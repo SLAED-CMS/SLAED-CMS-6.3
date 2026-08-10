@@ -4285,6 +4285,21 @@ function setUploadRuleData(array $rule): string {
     return implode('|', array_map(static fn($v) => (string)($rule[$v] ?? ''), $keys));
 }
 
+# Return what one refused upload is told to the visitor: the service answers a code and the settings of the module answer the number the refusal names, so both screens speak alike
+# The mapping lives here and not beside a screen, because the editor window and the administrative catalogue would otherwise explain the same refusal in two different words
+function getUploadFailText(string $code, array $rule): string {
+    return match ($code) {
+        'size' => _ERROR_BIG,
+        'count' => _FILEUP.': '.(int)($rule['maxfiles'] ?? 0),
+        'extension', 'mime', 'image', 'unsupported' => _ERROR_FILE,
+        'dimensions' => _ERROR_SIZE,
+        'quota' => _FSIZEALL.': '.filterSize((int)($rule['maxquota'] ?? 0)),
+        'exists' => _ERROR_EXIST,
+        'destination', 'write' => _ERROR_UP,
+        default => _ERROR_DOWN,
+    };
+}
+
 # Return the single upload service; core/classes has no runtime autoload, so the class file is required on first use instead of on every request
 # The upload root is named here and nowhere else, which is why no adapter ever calls new Upload(); where the destination locks live is decided by FileManager alone
 function getUploadService(): Upload {
@@ -4315,74 +4330,64 @@ function getEditorFileOwner(string $mod): ?string {
     return ($sid === '') ? null : substr(hash_hmac('sha256', 'upload|'.$sid, getSecret('upload')), 0, 16);
 }
 
-# Return image metadata for an uploaded or stored editor file
-# A stored file that no longer decodes is a listing entry, not a defect, so its warning is swallowed by a handler rather than suppressed with @ or left to reach the log
-# Which extensions count as an image is Parser::EMBEDIMG, the one list the render bound and the editor read too, so a type accepted here can never be a type the parser refuses to draw
-function getEditorImageData(string $file, string $ext, int $wid, int $hei): array {
-    $img = in_array($ext, Parser::EMBEDIMG, true);
-    if (!$img) return ['ok' => true, 'image' => false, 'width' => 0, 'height' => 0, 'error' => ''];
-    set_error_handler(static fn(): bool => true);
-    try {
-        $inf = getimagesize($file);
-    } finally {
-        restore_error_handler();
-    }
-    if (!is_array($inf)) return ['ok' => false, 'image' => true, 'width' => 0, 'height' => 0, 'error' => _ERROR_FILE];
-    $one = (int)($inf[0] ?? 0);
-    $two = (int)($inf[1] ?? 0);
-    if (($wid > 0 && $one > $wid) || ($hei > 0 && $two > $hei)) return ['ok' => false, 'image' => true, 'width' => $one, 'height' => $two, 'error' => _ERROR_SIZE];
-    return ['ok' => true, 'image' => true, 'width' => $one, 'height' => $two, 'error' => ''];
+# Return the file context of one editor module; core/classes has no runtime autoload, so the file layer is required on first use and the module directory is named the root here alone
+# The client passes a name inside that directory and never a root of its own, and what may be done there is the answer of the upload rule and not a role the window worked out again
+# Listing and uploading are one decision, checkEditorUploadAccess(), and the two operations a module moderator additionally holds ride on is_moder(), the one role rule of this area
+function getEditorFileArea(string $mod, array $rule): FileManager {
+    require_once BASE_DIR.'/core/classes/filemanager.php';
+    $able = checkEditorUploadAccess($mod, $rule);
+    return new FileManager('editor', (string)$rule['path'], ['upload' => $able, 'list' => $able, 'moder' => is_moder($mod)]);
 }
 
-# Return one stored editor file row for JSON output
-function getEditorFileData(string $dir, string $file): array {
-    $base = str_replace('\\', '/', BASE_DIR);
-    $rel = '';
-    $dir = str_replace('\\', '/', $dir);
-    if (str_starts_with($dir, $base.'/')) {
-        $rel = substr($dir, strlen($base) + 1);
-    }
-    $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
-    $img = getEditorImageData($dir.'/'.$file, $ext, 0, 0);
+# Answer the upload rule of one editor route once the three questions every one of them asks have been answered: the settings of the module, the right of the visitor and the token
+# A refusal answers the JSON here and never returns, so no route restates the guards and none of them can ship with one of the three quietly missing from its own opening lines
+function getEditorRouteRule(string $src = 'post'): array {
+    $mod = strtolower(getVar('get', 'mod', 'var', ''));
+    $rul = getUploadRuleData($mod);
+    if (!$rul['ok']) getEditorJson(['ok' => false, 'error' => $rul['error']]);
+    if (!checkEditorUploadAccess($mod, $rul)) getEditorJson(['ok' => false, 'error' => _ACCESSDENIED]);
+    if (!checkSiteToken(getVar($src, 'token', 'raw', ''), 'upload')) getEditorJson(['ok' => false, 'error' => _TOKENMISS]);
+    return $rul + ['mod' => $mod];
+}
+
+# Return one stored editor file row for JSON output: the descriptor of the file layer plus the two strings the window prints, so the client never formats a size or a date of its own
+# Which actions a row offers is the capability set of its own descriptor and never a role the window derives again, which is what keeps the interface from computing a permission
+# The absolute server path is absent because the file layer gives an editor context none, and the thumbnail falls back to the file itself so a listing always has one to draw
+function getEditorFileData(array $one): array {
     return [
-        'file' => $file,
-        'url' => (($rel !== '') ? $rel : basename($dir)).'/'.$file,
-        'type' => $ext,
-        'size' => filterSize(filesize($dir.'/'.$file)),
-        'image' => (bool)($img['ok'] ?? false) && (bool)($img['image'] ?? false),
-        'width' => (int)($img['width'] ?? 0),
-        'height' => (int)($img['height'] ?? 0),
-        'time' => filemtime($dir.'/'.$file),
+        'file' => $one['name'],
+        'path' => $one['path'],
+        'url' => $one['url'],
+        'thumb' => ($one['thumbnail'] !== '') ? $one['thumbnail'] : $one['url'],
+        'kind' => $one['kind'],
+        'type' => $one['extension'],
+        'size' => $one['size'],
+        'sizetext' => filterSize($one['size']),
+        'time' => $one['mtime'],
+        'timetext' => date(_TIMESTRING, $one['mtime']),
+        'image' => $one['kind'] === 'image',
+        'width' => (int)$one['width'],
+        'height' => (int)$one['height'],
+        'able' => $one['capabilities'],
     ];
 }
 
 # Publish one editor submission through the upload service and answer with the editor JSON; rules, naming and quota belong to the service, the adapter only maps its codes
 # Who the stored file belongs to is answered by getEditorFileOwner() alone, so the upload route and the listing route can never disagree about the segment the name carries
 function addEditorUpload(): void {
-    $mod = strtolower(getVar('get', 'mod', 'var', ''));
-    $rul = getUploadRuleData($mod);
-    if (!$rul['ok']) getEditorJson(['ok' => false, 'error' => $rul['error']]);
-    $dir = $rul['path'];
-    if (!checkEditorUploadAccess($mod, $rul)) getEditorJson(['ok' => false, 'error' => 'Access denied']);
-    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'upload')) getEditorJson(['ok' => false, 'error' => _TOKENMISS]);
+    $rul = getEditorRouteRule();
+    $mod = (string)$rul['mod'];
+    $area = getEditorFileArea($mod, $rul);
     $own = getEditorFileOwner($mod);
     $out = [];
     $bad = [];
     foreach (getUploadService()->addUploadedFiles($_FILES['file'] ?? [], $rul, $mod, $mod, $own) as $res) {
-        if ($res['ok']) {
-            $out[] = getEditorFileData($dir, (string)$res['file']);
+        $one = $res['ok'] ? $area->getFileData((string)$res['file']) : [];
+        if ($one !== []) {
+            $out[] = getEditorFileData($one);
             continue;
         }
-        $bad[] = match ((string)$res['error']) {
-            'size' => _ERROR_BIG,
-            'count' => _FILEUP.': '.$rul['maxfiles'],
-            'extension', 'mime', 'image', 'unsupported' => _ERROR_FILE,
-            'dimensions' => _ERROR_SIZE,
-            'quota' => _FSIZEALL.': '.filterSize($rul['maxquota']),
-            'exists' => _ERROR_EXIST,
-            'destination', 'write' => _ERROR_UP,
-            default => _ERROR_DOWN,
-        };
+        $bad[] = getUploadFailText($res['ok'] ? 'write' : (string)$res['error'], $rul);
     }
     getEditorJson(['ok' => $out !== [], 'files' => $out, 'errors' => $bad, 'error' => $out ? '' : ($bad[0] ?? _ERROR_DOWN)]);
 }
@@ -4393,26 +4398,66 @@ function addEditorUpload(): void {
 # The owner segment is alphanumeric and not numeric, so the comparison is a string one: an integer cast turns every guest token into zero and matches one guest against another
 # Who a stored name belongs to is read by FileManager::getFileOwner(), the one place that knows the format, so this route carries no pattern and no salt length of its own
 function getEditorFileJson(): void {
-    require_once BASE_DIR.'/core/classes/filemanager.php';
-    $mod = strtolower(getVar('get', 'mod', 'var', ''));
-    $rul = getUploadRuleData($mod);
-    if (!$rul['ok']) getEditorJson(['ok' => false, 'error' => $rul['error']]);
-    $dir = $rul['path'];
-    if (!checkEditorUploadAccess($mod, $rul)) getEditorJson(['ok' => false, 'error' => 'Access denied']);
-    if (!checkSiteToken(getVar('req', 'token', 'raw', ''), 'upload')) getEditorJson(['ok' => false, 'error' => _TOKENMISS]);
+    $rul = getEditorRouteRule('req');
+    $mod = (string)$rul['mod'];
+    $area = getEditorFileArea($mod, $rul);
     $all = is_moder($mod);
     $tok = getEditorFileOwner($mod);
     $lim = $all ? $rul['moderfiles'] : (is_user() ? $rul['userfiles'] : $rul['guestfiles']);
     $row = [];
-    foreach (scandir($dir) ?: [] as $file) {
-        if ($file === '.' || $file === '..' || $file === 'index.html' || !is_file($dir.'/'.$file)) continue;
-        $own = $tok !== null && FileManager::getFileOwner($file) === $tok;
-        if (!$all && !$own) continue;
-        $row[] = getEditorFileData($dir, $file);
+    $used = 0;
+    foreach ($area->getFileList('') as $one) {
+        if ($one['kind'] === 'dir' || in_array($one['name'], ['index.html', '.htaccess'], true)) continue;
+        $used += $one['size'];
+        if (!$all && ($tok === null || FileManager::getFileOwner($one['name']) !== $tok)) continue;
+        $row[] = getEditorFileData($one);
     }
-    usort($row, static fn(array $one, array $two): int => ($two['time'] ?? 0) <=> ($one['time'] ?? 0));
+    usort($row, static fn(array $one, array $two): int => $two['time'] <=> $one['time']);
     if ($lim > 0) $row = array_slice($row, 0, $lim);
-    getEditorJson(['ok' => true, 'files' => $row]);
+    getEditorJson([
+        'ok' => true,
+        'files' => $row,
+        'able' => $area->getCapabilities(),
+        'used' => $used,
+        'quota' => $rul['maxquota'],
+        'usedtext' => filterSize($used),
+        'quotatext' => filterSize($rul['maxquota']),
+    ]);
+}
+
+# Run one changing operation of the editor window over one path or over the marked set; deletion and packing are the two it offers and a module moderator alone is answered them
+# Every path is asked of its own descriptor before it is touched, so a capability the context withholds refuses here and not after the object was already opened for the work
+# Each path is journalled on its own and the answer names how many of how many ran, because a marked set is the same action over several names and never a second operation
+function setEditorFileRun(string $op): void {
+    global $admin, $user;
+    $rul = getEditorRouteRule();
+    $who = (string)($user[1] ?? '');
+    if ($who === '') $who = (string)($admin[1] ?? '');
+    $area = getEditorFileArea((string)$rul['mod'], $rul);
+    $mark = getVar('post', 'mark[]', 'array', []);
+    $file = getVar('post', 'file', 'raw', '');
+    if ($mark === [] && is_string($file) && $file !== '') $mark = [$file];
+    $need = ($op === 'editorDelete') ? 'delete' : 'compress';
+    $done = 0;
+    $note = '';
+    foreach ($mark as $path) {
+        $one = is_string($path) ? $area->getFileData(mb_substr(trim($path), 0, 512)) : [];
+        $shut = $one === [] || empty($one['capabilities'][$need]);
+        if ($shut) $res = ['ok' => false, 'error' => 'closed', 'path' => ''];
+        elseif ($need === 'delete') $res = $area->deleteFileEntry($one['path']);
+        else $res = $area->addFileArchive($one['path']);
+        if ($res['ok']) $done++;
+        elseif ($note === '') $note = ($res['error'] === 'closed') ? _ACCESSDENIED : _ERROR_UP;
+        Logger::addFile($res['ok'] ? 'notice' : 'warning', 'Editor file operation', [
+            'user' => substr($who, 0, 25),
+            'ctx' => 'editor',
+            'op' => $op,
+            'path' => is_string($path) ? $path : '',
+            'target' => (string)($res['path'] ?? ''),
+            'result' => $res['ok'] ? 'ok' : (string)$res['error'],
+        ]);
+    }
+    getEditorJson(['ok' => $done > 0, 'done' => $done, 'total' => count($mark), 'error' => ($done > 0) ? '' : ($note ?: _ERROR)]);
 }
 
 # Add downloads

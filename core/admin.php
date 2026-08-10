@@ -864,6 +864,7 @@ function getAdminPrivateList(int $obj = 0): string {
 }
 
 # Show uploads files for admin
+# The quick lists of the module answer a directory and nothing else: deleting and packing live on the POST routes of the file manager, and no address of this screen changes a file
 function getAdminUploadFiles(): void {
  global $user, $tpl;
     $id   = filterVar(getVar('get', 'id',   'text', ''));
@@ -871,18 +872,10 @@ function getAdminUploadFiles(): void {
     $cid  = getVar('get', 'cid',  'num',  0);
     $rul = getUploadRuleData($dir);
     $connum = $rul['adminlist'] ?: 50;
-    $file = filterText(getVar('get', 'file', 'text', ''));
     $num  = ($cid) ? $cid : '1';
     $path = ($id == 1) ? UPLOADS_DIR.'/'.$dir.'/' : UPLOADS_DIR.'/'.$dir.'/thumb/';
     $pub = ($id == 1) ? 'uploads/'.$dir.'/' : 'uploads/'.$dir.'/thumb/';
     if (is_dir($path)) {
-        if ($file && $dir) {
-            if (!$cid) {
-                if (file_exists($path.$file)) unlink($path.$file);
-            } else {
-                addCompress($path, $path.$file, $file);
-            }
-        }
         $files = [];
         foreach (scandir($path) ?: [] as $entry) {
             if ($entry === '.' || $entry === '..' || $entry === 'index.html' || is_dir($path.$entry)) continue;
@@ -922,23 +915,6 @@ function getAdminUploadFiles(): void {
                     ]);
                     $isize = _NO;
                 }
-                $show = [];
-                if (in_array(true, checkCompress(), true)) {
-                    $zhref = 'index.php?go=5&op=getAdminUploadFiles&id='.$id.'&dir='.$dir.'&cid=1&file='.$entry[1];
-                    $show[] = [
-                        'href' => $zhref,
-                        'icon_name' => 'file-zip',
-                        'title' => _ZIP,
-                        'link_attr' => 'hx-get="'.$zhref.'" hx-target="#repf'.$id.'" hx-swap="innerHTML" hx-push-url="false"',
-                    ];
-                }
-                $dhref = 'index.php?go=5&op=getAdminUploadFiles&id='.$id.'&dir='.$dir.'&cid=0&file='.$entry[1];
-                $show[] = [
-                    'href' => $dhref,
-                    'icon_name' => 'trash',
-                    'title' => _ONDELETE,
-                    'link_attr' => 'hx-get="'.$dhref.'" hx-target="#repf'.$id.'" hx-swap="innerHTML" hx-push-url="false"',
-                ];
                 $contents[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
                         ['content_html' => $img],
@@ -946,10 +922,6 @@ function getAdminUploadFiles(): void {
                         ['content_html' => date(_TIMESTRING, $entry[0])],
                         ['content_html' => filterSize($filesize)],
                         ['content_html' => $isize],
-                        ['content_html' => $tpl->getHtmlFrag('dial', [
-                            'dial_title' => _EDITOR,
-                            'dial' => $show,
-                        ]), 'is_col_actions' => true],
                     ],
                 ])]);
                 $a++;
@@ -970,7 +942,6 @@ function getAdminUploadFiles(): void {
                 ['content' => _DATE],
                 ['content' => _SIZE],
                 ['content' => _WIDTH.' x '._HEIGHT],
-                ['content' => _FUNCTIONS, 'nosort' => true],
             ],
             'rows_html' => $cont,
             'disable_sort' => true,
@@ -1184,33 +1155,60 @@ function checkSqlTable(string $name): bool {
     return (int)($row['num'] ?? 0) > 0;
 }
 
-# Return the one system file context of the administration; core/classes carries no runtime autoload, so the file layer is required on first use and the root is named here alone
-# The root is BASE_DIR and the client never names it: every route below passes a path relative to this context and the file layer decides what that path is allowed to mean
-function getAdminFileManager(): FileManager {
-    static $man = null;
-    if ($man === null) {
+# Return which of the two administrative file areas the current request works in; a page names its own area once, and every route of it reads the name back out of the request
+# The client never names a root, only which of the two screens it is on, and what that screen is allowed to mean is decided by the context the file layer is built with
+function getAdminFileMode(string $set = ''): string {
+    static $ctx = '';
+    if ($set !== '') $ctx = $set;
+    if ($ctx === '') $ctx = (getVar('get', 'ctx', 'word', '') === 'uploads' || getVar('post', 'ctx', 'word', '') === 'uploads') ? 'uploads' : 'system';
+    return $ctx;
+}
+
+# Return the file context of one administrative area; core/classes carries no runtime autoload, so the file layer is required on first use and both roots are named here alone
+# The upload area is rooted at the whole upload tree and the system area at BASE_DIR: the client passes a path relative to the context and never the physical root itself
+function getAdminFileManager(string $mode = ''): FileManager {
+    static $mans = [];
+    $mode = ($mode === '') ? getAdminFileMode() : $mode;
+    if (!isset($mans[$mode])) {
         require_once BASE_DIR.'/core/classes/filemanager.php';
-        $man = new FileManager('system', BASE_DIR);
+        $mans[$mode] = ($mode === 'uploads') ? new FileManager('uploads', UPLOADS_DIR) : new FileManager('system', BASE_DIR);
     }
-    return $man;
+    return $mans[$mode];
+}
+
+# Return the upload rule one browser path publishes under: the first segment of the path names the module, so a directory of the tree carries the settings of its own module
+# The shared quota of a module counts what its users stored and is not a limit on the administration, so the one rule value the catalogue drops is that ceiling
+function getAdminUploadRule(string $dir): array {
+    $mod = ($dir === '') ? '' : explode('/', $dir)[0];
+    return array_merge(getUploadRuleData($mod), ['maxquota' => 0]);
 }
 
 # Return one relative path of the request unfiltered, because what a path means is decided by the canonicalization of the file layer and never by a filter of the input side
-function getAdminFilePath(string $key): string {
-    $path = getVar('get', $key, 'raw', '');
+# A reading route carries its path in the query and a write carries it in the body, so the source is named by the caller and the two never read each other by accident
+function getAdminFilePath(string $key, string $src = 'get'): string {
+    $path = getVar($src, $key, 'raw', '');
     return is_string($path) ? mb_substr(trim($path), 0, 512) : '';
 }
 
 # Return the address of one browser route with the values it carries and the ajax token every numeric go route is asked for before it answers anything
+# The area of the screen travels with every address, because the answering route builds its own context and must not fall back to the system one on a catalogue request
 function getAdminFileLink(string $op, array $args = []): string {
     static $tok = '';
     if ($tok === '') $tok = getSiteToken();
-    $out = 'index.php?go=5&op='.$op;
+    $out = 'index.php?go=5&op='.$op.((getAdminFileMode() === 'uploads') ? '&ctx=uploads' : '');
     foreach ($args as $key => $val) {
         if ((string)$val === '') continue;
         $out .= '&'.$key.'='.rawurlencode((string)$val);
     }
     return $out.'&token='.$tok;
+}
+
+# Return the address one image is shown at: a file of the upload tree is public and is served by the web server, and a system file exists only behind the route that checks it again
+# A listing asks for the stored thumbnail where one was published, because a directory of full-sized photographs drawn at icon size is the one place this screen can waste a network
+function getAdminFileShot(array $one, bool $small = false): string {
+    if (($one['kind'] ?? '') !== 'image' || empty($one['capabilities']['preview'])) return '';
+    if ($small && $one['thumbnail'] !== '') return $one['thumbnail'];
+    return ($one['url'] !== '') ? $one['url'] : getAdminFileLink('getAdminFilePreview', ['file' => $one['path']]);
 }
 
 # Return the icon and the tone one object is drawn with, chosen by the kind of the descriptor, so the type resolver of the file layer stays the only one in the project
@@ -1264,16 +1262,17 @@ function getAdminFileNodes(string $dir): string {
         $cur = $next;
         $step++;
     }
+    $isup = getAdminFileMode() === 'uploads';
     array_unshift($out, [
-        'name' => _UPLOADS_ROOT,
-        'hint' => _UPLOADS_ROOT,
+        'name' => $isup ? basename(UPLOADS_DIR) : _UPLOADS_ROOT,
+        'hint' => $isup ? basename(UPLOADS_DIR) : _UPLOADS_ROOT,
         'path' => '',
         'url' => getAdminFileLink('getAdminFileList'),
         'pads' => [],
-        'icon' => 'hdd-stack',
+        'icon' => $isup ? 'folder2-open' : 'hdd-stack',
         'is_cur' => $dir === '',
     ]);
-    return $tpl->getHtmlPart('file-browser-tree', ['cap_text' => _UPLOADS_TREE, 'nodes' => $out]);
+    return $tpl->getHtmlPart('file-browser-tree', ['cap_text' => $isup ? _UPLOADS_DIRS : _UPLOADS_TREE, 'nodes' => $out]);
 }
 
 # Render the capability row of the context: what the interface prints is the answer of the file layer, so no screen derives a permission from a role of its own
@@ -1293,76 +1292,169 @@ function getAdminFileGrants(): string {
     return $out;
 }
 
+# Render the fan of one object: what it offers is the capability set of its own descriptor, so an operation the context forbids is not drawn at all instead of failing on the route
+# Reading actions are addresses and the two that change nothing but the name of a thing open the shared form, while a delete and a pack are POST forms of the module with its token
+# The question of a delete names the object, and a critical path adds what its loss costs and that the journal keeps the answer, because a stray click there stops the site
+function getAdminFileActs(array $one): string {
+    global $afile, $tpl;
+    $able = $one['capabilities'];
+    $ctx = getAdminFileMode();
+    $path = $one['path'];
+    $name = $one['name'];
+    $dir = str_contains($path, '/') ? substr($path, 0, (int)strrpos($path, '/')) : '';
+    $ask = _DELETE.' "'.$name.'"?'.(empty($one['critical']) ? '' : ' '._UPLOADS_CRITDEL);
+    $dial = [];
+    if (!empty($able['edit'])) $dial[] = ['href' => $afile.'.php?name=uploads&op=fmedit&file='.rawurlencode($path), 'icon_name' => 'pencil-square', 'title' => _EDIT];
+    if (!empty($able['preview']) && $one['kind'] === 'image') $dial[] = ['href' => '#', 'run' => 'preview', 'icon_name' => 'zoom-in', 'title' => _UPLOADS_PREVIEW];
+    if (!empty($able['download'])) $dial[] = ['href' => getAdminFileLink('getAdminFileDownload', ['file' => $path]), 'icon_name' => 'download', 'title' => _DOWNLOAD];
+    if (!empty($able['rename'])) $dial[] = ['href' => '#', 'act' => 'fmrename', 'file' => $path, 'arg' => $name, 'icon_name' => 'input-cursor-text', 'title' => _UPLOADS_TORENAME];
+    if (!empty($able['copy'])) $dial[] = ['href' => '#', 'act' => 'fmcopy', 'file' => $path, 'arg' => $path, 'icon_name' => 'files', 'title' => _UPLOADS_TOCOPY];
+    if (!empty($able['move'])) $dial[] = ['href' => '#', 'act' => 'fmmove', 'file' => $path, 'arg' => $path, 'icon_name' => 'folder-symlink', 'title' => _UPLOADS_TOMOVE];
+    $post = ['name' => 'uploads', 'op' => '', 'ctx' => $ctx, 'file' => $path, 'back' => $dir];
+    if (!empty($able['compress'])) $dial[] = getTplPostAction(['op' => 'fmcompress'] + $post, 'file-zip', _UPLOADS_TOZIP) + ['run' => 'fmcompress'];
+    if (!empty($able['delete'])) $dial[] = getTplPostAction(['op' => 'fmdelete'] + $post, 'trash3', _DELETE, $ask) + ['run' => 'fmdelete'];
+    return ($dial === []) ? '' : $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $dial]);
+}
+
 # Render the properties of one object from its descriptor: the absolute path is shown because an administrator is full-handed, and a critical path says so next to its own name
 # An object that does not exist or that the path policy closes answers the empty panel, so a closed path is refused here exactly as it is refused on every other route
+# A source file also states how many lines it holds and which version it carries, and both come from reading it once, which is why no listing ever asks for them
 function getAdminFileProps(string $path): string {
-    global $tpl;
+    global $afile, $tpl;
     $man = getAdminFileManager();
     $one = ($path === '') ? [] : $man->getFileData($path);
     if ($one === []) return $tpl->getHtmlFrag('file-browser-props', ['cap_text' => _UPLOADS_PROPS, 'hint_text' => _NO_INFO]);
     [$icon, $tone] = getAdminFileIcon($one['kind']);
+    $body = empty($one['editable']) ? [] : $man->getFileBody($one['path']);
     $rows = [
         ['label' => _NAME, 'value' => $one['name']],
         ['label' => _TYPE, 'value' => ($one['extension'] === '') ? $one['kind'] : $one['kind'].' · '.$one['extension']],
     ];
     if ($one['kind'] !== 'dir') $rows[] = ['label' => _SIZE, 'value' => filterSize($one['size'])];
     if ($one['width']) $rows[] = ['label' => _UPLOADS_DIMS, 'value' => $one['width'].' × '.$one['height']];
+    if ($body !== []) $rows[] = ['label' => _UPLOADS_LINES, 'value' => number_format($body['lines'], 0, '', ' ')];
     $rows[] = ['label' => _DATE, 'value' => date(_TIMESTRING, $one['mtime'])];
-    $rows[] = ['label' => _UPLOADS_PATH, 'value' => ($one['path'] === '') ? '/' : $one['path']];
+    $rows[] = ['label' => ($one['url'] === '') ? _UPLOADS_PATH : _UPLOADS_ADDR, 'value' => ($one['path'] === '') ? '/' : ($one['url'] ?: $one['path'])];
     $rows[] = ['label' => _UPLOADS_FULL, 'value' => $one['realpath'] ?? ''];
+    if ($body !== []) $rows[] = ['label' => _UPLOADS_VERSION, 'value' => substr($body['version'], 0, 6)];
+    if ($one['managed']) $rows[] = ['label' => _UPLOADS_OWNER, 'value' => FileManager::getFileOwner($one['name']) ?? _UPLOADS_OWNSITE];
     $acts = [];
-    if (!empty($one['capabilities']['download'])) {
-        $acts[] = ['url' => getAdminFileLink('getAdminFileDownload', ['file' => $one['path']]), 'icon' => 'download', 'title' => _DOWNLOAD];
+    if ($body !== [] && !empty($one['capabilities']['edit'])) {
+        $acts[] = ['url' => $afile.'.php?name=uploads&op=fmedit&file='.rawurlencode($one['path']), 'icon' => 'pencil-square', 'title' => _EDIT, 'is_main' => true];
     }
+    if (!empty($one['capabilities']['download'])) {
+        $acts[] = ['url' => getAdminFileLink('getAdminFileDownload', ['file' => $one['path']]), 'icon' => 'download', 'title' => _DOWNLOAD, 'is_load' => true];
+    }
+    $warn = empty($one['critical']) ? '' : _UPLOADS_CRIT;
+    if ($warn === '' && $one['managed'] && !empty($one['capabilities']['rename'])) $warn = _UPLOADS_LINKWARN;
     return $tpl->getHtmlFrag('file-browser-props', [
         'cap_text' => _UPLOADS_PROPS,
         'name' => $one['name'],
         'icon' => $icon,
         'tone' => $tone,
-        'image_url' => ($one['kind'] === 'image' && !empty($one['capabilities']['preview'])) ? getAdminFileLink('getAdminFilePreview', ['file' => $one['path']]) : '',
+        'image_url' => getAdminFileShot($one),
         'rows' => $rows,
         'acts' => $acts,
-        'note_html' => empty($one['critical']) ? '' : $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _UPLOADS_CRIT]),
+        'note_html' => ($warn === '') ? '' : $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $warn]),
+    ]);
+}
+
+# Render the source editor of one system file in the place of the list, with the tree beside it: the way back, the name, the version of the open file and the code widget
+# The version travels in the form and is compared under the lock of the directory on the way back, so the field is what tells a stale save from a fresh one and is never dropped
+# A critical path asks again through the shared confirm protocol before the write, because an error in one of those files stops the site and a stray click must not reach it
+function getAdminFileEditor(array $edit): string {
+    global $afile, $tpl;
+    $man = getAdminFileManager();
+    $path = (string)($edit['path'] ?? '');
+    $one = $man->getFileData($path);
+    $dir = str_contains($path, '/') ? substr($path, 0, (int)strrpos($path, '/')) : '';
+    $ver = (string)($edit['version'] ?? '');
+    $code = 'slfmcode';
+    return $tpl->getHtmlPart('file-browser-editor', [
+        'action_url' => $afile.'.php',
+        'back_url' => $afile.'.php?name=uploads&op=sysfiles'.(($dir === '') ? '' : '&dir='.rawurlencode($dir)),
+        'back_text' => _BACK,
+        'path_text' => $path,
+        'ver_label' => _UPLOADS_VERSION,
+        'ver_text' => substr($ver, 0, 6),
+        'ver_hint' => _UPLOADS_VERHINT,
+        'save_text' => _SAVECHANGES,
+        'code_id' => $code,
+        'ask_text' => _UPLOADS_LEAVE,
+        'confirm_text' => empty($one['critical']) ? '' : _UPLOADS_CRITASK,
+        'note_html' => ($edit['note'] ?? '') === '' ? '' : $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $edit['note']]),
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'uploads'],
+            ['nameattr' => 'op', 'valueattr' => 'fmsave'],
+            ['nameattr' => 'file', 'valueattr' => $path],
+            ['nameattr' => 'ver', 'valueattr' => $ver],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('uploads')],
+        ],
+        'code_html' => Editor::getCode([
+            'id' => $code,
+            'name' => 'text',
+            'lang' => $man->getCodeLanguage($path),
+            'text' => (string)($edit['text'] ?? ''),
+        ]),
     ]);
 }
 
 # Render the system file browser of one directory: the tree along the open path, the list, the properties, the capability row and the counter of the current directory
 # The same body answers the first page and every navigation of it; the toolbar is drawn once and the crumbs travel back out of band, because they live inside it
-function getAdminFileShell(bool $full = false): string {
-    global $tpl;
+# An open source file takes the place of the list and the pager: the tree, the properties and the capability row stay, because the screen has not changed, only its work area has
+# One object is drawn twice, as a row and as a tile, so its fan is built twice as well: two forms of one identifier would make the tile submit the form standing in the row
+function getAdminFileShell(bool $full = false, array $edit = []): string {
+    global $afile, $tpl;
+    $ctx = getAdminFileMode();
     $man = getAdminFileManager();
-    $dir = getAdminFilePath('dir');
-    $find = mb_substr(getAdminFilePath('find'), 0, 60);
+    $able = $man->getCapabilities();
+    $pick = (string)($edit['path'] ?? '');
+    $sent = getAdminFilePath('dir');
+    if ($sent === '') $sent = getAdminFilePath('dir', 'post');
+    $dir = ($pick === '') ? $sent : (str_contains($pick, '/') ? substr($pick, 0, (int)strrpos($pick, '/')) : '');
+    $find = ($pick === '') ? mb_substr(getAdminFilePath('find'), 0, 60) : '';
     $one = $man->getFileData($dir);
     if (($one['kind'] ?? '') !== 'dir') $dir = '';
     $all = $man->getFileList($dir);
     if ($find !== '') $all = array_values(array_filter($all, static fn(array $row): bool => mb_stripos($row['name'], $find) !== false));
     $sum = 0;
     foreach ($all as $row) $sum += $row['size'];
+    $rule = getAdminUploadRule($dir);
     $lim = max(10, (int)getUploadRuleData('all')['adminlist']);
     $pages = (int)ceil(count($all) / $lim);
     $num = max(1, min((int)getVar('get', 'num', 'num', 1), max(1, $pages)));
+    $mark = !empty($able['delete']) || !empty($able['compress']) || !empty($able['move']);
     $rows = '';
     $tiles = '';
-    foreach (array_slice($all, ($num - 1) * $lim, $lim) as $row) {
+    foreach (($pick === '') ? array_slice($all, ($num - 1) * $lim, $lim) : [] as $row) {
         [$icon, $tone] = getAdminFileIcon($row['kind']);
         $isdir = $row['kind'] === 'dir';
         $data = [
             'name' => $row['name'],
-            'path' => $row['path'],
+            'hint_text' => $row['path'],
             'url' => $isdir ? getAdminFileLink('getAdminFileList', ['dir' => $row['path']]) : getAdminFileLink('getAdminFileData', ['file' => $row['path']]),
-            'image_url' => ($row['kind'] === 'image' && !empty($row['capabilities']['preview'])) ? getAdminFileLink('getAdminFilePreview', ['file' => $row['path']]) : '',
+            'image_url' => getAdminFileShot($row, true),
+            'full_url' => getAdminFileShot($row),
+            'info_url' => getAdminFileLink('getAdminFileData', ['file' => $row['path']]),
+            'down_url' => empty($row['capabilities']['download']) ? '' : getAdminFileLink('getAdminFileDownload', ['file' => $row['path']]),
             'icon' => $icon,
             'tone' => $tone,
             'is_dir' => $isdir,
+            'is_mark' => $mark && !$isdir,
+            'pick_value' => $row['path'],
+            'mark_text' => _UPLOADS_MARK,
+            'shot_text' => _UPLOADS_PREVIEW,
             'kind_text' => $isdir ? _DIR : strtoupper($row['extension']),
             'size_text' => $isdir ? '' : filterSize($row['size']),
             'date_text' => date(_TIMESTRING, $row['mtime']),
+            'acts_html' => getAdminFileActs($row),
         ];
         $rows .= $tpl->getHtmlFrag('file-browser-row', $data);
+        $data['acts_html'] = getAdminFileActs($row);
         $tiles .= $tpl->getHtmlFrag('file-browser-tile', $data);
     }
-    $crumbs = [['name' => _UPLOADS_ROOT, 'url' => ($dir === '') ? '' : getAdminFileLink('getAdminFileList')]];
+    $home = ($ctx === 'uploads') ? basename(UPLOADS_DIR) : _UPLOADS_ROOT;
+    $crumbs = [['name' => $home, 'url' => ($dir === '') ? '' : getAdminFileLink('getAdminFileList')]];
     $walk = '';
     foreach (($dir === '') ? [] : explode('/', $dir) as $part) {
         $walk = ($walk === '') ? $part : $walk.'/'.$part;
@@ -1371,8 +1463,33 @@ function getAdminFileShell(bool $full = false): string {
     return $tpl->getHtmlPart('file-browser', [
         'is_full' => $full,
         'is_swap' => !$full,
+        'ctx' => $ctx,
         'dir' => $dir,
         'crumbs' => $crumbs,
+        'can_upload' => !empty($able['upload']),
+        'is_upload' => !empty($able['upload']) && $rule['ok'],
+        'can_mark' => $mark,
+        'can_move' => !empty($able['move']),
+        'can_zip' => !empty($able['compress']),
+        'can_delete' => !empty($able['delete']),
+        'load_text' => _UPLOADS_LOAD,
+        'drop_text' => _UPLOADS_DROP,
+        'types_text' => $rule['ok'] ? _FTYPE.': '.$rule['extensions'].' · '._FSIZE.': '.filterSize($rule['maxbytes']) : '',
+        'link_text' => _FILE_SITE,
+        'queue_text' => _UPLOADS_QUEUE,
+        'stop_text' => _UPLOADS_STOP,
+        'marks_text' => _UPLOADS_MARKED,
+        'zip_text' => _UPLOADS_TOZIP,
+        'pack_text' => _UPLOADS_TOPACK,
+        'move_text' => _UPLOADS_TOMOVE,
+        'delete_text' => _DELETE,
+        'clear_text' => _UPLOADS_UNMARK,
+        'ask_text' => _UPLOADS_MANYDEL,
+        'shot_text' => _UPLOADS_PREVIEW,
+        'down_text' => _DOWNLOAD,
+        'prev_text' => _BACK,
+        'next_text' => _NEXT,
+        'pack_name' => 'archive.zip',
         'self_url' => getAdminFileLink('getAdminFileList', ['dir' => $dir, 'find' => $find, 'num' => ($num > 1) ? $num : '']),
         'up_url' => getAdminFileLink('getAdminFileList', ['dir' => str_contains($dir, '/') ? substr($dir, 0, (int)strrpos($dir, '/')) : '']),
         'find_url' => getAdminFileLink('getAdminFileList'),
@@ -1383,26 +1500,40 @@ function getAdminFileShell(bool $full = false): string {
         'filter_text' => _UPLOADS_FILTER,
         'list_text' => _LIST,
         'tiles_text' => _UPLOADS_TILES,
+        'post_url' => $afile.'.php',
+        'token' => getSiteToken('uploads'),
+        'newfile_text' => _UPLOADS_NEWFILE,
+        'newdir_text' => _UPLOADS_NEWDIR,
+        'apply_text' => _EXECUTE,
+        'cancel_text' => _CLOSE,
+        'can_create' => !empty($able['create']),
+        'can_mkdir' => !empty($able['mkdir']),
         'caps_label' => _UPLOADS_GRANTS,
         'caps_html' => getAdminFileGrants(),
         'info_text' => _OVERALL.': '.count($all).' · '.filterSize($sum),
         'tree_html' => getAdminFileNodes($dir),
-        'props_html' => getAdminFileProps(''),
-        'pager_html' => getTplPagerView($num, $pages, 8, static fn(int $i): array => [
+        'props_html' => getAdminFileProps($pick),
+        'pager_html' => ($pick !== '') ? '' : getTplPagerView($num, $pages, 8, static fn(int $i): array => [
             'query' => getAdminFileLink('getAdminFileList', ['dir' => $dir, 'find' => $find, 'num' => $i]),
             'target_id' => 'slfmbody',
         ]),
-        'list_html' => $tpl->getHtmlPart('file-browser-list', [
+        'list_html' => ($pick !== '') ? getAdminFileEditor($edit) : $tpl->getHtmlPart('file-browser-list', [
             'is_empty' => $rows === '',
             'empty_icon' => ($find === '') ? 'folder2' : 'search',
             'empty_title' => ($find === '') ? _UPLOADS_EMPTY : _UPLOADS_NOFIND,
             'empty_text' => ($find === '') ? _UPLOADS_EMPTYTXT : _UPLOADS_NOFINDTXT,
             'reset_url' => ($find === '') ? '' : getAdminFileLink('getAdminFileList', ['dir' => $dir]),
             'reset_text' => _FRESET,
+            'fail_title' => _UPLOADS_FAIL,
+            'fail_text' => _UPLOADS_FAILTXT,
+            'retry_text' => _RETRY,
+            'can_mark' => $mark,
+            'mark_all_text' => _UPLOADS_MARKALL,
             'name_text' => _NAME,
             'type_text' => _TYPE,
             'size_text' => _SIZE,
             'date_text' => _DATE,
+            'acts_text' => _FUNCTIONS,
             'rows_html' => $rows,
             'tiles_html' => $tiles,
         ]),

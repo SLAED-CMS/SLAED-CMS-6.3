@@ -2425,10 +2425,6 @@ dialog.sl-modal.sl-modal-wide {
   overflow-y: auto;
 }
 
-.sl-icon-cell[hidden] {
-  display: none;
-}
-
 .sl-icon-cell {
   display: grid;
   justify-items: center;
@@ -5677,10 +5673,6 @@ body:has(.sl-admin-login-shell):before {
   font-size: var(--sl-img-placeholder-icon-size);
 }
 
-.sl-img-placeholder[hidden] {
-  display: none;
-}
-
 .sl-img-left {
   float: left;
 }
@@ -5994,9 +5986,38 @@ body:has(.sl-admin-login-shell):before {
   gap: 10px;
 }
 
-/* The hidden view keeps its own display, so the attribute of the switched-off list has to win over it */
-.sl-fm-grid[hidden] {
-  display: none;
+/* The fan of a tile is anchored against the cell, because the whole surface of the tile itself is one link and nothing may be laid inside it */
+.sl-fm-cell {
+  position: relative;
+}
+
+/* A fan of a tile stays inside its own tile: the work area scrolls, and a fan reaching past the left edge of the leftmost tile would be cut away by that scroll */
+.sl-fm-cell > .sl-dial {
+  top: auto;
+  bottom: 8px;
+  transform: none;
+  flex-wrap: wrap-reverse;
+  justify-content: flex-end;
+  gap: 2px;
+  max-width: calc(100% - 16px);
+  border-radius: var(--sl-radius-control);
+}
+
+/* The form of an operation stands where the list starts: a rename, a copy and a move are opened from a row, from a tile and from the toolbar, and all three find it in one place */
+.sl-fm-ops {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-sm);
+  margin-bottom: var(--sl-space-sm);
+  padding: var(--sl-space-sm);
+  border: 1px solid var(--sl-color-border-strong);
+  border-radius: var(--sl-radius-card);
+  background: var(--sl-color-bg-soft);
+}
+
+.sl-fm-ops input[type="text"] {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .sl-fm-tile {
@@ -6204,6 +6225,274 @@ body:has(.sl-admin-login-shell):before {
   font-size: 12px;
   line-height: 1.5;
   color: var(--sl-color-text-muted);
+}
+
+/* Source editor of the system area: it takes the place of the list and the tree stays beside it (§10) */
+.sl-fm-edit,
+.sl-fm-edit-form {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sl-fm-edit-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--sl-color-border);
+  background: var(--sl-color-bg-soft);
+}
+
+.sl-fm-edit-head b {
+  flex: 1 1 auto;
+  overflow: hidden;
+  font-weight: normal;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--sl-color-text);
+}
+
+.sl-fm-edit .sl-code-editor {
+  min-height: 420px;
+}
+
+/* The one action a panel leads with: the same accent the mockup gives the primary object action */
+.sl-but-mini.sl-fm-main {
+  background-color: var(--sl-color-primary);
+  color: var(--sl-color-on-dark);
+}
+
+/* A shown object announces itself under the pointer: the kind icon gives way to the glass, and the thumbnail is the button that opens the gallery (§9.1) */
+button.sl-fm-thumb {
+  border: 0;
+  cursor: pointer;
+}
+
+button.sl-fm-thumb .bi-zoom-in,
+button.sl-fm-thumb:hover .bi:first-child {
+  display: none;
+}
+
+button.sl-fm-thumb:hover .bi-zoom-in {
+  display: inline-block;
+}
+
+/* Mark and glass of a tile: both sit over the picture, so the tile itself stays one link and carries no control inside it */
+.sl-fm-tile-mark {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 2;
+}
+
+.sl-but-mini.sl-fm-tile-shot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 2;
+}
+
+/* The list on its way: the place of the rows is held by a skeleton, so the work area neither empties nor jumps while the answer is still travelling (§31) */
+.sl-skel {
+  animation: sl-skel-pulse 1.2s ease-in-out infinite;
+}
+
+.sl-skel-row {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 90px 70px 90px;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 6px;
+  border-bottom: 1px solid var(--sl-color-border);
+}
+
+.sl-skel-cell,
+.sl-skel-line {
+  display: block;
+  background: var(--sl-color-bg-subtle);
+}
+
+.sl-skel-cell {
+  height: 24px;
+  border-radius: var(--sl-radius-control);
+}
+
+.sl-skel-line {
+  height: 10px;
+  border-radius: 5px;
+}
+
+.sl-skel-line-half {
+  width: 54%;
+}
+
+@keyframes sl-skel-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sl-skel {
+    animation: none;
+  }
+}
+
+/* A list that never arrived says so and offers the way back to it; an empty directory and an empty filter are other states and carry other words */
+.sl-fm-empty.sl-is-fail .bi {
+  color: var(--sl-color-danger);
+}
+
+/* Upload panel: the drop target, the address of a remote file and the two buttons of the form, opened from the toolbar and closed with the next answer of the server */
+.sl-fm-load {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sl-space-sm);
+  padding: var(--sl-space-md);
+  border-bottom: 1px solid var(--sl-color-border);
+  background: var(--sl-color-bg-soft);
+}
+
+.sl-fm-load > small {
+  flex: 1 1 100%;
+  font-size: 12px;
+  color: var(--sl-color-text-muted);
+}
+
+.sl-fm-load input[type="text"] {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.sl-fm-drop {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-sm);
+  flex: 1 1 260px;
+  padding: 10px 12px;
+  border: 1px dashed var(--sl-color-border-strong);
+  border-radius: var(--sl-radius-control);
+  background: var(--sl-color-bg);
+  cursor: pointer;
+}
+
+.sl-fm-drop b {
+  font-weight: normal;
+  font-size: 13px;
+  color: var(--sl-color-text-muted);
+}
+
+/* Upload queue: one line per file with its own bar, its own reason and one counter over the set (§31) */
+.sl-fm-queue {
+  padding: var(--sl-space-md);
+  border-bottom: 1px solid var(--sl-color-border);
+  background: var(--sl-color-bg-soft);
+}
+
+.sl-fm-queue-cap {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-sm);
+  margin-bottom: var(--sl-space-sm);
+  font-size: 12px;
+  color: var(--sl-color-text-muted);
+}
+
+.sl-fm-queue-cap b {
+  font-weight: normal;
+  color: var(--sl-color-text);
+}
+
+.sl-fm-queue-cap > button {
+  margin-left: auto;
+}
+
+.sl-fm-job {
+  display: grid;
+  grid-template-columns: minmax(0, 220px) minmax(0, 1fr) minmax(0, 220px);
+  align-items: center;
+  gap: var(--sl-space-sm);
+  padding: 4px 0;
+  font-size: 12px;
+}
+
+.sl-fm-job b {
+  overflow: hidden;
+  font-weight: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-fm-job small {
+  color: var(--sl-color-danger);
+}
+
+.sl-fm-job[data-sl-fm-fail] b {
+  color: var(--sl-color-danger);
+}
+
+/* Gallery on the shared wide modal: the picture between the two arrows, the properties of the object beside it and the counter in the footer (§9.1) */
+.sl-fm-modal-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: var(--sl-space-md);
+  margin: var(--sl-space-md) 0;
+}
+
+.sl-fm-modal-stage {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-sm);
+  min-width: 0;
+}
+
+.sl-fm-modal-stage > span {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: center;
+}
+
+.sl-fm-modal-stage img {
+  max-height: min(60vh, 520px);
+  object-fit: contain;
+}
+
+.sl-fm-modal aside {
+  min-width: 0;
+  overflow: auto;
+  max-height: min(60vh, 520px);
+}
+
+.sl-but-mini.sl-fm-modal-nav {
+  flex: 0 0 auto;
+}
+
+.sl-fm-modal-count {
+  flex: 1 1 auto;
+  font-size: 12px;
+  color: var(--sl-color-text-muted);
+}
+
+.sl-fm-modal .sl-fm-props {
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .sl-fm-modal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sl-fm-job {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 1100px) {

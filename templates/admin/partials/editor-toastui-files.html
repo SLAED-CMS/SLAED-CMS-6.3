@@ -7,52 +7,211 @@
       <button type="button" class="sl-toastui-window-action js-slaed-window-close" data-editor="{{ editor_id }}" data-window="files" title="{{ close_label }}" aria-label="{{ close_label }}"><span class="sl-toastui-head-icon sl-toastui-head-icon-close" aria-hidden="true"></span></button>
     </div>
   </div>
-  <div class="sl-toastui-upload-body">
-    <div class="sl-toastui-upload-link">
-      <label for="{{ url_id }}">{{ url_label }}</label>
-      <input type="text" id="{{ url_id }}" class="js-slaed-image-url" data-editor="{{ editor_id }}" placeholder="{{ url_label }}">
-      <label for="{{ alt_id }}">{{ alt_label }}</label>
-      <input type="text" id="{{ alt_id }}" class="js-slaed-image-alt" data-editor="{{ editor_id }}" placeholder="{{ alt_label }}">
-      <input type="button" value="{{ insert_label }}" class="js-slaed-image-insert" data-editor="{{ editor_id }}">
-    </div>
-    {% if can_upload %}
-    <div class="sl-alert sl-alert-info js-slaed-upload-limits">
-      <div class="sl-alert-body">
-        <ul class="sl-alert-list">
-          <li>{{ type_label }}: {{ types_text }}</li>
-          <li>{{ allsize_label }}: {{ allsize_text }}</li>
-          <li>{{ filesize_label }}: {{ filesize_text }}</li>
-          <li>{{ width_label }}: {{ width_text }}</li>
-          <li>{{ height_label }}: {{ height_text }}</li>
-          <li>{{ count_label }}: {{ count_text }}</li>
-        </ul>
+  <div class="sl-fm-split">
+    <nav class="sl-fm-rail" role="tablist" aria-label="{{ add_label }}">
+      <span class="sl-fm-rail-cap">{{ add_label }}</span>
+      <button type="button" class="sl-fm-rail-item" role="tab" aria-selected="false" data-sl-pane="up" data-editor="{{ editor_id }}"{% if not can_upload %} disabled{% endif %}>
+        <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
+        <span><b>{{ up_label }}</b><small>{% if can_upload %}{{ up_note }}{% else %}{{ up_why }}{% endif %}</small></span>
+        {% if not can_upload %}<i class="bi bi-lock-fill sl-fm-rail-lock" aria-hidden="true"></i>{% endif %}
+      </button>
+      <button type="button" class="sl-fm-rail-item" role="tab" aria-selected="false" data-sl-pane="url" data-editor="{{ editor_id }}">
+        <i class="bi bi-link-45deg" aria-hidden="true"></i>
+        <span><b>{{ link_label }}</b><small>{{ link_note }}</small></span>
+      </button>
+      <button type="button" class="sl-fm-rail-item" role="tab" aria-selected="false" data-sl-pane="emb" data-editor="{{ editor_id }}"{% if not can_embed %} disabled{% endif %}>
+        <i class="bi bi-file-earmark-code" aria-hidden="true"></i>
+        <span><b>{{ embed_label }}</b><small>{% if can_embed %}{{ embed_note }}{% else %}{{ embed_why }}{% endif %}</small></span>
+        {% if not can_embed %}<i class="bi bi-lock-fill sl-fm-rail-lock" aria-hidden="true"></i>{% endif %}
+      </button>
+      <span class="sl-fm-rail-sep"></span>
+      <span class="sl-fm-rail-cap">{{ store_label }}</span>
+      <button type="button" class="sl-fm-rail-item" role="tab" aria-selected="false" data-sl-pane="lib" data-editor="{{ editor_id }}"{% if not can_list %} disabled{% endif %}>
+        <i class="bi bi-images" aria-hidden="true"></i>
+        <span><b>{{ files_label }}</b><small data-sl-slot="railnote">{% if can_list %}{{ files_note }}{% else %}{{ files_why }}{% endif %}</small></span>
+        {% if not can_list %}<i class="bi bi-lock-fill sl-fm-rail-lock" aria-hidden="true"></i>{% endif %}
+      </button>
+      <span class="sl-fm-rail-foot"><b data-sl-slot="quota">{{ quota_text }}</b>{{ module_text }}</span>
+    </nav>
+    <div class="sl-fm-main">
+      <div class="sl-fm-main-head">
+        <div>
+          <h2 data-sl-slot="title">{{ link_label }}</h2>
+          <p data-sl-slot="lead">{{ link_lead }}</p>
+        </div>
+      </div>
+      <div class="sl-fm-body">
+        {% if can_upload %}
+        <section class="sl-fm-pane" data-sl-pane="up" role="tabpanel">
+          <div class="sl-fm-drop js-slaed-upload-drop" data-editor="{{ editor_id }}" data-sl-mode="upload" tabindex="0" role="button" aria-label="{{ drop_label }}">
+            <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
+            <b>{{ drop_label }}</b>
+            <small>{{ limits_text }}</small>
+            <input type="file" id="{{ file_id }}" class="sl-toastui-file-input js-slaed-upload-file" data-editor="{{ editor_id }}" accept="{{ accept_attr }}" multiple="multiple">
+          </div>
+          <div>
+            <span class="sl-fm-label">{{ insas_label }}</span>
+            <div class="sl-fm-as" id="{{ object_id }}">
+              <label><input type="radio" name="{{ object_id }}m" value="image" checked>{{ image_label }}</label>
+              <label><input type="radio" name="{{ object_id }}m" value="attach">{{ object_label }}</label>
+            </div>
+          </div>
+          <div>
+            <label class="sl-fm-label" for="{{ alt_id }}">{{ alt_label }}</label>
+            <input type="text" id="{{ alt_id }}" class="sl-fm-field js-slaed-image-alt" data-editor="{{ editor_id }}" placeholder="{{ alt_label }}">
+          </div>
+          <div class="sl-fm-queue" data-sl-slot="queue" hidden>
+            <span class="sl-fm-queue-cap">
+              <b data-sl-slot="queuecap"></b>
+              <button type="button" class="sl-but-mini sl-is-muted" data-sl-act="stop" data-editor="{{ editor_id }}" title="{{ stop_label }}" aria-label="{{ stop_label }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+            </span>
+            <div data-sl-slot="jobs"></div>
+          </div>
+          <div class="sl-fm-quota">
+            <span>{{ used_label }}</span>
+            <span class="sl-fm-quota-track"><span class="sl-fm-quota-fill" data-sl-slot="quotafill"></span></span>
+            <span data-sl-slot="quotanum">{{ quota_text }}</span>
+          </div>
+        </section>
+        {% endif %}
+        <section class="sl-fm-pane" data-sl-pane="url" role="tabpanel">
+          <div>
+            <label class="sl-fm-label" for="{{ url_id }}">{{ address_label }}</label>
+            <input type="text" id="{{ url_id }}" class="sl-fm-field js-slaed-image-url" data-editor="{{ editor_id }}" placeholder="{{ address_label }}" autocomplete="off" spellcheck="false">
+          </div>
+          <div>
+            <label class="sl-fm-label" for="{{ urlalt_id }}">{{ alt_label }}</label>
+            <input type="text" id="{{ urlalt_id }}" class="sl-fm-field js-slaed-image-alt" data-editor="{{ editor_id }}" placeholder="{{ alt_label }}">
+          </div>
+          <div class="sl-alert sl-alert-info">
+            <div class="sl-alert-body">{{ link_warn }}</div>
+          </div>
+        </section>
+        {% if can_embed %}
+        <section class="sl-fm-pane" data-sl-pane="emb" role="tabpanel">
+          <div class="sl-alert sl-alert-warn">
+            <div class="sl-alert-body">{{ embed_note }}</div>
+          </div>
+          <div class="sl-fm-drop js-slaed-upload-drop" data-editor="{{ editor_id }}" data-sl-mode="embed" tabindex="0" role="button" aria-label="{{ drop_label }}">
+            <i class="bi bi-file-earmark-code" aria-hidden="true"></i>
+            <b>{{ drop_label }}</b>
+            <small>{{ embed_types }}</small>
+            <input type="file" id="{{ embed_id }}" class="sl-toastui-file-input js-slaed-upload-file" data-editor="{{ editor_id }}" accept="{{ embed_accept }}" multiple="multiple">
+          </div>
+          <div class="sl-fm-quota">
+            <span>{{ room_label }}</span>
+            <span class="sl-fm-quota-track"><span class="sl-fm-quota-fill" data-sl-slot="roomfill"></span></span>
+            <span>{{ room_text }}</span>
+          </div>
+        </section>
+        {% endif %}
+        {% if can_list %}
+        <section class="sl-fm-pane" data-sl-pane="lib" role="tabpanel">
+          <div class="sl-fm-view" data-sl-view="compact">
+            <div class="sl-fm-grid" data-sl-slot="tiles"></div>
+            <div class="sl-fm-as">
+              <button type="button" data-sl-act="full" data-editor="{{ editor_id }}"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i>{{ full_label }}</button>
+            </div>
+            <p class="sl-fm-more" data-sl-slot="more"></p>
+          </div>
+          <div class="sl-fm-view" data-sl-view="full" hidden>
+            <div class="sl-fm-lib-bar">
+              <span class="sl-fm-search"><i class="bi bi-search" aria-hidden="true"></i><input type="text" data-sl-slot="find" data-editor="{{ editor_id }}" placeholder="{{ filter_label }}" aria-label="{{ filter_label }}" autocomplete="off" spellcheck="false"></span>
+              <span class="sl-fm-filters">
+                <button type="button" class="sl-fm-filter" data-sl-kind="" data-editor="{{ editor_id }}" aria-pressed="true">{{ all_label }}</button>
+                <button type="button" class="sl-fm-filter" data-sl-kind="image" data-editor="{{ editor_id }}" aria-pressed="false">{{ images_label }}</button>
+                <button type="button" class="sl-fm-filter" data-sl-kind="other" data-editor="{{ editor_id }}" aria-pressed="false">{{ others_label }}</button>
+              </span>
+              <span class="sl-fm-modes">
+                <button type="button" class="sl-fm-mode" data-sl-mode="list" data-editor="{{ editor_id }}" aria-pressed="true" title="{{ list_label }}" aria-label="{{ list_label }}"><i class="bi bi-list-ul" aria-hidden="true"></i></button>
+                <button type="button" class="sl-fm-mode" data-sl-mode="grid" data-editor="{{ editor_id }}" aria-pressed="false" title="{{ tiles_label }}" aria-label="{{ tiles_label }}"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i></button>
+              </span>
+            </div>
+            <div class="sl-fm-lib-split">
+              <div>
+                <div class="sl-fm-rows" data-sl-modeview="list">
+                  <div class="sl-fm-rows-head"><label class="sl-fm-pick" title="{{ markall_label }}"><input type="checkbox" data-sl-slot="pickall" data-editor="{{ editor_id }}"></label><span></span><span>{{ name_label }}</span><span>{{ type_label }}</span><span>{{ size_label }}</span><span>{{ date_label }}</span><span></span></div>
+                  <div data-sl-slot="rows"></div>
+                </div>
+                <div class="sl-fm-grid" data-sl-modeview="grid" data-sl-slot="fulltiles" hidden></div>
+                <p class="sl-pager-info" data-sl-slot="pagerinfo" hidden></p>
+                <div class="sl-pager" data-sl-slot="pager" hidden>
+                  <div class="sl-pager-main">
+                    <div class="sl-pager-pages" data-sl-slot="pages"></div>
+                  </div>
+                </div>
+              </div>
+              <aside class="sl-fm-props">
+                <span class="sl-fm-props-cap">{{ props_label }}</span>
+                <span class="sl-fm-props-img" data-sl-slot="propsimg"><i class="bi bi-image" aria-hidden="true"></i></span>
+                <dl data-sl-slot="propslist"></dl>
+                <p class="sl-fm-props-note">{{ props_note }}</p>
+              </aside>
+            </div>
+          </div>
+          <div class="sl-bulk-bar" data-sl-slot="bulk" hidden>
+            <span class="sl-bulk-count" data-sl-slot="bulkcount"></span>
+            <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-bulk="image" data-editor="{{ editor_id }}"><i class="bi bi-image" aria-hidden="true"></i>&nbsp;<span></span></button>
+            <button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-sl-bulk="attach" data-editor="{{ editor_id }}"><i class="bi bi-paperclip" aria-hidden="true"></i>&nbsp;<span></span></button>
+            {% if can_zip %}<button type="button" class="sl-chip sl-chip-warn sl-live-act" data-sl-bulk="zip" data-editor="{{ editor_id }}"><i class="bi bi-file-zip" aria-hidden="true"></i>&nbsp;<span>{{ zip_label }}</span></button>{% endif %}
+            {% if can_delete %}<button type="button" class="sl-chip sl-chip-danger sl-live-act" data-sl-bulk="delete" data-editor="{{ editor_id }}"><i class="bi bi-trash3" aria-hidden="true"></i>&nbsp;<span>{{ delete_label }}</span></button>{% endif %}
+            <button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-sl-bulk="clear" data-editor="{{ editor_id }}"><i class="bi bi-x-lg" aria-hidden="true"></i>&nbsp;<span>{{ unmark_label }}</span></button>
+          </div>
+          <div class="sl-fm-view" data-sl-view="skel" hidden>
+            <div class="sl-fm-grid sl-skel" aria-hidden="true">
+              <div class="sl-skel-tile"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span></div>
+              <div class="sl-skel-tile"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span></div>
+              <div class="sl-skel-tile"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span></div>
+              <div class="sl-skel-tile"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span></div>
+              <div class="sl-skel-tile"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span></div>
+              <div class="sl-skel-tile"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span></div>
+            </div>
+            <p class="sl-fm-more">{{ wait_text }}</p>
+          </div>
+          <div class="sl-fm-view" data-sl-view="empty" hidden>
+            <div class="sl-fm-empty" data-sl-slot="emptybox">
+              <i class="bi bi-folder2" data-sl-slot="emptyicon" aria-hidden="true"></i>
+              <b data-sl-slot="emptytitle"></b>
+              <p data-sl-slot="emptytext"></p>
+              <button type="button" class="sl-fm-btn" data-sl-slot="emptyact" data-editor="{{ editor_id }}" hidden></button>
+            </div>
+          </div>
+        </section>
+        {% endif %}
+      </div>
+      <div id="{{ msg_id }}"></div>
+      <div class="sl-fm-foot">
+        <span class="sl-fm-foot-info" data-sl-slot="info" aria-live="polite">{{ nofile_label }}</span>
+        <button type="button" class="sl-fm-btn" data-sl-act="refresh" data-editor="{{ editor_id }}"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i>{{ refresh_label }}</button>
+        <button type="button" class="sl-fm-btn js-slaed-window-close" data-editor="{{ editor_id }}" data-window="files"><i class="bi bi-x-lg" aria-hidden="true"></i>{{ close_label }}</button>
+        <button type="button" class="sl-fm-btn sl-fm-btn-main" data-sl-act="apply" data-editor="{{ editor_id }}"><i class="bi bi-check-lg" aria-hidden="true"></i>{{ insert_label }}</button>
       </div>
     </div>
-    <div id="{{ object_id }}" class="sl-toastui-image-mode">
-      <label><input type="radio" name="{{ object_id }}m" value="upload" checked><span><strong>{{ upload_label }}</strong><small>{{ upload_info }}</small></span></label>
-      <label><input type="radio" name="{{ object_id }}m" value="attach"><span><strong>{{ object_label }}</strong><small>{{ object_info }}</small></span></label>
-      {% if can_embed %}
-      <label><input type="radio" name="{{ object_id }}m" value="embed"><span><strong>{{ embed_label }}</strong><small>{{ embed_info }}</small></span></label>
-      {% endif %}
-    </div>
-    {% endif %}
-    {% if can_upload or can_embed %}
-    <div class="sl-toastui-upload-picker">
-      <label for="{{ file_id }}">{{ select_label }}</label>
-      <div class="sl-toastui-upload-file-row js-slaed-upload-drop" data-editor="{{ editor_id }}" role="button" tabindex="0" aria-label="{{ drop_label }}">
-        <span class="toastui-editor-file-name js-slaed-upload-name">{{ nofile_label }}</span>
-        <input type="file" id="{{ file_id }}" class="sl-toastui-file-input js-slaed-upload-file" data-editor="{{ editor_id }}" accept="{{ accept_attr }}" multiple="multiple">
-      </div>
-      <small>{{ drop_label }}</small>
-    </div>
-    {% endif %}
-    <div id="{{ msg_id }}"></div>
-    {% if can_list %}
-    <div class="sl-toastui-upload-files-head">
-      <strong>{{ files_label }}</strong>
-      <input type="button" value="{{ refresh_label }}" class="js-slaed-file-refresh" data-editor="{{ editor_id }}">
-    </div>
-    <div id="{{ list_id }}" class="sl-editor-upload-files"></div>
-    {% endif %}
   </div>
 </div>
+{% if can_list %}
+<dialog class="sl-modal sl-modal-wide sl-toastui-shot" data-sl-slot="modal" data-editor="{{ editor_id }}" aria-label="{{ shot_label }}">
+  <div class="sl-modal-body">
+    <div class="sl-modal-title"><i class="bi bi-image" aria-hidden="true"></i> <span data-sl-slot="shottitle"></span></div>
+    <button type="button" class="sl-but-mini sl-modal-close" data-sl-close title="{{ close_label }}" aria-label="{{ close_label }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    <div class="sl-fm-modal-grid">
+      <div class="sl-fm-modal-stage">
+        <button type="button" class="sl-but-mini sl-fm-modal-nav sl-fm-modal-prev" data-sl-step="-1" data-editor="{{ editor_id }}" title="{{ prev_label }}" aria-label="{{ prev_label }}"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+        <span class="sl-fm-modal-img"><img class="sl-modal-image" src="" alt="" data-sl-slot="shotimg"></span>
+        <button type="button" class="sl-but-mini sl-fm-modal-nav sl-fm-modal-next" data-sl-step="1" data-editor="{{ editor_id }}" title="{{ next_label }}" aria-label="{{ next_label }}"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <aside class="sl-fm-modal-side">
+        <dl class="sl-fm-props" data-sl-slot="shotprops"></dl>
+      </aside>
+    </div>
+    <div class="sl-modal-foot">
+      <span class="sl-fm-modal-count" data-sl-slot="shotcount"></span>
+      <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-act="image" data-editor="{{ editor_id }}"><i class="bi bi-image" aria-hidden="true"></i>&nbsp;{{ insimg_label }}</button>
+      <button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-sl-act="attach" data-editor="{{ editor_id }}"><i class="bi bi-paperclip" aria-hidden="true"></i>&nbsp;{{ insobj_label }}</button>
+      <a class="sl-chip sl-chip-neutral sl-live-act" data-sl-slot="shotdown" href="#" download><i class="bi bi-download" aria-hidden="true"></i>&nbsp;{{ down_label }}</a>
+      {% if can_zip %}<button type="button" class="sl-chip sl-chip-warn sl-live-act" data-sl-act="zip" data-editor="{{ editor_id }}"><i class="bi bi-file-zip" aria-hidden="true"></i>&nbsp;{{ zip_label }}</button>{% endif %}
+      {% if can_delete %}<button type="button" class="sl-chip sl-chip-danger sl-live-act" data-sl-act="delete" data-editor="{{ editor_id }}"><i class="bi bi-trash3" aria-hidden="true"></i>&nbsp;{{ delete_label }}</button>{% endif %}
+    </div>
+  </div>
+</dialog>
+{% endif %}

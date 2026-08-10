@@ -347,20 +347,20 @@ function checkWriteRows(string $ajar, string $ujar): void {
     checkMatrixRow('editor write publishes one owned file', ($out['ok'] ?? false) && count($new) === 1, implode(', ', $new));
 
     $base = ROOTDIR.'/uploads/screens';
-    $send = ['op' => 'uploadsave', 'dir' => 'screens', 'token' => getScopeToken($ajar, 'uploads')];
+    $send = ['op' => 'fmupload', 'dir' => 'screens', 'token' => getScopeToken($ajar, 'uploads')];
     $was = getDirTree($base);
-    getHttpReply($ajar, '/admin.php?name=uploads', $send, ['userfile' => $png]);
+    getHttpReply($ajar, '/admin.php?name=uploads', $send, ['userfile[]' => $png]);
     $new = getTreeDelta($base, $was);
     checkMatrixRow('admin local write publishes into a directory with no record', count($new) === 1, implode(', ', $new));
 
     $was = getDirTree($base);
     $send['sitefile'] = SITEURL.'/nothing-here.png';
-    getHttpReply($ajar, '/admin.php?name=uploads', $send, ['userfile' => $txt]);
+    getHttpReply($ajar, '/admin.php?name=uploads', $send, ['userfile[]' => $txt]);
     checkMatrixRow('a rejected local file never falls back to the link', getTreeDelta($base, $was) === []);
 
     foreach (['http://127.0.0.1/a.png', 'http://169.254.169.254/a.png', 'http://[::1]/a.png'] as $one) {
         $was = getDirTree($base);
-        $send = ['op' => 'uploadsave', 'dir' => 'screens', 'token' => getScopeToken($ajar, 'uploads'), 'sitefile' => $one];
+        $send = ['op' => 'fmupload', 'dir' => 'screens', 'token' => getScopeToken($ajar, 'uploads'), 'sitefile' => $one];
         getHttpReply($ajar, '/admin.php?name=uploads', $send);
         checkMatrixRow('remote target '.$one.' is refused', getTreeDelta($base, $was) === []);
     }
@@ -369,7 +369,7 @@ function checkWriteRows(string $ajar, string $ujar): void {
         setSkipRow('a public remote file publishes', 'SLAED_REMOTE_URL is not set');
     } else {
         $was = getDirTree($base);
-        $send = ['op' => 'uploadsave', 'dir' => 'screens', 'token' => getScopeToken($ajar, 'uploads'), 'sitefile' => $link];
+        $send = ['op' => 'fmupload', 'dir' => 'screens', 'token' => getScopeToken($ajar, 'uploads'), 'sitefile' => $link];
         getHttpReply($ajar, '/admin.php?name=uploads', $send);
         $new = getTreeDelta($base, $was);
         checkMatrixRow('a public remote file publishes', count($new) === 1, implode(', ', $new));

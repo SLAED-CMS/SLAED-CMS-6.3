@@ -177,6 +177,12 @@ if (empty($go)) {
                 case 'editorFiles':
                 getEditorFileJson();
                 break;
+                case 'editorDelete':
+                setEditorFileRun('editorDelete');
+                break;
+                case 'editorArchive':
+                setEditorFileRun('editorArchive');
+                break;
                 default:
                 http_response_code(400);
                 getEditorJson(['ok' => false, 'error' => _ERROR]);

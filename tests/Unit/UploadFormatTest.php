@@ -166,8 +166,9 @@ final class UploadFormatTest extends TestCase
         $this->assertSame($want, $this->getList('core/classes/parser.php', '$img = ['), 'filterAttach() disagrees on the image set');
         $this->assertSame($want, $this->getList('core/admin.php', '$ftype = ['), 'The admin file listing disagrees on the image set');
         $this->assertSame($want, $this->getList('core/classes/parser.php', 'public const EMBEDIMG = ['), 'Parser::EMBEDIMG disagrees on the image set');
-        $sys = $this->getFile('core/system.php');
-        $this->assertStringContainsString('$img = in_array($ext, Parser::EMBEDIMG, true);', $sys, 'getEditorImageData() no longer reads the one embeddable type list');
+        $drv = $this->getFile('plugins/editors/toastui/driver.php');
+        $this->assertStringContainsString('Parser::EMBEDIMG', $drv, 'The editor window no longer reads the one embeddable type list and restates it in its own words');
+        $this->assertSame(0, preg_match("#'embedimg' => \[#", $drv), 'The editor window restates the image set in a list of its own again');
         $pars = $this->getFile('core/classes/parser.php');
         $this->assertStringContainsString('if (!in_array(strtolower($dm[1]), self::EMBEDIMG, true)) return null;', $pars, 'The data-URI allowlist no longer reads the one embeddable type list');
         $this->assertSame(0, preg_match('#data:image/\(\?:#', $pars), 'The data-URI allowlist restates the image set in its own pattern again');

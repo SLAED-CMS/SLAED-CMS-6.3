@@ -1832,10 +1832,6 @@ td.sl-cart-col-stat {
   cursor: pointer;
 }
 
-.sl-editor-upload-files {
-  margin: 5px;
-}
-
 .sl-list,
 .sl-sublist,
 .sl-sublist-two {
@@ -2033,10 +2029,6 @@ ol.sl-sublist-two li:hover:before {
   height: var(--sl-img-placeholder-size);
   vertical-align: top;
   font-size: var(--sl-img-placeholder-icon-size);
-}
-
-.sl-img-placeholder[hidden] {
-  display: none;
 }
 
 .sl-img-left {
@@ -2262,6 +2254,48 @@ ol.sl-sublist-two li:hover:before {
 .sl-license {
   font-size: 0.9em;
   color: var(--sl-color-text-muted);
+}
+
+/* The list on its way: the place of the rows is held by a skeleton, so the work area neither empties nor jumps while the answer is still travelling (§31) */
+.sl-skel {
+  animation: sl-skel-pulse 1.2s ease-in-out infinite;
+}
+
+.sl-skel-cell,
+.sl-skel-line {
+  display: block;
+  background: var(--sl-color-bg-soft-alt);
+}
+
+.sl-skel-cell {
+  height: 24px;
+  border-radius: var(--sl-radius-control);
+}
+
+.sl-skel-line {
+  height: 10px;
+  border-radius: 5px;
+}
+
+.sl-skel-line-half {
+  width: 54%;
+}
+
+@keyframes sl-skel-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sl-skel {
+    animation: none;
+  }
 }
 
 .sl-loading {

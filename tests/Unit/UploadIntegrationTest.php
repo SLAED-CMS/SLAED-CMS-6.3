@@ -20,7 +20,7 @@ final class UploadIntegrationTest extends TestCase
         'modules/account/index.php' => 'saveavatar',
         'modules/files/index.php' => 'send',
         'modules/files/admin/index.php' => 'save',
-        'admin/modules/uploads.php' => 'uploadsave',
+        'admin/modules/uploads.php' => 'fmupload',
     ];
 
     private static array $probe = [];
@@ -139,7 +139,7 @@ final class UploadIntegrationTest extends TestCase
     public function everyAdapterGuardsThePublishCall(): void
     {
         $guards = [
-            'core/system.php' => 'checkSiteToken(',
+            'core/system.php' => 'getEditorRouteRule(',
             'modules/account/index.php' => 'checkSiteToken(',
             'modules/files/index.php' => 'checkSiteToken(',
             'modules/files/admin/index.php' => 'checkAdminPost(',
@@ -153,6 +153,10 @@ final class UploadIntegrationTest extends TestCase
             $this->assertNotFalse($call, $name.'() no longer publishes through the service');
             $this->assertLessThan($call, $gate, $name.'() reaches the upload service before it checks its token');
         }
+        # The editor routes read their rule through one guard, so the token check is asserted where it now stands and not where every route used to repeat it
+        $rule = $this->getBody('core/system.php', 'getEditorRouteRule');
+        $this->assertStringContainsString('checkSiteToken(', $rule, 'The shared guard of the editor routes carries no token check at all');
+        $this->assertStringContainsString('checkEditorUploadAccess(', $rule, 'The shared guard of the editor routes decides nothing about access');
     }
 
     # Both editor routes take the owner from the one resolver, and the listing compares it as a string
@@ -172,7 +176,7 @@ final class UploadIntegrationTest extends TestCase
         }
         $list = $this->getBody('core/system.php', 'getEditorFileJson');
         $read = 'The route no longer reads the owner off the file layer and takes the stored name apart again';
-        $this->assertStringContainsString('FileManager::getFileOwner($file) === $tok', $list, $read);
+        $this->assertStringContainsString("FileManager::getFileOwner(\$one['name']) !== \$tok", $list, $read);
         $this->assertStringNotContainsString('preg_match(', $list, 'The route carries a pattern of its own beside the one of the file layer');
         $cast = 'The owner is compared as an integer, so every guest token collapses to zero and matches every other guest';
         $this->assertDoesNotMatchRegularExpression('#\(int\) *(?:\$tok|FileManager::getFileOwner)#', $list, $cast);
@@ -187,10 +191,10 @@ final class UploadIntegrationTest extends TestCase
     public function theListingRouteLeavesAccessToTheOneGate(): void
     {
         $body = $this->getBody('core/system.php', 'getEditorFileJson');
-        $this->assertStringContainsString('checkEditorUploadAccess(', $body, 'The listing route no longer asks the one function that decides access');
+        $this->assertStringContainsString('getEditorRouteRule(', $body, 'The listing route no longer passes the one guard that decides access');
         $this->assertSame(1, substr_count($body, 'is_user('), 'The route tests membership beside the limit choice, which is a role rule beside the settings');
         $this->assertMatchesRegularExpression('#\$lim = .*is_user\(\).*guestfiles#', $body, 'Membership no longer chooses which of the three limits applies');
-        $this->assertSame(1, substr_count($body, "getEditorJson(['ok' => true"), 'The route answers a list twice, so one of them is an early answer beside the settings');
+        $this->assertSame(1, substr_count($body, "'ok' => true"), 'The route answers a list twice, so one of them is an early answer beside the settings');
         foreach (['moderfiles', 'userfiles', 'guestfiles'] as $key) {
             $this->assertStringContainsString("\$rul['".$key."']", $body, 'The listing limit never reads '.$key.', so one role is bounded by the limit of another');
         }

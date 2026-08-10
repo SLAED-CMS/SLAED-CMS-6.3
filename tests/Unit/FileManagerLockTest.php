@@ -90,7 +90,7 @@ final class FileManagerLockTest extends TestCase
         $this->assertStringNotContainsString('const SALTLEN', $upl, 'The upload service still declares the salt length instead of reading it');
         $this->assertStringContainsString('getRandomString(FileManager::SALTLEN)', $upl, 'The stored name is no longer drawn at the length the file layer publishes');
         $this->assertStringContainsString('FileManager::checkFileName($file)', $upl, 'The compensation no longer asks the file layer what a managed name is');
-        $this->assertStringContainsString('FileManager::getFileOwner($file) === $tok', $sys, 'The editor listing no longer asks the file layer who owns a stored file');
+        $this->assertStringContainsString("FileManager::getFileOwner(\$one['name']) !== \$tok", $sys, 'The editor listing no longer asks the file layer who owns a stored file');
         $this->assertStringContainsString('public const SALTLEN = 10;', $this->getFile('core/classes/filemanager.php'), 'The file layer does not publish the salt length');
     }
 

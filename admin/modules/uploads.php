@@ -14,9 +14,9 @@ function getUploadModuleList(): array {
     return in_array('all', $mods, true) ? array_merge(['all'], $rest) : $rest;
 }
 
-function getUploadsSearch(): string {
+function getUploadsSearch(string $mod = ''): string {
     global $afile, $conf, $tpl;
-    $dir = getVar('post', 'dir', 'var', $conf['uploads']['dir']);
+    $dir = ($mod === '') ? getVar('post', 'dir', 'var', $conf['uploads']['dir']) : $mod;
     $opts = '';
     foreach (scandir(UPLOADS_DIR) as $file) {
         if (preg_match('/\./', $file)) continue;
@@ -38,56 +38,22 @@ function getUploadsSearch(): string {
 }
 
 function uploads(): void {
-    global $afile, $conf, $stop, $tpl;
-    $dir = getVar('post', 'dir', 'var', '');
-    if ($dir === '') $dir = getVar('get', 'dir', 'var', $conf['uploads']['dir']);
+    global $conf, $stop, $tpl;
+    getAdminFileMode('uploads');
+    $walk = getAdminFilePath('dir');
+    if ($walk === '') $walk = getAdminFilePath('dir', 'post');
+    $dir = ($walk === '') ? $conf['uploads']['dir'] : explode('/', $walk)[0];
     # The file panels are read through the shared go=5 endpoint, which validates the global ajax scope, so this one keeps that scope while the module forms use their own
     $token = '&token='.getSiteToken();
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
         'tabs' => [_FILES, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
-        'subtitle_html' => getUploadsSearch(),
+        'subtitle_html' => getUploadsSearch($dir),
     ]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
     $cont .= checkPerms(UPLOADS_DIR);
-    $tabone = $tpl->getHtmlFrag('alert', [
-        'is_warn' => false,
-        'messages' => [
-            _MODUL.': '.getModuleName($dir),
-            _DIR.': uploads/'.$dir,
-        ],
-    ]);
-    $tabone .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php',
-        'form_attr' => 'enctype="multipart/form-data"',
-        'hidden' => [
-            ['nameattr' => 'name', 'valueattr' => 'uploads'],
-            ['nameattr' => 'op', 'valueattr' => 'uploadsave'],
-            ['nameattr' => 'dir', 'valueattr' => $dir],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken('uploads')],
-        ],
-        'rows' => [
-            [
-                'label_html' => _FILE_USER,
-                'field_html' => $tpl->getHtmlFrag('input', [
-                    'itype' => 'file',
-                    'name_attr' => 'userfile',
-                    'value_attr' => '',
-                ]),
-            ],
-            [
-                'label_html' => _FILE_SITE,
-                'field_html' => $tpl->getHtmlFrag('input', [
-                    'itype' => 'text',
-                    'name_attr' => 'sitefile',
-                    'placeholder_text' => _FILE_SITE,
-                    'value_attr' => '',
-                ]),
-            ],
-        ],
-        'submit_label' => _EXECUTE,
-    ])]);
+    $tabone = getAdminFileShell(true);
     $fdir = UPLOADS_DIR.'/'.$dir;
     $tabtwo = checkPerms($fdir);
     if (is_dir($fdir)) {
@@ -102,7 +68,7 @@ function uploads(): void {
         }
         $tabtwo .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'messages' => [
             _MODUL.': '.getModuleName($dir),
-            _DIR.': '.$fdir,
+            _DIR.': uploads/'.$dir,
             _FILE_M.': '.$f,
             _FILE_S.': '.filterSize($affilesize),
         ]]);
@@ -124,7 +90,7 @@ function uploads(): void {
         }
         $tabthr .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'messages' => [
             _MODUL.': '.getModuleName($dir),
-            _DIR.': '.$tdir,
+            _DIR.': uploads/'.$dir.'/thumb',
             _FILE_M.': '.$t,
             _FILE_S.': '.filterSize($atfilesize),
         ]]);
@@ -162,35 +128,45 @@ function uploads(): void {
     setFoot();
 }
 
-function uploadsave(): void {
-    global $afile, $stop;
-    $dir = getVar('post', 'dir', 'var');
+function fmupload(): void {
+    global $admin, $afile;
+    getAdminFileMode('uploads');
+    $dir = getAdminFilePath('dir', 'post');
     $site = getVar('post', 'sitefile', 'raw', '');
     $site = is_string($site) ? trim($site) : '';
-    $warn = !checkAdminPost('uploads');
-    if (!$warn) {
-        $rule = array_merge(getUploadRuleData('all'), ['maxquota' => 0]);
-        $sent = (int)($_FILES['userfile']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE;
-        $res = ['ok' => false, 'error' => 'missing'];
-        if ($sent) $res = getUploadService()->addUploadedFile($_FILES['userfile'], $rule, $dir, $dir, null);
-        elseif ($site !== '') $res = getUploadService()->addRemoteFile($site, $rule, $dir, $dir, null);
-        if (!$res['ok']) $stop = match ((string)$res['error']) {
-            'size' => _ERROR_BIG,
-            'extension', 'mime', 'image', 'unsupported' => _ERROR_FILE,
-            'dimensions' => _ERROR_SIZE,
-            'exists' => _ERROR_EXIST,
-            'destination', 'write' => _ERROR_UP,
-            default => _ERROR_DOWN,
-        };
+    $json = getVar('post', 'ajax', 'num', 0) === 1;
+    $back = $afile.'.php?name=uploads'.(($dir === '') ? '' : '&dir='.rawurlencode($dir));
+    $rule = getAdminUploadRule($dir);
+    $mod = ($dir === '') ? '' : explode('/', $dir)[0];
+    $errs = array_filter((array)($_FILES['userfile']['error'] ?? []), static fn($v): bool => (int)$v !== UPLOAD_ERR_NO_FILE);
+    $pass = checkAdminPost('uploads');
+    unset($_POST['token']);
+    if (!$pass && $json) getEditorJson(['ok' => false, 'error' => _TOKENMISS]);
+    if (!$pass) setRedirect($back, false, 302, _TOKENMISS, true);
+    $okay = $rule['ok'] && getAdminFileManager()->checkFileAccess($dir, 'write');
+    $sent = ($okay && $errs !== []) ? getUploadService()->addUploadedFiles($_FILES['userfile'], $rule, $dir, $mod, null) : [];
+    if ($sent === [] && $site !== '' && $okay) $sent = [getUploadService()->addRemoteFile($site, $rule, $dir, $mod, null)];
+    if ($sent === []) $sent = [['ok' => false, 'error' => $okay ? 'missing' : 'destination', 'file' => '']];
+    $done = 0;
+    $note = '';
+    foreach ($sent as $res) {
+        if ($res['ok']) $done++;
+        elseif ($note === '') $note = getUploadFailText((string)$res['error'], $rule);
+        Logger::addFile($res['ok'] ? 'notice' : 'warning', 'Upload file operation', [
+            'admin' => substr((string)($admin[1] ?? ''), 0, 25),
+            'ctx' => getAdminFileMode(),
+            'op' => 'fmupload',
+            'path' => $dir,
+            'target' => (string)($res['file'] ?? ''),
+            'result' => $res['ok'] ? 'ok' : (string)$res['error'],
+        ]);
     }
-    if (!$warn && $stop) {
-        uploads();
-    } else {
-        setRedirect($afile.'.php?name=uploads&dir='.$dir, false, 302, $warn ? _TOKENMISS : _SUCCUPLOAD, $warn);
-    }
+    if ($json) getEditorJson(['ok' => $done > 0, 'done' => $done, 'error' => ($done > 0) ? '' : $note]);
+    setRedirect($back, false, 302, ($done > 0) ? _SUCCUPLOAD : $note, $done < 1);
 }
 
 function sysfiles(): void {
+    getAdminFileMode('system');
     setHead();
     echo getTplAdminTabs([
         'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
@@ -198,6 +174,172 @@ function sysfiles(): void {
         'tab' => 1,
     ]).getAdminFileShell(true);
     setFoot();
+}
+
+function fmedit(): void {
+    global $afile;
+    getAdminFileMode('system');
+    $file = getAdminFilePath('file');
+    $body = getAdminFileManager()->getFileBody($file);
+    if ($body === []) setRedirect($afile.'.php?name=uploads&op=sysfiles', false, 302, _UPLOADS_NOEDIT, true);
+    setHead();
+    echo getTplAdminTabs([
+        'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
+        'tabs' => [_FILES, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
+        'tab' => 1,
+    ]).getAdminFileShell(true, ['path' => $file, 'text' => $body['text'], 'version' => $body['version']]);
+    setFoot();
+}
+
+function fmsave(): void {
+    global $admin, $afile;
+    getAdminFileMode('system');
+    $file = getAdminFilePath('file', 'post');
+    $text = getVar('post', 'text', 'raw', '');
+    $text = is_string($text) ? $text : '';
+    $ver = getVar('post', 'ver', 'word', '');
+    $pass = checkAdminPost('uploads');
+    unset($_POST['text'], $_POST['token']);
+    if (!$pass) setRedirect($afile.'.php?name=uploads&op=sysfiles', false, 302, _TOKENMISS, true);
+    $res = getAdminFileManager()->setFileBody($file, $text, $ver);
+    Logger::addFile($res['ok'] ? 'notice' : 'warning', 'System file save', [
+        'admin' => substr((string)($admin[1] ?? ''), 0, 25),
+        'op' => 'fmsave',
+        'path' => $file,
+        'target' => $file,
+        'result' => $res['ok'] ? 'ok' : $res['error'],
+    ]);
+    if ($res['ok']) setRedirect($afile.'.php?name=uploads&op=fmedit&file='.rawurlencode($file), false, 302, _SUCCSAVE, false);
+    if ($res['error'] === 'closed' || $res['error'] === 'read') setRedirect($afile.'.php?name=uploads&op=sysfiles', false, 302, _ACCESSDENIED, true);
+    $stale = $res['error'] === 'conflict';
+    if ($stale) http_response_code(409);
+    setHead();
+    echo getTplAdminTabs([
+        'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
+        'tabs' => [_FILES, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
+        'tab' => 1,
+    ]).getAdminFileShell(true, [
+        'path' => $file,
+        'text' => $text,
+        'version' => $stale ? $res['version'] : $ver,
+        'note' => $stale ? _UPLOADS_STALE : (($res['error'] === 'body') ? _ERROR_FILE : _ERROR_UP),
+    ]);
+    setFoot();
+}
+
+function getFileNote(array $res, string $op): string {
+    return match ($res['error']) {
+        '' => ($op === 'fmdelete') ? _SUCCDELETE : _SUCCSAVE,
+        'exists' => _UPLOADS_TAKEN,
+        'filled' => _UPLOADS_FILLED,
+        'loop' => _UPLOADS_BADDEST,
+        'closed' => _ACCESSDENIED,
+        default => _ERROR_UP,
+    };
+}
+
+function setFileAction(string $op): void {
+    global $admin, $afile;
+    $ctx = getAdminFileMode();
+    $man = getAdminFileManager();
+    $file = getAdminFilePath('file', 'post');
+    $arg = getAdminFilePath('arg', 'post');
+    $dir = getAdminFilePath('back', 'post');
+    $mark = getVar('post', 'mark[]', 'raw', []);
+    $mark = is_array($mark) ? array_values(array_filter($mark, 'is_string')) : [];
+    $page = ($ctx === 'uploads') ? '' : '&op=sysfiles';
+    $back = $afile.'.php?name=uploads'.$page.(($dir === '') ? '' : '&dir='.rawurlencode($dir));
+    $pass = checkAdminPost('uploads');
+    unset($_POST['token']);
+    if (!$pass) setRedirect($back, false, 302, _TOKENMISS, true);
+    $dest = ($dir === '') ? $arg : $dir.'/'.$arg;
+    if ($mark !== []) {
+        setFileActions($op, $mark, ($op === 'fmpack') ? $dest : $arg, $back);
+        return;
+    }
+    $res = match ($op) {
+        'fmcreate' => $man->addFileEntry($dest),
+        'fmmkdir' => $man->addDirectory($dest),
+        'fmrename' => $man->updateFileName($file, $arg),
+        'fmcopy' => $man->addFileCopy($file, $arg),
+        'fmmove' => $man->updateFilePath($file, $arg),
+        'fmdelete' => $man->deleteFileEntry($file),
+        'fmpack' => $man->addFilesArchive([$file], $dest),
+        default => $man->addFileArchive($file),
+    };
+    Logger::addFile($res['ok'] ? 'notice' : 'warning', 'File manager operation', [
+        'admin' => substr((string)($admin[1] ?? ''), 0, 25),
+        'ctx' => $ctx,
+        'op' => $op,
+        'path' => ($file === '') ? $dest : $file,
+        'target' => ($res['path'] === '') ? $arg : $res['path'],
+        'result' => $res['ok'] ? 'ok' : $res['error'],
+    ]);
+    $note = getFileNote($res, $op);
+    setRedirect($back, false, 302, $note, !$res['ok']);
+}
+
+function setFileActions(string $op, array $mark, string $arg, string $back): void {
+    global $admin;
+    $ctx = getAdminFileMode();
+    $man = getAdminFileManager();
+    $done = 0;
+    $fail = [];
+    $runs = ($op === 'fmpack') ? [$man->addFilesArchive($mark, $arg)] : [];
+    foreach (($op === 'fmpack') ? [] : $mark as $path) {
+        $runs[] = match ($op) {
+            'fmmove' => $man->updateFilePath($path, ($arg === '') ? basename($path) : $arg.'/'.basename($path)),
+            'fmdelete' => $man->deleteFileEntry($path),
+            'fmcompress' => $man->addFileArchive($path),
+            default => ['ok' => false, 'error' => 'closed', 'path' => ''],
+        };
+    }
+    foreach ($runs as $i => $res) {
+        if ($res['ok']) $done++;
+        elseif (!in_array($res['error'], $fail, true)) $fail[] = $res['error'];
+        Logger::addFile($res['ok'] ? 'notice' : 'warning', 'File manager operation', [
+            'admin' => substr((string)($admin[1] ?? ''), 0, 25),
+            'ctx' => $ctx,
+            'op' => $op,
+            'path' => ($op === 'fmpack') ? implode(', ', $mark) : (string)($mark[$i] ?? ''),
+            'target' => ($res['path'] === '') ? $arg : $res['path'],
+            'result' => $res['ok'] ? 'ok' : $res['error'],
+        ]);
+    }
+    $note = ($done === count($runs)) ? getFileNote(['error' => ''], $op) : getFileNote(['error' => $fail[0] ?? 'write'], $op);
+    setRedirect($back, false, 302, $note.' '.$done.'/'.count($runs), $done < count($runs));
+}
+
+function fmcreate(): void {
+    setFileAction('fmcreate');
+}
+
+function fmmkdir(): void {
+    setFileAction('fmmkdir');
+}
+
+function fmrename(): void {
+    setFileAction('fmrename');
+}
+
+function fmcopy(): void {
+    setFileAction('fmcopy');
+}
+
+function fmmove(): void {
+    setFileAction('fmmove');
+}
+
+function fmdelete(): void {
+    setFileAction('fmdelete');
+}
+
+function fmcompress(): void {
+    setFileAction('fmcompress');
+}
+
+function fmpack(): void {
+    setFileAction('fmpack');
 }
 
 function tplconfig(): void {
@@ -442,7 +584,17 @@ function info(): void {
 switch ($op) {
     default: uploads(); break;
     case 'sysfiles': sysfiles(); break;
-    case 'uploadsave': uploadsave(); break;
+    case 'fmedit': fmedit(); break;
+    case 'fmsave': fmsave(); break;
+    case 'fmcreate': fmcreate(); break;
+    case 'fmmkdir': fmmkdir(); break;
+    case 'fmrename': fmrename(); break;
+    case 'fmcopy': fmcopy(); break;
+    case 'fmmove': fmmove(); break;
+    case 'fmdelete': fmdelete(); break;
+    case 'fmcompress': fmcompress(); break;
+    case 'fmpack': fmpack(); break;
+    case 'fmupload': fmupload(); break;
     case 'tplconfig': tplconfig(); break;
     case 'tplsave': tplsave(); break;
     case 'config': config(); break;

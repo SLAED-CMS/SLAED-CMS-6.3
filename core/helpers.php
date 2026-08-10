@@ -685,15 +685,18 @@ function getTplNewGraphic(string $time): string {
 
 # Build one admin speed-dial action that submits a POST form instead of following a link, with the CSRF token scoped to the module named in the hidden fields
 # A state-changing address is followed by prefetchers, scanners and link previews, and its token ends up in history, logs and the Referer header; a form body has none of that
+# The identifier carries a mark of its own answer, because a fragment counts from one again and a button naming slpost1 would own the first form of the page it was swapped into
 function getTplPostAction(array $hide, string $icon, string $title, string $confirm = ''): array {
     global $afile, $tpl;
     static $seq = 0;
+    static $salt = '';
+    if ($salt === '') $salt = substr(sha1(random_bytes(8)), 0, 6);
     $hide['token'] = getSiteToken((string)($hide['name'] ?? 'ajax'));
     $html = '';
     foreach ($hide as $key => $val) {
         $html .= $tpl->getHtmlFrag('hidden', ['name_attr' => (string)$key, 'value_attr' => (string)$val, 'input_attr' => '']);
     }
-    $out = ['href' => $afile.'.php', 'form_id' => 'slpost'.(++$seq), 'hidden' => $html, 'icon_name' => $icon, 'title' => $title];
+    $out = ['href' => $afile.'.php', 'form_id' => 'slpost'.$salt.(++$seq), 'hidden' => $html, 'icon_name' => $icon, 'title' => $title];
     if ($confirm !== '') $out['confirm_text'] = $confirm;
     return $out;
 }

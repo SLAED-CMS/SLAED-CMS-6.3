@@ -1,25 +1,43 @@
 <div class="sl-fm-scroll">
-  {% if is_empty %}
-  <div class="sl-fm-empty">
-    <i class="bi bi-{{ empty_icon }}" aria-hidden="true"></i>
-    <b>{{ empty_title }}</b>
-    <p>{{ empty_text }}</p>
-    {% if reset_url %}<a class="sl-but" href="{{ reset_url }}" hx-get="{{ reset_url }}" hx-target="#slfmbody" hx-swap="innerHTML" hx-push-url="false">{{ reset_text }}</a>{% endif %}
+  <div class="sl-skel" aria-hidden="true" hidden>
+    <div class="sl-skel-row"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line"></span></div>
+    <div class="sl-skel-row"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line"></span></div>
+    <div class="sl-skel-row"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line"></span></div>
+    <div class="sl-skel-row"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line"></span></div>
+    <div class="sl-skel-row"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line"></span></div>
+    <div class="sl-skel-row"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line"></span></div>
   </div>
-  {% else %}
-  <div class="sl-table-shell" data-sl-fm-view="list">
-    <table class="sl-table-list-sort">
-      <thead>
-        <tr>
-          <th>{{ name_text }}</th>
-          <th>{{ type_text }}</th>
-          <th>{{ size_text }}</th>
-          <th class="sl-col-date">{{ date_text }}</th>
-        </tr>
-      </thead>
-      <tbody>{{{ rows_html }}}</tbody>
-    </table>
+  <div class="sl-fm-empty sl-is-fail" data-sl-fm-fail hidden>
+    <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+    <b>{{ fail_title }}</b>
+    <p>{{ fail_text }}</p>
+    <button type="button" class="sl-but" data-sl-fm-go="self">{{ retry_text }}</button>
   </div>
-  <div class="sl-fm-grid" data-sl-fm-view="grid" hidden>{{{ tiles_html }}}</div>
-  {% endif %}
+  <div data-sl-fm-real>
+    {% if is_empty %}
+    <div class="sl-fm-empty">
+      <i class="bi bi-{{ empty_icon }}" aria-hidden="true"></i>
+      <b>{{ empty_title }}</b>
+      <p>{{ empty_text }}</p>
+      {% if reset_url %}<a class="sl-but" href="{{ reset_url }}" hx-get="{{ reset_url }}" hx-target="#slfmbody" hx-swap="innerHTML" hx-push-url="false">{{ reset_text }}</a>{% endif %}
+    </div>
+    {% else %}
+    <div class="sl-table-shell" data-sl-fm-view="list">
+      <table class="sl-table-list-sort">
+        <thead>
+          <tr>
+            <th class="sl-col-check">{% if can_mark %}<input type="checkbox" aria-label="{{ mark_all_text }}" data-sl-fm-all>{% endif %}</th>
+            <th>{{ name_text }}</th>
+            <th>{{ type_text }}</th>
+            <th>{{ size_text }}</th>
+            <th class="sl-col-date">{{ date_text }}</th>
+            <th class="sl-col-actions">{{ acts_text }}</th>
+          </tr>
+        </thead>
+        <tbody>{{{ rows_html }}}</tbody>
+      </table>
+    </div>
+    <div class="sl-fm-grid" data-sl-fm-view="grid" hidden>{{{ tiles_html }}}</div>
+    {% endif %}
+  </div>
 </div>

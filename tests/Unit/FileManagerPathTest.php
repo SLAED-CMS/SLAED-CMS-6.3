@@ -326,7 +326,7 @@ final class FileManagerPathTest extends TestCase
         $want = ['browse', 'preview', 'upload', 'download', 'mkdir', 'rename', 'copy', 'move', 'delete', 'compress'];
         $this->assertSame($want, $this->getGrantNames($upl), 'The administrative catalogue does not match the plan');
         $sys = $this->getManager()->getCapabilities();
-        $want = ['browse', 'preview', 'download', 'edit', 'create', 'mkdir', 'rename', 'copy', 'move', 'delete'];
+        $want = ['browse', 'preview', 'download', 'edit', 'create', 'mkdir', 'rename', 'copy', 'move', 'delete', 'compress'];
         $this->assertSame($want, $this->getGrantNames($sys), 'The system context does not match the plan');
         $full = $this->getManager('editor', ['list' => true, 'upload' => true, 'embed' => true, 'moder' => true])->getCapabilities();
         $want = ['browse', 'preview', 'upload', 'download', 'insert', 'embed', 'delete', 'compress'];

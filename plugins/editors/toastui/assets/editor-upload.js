@@ -4,6 +4,18 @@
     var api = win.SlaedToastUi || {};
     var drag = null;
     var layer = 10100;
+    var rooms = {};
+    // The kind of an object decides the glyph it is drawn with; the type resolver itself stays on the server and this map only dresses its answer
+    var icons = {
+        dir: 'folder2',
+        image: 'image',
+        audio: 'file-earmark-music',
+        video: 'file-earmark-play',
+        archive: 'file-earmark-zip',
+        document: 'file-earmark-pdf',
+        text: 'file-earmark-text',
+        code: 'file-earmark-code'
+    };
 
     function getOpt(id) {
         var ed = api.options || {};
@@ -16,14 +28,62 @@
         return lab[key] || val;
     }
 
-    function getWindow(id, type) {
+    // The language constants arrive as printf patterns, because a number in the middle of a sentence stands in a different place in every one of the six locales
+    function getText(text, one, two) {
+        return String(text || '')
+            .replace('%1$d', one).replace('%2$d', two)
+            .replace('%1$s', one).replace('%2$s', two)
+            .replace('%d', one).replace('%s', one);
+    }
+
+    // Every window keeps its own catalogue, its own marks and its own current object, because a page may carry more than one editor and they share nothing but the code
+    function getRoom(id) {
+        var key = String(id);
+        if (!rooms[key]) {
+            rooms[key] = {
+                files: [],
+                view: [],
+                pick: [],
+                cur: 0,
+                pane: '',
+                full: false,
+                mode: 'list',
+                kind: '',
+                find: '',
+                page: 0,
+                state: 'skel',
+                queue: null
+            };
+        }
+        return rooms[key];
+    }
+
+    function getPanel(id) {
         var opt = getOpt(id);
+        return opt.panel ? doc.getElementById(opt.panel) : null;
+    }
+
+    function getSlot(id, name) {
+        var el = getPanel(id);
+        return el ? el.querySelector('[data-sl-slot="' + name + '"]') : null;
+    }
+
+    function getShot(id) {
+        var all = doc.querySelectorAll('.sl-toastui-shot');
+        var out = null;
+        Array.prototype.forEach.call(all, function(el) {
+            if (el.getAttribute('data-editor') === String(id)) out = el;
+        });
+        return out;
+    }
+
+    function getWindow(id, type) {
         var emoji;
         if (type === 'emoji') {
             emoji = doc.querySelector('.sl-editor-emoji-panel');
             return emoji && emoji.getAttribute('data-editor') === String(id) ? emoji : null;
         }
-        return opt.panel ? doc.getElementById(opt.panel) : null;
+        return getPanel(id);
     }
 
     function setWindowFront(id, type) {
@@ -35,7 +95,7 @@
 
     function setPanel(id, show) {
         var opt = getOpt(id);
-        var el = opt.panel ? doc.getElementById(opt.panel) : null;
+        var el = getPanel(id);
         var box = doc.getElementById(String(id) + '_toast');
         var root = box ? box.querySelector('.toastui-editor-defaultUI') : null;
         if (!el) return;
@@ -43,6 +103,7 @@
         el.classList.toggle('sl-none', !show);
         el.setAttribute('aria-hidden', show ? 'false' : 'true');
         if (!show) return;
+        if (getRoom(id).pane === '') setPane(id, '');
         if (opt.canlist) getFiles(id);
         setWindowFront(id, 'files');
     }
@@ -91,6 +152,12 @@
         if (icon) {
             icon.classList.toggle('sl-toastui-head-icon-expand', !open);
             icon.classList.toggle('sl-toastui-head-icon-collapse', open);
+        }
+        // The expanded window is also the expanded catalogue: one button, because the room and what fills it are the same decision
+        // The list is drawn again with it, because the compact view shows the last few files and the expanded one shows a page of them
+        if (type === 'files') {
+            setView(id, open);
+            setList(id);
         }
         setWindowFront(id, type);
     }
@@ -178,10 +245,19 @@
             node = getMsg(id, text, warn);
             if (node) el.appendChild(node);
         }
-        if (warn) setPanel(id, true);
+        // A refusal opens the window only when it was closed: a message raised while it is open must not restart the request that produced it
+        if (warn && getPanel(id) && getPanel(id).classList.contains('sl-none')) setPanel(id, true);
     }
 
-    function getReq(url, data) {
+    // The status line reports what happened last and is read out loud, so it never carries a word the visitor did not cause
+    function setInfo(id, text) {
+        var el = getSlot(id, 'info');
+        if (el) el.textContent = text;
+    }
+
+    function getReq(id, url, data) {
+        var opt = getOpt(id);
+        data.append('token', opt.ajax || '');
         return fetch(url, {
             method: 'POST',
             credentials: 'same-origin',
@@ -191,19 +267,30 @@
         });
     }
 
-    function getImageMode(id) {
-        var opt = getOpt(id);
-        var mode = opt.object ? doc.getElementById(opt.object) : null;
-        var sel = mode ? mode.querySelector('input[type="radio"]:checked') : null;
-        if (sel) return sel.value;
-        return opt.canupload ? 'upload' : 'embed';
-    }
-
     function addSource(id, url, text) {
         var ed = api.getEditor ? api.getEditor(id) : null;
         if (!ed || !url) return;
         ed.focus();
         ed.exec('addImage', { imageUrl: url, altText: text || 'image' });
+    }
+
+    function addAttach(id, file) {
+        var txt = '[attach=' + file + ' align=left title=title]';
+        if (api.insertText) api.insertText(id, txt);
+    }
+
+    function getAltText(id, pane) {
+        var opt = getOpt(id);
+        var el = doc.getElementById((pane === 'url') ? (opt.urlalt || '') : (opt.alt || ''));
+        return el ? String(el.value || '').trim() : '';
+    }
+
+    // Which shape an uploaded file takes lives inside the upload section, because it belongs to the file and not to the window
+    function getInsertMode(id) {
+        var opt = getOpt(id);
+        var mode = opt.object ? doc.getElementById(opt.object) : null;
+        var sel = mode ? mode.querySelector('input[type="radio"]:checked') : null;
+        return sel ? sel.value : 'image';
     }
 
     function checkEmbedType(id, file) {
@@ -234,160 +321,709 @@
         }
         rd.onload = function() {
             if (done) done(String(rd.result), file.name || 'image');
+            else addSource(id, String(rd.result), file.name || 'image');
             setPanel(id, false);
         };
         rd.readAsDataURL(file);
     }
 
-    function addImage(id, file, done) {
-        var opt = getOpt(id);
-        var data = new FormData();
-        var put = done || function(url, text) {
-            addSource(id, url, text);
-        };
-        if (getImageMode(id) === 'embed') {
-            addEmbed(id, file, put);
-            return Promise.resolve();
-        }
-        if (!opt.canupload || !opt.upload) return Promise.resolve();
-        data.append('token', opt.token || '');
-        data.append('file[]', file);
-        return getReq(opt.upload, data).then(function(json) {
-            var row = json.files && json.files[0] ? json.files[0] : null;
-            if (!json.ok || !row) {
-                setMsg(id, json.error || getLab(id, 'upload', 'Upload failed'), true);
-                return;
-            }
-            if (getImageMode(id) === 'attach') {
-                addAttach(id, row.file);
-                getFiles(id);
-                return;
-            }
-            setMsg(id, row.file || getLab(id, 'uploaded', 'Uploaded'), false);
-            put(row.url, row.file || 'image');
-            getFiles(id);
-        }).catch(function() {
-            setMsg(id, getLab(id, 'upload', 'Upload failed'), true);
-        });
-    }
-
-    function addAttach(id, file) {
-        var txt = '[attach=' + file + ' align=left title=title]';
-        if (api.insertText) api.insertText(id, txt);
-        setPanel(id, false);
-    }
-
-    function addExisting(id, url, text) {
-        addSource(id, url, text);
-        setPanel(id, false);
-    }
-
     function addUrl(id) {
         var opt = getOpt(id);
         var url = opt.url ? doc.getElementById(opt.url) : null;
-        var alt = opt.alt ? doc.getElementById(opt.alt) : null;
         var src = url ? String(url.value || '').trim() : '';
+        var alt = opt.urlalt ? doc.getElementById(opt.urlalt) : null;
         if (src === '') return;
-        addSource(id, src, alt ? String(alt.value || '').trim() : '');
+        addSource(id, src, getAltText(id, 'url'));
         if (url) url.value = '';
         if (alt) alt.value = '';
         setPanel(id, false);
     }
 
-    function getRows(id, rows) {
-        var table;
-        var body;
-        if (!rows || !rows.length) return getMsg(id, getLab(id, 'nofiles', 'No files'), false);
-        table = api.getTpl(id, 'file-table');
-        body = table ? table.querySelector('tbody') : null;
-        if (!body) return null;
-        rows.forEach(function(row) {
-            var tr = api.getTpl(id, 'file-row');
-            var img = tr ? tr.querySelector('.js-slaed-file-thumb') : null;
-            var name = tr ? tr.querySelector('.js-slaed-file-name') : null;
-            var size = tr ? tr.querySelector('.js-slaed-file-size') : null;
-            var ins = tr ? tr.querySelector('.js-slaed-file-image') : null;
-            var att = tr ? tr.querySelector('.js-slaed-file-attach') : null;
-            if (!tr) return;
-            if (img) {
-                if (row.image) img.src = row.url;
-                else img.remove();
-            }
-            if (name) name.textContent = row.file;
-            if (size) size.textContent = row.size;
-            if (ins) {
-                if (row.image) {
-                    ins.textContent = getLab(id, 'image', 'Image');
-                    ins.setAttribute('data-editor', id);
-                    ins.setAttribute('data-file', row.file);
-                    ins.setAttribute('data-url', row.url);
-                } else {
-                    ins.remove();
-                }
-            }
-            if (att) {
-                att.textContent = getLab(id, 'attach', 'Attachment');
-                att.setAttribute('data-editor', id);
-                att.setAttribute('data-file', row.file);
-            }
-            body.appendChild(tr);
-        });
-        return table;
+    // The queue runs the files one at a time: each carries its own bar and its own cancel, and a refusal names the reason the server gave and never stops the rest
+    function getJobBox(id, file, num) {
+        var box = api.getTpl(id, 'fm-job');
+        var name = box ? box.querySelector('.sl-fm-job-name') : null;
+        if (!box) return null;
+        box.setAttribute('data-sl-job', String(num));
+        if (name) {
+            name.firstElementChild.textContent = file.name || '';
+            name.lastElementChild.textContent = getSizeText(file.size || 0);
+        }
+        return box;
     }
 
-    function getFiles(id) {
+    function setJobDone(id, box, why) {
+        var stop = box.querySelector('[data-sl-act="jobstop"]');
+        var line = box.querySelector('.sl-progress-line');
+        var note;
+        if (stop) stop.remove();
+        box.classList.add(why ? 'sl-is-fail' : 'sl-is-done');
+        box.querySelector('.bi').className = 'bi bi-' + (why ? 'exclamation-octagon-fill' : 'check-circle-fill');
+        if (!why || !line) return;
+        note = api.getTpl(id, 'fm-why');
+        if (!note) return;
+        note.textContent = why;
+        line.replaceWith(note);
+    }
+
+    function setJobStep(box, at) {
+        var line = box ? box.querySelector('.sl-progress-line div') : null;
+        if (!line) return;
+        line.style.width = at + '%';
+        line.textContent = at + '%';
+    }
+
+    function addJobRun(id, file, box, done) {
         var opt = getOpt(id);
-        var el = opt.list ? doc.getElementById(opt.list) : null;
-        if (!el || !opt.files) return;
-        fetch(opt.files, { credentials: 'same-origin' }).then(function(res) {
-            return res.json();
-        }).then(function(json) {
-            var node = json.ok ? getRows(id, json.files || []) : getMsg(id, json.error || getLab(id, 'load', 'Load failed'), true);
-            el.replaceChildren();
-            if (node) el.appendChild(node);
-        }).catch(function() {
-            var node = getMsg(id, getLab(id, 'load', 'Load failed'), true);
-            el.replaceChildren();
-            if (node) el.appendChild(node);
+        var data = new FormData();
+        var xhr = new XMLHttpRequest();
+        data.append('token', opt.token || '');
+        data.append('file[]', file);
+        xhr.open('POST', opt.upload, true);
+        xhr.upload.onprogress = function(ev) {
+            if (ev.lengthComputable) setJobStep(box, Math.round((ev.loaded / ev.total) * 100));
+        };
+        xhr.onload = function() {
+            var json = null;
+            try {
+                json = JSON.parse(xhr.responseText);
+            } catch (err) {
+                json = null;
+            }
+            setJobStep(box, 100);
+            done(json);
+        };
+        xhr.onerror = function() {
+            done(null);
+        };
+        xhr.send(data);
+        return xhr;
+    }
+
+    function setQueueStep(id) {
+        var room = getRoom(id);
+        var job = room.queue;
+        var cap = getSlot(id, 'queuecap');
+        var stop = getPanel(id) ? getPanel(id).querySelector('[data-sl-act="stop"]') : null;
+        var box;
+        if (!job) return;
+        if (job.at >= job.list.length) {
+            if (cap) cap.textContent = getText(getLab(id, 'queueend', '%1$d / %2$d'), job.done, job.list.length);
+            if (stop) stop.hidden = true;
+            room.queue = null;
+            if (getOpt(id).canlist) getFiles(id);
+            return;
+        }
+        box = getPanel(id).querySelector('[data-sl-job="' + job.at + '"]');
+        if (cap) cap.textContent = getText(getLab(id, 'queue', '%1$d / %2$d'), job.at + 1, job.list.length);
+        job.run = addJobRun(id, job.list[job.at], box, function(json) {
+            var row = json && json.files && json.files[0] ? json.files[0] : null;
+            var why = row ? '' : ((json && json.error) || getLab(id, 'upload', 'Upload failed'));
+            if (box) setJobDone(id, box, why);
+            if (row) job.done++;
+            if (row && job.list.length === 1) addUploaded(id, row);
+            job.at++;
+            setQueueStep(id);
         });
     }
 
-    function setFileName(id, files) {
-        var opt = getOpt(id);
-        var panel = opt.panel ? doc.getElementById(opt.panel) : null;
-        var name = panel ? panel.querySelector('.js-slaed-upload-name') : null;
-        var rows = Array.prototype.slice.call(files || []);
-        if (!name) return;
-        name.textContent = rows.length ? rows.map(function(file) { return file.name; }).join(', ') : getLab(id, 'nofile', 'No file');
-        name.title = name.textContent;
+    function addQueue(id, files) {
+        var room = getRoom(id);
+        var jobs = getSlot(id, 'jobs');
+        var box = getSlot(id, 'queue');
+        var stop = getPanel(id) ? getPanel(id).querySelector('[data-sl-act="stop"]') : null;
+        if (!jobs || !box || !files.length) return;
+        jobs.replaceChildren();
+        files.forEach(function(file, i) {
+            var one = getJobBox(id, file, i);
+            if (one) jobs.appendChild(one);
+        });
+        box.hidden = false;
+        if (stop) stop.hidden = false;
+        room.queue = { list: files, at: 0, done: 0, run: null };
+        setQueueStep(id);
     }
 
-    function addFileList(id, list, input) {
+    function deleteQueue(id) {
+        var room = getRoom(id);
+        var box = getSlot(id, 'queue');
+        if (room.queue && room.queue.run) room.queue.run.abort();
+        room.queue = null;
+        if (box) box.hidden = true;
+        if (getOpt(id).canlist) getFiles(id);
+    }
+
+    // One successful upload adds one object instead of reloading the whole catalogue, which is what keeps the marks and the current object where they were
+    function addUploaded(id, row) {
+        var room = getRoom(id);
+        var mode = getInsertMode(id);
+        setInfo(id, row.file);
+        if (mode === 'attach' || !row.image) addAttach(id, row.file);
+        else addSource(id, row.url, getAltText(id, 'up') || row.file);
+        room.files.unshift(row);
+        setList(id);
+    }
+
+    function addFileList(id, list, mode) {
         var opt = getOpt(id);
         var files = Array.prototype.slice.call(list || []);
         var max = parseInt(opt.maxfiles || 0, 10);
         if (!files.length) return;
-        setFileName(id, files);
-        if (getImageMode(id) !== 'embed' && max > 0 && files.length > max) {
-            setMsg(id, getLab(id, 'fileup', 'Files') + ': ' + max, true);
-            if (input) input.value = '';
-            setFileName(id, []);
+        if (mode === 'embed') {
+            addEmbed(id, files[0]);
             return;
         }
-        files.reduce(function(req, file) {
-            return req.then(function() {
-                return addImage(id, file);
-            });
-        }, Promise.resolve()).then(function() {
-            if (opt.canlist) getFiles(id);
-            if (input) input.value = '';
-            setFileName(id, []);
+        if (!opt.canupload || !opt.upload) return;
+        if (max > 0 && files.length > max) {
+            setMsg(id, getLab(id, 'fileup', 'Files') + ': ' + max, true);
+            return;
+        }
+        setMsg(id, '', false);
+        addQueue(id, files);
+    }
+
+    function getSizeText(size) {
+        var unit = ['B', 'KB', 'MB', 'GB'];
+        var num = Number(size) || 0;
+        var at = 0;
+        while (num >= 1024 && at < unit.length - 1) {
+            num = num / 1024;
+            at++;
+        }
+        return (at === 0 ? num : num.toFixed(1)) + ' ' + unit[at];
+    }
+
+    function getIcon(row) {
+        return icons[row.kind] || 'file-earmark';
+    }
+
+    // The fan belongs to the object and offers exactly what the descriptor of that object allows, so an action the context withholds is not drawn instead of failing on the route
+    function getDial(id, row, num) {
+        var box = api.getTpl(id, 'fm-dial');
+        var able = row.able || {};
+        var acts = [];
+        var seen = 0;
+        if (!box) return null;
+        if (row.image && able.insert) acts.push(['image', 'image', getLab(id, 'insert', 'Insert image')]);
+        if (able.insert) acts.push(['attach', 'paperclip', getLab(id, 'insobj', 'Insert file')]);
+        if (able.download) acts.push(['down', 'download', getLab(id, 'download', 'Download')]);
+        if (able.compress) acts.push(['zip', 'file-zip', getLab(id, 'zip', 'ZIP')]);
+        if (able.delete) acts.push(['delete', 'trash3', getLab(id, 'delete', 'Delete')]);
+        acts.forEach(function(act) {
+            var item = api.getTpl(id, 'fm-act');
+            if (!item) return;
+            // Downloading is an address and not an action: a real link hands the file over, while a script would only open it in a second tab
+            if (act[0] === 'down') {
+                item.href = row.url;
+                item.setAttribute('download', row.file);
+            } else {
+                item.setAttribute('data-sl-act', act[0]);
+                item.setAttribute('data-sl-num', String(num));
+            }
+            item.setAttribute('data-editor', id);
+            item.title = act[2];
+            item.setAttribute('aria-label', act[2]);
+            if (act[0] === 'delete') item.setAttribute('data-sl-ask', getText(getLab(id, 'askdel', 'Delete %s?'), row.file));
+            item.firstElementChild.className = 'bi bi-' + act[1];
+            box.appendChild(item);
+            seen++;
+        });
+        box.querySelector('.sl-dial-toggle').title = getLab(id, 'acts', '');
+        box.querySelector('.sl-dial-toggle').setAttribute('aria-label', getLab(id, 'acts', ''));
+        // The width of the fan plate is counted by the theme through this variable, so it is written down and never inferred from a child index
+        box.style.setProperty('--sl-dial-count', String(seen));
+        return seen ? box : null;
+    }
+
+    function setShotCell(id, cell, row, num) {
+        var icon = cell.querySelector('.bi');
+        var img = cell.querySelector('img');
+        var zoom = cell.querySelector('[data-sl-zoom]');
+        icon.className = 'bi bi-' + getIcon(row);
+        if (row.image && row.thumb) {
+            img.src = row.thumb;
+            img.alt = row.file;
+            img.hidden = false;
+            icon.hidden = true;
+        }
+        if (!row.able || !row.able.preview) return;
+        zoom.hidden = false;
+        zoom.setAttribute('data-sl-zoom', String(num));
+        zoom.setAttribute('data-editor', id);
+        zoom.title = getLab(id, 'preview', '');
+    }
+
+    function setPickBox(id, cell, row, num) {
+        var pick = cell.querySelector('[data-sl-pick]');
+        if (!pick) return;
+        pick.setAttribute('data-sl-pick', String(num));
+        pick.setAttribute('data-editor', id);
+        pick.parentNode.title = getLab(id, 'mark', '') + ' ' + row.file;
+    }
+
+    function getTile(id, row, num) {
+        var cell = api.getTpl(id, 'fm-tile');
+        var dial;
+        if (!cell) return null;
+        cell.setAttribute('data-sl-num', String(num));
+        cell.setAttribute('data-editor', id);
+        setShotCell(id, cell.querySelector('.sl-fm-tile-img'), row, num);
+        cell.querySelector('.sl-fm-tile-kind').textContent = String(row.type || '').toUpperCase();
+        cell.querySelector('.sl-fm-tile-cap b').textContent = row.file;
+        cell.querySelector('.sl-fm-tile-cap small').textContent = row.sizetext + ' · ' + row.timetext;
+        setPickBox(id, cell, row, num);
+        dial = getDial(id, row, num);
+        if (dial) cell.appendChild(dial);
+        return cell;
+    }
+
+    function getRow(id, row, num) {
+        var line = api.getTpl(id, 'fm-row');
+        var meta;
+        var dial;
+        if (!line) return null;
+        line.setAttribute('data-sl-num', String(num));
+        line.setAttribute('data-editor', id);
+        setShotCell(id, line.querySelector('.sl-fm-row-thumb'), row, num);
+        line.querySelector('.sl-fm-row-name').textContent = row.file;
+        line.querySelector('.sl-fm-row-name').title = row.file;
+        meta = line.querySelectorAll('.sl-fm-row-meta');
+        meta[0].textContent = String(row.type || '').toUpperCase();
+        meta[1].textContent = row.sizetext;
+        meta[2].textContent = row.timetext;
+        setPickBox(id, line, row, num);
+        dial = getDial(id, row, num);
+        if (dial) line.appendChild(dial);
+        return line;
+    }
+
+    function getProps(id, row) {
+        var out = [
+            [getLab(id, 'name', ''), row.file],
+            [getLab(id, 'type', ''), row.kind + (row.type ? ' · ' + row.type : '')],
+            [getLab(id, 'size', ''), row.sizetext]
+        ];
+        if (row.width && row.height) out.push([getLab(id, 'dim', ''), row.width + ' × ' + row.height]);
+        out.push([getLab(id, 'date', ''), row.timetext]);
+        out.push([getLab(id, 'addr', ''), row.url || row.path]);
+        return out;
+    }
+
+    function setProps(id, box, rows) {
+        if (!box) return;
+        box.replaceChildren();
+        rows.forEach(function(row) {
+            var line = api.getTpl(id, 'fm-prop');
+            if (!line) return;
+            line.firstElementChild.textContent = row[0];
+            line.lastElementChild.textContent = row[1];
+            line.lastElementChild.title = row[1];
+            box.appendChild(line);
         });
     }
 
-    function addPanel(id) {
+    // The current object is the one whose properties stand on the right; it follows a click on a row or a tile and never follows a mark
+    function setCurrent(id, num) {
+        var room = getRoom(id);
+        var row = room.view[num];
+        var img = getSlot(id, 'propsimg');
+        var el = getPanel(id);
+        if (!row || !el) return;
+        room.cur = num;
+        // The tile and the row alone carry the mark of the current object: the items of a fan carry the same number and would wear it too
+        Array.prototype.forEach.call(el.querySelectorAll('.sl-fm-cell, .sl-fm-row'), function(one) {
+            one.classList.toggle('sl-is-current', one.getAttribute('data-sl-num') === String(num));
+        });
+        if (img) {
+            img.replaceChildren();
+            img.appendChild((row.image && row.thumb) ? getShotImage(row) : getIconNode(row));
+        }
+        setProps(id, getSlot(id, 'propslist'), getProps(id, row));
+        setInfo(id, row.file + ' · ' + row.sizetext);
+    }
+
+    function getIconNode(row) {
+        var el = doc.createElement('i');
+        el.className = 'bi bi-' + getIcon(row);
+        el.setAttribute('aria-hidden', 'true');
+        return el;
+    }
+
+    function getShotImage(row) {
+        var el = doc.createElement('img');
+        el.src = row.thumb || row.url;
+        el.alt = row.file;
+        return el;
+    }
+
+    // The marks live in one set of names, so the tile and the row of one file always show the same state
+    function setPicks(id) {
+        var room = getRoom(id);
+        var el = getPanel(id);
+        var bulk = getSlot(id, 'bulk');
+        var count = getSlot(id, 'bulkcount');
+        var all = getSlot(id, 'pickall');
+        var okay = el ? el.querySelector('[data-sl-act="apply"]') : null;
+        var num = room.pick.length;
+        var one;
+        if (!el) return;
+        Array.prototype.forEach.call(el.querySelectorAll('[data-sl-pick]'), function(box) {
+            var row = room.view[parseInt(box.getAttribute('data-sl-pick'), 10)];
+            box.checked = !!row && room.pick.indexOf(row.path) >= 0;
+        });
+        if (bulk) bulk.hidden = num === 0;
+        if (count) count.textContent = getLab(id, 'marked', '') + ': ' + num;
+        // One mark speaks in the singular, because "insert as images" about a single file reads as a defect
+        one = el.querySelector('[data-sl-bulk="image"] span');
+        if (one) one.textContent = (num === 1) ? getLab(id, 'insert', '') : getLab(id, 'insimgs', '');
+        one = el.querySelector('[data-sl-bulk="attach"] span');
+        if (one) one.textContent = (num === 1) ? getLab(id, 'insobj', '') : getLab(id, 'insobjs', '');
+        one = el.querySelector('[data-sl-bulk="delete"]');
+        if (one) one.setAttribute('data-sl-ask', getText(getLab(id, 'askdels', '%d'), num));
+        if (all) {
+            all.checked = num > 0 && num === room.view.length;
+            all.indeterminate = num > 0 && num < room.view.length;
+        }
+        if (okay) okay.disabled = (room.pane === 'lib') ? num === 0 : room.pane !== 'url';
+    }
+
+    function getPageRows(id) {
+        var room = getRoom(id);
         var opt = getOpt(id);
-        var el = opt.panel ? doc.getElementById(opt.panel) : null;
+        var size = parseInt(opt.page || 12, 10);
+        var from = room.page * size;
+        return room.full ? room.view.slice(from, from + size) : room.view.slice(0, parseInt(opt.last || 6, 10));
+    }
+
+    function setPager(id) {
+        var room = getRoom(id);
+        var opt = getOpt(id);
+        var size = parseInt(opt.page || 12, 10);
+        var pages = Math.ceil(room.view.length / size);
+        var box = getSlot(id, 'pages');
+        var pager = getSlot(id, 'pager');
+        var info = getSlot(id, 'pagerinfo');
+        var from = room.page * size;
+        var i;
+        if (!box || !pager || !info) return;
+        box.replaceChildren();
+        pager.hidden = pages < 2;
+        info.hidden = pages < 2;
+        if (pages < 2) return;
+        info.textContent = (from + 1) + '–' + Math.min(from + size, room.view.length) + ' / ' + room.view.length;
+        for (i = 0; i < pages; i++) {
+            (function(at) {
+                var one = api.getTpl(id, 'fm-page');
+                if (!one) return;
+                one.textContent = String(at + 1);
+                one.setAttribute('data-sl-page', String(at));
+                one.setAttribute('data-editor', id);
+                one.classList.toggle('sl-is-active', at === room.page);
+                box.appendChild(one);
+            })(i);
+        }
+    }
+
+    function setList(id) {
+        var room = getRoom(id);
+        var opt = getOpt(id);
+        var tiles = getSlot(id, 'tiles');
+        var rows = getSlot(id, 'rows');
+        var full = getSlot(id, 'fulltiles');
+        var more = getSlot(id, 'more');
+        var find = String(room.find || '').toLowerCase();
+        var page;
+        if (!tiles || !rows || !full) return;
+        room.view = room.files.filter(function(row) {
+            if (find !== '' && String(row.file).toLowerCase().indexOf(find) < 0) return false;
+            if (room.kind === 'image') return !!row.image;
+            if (room.kind === 'other') return !row.image;
+            return true;
+        });
+        room.pick = room.pick.filter(function(path) {
+            return room.view.some(function(row) {
+                return row.path === path;
+            });
+        });
+        page = getPageRows(id);
+        tiles.replaceChildren();
+        rows.replaceChildren();
+        full.replaceChildren();
+        page.forEach(function(row) {
+            var num = room.view.indexOf(row);
+            var tile = getTile(id, row, num);
+            var line = getRow(id, row, num);
+            var wide = getTile(id, row, num);
+            if (tile) tiles.appendChild(tile);
+            if (line) rows.appendChild(line);
+            if (wide) full.appendChild(wide);
+        });
+        if (more) {
+            more.textContent = (room.view.length > parseInt(opt.last || 6, 10))
+                ? getText(getLab(id, 'more', '%1$d / %2$d'), page.length, room.view.length)
+                : '';
+        }
+        setPager(id);
+        setPicks(id);
+        if (room.view.length) setCurrent(id, Math.min(room.cur, room.view.length - 1));
+        setState(id, getListState(id));
+    }
+
+    function getListState(id) {
+        var room = getRoom(id);
+        if (room.state === 'skel' || room.state === 'fail') return room.state;
+        if (room.files.length === 0) return 'empty';
+        if (room.view.length === 0) return 'filter';
+        return 'ready';
+    }
+
+    // The catalogue has five states and the settled one is only one of them; an empty catalogue and an empty filter say different words on purpose (§31)
+    function setState(id, name) {
+        var room = getRoom(id);
+        var rows = {
+            empty: ['folder2', getLab(id, 'empty', ''), getLab(id, 'emptywhy', ''), ''],
+            filter: ['search', getLab(id, 'none', ''), getLab(id, 'nonewhy', ''), getLab(id, 'reset', '')],
+            fail: ['exclamation-triangle', getLab(id, 'fail', ''), getLab(id, 'failwhy', ''), getLab(id, 'retry', '')]
+        };
+        var row = rows[name];
+        var el = getPanel(id);
+        var box;
+        room.state = name;
+        if (!el || !el.querySelector('[data-sl-view="empty"]')) return;
+        if (row) {
+            getSlot(id, 'emptyicon').className = 'bi bi-' + row[0];
+            getSlot(id, 'emptytitle').textContent = row[1];
+            getSlot(id, 'emptytext').textContent = row[2];
+            box = getSlot(id, 'emptyact');
+            box.textContent = row[3];
+            box.hidden = row[3] === '';
+            box.setAttribute('data-sl-act', (name === 'fail') ? 'retry' : 'reset');
+            getSlot(id, 'emptybox').classList.toggle('sl-is-fail', name === 'fail');
+        }
+        setView(id, room.full);
+    }
+
+    // The expanded window is also the expanded catalogue: the tiles give way to the filter, the list and the properties, and the empty result keeps the toolbar it belongs to
+    function setView(id, full) {
+        var room = getRoom(id);
+        var el = getPanel(id);
+        var lib = el ? el.querySelector('[data-sl-pane="lib"].sl-fm-pane') : null;
+        var open = room.state === 'ready';
+        var none = room.state === 'filter';
+        room.full = !!full;
+        if (!lib) return;
+        lib.querySelector('[data-sl-view="compact"]').hidden = !open || room.full;
+        lib.querySelector('[data-sl-view="full"]').hidden = (!open && !none) || !room.full;
+        lib.querySelector('[data-sl-view="skel"]').hidden = room.state !== 'skel';
+        lib.querySelector('[data-sl-view="empty"]').hidden = open || room.state === 'skel';
+    }
+
+    function setPane(id, name) {
+        var room = getRoom(id);
+        var opt = getOpt(id);
+        var el = getPanel(id);
+        var able = { up: !!opt.canupload, url: true, emb: !!opt.canembed, lib: !!opt.canlist };
+        var panes = opt.panes || {};
+        var okay;
+        var meta;
+        if (!el) return;
+        // A closed section never takes the window: it opens on the first one the settings left open
+        if (name === '' || !able[name]) {
+            name = '';
+            ['up', 'url', 'emb', 'lib'].forEach(function(key) {
+                if (name === '' && able[key]) name = key;
+            });
+        }
+        if (name === '') return;
+        room.pane = name;
+        Array.prototype.forEach.call(el.querySelectorAll('.sl-fm-rail-item'), function(one) {
+            one.setAttribute('aria-selected', String(one.getAttribute('data-sl-pane') === name));
+        });
+        Array.prototype.forEach.call(el.querySelectorAll('.sl-fm-pane'), function(one) {
+            one.classList.toggle('sl-is-open', one.getAttribute('data-sl-pane') === name);
+        });
+        meta = panes[name] || ['', ''];
+        el.querySelector('[data-sl-slot="title"]').textContent = meta[0];
+        el.querySelector('[data-sl-slot="lead"]').textContent = meta[1];
+        okay = el.querySelector('[data-sl-act="apply"]');
+        if (okay) okay.disabled = (name === 'lib') ? room.pick.length === 0 : name !== 'url';
+    }
+
+    function setQuota(id, json) {
+        var room = getRoom(id);
+        var rail = getSlot(id, 'quota');
+        var num = getSlot(id, 'quotanum');
+        var fill = getSlot(id, 'quotafill');
+        var note = getSlot(id, 'railnote');
+        var text = getText(getLab(id, 'quota', '%1$s / %2$s'), json.usedtext, json.quotatext);
+        var part = (json.quota > 0) ? Math.min(100, Math.round((json.used / json.quota) * 100)) : 0;
+        if (rail) rail.textContent = text;
+        if (num) num.textContent = text;
+        if (fill) fill.style.width = part + '%';
+        if (note) note.textContent = getText(getLab(id, 'mynote', '%d'), room.files.length);
+    }
+
+    function getFiles(id) {
+        var opt = getOpt(id);
+        var room = getRoom(id);
+        if (!opt.files) return;
+        room.state = 'skel';
+        setView(id, room.full);
+        getReq(id, opt.files, new FormData()).then(function(json) {
+            if (!json || !json.ok) {
+                room.state = 'fail';
+                setState(id, 'fail');
+                setInfo(id, (json && json.error) || getLab(id, 'fail', ''));
+                return;
+            }
+            room.state = 'ready';
+            room.files = json.files || [];
+            setList(id);
+            setQuota(id, json);
+        }).catch(function() {
+            room.state = 'fail';
+            setState(id, 'fail');
+        });
+    }
+
+    // No changing action runs without an answer: the object stays busy until the server has spoken and no row disappears on hope alone
+    // Only the tile and the row of the object are covered: the items of its own fan carry the same number, and an overlay inside one of them would hide the action it names
+    function setBusy(id, num, on) {
+        var el = getPanel(id);
+        var pick = '.sl-fm-cell[data-sl-num="' + num + '"], .sl-fm-row[data-sl-num="' + num + '"]';
+        if (!el) return;
+        Array.prototype.forEach.call(el.querySelectorAll(pick), function(one) {
+            var box = one.querySelector('.sl-fm-busy');
+            if (on && !box) {
+                box = api.getTpl(id, 'fm-busy');
+                if (box) one.appendChild(box);
+                return;
+            }
+            if (!on && box) box.remove();
+        });
+    }
+
+    function setFileRun(id, way, paths, num) {
+        var opt = getOpt(id);
+        var url = (way === 'delete') ? opt.remove : opt.archive;
+        var data = new FormData();
+        if (!url || !paths.length) return;
+        paths.forEach(function(path) {
+            data.append('mark[]', path);
+        });
+        if (num >= 0) setBusy(id, num, true);
+        getReq(id, url, data).then(function(json) {
+            if (num >= 0) setBusy(id, num, false);
+            if (!json || !json.ok) {
+                setMsg(id, (json && json.error) || getLab(id, 'load', ''), true);
+                return;
+            }
+            setInfo(id, json.done + ' / ' + json.total);
+            getFiles(id);
+        }).catch(function() {
+            if (num >= 0) setBusy(id, num, false);
+            setMsg(id, getLab(id, 'load', ''), true);
+        });
+    }
+
+    function setAct(id, way, num) {
+        var room = getRoom(id);
+        var row = room.view[num];
+        var shot = getShot(id);
+        if (!row) return;
+        if (shot && shot.open && way !== 'down') shot.close();
+        if (way === 'image') {
+            addSource(id, row.url, row.file);
+            setPanel(id, false);
+            return;
+        }
+        if (way === 'attach') {
+            addAttach(id, row.file);
+            setPanel(id, false);
+            return;
+        }
+        if (way === 'delete' || way === 'zip') setFileRun(id, way, [row.path], num);
+    }
+
+    function setBulk(id, way) {
+        var room = getRoom(id);
+        var rows = room.view.filter(function(row) {
+            return room.pick.indexOf(row.path) >= 0;
+        });
+        if (way === 'clear') {
+            room.pick = [];
+            setPicks(id);
+            return;
+        }
+        if (way === 'delete' || way === 'zip') {
+            setFileRun(id, way, room.pick.slice(), -1);
+            room.pick = [];
+            setPicks(id);
+            return;
+        }
+        rows.forEach(function(row) {
+            if (way === 'image' && row.image) addSource(id, row.url, row.file);
+            else addAttach(id, row.file);
+        });
+        room.pick = [];
+        setPicks(id);
+        setPanel(id, false);
+    }
+
+    // The gallery walks the objects that can be previewed at all, so the counter counts them and never the length of the list
+    function getShotList(id) {
+        return getRoom(id).view.filter(function(row) {
+            return row.able && row.able.preview;
+        });
+    }
+
+    function setModal(id, num) {
+        var room = getRoom(id);
+        var shot = getShot(id);
+        var list = getShotList(id);
+        var row = room.view[num];
+        var at = list.indexOf(row);
+        var img;
+        var down;
+        if (!shot || !row || at < 0) return;
+        room.cur = num;
+        shot.querySelector('[data-sl-slot="shottitle"]').textContent = row.file;
+        img = shot.querySelector('[data-sl-slot="shotimg"]');
+        img.src = row.url;
+        img.alt = row.file;
+        shot.querySelector('[data-sl-slot="shotcount"]').textContent = (at + 1) + ' / ' + list.length;
+        setProps(id, shot.querySelector('[data-sl-slot="shotprops"]'), getProps(id, row));
+        down = shot.querySelector('[data-sl-slot="shotdown"]');
+        if (down) down.href = row.url;
+        Array.prototype.forEach.call(shot.querySelectorAll('[data-sl-act]'), function(one) {
+            one.setAttribute('data-sl-num', String(num));
+            if (one.getAttribute('data-sl-act') === 'delete') one.setAttribute('data-sl-ask', getText(getLab(id, 'askdel', '%s'), row.file));
+        });
+        if (!shot.open) shot.showModal();
+    }
+
+    function setStep(id, way) {
+        var room = getRoom(id);
+        var list = getShotList(id);
+        var at = list.indexOf(room.view[room.cur]);
+        var next;
+        if (!list.length) return;
+        next = list[(at + way + list.length) % list.length];
+        setModal(id, room.view.indexOf(next));
+    }
+
+    function setAsk(id, node, run) {
+        var text = node.getAttribute('data-sl-ask');
+        if (!text) {
+            run();
+            return;
+        }
+        if (win.setConfirmTask) win.setConfirmTask(text, run);
+        else if (win.confirm(text)) run();
+    }
+
+    function addPanel(id) {
+        var el = getPanel(id);
         if (!el) return;
         setPanel(id, el.classList.contains('sl-none'));
     }
@@ -395,7 +1031,9 @@
     function addHook(id, ed) {
         if (!ed || typeof ed.addHook !== 'function') return;
         ed.addHook('addImageBlobHook', function(blob, done) {
-            addImage(id, blob, done);
+            var opt = getOpt(id);
+            if (opt.canupload) addFileList(id, [blob], 'upload');
+            else addEmbed(id, blob, done);
             return false;
         });
     }
@@ -420,8 +1058,45 @@
 
     doc.addEventListener('change', function(ev) {
         var el = ev.target;
-        if (!el.classList || !el.classList.contains('js-slaed-upload-file')) return;
-        addFileList(el.getAttribute('data-editor'), el.files, el);
+        var zone;
+        var id;
+        var num;
+        var room;
+        var row;
+        if (!el.classList) return;
+        if (el.classList.contains('js-slaed-upload-file')) {
+            zone = el.closest('.js-slaed-upload-drop');
+            addFileList(el.getAttribute('data-editor'), el.files, zone ? zone.getAttribute('data-sl-mode') : 'upload');
+            el.value = '';
+            return;
+        }
+        id = el.getAttribute('data-editor');
+        if (!id) return;
+        if (el.hasAttribute('data-sl-pick')) {
+            room = getRoom(id);
+            num = parseInt(el.getAttribute('data-sl-pick'), 10);
+            row = room.view[num];
+            if (!row) return;
+            if (el.checked && room.pick.indexOf(row.path) < 0) room.pick.push(row.path);
+            if (!el.checked) room.pick = room.pick.filter(function(path) { return path !== row.path; });
+            setPicks(id);
+            return;
+        }
+        if (el.hasAttribute('data-sl-slot') && el.getAttribute('data-sl-slot') === 'pickall') {
+            room = getRoom(id);
+            room.pick = el.checked ? room.view.map(function(one) { return one.path; }) : [];
+            setPicks(id);
+        }
+    });
+
+    doc.addEventListener('input', function(ev) {
+        var el = ev.target;
+        var id;
+        if (!el.hasAttribute || !el.hasAttribute('data-sl-slot') || el.getAttribute('data-sl-slot') !== 'find') return;
+        id = el.getAttribute('data-editor');
+        getRoom(id).find = String(el.value || '');
+        getRoom(id).page = 0;
+        setList(id);
     });
 
     doc.addEventListener('dragover', function(ev) {
@@ -443,12 +1118,20 @@
         if (!zone) return;
         ev.preventDefault();
         zone.classList.remove('sl-drag-over');
-        addFileList(zone.getAttribute('data-editor'), ev.dataTransfer ? ev.dataTransfer.files : []);
+        addFileList(zone.getAttribute('data-editor'), ev.dataTransfer ? ev.dataTransfer.files : [], zone.getAttribute('data-sl-mode'));
     });
 
     doc.addEventListener('keydown', function(ev) {
         var zone = ev.target.closest ? ev.target.closest('.js-slaed-upload-drop') : null;
+        var shot = ev.target.closest ? ev.target.closest('.sl-toastui-shot') : null;
         var file;
+        var id;
+        if (shot) {
+            id = shot.getAttribute('data-editor');
+            if (ev.key === 'ArrowLeft') setStep(id, -1);
+            if (ev.key === 'ArrowRight') setStep(id, 1);
+            return;
+        }
         if (!zone || (ev.key !== 'Enter' && ev.key !== ' ')) return;
         ev.preventDefault();
         file = zone.querySelector('.js-slaed-upload-file');
@@ -469,29 +1152,131 @@
 
     doc.addEventListener('click', function(ev) {
         var el = ev.target;
-        var button = el.closest ? el.closest('button, input[type="button"]') : el;
         var zone = el.closest ? el.closest('.js-slaed-upload-drop') : null;
+        var zoom = el.closest ? el.closest('[data-sl-zoom]') : null;
+        var pane = el.closest ? el.closest('[data-sl-pane].sl-fm-rail-item') : null;
+        var act = el.closest ? el.closest('[data-sl-act]') : null;
+        var bulk = el.closest ? el.closest('[data-sl-bulk]') : null;
+        var page = el.closest ? el.closest('[data-sl-page]') : null;
+        var kind = el.closest ? el.closest('[data-sl-kind]') : null;
+        var mode = el.closest ? el.closest('[data-sl-mode].sl-fm-mode') : null;
+        var step = el.closest ? el.closest('[data-sl-step]') : null;
+        var item = el.closest ? el.closest('[data-sl-num]') : null;
+        var button = el.closest ? el.closest('button, input[type="button"]') : null;
         var id;
-        var opt;
-        var panel;
-        var file;
+        var room;
         if (zone && !el.classList.contains('js-slaed-upload-file')) {
-            id = zone.getAttribute('data-editor');
-            opt = getOpt(id);
-            panel = opt.panel ? doc.getElementById(opt.panel) : null;
-            file = panel ? panel.querySelector('.js-slaed-upload-file') : null;
-            if (file) file.click();
+            zone.querySelector('.js-slaed-upload-file').click();
+            return;
+        }
+        if (zoom && zoom.hasAttribute('data-editor')) {
+            ev.preventDefault();
+            setModal(zoom.getAttribute('data-editor'), parseInt(zoom.getAttribute('data-sl-zoom'), 10));
+            return;
+        }
+        if (pane) {
+            setPane(pane.getAttribute('data-editor'), pane.getAttribute('data-sl-pane'));
+            return;
+        }
+        if (step) {
+            setStep(step.getAttribute('data-editor'), parseInt(step.getAttribute('data-sl-step'), 10));
+            return;
+        }
+        if (kind) {
+            id = kind.getAttribute('data-editor');
+            room = getRoom(id);
+            room.kind = kind.getAttribute('data-sl-kind');
+            room.page = 0;
+            Array.prototype.forEach.call(getPanel(id).querySelectorAll('[data-sl-kind]'), function(one) {
+                one.setAttribute('aria-pressed', String(one === kind));
+            });
+            setList(id);
+            return;
+        }
+        if (mode) {
+            id = mode.getAttribute('data-editor');
+            getRoom(id).mode = mode.getAttribute('data-sl-mode');
+            Array.prototype.forEach.call(getPanel(id).querySelectorAll('[data-sl-mode].sl-fm-mode'), function(one) {
+                one.setAttribute('aria-pressed', String(one === mode));
+            });
+            Array.prototype.forEach.call(getPanel(id).querySelectorAll('[data-sl-modeview]'), function(one) {
+                one.hidden = one.getAttribute('data-sl-modeview') !== getRoom(id).mode;
+            });
+            return;
+        }
+        if (page) {
+            ev.preventDefault();
+            id = page.getAttribute('data-editor');
+            getRoom(id).page = parseInt(page.getAttribute('data-sl-page'), 10);
+            setList(id);
+            return;
+        }
+        if (bulk) {
+            id = bulk.getAttribute('data-editor');
+            setAsk(id, bulk, function() {
+                setBulk(id, bulk.getAttribute('data-sl-bulk'));
+            });
+            return;
+        }
+        if (act && act.hasAttribute('data-editor')) {
+            ev.preventDefault();
+            id = act.getAttribute('data-editor');
+            setActRun(id, act);
+            return;
+        }
+        if (item && item.hasAttribute('data-sl-num') && !el.closest('.sl-fm-pick')) {
+            setCurrent(item.getAttribute('data-editor'), parseInt(item.getAttribute('data-sl-num'), 10));
             return;
         }
         if (!button || !button.classList) return;
         id = button.getAttribute('data-editor');
-        if (button.classList.contains('js-slaed-image-insert')) addUrl(id);
-        if (button.classList.contains('js-slaed-file-image')) addExisting(id, button.getAttribute('data-url'), button.getAttribute('data-file'));
-        if (button.classList.contains('js-slaed-file-attach')) addAttach(id, button.getAttribute('data-file'));
-        if (button.classList.contains('js-slaed-file-refresh')) getFiles(id);
         if (button.classList.contains('js-slaed-window-expand')) setWindowExpand(id, button.getAttribute('data-window'), button);
         if (button.classList.contains('js-slaed-window-close')) setWindowClose(id, button.getAttribute('data-window'));
     });
+
+    function setActRun(id, act) {
+        var way = act.getAttribute('data-sl-act');
+        var num = act.hasAttribute('data-sl-num') ? parseInt(act.getAttribute('data-sl-num'), 10) : getRoom(id).cur;
+        var box;
+        if (way === 'refresh') {
+            getFiles(id);
+            return;
+        }
+        if (way === 'apply') {
+            if (getRoom(id).pane === 'url') addUrl(id);
+            else setBulk(id, 'image');
+            return;
+        }
+        if (way === 'full') {
+            box = getPanel(id).querySelector('.js-slaed-window-expand');
+            setPane(id, 'lib');
+            if (box && !getPanel(id).classList.contains('sl-toastui-window-expanded')) box.click();
+            return;
+        }
+        if (way === 'retry') {
+            getFiles(id);
+            return;
+        }
+        if (way === 'reset') {
+            getRoom(id).find = '';
+            getRoom(id).kind = '';
+            getRoom(id).page = 0;
+            box = getSlot(id, 'find');
+            if (box) box.value = '';
+            Array.prototype.forEach.call(getPanel(id).querySelectorAll('[data-sl-kind]'), function(one) {
+                one.setAttribute('aria-pressed', String(one.getAttribute('data-sl-kind') === ''));
+            });
+            setList(id);
+            return;
+        }
+        if (way === 'stop' || way === 'jobstop') {
+            deleteQueue(id);
+            return;
+        }
+        setAsk(id, act, function() {
+            setAct(id, way, num);
+        });
+    }
 
     api.options = api.options || {};
     api.getTpl = api.getTpl || function(id, name) {
@@ -509,6 +1294,7 @@
         api.options[String(id)] = opt;
         addHook(id, ed);
         addBtn(id, ed);
+        setPane(id, '');
     };
     win.SlaedToastUi = api;
 })(window, document);

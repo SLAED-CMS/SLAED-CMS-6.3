@@ -151,6 +151,16 @@ final class EditorRoomTest extends TestCase
         return substr($js, $from, $stop - $from);
     }
 
+    # How many open template conditions stand over the first appearance of one marker, so a claim about what a visitor is shown is made about nesting and not about source order
+    # A textual test cannot tell a block that precedes the marker from one that encloses it, and the whole point of the address field is that no condition encloses it at all
+    private function getDepth(string $tpl, string $mark): int
+    {
+        $at = strpos($tpl, $mark);
+        $this->assertNotFalse($at, $mark.' is gone from the window markup');
+        $head = substr($tpl, 0, $at);
+        return preg_match_all('#\{%\s*if\s#', $head) - preg_match_all('#\{%\s*endif\s*%\}#', $head);
+    }
+
     # The offset of the quote that closes the string starting at the given quote, escapes honoured
     private function getStringEnd(string $code, int $from): int
     {
@@ -305,8 +315,8 @@ final class EditorRoomTest extends TestCase
             $this->assertStringContainsString($part, $body, 'The embed path no longer checks '.$part.', so one half of the contract is unenforced in the client');
         }
         $this->assertMatchesRegularExpression('#addFileList\(zone\.getAttribute\(.data-editor.\), ev\.dataTransfer#', $js, 'A dropped file misses the one file entry point');
-        $this->assertStringContainsString('addFileList(el.getAttribute(\'data-editor\'), el.files, el);', $js, 'A picked file misses the one file entry point');
-        $this->assertStringContainsString('addEmbed(id, file, put);', $js, 'The embed mode no longer routes through the guarded embed path');
+        $this->assertMatchesRegularExpression('#addFileList\(el\.getAttribute\(.data-editor.\), el\.files,#', $js, 'A picked file misses the one file entry point');
+        $this->assertStringContainsString('addEmbed(id, files[0]);', $js, 'The embed mode no longer routes through the guarded embed path');
     }
 
     # A column of this contract written by a path that never rendered an editor is guarded too, and a refusal there keeps the stored body rather than losing it
@@ -339,7 +349,8 @@ final class EditorRoomTest extends TestCase
         $lite = $this->getFile('templates/lite/partials/editor-toastui-files.html');
         $this->assertSame($lite, $this->getFile('templates/admin/partials/editor-toastui-files.html'), 'The two themes no longer carry the same window markup');
         $this->assertStringContainsString('js-slaed-image-url', $lite, 'The address field is gone from the window, which is the one thing every visitor may use');
-        $this->assertSame(0, preg_match('#\{% if can_upload %\}.*js-slaed-image-url#s', $lite), 'The address field sits behind the upload right, though it stores nothing');
+        $note = 'The address field sits inside a condition of the window, though it stores nothing and belongs to every visitor';
+        $this->assertSame(0, $this->getDepth($lite, 'js-slaed-image-url'), $note);
         foreach (['lite', 'admin'] as $theme) {
             $path = dirname(__DIR__, 2).'/templates/'.$theme.'/partials/editor-toastui-dialogs.html';
             $this->assertFileDoesNotExist($path, 'A second window markup survives in the '.$theme.' theme');

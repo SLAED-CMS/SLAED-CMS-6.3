@@ -5,19 +5,74 @@
     <button type="button" class="sl-but-mini sl-is-muted" data-sl-fm-go="up" title="{{ up_text }}" aria-label="{{ up_text }}"><i class="bi bi-arrow-up" aria-hidden="true"></i></button>
     <button type="button" class="sl-but-mini sl-is-muted" data-sl-fm-go="self" title="{{ reload_text }}" aria-label="{{ reload_text }}"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button>
     <span class="sl-fm-sep"></span>
+    {% if can_create %}<button type="button" class="sl-but-mini sl-is-muted" data-sl-fm-act="fmcreate" title="{{ newfile_text }}" aria-label="{{ newfile_text }}"><i class="bi bi-file-earmark-plus" aria-hidden="true"></i></button>{% endif %}
+    {% if can_mkdir %}<button type="button" class="sl-but-mini sl-is-muted" data-sl-fm-act="fmmkdir" title="{{ newdir_text }}" aria-label="{{ newdir_text }}"><i class="bi bi-folder-plus" aria-hidden="true"></i></button>{% endif %}
+    {% if can_upload %}<button type="button" class="sl-but-mini sl-fm-main" data-sl-fm-act="upload" title="{{ load_text }}" aria-label="{{ load_text }}"><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i></button>{% endif %}
     <span class="sl-fm-crumbs" id="slfmcrumbs">{% for crumb in crumbs %}{% if crumb.url %}<a href="{{ crumb.url }}" hx-get="{{ crumb.url }}" hx-target="#slfmbody" hx-swap="innerHTML" hx-push-url="false">{{ crumb.name }}</a><span>/</span>{% else %}<b>{{ crumb.name }}</b>{% endif %}{% endfor %}</span>
     <input type="text" name="find" value="{{ find_text }}" placeholder="{{ filter_text }}" aria-label="{{ filter_text }}" hx-get="{{ find_url }}" hx-include="#slfmbody [name='dir']" hx-target="#slfmbody" hx-swap="innerHTML" hx-push-url="false" hx-trigger="input changed delay:400ms, search">
     <button type="button" class="sl-but-mini sl-is-muted" data-sl-fm-view="list" aria-pressed="true" title="{{ list_text }}" aria-label="{{ list_text }}"><i class="bi bi-list-ul" aria-hidden="true"></i></button>
     <button type="button" class="sl-but-mini sl-is-muted" data-sl-fm-view="grid" aria-pressed="false" title="{{ tiles_text }}" aria-label="{{ tiles_text }}"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i></button>
   </div>
+  {% if can_upload %}
+  <div class="sl-fm-queue" hidden>
+    <span class="sl-fm-queue-cap">
+      <b>{{ queue_text }}</b>
+      <span data-sl-fm-turn></span>
+      <button type="button" class="sl-but-mini sl-is-muted" data-sl-fm-act="stop" title="{{ stop_text }}" aria-label="{{ stop_text }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    </span>
+    <div data-sl-fm-jobs></div>
+  </div>
+  {% endif %}
   <div id="slfmbody">
 {% endif %}
     <input type="hidden" name="dir" value="{{ dir }}">
+    <form class="sl-fm-ops" action="{{ post_url }}" method="post" hidden>
+      <input type="hidden" name="name" value="uploads">
+      <input type="hidden" name="op" value="">
+      <input type="hidden" name="ctx" value="{{ ctx }}">
+      <input type="hidden" name="file" value="">
+      <input type="hidden" name="back" value="{{ dir }}">
+      <input type="hidden" name="token" value="{{ token }}">
+      <b data-sl-fm-title></b>
+      <input type="text" name="arg" value="" autocomplete="off" spellcheck="false" required>
+      <span data-sl-fm-marks></span>
+      <button type="submit" class="sl-but-blue">{{ apply_text }}</button>
+      <button type="button" class="sl-but" data-sl-fm-act="close">{{ cancel_text }}</button>
+    </form>
+    {% if is_upload %}
+    <form class="sl-fm-load" action="{{ post_url }}" method="post" enctype="multipart/form-data" hidden>
+      <input type="hidden" name="name" value="uploads">
+      <input type="hidden" name="op" value="fmupload">
+      <input type="hidden" name="ctx" value="{{ ctx }}">
+      <input type="hidden" name="dir" value="{{ dir }}">
+      <input type="hidden" name="back" value="{{ dir }}">
+      <input type="hidden" name="token" value="{{ token }}">
+      <label class="sl-fm-drop">
+        <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
+        <b>{{ drop_text }}</b>
+        <input type="file" name="userfile[]" multiple>
+      </label>
+      <small>{{ types_text }}</small>
+      <input type="text" name="sitefile" value="" placeholder="{{ link_text }}" aria-label="{{ link_text }}" autocomplete="off" spellcheck="false">
+      <button type="submit" class="sl-but-blue">{{ apply_text }}</button>
+      <button type="button" class="sl-but" data-sl-fm-act="close">{{ cancel_text }}</button>
+    </form>
+    {% endif %}
     <div class="sl-fm-split" data-sl-fm-url="{{ self_url }}" data-sl-fm-up="{{ up_url }}" data-sl-fm-find="{{ find_text }}">
       {{{ tree_html }}}
       <div class="sl-fm-work">{{{ list_html }}}</div>
       <aside class="sl-fm-side" id="slfmside">{{{ props_html }}}</aside>
     </div>
+    {% if can_mark %}
+    <div class="sl-bulk-bar" hidden>
+      <span class="sl-bulk-count" data-sl-fm-count="{{ marks_text }}"></span>
+      {% if can_zip %}<button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-sl-fm-act="fmcompress" data-sl-fm-many="1"><i class="bi bi-file-zip" aria-hidden="true"></i>&nbsp;{{ zip_text }}</button>{% endif %}
+      {% if can_zip %}<button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-sl-fm-act="fmpack" data-sl-fm-many="1" data-sl-fm-arg="{{ pack_name }}"><i class="bi bi-file-earmark-zip" aria-hidden="true"></i>&nbsp;{{ pack_text }}</button>{% endif %}
+      {% if can_move %}<button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-sl-fm-act="fmmove" data-sl-fm-many="1" data-sl-fm-arg="{{ dir }}"><i class="bi bi-folder-symlink" aria-hidden="true"></i>&nbsp;{{ move_text }}</button>{% endif %}
+      {% if can_delete %}<button type="button" class="sl-chip sl-chip-danger sl-live-act" data-sl-fm-act="fmdelete" data-sl-fm-many="1" data-sl-fm-ask="{{ ask_text }}"><i class="bi bi-trash3" aria-hidden="true"></i>&nbsp;{{ delete_text }}</button>{% endif %}
+      <button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-sl-fm-act="unmark"><i class="bi bi-x-lg" aria-hidden="true"></i>&nbsp;{{ clear_text }}</button>
+    </div>
+    {% endif %}
     {% if caps_html %}<div class="sl-fm-caps"><b>{{ caps_label }}</b>{{{ caps_html }}}</div>{% endif %}
     <div class="sl-fm-foot">
       <span aria-live="polite">{{ info_text }}</span>
@@ -26,5 +81,25 @@
 {% if is_full %}
   </div>
 </div>
+<dialog class="sl-modal sl-modal-wide sl-fm-modal" aria-label="{{ shot_text }}">
+  <div class="sl-modal-body">
+    <div class="sl-modal-title"><i class="bi bi-image" aria-hidden="true"></i> <span data-sl-fm-name></span></div>
+    <button type="button" class="sl-but-mini sl-modal-close" data-sl-close title="{{ cancel_text }}" aria-label="{{ cancel_text }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    <div class="sl-fm-modal-grid">
+      <div class="sl-fm-modal-stage">
+        <button type="button" class="sl-but-mini sl-fm-modal-nav" data-sl-fm-step="-1" title="{{ prev_text }}" aria-label="{{ prev_text }}"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+        <span><img class="sl-modal-image" src="" alt="" data-sl-fm-img></span>
+        <button type="button" class="sl-but-mini sl-fm-modal-nav" data-sl-fm-step="1" title="{{ next_text }}" aria-label="{{ next_text }}"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <aside id="slfmshot"></aside>
+    </div>
+    <div class="sl-modal-foot">
+      <span class="sl-fm-modal-count" data-sl-fm-num></span>
+      <a class="sl-chip sl-chip-neutral sl-live-act" data-sl-fm-down href="#" download><i class="bi bi-download" aria-hidden="true"></i>&nbsp;{{ down_text }}</a>
+      {% if can_zip %}<button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-sl-fm-run="fmcompress"><i class="bi bi-file-zip" aria-hidden="true"></i>&nbsp;{{ zip_text }}</button>{% endif %}
+      {% if can_delete %}<button type="button" class="sl-chip sl-chip-danger sl-live-act" data-sl-fm-run="fmdelete"><i class="bi bi-trash3" aria-hidden="true"></i>&nbsp;{{ delete_text }}</button>{% endif %}
+    </div>
+  </div>
+</dialog>
 {% endif %}
 {% if is_swap %}<span class="sl-fm-crumbs" id="slfmcrumbs" hx-swap-oob="true">{% for crumb in crumbs %}{% if crumb.url %}<a href="{{ crumb.url }}" hx-get="{{ crumb.url }}" hx-target="#slfmbody" hx-swap="innerHTML" hx-push-url="false">{{ crumb.name }}</a><span>/</span>{% else %}<b>{{ crumb.name }}</b>{% endif %}{% endfor %}</span>{% endif %}

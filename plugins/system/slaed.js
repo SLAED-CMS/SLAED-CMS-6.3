@@ -423,6 +423,20 @@
         });
     }
 
+    // Ask again through the system dialog for something that is neither a link nor a form of its own: the caller hands over the question and what to run on yes
+    // The text comes from the caller and never from this file, because every visible word of the project lives in a language constant
+    window.setConfirmTask = function (text, run) {
+        var dlg = document.getElementById('sl-confirm');
+        if (!dlg) {
+            if (window.confirm(text)) run();
+            return;
+        }
+        dlg.querySelector('[data-sl-confirm-text]').textContent = text;
+        dlg.slask = null;
+        dlg.slrun = run;
+        dlg.showModal();
+    };
+
     // Speed dial: click on the toggle pins the fan open, any other click closes every open dial;
     // links carrying data-sl-confirm (plain text, escaped by the template) must pass a confirm dialog first
     function setDialToggle() {
@@ -436,6 +450,7 @@
                     event.preventDefault();
                     dlg.querySelector('[data-sl-confirm-text]').textContent = ask.getAttribute('data-sl-confirm');
                     dlg.slask = ask;
+                    dlg.slrun = null;
                     dlg.showModal();
                     return;
                 }
@@ -1239,12 +1254,21 @@
             if (okay) {
                 var box = okay.closest('dialog');
                 var ask = box ? box.slask : null;
-                if (box) box.close();
+                var run = box ? box.slrun : null;
+                if (box) {
+                    box.close();
+                    box.slrun = null;
+                }
+                if (typeof run === 'function') {
+                    run();
+                    return;
+                }
                 if (ask && ask.href) { window.location.href = ask.href; return; }
                 if (ask) {
                     // A submit button may own its form through the form attribute, which puts the form outside its ancestors
                     var askform = ask.form || ask.closest('form');
-                    if (askform) askform.submit();
+                    // requestSubmit and not submit: the latter skips every submit listener, and a field a listener fills in would travel empty or stale
+                    if (askform) askform.requestSubmit ? askform.requestSubmit() : askform.submit();
                 }
                 return;
             }

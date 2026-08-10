@@ -11,7 +11,7 @@
   </dl>
   {% if acts %}
   <div class="sl-fm-acts">
-    {% for act in acts %}<a class="sl-but-mini sl-is-muted" href="{{ act.url }}" title="{{ act.title }}" aria-label="{{ act.title }}"><i class="bi bi-{{ act.icon }}" aria-hidden="true"></i></a>{% endfor %}
+    {% for act in acts %}<a class="sl-but-mini {% if act.is_main %}sl-fm-main{% else %}sl-is-muted{% endif %}" href="{{ act.url }}"{% if act.is_load %} download{% endif %} title="{{ act.title }}" aria-label="{{ act.title }}"><i class="bi bi-{{ act.icon }}" aria-hidden="true"></i></a>{% endfor %}
   </div>
   {% endif %}
   {% if note_html %}{{{ note_html }}}{% endif %}

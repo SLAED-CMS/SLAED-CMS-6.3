@@ -214,15 +214,15 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     box-shadow: var(--sl-shadow-panel);
     box-sizing: border-box;
     font-family: inherit;
-    font-size: 12px;
+    font-size: 13px;
     left: 50%;
     max-height: calc(100vh - 48px);
-    overflow: auto;
-    padding: 0 var(--sl-space-lg) var(--sl-space-lg);
+    overflow: hidden;
     position: absolute;
     top: 40px;
     transform: translateX(-50%);
-    width: min(720px, calc(100% - 24px));
+    transition: width 0.22s ease;
+    width: min(880px, calc(100% - 24px));
     z-index: 31;
 }
 
@@ -240,7 +240,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 
 .sl-toastui-upload > .sl-toastui-window-head {
     border-radius: var(--sl-radius-card) var(--sl-radius-card) 0 0;
-    margin: 0 calc(var(--sl-space-lg) * -1) var(--sl-space-lg);
+    height: 42px;
 }
 
 .sl-toastui-window-head strong {
@@ -314,78 +314,1025 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     font-size: 12px;
 }
 
-.sl-toastui-upload-body {
+/* The window of the file manager: the rail of insertion ways on the left, the work area on the right, one permanent status line below (docs/FILE-MANAGER-CONCEPT-2026.md §9) */
+/* Every rule below is scoped under the window root: the administrative browser owns the same component names in its own theme, and the two must never reach each other */
+.sl-toastui-upload .sl-fm-split {
+    display: grid;
+    grid-template-columns: 232px minmax(0, 1fr);
+    min-height: 420px;
+}
+
+.sl-toastui-upload .sl-fm-rail {
+    background: var(--sl-color-bg-soft);
+    border-right: 1px solid var(--sl-color-border);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow-y: auto;
+    padding: 12px 10px;
+}
+
+/* Nothing in the rail gives way under pressure: a shrinking section slides under the next one and the whole column reads as one heap of words */
+.sl-toastui-upload .sl-fm-rail > * {
+    flex: 0 0 auto;
+}
+
+.sl-toastui-upload .sl-fm-rail-cap {
+    color: var(--sl-color-text-subtle);
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    padding: 4px 10px 8px;
+    text-transform: uppercase;
+}
+
+/* The window is mounted inside the editor root, where the vendor stylesheet gives every button one fixed height */
+/* A section of the rail is as tall as its own words, so it takes its height back; every other control of the window names its own and is therefore left alone */
+.sl-toastui-upload .sl-fm-rail-item {
+    align-items: flex-start;
+    background: transparent;
+    border: 0;
+    border-radius: 8px;
+    height: auto;
+    color: var(--sl-color-text-heading);
+    cursor: pointer;
+    display: flex;
+    font: inherit;
+    gap: 10px;
+    padding: 10px 11px;
+    position: relative;
+    text-align: left;
+    transition: background-color 0.16s ease;
+}
+
+.sl-toastui-upload .sl-fm-rail-item .bi {
+    color: var(--sl-color-text-muted);
+    flex: 0 0 auto;
+    font-size: var(--sl-size-icon-sm);
+    margin-top: 1px;
+}
+
+.sl-toastui-upload .sl-fm-rail-item > span {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.sl-toastui-upload .sl-fm-rail-item b {
+    display: block;
+    font-size: 13px;
+    font-weight: 400;
+}
+
+.sl-toastui-upload .sl-fm-rail-item small {
+    color: var(--sl-color-text-subtle);
+    display: block;
+    font-size: 11px;
+    line-height: 1.4;
+    margin-top: 3px;
+}
+
+.sl-toastui-upload .sl-fm-rail-item:hover:not([disabled]) {
+    background: var(--sl-color-bg);
+}
+
+.sl-toastui-upload .sl-fm-rail-item[aria-selected="true"] {
+    background: var(--sl-color-bg);
+    box-shadow: inset 0 0 0 1px var(--sl-color-border);
+}
+
+.sl-toastui-upload .sl-fm-rail-item[aria-selected="true"]::before {
+    background: var(--sl-color-primary);
+    border-radius: 0 3px 3px 0;
+    bottom: 10px;
+    content: "";
+    left: -10px;
+    position: absolute;
+    top: 10px;
+    width: 3px;
+}
+
+.sl-toastui-upload .sl-fm-rail-item[aria-selected="true"] .bi,
+.sl-toastui-upload .sl-fm-rail-item[aria-selected="true"] b {
+    color: var(--sl-color-primary);
+}
+
+/* A section the settings close stays where it is and says why, because a control that vanishes is looked for and one that explains itself is understood */
+.sl-toastui-upload .sl-fm-rail-item[disabled] {
+    cursor: not-allowed;
+}
+
+.sl-toastui-upload .sl-fm-rail-item[disabled] b,
+.sl-toastui-upload .sl-fm-rail-item[disabled] .bi {
+    color: var(--sl-color-text-subtle);
+}
+
+.sl-toastui-upload .sl-fm-rail-item[disabled] small {
+    color: var(--sl-color-text-subtle);
+    font-style: italic;
+}
+
+.sl-toastui-upload .sl-fm-rail-lock {
+    color: var(--sl-color-text-subtle) !important;
+    font-size: var(--sl-size-icon-xs) !important;
+    margin: 0 !important;
+    position: absolute;
+    right: 10px;
+    top: 11px;
+}
+
+.sl-toastui-upload .sl-fm-rail-sep {
+    background: var(--sl-color-border);
+    height: 1px;
+    margin: 8px 10px;
+}
+
+.sl-toastui-upload .sl-fm-rail-foot {
+    color: var(--sl-color-text-subtle);
+    font-size: 11px;
+    line-height: 1.5;
+    margin-top: auto;
+    padding: 10px;
+}
+
+.sl-toastui-upload .sl-fm-rail-foot b {
+    color: var(--sl-color-text-muted);
+    display: block;
+    font-weight: 400;
+}
+
+.sl-toastui-upload .sl-fm-main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.sl-toastui-upload .sl-fm-main-head {
+    padding: 16px 20px 0;
+}
+
+.sl-toastui-upload .sl-fm-main-head h2 {
+    color: var(--sl-color-text-heading);
+    font: normal 17px/1.2 inherit;
+    margin: 0 0 4px;
+}
+
+.sl-toastui-upload .sl-fm-main-head p {
+    color: var(--sl-color-text-muted);
+    font-size: 12px;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.sl-toastui-upload .sl-fm-body {
+    flex: 1 1 auto;
+    max-height: 56vh;
+    overflow: auto;
+    padding: 16px 20px;
+}
+
+.sl-toastui-upload .sl-fm-pane {
+    display: none;
+    flex-direction: column;
+    gap: var(--sl-space-lg);
+}
+
+.sl-toastui-upload .sl-fm-pane.sl-is-open {
+    display: flex;
+}
+
+.sl-toastui-upload .sl-fm-label {
+    color: var(--sl-color-text-heading);
+    display: block;
+    font-size: 12px;
+    margin-bottom: var(--sl-space-sm);
+}
+
+.sl-toastui-upload .sl-fm-drop {
+    align-items: center;
+    background: var(--sl-color-bg-soft);
+    border: 1px dashed var(--sl-color-border-strong);
+    border-radius: 10px;
+    color: var(--sl-color-text-muted);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    justify-content: center;
+    min-height: 140px;
+    padding: 18px;
+    text-align: center;
+    transition: border-color 0.16s ease, background-color 0.16s ease;
+}
+
+.sl-toastui-upload .sl-fm-drop:hover,
+.sl-toastui-upload .sl-fm-drop:focus-visible,
+.sl-toastui-upload .sl-fm-drop.sl-drag-over {
+    background: color-mix(in srgb, var(--sl-color-primary) 7%, transparent);
+    border-color: var(--sl-color-primary);
+    outline: 0;
+}
+
+.sl-toastui-upload .sl-fm-drop .bi {
+    color: var(--sl-color-primary);
+    font-size: 30px;
+}
+
+.sl-toastui-upload .sl-fm-drop b {
+    color: var(--sl-color-text-heading);
+    font-weight: 400;
+}
+
+.sl-toastui-upload .sl-fm-drop small {
+    font-size: 12px;
+}
+
+.sl-toastui-upload .sl-fm-as {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.sl-toastui-upload .sl-fm-as label {
+    align-items: center;
+    background: var(--sl-color-bg-soft);
+    border: 1px solid var(--sl-color-border);
+    border-radius: 999px;
+    color: var(--sl-color-text-heading);
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 12px;
+    gap: 7px;
+    height: 30px;
+    padding: 0 12px;
+}
+
+.sl-toastui-upload .sl-fm-as input {
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+}
+
+.sl-toastui-upload .sl-fm-as label:has(input:checked) {
+    background: color-mix(in srgb, var(--sl-color-primary) 12%, transparent);
+    border-color: var(--sl-color-primary);
+    color: var(--sl-color-brand-strong);
+}
+
+/* The action sits in the row of the view choice: the same shape, pushed to the right, because it is not one of the choices */
+.sl-toastui-upload .sl-fm-as button {
+    align-items: center;
+    background: var(--sl-color-bg-soft);
+    border: 1px solid var(--sl-color-border);
+    border-radius: 999px;
+    color: var(--sl-color-text-heading);
+    cursor: pointer;
+    display: inline-flex;
+    font: inherit;
+    font-size: 12px;
+    gap: 7px;
+    height: 30px;
+    margin-left: auto;
+    padding: 0 12px;
+}
+
+.sl-toastui-upload .sl-fm-as button:hover {
+    border-color: var(--sl-color-primary);
+    color: var(--sl-color-primary);
+}
+
+.sl-toastui-upload .sl-fm-as button .bi {
+    font-size: var(--sl-size-icon-xs);
+}
+
+.sl-toastui-upload .sl-fm-field {
+    background: var(--sl-field-bg);
+    border: 1px solid var(--sl-field-border);
+    border-radius: var(--sl-field-radius);
+    box-shadow: var(--sl-shadow-input);
+    box-sizing: border-box;
+    color: var(--sl-color-text);
+    display: block;
+    font: inherit;
+    height: 34px;
+    padding: 0 12px;
+    width: 100%;
+}
+
+.sl-toastui-upload .sl-fm-field:focus {
+    border-color: var(--sl-field-focus);
+    box-shadow: var(--sl-shadow-input), 0 0 0 3px var(--sl-field-focus-ring);
+    outline: 0;
+}
+
+.sl-toastui-upload .sl-fm-view {
     display: flex;
     flex-direction: column;
     gap: var(--sl-space-lg);
 }
 
-/* Inserting an image by its address is open to every visitor, so this field group is the one part of the window that is always rendered */
-.sl-toastui-upload-link {
-    align-items: center;
-    column-gap: var(--sl-space-md);
+/* The tile is as wide as the open fan needs, because the fan unfolds to the left and has to fit inside the tile it belongs to */
+.sl-toastui-upload .sl-fm-grid {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    row-gap: var(--sl-space-sm);
+    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
 }
 
-.sl-toastui-upload-link input[type="text"] {
-    background: var(--sl-field-bg);
-    border: 1px solid var(--sl-field-border);
-    border-radius: var(--sl-field-radius);
-    box-sizing: border-box;
-    color: var(--sl-color-text);
-    height: 32px;
-    padding: 0 var(--sl-space-md);
+/* The wrapper holds the fan above the tile: the tile itself clips its own overflow, or the open fan would be cut off by it */
+.sl-toastui-upload .sl-fm-cell {
+    position: relative;
+}
+
+.sl-toastui-upload .sl-fm-cell > .sl-dial {
+    bottom: 9px;
+    position: absolute;
+    right: 6px;
+}
+
+/* The mark of a file: the plain checkbox of base.css on a round backing, so it stays readable over a picture */
+.sl-toastui-upload .sl-fm-pick {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.88);
+    border-radius: 50%;
+    cursor: pointer;
+    display: inline-flex;
+    height: 24px;
+    justify-content: center;
+    left: 6px;
+    position: absolute;
+    top: 6px;
+    width: 24px;
+    z-index: 2;
+}
+
+.sl-toastui-upload .sl-fm-pick input {
+    margin: 0;
+}
+
+.sl-toastui-upload .sl-fm-cell:has(.sl-fm-pick input:checked) .sl-fm-tile {
+    border-color: var(--sl-color-primary);
+    box-shadow: 0 0 0 3px var(--sl-field-focus-ring);
+}
+
+/* The current file is the one whose properties stand on the right; a mark is a separate thing and serves the actions over several files */
+.sl-toastui-upload .sl-fm-cell.sl-is-current .sl-fm-tile {
+    border-color: var(--sl-color-border-strong);
+}
+
+.sl-toastui-upload .sl-fm-row.sl-is-current {
+    background: var(--sl-color-bg-soft);
+    border-color: var(--sl-color-border);
+}
+
+.sl-toastui-upload .sl-fm-row:has(.sl-fm-pick input:checked) {
+    background: color-mix(in srgb, var(--sl-color-primary) 6%, transparent);
+    border-color: var(--sl-color-primary);
+}
+
+.sl-toastui-upload .sl-fm-row .sl-fm-pick,
+.sl-toastui-upload .sl-fm-rows-head .sl-fm-pick {
+    background: none;
+    height: auto;
+    position: static;
+    width: auto;
+}
+
+.sl-toastui-upload .sl-fm-view .sl-bulk-bar {
+    margin-top: 0;
+}
+
+.sl-toastui-upload .sl-fm-tile {
+    background: var(--sl-color-bg);
+    border: 1px solid var(--sl-color-border);
+    border-radius: 10px;
+    display: block;
+    overflow: hidden;
+    padding: 0;
+    position: relative;
+}
+
+.sl-toastui-upload .sl-fm-cell:hover .sl-fm-tile {
+    border-color: var(--sl-color-border-strong);
+}
+
+.sl-toastui-upload .sl-fm-tile-img {
+    align-items: center;
+    background: var(--sl-color-bg-soft-alt);
+    color: var(--sl-color-text-muted);
+    display: flex;
+    font-size: var(--sl-size-icon-md);
+    height: 78px;
+    justify-content: center;
+    position: relative;
+}
+
+.sl-toastui-upload .sl-fm-tile-img img,
+.sl-toastui-upload .sl-fm-row-thumb img {
+    height: 100%;
+    object-fit: cover;
     width: 100%;
 }
 
-.sl-toastui-upload-link input[type="button"] {
-    grid-column: 2;
+/* The whole preview is one link: the shared lightbox opens by the picture of the object */
+.sl-toastui-upload .sl-fm-zoom {
+    align-items: center;
+    background: color-mix(in srgb, var(--sl-color-text-heading) 34%, transparent);
+    color: var(--sl-color-on-dark);
+    display: flex;
+    font-size: var(--sl-size-icon-sm);
+    inset: 0;
+    justify-content: center;
+    opacity: 0;
+    position: absolute;
+    text-decoration: none;
+    transition: opacity 0.16s ease;
+}
+
+.sl-toastui-upload .sl-fm-zoom:hover,
+.sl-toastui-upload .sl-fm-zoom:focus-visible {
+    opacity: 1;
+}
+
+/* The kind badge went right: the mark of the file stands top left now */
+.sl-toastui-upload .sl-fm-tile-kind {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.88);
+    border-radius: 999px;
+    color: var(--sl-color-text-muted);
+    display: inline-flex;
+    font-size: 10px;
+    height: 17px;
+    letter-spacing: 0.3px;
+    padding: 0 6px;
+    position: absolute;
+    right: 6px;
+    top: 6px;
+}
+
+.sl-toastui-upload .sl-fm-tile-cap {
+    border-top: 1px solid var(--sl-color-border);
+    display: block;
+    padding: 7px 8px;
+    padding-right: 40px;
+}
+
+.sl-toastui-upload .sl-fm-tile-cap b {
+    color: var(--sl-color-text-heading);
+    display: block;
+    font-size: 12px;
+    font-weight: 400;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sl-toastui-upload .sl-fm-tile-cap small {
+    color: var(--sl-color-text-subtle);
+    display: block;
+    font-size: 11px;
+    margin-top: 2px;
+}
+
+.sl-toastui-upload .sl-fm-more {
+    color: var(--sl-color-text-muted);
+    font-size: 12px;
+    margin: 0;
+}
+
+.sl-toastui-upload .sl-fm-lib-bar {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+}
+
+.sl-toastui-upload .sl-fm-search {
+    flex: 1 1 auto;
+    min-width: 0;
+    position: relative;
+}
+
+.sl-toastui-upload .sl-fm-search .bi {
+    color: var(--sl-color-text-subtle);
+    font-size: var(--sl-size-icon-xs);
+    left: 11px;
+    pointer-events: none;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.sl-toastui-upload .sl-fm-search input {
+    background: var(--sl-field-bg);
+    border: 1px solid var(--sl-field-border);
+    border-radius: 999px;
+    box-shadow: var(--sl-shadow-input);
+    box-sizing: border-box;
+    color: var(--sl-color-text);
+    font: inherit;
+    height: 32px;
+    padding: 0 12px 0 32px;
+    width: 100%;
+}
+
+.sl-toastui-upload .sl-fm-search input:focus {
+    border-color: var(--sl-field-focus);
+    box-shadow: var(--sl-shadow-input), 0 0 0 3px var(--sl-field-focus-ring);
+    outline: 0;
+}
+
+.sl-toastui-upload .sl-fm-filters {
+    display: flex;
+    gap: 4px;
+}
+
+.sl-toastui-upload .sl-fm-filter {
+    background: var(--sl-color-bg);
+    border: 1px solid var(--sl-color-border);
+    border-radius: 999px;
+    color: var(--sl-color-text-muted);
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+    height: 28px;
+    padding: 0 11px;
+}
+
+.sl-toastui-upload .sl-fm-filter:hover {
+    border-color: var(--sl-color-border-strong);
+    color: var(--sl-color-text);
+}
+
+.sl-toastui-upload .sl-fm-filter[aria-pressed="true"] {
+    background: color-mix(in srgb, var(--sl-color-primary) 10%, transparent);
+    border-color: var(--sl-color-primary);
+    color: var(--sl-color-brand-strong);
+}
+
+.sl-toastui-upload .sl-fm-modes {
+    background: var(--sl-color-bg-soft-alt);
+    border-radius: 8px;
+    display: flex;
+    gap: 2px;
+    padding: 2px;
+}
+
+.sl-toastui-upload .sl-fm-mode {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+    color: var(--sl-color-text-muted);
+    cursor: pointer;
+    display: inline-flex;
+    font-size: var(--sl-size-icon-xs);
+    height: 26px;
+    justify-content: center;
+    width: 28px;
+}
+
+.sl-toastui-upload .sl-fm-mode[aria-pressed="true"] {
+    background: var(--sl-color-bg);
+    box-shadow: var(--sl-shadow-soft);
+    color: var(--sl-color-primary);
+}
+
+.sl-toastui-upload .sl-fm-lib-split {
+    align-items: start;
+    display: grid;
+    gap: 14px;
+    grid-template-columns: minmax(0, 1fr) 246px;
+}
+
+.sl-toastui-upload .sl-fm-rows {
+    display: flex;
+    flex-direction: column;
+}
+
+.sl-toastui-upload .sl-fm-rows-head,
+.sl-toastui-upload .sl-fm-row {
+    align-items: center;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: 22px 44px minmax(0, 1fr) 68px 78px 88px 34px;
+}
+
+.sl-toastui-upload .sl-fm-rows-head {
+    border-bottom: 1px solid var(--sl-color-border);
+    color: var(--sl-color-text-subtle);
+    font-size: 11px;
+    letter-spacing: 0.3px;
+    padding: 0 6px 6px;
+    text-transform: uppercase;
+}
+
+.sl-toastui-upload .sl-fm-row {
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 6px;
+    position: relative;
+}
+
+.sl-toastui-upload .sl-fm-row:hover {
+    background: var(--sl-color-bg-soft);
+    border-color: var(--sl-color-border);
+}
+
+.sl-toastui-upload .sl-fm-row-thumb {
+    align-items: center;
+    background: var(--sl-color-bg-soft-alt);
+    color: var(--sl-color-text-muted);
+    display: flex;
+    font-size: var(--sl-size-icon-xs);
+    height: 32px;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    width: 44px;
+}
+
+.sl-toastui-upload .sl-fm-row .sl-dial {
     justify-self: end;
 }
 
-.sl-toastui-upload-picker > small {
-    color: var(--sl-color-text-muted);
-    display: block;
+.sl-toastui-upload .sl-fm-row-name {
+    color: var(--sl-color-text-heading);
     font-size: 12px;
-    margin-top: var(--sl-space-xs);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.sl-toastui-image-mode {
-    color: var(--sl-color-text);
+.sl-toastui-upload .sl-fm-row-meta {
+    color: var(--sl-color-text-subtle);
+    font-size: 11px;
+}
+
+.sl-toastui-upload .sl-fm-props,
+.sl-toastui-shot .sl-fm-props {
+    background: var(--sl-color-bg-soft);
+    border: 1px solid var(--sl-color-border);
+    border-radius: 10px;
+    padding: 12px;
+}
+
+.sl-toastui-upload .sl-fm-props-cap {
+    color: var(--sl-color-text-subtle);
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.sl-toastui-upload .sl-fm-props-img {
+    align-items: center;
+    background: var(--sl-color-bg-soft-alt);
+    border-radius: 8px;
+    color: var(--sl-color-text-muted);
+    display: flex;
+    font-size: 30px;
+    height: 108px;
+    justify-content: center;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+.sl-toastui-upload .sl-fm-props-img img {
+    height: 100%;
+    object-fit: contain;
+    width: 100%;
+}
+
+.sl-toastui-upload .sl-fm-props dl {
+    margin: 0;
+}
+
+.sl-toastui-upload .sl-fm-props div,
+.sl-toastui-shot .sl-fm-props div {
+    border-bottom: 1px dashed var(--sl-color-border);
+    display: flex;
+    font-size: 12px;
+    gap: 10px;
+    justify-content: space-between;
+    padding: 5px 0;
+}
+
+.sl-toastui-upload .sl-fm-props div:last-child,
+.sl-toastui-shot .sl-fm-props div:last-child {
+    border-bottom: 0;
+}
+
+.sl-toastui-upload .sl-fm-props dt,
+.sl-toastui-shot .sl-fm-props dt {
+    color: var(--sl-color-text-subtle);
+    flex: 0 0 auto;
+}
+
+.sl-toastui-upload .sl-fm-props dd,
+.sl-toastui-shot .sl-fm-props dd {
+    color: var(--sl-color-text-heading);
+    margin: 0;
+    min-width: 0;
+    overflow: hidden;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sl-toastui-upload .sl-fm-props-note {
+    color: var(--sl-color-text-subtle);
+    font-size: 11px;
+    line-height: 1.45;
+    margin: 10px 0 0;
+}
+
+.sl-toastui-upload .sl-fm-view .sl-pager {
+    padding: 10px 0 0;
+}
+
+.sl-toastui-upload .sl-fm-view .sl-pager-info {
+    font-size: 12px;
+}
+
+/* The empty catalogue names its reason instead of saying nothing; the same block carries the empty filter and the list that never arrived */
+.sl-toastui-upload .sl-fm-empty {
+    align-items: center;
+    background: var(--sl-color-bg-soft);
+    border: 1px dashed var(--sl-color-border-strong);
+    border-radius: 10px;
     display: flex;
     flex-direction: column;
-    font-size: 12px;
-    gap: var(--sl-space-sm);
+    gap: 8px;
+    padding: 34px 20px;
+    text-align: center;
 }
 
-.sl-toastui-image-mode label {
-    align-items: flex-start;
-    cursor: pointer;
-    display: flex;
-    gap: var(--sl-space-sm);
+.sl-toastui-upload .sl-fm-empty .bi {
+    color: var(--sl-color-text-subtle);
+    font-size: 30px;
 }
 
-.sl-toastui-image-mode input {
-    margin: 2px 0 0;
+.sl-toastui-upload .sl-fm-empty b {
+    color: var(--sl-color-text-heading);
+    font-weight: 400;
 }
 
-.sl-toastui-image-mode span,
-.sl-toastui-image-mode small {
-    display: block;
-}
-
-.sl-toastui-image-mode strong {
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.sl-toastui-image-mode small {
+.sl-toastui-upload .sl-fm-empty p {
     color: var(--sl-color-text-muted);
     font-size: 12px;
-    line-height: 1.35;
-    margin-top: var(--sl-space-xs);
+    line-height: 1.5;
+    margin: 0;
+    max-width: 420px;
+}
+
+.sl-toastui-upload .sl-fm-empty.sl-is-fail .bi {
+    color: var(--sl-color-danger);
+}
+
+/* The skeleton of the catalogue takes the shape of a tile, because tiles is what the compact catalogue shows and a row-shaped placeholder would jump when the answer lands */
+.sl-toastui-upload .sl-skel-tile {
+    background: var(--sl-color-bg);
+    border: 1px solid var(--sl-color-border);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.sl-toastui-upload .sl-skel-tile .sl-skel-cell {
+    border-radius: 0;
+    height: 78px;
+}
+
+.sl-toastui-upload .sl-skel-tile .sl-skel-line {
+    height: 9px;
+    margin: 8px;
+}
+
+/* The upload queue: the files go one at a time, each with its own bar and its own cancel, and a refused one names the reason the server gave */
+.sl-toastui-upload .sl-fm-queue {
+    background: var(--sl-color-bg-soft);
+    border: 1px solid var(--sl-color-border);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+}
+
+.sl-toastui-upload .sl-fm-queue-cap {
+    align-items: center;
+    color: var(--sl-color-text-muted);
+    display: flex;
+    font-size: 12px;
+    gap: 10px;
+}
+
+.sl-toastui-upload .sl-fm-queue-cap b {
+    color: var(--sl-color-text-heading);
+    flex: 1 1 auto;
+    font-weight: 400;
+}
+
+.sl-toastui-upload .sl-fm-job {
+    align-items: center;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: 22px minmax(0, 1fr) 28px;
+}
+
+.sl-toastui-upload .sl-fm-job > .bi {
+    color: var(--sl-color-text-muted);
+    font-size: var(--sl-size-icon-sm);
+}
+
+.sl-toastui-upload .sl-fm-job-name {
+    color: var(--sl-color-text-heading);
+    display: flex;
+    font-size: 12px;
+    gap: 10px;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.sl-toastui-upload .sl-fm-job-name span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sl-toastui-upload .sl-fm-job-name small {
+    color: var(--sl-color-text-subtle);
+    flex: 0 0 auto;
+}
+
+.sl-toastui-upload .sl-fm-job-why {
+    color: var(--sl-color-danger);
+    font-size: 12px;
+    line-height: 1.4;
+    margin: 0;
+}
+
+.sl-toastui-upload .sl-fm-job.sl-is-done > .bi {
+    color: var(--sl-color-success);
+}
+
+.sl-toastui-upload .sl-fm-job.sl-is-fail > .bi {
+    color: var(--sl-color-danger);
+}
+
+/* An action goes at its own pace: while the server has not answered, the object is busy and says so, and nothing on the list disappears before the answer */
+.sl-toastui-upload .sl-fm-busy {
+    align-items: center;
+    background: color-mix(in srgb, var(--sl-color-bg) 74%, transparent);
+    border-radius: 8px;
+    display: flex;
+    inset: 0;
+    justify-content: center;
+    position: absolute;
+    z-index: 3;
+}
+
+.sl-toastui-upload .sl-fm-quota {
+    align-items: center;
+    color: var(--sl-color-text-muted);
+    display: flex;
+    font-size: 12px;
+    gap: 10px;
+}
+
+.sl-toastui-upload .sl-fm-quota-track {
+    background: var(--sl-color-bg-soft-alt);
+    border-radius: 3px;
+    flex: 1 1 auto;
+    height: 6px;
+    overflow: hidden;
+}
+
+.sl-toastui-upload .sl-fm-quota-fill {
+    background: linear-gradient(90deg, var(--sl-color-primary), var(--sl-color-brand-strong));
+    border-radius: 3px;
+    display: block;
+    height: 100%;
+}
+
+.sl-toastui-upload .sl-fm-foot {
+    align-items: center;
+    background: var(--sl-color-bg-soft);
+    border-top: 1px solid var(--sl-color-border);
+    display: flex;
+    gap: 10px;
+    padding: 10px 20px;
+}
+
+.sl-toastui-upload .sl-fm-foot-info {
+    color: var(--sl-color-text-muted);
+    flex: 1 1 auto;
+    font-size: 12px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* The three buttons of the status line carry one shape, one height and one width */
+.sl-toastui-upload .sl-fm-btn {
+    align-items: center;
+    background: var(--sl-color-bg);
+    border: 1px solid var(--sl-color-border);
+    border-radius: var(--sl-radius-control);
+    box-sizing: border-box;
+    color: var(--sl-color-text-heading);
+    cursor: pointer;
+    display: inline-flex;
+    font: inherit;
+    font-size: 13px;
+    gap: 7px;
+    height: 32px;
+    justify-content: center;
+    min-width: 116px;
+    padding: 0 16px;
+    transition: border-color 0.16s ease, background-color 0.16s ease;
+}
+
+.sl-toastui-upload .sl-fm-btn .bi {
+    font-size: var(--sl-size-icon-xs);
+}
+
+.sl-toastui-upload .sl-fm-btn:hover {
+    border-color: var(--sl-color-border-strong);
+}
+
+.sl-toastui-upload .sl-fm-btn:focus-visible {
+    border-color: var(--sl-color-primary);
+    box-shadow: 0 0 0 3px var(--sl-field-focus-ring);
+    outline: 0;
+}
+
+.sl-toastui-upload .sl-fm-btn[disabled] {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.sl-toastui-upload .sl-fm-btn-main {
+    background: var(--sl-color-primary);
+    border-color: var(--sl-color-primary);
+    color: var(--sl-color-on-dark);
+}
+
+.sl-toastui-upload .sl-fm-btn-main:hover {
+    background: var(--sl-color-primary-hover);
+    border-color: var(--sl-color-primary-hover);
+}
+
+.sl-toastui-upload .sl-fm-btn-main[disabled]:hover {
+    background: var(--sl-color-primary);
+    border-color: var(--sl-color-primary);
+}
+
+/* The gallery uses the shared modal frame of the theme; only the layout of its content is added here */
+.sl-toastui-shot .sl-fm-modal-grid {
+    align-items: start;
+    display: grid;
+    gap: 16px;
+    grid-template-columns: minmax(0, 1fr) 268px;
+}
+
+.sl-toastui-shot .sl-fm-modal-stage {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    position: relative;
+}
+
+.sl-toastui-shot .sl-fm-modal-img {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    min-height: min(62vh, 460px);
+    width: 100%;
+}
+
+.sl-toastui-shot .sl-fm-modal-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.sl-toastui-shot .sl-fm-modal-prev {
+    left: 10px;
+}
+
+.sl-toastui-shot .sl-fm-modal-next {
+    right: 10px;
+}
+
+.sl-toastui-shot .sl-fm-modal-count {
+    align-items: center;
+    background: var(--sl-color-bg-soft-alt);
+    border-radius: 999px;
+    color: var(--sl-color-text-muted);
+    display: inline-flex;
+    font-size: 11px;
+    height: 22px;
+    padding: 0 9px;
 }
 
 .sl-toastui-upload.sl-none {
@@ -412,135 +1359,65 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     display: none;
 }
 
-.sl-toastui-upload-picker > label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: var(--sl-space-sm);
-}
-
-.sl-toastui-upload-file-row {
-    align-items: center;
-    display: grid;
-    gap: var(--sl-space-md);
-    grid-template-columns: minmax(0, 1fr) minmax(120px, 33%);
-    outline: 2px solid transparent;
-    outline-offset: 3px;
-}
-
-.sl-toastui-upload-file-row:focus-visible {
-    outline-color: var(--sl-color-primary);
-}
-
-.sl-toastui-upload-file-row.sl-drag-over {
-    background: color-mix(in srgb, var(--sl-color-primary) 8%, transparent);
-    outline-color: var(--sl-color-primary);
-}
-
-.sl-toastui-upload-file-row .toastui-editor-file-name {
-    background: var(--sl-field-bg);
-    border: 1px solid var(--sl-field-border);
-    border-radius: var(--sl-field-radius);
-    box-sizing: border-box;
-    color: var(--sl-color-text);
-    cursor: pointer;
-    grid-column: 1 / -1;
-    height: 32px;
-    line-height: 30px;
-    margin: 0;
-    min-width: 0;
-    overflow: hidden;
-    padding: 0 var(--sl-space-md);
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    width: 100%;
-}
-
-.sl-toastui-upload-files-head {
-    align-items: center;
-    display: flex;
-    gap: var(--sl-space-md);
-    justify-content: space-between;
-}
-
-.sl-toastui-upload-files-head input {
-    min-width: 120px;
-}
-
-.sl-toastui-upload input[type="button"] {
-    background: var(--sl-color-bg-soft);
-    border: 1px solid var(--sl-color-border);
-    border-radius: var(--sl-radius-control);
-    color: var(--sl-color-text);
-    height: 32px;
-    line-height: 1.4;
-    padding: 0 var(--sl-space-lg);
-}
-
-.sl-toastui-upload input[type="button"]:hover {
-    background: var(--sl-color-border);
-}
-
-.sl-toastui-upload .sl-editor-upload-files .toastui-editor-close-button,
-.sl-toastui-upload .sl-editor-upload-files .toastui-editor-ok-button {
-    border-radius: var(--sl-radius-control);
-    height: 32px;
-    min-width: 90px;
-    padding: 0 var(--sl-space-lg);
-}
-
-.sl-toastui-upload .sl-editor-upload-files .toastui-editor-close-button {
-    background: var(--sl-color-bg-soft);
-    border: 1px solid var(--sl-color-border);
-    color: var(--sl-color-text);
-}
-
-.sl-toastui-upload .sl-editor-upload-files .toastui-editor-close-button:hover {
-    border-color: var(--sl-color-border-strong);
-}
-
-.sl-toastui-upload .sl-editor-upload-files .toastui-editor-ok-button {
-    background: var(--sl-color-primary);
-    color: var(--sl-color-on-dark);
-}
-
-.sl-toastui-upload .sl-editor-upload-files .toastui-editor-ok-button:hover {
-    background: var(--sl-color-primary-hover);
-}
-
-.sl-toastui-upload .sl-editor-upload-files {
-    max-height: 280px;
-    overflow: auto;
-}
-
-.sl-toastui-file-table {
-    border-collapse: collapse;
-    color: var(--sl-color-text);
-    width: 100%;
-}
-
-.sl-toastui-file-table td {
-    border-bottom: 1px solid var(--sl-color-border);
-    padding: var(--sl-space-sm);
-    vertical-align: middle;
-}
-
-.sl-toastui-file-table td:last-child {
-    text-align: right;
-    white-space: nowrap;
-}
-
-.sl-toastui-upload.sl-toastui-window-expanded .sl-toastui-upload-body {
+.sl-toastui-upload.sl-toastui-window-expanded .sl-fm-split {
     flex: 1 1 auto;
     min-height: 0;
 }
 
-.sl-toastui-upload.sl-toastui-window-expanded .sl-editor-upload-files {
-    flex: 1 1 auto;
+.sl-toastui-upload.sl-toastui-window-expanded .sl-fm-body {
     max-height: none;
 }
 
 .sl-toastui-upload.sl-toastui-window-expanded.sl-none {
     display: none;
+}
+
+@media (max-width: 900px) {
+    .sl-toastui-upload .sl-fm-lib-split {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 720px) {
+    .sl-toastui-upload .sl-fm-split {
+        grid-template-columns: 1fr;
+    }
+    .sl-toastui-upload .sl-fm-rail {
+        border-bottom: 1px solid var(--sl-color-border);
+        border-right: 0;
+        flex-direction: row;
+        overflow-x: auto;
+    }
+    .sl-toastui-upload .sl-fm-rail-cap,
+    .sl-toastui-upload .sl-fm-rail-sep,
+    .sl-toastui-upload .sl-fm-rail-foot {
+        display: none;
+    }
+    .sl-toastui-upload .sl-fm-rail-item small {
+        display: none;
+    }
+    .sl-toastui-upload .sl-fm-rail-item[disabled] small {
+        display: block;
+        max-width: 150px;
+    }
+    .sl-toastui-upload .sl-fm-rail-item[aria-selected="true"]::before {
+        bottom: -12px;
+        height: 3px;
+        left: 10px;
+        right: 10px;
+        top: auto;
+        width: auto;
+    }
+    .sl-toastui-upload .sl-fm-rows-head,
+    .sl-toastui-upload .sl-fm-row {
+        grid-template-columns: 22px 44px minmax(0, 1fr) 88px 34px;
+    }
+    .sl-toastui-upload .sl-fm-rows-head span:nth-child(4),
+    .sl-toastui-upload .sl-fm-row span:nth-child(4),
+    .sl-toastui-upload .sl-fm-rows-head span:nth-child(5),
+    .sl-toastui-upload .sl-fm-row span:nth-child(5) {
+        display: none;
+    }
 }
 
 @media (max-width: 600px) {
@@ -667,11 +1544,6 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 
 .sl-editor-emoji-panel.sl-toastui-window-expanded .sl-editor-emoji-grid {
     max-height: calc(100vh - 150px);
-}
-
-.sl-toastui-file-thumb {
-    max-height: 50px;
-    max-width: 80px;
 }
 
 /* ===== Vendor alignment: engine surfaces mapped to theme tokens (chrome) ===== */

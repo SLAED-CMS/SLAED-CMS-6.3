@@ -1,11 +1,17 @@
 <tr>
+  <td class="sl-col-check">{% if is_mark %}<input type="checkbox" value="{{ pick_value }}" aria-label="{{ mark_text }}" data-sl-fm-mark>{% endif %}</td>
   <td>
     <span class="sl-fm-name">
+      {% if full_url %}
+      <button type="button" class="sl-fm-thumb sl-fm-thumb-{{ tone }}" title="{{ shot_text }}" aria-label="{{ shot_text }}" data-sl-fm-show data-sl-fm-file="{{ pick_value }}" data-sl-fm-name="{{ name }}" data-sl-fm-img="{{ full_url }}" data-sl-fm-info="{{ info_url }}" data-sl-fm-down="{{ down_url }}"><i class="bi bi-{{ icon }}" aria-hidden="true"></i><i class="bi bi-zoom-in" aria-hidden="true"></i></button>
+      {% else %}
       <span class="sl-fm-thumb sl-fm-thumb-{{ tone }}"><i class="bi bi-{{ icon }}" aria-hidden="true"></i></span>
-      <a href="{{ url }}" hx-get="{{ url }}" hx-target="{% if is_dir %}#slfmbody{% else %}#slfmside{% endif %}" hx-swap="innerHTML" hx-push-url="false" title="{{ path }}" data-sl-fm-pick>{{ name }}</a>
+      {% endif %}
+      <a href="{{ url }}" hx-get="{{ url }}" hx-target="{% if is_dir %}#slfmbody{% else %}#slfmside{% endif %}" hx-swap="innerHTML" hx-push-url="false" title="{{ hint_text }}" data-sl-fm-pick>{{ name }}</a>
     </span>
   </td>
   <td>{{ kind_text }}</td>
   <td>{{ size_text }}</td>
   <td class="sl-col-date">{{ date_text }}</td>
+  <td class="sl-col-actions">{{{ acts_html }}}</td>
 </tr>

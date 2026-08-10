@@ -196,6 +196,11 @@
   --sl-progress-fill-5-end: #8c2ca9;
 }
 
+/* Reset: the attribute wins over every class, because a component setting display would otherwise keep on the screen what the page has taken off it */
+[hidden] {
+  display: none !important;
+}
+
 /* Reset: zero margins, padding and borders on all HTML elements */
 html,
 body,
