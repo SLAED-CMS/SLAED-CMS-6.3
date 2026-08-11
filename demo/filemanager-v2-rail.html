@@ -305,7 +305,7 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color:
     <div class="sl-fm" role="dialog" aria-label="Файловый менеджер">
       <div class="sl-fm-head">
         <button type="button" class="sl-fm-act sl-fm-act-drag" title="Переместить окно" aria-label="Переместить окно"><i class="bi bi-arrows-move" aria-hidden="true"></i></button>
-        <span class="sl-fm-head-title"><i class="bi bi-folder2-open" aria-hidden="true"></i>Файловый менеджер</span>
+        <span class="sl-fm-head-title"><i class="bi bi-folder-fill" aria-hidden="true"></i>Файловый менеджер</span>
         <button type="button" class="sl-fm-act" data-slot="expand" title="Развернуть" aria-label="Развернуть"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i></button>
         <button type="button" class="sl-fm-act" title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
       </div>
@@ -491,7 +491,7 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color:
               <!-- §31 Пустой каталог, пустой результат фильтра и несостоявшийся список — три разных текста в одном блоке -->
               <div class="sl-fm-view" data-view="empty" hidden>
                 <div class="sl-fm-empty" data-slot="empty-box">
-                  <i class="bi bi-folder2" data-slot="empty-icon" aria-hidden="true"></i>
+                  <i class="bi bi-folder" data-slot="empty-icon" aria-hidden="true"></i>
                   <b data-slot="empty-title">Каталог пока пуст</b>
                   <p data-slot="empty-text">Загруженные файлы появятся здесь сразу после первой загрузки.</p>
                   <button type="button" class="sl-fm-btn" data-slot="empty-act" hidden></button>
@@ -838,7 +838,7 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color:
     var states = {
         ready: [],
         skel: [],
-        empty: ['folder2', 'Каталог пока пуст', 'Загруженные файлы появятся здесь сразу после первой загрузки.', ''],
+        empty: ['folder', 'Каталог пока пуст', 'Загруженные файлы появятся здесь сразу после первой загрузки.', ''],
         filter: ['search', 'Ничего не найдено', 'В этой директории нет файлов, подходящих под фильтр.', 'Сбросить фильтр'],
         fail: ['exclamation-triangle', 'Список не загрузился', 'Сервер не ответил на запрос каталога. Файлы на месте, получить список не удалось.', 'Повторить']
     };

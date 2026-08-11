@@ -7,7 +7,7 @@
     var rooms = {};
     // The kind of an object decides the glyph it is drawn with; the type resolver itself stays on the server and this map only dresses its answer
     var icons = {
-        dir: 'folder2',
+        dir: 'folder',
         image: 'image',
         audio: 'file-earmark-music',
         video: 'file-earmark-play',
@@ -52,7 +52,9 @@
                 find: '',
                 page: 0,
                 state: 'skel',
-                queue: null
+                queue: null,
+                anch: -1,
+                back: null
             };
         }
         return rooms[key];
@@ -93,19 +95,30 @@
         el.style.zIndex = String(layer);
     }
 
+    // The window opens on its first control and gives the focus back to what opened it: a window closing into nothing leaves the keyboard on the page and not in the editor (§33)
     function setPanel(id, show) {
         var opt = getOpt(id);
         var el = getPanel(id);
         var box = doc.getElementById(String(id) + '_toast');
         var root = box ? box.querySelector('.toastui-editor-defaultUI') : null;
+        var room = getRoom(id);
+        var back = room.back;
+        var first;
         if (!el) return;
         if (root && el.parentNode !== root && !el.classList.contains('sl-toastui-window-expanded')) root.appendChild(el);
         el.classList.toggle('sl-none', !show);
         el.setAttribute('aria-hidden', show ? 'false' : 'true');
-        if (!show) return;
-        if (getRoom(id).pane === '') setPane(id, '');
+        if (!show) {
+            room.back = null;
+            if (back && back.isConnected) back.focus();
+            return;
+        }
+        if (!el.contains(doc.activeElement)) room.back = doc.activeElement;
+        if (room.pane === '') setPane(id, '');
         if (opt.canlist) getFiles(id);
         setWindowFront(id, 'files');
+        first = el.querySelector('.sl-fm-rail-item:not([disabled])');
+        if (first) first.focus();
     }
 
     function setWindowExpand(id, type, button) {
@@ -687,6 +700,94 @@
         if (okay) okay.disabled = (room.pane === 'lib') ? num === 0 : room.pane !== 'url';
     }
 
+    // A mark belongs to the file and not to the box drawing it, so it is set on the path of the object and the row and the tile read it back from the one set of names
+    function setPickOne(id, num, on) {
+        var room = getRoom(id);
+        var row = room.view[num];
+        var at;
+        if (!row) return;
+        at = room.pick.indexOf(row.path);
+        if (on === null) on = at < 0;
+        if (on && at < 0) room.pick.push(row.path);
+        if (!on && at >= 0) room.pick.splice(at, 1);
+        setPicks(id);
+    }
+
+    function setPickSpan(id, from, to) {
+        var at = Math.min(from, to);
+        var end = Math.max(from, to);
+        for (; at <= end; at++) setPickOne(id, at, true);
+    }
+
+    // The keys walk what the eye sees: whichever of the three drawings of the catalogue is on screen is the one the arrows step through
+    function getWalk(id) {
+        var el = getPanel(id);
+        var out = [];
+        if (!el) return out;
+        Array.prototype.forEach.call(el.querySelectorAll('.sl-fm-row[data-sl-num], .sl-fm-cell[data-sl-num]'), function(one) {
+            if (one.offsetParent !== null) out.push(one);
+        });
+        return out;
+    }
+
+    // How far one key carries depends on the drawing: rows walk by one, tiles walk by one across and by a whole row of them down, counted off the drawing itself
+    function getWalkCols(walk) {
+        var top = walk.length ? walk[0].getBoundingClientRect().top : 0;
+        var num = 0;
+        walk.forEach(function(one) {
+            if (Math.abs(one.getBoundingClientRect().top - top) < 4) num++;
+        });
+        return Math.max(1, num);
+    }
+
+    function getWalkTurn(walk, at, key) {
+        var wide = walk.length && walk[0].classList.contains('sl-fm-cell') ? getWalkCols(walk) : 1;
+        if (key === 'Home') return 0;
+        if (key === 'End') return walk.length - 1;
+        if (key === 'ArrowLeft') return wide > 1 ? at - 1 : at;
+        if (key === 'ArrowRight') return wide > 1 ? at + 1 : at;
+        if (key === 'ArrowUp') return at - wide;
+        return at + wide;
+    }
+
+    // An arrow moves the current object, the shift with it drags the marks along, a space marks one and Enter does with it what the window exists for: it inserts it
+    function setWalkKeys(id, ev) {
+        var room = getRoom(id);
+        var walk = getWalk(id);
+        var keys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
+        var at = -1;
+        var to;
+        var num;
+        var row;
+        if (!walk.length) return false;
+        // The object under the keys is the object holding the focus, and the current one only when the focus stands somewhere else in the catalogue
+        walk.forEach(function(one, i) {
+            if (parseInt(one.getAttribute('data-sl-num'), 10) === room.cur && at < 0) at = i;
+            if (one === doc.activeElement) at = i;
+        });
+        if (at < 0) at = 0;
+        num = parseInt(walk[at].getAttribute('data-sl-num'), 10);
+        row = room.view[num] || {};
+        if (ev.key === 'Enter') {
+            if (!row.able || !row.able.insert) return false;
+            setAct(id, (row.image ? 'image' : 'attach'), num);
+            return true;
+        }
+        if (ev.key === ' ') {
+            room.anch = num;
+            setPickOne(id, num, null);
+            return true;
+        }
+        if (keys.indexOf(ev.key) < 0) return false;
+        to = Math.min(Math.max(getWalkTurn(walk, at, ev.key), 0), walk.length - 1);
+        num = parseInt(walk[to].getAttribute('data-sl-num'), 10);
+        if (ev.shiftKey && room.anch < 0) room.anch = parseInt(walk[at].getAttribute('data-sl-num'), 10);
+        setCurrent(id, num);
+        walk[to].focus();
+        if (ev.shiftKey) setPickSpan(id, room.anch, num);
+        return true;
+    }
+
     function getPageRows(id) {
         var room = getRoom(id);
         var opt = getOpt(id);
@@ -745,6 +846,8 @@
                 return row.path === path;
             });
         });
+        // A drawing of the catalogue again means other places for the same files, so the object a range of marks would start from is no longer the object it was
+        room.anch = -1;
         page = getPageRows(id);
         tiles.replaceChildren();
         rows.replaceChildren();
@@ -781,7 +884,7 @@
     function setState(id, name) {
         var room = getRoom(id);
         var rows = {
-            empty: ['folder2', getLab(id, 'empty', ''), getLab(id, 'emptywhy', ''), ''],
+            empty: ['folder', getLab(id, 'empty', ''), getLab(id, 'emptywhy', ''), ''],
             filter: ['search', getLab(id, 'none', ''), getLab(id, 'nonewhy', ''), getLab(id, 'reset', '')],
             fail: ['exclamation-triangle', getLab(id, 'fail', ''), getLab(id, 'failwhy', ''), getLab(id, 'retry', '')]
         };
@@ -1099,8 +1202,21 @@
         setList(id);
     });
 
-    doc.addEventListener('dragover', function(ev) {
+    function getPanelOwn(node) {
+        var el = node && node.closest ? node.closest('.sl-toastui-upload') : null;
+        return el ? el.getAttribute('data-editor-id') : '';
+    }
+
+    // The catalogue takes a drop of its own: a file dragged onto the storage belongs to the same module, and the window turns to the upload, where the queue and its reasons live
+    function getDropZone(ev) {
         var zone = ev.target.closest ? ev.target.closest('.js-slaed-upload-drop') : null;
+        var lib = ev.target.closest ? ev.target.closest('.sl-fm-pane[data-sl-pane="lib"]') : null;
+        if (zone) return zone;
+        return (lib && getOpt(getPanelOwn(lib)).canupload) ? lib : null;
+    }
+
+    doc.addEventListener('dragover', function(ev) {
+        var zone = getDropZone(ev);
         if (!zone) return;
         ev.preventDefault();
         if (ev.dataTransfer) ev.dataTransfer.dropEffect = 'copy';
@@ -1108,23 +1224,28 @@
     });
 
     doc.addEventListener('dragleave', function(ev) {
-        var zone = ev.target.closest ? ev.target.closest('.js-slaed-upload-drop') : null;
+        var zone = getDropZone(ev);
         if (!zone || (ev.relatedTarget && zone.contains(ev.relatedTarget))) return;
         zone.classList.remove('sl-drag-over');
     });
 
     doc.addEventListener('drop', function(ev) {
-        var zone = ev.target.closest ? ev.target.closest('.js-slaed-upload-drop') : null;
+        var zone = getDropZone(ev);
+        var id;
         if (!zone) return;
         ev.preventDefault();
         zone.classList.remove('sl-drag-over');
-        addFileList(zone.getAttribute('data-editor'), ev.dataTransfer ? ev.dataTransfer.files : [], zone.getAttribute('data-sl-mode'));
+        id = zone.getAttribute('data-editor') || getPanelOwn(zone);
+        if (!zone.classList.contains('js-slaed-upload-drop')) setPane(id, 'up');
+        addFileList(id, ev.dataTransfer ? ev.dataTransfer.files : [], zone.getAttribute('data-sl-mode') || 'upload');
     });
 
     doc.addEventListener('keydown', function(ev) {
         var zone = ev.target.closest ? ev.target.closest('.js-slaed-upload-drop') : null;
         var shot = ev.target.closest ? ev.target.closest('.sl-toastui-shot') : null;
+        var el = ev.target.closest ? ev.target.closest('.sl-toastui-upload') : null;
         var file;
+        var lib;
         var id;
         if (shot) {
             id = shot.getAttribute('data-editor');
@@ -1132,11 +1253,50 @@
             if (ev.key === 'ArrowRight') setStep(id, 1);
             return;
         }
+        // The window closes on the same key the gallery does, and the fan standing open at the pointer is the one that key reaches first
+        if (el && ev.key === 'Escape' && !doc.querySelector('.sl-dial.sl-open')) {
+            ev.preventDefault();
+            setWindowClose(getPanelOwn(el), 'files');
+            return;
+        }
+        // Only the catalogue answers to these keys: the rail, the fields and the fan of an object stand in the same window and keep the keys they came with
+        lib = ev.target.closest ? ev.target.closest('.sl-fm-pane[data-sl-pane="lib"]') : null;
+        if (el && lib && !ev.target.matches('input, textarea, select, button, a')) {
+            if (setWalkKeys(getPanelOwn(el), ev)) ev.preventDefault();
+            return;
+        }
         if (!zone || (ev.key !== 'Enter' && ev.key !== ' ')) return;
         ev.preventDefault();
         file = zone.querySelector('.js-slaed-upload-file');
         if (file) file.click();
     });
+
+    // The context menu is the fan of the object and is opened for every fan of the project by the component; what belongs to the window is that the object becomes the current one
+    doc.addEventListener('contextmenu', function(ev) {
+        var el = ev.target.closest ? ev.target.closest('.sl-fm-row[data-sl-num], .sl-fm-cell[data-sl-num]') : null;
+        if (!el) return;
+        setCurrent(getPanelOwn(el), parseInt(el.getAttribute('data-sl-num'), 10));
+    });
+
+    // A modifier turns a press on an object into a mark: alone it marks and unmarks one, with the shift it marks everything between the object it started from and this one
+    // The press is taken in the capture phase, because a plain press on the same object means the current object and a press on the box itself means the mark of that one
+    doc.addEventListener('click', function(ev) {
+        var el = (ev.shiftKey || ev.ctrlKey || ev.metaKey) && ev.target.closest ? ev.target.closest('.sl-fm-row[data-sl-num], .sl-fm-cell[data-sl-num], [data-sl-pick]') : null;
+        var id = el ? getPanelOwn(el) : '';
+        var num = el ? parseInt(el.getAttribute('data-sl-num') || el.getAttribute('data-sl-pick'), 10) : -1;
+        var room;
+        if (!el || !id || isNaN(num)) return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        room = getRoom(id);
+        setCurrent(id, num);
+        if (ev.shiftKey && room.anch >= 0) {
+            setPickSpan(id, room.anch, num);
+            return;
+        }
+        setPickOne(id, num, null);
+        room.anch = num;
+    }, true);
 
     doc.addEventListener('pointerdown', setWindowDrag);
     doc.addEventListener('pointermove', updateWindowDrag);

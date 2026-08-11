@@ -248,10 +248,13 @@ index in `getUploadRuleData()` (`:4250`). The final key order appends one key an
 reorders nothing:
 
 `extensions`, `maxquota`, `maxbytes`, `maxwidth`, `maxheight`, `maxfiles`, `thumbwidth`,
-`adminlist`, `moderfiles`, `userfiles`, `userupload`, `guestupload`, **`guestfiles`**
+`moderfiles`, `userfiles`, `userupload`, `guestupload`, **`guestfiles`**
 
-Appending is what makes the change need no config migration: a stored rule that ends at
-`guestupload` keeps working and answers the reader's default for the new position.
+`guestfiles` was appended at the end, which is what let that change land without a config
+migration. The order later lost `adminlist` — the list length of the retired administrative
+list — and that removal did need one: `config/uploads.php` was rewritten field by field
+(see `docs/FILE-MANAGER-CONCEPT-2026.md`). A rule written short by hand still answers the
+guest limit with the user one, because zero in that position would mean no limit at all.
 
 That default needs care. The listing limit treats `0` as "no limit"
 (`core/system.php:4396`), so a `guestfiles` that defaults to `0` would hand an unbounded

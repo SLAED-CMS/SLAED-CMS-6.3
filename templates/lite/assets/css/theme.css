@@ -1371,6 +1371,15 @@ button.sl-but-mini:hover,
   z-index: 30;
 }
 
+/* The same fan opened as a context menu: it leaves the corner of its object and stands where the pointer is, the items keeping the side they open to in this theme */
+.sl-dial.sl-dial-point {
+  position: absolute;
+  right: auto;
+  bottom: auto;
+  z-index: 30;
+  transform: translateY(-50%);
+}
+
 /* Backdrop pill behind the open fan (admin-style); width follows the item count via --sl-dial-count */
 .sl-dial::before {
   content: "";

@@ -437,9 +437,69 @@
         dlg.showModal();
     };
 
+    // A fan opened at the pointer gives its placement back when it goes down, because it belongs to the corner of its own object and stands there again next time
+    function deleteDialPoint(dial) {
+        dial.classList.remove('sl-open', 'sl-dial-point');
+        dial.style.left = '';
+        dial.style.top = '';
+    }
+
+    // Every open fan of the page goes down at once, and one named is left standing
+    function setDialsOff(keep) {
+        document.querySelectorAll('.sl-dial.sl-open').forEach(function (dial) {
+            if (dial !== keep) deleteDialPoint(dial);
+        });
+    }
+
+    // The fan of an object is its context menu: the actions it already carries are the ones a right click must offer, so no second list of them is drawn anywhere
+    // The object is the nearest box around the pointer holding exactly one fan; a box holding several is the list around them, and there the menu belongs to the browser
+    function getDialOwn(node) {
+        var box = node && node.closest ? node.closest('.sl-dial') : null;
+        var list;
+        if (box) return box;
+        while (node && node !== document.body) {
+            list = node.querySelectorAll('.sl-dial');
+            if (list.length > 1) return null;
+            if (list.length === 1) return list[0];
+            node = node.parentElement;
+        }
+        return null;
+    }
+
+    // The fan opens where the pointer stands and stays inside the box it is placed in, because the work area scrolls and a fan reaching past its edge would be cut away
+    function setDialPoint(dial, event) {
+        var host = dial.offsetParent || document.body;
+        var box = host.getBoundingClientRect();
+        var item = dial.querySelector('.sl-dial-item');
+        var seen = dial.querySelectorAll('.sl-dial-item').length;
+        var size = parseFloat(window.getComputedStyle(dial).getPropertyValue('--sl-size-chip')) || 32;
+        var wide = (seen + 1) * (size + 6) + 12;
+        var left = event.clientX - box.left;
+        var top = event.clientY - box.top;
+        setDialsOff(dial);
+        dial.classList.add('sl-dial-point', 'sl-open');
+        // Which way the fan grows is a decision of the theme: an absolute item opens to the left of the toggle, an item in the flow follows it to the right
+        if (item && window.getComputedStyle(item).position === 'absolute') left = Math.max(left, wide);
+        else left = Math.min(left, Math.max(0, host.clientWidth - wide));
+        dial.style.left = left + 'px';
+        dial.style.top = top + 'px';
+    }
+
     // Speed dial: click on the toggle pins the fan open, any other click closes every open dial;
     // links carrying data-sl-confirm (plain text, escaped by the template) must pass a confirm dialog first
     function setDialToggle() {
+        document.addEventListener('contextmenu', function (event) {
+            var dial = getDialOwn(event.target);
+            if (!dial || !dial.querySelector('.sl-dial-item')) return;
+            event.preventDefault();
+            setDialPoint(dial, event);
+        });
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') setDialsOff(null);
+        });
+        document.addEventListener('scroll', function () {
+            document.querySelectorAll('.sl-dial.sl-dial-point').forEach(deleteDialPoint);
+        }, true);
         document.addEventListener('click', function (event) {
             var node = event.target;
             if (!node || !node.closest) return;
@@ -460,10 +520,13 @@
                 }
             }
             var toggle = node.closest('.sl-dial-toggle');
-            document.querySelectorAll('.sl-dial.sl-open').forEach(function (dial) {
-                if (!toggle || dial !== toggle.parentNode) dial.classList.remove('sl-open');
-            });
-            if (toggle) toggle.parentNode.classList.toggle('sl-open');
+            var own = toggle ? toggle.parentNode : null;
+            var open = !!own && own.classList.contains('sl-open') && !own.classList.contains('sl-dial-point');
+            setDialsOff(own);
+            if (!own) return;
+            // A press on the toggle brings the fan back to the place it belongs to, and only a fan already standing there closes on it
+            deleteDialPoint(own);
+            own.classList.toggle('sl-open', !open);
         });
     }
 

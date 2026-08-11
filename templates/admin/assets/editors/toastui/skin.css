@@ -499,6 +499,14 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     display: flex;
 }
 
+/* The catalogue takes a drop of its own: files dragged onto the storage go up into the same module, and the sheet says so before the pointer is let go */
+.sl-toastui-upload .sl-fm-pane.sl-drag-over {
+    background: color-mix(in srgb, var(--sl-color-primary) 7%, transparent);
+    border-radius: 10px;
+    outline: 2px dashed var(--sl-color-primary);
+    outline-offset: 4px;
+}
+
 .sl-toastui-upload .sl-fm-label {
     color: var(--sl-color-text-heading);
     display: block;
@@ -950,6 +958,22 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 
 .sl-toastui-upload .sl-fm-row .sl-dial {
     justify-self: end;
+}
+
+/* The fan opened at the pointer leaves the corner of its object: the rule stands after both anchors of this window, because a menu at the pointer overrules both */
+.sl-toastui-upload .sl-dial.sl-dial-point {
+    bottom: auto;
+    justify-self: auto;
+    position: absolute;
+    right: auto;
+}
+
+/* The object the keys walk to must be seen as the object the keys will act on */
+.sl-toastui-upload .sl-fm-row:focus-visible,
+.sl-toastui-upload .sl-fm-cell:focus-visible {
+    border-radius: 10px;
+    outline: 2px solid var(--sl-color-primary);
+    outline-offset: 2px;
 }
 
 .sl-toastui-upload .sl-fm-row-name {

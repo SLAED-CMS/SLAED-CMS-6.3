@@ -176,10 +176,8 @@ define('_DELSETUP','W celu zwiększenia bezpieczeństwa należy usunąć lub zmi
 define('_DENYING','Zdradzony wybranych modułów');
 define('_DESC','W porządku malejącym');
 define('_DRAGSORT','Przeciągnij ikonę w kolumnie „Pozycja” w obrębie grupy. Wolne bloki tworzą osobną grupę i używają [block=id]; pozycja ani kolejność ich nie dotyczą.');
-define('_DGEN','Główny katalog');
 define('_DIR','Katalog');
 define('_DIRDEF','Katalog domyślny');
-define('_DTHUMB','Dodatkowe katalog');
 define('_EDFILEA','Całkowita liczba plików dla admina');
 define('_EDFILEG','Całkowita liczba plików dla gościa');
 define('_EDFILEU','Całkowita liczba plików dla użytkownika');
@@ -224,7 +222,6 @@ define('_FILE_S','Całkowity rozmiar plików');
 define('_FIX','Sortowanie');
 define('_FIXED','Zablokować');
 define('_FLY_FIX','Wolny stały blok');
-define('_F_5','Liczba plików na stronę');
 define('_F_8','Pozwól dodawać pliki?');
 define('_F_9','Zezwól gościom dodawać pliki?');
 define('_GDWIDTH','Szerokość obrazu podglądu');

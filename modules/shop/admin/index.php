@@ -1062,7 +1062,7 @@ function export(): void {
             foreach ($list as $val) fputcsv($fp, explode('||', $val));
 
             fclose($fp);
-            stream(UPLOADS_DIR.'/shop/temp/'.$date.'_'.$bd.'.csv', $date.'_'.$bd.'.csv');
+            getFileStream(UPLOADS_DIR.'/shop/temp/'.$date.'_'.$bd.'.csv', $date.'_'.$bd.'.csv');
         } else {
             setRedirect($afile.'.php?name=shop&op=export');
         }

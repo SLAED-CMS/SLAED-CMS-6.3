@@ -246,6 +246,10 @@
     }
     /* File browser: the view, the current object and the way back are local state of the screen, and where back, up and refresh lead is read off the body the server just sent */
     var fmback = [];
+    /* The object a range of marks starts from, and the wait before the properties of a walked-to object are asked for */
+    var fmfrom = -1;
+    var fmside = null;
+    var fmshown = false;
     function setFileView(mode) {
         document.querySelectorAll('[data-sl-fm-view]').forEach(function (node) {
             var own = node.getAttribute('data-sl-fm-view');
@@ -260,6 +264,56 @@
         });
         var own = node.closest('tr') || node.closest('.sl-fm-cell');
         if (own) own.setAttribute('aria-selected', 'true');
+    }
+    /* The keys and the modifiers walk the objects of the view that is on, and one object is one entry however the two views of the list draw it */
+    function getFileWalk() {
+        var view = document.querySelector('#slfmbody div[data-sl-fm-view]:not([hidden])');
+        return view ? Array.prototype.slice.call(view.querySelectorAll('[data-sl-fm-pick]')) : [];
+    }
+    function getFileHost(node) {
+        return (node && node.closest) ? node.closest('tr, .sl-fm-cell') : null;
+    }
+    /* A mark belongs to the object and not to the box drawing it, so it is set through the one handler that keeps the row, the tile and the panel of marks in step */
+    function setFileMark(item, on) {
+        var host = getFileHost(item);
+        var box = host ? host.querySelector('[data-sl-fm-mark]') : null;
+        if (!box) return;
+        box.checked = (on === null) ? !box.checked : on;
+        setFileMarks(box);
+    }
+    function setFileSpan(from, to) {
+        var walk = getFileWalk();
+        var at = Math.min(from, to);
+        var end = Math.max(from, to);
+        for (; at <= end; at++) setFileMark(walk[at], true);
+    }
+    /* Walking the list changes the current object, and the properties beside it belong to that object; the request waits a moment, because a held key would send one per step */
+    function setFileSide(item) {
+        var url = item.getAttribute('hx-get') || '';
+        if (fmside) window.clearTimeout(fmside);
+        if (!window.htmx || url === '' || item.getAttribute('hx-target') !== '#slfmside') return;
+        fmside = window.setTimeout(function () {
+            window.htmx.ajax('GET', url, { target: '#slfmside', swap: 'innerHTML' });
+        }, 250);
+    }
+    /* How far one key carries depends on the view: a list walks by rows, tiles walk by one across and by a whole row of them down, counted off the drawing itself */
+    function getFileCols(walk) {
+        var top = walk.length ? walk[0].getBoundingClientRect().top : 0;
+        var num = 0;
+        walk.forEach(function (item) {
+            if (Math.abs(item.getBoundingClientRect().top - top) < 4) num++;
+        });
+        return Math.max(1, num);
+    }
+    function getFileTurn(walk, at, key) {
+        var view = document.querySelector('#slfmbody div[data-sl-fm-view]:not([hidden])');
+        var grid = !!view && view.classList.contains('sl-fm-grid');
+        if (key === 'Home') return 0;
+        if (key === 'End') return walk.length - 1;
+        if (key === 'ArrowLeft') return grid ? at - 1 : at;
+        if (key === 'ArrowRight') return grid ? at + 1 : at;
+        if (key === 'ArrowUp') return at - (grid ? getFileCols(walk) : 1);
+        return at + (grid ? getFileCols(walk) : 1);
     }
     /* One form serves every operation needing a word from the administrator: which operation, what it runs on and what it starts from are read off the item that opened it */
     /* The item names the operation exactly as the route does, so the value travels into the form untouched and no second table of names has to agree with the module */
@@ -304,6 +358,10 @@
         var find = document.querySelector('.sl-fm-bar input[name="find"]');
         var load = document.querySelector('[data-sl-fm-act="upload"]');
         if (load) load.disabled = !document.querySelector('.sl-fm-load');
+        /* The answer brings another directory: the object a range started from is gone with the previous one, and a request asked for by a key of the previous one is stale */
+        if (fmside) window.clearTimeout(fmside);
+        fmfrom = -1;
+        fmshown = false;
         setFileMarks(null);
         if (split) {
             var url = split.getAttribute('data-sl-fm-url');
@@ -352,36 +410,43 @@
         return seen;
     }
     /* A marked set travels in the form one object travels in: the operation is named the same way and only the number of paths in the body differs */
-    /* An operation asking for a word opens the field with the value it starts from, and one asking for nothing goes straight out, through the system dialog where it must */
-    function setFileMany(node) {
+    /* The panel of marks and the pointer dragging a set onto a directory fill the same form, so what a set is written into the form with is said once and in one place */
+    function setFileSet(act, name, paths, val) {
         var form = document.querySelector('.sl-fm-ops');
         var box = form ? form.querySelector('[data-sl-fm-marks]') : null;
         var arg = form ? form.querySelector('[name="arg"]') : null;
-        var seen = setFileMarks(null);
+        if (!form || !box || !arg || paths.length < 1) return null;
+        box.textContent = '';
+        paths.forEach(function (one) {
+            var line = document.createElement('input');
+            line.type = 'hidden';
+            line.name = 'mark[]';
+            line.value = one;
+            box.appendChild(line);
+        });
+        form.querySelector('[name="op"]').value = act;
+        form.querySelector('[name="file"]').value = '';
+        form.querySelector('[data-sl-fm-title]').textContent = name;
+        /* The root of the context is a target with no name of its own, and a field demanding a word would refuse the one directory that has none */
+        arg.required = val !== '';
+        arg.setAttribute('aria-label', name);
+        arg.value = val;
+        return form;
+    }
+    function setFileWord(form) {
+        var arg = form.querySelector('[name="arg"]');
+        form.hidden = false;
+        arg.focus();
+        arg.select();
+    }
+    /* An operation asking for a word opens the field with the value it starts from, and one asking for nothing goes straight out, through the system dialog where it must */
+    function setFileMany(node) {
         var need = node.hasAttribute('data-sl-fm-arg');
         var ask = node.getAttribute('data-sl-fm-ask');
-        var name = (node.textContent || '').trim();
-        if (!form || !box || !arg || seen.length < 1) return;
-        box.textContent = '';
-        seen.forEach(function (val) {
-            var one = document.createElement('input');
-            one.type = 'hidden';
-            one.name = 'mark[]';
-            one.value = val;
-            box.appendChild(one);
-        });
-        form.querySelector('[name="op"]').value = node.getAttribute('data-sl-fm-act');
-        form.querySelector('[name="file"]').value = '';
-        arg.required = need;
-        arg.value = need ? node.getAttribute('data-sl-fm-arg') : '';
+        var form = setFileSet(node.getAttribute('data-sl-fm-act'), (node.textContent || '').trim(), setFileMarks(null), need ? node.getAttribute('data-sl-fm-arg') : '');
+        if (!form) return;
         form.hidden = !need;
-        if (need) {
-            form.querySelector('[data-sl-fm-title]').textContent = name;
-            arg.setAttribute('aria-label', name);
-            arg.focus();
-            arg.select();
-            return;
-        }
+        if (need) return setFileWord(form);
         var run = function () { form.requestSubmit ? form.requestSubmit() : form.submit(); };
         if (ask && window.setConfirmTask) return window.setConfirmTask(ask, run);
         run();
@@ -465,17 +530,155 @@
         if (box) box.hidden = true;
     }
     /* The target really takes a drop: a label around a file field opens the picker on a click, but a dropped file reaches nobody unless the page takes it off the event itself */
+    /* The whole browser is that target and not the label alone: a file dragged onto the list belongs to the directory the list shows, and the panel opens with the drag */
+    /* so its limits and its second field are read before the pointer is let go; a panel opened by the drag closes with it, one opened by the administrator stays */
+    function checkFileDrag(event) {
+        var kind = event.dataTransfer ? event.dataTransfer.types : null;
+        return !drag && fmdrag.length < 1 && !!kind && Array.prototype.indexOf.call(kind, 'Files') >= 0;
+    }
+    function setFileZone(on) {
+        var form = document.querySelector('.sl-fm-load');
+        var zone = form ? form.querySelector('.sl-fm-drop') : null;
+        if (!form || !zone) return;
+        zone.classList.toggle('sl-drag-over', on);
+        if (on && form.hidden) {
+            form.hidden = false;
+            fmshown = true;
+        }
+        if (!on && fmshown) {
+            form.hidden = true;
+            fmshown = false;
+        }
+    }
     document.addEventListener('dragover', function (event) {
-        if (event.target && event.target.closest && event.target.closest('.sl-fm-drop')) event.preventDefault();
+        var body = event.target && event.target.closest ? event.target.closest('#slfmbody') : null;
+        if (!body || !document.querySelector('.sl-fm-load') || !checkFileDrag(event)) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'copy';
+        setFileZone(true);
+    });
+    document.addEventListener('dragleave', function (event) {
+        var body = event.target && event.target.closest ? event.target.closest('#slfmbody') : null;
+        if (!body || (event.relatedTarget && body.contains(event.relatedTarget))) return;
+        setFileZone(false);
     });
     document.addEventListener('drop', function (event) {
-        var zone = event.target && event.target.closest ? event.target.closest('.sl-fm-drop') : null;
-        var pick = zone ? zone.querySelector('input[type="file"]') : null;
-        var form = zone ? zone.closest('form') : null;
-        if (!pick || !form || !event.dataTransfer || event.dataTransfer.files.length < 1) return;
+        var body = event.target && event.target.closest ? event.target.closest('#slfmbody') : null;
+        var form = body ? document.querySelector('.sl-fm-load') : null;
+        var pick = form ? form.querySelector('input[type="file"]') : null;
+        if (!pick || !event.dataTransfer || event.dataTransfer.files.length < 1) return;
         event.preventDefault();
+        setFileZone(false);
+        fmshown = false;
         pick.files = event.dataTransfer.files;
         form.requestSubmit ? form.requestSubmit() : form.submit();
+    });
+    /* A modifier turns a press on an object into a mark: alone it marks and unmarks one, with the shift it marks everything between the object it started from and this one */
+    /* The press is taken in the capture phase, because the address of the object carries a request of its own and it must not leave while the press means marking */
+    document.addEventListener('click', function (event) {
+        var node = (event.shiftKey || event.ctrlKey || event.metaKey) && event.target.closest ? event.target.closest('[data-sl-fm-pick],[data-sl-fm-mark]') : null;
+        var host = getFileHost(node);
+        var walk;
+        var at;
+        if (!node || !host) return;
+        walk = getFileWalk();
+        at = walk.indexOf(host.querySelector('[data-sl-fm-pick]'));
+        if (at < 0) return;
+        event.preventDefault();
+        event.stopPropagation();
+        /* The mark is not the current object: the current one is the object whose properties stand on the right, and a marking press asks the server for nothing (§9.1) */
+        if (event.shiftKey && fmfrom >= 0) return setFileSpan(fmfrom, at);
+        setFileMark(walk[at], null);
+        fmfrom = at;
+    }, true);
+    /* A desk drags: an object taken by the pointer and let go on a directory moves there, and the whole marked set travels with it when the object dragged is one of them */
+    /* The move is never run behind the administrator: the form opens with the target already in it, because a moved file leaves its published address behind (§8) */
+    var fmdrag = [];
+    function setFileOver(box) {
+        document.querySelectorAll('.sl-drag-over[data-sl-fm-dir]').forEach(function (one) {
+            if (one !== box) one.classList.remove('sl-drag-over');
+        });
+        if (box) box.classList.add('sl-drag-over');
+    }
+    /* A directory takes the set unless it is in the set itself: a directory dropped into its own name is the one move that has nowhere to go */
+    function getFileDir(node) {
+        var box = (node && node.closest) ? node.closest('[data-sl-fm-dir]') : null;
+        if (!box || fmdrag.length < 1) return null;
+        return (fmdrag.indexOf(box.getAttribute('data-sl-fm-dir')) < 0) ? box : null;
+    }
+    document.addEventListener('dragstart', function (event) {
+        var host = getFileHost(event.target);
+        var own = host ? host.getAttribute('data-sl-fm-file') : '';
+        var seen;
+        if (!host || !own || !host.hasAttribute('draggable')) return;
+        seen = setFileMarks(null);
+        fmdrag = (seen.indexOf(own) >= 0) ? seen : [own];
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', fmdrag.join('\n'));
+    });
+    document.addEventListener('dragover', function (event) {
+        var box = getFileDir(event.target);
+        if (!box) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+        setFileOver(box);
+    });
+    document.addEventListener('drop', function (event) {
+        var box = getFileDir(event.target);
+        var many = document.querySelector('[data-sl-fm-act="fmmove"][data-sl-fm-many]');
+        var form;
+        if (!box || !many) return;
+        event.preventDefault();
+        setFileOver(null);
+        form = setFileSet('fmmove', (many.textContent || '').trim(), fmdrag, box.getAttribute('data-sl-fm-dir'));
+        fmdrag = [];
+        if (form) setFileWord(form);
+    });
+    document.addEventListener('dragend', function () {
+        setFileOver(null);
+        fmdrag = [];
+    });
+    /* The context menu is the fan of the object and the component opens it for every fan of the project; what belongs to the browser is that the object becomes current */
+    document.addEventListener('contextmenu', function (event) {
+        var host = (event.target && event.target.closest && event.target.closest('#slfmbody')) ? getFileHost(event.target) : null;
+        var node = host ? host.querySelector('[data-sl-fm-pick]') : null;
+        if (!node) return;
+        setFilePick(node);
+        setFileSide(node);
+    });
+    /* The keys walk the list the pointer walks: an arrow moves the current object, the shift with it drags the marks along, a space marks one and Enter does what a press does */
+    /* Only an object of the list answers to these keys: a fan item and the field of an operation stand inside the body too and keep the keys they came with */
+    document.addEventListener('keydown', function (event) {
+        var box = document.querySelector('.sl-fm-modal');
+        var node = document.activeElement;
+        var keys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
+        var host = getFileHost(node);
+        var walk;
+        var at;
+        var to;
+        if (box && box.open) return;
+        if (!node || !node.matches || !host || !node.matches('[data-sl-fm-pick],[data-sl-fm-mark]')) return;
+        walk = getFileWalk();
+        at = walk.indexOf(host.querySelector('[data-sl-fm-pick]'));
+        if (at < 0) return;
+        if (event.key === 'Enter' && node.hasAttribute('data-sl-fm-pick')) {
+            event.preventDefault();
+            return walk[at].click();
+        }
+        /* The mark of a box is set by the browser itself on this key, and setting it a second time here would take it straight back off */
+        if (event.key === ' ' && node.hasAttribute('data-sl-fm-pick')) {
+            event.preventDefault();
+            fmfrom = at;
+            return setFileMark(walk[at], null);
+        }
+        if (keys.indexOf(event.key) < 0) return;
+        to = Math.min(Math.max(getFileTurn(walk, at, event.key), 0), walk.length - 1);
+        event.preventDefault();
+        if (event.shiftKey && fmfrom < 0) fmfrom = at;
+        setFilePick(walk[to]);
+        walk[to].focus();
+        setFileSide(walk[to]);
+        if (event.shiftKey) setFileSpan(fmfrom, to);
     });
     /* The gallery walks the objects that can be shown and nothing else, and one object is one entry however many times the two views of the list draw it */
     function getFileShots() {
@@ -586,9 +789,10 @@
     /* The three states a list can be in besides being there: it is on its way, it did not arrive, or it arrived and takes the place of both (§31) */
     /* The answer replaces the whole body, so the marks below belong to the body that is leaving and never have to be taken back on a swap that succeeded */
     function setFileWait(mode) {
+        /* The three states belong to the list and are looked for inside it: a refused file of the queue carries the same mark, and the queue stands above the body */
         var skel = document.querySelector('#slfmbody .sl-skel');
-        var fail = document.querySelector('[data-sl-fm-fail]');
-        var real = document.querySelector('[data-sl-fm-real]');
+        var fail = document.querySelector('#slfmbody [data-sl-fm-fail]');
+        var real = document.querySelector('#slfmbody [data-sl-fm-real]');
         if (!skel || !fail || !real) return;
         skel.hidden = mode !== 'wait';
         fail.hidden = mode !== 'fail';

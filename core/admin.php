@@ -863,95 +863,6 @@ function getAdminPrivateList(int $obj = 0): string {
     return '';
 }
 
-# Show uploads files for admin
-# The quick lists of the module answer a directory and nothing else: deleting and packing live on the POST routes of the file manager, and no address of this screen changes a file
-function getAdminUploadFiles(): void {
- global $user, $tpl;
-    $id   = filterVar(getVar('get', 'id',   'text', ''));
-    $dir  = strtolower(getVar('get', 'dir',  'text', ''));
-    $cid  = getVar('get', 'cid',  'num',  0);
-    $rul = getUploadRuleData($dir);
-    $connum = $rul['adminlist'] ?: 50;
-    $num  = ($cid) ? $cid : '1';
-    $path = ($id == 1) ? UPLOADS_DIR.'/'.$dir.'/' : UPLOADS_DIR.'/'.$dir.'/thumb/';
-    $pub = ($id == 1) ? 'uploads/'.$dir.'/' : 'uploads/'.$dir.'/thumb/';
-    if (is_dir($path)) {
-        $files = [];
-        foreach (scandir($path) ?: [] as $entry) {
-            if ($entry === '.' || $entry === '..' || $entry === 'index.html' || is_dir($path.$entry)) continue;
-            $files[] = [filemtime($path.$entry), $entry];
-        }
-        if (is_array($files)) {
-            $a = 0;
-            rsort($files);
-            foreach ($files as $entry) {
-                $filesize = filesize($path.$entry[1]);
-                list($imgwidth, $imgheight) = getimagesize($path.$entry[1]);
-                $type = strtolower(substr(strrchr($entry[1], '.'), 1));
-                $ftype = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif'];
-                $dirfile = (preg_match('#php.*|js|htm|html|phtml|cgi|pl|perl|asp#i', $type))
-                    ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => true, 'label' => $entry[1]])
-                    : $entry[1];
-                if (in_array($type, $ftype) && $imgwidth && $imgheight) {
-                    $img = $tpl->getHtmlFrag('image-preview', [
-                        'preview_id' => 'sf-form-'.$a,
-                        'image_url' => $pub.$entry[1],
-                        'fallback_url' => 'templates/admin/images/icons/no.png',
-                        'image_title' => _IMG,
-                        'no_title' => _NO,
-                        'show_toggle' => true,
-                        'show_fallback' => false,
-                    ]);
-                    $isize = $imgwidth.' x '.$imgheight;
-                } else {
-                    $img = $tpl->getHtmlFrag('image-preview', [
-                        'preview_id' => 'sf-form-'.$a,
-                        'image_url' => '',
-                        'fallback_url' => 'templates/admin/images/icons/no.png',
-                        'image_title' => _IMG,
-                        'no_title' => _NO,
-                        'show_toggle' => false,
-                        'show_fallback' => true,
-                    ]);
-                    $isize = _NO;
-                }
-                $contents[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
-                    'cells' => [
-                        ['content_html' => $img],
-                        ['content_html' => $dirfile],
-                        ['content_html' => date(_TIMESTRING, $entry[0])],
-                        ['content_html' => filterSize($filesize)],
-                        ['content_html' => $isize],
-                    ],
-                ])]);
-                $a++;
-            }
-        }
-        $numpages = ceil($a / $connum);
-        $offset = ($num - 1) * $connum;
-        $tnum = ($offset) ? $connum + $offset : $connum;
-        $cont = '';
-        for ($i = $offset; $i < $tnum; $i++) {
-            if (!empty($contents[$i])) $cont .= $contents[$i];
-        }
-        $contnum = ($a > $connum) ? getAsyncPager('pagenum', $a, $numpages, $connum, 8, $num, '0', 5, 'getAdminUploadFiles', 'f'.$id, $id, '', $dir) : '';
-        $content = ($cont) ? $tpl->getHtmlFrag('table', [
-            'head' => [
-                ['content' => cutstr(_IMG, 4, 1)],
-                ['content' => _FILE],
-                ['content' => _DATE],
-                ['content' => _SIZE],
-                ['content' => _WIDTH.' x '._HEIGHT],
-            ],
-            'rows_html' => $cont,
-            'disable_sort' => true,
-        ]).$contnum : '';
-    } else {
-        $content = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO]);
-    }
-    echo $content;
-}
-
 # Add voting
 function add_voting(string $modul, string $selectName, int $selectedId, string $extraClass = ''): string {
  global $db, $locale, $conf, $tpl;
@@ -1214,7 +1125,7 @@ function getAdminFileShot(array $one, bool $small = false): string {
 # Return the icon and the tone one object is drawn with, chosen by the kind of the descriptor, so the type resolver of the file layer stays the only one in the project
 function getAdminFileIcon(string $kind): array {
     return match ($kind) {
-        'dir' => ['folder2', 'dir'],
+        'dir' => ['folder', 'dir'],
         'image' => ['image', 'img'],
         'audio' => ['file-earmark-music', 'doc'],
         'video' => ['file-earmark-play', 'doc'],
@@ -1246,7 +1157,7 @@ function getAdminFileNodes(string $dir): string {
                 'path' => $row['path'],
                 'url' => getAdminFileLink('getAdminFileList', ['dir' => $row['path']]),
                 'pads' => array_fill(0, $step + 1, true),
-                'icon' => ($row['path'] === $dir) ? 'folder2-open' : 'folder2',
+                'icon' => ($row['path'] === $dir) ? 'folder-fill' : 'folder',
                 'is_cur' => $row['path'] === $dir,
             ];
         }
@@ -1269,7 +1180,7 @@ function getAdminFileNodes(string $dir): string {
         'path' => '',
         'url' => getAdminFileLink('getAdminFileList'),
         'pads' => [],
-        'icon' => $isup ? 'folder2-open' : 'hdd-stack',
+        'icon' => $isup ? 'folder-fill' : 'hdd-stack',
         'is_cur' => $dir === '',
     ]);
     return $tpl->getHtmlPart('file-browser-tree', ['cap_text' => $isup ? _UPLOADS_DIRS : _UPLOADS_TREE, 'nodes' => $out]);
@@ -1401,8 +1312,10 @@ function getAdminFileEditor(array $edit): string {
 
 # Render the system file browser of one directory: the tree along the open path, the list, the properties, the capability row and the counter of the current directory
 # The same body answers the first page and every navigation of it; the toolbar is drawn once and the crumbs travel back out of band, because they live inside it
-# An open source file takes the place of the list and the pager: the tree, the properties and the capability row stay, because the screen has not changed, only its work area has
+# An open source file takes the place of the list: the tree, the properties and the capability row stay, because the screen has not changed, only its work area has
 # One object is drawn twice, as a row and as a tile, so its fan is built twice as well: two forms of one identifier would make the tile submit the form standing in the row
+# The directory is answered whole and scrolled with the page rather than paged, and the administration is given all of it: no ceiling, no page and nothing left out of the answer
+# The settings that count files belong to the editor and to the visitor, and none of them reaches this screen: what an administrator may not see is decided by the policy, not by a number
 function getAdminFileShell(bool $full = false, array $edit = []): string {
     global $afile, $tpl;
     $ctx = getAdminFileMode();
@@ -1420,13 +1333,11 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
     $sum = 0;
     foreach ($all as $row) $sum += $row['size'];
     $rule = getAdminUploadRule($dir);
-    $lim = max(10, (int)getUploadRuleData('all')['adminlist']);
-    $pages = (int)ceil(count($all) / $lim);
-    $num = max(1, min((int)getVar('get', 'num', 'num', 1), max(1, $pages)));
+    $show = ($pick === '') ? $all : [];
     $mark = !empty($able['delete']) || !empty($able['compress']) || !empty($able['move']);
     $rows = '';
     $tiles = '';
-    foreach (($pick === '') ? array_slice($all, ($num - 1) * $lim, $lim) : [] as $row) {
+    foreach ($show as $row) {
         [$icon, $tone] = getAdminFileIcon($row['kind']);
         $isdir = $row['kind'] === 'dir';
         $data = [
@@ -1441,12 +1352,14 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
             'tone' => $tone,
             'is_dir' => $isdir,
             'is_mark' => $mark && !$isdir,
+            'is_move' => !empty($row['capabilities']['move']),
             'pick_value' => $row['path'],
             'mark_text' => _UPLOADS_MARK,
             'shot_text' => _UPLOADS_PREVIEW,
             'kind_text' => $isdir ? _DIR : strtoupper($row['extension']),
-            'size_text' => $isdir ? '' : filterSize($row['size']),
+            'size_text' => $isdir ? '—' : filterSize($row['size']),
             'date_text' => date(_TIMESTRING, $row['mtime']),
+            'day_text' => date(_DATESTRING, $row['mtime']),
             'acts_html' => getAdminFileActs($row),
         ];
         $rows .= $tpl->getHtmlFrag('file-browser-row', $data);
@@ -1490,7 +1403,7 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
         'prev_text' => _BACK,
         'next_text' => _NEXT,
         'pack_name' => 'archive.zip',
-        'self_url' => getAdminFileLink('getAdminFileList', ['dir' => $dir, 'find' => $find, 'num' => ($num > 1) ? $num : '']),
+        'self_url' => getAdminFileLink('getAdminFileList', ['dir' => $dir, 'find' => $find]),
         'up_url' => getAdminFileLink('getAdminFileList', ['dir' => str_contains($dir, '/') ? substr($dir, 0, (int)strrpos($dir, '/')) : '']),
         'find_url' => getAdminFileLink('getAdminFileList'),
         'find_text' => $find,
@@ -1513,13 +1426,9 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
         'info_text' => _OVERALL.': '.count($all).' · '.filterSize($sum),
         'tree_html' => getAdminFileNodes($dir),
         'props_html' => getAdminFileProps($pick),
-        'pager_html' => ($pick !== '') ? '' : getTplPagerView($num, $pages, 8, static fn(int $i): array => [
-            'query' => getAdminFileLink('getAdminFileList', ['dir' => $dir, 'find' => $find, 'num' => $i]),
-            'target_id' => 'slfmbody',
-        ]),
         'list_html' => ($pick !== '') ? getAdminFileEditor($edit) : $tpl->getHtmlPart('file-browser-list', [
             'is_empty' => $rows === '',
-            'empty_icon' => ($find === '') ? 'folder2' : 'search',
+            'empty_icon' => ($find === '') ? 'folder' : 'search',
             'empty_title' => ($find === '') ? _UPLOADS_EMPTY : _UPLOADS_NOFIND,
             'empty_text' => ($find === '') ? _UPLOADS_EMPTYTXT : _UPLOADS_NOFINDTXT,
             'reset_url' => ($find === '') ? '' : getAdminFileLink('getAdminFileList', ['dir' => $dir]),
@@ -1530,7 +1439,6 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
             'can_mark' => $mark,
             'mark_all_text' => _UPLOADS_MARKALL,
             'name_text' => _NAME,
-            'type_text' => _TYPE,
             'size_text' => _SIZE,
             'date_text' => _DATE,
             'acts_text' => _FUNCTIONS,
@@ -1571,7 +1479,7 @@ function getAdminFilePreview(): void {
 }
 
 # Answer one file of the system area as a download; a direct link is no use here, because the web server would execute index.php instead of handing it over (§17)
-# The type is always the opaque one and never guessed from the extension: an active type answered from the administrative origin would run inside it instead of being saved
+# The route decides who may have the file and the shared download path decides how it leaves, so the headers of a download are written in one place for the whole project
 function getAdminFileDownload(): void {
     $man = getAdminFileManager();
     $path = getAdminFilePath('file');
@@ -1580,11 +1488,5 @@ function getAdminFileDownload(): void {
         http_response_code(403);
         exit;
     }
-    $name = rawurlencode($one['name']);
-    while (ob_get_level() > 0) ob_end_clean();
-    Cache::setHeaders(false, 0, 'application/octet-stream');
-    header('Content-Disposition: attachment; filename="'.$name.'"; filename*=UTF-8\'\''.$name);
-    header('Content-Length: '.$one['size']);
-    readfile($one['realpath']);
-    exit;
+    getFileStream($one['realpath'], $one['name']);
 }

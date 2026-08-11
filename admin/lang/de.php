@@ -176,10 +176,8 @@ define('_DELSETUP','Zwecks der Erhöhung der Sicherheit muß man die Datei der A
 define('_DENYING','Ausgewahlte Module nicht Anzeigen');
 define('_DESC','Absteigend');
 define('_DRAGSORT','Das „Position“-Symbol sortiert Blöcke je Gruppe. Freie Blöcke bilden eine eigene Gruppe und nutzen [block=id]; Position und Reihenfolge gelten für sie nicht.');
-define('_DGEN','Primäre Verzeichnis');
 define('_DIR','Verzeichnis');
 define('_DIRDEF','Standardmäßige Verzeichnis');
-define('_DTHUMB','Zusätzliche Verzeichnis');
 define('_EDFILEA','Anzahl von Dateien, für den Administrator');
 define('_EDFILEG','Anzahl von Dateien für den Gast');
 define('_EDFILEU','Anzahl von Dateien für den Benutzer');
@@ -224,7 +222,6 @@ define('_FILE_S','Allgemeine Größe der Dateien');
 define('_FIX','Sortierung');
 define('_FIXED','Fixieren');
 define('_FLY_FIX','Freier festgelegter Block');
-define('_F_5','Menge der Dateien auf die Seite');
 define('_F_8','Erlauben, die Dateien zu ergдnzen?');
 define('_F_9','Gдsten erlauben, die Dateien zu ergänzen?');
 define('_GDWIDTH','Die Breite des Bildes für die vor Ansicht');

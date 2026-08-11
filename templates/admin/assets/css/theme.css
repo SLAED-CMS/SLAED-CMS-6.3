@@ -5127,7 +5127,7 @@ body:has(.sl-admin-login-shell):before {
 .sl-wrapper {
   position: relative;
   width: min(1440px, calc(100vw - 32px));
-  overflow: hidden;
+  overflow: clip;
   text-align: left;
   margin: 26px auto 27px auto;
   background: var(--sl-color-bg);
@@ -5799,11 +5799,12 @@ body:has(.sl-admin-login-shell):before {
 }
 
 /* File browser: the shell of the system file tab — toolbar, three columns, capability row and status line (docs/FILE-MANAGER-CONCEPT-2026.md) */
+/* The card clips to its own rounded corners with clip and never with hidden: hidden makes a scroll container of it, and a scroll container swallows the sticky columns inside */
 .sl-fm-shell {
   border: 1px solid var(--sl-color-border-strong);
   border-radius: var(--sl-radius-card);
   background: var(--sl-color-bg);
-  overflow: hidden;
+  overflow: clip;
   font-size: 13px;
 }
 
@@ -5815,8 +5816,11 @@ body:has(.sl-admin-login-shell):before {
   border-radius: 0;
 }
 
+/* The filter and the two view buttons stand over the properties column: the field takes what is left of that column once the two buttons and the gaps between them are counted */
+/* The right inset of the toolbar is the one the whole bar keeps, so the group ends where every other control of the bar ends and begins where the column beside it begins */
 .sl-fm-bar input[type="text"] {
-  width: 220px;
+  box-sizing: border-box;
+  width: calc(250px - 8px - 2 * (var(--sl-size-chip) + 8px));
   height: var(--sl-size-chip);
   padding: 0 8px;
 }
@@ -5855,10 +5859,10 @@ body:has(.sl-admin-login-shell):before {
   background: var(--sl-color-border-strong);
 }
 
-/* Three columns: tree, list, properties */
+/* Three columns: tree, list, properties; both sides hold one width and the middle takes whatever the window leaves */
 .sl-fm-split {
   display: grid;
-  grid-template-columns: 236px minmax(0, 1fr) 282px;
+  grid-template-columns: 250px minmax(0, 1fr) 250px;
   min-height: 470px;
   border-top: 1px solid var(--sl-color-border);
 }
@@ -5874,6 +5878,17 @@ body:has(.sl-admin-login-shell):before {
   overflow: auto;
 }
 
+/* The page is what scrolls, so the two side columns hold themselves in the window while the list passes: what they say belongs to the object in view, not to the top of the directory */
+/* Each is as tall as the window and never taller than the row it stands in, because a column taller than its own row would hang below the panel on a short directory */
+.sl-fm-tree,
+.sl-fm-side {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  box-sizing: border-box;
+  height: min(100vh, 100%);
+}
+
 .sl-fm-cap {
   display: block;
   padding: 2px 8px 8px;
@@ -5883,12 +5898,14 @@ body:has(.sl-admin-login-shell):before {
   color: var(--sl-color-text-muted);
 }
 
+/* The node counts its own padding inside its width: the theme has no global border-box, so a full width plus padding would push the tree wider than the column that holds it */
 .sl-fm-node {
   display: flex;
   align-items: center;
   gap: 6px;
+  box-sizing: border-box;
   width: 100%;
-  padding: 5px 8px;
+  padding: 4px;
   border-radius: var(--sl-radius-control);
   color: var(--sl-color-text-soft);
   text-align: left;
@@ -5908,8 +5925,10 @@ body:has(.sl-admin-login-shell):before {
   white-space: nowrap;
 }
 
+/* The step of one level is this width plus the gap of the node, and it is set here alone: the shared pad of the admin tree stays 22px for every other screen that uses it */
 .sl-fm-node .sl-tree-pad {
   margin: 0;
+  width: 2px;
 }
 
 .sl-fm-node:hover {
@@ -5925,10 +5944,16 @@ body:has(.sl-admin-login-shell):before {
   color: var(--sl-color-primary);
 }
 
+/* Work area: the directory stands at its own length and the page is what scrolls, so the list has no box of its own to scroll inside */
 .sl-fm-scroll {
   padding: 8px;
-  max-height: 452px;
-  overflow: auto;
+}
+
+/* The column titles stay while the rows pass under them, and they stand above the fan of a row: a row half under the titles must not push its own button through them */
+.sl-fm-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 40;
 }
 
 .sl-fm-name {
@@ -5991,16 +6016,26 @@ body:has(.sl-admin-login-shell):before {
   position: relative;
 }
 
-/* A fan of a tile stays inside its own tile: the work area scrolls, and a fan reaching past the left edge of the leftmost tile would be cut away by that scroll */
+/* A fan of a tile opens as one row, the shape it has in a row of the list: the work area no longer scrolls inside itself, so nothing cuts a fan that reaches past its own tile */
+/* Its own layer keeps it over the neighbouring tiles it reaches across, which the tiles beside it would otherwise paint over */
 .sl-fm-cell > .sl-dial {
   top: auto;
   bottom: 8px;
+  z-index: 30;
   transform: none;
-  flex-wrap: wrap-reverse;
-  justify-content: flex-end;
-  gap: 2px;
-  max-width: calc(100% - 16px);
-  border-radius: var(--sl-radius-control);
+}
+
+/* The same fan opened as a context menu: it leaves the corner of its object and stands where the pointer is, so the toggle meets the pointer and the actions follow it */
+/* The rule stands after both placements of a fan on purpose: a menu at the pointer overrules the anchor of a row as much as the anchor of a tile */
+.sl-dial.sl-dial-point {
+  right: auto;
+  bottom: auto;
+  z-index: 30;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 0;
+  max-width: none;
+  transform: translateY(-50%);
 }
 
 /* The form of an operation stands where the list starts: a rename, a copy and a move are opened from a row, from a tile and from the toolbar, and all three find it in one place */
@@ -6035,6 +6070,12 @@ body:has(.sl-admin-login-shell):before {
   border-color: var(--sl-color-border-strong);
 }
 
+/* The current tile is the one the properties beside the list describe, as the selected row is in the other view; the keys walk both and must show where they stand */
+.sl-fm-cell[aria-selected="true"] .sl-fm-tile {
+  border-color: var(--sl-color-primary);
+  background-color: var(--sl-color-primary-tint);
+}
+
 .sl-fm-tile-img {
   display: flex;
   align-items: center;
@@ -6049,9 +6090,10 @@ body:has(.sl-admin-login-shell):before {
   object-fit: cover;
 }
 
+/* The right side of the caption is left to the fan that stands over it, so a long name is cut by the ellipsis and never runs under the button */
 .sl-fm-tile-cap {
   display: block;
-  padding: 6px 8px;
+  padding: 6px 40px 6px 8px;
   border-top: 1px solid var(--sl-color-border);
 }
 
@@ -6089,6 +6131,13 @@ body:has(.sl-admin-login-shell):before {
   border-left: 1px solid var(--sl-color-border);
   background: var(--sl-color-bg-soft);
   overflow: auto;
+}
+
+/* The panel of the marked set follows the page as well: the set is acted on from anywhere in the list, and a panel left at the bottom of it would be out of reach */
+.sl-fm-shell .sl-bulk-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
 }
 
 /* Explanation in the narrow column reads worse when justified */
@@ -6280,11 +6329,24 @@ button.sl-fm-thumb:hover .bi-zoom-in {
 }
 
 /* Mark and glass of a tile: both sit over the picture, so the tile itself stays one link and carries no control inside it */
-.sl-fm-tile-mark {
+/* The mark of a tile sits on its own light plate, under the name the window of the editor gives the same plate: the thumbnail carries the tone of the kind and a bare box is lost on it */
+.sl-fm-pick {
   position: absolute;
   top: 6px;
   left: 6px;
   z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--sl-color-bg) 88%, transparent);
+  cursor: pointer;
+}
+
+.sl-fm-pick input {
+  margin: 0;
 }
 
 .sl-but-mini.sl-fm-tile-shot {
@@ -6299,9 +6361,10 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   animation: sl-skel-pulse 1.2s ease-in-out infinite;
 }
 
+/* The placeholder stands in for the columns the list really has: mark, name, size and date */
 .sl-skel-row {
   display: grid;
-  grid-template-columns: 30px minmax(0, 1fr) 90px 70px 90px;
+  grid-template-columns: 30px minmax(0, 1fr) 70px 90px;
   align-items: center;
   gap: 12px;
   padding: 7px 6px;
@@ -6384,10 +6447,31 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   cursor: pointer;
 }
 
+/* A drag is over the target: the same state name the window of the editor uses, because the two screens draw one component and not two (§32) */
+.sl-fm-drop.sl-drag-over {
+  border-color: var(--sl-color-primary);
+  background-color: var(--sl-color-primary-tint);
+}
+
 .sl-fm-drop b {
   font-weight: normal;
   font-size: 13px;
   color: var(--sl-color-text-muted);
+}
+
+/* The directory a dragged set would land in: a node of the tree, a row and a tile say it the same way, because all three take the same drop */
+.sl-fm-node.sl-drag-over,
+.sl-fm-cell.sl-drag-over .sl-fm-tile {
+  outline: 2px dashed var(--sl-color-primary);
+  outline-offset: -2px;
+  background-color: var(--sl-color-primary-tint);
+}
+
+.sl-table-list-sort tbody tr.sl-drag-over > td {
+  background-color: var(--sl-color-primary-tint);
+  box-shadow:
+    inset 0 2px 0 var(--sl-color-primary),
+    inset 0 -2px 0 var(--sl-color-primary);
 }
 
 /* Upload queue: one line per file with its own bar, its own reason and one counter over the set (§31) */

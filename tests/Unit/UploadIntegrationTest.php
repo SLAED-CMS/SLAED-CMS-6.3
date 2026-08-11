@@ -78,12 +78,12 @@ final class UploadIntegrationTest extends TestCase
         }
     }
 
-    # The appended key falls back to the user limit when its position is absent, because zero means no limit and would hand an unbounded list to the one role that never had one
+    # The guest limit falls back to the user one when its position is absent, because zero means no limit and would hand an unbounded list to the one role that never had one
     #[Test]
     public function aRuleWithoutTheAppendedKeyFallsBackToTheUserLimit(): void
     {
         $data = $this->getProbe('resolver');
-        $this->assertSame(9, $data['old']['userfiles'], 'A rule written before the release lost its user limit');
+        $this->assertSame(8, $data['old']['userfiles'], 'A rule written short lost its user limit');
         $this->assertSame($data['old']['userfiles'], $data['old']['guestfiles'], 'A rule without the guest limit did not fall back to the user limit');
     }
 

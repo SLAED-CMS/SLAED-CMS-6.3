@@ -314,7 +314,7 @@ final class EditorRoomTest extends TestCase
         foreach (['opt.canembed', 'checkEmbedType(id, file)', 'file.size > max'] as $part) {
             $this->assertStringContainsString($part, $body, 'The embed path no longer checks '.$part.', so one half of the contract is unenforced in the client');
         }
-        $this->assertMatchesRegularExpression('#addFileList\(zone\.getAttribute\(.data-editor.\), ev\.dataTransfer#', $js, 'A dropped file misses the one file entry point');
+        $this->assertMatchesRegularExpression('#addFileList\(id, ev\.dataTransfer#', $js, 'A dropped file misses the one file entry point');
         $this->assertMatchesRegularExpression('#addFileList\(el\.getAttribute\(.data-editor.\), el\.files,#', $js, 'A picked file misses the one file entry point');
         $this->assertStringContainsString('addEmbed(id, files[0]);', $js, 'The embed mode no longer routes through the guarded embed path');
     }

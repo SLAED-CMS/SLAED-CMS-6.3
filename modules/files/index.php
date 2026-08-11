@@ -616,11 +616,12 @@ function loading(): void {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_files SET hits = hits+1 WHERE id = :id', ['id' => $id]);
         [$stitle, $url] = $db->getSqlRow($db->getSqlQuery('SELECT title, url FROM '.PREFIX_DB.'_files WHERE id = :id', ['id' => $id]));
         addPointsAction('download', $id, 11);
-        if ($conf['files']['stream'] == 2) {
+        $here = $url !== '' && is_file($url);
+        if ($here && $conf['files']['stream'] == 2) {
             $type = strtolower(substr(strrchr($url, '.'), 1));
-            stream($url, getRandomString(10).'.'.$type);
-        } elseif ($conf['files']['stream'] == '1') {
-            stream($url, preg_replace('#(.*?)\/#i', '', $url));
+            getFileStream($url, getRandomString(10).'.'.$type);
+        } elseif ($here && $conf['files']['stream'] == '1') {
+            getFileStream($url, preg_replace('#(.*?)\/#i', '', $url));
         } else {
             $info = sprintf(_NOTEDOWNLOAD, $stitle, $tpl->getHtmlFrag('link', ['href' => $url, 'title' => _UPLOAD.': '.$stitle, 'label' => $url, 'is_blank' => true]));
             setHead(['title' => _FILES]);

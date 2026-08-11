@@ -1,4 +1,4 @@
-<tr>
+<tr data-sl-fm-file="{{ pick_value }}"{% if is_dir %} data-sl-fm-dir="{{ pick_value }}"{% endif %}{% if is_move %} draggable="true"{% endif %}>
   <td class="sl-col-check">{% if is_mark %}<input type="checkbox" value="{{ pick_value }}" aria-label="{{ mark_text }}" data-sl-fm-mark>{% endif %}</td>
   <td>
     <span class="sl-fm-name">
@@ -10,7 +10,6 @@
       <a href="{{ url }}" hx-get="{{ url }}" hx-target="{% if is_dir %}#slfmbody{% else %}#slfmside{% endif %}" hx-swap="innerHTML" hx-push-url="false" title="{{ hint_text }}" data-sl-fm-pick>{{ name }}</a>
     </span>
   </td>
-  <td>{{ kind_text }}</td>
   <td>{{ size_text }}</td>
   <td class="sl-col-date">{{ date_text }}</td>
   <td class="sl-col-actions">{{{ acts_html }}}</td>

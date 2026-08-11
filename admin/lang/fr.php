@@ -176,10 +176,8 @@ define('_DELSETUP',"Afin d'améliorer la sécurité, vous devez supprimer ou ren
 define('_DENYING','La négation de la étiqueté modules');
 define('_DESC',"Dans l'ordre décroissant");
 define('_DRAGSORT','Glissez l\'icône « Position » dans un groupe. Les blocs libres forment un groupe séparé et utilisent [block=id] ; position et ordre ne s\'appliquent pas.');
-define('_DGEN','Basedir');
 define('_DIR','Annuaire');
 define('_DIRDEF','Le répertoire par défaut');
-define('_DTHUMB',"Plus d'annuaire");
 define('_EDFILEA',"Le nombre total de fichiers pour l'administrateur");
 define('_EDFILEG',"Le nombre total de fichiers pour l'invité");
 define('_EDFILEU',"Le nombre total de fichiers pour l'utilisateur");
@@ -224,7 +222,6 @@ define('_FILE_S','La taille totale des fichiers');
 define('_FIX','Tri');
 define('_FIXED','Fixer');
 define('_FLY_FIX','Libre un bloc fixe');
-define('_F_5','Le nombre de fichiers par page');
 define('_F_8',"Autoriser l'ajout de fichiers?");
 define('_F_9',"Autoriser les clients d'ajouter des fichiers?");
 define('_GDWIDTH',"Largeur de l'image d'aperçu");

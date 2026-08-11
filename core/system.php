@@ -4246,8 +4246,8 @@ function getEditorJson(array $dat): void {
     exit;
 }
 
-# Split the pipe-separated upload configuration of one directory into named rule keys; all thirteen are returned even when ok is false, so a caller needing one limit can read it
-# guestfiles is appended, so a rule stored before it existed keeps working; its absent position falls back to userfiles and not to zero, which the listing limit reads as no limit
+# Split the pipe-separated upload configuration of one directory into named rule keys; all twelve are returned even when ok is false, so a caller needing one limit can read it
+# The order is the stored one and the stored strings carry exactly these twelve fields; a rule written short by hand keeps its guest limit at the user one, because zero there means no limit at all
 function getUploadRuleData(string $mod): array {
     global $conf;
     $con = isset($conf['uploads'][$mod]) ? explode('|', (string)$conf['uploads'][$mod]) : [];
@@ -4267,12 +4267,11 @@ function getUploadRuleData(string $mod): array {
         'maxheight' => (int)($con[4] ?? 0),
         'maxfiles' => (int)($con[5] ?? 0),
         'thumbwidth' => (int)($con[6] ?? 0),
-        'adminlist' => (int)($con[7] ?? 0),
-        'moderfiles' => (int)($con[8] ?? 0),
-        'userfiles' => (int)($con[9] ?? 0),
-        'userupload' => (int)($con[10] ?? 0),
-        'guestupload' => (int)($con[11] ?? 0),
-        'guestfiles' => (int)($con[12] ?? $con[9] ?? 0),
+        'moderfiles' => (int)($con[7] ?? 0),
+        'userfiles' => (int)($con[8] ?? 0),
+        'userupload' => (int)($con[9] ?? 0),
+        'guestupload' => (int)($con[10] ?? 0),
+        'guestfiles' => (int)($con[11] ?? $con[8] ?? 0),
     ];
 }
 
@@ -4280,7 +4279,7 @@ function getUploadRuleData(string $mod): array {
 function setUploadRuleData(array $rule): string {
     $keys = [
         'extensions', 'maxquota', 'maxbytes', 'maxwidth', 'maxheight', 'maxfiles', 'thumbwidth',
-        'adminlist', 'moderfiles', 'userfiles', 'userupload', 'guestupload', 'guestfiles',
+        'moderfiles', 'userfiles', 'userupload', 'guestupload', 'guestfiles',
     ];
     return implode('|', array_map(static fn($v) => (string)($rule[$v] ?? ''), $keys));
 }
@@ -4460,26 +4459,21 @@ function setEditorFileRun(string $op): void {
     getEditorJson(['ok' => $done > 0, 'done' => $done, 'total' => count($mark), 'error' => ($done > 0) ? '' : ($note ?: _ERROR)]);
 }
 
-# Add downloads
-function stream(string $url, string $name): void {
-    header('Content-Type: application/force-download');
-    header('Content-Range: bytes');
-    header('Content-Length: '.filesize($url));
-    header('Content-Disposition: attachment; filename='.$name);
-    readfile($url);
-
-    /* https://secure.php.net/manual/ru/function.readfile.php
-    if (file_exists($file)) {
-        header('Content-Description: File Transfer');
-        header('Content-Type: application/octet-stream');
-        header('Content-Disposition: attachment; filename="'.basename($file).'"');
-        header('Expires: 0');
-        header('Cache-Control: must-revalidate');
-        header('Pragma: public');
-        header('Content-Length: ' . filesize($file));
-        readfile($file);
+# Hand one stored file to the client as a download and end the request there, which is the single download path of the project and the one place its headers are decided
+# The type is always the opaque one and never guessed from the extension: an active type answered from the origin of the site is executed instead of being saved
+# The name is reduced to its own last segment and encoded, so a name assembled out of a request carries no separator of its own and can append no header line
+function getFileStream(string $path, string $name): void {
+    $name = rawurlencode(basename($name));
+    if ($name === '' || !is_file($path) || !is_readable($path)) {
+        http_response_code(404);
         exit;
-    }*/
+    }
+    while (ob_get_level() > 0) ob_end_clean();
+    Cache::setHeaders(false, 0, 'application/octet-stream');
+    header('Content-Disposition: attachment; filename="'.$name.'"; filename*=UTF-8\'\''.$name);
+    header('Content-Length: '.filesize($path));
+    readfile($path);
+    exit;
 }
 
 # Format letter

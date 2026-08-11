@@ -641,10 +641,7 @@ function download(): void {
     $file = getVar('get', 'file', 'var');
     if ($file) {
         $path = LOGS_DIR.'/'.$file.'.log';
-        if (is_file($path)) {
-            stream($path, date('d.m.Y').'_'.$file.'.log');
-            return;
-        }
+        if (is_file($path)) getFileStream($path, date('d.m.Y').'_'.$file.'.log');
         setRedirect($afile.'.php?name=security');
     } else {
         setRedirect($afile.'.php?name=security');

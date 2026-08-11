@@ -164,7 +164,7 @@ final class UploadFormatTest extends TestCase
         sort($want);
         $this->assertSame($want, $this->getList('core/system.php', 'if (!in_array($ext, ['), 'getImageBox() disagrees on the image set');
         $this->assertSame($want, $this->getList('core/classes/parser.php', '$img = ['), 'filterAttach() disagrees on the image set');
-        $this->assertSame($want, $this->getList('core/admin.php', '$ftype = ['), 'The admin file listing disagrees on the image set');
+        $this->assertStringNotContainsString('$ftype = [', $this->getFile('core/admin.php'), 'The administration restates the image set in a list of its own again');
         $this->assertSame($want, $this->getList('core/classes/parser.php', 'public const EMBEDIMG = ['), 'Parser::EMBEDIMG disagrees on the image set');
         $drv = $this->getFile('plugins/editors/toastui/driver.php');
         $this->assertStringContainsString('Parser::EMBEDIMG', $drv, 'The editor window no longer reads the one embeddable type list and restates it in its own words');

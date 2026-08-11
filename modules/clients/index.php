@@ -127,7 +127,7 @@ function download(): void {
             }
         } else {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_clients_down SET hits = hits+1 WHERE id = :id', ['id' => $id]);
-            stream($tpath, date('d.m.Y').'_'.str_replace(' ', '_', $num).strtolower((string)strrchr($tpath, '.')));
+            getFileStream($tpath, date('d.m.Y').'_'.str_replace(' ', '_', $num).strtolower((string)strrchr($tpath, '.')));
         }
     } else {
         $stop = _CLERROR;
@@ -183,7 +183,7 @@ function generator(string $path = ''): void {
         }
         fwrite($fp, $code);
         fclose($fp);
-        if (!$path) stream($dir.'/'.$uid.'.txt', 'license.txt');
+        if (!$path) getFileStream($dir.'/'.$uid.'.txt', 'license.txt');
     } else {
         $stop = _CLERROR;
         clients();

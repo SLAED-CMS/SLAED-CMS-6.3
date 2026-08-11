@@ -886,7 +886,7 @@ function getProbeResolver(): array {
     $conf['uploads']['probeshort'] = 'gif';
     $short = getUploadRuleData('probeshort');
     $out['short'] = ['ok' => (bool)$short['ok'], 'ext' => (string)$short['extensions'], 'quota' => (int)$short['maxquota'], 'guest' => (int)$short['guestupload']];
-    $conf['uploads']['probeold'] = 'gif|1|2|3|4|5|6|7|8|9|1|0';
+    $conf['uploads']['probeold'] = 'gif|1|2|3|4|5|6|7|8|9|1';
     $old = getUploadRuleData('probeold');
     $out['old'] = ['userfiles' => (int)$old['userfiles'], 'guestfiles' => (int)$old['guestfiles']];
     $conf['uploads']['probeempty'] = '';

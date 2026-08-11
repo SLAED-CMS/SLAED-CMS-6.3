@@ -1,7 +1,7 @@
 <nav class="sl-fm-tree" aria-label="{{ cap_text }}">
   <span class="sl-fm-cap">{{ cap_text }}</span>
   {% for node in nodes %}
-  <a class="sl-fm-node" href="{{ node.url }}" hx-get="{{ node.url }}" hx-target="#slfmbody" hx-swap="innerHTML" hx-push-url="false" title="{{ node.hint }}" {% if node.is_cur %}aria-current="true"{% endif %}>
+  <a class="sl-fm-node" href="{{ node.url }}" hx-get="{{ node.url }}" hx-target="#slfmbody" hx-swap="innerHTML" hx-push-url="false" title="{{ node.hint }}" data-sl-fm-dir="{{ node.path }}" {% if node.is_cur %}aria-current="true"{% endif %}>
     {% for pad in node.pads %}<span class="sl-tree-pad"></span>{% endfor %}
     <i class="bi bi-{{ node.icon }}" aria-hidden="true"></i><span>{{ node.name }}</span>
   </a>

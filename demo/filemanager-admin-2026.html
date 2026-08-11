@@ -71,7 +71,7 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-muted); color
 .sl-but-mini.sl-fm-danger:hover, .sl-but-mini.sl-fm-danger:focus-visible { background-color: var(--sl-color-danger); color: var(--sl-color-on-dark); }
 
 /* три колонки: дерево, список, свойства */
-.sl-fm-split { display: grid; grid-template-columns: 236px minmax(0, 1fr) 282px; min-height: 470px; border-top: 1px solid var(--sl-color-border); }
+.sl-fm-split { display: grid; grid-template-columns: 250px minmax(0, 1fr) 250px; min-height: 470px; border-top: 1px solid var(--sl-color-border); }
 .sl-fm-tree { padding: 10px 8px; border-right: 1px solid var(--sl-color-border); background: var(--sl-color-bg-soft); overflow: auto; }
 .sl-fm-cap { display: block; padding: 2px 8px 8px; font-size: 11px; letter-spacing: 0.4px; text-transform: uppercase; color: var(--sl-color-text-muted); }
 .sl-fm-node { display: flex; align-items: center; gap: 6px; width: 100%; padding: 5px 8px; border: 0; border-radius: var(--sl-radius-control); background: transparent; color: var(--sl-color-text-soft); text-align: left; font: inherit; font-size: 13px; cursor: pointer; }
@@ -161,7 +161,7 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-muted); color
 
 /* §31 Скелетон списка: место строк занято, пока каталог не пришёл */
 .sl-skel { animation: sl-skel-pulse 1.2s ease-in-out infinite; }
-.sl-skel-row { display: grid; grid-template-columns: 30px minmax(0, 1fr) 90px 70px 90px; align-items: center; gap: 12px; padding: 7px 6px; border-bottom: 1px solid var(--sl-color-border); }
+.sl-skel-row { display: grid; grid-template-columns: 30px minmax(0, 1fr) 70px 90px; align-items: center; gap: 12px; padding: 7px 6px; border-bottom: 1px solid var(--sl-color-border); }
 .sl-skel-cell { display: block; border-radius: var(--sl-radius-control); background: var(--sl-color-bg-subtle); }
 .sl-skel-row .sl-skel-cell { height: 24px; }
 .sl-skel-line { display: block; height: 10px; border-radius: 5px; background: var(--sl-color-bg-subtle); }
@@ -247,7 +247,7 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-muted); color
       </div>
 
       <ul class="sl-tabs-nav" role="tablist" aria-label="Разделы модуля загрузок">
-        <li class="sl-tabs-item"><a class="sl-tabs-link sl-is-active" role="tab" href="#" data-ctx="uploads"><i class="bi bi-folder2-open" aria-hidden="true"></i>&nbsp;Каталог файлов</a></li>
+        <li class="sl-tabs-item"><a class="sl-tabs-link sl-is-active" role="tab" href="#" data-ctx="uploads"><i class="bi bi-folder-fill" aria-hidden="true"></i>&nbsp;Каталог файлов</a></li>
         <li class="sl-tabs-item"><a class="sl-tabs-link" role="tab" href="#" data-ctx="system"><i class="bi bi-hdd-stack" aria-hidden="true"></i>&nbsp;Системные файлы</a></li>
         <li class="sl-tabs-item"><a class="sl-tabs-link" role="tab" href="#" data-ctx="tpl"><i class="bi bi-code-square" aria-hidden="true"></i>&nbsp;Шаблоны</a></li>
         <li class="sl-tabs-item"><a class="sl-tabs-link" role="tab" href="#" data-ctx="cfg"><i class="bi bi-sliders" aria-hidden="true"></i>&nbsp;Конфигурации</a></li>
@@ -274,27 +274,27 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-muted); color
           <nav class="sl-fm-tree">
             <span class="sl-fm-cap" data-slot="tree-cap">Директории загрузок</span>
             <div data-slot="tree-uploads">
-              <button type="button" class="sl-fm-node"><i class="bi bi-folder2-open" aria-hidden="true"></i><span>uploads</span></button>
-              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder2" aria-hidden="true"></i><span>all</span></button>
-              <button type="button" class="sl-fm-node" aria-current="true"><span class="sl-tree-pad"></span><i class="bi bi-folder2-open" aria-hidden="true"></i><span>files</span></button>
-              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><span class="sl-tree-pad"></span><i class="bi bi-folder2" aria-hidden="true"></i><span>thumb</span></button>
-              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder2" aria-hidden="true"></i><span>news</span></button>
-              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder2" aria-hidden="true"></i><span>forum</span></button>
-              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder2" aria-hidden="true"></i><span>shop</span></button>
+              <button type="button" class="sl-fm-node"><i class="bi bi-folder-fill" aria-hidden="true"></i><span>uploads</span></button>
+              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder" aria-hidden="true"></i><span>all</span></button>
+              <button type="button" class="sl-fm-node" aria-current="true"><span class="sl-tree-pad"></span><i class="bi bi-folder-fill" aria-hidden="true"></i><span>files</span></button>
+              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><span class="sl-tree-pad"></span><i class="bi bi-folder" aria-hidden="true"></i><span>thumb</span></button>
+              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder" aria-hidden="true"></i><span>news</span></button>
+              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder" aria-hidden="true"></i><span>forum</span></button>
+              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder" aria-hidden="true"></i><span>shop</span></button>
               <button type="button" class="sl-fm-node sl-fm-node-lazy"><span class="sl-tree-pad"></span><i class="bi bi-three-dots" aria-hidden="true"></i><span>ещё 11 директорий</span></button>
             </div>
             <div data-slot="tree-system" hidden>
               <button type="button" class="sl-fm-node"><i class="bi bi-hdd-stack" aria-hidden="true"></i><span>SLAED</span></button>
-              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder2" aria-hidden="true"></i><span>admin</span></button>
-              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder2" aria-hidden="true"></i><span>blocks</span></button>
-              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder2" aria-hidden="true"></i><span>config</span></button>
-              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder2" aria-hidden="true"></i><span>core</span></button>
-              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder2" aria-hidden="true"></i><span>modules</span></button>
-              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder2" aria-hidden="true"></i><span>plugins</span></button>
-              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder2" aria-hidden="true"></i><span>uploads</span></button>
-              <button type="button" class="sl-fm-node" aria-current="true"><span class="sl-tree-pad"></span><i class="bi bi-folder2-open" aria-hidden="true"></i><span>templates</span></button>
-              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><span class="sl-tree-pad"></span><i class="bi bi-folder2" aria-hidden="true"></i><span>admin</span></button>
-              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><span class="sl-tree-pad"></span><i class="bi bi-folder2-open" aria-hidden="true"></i><span>lite</span></button>
+              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder" aria-hidden="true"></i><span>admin</span></button>
+              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder" aria-hidden="true"></i><span>blocks</span></button>
+              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder" aria-hidden="true"></i><span>config</span></button>
+              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder" aria-hidden="true"></i><span>core</span></button>
+              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder" aria-hidden="true"></i><span>modules</span></button>
+              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder" aria-hidden="true"></i><span>plugins</span></button>
+              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder" aria-hidden="true"></i><span>uploads</span></button>
+              <button type="button" class="sl-fm-node" aria-current="true"><span class="sl-tree-pad"></span><i class="bi bi-folder-fill" aria-hidden="true"></i><span>templates</span></button>
+              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><span class="sl-tree-pad"></span><i class="bi bi-folder" aria-hidden="true"></i><span>admin</span></button>
+              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><span class="sl-tree-pad"></span><i class="bi bi-folder-fill" aria-hidden="true"></i><span>lite</span></button>
             </div>
           </nav>
 
@@ -312,17 +312,17 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-muted); color
 
               <!-- §31 Каталог грузится: скелетон на месте строк -->
               <div class="sl-skel" data-view="skel" aria-hidden="true" hidden>
-                <div class="sl-skel-row"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line"></span></div>
-                <div class="sl-skel-row"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line"></span></div>
-                <div class="sl-skel-row"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line"></span></div>
-                <div class="sl-skel-row"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line"></span></div>
-                <div class="sl-skel-row"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line"></span></div>
-                <div class="sl-skel-row"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line"></span></div>
+                <div class="sl-skel-row"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line"></span></div>
+                <div class="sl-skel-row"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line"></span></div>
+                <div class="sl-skel-row"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line"></span></div>
+                <div class="sl-skel-row"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line"></span></div>
+                <div class="sl-skel-row"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line"></span></div>
+                <div class="sl-skel-row"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span><span class="sl-skel-line"></span></div>
               </div>
 
               <!-- §31 Пустая директория, пустой фильтр и несостоявшийся список говорят разными словами -->
               <div class="sl-fm-empty" data-view="empty" hidden>
-                <i class="bi bi-folder2" data-slot="empty-icon" aria-hidden="true"></i>
+                <i class="bi bi-folder" data-slot="empty-icon" aria-hidden="true"></i>
                 <b data-slot="empty-title">Директория пуста</b>
                 <p data-slot="empty-text">В этой директории пока нет ни файлов, ни поддиректорий.</p>
                 <button type="button" class="sl-but" data-slot="empty-act" hidden></button>
@@ -330,12 +330,12 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-muted); color
 
               <div class="sl-table-shell" data-mode-view="list">
                 <table class="sl-table-list-sort" data-slot="rows-uploads">
-                  <thead><tr><th class="sl-col-check"><input type="checkbox" data-slot="pick-all"></th><th>Имя</th><th>Тип</th><th>Размер</th><th>Изменён</th><th class="sl-col-actions">Действия</th></tr></thead>
+                  <thead><tr><th class="sl-col-check"><input type="checkbox" data-slot="pick-all"></th><th>Имя</th><th>Размер</th><th>Изменён</th><th class="sl-col-actions">Действия</th></tr></thead>
                   <tbody></tbody>
                 </table>
 
                 <table class="sl-table-list-sort" data-slot="rows-system" hidden>
-                  <thead><tr><th class="sl-col-check"><input type="checkbox" data-slot="pick-all"></th><th>Имя</th><th>Тип</th><th>Размер</th><th>Изменён</th><th class="sl-col-actions">Действия</th></tr></thead>
+                  <thead><tr><th class="sl-col-check"><input type="checkbox" data-slot="pick-all"></th><th>Имя</th><th>Размер</th><th>Изменён</th><th class="sl-col-actions">Действия</th></tr></thead>
                   <tbody></tbody>
                 </table>
               </div>
@@ -496,7 +496,7 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-muted); color
     /* Один список объектов на контекст: из него рисуются и таблица, и плитки, и галерея предпросмотра */
     var sets = {
         uploads: [
-            { name: 'thumb', kind: 'директория', mime: 'directory', size: '—', date: '10.08.2026', full: '10.08.2026 09:12', dim: '—', tone: 'dir', icon: 'folder2', dir: true },
+            { name: 'thumb', kind: 'директория', mime: 'directory', size: '—', date: '10.08.2026', full: '10.08.2026 09:12', dim: '—', tone: 'dir', icon: 'folder', dir: true },
             { name: 'screenshot-2026-08-10.png', kind: 'PNG', mime: 'image · png', size: '248 KB', date: 'сегодня', full: '10.08.2026 14:20', dim: '1280 × 720', tone: 'img', icon: 'image', img: true },
             { name: 'logo-slaed.webp', kind: 'WEBP', mime: 'image · webp', size: '34 KB', date: 'вчера', full: '09.08.2026 18:02', dim: '512 × 512', tone: 'img', icon: 'image', img: true },
             { name: 'banner-autumn.jpg', kind: 'JPG', mime: 'image · jpeg', size: '512 KB', date: '05.08.2026', full: '05.08.2026 09:41', dim: '1920 × 480', tone: 'img', icon: 'image', img: true },
@@ -505,8 +505,8 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-muted); color
             { name: 'module-pack.zip', kind: 'ZIP', mime: 'archive · zip', size: '860 KB', date: '21.07.2026', full: '21.07.2026 16:58', dim: '—', tone: 'zip', icon: 'file-earmark-zip' }
         ],
         system: [
-            { name: 'assets', kind: 'директория', mime: 'directory', size: '—', date: '09.08.2026', full: '09.08.2026 20:10', dim: '—', tone: 'dir', icon: 'folder2', dir: true },
-            { name: 'fragments', kind: 'директория', mime: 'directory', size: '—', date: '10.08.2026', full: '10.08.2026 07:55', dim: '—', tone: 'dir', icon: 'folder2', dir: true },
+            { name: 'assets', kind: 'директория', mime: 'directory', size: '—', date: '09.08.2026', full: '09.08.2026 20:10', dim: '—', tone: 'dir', icon: 'folder', dir: true },
+            { name: 'fragments', kind: 'директория', mime: 'directory', size: '—', date: '10.08.2026', full: '10.08.2026 07:55', dim: '—', tone: 'dir', icon: 'folder', dir: true },
             { name: 'theme.css', kind: 'CSS', mime: 'text · css', size: '198 KB', date: 'сегодня', full: '10.08.2026 11:04', dim: '5 753 строки', tone: 'code', icon: 'filetype-css', edit: true },
             { name: 'base.css', kind: 'CSS', mime: 'text · css', size: '14 KB', date: '08.08.2026', full: '08.08.2026 13:20', dim: '580 строк', tone: 'code', icon: 'filetype-css', edit: true },
             { name: 'index.php', kind: 'PHP', mime: 'text · php', size: '19 KB', date: '04.08.2026', full: '04.08.2026 22:31', dim: '612 строк', tone: 'code', icon: 'filetype-php', edit: true, crit: true },
@@ -556,7 +556,7 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-muted); color
         tr.setAttribute('data-num', String(num));
         tr.innerHTML = '<td class="sl-col-check"><input type="checkbox" data-pick="' + num + '"></td>'
             + '<td><span class="sl-fm-name"><span class="sl-fm-thumb sl-fm-thumb-' + item.tone + '"><i class="bi bi-' + item.icon + '" aria-hidden="true"></i></span><span>' + item.name + '</span></span></td>'
-            + '<td>' + item.kind + '</td><td>' + item.size + '</td><td>' + item.date + '</td>'
+            + '<td>' + item.size + '</td><td>' + item.date + '</td>'
             + '<td class="sl-col-actions"></td>';
         if (item.edit) tr.setAttribute('data-open', 'editor');
         if (item.img) tr.querySelector('.sl-fm-thumb').appendChild(getZoom(num));
@@ -640,7 +640,7 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-muted); color
     var states = {
         ready: [],
         skel: [],
-        empty: ['folder2', 'Директория пуста', 'В этой директории пока нет ни файлов, ни поддиректорий.', ''],
+        empty: ['folder', 'Директория пуста', 'В этой директории пока нет ни файлов, ни поддиректорий.', ''],
         filter: ['search', 'Ничего не найдено', 'В этой директории нет объектов, подходящих под фильтр.', 'Сбросить фильтр'],
         fail: ['exclamation-triangle', 'Список не загрузился', 'Сервер не ответил на запрос директории. Файлы на месте, получить список не удалось.', 'Повторить']
     };
@@ -673,7 +673,7 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-muted); color
         document.querySelector('[data-slot="side"]').hidden = name !== 'ready';
         /* Страниц у списка, которого нет, тоже нет */
         document.querySelector('.sl-fm-foot .sl-pager').hidden = name !== 'ready';
-        document.querySelector('.sl-fm-split').style.gridTemplateColumns = name === 'ready' ? '' : '236px minmax(0, 1fr)';
+        document.querySelector('.sl-fm-split').style.gridTemplateColumns = name === 'ready' ? '' : '250px minmax(0, 1fr)';
         if (name !== 'ready') picks.clear();
         setMode(modenow);
         setPicks();
@@ -855,7 +855,7 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-muted); color
         document.querySelector('[data-slot="list"]').hidden = on;
         document.querySelector('[data-slot="editor"]').hidden = !on;
         document.querySelector('[data-slot="side"]').hidden = on;
-        document.querySelector('.sl-fm-split').style.gridTemplateColumns = on ? '236px minmax(0, 1fr)' : '';
+        document.querySelector('.sl-fm-split').style.gridTemplateColumns = on ? '250px minmax(0, 1fr)' : '';
     }
     /* Системный пагинатор админки: sl-pnum для номеров, sl-pnum-nav для стрелок, стрелка рисуется темой */
     function getPageLink(num, cur) {

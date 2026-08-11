@@ -43,88 +43,14 @@ function uploads(): void {
     $walk = getAdminFilePath('dir');
     if ($walk === '') $walk = getAdminFilePath('dir', 'post');
     $dir = ($walk === '') ? $conf['uploads']['dir'] : explode('/', $walk)[0];
-    # The file panels are read through the shared go=5 endpoint, which validates the global ajax scope, so this one keeps that scope while the module forms use their own
-    $token = '&token='.getSiteToken();
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
-        'tabs' => [_FILES, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
         'subtitle_html' => getUploadsSearch($dir),
     ]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
-    $cont .= checkPerms(UPLOADS_DIR);
-    $tabone = getAdminFileShell(true);
-    $fdir = UPLOADS_DIR.'/'.$dir;
-    $tabtwo = checkPerms($fdir);
-    if (is_dir($fdir)) {
-        $f = 0;
-        $affilesize = 0;
-        foreach (scandir($fdir) as $file) {
-            if ($file != '.' && $file != '..' && $file != 'index.html' && !is_dir($fdir.'/'.$file)) {
-                $filesize = filesize($fdir.'/'.$file);
-                $f++;
-                $affilesize += $filesize;
-            }
-        }
-        $tabtwo .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'messages' => [
-            _MODUL.': '.getModuleName($dir),
-            _DIR.': uploads/'.$dir,
-            _FILE_M.': '.$f,
-            _FILE_S.': '.filterSize($affilesize),
-        ]]);
-    } else {
-        $tabtwo .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
-    }
-    $tabtwo .= $tpl->getHtmlPart('box', ['box_id' => 'repf1']);
-    $tdir = $fdir.'/thumb';
-    $tabthr = checkPerms($tdir);
-    if (is_dir($tdir)) {
-        $t = 0;
-        $atfilesize = 0;
-        foreach (scandir($tdir) as $file) {
-            if ($file != '.' && $file != '..' && $file != 'index.html' && !is_dir($tdir.'/'.$file)) {
-                $filesize = filesize($tdir.'/'.$file);
-                $t++;
-                $atfilesize += $filesize;
-            }
-        }
-        $tabthr .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'messages' => [
-            _MODUL.': '.getModuleName($dir),
-            _DIR.': uploads/'.$dir.'/thumb',
-            _FILE_M.': '.$t,
-            _FILE_S.': '.filterSize($atfilesize),
-        ]]);
-    } else {
-        $tabthr .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
-    }
-    $tabthr .= $tpl->getHtmlPart('box', ['box_id' => 'repf2']);
-    $tabs = [
-        ['label' => _EUPLOAD, 'target' => 'uploads-panel-0', 'active' => true, 'hx_get' => '', 'hx_target' => ''],
-        ['label' => _DGEN, 'target' => 'uploads-panel-1', 'active' => false, 'hx_get' => 'index.php?go=5&op=getAdminUploadFiles&id=1&dir='.$dir.$token, 'hx_target' => '#repf1'],
-        ['label' => _DTHUMB, 'target' => 'uploads-panel-2', 'active' => false, 'hx_get' => 'index.php?go=5&op=getAdminUploadFiles&id=2&dir='.$dir.$token, 'hx_target' => '#repf2'],
-    ];
-    $tabsHtml = '';
-    foreach ($tabs as $tab) {
-        $tabsHtml .= $tpl->getHtmlFrag('tabs-link', [
-            'href' => '#',
-            'label' => $tab['label'],
-            'rel' => $tab['target'],
-            'is_active' => $tab['active'],
-            'hx_get' => $tab['hx_get'],
-            'hx_target' => $tab['hx_target'],
-        ]);
-    }
-    $uplv = $tpl->getHtmlPart('tabs', [
-        'id' => 'uploads-tabs',
-        'is_runtime' => true,
-        'is_subtabs' => true,
-        'tabs_html' => $tabsHtml,
-        'content_html' =>
-            $tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'uploads-panel-0', 'content_html' => $tabone])
-            .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'uploads-panel-1', 'content_html' => $tabtwo])
-            .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'uploads-panel-2', 'content_html' => $tabthr]),
-    ]);
-    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $uplv]);
+    echo $cont.checkPerms(UPLOADS_DIR).getAdminFileShell(true);
     setFoot();
 }
 
@@ -170,7 +96,7 @@ function sysfiles(): void {
     setHead();
     echo getTplAdminTabs([
         'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
-        'tabs' => [_FILES, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
         'tab' => 1,
     ]).getAdminFileShell(true);
     setFoot();
@@ -185,7 +111,7 @@ function fmedit(): void {
     setHead();
     echo getTplAdminTabs([
         'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
-        'tabs' => [_FILES, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
         'tab' => 1,
     ]).getAdminFileShell(true, ['path' => $file, 'text' => $body['text'], 'version' => $body['version']]);
     setFoot();
@@ -216,7 +142,7 @@ function fmsave(): void {
     setHead();
     echo getTplAdminTabs([
         'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
-        'tabs' => [_FILES, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
         'tab' => 1,
     ]).getAdminFileShell(true, [
         'path' => $file,
@@ -347,7 +273,7 @@ function tplconfig(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
-        'tabs' => [_FILES, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
         'tab' => 2,
         'subtitle_html' => getUploadsSearch(),
     ]);
@@ -405,7 +331,7 @@ function config(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
-        'tabs' => [_FILES, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
         'tab' => 3,
         'subtitle_html' => getUploadsSearch(),
     ]);
@@ -447,7 +373,6 @@ function config(): void {
                 ['label_html' => _AHEIGHT._AIN, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'height[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['maxheight']])],
                 ['label_html' => _FILEUP, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'up[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['maxfiles']])],
                 ['label_html' => _GDWIDTH, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'gdwidth[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['thumbwidth']])],
-                ['label_html' => _F_5, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['adminlist']])],
                 ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _EDFILEA, 'hint' => _CONFINES]), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'asum[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['moderfiles']])],
                 ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _EDFILEU, 'hint' => _CONFINES]), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'usum[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['userfiles']])],
                 ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _EDFILEG, 'hint' => _CONFINES]), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'gsum[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['guestfiles']])],
@@ -529,7 +454,6 @@ function configsave(): void {
     $height = getVar('post', 'height[]');
     $up = getVar('post', 'up[]');
     $gdwidth = getVar('post', 'gdwidth[]');
-    $num = getVar('post', 'num[]');
     $asum = getVar('post', 'asum[]');
     $usum = getVar('post', 'usum[]');
     $gsum = getVar('post', 'gsum[]');
@@ -543,7 +467,6 @@ function configsave(): void {
             $xheight = (!intval($height[$i] ?? 0)) ? 500 : intval($height[$i]);
             $xup = (!intval($up[$i] ?? 0)) ? 10 : intval($up[$i]);
             $xgdwidth = (!intval($gdwidth[$i] ?? 0)) ? 150 : intval($gdwidth[$i]);
-            $xnum = (!intval($num[$i] ?? 0)) ? 10 : intval($num[$i]);
             $xasum = (!intval($asum[$i] ?? 0)) ? 250 : intval($asum[$i]);
             $xusum = (!intval($usum[$i] ?? 0)) ? 100 : intval($usum[$i]);
             $xgsum = (!intval($gsum[$i] ?? 0)) ? $xusum : intval($gsum[$i]);
@@ -557,7 +480,6 @@ function configsave(): void {
                 'maxheight' => $xheight,
                 'maxfiles' => $xup,
                 'thumbwidth' => $xgdwidth,
-                'adminlist' => $xnum,
                 'moderfiles' => $xasum,
                 'userfiles' => $xusum,
                 'userupload' => $upload,
@@ -576,7 +498,7 @@ function configsave(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
-        'tabs' => [_FILES, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
         'subtitle_html' => getUploadsSearch(),
     ]);
 }

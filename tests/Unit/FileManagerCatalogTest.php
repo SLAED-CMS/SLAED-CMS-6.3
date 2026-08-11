@@ -13,7 +13,8 @@ use ZipArchive;
  * temp directory that is rebuilt before each test, so nothing below the site is ever touched. The route side - one
  * POST route per operation, the scoped token before the upload service, the marked set read out of the body and the
  * journal entry of §24 - is proven off the sources, because a handler cannot be called without an administrative
- * session.
+ * session. Stage 9 closes here as well: the catalogue is the only list of the upload tree left, and one download
+ * path serves the whole project.
  */
 final class FileManagerCatalogTest extends TestCase
 {
@@ -268,21 +269,95 @@ final class FileManagerCatalogTest extends TestCase
         $this->assertStringContainsString("getAdminFileMode('system')", $this->getBody('admin/modules/uploads.php', 'sysfiles'), 'The system screen does not name its own area');
     }
 
-    # No address of the module changes a file any more: the quick lists answer a directory, and every operation of §17 has one POST route of its own
+    # No address of the module changes a file any more: every operation of §17 has one POST route of its own, and the upload route that ran beside the file manager is gone
     #[Test]
     public function noAddressOfTheModuleChangesAFile(): void
     {
-        $body = $this->getBody('core/admin.php', 'getAdminUploadFiles');
-        foreach (['unlink(', 'addCompress(', 'rename(', 'rmdir('] as $call) {
-            $this->assertStringNotContainsString($call, $body, 'The quick list of the module still changes the filesystem on a GET');
-        }
-        $this->assertStringNotContainsString('cid=1', $body, 'The quick list of the module still carries an address that packs a file');
-        $this->assertStringNotContainsString('cid=0', $body, 'The quick list of the module still carries an address that deletes a file');
         $mod = $this->getFile('admin/modules/uploads.php');
         foreach (['fmcreate', 'fmmkdir', 'fmrename', 'fmcopy', 'fmmove', 'fmdelete', 'fmcompress', 'fmpack', 'fmupload'] as $name) {
             $this->assertStringContainsString("case '".$name."': ".$name."(); break;", $mod, 'The operation '.$name.' has no route of its own');
         }
         $this->assertStringNotContainsString('uploadsave', $mod, 'The upload route that ran beside the file manager is still wired');
+    }
+
+    # The catalogue is the only list of the upload tree the administration has: the quick lists went with the route that fed them and with the captions they were named by
+    #[Test]
+    public function theCatalogueIsTheOnlyListOfTheTree(): void
+    {
+        $this->assertStringNotContainsString('function getAdminUploadFiles(', $this->getFile('core/admin.php'), 'The quick list of the module is still built');
+        $this->assertStringNotContainsString('getAdminUploadFiles', $this->getFile('index.php'), 'The route the quick list was read through is still wired');
+        $body = $this->getBody('admin/modules/uploads.php', 'uploads');
+        $this->assertStringNotContainsString('uploads-panel', $body, 'The catalogue screen still carries the sub-tabs the quick lists lived in');
+        $this->assertStringContainsString('getAdminFileShell(true)', $body, 'The catalogue screen shows no browser of its own');
+        $this->assertStringContainsString('getUploadsSearch(', $body, 'The directory selector the screen navigates by is gone');
+        foreach (['de', 'en', 'fr', 'pl', 'ru', 'uk'] as $loc) {
+            $lang = $this->getFile('admin/lang/'.$loc.'.php');
+            $this->assertStringNotContainsString('_DGEN', $lang, 'The caption of a removed sub-tab is still defined in '.$loc);
+            $this->assertStringNotContainsString('_DTHUMB', $lang, 'The caption of a removed sub-tab is still defined in '.$loc);
+        }
+    }
+
+    # The directory stands at its own length and the page carries it: no pager, no box of its own to scroll, and the settings say how many objects one answer may hold
+    #[Test]
+    public function theDirectoryIsScrolledAndNotPaged(): void
+    {
+        $body = $this->getBody('core/admin.php', 'getAdminFileShell');
+        $this->assertStringNotContainsString('pager_html', $body, 'The catalogue still builds a pager for the directory');
+        $this->assertStringNotContainsString("'num' =>", $body, 'An address of the catalogue still carries a page number');
+        $this->assertStringNotContainsString('array_slice($all', $body, 'The administration is answered a part of the directory instead of all of it');
+        foreach (['core/system.php', 'core/admin.php', 'admin/modules/uploads.php'] as $path) {
+            $this->assertStringNotContainsString('adminlist', $this->getFile($path), 'The retired list-length setting still lives in '.$path);
+        }
+        $rule = $this->getBody('core/system.php', 'getUploadRuleData');
+        $this->assertStringContainsString("'moderfiles' => (int)(\$con[7] ?? 0)", $rule, 'The stored rule was not closed up after the retired field was taken out of it');
+        $this->assertStringNotContainsString('$con[12]', $rule, 'The rule still reads a position the stored strings no longer carry');
+        $shell = $this->getFile('templates/admin/partials/file-browser.html');
+        $this->assertStringNotContainsString('pager_html', $shell, 'The shell still leaves a place for the pager');
+        $css = $this->getFile('templates/admin/assets/css/theme.css');
+        $this->assertDoesNotMatchRegularExpression('#\.sl-fm-scroll \{[^}]*max-height#', $css, 'The list still stands in a box of its own height');
+        $this->assertDoesNotMatchRegularExpression('#\.sl-fm-scroll \{[^}]*overflow#', $css, 'The list still scrolls inside itself instead of with the page');
+        $this->assertMatchesRegularExpression('#\.sl-fm-scroll thead th \{\s*position: sticky;#', $css, 'The column titles do not stay while the rows pass under them');
+        $this->assertMatchesRegularExpression('#\.sl-fm-tree,\s*\.sl-fm-side \{\s*position: sticky;#', $css, 'The tree and the properties scroll away with the list');
+        $this->assertMatchesRegularExpression('#\.sl-fm-shell \.sl-bulk-bar \{\s*position: sticky;#', $css, 'The panel of the marked set is left at the bottom of the list');
+        $this->assertMatchesRegularExpression('#\.sl-fm-scroll thead th \{[^}]*z-index: 40;#', $css, 'A row passing under the titles pushes its own fan through them');
+        $this->assertMatchesRegularExpression('#\.sl-fm-tile-cap \{[^}]*padding: 6px 40px#', $css, 'The caption of a tile runs under the fan that stands over it');
+        $tile = $this->getFile('templates/admin/fragments/file-browser-tile.html');
+        $this->assertStringContainsString('<label class="sl-fm-pick">', $tile, 'The mark of a tile has no plate of its own and is lost on a coloured thumbnail');
+        $this->assertStringContainsString('{{ size_text }} · {{ day_text }}', $tile, 'The caption of a tile does not name the size and the day the mockup shows');
+        $this->assertStringNotContainsString('sl-fm-tile-mark', $this->getFile('templates/admin/assets/css/theme.css'), 'The plate of a mark carries a second name beside the one the editor window gives it');
+        $this->assertDoesNotMatchRegularExpression('#\.sl-fm-cell > \.sl-dial \{[^}]*flex-wrap#', $css, 'A fan of a tile is folded into a block instead of the one row it has everywhere else');
+        $this->assertMatchesRegularExpression('#\.sl-fm-node \.sl-tree-pad \{[^}]*width: 2px;#', $css, 'The step of one level in the tree is not the narrow one the browser sets for itself');
+        $this->assertMatchesRegularExpression('#^\.sl-tree-pad \{\s*display: inline-block;\s*width: 22px;#m', $css, 'The shared pad of the admin tree lost its own width to the file browser');
+        $this->assertMatchesRegularExpression('#\.sl-fm-node \{[^}]*box-sizing: border-box;[^}]*width: 100%;#', $css, 'A node counts its padding outside its width and pushes the tree wider than its column');
+        foreach (['de', 'en', 'fr', 'pl', 'ru', 'uk'] as $loc) {
+            $lang = $this->getFile('admin/lang/'.$loc.'.php');
+            $this->assertStringNotContainsString('_UPLOADS_CUT', $lang, 'The caption of a trimmed directory outlived the trimming in '.$loc);
+        }
+    }
+
+    # Return one define() line of a locale file, so a claim about its wording is made about that line alone
+    private function getLine(string $code, string $name): string
+    {
+        $from = strpos($code, "define('".$name."'");
+        $this->assertNotFalse($from, $name.' is gone from the locale');
+        return substr($code, $from, (int)strpos($code, "\n", $from) - $from);
+    }
+
+    # One download path serves the whole project: the type is the opaque one, the name reaches the header encoded and the request ends where the file ends (§17)
+    #[Test]
+    public function oneDownloadPathServesTheProject(): void
+    {
+        $this->assertStringNotContainsString('function stream(', $this->getFile('core/system.php'), 'The download helper of the legacy contract is still defined');
+        $body = $this->getBody('core/system.php', 'getFileStream');
+        $this->assertStringContainsString("'application/octet-stream'", $body, 'A download is answered with a type the browser may execute');
+        $this->assertStringContainsString('rawurlencode(basename($name))', $body, 'The name of a download reaches the header as it was given');
+        $this->assertStringContainsString('exit;', $body, 'A download does not end the request it answers');
+        foreach (['admin/modules/security.php', 'modules/clients/index.php', 'modules/files/index.php', 'modules/shop/admin/index.php'] as $path) {
+            $this->assertDoesNotMatchRegularExpression('/(?<![\w>])stream\(/', $this->getFile($path), 'A download of '.$path.' still goes through the legacy helper');
+        }
+        $down = $this->getBody('core/admin.php', 'getAdminFileDownload');
+        $this->assertStringContainsString('getFileStream(', $down, 'The download route of the file manager writes headers of its own');
+        $this->assertStringNotContainsString('readfile(', $down, 'The download route of the file manager reads the file out a second time');
     }
 
     # The upload route checks the scoped token before the service is reached, and it publishes through the accessor and never through a class of its own

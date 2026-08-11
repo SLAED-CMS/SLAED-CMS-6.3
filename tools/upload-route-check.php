@@ -97,7 +97,7 @@ function setAdminSession(string $jar, string $name, string $pass): bool {
     if (is_file($jar)) unlink($jar);
     getHttpReply($jar, '/admin.php');
     getHttpReply($jar, '/admin.php', ['op' => 'check_admin', 'name' => $name, 'pwd' => $pass]);
-    return str_contains(getHttpReply($jar, '/admin.php?name=uploads')['body'], 'uploads-tabs');
+    return str_contains(getHttpReply($jar, '/admin.php?name=uploads')['body'], 'slfmbody');
 }
 
 # Open a site user session and prove it landed by fetching the profile route that carries the avatar form

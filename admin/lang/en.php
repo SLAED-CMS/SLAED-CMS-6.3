@@ -176,10 +176,8 @@ define('_DELSETUP','With a view of increase of safety it is necessary to remove 
 define('_DENYING','Denying of noted modules');
 define('_DESC','Descending');
 define('_DRAGSORT','Drag the "Position" icon to reorder blocks within a group. Free blocks form a separate group and use [block=id]; position and order do not apply to them.');
-define('_DGEN','The main directory');
 define('_DIR','Directory');
 define('_DIRDEF','Directory by default');
-define('_DTHUMB','Additional directory');
 define('_EDFILEA','The total number of files to the administrator of the');
 define('_EDFILEG','The total number of files for the guest');
 define('_EDFILEU','The total number of files for the user');
@@ -224,7 +222,6 @@ define('_FILE_S','General size of files');
 define('_FIX','Sorting');
 define('_FIXED','Fixed');
 define('_FLY_FIX','Free fixed block');
-define('_F_5','Quantity of files on page');
 define('_F_8','To allow to add files?');
 define('_F_9','To allow to add to visitors files?');
 define('_GDWIDTH','Width of the image of preliminary viewing');
