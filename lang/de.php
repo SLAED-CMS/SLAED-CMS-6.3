@@ -218,7 +218,7 @@ define('_EUSEPHP','PHP-Code verwenden');
 define('_EDITOR_ADD','Hinzufügen');
 define('_EDITOR_STORE','Speicher');
 define('_EDITOR_LINK','Bildadresse');
-define('_EDITOR_LINKNOTE','Externe Adresse, es wird nichts gespeichert');
+define('_EDITOR_LINKNOTE','Die Datei wird nicht hochgeladen, das Bild bleibt unter seiner Adresse verfügbar.');
 define('_EDITOR_LINKINFO','Das Bild wird über eine externe Adresse eingebunden, auf den Server gelangt nichts.');
 define('_EDITOR_LINKWARN','Die Datei bleibt auf einem fremden Server. Sie belegt kein Kontingent des Moduls, ihr Fortbestand ist aber auch nicht gesichert.');
 define('_EDITOR_MY','Meine Dateien');

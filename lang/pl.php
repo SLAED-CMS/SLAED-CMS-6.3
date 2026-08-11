@@ -218,7 +218,7 @@ define('_EUSEPHP','Kod wykorzystanie PHP');
 define('_EDITOR_ADD','Dodaj');
 define('_EDITOR_STORE','Magazyn');
 define('_EDITOR_LINK','Adres obrazu');
-define('_EDITOR_LINKNOTE','Adres zewnętrzny, nic nie jest przechowywane');
+define('_EDITOR_LINKNOTE','Plik nie jest przesyłany, ale obraz pozostaje dostępny pod podanym adresem.');
 define('_EDITOR_LINKINFO','Obraz jest podłączany przez adres zewnętrzny, na serwer nic nie trafia.');
 define('_EDITOR_LINKWARN','Plik pozostaje na obcym serwerze. Nie zajmuje miejsca w limicie modułu, ale jego trwałość również nie jest gwarantowana.');
 define('_EDITOR_MY','Moje pliki');

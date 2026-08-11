@@ -186,13 +186,18 @@
         setPanel(id, false);
     }
 
+    // The whole head carries the window: a press on its plate moves it, and the grip beside the other buttons says so to anyone who looks for a handle
+    // An action of the head keeps its own press, because a button that moves the window instead of closing it is a button that cannot be hit
     function setWindowDrag(event) {
-        var handle = event.target.closest ? event.target.closest('.js-slaed-window-drag') : null;
+        var head = event.target.closest ? event.target.closest('.sl-toastui-window-head') : null;
+        var act = event.target.closest ? event.target.closest('.sl-toastui-window-action') : null;
+        var handle = head ? head.querySelector('.js-slaed-window-drag') : null;
         var id;
         var type;
         var el;
         var rect;
-        if (!handle) return;
+        if (!head || !handle || event.button !== 0) return;
+        if (act && !act.classList.contains('js-slaed-window-drag')) return;
         id = handle.getAttribute('data-editor');
         type = handle.getAttribute('data-window');
         el = getWindow(id, type);

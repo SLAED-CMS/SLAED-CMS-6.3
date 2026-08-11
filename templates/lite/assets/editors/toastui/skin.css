@@ -136,7 +136,7 @@ button.toastui-editor-toolbar-icons {
 }
 
 .toastui-editor-toolbar-icons.sl-editor-icon-files::before {
-    content: "\f3d8";
+    content: "\f3d7";
 }
 
 .toastui-editor-toolbar-icons.sl-editor-icon-fullscreen::before {
@@ -226,11 +226,13 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     z-index: 31;
 }
 
+/* The plate of the head is the handle: a press anywhere on it moves the window, so the cursor says so over the whole strip and not only over the grip beside the buttons */
 .sl-toastui-window-head {
     align-items: center;
     background: var(--sl-color-bg-soft);
     border-bottom: 1px solid var(--sl-color-border);
     box-sizing: border-box;
+    cursor: move;
     display: flex;
     font-family: inherit;
     gap: var(--sl-space-sm);
@@ -248,6 +250,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     flex: 1 1 auto;
     font-size: 13px;
     font-weight: 600;
+    user-select: none;
 }
 
 .sl-toastui-window-actions {
@@ -262,6 +265,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     border: 0;
     border-radius: var(--sl-radius-control);
     color: var(--sl-color-text);
+    cursor: pointer;
     display: inline-flex;
     font-family: inherit;
     font-size: 14px;
@@ -272,8 +276,29 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     width: 28px;
 }
 
-.sl-toastui-window-head button.sl-toastui-window-action:hover {
-    background: var(--sl-color-border);
+/* The three buttons of the head take the system tones in the order they stand: moving is a safe action, expanding is the ordinary one and closing is the one that ends the window */
+/* An expanded window fills its room and has nowhere left to move: the handle goes with the freedom it stood for, and the plate stops promising a drag it cannot do */
+.sl-toastui-window-expanded .sl-toastui-window-head {
+    cursor: default;
+}
+
+.sl-toastui-window-expanded .sl-toastui-window-head .js-slaed-window-drag {
+    display: none;
+}
+
+.sl-toastui-window-head button.js-slaed-window-drag:hover {
+    background: color-mix(in srgb, var(--sl-color-success) 13%, transparent);
+    color: var(--sl-color-success);
+}
+
+.sl-toastui-window-head button.js-slaed-window-expand:hover {
+    background: color-mix(in srgb, var(--sl-color-primary) 13%, transparent);
+    color: var(--sl-color-primary);
+}
+
+.sl-toastui-window-head button.js-slaed-window-close:hover {
+    background: color-mix(in srgb, var(--sl-color-danger) 13%, transparent);
+    color: var(--sl-color-danger);
 }
 
 .sl-toastui-window-drag {
@@ -292,8 +317,22 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     width: 16px;
 }
 
+/* The caption carries the icon of the button that opens the window, so the head and its opener name the same thing */
+.sl-toastui-head-icon-files::before {
+    content: "\f3d7";
+}
+
+.sl-toastui-head-icon-emoji::before {
+    content: "\f327";
+}
+
+.sl-toastui-window-head > .sl-toastui-head-icon {
+    color: var(--sl-color-primary);
+    flex: 0 0 auto;
+}
+
 .sl-toastui-head-icon-move::before {
-    content: "\f14e";
+    content: "\f3fe";
 }
 
 .sl-toastui-head-icon-expand::before {

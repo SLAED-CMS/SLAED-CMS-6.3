@@ -14,16 +14,15 @@ function getUploadModuleList(): array {
     return in_array('all', $mods, true) ? array_merge(['all'], $rest) : $rest;
 }
 
-function getUploadsSearch(string $mod = ''): string {
-    global $afile, $conf, $tpl;
-    $dir = ($mod === '') ? getVar('post', 'dir', 'var', $conf['uploads']['dir']) : $mod;
+function getUploadsSearch(string $mod): string {
+    global $afile, $tpl;
     $opts = '';
     foreach (scandir(UPLOADS_DIR) as $file) {
         if (preg_match('/\./', $file)) continue;
         $opts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => $file,
             'label_text' => 'uploads/'.$file,
-            'is_selected' => $dir == $file,
+            'is_selected' => $mod === $file,
         ]);
     }
     $form = $tpl->getHtmlPart('form', [
@@ -275,7 +274,6 @@ function tplconfig(): void {
         'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
         'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
         'tab' => 2,
-        'subtitle_html' => getUploadsSearch(),
     ]);
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _TPINFO]);
     $cont .= checkPerms(CONFIG_DIR.'/filetype.php');
@@ -333,7 +331,6 @@ function config(): void {
         'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
         'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
         'tab' => 3,
-        'subtitle_html' => getUploadsSearch(),
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/uploads.php');
     $serv = getUploadService();
@@ -383,26 +380,6 @@ function config(): void {
             $i++;
         }
     }
-    $tabtwo = $blocks;
-    $tabsHtml = $tpl->getHtmlFrag('tabs-link', [
-        'href' => '#',
-        'label' => _GENPREF,
-        'rel' => 'uploads-config-panel-0',
-        'is_active' => true,
-    ]).$tpl->getHtmlFrag('tabs-link', [
-        'href' => '#',
-        'label' => _MODULES,
-        'rel' => 'uploads-config-panel-1',
-        'is_active' => false,
-    ]);
-    $conts = $tpl->getHtmlPart('tabs', [
-        'id' => 'uploads-config-tabs',
-        'is_runtime' => true,
-        'tabs_html' => $tabsHtml,
-        'content_html' =>
-            $tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'uploads-config-panel-0', 'content_html' => $tabone])
-            .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'uploads-config-panel-1', 'content_html' => $tabtwo]),
-    ]);
     $confv = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
@@ -410,7 +387,7 @@ function config(): void {
             ['nameattr' => 'op', 'valueattr' => 'configsave'],
             ['nameattr' => 'token', 'valueattr' => getSiteToken('uploads')],
         ],
-        'content_html' => $conts,
+        'content_html' => $tpl->getHtmlPart('box', ['content_html' => $tabone]).$blocks,
         'submit_label' => _SAVECHANGES,
     ]);
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $confv]);
@@ -499,7 +476,6 @@ function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
         'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
-        'subtitle_html' => getUploadsSearch(),
     ]);
 }
 

@@ -218,7 +218,7 @@ define('_EUSEPHP','Utilisez le code PHP');
 define('_EDITOR_ADD','Ajouter');
 define('_EDITOR_STORE','Stockage');
 define('_EDITOR_LINK','Adresse de l\'image');
-define('_EDITOR_LINKNOTE','Adresse externe, rien n\'est conservé');
+define('_EDITOR_LINKNOTE',"Le fichier n'est pas téléversé, mais l'image reste disponible à cette adresse.");
 define('_EDITOR_LINKINFO','L\'image est rattachée par une adresse externe, rien n\'arrive sur le serveur.');
 define('_EDITOR_LINKWARN','Le fichier reste sur un serveur étranger. Il ne prend pas de place dans le quota du module, mais sa conservation n\'est pas garantie non plus.');
 define('_EDITOR_MY','Mes fichiers');

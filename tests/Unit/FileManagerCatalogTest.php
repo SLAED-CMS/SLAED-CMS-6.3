@@ -280,6 +280,17 @@ final class FileManagerCatalogTest extends TestCase
         $this->assertStringNotContainsString('uploadsave', $mod, 'The upload route that ran beside the file manager is still wired');
     }
 
+    # Every route that puts a file on the disk leaves a record: the window of the editor writes one for its own upload, as its deletion and its packing already did
+    #[Test]
+    public function everyWritingRouteOfTheWindowIsJournalled(): void
+    {
+        $body = $this->getBody('core/system.php', 'addEditorUpload');
+        $this->assertStringContainsString('Logger::addFile(', $body, 'An upload of the editor window reaches the disk without a record');
+        $this->assertStringContainsString("'ctx' => 'editor'", $body, 'The record of an upload does not name the area it was made in');
+        $this->assertStringContainsString("'op' => 'editorUpload'", $body, 'The record of an upload does not name the route that made it');
+        $this->assertStringContainsString("'result' => \$res['ok'] ? 'ok' : (string)\$res['error']", $body, 'A refused upload is recorded as if it had stored the file');
+    }
+
     # The catalogue is the only list of the upload tree the administration has: the quick lists went with the route that fed them and with the captions they were named by
     #[Test]
     public function theCatalogueIsTheOnlyListOfTheTree(): void

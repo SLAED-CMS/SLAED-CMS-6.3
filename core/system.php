@@ -4373,15 +4373,27 @@ function getEditorFileData(array $one): array {
 
 # Publish one editor submission through the upload service and answer with the editor JSON; rules, naming and quota belong to the service, the adapter only maps its codes
 # Who the stored file belongs to is answered by getEditorFileOwner() alone, so the upload route and the listing route can never disagree about the segment the name carries
+# Every submission is journalled on its own, as the other two routes of the window are: a file that reaches the disk without a record is a file nobody can account for later
 function addEditorUpload(): void {
+    global $admin, $user;
     $rul = getEditorRouteRule();
     $mod = (string)$rul['mod'];
     $area = getEditorFileArea($mod, $rul);
     $own = getEditorFileOwner($mod);
+    $who = (string)($user[1] ?? '');
+    if ($who === '') $who = (string)($admin[1] ?? '');
     $out = [];
     $bad = [];
     foreach (getUploadService()->addUploadedFiles($_FILES['file'] ?? [], $rul, $mod, $mod, $own) as $res) {
         $one = $res['ok'] ? $area->getFileData((string)$res['file']) : [];
+        Logger::addFile($res['ok'] ? 'notice' : 'warning', 'Editor file operation', [
+            'user' => substr($who, 0, 25),
+            'ctx' => 'editor',
+            'op' => 'editorUpload',
+            'path' => $mod,
+            'target' => (string)($res['file'] ?? ''),
+            'result' => $res['ok'] ? 'ok' : (string)$res['error'],
+        ]);
         if ($one !== []) {
             $out[] = getEditorFileData($one);
             continue;

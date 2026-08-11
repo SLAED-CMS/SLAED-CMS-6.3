@@ -218,7 +218,7 @@ define('_EUSEPHP','Use PHP code');
 define('_EDITOR_ADD','Add');
 define('_EDITOR_STORE','Storage');
 define('_EDITOR_LINK','Image link');
-define('_EDITOR_LINKNOTE','External address, nothing is stored');
+define('_EDITOR_LINKNOTE','The file is not uploaded, but the image stays available at the given address.');
 define('_EDITOR_LINKINFO','The image is attached by an external address, nothing reaches the server.');
 define('_EDITOR_LINKWARN','The file stays on a foreign server. It takes no room in the module quota, but neither is its survival guaranteed.');
 define('_EDITOR_MY','My files');
