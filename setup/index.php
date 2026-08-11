@@ -70,7 +70,7 @@ function setConfigFile(string $fp, array $arr, array $act = []): void {
             $take = '';
             while ($from < $size && strlen(var_export($take.$val[$from], true)) - 2 <= $step) $take .= $val[$from++];
             if ($take === '') $take = $val[$from++];
-            $out .= ($out === '' ? '' : PHP_EOL.$goal).var_export($take, true);
+            $out .= ($out === '' ? '' : "\n".$goal).var_export($take, true);
             $step = $rest;
         }
         return $out;
@@ -78,21 +78,21 @@ function setConfigFile(string $fp, array $arr, array $act = []): void {
     $exp = function (array $arr, int $dep = 0) use (&$exp, $wrap): string {
         $pad = str_repeat('    ', $dep);
         $ind = $pad.'    ';
-        $out = '['.PHP_EOL;
+        $out = '['."\n";
         foreach ($arr as $key => $val) {
             $head = $ind.var_export($key, true).' => ';
             $body = is_array($val) ? $exp($val, $dep + 1) : var_export($val, true);
             if (!is_array($val) && strlen($head.$body) + 1 > 180) $body = $wrap($val, $ind, strlen($head));
-            $out .= $head.$body.','.PHP_EOL;
+            $out .= $head.$body.','."\n";
         }
         return $out.$pad.']';
     };
-    $cnt = '<?php'.PHP_EOL
-    .'# Author: Eduard Laas'.PHP_EOL
-    .'# 2005 - '.date('Y').' SLAED'.PHP_EOL
-    .'# License: MIT'.PHP_EOL
-    .'# Website: slaed.net'.PHP_EOL.PHP_EOL
-    .'return '.$exp($data).';'.PHP_EOL;
+    $cnt = '<?php'."\n"
+    .'# Author: Eduard Laas'."\n"
+    .'# 2005 - '.date('Y').' SLAED'."\n"
+    .'# License: MIT'."\n"
+    .'# Website: slaed.net'."\n\n"
+    .'return '.$exp($data).';'."\n";
     file_put_contents($fp, $cnt, LOCK_EX);
 }
 
@@ -171,19 +171,19 @@ function getInfo(string $table, mixed $id): string {
 
 function setHead(): void {
     global $title, $conf;
-    echo '<!doctype html>'.PHP_EOL
-    .'<html lang="'.substr(_LOCALE, 0, 2).'">'.PHP_EOL
-    .'<head>'.PHP_EOL
-    .'<meta charset="'._CHARSET.'">'.PHP_EOL
-    .'<title>'._SETUP_SLAED.' - '.$title.'</title>'.PHP_EOL
-    .'<meta name="resource-type" content="document">'.PHP_EOL
-    .'<meta name="document-state" content="dynamic">'.PHP_EOL
-    .'<meta name="distribution" content="global">'.PHP_EOL
-    .'<meta name="author" content="'.$conf['sitename'].'">'.PHP_EOL
-    .'<meta name="generator" content="SLAED CMS '.$conf['version'].'">'.PHP_EOL
-    .'<link rel="stylesheet" href="setup/templates/style.css">'.PHP_EOL
-    .'</head>'.PHP_EOL
-    .'<body id="page_bg">'.PHP_EOL
+    echo '<!doctype html>'."\n"
+    .'<html lang="'.substr(_LOCALE, 0, 2).'">'."\n"
+    .'<head>'."\n"
+    .'<meta charset="'._CHARSET.'">'."\n"
+    .'<title>'._SETUP_SLAED.' - '.$title.'</title>'."\n"
+    .'<meta name="resource-type" content="document">'."\n"
+    .'<meta name="document-state" content="dynamic">'."\n"
+    .'<meta name="distribution" content="global">'."\n"
+    .'<meta name="author" content="'.$conf['sitename'].'">'."\n"
+    .'<meta name="generator" content="SLAED CMS '.$conf['version'].'">'."\n"
+    .'<link rel="stylesheet" href="setup/templates/style.css">'."\n"
+    .'</head>'."\n"
+    .'<body id="page_bg">'."\n"
     .'<div id="wrapper">'
     .'<div id="header">'
     .'<div id="header-left">'
@@ -212,30 +212,30 @@ function setFoot(): void {
     .'</div>'
     .'</div>'
     .'</div>'
-    .'</div>'.PHP_EOL
-    .'</body>'.PHP_EOL
+    .'</div>'."\n"
+    .'</body>'."\n"
     .'</html>';
 }
 
 function setExit(string $msg, string $typ = ''): never {
     global $conf;
-    $cont = '<!doctype html>'.PHP_EOL
-    .'<html lang="'.substr(_LOCALE, 0, 2).'">'.PHP_EOL
-    .'<head>'.PHP_EOL
-    .'<meta charset="'._CHARSET.'">'.PHP_EOL
-    .'<title>'._SETUP_SLAED.'</title>'.PHP_EOL
-    .'<meta name="author" content="'.$conf['sitename'].'">'.PHP_EOL
-    .'<meta name="generator" content="SLAED CMS '.$conf['version'].'">'.PHP_EOL;
-    $cont .= ($typ) ? '<meta http-equiv="refresh" content="5; url='.$conf['homeurl'].'/index.php">'.PHP_EOL : '';
-    $cont .= '<link rel="stylesheet" href="setup/templates/style.css">'.PHP_EOL
-    .'</head>'.PHP_EOL
-    .'<body>'.PHP_EOL
-    .'<div style="margin: 25%;">'.PHP_EOL
-    .'<div style="text-align: center;"><img src="setup/templates/images/logotype.png" alt="'.$conf['sitename'].'" title="'.$conf['sitename'].'"></div>'.PHP_EOL
-    .'<div style="margin-top: 50px; font: 18px Arial, Tahoma, sans-serif, Verdana; color: #1a4674; font-weight: bold; text-align: center;">'.$msg.'</div>'.PHP_EOL
-    .'<div style="margin-top: 50px; text-align: center;">'._GOBACK.'</div>'.PHP_EOL
-    .'</div>'.PHP_EOL
-    .'</body>'.PHP_EOL
+    $cont = '<!doctype html>'."\n"
+    .'<html lang="'.substr(_LOCALE, 0, 2).'">'."\n"
+    .'<head>'."\n"
+    .'<meta charset="'._CHARSET.'">'."\n"
+    .'<title>'._SETUP_SLAED.'</title>'."\n"
+    .'<meta name="author" content="'.$conf['sitename'].'">'."\n"
+    .'<meta name="generator" content="SLAED CMS '.$conf['version'].'">'."\n";
+    $cont .= ($typ) ? '<meta http-equiv="refresh" content="5; url='.$conf['homeurl'].'/index.php">'."\n" : '';
+    $cont .= '<link rel="stylesheet" href="setup/templates/style.css">'."\n"
+    .'</head>'."\n"
+    .'<body>'."\n"
+    .'<div style="margin: 25%;">'."\n"
+    .'<div style="text-align: center;"><img src="setup/templates/images/logotype.png" alt="'.$conf['sitename'].'" title="'.$conf['sitename'].'"></div>'."\n"
+    .'<div style="margin-top: 50px; font: 18px Arial, Tahoma, sans-serif, Verdana; color: #1a4674; font-weight: bold; text-align: center;">'.$msg.'</div>'."\n"
+    .'<div style="margin-top: 50px; text-align: center;">'._GOBACK.'</div>'."\n"
+    .'</div>'."\n"
+    .'</body>'."\n"
     .'</html>';
     die($cont);
 }
@@ -273,7 +273,7 @@ function language(): void {
         $altlang = getLang($val);
         if (($ix - 1) % $col == 0) $cont .= '<tr>';
         $cont .= '<td style="width: '.$tdwidth.'%;" class="sl_center"><a href="setup.php?op=lang&amp;id='.$val.'" title="'.$altlang.'"><img src="setup/templates/images/'.$val.'.png" alt="'.$altlang.'"><br><b>'.$altlang.'</b></a></td>';
-        if ($ix % $col == 0) $cont .= '</tr>'.PHP_EOL;
+        if ($ix % $col == 0) $cont .= '</tr>'."\n";
         $ix++;
     }
     if ($clang) {

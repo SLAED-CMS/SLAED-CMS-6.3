@@ -35,7 +35,7 @@ final class PrivatMigrationTest extends TestCase
     public function everyChannelEndsOnTheFreshSchema(): void
     {
         $data = $this->getProbe();
-        $this->assertCount(8, $data['runs'], 'Two channels times four states is what the plan asks for');
+        $this->assertCount(4, $data['runs'], 'The upgrade channel times four states is what the probe drives');
         foreach ($data['runs'] as $name => $run) {
             $this->assertTrue($run['def'], $name." did not converge on the fresh schema:\n".$run['text']."\n\nfresh:\n".$data['fresh']);
         }

@@ -129,7 +129,7 @@ final class StatsContractTest extends TestCase
         file_put_contents($this->dir.'/statistic.log', $seed);
         file_put_contents($this->dir.'/ips.log', '198.51.100.1,');
         $this->getHit('203.0.113.30');
-        $this->assertSame($seed.PHP_EOL, $this->getFile('days.log'), 'the previous day must be preserved');
+        $this->assertSame($seed."\n", $this->getFile('days.log'), 'the previous day must be preserved');
         $part = $this->getFields();
         $this->assertSame(date('d.m.Y'), $part[0]);
         $this->assertSame('1', $part[1]);
@@ -145,7 +145,7 @@ final class StatsContractTest extends TestCase
         $old = date('m.Y', (int)strtotime('first day of last month'));
         $seed = $this->getSeedLine('15.'.$old);
         file_put_contents($this->dir.'/statistic.log', $seed);
-        file_put_contents($this->dir.'/days.log', $this->getSeedLine('14.'.$old).PHP_EOL);
+        file_put_contents($this->dir.'/days.log', $this->getSeedLine('14.'.$old)."\n");
         $this->getHit('203.0.113.31');
         $name = 'statistic_'.substr($old, 3).'-'.substr($old, 0, 2).'.log';
         $this->assertFileExists($this->dir.'/statistic/'.$name);
@@ -160,7 +160,7 @@ final class StatsContractTest extends TestCase
     {
         $date = $this->getSameMonthDate();
         $seed = $this->getSeedLine($date);
-        $rival = $date.'|9|9|9|9|9|9|9'.PHP_EOL;
+        $rival = $date.'|9|9|9|9|9|9|9'."\n";
         file_put_contents($this->dir.'/statistic.log', $seed);
         file_put_contents($this->dir.'/days.log', $rival);
         $data = $this->getHit('203.0.113.32');
@@ -177,7 +177,7 @@ final class StatsContractTest extends TestCase
         file_put_contents($this->dir.'/statistic.log', $seed);
         file_put_contents($this->dir.'/days.log', '01.01.2020|1|1|1');
         $this->getHit('203.0.113.33');
-        $this->assertSame($seed.PHP_EOL, $this->getFile('days.log'), 'the truncated fragment must be dropped');
+        $this->assertSame($seed."\n", $this->getFile('days.log'), 'the truncated fragment must be dropped');
     }
 
     # A failed lock acquisition leaves every counter file untouched instead of writing a partial state

@@ -355,7 +355,7 @@ function add(): void {
             }
         }
         if (!$lines) $lines[] = _NO_INFO;
-        $infos = $ttitle.': '.$mod.PHP_EOL.PHP_EOL.implode(PHP_EOL, $lines);
+        $infos = $ttitle.': '.$mod."\n\n".implode("\n", $lines);
     }
     modules();
 }

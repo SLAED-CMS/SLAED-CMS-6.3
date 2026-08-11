@@ -90,7 +90,7 @@ function view(): void {
     while ([$id, $pid, $huid, $haid, $title, $time, $hometext, $field, $counter, $score, $ratings, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
         $title = $title ?: _MESSAGE.': '.$a;
         $fields = getTplViewFieldRows(['field' => $field, 'mod' => 'help']);
-        $text = $prs->filterContent($hometext.(($fields) ? PHP_EOL.PHP_EOL.$fields : ''), false, 'help');
+        $text = $prs->filterContent($hometext.(($fields) ? "\n\n".$fields : ''), false, 'help');
         $meta = [];
         if (!$pid) {
             $meta[] = $tpl->getHtmlFrag('inline-badge', ['is_category' => true, 'label' => ($ctitle ?: _NO)]);

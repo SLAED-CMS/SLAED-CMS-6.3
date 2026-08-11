@@ -163,8 +163,8 @@ function add(): void {
         ]);
     }
     $perm = $tpl->getHtmlPart('div', ['is_radio_group' => true, 'content_html' => $items]);
-    $txt = _FOLLOWINGMEM.PHP_EOL.PHP_EOL
-        ._NICKNAME.': [login]'.PHP_EOL
+    $txt = _FOLLOWINGMEM."\n\n"
+        ._NICKNAME.': [login]'."\n"
         ._PASSWORD.': [pass]';
     $mailtext = replace_break(str_replace('[text]', $txt, $conf['mtemp']));
     $langv = $conf['multilingual'] == 1

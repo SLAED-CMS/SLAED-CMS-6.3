@@ -1178,7 +1178,7 @@ function updateStatsTrack(string $request, int $guest, array $state): void {
                 $done = true;
             }
             if (!$done) {
-                $keep = $line.PHP_EOL;
+                $keep = $line."\n";
                 $saved = false;
                 $why = 'days.log append';
                 $fpd = $safeOpen($spath.'days.log', 'c+');

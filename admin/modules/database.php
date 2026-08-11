@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function addDblog(string $text): void {
     $path = LOGS_DIR.'/database.log';
-    $line = '['.date('Y-m-d H:i:s').'] '.$text.PHP_EOL;
+    $line = '['.date('Y-m-d H:i:s').'] '.$text."\n";
     file_put_contents($path, $line, FILE_APPEND | LOCK_EX);
 }
 

@@ -111,10 +111,8 @@ is exactly the shape that must not carry an embedded image. It is the last colum
 the schema work below that had not moved yet, and with it every column a rich editor
 writes into is `TEXT` or `MEDIUMTEXT` and no `VARCHAR` sits behind an editor.
 
-**Deployment:** an installation already running 6.3 applies
-`setup/sql/update6_3_patch.sql`, which is idempotent and safe to re-run. A 6.2 upgrade
-and a fresh install carry the column already. No data is lost or rewritten — the column
-only gets wider, and no stored description changes.
+**Deployment:** a 6.2 upgrade and a fresh install carry the column already. No data is
+lost or rewritten — the column only gets wider, and no stored description changes.
 
 The upload rule of a module gains a thirteenth field, `guestfiles`, with its own input
 on `admin.php?name=uploads&op=config` beside the two upload switches. A rule stored
@@ -184,15 +182,14 @@ the code follows it, and code deployed before the section does the same in the
 other direction.
 
 Which file an installation needs depends on where it comes from, and it is
-exactly one of the three:
+exactly one of the two:
 
 | Coming from | File | How |
 |---|---|---|
 | a new installation | `setup/sql/table.sql` | the installer, nothing to do |
 | 6.2 | `setup/sql/table_update6_3.sql` | the installer, per the section below |
-| already 6.3 | `setup/sql/update6_3_patch.sql` | **Administrator panel → Database → Inquiry**, section 5 |
 
-What the section does to `{prefix}_privat`: it adds `saved`, `delin` and `delout`,
+What the upgrade does to `{prefix}_privat`: it adds `saved`, `delin` and `delout`,
 carries the saved messages over from `status` before that column is renamed to
 `viewed`, forces `viewed` onto `TINYINT UNSIGNED NOT NULL DEFAULT 0` — the old
 declaration was `BOOLEAN` while the code stored `2` — and replaces the three
@@ -200,8 +197,8 @@ single-column keys `uidin`, `uidout` and `status` with the composites
 `in_box`, `in_new`, `out_box`, `out_new` and `flood`. It deletes no row and no
 message, and the row count it starts from is the row count it ends on. It is safe
 to run twice, and safe to run again after a crash: a re-run reads the shape the
-table is really in and finishes only what is missing. All three files end on the
-same table definition, byte for byte.
+table is really in and finishes only what is missing. Both files end on the same
+table definition, byte for byte.
 
 Building five indexes rewrites the table, and InnoDB holds the rows while it
 does. On a large private-message table that is a maintenance window rather than a
@@ -240,43 +237,6 @@ What changes for the people using the site:
 
 ## 2026-07-29
 
-### If the installation already runs 6.3
-
-One file brings it up to date: **`setup/sql/update6_3_patch.sql`**, pasted into
-**Administrator panel → Database → Inquiry** (`admin.php?name=database&op=dump`). That
-page substitutes `{prefix}` itself, so the same file serves any prefix, and its parse
-action shows the statements before anything executes.
-
-Five sections, in this order:
-
-1. `{prefix}_comment` on its final shape: `pid` directly behind `id` for the reply
-   tree, `edited` and `deleted` for the moderation marks, `reqkey` as the binary
-   idempotency key under one unique index, `time` required, `ip` byte-compared for
-   the flood interval, and the index set the real list, count and thread predicates
-   are read through. Every stored comment stays a root; nothing is re-parented. Two
-   guards stop the run before it changes anything: a `reqkey` found as hex text and
-   a `NULL` in `time`.
-2. The `{prefix}_admins` column types the fresh schema declares. The upgrade file used
-   to declare `editor` as `BOOLEAN`, which fails on any installation whose
-   administrators carry an editor name, and because an `ALTER` is all or nothing the
-   twelve other columns of that statement went down with it.
-3. `{prefix}_users.points` back to `NOT NULL DEFAULT 0`. The upgrade declared that
-   column twice and the nullable declaration won.
-4. The `comments` column of the eight target tables, brought in line with the comments
-   really published under them.
-
-It deletes no row, touches no authored text and recalculates no user point. Columns
-and indexes are added only when absent, every counter statement writes only the rows
-that disagree, and the only drops are the columns and the keys the final contract
-removes, which are no-ops where an installation never carried them. A second run
-changes nothing.
-
-Nothing has to be scheduled afterwards: every comment write recomputes the counter of
-its own target, so section 4 is a one-off repair of what drifted before. What it cannot
-reach is a target nobody has commented on since — the comments section of the panel
-reports those on its first tab and repairs them on a click, and
-`tools/comment-recount.php report|fix` does the same from the shell.
-
 ### Upgrade 6.2 → 6.3 must go through the installer, not through the SQL page
 
 `setup/sql/table_update6_3.sql` is **not the whole upgrade**. Five steps of the 6.2 → 6.3
@@ -312,9 +272,9 @@ What the SQL file alone does **not** do:
 5. **`config/newsletter.php` is not created**, so the campaign limits fall back to
    nothing.
 
-If an installation has to be updated by hand, run the installer for the upgrade and
-use the SQL page only for the standalone repair files, which are written for it and
-remove nothing — `setup/sql/update6_3_patch.sql` is one of those.
+The upgrade runs through the installer and nowhere else. The SQL page parses and
+executes what it is given, but it performs none of the five PHP steps above, so a
+schema pasted into it leaves the data around it wrong.
 
 ### Upgrade notes for the comment subsystem
 
@@ -347,15 +307,12 @@ restore.**
   eight target tables is denormalised, and until 6.3 the counter could be moved for
   the wrong target by a request-supplied module name. The write path is fixed, the
   residue is not: on the reference installation 23 of 885 targets disagreed with
-  their live count. Three ways in, all writing the same numbers:
+  their live count. Two ways in, both writing the same numbers:
   - `php tools/comment-recount.php report` reads only and prints every target that
     disagrees, `fix` writes the live count back;
-  - `setup/sql/update6_3_patch.sql` through **Administrator panel → Database →
-    Inquiry**, for an installation that already runs 6.3 and is updated by hand. Its
-    fourth section is this sweep;
   - the first tab of the comments section, which reports what is left and repairs it
     on a click.
-  All three are safe to repeat: only rows that disagree are written, so a second
+  Both are safe to repeat: only rows that disagree are written, so a second
   run reports zero affected rows. None of them touches the comment table, and no
   user points are recalculated. Beyond them the counter maintains itself: every
   comment write recomputes the target it touched instead of nudging it by one.

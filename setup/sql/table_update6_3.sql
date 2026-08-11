@@ -1544,8 +1544,7 @@ ALTER TABLE `{prefix}_clients_down`
 # summary columns (`intro`, and `users.block`) stay TEXT on purpose: a list query draws twenty of
 # them onto one page, and an image referenced by address or uploaded to the server still fits
 # there. auto_links.intro and users.sig widen only to TEXT and for a reason of their own: a
-# VARCHAR(255) behind a rich editor holds about 127 Cyrillic characters, which is one sentence. The
-# full argument is in setup/sql/update6_3_patch.sql, section 9.
+# VARCHAR(255) behind a rich editor holds about 127 Cyrillic characters, which is one sentence.
 ALTER TABLE `{prefix}_comment`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `modul` VARCHAR(60) NOT NULL,

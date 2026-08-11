@@ -95,7 +95,7 @@ function getVariablesInfo(): string {
         $arr = $GLOBALS['_'.$var] ?? [];
         if ($arr) $cont[] = $var.': '.print_r($arr, true);
     }
-    return implode(PHP_EOL, $cont);
+    return implode("\n", $cont);
 }
 
 # Add security log entry (IP, user, URL, agent; auto-rotates on size limit)
@@ -105,7 +105,7 @@ function addLog(): bool {
     $agent = getAgent();
     $url = filterText((string)getenv('REQUEST_URI'));
     $refer = getReferer();
-    $ref = $refer ? PHP_EOL._REFERER.': '.$refer : '';
+    $ref = $refer ? "\n"._REFERER.': '.$refer : '';
     $luser = (is_array($user) && isset($user[1])) ? substr((string)$user[1], 0, 25) : substr(_ANONYM, 0, 25);
     $log = LOGS_DIR.'/log.log';
     $max = $conf['security']['log_size'] ?? 10485760;
@@ -120,7 +120,7 @@ function addLog(): bool {
         if ($fhandle === false) return false;
     }
     $vars = getVariablesInfo();
-    $entry = ($vars ? $vars.PHP_EOL : '')._IP.': '.$ip.PHP_EOL._USER.': '.$luser.PHP_EOL._URL.': '.$url.$ref.PHP_EOL._BROWSER.': '.$agent.PHP_EOL._DATE.': '.date(_TIMESTRING).PHP_EOL.'----'.PHP_EOL;
+    $entry = ($vars ? $vars."\n" : '')._IP.': '.$ip."\n"._USER.': '.$luser."\n"._URL.': '.$url.$ref."\n"._BROWSER.': '.$agent."\n"._DATE.': '.date(_TIMESTRING)."\n".'----'."\n";
     fwrite($fhandle, $entry);
     fclose($fhandle);
     return true;
@@ -1036,7 +1036,7 @@ function addHackReport(string $msg): void {
     $msg = filterText(substr($msg, 0, 500));
     $url = filterText(getenv('REQUEST_URI'));
     $refer = getReferer();
-    $ref = ($refer) ? PHP_EOL._REFERER.': '.$refer : '';
+    $ref = ($refer) ? "\n"._REFERER.': '.$refer : '';
     $ip = getIp();
     $agent = getAgent();
     $dtime = date(_TIMESTRING);
@@ -1063,7 +1063,7 @@ function addHackReport(string $msg): void {
             $lines[] = ['label' => _DATE, 'value' => $dtime];
             $mmsg = $tpl->getHtmlPart('message-block', ['title' => $subject, 'intro_text' => _HACK.': '.$msg, 'lines' => $lines]);
         } else {
-            $mmsg = $conf['sitename'].' - '._SECURITY.PHP_EOL._HACK.': '.$msg.PHP_EOL._IP.': '.$ip.PHP_EOL._USER.': '.$luser.PHP_EOL._URL.': '.$url.$ref.PHP_EOL._BROWSER.': '.$agent.PHP_EOL._DATE.': '.$dtime;
+            $mmsg = $conf['sitename'].' - '._SECURITY."\n"._HACK.': '.$msg."\n"._IP.': '.$ip."\n"._USER.': '.$luser."\n"._URL.': '.$url.$ref."\n"._BROWSER.': '.$agent."\n"._DATE.': '.$dtime;
         }
         $mailer->addQueue(['kind' => 'security', 'email' => $conf['adminmail'], 'title' => $subject, 'body' => $mmsg, 'sender' => $conf['adminmail'], 'prio' => 1]);
     }
@@ -1079,7 +1079,7 @@ function addWarnReport(string $msg): void {
     $msg = filterText(substr($msg, 0, 500));
     $url = filterText(getenv('REQUEST_URI'));
     $refer = getReferer();
-    $ref = ($refer) ? PHP_EOL._REFERER.': '.$refer : '';
+    $ref = ($refer) ? "\n"._REFERER.': '.$refer : '';
     $ip = getIp();
     $agent = getAgent();
     $dtime = date(_TIMESTRING);
@@ -1097,7 +1097,7 @@ function addWarnReport(string $msg): void {
             $lines[] = ['label' => _DATE, 'value' => $dtime];
             $mmsg = $tpl->getHtmlPart('message-block', ['title' => $subject, 'intro_text' => _WARN.': '.$msg, 'lines' => $lines]);
         } else {
-            $mmsg = $conf['sitename'].' - '._SECURITY.PHP_EOL._WARN.': '.$msg.PHP_EOL._IP.': '.$ip.PHP_EOL._USER.': '.$luser.PHP_EOL._URL.': '.$url.$ref.PHP_EOL._BROWSER.': '.$agent.PHP_EOL._DATE.': '.$dtime;
+            $mmsg = $conf['sitename'].' - '._SECURITY."\n"._WARN.': '.$msg."\n"._IP.': '.$ip."\n"._USER.': '.$luser."\n"._URL.': '.$url.$ref."\n"._BROWSER.': '.$agent."\n"._DATE.': '.$dtime;
         }
         $mailer->addQueue(['kind' => 'security', 'email' => $conf['adminmail'], 'title' => $subject, 'body' => $mmsg, 'sender' => $conf['adminmail'], 'prio' => 1]);
     }

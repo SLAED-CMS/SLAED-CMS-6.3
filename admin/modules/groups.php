@@ -207,7 +207,7 @@ function save(): void {
         }
         setRedirect($afile.'.php?name=groups', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
     } else {
-        $stop = implode(PHP_EOL, $stop);
+        $stop = implode("\n", $stop);
         add();
     }
 }

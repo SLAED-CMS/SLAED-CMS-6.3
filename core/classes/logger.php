@@ -184,6 +184,6 @@ class Logger {
                 if (is_file($guard)) unlink($guard);
             }
         }
-        return file_put_contents($file, $line.PHP_EOL, FILE_APPEND | LOCK_EX) !== false;
+        return file_put_contents($file, $line."\n", FILE_APPEND | LOCK_EX) !== false;
     }
 }

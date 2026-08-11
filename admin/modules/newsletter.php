@@ -203,7 +203,7 @@ function add(): void {
             $nid = $lock ? 0 : $id;
         }
     }
-    $stoptext = is_array($stop) ? implode(PHP_EOL, $stop) : (string)$stop;
+    $stoptext = is_array($stop) ? implode("\n", $stop) : (string)$stop;
     setHead();
     $cont = getCampTabs(1);
     if ($stoptext !== '') $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stoptext]);

@@ -437,10 +437,10 @@ function filecodesave(): void {
             $htmle = '';
             $flag = getVar('post', 'flag', 'var', '');
             if ($flag == 'html') {
-                $htmlb = "\$content = <<<BLOCKHTML\r\n";
-                $htmle = "\r\nBLOCKHTML;\r\n";
+                $htmlb = "\$content = <<<BLOCKHTML\n";
+                $htmle = "\nBLOCKHTML;\n";
             }
-            fwrite($handle, '<?php'.PHP_EOL.'# Author: Eduard Laas'.PHP_EOL.'# 2005 - '.date('Y').' SLAED'.PHP_EOL.'# License: MIT'.PHP_EOL.'# Website: slaed.net'.PHP_EOL.PHP_EOL.'if (!defined(\'BLOCK_FILE\')) {'.PHP_EOL.'header(\'Location: ../index.php\');'.PHP_EOL.'exit;'.PHP_EOL.'}'.PHP_EOL.PHP_EOL.$htmlb.$btext.$htmle.PHP_EOL.'?>');
+            fwrite($handle, '<?php'."\n".'# Author: Eduard Laas'."\n".'# 2005 - '.date('Y').' SLAED'."\n".'# License: MIT'."\n".'# Website: slaed.net'."\n\n".'if (!defined(\'BLOCK_FILE\')) {'."\n".'header(\'Location: ../index.php\');'."\n".'exit;'."\n".'}'."\n\n".$htmlb.$btext.$htmle."\n".'?>');
             fclose($handle);
             setRedirect($afile.'.php?name=blocks', false, 302, _SUCCFILESAVE);
         }

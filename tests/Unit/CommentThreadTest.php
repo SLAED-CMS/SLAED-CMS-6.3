@@ -63,11 +63,11 @@ final class CommentThreadTest extends TestCase
         $this->assertStringNotContainsString('path', $table, 'The fresh schema still carries a materialised path');
     }
 
-    # Every channel reaches the same tree: pid is added, placed behind id and indexed, and any path an earlier release created is dropped
+    # The upgrade channel reaches the same tree as a fresh install: pid is added, placed behind id and indexed, and any path an earlier release created is dropped
     #[Test]
     public function theUpgradeBackfillsBeforeItIndexes(): void
     {
-        foreach (['setup/sql/table_update6_3.sql', 'setup/sql/update6_3_patch.sql'] as $file) {
+        foreach (['setup/sql/table_update6_3.sql'] as $file) {
             $code = $this->getFile($file);
             $this->assertStringContainsString("CALL delcol('{prefix}_comment', 'path')", $code, $file.' does not drop the path column');
             $this->assertStringContainsString("CALL delidx('{prefix}_comment', 'modul_cid_path')", $code, $file.' does not drop the path index');

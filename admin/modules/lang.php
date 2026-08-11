@@ -225,9 +225,9 @@ function save(): void {
                 if ($cons === '' || $cont === '') continue;
                 $keep[trim($cons)] = trim(str_replace(['<?php', '?>', "\r", "\n"], ['&lt;?php', '?&gt;', '', ''], $cont));
             }
-            $body = '<?php'.PHP_EOL.'# Author: Eduard Laas'.PHP_EOL.'# 2005 - '.date('Y').' SLAED'.PHP_EOL.'# License: MIT'.PHP_EOL.'# Website: slaed.net'.PHP_EOL.PHP_EOL;
+            $body = '<?php'."\n".'# Author: Eduard Laas'."\n".'# 2005 - '.date('Y').' SLAED'."\n".'# License: MIT'."\n".'# Website: slaed.net'."\n\n";
             foreach ($keep as $cons => $cont) {
-                $body .= 'define(\''.addcslashes((string)$cons, "\\'").'\',\''.addcslashes((string)$cont, "\\'").'\');'.PHP_EOL;
+                $body .= 'define(\''.addcslashes((string)$cons, "\\'").'\',\''.addcslashes((string)$cont, "\\'").'\');'."\n";
             }
             $hand = fopen($file, 'wb');
             if ($hand === false) continue;

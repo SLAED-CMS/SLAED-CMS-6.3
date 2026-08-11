@@ -136,6 +136,6 @@ final class MailTransportTest extends TestCase
     public function theClientBlockKeepsItsPlainTextForm(): void
     {
         $text = $this->getCall($this->getMail(), 'getClientBlock', []);
-        $this->assertSame(PHP_EOL.'IP: 127.0.0.1'.PHP_EOL.'Browser: PHPUnit'.PHP_EOL.'Hash: '.md5('PHPUnit'), $text);
+        $this->assertSame("\n".'IP: 127.0.0.1'."\n".'Browser: PHPUnit'."\n".'Hash: '.md5('PHPUnit'), $text);
     }
 }

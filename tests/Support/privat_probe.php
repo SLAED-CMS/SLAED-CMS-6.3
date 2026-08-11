@@ -233,10 +233,7 @@ try {
     $pdo->exec($make);
     $fresh = getProbeDef($pdo);
     $report['fresh'] = $fresh;
-    $chan = [
-        'up62' => getProbeSteps(BASE_DIR.'/setup/sql/table_update6_3.sql'),
-        'patch' => getProbeSteps(BASE_DIR.'/setup/sql/update6_3_patch.sql'),
-    ];
+    $chan = ['up62' => getProbeSteps(BASE_DIR.'/setup/sql/table_update6_3.sql')];
     foreach ($chan as $name => $step) {
         foreach (['a', 'b', 'c', 'd'] as $stat) {
             $report['runs'][$name.':'.$stat] = getProbeCase($pdo, $stat, $step, $make, $fresh);

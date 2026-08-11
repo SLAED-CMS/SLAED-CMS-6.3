@@ -646,7 +646,7 @@ class Mail {
                 ],
             ]);
         }
-        return PHP_EOL._IP.': '.getIp().PHP_EOL._BROWSER.': '.$agent.PHP_EOL._HASH.': '.md5($agent);
+        return "\n"._IP.': '.getIp()."\n"._BROWSER.': '.$agent."\n"._HASH.': '.md5($agent);
     }
 
     # Assemble the MIME header block for one already validated sender; no Return-Path is written because the receiving MTA owns that header

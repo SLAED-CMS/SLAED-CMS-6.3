@@ -20,7 +20,7 @@ function isRawEditorFile(string $file): bool {
 
 function filterRawEditorText(string $file, string $text): string {
     if (!isRawEditorFile($file)) return $text;
-    $prefix = '<?php'.PHP_EOL.'if (!defined(\'FUNC_FILE\')) die(\'Illegal file access\');'.PHP_EOL;
+    $prefix = '<?php'."\n".'if (!defined(\'FUNC_FILE\')) die(\'Illegal file access\');'."\n";
     if (str_starts_with($text, $prefix)) $text = substr($text, strlen($prefix));
     return ltrim($text);
 }
@@ -44,7 +44,7 @@ function getRobotsTemplate(): string {
     ];
     $rows[] = '';
     $rows[] = 'Sitemap: '.($base ? $base.'/sitemap.xml' : '/sitemap.xml');
-    return implode(PHP_EOL, $rows);
+    return implode("\n", $rows);
 }
 
 function getRobotsButton(string $template): string {
@@ -158,7 +158,7 @@ function save(): void {
     }
     $templ = getVar('post', 'template', 'raw');
     $templ = filterRawEditorText($file, $templ);
-    $templ = isRawEditorFile($file) ? $templ : '<?php'.PHP_EOL.'if (!defined(\'FUNC_FILE\')) die(\'Illegal file access\');'.PHP_EOL.$templ.PHP_EOL;
+    $templ = isRawEditorFile($file) ? $templ : '<?php'."\n".'if (!defined(\'FUNC_FILE\')) die(\'Illegal file access\');'."\n".$templ."\n";
     $saved = false;
     if ($file && $templ) $saved = file_put_contents($file, $templ, LOCK_EX) !== false;
     if (isHtmxReq()) {

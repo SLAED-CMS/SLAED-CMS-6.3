@@ -62,13 +62,13 @@ class SchemaUpdateValidationTest extends TestCase
     }
 
     /**
-     * The update channels this test reads, as relative path => absolute path. Both of them declare
-     * columns of the same tables, and an installation runs one or the other, never both.
+     * The update channels this test reads, as relative path => absolute path. Every one of them
+     * declares columns of the same tables an installation also reaches through setup/sql/table.sql.
      */
     private static function getUpdateFiles(): array
     {
         $out = [];
-        foreach (['setup/sql/table_update6_3.sql', 'setup/sql/update6_3_patch.sql'] as $name) {
+        foreach (['setup/sql/table_update6_3.sql'] as $name) {
             if (file_exists(self::$basePath.'/'.$name)) {
                 $out[$name] = self::$basePath.'/'.$name;
             }

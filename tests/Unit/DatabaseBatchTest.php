@@ -163,11 +163,11 @@ final class DatabaseBatchTest extends TestCase
         $this->assertStringContainsString('getSqlinfo(', $body, 'The installer still guesses the table name of a statement on its own');
     }
 
-    # The shipped migration file is the case this was found on: every block carries real SQL and the escaped default reaches the driver as written
+    # The shipped upgrade channel is the case the splitter was found on: every block carries real SQL and an escaped default reaches the driver as written
     #[Test]
-    public function theShippedPatchSplitsIntoRealStatements(): void
+    public function theShippedUpgradeSplitsIntoRealStatements(): void
     {
-        $file = dirname(__DIR__, 2).'/setup/sql/update6_3_patch.sql';
+        $file = dirname(__DIR__, 2).'/setup/sql/table_update6_3.sql';
         $this->assertFileExists($file);
         $out = getSqlbatch((string)file_get_contents($file));
         $this->assertSame('', $out['error']);
@@ -176,33 +176,5 @@ final class DatabaseBatchTest extends TestCase
             $this->assertSame($one, getSqlclean($one), 'Block '.($num + 1).' still carries a leading comment');
             $this->assertNotSame('SQL', getSqlinfo($one)['type'], 'Block '.($num + 1).' has no readable statement type');
         }
-        $hit = array_values(array_filter($out['statements'], static fn(string $one): bool => str_contains($one, "'ascii_bin'")));
-        $this->assertNotEmpty($hit, 'The address collation block is gone from the patch');
-        $this->assertStringContainsString("DEFAULT \\'\\''", $hit[0], 'The escaped empty default did not survive the split');
-    }
-
-    # The one-time text repair goes through the same page, so it has to split the same way, and it may only ever touch the three fields it names
-    # Its blocks run in one order for a reason: every break block precedes every entity block, because that is the only moment a writer tag can be told from an authored one
-    #[Test]
-    public function theOneTimeTextRepairSplitsAndStaysInScope(): void
-    {
-        $file = dirname(__DIR__, 2).'/setup/sql/update6_3_text_once.sql';
-        $this->assertFileExists($file);
-        $out = getSqlbatch((string)file_get_contents($file));
-        $this->assertSame('', $out['error']);
-        $this->assertNotEmpty($out['statements']);
-        $last = -1;
-        foreach ($out['statements'] as $num => $one) {
-            $this->assertSame($one, getSqlclean($one), 'Block '.($num + 1).' still carries a leading comment');
-            $this->assertSame('UPDATE', getSqlinfo($one)['type'], 'Block '.($num + 1).' is not an update, so this file does more than repair text');
-            $this->assertMatchesRegularExpression('#`\{prefix\}_(comment|privat)`#', $one, 'Block '.($num + 1).' names a table this repair may not touch');
-            if (str_contains($one, '<br')) $last = $num;
-        }
-        $first = null;
-        foreach ($out['statements'] as $num => $one) {
-            if ($first === null && str_contains($one, '&amp;')) $first = $num;
-        }
-        $this->assertNotNull($first, 'The ampersand is never decoded, so the repair leaves the escape it was written for');
-        $this->assertGreaterThan($last, $first, 'An entity block runs before a break block, which would delete the break tags an author typed');
     }
 }

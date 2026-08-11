@@ -239,7 +239,7 @@ function banlist(): void {
     $name = getVar('get', 'uname', 'name');
     $mailTextId = 'sl_form_security_mail';
     $check = '';
-    $mailtext = replace_break(str_replace('[text]', _BANN_INFO.PHP_EOL.PHP_EOL._BANN_TERM.': [time]'.PHP_EOL._BANN_REAS.': [info]', $conf['mtemp']));
+    $mailtext = replace_break(str_replace('[text]', _BANN_INFO."\n\n"._BANN_TERM.': [time]'."\n"._BANN_REAS.': [info]', $conf['mtemp']));
     $userrows = [
         [
             'label_html' => _NICKNAME,
@@ -444,7 +444,7 @@ function passsave(): void {
     global $conf, $afile;
     $warn = !checkAdminPost('security');
     if (!$warn) {
-        $protect = [PHP_EOL => '', ' ' => ''];
+        $protect = ["\r" => '', "\n" => '', ' ' => ''];
         $admin_ip = getVar('post', 'admin_ip', 'text');
         $login = getVar('post', 'login', 'text');
         $password = getVar('post', 'password', 'text');

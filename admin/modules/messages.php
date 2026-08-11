@@ -87,7 +87,7 @@ function add(): void {
         $view = getVar('post', 'view', 'num');
         $lang = getVar('post', 'lang', 'var');
     }
-    $stoptext = is_array($stop) ? implode(PHP_EOL, $stop) : (string)$stop;
+    $stoptext = is_array($stop) ? implode("\n", $stop) : (string)$stop;
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=messages', 'name=messages&op=add', 'name=messages&op=info'], 'tabs' => [_HOME, _ADD, _DOCS], 'tab' => 1]);
     if ($stoptext !== '') $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stoptext]);
