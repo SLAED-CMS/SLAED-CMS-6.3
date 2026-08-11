@@ -275,7 +275,7 @@ final class FileManagerCatalogTest extends TestCase
     {
         $mod = $this->getFile('admin/modules/uploads.php');
         foreach (['fmcreate', 'fmmkdir', 'fmrename', 'fmcopy', 'fmmove', 'fmdelete', 'fmcompress', 'fmpack', 'fmupload'] as $name) {
-            $this->assertStringContainsString("case '".$name."': ".$name."(); break;", $mod, 'The operation '.$name.' has no route of its own');
+            $this->assertStringContainsString("case '".$name."': ".$name.'(); break;', $mod, 'The operation '.$name.' has no route of its own');
         }
         $this->assertStringNotContainsString('uploadsave', $mod, 'The upload route that ran beside the file manager is still wired');
     }

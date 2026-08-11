@@ -279,7 +279,7 @@ final class FileManagerOpsTest extends TestCase
         $guard = "if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');";
         $this->assertStringContainsString($guard, $mod, 'The module of the file browser is open to more than the super administrator');
         foreach (['fmcreate', 'fmmkdir', 'fmrename', 'fmcopy', 'fmmove', 'fmdelete', 'fmcompress'] as $name) {
-            $this->assertStringContainsString("case '".$name."': ".$name."(); break;", $mod, 'The operation '.$name.' has no route of its own');
+            $this->assertStringContainsString("case '".$name."': ".$name.'(); break;', $mod, 'The operation '.$name.' has no route of its own');
         }
         $from = strpos($mod, 'function setFileAction(string $op): void {');
         $this->assertNotFalse($from, 'The module carries no handler for the operations of the stage');

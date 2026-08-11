@@ -63,11 +63,13 @@ final class CommentWriteTest extends TestCase
     }
 
     # Each module increments its own target counter by one and awards its own points slot
+    # A module with no writable target on this installation is reported as target 0 and carries no delta, so it is passed over the way the row scenario passes it over
     #[Test]
     public function everyModuleMovesItsOwnCounterAndSlot(): void
     {
         $data = $this->getUserProbe();
         foreach ($data['rows'] as $mod => $one) {
+            if (intval($one['target']) === 0) continue;
             $this->assertSame($one['wantdelta'], $one['delta'], 'Module "'.$mod.'" moved another counter or another points slot');
         }
     }

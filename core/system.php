@@ -2536,7 +2536,7 @@ function setConfigFile(string $fp, array $arr, array $act = []): void {
     .'# Website: slaed.net'."\n\n"
     .'return '.$export($data).';'."\n";
     file_put_contents($fp, $cnt, LOCK_EX);
-    @unlink(CONFIG_DIR.'/local.php');
+    if (is_file(CONFIG_DIR.'/local.php')) unlink(CONFIG_DIR.'/local.php');
     getConfig();
 }
 

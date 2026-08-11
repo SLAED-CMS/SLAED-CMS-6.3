@@ -116,7 +116,12 @@ Check the active files in `config/` and verify:
 
 ```bash
 rm -rf storage/cache/*
+rm -f config/local.php
 ```
+
+`config/local.php` is the merged configuration cache. It is accepted on its version marker alone
+and is never compared against the source files it was built from, so a stale one keeps serving the
+previous release's configuration until an admin save rebuilds it. Delete it on every upgrade.
 
 Additional runtime-generated locations present in the repository:
 

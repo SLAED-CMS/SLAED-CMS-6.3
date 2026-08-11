@@ -37,6 +37,7 @@ if (!is_dir(WORKDIR) && !mkdir(WORKDIR, 0777, true)) die("cannot create the scra
 
 $GLOBALS['fails'] = 0;
 $GLOBALS['skips'] = 0;
+$GLOBALS['undone'] = 0;
 $GLOBALS['made'] = [];
 $GLOBALS['rows'] = [];
 $GLOBALS['news'] = [];
@@ -183,8 +184,10 @@ function checkMatrixRow(string $name, bool $done, string $note = ''): void {
 }
 
 # Record one row that could not be run at all, so a missing prerequisite never reads as a pass
-function setSkipRow(string $name, string $why): void {
+# A required row is one the walk sets up itself, and it fails the run too: the shape of a stand may leave a row unrun, a prerequisite this tool builds may not go missing quietly
+function setSkipRow(string $name, string $why, bool $must = false): void {
     $GLOBALS['skips']++;
+    if ($must) $GLOBALS['undone']++;
     echo '  skip '.$name.' - '.$why."\n";
 }
 
@@ -285,7 +288,7 @@ function checkAvatarRows(string $ujar, string $gjar): void {
     $txt = addTestFixture('av.txt', 'txt');
     $rows = getDbRows('SELECT id, avatar FROM {p}_users WHERE name = :n', ['n' => (string)getenv('SLAED_USER_NAME')]);
     if ($rows === []) {
-        setSkipRow('avatar rows', 'the site user has no row of its own');
+        setSkipRow('avatar rows', 'the site user has no row of its own', true);
         return;
     }
     $befo = (string)$rows[0]['avatar'];
@@ -408,7 +411,7 @@ function checkAdminFileRows(string $ajar, string $zip, string $mark): void {
     checkMatrixRow('an admin save publishes into the selected directory in one step', count($new) === 1 && count($row) === 1);
     $fid = (int)($row[0]['id'] ?? 0);
     if ($fid === 0) {
-        setSkipRow('admin update and relocation rows', 'the first admin save produced no row');
+        setSkipRow('admin update and relocation rows', 'the first admin save produced no row', true);
         return;
     }
     $was = getDirTree($pub);
@@ -523,16 +526,30 @@ function checkCaptchaRow(string $gjar): void {
     getHttpReply($gjar, '/index.php?name=account');
 }
 
+# The key order of one upload record, lifted out of setUploadRuleData() rather than repeated here, because a position copied into a walk drifts away from the record it walks
+# A walk driving the same stand over HTTP cannot require the core, so the list is read off the serializer that owns it and an unreadable list answers empty, which reads as not run
+function getUploadRuleKeys(): array {
+    $code = (string)file_get_contents(ROOTDIR.'/core/system.php');
+    if (!preg_match('#function setUploadRuleData\(array \$rule\): string \{\s*\$keys = \[(.+?)\];#s', $code, $hit)) return [];
+    preg_match_all("#'([a-z]+)'#", $hit[1], $all);
+    return $all[1];
+}
+
 # Rewrite the two upload switches of the news record and drop the merged configuration cache, so the next request reads the record this row is about
 # The record is a pipe separated string in a fixed key order; only the two positions of the switches are touched and every other value the record carries is kept
+# Both positions and the field count come from the shipped key order, so a key added to or removed from the record moves this walk with it instead of writing into the wrong field
 function setUploadSwitch(int $user, int $guest): bool {
+    $keys = getUploadRuleKeys();
+    $upos = array_search('userupload', $keys, true);
+    $gpos = array_search('guestupload', $keys, true);
+    if ($upos === false || $gpos === false) return false;
     $file = ROOTDIR.'/config/uploads.php';
     $code = (string)file_get_contents($file);
     if (!preg_match("#'news' => '([^']*)',#", $code, $hit)) return false;
     $rule = explode('|', $hit[1]);
-    if (count($rule) < 13) return false;
-    $rule[10] = (string)$user;
-    $rule[11] = (string)$guest;
+    if (count($rule) !== count($keys)) return false;
+    $rule[$upos] = (string)$user;
+    $rule[$gpos] = (string)$guest;
     $done = file_put_contents($file, str_replace($hit[0], "'news' => '".implode('|', $rule)."',", $code)) !== false;
     if (is_file(ROOTDIR.'/config/local.php')) unlink(ROOTDIR.'/config/local.php');
     clearstatcache();
@@ -564,7 +581,7 @@ function checkEditorMatrixRows(string $ajar, string $ujar, string $gjar): void {
     $who = ['moderator' => $ajar, 'member' => $ujar, 'guest' => $gjar];
     foreach ([[0, 0], [1, 0], [0, 1], [1, 1]] as [$user, $guest]) {
         if (!setUploadSwitch($user, $guest)) {
-            setSkipRow('the access matrix', 'the news record of config/uploads.php could not be rewritten');
+            setSkipRow('the access matrix', 'the news record of config/uploads.php could not be rewritten', true);
             return;
         }
         $name = 'userupload='.$user.' guestupload='.$guest;
@@ -583,7 +600,7 @@ function checkEditorMatrixRows(string $ajar, string $ujar, string $gjar): void {
 function checkEditorGuestRows(string $gjar): void {
     echo "Editor guest isolation\n";
     if (!setUploadSwitch(1, 1)) {
-        setSkipRow('the guest isolation rows', 'the news record of config/uploads.php could not be rewritten');
+        setSkipRow('the guest isolation rows', 'the news record of config/uploads.php could not be rewritten', true);
         return;
     }
     $png = addTestFixture('gx.png', 'png', 60, 40);
@@ -591,7 +608,7 @@ function checkEditorGuestRows(string $gjar): void {
     if (is_file($second)) unlink($second);
     getHttpReply($second, '/index.php?name=account');
     if (getSessionId($second) === '' || getSessionId($second) === getSessionId($gjar)) {
-        setSkipRow('the guest isolation rows', 'the second guest opened no session of its own');
+        setSkipRow('the guest isolation rows', 'the second guest opened no session of its own', true);
         return;
     }
     $one = addEditorFile($gjar, $png);
@@ -728,5 +745,5 @@ if ($mode === 'editor' || $mode === 'all') {
 if ($mode === 'captcha' || $mode === 'all') checkCaptchaRow($gjar);
 deleteWalkTraces();
 echo ($GLOBALS['fails'] === 0 ? 'all rows passed' : $GLOBALS['fails'].' row(s) failed');
-echo ($GLOBALS['skips'] > 0 ? ', '.$GLOBALS['skips']." not run\n" : "\n");
-exit($GLOBALS['fails'] === 0 ? 0 : 1);
+echo ($GLOBALS['skips'] > 0 ? ', '.$GLOBALS['skips'].' not run of which '.$GLOBALS['undone']." required\n" : "\n");
+exit(($GLOBALS['fails'] === 0 && $GLOBALS['undone'] === 0) ? 0 : 1);
