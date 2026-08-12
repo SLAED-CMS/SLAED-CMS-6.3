@@ -14,6 +14,7 @@ define('FUNC_FILE', true);
 define('BASE_DIR', dirname(__DIR__));
 define('CONFIG_DIR', BASE_DIR.'/config');
 define('CACHE_DIR', BASE_DIR.'/storage/cache');
+define('COUNTER_DIR', BASE_DIR.'/storage/counter');
 define('LOGS_DIR', BASE_DIR.'/storage/logs');
 
 // Test-Konfiguration laden

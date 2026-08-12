@@ -54,7 +54,11 @@ Written down so the next reader does not re-derive it.
   emitter disables caching instead of leaking.
 - **Invalidation.** Every DB write bumps the epoch, which retires the whole
   layer; `cachegc` removes the files afterwards. No route needs its own
-  invalidation.
+  invalidation. The epoch is one number in `storage/counter/cache.log`, kept
+  next to the other persistent counters and outside the tree it retires, so
+  clearing the cache cannot reset it. `deleteAll()` ends on a bump of its own:
+  `unlink()` reports failure silently, and a file the sweep could not remove
+  has to stay unreachable rather than be served again.
 - **Statistics survive a hit.** `setHead()` registers the referer and stats
   trackers through `addDeferredTask()` before it looks into the cache, and
   `setDeferredTasks()` runs on the hit path as well. Visit statistics therefore

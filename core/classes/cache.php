@@ -89,16 +89,19 @@ class Cache {
     }
 
     # Remove every cached file under storage/cache, keeping protected markers and the directory tree
+    # The generation is bumped afterwards because unlink reports failure silently: a page the sweep could not remove stays unreachable instead of being served again
     public static function deleteAll(): int {
-        if (!is_dir(CACHE_DIR)) return 0;
         $num = 0;
-        $iter = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(CACHE_DIR, FilesystemIterator::SKIP_DOTS));
-        foreach ($iter as $file) {
-            if (!$file->isFile()) continue;
-            $name = $file->getFilename();
-            if ($name === '.htaccess' || $name === 'index.html') continue;
-            if (unlink($file->getPathname())) $num++;
+        if (is_dir(CACHE_DIR)) {
+            $iter = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(CACHE_DIR, FilesystemIterator::SKIP_DOTS));
+            foreach ($iter as $file) {
+                if (!$file->isFile()) continue;
+                $name = $file->getFilename();
+                if ($name === '.htaccess' || $name === 'index.html') continue;
+                if (unlink($file->getPathname())) $num++;
+            }
         }
+        self::addEpoch();
         return $num;
     }
 
@@ -147,8 +150,9 @@ class Cache {
     }
 
     # Read the current page-cache generation counter, returning zero when it is missing
+    # The counter lives with the other persistent counters in storage/counter and not inside the tree it governs, so clearing the cache cannot reset it
     public static function getEpoch(): int {
-        $file = CACHE_DIR.'/pages/epoch';
+        $file = COUNTER_DIR.'/cache.log';
         if (!is_file($file)) return 0;
         $val = file_get_contents($file);
         return ($val !== false) ? (int)$val : 0;
@@ -158,9 +162,9 @@ class Cache {
     public static function addEpoch(): void {
         if (self::$bumped) return;
         self::$bumped = true;
-        $dir = CACHE_DIR.'/pages';
+        $dir = COUNTER_DIR;
         if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) return;
-        $hand = fopen($dir.'/epoch', 'c+');
+        $hand = fopen($dir.'/cache.log', 'c+');
         if ($hand === false) return;
         if (flock($hand, LOCK_EX)) {
             $val = (int)stream_get_contents($hand);
