@@ -10,6 +10,8 @@ class Parser {
     public const EMBEDMAX = 65536;
     public const EMBEDIMG = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif'];
     private const CACHETTL = 86400;
+    # The shortest source worth storing, counted in bytes because parsing cost scales with bytes: below it one write costs more than the hits it saves before the entry ages out
+    private const CACHEMIN = 2048;
     public static bool $freeoff = false;
     private static array $pcache = [];
     private array $stash = [];
@@ -71,6 +73,7 @@ class Parser {
     }
 
     # Standard rendering pipeline: filterDoc() plus replace rules and img repair; call filterDoc() directly when replacement rules must not apply (changelog, search)
+    # Stored is the finished rendering of a source of at least CACHEMIN bytes whose parse does not vary; a [block=] or [usephp] source is rendered anew on every serve
     # The stored rendering lives here and not in a caller, because the key is built from what this class itself reads and only this class knows whether a parse may be reused at all
     public function filterContent(string $src, bool $safe, string $mod, int $hoff = 0, string $fmt = ''): string {
         $file = $this->getCachePath($src, $safe, $mod, $hoff, $fmt);
@@ -111,7 +114,7 @@ class Parser {
     # The cache path of one rendering, or an empty string when nothing may be stored; the key carries every input the output depends on, the class version included
     private function getCachePath(string $src, bool $safe, string $mod, int $hoff, string $fmt): string {
         static $ver = '';
-        if ($src === '' || !$this->checkCacheReady()) return '';
+        if (strlen($src) < self::CACHEMIN || !$this->checkCacheReady()) return '';
         if ($ver === '') $ver = (string)filemtime(__FILE__);
         return Cache::getPath('data', Cache::getHash([
             'parser', $ver, $this->getConfigHash($mod), sha1($src), (int)$safe, $mod, $hoff, $fmt, getTheme(), _LOCALE,

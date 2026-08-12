@@ -270,22 +270,18 @@ final class UploadIntegrationTest extends TestCase
         $this->assertSame([], $data['nodecoder'], 'This build has no decoder for '.implode(', ', $data['nodecoder']).', so the fail closed branch is live here');
     }
 
-    # A value whose line would pass the limit is written as a concatenation; the shipped artifact proves it and the writer source keeps the branch that produced it
+    # One stored value is one line however long it is: a configuration file is data, and the line limit of .rules/global.md governs the code a person writes
     # The byte-for-byte round trip of a real save belongs to tools/upload-route-check.php: a unit test may not write into the configuration directory of the site
     #[Test]
-    public function theConfigurationFilesKeepEveryLineInsideTheLimit(): void
+    public function theConfigurationWritersKeepOneValueOnOneLine(): void
     {
-        foreach (['config/filetype.php', 'config/uploads.php', 'config/files.php', 'config/users.php'] as $path) {
-            foreach (explode("\n", $this->getFile($path)) as $num => $line) {
-                $this->assertLessThanOrEqual(180, strlen(rtrim($line, "\r")), $path.' line '.($num + 1).' passes the 180 character limit');
-            }
-        }
         $body = $this->getBody('core/system.php', 'setConfigFile');
-        $this->assertStringContainsString('$wrap = function', $body, 'The writer no longer wraps a value that would pass the line limit');
-        $this->assertStringContainsString("\$ind.'    .'", $body, 'The wrap no longer emits a concatenation the next save can reproduce');
-        $this->assertStringContainsString('$wrap = function', $this->getFile('setup/index.php'), 'The installer writer would produce files the panel writer would not');
-        $fty = $this->getFile('config/filetype.php');
-        $this->assertStringContainsString("'\n            .'", $fty, 'No shipped template is wrapped, so the limit is met by accident rather than by the writer');
+        $this->assertStringNotContainsString('$wrap', $body, 'The writer splits a long value across lines again');
+        $this->assertStringNotContainsString("\$ind.'    .'", $body, 'The writer emits a concatenation again');
+        $this->assertStringNotContainsString('$wrap', $this->getFile('setup/index.php'), 'The installer writer would produce files the panel writer would not');
+        foreach (['config/filetype.php', 'config/uploads.php', 'config/files.php', 'config/users.php'] as $path) {
+            $this->assertDoesNotMatchRegularExpression("#\n\s+\.'#", $this->getFile($path), $path.' still carries a value split across lines');
+        }
     }
 
     # The generic upload fallback of the editor entry is closed: an unknown operation answers 400 instead of publishing anything

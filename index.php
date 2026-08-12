@@ -220,10 +220,10 @@ if (empty($go)) {
     Cache::setHeaders(false);
     echo getRssChannel();
 } elseif ($go == 'search') {
-    Cache::setHeaders(true, $conf['cache_d']);
+    Cache::setHeaders(true, Cache::STATICDAYS);
     echo getOpenSearch();
 } elseif ($go == 'xsl') {
-    Cache::setHeaders(true, $conf['cache_d']);
+    Cache::setHeaders(true, Cache::STATICDAYS);
     echo getOpenXsl();
 } elseif ($go == 'asset') {
     $hash = getVar('req', 'file', 'var');
@@ -231,7 +231,7 @@ if (empty($go)) {
     if (!in_array($type, ['css', 'js'], true)) die('Illegal file access');
     $afile = Cache::getPath('assets', $hash, $type);
     if ($afile === '' || !is_file($afile)) die('Illegal file access');
-    Cache::setHeaders(true, $conf['cache_d'], ($type === 'css') ? 'text/css' : 'text/javascript', 0, true);
+    Cache::setHeaders(true, 0, ($type === 'css') ? 'text/css' : 'text/javascript', 0, true);
     echo Cache::getBody($afile);
 } elseif ($go == 'captcha') {
     Cache::setHeaders(false);

@@ -12,7 +12,7 @@ return [
             'cachegc' => [
                 'title' => 'Page cache cleanup',
                 'type' => 'system',
-                'active' => '0',
+                'active' => '1',
                 'system' => 'cachegc',
                 'schedule' => '45 3 * * *',
                 'priority' => '5',

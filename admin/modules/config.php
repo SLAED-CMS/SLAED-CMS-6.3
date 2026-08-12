@@ -690,12 +690,12 @@ function config(): void {
         'label_text' => _CACHE_2,
         'is_selected' => $conf['cache'] == 2,
     ]);
-    $rows[] = ['label_html' => _CACHE, 'field_html' => $tpl->getHtmlFrag('select', [
+    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CACHE, 'hint' => _CACHEINFO]), 'field_html' => $tpl->getHtmlFrag('select', [
         'name_attr' => 'cache',
         'options_html' => $opts,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => _CACHETIME, 'field_html' => $tpl->getHtmlFrag('input', [
+    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CACHETIME, 'hint' => _CACHETIMEINFO]), 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'number',
         'name_attr' => 'cache_t',
         'value_attr' => (string)$conf['cache_t'],
@@ -703,17 +703,15 @@ function config(): void {
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => _CACHECOMP, 'field_html' => getTplRadioGroup(['name' => 'cache_c', 'value' => $conf['cache_c'], 'options' => $yesno])];
-    $rows[] = ['label_html' => _CACHEBROW, 'field_html' => getTplRadioGroup(['name' => 'cache_b', 'value' => $conf['cache_b'], 'options' => $yesno])];
-    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CACHELOCK, 'hint' => _CACHELOCKINFO]), 'field_html' => getTplRadioGroup(['name' => 'cache_l', 'value' => $conf['cache_l'] ?? '0', 'options' => $yesno])];
-    $rows[] = ['label_html' => _CACHEDEL, 'field_html' => $tpl->getHtmlFrag('input', [
+    $rows[] = ['label_html' => _CACHEBROW, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'number',
-        'name_attr' => 'cache_d',
-        'value_attr' => (string)$conf['cache_d'],
-        'placeholder_text' => _CACHEDEL,
+        'name_attr' => 'cache_b',
+        'value_attr' => (string)$conf['cache_b'],
+        'placeholder_text' => _CACHEBROW,
         'is_required' => true,
         'is_config' => true,
     ])];
+    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CACHELOCK, 'hint' => _CACHELOCKINFO]), 'field_html' => getTplRadioGroup(['name' => 'cache_l', 'value' => $conf['cache_l'] ?? '0', 'options' => $yesno])];
     $rows[] = ['label_html' => _CACHECSS, 'field_html' => getTplRadioGroup(['name' => 'cache_css', 'value' => $conf['cache_css'], 'options' => $yesno])];
     $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CSSDIR, 'hint' => _CSSDIRINFO.' '._NOKOMA]), 'field_html' => $tpl->getHtmlFrag('textarea', [
         'name_attr' => 'css_f',
@@ -739,6 +737,7 @@ function config(): void {
     foreach ($dirs as $dk => $dv) $lines[] = $dk.': '.$dv;
     $lines[] = _FILE_M.': '.$cnt;
     $lines[] = _FILE_S.': '.filterSize($size);
+    if (empty($conf['scheduler']['jobs']['cachegc']['active'])) $lines[] = _SCHEDULER.' cachegc: '._SCHEDULER_OFF;
     $html = $tpl->getHtmlFrag('alert', ['messages' => $lines]);
     $tabf = $html.$tpl->getHtmlPart('div', ['rows' => $rows]);
 
@@ -903,8 +902,6 @@ function save(): void {
             'botsact' => getVar('post', 'botsact', 'num'),
             'cache' => getVar('post', 'cache', 'num'),
             'cache_t' => getVar('post', 'cache_t', 'num', 60),
-            'cache_d' => getVar('post', 'cache_d', 'num', 30),
-            'cache_c' => getVar('post', 'cache_c', 'num'),
             'cache_b' => getVar('post', 'cache_b', 'num'),
             'cache_l' => getVar('post', 'cache_l', 'num'),
             'cache_css' => getVar('post', 'cache_css', 'num'),
@@ -959,13 +956,10 @@ function save(): void {
     setRedirect($afile.'.php?name=config&tab='.$ctab, false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
-# The test button sits inside the shared config form, so its POST carries the password field, and Logger writes every posted field into a failure entry
-# The send reads the stored configuration and never that field, so it is dropped before any transport can fail and record the request that produced it
 # The message is queued like every other one and the drain is then run inside this request, because a button that only stored a row would stop proving that the settings work
 # A run that sent nothing is reported as such: the rate window or the time budget can end a drain before the test message leaves, and success would be a claim nobody verified
 function mailtest(): void {
     global $afile, $conf, $mailer;
-    unset($_POST['mailpass']);
     $ctab = getVar('post', 'tab', 'num', 6);
     if ($ctab < 0 || $ctab > 6) $ctab = 6;
     $warn = !checkAdminPost('config');

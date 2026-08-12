@@ -7,6 +7,8 @@
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
 class Logger {
+    # The names whose value is a secret; the rule is the substring, checked case-insensitively, so every password, token, key and one-time code field in the codebase is covered
+    private const MASKKEYS = '/pass|pwd|secret|token|key|code/i';
     protected static bool $lock = false;
 
     # Add PHP log entry
@@ -101,14 +103,21 @@ class Logger {
     }
 
     # Get bounded request context
+    # Request data is masked by key name before it is bounded, so a value named after a password, a secret, a token or a code never reaches a log line whatever raised the entry
+    # The name decides, not the channel or the module: every posted field of every request passes here, and a false positive such as a captcha code loses nothing worth reading
     protected static function getContext(): array {
-        $query = self::filterArray($_GET ?? []);
-        $post = self::filterArray($_POST ?? []);
+        $data = ['query' => $_GET ?? [], 'post' => $_POST ?? []];
+        foreach ($data as $part => $rows) {
+            foreach (array_keys($rows) as $key) {
+                if (preg_match(self::MASKKEYS, (string)$key)) $rows[$key] = '[masked]';
+            }
+            $data[$part] = self::filterArray($rows);
+        }
         $cook = array_keys($_COOKIE ?? []);
         $sess = (session_status() === PHP_SESSION_ACTIVE) ? array_keys($_SESSION ?? []) : [];
         $row = [
-            'query' => $query ?: new stdClass(),
-            'post' => $post ?: new stdClass(),
+            'query' => $data['query'] ?: new stdClass(),
+            'post' => $data['post'] ?: new stdClass(),
             'cookie_keys' => array_slice($cook, 0, 50),
             'session_keys' => array_slice($sess, 0, 50),
         ];
@@ -118,6 +127,7 @@ class Logger {
     }
 
     # Get common request fields
+    # The address is masked like the posted data: a one-time code, an OAuth callback or a reset link carries its secret in the query, and the referer carries the previous one
     protected static function getRequest(): array {
         $ref = function_exists('getReferer') ? (string)getReferer() : (string)($_SERVER['HTTP_REFERER'] ?? '');
         $ip = function_exists('getIp') ? (string)getIp() : (string)($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
@@ -125,8 +135,8 @@ class Logger {
             'req_id' => $_SERVER['HTTP_X_REQUEST_ID'] ?? $_SERVER['UNIQUE_ID'] ?? null,
             'ip' => $ip,
             'method' => $_SERVER['REQUEST_METHOD'] ?? 'GET',
-            'url' => self::filterText($_SERVER['REQUEST_URI'] ?? (string)getenv('REQUEST_URI'), 2048) ?: null,
-            'referer' => self::filterText($ref, 2048) ?: null,
+            'url' => self::filterText(self::filterQuery($_SERVER['REQUEST_URI'] ?? (string)getenv('REQUEST_URI')), 2048) ?: null,
+            'referer' => self::filterText(self::filterQuery($ref), 2048) ?: null,
             'ua' => self::filterText($_SERVER['HTTP_USER_AGENT'] ?? '', 512) ?: null,
         ];
     }
@@ -148,6 +158,16 @@ class Logger {
     # Filter bounded text field
     protected static function filterText(mixed $text, int $max = 1024): string {
         return substr(str_replace(["\r", "\n", "\0"], ' ', trim((string)$text)), 0, $max);
+    }
+
+    # Mask the query part of one address by key name, leaving the path and every other pair in raw form; not named filterUrl, because Parser has a link policy by that name
+    protected static function filterQuery(mixed $url): string {
+        $url = (string)$url;
+        $pos = strpos($url, '?');
+        if ($pos === false) return $url;
+        $mask = static fn(array $pair): string => preg_match(self::MASKKEYS, urldecode($pair[2])) ? $pair[1].$pair[2].'=[masked]' : $pair[0];
+        $query = substr($url, $pos + 1);
+        return substr($url, 0, $pos + 1).(preg_replace_callback('/(^|&)([^&=]+)=([^&]*)/', $mask, $query) ?? $query);
     }
 
     # Filter bounded array fields

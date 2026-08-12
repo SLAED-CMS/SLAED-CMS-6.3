@@ -77,7 +77,7 @@ visitor-bound content through the dynamic-regions mechanism:
   `name`, `op`, `cat`, `num`, with tracking keys dropped through the central
   list). Unknown, duplicate, or malformed query keys make the request render
   live and never create a cache entry. The cache identity (`getPageHash()`,
-  identity version `pc2`) is built from the validated values plus the
+  identity version `pc3`) is built from the validated values plus the
   canonical `homeurl` host — `num=1` and the omitted page share one entry,
   alternate encodings collapse, and a foreign `Host` header cannot create a
   cache namespace. Pre-contract cache files are unreachable and removed by
@@ -108,9 +108,41 @@ visitor-bound content through the dynamic-regions mechanism:
   it creates a new ID), and CSRF is unaffected because any page carrying a
   token or captcha is dynamic and therefore no-store.
 
-Page-cache cleanup runs as a scheduler task (`cachegc`), not a per-request
-sweep. CSS/JS bundling cache (`cache_css`/`cache_script`) remains a separate
-setting.
+Page-cache cleanup runs as a scheduler task (`cachegc`), active by default,
+not a per-request sweep. CSS/JS bundling cache (`cache_css`/`cache_script`)
+remains a separate setting.
+
+### Parser Cache
+
+Below the page cache sits a second, finer layer: `Parser::filterContent()`
+stores the finished rendering of one text under `storage/cache/pages/data`, so
+a news body, a page or a comment thread is parsed once and read back on every
+later request. It is gated by the same `cache` setting, and by nothing else —
+option 2 narrows the page cache to the home page but does not narrow this
+layer.
+
+- **Size threshold**: `Parser::CACHEMIN` is 2048 bytes of source, and
+  `getCachePath()` returns an empty string below it, which gates the read and
+  the write in one place. The reason is write amortization, not parse cost: a
+  hit saves a fraction of a millisecond, a write costs about a millisecond,
+  and a read never refreshes `mtime`, so with `CACHETTL` at one day every live
+  entry is rewritten daily. Break-even sits near 700 bytes, but only at some
+  thirty hits per day per fragment; from 2 KB a write repays after three or
+  four hits, which is almost any traffic. Short comment lines and news teasers
+  therefore never reach the disk, and the directory holds the few documents
+  that are actually expensive to parse.
+- **Identity**: the key carries the source hash, the safety flag, the module,
+  the heading offset, the format, the theme, the locale, the mtime of
+  `core/classes/parser.php` and a hash of every configuration value the class
+  reads (replace rules, upload settings, file types, `homeurl`). A changed
+  rule or a deployed parser retires every stored rendering without anyone
+  clearing a cache.
+- **Never stored**: a rendering that varies per request. `[block=id]` and
+  `[usephp]` set `$this->vary` while parsing and `filterContent()` skips the
+  write, whatever the size of the source.
+- `storage/cache/pages/data` also holds two smaller JSON caches that follow
+  the same retention: the category map (`core/system.php`) and the MX lookup
+  of the mail transport (`core/classes/mail.php`).
 
 ### Template Runtime
 

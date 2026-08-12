@@ -40,7 +40,7 @@ function getConfig(): array {
     if (is_file($local_file) && is_readable($local_file)) {
         $cache = require $local_file;
         $valid = is_array($cache) && isset($cache['_meta'], $cache['_config']) && is_array($cache['_meta']) && is_array($cache['_config']);
-        if ($valid && (($cache['_meta']['cache_version'] ?? 0) === 3)) {
+        if ($valid && (($cache['_meta']['cache_version'] ?? 0) === 4)) {
             return $cache['_config'];
         }
     }
@@ -95,7 +95,7 @@ function getConfig(): array {
     $data = [
         '_meta' => [
             'base_fingerprint' => sha1($hash),
-            'cache_version' => 3,
+            'cache_version' => 4,
             'generated_at' => time(),
         ],
         '_config' => $conf,
@@ -1616,14 +1616,15 @@ function checkPageCache(): bool {
     return getCacheRouteVars() !== null;
 }
 
-# Build the pc2 page cache identity from version, epoch, canonical host, scheme, theme, locale, and validated route parameters; old cache files stay unreachable until GC
+# Build the pc3 page cache identity from version, epoch, canonical host, scheme, theme, locale, and validated route parameters; old cache files stay unreachable until GC
+# The prefix is the version field of the key: an entry written under earlier rules must not be served now, and bumping the literal retires all of them at once
 function getPageHash(): string {
     global $theme, $locale, $conf;
     $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
     $canon = strtolower((string)parse_url((string)($conf['homeurl'] ?? ''), PHP_URL_HOST));
     $vars = getCacheRouteVars() ?? [];
     ksort($vars);
-    return Cache::getHash(['pc2', $conf['version'] ?? '', Cache::getEpoch(), $canon, $scheme, $theme, $locale, http_build_query($vars)]);
+    return Cache::getHash(['pc3', $conf['version'] ?? '', Cache::getEpoch(), $canon, $scheme, $theme, $locale, http_build_query($vars)]);
 }
 
 # Sweep stale page-cache files older than the retention window as a scheduler job and report the removed count
@@ -1635,6 +1636,8 @@ function addCacheGcTask(): array {
 }
 
 # Format head
+# A stored page may be handed to the browser cache too: that needs an entry with no dynamic region and a cache_b in days, and such a response drops the generation-time
+# marker, because a copy the browser answers from its own store would keep showing the moment the first visitor was served
 function setHead(array $seo = []): void {
     global $home, $conf, $user, $name, $theme, $op, $tpl, $adminpage, $adminvars, $sitepage, $sitevars;
     $name = $name ?? '';
@@ -1660,13 +1663,15 @@ function setHead(array $seo = []): void {
             $body = Cache::getBody($file);
             if ($body !== '') {
                 $meta = Cache::getMeta($file, $body);
-                if (!$meta['dyn'] && $conf['cache_b'] === '1' && $conf['db_t'] != '1') {
+                $days = (int)$conf['cache_b'];
+                if (!$meta['dyn'] && $days > 0) {
                     $mtime = filemtime($file);
-                    Cache::setHeaders(true, $conf['cache_d'], 'text/html', $mtime);
+                    Cache::setHeaders(true, $days, 'text/html', $mtime);
                     if (Cache::checkNotModified($mtime)) {
                         setDeferredTasks();
                         exit;
                     }
+                    $body = str_replace(GEN_MARK, '', $body);
                 } elseif ($meta['dyn']) {
                     Cache::setHeaders(false);
                 }
@@ -1955,6 +1960,8 @@ function setHead(array $seo = []): void {
 }
 
 # Format foot
+# What is stored is what is served: the entry holds the same HTML the first visitor received, with the serve-time markers still in it, so no later visitor is given a different page
+# The response that is also handed to the browser cache drops the generation-time marker rather than filling it, because a frozen copy would report the timing of a foreign request
 function setFoot(): void {
     global $home, $name, $conf, $tpl, $adminpage, $adminvars, $sitepage, $sitevars, $blocks, $blocks_c, $foot;
     if (defined('ADMIN_FILE')) {
@@ -2016,13 +2023,14 @@ function setFoot(): void {
     $html = getOutputHtml($tpl->getHtmlPage($page, $vars, $page === 'home' ? 'home' : 'app'));
     unset($sitepage, $sitevars);
     if ($docache && $html !== '' && !checkCachePoison()) {
-        $body = !empty($conf['cache_c']) ? getOutputHtml($html, true) : $html;
-        $dyn = str_contains($body, '[[sldyn:');
+        $dyn = str_contains($html, '[[sldyn:');
         $file = Cache::getPath('html', getPageHash(), 'html');
-        $done = Cache::setBody($file, $body) && Cache::setMeta($file, $body, $dyn);
-        if ($done && !$dyn && $conf['cache_b'] === '1' && $conf['db_t'] != '1') {
+        $done = Cache::setBody($file, $html) && Cache::setMeta($file, $html, $dyn);
+        $days = (int)$conf['cache_b'];
+        if ($done && !$dyn && $days > 0) {
             clearstatcache(true, $file);
-            Cache::setHeaders(true, $conf['cache_d'], 'text/html', filemtime($file));
+            Cache::setHeaders(true, $days, 'text/html', filemtime($file));
+            $html = str_replace(GEN_MARK, '', $html);
         }
         if ($dyn && !headers_sent()) Cache::setHeaders(false);
     }
@@ -2483,8 +2491,9 @@ function checkFileChmod(string $dir, int $chm): string {
 }
 
 # Saving configurations to a file
-# A value whose line would pass the 180 character limit of .rules/global.md is emitted as a concatenation across lines, split on raw characters and escaped per chunk
-# The split is deterministic, so a save of an unchanged configuration reproduces the file byte for byte and the round trip the settings tabs rely on still holds
+# One value is one line however long it is: this file is stored data, not code anybody reads, and the line limit of .rules/global.md governs what a person writes
+# Line endings are normalized on the way in, because a textarea posts CRLF and a stored configuration is a source file of this repository, which is LF only
+# The output is deterministic, so a save of an unchanged configuration reproduces the file byte for byte and the round trip the settings tabs rely on still holds
 function setConfigFile(string $fp, array $arr, array $act = []): void {
     static $reserved = ['system.php', 'header.php', 'chmod.php', 'local.php'];
     if (in_array($fp, $reserved)) return;
@@ -2496,36 +2505,19 @@ function setConfigFile(string $fp, array $arr, array $act = []): void {
             foreach ($val as $k => $vv) $val[$k] = $norm($vv);
             return $val;
         }
-        return is_bool($val) ? (string)(int)$val : (string)$val;
+        if (is_bool($val)) return (string)(int)$val;
+        return str_replace(["\r\n", "\r"], "\n", (string)$val);
     };
     foreach ($arr as $key => $val) $arr[$key] = $norm($val);
     $key  = pathinfo(basename($fp), PATHINFO_FILENAME);
     $data = ($key === 'global') ? $arr : [$key => $arr];
-    $wrap = function (string $val, string $ind, int $head): string {
-        $goal = $ind.'    .';
-        $step = 180 - $head - 3;
-        $rest = 180 - strlen($goal) - 3;
-        $out = '';
-        $from = 0;
-        $size = strlen($val);
-        while ($from < $size) {
-            $take = '';
-            while ($from < $size && strlen(var_export($take.$val[$from], true)) - 2 <= $step) $take .= $val[$from++];
-            if ($take === '') $take = $val[$from++];
-            $out .= ($out === '' ? '' : "\n".$goal).var_export($take, true);
-            $step = $rest;
-        }
-        return $out;
-    };
-    $export = function (array $arr, int $dep = 0) use (&$export, $wrap): string {
+    $export = function (array $arr, int $dep = 0) use (&$export): string {
         $pad = str_repeat('    ', $dep);
         $ind = $pad.'    ';
         $out = '['."\n";
         foreach ($arr as $key => $val) {
-            $head = $ind.var_export($key, true).' => ';
             $body = is_array($val) ? $export($val, $dep + 1) : var_export($val, true);
-            if (!is_array($val) && strlen($head.$body) + 1 > 180) $body = $wrap($val, $ind, strlen($head));
-            $out .= $head.$body.','."\n";
+            $out .= $ind.var_export($key, true).' => '.$body.','."\n";
         }
         return $out.$pad.']';
     };

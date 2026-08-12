@@ -59,31 +59,13 @@ function setConfigFile(string $fp, array $arr, array $act = []): void {
     foreach ($arr as $key => $val) $arr[$key] = $norm($val);
     $key = pathinfo(basename($fp), PATHINFO_FILENAME);
     $data = ($key === 'global') ? $arr : [$key => $arr];
-    $wrap = function (string $val, string $ind, int $head): string {
-        $goal = $ind.'    .';
-        $step = 180 - $head - 3;
-        $rest = 180 - strlen($goal) - 3;
-        $out = '';
-        $from = 0;
-        $size = strlen($val);
-        while ($from < $size) {
-            $take = '';
-            while ($from < $size && strlen(var_export($take.$val[$from], true)) - 2 <= $step) $take .= $val[$from++];
-            if ($take === '') $take = $val[$from++];
-            $out .= ($out === '' ? '' : "\n".$goal).var_export($take, true);
-            $step = $rest;
-        }
-        return $out;
-    };
-    $exp = function (array $arr, int $dep = 0) use (&$exp, $wrap): string {
+    $exp = function (array $arr, int $dep = 0) use (&$exp): string {
         $pad = str_repeat('    ', $dep);
         $ind = $pad.'    ';
         $out = '['."\n";
         foreach ($arr as $key => $val) {
-            $head = $ind.var_export($key, true).' => ';
             $body = is_array($val) ? $exp($val, $dep + 1) : var_export($val, true);
-            if (!is_array($val) && strlen($head.$body) + 1 > 180) $body = $wrap($val, $ind, strlen($head));
-            $out .= $head.$body.','."\n";
+            $out .= $ind.var_export($key, true).' => '.$body.','."\n";
         }
         return $out.$pad.']';
     };

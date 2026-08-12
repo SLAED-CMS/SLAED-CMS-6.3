@@ -42,7 +42,7 @@ Comments and private messages never carry the tags at all, whoever writes them: 
 
 Preview and publication must resolve the capability identically. A preview therefore renders the exact string the save handler would store, which means the add/reply form reads its body with `getVar(..., 'text')`, never `'raw'`. Reading a body raw for preview is what once let an anonymous request drive trusted rendering — and with `[usephp]` restored that defect is remote code execution, not merely stored XSS. It must not reappear.
 
-Because `[usephp]` output is produced per render, any cache that stores rendered content must exclude sources containing it; `modules/news/index.php` does so in its parser cache guard.
+Because `[usephp]` output is produced per render, no cache may store it. The exclusion lives in the parser itself: the handler sets `$this->vary`, as the `[block=id]` handler does, and `filterContent()` skips the write for any source whose render varied. No caller has to know the rule, and a source that gained the tag stops being stored the moment it is parsed again.
 
 ## Supported Markup
 

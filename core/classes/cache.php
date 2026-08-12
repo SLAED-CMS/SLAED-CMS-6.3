@@ -11,6 +11,8 @@ class Cache {
     private const EXTS = ['html', 'css', 'js', 'json'];
     private const SWEEP = ['html', 'assets', 'data', 'locks'];
     private const DROP = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid', 'yclid', 'fbclid', '_openstat'];
+    # How long a generated static document may sit in a browser cache; the OpenSearch and XSL descriptions change with a release, not with a setting, so no field governs them
+    public const STATICDAYS = 7;
     private static bool $bumped = false;
     private static $hold = null;
 
@@ -55,8 +57,16 @@ class Cache {
     }
 
     # Read a cache file and return its body or an empty string when it cannot be read
+    # A stored file that cannot be read is the one cache failure nothing else reports: the caller renders the page again and the guard prevents the warning that would name it
+    # It is recorded once per process, because a site whose cache directory lost its permissions would otherwise pay a locked append for every read of every page
     public static function getBody(string $file): string {
-        if (!is_file($file) || !is_readable($file)) return '';
+        static $told = false;
+        if (!is_file($file)) return '';
+        if (!is_readable($file)) {
+            if (!$told) Logger::addFile('error', 'Cache file is not readable', ['path' => $file]);
+            $told = true;
+            return '';
+        }
         $body = file_get_contents($file);
         return ($body !== false) ? $body : '';
     }

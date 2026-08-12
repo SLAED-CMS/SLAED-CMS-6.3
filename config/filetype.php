@@ -7,13 +7,11 @@
 return [
     'filetype' => [
         '7z' => '<a href="[src]" target="_blank" rel="noopener" title="[title]">[title]</a>',
-        'avif' => '<a rel="[rel]" title="[title]" href="[src]" class="sl-attach sl-attach-[align]"><img src="[tsrc]" style="max-width:[twidth]px" alt="[title]" loading="lazy"></a'
-            .'>',
+        'avif' => '<a rel="[rel]" title="[title]" href="[src]" class="sl-attach sl-attach-[align]"><img src="[tsrc]" style="max-width:[twidth]px" alt="[title]" loading="lazy"></a>',
         'flac' => '<audio controls preload="metadata" src="[src]" title="[title]"></audio>',
         'gif' => '<a rel="[rel]" title="[title]" href="[src]" class="sl-attach sl-attach-[align]"><img src="[tsrc]" style="max-width:[twidth]px" alt="[title]" loading="lazy"></a>',
         'gz' => '<a href="[src]" target="_blank" rel="noopener" title="[title]">[title]</a>',
-        'jpeg' => '<a rel="[rel]" title="[title]" href="[src]" class="sl-attach sl-attach-[align]"><img src="[tsrc]" style="max-width:[twidth]px" alt="[title]" loading="lazy"></a'
-            .'>',
+        'jpeg' => '<a rel="[rel]" title="[title]" href="[src]" class="sl-attach sl-attach-[align]"><img src="[tsrc]" style="max-width:[twidth]px" alt="[title]" loading="lazy"></a>',
         'jpg' => '<a rel="[rel]" title="[title]" href="[src]" class="sl-attach sl-attach-[align]"><img src="[tsrc]" style="max-width:[twidth]px" alt="[title]" loading="lazy"></a>',
         'm4a' => '<audio controls preload="metadata" src="[src]" title="[title]"></audio>',
         'mp3' => '<audio controls preload="metadata" src="[src]" title="[title]"></audio>',
@@ -27,8 +25,7 @@ return [
         'tar' => '<a href="[src]" target="_blank" rel="noopener" title="[title]">[title]</a>',
         'wav' => '<audio controls preload="metadata" src="[src]" title="[title]"></audio>',
         'webm' => '<video controls preload="metadata" width="[width]" height="[height]" src="[src]" title="[title]"></video>',
-        'webp' => '<a rel="[rel]" title="[title]" href="[src]" class="sl-attach sl-attach-[align]"><img src="[tsrc]" style="max-width:[twidth]px" alt="[title]" loading="lazy"></a'
-            .'>',
+        'webp' => '<a rel="[rel]" title="[title]" href="[src]" class="sl-attach sl-attach-[align]"><img src="[tsrc]" style="max-width:[twidth]px" alt="[title]" loading="lazy"></a>',
         'zip' => '<a href="[src]" target="_blank" rel="noopener" title="[title]">[title]</a>',
     ],
 ];

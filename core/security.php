@@ -72,13 +72,14 @@ if ($conf['security']['error'] === 2) {
 if (session_status() === PHP_SESSION_NONE) session_start();
 
 # Flood Protection
+# The report names the fields and does not quote them: Logger already stores the request data of the same entry with every secret masked, and a dump here would restore the password
 if (!defined('ADMIN_FILE') && $conf['security']['flood']) {
     $ctime = time();
     $ftime = $ctime - intval($conf['security']['flood_t']);
     $flood = (isset($_SESSION[$conf['user_c'].'-flood']) && $_SESSION[$conf['user_c'].'-flood'] > $ftime) ? 1 : 0;
     if ($conf['security']['flood'] == 3 && $flood) addWarnReport('Flood attack');
-    if ($conf['security']['flood'] == 2 && isset($_GET) && $flood) addWarnReport('Flood in GET - '.print_r($_GET, true));
-    if (isset($_POST) && $flood) addWarnReport('Flood in POST - '.print_r($_POST, true));
+    if ($conf['security']['flood'] == 2 && isset($_GET) && $flood) addWarnReport('Flood in GET - '.implode(', ', array_keys($_GET)));
+    if (isset($_POST) && $flood) addWarnReport('Flood in POST - '.implode(', ', array_keys($_POST)));
     $_SESSION[$conf['user_c'].'-flood'] = $ctime;
 }
 
