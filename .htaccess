@@ -22,11 +22,12 @@ ErrorDocument 502 /error.html
 ErrorDocument 504 /error.html
 
 # Deflate compression (Apache fallback; on nginx/LiteSpeed configure gzip/brotli in the server config)
-# WOFF2/WOFF are already compressed and are intentionally excluded
+# The filter is chosen by response type and not by file name, which is what covers the pages themselves: they are built by index.php and no file-name rule reaches them
+# WOFF2/WOFF, images and archives are already compressed and are intentionally left out
 <IfModule mod_deflate.c>
-<FilesMatch "\.(js|css|svg|xml|json|txt)$">
-SetOutputFilter DEFLATE
-</FilesMatch>
+AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript text/xml text/xsl
+AddOutputFilterByType DEFLATE application/javascript application/json application/xml application/xhtml+xml
+AddOutputFilterByType DEFLATE application/rss+xml application/xslt+xml application/opensearchdescription+xml image/svg+xml
 </IfModule>
 
 # Browser cache expires (Apache fallback; on nginx/LiteSpeed configure expires/Cache-Control in the server config)

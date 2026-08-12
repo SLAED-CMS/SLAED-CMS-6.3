@@ -1197,11 +1197,11 @@ function deleteFavorite(): string {
 }
 
 # Output the RSS 2.0 feed for the specified module and optional category
+# Every address is escaped before it enters the document: the ampersand of a query string is a character reference in XML, and a reader that parses strictly rejects the whole feed
 function getRssChannel() {
     global $db, $conf, $prs;
     header_remove('X-Content-Type-Options');
     header('Content-Type: application/rss+xml; charset='._CHARSET);
-    header('Content-Encoding: none');
 
     $name = filterVar(getVar('post', 'name', 'text', '') ?: getVar('get', 'name', 'text', ''));
     $hmodul = explode(',', $conf['module']);
@@ -1260,44 +1260,47 @@ function getRssChannel() {
     ."<rss version=\"2.0\">\n"
     ."<channel>\n"
     .'<title>'.htmlspecialchars($conf['sitename'])."</title>\n"
-    .'<link>'.$conf['homeurl']."</link>\n"
+    .'<link>'.htmlspecialchars($conf['homeurl'])."</link>\n"
     .'<description>'.htmlspecialchars($conf['slogan'])."</description>\n"
     .'<generator>SLAED CMS '.$conf['version']."</generator>\n"
     .'<copyright>Copyright (c) SLAED CMS '.$conf['version']."</copyright>\n"
     .'<language>'.htmlspecialchars(substr(_LOCALE, 0, 2))."</language>\n"
-    .'<lastBuildDate>'.date('D, j M Y H:m:s O')."</lastBuildDate>\n\n";
+    .'<lastBuildDate>'.date('D, j M Y H:i:s O')."</lastBuildDate>\n\n";
     if ($name && $name != 'content' && $name != 'shop' && $result) {
         while ([$rid, $uname, $rtitle, $rtime, $rhometext, $rctitle, $user_name] = $db->getSqlRow($result)) {
             $rauthor = ($user_name) ? $user_name : (($uname) ? $uname : _ANONYM);
+            $rurl = htmlspecialchars($conf['homeurl'].'/index.php?name='.$name.'&op=view&id='.$rid);
             $content .= "<item>\n"
             .'<title>'.htmlspecialchars($rtitle)."</title>\n"
-            .'<pubDate>'.htmlspecialchars(date('D, j M Y H:m:s O', strtotime($rtime)))."</pubDate>\n"
-            .'<guid>'.$conf['homeurl'].'/index.php?name='.$name.'&op=view&id='.$rid."</guid>\n"
-            .'<link>'.$conf['homeurl'].'/index.php?name='.$name.'&op=view&id='.$rid."</link>\n"
+            .'<pubDate>'.htmlspecialchars(date('D, j M Y H:i:s O', strtotime($rtime)))."</pubDate>\n"
+            .'<guid>'.$rurl."</guid>\n"
+            .'<link>'.$rurl."</link>\n"
             .'<description>'.htmlspecialchars($prs->filterContent($rhometext, false, $name))."</description>\n"
-            .'<comments>'.$conf['homeurl'].'/index.php?name='.$name.'&op=view&id='.$rid.'#'.$rid."</comments>\n";
+            .'<comments>'.$rurl.'#'.$rid."</comments>\n";
             $content .= ($rctitle) ? '<category>'.htmlspecialchars($rctitle)."</category>\n" : '';
             $content .= '<author>antispam@antispam.com ('.htmlspecialchars($rauthor).")</author>\n"
             ."</item>\n\n";
         }
     } elseif ($name && $name == 'content' && $result) {
         [$rid, $rtitle, $rhometext, $rtime] = $db->getSqlRow($result);
+        $rurl = htmlspecialchars($conf['homeurl'].'/index.php?name='.$name.'&op=view&id='.$rid);
         $content .= "<item>\n"
         .'<title>'.htmlspecialchars($rtitle)."</title>\n"
-        .'<pubDate>'.htmlspecialchars(date('D, j M Y H:m:s O', strtotime($rtime)))."</pubDate>\n"
-        .'<guid>'.$conf['homeurl'].'/index.php?name='.$name.'&op=view&id='.$rid."</guid>\n"
-        .'<link>'.$conf['homeurl'].'/index.php?name='.$name.'&op=view&id='.$rid."</link>\n"
+        .'<pubDate>'.htmlspecialchars(date('D, j M Y H:i:s O', strtotime($rtime)))."</pubDate>\n"
+        .'<guid>'.$rurl."</guid>\n"
+        .'<link>'.$rurl."</link>\n"
         .'<description>'.htmlspecialchars($prs->filterContent($rhometext, false, $name))."</description>\n"
         ."</item>\n\n";
     } elseif ($name && $name == 'shop' && $result) {
         while ([$rid, $rtitle, $rtime, $rhometext, $rctitle] = $db->getSqlRow($result)) {
+            $rurl = htmlspecialchars($conf['homeurl'].'/index.php?name='.$name.'&op=view&id='.$rid);
             $content .= "<item>\n"
             .'<title>'.htmlspecialchars($rtitle)."</title>\n"
-            .'<pubDate>'.htmlspecialchars(date('D, j M Y H:m:s O', strtotime($rtime)))."</pubDate>\n"
-            .'<guid>'.$conf['homeurl'].'/index.php?name='.$name.'&op=view&id='.$rid."</guid>\n"
-            .'<link>'.$conf['homeurl'].'/index.php?name='.$name.'&op=view&id='.$rid."</link>\n"
+            .'<pubDate>'.htmlspecialchars(date('D, j M Y H:i:s O', strtotime($rtime)))."</pubDate>\n"
+            .'<guid>'.$rurl."</guid>\n"
+            .'<link>'.$rurl."</link>\n"
             .'<description>'.htmlspecialchars($prs->filterContent($rhometext, false, $name))."</description>\n"
-            .'<comments>'.$conf['homeurl'].'/index.php?name='.$name.'&op=view&id='.$rid.'#'.$rid."</comments>\n";
+            .'<comments>'.$rurl.'#'.$rid."</comments>\n";
             $content .= ($rctitle) ? '<category>'.htmlspecialchars($rctitle)."</category>\n" : '';
             $content .= "</item>\n\n";
         }
@@ -1307,19 +1310,20 @@ function getRssChannel() {
 }
 
 # Output the OpenSearch description XML for browser search integration
+# Every address is escaped before it enters the document: an ampersand of a query string is a character reference in XML, and a browser that parses this strictly drops the whole file
 function getOpenSearch() {
     global $conf;
     header('Content-Type: application/opensearchdescription+xml');
-    header('Content-Encoding: none');
+    $find = htmlspecialchars($conf['homeurl'].'/index.php?name=search&word={searchTerms}');
     return '<?xml version="1.0" encoding="'._CHARSET."\"?>\n"
     ."<OpenSearchDescription xmlns=\"http://a9.com/-/spec/opensearch/1.1/\">\n"
     .'<ShortName>'.htmlspecialchars($conf['sitename'])."</ShortName>\n"
     .'<Description>'.htmlspecialchars($conf['slogan'])."</Description>\n"
-    .'<Url type="application/atom+xml" template="'.$conf['homeurl']."/index.php?name=search&word={searchTerms}\"/>\n"
-    .'<Url type="application/rss+xml" template="'.$conf['homeurl']."/index.php?name=search&word={searchTerms}\"/>\n"
-    .'<Url type="text/html" template="'.$conf['homeurl']."/index.php?name=search&word={searchTerms}\"/>\n"
+    .'<Url type="application/atom+xml" template="'.$find."\"/>\n"
+    .'<Url type="application/rss+xml" template="'.$find."\"/>\n"
+    .'<Url type="text/html" template="'.$find."\"/>\n"
     .(is_file(BASE_DIR.'/templates/'.$conf['theme'].'/images/favicon.svg')
-        ? '<Image height="16" width="16" type="image/svg+xml">'.$conf['homeurl'].'/templates/'.$conf['theme'].'/images/favicon.svg</Image>\n'
+        ? '<Image height="16" width="16" type="image/svg+xml">'.htmlspecialchars($conf['homeurl'].'/templates/'.$conf['theme'].'/images/favicon.svg')."</Image>\n"
         : '')
     .'<Attribution>Copyright (c) SLAED CMS '.$conf['version']."</Attribution>\n"
     .'<Language>'.htmlspecialchars(substr(_LOCALE, 0, 2))."</Language>\n"

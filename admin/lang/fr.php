@@ -479,7 +479,6 @@ define('_RSSUSE','Activer afficher les flux RSS?');
 define('_RULACT',"Une confirmation de règles lors de l'enregistrement de l'utilisateur?");
 define('_SCRIPTASIN','Chargement asynchrone des scripts?');
 define('_SCRIPTBOT','Les scripts côté transmis à la baisse?');
-define('_SCRIPTCOMP','Compresser les scripts?');
 define('_SCRIPTFILE','Les fichiers de script');
 define('_SCRIPTFILEINFO','Indiquer directement les fichiers de script.');
 define('_SCRIPTHEAD',"Afficher le contenu de script dans l'en-tête?");

@@ -730,7 +730,6 @@ function config(): void {
         'is_config' => true,
     ])];
     $rows[] = ['label_html' => _SCRIPTHEAD, 'field_html' => getTplRadioGroup(['name' => 'script_h', 'value' => $conf['script_h'], 'options' => $yesno])];
-    $rows[] = ['label_html' => _SCRIPTCOMP, 'field_html' => getTplRadioGroup(['name' => 'script_c', 'value' => $conf['script_c'], 'options' => $yesno])];
     $rows[] = ['label_html' => _SCRIPTASIN, 'field_html' => getTplRadioGroup(['name' => 'script_a', 'value' => $conf['script_a'], 'options' => $yesno])];
     $rows[] = ['label_html' => _SCRIPTBOT, 'field_html' => getTplRadioGroup(['name' => 'script_b', 'value' => $conf['script_b'], 'options' => $yesno])];
     $lines = [_DIR.': storage/cache'];
@@ -912,7 +911,6 @@ function save(): void {
             'cache_script' => getVar('post', 'cache_script', 'num'),
             'script_f' => strtr(getVar('post', 'script_f', 'text', 'plugins/system/global-func.js,plugins/system/slaed.js,plugins/tablesort/tablesort.min.js'), $kprotect),
             'script_h' => getVar('post', 'script_h', 'num'),
-            'script_c' => getVar('post', 'script_c', 'num'),
             'script_a' => getVar('post', 'script_a', 'num'),
             'script_b' => getVar('post', 'script_b', 'num'),
             'mtemp' => filterTrustedTags((string)getVar('post', 'mtemp', 'raw'), isAdmin(true)),

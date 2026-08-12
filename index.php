@@ -223,7 +223,7 @@ if (empty($go)) {
     Cache::setHeaders(true, Cache::STATICDAYS);
     echo getOpenSearch();
 } elseif ($go == 'xsl') {
-    Cache::setHeaders(true, Cache::STATICDAYS);
+    Cache::setHeaders(true, Cache::STATICDAYS, 'text/xsl');
     echo getOpenXsl();
 } elseif ($go == 'asset') {
     $hash = getVar('req', 'file', 'var');

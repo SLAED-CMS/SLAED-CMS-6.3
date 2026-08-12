@@ -479,7 +479,6 @@ define('_RSSUSE','Aktiviere Lesen von Überschriften?');
 define('_RULACT','Die Bestдtigung der Regeln bei der Registrierung der Benutzer zu fordern?');
 define('_SCRIPTASIN','Asynchrones laden der Skripte?');
 define('_SCRIPTBOT','Die Seitenskripte nach unten ubertragen?');
-define('_SCRIPTCOMP','Skripte komprimieren?');
 define('_SCRIPTFILE','Skriptdateien');
 define('_SCRIPTFILEINFO','Bitte direkt Skriptdateien.');
 define('_SCRIPTHEAD','Ausgegeben werden die Inhalte der Skripte in der Kopfzeile?');

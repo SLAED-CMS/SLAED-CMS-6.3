@@ -200,11 +200,13 @@ class Cache {
     }
 
     # Emit browser cache, content type, and security headers; a public response drops every pending cookie so a shared proxy can never hand one visitor state to another
+    # It also drops the Pragma that PHP emits for every session, because a response cannot both invite caching and forbid it, whatever an old intermediary decides to honour
     public static function setHeaders(bool $public, int $days = 0, string $type = 'text/html', int $mtime = 0, bool $immutable = false): void {
         $ctype = ($type === 'text/html') ? $type.'; charset='._CHARSET : $type;
         header('Content-Type: '.$ctype);
         if ($public) {
             header_remove('Set-Cookie');
+            header_remove('Pragma');
             $max = $immutable ? 31536000 : $days * 86400;
             header('Cache-Control: public, max-age='.$max.($immutable ? ', immutable' : ''));
             header('Expires: '.gmdate('D, d M Y H:i:s', time() + $max).' GMT');

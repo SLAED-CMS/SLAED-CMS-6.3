@@ -479,7 +479,6 @@ define('_RSSUSE','Activate Headlines Reader?');
 define('_RULACT','To demand acknowledgement of rules at registration of users?');
 define('_SCRIPTASIN','Asynchronous loading of scripts?');
 define('_SCRIPTBOT','The side scripts downward transmitted?');
-define('_SCRIPTCOMP','Compress scripts?');
 define('_SCRIPTFILE','Script files');
 define('_SCRIPTFILEINFO','Directly include script files.');
 define('_SCRIPTHEAD','To display the contents of the scripts in the header?');

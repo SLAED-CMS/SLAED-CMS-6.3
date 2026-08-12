@@ -157,15 +157,16 @@ Built-in OAuth2 Authorization Code Flow with PKCE (Google and Microsoft in V1, n
 - Providers are configured in the admin panel under Users settings (Client ID / Client Secret per provider) or in `config/oauth.php`. The redirect URI to register at the provider console is `https://your-site/index.php?name=account&op=oauth`.
 - Accounts created through OAuth have no password (an invalid `!`-prefixed marker is stored); a password can be added later via password recovery.
 
-### Page Cache Settings
+### Cache And Asset Settings
 
-The page cache is governed by four fields: `cache`, `cache_t`, `cache_b`, `cache_l`.
+`config/global.php` holds four page-cache fields: `cache`, `cache_t`, `cache_b`, `cache_l`. Keys not in that set are ignored and disappear on the next save of the settings form.
 
-- `cache_b` is a number of days of browser caching, `0` turns it off. An installation that ran `cache_b = '1'` must set `cache_b` to the value of its former `cache_d`, because a bare `1` now means one day instead of that duration.
-- `cache_c` and `cache_d` are gone from `config/global.php`. The stored page is what is served, so the second minify pass has nothing left to decide, and the browser duration lives in `cache_b`.
-- Browser caching no longer depends on `db_t`. A publicly cached response drops the generation-time footer instead, so a copy the browser answers from its own store cannot show the timing of a foreign request.
-- `?go=search` and `?go=xsl` answer with a fixed seven days (`Cache::STATICDAYS`), `?go=asset` keeps its immutable year. Neither reads a setting any more.
-- `cache_version` is `4`, so `config/local.php` is rebuilt on the first request after the upgrade. Stored pages are addressed under the `pc3` key, which makes every entry written by an earlier release unreachable at once; the `cachegc` job then removes the files.
+Action required on upgrade:
+
+- Set `cache_b` to the number of days a browser may keep a page, `0` for off.
+- Rebuild the JS bundle: the asset key changes with `ASSETS_VER`, so nothing has to be cleared by hand.
+
+Everything else follows automatically: `cache_version` `4` rebuilds `config/local.php` on the first request, and stored pages live under the `pc3` key, which the `cachegc` job cleans up.
 
 ### Database Layer
 

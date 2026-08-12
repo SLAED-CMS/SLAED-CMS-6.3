@@ -22,9 +22,9 @@ The core parser operation. Processes all markup but **skips** the global search-
 
 The format names the syntax the stored source was written in. It is an input to rendering, not a security switch:
 * **`'plain'`:** no Markdown construct is recognised — no headings, lists, tables, quotes, emphasis, code fences, inline code or `[t](u)` links. A blank line separates paragraphs and every other line ending becomes a `<br>`. The bracket layer (BBCode, smilies, attachments) still runs.
-* **anything else, including `''`:** Markdown, which is the behaviour every caller had before the parameter existed.
+* **anything else, including `''`:** Markdown, which is what a caller that says nothing gets.
 
-No stored content passes this argument. Comments and private messages used to carry a `format` column and hand it over here; `docs/CONTENT-CONTRACT-2026.md` removed both columns, because `plain` and the editors are input interfaces rather than storage formats and rendering must not branch on the editor an author typed in. Every caller of stored content therefore omits the argument, and the parameter survives for a caller that knows the syntax of a string it built itself.
+No stored content passes this argument, and no table carries a format column: `plain` and the editors are input interfaces rather than storage formats, and rendering must not branch on the editor an author happened to type in. The argument belongs to a caller that knows the syntax of a string it built itself.
 
 ## Security Context (`$safe`)
 

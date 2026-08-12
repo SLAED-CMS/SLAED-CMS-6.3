@@ -32,7 +32,8 @@ define('UPLOADS_DIR', BASE_DIR.'/uploads');
 
 # Asset bundle version; bump on every release that ships changed CSS/JS/fonts so
 # cached immutable bundles are invalidated even when deployment preserves mtimes
-define('ASSETS_VER', 2);
+# Bump it for a change of the builder as well: the key covers the sources and the settings, not the code that joins them, so a stored bundle would outlive the rule that produced it
+define('ASSETS_VER', 3);
 
 # Load the runtime config from cache, rebuilding it from source if needed; the rebuild also stores derived data (asset manifests per theme, parsed SEO graph/schema, logo sizes) under $conf['derived'], so theme asset or logo changes need a config rebuild (admin save or deleting config/local.php) to take effect
 function getConfig(): array {
@@ -1628,10 +1629,12 @@ function getPageHash(): string {
 }
 
 # Sweep stale page-cache files older than the retention window as a scheduler job and report the removed count
+# Asset bundles are swept too: a bundle in use has its file rewritten on every rebuild, so only the one no other page points at can reach the retention window, which is a full day of page TTLs
 function addCacheGcTask(): array {
     global $conf;
     $ttl = max((int)$conf['cache_t'] * 24, 86400);
-    $num = Cache::deleteStale('html', $ttl) + Cache::deleteStale('locks', $ttl) + Cache::deleteStale('data', $ttl) + Cache::deleteStaleTree(CACHE_DIR.'/templates', $ttl);
+    $num = Cache::deleteStale('html', $ttl) + Cache::deleteStale('locks', $ttl) + Cache::deleteStale('data', $ttl)
+        + Cache::deleteStale('assets', $ttl) + Cache::deleteStaleTree(CACHE_DIR.'/templates', $ttl);
     return ['status' => 'success', 'message' => 'Removed '.$num.' cache files'];
 }
 
@@ -2570,6 +2573,8 @@ function getAssetFiles(array $entries, string $ext): array {
 }
 
 # Definition and processing of header scripts files
+# Concatenated sources are separated by a semicolon and a line break, never by a space: a file ending in a line comment without a break would swallow the next one,
+# and a statement left without its own semicolon would join the first line of the following file instead of ending where its author ended it
 function doScript(): string {
     global $theme, $conf, $tpl;
     $async = ($conf['script_a']) ? 'async ' : '';
@@ -2587,7 +2592,7 @@ function doScript(): string {
         $route = '';
         if ($conf['cache_script']) {
             $fp = $drv['jsfp'] ?? sha1(serialize(array_map(static fn($file) => is_file($file) ? filemtime($file).':'.filesize($file) : '0:0', array_combine($array, $array) ?: [])));
-            $hash = Cache::getHash(['assets-v'.ASSETS_VER, $theme, 'js', $fp, $conf['script_c'], $conf['script_h'], $conf['script_a']]);
+            $hash = Cache::getHash(['assets-v'.ASSETS_VER, $theme, 'js', $fp, $conf['script_h'], $conf['script_a']]);
             $sfile = Cache::getPath('assets', $hash, 'js');
             $route = 'index.php?go=asset&file='.$hash.'&type=js';
         }
@@ -2597,14 +2602,14 @@ function doScript(): string {
             foreach ($array as $file) {
                 if (file_exists($file)) {
                     if ($conf['cache_script'] || $conf['script_h']) {
-                        $cont = file_get_contents($file);
-                        $arr[] = ($conf['script_c']) ? getCompressCode($cont) : $cont;
+                        $arr[] = file_get_contents($file);
                     } else {
                         $arr[] = $tpl->getHtmlFrag('head-script-src', ['src' => $file, 'attr' => trim($async)]);
                     }
                 }
             }
-            $cont = ($conf['script_h']) ? $tpl->getHtmlFrag('head-script-inline', ['js' => implode(' ', $arr)]) : (($conf['cache_script']) ? implode(' ', $arr) : implode("\n", $arr));
+            $bond = ($conf['cache_script'] || $conf['script_h']) ? implode(";\n", $arr) : implode("\n", $arr);
+            $cont = ($conf['script_h']) ? $tpl->getHtmlFrag('head-script-inline', ['js' => $bond]) : $bond;
             if ($conf['cache_script']) {
                 Cache::setBody($sfile, $cont);
                 $cont = (is_file($sfile) && !$conf['script_h']) ? $tpl->getHtmlFrag('head-script-src', ['src' => $route, 'attr' => trim($async)]) : $cont;
@@ -2670,7 +2675,7 @@ function doCss(): string {
                             $cont
                         );
                         if ($conf['css_e']) $cont = preg_replace_callback('#url\((.*?\.(png|jpg|jpeg|gif|svg|bmp))\)#i', 'getImgEncode', $cont);
-                        $arr[] = ($conf['css_c']) ? getCompressCss($cont) : $cont;
+                        $arr[] = ($conf['css_c'] && !str_contains(basename($file), '.min.')) ? getCompressCss($cont) : $cont;
                     } else {
                         $arr[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $file, 'type' => '', 'title' => '']);
                     }
@@ -2990,6 +2995,8 @@ function getImageBox(string $file): array {
 }
 
 # Compress CSS
+# A file that is already minified is left alone: it carries no comments and no indentation to win back, and running a regex over it only spends time on the build
+# There is no counterpart for scripts on purpose: a regex cannot tell code from the inside of a string, so stripping spaces around braces and operators breaks valid JavaScript
 function getCompressCss(string $css): string {
     # Remove multiline comment
     $css = preg_replace('#\/\*(?!-)[\x00-\xff]*?\*\/#', '', $css);
@@ -3002,30 +3009,16 @@ function getCompressCss(string $css): string {
     return $css;
 }
 
-# Compress Code
-function getCompressCode(string $code): string {
-    # Remove multiline comment
-    $code = preg_replace('#\/\*(?!-)[\x00-\xff]*?\*\/#', '', $code);
-    # Remove tabs and extra spaces
-    $code = str_replace(["\t", '  ', '   ', '    '], ' ', $code);
-    # Remove other spaces before/after )
-    $code = preg_replace(['#( )+\)#', '#\)( )+#'], ')', $code);
-    # Remove spaces that can be removed
-    $code = preg_replace('#\s?([\{\=-])\s?#', '\\1', $code);
-    return $code;
-}
-
 # Normalize final HTML output while keeping the template's own indentation, doing heavy work only on the few multiline matches
 # Raw bodies of script/style/pre/code/textarea and comments are protected first
 # Then multiline class lists and multiline tags are squeezed to a single line
-# full=false drops blank lines but keeps each line leading indent and leaves all other template whitespace untouched
-# full=true compresses everything to a single line and strips non-conditional comments
-function getOutputHtml(string $html, bool $full = false): string {
+# Blank lines are dropped, the leading indent of every line is kept, and all other template whitespace is left untouched
+# There is no stronger mode: the page that is served and the page that is stored are the same string, so a second pass would only make the two differ
+function getOutputHtml(string $html): string {
     if ($html === '') return '';
     $keep = [];
-    $html = (string)preg_replace_callback('#<(script|style|pre|code|textarea)\b[^>]*>.*?</\1>|<!--.*?-->#si', static function(array $dat) use (&$keep, $full): string {
+    $html = (string)preg_replace_callback('#<(script|style|pre|code|textarea)\b[^>]*>.*?</\1>|<!--.*?-->#si', static function(array $dat) use (&$keep): string {
         if ($dat[0][1] === '!') {
-            if ($full && !str_starts_with($dat[0], '<!--[')) return '';
             $key = "\x01".count($keep)."\x01";
             $keep[$key] = $dat[0];
             return $key;
@@ -3062,13 +3055,7 @@ function getOutputHtml(string $html, bool $full = false): string {
         }
         return $out;
     }, $html);
-    if ($full) {
-        $html = (string)preg_replace('#>[\s]+<#', '><', $html);
-        $html = (string)preg_replace('#[\r\n\t]+#', ' ', $html);
-        $html = (string)preg_replace('#\s{2,}#', ' ', $html);
-    } else {
-        $html = (string)preg_replace('#\n[ \t\r]*(?=\n)#', '', $html);
-    }
+    $html = (string)preg_replace('#\n[ \t\r]*(?=\n)#', '', $html);
     return strtr($html, $keep);
 }
 

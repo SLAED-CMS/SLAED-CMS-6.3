@@ -368,9 +368,13 @@ configuration that the operator must apply.
 ### Apache / LiteSpeed
 
 `.htaccess` already enables `mod_deflate` and `mod_expires` as a fallback:
-text assets are compressed, images/CSS/JS get 30 days, fonts get 1 year. WOFF2
+text responses are compressed, images/CSS/JS get 30 days, fonts get 1 year. WOFF2
 is intentionally excluded from compression because it is already compressed.
 This works out of the box on Apache and on LiteSpeed in `.htaccess`-compat mode.
+
+The compression filter is selected by response type (`AddOutputFilterByType`),
+which is what covers the pages themselves: a page is built by `index.php`, so a
+rule matching file names would never reach the largest response of the site.
 
 ### nginx
 
@@ -380,6 +384,7 @@ The known production gap is that WOFF2 and some SVG have no `Cache-Control`.
 ```nginx
 # Compression (the PHP bundle is served via index.php?go=asset, so gzip_proxied is required).
 # Do not gzip woff2/woff — they are already compressed.
+# text/html is compressed by nginx whenever gzip is on and must not be listed in gzip_types: naming it there only produces a duplicate-MIME warning.
 gzip on;
 gzip_vary on;
 gzip_proxied any;
