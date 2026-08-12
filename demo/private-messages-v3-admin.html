@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED — ЛС, вариант 3: компактный административный стиль</title>
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<link rel="stylesheet" href="../plugins/editors/toastui/assets/toastui-editor.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/editors/toastui/skin.css">
+<style>
+/* ==== Общая обвязка демо ==== */
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color: var(--sl-color-text); font: 13px/1.45 Arial, system-ui, sans-serif; }
+a { text-decoration: none; }
+.sl-pmdemo-head { padding: 28px max(20px, calc((100vw - 1180px) / 2)) 24px; border-bottom: 1px solid var(--sl-color-border); background: radial-gradient(circle at 88% 0, color-mix(in srgb, var(--sl-color-brand) 18%, transparent), transparent 32%), var(--sl-color-bg); }
+.sl-pmdemo-back { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px; color: var(--sl-color-text-muted); font-size: 12px; }
+.sl-pmdemo-back:hover { color: var(--sl-color-primary); }
+.sl-pmdemo-head h1 { margin: 0 0 10px; color: var(--sl-color-text-heading); font-size: clamp(23px, 4vw, 32px); line-height: 1.12; }
+.sl-pmdemo-head p { max-width: 840px; margin: 0 0 14px; color: var(--sl-color-text-muted); }
+.sl-pmdemo-chips { display: flex; flex-wrap: wrap; gap: var(--sl-space-sm); }
+.sl-pmdemo-main { width: 1180px; max-width: calc(100% - 28px); margin: 26px auto 0; }
+.sl-pmdemo-sec { margin-bottom: 38px; }
+.sl-pmdemo-sec > h2 { display: flex; align-items: center; gap: 10px; margin: 0 0 6px; color: var(--sl-color-text-heading); font-size: 17px; }
+.sl-pmdemo-sec > h2 > span { display: grid; place-items: center; flex: 0 0 26px; width: 26px; height: 26px; border-radius: 50%; background: var(--sl-color-text-heading); color: var(--sl-color-on-dark); font: bold 11px/1 Arial, sans-serif; }
+.sl-pmdemo-sec > p { margin: 0 0 14px; color: var(--sl-color-text-muted); }
+.sl-pmdemo-frame { container-type: inline-size; padding: 14px; border: 1px solid var(--sl-color-border-subtle); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); box-shadow: var(--sl-shadow-soft); }
+.sl-pmdemo-phones { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; }
+.sl-pmdemo-phone { container-type: inline-size; width: 390px; max-width: 100%; padding: 12px 10px; border: 1px solid var(--sl-color-border-strong); border-radius: 20px; background: var(--sl-color-bg); box-shadow: var(--sl-shadow-panel); }
+.sl-pmdemo-phone > figcaption { margin: 0 0 10px; color: var(--sl-color-text-muted); font-size: 11px; text-align: center; text-transform: uppercase; letter-spacing: 0.08em; }
+:focus-visible { outline: 2px solid var(--sl-color-primary); outline-offset: 2px; border-radius: 3px; }
+
+/* ==== Вариант 3: компактный административный стиль ==== */
+.sl-pmadm { font-size: 12px; }
+
+/* Шапка раздела: вкладки-папки и счётчики в одну строку */
+.sl-pmadm-top { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sl-space-md); padding: 0 0 10px; border-bottom: 2px solid var(--sl-color-border-strong); }
+.sl-pmadm-top h3 { margin: 0; color: var(--sl-color-text-heading); font-size: 15px; }
+.sl-pmadm-tabs { display: flex; gap: 0; margin-left: auto; }
+.sl-pmadm-tabs a { padding: 5px 12px; border: 1px solid var(--sl-color-border-strong); border-right-width: 0; background: var(--sl-color-bg-soft); color: var(--sl-color-text-muted); font-weight: bold; }
+.sl-pmadm-tabs a:first-child { border-radius: var(--sl-radius-control) 0 0 var(--sl-radius-control); }
+.sl-pmadm-tabs a:last-child { border-right-width: 1px; border-radius: 0 var(--sl-radius-control) var(--sl-radius-control) 0; }
+.sl-pmadm-tabs a[aria-current="page"] { background: var(--sl-color-primary); border-color: var(--sl-color-primary); color: var(--sl-color-on-dark); }
+.sl-pmadm-tabs a:not([aria-current]):hover { background: var(--sl-color-bg); color: var(--sl-color-brand-strong); }
+
+/* Строка фильтров: селекты + даты + поиск, всё на одной высоте поля */
+.sl-pmadm-filter { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--sl-space-md); padding: 10px; margin: 10px 0; border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-control); background: var(--sl-color-bg-soft); }
+.sl-pmadm-f { display: grid; gap: 3px; }
+.sl-pmadm-f > span { color: var(--sl-color-text-muted); font-size: 11px; }
+.sl-pmadm-f .sl-field { height: 26px; padding: 0 8px; font-size: 12px; }
+.sl-pmadm-f-wide .sl-field { width: 190px; }
+.sl-pmadm-filter .sl-but { height: 26px; margin: 0; font-size: 12px; }
+.sl-pmadm-filter-end { margin-left: auto; display: flex; gap: var(--sl-space-sm); }
+
+/* Плотная таблица: 26px строка, зебра, липкая шапка */
+.sl-pmadm-table { width: 100%; border-collapse: collapse; }
+.sl-pmadm-table thead th { position: sticky; top: 0; z-index: 2; padding: 6px 8px; background: var(--sl-color-bg-soft-alt); border-bottom: 1px solid var(--sl-color-border-strong); color: var(--sl-color-text-heading); font-size: 11px; font-weight: bold; text-align: left; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+.sl-pmadm-table thead th a { display: inline-flex; align-items: center; gap: 4px; color: inherit; }
+.sl-pmadm-table thead th a .bi { font-size: 10px; opacity: 0.6; }
+.sl-pmadm-table tbody td { padding: 3px 8px; border-bottom: 1px solid var(--sl-color-border-subtle); vertical-align: middle; }
+.sl-pmadm-table tbody tr:nth-child(even of :not(.sl-pmadm-detail)) { background: color-mix(in srgb, var(--sl-color-bg-soft) 55%, transparent); }
+.sl-pmadm-table tbody tr:hover { background: var(--sl-color-bg-soft-alt); }
+.sl-pmadm-table tbody tr[aria-selected="true"] { background: color-mix(in srgb, var(--sl-color-primary) 10%, transparent); box-shadow: inset 3px 0 0 var(--sl-color-primary); }
+.sl-pmadm-c-check { width: 30px; text-align: center; }
+.sl-pmadm-c-check input { margin: 0; }
+.sl-pmadm-c-id { width: 62px; color: var(--sl-color-text-muted); font-family: monospace; }
+.sl-pmadm-c-state { width: 118px; }
+.sl-pmadm-c-user { width: 150px; }
+.sl-pmadm-c-date { width: 126px; color: var(--sl-color-text-muted); white-space: nowrap; }
+.sl-pmadm-c-act { width: 96px; text-align: right; white-space: nowrap; }
+.sl-pmadm-subj { display: block; max-width: 100%; overflow: hidden; color: var(--sl-color-text); text-overflow: ellipsis; white-space: nowrap; }
+.sl-pmadm-subj:hover { color: var(--sl-color-primary); }
+.sl-pmadm-new .sl-pmadm-subj { color: var(--sl-color-text-heading); font-weight: bold; }
+.sl-pmadm-table .sl-chip { height: 20px; padding: 0 6px; font-size: 11px; }
+.sl-pmadm-table .sl-but-mini { --sl-size-chip: 22px; }
+.sl-pmadm-table .sl-but-mini > .bi { font-size: 12px; }
+
+/* Развёрнутая строка вместо отдельной страницы просмотра */
+.sl-pmadm-detail > td { padding: 0 !important; background: var(--sl-color-bg); box-shadow: inset 3px 0 0 var(--sl-color-primary); }
+.sl-pmadm-detail-in { display: grid; grid-template-columns: minmax(0, 1fr) 240px; gap: 14px; padding: 12px 14px 14px; border-bottom: 1px solid var(--sl-color-border-strong); }
+.sl-pmadm-detail-in h4 { display: block; margin: 0 0 8px; color: var(--sl-color-text-heading); font-size: 14px; }
+.sl-pmadm-detail-in p { margin: 0 0 10px; font-size: 12px; }
+.sl-pmadm-detail-in p:last-child { margin-bottom: 0; }
+.sl-pmadm-side { display: grid; align-content: start; gap: var(--sl-space-sm); padding: 10px; border: 1px solid var(--sl-color-border-subtle); border-radius: var(--sl-radius-control); background: var(--sl-color-bg-soft); }
+.sl-pmadm-side dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 3px 8px; margin: 0; font-size: 11px; }
+.sl-pmadm-side dt { color: var(--sl-color-text-muted); }
+.sl-pmadm-side dd { margin: 0; color: var(--sl-color-text-heading); overflow-wrap: anywhere; }
+.sl-pmadm-side-acts { display: flex; flex-wrap: wrap; gap: var(--sl-space-xs); margin-top: 2px; }
+.sl-pmadm-side-acts .sl-but { height: 24px; margin: 0; padding: 0 10px; font-size: 12px; }
+
+/* Форма ответа занимает обе колонки раскрытой строки: редактор шире, чем боковая справка */
+.sl-pmadm-answer { display: grid; gap: var(--sl-space-md); grid-column: 1 / -1; padding-top: 10px; border-top: 1px solid var(--sl-color-border-subtle); }
+.sl-pmadm-answer-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sl-space-md); }
+.sl-pmadm-answer-foot .sl-but { height: 26px; margin: 0; font-size: 12px; }
+.sl-pmadm-answer-foot small { color: var(--sl-color-text-muted); }
+
+/* Низ таблицы: массовое действие + пагинатор в одну полосу */
+.sl-pmadm-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sl-space-md); margin-top: 10px; padding: 8px 10px; border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-control); background: var(--sl-color-bg-soft); }
+.sl-pmadm-foot .sl-field { height: 26px; padding: 0 8px; font-size: 12px; }
+.sl-pmadm-foot .sl-but { height: 26px; margin: 0; font-size: 12px; }
+.sl-pmadm-pages { display: flex; align-items: center; gap: var(--sl-space-xs); margin-left: auto; }
+.sl-pmadm-pages .sl-but-mini { --sl-size-chip: 22px; font-size: 11px; }
+.sl-pmadm-pages small { color: var(--sl-color-text-muted); }
+
+/* Пустое состояние в стиле админ-списка */
+.sl-pmadm-empty td { padding: 26px 10px !important; text-align: center; }
+.sl-pmadm-empty i { display: block; margin-bottom: 6px; color: var(--sl-color-text-subtle); font-size: 30px; }
+.sl-pmadm-empty b { color: var(--sl-color-text-heading); }
+.sl-pmadm-empty p { margin: 4px 0 0; color: var(--sl-color-text-muted); }
+
+/* Мобильная раскладка: служебные колонки скрываются, строка становится двухуровневой */
+@container (max-width: 860px) {
+  .sl-pmadm-tabs { margin-left: 0; width: 100%; }
+  .sl-pmadm-tabs a { flex: 1 1 0; text-align: center; }
+  .sl-pmadm-f-wide .sl-field { width: 100%; }
+  .sl-pmadm-f { flex: 1 1 140px; }
+  .sl-pmadm-filter-end { margin-left: 0; width: 100%; }
+  .sl-pmadm-c-id, .sl-pmadm-c-user { display: none; }
+  .sl-pmadm-c-state { width: 80px; }
+  .sl-pmadm-c-date { width: 92px; font-size: 11px; }
+  .sl-pmadm-c-act { width: 60px; }
+  .sl-pmadm-mobile-from { display: block; color: var(--sl-color-text-muted); font-size: 11px; }
+  .sl-pmadm-detail-in { grid-template-columns: 1fr; }
+  .sl-pmadm-pages { margin-left: 0; width: 100%; }
+}
+.sl-pmadm-mobile-from { display: none; }
+/* Поле сообщения — настоящий редактор Toast UI (plugins/editors/toastui), а не textarea: скрытая textarea остаётся источником, редактор монтируется в соседний div */
+.sl-pm-editor { width: 100%; min-width: 0; }
+.sl-pm-editor .toastui-editor-defaultUI { border-radius: var(--sl-radius-control); }
+.sl-pm-note { margin: 0; color: var(--sl-color-text-muted); font-size: 11px; }
+.sl-pm-note .bi { margin-right: 5px; color: var(--sl-color-primary); }
+</style>
+</head>
+<body>
+
+<header class="sl-pmdemo-head">
+  <a class="sl-pmdemo-back" href="private-messages-index.html"><i class="bi bi-arrow-left" aria-hidden="true"></i> Все варианты личных сообщений</a>
+  <h1>Вариант 3 — Компактный административный стиль</h1>
+  <p>Плотный реестр в духе админ-списков SLAED: строка 26&nbsp;px, зебра, липкая шапка с сортировкой, полноценная строка фильтров, ID сообщения и колонка состояния. Просмотр разворачивается прямо в таблице отдельной строкой, поэтому позиция в списке не теряется.</p>
+  <div class="sl-pmdemo-chips">
+    <span class="sl-chip sl-chip-info"><i class="bi bi-table" aria-hidden="true"></i> плотная таблица</span>
+    <span class="sl-chip sl-chip-info"><i class="bi bi-sort-down" aria-hidden="true"></i> data-sl-table-sort</span>
+    <span class="sl-chip sl-chip-info"><i class="bi bi-funnel" aria-hidden="true"></i> строка фильтров</span>
+    <span class="sl-chip sl-chip-neutral"><i class="bi bi-ui-checks" aria-hidden="true"></i> sl-bulk-bar</span>
+    <span class="sl-chip sl-chip-neutral"><i class="bi bi-arrows-expand" aria-hidden="true"></i> раскрытие строки</span>
+  </div>
+</header>
+
+<main class="sl-pmdemo-main">
+
+  <section class="sl-pmdemo-sec">
+    <h2><span>1</span> Реестр входящих: фильтры, сортировка, выделение</h2>
+    <p>Фильтры работают внутри папки, а не поверх неё; выбранная строка помечена левой полосой и подсвечена.</p>
+
+    <div class="sl-pmdemo-frame">
+      <div class="sl-pmadm">
+
+        <div class="sl-pmadm-top">
+          <h3><i class="bi bi-envelope" aria-hidden="true"></i>&nbsp; Личные сообщения</h3>
+          <nav class="sl-pmadm-tabs" aria-label="Папки">
+            <a href="#" aria-current="page">Входящие · 24</a>
+            <a href="#">Исходящие · 17</a>
+            <a href="#">Сохранённые · 6</a>
+            <a href="#">Написать</a>
+          </nav>
+        </div>
+
+        <form class="sl-pmadm-filter" action="#" method="post" role="search">
+          <label class="sl-pmadm-f sl-pmadm-f-wide"><span>Поиск</span><input class="sl-field" type="search" name="query" placeholder="Тема, текст, автор"></label>
+          <label class="sl-pmadm-f"><span>Состояние</span>
+            <select class="sl-field" name="state">
+              <option>Любое</option>
+              <option>Непрочитанные</option>
+              <option>Прочитанные</option>
+              <option>Сохранённые</option>
+            </select>
+          </label>
+          <label class="sl-pmadm-f"><span>Отправитель</span><input class="sl-field" type="text" name="from" placeholder="Ник"></label>
+          <label class="sl-pmadm-f"><span>С даты</span><input class="sl-field" type="date" name="from_date" value="2026-08-01"></label>
+          <label class="sl-pmadm-f"><span>По дату</span><input class="sl-field" type="date" name="to_date" value="2026-08-12"></label>
+          <span class="sl-pmadm-filter-end">
+            <input type="submit" class="sl-but" value="Применить">
+            <input type="reset" class="sl-but" value="Сброс">
+          </span>
+        </form>
+
+        <form action="#" method="post">
+          <div class="sl-table-shell">
+            <table class="sl-pmadm-table">
+              <thead>
+                <tr>
+                  <th class="sl-pmadm-c-check" scope="col"><input type="checkbox" class="sl-check" title="Отметить все"><span class="sl-visually-hidden">Отметить все</span></th>
+                  <th class="sl-pmadm-c-id" scope="col"><a href="#">ID <i class="bi bi-arrow-down-up" aria-hidden="true"></i></a></th>
+                  <th class="sl-pmadm-c-state" scope="col">Состояние</th>
+                  <th scope="col"><a href="#">Заголовок <i class="bi bi-arrow-down-up" aria-hidden="true"></i></a></th>
+                  <th class="sl-pmadm-c-user" scope="col"><a href="#">Отправитель <i class="bi bi-arrow-down-up" aria-hidden="true"></i></a></th>
+                  <th class="sl-pmadm-c-date" scope="col"><a href="#">Дата <i class="bi bi-arrow-down" aria-hidden="true"></i></a></th>
+                  <th class="sl-pmadm-c-act" scope="col">Опции</th>
+                </tr>
+              </thead>
+              <tbody>
+
+                <tr class="sl-pmadm-new" aria-selected="true">
+                  <td class="sl-pmadm-c-check"><input type="checkbox" class="sl-check" name="id[]" value="4181" checked></td>
+                  <td class="sl-pmadm-c-id">4181</td>
+                  <td class="sl-pmadm-c-state"><span class="sl-chip sl-chip-info sl-message-in"><i class="bi bi-envelope" aria-hidden="true"></i> Новое</span></td>
+                  <td><a class="sl-pmadm-subj" href="#pmadm-open">Ошибка при обновлении с 6.2 на 6.3</a><small class="sl-pmadm-mobile-from">Крамской</small></td>
+                  <td class="sl-pmadm-c-user"><a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Крамской</a></td>
+                  <td class="sl-pmadm-c-date"><time datetime="2026-08-12T14:32">12.08.26 14:32</time></td>
+                  <td class="sl-pmadm-c-act">
+                    <a class="sl-but-mini" href="#pmadm-open" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                    <a class="sl-but-mini" href="#" title="Сохранить"><i class="bi bi-archive" aria-hidden="true"></i></a>
+                    <a class="sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                  </td>
+                </tr>
+
+                <tr class="sl-pmadm-detail" id="pmadm-open">
+                  <td colspan="7">
+                    <div class="sl-pmadm-detail-in">
+                      <div>
+                        <h4>Ошибка при обновлении с 6.2 на 6.3</h4>
+                        <p>Добрый день! Обновлял тестовый сайт с 6.2.4 на 6.3, скрипт setup отработал без ошибок, но после входа в админку получаю 500 на любом разделе.</p>
+                        <p>В <code>storage/logs/error_php.log</code> одна и та же строка про недостающую колонку <code>saved</code> в таблице <code>_privat</code>. Похоже, миграция таблицы личных сообщений не применилась. Можно ли догнать её вручную, не откатывая весь апдейт?</p>
+                        <p>Дамп базы перед обновлением сохранён, откатиться могу в любой момент.</p>
+                      </div>
+                      <aside class="sl-pmadm-side">
+                        <dl>
+                          <dt>ID</dt><dd>4181</dd>
+                          <dt>Отправитель</dt><dd>Крамской (uid 318)</dd>
+                          <dt>Получено</dt><dd>12.08.2026 14:32</dd>
+                          <dt>Состояние</dt><dd>Прочитано</dd>
+                          <dt>Группа</dt><dd>Проверенные</dd>
+                          <dt>IP</dt><dd>195.24.71.104</dd>
+                        </dl>
+                        <div class="sl-pmadm-side-acts">
+                          <a class="sl-but" href="#"><i class="bi bi-reply" aria-hidden="true"></i>&nbsp; Ответить</a>
+                          <a class="sl-but" href="#"><i class="bi bi-archive" aria-hidden="true"></i>&nbsp; Сохранить</a>
+                          <a class="sl-but" href="#"><i class="bi bi-envelope" aria-hidden="true"></i>&nbsp; Непрочитанным</a>
+                          <a class="sl-but" href="#" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i>&nbsp; Удалить</a>
+                          <a class="sl-but" href="#"><i class="bi bi-person" aria-hidden="true"></i>&nbsp; Профиль</a>
+                        </div>
+                      </aside>
+                      <div class="sl-pmadm-answer">
+                        <label class="sl-visually-hidden" for="pmadm-reply">Текст ответа</label>
+                        <div class="sl-pm-editor" data-sl-pm-editor="pmadm-reply" data-sl-pm-height="260" data-sl-pm-placeholder="Ответ пользователю Крамской&hellip;">
+                          <textarea id="pmadm-reply" name="text" rows="15" style="display:none"></textarea>
+                          <div id="pmadm-reply_toast"></div>
+                        </div>
+                        <p class="sl-pm-note"><i class="bi bi-info-circle" aria-hidden="true"></i> Это настоящий редактор Toast UI из <code>plugins/editors/toastui</code> — тот же, что стоит в форме отправки на боевой странице. Его панель и переключатель Markdown/Визуальный занимают около 300&nbsp;px, и плотная раскладка обязана это учитывать.</p>
+                        <div class="sl-pmadm-answer-foot">
+                          <input type="submit" class="sl-but" value="Отправить" title="Отправить ответ">
+                          <input type="button" class="sl-but" value="Свернуть ответ">
+                          <small>Заголовок подставится как «Ответ: Ошибка при обновлении с 6.2 на 6.3»</small>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr class="sl-pmadm-new">
+                  <td class="sl-pmadm-c-check"><input type="checkbox" class="sl-check" name="id[]" value="4180"></td>
+                  <td class="sl-pmadm-c-id">4180</td>
+                  <td class="sl-pmadm-c-state"><span class="sl-chip sl-chip-info sl-message-in"><i class="bi bi-envelope" aria-hidden="true"></i> Новое</span></td>
+                  <td><a class="sl-pmadm-subj" href="#">Re: Права доступа к модулю «Файлы»</a><small class="sl-pmadm-mobile-from">Nataly_V</small></td>
+                  <td class="sl-pmadm-c-user"><a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Nataly_V</a></td>
+                  <td class="sl-pmadm-c-date"><time datetime="2026-08-12T11:05">12.08.26 11:05</time></td>
+                  <td class="sl-pmadm-c-act">
+                    <a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                    <a class="sl-but-mini" href="#" title="Сохранить"><i class="bi bi-archive" aria-hidden="true"></i></a>
+                    <a class="sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td class="sl-pmadm-c-check"><input type="checkbox" class="sl-check" name="id[]" value="4177"></td>
+                  <td class="sl-pmadm-c-id">4177</td>
+                  <td class="sl-pmadm-c-state"><span class="sl-chip sl-chip-neutral"><i class="bi bi-envelope-open" aria-hidden="true"></i> Прочитано</span></td>
+                  <td><a class="sl-pmadm-subj" href="#">Счёт №2418 оплачен, отгрузка сегодня</a><small class="sl-pmadm-mobile-from">admin_shop</small></td>
+                  <td class="sl-pmadm-c-user"><a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> admin_shop</a></td>
+                  <td class="sl-pmadm-c-date"><time datetime="2026-08-11T19:47">11.08.26 19:47</time></td>
+                  <td class="sl-pmadm-c-act">
+                    <a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                    <a class="sl-but-mini" href="#" title="Сохранить"><i class="bi bi-archive" aria-hidden="true"></i></a>
+                    <a class="sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td class="sl-pmadm-c-check"><input type="checkbox" class="sl-check" name="id[]" value="4173"></td>
+                  <td class="sl-pmadm-c-id">4173</td>
+                  <td class="sl-pmadm-c-state"><span class="sl-chip sl-chip-warn sl-message-save"><i class="bi bi-bookmark-fill" aria-hidden="true"></i> Сохранено</span></td>
+                  <td><a class="sl-pmadm-subj" href="#">Шаблон lite: сломалась вёрстка таблиц</a><small class="sl-pmadm-mobile-from">Igor_Tech</small></td>
+                  <td class="sl-pmadm-c-user"><a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Igor_Tech</a></td>
+                  <td class="sl-pmadm-c-date"><time datetime="2026-08-11T09:12">11.08.26 09:12</time></td>
+                  <td class="sl-pmadm-c-act">
+                    <a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                    <a class="sl-but-mini sl-is-active" href="#" title="Убрать из сохранённых"><i class="bi bi-bookmark-dash" aria-hidden="true"></i></a>
+                    <a class="sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td class="sl-pmadm-c-check"><input type="checkbox" class="sl-check" name="id[]" value="4166"></td>
+                  <td class="sl-pmadm-c-id">4166</td>
+                  <td class="sl-pmadm-c-state"><span class="sl-chip sl-chip-neutral"><i class="bi bi-envelope-open" aria-hidden="true"></i> Прочитано</span></td>
+                  <td><a class="sl-pmadm-subj" href="#">Спасибо за помощь с переносом БД</a><small class="sl-pmadm-mobile-from">Мария Соколова</small></td>
+                  <td class="sl-pmadm-c-user"><a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Мария Соколова</a></td>
+                  <td class="sl-pmadm-c-date"><time datetime="2026-08-10T22:03">10.08.26 22:03</time></td>
+                  <td class="sl-pmadm-c-act">
+                    <a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                    <a class="sl-but-mini" href="#" title="Сохранить"><i class="bi bi-archive" aria-hidden="true"></i></a>
+                    <a class="sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td class="sl-pmadm-c-check"><input type="checkbox" class="sl-check" name="id[]" value="4160"></td>
+                  <td class="sl-pmadm-c-id">4160</td>
+                  <td class="sl-pmadm-c-state"><span class="sl-chip sl-chip-danger"><i class="bi bi-person-x" aria-hidden="true"></i> Автор удалён</span></td>
+                  <td><a class="sl-pmadm-subj" href="#">Вопрос по лицензии MIT</a><small class="sl-pmadm-mobile-from">Гость</small></td>
+                  <td class="sl-pmadm-c-user"><span class="sl-muted">Гость</span></td>
+                  <td class="sl-pmadm-c-date"><time datetime="2026-08-09T13:24">09.08.26 13:24</time></td>
+                  <td class="sl-pmadm-c-act">
+                    <a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                    <a class="sl-but-mini" href="#" title="Сохранить"><i class="bi bi-archive" aria-hidden="true"></i></a>
+                    <a class="sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                  </td>
+                </tr>
+
+              </tbody>
+            </table>
+          </div>
+
+          <div class="sl-pmadm-foot">
+            <span class="sl-bulk-count">Отмечено: 1 из 24</span>
+            <span class="sl-action-label">Действие</span>
+            <label class="sl-visually-hidden" for="pmadm-act">Действие над отмеченными</label>
+            <select id="pmadm-act" name="act" class="sl-field">
+              <option value="read">Отметить прочитанными</option>
+              <option value="unread">Отметить непрочитанными</option>
+              <option value="save">Сохранить</option>
+              <option value="delete">Удалить</option>
+            </select>
+            <input type="submit" class="sl-but" value="OK">
+            <span class="sl-pmadm-pages">
+              <small>1&ndash;25 из 24</small>
+              <span class="sl-but-mini sl-is-muted"><i class="bi bi-chevron-left" aria-hidden="true"></i></span>
+              <a class="sl-but-mini sl-is-active" href="#" aria-current="page">1</a>
+              <a class="sl-but-mini" href="#">2</a>
+              <a class="sl-but-mini" href="#">3</a>
+              <a class="sl-but-mini" href="#"><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+              <label class="sl-visually-hidden" for="pmadm-per">На странице</label>
+              <select id="pmadm-per" class="sl-field"><option>25</option><option>50</option><option>100</option></select>
+            </span>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </section>
+
+  <section class="sl-pmdemo-sec">
+    <h2><span>2</span> Исходящие</h2>
+    <p>Колонка «Отправитель» становится «Получателем», состояние отражает, открыл ли получатель письмо, а действий остаётся два.</p>
+    <div class="sl-pmdemo-frame">
+      <div class="sl-pmadm">
+        <div class="sl-pmadm-top">
+          <h3><i class="bi bi-send" aria-hidden="true"></i>&nbsp; Исходящие</h3>
+          <nav class="sl-pmadm-tabs" aria-label="Папки">
+            <a href="#">Входящие · 24</a>
+            <a href="#" aria-current="page">Исходящие · 17</a>
+            <a href="#">Сохранённые · 6</a>
+            <a href="#">Написать</a>
+          </nav>
+        </div>
+        <div class="sl-table-shell">
+          <table class="sl-pmadm-table">
+            <thead>
+              <tr>
+                <th class="sl-pmadm-c-check" scope="col"><input type="checkbox" class="sl-check" title="Отметить все"></th>
+                <th class="sl-pmadm-c-id" scope="col">ID</th>
+                <th class="sl-pmadm-c-state" scope="col">Состояние</th>
+                <th scope="col">Заголовок</th>
+                <th class="sl-pmadm-c-user" scope="col">Получатель</th>
+                <th class="sl-pmadm-c-date" scope="col">Дата</th>
+                <th class="sl-pmadm-c-act" scope="col">Опции</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="sl-pmadm-c-check"><input type="checkbox" class="sl-check"></td>
+                <td class="sl-pmadm-c-id">4182</td>
+                <td class="sl-pmadm-c-state"><span class="sl-chip sl-chip-warn sl-message-out"><i class="bi bi-send" aria-hidden="true"></i> Не прочитано</span></td>
+                <td><a class="sl-pmadm-subj" href="#">Re: Ошибка при обновлении с 6.2 на 6.3</a></td>
+                <td class="sl-pmadm-c-user"><a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Крамской</a></td>
+                <td class="sl-pmadm-c-date"><time datetime="2026-08-12T15:10">12.08.26 15:10</time></td>
+                <td class="sl-pmadm-c-act">
+                  <a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                  <a class="sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                </td>
+              </tr>
+              <tr>
+                <td class="sl-pmadm-c-check"><input type="checkbox" class="sl-check"></td>
+                <td class="sl-pmadm-c-id">4175</td>
+                <td class="sl-pmadm-c-state"><span class="sl-chip sl-chip-success sl-message-out"><i class="bi bi-send-check" aria-hidden="true"></i> Прочитано</span></td>
+                <td><a class="sl-pmadm-subj" href="#">Re: Шаблон lite: сломалась вёрстка таблиц</a></td>
+                <td class="sl-pmadm-c-user"><a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Igor_Tech</a></td>
+                <td class="sl-pmadm-c-date"><time datetime="2026-08-11T10:00">11.08.26 10:00</time></td>
+                <td class="sl-pmadm-c-act">
+                  <a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                  <a class="sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                </td>
+              </tr>
+              <tr>
+                <td class="sl-pmadm-c-check"><input type="checkbox" class="sl-check"></td>
+                <td class="sl-pmadm-c-id">4171</td>
+                <td class="sl-pmadm-c-state"><span class="sl-chip sl-chip-success sl-message-out"><i class="bi bi-send-check" aria-hidden="true"></i> Прочитано</span></td>
+                <td><a class="sl-pmadm-subj" href="#">Патч для парсера: [tabs] внутри [usehtml]</a></td>
+                <td class="sl-pmadm-c-user"><a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> dev_kostya</a></td>
+                <td class="sl-pmadm-c-date"><time datetime="2026-08-10T16:40">10.08.26 16:40</time></td>
+                <td class="sl-pmadm-c-act">
+                  <a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                  <a class="sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sl-pmdemo-sec">
+    <h2><span>3</span> Пустое состояние</h2>
+    <p>Пустота остаётся внутри таблицы: шапка, фильтры и массовое действие не исчезают, поэтому фильтр можно сбросить не уходя со страницы.</p>
+    <div class="sl-pmdemo-frame">
+      <div class="sl-pmadm">
+        <form class="sl-pmadm-filter" action="#" method="post" role="search">
+          <label class="sl-pmadm-f sl-pmadm-f-wide"><span>Поиск</span><input class="sl-field" type="search" value="лицензия GPL"></label>
+          <label class="sl-pmadm-f"><span>Состояние</span><select class="sl-field"><option>Непрочитанные</option></select></label>
+          <span class="sl-pmadm-filter-end"><input type="submit" class="sl-but" value="Применить"><input type="reset" class="sl-but" value="Сброс"></span>
+        </form>
+        <div class="sl-table-shell">
+          <table class="sl-pmadm-table">
+            <thead>
+              <tr>
+                <th class="sl-pmadm-c-check" scope="col"><input type="checkbox" class="sl-check"></th>
+                <th class="sl-pmadm-c-id" scope="col">ID</th>
+                <th class="sl-pmadm-c-state" scope="col">Состояние</th>
+                <th scope="col">Заголовок</th>
+                <th class="sl-pmadm-c-user" scope="col">Отправитель</th>
+                <th class="sl-pmadm-c-date" scope="col">Дата</th>
+                <th class="sl-pmadm-c-act" scope="col">Опции</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="sl-pmadm-empty">
+                <td colspan="7">
+                  <i class="bi bi-inbox" aria-hidden="true"></i>
+                  <b>Нет информации</b>
+                  <p>По запросу «лицензия GPL» среди непрочитанных ничего не найдено. Во входящих без фильтра — 24 сообщения.</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sl-pmdemo-sec">
+    <h2><span>4</span> Мобильное отображение</h2>
+    <p>На узком экране прячутся ID и колонка автора — ник переезжает под тему; вкладки-папки растягиваются на всю ширину, пагинатор уходит на отдельную строку.</p>
+    <div class="sl-pmdemo-phones">
+      <figure class="sl-pmdemo-phone">
+        <figcaption>Реестр, 390&nbsp;px</figcaption>
+        <div class="sl-pmadm">
+          <div class="sl-pmadm-top">
+            <h3>Личные сообщения</h3>
+            <nav class="sl-pmadm-tabs" aria-label="Папки">
+              <a href="#" aria-current="page">Вход. 24</a>
+              <a href="#">Исход. 17</a>
+              <a href="#">Сохр. 6</a>
+            </nav>
+          </div>
+          <form class="sl-pmadm-filter" action="#" method="post" role="search">
+            <label class="sl-pmadm-f sl-pmadm-f-wide"><span>Поиск</span><input class="sl-field" type="search" placeholder="Тема, автор"></label>
+            <label class="sl-pmadm-f"><span>Состояние</span><select class="sl-field"><option>Любое</option><option>Непрочитанные</option></select></label>
+            <span class="sl-pmadm-filter-end"><input type="submit" class="sl-but" value="Применить"><input type="reset" class="sl-but" value="Сброс"></span>
+          </form>
+          <div class="sl-table-shell">
+            <table class="sl-pmadm-table">
+              <thead>
+                <tr>
+                  <th class="sl-pmadm-c-check"><input type="checkbox" class="sl-check"></th>
+                  <th class="sl-pmadm-c-id">ID</th>
+                  <th class="sl-pmadm-c-state">Сост.</th>
+                  <th>Заголовок</th>
+                  <th class="sl-pmadm-c-user">Автор</th>
+                  <th class="sl-pmadm-c-date">Дата</th>
+                  <th class="sl-pmadm-c-act">Опции</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="sl-pmadm-new">
+                  <td class="sl-pmadm-c-check"><input type="checkbox" class="sl-check"></td>
+                  <td class="sl-pmadm-c-id">4181</td>
+                  <td class="sl-pmadm-c-state"><span class="sl-chip sl-chip-info"><i class="bi bi-envelope" aria-hidden="true"></i></span></td>
+                  <td><a class="sl-pmadm-subj" href="#">Ошибка при обновлении с 6.2 на 6.3</a><small class="sl-pmadm-mobile-from">Крамской</small></td>
+                  <td class="sl-pmadm-c-user">Крамской</td>
+                  <td class="sl-pmadm-c-date">12.08 14:32</td>
+                  <td class="sl-pmadm-c-act"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></td>
+                </tr>
+                <tr>
+                  <td class="sl-pmadm-c-check"><input type="checkbox" class="sl-check"></td>
+                  <td class="sl-pmadm-c-id">4177</td>
+                  <td class="sl-pmadm-c-state"><span class="sl-chip sl-chip-neutral"><i class="bi bi-envelope-open" aria-hidden="true"></i></span></td>
+                  <td><a class="sl-pmadm-subj" href="#">Счёт №2418 оплачен</a><small class="sl-pmadm-mobile-from">admin_shop</small></td>
+                  <td class="sl-pmadm-c-user">admin_shop</td>
+                  <td class="sl-pmadm-c-date">11.08 19:47</td>
+                  <td class="sl-pmadm-c-act"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></td>
+                </tr>
+                <tr>
+                  <td class="sl-pmadm-c-check"><input type="checkbox" class="sl-check"></td>
+                  <td class="sl-pmadm-c-id">4173</td>
+                  <td class="sl-pmadm-c-state"><span class="sl-chip sl-chip-warn"><i class="bi bi-bookmark-fill" aria-hidden="true"></i></span></td>
+                  <td><a class="sl-pmadm-subj" href="#">Шаблон lite: вёрстка таблиц</a><small class="sl-pmadm-mobile-from">Igor_Tech</small></td>
+                  <td class="sl-pmadm-c-user">Igor_Tech</td>
+                  <td class="sl-pmadm-c-date">11.08 09:12</td>
+                  <td class="sl-pmadm-c-act"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="sl-pmadm-foot">
+            <span class="sl-bulk-count">Отмечено: 0</span>
+            <label class="sl-visually-hidden" for="pmadm-act-m">Действие</label>
+            <select id="pmadm-act-m" class="sl-field"><option>Отметить прочитанными</option><option>Удалить</option></select>
+            <input type="submit" class="sl-but" value="OK">
+            <span class="sl-pmadm-pages">
+              <small>1&ndash;25 из 24</small>
+              <a class="sl-but-mini sl-is-active" href="#">1</a>
+              <a class="sl-but-mini" href="#">2</a>
+              <a class="sl-but-mini" href="#"><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+            </span>
+          </div>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+</main>
+
+<script>
+/* Демонстрационное поведение: «отметить все» и выделение строки по клику */
+document.querySelectorAll('.sl-pmadm-table').forEach(function (table) {
+  var all = table.querySelector('thead .sl-check');
+  if (all) all.addEventListener('change', function () {
+    table.querySelectorAll('tbody .sl-check').forEach(function (one) { one.checked = all.checked; });
+  });
+  table.querySelectorAll('tbody tr:not(.sl-pmadm-detail):not(.sl-pmadm-empty)').forEach(function (row) {
+    row.addEventListener('click', function (ev) {
+      if (ev.target.closest('a, input, select, button')) return;
+      table.querySelectorAll('tbody tr').forEach(function (one) { one.removeAttribute('aria-selected'); });
+      row.setAttribute('aria-selected', 'true');
+    });
+  });
+});
+</script>
+
+<!-- Реальный редактор сообщений: те же файлы, что подключает драйвер plugins/editors/toastui -->
+<script src="../plugins/editors/toastui/assets/toastui-editor.all.min.js"></script>
+<script src="../plugins/editors/toastui/assets/i18n/ru-ru.js"></script>
+<script src="../plugins/editors/toastui/assets/i18n/emoji-ru.js"></script>
+<script src="../plugins/editors/toastui/assets/editor-tags.js"></script>
+<script src="../plugins/editors/toastui/assets/editor-emoji.js"></script>
+<script src="../plugins/editors/toastui/assets/editor-upload.js"></script>
+<script>
+/* Монтирование Toast UI так же, как это делает EditorToastUi::getWidget(): скрытая textarea — источник, соседний div — сам редактор */
+document.querySelectorAll('[data-sl-pm-editor]').forEach(function (box) {
+  var id = box.getAttribute('data-sl-pm-editor');
+  var ta = document.getElementById(id);
+  var mount = document.getElementById(id + '_toast');
+  var root = window.toastui && window.toastui.Editor;
+  if (!ta || !mount || !root) return;
+  var ed = new root({
+    el: mount,
+    initialEditType: 'markdown',
+    initialValue: ta.value,
+    placeholder: box.getAttribute('data-sl-pm-placeholder') || '',
+    height: (box.getAttribute('data-sl-pm-height') || '300') + 'px',
+    language: 'ru-RU',
+    autofocus: false,
+    usageStatistics: false
+  });
+  if (window.SlaedToastUi) {
+    window.SlaedToastUi.register(id, ed, {
+      super: false,
+      tpl: 'js-slaed-editor-tpl',
+      labels: {
+        quote: 'Цитировать', hide: 'Скрытый текст', tabs: 'Вкладки', emoji: 'Смайлы',
+        fullscreen: 'Развернуть редактор на весь экран', exitfull: 'Свернуть редактор',
+        insert: 'Вставить изображение', image: 'Изображение', attach: 'Прикрепить файл'
+      }
+    });
+  }
+  ed.on('change', function () { ta.value = ed.getMarkdown(); });
+});
+</script>
+</body>
+</html>

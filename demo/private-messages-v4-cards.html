@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED — ЛС, вариант 4: карточки сообщений</title>
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<link rel="stylesheet" href="../plugins/editors/toastui/assets/toastui-editor.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/editors/toastui/skin.css">
+<style>
+/* ==== Общая обвязка демо ==== */
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color: var(--sl-color-text); font: 13px/1.45 Arial, system-ui, sans-serif; }
+a { text-decoration: none; }
+.sl-pmdemo-head { padding: 28px max(20px, calc((100vw - 1180px) / 2)) 24px; border-bottom: 1px solid var(--sl-color-border); background: radial-gradient(circle at 88% 0, color-mix(in srgb, var(--sl-color-brand) 18%, transparent), transparent 32%), var(--sl-color-bg); }
+.sl-pmdemo-back { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px; color: var(--sl-color-text-muted); font-size: 12px; }
+.sl-pmdemo-back:hover { color: var(--sl-color-primary); }
+.sl-pmdemo-head h1 { margin: 0 0 10px; color: var(--sl-color-text-heading); font-size: clamp(23px, 4vw, 32px); line-height: 1.12; }
+.sl-pmdemo-head p { max-width: 840px; margin: 0 0 14px; color: var(--sl-color-text-muted); }
+.sl-pmdemo-chips { display: flex; flex-wrap: wrap; gap: var(--sl-space-sm); }
+.sl-pmdemo-main { width: 1180px; max-width: calc(100% - 28px); margin: 26px auto 0; }
+.sl-pmdemo-sec { margin-bottom: 38px; }
+.sl-pmdemo-sec > h2 { display: flex; align-items: center; gap: 10px; margin: 0 0 6px; color: var(--sl-color-text-heading); font-size: 17px; }
+.sl-pmdemo-sec > h2 > span { display: grid; place-items: center; flex: 0 0 26px; width: 26px; height: 26px; border-radius: 50%; background: var(--sl-color-text-heading); color: var(--sl-color-on-dark); font: bold 11px/1 Arial, sans-serif; }
+.sl-pmdemo-sec > p { margin: 0 0 14px; color: var(--sl-color-text-muted); }
+.sl-pmdemo-frame { container-type: inline-size; padding: 14px; border: 1px solid var(--sl-color-border-subtle); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); box-shadow: var(--sl-shadow-soft); }
+.sl-pmdemo-phones { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; }
+.sl-pmdemo-phone { container-type: inline-size; width: 390px; max-width: 100%; padding: 12px 10px; border: 1px solid var(--sl-color-border-strong); border-radius: 20px; background: var(--sl-color-bg); box-shadow: var(--sl-shadow-panel); }
+.sl-pmdemo-phone > figcaption { margin: 0 0 10px; color: var(--sl-color-text-muted); font-size: 11px; text-align: center; text-transform: uppercase; letter-spacing: 0.08em; }
+:focus-visible { outline: 2px solid var(--sl-color-primary); outline-offset: 2px; border-radius: 3px; }
+
+/* ==== Вариант 4: карточки сообщений ==== */
+.sl-pmcard-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sl-space-md); margin-bottom: 14px; }
+.sl-pmcard-bar .sl-search-form { width: 320px; flex: 1 1 240px; }
+.sl-pmcard-tabs { display: flex; flex-wrap: wrap; gap: var(--sl-space-sm); }
+.sl-pmcard-tabs a { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 14px; border: 1px solid var(--sl-color-border-strong); border-radius: 15px; background: var(--sl-color-bg); color: var(--sl-color-text-muted); font-weight: bold; transition: border-color 0.18s ease, color 0.18s ease; }
+.sl-pmcard-tabs a:hover { border-color: var(--sl-color-primary); color: var(--sl-color-brand-strong); }
+.sl-pmcard-tabs a[aria-current="page"] { border-color: transparent; background: var(--sl-color-primary); color: var(--sl-color-on-dark); }
+.sl-pmcard-tabs a[aria-current="page"] .sl-but-mini { background: rgba(255, 255, 255, 0.28); }
+.sl-pmcard-sort { display: flex; align-items: center; gap: var(--sl-space-sm); margin-left: auto; color: var(--sl-color-text-muted); }
+.sl-pmcard-sort .sl-field { height: 30px; }
+
+.sl-pmcard-facets { display: flex; flex-wrap: wrap; gap: var(--sl-space-sm); margin-bottom: 14px; }
+.sl-pmcard-facets .sl-chip { cursor: pointer; border: 1px solid transparent; }
+.sl-pmcard-facets .sl-chip[aria-pressed="true"] { border-color: color-mix(in srgb, var(--sl-color-primary) 45%, transparent); background: color-mix(in srgb, var(--sl-color-primary) 14%, transparent); color: var(--sl-color-brand-strong); }
+
+/* Сетка карточек */
+.sl-pmcard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; align-items: start; }
+
+.sl-pmcard { --sl-cat-tone: var(--sl-color-tone-neutral); position: relative; display: grid; gap: 10px; padding: 13px 14px 12px; border: 1px solid var(--sl-color-border-subtle); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); box-shadow: var(--sl-shadow-soft); transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease; }
+.sl-pmcard::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 3px; border-radius: var(--sl-radius-card) var(--sl-radius-card) 0 0; background: var(--sl-cat-tone); opacity: 0.85; }
+.sl-pmcard:hover { border-color: color-mix(in srgb, var(--sl-cat-tone) 45%, var(--sl-color-border)); box-shadow: var(--sl-shadow-panel); transform: translateY(-2px); }
+.sl-pmcard-new { --sl-cat-tone: var(--sl-color-tone-info); background: color-mix(in srgb, var(--sl-color-primary) 3%, var(--sl-color-bg)); }
+.sl-pmcard-saved { --sl-cat-tone: var(--sl-color-tone-warning); }
+.sl-pmcard-out { --sl-cat-tone: var(--sl-color-tone-success); }
+.sl-pmcard[aria-current="true"] { border-color: var(--sl-color-primary); box-shadow: 0 0 0 3px var(--sl-field-focus-ring), var(--sl-shadow-panel); }
+
+.sl-pmcard-top { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+.sl-pmcard-top img { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; background: var(--sl-color-bg-soft-soft); }
+.sl-pmcard-who { min-width: 0; }
+.sl-pmcard-who b { display: block; overflow: hidden; color: var(--sl-color-text-heading); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.sl-pmcard-who small { display: block; color: var(--sl-color-text-muted); font-size: 11px; }
+.sl-pmcard-pick { display: grid; place-items: center; }
+.sl-pmcard-pick input { margin: 0; }
+
+.sl-pmcard-subj { display: block; overflow: hidden; color: var(--sl-color-text-heading); font-size: 15px; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.sl-pmcard-new .sl-pmcard-subj { font-weight: bold; }
+a.sl-pmcard-subj:hover { color: var(--sl-color-primary); }
+.sl-pmcard-snip { margin: 0; overflow: hidden; color: var(--sl-color-text-muted); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.sl-pmcard-meta { display: flex; flex-wrap: wrap; gap: var(--sl-space-sm); }
+.sl-pmcard-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sl-space-xs); padding-top: 10px; border-top: 1px solid var(--sl-color-border-subtle); }
+.sl-pmcard-foot .sl-but { height: 26px; margin: 0; padding: 0 11px; font-size: 12px; }
+.sl-pmcard-foot .sl-but-mini { margin-left: auto; }
+
+/* Раскрытая карточка на всю ширину сетки */
+.sl-pmcard-open { grid-column: 1 / -1; --sl-cat-tone: var(--sl-color-tone-info); }
+.sl-pmcard-open .sl-pmcard-subj { -webkit-line-clamp: none; display: block; font-size: 19px; }
+.sl-pmcard-body { display: grid; gap: 12px; }
+.sl-pmcard-body p { max-width: 72ch; margin: 0; }
+.sl-pmcard-reply { display: grid; gap: var(--sl-space-md); padding: 12px; border: 1px solid var(--sl-color-border-subtle); border-radius: var(--sl-radius-control); background: var(--sl-color-bg-soft); }
+.sl-pmcard-reply-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sl-space-md); }
+.sl-pmcard-reply-foot small { color: var(--sl-color-text-muted); }
+
+/* Подвал сетки: массовое действие + «загрузить ещё» */
+.sl-pmcard-load { display: grid; justify-items: center; gap: 8px; margin-top: 18px; }
+.sl-pmcard-load small { color: var(--sl-color-text-muted); }
+.sl-pmcard-load .sl-but { margin: 0; }
+.sl-pmcard-progress { width: 220px; height: 4px; overflow: hidden; border-radius: 2px; background: var(--sl-color-bg-soft-soft); }
+.sl-pmcard-progress > i { display: block; width: 25%; height: 100%; border-radius: 2px; background: var(--sl-color-primary); }
+
+/* Пустое состояние */
+.sl-pmcard-empty { display: grid; justify-items: center; gap: 10px; padding: 46px 20px; border: 1px dashed var(--sl-color-border-strong); border-radius: var(--sl-radius-card); background: var(--sl-color-bg-soft); text-align: center; }
+.sl-pmcard-empty i { font-size: 48px; color: var(--sl-color-text-subtle); }
+.sl-pmcard-empty b { color: var(--sl-color-text-heading); font-size: 15px; }
+.sl-pmcard-empty p { max-width: 420px; margin: 0; color: var(--sl-color-text-muted); }
+
+/* Мобильная раскладка */
+@container (max-width: 720px) {
+  .sl-pmcard-grid { grid-template-columns: 1fr; }
+  .sl-pmcard-sort { margin-left: 0; }
+  .sl-pmcard-tabs { width: 100%; }
+  .sl-pmcard-tabs a { flex: 1 1 0; justify-content: center; padding: 0 8px; }
+  .sl-pmcard-foot .sl-but span { display: none; }
+  .sl-pmcard-foot .sl-but { padding: 0 9px; }
+}
+/* Поле сообщения — настоящий редактор Toast UI (plugins/editors/toastui), а не textarea: скрытая textarea остаётся источником, редактор монтируется в соседний div */
+.sl-pm-editor { width: 100%; min-width: 0; }
+.sl-pm-editor .toastui-editor-defaultUI { border-radius: var(--sl-radius-control); }
+.sl-pm-note { margin: 0; color: var(--sl-color-text-muted); font-size: 11px; }
+.sl-pm-note .bi { margin-right: 5px; color: var(--sl-color-primary); }
+</style>
+</head>
+<body>
+
+<header class="sl-pmdemo-head">
+  <a class="sl-pmdemo-back" href="private-messages-index.html"><i class="bi bi-arrow-left" aria-hidden="true"></i> Все варианты личных сообщений</a>
+  <h1>Вариант 4 — Карточки сообщений</h1>
+  <p>Каждое письмо — карточка с аватаром, темой в две строки, отрывком текста и полкой действий. Цветная полоса сверху кодирует состояние: синяя — новое, жёлтая — сохранённое, зелёная — отправленное и прочитанное. Выбранная карточка раскрывается на всю ширину сетки прямо на месте.</p>
+  <div class="sl-pmdemo-chips">
+    <span class="sl-chip sl-chip-info"><i class="bi bi-grid" aria-hidden="true"></i> сетка auto-fill 320px</span>
+    <span class="sl-chip sl-chip-info"><i class="bi bi-palette" aria-hidden="true"></i> sl-cat-tone / --sl-cat-tone</span>
+    <span class="sl-chip sl-chip-info"><i class="bi bi-tags" aria-hidden="true"></i> sl-chip тоны</span>
+    <span class="sl-chip sl-chip-neutral"><i class="bi bi-arrow-down-circle" aria-hidden="true"></i> load more вместо пагинатора</span>
+  </div>
+</header>
+
+<main class="sl-pmdemo-main">
+
+  <section class="sl-pmdemo-sec">
+    <h2><span>1</span> Входящие: карточки, поиск, фильтры, раскрытое сообщение</h2>
+    <p>Чекбокс живёт в углу карточки, поэтому массовые действия работают так же, как в таблице. Раскрытая карточка занимает всю ширину и несёт форму ответа.</p>
+
+    <div class="sl-pmdemo-frame">
+
+      <div class="sl-pmcard-bar">
+        <nav class="sl-pmcard-tabs" aria-label="Папки">
+          <a href="#" aria-current="page"><i class="bi bi-envelope" aria-hidden="true"></i> Входящие <span class="sl-but-mini">8</span></a>
+          <a href="#"><i class="bi bi-send" aria-hidden="true"></i> Исходящие <span class="sl-but-mini sl-is-soft">17</span></a>
+          <a href="#"><i class="bi bi-bookmark" aria-hidden="true"></i> Сохранённые <span class="sl-but-mini sl-is-soft">6</span></a>
+          <a href="#"><i class="bi bi-pencil-square" aria-hidden="true"></i> Написать</a>
+        </nav>
+        <label class="sl-pmcard-sort">Сортировка
+          <select class="sl-field"><option>Сначала новые</option><option>Сначала старые</option><option>По отправителю</option><option>Непрочитанные сверху</option></select>
+        </label>
+      </div>
+
+      <div class="sl-pmcard-bar">
+        <form class="sl-search-form" role="search" action="#" method="post">
+          <label class="sl-visually-hidden" for="pmcard-q">Поиск по личным сообщениям</label>
+          <input id="pmcard-q" type="search" name="query" placeholder="Поиск по теме, тексту и автору">
+          <button type="submit" title="Найти"><i class="bi bi-search" aria-hidden="true"></i></button>
+        </form>
+        <div class="sl-pmcard-facets" role="group" aria-label="Фильтр">
+          <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="true">Все · 24</button>
+          <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Непрочитанные · 8</button>
+          <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Сохранённые · 6</button>
+          <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">За неделю · 11</button>
+        </div>
+      </div>
+
+      <div class="sl-bulk-bar">
+        <span class="sl-bulk-count">Отмечено: 2 из 24</span>
+        <span class="sl-action-label">Действие</span>
+        <label class="sl-visually-hidden" for="pmcard-act">Действие над отмеченными</label>
+        <select id="pmcard-act" class="sl-field">
+          <option>Отметить прочитанными</option>
+          <option>Отметить непрочитанными</option>
+          <option>Сохранить</option>
+          <option>Удалить</option>
+        </select>
+        <input type="submit" class="sl-but" value="OK">
+      </div>
+
+      <div class="sl-pmcard-grid" style="margin-top: 14px;">
+
+        <article class="sl-pmcard sl-pmcard-new sl-pmcard-open" aria-current="true">
+          <header class="sl-pmcard-top">
+            <img src="../templates/lite/images/avatars/presets/001.svg" alt="">
+            <span class="sl-pmcard-who"><b>Крамской</b><small>Проверенные · 1 240 очков</small></span>
+            <label class="sl-pmcard-pick"><span class="sl-visually-hidden">Отметить сообщение 4181</span><input type="checkbox" class="sl-check" name="id[]" value="4181" checked></label>
+          </header>
+          <h3 class="sl-pmcard-subj">Ошибка при обновлении с 6.2 на 6.3</h3>
+          <div class="sl-pmcard-meta">
+            <span class="sl-chip sl-chip-info"><i class="bi bi-clock-history" aria-hidden="true"></i> <time datetime="2026-08-12T14:32">12.08.2026 14:32</time></span>
+            <span class="sl-chip sl-chip-success"><i class="bi bi-check-circle" aria-hidden="true"></i> Прочитано</span>
+            <a class="sl-chip sl-chip-neutral" href="#"><i class="bi bi-person" aria-hidden="true"></i> Профиль</a>
+          </div>
+          <div class="sl-pmcard-body">
+            <p>Добрый день! Обновлял тестовый сайт с 6.2.4 на 6.3, скрипт setup отработал без ошибок, но после входа в админку получаю 500 на любом разделе.</p>
+            <p>В <code>storage/logs/error_php.log</code> одна и та же строка про недостающую колонку <code>saved</code> в таблице <code>_privat</code>. Похоже, миграция таблицы личных сообщений не применилась. Подскажите, можно ли догнать её вручную, не откатывая весь апдейт? Дамп базы перед обновлением сохранён.</p>
+            <form class="sl-pmcard-reply" action="#" method="post">
+              <label class="sl-visually-hidden" for="pmcard-reply">Текст ответа</label>
+              <div class="sl-pm-editor" data-sl-pm-editor="pmcard-reply" data-sl-pm-height="280" data-sl-pm-placeholder="Ответ пользователю Крамской&hellip;">
+                <textarea id="pmcard-reply" name="text" rows="15" style="display:none"></textarea>
+                <div id="pmcard-reply_toast"></div>
+              </div>
+              <p class="sl-pm-note"><i class="bi bi-info-circle" aria-hidden="true"></i> Поле сообщения — настоящий Toast UI из <code>plugins/editors/toastui</code>. Он не помещается в узкую карточку, поэтому ответ возможен только в раскрытой на всю ширину сетки карточке — в 320&nbsp;px колонке редактор нечитаем.</p>
+              <div class="sl-pmcard-reply-foot">
+                <input type="submit" class="sl-but" value="Отправить">
+                <button type="button" class="sl-but"><i class="bi bi-quote" aria-hidden="true"></i>&nbsp; Цитировать</button>
+                <small>Интервал между отправками — 60 секунд</small>
+              </div>
+            </form>
+          </div>
+          <footer class="sl-pmcard-foot">
+            <button type="button" class="sl-but"><i class="bi bi-chevron-up" aria-hidden="true"></i> <span>Свернуть</span></button>
+            <button type="button" class="sl-but"><i class="bi bi-archive" aria-hidden="true"></i> <span>Сохранить</span></button>
+            <button type="button" class="sl-but"><i class="bi bi-envelope" aria-hidden="true"></i> <span>Непрочитанным</span></button>
+            <button type="button" class="sl-but" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i> <span>Удалить</span></button>
+            <span class="sl-but-mini sl-is-soft" title="ID сообщения">4181</span>
+          </footer>
+        </article>
+
+        <article class="sl-pmcard sl-pmcard-new">
+          <header class="sl-pmcard-top">
+            <img src="../templates/lite/images/avatars/presets/007.svg" alt="">
+            <span class="sl-pmcard-who"><b>Nataly_V</b><small>Модераторы</small></span>
+            <label class="sl-pmcard-pick"><span class="sl-visually-hidden">Отметить сообщение 4180</span><input type="checkbox" class="sl-check" name="id[]" value="4180" checked></label>
+          </header>
+          <a class="sl-pmcard-subj" href="#">Re: Права доступа к модулю «Файлы»</a>
+          <p class="sl-pmcard-snip">Группе «Модераторы» всё ещё не видна кнопка загрузки, хотя в правах галка стоит. Проверяла в двух браузерах и с очищенным кэшем шаблона.</p>
+          <div class="sl-pmcard-meta">
+            <span class="sl-chip sl-chip-info sl-message-in"><i class="bi bi-envelope" aria-hidden="true"></i> Новое</span>
+            <span class="sl-chip sl-chip-neutral"><i class="bi bi-clock-history" aria-hidden="true"></i> 12.08 11:05</span>
+          </div>
+          <footer class="sl-pmcard-foot">
+            <button type="button" class="sl-but"><i class="bi bi-eye" aria-hidden="true"></i> <span>Открыть</span></button>
+            <button type="button" class="sl-but"><i class="bi bi-reply" aria-hidden="true"></i> <span>Ответить</span></button>
+            <button type="button" class="sl-but"><i class="bi bi-archive" aria-hidden="true"></i> <span>Сохранить</span></button>
+            <button type="button" class="sl-but" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i> <span>Удалить</span></button>
+            <span class="sl-but-mini sl-is-soft" title="ID сообщения">4180</span>
+          </footer>
+        </article>
+
+        <article class="sl-pmcard">
+          <header class="sl-pmcard-top">
+            <img src="../templates/lite/images/avatars/presets/012.svg" alt="">
+            <span class="sl-pmcard-who"><b>admin_shop</b><small>Администрация</small></span>
+            <label class="sl-pmcard-pick"><span class="sl-visually-hidden">Отметить сообщение 4177</span><input type="checkbox" class="sl-check" name="id[]" value="4177"></label>
+          </header>
+          <a class="sl-pmcard-subj" href="#">Счёт №2418 оплачен, отгрузка сегодня</a>
+          <p class="sl-pmcard-snip">Платёж прошёл, статус заказа в модуле «Магазин» переведён в «Оплачен». Трек-номер придёт отдельным письмом на почту из профиля.</p>
+          <div class="sl-pmcard-meta">
+            <span class="sl-chip sl-chip-neutral"><i class="bi bi-envelope-open" aria-hidden="true"></i> Прочитано</span>
+            <span class="sl-chip sl-chip-neutral"><i class="bi bi-clock-history" aria-hidden="true"></i> 11.08 19:47</span>
+          </div>
+          <footer class="sl-pmcard-foot">
+            <button type="button" class="sl-but"><i class="bi bi-eye" aria-hidden="true"></i> <span>Открыть</span></button>
+            <button type="button" class="sl-but"><i class="bi bi-reply" aria-hidden="true"></i> <span>Ответить</span></button>
+            <button type="button" class="sl-but"><i class="bi bi-archive" aria-hidden="true"></i> <span>Сохранить</span></button>
+            <button type="button" class="sl-but" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i> <span>Удалить</span></button>
+            <span class="sl-but-mini sl-is-soft" title="ID сообщения">4177</span>
+          </footer>
+        </article>
+
+        <article class="sl-pmcard sl-pmcard-saved">
+          <header class="sl-pmcard-top">
+            <img src="../templates/lite/images/avatars/presets/018.svg" alt="">
+            <span class="sl-pmcard-who"><b>Igor_Tech</b><small>Проверенные</small></span>
+            <label class="sl-pmcard-pick"><span class="sl-visually-hidden">Отметить сообщение 4173</span><input type="checkbox" class="sl-check" name="id[]" value="4173"></label>
+          </header>
+          <a class="sl-pmcard-subj" href="#">Шаблон lite: сломалась вёрстка таблиц</a>
+          <p class="sl-pmcard-snip">После правки theme.css строки таблицы в блоке форума разъезжаются на ширине 1024px. Похоже, дело в колонке с многоточием.</p>
+          <div class="sl-pmcard-meta">
+            <span class="sl-chip sl-chip-warn sl-message-save"><i class="bi bi-bookmark-fill" aria-hidden="true"></i> Сохранено</span>
+            <span class="sl-chip sl-chip-neutral"><i class="bi bi-clock-history" aria-hidden="true"></i> 11.08 09:12</span>
+          </div>
+          <footer class="sl-pmcard-foot">
+            <button type="button" class="sl-but"><i class="bi bi-eye" aria-hidden="true"></i> <span>Открыть</span></button>
+            <button type="button" class="sl-but"><i class="bi bi-reply" aria-hidden="true"></i> <span>Ответить</span></button>
+            <button type="button" class="sl-but"><i class="bi bi-bookmark-dash" aria-hidden="true"></i> <span>Убрать</span></button>
+            <button type="button" class="sl-but" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i> <span>Удалить</span></button>
+            <span class="sl-but-mini sl-is-soft" title="ID сообщения">4173</span>
+          </footer>
+        </article>
+
+        <article class="sl-pmcard">
+          <header class="sl-pmcard-top">
+            <img src="../templates/lite/images/avatars/presets/004.svg" alt="">
+            <span class="sl-pmcard-who"><b>Мария Соколова</b><small>Пользователи</small></span>
+            <label class="sl-pmcard-pick"><span class="sl-visually-hidden">Отметить сообщение 4166</span><input type="checkbox" class="sl-check" name="id[]" value="4166"></label>
+          </header>
+          <a class="sl-pmcard-subj" href="#">Спасибо за помощь с переносом БД</a>
+          <p class="sl-pmcard-snip">Дамп развернулся без потерь, префикс поменяли через setup — всё встало. Отдельное спасибо за подсказку про кодировку utf8mb4.</p>
+          <div class="sl-pmcard-meta">
+            <span class="sl-chip sl-chip-neutral"><i class="bi bi-envelope-open" aria-hidden="true"></i> Прочитано</span>
+            <span class="sl-chip sl-chip-neutral"><i class="bi bi-clock-history" aria-hidden="true"></i> 10.08 22:03</span>
+          </div>
+          <footer class="sl-pmcard-foot">
+            <button type="button" class="sl-but"><i class="bi bi-eye" aria-hidden="true"></i> <span>Открыть</span></button>
+            <button type="button" class="sl-but"><i class="bi bi-reply" aria-hidden="true"></i> <span>Ответить</span></button>
+            <button type="button" class="sl-but"><i class="bi bi-archive" aria-hidden="true"></i> <span>Сохранить</span></button>
+            <button type="button" class="sl-but" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i> <span>Удалить</span></button>
+            <span class="sl-but-mini sl-is-soft" title="ID сообщения">4166</span>
+          </footer>
+        </article>
+
+        <article class="sl-pmcard">
+          <header class="sl-pmcard-top">
+            <img src="../templates/lite/images/avatars/system/deleted.svg" alt="">
+            <span class="sl-pmcard-who"><b class="sl-muted">Гость</b><small>Аккаунт удалён</small></span>
+            <label class="sl-pmcard-pick"><span class="sl-visually-hidden">Отметить сообщение 4160</span><input type="checkbox" class="sl-check" name="id[]" value="4160"></label>
+          </header>
+          <a class="sl-pmcard-subj" href="#">Вопрос по лицензии MIT</a>
+          <p class="sl-pmcard-snip">Можно ли использовать SLAED в коммерческом проекте с закрытыми правками ядра, если сохранить копирайт в LICENSE?</p>
+          <div class="sl-pmcard-meta">
+            <span class="sl-chip sl-chip-danger"><i class="bi bi-person-x" aria-hidden="true"></i> Отвечать некому</span>
+            <span class="sl-chip sl-chip-neutral"><i class="bi bi-clock-history" aria-hidden="true"></i> 09.08 13:24</span>
+          </div>
+          <footer class="sl-pmcard-foot">
+            <button type="button" class="sl-but"><i class="bi bi-eye" aria-hidden="true"></i> <span>Открыть</span></button>
+            <button type="button" class="sl-but" disabled><i class="bi bi-reply" aria-hidden="true"></i> <span>Ответить</span></button>
+            <button type="button" class="sl-but"><i class="bi bi-archive" aria-hidden="true"></i> <span>Сохранить</span></button>
+            <button type="button" class="sl-but" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i> <span>Удалить</span></button>
+            <span class="sl-but-mini sl-is-soft" title="ID сообщения">4160</span>
+          </footer>
+        </article>
+
+      </div>
+
+      <div class="sl-pmcard-load">
+        <span class="sl-pmcard-progress"><i></i></span>
+        <small>Показано 6 из 24</small>
+        <button type="button" class="sl-but"><i class="bi bi-arrow-down-circle" aria-hidden="true"></i>&nbsp; Загрузить ещё 18</button>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="sl-pmdemo-sec">
+    <h2><span>2</span> Исходящие</h2>
+    <p>Зелёная полоса и чип со «стрелкой отправки» отличают исходящую карточку; действий два — открыть и удалить свою копию.</p>
+    <div class="sl-pmdemo-frame">
+      <div class="sl-pmcard-grid">
+        <article class="sl-pmcard sl-pmcard-out">
+          <header class="sl-pmcard-top">
+            <img src="../templates/lite/images/avatars/presets/001.svg" alt="">
+            <span class="sl-pmcard-who"><b>Кому: Крамской</b><small>Проверенные</small></span>
+            <label class="sl-pmcard-pick"><span class="sl-visually-hidden">Отметить сообщение 4182</span><input type="checkbox" class="sl-check"></label>
+          </header>
+          <a class="sl-pmcard-subj" href="#">Re: Ошибка при обновлении с 6.2 на 6.3</a>
+          <p class="sl-pmcard-snip">Догнать миграцию можно: в setup/sql лежит инкремент, который добавляет колонку saved и переносит старые флаги. Откат не нужен.</p>
+          <div class="sl-pmcard-meta">
+            <span class="sl-chip sl-chip-warn sl-message-out"><i class="bi bi-send" aria-hidden="true"></i> Не прочитано получателем</span>
+            <span class="sl-chip sl-chip-neutral"><i class="bi bi-clock-history" aria-hidden="true"></i> 12.08 15:10</span>
+          </div>
+          <footer class="sl-pmcard-foot">
+            <button type="button" class="sl-but"><i class="bi bi-eye" aria-hidden="true"></i> <span>Открыть</span></button>
+            <button type="button" class="sl-but" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i> <span>Удалить</span></button>
+            <span class="sl-but-mini sl-is-soft" title="ID сообщения">4182</span>
+          </footer>
+        </article>
+
+        <article class="sl-pmcard sl-pmcard-out">
+          <header class="sl-pmcard-top">
+            <img src="../templates/lite/images/avatars/presets/018.svg" alt="">
+            <span class="sl-pmcard-who"><b>Кому: Igor_Tech</b><small>Проверенные</small></span>
+            <label class="sl-pmcard-pick"><span class="sl-visually-hidden">Отметить сообщение 4175</span><input type="checkbox" class="sl-check"></label>
+          </header>
+          <a class="sl-pmcard-subj" href="#">Re: Шаблон lite: сломалась вёрстка таблиц</a>
+          <p class="sl-pmcard-snip">Проверьте класс sl-cell-ellipsis: у него width 100% и max-width 0, иначе колонка диктует минимальную ширину и таблица вылезает из оболочки.</p>
+          <div class="sl-pmcard-meta">
+            <span class="sl-chip sl-chip-success sl-message-out"><i class="bi bi-send-check" aria-hidden="true"></i> Прочитано 11.08 в 10:14</span>
+          </div>
+          <footer class="sl-pmcard-foot">
+            <button type="button" class="sl-but"><i class="bi bi-eye" aria-hidden="true"></i> <span>Открыть</span></button>
+            <button type="button" class="sl-but" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i> <span>Удалить</span></button>
+            <span class="sl-but-mini sl-is-soft" title="ID сообщения">4175</span>
+          </footer>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="sl-pmdemo-sec">
+    <h2><span>3</span> Пустое состояние</h2>
+    <p>Пунктирная рамка держит место сетки, чтобы страница не «схлопывалась» при пустой папке.</p>
+    <div class="sl-pmdemo-frame">
+      <div class="sl-pmcard-empty">
+        <i class="bi bi-bookmark" aria-hidden="true"></i>
+        <b>Сохранённых сообщений нет</b>
+        <p>Отметьте письмо во входящих кнопкой «Сохранить» — оно переедет сюда и не пропадёт при чистке входящих. Квота сохранённых считается отдельно: 250 сообщений.</p>
+        <button type="button" class="sl-but"><i class="bi bi-envelope" aria-hidden="true"></i>&nbsp; Открыть входящие</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="sl-pmdemo-sec">
+    <h2><span>4</span> Мобильное отображение</h2>
+    <p>Сетка сворачивается в одну колонку, подписи у кнопок действий уходят — остаются иконки с подсказками; вкладки-папки растягиваются на ширину экрана.</p>
+    <div class="sl-pmdemo-phones">
+      <figure class="sl-pmdemo-phone">
+        <figcaption>Карточки, 390&nbsp;px</figcaption>
+        <div class="sl-pmcard-bar">
+          <nav class="sl-pmcard-tabs" aria-label="Папки">
+            <a href="#" aria-current="page">Входящие <span class="sl-but-mini">8</span></a>
+            <a href="#">Исходящие</a>
+            <a href="#">Сохранённые</a>
+          </nav>
+        </div>
+        <div class="sl-pmcard-bar">
+          <form class="sl-search-form" role="search" action="#" method="post">
+            <label class="sl-visually-hidden" for="pmcard-q-m">Поиск</label>
+            <input id="pmcard-q-m" type="search" placeholder="Поиск">
+            <button type="submit" title="Найти"><i class="bi bi-search" aria-hidden="true"></i></button>
+          </form>
+        </div>
+        <div class="sl-pmcard-grid">
+          <article class="sl-pmcard sl-pmcard-new">
+            <header class="sl-pmcard-top">
+              <img src="../templates/lite/images/avatars/presets/001.svg" alt="">
+              <span class="sl-pmcard-who"><b>Крамской</b><small>Проверенные</small></span>
+              <label class="sl-pmcard-pick"><span class="sl-visually-hidden">Отметить</span><input type="checkbox" class="sl-check"></label>
+            </header>
+            <a class="sl-pmcard-subj" href="#">Ошибка при обновлении с 6.2 на 6.3</a>
+            <p class="sl-pmcard-snip">После setup/update ловлю 500 на admin.php, в логе — недостающая колонка saved.</p>
+            <div class="sl-pmcard-meta">
+              <span class="sl-chip sl-chip-info sl-message-in"><i class="bi bi-envelope" aria-hidden="true"></i> Новое</span>
+              <span class="sl-chip sl-chip-neutral"><i class="bi bi-clock-history" aria-hidden="true"></i> 12.08 14:32</span>
+            </div>
+            <footer class="sl-pmcard-foot">
+              <button type="button" class="sl-but" title="Открыть"><i class="bi bi-eye" aria-hidden="true"></i> <span>Открыть</span></button>
+              <button type="button" class="sl-but" title="Ответить"><i class="bi bi-reply" aria-hidden="true"></i> <span>Ответить</span></button>
+              <button type="button" class="sl-but" title="Сохранить"><i class="bi bi-archive" aria-hidden="true"></i> <span>Сохранить</span></button>
+              <button type="button" class="sl-but" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i> <span>Удалить</span></button>
+              <span class="sl-but-mini sl-is-soft">4181</span>
+            </footer>
+          </article>
+          <article class="sl-pmcard sl-pmcard-saved">
+            <header class="sl-pmcard-top">
+              <img src="../templates/lite/images/avatars/presets/018.svg" alt="">
+              <span class="sl-pmcard-who"><b>Igor_Tech</b><small>Проверенные</small></span>
+              <label class="sl-pmcard-pick"><span class="sl-visually-hidden">Отметить</span><input type="checkbox" class="sl-check"></label>
+            </header>
+            <a class="sl-pmcard-subj" href="#">Шаблон lite: сломалась вёрстка таблиц</a>
+            <p class="sl-pmcard-snip">После правки theme.css строки разъезжаются на ширине 1024px.</p>
+            <div class="sl-pmcard-meta">
+              <span class="sl-chip sl-chip-warn sl-message-save"><i class="bi bi-bookmark-fill" aria-hidden="true"></i> Сохранено</span>
+            </div>
+            <footer class="sl-pmcard-foot">
+              <button type="button" class="sl-but" title="Открыть"><i class="bi bi-eye" aria-hidden="true"></i> <span>Открыть</span></button>
+              <button type="button" class="sl-but" title="Ответить"><i class="bi bi-reply" aria-hidden="true"></i> <span>Ответить</span></button>
+              <button type="button" class="sl-but" title="Убрать из сохранённых"><i class="bi bi-bookmark-dash" aria-hidden="true"></i> <span>Убрать</span></button>
+              <button type="button" class="sl-but" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i> <span>Удалить</span></button>
+              <span class="sl-but-mini sl-is-soft">4173</span>
+            </footer>
+          </article>
+        </div>
+        <div class="sl-pmcard-load">
+          <small>Показано 2 из 24</small>
+          <button type="button" class="sl-but">Загрузить ещё</button>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+</main>
+
+<script>
+/* Демонстрационное поведение: фильтры-чипсы и раскрытие карточки */
+document.querySelectorAll('.sl-pmcard-facets').forEach(function (box) {
+  box.addEventListener('click', function (ev) {
+    var but = ev.target.closest('button');
+    if (!but) return;
+    box.querySelectorAll('button').forEach(function (one) { one.setAttribute('aria-pressed', String(one === but)); });
+  });
+});
+document.querySelectorAll('.sl-pmcard-grid').forEach(function (grid) {
+  grid.addEventListener('click', function (ev) {
+    var but = ev.target.closest('.sl-pmcard-foot .sl-but');
+    if (!but || !but.textContent.trim().startsWith('Открыть')) return;
+    grid.querySelectorAll('.sl-pmcard').forEach(function (one) { one.removeAttribute('aria-current'); });
+    but.closest('.sl-pmcard').setAttribute('aria-current', 'true');
+  });
+});
+</script>
+
+<!-- Реальный редактор сообщений: те же файлы, что подключает драйвер plugins/editors/toastui -->
+<script src="../plugins/editors/toastui/assets/toastui-editor.all.min.js"></script>
+<script src="../plugins/editors/toastui/assets/i18n/ru-ru.js"></script>
+<script src="../plugins/editors/toastui/assets/i18n/emoji-ru.js"></script>
+<script src="../plugins/editors/toastui/assets/editor-tags.js"></script>
+<script src="../plugins/editors/toastui/assets/editor-emoji.js"></script>
+<script src="../plugins/editors/toastui/assets/editor-upload.js"></script>
+<script>
+/* Монтирование Toast UI так же, как это делает EditorToastUi::getWidget(): скрытая textarea — источник, соседний div — сам редактор */
+document.querySelectorAll('[data-sl-pm-editor]').forEach(function (box) {
+  var id = box.getAttribute('data-sl-pm-editor');
+  var ta = document.getElementById(id);
+  var mount = document.getElementById(id + '_toast');
+  var root = window.toastui && window.toastui.Editor;
+  if (!ta || !mount || !root) return;
+  var ed = new root({
+    el: mount,
+    initialEditType: 'markdown',
+    initialValue: ta.value,
+    placeholder: box.getAttribute('data-sl-pm-placeholder') || '',
+    height: (box.getAttribute('data-sl-pm-height') || '300') + 'px',
+    language: 'ru-RU',
+    autofocus: false,
+    usageStatistics: false
+  });
+  if (window.SlaedToastUi) {
+    window.SlaedToastUi.register(id, ed, {
+      super: false,
+      tpl: 'js-slaed-editor-tpl',
+      labels: {
+        quote: 'Цитировать', hide: 'Скрытый текст', tabs: 'Вкладки', emoji: 'Смайлы',
+        fullscreen: 'Развернуть редактор на весь экран', exitfull: 'Свернуть редактор',
+        insert: 'Вставить изображение', image: 'Изображение', attach: 'Прикрепить файл'
+      }
+    });
+  }
+  ed.on('change', function () { ta.value = ed.getMarkdown(); });
+});
+</script>
+</body>
+</html>

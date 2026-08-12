@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED — ЛС: где разместить фильтры</title>
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<style>
+/* ==== Обвязка демо ==== */
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color: var(--sl-color-text); font: 13px/1.45 Arial, system-ui, sans-serif; }
+a { text-decoration: none; }
+.sl-pmdemo-head { padding: 30px max(20px, calc((100vw - 1240px) / 2)) 26px; border-bottom: 1px solid var(--sl-color-border); background: radial-gradient(circle at 88% 0, color-mix(in srgb, var(--sl-color-brand) 20%, transparent), transparent 32%), var(--sl-color-bg); }
+.sl-pmdemo-back { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px; color: var(--sl-color-text-muted); font-size: 12px; }
+.sl-pmdemo-back:hover { color: var(--sl-color-primary); }
+.sl-pmdemo-head h1 { margin: 0 0 10px; color: var(--sl-color-text-heading); font-size: clamp(24px, 4vw, 34px); line-height: 1.12; }
+.sl-pmdemo-head p { max-width: 880px; margin: 0 0 12px; color: var(--sl-color-text-muted); }
+.sl-pmdemo-chips { display: flex; flex-wrap: wrap; gap: var(--sl-space-sm); margin-top: 14px; }
+.sl-pmdemo-main { width: 1240px; max-width: calc(100% - 28px); margin: 26px auto 0; }
+.sl-pmdemo-sec { margin-bottom: 40px; }
+.sl-pmdemo-sec > h2 { display: flex; align-items: center; gap: 10px; margin: 0 0 6px; color: var(--sl-color-text-heading); font-size: 18px; }
+.sl-pmdemo-sec > p { max-width: 900px; margin: 0 0 14px; color: var(--sl-color-text-muted); }
+:focus-visible { outline: 2px solid var(--sl-color-primary); outline-offset: 2px; border-radius: 3px; }
+
+.sl-pmt-card { margin-bottom: 16px; border: 1px solid var(--sl-color-border-subtle); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); box-shadow: var(--sl-shadow-soft); overflow: hidden; }
+.sl-pmt-card > header { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sl-space-md); padding: 11px 14px; border-bottom: 1px solid var(--sl-color-border-subtle); background: var(--sl-color-bg-soft); }
+.sl-pmt-card > header b { display: inline-flex; align-items: center; gap: 8px; color: var(--sl-color-text-heading); font-size: 14px; }
+.sl-pmt-key { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 6px; background: var(--sl-color-text-heading); color: var(--sl-color-on-dark); font: bold 11px/1 Arial, sans-serif; }
+.sl-pmt-card > header small { color: var(--sl-color-text-muted); }
+.sl-pmt-card > header .sl-chip { height: 20px; font-size: 11px; }
+.sl-pmt-wide { container-type: inline-size; padding: 16px 14px; }
+.sl-pmt-narrow { container-type: inline-size; width: 430px; max-width: 100%; margin: 0 14px 16px; padding: 12px; border: 1px dashed var(--sl-color-border-strong); border-radius: var(--sl-radius-card); }
+.sl-pmt-narrow::before { content: "430 px"; display: block; margin-bottom: 9px; color: var(--sl-color-text-subtle); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
+.sl-pmt-note { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 6px 20px; padding: 10px 14px; border-top: 1px solid var(--sl-color-border-subtle); background: var(--sl-color-bg-soft); font-size: 12px; }
+.sl-pmt-note p { position: relative; margin: 0; padding-left: 18px; color: var(--sl-color-text-muted); }
+.sl-pmt-note p::before { position: absolute; left: 0; font-family: bootstrap-icons; font-size: 11px; }
+.sl-pmt-pro::before { content: "\F26E"; color: var(--sl-color-success); }
+.sl-pmt-con::before { content: "\F62A"; color: var(--sl-color-warning); }
+
+/* Базовые части панели — как в финальном макете */
+.sl-pmt-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sl-space-md); }
+.sl-pmt-bar + .sl-pmt-bar { margin-top: var(--sl-space-md); }
+.sl-pmt-bar .sl-search-form { width: 340px; flex: 1 1 240px; }
+.sl-pmt-bar .sl-field { height: 30px; }
+.sl-pmt-found { margin-left: auto; color: var(--sl-color-text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sl-pmt-found b { color: var(--sl-color-text-heading); }
+
+/* Чипсы быстрых фильтров */
+.sl-pmt-quick { display: flex; flex-wrap: wrap; gap: var(--sl-space-sm); }
+.sl-pmt-quick .sl-chip { border: 1px solid transparent; cursor: pointer; }
+.sl-pmt-quick .sl-chip[aria-pressed="true"] { border-color: color-mix(in srgb, var(--sl-color-primary) 45%, transparent); background: color-mix(in srgb, var(--sl-color-primary) 14%, transparent); color: var(--sl-color-brand-strong); }
+.sl-pmt-quick .sl-chip b { font-weight: normal; opacity: 0.65; }
+
+/* Полоса активных фильтров — как в финале сейчас */
+.sl-pmt-active { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sl-space-xs); margin-top: var(--sl-space-md); padding: 7px 10px; border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-control); background: var(--sl-color-bg-soft); }
+.sl-pmt-active > b { color: var(--sl-color-text-muted); font-size: 11px; font-weight: normal; }
+.sl-pmt-active .sl-chip { height: 22px; padding: 0 4px 0 8px; font-size: 11px; }
+.sl-pmt-kill { display: grid; place-items: center; width: 16px; height: 16px; border: 0; border-radius: 50%; background: transparent; color: inherit; cursor: pointer; font-size: 10px; }
+.sl-pmt-kill:hover { background: var(--sl-overlay-10); }
+.sl-pmt-clear { margin-left: auto; border: 0; background: transparent; color: var(--sl-color-primary); cursor: pointer; font: inherit; font-size: 11px; }
+.sl-pmt-clear:hover { text-decoration: underline; }
+
+/* Вариант Г: чипсы и есть строка состояния */
+.sl-pmt-merge { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sl-space-sm); margin-top: var(--sl-space-md); padding: 8px 10px; border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-control); background: var(--sl-color-bg-soft); }
+.sl-pmt-merge .sl-chip { cursor: pointer; border: 1px solid transparent; }
+.sl-pmt-merge .sl-chip[aria-pressed="true"] { border-color: color-mix(in srgb, var(--sl-color-primary) 45%, transparent); background: color-mix(in srgb, var(--sl-color-primary) 14%, transparent); color: var(--sl-color-brand-strong); }
+.sl-pmt-merge .sl-chip b { font-weight: normal; opacity: 0.65; }
+.sl-pmt-merge .sl-pmt-sep { width: 1px; height: 20px; background: var(--sl-color-border-strong); }
+
+/* Вариант Д: сегментированный переключатель */
+.sl-pmt-seg { display: inline-flex; padding: 3px; border-radius: 999px; background: var(--sl-color-bg-soft-alt); }
+.sl-pmt-seg button { height: 26px; padding: 0 12px; border: 0; border-radius: 999px; background: transparent; color: var(--sl-color-text-muted); font: 12px/1 Arial, system-ui, sans-serif; cursor: pointer; transition: background-color 0.18s ease, color 0.18s ease; }
+.sl-pmt-seg button[aria-selected="true"] { background: var(--sl-color-bg); color: var(--sl-color-brand-strong); font-weight: bold; box-shadow: var(--sl-shadow-soft); }
+.sl-pmt-seg button b { font-weight: inherit; opacity: 0.6; }
+
+/* Вариант Е: фильтры внутри левой колонки */
+.sl-pmt-split { display: grid; grid-template-columns: 396px minmax(0, 1fr); overflow: hidden; border: 1px solid var(--sl-color-border-strong); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); }
+.sl-pmt-aside { display: flex; min-width: 0; flex-direction: column; border-right: 1px solid var(--sl-color-border-subtle); background: var(--sl-color-bg-soft); }
+.sl-pmt-aside-top { display: flex; flex-wrap: wrap; gap: var(--sl-space-xs); padding: 9px 10px; border-bottom: 1px solid var(--sl-color-border-subtle); background: var(--sl-color-bg); }
+.sl-pmt-aside-top .sl-chip { cursor: pointer; border: 1px solid transparent; font-size: 12px; }
+.sl-pmt-aside-top .sl-chip[aria-pressed="true"] { border-color: color-mix(in srgb, var(--sl-color-primary) 45%, transparent); background: color-mix(in srgb, var(--sl-color-primary) 14%, transparent); color: var(--sl-color-brand-strong); }
+.sl-pmt-aside-top .sl-chip b { font-weight: normal; opacity: 0.65; }
+.sl-pmt-rows { padding: 4px 0; }
+.sl-pmt-row { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; align-items: center; gap: 9px; padding: 7px 10px; border-bottom: 1px solid var(--sl-color-border-subtle); }
+.sl-pmt-row img { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; background: var(--sl-color-bg-soft-soft); }
+.sl-pmt-row b { display: block; overflow: hidden; color: var(--sl-color-text-heading); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.sl-pmt-row small { display: block; overflow: hidden; color: var(--sl-color-text-muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.sl-pmt-row time { color: var(--sl-color-text-subtle); font-size: 11px; }
+.sl-pmt-view { display: grid; place-items: center; padding: 30px; color: var(--sl-color-text-subtle); }
+
+/* Итог */
+.sl-pmt-final { display: grid; gap: 12px; padding: 18px; border: 1px solid var(--sl-color-border-strong); border-left: 4px solid var(--sl-color-primary); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); }
+.sl-pmt-final h3 { margin: 0; color: var(--sl-color-text-heading); font-size: 17px; }
+.sl-pmt-final p { max-width: 900px; margin: 0; }
+.sl-pmt-final ul { max-width: 900px; margin: 0; padding-left: 20px; }
+.sl-pmt-final li { margin-bottom: 4px; }
+
+/* Узкая раскладка панелей */
+@container (max-width: 560px) {
+  .sl-pmt-bar .sl-search-form { flex-basis: 100%; width: auto; }
+  .sl-pmt-found { margin-left: 0; }
+  .sl-pmt-quick { width: 100%; }
+  .sl-pmt-seg { width: 100%; }
+  .sl-pmt-seg button { flex: 1 1 0; padding: 0 6px; }
+  .sl-pmt-split { grid-template-columns: 1fr; }
+  .sl-pmt-view { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="sl-pmdemo-head">
+  <a class="sl-pmdemo-back" href="private-messages-final-2026.html"><i class="bi bi-arrow-left" aria-hidden="true"></i> Финальный вариант</a>
+  <h1>Где разместить быстрые фильтры</h1>
+  <p>Чипсы «Все · Непрочитанные · Сохранённые · За неделю» в финальный макет добавить стоит. Но есть развилка, которую надо решить до раскладки: <b>в финале уже есть полоса активных фильтров</b> — та, где применённые условия висят снимаемыми токенами. Если положить рядом ещё ряд чипсов, «Непрочитанные» окажется на экране дважды: как нажатый чипс и как снимаемый токен.</p>
+  <p>Поэтому шесть вариантов ниже делятся на два класса: те, где два ряда сосуществуют (А, Б, В, Е), и те, где они объединены в один (Г, Д). Каждый показан в широком виде и на 430&nbsp;px.</p>
+  <div class="sl-pmdemo-chips">
+    <span class="sl-chip sl-chip-warn"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> риск дублирования состояния</span>
+    <span class="sl-chip sl-chip-info"><i class="bi bi-database" aria-hidden="true"></i> «С вложениями» не поддержано схемой</span>
+    <span class="sl-chip sl-chip-neutral"><i class="bi bi-arrows-collapse" aria-hidden="true"></i> проверено на 430 px</span>
+  </div>
+</header>
+
+<main class="sl-pmdemo-main">
+
+  <section class="sl-pmdemo-sec">
+    <h2>Сначала о самих чипсах</h2>
+    <p>В таблице <code>_privat</code> колонок вложений нет — только <code>id, uidin, uidout, title, body, time, ip, viewed, saved, delin, delout</code>. Чипс «С вложениями» пришлось бы считать через <code>LIKE</code> по <code>MEDIUMTEXT body</code> — полное сканирование без индекса, и на каждый показ страницы. Остальные три ложатся в уже существующие индексы.</p>
+    <div class="sl-pmt-card">
+      <header><b>Набор чипсов, который ничего не стоит</b><small>каждый попадает в свой индекс</small><span class="sl-chip sl-chip-success">взят в финал</span></header>
+      <div class="sl-pmt-wide">
+        <div class="sl-pmt-quick" role="group" aria-label="Быстрый фильтр">
+          <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="true">Все <b>· 240</b></button>
+          <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Непрочитанные <b>· 8</b></button>
+          <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Прочитанные <b>· 232</b></button>
+          <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">За неделю <b>· 61</b></button>
+        </div>
+      </div>
+      <div class="sl-pmt-note">
+        <p class="sl-pmt-pro">Непрочитанные и Прочитанные — индекс <code>in_new (uidin, delin, viewed)</code>, обе стороны одного флага</p>
+        <p class="sl-pmt-pro">За неделю — индекс <code>in_box (uidin, delin, saved, time)</code>, он заканчивается на <code>time</code></p>
+        <p class="sl-pmt-con">Непрочитанные и Прочитанные исключают друг друга: <code>viewed</code> не бывает 0 и 1 сразу, вместе они дадут пустой список</p>
+        <p class="sl-pmt-con">Сохранённые чипсом не берём: по <code>getBoxWhere()</code> входящие — это <code>saved = 0</code>, сохранённых там нет вовсе. Это полка, а не фильтр</p>
+        <p class="sl-pmt-con">С вложениями — колонки нет; <code>LIKE</code> по телу письма читает всю таблицу, от чипса стоит отказаться</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sl-pmdemo-sec">
+    <h2>Раскладки</h2>
+
+    <article class="sl-pmt-card">
+      <header>
+        <b><span class="sl-pmt-key">А</span> Чипсы справа от поиска</b>
+        <small>как на скриншоте из варианта 1</small>
+      </header>
+      <div class="sl-pmt-wide">
+        <div class="sl-pmt-bar">
+          <form class="sl-search-form" role="search" action="#" method="post">
+            <label class="sl-visually-hidden" for="pmt-a">Поиск</label>
+            <input id="pmt-a" type="search" placeholder="Поиск по теме, тексту и автору">
+            <button type="submit" title="Найти"><i class="bi bi-search" aria-hidden="true"></i></button>
+          </form>
+          <div class="sl-pmt-quick" role="group" aria-label="Быстрый фильтр">
+            <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="true">Все <b>· 240</b></button>
+            <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Непрочитанные <b>· 8</b></button>
+            <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Сохранённые <b>· 63</b></button>
+            <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">За неделю <b>· 61</b></button>
+          </div>
+        </div>
+        <div class="sl-pmt-bar">
+          <label class="sl-visually-hidden" for="pmt-a-s">Сортировка</label>
+          <select id="pmt-a-s" class="sl-field"><option>Сначала новые</option><option>Непрочитанные сверху</option></select>
+          <span class="sl-pmt-found">Найдено <b>61</b> из <b>240</b> · показано 1&ndash;25</span>
+        </div>
+        <div class="sl-pmt-active">
+          <b>Фильтры:</b>
+          <span class="sl-chip sl-chip-info">Непрочитанные <button type="button" class="sl-pmt-kill" title="Снять"><i class="bi bi-x" aria-hidden="true"></i></button></span>
+          <span class="sl-chip sl-chip-warn">«миграция» <button type="button" class="sl-pmt-kill" title="Снять"><i class="bi bi-x" aria-hidden="true"></i></button></span>
+          <button type="button" class="sl-pmt-clear">Сбросить всё</button>
+        </div>
+      </div>
+      <div class="sl-pmt-narrow">
+        <div class="sl-pmt-bar">
+          <form class="sl-search-form" role="search" action="#" method="post">
+            <label class="sl-visually-hidden" for="pmt-a2">Поиск</label>
+            <input id="pmt-a2" type="search" placeholder="Поиск">
+            <button type="submit" title="Найти"><i class="bi bi-search" aria-hidden="true"></i></button>
+          </form>
+          <div class="sl-pmt-quick" role="group" aria-label="Быстрый фильтр">
+            <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="true">Все <b>· 240</b></button>
+            <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Непрочитанные <b>· 8</b></button>
+            <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Сохранённые <b>· 63</b></button>
+            <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">За неделю <b>· 61</b></button>
+          </div>
+        </div>
+      </div>
+      <div class="sl-pmt-note">
+        <p class="sl-pmt-pro">Минимальная правка: ряд уже сверстан в варианте 1, переносится как есть</p>
+        <p class="sl-pmt-pro">Поиск остаётся первым — привычный порядок «сначала ищу, потом сужаю»</p>
+        <p class="sl-pmt-con">Чипсы прыгают по ширине: при 1200&nbsp;px они в одну строку, при 1000&nbsp;px последний переносится под поиск</p>
+        <p class="sl-pmt-con">«Непрочитанные» дублируются в полосе активных фильтров ниже</p>
+      </div>
+    </article>
+
+    <article class="sl-pmt-card">
+      <header>
+        <b><span class="sl-pmt-key">Б</span> Чипсы слева, поиск уже и справа</b>
+        <small>ваше предложение</small>
+      </header>
+      <div class="sl-pmt-wide">
+        <div class="sl-pmt-bar">
+          <div class="sl-pmt-quick" role="group" aria-label="Быстрый фильтр">
+            <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="true">Все <b>· 240</b></button>
+            <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Непрочитанные <b>· 8</b></button>
+            <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Сохранённые <b>· 63</b></button>
+            <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">За неделю <b>· 61</b></button>
+          </div>
+          <form class="sl-search-form" role="search" action="#" method="post" style="width: 250px; flex: 0 1 250px; margin-left: auto;">
+            <label class="sl-visually-hidden" for="pmt-b">Поиск</label>
+            <input id="pmt-b" type="search" placeholder="Поиск">
+            <button type="submit" title="Найти"><i class="bi bi-search" aria-hidden="true"></i></button>
+          </form>
+        </div>
+        <div class="sl-pmt-bar">
+          <label class="sl-visually-hidden" for="pmt-b-s">Сортировка</label>
+          <select id="pmt-b-s" class="sl-field"><option>Сначала новые</option><option>Непрочитанные сверху</option></select>
+          <span class="sl-pmt-found">Найдено <b>61</b> из <b>240</b> · показано 1&ndash;25</span>
+        </div>
+        <div class="sl-pmt-active">
+          <b>Фильтры:</b>
+          <span class="sl-chip sl-chip-info">Непрочитанные <button type="button" class="sl-pmt-kill" title="Снять"><i class="bi bi-x" aria-hidden="true"></i></button></span>
+          <span class="sl-chip sl-chip-warn">«миграция» <button type="button" class="sl-pmt-kill" title="Снять"><i class="bi bi-x" aria-hidden="true"></i></button></span>
+          <button type="button" class="sl-pmt-clear">Сбросить всё</button>
+        </div>
+      </div>
+      <div class="sl-pmt-narrow">
+        <div class="sl-pmt-bar">
+          <div class="sl-pmt-quick" role="group" aria-label="Быстрый фильтр">
+            <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="true">Все <b>· 240</b></button>
+            <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Непрочитанные <b>· 8</b></button>
+            <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Сохранённые <b>· 63</b></button>
+            <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">За неделю <b>· 61</b></button>
+          </div>
+          <form class="sl-search-form" role="search" action="#" method="post">
+            <label class="sl-visually-hidden" for="pmt-b2">Поиск</label>
+            <input id="pmt-b2" type="search" placeholder="Поиск">
+            <button type="submit" title="Найти"><i class="bi bi-search" aria-hidden="true"></i></button>
+          </form>
+        </div>
+      </div>
+      <div class="sl-pmt-note">
+        <p class="sl-pmt-pro">Чипсы стоят у левого края, под ними ровно так же начинается список — вертикальная ось выдержана</p>
+        <p class="sl-pmt-pro">Поиск фиксированной ширины перестаёт «дышать» при смене окна</p>
+        <p class="sl-pmt-con">250&nbsp;px под плейсхолдер «Поиск по теме, тексту и автору» мало — подпись придётся сократить до «Поиск»</p>
+        <p class="sl-pmt-con">На узком экране чипсы всё равно уходят выше поиска, то есть порядок меняется дважды</p>
+      </div>
+    </article>
+
+    <article class="sl-pmt-card">
+      <header>
+        <b><span class="sl-pmt-key">В</span> Две строки: поиск сверху, чипсы под ним</b>
+        <small>каждая строка со своей задачей</small>
+      </header>
+      <div class="sl-pmt-wide">
+        <div class="sl-pmt-bar">
+          <form class="sl-search-form" role="search" action="#" method="post">
+            <label class="sl-visually-hidden" for="pmt-c">Поиск</label>
+            <input id="pmt-c" type="search" placeholder="Поиск по теме, тексту и автору">
+            <button type="submit" title="Найти"><i class="bi bi-search" aria-hidden="true"></i></button>
+          </form>
+          <label class="sl-visually-hidden" for="pmt-c-s">Сортировка</label>
+          <select id="pmt-c-s" class="sl-field"><option>Сначала новые</option><option>Непрочитанные сверху</option></select>
+          <span class="sl-pmt-found">Найдено <b>61</b> из <b>240</b> · показано 1&ndash;25</span>
+        </div>
+        <div class="sl-pmt-bar">
+          <div class="sl-pmt-quick" role="group" aria-label="Быстрый фильтр">
+            <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="true">Все <b>· 240</b></button>
+            <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Непрочитанные <b>· 8</b></button>
+            <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Сохранённые <b>· 63</b></button>
+            <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">За неделю <b>· 61</b></button>
+          </div>
+        </div>
+        <div class="sl-pmt-active">
+          <b>Фильтры:</b>
+          <span class="sl-chip sl-chip-info">Непрочитанные <button type="button" class="sl-pmt-kill" title="Снять"><i class="bi bi-x" aria-hidden="true"></i></button></span>
+          <span class="sl-chip sl-chip-warn">«миграция» <button type="button" class="sl-pmt-kill" title="Снять"><i class="bi bi-x" aria-hidden="true"></i></button></span>
+          <button type="button" class="sl-pmt-clear">Сбросить всё</button>
+        </div>
+      </div>
+      <div class="sl-pmt-narrow">
+        <div class="sl-pmt-bar">
+          <form class="sl-search-form" role="search" action="#" method="post">
+            <label class="sl-visually-hidden" for="pmt-c2">Поиск</label>
+            <input id="pmt-c2" type="search" placeholder="Поиск">
+            <button type="submit" title="Найти"><i class="bi bi-search" aria-hidden="true"></i></button>
+          </form>
+          <span class="sl-pmt-found">Найдено <b>61</b> из <b>240</b></span>
+        </div>
+        <div class="sl-pmt-bar">
+          <div class="sl-pmt-quick" role="group" aria-label="Быстрый фильтр">
+            <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="true">Все <b>· 240</b></button>
+            <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Непрочитанные <b>· 8</b></button>
+            <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Сохранённые <b>· 63</b></button>
+            <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">За неделю <b>· 61</b></button>
+          </div>
+        </div>
+      </div>
+      <div class="sl-pmt-note">
+        <p class="sl-pmt-pro">Раскладка не меняется от ширины: на 1440 и на 430&nbsp;px порядок один и тот же</p>
+        <p class="sl-pmt-pro">Поиск занимает всю привычную ширину, плейсхолдер сокращать не нужно</p>
+        <p class="sl-pmt-con">Три ряда подряд: поиск, чипсы, активные фильтры — шапка вырастает на 40&nbsp;px</p>
+        <p class="sl-pmt-con">Дублирование состояния никуда не делось</p>
+      </div>
+    </article>
+
+    <article class="sl-pmt-card">
+      <header>
+        <b><span class="sl-pmt-key">Г</span> Чипсы и есть строка активных фильтров</b>
+        <small>объединение вместо двух рядов</small>
+        <span class="sl-chip sl-chip-success">нет дублирования</span>
+      </header>
+      <div class="sl-pmt-wide">
+        <div class="sl-pmt-bar">
+          <form class="sl-search-form" role="search" action="#" method="post">
+            <label class="sl-visually-hidden" for="pmt-d">Поиск</label>
+            <input id="pmt-d" type="search" value="миграция" placeholder="Поиск по теме, тексту и автору">
+            <button type="submit" title="Найти"><i class="bi bi-search" aria-hidden="true"></i></button>
+          </form>
+          <label class="sl-visually-hidden" for="pmt-d-s">Сортировка</label>
+          <select id="pmt-d-s" class="sl-field"><option>Сначала новые</option><option>Непрочитанные сверху</option></select>
+          <span class="sl-pmt-found">Найдено <b>61</b> из <b>240</b> · показано 1&ndash;25</span>
+        </div>
+        <div class="sl-pmt-merge" role="group" aria-label="Фильтр">
+          <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Все <b>· 240</b></button>
+          <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="true">Непрочитанные <b>· 8</b></button>
+          <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Сохранённые <b>· 63</b></button>
+          <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="true">За неделю <b>· 61</b></button>
+          <span class="sl-pmt-sep" aria-hidden="true"></span>
+          <span class="sl-chip sl-chip-warn">«миграция» <button type="button" class="sl-pmt-kill" title="Очистить поиск"><i class="bi bi-x" aria-hidden="true"></i></button></span>
+          <button type="button" class="sl-pmt-clear">Сбросить всё</button>
+        </div>
+      </div>
+      <div class="sl-pmt-narrow">
+        <div class="sl-pmt-bar">
+          <form class="sl-search-form" role="search" action="#" method="post">
+            <label class="sl-visually-hidden" for="pmt-d2">Поиск</label>
+            <input id="pmt-d2" type="search" value="миграция" placeholder="Поиск">
+            <button type="submit" title="Найти"><i class="bi bi-search" aria-hidden="true"></i></button>
+          </form>
+          <span class="sl-pmt-found">Найдено <b>61</b> из <b>240</b></span>
+        </div>
+        <div class="sl-pmt-merge" role="group" aria-label="Фильтр">
+          <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Все <b>· 240</b></button>
+          <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="true">Непрочитанные <b>· 8</b></button>
+          <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Сохранённые <b>· 63</b></button>
+          <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="true">За неделю <b>· 61</b></button>
+          <span class="sl-chip sl-chip-warn">«миграция» <button type="button" class="sl-pmt-kill" title="Очистить поиск"><i class="bi bi-x" aria-hidden="true"></i></button></span>
+          <button type="button" class="sl-pmt-clear">Сбросить всё</button>
+        </div>
+      </div>
+      <div class="sl-pmt-note">
+        <p class="sl-pmt-pro">Один ряд вместо двух: нажатый чипс и есть применённый фильтр, второй раз его писать не надо</p>
+        <p class="sl-pmt-pro">Снять фильтр можно там же, где включил, — не нужно искать токен в другой полосе</p>
+        <p class="sl-pmt-pro">Поисковый запрос присоединяется к тому же ряду отдельным снимаемым чипсом</p>
+        <p class="sl-pmt-con">Чипс работает двумя способами сразу: нажатие переключает, крестик снимает — правило надо объяснить один раз</p>
+        <p class="sl-pmt-con">Условия, которых нет среди чипсов (диапазон дат, конкретный отправитель), всё равно придут в этот ряд токенами</p>
+      </div>
+    </article>
+
+    <article class="sl-pmt-card">
+      <header>
+        <b><span class="sl-pmt-key">Д</span> Сегмент для взаимоисключающих, чипсы для добавочных</b>
+        <small>разделение по типу условия</small>
+        <span class="sl-chip sl-chip-success">нет дублирования</span>
+      </header>
+      <div class="sl-pmt-wide">
+        <div class="sl-pmt-bar">
+          <div class="sl-pmt-seg" role="tablist" aria-label="Выборка">
+            <button type="button" role="tab" aria-selected="false">Все <b>240</b></button>
+            <button type="button" role="tab" aria-selected="true">Непрочитанные <b>8</b></button>
+            <button type="button" role="tab" aria-selected="false">Сохранённые <b>63</b></button>
+          </div>
+          <form class="sl-search-form" role="search" action="#" method="post" style="width: 280px; flex: 0 1 280px; margin-left: auto;">
+            <label class="sl-visually-hidden" for="pmt-e">Поиск</label>
+            <input id="pmt-e" type="search" value="миграция" placeholder="Поиск">
+            <button type="submit" title="Найти"><i class="bi bi-search" aria-hidden="true"></i></button>
+          </form>
+        </div>
+        <div class="sl-pmt-bar">
+          <div class="sl-pmt-quick" role="group" aria-label="Дополнительно">
+            <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="true">За неделю <b>· 61</b></button>
+            <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">От Крамской <b>· 46</b></button>
+            <span class="sl-chip sl-chip-warn">«миграция» <button type="button" class="sl-pmt-kill" title="Очистить поиск"><i class="bi bi-x" aria-hidden="true"></i></button></span>
+          </div>
+          <span class="sl-pmt-found">Найдено <b>61</b> из <b>240</b></span>
+        </div>
+      </div>
+      <div class="sl-pmt-narrow">
+        <div class="sl-pmt-bar">
+          <div class="sl-pmt-seg" role="tablist" aria-label="Выборка">
+            <button type="button" role="tab" aria-selected="false">Все <b>240</b></button>
+            <button type="button" role="tab" aria-selected="true">Непрочит. <b>8</b></button>
+            <button type="button" role="tab" aria-selected="false">Сохран. <b>63</b></button>
+          </div>
+        </div>
+        <div class="sl-pmt-bar">
+          <form class="sl-search-form" role="search" action="#" method="post">
+            <label class="sl-visually-hidden" for="pmt-e2">Поиск</label>
+            <input id="pmt-e2" type="search" value="миграция" placeholder="Поиск">
+            <button type="submit" title="Найти"><i class="bi bi-search" aria-hidden="true"></i></button>
+          </form>
+        </div>
+        <div class="sl-pmt-bar">
+          <div class="sl-pmt-quick" role="group" aria-label="Дополнительно">
+            <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="true">За неделю <b>· 61</b></button>
+            <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">От Крамской <b>· 46</b></button>
+          </div>
+        </div>
+      </div>
+      <div class="sl-pmt-note">
+        <p class="sl-pmt-pro">Честно разделены разные вещи: «Все / Непрочитанные / Сохранённые» исключают друг друга, «За неделю» добавляется к любому из них</p>
+        <p class="sl-pmt-pro">Сегмент выглядит как переключатель и не путается с добавочными условиями</p>
+        <p class="sl-pmt-con">Ещё один компонент: сегментированного переключателя в теме нет, придётся заводить</p>
+        <p class="sl-pmt-con">На узком экране это уже три ряда</p>
+      </div>
+    </article>
+
+    <article class="sl-pmt-card">
+      <header>
+        <b><span class="sl-pmt-key">Е</span> Чипсы в левой колонке, над лентой</b>
+        <small>фильтр стоит там, где список, который он сужает</small>
+      </header>
+      <div class="sl-pmt-wide">
+        <div class="sl-pmt-bar">
+          <form class="sl-search-form" role="search" action="#" method="post">
+            <label class="sl-visually-hidden" for="pmt-f">Поиск</label>
+            <input id="pmt-f" type="search" placeholder="Поиск по теме, тексту и автору">
+            <button type="submit" title="Найти"><i class="bi bi-search" aria-hidden="true"></i></button>
+          </form>
+          <label class="sl-visually-hidden" for="pmt-f-s">Сортировка</label>
+          <select id="pmt-f-s" class="sl-field"><option>Сначала новые</option><option>Непрочитанные сверху</option></select>
+          <span class="sl-pmt-found">Найдено <b>61</b> из <b>240</b></span>
+        </div>
+        <div class="sl-pmt-split" style="margin-top: var(--sl-space-md);">
+          <aside class="sl-pmt-aside">
+            <div class="sl-pmt-aside-top" role="group" aria-label="Быстрый фильтр">
+              <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="true">Все <b>· 240</b></button>
+              <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Непрочит. <b>· 8</b></button>
+              <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Сохран. <b>· 63</b></button>
+              <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Неделя <b>· 61</b></button>
+            </div>
+            <div class="sl-pmt-rows">
+              <div class="sl-pmt-row">
+                <img src="../templates/lite/images/avatars/presets/001.svg" alt="">
+                <span><b>Ошибка при обновлении с 6.2 на 6.3</b><small>Крамской — миграция не применилась</small></span>
+                <time datetime="2026-08-12T14:32">14:32</time>
+              </div>
+              <div class="sl-pmt-row">
+                <img src="../templates/lite/images/avatars/presets/007.svg" alt="">
+                <span><b>Re: Права доступа к модулю «Файлы»</b><small>Nataly_V — права слетели</small></span>
+                <time datetime="2026-08-12T11:05">11:05</time>
+              </div>
+              <div class="sl-pmt-row">
+                <img src="../templates/lite/images/avatars/presets/012.svg" alt="">
+                <span><b>Заказ №2419: сменился склад</b><small>admin_shop — остатки перенесены</small></span>
+                <time datetime="2026-08-11T08:31">08:31</time>
+              </div>
+            </div>
+          </aside>
+          <div class="sl-pmt-view"><span>Область чтения</span></div>
+        </div>
+      </div>
+      <div class="sl-pmt-narrow">
+        <div class="sl-pmt-bar">
+          <form class="sl-search-form" role="search" action="#" method="post">
+            <label class="sl-visually-hidden" for="pmt-f2">Поиск</label>
+            <input id="pmt-f2" type="search" placeholder="Поиск">
+            <button type="submit" title="Найти"><i class="bi bi-search" aria-hidden="true"></i></button>
+          </form>
+        </div>
+        <div class="sl-pmt-split" style="margin-top: var(--sl-space-md);">
+          <aside class="sl-pmt-aside">
+            <div class="sl-pmt-aside-top" role="group" aria-label="Быстрый фильтр">
+              <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="true">Все <b>· 240</b></button>
+              <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Непрочит. <b>· 8</b></button>
+              <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Сохран. <b>· 63</b></button>
+              <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Неделя <b>· 61</b></button>
+            </div>
+            <div class="sl-pmt-rows">
+              <div class="sl-pmt-row">
+                <img src="../templates/lite/images/avatars/presets/001.svg" alt="">
+                <span><b>Ошибка при обновлении</b><small>Крамской</small></span>
+                <time datetime="2026-08-12T14:32">14:32</time>
+              </div>
+              <div class="sl-pmt-row">
+                <img src="../templates/lite/images/avatars/presets/007.svg" alt="">
+                <span><b>Re: Права доступа</b><small>Nataly_V</small></span>
+                <time datetime="2026-08-12T11:05">11:05</time>
+              </div>
+            </div>
+          </aside>
+          <div class="sl-pmt-view"><span>Область чтения</span></div>
+        </div>
+      </div>
+      <div class="sl-pmt-note">
+        <p class="sl-pmt-pro">Фильтр физически примыкает к тому, что фильтрует, — область чтения справа от него не зависит</p>
+        <p class="sl-pmt-pro">Шапка страницы не растёт вовсе</p>
+        <p class="sl-pmt-con">Колонка 396&nbsp;px вмещает четыре чипса только в сокращённых подписях</p>
+        <p class="sl-pmt-con">Поиск наверху, а фильтр внизу — два места для одной задачи</p>
+      </div>
+    </article>
+  </section>
+
+  <section class="sl-pmdemo-sec">
+    <h2>Что рекомендую</h2>
+    <div class="sl-pmt-final">
+      <h3><i class="bi bi-star-fill" aria-hidden="true"></i>&nbsp; Вариант Г: чипсы занимают ту строку, которая уже есть</h3>
+      <p>Отвечая прямо на вопрос «слева или справа»: <b>ни то, ни другое — чипсам не нужно место в строке поиска</b>. В финале под поиском уже стоит полоса активных фильтров. Если чипсы поставить именно в неё, нажатый чипс становится применённым фильтром, и второй ряд не нужен: ни дублирования, ни лишних 40&nbsp;px в шапке, ни сужения поля поиска.</p>
+      <p>Что меняется в финале:</p>
+      <ul>
+        <li>Строка поиска остаётся как есть — 340&nbsp;px, полный плейсхолдер, сортировка и счётчик «Найдено N из M» справа.</li>
+        <li>Полоса <code>sl-pmf-active</code> из пассивной («вот что применено») становится активной: чипсы в ней кликаются, нажатые подсвечены.</li>
+        <li>Поисковый запрос и условия, которых нет среди чипсов, отделяются вертикальной чертой и остаются снимаемыми токенами.</li>
+        <li>Набор чипсов — «Все · Непрочитанные · Сохранённые · За неделю». <b>«С вложениями» не берём</b>: колонки нет, а <code>LIKE</code> по телу письма читает всю таблицу.</li>
+      </ul>
+      <p>Если всё-таки хочется именно вашу раскладку (Б), она рабочая — но тогда поле поиска придётся сузить до 250&nbsp;px и сократить плейсхолдер до «Поиск», а дублирование с полосой активных фильтров надо будет чем-то закрыть: либо убрать полосу совсем, либо оставить в ней только запрос и даты.</p>
+      <p>Скажите, какой берём, — вставлю в финальный макет.</p>
+    </div>
+  </section>
+
+</main>
+
+<script>
+/* Демонстрационное поведение: переключение чипсов и сегментов */
+document.querySelectorAll('.sl-pmt-quick, .sl-pmt-merge, .sl-pmt-aside-top').forEach(function (box) {
+  box.addEventListener('click', function (ev) {
+    if (ev.target.closest('.sl-pmt-kill, .sl-pmt-clear')) return;
+    var but = ev.target.closest('button[aria-pressed]');
+    if (!but) return;
+    but.setAttribute('aria-pressed', but.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+  });
+});
+document.querySelectorAll('.sl-pmt-seg').forEach(function (box) {
+  box.addEventListener('click', function (ev) {
+    var but = ev.target.closest('button');
+    if (!but) return;
+    box.querySelectorAll('button').forEach(function (one) { one.setAttribute('aria-selected', String(one === but)); });
+  });
+});
+</script>
+
+</body>
+</html>

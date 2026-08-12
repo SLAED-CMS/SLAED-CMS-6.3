@@ -1,0 +1,1351 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED — личные сообщения: финальный вариант 2026</title>
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<link rel="stylesheet" href="../plugins/editors/toastui/assets/toastui-editor.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/editors/toastui/skin.css">
+<style>
+/* ==== Обвязка демо ==== */
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color: var(--sl-color-text); font: 13px/1.45 Arial, system-ui, sans-serif; }
+a { text-decoration: none; }
+.sl-pmdemo-head { padding: 30px max(20px, calc((100vw - 1240px) / 2)) 26px; border-bottom: 1px solid var(--sl-color-border); background: radial-gradient(circle at 88% 0, color-mix(in srgb, var(--sl-color-brand) 20%, transparent), transparent 32%), var(--sl-color-bg); }
+.sl-pmdemo-back { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px; color: var(--sl-color-text-muted); font-size: 12px; }
+.sl-pmdemo-back:hover { color: var(--sl-color-primary); }
+.sl-pmdemo-head h1 { margin: 0 0 10px; color: var(--sl-color-text-heading); font-size: clamp(24px, 4vw, 34px); line-height: 1.12; }
+.sl-pmdemo-head p { max-width: 880px; margin: 0 0 12px; color: var(--sl-color-text-muted); }
+.sl-pmdemo-chips { display: flex; flex-wrap: wrap; gap: var(--sl-space-sm); margin-top: 14px; }
+.sl-pmdemo-main { width: 1240px; max-width: calc(100% - 28px); margin: 26px auto 0; }
+.sl-pmdemo-sec { margin-bottom: 40px; }
+.sl-pmdemo-sec > h2 { display: flex; align-items: center; gap: 10px; margin: 0 0 6px; color: var(--sl-color-text-heading); font-size: 17px; }
+.sl-pmdemo-sec > h2 > span { display: grid; place-items: center; flex: 0 0 26px; width: 26px; height: 26px; border-radius: 50%; background: var(--sl-color-text-heading); color: var(--sl-color-on-dark); font: bold 11px/1 Arial, sans-serif; }
+.sl-pmdemo-sec > p { max-width: 900px; margin: 0 0 14px; color: var(--sl-color-text-muted); }
+.sl-pmdemo-frame { container-type: inline-size; padding: 14px; border: 1px solid var(--sl-color-border-subtle); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); box-shadow: var(--sl-shadow-soft); }
+.sl-pmdemo-phones { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; }
+.sl-pmdemo-phone { container-type: inline-size; width: 390px; max-width: 100%; padding: 12px 10px; border: 1px solid var(--sl-color-border-strong); border-radius: 20px; background: var(--sl-color-bg); box-shadow: var(--sl-shadow-panel); }
+.sl-pmdemo-phone > figcaption { margin: 0 0 10px; color: var(--sl-color-text-muted); font-size: 11px; text-align: center; text-transform: uppercase; letter-spacing: 0.08em; }
+.sl-pmdemo-from { display: inline-flex; align-items: center; gap: 5px; height: 20px; padding: 0 7px; border-radius: 999px; background: var(--sl-color-bg-soft-alt); color: var(--sl-color-text-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+:focus-visible { outline: 2px solid var(--sl-color-primary); outline-offset: 2px; border-radius: 3px; }
+
+/* ==== Финальный вариант: полки → фокус → тулбар → две колонки ==== */
+
+/* Кольцо квоты вместо текстового алерта: дуга рисуется SVG, как sl-knob в админском мониторе.
+   Ни фона, ни рамки — только дуга и иконка, обе в тоне заполнения; тон общий, рассинхронизировать их нельзя.
+   pathLength="100" нормализует окружность, поэтому PHP отдаёт один процент, а шаблон ставит stroke-dashoffset = 100 - процент. */
+.sl-pmh { --sl-pmh-size: 46px; --sl-pmh-width: 4; --sl-pmh-tone: var(--sl-color-success); --sl-pmh-track: var(--sl-progress-track-bg); position: relative; display: grid; place-items: center; flex: 0 0 var(--sl-pmh-size); width: var(--sl-pmh-size); height: var(--sl-pmh-size); }
+.sl-pmh-svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.sl-pmh-bg { fill: none; stroke: var(--sl-pmh-track); stroke-width: var(--sl-pmh-width); }
+/* Концы прямые: при 96% скруглённый конец добавляет к дуге по половине толщины с каждой стороны и съедает разрыв, делая «почти полный» неотличимым от «полного» */
+.sl-pmh-val { fill: none; stroke: var(--sl-pmh-tone); stroke-width: var(--sl-pmh-width); stroke-linecap: butt; transition: stroke-dashoffset 0.9s cubic-bezier(0.2, 0.7, 0.3, 1); }
+.sl-pmh > .bi { color: var(--sl-pmh-tone); font-size: calc(var(--sl-pmh-size) * 0.45); line-height: 1; transition: color 0.3s ease, transform 0.18s ease; }
+/* Полка, где мерить нечего — исходящие без квоты и «Написать»: кольцо сплошное и в цвет иконки, бледного трека под несуществующую дугу нет */
+.sl-pmh-full .sl-pmh-bg { stroke: var(--sl-pmh-tone); }
+.sl-pmh-ok { --sl-pmh-tone: var(--sl-color-success); }
+.sl-pmh-info { --sl-pmh-tone: var(--sl-color-primary); }
+.sl-pmh-warn { --sl-pmh-tone: var(--sl-color-warning); }
+.sl-pmh-danger { --sl-pmh-tone: var(--sl-color-danger); }
+.sl-pmh-none { --sl-pmh-tone: var(--sl-color-text-subtle); }
+
+/* Полки-плитки вместо текстовых вкладок (из варианта 1): кольцо квоты + подпись + бейдж непрочитанных */
+.sl-pmf-folders { display: grid; grid-template-columns: repeat(auto-fit, minmax(178px, 1fr)); gap: var(--sl-space-md); margin-bottom: 14px; }
+.sl-pmf-fold { position: relative; display: grid; grid-template-columns: var(--sl-pmh-size, 46px) minmax(0, 1fr); align-items: center; gap: 11px; padding: 10px 12px; border: 1px solid var(--sl-color-border-subtle); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); color: var(--sl-color-text-muted); transition: border-color 0.18s ease, transform 0.18s ease; }
+.sl-pmf-fold:hover { border-color: color-mix(in srgb, var(--sl-pmh-tone) 45%, var(--sl-color-border)); transform: translateY(-2px); }
+.sl-pmf-fold:hover .sl-pmh > .bi { transform: scale(1.1); }
+.sl-pmf-fold[aria-current="page"] { border-color: color-mix(in srgb, var(--sl-pmh-tone) 55%, var(--sl-color-border)); }
+.sl-pmf-fold b { display: block; overflow: hidden; color: var(--sl-color-text-heading); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.sl-pmf-fold small { display: block; color: var(--sl-color-text-muted); font-size: 11px; }
+.sl-pmf-fold .sl-chip { height: 19px; margin-top: 5px; padding: 0 7px; font-size: 10px; }
+.sl-pmf-fold .sl-cab-badge { top: 7px; right: 9px; }
+
+/* Колода фокуса (из варианта 8) — дополнение к папкам, а не замена; сворачивается штатным details */
+.sl-pmf-focus { margin-bottom: 14px; border: 1px solid var(--sl-color-border-subtle); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); }
+.sl-pmf-focus > summary { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sl-space-md); padding: 10px 12px; color: var(--sl-color-text-heading); font-size: 13px; font-weight: bold; cursor: pointer; list-style: none; }
+.sl-pmf-focus > summary::-webkit-details-marker { display: none; }
+.sl-pmf-focus > summary .bi-lightning-charge { color: var(--sl-color-warning); }
+.sl-pmf-focus > summary small { color: var(--sl-color-text-muted); font-weight: normal; }
+.sl-pmf-focus > summary::after { content: "\F282"; margin-left: auto; font-family: bootstrap-icons; font-size: 12px; font-weight: normal; color: var(--sl-color-text-subtle); }
+.sl-pmf-focus[open] > summary::after { content: "\F286"; }
+.sl-pmf-focus[open] > summary { border-bottom: 1px solid var(--sl-color-border-subtle); }
+.sl-pmf-deck { display: flex; gap: 10px; padding: 12px; overflow-x: auto; scroll-snap-type: x mandatory; }
+.sl-pmf-slot { --sl-cat-tone: var(--sl-color-tone-info); display: grid; align-content: start; gap: 7px; flex: 0 0 248px; padding: 11px 12px 10px; border: 1px solid var(--sl-color-border-subtle); border-radius: var(--sl-radius-card); background: linear-gradient(180deg, color-mix(in srgb, var(--sl-cat-tone) 9%, var(--sl-color-bg)), var(--sl-color-bg) 60%); scroll-snap-align: start; transition: border-color 0.18s ease, box-shadow 0.18s ease; }
+.sl-pmf-slot:hover { border-color: color-mix(in srgb, var(--sl-cat-tone) 50%, var(--sl-color-border)); box-shadow: var(--sl-shadow-soft); }
+.sl-pmf-slot-keep { --sl-cat-tone: var(--sl-color-tone-warning); }
+.sl-pmf-slot-top { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+.sl-pmf-slot-top img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: var(--sl-color-bg-soft-soft); }
+.sl-pmf-slot-top b { overflow: hidden; color: var(--sl-color-text-heading); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.sl-pmf-slot-top time { color: var(--sl-color-text-muted); font-size: 11px; }
+.sl-pmf-slot-subj { display: -webkit-box; overflow: hidden; color: var(--sl-color-text-heading); font-size: 13px; font-weight: bold; line-height: 1.3; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.sl-pmf-slot-subj:hover { color: var(--sl-color-primary); }
+.sl-pmf-slot p { display: -webkit-box; overflow: hidden; margin: 0; color: var(--sl-color-text-muted); font-size: 12px; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.sl-pmf-slot-acts { display: flex; gap: var(--sl-space-xs); padding-top: 7px; border-top: 1px solid var(--sl-color-border-subtle); }
+.sl-pmf-slot-acts .sl-but-mini { --sl-size-chip: 23px; }
+.sl-pmf-slot-acts .sl-but-mini > .bi { font-size: 12px; }
+.sl-pmf-slot-more { display: grid; place-content: center; justify-items: center; gap: 5px; flex: 0 0 118px; border: 1px dashed var(--sl-color-border-strong); border-radius: var(--sl-radius-card); background: var(--sl-color-bg-soft); color: var(--sl-color-text-muted); font-size: 12px; scroll-snap-align: start; }
+.sl-pmf-slot-more i { font-size: 20px; }
+
+/* Тулбар: поиск, сортировка и счётчик выборки (счётчик — из варианта 7) */
+.sl-pmf-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sl-space-md); margin-bottom: var(--sl-space-md); }
+.sl-pmf-bar .sl-search-form { width: 340px; flex: 1 1 240px; }
+.sl-pmf-bar .sl-field { height: 30px; }
+.sl-pmf-found { margin-left: auto; color: var(--sl-color-text-muted); font-variant-numeric: tabular-nums; }
+.sl-pmf-found b { color: var(--sl-color-text-heading); }
+
+/* Полоса активных фильтров (из варианта 7): видно, почему список короткий */
+/* Полоса фильтров — орган управления, а не табло: чипсы всегда на месте и только меняют состояние.
+   Иначе снятый фильтр вернуть нечем — включить его на странице было бы негде. */
+.sl-pmf-active { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sl-space-xs); margin-bottom: var(--sl-space-md); padding: 7px 10px; border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-control); background: var(--sl-color-bg-soft); }
+.sl-pmf-active > b { color: var(--sl-color-text-muted); font-size: 11px; font-weight: normal; }
+.sl-pmf-active .sl-chip { height: 22px; padding: 0 8px; font-size: 11px; }
+.sl-pmf-active button.sl-chip { border: 1px solid transparent; cursor: pointer; }
+.sl-pmf-active button.sl-chip:hover { border-color: var(--sl-color-border-strong); }
+.sl-pmf-active button.sl-chip[aria-pressed="true"] { border-color: color-mix(in srgb, var(--sl-color-primary) 45%, transparent); background: color-mix(in srgb, var(--sl-color-primary) 14%, transparent); color: var(--sl-color-brand-strong); }
+.sl-pmf-active .sl-chip b { font-weight: normal; opacity: 0.6; }
+/* Запрос — не переключатель: он появляется, когда в поиске что-то есть, и снимается крестиком вместе с очисткой поля */
+.sl-pmf-active .sl-chip-warn { padding: 0 4px 0 8px; }
+.sl-pmf-active .sl-chip > button { display: grid; place-items: center; width: 16px; height: 16px; border: 0; border-radius: 50%; background: transparent; color: inherit; cursor: pointer; font-size: 10px; }
+.sl-pmf-active .sl-chip > button:hover { background: var(--sl-overlay-10); }
+.sl-pmf-active [hidden] { display: none; }
+.sl-pmf-sep { width: 1px; height: 18px; margin: 0 var(--sl-space-xs); background: var(--sl-color-border-strong); }
+.sl-pmf-clear { margin-left: auto; border: 0; background: transparent; color: var(--sl-color-primary); cursor: pointer; font: inherit; font-size: 11px; }
+.sl-pmf-clear:hover { text-decoration: underline; }
+
+/* Две колонки — ядро варианта 2 */
+.sl-pmf-split { display: grid; grid-template-columns: 396px minmax(0, 1fr); overflow: hidden; border: 1px solid var(--sl-color-border-strong); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); }
+.sl-pmf-aside { display: flex; min-width: 0; flex-direction: column; border-right: 1px solid var(--sl-color-border-subtle); background: var(--sl-color-bg-soft); }
+.sl-pmf-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.sl-pmf-day { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 7px; padding: 4px 12px; background: color-mix(in srgb, var(--sl-color-bg-soft-alt) 94%, transparent); backdrop-filter: blur(4px); color: var(--sl-color-text-heading); font-size: 11px; font-weight: bold; }
+.sl-pmf-day small { margin-left: auto; color: var(--sl-color-text-muted); font-weight: normal; }
+
+/* Строка ленты — плотность варианта 3: два уровня вместо трёх, 52 px вместо 76 */
+.sl-pmf-item { position: relative; display: grid; grid-template-columns: 22px 26px minmax(0, 1fr) auto; align-items: start; gap: 8px; width: 100%; padding: 7px 10px 7px 8px; border: 0; border-bottom: 1px solid var(--sl-color-border-subtle); background: transparent; color: inherit; font: inherit; text-align: left; transition: background-color 0.15s ease; }
+.sl-pmf-item:hover { background: var(--sl-color-bg-soft-alt); }
+.sl-pmf-item[aria-current="true"] { background: var(--sl-color-bg); box-shadow: inset 3px 0 0 var(--sl-color-primary); }
+.sl-pmf-pick { display: grid; place-items: center; height: 26px; }
+.sl-pmf-pick input { margin: 0; }
+.sl-pmf-item > img { width: 26px; height: 26px; margin-top: 1px; border-radius: 50%; object-fit: cover; background: var(--sl-color-bg-soft-soft); }
+.sl-pmf-body { min-width: 0; }
+.sl-pmf-line { display: flex; align-items: baseline; gap: var(--sl-space-sm); min-width: 0; }
+.sl-pmf-subj { flex: 1 1 auto; overflow: hidden; color: var(--sl-color-text); text-align: left; text-overflow: ellipsis; white-space: nowrap; }
+.sl-pmf-subj:hover { color: var(--sl-color-primary); }
+.sl-pmf-when { flex: 0 0 auto; color: var(--sl-color-text-subtle); font-size: 11px; font-variant-numeric: tabular-nums; }
+.sl-pmf-meta { display: flex; align-items: center; gap: 6px; min-width: 0; margin-top: 3px; }
+.sl-pmf-meta .sl-author { flex: 0 0 auto; max-width: 46%; overflow: hidden; color: var(--sl-color-text-muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.sl-pmf-meta .sl-author:hover { color: var(--sl-color-primary); }
+.sl-pmf-snip { flex: 1 1 auto; overflow: hidden; color: var(--sl-color-text-subtle); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.sl-pmf-flag { flex: 0 0 auto; }
+.sl-pmf-item .sl-chip { height: 19px; padding: 0 6px; font-size: 11px; }
+.sl-pmf-item .sl-dial-toggle { --sl-size-chip: 22px; }
+.sl-pmf-item .sl-dial-item { --sl-size-chip: 22px; }
+.sl-pmf-item .sl-dial .bi { font-size: 12px; }
+.sl-pmf-new .sl-pmf-subj { color: var(--sl-color-text-heading); font-weight: bold; }
+.sl-pmf-new .sl-pmf-snip { color: var(--sl-color-text-muted); }
+
+/* Подвал левой колонки: пагинатор и штатная полоса массовых действий (из варианта 1) */
+/* Подвал прижат к низу колонки: список короче панели чтения, и пагинатор не должен зависать посередине */
+.sl-pmf-foot { margin-top: auto; border-top: 1px solid var(--sl-color-border-subtle); background: var(--sl-color-bg); }
+.sl-pmf-foot .sl-pager-info { padding: 8px 10px 0; font-size: 12px; }
+.sl-pmf-foot .sl-pager { padding: 6px 0 10px; border-top: 0; }
+.sl-pmf-foot .sl-pager-main { font-size: 14px; }
+.sl-pmf-foot .sl-but-mini { --sl-size-chip: 24px; font-size: 11px; }
+.sl-pmf-foot .sl-bulk-bar { margin: 0; border-width: 1px 0 0; border-radius: 0; gap: var(--sl-space-sm); padding: 8px 10px; }
+.sl-pmf-foot .sl-bulk-bar .sl-field { height: 26px; padding: 0 8px; font-size: 12px; }
+.sl-pmf-foot .sl-bulk-bar .sl-but { height: 26px; margin: 0; font-size: 12px; }
+.sl-pmf-foot .sl-bulk-count { flex: 1 1 100%; }
+
+/* Правая колонка — чтение */
+.sl-pmf-view { display: flex; min-width: 0; flex-direction: column; }
+.sl-pmf-acts { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sl-space-sm); padding: 8px 14px; border-bottom: 1px solid var(--sl-color-border-subtle); background: var(--sl-color-bg-soft-alt); }
+.sl-pmf-acts .sl-but { margin: 0; }
+.sl-pmf-acts-end { display: flex; gap: var(--sl-space-sm); margin-left: auto; }
+.sl-pmf-back { display: none; }
+.sl-pmf-head { padding: 16px 20px 13px; border-bottom: 1px solid var(--sl-color-border-subtle); }
+.sl-pmf-head h2 { max-width: 40ch; margin: 0 0 12px; color: var(--sl-color-text-heading); font-size: 21px; line-height: 1.22; }
+.sl-pmf-who { display: flex; align-items: center; gap: 11px; }
+.sl-pmf-who img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: var(--sl-color-bg-soft-soft); }
+.sl-pmf-who b { display: block; }
+.sl-pmf-who small { display: block; color: var(--sl-color-text-muted); }
+.sl-pmf-chips { display: flex; flex-wrap: wrap; gap: var(--sl-space-sm); margin-top: 12px; }
+
+/* Типографика чтения — из варианта 6: 62 знака в строке, 15/1.62 */
+.sl-pmf-text { flex: 1 1 auto; padding: 20px; font-size: 15px; line-height: 1.62; }
+.sl-pmf-text p { max-width: 62ch; margin: 0 0 16px; }
+.sl-pmf-text p:last-child { margin-bottom: 0; }
+.sl-pmf-text blockquote { max-width: 62ch; }
+.sl-pmf-sig { max-width: 62ch; margin-top: 20px; padding-top: 10px; border-top: 1px solid var(--sl-color-border-subtle); color: var(--sl-color-text-muted); font-size: 13px; font-style: italic; }
+
+/* Ответ: заголовок + настоящий редактор */
+.sl-pmf-reply { display: grid; gap: var(--sl-space-md); padding: 14px 20px 18px; border-top: 1px solid var(--sl-color-border-subtle); background: var(--sl-color-bg-soft); }
+/* Заголовок — поле во всю ширину без подписи: что это за строка, видно из формы, а пустое поле само подсказывает плейсхолдером */
+.sl-pmf-title { width: 100%; }
+.sl-pmf-reply-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sl-space-md); }
+.sl-pmf-reply-foot .sl-but { margin: 0; }
+.sl-pmf-reply-foot small { color: var(--sl-color-text-muted); }
+
+/* Пустые состояния */
+.sl-pmf-blank { display: grid; align-content: center; justify-items: center; gap: 10px; min-height: 340px; padding: 30px; text-align: center; }
+.sl-pmf-blank i { font-size: 50px; color: var(--sl-color-text-subtle); }
+.sl-pmf-blank b { color: var(--sl-color-text-heading); font-size: 15px; }
+.sl-pmf-blank p { max-width: 420px; margin: 0; color: var(--sl-color-text-muted); }
+.sl-pmf-blank .sl-but { margin: 0; }
+.sl-pmf-keys { display: inline-flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 4px; color: var(--sl-color-text-muted); font-size: 11px; }
+.sl-pmf-keys kbd { padding: 2px 7px; border: 1px solid var(--sl-color-border-strong); border-bottom-width: 2px; border-radius: 4px; background: var(--sl-color-bg-soft-alt); color: var(--sl-color-text-heading); font: 11px/1.4 monospace; }
+
+/* Поле сообщения — настоящий Toast UI (plugins/editors/toastui): скрытая textarea остаётся источником */
+.sl-pm-editor { width: 100%; min-width: 0; }
+.sl-pm-editor .toastui-editor-defaultUI { border-radius: var(--sl-radius-control); }
+.sl-pm-note { margin: 0; color: var(--sl-color-text-muted); font-size: 11px; }
+.sl-pm-note .bi { margin-right: 5px; color: var(--sl-color-primary); }
+
+/* Контракт с бэкендом */
+.sl-pmf-map { width: 100%; min-width: 620px; border-collapse: collapse; font-size: 12px; }
+.sl-pmf-map th, .sl-pmf-map td { padding: 7px 9px; border-bottom: 1px solid var(--sl-color-border-subtle); text-align: left; vertical-align: top; }
+.sl-pmf-map thead th { background: var(--sl-color-bg-soft-alt); color: var(--sl-color-text-heading); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+.sl-pmf-map tbody th { color: var(--sl-color-text-heading); font-weight: bold; }
+.sl-pmf-map code { font-size: 11px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sl-pmf-fold, .sl-pmf-slot, .sl-pmh-val, .sl-pmh > .bi { transition: none; }
+}
+
+/* Планшет: колонка списка ужимается, полки в два ряда */
+@container (max-width: 1040px) {
+  .sl-pmf-split { grid-template-columns: 330px minmax(0, 1fr); }
+  .sl-pmf-head h2 { font-size: 19px; }
+  .sl-pmf-text { padding: 16px; }
+}
+
+/* Мобильный: панели не сжимаются, а подменяют друг друга */
+@container (max-width: 800px) {
+  .sl-pmf-folders { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+  .sl-pmf-fold { --sl-pmh-size: 36px; grid-template-columns: 36px minmax(0, 1fr); gap: 9px; padding: 8px 10px; }
+  .sl-pmf-fold small { font-size: 10px; }
+  .sl-pmf-fold .sl-chip { margin-top: 4px; }
+  .sl-pmf-found { margin-left: 0; }
+  .sl-pmf-split { grid-template-columns: 1fr; }
+  .sl-pmf-aside { border-right: 0; }
+  .sl-pmf-scroll { max-height: 340px; }
+  .sl-pmf-back { display: inline-flex; }
+  .sl-pmf-acts-end { margin-left: auto; }
+  .sl-pmf-head { padding: 14px; }
+  .sl-pmf-head h2 { font-size: 18px; }
+  .sl-pmf-text { padding: 14px; font-size: 15px; }
+  .sl-pmf-reply { padding: 12px 14px 16px; }
+  .sl-pmf-slot { flex-basis: 78%; }
+  .sl-pmf-split[data-sl-pane="view"] .sl-pmf-aside { display: none; }
+  .sl-pmf-split[data-sl-pane="list"] .sl-pmf-view { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="sl-pmdemo-head">
+  <a class="sl-pmdemo-back" href="private-messages-index.html"><i class="bi bi-arrow-left" aria-hidden="true"></i> Все варианты личных сообщений</a>
+  <h1>Личные сообщения — финальный вариант</h1>
+  <p>Основа — двухпанельная раскладка варианта&nbsp;2: список слева остаётся на экране, письмо открывается справа. Сверху добавлены полки-плитки и колода фокуса, под списком вернулась штатная полоса массовых действий, а над ним — полоса активных фильтров со счётчиком выборки. Строка ленты сжата до двух уровней: <b>56&nbsp;px против 111&nbsp;px</b> у исходного варианта&nbsp;2 — вдвое больше писем на экран без потери читаемости.</p>
+  <p>Текстовый алерт о квоте заменён на <b>кольцо вокруг иконки полки</b>: дуга и иконка в одном тоне, порог — та же лестница, что красит подвал сайта. Полки без квоты (исходящие и «Написать») несут сплошное кольцо в цвет своей иконки. Подробный разбор — в <a href="private-messages-quota-halo.html">отдельном демо</a>.</p>
+  <p>Все данные на экране — реальные для стенда: 240 входящих при квоте 250, 10 страниц по 25. Поле ответа — настоящий Toast UI из <code>plugins/editors/toastui</code>.</p>
+  <div class="sl-pmdemo-chips">
+    <span class="sl-chip sl-chip-info"><i class="bi bi-layout-sidebar" aria-hidden="true"></i> основа: вариант 2</span>
+    <span class="sl-chip sl-chip-success"><i class="bi bi-grid-1x2" aria-hidden="true"></i> из 1: полки-плитки + sl-bulk-bar</span>
+    <span class="sl-chip sl-chip-danger"><i class="bi bi-circle-half" aria-hidden="true"></i> кольцо квоты вместо алерта</span>
+    <span class="sl-chip sl-chip-success"><i class="bi bi-list" aria-hidden="true"></i> из 3: плотность и чипсы состояния</span>
+    <span class="sl-chip sl-chip-success"><i class="bi bi-funnel" aria-hidden="true"></i> из 7: активные фильтры и «найдено N из M»</span>
+    <span class="sl-chip sl-chip-success"><i class="bi bi-lightning-charge" aria-hidden="true"></i> из 8: колода фокуса</span>
+    <span class="sl-chip sl-chip-success"><i class="bi bi-type" aria-hidden="true"></i> из 6: 62 знака, 15/1.62</span>
+  </div>
+</header>
+
+<main class="sl-pmdemo-main">
+
+  <section class="sl-pmdemo-sec">
+    <h2><span>1</span> Входящие с открытым письмом</h2>
+    <p>Полки задают папку, чипсы под поиском — выборку внутри неё. Выбор письма меняет только правую панель: список, позиция прокрутки и отметки чекбоксов остаются на месте.</p>
+
+    <div class="sl-pmdemo-frame">
+
+      <nav class="sl-pmf-folders" aria-label="Папки личных сообщений">
+        <a class="sl-pmf-fold sl-pmh-danger" href="#" aria-current="page">
+          <span class="sl-pmh sl-pmh-danger" role="img" aria-label="Входящие заполнены на 96 процентов, свободно 10">
+            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+              <circle class="sl-pmh-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="4"></circle>
+            </svg>
+            <i class="bi bi-envelope" aria-hidden="true"></i>
+          </span>
+          <span>
+            <b>Входящие</b>
+            <small>240 из 250</small>
+            <span class="sl-chip sl-chip-danger"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> свободно 10</span>
+          </span>
+          <span class="sl-cab-badge">8</span>
+        </a>
+        <a class="sl-pmf-fold sl-pmh-none" href="#">
+          <span class="sl-pmh sl-pmh-none sl-pmh-full" role="img" aria-label="У исходящих нет ограничения">
+            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+            </svg>
+            <i class="bi bi-send" aria-hidden="true"></i>
+          </span>
+          <span><b>Исходящие</b><small>903 · без ограничения</small></span>
+        </a>
+        <a class="sl-pmf-fold sl-pmh-ok" href="#">
+          <span class="sl-pmh sl-pmh-ok" role="img" aria-label="Сохранённые заполнены на 25 процентов">
+            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+              <circle class="sl-pmh-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="74.8"></circle>
+            </svg>
+            <i class="bi bi-bookmark" aria-hidden="true"></i>
+          </span>
+          <span><b>Сохранённые</b><small>63 из 250</small></span>
+        </a>
+        <a class="sl-pmf-fold sl-pmh-info" href="#">
+          <span class="sl-pmh sl-pmh-info sl-pmh-full" role="img" aria-label="Написать новое письмо">
+            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+            </svg>
+            <i class="bi bi-pencil-square" aria-hidden="true"></i>
+          </span>
+          <span><b>Написать</b><small>новое письмо</small></span>
+        </a>
+      </nav>
+
+      <details class="sl-pmf-focus" open>
+        <summary><i class="bi bi-lightning-charge" aria-hidden="true"></i> Фокус <small>8 непрочитанных · 3 старше суток</small></summary>
+        <div class="sl-pmf-deck">
+          <article class="sl-pmf-slot">
+            <header class="sl-pmf-slot-top">
+              <img src="../templates/lite/images/avatars/presets/001.svg" alt="">
+              <b>Крамской</b>
+              <time datetime="2026-08-12T14:32">14:32</time>
+            </header>
+            <a class="sl-pmf-slot-subj" href="#pmf-read">Ошибка при обновлении с 6.2 на 6.3</a>
+            <p>После setup ловлю 500 на любом разделе админки, в логе — недостающая колонка saved.</p>
+            <footer class="sl-pmf-slot-acts">
+              <a class="sl-but-mini" href="#pmf-read" title="Открыть"><i class="bi bi-eye" aria-hidden="true"></i></a>
+              <a class="sl-but-mini" href="#" title="Ответить"><i class="bi bi-reply" aria-hidden="true"></i></a>
+              <a class="sl-but-mini" href="#" title="Отметить прочитанным"><i class="bi bi-check2" aria-hidden="true"></i></a>
+              <a class="sl-but-mini" href="#" title="Сохранить"><i class="bi bi-archive" aria-hidden="true"></i></a>
+              <a class="sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+            </footer>
+          </article>
+
+          <article class="sl-pmf-slot">
+            <header class="sl-pmf-slot-top">
+              <img src="../templates/lite/images/avatars/presets/007.svg" alt="">
+              <b>Nataly_V</b>
+              <time datetime="2026-08-12T11:05">11:05</time>
+            </header>
+            <a class="sl-pmf-slot-subj" href="#">Re: Права доступа к модулю «Файлы»</a>
+            <p>Группе «Модераторы» не видна кнопка загрузки, хотя в правах галка стоит.</p>
+            <footer class="sl-pmf-slot-acts">
+              <a class="sl-but-mini" href="#" title="Открыть"><i class="bi bi-eye" aria-hidden="true"></i></a>
+              <a class="sl-but-mini" href="#" title="Ответить"><i class="bi bi-reply" aria-hidden="true"></i></a>
+              <a class="sl-but-mini" href="#" title="Отметить прочитанным"><i class="bi bi-check2" aria-hidden="true"></i></a>
+              <a class="sl-but-mini" href="#" title="Сохранить"><i class="bi bi-archive" aria-hidden="true"></i></a>
+              <a class="sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+            </footer>
+          </article>
+
+          <article class="sl-pmf-slot sl-pmf-slot-keep">
+            <header class="sl-pmf-slot-top">
+              <img src="../templates/lite/images/avatars/presets/018.svg" alt="">
+              <b>Igor_Tech</b>
+              <time datetime="2026-08-11T09:12">вчера</time>
+            </header>
+            <a class="sl-pmf-slot-subj" href="#">Шаблон lite: сломалась вёрстка таблиц</a>
+            <p>Сохранено и до сих пор не прочитано — строки разъезжаются на ширине 1024&nbsp;px.</p>
+            <footer class="sl-pmf-slot-acts">
+              <a class="sl-but-mini" href="#" title="Открыть"><i class="bi bi-eye" aria-hidden="true"></i></a>
+              <a class="sl-but-mini" href="#" title="Ответить"><i class="bi bi-reply" aria-hidden="true"></i></a>
+              <a class="sl-but-mini" href="#" title="Отметить прочитанным"><i class="bi bi-check2" aria-hidden="true"></i></a>
+              <a class="sl-but-mini sl-is-active" href="#" title="Убрать из сохранённых"><i class="bi bi-bookmark-dash" aria-hidden="true"></i></a>
+              <a class="sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+            </footer>
+          </article>
+
+          <article class="sl-pmf-slot">
+            <header class="sl-pmf-slot-top">
+              <img src="../templates/lite/images/avatars/presets/012.svg" alt="">
+              <b>admin_shop</b>
+              <time datetime="2026-08-11T08:31">вчера</time>
+            </header>
+            <a class="sl-pmf-slot-subj" href="#">Заказ №2419: сменился склад отгрузки</a>
+            <p>Позиции переехали на второй склад, срок доставки не меняется.</p>
+            <footer class="sl-pmf-slot-acts">
+              <a class="sl-but-mini" href="#" title="Открыть"><i class="bi bi-eye" aria-hidden="true"></i></a>
+              <a class="sl-but-mini" href="#" title="Ответить"><i class="bi bi-reply" aria-hidden="true"></i></a>
+              <a class="sl-but-mini" href="#" title="Отметить прочитанным"><i class="bi bi-check2" aria-hidden="true"></i></a>
+              <a class="sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+            </footer>
+          </article>
+
+          <a class="sl-pmf-slot-more" href="#"><i class="bi bi-three-dots" aria-hidden="true"></i><span>Ещё 4</span></a>
+        </div>
+      </details>
+
+      <div class="sl-pmf-bar">
+        <form class="sl-search-form" role="search" action="#" method="post">
+          <label class="sl-visually-hidden" for="pmf-q">Поиск по личным сообщениям</label>
+          <input id="pmf-q" type="search" name="query" value="миграция" placeholder="Поиск по теме, тексту и автору">
+          <button type="submit" title="Найти"><i class="bi bi-search" aria-hidden="true"></i></button>
+        </form>
+        <label class="sl-visually-hidden" for="pmf-sort">Сортировка</label>
+        <select id="pmf-sort" class="sl-field" name="sort">
+          <option>Сначала новые</option>
+          <option>Сначала старые</option>
+          <option>Непрочитанные сверху</option>
+          <option>По отправителю</option>
+        </select>
+        <span class="sl-pmf-found">Найдено <b>61</b> из <b>240</b> · показано 1&ndash;25</span>
+      </div>
+
+      <div class="sl-pmf-active" role="group" aria-label="Фильтр выборки">
+        <b>Фильтр:</b>
+        <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Все <b>· 240</b></button>
+        <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="true" data-sl-pm-one="state">Непрочитанные <b>· 8</b></button>
+        <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false" data-sl-pm-one="state">Прочитанные <b>· 232</b></button>
+        <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="true">За неделю <b>· 61</b></button>
+        <span class="sl-pmf-sep" aria-hidden="true"></span>
+        <span class="sl-chip sl-chip-warn" data-sl-pm-query>«миграция» <button type="button" title="Очистить поиск"><i class="bi bi-x" aria-hidden="true"></i></button></span>
+        <button type="button" class="sl-pmf-clear">Сбросить всё</button>
+      </div>
+
+      <div class="sl-pmf-split" data-sl-pane="view">
+
+        <aside class="sl-pmf-aside">
+          <form class="sl-pmf-scroll" action="#" method="post" aria-label="Список сообщений">
+            <p class="sl-pmf-day"><i class="bi bi-calendar3" aria-hidden="true"></i> Сегодня, 12 августа <small>3 письма</small></p>
+
+            <div class="sl-pmf-item sl-pmf-new" aria-current="true">
+              <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить сообщение 4181</span><input type="checkbox" class="sl-check" name="id[]" value="4181" checked></label>
+              <img src="../templates/lite/images/avatars/presets/001.svg" alt="">
+              <div class="sl-pmf-body">
+                <span class="sl-pmf-line">
+                  <a class="sl-pmf-subj" href="#pmf-read">Ошибка при обновлении с 6.2 на 6.3</a>
+                  <time class="sl-pmf-when" datetime="2026-08-12T14:32">14:32</time>
+                </span>
+                <span class="sl-pmf-meta">
+                  <a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Крамской</a>
+                  <span class="sl-pmf-snip">— похоже, миграция таблицы не применилась</span>
+                  <span class="sl-chip sl-chip-info sl-message-in sl-pmf-flag" title="Новое сообщение"><i class="bi bi-envelope" aria-hidden="true"></i></span>
+                </span>
+              </div>
+              <span class="sl-dial">
+                <button class="sl-dial-toggle sl-but-mini" type="button" title="Действия"><i class="bi bi-gear-fill"></i></button>
+                <a class="sl-dial-item sl-but-mini" href="#pmf-read" title="Показать"><i class="bi bi-eye"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Сохранить"><i class="bi bi-archive"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Отметить непрочитанным"><i class="bi bi-envelope"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash"></i></a>
+              </span>
+            </div>
+
+            <div class="sl-pmf-item sl-pmf-new">
+              <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить сообщение 4180</span><input type="checkbox" class="sl-check" name="id[]" value="4180" checked></label>
+              <img src="../templates/lite/images/avatars/presets/007.svg" alt="">
+              <div class="sl-pmf-body">
+                <span class="sl-pmf-line">
+                  <a class="sl-pmf-subj" href="#">Re: Права доступа к модулю «Файлы»</a>
+                  <time class="sl-pmf-when" datetime="2026-08-12T11:05">11:05</time>
+                </span>
+                <span class="sl-pmf-meta">
+                  <a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Nataly_V</a>
+                  <span class="sl-pmf-snip">— после миграции права слетели</span>
+                  <span class="sl-chip sl-chip-info sl-message-in sl-pmf-flag" title="Новое сообщение"><i class="bi bi-envelope" aria-hidden="true"></i></span>
+                </span>
+              </div>
+              <span class="sl-dial">
+                <button class="sl-dial-toggle sl-but-mini" type="button" title="Действия"><i class="bi bi-gear-fill"></i></button>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Показать"><i class="bi bi-eye"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Сохранить"><i class="bi bi-archive"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Отметить непрочитанным"><i class="bi bi-envelope"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash"></i></a>
+              </span>
+            </div>
+
+            <div class="sl-pmf-item sl-pmf-new">
+              <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить сообщение 4179</span><input type="checkbox" class="sl-check" name="id[]" value="4179"></label>
+              <img src="../templates/lite/images/avatars/presets/004.svg" alt="">
+              <div class="sl-pmf-body">
+                <span class="sl-pmf-line">
+                  <a class="sl-pmf-subj" href="#">Патч для парсера: [tabs] внутри [usehtml]</a>
+                  <time class="sl-pmf-when" datetime="2026-08-12T09:48">09:48</time>
+                </span>
+                <span class="sl-pmf-meta">
+                  <a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> dev_kostya</a>
+                  <span class="sl-pmf-snip">— проверял после миграции контента</span>
+                  <span class="sl-chip sl-chip-info sl-message-in sl-pmf-flag" title="Новое сообщение"><i class="bi bi-envelope" aria-hidden="true"></i></span>
+                </span>
+              </div>
+              <span class="sl-dial">
+                <button class="sl-dial-toggle sl-but-mini" type="button" title="Действия"><i class="bi bi-gear-fill"></i></button>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Показать"><i class="bi bi-eye"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Сохранить"><i class="bi bi-archive"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Отметить непрочитанным"><i class="bi bi-envelope"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash"></i></a>
+              </span>
+            </div>
+
+            <p class="sl-pmf-day"><i class="bi bi-calendar3" aria-hidden="true"></i> Вчера, 11 августа <small>2 письма</small></p>
+
+            <div class="sl-pmf-item sl-pmf-new">
+              <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить сообщение 4173</span><input type="checkbox" class="sl-check" name="id[]" value="4173"></label>
+              <img src="../templates/lite/images/avatars/presets/018.svg" alt="">
+              <div class="sl-pmf-body">
+                <span class="sl-pmf-line">
+                  <a class="sl-pmf-subj" href="#">Шаблон lite: сломалась вёрстка таблиц</a>
+                  <time class="sl-pmf-when" datetime="2026-08-11T09:12">09:12</time>
+                </span>
+                <span class="sl-pmf-meta">
+                  <a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Igor_Tech</a>
+                  <span class="sl-pmf-snip">— воспроизводится после миграции</span>
+                  <span class="sl-chip sl-chip-warn sl-message-save sl-pmf-flag" title="Сохранённое сообщение"><i class="bi bi-bookmark-fill" aria-hidden="true"></i></span>
+                </span>
+              </div>
+              <span class="sl-dial">
+                <button class="sl-dial-toggle sl-but-mini" type="button" title="Действия"><i class="bi bi-gear-fill"></i></button>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Показать"><i class="bi bi-eye"></i></a>
+                <a class="sl-dial-item sl-but-mini sl-is-active" href="#" title="Убрать из сохранённых"><i class="bi bi-bookmark-dash"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Отметить непрочитанным"><i class="bi bi-envelope"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash"></i></a>
+              </span>
+            </div>
+
+            <div class="sl-pmf-item">
+              <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить сообщение 4170</span><input type="checkbox" class="sl-check" name="id[]" value="4170"></label>
+              <img src="../templates/lite/images/avatars/presets/012.svg" alt="">
+              <div class="sl-pmf-body">
+                <span class="sl-pmf-line">
+                  <a class="sl-pmf-subj" href="#">Заказ №2419: сменился склад отгрузки</a>
+                  <time class="sl-pmf-when" datetime="2026-08-11T08:31">08:31</time>
+                </span>
+                <span class="sl-pmf-meta">
+                  <a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> admin_shop</a>
+                  <span class="sl-pmf-snip">— миграция остатков закончена</span>
+                  <span class="sl-chip sl-chip-neutral sl-message-in sl-hidden sl-pmf-flag" title="Прочитанное сообщение"><i class="bi bi-envelope-open" aria-hidden="true"></i></span>
+                </span>
+              </div>
+              <span class="sl-dial">
+                <button class="sl-dial-toggle sl-but-mini" type="button" title="Действия"><i class="bi bi-gear-fill"></i></button>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Показать"><i class="bi bi-eye"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Сохранить"><i class="bi bi-archive"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Отметить непрочитанным"><i class="bi bi-envelope"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash"></i></a>
+              </span>
+            </div>
+
+            <p class="sl-pmf-day"><i class="bi bi-calendar3" aria-hidden="true"></i> 10 августа <small>2 письма</small></p>
+
+            <div class="sl-pmf-item">
+              <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить сообщение 4166</span><input type="checkbox" class="sl-check" name="id[]" value="4166"></label>
+              <img src="../templates/lite/images/avatars/presets/004.svg" alt="">
+              <div class="sl-pmf-body">
+                <span class="sl-pmf-line">
+                  <a class="sl-pmf-subj" href="#">Спасибо за помощь с переносом БД</a>
+                  <time class="sl-pmf-when" datetime="2026-08-10T22:03">22:03</time>
+                </span>
+                <span class="sl-pmf-meta">
+                  <a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Мария Соколова</a>
+                  <span class="sl-pmf-snip">— миграция прошла без потерь</span>
+                  <span class="sl-chip sl-chip-neutral sl-message-in sl-hidden sl-pmf-flag" title="Прочитанное сообщение"><i class="bi bi-envelope-open" aria-hidden="true"></i></span>
+                </span>
+              </div>
+              <span class="sl-dial">
+                <button class="sl-dial-toggle sl-but-mini" type="button" title="Действия"><i class="bi bi-gear-fill"></i></button>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Показать"><i class="bi bi-eye"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Сохранить"><i class="bi bi-archive"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Отметить непрочитанным"><i class="bi bi-envelope"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash"></i></a>
+              </span>
+            </div>
+
+            <div class="sl-pmf-item">
+              <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить сообщение 4160</span><input type="checkbox" class="sl-check" name="id[]" value="4160"></label>
+              <img src="../templates/lite/images/avatars/system/deleted.svg" alt="">
+              <div class="sl-pmf-body">
+                <span class="sl-pmf-line">
+                  <a class="sl-pmf-subj" href="#">Вопрос по лицензии MIT</a>
+                  <time class="sl-pmf-when" datetime="2026-08-09T13:24">09.08</time>
+                </span>
+                <span class="sl-pmf-meta">
+                  <span class="sl-author sl-muted"><i class="bi bi-person-x" aria-hidden="true"></i> Гость</span>
+                  <span class="sl-pmf-snip">— аккаунт отправителя удалён</span>
+                </span>
+              </div>
+              <span class="sl-dial">
+                <button class="sl-dial-toggle sl-but-mini" type="button" title="Действия"><i class="bi bi-gear-fill"></i></button>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Показать"><i class="bi bi-eye"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Сохранить"><i class="bi bi-archive"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash"></i></a>
+              </span>
+            </div>
+          </form>
+
+          <div class="sl-pmf-foot">
+            <p class="sl-pager-info">Всего: <b>240</b> на <b>10</b> страницах по <b>25</b> на каждой странице</p>
+            <nav class="sl-pager" aria-label="Постраничная навигация">
+              <div class="sl-pager-main">
+                <div class="sl-pager-pages">
+                  <a class="sl-but-mini sl-is-active" href="#" aria-current="page">1</a>
+                  <a class="sl-but-mini" href="#">2</a>
+                  <a class="sl-but-mini" href="#">3</a>
+                  <span class="sl-but-mini sl-is-muted">&hellip;</span>
+                  <a class="sl-but-mini" href="#">10</a>
+                </div>
+                <div class="sl-pager-nextprev">
+                  <b class="sl-pager-prev"><span class="sl-but-mini sl-is-muted" title="Предыдущая"><i class="bi bi-chevron-left" aria-hidden="true"></i></span></b>
+                  <b class="sl-pager-next"><a class="sl-but-mini" href="#" title="Следующая"><i class="bi bi-chevron-right" aria-hidden="true"></i></a></b>
+                </div>
+              </div>
+            </nav>
+            <div class="sl-bulk-bar">
+              <span class="sl-bulk-count">Отмечено: 2 из 25 на странице</span>
+              <span class="sl-action-label">Действие</span>
+              <label class="sl-visually-hidden" for="pmf-act">Действие над отмеченными</label>
+              <select id="pmf-act" name="act" class="sl-field">
+                <option value="read">Отметить прочитанными</option>
+                <option value="unread">Отметить непрочитанными</option>
+                <option value="save">Сохранить</option>
+                <option value="delete">Удалить</option>
+              </select>
+              <input type="submit" class="sl-but" value="OK" title="Применить действие">
+            </div>
+          </div>
+        </aside>
+
+        <section class="sl-pmf-view" id="pmf-read" aria-label="Просмотр сообщения">
+          <div class="sl-pmf-acts">
+            <button type="button" class="sl-but sl-pmf-back" data-sl-pm-back><i class="bi bi-chevron-left" aria-hidden="true"></i>&nbsp; К списку</button>
+            <button type="button" class="sl-but"><i class="bi bi-reply" aria-hidden="true"></i>&nbsp; Ответить</button>
+            <button type="button" class="sl-but"><i class="bi bi-forward" aria-hidden="true"></i>&nbsp; Переслать</button>
+            <span class="sl-pmf-acts-end">
+              <button type="button" class="sl-but-mini" title="Цитировать письмо"><i class="bi bi-quote" aria-hidden="true"></i><span class="sl-visually-hidden">Цитировать письмо</span></button>
+              <button type="button" class="sl-but-mini" title="Сохранить"><i class="bi bi-archive" aria-hidden="true"></i><span class="sl-visually-hidden">Сохранить</span></button>
+              <button type="button" class="sl-but-mini" title="Отметить непрочитанным"><i class="bi bi-envelope" aria-hidden="true"></i><span class="sl-visually-hidden">Отметить непрочитанным</span></button>
+              <button type="button" class="sl-but-mini" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i><span class="sl-visually-hidden">Удалить</span></button>
+              <span class="sl-pmf-sep" aria-hidden="true"></span>
+              <a class="sl-but-mini" href="#" title="Предыдущее письмо"><i class="bi bi-chevron-up" aria-hidden="true"></i></a>
+              <a class="sl-but-mini" href="#" title="Следующее письмо"><i class="bi bi-chevron-down" aria-hidden="true"></i></a>
+            </span>
+          </div>
+
+          <header class="sl-pmf-head">
+            <h2>Ошибка при обновлении с 6.2 на 6.3</h2>
+            <div class="sl-pmf-who">
+              <img src="../templates/lite/images/avatars/presets/001.svg" alt="Крамской" class="sl-avatar">
+              <span>
+                <b><a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Крамской</a></b>
+                <small>Группа: Проверенные · 1 240 пунктов · регистрация 11.05.2010</small>
+              </span>
+            </div>
+            <div class="sl-pmf-chips">
+              <span class="sl-chip sl-chip-info sl-topic-post" title="Добавлено"><i class="bi bi-clock-history" aria-hidden="true"></i> <time datetime="2026-08-12T14:32">12.08.2026 14:32</time></span>
+              <span class="sl-chip sl-chip-success"><i class="bi bi-check-circle" aria-hidden="true"></i> Прочитано</span>
+              <a class="sl-chip sl-chip-neutral" href="#"><i class="bi bi-person-badge" aria-hidden="true"></i> Персональная информация</a>
+              <a class="sl-chip sl-chip-neutral" href="#"><i class="bi bi-globe" aria-hidden="true"></i> Сайт автора</a>
+            </div>
+          </header>
+
+          <div class="sl-pmf-text">
+            <p>Добрый день! Обновлял тестовый сайт с 6.2.4 на 6.3, скрипт setup отработал без ошибок, но после входа в админку получаю 500 на любом разделе.</p>
+            <p>В <code>storage/logs/error_php.log</code> одна и та же строка про недостающую колонку <code>saved</code> в таблице <code>_privat</code>. Похоже, миграция таблицы личных сообщений не применилась.</p>
+            <blockquote><p>Подскажите, можно ли догнать её вручную, не откатывая весь апдейт? Дамп базы перед обновлением сохранён.</p></blockquote>
+            <p>Если нужно — пришлю полный лог и вывод <code>SHOW CREATE TABLE</code>. Спасибо заранее.</p>
+            <p class="sl-pmf-sig">Здесь молодость бродит крылато, и старость не клонит голов.</p>
+          </div>
+
+          <form class="sl-pmf-reply" action="#" method="post">
+            <label class="sl-visually-hidden" for="pmf-title">Заголовок</label>
+            <input id="pmf-title" class="sl-field sl-pmf-title" type="text" name="title" maxlength="100" placeholder="Заголовок" value="Ответ: Ошибка при обновлении с 6.2 на 6.3">
+            <label class="sl-visually-hidden" for="pmf-reply">Текст ответа</label>
+            <div class="sl-pm-editor" data-sl-pm-editor="pmf-reply" data-sl-pm-height="300" data-sl-pm-placeholder="Ответ пользователю Крамской&hellip;">
+              <textarea id="pmf-reply" name="text" rows="15" style="display:none"></textarea>
+              <div id="pmf-reply_toast"></div>
+            </div>
+            <p class="sl-pm-note"><i class="bi bi-info-circle" aria-hidden="true"></i> Поле сообщения — настоящий Toast UI из <code>plugins/editors/toastui</code>: панель инструментов, вставка изображений через файловый менеджер, смайлы и переключатель Markdown/Визуальный. Его минимальные 250&nbsp;px — главный довод за две колонки: редактор живёт справа, а список слева остаётся на экране целиком.</p>
+            <div class="sl-pmf-reply-foot">
+              <input type="submit" class="sl-but" value="Отправить" title="Отправить">
+              <small>Интервал между отправками — 60 секунд · входящих у получателя: 240 из 250</small>
+            </div>
+          </form>
+        </section>
+
+      </div>
+    </div>
+  </section>
+
+  <section class="sl-pmdemo-sec">
+    <h2><span>2</span> Исходящие</h2>
+    <p>Меняются три вещи: колонка автора становится получателем, чипс показывает, открыл ли адресат письмо, а из массовых действий остаётся только удаление своей копии — ровно то, что разрешает <code>updatePrivatBox()</code> для этой папки.</p>
+
+    <div class="sl-pmdemo-frame">
+      <nav class="sl-pmf-folders" aria-label="Папки личных сообщений">
+        <a class="sl-pmf-fold sl-pmh-danger" href="#">
+          <span class="sl-pmh sl-pmh-danger" role="img" aria-label="Входящие заполнены на 96 процентов">
+            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+              <circle class="sl-pmh-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="4"></circle>
+            </svg>
+            <i class="bi bi-envelope" aria-hidden="true"></i>
+          </span>
+          <span><b>Входящие</b><small>240 из 250</small></span>
+          <span class="sl-cab-badge">8</span>
+        </a>
+        <a class="sl-pmf-fold sl-pmh-none" href="#" aria-current="page">
+          <span class="sl-pmh sl-pmh-none sl-pmh-full" role="img" aria-label="У исходящих нет ограничения">
+            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+            </svg>
+            <i class="bi bi-send" aria-hidden="true"></i>
+          </span>
+          <span><b>Исходящие</b><small>903 · без ограничения</small></span>
+        </a>
+        <a class="sl-pmf-fold sl-pmh-ok" href="#">
+          <span class="sl-pmh sl-pmh-ok" role="img" aria-label="Сохранённые заполнены на 25 процентов">
+            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+              <circle class="sl-pmh-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="74.8"></circle>
+            </svg>
+            <i class="bi bi-bookmark" aria-hidden="true"></i>
+          </span>
+          <span><b>Сохранённые</b><small>63 из 250</small></span>
+        </a>
+        <a class="sl-pmf-fold sl-pmh-info" href="#">
+          <span class="sl-pmh sl-pmh-info sl-pmh-full" role="img" aria-label="Написать новое письмо">
+            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+            </svg>
+            <i class="bi bi-pencil-square" aria-hidden="true"></i>
+          </span>
+          <span><b>Написать</b><small>новое письмо</small></span>
+        </a>
+      </nav>
+
+      <div class="sl-pmf-bar">
+        <form class="sl-search-form" role="search" action="#" method="post">
+          <label class="sl-visually-hidden" for="pmf-q2">Поиск по исходящим</label>
+          <input id="pmf-q2" type="search" placeholder="Поиск по теме и получателю">
+          <button type="submit" title="Найти"><i class="bi bi-search" aria-hidden="true"></i></button>
+        </form>
+        <span class="sl-pmf-found">Показано 1&ndash;25 из <b>903</b></span>
+      </div>
+
+      <div class="sl-pmf-split" data-sl-pane="view">
+        <aside class="sl-pmf-aside">
+          <form class="sl-pmf-scroll" action="#" method="post" aria-label="Список исходящих">
+            <p class="sl-pmf-day"><i class="bi bi-calendar3" aria-hidden="true"></i> Сегодня, 12 августа <small>2 письма</small></p>
+
+            <div class="sl-pmf-item" aria-current="true">
+              <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить сообщение 4182</span><input type="checkbox" class="sl-check" name="id[]" value="4182"></label>
+              <img src="../templates/lite/images/avatars/presets/001.svg" alt="">
+              <div class="sl-pmf-body">
+                <span class="sl-pmf-line">
+                  <a class="sl-pmf-subj" href="#">Re: Ошибка при обновлении с 6.2 на 6.3</a>
+                  <time class="sl-pmf-when" datetime="2026-08-12T15:10">15:10</time>
+                </span>
+                <span class="sl-pmf-meta">
+                  <a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Крамской</a>
+                  <span class="sl-pmf-snip">— инкремент лежит в setup/sql</span>
+                  <span class="sl-chip sl-chip-warn sl-message-out sl-pmf-flag" title="Получатель ещё не открыл письмо"><i class="bi bi-send" aria-hidden="true"></i></span>
+                </span>
+              </div>
+              <span class="sl-dial">
+                <button class="sl-dial-toggle sl-but-mini" type="button" title="Действия"><i class="bi bi-gear-fill"></i></button>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Показать"><i class="bi bi-eye"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Удалить свою копию" data-sl-confirm="Удаление объекта"><i class="bi bi-trash"></i></a>
+              </span>
+            </div>
+
+            <div class="sl-pmf-item">
+              <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить сообщение 4178</span><input type="checkbox" class="sl-check" name="id[]" value="4178"></label>
+              <img src="../templates/lite/images/avatars/presets/004.svg" alt="">
+              <div class="sl-pmf-body">
+                <span class="sl-pmf-line">
+                  <a class="sl-pmf-subj" href="#">Патч принят, спасибо</a>
+                  <time class="sl-pmf-when" datetime="2026-08-12T09:55">09:55</time>
+                </span>
+                <span class="sl-pmf-meta">
+                  <a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> dev_kostya</a>
+                  <span class="sl-pmf-snip">— влит в ветку master</span>
+                  <span class="sl-chip sl-chip-success sl-message-out sl-pmf-flag" title="Прочитано получателем"><i class="bi bi-send-check" aria-hidden="true"></i></span>
+                </span>
+              </div>
+              <span class="sl-dial">
+                <button class="sl-dial-toggle sl-but-mini" type="button" title="Действия"><i class="bi bi-gear-fill"></i></button>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Показать"><i class="bi bi-eye"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Удалить свою копию" data-sl-confirm="Удаление объекта"><i class="bi bi-trash"></i></a>
+              </span>
+            </div>
+
+            <p class="sl-pmf-day"><i class="bi bi-calendar3" aria-hidden="true"></i> Вчера, 11 августа <small>1 письмо</small></p>
+
+            <div class="sl-pmf-item">
+              <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить сообщение 4175</span><input type="checkbox" class="sl-check" name="id[]" value="4175"></label>
+              <img src="../templates/lite/images/avatars/presets/018.svg" alt="">
+              <div class="sl-pmf-body">
+                <span class="sl-pmf-line">
+                  <a class="sl-pmf-subj" href="#">Re: Шаблон lite: сломалась вёрстка таблиц</a>
+                  <time class="sl-pmf-when" datetime="2026-08-11T10:00">10:00</time>
+                </span>
+                <span class="sl-pmf-meta">
+                  <a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Igor_Tech</a>
+                  <span class="sl-pmf-snip">— проверьте sl-cell-ellipsis</span>
+                  <span class="sl-chip sl-chip-success sl-message-out sl-pmf-flag" title="Прочитано получателем"><i class="bi bi-send-check" aria-hidden="true"></i></span>
+                </span>
+              </div>
+              <span class="sl-dial">
+                <button class="sl-dial-toggle sl-but-mini" type="button" title="Действия"><i class="bi bi-gear-fill"></i></button>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Показать"><i class="bi bi-eye"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Удалить свою копию" data-sl-confirm="Удаление объекта"><i class="bi bi-trash"></i></a>
+              </span>
+            </div>
+          </form>
+
+          <div class="sl-pmf-foot">
+            <p class="sl-pager-info">Всего: <b>903</b> на <b>37</b> страницах по <b>25</b> на каждой странице</p>
+            <div class="sl-bulk-bar">
+              <span class="sl-bulk-count">Отмечено: 0</span>
+              <span class="sl-action-label">Действие</span>
+              <label class="sl-visually-hidden" for="pmf-act2">Действие над отмеченными</label>
+              <select id="pmf-act2" class="sl-field"><option value="delete">Удалить</option></select>
+              <input type="submit" class="sl-but" value="OK">
+            </div>
+          </div>
+        </aside>
+
+        <section class="sl-pmf-view" aria-label="Просмотр сообщения">
+          <div class="sl-pmf-acts">
+            <button type="button" class="sl-but sl-pmf-back" data-sl-pm-back><i class="bi bi-chevron-left" aria-hidden="true"></i>&nbsp; К списку</button>
+            <button type="button" class="sl-but"><i class="bi bi-arrow-repeat" aria-hidden="true"></i>&nbsp; Написать ещё раз</button>
+            <button type="button" class="sl-but"><i class="bi bi-forward" aria-hidden="true"></i>&nbsp; Переслать</button>
+            <span class="sl-pmf-acts-end">
+              <button type="button" class="sl-but-mini" title="Цитировать письмо"><i class="bi bi-quote" aria-hidden="true"></i><span class="sl-visually-hidden">Цитировать письмо</span></button>
+              <button type="button" class="sl-but-mini" title="Удалить свою копию" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i><span class="sl-visually-hidden">Удалить свою копию</span></button>
+              <span class="sl-pmf-sep" aria-hidden="true"></span>
+              <a class="sl-but-mini" href="#" title="Предыдущее письмо"><i class="bi bi-chevron-up" aria-hidden="true"></i></a>
+              <a class="sl-but-mini" href="#" title="Следующее письмо"><i class="bi bi-chevron-down" aria-hidden="true"></i></a>
+            </span>
+          </div>
+          <header class="sl-pmf-head">
+            <h2>Re: Ошибка при обновлении с 6.2 на 6.3</h2>
+            <div class="sl-pmf-who">
+              <img src="../templates/lite/images/avatars/presets/001.svg" alt="Крамской" class="sl-avatar">
+              <span>
+                <b>Получатель: <a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Крамской</a></b>
+                <small>Группа: Проверенные · был на сайте 12 минут назад</small>
+              </span>
+            </div>
+            <div class="sl-pmf-chips">
+              <span class="sl-chip sl-chip-info sl-topic-post" title="Отправлено"><i class="bi bi-clock-history" aria-hidden="true"></i> <time datetime="2026-08-12T15:10">12.08.2026 15:10</time></span>
+              <span class="sl-chip sl-chip-warn sl-message-out"><i class="bi bi-send" aria-hidden="true"></i> Получатель ещё не открыл письмо</span>
+            </div>
+          </header>
+          <div class="sl-pmf-text">
+            <p>Догнать миграцию можно: в <code>setup/sql</code> лежит инкремент, который добавляет колонку <code>saved</code> и переносит старые флаги папок в четыре колонки состояния. Откат не нужен.</p>
+            <p>Перед запуском проверьте, что версия в <code>config/system.php</code> уже 6.3 — иначе скрипт посчитает базу актуальной и пропустит шаг.</p>
+          </div>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <section class="sl-pmdemo-sec">
+    <h2><span>3</span> Пустые состояния</h2>
+    <p>Три разных пустоты и три разных выхода из неё: ничего не выбрано, фильтр отсёк всё, папка пуста по существу.</p>
+
+    <div class="sl-pmdemo-frame" style="margin-bottom: 14px;">
+      <span class="sl-pmdemo-from"><i class="bi bi-1-circle" aria-hidden="true"></i> Письмо не выбрано</span>
+      <div class="sl-pmf-split" style="margin-top: 10px;">
+        <aside class="sl-pmf-aside">
+          <div class="sl-pmf-scroll">
+            <p class="sl-pmf-day"><i class="bi bi-calendar3" aria-hidden="true"></i> Сегодня, 12 августа <small>3 письма</small></p>
+            <div class="sl-pmf-item sl-pmf-new">
+              <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить</span><input type="checkbox" class="sl-check"></label>
+              <img src="../templates/lite/images/avatars/presets/001.svg" alt="">
+              <div class="sl-pmf-body">
+                <span class="sl-pmf-line"><a class="sl-pmf-subj" href="#">Ошибка при обновлении с 6.2 на 6.3</a><time class="sl-pmf-when" datetime="2026-08-12T14:32">14:32</time></span>
+                <span class="sl-pmf-meta"><a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Крамской</a><span class="sl-pmf-snip">— миграция не применилась</span></span>
+              </div>
+            </div>
+            <div class="sl-pmf-item sl-pmf-new">
+              <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить</span><input type="checkbox" class="sl-check"></label>
+              <img src="../templates/lite/images/avatars/presets/007.svg" alt="">
+              <div class="sl-pmf-body">
+                <span class="sl-pmf-line"><a class="sl-pmf-subj" href="#">Re: Права доступа к модулю «Файлы»</a><time class="sl-pmf-when" datetime="2026-08-12T11:05">11:05</time></span>
+                <span class="sl-pmf-meta"><a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Nataly_V</a><span class="sl-pmf-snip">— права слетели</span></span>
+              </div>
+            </div>
+          </div>
+        </aside>
+        <section class="sl-pmf-view" aria-label="Просмотр сообщения">
+          <div class="sl-pmf-blank">
+            <i class="bi bi-envelope-open" aria-hidden="true"></i>
+            <b>Письмо не выбрано</b>
+            <p>Выберите сообщение слева, чтобы прочитать его и ответить. Открытие входящего сразу помечает его прочитанным.</p>
+            <span class="sl-pmf-keys"><kbd>↑</kbd><kbd>↓</kbd> — по списку<kbd>Enter</kbd> — открыть<kbd>R</kbd> — ответить<kbd>E</kbd> — сохранить<kbd>Del</kbd> — удалить</span>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <div class="sl-pmdemo-frame" style="margin-bottom: 14px;">
+      <span class="sl-pmdemo-from"><i class="bi bi-2-circle" aria-hidden="true"></i> Фильтры отсекли всё</span>
+      <div class="sl-pmf-active" role="group" aria-label="Фильтр выборки" style="margin-top: 10px;">
+        <b>Фильтр:</b>
+        <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Все <b>· 63</b></button>
+        <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false" data-sl-pm-one="state">Непрочитанные <b>· 1</b></button>
+        <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false" data-sl-pm-one="state">Прочитанные <b>· 62</b></button>
+        <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="true">Сегодня <b>· 0</b></button>
+        <span class="sl-pmf-sep" aria-hidden="true"></span>
+        <span class="sl-chip sl-chip-warn" data-sl-pm-query>«webhook» <button type="button" title="Очистить поиск"><i class="bi bi-x" aria-hidden="true"></i></button></span>
+        <button type="button" class="sl-pmf-clear">Сбросить всё</button>
+      </div>
+      <div class="sl-pmf-split">
+        <aside class="sl-pmf-aside">
+          <div class="sl-pmf-blank">
+            <i class="bi bi-funnel" aria-hidden="true"></i>
+            <b>Под фильтры не попало ни одного письма</b>
+            <p>Скрыто 240 сообщений. Снимите условие «Сегодня» — по запросу «webhook» среди сохранённых за всё время найдётся 12 писем.</p>
+            <button type="button" class="sl-but"><i class="bi bi-x-circle" aria-hidden="true"></i>&nbsp; Снять «Сегодня»</button>
+          </div>
+        </aside>
+        <section class="sl-pmf-view" aria-label="Просмотр сообщения">
+          <div class="sl-pmf-blank">
+            <i class="bi bi-inbox" aria-hidden="true"></i>
+            <b>Показывать нечего</b>
+            <p>Счётчик в тулбаре показывает, сколько писем скрыто фильтром, а полоса над списком — какими именно условиями.</p>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <div class="sl-pmdemo-frame">
+      <span class="sl-pmdemo-from"><i class="bi bi-3-circle" aria-hidden="true"></i> Папка пуста по существу</span>
+      <div class="sl-pmf-split" style="margin-top: 10px;">
+        <aside class="sl-pmf-aside">
+          <div class="sl-pmf-blank">
+            <i class="bi bi-bookmark" aria-hidden="true"></i>
+            <b>Сохранённых сообщений нет</b>
+            <p>Отметьте письмо во входящих кнопкой «Сохранить» — оно переедет сюда и переживёт чистку почты. Квота сохранённых считается отдельно: 250 сообщений.</p>
+            <button type="button" class="sl-but"><i class="bi bi-envelope" aria-hidden="true"></i>&nbsp; Перейти во входящие</button>
+          </div>
+        </aside>
+        <section class="sl-pmf-view" aria-label="Просмотр сообщения">
+          <div class="sl-pmf-blank">
+            <i class="bi bi-check2-circle" aria-hidden="true"></i>
+            <b>Ничего не требует внимания</b>
+            <p>Колода фокуса появляется над списком только когда есть непрочитанные. Сейчас их нет.</p>
+          </div>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <section class="sl-pmdemo-sec">
+    <h2><span>4</span> Мобильное отображение</h2>
+    <p>Панели не сжимаются, а подменяют друг друга: сначала список, после выбора — чтение с кнопкой «К списку». Полки становятся компактнее, подписи под ними прячутся, колода фокуса листается пальцем. Переключение ниже работает по-настоящему.</p>
+
+    <div class="sl-pmdemo-phones">
+
+      <figure class="sl-pmdemo-phone">
+        <figcaption>Список, 390&nbsp;px</figcaption>
+        <nav class="sl-pmf-folders" aria-label="Папки">
+          <a class="sl-pmf-fold sl-pmh-danger" href="#" aria-current="page">
+            <span class="sl-pmh sl-pmh-danger" role="img" aria-label="Входящие заполнены на 96 процентов">
+              <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
+                <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+                <circle class="sl-pmh-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="4"></circle>
+              </svg>
+              <i class="bi bi-envelope" aria-hidden="true"></i>
+            </span>
+            <span><b>Входящие</b><small>240 из 250</small></span>
+            <span class="sl-cab-badge">8</span>
+          </a>
+          <a class="sl-pmf-fold sl-pmh-none" href="#">
+            <span class="sl-pmh sl-pmh-none sl-pmh-full" role="img" aria-label="Без ограничения">
+              <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
+                <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+              </svg>
+              <i class="bi bi-send" aria-hidden="true"></i>
+            </span>
+            <span><b>Исходящие</b><small>903</small></span>
+          </a>
+          <a class="sl-pmf-fold sl-pmh-ok" href="#">
+            <span class="sl-pmh sl-pmh-ok" role="img" aria-label="Сохранённые заполнены на 25 процентов">
+              <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
+                <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+                <circle class="sl-pmh-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="74.8"></circle>
+              </svg>
+              <i class="bi bi-bookmark" aria-hidden="true"></i>
+            </span>
+            <span><b>Сохранённые</b><small>63</small></span>
+          </a>
+          <a class="sl-pmf-fold sl-pmh-info" href="#">
+            <span class="sl-pmh sl-pmh-info sl-pmh-full" role="img" aria-label="Написать новое письмо">
+              <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
+                <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+              </svg>
+              <i class="bi bi-pencil-square" aria-hidden="true"></i>
+            </span>
+            <span><b>Написать</b><small>новое</small></span>
+          </a>
+        </nav>
+
+        <details class="sl-pmf-focus" open>
+          <summary><i class="bi bi-lightning-charge" aria-hidden="true"></i> Фокус <small>8 непрочитанных</small></summary>
+          <div class="sl-pmf-deck">
+            <article class="sl-pmf-slot">
+              <header class="sl-pmf-slot-top">
+                <img src="../templates/lite/images/avatars/presets/001.svg" alt="">
+                <b>Крамской</b>
+                <time datetime="2026-08-12T14:32">14:32</time>
+              </header>
+              <a class="sl-pmf-slot-subj" href="#">Ошибка при обновлении с 6.2 на 6.3</a>
+              <p>После setup ловлю 500 на любом разделе админки.</p>
+              <footer class="sl-pmf-slot-acts">
+                <a class="sl-but-mini" href="#" title="Открыть"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                <a class="sl-but-mini" href="#" title="Ответить"><i class="bi bi-reply" aria-hidden="true"></i></a>
+                <a class="sl-but-mini" href="#" title="Прочитано"><i class="bi bi-check2" aria-hidden="true"></i></a>
+                <a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a>
+              </footer>
+            </article>
+            <article class="sl-pmf-slot">
+              <header class="sl-pmf-slot-top">
+                <img src="../templates/lite/images/avatars/presets/007.svg" alt="">
+                <b>Nataly_V</b>
+                <time datetime="2026-08-12T11:05">11:05</time>
+              </header>
+              <a class="sl-pmf-slot-subj" href="#">Re: Права доступа к модулю «Файлы»</a>
+              <p>Кнопка загрузки не видна модераторам.</p>
+              <footer class="sl-pmf-slot-acts">
+                <a class="sl-but-mini" href="#" title="Открыть"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                <a class="sl-but-mini" href="#" title="Ответить"><i class="bi bi-reply" aria-hidden="true"></i></a>
+                <a class="sl-but-mini" href="#" title="Прочитано"><i class="bi bi-check2" aria-hidden="true"></i></a>
+                <a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a>
+              </footer>
+            </article>
+          </div>
+        </details>
+
+        <div class="sl-pmf-bar">
+          <form class="sl-search-form" role="search" action="#" method="post">
+            <label class="sl-visually-hidden" for="pmf-q-m">Поиск</label>
+            <input id="pmf-q-m" type="search" placeholder="Поиск">
+            <button type="submit" title="Найти"><i class="bi bi-search" aria-hidden="true"></i></button>
+          </form>
+          <span class="sl-pmf-found">1&ndash;25 из <b>240</b></span>
+        </div>
+
+        <div class="sl-pmf-split" data-sl-pane="list">
+          <aside class="sl-pmf-aside">
+            <form class="sl-pmf-scroll" action="#" method="post" aria-label="Список сообщений">
+              <p class="sl-pmf-day"><i class="bi bi-calendar3" aria-hidden="true"></i> Сегодня <small>3</small></p>
+              <div class="sl-pmf-item sl-pmf-new" data-sl-pm-open>
+                <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить</span><input type="checkbox" class="sl-check"></label>
+                <img src="../templates/lite/images/avatars/presets/001.svg" alt="">
+                <div class="sl-pmf-body">
+                  <span class="sl-pmf-line"><a class="sl-pmf-subj" href="#">Ошибка при обновлении с 6.2 на 6.3</a><time class="sl-pmf-when" datetime="2026-08-12T14:32">14:32</time></span>
+                  <span class="sl-pmf-meta"><a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Крамской</a><span class="sl-chip sl-chip-info sl-message-in sl-pmf-flag"><i class="bi bi-envelope" aria-hidden="true"></i></span></span>
+                </div>
+                <span class="sl-dial">
+                  <button class="sl-dial-toggle sl-but-mini" type="button" title="Действия"><i class="bi bi-gear-fill"></i></button>
+                  <a class="sl-dial-item sl-but-mini" href="#" title="Показать"><i class="bi bi-eye"></i></a>
+                  <a class="sl-dial-item sl-but-mini" href="#" title="Сохранить"><i class="bi bi-archive"></i></a>
+                  <a class="sl-dial-item sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash"></i></a>
+                </span>
+              </div>
+              <div class="sl-pmf-item sl-pmf-new" data-sl-pm-open>
+                <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить</span><input type="checkbox" class="sl-check"></label>
+                <img src="../templates/lite/images/avatars/presets/007.svg" alt="">
+                <div class="sl-pmf-body">
+                  <span class="sl-pmf-line"><a class="sl-pmf-subj" href="#">Re: Права доступа к модулю «Файлы»</a><time class="sl-pmf-when" datetime="2026-08-12T11:05">11:05</time></span>
+                  <span class="sl-pmf-meta"><a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Nataly_V</a><span class="sl-chip sl-chip-info sl-message-in sl-pmf-flag"><i class="bi bi-envelope" aria-hidden="true"></i></span></span>
+                </div>
+                <span class="sl-dial">
+                  <button class="sl-dial-toggle sl-but-mini" type="button" title="Действия"><i class="bi bi-gear-fill"></i></button>
+                  <a class="sl-dial-item sl-but-mini" href="#" title="Показать"><i class="bi bi-eye"></i></a>
+                  <a class="sl-dial-item sl-but-mini" href="#" title="Сохранить"><i class="bi bi-archive"></i></a>
+                  <a class="sl-dial-item sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash"></i></a>
+                </span>
+              </div>
+              <p class="sl-pmf-day"><i class="bi bi-calendar3" aria-hidden="true"></i> Вчера <small>2</small></p>
+              <div class="sl-pmf-item" data-sl-pm-open>
+                <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить</span><input type="checkbox" class="sl-check"></label>
+                <img src="../templates/lite/images/avatars/presets/012.svg" alt="">
+                <div class="sl-pmf-body">
+                  <span class="sl-pmf-line"><a class="sl-pmf-subj" href="#">Заказ №2419: сменился склад</a><time class="sl-pmf-when" datetime="2026-08-11T08:31">08:31</time></span>
+                  <span class="sl-pmf-meta"><a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> admin_shop</a></span>
+                </div>
+                <span class="sl-dial">
+                  <button class="sl-dial-toggle sl-but-mini" type="button" title="Действия"><i class="bi bi-gear-fill"></i></button>
+                  <a class="sl-dial-item sl-but-mini" href="#" title="Показать"><i class="bi bi-eye"></i></a>
+                  <a class="sl-dial-item sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash"></i></a>
+                </span>
+              </div>
+            </form>
+            <div class="sl-pmf-foot">
+              <p class="sl-pager-info">Всего: <b>240</b> на <b>10</b> страницах</p>
+              <nav class="sl-pager" aria-label="Страницы">
+                <div class="sl-pager-main">
+                  <div class="sl-pager-pages">
+                    <a class="sl-but-mini sl-is-active" href="#">1</a>
+                    <a class="sl-but-mini" href="#">2</a>
+                    <a class="sl-but-mini" href="#">3</a>
+                  </div>
+                  <div class="sl-pager-nextprev">
+                    <b class="sl-pager-next"><a class="sl-but-mini" href="#" title="Следующая"><i class="bi bi-chevron-right" aria-hidden="true"></i></a></b>
+                  </div>
+                </div>
+              </nav>
+              <div class="sl-bulk-bar">
+                <span class="sl-bulk-count">Отмечено: 0</span>
+                <label class="sl-visually-hidden" for="pmf-act-m">Действие</label>
+                <select id="pmf-act-m" class="sl-field"><option>Отметить прочитанными</option><option>Сохранить</option><option>Удалить</option></select>
+                <input type="submit" class="sl-but" value="OK">
+              </div>
+            </div>
+          </aside>
+
+          <section class="sl-pmf-view" aria-label="Просмотр сообщения">
+            <div class="sl-pmf-acts">
+              <button type="button" class="sl-but sl-pmf-back" data-sl-pm-back><i class="bi bi-chevron-left" aria-hidden="true"></i>&nbsp; К списку</button>
+              <span class="sl-pmf-acts-end">
+                <button type="button" class="sl-but-mini" title="Ответить"><i class="bi bi-reply" aria-hidden="true"></i><span class="sl-visually-hidden">Ответить</span></button>
+                <button type="button" class="sl-but-mini" title="Переслать"><i class="bi bi-forward" aria-hidden="true"></i><span class="sl-visually-hidden">Переслать</span></button>
+                <button type="button" class="sl-but-mini" title="Цитировать письмо"><i class="bi bi-quote" aria-hidden="true"></i><span class="sl-visually-hidden">Цитировать письмо</span></button>
+                <button type="button" class="sl-but-mini" title="Сохранить"><i class="bi bi-archive" aria-hidden="true"></i><span class="sl-visually-hidden">Сохранить</span></button>
+                <button type="button" class="sl-but-mini" title="Отметить непрочитанным"><i class="bi bi-envelope" aria-hidden="true"></i><span class="sl-visually-hidden">Отметить непрочитанным</span></button>
+                <button type="button" class="sl-but-mini" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i><span class="sl-visually-hidden">Удалить</span></button>
+              </span>
+            </div>
+            <header class="sl-pmf-head">
+              <h2>Ошибка при обновлении с 6.2 на 6.3</h2>
+              <div class="sl-pmf-who">
+                <img src="../templates/lite/images/avatars/presets/001.svg" alt="Крамской" class="sl-avatar">
+                <span><b><a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Крамской</a></b><small>Проверенные · 12.08.2026 14:32</small></span>
+              </div>
+              <div class="sl-pmf-chips">
+                <span class="sl-chip sl-chip-success"><i class="bi bi-check-circle" aria-hidden="true"></i> Прочитано</span>
+              </div>
+            </header>
+            <div class="sl-pmf-text">
+              <p>Добрый день! Обновлял тестовый сайт с 6.2.4 на 6.3, скрипт setup отработал без ошибок, но после входа в админку получаю 500 на любом разделе.</p>
+              <p>В логе одна и та же строка про недостающую колонку <code>saved</code> в таблице <code>_privat</code>.</p>
+            </div>
+            <form class="sl-pmf-reply" action="#" method="post">
+              <label class="sl-visually-hidden" for="pmf-title-m">Заголовок</label>
+              <input id="pmf-title-m" class="sl-field sl-pmf-title" type="text" placeholder="Заголовок" value="">
+              <label class="sl-visually-hidden" for="pmf-reply-m">Текст ответа</label>
+              <div class="sl-pm-editor" data-sl-pm-editor="pmf-reply-m" data-sl-pm-height="230" data-sl-pm-placeholder="Ответ&hellip;">
+                <textarea id="pmf-reply-m" name="text" rows="15" style="display:none"></textarea>
+                <div id="pmf-reply-m_toast"></div>
+              </div>
+              <div class="sl-pmf-reply-foot"><input type="submit" class="sl-but" value="Отправить"></div>
+            </form>
+          </section>
+        </div>
+      </figure>
+
+    </div>
+  </section>
+
+  <section class="sl-pmdemo-sec">
+    <h2><span>5</span> Контракт с бэкендом</h2>
+    <p>Ни один блок не требует нового SQL: всё, что на экране, уже отдают <code>Privat</code> и <code>getPrivateMessageView()</code>. Ниже — что откуда берётся и что придётся дописать.</p>
+
+    <div class="sl-pmdemo-frame">
+      <div class="sl-table-shell">
+      <table class="sl-pmf-map">
+        <thead>
+          <tr>
+            <th scope="col">Блок интерфейса</th>
+            <th scope="col">Источник данных</th>
+            <th scope="col">Что нужно доработать</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">Полки-плитки со счётчиками</th>
+            <td><code>Privat::getMessageCount()</code> по трём ящикам + <code>getUnreadCount()</code> для бейджа; квоты — <code>privat.messin</code> / <code>privat.messsav</code></td>
+            <td>Готово. Счётчики уже читаются в <code>getPrivateMessageView()</code> для алертов о квоте</td>
+          </tr>
+          <tr>
+            <th scope="row">Кольцо квоты вместо алерта</th>
+            <td>Те же счётчики и квоты; тон — по лестнице <code>getDebugSystemInfo()</code> (до 50 зелёный, 50&ndash;75 синий, 75&ndash;95 оранжевый, свыше 95 красный)</td>
+            <td>Шаблону нужны четыре значения на полку: <code>tone</code>, <code>rest</code> = 100 &minus; процент, флаг <code>no_limit</code> (исходящие с <code>max = 0</code> и «Написать») и <code>label</code> для скрин-ридера. Новых запросов нет; классы <code>sl-pmh-*</code> переезжают в <code>theme.css</code>, новых токенов не требуется</td>
+          </tr>
+          <tr>
+            <th scope="row">Колода фокуса</th>
+            <td><code>Privat::getRecentList()</code> — уже существует для превью кабинета</td>
+            <td>Нужен вариант с фильтром «только непрочитанные»: один предикат <code>viewed = 0</code> в существующем методе</td>
+          </tr>
+          <tr>
+            <th scope="row">Лента писем</th>
+            <td><code>Privat::getMessageList($uid, $box, $page)</code> — отдаёт id, title, time, viewed, saved, name, avatar и pager целиком</td>
+            <td>Ничего. Аватар уже в выборке, второго запроса не нужно</td>
+          </tr>
+          <tr>
+            <th scope="row">Чипсы состояния</th>
+            <td>Колонки <code>viewed</code> / <code>saved</code>, для исходящих — <code>viewed</code> получателя</td>
+            <td>Ничего. Сейчас те же флаги рисует <code>span</code> с <code>is_message_in/out/save</code></td>
+          </tr>
+          <tr>
+            <th scope="row">Действия строки и массовые</th>
+            <td>Маршрут <code>updatePrivatBox()</code>: один id или много — один и тот же запрос, набор действий уже ограничен папкой</td>
+            <td>Ничего</td>
+          </tr>
+          <tr>
+            <th scope="row">Правая панель</th>
+            <td><code>setPrivateMessageRead()</code> → <code>Privat::getMessageView()</code>; профиль автора — тем же запросом, что и сейчас</td>
+            <td>Сменить цель свапа: сейчас <code>hx-target="#rep&lt;папка&gt;"</code> перерисовывает всю вкладку, нужно <code>#repprview</code> — только правую колонку</td>
+          </tr>
+          <tr>
+            <th scope="row">Кнопка «Переслать»</th>
+            <td>Тот же <code>Privat::getMessageView()</code>, что и для чтения: тело и заголовок уже загружены</td>
+            <td><b>Новое, но дёшево.</b> Действия «переслать» в модуле нет. Реализуется как форма отправки с предзаполнением — тем же приёмом, что и ответ: сейчас <code>getPrivateMessageView()</code> при <code>typ = 4</code> подставляет <code>_PRREP.': '.$view['title']</code> и <code>[quote]тело[/quote]</code>. Для пересылки — префикс «Fwd: », тело без цитаты и <b>пустой получатель</b>. Ни новой таблицы, ни нового запроса; нужен один параметр маршрута, отличающий пересылку от ответа</td>
+          </tr>
+          <tr>
+            <th scope="row">Пагинатор и полоса действий</th>
+            <td><code>getTplPagerView()</code> и фрагменты <code>pager</code> / <code>block-content</code> с <code>is_bulk_bar</code></td>
+            <td>Ничего, кроме нового места в разметке</td>
+          </tr>
+          <tr>
+            <th scope="row">Поиск, фильтры и «найдено N из M»</th>
+            <td>&mdash;</td>
+            <td><b>Новое.</b> Нужны условия поверх предиката ящика в <code>getMessageList()</code> и парный <code>COUNT</code> — по правилу паритета список, счётчик, пагинатор и подсветка должны считаться из одного запроса</td>
+          </tr>
+          <tr>
+            <th scope="row">Поле ответа</th>
+            <td><code>getTplTextarea()</code> со <code>store =&gt; 'privat.body'</code> — тот же вызов, что и сейчас</td>
+            <td>Ничего, кроме починки инициализации редактора после htmx-свапа (см. индекс вариантов)</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Реальный редактор сообщений: те же файлы, что подключает драйвер plugins/editors/toastui -->
+<script src="../plugins/editors/toastui/assets/toastui-editor.all.min.js"></script>
+<script src="../plugins/editors/toastui/assets/i18n/ru-ru.js"></script>
+<script src="../plugins/editors/toastui/assets/i18n/emoji-ru.js"></script>
+<script src="../plugins/editors/toastui/assets/editor-tags.js"></script>
+<script src="../plugins/editors/toastui/assets/editor-emoji.js"></script>
+<script src="../plugins/editors/toastui/assets/editor-upload.js"></script>
+<script>
+/* Монтирование Toast UI так же, как это делает EditorToastUi::getWidget(): скрытая textarea — источник, соседний div — сам редактор */
+document.querySelectorAll('[data-sl-pm-editor]').forEach(function (box) {
+  var id = box.getAttribute('data-sl-pm-editor');
+  var ta = document.getElementById(id);
+  var mount = document.getElementById(id + '_toast');
+  var root = window.toastui && window.toastui.Editor;
+  if (!ta || !mount || !root) return;
+  var ed = new root({
+    el: mount,
+    initialEditType: 'markdown',
+    initialValue: ta.value,
+    placeholder: box.getAttribute('data-sl-pm-placeholder') || '',
+    height: (box.getAttribute('data-sl-pm-height') || '300') + 'px',
+    language: 'ru-RU',
+    autofocus: false,
+    usageStatistics: false
+  });
+  if (window.SlaedToastUi) {
+    window.SlaedToastUi.register(id, ed, {
+      super: false,
+      tpl: 'js-slaed-editor-tpl',
+      labels: {
+        quote: 'Цитировать', hide: 'Скрытый текст', tabs: 'Вкладки', emoji: 'Смайлы',
+        fullscreen: 'Развернуть редактор на весь экран', exitfull: 'Свернуть редактор',
+        insert: 'Вставить изображение', image: 'Изображение', attach: 'Прикрепить файл'
+      }
+    });
+  }
+  ed.on('change', function () { ta.value = ed.getMarkdown(); });
+});
+
+/* Демонстрационное поведение: выбор письма, подмена панелей на узком экране, снятие фильтров, отметить все */
+document.querySelectorAll('.sl-pmf-split').forEach(function (root) {
+  root.querySelectorAll('.sl-pmf-item').forEach(function (item) {
+    item.addEventListener('click', function (ev) {
+      if (ev.target.closest('input, label, .sl-dial')) return;
+      root.querySelectorAll('.sl-pmf-item').forEach(function (one) { one.removeAttribute('aria-current'); });
+      item.setAttribute('aria-current', 'true');
+      if (item.hasAttribute('data-sl-pm-open')) root.setAttribute('data-sl-pane', 'view');
+    });
+  });
+  root.querySelectorAll('[data-sl-pm-back]').forEach(function (but) {
+    but.addEventListener('click', function () { root.setAttribute('data-sl-pane', 'list'); });
+  });
+  var out = root.querySelector('.sl-bulk-count');
+  if (out) root.addEventListener('change', function () {
+    var num = root.querySelectorAll('.sl-pmf-item .sl-check:checked').length;
+    out.textContent = num ? 'Отмечено: ' + num : 'Отмечено: 0';
+  });
+});
+/* Полоса фильтров: чипсы — переключатели, поэтому со страницы не исчезают и снятый фильтр всегда можно включить обратно.
+   «Все» и остальные чипсы взаимоисключающи: включение любого гасит «Все», снятие последнего возвращает «Все».
+   Запрос — единственный элемент, который прячется, но вместе с ним очищается поле поиска, так что вернуть его можно набором. */
+document.querySelectorAll('.sl-pmf-active').forEach(function (bar) {
+  var chips = [].slice.call(bar.querySelectorAll('button.sl-chip[aria-pressed]'));
+  var all = chips[0];
+  var rest = chips.slice(1);
+  var query = bar.parentNode.querySelector('.sl-search-form input');
+  var setAll = function () {
+    if (all) all.setAttribute('aria-pressed', String(!rest.some(function (one) { return one.getAttribute('aria-pressed') === 'true'; })));
+  };
+  bar.addEventListener('click', function (ev) {
+    var kill = ev.target.closest('.sl-chip > button');
+    if (kill) {
+      kill.closest('.sl-chip').hidden = true;
+      if (query) query.value = '';
+      return;
+    }
+    if (ev.target.closest('.sl-pmf-clear')) {
+      rest.forEach(function (one) { one.setAttribute('aria-pressed', 'false'); });
+      setAll();
+      bar.querySelectorAll('[data-sl-pm-query]').forEach(function (one) { one.hidden = true; });
+      if (query) query.value = '';
+      return;
+    }
+    var chip = ev.target.closest('button.sl-chip[aria-pressed]');
+    if (!chip) return;
+    if (chip === all) {
+      rest.forEach(function (one) { one.setAttribute('aria-pressed', 'false'); });
+      setAll();
+      return;
+    }
+    var next = chip.getAttribute('aria-pressed') === 'true' ? 'false' : 'true';
+    /* «Прочитанные» и «Непрочитанные» исключают друг друга: viewed не может быть 0 и 1 одновременно, вместе они дали бы пустой список */
+    var group = chip.getAttribute('data-sl-pm-one');
+    if (group && next === 'true') {
+      rest.forEach(function (one) {
+        if (one !== chip && one.getAttribute('data-sl-pm-one') === group) one.setAttribute('aria-pressed', 'false');
+      });
+    }
+    chip.setAttribute('aria-pressed', next);
+    setAll();
+  });
+  setAll();
+});
+/* Набор в поиске возвращает чипс запроса — вместе с полем он и есть способ «поднять» снятый фильтр */
+document.querySelectorAll('.sl-pmf-bar .sl-search-form input').forEach(function (field) {
+  var bar = field.closest('.sl-pmdemo-frame');
+  var chip = bar ? bar.querySelector('[data-sl-pm-query]') : null;
+  if (!chip) return;
+  field.addEventListener('input', function () {
+    var text = field.value.trim();
+    chip.hidden = text === '';
+    if (text !== '') chip.childNodes[0].nodeValue = '«' + text + '» ';
+  });
+});
+</script>
+
+</body>
+</html>

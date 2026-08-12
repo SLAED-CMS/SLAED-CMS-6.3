@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED — ЛС, вариант 7: большой объём сообщений</title>
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<link rel="stylesheet" href="../plugins/editors/toastui/assets/toastui-editor.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/editors/toastui/skin.css">
+<style>
+/* ==== Общая обвязка демо ==== */
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color: var(--sl-color-text); font: 13px/1.45 Arial, system-ui, sans-serif; }
+a { text-decoration: none; }
+.sl-pmdemo-head { padding: 28px max(20px, calc((100vw - 1180px) / 2)) 24px; border-bottom: 1px solid var(--sl-color-border); background: radial-gradient(circle at 88% 0, color-mix(in srgb, var(--sl-color-brand) 18%, transparent), transparent 32%), var(--sl-color-bg); }
+.sl-pmdemo-back { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px; color: var(--sl-color-text-muted); font-size: 12px; }
+.sl-pmdemo-back:hover { color: var(--sl-color-primary); }
+.sl-pmdemo-head h1 { margin: 0 0 10px; color: var(--sl-color-text-heading); font-size: clamp(23px, 4vw, 32px); line-height: 1.12; }
+.sl-pmdemo-head p { max-width: 840px; margin: 0 0 14px; color: var(--sl-color-text-muted); }
+.sl-pmdemo-chips { display: flex; flex-wrap: wrap; gap: var(--sl-space-sm); }
+.sl-pmdemo-main { width: 1180px; max-width: calc(100% - 28px); margin: 26px auto 0; }
+.sl-pmdemo-sec { margin-bottom: 38px; }
+.sl-pmdemo-sec > h2 { display: flex; align-items: center; gap: 10px; margin: 0 0 6px; color: var(--sl-color-text-heading); font-size: 17px; }
+.sl-pmdemo-sec > h2 > span { display: grid; place-items: center; flex: 0 0 26px; width: 26px; height: 26px; border-radius: 50%; background: var(--sl-color-text-heading); color: var(--sl-color-on-dark); font: bold 11px/1 Arial, sans-serif; }
+.sl-pmdemo-sec > p { margin: 0 0 14px; color: var(--sl-color-text-muted); }
+.sl-pmdemo-frame { container-type: inline-size; padding: 14px; border: 1px solid var(--sl-color-border-subtle); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); box-shadow: var(--sl-shadow-soft); }
+.sl-pmdemo-phones { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; }
+.sl-pmdemo-phone { container-type: inline-size; width: 390px; max-width: 100%; padding: 12px 10px; border: 1px solid var(--sl-color-border-strong); border-radius: 20px; background: var(--sl-color-bg); box-shadow: var(--sl-shadow-panel); }
+.sl-pmdemo-phone > figcaption { margin: 0 0 10px; color: var(--sl-color-text-muted); font-size: 11px; text-align: center; text-transform: uppercase; letter-spacing: 0.08em; }
+:focus-visible { outline: 2px solid var(--sl-color-primary); outline-offset: 2px; border-radius: 3px; }
+
+/* ==== Вариант 7: большой объём ==== */
+.sl-pmdense { display: grid; grid-template-columns: 216px minmax(0, 1fr); gap: 14px; font-size: 12px; }
+
+/* Фасетный фильтр слева: каждая грань со своим счётчиком */
+.sl-pmdense-side { display: grid; align-content: start; gap: 12px; }
+.sl-pmdense-facet { border: 1px solid var(--sl-color-border-subtle); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); }
+.sl-pmdense-facet > summary { display: flex; align-items: center; gap: 6px; padding: 8px 10px; color: var(--sl-color-text-heading); font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; list-style: none; }
+.sl-pmdense-facet > summary::-webkit-details-marker { display: none; }
+.sl-pmdense-facet > summary::after { content: "\F282"; margin-left: auto; font-family: bootstrap-icons; font-size: 11px; font-weight: normal; color: var(--sl-color-text-subtle); }
+.sl-pmdense-facet[open] > summary::after { content: "\F286"; }
+.sl-pmdense-facet ul { margin: 0; padding: 0 6px 8px; list-style: none; }
+.sl-pmdense-facet li { margin: 0; }
+.sl-pmdense-opt { display: flex; align-items: center; gap: 7px; width: 100%; padding: 4px 6px; border-radius: var(--sl-radius-control); color: var(--sl-color-text-muted); cursor: pointer; }
+.sl-pmdense-opt:hover { background: var(--sl-color-bg-soft-alt); color: var(--sl-color-text-heading); }
+.sl-pmdense-opt input { margin: 0; }
+.sl-pmdense-opt span { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sl-pmdense-opt b { color: var(--sl-color-text-subtle); font-size: 11px; font-weight: normal; font-variant-numeric: tabular-nums; }
+.sl-pmdense-opt input:checked ~ span { color: var(--sl-color-brand-strong); font-weight: bold; }
+.sl-pmdense-saved { display: grid; gap: 4px; padding: 8px 10px; }
+.sl-pmdense-saved a { display: flex; align-items: center; gap: 6px; color: var(--sl-color-text-muted); }
+.sl-pmdense-saved a:hover { color: var(--sl-color-primary); }
+.sl-pmdense-side-foot { display: flex; gap: var(--sl-space-sm); }
+.sl-pmdense-side-foot .sl-but { flex: 1 1 0; height: 26px; margin: 0; font-size: 12px; }
+
+/* Липкая панель над списком */
+.sl-pmdense-main { min-width: 0; }
+.sl-pmdense-bar { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: var(--sl-space-sm); padding: 8px 10px; border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-control) var(--sl-radius-control) 0 0; background: var(--sl-color-bg); }
+.sl-pmdense-bar .sl-search-form { width: 260px; flex: 1 1 200px; }
+.sl-pmdense-bar .sl-search-form input { height: 28px; line-height: 28px; }
+.sl-pmdense-bar .sl-search-form button { flex-basis: 28px; width: 28px; height: 28px; }
+.sl-pmdense-bar .sl-field { height: 26px; padding: 0 8px; font-size: 12px; }
+.sl-pmdense-tabs { display: inline-flex; }
+.sl-pmdense-tabs a { padding: 4px 10px; border: 1px solid var(--sl-color-border-strong); border-right-width: 0; background: var(--sl-color-bg-soft); color: var(--sl-color-text-muted); font-weight: bold; }
+.sl-pmdense-tabs a:first-child { border-radius: var(--sl-radius-control) 0 0 var(--sl-radius-control); }
+.sl-pmdense-tabs a:last-child { border-right-width: 1px; border-radius: 0 var(--sl-radius-control) var(--sl-radius-control) 0; }
+.sl-pmdense-tabs a[aria-current="page"] { background: var(--sl-color-primary); border-color: var(--sl-color-primary); color: var(--sl-color-on-dark); }
+.sl-pmdense-total { margin-left: auto; color: var(--sl-color-text-muted); font-variant-numeric: tabular-nums; }
+
+/* Активные фильтры отдельной полосой — видно, почему список короткий */
+.sl-pmdense-active { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sl-space-xs); padding: 6px 10px; border: 1px solid var(--sl-color-border); border-top: 0; background: var(--sl-color-bg-soft); }
+.sl-pmdense-active .sl-chip { height: 22px; padding: 0 4px 0 8px; font-size: 11px; }
+.sl-pmdense-active .sl-chip button { display: grid; place-items: center; width: 16px; height: 16px; border: 0; border-radius: 50%; background: transparent; color: inherit; cursor: pointer; font-size: 10px; }
+.sl-pmdense-active .sl-chip button:hover { background: rgba(0, 0, 0, 0.08); }
+.sl-pmdense-active > b { color: var(--sl-color-text-muted); font-size: 11px; font-weight: normal; }
+.sl-pmdense-clear { margin-left: auto; border: 0; background: transparent; color: var(--sl-color-primary); cursor: pointer; font: inherit; font-size: 11px; }
+
+/* Сама лента: строка 28px, группы по дням липкие */
+.sl-pmdense-scroll { max-height: 520px; overflow-y: auto; border: 1px solid var(--sl-color-border); border-top: 0; background: var(--sl-color-bg); }
+.sl-pmdense-day { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 8px; padding: 4px 10px; background: var(--sl-color-bg-soft-alt); border-bottom: 1px solid var(--sl-color-border-subtle); color: var(--sl-color-text-heading); font-size: 11px; font-weight: bold; }
+.sl-pmdense-day small { margin-left: auto; color: var(--sl-color-text-muted); font-weight: normal; }
+.sl-pmdense-row { display: grid; grid-template-columns: 26px 16px 150px minmax(0, 1fr) 96px 86px; align-items: center; gap: 8px; min-height: 28px; padding: 2px 10px; border-bottom: 1px solid var(--sl-color-border-subtle); }
+.sl-pmdense-row:hover { background: var(--sl-color-bg-soft); }
+.sl-pmdense-row[aria-selected="true"] { background: color-mix(in srgb, var(--sl-color-primary) 9%, transparent); box-shadow: inset 3px 0 0 var(--sl-color-primary); }
+.sl-pmdense-row input[type="checkbox"] { margin: 0; }
+.sl-pmdense-flag { display: grid; place-items: center; color: var(--sl-color-text-subtle); font-size: 13px; }
+.sl-pmdense-new .sl-pmdense-flag { color: var(--sl-color-primary); }
+.sl-pmdense-keep .sl-pmdense-flag { color: var(--sl-color-warning); }
+.sl-pmdense-who { overflow: hidden; color: var(--sl-color-text-muted); text-overflow: ellipsis; white-space: nowrap; }
+.sl-pmdense-what { min-width: 0; overflow: hidden; color: var(--sl-color-text); text-overflow: ellipsis; white-space: nowrap; }
+.sl-pmdense-what:hover { color: var(--sl-color-primary); }
+.sl-pmdense-what em { color: var(--sl-color-text-subtle); font-style: normal; }
+.sl-pmdense-new .sl-pmdense-who, .sl-pmdense-new .sl-pmdense-what { color: var(--sl-color-text-heading); font-weight: bold; }
+.sl-pmdense-when { color: var(--sl-color-text-subtle); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.sl-pmdense-acts { display: inline-flex; gap: 2px; justify-content: flex-end; }
+.sl-pmdense-acts a { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; color: var(--sl-color-text-subtle); }
+.sl-pmdense-acts a:hover { background: var(--sl-color-bg-soft-alt); color: var(--sl-color-primary); }
+.sl-pmdense-hit { padding: 0 2px; border-radius: 2px; background: color-mix(in srgb, var(--sl-color-warning) 32%, transparent); color: var(--sl-color-text-heading); }
+
+/* Плавающая полоса массовых действий появляется только при выделении */
+.sl-pmdense-mass { position: sticky; bottom: 8px; z-index: 6; display: flex; flex-wrap: wrap; align-items: center; gap: var(--sl-space-sm); margin: 10px 0 0; padding: 8px 12px; border: 1px solid var(--sl-color-border-strong); border-radius: 999px; background: var(--sl-color-bg); box-shadow: var(--sl-shadow-panel); }
+.sl-pmdense-mass .sl-but { height: 26px; margin: 0; font-size: 12px; }
+.sl-pmdense-mass b { color: var(--sl-color-text-heading); font-variant-numeric: tabular-nums; }
+.sl-pmdense-mass .sl-pmdense-mass-end { margin-left: auto; }
+
+/* Подвал: переход по страницам с полем номера и размером страницы */
+.sl-pmdense-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sl-space-sm); padding: 8px 10px; border: 1px solid var(--sl-color-border); border-top: 0; border-radius: 0 0 var(--sl-radius-control) var(--sl-radius-control); background: var(--sl-color-bg-soft); color: var(--sl-color-text-muted); }
+.sl-pmdense-foot .sl-but-mini { --sl-size-chip: 22px; font-size: 11px; }
+.sl-pmdense-foot .sl-field { width: 58px; height: 24px; padding: 0 6px; font-size: 12px; }
+.sl-pmdense-foot .sl-pmdense-per { width: auto; }
+.sl-pmdense-jump { display: flex; align-items: center; gap: 5px; margin-left: auto; }
+
+/* Выдвижная панель ответа: список под ней не перерисовывается */
+.sl-pmdense-answer { display: grid; gap: var(--sl-space-md); padding: 12px 14px 14px; border: 1px solid var(--sl-color-border-strong); border-top: 3px solid var(--sl-color-primary); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); box-shadow: var(--sl-shadow-panel); }
+.sl-pmdense-answer-top { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sl-space-sm); }
+.sl-pmdense-answer-top b { min-width: 0; overflow: hidden; color: var(--sl-color-text-heading); text-overflow: ellipsis; white-space: nowrap; }
+.sl-pmdense-answer-end { display: inline-flex; gap: var(--sl-space-xs); margin-left: auto; }
+.sl-pmdense-answer form { display: grid; gap: var(--sl-space-md); }
+.sl-pmdense-answer .sl-field { height: 28px; }
+.sl-pmdense-answer-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sl-space-md); }
+.sl-pmdense-answer-foot .sl-but { height: 27px; margin: 0; font-size: 12px; }
+.sl-pmdense-answer-foot small { color: var(--sl-color-text-muted); }
+
+/* Легенда клавиатурных сокращений */
+.sl-pmdense-keys { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; color: var(--sl-color-text-muted); font-size: 11px; }
+.sl-pmdense-keys kbd { padding: 1px 6px; border: 1px solid var(--sl-color-border-strong); border-bottom-width: 2px; border-radius: 3px; background: var(--sl-color-bg); color: var(--sl-color-text-heading); font: 11px/1.4 monospace; }
+
+/* Пустое состояние */
+.sl-pmdense-empty { display: grid; justify-items: center; gap: 8px; padding: 46px 20px; text-align: center; }
+.sl-pmdense-empty i { font-size: 40px; color: var(--sl-color-text-subtle); }
+.sl-pmdense-empty b { color: var(--sl-color-text-heading); font-size: 14px; }
+.sl-pmdense-empty p { max-width: 440px; margin: 0; color: var(--sl-color-text-muted); }
+
+/* Мобильная раскладка: фасеты уезжают в раскрывающийся блок, строка становится двухуровневой */
+@container (max-width: 860px) {
+  .sl-pmdense { grid-template-columns: 1fr; }
+  .sl-pmdense-side { order: 1; }
+  .sl-pmdense-bar { position: static; }
+  .sl-pmdense-bar .sl-search-form { flex-basis: 100%; }
+  .sl-pmdense-tabs { width: 100%; }
+  .sl-pmdense-tabs a { flex: 1 1 0; text-align: center; }
+  .sl-pmdense-total { margin-left: 0; }
+  .sl-pmdense-row { grid-template-columns: 26px 16px minmax(0, 1fr) 78px; grid-template-areas: "pick flag what when" "pick flag who acts"; row-gap: 2px; padding: 5px 10px; }
+  .sl-pmdense-row > input { grid-area: pick; }
+  .sl-pmdense-flag { grid-area: flag; align-self: start; margin-top: 2px; }
+  .sl-pmdense-what { grid-area: what; }
+  .sl-pmdense-who { grid-area: who; font-size: 11px; }
+  .sl-pmdense-when { grid-area: when; font-size: 11px; }
+  .sl-pmdense-acts { grid-area: acts; justify-content: flex-start; }
+  .sl-pmdense-keys { display: none; }
+  .sl-pmdense-jump { margin-left: 0; }
+  .sl-pmdense-mass { position: static; border-radius: var(--sl-radius-card); }
+  .sl-pmdense-answer-top b { flex-basis: 100%; }
+}
+/* Поле сообщения — настоящий редактор Toast UI (plugins/editors/toastui), а не textarea: скрытая textarea остаётся источником, редактор монтируется в соседний div */
+.sl-pm-editor { width: 100%; min-width: 0; }
+.sl-pm-editor .toastui-editor-defaultUI { border-radius: var(--sl-radius-control); }
+.sl-pm-note { margin: 0; color: var(--sl-color-text-muted); font-size: 11px; }
+.sl-pm-note .bi { margin-right: 5px; color: var(--sl-color-primary); }
+</style>
+</head>
+<body>
+
+<header class="sl-pmdemo-head">
+  <a class="sl-pmdemo-back" href="private-messages-index.html"><i class="bi bi-arrow-left" aria-hidden="true"></i> Все варианты личных сообщений</a>
+  <h1>Вариант 7 — Большой объём сообщений</h1>
+  <p>Раскладка для ящика на тысячи писем: фасетный фильтр со счётчиками, липкие заголовки дней, строка высотой 28&nbsp;px, полоса активных фильтров, плавающая панель массовых действий и переход к произвольной странице. Подсветка совпадений показывает, почему письмо попало в выборку.</p>
+  <div class="sl-pmdemo-chips">
+    <span class="sl-chip sl-chip-info"><i class="bi bi-funnel" aria-hidden="true"></i> фасеты со счётчиками</span>
+    <span class="sl-chip sl-chip-info"><i class="bi bi-pin-angle" aria-hidden="true"></i> липкие дни</span>
+    <span class="sl-chip sl-chip-info"><i class="bi bi-ui-checks" aria-hidden="true"></i> плавающая панель действий</span>
+    <span class="sl-chip sl-chip-neutral"><i class="bi bi-keyboard" aria-hidden="true"></i> клавиатурные сокращения</span>
+    <span class="sl-chip sl-chip-neutral"><i class="bi bi-hash" aria-hidden="true"></i> переход к странице</span>
+  </div>
+</header>
+
+<main class="sl-pmdemo-main">
+
+  <section class="sl-pmdemo-sec">
+    <h2><span>1</span> Входящие: 1 284 сообщения, активный фильтр</h2>
+    <p>Счётчик в правом углу панели показывает диапазон и общее число. Полоса под панелью перечисляет применённые фильтры — каждый снимается крестиком.</p>
+
+    <div class="sl-pmdemo-frame">
+      <div class="sl-pmdense">
+
+        <aside class="sl-pmdense-side" aria-label="Фильтры">
+          <details class="sl-pmdense-facet" open>
+            <summary>Состояние</summary>
+            <ul>
+              <li><label class="sl-pmdense-opt"><input type="checkbox" class="sl-check" checked><span>Непрочитанные</span><b>142</b></label></li>
+              <li><label class="sl-pmdense-opt"><input type="checkbox" class="sl-check"><span>Прочитанные</span><b>1 142</b></label></li>
+              <li><label class="sl-pmdense-opt"><input type="checkbox" class="sl-check"><span>Сохранённые</span><b>63</b></label></li>
+            </ul>
+          </details>
+
+          <details class="sl-pmdense-facet" open>
+            <summary>Период</summary>
+            <ul>
+              <li><label class="sl-pmdense-opt"><input type="radio" name="pmdense-when" class="sl-check"><span>Сегодня</span><b>9</b></label></li>
+              <li><label class="sl-pmdense-opt"><input type="radio" name="pmdense-when" class="sl-check" checked><span>За 7 дней</span><b>61</b></label></li>
+              <li><label class="sl-pmdense-opt"><input type="radio" name="pmdense-when" class="sl-check"><span>За 30 дней</span><b>218</b></label></li>
+              <li><label class="sl-pmdense-opt"><input type="radio" name="pmdense-when" class="sl-check"><span>За всё время</span><b>1 284</b></label></li>
+            </ul>
+          </details>
+
+          <details class="sl-pmdense-facet">
+            <summary>Отправитель</summary>
+            <ul>
+              <li><label class="sl-pmdense-opt"><input type="checkbox" class="sl-check"><span>Крамской</span><b>46</b></label></li>
+              <li><label class="sl-pmdense-opt"><input type="checkbox" class="sl-check"><span>Igor_Tech</span><b>38</b></label></li>
+              <li><label class="sl-pmdense-opt"><input type="checkbox" class="sl-check"><span>Nataly_V</span><b>31</b></label></li>
+              <li><label class="sl-pmdense-opt"><input type="checkbox" class="sl-check"><span>admin_shop</span><b>24</b></label></li>
+              <li><label class="sl-pmdense-opt"><input type="checkbox" class="sl-check"><span>dev_kostya</span><b>19</b></label></li>
+              <li><label class="sl-pmdense-opt"><input type="checkbox" class="sl-check"><span>Гость</span><b>7</b></label></li>
+            </ul>
+          </details>
+
+          <details class="sl-pmdense-facet">
+            <summary>Сохранённые запросы</summary>
+            <div class="sl-pmdense-saved">
+              <a href="#"><i class="bi bi-star" aria-hidden="true"></i> Непрочитанное за неделю</a>
+              <a href="#"><i class="bi bi-star" aria-hidden="true"></i> Всё от Igor_Tech</a>
+              <a href="#"><i class="bi bi-star" aria-hidden="true"></i> Заказы и счета</a>
+              <a href="#"><i class="bi bi-plus-circle" aria-hidden="true"></i> Сохранить текущий</a>
+            </div>
+          </details>
+
+          <div class="sl-pmdense-side-foot">
+            <button type="button" class="sl-but">Применить</button>
+            <button type="button" class="sl-but">Сброс</button>
+          </div>
+        </aside>
+
+        <div class="sl-pmdense-main">
+
+          <div class="sl-pmdense-bar">
+            <nav class="sl-pmdense-tabs" aria-label="Папки">
+              <a href="#" aria-current="page">Входящие</a>
+              <a href="#">Исходящие</a>
+              <a href="#">Сохранённые</a>
+            </nav>
+            <form class="sl-search-form" role="search" action="#" method="post">
+              <label class="sl-visually-hidden" for="pmdense-q">Поиск по личным сообщениям</label>
+              <input id="pmdense-q" type="search" name="query" value="миграция" placeholder="Поиск по теме и тексту">
+              <button type="submit" title="Найти"><i class="bi bi-search" aria-hidden="true"></i></button>
+            </form>
+            <label class="sl-visually-hidden" for="pmdense-sort">Сортировка</label>
+            <select id="pmdense-sort" class="sl-field">
+              <option>Сначала новые</option>
+              <option>Сначала старые</option>
+              <option>Непрочитанные сверху</option>
+              <option>По отправителю</option>
+            </select>
+            <span class="sl-pmdense-total">1&ndash;50 из <b>1&nbsp;284</b> · найдено <b>61</b></span>
+          </div>
+
+          <div class="sl-pmdense-active">
+            <b>Фильтры:</b>
+            <span class="sl-chip sl-chip-info">Непрочитанные <button type="button" title="Снять фильтр"><i class="bi bi-x" aria-hidden="true"></i></button></span>
+            <span class="sl-chip sl-chip-info">За 7 дней <button type="button" title="Снять фильтр"><i class="bi bi-x" aria-hidden="true"></i></button></span>
+            <span class="sl-chip sl-chip-warn">«миграция» <button type="button" title="Снять фильтр"><i class="bi bi-x" aria-hidden="true"></i></button></span>
+            <button type="button" class="sl-pmdense-clear">Сбросить всё</button>
+          </div>
+
+          <form>
+            <div class="sl-pmdense-scroll" tabindex="0" aria-label="Список сообщений">
+
+              <p class="sl-pmdense-day"><i class="bi bi-calendar3" aria-hidden="true"></i> Сегодня, 12 августа <small>9 сообщений</small></p>
+
+              <div class="sl-pmdense-row sl-pmdense-new" aria-selected="true">
+                <input type="checkbox" class="sl-check" name="id[]" value="4181" checked title="Отметить сообщение">
+                <i class="sl-pmdense-flag bi bi-circle-fill" title="Непрочитанное"></i>
+                <span class="sl-pmdense-who">Крамской</span>
+                <a class="sl-pmdense-what" href="#">Ошибка при обновлении с 6.2 на 6.3 <em>— похоже, <span class="sl-pmdense-hit">миграция</span> таблицы не применилась</em></a>
+                <span class="sl-pmdense-when">14:32</span>
+                <span class="sl-pmdense-acts">
+                  <a href="#" title="Открыть"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                  <a href="#" title="Ответить"><i class="bi bi-reply" aria-hidden="true"></i></a>
+                  <a href="#" title="Сохранить"><i class="bi bi-bookmark" aria-hidden="true"></i></a>
+                  <a href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                </span>
+              </div>
+
+              <div class="sl-pmdense-row sl-pmdense-new">
+                <input type="checkbox" class="sl-check" name="id[]" value="4180" checked title="Отметить сообщение">
+                <i class="sl-pmdense-flag bi bi-circle-fill" title="Непрочитанное"></i>
+                <span class="sl-pmdense-who">Nataly_V</span>
+                <a class="sl-pmdense-what" href="#">Re: Права доступа к модулю «Файлы» <em>— после <span class="sl-pmdense-hit">миграции</span> права слетели</em></a>
+                <span class="sl-pmdense-when">11:05</span>
+                <span class="sl-pmdense-acts">
+                  <a href="#" title="Открыть"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                  <a href="#" title="Ответить"><i class="bi bi-reply" aria-hidden="true"></i></a>
+                  <a href="#" title="Сохранить"><i class="bi bi-bookmark" aria-hidden="true"></i></a>
+                  <a href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                </span>
+              </div>
+
+              <div class="sl-pmdense-row sl-pmdense-new">
+                <input type="checkbox" class="sl-check" name="id[]" value="4179" title="Отметить сообщение">
+                <i class="sl-pmdense-flag bi bi-circle-fill" title="Непрочитанное"></i>
+                <span class="sl-pmdense-who">dev_kostya</span>
+                <a class="sl-pmdense-what" href="#">Патч для парсера: [tabs] внутри [usehtml] <em>— проверял после <span class="sl-pmdense-hit">миграции</span> контента</em></a>
+                <span class="sl-pmdense-when">09:48</span>
+                <span class="sl-pmdense-acts">
+                  <a href="#" title="Открыть"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                  <a href="#" title="Ответить"><i class="bi bi-reply" aria-hidden="true"></i></a>
+                  <a href="#" title="Сохранить"><i class="bi bi-bookmark" aria-hidden="true"></i></a>
+                  <a href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                </span>
+              </div>
+
+              <p class="sl-pmdense-day"><i class="bi bi-calendar3" aria-hidden="true"></i> Вчера, 11 августа <small>14 сообщений</small></p>
+
+              <div class="sl-pmdense-row sl-pmdense-new sl-pmdense-keep">
+                <input type="checkbox" class="sl-check" name="id[]" value="4173" title="Отметить сообщение">
+                <i class="sl-pmdense-flag bi bi-bookmark-fill" title="Сохранённое, непрочитанное"></i>
+                <span class="sl-pmdense-who">Igor_Tech</span>
+                <a class="sl-pmdense-what" href="#">Шаблон lite: сломалась вёрстка таблиц <em>— воспроизводится только после <span class="sl-pmdense-hit">миграции</span></em></a>
+                <span class="sl-pmdense-when">09:12</span>
+                <span class="sl-pmdense-acts">
+                  <a href="#" title="Открыть"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                  <a href="#" title="Ответить"><i class="bi bi-reply" aria-hidden="true"></i></a>
+                  <a href="#" title="Убрать из сохранённых"><i class="bi bi-bookmark-dash" aria-hidden="true"></i></a>
+                  <a href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                </span>
+              </div>
+
+              <div class="sl-pmdense-row sl-pmdense-new">
+                <input type="checkbox" class="sl-check" name="id[]" value="4170" title="Отметить сообщение">
+                <i class="sl-pmdense-flag bi bi-circle-fill" title="Непрочитанное"></i>
+                <span class="sl-pmdense-who">admin_shop</span>
+                <a class="sl-pmdense-what" href="#">Заказ №2419: сменился склад отгрузки <em>— <span class="sl-pmdense-hit">миграция</span> остатков закончена</em></a>
+                <span class="sl-pmdense-when">08:31</span>
+                <span class="sl-pmdense-acts">
+                  <a href="#" title="Открыть"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                  <a href="#" title="Ответить"><i class="bi bi-reply" aria-hidden="true"></i></a>
+                  <a href="#" title="Сохранить"><i class="bi bi-bookmark" aria-hidden="true"></i></a>
+                  <a href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                </span>
+              </div>
+
+              <p class="sl-pmdense-day"><i class="bi bi-calendar3" aria-hidden="true"></i> 10 августа <small>11 сообщений</small></p>
+
+              <div class="sl-pmdense-row sl-pmdense-new">
+                <input type="checkbox" class="sl-check" name="id[]" value="4166" title="Отметить сообщение">
+                <i class="sl-pmdense-flag bi bi-circle-fill" title="Непрочитанное"></i>
+                <span class="sl-pmdense-who">Мария Соколова</span>
+                <a class="sl-pmdense-what" href="#">Спасибо за помощь с переносом БД <em>— <span class="sl-pmdense-hit">миграция</span> прошла без потерь</em></a>
+                <span class="sl-pmdense-when">22:03</span>
+                <span class="sl-pmdense-acts">
+                  <a href="#" title="Открыть"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                  <a href="#" title="Ответить"><i class="bi bi-reply" aria-hidden="true"></i></a>
+                  <a href="#" title="Сохранить"><i class="bi bi-bookmark" aria-hidden="true"></i></a>
+                  <a href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                </span>
+              </div>
+
+              <div class="sl-pmdense-row sl-pmdense-new">
+                <input type="checkbox" class="sl-check" name="id[]" value="4164" title="Отметить сообщение">
+                <i class="sl-pmdense-flag bi bi-circle-fill" title="Непрочитанное"></i>
+                <span class="sl-pmdense-who">hosting_support</span>
+                <a class="sl-pmdense-what" href="#">Регламентные работы на сервере БД <em>— окно <span class="sl-pmdense-hit">миграции</span> 14 августа с 02:00</em></a>
+                <span class="sl-pmdense-when">18:12</span>
+                <span class="sl-pmdense-acts">
+                  <a href="#" title="Открыть"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                  <a href="#" title="Ответить"><i class="bi bi-reply" aria-hidden="true"></i></a>
+                  <a href="#" title="Сохранить"><i class="bi bi-bookmark" aria-hidden="true"></i></a>
+                  <a href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                </span>
+              </div>
+
+              <div class="sl-pmdense-row">
+                <input type="checkbox" class="sl-check" name="id[]" value="4161" title="Отметить сообщение">
+                <i class="sl-pmdense-flag bi bi-circle" title="Прочитанное"></i>
+                <span class="sl-pmdense-who">Крамской</span>
+                <a class="sl-pmdense-what" href="#">Планирую обновление до 6.3 <em>— спрашивал про <span class="sl-pmdense-hit">миграцию</span> ЛС</em></a>
+                <span class="sl-pmdense-when">17:20</span>
+                <span class="sl-pmdense-acts">
+                  <a href="#" title="Открыть"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                  <a href="#" title="Ответить"><i class="bi bi-reply" aria-hidden="true"></i></a>
+                  <a href="#" title="Сохранить"><i class="bi bi-bookmark" aria-hidden="true"></i></a>
+                  <a href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                </span>
+              </div>
+
+              <div class="sl-pmdense-row">
+                <input type="checkbox" class="sl-check" name="id[]" value="4158" title="Отметить сообщение">
+                <i class="sl-pmdense-flag bi bi-circle" title="Прочитанное"></i>
+                <span class="sl-pmdense-who">Гость</span>
+                <a class="sl-pmdense-what" href="#">Вопрос по лицензии MIT <em>— аккаунт удалён</em></a>
+                <span class="sl-pmdense-when">13:24</span>
+                <span class="sl-pmdense-acts">
+                  <a href="#" title="Открыть"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                  <a href="#" title="Сохранить"><i class="bi bi-bookmark" aria-hidden="true"></i></a>
+                  <a href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                </span>
+              </div>
+
+            </div>
+
+            <div class="sl-pmdense-foot">
+              <label class="sl-visually-hidden" for="pmdense-per">Сообщений на странице</label>
+              <select id="pmdense-per" class="sl-field sl-pmdense-per"><option>25</option><option selected>50</option><option>100</option><option>200</option></select>
+              <span>на странице</span>
+              <span class="sl-pmdense-jump">
+                <span class="sl-but-mini sl-is-muted"><i class="bi bi-chevron-double-left" aria-hidden="true"></i></span>
+                <span class="sl-but-mini sl-is-muted"><i class="bi bi-chevron-left" aria-hidden="true"></i></span>
+                <a class="sl-but-mini sl-is-active" href="#" aria-current="page">1</a>
+                <a class="sl-but-mini" href="#">2</a>
+                <a class="sl-but-mini" href="#">3</a>
+                <span class="sl-but-mini sl-is-muted">&hellip;</span>
+                <a class="sl-but-mini" href="#">26</a>
+                <a class="sl-but-mini" href="#"><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+                <a class="sl-but-mini" href="#"><i class="bi bi-chevron-double-right" aria-hidden="true"></i></a>
+                <label class="sl-visually-hidden" for="pmdense-jump">Номер страницы</label>
+                <input id="pmdense-jump" class="sl-field" type="number" min="1" max="26" value="1">
+                <button type="button" class="sl-but-mini" title="Перейти"><i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+              </span>
+            </div>
+
+            <div class="sl-pmdense-mass">
+              <b>Отмечено: 3</b>
+              <button type="button" class="sl-but">Выделить всё на странице</button>
+              <button type="button" class="sl-but">Выделить все 61</button>
+              <span class="sl-pmdense-mass-end">
+                <button type="button" class="sl-but"><i class="bi bi-check2-all" aria-hidden="true"></i>&nbsp; Прочитано</button>
+                <button type="button" class="sl-but"><i class="bi bi-envelope" aria-hidden="true"></i>&nbsp; Непрочитано</button>
+                <button type="button" class="sl-but"><i class="bi bi-archive" aria-hidden="true"></i>&nbsp; Сохранить</button>
+                <button type="button" class="sl-but" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i>&nbsp; Удалить</button>
+              </span>
+            </div>
+          </form>
+
+          <p class="sl-pmdense-keys">
+            <span><kbd>J</kbd> / <kbd>K</kbd> — по списку</span>
+            <span><kbd>X</kbd> — отметить</span>
+            <span><kbd>E</kbd> — сохранить</span>
+            <span><kbd>U</kbd> — непрочитанным</span>
+            <span><kbd>#</kbd> — удалить</span>
+            <span><kbd>/</kbd> — поиск</span>
+            <span><kbd>G</kbd> затем <kbd>I</kbd> — входящие</span>
+          </p>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sl-pmdemo-sec">
+    <h2><span>2</span> Ответ поверх плотного списка</h2>
+    <p>Ответ открывается выдвижной панелью, а не отдельной страницей: список остаётся на месте и не теряет ни позицию прокрутки, ни выделение. Поле сообщения — настоящий редактор Toast UI с боевой страницы, поэтому панель заведомо высокая; плотная лента под ней продолжает жить.</p>
+    <div class="sl-pmdemo-frame">
+      <aside class="sl-pmdense-answer" aria-label="Ответ на сообщение">
+        <header class="sl-pmdense-answer-top">
+          <span class="sl-chip sl-chip-info sl-message-in"><i class="bi bi-reply" aria-hidden="true"></i> Ответ</span>
+          <b>Крамской · Ошибка при обновлении с 6.2 на 6.3</b>
+          <span class="sl-pmdense-answer-end">
+            <a class="sl-but-mini" href="#" title="Свернуть панель"><i class="bi bi-chevron-down" aria-hidden="true"></i></a>
+            <a class="sl-but-mini" href="#" title="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></a>
+          </span>
+        </header>
+        <form action="#" method="post">
+          <label class="sl-visually-hidden" for="pmdense-title">Заголовок</label>
+          <input id="pmdense-title" class="sl-field" type="text" name="title" maxlength="100" value="Ответ: Ошибка при обновлении с 6.2 на 6.3">
+          <label class="sl-visually-hidden" for="pmdense-reply">Текст ответа</label>
+          <div class="sl-pm-editor" data-sl-pm-editor="pmdense-reply" data-sl-pm-height="280" data-sl-pm-placeholder="Ответ пользователю Крамской&hellip;">
+            <textarea id="pmdense-reply" name="text" rows="15" style="display:none"></textarea>
+            <div id="pmdense-reply_toast"></div>
+          </div>
+          <p class="sl-pm-note"><i class="bi bi-info-circle" aria-hidden="true"></i> Редактор — реальный Toast UI из <code>plugins/editors/toastui</code>: панель инструментов, вставка изображений через файловый менеджер, смайлы и переключатель Markdown/Визуальный. Ниже 250&nbsp;px он не сжимается, это ограничение драйвера.</p>
+          <div class="sl-pmdense-answer-foot">
+            <input type="submit" class="sl-but" value="Отправить">
+            <input type="button" class="sl-but" value="Цитировать письмо">
+            <small>Интервал между отправками — 60 секунд</small>
+          </div>
+        </form>
+      </aside>
+    </div>
+  </section>
+
+  <section class="sl-pmdemo-sec">
+    <h2><span>3</span> Исходящие и предупреждение о переполнении</h2>
+    <p>При приближении к квоте сверху появляется штатный <code>sl-alert</code> — тот же, что уже отдаёт <code>getPrivateMessageView()</code>.</p>
+    <div class="sl-pmdemo-frame">
+      <div class="sl-alert sl-alert-warn">
+        <div class="sl-alert-body"><p class="sl-alert-text">Максимально допустимое количество в размере 250 входящих сообщений уже набрано! Вы больше не можете получать новые сообщения от пользователей. Удалите устаревшие или очистите отдел входящих.</p></div>
+      </div>
+      <div class="sl-pmdense">
+        <div class="sl-pmdense-main" style="grid-column: 1 / -1;">
+          <div class="sl-pmdense-bar">
+            <nav class="sl-pmdense-tabs" aria-label="Папки">
+              <a href="#">Входящие</a>
+              <a href="#" aria-current="page">Исходящие</a>
+              <a href="#">Сохранённые</a>
+            </nav>
+            <span class="sl-pmdense-total">1&ndash;50 из <b>903</b></span>
+          </div>
+          <div class="sl-pmdense-scroll" style="max-height: 220px;">
+            <p class="sl-pmdense-day"><i class="bi bi-calendar3" aria-hidden="true"></i> Сегодня, 12 августа <small>4 сообщения</small></p>
+            <div class="sl-pmdense-row">
+              <input type="checkbox" class="sl-check" title="Отметить">
+              <i class="sl-pmdense-flag bi bi-send" title="Не прочитано получателем"></i>
+              <span class="sl-pmdense-who">кому Крамской</span>
+              <a class="sl-pmdense-what" href="#">Re: Ошибка при обновлении с 6.2 на 6.3 <em>— ещё не прочитано</em></a>
+              <span class="sl-pmdense-when">15:10</span>
+              <span class="sl-pmdense-acts">
+                <a href="#" title="Открыть"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                <a href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+              </span>
+            </div>
+            <div class="sl-pmdense-row">
+              <input type="checkbox" class="sl-check" title="Отметить">
+              <i class="sl-pmdense-flag bi bi-send-check" title="Прочитано получателем" style="color: var(--sl-color-success);"></i>
+              <span class="sl-pmdense-who">кому Igor_Tech</span>
+              <a class="sl-pmdense-what" href="#">Re: Шаблон lite: сломалась вёрстка таблиц <em>— прочитано 11 авг в 10:14</em></a>
+              <span class="sl-pmdense-when">10:00</span>
+              <span class="sl-pmdense-acts">
+                <a href="#" title="Открыть"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                <a href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+              </span>
+            </div>
+            <div class="sl-pmdense-row">
+              <input type="checkbox" class="sl-check" title="Отметить">
+              <i class="sl-pmdense-flag bi bi-send-check" title="Прочитано получателем" style="color: var(--sl-color-success);"></i>
+              <span class="sl-pmdense-who">кому dev_kostya</span>
+              <a class="sl-pmdense-what" href="#">Патч принят, спасибо <em>— влит в ветку master</em></a>
+              <span class="sl-pmdense-when">09:55</span>
+              <span class="sl-pmdense-acts">
+                <a href="#" title="Открыть"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                <a href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sl-pmdemo-sec">
+    <h2><span>4</span> Пустое состояние при активных фильтрах</h2>
+    <p>Главное здесь — не «пусто», а «пусто из-за фильтров»: сразу видно, сколько сообщений скрыто и чем именно.</p>
+    <div class="sl-pmdemo-frame">
+      <div class="sl-pmdense">
+        <div class="sl-pmdense-main" style="grid-column: 1 / -1;">
+          <div class="sl-pmdense-bar">
+            <nav class="sl-pmdense-tabs" aria-label="Папки"><a href="#" aria-current="page">Входящие</a><a href="#">Исходящие</a><a href="#">Сохранённые</a></nav>
+            <form class="sl-search-form" role="search" action="#" method="post">
+              <label class="sl-visually-hidden" for="pmdense-q2">Поиск</label>
+              <input id="pmdense-q2" type="search" value="webhook" placeholder="Поиск">
+              <button type="submit" title="Найти"><i class="bi bi-search" aria-hidden="true"></i></button>
+            </form>
+            <span class="sl-pmdense-total">найдено <b>0</b> из 1&nbsp;284</span>
+          </div>
+          <div class="sl-pmdense-active">
+            <b>Фильтры:</b>
+            <span class="sl-chip sl-chip-info">Сохранённые <button type="button" title="Снять фильтр"><i class="bi bi-x" aria-hidden="true"></i></button></span>
+            <span class="sl-chip sl-chip-info">Сегодня <button type="button" title="Снять фильтр"><i class="bi bi-x" aria-hidden="true"></i></button></span>
+            <span class="sl-chip sl-chip-warn">«webhook» <button type="button" title="Снять фильтр"><i class="bi bi-x" aria-hidden="true"></i></button></span>
+            <button type="button" class="sl-pmdense-clear">Сбросить всё</button>
+          </div>
+          <div class="sl-pmdense-scroll">
+            <div class="sl-pmdense-empty">
+              <i class="bi bi-funnel" aria-hidden="true"></i>
+              <b>Под фильтры не попало ни одного сообщения</b>
+              <p>Скрыто 1&nbsp;284 сообщения. Снимите условие «Сегодня» — по запросу «webhook» среди сохранённых за всё время найдётся 12 писем.</p>
+              <button type="button" class="sl-but">Снять «Сегодня»</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sl-pmdemo-sec">
+    <h2><span>5</span> Мобильное отображение</h2>
+    <p>Фасеты уезжают под список в свёрнутые блоки <code>&lt;details&gt;</code>, строка становится двухуровневой: тема и время сверху, отправитель и действия снизу. Плавающая панель массовых действий остаётся прилипшей к низу.</p>
+    <div class="sl-pmdemo-phones">
+      <figure class="sl-pmdemo-phone">
+        <figcaption>Плотный список, 390&nbsp;px</figcaption>
+        <div class="sl-pmdense">
+          <div class="sl-pmdense-main">
+            <div class="sl-pmdense-bar">
+              <nav class="sl-pmdense-tabs" aria-label="Папки"><a href="#" aria-current="page">Входящие</a><a href="#">Исходящие</a><a href="#">Сохранённые</a></nav>
+              <form class="sl-search-form" role="search" action="#" method="post">
+                <label class="sl-visually-hidden" for="pmdense-q3">Поиск</label>
+                <input id="pmdense-q3" type="search" value="миграция" placeholder="Поиск">
+                <button type="submit" title="Найти"><i class="bi bi-search" aria-hidden="true"></i></button>
+              </form>
+              <span class="sl-pmdense-total">1&ndash;50 из 1&nbsp;284</span>
+            </div>
+            <div class="sl-pmdense-active">
+              <span class="sl-chip sl-chip-info">Непрочит. <button type="button" title="Снять"><i class="bi bi-x" aria-hidden="true"></i></button></span>
+              <span class="sl-chip sl-chip-warn">«миграция» <button type="button" title="Снять"><i class="bi bi-x" aria-hidden="true"></i></button></span>
+            </div>
+            <div class="sl-pmdense-scroll" style="max-height: 300px;">
+              <p class="sl-pmdense-day">Сегодня <small>9</small></p>
+              <div class="sl-pmdense-row sl-pmdense-new">
+                <input type="checkbox" class="sl-check" title="Отметить">
+                <i class="sl-pmdense-flag bi bi-circle-fill"></i>
+                <span class="sl-pmdense-who">Крамской</span>
+                <a class="sl-pmdense-what" href="#">Ошибка при обновлении с 6.2 на 6.3</a>
+                <span class="sl-pmdense-when">14:32</span>
+                <span class="sl-pmdense-acts">
+                  <a href="#" title="Открыть"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                  <a href="#" title="Ответить"><i class="bi bi-reply" aria-hidden="true"></i></a>
+                  <a href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                </span>
+              </div>
+              <div class="sl-pmdense-row sl-pmdense-new">
+                <input type="checkbox" class="sl-check" title="Отметить">
+                <i class="sl-pmdense-flag bi bi-circle-fill"></i>
+                <span class="sl-pmdense-who">Nataly_V</span>
+                <a class="sl-pmdense-what" href="#">Re: Права доступа к модулю «Файлы»</a>
+                <span class="sl-pmdense-when">11:05</span>
+                <span class="sl-pmdense-acts">
+                  <a href="#" title="Открыть"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                  <a href="#" title="Ответить"><i class="bi bi-reply" aria-hidden="true"></i></a>
+                  <a href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                </span>
+              </div>
+              <p class="sl-pmdense-day">Вчера <small>14</small></p>
+              <div class="sl-pmdense-row sl-pmdense-keep">
+                <input type="checkbox" class="sl-check" title="Отметить">
+                <i class="sl-pmdense-flag bi bi-bookmark-fill"></i>
+                <span class="sl-pmdense-who">Igor_Tech</span>
+                <a class="sl-pmdense-what" href="#">Шаблон lite: сломалась вёрстка таблиц</a>
+                <span class="sl-pmdense-when">09:12</span>
+                <span class="sl-pmdense-acts">
+                  <a href="#" title="Открыть"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                  <a href="#" title="Убрать"><i class="bi bi-bookmark-dash" aria-hidden="true"></i></a>
+                  <a href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                </span>
+              </div>
+            </div>
+            <div class="sl-pmdense-foot">
+              <label class="sl-visually-hidden" for="pmdense-per-m">На странице</label>
+              <select id="pmdense-per-m" class="sl-field sl-pmdense-per"><option>50</option></select>
+              <span class="sl-pmdense-jump">
+                <a class="sl-but-mini sl-is-active" href="#">1</a>
+                <a class="sl-but-mini" href="#">2</a>
+                <a class="sl-but-mini" href="#">3</a>
+                <a class="sl-but-mini" href="#"><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+              </span>
+            </div>
+            <div class="sl-pmdense-mass">
+              <b>Отмечено: 0</b>
+              <span class="sl-pmdense-mass-end">
+                <button type="button" class="sl-but" title="Прочитано"><i class="bi bi-check2-all" aria-hidden="true"></i></button>
+                <button type="button" class="sl-but" title="Сохранить"><i class="bi bi-archive" aria-hidden="true"></i></button>
+                <button type="button" class="sl-but" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></button>
+              </span>
+            </div>
+          </div>
+          <aside class="sl-pmdense-side" aria-label="Фильтры">
+            <details class="sl-pmdense-facet">
+              <summary>Состояние</summary>
+              <ul>
+                <li><label class="sl-pmdense-opt"><input type="checkbox" class="sl-check" checked><span>Непрочитанные</span><b>142</b></label></li>
+                <li><label class="sl-pmdense-opt"><input type="checkbox" class="sl-check"><span>Сохранённые</span><b>63</b></label></li>
+              </ul>
+            </details>
+            <details class="sl-pmdense-facet">
+              <summary>Период</summary>
+              <ul>
+                <li><label class="sl-pmdense-opt"><input type="radio" name="pmdense-when-m" class="sl-check"><span>Сегодня</span><b>9</b></label></li>
+                <li><label class="sl-pmdense-opt"><input type="radio" name="pmdense-when-m" class="sl-check" checked><span>За 7 дней</span><b>61</b></label></li>
+              </ul>
+            </details>
+            <div class="sl-pmdense-side-foot">
+              <button type="button" class="sl-but">Применить</button>
+              <button type="button" class="sl-but">Сброс</button>
+            </div>
+          </aside>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+</main>
+
+<script>
+/* Демонстрационное поведение: подсветка выбранной строки и счётчик отмеченных */
+document.querySelectorAll('.sl-pmdense-scroll').forEach(function (list) {
+  list.querySelectorAll('.sl-pmdense-row').forEach(function (row) {
+    row.addEventListener('click', function (ev) {
+      if (ev.target.closest('a, input, button')) return;
+      list.querySelectorAll('.sl-pmdense-row').forEach(function (one) { one.removeAttribute('aria-selected'); });
+      row.setAttribute('aria-selected', 'true');
+    });
+  });
+});
+document.querySelectorAll('.sl-pmdense-main form').forEach(function (form) {
+  var out = form.querySelector('.sl-pmdense-mass b');
+  if (!out) return;
+  form.addEventListener('change', function () {
+    out.textContent = 'Отмечено: ' + form.querySelectorAll('.sl-pmdense-row input:checked').length;
+  });
+});
+</script>
+
+<!-- Реальный редактор сообщений: те же файлы, что подключает драйвер plugins/editors/toastui -->
+<script src="../plugins/editors/toastui/assets/toastui-editor.all.min.js"></script>
+<script src="../plugins/editors/toastui/assets/i18n/ru-ru.js"></script>
+<script src="../plugins/editors/toastui/assets/i18n/emoji-ru.js"></script>
+<script src="../plugins/editors/toastui/assets/editor-tags.js"></script>
+<script src="../plugins/editors/toastui/assets/editor-emoji.js"></script>
+<script src="../plugins/editors/toastui/assets/editor-upload.js"></script>
+<script>
+/* Монтирование Toast UI так же, как это делает EditorToastUi::getWidget(): скрытая textarea — источник, соседний div — сам редактор */
+document.querySelectorAll('[data-sl-pm-editor]').forEach(function (box) {
+  var id = box.getAttribute('data-sl-pm-editor');
+  var ta = document.getElementById(id);
+  var mount = document.getElementById(id + '_toast');
+  var root = window.toastui && window.toastui.Editor;
+  if (!ta || !mount || !root) return;
+  var ed = new root({
+    el: mount,
+    initialEditType: 'markdown',
+    initialValue: ta.value,
+    placeholder: box.getAttribute('data-sl-pm-placeholder') || '',
+    height: (box.getAttribute('data-sl-pm-height') || '300') + 'px',
+    language: 'ru-RU',
+    autofocus: false,
+    usageStatistics: false
+  });
+  if (window.SlaedToastUi) {
+    window.SlaedToastUi.register(id, ed, {
+      super: false,
+      tpl: 'js-slaed-editor-tpl',
+      labels: {
+        quote: 'Цитировать', hide: 'Скрытый текст', tabs: 'Вкладки', emoji: 'Смайлы',
+        fullscreen: 'Развернуть редактор на весь экран', exitfull: 'Свернуть редактор',
+        insert: 'Вставить изображение', image: 'Изображение', attach: 'Прикрепить файл'
+      }
+    });
+  }
+  ed.on('change', function () { ta.value = ed.getMarkdown(); });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED — ЛС, вариант 1: классический почтовый ящик</title>
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<link rel="stylesheet" href="../plugins/editors/toastui/assets/toastui-editor.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/editors/toastui/skin.css">
+<style>
+/* ==== Общая обвязка демо (одинакова во всех вариантах, живёт только здесь) ==== */
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color: var(--sl-color-text); font: 13px/1.45 Arial, system-ui, sans-serif; }
+a { text-decoration: none; }
+.sl-pmdemo-head { padding: 28px max(20px, calc((100vw - 1180px) / 2)) 24px; border-bottom: 1px solid var(--sl-color-border); background: radial-gradient(circle at 88% 0, color-mix(in srgb, var(--sl-color-brand) 18%, transparent), transparent 32%), var(--sl-color-bg); }
+.sl-pmdemo-back { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px; color: var(--sl-color-text-muted); font-size: 12px; }
+.sl-pmdemo-back:hover { color: var(--sl-color-primary); }
+.sl-pmdemo-head h1 { margin: 0 0 10px; color: var(--sl-color-text-heading); font-size: clamp(23px, 4vw, 32px); line-height: 1.12; }
+.sl-pmdemo-head p { max-width: 840px; margin: 0 0 14px; color: var(--sl-color-text-muted); }
+.sl-pmdemo-chips { display: flex; flex-wrap: wrap; gap: var(--sl-space-sm); }
+.sl-pmdemo-main { width: 1180px; max-width: calc(100% - 28px); margin: 26px auto 0; }
+.sl-pmdemo-sec { margin-bottom: 38px; }
+.sl-pmdemo-sec > h2 { display: flex; align-items: center; gap: 10px; margin: 0 0 6px; color: var(--sl-color-text-heading); font-size: 17px; }
+.sl-pmdemo-sec > h2 > span { display: grid; place-items: center; flex: 0 0 26px; width: 26px; height: 26px; border-radius: 50%; background: var(--sl-color-text-heading); color: var(--sl-color-on-dark); font: bold 11px/1 Arial, sans-serif; }
+.sl-pmdemo-sec > p { margin: 0 0 14px; color: var(--sl-color-text-muted); }
+.sl-pmdemo-frame { container-type: inline-size; padding: 14px; border: 1px solid var(--sl-color-border-subtle); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); box-shadow: var(--sl-shadow-soft); }
+.sl-pmdemo-phones { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; }
+.sl-pmdemo-phone { container-type: inline-size; width: 390px; max-width: 100%; padding: 12px 10px; border: 1px solid var(--sl-color-border-strong); border-radius: 20px; background: var(--sl-color-bg); box-shadow: var(--sl-shadow-panel); }
+.sl-pmdemo-phone > figcaption { margin: 0 0 10px; color: var(--sl-color-text-muted); font-size: 11px; text-align: center; text-transform: uppercase; letter-spacing: 0.08em; }
+:focus-visible { outline: 2px solid var(--sl-color-primary); outline-offset: 2px; border-radius: 3px; }
+
+/* ==== Вариант 1: классический почтовый ящик ==== */
+.sl-pmbox { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 14px; }
+
+/* Левая колонка папок — переиспользует плиточную механику sl-cab-act/sl-cat-ico */
+.sl-pmbox-rail { display: flex; flex-direction: column; gap: var(--sl-space-sm); }
+.sl-pmbox-fold { --sl-cat-tone: var(--sl-color-tone-info); position: relative; display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 9px; padding: 8px 10px; border: 1px solid var(--sl-color-border-subtle); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); color: var(--sl-color-text-muted); transition: border-color 0.18s ease, background-color 0.18s ease; }
+.sl-pmbox-fold .sl-cat-ico { --sl-size-tile: 32px; }
+.sl-pmbox-fold .sl-cat-ico .bi { font-size: var(--sl-size-icon-sm); }
+.sl-pmbox-fold b { overflow: hidden; color: var(--sl-color-text-heading); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.sl-pmbox-fold:hover { border-color: color-mix(in srgb, var(--sl-cat-tone) 45%, var(--sl-color-border)); }
+.sl-pmbox-fold[aria-current="page"] { border-color: color-mix(in srgb, var(--sl-cat-tone) 55%, var(--sl-color-border)); background: color-mix(in srgb, var(--sl-cat-tone) 8%, var(--sl-color-bg)); }
+.sl-pmbox-write { justify-content: center; margin-top: var(--sl-space-xs); }
+
+/* Панель инструментов над списком */
+.sl-pmbox-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sl-space-md); margin-bottom: 12px; }
+.sl-pmbox-bar .sl-search-form { width: 300px; flex: 1 1 220px; }
+.sl-pmbox-filters { display: flex; flex-wrap: wrap; gap: var(--sl-space-sm); margin-left: auto; }
+.sl-pmbox-filters .sl-chip { border: 1px solid transparent; cursor: pointer; }
+.sl-pmbox-filters .sl-chip[aria-pressed="true"] { border-color: color-mix(in srgb, var(--sl-color-primary) 45%, transparent); background: color-mix(in srgb, var(--sl-color-primary) 14%, transparent); color: var(--sl-color-brand-strong); }
+
+/* Строки таблицы: непрочитанное получает левую полосу и жирный заголовок */
+.sl-pmbox-list .sl-table-cell { padding: 7px 5px; }
+.sl-pmbox-row-new { background: color-mix(in srgb, var(--sl-color-primary) 4%, transparent); box-shadow: inset 3px 0 0 var(--sl-color-primary); }
+.sl-pmbox-row-new .sl-pmbox-subj { color: var(--sl-color-text-heading); font-weight: bold; }
+.sl-pmbox-subj { display: inline-block; max-width: 100%; overflow: hidden; color: var(--sl-color-text); text-overflow: ellipsis; vertical-align: middle; white-space: nowrap; }
+.sl-pmbox-subj:hover { color: var(--sl-color-primary); }
+.sl-pmbox-snip { display: block; overflow: hidden; margin-top: 2px; color: var(--sl-color-text-muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.sl-pmbox-from { display: inline-flex; align-items: center; gap: 7px; min-width: 0; }
+.sl-pmbox-from img { flex: 0 0 24px; width: 24px; height: 24px; border-radius: 50%; object-fit: cover; background: var(--sl-color-bg-soft-soft); }
+.sl-pmbox-from span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sl-pmbox-acts { display: inline-flex; gap: var(--sl-space-xs); justify-content: flex-end; }
+.sl-pmbox-col-date { width: 120px; white-space: nowrap; }
+.sl-pmbox-col-from { width: 190px; }
+.sl-pmbox-col-act { width: 118px; }
+
+/* Панель чтения открывается под списком, как в классическом ящике с выключенной областью просмотра */
+.sl-pmbox-read { margin-top: 16px; border: 1px solid var(--sl-color-border-strong); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); }
+.sl-pmbox-read-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sl-space-md); padding: 10px 12px; border-bottom: 1px solid var(--sl-color-border-subtle); background: var(--sl-color-bg-soft-alt); border-radius: var(--sl-radius-card) var(--sl-radius-card) 0 0; }
+.sl-pmbox-read-head h3 { flex: 1 1 240px; min-width: 0; margin: 0; color: var(--sl-color-text-heading); font-size: 15px; }
+.sl-pmbox-read-meta { display: flex; flex-wrap: wrap; gap: var(--sl-space-sm); padding: 10px 12px; border-bottom: 1px solid var(--sl-color-border-subtle); }
+.sl-pmbox-read-body { padding: 14px 12px; }
+.sl-pmbox-read-body p { margin: 0 0 12px; }
+.sl-pmbox-read-body p:last-child { margin-bottom: 0; }
+.sl-pmbox-reply { display: grid; gap: var(--sl-space-md); padding: 12px; border-top: 1px solid var(--sl-color-border-subtle); background: var(--sl-color-bg-soft); border-radius: 0 0 var(--sl-radius-card) var(--sl-radius-card); }
+.sl-pmbox-reply-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sl-space-md); }
+.sl-pmbox-reply-foot small { color: var(--sl-color-text-muted); }
+
+/* Пустое состояние */
+.sl-pmbox-empty { display: grid; justify-items: center; gap: 10px; padding: 42px 20px; text-align: center; }
+.sl-pmbox-empty i { font-size: 46px; color: var(--sl-color-text-subtle); }
+.sl-pmbox-empty b { color: var(--sl-color-text-heading); font-size: 15px; }
+.sl-pmbox-empty p { max-width: 380px; margin: 0; color: var(--sl-color-text-muted); }
+
+/* Мобильная раскладка: полки становятся полосой, таблица — стопкой карточек-строк */
+@container (max-width: 780px) {
+  .sl-pmbox { grid-template-columns: 1fr; }
+  .sl-pmbox-rail { flex-direction: row; overflow-x: auto; padding-bottom: 4px; }
+  .sl-pmbox-fold { flex: 0 0 auto; grid-template-columns: auto auto; }
+  .sl-pmbox-fold .sl-cat-ico { display: none; }
+  .sl-pmbox-filters { margin-left: 0; }
+  .sl-pmbox-list thead { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
+  .sl-pmbox-list table, .sl-pmbox-list tbody, .sl-pmbox-list tr, .sl-pmbox-list td { display: block; width: auto; }
+  .sl-pmbox-list tr { position: relative; margin-bottom: 8px; padding: 8px 8px 8px 34px; border: 1px solid var(--sl-color-border-subtle); border-radius: var(--sl-radius-card); }
+  .sl-pmbox-list td { max-width: none; padding: 2px 0; border: 0; }
+  .sl-pmbox-list td.sl-col-check { position: absolute; top: 10px; left: 8px; width: auto; }
+  .sl-pmbox-col-date, .sl-pmbox-col-from, .sl-pmbox-col-act { width: auto; }
+  .sl-pmbox-acts { justify-content: flex-start; margin-top: 4px; }
+}
+/* Поле сообщения — настоящий редактор Toast UI (plugins/editors/toastui), а не textarea: скрытая textarea остаётся источником, редактор монтируется в соседний div */
+.sl-pm-editor { width: 100%; min-width: 0; }
+.sl-pm-editor .toastui-editor-defaultUI { border-radius: var(--sl-radius-control); }
+.sl-pm-note { margin: 0; color: var(--sl-color-text-muted); font-size: 11px; }
+.sl-pm-note .bi { margin-right: 5px; color: var(--sl-color-primary); }
+</style>
+</head>
+<body>
+
+<header class="sl-pmdemo-head">
+  <a class="sl-pmdemo-back" href="private-messages-index.html"><i class="bi bi-arrow-left" aria-hidden="true"></i> Все варианты личных сообщений</a>
+  <h1>Вариант 1 — Классический почтовый ящик</h1>
+  <p>Привычная модель почты: слева полки с счётчиками, справа список-таблица с массовым выделением, панель чтения раскрывается под списком. Ближе всего к тому, что уже отдаёт <b>getPrivateMessageView()</b> — таблица <code>content-list</code>, чекбоксы, speed-dial действий и пагинатор остаются на своих местах.</p>
+  <div class="sl-pmdemo-chips">
+    <span class="sl-chip sl-chip-info"><i class="bi bi-table" aria-hidden="true"></i> sl-table-list</span>
+    <span class="sl-chip sl-chip-info"><i class="bi bi-check2-square" aria-hidden="true"></i> sl-col-check</span>
+    <span class="sl-chip sl-chip-info"><i class="bi bi-three-dots" aria-hidden="true"></i> sl-dial</span>
+    <span class="sl-chip sl-chip-info"><i class="bi bi-list-ol" aria-hidden="true"></i> sl-pager</span>
+    <span class="sl-chip sl-chip-neutral"><i class="bi bi-grid-1x2" aria-hidden="true"></i> sl-cat-ico / sl-cat-tone</span>
+  </div>
+</header>
+
+<main class="sl-pmdemo-main">
+
+  <section class="sl-pmdemo-sec">
+    <h2><span>1</span> Входящие: список, поиск, фильтры, выделение</h2>
+    <p>Непрочитанные помечены синей полосой и жирным заголовком. Фильтры-чипсы переключают выборку внутри папки, не меняя саму папку.</p>
+
+    <div class="sl-pmdemo-frame">
+      <div class="sl-pmbox">
+
+        <nav class="sl-pmbox-rail" aria-label="Папки личных сообщений">
+          <a class="sl-pmbox-fold sl-cat-tone-0" href="#" aria-current="page">
+            <span class="sl-cat-ico"><i class="bi bi-envelope" aria-hidden="true"></i></span>
+            <b>Входящие</b>
+            <span class="sl-but-mini">8</span>
+          </a>
+          <a class="sl-pmbox-fold sl-cat-tone-1" href="#">
+            <span class="sl-cat-ico"><i class="bi bi-send" aria-hidden="true"></i></span>
+            <b>Исходящие</b>
+            <span class="sl-but-mini sl-is-soft">17</span>
+          </a>
+          <a class="sl-pmbox-fold sl-cat-tone-2" href="#">
+            <span class="sl-cat-ico"><i class="bi bi-bookmark" aria-hidden="true"></i></span>
+            <b>Сохранённые</b>
+            <span class="sl-but-mini sl-is-soft">6</span>
+          </a>
+          <a class="sl-pmbox-fold sl-pmbox-write sl-cat-tone-4" href="#">
+            <span class="sl-cat-ico"><i class="bi bi-pencil-square" aria-hidden="true"></i></span>
+            <b>Написать</b>
+          </a>
+        </nav>
+
+        <div>
+          <div class="sl-pmbox-bar">
+            <form class="sl-search-form" role="search" action="#" method="post">
+              <label class="sl-visually-hidden" for="pmbox-q">Поиск по личным сообщениям</label>
+              <input id="pmbox-q" type="search" name="query" placeholder="Поиск по теме и отправителю" value="">
+              <button type="submit" title="Найти"><i class="bi bi-search" aria-hidden="true"></i></button>
+            </form>
+            <div class="sl-pmbox-filters" role="group" aria-label="Фильтр сообщений">
+              <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="true">Все · 24</button>
+              <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Непрочитанные · 8</button>
+              <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">С вложениями · 3</button>
+              <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">За неделю · 11</button>
+            </div>
+          </div>
+
+          <div class="sl-alert sl-alert-info">
+            <div class="sl-alert-body"><p class="sl-alert-text">Максимально допустимое количество входящих сообщений 250, на данный момент в отделе содержится 24, ещё можно сохранить 226.</p></div>
+          </div>
+
+          <form class="sl-pmbox-list" action="#" method="post">
+            <div class="sl-table-shell">
+              <table class="sl-table-list">
+                <thead class="sl-table-head">
+                  <tr>
+                    <th class="sl-col-check" scope="col"><input type="checkbox" class="sl-check" title="Отметить все"><span class="sl-visually-hidden">Отметить все</span></th>
+                    <th scope="col">Заголовок</th>
+                    <th class="sl-pmbox-col-from" scope="col">Отправитель</th>
+                    <th class="sl-pmbox-col-date" scope="col">Дата</th>
+                    <th class="sl-pmbox-col-act" scope="col">Опции</th>
+                  </tr>
+                </thead>
+                <tbody>
+
+                  <tr class="sl-table-row sl-pmbox-row-new">
+                    <td class="sl-table-cell sl-col-check"><input type="checkbox" class="sl-check" name="id[]" value="4181" title="Отметить сообщение"></td>
+                    <td class="sl-table-cell sl-cell-ellipsis">
+                      <span class="sl-chip sl-chip-info sl-message-in" title="Новое сообщение"><i class="bi bi-envelope" aria-hidden="true"></i></span>
+                      <a class="sl-pmbox-subj" href="#pmbox-read">Ошибка при обновлении с 6.2 на 6.3</a>
+                      <small class="sl-pmbox-snip">После setup/update ловлю 500 на admin.php, в error_php.log — Privat::getBoxWhere()…</small>
+                    </td>
+                    <td class="sl-table-cell sl-pmbox-col-from"><span class="sl-pmbox-from"><img src="../templates/lite/images/avatars/presets/001.svg" alt=""><span>Крамской</span></span></td>
+                    <td class="sl-table-cell sl-pmbox-col-date"><time datetime="2026-08-12T14:32">12.08.2026 14:32</time></td>
+                    <td class="sl-table-cell sl-pmbox-col-act">
+                      <span class="sl-pmbox-acts">
+                        <a class="sl-but-mini" href="#pmbox-read" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                        <a class="sl-but-mini" href="#" title="Сохранить"><i class="bi bi-archive" aria-hidden="true"></i></a>
+                        <a class="sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                      </span>
+                    </td>
+                  </tr>
+
+                  <tr class="sl-table-row sl-pmbox-row-new">
+                    <td class="sl-table-cell sl-col-check"><input type="checkbox" class="sl-check" name="id[]" value="4180" title="Отметить сообщение"></td>
+                    <td class="sl-table-cell sl-cell-ellipsis">
+                      <span class="sl-chip sl-chip-info sl-message-in" title="Новое сообщение"><i class="bi bi-envelope" aria-hidden="true"></i></span>
+                      <a class="sl-pmbox-subj" href="#pmbox-read">Re: Права доступа к модулю «Файлы»</a>
+                      <small class="sl-pmbox-snip">Группе «Модераторы» всё ещё не видна кнопка загрузки, хотя в правах галка стоит.</small>
+                    </td>
+                    <td class="sl-table-cell sl-pmbox-col-from"><span class="sl-pmbox-from"><img src="../templates/lite/images/avatars/presets/007.svg" alt=""><span>Nataly_V</span></span></td>
+                    <td class="sl-table-cell sl-pmbox-col-date"><time datetime="2026-08-12T11:05">12.08.2026 11:05</time></td>
+                    <td class="sl-table-cell sl-pmbox-col-act">
+                      <span class="sl-pmbox-acts">
+                        <a class="sl-but-mini" href="#pmbox-read" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                        <a class="sl-but-mini" href="#" title="Сохранить"><i class="bi bi-archive" aria-hidden="true"></i></a>
+                        <a class="sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                      </span>
+                    </td>
+                  </tr>
+
+                  <tr class="sl-table-row">
+                    <td class="sl-table-cell sl-col-check"><input type="checkbox" class="sl-check" name="id[]" value="4177" title="Отметить сообщение" checked></td>
+                    <td class="sl-table-cell sl-cell-ellipsis">
+                      <span class="sl-chip sl-chip-neutral sl-message-in sl-hidden" title="Прочитанное сообщение"><i class="bi bi-envelope-open" aria-hidden="true"></i></span>
+                      <a class="sl-pmbox-subj" href="#pmbox-read">Счёт №2418 оплачен, отгрузка сегодня</a>
+                      <small class="sl-pmbox-snip">Платёж прошёл, статус заказа в модуле «Магазин» переведён в «Оплачен».</small>
+                    </td>
+                    <td class="sl-table-cell sl-pmbox-col-from"><span class="sl-pmbox-from"><img src="../templates/lite/images/avatars/presets/012.svg" alt=""><span>admin_shop</span></span></td>
+                    <td class="sl-table-cell sl-pmbox-col-date"><time datetime="2026-08-11T19:47">11.08.2026 19:47</time></td>
+                    <td class="sl-table-cell sl-pmbox-col-act">
+                      <span class="sl-pmbox-acts">
+                        <a class="sl-but-mini" href="#pmbox-read" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                        <a class="sl-but-mini" href="#" title="Сохранить"><i class="bi bi-archive" aria-hidden="true"></i></a>
+                        <a class="sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                      </span>
+                    </td>
+                  </tr>
+
+                  <tr class="sl-table-row">
+                    <td class="sl-table-cell sl-col-check"><input type="checkbox" class="sl-check" name="id[]" value="4173" title="Отметить сообщение"></td>
+                    <td class="sl-table-cell sl-cell-ellipsis">
+                      <span class="sl-chip sl-chip-warn sl-message-save" title="Сохранённое сообщение"><i class="bi bi-bookmark-fill" aria-hidden="true"></i></span>
+                      <a class="sl-pmbox-subj" href="#pmbox-read">Шаблон lite: сломалась вёрстка таблиц</a>
+                      <small class="sl-pmbox-snip">После правки theme.css строки таблицы в блоке форума разъезжаются на 1024px.</small>
+                    </td>
+                    <td class="sl-table-cell sl-pmbox-col-from"><span class="sl-pmbox-from"><img src="../templates/lite/images/avatars/presets/018.svg" alt=""><span>Igor_Tech</span></span></td>
+                    <td class="sl-table-cell sl-pmbox-col-date"><time datetime="2026-08-11T09:12">11.08.2026 09:12</time></td>
+                    <td class="sl-table-cell sl-pmbox-col-act">
+                      <span class="sl-pmbox-acts">
+                        <a class="sl-but-mini" href="#pmbox-read" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                        <a class="sl-but-mini sl-is-active" href="#" title="Убрать из сохранённых"><i class="bi bi-bookmark-dash" aria-hidden="true"></i></a>
+                        <a class="sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                      </span>
+                    </td>
+                  </tr>
+
+                  <tr class="sl-table-row">
+                    <td class="sl-table-cell sl-col-check"><input type="checkbox" class="sl-check" name="id[]" value="4166" title="Отметить сообщение"></td>
+                    <td class="sl-table-cell sl-cell-ellipsis">
+                      <span class="sl-chip sl-chip-neutral sl-message-in sl-hidden" title="Прочитанное сообщение"><i class="bi bi-envelope-open" aria-hidden="true"></i></span>
+                      <a class="sl-pmbox-subj" href="#pmbox-read">Спасибо за помощь с переносом БД</a>
+                      <small class="sl-pmbox-snip">Дамп развернулся без потерь, префикс поменяли через setup — всё встало.</small>
+                    </td>
+                    <td class="sl-table-cell sl-pmbox-col-from"><span class="sl-pmbox-from"><img src="../templates/lite/images/avatars/presets/004.svg" alt=""><span>Мария Соколова</span></span></td>
+                    <td class="sl-table-cell sl-pmbox-col-date"><time datetime="2026-08-10T22:03">10.08.2026 22:03</time></td>
+                    <td class="sl-table-cell sl-pmbox-col-act">
+                      <span class="sl-pmbox-acts">
+                        <a class="sl-but-mini" href="#pmbox-read" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                        <a class="sl-but-mini" href="#" title="Сохранить"><i class="bi bi-archive" aria-hidden="true"></i></a>
+                        <a class="sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                      </span>
+                    </td>
+                  </tr>
+
+                  <tr class="sl-table-row">
+                    <td class="sl-table-cell sl-col-check"><input type="checkbox" class="sl-check" name="id[]" value="4160" title="Отметить сообщение"></td>
+                    <td class="sl-table-cell sl-cell-ellipsis">
+                      <span class="sl-chip sl-chip-neutral sl-message-in sl-hidden" title="Прочитанное сообщение"><i class="bi bi-envelope-open" aria-hidden="true"></i></span>
+                      <a class="sl-pmbox-subj" href="#pmbox-read">Вопрос по лицензии MIT</a>
+                      <small class="sl-pmbox-snip">Аккаунт отправителя удалён, копия сообщения остаётся читаемой.</small>
+                    </td>
+                    <td class="sl-table-cell sl-pmbox-col-from"><span class="sl-pmbox-from"><img src="../templates/lite/images/avatars/system/deleted.svg" alt=""><span class="sl-muted">Гость</span></span></td>
+                    <td class="sl-table-cell sl-pmbox-col-date"><time datetime="2026-08-09T13:24">09.08.2026 13:24</time></td>
+                    <td class="sl-table-cell sl-pmbox-col-act">
+                      <span class="sl-pmbox-acts">
+                        <a class="sl-but-mini" href="#pmbox-read" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                        <a class="sl-but-mini" href="#" title="Сохранить"><i class="bi bi-archive" aria-hidden="true"></i></a>
+                        <a class="sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                      </span>
+                    </td>
+                  </tr>
+
+                </tbody>
+              </table>
+            </div>
+
+            <p class="sl-pager-info">Всего: <b>24</b> на <b>1</b> странице по <b>25</b> сообщений</p>
+            <nav class="sl-pager" aria-label="Постраничная навигация">
+              <div class="sl-pager-main">
+                <div class="sl-pager-pages">
+                  <a class="sl-but-mini sl-is-active" href="#" aria-current="page">1</a>
+                  <a class="sl-but-mini" href="#">2</a>
+                  <a class="sl-but-mini" href="#">3</a>
+                  <span class="sl-but-mini sl-is-muted">&hellip;</span>
+                  <a class="sl-but-mini" href="#">9</a>
+                </div>
+                <div class="sl-pager-nextprev">
+                  <b class="sl-pager-prev"><span class="sl-but-mini sl-is-muted" title="Предыдущая"><i class="bi bi-chevron-left" aria-hidden="true"></i></span></b>
+                  <b class="sl-pager-next"><a class="sl-but-mini" href="#" title="Следующая"><i class="bi bi-chevron-right" aria-hidden="true"></i></a></b>
+                </div>
+              </div>
+            </nav>
+
+            <div class="sl-bulk-bar">
+              <span class="sl-bulk-count">Отмечено: 1 из 24</span>
+              <span class="sl-action-label">Действие</span>
+              <label class="sl-visually-hidden" for="pmbox-act">Действие над отмеченными</label>
+              <select id="pmbox-act" name="act" class="sl-field">
+                <option value="read">Отметить прочитанными</option>
+                <option value="unread">Отметить непрочитанными</option>
+                <option value="save">Сохранить</option>
+                <option value="delete">Удалить</option>
+              </select>
+              <input type="submit" class="sl-but" value="OK" title="Действие">
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sl-pmdemo-sec" id="pmbox-read">
+    <h2><span>2</span> Выбранное сообщение и быстрый ответ</h2>
+    <p>Открытие помечает сообщение прочитанным — это POST-маршрут <code>setPrivateMessageRead</code>, поэтому «Показать» остаётся кнопкой, а не ссылкой.</p>
+
+    <div class="sl-pmdemo-frame">
+      <article class="sl-pmbox-read">
+        <header class="sl-pmbox-read-head">
+          <h3>Ошибка при обновлении с 6.2 на 6.3</h3>
+          <span class="sl-pmbox-acts">
+            <a class="sl-but-mini" href="#" title="Ответить"><i class="bi bi-reply" aria-hidden="true"></i></a>
+            <a class="sl-but-mini" href="#" title="Сохранить"><i class="bi bi-archive" aria-hidden="true"></i></a>
+            <a class="sl-but-mini" href="#" title="Отметить непрочитанным"><i class="bi bi-envelope" aria-hidden="true"></i></a>
+            <a class="sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+          </span>
+        </header>
+        <div class="sl-pmbox-read-meta">
+          <span class="sl-chip sl-chip-neutral"><i class="bi bi-person" aria-hidden="true"></i> Крамской</span>
+          <span class="sl-chip sl-chip-info"><i class="bi bi-clock-history" aria-hidden="true"></i> <time datetime="2026-08-12T14:32">12.08.2026 14:32</time></span>
+          <span class="sl-chip sl-chip-success"><i class="bi bi-check-circle" aria-hidden="true"></i> Прочитано</span>
+          <span class="sl-chip sl-chip-neutral"><i class="bi bi-people" aria-hidden="true"></i> Группа: Проверенные</span>
+        </div>
+        <div class="sl-pmbox-read-body">
+          <p>Добрый день! Обновлял тестовый сайт с 6.2.4 на 6.3, скрипт setup отработал без ошибок, но после входа в админку получаю 500 на любом разделе.</p>
+          <p>В <code>storage/logs/error_php.log</code> одна и та же строка про недостающую колонку <code>saved</code> в таблице <code>_privat</code>. Похоже, миграция таблицы личных сообщений не применилась. Подскажите, можно ли догнать её вручную, не откатывая весь апдейт?</p>
+          <p>Дамп базы перед обновлением сохранён, откатиться могу в любой момент.</p>
+        </div>
+        <form class="sl-pmbox-reply" action="#" method="post">
+          <label class="sl-visually-hidden" for="pmbox-reply">Текст ответа</label>
+          <div class="sl-pm-editor" data-sl-pm-editor="pmbox-reply" data-sl-pm-height="300" data-sl-pm-placeholder="Ответ пользователю Крамской&hellip;">
+            <textarea id="pmbox-reply" name="text" rows="15" style="display:none"></textarea>
+            <div id="pmbox-reply_toast"></div>
+          </div>
+          <p class="sl-pm-note"><i class="bi bi-info-circle" aria-hidden="true"></i> Поле сообщения — настоящий Toast UI из <code>plugins/editors/toastui</code>, тот же, что стоит на боевой странице: панель инструментов, вставка изображений через файловый менеджер, смайлы и переключатель Markdown/Визуальный. Ниже 250&nbsp;px он не сжимается, поэтому панель чтения под списком получается высокой.</p>
+          <div class="sl-pmbox-reply-foot">
+            <input type="submit" class="sl-but" value="Отправить" title="Отправить">
+            <a class="sl-but" href="#">Цитировать</a>
+            <small>Интервал между отправками — 60 секунд</small>
+          </div>
+        </form>
+      </article>
+    </div>
+  </section>
+
+  <section class="sl-pmdemo-sec">
+    <h2><span>3</span> Исходящие</h2>
+    <p>В исходящих нет действий «прочитать» и «сохранить» — только удаление своей копии; статус показывает, открыл ли письмо получатель.</p>
+
+    <div class="sl-pmdemo-frame">
+      <div class="sl-table-shell">
+        <table class="sl-table-list">
+          <thead class="sl-table-head">
+            <tr>
+              <th class="sl-col-check" scope="col"><input type="checkbox" class="sl-check" title="Отметить все"></th>
+              <th scope="col">Заголовок</th>
+              <th class="sl-pmbox-col-from" scope="col">Получатель</th>
+              <th class="sl-pmbox-col-date" scope="col">Дата</th>
+              <th class="sl-pmbox-col-act" scope="col">Опции</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="sl-table-row">
+              <td class="sl-table-cell sl-col-check"><input type="checkbox" class="sl-check" name="id[]" value="4182"></td>
+              <td class="sl-table-cell sl-cell-ellipsis">
+                <span class="sl-chip sl-chip-warn sl-message-out" title="Непрочитанное сообщение"><i class="bi bi-send" aria-hidden="true"></i></span>
+                <a class="sl-pmbox-subj" href="#">Re: Ошибка при обновлении с 6.2 на 6.3</a>
+                <small class="sl-pmbox-snip">Догнать миграцию можно: в setup/sql лежит инкремент privat-format&hellip;</small>
+              </td>
+              <td class="sl-table-cell sl-pmbox-col-from"><span class="sl-pmbox-from"><img src="../templates/lite/images/avatars/presets/001.svg" alt=""><span>Крамской</span></span></td>
+              <td class="sl-table-cell sl-pmbox-col-date"><time datetime="2026-08-12T15:10">12.08.2026 15:10</time></td>
+              <td class="sl-table-cell sl-pmbox-col-act">
+                <span class="sl-pmbox-acts">
+                  <a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                  <a class="sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                </span>
+              </td>
+            </tr>
+            <tr class="sl-table-row">
+              <td class="sl-table-cell sl-col-check"><input type="checkbox" class="sl-check" name="id[]" value="4175"></td>
+              <td class="sl-table-cell sl-cell-ellipsis">
+                <span class="sl-chip sl-chip-success sl-message-out sl-hidden" title="Прочитанное сообщение"><i class="bi bi-send-check" aria-hidden="true"></i></span>
+                <a class="sl-pmbox-subj" href="#">Re: Шаблон lite: сломалась вёрстка таблиц</a>
+                <small class="sl-pmbox-snip">Проверьте sl-cell-ellipsis: у него width 100% и max-width 0, иначе колонка&hellip;</small>
+              </td>
+              <td class="sl-table-cell sl-pmbox-col-from"><span class="sl-pmbox-from"><img src="../templates/lite/images/avatars/presets/018.svg" alt=""><span>Igor_Tech</span></span></td>
+              <td class="sl-table-cell sl-pmbox-col-date"><time datetime="2026-08-11T10:00">11.08.2026 10:00</time></td>
+              <td class="sl-table-cell sl-pmbox-col-act">
+                <span class="sl-pmbox-acts">
+                  <a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a>
+                  <a class="sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i></a>
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="sl-pmdemo-sec">
+    <h2><span>4</span> Пустое состояние</h2>
+    <p>Отдельная иллюстрация вместо голого <code>sl-alert</code>: пустая папка — не ошибка, поэтому у неё есть действие-выход.</p>
+    <div class="sl-pmdemo-frame">
+      <div class="sl-pmbox-empty">
+        <i class="bi bi-inbox" aria-hidden="true"></i>
+        <b>В сохранённых пока пусто</b>
+        <p>Сюда попадают сообщения, отмеченные как «Сохранить». Они не удаляются при чистке входящих и учитываются отдельной квотой — 250 штук.</p>
+        <a class="sl-but" href="#"><i class="bi bi-envelope" aria-hidden="true"></i>&nbsp; Перейти во входящие</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="sl-pmdemo-sec">
+    <h2><span>5</span> Мобильное отображение</h2>
+    <p>Полки превращаются в горизонтальную полосу, таблица — в стопку строк-карточек. Раскладка переключается через <code>@container</code>, поэтому макет ниже — настоящий мобильный вид, а не картинка.</p>
+    <div class="sl-pmdemo-phones">
+
+      <figure class="sl-pmdemo-phone">
+        <figcaption>Список, 390&nbsp;px</figcaption>
+        <div class="sl-pmbox">
+          <nav class="sl-pmbox-rail" aria-label="Папки">
+            <a class="sl-pmbox-fold sl-cat-tone-0" href="#" aria-current="page"><b>Входящие</b><span class="sl-but-mini">8</span></a>
+            <a class="sl-pmbox-fold sl-cat-tone-1" href="#"><b>Исходящие</b><span class="sl-but-mini sl-is-soft">17</span></a>
+            <a class="sl-pmbox-fold sl-cat-tone-2" href="#"><b>Сохранённые</b><span class="sl-but-mini sl-is-soft">6</span></a>
+          </nav>
+          <div>
+            <div class="sl-pmbox-bar">
+              <form class="sl-search-form" role="search" action="#" method="post">
+                <label class="sl-visually-hidden" for="pmbox-q-m">Поиск</label>
+                <input id="pmbox-q-m" type="search" placeholder="Поиск">
+                <button type="submit" title="Найти"><i class="bi bi-search" aria-hidden="true"></i></button>
+              </form>
+            </div>
+            <div class="sl-pmbox-list">
+              <table class="sl-table-list">
+                <thead class="sl-table-head"><tr><th class="sl-col-check">&nbsp;</th><th>Заголовок</th><th>Отправитель</th><th>Дата</th><th>Опции</th></tr></thead>
+                <tbody>
+                  <tr class="sl-table-row sl-pmbox-row-new">
+                    <td class="sl-table-cell sl-col-check"><input type="checkbox" class="sl-check" title="Отметить"></td>
+                    <td class="sl-table-cell"><a class="sl-pmbox-subj" href="#">Ошибка при обновлении с 6.2 на 6.3</a><small class="sl-pmbox-snip">После setup/update ловлю 500 на admin.php&hellip;</small></td>
+                    <td class="sl-table-cell"><span class="sl-pmbox-from"><img src="../templates/lite/images/avatars/presets/001.svg" alt=""><span>Крамской</span></span></td>
+                    <td class="sl-table-cell"><span class="sl-chip sl-chip-info"><i class="bi bi-clock-history" aria-hidden="true"></i> 12.08 14:32</span></td>
+                    <td class="sl-table-cell"><span class="sl-pmbox-acts"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Сохранить"><i class="bi bi-archive" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></td>
+                  </tr>
+                  <tr class="sl-table-row">
+                    <td class="sl-table-cell sl-col-check"><input type="checkbox" class="sl-check" title="Отметить"></td>
+                    <td class="sl-table-cell"><a class="sl-pmbox-subj" href="#">Счёт №2418 оплачен, отгрузка сегодня</a><small class="sl-pmbox-snip">Платёж прошёл, статус заказа переведён&hellip;</small></td>
+                    <td class="sl-table-cell"><span class="sl-pmbox-from"><img src="../templates/lite/images/avatars/presets/012.svg" alt=""><span>admin_shop</span></span></td>
+                    <td class="sl-table-cell"><span class="sl-chip sl-chip-info"><i class="bi bi-clock-history" aria-hidden="true"></i> 11.08 19:47</span></td>
+                    <td class="sl-table-cell"><span class="sl-pmbox-acts"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Сохранить"><i class="bi bi-archive" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </figure>
+
+      <figure class="sl-pmdemo-phone">
+        <figcaption>Чтение и ответ, 390&nbsp;px</figcaption>
+        <article class="sl-pmbox-read">
+          <header class="sl-pmbox-read-head">
+            <h3>Ошибка при обновлении с 6.2 на 6.3</h3>
+            <span class="sl-pmbox-acts">
+              <a class="sl-but-mini" href="#" title="Ответить"><i class="bi bi-reply" aria-hidden="true"></i></a>
+              <a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a>
+            </span>
+          </header>
+          <div class="sl-pmbox-read-meta">
+            <span class="sl-chip sl-chip-neutral"><i class="bi bi-person" aria-hidden="true"></i> Крамской</span>
+            <span class="sl-chip sl-chip-info"><i class="bi bi-clock-history" aria-hidden="true"></i> 12.08 14:32</span>
+          </div>
+          <div class="sl-pmbox-read-body">
+            <p>Добрый день! Обновлял тестовый сайт с 6.2.4 на 6.3, скрипт setup отработал без ошибок, но после входа в админку получаю 500 на любом разделе.</p>
+          </div>
+          <form class="sl-pmbox-reply" action="#" method="post">
+            <label class="sl-visually-hidden" for="pmbox-reply-m">Ответ</label>
+            <div class="sl-pm-editor" data-sl-pm-editor="pmbox-reply-m" data-sl-pm-height="230" data-sl-pm-placeholder="Ответ&hellip;">
+              <textarea id="pmbox-reply-m" name="text" rows="15" style="display:none"></textarea>
+              <div id="pmbox-reply-m_toast"></div>
+            </div>
+            <div class="sl-pmbox-reply-foot"><input type="submit" class="sl-but" value="Отправить"></div>
+          </form>
+        </article>
+      </figure>
+
+    </div>
+  </section>
+
+</main>
+
+<script>
+/* Демонстрационное поведение: чипсы-фильтры и «отметить все». Никаких зависимостей. */
+document.querySelectorAll('.sl-pmbox-filters').forEach(function (box) {
+  box.addEventListener('click', function (ev) {
+    var but = ev.target.closest('button');
+    if (!but) return;
+    box.querySelectorAll('button').forEach(function (one) { one.setAttribute('aria-pressed', String(one === but)); });
+  });
+});
+document.querySelectorAll('.sl-pmbox-list').forEach(function (form) {
+  var all = form.querySelector('thead .sl-check');
+  if (!all) return;
+  all.addEventListener('change', function () {
+    form.querySelectorAll('tbody .sl-check').forEach(function (one) { one.checked = all.checked; });
+  });
+});
+</script>
+
+<!-- Реальный редактор сообщений: те же файлы, что подключает драйвер plugins/editors/toastui -->
+<script src="../plugins/editors/toastui/assets/toastui-editor.all.min.js"></script>
+<script src="../plugins/editors/toastui/assets/i18n/ru-ru.js"></script>
+<script src="../plugins/editors/toastui/assets/i18n/emoji-ru.js"></script>
+<script src="../plugins/editors/toastui/assets/editor-tags.js"></script>
+<script src="../plugins/editors/toastui/assets/editor-emoji.js"></script>
+<script src="../plugins/editors/toastui/assets/editor-upload.js"></script>
+<script>
+/* Монтирование Toast UI так же, как это делает EditorToastUi::getWidget(): скрытая textarea — источник, соседний div — сам редактор */
+document.querySelectorAll('[data-sl-pm-editor]').forEach(function (box) {
+  var id = box.getAttribute('data-sl-pm-editor');
+  var ta = document.getElementById(id);
+  var mount = document.getElementById(id + '_toast');
+  var root = window.toastui && window.toastui.Editor;
+  if (!ta || !mount || !root) return;
+  var ed = new root({
+    el: mount,
+    initialEditType: 'markdown',
+    initialValue: ta.value,
+    placeholder: box.getAttribute('data-sl-pm-placeholder') || '',
+    height: (box.getAttribute('data-sl-pm-height') || '300') + 'px',
+    language: 'ru-RU',
+    autofocus: false,
+    usageStatistics: false
+  });
+  if (window.SlaedToastUi) {
+    window.SlaedToastUi.register(id, ed, {
+      super: false,
+      tpl: 'js-slaed-editor-tpl',
+      labels: {
+        quote: 'Цитировать', hide: 'Скрытый текст', tabs: 'Вкладки', emoji: 'Смайлы',
+        fullscreen: 'Развернуть редактор на весь экран', exitfull: 'Свернуть редактор',
+        insert: 'Вставить изображение', image: 'Изображение', attach: 'Прикрепить файл'
+      }
+    });
+  }
+  ed.on('change', function () { ta.value = ed.getMarkdown(); });
+});
+</script>
+</body>
+</html>
