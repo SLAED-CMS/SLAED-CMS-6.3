@@ -1486,6 +1486,7 @@
     // The reply form stands below the swapped region and lives the whole visit, so the answer that opened a message hands its source over in a carrier textarea instead of redrawing the form
     // The editor is filled through its own API: writing the hidden textarea alone changes what the form would send but not a character of what the writer sees
     // The carrier is removed once it has been read, so a later swap never finds the text of the message before it
+    // The recipient is announced only when it really changed: reading three messages from one person would otherwise cost three identical card lookups over that person's mailbox
     function setPrivatCarry(root) {
         var carry = root && root.querySelector ? root.querySelector('[data-sl-pm-carry]') : null;
         if (!carry) return;
@@ -1493,7 +1494,11 @@
         if (form) {
             var to = form.querySelector('[name="name"]');
             var head = form.querySelector('[name="title"]');
-            if (to) to.value = carry.getAttribute('data-sl-pm-name') || '';
+            if (to) {
+                var was = to.value;
+                to.value = carry.getAttribute('data-sl-pm-name') || '';
+                if (to.value !== was) to.dispatchEvent(new Event('input', { bubbles: true }));
+            }
             if (head) head.value = carry.getAttribute('data-sl-pm-title') || '';
             var area = form.querySelector('textarea[name="text"]');
             var api = window.SlaedToastUi;
@@ -1506,6 +1511,39 @@
             }
         }
         if (carry.parentNode) carry.parentNode.removeChild(carry);
+    }
+
+    // «Clear the form» empties the compose state through the editor API the carrier fills it with, because writing the hidden textarea leaves what the writer sees untouched
+    // The recipient is cleared through an input event, so the card beside the field leaves with the name it was drawn for instead of standing under an empty field
+    function setPrivatWipe() {
+        var form = document.getElementById('prform');
+        if (!form) return;
+        var to = form.querySelector('[name="name"]');
+        var head = form.querySelector('[name="title"]');
+        var area = form.querySelector('textarea[name="text"]');
+        var api = window.SlaedToastUi;
+        var edit = (area && api && typeof api.getEditor === 'function') ? api.getEditor(area.id) : null;
+        if (head) head.value = '';
+        if (edit && typeof edit.setMarkdown === 'function') {
+            edit.setMarkdown('');
+            syncEditorValue(area.id, edit);
+        } else if (area) {
+            area.value = '';
+        }
+        if (!to) return;
+        to.value = '';
+        to.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    // Where the reader continues after asking to answer: the editor itself when there is one, and the form otherwise
+    // The carrier fills the editor after the swap, so focusing it before the answer arrives costs nothing and saves the reader the scroll
+    function setPrivatReply() {
+        var form = document.getElementById('prform');
+        var area = form ? form.querySelector('textarea[name="text"]') : null;
+        var api = window.SlaedToastUi;
+        var edit = (area && api && typeof api.getEditor === 'function') ? api.getEditor(area.id) : null;
+        if (edit && typeof edit.focus === 'function') edit.focus();
+        else if (form && form.scrollIntoView) form.scrollIntoView({ block: 'nearest' });
     }
 
     // One row at a time carries the open mark: the answer that opened a message redraws only that row, so the row it replaced has to be cleared here
@@ -1568,19 +1606,16 @@
             tools.requestSubmit();
             return;
         }
+        if (event.target.closest('[data-sl-pm-wipe]')) {
+            setPrivatWipe();
+            return;
+        }
         if (event.target.closest('[data-sl-pm-back]')) {
             setPrivatPane('list');
             return;
         }
-        if (event.target.closest('[data-sl-pm-reply]')) {
-            var form = document.getElementById('prform');
-            var area = form ? form.querySelector('textarea[name="text"]') : null;
-            var api = window.SlaedToastUi;
-            var edit = (area && api && typeof api.getEditor === 'function') ? api.getEditor(area.id) : null;
-            if (edit && typeof edit.focus === 'function') edit.focus();
-            else if (form && form.scrollIntoView) form.scrollIntoView({ block: 'nearest' });
-            return;
-        }
+        // A reply from the deck opens the message and moves to the form in one click, so this no longer ends the handler: the element it sits on may be an opening one too
+        if (event.target.closest('[data-sl-pm-reply]')) setPrivatReply();
         var open = event.target.closest('[hx-target="#prview"]');
         if (!open) return;
         var item = open.closest('.sl-pmf-item');

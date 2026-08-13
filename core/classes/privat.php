@@ -83,6 +83,12 @@ final class Privat {
         return $pre.'uidin = :uid AND '.$pre.'delin = 0 AND '.$pre.'saved = 0';
     }
 
+    # The predicate of everything one reader has received and not opened, across both mailboxes it can sit in, optionally through a table alias
+    # It is written once because two consumers read it, the cabinet badge and the focus deck, and a badge counting one thing while the deck shows another is a defect nobody can see
+    private function getNewWhere(string $pre = ''): string {
+        return $pre.'uidin = :uid AND '.$pre.'delin = 0 AND '.$pre.'viewed = 0';
+    }
+
     # The predicate one participant reaches their own copy of a single message through, which is what every mutation authorizes itself with
     private function getSideWhere(PrivatBox $box, string $pre = ''): string {
         if ($box === PrivatBox::Outbox) return $pre.'uidout = :uid AND '.$pre.'delout = 0';
@@ -319,10 +325,13 @@ final class Privat {
         return $row && !empty($row['hot']);
     }
 
-    # Report whether the mailbox of the recipient has no room left, over both quotas the module carries
+    # Report whether the inbox of the recipient has no room left, which is the only mailbox an arriving message can land in
+    # A stored row carries no saved flag of its own, so it is always received into the inbox and the saved folder cannot refuse it
+    # That folder has its own quota and setMessageSaved() is where it is enforced, over what a batch really adds, at the moment the reader moves a message into it
+    # A setting of zero is the absence of a bound and never a bound of zero: it is what the outbox answers, what the ring draws as unmeasured, and what both alerts already read it as
     private function checkQuota(int $uid): bool {
-        return $this->getMessageCount($uid, PrivatBox::Inbox) >= $this->getBoxLimit(PrivatBox::Inbox)
-            || $this->getMessageCount($uid, PrivatBox::Saved) >= $this->getBoxLimit(PrivatBox::Saved);
+        $max = $this->getBoxLimit(PrivatBox::Inbox);
+        return $max > 0 && $this->getMessageCount($uid, PrivatBox::Inbox) >= $max;
     }
 
     # The quota one mailbox answers to, read from the settings this class already holds, so nothing outside it has to know which setting bounds which box
@@ -350,7 +359,7 @@ final class Privat {
     # Count the messages one account has not opened yet, saved ones included: a message saved without being read is still unread
     public function getUnreadCount(int $uid): int {
         if ($uid < 1) return 0;
-        return $this->getTotal('uidin = :uid AND delin = 0 AND viewed = 0', ['uid' => $uid]);
+        return $this->getTotal($this->getNewWhere(), ['uid' => $uid]);
     }
 
     # Count the unopened messages of one mailbox, which is the badge of one shelf and not the counter of the cabinet
@@ -405,14 +414,19 @@ final class Privat {
     }
 
     # Return the newest messages of one inbox for the dashboard preview, which is the inbox list without its pager
-    public function getRecentList(int $uid, int $num = 6): array {
+    # Asked for the unread it answers the cabinet badge predicate, which spans both received mailboxes: a message saved without being read is the one still waiting for attention
+    # That predicate is the one getUnreadCount() counts, so the deck and the badge above it can never disagree about what is unread
+    # Both shapes answer the snippet the dense row shows, because one row shape out of this class is what keeps a consumer from ever cutting a body of its own
+    public function getRecentList(int $uid, int $num = 6, bool $new = false): array {
         if ($uid < 1 || $num < 1) return [];
-        $sql = 'SELECT p.'.str_replace(', ', ', p.', self::FIELDS).', u.name, u.avatar FROM '.PREFIX_DB.'_privat AS p'
-            .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidout = u.id) WHERE '.$this->getBoxWhere(PrivatBox::Inbox, 'p.')
+        $where = $new ? $this->getNewWhere('p.') : $this->getBoxWhere(PrivatBox::Inbox, 'p.');
+        $sql = 'SELECT p.'.str_replace(', ', ', p.', self::FIELDS).', LEFT(p.body, '.self::SNIPCUT.') AS snip, u.name, u.avatar FROM '.PREFIX_DB.'_privat AS p'
+            .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidout = u.id) WHERE '.$where
             .' ORDER BY p.time DESC, p.id DESC LIMIT 0, '.intval($num);
         $out = [];
         foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql, ['uid' => $uid])) ?: [] as $row) {
-            $out[] = $this->getRowData($row) + $this->getMateData($row, PrivatBox::Inbox);
+            $out[] = $this->getRowData($row) + $this->getMateData($row, PrivatBox::Inbox)
+                + ['snip' => $this->filterSnippet((string)($row['snip'] ?? ''))];
         }
         return $out;
     }
@@ -528,6 +542,7 @@ final class Privat {
     # The quota counts what the batch would really add, so re-saving a saved message costs nothing and a full folder refuses the whole batch
     # A batch locks only the rows it names, so two of them would both read a folder with room: the account is locked before the folder is counted, which is the row a send locks too
     # Taking that lock before the rows of the batch is what puts this write in the same order as a send, and only the branch that reads the quota needs it at all
+    # A folder no setting bounds is counted against nothing: zero is the absence of a bound here as everywhere else, so neither of the two reads behind it is made
     public function setMessageSaved(int $uid, array $ids, bool $keep): bool {
         $ids = $this->getIdList($ids);
         if ($uid < 1 || !$ids) return false;
@@ -535,11 +550,12 @@ final class Privat {
         if ($own && !$this->db->setSqlBegin()) return false;
         if ($keep && $this->getUserLock($uid, $uid) === false) return $this->getFailed($own);
         if (!$this->checkOwner($uid, $ids, PrivatBox::Inbox)) return $this->getFailed($own);
-        if ($keep) {
+        $max = ($keep) ? $this->getBoxLimit(PrivatBox::Saved) : 0;
+        if ($max > 0) {
             [$keys, $pars] = $this->getIdBind($ids);
             $pars['uid'] = $uid;
             $add = $this->getTotal('id IN ('.$keys.') AND '.$this->getSideWhere(PrivatBox::Inbox).' AND saved = 0', $pars);
-            if ($this->getMessageCount($uid, PrivatBox::Saved) + $add > $this->getBoxLimit(PrivatBox::Saved)) return $this->getFailed($own);
+            if ($this->getMessageCount($uid, PrivatBox::Saved) + $add > $max) return $this->getFailed($own);
         }
         if (!$this->setMessageFlag($uid, $ids, 'saved', $keep ? 1 : 0)) return $this->getFailed($own);
         if ($own && !$this->db->setSqlCommit()) return $this->getFailed($own);

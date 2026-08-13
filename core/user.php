@@ -671,6 +671,67 @@ function getPrivatShelves(int $typ = 1): string {
     return $tpl->getHtmlFrag('privat-shelves', ['nav_label' => _PRIVAT, 'items' => $items]);
 }
 
+# The focus deck: the unread of both received mailboxes as cards above the list, so what still wants attention is not buried on page four of a mailbox
+# It reads the predicate of the cabinet badge and never a mailbox, because a message saved without being read is exactly the one that still needs answering
+# The deck is a snapshot like everything else the page renders: an action taken inside it moves the badges and redraws the list, and the deck itself stays as it was drawn
+# Nothing unread means no deck at all rather than an empty one, which is why this answers an empty string and the shell prints nothing where it stood
+# It stands over the inbox and nowhere else: the outbox has no unread of its own to answer for, a saved message is not going anywhere, and «write» is an action and not a mailbox
+# Every action of a slot names the inbox, because that is the list under the deck and the one an answer redraws; the subsystem authorizes each of them by the reader's own side
+# Each of them carries the page, the search, the filters and the sort the reader is holding, so acting from the deck lands back on the selection the list was drawn under
+# The tail counts what the cap left out and sends the reader to the mailbox filter that comes closest to the deck, which is the inbox unread and not the saved one
+function getPrivatFocus(int $typ = 1): string {
+    global $conf, $user, $tpl, $prv;
+    if (!is_user() || !$conf['privat']['act'] || $typ !== 1) return '';
+    $uid = intval($user[0]);
+    $new = $prv->getUnreadCount($uid);
+    if ($new < 1) return '';
+    $rows = $prv->getRecentList($uid, 6, true);
+    $tok = getSiteToken();
+    $past = date('Y-m-d', strtotime('-1 day'));
+    $state = '&pnum='.getVar('req', 'pnum', 'num', 1).getPrivatPick()['link'];
+    $slots = [];
+    foreach ($rows as $one) {
+        $when = strtotime($one['time']);
+        $open = 'index.php?go=1&op=setPrivateMessageRead&id='.$one['id'].'&cid=1';
+        $base = 'index.php?go=1&op=updatePrivatBox&typ=1'.$state.'&id%5B%5D='.$one['id'].'&act=';
+        $mkact = static fn(string $href, string $title, string $icon, bool $view = false, bool $reply = false): array => [
+            'href' => $href, 'title' => $title, 'icon' => $icon, 'is_reply' => $reply,
+            'target' => $view ? 'prview' : 'prlist', 'confirm' => ($icon === 'trash') ? (string)_ONDELETE : '',
+        ];
+        $acts = [$mkact($open, (string)_SHOW, 'eye', true), $mkact($open, (string)_PRREP, 'reply', true, true)];
+        $acts[] = $mkact($base.'read', (string)_PRIVAT_READ, 'check2');
+        $acts[] = $one['saved']
+            ? $mkact($base.'unsave', (string)_PRIVAT_UNSAVE, 'bookmark-dash')
+            : $mkact($base.'save', (string)_SAVE, 'archive');
+        $acts[] = $mkact($base.'delete', (string)_DELETE, 'trash');
+        $slots[] = [
+            'avatar' => ($one['name'] !== '') ? getUserAvatarUrl(['avatar' => $one['avatar']]) : getUserAvatarUrl([], true),
+            'author' => ($one['name'] !== '') ? $one['name'] : (string)_ANONYM,
+            'stamp' => date('Y-m-d\TH:i', $when),
+            'when' => match (true) {
+                date('Y-m-d', $when) === date('Y-m-d') => date('H:i', $when),
+                date('Y-m-d', $when) === $past => (string)_YESTERDAY,
+                default => date('d.m', $when),
+            },
+            'title' => $one['title'],
+            'snip' => $one['snip'],
+            'href' => 'index.php?name=account&op=privat&id='.$one['id'],
+            'open' => $open,
+            'is_keep' => $one['saved'] > 0,
+            'acts' => $acts,
+        ];
+    }
+    return $tpl->getHtmlFrag('privat-focus', [
+        'label' => (string)_PRFOCUS,
+        'count' => sprintf(_PRFOCUSN, $new),
+        'token' => $tok,
+        'slots' => $slots,
+        'more' => ($new > count($slots)) ? (string)($new - count($slots)) : '',
+        'more_label' => (string)_MORE,
+        'more_href' => 'index.php?name=account&op=privat&typ=1&stat=unread',
+    ]);
+}
+
 # The three navigation counters one mutation moves, rendered as out-of-band swaps beside the answer that carries them
 # They answer the mailbox and never the current selection, so a filter that hides everything still leaves the shelves counting what is really there
 # The two shelf badges split the unread between the inbox and the saved box and add up to the cabinet one, which is why all three travel together
@@ -723,7 +784,7 @@ function getPrivatRowData(array $row, int $typ, string $tok, int $pick = 0, stri
     global $tpl;
     $when = strtotime($row['time']);
     $past = date('Y-m-d', strtotime('-1 day'));
-    $link = 'index.php?go=1&op=setPrivateMessageRead&id='.$row['id'].'&cid='.(($typ == 2) ? 2 : 1).$state;
+    $link = 'index.php?go=1&op=setPrivateMessageRead&id='.$row['id'].'&cid='.(($typ == 2) ? 2 : 1).'&row=1'.$state;
     $base = 'index.php?go=1&op=updatePrivatBox&typ='.$typ.$state.'&id%5B%5D='.$row['id'].'&act=';
     $mkact = static fn(string $href, string $title, string $icon, bool $stay = false): array => [
         'href' => $href, 'title' => $title, 'icon_name' => $icon,
@@ -779,6 +840,7 @@ function getPrivatRowData(array $row, int $typ, string $tok, int $pick = 0, stri
 # The right column carries what the reply form has to hold in a hidden textarea of its own, because that form stands below the swapped region and is filled through the editor API and never by writing its field
 # The bulk action and its button stand in the footer of the column while the selection lives in the scrolling form above it, so both are bound back to that form by name instead of by nesting
 # Only a caller that names no column at all is answered from the request: zero means the empty pane, and a page that asks for it while the address carries a mailbox must not be handed that mailbox instead
+# The compose state names what bounds a send before the writer runs into it: the interval out of the settings, and the two lengths the stored columns allow
 function getPrivateMessageView(string|array $stop = '', string $info = '', int $typ = -1, array $view = []): string {
     global $db, $user, $conf, $tpl, $prs, $prv;
     if (!is_user() || !$conf['privat']['act']) return $tpl->getHtmlFrag('alert', ['text' => _ERROR, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
@@ -871,14 +933,33 @@ function getPrivateMessageView(string|array $stop = '', string $info = '', int $
     if ($typ == 4) {
         if (!$view) {
             $post = filterText(mb_substr(urldecode((string)getVar('req', 'uname', 'raw', '')), 0, 25));
+            $back = '';
+            $head = '';
+            $from = getVar('req', 'id', 'num', 0);
+            if ($from && getVar('req', 'fwd', 'num', 0) == 1) {
+                $side = (getVar('req', 'cid', 'num', 0) == 2) ? PrivatBox::Outbox : PrivatBox::Inbox;
+                $old = $prv->getMessageView($uid, $from, $side);
+                if ($old) {
+                    $post = '';
+                    $back = (getEditorMode() !== 'html') ? getDecodedText(replace_break($old['body'])) : $old['body'];
+                    $head = _PRFWD.': '.$old['title'];
+                }
+            }
+            $wait = intval($conf['privat']['send']);
+            $chips = $wait ? $tpl->getHtmlFrag('span', ['title' => '', 'chip_tone' => 'info', 'icon_name' => 'hourglass-split', 'text' => sprintf(_PRWAIT, $wait)]) : '';
+            $chips .= $tpl->getHtmlFrag('span', ['title' => '', 'chip_tone' => 'neutral', 'icon_name' => 'person', 'text' => sprintf(_PRLIMTO, 25)]);
+            $chips .= $tpl->getHtmlFrag('span', ['title' => '', 'chip_tone' => 'neutral', 'icon_name' => 'type', 'text' => sprintf(_PRLIMSUB, 100)]);
             return $tpl->getHtmlPart('privat-view', [
                 'alert_html' => $note,
                 'token' => $tok,
                 'title' => (string)_PRNEW,
-                'is_carry' => $post !== '' || $info !== '',
+                'chips_html' => $chips,
+                'is_wipe' => true,
+                'wipe_label' => (string)_PRWIPE,
+                'is_carry' => $post !== '' || $head !== '' || $info !== '',
                 'carry_name' => $post,
-                'carry_title' => '',
-                'carry_body' => '',
+                'carry_title' => $head,
+                'carry_body' => $back,
             ]);
         }
         $sql = 'SELECT u.id, u.name, u.avatar, u.website, u.sig, g.name AS gname FROM '.PREFIX_DB.'_users AS u'
@@ -945,6 +1026,8 @@ function getPrivateMessageView(string|array $stop = '', string $info = '', int $
             'sig_html' => ($mate['sig'] ?? '') ? $prs->filterContent((string)$mate['sig'], false, $conf['name'], 2) : '',
             'is_reply' => true,
             'reply_label' => (string)_PRREP,
+            'forward_href' => 'index.php?go=1&op=getPrivateMessageView&typ=4&id='.$view['id'].'&fwd=1&cid='.($mine ? 1 : 2),
+            'forward_label' => (string)_PRFORWARD,
             'acts' => $acts,
             'is_carry' => true,
             'carry_name' => $pname,
@@ -1023,6 +1106,8 @@ function addPrivateMessage(): void {
 # Open one message of a mailbox and answer the right column of the layout, with the row it changed and the navigation counters as out-of-band swaps beside it
 # Opening a received message is what marks it read, so this is a POST route and not a link: the row is read once here and handed to the view instead of being read a second time
 # Only a read that really changed something carries the out-of-band part: a message that was open already moves no counter and leaves its row exactly as the list drew it
+# The row travels back only where the caller stands on it: a list row asks, the deck and the deep link do not, because a swap with no target is an error and not a no-op
+# What that costs is one stale mark in a list the reader is not looking at, which is the snapshot the whole page already is, and the next list request draws it right
 # Nothing else follows the mutation: the filtered total, the pager and the row set are what the last list request answered, and they come back into line on the next one
 # A message the reader holds no copy of answers the empty pane, because an id alone is not a permission and a refusal has nothing to show
 # The row it swaps back carries the selection it was drawn under, so its own actions still answer the same page, filter, search and sort the reader is looking at
@@ -1044,14 +1129,17 @@ function setPrivateMessageRead(): void {
     if ($seen) $view['viewed'] = 1;
     echo getPrivateMessageView('', '', 4, $view);
     if (!$seen) return;
-    $state = '&pnum='.getVar('req', 'pnum', 'num', 1).getPrivatPick()['link'];
-    echo $tpl->getHtmlFrag('privat-row', getPrivatRowData($view, $view['saved'] ? 3 : 1, getSiteToken(), $id, $state) + ['is_oob' => true]);
+    if (getVar('req', 'row', 'num', 0) == 1) {
+        $state = '&pnum='.getVar('req', 'pnum', 'num', 1).getPrivatPick()['link'];
+        echo $tpl->getHtmlFrag('privat-row', getPrivatRowData($view, $view['saved'] ? 3 : 1, getSiteToken(), $id, $state) + ['is_oob' => true]);
+    }
     echo getPrivatBadges();
 }
 
 # Apply one mailbox action to the messages a view has selected and answer that mailbox again
 # One row action and a bulk action are the same request with one id or many, so a mailbox has one mutation route and every selection travels through the same checks
 # The action is taken from the fixed set its own mailbox offers, and every submitted id is rechecked against the reader inside the transaction of the subsystem
+# The inbox offers unsave too, because the focus deck stands over it and shows saved messages never read: the write authorizes itself by the reader's own side either way
 # An empty selection is a mistake and says so; an action a mailbox never offered can only come from a forged request and answers the generic error
 # The full-folder message is kept for a folder that really cannot take the batch, so a save refused for any other reason is not reported as a quota that was never reached
 function updatePrivatBox(): void {
@@ -1065,7 +1153,7 @@ function updatePrivatBox(): void {
     $keep = match ($typ) {
         2 => ['delete'],
         3 => ['read', 'unread', 'unsave', 'delete'],
-        default => ['read', 'unread', 'save', 'delete'],
+        default => ['read', 'unread', 'save', 'unsave', 'delete'],
     };
     if (!$uid || !$conf['privat']['act'] || !in_array($act, $keep, true)) {
         echo getPrivateMessageView((string)_ERROR, '', $typ);

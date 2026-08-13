@@ -112,7 +112,7 @@ function getProbeIds(array $out): array {
     return array_map('intval', array_column($out['rows'], 'id'));
 }
 
-# Every mailbox read of the plan against the fixture: the three boxes, both counters, the preview, the pager and the guest
+# Every mailbox read of the plan against the fixture: the three boxes, both counters, the preview, the deck, the pager and the guest
 function getProbeBoxes(): array {
     setProbeSeed();
     $prv = getProbeMail();
@@ -143,6 +143,10 @@ function getProbeBoxes(): array {
             $prv->getUnreadBoxCount(2, PrivatBox::Outbox), $prv->getUnreadBoxCount(0, PrivatBox::Inbox),
         ],
         'recent' => array_map('intval', array_column($prv->getRecentList(2), 'id')),
+        'deck' => array_map('intval', array_column($prv->getRecentList(2, 6, true), 'id')),
+        'deckcap' => array_map('intval', array_column($prv->getRecentList(2, 1, true), 'id')),
+        'decksnip' => [$prv->getRecentList(2, 1, true)[0]['snip'] ?? null, $prv->getRecentList(2, 1)[0]['snip'] ?? null],
+        'deckguest' => count($prv->getRecentList(0, 6, true)),
         'mate' => array_column($prv->getMessageList(2, PrivatBox::Inbox)['rows'], 'name'),
         'guest' => [$prv->getMessageCount(0, PrivatBox::Inbox), $prv->getUnreadCount(0), count($prv->getRecentList(0)), count(getProbeIds($none))],
         'pages' => [$one['pages'], getProbeIds($page->getMessageList(2, PrivatBox::Inbox, 1)), getProbeIds($page->getMessageList(2, PrivatBox::Inbox, 2))],
@@ -199,6 +203,7 @@ function getProbeViews(): array {
 }
 
 # Every refusal of the send path and the one accepted send, whose id is checked against the row that was really written
+# The saved scenario is an acceptance and not a refusal: a full saved folder leaves the inbox with room, and the inbox is where an arriving message lands
 function getProbeSend(): array {
     setProbeSeed();
     $prv = getProbeMail();
@@ -215,7 +220,10 @@ function getProbeSend(): array {
     $out['selfok'] = getProbeMail(['himself' => 0])->addMessage(2, 'anna', 'title', 'body', '127.0.0.1')['error'];
     setProbeSeed();
     $out['quota'] = getProbeMail(['messin' => 2])->addMessage(3, 'anna', 'title', 'body', '127.0.0.1')['error'];
+    setProbeSeed();
     $out['keptquota'] = getProbeMail(['messsav' => 2])->addMessage(3, 'anna', 'title', 'body', '127.0.0.1')['error'];
+    setProbeSeed();
+    $out['freequota'] = getProbeMail(['messin' => 0])->addMessage(3, 'anna', 'title', 'body', '127.0.0.1')['error'];
     setProbeSeed();
     $new = $prv->addMessage(3, 'anna', 'probe subject', 'probe text', '10.0.0.7');
     $out['sent'] = [$new['error'], $new['id'] > 8];
@@ -249,13 +257,15 @@ function getProbeFlags(): array {
     return $out;
 }
 
-# The saved quota at its boundary, over what a batch would really add rather than over its size
+# The saved quota at its boundary, over what a batch would really add rather than over its size, and the folder that is bounded by no setting at all
 function getProbeQuota(): array {
     setProbeSeed();
     $out = [];
     $out['full'] = [getProbeMail(['messsav' => 2])->setMessageSaved(2, [1], true), getProbeRow(1)];
     $out['again'] = [getProbeMail(['messsav' => 2])->setMessageSaved(2, [3], true), getProbeRow(3)];
     $out['room'] = [getProbeMail(['messsav' => 3])->setMessageSaved(2, [1], true), getProbeRow(1)];
+    setProbeSeed();
+    $out['nolimit'] = [getProbeMail(['messsav' => 0])->setMessageSaved(2, [1], true), getProbeRow(1)];
     return $out;
 }
 

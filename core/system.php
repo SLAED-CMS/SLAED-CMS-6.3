@@ -4853,18 +4853,51 @@ function is_moder(string $modul = ''): int {
     }
 }
 
-# Search user name
+# Search user name: the flat array of names twelve forms read, and the richer answer only the compose field of the private message page asks for
+# Both shapes are bounded, the richer one tighter: a suggestion list nobody can read to the end is a page of a database and not an answer to a reader
+# The card belongs to the name that resolved exactly and never to a suggestion, so one keystroke costs one lookup of one account instead of one for every row offered
 function getUserList(): void {
- global $db;
+    global $db;
     $let = analyze_name(getVar('get', 'term', 'text', ''));
+    $rich = getVar('get', 'rich', 'num', 0) == 1;
     $name = [];
     if ($let) {
-        $result = $db->getSqlQuery('SELECT name FROM '.PREFIX_DB.'_users WHERE name LIKE :name ORDER BY name ASC', ['name' => $let.'%']);
-        while (list($user_name) = $db->getSqlRow($result)) $name[] = $user_name;
+        $sql = 'SELECT name FROM '.PREFIX_DB.'_users WHERE name LIKE :name ORDER BY name ASC LIMIT '.($rich ? 10 : 50);
+        $result = $db->getSqlQuery($sql, ['name' => $let.'%']);
+        while (list($uname) = $db->getSqlRow($result)) $name[] = $uname;
     }
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode($name, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    echo json_encode($rich ? ['items' => $name, 'card' => getUserCardData($let) ?: null] : $name, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     exit;
+}
+
+# The recipient card of the private message form: who a typed name resolves to, and how much room their mailbox still has, in one lookup for one account
+# Only an exact name is answered: a card drawn for every suggestion would cost one mailbox count per offered row, which is the N+1 this form exists without
+# The fill is read through the subsystem that owns the private message table, and it answers a grade and not the numbers: how full another member's mailbox is belongs to them
+# The grade folds the ladder that colours the shelves into the three steps a sender can act on: there is room, it is nearly full, and it will refuse the message
+# The inbox is the only mailbox read, because it is the only one an arriving message lands in and the only one a send is refused on
+# A mailbox no setting bounds is graded none rather than well: the shelves answer an unmeasured box the same way, and nothing measured is not the same as nothing wrong
+# A card is answered to a member only, and never before the module itself is on: a name that resolves to nobody answers nothing at all and the form sends exactly as it did
+function getUserCardData(string $name): array {
+    global $db, $conf, $prv;
+    $name = filterText(mb_substr($name, 0, 25));
+    if ($name === '' || !is_user() || empty($conf['privat']['act'])) return [];
+    $sql = 'SELECT u.id, u.name, u.avatar, u.lastvis, g.name AS gname FROM '.PREFIX_DB.'_users AS u'
+        .' LEFT JOIN '.PREFIX_DB.'_groups AS g ON ((g.extra = 1 AND u.grp = g.id) OR (g.extra != 1 AND u.points >= g.points))'
+        .' WHERE u.name = :name ORDER BY g.extra DESC, g.points DESC LIMIT 1';
+    $mate = $db->getSqlRow($db->getSqlQuery($sql, ['name' => $name]));
+    if (!$mate) return [];
+    ['has' => $has, 'max' => $max, 'part' => $part] = $prv->getBoxFill(intval($mate['id']), PrivatBox::Inbox);
+    $tone = ($max > 0) ? getPercentTone($part) : '';
+    $step = ($max < 1) ? 'none' : (($has >= $max) ? 'danger' : (in_array($tone, ['warn', 'danger'], true) ? 'warn' : 'ok'));
+    return [
+        'name' => (string)$mate['name'],
+        'avatar' => getUserAvatarUrl(['avatar' => (string)($mate['avatar'] ?? '')]),
+        'group' => ($mate['gname'] ?? '') ? _GROUP.': '.$mate['gname'] : (string)_RANK,
+        'seen' => ($mate['lastvis'] ?? '') ? _LAST_VISIT.': '.format_time((string)$mate['lastvis'], _TIMESTRING) : '',
+        'tone' => $step,
+        'fill' => match ($step) {'danger' => (string)_PRBOXFULL, 'warn' => (string)_PRBOXNEAR, 'ok' => (string)_PRBOXROOM, default => ''},
+    ];
 }
 
 # Analyze name

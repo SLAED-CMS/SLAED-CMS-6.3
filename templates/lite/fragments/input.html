@@ -19,6 +19,7 @@
     data-sl-user-search="{{{ endpoint_attr }}}"
     data-sl-user-token="{{ token_attr }}"
     data-sl-user-minlength="{{ minlength_num }}"
+    {% if card_attr %}data-sl-user-card="{{ card_attr }}"{% endif %}
     list="{{ list_id }}"
   {% endif %}
 

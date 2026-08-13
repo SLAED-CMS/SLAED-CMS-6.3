@@ -85,19 +85,46 @@ function syncNativeDateTimeInput(input) {
 	hidden.value = normalizeDateTimeValue(input.value, input.dataset.slDatetimeKind || '');
 }
 
+/* The card of the resolved account: the markup and its class names belong to the theme and stand on the page already, so only the named slots and the tone are written here */
+/* An answer that carries no card hides the container again, because a card left standing under a changed name would describe somebody else */
+function setUserCard(input, card) {
+	var boxId = input.dataset.slUserCard || '';
+	var box = boxId ? document.getElementById(boxId) : null;
+	if (!box) return;
+	box.setAttribute('data-sl-tone', card ? (card.tone || '') : '');
+	box.hidden = !card;
+	var slots = box.querySelectorAll('[data-sl-user-slot]');
+	for (var i = 0; i < slots.length; i++) {
+		var key = slots[i].getAttribute('data-sl-user-slot');
+		var text = card ? (card[key] || '') : '';
+		if (key !== 'avatar') {
+			slots[i].textContent = text;
+		} else if (text) {
+			slots[i].src = text;
+		} else {
+			slots[i].removeAttribute('src');
+		}
+	}
+}
+
 function fetchUserSuggestions(input) {
 	if (!input || !input.dataset || !input.dataset.slUserSearch) return;
 	var listId = input.getAttribute('list');
 	var minLength = parseInt(input.dataset.slUserMinlength || '1', 10);
+	var rich = !!input.dataset.slUserCard;
 	var value = input.value || '';
 	if (!listId) return;
 	var list = document.getElementById(listId);
 	if (!list) return;
 	if (value.length < minLength) {
 		list.innerHTML = '';
+		setUserCard(input, null);
 		return;
 	}
 	var url = input.dataset.slUserSearch.replace(/&amp;/g, '&') + '&term=' + encodeURIComponent(value);
+	if (rich) {
+		url += '&rich=1';
+	}
 	if (input.dataset.slUserToken) {
 		url += '&token=' + encodeURIComponent(input.dataset.slUserToken);
 	}
@@ -111,18 +138,34 @@ function fetchUserSuggestions(input) {
 		.then(function (response) {
 			return response.ok ? response.json() : [];
 		})
-		.then(function (items) {
-			if (input.value !== value || !Array.isArray(items)) return;
+		.then(function (answer) {
+			if (input.value !== value) return;
+			var data = answer || [];
+			var items = rich ? data.items : data;
 			list.innerHTML = '';
-			for (var i = 0; i < items.length; i++) {
-				var option = document.createElement('option');
-				option.value = items[i];
-				list.appendChild(option);
+			if (Array.isArray(items)) {
+				for (var i = 0; i < items.length; i++) {
+					var option = document.createElement('option');
+					option.value = items[i];
+					list.appendChild(option);
+				}
 			}
+			if (rich) setUserCard(input, data.card || null);
 		})
 		.catch(function () {
 			list.innerHTML = '';
+			setUserCard(input, null);
 		});
+}
+
+/* The lookup waits for the typing to settle: every keystroke used to open a request of its own and only the answers were dropped, never the requests themselves */
+var userSuggestTimers = new WeakMap();
+
+function setUserSuggestTimer(input) {
+	window.clearTimeout(userSuggestTimers.get(input));
+	userSuggestTimers.set(input, window.setTimeout(function () {
+		fetchUserSuggestions(input);
+	}, 250));
 }
 
 document.addEventListener('input', function (event) {
@@ -131,7 +174,7 @@ document.addEventListener('input', function (event) {
 		syncNativeDateTimeInput(target);
 	}
 	if (target && target.matches('input[data-sl-user-search]')) {
-		fetchUserSuggestions(target);
+		setUserSuggestTimer(target);
 	}
 });
 

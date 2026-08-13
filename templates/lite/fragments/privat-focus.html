@@ -1,0 +1,20 @@
+<details class="sl-pmf-focus" open>
+  <summary><i class="bi bi-lightning-charge" aria-hidden="true"></i> {{ label }} <small>{{ count }}</small></summary>
+  <div class="sl-pmf-deck">
+    {% for slot in slots %}
+    <article class="sl-pmf-slot{% if slot.is_keep %} sl-pmf-slot-keep{% endif %}">
+      <header class="sl-pmf-slot-top">
+        <img src="{{ slot.avatar }}" alt="">
+        <b title="{{ slot.author }}">{{ slot.author }}</b>
+        <time datetime="{{ slot.stamp }}">{{ slot.when }}</time>
+      </header>
+      <a class="sl-pmf-slot-subj" href="{{ slot.href }}" title="{{ slot.title }}" hx-post="{{ slot.open }}" hx-target="#prview" hx-swap="innerHTML" hx-push-url="false" hx-params="none" hx-headers='{"X-CSRF-TOKEN": "{{ token }}"}'>{{ slot.title }}</a>
+      {% if slot.snip %}<p>{{ slot.snip }}</p>{% endif %}
+      <footer class="sl-pmf-slot-acts">
+        {% for act in slot.acts %}<a class="sl-but-mini" href="{{ act.href }}" title="{{ act.title }}"{% if act.confirm %} data-sl-confirm="{{ act.confirm }}"{% endif %}{% if act.is_reply %} data-sl-pm-reply{% endif %} hx-post="{{ act.href }}" hx-target="#{{ act.target }}" hx-swap="innerHTML" hx-push-url="false" hx-params="none" hx-headers='{"X-CSRF-TOKEN": "{{ token }}"}'><i class="bi bi-{{ act.icon }}" aria-hidden="true"></i><span class="sl-visually-hidden">{{ act.title }}</span></a>{% endfor %}
+      </footer>
+    </article>
+    {% endfor %}
+    {% if more %}<a class="sl-pmf-slot-more" href="{{ more_href }}"><i class="bi bi-three-dots" aria-hidden="true"></i><span>{{ more_label }} {{ more }}</span></a>{% endif %}
+  </div>
+</details>

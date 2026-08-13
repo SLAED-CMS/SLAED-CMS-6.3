@@ -603,6 +603,7 @@ function privat(): void {
         echo $tpl->getHtmlFrag('title', ['title' => _PRIVAT, 'is_level_one' => true]).getUserNav()
             .$tpl->getHtmlPart('privat-page', [
                 'shelves_html' => getPrivatShelves($typ),
+                'focus_html' => getPrivatFocus($typ),
                 'find_url' => 'index.php?go=1&op=getPrivateMessageView',
                 'find' => $pick['find'],
                 'seek_label' => (string)_PRSEEK,
@@ -635,6 +636,7 @@ function privat(): void {
                     'input_id' => 'privat_message_name',
                     'list_id' => 'privat_message_name_list',
                     'maxlength' => 25,
+                    'card' => 'prmate',
                     'value' => ($typ == 4) ? $name : '',
                 ]),
                 'head_label' => (string)_TITLE,
@@ -653,6 +655,7 @@ function privat(): void {
                     'placeholder' => _MESSAGE,
                 ]),
                 'send_label' => (string)_SEND,
+                'wait_note' => intval($conf['privat']['send']) ? sprintf(_PRWAIT, intval($conf['privat']['send'])) : '',
             ]);
         setFoot();
     } else {

@@ -1,5 +1,6 @@
 <div class="sl-pmf-page">
   {{{ shelves_html }}}
+  {% if focus_html %}{{{ focus_html }}}{% endif %}
   <form class="sl-pmf-bar" id="prtools" role="search" action="index.php" method="get" hx-get="{{ find_url }}" hx-target="#prlist" hx-swap="innerHTML" hx-push-url="false" hx-params="not name,op" hx-trigger="submit, change from:#prsort">
     {{{ tools_html }}}
     <label class="sl-visually-hidden" for="prfind">{{ seek_label }}</label>
@@ -23,15 +24,27 @@
       <button type="button" class="sl-but sl-pmf-back" data-sl-pm-back><i class="bi bi-chevron-left" aria-hidden="true"></i>&nbsp; {{ back_label }}</button>
       <div id="prview">{{{ view_html }}}</div>
       {% if open_post %}<div hx-post="{{ open_post }}" hx-trigger="load" hx-target="#prview" hx-swap="innerHTML" hx-push-url="false" hx-headers='{"X-CSRF-TOKEN": "{{ token }}"}'></div>{% endif %}
-      <form class="sl-pmf-reply sl-pmf-compose" id="prform" action="{{ send_url }}" method="post" hx-post="{{ send_url }}" hx-target="#prview" hx-swap="innerHTML" hx-push-url="false">
+      <form class="sl-pmf-reply" id="prform" action="{{ send_url }}" method="post" hx-post="{{ send_url }}" hx-target="#prview" hx-swap="innerHTML" hx-push-url="false">
         {{{ token_html }}}
         <label class="sl-visually-hidden" for="privat_message_name">{{ to_label }}</label>
         {{{ to_html }}}
+        <div class="sl-pmf-who sl-pmf-mate" id="prmate" data-sl-tone="" hidden>
+          <img alt="" data-sl-user-slot="avatar">
+          <span>
+            <b data-sl-user-slot="name"></b>
+            <small><span data-sl-user-slot="group"></span><span data-sl-user-slot="seen"></span></small>
+            <span class="sl-chip" data-sl-user-slot="fill"></span>
+          </span>
+          <span class="sl-knob sl-knob-full" aria-hidden="true">
+            <svg class="sl-knob-svg" viewBox="0 0 44 44"><circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle></svg>
+            <i class="bi bi-inbox"></i>
+          </span>
+        </div>
         <label class="sl-visually-hidden" for="prtitle">{{ head_label }}</label>
         {{{ head_html }}}
         <label class="sl-visually-hidden" for="privat">{{ text_label }}</label>
         <div class="sl-pm-editor">{{{ editor_html }}}</div>
-        <div class="sl-pmf-reply-foot"><input type="submit" class="sl-but" value="{{ send_label }}" title="{{ send_label }}"></div>
+        <div class="sl-pmf-reply-foot"><input type="submit" class="sl-but" value="{{ send_label }}" title="{{ send_label }}">{% if wait_note %}<small>{{ wait_note }}</small>{% endif %}</div>
       </form>
     </section>
   </div>

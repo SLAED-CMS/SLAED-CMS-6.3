@@ -96,6 +96,19 @@ final class PrivatClassTest extends TestCase
         $this->assertSame($run['badgeout'][0], $run['shelf'][2], 'The outgoing shelf and the outgoing counter answer one predicate with two numbers');
     }
 
+    # Batch 6: the focus deck reads the unread of both received mailboxes, which is the predicate of the cabinet badge and never that of one mailbox
+    # A message saved without being read is the one the deck exists for, so the inbox predicate would have hidden exactly the row that still wants attention
+    #[Test]
+    public function theDeckReadsTheUnreadOfBothReceivedBoxes(): void
+    {
+        $run = $this->getRun('boxes');
+        $this->assertSame([4, 1], $run['deck'], 'The deck is not the unread of both received mailboxes, newest first');
+        $this->assertSame($run['badge'], count($run['deck']), 'The deck and the cabinet badge disagree about what is unread');
+        $this->assertSame([4], $run['deckcap'], 'The deck is not bounded by the number it was asked for');
+        $this->assertSame(['probe body 4', 'probe body 2'], $run['decksnip'], 'A preview row answers no snippet, or the two shapes answer different ones');
+        $this->assertSame(0, $run['deckguest'], 'A deck was answered without an account');
+    }
+
     # Batch 1: the list row answers a snippet of the body the server cut, with the source markup stripped out of that cut and the body itself left in the column
     #[Test]
     public function theListRowAnswersASnippetAndNotTheBody(): void
@@ -188,13 +201,15 @@ final class PrivatClassTest extends TestCase
         $this->assertSame('ok', $run['nowait'], 'A send was refused although the installation sets no interval');
     }
 
-    # A full mailbox refuses the send, over the inbox quota and over the saved quota the plan has the write path recheck
+    # A full inbox refuses the send, and a full saved folder does not: a stored row carries no saved flag, so an arriving message can only land in the inbox
+    # The saved quota is enforced where the reader moves a message into that folder, which is setMessageSaved(), and refusing a send for it would apply it to somebody else's action
     #[Test]
     public function aFullMailboxRefusesTheSend(): void
     {
         $run = $this->getRun('send');
         $this->assertSame('quota', $run['quota'], 'The inbox quota of the recipient was not rechecked');
-        $this->assertSame('quota', $run['keptquota'], 'The saved quota of the recipient was not rechecked');
+        $this->assertSame('ok', $run['keptquota'], 'A full saved folder refused a message that would have landed in the inbox');
+        $this->assertSame('ok', $run['freequota'], 'A mailbox no setting bounds refused every message, because a count is not below zero');
     }
 
     # Read, unread and saved are three states of their own: saving keeps what was read, unsaving keeps it too
@@ -225,6 +240,7 @@ final class PrivatClassTest extends TestCase
     }
 
     # The saved quota bounds what a batch really adds, so re-saving a saved message costs nothing
+    # A setting of zero is the absence of a bound and never a bound of zero: it is what the outbox answers, what the ring draws as unmeasured and what both alerts read it as
     #[Test]
     public function theSavedQuotaBoundsWhatIsAdded(): void
     {
@@ -232,6 +248,7 @@ final class PrivatClassTest extends TestCase
         $this->assertSame([false, [0, 0, 0, 0]], $run['full'], 'A full saved folder took one more message');
         $this->assertSame([true, [1, 1, 0, 0]], $run['again'], 'Saving an already saved message was counted against the quota');
         $this->assertSame([true, [0, 1, 0, 0]], $run['room'], 'A saved folder with room refused a message');
+        $this->assertSame([true, [0, 1, 0, 0]], $run['nolimit'], 'A saved folder no setting bounds refused every message it was offered');
     }
 
     # A delete removes the copy of the side that asked and leaves the other side untouched until it deletes too

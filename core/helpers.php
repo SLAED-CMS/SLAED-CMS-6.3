@@ -458,6 +458,7 @@ function getTplRadioGroup(array $data = []): string {
 }
 
 # Render one shared user autocomplete input with datalist-backed lookup
+# A caller that names a card container opts into the richer, bounded answer of the route; every other caller keeps the flat array of names it has always been handed
 function getTplUserSearchInput(array $data = []): string {
     global $tpl;
     $name = $data['name'] ?? 'uname';
@@ -471,6 +472,7 @@ function getTplUserSearchInput(array $data = []): string {
         $tiphtml = getTplTitleTip($tip);
     }
     return $tpl->getHtmlFrag('input', [
+        'card_attr' => (string)($data['card'] ?? ''),
         'endpoint_attr' => $endpoint,
         'is_required' => true,
         'is_user_search' => true,
