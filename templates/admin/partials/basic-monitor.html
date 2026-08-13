@@ -21,36 +21,36 @@
       </div>
       <div class="sl-monitor-sys-grid">
         <div class="sl-monitor-sys-item">
-          <div class="sl-knob-wrapper">
-            <svg class="sl-knob-svg" viewBox="0 0 100 100">
-              <circle class="sl-knob-bg" cx="50" cy="50" r="45"></circle>
-              <circle class="sl-knob-val{% if cpu_is_danger %} sl-knob-danger{% elseif cpu_is_warning %} sl-knob-warning{% elseif cpu_is_info %} sl-knob-info{% else %} sl-knob-success{% endif %}" cx="50" cy="50" r="45" stroke-dasharray="{{ dash }}" stroke-dashoffset="{{ off }}"></circle>
+          <div class="sl-knob sl-knob-{{ cpu_tone }}{% if cpu_full %} sl-knob-full{% endif %}">
+            <svg class="sl-knob-svg" viewBox="0 0 100 100" aria-hidden="true">
+              <circle class="sl-knob-bg" cx="50" cy="50" r="46"></circle>
+              <circle class="sl-knob-val" cx="50" cy="50" r="46" pathLength="100" stroke-dasharray="{{ load_0 }} 100"></circle>
             </svg>
-            <div class="sl-knob-text{% if cpu_is_danger %} sl-knob-danger{% elseif cpu_is_warning %} sl-knob-warning{% elseif cpu_is_info %} sl-knob-info{% else %} sl-knob-success{% endif %}">{{ load_0 }}%</div>
+            <div class="sl-knob-text">{{ load_0 }}%</div>
           </div>
           <div class="sl-system-label">CPU Usage</div>
           <div class="sl-system-sub">{{ cpuphys }} / {{ cpucores }} Cores</div>
           <div class="sl-system-sub">{{ cpufreq }}</div>
         </div>
         <div class="sl-monitor-sys-item">
-          <div class="sl-knob-wrapper">
-            <svg class="sl-knob-svg" viewBox="0 0 100 100">
-              <circle class="sl-knob-bg" cx="50" cy="50" r="45"></circle>
-              <circle class="sl-knob-val{% if ram_is_danger %} sl-knob-danger{% elseif ram_is_warning %} sl-knob-warning{% elseif ram_is_info %} sl-knob-info{% else %} sl-knob-success{% endif %}" cx="50" cy="50" r="45" stroke-dasharray="{{ dash_r }}" stroke-dashoffset="{{ off_r }}"></circle>
+          <div class="sl-knob sl-knob-{{ ram_tone }}{% if ram_full %} sl-knob-full{% endif %}">
+            <svg class="sl-knob-svg" viewBox="0 0 100 100" aria-hidden="true">
+              <circle class="sl-knob-bg" cx="50" cy="50" r="46"></circle>
+              <circle class="sl-knob-val" cx="50" cy="50" r="46" pathLength="100" stroke-dasharray="{{ ram_p }} 100"></circle>
             </svg>
-            <div class="sl-knob-text{% if ram_is_danger %} sl-knob-danger{% elseif ram_is_warning %} sl-knob-warning{% elseif ram_is_info %} sl-knob-info{% else %} sl-knob-success{% endif %}">{{ ram_p }}%</div>
+            <div class="sl-knob-text">{{ ram_p }}%</div>
           </div>
           <div class="sl-system-label">RAM Usage</div>
           <div class="sl-system-sub">{{ ramumb }} / {{ ramtmb }}</div>
           <div class="sl-system-sub">Available: {{ ramavailmb }}</div>
         </div>
         <div class="sl-monitor-sys-item">
-          <div class="sl-knob-wrapper">
-            <svg class="sl-knob-svg" viewBox="0 0 100 100">
-              <circle class="sl-knob-bg" cx="50" cy="50" r="45"></circle>
-              <circle class="sl-knob-val{% if disk_is_danger %} sl-knob-danger{% elseif disk_is_warning %} sl-knob-warning{% elseif disk_is_info %} sl-knob-info{% else %} sl-knob-success{% endif %}" cx="50" cy="50" r="45" stroke-dasharray="{{ dash_d }}" stroke-dashoffset="{{ off_d }}"></circle>
+          <div class="sl-knob sl-knob-{{ disk_tone }}{% if disk_full %} sl-knob-full{% endif %}">
+            <svg class="sl-knob-svg" viewBox="0 0 100 100" aria-hidden="true">
+              <circle class="sl-knob-bg" cx="50" cy="50" r="46"></circle>
+              <circle class="sl-knob-val" cx="50" cy="50" r="46" pathLength="100" stroke-dasharray="{{ disk_p }} 100"></circle>
             </svg>
-            <div class="sl-knob-text{% if disk_is_danger %} sl-knob-danger{% elseif disk_is_warning %} sl-knob-warning{% elseif disk_is_info %} sl-knob-info{% else %} sl-knob-success{% endif %}">{{ disk_p }}%</div>
+            <div class="sl-knob-text">{{ disk_p }}%</div>
           </div>
           <div class="sl-system-label">Disk Usage</div>
           <div class="sl-system-sub">Root /</div>

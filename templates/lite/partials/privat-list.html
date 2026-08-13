@@ -1,0 +1,21 @@
+{% if alert_html %}{{{ alert_html }}}{% endif %}
+{% if groups %}
+<form class="sl-pmf-scroll" id="prbulk" action="{{ bulk_url }}" method="post">
+  {{{ hidden_html }}}
+  {% for group in groups %}
+  <p class="sl-pmf-day"><i class="bi bi-calendar3" aria-hidden="true"></i> {{ group.label }} <small>{{ group.count }}</small></p>
+  {% for row in group.rows %}{% include 'fragments/privat-row.html' with row %}{% endfor %}
+  {% endfor %}
+</form>
+<div class="sl-pmf-foot">
+  {% if found or shown %}<p class="sl-pmf-found">{% if found %}<span>{{ found }}</span>{% endif %}{% if shown %}<span>{{ shown }}</span>{% endif %}</p>{% endif %}
+  {{{ pager_html }}}
+  {% if bulk_html %}{{{ bulk_html }}}{% endif %}
+</div>
+{% else %}
+<div class="sl-pmf-blank">
+  <i class="bi bi-{{ empty_icon }}" aria-hidden="true"></i>
+  <b>{{ empty_title }}</b>
+  {% if found %}<p>{{ found }}</p>{% endif %}
+</div>
+{% endif %}

@@ -119,7 +119,18 @@ function getProbeBoxes(): array {
     $page = getProbeMail(['num' => 1]);
     $none = $prv->getMessageList(0, PrivatBox::Inbox);
     $one = $page->getMessageList(2, PrivatBox::Inbox);
+    $room = getProbeMail(['messin' => 4, 'messsav' => 0]);
+    $over = getProbeMail(['messin' => 1]);
+    $read = static fn(array $fill): array => [$fill['has'], $fill['max'], number_format($fill['part'], 1, '.', '')];
     return [
+        'limit' => [$room->getBoxLimit(PrivatBox::Inbox), $room->getBoxLimit(PrivatBox::Saved), $room->getBoxLimit(PrivatBox::Outbox)],
+        'fill' => [
+            $read($room->getBoxFill(2, PrivatBox::Inbox)),
+            $read($room->getBoxFill(2, PrivatBox::Saved)),
+            $read($room->getBoxFill(2, PrivatBox::Outbox)),
+            $read($over->getBoxFill(2, PrivatBox::Inbox)),
+            $read($room->getBoxFill(0, PrivatBox::Inbox)),
+        ],
         'inbox' => getProbeIds($prv->getMessageList(2, PrivatBox::Inbox)),
         'saved' => getProbeIds($prv->getMessageList(2, PrivatBox::Saved)),
         'outbox' => getProbeIds($prv->getMessageList(2, PrivatBox::Outbox)),
@@ -127,10 +138,46 @@ function getProbeBoxes(): array {
         'count' => [$prv->getMessageCount(2, PrivatBox::Inbox), $prv->getMessageCount(2, PrivatBox::Saved), $prv->getMessageCount(2, PrivatBox::Outbox)],
         'badge' => $prv->getUnreadCount(2),
         'badgeout' => [$prv->getUnreadOutCount(2), $prv->getUnreadOutCount(3), $prv->getUnreadOutCount(0)],
+        'shelf' => [
+            $prv->getUnreadBoxCount(2, PrivatBox::Inbox), $prv->getUnreadBoxCount(2, PrivatBox::Saved),
+            $prv->getUnreadBoxCount(2, PrivatBox::Outbox), $prv->getUnreadBoxCount(0, PrivatBox::Inbox),
+        ],
         'recent' => array_map('intval', array_column($prv->getRecentList(2), 'id')),
         'mate' => array_column($prv->getMessageList(2, PrivatBox::Inbox)['rows'], 'name'),
         'guest' => [$prv->getMessageCount(0, PrivatBox::Inbox), $prv->getUnreadCount(0), count($prv->getRecentList(0)), count(getProbeIds($none))],
         'pages' => [$one['pages'], getProbeIds($page->getMessageList(2, PrivatBox::Inbox, 1)), getProbeIds($page->getMessageList(2, PrivatBox::Inbox, 2))],
+    ];
+}
+
+# The body one snippet scenario is read from: source markup of both syntaxes over several lines, which one row has to answer as a single plain line
+const PROBESNIP = "# Head\n\n[b]bold[/b] <b>html</b> **stars** [link](http://slaed.net/x)\n> quote\nend";
+
+# What a list row answers for the body of its message: the markup of the cut is gone, a multibyte cut stays whole, and a tag the cut broke open never reaches the row
+# The bodies are written straight into the fixture, because what is read here is the cut of the server and not what a send normalizes on its way in
+function getProbeSnip(): array {
+    setProbeSeed();
+    $pdb = $GLOBALS['pdb'];
+    $prv = getProbeMail();
+    $sql = 'UPDATE '.PREFIX_DB.'_privat SET body = :txt WHERE id = :id';
+    $pdb->getSqlQuery($sql, ['id' => 1, 'txt' => PROBESNIP]);
+    $pdb->getSqlQuery($sql, ['id' => 2, 'txt' => str_repeat('я', 900)]);
+    $pdb->getSqlQuery($sql, ['id' => 3, 'txt' => str_repeat('a', 290).' [url=http://slaed.net]link[/url]']);
+    $pdb->getSqlQuery($sql, ['id' => 4, 'txt' => 'price is [10 and the sentence goes on']);
+    $rows = [];
+    foreach ([PrivatBox::Inbox, PrivatBox::Saved] as $box) {
+        foreach ($prv->getMessageList(2, $box)['rows'] as $one) {
+            $rows[$one['id']] = $one;
+        }
+    }
+    $long = (string)($rows[2]['snip'] ?? '');
+    return [
+        'mark' => (string)($rows[1]['snip'] ?? ''),
+        'long' => [mb_strlen($long), mb_check_encoding($long, 'UTF-8')],
+        'open' => (string)($rows[3]['snip'] ?? ''),
+        'kept' => (string)($rows[4]['snip'] ?? ''),
+        'whole' => array_key_exists('body', $rows[1] ?? []),
+        'view' => mb_strlen((string)($prv->getMessageView(2, 2, PrivatBox::Inbox)['body'] ?? '')),
+        'same' => [(string)($rows[1]['snip'] ?? ''), (string)($prv->getMessageView(2, 1, PrivatBox::Inbox)['snip'] ?? '')],
     ];
 }
 
@@ -475,6 +522,7 @@ try {
     addProbeSchema();
     $report['runs'] = [
         'boxes' => getProbeBoxes(),
+        'snip' => getProbeSnip(),
         'views' => getProbeViews(),
         'send' => getProbeSend(),
         'flags' => getProbeFlags(),

@@ -1,0 +1,16 @@
+<div class="sl-pmf-item{% if is_new %} sl-pmf-new{% endif %}" id="{{ row_id }}"{% if is_open %} aria-current="true"{% endif %}{% if is_oob %} hx-swap-oob="true"{% endif %}>
+  <label class="sl-pmf-pick"><span class="sl-visually-hidden">{{ pick_label }}</span>{{{ pick_html }}}</label>
+  <img src="{{ avatar }}" alt="">
+  <div class="sl-pmf-body">
+    <span class="sl-pmf-line">
+      <a class="sl-pmf-subj" href="{{ open_href }}" title="{{ title }}" hx-post="{{ open_post }}" hx-target="#prview" hx-swap="innerHTML" hx-push-url="false" hx-params="none" hx-headers='{"X-CSRF-TOKEN": "{{ token }}"}'>{{ title }}</a>
+      <time class="sl-pmf-when" datetime="{{ stamp }}">{{ when }}</time>
+    </span>
+    <span class="sl-pmf-meta">
+      {% if author_html %}{{{ author_html }}}{% else %}<span class="sl-author sl-muted"><i class="bi bi-person-x" aria-hidden="true"></i> {{ author }}</span>{% endif %}
+      {% if snip %}<span class="sl-pmf-snip">{{ snip }}</span>{% endif %}
+      {{{ mark_html }}}
+    </span>
+  </div>
+  {{{ actions_html }}}
+</div>

@@ -1,0 +1,38 @@
+<div class="sl-pmf-page">
+  {{{ shelves_html }}}
+  <form class="sl-pmf-bar" id="prtools" role="search" action="index.php" method="get" hx-get="{{ find_url }}" hx-target="#prlist" hx-swap="innerHTML" hx-push-url="false" hx-params="not name,op" hx-trigger="submit, change from:#prsort">
+    {{{ tools_html }}}
+    <label class="sl-visually-hidden" for="prfind">{{ seek_label }}</label>
+    <span class="sl-search-form">
+      <input id="prfind" type="search" name="query" value="{{ find }}" maxlength="64" placeholder="{{ seek_label }}">
+      <button type="submit" title="{{ search_label }}"><i class="bi bi-search" aria-hidden="true"></i></button>
+    </span>
+    <label class="sl-visually-hidden" for="prsort">{{ sort_label }}</label>
+    {{{ sort_html }}}
+  </form>
+  {% if chips %}
+  <div class="sl-pmf-active" id="prchips" role="group" aria-label="{{ filter_label }}">
+    <b>{{ filter_label }}</b>
+    {% for chip in chips %}<button type="button" class="sl-chip sl-chip-neutral" aria-pressed="{% if chip.on %}true{% else %}false{% endif %}" data-sl-pm-chip="{{ chip.grp }}" data-sl-pm-value="{{ chip.val }}">{{ chip.label }} <b>· {{ chip.num }}</b></button>{% endfor %}
+    <button type="button" class="sl-pmf-clear" data-sl-pm-clear>{{ reset_label }}</button>
+  </div>
+  {% endif %}
+  <div class="sl-pmf-split" id="prpage" data-sl-pane="{{ pane }}">
+    <aside class="sl-pmf-aside" id="prlist" aria-label="{{ list_label }}">{{{ list_html }}}</aside>
+    <section class="sl-pmf-view" aria-label="{{ view_label }}">
+      <button type="button" class="sl-but sl-pmf-back" data-sl-pm-back><i class="bi bi-chevron-left" aria-hidden="true"></i>&nbsp; {{ back_label }}</button>
+      <div id="prview">{{{ view_html }}}</div>
+      {% if open_post %}<div hx-post="{{ open_post }}" hx-trigger="load" hx-target="#prview" hx-swap="innerHTML" hx-push-url="false" hx-headers='{"X-CSRF-TOKEN": "{{ token }}"}'></div>{% endif %}
+      <form class="sl-pmf-reply sl-pmf-compose" id="prform" action="{{ send_url }}" method="post" hx-post="{{ send_url }}" hx-target="#prview" hx-swap="innerHTML" hx-push-url="false">
+        {{{ token_html }}}
+        <label class="sl-visually-hidden" for="privat_message_name">{{ to_label }}</label>
+        {{{ to_html }}}
+        <label class="sl-visually-hidden" for="prtitle">{{ head_label }}</label>
+        {{{ head_html }}}
+        <label class="sl-visually-hidden" for="privat">{{ text_label }}</label>
+        <div class="sl-pm-editor">{{{ editor_html }}}</div>
+        <div class="sl-pmf-reply-foot"><input type="submit" class="sl-but" value="{{ send_label }}" title="{{ send_label }}"></div>
+      </form>
+    </section>
+  </div>
+</div>

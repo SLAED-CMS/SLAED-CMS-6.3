@@ -1469,6 +1469,124 @@
         setCommentKeys(form);
     });
 
+    // The two panels of the private message page trade places below 800 px: the container query hides one of them and this attribute decides which
+    // The focus follows only where the switch is really visible, because on a wide layout both panels stay on screen and moving the focus would only jump the page
+    function setPrivatPane(name) {
+        var split = document.getElementById('prpage');
+        if (!split) return;
+        split.setAttribute('data-sl-pane', name);
+        var page = split.parentNode;
+        if (!page || page.clientWidth > 800) return;
+        var box = document.getElementById(name === 'view' ? 'prview' : 'prlist');
+        if (!box) return;
+        box.setAttribute('tabindex', '-1');
+        box.focus();
+    }
+
+    // The reply form stands below the swapped region and lives the whole visit, so the answer that opened a message hands its source over in a carrier textarea instead of redrawing the form
+    // The editor is filled through its own API: writing the hidden textarea alone changes what the form would send but not a character of what the writer sees
+    // The carrier is removed once it has been read, so a later swap never finds the text of the message before it
+    function setPrivatCarry(root) {
+        var carry = root && root.querySelector ? root.querySelector('[data-sl-pm-carry]') : null;
+        if (!carry) return;
+        var form = document.getElementById('prform');
+        if (form) {
+            var to = form.querySelector('[name="name"]');
+            var head = form.querySelector('[name="title"]');
+            if (to) to.value = carry.getAttribute('data-sl-pm-name') || '';
+            if (head) head.value = carry.getAttribute('data-sl-pm-title') || '';
+            var area = form.querySelector('textarea[name="text"]');
+            var api = window.SlaedToastUi;
+            var edit = (area && api && typeof api.getEditor === 'function') ? api.getEditor(area.id) : null;
+            if (edit && typeof edit.setMarkdown === 'function') {
+                edit.setMarkdown(carry.value);
+                syncEditorValue(area.id, edit);
+            } else if (area) {
+                area.value = carry.value;
+            }
+        }
+        if (carry.parentNode) carry.parentNode.removeChild(carry);
+    }
+
+    // One row at a time carries the open mark: the answer that opened a message redraws only that row, so the row it replaced has to be cleared here
+    function setPrivatOpen(item) {
+        var marked = document.querySelectorAll('.sl-pmf-item[aria-current]');
+        for (var i = 0; i < marked.length; i++) marked[i].removeAttribute('aria-current');
+        item.setAttribute('aria-current', 'true');
+    }
+
+    // The filter bar is an organ of control and not a scoreboard: a chip is always on the page and only changes state, or a filter once taken off could never be put back
+    // Each group keeps its value in one hidden field, so the two state chips exclude each other by construction and the period chip stands beside them on its own
+    // The numbers on the chips are facets of the mailbox and stay as the page drew them; only the list and its counter answer the selection
+    function setPrivatChip(chip) {
+        var form = document.getElementById('prtools');
+        if (!form) return;
+        var group = chip.getAttribute('data-sl-pm-chip');
+        var value = chip.getAttribute('data-sl-pm-value') || '';
+        var names = group === 'all' ? ['stat', 'perd'] : [group];
+        for (var i = 0; i < names.length; i++) {
+            var field = form.querySelector('[name="' + names[i] + '"]');
+            if (!field) continue;
+            field.value = (group === 'all' || field.value === value) ? '' : value;
+        }
+        setPrivatChipState(form);
+        form.requestSubmit();
+    }
+
+    // What every chip of the bar reads back off the hidden fields, so the pressed states and the request can never tell two different stories
+    function setPrivatChipState(form) {
+        var bar = document.getElementById('prchips');
+        if (!bar) return;
+        var chips = bar.querySelectorAll('[data-sl-pm-chip]');
+        var live = false;
+        for (var i = 0; i < chips.length; i++) {
+            var group = chips[i].getAttribute('data-sl-pm-chip');
+            if (group === 'all') continue;
+            var field = form.querySelector('[name="' + group + '"]');
+            var on = !!field && field.value !== '' && field.value === chips[i].getAttribute('data-sl-pm-value');
+            chips[i].setAttribute('aria-pressed', String(on));
+            if (on) live = true;
+        }
+        var all = bar.querySelector('[data-sl-pm-chip="all"]');
+        if (all) all.setAttribute('aria-pressed', String(!live));
+    }
+
+    document.addEventListener('click', function (event) {
+        if (!event.target || !event.target.closest) return;
+        var chip = event.target.closest('[data-sl-pm-chip]');
+        if (chip) {
+            setPrivatChip(chip);
+            return;
+        }
+        if (event.target.closest('[data-sl-pm-clear]')) {
+            var tools = document.getElementById('prtools');
+            if (!tools) return;
+            tools.querySelector('[name="stat"]').value = '';
+            tools.querySelector('[name="perd"]').value = '';
+            tools.querySelector('[name="query"]').value = '';
+            setPrivatChipState(tools);
+            tools.requestSubmit();
+            return;
+        }
+        if (event.target.closest('[data-sl-pm-back]')) {
+            setPrivatPane('list');
+            return;
+        }
+        if (event.target.closest('[data-sl-pm-reply]')) {
+            var form = document.getElementById('prform');
+            var area = form ? form.querySelector('textarea[name="text"]') : null;
+            var api = window.SlaedToastUi;
+            var edit = (area && api && typeof api.getEditor === 'function') ? api.getEditor(area.id) : null;
+            if (edit && typeof edit.focus === 'function') edit.focus();
+            else if (form && form.scrollIntoView) form.scrollIntoView({ block: 'nearest' });
+            return;
+        }
+        var open = event.target.closest('[hx-target="#prview"]');
+        if (!open) return;
+        var item = open.closest('.sl-pmf-item');
+        if (item) setPrivatOpen(item);
+    });
+
     function setSlaedUi() {
         setTableSort(document);
         setLightbox();
@@ -1487,6 +1605,7 @@
         setLiveChips(document);
         setProfileScrolls(document);
         setCommentKeys(document);
+        setPrivatCarry(document);
     }
 
     // Feed lists inside inactive tabs have zero height: re-measure pending ones right after any tab switch
@@ -1508,6 +1627,10 @@
         setLiveChips(event.target);
         setProfileScrolls(document);
         setCommentKeys(event.target);
+        if (event.target && event.target.id === 'prview') {
+            setPrivatPane('view');
+            setPrivatCarry(event.target);
+        }
         if (live === event.target && window.htmx) {
             var detail = live.querySelector('[data-sl-toggle-control][aria-expanded="true"]');
             var rows = live.querySelector('.sl-session-list [id$="-rows"]');

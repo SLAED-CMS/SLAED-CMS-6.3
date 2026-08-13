@@ -15,7 +15,11 @@
       {% if has_points and not has_level %}<span class="sl-chip sl-chip-info" title="{{ points_label }}"><i class="bi bi-stars" aria-hidden="true"></i> {{ points_text }}</span>{% endif %}
     </div>
     {% if has_level %}
-    <div class="sl-cab-ring" style="--sl-cab-level:{{ level }}%"{% if level_next %} title="{{ level_next }}"{% endif %}>
+    <div class="sl-knob sl-knob-ok sl-cab-ring{% if level_full %} sl-knob-full{% endif %}"{% if level_next %} title="{{ level_next }}"{% endif %}>
+      <svg class="sl-knob-svg" viewBox="0 0 124 124" aria-hidden="true">
+        <circle class="sl-knob-bg" cx="62" cy="62" r="59"></circle>
+        <circle class="sl-knob-val" cx="62" cy="62" r="59" pathLength="100" stroke-dasharray="{{ level }} 100"></circle>
+      </svg>
       <span><span><b>{{ points_text }}</b><small>{{ points_label }}{% if level_group %} · {{ level_group }}{% endif %}</small><small>{{ level }}%</small></span></span>
     </div>
     {% endif %}

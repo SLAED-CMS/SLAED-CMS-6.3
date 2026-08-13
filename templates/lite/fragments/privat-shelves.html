@@ -1,0 +1,19 @@
+<nav class="sl-cab-actions sl-pmf-folders" aria-label="{{ nav_label }}">
+  {% for item in items %}
+  <a class="sl-cab-act sl-pmf-fold sl-knob-{{ item.tone }}" href="{{ item.href }}" title="{{ item.label }}"{% if item.current %} aria-current="page"{% endif %}>
+    <span class="sl-knob sl-knob-{{ item.tone }}{% if item.full %} sl-knob-full{% endif %}" role="img" aria-label="{% if item.ring %}{{ item.ring }}{% else %}{{ item.label }}: {{ item.note }}{% endif %}">
+      <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true">
+        <circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle>
+        <circle class="sl-knob-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="{{ item.part }} 100"></circle>
+      </svg>
+      <i class="bi bi-{{ item.icon }}" aria-hidden="true"></i>
+    </span>
+    <span>
+      <b>{{ item.label }}</b>
+      <small>{% if item.count %}<span>{{ item.count }}</span>{% endif %}{% if item.note %}<span>{{ item.note }}</span>{% endif %}</small>
+      {% if item.free %}<span class="sl-chip sl-chip-danger"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ item.free }}</span>{% endif %}
+    </span>
+    {% if item.badge_id %}<span class="sl-cab-badge{% if !item.badge %} sl-hidden{% endif %}" id="{{ item.badge_id }}">{{ item.badge }}</span>{% endif %}
+  </a>
+  {% endfor %}
+</nav>

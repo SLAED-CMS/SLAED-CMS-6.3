@@ -73,6 +73,57 @@ final class PrivatClassTest extends TestCase
         $this->assertSame([1, 3, 0], $run['badgeout'], 'The outgoing badge is not the sent, undeleted, unopened messages');
     }
 
+    # Batch 2: the quota of a mailbox and how full it is are read from the subsystem that owns the settings, and the outbox answers to no quota at all
+    #[Test]
+    public function everyMailboxAnswersItsOwnQuota(): void
+    {
+        $run = $this->getRun('boxes');
+        $this->assertSame([4, 0, 0], $run['limit'], 'A mailbox does not answer the setting that bounds it, or the outbox was given a quota');
+        $this->assertSame([2, 4, '50.0'], $run['fill'][0], 'The inbox does not answer what it holds against what it may hold');
+        $this->assertSame([2, 0, '0.0'], $run['fill'][1], 'A mailbox with no quota answers a per cent instead of nothing to measure');
+        $this->assertSame([1, 0, '0.0'], $run['fill'][2], 'The outbox answers a fill it has no quota for');
+        $this->assertSame([2, 1, '100.0'], $run['fill'][3], 'A mailbox over a lowered quota answers more than a whole ring');
+        $this->assertSame([0, 4, '0.0'], $run['fill'][4], 'A fill was answered without an account');
+    }
+
+    # Batch 1 of docs/PRIVATE-MESSAGES-2026.md: a shelf badge counts the unread of its own mailbox, and the two shelves add up to the cabinet badge
+    #[Test]
+    public function everyShelfCountsTheUnreadOfItsOwnBox(): void
+    {
+        $run = $this->getRun('boxes');
+        $this->assertSame([1, 1, 1, 0], $run['shelf'], 'A shelf badge is not the unread of the mailbox it belongs to');
+        $this->assertSame($run['badge'], $run['shelf'][0] + $run['shelf'][1], 'The inbox and the saved shelf do not add up to the cabinet badge');
+        $this->assertSame($run['badgeout'][0], $run['shelf'][2], 'The outgoing shelf and the outgoing counter answer one predicate with two numbers');
+    }
+
+    # Batch 1: the list row answers a snippet of the body the server cut, with the source markup stripped out of that cut and the body itself left in the column
+    #[Test]
+    public function theListRowAnswersASnippetAndNotTheBody(): void
+    {
+        $run = $this->getRun('snip');
+        $this->assertFalse($run['whole'], 'A list row carries the whole body of its message');
+        $this->assertSame('Head bold html stars link quote end', $run['mark'], 'The snippet still carries the source markup or the line breaks of the body');
+        $this->assertSame(str_repeat('a', 160), $run['open'], 'A tag the cut broke in half reached the row, or the snippet is not bounded');
+        $this->assertSame('price is [10 and the sentence goes on', $run['kept'], 'A bracket the author wrote was read as a tag the cut broke, and the text after it was dropped');
+        $this->assertSame(900, $run['view'], 'The detail view no longer answers the whole body');
+    }
+
+    # Batch 3: the detail read answers the same snippet the list row does, because the out-of-band swap redraws that row from this answer and no consumer cuts a body of its own
+    #[Test]
+    public function theDetailReadAnswersTheRowSnippet(): void
+    {
+        $run = $this->getRun('snip');
+        $this->assertNotSame('', $run['same'][1], 'The detail read answers no snippet, so the row it redraws would lose its preview');
+        $this->assertSame($run['same'][0], $run['same'][1], 'The row a detail answer redraws would carry another snippet than the list gave it');
+    }
+
+    # Batch 1: the cut is measured in characters, so a multibyte body is never broken in the middle of one of them
+    #[Test]
+    public function theSnippetCutIsMultibyteSafe(): void
+    {
+        $this->assertSame([160, true], $this->getRun('snip')['long'], 'The snippet of a multibyte body was cut by bytes, or left a broken character behind');
+    }
+
     # Every list resolves the counterpart of the message rather than the reader, and a mailbox of nobody is empty
     #[Test]
     public function everyListNamesTheCounterpart(): void

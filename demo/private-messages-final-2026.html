@@ -34,33 +34,8 @@ a { text-decoration: none; }
 
 /* ==== Финальный вариант: полки → фокус → тулбар → две колонки ==== */
 
-/* Кольцо квоты вместо текстового алерта: дуга рисуется SVG, как sl-knob в админском мониторе.
-   Ни фона, ни рамки — только дуга и иконка, обе в тоне заполнения; тон общий, рассинхронизировать их нельзя.
-   pathLength="100" нормализует окружность, поэтому PHP отдаёт один процент, а шаблон ставит stroke-dashoffset = 100 - процент. */
-.sl-pmh { --sl-pmh-size: 46px; --sl-pmh-width: 4; --sl-pmh-tone: var(--sl-color-success); --sl-pmh-track: var(--sl-progress-track-bg); position: relative; display: grid; place-items: center; flex: 0 0 var(--sl-pmh-size); width: var(--sl-pmh-size); height: var(--sl-pmh-size); }
-.sl-pmh-svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
-.sl-pmh-bg { fill: none; stroke: var(--sl-pmh-track); stroke-width: var(--sl-pmh-width); }
-/* Концы прямые: при 96% скруглённый конец добавляет к дуге по половине толщины с каждой стороны и съедает разрыв, делая «почти полный» неотличимым от «полного» */
-.sl-pmh-val { fill: none; stroke: var(--sl-pmh-tone); stroke-width: var(--sl-pmh-width); stroke-linecap: butt; transition: stroke-dashoffset 0.9s cubic-bezier(0.2, 0.7, 0.3, 1); }
-.sl-pmh > .bi { color: var(--sl-pmh-tone); font-size: calc(var(--sl-pmh-size) * 0.45); line-height: 1; transition: color 0.3s ease, transform 0.18s ease; }
-/* Полка, где мерить нечего — исходящие без квоты и «Написать»: кольцо сплошное и в цвет иконки, бледного трека под несуществующую дугу нет */
-.sl-pmh-full .sl-pmh-bg { stroke: var(--sl-pmh-tone); }
-.sl-pmh-ok { --sl-pmh-tone: var(--sl-color-success); }
-.sl-pmh-info { --sl-pmh-tone: var(--sl-color-primary); }
-.sl-pmh-warn { --sl-pmh-tone: var(--sl-color-warning); }
-.sl-pmh-danger { --sl-pmh-tone: var(--sl-color-danger); }
-.sl-pmh-none { --sl-pmh-tone: var(--sl-color-text-subtle); }
 
-/* Полки-плитки вместо текстовых вкладок (из варианта 1): кольцо квоты + подпись + бейдж непрочитанных */
-.sl-pmf-folders { display: grid; grid-template-columns: repeat(auto-fit, minmax(178px, 1fr)); gap: var(--sl-space-md); margin-bottom: 14px; }
-.sl-pmf-fold { position: relative; display: grid; grid-template-columns: var(--sl-pmh-size, 46px) minmax(0, 1fr); align-items: center; gap: 11px; padding: 10px 12px; border: 1px solid var(--sl-color-border-subtle); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); color: var(--sl-color-text-muted); transition: border-color 0.18s ease, transform 0.18s ease; }
-.sl-pmf-fold:hover { border-color: color-mix(in srgb, var(--sl-pmh-tone) 45%, var(--sl-color-border)); transform: translateY(-2px); }
-.sl-pmf-fold:hover .sl-pmh > .bi { transform: scale(1.1); }
-.sl-pmf-fold[aria-current="page"] { border-color: color-mix(in srgb, var(--sl-pmh-tone) 55%, var(--sl-color-border)); }
-.sl-pmf-fold b { display: block; overflow: hidden; color: var(--sl-color-text-heading); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
-.sl-pmf-fold small { display: block; color: var(--sl-color-text-muted); font-size: 11px; }
-.sl-pmf-fold .sl-chip { height: 19px; margin-top: 5px; padding: 0 7px; font-size: 10px; }
-.sl-pmf-fold .sl-cab-badge { top: 7px; right: 9px; }
+/* Полки-плитки и кольцо квоты живут в теме: sl-cab-actions + sl-cab-act + sl-knob, здесь только то, чего в теме ещё нет */
 
 /* Колода фокуса (из варианта 8) — дополнение к папкам, а не замена; сворачивается штатным details */
 .sl-pmf-focus { margin-bottom: 14px; border: 1px solid var(--sl-color-border-subtle); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); }
@@ -191,7 +166,7 @@ a { text-decoration: none; }
 .sl-pmf-mate b { display: block; color: var(--sl-color-text-heading); }
 .sl-pmf-mate small { display: block; color: var(--sl-color-text-muted); font-size: 11px; }
 .sl-pmf-mate .sl-chip { margin-top: 5px; }
-.sl-pmf-mate .sl-pmh { --sl-pmh-size: 36px; }
+.sl-pmf-mate .sl-knob { --sl-knob-size: 36px; }
 /* Ответы формы отправки: штатный sl-alert без обвязки — в демо они стоят подряд, на странице приходит один */
 .sl-pmf-says { display: grid; gap: var(--sl-space-md); }
 .sl-pmf-says .sl-alert { margin: 0; }
@@ -219,7 +194,7 @@ a { text-decoration: none; }
 .sl-pmf-map code { font-size: 11px; }
 
 @media (prefers-reduced-motion: reduce) {
-  .sl-pmf-fold, .sl-pmf-slot, .sl-pmh-val, .sl-pmh > .bi { transition: none; }
+  .sl-pmf-slot { transition: none; }
 }
 
 /* Планшет: колонка списка ужимается, полки в два ряда */
@@ -231,11 +206,6 @@ a { text-decoration: none; }
 
 /* Мобильный: панели не сжимаются, а подменяют друг друга */
 @container (max-width: 800px) {
-  /* Полки уходят в ленту с прокруткой: четыре плитки в два ряда съедали пол-экрана до первого письма, а подсмотренный край соседней плитки сам показывает, что ряд листается */
-  .sl-pmf-folders { display: flex; grid-template-columns: none; gap: var(--sl-space-sm); overflow-x: auto; scroll-snap-type: x mandatory; }
-  .sl-pmf-fold { --sl-pmh-size: 36px; flex: 0 0 62%; grid-template-columns: 36px minmax(0, 1fr); gap: 9px; padding: 8px 10px; scroll-snap-align: start; }
-  .sl-pmf-fold small { font-size: 10px; }
-  .sl-pmf-fold .sl-chip { margin-top: 4px; }
   .sl-pmf-found { margin-left: 0; }
   .sl-pmf-split { grid-template-columns: 1fr; }
   .sl-pmf-aside { border-right: 0; }
@@ -279,49 +249,51 @@ a { text-decoration: none; }
 
     <div class="sl-pmdemo-frame">
 
-      <nav class="sl-pmf-folders" aria-label="Папки личных сообщений">
-        <a class="sl-pmf-fold sl-pmh-danger" href="#" aria-current="page">
-          <span class="sl-pmh sl-pmh-danger" role="img" aria-label="Входящие заполнены на 96 процентов, свободно 10">
-            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
-              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
-              <circle class="sl-pmh-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="4"></circle>
+      <nav class="sl-cab-actions sl-pmf-folders" aria-label="Папки личных сообщений">
+        <a class="sl-cab-act sl-pmf-fold sl-knob-danger" href="#" aria-current="page">
+          <span class="sl-knob sl-knob-danger" role="img" aria-label="Входящие заполнены на 96 процентов, свободно 10">
+            <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle>
+              <circle class="sl-knob-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="96 100"></circle>
             </svg>
             <i class="bi bi-envelope" aria-hidden="true"></i>
           </span>
           <span>
             <b>Входящие</b>
-            <small>240 из 250</small>
+            <small><span>240 из 250</span></small>
             <span class="sl-chip sl-chip-danger"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> свободно 10</span>
           </span>
           <span class="sl-cab-badge">7</span>
         </a>
-        <a class="sl-pmf-fold sl-pmh-none" href="#">
-          <span class="sl-pmh sl-pmh-none sl-pmh-full" role="img" aria-label="У исходящих нет ограничения">
-            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
-              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+        <a class="sl-cab-act sl-pmf-fold sl-knob-none" href="#">
+          <span class="sl-knob sl-knob-none sl-knob-full" role="img" aria-label="У исходящих нет ограничения">
+            <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle>
+            <circle class="sl-knob-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="0 100"></circle>
             </svg>
             <i class="bi bi-send" aria-hidden="true"></i>
           </span>
-          <span><b>Исходящие</b><small>903 · без ограничения</small></span>
+          <span><b>Исходящие</b><small><span>903</span><span>без ограничения</span></small></span>
         </a>
-        <a class="sl-pmf-fold sl-pmh-ok" href="#">
-          <span class="sl-pmh sl-pmh-ok" role="img" aria-label="Сохранённые заполнены на 25 процентов">
-            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
-              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
-              <circle class="sl-pmh-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="74.8"></circle>
+        <a class="sl-cab-act sl-pmf-fold sl-knob-ok" href="#">
+          <span class="sl-knob sl-knob-ok" role="img" aria-label="Сохранённые заполнены на 25 процентов">
+            <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle>
+              <circle class="sl-knob-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="25.2 100"></circle>
             </svg>
             <i class="bi bi-bookmark" aria-hidden="true"></i>
           </span>
-          <span><b>Сохранённые</b><small>63 из 250</small></span>
+          <span><b>Сохранённые</b><small><span>63 из 250</span></small></span>
         </a>
-        <a class="sl-pmf-fold sl-pmh-info" href="#">
-          <span class="sl-pmh sl-pmh-info sl-pmh-full" role="img" aria-label="Написать новое письмо">
-            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
-              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+        <a class="sl-cab-act sl-pmf-fold sl-knob-info" href="#">
+          <span class="sl-knob sl-knob-info sl-knob-full" role="img" aria-label="Написать новое письмо">
+            <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle>
+            <circle class="sl-knob-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="0 100"></circle>
             </svg>
             <i class="bi bi-pencil-square" aria-hidden="true"></i>
           </span>
-          <span><b>Написать</b><small>новое письмо</small></span>
+          <span><b>Написать</b><small><span>новое письмо</span></small></span>
         </a>
       </nav>
 
@@ -671,45 +643,47 @@ a { text-decoration: none; }
     <p>Меняются три вещи: колонка автора становится получателем, чипс показывает, открыл ли адресат письмо, а из массовых действий остаётся только удаление своей копии — ровно то, что разрешает <code>updatePrivatBox()</code> для этой папки.</p>
 
     <div class="sl-pmdemo-frame">
-      <nav class="sl-pmf-folders" aria-label="Папки личных сообщений">
-        <a class="sl-pmf-fold sl-pmh-danger" href="#">
-          <span class="sl-pmh sl-pmh-danger" role="img" aria-label="Входящие заполнены на 96 процентов">
-            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
-              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
-              <circle class="sl-pmh-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="4"></circle>
+      <nav class="sl-cab-actions sl-pmf-folders" aria-label="Папки личных сообщений">
+        <a class="sl-cab-act sl-pmf-fold sl-knob-danger" href="#">
+          <span class="sl-knob sl-knob-danger" role="img" aria-label="Входящие заполнены на 96 процентов">
+            <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle>
+              <circle class="sl-knob-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="96 100"></circle>
             </svg>
             <i class="bi bi-envelope" aria-hidden="true"></i>
           </span>
-          <span><b>Входящие</b><small>240 из 250</small></span>
+          <span><b>Входящие</b><small><span>240 из 250</span></small></span>
           <span class="sl-cab-badge">7</span>
         </a>
-        <a class="sl-pmf-fold sl-pmh-none" href="#" aria-current="page">
-          <span class="sl-pmh sl-pmh-none sl-pmh-full" role="img" aria-label="У исходящих нет ограничения">
-            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
-              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+        <a class="sl-cab-act sl-pmf-fold sl-knob-none" href="#" aria-current="page">
+          <span class="sl-knob sl-knob-none sl-knob-full" role="img" aria-label="У исходящих нет ограничения">
+            <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle>
+            <circle class="sl-knob-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="0 100"></circle>
             </svg>
             <i class="bi bi-send" aria-hidden="true"></i>
           </span>
-          <span><b>Исходящие</b><small>903 · без ограничения</small></span>
+          <span><b>Исходящие</b><small><span>903</span><span>без ограничения</span></small></span>
         </a>
-        <a class="sl-pmf-fold sl-pmh-ok" href="#">
-          <span class="sl-pmh sl-pmh-ok" role="img" aria-label="Сохранённые заполнены на 25 процентов">
-            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
-              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
-              <circle class="sl-pmh-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="74.8"></circle>
+        <a class="sl-cab-act sl-pmf-fold sl-knob-ok" href="#">
+          <span class="sl-knob sl-knob-ok" role="img" aria-label="Сохранённые заполнены на 25 процентов">
+            <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle>
+              <circle class="sl-knob-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="25.2 100"></circle>
             </svg>
             <i class="bi bi-bookmark" aria-hidden="true"></i>
           </span>
-          <span><b>Сохранённые</b><small>63 из 250</small></span>
+          <span><b>Сохранённые</b><small><span>63 из 250</span></small></span>
         </a>
-        <a class="sl-pmf-fold sl-pmh-info" href="#">
-          <span class="sl-pmh sl-pmh-info sl-pmh-full" role="img" aria-label="Написать новое письмо">
-            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
-              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+        <a class="sl-cab-act sl-pmf-fold sl-knob-info" href="#">
+          <span class="sl-knob sl-knob-info sl-knob-full" role="img" aria-label="Написать новое письмо">
+            <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle>
+            <circle class="sl-knob-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="0 100"></circle>
             </svg>
             <i class="bi bi-pencil-square" aria-hidden="true"></i>
           </span>
-          <span><b>Написать</b><small>новое письмо</small></span>
+          <span><b>Написать</b><small><span>новое письмо</span></small></span>
         </a>
       </nav>
 
@@ -846,50 +820,52 @@ a { text-decoration: none; }
     <p>Сохранённое письмо уходит из входящих: предикат папки исключает <code>saved = 1</code>, поэтому одно и то же письмо не лежит в двух лентах, а бейджи полок делят непрочитанные между собой — 7 во входящих и 1 здесь. У полки своя квота — 250 сообщений отдельно от входящих, поэтому её кольцо зелёное там, где у входящих красное. Отличий от входящих три: в строке закладка вместо конверта, «Сохранить» сменилось на «Убрать из сохранённых», а колода фокуса остаётся во входящих — сохранённое письмо и так никуда не денется. Форма ответа здесь та же, что и во входящих, поэтому показана только панель чтения.</p>
 
     <div class="sl-pmdemo-frame">
-      <nav class="sl-pmf-folders" aria-label="Папки личных сообщений">
-        <a class="sl-pmf-fold sl-pmh-danger" href="#">
-          <span class="sl-pmh sl-pmh-danger" role="img" aria-label="Входящие заполнены на 96 процентов">
-            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
-              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
-              <circle class="sl-pmh-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="4"></circle>
+      <nav class="sl-cab-actions sl-pmf-folders" aria-label="Папки личных сообщений">
+        <a class="sl-cab-act sl-pmf-fold sl-knob-danger" href="#">
+          <span class="sl-knob sl-knob-danger" role="img" aria-label="Входящие заполнены на 96 процентов">
+            <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle>
+              <circle class="sl-knob-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="96 100"></circle>
             </svg>
             <i class="bi bi-envelope" aria-hidden="true"></i>
           </span>
-          <span><b>Входящие</b><small>240 из 250</small></span>
+          <span><b>Входящие</b><small><span>240 из 250</span></small></span>
           <span class="sl-cab-badge">7</span>
         </a>
-        <a class="sl-pmf-fold sl-pmh-none" href="#">
-          <span class="sl-pmh sl-pmh-none sl-pmh-full" role="img" aria-label="У исходящих нет ограничения">
-            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
-              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+        <a class="sl-cab-act sl-pmf-fold sl-knob-none" href="#">
+          <span class="sl-knob sl-knob-none sl-knob-full" role="img" aria-label="У исходящих нет ограничения">
+            <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle>
+            <circle class="sl-knob-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="0 100"></circle>
             </svg>
             <i class="bi bi-send" aria-hidden="true"></i>
           </span>
-          <span><b>Исходящие</b><small>903 · без ограничения</small></span>
+          <span><b>Исходящие</b><small><span>903</span><span>без ограничения</span></small></span>
         </a>
-        <a class="sl-pmf-fold sl-pmh-ok" href="#" aria-current="page">
-          <span class="sl-pmh sl-pmh-ok" role="img" aria-label="Сохранённые заполнены на 25 процентов, свободно 187">
-            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
-              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
-              <circle class="sl-pmh-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="74.8"></circle>
+        <a class="sl-cab-act sl-pmf-fold sl-knob-ok" href="#" aria-current="page">
+          <span class="sl-knob sl-knob-ok" role="img" aria-label="Сохранённые заполнены на 25 процентов, свободно 187">
+            <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle>
+              <circle class="sl-knob-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="25.2 100"></circle>
             </svg>
             <i class="bi bi-bookmark" aria-hidden="true"></i>
           </span>
           <span>
             <b>Сохранённые</b>
-            <small>63 из 250</small>
+            <small><span>63 из 250</span></small>
             <span class="sl-chip sl-chip-success"><i class="bi bi-bookmark-check" aria-hidden="true"></i> свободно 187</span>
           </span>
           <span class="sl-cab-badge">1</span>
         </a>
-        <a class="sl-pmf-fold sl-pmh-info" href="#">
-          <span class="sl-pmh sl-pmh-info sl-pmh-full" role="img" aria-label="Написать новое письмо">
-            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
-              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+        <a class="sl-cab-act sl-pmf-fold sl-knob-info" href="#">
+          <span class="sl-knob sl-knob-info sl-knob-full" role="img" aria-label="Написать новое письмо">
+            <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle>
+            <circle class="sl-knob-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="0 100"></circle>
             </svg>
             <i class="bi bi-pencil-square" aria-hidden="true"></i>
           </span>
-          <span><b>Написать</b><small>новое письмо</small></span>
+          <span><b>Написать</b><small><span>новое письмо</span></small></span>
         </a>
       </nav>
 
@@ -1125,47 +1101,49 @@ a { text-decoration: none; }
     <p>«Написать» — не папка, а действие: своей ленты у неё нет, поэтому слева остаются входящие — переписку видно, пока пишете, в том числе при входе по ссылке «написать этому пользователю» из профиля. Справа вместо письма — три поля формы отправки: получатель с автодополнением (<code>getTplUserSearchInput()</code>, до 25 символов), заголовок до 100 символов и тот же Toast UI. Имя, распознанное автодополнением, разворачивается в карточку адресата с кольцом его входящих — переполненный ящик виден до отправки, а не в отказе после неё.</p>
 
     <div class="sl-pmdemo-frame">
-      <nav class="sl-pmf-folders" aria-label="Папки личных сообщений">
-        <a class="sl-pmf-fold sl-pmh-danger" href="#">
-          <span class="sl-pmh sl-pmh-danger" role="img" aria-label="Входящие заполнены на 96 процентов">
-            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
-              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
-              <circle class="sl-pmh-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="4"></circle>
+      <nav class="sl-cab-actions sl-pmf-folders" aria-label="Папки личных сообщений">
+        <a class="sl-cab-act sl-pmf-fold sl-knob-danger" href="#">
+          <span class="sl-knob sl-knob-danger" role="img" aria-label="Входящие заполнены на 96 процентов">
+            <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle>
+              <circle class="sl-knob-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="96 100"></circle>
             </svg>
             <i class="bi bi-envelope" aria-hidden="true"></i>
           </span>
-          <span><b>Входящие</b><small>240 из 250</small></span>
+          <span><b>Входящие</b><small><span>240 из 250</span></small></span>
           <span class="sl-cab-badge">7</span>
         </a>
-        <a class="sl-pmf-fold sl-pmh-none" href="#">
-          <span class="sl-pmh sl-pmh-none sl-pmh-full" role="img" aria-label="У исходящих нет ограничения">
-            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
-              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+        <a class="sl-cab-act sl-pmf-fold sl-knob-none" href="#">
+          <span class="sl-knob sl-knob-none sl-knob-full" role="img" aria-label="У исходящих нет ограничения">
+            <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle>
+            <circle class="sl-knob-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="0 100"></circle>
             </svg>
             <i class="bi bi-send" aria-hidden="true"></i>
           </span>
-          <span><b>Исходящие</b><small>903 · без ограничения</small></span>
+          <span><b>Исходящие</b><small><span>903</span><span>без ограничения</span></small></span>
         </a>
-        <a class="sl-pmf-fold sl-pmh-ok" href="#">
-          <span class="sl-pmh sl-pmh-ok" role="img" aria-label="Сохранённые заполнены на 25 процентов">
-            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
-              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
-              <circle class="sl-pmh-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="74.8"></circle>
+        <a class="sl-cab-act sl-pmf-fold sl-knob-ok" href="#">
+          <span class="sl-knob sl-knob-ok" role="img" aria-label="Сохранённые заполнены на 25 процентов">
+            <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle>
+              <circle class="sl-knob-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="25.2 100"></circle>
             </svg>
             <i class="bi bi-bookmark" aria-hidden="true"></i>
           </span>
-          <span><b>Сохранённые</b><small>63 из 250</small></span>
+          <span><b>Сохранённые</b><small><span>63 из 250</span></small></span>
         </a>
-        <a class="sl-pmf-fold sl-pmh-info" href="#" aria-current="page">
-          <span class="sl-pmh sl-pmh-info sl-pmh-full" role="img" aria-label="Написать новое письмо">
-            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
-              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+        <a class="sl-cab-act sl-pmf-fold sl-knob-info" href="#" aria-current="page">
+          <span class="sl-knob sl-knob-info sl-knob-full" role="img" aria-label="Написать новое письмо">
+            <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle>
+            <circle class="sl-knob-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="0 100"></circle>
             </svg>
             <i class="bi bi-pencil-square" aria-hidden="true"></i>
           </span>
           <span>
             <b>Написать</b>
-            <small>новое письмо</small>
+            <small><span>новое письмо</span></small>
             <span class="sl-chip sl-chip-info"><i class="bi bi-hourglass-split" aria-hidden="true"></i> интервал 60 с</span>
           </span>
         </a>
@@ -1310,10 +1288,10 @@ a { text-decoration: none; }
                 <small>Группа: Проверенные · был на сайте 12 минут назад</small>
                 <span class="sl-chip sl-chip-warn"><i class="bi bi-inbox" aria-hidden="true"></i> входящих 214 из 250 · свободно 36</span>
               </span>
-              <span class="sl-pmh sl-pmh-warn" role="img" aria-label="Входящие получателя заполнены на 86 процентов">
-                <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
-                  <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
-                  <circle class="sl-pmh-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="14.4"></circle>
+              <span class="sl-knob sl-knob-warn" role="img" aria-label="Входящие получателя заполнены на 86 процентов">
+                <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true">
+                  <circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle>
+                  <circle class="sl-knob-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="85.6 100"></circle>
                 </svg>
                 <i class="bi bi-inbox" aria-hidden="true"></i>
               </span>
@@ -1481,45 +1459,47 @@ a { text-decoration: none; }
 
       <figure class="sl-pmdemo-phone">
         <figcaption>Список, 390&nbsp;px</figcaption>
-        <nav class="sl-pmf-folders" aria-label="Папки">
-          <a class="sl-pmf-fold sl-pmh-danger" href="#" aria-current="page">
-            <span class="sl-pmh sl-pmh-danger" role="img" aria-label="Входящие заполнены на 96 процентов">
-              <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
-                <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
-                <circle class="sl-pmh-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="4"></circle>
+        <nav class="sl-cab-actions sl-pmf-folders" aria-label="Папки">
+          <a class="sl-cab-act sl-pmf-fold sl-knob-danger" href="#" aria-current="page">
+            <span class="sl-knob sl-knob-danger" role="img" aria-label="Входящие заполнены на 96 процентов">
+              <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true">
+                <circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle>
+                <circle class="sl-knob-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="96 100"></circle>
               </svg>
               <i class="bi bi-envelope" aria-hidden="true"></i>
             </span>
-            <span><b>Входящие</b><small>240 из 250</small></span>
+            <span><b>Входящие</b><small><span>240 из 250</span></small></span>
             <span class="sl-cab-badge">7</span>
           </a>
-          <a class="sl-pmf-fold sl-pmh-none" href="#">
-            <span class="sl-pmh sl-pmh-none sl-pmh-full" role="img" aria-label="Без ограничения">
-              <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
-                <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+          <a class="sl-cab-act sl-pmf-fold sl-knob-none" href="#">
+            <span class="sl-knob sl-knob-none sl-knob-full" role="img" aria-label="Без ограничения">
+              <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true">
+                <circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle>
+              <circle class="sl-knob-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="0 100"></circle>
               </svg>
               <i class="bi bi-send" aria-hidden="true"></i>
             </span>
-            <span><b>Исходящие</b><small>903</small></span>
+            <span><b>Исходящие</b><small><span>903</span></small></span>
           </a>
-          <a class="sl-pmf-fold sl-pmh-ok" href="#">
-            <span class="sl-pmh sl-pmh-ok" role="img" aria-label="Сохранённые заполнены на 25 процентов">
-              <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
-                <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
-                <circle class="sl-pmh-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="74.8"></circle>
+          <a class="sl-cab-act sl-pmf-fold sl-knob-ok" href="#">
+            <span class="sl-knob sl-knob-ok" role="img" aria-label="Сохранённые заполнены на 25 процентов">
+              <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true">
+                <circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle>
+                <circle class="sl-knob-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="25.2 100"></circle>
               </svg>
               <i class="bi bi-bookmark" aria-hidden="true"></i>
             </span>
-            <span><b>Сохранённые</b><small>63</small></span>
+            <span><b>Сохранённые</b><small><span>63</span></small></span>
           </a>
-          <a class="sl-pmf-fold sl-pmh-info" href="#">
-            <span class="sl-pmh sl-pmh-info sl-pmh-full" role="img" aria-label="Написать новое письмо">
-              <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
-                <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+          <a class="sl-cab-act sl-pmf-fold sl-knob-info" href="#">
+            <span class="sl-knob sl-knob-info sl-knob-full" role="img" aria-label="Написать новое письмо">
+              <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true">
+                <circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle>
+              <circle class="sl-knob-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="0 100"></circle>
               </svg>
               <i class="bi bi-pencil-square" aria-hidden="true"></i>
             </span>
-            <span><b>Написать</b><small>новое</small></span>
+            <span><b>Написать</b><small><span>новое</span></small></span>
           </a>
         </nav>
 
@@ -1680,45 +1660,47 @@ a { text-decoration: none; }
 
       <figure class="sl-pmdemo-phone">
         <figcaption>Написать, 390&nbsp;px</figcaption>
-        <nav class="sl-pmf-folders" aria-label="Папки">
-          <a class="sl-pmf-fold sl-pmh-danger" href="#">
-            <span class="sl-pmh sl-pmh-danger" role="img" aria-label="Входящие заполнены на 96 процентов">
-              <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
-                <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
-                <circle class="sl-pmh-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="4"></circle>
+        <nav class="sl-cab-actions sl-pmf-folders" aria-label="Папки">
+          <a class="sl-cab-act sl-pmf-fold sl-knob-danger" href="#">
+            <span class="sl-knob sl-knob-danger" role="img" aria-label="Входящие заполнены на 96 процентов">
+              <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true">
+                <circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle>
+                <circle class="sl-knob-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="96 100"></circle>
               </svg>
               <i class="bi bi-envelope" aria-hidden="true"></i>
             </span>
-            <span><b>Входящие</b><small>240 из 250</small></span>
+            <span><b>Входящие</b><small><span>240 из 250</span></small></span>
             <span class="sl-cab-badge">7</span>
           </a>
-          <a class="sl-pmf-fold sl-pmh-none" href="#">
-            <span class="sl-pmh sl-pmh-none sl-pmh-full" role="img" aria-label="Без ограничения">
-              <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
-                <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+          <a class="sl-cab-act sl-pmf-fold sl-knob-none" href="#">
+            <span class="sl-knob sl-knob-none sl-knob-full" role="img" aria-label="Без ограничения">
+              <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true">
+                <circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle>
+              <circle class="sl-knob-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="0 100"></circle>
               </svg>
               <i class="bi bi-send" aria-hidden="true"></i>
             </span>
-            <span><b>Исходящие</b><small>903</small></span>
+            <span><b>Исходящие</b><small><span>903</span></small></span>
           </a>
-          <a class="sl-pmf-fold sl-pmh-ok" href="#">
-            <span class="sl-pmh sl-pmh-ok" role="img" aria-label="Сохранённые заполнены на 25 процентов">
-              <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
-                <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
-                <circle class="sl-pmh-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="74.8"></circle>
+          <a class="sl-cab-act sl-pmf-fold sl-knob-ok" href="#">
+            <span class="sl-knob sl-knob-ok" role="img" aria-label="Сохранённые заполнены на 25 процентов">
+              <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true">
+                <circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle>
+                <circle class="sl-knob-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="25.2 100"></circle>
               </svg>
               <i class="bi bi-bookmark" aria-hidden="true"></i>
             </span>
-            <span><b>Сохранённые</b><small>63</small></span>
+            <span><b>Сохранённые</b><small><span>63</span></small></span>
           </a>
-          <a class="sl-pmf-fold sl-pmh-info" href="#" aria-current="page">
-            <span class="sl-pmh sl-pmh-info sl-pmh-full" role="img" aria-label="Написать новое письмо">
-              <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
-                <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+          <a class="sl-cab-act sl-pmf-fold sl-knob-info" href="#" aria-current="page">
+            <span class="sl-knob sl-knob-info sl-knob-full" role="img" aria-label="Написать новое письмо">
+              <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true">
+                <circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle>
+              <circle class="sl-knob-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="0 100"></circle>
               </svg>
               <i class="bi bi-pencil-square" aria-hidden="true"></i>
             </span>
-            <span><b>Написать</b><small>новое</small></span>
+            <span><b>Написать</b><small><span>новое</span></small></span>
           </a>
         </nav>
 
@@ -1768,10 +1750,10 @@ a { text-decoration: none; }
                   <small>Проверенные · 12 минут назад</small>
                   <span class="sl-chip sl-chip-warn"><i class="bi bi-inbox" aria-hidden="true"></i> 214 из 250</span>
                 </span>
-                <span class="sl-pmh sl-pmh-warn" role="img" aria-label="Входящие получателя заполнены на 86 процентов">
-                  <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
-                    <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
-                    <circle class="sl-pmh-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="14.4"></circle>
+                <span class="sl-knob sl-knob-warn" role="img" aria-label="Входящие получателя заполнены на 86 процентов">
+                  <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true">
+                    <circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle>
+                    <circle class="sl-knob-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="85.6 100"></circle>
                   </svg>
                   <i class="bi bi-inbox" aria-hidden="true"></i>
                 </span>
@@ -1814,8 +1796,8 @@ a { text-decoration: none; }
           </tr>
           <tr>
             <th scope="row">Кольцо квоты вместо алерта</th>
-            <td>Те же счётчики и квоты; тон — по лестнице <code>getDebugSystemInfo()</code> (до 50 зелёный, 50&ndash;75 синий, 75&ndash;95 оранжевый, свыше 95 красный)</td>
-            <td>Шаблону нужны четыре значения на полку: <code>tone</code>, <code>rest</code> = 100 &minus; процент, флаг <code>no_limit</code> (исходящие с <code>max = 0</code> и «Написать») и <code>label</code> для скрин-ридера. Новых запросов нет; классы <code>sl-pmh-*</code> переезжают в <code>theme.css</code>, новых токенов не требуется</td>
+            <td>Те же счётчики и квоты; тон — по единой лестнице <code>getPercentTone()</code> (до 50 зелёный, 50&ndash;75 синий, 75&ndash;95 оранжевый, свыше 95 красный), её же читают датчики монитора и панель отладки</td>
+            <td>Шаблону нужны четыре значения на полку: <code>tone</code>, <code>part</code> — сам процент, флаг <code>full</code> (мерить нечего либо мест не осталось) и <code>label</code> для скрин-ридера. Новых запросов нет. Кольцо — общий <code>sl-knob</code> темы, тот же, что рисует уровень очков в кабинете и датчики админского монитора: <code>pathLength="100"</code>, дуга в <code>stroke-dasharray="{процент} 100"</code>, прямые торцы; при <code>full</code> трек берёт тон дуги. Плитка — вариант штатной <code>sl-cab-act</code>, поэтому коробка, рамка, ховер и бейдж достаются даром</td>
           </tr>
           <tr>
             <th scope="row">Колода фокуса</th>

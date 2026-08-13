@@ -3194,6 +3194,15 @@ function getLoadStats(): array {
     ];
 }
 
+# The one ladder that turns a per cent into a tone, so a quota ring, a server gauge and the debug panel never disagree about what «almost full» looks like
+# The names are the ones both themes give their tone classes, and a value outside nought to a hundred answers the tone of the end it passed
+function getPercentTone(float $part): string {
+    if ($part > 95) return 'danger';
+    if ($part > 75) return 'warn';
+    if ($part > 50) return 'info';
+    return 'ok';
+}
+
 # Returns rendered system debug information
 function getDebugSystemInfo(array $stats = []): string {
     global $tpl;
@@ -3207,22 +3216,11 @@ function getDebugSystemInfo(array $stats = []): string {
     $metric = static function (float $value, float $max): array {
         $percent = ($max > 0) ? ($value * 100 / $max) : 0.0;
         $percent = min(100.0, max(0.0, $percent));
-        $state = 'info';
-        $prog = '1';
-        if ($percent <= 50) {
-            $state = 'success';
-            $prog = '2';
-        } elseif ($percent > 75 && $percent <= 95) {
-            $state = 'warn';
-            $prog = '3';
-        } elseif ($percent > 95) {
-            $state = 'danger';
-            $prog = '4';
-        }
+        $state = getPercentTone($percent);
         return [
             'percent' => number_format($percent, 1, '.', ''),
-            'progress' => $prog,
-            'is_success' => $state === 'success',
+            'progress' => ['ok' => '2', 'info' => '1', 'warn' => '3', 'danger' => '4'][$state],
+            'is_success' => $state === 'ok',
             'is_info' => $state === 'info',
             'is_warn' => $state === 'warn',
             'is_danger' => $state === 'danger',

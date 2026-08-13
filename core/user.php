@@ -335,6 +335,7 @@ function setMessageShow(): string {
 
 # Build the account navigation items with icon, tone, tooltip and optional badge/sub texts per active module; $home prepends the cabinet home link for inner pages
 # The unread badge is capped at 99+ because the counter sits in a round badge on the tile and a four-digit number would stretch it across the label
+# Only the inner strip names its unread badge: that is the one an out-of-band swap reaches, and the cabinet home page draws its own tiles from the same items
 function getUserNavItems(bool $home = false): array {
     global $db, $conf, $prv;
     $uid = intval((getUserInfo() ?? [])['id'] ?? 0);
@@ -344,7 +345,10 @@ function getUserNavItems(bool $home = false): array {
     if ($conf['privat']['act']) {
         $new = $prv->getUnreadCount($uid);
         $mark = ($new > 99) ? '99+' : (string)$new;
-        $items[] = ['label' => _MESSAGES, 'title' => _PRIVAT, 'href' => 'index.php?name=account&op=privat', 'icon' => 'envelope', 'badge' => $new ? $mark : ''];
+        $items[] = [
+            'label' => _MESSAGES, 'title' => _PRIVAT, 'href' => 'index.php?name=account&op=privat', 'icon' => 'envelope',
+            'badge' => $new ? $mark : '', 'badge_id' => $home ? 'pmbadgenav' : '',
+        ];
     }
     if (is_active('clients') && isModGroup('clients')) {
         getLang('clients');
@@ -622,77 +626,206 @@ function updatePost() {
     }
 }
 
-# Render the private-message inbox, outbox, saved or detail view
+# The shelf strip of the private message page: the three mailboxes and the compose action, each with the quota ring that replaced the half-capacity alert
+# Tone comes from the one ladder of getPercentTone(), the same one the server gauges and the debug panel read, and part is the per cent the template draws as the arc
+# A shelf answers a solid ring where nothing can be measured and where nothing is left: under a whole arc the track carries its tone, so the join of the two ends never shows
+# The unread badge belongs to the inbox and the saved box, never to the outbox, whose unread means the other side has not read it
+# Count and note are two texts and never one: the theme decides whether a separator stands between them, and a shelf that answers only one of them gets no separator at all
+# The ring reads as a whole sentence where there is a per cent to read out, and as the label with its note where there is none: no locale composes that from punctuation
+# A shelf is a link to its own mailbox and «write» is the fourth one, because a mailbox the reader cannot reach is a picture and not a strip of navigation
+# The badge of a shelf keeps its box even at zero: an out-of-band swap replaces an element that is there, and a counter that vanished has nothing left to replace
+function getPrivatShelves(int $typ = 1): string {
+    global $conf, $user, $tpl, $prv;
+    if (!is_user() || !$conf['privat']['act']) return '';
+    $uid = intval($user[0]);
+    $items = [];
+    foreach ([
+        [PrivatBox::Inbox, (string)_PRIN, 'envelope', 'pmbadgein', 1],
+        [PrivatBox::Outbox, (string)_PROUT, 'send', '', 2],
+        [PrivatBox::Saved, (string)_PRSAVE, 'bookmark', 'pmbadgesv', 3],
+    ] as [$box, $lab, $icon, $mark, $num]) {
+        ['has' => $has, 'max' => $max, 'part' => $part] = $prv->getBoxFill($uid, $box);
+        $new = $mark ? $prv->getUnreadBoxCount($uid, $box) : 0;
+        $tone = ($max > 0) ? getPercentTone($part) : 'none';
+        $items[] = [
+            'label' => $lab,
+            'icon' => $icon,
+            'tone' => $tone,
+            'href' => 'index.php?name=account&op=privat&typ='.$num,
+            'current' => $typ === $num,
+            'part' => number_format($part, 1, '.', ''),
+            'full' => $max < 1 || $part >= 100,
+            'ring' => ($max > 0) ? sprintf(_PRFILLED, $lab, round($part)) : '',
+            'count' => ($max > 0) ? sprintf(_PRQUOTA, $has, $max) : (string)$has,
+            'note' => ($max > 0) ? '' : (string)_PRNOLIMIT,
+            'free' => ($tone === 'danger') ? sprintf(_PRFREE, max(0, $max - $has)) : '',
+            'badge' => $new ? (($new > 99) ? '99+' : (string)$new) : '',
+            'badge_id' => $mark,
+        ];
+    }
+    $items[] = [
+        'label' => (string)_PRWRITE, 'icon' => 'pencil-square', 'tone' => 'info', 'part' => '0.0', 'full' => true,
+        'href' => 'index.php?name=account&op=privat&typ=4', 'current' => $typ === 4,
+        'ring' => '', 'count' => '', 'note' => (string)_PRNEW, 'free' => '', 'badge' => '', 'badge_id' => '',
+    ];
+    return $tpl->getHtmlFrag('privat-shelves', ['nav_label' => _PRIVAT, 'items' => $items]);
+}
+
+# The three navigation counters one mutation moves, rendered as out-of-band swaps beside the answer that carries them
+# They answer the mailbox and never the current selection, so a filter that hides everything still leaves the shelves counting what is really there
+# The two shelf badges split the unread between the inbox and the saved box and add up to the cabinet one, which is why all three travel together
+function getPrivatBadges(): string {
+    global $user, $tpl, $prv;
+    $uid = intval($user[0] ?? 0);
+    $out = '';
+    foreach ([
+        ['pmbadgein', $prv->getUnreadBoxCount($uid, PrivatBox::Inbox)],
+        ['pmbadgesv', $prv->getUnreadBoxCount($uid, PrivatBox::Saved)],
+        ['pmbadgenav', $prv->getUnreadCount($uid)],
+    ] as [$key, $new]) {
+        $out .= $tpl->getHtmlFrag('span', [
+            'id' => $key,
+            'is_cab_badge' => true,
+            'is_oob' => true,
+            'is_hidden' => $new < 1,
+            'text' => ($new > 99) ? '99+' : (string)$new,
+        ]);
+    }
+    return $out;
+}
+
+# The selection a request carries, read under fixed names and reduced to a fixed set of values, because a sort and a filter are conditions and never fragments of SQL from an address
+# The term keeps the per cent and the underscore a reader typed: the subsystem escapes both against the escape character it declares in the statement rather than dropping them here
+# The ready query string travels beside the values, because the pager, every row action and the bulk route all have to carry the same selection back with them
+function getPrivatPick(): array {
+    $stat = (string)getVar('req', 'stat', 'var', '');
+    $perd = (string)getVar('req', 'perd', 'var', '');
+    $sort = (string)getVar('req', 'sort', 'var', '');
+    $out = [
+        'find' => trim((string)getVar('req', 'query', 'word', '')),
+        'stat' => in_array($stat, ['unread', 'read'], true) ? $stat : '',
+        'perd' => in_array($perd, ['new', 'old'], true) ? $perd : '',
+        'sort' => in_array($sort, ['old', 'unread', 'name'], true) ? $sort : '',
+    ];
+    $link = '';
+    foreach (['query' => $out['find'], 'stat' => $out['stat'], 'perd' => $out['perd'], 'sort' => $out['sort']] as $key => $val) {
+        if ($val !== '') $link .= '&'.$key.'='.urlencode($val);
+    }
+    return $out + ['link' => $link];
+}
+
+# Build one dense list row of a mailbox, which is the same shape whether it is drawn inside its list or swapped out of band beside the answer that changed it
+# The mailbox decides the state flag and the action set, so a row never has to be told twice which box it stands in, and only a received one can carry the unread mark
+# Today and yesterday are read as a time and an older day as a date, because the day header standing above the row already carries the day itself
+# The subject is a link to the deep route as well as the swap, so the row still opens its message where the swap cannot run
+# Every action of a row names its own id and its own act in the address and sends no body at all: the row stands inside the selection form, whose values would otherwise override both
+function getPrivatRowData(array $row, int $typ, string $tok, int $pick = 0, string $state = ''): array {
+    global $tpl;
+    $when = strtotime($row['time']);
+    $past = date('Y-m-d', strtotime('-1 day'));
+    $link = 'index.php?go=1&op=setPrivateMessageRead&id='.$row['id'].'&cid='.(($typ == 2) ? 2 : 1).$state;
+    $base = 'index.php?go=1&op=updatePrivatBox&typ='.$typ.$state.'&id%5B%5D='.$row['id'].'&act=';
+    $mkact = static fn(string $href, string $title, string $icon, bool $stay = false): array => [
+        'href' => $href, 'title' => $title, 'icon_name' => $icon,
+        'is_htmx' => true, 'is_post' => true, 'hx_headers' => $tok, 'no_params' => true,
+        'hx_target' => $stay ? '#prview' : '#prlist',
+        'confirm_text' => ($icon === 'trash') ? (string)_ONDELETE : '',
+    ];
+    $mark = match ($typ) {
+        3 => $tpl->getHtmlFrag('span', ['title' => _PRMOVE, 'is_message_save' => true, 'text' => '']),
+        2 => $tpl->getHtmlFrag('span', [
+            'title' => $row['viewed'] ? _PROLD : _PROUTNEW,
+            'is_message_out' => !$row['viewed'], 'is_message_read' => $row['viewed'] > 0, 'text' => '',
+        ]),
+        default => $tpl->getHtmlFrag('span', [
+            'title' => $row['viewed'] ? _PROLD : _PRNEW,
+            'is_message_in' => true, 'is_hidden' => $row['viewed'] > 0, 'text' => '',
+        ]),
+    };
+    $acts = [$mkact($link, (string)_SHOW, 'eye', true)];
+    if ($typ == 1) $acts[] = $mkact($base.'save', (string)_SAVE, 'archive');
+    if ($typ == 3) $acts[] = $mkact($base.'unsave', (string)_PRIVAT_UNSAVE, 'bookmark-dash');
+    if ($typ != 2) {
+        $acts[] = $row['viewed']
+            ? $mkact($base.'unread', (string)_PRIVAT_NEW, 'envelope')
+            : $mkact($base.'read', (string)_PRIVAT_READ, 'envelope-open');
+    }
+    $acts[] = $mkact($base.'delete', (string)_DELETE, 'trash');
+    return [
+        'row_id' => 'pmrow'.$row['id'],
+        'is_new' => !$row['viewed'] && $typ != 2,
+        'is_open' => $pick === $row['id'],
+        'pick_label' => $row['title'],
+        'pick_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'id[]', 'value_attr' => (string)$row['id'], 'is_check' => true]),
+        'avatar' => ($row['name'] !== '') ? getUserAvatarUrl(['avatar' => $row['avatar']]) : getUserAvatarUrl([], true),
+        'open_href' => 'index.php?name=account&op=privat&id='.$row['id'].$state,
+        'open_post' => $link,
+        'token' => $tok,
+        'title' => $row['title'],
+        'stamp' => date('Y-m-d\TH:i', $when),
+        'when' => (date('Y-m-d', $when) >= $past) ? date('H:i', $when) : date('d.m', $when),
+        'author' => (string)_ANONYM,
+        'author_html' => ($row['name'] !== '') ? user_info($row['name']) : '',
+        'snip' => $row['snip'],
+        'mark_html' => $mark,
+        'actions_html' => getActionMenu($acts),
+    ];
+}
+
+# Render one column of the private message layout: a mailbox as the left one for typ 1 to 3, one message or the compose state as the right one, the empty pane for nothing at all
 # Every mailbox read runs through the private-message subsystem, so no state column is restated here and a list, its counter and its quota can never disagree
 # This function only reads: opening a message is what marks it read and that is a POST route of its own, which hands the row it has already loaded down instead of having it read twice
 # A stored message is source from stage 2 on: the body is rendered safe in the format its own row names, and the title is plain text the template escapes where it prints it
-# The compose form refills its two fields with what was really submitted or stored, because escaping source into an editor hands the author back an escape they never wrote
-function getPrivateMessageView(string|array $stop = '', string $info = '', int $typ = 0, array $view = []): string {
+# The right column carries what the reply form has to hold in a hidden textarea of its own, because that form stands below the swapped region and is filled through the editor API and never by writing its field
+# The bulk action and its button stand in the footer of the column while the selection lives in the scrolling form above it, so both are bound back to that form by name instead of by nesting
+# Only a caller that names no column at all is answered from the request: zero means the empty pane, and a page that asks for it while the address carries a mailbox must not be handed that mailbox instead
+function getPrivateMessageView(string|array $stop = '', string $info = '', int $typ = -1, array $view = []): string {
     global $db, $user, $conf, $tpl, $prs, $prv;
     if (!is_user() || !$conf['privat']['act']) return $tpl->getHtmlFrag('alert', ['text' => _ERROR, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
-    $typ = $typ ?: getVar('req', 'typ', 'num', 0);
+    if ($typ < 0) $typ = getVar('req', 'typ', 'num', 0);
     $uid = intval($user[0]);
     $tok = getSiteToken();
     $conf['name'] = 'account';
-    $cont = '';
+    $note = '';
     if ($stop) {
-        $cont .= $tpl->getHtmlFrag('alert', [
+        $note = $tpl->getHtmlFrag('alert', [
             'text' => is_array($stop) ? '' : $stop, 'messages' => is_array($stop) ? $stop : [],
             'meta' => '', 'type' => 'warn', 'is_warn' => true,
         ]);
     } elseif ($info) {
-        $cont .= $tpl->getHtmlFrag('alert', ['text' => $info, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
+        $note = $tpl->getHtmlFrag('alert', ['text' => $info, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
     }
     if ($typ >= 1 && $typ <= 3) {
         $box = match ($typ) {2 => PrivatBox::Outbox, 3 => PrivatBox::Saved, default => PrivatBox::Inbox};
-        $prm = match ($typ) {2 => 'prmessou', 3 => 'prmesssa', default => 'prmessin'};
-        $data = $prv->getMessageList($uid, $box, getVar('get', 'cid', 'num', 1));
-        $max = ($typ == 2) ? 0 : intval($conf['privat'][($typ == 3) ? 'messsav' : 'messin']);
-        $left = $max - $data['total'];
-        if ($max > 0 && $left <= 0) {
-            $cont .= $tpl->getHtmlFrag('alert', [
+        $pick = getPrivatPick();
+        $data = $prv->getMessageList($uid, $box, getVar('req', 'pnum', 'num', 1), $pick);
+        $seek = $pick['find'] !== '' || $pick['stat'] !== '' || $pick['perd'] !== '';
+        $state = '&pnum='.$data['page'].$pick['link'];
+        $max = $prv->getBoxLimit($box);
+        if ($max > 0 && $data['total'] >= $max) {
+            $note .= $tpl->getHtmlFrag('alert', [
                 'text' => sprintf(($typ == 3) ? _PRSAVEEXIT : _PRINEXIT, $max),
                 'meta' => '', 'type' => 'warn', 'is_warn' => true,
             ]);
-        } elseif ($max > 0 && $data['total'] >= ($max / 2)) {
-            $cont .= $tpl->getHtmlFrag('alert', [
-                'text' => sprintf(($typ == 3) ? _PRSAVEMAX : _PRINMAX, $max, $data['total'], $left),
-                'meta' => '', 'type' => 'info', 'is_warn' => false,
-            ]);
         }
-        $rows = [];
+        $open = getVar('req', 'id', 'num', 0);
+        $past = date('Y-m-d', strtotime('-1 day'));
+        $days = [];
         foreach ($data['rows'] as $one) {
-            $url = 'index.php?go=1&op=setPrivateMessageRead&id='.$one['id'].'&cid='.(($typ == 2) ? 2 : 1).'&mod='.$typ;
-            $mark = ($typ == 3)
-                ? $tpl->getHtmlFrag('span', ['title' => _PRMOVE, 'is_message_save' => true, 'text' => ''])
-                : $tpl->getHtmlFrag('span', [
-                    'title' => $one['viewed'] ? _PROLD : (($typ == 2) ? _PROUTNEW : _PRNEW),
-                    'is_message_in' => $typ != 2,
-                    'is_message_out' => $typ == 2,
-                    'is_hidden' => $one['viewed'] > 0,
-                    'text' => '',
-                ]);
-            $base = 'index.php?go=1&op=updatePrivatBox&typ='.$typ.'&id%5B%5D='.$one['id'].'&act=';
-            $acts = [['href' => $url, 'title' => _SHOW, 'icon_name' => 'eye',
-                'is_htmx' => true, 'is_post' => true, 'hx_headers' => $tok, 'hx_target' => '#rep'.$prm]];
-            if ($typ == 1) {
-                $acts[] = ['href' => $base.'save', 'title' => _SAVE, 'icon_name' => 'archive',
-                    'is_htmx' => true, 'is_post' => true, 'hx_headers' => $tok, 'hx_target' => '#rep'.$prm];
+            $day = date('Y-m-d', strtotime($one['time']));
+            if (!isset($days[$day])) {
+                $days[$day] = [
+                    'label' => match ($day) {
+                        date('Y-m-d') => (string)_TODAY,
+                        $past => (string)_YESTERDAY,
+                        default => format_time($one['time'], _DATESTRING),
+                    },
+                    'count' => 0,
+                    'rows' => [],
+                ];
             }
-            $acts[] = ['href' => $base.'delete', 'title' => _DELETE, 'icon_name' => 'trash',
-                'is_htmx' => true, 'is_post' => true, 'hx_headers' => $tok, 'hx_target' => '#rep'.$prm];
-            $pick = $tpl->getHtmlFrag('checkbox', ['name_attr' => 'id[]', 'value_attr' => (string)$one['id'], 'is_check' => true]);
-            $open = $tpl->getHtmlFrag('link', [
-                'href' => $url, 'is_htmx' => true, 'is_post' => true, 'hx_headers' => $tok, 'hx_target' => '#rep'.$prm,
-                'title' => $one['title'], 'label' => cutstr($one['title'], 35),
-            ]);
-            $rows[] = ['cells' => [
-                ['is_col_check' => true, 'content_html' => $pick],
-                ['content_html' => $mark.$open],
-                ['content_html' => ($one['name'] !== '') ? user_info($one['name']) : (string)_ANONYM],
-                ['text' => format_time($one['time'], _TIMESTRING)],
-                ['content_html' => getActionMenu($acts)],
-            ]];
+            $days[$day]['count']++;
+            $days[$day]['rows'][] = getPrivatRowData($one, $typ, $tok, $open, $state);
         }
         $mass = [];
         if ($typ != 2) {
@@ -704,149 +837,129 @@ function getPrivateMessageView(string|array $stop = '', string $info = '', int $
         $mass['delete'] = (string)_DELETE;
         $opts = '';
         foreach ($mass as $key => $lab) $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $key, 'label_text' => $lab]);
-        $form = 'prbulk'.$prm;
-        $all = $tpl->getHtmlFrag('checkbox', ['is_check' => true, 'input_attr' => 'title="'._CHECKALL.'"']);
         $bulk = $tpl->getHtmlFrag('inline-badge', ['is_action_label' => true, 'label' => _CHECKOP])
-            .$tpl->getHtmlFrag('select', ['name_attr' => 'act', 'title' => _CHECKOP, 'options_html' => $opts])
+            .$tpl->getHtmlFrag('select', [
+                'name_attr' => 'act', 'title' => _CHECKOP, 'options_html' => $opts, 'select_attr' => 'form="prbulk"',
+            ])
             .$tpl->getHtmlFrag('button', [
-                'button_type' => 'submit', 'submit_label' => _OK, 'title' => _CHECKOP,
+                'button_type' => 'submit', 'submit_label' => _OK, 'title' => _CHECKOP, 'input_attr' => 'form="prbulk"',
                 'hx_post' => 'index.php?go=1&op=updatePrivatBox',
-                'hx_include' => '#'.$form, 'hx_target' => '#rep'.$prm,
+                'hx_include' => '#prbulk', 'hx_target' => '#prlist',
             ]);
-        $list = $tpl->getHtmlPart('content-list', [
-            'rows' => $rows,
-            'table_open' => ['open' => true, 'headers' => [
-                ['is_col_check' => true, 'no_sort' => true, 'content_html' => $all],
-                ['text' => _TITLE],
-                ['text' => ($typ == 2) ? _PRRE : _PRSE],
-                ['text' => _DATE],
-                ['text' => _FUNCTIONS, 'no_sort' => true],
-            ]],
-            'table_close' => [],
-            'empty_alert' => ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false],
+        $keys = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => $tok, 'input_attr' => ''])
+            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'typ', 'value_attr' => (string)$typ, 'input_attr' => ''])
+            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'pnum', 'value_attr' => (string)$data['page'], 'input_attr' => '']);
+        foreach (['query' => $pick['find'], 'stat' => $pick['stat'], 'perd' => $pick['perd'], 'sort' => $pick['sort']] as $key => $val) {
+            if ($val !== '') $keys .= $tpl->getHtmlFrag('hidden', ['name_attr' => $key, 'value_attr' => $val, 'input_attr' => '']);
+        }
+        return $tpl->getHtmlPart('privat-list', [
+            'alert_html' => $note,
+            'groups' => array_values($days),
+            'empty_title' => $seek ? (string)_PRNOHIT : (string)_NO_INFO,
+            'empty_icon' => $seek ? 'funnel' : 'inbox',
+            'found' => $seek ? sprintf(_PRFOUND, $data['total'], $prv->getMessageCount($uid, $box)) : '',
+            'shown' => $data['total'] ? sprintf(_PRSHOWN, $data['offset'] + 1, min($data['offset'] + $data['limit'], $data['total'])) : '',
+            'bulk_url' => 'index.php?go=1&op=updatePrivatBox',
+            'hidden_html' => $keys,
             'pager_html' => getTplPagerView($data['page'], $data['pages'], intval($conf['privat']['nump']), static fn(int $i): array => [
-                'query' => 'index.php?go=1&op=getPrivateMessageView&typ='.$typ.'&cid='.$i,
-                'target_id' => 'rep'.$prm,
+                'query' => 'index.php?go=1&op=getPrivateMessageView&typ='.$typ.'&pnum='.$i.$pick['link'],
+                'target_id' => 'prlist',
             ], ['count' => $data['total'], 'limit' => $data['limit'], 'page' => $data['limit']]),
             'bulk_html' => $tpl->getHtmlFrag('block-content', ['is_bulk_bar' => true, 'content' => $bulk]),
         ]);
-        $cont .= $tpl->getHtmlPart('form-wrap', [
-            'form_id' => $form,
-            'content_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => $tok, 'input_attr' => ''])
-                .$tpl->getHtmlFrag('hidden', ['name_attr' => 'typ', 'value_attr' => (string)$typ, 'input_attr' => '']).$list,
-        ]);
-    } elseif ($typ == 4) {
-        $cid = getVar('req', 'cid', 'num', 0);
-        $mod = getVar('req', 'mod', 'num', 0);
-        $prm = match ($mod) {1 => 'prmessin', 2 => 'prmessou', 3 => 'prmesssa', default => 'prmessfo'};
-        $pname = '';
-        if ($view) {
-            $sql = 'SELECT u.id, u.name, u.rank, u.avatar, u.website, u.regdate, u.origin, u.sig, u.points, u.warnings,'
-                .' u.gender, u.votes, u.tvotes, g.name AS gname, g.rank AS grank FROM '.PREFIX_DB.'_users AS u'
-                .' LEFT JOIN '.PREFIX_DB.'_groups AS g ON ((g.extra = 1 AND u.grp = g.id) OR (g.extra != 1 AND u.points >= g.points))'
-                .' WHERE u.id = :pid ORDER BY g.extra DESC, g.points DESC';
-            $mate = $db->getSqlRow($db->getSqlQuery($sql, ['pid' => $view['partner']])) ?: [];
-            $pname = (string)($mate['name'] ?? '');
-            $show = ($pname !== '') ? $pname : (string)_ANONYM;
-            $gname = (string)($mate['gname'] ?? '');
-            $trank = ($gname !== '') ? _GROUP.': '.$gname : (string)_RANK;
-            $grank = (string)($mate['grank'] ?? '');
-            $avat = ($pname !== '') ? getUserAvatarUrl(['avatar' => (string)($mate['avatar'] ?? '')]) : getUserAvatarUrl([], true);
-            $sig = ($mate['sig'] ?? '') ? $tpl->getHtmlFrag('block-content', ['is_signature' => true, 'content' => $mate['sig']]) : '';
-            $menu = [];
-            if ($conf['privat']['profil'] && $pname !== '') {
-                $menu[] = [
-                    'href' => 'index.php?name=account&op=view&uname='.urlencode($pname),
-                    'title' => _PERSONALINFO, 'icon_name' => 'person',
-                ];
-            }
-            if ($conf['privat']['web'] && ($mate['website'] ?? '')) {
-                $menu[] = ['href' => (string)$mate['website'], 'title' => _DOWNLLINK, 'icon_name' => 'globe', 'is_blank' => true];
-            }
-            $tip = getUserTip(
-                $gname,
-                intval($mate['points'] ?? 0),
-                (string)($mate['regdate'] ?? ''),
-                intval($mate['gender'] ?? 0),
-                (string)($mate['origin'] ?? ''),
-                (string)($mate['warnings'] ?? ''),
-                $pname === '',
-                $view['partner'] > 0
-            );
-            $rimg = ($grank && file_exists(getThemeImagePath('ranks/'.$grank)))
-                ? $tpl->getHtmlFrag('image', ['src' => getThemeImagePath('ranks/'.$grank), 'alt' => $trank, 'title' => $trank])
-                : '';
-            $cont .= $tpl->getHtmlFrag('forum-post', [
-                'id' => 'pm'.$view['id'],
-                'username' => $show,
-                'username_html' => ($pname !== '') ? user_info($pname, false) : htmlspecialchars($show, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
-                'report' => $tip,
-                'date' => $tpl->getHtmlFrag('inline-badge', ['title_text' => _PADD, 'label' => format_time($view['time'], _TIMESTRING), 'is_comment_date' => true]),
-                'ip' => (is_moder($conf['name'])) ? Geoip::getIpHtml($view['ip'], true) : '',
-                'meta_title' => cutstr($view['title'], 35),
-                'avatar' => $avat,
-                'avatar_html' => $tpl->getHtmlFrag('image', ['src' => $avat, 'alt' => $show, 'title' => $show, 'is_avatar' => true]),
-                'rank_html' => ($mate['rank'] ?? '') ? $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => $mate['rank']]) : '',
-                'rank_link' => $rimg,
-                'user_rate' => getRatingAsync(0, intval($mate['id'] ?? 0), $conf['name'], intval($mate['votes'] ?? 0), intval($mate['tvotes'] ?? 0), '', '1'),
-                'text' => $prs->filterContent($view['body'], true, $conf['name'], 2, 'breaks'),
-                'sig' => $prs->filterContent($sig, false, $conf['name'], 2),
-                'btn_user' => getActionMenu($menu, true),
-                'btn_edit' => getActionMenu([[
-                    'href' => 'index.php?go=1&op=updatePrivatBox&typ='.$mod.'&id%5B%5D='.$view['id'].'&act=delete',
-                    'title' => _ONDELETE, 'icon_name' => 'trash',
-                    'is_htmx' => true, 'is_post' => true, 'hx_headers' => $tok, 'hx_target' => '#rep'.$prm,
-                ]]),
-                'is_private_message' => true,
-            ]);
-        }
-        if (!$info && (!$cid || $cid == 1)) {
-            $post = (string)getVar('post', 'name', 'raw', '') ?: urldecode((string)getVar('req', 'uname', 'raw', ''));
-            $post = filterText(mb_substr($post, 0, 25)) ?: $pname;
-            $head = trim((string)getVar('post', 'title', 'raw', '')) ?: (($view) ? _PRREP.': '.$view['title'] : '');
-            $body = trim((string)getVar('post', 'text', 'raw', '')) ?: (($view) ? '[quote]'.$view['body'].'[/quote]' : '');
-            $form = 'form'.$prm;
-            $cont .= $tpl->getHtmlPart('form-add', [
-                'no_action' => true,
-                'form_id' => $form,
-                'form_name' => 'post',
-                'no_enctype' => true,
-                'extrafields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => $tok, 'input_attr' => '']),
-                'fields' => $tpl->getHtmlFrag('form-field-row', ['label' => _PRRE, 'field_html' => getTplUserSearchInput([
-                    'name' => 'name',
-                    'input_id' => 'privat_message_name',
-                    'list_id' => 'privat_message_name_list',
-                    'maxlength' => 25,
-                    'value' => $post,
-                ])])
-                    .$tpl->getHtmlFrag('form-field-row', ['label' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', [
-                        'itype' => 'text', 'name_attr' => 'title', 'value_attr' => $head, 'maxlength_num' => 100,
-                    ])])
-                    .$tpl->getHtmlFrag('form-field-row', [
-                        'label' => _MESSAGE,
-                        'hide_label' => true,
-                        'field_html' => getTplTextarea([
-                            'id' => ($view) ? '2' : '1',
-                            'name' => 'text',
-                            'value' => $body,
-                            'mod' => $conf['name'],
-                            'store' => 'privat.body',
-                            'rows' => '15',
-                            'placeholder' => _MESSAGE,
-                        ]),
-                    ]),
-                'submit' => $tpl->getHtmlFrag('form-submit', [
-                    'button_type' => 'submit',
-                    'label' => _SEND,
-                    'title' => _SEND,
-                    'hx_post' => 'index.php?go=1&op=addPrivateMessage',
-                    'hx_include' => '#'.$form,
-                    'hx_target' => '#rep'.$prm,
-                ]),
-            ]);
-        }
     }
-    return $cont;
+    if ($typ == 4) {
+        if (!$view) {
+            $post = filterText(mb_substr(urldecode((string)getVar('req', 'uname', 'raw', '')), 0, 25));
+            return $tpl->getHtmlPart('privat-view', [
+                'alert_html' => $note,
+                'token' => $tok,
+                'title' => (string)_PRNEW,
+                'is_carry' => $post !== '' || $info !== '',
+                'carry_name' => $post,
+                'carry_title' => '',
+                'carry_body' => '',
+            ]);
+        }
+        $sql = 'SELECT u.id, u.name, u.avatar, u.website, u.sig, g.name AS gname FROM '.PREFIX_DB.'_users AS u'
+            .' LEFT JOIN '.PREFIX_DB.'_groups AS g ON ((g.extra = 1 AND u.grp = g.id) OR (g.extra != 1 AND u.points >= g.points))'
+            .' WHERE u.id = :pid ORDER BY g.extra DESC, g.points DESC';
+        $mate = $db->getSqlRow($db->getSqlQuery($sql, ['pid' => $view['partner']])) ?: [];
+        $pname = (string)($mate['name'] ?? '');
+        $show = ($pname !== '') ? $pname : (string)_ANONYM;
+        $gname = (string)($mate['gname'] ?? '');
+        $mine = $view['uidin'] === $uid;
+        $mod = $mine ? ($view['saved'] ? 3 : 1) : 2;
+        $base = 'index.php?go=1&op=updatePrivatBox&typ='.$mod.'&id%5B%5D='.$view['id'].'&act=';
+        $acts = [];
+        if ($mine) {
+            $acts[] = $view['saved']
+                ? ['href' => $base.'unsave', 'title' => (string)_PRIVAT_UNSAVE, 'icon' => 'bookmark-dash', 'on' => true, 'confirm' => '']
+                : ['href' => $base.'save', 'title' => (string)_SAVE, 'icon' => 'archive', 'on' => false, 'confirm' => ''];
+            $acts[] = $view['viewed']
+                ? ['href' => $base.'unread', 'title' => (string)_PRIVAT_NEW, 'icon' => 'envelope', 'on' => false, 'confirm' => '']
+                : ['href' => $base.'read', 'title' => (string)_PRIVAT_READ, 'icon' => 'envelope-open', 'on' => false, 'confirm' => ''];
+        }
+        $acts[] = ['href' => $base.'delete', 'title' => (string)_DELETE, 'icon' => 'trash', 'on' => false, 'confirm' => (string)_ONDELETE];
+        $chips = $tpl->getHtmlFrag('inline-badge', [
+            'title_text' => _PADD, 'label' => format_time($view['time'], _TIMESTRING), 'is_comment_date' => true,
+        ]);
+        if ($view['saved']) {
+            $chips .= $tpl->getHtmlFrag('span', ['title' => _PRMOVE, 'is_message_save' => true, 'text' => _PRMOVE]);
+        } elseif (!$mine) {
+            $chips .= $tpl->getHtmlFrag('span', [
+                'title' => $view['viewed'] ? _PROLD : _PROUTNEW, 'text' => $view['viewed'] ? _PROLD : _PROUTNEW,
+                'is_message_out' => !$view['viewed'], 'is_message_read' => $view['viewed'] > 0,
+            ]);
+        } else {
+            $chips .= $tpl->getHtmlFrag('span', [
+                'title' => $view['viewed'] ? _PROLD : _PRNEW, 'text' => $view['viewed'] ? _PROLD : _PRNEW,
+                'is_message_in' => true,
+            ]);
+        }
+        if ($conf['privat']['profil'] && $pname !== '') {
+            $chips .= $tpl->getHtmlFrag('link', [
+                'href' => 'index.php?name=account&op=view&uname='.urlencode($pname),
+                'title' => _PERSONALINFO, 'label' => _PERSONALINFO, 'icon_name' => 'person-badge', 'chip_tone' => 'neutral',
+            ]);
+        }
+        if ($conf['privat']['web'] && ($mate['website'] ?? '')) {
+            $chips .= $tpl->getHtmlFrag('link', [
+                'href' => (string)$mate['website'], 'title' => _DOWNLLINK, 'label' => _DOWNLLINK,
+                'icon_name' => 'globe', 'chip_tone' => 'neutral', 'is_blank' => true,
+            ]);
+        }
+        if (is_moder($conf['name'])) $chips .= Geoip::getIpHtml($view['ip'], true);
+        $quote = '[quote]'.$view['body'].'[/quote]';
+        if (getEditorMode() !== 'html') $quote = getDecodedText(replace_break($quote));
+        return $tpl->getHtmlPart('privat-view', [
+            'alert_html' => $note,
+            'token' => $tok,
+            'title' => $view['title'],
+            'avatar' => ($pname !== '') ? getUserAvatarUrl(['avatar' => (string)($mate['avatar'] ?? '')]) : getUserAvatarUrl([], true),
+            'author' => $show,
+            'author_html' => ($pname !== '') ? user_info($pname, false) : '',
+            'note' => ($gname !== '') ? _GROUP.': '.$gname : (string)_RANK,
+            'chips_html' => $chips,
+            'text_html' => $prs->filterContent($view['body'], true, $conf['name'], 2, 'breaks'),
+            'sig_html' => ($mate['sig'] ?? '') ? $prs->filterContent((string)$mate['sig'], false, $conf['name'], 2) : '',
+            'is_reply' => true,
+            'reply_label' => (string)_PRREP,
+            'acts' => $acts,
+            'is_carry' => true,
+            'carry_name' => $pname,
+            'carry_title' => _PRREP.': '.$view['title'],
+            'carry_body' => $quote,
+        ]);
+    }
+    return $tpl->getHtmlPart('privat-view', [
+        'alert_html' => $note,
+        'token' => $tok,
+        'is_blank' => true,
+        'blank_icon' => 'envelope-open',
+        'blank_title' => (string)_PRPICK,
+        'blank_text' => (string)_PRPICKT,
+    ]);
 }
 
 # Validate and send a new private message; answers the compose view with the outcome of the send
@@ -907,10 +1020,14 @@ function addPrivateMessage(): void {
     echo getPrivateMessageView('', sprintf(_PRSENDED, $name), 4);
 }
 
-# Open one message of a mailbox and answer its detail view together with the reply form
+# Open one message of a mailbox and answer the right column of the layout, with the row it changed and the navigation counters as out-of-band swaps beside it
 # Opening a received message is what marks it read, so this is a POST route and not a link: the row is read once here and handed to the view instead of being read a second time
+# Only a read that really changed something carries the out-of-band part: a message that was open already moves no counter and leaves its row exactly as the list drew it
+# Nothing else follows the mutation: the filtered total, the pager and the row set are what the last list request answered, and they come back into line on the next one
+# A message the reader holds no copy of answers the empty pane, because an id alone is not a permission and a refusal has nothing to show
+# The row it swaps back carries the selection it was drawn under, so its own actions still answer the same page, filter, search and sort the reader is looking at
 function setPrivateMessageRead(): void {
-    global $conf, $user, $prv;
+    global $conf, $user, $tpl, $prv;
     $uid = (is_user()) ? intval($user[0]) : 0;
     $id = getVar('req', 'id', 'num', 0);
     $box = (getVar('req', 'cid', 'num', 0) == 2) ? PrivatBox::Outbox : PrivatBox::Inbox;
@@ -919,8 +1036,17 @@ function setPrivateMessageRead(): void {
         return;
     }
     $view = $prv->getMessageView($uid, $id, $box);
-    if ($view && $box === PrivatBox::Inbox && !$view['viewed'] && $prv->setMessageRead($uid, [$id], true)) $view['viewed'] = 1;
+    if (!$view) {
+        echo getPrivateMessageView('', '', 0);
+        return;
+    }
+    $seen = $box === PrivatBox::Inbox && !$view['viewed'] && $prv->setMessageRead($uid, [$id], true);
+    if ($seen) $view['viewed'] = 1;
     echo getPrivateMessageView('', '', 4, $view);
+    if (!$seen) return;
+    $state = '&pnum='.getVar('req', 'pnum', 'num', 1).getPrivatPick()['link'];
+    echo $tpl->getHtmlFrag('privat-row', getPrivatRowData($view, $view['saved'] ? 3 : 1, getSiteToken(), $id, $state) + ['is_oob' => true]);
+    echo getPrivatBadges();
 }
 
 # Apply one mailbox action to the messages a view has selected and answer that mailbox again
@@ -956,11 +1082,11 @@ function updatePrivatBox(): void {
         'unsave' => $prv->setMessageSaved($uid, $ids, false),
         default => $prv->deleteMessage($uid, $ids, $box),
     };
-    $max = intval($conf['privat']['messsav']);
+    $max = $prv->getBoxLimit(PrivatBox::Saved);
     $has = ($act === 'save') ? $prv->getMessageCount($uid, PrivatBox::Saved) : 0;
-    $info = ($done && $act === 'save' && $max > 0 && $has >= ($max / 2)) ? sprintf(_PRSAVEMAX, $max, $has, $max - $has) : '';
     $stop = ($act === 'save' && $max > 0 && ($has + count($ids)) > $max) ? sprintf(_PRSAVEEXIT, $max) : (string)_ERROR;
-    echo getPrivateMessageView($done ? '' : $stop, $info, $typ);
+    echo getPrivateMessageView($done ? '' : $stop, '', $typ);
+    echo getPrivatBadges();
 }
 
 # Per-module map for profile contribution views: label constant, icon name, table, where clause and rating column pair (count, total); fav marks the favorites modul key

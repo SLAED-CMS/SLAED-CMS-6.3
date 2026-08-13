@@ -1246,37 +1246,24 @@ function getServerStatusVars(?array $snapshot = null): array {
     $disksum = (float)$snapshot['disk_total'];
     $diskused = (float)$snapshot['disk_used'];
     $diskpct = (float)$snapshot['disk_pct'];
-    $dash = 2 * M_PI * 45;
-    $offload = $dash - ($dash * $cpup / 100);
-    $offr = $dash - ($dash * $mem['percent'] / 100);
-    $offd = $dash - ($dash * $diskpct / 100);
     $cpuval = (float)$cpup;
     $ramval = (float)$mem['percent'];
     $diskval = (float)$diskpct;
     return [
-        'dash' => $dash,
-        'off' => $offload,
         'load_0' => round($cpuval, 1),
-        'cpu_is_danger' => $cpuval > 95,
-        'cpu_is_warning' => $cpuval > 75 && $cpuval <= 95,
-        'cpu_is_info' => $cpuval > 50 && $cpuval <= 75,
+        'cpu_tone' => getPercentTone($cpuval),
+        'cpu_full' => $cpuval >= 100,
         'cpucores' => $cpu['logical'],
         'cpuphys' => $cpu['physical'],
         'cpufreq' => $cpu['freq'],
-        'dash_r' => $dash,
-        'off_r' => $offr,
-        'ram_is_danger' => $ramval > 95,
-        'ram_is_warning' => $ramval > 75 && $ramval <= 95,
-        'ram_is_info' => $ramval > 50 && $ramval <= 75,
+        'ram_tone' => getPercentTone($ramval),
+        'ram_full' => $ramval >= 100,
         'ram_p' => round($ramval, 1),
         'ramumb' => filterSize($mem['used']),
         'ramtmb' => filterSize($mem['total']),
         'ramavailmb' => filterSize($mem['free']),
-        'dash_d' => $dash,
-        'off_d' => $offd,
-        'disk_is_danger' => $diskval > 95,
-        'disk_is_warning' => $diskval > 75 && $diskval <= 95,
-        'disk_is_info' => $diskval > 50 && $diskval <= 75,
+        'disk_tone' => getPercentTone($diskval),
+        'disk_full' => $diskval >= 100,
         'disk_p' => $diskpct,
         'diskused' => filterSize($diskused),
         'disktot' => filterSize($disksum),

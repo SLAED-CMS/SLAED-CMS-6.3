@@ -4415,14 +4415,26 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   align-items: center;
 }
 
-.sl-knob-wrapper {
+/* The one progress ring of this theme, under the same names the lite theme gives it: an SVG arc over a track, with whatever the consumer puts in the middle */
+/* Geometry belongs to the markup and appearance to this block: the consumer draws its own viewBox and radius, and sets the size and the stroke width through the two variables */
+/* pathLength="100" normalizes the circle, so PHP answers one percentage and the markup makes it the drawn half of stroke-dasharray, with no circumference to compute */
+/* Butt ends: a rounded cap adds half the stroke width at each end and at 96 per cent it closes the very gap that tells "almost full" from "full" */
+.sl-knob {
+  --sl-knob-size: 100px;
+  --sl-knob-width: 8;
+  --sl-knob-tone: var(--sl-color-success);
+  --sl-knob-track: var(--sl-color-bg-subtle);
   position: relative;
-  width: 100px;
-  height: 100px;
+  display: grid;
+  place-items: center;
+  width: var(--sl-knob-size);
+  height: var(--sl-knob-size);
   margin-bottom: 10px;
 }
 
 .sl-knob-svg {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   transform: rotate(-90deg);
@@ -4430,43 +4442,28 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
 
 .sl-knob-bg {
   fill: none;
-  stroke: var(--sl-color-bg-subtle);
-  stroke-width: 8;
-  stroke-linecap: round;
+  stroke: var(--sl-knob-track);
+  stroke-width: var(--sl-knob-width);
 }
 
 .sl-knob-val {
   fill: none;
-  stroke-width: 8;
-  stroke-linecap: round;
-  transition: stroke-dashoffset 1s ease;
+  stroke: var(--sl-knob-tone);
+  stroke-width: var(--sl-knob-width);
+  stroke-linecap: butt;
+  transition: stroke-dasharray 1s ease;
 }
 
-.sl-knob-success {
-  color: var(--sl-color-success);
-  stroke: var(--sl-color-success);
-}
+/* A gauge with nothing left: the track takes the tone, so the join where the two butt ends of a whole arc meet has nothing to show through it */
+.sl-knob-full .sl-knob-bg { stroke: var(--sl-knob-tone); }
+.sl-knob-ok { --sl-knob-tone: var(--sl-color-success); }
+.sl-knob-info { --sl-knob-tone: var(--sl-color-primary-hover); }
+.sl-knob-warn { --sl-knob-tone: var(--sl-color-warning); }
+.sl-knob-danger { --sl-knob-tone: var(--sl-color-danger); }
 
-.sl-knob-info {
-  color: var(--sl-color-primary-hover);
-  stroke: var(--sl-color-primary-hover);
-}
-
-.sl-knob-warning {
-  color: var(--sl-color-warning);
-  stroke: var(--sl-color-warning);
-}
-
-.sl-knob-danger {
-  color: var(--sl-color-danger);
-  stroke: var(--sl-color-danger);
-}
-
+/* The centre reads the tone of its own arc, so the number and the ring around it can never disagree */
 .sl-knob-text {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  color: var(--sl-knob-tone);
   font-size: var(--sl-monitor-size-kpi);
   font-weight: 700;
 }

@@ -520,6 +520,7 @@ function profil(): void {
         'ring' => $lvl['ring'],
         'has_level' => !empty($conf['users']['point']) && !empty($inf['points']),
         'level' => $lvl['level'],
+        'level_full' => $lvl['level'] >= 100,
         'level_group' => ($lvl['groups']) ? end($lvl['groups']) : '',
         'level_next' => $lvl['nextlab'],
         'rank' => (string)($inf['rank'] ?? ''),
@@ -561,27 +562,98 @@ function rssfeed(): void {
 }
 
 function privat(): void {
-    global $conf, $tpl;
+    global $conf, $tpl, $user, $prv;
     if (is_user() && ($conf['privat']['act'] ?? 0)) {
-        #$typ = (getVar('get', 'uname', 'text')) ? 3 : 0;
         setHead([
             'title' => _PRIVAT,
         ]);
-        $tabs = [['prmessin', 1, _PRIN], ['prmessou', 2, _PROUT], ['prmesssa', 3, _PRSAVE], ['prmessfo', 4, _SEND]];
-        $title = [];
-        $text = [];
-        foreach ($tabs as $pos => $one) {
-            [$key, $typ, $lab] = $one;
-            $title[] = $tpl->getHtmlFrag('span', [
-                'target_id' => $key,
-                'request' => 'go=1&op=getPrivateMessageView&typ='.$typ,
-                'text' => $lab,
-                'is_htmx' => true,
-            ]);
-            $text[] = $tpl->getHtmlFrag('block-content', ['id' => 'rep'.$key, 'content' => $pos ? '' : getPrivateMessageView('', '', $typ)]);
+        $uid = intval($user[0]);
+        $tok = getSiteToken();
+        $id = getVar('get', 'id', 'num', 0);
+        $typ = getVar('get', 'typ', 'num', 0);
+        $name = filterText(mb_substr(urldecode((string)getVar('get', 'uname', 'raw', '')), 0, 25));
+        $open = '';
+        if ($id) {
+            $view = $prv->getMessageView($uid, $id, PrivatBox::Inbox);
+            $side = $view ? 1 : 2;
+            if (!$view) $view = $prv->getMessageView($uid, $id, PrivatBox::Outbox);
+            if ($view) {
+                $typ = ($side == 2) ? 2 : ($view['saved'] ? 3 : 1);
+                $open = 'index.php?go=1&op=setPrivateMessageRead&id='.$id.'&cid='.$side;
+            }
         }
-        $cont = $tpl->getHtmlFrag('title', ['title' => _PRIVAT, 'is_level_one' => true]).getUserNav().getNaviTabs(0, 'tab', $title, $text);
-        echo $cont;
+        if ($typ < 1 || $typ > 4) $typ = ($name !== '') ? 4 : 1;
+        $list = ($typ == 4) ? 1 : $typ;
+        $box = match ($list) {2 => PrivatBox::Outbox, 3 => PrivatBox::Saved, default => PrivatBox::Inbox};
+        $pick = getPrivatPick();
+        $sorts = '';
+        foreach (['' => _PRBYNEW, 'old' => _PRBYOLD, 'unread' => _PRBYUNS, 'name' => _PRBYMATE] as $key => $lab) {
+            $sorts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $key, 'label_text' => $lab, 'is_selected' => $pick['sort'] === $key]);
+        }
+        $chips = [];
+        if ($list != 2) {
+            $face = $prv->getBoxFacets($uid, $box);
+            $chips[] = ['grp' => 'all', 'val' => '', 'label' => (string)_ALL, 'num' => $face['total'], 'on' => $pick['stat'] === '' && $pick['perd'] === ''];
+            $chips[] = ['grp' => 'stat', 'val' => 'unread', 'label' => (string)_PRUNSEEN, 'num' => $face['unread'], 'on' => $pick['stat'] === 'unread'];
+            $chips[] = ['grp' => 'stat', 'val' => 'read', 'label' => (string)_PRSEEN, 'num' => $face['read'], 'on' => $pick['stat'] === 'read'];
+            $chips[] = ($list == 3)
+                ? ['grp' => 'perd', 'val' => 'old', 'label' => (string)_PRSTALE, 'num' => $face['stale'], 'on' => $pick['perd'] === 'old']
+                : ['grp' => 'perd', 'val' => 'new', 'label' => (string)_PRFRESH, 'num' => $face['fresh'], 'on' => $pick['perd'] === 'new'];
+        }
+        echo $tpl->getHtmlFrag('title', ['title' => _PRIVAT, 'is_level_one' => true]).getUserNav()
+            .$tpl->getHtmlPart('privat-page', [
+                'shelves_html' => getPrivatShelves($typ),
+                'find_url' => 'index.php?go=1&op=getPrivateMessageView',
+                'find' => $pick['find'],
+                'seek_label' => (string)_PRSEEK,
+                'search_label' => (string)_SEARCH,
+                'sort_label' => (string)_PRSORT,
+                'filter_label' => (string)_PRFILTER,
+                'reset_label' => (string)_PRRESET,
+                'chips' => $chips,
+                'sort_html' => $tpl->getHtmlFrag('select', [
+                    'name_attr' => 'sort', 'title' => _PRSORT, 'options_html' => $sorts, 'select_attr' => 'id="prsort"',
+                ]),
+                'tools_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'name', 'value_attr' => 'account', 'input_attr' => ''])
+                    .$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'privat', 'input_attr' => ''])
+                    .$tpl->getHtmlFrag('hidden', ['name_attr' => 'typ', 'value_attr' => (string)$list, 'input_attr' => ''])
+                    .$tpl->getHtmlFrag('hidden', ['name_attr' => 'stat', 'value_attr' => $pick['stat'], 'input_attr' => 'id="prstat"'])
+                    .$tpl->getHtmlFrag('hidden', ['name_attr' => 'perd', 'value_attr' => $pick['perd'], 'input_attr' => 'id="prperd"']),
+                'pane' => ($open || $typ == 4) ? 'view' : 'list',
+                'list_label' => (string)_PRLIST,
+                'view_label' => (string)_PRVIEW,
+                'back_label' => (string)_PRBACK,
+                'token' => $tok,
+                'open_post' => $open,
+                'list_html' => getPrivateMessageView('', '', $list),
+                'view_html' => getPrivateMessageView('', '', ($typ == 4) ? 4 : 0),
+                'send_url' => 'index.php?go=1&op=addPrivateMessage',
+                'token_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => $tok, 'input_attr' => '']),
+                'to_label' => (string)_PRRE,
+                'to_html' => getTplUserSearchInput([
+                    'name' => 'name',
+                    'input_id' => 'privat_message_name',
+                    'list_id' => 'privat_message_name_list',
+                    'maxlength' => 25,
+                    'value' => ($typ == 4) ? $name : '',
+                ]),
+                'head_label' => (string)_TITLE,
+                'head_html' => $tpl->getHtmlFrag('input', [
+                    'itype' => 'text', 'name_attr' => 'title', 'value_attr' => '', 'maxlength_num' => 100,
+                    'input_id' => 'prtitle', 'placeholder_text' => _TITLE,
+                ]),
+                'text_label' => (string)_MESSAGE,
+                'editor_html' => getTplTextarea([
+                    'id' => 'privat',
+                    'name' => 'text',
+                    'value' => '',
+                    'mod' => $conf['name'],
+                    'store' => 'privat.body',
+                    'rows' => '15',
+                    'placeholder' => _MESSAGE,
+                ]),
+                'send_label' => (string)_SEND,
+            ]);
         setFoot();
     } else {
         account();

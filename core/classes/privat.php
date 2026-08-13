@@ -26,6 +26,38 @@ final class Privat {
     # How many messages one bulk action may carry, so a submitted selection cannot grow into an unbounded statement
     private const MAXBULK = 100;
 
+    # How many characters of a body the server cuts for one list row, which is the only part of that column a list ever reads
+    private const SNIPCUT = 300;
+
+    # How many days back the newer period reaches and how many days back the older one begins, which are the two boundaries the facet row and the period filter share
+    private const FRESHDAY = 7;
+    private const STALEDAY = 30;
+
+    # The character the search declares as its own escape, so what an author wrote as a per cent or an underscore stays a per cent or an underscore whatever the SQL mode says
+    private const LIKEMARK = '!';
+
+    # The longest search term one selection carries, because a term is a condition and not a document
+    private const FINDMAX = 64;
+
+    # How many characters of that cut are left once the source markup is stripped out of it, which is the snippet one row answers
+    private const SNIPLEN = 160;
+
+    # The source markup a snippet drops and what each pattern leaves behind, in the order they have to run
+    # A whole markdown link goes before one the cut broke off, both go before the bracket tags, and the whitespace collapses last
+    private const SNIPFROM = [
+        '#!?\[([^\]\n]*)\]\([^)\n]*\)#u',
+        '#!?\[[^\]\n]*\]\([^)\n]*$#u',
+        '#\[/?[a-z][a-z\d]*(?:=[^\]\n]*)?\]#iu',
+        '#<[^>]*>#u',
+        '#^[ \t]*(?:[>\#]+|[-+*]|\d+\.)[ \t]+#mu',
+        '#[`*~]+#u',
+        '#\s+#u',
+    ];
+    private const SNIPTO = ['$1', '', '', '', '', '', ' '];
+
+    # The tag or bracket the cut itself broke open, which is everything from the last unclosed one to the end of the prefix
+    private const SNIPOPEN = '#[<\[][^>\]\n]*$#u';
+
     private Database $db;
     private array $conf;
     private array $site;
@@ -58,10 +90,70 @@ final class Privat {
     }
 
     # Count the rows one predicate answers, or the whole table when the administrator list asks without one
-    private function getTotal(string $where, array $pars): int {
-        $sql = 'SELECT COUNT(id) AS num FROM '.PREFIX_DB.'_privat'.(($where === '') ? '' : ' WHERE '.$where);
+    # The table carries its alias in every count, so the one predicate that has to reach the counterpart brings its join along and the others read exactly as they did
+    private function getTotal(string $where, array $pars, string $join = ''): int {
+        $sql = 'SELECT COUNT(p.id) AS num FROM '.PREFIX_DB.'_privat AS p'.$join.(($where === '') ? '' : ' WHERE '.$where);
         $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, $pars));
         return $row ? intval($row['num']) : 0;
+    }
+
+    # The join one list needs to name the counterpart of every row, which is the same join its count takes on only when the search reads that name
+    private function getMateJoin(PrivatBox $box): string {
+        $mate = ($box === PrivatBox::Outbox) ? 'uidin' : 'uidout';
+        return ' LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.'.$mate.' = u.id)';
+    }
+
+    # The selection one list answers: the mailbox predicate with the toolbar conditions above it, the values each of them binds, and whether the counterpart has to be joined for it
+    # Search takes one placeholder per column and declares its own escape character, because a native prepared statement refuses a repeated name and no SQL mode may decide what an underscore means
+    # The period binds a number of days rather than a moment, so the boundary is drawn by the same server that wrote the row and an installation whose database runs another time zone still cuts where it should
+    # Only the search reaches outside the message table, which is why it is also the only condition that reports a join back to the count
+    private function getPickWhere(PrivatBox $box, array $pick): array {
+        $where = $this->getBoxWhere($box, 'p.');
+        $pars = [];
+        $join = false;
+        $stat = (string)($pick['stat'] ?? '');
+        if ($stat === 'unread') $where .= ' AND p.viewed = 0';
+        if ($stat === 'read') $where .= ' AND p.viewed = 1';
+        $perd = (string)($pick['perd'] ?? '');
+        if ($perd === 'new') {
+            $where .= ' AND p.time >= NOW() - INTERVAL :fnew DAY';
+            $pars['fnew'] = self::FRESHDAY;
+        }
+        if ($perd === 'old') {
+            $where .= ' AND p.time < NOW() - INTERVAL :fold DAY';
+            $pars['fold'] = self::STALEDAY;
+        }
+        $find = $this->filterFindText((string)($pick['find'] ?? ''));
+        if ($find !== '') {
+            $mark = self::LIKEMARK;
+            $where .= ' AND (p.title LIKE :ftit ESCAPE \''.$mark.'\' OR p.body LIKE :fbody ESCAPE \''.$mark.'\''
+                .' OR u.name LIKE :fusr ESCAPE \''.$mark.'\')';
+            $pars['ftit'] = $find;
+            $pars['fbody'] = $find;
+            $pars['fusr'] = $find;
+            $join = true;
+        }
+        return [$where, $pars, $join];
+    }
+
+    # Turn one submitted term into the pattern its three columns are compared with, or nothing at all when the term carries no term
+    # The escape character is escaped before the wildcards are, or the escape of a per cent would itself be read as a literal one
+    private function filterFindText(string $text): string {
+        $text = trim(mb_substr(trim($text), 0, self::FINDMAX));
+        if ($text === '') return '';
+        $mark = self::LIKEMARK;
+        return '%'.str_replace([$mark, '%', '_'], [$mark.$mark, $mark.'%', $mark.'_'], $text).'%';
+    }
+
+    # The order one list is read in, chosen from a fixed set and never from a request, each shape ending in a tie-breaker on the id in the direction of its own primary sort
+    # Without that tie-breaker two rows sharing one moment can repeat or drop across a page boundary, which is a lost message rather than a cosmetic wobble
+    private function getSortOrder(string $sort): string {
+        return match ($sort) {
+            'old' => 'p.time ASC, p.id ASC',
+            'unread' => 'p.viewed ASC, p.time DESC, p.id DESC',
+            'name' => 'u.name ASC, p.time DESC, p.id DESC',
+            default => 'p.time DESC, p.id DESC',
+        };
     }
 
     # Resolve the page bounds of one list from its total, so the rows and the pager of a mailbox are computed once and from the same number
@@ -94,6 +186,18 @@ final class Privat {
     private function getMateData(array $row, PrivatBox $box): array {
         $uid = ($box === PrivatBox::Outbox) ? intval($row['uidin']) : intval($row['uidout']);
         return ['partner' => $uid, 'name' => (string)($row['name'] ?? ''), 'avatar' => (string)($row['avatar'] ?? '')];
+    }
+
+    # The plain single line a list row shows under its subject, built from the prefix the server cut and never from a whole stored body
+    # The source markup goes first, then the line breaks, so neither half a tag nor a second line ever reaches the row
+    # Only a prefix the server really cut loses its last open bracket: in a body short enough to arrive whole, that bracket is what the author wrote and not a tag the cut broke
+    # The length is counted in characters and not in bytes, which is what leaves the last character of a multibyte cut whole
+    private function filterSnippet(string $text): string {
+        if ($text === '') return '';
+        $cut = mb_strlen($text) >= self::SNIPCUT;
+        $text = (string)preg_replace(self::SNIPFROM, self::SNIPTO, $text);
+        if ($cut) $text = (string)preg_replace(self::SNIPOPEN, '', $text);
+        return trim(mb_substr(trim($text), 0, self::SNIPLEN));
     }
 
     # The state an administrator reads one row as, derived from the four columns in the order the plan fixes, first match winning
@@ -217,8 +321,24 @@ final class Privat {
 
     # Report whether the mailbox of the recipient has no room left, over both quotas the module carries
     private function checkQuota(int $uid): bool {
-        return $this->getMessageCount($uid, PrivatBox::Inbox) >= intval($this->conf['messin'] ?? 0)
-            || $this->getMessageCount($uid, PrivatBox::Saved) >= intval($this->conf['messsav'] ?? 0);
+        return $this->getMessageCount($uid, PrivatBox::Inbox) >= $this->getBoxLimit(PrivatBox::Inbox)
+            || $this->getMessageCount($uid, PrivatBox::Saved) >= $this->getBoxLimit(PrivatBox::Saved);
+    }
+
+    # The quota one mailbox answers to, read from the settings this class already holds, so nothing outside it has to know which setting bounds which box
+    # The outbox has none: a sender is bounded by the mailbox of whoever receives the message, never by the copies they keep of what they sent
+    public function getBoxLimit(PrivatBox $box): int {
+        if ($box === PrivatBox::Outbox) return 0;
+        return intval($this->conf[($box === PrivatBox::Saved) ? 'messsav' : 'messin'] ?? 0);
+    }
+
+    # How full one mailbox is: what it holds, what it may hold, and the per cent between the two, which is the one place that arithmetic happens
+    # The per cent is clamped, because a quota lowered under a mailbox that has already passed it would otherwise answer more than a whole ring
+    # A mailbox with no quota answers zero per cent rather than a hundred: nothing is measured there, and what is unmeasured is not full
+    public function getBoxFill(int $uid, PrivatBox $box): array {
+        $has = $this->getMessageCount($uid, $box);
+        $max = $this->getBoxLimit($box);
+        return ['has' => $has, 'max' => $max, 'part' => ($max > 0) ? min(100.0, $has * 100 / $max) : 0.0];
     }
 
     # Count one mailbox of one account, which is the number its list pages, its counter and its quota are all read from
@@ -233,25 +353,55 @@ final class Privat {
         return $this->getTotal('uidin = :uid AND delin = 0 AND viewed = 0', ['uid' => $uid]);
     }
 
+    # Count the unopened messages of one mailbox, which is the badge of one shelf and not the counter of the cabinet
+    # The inbox and the saved box split the unread between them, so their two badges add up to the one number getUnreadCount() answers
+    public function getUnreadBoxCount(int $uid, PrivatBox $box): int {
+        if ($uid < 1) return 0;
+        return $this->getTotal($this->getBoxWhere($box).' AND viewed = 0', ['uid' => $uid]);
+    }
+
     # Count the messages one account has sent that their recipient has not opened yet, which is the outgoing counter of the sidebar block
     # It filters delout because a sender who threw their own copy away is no longer waiting for it to be read
     public function getUnreadOutCount(int $uid): int {
-        if ($uid < 1) return 0;
-        return $this->getTotal('uidout = :uid AND delout = 0 AND viewed = 0', ['uid' => $uid]);
+        return $this->getUnreadBoxCount($uid, PrivatBox::Outbox);
     }
 
-    # Return one page of one mailbox, newest first, with the counterpart of every message resolved in the same round trip
-    public function getMessageList(int $uid, PrivatBox $box, int $page = 1): array {
-        $out = $this->getPager($this->getMessageCount($uid, $box), $page, intval($this->conf['num'] ?? 25));
+    # Return one page of one mailbox under one selection, with the counterpart of every message resolved in the same round trip
+    # The body is read as the prefix the server cuts and never as the column itself, so a page of a mailbox costs no MEDIUMTEXT per row
+    # The rows, the count they are paged against and the pager all come out of one predicate set inside one answer, which is what makes rows = min(limit, total - offset) hold for it
+    public function getMessageList(int $uid, PrivatBox $box, int $page = 1, array $pick = []): array {
+        [$where, $pars, $join] = $this->getPickWhere($box, $pick);
+        $pars['uid'] = $uid;
+        $link = $this->getMateJoin($box);
+        $out = $this->getPager(($uid < 1) ? 0 : $this->getTotal($where, $pars, $join ? $link : ''), $page, intval($this->conf['num'] ?? 25));
         if ($uid < 1 || $out['total'] < 1) return $out;
-        $mate = ($box === PrivatBox::Outbox) ? 'uidin' : 'uidout';
-        $sql = 'SELECT p.'.str_replace(', ', ', p.', self::FIELDS).', u.name, u.avatar FROM '.PREFIX_DB.'_privat AS p'
-            .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.'.$mate.' = u.id) WHERE '.$this->getBoxWhere($box, 'p.')
-            .' ORDER BY p.time DESC, p.id DESC LIMIT '.$out['offset'].', '.$out['limit'];
-        foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql, ['uid' => $uid])) ?: [] as $row) {
-            $out['rows'][] = $this->getRowData($row) + $this->getMateData($row, $box);
+        $sql = 'SELECT p.'.str_replace(', ', ', p.', self::FIELDS).', LEFT(p.body, '.self::SNIPCUT.') AS snip, u.name, u.avatar'
+            .' FROM '.PREFIX_DB.'_privat AS p'.$link.' WHERE '.$where
+            .' ORDER BY '.$this->getSortOrder((string)($pick['sort'] ?? '')).' LIMIT '.$out['offset'].', '.$out['limit'];
+        foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: [] as $row) {
+            $out['rows'][] = $this->getRowData($row) + $this->getMateData($row, $box) + ['snip' => $this->filterSnippet((string)($row['snip'] ?? ''))];
         }
         return $out;
+    }
+
+    # The facets of one mailbox in one aggregate row: what it holds altogether, and what each single toolbar condition answers inside it
+    # A facet is measured against the mailbox alone, never against the other facets and never against the search, so a chip keeps saying what its own condition would find
+    # Both period boundaries are counted in the same row under names of their own, because one name in two places is what a native prepared statement refuses
+    public function getBoxFacets(int $uid, PrivatBox $box): array {
+        $out = ['total' => 0, 'unread' => 0, 'read' => 0, 'fresh' => 0, 'stale' => 0];
+        if ($uid < 1) return $out;
+        $sql = 'SELECT COUNT(id) AS total, SUM(viewed = 0) AS unseen, SUM(viewed = 1) AS seen,'
+            .' SUM(time >= NOW() - INTERVAL :fnew DAY) AS fresh, SUM(time < NOW() - INTERVAL :fold DAY) AS stale'
+            .' FROM '.PREFIX_DB.'_privat WHERE '.$this->getBoxWhere($box);
+        $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['uid' => $uid, 'fnew' => self::FRESHDAY, 'fold' => self::STALEDAY]));
+        if (!$row) return $out;
+        return [
+            'total' => intval($row['total']),
+            'unread' => intval($row['unseen']),
+            'read' => intval($row['seen']),
+            'fresh' => intval($row['fresh']),
+            'stale' => intval($row['stale']),
+        ];
     }
 
     # Return the newest messages of one inbox for the dashboard preview, which is the inbox list without its pager
@@ -269,6 +419,7 @@ final class Privat {
 
     # Return one message as one of its two participants reads it, or nothing at all when that side has deleted its copy
     # The counterpart is answered with the row, so the profile a detail view renders is the other account and never the reader's own
+    # The snippet travels with it because the list row of that same message is redrawn from this answer after it changed, and no consumer outside this class ever cuts a body of its own
     public function getMessageView(int $uid, int $id, PrivatBox $box): array {
         if ($uid < 1 || $id < 1) return [];
         $mate = ($box === PrivatBox::Outbox) ? 'uidin' : 'uidout';
@@ -276,7 +427,8 @@ final class Privat {
             .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.'.$mate.' = u.id) WHERE p.id = :id AND '.$this->getSideWhere($box, 'p.').' LIMIT 1';
         $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['id' => $id, 'uid' => $uid]));
         if (!$row) return [];
-        return $this->getRowData($row) + $this->getMateData($row, $box) + ['body' => (string)$row['body'], 'ip' => (string)$row['ip']];
+        return $this->getRowData($row) + $this->getMateData($row, $box)
+            + ['body' => (string)$row['body'], 'ip' => (string)$row['ip'], 'snip' => $this->filterSnippet((string)$row['body'])];
     }
 
     # Return one page of the administrator list, newest first, with both account names and the state the four columns add up to
@@ -387,7 +539,7 @@ final class Privat {
             [$keys, $pars] = $this->getIdBind($ids);
             $pars['uid'] = $uid;
             $add = $this->getTotal('id IN ('.$keys.') AND '.$this->getSideWhere(PrivatBox::Inbox).' AND saved = 0', $pars);
-            if ($this->getMessageCount($uid, PrivatBox::Saved) + $add > intval($this->conf['messsav'] ?? 0)) return $this->getFailed($own);
+            if ($this->getMessageCount($uid, PrivatBox::Saved) + $add > $this->getBoxLimit(PrivatBox::Saved)) return $this->getFailed($own);
         }
         if (!$this->setMessageFlag($uid, $ids, 'saved', $keep ? 1 : 0)) return $this->getFailed($own);
         if ($own && !$this->db->setSqlCommit()) return $this->getFailed($own);
