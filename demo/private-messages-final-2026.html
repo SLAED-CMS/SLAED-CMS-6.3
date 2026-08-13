@@ -83,8 +83,6 @@ a { text-decoration: none; }
 .sl-pmf-slot-subj:hover { color: var(--sl-color-primary); }
 .sl-pmf-slot p { display: -webkit-box; overflow: hidden; margin: 0; color: var(--sl-color-text-muted); font-size: 12px; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .sl-pmf-slot-acts { display: flex; gap: var(--sl-space-xs); padding-top: 7px; border-top: 1px solid var(--sl-color-border-subtle); }
-.sl-pmf-slot-acts .sl-but-mini { --sl-size-chip: 23px; }
-.sl-pmf-slot-acts .sl-but-mini > .bi { font-size: 12px; }
 .sl-pmf-slot-more { display: grid; place-content: center; justify-items: center; gap: 5px; flex: 0 0 118px; border: 1px dashed var(--sl-color-border-strong); border-radius: var(--sl-radius-card); background: var(--sl-color-bg-soft); color: var(--sl-color-text-muted); font-size: 12px; scroll-snap-align: start; }
 .sl-pmf-slot-more i { font-size: 20px; }
 
@@ -137,11 +135,11 @@ a { text-decoration: none; }
 .sl-pmf-meta .sl-author { flex: 0 0 auto; max-width: 46%; overflow: hidden; color: var(--sl-color-text-muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .sl-pmf-meta .sl-author:hover { color: var(--sl-color-primary); }
 .sl-pmf-snip { flex: 1 1 auto; overflow: hidden; color: var(--sl-color-text-subtle); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
-.sl-pmf-flag { flex: 0 0 auto; }
 .sl-pmf-item .sl-chip { height: 19px; padding: 0 6px; font-size: 11px; }
-.sl-pmf-item .sl-dial-toggle { --sl-size-chip: 22px; }
-.sl-pmf-item .sl-dial-item { --sl-size-chip: 22px; }
-.sl-pmf-item .sl-dial .bi { font-size: 12px; }
+/* Круглым флаг состояния делает штатный sl-chip-icon из темы; строка ленты только ужимает его под свою высоту 19 px вместо 26 */
+/* Иконка ужата до трёх четвертей базового размера: в круге 19 px штатные 16 px упираются в края и закрывают собой фон, по которому и читается состояние */
+.sl-pmf-item .sl-chip-icon { flex: 0 0 auto; width: 19px; }
+.sl-pmf-item .sl-chip-icon .bi { font-size: calc(var(--sl-size-icon-xs) * 0.75); }
 .sl-pmf-new .sl-pmf-subj { color: var(--sl-color-text-heading); font-weight: bold; }
 .sl-pmf-new .sl-pmf-snip { color: var(--sl-color-text-muted); }
 
@@ -151,7 +149,6 @@ a { text-decoration: none; }
 .sl-pmf-foot .sl-pager-info { padding: 8px 10px 0; font-size: 12px; }
 .sl-pmf-foot .sl-pager { padding: 6px 0 10px; border-top: 0; }
 .sl-pmf-foot .sl-pager-main { font-size: 14px; }
-.sl-pmf-foot .sl-but-mini { --sl-size-chip: 24px; font-size: 11px; }
 .sl-pmf-foot .sl-bulk-bar { margin: 0; border-width: 1px 0 0; border-radius: 0; gap: var(--sl-space-sm); padding: 8px 10px; }
 .sl-pmf-foot .sl-bulk-bar .sl-field { height: 26px; padding: 0 8px; font-size: 12px; }
 .sl-pmf-foot .sl-bulk-bar .sl-but { height: 26px; margin: 0; font-size: 12px; }
@@ -185,6 +182,19 @@ a { text-decoration: none; }
 .sl-pmf-reply-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sl-space-md); }
 .sl-pmf-reply-foot .sl-but { margin: 0; }
 .sl-pmf-reply-foot small { color: var(--sl-color-text-muted); }
+
+/* Написать: та же сетка, что у ответа, но во всю правую колонку — письма над формой нет, поэтому нет ни верхней границы, ни подложки */
+.sl-pmf-compose { flex: 1 1 auto; align-content: start; border-top: 0; background: var(--sl-color-bg); }
+/* Карточка адресата: имя из автодополнения становится человеком с тем же кольцом квоты, что и полки, — переполненный ящик получателя виден до отправки, а не в отказе после неё */
+.sl-pmf-mate { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: center; gap: 11px; padding: 9px 12px; border: 1px solid var(--sl-color-border-subtle); border-radius: var(--sl-radius-card); background: var(--sl-color-bg-soft); }
+.sl-pmf-mate img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: var(--sl-color-bg-soft-soft); }
+.sl-pmf-mate b { display: block; color: var(--sl-color-text-heading); }
+.sl-pmf-mate small { display: block; color: var(--sl-color-text-muted); font-size: 11px; }
+.sl-pmf-mate .sl-chip { margin-top: 5px; }
+.sl-pmf-mate .sl-pmh { --sl-pmh-size: 36px; }
+/* Ответы формы отправки: штатный sl-alert без обвязки — в демо они стоят подряд, на странице приходит один */
+.sl-pmf-says { display: grid; gap: var(--sl-space-md); }
+.sl-pmf-says .sl-alert { margin: 0; }
 
 /* Пустые состояния */
 .sl-pmf-blank { display: grid; align-content: center; justify-items: center; gap: 10px; min-height: 340px; padding: 30px; text-align: center; }
@@ -221,8 +231,9 @@ a { text-decoration: none; }
 
 /* Мобильный: панели не сжимаются, а подменяют друг друга */
 @container (max-width: 800px) {
-  .sl-pmf-folders { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
-  .sl-pmf-fold { --sl-pmh-size: 36px; grid-template-columns: 36px minmax(0, 1fr); gap: 9px; padding: 8px 10px; }
+  /* Полки уходят в ленту с прокруткой: четыре плитки в два ряда съедали пол-экрана до первого письма, а подсмотренный край соседней плитки сам показывает, что ряд листается */
+  .sl-pmf-folders { display: flex; grid-template-columns: none; gap: var(--sl-space-sm); overflow-x: auto; scroll-snap-type: x mandatory; }
+  .sl-pmf-fold { --sl-pmh-size: 36px; flex: 0 0 62%; grid-template-columns: 36px minmax(0, 1fr); gap: 9px; padding: 8px 10px; scroll-snap-align: start; }
   .sl-pmf-fold small { font-size: 10px; }
   .sl-pmf-fold .sl-chip { margin-top: 4px; }
   .sl-pmf-found { margin-left: 0; }
@@ -248,7 +259,7 @@ a { text-decoration: none; }
   <h1>Личные сообщения — финальный вариант</h1>
   <p>Основа — двухпанельная раскладка варианта&nbsp;2: список слева остаётся на экране, письмо открывается справа. Сверху добавлены полки-плитки и колода фокуса, под списком вернулась штатная полоса массовых действий, а над ним — полоса активных фильтров со счётчиком выборки. Строка ленты сжата до двух уровней: <b>56&nbsp;px против 111&nbsp;px</b> у исходного варианта&nbsp;2 — вдвое больше писем на экран без потери читаемости.</p>
   <p>Текстовый алерт о квоте заменён на <b>кольцо вокруг иконки полки</b>: дуга и иконка в одном тоне, порог — та же лестница, что красит подвал сайта. Полки без квоты (исходящие и «Написать») несут сплошное кольцо в цвет своей иконки. Подробный разбор — в <a href="private-messages-quota-halo.html">отдельном демо</a>.</p>
-  <p>Все данные на экране — реальные для стенда: 240 входящих при квоте 250, 10 страниц по 25. Поле ответа — настоящий Toast UI из <code>plugins/editors/toastui</code>.</p>
+  <p>Все данные на экране — реальные для стенда: 240 входящих при квоте 250, 10 страниц по 25. Поле ответа — настоящий Toast UI из <code>plugins/editors/toastui</code>. Каждая полка показана целиком: входящие, исходящие, сохранённые и форма отправки.</p>
   <div class="sl-pmdemo-chips">
     <span class="sl-chip sl-chip-info"><i class="bi bi-layout-sidebar" aria-hidden="true"></i> основа: вариант 2</span>
     <span class="sl-chip sl-chip-success"><i class="bi bi-grid-1x2" aria-hidden="true"></i> из 1: полки-плитки + sl-bulk-bar</span>
@@ -264,7 +275,7 @@ a { text-decoration: none; }
 
   <section class="sl-pmdemo-sec">
     <h2><span>1</span> Входящие с открытым письмом</h2>
-    <p>Полки задают папку, чипсы под поиском — выборку внутри неё. Выбор письма меняет только правую панель: список, позиция прокрутки и отметки чекбоксов остаются на месте.</p>
+    <p>Полки задают папку, чипсы под поиском — выборку внутри неё. Выбор письма меняет только правую панель: список, позиция прокрутки и отметки чекбоксов остаются на месте. Ленты в демо укорочены до нескольких писем, а счётчики полок, тулбара и пагинатора показывают числа настоящей страницы: 240 входящих, 25 писем на страницу, 10 страниц.</p>
 
     <div class="sl-pmdemo-frame">
 
@@ -282,7 +293,7 @@ a { text-decoration: none; }
             <small>240 из 250</small>
             <span class="sl-chip sl-chip-danger"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> свободно 10</span>
           </span>
-          <span class="sl-cab-badge">8</span>
+          <span class="sl-cab-badge">7</span>
         </a>
         <a class="sl-pmf-fold sl-pmh-none" href="#">
           <span class="sl-pmh sl-pmh-none sl-pmh-full" role="img" aria-label="У исходящих нет ограничения">
@@ -407,8 +418,8 @@ a { text-decoration: none; }
       <div class="sl-pmf-active" role="group" aria-label="Фильтр выборки">
         <b>Фильтр:</b>
         <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Все <b>· 240</b></button>
-        <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="true" data-sl-pm-one="state">Непрочитанные <b>· 8</b></button>
-        <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false" data-sl-pm-one="state">Прочитанные <b>· 232</b></button>
+        <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="true" data-sl-pm-one="state">Непрочитанные <b>· 7</b></button>
+        <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false" data-sl-pm-one="state">Прочитанные <b>· 233</b></button>
         <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="true">За неделю <b>· 61</b></button>
         <span class="sl-pmf-sep" aria-hidden="true"></span>
         <span class="sl-chip sl-chip-warn" data-sl-pm-query>«миграция» <button type="button" title="Очистить поиск"><i class="bi bi-x" aria-hidden="true"></i></button></span>
@@ -432,7 +443,7 @@ a { text-decoration: none; }
                 <span class="sl-pmf-meta">
                   <a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Крамской</a>
                   <span class="sl-pmf-snip">— похоже, миграция таблицы не применилась</span>
-                  <span class="sl-chip sl-chip-info sl-message-in sl-pmf-flag" title="Новое сообщение"><i class="bi bi-envelope" aria-hidden="true"></i></span>
+                  <span class="sl-chip sl-chip-info sl-message-in sl-chip-icon" title="Новое сообщение"><i class="bi bi-envelope" aria-hidden="true"></i></span>
                 </span>
               </div>
               <span class="sl-dial">
@@ -455,7 +466,7 @@ a { text-decoration: none; }
                 <span class="sl-pmf-meta">
                   <a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Nataly_V</a>
                   <span class="sl-pmf-snip">— после миграции права слетели</span>
-                  <span class="sl-chip sl-chip-info sl-message-in sl-pmf-flag" title="Новое сообщение"><i class="bi bi-envelope" aria-hidden="true"></i></span>
+                  <span class="sl-chip sl-chip-info sl-message-in sl-chip-icon" title="Новое сообщение"><i class="bi bi-envelope" aria-hidden="true"></i></span>
                 </span>
               </div>
               <span class="sl-dial">
@@ -478,7 +489,7 @@ a { text-decoration: none; }
                 <span class="sl-pmf-meta">
                   <a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> dev_kostya</a>
                   <span class="sl-pmf-snip">— проверял после миграции контента</span>
-                  <span class="sl-chip sl-chip-info sl-message-in sl-pmf-flag" title="Новое сообщение"><i class="bi bi-envelope" aria-hidden="true"></i></span>
+                  <span class="sl-chip sl-chip-info sl-message-in sl-chip-icon" title="Новое сообщение"><i class="bi bi-envelope" aria-hidden="true"></i></span>
                 </span>
               </div>
               <span class="sl-dial">
@@ -490,30 +501,7 @@ a { text-decoration: none; }
               </span>
             </div>
 
-            <p class="sl-pmf-day"><i class="bi bi-calendar3" aria-hidden="true"></i> Вчера, 11 августа <small>2 письма</small></p>
-
-            <div class="sl-pmf-item sl-pmf-new">
-              <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить сообщение 4173</span><input type="checkbox" class="sl-check" name="id[]" value="4173"></label>
-              <img src="../templates/lite/images/avatars/presets/018.svg" alt="">
-              <div class="sl-pmf-body">
-                <span class="sl-pmf-line">
-                  <a class="sl-pmf-subj" href="#">Шаблон lite: сломалась вёрстка таблиц</a>
-                  <time class="sl-pmf-when" datetime="2026-08-11T09:12">09:12</time>
-                </span>
-                <span class="sl-pmf-meta">
-                  <a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Igor_Tech</a>
-                  <span class="sl-pmf-snip">— воспроизводится после миграции</span>
-                  <span class="sl-chip sl-chip-warn sl-message-save sl-pmf-flag" title="Сохранённое сообщение"><i class="bi bi-bookmark-fill" aria-hidden="true"></i></span>
-                </span>
-              </div>
-              <span class="sl-dial">
-                <button class="sl-dial-toggle sl-but-mini" type="button" title="Действия"><i class="bi bi-gear-fill"></i></button>
-                <a class="sl-dial-item sl-but-mini" href="#" title="Показать"><i class="bi bi-eye"></i></a>
-                <a class="sl-dial-item sl-but-mini sl-is-active" href="#" title="Убрать из сохранённых"><i class="bi bi-bookmark-dash"></i></a>
-                <a class="sl-dial-item sl-but-mini" href="#" title="Отметить непрочитанным"><i class="bi bi-envelope"></i></a>
-                <a class="sl-dial-item sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash"></i></a>
-              </span>
-            </div>
+            <p class="sl-pmf-day"><i class="bi bi-calendar3" aria-hidden="true"></i> Вчера, 11 августа <small>1 письмо</small></p>
 
             <div class="sl-pmf-item">
               <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить сообщение 4170</span><input type="checkbox" class="sl-check" name="id[]" value="4170"></label>
@@ -526,7 +514,7 @@ a { text-decoration: none; }
                 <span class="sl-pmf-meta">
                   <a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> admin_shop</a>
                   <span class="sl-pmf-snip">— миграция остатков закончена</span>
-                  <span class="sl-chip sl-chip-neutral sl-message-in sl-hidden sl-pmf-flag" title="Прочитанное сообщение"><i class="bi bi-envelope-open" aria-hidden="true"></i></span>
+                  <span class="sl-chip sl-chip-neutral sl-message-in sl-hidden sl-chip-icon" title="Прочитанное сообщение"><i class="bi bi-envelope-open" aria-hidden="true"></i></span>
                 </span>
               </div>
               <span class="sl-dial">
@@ -551,7 +539,7 @@ a { text-decoration: none; }
                 <span class="sl-pmf-meta">
                   <a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Мария Соколова</a>
                   <span class="sl-pmf-snip">— миграция прошла без потерь</span>
-                  <span class="sl-chip sl-chip-neutral sl-message-in sl-hidden sl-pmf-flag" title="Прочитанное сообщение"><i class="bi bi-envelope-open" aria-hidden="true"></i></span>
+                  <span class="sl-chip sl-chip-neutral sl-message-in sl-hidden sl-chip-icon" title="Прочитанное сообщение"><i class="bi bi-envelope-open" aria-hidden="true"></i></span>
                 </span>
               </div>
               <span class="sl-dial">
@@ -669,7 +657,7 @@ a { text-decoration: none; }
             <p class="sl-pm-note"><i class="bi bi-info-circle" aria-hidden="true"></i> Поле сообщения — настоящий Toast UI из <code>plugins/editors/toastui</code>: панель инструментов, вставка изображений через файловый менеджер, смайлы и переключатель Markdown/Визуальный. Его минимальные 250&nbsp;px — главный довод за две колонки: редактор живёт справа, а список слева остаётся на экране целиком.</p>
             <div class="sl-pmf-reply-foot">
               <input type="submit" class="sl-but" value="Отправить" title="Отправить">
-              <small>Интервал между отправками — 60 секунд · входящих у получателя: 240 из 250</small>
+              <small>Интервал между отправками — 60 секунд · входящих у получателя: 214 из 250</small>
             </div>
           </form>
         </section>
@@ -693,7 +681,7 @@ a { text-decoration: none; }
             <i class="bi bi-envelope" aria-hidden="true"></i>
           </span>
           <span><b>Входящие</b><small>240 из 250</small></span>
-          <span class="sl-cab-badge">8</span>
+          <span class="sl-cab-badge">7</span>
         </a>
         <a class="sl-pmf-fold sl-pmh-none" href="#" aria-current="page">
           <span class="sl-pmh sl-pmh-none sl-pmh-full" role="img" aria-label="У исходящих нет ограничения">
@@ -750,7 +738,7 @@ a { text-decoration: none; }
                 <span class="sl-pmf-meta">
                   <a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Крамской</a>
                   <span class="sl-pmf-snip">— инкремент лежит в setup/sql</span>
-                  <span class="sl-chip sl-chip-warn sl-message-out sl-pmf-flag" title="Получатель ещё не открыл письмо"><i class="bi bi-send" aria-hidden="true"></i></span>
+                  <span class="sl-chip sl-chip-warn sl-message-out sl-chip-icon" title="Получатель ещё не открыл письмо"><i class="bi bi-send" aria-hidden="true"></i></span>
                 </span>
               </div>
               <span class="sl-dial">
@@ -771,7 +759,7 @@ a { text-decoration: none; }
                 <span class="sl-pmf-meta">
                   <a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> dev_kostya</a>
                   <span class="sl-pmf-snip">— влит в ветку master</span>
-                  <span class="sl-chip sl-chip-success sl-message-out sl-pmf-flag" title="Прочитано получателем"><i class="bi bi-send-check" aria-hidden="true"></i></span>
+                  <span class="sl-chip sl-chip-success sl-message-out sl-chip-icon" title="Прочитано получателем"><i class="bi bi-send-check" aria-hidden="true"></i></span>
                 </span>
               </div>
               <span class="sl-dial">
@@ -794,7 +782,7 @@ a { text-decoration: none; }
                 <span class="sl-pmf-meta">
                   <a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Igor_Tech</a>
                   <span class="sl-pmf-snip">— проверьте sl-cell-ellipsis</span>
-                  <span class="sl-chip sl-chip-success sl-message-out sl-pmf-flag" title="Прочитано получателем"><i class="bi bi-send-check" aria-hidden="true"></i></span>
+                  <span class="sl-chip sl-chip-success sl-message-out sl-chip-icon" title="Прочитано получателем"><i class="bi bi-send-check" aria-hidden="true"></i></span>
                 </span>
               </div>
               <span class="sl-dial">
@@ -854,7 +842,547 @@ a { text-decoration: none; }
   </section>
 
   <section class="sl-pmdemo-sec">
-    <h2><span>3</span> Пустые состояния</h2>
+    <h2><span>3</span> Сохранённые</h2>
+    <p>Сохранённое письмо уходит из входящих: предикат папки исключает <code>saved = 1</code>, поэтому одно и то же письмо не лежит в двух лентах, а бейджи полок делят непрочитанные между собой — 7 во входящих и 1 здесь. У полки своя квота — 250 сообщений отдельно от входящих, поэтому её кольцо зелёное там, где у входящих красное. Отличий от входящих три: в строке закладка вместо конверта, «Сохранить» сменилось на «Убрать из сохранённых», а колода фокуса остаётся во входящих — сохранённое письмо и так никуда не денется. Форма ответа здесь та же, что и во входящих, поэтому показана только панель чтения.</p>
+
+    <div class="sl-pmdemo-frame">
+      <nav class="sl-pmf-folders" aria-label="Папки личных сообщений">
+        <a class="sl-pmf-fold sl-pmh-danger" href="#">
+          <span class="sl-pmh sl-pmh-danger" role="img" aria-label="Входящие заполнены на 96 процентов">
+            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+              <circle class="sl-pmh-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="4"></circle>
+            </svg>
+            <i class="bi bi-envelope" aria-hidden="true"></i>
+          </span>
+          <span><b>Входящие</b><small>240 из 250</small></span>
+          <span class="sl-cab-badge">7</span>
+        </a>
+        <a class="sl-pmf-fold sl-pmh-none" href="#">
+          <span class="sl-pmh sl-pmh-none sl-pmh-full" role="img" aria-label="У исходящих нет ограничения">
+            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+            </svg>
+            <i class="bi bi-send" aria-hidden="true"></i>
+          </span>
+          <span><b>Исходящие</b><small>903 · без ограничения</small></span>
+        </a>
+        <a class="sl-pmf-fold sl-pmh-ok" href="#" aria-current="page">
+          <span class="sl-pmh sl-pmh-ok" role="img" aria-label="Сохранённые заполнены на 25 процентов, свободно 187">
+            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+              <circle class="sl-pmh-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="74.8"></circle>
+            </svg>
+            <i class="bi bi-bookmark" aria-hidden="true"></i>
+          </span>
+          <span>
+            <b>Сохранённые</b>
+            <small>63 из 250</small>
+            <span class="sl-chip sl-chip-success"><i class="bi bi-bookmark-check" aria-hidden="true"></i> свободно 187</span>
+          </span>
+          <span class="sl-cab-badge">1</span>
+        </a>
+        <a class="sl-pmf-fold sl-pmh-info" href="#">
+          <span class="sl-pmh sl-pmh-info sl-pmh-full" role="img" aria-label="Написать новое письмо">
+            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+            </svg>
+            <i class="bi bi-pencil-square" aria-hidden="true"></i>
+          </span>
+          <span><b>Написать</b><small>новое письмо</small></span>
+        </a>
+      </nav>
+
+      <div class="sl-pmf-bar">
+        <form class="sl-search-form" role="search" action="#" method="post">
+          <label class="sl-visually-hidden" for="pmf-q3">Поиск по сохранённым</label>
+          <input id="pmf-q3" type="search" name="query" placeholder="Поиск по теме, тексту и автору">
+          <button type="submit" title="Найти"><i class="bi bi-search" aria-hidden="true"></i></button>
+        </form>
+        <label class="sl-visually-hidden" for="pmf-sort3">Сортировка</label>
+        <select id="pmf-sort3" class="sl-field" name="sort">
+          <option>Сначала новые</option>
+          <option>Сначала старые</option>
+          <option>Непрочитанные сверху</option>
+          <option>По отправителю</option>
+        </select>
+        <span class="sl-pmf-found">Показано 1&ndash;25 из <b>63</b></span>
+      </div>
+
+      <div class="sl-pmf-active" role="group" aria-label="Фильтр выборки">
+        <b>Фильтр:</b>
+        <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="true">Все <b>· 63</b></button>
+        <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false" data-sl-pm-one="state">Непрочитанные <b>· 1</b></button>
+        <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false" data-sl-pm-one="state">Прочитанные <b>· 62</b></button>
+        <button type="button" class="sl-chip sl-chip-neutral" aria-pressed="false">Старше месяца <b>· 41</b></button>
+        <span class="sl-pmf-sep" aria-hidden="true"></span>
+        <span class="sl-chip sl-chip-warn" data-sl-pm-query hidden>«» <button type="button" title="Очистить поиск"><i class="bi bi-x" aria-hidden="true"></i></button></span>
+        <button type="button" class="sl-pmf-clear">Сбросить всё</button>
+      </div>
+
+      <div class="sl-pmf-split" data-sl-pane="view">
+
+        <aside class="sl-pmf-aside">
+          <form class="sl-pmf-scroll" action="#" method="post" aria-label="Список сохранённых">
+            <p class="sl-pmf-day"><i class="bi bi-calendar3" aria-hidden="true"></i> Вчера, 11 августа <small>1 письмо</small></p>
+
+            <div class="sl-pmf-item sl-pmf-new">
+              <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить сообщение 4173</span><input type="checkbox" class="sl-check" name="id[]" value="4173"></label>
+              <img src="../templates/lite/images/avatars/presets/018.svg" alt="">
+              <div class="sl-pmf-body">
+                <span class="sl-pmf-line">
+                  <a class="sl-pmf-subj" href="#">Шаблон lite: сломалась вёрстка таблиц</a>
+                  <time class="sl-pmf-when" datetime="2026-08-11T09:12">09:12</time>
+                </span>
+                <span class="sl-pmf-meta">
+                  <a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Igor_Tech</a>
+                  <span class="sl-pmf-snip">— строки разъезжаются на 1024 px</span>
+                  <span class="sl-chip sl-chip-warn sl-message-save sl-chip-icon" title="Сохранённое сообщение"><i class="bi bi-bookmark-fill" aria-hidden="true"></i></span>
+                </span>
+              </div>
+              <span class="sl-dial">
+                <button class="sl-dial-toggle sl-but-mini" type="button" title="Действия"><i class="bi bi-gear-fill"></i></button>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Показать"><i class="bi bi-eye"></i></a>
+                <a class="sl-dial-item sl-but-mini sl-is-active" href="#" title="Убрать из сохранённых"><i class="bi bi-bookmark-dash"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Отметить прочитанным"><i class="bi bi-envelope-open"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash"></i></a>
+              </span>
+            </div>
+
+            <p class="sl-pmf-day"><i class="bi bi-calendar3" aria-hidden="true"></i> 2 августа <small>2 письма</small></p>
+
+            <div class="sl-pmf-item" aria-current="true">
+              <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить сообщение 4102</span><input type="checkbox" class="sl-check" name="id[]" value="4102" checked></label>
+              <img src="../templates/lite/images/avatars/presets/004.svg" alt="">
+              <div class="sl-pmf-body">
+                <span class="sl-pmf-line">
+                  <a class="sl-pmf-subj" href="#pmf-keep">Как перенести форум на новый домен</a>
+                  <time class="sl-pmf-when" datetime="2026-08-02T18:40">02.08</time>
+                </span>
+                <span class="sl-pmf-meta">
+                  <a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Мария Соколова</a>
+                  <span class="sl-pmf-snip">— порядок шагов и что чинить в конфиге</span>
+                  <span class="sl-chip sl-chip-warn sl-message-save sl-chip-icon" title="Сохранённое сообщение"><i class="bi bi-bookmark-fill" aria-hidden="true"></i></span>
+                </span>
+              </div>
+              <span class="sl-dial">
+                <button class="sl-dial-toggle sl-but-mini" type="button" title="Действия"><i class="bi bi-gear-fill"></i></button>
+                <a class="sl-dial-item sl-but-mini" href="#pmf-keep" title="Показать"><i class="bi bi-eye"></i></a>
+                <a class="sl-dial-item sl-but-mini sl-is-active" href="#" title="Убрать из сохранённых"><i class="bi bi-bookmark-dash"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Отметить непрочитанным"><i class="bi bi-envelope"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash"></i></a>
+              </span>
+            </div>
+
+            <div class="sl-pmf-item">
+              <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить сообщение 4098</span><input type="checkbox" class="sl-check" name="id[]" value="4098"></label>
+              <img src="../templates/lite/images/avatars/presets/012.svg" alt="">
+              <div class="sl-pmf-body">
+                <span class="sl-pmf-line">
+                  <a class="sl-pmf-subj" href="#">Ключи лицензии и продление на год</a>
+                  <time class="sl-pmf-when" datetime="2026-08-02T11:17">02.08</time>
+                </span>
+                <span class="sl-pmf-meta">
+                  <a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> admin_shop</a>
+                  <span class="sl-pmf-snip">— номер счёта и срок действия</span>
+                  <span class="sl-chip sl-chip-warn sl-message-save sl-chip-icon" title="Сохранённое сообщение"><i class="bi bi-bookmark-fill" aria-hidden="true"></i></span>
+                </span>
+              </div>
+              <span class="sl-dial">
+                <button class="sl-dial-toggle sl-but-mini" type="button" title="Действия"><i class="bi bi-gear-fill"></i></button>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Показать"><i class="bi bi-eye"></i></a>
+                <a class="sl-dial-item sl-but-mini sl-is-active" href="#" title="Убрать из сохранённых"><i class="bi bi-bookmark-dash"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Отметить непрочитанным"><i class="bi bi-envelope"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash"></i></a>
+              </span>
+            </div>
+
+            <p class="sl-pmf-day"><i class="bi bi-calendar3" aria-hidden="true"></i> 14 июля <small>2 письма</small></p>
+
+            <div class="sl-pmf-item">
+              <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить сообщение 3944</span><input type="checkbox" class="sl-check" name="id[]" value="3944"></label>
+              <img src="../templates/lite/images/avatars/presets/004.svg" alt="">
+              <div class="sl-pmf-body">
+                <span class="sl-pmf-line">
+                  <a class="sl-pmf-subj" href="#">Резервное копирование: cron и права</a>
+                  <time class="sl-pmf-when" datetime="2026-07-14T20:05">14.07</time>
+                </span>
+                <span class="sl-pmf-meta">
+                  <a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> dev_kostya</a>
+                  <span class="sl-pmf-snip">— готовая строка для планировщика</span>
+                  <span class="sl-chip sl-chip-warn sl-message-save sl-chip-icon" title="Сохранённое сообщение"><i class="bi bi-bookmark-fill" aria-hidden="true"></i></span>
+                </span>
+              </div>
+              <span class="sl-dial">
+                <button class="sl-dial-toggle sl-but-mini" type="button" title="Действия"><i class="bi bi-gear-fill"></i></button>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Показать"><i class="bi bi-eye"></i></a>
+                <a class="sl-dial-item sl-but-mini sl-is-active" href="#" title="Убрать из сохранённых"><i class="bi bi-bookmark-dash"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Отметить непрочитанным"><i class="bi bi-envelope"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash"></i></a>
+              </span>
+            </div>
+
+            <div class="sl-pmf-item">
+              <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить сообщение 3931</span><input type="checkbox" class="sl-check" name="id[]" value="3931"></label>
+              <img src="../templates/lite/images/avatars/system/deleted.svg" alt="">
+              <div class="sl-pmf-body">
+                <span class="sl-pmf-line">
+                  <a class="sl-pmf-subj" href="#">Вопрос по лицензии MIT</a>
+                  <time class="sl-pmf-when" datetime="2026-07-14T09:26">14.07</time>
+                </span>
+                <span class="sl-pmf-meta">
+                  <span class="sl-author sl-muted"><i class="bi bi-person-x" aria-hidden="true"></i> Гость</span>
+                  <span class="sl-pmf-snip">— аккаунт отправителя удалён, письмо осталось</span>
+                  <span class="sl-chip sl-chip-warn sl-message-save sl-chip-icon" title="Сохранённое сообщение"><i class="bi bi-bookmark-fill" aria-hidden="true"></i></span>
+                </span>
+              </div>
+              <span class="sl-dial">
+                <button class="sl-dial-toggle sl-but-mini" type="button" title="Действия"><i class="bi bi-gear-fill"></i></button>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Показать"><i class="bi bi-eye"></i></a>
+                <a class="sl-dial-item sl-but-mini sl-is-active" href="#" title="Убрать из сохранённых"><i class="bi bi-bookmark-dash"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash"></i></a>
+              </span>
+            </div>
+          </form>
+
+          <div class="sl-pmf-foot">
+            <p class="sl-pager-info">Всего: <b>63</b> на <b>3</b> страницах по <b>25</b> на каждой странице</p>
+            <nav class="sl-pager" aria-label="Постраничная навигация">
+              <div class="sl-pager-main">
+                <div class="sl-pager-pages">
+                  <a class="sl-but-mini sl-is-active" href="#" aria-current="page">1</a>
+                  <a class="sl-but-mini" href="#">2</a>
+                  <a class="sl-but-mini" href="#">3</a>
+                </div>
+                <div class="sl-pager-nextprev">
+                  <b class="sl-pager-prev"><span class="sl-but-mini sl-is-muted" title="Предыдущая"><i class="bi bi-chevron-left" aria-hidden="true"></i></span></b>
+                  <b class="sl-pager-next"><a class="sl-but-mini" href="#" title="Следующая"><i class="bi bi-chevron-right" aria-hidden="true"></i></a></b>
+                </div>
+              </div>
+            </nav>
+            <div class="sl-bulk-bar">
+              <span class="sl-bulk-count">Отмечено: 1 из 25 на странице</span>
+              <span class="sl-action-label">Действие</span>
+              <label class="sl-visually-hidden" for="pmf-act3">Действие над отмеченными</label>
+              <select id="pmf-act3" name="act" class="sl-field">
+                <option value="read">Отметить прочитанными</option>
+                <option value="unread">Отметить непрочитанными</option>
+                <option value="unsave">Убрать из сохранённых</option>
+                <option value="delete">Удалить</option>
+              </select>
+              <input type="submit" class="sl-but" value="OK" title="Применить действие">
+            </div>
+          </div>
+        </aside>
+
+        <section class="sl-pmf-view" id="pmf-keep" aria-label="Просмотр сохранённого сообщения">
+          <div class="sl-pmf-acts">
+            <button type="button" class="sl-but sl-pmf-back" data-sl-pm-back><i class="bi bi-chevron-left" aria-hidden="true"></i>&nbsp; К списку</button>
+            <button type="button" class="sl-but"><i class="bi bi-reply" aria-hidden="true"></i>&nbsp; Ответить</button>
+            <button type="button" class="sl-but"><i class="bi bi-forward" aria-hidden="true"></i>&nbsp; Переслать</button>
+            <span class="sl-pmf-acts-end">
+              <button type="button" class="sl-but-mini" title="Цитировать письмо"><i class="bi bi-quote" aria-hidden="true"></i><span class="sl-visually-hidden">Цитировать письмо</span></button>
+              <button type="button" class="sl-but-mini sl-is-active" title="Убрать из сохранённых"><i class="bi bi-bookmark-dash" aria-hidden="true"></i><span class="sl-visually-hidden">Убрать из сохранённых</span></button>
+              <button type="button" class="sl-but-mini" title="Отметить непрочитанным"><i class="bi bi-envelope" aria-hidden="true"></i><span class="sl-visually-hidden">Отметить непрочитанным</span></button>
+              <button type="button" class="sl-but-mini" title="Удалить" data-sl-confirm="Удаление объекта"><i class="bi bi-trash" aria-hidden="true"></i><span class="sl-visually-hidden">Удалить</span></button>
+              <span class="sl-pmf-sep" aria-hidden="true"></span>
+              <a class="sl-but-mini" href="#" title="Предыдущее письмо"><i class="bi bi-chevron-up" aria-hidden="true"></i></a>
+              <a class="sl-but-mini" href="#" title="Следующее письмо"><i class="bi bi-chevron-down" aria-hidden="true"></i></a>
+            </span>
+          </div>
+
+          <header class="sl-pmf-head">
+            <h2>Как перенести форум на новый домен</h2>
+            <div class="sl-pmf-who">
+              <img src="../templates/lite/images/avatars/presets/004.svg" alt="Мария Соколова" class="sl-avatar">
+              <span>
+                <b><a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Мария Соколова</a></b>
+                <small>Группа: Администраторы · 8 640 пунктов · регистрация 03.02.2009</small>
+              </span>
+            </div>
+            <div class="sl-pmf-chips">
+              <span class="sl-chip sl-chip-info sl-topic-post" title="Добавлено"><i class="bi bi-clock-history" aria-hidden="true"></i> <time datetime="2026-08-02T18:40">02.08.2026 18:40</time></span>
+              <span class="sl-chip sl-chip-warn sl-message-save"><i class="bi bi-bookmark-fill" aria-hidden="true"></i> Сохранённое сообщение</span>
+              <span class="sl-chip sl-chip-success"><i class="bi bi-check-circle" aria-hidden="true"></i> Прочитано</span>
+              <a class="sl-chip sl-chip-neutral" href="#"><i class="bi bi-person-badge" aria-hidden="true"></i> Персональная информация</a>
+            </div>
+          </header>
+
+          <div class="sl-pmf-text">
+            <p>Порядок такой: сначала меняете <code>homeurl</code> в <code>config/system.php</code>, потом прогоняете замену домена по таблицам с готовым контентом — новости, форум и личные сообщения хранят абсолютные ссылки только в теле.</p>
+            <p>Редиректы со старого домена ставьте после смены, а не до неё: пока старый адрес отвечает, htmx-запросы админки будут уходить на прежний хост и вы получите пустые панели.</p>
+            <blockquote><p>Сохраните это письмо — в нём весь порядок шагов, а поиск по почте потом ничего не найдёт: тема сформулирована не теми словами, которые вы будете вспоминать.</p></blockquote>
+            <p class="sl-pmf-sig">Спокойного переезда.</p>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </section>
+
+  <section class="sl-pmdemo-sec">
+    <h2><span>4</span> Написать</h2>
+    <p>«Написать» — не папка, а действие: своей ленты у неё нет, поэтому слева остаются входящие — переписку видно, пока пишете, в том числе при входе по ссылке «написать этому пользователю» из профиля. Справа вместо письма — три поля формы отправки: получатель с автодополнением (<code>getTplUserSearchInput()</code>, до 25 символов), заголовок до 100 символов и тот же Toast UI. Имя, распознанное автодополнением, разворачивается в карточку адресата с кольцом его входящих — переполненный ящик виден до отправки, а не в отказе после неё.</p>
+
+    <div class="sl-pmdemo-frame">
+      <nav class="sl-pmf-folders" aria-label="Папки личных сообщений">
+        <a class="sl-pmf-fold sl-pmh-danger" href="#">
+          <span class="sl-pmh sl-pmh-danger" role="img" aria-label="Входящие заполнены на 96 процентов">
+            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+              <circle class="sl-pmh-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="4"></circle>
+            </svg>
+            <i class="bi bi-envelope" aria-hidden="true"></i>
+          </span>
+          <span><b>Входящие</b><small>240 из 250</small></span>
+          <span class="sl-cab-badge">7</span>
+        </a>
+        <a class="sl-pmf-fold sl-pmh-none" href="#">
+          <span class="sl-pmh sl-pmh-none sl-pmh-full" role="img" aria-label="У исходящих нет ограничения">
+            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+            </svg>
+            <i class="bi bi-send" aria-hidden="true"></i>
+          </span>
+          <span><b>Исходящие</b><small>903 · без ограничения</small></span>
+        </a>
+        <a class="sl-pmf-fold sl-pmh-ok" href="#">
+          <span class="sl-pmh sl-pmh-ok" role="img" aria-label="Сохранённые заполнены на 25 процентов">
+            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+              <circle class="sl-pmh-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="74.8"></circle>
+            </svg>
+            <i class="bi bi-bookmark" aria-hidden="true"></i>
+          </span>
+          <span><b>Сохранённые</b><small>63 из 250</small></span>
+        </a>
+        <a class="sl-pmf-fold sl-pmh-info" href="#" aria-current="page">
+          <span class="sl-pmh sl-pmh-info sl-pmh-full" role="img" aria-label="Написать новое письмо">
+            <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+            </svg>
+            <i class="bi bi-pencil-square" aria-hidden="true"></i>
+          </span>
+          <span>
+            <b>Написать</b>
+            <small>новое письмо</small>
+            <span class="sl-chip sl-chip-info"><i class="bi bi-hourglass-split" aria-hidden="true"></i> интервал 60 с</span>
+          </span>
+        </a>
+      </nav>
+
+      <div class="sl-pmf-split" data-sl-pane="view">
+
+        <aside class="sl-pmf-aside">
+          <div class="sl-pmf-scroll">
+            <p class="sl-pmf-day"><i class="bi bi-calendar3" aria-hidden="true"></i> Сегодня, 12 августа <small>входящие</small></p>
+
+            <div class="sl-pmf-item sl-pmf-new">
+              <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить сообщение 4181</span><input type="checkbox" class="sl-check" name="id[]" value="4181"></label>
+              <img src="../templates/lite/images/avatars/presets/001.svg" alt="">
+              <div class="sl-pmf-body">
+                <span class="sl-pmf-line">
+                  <a class="sl-pmf-subj" href="#">Ошибка при обновлении с 6.2 на 6.3</a>
+                  <time class="sl-pmf-when" datetime="2026-08-12T14:32">14:32</time>
+                </span>
+                <span class="sl-pmf-meta">
+                  <a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Крамской</a>
+                  <span class="sl-pmf-snip">— миграция таблицы не применилась</span>
+                  <span class="sl-chip sl-chip-info sl-message-in sl-chip-icon" title="Новое сообщение"><i class="bi bi-envelope" aria-hidden="true"></i></span>
+                </span>
+              </div>
+            </div>
+
+            <div class="sl-pmf-item sl-pmf-new">
+              <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить сообщение 4180</span><input type="checkbox" class="sl-check" name="id[]" value="4180"></label>
+              <img src="../templates/lite/images/avatars/presets/007.svg" alt="">
+              <div class="sl-pmf-body">
+                <span class="sl-pmf-line">
+                  <a class="sl-pmf-subj" href="#">Re: Права доступа к модулю «Файлы»</a>
+                  <time class="sl-pmf-when" datetime="2026-08-12T11:05">11:05</time>
+                </span>
+                <span class="sl-pmf-meta">
+                  <a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Nataly_V</a>
+                  <span class="sl-pmf-snip">— права слетели после миграции</span>
+                  <span class="sl-chip sl-chip-info sl-message-in sl-chip-icon" title="Новое сообщение"><i class="bi bi-envelope" aria-hidden="true"></i></span>
+                </span>
+              </div>
+            </div>
+
+            <div class="sl-pmf-item sl-pmf-new">
+              <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить сообщение 4179</span><input type="checkbox" class="sl-check" name="id[]" value="4179"></label>
+              <img src="../templates/lite/images/avatars/presets/004.svg" alt="">
+              <div class="sl-pmf-body">
+                <span class="sl-pmf-line">
+                  <a class="sl-pmf-subj" href="#">Патч для парсера: [tabs] внутри [usehtml]</a>
+                  <time class="sl-pmf-when" datetime="2026-08-12T09:48">09:48</time>
+                </span>
+                <span class="sl-pmf-meta">
+                  <a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> dev_kostya</a>
+                  <span class="sl-pmf-snip">— проверял после миграции контента</span>
+                  <span class="sl-chip sl-chip-info sl-message-in sl-chip-icon" title="Новое сообщение"><i class="bi bi-envelope" aria-hidden="true"></i></span>
+                </span>
+              </div>
+            </div>
+
+            <p class="sl-pmf-day"><i class="bi bi-calendar3" aria-hidden="true"></i> Вчера, 11 августа <small>1 письмо</small></p>
+
+            <div class="sl-pmf-item">
+              <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить сообщение 4170</span><input type="checkbox" class="sl-check" name="id[]" value="4170"></label>
+              <img src="../templates/lite/images/avatars/presets/012.svg" alt="">
+              <div class="sl-pmf-body">
+                <span class="sl-pmf-line">
+                  <a class="sl-pmf-subj" href="#">Заказ №2419: сменился склад отгрузки</a>
+                  <time class="sl-pmf-when" datetime="2026-08-11T08:31">08:31</time>
+                </span>
+                <span class="sl-pmf-meta">
+                  <a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> admin_shop</a>
+                  <span class="sl-pmf-snip">— миграция остатков закончена</span>
+                  <span class="sl-chip sl-chip-neutral sl-message-in sl-hidden sl-chip-icon" title="Прочитанное сообщение"><i class="bi bi-envelope-open" aria-hidden="true"></i></span>
+                </span>
+              </div>
+            </div>
+
+            <p class="sl-pmf-day"><i class="bi bi-calendar3" aria-hidden="true"></i> 10 августа <small>2 письма</small></p>
+
+            <div class="sl-pmf-item">
+              <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить сообщение 4166</span><input type="checkbox" class="sl-check" name="id[]" value="4166"></label>
+              <img src="../templates/lite/images/avatars/presets/004.svg" alt="">
+              <div class="sl-pmf-body">
+                <span class="sl-pmf-line">
+                  <a class="sl-pmf-subj" href="#">Спасибо за помощь с переносом БД</a>
+                  <time class="sl-pmf-when" datetime="2026-08-10T22:03">22:03</time>
+                </span>
+                <span class="sl-pmf-meta">
+                  <a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Мария Соколова</a>
+                  <span class="sl-pmf-snip">— миграция прошла без потерь</span>
+                  <span class="sl-chip sl-chip-neutral sl-message-in sl-hidden sl-chip-icon" title="Прочитанное сообщение"><i class="bi bi-envelope-open" aria-hidden="true"></i></span>
+                </span>
+              </div>
+            </div>
+
+            <div class="sl-pmf-item">
+              <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить сообщение 4160</span><input type="checkbox" class="sl-check" name="id[]" value="4160"></label>
+              <img src="../templates/lite/images/avatars/system/deleted.svg" alt="">
+              <div class="sl-pmf-body">
+                <span class="sl-pmf-line">
+                  <a class="sl-pmf-subj" href="#">Вопрос по лицензии MIT</a>
+                  <time class="sl-pmf-when" datetime="2026-08-09T13:24">09.08</time>
+                </span>
+                <span class="sl-pmf-meta">
+                  <span class="sl-author sl-muted"><i class="bi bi-person-x" aria-hidden="true"></i> Гость</span>
+                  <span class="sl-pmf-snip">— аккаунт отправителя удалён</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="sl-pmf-foot">
+            <p class="sl-pager-info">Всего: <b>240</b> на <b>10</b> страницах по <b>25</b> на каждой странице</p>
+          </div>
+        </aside>
+
+        <section class="sl-pmf-view" aria-label="Новое письмо">
+          <div class="sl-pmf-acts">
+            <button type="button" class="sl-but sl-pmf-back" data-sl-pm-back><i class="bi bi-chevron-left" aria-hidden="true"></i>&nbsp; К списку</button>
+            <span class="sl-pmf-acts-end">
+              <button type="button" class="sl-but-mini" title="Очистить форму"><i class="bi bi-eraser" aria-hidden="true"></i><span class="sl-visually-hidden">Очистить форму</span></button>
+            </span>
+          </div>
+
+          <header class="sl-pmf-head">
+            <h2>Новое письмо</h2>
+            <div class="sl-pmf-chips">
+              <span class="sl-chip sl-chip-info"><i class="bi bi-hourglass-split" aria-hidden="true"></i> интервал между отправками 60 секунд</span>
+              <span class="sl-chip sl-chip-neutral"><i class="bi bi-person" aria-hidden="true"></i> имя получателя — до 25 символов</span>
+              <span class="sl-chip sl-chip-neutral"><i class="bi bi-type" aria-hidden="true"></i> заголовок — до 100 символов</span>
+            </div>
+          </header>
+
+          <form class="sl-pmf-reply sl-pmf-compose" action="#" method="post">
+            <label class="sl-visually-hidden" for="pmf-to">Получатель</label>
+            <input id="pmf-to" class="sl-field sl-pmf-title" type="text" name="name" maxlength="25" minlength="1" required autocomplete="off" list="pmf-to-list" placeholder="Получатель — начните вводить имя" value="Крамской" data-sl-user-search="index.php?go=1&amp;op=getUserList" data-sl-user-minlength="1"><datalist id="pmf-to-list"></datalist>
+
+            <div class="sl-pmf-mate">
+              <img src="../templates/lite/images/avatars/presets/001.svg" alt="">
+              <span>
+                <b><a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Крамской</a></b>
+                <small>Группа: Проверенные · был на сайте 12 минут назад</small>
+                <span class="sl-chip sl-chip-warn"><i class="bi bi-inbox" aria-hidden="true"></i> входящих 214 из 250 · свободно 36</span>
+              </span>
+              <span class="sl-pmh sl-pmh-warn" role="img" aria-label="Входящие получателя заполнены на 86 процентов">
+                <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
+                  <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+                  <circle class="sl-pmh-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="14.4"></circle>
+                </svg>
+                <i class="bi bi-inbox" aria-hidden="true"></i>
+              </span>
+            </div>
+
+            <label class="sl-visually-hidden" for="pmf-new-title">Заголовок</label>
+            <input id="pmf-new-title" class="sl-field sl-pmf-title" type="text" name="title" maxlength="100" placeholder="Заголовок">
+
+            <label class="sl-visually-hidden" for="pmf-new">Текст сообщения</label>
+            <div class="sl-pm-editor" data-sl-pm-editor="pmf-new" data-sl-pm-height="300" data-sl-pm-placeholder="Сообщение пользователю Крамской&hellip;">
+              <textarea id="pmf-new" name="text" rows="15" style="display:none"></textarea>
+              <div id="pmf-new_toast"></div>
+            </div>
+
+            <p class="sl-pm-note"><i class="bi bi-info-circle" aria-hidden="true"></i> Поля те же, что отдаёт <code>getPrivateMessageView()</code> при <code>typ&nbsp;=&nbsp;4</code>: ответ на письмо открывает эту же форму с подставленным получателем, заголовком «Ответ: …» и телом в <code>[quote]</code>, а пересылка — с префиксом «Fwd: » и пустым получателем.</p>
+
+            <div class="sl-pmf-reply-foot">
+              <input type="submit" class="sl-but" value="Отправить" title="Отправить">
+              <small>Отправка начислит 45 пунктов и, если получатель просил уведомления, поставит письмо в очередь рассылки</small>
+            </div>
+          </form>
+        </section>
+
+      </div>
+    </div>
+
+    <div class="sl-pmdemo-frame" style="margin-top: 14px;">
+      <span class="sl-pmdemo-from"><i class="bi bi-chat-left-text" aria-hidden="true"></i> Что форма отвечает после «Отправить»</span>
+      <p style="margin: 10px 0 12px; color: var(--sl-color-text-muted);">Отправка ничего не перерисовывает, кроме правой колонки: <code>addPrivateMessage()</code> возвращает ту же форму с алертом сверху. Ниже — все ответы, которые она умеет давать; тексты взяты из языковых констант как есть.</p>
+      <div class="sl-pmf-says">
+        <div class="sl-alert sl-alert-info">
+          <div class="sl-alert-body">
+            <p class="sl-alert-text">Сообщение пользователю Крамской успешно отправлено.</p>
+          </div>
+        </div>
+        <div class="sl-alert sl-alert-warn">
+          <div class="sl-alert-body">
+            <ul class="sl-alert-list">
+              <li>Получатель с указанным именем не найден! Проверьте введенное имя пользователя и повторите попытку.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="sl-alert sl-alert-warn">
+          <div class="sl-alert-body">
+            <ul class="sl-alert-list">
+              <li>Минимальный период времени между публикациями сообщений составляет 60 секунд.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="sl-alert sl-alert-warn">
+          <div class="sl-alert-body">
+            <ul class="sl-alert-list">
+              <li>Сообщение пользователю Крамской не может быть отправлено, по причине переполнения его папки входящих сообщений.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="sl-alert sl-alert-warn">
+          <div class="sl-alert-body">
+            <ul class="sl-alert-list">
+              <li>Запрещена отправка сообщений самому себе!</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sl-pmdemo-sec">
+    <h2><span>5</span> Пустые состояния</h2>
     <p>Три разных пустоты и три разных выхода из неё: ничего не выбрано, фильтр отсёк всё, папка пуста по существу.</p>
 
     <div class="sl-pmdemo-frame" style="margin-bottom: 14px;">
@@ -862,7 +1390,7 @@ a { text-decoration: none; }
       <div class="sl-pmf-split" style="margin-top: 10px;">
         <aside class="sl-pmf-aside">
           <div class="sl-pmf-scroll">
-            <p class="sl-pmf-day"><i class="bi bi-calendar3" aria-hidden="true"></i> Сегодня, 12 августа <small>3 письма</small></p>
+            <p class="sl-pmf-day"><i class="bi bi-calendar3" aria-hidden="true"></i> Сегодня, 12 августа <small>2 письма</small></p>
             <div class="sl-pmf-item sl-pmf-new">
               <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить</span><input type="checkbox" class="sl-check"></label>
               <img src="../templates/lite/images/avatars/presets/001.svg" alt="">
@@ -946,8 +1474,8 @@ a { text-decoration: none; }
   </section>
 
   <section class="sl-pmdemo-sec">
-    <h2><span>4</span> Мобильное отображение</h2>
-    <p>Панели не сжимаются, а подменяют друг друга: сначала список, после выбора — чтение с кнопкой «К списку». Полки становятся компактнее, подписи под ними прячутся, колода фокуса листается пальцем. Переключение ниже работает по-настоящему.</p>
+    <h2><span>6</span> Мобильное отображение</h2>
+    <p>Панели не сжимаются, а подменяют друг друга: сначала список, после выбора — чтение с кнопкой «К списку». Полки становятся компактнее, подписи под ними прячутся, колода фокуса листается пальцем. Переключение ниже работает по-настоящему. Второй телефон — «Написать»: та же подмена панелей, форма отправки занимает экран целиком, а карточка адресата ужимается до имени и кольца.</p>
 
     <div class="sl-pmdemo-phones">
 
@@ -963,7 +1491,7 @@ a { text-decoration: none; }
               <i class="bi bi-envelope" aria-hidden="true"></i>
             </span>
             <span><b>Входящие</b><small>240 из 250</small></span>
-            <span class="sl-cab-badge">8</span>
+            <span class="sl-cab-badge">7</span>
           </a>
           <a class="sl-pmf-fold sl-pmh-none" href="#">
             <span class="sl-pmh sl-pmh-none sl-pmh-full" role="img" aria-label="Без ограничения">
@@ -1043,13 +1571,13 @@ a { text-decoration: none; }
         <div class="sl-pmf-split" data-sl-pane="list">
           <aside class="sl-pmf-aside">
             <form class="sl-pmf-scroll" action="#" method="post" aria-label="Список сообщений">
-              <p class="sl-pmf-day"><i class="bi bi-calendar3" aria-hidden="true"></i> Сегодня <small>3</small></p>
+              <p class="sl-pmf-day"><i class="bi bi-calendar3" aria-hidden="true"></i> Сегодня <small>2</small></p>
               <div class="sl-pmf-item sl-pmf-new" data-sl-pm-open>
                 <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить</span><input type="checkbox" class="sl-check"></label>
                 <img src="../templates/lite/images/avatars/presets/001.svg" alt="">
                 <div class="sl-pmf-body">
                   <span class="sl-pmf-line"><a class="sl-pmf-subj" href="#">Ошибка при обновлении с 6.2 на 6.3</a><time class="sl-pmf-when" datetime="2026-08-12T14:32">14:32</time></span>
-                  <span class="sl-pmf-meta"><a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Крамской</a><span class="sl-chip sl-chip-info sl-message-in sl-pmf-flag"><i class="bi bi-envelope" aria-hidden="true"></i></span></span>
+                  <span class="sl-pmf-meta"><a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Крамской</a><span class="sl-chip sl-chip-info sl-message-in sl-chip-icon"><i class="bi bi-envelope" aria-hidden="true"></i></span></span>
                 </div>
                 <span class="sl-dial">
                   <button class="sl-dial-toggle sl-but-mini" type="button" title="Действия"><i class="bi bi-gear-fill"></i></button>
@@ -1063,7 +1591,7 @@ a { text-decoration: none; }
                 <img src="../templates/lite/images/avatars/presets/007.svg" alt="">
                 <div class="sl-pmf-body">
                   <span class="sl-pmf-line"><a class="sl-pmf-subj" href="#">Re: Права доступа к модулю «Файлы»</a><time class="sl-pmf-when" datetime="2026-08-12T11:05">11:05</time></span>
-                  <span class="sl-pmf-meta"><a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Nataly_V</a><span class="sl-chip sl-chip-info sl-message-in sl-pmf-flag"><i class="bi bi-envelope" aria-hidden="true"></i></span></span>
+                  <span class="sl-pmf-meta"><a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Nataly_V</a><span class="sl-chip sl-chip-info sl-message-in sl-chip-icon"><i class="bi bi-envelope" aria-hidden="true"></i></span></span>
                 </div>
                 <span class="sl-dial">
                   <button class="sl-dial-toggle sl-but-mini" type="button" title="Действия"><i class="bi bi-gear-fill"></i></button>
@@ -1072,7 +1600,7 @@ a { text-decoration: none; }
                   <a class="sl-dial-item sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash"></i></a>
                 </span>
               </div>
-              <p class="sl-pmf-day"><i class="bi bi-calendar3" aria-hidden="true"></i> Вчера <small>2</small></p>
+              <p class="sl-pmf-day"><i class="bi bi-calendar3" aria-hidden="true"></i> Вчера <small>1</small></p>
               <div class="sl-pmf-item" data-sl-pm-open>
                 <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить</span><input type="checkbox" class="sl-check"></label>
                 <img src="../templates/lite/images/avatars/presets/012.svg" alt="">
@@ -1150,11 +1678,122 @@ a { text-decoration: none; }
         </div>
       </figure>
 
+      <figure class="sl-pmdemo-phone">
+        <figcaption>Написать, 390&nbsp;px</figcaption>
+        <nav class="sl-pmf-folders" aria-label="Папки">
+          <a class="sl-pmf-fold sl-pmh-danger" href="#">
+            <span class="sl-pmh sl-pmh-danger" role="img" aria-label="Входящие заполнены на 96 процентов">
+              <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
+                <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+                <circle class="sl-pmh-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="4"></circle>
+              </svg>
+              <i class="bi bi-envelope" aria-hidden="true"></i>
+            </span>
+            <span><b>Входящие</b><small>240 из 250</small></span>
+            <span class="sl-cab-badge">7</span>
+          </a>
+          <a class="sl-pmf-fold sl-pmh-none" href="#">
+            <span class="sl-pmh sl-pmh-none sl-pmh-full" role="img" aria-label="Без ограничения">
+              <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
+                <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+              </svg>
+              <i class="bi bi-send" aria-hidden="true"></i>
+            </span>
+            <span><b>Исходящие</b><small>903</small></span>
+          </a>
+          <a class="sl-pmf-fold sl-pmh-ok" href="#">
+            <span class="sl-pmh sl-pmh-ok" role="img" aria-label="Сохранённые заполнены на 25 процентов">
+              <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
+                <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+                <circle class="sl-pmh-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="74.8"></circle>
+              </svg>
+              <i class="bi bi-bookmark" aria-hidden="true"></i>
+            </span>
+            <span><b>Сохранённые</b><small>63</small></span>
+          </a>
+          <a class="sl-pmf-fold sl-pmh-info" href="#" aria-current="page">
+            <span class="sl-pmh sl-pmh-info sl-pmh-full" role="img" aria-label="Написать новое письмо">
+              <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
+                <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+              </svg>
+              <i class="bi bi-pencil-square" aria-hidden="true"></i>
+            </span>
+            <span><b>Написать</b><small>новое</small></span>
+          </a>
+        </nav>
+
+        <div class="sl-pmf-split" data-sl-pane="view">
+          <aside class="sl-pmf-aside">
+            <div class="sl-pmf-scroll">
+              <p class="sl-pmf-day"><i class="bi bi-calendar3" aria-hidden="true"></i> Сегодня <small>входящие</small></p>
+              <div class="sl-pmf-item sl-pmf-new" data-sl-pm-open>
+                <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить</span><input type="checkbox" class="sl-check"></label>
+                <img src="../templates/lite/images/avatars/presets/001.svg" alt="">
+                <div class="sl-pmf-body">
+                  <span class="sl-pmf-line"><a class="sl-pmf-subj" href="#">Ошибка при обновлении с 6.2 на 6.3</a><time class="sl-pmf-when" datetime="2026-08-12T14:32">14:32</time></span>
+                  <span class="sl-pmf-meta"><a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Крамской</a><span class="sl-chip sl-chip-info sl-message-in sl-chip-icon"><i class="bi bi-envelope" aria-hidden="true"></i></span></span>
+                </div>
+              </div>
+              <div class="sl-pmf-item sl-pmf-new" data-sl-pm-open>
+                <label class="sl-pmf-pick"><span class="sl-visually-hidden">Отметить</span><input type="checkbox" class="sl-check"></label>
+                <img src="../templates/lite/images/avatars/presets/007.svg" alt="">
+                <div class="sl-pmf-body">
+                  <span class="sl-pmf-line"><a class="sl-pmf-subj" href="#">Re: Права доступа к модулю «Файлы»</a><time class="sl-pmf-when" datetime="2026-08-12T11:05">11:05</time></span>
+                  <span class="sl-pmf-meta"><a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Nataly_V</a><span class="sl-chip sl-chip-info sl-message-in sl-chip-icon"><i class="bi bi-envelope" aria-hidden="true"></i></span></span>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          <section class="sl-pmf-view" aria-label="Новое письмо">
+            <div class="sl-pmf-acts">
+              <button type="button" class="sl-but sl-pmf-back" data-sl-pm-back><i class="bi bi-chevron-left" aria-hidden="true"></i>&nbsp; К списку</button>
+              <span class="sl-pmf-acts-end">
+                <button type="button" class="sl-but-mini" title="Очистить форму"><i class="bi bi-eraser" aria-hidden="true"></i><span class="sl-visually-hidden">Очистить форму</span></button>
+              </span>
+            </div>
+            <header class="sl-pmf-head">
+              <h2>Новое письмо</h2>
+              <div class="sl-pmf-chips">
+                <span class="sl-chip sl-chip-info"><i class="bi bi-hourglass-split" aria-hidden="true"></i> интервал 60 с</span>
+              </div>
+            </header>
+            <form class="sl-pmf-reply sl-pmf-compose" action="#" method="post">
+              <label class="sl-visually-hidden" for="pmf-to-m">Получатель</label>
+              <input id="pmf-to-m" class="sl-field sl-pmf-title" type="text" name="name" maxlength="25" minlength="1" required autocomplete="off" list="pmf-to-m-list" placeholder="Получатель — начните вводить имя" value="Крамской" data-sl-user-search="index.php?go=1&amp;op=getUserList" data-sl-user-minlength="1"><datalist id="pmf-to-m-list"></datalist>
+              <div class="sl-pmf-mate">
+                <img src="../templates/lite/images/avatars/presets/001.svg" alt="">
+                <span>
+                  <b><a class="sl-author" href="#"><i class="bi bi-person" aria-hidden="true"></i> Крамской</a></b>
+                  <small>Проверенные · 12 минут назад</small>
+                  <span class="sl-chip sl-chip-warn"><i class="bi bi-inbox" aria-hidden="true"></i> 214 из 250</span>
+                </span>
+                <span class="sl-pmh sl-pmh-warn" role="img" aria-label="Входящие получателя заполнены на 86 процентов">
+                  <svg class="sl-pmh-svg" viewBox="0 0 44 44" aria-hidden="true">
+                    <circle class="sl-pmh-bg" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"></circle>
+                    <circle class="sl-pmh-val" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="100" stroke-dashoffset="14.4"></circle>
+                  </svg>
+                  <i class="bi bi-inbox" aria-hidden="true"></i>
+                </span>
+              </div>
+              <label class="sl-visually-hidden" for="pmf-new-title-m">Заголовок</label>
+              <input id="pmf-new-title-m" class="sl-field sl-pmf-title" type="text" name="title" maxlength="100" placeholder="Заголовок">
+              <label class="sl-visually-hidden" for="pmf-new-m">Текст сообщения</label>
+              <div class="sl-pm-editor" data-sl-pm-editor="pmf-new-m" data-sl-pm-height="230" data-sl-pm-placeholder="Сообщение&hellip;">
+                <textarea id="pmf-new-m" name="text" rows="15" style="display:none"></textarea>
+                <div id="pmf-new-m_toast"></div>
+              </div>
+              <div class="sl-pmf-reply-foot"><input type="submit" class="sl-but" value="Отправить"></div>
+            </form>
+          </section>
+        </div>
+      </figure>
+
     </div>
   </section>
 
   <section class="sl-pmdemo-sec">
-    <h2><span>5</span> Контракт с бэкендом</h2>
+    <h2><span>7</span> Контракт с бэкендом</h2>
     <p>Ни один блок не требует нового SQL: всё, что на экране, уже отдают <code>Privat</code> и <code>getPrivateMessageView()</code>. Ниже — что откуда берётся и что придётся дописать.</p>
 
     <div class="sl-pmdemo-frame">
@@ -1170,8 +1809,8 @@ a { text-decoration: none; }
         <tbody>
           <tr>
             <th scope="row">Полки-плитки со счётчиками</th>
-            <td><code>Privat::getMessageCount()</code> по трём ящикам + <code>getUnreadCount()</code> для бейджа; квоты — <code>privat.messin</code> / <code>privat.messsav</code></td>
-            <td>Готово. Счётчики уже читаются в <code>getPrivateMessageView()</code> для алертов о квоте</td>
+            <td><code>Privat::getMessageCount()</code> по трём ящикам; квоты — <code>privat.messin</code> / <code>privat.messsav</code></td>
+            <td>Счётчики писем готовы — их уже читает <code>getPrivateMessageView()</code> для алертов о квоте. <b>Новое:</b> бейдж непрочитанных нужен <b>по ящику</b>, а <code>getUnreadCount()</code> считает их сквозь папки для навигации кабинета. Нужен счёт с предикатом ящика и <code>viewed = 0</code>: 7 во входящих и 1 в сохранённых вместо одной восьмёрки на обеих полках</td>
           </tr>
           <tr>
             <th scope="row">Кольцо квоты вместо алерта</th>
@@ -1181,12 +1820,12 @@ a { text-decoration: none; }
           <tr>
             <th scope="row">Колода фокуса</th>
             <td><code>Privat::getRecentList()</code> — уже существует для превью кабинета</td>
-            <td>Нужен вариант с фильтром «только непрочитанные»: один предикат <code>viewed = 0</code> в существующем методе</td>
+            <td>Нужен вариант «только непрочитанные, папка не важна»: <code>uidin = :uid AND delin = 0 AND viewed = 0</code> — тот же предикат, что у <code>getUnreadCount()</code>. Предикат входящих здесь не подходит: он исключает <code>saved = 1</code>, и сохранённое непрочитанное письмо в колоду бы не попало, хотя внимания требует именно оно</td>
           </tr>
           <tr>
             <th scope="row">Лента писем</th>
             <td><code>Privat::getMessageList($uid, $box, $page)</code> — отдаёт id, title, time, viewed, saved, name, avatar и pager целиком</td>
-            <td>Ничего. Аватар уже в выборке, второго запроса не нужно</td>
+            <td>Аватар уже в выборке, второго запроса не нужно. <b>Новое:</b> сниппета в ней нет — константа <code>FIELDS</code> не содержит <code>body</code>, его читают только просмотр письма и админский список. Нужна обрезка на стороне БД, а не тело каждой строки в память</td>
           </tr>
           <tr>
             <th scope="row">Чипсы состояния</th>
@@ -1204,9 +1843,44 @@ a { text-decoration: none; }
             <td>Сменить цель свапа: сейчас <code>hx-target="#rep&lt;папка&gt;"</code> перерисовывает всю вкладку, нужно <code>#repprview</code> — только правую колонку</td>
           </tr>
           <tr>
+            <th scope="row">Что ещё меняет открытие письма</th>
+            <td>Одно чтение меняет строку в списке (снимается «непрочитано») и два бейджа — полки и кабинета</td>
+            <td><b>Решение: один основной свап и набор адресуемых OOB-целей.</b> Ответ <code>setPrivateMessageRead()</code> отдаёт правую колонку основным свапом, а строку и оба бейджа — как <code>hx-swap-oob</code>, поэтому у строки должен быть стабильный id. <b>Отрисованная страница — снимок:</b> счётчик выборки, числа фильтров, пагинатор и состав строк не пересчитываются внутри ответа на действие, иначе список перетасуется под курсором; они приходят в норму на следующем запросе списка, тогда же прочитанная строка и покидает фильтр «непрочитанные»</td>
+          </tr>
+          <tr>
+            <th scope="row">Полка «Сохранённые»</th>
+            <td>Тот же <code>Privat::getMessageList()</code> с <code>PrivatBox::Saved</code>; квота — <code>privat.messsav</code>, снятие закладки — <code>updatePrivatBox()</code> с <code>act = unsave</code>, который уже есть в наборе массовых действий этой папки</td>
+            <td>Действие строки «Убрать из сохранённых»: тот же <code>act = unsave</code> с одним id вместо списка. Сейчас в меню строки для этой папки только «Показать» и «Удалить»</td>
+          </tr>
+          <tr>
+            <th scope="row">Форма отправки</th>
+            <td><code>getPrivateMessageView()</code> при <code>typ = 4</code>: <code>getTplUserSearchInput()</code> с автодополнением через <code>op=getUserList</code>, поле заголовка на 100 символов и <code>getTplTextarea()</code> со <code>store =&gt; 'privat.body'</code>; отправка — <code>addPrivateMessage()</code></td>
+            <td>Ничего для самой формы. Новое место: форма живёт в правой колонке рядом со списком, а не на отдельной вкладке</td>
+          </tr>
+          <tr>
+            <th scope="row">Карточка адресата с кольцом</th>
+            <td>Имя из автодополнения; квота получателя — та же пара <code>getMessageCount()</code> и <code>privat.messin</code>, что красит полки</td>
+            <td><b>Новое.</b> Сейчас переполнение чужого ящика видно только в отказе: <code>Privat::checkQuota()</code> закрыт и работает внутри транзакции отправки. Ответ <code>getUserList</code> — плоский список имён, и его читают ещё тринадцать форм, поэтому богатый ответ подключается отдельным параметром и с лимитом, а не заменяет прежний. Карточка запрашивается для <b>распознанного</b> получателя, а не для каждой подсказки — иначе это N+1 по чужим ящикам. Заполненность читает метод <code>Privat</code>, потому что таблицу ЛС не трогает никто снаружи класса. Что именно показывать — точные числа или градацию «есть место / почти полон / полон» — решается до реализации: это состояние чужого ящика</td>
+          </tr>
+          <tr>
+            <th scope="row">Ответы формы отправки</th>
+            <td>Коды <code>Privat::addMessage()</code>: <code>no_recipient</code>, <code>unknown_recipient</code>, <code>self</code>, <code>no_title</code>, <code>no_body</code>, <code>word_long</code>, <code>flood</code>, <code>quota</code>, <code>no_room</code> — каждый уже сопоставлен своей константе</td>
+            <td>Ничего. Алерт рисует штатный фрагмент <code>alert</code>, целью свапа остаётся правая колонка</td>
+          </tr>
+          <tr>
             <th scope="row">Кнопка «Переслать»</th>
             <td>Тот же <code>Privat::getMessageView()</code>, что и для чтения: тело и заголовок уже загружены</td>
             <td><b>Новое, но дёшево.</b> Действия «переслать» в модуле нет. Реализуется как форма отправки с предзаполнением — тем же приёмом, что и ответ: сейчас <code>getPrivateMessageView()</code> при <code>typ = 4</code> подставляет <code>_PRREP.': '.$view['title']</code> и <code>[quote]тело[/quote]</code>. Для пересылки — префикс «Fwd: », тело без цитаты и <b>пустой получатель</b>. Ни новой таблицы, ни нового запроса; нужен один параметр маршрута, отличающий пересылку от ответа</td>
+          </tr>
+          <tr>
+            <th scope="row">Ссылка из письма-уведомления</th>
+            <td>Почтовое уведомление уже шлёт <code>op=privat&amp;id=…</code>, а <code>privat()</code> этот <code>id</code> сегодня не читает</td>
+            <td><b>Новое, в два шага.</b> GET строит раскладку с наведённым письмом, но не открывает его: открытие пишет <code>viewed</code>, а состояние меняют только POST-маршруты за проверкой токена. Открывает уже <code>setPrivateMessageRead()</code> обычным POST. Ящик определяется по копиям читателя — сначала входящие, затем исходящие: один <code>id</code> не говорит, на какой стороне читатель, а обе выборки уже ограничены его предикатом</td>
+          </tr>
+          <tr>
+            <th scope="row">Подмена панелей на телефоне</th>
+            <td>Атрибут <code>data-sl-pane</code> на раскладке: контейнерный запрос прячет одну панель, атрибут решает какую</td>
+            <td><b>Новое.</b> В этом демо переключение делает его собственный скрипт, а в <code>plugins/system/slaed.js</code> обработчика нет вовсе. Без него читатель на 390&nbsp;px откроет письмо и останется на скрытом списке, поэтому механика переезжает в боевой скрипт вместе с раскладкой — вместе с кнопкой «К списку» и переносом фокуса</td>
           </tr>
           <tr>
             <th scope="row">Пагинатор и полоса действий</th>
@@ -1216,12 +1890,22 @@ a { text-decoration: none; }
           <tr>
             <th scope="row">Поиск, фильтры и «найдено N из M»</th>
             <td>&mdash;</td>
-            <td><b>Новое.</b> Нужны условия поверх предиката ящика в <code>getMessageList()</code> и парный <code>COUNT</code> — по правилу паритета список, счётчик, пагинатор и подсветка должны считаться из одного запроса</td>
+            <td><b>Новое.</b> Условия поверх предиката ящика в <code>getMessageList()</code> и парный <code>COUNT</code> из того же набора: список, счётчик выборки и пагинатор сходятся по формуле <code>строк = min(лимит, найдено &minus; смещение)</code>, а не тремя равными числами. Счётчики полок в этот набор не входят — они отвечают за ящик, и фильтр не должен их обнулять. Числа на чипсах — грани ящика: каждый показывает, что отвечает его собственное условие, независимо от соседних чипсов и от поиска, и все они приходят одной агрегатной строкой. «Старше месяца» требует и второй формы предиката периода — <code>time &lt; …</code>, не только <code>&gt;=</code>, причём со своим именем параметра: границы у чипсов разные, а повтор имени подготовленный запрос не примет. Поиск требует по своему плейсхолдеру на колонку (подготовка запросов здесь настоящая, повтор имени — ошибка) и экранирования <code>%</code>, <code>_</code> и самого символа экранирования, объявленного через <code>ESCAPE</code> прямо в запросе. Индекс под <code>LIKE '%…%'</code> обычным BTREE не строится: либо скан, либо отдельное согласованное изменение схемы</td>
           </tr>
           <tr>
             <th scope="row">Поле ответа</th>
             <td><code>getTplTextarea()</code> со <code>store =&gt; 'privat.body'</code> — тот же вызов, что и сейчас</td>
-            <td>Ничего, кроме починки инициализации редактора после htmx-свапа (см. индекс вариантов)</td>
+            <td><b>Решение: редактор не попадает в свап.</b> Форма ответа стоит ниже свапаемой области и живёт весь сеанс, а открытие письма меняет только значения полей — получателя, заголовок «Ответ: …» и цитату. Toast UI создаётся один раз, и известная поломка инициализации после свапа не возникает вовсе. Заполняется он через свой API — <code>SlaedToastUi.getEditor(id).setMarkdown()</code>: запись в скрытую <code>textarea</code> редактор не обновит, её он только отдаёт форме. Тело приезжает внутри свапа отдельной скрытой <code>textarea</code>-переносчиком: экранированный текст в ней не может закрыть свой контекст, в отличие от JSON в атрибуте или инлайне, а тело — <code>MEDIUMTEXT</code>. Обработчик читает <code>value</code>, отдаёт редактору и удаляет переносчик</td>
+          </tr>
+          <tr>
+            <th scope="row">Алерт о квоте</th>
+            <td>Те же счётчики; тексты <code>_PRINEXIT</code> / <code>_PRSAVEEXIT</code> для предела и <code>_PRINMAX</code> / <code>_PRSAVEMAX</code> для порога</td>
+            <td><b>Решение: кольцо всегда, текстовый алерт только на пределе.</b> Постоянный индикатор — кольцо полки, а <code>_PRINEXIT</code> / <code>_PRSAVEEXIT</code> остаются, потому что говорят, что делать, когда мест уже нет. Ветка порога <code>total &gt;= max / 2</code> с <code>_PRINMAX</code> / <code>_PRSAVEMAX</code> уходит: половину заполнения показывает то же кольцо, а алерт на каждом втором заходе в почту — шум</td>
+          </tr>
+          <tr>
+            <th scope="row">Вход на «Написать» по ссылке</th>
+            <td>Маршрут <code>op=privat&amp;uname=…</code> из профиля и блока пользователя: получатель приходит в <code>uname</code>, а папки в запросе нет</td>
+            <td><b>Решение: слева всегда входящие.</b> Форма открывается справа с подставленным получателем, левая колонка показывает первую страницу входящих. Своей папки у «Написать» нет, а пустая колонка рядом с формой ломала бы обещание двух панелей</td>
           </tr>
         </tbody>
       </table>

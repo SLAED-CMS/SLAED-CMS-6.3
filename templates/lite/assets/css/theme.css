@@ -3257,6 +3257,7 @@ ol.sl-sublist-two li:hover:before {
 .sl-pm-new {
   display: inline-grid;
   place-items: center;
+  box-sizing: border-box;
   min-width: 20px;
   height: 20px;
   padding: 0 6px;
@@ -5743,6 +5744,13 @@ a.sl-chip-neutral {
   background: var(--sl-chip-hover-bg);
 }
 
+/* Label-less chip: a state flag is one glyph, so equal width and height turn the pill into a round badge instead of leaving empty side padding around the icon */
+.sl-chip-icon {
+  justify-content: center;
+  width: 26px;
+  padding: 0;
+}
+
 /* IP meta chip (moderators): the inner IP link inherits the chip tone */
 .sl-chip.sl-geo-ip a {
   color: inherit;
@@ -8121,10 +8129,15 @@ a.sl-profile-hub-row:hover {
   white-space: nowrap;
 }
 
+/* Counter badge: centered like sl-pm-new, because a single digit is narrower than the min-width and would otherwise sit against the left padding */
+/* The theme has no global border-box, so the badge declares its own: without it the padding is added to the 20px minimum and one digit gets a 32px oval instead of a circle */
 .sl-cab-badge {
   position: absolute;
   top: 8px;
   right: 10px;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
   min-width: 20px;
   height: 20px;
   padding: 0 6px;
@@ -8133,7 +8146,7 @@ a.sl-profile-hub-row:hover {
   color: var(--sl-color-on-dark);
   font-size: 10px;
   font-weight: bold;
-  line-height: 20px;
+  line-height: 1;
 }
 
 /* Community progress ring: conic fill follows the point-level percent, the center shows the points and reached group; sized and shadowed exactly like sl-profile-avatar */

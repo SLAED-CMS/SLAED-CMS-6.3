@@ -334,6 +334,7 @@ function setMessageShow(): string {
 }
 
 # Build the account navigation items with icon, tone, tooltip and optional badge/sub texts per active module; $home prepends the cabinet home link for inner pages
+# The unread badge is capped at 99+ because the counter sits in a round badge on the tile and a four-digit number would stretch it across the label
 function getUserNavItems(bool $home = false): array {
     global $db, $conf, $prv;
     $uid = intval((getUserInfo() ?? [])['id'] ?? 0);
@@ -342,7 +343,8 @@ function getUserNavItems(bool $home = false): array {
     if ($home) $items[] = ['label' => _HOME, 'title' => _RETURNACCOUNT, 'href' => 'index.php?name=account', 'icon' => 'house'];
     if ($conf['privat']['act']) {
         $new = $prv->getUnreadCount($uid);
-        $items[] = ['label' => _MESSAGES, 'title' => _PRIVAT, 'href' => 'index.php?name=account&op=privat', 'icon' => 'envelope', 'badge' => $new ? (string)$new : ''];
+        $mark = ($new > 99) ? '99+' : (string)$new;
+        $items[] = ['label' => _MESSAGES, 'title' => _PRIVAT, 'href' => 'index.php?name=account&op=privat', 'icon' => 'envelope', 'badge' => $new ? $mark : ''];
     }
     if (is_active('clients') && isModGroup('clients')) {
         getLang('clients');

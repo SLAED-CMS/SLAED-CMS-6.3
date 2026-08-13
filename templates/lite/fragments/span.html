@@ -19,6 +19,7 @@
     {% if is_message_in %} sl-chip sl-message-in{% endif %}
     {% if is_message_out %} sl-chip sl-message-out{% endif %}
     {% if is_message_save %} sl-chip sl-message-save{% endif %}
+    {% if is_message_in or is_message_out or is_message_save %}{% if text %}{% else %} sl-chip-icon{% endif %}{% endif %}
     {% if is_votes %} sl-chip sl-chip-success sl-votes{% endif %}
     {% if is_cart_total %} sl-chip sl-cart-total{% endif %}
     {% if is_hidden %} sl-hidden{% endif %}
