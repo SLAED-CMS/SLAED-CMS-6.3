@@ -1332,36 +1332,39 @@ function getMonitorServerStats(): array {
         'is_danger' => !$ishttps,
         'label' => $ishttps ? 'enabled' : 'disabled',
     ]);
-    $loaded = get_loaded_extensions();
-    $ext_dir = ini_get('extension_dir');
-    $off = [];
-    $ob = ini_get('open_basedir');
-    $ext_accessible = !$ob || array_reduce(
-        explode(PATH_SEPARATOR, $ob),
-        static fn(bool $c, string $d) => $c || str_starts_with($ext_dir, rtrim($d, '/\\')),
+    $exts = get_loaded_extensions();
+    $dir = (string)ini_get('extension_dir');
+    $base = (string)ini_get('open_basedir');
+    $able = $base === '' || array_reduce(
+        explode(PATH_SEPARATOR, $base),
+        static fn(bool $keep, string $one): bool => $keep || str_starts_with($dir, rtrim($one, '/\\')),
         false
     );
-    if ($ext_dir && $ext_accessible && is_dir($ext_dir)) {
-        $files = array_merge(glob($ext_dir.'/*.so') ?: [], glob($ext_dir.'/*.dll') ?: []);
-        $loaded_lower = array_map('strtolower', $loaded);
-        foreach ($files as $f) {
-            $name = strtolower(str_replace(['php_', '.dll', '.so'], '', basename($f)));
-            if ($name !== '' && !in_array($name, $loaded_lower, true)) {
-                $off[] = $name;
-            }
+    $why = '';
+    if ($dir === '') $why = 'extension_dir is not set, so the module directory was not read';
+    elseif (!$able) $why = 'extension_dir '.$dir.' lies outside open_basedir '.$base.', so the module directory was not read';
+    elseif (!is_dir($dir)) $why = 'extension_dir '.$dir.' is not a readable directory, so the module directory was not read';
+    $off = [];
+    if ($why === '') {
+        $seen = array_map('strtolower', $exts);
+        foreach (array_merge(glob($dir.'/*.so') ?: [], glob($dir.'/*.dll') ?: []) as $file) {
+            $name = strtolower(str_replace(['php_', '.dll', '.so'], '', basename($file)));
+            if ($name !== '' && !in_array($name, $seen, true)) $off[] = $name;
         }
     }
-    
-    $exton = implode(', ', $loaded);
-    $extlist_on = $tpl->getHtmlFrag('popover', ['content_html' => $exton, 'label_text' => $exton]);
-    if (!empty($off)) { $extoff = implode(', ', $off); $extlist_off = $tpl->getHtmlFrag('popover', ['content_html' => $extoff, 'label_text' => $extoff]); } else { $extlist_off = 'None / N/A'; }
+    $onlist = implode(', ', $exts);
+    $offlist = implode(', ', $off);
+    $onhtml = $tpl->getHtmlFrag('popover', ['content_html' => $onlist, 'label_text' => $onlist]);
+    if ($why !== '') $offhtml = $tpl->getHtmlFrag('popover', ['content_html' => $why, 'label_text' => 'N/A']);
+    elseif ($off !== []) $offhtml = $tpl->getHtmlFrag('popover', ['content_html' => $offlist, 'label_text' => $offlist]);
+    else $offhtml = 'None';
 
     return [
         'servsw' => $servsw,
         'servname' => $servname,
         'servver' => $servver,
-        'extlist_on' => $extlist_on,
-        'extlist_off' => $extlist_off,
+        'extlist_on' => $onhtml,
+        'extlist_off' => $offhtml,
         'srvprot' => getServerValue('SERVER_PROTOCOL', 'N/A'),
         'srvname' => getServerValue('SERVER_NAME', 'N/A'),
         'srvport' => $srvport,
