@@ -503,6 +503,7 @@ class Upload {
 
     # Proves one ISO base media file: the first box is a file type box of an accepted brand, every top level box ends where the next begins, and the wanted track is declared
     # Which handler is demanded separates the two extensions of this one container: a sound track is an m4a and a picture track is an mp4, which is what their canonical types say
+    # The walk is bounded, so a fragmented file of more boxes than that is proven by the declared track and the boxes the walk did reach rather than refused for its length
     private function checkBoxBody(mixed $hand, int $size, string $want): bool {
         $head = $this->getFilePart($hand, 0, 8);
         if ($head === '' || substr($head, 4, 4) !== 'ftyp') return false;
@@ -518,7 +519,7 @@ class Upload {
             $from += $box['size'];
             if ($from === $size) return $seen;
         }
-        return false;
+        return $seen;
     }
 
     # Returns whether the major brand of one file type box or one of the compatible brands behind it is a brand this project accepts
@@ -741,23 +742,37 @@ class Upload {
         return [];
     }
 
-    # Proves one gzip member: the header with every optional field it announces, and where the compression library is present the stream itself against its own checksum and length
+    # Proves one gzip file member by member: every header with the optional fields it announces, and where the compression library is present every stream against its own trailer
+    # A file of several concatenated members is one gzip file too, so the walk moves on behind a member instead of holding the whole body against the trailer of the last one
     private function checkGzipBody(mixed $hand, int $size): bool {
-        $head = $this->getFilePart($hand, 0, 10);
-        if ($head === '' || !str_starts_with($head, "\x1f\x8b\x08")) return false;
-        $flag = ord($head[3]);
-        if ($flag & 0xe0) return false;
-        $from = 10;
-        if ($flag & 0x04) {
-            $more = $this->getFilePart($hand, $from, 2);
-            if ($more === '') return false;
-            $from += 2 + (int)unpack('v', $more)[1];
+        $from = 0;
+        for ($i = 0; $i < self::BLOCKS; $i++) {
+            $data = $this->getGzipHead($hand, $size, $from);
+            if ($data < 0) return false;
+            if (!function_exists('inflate_init')) return true;
+            $from = $this->getGzipStop($hand, $size, $data);
+            if ($from < 1) return false;
+            if ($from === $size) return true;
         }
-        if ($flag & 0x08) $from = $this->getTextStop($hand, $from, $size);
-        if ($flag & 0x10) $from = $this->getTextStop($hand, $from, $size);
-        if ($flag & 0x02) $from += 2;
-        if ($from < 10 || $from + 8 > $size) return false;
-        return !function_exists('inflate_init') || $this->checkGzipFlow($hand, $size, $from);
+        return true;
+    }
+
+    # Returns the offset the compressed stream of the member at one offset begins at, or minus one when that member carries no readable RFC 1952 header
+    private function getGzipHead(mixed $hand, int $size, int $from): int {
+        $head = $this->getFilePart($hand, $from, 10);
+        if ($head === '' || !str_starts_with($head, "\x1f\x8b\x08")) return -1;
+        $flag = ord($head[3]);
+        if ($flag & 0xe0) return -1;
+        $data = $from + 10;
+        if ($flag & 0x04) {
+            $more = $this->getFilePart($hand, $data, 2);
+            if ($more === '') return -1;
+            $data += 2 + (int)unpack('v', $more)[1];
+        }
+        if ($flag & 0x08) $data = $this->getTextStop($hand, $data, $size);
+        if ($flag & 0x10) $data = $this->getTextStop($hand, $data, $size);
+        if ($flag & 0x02) $data += 2;
+        return ($data < $from + 10 || $data + 8 > $size) ? -1 : $data;
     }
 
     # Returns the offset behind the zero terminated string at one offset, or minus one when the file ends before its terminator
@@ -772,31 +787,33 @@ class Upload {
         return -1;
     }
 
-    # Decompresses one gzip member in bounded chunks and holds it to the checksum and the uncompressed length its own trailer announces
-    private function checkGzipFlow(mixed $hand, int $size, int $from): bool {
-        $tail = $this->getFilePart($hand, $size - 8, 8);
-        $flow = ($tail === '') ? false : inflate_init(ZLIB_ENCODING_RAW);
-        if ($flow === false || fseek($hand, $from) !== 0) return false;
+    # Decompresses the member whose stream begins at one offset in bounded chunks and returns the offset behind its trailer, or minus one when stream, checksum or length disagree
+    # Where the stream ends is the library's answer rather than the end of the file, which is what lets the next member of a concatenation be found at all
+    private function getGzipStop(mixed $hand, int $size, int $from): int {
+        $flow = inflate_init(ZLIB_ENCODING_RAW);
+        if ($flow === false || fseek($hand, $from) !== 0) return -1;
         $sum = hash_init('crc32b');
-        $stop = $size - 8;
+        $seen = $from;
         $len = 0;
         set_error_handler(static fn(): bool => true);
         try {
-            while ($from < $stop) {
-                $part = fread($hand, min(self::CHUNK, $stop - $from));
-                if (!is_string($part) || $part === '') return false;
-                $from += strlen($part);
-                $out = inflate_add($flow, $part, ($from >= $stop) ? ZLIB_FINISH : ZLIB_NO_FLUSH);
-                if ($out === false) return false;
+            while ($seen < $size && inflate_get_status($flow) !== ZLIB_STREAM_END) {
+                $part = fread($hand, min(self::CHUNK, $size - $seen));
+                if (!is_string($part) || $part === '') return -1;
+                $out = inflate_add($flow, $part);
+                if ($out === false) return -1;
                 hash_update($sum, $out);
                 $len += strlen($out);
+                $seen += strlen($part);
             }
         } finally {
             restore_error_handler();
         }
-        if (inflate_get_status($flow) !== ZLIB_STREAM_END) return false;
-        $want = (int)unpack('V', substr($tail, 0, 4))[1];
-        return (int)hexdec(hash_final($sum)) === $want && ($len & 0xffffffff) === (int)unpack('V', substr($tail, 4, 4))[1];
+        if (inflate_get_status($flow) !== ZLIB_STREAM_END) return -1;
+        $stop = $from + inflate_get_read_len($flow);
+        $tail = $this->getFilePart($hand, $stop, 8);
+        if ($tail === '' || (int)hexdec(hash_final($sum)) !== (int)unpack('V', substr($tail, 0, 4))[1]) return -1;
+        return (($len & 0xffffffff) === (int)unpack('V', substr($tail, 4, 4))[1]) ? $stop + 8 : -1;
     }
 
     # Proves one 7z archive: the start header holds against its own checksum, and the next header it addresses lies inside the file and holds against its checksum as well
@@ -813,21 +830,22 @@ class Upload {
     }
 
     # Proves one tar archive: every header block holds against its own checksum, its data is padded to the block size, and the chain ends with the two zero blocks the format needs
+    # Where the walk reaches that end it reads both blocks itself, and an archive longer than the walk is answered by the end of the file, which carries them just as well
     private function checkTarBody(mixed $hand, int $size): bool {
         if ($size < 1536 || $size % 512 !== 0) return false;
+        if (trim($this->getFilePart($hand, $size - 1024, 1024), "\x00") !== '') return false;
         $from = 0;
         $seen = 0;
-        while ($seen < self::BLOCKS && $from + 512 <= $size) {
+        while ($seen < self::BLOCKS && $from + 1024 <= $size) {
             $head = $this->getFilePart($hand, $from, 512);
             if ($head === '') return false;
-            if (trim($head, "\x00") === '') break;
+            if (trim($head, "\x00") === '') return trim($this->getFilePart($hand, $from, 1024), "\x00") === '';
             $len = $this->checkTarHead($head) ? $this->getTarNum(substr($head, 124, 12)) : -1;
             if ($len < 0) return false;
             $from += 512 + intdiv($len + 511, 512) * 512;
             $seen++;
         }
-        if ($seen < 1 || $from + 1024 > $size) return false;
-        return trim($this->getFilePart($hand, $from, 1024), "\x00") === '';
+        return $seen === self::BLOCKS && $from + 1024 <= $size;
     }
 
     # Returns whether one tar header block holds against the checksum it carries, which is the sum of its own bytes with the checksum field read as spaces

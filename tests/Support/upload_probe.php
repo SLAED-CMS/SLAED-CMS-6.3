@@ -247,14 +247,28 @@ function getProbeSeven(): string {
     return "7z\xbc\xaf\x27\x1c\x00\x04".pack('V', crc32($head)).$head;
 }
 
-# One POSIX tar archive with a single member, its header checksum computed the way the format defines it and the two zero blocks that end every archive
+# One POSIX tar header block for the given member name and data length, with the checksum computed the way the format defines it
+function getProbeTarHead(string $name, int $len): string {
+    $head = str_pad($name, 100, "\x00").str_pad('0000644', 8, "\x00").str_pad('0000000', 8, "\x00").str_pad('0000000', 8, "\x00");
+    $head .= sprintf('%011o', $len)."\x00".sprintf('%011o', 0)."\x00".'        '.'0'.str_repeat("\x00", 100);
+    $head .= "ustar\x0000".str_repeat("\x00", 64).str_repeat("\x00", 16).str_repeat("\x00", 155).str_repeat("\x00", 12);
+    return substr_replace($head, sprintf('%06o', array_sum((array)unpack('C*', $head)))."\x00 ", 148, 8);
+}
+
+# One POSIX tar archive with a single member and the two zero blocks that end every archive
 function getProbeTar(): string {
     $body = 'slaed upload probe';
-    $head = str_pad('probe.txt', 100, "\x00").str_pad('0000644', 8, "\x00").str_pad('0000000', 8, "\x00").str_pad('0000000', 8, "\x00");
-    $head .= sprintf('%011o', strlen($body))."\x00".sprintf('%011o', 0)."\x00".'        '.'0'.str_repeat("\x00", 100);
-    $head .= "ustar\x0000".str_repeat("\x00", 64).str_repeat("\x00", 16).str_repeat("\x00", 155).str_repeat("\x00", 12);
-    $head = substr_replace($head, sprintf('%06o', array_sum((array)unpack('C*', $head)))."\x00 ", 148, 8);
-    return $head.str_pad($body, 512, "\x00").str_repeat("\x00", 1024);
+    return getProbeTarHead('probe.txt', strlen($body)).str_pad($body, 512, "\x00").str_repeat("\x00", 1024);
+}
+
+# One POSIX tar archive of the requested member count, which is what an archive longer than the bounded walk of the validator is built from
+function getProbeTarMany(int $num, bool $isend = true): string {
+    $out = '';
+    for ($i = 0; $i < $num; $i++) {
+        $body = 'member '.$i;
+        $out .= getProbeTarHead('f'.$i.'.txt', strlen($body)).str_pad($body, 512, "\x00");
+    }
+    return $isend ? $out.str_repeat("\x00", 1024) : $out;
 }
 
 # A real zip archive, built by the extension that owns the format instead of by hand
@@ -488,6 +502,39 @@ function getProbeFaulty(): array {
         $out[$key] = addProbeRun(getProbeBlind(), addProbeRaw('claim.'.$one[0], $one[1]), getProbeRule());
     }
     $out['made'] = array_map('strlen', $good);
+    return $out;
+}
+
+# Containers longer than the bounded walk of their validator: a real archive of many members passes, and the structure the walk does reach still answers for the file
+# Every accepted case here was refused before the walks learned to end behind their bound, so each of them is the regression guard of one validator
+function getProbeBulky(): array {
+    $free = str_repeat(pack('N', 8).'free', 400);
+    $ftyp = getProbeBox('ftyp', 'isom'.pack('N', 512).'isom'.'isomiso2');
+    $first = (string)gzencode('first member of a concatenated gzip file');
+    $second = (string)gzencode('second member of a concatenated gzip file');
+    $sum = crc32('second member of a concatenated gzip file');
+    $broken = substr_replace($second, pack('V', ($sum + 1) & 0xffffffff), strlen($second) - 8, 4);
+    $short = getProbeTarMany(1, false);
+    $junk = str_repeat("\x41", 512);
+    $list = [
+        'tarmany' => ['tar', getProbeTarMany(300)],
+        'tarbad' => ['tar', substr_replace(getProbeTarMany(300), 'X', 200 * 1024, 1)],
+        'tarnoend' => ['tar', getProbeTarMany(300, false)],
+        'tarhalf' => ['tar', $short.str_repeat("\x00", 512).$junk.str_repeat("\x00", 1024)],
+        'tarnomark' => ['tar', $short.$junk.str_repeat("\x00", 1024)],
+        'tarpad' => ['tar', $short.str_repeat("\x00", 1024).str_repeat("\x00", 8704)],
+        'boxmany' => ['mp4', getProbeMpeg('isom', 'vide').$free],
+        'boxlost' => ['mp4', $ftyp.$free],
+        'gzmulti' => ['gz', $first.$second],
+        'gzsecond' => ['gz', $first.$broken],
+        'gztail' => ['gz', $first.'trailing bytes that open no member'],
+    ];
+    $out = [];
+    foreach ($list as $key => $one) {
+        addProbeRoot();
+        $out[$key] = addProbeRun(getProbeBlind(), addProbeRaw('claim.'.$one[0], $one[1]), getProbeRule());
+    }
+    $out['made'] = array_map(static fn(array $row): int => strlen($row[1]), $list);
     return $out;
 }
 
@@ -1149,6 +1196,7 @@ try {
         'magic' => getProbeMagic(),
         'cross' => getProbeCross(),
         'faulty' => getProbeFaulty(),
+        'bulky' => getProbeBulky(),
         'first' => getProbeFirst(),
         'blindnet' => getProbeBlindnet(),
         'codes' => getProbeCodes(),

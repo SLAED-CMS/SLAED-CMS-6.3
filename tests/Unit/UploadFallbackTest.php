@@ -133,6 +133,26 @@ final class UploadFallbackTest extends TestCase
         }
     }
 
+    # A container of more members than the bounded walk visits is still published, while the structure that walk does reach still answers for the file
+    #[Test]
+    public function aContainerLongerThanTheWalkIsStillJudged(): void
+    {
+        $data = $this->getProbe('bulky');
+        foreach ($data['made'] as $key => $len) {
+            $this->assertGreaterThan(0, $len, 'The '.$key.' body is empty, so it would prove nothing');
+        }
+        unset($data['made']);
+        $want = ['tarmany' => 'application/x-tar', 'tarpad' => 'application/x-tar', 'boxmany' => 'video/mp4', 'gzmulti' => 'application/gzip'];
+        foreach ($want as $key => $mime) {
+            $this->assertTrue($data[$key]['ok'], 'The '.$key.' file was refused for its length with '.var_export($data[$key]['error'], true));
+            $this->assertSame($mime, $data[$key]['mime'], 'The '.$key.' file was named something other than its canonical type');
+            $this->assertSame([$data[$key]['file']], $data[$key]['left'], 'The '.$key.' run left something other than its published file behind');
+        }
+        foreach (['tarbad', 'tarnoend', 'tarhalf', 'tarnomark', 'boxlost', 'gzsecond', 'gztail'] as $key) {
+            $this->checkFailShape($data[$key], 'mime', 'The '.$key.' body');
+        }
+    }
+
     # A missing file, a failed transfer, an oversized file and a refused extension are all answered before the content is ever read
     #[Test]
     public function theCheapRefusalsComeBeforeTheContent(): void
