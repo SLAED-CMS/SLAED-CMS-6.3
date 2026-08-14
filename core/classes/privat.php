@@ -487,6 +487,7 @@ final class Privat {
     # The name is resolved before the transaction opens on purpose: the first plain read of a transaction fixes the snapshot every later plain read answers from
     # With the lock as the first statement, the interval and the quotas behind it see the send that has just committed, so two of them cannot take one last place
     # The resolved id is not trusted either: the lock reports whether that account is still there, and a sender it no longer finds is gone
+    # A word limit of zero bounds no word, the way a mailbox limit of zero bounds no message: without that test no word is short enough and every body is refused
     private function addMessageRow(int $uid, string $name, string $title, string $body, string $ip): array {
         $title = trim($title);
         $body = trim($body);
@@ -494,7 +495,8 @@ final class Privat {
         if (trim($name) === '') return ['id' => 0, 'error' => 'no_recipient'];
         if ($title === '') return ['id' => 0, 'error' => 'no_title'];
         if ($body === '') return ['id' => 0, 'error' => 'no_body'];
-        if ($this->getWordLength($body) > intval($this->conf['letter'] ?? 0)) return ['id' => 0, 'error' => 'word_long'];
+        $long = intval($this->conf['letter'] ?? 0);
+        if ($long > 0 && $this->getWordLength($body) > $long) return ['id' => 0, 'error' => 'word_long'];
         $to = $this->getUserId($name);
         if ($to < 1) return ['id' => 0, 'error' => 'unknown_recipient'];
         if (!empty($this->conf['himself']) && $to === $uid) return ['id' => 0, 'error' => 'self'];

@@ -263,7 +263,9 @@ final class UploadIntegrationTest extends TestCase
     public function aMissingImageDecoderFailsClosed(): void
     {
         $body = $this->getBody('core/classes/upload.php', 'getDecodeError');
-        $this->assertStringContainsString("!function_exists(\$call)) return 'unsupported'", $body, 'A missing decoder no longer fails closed');
+        $this->assertStringContainsString('!function_exists($call))', $body, 'The decode check no longer asks whether the decoder of this type exists');
+        $this->assertStringContainsString("addCapsNote('decoder_missing')", $body, 'A missing decoder is no longer recorded as the server capability it is');
+        $this->assertStringContainsString("return 'unsupported';", $body, 'A missing decoder no longer fails closed');
         $this->assertStringNotContainsString('return true', $body, 'The decode check can still answer true without decoding anything');
         $this->assertStringContainsString('"ext-gd"', $this->getFile('composer.json'), 'ext-gd is not a require, so a build without it would refuse every image');
         $data = $this->getProbe('service');

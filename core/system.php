@@ -4263,11 +4263,13 @@ function setUploadRuleData(array $rule): string {
 
 # Return what one refused upload is told to the visitor: the service answers a code and the settings of the module answer the number the refusal names, so both screens speak alike
 # The mapping lives here and not beside a screen, because the editor window and the administrative catalogue would otherwise explain the same refusal in two different words
+# A capability this build does not have is told apart from a file this build refuses: the first is nothing the visitor can correct by choosing another file
 function getUploadFailText(string $code, array $rule): string {
     return match ($code) {
         'size' => _ERROR_BIG,
         'count' => _FILEUP.': '.(int)($rule['maxfiles'] ?? 0),
-        'extension', 'mime', 'image', 'unsupported' => _ERROR_FILE,
+        'unsupported' => _ERROR_SERV,
+        'extension', 'mime', 'image' => _ERROR_FILE,
         'dimensions' => _ERROR_SIZE,
         'quota' => _FSIZEALL.': '.filterSize((int)($rule['maxquota'] ?? 0)),
         'exists' => _ERROR_EXIST,

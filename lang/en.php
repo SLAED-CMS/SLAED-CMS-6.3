@@ -186,6 +186,7 @@ define('_ERROR_EXIST','File with such name already exists on a server!');
 define('_ERROR_FILE','Inadmissible format of a file!');
 define('_ERRLOG','Errors and warnings');
 define('_ERROR_PASS','Entered by you new passwords do not coincide!');
+define('_ERROR_SERV','This file type cannot be processed on the server at the moment!');
 define('_ERROR_SIZE','Size of a loaded graphic element exceeds admissible!');
 define('_ERROR_UP','There was a mistake at record of a file!');
 define('_EATTACH','Attachment');

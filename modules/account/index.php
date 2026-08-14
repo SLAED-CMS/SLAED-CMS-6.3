@@ -1157,16 +1157,7 @@ function saveavatar(): void {
         $res = getUploadService()->addUploadedFile($_FILES['userfile'] ?? [], $rule, $adir, $conf['name'], $uid);
         $avatar = ($res['ok']) ? (string)$res['file'] : '';
         $path = ($res['ok']) ? (string)$res['path'] : '';
-        if (!$res['ok']) {
-            $stop[] = match ((string)$res['error']) {
-                'size' => _ERROR_BIG,
-                'extension', 'mime', 'image', 'unsupported' => _ERROR_FILE,
-                'dimensions' => _ERROR_SIZE,
-                'exists' => _ERROR_EXIST,
-                'destination', 'write' => _ERROR_UP,
-                default => _ERROR_DOWN,
-            };
-        }
+        if (!$res['ok']) $stop[] = getUploadFailText((string)$res['error'], $rule);
     }
     if ($stop || !$avatar) {
         edithome();

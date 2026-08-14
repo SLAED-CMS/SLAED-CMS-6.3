@@ -775,9 +775,12 @@ function send(): void {
         $subject = getVar('post', 'subject', 'text');
         $hometext = getVar('post', 'hometext', 'text');
 
-        $checks = str_replace(["\n", "\r", "\t"], ' ', $hometext);
-        $words = explode(' ', $checks);
-        for ($ix = 0; $ix < count($words); $ix++) $size = strlen($words[$ix]);
+        # The longest word of the post in characters, which is what the letter limit bounds; a limit of zero bounds no word at all
+        $size = 0;
+        foreach (preg_split('/\s+/u', $hometext, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $word) {
+            $size = max($size, mb_strlen($word));
+        }
+        $long = intval($conf['forum']['letter']);
         $status = getVar('post', 'status', 'num', 0);
 
         $field = getVar('post', 'field', 'field');
@@ -790,7 +793,7 @@ function send(): void {
         $stop = [];
         if (!$subject) $stop[] = _CERROR;
         if (!$hometext) $stop[] = _CERROR1;
-        if ($size > $conf['forum']['letter']) $stop[] = _CERROR2;
+        if ($long > 0 && $size > $long) $stop[] = _CERROR2;
         if (!$postname && !is_user()) $stop[] = _CERROR3;
         if ($room = checkEditorTextRoom($hometext, 'forum.body')) $stop[] = $room;
 

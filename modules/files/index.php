@@ -554,14 +554,7 @@ function send(): void {
                 $fsize = $res['size'];
                 $rpath = (string)$res['path'];
             } else {
-                $stop[] = match ((string)$res['error']) {
-                    'size' => _ERROR_BIG,
-                    'extension', 'mime', 'image', 'unsupported' => _ERROR_FILE,
-                    'dimensions' => _ERROR_SIZE,
-                    'exists' => _ERROR_EXIST,
-                    'destination', 'write' => _ERROR_UP,
-                    default => _ERROR_DOWN,
-                };
+                $stop[] = getUploadFailText((string)$res['error'], $rule);
             }
         }
         if (!$stop && !$url && $posttype == 'save') $stop[] = _UPLOADEROR2;

@@ -440,14 +440,16 @@ class Comment {
 
     # Apply the write rules of one comment and answer every refusal it collects, in the order the submit path applies them, so its caller can show the last one or the whole list
     # The rules a new comment adds are the ones an edit never had: a guest name, the flood window and the captcha; the length rule measures the longest word in characters for both
+    # A word limit of zero bounds no word at all, because no word is shorter than none and the comparison would refuse every body
     public function checkRules(string $mod, string $body, string $name, string $addr, bool $isnew): array {
         $words = array_map(static fn(string $one): int => mb_strlen($one, 'UTF-8'), explode(' ', str_replace(["\n", "\r", "\t"], ' ', $body)));
         $long = $words ? max($words) : 0;
+        $limit = intval($this->conf['letter'] ?? 0);
         $last = $isnew ? $this->getLastTime($addr) : '';
         $wait = ($last !== '' ? strtotime($last) : 0) + intval($this->conf['send']);
         $stop = [];
         if ($body === '') $stop[] = _CERROR1;
-        if ($long > $this->conf['letter']) $stop[] = _CERROR2;
+        if ($limit > 0 && $long > $limit) $stop[] = _CERROR2;
         if ($isnew && !is_user() && ($name === '' || $this->conf['anonpost'] == 0)) $stop[] = _CERROR3;
         if ($isnew && $wait > time()) $stop[] = sprintf(_CERROR5, $this->conf['send']);
         if (!is_moder($mod) && (($this->conf['link'] == 1 && !is_user()) || $this->conf['link'] == 2) && stripos($body, 'http://') !== false) $stop[] = _CERROR9;

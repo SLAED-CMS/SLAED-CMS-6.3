@@ -13,11 +13,15 @@
     "require": {
         "php": ">=8.4",
         "ext-curl": "*",
-        "ext-fileinfo": "*",
         "ext-gd": "*",
         "ext-mbstring": "*",
         "ext-pdo": "*",
         "ext-json": "*"
+    },
+    "suggest": {
+        "ext-fileinfo": "Names an uploaded file by the magic database; without it the upload service falls back to its own structural validators",
+        "ext-zip": "Opens an uploaded zip archive as a second proof beside the structural walk of its central directory",
+        "ext-zlib": "Decompresses an uploaded gzip member to hold it against its own checksum and length"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.93",

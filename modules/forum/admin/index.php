@@ -119,7 +119,7 @@ function config(): void {
         ['label_html' => _CDEFIS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'defis', 'value_attr' => urldecode($conf['forum']['defis'] ?? ''), 'is_config' => true])],
         ['label_html' => _FO_1, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'listnum', 'value_attr' => (string)($conf['forum']['listnum'] ?? 0), 'is_config' => true])],
         ['label_html' => _FO_2, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'pop', 'value_attr' => (string)($conf['forum']['pop'] ?? 0), 'is_config' => true])],
-        ['label_html' => _COMLETTER, 'field_html' => getTplRadioGroup(['name' => 'letter', 'value' => (string)($conf['forum']['letter'] ?? 0), 'options' => $yesno])],
+        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _COMLETTER, 'hint' => _CONFINES]), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'letter', 'value_attr' => (string)($conf['forum']['letter'] ?? 0), 'is_config' => true])],
         ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)($conf['forum']['num'] ?? 0), 'is_config' => true])],
         ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'pnum', 'value_attr' => (string)($conf['forum']['pnum'] ?? 0), 'is_config' => true])],
         ['label_html' => _FO_5, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'recycle', 'is_config' => true, 'options_html' => $recycleopts])],

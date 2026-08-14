@@ -118,6 +118,11 @@ a { text-decoration: none; }
 <header class="sl-pmdemo-head">
   <a class="sl-pmdemo-back" href="private-messages-quota-lab.html"><i class="bi bi-arrow-left" aria-hidden="true"></i> Все варианты индикатора квоты</a>
   <h1>Кольцо квоты — доработанный вариант</h1>
+  <div class="sl-alert sl-alert-success">
+    <div class="sl-alert-body">
+      <p class="sl-alert-text"><b>Реализовано.</b> Это кольцо рисует квоту полок на странице <code>index.php?name=account&amp;op=privat</code>: общий <code>sl-knob</code>, объявленный в обеих темах, тон — по лестнице <code>getPercentTone()</code>, а лимит <code>0</code> означает отсутствие границы и сплошное кольцо.</p>
+    </div>
+  </div>
   <p>Габарит варианта&nbsp;<b>И</b> (кольцо надето на иконку полки, высота строки не растёт), движок кольца от варианта&nbsp;<b>Ж</b> (SVG, как <code>sl-knob</code> в мониторе). Внесены три правки: <b>фон убран</b>, <b>кольцо толще</b>, <b>иконка окрашена в тон заполнения</b>.</p>
   <p>Показаны все три папки и кнопка «Написать». Там, где мерить нечего — у исходящих (<code>max = 0</code> в коде) и у «Написать» — кольцо рисуется сплошным и в тон иконки: серым и системным голубым соответственно.</p>
   <div class="sl-pmdemo-chips">
@@ -133,7 +138,7 @@ a { text-decoration: none; }
 
   <section class="sl-pmdemo-sec">
     <h2><span>1</span> Три папки в реальном состоянии</h2>
-    <p>Данные стенда: входящие 240 из 250, сохранённые 63 из 250, исходящие 903 без ограничения. Чип с остатком появляется только с оранжевого порога — там же, где сейчас всплывает алерт.</p>
+    <p>Данные стенда: входящие 240 из 250, сохранённые 63 из 250, исходящие 903 без ограничения. Чип с остатком появляется только с оранжевого порога.</p>
 
     <div class="sl-pmdemo-frame">
       <nav class="sl-pmh-folders" aria-label="Папки личных сообщений">
@@ -652,7 +657,7 @@ a { text-decoration: none; }
         <li><code>icon</code> — имя иконки: <code>envelope</code>, <code>send</code>, <code>bookmark</code>, <code>pencil-square</code>, а при 100% для входящих — <code>envelope-x</code>;</li>
         <li><code>label</code> — текстовое описание для скрин-ридера, потому что дуга сама по себе ничего не говорит.</li>
       </ul>
-      <p>Проценты для входящих и сохранённых уже считаются в <code>getPrivateMessageView()</code> — там же, где сейчас собираются алерты о квоте. Новых запросов к базе нет.</p>
+      <p>Проценты для входящих и сохранённых отдаёт <code>Privat::getBoxFill()</code> — тот же метод, что читают алерт о пределе и карточка адресата. Новых запросов к базе нет.</p>
       <p>По правилам темы новые классы <code>sl-pmh-*</code> должны переехать в <code>templates/lite/assets/css/theme.css</code>, а токены брать оттуда же: трек — <code>--sl-progress-track-bg</code>, тона — <code>--sl-color-success</code> / <code>-primary</code> / <code>-warning</code> / <code>-danger</code> / <code>--sl-color-text-subtle</code>. Ни одного нового токена не требуется.</p>
     </div>
   </section>

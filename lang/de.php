@@ -186,6 +186,7 @@ define('_ERROR_EXIST','Datei mit solcher Bezeichnung existiert schon auf dem Ser
 define('_ERROR_FILE','Unzulässige Dateiformat!');
 define('_ERRLOG','Fehler und Warnungen');
 define('_ERROR_PASS','Ihre neue Passwärter stimmen nicht überein!');
+define('_ERROR_SERV','Dateien dieses Typs können auf dem Server zurzeit nicht verarbeitet werden!');
 define('_ERROR_SIZE','Umfang des geladenen graphischen Elementes ist unzülässig!');
 define('_ERROR_UP','Fehler bei der Aufnahme der Datei!');
 define('_EATTACH','Anhang');

@@ -86,7 +86,7 @@ final class PrivatClassTest extends TestCase
         $this->assertSame([0, 4, '0.0'], $run['fill'][4], 'A fill was answered without an account');
     }
 
-    # Batch 1 of docs/PRIVATE-MESSAGES-2026.md: a shelf badge counts the unread of its own mailbox, and the two shelves add up to the cabinet badge
+    # A shelf badge counts the unread of its own mailbox, and the two shelves add up to the cabinet badge, because a saved message leaves the inbox and takes its unread mark with it
     #[Test]
     public function everyShelfCountsTheUnreadOfItsOwnBox(): void
     {
@@ -177,10 +177,13 @@ final class PrivatClassTest extends TestCase
     }
 
     # The word limit counts characters: sixty Cyrillic letters are sixty letters and a hundred and twenty bytes
+    # A limit of zero is the absence of a bound here as it is everywhere else, because no word is shorter than none and the comparison would refuse every body
     #[Test]
     public function theWordLimitCountsCharacters(): void
     {
-        $this->assertSame('ok', $this->getRun('send')['utf'], 'A word inside the limit was measured in bytes');
+        $run = $this->getRun('send');
+        $this->assertSame('ok', $run['utf'], 'A word inside the limit was measured in bytes');
+        $this->assertSame('ok', $run['freeletter'], 'A word limit of zero refused every message instead of bounding none');
     }
 
     # An accepted send stores exactly what it was handed, unread, and answers the id of that row and of no other

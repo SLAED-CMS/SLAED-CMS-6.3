@@ -111,7 +111,12 @@ a { text-decoration: none; }
 <header class="sl-pmdemo-head">
   <a class="sl-pmdemo-back" href="private-messages-index.html"><i class="bi bi-arrow-left" aria-hidden="true"></i> Все варианты личных сообщений</a>
   <h1>Вариант 1 — Классический почтовый ящик</h1>
-  <p>Привычная модель почты: слева полки с счётчиками, справа список-таблица с массовым выделением, панель чтения раскрывается под списком. Ближе всего к тому, что уже отдаёт <b>getPrivateMessageView()</b> — таблица <code>content-list</code>, чекбоксы, speed-dial действий и пагинатор остаются на своих местах.</p>
+  <div class="sl-alert sl-alert-info">
+    <div class="sl-alert-body">
+      <p class="sl-alert-text"><b>Лаборатория.</b> Этот вариант не выбран — из него в финальный макет взяты полки-плитки со счётчиками и штатная полоса массовых действий под списком. Страница <code>index.php?name=account&amp;op=privat</code> собрана по <a href="private-messages-final-2026.html">финальному варианту</a>, и разметка ниже нигде не используется.</p>
+    </div>
+  </div>
+  <p>Привычная модель почты: слева полки с счётчиками, справа список-таблица с массовым выделением, панель чтения раскрывается под списком. Самый близкий к почтовому канону вариант: таблица со штатными чекбоксами, speed-dial действий и пагинатором.</p>
   <div class="sl-pmdemo-chips">
     <span class="sl-chip sl-chip-info"><i class="bi bi-table" aria-hidden="true"></i> sl-table-list</span>
     <span class="sl-chip sl-chip-info"><i class="bi bi-check2-square" aria-hidden="true"></i> sl-col-check</span>

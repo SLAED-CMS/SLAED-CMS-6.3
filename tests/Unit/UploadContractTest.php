@@ -284,8 +284,9 @@ final class UploadContractTest extends TestCase
     public function thePublicationNeitherReservesTheFinalNameNorLinks(): void
     {
         $code = $this->getFile('core/classes/upload.php');
-        $this->assertSame(1, substr_count($code, 'fopen('), 'The class opens a file somewhere other than the remote partial');
-        $this->assertStringContainsString("fopen(\$part, 'ab')", $code, 'The one fopen() of the class must be the remote partial, never a final name');
+        $this->assertSame(2, substr_count($code, 'fopen('), 'The class opens a file somewhere other than the remote partial and the read of the content validator');
+        $this->assertStringContainsString("fopen(\$part, 'ab')", $code, 'The writing fopen() of the class must be the remote partial, never a final name');
+        $this->assertStringContainsString("fopen(\$path, 'rb')", $code, 'The reading fopen() of the class must be the read-only handle of the content validator');
         $this->assertStringContainsString('FileManager::getPathLock($canon)', $code, 'The publication no longer runs under the shared destination lock');
         $this->assertStringNotContainsString('function getLockHandle', $code, 'The class kept a lock protocol of its own, so its writers stand in two queues');
         $this->assertDoesNotMatchRegularExpression('#(?<![a-zA-Z_])link\(#', $code, 'The class publishes through link(), which the plan rejects');

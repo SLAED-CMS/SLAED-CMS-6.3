@@ -605,7 +605,8 @@ function updatePost() {
                 $room = checkEditorTextRoom($htext, 'forum.body');
                 $stop = [];
                 if ($text == '') $stop[] = _CERROR1;
-                if ($long > intval($conf['forum']['letter'])) $stop[] = _CERROR2;
+                $limit = intval($conf['forum']['letter']);
+                if ($limit > 0 && $long > $limit) $stop[] = _CERROR2;
                 if ($room !== '') $stop[] = $room;
                 if (!$stop) {
                     $db->getSqlQuery(

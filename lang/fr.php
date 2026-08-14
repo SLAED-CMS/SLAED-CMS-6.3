@@ -186,6 +186,7 @@ define('_ERROR_EXIST','Un fichier de ce nom existe déjà sur le serveur!');
 define('_ERROR_FILE','Format de fichier non valide!');
 define('_ERRLOG','Erreurs et avertissements');
 define('_ERROR_PASS','Les mots de passe saisis ne correspondent pas!');
+define('_ERROR_SERV','Ce type de fichier ne peut pas être traité sur le serveur pour le moment!');
 define('_ERROR_SIZE',"La taille du téléchargement de l'élément graphique dépasse!");
 define('_ERROR_UP',"Une erreur s'est produite lors de l'écriture du fichier!");
 define('_EATTACH','Pièce jointe');

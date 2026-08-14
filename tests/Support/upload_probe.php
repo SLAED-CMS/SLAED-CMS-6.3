@@ -98,6 +98,13 @@ class ProbeUpload extends Upload {
     }
 }
 
+# The build the fallback plan is about: the magic database is gone while GD, cURL, zlib, the archive extension and every other native capability of this machine stay available
+class BlindUpload extends ProbeUpload {
+    protected function getTypeReader(): ?finfo {
+        return null;
+    }
+}
+
 # Start every scenario from an empty scratch tree with one prepared destination directory below the disposable upload root
 function addProbeRoot(): void {
     foreach ([$GLOBALS['proot'], $GLOBALS['ptmp']] as $dir) {
@@ -110,6 +117,11 @@ function addProbeRoot(): void {
 # Build one service over the disposable root
 function getProbeUpload(): ProbeUpload {
     return new ProbeUpload($GLOBALS['proot']);
+}
+
+# Build one service over the disposable root that has no magic database at all, which is the whole point of every fallback scenario
+function getProbeBlind(): ProbeUpload {
+    return new BlindUpload($GLOBALS['proot']);
 }
 
 # The default rule of a scenario: everything the type policy knows is allowed and no limit is set, so a scenario only states the limit it is about
@@ -153,20 +165,23 @@ function addProbeImage(string $path, string $ext, int $wid, int $hei): string {
     return $done && is_file($path) ? $path : '';
 }
 
-# Return the smallest body that carries the container magic of one non-image format, so libmagic reports the type a real file of that format would
+# Return one structurally complete body of the requested non-image format: every container carries the blocks, sizes and checksums its own validator walks
+# A magic signature alone is no fixture any more - the fallback of a build without libmagic reads the whole structure, so a fixture that only starts right would prove nothing
 function getProbeBody(string $ext): string {
     return match ($ext) {
         'pdf' => "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Count 0>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n",
         'gz' => (string)gzencode('slaed upload probe'),
-        'rar' => "Rar!\x1a\x07\x00".str_repeat("\x00", 32),
-        '7z' => "7z\xbc\xaf\x27\x1c\x00\x04".str_repeat("\x00", 24),
-        'mp3' => "ID3\x03\x00\x00\x00\x00\x00\x21".str_repeat("\x00", 33)."\xff\xfb\x90\x00".str_repeat("\x00", 64),
+        'rar' => getProbeRar(),
+        '7z' => getProbeSeven(),
+        'mp3' => "ID3\x04\x00\x00\x00\x00\x00\x40".str_repeat("\x00", 64).str_repeat(getProbeFrame(), 3),
         'wav' => getProbeWave(),
-        'flac' => "fLaC\x00\x00\x00\x22".str_repeat("\x00", 34),
-        'ogg', 'oga', 'opus' => "OggS\x00\x02".str_repeat("\x00", 20)."\x01\x1e\x01vorbis".str_repeat("\x00", 24),
-        'm4a' => "\x00\x00\x00\x20ftypM4A \x00\x00\x00\x00M4A mp42isom".str_repeat("\x00", 16),
-        'mp4' => "\x00\x00\x00\x20ftypisom\x00\x00\x02\x00isomiso2avc1mp41".str_repeat("\x00", 16),
-        'webm' => "\x1a\x45\xdf\xa3\x01\x00\x00\x00\x00\x00\x00\x1f\x42\x86\x81\x01\x42\xf7\x81\x01\x42\xf2\x81\x04\x42\xf3\x81\x08\x42\x82\x84webm",
+        'flac' => "fLaC\x80\x00\x00\x22".pack('nn', 4096, 4096)."\x00\x00\x00\x00\x00\x00\x0a\xc4\x42\xf0\x00\x00\x00\x00".str_repeat("\x00", 16),
+        'ogg', 'oga' => getProbeOgg('vorbis'),
+        'opus' => getProbeOgg('opus'),
+        'm4a' => getProbeMpeg('M4A ', 'soun'),
+        'mp4' => getProbeMpeg('isom', 'vide'),
+        'webm' => getProbeWebm(),
+        'tar' => getProbeTar(),
         default => '',
     };
 }
@@ -179,23 +194,76 @@ function getProbeWave(): string {
     return 'RIFF'.pack('V', strlen($body)).$body;
 }
 
-# A real archive of the requested container, built by the extension that owns the format instead of by hand
+# One MPEG 1 layer III frame of 128 kbit at 44.1 kHz without padding, which is 417 bytes long and carries silence
+function getProbeFrame(): string {
+    return "\xff\xfb\x90\x00".str_repeat("\x00", 413);
+}
+
+# One Ogg page carrying the identification packet of the requested codec, with the page checksum the format demands over the finished page
+function getProbeOgg(string $codec): string {
+    $data = ($codec === 'opus') ? "OpusHead\x01\x02".pack('v', 312).pack('V', 48000).pack('v', 0)."\x00"
+        : "\x01vorbis".pack('V', 0)."\x02".pack('V', 44100).pack('V', 0).pack('V', 128000).pack('V', 0)."\xb8\x01";
+    $page = 'OggS'."\x00\x02".str_repeat("\x00", 8).pack('V', 0x12345678).pack('V', 0)."\x00\x00\x00\x00".chr(1).chr(strlen($data)).$data;
+    return substr_replace($page, pack('V', getProbeOggSum($page)), 22, 4);
+}
+
+# The Ogg page checksum: a CRC-32 over the Ogg polynomial without input or output reflection, computed here so the fixture is built independently of the code under test
+function getProbeOggSum(string $page): int {
+    $sum = 0;
+    for ($i = 0; $i < strlen($page); $i++) {
+        $sum ^= ord($page[$i]) << 24;
+        for ($j = 0; $j < 8; $j++) $sum = (($sum & 0x80000000) ? (($sum << 1) ^ 0x04c11db7) : ($sum << 1)) & 0xffffffff;
+    }
+    return $sum;
+}
+
+# One ISO base media box of the given type
+function getProbeBox(string $type, string $body): string {
+    return pack('N', strlen($body) + 8).$type.$body;
+}
+
+# One ISO base media file of the requested brand whose single track declares the requested handler, which is what separates an audio file from a video one
+function getProbeMpeg(string $brand, string $kind): string {
+    $hdlr = getProbeBox('hdlr', pack('N', 0).pack('N', 0).$kind.str_repeat("\x00", 12).'probe'."\x00");
+    $trak = getProbeBox('trak', getProbeBox('mdia', getProbeBox('mdhd', str_repeat("\x00", 24)).$hdlr));
+    $moov = getProbeBox('moov', getProbeBox('mvhd', str_repeat("\x00", 100)).$trak);
+    return getProbeBox('ftyp', $brand.pack('N', 512).$brand.'isomiso2').$moov.getProbeBox('mdat', str_repeat("\x00", 64));
+}
+
+# One WebM file: a complete EBML header declaring the webm document type, followed by the segment every reader expects behind it
+function getProbeWebm(): string {
+    $head = "\x42\x86\x81\x01\x42\xf7\x81\x01\x42\xf2\x81\x04\x42\xf3\x81\x08\x42\x82\x84webm\x42\x87\x81\x02\x42\x85\x81\x02";
+    return "\x1a\x45\xdf\xa3".chr(0x80 | strlen($head)).$head."\x18\x53\x80\x67\x80";
+}
+
+# One RAR 4 archive: the marker, the archive header the format requires first and the end of archive block behind it
+function getProbeRar(): string {
+    return "Rar!\x1a\x07\x00"."\x00\x00\x73\x00\x00".pack('v', 13).str_repeat("\x00", 6)."\x00\x00\x7b\x40\x00".pack('v', 7);
+}
+
+# One empty 7z archive: the signature, the version and a start header that holds against its own checksum and addresses a next header of length zero
+function getProbeSeven(): string {
+    $head = pack('P', 0).pack('P', 0).pack('V', 0);
+    return "7z\xbc\xaf\x27\x1c\x00\x04".pack('V', crc32($head)).$head;
+}
+
+# One POSIX tar archive with a single member, its header checksum computed the way the format defines it and the two zero blocks that end every archive
+function getProbeTar(): string {
+    $body = 'slaed upload probe';
+    $head = str_pad('probe.txt', 100, "\x00").str_pad('0000644', 8, "\x00").str_pad('0000000', 8, "\x00").str_pad('0000000', 8, "\x00");
+    $head .= sprintf('%011o', strlen($body))."\x00".sprintf('%011o', 0)."\x00".'        '.'0'.str_repeat("\x00", 100);
+    $head .= "ustar\x0000".str_repeat("\x00", 64).str_repeat("\x00", 16).str_repeat("\x00", 155).str_repeat("\x00", 12);
+    $head = substr_replace($head, sprintf('%06o', array_sum((array)unpack('C*', $head)))."\x00 ", 148, 8);
+    return $head.str_pad($body, 512, "\x00").str_repeat("\x00", 1024);
+}
+
+# A real zip archive, built by the extension that owns the format instead of by hand
 function addProbeArchive(string $path, string $ext): string {
-    if ($ext === 'zip') {
-        if (!class_exists('ZipArchive')) return '';
-        $zip = new ZipArchive();
-        if ($zip->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) return '';
-        $zip->addFromString('probe.txt', 'slaed upload probe');
-        $zip->close();
-        return is_file($path) ? $path : '';
-    }
-    if (!class_exists('PharData')) return '';
-    try {
-        $tar = new PharData($path);
-        $tar->addFromString('probe.txt', 'slaed upload probe');
-    } catch (Throwable) {
-        return '';
-    }
+    if ($ext !== 'zip' || !class_exists('ZipArchive')) return '';
+    $zip = new ZipArchive();
+    if ($zip->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) return '';
+    $zip->addFromString('probe.txt', 'slaed upload probe');
+    $zip->close();
     return is_file($path) ? $path : '';
 }
 
@@ -206,7 +274,7 @@ function addProbeFile(string $ext, string $name = '', int $wid = 40, int $hei = 
     $type = strtolower((string)pathinfo($file, PATHINFO_EXTENSION));
     if (in_array($type, ['gif', 'jpg', 'jpeg', 'png', 'webp', 'avif', 'bmp'], true)) {
         if (addProbeImage($path, $type, $wid, $hei) === '') return [];
-    } elseif ($type === 'zip' || $type === 'tar') {
+    } elseif ($type === 'zip') {
         if (addProbeArchive($path, $type) === '') return [];
     } else {
         $body = getProbeBody($type);
@@ -311,6 +379,152 @@ function getProbeTypes(): array {
             'error' => $res['error'],
             'stored' => count($res['left']) === 1,
         ];
+    }
+    return $out;
+}
+
+# One real fixture of every mapped extension against a build without a magic database: the fallback alone has to accept each of them and publish it under its own extension
+function getProbeNomagic(): array {
+    $out = [];
+    foreach (Upload::getSupportedTypes() as $ext) {
+        addProbeRoot();
+        $file = addProbeFile($ext);
+        if ($file === []) {
+            $out[$ext] = ['made' => false];
+            continue;
+        }
+        $res = addProbeRun(getProbeBlind(), $file, getProbeRule());
+        $out[$ext] = [
+            'made' => true,
+            'ok' => (bool)$res['ok'],
+            'error' => $res['error'],
+            'file' => $res['file'],
+            'mime' => $res['mime'],
+            'left' => $res['left'],
+            'parts' => $res['parts'],
+        ];
+    }
+    return $out;
+}
+
+# The same bodies against a build with the magic database, so the two readers are compared on one and the same set of fixtures
+function getProbeMagic(): array {
+    $out = [];
+    foreach (Upload::getSupportedTypes() as $ext) {
+        addProbeRoot();
+        $file = addProbeFile($ext);
+        if ($file === []) {
+            $out[$ext] = ['made' => false];
+            continue;
+        }
+        $res = addProbeRun(getProbeUpload(), $file, getProbeRule());
+        $out[$ext] = ['made' => true, 'ok' => (bool)$res['ok'], 'error' => $res['error'], 'mime' => $res['mime'], 'file' => $res['file']];
+    }
+    return $out;
+}
+
+# One body of every format submitted under every other mapped extension: without a magic database the content still has to answer for the name it arrived under
+function getProbeCross(): array {
+    addProbeRoot();
+    $list = Upload::getSupportedTypes();
+    $body = [];
+    foreach ($list as $ext) {
+        $one = getProbeSource($ext);
+        if ($one !== '') $body[$ext] = $one;
+    }
+    $out = [];
+    foreach ($body as $ext => $data) {
+        foreach ($list as $want) {
+            if ($want === $ext) continue;
+            addProbeRoot();
+            $res = addProbeRun(getProbeBlind(), addProbeRaw('claim.'.$want, $data), getProbeRule());
+            $out[$ext][$want] = ['ok' => (bool)$res['ok'], 'error' => $res['error'], 'left' => $res['left']];
+        }
+    }
+    return $out;
+}
+
+# Truncated, corrupted and polyglot bodies: each one carries the opening signature of its format and fails on the structure behind it
+function getProbeFaulty(): array {
+    addProbeRoot();
+    $good = [];
+    foreach (['gz', 'zip', 'tar', '7z', 'rar', 'mp3', 'wav', 'flac', 'ogg', 'm4a', 'mp4', 'webm', 'pdf'] as $ext) $good[$ext] = getProbeSource($ext);
+    $seven = pack('P', 4096).pack('P', 16).pack('V', 0);
+    $ogg = substr_replace(substr_replace($good['ogg'], "\x01probeX", 28, 7), "\x00\x00\x00\x00", 22, 4);
+    $list = [
+        'gzcut' => ['gz', substr($good['gz'], 0, 6)],
+        'gzsum' => ['gz', substr($good['gz'], 0, -8).str_repeat("\x00", 8)],
+        'gzjunk' => ['gz', "\x1f\x8b\x08\x00".str_repeat("\x00", 6).str_repeat("\x41", 32).str_repeat("\x00", 8)],
+        'zipcut' => ['zip', substr($good['zip'], 0, -4)],
+        'zipoff' => ['zip', substr_replace($good['zip'], pack('V', 999999), strlen($good['zip']) - 6, 4)],
+        'ziptail' => ['zip', $good['zip'].'trailing bytes'],
+        'tarsum' => ['tar', substr_replace($good['tar'], 'X', 0, 1)],
+        'tarend' => ['tar', substr($good['tar'], 0, 1024)],
+        'sevensum' => ['7z', substr_replace($good['7z'], pack('V', 1234), 8, 4)],
+        'sevenoff' => ['7z', "7z\xbc\xaf\x27\x1c\x00\x04".pack('V', crc32($seven)).$seven],
+        'rarzero' => ['rar', "Rar!\x1a\x07\x00".str_repeat("\x00", 32)],
+        'rarcut' => ['rar', substr($good['rar'], 0, 12)],
+        'mpone' => ['mp3', "ID3\x04\x00\x00\x00\x00\x00\x40".str_repeat("\x00", 64).getProbeFrame()],
+        'mpnone' => ['mp3', "ID3\x04\x00\x00\x00\x00\x00\x40".str_repeat("\x00", 64)],
+        'wavlen' => ['wav', substr_replace($good['wav'], pack('V', 999999), 4, 4)],
+        'wavchunk' => ['wav', substr_replace($good['wav'], pack('V', 9999), 16, 4)],
+        'flaclen' => ['flac', substr_replace($good['flac'], "\x21", 7, 1)],
+        'flaccut' => ['flac', substr($good['flac'], 0, 20)],
+        'oggsum' => ['ogg', substr_replace($good['ogg'], "\x00\x00\x00\x00", 22, 4)],
+        'oggcodec' => ['ogg', substr_replace($ogg, pack('V', getProbeOggSum($ogg)), 22, 4)],
+        'boxcut' => ['m4a', substr($good['m4a'], 0, 20)],
+        'boxbrand' => ['mp4', substr_replace($good['mp4'], 'qt  '.pack('N', 512).'qt  qt  ', 8, 20)],
+        'boxbare' => ['mp4', substr($good['mp4'], 0, 28)],
+        'webmdoc' => ['webm', str_replace('webm', 'mkv3', $good['webm'])],
+        'webmlen' => ['webm', substr_replace($good['webm'], chr(0x80 | 40), 4, 1)],
+        'pdfver' => ['pdf', str_replace('%PDF-1.4', '%PDF-9.9', $good['pdf'])],
+        'pdfend' => ['pdf', str_replace('%%EOF', '', $good['pdf'])],
+        'pdfaway' => ['pdf', str_repeat('A', 3000).$good['pdf']],
+        'pdfzip' => ['pdf', "%PDF-1.4\n".$good['zip']],
+    ];
+    $out = [];
+    foreach ($list as $key => $one) {
+        addProbeRoot();
+        $out[$key] = addProbeRun(getProbeBlind(), addProbeRaw('claim.'.$one[0], $one[1]), getProbeRule());
+    }
+    $out['made'] = array_map('strlen', $good);
+    return $out;
+}
+
+# The refusals that must be reached before anything is read from the file at all, on a build that could not read it in the first place
+function getProbeFirst(): array {
+    addProbeRoot();
+    $upl = getProbeBlind();
+    $file = addProbeFile('png');
+    $out = [];
+    $out['missing'] = addProbeRun($upl, [], getProbeRule());
+    $out['transfer'] = addProbeRun($upl, ['name' => 'a.png', 'tmp_name' => $file['tmp_name'], 'size' => 10, 'error' => UPLOAD_ERR_PARTIAL], getProbeRule());
+    $out['inisize'] = addProbeRun($upl, ['name' => 'a.png', 'tmp_name' => $file['tmp_name'], 'size' => 10, 'error' => UPLOAD_ERR_INI_SIZE], getProbeRule());
+    $out['size'] = addProbeRun($upl, addProbeFile('png'), getProbeRule(['maxbytes' => 20]));
+    $out['extension'] = addProbeRun($upl, addProbeFile('png'), getProbeRule(['extensions' => 'gif,jpg']));
+    $out['blocked'] = addProbeRun($upl, addProbeRaw('evil.php', '<?php echo 1;'), getProbeRule(['extensions' => 'php,png']));
+    $out['unsupported'] = addProbeRun($upl, addProbeFile('bmp'), getProbeRule(['extensions' => 'bmp,png']));
+    $out['gone'] = addProbeRun($upl, addProbeRaw('empty.png', ''), getProbeRule());
+    $out['done'] = addProbeRun($upl, addProbeFile('png'), getProbeRule(), 'files', 'files', 7);
+    return $out;
+}
+
+# The remote half of the same build: one validator answers both flows, and every refusal leaves the destination as it found it
+function getProbeBlindnet(): array {
+    addProbeRoot();
+    $png = getProbeSource('png');
+    $site = 'https://files.example.net/photo.png';
+    $list = [
+        'image' => [['reply' => [['code' => 200, 'body' => $png]]], $site],
+        'archive' => [['reply' => [['code' => 200, 'body' => getProbeSource('gz')]]], 'https://files.example.net/backup.gz'],
+        'sound' => [['reply' => [['code' => 200, 'body' => getProbeSource('flac')]]], 'https://files.example.net/song.flac'],
+        'mime' => [['reply' => [['code' => 200, 'body' => getProbeSource('gz')]]], $site],
+        'broken' => [['reply' => [['code' => 200, 'body' => substr($png, 0, 33)]]], $site],
+    ];
+    $out = [];
+    foreach ($list as $key => $one) {
+        addProbeRoot();
+        $out[$key] = getProbeShape(addProbeFetch($one[0] + ['blind' => true], $one[1]));
     }
     return $out;
 }
@@ -659,7 +873,7 @@ function getProbeChain(): array {
 
 # Fetch one URL against a scripted zone and a scripted reply chain, and report the result with what the destination holds and how every request was configured
 function addProbeFetch(array $over, string $url = 'https://files.example.net/photo.png', array $rule = []): array {
-    $upl = getProbeUpload();
+    $upl = empty($over['blind']) ? getProbeUpload() : getProbeBlind();
     $upl->dns = getProbeZone($over['dns'] ?? []);
     $upl->reply = $over['reply'] ?? [];
     $upl->peer = (string)($over['peer'] ?? '');
@@ -931,6 +1145,12 @@ try {
         'hold' => getProbeHold(),
         'queue' => getProbeQueue(),
         'types' => getProbeTypes(),
+        'nomagic' => getProbeNomagic(),
+        'magic' => getProbeMagic(),
+        'cross' => getProbeCross(),
+        'faulty' => getProbeFaulty(),
+        'first' => getProbeFirst(),
+        'blindnet' => getProbeBlindnet(),
         'codes' => getProbeCodes(),
         'naming' => getProbeNaming(),
         'publish' => getProbePublish(),

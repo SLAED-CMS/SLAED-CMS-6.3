@@ -186,6 +186,7 @@ define('_ERROR_EXIST','Plik o tej nazwie już istnieje na serwerze!');
 define('_ERROR_FILE','Nieprawidłowy format pliku!');
 define('_ERRLOG','Błędy i ostrzeżenia');
 define('_ERROR_PASS','Wprowadzone hasła nie są identyczne!');
+define('_ERROR_SERV','Pliki tego typu nie mogą być teraz przetworzone na serwerze!');
 define('_ERROR_SIZE','Rozmiar załadowanej grafiki przekracza normy!');
 define('_ERROR_UP','Wystąpił błąd podczas zapisu pliku!');
 define('_EATTACH','Załącznik');

@@ -216,6 +216,8 @@ function getProbeSend(): array {
     $out['long'] = $prv->addMessage(3, 'anna', 'title', 'word '.str_repeat('a', 101), '127.0.0.1')['error'];
     $out['utf'] = getProbeMail(['letter' => 100])->addMessage(3, 'anna', 'title', str_repeat('я', 60), '127.0.0.1')['error'];
     setProbeSeed();
+    $out['freeletter'] = getProbeMail(['letter' => 0])->addMessage(3, 'anna', 'title', 'word '.str_repeat('a', 300), '127.0.0.1')['error'];
+    setProbeSeed();
     $out['self'] = getProbeMail(['himself' => 1])->addMessage(2, 'anna', 'title', 'body', '127.0.0.1')['error'];
     $out['selfok'] = getProbeMail(['himself' => 0])->addMessage(2, 'anna', 'title', 'body', '127.0.0.1')['error'];
     setProbeSeed();

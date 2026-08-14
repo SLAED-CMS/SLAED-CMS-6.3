@@ -115,7 +115,12 @@ a { text-decoration: none; }
 <header class="sl-pmdemo-head">
   <a class="sl-pmdemo-back" href="private-messages-index.html"><i class="bi bi-arrow-left" aria-hidden="true"></i> Все варианты личных сообщений</a>
   <h1>Вариант 2 — Список слева, просмотр справа</h1>
-  <p>Двухпанельный интерфейс: узкая лента писем со стикирующимися разделителями дней и широкая область чтения с формой ответа под текстом. Выбор в списке не перезагружает страницу — правая панель меняется одним htmx-свапом в тот же контейнер, что и сегодня используется для вкладок.</p>
+  <div class="sl-alert sl-alert-info">
+    <div class="sl-alert-body">
+      <p class="sl-alert-text"><b>Основа финального макета.</b> Отсюда взята главная механика: две колонки, список слева остаётся на экране. Страница <code>index.php?name=account&amp;op=privat</code> собрана по <a href="private-messages-final-2026.html">финальному варианту</a>, и разметка ниже нигде не используется.</p>
+    </div>
+  </div>
+  <p>Двухпанельный интерфейс: узкая лента писем со стикирующимися разделителями дней и широкая область чтения с формой ответа под текстом. Выбор в списке не перезагружает страницу — правая панель меняется одним htmx-свапом, и список вместе с прокруткой и отметками остаётся на месте.</p>
   <div class="sl-pmdemo-chips">
     <span class="sl-chip sl-chip-info"><i class="bi bi-layout-sidebar" aria-hidden="true"></i> две панели</span>
     <span class="sl-chip sl-chip-info"><i class="bi bi-chat-square-text" aria-hidden="true"></i> sl-forum-post-логика</span>

@@ -337,9 +337,9 @@ function config(): void {
         ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$conf['comments']['anum']])],
         ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => (string)$conf['comments']['nump']])],
         ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$conf['comments']['anump']])],
-        ['label_html' => _COMLETTER, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'letter', 'value_attr' => (string)$conf['comments']['letter']])],
+        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _COMLETTER, 'hint' => _CONFINES]), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'letter', 'value_attr' => (string)$conf['comments']['letter']])],
         ['label_html' => _CEDITT, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'edit', 'value_attr' => (string)intval($conf['comments']['edit'] / 60)])],
-        ['label_html' => _CSEND, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'send', 'value_attr' => (string)$conf['comments']['send']])],
+        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CSEND, 'hint' => _CONFINES]), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'send', 'value_attr' => (string)$conf['comments']['send']])],
         ['label_html' => _SORT, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'sort', 'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _ASC, 'is_selected' => (string)($conf['comments']['sort'] ?? '1') === '1']).$tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _DESC, 'is_selected' => (string)($conf['comments']['sort'] ?? '1') === '0'])])],
         ['label_html' => _ALLOWANONPOST, 'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'anonpost',

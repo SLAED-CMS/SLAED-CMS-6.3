@@ -166,6 +166,11 @@ a { text-decoration: none; }
 <header class="sl-pmdemo-head">
   <a class="sl-pmdemo-back" href="private-messages-index.html"><i class="bi bi-arrow-left" aria-hidden="true"></i> Все варианты личных сообщений</a>
   <h1>Вариант 7 — Большой объём сообщений</h1>
+  <div class="sl-alert sl-alert-info">
+    <div class="sl-alert-body">
+      <p class="sl-alert-text"><b>Лаборатория.</b> Этот вариант не выбран — из него в финальный макет взяты полоса активных фильтров, фасеты со счётчиками и счётчик «найдено N из M». Страница <code>index.php?name=account&amp;op=privat</code> собрана по <a href="private-messages-final-2026.html">финальному варианту</a>, и разметка ниже нигде не используется.</p>
+    </div>
+  </div>
   <p>Раскладка для ящика на тысячи писем: фасетный фильтр со счётчиками, липкие заголовки дней, строка высотой 28&nbsp;px, полоса активных фильтров, плавающая панель массовых действий и переход к произвольной странице. Подсветка совпадений показывает, почему письмо попало в выборку.</p>
   <div class="sl-pmdemo-chips">
     <span class="sl-chip sl-chip-info"><i class="bi bi-funnel" aria-hidden="true"></i> фасеты со счётчиками</span>
@@ -482,7 +487,7 @@ a { text-decoration: none; }
 
   <section class="sl-pmdemo-sec">
     <h2><span>3</span> Исходящие и предупреждение о переполнении</h2>
-    <p>При приближении к квоте сверху появляется штатный <code>sl-alert</code> — тот же, что уже отдаёт <code>getPrivateMessageView()</code>.</p>
+    <p>При приближении к квоте сверху появляется штатный <code>sl-alert</code>. В финальном макете постоянный индикатор — кольцо полки, а текстовый алерт остался только на пределе.</p>
     <div class="sl-pmdemo-frame">
       <div class="sl-alert sl-alert-warn">
         <div class="sl-alert-body"><p class="sl-alert-text">Максимально допустимое количество в размере 250 входящих сообщений уже набрано! Вы больше не можете получать новые сообщения от пользователей. Удалите устаревшие или очистите отдел входящих.</p></div>
