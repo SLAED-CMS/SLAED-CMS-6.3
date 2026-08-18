@@ -174,18 +174,18 @@
               <i class="bi bi-folder" data-sl-slot="emptyicon" aria-hidden="true"></i>
               <b data-sl-slot="emptytitle"></b>
               <p data-sl-slot="emptytext"></p>
-              <button type="button" class="sl-fm-btn" data-sl-slot="emptyact" data-editor="{{ editor_id }}" hidden></button>
+              <button type="button" class="sl-modal-btn" data-sl-slot="emptyact" data-editor="{{ editor_id }}" hidden></button>
             </div>
           </div>
         </section>
         {% endif %}
       </div>
       <div id="{{ msg_id }}"></div>
-      <div class="sl-fm-foot">
-        <span class="sl-fm-foot-info" data-sl-slot="info" aria-live="polite">{{ nofile_label }}</span>
-        <button type="button" class="sl-fm-btn" data-sl-act="refresh" data-editor="{{ editor_id }}"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i>{{ refresh_label }}</button>
-        <button type="button" class="sl-fm-btn" data-sl-close><i class="bi bi-x-lg" aria-hidden="true"></i>{{ close_label }}</button>
-        <button type="button" class="sl-fm-btn sl-fm-btn-main" data-sl-act="apply" data-editor="{{ editor_id }}"><i class="bi bi-check-lg" aria-hidden="true"></i>{{ insert_label }}</button>
+      <div class="sl-modal-foot">
+        <span class="sl-modal-info" data-sl-slot="info" aria-live="polite">{{ nofile_label }}</span>
+        <button type="button" class="sl-modal-btn" data-sl-act="refresh" data-editor="{{ editor_id }}"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i>{{ refresh_label }}</button>
+        <button type="button" class="sl-modal-btn" data-sl-close><i class="bi bi-x-lg" aria-hidden="true"></i>{{ close_label }}</button>
+        <button type="button" class="sl-modal-btn sl-modal-btn-main" data-sl-act="apply" data-editor="{{ editor_id }}"><i class="bi bi-check-lg" aria-hidden="true"></i>{{ insert_label }}</button>
       </div>
     </div>
   </div>

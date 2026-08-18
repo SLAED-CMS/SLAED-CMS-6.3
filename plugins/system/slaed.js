@@ -44,16 +44,15 @@
 
     // A window standing beside the page has no place of its own in the flow, so it is given one on first sight
     // On a phone no coordinates are handed out at all: there the window lies as a sheet at the bottom edge and an inline style would beat that rule
+    // Every size here is read off the layout and never off a client rect: the entry animation still holds the window at scale(0.97), and a rect measured through it is short by 3%
     function setWindowPlace(box) {
-        var rect;
         if (window.matchMedia('(max-width: 600px)').matches) {
             box.style.left = '';
             box.style.top = '';
             return;
         }
         if (box.getAttribute('data-sl-moved')) return;
-        rect = box.getBoundingClientRect();
-        box.style.left = Math.max(12, Math.round((window.innerWidth - rect.width) / 2)) + 'px';
+        box.style.left = Math.max(12, Math.round((window.innerWidth - box.offsetWidth) / 2)) + 'px';
         box.style.top = '40px';
     }
 
@@ -156,8 +155,7 @@
 
     // A window does not let itself be dragged off the screen whole: a piece of its plate stays in reach, or the hand can never bring it back
     function setWindowBounds(box, left, top) {
-        var rect = box.getBoundingClientRect();
-        box.style.left = Math.round(Math.min(Math.max(left, WINWIDE - rect.width), window.innerWidth - WINWIDE)) + 'px';
+        box.style.left = Math.round(Math.min(Math.max(left, WINWIDE - box.offsetWidth), window.innerWidth - WINWIDE)) + 'px';
         box.style.top = Math.round(Math.min(Math.max(top, 0), Math.max(0, window.innerHeight - WINHIGH))) + 'px';
     }
 
@@ -192,18 +190,21 @@
             if (box) setWindowFront(box);
         });
         // The whole plate of the head is the handle; a control standing on it keeps its own press, and the grip is a sign of what the plate does rather than a control
+        // The place the drag starts from is the layout one: a grip taken while the window is still animating in would pin it where the transform draws it and not where it stands
         document.addEventListener('pointerdown', function (event) {
             var box = event.target.closest ? event.target.closest('dialog.sl-modal[data-sl-window]') : null;
             var head = event.target.closest ? event.target.closest('.sl-modal-title') : null;
             var act = event.target.closest ? event.target.closest('button, a, input, select, textarea') : null;
-            var rect;
+            var left;
+            var top;
             if (!box || !head || act || event.button !== 0) return;
             if (box.classList.contains('sl-is-full')) return;
-            rect = box.getBoundingClientRect();
-            box.style.left = rect.left + 'px';
-            box.style.top = rect.top + 'px';
+            left = box.offsetLeft;
+            top = box.offsetTop;
+            box.style.left = left + 'px';
+            box.style.top = top + 'px';
             box.setAttribute('data-sl-moved', '1');
-            windrag = { box: box, left: rect.left, top: rect.top, x: event.clientX, y: event.clientY };
+            windrag = { box: box, left: left, top: top, x: event.clientX, y: event.clientY };
             event.preventDefault();
         });
         document.addEventListener('pointermove', function (event) {

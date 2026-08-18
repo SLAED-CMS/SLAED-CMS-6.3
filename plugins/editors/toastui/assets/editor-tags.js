@@ -140,8 +140,9 @@
     }
     win.addEventListener('load', setWidths);
     win.addEventListener('resize', setWidths);
+    // The key reaches the fullscreen only once nothing stands in front of it: an open window is what the press is about, and the canon closes that one first
     doc.addEventListener('keydown', function(event) {
-        if (event.key !== 'Escape') return;
+        if (event.key !== 'Escape' || doc.querySelector('dialog.sl-modal[open]')) return;
         map.forEach(function(ed, id) {
             var box = doc.getElementById(String(id) + '_toast');
             if (box && box.classList.contains('sl-toastui-editor-fullscreen')) setFullscreen(id, false);

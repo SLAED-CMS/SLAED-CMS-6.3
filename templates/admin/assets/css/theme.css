@@ -2478,7 +2478,7 @@ html.sl-is-locked {
 }
 
 .sl-modal-btn > .bi { font-size: var(--sl-size-icon-xs); }
-.sl-modal-btn:hover { border-color: var(--sl-color-border-strong); }
+.sl-modal-btn:hover:not([disabled]) { border-color: var(--sl-color-border-strong); }
 
 .sl-modal-btn:focus-visible {
   outline: 0;
@@ -2494,7 +2494,7 @@ html.sl-is-locked {
   color: var(--sl-color-on-dark);
 }
 
-.sl-modal-btn-main:hover {
+.sl-modal-btn-main:hover:not([disabled]) {
   background: color-mix(in srgb, var(--sl-modal-tone) 86%, #000000);
   border-color: color-mix(in srgb, var(--sl-modal-tone) 86%, #000000);
 }
@@ -2507,7 +2507,6 @@ html.sl-is-locked {
 
 /* Axis: size. lg is 880px, exactly the width of the File Manager */
 .sl-modal-sm { --sl-modal-w: 420px; }
-.sl-modal-md { --sl-modal-w: 560px; }
 .sl-modal-lg { --sl-modal-w: 880px; }
 .sl-modal-xl { --sl-modal-w: 1120px; }
 

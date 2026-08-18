@@ -51,7 +51,6 @@
 
   /* Props: a picture that is not a picture, and the stage the gallery puts one on */
   .d-shot { display: block; width: 100%; min-height: 300px; background: repeating-linear-gradient(45deg, #2f3a48 0 18px, #333f4e 18px 36px); }
-  .d-stage { display: flex; align-items: center; justify-content: center; background: var(--sl-color-bg-soft-darker); }
 
   /* The icon grid is shipped by the admin theme, and this page loads the lite one */
   .d-icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 6px; }
@@ -64,7 +63,7 @@
 
 <header class="d-head">
   <h1 class="sl-font">Канон окна</h1>
-  <p>Одно окно на всю систему. Визуал взят у менеджера файлов и не меняется: плита-шапка 42px, кластер призрачных кнопок справа, тело со своим скроллом, подвал со строкой статуса. Значения скопированы из <code>skin.css</code> как есть, только под именами <code>sl-modal-*</code>.</p>
+  <p>Одно окно на всю систему: плита-шапка 42px, кластер призрачных кнопок справа, тело со своим скроллом, подвал со строкой статуса. Блок объявлен побайтово одинаково в <code>theme.css</code> обеих тем, а значения каждая тема берёт из своих токенов.</p>
   <p>Механизм один — нативный <code>&lt;dialog&gt;</code>. <code>showModal()</code> для решений, <code>show()</code> для инструментов, рядом с которыми работают.</p>
   <p class="d-mini">Страница — один файл. Окна рисует <code>theme.css</code> темы, а ведёт <code>plugins/system/slaed.js</code> — тот же код, что в системе. Свой <code>&lt;style&gt;</code> держит только леса самой страницы и бутафорию внутри окон: канона в нём нет ни строки. Что видно здесь, то и работает в админке и на сайте.</p>
 </header>
@@ -72,56 +71,49 @@
 <div class="sl-wrp">
 
 <section class="d-sec">
-  <h2 class="sl-font">Все девять мест системы на одном окне</h2>
-  <p class="d-note">Это не варианты. Это одно и то же окно, применённое к каждому месту, где сегодня живёт свой диалог. Проверка простая: если канон честный, ни одно место не потребует исключения.</p>
+  <h2 class="sl-font">Девять мест системы на одном окне</h2>
+  <p class="d-note">Это не варианты. Это одно и то же окно, применённое к каждому месту, где системе нужен диалог. Проверка простая: ни одно место не требует исключения.</p>
   <div class="d-grid">
 
     <div class="d-cell">
       <b class="d-name">Подтверждение</b>
-      <span class="d-was">было: 2 файла — lite/fragments + admin/fragments</span>
-      <p>Размер <code>sm</code>, тон <code>danger</code>. Тона в системе сегодня нет вообще: удаление выглядит как «поделиться».</p>
+      <p>Размер <code>sm</code>, тон <code>danger</code>. Тон и красит шапку, и делает главную кнопку красной: удаление не выглядит как «поделиться».</p>
       <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-confirm"><i class="bi bi-play-fill"></i> Открыть</button>
     </div>
 
     <div class="d-cell">
       <b class="d-name">Поделиться</b>
-      <span class="d-was">было: #sl-share-sheet</span>
-      <p>Размер <code>md</code>. Сетка сетей — существующий <code>.sl-share-grid</code>, канон её не касается.</p>
+      <p>Размер по умолчанию — класса не требует. Сетка сетей — существующий <code>.sl-share-grid</code>, канон её не касается.</p>
       <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-share"><i class="bi bi-play-fill"></i> Открыть</button>
     </div>
 
     <div class="d-cell">
       <b class="d-name">QR-код</b>
-      <span class="d-was">было: #sl-share-qr</span>
       <p>Размер <code>sm</code>, подвал с одним действием. Строка статуса пустая — и тогда она не занимает места.</p>
       <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-qr"><i class="bi bi-play-fill"></i> Открыть</button>
     </div>
 
     <div class="d-cell">
       <b class="d-name">Галерея изображения</b>
-      <span class="d-was">было: 4 реализации — .sl-toastui-shot ×2 темы, .sl-fm-modal, лайтбокс строкой в slaed.js</span>
-      <p>Размер <code>xl</code>, тело без отступов, свойства справа, действия чипами в подвале. Одно окно вместо четырёх с тремя разными наборами data-атрибутов.</p>
+      <p>Размер <code>xl</code>, тело без отступов, свойства справа, действия чипами в подвале. Один фрагмент на редактор, файловый браузер и лайтбокс сайта — их различает только <code>data-sl-shot</code>.</p>
       <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-shot"><i class="bi bi-play-fill"></i> Открыть</button>
     </div>
 
     <div class="d-cell">
       <b class="d-name">Подборщик иконок</b>
-      <span class="d-was">было: #sl_icon_modal, только admin</span>
       <p>Размер <code>lg</code>. Поиск уезжает в панель команд под шапкой, а не внутрь заголовка — шапка перестаёт быть исключением.</p>
       <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-icons"><i class="bi bi-play-fill"></i> Открыть</button>
     </div>
 
     <div class="d-cell">
       <b class="d-name">Менеджер файлов</b>
-      <span class="d-was">было: .sl-toastui-upload, div с position:absolute</span>
-      <p>Оконная подача: подложки нет, страница жива, шапка — ручка, тащи. Ширина <code>lg</code> = 880px, ровно как сегодня. <b>Вид не изменился.</b></p>
+      <p>Оконная подача: подложки нет, страница жива, шапка — ручка, тащи. Ширина <code>lg</code> = 880px. Подвал, кнопки и строка статуса — общие классы канона, своих у менеджера не осталось.</p>
       <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-files"><i class="bi bi-play-fill"></i> Открыть</button>
     </div>
 
     <div class="d-cell">
       <b class="d-name">Панель эмодзи</b>
-      <span class="d-was">было: .sl-editor-emoji-panel</span>
-      <p>Оконная подача, размер <code>sm</code>, подвала нет — он просто не написан, класса для этого не нужно. Шапка приходит к общим 42px вместо своих 36px.</p>
+      <p>Оконная подача, размер <code>sm</code>, подвала нет — он просто не написан, класса для этого не нужно. Панель встаёт у кнопки, которая её открыла, а на телефоне ложится листом снизу, как любое окно.</p>
       <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-emoji"><i class="bi bi-play-fill"></i> Открыть</button>
     </div>
 
@@ -144,19 +136,19 @@
 
 <section class="d-sec">
   <h2 class="sl-font">Четыре оси — всё, что канон допускает</h2>
-  <p class="d-note">Пять сегодняшних оформлений сводятся к одной структуре и четырём осям. Больше ничего заводить не нужно.</p>
+  <p class="d-note">Одна структура и четыре оси покрывают все окна системы. Больше ничего заводить не нужно: новое окно стоит разметки и не стоит ни строки CSS.</p>
   <div class="d-grid">
     <div class="d-cell">
       <b class="d-name">Размер</b>
-      <p>Сегодня их два: 520px и <code>.sl-modal-wide</code>, причём wide в двух темах реализован по-разному.</p>
+      <p>Пять ступеней. У размера по умолчанию класса нет: окно на 560px не пишет ничего.</p>
       <div class="d-row">
         <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-sm">sm · 420</button>
-        <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-md">md · 560</button>
+        <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-md">по умолчанию · 560</button>
         <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-lg">lg · 880</button>
         <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-xl">xl · 1120</button>
         <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-full">full</button>
       </div>
-      <p style="margin-top:12px"><code>lg</code> = 880px намеренно: это ширина менеджера файлов сегодня.</p>
+      <p style="margin-top:12px"><code>lg</code> = 880px намеренно: это ширина менеджера файлов.</p>
     </div>
     <div class="d-cell">
       <b class="d-name">Подача</b>
@@ -168,7 +160,7 @@
     </div>
     <div class="d-cell">
       <b class="d-name">Тон</b>
-      <p>Одна переменная <code>--sl-modal-tone</code> красит иконку шапки, полосу акцента и главную кнопку. Сегодня понятия тона нет.</p>
+      <p>Одна переменная <code>--sl-modal-tone</code> красит иконку шапки, полосу акцента и главную кнопку. Без класса тон — основной цвет темы.</p>
       <div class="d-row">
         <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-confirm">danger</button>
         <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-warn">warn</button>
@@ -187,37 +179,37 @@
 </section>
 
 <section class="d-sec">
-  <h2 class="sl-font">Что уходит при переезде</h2>
+  <h2 class="sl-font">Что делает платформа, а что канон</h2>
   <div class="d-grid">
     <div class="d-cell">
-      <b class="d-name">Дублирование</b>
+      <b class="d-name">Браузер</b>
       <ul class="d-list">
-        <li><b>Галерея</b><span>4 реализации → 1</span></li>
-        <li><b>confirm-modal</b><span>2 файла → 1 структура, значения из токенов темы</span></li>
-        <li><b>Escape</b><span>3 места → 1</span></li>
-        <li><b>Оформлений окна</b><span>5 → 1 структура + 4 оси</span></li>
+        <li><b>Ловушка фокуса</b><span>у модального окна — работа <code>showModal()</code></span></li>
+        <li><b>Верхний слой</b><span>модальное окно рисуется поверх без единого z-index</span></li>
+        <li><b>Возврат фокуса</b><span>у модального окна: после <code>close()</code> клавиатура сама идёт на открывшую кнопку. У оконной подачи это делает канон</span></li>
+        <li><b>aria-modal</b><span>ставит браузер, руками не нужен</span></li>
       </ul>
     </div>
     <div class="d-cell">
-      <b class="d-name">Ручной код</b>
+      <b class="d-name">Канон</b>
       <ul class="d-list">
-        <li><b>editor-upload.js</b><span><code>setPanel</code>, <code>setWindowFront</code>, <code>setWindowClose</code> и ручной возврат фокуса уходят в браузер</span></li>
-        <li><b>z-index</b><span>31 / 10020 / 10050 → верхний слой, руками не нужен</span></li>
-        <li><b>aria-hidden</b><span>переключение вручную → состояние <code>&lt;dialog&gt;</code></span></li>
-        <li><b>window.confirm</b><span>запасной путь в slaed.js остаётся — но только как запасной</span></li>
+        <li><b>Блокировка скролла</b><span><code>html.sl-is-locked</code> плюс возврат ширины полосы прокрутки</span></li>
+        <li><b>Порядок оконных</b><span>подъём по нажатию, фокусу и перетаскиванию — и та же очередь для Escape</span></li>
+        <li><b>Место и перетаскивание</b><span>немодальное окно платформа никуда не ставит</span></li>
+        <li><b>Escape и анимация ухода</b><span>немодальное окно этой клавише не отвечает само</span></li>
       </ul>
     </div>
     <div class="d-cell">
-      <b class="d-name">Появляется</b>
+      <b class="d-name">Тон</b>
       <ul class="d-list">
-        <li><b>Блокировка скролла</b><span>сегодня её нет ни у одного окна</span></li>
-        <li><b>aria-modal</b><span>ставит браузер для <code>showModal()</code></span></li>
-        <li><b>Ловушка фокуса</b><span>сегодня её нет у менеджера файлов</span></li>
-        <li><b>Тон окна</b><span>опасное действие перестаёт выглядеть как обычное</span></li>
+        <li><b>--sl-modal-tone</b><span>иконка шапки, полоса акцента и главная кнопка</span></li>
+        <li><b>danger</b><span>удаление перестаёт выглядеть как обычное действие</span></li>
+        <li><b>warn / success</b><span>предупреждение и подтверждённый исход</span></li>
+        <li><b>Без класса</b><span>тон по умолчанию — основной цвет темы</span></li>
       </ul>
     </div>
     <div class="d-cell">
-      <b class="d-name">Новые имена классов</b>
+      <b class="d-name">Имена классов канона</b>
       <p>Всё остальное — существующие. Утверждены и живут в <code>theme.css</code>:</p>
       <ul class="d-list">
         <li><b>.sl-modal-cap</b><span>заголовок с подписью</span></li>
@@ -234,7 +226,7 @@
 
 <section class="d-sec">
   <h2 class="sl-font">Клавиатура</h2>
-  <p class="d-note">Tab не уходит за пределы открытого окна, Escape закрывает везде, кроме «Обработки», после закрытия фокус возвращается на кнопку, которая окно открыла, страница под модальным окном не прокручивается. У немодальной подачи ловушки фокуса нет — это осознанный размен: в менеджере файлов её нет и сегодня, потому что окно стоит рядом с редактором, а не вместо него.</p>
+  <p class="d-note">Tab не уходит за пределы открытого окна, Escape закрывает везде, кроме «Обработки», после закрытия фокус возвращается на кнопку, которая окно открыла, страница под модальным окном не прокручивается. У немодальной подачи ловушки фокуса нет — это осознанный размен: окно стоит рядом с редактором, а не вместо него, и клавиатура должна уходить в текст под ним.</p>
 </section>
 
 </div>
@@ -259,7 +251,7 @@
 </dialog>
 
 <!-- ================= 2 · Поделиться ================= -->
-<dialog class="sl-modal sl-modal-md" id="w-share" aria-labelledby="w-share-t">
+<dialog class="sl-modal" id="w-share" aria-labelledby="w-share-t">
       <div class="sl-modal-title">
       <i class="bi bi-share-fill" aria-hidden="true"></i>
       <span class="sl-modal-cap"><strong id="w-share-t">Поделиться</strong><span class="sl-modal-sub">SLAED CMS 4.2: единая система окон</span></span>
@@ -304,7 +296,7 @@
 </dialog>
 
 <!-- ================= 4 · Галерея изображения ================= -->
-<dialog class="sl-modal sl-modal-xl sl-toastui-shot" id="w-shot" aria-labelledby="w-shot-t">
+<dialog class="sl-modal sl-modal-xl" id="w-shot" aria-labelledby="w-shot-t">
       <div class="sl-modal-title">
       <i class="bi bi-image" aria-hidden="true"></i>
       <span class="sl-modal-cap"><strong id="w-shot-t">banner-3x4kd91ab.webp</strong><span class="sl-modal-sub">3 из 128 · стрелки листают</span></span>
@@ -314,9 +306,13 @@
       </span>
     </div>
     <div class="sl-modal-body sl-modal-body-flush">
-      <div style="display:grid;grid-template-columns:minmax(0,1fr) 268px;height:100%">
-        <div class="d-stage"><span class="d-shot" role="img" aria-label="Изображение-заглушка"></span></div>
-        <aside style="padding:16px 20px;border-left:1px solid var(--sl-color-border)">
+      <div class="sl-shot-grid">
+        <div class="sl-shot-stage">
+          <button type="button" class="sl-but-mini sl-shot-nav sl-shot-nav-prev" title="Предыдущее" aria-label="Предыдущее"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+          <span class="sl-shot-img"><span class="d-shot" role="img" aria-label="Изображение-заглушка"></span></span>
+          <button type="button" class="sl-but-mini sl-shot-nav sl-shot-nav-next" title="Следующее" aria-label="Следующее"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+        </div>
+        <aside class="sl-shot-side">
           <dl class="sl-fm-props">
             <div><dt>Тип</dt><dd>WEBP</dd></div>
             <div><dt>Размер</dt><dd>248 КБ</dd></div>
@@ -547,7 +543,7 @@
 <!-- ================= оси: размеры и тона ================= -->
 <dialog class="sl-modal sl-modal-sm" id="w-sm" aria-labelledby="w-sm-t"><div class="sl-modal-title"><i class="bi bi-aspect-ratio" aria-hidden="true"></i><span class="sl-modal-cap"><strong id="w-sm-t">sm — 420px</strong></span><span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div><div class="sl-modal-body"><p>Один вопрос, максимум одно поле.</p></div><div class="sl-modal-foot"><span class="sl-modal-info" aria-live="polite"></span><button type="button" class="sl-modal-btn sl-modal-btn-main" data-sl-close>Понятно</button></div></dialog>
 
-<dialog class="sl-modal sl-modal-md" id="w-md" aria-labelledby="w-md-t"><div class="sl-modal-title"><i class="bi bi-aspect-ratio" aria-hidden="true"></i><span class="sl-modal-cap"><strong id="w-md-t">md — 560px</strong><span class="sl-modal-sub">размер по умолчанию</span></span><span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div><div class="sl-modal-body"><p>Небольшая форма, сообщение, короткий текст. Класса не требует.</p><div class="d-fields"><div class="sl-form-row"><label class="sl-form-label" for="md-a">Название</label><input class="sl-field" id="md-a" type="text"></div><div class="sl-form-row"><label class="sl-form-label" for="md-b">Категория</label><select class="sl-field" id="md-b"><option>Новости</option></select></div></div></div><div class="sl-modal-foot"><span class="sl-modal-info" aria-live="polite">Изменений нет</span><button type="button" class="sl-modal-btn" data-sl-close>Отмена</button><button type="button" class="sl-modal-btn sl-modal-btn-main" data-sl-close>Сохранить</button></div></dialog>
+<dialog class="sl-modal" id="w-md" aria-labelledby="w-md-t"><div class="sl-modal-title"><i class="bi bi-aspect-ratio" aria-hidden="true"></i><span class="sl-modal-cap"><strong id="w-md-t">560px — по умолчанию</strong><span class="sl-modal-sub">класса не требует</span></span><span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div><div class="sl-modal-body"><p>Небольшая форма, сообщение, короткий текст. Класса не требует.</p><div class="d-fields"><div class="sl-form-row"><label class="sl-form-label" for="md-a">Название</label><input class="sl-field" id="md-a" type="text"></div><div class="sl-form-row"><label class="sl-form-label" for="md-b">Категория</label><select class="sl-field" id="md-b"><option>Новости</option></select></div></div></div><div class="sl-modal-foot"><span class="sl-modal-info" aria-live="polite">Изменений нет</span><button type="button" class="sl-modal-btn" data-sl-close>Отмена</button><button type="button" class="sl-modal-btn sl-modal-btn-main" data-sl-close>Сохранить</button></div></dialog>
 
 <dialog class="sl-modal sl-modal-lg" id="w-lg" aria-labelledby="w-lg-t"><div class="sl-modal-title"><i class="bi bi-aspect-ratio" aria-hidden="true"></i><span class="sl-modal-cap"><strong id="w-lg-t">lg — 880px</strong><span class="sl-modal-sub">ровно ширина менеджера файлов сегодня</span></span><span class="sl-modal-acts"><button type="button" class="sl-modal-act" data-sl-full data-expand="Развернуть" data-restore="Свернуть" aria-label="Развернуть"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i></button><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div><div class="sl-modal-body"><div class="d-fields"><div class="sl-form-row"><label class="sl-form-label" for="lg-a">Заголовок</label><input class="sl-field" id="lg-a" type="text"></div><div class="sl-form-row"><label class="sl-form-label" for="lg-b">Категория</label><select class="sl-field" id="lg-b"><option>Новости</option></select></div><div class="sl-form-row d-span"><label class="sl-form-label" for="lg-c">Текст</label><textarea class="sl-field sl-field--block" id="lg-c" rows="6"></textarea></div></div></div><div class="sl-modal-foot"><span class="sl-modal-info" aria-live="polite">Форма в две колонки помещается без сжатия</span><button type="button" class="sl-modal-btn" data-sl-close>Отмена</button><button type="button" class="sl-modal-btn sl-modal-btn-main" data-sl-close>Сохранить</button></div></dialog>
 

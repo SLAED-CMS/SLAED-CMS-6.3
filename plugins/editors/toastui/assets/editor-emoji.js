@@ -314,11 +314,18 @@
         return btn;
     }
 
+    // The width follows the row of category tabs, so a long row is not cut off and a short one leaves no gap
+    // On a phone no width is written at all: there the canon lays the window edge to edge, and an inline width would leave the sheet short of the screen
     function sizePanel() {
         var tabs = panel.querySelector('.sl-editor-emoji-tabs');
         var min = 360;
         var max = Math.max(280, win.innerWidth - 24);
-        var width = Math.max(min, tabs.scrollWidth + 18);
+        var width;
+        if (win.matchMedia('(max-width: 600px)').matches) {
+            panel.style.width = '';
+            return;
+        }
+        width = Math.max(min, tabs.scrollWidth + 18);
         panel.style.width = Math.min(width, max) + 'px';
     }
 
@@ -373,14 +380,20 @@
         return panel;
     }
 
+    // The panel stands at the button that opened it, because it is read against the text it writes into
+    // On a phone it takes no coordinates: the canon lays every window as a sheet along the bottom edge, and an inline place would beat that rule and push the panel past it
+    // The owner is written before that turn is taken, because a second press on the button closes the panel only while the panel knows whose it is
     function place(id) {
         var root = doc.getElementById(id + '_toast');
         var btn = root ? root.querySelector('.toastui-editor-toolbar-icons.sl-editor-icon-emoji') : null;
         var left;
         var top;
         var box;
+        if (!panel) return;
+        panel.setAttribute('data-editor', id);
+        if (win.matchMedia('(max-width: 600px)').matches) return;
         if (!btn) btn = doc.querySelector('.toastui-editor-toolbar-icons.sl-editor-icon-emoji');
-        if (!panel || !btn) return;
+        if (!btn) return;
         box = btn.getBoundingClientRect();
         left = Math.max(8, box.left - 160);
         left = Math.min(left, win.innerWidth - panel.offsetWidth - 8);
@@ -389,7 +402,6 @@
         if (top + panel.offsetHeight > win.innerHeight - 8) top = Math.max(8, box.top - panel.offsetHeight - 6);
         panel.style.left = Math.max(8, left) + 'px';
         panel.style.top = top + 'px';
-        panel.setAttribute('data-editor', id);
     }
 
     function toggle(id) {
