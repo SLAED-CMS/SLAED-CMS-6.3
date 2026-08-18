@@ -1373,7 +1373,19 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
         $walk = ($walk === '') ? $part : $walk.'/'.$part;
         $crumbs[] = ['name' => $part, 'url' => ($walk === $dir) ? '' : getAdminFileLink('getAdminFileList', ['dir' => $walk])];
     }
-    return $tpl->getHtmlPart('file-browser', [
+    $acts = [['icon' => 'download', 'name' => _DOWNLOAD, 'tone' => 'neutral', 'is_load' => true]];
+    if (!empty($able['compress'])) $acts[] = ['key' => 'fmcompress', 'icon' => 'file-zip', 'name' => _UPLOADS_TOZIP, 'tone' => 'neutral'];
+    if (!empty($able['delete'])) $acts[] = ['key' => 'fmdelete', 'icon' => 'trash3', 'name' => _DELETE, 'tone' => 'danger'];
+    $shot = !$full ? '' : $tpl->getHtmlPart('window-gallery', [
+        'shot_own' => 'files',
+        'shot_text' => _UPLOADS_PREVIEW,
+        'prev_text' => _BACK,
+        'next_text' => _NEXT,
+        'can_walk' => true,
+        'can_props' => true,
+        'acts' => $acts,
+    ]);
+    return $shot.$tpl->getHtmlPart('file-browser', [
         'is_full' => $full,
         'is_swap' => !$full,
         'ctx' => $ctx,
@@ -1398,10 +1410,6 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
         'delete_text' => _DELETE,
         'clear_text' => _UPLOADS_UNMARK,
         'ask_text' => _UPLOADS_MANYDEL,
-        'shot_text' => _UPLOADS_PREVIEW,
-        'down_text' => _DOWNLOAD,
-        'prev_text' => _BACK,
-        'next_text' => _NEXT,
         'pack_name' => 'archive.zip',
         'self_url' => getAdminFileLink('getAdminFileList', ['dir' => $dir, 'find' => $find]),
         'up_url' => getAdminFileLink('getAdminFileList', ['dir' => str_contains($dir, '/') ? substr($dir, 0, (int)strrpos($dir, '/')) : '']),

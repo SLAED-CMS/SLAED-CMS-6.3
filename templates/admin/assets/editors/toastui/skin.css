@@ -207,144 +207,15 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     color: var(--sl-color-text);
 }
 
+/* The frame, the placing and the stacking of this window belong to the canon; what stays here is what only the file manager has */
 .sl-toastui-upload {
-    background: var(--sl-color-bg);
-    border: 1px solid var(--sl-color-border-strong);
-    border-radius: var(--sl-radius-card);
-    box-shadow: var(--sl-shadow-panel);
-    box-sizing: border-box;
     font-family: inherit;
     font-size: 13px;
-    left: 50%;
-    max-height: calc(100vh - 48px);
-    overflow: hidden;
-    position: absolute;
-    top: 40px;
-    transform: translateX(-50%);
-    transition: width 0.22s ease;
-    width: min(880px, calc(100% - 24px));
-    z-index: 31;
 }
 
-/* The plate of the head is the handle: a press anywhere on it moves the window, so the cursor says so over the whole strip and not only over the grip beside the buttons */
-.sl-toastui-window-head {
-    align-items: center;
-    background: var(--sl-color-bg-soft);
-    border-bottom: 1px solid var(--sl-color-border);
-    box-sizing: border-box;
-    cursor: move;
-    display: flex;
-    font-family: inherit;
-    gap: var(--sl-space-sm);
-    height: 36px;
-    padding: 0 var(--sl-space-md);
-}
-
-.sl-toastui-upload > .sl-toastui-window-head {
-    border-radius: var(--sl-radius-card) var(--sl-radius-card) 0 0;
-    height: 42px;
-}
-
-.sl-toastui-window-head strong {
-    color: var(--sl-color-text);
+.sl-toastui-upload .sl-fm-split {
     flex: 1 1 auto;
-    font-size: 13px;
-    font-weight: 600;
-    user-select: none;
-}
-
-.sl-toastui-window-actions {
-    align-items: center;
-    display: flex;
-    gap: var(--sl-space-xs);
-}
-
-.sl-toastui-window-head button.sl-toastui-window-action {
-    align-items: center;
-    background: transparent;
-    border: 0;
-    border-radius: var(--sl-radius-control);
-    color: var(--sl-color-text);
-    cursor: pointer;
-    display: inline-flex;
-    font-family: inherit;
-    font-size: 14px;
-    height: 28px;
-    justify-content: center;
-    min-width: 0;
-    padding: 0;
-    width: 28px;
-}
-
-/* The three buttons of the head take the system tones in the order they stand: moving is a safe action, expanding is the ordinary one and closing is the one that ends the window */
-/* An expanded window fills its room and has nowhere left to move: the handle goes with the freedom it stood for, and the plate stops promising a drag it cannot do */
-.sl-toastui-window-expanded .sl-toastui-window-head {
-    cursor: default;
-}
-
-.sl-toastui-window-expanded .sl-toastui-window-head .js-slaed-window-drag {
-    display: none;
-}
-
-.sl-toastui-window-head button.js-slaed-window-drag:hover {
-    background: color-mix(in srgb, var(--sl-color-success) 13%, transparent);
-    color: var(--sl-color-success);
-}
-
-.sl-toastui-window-head button.js-slaed-window-expand:hover {
-    background: color-mix(in srgb, var(--sl-color-primary) 13%, transparent);
-    color: var(--sl-color-primary);
-}
-
-.sl-toastui-window-head button.js-slaed-window-close:hover {
-    background: color-mix(in srgb, var(--sl-color-danger) 13%, transparent);
-    color: var(--sl-color-danger);
-}
-
-.sl-toastui-window-drag {
-    cursor: move;
-}
-
-.sl-toastui-head-icon {
-    display: block;
-    font-family: bootstrap-icons, "bootstrap-icons";
-    font-size: 16px;
-    font-style: normal;
-    font-weight: 400;
-    height: 16px;
-    line-height: 16px;
-    speak: never;
-    width: 16px;
-}
-
-/* The caption carries the icon of the button that opens the window, so the head and its opener name the same thing */
-.sl-toastui-head-icon-files::before {
-    content: "\f3d7";
-}
-
-.sl-toastui-head-icon-emoji::before {
-    content: "\f327";
-}
-
-.sl-toastui-window-head > .sl-toastui-head-icon {
-    color: var(--sl-color-primary);
-    flex: 0 0 auto;
-}
-
-.sl-toastui-head-icon-move::before {
-    content: "\f3fe";
-}
-
-.sl-toastui-head-icon-expand::before {
-    content: "\f14a";
-}
-
-.sl-toastui-head-icon-collapse::before {
-    content: "\f149";
-}
-
-.sl-toastui-head-icon-close::before {
-    content: "\f659";
+    min-height: 0;
 }
 
 .sl-toastui-upload button,
@@ -1030,7 +901,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-props,
-.sl-toastui-shot .sl-fm-props {
+.sl-shot-side .sl-fm-props {
     background: var(--sl-color-bg-soft);
     border: 1px solid var(--sl-color-border);
     border-radius: 10px;
@@ -1070,7 +941,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-props div,
-.sl-toastui-shot .sl-fm-props div {
+.sl-shot-side .sl-fm-props div {
     border-bottom: 1px dashed var(--sl-color-border);
     display: flex;
     font-size: 12px;
@@ -1080,18 +951,18 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-props div:last-child,
-.sl-toastui-shot .sl-fm-props div:last-child {
+.sl-shot-side .sl-fm-props div:last-child {
     border-bottom: 0;
 }
 
 .sl-toastui-upload .sl-fm-props dt,
-.sl-toastui-shot .sl-fm-props dt {
+.sl-shot-side .sl-fm-props dt {
     color: var(--sl-color-text-subtle);
     flex: 0 0 auto;
 }
 
 .sl-toastui-upload .sl-fm-props dd,
-.sl-toastui-shot .sl-fm-props dd {
+.sl-shot-side .sl-fm-props dd {
     color: var(--sl-color-text-heading);
     margin: 0;
     min-width: 0;
@@ -1350,89 +1221,12 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     border-color: var(--sl-color-primary);
 }
 
-/* The gallery uses the shared modal frame of the theme; only the layout of its content is added here */
-.sl-toastui-shot .sl-fm-modal-grid {
-    align-items: start;
-    display: grid;
-    gap: 16px;
-    grid-template-columns: minmax(0, 1fr) 268px;
-}
-
-.sl-toastui-shot .sl-fm-modal-stage {
-    align-items: center;
-    display: flex;
-    justify-content: center;
-    position: relative;
-}
-
-.sl-toastui-shot .sl-fm-modal-img {
-    align-items: center;
-    display: flex;
-    justify-content: center;
-    min-height: min(62vh, 460px);
-    width: 100%;
-}
-
-.sl-toastui-shot .sl-fm-modal-nav {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-.sl-toastui-shot .sl-fm-modal-prev {
-    left: 10px;
-}
-
-.sl-toastui-shot .sl-fm-modal-next {
-    right: 10px;
-}
-
-.sl-toastui-shot .sl-fm-modal-count {
-    align-items: center;
-    background: var(--sl-color-bg-soft-alt);
-    border-radius: 999px;
-    color: var(--sl-color-text-muted);
-    display: inline-flex;
-    font-size: 11px;
-    height: 22px;
-    padding: 0 9px;
-}
-
-.sl-toastui-upload.sl-none {
-    display: none;
-}
-
-.sl-toastui-upload.sl-toastui-window-expanded,
-.sl-editor-emoji-panel.sl-toastui-window-expanded {
-    bottom: 24px;
-    display: flex;
-    flex-direction: column;
-    left: 24px;
-    max-height: none;
-    position: fixed;
-    right: 24px;
-    top: 24px;
-    transform: none;
-    height: auto !important;
-    width: auto !important;
-    z-index: 10050;
-}
-
 .sl-toastui-file-input {
     display: none;
 }
 
-.sl-toastui-upload.sl-toastui-window-expanded .sl-fm-split {
-    flex: 1 1 auto;
-    min-height: 0;
-}
-
-.sl-toastui-upload.sl-toastui-window-expanded .sl-fm-body {
+.sl-toastui-upload.sl-is-full .sl-fm-body {
     max-height: none;
-}
-
-.sl-toastui-upload.sl-toastui-window-expanded.sl-none {
-    display: none;
 }
 
 @media (max-width: 900px) {
@@ -1483,41 +1277,15 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     }
 }
 
-@media (max-width: 600px) {
-    .sl-toastui-upload {
-        left: var(--sl-space-lg);
-        right: var(--sl-space-lg);
-        transform: none;
-        width: auto;
-    }
-}
-
 .toastui-editor-toolbar-icons.sl-editor-icon-emoji::before {
     content: "\f327";
 }
 
-.sl-editor-emoji-panel {
-    background: var(--sl-color-bg);
-    border: 1px solid var(--sl-color-border-strong);
-    border-radius: var(--sl-radius-card);
-    box-shadow: var(--sl-shadow-panel);
-    box-sizing: border-box;
+/* The panel keeps its own tight spacing: the canon body would give it the padding of a reading window and thin the grid out */
+dialog.sl-editor-emoji-panel {
     font-family: inherit;
     font-size: 12px;
     max-height: 420px;
-    padding: 8px;
-    position: absolute;
-    width: min(430px, calc(100vw - 24px));
-    z-index: 10020;
-}
-
-.sl-editor-emoji-panel > .sl-toastui-window-head {
-    border-radius: var(--sl-radius-card) var(--sl-radius-card) 0 0;
-    margin: -8px -8px 8px;
-}
-
-.sl-editor-emoji-panel.sl-none {
-    display: none;
 }
 
 .sl-editor-emoji-panel button,
@@ -1526,6 +1294,8 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-editor-emoji-search {
+    margin: 8px 8px 0;
+    width: calc(100% - 16px);
     background: var(--sl-field-bg);
     border: 1px solid var(--sl-field-border);
     border-radius: var(--sl-field-radius);
@@ -1535,13 +1305,12 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     font-size: 12px;
     height: 32px;
     padding: 0 var(--sl-space-md);
-    width: 100%;
 }
 
 .sl-editor-emoji-tabs {
     display: flex;
     gap: 4px;
-    margin: 6px 0;
+    margin: 6px 8px;
     overflow: hidden;
 }
 
@@ -1575,6 +1344,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 .sl-editor-emoji-grid {
     display: grid;
     gap: 3px;
+    padding: 0 8px 8px;
     grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
     max-height: 292px;
     overflow: auto;
@@ -1605,7 +1375,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     padding: 12px 4px;
 }
 
-.sl-editor-emoji-panel.sl-toastui-window-expanded .sl-editor-emoji-grid {
+.sl-editor-emoji-panel.sl-is-full .sl-editor-emoji-grid {
     max-height: calc(100vh - 150px);
 }
 
@@ -1815,7 +1585,6 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .toastui-editor-defaultUI button:focus-visible,
-.sl-toastui-window-head button.sl-toastui-window-action:focus-visible,
 .sl-editor-emoji-tab:focus-visible,
 .sl-editor-emoji-item:focus-visible {
     box-shadow: 0 0 0 3px var(--sl-field-focus-ring);

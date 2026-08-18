@@ -1,37 +1,254 @@
 (function () {
-    // Lightbox: image links open in the shared project modal frame; the dialog is created once on first use
-    function setLightbox() {
-        var root = null;
-        var image = null;
-        var label = null;
+    // Window canon: one mechanism for every window of the system, the native dialog
+    // showModal() for decisions, show() for tools worked alongside; the focus trap, the top layer and the return of the focus are the work of the browser
+    // Only what the platform does not give is written here: the scroll lock, the animated exit, the placing, the stacking, the drag and the key a non-modal dialog does not answer
+    var winstack = [];
+    var winlayer = 10050;
+    var windrag = null;
+    var WINPICKS = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    // How much of a window has to stay on screen for a hand to reach its head again
+    var WINHIGH = 42;
+    var WINWIDE = 120;
 
-        function getLightbox() {
-            if (root) return;
-            root = document.createElement('dialog');
-            root.className = 'sl-modal sl-modal-wide';
-            root.innerHTML = '<div class="sl-modal-body">'
-                + '<div class="sl-font sl-modal-title"><i class="bi bi-image" aria-hidden="true"></i> <span></span></div>'
-                + '<button type="button" class="sl-but-mini sl-modal-close" data-sl-close><i class="bi bi-x-lg" aria-hidden="true"></i></button>'
-                + '<img class="sl-modal-image" alt=""></div>';
-            document.body.appendChild(root);
-            image = root.querySelector('.sl-modal-image');
-            label = root.querySelector('.sl-modal-title > span');
-            root.addEventListener('close', function () {
-                image.removeAttribute('src');
+    // The presentation is a boolean of the markup: a window is either modal or stands beside the page
+    function isWindowModal(box) {
+        return !box.hasAttribute('data-sl-window');
+    }
+
+    // The page under a modal window stops scrolling, and the width of the scrollbar is paid back so the content does not jump sideways
+    function setPageLock(on) {
+        var root = document.documentElement;
+        if (on) {
+            if (root.classList.contains('sl-is-locked')) return;
+            root.style.paddingRight = (window.innerWidth - root.clientWidth) + 'px';
+            root.classList.add('sl-is-locked');
+            return;
+        }
+        root.classList.remove('sl-is-locked');
+        root.style.paddingRight = '';
+    }
+
+    // The keyboard lands where the window named it, otherwise on the first control of its content
+    // The actions of the head are chrome and never the first stop: a window that opens on its own close button reads as a window asking to be shut
+    function setFirstFocus(box) {
+        var pick = box.querySelector('[data-sl-focus]');
+        if (!pick) {
+            Array.prototype.some.call(box.querySelectorAll(WINPICKS), function (one) {
+                if (one.closest('.sl-modal-title')) return false;
+                pick = one;
+                return true;
             });
         }
+        if (pick) pick.focus();
+    }
 
+    // A window standing beside the page has no place of its own in the flow, so it is given one on first sight
+    // On a phone no coordinates are handed out at all: there the window lies as a sheet at the bottom edge and an inline style would beat that rule
+    function setWindowPlace(box) {
+        var rect;
+        if (window.matchMedia('(max-width: 600px)').matches) {
+            box.style.left = '';
+            box.style.top = '';
+            return;
+        }
+        if (box.getAttribute('data-sl-moved')) return;
+        rect = box.getBoundingClientRect();
+        box.style.left = Math.max(12, Math.round((window.innerWidth - rect.width) / 2)) + 'px';
+        box.style.top = '40px';
+    }
+
+    // A modal window is raised by the top layer of the browser; a window beside the page is raised by the canon
+    // The raised window becomes the top one for Escape as well, or the key would close what lies visually below
+    function setWindowFront(box) {
+        var at;
+        if (!box || isWindowModal(box) || !box.open) return;
+        at = winstack.indexOf(box);
+        winlayer += 2;
+        box.style.zIndex = String(winlayer);
+        if (at > -1 && at !== winstack.length - 1) {
+            winstack.splice(at, 1);
+            winstack.push(box);
+        }
+    }
+
+    // Calling the opener of a window that already stands open is a request to bring it back and put the keyboard in it, not a miss: a button has no right to stay silent
+    function setWindowOpen(box) {
+        if (!box) return;
+        if (box.open) {
+            setWindowFront(box);
+            if (!box.contains(document.activeElement)) setFirstFocus(box);
+            return;
+        }
+        box.backnode = document.activeElement;
+        if (isWindowModal(box)) {
+            box.showModal();
+            setPageLock(true);
+            winstack.push(box);
+        } else {
+            box.show();
+            setWindowPlace(box);
+            winstack.push(box);
+            setWindowFront(box);
+        }
+        window.requestAnimationFrame(function () { setFirstFocus(box); });
+    }
+
+    // The exit is played out first and only then made real, otherwise the window blinks
+    // There is nothing to wait for when there is no animation: with motion switched off the window has to leave at once instead of sitting out a fallback timer
+    function setWindowClose(box) {
+        var shut = false;
+        var runs;
+        var end;
+        if (!box || !box.open || box.classList.contains('sl-is-shut')) return;
+        end = function () {
+            if (shut) return;
+            shut = true;
+            box.classList.remove('sl-is-shut');
+            box.close();
+        };
+        box.classList.add('sl-is-shut');
+        runs = box.getAnimations ? box.getAnimations({ subtree: false }).filter(function (one) { return one.animationName === 'sl-modal-out'; }) : [];
+        if (!runs.length) {
+            end();
+            return;
+        }
+        window.setTimeout(end, 200);
+        Promise.allSettled(runs.map(function (one) { return one.finished; })).then(end);
+    }
+
+    // A window that has left gives the page back its scroll; the browser returns the focus by itself only for a modal one
+    function setWindowRelease(box) {
+        var at = winstack.indexOf(box);
+        if (at > -1) winstack.splice(at, 1);
+        box.classList.remove('sl-is-shut');
+        if (!winstack.filter(isWindowModal).length) setPageLock(false);
+        if (!isWindowModal(box) && box.backnode && box.backnode.isConnected) box.backnode.focus();
+        box.backnode = null;
+    }
+
+    // A window with nowhere left to move stops promising a drag: the plate loses its cursor and the grip goes with the freedom it stood for
+    // The place the window stood in is remembered and given back, or a moved window collapses into a corner it never came from
+    function setWindowExpand(box, button) {
+        var icon = button ? button.querySelector('.bi') : null;
+        var full = !box.classList.contains('sl-is-full');
+        box.classList.toggle('sl-is-full', full);
+        if (!isWindowModal(box)) {
+            if (full) {
+                box.setAttribute('data-sl-left', box.style.left);
+                box.setAttribute('data-sl-top', box.style.top);
+                box.style.left = '24px';
+                box.style.top = '24px';
+            } else {
+                box.style.left = box.getAttribute('data-sl-left') || '';
+                box.style.top = box.getAttribute('data-sl-top') || '';
+                setWindowPlace(box);
+            }
+        }
+        if (button) {
+            button.title = button.getAttribute(full ? 'data-restore' : 'data-expand') || button.title;
+            button.setAttribute('aria-label', button.title);
+        }
+        if (icon) {
+            icon.classList.toggle('bi-arrows-angle-expand', !full);
+            icon.classList.toggle('bi-arrows-angle-contract', full);
+        }
+    }
+
+    // A window does not let itself be dragged off the screen whole: a piece of its plate stays in reach, or the hand can never bring it back
+    function setWindowBounds(box, left, top) {
+        var rect = box.getBoundingClientRect();
+        box.style.left = Math.round(Math.min(Math.max(left, WINWIDE - rect.width), window.innerWidth - WINWIDE)) + 'px';
+        box.style.top = Math.round(Math.min(Math.max(top, 0), Math.max(0, window.innerHeight - WINHIGH))) + 'px';
+    }
+
+    // cancel and close arrive at the dialog itself and do not bubble: they can only be heard in the capture phase
+    function setWindowKeys() {
+        document.addEventListener('cancel', function (event) {
+            var box = event.target.closest ? event.target.closest('dialog.sl-modal') : null;
+            if (!box) return;
+            event.preventDefault();
+            if (!box.hasAttribute('data-sl-static')) setWindowClose(box);
+        }, true);
+        document.addEventListener('close', function (event) {
+            var box = event.target.closest ? event.target.closest('dialog.sl-modal') : null;
+            if (box) setWindowRelease(box);
+        }, true);
+        // A window beside the page is not closed by the browser on this key, and a fan standing open at the pointer is what the key reaches first
+        document.addEventListener('keydown', function (event) {
+            var box = winstack[winstack.length - 1];
+            if (event.key !== 'Escape' || !box || isWindowModal(box)) return;
+            if (box.hasAttribute('data-sl-static') || document.querySelector('.sl-dial.sl-open')) return;
+            event.preventDefault();
+            setWindowClose(box);
+        });
+        // Any approach to a window beside the page raises it, by pointer and by keyboard alike
+        // The capture phase is needed so the order is settled before the drag takes over
+        document.addEventListener('pointerdown', function (event) {
+            var box = event.target.closest ? event.target.closest('dialog.sl-modal[data-sl-window]') : null;
+            if (box) setWindowFront(box);
+        }, true);
+        document.addEventListener('focusin', function (event) {
+            var box = event.target.closest ? event.target.closest('dialog.sl-modal[data-sl-window]') : null;
+            if (box) setWindowFront(box);
+        });
+        // The whole plate of the head is the handle; a control standing on it keeps its own press, and the grip is a sign of what the plate does rather than a control
+        document.addEventListener('pointerdown', function (event) {
+            var box = event.target.closest ? event.target.closest('dialog.sl-modal[data-sl-window]') : null;
+            var head = event.target.closest ? event.target.closest('.sl-modal-title') : null;
+            var act = event.target.closest ? event.target.closest('button, a, input, select, textarea') : null;
+            var rect;
+            if (!box || !head || act || event.button !== 0) return;
+            if (box.classList.contains('sl-is-full')) return;
+            rect = box.getBoundingClientRect();
+            box.style.left = rect.left + 'px';
+            box.style.top = rect.top + 'px';
+            box.setAttribute('data-sl-moved', '1');
+            windrag = { box: box, left: rect.left, top: rect.top, x: event.clientX, y: event.clientY };
+            event.preventDefault();
+        });
+        document.addEventListener('pointermove', function (event) {
+            if (!windrag) return;
+            setWindowBounds(windrag.box, windrag.left + event.clientX - windrag.x, windrag.top + event.clientY - windrag.y);
+        });
+        document.addEventListener('pointerup', function () { windrag = null; });
+        // A screen that shrank must not hide a window: on a phone the coordinates are dropped, on a desktop the window is pulled back into sight
+        window.addEventListener('resize', function () {
+            winstack.forEach(function (box) {
+                if (isWindowModal(box) || box.classList.contains('sl-is-full')) return;
+                if (window.matchMedia('(max-width: 600px)').matches) {
+                    box.style.left = '';
+                    box.style.top = '';
+                    return;
+                }
+                setWindowBounds(box, parseFloat(box.style.left) || box.getBoundingClientRect().left, parseFloat(box.style.top) || box.getBoundingClientRect().top);
+            });
+        });
+    }
+
+    window.setWindowOpen = setWindowOpen;
+    window.setWindowClose = setWindowClose;
+    window.setWindowFront = setWindowFront;
+    window.setWindowExpand = setWindowExpand;
+
+    // Lightbox: an image link opens the gallery window the page carries, the same one the editor and the file browser open with their own data
+    function setLightbox() {
+        var root = document.querySelector('dialog[data-sl-shot="view"]');
+        var image = root ? root.querySelector('[data-sl-shot-img]') : null;
+        var label = root ? root.querySelector('[data-sl-shot-name]') : null;
+        if (!root || !image || !label) return;
+        root.addEventListener('close', function () {
+            image.removeAttribute('src');
+        });
         document.addEventListener('click', function (event) {
             var trigger = event.target.closest('a.sl-attach, a.site-link');
             if (!trigger) return;
             var href = trigger.getAttribute('href') || '';
             if (!/\.(?:avif|gif|jpe?g|png|webp|svg)(?:[?#].*)?$/i.test(href)) return;
             event.preventDefault();
-            getLightbox();
             image.src = href;
             image.alt = trigger.getAttribute('title') || '';
             label.textContent = trigger.getAttribute('title') || href.split('/').pop();
-            root.showModal();
+            setWindowOpen(root);
         });
     }
 
@@ -434,7 +651,7 @@
         dlg.querySelector('[data-sl-confirm-text]').textContent = text;
         dlg.slask = null;
         dlg.slrun = run;
-        dlg.showModal();
+        setWindowOpen(dlg);
     };
 
     // A fan opened at the pointer gives its placement back when it goes down, because it belongs to the corner of its own object and stands there again next time
@@ -511,7 +728,7 @@
                     dlg.querySelector('[data-sl-confirm-text]').textContent = ask.getAttribute('data-sl-confirm');
                     dlg.slask = ask;
                     dlg.slrun = null;
-                    dlg.showModal();
+                    setWindowOpen(dlg);
                     return;
                 }
                 if (!window.confirm(ask.getAttribute('data-sl-confirm'))) {
@@ -1306,20 +1523,36 @@
             if (!node || !node.closest) return;
             var fav = node.closest('[data-sl-fav]');
             if (fav) favpending = { id: fav.getAttribute('data-sl-fav'), done: fav.getAttribute('data-sl-done') || '' };
+            var call = node.closest('[data-sl-open]');
+            if (call) {
+                event.preventDefault();
+                setWindowOpen(document.getElementById(call.getAttribute('data-sl-open')));
+                return;
+            }
             var close = node.closest('[data-sl-close]');
             if (close) {
                 var dlg = close.closest('dialog');
-                if (dlg) dlg.close();
+                if (dlg) setWindowClose(dlg);
                 return;
             }
-            if (node.tagName === 'DIALOG' && node.classList.contains('sl-modal')) { node.close(); return; }
+            var wide = node.closest('[data-sl-full]');
+            if (wide) {
+                var room = wide.closest('dialog.sl-modal');
+                if (room) { event.preventDefault(); setWindowExpand(room, wide); }
+                return;
+            }
+            // A press past the frame arrives at the dialog itself; a window that must be answered does not listen to it
+            if (node.tagName === 'DIALOG' && node.classList.contains('sl-modal')) {
+                if (!node.hasAttribute('data-sl-static')) setWindowClose(node);
+                return;
+            }
             var okay = node.closest('[data-sl-confirm-ok]');
             if (okay) {
                 var box = okay.closest('dialog');
                 var ask = box ? box.slask : null;
                 var run = box ? box.slrun : null;
                 if (box) {
-                    box.close();
+                    setWindowClose(box);
                     box.slrun = null;
                 }
                 if (typeof run === 'function') {
@@ -1357,7 +1590,7 @@
                 if (!data || !mask) return;
                 var target = mask.replace('{u}', encodeURIComponent(data.url)).replace('{t}', encodeURIComponent(data.title));
                 var sheet = net.closest('dialog');
-                if (sheet) sheet.close();
+                if (sheet) setWindowClose(sheet);
                 if (key === 'mail' || key === 'viber') { window.location.href = target; return; }
                 window.open(target, 'slshare', 'width=640,height=520,noopener');
                 return;
@@ -1378,14 +1611,14 @@
                     slot.innerHTML = getQrSvg(share.url);
                     slot.setAttribute('data-sl-qr', share.url);
                 }
-                qr.showModal();
+                setWindowOpen(qr);
             }
             if (kind === 'more' && share) {
                 var more = document.getElementById('sl-share-sheet');
                 if (!more) return;
                 more.setAttribute('data-sl-share-url', share.url);
                 more.setAttribute('data-sl-share-title', share.title);
-                more.showModal();
+                setWindowOpen(more);
             }
         });
         // Paused live boxes swallow their htmx polls; direct clicks keep working
@@ -1623,6 +1856,7 @@
     });
 
     function setSlaedUi() {
+        setWindowKeys();
         setTableSort(document);
         setLightbox();
         setImageReplace();

@@ -17,6 +17,7 @@ final class DeskKeysTest extends TestCase
     private const THEMES = ['admin', 'lite'];
     private const ADMINJS = 'templates/admin/assets/js/admin-ui.js';
     private const EDITJS = 'plugins/editors/toastui/assets/editor-upload.js';
+    private const SITEJS = 'plugins/system/slaed.js';
 
     private static array $files = [];
 
@@ -144,22 +145,31 @@ final class DeskKeysTest extends TestCase
         $this->assertStringContainsString("matches('input, textarea, select, button, a')", $lib, $note);
     }
 
-    # The window opens on its first control and gives the focus back to what opened it, and the key that closes a gallery closes the window behind it (§33)
+    # The window opens on its content and gives the focus back to what opened it, and the key that closes a window lets an open fan win first (§33)
+    # The rule is kept once, in the window canon of the shared component, because every window of the project now answers the same mechanism
     #[Test]
     public function theFocusAndTheEscapeFollowTheKeyboardRule(): void
     {
-        $part = $this->getPart(self::EDITJS, 'function setPanel(id, show)', 1200);
+        $part = $this->getPart(self::SITEJS, 'function setWindowOpen(box)', 700);
         $note = 'The window forgets what opened it, so the keyboard is left on the page when it closes';
-        $this->assertStringContainsString('room.back = doc.activeElement', $part, $note);
+        $this->assertStringContainsString('box.backnode = document.activeElement', $part, $note);
+        $free = $this->getPart(self::SITEJS, 'function setWindowRelease(box)', 500);
         $note = 'The focus is handed back to an element the answer of the server has already replaced';
-        $this->assertStringContainsString('back.isConnected', $part, $note);
+        $this->assertStringContainsString('box.backnode.isConnected', $free, $note);
+        $note = 'A window beside the page never gets its focus back, because only a modal one is served by the browser';
+        $this->assertStringContainsString('!isWindowModal(box) && box.backnode', $free, $note);
+        $first = $this->getPart(self::SITEJS, 'function setFirstFocus(box)', 500);
         $note = 'The window opens on nothing, so the first key press goes to the page behind it';
-        $this->assertStringContainsString('.sl-fm-rail-item:not([disabled])', $part, $note);
-        $esc = $this->getPart(self::EDITJS, "if (el && ev.key === 'Escape'", 300);
+        $this->assertStringContainsString('[data-sl-focus]', $first, $note);
+        $note = 'The window opens on an action of its own head, which reads as a window asking to be shut';
+        $this->assertStringContainsString("one.closest('.sl-modal-title')", $first, $note);
+        $esc = $this->getPart(self::SITEJS, 'A window beside the page is not closed by the browser on this key', 600);
         $note = 'The key closes the window under the open fan instead of the fan standing on it';
         $this->assertStringContainsString('.sl-dial.sl-open', $esc, $note);
-        $note = 'The key closes something other than the window it was pressed in';
-        $this->assertStringContainsString("setWindowClose(getPanelOwn(el), 'files')", $esc, $note);
+        $note = 'The key closes the window opened last instead of the one standing in front';
+        $this->assertStringContainsString('winstack[winstack.length - 1]', $esc, $note);
+        $note = 'The editor keeps a second answer to the key, so two handlers race for one press';
+        $this->assertStringNotContainsString("ev.key === 'Escape'", $this->getFile(self::EDITJS), $note);
         foreach (self::THEMES as $name) {
             $tpl = $this->getFile('templates/'.$name.'/partials/editor-toastui-templates.html');
             $note = 'A row of theme '.$name.' cannot take the focus, so the arrows never reach the catalogue';

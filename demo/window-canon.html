@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED — Канон окна</title>
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<link rel="stylesheet" href="../templates/lite/assets/editors/toastui/skin.css">
+<style>
+  /* SLAED - the page around the windows. No part of the canon lives here: the windows are drawn by the theme and driven by the shared component */
+  /* What the theme already ships is used from the theme: the container is sl-wrp, an opener is sl-chip, a labelled field is sl-form-row, the emoji grid is the one of the editor skin */
+  /* What is left below has no counterpart in lite: the layout of the demo cards, and the props that stand in for a picture, a stage and the icon grid of the admin theme */
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 0 0 80px;
+    background: var(--sl-color-bg-soft);
+    color: var(--sl-color-text);
+    font: 15px/1.55 Arial, Tahoma, sans-serif;
+  }
+
+  .d-head { padding: 28px clamp(14px, 4vw, 48px); background: var(--sl-color-bg); border-bottom: 1px solid var(--sl-color-border); }
+  .d-head h1 { margin: 0 0 8px; color: var(--sl-color-text-heading); font-size: clamp(22px, 3vw, 30px); font-weight: normal; line-height: 1.15; }
+  .d-head p { max-width: 88ch; margin: 0 0 6px; color: var(--sl-color-text-muted); font-size: 14px; }
+  .d-mini { color: var(--sl-color-text-subtle); font-size: 13px; }
+
+  .d-sec { margin: 40px 0 0; }
+  .d-sec > h2 { margin: 0 0 6px; padding-bottom: 8px; border-bottom: 2px solid var(--sl-color-border); color: var(--sl-color-text-heading); font-size: 20px; font-weight: normal; line-height: 1.2; }
+  .d-note { max-width: 88ch; margin: 0 0 20px; color: var(--sl-color-text-muted); font-size: 13.5px; }
+
+  .d-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap: 16px; align-items: start; }
+  .d-cell { padding: 16px 18px; background: var(--sl-color-bg); border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-card); }
+  .d-cell b.d-name { display: block; margin-bottom: 4px; color: var(--sl-color-text-heading); font-size: 14px; font-weight: 600; }
+  .d-cell .d-was { display: block; margin-bottom: 10px; color: var(--sl-color-text-subtle); font: 11.5px/1.5 Consolas, "Courier New", monospace; }
+  .d-cell p { margin: 0 0 12px; color: var(--sl-color-text-muted); font-size: 13px; }
+
+  .d-row { display: flex; flex-wrap: wrap; gap: 10px; }
+  .d-list { margin: 0; padding: 0; list-style: none; font-size: 13.5px; }
+  .d-list li { display: flex; gap: 10px; padding: 7px 0; border-top: 1px solid var(--sl-color-border-subtle); line-height: 1.5; }
+  .d-list li:first-child { border-top: 0; }
+  .d-list b { flex: 0 0 132px; color: var(--sl-color-text-muted); font-weight: normal; font-size: 12.5px; }
+
+  /* Two form rows of the theme side by side; the theme stacks them one per line and has no two-column form of its own */
+  .d-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--sl-space-lg); }
+  .d-fields > .sl-form-row { margin-bottom: 0; }
+  .d-span { grid-column: 1 / -1; }
+
+  /* Props: a picture that is not a picture, and the stage the gallery puts one on */
+  .d-shot { display: block; width: 100%; min-height: 300px; background: repeating-linear-gradient(45deg, #2f3a48 0 18px, #333f4e 18px 36px); }
+  .d-stage { display: flex; align-items: center; justify-content: center; background: var(--sl-color-bg-soft-darker); }
+
+  /* The icon grid is shipped by the admin theme, and this page loads the lite one */
+  .d-icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 6px; }
+  .d-icon { display: flex; align-items: center; justify-content: center; aspect-ratio: 1; border: 1px solid transparent; border-radius: var(--sl-radius-control); background: var(--sl-color-bg-soft); color: var(--sl-color-text-heading); font-size: 19px; cursor: pointer; }
+  .d-icon:hover { border-color: var(--sl-color-primary); color: var(--sl-color-primary); }
+</style>
+<script src="../plugins/system/slaed.js" defer></script>
+</head>
+<body>
+
+<header class="d-head">
+  <h1 class="sl-font">Канон окна</h1>
+  <p>Одно окно на всю систему. Визуал взят у менеджера файлов и не меняется: плита-шапка 42px, кластер призрачных кнопок справа, тело со своим скроллом, подвал со строкой статуса. Значения скопированы из <code>skin.css</code> как есть, только под именами <code>sl-modal-*</code>.</p>
+  <p>Механизм один — нативный <code>&lt;dialog&gt;</code>. <code>showModal()</code> для решений, <code>show()</code> для инструментов, рядом с которыми работают.</p>
+  <p class="d-mini">Страница — один файл. Окна рисует <code>theme.css</code> темы, а ведёт <code>plugins/system/slaed.js</code> — тот же код, что в системе. Свой <code>&lt;style&gt;</code> держит только леса самой страницы и бутафорию внутри окон: канона в нём нет ни строки. Что видно здесь, то и работает в админке и на сайте.</p>
+</header>
+
+<div class="sl-wrp">
+
+<section class="d-sec">
+  <h2 class="sl-font">Все девять мест системы на одном окне</h2>
+  <p class="d-note">Это не варианты. Это одно и то же окно, применённое к каждому месту, где сегодня живёт свой диалог. Проверка простая: если канон честный, ни одно место не потребует исключения.</p>
+  <div class="d-grid">
+
+    <div class="d-cell">
+      <b class="d-name">Подтверждение</b>
+      <span class="d-was">было: 2 файла — lite/fragments + admin/fragments</span>
+      <p>Размер <code>sm</code>, тон <code>danger</code>. Тона в системе сегодня нет вообще: удаление выглядит как «поделиться».</p>
+      <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-confirm"><i class="bi bi-play-fill"></i> Открыть</button>
+    </div>
+
+    <div class="d-cell">
+      <b class="d-name">Поделиться</b>
+      <span class="d-was">было: #sl-share-sheet</span>
+      <p>Размер <code>md</code>. Сетка сетей — существующий <code>.sl-share-grid</code>, канон её не касается.</p>
+      <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-share"><i class="bi bi-play-fill"></i> Открыть</button>
+    </div>
+
+    <div class="d-cell">
+      <b class="d-name">QR-код</b>
+      <span class="d-was">было: #sl-share-qr</span>
+      <p>Размер <code>sm</code>, подвал с одним действием. Строка статуса пустая — и тогда она не занимает места.</p>
+      <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-qr"><i class="bi bi-play-fill"></i> Открыть</button>
+    </div>
+
+    <div class="d-cell">
+      <b class="d-name">Галерея изображения</b>
+      <span class="d-was">было: 4 реализации — .sl-toastui-shot ×2 темы, .sl-fm-modal, лайтбокс строкой в slaed.js</span>
+      <p>Размер <code>xl</code>, тело без отступов, свойства справа, действия чипами в подвале. Одно окно вместо четырёх с тремя разными наборами data-атрибутов.</p>
+      <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-shot"><i class="bi bi-play-fill"></i> Открыть</button>
+    </div>
+
+    <div class="d-cell">
+      <b class="d-name">Подборщик иконок</b>
+      <span class="d-was">было: #sl_icon_modal, только admin</span>
+      <p>Размер <code>lg</code>. Поиск уезжает в панель команд под шапкой, а не внутрь заголовка — шапка перестаёт быть исключением.</p>
+      <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-icons"><i class="bi bi-play-fill"></i> Открыть</button>
+    </div>
+
+    <div class="d-cell">
+      <b class="d-name">Менеджер файлов</b>
+      <span class="d-was">было: .sl-toastui-upload, div с position:absolute</span>
+      <p>Оконная подача: подложки нет, страница жива, шапка — ручка, тащи. Ширина <code>lg</code> = 880px, ровно как сегодня. <b>Вид не изменился.</b></p>
+      <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-files"><i class="bi bi-play-fill"></i> Открыть</button>
+    </div>
+
+    <div class="d-cell">
+      <b class="d-name">Панель эмодзи</b>
+      <span class="d-was">было: .sl-editor-emoji-panel</span>
+      <p>Оконная подача, размер <code>sm</code>, подвала нет — он просто не написан, класса для этого не нужно. Шапка приходит к общим 42px вместо своих 36px.</p>
+      <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-emoji"><i class="bi bi-play-fill"></i> Открыть</button>
+    </div>
+
+    <div class="d-cell">
+      <b class="d-name">Обработка</b>
+      <span class="d-was">нового случая нет — но он нужен</span>
+      <p>Окно с <code>data-sl-static</code>: Escape и клик мимо заблокированы, потому что операцию нельзя прервать. Сегодня в системе такого окна нет.</p>
+      <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-wait"><i class="bi bi-play-fill"></i> Открыть</button>
+    </div>
+
+    <div class="d-cell">
+      <b class="d-name">Выбор из списка</b>
+      <span class="d-was">нового случая нет — сейчас это отдельная страница</span>
+      <p>Второй вызов панели команд и тела без отступов: поиск и фильтр под шапкой, таблица от края до края. Существующий <code>.sl-table</code>, канон его не касается.</p>
+      <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-list"><i class="bi bi-play-fill"></i> Открыть</button>
+    </div>
+
+  </div>
+</section>
+
+<section class="d-sec">
+  <h2 class="sl-font">Четыре оси — всё, что канон допускает</h2>
+  <p class="d-note">Пять сегодняшних оформлений сводятся к одной структуре и четырём осям. Больше ничего заводить не нужно.</p>
+  <div class="d-grid">
+    <div class="d-cell">
+      <b class="d-name">Размер</b>
+      <p>Сегодня их два: 520px и <code>.sl-modal-wide</code>, причём wide в двух темах реализован по-разному.</p>
+      <div class="d-row">
+        <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-sm">sm · 420</button>
+        <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-md">md · 560</button>
+        <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-lg">lg · 880</button>
+        <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-xl">xl · 1120</button>
+        <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-full">full</button>
+      </div>
+      <p style="margin-top:12px"><code>lg</code> = 880px намеренно: это ширина менеджера файлов сегодня.</p>
+    </div>
+    <div class="d-cell">
+      <b class="d-name">Подача</b>
+      <p>Модальная — решение: подложка, ловушка фокуса, блокировка прокрутки. Оконная — инструмент рядом: страница жива, окно перетаскивается.</p>
+      <div class="d-row">
+        <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-md"><i class="bi bi-square"></i> модальная</button>
+        <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-files"><i class="bi bi-grip-vertical"></i> оконная</button>
+      </div>
+    </div>
+    <div class="d-cell">
+      <b class="d-name">Тон</b>
+      <p>Одна переменная <code>--sl-modal-tone</code> красит иконку шапки, полосу акцента и главную кнопку. Сегодня понятия тона нет.</p>
+      <div class="d-row">
+        <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-confirm">danger</button>
+        <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-warn">warn</button>
+        <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-ok">success</button>
+      </div>
+    </div>
+    <div class="d-cell">
+      <b class="d-name">Подвал</b>
+      <p>Есть — кнопки и строка статуса. Нет — просто не написан. Пустая строка статуса схлопывается сама (<code>:empty</code>), поэтому под неё не нужно ни класса, ни флага из PHP.</p>
+      <div class="d-row">
+        <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-qr">со статусом</button>
+        <button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-open="w-emoji">без подвала</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="d-sec">
+  <h2 class="sl-font">Что уходит при переезде</h2>
+  <div class="d-grid">
+    <div class="d-cell">
+      <b class="d-name">Дублирование</b>
+      <ul class="d-list">
+        <li><b>Галерея</b><span>4 реализации → 1</span></li>
+        <li><b>confirm-modal</b><span>2 файла → 1 структура, значения из токенов темы</span></li>
+        <li><b>Escape</b><span>3 места → 1</span></li>
+        <li><b>Оформлений окна</b><span>5 → 1 структура + 4 оси</span></li>
+      </ul>
+    </div>
+    <div class="d-cell">
+      <b class="d-name">Ручной код</b>
+      <ul class="d-list">
+        <li><b>editor-upload.js</b><span><code>setPanel</code>, <code>setWindowFront</code>, <code>setWindowClose</code> и ручной возврат фокуса уходят в браузер</span></li>
+        <li><b>z-index</b><span>31 / 10020 / 10050 → верхний слой, руками не нужен</span></li>
+        <li><b>aria-hidden</b><span>переключение вручную → состояние <code>&lt;dialog&gt;</code></span></li>
+        <li><b>window.confirm</b><span>запасной путь в slaed.js остаётся — но только как запасной</span></li>
+      </ul>
+    </div>
+    <div class="d-cell">
+      <b class="d-name">Появляется</b>
+      <ul class="d-list">
+        <li><b>Блокировка скролла</b><span>сегодня её нет ни у одного окна</span></li>
+        <li><b>aria-modal</b><span>ставит браузер для <code>showModal()</code></span></li>
+        <li><b>Ловушка фокуса</b><span>сегодня её нет у менеджера файлов</span></li>
+        <li><b>Тон окна</b><span>опасное действие перестаёт выглядеть как обычное</span></li>
+      </ul>
+    </div>
+    <div class="d-cell">
+      <b class="d-name">Новые имена классов</b>
+      <p>Всё остальное — существующие. Утверждены и живут в <code>theme.css</code>:</p>
+      <ul class="d-list">
+        <li><b>.sl-modal-cap</b><span>заголовок с подписью</span></li>
+        <li><b>.sl-modal-sub</b><span>подпись в шапке</span></li>
+        <li><b>.sl-modal-acts / -act</b><span>кластер и призрачная кнопка</span></li>
+        <li><b>.sl-modal-info</b><span>строка статуса, всегда <code>aria-live</code></span></li>
+        <li><b>.sl-modal-btn</b><span>кнопка подвала</span></li>
+        <li><b>.sl-modal-bar</b><span>панель команд — подборщик иконок и выбор из списка</span></li>
+        <li><b>.sl-modal-body-flush</b><span>тело без отступов — галерея и таблица</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="d-sec">
+  <h2 class="sl-font">Клавиатура</h2>
+  <p class="d-note">Tab не уходит за пределы открытого окна, Escape закрывает везде, кроме «Обработки», после закрытия фокус возвращается на кнопку, которая окно открыла, страница под модальным окном не прокручивается. У немодальной подачи ловушки фокуса нет — это осознанный размен: в менеджере файлов её нет и сегодня, потому что окно стоит рядом с редактором, а не вместо него.</p>
+</section>
+
+</div>
+
+<!-- ================= 1 · Подтверждение ================= -->
+<dialog class="sl-modal sl-modal-sm sl-modal-danger" id="w-confirm" aria-labelledby="w-confirm-t">
+      <div class="sl-modal-title">
+      <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+      <span class="sl-modal-cap"><h2 id="w-confirm-t">Удалить 12 файлов?</h2><span class="sl-modal-sub">действие необратимо</span></span>
+      <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span>
+    </div>
+    <div class="sl-modal-body">
+      <p>Файлы будут стёрты с диска. Ссылки на них в опубликованных материалах перестанут открываться.</p>
+      <div class="sl-alert sl-alert-error"><div class="sl-alert-body"><p class="sl-alert-text">4 из 12 файлов используются в материалах, которые сейчас опубликованы.</p></div></div>
+    </div>
+    <div class="sl-modal-foot">
+      <span class="sl-modal-info" aria-live="polite">Освободится 18,4 МБ</span>
+      <button type="button" class="sl-modal-btn" data-sl-close data-sl-focus>Отмена</button>
+      <button type="button" class="sl-modal-btn sl-modal-btn-main" data-sl-close><i class="bi bi-trash3" aria-hidden="true"></i> Удалить</button>
+    </div>
+  
+</dialog>
+
+<!-- ================= 2 · Поделиться ================= -->
+<dialog class="sl-modal sl-modal-md" id="w-share" aria-labelledby="w-share-t">
+      <div class="sl-modal-title">
+      <i class="bi bi-share-fill" aria-hidden="true"></i>
+      <span class="sl-modal-cap"><strong id="w-share-t">Поделиться</strong><span class="sl-modal-sub">SLAED CMS 4.2: единая система окон</span></span>
+      <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span>
+    </div>
+    <div class="sl-modal-body">
+      <div class="sl-share-grid">
+        <button type="button" class="sl-share-net"><span class="sl-share-net-ico"><i class="bi bi-telegram" aria-hidden="true"></i></span>Telegram</button>
+        <button type="button" class="sl-share-net"><span class="sl-share-net-ico"><i class="bi bi-whatsapp" aria-hidden="true"></i></span>WhatsApp</button>
+        <button type="button" class="sl-share-net"><span class="sl-share-net-ico"><i class="bi bi-facebook" aria-hidden="true"></i></span>Facebook</button>
+        <button type="button" class="sl-share-net"><span class="sl-share-net-ico"><i class="bi bi-twitter-x" aria-hidden="true"></i></span>X</button>
+        <button type="button" class="sl-share-net"><span class="sl-share-net-ico"><i class="bi bi-reddit" aria-hidden="true"></i></span>Reddit</button>
+        <button type="button" class="sl-share-net"><span class="sl-share-net-ico"><i class="bi bi-linkedin" aria-hidden="true"></i></span>LinkedIn</button>
+        <button type="button" class="sl-share-net"><span class="sl-share-net-ico"><i class="bi bi-pinterest" aria-hidden="true"></i></span>Pinterest</button>
+        <button type="button" class="sl-share-net"><span class="sl-share-net-ico"><i class="bi bi-envelope-at" aria-hidden="true"></i></span>E-mail</button>
+      </div>
+    </div>
+    <div class="sl-modal-foot">
+      <span class="sl-modal-info" aria-live="polite">slaed.net/news/412</span>
+      <button type="button" class="sl-modal-btn" data-sl-close><i class="bi bi-qr-code" aria-hidden="true"></i> QR-код</button>
+      <button type="button" class="sl-modal-btn sl-modal-btn-main" data-sl-close><i class="bi bi-link-45deg" aria-hidden="true"></i> Копировать</button>
+    </div>
+  
+</dialog>
+
+<!-- ================= 3 · QR ================= -->
+<dialog class="sl-modal sl-modal-sm" id="w-qr" aria-labelledby="w-qr-t">
+      <div class="sl-modal-title">
+      <i class="bi bi-qr-code" aria-hidden="true"></i>
+      <span class="sl-modal-cap"><strong id="w-qr-t">QR-код</strong></span>
+      <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span>
+    </div>
+    <div class="sl-modal-body">
+      <div class="sl-qr-code" style="display:flex;align-items:center;justify-content:center;color:var(--sl-color-text-subtle);font-size:12px">образец</div>
+      <p class="sl-modal-note">slaed.net/news/412</p>
+    </div>
+    <div class="sl-modal-foot">
+      <span class="sl-modal-info" aria-live="polite"></span>
+      <button type="button" class="sl-modal-btn sl-modal-btn-main" data-sl-close><i class="bi bi-link-45deg" aria-hidden="true"></i> Копировать ссылку</button>
+    </div>
+  
+</dialog>
+
+<!-- ================= 4 · Галерея изображения ================= -->
+<dialog class="sl-modal sl-modal-xl sl-toastui-shot" id="w-shot" aria-labelledby="w-shot-t">
+      <div class="sl-modal-title">
+      <i class="bi bi-image" aria-hidden="true"></i>
+      <span class="sl-modal-cap"><strong id="w-shot-t">banner-3x4kd91ab.webp</strong><span class="sl-modal-sub">3 из 128 · стрелки листают</span></span>
+      <span class="sl-modal-acts">
+        <button type="button" class="sl-modal-act" data-sl-full data-expand="Развернуть" data-restore="Свернуть" title="Развернуть" aria-label="Развернуть"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i></button>
+        <button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+      </span>
+    </div>
+    <div class="sl-modal-body sl-modal-body-flush">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 268px;height:100%">
+        <div class="d-stage"><span class="d-shot" role="img" aria-label="Изображение-заглушка"></span></div>
+        <aside style="padding:16px 20px;border-left:1px solid var(--sl-color-border)">
+          <dl class="sl-fm-props">
+            <div><dt>Тип</dt><dd>WEBP</dd></div>
+            <div><dt>Размер</dt><dd>248 КБ</dd></div>
+            <div><dt>Разрешение</dt><dd>1600 × 900</dd></div>
+            <div><dt>Загружен</dt><dd>18.08.2026</dd></div>
+            <div><dt>Владелец</dt><dd>Eduard Laas</dd></div>
+          </dl>
+        </aside>
+      </div>
+    </div>
+    <div class="sl-modal-foot">
+      <span class="sl-modal-info" aria-live="polite">3 / 128</span>
+      <button type="button" class="sl-chip sl-chip-info sl-live-act"><i class="bi bi-image" aria-hidden="true"></i>&nbsp;Как изображение</button>
+      <button type="button" class="sl-chip sl-chip-neutral sl-live-act"><i class="bi bi-paperclip" aria-hidden="true"></i>&nbsp;Как вложение</button>
+      <button type="button" class="sl-chip sl-chip-neutral sl-live-act"><i class="bi bi-download" aria-hidden="true"></i>&nbsp;Скачать</button>
+      <button type="button" class="sl-chip sl-chip-danger sl-live-act"><i class="bi bi-trash3" aria-hidden="true"></i>&nbsp;Удалить</button>
+    </div>
+  
+</dialog>
+
+<!-- ================= 5 · Подборщик иконок ================= -->
+<dialog class="sl-modal sl-modal-lg" id="w-icons" aria-labelledby="w-icons-t">
+      <div class="sl-modal-title">
+      <i class="bi bi-grid-3x3-gap-fill" aria-hidden="true"></i>
+      <span class="sl-modal-cap"><strong id="w-icons-t">Выбор иконки</strong><span class="sl-modal-sub">Bootstrap Icons · 2 080 знаков</span></span>
+      <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span>
+    </div>
+    <div class="sl-modal-bar">
+      <input class="sl-field" type="search" placeholder="Поиск по имени" aria-label="Поиск по имени" data-sl-focus>
+      <span class="sl-modal-bar-gap"></span>
+      <span class="sl-chip sl-chip-neutral">выбрано: bi-folder2-open</span>
+    </div>
+    <div class="sl-modal-body">
+      <div class="d-icons">
+        <button type="button" class="d-icon"><i class="bi bi-folder2-open"></i></button>
+        <button type="button" class="d-icon"><i class="bi bi-file-earmark"></i></button>
+        <button type="button" class="d-icon"><i class="bi bi-image"></i></button>
+        <button type="button" class="d-icon"><i class="bi bi-camera"></i></button>
+        <button type="button" class="d-icon"><i class="bi bi-music-note"></i></button>
+        <button type="button" class="d-icon"><i class="bi bi-play-circle"></i></button>
+        <button type="button" class="d-icon"><i class="bi bi-gear"></i></button>
+        <button type="button" class="d-icon"><i class="bi bi-people"></i></button>
+        <button type="button" class="d-icon"><i class="bi bi-chat"></i></button>
+        <button type="button" class="d-icon"><i class="bi bi-star"></i></button>
+        <button type="button" class="d-icon"><i class="bi bi-heart"></i></button>
+        <button type="button" class="d-icon"><i class="bi bi-bell"></i></button>
+        <button type="button" class="d-icon"><i class="bi bi-calendar"></i></button>
+        <button type="button" class="d-icon"><i class="bi bi-clock"></i></button>
+        <button type="button" class="d-icon"><i class="bi bi-tag"></i></button>
+        <button type="button" class="d-icon"><i class="bi bi-bookmark"></i></button>
+        <button type="button" class="d-icon"><i class="bi bi-shield-check"></i></button>
+        <button type="button" class="d-icon"><i class="bi bi-key"></i></button>
+        <button type="button" class="d-icon"><i class="bi bi-envelope"></i></button>
+        <button type="button" class="d-icon"><i class="bi bi-globe"></i></button>
+        <button type="button" class="d-icon"><i class="bi bi-house"></i></button>
+        <button type="button" class="d-icon"><i class="bi bi-search"></i></button>
+        <button type="button" class="d-icon"><i class="bi bi-trash3"></i></button>
+        <button type="button" class="d-icon"><i class="bi bi-pencil"></i></button>
+      </div>
+    </div>
+    <div class="sl-modal-foot">
+      <span class="sl-modal-info" aria-live="polite">bi-folder2-open</span>
+      <button type="button" class="sl-modal-btn" data-sl-close>Отмена</button>
+      <button type="button" class="sl-modal-btn sl-modal-btn-main" data-sl-close><i class="bi bi-check-lg" aria-hidden="true"></i> Выбрать</button>
+    </div>
+  
+</dialog>
+
+<!-- ================= 6 · Менеджер файлов, оконная подача ================= -->
+<dialog class="sl-modal sl-modal-lg sl-toastui-upload" id="w-files" data-sl-window aria-labelledby="w-files-t">
+      <div class="sl-modal-title">
+      <i class="bi bi-folder2-open" aria-hidden="true"></i>
+      <span class="sl-modal-cap"><h2 id="w-files-t">Менеджер файлов</h2><span class="sl-modal-sub">оконная подача · тащи за шапку</span></span>
+      <span class="sl-modal-acts">
+        <span class="sl-modal-act sl-modal-act-move" title="Перетащить за шапку" aria-hidden="true"><i class="bi bi-grip-vertical"></i></span>
+        <button type="button" class="sl-modal-act" data-sl-full data-expand="Развернуть" data-restore="Свернуть" title="Развернуть" aria-label="Развернуть"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i></button>
+        <button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+      </span>
+    </div>
+    <div class="sl-fm-split">
+      <nav class="sl-fm-rail" role="tablist" aria-label="Способ вставки">
+        <span class="sl-fm-rail-cap">Добавить</span>
+        <button type="button" class="sl-fm-rail-item" role="tab" aria-selected="false"><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i><span><b>Загрузить</b><small>с этого устройства</small></span></button>
+        <button type="button" class="sl-fm-rail-item" role="tab" aria-selected="false"><i class="bi bi-link-45deg" aria-hidden="true"></i><span><b>По ссылке</b><small>внешний адрес</small></span></button>
+        <button type="button" class="sl-fm-rail-item" role="tab" aria-selected="false" disabled><i class="bi bi-file-earmark-code" aria-hidden="true"></i><span><b>Встроить</b><small>требуется право модератора</small></span><i class="bi bi-lock-fill sl-fm-rail-lock" aria-hidden="true"></i></button>
+        <span class="sl-fm-rail-sep"></span>
+        <span class="sl-fm-rail-cap">Хранилище</span>
+        <button type="button" class="sl-fm-rail-item" role="tab" aria-selected="true"><i class="bi bi-images" aria-hidden="true"></i><span><b>Мои файлы</b><small>128 объектов</small></span></button>
+        <span class="sl-fm-rail-foot"><b>18,4 МБ из 50 МБ</b>модуль uploads</span>
+      </nav>
+      <div class="sl-fm-main">
+        <div class="sl-fm-main-head"><div><h2>Мои файлы</h2><p>Объекты, загруженные вами через редактор</p></div></div>
+        <div class="sl-fm-body">
+          <section class="sl-fm-pane sl-is-open" role="tabpanel">
+            <div class="sl-fm-view">
+              <div class="sl-fm-lib-bar">
+                <span class="sl-fm-search"><i class="bi bi-search" aria-hidden="true"></i><input type="text" placeholder="Фильтр по имени" aria-label="Фильтр по имени"></span>
+                <span class="sl-fm-filters">
+                  <button type="button" class="sl-fm-filter" aria-pressed="true">Все</button>
+                  <button type="button" class="sl-fm-filter" aria-pressed="false">Изображения</button>
+                  <button type="button" class="sl-fm-filter" aria-pressed="false">Прочие</button>
+                </span>
+                <span class="sl-fm-modes">
+                  <button type="button" class="sl-fm-mode" aria-pressed="false" title="Список" aria-label="Список"><i class="bi bi-list-ul" aria-hidden="true"></i></button>
+                  <button type="button" class="sl-fm-mode" aria-pressed="true" title="Плитки" aria-label="Плитки"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i></button>
+                </span>
+              </div>
+              <div class="sl-fm-lib-split">
+                <div>
+                  <div class="sl-fm-grid">
+                    <div class="sl-fm-cell sl-is-current"><label class="sl-fm-pick"><input type="checkbox" checked aria-label="Отметить"></label><span class="sl-fm-tile"><span class="sl-fm-tile-img"><i class="bi bi-file-earmark-image" aria-hidden="true"></i></span><span class="sl-fm-tile-kind">WEBP</span><span class="sl-fm-tile-cap"><b>banner-3x4kd91ab.webp</b><small>248 КБ · 18.08.2026</small></span></span></div>
+                    <div class="sl-fm-cell"><label class="sl-fm-pick"><input type="checkbox" aria-label="Отметить"></label><span class="sl-fm-tile"><span class="sl-fm-tile-img"><i class="bi bi-file-earmark-image" aria-hidden="true"></i></span><span class="sl-fm-tile-kind">PNG</span><span class="sl-fm-tile-cap"><b>screen-main-7fa02bc11.png</b><small>1,1 МБ · 17.08.2026</small></span></span></div>
+                    <div class="sl-fm-cell"><label class="sl-fm-pick"><input type="checkbox" aria-label="Отметить"></label><span class="sl-fm-tile"><span class="sl-fm-tile-img"><i class="bi bi-file-earmark-zip" aria-hidden="true"></i></span><span class="sl-fm-tile-kind">ZIP</span><span class="sl-fm-tile-cap"><b>backup-2026-08-a91bcd2ee.zip</b><small>12,7 МБ · 16.08.2026</small></span></span></div>
+                    <div class="sl-fm-cell"><label class="sl-fm-pick"><input type="checkbox" aria-label="Отметить"></label><span class="sl-fm-tile"><span class="sl-fm-tile-img"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i></span><span class="sl-fm-tile-kind">PDF</span><span class="sl-fm-tile-cap"><b>handbook-4c81de00a.pdf</b><small>3,2 МБ · 14.08.2026</small></span></span></div>
+                    <div class="sl-fm-cell"><label class="sl-fm-pick"><input type="checkbox" aria-label="Отметить"></label><span class="sl-fm-tile"><span class="sl-fm-tile-img"><i class="bi bi-file-earmark-music" aria-hidden="true"></i></span><span class="sl-fm-tile-kind">MP3</span><span class="sl-fm-tile-cap"><b>intro-90ab12ff4.mp3</b><small>4,4 МБ · 11.08.2026</small></span></span></div>
+                    <div class="sl-fm-cell"><label class="sl-fm-pick"><input type="checkbox" aria-label="Отметить"></label><span class="sl-fm-tile"><span class="sl-fm-tile-img"><i class="bi bi-file-earmark-play" aria-hidden="true"></i></span><span class="sl-fm-tile-kind">MP4</span><span class="sl-fm-tile-cap"><b>promo-11de99a30.mp4</b><small>18,2 МБ · 09.08.2026</small></span></span></div>
+                  </div>
+                  <p class="sl-fm-more">Показано 6 из 128</p>
+                </div>
+                <aside class="sl-fm-props">
+                  <span class="sl-fm-props-cap">Свойства</span>
+                  <span class="sl-fm-props-img"><i class="bi bi-image" aria-hidden="true"></i></span>
+                  <dl>
+                    <div><dt>Тип</dt><dd>WEBP</dd></div>
+                    <div><dt>Размер</dt><dd>248 КБ</dd></div>
+                    <div><dt>Разрешение</dt><dd>1600 × 900</dd></div>
+                  </dl>
+                  <p class="sl-fm-props-note">Свойства объекта под курсором списка.</p>
+                </aside>
+              </div>
+              <div class="sl-bulk-bar">
+                <span class="sl-bulk-count">Отмечен 1 объект</span>
+                <button type="button" class="sl-chip sl-chip-info"><i class="bi bi-image" aria-hidden="true"></i> Как изображение</button>
+                <button type="button" class="sl-chip sl-chip-neutral"><i class="bi bi-paperclip" aria-hidden="true"></i> Как вложение</button>
+                <button type="button" class="sl-chip sl-chip-danger"><i class="bi bi-trash3" aria-hidden="true"></i> Удалить</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+    <div class="sl-modal-foot">
+      <span class="sl-modal-info" aria-live="polite">banner-3x4kd91ab.webp · 248 КБ · 1600 × 900</span>
+      <button type="button" class="sl-modal-btn"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Обновить</button>
+      <button type="button" class="sl-modal-btn" data-sl-close><i class="bi bi-x-lg" aria-hidden="true"></i> Закрыть</button>
+      <button type="button" class="sl-modal-btn sl-modal-btn-main" data-sl-close><i class="bi bi-check-lg" aria-hidden="true"></i> Вставить</button>
+    </div>
+  
+</dialog>
+
+<!-- ================= 7 · Панель эмодзи, без подвала ================= -->
+<dialog class="sl-modal sl-modal-sm" id="w-emoji" data-sl-window aria-labelledby="w-emoji-t">
+      <div class="sl-modal-title">
+      <i class="bi bi-emoji-smile" aria-hidden="true"></i>
+      <span class="sl-modal-cap"><strong id="w-emoji-t">Эмодзи</strong></span>
+      <span class="sl-modal-acts">
+        <span class="sl-modal-act sl-modal-act-move" title="Перетащить за шапку" aria-hidden="true"><i class="bi bi-grip-vertical"></i></span>
+        <button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+      </span>
+    </div>
+    <div class="sl-modal-body">
+      <div class="sl-editor-emoji-grid">
+        <button type="button" class="sl-editor-emoji-item">😀</button><button type="button" class="sl-editor-emoji-item">😅</button><button type="button" class="sl-editor-emoji-item">😍</button><button type="button" class="sl-editor-emoji-item">🤔</button>
+        <button type="button" class="sl-editor-emoji-item">👍</button><button type="button" class="sl-editor-emoji-item">👏</button><button type="button" class="sl-editor-emoji-item">🔥</button><button type="button" class="sl-editor-emoji-item">🎉</button>
+        <button type="button" class="sl-editor-emoji-item">✅</button><button type="button" class="sl-editor-emoji-item">❌</button><button type="button" class="sl-editor-emoji-item">⚠️</button><button type="button" class="sl-editor-emoji-item">💡</button>
+        <button type="button" class="sl-editor-emoji-item">📁</button><button type="button" class="sl-editor-emoji-item">📎</button><button type="button" class="sl-editor-emoji-item">🔗</button><button type="button" class="sl-editor-emoji-item">⭐</button>
+      </div>
+    </div>
+  
+</dialog>
+
+<!-- ================= 8 · Обработка ================= -->
+<dialog class="sl-modal sl-modal-sm" id="w-wait" data-sl-static aria-labelledby="w-wait-t">
+      <div class="sl-modal-title">
+      <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+      <span class="sl-modal-cap"><strong id="w-wait-t">Импорт данных</strong><span class="sl-modal-sub">шаг 2 из 4</span></span>
+    </div>
+    <div class="sl-modal-body">
+      <p>Обрабатывается 412 записей. Escape и клик мимо заблокированы: операцию нельзя прервать на середине.</p>
+      <span class="sl-fm-quota-track" style="display:block"><span class="sl-fm-quota-fill" style="width:46%"></span></span>
+    </div>
+    <div class="sl-modal-foot">
+      <span class="sl-modal-info" aria-live="polite">проверка ссылок…</span>
+      <button type="button" class="sl-modal-btn" disabled>Закрыть</button>
+    </div>
+  
+</dialog>
+
+<!-- ================= 9 · Выбор из списка ================= -->
+<dialog class="sl-modal sl-modal-lg" id="w-list" aria-labelledby="w-list-t">
+  <div class="sl-modal-title">
+    <i class="bi bi-people" aria-hidden="true"></i>
+    <span class="sl-modal-cap"><h2 id="w-list-t">Выбор пользователя</h2><span class="sl-modal-sub">1 248 записей · страница 1 из 63</span></span>
+    <span class="sl-modal-acts">
+      <button type="button" class="sl-modal-act" data-sl-full data-expand="Развернуть" data-restore="Свернуть" title="Развернуть" aria-label="Развернуть"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i></button>
+      <button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    </span>
+  </div>
+  <div class="sl-modal-bar">
+    <input class="sl-field" type="search" placeholder="Поиск по имени или e-mail" aria-label="Поиск" data-sl-focus>
+    <span class="sl-chip sl-chip-neutral"><i class="bi bi-funnel" aria-hidden="true"></i> Все группы</span>
+    <span class="sl-modal-bar-gap"></span>
+    <span class="sl-chip sl-chip-info">отмечен 1</span>
+  </div>
+  <div class="sl-modal-body sl-modal-body-flush">
+    <div class="sl-table-shell">
+      <table class="sl-table">
+        <thead class="sl-table-head"><tr><th class="sl-col-check"><input type="checkbox" aria-label="Отметить все"></th><th>Пользователь</th><th>Группа</th><th>Регистрация</th><th class="sl-table-col-num">Материалов</th></tr></thead>
+        <tbody class="sl-table-body">
+          <tr class="sl-table-row"><td class="sl-col-check"><input type="checkbox" checked aria-label="Отметить"></td><td>Eduard Laas</td><td>Администратор</td><td>12.03.2005</td><td class="sl-table-col-num">3 421</td></tr>
+          <tr class="sl-table-row"><td class="sl-col-check"><input type="checkbox" aria-label="Отметить"></td><td>Anna Weber</td><td>Модератор</td><td>04.11.2019</td><td class="sl-table-col-num">812</td></tr>
+          <tr class="sl-table-row"><td class="sl-col-check"><input type="checkbox" aria-label="Отметить"></td><td>Pavel Orlov</td><td>Пользователь</td><td>27.06.2022</td><td class="sl-table-col-num">96</td></tr>
+          <tr class="sl-table-row"><td class="sl-col-check"><input type="checkbox" aria-label="Отметить"></td><td>Marta King</td><td>Пользователь</td><td>02.02.2024</td><td class="sl-table-col-num">14</td></tr>
+          <tr class="sl-table-row"><td class="sl-col-check"><input type="checkbox" aria-label="Отметить"></td><td>Ivan Petrov</td><td>Пользователь</td><td>19.09.2025</td><td class="sl-table-col-num">2</td></tr>
+          <tr class="sl-table-row"><td class="sl-col-check"><input type="checkbox" aria-label="Отметить"></td><td>Lena Fischer</td><td>Пользователь</td><td>30.01.2026</td><td class="sl-table-col-num">0</td></tr>
+          <tr class="sl-table-row"><td class="sl-col-check"><input type="checkbox" aria-label="Отметить"></td><td>Oleg Sokolov</td><td>Пользователь</td><td>11.02.2026</td><td class="sl-table-col-num">0</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="sl-modal-foot">
+    <span class="sl-modal-info" aria-live="polite">Отмечен 1 пользователь</span>
+    <button type="button" class="sl-modal-btn" data-sl-close>Отмена</button>
+    <button type="button" class="sl-modal-btn sl-modal-btn-main" data-sl-close><i class="bi bi-check-lg" aria-hidden="true"></i> Выбрать</button>
+  </div>
+</dialog>
+
+<!-- ================= оси: размеры и тона ================= -->
+<dialog class="sl-modal sl-modal-sm" id="w-sm" aria-labelledby="w-sm-t"><div class="sl-modal-title"><i class="bi bi-aspect-ratio" aria-hidden="true"></i><span class="sl-modal-cap"><strong id="w-sm-t">sm — 420px</strong></span><span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div><div class="sl-modal-body"><p>Один вопрос, максимум одно поле.</p></div><div class="sl-modal-foot"><span class="sl-modal-info" aria-live="polite"></span><button type="button" class="sl-modal-btn sl-modal-btn-main" data-sl-close>Понятно</button></div></dialog>
+
+<dialog class="sl-modal sl-modal-md" id="w-md" aria-labelledby="w-md-t"><div class="sl-modal-title"><i class="bi bi-aspect-ratio" aria-hidden="true"></i><span class="sl-modal-cap"><strong id="w-md-t">md — 560px</strong><span class="sl-modal-sub">размер по умолчанию</span></span><span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div><div class="sl-modal-body"><p>Небольшая форма, сообщение, короткий текст. Класса не требует.</p><div class="d-fields"><div class="sl-form-row"><label class="sl-form-label" for="md-a">Название</label><input class="sl-field" id="md-a" type="text"></div><div class="sl-form-row"><label class="sl-form-label" for="md-b">Категория</label><select class="sl-field" id="md-b"><option>Новости</option></select></div></div></div><div class="sl-modal-foot"><span class="sl-modal-info" aria-live="polite">Изменений нет</span><button type="button" class="sl-modal-btn" data-sl-close>Отмена</button><button type="button" class="sl-modal-btn sl-modal-btn-main" data-sl-close>Сохранить</button></div></dialog>
+
+<dialog class="sl-modal sl-modal-lg" id="w-lg" aria-labelledby="w-lg-t"><div class="sl-modal-title"><i class="bi bi-aspect-ratio" aria-hidden="true"></i><span class="sl-modal-cap"><strong id="w-lg-t">lg — 880px</strong><span class="sl-modal-sub">ровно ширина менеджера файлов сегодня</span></span><span class="sl-modal-acts"><button type="button" class="sl-modal-act" data-sl-full data-expand="Развернуть" data-restore="Свернуть" aria-label="Развернуть"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i></button><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div><div class="sl-modal-body"><div class="d-fields"><div class="sl-form-row"><label class="sl-form-label" for="lg-a">Заголовок</label><input class="sl-field" id="lg-a" type="text"></div><div class="sl-form-row"><label class="sl-form-label" for="lg-b">Категория</label><select class="sl-field" id="lg-b"><option>Новости</option></select></div><div class="sl-form-row d-span"><label class="sl-form-label" for="lg-c">Текст</label><textarea class="sl-field sl-field--block" id="lg-c" rows="6"></textarea></div></div></div><div class="sl-modal-foot"><span class="sl-modal-info" aria-live="polite">Форма в две колонки помещается без сжатия</span><button type="button" class="sl-modal-btn" data-sl-close>Отмена</button><button type="button" class="sl-modal-btn sl-modal-btn-main" data-sl-close>Сохранить</button></div></dialog>
+
+<dialog class="sl-modal sl-modal-xl" id="w-xl" aria-labelledby="w-xl-t"><div class="sl-modal-title"><i class="bi bi-aspect-ratio" aria-hidden="true"></i><span class="sl-modal-cap"><strong id="w-xl-t">xl — 1120px</strong><span class="sl-modal-sub">галереи и таблицы</span></span><span class="sl-modal-acts"><button type="button" class="sl-modal-act" data-sl-full data-expand="Развернуть" data-restore="Свернуть" aria-label="Развернуть"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i></button><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div><div class="sl-modal-body"><p>Ширина, на которой сетка плиток и таблица из семи колонок живут без горизонтальной прокрутки. На телефоне xl раскрывается во весь экран, а не превращается в лист.</p></div><div class="sl-modal-foot"><span class="sl-modal-info" aria-live="polite"></span><button type="button" class="sl-modal-btn sl-modal-btn-main" data-sl-close>Закрыть</button></div></dialog>
+
+<dialog class="sl-modal sl-modal-full" id="w-full" aria-labelledby="w-full-t"><div class="sl-modal-title"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i><span class="sl-modal-cap"><strong id="w-full-t">full</strong><span class="sl-modal-sub">отступ 24px по кругу, на телефоне во весь экран</span></span><span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div><div class="sl-modal-body"><p>Отступ по кругу оставлен намеренно: он показывает, что страница под окном никуда не делась, и оставляет место для тени.</p></div><div class="sl-modal-foot"><span class="sl-modal-info" aria-live="polite"></span><button type="button" class="sl-modal-btn sl-modal-btn-main" data-sl-close>Закрыть</button></div></dialog>
+
+<dialog class="sl-modal sl-modal-sm sl-modal-warn" id="w-warn" aria-labelledby="w-warn-t"><div class="sl-modal-title"><i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i><span class="sl-modal-cap"><strong id="w-warn-t">Квота почти исчерпана</strong></span><span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div><div class="sl-modal-body"><p>Осталось 1,6 МБ из 50 МБ. Следующая загрузка больше 1,6 МБ будет отклонена.</p></div><div class="sl-modal-foot"><span class="sl-modal-info" aria-live="polite"></span><button type="button" class="sl-modal-btn" data-sl-close>Позже</button><button type="button" class="sl-modal-btn sl-modal-btn-main" data-sl-close>Открыть файлы</button></div></dialog>
+
+<dialog class="sl-modal sl-modal-sm sl-modal-success" id="w-ok" aria-labelledby="w-ok-t"><div class="sl-modal-title"><i class="bi bi-check-circle-fill" aria-hidden="true"></i><span class="sl-modal-cap"><strong id="w-ok-t">Импорт завершён</strong></span><span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span></div><div class="sl-modal-body"><p>412 записей добавлено, 7 пропущено как дубликаты. Отчёт сохранён в журнале операций.</p></div><div class="sl-modal-foot"><span class="sl-modal-info" aria-live="polite"></span><button type="button" class="sl-modal-btn" data-sl-close>Журнал</button><button type="button" class="sl-modal-btn sl-modal-btn-main" data-sl-close>Готово</button></div></dialog>
+
+</body>
+</html>

@@ -1,0 +1,23 @@
+<dialog class="sl-modal sl-modal-xl" data-sl-shot="{% if shot_own %}{{ shot_own }}{% else %}view{% endif %}"{% if editor_id %} data-editor="{{ editor_id }}"{% endif %} aria-label="{% if shot_text %}{{ shot_text }}{% else %}{{ _PREVIEW }}{% endif %}">
+  <div class="sl-modal-title">
+    <i class="bi bi-image" aria-hidden="true"></i>
+    <span class="sl-modal-cap"><strong data-sl-shot-name></strong></span>
+    <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="{{ _CLOSE }}" aria-label="{{ _CLOSE }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span>
+  </div>
+  <div class="sl-modal-body sl-modal-body-flush">
+    <div class="sl-shot-grid">
+      <div class="sl-shot-stage">
+        {% if can_walk %}<button type="button" class="sl-but-mini sl-shot-nav sl-shot-nav-prev" data-sl-shot-step="-1" title="{{ prev_text }}" aria-label="{{ prev_text }}"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>{% endif %}
+        <span class="sl-shot-img"><img class="sl-modal-image" src="" alt="" data-sl-shot-img></span>
+        {% if can_walk %}<button type="button" class="sl-but-mini sl-shot-nav sl-shot-nav-next" data-sl-shot-step="1" title="{{ next_text }}" aria-label="{{ next_text }}"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>{% endif %}
+      </div>
+      {% if can_props %}<aside class="sl-shot-side" data-sl-shot-props><dl class="sl-fm-props" data-sl-shot-rows></dl></aside>{% endif %}
+    </div>
+  </div>
+  {% if acts %}
+  <div class="sl-modal-foot">
+    <span class="sl-modal-info" aria-live="polite" data-sl-shot-num></span>
+    {% for act in acts %}{% if act.is_load %}<a class="sl-chip sl-chip-{{ act.tone }} sl-live-act" data-sl-shot-down href="#" download><i class="bi bi-{{ act.icon }}" aria-hidden="true"></i>&nbsp;{{ act.name }}</a>{% else %}<button type="button" class="sl-chip sl-chip-{{ act.tone }} sl-live-act" data-sl-shot-act="{{ act.key }}"><i class="bi bi-{{ act.icon }}" aria-hidden="true"></i>&nbsp;{{ act.name }}</button>{% endif %}{% endfor %}
+  </div>
+  {% endif %}
+</dialog>

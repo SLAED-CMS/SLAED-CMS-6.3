@@ -377,18 +377,19 @@
         var root = doc.getElementById(id + '_toast');
         var btn = root ? root.querySelector('.toastui-editor-toolbar-icons.sl-editor-icon-emoji') : null;
         var left;
+        var top;
         var box;
         if (!btn) btn = doc.querySelector('.toastui-editor-toolbar-icons.sl-editor-icon-emoji');
         if (!panel || !btn) return;
         box = btn.getBoundingClientRect();
-        left = Math.max(8, box.left + win.scrollX - 160);
-        left = Math.min(left, win.scrollX + win.innerWidth - panel.offsetWidth - 8);
+        left = Math.max(8, box.left - 160);
+        left = Math.min(left, win.innerWidth - panel.offsetWidth - 8);
+        top = box.bottom + 6;
+        // A window beside the page is fixed to the viewport and no longer scrolls away with the document: with no room under the button the panel opens above it
+        if (top + panel.offsetHeight > win.innerHeight - 8) top = Math.max(8, box.top - panel.offsetHeight - 6);
         panel.style.left = Math.max(8, left) + 'px';
-        panel.style.top = (box.bottom + win.scrollY + 6) + 'px';
+        panel.style.top = top + 'px';
         panel.setAttribute('data-editor', id);
-        panel.querySelectorAll('[data-window="emoji"]').forEach(function(el) {
-            el.setAttribute('data-editor', id);
-        });
     }
 
     function toggle(id) {
@@ -396,17 +397,17 @@
         if (!panel) return;
         active = String(id);
         if (cat === 'recent' && !getRecent().length) cat = 'smileys';
-        panel.classList.toggle('sl-none', panel.getAttribute('data-editor') === active && !panel.classList.contains('sl-none'));
-        if (panel.classList.contains('sl-none')) return;
+        if (panel.open && panel.getAttribute('data-editor') === active) {
+            win.setWindowClose(panel);
+            return;
+        }
         render(id);
+        win.setWindowOpen(panel);
         place(id);
-        if (api.syncWindow) api.syncWindow(id, 'emoji');
-        panel.querySelector('.sl-editor-emoji-search').focus();
     }
 
     function hide() {
-        if (panel) panel.classList.add('sl-none');
-        if (active && api.syncWindow) api.syncWindow(active, 'emoji');
+        if (panel) win.setWindowClose(panel);
     }
 
     doc.addEventListener('input', function(ev) {
@@ -416,7 +417,7 @@
 
     doc.addEventListener('click', function(ev) {
         var el = ev.target;
-        if (!panel || panel.classList.contains('sl-none')) return;
+        if (!panel || !panel.open) return;
         if (el.classList && el.classList.contains('sl-editor-emoji-tab')) {
             cat = el.getAttribute('data-cat') || 'smileys';
             panel.querySelector('.sl-editor-emoji-search').value = '';
@@ -430,10 +431,6 @@
             return;
         }
         if (!panel.contains(el) && !el.classList.contains('sl-editor-icon-emoji')) hide();
-    });
-
-    doc.addEventListener('keydown', function(ev) {
-        if (ev.key === 'Escape') hide();
     });
 
     api.getTpl = api.getTpl || function(id, name) {

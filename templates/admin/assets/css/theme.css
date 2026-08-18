@@ -2254,60 +2254,395 @@ tr.sl-row-collapsed {
   cursor: pointer;
 }
 
-/* Modal: the one project-wide dialog frame - native dialog with a title bar strip (icon picker, confirmations) */
+/* Window canon: the one project-wide window - a native dialog with four axes (size, presentation, tone, foot) */
+/* Values are copied from the editor File Manager, so a window styled by the canon looks the way that panel already looks */
+/* Theme values of the window: they move to tokens.css when the theme etalon program creates that file */
+:root {
+  --sl-modal-gutter: 24px;
+  --sl-modal-pad: 20px;
+  --sl-modal-head: 42px;
+}
+
+/* Values internal to the component: the axis classes set them, a theme author never does, and they carry no place in a token file */
+:root {
+  --sl-modal-w: 560px;
+  --sl-modal-tone: var(--sl-color-primary);
+}
+
+/* Frame */
 dialog.sl-modal {
-  width: min(94vw, 520px);
+  box-sizing: border-box;
+  width: min(var(--sl-modal-w), calc(100vw - var(--sl-modal-gutter) * 2));
+  max-width: none;
+  max-height: calc(100dvh - var(--sl-modal-gutter) * 2);
   padding: 0;
+  overflow: hidden;
   border: 1px solid var(--sl-color-border-strong);
   border-radius: var(--sl-radius-card);
   background: var(--sl-color-bg);
   color: var(--sl-color-text);
-  box-shadow: var(--sl-shadow-float);
+  box-shadow: var(--sl-shadow-panel);
   animation: sl-modal-in 0.22s cubic-bezier(0.34, 1.3, 0.64, 1);
 }
 
+/* The dialog is the flex column itself: a frame element inside it added a node per fragment and nothing else */
+dialog.sl-modal[open] {
+  display: flex;
+  flex-direction: column;
+}
+
 dialog.sl-modal::backdrop {
-  background: color-mix(in srgb, var(--sl-color-text) 40%, transparent);
+  background: color-mix(in srgb, var(--sl-color-text-heading) 58%, transparent);
 }
 
-.sl-modal-body {
-  position: relative;
-  padding: 0 20px 20px;
+dialog.sl-modal.sl-is-shut,
+dialog.sl-modal.sl-is-shut::backdrop {
+  animation: sl-modal-out 0.13s ease-in forwards;
 }
 
-/* Title bar strip: bleeds to the dialog edges via negative margins so dialog markup stays flat */
+/* The page under a modal window does not scroll; the class is put on the document by the canon engine */
+html.sl-is-locked {
+  overflow: hidden;
+}
+
+/* Head plate */
 .sl-modal-title {
   display: flex;
   align-items: center;
+  flex: 0 0 auto;
+  box-sizing: border-box;
   gap: var(--sl-space-md);
-  margin: 0 -20px 16px;
-  padding: 12px 56px 12px 20px;
-  background: var(--sl-color-bg-muted);
+  min-height: var(--sl-modal-head);
+  margin: 0;
+  padding: 0 var(--sl-space-md) 0 var(--sl-modal-pad);
+  background: var(--sl-color-bg-soft);
   border-bottom: 1px solid var(--sl-color-border);
   border-radius: calc(var(--sl-radius-card) - 1px) calc(var(--sl-radius-card) - 1px) 0 0;
+  box-shadow: inset 0 3px 0 0 var(--sl-modal-line, transparent);
   color: var(--sl-color-text);
-  font-weight: bold;
-  font-size: 16px;
+  font-size: 13px;
 }
 
+/* The icon and the accent stripe take the tone of the window; the default tone is the primary colour, which is what the File Manager head shows today */
 .sl-modal-title > .bi {
-  color: var(--sl-color-primary);
+  flex: 0 0 auto;
+  color: var(--sl-modal-tone);
+  font-size: var(--sl-size-icon-sm);
 }
 
-.sl-modal-close {
-  position: absolute;
-  top: 10px;
-  right: 12px;
+/* A caption with a subtitle fits the same plate height as one without: the height of the plate is part of the look and must not float with the content */
+.sl-modal-cap {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+  padding: var(--sl-space-xs) 0;
 }
 
-/* Footer action row: confirmations and modal forms */
+/* Both lines of the caption are clipped the same way, so one rule serves both */
+.sl-modal-cap > * {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The name of the window is the first child of the caption whatever tag the fragment gives it: strong, span, or a real heading for aria-labelledby */
+.sl-modal-cap > :first-child {
+  color: var(--sl-color-text);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  user-select: none;
+}
+
+.sl-modal-sub {
+  color: var(--sl-color-text-muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+/* Ghost action cluster of the head */
+.sl-modal-acts {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: var(--sl-space-xs);
+}
+
+.sl-modal-act {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 28px;
+  height: 28px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--sl-radius-control);
+  background: transparent;
+  color: var(--sl-color-text);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* The hover tone follows the meaning of the action, as the File Manager head does; expand takes the default tone and needs no class of its own */
+.sl-modal-act:hover {
+  background: color-mix(in srgb, var(--sl-modal-act-tone, var(--sl-color-primary)) 13%, transparent);
+  color: var(--sl-modal-act-tone, var(--sl-color-primary));
+}
+
+.sl-modal-act-move { --sl-modal-act-tone: var(--sl-color-success); }
+.sl-modal-act-close { --sl-modal-act-tone: var(--sl-color-danger); }
+
+.sl-modal-act:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 3px var(--sl-field-focus-ring);
+}
+
+/* Body: the only scrolling part of the window */
+.sl-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 16px var(--sl-modal-pad);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.sl-modal-body > * + * { margin-top: var(--sl-space-lg); }
+.sl-modal-body p { margin: 0; line-height: 1.55; }
+.sl-modal-body-flush { padding: 0; }
+
+/* Command panel under the head */
+.sl-modal-bar {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: var(--sl-space-md);
+  padding: var(--sl-space-md) var(--sl-modal-pad);
+  border-bottom: 1px solid var(--sl-color-border);
+}
+
+.sl-modal-bar-gap { flex: 1 1 auto; }
+
+/* Foot: status line and buttons */
 .sl-modal-foot {
   display: flex;
-  justify-content: flex-end;
-  gap: var(--sl-space-md);
-  margin-top: 18px;
-  padding-top: 14px;
+  align-items: center;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding: 10px var(--sl-modal-pad);
+  background: var(--sl-color-bg-soft);
   border-top: 1px solid var(--sl-color-border);
+  justify-content: flex-end;
+}
+
+/* The status line pushes itself left rather than the foot aligning it: without the line the buttons must still stand right */
+.sl-modal-info {
+  flex: 1 1 160px;
+  min-width: 0;
+  margin-right: auto;
+  color: var(--sl-color-text-muted);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-modal-info:empty { display: none; }
+
+/* Foot buttons */
+.sl-modal-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  gap: 7px;
+  min-width: 116px;
+  height: 32px;
+  padding: 0 16px;
+  border: 1px solid var(--sl-color-border);
+  border-radius: var(--sl-radius-control);
+  background: var(--sl-color-bg);
+  color: var(--sl-color-text-heading);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background-color 0.16s ease;
+}
+
+.sl-modal-btn > .bi { font-size: var(--sl-size-icon-xs); }
+.sl-modal-btn:hover { border-color: var(--sl-color-border-strong); }
+
+.sl-modal-btn:focus-visible {
+  outline: 0;
+  border-color: var(--sl-color-primary);
+  box-shadow: 0 0 0 3px var(--sl-field-focus-ring);
+}
+
+.sl-modal-btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+
+.sl-modal-btn-main {
+  background: var(--sl-modal-tone);
+  border-color: var(--sl-modal-tone);
+  color: var(--sl-color-on-dark);
+}
+
+.sl-modal-btn-main:hover {
+  background: color-mix(in srgb, var(--sl-modal-tone) 86%, #000000);
+  border-color: color-mix(in srgb, var(--sl-modal-tone) 86%, #000000);
+}
+
+/* On a narrow window the status line and two buttons do not share a row: the line takes its own row and the buttons keep their width */
+.sl-modal-sm .sl-modal-info { flex: 1 1 100%; }
+
+/* Justified text needs a column wide enough to justify into; in a window it opens rivers instead of an even edge */
+.sl-modal .sl-alert-text { text-align: left; }
+
+/* Axis: size. lg is 880px, exactly the width of the File Manager */
+.sl-modal-sm { --sl-modal-w: 420px; }
+.sl-modal-md { --sl-modal-w: 560px; }
+.sl-modal-lg { --sl-modal-w: 880px; }
+.sl-modal-xl { --sl-modal-w: 1120px; }
+
+dialog.sl-modal-full,
+dialog.sl-modal.sl-is-full {
+  width: calc(100vw - var(--sl-modal-gutter) * 2);
+  height: calc(100dvh - var(--sl-modal-gutter) * 2);
+  max-height: none;
+}
+
+/* Axis: tone. Two variables and nothing more: the icon, the stripe and the primary button find them by themselves */
+.sl-modal-danger { --sl-modal-tone: var(--sl-color-danger); --sl-modal-line: var(--sl-color-danger); }
+.sl-modal-warn { --sl-modal-tone: var(--sl-color-warning); --sl-modal-line: var(--sl-color-warning); }
+.sl-modal-success { --sl-modal-tone: var(--sl-color-success); --sl-modal-line: var(--sl-color-success); }
+
+/* Axis: presentation. The windowed one is non-modal and draggable, because the File Manager and the emoji panel are worked alongside the text under them */
+dialog.sl-modal[data-sl-window] {
+  position: fixed;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  margin: 0;
+}
+
+dialog.sl-modal[data-sl-window] > .sl-modal-title { cursor: move; }
+dialog.sl-modal[data-sl-window].sl-is-full > .sl-modal-title { cursor: default; }
+dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
+
+@keyframes sl-modal-in { from { opacity: 0; transform: translateY(14px) scale(0.97); } }
+@keyframes sl-modal-out { to { opacity: 0; transform: translateY(6px) scale(0.99); } }
+
+@media (max-width: 600px) {
+  /* One variable carries the gutter of the whole window, so the head, the panel, the body and the foot need no rule each */
+  :root { --sl-modal-gutter: 0px; --sl-modal-pad: var(--sl-space-lg); }
+
+  dialog.sl-modal {
+    width: 100vw;
+    max-width: 100vw;
+    max-height: 92dvh;
+    margin: auto auto 0;
+    border-width: 1px 0 0;
+    border-radius: var(--sl-radius-card) var(--sl-radius-card) 0 0;
+  }
+
+  dialog.sl-modal-xl,
+  dialog.sl-modal-full,
+  dialog.sl-modal.sl-is-full {
+    width: 100vw;
+    height: 100dvh;
+    max-height: none;
+    border-width: 0;
+    border-radius: 0;
+  }
+
+  dialog.sl-modal[data-sl-window] {
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
+
+  .sl-modal-info { flex: 1 1 100%; order: -1; }
+  .sl-modal-btn { flex: 1 1 0; min-width: 0; height: 40px; }
+}
+
+@media (pointer: coarse) {
+  .sl-modal-act { width: 34px; height: 34px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog.sl-modal,
+  dialog.sl-modal::backdrop,
+  .sl-modal-btn,
+  .sl-modal-act { animation: none !important; transition: none !important; }
+}
+
+/* Gallery on the window canon: the picture between two arrows, the properties of the object beside it, the counter in the status line of the foot */
+/* The layout is the one the editor gallery already had, because the canon takes its values from the editor and not from the file browser */
+.sl-shot-grid {
+  display: grid;
+  align-items: start;
+  gap: var(--sl-space-lg);
+  grid-template-columns: minmax(0, 1fr) 268px;
+  padding: var(--sl-space-lg);
+}
+
+/* A gallery without properties gives the whole width to the picture: the column is not written when there is nothing to put in it */
+.sl-shot-grid:not(:has(.sl-shot-side)) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.sl-shot-stage {
+  display: flex;
+  position: relative;
+  align-items: center;
+  justify-content: center;
+}
+
+.sl-shot-img {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: min(62vh, 460px);
+}
+
+.sl-modal-image {
+  display: block;
+  max-width: 100%;
+  max-height: min(62vh, 460px);
+  border-radius: var(--sl-radius-control);
+  object-fit: contain;
+}
+
+/* The arrows stand over the picture and not beside it, so a narrow picture does not push them to the edge of the window */
+.sl-shot-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.sl-shot-nav-prev { left: 10px; }
+.sl-shot-nav-next { right: 10px; }
+
+.sl-shot-side {
+  min-width: 0;
+  max-height: min(62vh, 460px);
+  overflow: auto;
+}
+
+.sl-shot-side .sl-fm-props { margin: 0; }
+
+@media (max-width: 720px) {
+  .sl-shot-grid { grid-template-columns: minmax(0, 1fr); }
+  .sl-shot-side { max-height: 40vh; }
 }
 
 /* Chip tones and chip buttons used inside modal footers; class names match the lite theme */
@@ -2324,28 +2659,6 @@ dialog.sl-modal::backdrop {
 .sl-chip-danger {
   background: color-mix(in srgb, var(--sl-color-danger) 12%, transparent);
   color: var(--sl-color-danger);
-}
-
-/* Wide contents: image previews, galleries and icon grids on the shared modal frame */
-dialog.sl-modal.sl-modal-wide {
-  width: min(1180px, calc(100vw - 40px));
-  max-width: none;
-}
-
-/* Lightbox image inside the shared modal */
-.sl-modal-image {
-  display: block;
-  max-width: 100%;
-  max-height: calc(90vh - 140px);
-  margin: 0 auto;
-  border-radius: var(--sl-radius-soft);
-}
-
-@keyframes sl-modal-in {
-  from {
-    opacity: 0;
-    transform: translateY(14px) scale(0.97);
-  }
 }
 
 /* Bulk action bar: appears once at least one row is checked; the class name matches the lite theme */
@@ -2365,27 +2678,10 @@ dialog.sl-modal.sl-modal-wide {
   color: var(--sl-color-text);
 }
 
-/* Icon picker on the shared modal frame: fixed height with a scrolling grid */
-.sl-icon-modal {
-  width: min(760px, calc(100vw - 40px));
-}
-
-.sl-icon-modal .sl-modal-body {
-  display: flex;
-  flex-direction: column;
-  height: min(560px, calc(100vh - 80px));
-  padding: 0;
-}
-
-.sl-icon-modal .sl-modal-title {
-  flex: 0 0 auto;
-  margin: 0;
-}
-
-.sl-icon-modal .sl-modal-title [data-sl-icon-search] {
+/* Icon picker on the canon: the head names the window, the command panel carries the sources and the search, the body scrolls the grid */
+.sl-modal-bar [data-sl-icon-search] {
   flex: 1 1 auto;
   min-width: 0;
-  font-weight: normal;
 }
 
 .sl-icon-modal-tabs {
@@ -2415,14 +2711,11 @@ dialog.sl-modal.sl-modal-wide {
 }
 
 .sl-icon-modal-grid {
-  flex: 1 1 auto;
-  min-height: 0;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
   align-content: start;
   gap: var(--sl-space-xs);
   padding: var(--sl-space-lg);
-  overflow-y: auto;
 }
 
 .sl-icon-cell {
@@ -6520,57 +6813,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   color: var(--sl-color-danger);
 }
 
-/* Gallery on the shared wide modal: the picture between the two arrows, the properties of the object beside it and the counter in the footer (§9.1) */
-.sl-fm-modal-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
-  gap: var(--sl-space-md);
-  margin: var(--sl-space-md) 0;
-}
-
-.sl-fm-modal-stage {
-  display: flex;
-  align-items: center;
-  gap: var(--sl-space-sm);
-  min-width: 0;
-}
-
-.sl-fm-modal-stage > span {
-  flex: 1 1 auto;
-  min-width: 0;
-  text-align: center;
-}
-
-.sl-fm-modal-stage img {
-  max-height: min(60vh, 520px);
-  object-fit: contain;
-}
-
-.sl-fm-modal aside {
-  min-width: 0;
-  overflow: auto;
-  max-height: min(60vh, 520px);
-}
-
-.sl-but-mini.sl-fm-modal-nav {
-  flex: 0 0 auto;
-}
-
-.sl-fm-modal-count {
-  flex: 1 1 auto;
-  font-size: 12px;
-  color: var(--sl-color-text-muted);
-}
-
-.sl-fm-modal .sl-fm-props {
-  margin: 0;
-}
-
 @media (max-width: 720px) {
-  .sl-fm-modal-grid {
-    grid-template-columns: 1fr;
-  }
-
   .sl-fm-job {
     grid-template-columns: 1fr;
   }

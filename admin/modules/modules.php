@@ -280,7 +280,7 @@ function edit(): void {
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
     ]);
-    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $form]).$tpl->getHtmlPart('icon-picker-modal', ['search_text' => _SEARCH, 'close_text' => _CLOSE]);
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $form]).$tpl->getHtmlPart('window-icons', ['title_text' => _ICONPICK, 'search_text' => _SEARCH, 'close_text' => _CLOSE]);
     setFoot();
 }
 

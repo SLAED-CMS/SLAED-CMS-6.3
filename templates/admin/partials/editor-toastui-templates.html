@@ -1,18 +1,19 @@
 <div class="js-slaed-editor-tpl" hidden>
   <template data-tpl="emoji-panel">
-    <div class="sl-editor-emoji-panel sl-none">
-      <div class="sl-toastui-window-head">
-        <span class="sl-toastui-head-icon sl-toastui-head-icon-emoji" aria-hidden="true"></span><strong>{{ emoji_label }}</strong>
-        <div class="sl-toastui-window-actions">
-          <button type="button" class="sl-toastui-window-action sl-toastui-window-drag js-slaed-window-drag" data-window="emoji" title="{{ move_label }}" aria-label="{{ move_label }}"><span class="sl-toastui-head-icon sl-toastui-head-icon-move" aria-hidden="true"></span></button>
-          <button type="button" class="sl-toastui-window-action js-slaed-window-expand" data-window="emoji" data-expand="{{ expand_label }}" data-restore="{{ restore_label }}" title="{{ expand_label }}" aria-label="{{ expand_label }}"><span class="sl-toastui-head-icon sl-toastui-head-icon-expand" aria-hidden="true"></span></button>
-          <button type="button" class="sl-toastui-window-action js-slaed-window-close" data-window="emoji" title="{{ close_label }}" aria-label="{{ close_label }}"><span class="sl-toastui-head-icon sl-toastui-head-icon-close" aria-hidden="true"></span></button>
-        </div>
+    <dialog class="sl-modal sl-modal-sm sl-editor-emoji-panel" data-sl-window>
+      <div class="sl-modal-title">
+        <i class="bi bi-emoji-smile" aria-hidden="true"></i>
+        <span class="sl-modal-cap"><strong>{{ emoji_label }}</strong></span>
+        <span class="sl-modal-acts">
+          <span class="sl-modal-act sl-modal-act-move" title="{{ move_label }}" aria-hidden="true"><i class="bi bi-grip-vertical"></i></span>
+          <button type="button" class="sl-modal-act" data-sl-full data-expand="{{ expand_label }}" data-restore="{{ restore_label }}" title="{{ expand_label }}" aria-label="{{ expand_label }}"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i></button>
+          <button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="{{ close_label }}" aria-label="{{ close_label }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+        </span>
       </div>
       <input type="search" class="sl-editor-emoji-search">
       <div class="sl-editor-emoji-tabs"></div>
       <div class="sl-editor-emoji-grid"></div>
-    </div>
+    </dialog>
   </template>
   <template data-tpl="emoji-tab"><button type="button" class="sl-editor-emoji-tab"></button></template>
   <template data-tpl="emoji-item"><button type="button" class="sl-editor-emoji-item"></button></template>

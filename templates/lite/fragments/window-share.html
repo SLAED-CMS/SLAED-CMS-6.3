@@ -1,7 +1,10 @@
-<dialog class="sl-modal" id="sl-share-sheet" aria-label="{{ _SHARE }}">
+<dialog class="sl-modal sl-modal-md" id="sl-share-sheet" aria-labelledby="sl-share-name">
+  <div class="sl-modal-title">
+    <i class="bi bi-share-fill" aria-hidden="true"></i>
+    <span class="sl-modal-cap"><strong id="sl-share-name">{{ _SHARE }}</strong></span>
+    <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="{{ _CLOSE }}" aria-label="{{ _CLOSE }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span>
+  </div>
   <div class="sl-modal-body">
-    <div class="sl-font sl-modal-title"><i class="bi bi-share-fill" aria-hidden="true"></i> {{ _SHARE }}</div>
-    <button type="button" class="sl-but-mini sl-modal-close" data-sl-close title="{{ _CLOSE }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
     <div class="sl-share-grid">
       <button type="button" class="sl-share-net" data-sl-net="telegram"><span class="sl-share-net-ico"><i class="bi bi-telegram" aria-hidden="true"></i></span>Telegram</button>
       <button type="button" class="sl-share-net" data-sl-net="whatsapp"><span class="sl-share-net-ico"><i class="bi bi-whatsapp" aria-hidden="true"></i></span>WhatsApp</button>
@@ -15,14 +18,5 @@
       <button type="button" class="sl-share-net" data-sl-net="linkedin"><span class="sl-share-net-ico"><i class="bi bi-linkedin" aria-hidden="true"></i></span>LinkedIn</button>
       <button type="button" class="sl-share-net" data-sl-net="mail"><span class="sl-share-net-ico"><i class="bi bi-envelope-at" aria-hidden="true"></i></span>{{ _EMAIL }}</button>
     </div>
-  </div>
-</dialog>
-<dialog class="sl-modal" id="sl-share-qr" aria-label="{{ _QRCODE }}">
-  <div class="sl-modal-body">
-    <div class="sl-font sl-modal-title"><i class="bi bi-qr-code" aria-hidden="true"></i> {{ _QRCODE }}</div>
-    <button type="button" class="sl-but-mini sl-modal-close" data-sl-close title="{{ _CLOSE }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
-    <div class="sl-qr-code" data-sl-qr></div>
-    <p class="sl-modal-note"></p>
-    <div class="sl-share-action"><button type="button" class="sl-chip sl-chip-info sl-live-act" data-sl-share-act="copy" data-sl-done="{{ _COPIED }}"><i class="bi bi-link-45deg" aria-hidden="true"></i> {{ _COPYLINK }}</button></div>
   </div>
 </dialog>

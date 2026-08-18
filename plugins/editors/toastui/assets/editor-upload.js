@@ -2,8 +2,6 @@
     'use strict';
 
     var api = win.SlaedToastUi || {};
-    var drag = null;
-    var layer = 10100;
     var rooms = {};
     // The kind of an object decides the glyph it is drawn with; the type resolver itself stays on the server and this map only dresses its answer
     var icons = {
@@ -53,8 +51,7 @@
                 page: 0,
                 state: 'skel',
                 queue: null,
-                anch: -1,
-                back: null
+                anch: -1
             };
         }
         return rooms[key];
@@ -71,7 +68,7 @@
     }
 
     function getShot(id) {
-        var all = doc.querySelectorAll('.sl-toastui-shot');
+        var all = doc.querySelectorAll('dialog[data-sl-shot="editor"]');
         var out = null;
         Array.prototype.forEach.call(all, function(el) {
             if (el.getAttribute('data-editor') === String(id)) out = el;
@@ -79,170 +76,32 @@
         return out;
     }
 
-    function getWindow(id, type) {
-        var emoji;
-        if (type === 'emoji') {
-            emoji = doc.querySelector('.sl-editor-emoji-panel');
-            return emoji && emoji.getAttribute('data-editor') === String(id) ? emoji : null;
-        }
-        return getPanel(id);
-    }
-
-    function setWindowFront(id, type) {
-        var el = getWindow(id, type);
-        if (!el || el.classList.contains('sl-none') || win.getComputedStyle(el).display === 'none') return;
-        layer += 2;
-        el.style.zIndex = String(layer);
-    }
-
-    // The window opens on its first control and gives the focus back to what opened it: a window closing into nothing leaves the keyboard on the page and not in the editor (§33)
+    // The window itself, its focus and its place are the canon; what belongs to the editor is which pane stands open and whether the catalogue needs reading again
+    // The panel keeps living inside the editor root, because the editor has a fullscreen of its own and a window outside it would be left behind
     function setPanel(id, show) {
         var opt = getOpt(id);
         var el = getPanel(id);
         var box = doc.getElementById(String(id) + '_toast');
         var root = box ? box.querySelector('.toastui-editor-defaultUI') : null;
         var room = getRoom(id);
-        var back = room.back;
-        var first;
         if (!el) return;
-        if (root && el.parentNode !== root && !el.classList.contains('sl-toastui-window-expanded')) root.appendChild(el);
-        el.classList.toggle('sl-none', !show);
-        el.setAttribute('aria-hidden', show ? 'false' : 'true');
         if (!show) {
-            room.back = null;
-            if (back && back.isConnected) back.focus();
+            win.setWindowClose(el);
             return;
         }
-        if (!el.contains(doc.activeElement)) room.back = doc.activeElement;
+        if (root && el.parentNode !== root && !el.classList.contains('sl-is-full')) root.appendChild(el);
         if (room.pane === '') setPane(id, '');
         if (opt.canlist) getFiles(id);
-        setWindowFront(id, 'files');
-        first = el.querySelector('.sl-fm-rail-item:not([disabled])');
-        if (first) first.focus();
+        win.setWindowOpen(el);
     }
 
-    function setWindowExpand(id, type, button) {
-        var el = getWindow(id, type);
-        var icon = button ? button.querySelector('.sl-toastui-head-icon') : null;
-        var box = doc.getElementById(String(id) + '_toast');
-        var root = box ? box.querySelector('.toastui-editor-defaultUI') : null;
-        var open;
-        if (!el || !button) return;
-        open = !el.classList.contains('sl-toastui-window-expanded');
-        if (open) {
-            el.setAttribute('data-slaed-left', el.style.left || '');
-            el.setAttribute('data-slaed-top', el.style.top || '');
-            el.setAttribute('data-slaed-transform', el.style.transform || '');
-            el.setAttribute('data-slaed-bottom', el.style.bottom || '');
-            el.setAttribute('data-slaed-height', el.style.height || '');
-            el.setAttribute('data-slaed-position', el.style.position || '');
-            el.setAttribute('data-slaed-right', el.style.right || '');
-            el.setAttribute('data-slaed-width', el.style.width || '');
-            if (el.parentNode !== doc.body) doc.body.appendChild(el);
-            el.classList.add('sl-toastui-window-expanded');
-            el.style.bottom = '24px';
-            el.style.height = 'auto';
-            el.style.left = '24px';
-            el.style.position = 'fixed';
-            el.style.right = '24px';
-            el.style.top = '24px';
-            el.style.transform = 'none';
-            el.style.width = 'auto';
-        } else {
-            el.classList.remove('sl-toastui-window-expanded');
-            if (type === 'files' && root && el.parentNode !== root) root.appendChild(el);
-            el.style.bottom = el.getAttribute('data-slaed-bottom') || '';
-            el.style.height = el.getAttribute('data-slaed-height') || '';
-            el.style.left = el.getAttribute('data-slaed-left') || '';
-            el.style.position = el.getAttribute('data-slaed-position') || '';
-            el.style.right = el.getAttribute('data-slaed-right') || '';
-            el.style.top = el.getAttribute('data-slaed-top') || '';
-            el.style.transform = el.getAttribute('data-slaed-transform') || '';
-            el.style.width = el.getAttribute('data-slaed-width') || '';
-        }
-        button.title = button.getAttribute(open ? 'data-restore' : 'data-expand') || '';
-        button.setAttribute('aria-label', button.title);
-        if (icon) {
-            icon.classList.toggle('sl-toastui-head-icon-expand', !open);
-            icon.classList.toggle('sl-toastui-head-icon-collapse', open);
-        }
-        // The expanded window is also the expanded catalogue: one button, because the room and what fills it are the same decision
-        // The list is drawn again with it, because the compact view shows the last few files and the expanded one shows a page of them
-        if (type === 'files') {
-            setView(id, open);
-            setList(id);
-        }
-        setWindowFront(id, type);
-    }
-
-    function setWindowClose(id, type) {
-        var el = getWindow(id, type);
-        var expand = el ? el.querySelector('.js-slaed-window-expand') : null;
-        if (el && el.classList.contains('sl-toastui-window-expanded') && expand) setWindowExpand(id, type, expand);
-        if (type === 'emoji') {
-            if (el) el.classList.add('sl-none');
-            return;
-        }
-        setPanel(id, false);
-    }
-
-    // The whole head carries the window: a press on its plate moves it, and the grip beside the other buttons says so to anyone who looks for a handle
-    // An action of the head keeps its own press, because a button that moves the window instead of closing it is a button that cannot be hit
-    function setWindowDrag(event) {
-        var head = event.target.closest ? event.target.closest('.sl-toastui-window-head') : null;
-        var act = event.target.closest ? event.target.closest('.sl-toastui-window-action') : null;
-        var handle = head ? head.querySelector('.js-slaed-window-drag') : null;
-        var id;
-        var type;
-        var el;
-        var rect;
-        if (!head || !handle || event.button !== 0) return;
-        if (act && !act.classList.contains('js-slaed-window-drag')) return;
-        id = handle.getAttribute('data-editor');
-        type = handle.getAttribute('data-window');
-        el = getWindow(id, type);
-        if (!el || el.classList.contains('sl-toastui-window-expanded')) return;
-        setWindowFront(id, type);
-        rect = el.getBoundingClientRect();
-        el.style.bottom = 'auto';
-        el.style.height = rect.height + 'px';
-        el.style.left = rect.left + 'px';
-        el.style.position = 'fixed';
-        el.style.right = 'auto';
-        el.style.top = rect.top + 'px';
-        el.style.transform = 'none';
-        el.style.width = rect.width + 'px';
-        el.setAttribute('data-slaed-moved', '1');
-        drag = {
-            id: id,
-            type: type,
-            el: el,
-            left: parseFloat(el.style.left) || 0,
-            top: parseFloat(el.style.top) || 0,
-            x: event.clientX,
-            y: event.clientY
-        };
-        event.preventDefault();
-        event.stopPropagation();
-    }
-
-    function updateWindowDrag(event) {
-        var left;
-        var top;
-        var maxleft;
-        var maxtop;
-        if (!drag) return;
-        maxleft = Math.max(0, win.innerWidth - drag.el.offsetWidth);
-        maxtop = Math.max(0, win.innerHeight - 36);
-        left = Math.max(0, Math.min(maxleft, drag.left + event.clientX - drag.x));
-        top = Math.max(0, Math.min(maxtop, drag.top + event.clientY - drag.y));
-        drag.el.style.left = left + 'px';
-        drag.el.style.top = top + 'px';
-        event.preventDefault();
-    }
-
-    function deleteWindowDrag() {
-        drag = null;
+    // The expanded window is also the expanded catalogue: one button, because the room and what fills it are the same decision
+    // The list is drawn again with it, because the compact view shows the last few files and the expanded one shows a page of them
+    function setPanelView(id) {
+        var el = getPanel(id);
+        if (!el) return;
+        setView(id, el.classList.contains('sl-is-full'));
+        setList(id);
     }
 
     function getMsg(id, text, warn) {
@@ -264,7 +123,7 @@
             if (node) el.appendChild(node);
         }
         // A refusal opens the window only when it was closed: a message raised while it is open must not restart the request that produced it
-        if (warn && getPanel(id) && getPanel(id).classList.contains('sl-none')) setPanel(id, true);
+        if (warn && getPanel(id) && !getPanel(id).open) setPanel(id, true);
     }
 
     // The status line reports what happened last and is read out loud, so it never carries a word the visitor did not cause
@@ -1095,19 +954,19 @@
         var down;
         if (!shot || !row || at < 0) return;
         room.cur = num;
-        shot.querySelector('[data-sl-slot="shottitle"]').textContent = row.file;
-        img = shot.querySelector('[data-sl-slot="shotimg"]');
+        shot.querySelector('[data-sl-shot-name]').textContent = row.file;
+        img = shot.querySelector('[data-sl-shot-img]');
         img.src = row.url;
         img.alt = row.file;
-        shot.querySelector('[data-sl-slot="shotcount"]').textContent = (at + 1) + ' / ' + list.length;
-        setProps(id, shot.querySelector('[data-sl-slot="shotprops"]'), getProps(id, row));
-        down = shot.querySelector('[data-sl-slot="shotdown"]');
+        shot.querySelector('[data-sl-shot-num]').textContent = (at + 1) + ' / ' + list.length;
+        setProps(id, shot.querySelector('[data-sl-shot-rows]'), getProps(id, row));
+        down = shot.querySelector('[data-sl-shot-down]');
         if (down) down.href = row.url;
-        Array.prototype.forEach.call(shot.querySelectorAll('[data-sl-act]'), function(one) {
+        Array.prototype.forEach.call(shot.querySelectorAll('[data-sl-shot-act]'), function(one) {
             one.setAttribute('data-sl-num', String(num));
-            if (one.getAttribute('data-sl-act') === 'delete') one.setAttribute('data-sl-ask', getText(getLab(id, 'askdel', '%s'), row.file));
+            if (one.getAttribute('data-sl-shot-act') === 'delete') one.setAttribute('data-sl-ask', getText(getLab(id, 'askdel', '%s'), row.file));
         });
-        if (!shot.open) shot.showModal();
+        if (win.setWindowOpen) win.setWindowOpen(shot);
     }
 
     function setStep(id, way) {
@@ -1133,7 +992,7 @@
     function addPanel(id) {
         var el = getPanel(id);
         if (!el) return;
-        setPanel(id, el.classList.contains('sl-none'));
+        setPanel(id, !el.open);
     }
 
     function addHook(id, ed) {
@@ -1247,7 +1106,7 @@
 
     doc.addEventListener('keydown', function(ev) {
         var zone = ev.target.closest ? ev.target.closest('.js-slaed-upload-drop') : null;
-        var shot = ev.target.closest ? ev.target.closest('.sl-toastui-shot') : null;
+        var shot = ev.target.closest ? ev.target.closest('dialog[data-sl-shot="editor"]') : null;
         var el = ev.target.closest ? ev.target.closest('.sl-toastui-upload') : null;
         var file;
         var lib;
@@ -1256,12 +1115,6 @@
             id = shot.getAttribute('data-editor');
             if (ev.key === 'ArrowLeft') setStep(id, -1);
             if (ev.key === 'ArrowRight') setStep(id, 1);
-            return;
-        }
-        // The window closes on the same key the gallery does, and the fan standing open at the pointer is the one that key reaches first
-        if (el && ev.key === 'Escape' && !doc.querySelector('.sl-dial.sl-open')) {
-            ev.preventDefault();
-            setWindowClose(getPanelOwn(el), 'files');
             return;
         }
         // Only the catalogue answers to these keys: the rail, the fields and the fan of an object stand in the same window and keep the keys they came with
@@ -1303,18 +1156,6 @@
         room.anch = num;
     }, true);
 
-    doc.addEventListener('pointerdown', setWindowDrag);
-    doc.addEventListener('pointermove', updateWindowDrag);
-    doc.addEventListener('pointerup', deleteWindowDrag);
-    doc.addEventListener('pointercancel', deleteWindowDrag);
-
-    doc.addEventListener('pointerdown', function(ev) {
-        var el = ev.target.closest ? ev.target.closest('.sl-toastui-upload, .sl-editor-emoji-panel') : null;
-        if (!el) return;
-        if (el.classList.contains('sl-editor-emoji-panel')) setWindowFront(el.getAttribute('data-editor'), 'emoji');
-        else setWindowFront(el.getAttribute('data-editor-id'), 'files');
-    }, true);
-
     doc.addEventListener('click', function(ev) {
         var el = ev.target;
         var zone = el.closest ? el.closest('.js-slaed-upload-drop') : null;
@@ -1325,7 +1166,10 @@
         var page = el.closest ? el.closest('[data-sl-page]') : null;
         var kind = el.closest ? el.closest('[data-sl-kind]') : null;
         var mode = el.closest ? el.closest('[data-sl-mode].sl-fm-mode') : null;
-        var step = el.closest ? el.closest('[data-sl-step]') : null;
+        var shot = el.closest ? el.closest('dialog[data-sl-shot="editor"]') : null;
+        var wide;
+        var walk = shot ? el.closest('[data-sl-shot-step]') : null;
+        var pick = shot ? el.closest('[data-sl-shot-act]') : null;
         var item = el.closest ? el.closest('[data-sl-num]') : null;
         var button = el.closest ? el.closest('button, input[type="button"]') : null;
         var id;
@@ -1343,8 +1187,13 @@
             setPane(pane.getAttribute('data-editor'), pane.getAttribute('data-sl-pane'));
             return;
         }
-        if (step) {
-            setStep(step.getAttribute('data-editor'), parseInt(step.getAttribute('data-sl-step'), 10));
+        if (walk) {
+            setStep(shot.getAttribute('data-editor'), parseInt(walk.getAttribute('data-sl-shot-step'), 10));
+            return;
+        }
+        if (pick) {
+            ev.preventDefault();
+            setActRun(shot.getAttribute('data-editor'), pick, pick.getAttribute('data-sl-shot-act'));
             return;
         }
         if (kind) {
@@ -1386,21 +1235,22 @@
         if (act && act.hasAttribute('data-editor')) {
             ev.preventDefault();
             id = act.getAttribute('data-editor');
-            setActRun(id, act);
+            setActRun(id, act, act.getAttribute('data-sl-act'));
             return;
         }
         if (item && item.hasAttribute('data-sl-num') && !el.closest('.sl-fm-pick')) {
             setCurrent(item.getAttribute('data-editor'), parseInt(item.getAttribute('data-sl-num'), 10));
             return;
         }
-        if (!button || !button.classList) return;
-        id = button.getAttribute('data-editor');
-        if (button.classList.contains('js-slaed-window-expand')) setWindowExpand(id, button.getAttribute('data-window'), button);
-        if (button.classList.contains('js-slaed-window-close')) setWindowClose(id, button.getAttribute('data-window'));
+        // The canon toggles the window on this press; the catalogue inside it follows once the class is on, which is the next frame
+        wide = el.closest ? el.closest('.sl-toastui-upload [data-sl-full]') : null;
+        if (wide) {
+            id = wide.closest('.sl-toastui-upload').getAttribute('data-editor-id');
+            win.requestAnimationFrame(function() { setPanelView(id); });
+        }
     });
 
-    function setActRun(id, act) {
-        var way = act.getAttribute('data-sl-act');
+    function setActRun(id, act, way) {
         var num = act.hasAttribute('data-sl-num') ? parseInt(act.getAttribute('data-sl-num'), 10) : getRoom(id).cur;
         var box;
         if (way === 'refresh') {
@@ -1413,9 +1263,9 @@
             return;
         }
         if (way === 'full') {
-            box = getPanel(id).querySelector('.js-slaed-window-expand');
+            box = getPanel(id).querySelector('[data-sl-full]');
             setPane(id, 'lib');
-            if (box && !getPanel(id).classList.contains('sl-toastui-window-expanded')) box.click();
+            if (box && !getPanel(id).classList.contains('sl-is-full')) box.click();
             return;
         }
         if (way === 'retry') {
@@ -1449,10 +1299,6 @@
         var root = doc.querySelector('.' + (opt.tpl || 'js-slaed-editor-tpl'));
         var tpl = root ? root.querySelector('template[data-tpl="' + name + '"]') : null;
         return tpl && tpl.content && tpl.content.firstElementChild ? tpl.content.firstElementChild.cloneNode(true) : null;
-    };
-    api.syncWindow = function(id, type) {
-        setWindowFront(id, type);
-        return getWindow(id, type);
     };
     api.addUpload = function(id, ed, opt) {
         if (!opt) return;

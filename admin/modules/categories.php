@@ -131,7 +131,7 @@ function add(): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken('categories')],
         ],
         'submit_label' => _ADD,
-    ])]).$tpl->getHtmlPart('icon-picker-modal', ['search_text' => _SEARCH, 'close_text' => _CLOSE]);
+    ])]).$tpl->getHtmlPart('window-icons', ['title_text' => _ICONPICK, 'search_text' => _SEARCH, 'close_text' => _CLOSE]);
     setFoot();
 }
 
@@ -217,7 +217,7 @@ function subadd(): void {
                 ['nameattr' => 'token', 'valueattr' => getSiteToken('categories')],
             ],
             'submit_label' => _ADD,
-        ])]).$tpl->getHtmlPart('icon-picker-modal', ['search_text' => _SEARCH, 'close_text' => _CLOSE]);
+        ])]).$tpl->getHtmlPart('window-icons', ['title_text' => _ICONPICK, 'search_text' => _SEARCH, 'close_text' => _CLOSE]);
     } else {
         $subtitle = $tpl->getHtmlPart('div', ['is_searchbox' => true, 'content_html' => $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php',
@@ -369,7 +369,7 @@ function edit(): void {
             $parent == 0 ? [['nameattr' => 'parent', 'valueattr' => '0']] : []
         ),
         'submit_label' => _SAVECHANGES,
-    ])]).$tpl->getHtmlPart('icon-picker-modal', ['search_text' => _SEARCH, 'close_text' => _CLOSE]);
+    ])]).$tpl->getHtmlPart('window-icons', ['title_text' => _ICONPICK, 'search_text' => _SEARCH, 'close_text' => _CLOSE]);
     setFoot();
 }
 

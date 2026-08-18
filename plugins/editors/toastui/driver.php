@@ -256,14 +256,25 @@ class EditorToastUi implements ContentDriver {
             'delete_label' => _DELETE,
             'unmark_label' => _EDITOR_UNMARK,
             'wait_text' => _EDITOR_WAIT,
-            'shot_label' => _PREVIEW,
-            'prev_label' => _EDITOR_PREV,
-            'next_label' => _EDITOR_NEXT,
-            'insimg_label' => _INSERTIMG,
-            'insobj_label' => _EINSOBJ,
-            'down_label' => _DOWNLOAD,
             'insert_label' => _EDITOR_INSERT,
             'refresh_label' => _UPDATE,
+        ]);
+        $acts = [
+            ['key' => 'image', 'icon' => 'image', 'name' => _INSERTIMG, 'tone' => 'info'],
+            ['key' => 'attach', 'icon' => 'paperclip', 'name' => _EINSOBJ, 'tone' => 'neutral'],
+            ['icon' => 'download', 'name' => _DOWNLOAD, 'tone' => 'neutral', 'is_load' => true],
+        ];
+        if ($mdr) $acts[] = ['key' => 'zip', 'icon' => 'file-zip', 'name' => _EDITOR_ZIP, 'tone' => 'warn'];
+        if ($mdr) $acts[] = ['key' => 'delete', 'icon' => 'trash3', 'name' => _DELETE, 'tone' => 'danger'];
+        if ($upl) $panel .= $tpl->getHtmlPart('window-gallery', [
+            'shot_own' => 'editor',
+            'editor_id' => $eid,
+            'shot_text' => _PREVIEW,
+            'prev_text' => _EDITOR_PREV,
+            'next_text' => _EDITOR_NEXT,
+            'can_walk' => true,
+            'can_props' => true,
+            'acts' => $acts,
         ]);
         $jopt = json_encode($opt, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         $js = '(function(){var ta=document.getElementById('.$jid.');var root=window.toastui&&window.toastui.Editor;';

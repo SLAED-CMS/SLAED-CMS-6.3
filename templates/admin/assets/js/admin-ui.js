@@ -67,7 +67,7 @@
         if (!node || !node.closest) return;
         var opener = node.closest('[data-sl-icon-open]');
         if (opener) {
-            var modal = document.getElementById('sl_icon_modal');
+            var modal = document.getElementById('sl-icon-window');
             if (!modal) return;
             picker = opener.closest('.sl-icon-picker');
             setIconGrid(modal);
@@ -75,23 +75,15 @@
             var search = modal.querySelector('[data-sl-icon-search]');
             if (search) search.value = '';
             modal.querySelectorAll('.sl-icon-cell').forEach(function (cell) { cell.hidden = false; });
-            modal.showModal();
+            window.setWindowOpen(modal);
             setIconCurrent(modal);
-            if (search) search.focus();
             return;
         }
         var cell = node.closest('.sl-icon-cell');
         if (cell) {
             setIconValue(cell.getAttribute('data-sl-icon-name'));
-            cell.closest('dialog').close();
-            return;
+            window.setWindowClose(cell.closest('dialog'));
         }
-        if (node.closest('[data-sl-icon-close]')) {
-            node.closest('dialog').close();
-            return;
-        }
-        var dialog = node.closest('dialog.sl-icon-modal');
-        if (dialog && node === dialog) dialog.close();
     });
     document.addEventListener('input', function (event) {
         var node = event.target;
@@ -649,7 +641,7 @@
     /* The keys walk the list the pointer walks: an arrow moves the current object, the shift with it drags the marks along, a space marks one and Enter does what a press does */
     /* Only an object of the list answers to these keys: a fan item and the field of an operation stand inside the body too and keep the keys they came with */
     document.addEventListener('keydown', function (event) {
-        var box = document.querySelector('.sl-fm-modal');
+        var box = document.querySelector('dialog[data-sl-shot="files"]');
         var node = document.activeElement;
         var keys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
         var host = getFileHost(node);
@@ -695,7 +687,7 @@
     /* The properties beside the picture are the panel of the same object, asked of the same route the list asks, so the gallery repeats no descriptor of its own */
     var fmshot = 0;
     function setFileShot(step, from) {
-        var box = document.querySelector('.sl-fm-modal');
+        var box = document.querySelector('dialog[data-sl-shot="files"]');
         var list = getFileShots();
         var own = from ? from.getAttribute('data-sl-fm-file') : '';
         var at = from ? -1 : ((fmshot + step) % list.length + list.length) % list.length;
@@ -703,25 +695,25 @@
         if (from) list.forEach(function (node, i) { if (node.getAttribute('data-sl-fm-file') === own) at = i; });
         if (!box || list.length < 1 || at < 0) return;
         var node = list[at];
-        var down = box.querySelector('[data-sl-fm-down]');
-        var img = box.querySelector('[data-sl-fm-img]');
+        var down = box.querySelector('[data-sl-shot-down]');
+        var img = box.querySelector('[data-sl-shot-img]');
         fmshot = at;
-        box.querySelector('[data-sl-fm-name]').textContent = node.getAttribute('data-sl-fm-name');
-        box.querySelector('[data-sl-fm-num]').textContent = (at + 1) + ' / ' + list.length;
+        box.querySelector('[data-sl-shot-name]').textContent = node.getAttribute('data-sl-fm-name');
+        box.querySelector('[data-sl-shot-num]').textContent = (at + 1) + ' / ' + list.length;
         img.src = node.getAttribute('data-sl-fm-img');
         img.alt = node.getAttribute('data-sl-fm-name');
         down.href = node.getAttribute('data-sl-fm-down') || '#';
         down.hidden = !node.getAttribute('data-sl-fm-down');
-        if (window.htmx) window.htmx.ajax('GET', node.getAttribute('data-sl-fm-info'), { target: '#slfmshot', swap: 'innerHTML' });
-        if (!box.open) box.showModal();
+        if (window.htmx) window.htmx.ajax('GET', node.getAttribute('data-sl-fm-info'), { target: 'dialog[data-sl-shot="files"] [data-sl-shot-props]', swap: 'innerHTML' });
+        window.setWindowOpen(box);
     }
     /* An action of the gallery is the action of the object it shows: the fan of the row already carries it with its form and its question, so the picture only presses it */
     function setFileRun(name) {
-        var box = document.querySelector('.sl-fm-modal');
+        var box = document.querySelector('dialog[data-sl-shot="files"]');
         var list = getFileShots();
         var own = list[fmshot] ? list[fmshot].closest('tr, .sl-fm-cell') : null;
         var item = own ? own.querySelector('[data-sl-fm-run="' + name + '"], [data-sl-fm-act="' + name + '"]') : null;
-        if (box && box.open) box.close();
+        if (box && box.open) window.setWindowClose(box);
         if (item) item.click();
     }
     document.addEventListener('change', function (event) {
@@ -729,12 +721,12 @@
         if (node) setFileMarks(node);
     });
     document.addEventListener('keydown', function (event) {
-        var box = document.querySelector('.sl-fm-modal');
+        var box = document.querySelector('dialog[data-sl-shot="files"]');
         if (!box || !box.open) return;
         if (event.key === 'ArrowLeft') setFileShot(-1, null);
         if (event.key === 'ArrowRight') setFileShot(1, null);
     });
-    var fmhit = '[data-sl-fm-view],[data-sl-fm-pick],[data-sl-fm-go],[data-sl-fm-act],[data-sl-fm-show],[data-sl-fm-step],[data-sl-fm-run]';
+    var fmhit = '[data-sl-fm-view],[data-sl-fm-pick],[data-sl-fm-go],[data-sl-fm-act],[data-sl-fm-show],[data-sl-fm-run],[data-sl-shot-step],[data-sl-shot-act]';
     document.addEventListener('click', function (event) {
         var node = event.target && event.target.closest ? event.target.closest(fmhit) : null;
         if (!node) return;
@@ -742,7 +734,7 @@
             event.preventDefault();
             return setFileShot(0, node);
         }
-        if (node.hasAttribute('data-sl-fm-step')) return setFileShot(parseInt(node.getAttribute('data-sl-fm-step'), 10), null);
+        if (node.hasAttribute('data-sl-shot-step') && node.closest('dialog[data-sl-shot="files"]')) return setFileShot(parseInt(node.getAttribute('data-sl-shot-step'), 10), null);
         /* The fan of a row opens the gallery on the object the row is about; every other action of the fan is a link or a form of its own and is left alone */
         if (node.getAttribute('data-sl-fm-run') === 'preview') {
             var own = node.closest('tr, .sl-fm-cell');
@@ -751,7 +743,7 @@
             if (shot) setFileShot(0, shot);
             return;
         }
-        if (node.hasAttribute('data-sl-fm-run') && node.closest('.sl-fm-modal')) return setFileRun(node.getAttribute('data-sl-fm-run'));
+        if (node.hasAttribute('data-sl-shot-act') && node.closest('dialog[data-sl-shot="files"]')) return setFileRun(node.getAttribute('data-sl-shot-act'));
         if (node.hasAttribute('data-sl-fm-act')) {
             event.preventDefault();
             if (node.hasAttribute('data-sl-fm-many')) return setFileMany(node);

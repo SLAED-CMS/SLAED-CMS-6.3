@@ -80,25 +80,5 @@
 {% if is_full %}
   </div>
 </div>
-<dialog class="sl-modal sl-modal-wide sl-fm-modal" aria-label="{{ shot_text }}">
-  <div class="sl-modal-body">
-    <div class="sl-modal-title"><i class="bi bi-image" aria-hidden="true"></i> <span data-sl-fm-name></span></div>
-    <button type="button" class="sl-but-mini sl-modal-close" data-sl-close title="{{ cancel_text }}" aria-label="{{ cancel_text }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
-    <div class="sl-fm-modal-grid">
-      <div class="sl-fm-modal-stage">
-        <button type="button" class="sl-but-mini sl-fm-modal-nav" data-sl-fm-step="-1" title="{{ prev_text }}" aria-label="{{ prev_text }}"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
-        <span><img class="sl-modal-image" src="" alt="" data-sl-fm-img></span>
-        <button type="button" class="sl-but-mini sl-fm-modal-nav" data-sl-fm-step="1" title="{{ next_text }}" aria-label="{{ next_text }}"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
-      </div>
-      <aside id="slfmshot"></aside>
-    </div>
-    <div class="sl-modal-foot">
-      <span class="sl-fm-modal-count" data-sl-fm-num></span>
-      <a class="sl-chip sl-chip-neutral sl-live-act" data-sl-fm-down href="#" download><i class="bi bi-download" aria-hidden="true"></i>&nbsp;{{ down_text }}</a>
-      {% if can_zip %}<button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-sl-fm-run="fmcompress"><i class="bi bi-file-zip" aria-hidden="true"></i>&nbsp;{{ zip_text }}</button>{% endif %}
-      {% if can_delete %}<button type="button" class="sl-chip sl-chip-danger sl-live-act" data-sl-fm-run="fmdelete"><i class="bi bi-trash3" aria-hidden="true"></i>&nbsp;{{ delete_text }}</button>{% endif %}
-    </div>
-  </div>
-</dialog>
 {% endif %}
 {% if is_swap %}<span class="sl-fm-crumbs" id="slfmcrumbs" hx-swap-oob="true">{% for crumb in crumbs %}{% if crumb.url %}<a href="{{ crumb.url }}" hx-get="{{ crumb.url }}" hx-target="#slfmbody" hx-swap="innerHTML" hx-push-url="false">{{ crumb.name }}</a><span>/</span>{% else %}<b>{{ crumb.name }}</b>{% endif %}{% endfor %}</span>{% endif %}
