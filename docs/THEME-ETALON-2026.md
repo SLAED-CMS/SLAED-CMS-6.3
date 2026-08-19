@@ -3,8 +3,8 @@
 Turning the two shipped themes into reference etalons that hundreds of
 independent themes are copied from.
 
-Status: batch 3 next. Batches run 3 → 8; batch 9 is independent and may run
-alongside 3 to 7. A step that is done is deleted from this file, not marked done.
+Status: batch 4 next. Batches run 4 → 8; batch 9 is independent and may run
+alongside 4 to 7. A step that is done is deleted from this file, not marked done.
 
 The contract, the tool, the baseline, the screenshot rig and the two gates are in
 the tree: `tools/ui-contract.php`, `tools/ui-audit.php`,
@@ -18,15 +18,24 @@ Both `base.css` now carry the `/* --- end tokens --- */` marker.
 `setCookies()` marks the session cookie `secure` whenever `homeurl` is `https`, so
 a run over plain `http` fills the form, posts it and is handed a cookie the
 browser drops: the page comes back carrying the login block and no error to read.
-Every site baseline had been captured that way — logged out, under names that say
-otherwise — and `profile` and `private` had no baseline at all. The manifest names
-`https` and both contexts ignore the certificate a development stand signs itself,
-and the 84 baselines were re-captured from the pre-batch tree, which is what makes
-them a measurement of the theme rather than of who was logged in.
+Every site baseline had once been captured that way — logged out, under names that
+say otherwise. The manifest names `https`, both contexts ignore the certificate a
+development stand signs itself, and every state including `profile` and `private`
+now carries a baseline taken with a real session, which is what makes it a
+measurement of the theme rather than of who was logged in.
 
 **No manifest page opens the editor, so `skin.css` is outside the screenshot gate.**
-Everything it holds — 231 decisions, 8 transition decisions and 3 layers among them —
-is therefore checked by the audit alone until batch 4 adds a state that opens it.
+The 76 decisions it still holds — 8 transition decisions and 3 layers among them — are
+therefore checked by the audit alone until batch 4 adds a state that opens it.
+
+**The two `skin.css` copies must stay byte-identical, and a test says so.**
+`tests/Unit/EditorWindowTest::theWindowKeepsItsStylesUnderItsOwnRoot` asserts it, which
+is why batch 2 left the file alone. Batch 3 migrated admin's copy and copied the result
+to lite in the same commit, declaring in lite's API block exactly the nineteen ladder
+names the copied file reads and no more — a step nothing reads is a dead token, and
+`dead` is ratcheted at zero. Batch 4 inherits the rule: whatever it changes in admin's
+`skin.css` is copied to lite in the same commit, and lite gains only the names the copy
+consumes.
 
 No line numbers anywhere: every reference names a file, selector, token or
 function, and that name is what to search for.
@@ -107,7 +116,7 @@ Numbers here are the tool's, and drift as work lands.
 
 ## Contract
 
-- **Themes are independent.** No inheritance in `Template`; the **177**
+- **Themes are independent.** No inheritance in `Template`; the **126**
   byte-identical rules they share stay duplicated on purpose. `--cross`
 - **The engine is not touched.** No filter added, no grammar extended,
   `getFile()` and `checkFile()` unchanged so the security boundary around theme
@@ -119,8 +128,9 @@ Numbers here are the tool's, and drift as work lands.
   element styles) and `theme.css` (components, zero literals).
 - **`editors/toastui/skin.css` consumes tokens and is not API**, but is held to
   the same zero. `checkThemeAssets()` requires it when an editor manifest
-  declares a skin. 1657 lines, **231 untokenised decisions** per theme — and the
-  two copies are byte-identical, so it is migrated once in admin and copied.
+  declares a skin. **76 untokenised decisions** per theme — and the two copies are
+  byte-identical, which `EditorWindowTest` enforces, so it is migrated once in admin
+  and copied to lite in the same commit.
   `assets/vendor/` stays out of scope.
 - **`admin` first**, `lite` mirrors it: admin is smaller, so mistakes are cheap.
 - **Canon scope:** CSS, `fragments`, `partials`. Not `layouts` and `pages` — the
@@ -128,7 +138,7 @@ Numbers here are the tool's, and drift as work lands.
 
 ## The one metric
 
-**Untokenised visual decisions: admin 833, lite 1637 → 0.** `--count`
+**Untokenised visual decisions: admin 302, lite 1478 → 0.** `--count`
 
 Measured by the tool, which is the authority. Counted over every CSS file that is
 not the API block: `theme.css`, the element styles below the marker, and
@@ -137,12 +147,11 @@ tokens. Split by file:
 
 | | `theme.css` | `skin.css` | `base.css` below the marker |
 |---|---|---|---|
-admin | 575 | 231 | 27 |
-lite | 1364 | 231 | 42 |
+admin | 220 | 76 | 6 |
+lite | 1360 | 76 | 42 |
 
-Monotonic in one direction: **no batch raises a count it controls.** Batches 2–7
-lower the untokenised count; 1, 8 and 9 hold it flat. "Every batch lowers it"
-would be false for three of the nine.
+Monotonic in one direction: **no batch raises a count it controls.** Batches 4–7
+lower the untokenised count; 8 and 9 hold it flat.
 
 The ratchet holds `count`, `bare`, `dup`, `names`, `dead`, `alias`, `unsat`,
 `unmet`, `scoped`, `clash`, `classes`, `important` and `contrast`. It does **not** hold
@@ -152,8 +161,8 @@ The list lives in `tools/ui-contract.php` under `ratchet`.
 
 `clash` is one name declared twice inside one API block, where the second
 declaration silently wins and nothing else would ever say so. Both themes are at
-zero, and stayed there while the API blocks fell from 121 and 169 tokens to 105
-and 154 — a rename is exactly when a name lands on one already taken.
+zero, and stayed there while the API blocks moved from 121 and 169 tokens to 135
+and 173 — a rename is exactly when a name lands on one already taken.
 
 Counted **per part of a value, not per declaration** — the tool strips `var()`,
 drops neutral parts and judges the rest, so this line is already clean:
@@ -162,17 +171,17 @@ drops neutral parts and judges the rest, so this line is already clean:
 border: 1px solid var(--sl-border);   /* the decision is the colour */
 ```
 
-1226 declarations in admin and 1296 in lite already reach every decision through a
-token; 53 and 83 more are half done.
+1714 declarations in admin and 1424 in lite already reach every decision through a
+token; 29 and 83 more are half done.
 
-**Second check: bare numbers.** `--bare` — admin 91, lite 150
+**Second check: bare numbers.** `--bare` — admin 3, lite 136
 
 | Property | lite sites / values | admin sites / values | Spelled |
 |---|---|---|---|
-`font-weight` | 71 / 6 | 55 / 6 | `normal` and `400`, `bold` and `700` — four weights, six spellings |
-`line-height` | 33 / 15 | 22 / 10 | `1.05`…`1.62` plus `1.428571429` and `normal` — fifteen ways to say it |
+`font-weight` | 63 / 6 | 0 | `normal` and `400`, `bold` and `700` — four weights, six spellings |
+`line-height` | 27 / 15 | 0 | `1.05`…`1.62` plus `1.428571429` and `normal` — fifteen ways to say it |
 `z-index` | 29 / 14 | 3 / 3 | the three admin still spells are in `skin.css` |
-`opacity` | 17 / 7 | 11 / 7 | — |
+`opacity` | 17 / 7 | 0 | — |
 
 These carry no unit and no colour, so the first counter is blind to them. A bare
 number in the four must come from a token; `0` and `1` stay neutral in `opacity`
@@ -183,12 +192,12 @@ decision.
 
 | | lite | admin |
 |---|---|---|
-identical bodies | 122 groups | 82 groups |
-**redundant blocks** | **276** | **180** |
-of them inside `@media` | 24 | 14 |
+identical bodies | 121 groups | 81 groups |
+**redundant blocks** | **274** | **179** |
+of them inside `@media` | 22 | 15 |
 
 `display: none` appears 16 times in lite under 16 selectors, `margin: 0` twelve.
-These 456 are **candidates, not certainties** — whether selectors belong together
+These 453 are **candidates, not certainties** — whether selectors belong together
 is a human call, so batch 8 merges a group or allowlists it with a reason. What
 is certain is that none may be left unexamined. Repetition **with** need is not
 counted: `display: flex` appears 122 times because 122 elements are flex
@@ -208,11 +217,11 @@ while `prefers-reduced-motion` appears 14 and `focus-visible` 40. Dark is a
 second value inside the same declaration, so it costs nothing structurally, and
 no name stands in its way any more.
 
-`--names` reports **admin 33, lite 102** violations over the declared tokens, and
+`--names` reports **admin 20, lite 102** violations over the declared tokens, and
 every one is the fourth law alone — a name not yet registered in
 `tools/ui-contract.php`. Each belongs to a family whose batch has not run: the
 gradients and progress fills of batch 5, the `--sl-space-*` and `--sl-radius-*`
-scales of batches 3 and 6, the composed shadows and ring colours of batch 4, and
+scales of batch 6, the composed shadows and ring colours of batch 4, and
 the colour tails of batches 4 and 7. `--names` prints each with
 the law it breaks, which is the work list those batches inherit.
 
@@ -262,8 +271,8 @@ the `unmet` count now catches it; everywhere else the list below is the only gua
 
 | Place | Files | Occurrences | What it does |
 |---|---|---|---|
-theme CSS | 4 | 2629 `var()` — lite `theme.css` 1309, admin 1224, the two `base.css` 96 | reads |
-`editors/toastui/skin.css` | 2 | 295 each | reads; part of the package |
+theme CSS | 4 | 3007 `var()` — lite `theme.css` 1309, admin 1580, the two `base.css` 118 | reads |
+`editors/toastui/skin.css` | 2 | 450 each | reads; part of the package |
 `error.html`, repo root | 1 | 39 in its `:root`, 41 read | a self-contained third token set; the two extra are `--sl-alert-c` and `--sl-alert-tint`, scoped on the alert root as internals, which is legal |
 `lite` templates | 5 | 9 | **writes** a live value inline |
 admin PHP | 2 | 16 | reads inside markup it assembles |
@@ -299,9 +308,10 @@ Four laws, each machine-checkable, each with current offenders.
    API blocks, up to `--sl-login-dropdown-form-margin-left` at five.
 3. **One axis, one prefix, from the closed list.** Colour is the default axis and
    carries no prefix — it is the largest family and `color` bought nothing.
-4. **State is not an axis, and modifiers do not stack.** Offenders: 18
-   `--sl-hover-*` in admin, 11 byte-identical to an existing token;
-   `--sl-hover-opacity`; `--sl-bg-hover-gloss`; `--sl-color-bg-soft-soft`.
+4. **State is not an axis, and modifiers do not stack.** Offenders left:
+   `--sl-hover-shadow-input` and `--sl-shadow-hover-soft` in admin, which batch 4
+   settles with the shadow roles; `--sl-bg-hover-gloss` and `--sl-color-bg-soft-soft`
+   in lite.
 
 Average name length is 20.5 characters; under this grammar about 14.
 
@@ -370,14 +380,12 @@ moves the value with it.
 | Waiting on | Names |
 |---|---|
 gradients, batch 5 | `--sl-progress-*` and `--sl-line-gradient` in lite, with `--sl-grad-info/success-*`, `--sl-bg-hover-gloss` and the `--sl-but-*` bevel |
-the spacing and radius ladders, batches 3 and 6 | `--sl-space-xs/-sm/-md/-lg/-xl` onto `--sl-space-1…8`; `--sl-radius-control`/`-panel`/`-soft`/`-card` onto `--sl-radius-1…3`; `--sl-overlay-10/12/15/20` onto `--sl-scrim-*`, lite only, with `0.12` folding into `0.1`; `--sl-hover-opacity` onto `--sl-fade-subtle` |
-the type and size ladders, batches 3 and 6 | admin `--sl-size-tile-icon`, both `--sl-img-placeholder-icon-size`, lite `--sl-size-meta-row` and the login geometry — `--sl-login-field-pad-x`/`-y`, `--sl-login-dropdown-form-left`/`-width`/`-max-width`, `--sl-login-dropdown-offset-x`, each a figure a breakpoint overrides |
+the spacing and radius ladders, batch 6 | lite `--sl-space-xs/-sm/-md/-lg/-xl` onto `--sl-space-1…8`, which lite already declares because the editor skin reads them; `--sl-radius-control`/`-card` onto `--sl-radius-1…3`; `--sl-overlay-10/12/15/20` onto `--sl-scrim-*`, with `0.12` folding into `0.1` |
+the type and size ladders, batch 6 | lite `--sl-size-meta-row`, `--sl-img-placeholder-icon-size` — 48px, which admin now spells `--sl-size-icon-xl` — and the login geometry — `--sl-login-field-pad-x`/`-y`, `--sl-login-dropdown-form-left`/`-width`/`-max-width`, `--sl-login-dropdown-offset-x`, each a figure a breakpoint overrides. lite's `--sl-font-h1` at 28px and `--sl-font-h2` at 22px are off the shared ladder and fold onto 24 and 20 here |
 the shadow roles, batch 4 | admin `--sl-shadow-sidebar`, `--sl-shadow-bar`, `--sl-shadow-hover-soft`, `--sl-shadow-input-active`, `--sl-hover-shadow-input`, `--sl-focus-primary`, `--sl-focus-danger`, `--sl-focus-success`, `--sl-focus-success-ring`; lite `--sl-field-invalid-ring` and `--sl-field-valid-ring`. One component carries one `ring` and one `shadow`, so a second of either has nowhere to go until the roles are settled |
 the colour ramp, batches 4 and 7 | admin `--sl-color-text-soft` and `--sl-color-primary-hover-soft`; lite `--sl-color-text-ink`, `--sl-color-text-link`, `--sl-color-border-stronger`, `--sl-color-brand`/`-banner`/`-strong`, `--sl-color-tone-neutral`/`-primary`, `--sl-login-link-hover-color`, and the eight `--sl-changelog-*` that lite does not share with a semantic colour. Each is one value more than its role has steps, which the ramp folds rather than the grammar renames |
 
-Two rows of the map could not be written as they stood. `--sl-img-placeholder-icon-size`
-is the glyph inside the placeholder and not the box, so `--sl-placeholder-height`
-took the box that is measured twice and the glyph waits for the type ladder. The
+One row of the map could not be written as it stood. The
 bevel row asked for `--sl-btn-border` above and `--sl-btn-shadow` below, but lite
 already spends `--sl-btn-shadow` on the control shadow, so the two edges say
 `--sl-but-border-inner` and `-outer` until batch 5 composes them.
@@ -391,7 +399,37 @@ tool reports a collision as an error, never a merge.
 `--sl-primary` was free; `--sl-space-sm: 6px` → `--sl-space-<n>` is not, since the
 ladder has no 6 and 219 lite sites move. So the scale families — `--sl-space-*`,
 `--sl-radius-*`, `--sl-overlay-*` — are renamed **and snapped in one step**, in
-batches 3 and 6.
+batch 6. Admin did it in batch 3, and a tie between two neighbouring steps is not
+broken the same way on every ladder.
+
+**On spacing and radius the tie goes up** — `3→4`, `6→8`, `9→10`, `11→12`, `14→16`,
+`18→20`, `22→24` — because a rhythm step is read as breathing room and the denser of
+two neighbours is the one a reader notices. 61 of the 6px sites moved that way, and
+one moved down: the gap of a toolbar link, where going up pushed an already
+overflowing language row further off the edge.
+
+**On the type ladder the tie is broken by the siblings**, not by a direction. `11px`
+went **down** to 10 at all twelve sites, because every one is a caption standing
+beside a 12px sibling and sending both to 12 would have merged two sizes the design
+tells apart. `13px` went **up** to 14 at nine sites that are a title or the base font
+of a panel, and **down** to 12 at five that are metadata beside a 14 or 16px sibling.
+A type step is a rank, so the tie is decided by what it must stay distinguishable
+from.
+
+Two element sizes moved further than one step and are named here because no rule
+derives them: `h5` took `--sl-font-body` at 14 rather than the nearer 16, which keeps
+the heading ladder strictly descending against `h4`; and `ol` lost 6.8px of indent
+when `2.2em` snapped to the ladder's top step of 24.
+
+**Three sites had the layout bend instead of the value.** The module grid counted its
+gutters as a literal `21px` that no longer matched the snapped gap and dropped four
+columns to three; it now reads `calc((100% - (3 * var(--sl-space-3))) / 4)`. The card
+of a module and the caption of a file tile each held a right padding sized to clear
+the speed dial standing over them — 38px and 40px, which a snap to 24 would have run
+the title under. Both now say what the figure is for, in the spelling the sidebar
+already used: `calc(var(--sl-size-chip) + var(--sl-space-3) * 2)`. **A padding that
+makes room for an absolutely positioned control is not a rhythm step**, and the audit
+cannot tell the two apart — only the screenshot can.
 
 **Forbidden, each reported by the tool:** a token name not registered in
 `tools/ui-contract.php`; a name read and declared nowhere, met by no fallback; an alias of an alias with one use and no theming intent;
@@ -423,7 +461,7 @@ easing | 192 | 11 | `ease`, one `cubic-bezier` | admin spells two; lite still ho
 `z-index` | 36 | 14 | 8 named layers | spelling only, except where a stack is deliberate |
 `box-shadow` | 96 | 34 | 6 roles + `--sl-shadow-color` | — |
 `letter-spacing` | 16 | 5, `px`/`em` mixed | 3 roles | — |
-breakpoints | admin 8 widths, lite 11 | 12 distinct | `560` / `768` / `900` / `1200` | admin `600`, `700`, `720`, `1100`; lite `600`, `720`, `760`, `769`, `800`, `901`, `1040`, `1400` |
+breakpoints | admin 4 widths, lite 11 | 12 distinct | `560` / `768` / `900` / `1200` | admin is on the ladder; lite `600`, `720`, `760`, `769`, `800`, `901`, `1040`, `1400` |
 colour | 87 untokenised | 90 lite tokens, 66 admin | `--sl-<family>-50…900` | derived by `--ramp` |
 
 `--dist=<property>` per row; `--ramp` for colour.
@@ -468,17 +506,17 @@ tool before acting on any figure; every count below is the one the ratchet holds
 | Metric | lite | admin |
 |---|---|---|
 declarations outside the API block, custom properties excluded | 5400 | 4013 |
-untokenised visual decisions | **1637** | **833** |
-  of those, half tokenised | 83 | 53 |
-  declarations fully reached through a token | 1296 | 1226 |
-bare numbers in the four properties | 150 | 91 |
-redundant duplicate blocks | 276 | 180 |
-grammar violations | 102 | 33 |
-tokens in `base.css` | 154 | 113 |
-tokens scoped outside the API block | 109 | 88 |
+untokenised visual decisions | **1478** | **302** |
+  of those, half tokenised | 83 | 29 |
+  declarations fully reached through a token | 1424 | 1714 |
+bare numbers in the four properties | 136 | 3 |
+redundant duplicate blocks | 274 | 179 |
+grammar violations | 102 | 20 |
+tokens in `base.css` | 173 | 135 |
+tokens scoped outside the API block | 109 | 84 |
 dead tokens | 0 | 0 |
-names read and declared nowhere | 2 | 7 |
-single-use tokens | 55 | 30 |
+names read and declared nowhere | 2 | 6 |
+single-use tokens | 56 | 27 |
 alias chains | 0 | 0 |
 tokens that cannot satisfy their property | 0 | 0 |
 one name declared twice in the API block | 0 | 0 |
@@ -505,32 +543,46 @@ against every surface token it reports pairs that appear nowhere — the plan's
 worked example was `--sl-on-solid` against the page background — and a gate that
 opens with false alarms is switched off in a day.
 
+**The registry under-covers, and re-generating it raises the count without a
+regression behind it.** Re-run at the end of batch 3 it found **266** pairs where the
+committed file holds 203: `admin-account`, `profile` and `login-field-focus` were not
+in it at all, and `private` held 49 of its 84. Those pages render only with a session
+and a populated list, so the pairs were always on screen and never measured. 23 of the
+new ones are below AA — one in admin, the current page number of a pager at 4.4:1, and
+22 in lite on `profile` and `private`. Batch 3 checked pair by pair that its own snaps
+moved nothing across a threshold (the largest move was `23.8px → 24px`, and the
+`18.66px` and `14px`-bold boundaries were never crossed) and left the committed file
+alone, because a ratchet counts and cannot tell coverage from regression. **The batch
+that owns colour re-generates it and closes what it finds** — batch 4 for admin, batch
+7 for lite — and that is the one moment the `contrast` figure may legitimately move
+up, with the new pairs listed beside the reason.
+
 Untokenised decisions by property, largest first:
 
 | Property | lite | admin |
 |---|---|---|
-`padding` | 213 | 121 |
-`font-size` | 191 | 103 |
+`padding` | 209 | 0 |
+`font-size` | 178 | 0 |
 `transition` | 166 | 8 |
-`margin` | 103 | 40 |
-`height` | 98 | 61 |
-`width` | 88 | 68 |
-`border-radius` | 83 | 35 |
-`gap` | 80 | 65 |
-`font-weight` | 71 | 55 |
-`margin-bottom` | 56 | 25 |
+`margin` | 103 | 0 |
+`height` | 96 | 61 |
+`width` | 86 | 68 |
+`border-radius` | 75 | 0 |
+`gap` | 78 | 0 |
+`font-weight` | 63 | 0 |
+`margin-bottom` | 56 | 0 |
 `animation` | 55 | 26 |
-`margin-top` | 45 | 12 |
+`margin-top` | 45 | 0 |
 `box-shadow` | 42 | 21 |
 `background` | 39 | 17 |
-`line-height` | 33 | 22 |
+`line-height` | 27 | 0 |
 `z-index` | 29 | 3 |
 `min-height` | 19 | 32 |
 
 **In lite, no `transition` and no `z-index` reaches any value through a token** —
 63 transition declarations and 29 layers, not one of them reading a token. In admin
 both axes are on the ladder and the eleven decisions left are all in `skin.css`,
-which batch 4 owns. Gradients are the different case: all 39 admin and 23 lite
+which batch 4 owns. Every scale axis in admin now reads a token, in all three files. Gradients are the different case: all 39 admin and 23 lite
 gradient sites already read colour tokens for their stops. What lite still lacks is
 a name for the **gradient**, spelled out at each use site instead of living at one
 address as `--sl-grad-*`.
@@ -547,7 +599,7 @@ is `--sl-<component>-bg`, which is how the admin header rule already reads.
 
 **Cross-theme state.** `--cross`
 
-- 332 selectors exist in both: 177 byte-identical, **155 divergent** — including
+- 325 selectors exist in both: 126 byte-identical, **199 divergent** — including
   `body`, `h5`, `ol`, keyframe stops at `20%` and `50%`, `.sl-highlight`,
   `.sl-preview-meta`, `.sl-alert-flash-bar`, `.sl-progress-line div`,
   `.sl-debug-stats dd`. The number rises while one theme is ahead of the other and
@@ -560,51 +612,14 @@ Package a new theme copies: `lite` 667 files / 5069 KB, `admin` 491 / 3092 KB.
 
 ## Batches
 
-### Batch 3 — admin: scales
-
-**Causa.** 28 `font-size` values and 8 radius literals are not a system, and
-spacing is the largest single block. First batch that changes pixels.
-
-**Steps.** Migrate every axis onto the contract ladders: `font-size` (103),
-`padding` (121 with its directional forms), `gap` (65), `margin` with
-`margin-bottom` and `margin-top` (77), `border-radius` (35), `line-height` (22),
-`font-weight` (57), `letter-spacing` (7), `opacity` (11) — **529 decisions**,
-grouped from `--count` by property family. `font-weight` is free —
-`normal`→`400`, `bold`→`700` change nothing on screen.
-
-Carries the renames deferred from batch 1: `--sl-space-*` onto `--sl-space-<n>`,
-`--sl-radius-control`/`-panel`/`-soft`/`-card` onto `--sl-radius-1…3`,
-`--sl-hover-opacity` onto `--sl-fade-subtle`, and the two figures with no step of
-their own — `--sl-size-tile-icon` at 32px, which is `--sl-size-icon-lg` in lite
-and 28px here, and `--sl-img-placeholder-icon-size` at 48px, a font size above
-every step of the type ladder. `--sl-overlay-*` is **not** here — it exists only in lite.
-`6px` and the 32 `5px` sites move to 4 or 8 site by site, judged against the
-screenshot.
-
-Name the four breakpoints and collapse admin's values. admin holds eight widths:
-`560`, `600`, `700`, `720`, `768`, `900`, `1100`, `1200`, four of them already on
-the ladder. `1100` moves to `1200`; `700` and `720` move to `768`; `600` moves
-**down** to `560`, because sending it to `768` would widen the rule by 168px
-instead of 40. Each non-free move is reviewed at its own viewport. `901` is a
-lite value and belongs to batch 6.
-
-**Commit per property group**: `font-size`; `padding`+`gap`; `margin`;
-`border-radius`; the bare-number group; breakpoints. A bad snap in one group must
-be revertable without losing the others.
-
-**Verification.** Screenshot diff page by page, plus one pass per breakpoint at
-its own width; every difference either intended by the snap or resolved by
-adjusting the layout around it. The metric drops by roughly **530**, and this is
-the largest admin batch, not batch 4.
-
 ### Batch 4 — admin: the remainder, first etalon closed
 
 **Causa.** A theme 90% tokenised still forces its author into `theme.css`. Only
 zero is a contract.
 
 **Steps.** `background` (17), `width` (68), `height` (61), `min-height` (32),
-`box-shadow` (21), `animation` (26), the colour tail and the rest — **269
-decisions**, plus the 53 half tokenised. `skin.css` carries 11 of them on axes
+`box-shadow` (21), `animation` (26), the colour tail and the rest — **302
+decisions**, plus the 29 half tokenised. `skin.css` carries 76 of them, 11 on axes
 admin has already settled — 8 transition decisions and 3 layers — so those are
 spelled onto `--sl-time-*`, `--sl-ease-*` and `--sl-z-*` rather than decided
 again, and `--sl-z-toast` is declared here, because the fullscreen editor is its
@@ -614,15 +629,16 @@ without a role are settled here too: `--sl-shadow-sidebar`, `--sl-shadow-bar`,
 and the four `--sl-focus-*`, none of which fits a role while one component holds
 one `shadow` and one `ring`; and `--sl-color-text-soft`,
 `--sl-color-primary-hover-soft`, each one value more than its role has steps.
-**Admin reads five names it declares nowhere, and the property is dropped at every
-one of them.** `skin.css` reads `--sl-text-subtle` at 15 sites, `--sl-color-brand-strong`
-at 3 and `--sl-size-icon-md` at 1; `theme.css` reads `--sl-admin-tight-item-gap` at 2
+**Admin reads four names it declares nowhere, and the property is dropped at every
+one of them.** `skin.css` reads `--sl-text-subtle` at 15 sites and `--sl-color-brand-strong`
+at 3; `theme.css` reads `--sl-admin-tight-item-gap` at 2
 and `--sl-admin-tight-line-height` at 4, beside a scoped set on
 `.sl-admin-sidebar` that declares six neighbouring names and not these two. None of
 the five carries a `var()` fallback, so each falls through to the browser default.
 They are settled here with the rest. `editors/toastui/skin.css` is
-finished here too, 231 decisions; since the lite copy is byte-identical it is
-written once and copied in batch 7. Animation durations become component tokens.
+finished here too, its last 76 decisions; the copy in lite is written in the same
+commit, because `EditorWindowTest` compares the two files byte for byte and lite
+must gain every name the copy reads. Animation durations become component tokens.
 
 **Dark mode reaches admin here** — the shared plumbing and the admin toggle. It
 splits across two batches because lite has no dark tokens until batch 7.
@@ -684,12 +700,17 @@ both, and the editor, which stacks its own layers inside the page.
 
 ### Batch 6 — lite: scales
 
-Batch 3 on the same ladders: `font-size` (191), `padding` (213 with its
-directional forms), `margin` with `margin-bottom` and `margin-top` (204), `gap`
-(80), `border-radius` (83), `line-height` (33), `font-weight` (71),
+What batch 3 did to admin, on the same ladders and by the same rules — ties broken
+upward, the layout bending where a snap looked worse: `font-size` (178), `padding`
+(209 with its directional forms), `margin` with `margin-bottom` and `margin-top`
+(204), `gap` (78), `border-radius` (75), `line-height` (27), `font-weight` (63),
 `letter-spacing`, `opacity` (17), plus the deferred `--sl-space-*` rename over
-219 `sm` sites alone. Largest batch of the plan at **973** decisions; the
+219 `sm` sites alone. Largest batch of the plan at about **900** decisions; the
 per-group commit rule applies with more force, and splitting it is expected.
+
+The ladder names are already declared in lite's API block, because the editor skin
+copied from admin reads them; batch 6 adds the steps lite's own rules need and folds
+`--sl-font-h1` and `--sl-font-h2` onto 24 and 20.
 
 The lite figures batch 1 left are placed here: `--sl-size-meta-row`, the login
 field padding, and `--sl-login-dropdown-form-left`/`-width`/`-max-width` with
@@ -714,9 +735,9 @@ and `--sl-color-text-link`, `--sl-color-border-stronger` one unit from
 value with a semantic colour — an island the ramp folds onto the roles.
 
 `height` (98), `width` (88), `box-shadow` (42), `background` (39) and the tail —
-**409 decisions** — plus the 97 half tokenised, plus lite's dark values. `skin.css` is copied from admin rather than
-migrated — the two were byte-identical before the work and stay so after; if they
-have diverged by then, that divergence is itself a finding.
+**409 decisions** — plus the 97 half tokenised, plus lite's dark values. `skin.css` needs nothing here: batches 3 and 4 already
+copied admin's file to lite as they wrote it, because `EditorWindowTest` compares the
+two byte for byte. If they have diverged by then, that divergence is itself a finding.
 
 **The frontend half of the switch lands here**, on the plumbing batch 4 built:
 `data-theme` on lite's `layouts/admin.html`, `layouts/bare.html` and
@@ -736,7 +757,7 @@ the etalon is taught to every descendant, and after distribution the names can n
 longer be corrected.
 
 **Steps.**
-- Resolve the **135** divergent shared selectors: each becomes identical in
+- Resolve the **199** divergent shared selectors: each becomes identical in
   structure with the difference expressed by a token, or gets an allowlist entry
   with a written reason. Neither one nor the other is a bug.
 - Resolve the **29** same-named templates in canon scope — 22 `fragments`, 7
@@ -748,7 +769,7 @@ longer be corrected.
   extra wrappers), and unifying markup without reconciling keys silently drops
   data or changes what is escaped. List every caller, diff the key sets, decide
   the union, then unify.
-- **Collapse the 458 redundant rule blocks** — 276 lite, 182 admin — into
+- **Collapse the 453 redundant rule blocks** — 274 lite, 179 admin — into
   selector lists. Two conditions, both required: one `@media` context, and
   selectors that belong together. `.sl-none` beside `.sl-dial-post` is a utility
   beside a component; merging scatters the component's definition and is refused.
@@ -872,32 +893,32 @@ runtime-editable configuration — and the scan returns nothing.
 
 ## Risks
 
-- **Snap regressions.** Batches 3 and 6 change pixels on purpose; the committed
+- **Snap regressions.** Batch 6 changes pixels on purpose; the committed
   screenshot set is the only defence, and a page never captured is a page where a
-  regression ships silently. **19 states over four breakpoints are captured
+  regression ships silently. Batch 3 found four the audit could not see: a flex grid
+  whose gutters were a literal `21px` that no longer matched the snapped gap, which
+  dropped four columns to three; a toolbar whose language row was already overflowing
+  and overflowed further; and two paddings sized to clear a speed dial, where the snap
+  let the title run under the button. None of them raised a count, and the last two
+  were found only by resolving every changed declaration to pixels and reading the
+  list — the screenshot at `xl` showed titles short enough to hide it. **19 states over four breakpoints are captured
   today** — front page, article, news and forum lists, forum topic, voting,
   content, login, four admin sections, and the hover and focus states the
   manifest drives. A page outside that list is unguarded.
 
-  **The profile and the private messages are in the manifest and have no
-  baseline.** The site login does not take with the credentials this machine has,
-  and the rig now says so and skips them, rather than writing the anonymous page
-  under their name — which is what the first version did, silently, because it
-  proved the session with `.sl-user-card`, a class the logged-out page also
-  carries. A session is now proved twice: something only a session shows must
-  appear, and the password field must be gone. Whoever has a frontend account
-  captures those two.
+  The profile and the private messages now carry baselines: the site login takes
+  with the same credentials as the admin one, and the rig proves a session twice —
+  something only a session shows must appear, and the password field must be gone.
 
-  The admin user list was captured from `?name=users`, a module that does not
-  exist — four blank images that a noise floor of zero called stable. It is
-  `?name=account`, and a baseline under 6 KB beside neighbours of 200 KB is worth
-  a look before it is trusted.
+  `noise-floor.json` still carries four `admin-users-*` entries for a state the
+  manifest no longer names, left over from the `?name=users` module that does not
+  exist. `--capture` does not clear them; they are dead weight, not a gate.
 
   **The baselines are committed, so whatever they show is published.** The IP
   column of the user list and the mail fields of the configuration are masked for
   that reason: a guard against a layout change has no business carrying anyone's
   address into the repository.
-- **Baseline weight.** The image set is 36 MB, and batches 3 and 6 re-capture it
+- **Baseline weight.** The image set is 36 MB, and batch 6 re-captures it
   whole, so each re-capture adds about that much to history permanently. If that
   becomes the wrong trade, the answer is to narrow the manifest, not to stop
   committing baselines — an uncommitted baseline is no baseline at all.
@@ -906,6 +927,28 @@ runtime-editable configuration — and the scan returns nothing.
   either direction. Clear both, and disable `cache_css` **and** `css_h` — both
   are `'0'` in `config/global.php` today, and `config/local.php` must be deleted
   after any hand edit of `config/*` or it serves the old values.
+- **The stand's own data moves, and the committed baseline goes stale with it.**
+  A `--check` run at the head of batch 3, against a pristine tree, failed on every
+  one of the 84 images — including the frontend, which the batch never touches.
+  Nothing in the theme had changed: forum reply and view counters had moved, and a
+  sidebar block whose file is missing under `blocks/` had begun rendering
+  `_BLOCKPROBLEM` where it used to render nothing. Neither is masked. So a batch
+  cannot trust the committed baseline as its "before": it must **capture the
+  pristine tree first**, keep that capture outside the repository, and compare its
+  own two captures. That is what batch 3 did, and it is what made "the frontend
+  moved by 0.001% to 0.024%" a statement about the change instead of about the week.
+
+- **Two states never settle between runs, and the noise floor cannot see it.**
+  The floor is measured from two renders inside one `--capture` pass, so it catches
+  what changes in a second and misses what changes because the run itself changed
+  the site. `admin-statistic` carries a generated chart stamped with the time and
+  the running hit total, and every page the rig opens increments that total;
+  `admin-monitor-knob-hover` at `lg` moved by 327px between two consecutive runs.
+  Both are red against any baseline older than the current run. Until the manifest
+  stabilises them they are unguarded, and the fix belongs to the manifest, not to a
+  theme batch: masking a whole statistics page would hide the regressions the gate
+  exists to catch.
+
 - **A page that is not the same twice.** The site rotates content per request: a
   random FAQ line in `.sl-head-marquee`, a random poll in `.sl-vote`, a random
   related-article list in `.sl-related-list`, a view counter, the generation time
@@ -922,8 +965,9 @@ runtime-editable configuration — and the scan returns nothing.
   that floor, and both commands print every state whose floor is above the
   threshold. A page nobody managed to stabilise is therefore visibly unguarded
   instead of quietly passing. Adding a page to the manifest means capturing it
-  and reading its floor. **59 of the 60 states sit at a floor of zero**; only
-  `admin-config` at `sm` carries one, at 0.41%.
+  and reading its floor. **The frontend states sit at a floor of zero**; the eight
+  that need a session carry one between 0.001% and 0.19%, `profile` at `sm` the
+  largest. A floor near zero is not proof of stability — see the two states above.
 
 - **A render that is not the same twice either.** Three separate faults, each
   found by re-running the rig against its own output and each producing a diff
@@ -947,7 +991,7 @@ runtime-editable configuration — and the scan returns nothing.
 
   A visual gate has to be able to tell a change in the theme from a change in the
   run. None of these three could be told apart by looking at one run.
-- **Rollback granularity.** Batches 3 and 6 touch roughly 760 declarations with a
+- **Rollback granularity.** Batch 6 touches roughly 900 declarations with a
   human review as the only gate; the per-property-group commit keeps one bad snap
   to one group.
 - **Over-unification.** The temptation in batch 8 is to make the admin panel look
@@ -955,7 +999,7 @@ runtime-editable configuration — and the scan returns nothing.
 - **A name read but never declared is invisible to the gate.** `dead` reports a
   token declared and never read; nothing reports the reverse, and CSS answers an
   undeclared `var()` by dropping the declaration — no error, no warning, no pixel
-  that says why. Admin reads seven such names today and lite two. Five are the
+  that says why. Admin reads six such names today and lite two. Four are the
   missing declarations batch 4 settles. The other two are worse: **`--sl-float-top`
   and `--sl-float-left` are read by both themes and written by nothing.** An open
   `.sl-float-panel` is `position: fixed` with `top: var(--sl-float-top)`, so both
@@ -966,18 +1010,18 @@ runtime-editable configuration — and the scan returns nothing.
   `--sl-d-arrow`, `--sl-d-distance` and `--sl-d-duration`, and for nothing else.
   Whoever fixes the placement decides whether the two become `--sl-d-*` data tokens
   or the rule stops asking for them. The gate counts them either way: `unmet` is
-  ratcheted at admin 7 and lite 2, so the number can only fall.
+  ratcheted at admin 6 and lite 2, so the number can only fall.
 - **Premature freeze.** Freezing before both themes reach zero bakes in names the
   remaining literals contradict.
 - **An occupied rename target.** Every mapping is checked against the target's
   current occupants; the tool reports a collision as an error.
-- **Volume.** 2470 decisions left, of which 462 are in the two `skin.css` copies
-  and are done once. Batch 6 alone is 973; splitting it is expected. The per-batch
+- **Volume.** 1780 decisions left, of which 152 are in the two `skin.css` copies
+  and are done once. Batch 6 alone is about 900; splitting it is expected. The per-batch
   sizes measured by grouping `--count` by property family:
 
   | | motion | colour | layer | scales | rest |
   |---|---|---|---|---|---|
-  admin | 34 | 30 | 3 | 529 | 237 |
-  lite | 226 | 51 | 29 | 973 | 358 |
+  admin | 34 | 30 | 3 | 0 | 265 |
+  lite | 226 | 51 | 29 | 899 | 273 |
 - **Consolidation is not compression.** Expect roughly 10–15% fewer rules, not a
   smaller codebase. The deliverable is one address per decision.

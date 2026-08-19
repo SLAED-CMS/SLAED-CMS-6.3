@@ -331,7 +331,7 @@ final class FileManagerCatalogTest extends TestCase
         $this->assertMatchesRegularExpression('#\.sl-fm-tree,\s*\.sl-fm-side \{\s*position: sticky;#', $css, 'The tree and the properties scroll away with the list');
         $this->assertMatchesRegularExpression('#\.sl-fm-shell \.sl-bulk-bar \{\s*position: sticky;#', $css, 'The panel of the marked set is left at the bottom of the list');
         $this->assertMatchesRegularExpression('#\.sl-fm-scroll thead th \{[^}]*z-index: var\(--sl-z-sticky\);#', $css, 'A row passing under the titles pushes its own fan through them');
-        $this->assertMatchesRegularExpression('#\.sl-fm-tile-cap \{[^}]*padding: 6px 40px#', $css, 'The caption of a tile runs under the fan that stands over it');
+        $this->assertMatchesRegularExpression('#\.sl-fm-tile-cap \{[^}]*calc\(var\(--sl-size-chip\) \+ var\(--sl-space-3\) \* 2\)#', $css, 'The caption of a tile runs under the fan that stands over it');
         $tile = $this->getFile('templates/admin/fragments/file-browser-tile.html');
         $this->assertStringContainsString('<label class="sl-fm-pick">', $tile, 'The mark of a tile has no plate of its own and is lost on a coloured thumbnail');
         $this->assertStringContainsString('{{ size_text }} · {{ day_text }}', $tile, 'The caption of a tile does not name the size and the day the mockup shows');

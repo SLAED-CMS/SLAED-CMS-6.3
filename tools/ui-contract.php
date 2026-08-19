@@ -50,7 +50,7 @@ return [
         # `raised` is the layer measurement asked for: a component whose decorative floor opens a local stack needs
         # a name for what sits on that floor, and every other role is a layer that leaves the flow
         'z' => ['prefix' => 'z', 'roles' => ['base', 'raised', 'dropdown', 'sticky', 'overlay', 'modal', 'popover', 'toast']],
-        'size' => ['prefix' => 'size', 'roles' => ['control', 'chip', 'tile', 'avatar', 'icon-xs', 'icon-sm', 'icon-md', 'icon-lg']],
+        'size' => ['prefix' => 'size', 'roles' => ['control', 'chip', 'tile', 'avatar', 'icon-xs', 'icon-sm', 'icon-md', 'icon-lg', 'icon-xl']],
         'fade' => ['prefix' => 'fade', 'roles' => ['subtle', 'muted', 'disabled']],
         'layout' => ['prefix' => 'layout', 'roles' => ['container', 'sidebar', 'gutter', 'grid']],
         'bp' => ['prefix' => 'bp', 'roles' => ['sm', 'md', 'lg', 'xl']],
@@ -116,6 +116,7 @@ return [
             '0' => 'the absence of a value is not a decision',
             '1' => 'neutral in opacity and line-height',
             '1px' => 'a hairline is structural; anything thicker is a component decision',
+            '-1px' => 'a hairline pulled back by its own width, so two borders share one line; the optical counterpart of 1px and never a rhythm step',
             'solid' => 'a border style keyword',
             '100%' => 'fills its container',
             '100vh' => 'fills the viewport',
@@ -126,6 +127,7 @@ return [
             'transparent' => 'the absence of a colour is not a colour decision',
             'currentcolor' => 'defers to the colour already decided',
             '0.01ms' => 'motion off, not a duration',
+            '-9999px' => 'text pushed off the canvas so an icon can stand where it was: a hiding technique, not a typographic decision',
         ],
         'shapes' => [
             'circle-radius' => '50% on border-radius makes a circle and is geometry',
@@ -247,8 +249,30 @@ return [
     # raises both on purpose, and a component token that one component reads is correct at one use
     'ratchet' => ['count', 'bare', 'dup', 'names', 'dead', 'alias', 'unsat', 'unmet', 'scoped', 'classes', 'important', 'contrast', 'clash'],
 
-    # Rule bodies repeated under selectors that do not belong together. Batch 8 fills this
-    'duplicates' => [],
+    # Rule bodies repeated under selectors that do not belong together, each with the reason it is not merged.
+    # The key is the group's selectors sorted and joined by ', ', which is what checkDupBlocks() compares
+    'duplicates' => [
+        # A utility that puts a gap after any inline element, beside the input of one form field: merging would
+        # move the field's definition into the utility block, where nobody editing the field would look
+        '.sl-div-field label input, .sl-inline-gap',
+        # The head of the monitor and the count badge of a sidebar block: two components that share three
+        # declarations by coincidence and nothing else
+        '.sl-monitor-head-left, .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-block-sidebar-count-label',
+        # The tab strip of the icon picker and the filter row of the upload panel, in two different files
+        '.sl-icon-modal-tabs, .sl-toastui-upload .sl-fm-filters',
+        # The name cell of the file manager and a field row of the language editor
+        '.sl-fm-name, .sl-lang-edit-row .sl-div-field',
+        # The paragraph reset of base.css and the list item of the markdown block: one is the element default
+        # every page inherits, the other a rule scoped to rendered markdown, and they meet at one step by chance
+        '.sl-markdown li, p',
+        # Two site blocks lite hides on a narrow screen, beside the rail parts the editor window hides at the same
+        # width. They met when the skin took the shared breakpoint ladder; one is page furniture, the other a
+        # dialog the page never sees
+        '#block-idea, #block-feedback, .sl-toastui-upload .sl-fm-rail-cap, .sl-toastui-upload .sl-fm-rail-sep, .sl-toastui-upload .sl-fm-rail-foot, .sl-toastui-upload .sl-fm-rail-item small, .sl-toastui-upload .sl-fm-rows-head span:nth-child(4), .sl-toastui-upload .sl-fm-row span:nth-child(4), .sl-toastui-upload .sl-fm-rows-head span:nth-child(5), .sl-toastui-upload .sl-fm-row span:nth-child(5)',
+        # Three hover states and one static note that all fade to the same step. The note is not a hover, so merging
+        # would put a resting style inside a list of pointer states and hide it from whoever edits either one
+        '.sl-block-sidebar h3:hover, .sl-but:hover, .sl-but-blue:hover, .sl-but-red:hover, .sl-but-green:hover, .sl-but-foot:hover, .sl-but-back:hover, .sl-dashboard-panel-head:hover, .sl-session-note',
+    ],
 
     # PHP the markup scan skips, each with the reason it is not a leftover
     'markup' => [

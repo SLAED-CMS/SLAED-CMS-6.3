@@ -48,20 +48,49 @@
   --sl-size-tile: 44px;
   --sl-size-icon-xs: 16px;
   --sl-size-icon-sm: 18px;
-  --sl-size-icon-lg: 28px;
-  /* Waiting on the size ladder: 32px is the large icon in lite and the tile icon here */
-  --sl-size-tile-icon: 32px;
+  --sl-size-icon-md: 24px;
+  --sl-size-icon-lg: 32px;
+  --sl-size-icon-xl: 48px;
 
-  /* Spacing and radius, still on the legacy scale until the ladder lands */
-  --sl-space-xs: 4px;
-  --sl-space-sm: 6px;
-  --sl-space-md: 8px;
-  --sl-space-lg: 12px;
-  --sl-radius-control: 4px;
-  --sl-radius-panel: 4px;
-  --sl-radius-soft: 6px;
-  --sl-radius-card: 8px;
-  --sl-hover-opacity: 0.8;
+  /* Type: the size ladder, and the three line heights every block of text sits on */
+  --sl-font-micro: 10px;
+  --sl-font-small: 12px;
+  --sl-font-body: 14px;
+  --sl-font-h4: 16px;
+  --sl-font-h3: 18px;
+  --sl-font-h2: 20px;
+  --sl-font-h1: 24px;
+  --sl-font-display: 32px;
+  --sl-line-tight: 1.2;
+  --sl-line-normal: 1.45;
+  --sl-line-loose: 1.6;
+  --sl-weight-normal: 400;
+  --sl-weight-medium: 500;
+  --sl-weight-semibold: 600;
+  --sl-weight-bold: 700;
+  --sl-track-wide: 0.4px;
+
+  /* Opacity: the three steps a faded element sits on; 0 and 1 stay neutral */
+  --sl-fade-subtle: 0.8;
+  --sl-fade-muted: 0.55;
+  --sl-fade-disabled: 0.45;
+
+  /* Spacing: the eight measured steps every padding, margin and gap sits on */
+  --sl-space-1: 2px;
+  --sl-space-2: 4px;
+  --sl-space-3: 8px;
+  --sl-space-4: 10px;
+  --sl-space-5: 12px;
+  --sl-space-6: 16px;
+  --sl-space-7: 20px;
+  --sl-space-8: 24px;
+
+  /* Radius: three steps, plus the pill and the circle a shape asks for rather than a scale */
+  --sl-radius-1: 4px;
+  --sl-radius-2: 8px;
+  --sl-radius-3: 12px;
+  --sl-radius-pill: 999px;
+  --sl-radius-circle: 50%;
 
   /* Shadows */
   --sl-shadow-color: rgba(32, 75, 102, 0.18);
@@ -100,13 +129,10 @@
   --sl-panel-height: 32px;
   --sl-pager-height: 30px;
   --sl-placeholder-height: 64px;
-  /* Waiting on the type ladder: the glyph inside the placeholder is a font size above every step */
-  --sl-img-placeholder-icon-size: 48px;
   --sl-thumb-height: 48px;
-  --sl-thumb-radius: 30px;
   --sl-field-bg: var(--sl-bg);
   --sl-field-border: var(--sl-border-strong);
-  --sl-field-radius: var(--sl-radius-control);
+  --sl-field-radius: var(--sl-radius-1);
   --sl-field-text: var(--sl-text-muted);
   --sl-field-ring: rgba(11, 135, 201, 0.22);
   --sl-field-shadow:
@@ -173,7 +199,7 @@
   /* Components: the level meter track. The fill takes the track less its own hairline on each side */
   --sl-progress-bg: #f4f6f8;
   --sl-progress-border: #e8ebee;
-  --sl-progress-radius: 3px;
+  --sl-progress-radius: var(--sl-radius-1);
   --sl-progress-height: 10px;
 
   /* Components: the rule under the admin header, a second line gradient whose bright centre sits over
@@ -259,12 +285,9 @@ select,
 input,
 textarea,
 button {
-  font:
-    14px/16px Tahoma,
-    Arial,
-    Verdana,
-    sans-serif,
-    system-ui;
+  font-family: Tahoma, Arial, Verdana, sans-serif, system-ui;
+  font-size: var(--sl-font-body);
+  line-height: var(--sl-line-tight);
   color: var(--sl-text);
   outline: none;
 }
@@ -274,33 +297,33 @@ h2,
 h3,
 h4,
 h5 {
-  line-height: normal;
+  line-height: var(--sl-line-tight);
 }
 
 h1 {
-  font-size: 1.8em;
+  font-size: var(--sl-font-h1);
 }
 
 h2 {
-  font-size: 1.5em;
+  font-size: var(--sl-font-h2);
   color: var(--sl-primary-strong);
 }
 
 h3 {
-  font-size: 1.35em;
+  font-size: var(--sl-font-h3);
 }
 
 h4 {
-  font-size: 1.2em;
+  font-size: var(--sl-font-h4);
 }
 
 h5 {
-  font-size: 1.1em;
+  font-size: var(--sl-font-body);
   color: var(--sl-primary-strong);
 }
 
 p {
-  margin-bottom: 0.4em;
+  margin-bottom: var(--sl-space-2);
 }
 
 hr {
@@ -310,7 +333,7 @@ hr {
 }
 
 ul {
-  padding-left: 16px;
+  padding-left: var(--sl-space-6);
   list-style-position: outside;
   list-style-image: none;
 }
@@ -319,23 +342,23 @@ ol {
   list-style-image: none;
   list-style-position: outside;
   list-style-type: decimal;
-  margin-left: 2.2em;
+  margin-left: var(--sl-space-8);
 }
 
 legend {
   color: var(--sl-primary-strong);
-  font-weight: bold;
-  padding: var(--sl-space-sm);
+  font-weight: var(--sl-weight-bold);
+  padding: var(--sl-space-3);
   border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-control);
+  border-radius: var(--sl-radius-1);
 }
 
 fieldset {
   overflow: auto;
-  padding: var(--sl-space-sm);
-  margin: var(--sl-space-sm);
+  padding: var(--sl-space-3);
+  margin: var(--sl-space-3);
   border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-control);
+  border-radius: var(--sl-radius-1);
 }
 
 /* Links: default anchor colors and hover */
@@ -362,7 +385,7 @@ select {
   background: var(--sl-surface);
   color: var(--sl-text-muted);
   border: 1px solid var(--sl-border-strong);
-  border-radius: var(--sl-radius-control);
+  border-radius: var(--sl-radius-1);
   transition:
     background-color var(--sl-time-base) var(--sl-ease-out),
     border-color var(--sl-time-base) var(--sl-ease-out),
@@ -410,7 +433,7 @@ input[placeholder] {
 input[type="radio"],
 input[type="checkbox"] {
   min-height: 0;
-  margin: 0 2px 2px 0;
+  margin: 0 var(--sl-space-1) var(--sl-space-1) 0;
   vertical-align: middle;
 }
 
@@ -440,26 +463,26 @@ blockquote {
   color: var(--sl-text-muted);
   font-family: Georgia, "Times New Roman", serif;
   font-style: italic;
-  margin: 4px;
-  padding: 4px;
-  border-radius: 8px;
+  margin: var(--sl-space-2);
+  padding: var(--sl-space-2);
+  border-radius: var(--sl-radius-2);
 }
 
 blockquote:before {
   color: var(--sl-border-strong);
   content: "\201c";
-  font-size: 3em;
+  font-size: var(--sl-font-display);
   line-height: 0.1em;
-  margin-right: 0.2em;
+  margin-right: var(--sl-space-3);
   vertical-align: -0.4em;
 }
 
 blockquote:after {
   color: var(--sl-border-strong);
   content: "\201d";
-  font-size: 3em;
+  font-size: var(--sl-font-display);
   line-height: 0.1em;
-  margin-left: 0.1em;
+  margin-left: var(--sl-space-2);
   vertical-align: -0.4em;
 }
 
@@ -471,7 +494,7 @@ blockquote > p:first-child {
 .sl-attach {
   display: inline-block;
   max-width: 100%;
-  margin: 0 var(--sl-space-sm) var(--sl-space-sm) 0;
+  margin: 0 var(--sl-space-3) var(--sl-space-3) 0;
 }
 
 .sl-attach img {
@@ -485,11 +508,11 @@ blockquote > p:first-child {
 
 .sl-attach-right {
   float: right;
-  margin: 0 0 var(--sl-space-sm) var(--sl-space-sm);
+  margin: 0 0 var(--sl-space-3) var(--sl-space-3);
 }
 
 .sl-attach-center {
   display: block;
   float: none;
-  margin: 0 auto var(--sl-space-sm);
+  margin: 0 auto var(--sl-space-3);
 }

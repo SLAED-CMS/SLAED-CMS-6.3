@@ -86,6 +86,28 @@
   --sl-font-h1: 28px;
   --sl-font-h2: 22px;
   --sl-font-h4: 16px;
+  --sl-font-body: 14px;
+  --sl-font-small: 12px;
+  --sl-font-micro: 10px;
+  --sl-line-normal: 1.45;
+  --sl-weight-normal: 400;
+  --sl-track-wide: 0.4px;
+
+  /* The ladders the editor skin already reads, shared with admin down to the value. The steps the rest of
+     this theme has not reached yet arrive with its own migration, because a step nothing reads is a dead token */
+  --sl-space-1: 2px;
+  --sl-space-2: 4px;
+  --sl-space-3: 8px;
+  --sl-space-4: 10px;
+  --sl-space-5: 12px;
+  --sl-space-6: 16px;
+  --sl-space-7: 20px;
+  --sl-space-8: 24px;
+  --sl-radius-1: 4px;
+  --sl-radius-2: 8px;
+  --sl-radius-3: 12px;
+  --sl-radius-pill: 999px;
+  --sl-radius-circle: 50%;
 
   /* Spacing and radius, still on the legacy scale until the ladder lands */
   --sl-space-xs: 4px;
