@@ -704,6 +704,28 @@ function checkTokenUse(array $model): array {
     return $out;
 }
 
+# Names a theme reads and declares nowhere. `dead` is the other half of this: a token declared and never
+# read is loud, while a name read and never declared is silent - CSS answers an unknown var() by dropping
+# the whole declaration, with no error, no warning and no pixel that says why. A read carrying a fallback
+# is not counted: the author said what happens when the name is absent. A name registered under `data` is
+# not counted either, because something outside CSS writes it, which is exactly what that list records
+function checkUnmetNames(array $model): array {
+    $cont = getContract();
+    $known = $model['api'];
+    foreach ($model['scoped'] as $item) $known[$item['name']] = true;
+    $out = [];
+    foreach ($model['files'] as $path => $file) {
+        if (!preg_match_all('/var\(\s*(--[a-z0-9-]+)\s*\)/i', $file['body'], $hits, PREG_OFFSET_CAPTURE)) continue;
+        foreach ($hits[1] as $hit) {
+            $name = strtolower($hit[0]);
+            if (isset($known[$name]) || isset($cont['data'][$name])) continue;
+            $out[$name][] = $path;
+        }
+    }
+    ksort($out);
+    return $out;
+}
+
 # Follow a chain of plain aliases to the value it ends on, so an alias is judged by what it finally holds
 function getResolvedValue(string $val, array $api): string {
     for ($i = 0; $i < 8; $i++) {
@@ -940,6 +962,7 @@ function getThemeAudit(string $name): array {
     $dup = checkDupBlocks($model);
     $names = checkNameGrammar($model);
     $use = checkTokenUse($model);
+    $unmet = checkUnmetNames($model);
     $class = checkClassUse($model);
     $fail = checkContrastPairs($name);
     $text = '';
@@ -951,6 +974,7 @@ function getThemeAudit(string $name): array {
         'dup' => $dup,
         'names' => $names,
         'use' => $use,
+        'unmet' => $unmet,
         'classes' => $class,
         'contrast' => $fail,
         'totals' => [
@@ -962,6 +986,7 @@ function getThemeAudit(string $name): array {
             'single' => count($use['single']),
             'alias' => count($use['alias']),
             'unsat' => count($use['unsat']),
+            'unmet' => count($unmet),
             'scoped' => count($model['scoped']),
             'clash' => count($model['clash']),
             'classes' => count($class['unused']),
@@ -1155,11 +1180,13 @@ foreach ($want as $name) {
     setSection('alias chains:', $data['use']['alias']);
     $unsat = array_map(fn($v) => $v['name'].' is a '.$v['kind'].', read by '.$v['prop'].' at '.$v['file'].':'.$v['line'], $data['use']['unsat']);
     setSection('tokens that cannot satisfy their property:', $unsat);
+    $unmet = array_map(fn($v, $k) => $k.' is read '.count($v).' time'.(count($v) === 1 ? '' : 's').' in '.implode(', ', array_unique(array_map('basename', $v))).' and declared nowhere', $data['unmet'], array_keys($data['unmet']));
+    setSection('names read but declared nowhere, where the browser drops the declaration without a word:', $unmet);
     setSection('classes never referenced:', $data['classes']['unused']);
     setSection('classes assembled from a prefix, to be looked at by hand before removal:', $data['classes']['composed']);
     setSection('contrast below AA:', array_map(fn($v) => $v['sel'].' ['.$v['mode'].'] '.$v['fg'].' on '.$v['bg'].' = '.$v['ratio'].':1, needs '.$v['want'], $data['contrast']));
     if (isset($args['strict']) && !isset($base['themes'][$name])) {
-        foreach ($data['totals'] as $key => $val) if (in_array($key, ['count', 'bare', 'dead', 'alias', 'unsat', 'contrast'], true) && $val > 0) $fail = 1;
+        foreach ($data['totals'] as $key => $val) if (in_array($key, ['count', 'bare', 'dead', 'alias', 'unsat', 'unmet', 'contrast'], true) && $val > 0) $fail = 1;
     }
 }
 

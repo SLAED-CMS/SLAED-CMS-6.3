@@ -20,9 +20,8 @@
   --sl-primary-strong: #207fb6;
   --sl-primary-muted: #8fc5d9;
   --sl-primary-subtle: #d9eef6;
-  /* Waiting on the colour ramp: the fourth blue reads as a link under the pointer, the fifth is the centre stop of the header line */
+  /* Waiting on the colour ramp: the fourth blue reads as a link under the pointer */
   --sl-color-primary-hover-soft: #58a0c8;
-  --sl-color-primary-center: #174372;
   --sl-success: #34b94b;
   --sl-success-strong: #24973a;
   --sl-success-subtle: #eaf7ed;
@@ -113,21 +112,38 @@
   --sl-field-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 1px 1px rgba(43, 87, 112, 0.08);
 
-  /* Gradients, still spelled at their use sites until the gradient axis lands */
-  --sl-line-gradient: linear-gradient(
+  /* Motion: three durations and two curves; the property a transition animates stays literal */
+  --sl-time-fast: 0.15s;
+  --sl-time-base: 0.2s;
+  --sl-time-slow: 0.35s;
+  --sl-ease-out: ease;
+  --sl-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Layers: the roles a stack may take, in the order they overlap. A value between two of them is a
+     layer the ladder is missing, never a number picked to win one argument */
+  --sl-z-base: 0;
+  --sl-z-raised: 1;
+  --sl-z-overlay: 3;
+  --sl-z-dropdown: 30;
+  --sl-z-sticky: 40;
+  --sl-z-popover: 1000;
+  --sl-z-modal: 3000;
+
+  /* Gradients: each one at a single address, its stops read from the colour tokens */
+  --sl-grad-line: linear-gradient(
     90deg,
     rgba(208, 240, 254, 0) 0%,
     rgba(208, 240, 254, 0.35) 10%,
     rgba(138, 183, 216, 0.68) 28%,
     rgba(79, 122, 166, 0.9) 44%,
-    var(--sl-color-primary-center) 47.5%,
-    var(--sl-color-primary-center) 52.5%,
+    #174372 47.5%,
+    #174372 52.5%,
     rgba(79, 122, 166, 0.9) 56%,
     rgba(138, 183, 216, 0.68) 72%,
     rgba(208, 240, 254, 0.35) 90%,
     rgba(208, 240, 254, 0) 100%
   );
-  --sl-bg-footer-stripe:
+  --sl-grad-stripe:
     repeating-linear-gradient(
       135deg,
       rgba(255, 255, 255, 0.08) 0,
@@ -140,26 +156,49 @@
       var(--sl-primary-strong) 0%,
       var(--sl-primary) 100%
     );
-  --sl-progress-track-border: #e8ebee;
-  --sl-progress-track-bg: #f4f6f8;
-  --sl-progress-track-radius: 3px;
-  --sl-progress-track-height: 10px;
-  --sl-progress-fill-height: 8px;
-  --sl-progress-fill-1-base: #5c9ade;
-  --sl-progress-fill-1-start: #00adee;
-  --sl-progress-fill-1-end: #0078a5;
-  --sl-progress-fill-2-base: #77af3f;
-  --sl-progress-fill-2-start: #8fc857;
-  --sl-progress-fill-2-end: #5c9425;
-  --sl-progress-fill-3-base: #faa51a;
-  --sl-progress-fill-3-start: #faa51a;
-  --sl-progress-fill-3-end: #f47a20;
-  --sl-progress-fill-4-base: #c44747;
-  --sl-progress-fill-4-start: #dd5f5f;
-  --sl-progress-fill-4-end: #a92c2c;
-  --sl-progress-fill-5-base: #9b36b9;
-  --sl-progress-fill-5-start: #bf5fdd;
-  --sl-progress-fill-5-end: #8c2ca9;
+  --sl-grad-progress-1: linear-gradient(to top, #00adee 10%, var(--sl-progress-1) 90%);
+  --sl-grad-progress-2: linear-gradient(to top, #8fc857 10%, var(--sl-progress-2) 90%);
+  --sl-grad-progress-3: linear-gradient(to top, #faa51a 10%, var(--sl-progress-3) 90%);
+  --sl-grad-progress-4: linear-gradient(to top, #dd5f5f 10%, var(--sl-progress-4) 90%);
+  --sl-grad-progress-5: linear-gradient(to top, #bf5fdd 10%, var(--sl-progress-5) 90%);
+
+  /* Categorical: the five tones of the level meter. A poll cycles them by option number, so they
+     are told apart by colour and never by rank */
+  --sl-progress-1: #0078a5;
+  --sl-progress-2: #5c9425;
+  --sl-progress-3: #f47a20;
+  --sl-progress-4: #a92c2c;
+  --sl-progress-5: #8c2ca9;
+
+  /* Components: the level meter track. The fill takes the track less its own hairline on each side */
+  --sl-progress-bg: #f4f6f8;
+  --sl-progress-border: #e8ebee;
+  --sl-progress-radius: 3px;
+  --sl-progress-height: 10px;
+
+  /* Components: the rule under the admin header, a second line gradient whose bright centre sits over
+     the brand column instead of the middle of the page */
+  --sl-header-bg: linear-gradient(
+    90deg,
+    rgba(208, 240, 254, 0) 0%,
+    rgba(208, 240, 254, 0.18) 2%,
+    rgba(138, 183, 216, 0.38) 4.5%,
+    rgba(79, 122, 166, 0.72) 6.5%,
+    #174372 8.8%,
+    #174372 11.4%,
+    rgba(79, 122, 166, 0.72) 13.8%,
+    rgba(138, 183, 216, 0.38) 18%,
+    rgba(208, 240, 254, 0.22) 34%,
+    rgba(208, 240, 254, 0.24) 56%,
+    rgba(208, 240, 254, 0.22) 76%,
+    rgba(208, 240, 254, 0.2) 90%,
+    rgba(208, 240, 254, 0.12) 96%,
+    rgba(208, 240, 254, 0.08) 100%
+  );
+
+  /* Components: the two motions that carry the character of one element rather than a step of the ladder */
+  --sl-dial-dur: 0.05s;
+  --sl-knob-dur: 1s;
 }
 
 /* --- end tokens --- */
@@ -325,9 +364,9 @@ select {
   border: 1px solid var(--sl-border-strong);
   border-radius: var(--sl-radius-control);
   transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    background-color var(--sl-time-base) var(--sl-ease-out),
+    border-color var(--sl-time-base) var(--sl-ease-out),
+    box-shadow var(--sl-time-base) var(--sl-ease-out);
 }
 
 input:where(

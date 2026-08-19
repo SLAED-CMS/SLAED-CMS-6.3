@@ -1,20 +1,21 @@
 {
-    "generated": "2026-08-19T10:06:58Z",
+    "generated": "2026-08-19T13:10:23Z",
     "themes": {
         "admin": {
-            "count": 1003,
-            "bare": 107,
-            "dup": 181,
-            "names": 71,
+            "count": 833,
+            "bare": 91,
+            "dup": 180,
+            "names": 33,
             "dead": 0,
-            "single": 31,
+            "single": 30,
             "alias": 0,
             "unsat": 0,
+            "unmet": 7,
             "scoped": 88,
             "clash": 0,
             "classes": 4,
             "important": 23,
-            "tokens": 105,
+            "tokens": 113,
             "contrast": 14
         },
         "lite": {
@@ -26,6 +27,7 @@
             "single": 55,
             "alias": 0,
             "unsat": 0,
+            "unmet": 2,
             "scoped": 109,
             "clash": 0,
             "classes": 10,

@@ -47,7 +47,9 @@ return [
         'grad' => ['prefix' => 'grad', 'roles' => ['line', 'gloss', 'stripe', 'progress-1', 'progress-2', 'progress-3', 'progress-4', 'progress-5']],
         'time' => ['prefix' => 'time', 'roles' => ['fast', 'base', 'slow']],
         'ease' => ['prefix' => 'ease', 'roles' => ['out', 'in-out']],
-        'z' => ['prefix' => 'z', 'roles' => ['base', 'dropdown', 'sticky', 'overlay', 'modal', 'popover', 'toast']],
+        # `raised` is the layer measurement asked for: a component whose decorative floor opens a local stack needs
+        # a name for what sits on that floor, and every other role is a layer that leaves the flow
+        'z' => ['prefix' => 'z', 'roles' => ['base', 'raised', 'dropdown', 'sticky', 'overlay', 'modal', 'popover', 'toast']],
         'size' => ['prefix' => 'size', 'roles' => ['control', 'chip', 'tile', 'avatar', 'icon-xs', 'icon-sm', 'icon-md', 'icon-lg']],
         'fade' => ['prefix' => 'fade', 'roles' => ['subtle', 'muted', 'disabled']],
         'layout' => ['prefix' => 'layout', 'roles' => ['container', 'sidebar', 'gutter', 'grid']],
@@ -136,15 +138,18 @@ return [
     'categorical' => [
         'chart' => ['members' => ['up', 'down', 'cpu', 'ram'], 'mindiff' => 60],
         'season' => ['members' => ['winter', 'spring', 'summer', 'autumn', 'newyear'], 'mindiff' => 40],
+        # The five tones of the level meter: a poll paints its options with them by option number, so no option
+        # is more than another and no ladder applies. The gradient of each tone lives on the grad axis
+        'progress' => ['members' => ['1', '2', '3', '4', '5'], 'mindiff' => 60],
     ],
 
     # Component tokens: the prop is closed, the component is open but declared here
     'props' => ['bg', 'border', 'text', 'radius', 'height', 'width', 'pad-x', 'pad-y', 'gap', 'shadow', 'ring', 'dur'],
     'components' => [
         'alert', 'avatar', 'badge', 'btn', 'card', 'check', 'chip', 'code', 'crumb', 'dial',
-        'drop', 'editor', 'field', 'forum', 'login', 'menu', 'meter', 'modal', 'nav', 'pager',
-        'panel', 'placeholder', 'popover', 'progress', 'pulse', 'quote', 'spin', 'switch',
-        'table', 'tab', 'thumb', 'toast', 'tooltip', 'vote',
+        'drop', 'editor', 'field', 'forum', 'header', 'knob', 'login', 'menu', 'meter', 'modal',
+        'nav', 'pager', 'panel', 'placeholder', 'popover', 'progress', 'pulse', 'quote', 'spin',
+        'switch', 'table', 'tab', 'thumb', 'toast', 'tooltip', 'vote',
     ],
 
     # Written from outside CSS by a template or a script, read only by CSS. Never API
@@ -234,10 +239,13 @@ return [
         'pairs' => [],
     ],
 
+    # `unmet` is the other half of `dead`: a name a theme reads and declares nowhere, which CSS answers by
+    # dropping the declaration with no error and no warning. A read carrying a fallback is met by that fallback,
+    # and a name in `data` is met by whatever writes it from outside CSS.
     # Counts the ratchet holds: none of these may grow against the stored baseline.
     # `tokens` and `single` are recorded but not ratcheted, because extracting an axis into the API block
     # raises both on purpose, and a component token that one component reads is correct at one use
-    'ratchet' => ['count', 'bare', 'dup', 'names', 'dead', 'alias', 'unsat', 'scoped', 'classes', 'important', 'contrast', 'clash'],
+    'ratchet' => ['count', 'bare', 'dup', 'names', 'dead', 'alias', 'unsat', 'unmet', 'scoped', 'classes', 'important', 'contrast', 'clash'],
 
     # Rule bodies repeated under selectors that do not belong together. Batch 8 fills this
     'duplicates' => [],

@@ -137,7 +137,7 @@ thead tr th[data-sort-method="none"]::after {
   border: 1px solid transparent;
   cursor: pointer;
   box-shadow: var(--sl-btn-shadow);
-  transition: opacity 0.2s ease;
+  transition: opacity var(--sl-time-base) var(--sl-ease-out);
   box-sizing: border-box;
   vertical-align: middle;
 }
@@ -581,8 +581,8 @@ input.sl-but-blue[value="ОК"] {
   line-height: 1;
   text-decoration: none;
   transition:
-    color 0.18s ease,
-    transform 0.18s ease;
+    color var(--sl-time-base) var(--sl-ease-out),
+    transform var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-bl-up {
@@ -632,13 +632,13 @@ input.sl-but-blue[value="ОК"] {
   color: var(--sl-text-muted);
   font-size: var(--sl-size-icon-sm);
   vertical-align: middle;
-  transition: color 0.18s ease;
+  transition: color var(--sl-time-base) var(--sl-ease-out);
 }
 
 /* Scale only the glyph on hover: a transform on the handle itself would turn it into the containing block for the fixed-positioned hint panel */
 .sl-drag-handle::before {
   content: "\f3fe";
-  transition: transform 0.18s ease;
+  transition: transform var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-drag-handle:hover::before {
@@ -719,12 +719,11 @@ tr.sl-row-collapsed {
   overflow: visible;
 }
 
-.sl-table-list-sort tr:hover td.sl-col-actions {
-  z-index: 20;
-}
-
+/* One layer for the whole raised set of a hovered row: the two cells that anchor a fan and the fan itself */
+.sl-table-list-sort tr:hover td.sl-col-actions,
+.sl-table-list-sort tr:hover td:last-child,
 .sl-table-list-sort td.sl-col-actions .sl-dial {
-  z-index: 30;
+  z-index: var(--sl-z-dropdown);
 }
 
 /* Free block chips: accent tone with wind/pin glyphs for infly and flyfix markers */
@@ -882,13 +881,13 @@ tr.sl-row-collapsed {
   color: var(--sl-primary-strong);
   font-size: var(--sl-size-icon-sm);
   line-height: 1;
-  transition: color 0.18s ease;
+  transition: color var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-tip > .bi {
   display: block;
   pointer-events: none;
-  transition: transform 0.18s ease;
+  transition: transform var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-tip:hover {
@@ -909,7 +908,7 @@ tr.sl-row-collapsed {
   position: absolute;
   top: calc(100% + 8px);
   left: 50%;
-  z-index: 1000;
+  z-index: var(--sl-z-popover);
   min-width: 220px;
   width: max-content;
   max-width: min(520px, calc(100vw - 48px));
@@ -929,10 +928,10 @@ tr.sl-row-collapsed {
   display: none;
   opacity: 0;
   transform: translateX(-50%);
-  transition: opacity 0.18s ease;
+  transition: opacity var(--sl-time-base) var(--sl-ease-out);
   transition:
-    opacity 0.18s ease,
-    display 0.18s allow-discrete;
+    opacity var(--sl-time-base) var(--sl-ease-out),
+    display var(--sl-time-base) allow-discrete;
 }
 
 .sl-tip > .sl-float-panel {
@@ -984,7 +983,7 @@ tr.sl-row-collapsed {
   right: auto;
   bottom: auto;
   left: var(--sl-float-left);
-  z-index: 3000;
+  z-index: var(--sl-z-modal);
   margin: 0;
   transform: none;
   display: block;
@@ -1075,7 +1074,7 @@ tr.sl-row-collapsed {
   border-bottom: 1px solid var(--sl-border);
   border-radius: 0;
   background-color: var(--sl-bg);
-  transition: background-color 0.16s ease;
+  transition: background-color var(--sl-time-fast) var(--sl-ease-out);
 }
 
 .sl-div-item:hover {
@@ -1196,9 +1195,9 @@ tr.sl-row-collapsed {
   cursor: pointer;
   vertical-align: middle;
   transition:
-    background-color 0.16s ease,
-    border-color 0.16s ease,
-    box-shadow 0.16s ease;
+    background-color var(--sl-time-fast) var(--sl-ease-out),
+    border-color var(--sl-time-fast) var(--sl-ease-out),
+    box-shadow var(--sl-time-fast) var(--sl-ease-out);
 }
 
 .sl-admin-shell input[type="checkbox"]:hover {
@@ -1338,7 +1337,7 @@ tr.sl-row-collapsed {
   padding: var(--sl-space-md) 10px;
   border-bottom: 1px solid var(--sl-border);
   background-color: var(--sl-bg);
-  transition: background-color 0.2s ease;
+  transition: background-color var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-toggle-form-block .sl-div-field .sl-div-item:hover {
@@ -1397,8 +1396,8 @@ tr.sl-row-collapsed {
   line-height: 1;
   vertical-align: middle;
   transition:
-    color 0.18s ease,
-    transform 0.18s ease;
+    color var(--sl-time-base) var(--sl-ease-out),
+    transform var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-toggle-form-block-toggle:hover,
@@ -1677,7 +1676,7 @@ tr.sl-row-collapsed {
 .sl-admin-block-link,
 .sl-block-sidebar .sl-session-row {
   border-radius: var(--sl-radius-soft);
-  transition: background-color 0.15s ease;
+  transition: background-color var(--sl-time-fast) var(--sl-ease-out);
 }
 
 .sl-menu-list-item:hover,
@@ -1951,10 +1950,10 @@ tr.sl-row-collapsed {
   box-shadow: var(--sl-shadow-xs);
   box-sizing: border-box;
   transition:
-    border-color 0.18s ease,
-    background-color 0.18s ease,
-    box-shadow 0.18s ease,
-    transform 0.18s ease;
+    border-color var(--sl-time-base) var(--sl-ease-out),
+    background-color var(--sl-time-base) var(--sl-ease-out),
+    box-shadow var(--sl-time-base) var(--sl-ease-out),
+    transform var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-menu-grid > .sl-mcard:nth-child(4n + 2) {
@@ -2004,7 +2003,7 @@ tr.sl-row-collapsed {
 .sl-ico .bi {
   font-size: var(--sl-size-tile-icon);
   line-height: 1;
-  transition: transform 0.18s ease;
+  transition: transform var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-mcard:hover .sl-ico .bi {
@@ -2090,9 +2089,9 @@ tr.sl-row-collapsed {
   border-radius: 9999px;
   transform: translateY(-50%);
   transition:
-    background-color 0.18s ease,
-    border-color 0.18s ease,
-    box-shadow 0.18s ease;
+    background-color var(--sl-time-base) var(--sl-ease-out),
+    border-color var(--sl-time-base) var(--sl-ease-out),
+    box-shadow var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-dial.sl-open,
@@ -2136,13 +2135,13 @@ tr.sl-row-collapsed {
   transform: translateX(8px) scale(0.6);
   pointer-events: none;
   transition:
-    background-color 0.2s ease,
-    color 0.2s ease,
-    transform 0.18s ease,
-    opacity 0.18s ease,
-    max-width 0.18s ease,
-    min-width 0.18s ease,
-    margin 0.18s ease;
+    background-color var(--sl-time-base) var(--sl-ease-out),
+    color var(--sl-time-base) var(--sl-ease-out),
+    transform var(--sl-time-base) var(--sl-ease-out),
+    opacity var(--sl-time-base) var(--sl-ease-out),
+    max-width var(--sl-time-base) var(--sl-ease-out),
+    min-width var(--sl-time-base) var(--sl-ease-out),
+    margin var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-dial.sl-open .sl-dial-item,
@@ -2157,32 +2156,32 @@ tr.sl-row-collapsed {
 
 .sl-dial.sl-open .sl-dial-item:nth-child(2),
 .sl-dial:hover .sl-dial-item:nth-child(2) {
-  transition-delay: 0.04s;
+  transition-delay: calc(var(--sl-dial-dur) * 1);
 }
 
 .sl-dial.sl-open .sl-dial-item:nth-child(3),
 .sl-dial:hover .sl-dial-item:nth-child(3) {
-  transition-delay: 0.09s;
+  transition-delay: calc(var(--sl-dial-dur) * 2);
 }
 
 .sl-dial.sl-open .sl-dial-item:nth-child(4),
 .sl-dial:hover .sl-dial-item:nth-child(4) {
-  transition-delay: 0.14s;
+  transition-delay: calc(var(--sl-dial-dur) * 3);
 }
 
 .sl-dial.sl-open .sl-dial-item:nth-child(5),
 .sl-dial:hover .sl-dial-item:nth-child(5) {
-  transition-delay: 0.19s;
+  transition-delay: calc(var(--sl-dial-dur) * 4);
 }
 
 .sl-dial.sl-open .sl-dial-item:nth-child(6),
 .sl-dial:hover .sl-dial-item:nth-child(6) {
-  transition-delay: 0.24s;
+  transition-delay: calc(var(--sl-dial-dur) * 5);
 }
 
 .sl-dial.sl-open .sl-dial-item:nth-child(7),
 .sl-dial:hover .sl-dial-item:nth-child(7) {
-  transition-delay: 0.29s;
+  transition-delay: calc(var(--sl-dial-dur) * 6);
 }
 
 .sl-menu-list-item {
@@ -2207,7 +2206,7 @@ tr.sl-row-collapsed {
   flex: 0 0 auto;
   font-size: var(--sl-size-icon-sm);
   line-height: 1;
-  transition: transform 0.18s ease;
+  transition: transform var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-menu-list-item:hover > a .bi {
@@ -2220,7 +2219,7 @@ tr.sl-row-collapsed {
   height: auto;
   border: 1px solid var(--sl-border-strong);
   border-radius: var(--sl-radius-control);
-  transition: transform 0.18s ease;
+  transition: transform var(--sl-time-base) var(--sl-ease-out);
 }
 
 /* Icon picker: trigger, modal dialog and icon cell grid */
@@ -2468,7 +2467,7 @@ html.sl-is-locked {
   font: inherit;
   font-size: 13px;
   cursor: pointer;
-  transition: border-color 0.16s ease, background-color 0.16s ease;
+  transition: border-color var(--sl-time-fast) var(--sl-ease-out), background-color var(--sl-time-fast) var(--sl-ease-out);
 }
 
 .sl-modal-btn > .bi { font-size: var(--sl-size-icon-xs); }
@@ -2692,9 +2691,9 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   font-weight: bold;
   cursor: pointer;
   transition:
-    border-color 0.18s ease,
-    background-color 0.18s ease,
-    color 0.18s ease;
+    border-color var(--sl-time-base) var(--sl-ease-out),
+    background-color var(--sl-time-base) var(--sl-ease-out),
+    color var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-icon-modal-tabs button.sl-is-active {
@@ -2724,9 +2723,9 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   content-visibility: auto;
   contain-intrinsic-size: auto 68px auto 52px;
   transition:
-    border-color 0.18s ease,
-    background-color 0.18s ease,
-    color 0.18s ease;
+    border-color var(--sl-time-base) var(--sl-ease-out),
+    background-color var(--sl-time-base) var(--sl-ease-out),
+    color var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-icon-cell:hover {
@@ -2835,7 +2834,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   position: absolute;
   top: 100%;
   left: 0;
-  z-index: 1000;
+  z-index: var(--sl-z-popover);
 }
 
 .sl-image-preview-mini {
@@ -2845,7 +2844,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   height: 24px;
   border-radius: 15px;
   overflow: hidden;
-  transition: all 0.5s;
+  transition: all var(--sl-time-slow);
 }
 
 .sl-image-preview-thumb {
@@ -2916,8 +2915,8 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   background: var(--sl-switch-off);
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
   transition:
-    background 0.22s ease,
-    box-shadow 0.22s ease;
+    background var(--sl-time-base) var(--sl-ease-out),
+    box-shadow var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-radio-group.sl-radio-switch:has(input[value="1"]:checked) {
@@ -2927,7 +2926,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 .sl-radio-group.sl-radio-switch::after {
   content: "";
   position: absolute;
-  z-index: 0;
+  z-index: var(--sl-z-base);
   top: 2px;
   left: 2px;
   width: calc(50% - 2px);
@@ -2936,8 +2935,8 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   background: var(--sl-bg);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
   transition:
-    left 0.24s cubic-bezier(0.2, 0.8, 0.2, 1),
-    box-shadow 0.22s ease;
+    left var(--sl-time-base) var(--sl-ease-in-out),
+    box-shadow var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-radio-group.sl-radio-switch:has(input[value="0"]:checked)::after {
@@ -2947,7 +2946,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 .sl-radio-group.sl-radio-switch .sl-radio,
 .sl-div-item-full .sl-radio-group.sl-radio-switch .sl-radio {
   position: relative;
-  z-index: 1;
+  z-index: var(--sl-z-raised);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2964,7 +2963,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   cursor: pointer;
   -webkit-user-select: none;
   user-select: none;
-  transition: color 0.22s ease;
+  transition: color var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-radio-group.sl-radio-switch:has(input[value="1"]:checked) .sl-radio {
@@ -3293,11 +3292,11 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   opacity: 1;
   transform: translateY(0);
   transition:
-    opacity 0.35s ease,
-    transform 0.35s ease,
-    margin 0.35s ease,
-    padding 0.35s ease,
-    max-height 0.35s ease;
+    opacity var(--sl-time-slow) var(--sl-ease-out),
+    transform var(--sl-time-slow) var(--sl-ease-out),
+    margin var(--sl-time-slow) var(--sl-ease-out),
+    padding var(--sl-time-slow) var(--sl-ease-out),
+    max-height var(--sl-time-slow) var(--sl-ease-out);
   max-height: 160px;
   overflow: hidden;
 }
@@ -3446,10 +3445,10 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   font-size: 0;
   text-indent: -9999px;
   transition:
-    border-color 0.2s ease,
-    background 0.2s ease,
-    box-shadow 0.2s ease,
-    opacity 0.2s ease;
+    border-color var(--sl-time-base) var(--sl-ease-out),
+    background var(--sl-time-base) var(--sl-ease-out),
+    box-shadow var(--sl-time-base) var(--sl-ease-out),
+    opacity var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-pnum-nav::before {
@@ -3527,8 +3526,8 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   cursor: pointer;
   vertical-align: middle;
   transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
+    background-color var(--sl-time-base) var(--sl-ease-out),
+    color var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-but-mini > .bi {
@@ -3628,10 +3627,6 @@ button.sl-but-mini {
   right: auto;
   left: var(--sl-d-arrow, 16px);
   transform: translateX(-50%);
-}
-
-.sl-table-list-sort tr:hover td:last-child {
-  z-index: 20;
 }
 
 .sl-table-list-sort th {
@@ -3861,68 +3856,44 @@ button.sl-but-mini {
 .sl-progress-line {
   box-sizing: content-box;
   width: 100%;
-  height: var(--sl-progress-track-height);
-  background: var(--sl-progress-track-bg);
-  border: 1px solid var(--sl-progress-track-border);
-  border-radius: var(--sl-progress-track-radius);
+  height: var(--sl-progress-height);
+  background: var(--sl-progress-bg);
+  border: 1px solid var(--sl-progress-border);
+  border-radius: var(--sl-progress-radius);
 }
 
+/* The fill sits inside the track: the same outer height, so its own hairline comes off each side */
 .sl-progress-line div {
   box-sizing: content-box;
-  height: var(--sl-progress-fill-height);
-  border-radius: calc(var(--sl-progress-track-radius) - 1px);
+  height: calc(var(--sl-progress-height) - 1px - 1px);
+  border-radius: calc(var(--sl-progress-radius) - 1px);
   overflow: hidden;
   text-indent: -9999px;
 }
 
 .sl-progress-1 div {
-  border: 1px solid var(--sl-progress-fill-1-end);
-  background: var(--sl-progress-fill-1-base);
-  background: linear-gradient(
-    to top,
-    var(--sl-progress-fill-1-start) 10%,
-    var(--sl-progress-fill-1-end) 90%
-  );
+  border: 1px solid var(--sl-progress-1);
+  background: var(--sl-grad-progress-1);
 }
 
 .sl-progress-2 div {
-  border: 1px solid var(--sl-progress-fill-2-end);
-  background: var(--sl-progress-fill-2-base);
-  background: linear-gradient(
-    to top,
-    var(--sl-progress-fill-2-start) 10%,
-    var(--sl-progress-fill-2-end) 90%
-  );
+  border: 1px solid var(--sl-progress-2);
+  background: var(--sl-grad-progress-2);
 }
 
 .sl-progress-3 div {
-  border: 1px solid var(--sl-progress-fill-3-end);
-  background: var(--sl-progress-fill-3-base);
-  background: linear-gradient(
-    to top,
-    var(--sl-progress-fill-3-start) 10%,
-    var(--sl-progress-fill-3-end) 90%
-  );
+  border: 1px solid var(--sl-progress-3);
+  background: var(--sl-grad-progress-3);
 }
 
 .sl-progress-4 div {
-  border: 1px solid var(--sl-progress-fill-4-end);
-  background: var(--sl-progress-fill-4-base);
-  background: linear-gradient(
-    to top,
-    var(--sl-progress-fill-4-start) 10%,
-    var(--sl-progress-fill-4-end) 90%
-  );
+  border: 1px solid var(--sl-progress-4);
+  background: var(--sl-grad-progress-4);
 }
 
 .sl-progress-5 div {
-  border: 1px solid var(--sl-progress-fill-5-end);
-  background: var(--sl-progress-fill-5-base);
-  background: linear-gradient(
-    to top,
-    var(--sl-progress-fill-5-start) 10%,
-    var(--sl-progress-fill-5-end) 90%
-  );
+  border: 1px solid var(--sl-progress-5);
+  background: var(--sl-grad-progress-5);
 }
 
 .sl-vote-result .sl-progress-line {
@@ -4462,7 +4433,7 @@ button.sl-but-mini {
 .sl-changelog-commit {
   padding: 20px;
   border-bottom: 1px solid var(--sl-border);
-  transition: background-color 0.2s;
+  transition: background-color var(--sl-time-base);
 }
 
 .sl-changelog-commit:last-child {
@@ -4727,7 +4698,7 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   stroke: var(--sl-knob-tone);
   stroke-width: var(--sl-knob-width);
   stroke-linecap: butt;
-  transition: stroke-dasharray 1s ease;
+  transition: stroke-dasharray var(--sl-knob-dur) var(--sl-ease-out);
 }
 
 /* A gauge with nothing left: the track takes the tone, so the join where the two butt ends of a whole arc meet has nothing to show through it */
@@ -4839,8 +4810,8 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   color: inherit;
   cursor: pointer;
   transition:
-    border-color 0.18s ease,
-    background-color 0.18s ease;
+    border-color var(--sl-time-base) var(--sl-ease-out),
+    background-color var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-status-compact-item:hover {
@@ -5060,7 +5031,7 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
 .sl-chart-tip {
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.14s ease;
+  transition: opacity var(--sl-time-fast) var(--sl-ease-out);
 }
 
 .sl-chart-tip rect {
@@ -5176,7 +5147,7 @@ body:has(.sl-admin-login-shell) {
 body:has(.sl-admin-login-shell):before {
   position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: var(--sl-z-base);
   background: linear-gradient(
     180deg,
     var(--sl-primary-muted) 0%,
@@ -5189,7 +5160,7 @@ body:has(.sl-admin-login-shell):before {
 
 .sl-admin-login-shell {
   position: relative;
-  z-index: 1;
+  z-index: var(--sl-z-raised);
   width: min(420px, calc(100vw - 32px));
   margin: 0;
 }
@@ -5228,7 +5199,7 @@ body:has(.sl-admin-login-shell):before {
   bottom: 0;
   left: 5px;
   height: 1px;
-  background: var(--sl-line-gradient);
+  background: var(--sl-grad-line);
   content: "";
 }
 
@@ -5306,7 +5277,7 @@ body:has(.sl-admin-login-shell):before {
 .sl-admin-login-footer {
   height: 34px;
   margin: 0;
-  background: var(--sl-bg-footer-stripe);
+  background: var(--sl-grad-stripe);
 }
 
 .sl-admin-login-copyright {
@@ -5474,23 +5445,7 @@ body:has(.sl-admin-login-shell):before {
   bottom: 0;
   left: 0;
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    rgba(208, 240, 254, 0) 0%,
-    rgba(208, 240, 254, 0.18) 2%,
-    rgba(138, 183, 216, 0.38) 4.5%,
-    rgba(79, 122, 166, 0.72) 6.5%,
-    var(--sl-color-primary-center) 8.8%,
-    var(--sl-color-primary-center) 11.4%,
-    rgba(79, 122, 166, 0.72) 13.8%,
-    rgba(138, 183, 216, 0.38) 18%,
-    rgba(208, 240, 254, 0.22) 34%,
-    rgba(208, 240, 254, 0.24) 56%,
-    rgba(208, 240, 254, 0.22) 76%,
-    rgba(208, 240, 254, 0.2) 90%,
-    rgba(208, 240, 254, 0.12) 96%,
-    rgba(208, 240, 254, 0.08) 100%
-  );
+  background: var(--sl-header-bg);
   content: "";
   pointer-events: none;
 }
@@ -5644,7 +5599,7 @@ body:has(.sl-admin-login-shell):before {
   padding: 3px var(--sl-space-xs);
   border-radius: var(--sl-radius-soft);
   background: transparent;
-  transition: filter 0.15s;
+  transition: filter var(--sl-time-fast);
 }
 
 .sl-admin-language-link:hover {
@@ -5699,7 +5654,7 @@ body:has(.sl-admin-login-shell):before {
   position: relative;
   height: 58px;
   margin: 0 -15px;
-  background: var(--sl-bg-footer-stripe);
+  background: var(--sl-grad-stripe);
   border-top: 1px solid var(--sl-primary);
   border-radius: 0 0 var(--sl-radius-card) var(--sl-radius-card);
 }
@@ -5741,7 +5696,7 @@ body:has(.sl-admin-login-shell):before {
   background: none;
   border-radius: 0;
   box-shadow: none;
-  transition: transform 0.18s ease;
+  transition: transform var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-footer span a.sl-slaed-home,
@@ -6038,7 +5993,7 @@ body:has(.sl-admin-login-shell):before {
 .sl-msg-line {
   height: 1px;
   margin: 0 0 22px;
-  background: var(--sl-line-gradient);
+  background: var(--sl-grad-line);
 }
 
 .sl-msg-title {
@@ -6228,7 +6183,7 @@ body:has(.sl-admin-login-shell):before {
 .sl-fm-scroll thead th {
   position: sticky;
   top: 0;
-  z-index: 40;
+  z-index: var(--sl-z-sticky);
 }
 
 .sl-fm-name {
@@ -6296,7 +6251,7 @@ body:has(.sl-admin-login-shell):before {
 .sl-fm-cell > .sl-dial {
   top: auto;
   bottom: 8px;
-  z-index: 30;
+  z-index: var(--sl-z-dropdown);
   transform: none;
 }
 
@@ -6305,7 +6260,7 @@ body:has(.sl-admin-login-shell):before {
 .sl-dial.sl-dial-point {
   right: auto;
   bottom: auto;
-  z-index: 30;
+  z-index: var(--sl-z-dropdown);
   flex-direction: row;
   flex-wrap: nowrap;
   gap: 0;
@@ -6412,7 +6367,7 @@ body:has(.sl-admin-login-shell):before {
 .sl-fm-shell .sl-bulk-bar {
   position: sticky;
   bottom: 0;
-  z-index: 3;
+  z-index: var(--sl-z-overlay);
 }
 
 /* Explanation in the narrow column reads worse when justified */
@@ -6605,7 +6560,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   position: absolute;
   top: 6px;
   left: 6px;
-  z-index: 2;
+  z-index: var(--sl-z-raised);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -6624,7 +6579,7 @@ button.sl-fm-thumb:hover .bi-zoom-in {
   position: absolute;
   top: 4px;
   right: 4px;
-  z-index: 2;
+  z-index: var(--sl-z-raised);
 }
 
 /* The list on its way: the place of the rows is held by a skeleton, so the work area neither empties nor jumps while the answer is still travelling (§31) */

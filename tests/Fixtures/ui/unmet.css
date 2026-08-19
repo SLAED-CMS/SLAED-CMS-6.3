@@ -1,0 +1,20 @@
+/* Names a theme reads, against the four ways one can be met: the API block, a scoped declaration,
+   a fallback written at the read, and the data list of the contract. Only --sl-missing is met by none */
+:root {
+  --sl-declared: #ffffff;
+}
+
+/* --- end tokens --- */
+
+.sl-one {
+  color: var(--sl-declared);
+  gap: var(--sl-missing);
+  padding: var(--sl-absent, 4px);
+}
+
+.sl-two {
+  --sl-scoped-here: 8px;
+  margin: var(--sl-scoped-here);
+  height: var(--sl-missing);
+  width: var(--sl-d-count);
+}

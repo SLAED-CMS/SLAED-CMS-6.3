@@ -41,6 +41,14 @@ final class UiAuditTest extends TestCase
     }
 
     #[Test]
+    public function testOnlyANameMetByNothingIsReportedAsUnmet(): void
+    {
+        $unmet = checkUnmetNames($this->getModel('unmet.css', true));
+        $this->assertSame(['--sl-missing'], array_keys($unmet), 'a name is met by the API block, by a scoped declaration, by a fallback at the read, or by the data list');
+        $this->assertCount(2, $unmet['--sl-missing'], 'both reads of the one unmet name are reported, because each drops its own declaration');
+    }
+
+    #[Test]
     public function testTwoIdenticalBodiesInDifferentMediaAreNotDuplicates(): void
     {
         $dup = checkDupBlocks($this->getModel('dup-media.css'));
