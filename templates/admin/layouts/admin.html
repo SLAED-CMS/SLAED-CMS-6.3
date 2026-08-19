@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="{{ lang }}">
+<html lang="{{ lang }}" data-theme="{{ mode }}">
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 {{{ meta }}}
@@ -16,7 +16,7 @@
           <div class="sl-toolbar">
             <div>
               <ul class="sl-reset">{{{ menu }}}</ul>
-              <span class="sl-language sl-admin-language">{{{ admin_langs }}}</span>
+              <span class="sl-language sl-admin-language">{{{ admin_langs }}}</span>{{{ mode_html }}}
             </div>
           </div>
         </div>

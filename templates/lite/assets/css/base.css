@@ -238,6 +238,55 @@
   --sl-progress-fill-5-base: #9b36b9;
   --sl-progress-fill-5-start: #bf5fdd;
   --sl-progress-fill-5-end: #8c2ca9;
+
+  /* Colour: the washes and veils the editor package reads. A tint lies over what is behind it, a scrim hides it */
+  --sl-scrim: color-mix(in srgb, var(--sl-text-strong) 34%, transparent);
+  --sl-tint: color-mix(in srgb, var(--sl-primary) 10%, transparent);
+  --sl-tint-strong: color-mix(in srgb, var(--sl-primary) 24%, transparent);
+
+  /* Motion and layers, the steps the editor package reads. The rest of both axes lands with lite's own migration */
+  --sl-time-fast: 0.15s;
+  --sl-ease-out: ease;
+  --sl-z-raised: 1;
+  --sl-z-overlay: 3;
+  --sl-z-toast: 10000;
+
+  /* The focus ring the editor package draws */
+  --sl-ring-width: 2px;
+  --sl-ring-gap: 2px;
+
+  /* Components the editor package sizes: the toolbar window, the upload panel, the emoji picker */
+  --sl-editor-mode-height: 28px;
+  --sl-editor-tab-height: 24px;
+  --sl-editor-tab-width: 70px;
+  --sl-emoji-max-height: 420px;
+  --sl-emoji-grid-height: 292px;
+  --sl-emoji-full-gap: 150px;
+  --sl-fm-as-height: 30px;
+  --sl-fm-body-height: 56vh;
+  --sl-fm-busy-bg: color-mix(in srgb, var(--sl-bg) 74%, transparent);
+  --sl-fm-drop-height: 140px;
+  --sl-fm-empty-width: 440px;
+  --sl-fm-field-height: 34px;
+  --sl-fm-filter-height: 28px;
+  --sl-fm-kind-bg: color-mix(in srgb, var(--sl-bg) 88%, transparent);
+  --sl-fm-kind-height: 17px;
+  --sl-fm-mode-width: 28px;
+  --sl-fm-panel-height: 420px;
+  --sl-fm-pick-bg: color-mix(in srgb, var(--sl-bg) 88%, transparent);
+  --sl-fm-pick-height: 24px;
+  --sl-fm-pick-width: 24px;
+  --sl-fm-props-height: 108px;
+  --sl-fm-quota-height: 6px;
+  --sl-fm-row-height: 32px;
+  --sl-fm-row-width: 44px;
+  --sl-fm-search-height: 32px;
+  --sl-fm-tile-height: 74px;
+  --sl-rail-width: 3px;
+  --sl-rail-max-width: 150px;
+  --sl-skel-row-height: 10px;
+  --sl-skel-tile-height: 78px;
+  --sl-switch-bg: color-mix(in srgb, var(--sl-primary) 35%, var(--sl-bg));
 }
 
 /* --- end tokens --- */

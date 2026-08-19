@@ -1832,6 +1832,7 @@ function setHead(array $seo = []): void {
         if (!is_file($adpath)) $adpath = getThemeImagePath('logos/slaed_logo_256x73.png');
         $adminvars = [
             'theme' => getTheme(),
+            'mode' => getThemeMode(),
             'lang' => substr(_LOCALE, 0, 2),
             'sitename' => $conf['sitename'] ?? '',
             'homeurl' => $conf['homeurl'] ?? '',
@@ -1843,6 +1844,7 @@ function setHead(array $seo = []): void {
             'head_html' => '',
             'menu' => '',
             'admin_langs' => '',
+            'mode_html' => '',
             'admin_blocks' => '',
             'login' => '',
             'content' => '',
@@ -1909,6 +1911,7 @@ function setHead(array $seo = []): void {
     [$logo_w, $logo_h] = $conf['derived']['logo'][$theme] ?? getImageBox(BASE_DIR.'/templates/'.$theme.'/images/logos/'.($conf['site_logo'] ?? ''));
     $sitevars = [
         'theme' => getTheme(),
+        'mode' => getThemeMode(),
         'lang' => substr(_LOCALE, 0, 2),
         'sitename' => $conf['sitename'] ?? '',
         'logo' => $conf['site_logo'] ?? '',
@@ -3458,6 +3461,13 @@ function getTheme(): string {
     }
     if (!checkThemeAssets($default)) Logger::addSite('error', 'Active theme incomplete: '.$default, ['theme' => $default]);
     return $cached = $default;
+}
+
+# The colour mode the visitor chose, written by the toggle into the `mode` cookie and read before the first byte of the page
+# `auto` is the answer to everything unrecognised, including an absent cookie, because that is what follows the operating system
+function getThemeMode(): string {
+    $mode = getCookies('mode');
+    return in_array($mode, ['light', 'dark'], true) ? $mode : 'auto';
 }
 
 # Validate that a theme directory contains the canonical structure: base/theme CSS, icon library, system avatars, presets, and theme assets declared by editor manifests

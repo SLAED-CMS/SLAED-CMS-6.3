@@ -350,6 +350,9 @@ define('_MENUINFO','Aktivieren Sie diese Option und der folgende Text wird auf d
 define('_MESSAGE','Nachricht');
 define('_MESSAGES','Nachrichten');
 define('_MIN','min');
+define('_MODE_AUTO','System');
+define('_MODE_LIGHT','Hell');
+define('_MODE_DARK','Dunkel');
 define('_MODUL','Modul');
 define('_MODULESADMINS','Es tut uns leid, aber dieser Bereich ist unseren Administratoren vorbehalten.');
 define('_MODULEUSERS','Es tut uns leid, aber dieser Bereich ist nur unseren registrierten Benutzern zugänglich. Sie können sich jedoch kostenfrei registrieren, indem Sie <a href="index.php?name=account">hier klicken</a>, anschliessend haben Sie uneingeschränkten Zugriff auf diesen Bereich. Danke.');

@@ -350,6 +350,9 @@ define('_MENUINFO','Check this option and the following text will appear in the 
 define('_MESSAGE','Message');
 define('_MESSAGES','Messages');
 define('_MIN','min');
+define('_MODE_AUTO','System');
+define('_MODE_LIGHT','Light');
+define('_MODE_DARK','Dark');
 define('_MODUL','Modul');
 define('_MODULESADMINS','We are Sorry but this section of our site is for Administrators Only.');
 define('_MODULEUSERS','We are Sorry, but this section of our site is for Registered Users Only. You can register for free by clicking <a href="index.php?name=account">here</a>, then you can access this section without restrictions. Thanks.');

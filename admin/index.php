@@ -289,6 +289,20 @@ function logout() {
     setRedirect($afile.'.php');
 }
 
+# Store the colour mode the toolbar toggle asked for; anything but light or dark drops the cookie and hands the page back to the operating system
+function mode(): void {
+    global $afile;
+    if (checkAdminPost('mode')) {
+        $val = getVar('post', 'mode', 'var');
+        if (in_array($val, ['light', 'dark'], true)) {
+            setCookies('mode', time() + 31536000, $val);
+        } else {
+            setCookiesDelete('mode');
+        }
+    }
+    setRedirect($afile.'.php', true);
+}
+
 if (isAdmin()) {
     $name = getVar('req', 'name', 'var');
     $op = getVar('req', 'op', 'var', 'show');
@@ -298,6 +312,8 @@ if (isAdmin()) {
     $pagetitle = $conf['defis'].' '._ADMINMENU;
     if ($op == 'changeeditor') {
         changeeditor();
+    } elseif ($op == 'mode') {
+        mode();
     } elseif ($op == 'logout') {
         logout();
     } elseif ($panel) {

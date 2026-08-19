@@ -350,6 +350,9 @@ define('_MENUINFO','Propre menu sera reflété dans le bloc de droite ou à gauc
 define('_MESSAGE','Message');
 define('_MESSAGES','Messages');
 define('_MIN','min');
+define('_MODE_AUTO','Systeme');
+define('_MODE_LIGHT','Clair');
+define('_MODE_DARK','Sombre');
 define('_MODUL','Module');
 define('_MODULESADMINS','Nous sommes désolés mais cette section de notre site est réservée aux Administrateurs seulement.');
 define('_MODULEUSERS','Nous sommes désolés mais cette section de notre site est seulement pour les utilisateurs inscrits. Vous pouvez vous enregistrer gratuitement en cliquant <a href="index.php?name=account">ici</a>, puis vous pouvez accéder à cette section.');

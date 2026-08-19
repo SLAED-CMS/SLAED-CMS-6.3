@@ -1,30 +1,30 @@
 {
-    "generated": "2026-08-19T17:00:42Z",
+    "generated": "2026-08-19T19:00:12Z",
     "themes": {
         "admin": {
-            "count": 302,
-            "bare": 3,
-            "dup": 179,
-            "names": 20,
+            "count": 0,
+            "bare": 0,
+            "dup": 178,
+            "names": 0,
             "dead": 0,
-            "single": 27,
+            "single": 146,
             "alias": 0,
             "unsat": 0,
-            "unmet": 6,
+            "unmet": 2,
             "scoped": 84,
             "clash": 0,
             "classes": 4,
             "important": 23,
-            "tokens": 135,
-            "contrast": 14
+            "tokens": 291,
+            "contrast": 0
         },
         "lite": {
-            "count": 1478,
-            "bare": 136,
-            "dup": 274,
-            "names": 102,
+            "count": 1396,
+            "bare": 133,
+            "dup": 271,
+            "names": 99,
             "dead": 0,
-            "single": 56,
+            "single": 88,
             "alias": 0,
             "unsat": 0,
             "unmet": 2,
@@ -32,7 +32,7 @@
             "clash": 0,
             "classes": 10,
             "important": 19,
-            "tokens": 173,
+            "tokens": 214,
             "contrast": 53
         }
     },

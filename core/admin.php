@@ -264,9 +264,26 @@ function getAdminLayoutVars(): array {
     }
     return [
         'admin_langs' => getAdminLanguageLinks(),
+        'mode_html' => getAdminModeSwitch(),
         'menu' => getAdminTopMenu(),
         'admin_blocks' => getAdminPanelBlocks().getAdminInfo().adminblock(),
     ];
+}
+
+# Render the colour mode toggle of the admin toolbar: one button that steps the choice on to the next mode and shows the current one
+# The value travels in a POST body with a token because setCookies() marks the cookie httponly, so no script can write it and a script toggle would fail without a word
+function getAdminModeSwitch(): string {
+    global $afile, $tpl;
+    $next = ['auto' => 'light', 'light' => 'dark', 'dark' => 'auto'];
+    $icon = ['auto' => 'circle-half', 'light' => 'sun', 'dark' => 'moon'];
+    $name = ['auto' => _MODE_AUTO, 'light' => _MODE_LIGHT, 'dark' => _MODE_DARK];
+    $mode = getThemeMode();
+    $step = $next[$mode];
+    $html = '';
+    foreach (['op' => 'mode', 'mode' => $step, 'refer' => '1', 'token' => getSiteToken('mode')] as $key => $val) {
+        $html .= $tpl->getHtmlFrag('hidden', ['name_attr' => $key, 'value_attr' => $val, 'input_attr' => '']);
+    }
+    return $tpl->getHtmlFrag('mode-switch', ['action' => $afile.'.php', 'hidden' => $html, 'icon_name' => $icon[$mode], 'title' => $name[$step]]);
 }
 
 # Render one sidebar pending-count row: active-content link plus a live COUNT chip; title and label are constant names resolved here for the active module

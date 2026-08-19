@@ -337,8 +337,8 @@ final class FileManagerCatalogTest extends TestCase
         $this->assertStringContainsString('{{ size_text }} · {{ day_text }}', $tile, 'The caption of a tile does not name the size and the day the mockup shows');
         $this->assertStringNotContainsString('sl-fm-tile-mark', $this->getFile('templates/admin/assets/css/theme.css'), 'The plate of a mark carries a second name beside the one the editor window gives it');
         $this->assertDoesNotMatchRegularExpression('#\.sl-fm-cell > \.sl-dial \{[^}]*flex-wrap#', $css, 'A fan of a tile is folded into a block instead of the one row it has everywhere else');
-        $this->assertMatchesRegularExpression('#\.sl-fm-node \.sl-tree-pad \{[^}]*width: 2px;#', $css, 'The step of one level in the tree is not the narrow one the browser sets for itself');
-        $this->assertMatchesRegularExpression('#^\.sl-tree-pad \{\s*display: inline-block;\s*width: 22px;#m', $css, 'The shared pad of the admin tree lost its own width to the file browser');
+        $this->assertMatchesRegularExpression('#\.sl-fm-node \.sl-tree-pad \{[^}]*width: var\(--sl-space-1\);#', $css, 'The step of one level in the tree is not the narrow one the browser sets for itself');
+        $this->assertMatchesRegularExpression('#^\.sl-tree-pad \{\s*display: inline-block;\s*width: var\(--sl-tree-width\);#m', $css, 'The shared pad of the admin tree lost its own width to the file browser');
         $this->assertMatchesRegularExpression('#\.sl-fm-node \{[^}]*box-sizing: border-box;[^}]*width: 100%;#', $css, 'A node counts its padding outside its width and pushes the tree wider than its column');
         foreach (['de', 'en', 'fr', 'pl', 'ru', 'uk'] as $loc) {
             $lang = $this->getFile('admin/lang/'.$loc.'.php');

@@ -105,6 +105,37 @@ final class ThemeContractTest extends TestCase
     }
 
     #[Test]
+    public function testTheModeLivesOnlyInTheApiBlock(): void
+    {
+        foreach (self::$cont['themes'] as $name => $conf) {
+            $model = getThemeModel($name);
+            foreach ($model['files'] as $path => $file) {
+                $body = $file['text'];
+                if ($path === $conf['api']) {
+                    $mark = strpos($body, self::$cont['marker']);
+                    $this->assertNotFalse($mark, $path.' has no marker, so nothing says where the API block ends');
+                    $body = substr($body, $mark);
+                }
+                $body = filterComments($body);
+                $why = $path.' names the colour mode outside the API block';
+                $this->assertStringNotContainsString('light-dark(', $body, $why.'; a component that cannot follow the tokens is missing a role');
+                $this->assertStringNotContainsString('prefers-color-scheme', $body, $why.'; a media query drifts from the tokens the moment one of them moves');
+            }
+        }
+    }
+
+    #[Test]
+    public function testEveryDocumentTemplateCarriesTheModeAttribute(): void
+    {
+        $root = dirname(__DIR__, 2);
+        foreach (['templates/admin/layouts/admin.html', 'templates/admin/layouts/bare.html'] as $path) {
+            $html = (string)file_get_contents($root.'/'.$path);
+            $why = $path.' opens a document without the mode attribute, so the page renders in the wrong mode';
+            $this->assertStringContainsString('data-theme="{{ mode }}"', $html, $why);
+        }
+    }
+
+    #[Test]
     public function testEveryTokenReadByJavascriptIsStillDeclared(): void
     {
         $seen = [];

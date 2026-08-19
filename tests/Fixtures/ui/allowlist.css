@@ -9,6 +9,9 @@
   top: 3px;
   flex: 0 0 240px;
   transition: opacity 0.01ms;
+  vertical-align: -0.125em;
+  contain-intrinsic-size: auto 68px auto 52px;
+  animation: sl-spin var(--sl-spin-dur) infinite linear;
 }
 
 .sl-arrow {

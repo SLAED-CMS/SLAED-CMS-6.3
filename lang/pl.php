@@ -350,6 +350,9 @@ define('_MENUINFO','Własne menu będą widoczne w bloku z prawej lub z lewej st
 define('_MESSAGE','Wiadomość');
 define('_MESSAGES','Wiadomości');
 define('_MIN','min');
+define('_MODE_AUTO','System');
+define('_MODE_LIGHT','Jasny');
+define('_MODE_DARK','Ciemny');
 define('_MODUL','Moduł');
 define('_MODULESADMINS','Przepraszamy, ale ta część naszej strony jest tylko dla Administratorów.');
 define('_MODULEUSERS','Przepraszamy, ale ta część naszej strony jest tylko dla zarejestrowanych użytkowników. Możesz zarejestrować się bezpłatnie <a href="index.php?name= " account">tutaj</a>, po czym można uzyskać dostęp do tej sekcji.');

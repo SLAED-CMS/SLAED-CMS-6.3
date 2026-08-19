@@ -24,7 +24,11 @@ const UI_COLORS = [
 ];
 
 # Functions whose whole call is one colour decision
-const UI_CFUNC = ['rgb', 'rgba', 'hsl', 'hsla', 'hwb', 'lab', 'lch', 'oklab', 'oklch', 'color', 'color-mix', 'light-dark'];
+const UI_CFUNC = ['rgb', 'rgba', 'hsl', 'hsla', 'hwb', 'lab', 'lch', 'oklab', 'oklch', 'color'];
+
+# Functions that take colours and give one back. Their arguments are walked, because a mix of two tokens is tokenised
+# and a mix of two literals is not - the whole call cannot answer for both. The ratio is a decision of its own
+const UI_MFUNC = ['color-mix', 'light-dark'];
 
 # Functions whose arguments are walked, because the decisions sit inside them
 const UI_WFUNC = [
@@ -238,6 +242,13 @@ function getValueParts(string $val, bool &$hasvar = false): array {
                 $out[] = ['raw' => $name.'('.$args.')', 'kind' => 'color'];
                 continue;
             }
+            if (in_array($name, UI_MFUNC, true)) {
+                foreach (getValueParts($args, $hasvar) as $part) {
+                    if ($name === 'color-mix' && $part['kind'] === 'length' && str_ends_with($part['raw'], '%')) $part['kind'] = 'mix';
+                    $out[] = $part;
+                }
+                continue;
+            }
             if ($name === 'cubic-bezier' || $name === 'steps') {
                 $out[] = ['raw' => $name.'('.$args.')', 'kind' => 'ease'];
                 continue;
@@ -306,6 +317,8 @@ function isDecisionPart(string $prop, array $part, string $val): bool {
     }
     if ($raw === 'transparent' || $raw === 'currentcolor') return false;
     if ($kind === 'angle' || $kind === 'fraction') return false;
+    # How much of a colour a mix carries is a decision whatever property reads the result
+    if ($kind === 'mix') return true;
     if ($fam === 'space') return $kind === 'length' && $raw !== '0';
     if ($fam === 'radius') return $kind === 'length' && $raw !== '50%';
     if ($fam === 'border') {
@@ -426,6 +439,7 @@ function checkThemeCount(array $model): array {
 function getReplacement(string $prop, array $part, array $model): string {
     $fam = getPropFamily($prop);
     $raw = strtolower($part['raw']);
+    if ($part['kind'] === 'mix') return 'a --sl-<component>-mix token in base.css';
     if ($part['kind'] === 'color') {
         foreach ($model['api'] as $name => $val) if (strtolower($val) === $raw) return 'var('.$name.')';
         return 'a colour token in base.css';
@@ -595,9 +609,12 @@ function isKnownName(string $name): bool {
     return false;
 }
 
-# Convert one colour value to red, green and blue, or null when it is not a plain colour
-function getRgbValues(string $val): ?array {
+# Convert one colour value to red, green and blue, or null when it is not a plain colour.
+# A colour carrying both modes is read in the half $mode names, because every check downstream - the ramp, the
+# distinguishability of a categorical set - measures one mode at a time and a two-mode value would silently skip it
+function getRgbValues(string $val, string $mode = 'light'): ?array {
     $val = trim(strtolower($val));
+    if (preg_match('/^light-dark\(\s*(.+?)\s*,\s*(.+?)\s*\)$/is', $val, $part)) return getRgbValues($mode === 'dark' ? $part[2] : $part[1], $mode);
     if (preg_match('/^#([0-9a-f]{3})$/', $val, $hit)) {
         $hex = $hit[1];
         return [hexdec($hex[0].$hex[0]), hexdec($hex[1].$hex[1]), hexdec($hex[2].$hex[2])];
@@ -743,6 +760,9 @@ function getValueKind(string $val): string {
     if (str_contains($val, 'gradient(')) return 'gradient';
     if (getRgbValues($val) !== null) return 'color';
     if (preg_match('/^#|^(rgb|hsl)a?\(/i', $val)) return 'color';
+    # A colour carrying both modes and a colour mixed from two others are still colours; without this a token
+    # that gains its dark half reads as a different kind from the same name in a theme that has not gained it yet
+    if (preg_match('/^(light-dark|color-mix)\(/i', $val)) return 'color';
     if (preg_match('/(^|\s)-?[\d.]+(px|em|rem)(\s|$)/i', $val) && preg_match('/(^inset\s|#|rgba?\(|hsla?\(|currentcolor)/i', $val)) return 'shadow';
     if (getPartKind($val) === 'length') return 'length';
     if (getPartKind($val) === 'time') return 'time';

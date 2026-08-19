@@ -186,6 +186,10 @@ async function getContrastPairs(page, name, mode) {
       const fg = solid(css.color);
       if (!fg) continue;
       const bg = under(el, fg);
+      // A colour measured against itself is not a reading anyone can act on: it means an element between the text and
+      // the ground the walk could not follow - a knob drawn as a ::after, a pseudo-element, an image. The switch label
+      // sits on exactly such a knob, and reporting the track behind it as its ground would file a permanent false alarm
+      if (fg.join(',') === bg.rgb.join(',')) continue;
       const key = el.tagName.toLowerCase() + '|' + (typeof el.className === 'string' ? el.className.trim() : '') + '|' + fg.join(',') + '|' + bg.rgb.join(',');
       if (seen.has(key)) continue;
       seen.set(key, {
@@ -296,13 +300,13 @@ for (const kind of need) {
 // A development stand serves its own certificate, and the manifest names https because the session cookie needs it
 const open = await browser.newContext({ ignoreHTTPSErrors: true });
 
-for (const mode of conf.modes) {
+for (const mode of (job === 'contrast' ? conf.contrastmodes || conf.modes : conf.modes)) {
   for (const item of conf.pages) {
     if (only && item.name !== only) continue;
     const ctx = item.auth ? sess.get(item.auth) : open;
     if (!ctx) continue;
     const page = await ctx.newPage();
-    if (mode !== 'auto') await ctx.addCookies([{ name: 'mode', value: mode, url: conf.base }]);
+    if (mode !== 'auto') await ctx.addCookies([{ name: conf.cookie, value: mode, url: conf.base }]);
     try {
       for (const view of conf.viewports) await checkOnePage(page, item, view, mode, pairs, report);
     } catch (err) {
@@ -316,7 +320,9 @@ await browser.close();
 
 if (job === 'contrast') {
   const seen = new Map();
-  for (const pair of pairs) seen.set([pair.theme, pair.mode, pair.sel, pair.fg, pair.bg, pair.size, pair.weight].join('|'), pair);
+  // The mode is out of the key on purpose: a pair whose two colours are the same in both modes is one pair, and
+  // keying on the mode would file it twice and double a count that must only fall
+  for (const pair of pairs) seen.set([pair.theme, pair.sel, pair.fg, pair.bg, pair.size, pair.weight].join('|'), pair);
   const list = Array.from(seen.values()).sort((a, b) => (a.theme + a.sel).localeCompare(b.theme + b.sel));
   writeFileSync(join(root, 'tools/ui-contrast.json'), JSON.stringify({ generated: new Date().toISOString(), pairs: list }, null, 2) + '\n');
   console.log('wrote tools/ui-contrast.json with ' + list.length + ' pairs that really meet on screen, out of ' + pairs.length + ' sightings');

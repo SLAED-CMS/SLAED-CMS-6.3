@@ -16,7 +16,10 @@
     { "name": "xl", "width": 1200, "height": 1000 }
   ],
 
+  "_modes": "the screenshot baseline is captured in the mode a fresh browser answers with; the contrast walk drives both, because a pair that meets on screen in one mode is a different pair in the other. `cookie` is the name the CMS reads, which carries the user_c prefix of this stand",
   "modes": ["auto"],
+  "contrastmodes": ["light", "dark"],
+  "cookie": "slaed-mode",
 
   "auth": {
     "site": {

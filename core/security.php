@@ -473,6 +473,7 @@ function setExit(string $msg, string $typ = '', string $title = ''): never {
     die($tpl->getHtmlPage('message', [
         'lang' => substr(_LOCALE, 0, 2),
         'theme' => $theme,
+        'mode' => getThemeMode(),
         'sitename' => $conf['sitename'] ?? '',
         'homeurl' => $conf['homeurl'] ?? '',
         'slogan' => $conf['slogan'] ?? '',

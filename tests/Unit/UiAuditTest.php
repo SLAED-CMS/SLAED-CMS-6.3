@@ -66,6 +66,28 @@ final class UiAuditTest extends TestCase
     }
 
     #[Test]
+    public function testAColourMixIsJudgedByWhatIsInsideIt(): void
+    {
+        $count = checkThemeCount($this->getModel('mix.css'));
+        $raw = array_map(static fn(array $one): string => $one['sel'].' '.$one['raw'], $count['sites']);
+        $this->assertSame(
+            ['.sl-two 13%', '.sl-three #0877b1', '.sl-four #111827', '.sl-four #e5e7eb'],
+            $raw,
+            'a mix of two tokens is tokenised, a literal ratio is a decision, and a literal colour inside a mix is one too'
+        );
+        $this->assertSame('mix', $count['sites'][0]['kind'], 'the ratio carries its own kind, so its replacement names a mix token');
+    }
+
+    #[Test]
+    public function testAColourStaysAColourWhateverFunctionCarriesIt(): void
+    {
+        $this->assertSame('color', getValueKind('light-dark(#ffffff, #111827)'), 'a token that gained its dark half is still a colour');
+        $this->assertSame('color', getValueKind('color-mix(in srgb, var(--sl-primary) 10%, transparent)'), 'a mixed colour is still a colour');
+        $this->assertSame('gradient', getValueKind('linear-gradient(to top, #fff 0%, #000 100%)'));
+        $this->assertSame('length', getValueKind('24px'));
+    }
+
+    #[Test]
     public function testStructureIsNeverADecision(): void
     {
         $count = checkThemeCount($this->getModel('allowlist.css'));

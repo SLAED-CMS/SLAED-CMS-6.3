@@ -1,40 +1,48 @@
 /* Root variables: the theme API. A new theme repaints this block and nothing below the marker */
 :root {
+  /* Both modes live in one declaration through light-dark(), so they cannot drift apart. It resolves against the used
+     color-scheme, which is why the scheme is declared here and switched by the two selectors under the marker */
+  color-scheme: light dark;
+
   /* Colour: page, surfaces, borders */
-  --sl-bg: #ffffff;
-  --sl-bg-subtle: #f3f4f6;
-  --sl-bg-muted: #f4f6f8;
-  --sl-surface: #f7fbfd;
-  --sl-border: #e8ebee;
-  --sl-border-strong: #cad2da;
+  --sl-bg: light-dark(#ffffff, #111827);
+  --sl-bg-subtle: light-dark(#f3f4f6, #1a2130);
+  --sl-bg-muted: light-dark(#f4f6f8, #182030);
+  --sl-surface: light-dark(#f7fbfd, #151d2b);
+  --sl-border: light-dark(#e8ebee, #2a3444);
+  --sl-border-strong: light-dark(#cad2da, #3b4757);
 
   /* Colour: text */
-  --sl-text: #111827;
-  --sl-text-muted: #6b7280;
+  --sl-text: light-dark(#111827, #e5e7eb);
+  --sl-text-muted: light-dark(#636976, #9aa4b2);
+  --sl-text-subtle: light-dark(#9ca3af, #6b7684);
   --sl-text-strong: var(--sl-text);
-  /* Waiting on the colour ramp: one tone between text and muted, with no step of its own yet */
-  --sl-color-text-soft: #374151;
 
   /* Colour: brand and status */
-  --sl-primary: #0877b1;
-  --sl-primary-strong: #207fb6;
-  --sl-primary-muted: #8fc5d9;
-  --sl-primary-subtle: #d9eef6;
-  /* Waiting on the colour ramp: the fourth blue reads as a link under the pointer */
-  --sl-color-primary-hover-soft: #58a0c8;
-  --sl-success: #34b94b;
-  --sl-success-strong: #24973a;
-  --sl-success-subtle: #eaf7ed;
-  --sl-danger: #e24c4c;
-  --sl-danger-strong: #c73535;
-  --sl-danger-subtle: #fdecec;
-  --sl-warning: #d97706;
-  --sl-warning-strong: #c2410c;
-  --sl-warning-subtle: #fff4e5;
-  --sl-accent: #8e44ad;
-  --sl-info-subtle: #e8f4fd;
-  --sl-on-solid: #ffffff;
-  --sl-scrim-subtle: rgba(0, 0, 0, 0.1);
+  --sl-primary: light-dark(#0877b1, #38a9de);
+  --sl-primary-strong: light-dark(#1c6e9e, #5cbcea);
+  --sl-primary-muted: light-dark(#8fc5d9, #2b5f7d);
+  --sl-primary-subtle: light-dark(#d9eef6, #16323f);
+  --sl-success: light-dark(#268637, #46c95d);
+  --sl-success-strong: light-dark(#1f8031, #6ada7d);
+  --sl-success-subtle: light-dark(#eaf7ed, #14301b);
+  --sl-danger: light-dark(#cd4545, #f06a6a);
+  --sl-danger-strong: light-dark(#c73535, #ff8b8b);
+  --sl-danger-subtle: light-dark(#fdecec, #3a1a1a);
+  --sl-warning: light-dark(#d97706, #f0932b);
+  --sl-warning-strong: light-dark(#c2410c, #ffb057);
+  --sl-warning-subtle: light-dark(#fff4e5, #3a2a12);
+  --sl-accent: light-dark(#8e44ad, #b370cf);
+  --sl-info-subtle: light-dark(#e8f4fd, #14283a);
+  /* The colour that reads on a solid brand fill. In light the fill is dark and the text is white; in dark the ramp
+     reverses and the fill is the bright one, so the text goes dark. The role holds, the value turns over with it */
+  --sl-on-solid: light-dark(#ffffff, #0b1220);
+  --sl-scrim-subtle: light-dark(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.4));
+  --sl-scrim: color-mix(in srgb, var(--sl-text-strong) 34%, transparent);
+  --sl-scrim-strong: color-mix(in srgb, var(--sl-text-strong) 58%, transparent);
+  /* A translucent wash of the brand colour: a selection, a drop target, a pointed row, over whatever is behind it */
+  --sl-tint: color-mix(in srgb, var(--sl-primary) 10%, transparent);
+  --sl-tint-strong: color-mix(in srgb, var(--sl-primary) 24%, transparent);
 
   /* Categorical: the monitor series, a set with no order */
   --sl-chart-up: var(--sl-warning);
@@ -93,26 +101,12 @@
   --sl-radius-circle: 50%;
 
   /* Shadows */
-  --sl-shadow-color: rgba(32, 75, 102, 0.18);
-  --sl-shadow-xs: 0 1px 2px rgba(32, 75, 102, 0.08);
-  --sl-shadow-raised: 0 2px 6px rgba(35, 52, 70, 0.12);
-  --sl-shadow-float: 0 6px 18px rgba(0, 90, 130, 0.18);
-  --sl-shadow-inset: inset 0 1px 4px 0 rgba(0, 0, 0, 0.2);
-  --sl-shadow-focus: 0 0 0 2px rgba(11, 135, 201, 0.22);
-  /* Waiting on the shadow roles: composed shadows and ring colours that no role covers yet */
-  --sl-shadow-sidebar: 0 2px 6px rgba(41, 86, 109, 0.28);
-  --sl-shadow-bar:
-    0 1px 3px rgba(43, 87, 112, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.85);
-  --sl-shadow-hover-soft: 0 0 0 2px rgba(32, 127, 182, 0.08);
-  --sl-shadow-input-active:
-    inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 1px 2px rgba(43, 87, 112, 0.18);
-  --sl-hover-shadow-input:
-    inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 0 0 2px rgba(11, 135, 201, 0.08);
-  --sl-focus-primary: rgba(32, 127, 182, 0.38);
-  --sl-focus-danger: rgba(226, 76, 76, 0.3);
-  --sl-focus-success: rgba(52, 185, 75, 0.3);
-  --sl-focus-success-ring:
-    inset 0 0 0 1px rgba(0, 0, 0, 0.12), 0 0 0 2px rgba(52, 185, 75, 0.22);
+  --sl-shadow-color: light-dark(rgba(32, 75, 102, 0.18), rgba(0, 0, 0, 0.62));
+  --sl-shadow-xs: 0 1px 2px light-dark(rgba(32, 75, 102, 0.08), rgba(0, 0, 0, 0.5));
+  --sl-shadow-raised: 0 2px 6px light-dark(rgba(35, 52, 70, 0.12), rgba(0, 0, 0, 0.55));
+  --sl-shadow-float: 0 6px 18px light-dark(rgba(0, 90, 130, 0.18), rgba(0, 0, 0, 0.66));
+  --sl-shadow-inset: inset 0 1px 4px 0 light-dark(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.55));
+  --sl-shadow-focus: 0 0 0 2px light-dark(rgba(11, 135, 201, 0.22), rgba(92, 188, 234, 0.34));
 
   /* Components: the window canon, one dialog with four axes */
   --sl-modal-width: 560px;
@@ -122,10 +116,10 @@
 
   /* Components */
   --sl-btn-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.42),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
-  --sl-card-shadow: 0 1px 1px rgba(35, 52, 70, 0.08);
-  --sl-panel-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    0 2px 4px light-dark(rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0.7)), inset 0 1px 0 light-dark(rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.05)),
+    inset 0 -1px 0 light-dark(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.55));
+  --sl-card-shadow: 0 1px 1px light-dark(rgba(35, 52, 70, 0.08), rgba(0, 0, 0, 0.45));
+  --sl-panel-shadow: 0 1px 3px light-dark(rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.4));
   --sl-panel-height: 32px;
   --sl-pager-height: 30px;
   --sl-placeholder-height: 64px;
@@ -134,9 +128,9 @@
   --sl-field-border: var(--sl-border-strong);
   --sl-field-radius: var(--sl-radius-1);
   --sl-field-text: var(--sl-text-muted);
-  --sl-field-ring: rgba(11, 135, 201, 0.22);
+  --sl-field-ring: light-dark(rgba(11, 135, 201, 0.22), rgba(92, 188, 234, 0.34));
   --sl-field-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 1px 1px rgba(43, 87, 112, 0.08);
+    inset 0 1px 0 light-dark(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.06)), 0 1px 1px light-dark(rgba(43, 87, 112, 0.08), rgba(0, 0, 0, 0.45));
 
   /* Motion: three durations and two curves; the property a transition animates stays literal */
   --sl-time-fast: 0.15s;
@@ -154,20 +148,21 @@
   --sl-z-sticky: 40;
   --sl-z-popover: 1000;
   --sl-z-modal: 3000;
+  --sl-z-toast: 10000;
 
   /* Gradients: each one at a single address, its stops read from the colour tokens */
   --sl-grad-line: linear-gradient(
     90deg,
-    rgba(208, 240, 254, 0) 0%,
-    rgba(208, 240, 254, 0.35) 10%,
-    rgba(138, 183, 216, 0.68) 28%,
-    rgba(79, 122, 166, 0.9) 44%,
-    #174372 47.5%,
-    #174372 52.5%,
-    rgba(79, 122, 166, 0.9) 56%,
-    rgba(138, 183, 216, 0.68) 72%,
-    rgba(208, 240, 254, 0.35) 90%,
-    rgba(208, 240, 254, 0) 100%
+    light-dark(rgba(208, 240, 254, 0), rgba(60, 100, 140, 0)) 0%,
+    light-dark(rgba(208, 240, 254, 0.35), rgba(60, 100, 140, 0.35)) 10%,
+    light-dark(rgba(138, 183, 216, 0.68), rgba(100, 145, 185, 0.68)) 28%,
+    light-dark(rgba(79, 122, 166, 0.9), rgba(130, 180, 220, 0.9)) 44%,
+    light-dark(#174372, #a8d6f5) 47.5%,
+    light-dark(#174372, #a8d6f5) 52.5%,
+    light-dark(rgba(79, 122, 166, 0.9), rgba(130, 180, 220, 0.9)) 56%,
+    light-dark(rgba(138, 183, 216, 0.68), rgba(100, 145, 185, 0.68)) 72%,
+    light-dark(rgba(208, 240, 254, 0.35), rgba(60, 100, 140, 0.35)) 90%,
+    light-dark(rgba(208, 240, 254, 0), rgba(60, 100, 140, 0)) 100%
   );
   --sl-grad-stripe:
     repeating-linear-gradient(
@@ -182,23 +177,23 @@
       var(--sl-primary-strong) 0%,
       var(--sl-primary) 100%
     );
-  --sl-grad-progress-1: linear-gradient(to top, #00adee 10%, var(--sl-progress-1) 90%);
-  --sl-grad-progress-2: linear-gradient(to top, #8fc857 10%, var(--sl-progress-2) 90%);
-  --sl-grad-progress-3: linear-gradient(to top, #faa51a 10%, var(--sl-progress-3) 90%);
-  --sl-grad-progress-4: linear-gradient(to top, #dd5f5f 10%, var(--sl-progress-4) 90%);
-  --sl-grad-progress-5: linear-gradient(to top, #bf5fdd 10%, var(--sl-progress-5) 90%);
+  --sl-grad-progress-1: linear-gradient(to top, light-dark(#00adee, #5cc6f0) 10%, var(--sl-progress-1) 90%);
+  --sl-grad-progress-2: linear-gradient(to top, light-dark(#8fc857, #a9d97a) 10%, var(--sl-progress-2) 90%);
+  --sl-grad-progress-3: linear-gradient(to top, light-dark(#faa51a, #ffbe7a) 10%, var(--sl-progress-3) 90%);
+  --sl-grad-progress-4: linear-gradient(to top, light-dark(#dd5f5f, #f08c8c) 10%, var(--sl-progress-4) 90%);
+  --sl-grad-progress-5: linear-gradient(to top, light-dark(#bf5fdd, #d494ea) 10%, var(--sl-progress-5) 90%);
 
   /* Categorical: the five tones of the level meter. A poll cycles them by option number, so they
      are told apart by colour and never by rank */
-  --sl-progress-1: #0078a5;
-  --sl-progress-2: #5c9425;
-  --sl-progress-3: #f47a20;
-  --sl-progress-4: #a92c2c;
-  --sl-progress-5: #8c2ca9;
+  --sl-progress-1: light-dark(#0078a5, #33a6cf);
+  --sl-progress-2: light-dark(#5c9425, #8cc44f);
+  --sl-progress-3: light-dark(#f47a20, #ffa054);
+  --sl-progress-4: light-dark(#a92c2c, #e06666);
+  --sl-progress-5: light-dark(#8c2ca9, #c06fdd);
 
   /* Components: the level meter track. The fill takes the track less its own hairline on each side */
-  --sl-progress-bg: #f4f6f8;
-  --sl-progress-border: #e8ebee;
+  --sl-progress-bg: light-dark(#f4f6f8, #182030);
+  --sl-progress-border: light-dark(#e8ebee, #2a3444);
   --sl-progress-radius: var(--sl-radius-1);
   --sl-progress-height: 10px;
 
@@ -206,28 +201,215 @@
      the brand column instead of the middle of the page */
   --sl-header-bg: linear-gradient(
     90deg,
-    rgba(208, 240, 254, 0) 0%,
-    rgba(208, 240, 254, 0.18) 2%,
-    rgba(138, 183, 216, 0.38) 4.5%,
-    rgba(79, 122, 166, 0.72) 6.5%,
-    #174372 8.8%,
-    #174372 11.4%,
-    rgba(79, 122, 166, 0.72) 13.8%,
-    rgba(138, 183, 216, 0.38) 18%,
-    rgba(208, 240, 254, 0.22) 34%,
-    rgba(208, 240, 254, 0.24) 56%,
-    rgba(208, 240, 254, 0.22) 76%,
-    rgba(208, 240, 254, 0.2) 90%,
-    rgba(208, 240, 254, 0.12) 96%,
-    rgba(208, 240, 254, 0.08) 100%
+    light-dark(rgba(208, 240, 254, 0), rgba(60, 100, 140, 0)) 0%,
+    light-dark(rgba(208, 240, 254, 0.18), rgba(60, 100, 140, 0.18)) 2%,
+    light-dark(rgba(138, 183, 216, 0.38), rgba(100, 145, 185, 0.38)) 4.5%,
+    light-dark(rgba(79, 122, 166, 0.72), rgba(130, 180, 220, 0.72)) 6.5%,
+    light-dark(#174372, #a8d6f5) 8.8%,
+    light-dark(#174372, #a8d6f5) 11.4%,
+    light-dark(rgba(79, 122, 166, 0.72), rgba(130, 180, 220, 0.72)) 13.8%,
+    light-dark(rgba(138, 183, 216, 0.38), rgba(100, 145, 185, 0.38)) 18%,
+    light-dark(rgba(208, 240, 254, 0.22), rgba(60, 100, 140, 0.22)) 34%,
+    light-dark(rgba(208, 240, 254, 0.24), rgba(60, 100, 140, 0.24)) 56%,
+    light-dark(rgba(208, 240, 254, 0.22), rgba(60, 100, 140, 0.22)) 76%,
+    light-dark(rgba(208, 240, 254, 0.2), rgba(60, 100, 140, 0.2)) 90%,
+    light-dark(rgba(208, 240, 254, 0.12), rgba(60, 100, 140, 0.12)) 96%,
+    light-dark(rgba(208, 240, 254, 0.08), rgba(60, 100, 140, 0.08)) 100%
   );
 
-  /* Components: the two motions that carry the character of one element rather than a step of the ladder */
+  /* Layout: the widest the page shell ever grows */
+  --sl-layout-container: 1440px;
+
+  /* Components: the focus ring. One width, one gap and one alpha; a ring in a status colour mixes that colour at
+     the same alpha instead of carrying a fourth spelling of the same idea */
+  --sl-ring-width: 2px;
+  --sl-ring-gap: 2px;
+  --sl-ring-mix: 30%;
+  --sl-ring-bg: color-mix(in srgb, var(--sl-primary-strong) var(--sl-ring-mix), transparent);
+
+  /* Components: the motions that carry the character of one element rather than a step of the ladder. A duration here is
+     the animation's own; the two the modal opens and closes with are a transition step and read the ladder instead */
   --sl-dial-dur: 0.05s;
   --sl-knob-dur: 1s;
+  --sl-loading-dur: 0.8s;
+  --sl-drift-dur: 1.1s;
+  --sl-row-dur: 0.9s;
+  --sl-led-dur: 2s;
+  --sl-alert-dur: 1.8s;
+  --sl-skel-dur: 1.2s;
+  --sl-flash-dur: 5s;
+  --sl-modal-dur: 0.22s;
+  /* The overshoot a dialog opens with: a curve leaving the 0-1 range is a different kind of motion, not a ladder step */
+  --sl-modal-ease: cubic-bezier(0.34, 1.3, 0.64, 1);
+
+  /* Components: geometry, tints and shadows. A figure sizing a control, a panel or a column has one address here */
+  --sl-alert-height: 40px;
+  --sl-alert-border: 4px;
+  --sl-arrow-width: 8px;
+  --sl-bar-shadow:
+    0 1px 3px light-dark(rgba(43, 87, 112, 0.18), rgba(0, 0, 0, 0.58)), inset 0 1px 0 light-dark(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.06));
+  --sl-brand-width: 256px;
+  --sl-brand-height: 90px;
+  --sl-btn-width: 80px;
+  --sl-btn-mini-width: 44px;
+  --sl-changelog-width: 1400px;
+  --sl-changelog-body-border: 3px;
+  --sl-changelog-files-height: 300px;
+  --sl-changelog-stat-width: 50px;
+  --sl-check-width: 16px;
+  --sl-check-height: 16px;
+  --sl-check-ring:
+    inset 0 1px 0 light-dark(rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.07)), 0 0 0 var(--sl-ring-width) light-dark(rgba(11, 135, 201, 0.08), rgba(92, 188, 234, 0.14));
+  --sl-check-shadow:
+    inset 0 1px 0 light-dark(rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.04)), 0 1px 2px light-dark(rgba(43, 87, 112, 0.18), rgba(0, 0, 0, 0.58));
+  --sl-chip-height: 20px;
+  --sl-chip-width: 20px;
+  /* The tint reads the chip's own colour, so one declaration serves every tone the chip is painted in */
+  --sl-chip-bg: color-mix(in srgb, currentColor 13%, transparent);
+  --sl-col-id-width: 42px;
+  --sl-col-check-width: 36px;
+  --sl-col-author-width: 100px;
+  --sl-col-status-width: 80px;
+  --sl-col-actions-width: 72px;
+  --sl-col-date-width: 150px;
+  --sl-col-count-width: 64px;
+  --sl-col-sent-width: 118px;
+  --sl-col-ip-width: 150px;
+  --sl-col-ip-height: 24px;
+  --sl-col-lang-width: 58px;
+  --sl-col-module-width: 88px;
+  --sl-count-height: 22px;
+  --sl-row-border: 2px;
+  --sl-editor-height: 250px;
+  --sl-editor-mode-height: 28px;
+  --sl-editor-tab-height: 24px;
+  --sl-editor-tab-width: 70px;
+  --sl-emoji-max-height: 420px;
+  --sl-emoji-grid-height: 292px;
+  --sl-emoji-full-gap: 150px;
+  --sl-field-min-height: 180px;
+  --sl-field-mix: 8%;
+  --sl-flash-height: 160px;
+  --sl-fm-as-height: 30px;
+  --sl-fm-bar-width: 250px;
+  --sl-fm-body-height: 56vh;
+  --sl-fm-busy-bg: color-mix(in srgb, var(--sl-bg) 74%, transparent);
+  --sl-fm-drop-height: 140px;
+  --sl-fm-edit-height: 420px;
+  --sl-fm-empty-width: 440px;
+  --sl-fm-field-height: 34px;
+  --sl-fm-filter-height: 28px;
+  --sl-fm-kind-bg: color-mix(in srgb, var(--sl-bg) 88%, transparent);
+  --sl-fm-kind-height: 17px;
+  --sl-fm-mode-width: 28px;
+  --sl-fm-panel-height: 420px;
+  --sl-fm-pick-width: 24px;
+  --sl-fm-pick-height: 24px;
+  --sl-fm-pick-bg: color-mix(in srgb, var(--sl-bg) 88%, transparent);
+  --sl-fm-preview-height: 132px;
+  --sl-fm-props-height: 108px;
+  --sl-fm-quota-height: 6px;
+  --sl-fm-row-height: 32px;
+  --sl-fm-row-width: 44px;
+  --sl-fm-search-height: 32px;
+  --sl-fm-search-width: 130px;
+  --sl-fm-sep-height: 18px;
+  --sl-fm-split-height: 470px;
+  --sl-fm-thumb-width: 30px;
+  --sl-fm-thumb-height: 24px;
+  --sl-fm-tile-height: 74px;
+  --sl-footer-height: 58px;
+  --sl-footer-shadow: 0 1px 0 light-dark(rgba(255, 255, 255, 0.25), rgba(0, 0, 0, 0.35));
+  --sl-form-width: 545px;
+  --sl-form-label-width: 160px;
+  --sl-graph-height: 285px;
+  --sl-header-height: 72px;
+  /* The module tile paints its border and its ground from its own colour, which is what makes one rule serve four tones */
+  --sl-ico-bg: color-mix(in srgb, currentColor 10%, var(--sl-bg));
+  --sl-ico-border: color-mix(in srgb, currentColor 26%, var(--sl-border));
+  --sl-item-height: 38px;
+  --sl-lang-shadow: inset 1px 0 0 light-dark(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.05));
+  --sl-led-width: 12px;
+  --sl-led-height: 12px;
+  --sl-led-border: 2px;
+  --sl-led-shadow: 0 0 0 6px transparent;
+  --sl-login-width: 420px;
+  --sl-login-max-width: 390px;
+  --sl-login-header-height: 104px;
+  --sl-login-footer-height: 34px;
+  --sl-menu-height: 36px;
+  --sl-modal-act-width: var(--sl-size-control);
+  --sl-modal-act-height: var(--sl-size-control);
+  --sl-modal-act-bg: color-mix(in srgb, currentColor 13%, transparent);
+  --sl-modal-btn-width: 116px;
+  --sl-modal-btn-height: 32px;
+  /* How much of the tone the pressed main button keeps; the rest is the page text colour, which inverts with the mode */
+  --sl-modal-btn-mix: 86%;
+  --sl-modal-border: 3px;
+  --sl-mode-width: var(--sl-size-chip);
+  --sl-mode-height: var(--sl-size-chip);
+  --sl-module-head-height: 41px;
+  --sl-monitor-table-width: 38%;
+  --sl-move-height: 20px;
+  --sl-msg-width: 460px;
+  --sl-msg-shadow: 0 10px 30px light-dark(rgba(35, 52, 70, 0.14), rgba(0, 0, 0, 0.6));
+  --sl-msg-brand-width: 240px;
+  --sl-pnum-width: 27px;
+  --sl-pnum-height: 27px;
+  --sl-pnum-border: 2px;
+  --sl-pnum-arrow-width: 7px;
+  --sl-pnum-arrow-height: 7px;
+  --sl-popover-min-width: 220px;
+  --sl-popover-max-width: 520px;
+  --sl-popover-shadow: 0 6px 14px var(--sl-shadow-color);
+  --sl-radio-height: 20px;
+  --sl-rail-width: 3px;
+  --sl-rail-max-width: 150px;
+  --sl-ratings-width: 4ch;
+  --sl-row-bg: color-mix(in srgb, var(--sl-success) 25%, transparent);
+  --sl-search-min-width: 120px;
+  --sl-search-max-width: 220px;
+  --sl-search-sort-width: 110px;
+  --sl-search-order-width: 165px;
+  --sl-search-filter-width: 140px;
+  --sl-select-width: 350px;
+  --sl-select-height: 100px;
+  --sl-shot-max-height: min(62vh, 460px);
+  --sl-shot-side-height: 40vh;
+  --sl-skel-height: 24px;
+  --sl-skel-width: 54%;
+  --sl-skel-row-height: 10px;
+  --sl-skel-tile-height: 78px;
+  --sl-sort-width: 10px;
+  --sl-switch-bg: color-mix(in srgb, var(--sl-primary) 35%, var(--sl-bg));
+  --sl-switch-width: 58px;
+  --sl-switch-height: 24px;
+  --sl-switch-shadow: inset 0 0 0 1px light-dark(rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.5));
+  --sl-switch-ring:
+    inset 0 0 0 1px light-dark(rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.5)), 0 0 0 var(--sl-ring-width) light-dark(rgba(52, 185, 75, 0.22), rgba(70, 201, 93, 0.32));
+  --sl-switch-knob-shadow: 0 1px 3px light-dark(rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.6));
+  --sl-t-icon-width: 50px;
+  --sl-tab-height: 26px;
+  --sl-table-height: 30px;
+  --sl-toolbar-height: 36px;
+  --sl-toolbar-min-height: 42px;
+  --sl-toolbar-row-height: 34px;
+  --sl-tree-width: 22px;
+  --sl-wrap-height: 22px;
+  --sl-wrap-shadow: 0 2px 6px light-dark(rgba(41, 86, 109, 0.28), rgba(0, 0, 0, 0.7));
 }
 
 /* --- end tokens --- */
+
+/* The mode switch itself, and the only rules that name it. data-theme carries light, dark or auto; anything else,
+   including an absent attribute, leaves the page on the operating system's answer */
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
 
 /* Navigation: smooth in-page anchor scrolling */
 html {
@@ -369,7 +551,7 @@ a {
 
 a:hover {
   cursor: pointer;
-  color: var(--sl-color-primary-hover-soft);
+  color: var(--sl-primary-strong);
   text-decoration: none;
 }
 
@@ -403,7 +585,7 @@ textarea:where(:not(:disabled)):hover,
 select:where(:not(:disabled)):hover {
   background-color: var(--sl-bg);
   border-color: var(--sl-primary-muted);
-  box-shadow: var(--sl-shadow-hover-soft);
+  box-shadow: 0 0 0 var(--sl-ring-width) color-mix(in srgb, var(--sl-primary-strong) var(--sl-field-mix), transparent);
 }
 
 input:user-invalid,
@@ -416,14 +598,14 @@ input:user-invalid:focus,
 textarea:user-invalid:focus,
 select:user-invalid:focus {
   border-color: var(--sl-danger);
-  box-shadow: 0 0 0 2px var(--sl-focus-danger);
+  box-shadow: 0 0 0 var(--sl-ring-width) color-mix(in srgb, var(--sl-danger) var(--sl-ring-mix), transparent);
 }
 
 input:user-valid:required:focus,
 textarea:user-valid:required:focus,
 select:user-valid:required:focus {
   border-color: var(--sl-success);
-  box-shadow: 0 0 0 2px var(--sl-focus-success);
+  box-shadow: 0 0 0 var(--sl-ring-width) color-mix(in srgb, var(--sl-success) var(--sl-ring-mix), transparent);
 }
 
 input[placeholder] {
@@ -441,7 +623,7 @@ input:focus,
 textarea:focus,
 select:focus {
   border-color: var(--sl-primary-strong);
-  box-shadow: 0 0 0 2px var(--sl-focus-primary);
+  box-shadow: 0 0 0 var(--sl-ring-width) var(--sl-ring-bg);
 }
 
 input,
@@ -452,7 +634,7 @@ a {
 }
 
 select[multiple] {
-  height: 100px;
+  height: var(--sl-select-height);
 }
 
 /* Blockquote: quoted text framing */

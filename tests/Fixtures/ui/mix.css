@@ -1,0 +1,17 @@
+/* A mix of tokens is tokenised; a mix of literals is not, and the ratio is a decision either way */
+.sl-one {
+  background: color-mix(in srgb, var(--sl-primary) var(--sl-chip-mix), transparent);
+  color: light-dark(var(--sl-text), var(--sl-text-inverse));
+}
+
+.sl-two {
+  background: color-mix(in srgb, var(--sl-primary) 13%, transparent);
+}
+
+.sl-three {
+  background: color-mix(in srgb, #0877b1 var(--sl-chip-mix), transparent);
+}
+
+.sl-four {
+  color: light-dark(#111827, #e5e7eb);
+}

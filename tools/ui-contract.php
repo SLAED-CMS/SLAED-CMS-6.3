@@ -33,7 +33,9 @@ return [
     'axes' => [
         'color' => [
             'prefix' => '',
-            'roles' => ['bg', 'surface', 'border', 'text', 'primary', 'success', 'warning', 'danger', 'accent', 'info', 'on-solid', 'scrim'],
+            # `tint` is a translucent wash of the brand colour over whatever is behind it - a selection, a drop target,
+            # a pointed row. It is not `primary-subtle`, which is opaque and hides what it covers, and it inverts by itself
+            'roles' => ['bg', 'surface', 'border', 'text', 'primary', 'success', 'warning', 'danger', 'accent', 'info', 'on-solid', 'scrim', 'tint'],
             'steps' => ['subtle', 'muted', '', 'strong', 'inverse', 'sunken', 'raised'],
         ],
         'space' => ['prefix' => 'space', 'roles' => ['1', '2', '3', '4', '5', '6', '7', '8']],
@@ -111,6 +113,12 @@ return [
             'stroke-dashoffset' => 'traces one path, measured against that path',
             'will-change' => 'names a property, holds no value',
             'clip-path' => 'a geometric mask',
+            # The figure aligns a glyph against its own baseline. It is measured against the font, not against the page, and a
+            # theme that repaints the palette never moves it; a ladder step here would fight the typeface instead of the design
+            'vertical-align' => 'an optical offset measured against the font, not a rhythm step',
+            # A size hint for content-visibility: it estimates the box of what the browser has not rendered yet and paints nothing.
+            # Wrong, it costs a scroll jump; repainted by a theme, it changes no pixel
+            'contain-intrinsic-size' => 'a rendering hint for skipped content, never a painted value',
         ],
         'values' => [
             '0' => 'the absence of a value is not a decision',
@@ -127,6 +135,9 @@ return [
             'transparent' => 'the absence of a colour is not a colour decision',
             'currentcolor' => 'defers to the colour already decided',
             '0.01ms' => 'motion off, not a duration',
+            # A constant rate is the definition of a continuous animation: a spinner or a marquee that eases stutters at every
+            # cycle boundary, because the curve restarts where it ended. It is the absence of a curve, not one curve among many
+            'linear' => 'a constant rate, which is what a looping animation needs instead of a curve',
             '-9999px' => 'text pushed off the canvas so an icon can stand where it was: a hiding technique, not a typographic decision',
         ],
         'shapes' => [
@@ -146,12 +157,29 @@ return [
     ],
 
     # Component tokens: the prop is closed, the component is open but declared here
-    'props' => ['bg', 'border', 'text', 'radius', 'height', 'width', 'pad-x', 'pad-y', 'gap', 'shadow', 'ring', 'dur'],
+    # `min-*` and `max-*` are the same decision as the size beside them: a component that names its height and not the
+    # floor it may not fall below leaves half its geometry outside the API. `mix` is how much of a tone a tint carries,
+    # which cannot be hoisted into a root token when the tone itself is scoped. `ease` is the curve half of `dur`
+    'props' => [
+        'bg', 'border', 'text', 'radius', 'height', 'width', 'min-width', 'max-width', 'min-height', 'max-height',
+        'pad-x', 'pad-y', 'gap', 'shadow', 'ring', 'dur', 'ease', 'mix',
+    ],
+    # The eleven `col-*` entries are the column widths of a fixed admin list table: the track list of `table-layout: fixed`,
+    # which CSS spells as one width per cell instead of one `grid-template-columns`, and each is a figure an author retunes
     'components' => [
-        'alert', 'avatar', 'badge', 'btn', 'card', 'check', 'chip', 'code', 'crumb', 'dial',
-        'drop', 'editor', 'field', 'forum', 'header', 'knob', 'login', 'menu', 'meter', 'modal',
-        'nav', 'pager', 'panel', 'placeholder', 'popover', 'progress', 'pulse', 'quote', 'spin',
-        'switch', 'table', 'tab', 'thumb', 'toast', 'tooltip', 'vote',
+        'alert', 'arrow', 'avatar', 'badge', 'bar', 'brand', 'btn', 'btn-mini', 'card', 'changelog', 'changelog-body', 'changelog-files',
+        'changelog-stat', 'check', 'chip', 'code', 'col-actions', 'col-author', 'col-check', 'col-count', 'col-date',
+        'col-id', 'col-ip', 'col-lang', 'col-module', 'col-sent', 'col-status', 'count', 'crumb', 'dial', 'drift',
+        'drop', 'editor', 'editor-mode', 'editor-tab', 'emoji', 'emoji-full', 'emoji-grid', 'field', 'flash', 'fm-as',
+        'fm-bar', 'fm-body', 'fm-busy', 'fm-drop', 'fm-edit', 'fm-empty', 'fm-field', 'fm-filter', 'fm-kind', 'fm-mode',
+        'fm-panel', 'fm-pick', 'fm-preview', 'fm-props', 'fm-quota', 'fm-row', 'fm-search', 'fm-sep', 'fm-split', 'fm-thumb',
+        'fm-tile', 'footer', 'form', 'form-label', 'forum', 'graph', 'header',
+        'ico', 'item', 'knob', 'lang', 'led', 'loading', 'login', 'login-footer', 'login-header', 'menu',
+        'meter', 'modal', 'modal-act', 'modal-btn', 'mode', 'module-head', 'monitor-table', 'move', 'msg', 'msg-brand', 'nav',
+        'pager', 'panel', 'placeholder', 'pnum', 'pnum-arrow', 'popover', 'progress', 'pulse', 'quote', 'radio',
+        'rail', 'ratings', 'ring', 'row', 'search', 'search-filter', 'search-order', 'search-sort', 'select', 'shot', 'shot-side', 'skel',
+        'skel-row', 'skel-tile', 'sort', 'spin', 'switch', 'switch-knob', 't-icon', 'table', 'tab', 'thumb', 'toast',
+        'toolbar', 'toolbar-row', 'tooltip', 'tree', 'vote', 'wrap',
     ],
 
     # Written from outside CSS by a template or a script, read only by CSS. Never API
@@ -272,6 +300,26 @@ return [
         # Three hover states and one static note that all fade to the same step. The note is not a hover, so merging
         # would put a resting style inside a list of pointer states and hide it from whoever edits either one
         '.sl-block-sidebar h3:hover, .sl-but:hover, .sl-but-blue:hover, .sl-but-red:hover, .sl-but-green:hover, .sl-but-foot:hover, .sl-but-back:hover, .sl-dashboard-panel-head:hover, .sl-session-note',
+        # The hovered compact button and the page the pager is standing on: both are painted in the brand colour and both
+        # take the text that reads on it, which is one role and not one component. Merging would file the pager's current
+        # page inside a button's hover block, where nobody editing either would look for it
+        '.sl-but-mini:hover, .sl-but-mini:focus-visible, .sl-pager-pages .sl-pnum-cur',
+        # A chip that carries a checked radio and a filter button that is pressed: two controls of the upload panel that both
+        # say "on" in the same tint. Merging would put the chip's definition inside the filter's block, where nobody looking
+        # at either one would find it, and the two drift apart the moment one of them stops being a tint
+        '.sl-toastui-upload .sl-fm-as label:has(input:checked), .sl-toastui-upload .sl-fm-filter[aria-pressed="true"]',
+        # The faint text of a rail item nobody may click, beside the syntax marks of the markdown source. One is a state of a
+        # control, the other is how a language is written down; they share a tone and nothing else
+        '.sl-toastui-upload .sl-fm-rail-item[disabled] b, .sl-toastui-upload .sl-fm-rail-item[disabled] .bi, '
+            .'.toastui-editor-md-delimiter, .toastui-editor-md-thematic-break, .toastui-editor-md-link, '
+            .'.toastui-editor-md-table, .toastui-editor-md-block-quote',
+        # The same meeting in lite, where the faint tone is already shared by a footer menu, the glyphs of a read forum row
+        # and a nested list. None of them is the markdown source, and a selector list holding all four would name nothing
+        '.sl-fmenu a, .sl-forum-old .bi, .sl-topic-old .bi, .sl-topic-popular-old .bi, .sl-topic-closed .bi, '
+            .'.sl-forum-closed .bi, .sl-list-item > li ul, .sl-list-item > li ul a, '
+            .'.sl-toastui-upload .sl-fm-rail-item[disabled] b, .sl-toastui-upload .sl-fm-rail-item[disabled] .bi, '
+            .'.toastui-editor-md-delimiter, .toastui-editor-md-thematic-break, .toastui-editor-md-link, '
+            .'.toastui-editor-md-table, .toastui-editor-md-block-quote',
     ],
 
     # PHP the markup scan skips, each with the reason it is not a leftover
