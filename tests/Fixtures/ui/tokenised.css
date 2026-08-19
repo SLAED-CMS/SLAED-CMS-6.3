@@ -1,0 +1,10 @@
+/* Everything a token already owns, plus one declaration that is only half there */
+.sl-one {
+  padding: var(--sl-space-4);
+  color: var(--sl-text);
+  border: 1px solid var(--sl-border);
+}
+
+.sl-two {
+  padding: var(--sl-space-4) 7px;
+}

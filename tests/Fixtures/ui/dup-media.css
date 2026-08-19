@@ -1,0 +1,12 @@
+/* Two identical bodies that never share a context */
+@media (max-width: 768px) {
+  .sl-one {
+    display: none;
+  }
+}
+
+@media (min-width: 900px) {
+  .sl-one {
+    display: none;
+  }
+}

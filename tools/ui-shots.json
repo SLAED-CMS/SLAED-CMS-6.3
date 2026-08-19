@@ -1,0 +1,92 @@
+{
+  "_": "The whole screenshot rig, tracked so the next session has something to run. Credentials are never stored here: the runner reads SLAED_UI_USER and SLAED_UI_PASS from the environment and skips every page needing a session when they are absent.",
+  "base": "http://slaed.loc",
+  "out": "tools/ui-baseline",
+  "threshold": 0.002,
+  "_settle": "the gap between the two shots that decide the page has stopped changing; this site keeps repainting for about two seconds after load, so a fixed wait rendered two different pages at random",
+  "settle": 500,
+  "tries": 10,
+  "env": { "user": "SLAED_UI_USER", "pass": "SLAED_UI_PASS" },
+
+  "viewports": [
+    { "name": "sm", "width": 560, "height": 900 },
+    { "name": "md", "width": 768, "height": 1000 },
+    { "name": "lg", "width": 900, "height": 1000 },
+    { "name": "xl", "width": 1200, "height": 1000 }
+  ],
+
+  "modes": ["auto"],
+
+  "auth": {
+    "site": {
+      "url": "/index.php?name=account",
+      "user": ".sl-block-login input[name=\"user_name\"]",
+      "pass": ".sl-block-login input[name=\"user_password\"]",
+      "submit": ".sl-block-login button[type=\"submit\"], .sl-block-login input[type=\"submit\"]",
+      "proof": "a[href*=\"op=logout\"], .sl-logout",
+      "gone": ".sl-block-login input[name=\"user_password\"]"
+    },
+    "admin": {
+      "url": "/admin.php",
+      "user": "input[name=\"name\"]",
+      "pass": "input[name=\"pwd\"]",
+      "submit": ".sl-admin-login-submit, button[type=\"submit\"], input[type=\"submit\"]",
+      "proof": ".sl-admin-shell .sl-admin-main",
+      "gone": "input[name=\"pwd\"]"
+    }
+  },
+
+  "_mask": "hidden but still taking their space: what moves inside a box of stable size, and what must not be published. The baselines are committed, so the IP column of the user list and the mail fields of the configuration are hidden - a guard against a layout change has no business carrying anyone's address into the repository",
+  "mask": [".sl-captcha", ".sl-session-donut", ".sl-avatar img", ".sl-generates", ".sl-stat-num", ".sl-views", ".sl-coms", "time", ".sl-col-ip", "input[name=\"adminmail\"]", "input[name=\"mailfmail\"]", "input[name=\"mailhost\"]", "input[name=\"mailpass\"]"],
+
+  "_drop": "taken out of layout entirely: the site rotates these on every request, so their height is not the same twice and a diff of the whole page would be a diff of the dice. The debug sections are here because their row count follows the number of SQL queries the request happened to run",
+  "drop": [".sl-head-marquee", ".sl-vote", "[data-sl-vote-live]", ".sl-block-random", ".sl-banner", ".sl-related-list", ".sl-last-list", ".sl-random", ".sl-debug-section", "#sl_debugger"],
+
+  "pages": [
+    {
+      "name": "front",
+      "url": "/",
+      "steps": [
+        { "do": "hover", "sel": ".sl-fmenu a", "shot": "menu-hover" },
+        { "do": "focus", "sel": ".sl-search-form input", "shot": "search-focus" }
+      ]
+    },
+    { "name": "news-list", "url": "/index.php?name=news" },
+    {
+      "name": "article",
+      "url": "/index.php?name=news&op=view&id=645",
+      "steps": [{ "do": "hover", "sel": ".sl-but, .sl-button", "shot": "button-hover" }]
+    },
+    { "name": "forum-list", "url": "/index.php?name=forum" },
+    { "name": "forum-topic", "url": "/index.php?name=forum&op=view&id=16304" },
+    { "name": "voting", "url": "/index.php?name=voting" },
+    { "name": "content", "url": "/index.php?name=content" },
+    {
+      "name": "login",
+      "url": "/index.php?name=account",
+      "steps": [{ "do": "focus", "sel": ".sl-block-login input[name=\"user_name\"]", "shot": "field-focus" }]
+    },
+    { "name": "profile", "url": "/index.php?name=account&op=profile", "auth": "site" },
+    { "name": "private", "url": "/index.php?name=account&op=privat", "auth": "site" },
+    { "name": "admin-home", "url": "/admin.php", "auth": "admin", "theme": "admin" },
+    {
+      "name": "admin-monitor",
+      "url": "/admin.php?name=monitor",
+      "auth": "admin",
+      "theme": "admin",
+      "steps": [{ "do": "hover", "sel": ".sl-knob, .sl-but", "shot": "knob-hover" }]
+    },
+    { "name": "admin-statistic", "url": "/admin.php?name=statistic", "auth": "admin", "theme": "admin" },
+    { "name": "admin-account", "url": "/admin.php?name=account", "auth": "admin", "theme": "admin" },
+    {
+      "name": "admin-config",
+      "url": "/admin.php?name=config",
+      "auth": "admin",
+      "theme": "admin",
+      "steps": [
+        { "do": "focus", "sel": "input[type=\"text\"]", "shot": "field-focus" },
+        { "do": "click", "sel": "[data-sl-modal], .sl-but-modal", "shot": "modal-open", "optional": true }
+      ]
+    }
+  ]
+}

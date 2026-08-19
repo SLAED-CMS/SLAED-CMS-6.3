@@ -1,0 +1,41 @@
+{
+    "generated": "2026-08-19T07:37:33Z",
+    "themes": {
+        "admin": {
+            "count": 1005,
+            "bare": 109,
+            "dup": 182,
+            "names": 160,
+            "dead": 1,
+            "single": 36,
+            "alias": 0,
+            "unsat": 1,
+            "scoped": 96,
+            "clash": 0,
+            "classes": 4,
+            "important": 23,
+            "tokens": 121,
+            "contrast": 14
+        },
+        "lite": {
+            "count": 1637,
+            "bare": 150,
+            "dup": 276,
+            "names": 198,
+            "dead": 2,
+            "single": 62,
+            "alias": 0,
+            "unsat": 0,
+            "scoped": 113,
+            "clash": 0,
+            "classes": 10,
+            "important": 19,
+            "tokens": 169,
+            "contrast": 53
+        }
+    },
+    "global": {
+        "kinds": 1,
+        "markup": 143
+    }
+}

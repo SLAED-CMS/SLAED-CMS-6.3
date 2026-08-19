@@ -1,0 +1,14 @@
+/* Three untokenised decisions and one duplicated body */
+.sl-one {
+  padding: 10px;
+  color: #ff0000;
+  border: 1px solid #cccccc;
+}
+
+.sl-two {
+  display: none;
+}
+
+.sl-three {
+  display: none;
+}

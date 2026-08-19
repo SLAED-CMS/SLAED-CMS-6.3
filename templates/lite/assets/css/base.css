@@ -197,6 +197,8 @@
   --sl-progress-fill-5-end: #8c2ca9;
 }
 
+/* --- end tokens --- */
+
 /* Reset: the attribute wins over every class, because a component setting display would otherwise keep on the screen what the page has taken off it */
 [hidden] {
   display: none !important;

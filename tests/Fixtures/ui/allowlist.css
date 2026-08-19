@@ -1,0 +1,16 @@
+/* Structure, never a decision */
+.sl-one {
+  margin: 0 auto;
+  width: 100%;
+  height: 100vh;
+  border: 1px solid var(--sl-border);
+  border-radius: 50%;
+  grid-template-columns: 1fr 220px;
+  top: 3px;
+  flex: 0 0 240px;
+  transition: opacity 0.01ms;
+}
+
+.sl-arrow {
+  border: 6px solid transparent;
+}

@@ -1,0 +1,4 @@
+/* A shadow is one decision, not one per offset */
+.sl-one {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}

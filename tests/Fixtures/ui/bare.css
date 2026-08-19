@@ -1,0 +1,13 @@
+/* Bare numbers the first counter is blind to */
+.sl-one {
+  line-height: 1.428571429;
+  font-weight: bold;
+  opacity: 0.5;
+  z-index: 2001;
+}
+
+.sl-two {
+  line-height: 1;
+  opacity: 0;
+  font-weight: var(--sl-weight-bold);
+}

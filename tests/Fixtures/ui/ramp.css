@@ -1,0 +1,14 @@
+/* A cool near-white is a neutral whatever its hue, and a brand blue is not */
+:root {
+  --sl-gray-fifty: #f7fbff;
+  --sl-gray-two: #e5e7eb;
+  --sl-primary: #30a2f6;
+  --sl-primary-strong: #207fb6;
+  --sl-danger: #a92c2c;
+}
+
+/* --- end tokens --- */
+
+body {
+  color: var(--sl-text);
+}

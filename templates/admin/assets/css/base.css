@@ -154,6 +154,8 @@
   --sl-progress-fill-5-end: #8c2ca9;
 }
 
+/* --- end tokens --- */
+
 /* Navigation: smooth in-page anchor scrolling */
 html {
   scroll-behavior: smooth;

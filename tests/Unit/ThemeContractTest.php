@@ -1,0 +1,141 @@
+<?php
+
+namespace Tests\Unit;
+
+use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\TestCase;
+
+/**
+ * The theme ratchet. There are no git hooks and no CI here, and .claude/ is not tracked, so the edit
+ * hook is per-machine and this test is the whole enforcement that survives a clone: it runs the audit
+ * over both themes and fails when any ratcheted count grew against tools/ui-audit-baseline.json.
+ * It catches what an edit hook cannot - a manual edit, a merge, and a file the hook never saw.
+ */
+final class ThemeContractTest extends TestCase
+{
+    private static array $cont = [];
+    private static array $base = [];
+
+    public static function setUpBeforeClass(): void
+    {
+        require_once dirname(__DIR__, 2).'/tools/ui-audit.php';
+        self::$cont = getContract();
+        self::$base = getBaselineData();
+    }
+
+    #[Test]
+    public function testTheBaselineIsCommittedAndCoversEveryTheme(): void
+    {
+        $this->assertFileExists(dirname(__DIR__, 2).'/tools/ui-audit-baseline.json', 'the ratchet cannot live beside the gitignored rules and survive a clone');
+        foreach (array_keys(self::$cont['themes']) as $name) {
+            $this->assertArrayHasKey($name, self::$base['themes'] ?? [], 'theme '.$name.' has no baseline entry; store one with --store');
+        }
+    }
+
+    #[Test]
+    public function testNoRatchetedCountGrewAgainstTheBaseline(): void
+    {
+        foreach (array_keys(self::$cont['themes']) as $name) {
+            $now = getThemeAudit($name)['totals'];
+            foreach (self::$cont['ratchet'] as $key) {
+                $was = self::$base['themes'][$name][$key] ?? null;
+                if ($was === null) continue;
+                $this->assertLessThanOrEqual($was, $now[$key], $name.'.'.$key.' grew from '.$was.' to '.$now[$key].'; run php tools/ui-audit.php --theme='.$name.' to see where');
+            }
+        }
+    }
+
+    #[Test]
+    public function testEveryThemeClosesItsApiBlockWithTheMarker(): void
+    {
+        foreach (array_keys(self::$cont['themes']) as $name) {
+            $why = $name.'/assets/css/base.css has no '.self::$cont['marker'];
+            $this->assertTrue(getThemeModel($name)['marker'], $why.', so its API block has no end and a theme author cannot tell API from element styles');
+        }
+    }
+
+    #[Test]
+    public function testEveryDeclaredThemeFileIsPresent(): void
+    {
+        foreach (self::$cont['themes'] as $name => $conf) {
+            foreach ($conf['css'] as $path) {
+                $this->assertFileExists(dirname(__DIR__, 2).'/'.$path, $name.' declares '.$path.' in the contract but the package does not carry it');
+            }
+        }
+    }
+
+    #[Test]
+    public function testTheMarkupScanDidNotGrow(): void
+    {
+        $sum = 0;
+        foreach (checkPhpMarkup() as $hits) $sum += $hits['class'] + $hits['style'] + $hits['tag'];
+        $was = self::$base['global']['markup'] ?? null;
+        if ($was === null) $this->markTestSkipped('no stored markup baseline');
+        $this->assertLessThanOrEqual($was, $sum, 'PHP hardcodes more markup than the baseline records; a theme cannot restyle what PHP assembles');
+    }
+
+    #[Test]
+    public function testNoNewNameHoldsTwoKindsAcrossThemes(): void
+    {
+        $now = checkNameKinds();
+        $was = self::$base['global']['kinds'] ?? null;
+        if ($was === null) $this->markTestSkipped('no stored kind baseline');
+        $this->assertLessThanOrEqual($was, count($now), 'a rule written against one theme is wrong in the other, and no reader can tell which without opening both');
+    }
+
+    #[Test]
+    public function testEveryLadderStepHasATokenName(): void
+    {
+        foreach (self::$cont['ladders'] as $axis => $conf) {
+            $this->assertSameSize($conf['steps'], $conf['tokens'], 'ladder '.$axis.' has a step with no token name, so a snap has nowhere to land');
+        }
+    }
+
+    #[Test]
+    public function testEveryAllowlistEntryCarriesItsReason(): void
+    {
+        foreach (['properties', 'values', 'shapes'] as $part) {
+            foreach (self::$cont['allowlist'][$part] as $key => $why) {
+                $this->assertNotSame('', trim((string)$why), 'allowlist entry '.$part.'.'.$key.' has no written reason, and an allowlist without reasons is how a zoo grows back');
+            }
+        }
+        foreach (self::$cont['markup']['exclude'] as $key => $why) {
+            $this->assertNotSame('', trim((string)$why), 'markup exclusion '.$key.' has no written reason');
+        }
+    }
+
+    #[Test]
+    public function testEveryTokenReadByJavascriptIsStillDeclared(): void
+    {
+        $seen = [];
+        foreach (array_keys(self::$cont['themes']) as $name) $seen += getThemeModel($name)['api'];
+        foreach (array_keys(self::$cont['js']) as $tok) {
+            $this->assertArrayHasKey($tok, $seen, $tok.' is read through getComputedStyle and falls through to a script default when it disappears, which no CSS check can see');
+        }
+    }
+
+    #[Test]
+    public function testCategoricalMembersStayDistinguishable(): void
+    {
+        foreach (array_keys(self::$cont['themes']) as $name) {
+            $api = getThemeModel($name)['api'];
+            foreach (self::$cont['categorical'] as $set => $conf) {
+                $rgb = [];
+                foreach ($conf['members'] as $item) {
+                    $val = $api['--sl-'.$set.'-'.$item] ?? null;
+                    if ($val === null) continue;
+                    $hit = getRgbValues($val);
+                    if ($hit !== null) $rgb[$item] = $hit;
+                }
+                foreach ($rgb as $one => $left) {
+                    foreach ($rgb as $two => $right) {
+                        if ($one >= $two) continue;
+                        $gap = abs($left[0] - $right[0]) + abs($left[1] - $right[1]) + abs($left[2] - $right[2]);
+                        $why = $name.': '.$set.' members '.$one.' and '.$two.' are too close to tell apart';
+                        $this->assertGreaterThanOrEqual($conf['mindiff'], $gap, $why.', and a set with no order has no ladder to lean on');
+                    }
+                }
+            }
+        }
+    }
+}

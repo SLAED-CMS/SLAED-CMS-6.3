@@ -1,0 +1,8 @@
+/* One name declared twice: the last one silently wins */
+:root {
+  --sl-primary: #30a2f6;
+  --sl-space-4: 10px;
+  --sl-primary: #207fb6;
+}
+
+/* --- end tokens --- */
