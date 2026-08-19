@@ -7,20 +7,167 @@
   font-display: swap;
 }
 
-/* Root variables: color palette, progress fills, vote meter tokens and control radius */
+/* Root variables: the theme API. A new theme repaints this block and nothing below the marker */
 :root {
-  --sl-container: 1320px;
-  --sl-sidebar: 400px;
-  --sl-gutter: 24px;
-  --sl-grid-gap: 10px;
-  --sl-content: 880px;
+  /* Layout */
+  --sl-layout-container: 1320px;
+  --sl-layout-sidebar: 400px;
+  --sl-layout-gutter: 24px;
+  --sl-layout-grid: 10px;
+
+  /* Colour: page, surfaces, borders */
+  --sl-bg: #ffffff;
+  --sl-bg-subtle: #f2f4f7;
+  --sl-bg-muted: #e4e9ef;
+  --sl-bg-inverse: #2a303c;
+  --sl-surface: #f8f9fb;
+  --sl-surface-sunken: #22272f;
+  --sl-border: #e8ebee;
+  --sl-border-subtle: #ebebee;
+  --sl-border-muted: #d9d9dc;
+  --sl-border-strong: #cad2da;
+  --sl-border-inverse: #3b4049;
+  /* Waiting on the colour ramp: a fifth hairline one unit from --sl-border */
+  --sl-color-border-stronger: #e7e7eb;
+
+  /* Colour: text */
+  --sl-text: #222222;
+  --sl-text-strong: #223345;
+  --sl-text-muted: #6e7c8b;
+  --sl-text-subtle: #a5b2bf;
+  /* Waiting on the colour ramp: the darkest ink and the colour every heading link carries, neither with a step of its own */
+  --sl-color-text-ink: #111827;
+  --sl-color-text-link: #556779;
+
+  /* Colour: brand and status */
+  --sl-primary: #30a2f6;
+  --sl-primary-strong: #2a8fd8;
+  /* Waiting on the colour ramp: the brand blues and the two service tones of the social icons */
+  --sl-color-brand: #64b1e1;
+  --sl-color-brand-banner: #62b4ea;
+  --sl-color-brand-strong: #207fb6;
+  --sl-success: #5c9425;
+  --sl-success-subtle: #9fd779;
+  --sl-warning: #f47a20;
+  --sl-warning-subtle: #ffa024;
+  --sl-danger: #a92c2c;
+  --sl-danger-subtle: #fb7878;
+  --sl-accent: #8c2ca9;
+  --sl-info: #1d9bf0;
+  --sl-on-solid: #ffffff;
+  --sl-color-tone-neutral: #6b7280;
+  --sl-color-tone-primary: #4c75a3;
+  --sl-overlay-10: rgba(0, 0, 0, 0.1);
+  --sl-overlay-12: rgba(0, 0, 0, 0.12);
+  --sl-overlay-15: rgba(0, 0, 0, 0.15);
+  --sl-overlay-20: rgba(0, 0, 0, 0.2);
+
+  /* Categorical: the season skins, a set with no order */
+  --sl-season-winter: #4c8cc9;
+  --sl-season-spring: #5d82b7;
+  --sl-season-summer: #98c781;
+  --sl-season-autumn: #be8a7c;
+  --sl-season-newyear: #5e9ad6;
+
+  /* Control and icon sizes */
+  --sl-size-control: 34px;
+  --sl-size-chip: 26px;
+  --sl-size-tile: 46px;
+  --sl-size-avatar: 34px;
+  --sl-size-icon-xs: 16px;
+  --sl-size-icon-sm: 18px;
+  --sl-size-icon-md: 24px;
+  --sl-size-icon-lg: 32px;
+  /* Waiting on the size ladder: the meta row is a row height and no control */
+  --sl-size-meta-row: 24px;
+
+  /* Type sizes */
+  --sl-font-display: 32px;
+  --sl-font-h1: 28px;
+  --sl-font-h2: 22px;
+  --sl-font-h4: 16px;
+
+  /* Spacing and radius, still on the legacy scale until the ladder lands */
   --sl-space-xs: 4px;
   --sl-space-sm: 6px;
   --sl-space-md: 8px;
   --sl-space-lg: 12px;
   --sl-space-xl: 16px;
+  --sl-radius-control: 4px;
+  --sl-radius-card: 10px;
+
+  /* Shadows */
+  --sl-shadow-xs: 0 1px 2px rgba(42, 48, 60, 0.12);
+  --sl-shadow-float: 0 6px 12px rgba(0, 0, 0, 0.175);
+  --sl-panel-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+
+  /* Components: form field, shared by input, textarea, select and file controls */
+  --sl-field-height: 30px;
+  --sl-field-pad-x: var(--sl-space-lg);
+  --sl-field-pad-y: var(--sl-space-sm);
+  --sl-field-bg: var(--sl-bg);
+  --sl-field-border: var(--sl-border-strong);
+  --sl-field-radius: var(--sl-radius-control);
+  --sl-field-text: var(--sl-text-subtle);
+  --sl-field-ring: rgba(48, 162, 246, 0.18);
+  --sl-field-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+  /* Waiting on the shadow roles: one component carries one ring, and the field already spends it */
+  --sl-field-invalid-ring: rgba(169, 44, 44, 0.16);
+  --sl-field-valid-ring: rgba(92, 148, 37, 0.16);
+
+  /* Components: the window canon, one dialog with four axes */
+  --sl-modal-width: 560px;
+  --sl-modal-height: 42px;
+  --sl-modal-gap: 24px;
+  --sl-modal-pad-x: 20px;
+
+  /* Components: check, switch, forum icon, image placeholder, avatar */
+  --sl-check-width: 16px;
+  --sl-check-bg: var(--sl-primary);
+  --sl-switch-width: 58px;
+  --sl-switch-height: 24px;
+  --sl-forum-width: 64px;
+  --sl-placeholder-height: 64px;
+  /* Waiting on the type ladder: the glyph inside the placeholder is a font size above every step */
+  --sl-img-placeholder-icon-size: 48px;
+  --sl-avatar-border: 6px;
+
+  /* Components: the login bar and its dropdown */
+  --sl-login-height: 30px;
+  --sl-login-width: 162px;
+  --sl-login-pad-x: 15px;
+  --sl-login-pad-y: 5px;
+  --sl-login-gap: 8px;
+  --sl-login-radius: 15px;
+  /* Waiting on the colour ramp and the spacing ladder: a hovered colour, a second padding pair and the offsets the dropdown is placed by */
+  --sl-login-link-hover-color: #2a303c;
+  --sl-login-field-pad-x: 6px;
+  --sl-login-field-pad-y: 4px;
+  --sl-login-dropdown-offset-x: -100px;
+  --sl-login-dropdown-form-left: 50%;
+  --sl-login-dropdown-form-width: 160px;
+  --sl-login-dropdown-form-max-width: none;
+  --sl-drop-width: 180px;
+  --sl-drop-pad-x: 20px;
+  --sl-drop-pad-y: 20px;
+  --sl-drop-radius: 6px;
+
+  /* Components: the button bevel, still composed at its use sites until the gradient axis lands */
+  --sl-but-neutral-text: #2a303c;
+  --sl-but-neutral-start: #f8f9fb;
+  --sl-but-neutral-end: #ebedf1;
+  --sl-but-neutral-border-inner: rgba(247, 251, 255, 0.95);
+  --sl-but-neutral-border-outer: rgba(202, 210, 218, 0.85);
+  --sl-but-text-shadow-neutral: 0 1px 0 rgba(255, 255, 255, 0.85);
+  --sl-but-border-inner: rgba(247, 251, 255, 0.94);
+  --sl-but-border-outer: rgba(202, 210, 218, 0.85);
+  --sl-but-shadow-control: 0 2px 4px rgba(42, 48, 60, 0.16);
+  --sl-but-border-shadow:
+    inset 0 0 0 1px var(--sl-but-border-inner),
+    0 0 0 1px var(--sl-but-border-outer), var(--sl-but-shadow-control);
+
+  /* The changelog page, a colour island that the ramp folds onto the roles */
   --sl-changelog-bg: #f9fafb;
-  --sl-changelog-card: #ffffff;
   --sl-changelog-border: #e5e7eb;
   --sl-changelog-text: #374151;
   --sl-changelog-meta: #6b7280;
@@ -28,39 +175,8 @@
   --sl-changelog-add: #10b981;
   --sl-changelog-del: #ef4444;
   --sl-changelog-header: #f3f4f6;
-  /* Canonical color roles for the lite theme */
-  --sl-color-bg: #ffffff;
-  --sl-color-bg-soft: #f8f9fb;
-  --sl-color-bg-soft-alt: #f2f4f7;
-  --sl-color-bg-soft-dark: #2a303c;
-  --sl-color-bg-soft-darker: #22272f;
-  --sl-color-bg-soft-divider: #3b4049;
-  --sl-color-bg-soft-soft: #e4e9ef;
-  --sl-color-border-subtle: #ebebee;
-  --sl-color-border-stronger: #e7e7eb;
-  --sl-color-border-muted: #d9d9dc;
-  --sl-color-text: #222222;
-  --sl-color-text-strong: #111827;
-  --sl-color-text-heading: #223345;
-  --sl-color-text-muted: #6e7c8b;
-  --sl-color-text-subtle: #a5b2bf;
-  --sl-color-brand: #64b1e1;
-  --sl-color-brand-banner: #62b4ea;
-  --sl-color-primary: #30a2f6;
-  --sl-color-primary-hover: #2a8fd8;
-  --sl-color-brand-strong: #207fb6;
-  --sl-color-success: #5c9425;
-  --sl-color-success-soft: #9fd779;
-  --sl-color-warning: #f47a20;
-  --sl-color-warning-soft: #ffa024;
-  --sl-color-danger: #a92c2c;
-  --sl-color-danger-soft: #fb7878;
-  --sl-color-accent: #8c2ca9;
-  --sl-season-winter: #4c8cc9;
-  --sl-season-autumn: #be8a7c;
-  --sl-season-summer: #98c781;
-  --sl-season-spring: #5d82b7;
-  --sl-season-newyear: #5e9ad6;
+
+  /* Gradients, still spelled at their use sites until the gradient axis lands */
   --sl-line-gradient: linear-gradient(
     90deg,
     rgba(100, 177, 225, 0) 0%,
@@ -71,110 +187,15 @@
     rgba(100, 177, 225, 0.35) 88%,
     rgba(100, 177, 225, 0) 100%
   );
-  --sl-shadow-soft: 0 1px 2px rgba(42, 48, 60, 0.12);
-  --sl-shadow-panel: 0 4px 16px rgba(0, 0, 0, 0.2);
-  --sl-shadow-strong: 0 6px 12px rgba(0, 0, 0, 0.175);
-  --sl-overlay-10: rgba(0, 0, 0, 0.1);
-  --sl-overlay-12: rgba(0, 0, 0, 0.12);
-  --sl-overlay-15: rgba(0, 0, 0, 0.15);
-  --sl-overlay-20: rgba(0, 0, 0, 0.2);
-  --sl-color-border: #e8ebee;
-  --sl-color-border-strong: #cad2da;
-  --sl-radius-control: 4px;
-  --sl-radius-card: 10px;
-  /* Form field tokens: shared look for input, textarea, select and file controls */
-  --sl-shadow-input: inset 0 1px 2px rgba(0, 0, 0, 0.06);
-  --sl-field-height: 30px;
-  --sl-field-pad-x: var(--sl-space-lg);
-  --sl-field-pad-y: var(--sl-space-sm);
-  --sl-field-bg: var(--sl-color-bg);
-  --sl-field-border: var(--sl-color-border-strong);
-  --sl-field-radius: var(--sl-radius-control);
-  --sl-field-focus: var(--sl-color-primary);
-  --sl-field-focus-ring: rgba(48, 162, 246, 0.18);
-  --sl-field-placeholder: var(--sl-color-text-subtle);
-  --sl-field-disabled-bg: var(--sl-color-bg-soft-alt);
-  --sl-field-invalid: var(--sl-color-danger);
-  --sl-field-invalid-ring: rgba(169, 44, 44, 0.16);
-  --sl-field-valid: var(--sl-color-success);
-  --sl-field-valid-ring: rgba(92, 148, 37, 0.16);
-  --sl-check-size: 16px;
-  --sl-check-checked: var(--sl-color-primary);
-  --sl-switch-width: 58px;
-  --sl-switch-height: 24px;
-  --sl-size-icon-xs: 16px;
-  --sl-size-icon-sm: 18px;
-  --sl-size-icon-md: 24px;
-  --sl-size-icon-lg: 32px;
-  --sl-size-chip: 26px;
-  --sl-size-tile: 46px;
-  --sl-size-control: 34px;
-  --sl-size-nav-control: var(--sl-size-control);
-  --sl-size-meta-row: 24px;
-  --sl-font-display: 32px;
-  --sl-h1: 28px;
-  --sl-h2: 22px;
-  --sl-h3: 18px;
-  --sl-h4: 16px;
-  --sl-forum-icon-size: 64px;
-  --sl-img-placeholder-size: 64px;
-  --sl-img-placeholder-icon-size: 48px;
-  --sl-login-link-color: #556779;
-  --sl-login-link-hover-color: #2a303c;
-  --sl-login-pill-bg: #f2f4f7;
-  --sl-login-pill-radius: 15px;
-  --sl-login-link-pad-x: 15px;
-  --sl-login-link-pad-y: 5px;
-  --sl-login-link-height: 30px;
-  --sl-login-link-line-height: 20px;
-  --sl-login-dropdown-width: 160px;
-  --sl-login-dropdown-min-width: 180px;
-  --sl-login-dropdown-offset-x: -100px;
-  --sl-login-dropdown-form-left: 50%;
-  --sl-login-dropdown-form-margin-left: var(--sl-login-dropdown-offset-x);
-  --sl-login-dropdown-form-width: var(--sl-login-dropdown-width);
-  --sl-login-dropdown-form-max-width: none;
-  --sl-login-dropdown-padding: 20px;
-  --sl-login-dropdown-radius: 6px;
-  --sl-login-dropdown-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
-  --sl-login-field-width: 162px;
-  --sl-login-field-height: 30px;
-  --sl-login-field-pad-x: 6px;
-  --sl-login-field-pad-y: 4px;
-  --sl-login-links-gap: 8px;
-  --sl-login-avatar-size: 34px;
-  --sl-login-avatar-border-width: 6px;
-  --sl-login-avatar-border-color: #f2f4f7;
-  --sl-login-avatar-offset-top: -8px;
-  --sl-but-neutral-text: #2a303c;
-  --sl-but-neutral-start: #f8f9fb;
-  --sl-but-neutral-end: #ebedf1;
-  --sl-but-neutral-border-inner: rgba(247, 251, 255, 0.95);
-  --sl-but-neutral-border-outer: rgba(202, 210, 218, 0.85);
-  --sl-grad-info-start: #78c6fb;
-  --sl-grad-info-end: #6dbaf7;
-  --sl-grad-success-start: #9fd779;
-  --sl-grad-success-end: #96d26d;
-  --sl-but-text-shadow-neutral: 0 1px 0 rgba(255, 255, 255, 0.85);
-  --sl-but-border-light: rgba(247, 251, 255, 0.94);
-  --sl-but-border-dark: rgba(202, 210, 218, 0.85);
-  --sl-but-shadow-control: 0 2px 4px rgba(42, 48, 60, 0.16);
-  --sl-but-border-shadow:
-    inset 0 0 0 1px var(--sl-but-border-light),
-    0 0 0 1px var(--sl-but-border-dark), var(--sl-but-shadow-control);
-  --sl-color-on-dark: #ffffff;
-  --sl-color-tone-neutral: #6b7280;
-  --sl-color-tone-danger: #a92c2c;
-  --sl-color-tone-info: #1d9bf0;
-  --sl-color-tone-primary: #4c75a3;
-  --sl-color-tone-warning: #ffa024;
-  --sl-color-tone-success: #5c9425;
-  --sl-color-tone-accent: #8c2ca9;
   --sl-bg-hover-gloss: linear-gradient(
     145deg,
     rgba(255, 255, 255, 0.18),
     rgba(255, 255, 255, 0)
   );
+  --sl-grad-info-start: #78c6fb;
+  --sl-grad-info-end: #6dbaf7;
+  --sl-grad-success-start: #9fd779;
+  --sl-grad-success-end: #96d26d;
   --sl-progress-track-border: #ccc;
   --sl-progress-track-bg: #e7e7eb;
   --sl-progress-track-radius: 3px;
@@ -338,7 +359,7 @@ table {
 
 /* Base: global element styles, typography, links and form defaults */
 body {
-  background: var(--sl-color-bg);
+  background: var(--sl-bg);
   min-width: 0;
 }
 
@@ -352,14 +373,14 @@ button {
     system-ui,
     -apple-system,
     sans-serif;
-  color: var(--sl-color-text);
+  color: var(--sl-text);
   outline: none;
 }
 
 a {
   outline: none;
   text-decoration: none;
-  color: var(--sl-color-primary);
+  color: var(--sl-primary);
 }
 
 a:hover {
@@ -422,17 +443,17 @@ blockquote {
 }
 
 legend {
-  color: var(--sl-color-primary);
+  color: var(--sl-primary);
   font-weight: bold;
   padding: var(--sl-space-sm);
-  border: 1px solid var(--sl-color-border);
+  border: 1px solid var(--sl-border);
   border-radius: var(--sl-radius-control);
 }
 
 fieldset {
   padding: var(--sl-space-sm);
   margin-top: var(--sl-space-sm);
-  border: 1px solid var(--sl-color-border);
+  border: 1px solid var(--sl-border);
   border-radius: var(--sl-radius-control);
 }
 
@@ -441,7 +462,7 @@ optgroup {
     14px/1.4 Arial,
     Tahoma,
     sans-serif;
-  color: var(--sl-color-text);
+  color: var(--sl-text);
   outline: none;
 }
 
@@ -494,7 +515,7 @@ input[type="radio"],
 input[type="checkbox"] {
   line-height: normal;
   margin: 4px 0 0;
-  accent-color: var(--sl-color-primary);
+  accent-color: var(--sl-primary);
 }
 
 input[type="file"],
@@ -523,7 +544,7 @@ input[disabled] {
 }
 
 blockquote {
-  background: var(--sl-color-bg);
+  background: var(--sl-bg);
   border-left: 1px solid #b8c3cd;
   border-right: 1px solid #b8c3cd;
   color: #798086;

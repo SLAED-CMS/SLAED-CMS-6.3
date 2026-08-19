@@ -1,6 +1,6 @@
 <div class="sl-profile-card sl-profile-split">
   <aside class="sl-profile-split-rail">
-    <div class="sl-profile-avatar"{% if has_level or ring %} style="{% if has_level %}--sl-profile-level:{{ level }}%;{% endif %}{% if ring %}--sl-profile-ring:{{ ring }};{% endif %}"{% endif %}>
+    <div class="sl-profile-avatar"{% if has_level or ring %} style="{% if has_level %}--sl-d-level:{{ level }}%;{% endif %}{% if ring %}--sl-d-ring:{{ ring }};{% endif %}"{% endif %}>
       {% if avatar_html %}{{{ avatar_html }}}{% else %}<img src="{{ avatar }}" alt="{{ name }}" title="{{ name }}">{% endif %}
       {% if is_online %}<span class="sl-profile-status" title="{{ online_label }}"></span>{% endif %}
     </div>

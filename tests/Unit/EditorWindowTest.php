@@ -151,7 +151,7 @@ final class EditorWindowTest extends TestCase
             $this->assertStringContainsString($key, $js, 'The fan never asks '.$key.', so it offers an action the context withholds');
         }
         $note = 'The fan does not set its own count, so a right withheld leaves a gap in the plate the theme draws behind it';
-        $this->assertStringContainsString("setProperty('--sl-dial-count'", $js, $note);
+        $this->assertStringContainsString("setProperty('--sl-d-count'", $js, $note);
         $this->assertStringContainsString('data-sl-ask', $js, 'A deletion in the window asks nothing before it runs');
         $this->assertStringContainsString('win.setConfirmTask', $js, 'The window asks with a dialogue of its own instead of the shared confirmation of the project');
         $this->assertStringNotContainsString('window.confirm(text)', substr($js, 0, (int)strpos($js, 'function setAsk')), 'A browser prompt stands before the shared confirmation');

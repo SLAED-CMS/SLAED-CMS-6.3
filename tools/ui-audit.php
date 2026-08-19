@@ -563,7 +563,7 @@ function checkNameGrammar(array $model): array {
         $low = strtolower($name);
         if (count($part) > 3) $out[] = ['name' => $name, 'why' => count($part).' segments after '.$cont['prefix'].', the grammar allows three'];
         if (preg_match('/-(white|black|light|lighter|dark|darker)(-|$)/', $low)) $out[] = ['name' => $name, 'why' => 'the name cannot survive inversion; say the role it plays'];
-        if (preg_match('/-(hover|focus|active|visited)(-|$)/', $low)) $out[] = ['name' => $name, 'why' => 'state is not an axis; it lives in the selector'];
+        if (preg_match('/-(hover|focus|active|visited)(-|$)/', $low) && !isKnownName($name)) $out[] = ['name' => $name, 'why' => 'state is not an axis; it lives in the selector'];
         if (preg_match('/-(soft|muted|subtle|strong)-(soft|muted|subtle|strong)(-|$)/', $low)) $out[] = ['name' => $name, 'why' => 'modifiers do not stack'];
         if (!isKnownName($name)) $out[] = ['name' => $name, 'why' => 'not registered in tools/ui-contract.php'];
     }

@@ -1,7 +1,7 @@
 {% if live_every %}<div class="sl-live-tools">{% include 'fragments/live-chip.html' %}</div>{% endif %}
 {% if show_online_chip %}<span class="sl-chip sl-chip-info" data-sl-session-online><i class="bi bi-people-fill" aria-hidden="true"></i><b>{{ overall_count }}</b> {{ online_label }}</span>{% endif %}
 <div class="sl-session-summary">
-  <div class="sl-session-donut" style="--sl-members: {{ members_pct }}%; --sl-bots: {{ bots_end_pct }}%;">
+  <div class="sl-session-donut" style="--sl-d-members: {{ members_pct }}%; --sl-d-bots: {{ bots_end_pct }}%;">
     <span><b>{{ visitors_pct }}%</b><small>{{ visitors_label }}</small></span>
   </div>
   <div>

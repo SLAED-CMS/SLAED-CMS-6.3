@@ -1,4 +1,4 @@
-<div class="sl-user-card"{% if group_color %} style="--sl-user-color: {{ group_color }}; --sl-user-level: {{ ngroup_pct }}%;"{% endif %}>
+<div class="sl-user-card"{% if group_color %} style="--sl-d-user: {{ group_color }}; --sl-d-usrlevel: {{ ngroup_pct }}%;"{% endif %}>
   <div class="sl-block-user-ava">
     {% if is_user %}<a href="index.php?name=account" title="{{ change_label }}" class="sl-live-avatar"><i class="sl-ava-min" style="background-image: url({{ avatar_url }});"></i></a>{% else %}<i class="sl-ava-min" style="background-image: url({{ avatar_url }});"></i>{% endif %}
     <p>

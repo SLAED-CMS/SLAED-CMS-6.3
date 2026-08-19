@@ -1,4 +1,4 @@
-<div id="{{ id }}"{% if token %} hx-headers='{"X-CSRF-TOKEN": "{{ token }}"}'{% endif %}{% if depth %} style="--sl-com-depth:{{ depth }}"{% endif %}{% if is_gone %} title="{{ closed_title }}" class="sl-com-gone"{% elseif is_closed %} title="{{ closed_title }}" class="sl-hidden"{% endif %}>
+<div id="{{ id }}"{% if token %} hx-headers='{"X-CSRF-TOKEN": "{{ token }}"}'{% endif %}{% if depth %} style="--sl-d-depth:{{ depth }}"{% endif %}{% if is_gone %} title="{{ closed_title }}" class="sl-com-gone"{% elseif is_closed %} title="{{ closed_title }}" class="sl-hidden"{% endif %}>
   <div class="sl-comment">
 {% if not is_gone %}
     <div class="sl-com-left">

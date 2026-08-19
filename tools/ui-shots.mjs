@@ -281,7 +281,7 @@ for (const kind of need) {
     report.push('  skipped every ' + kind + ' page: set ' + conf.env.user + ' and ' + conf.env.pass + ' in the environment');
     continue;
   }
-  const ctx = await browser.newContext();
+  const ctx = await browser.newContext({ ignoreHTTPSErrors: true });
   const page = await ctx.newPage();
   try {
     await setSession(page, kind);
@@ -293,7 +293,8 @@ for (const kind of need) {
   await page.close();
 }
 
-const open = await browser.newContext();
+// A development stand serves its own certificate, and the manifest names https because the session cookie needs it
+const open = await browser.newContext({ ignoreHTTPSErrors: true });
 
 for (const mode of conf.modes) {
   for (const item of conf.pages) {

@@ -27,7 +27,7 @@ div[id$="_toast"] {
 
 button.toastui-editor-toolbar-icons {
     background-image: none;
-    color: var(--sl-color-text-muted);
+    color: var(--sl-text-muted);
     font-size: 0;
     position: relative;
 }
@@ -153,7 +153,7 @@ body.sl-toastui-page-locked {
 }
 
 div[id$="_toast"].sl-toastui-editor-fullscreen {
-    background: var(--sl-color-bg);
+    background: var(--sl-bg);
     bottom: 0;
     left: 0;
     position: fixed;
@@ -192,7 +192,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .toastui-editor-mode-switch .toastui-editor-md-tab-container .tab-item {
-    border: 1px solid var(--sl-color-border);
+    border: 1px solid var(--sl-border);
     border-radius: 0 0 var(--sl-radius-control) var(--sl-radius-control);
     height: 24px;
     line-height: 24px;
@@ -202,9 +202,9 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .toastui-editor-mode-switch .toastui-editor-md-tab-container .tab-item.active {
-    background: var(--sl-color-bg);
-    border-top-color: var(--sl-color-bg);
-    color: var(--sl-color-text);
+    background: var(--sl-bg);
+    border-top-color: var(--sl-bg);
+    color: var(--sl-text);
 }
 
 /* The frame, the placing and the stacking of this window belong to the canon; what stays here is what only the file manager has */
@@ -233,8 +233,8 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-rail {
-    background: var(--sl-color-bg-soft);
-    border-right: 1px solid var(--sl-color-border);
+    background: var(--sl-surface);
+    border-right: 1px solid var(--sl-border);
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -248,7 +248,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-rail-cap {
-    color: var(--sl-color-text-subtle);
+    color: var(--sl-text-subtle);
     font-size: 11px;
     letter-spacing: 0.5px;
     padding: 4px 10px 8px;
@@ -263,7 +263,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     border: 0;
     border-radius: 8px;
     height: auto;
-    color: var(--sl-color-text-heading);
+    color: var(--sl-text-strong);
     cursor: pointer;
     display: flex;
     font: inherit;
@@ -275,7 +275,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-rail-item .bi {
-    color: var(--sl-color-text-muted);
+    color: var(--sl-text-muted);
     flex: 0 0 auto;
     font-size: var(--sl-size-icon-sm);
     margin-top: 1px;
@@ -293,7 +293,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-rail-item small {
-    color: var(--sl-color-text-subtle);
+    color: var(--sl-text-subtle);
     display: block;
     font-size: 11px;
     line-height: 1.4;
@@ -301,16 +301,16 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-rail-item:hover:not([disabled]) {
-    background: var(--sl-color-bg);
+    background: var(--sl-bg);
 }
 
 .sl-toastui-upload .sl-fm-rail-item[aria-selected="true"] {
-    background: var(--sl-color-bg);
-    box-shadow: inset 0 0 0 1px var(--sl-color-border);
+    background: var(--sl-bg);
+    box-shadow: inset 0 0 0 1px var(--sl-border);
 }
 
 .sl-toastui-upload .sl-fm-rail-item[aria-selected="true"]::before {
-    background: var(--sl-color-primary);
+    background: var(--sl-primary);
     border-radius: 0 3px 3px 0;
     bottom: 10px;
     content: "";
@@ -322,7 +322,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 
 .sl-toastui-upload .sl-fm-rail-item[aria-selected="true"] .bi,
 .sl-toastui-upload .sl-fm-rail-item[aria-selected="true"] b {
-    color: var(--sl-color-primary);
+    color: var(--sl-primary);
 }
 
 /* A section the settings close stays where it is and says why, because a control that vanishes is looked for and one that explains itself is understood */
@@ -332,16 +332,16 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 
 .sl-toastui-upload .sl-fm-rail-item[disabled] b,
 .sl-toastui-upload .sl-fm-rail-item[disabled] .bi {
-    color: var(--sl-color-text-subtle);
+    color: var(--sl-text-subtle);
 }
 
 .sl-toastui-upload .sl-fm-rail-item[disabled] small {
-    color: var(--sl-color-text-subtle);
+    color: var(--sl-text-subtle);
     font-style: italic;
 }
 
 .sl-toastui-upload .sl-fm-rail-lock {
-    color: var(--sl-color-text-subtle) !important;
+    color: var(--sl-text-subtle) !important;
     font-size: var(--sl-size-icon-xs) !important;
     margin: 0 !important;
     position: absolute;
@@ -350,13 +350,13 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-rail-sep {
-    background: var(--sl-color-border);
+    background: var(--sl-border);
     height: 1px;
     margin: 8px 10px;
 }
 
 .sl-toastui-upload .sl-fm-rail-foot {
-    color: var(--sl-color-text-subtle);
+    color: var(--sl-text-subtle);
     font-size: 11px;
     line-height: 1.5;
     margin-top: auto;
@@ -364,7 +364,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-rail-foot b {
-    color: var(--sl-color-text-muted);
+    color: var(--sl-text-muted);
     display: block;
     font-weight: 400;
 }
@@ -380,13 +380,13 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-main-head h2 {
-    color: var(--sl-color-text-heading);
+    color: var(--sl-text-strong);
     font: normal 17px/1.2 inherit;
     margin: 0 0 4px;
 }
 
 .sl-toastui-upload .sl-fm-main-head p {
-    color: var(--sl-color-text-muted);
+    color: var(--sl-text-muted);
     font-size: 12px;
     line-height: 1.5;
     margin: 0;
@@ -411,14 +411,14 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 
 /* The catalogue takes a drop of its own: files dragged onto the storage go up into the same module, and the sheet says so before the pointer is let go */
 .sl-toastui-upload .sl-fm-pane.sl-drag-over {
-    background: color-mix(in srgb, var(--sl-color-primary) 7%, transparent);
+    background: color-mix(in srgb, var(--sl-primary) 7%, transparent);
     border-radius: 10px;
-    outline: 2px dashed var(--sl-color-primary);
+    outline: 2px dashed var(--sl-primary);
     outline-offset: 4px;
 }
 
 .sl-toastui-upload .sl-fm-label {
-    color: var(--sl-color-text-heading);
+    color: var(--sl-text-strong);
     display: block;
     font-size: 12px;
     margin-bottom: var(--sl-space-sm);
@@ -426,10 +426,10 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 
 .sl-toastui-upload .sl-fm-drop {
     align-items: center;
-    background: var(--sl-color-bg-soft);
-    border: 1px dashed var(--sl-color-border-strong);
+    background: var(--sl-surface);
+    border: 1px dashed var(--sl-border-strong);
     border-radius: 10px;
-    color: var(--sl-color-text-muted);
+    color: var(--sl-text-muted);
     cursor: pointer;
     display: flex;
     flex-direction: column;
@@ -444,18 +444,18 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 .sl-toastui-upload .sl-fm-drop:hover,
 .sl-toastui-upload .sl-fm-drop:focus-visible,
 .sl-toastui-upload .sl-fm-drop.sl-drag-over {
-    background: color-mix(in srgb, var(--sl-color-primary) 7%, transparent);
-    border-color: var(--sl-color-primary);
+    background: color-mix(in srgb, var(--sl-primary) 7%, transparent);
+    border-color: var(--sl-primary);
     outline: 0;
 }
 
 .sl-toastui-upload .sl-fm-drop .bi {
-    color: var(--sl-color-primary);
+    color: var(--sl-primary);
     font-size: 30px;
 }
 
 .sl-toastui-upload .sl-fm-drop b {
-    color: var(--sl-color-text-heading);
+    color: var(--sl-text-strong);
     font-weight: 400;
 }
 
@@ -471,10 +471,10 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 
 .sl-toastui-upload .sl-fm-as label {
     align-items: center;
-    background: var(--sl-color-bg-soft);
-    border: 1px solid var(--sl-color-border);
+    background: var(--sl-surface);
+    border: 1px solid var(--sl-border);
     border-radius: 999px;
-    color: var(--sl-color-text-heading);
+    color: var(--sl-text-strong);
     cursor: pointer;
     display: inline-flex;
     font-size: 12px;
@@ -490,18 +490,18 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-as label:has(input:checked) {
-    background: color-mix(in srgb, var(--sl-color-primary) 12%, transparent);
-    border-color: var(--sl-color-primary);
+    background: color-mix(in srgb, var(--sl-primary) 12%, transparent);
+    border-color: var(--sl-primary);
     color: var(--sl-color-brand-strong);
 }
 
 /* The action sits in the row of the view choice: the same shape, pushed to the right, because it is not one of the choices */
 .sl-toastui-upload .sl-fm-as button {
     align-items: center;
-    background: var(--sl-color-bg-soft);
-    border: 1px solid var(--sl-color-border);
+    background: var(--sl-surface);
+    border: 1px solid var(--sl-border);
     border-radius: 999px;
-    color: var(--sl-color-text-heading);
+    color: var(--sl-text-strong);
     cursor: pointer;
     display: inline-flex;
     font: inherit;
@@ -513,8 +513,8 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-as button:hover {
-    border-color: var(--sl-color-primary);
-    color: var(--sl-color-primary);
+    border-color: var(--sl-primary);
+    color: var(--sl-primary);
 }
 
 .sl-toastui-upload .sl-fm-as button .bi {
@@ -525,9 +525,9 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     background: var(--sl-field-bg);
     border: 1px solid var(--sl-field-border);
     border-radius: var(--sl-field-radius);
-    box-shadow: var(--sl-shadow-input);
+    box-shadow: var(--sl-field-shadow);
     box-sizing: border-box;
-    color: var(--sl-color-text);
+    color: var(--sl-text);
     display: block;
     font: inherit;
     height: 34px;
@@ -536,8 +536,8 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-field:focus {
-    border-color: var(--sl-field-focus);
-    box-shadow: var(--sl-shadow-input), 0 0 0 3px var(--sl-field-focus-ring);
+    border-color: var(--sl-primary);
+    box-shadow: var(--sl-field-shadow), 0 0 0 3px var(--sl-field-ring);
     outline: 0;
 }
 
@@ -586,23 +586,23 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-cell:has(.sl-fm-pick input:checked) .sl-fm-tile {
-    border-color: var(--sl-color-primary);
-    box-shadow: 0 0 0 3px var(--sl-field-focus-ring);
+    border-color: var(--sl-primary);
+    box-shadow: 0 0 0 3px var(--sl-field-ring);
 }
 
 /* The current file is the one whose properties stand on the right; a mark is a separate thing and serves the actions over several files */
 .sl-toastui-upload .sl-fm-cell.sl-is-current .sl-fm-tile {
-    border-color: var(--sl-color-border-strong);
+    border-color: var(--sl-border-strong);
 }
 
 .sl-toastui-upload .sl-fm-row.sl-is-current {
-    background: var(--sl-color-bg-soft);
-    border-color: var(--sl-color-border);
+    background: var(--sl-surface);
+    border-color: var(--sl-border);
 }
 
 .sl-toastui-upload .sl-fm-row:has(.sl-fm-pick input:checked) {
-    background: color-mix(in srgb, var(--sl-color-primary) 6%, transparent);
-    border-color: var(--sl-color-primary);
+    background: color-mix(in srgb, var(--sl-primary) 6%, transparent);
+    border-color: var(--sl-primary);
 }
 
 .sl-toastui-upload .sl-fm-row .sl-fm-pick,
@@ -618,8 +618,8 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-tile {
-    background: var(--sl-color-bg);
-    border: 1px solid var(--sl-color-border);
+    background: var(--sl-bg);
+    border: 1px solid var(--sl-border);
     border-radius: 10px;
     display: block;
     overflow: hidden;
@@ -628,13 +628,13 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-cell:hover .sl-fm-tile {
-    border-color: var(--sl-color-border-strong);
+    border-color: var(--sl-border-strong);
 }
 
 .sl-toastui-upload .sl-fm-tile-img {
     align-items: center;
-    background: var(--sl-color-bg-soft-alt);
-    color: var(--sl-color-text-muted);
+    background: var(--sl-bg-subtle);
+    color: var(--sl-text-muted);
     display: flex;
     font-size: var(--sl-size-icon-md);
     height: 78px;
@@ -652,8 +652,8 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 /* The whole preview is one link: the shared lightbox opens by the picture of the object */
 .sl-toastui-upload .sl-fm-zoom {
     align-items: center;
-    background: color-mix(in srgb, var(--sl-color-text-heading) 34%, transparent);
-    color: var(--sl-color-on-dark);
+    background: color-mix(in srgb, var(--sl-text-strong) 34%, transparent);
+    color: var(--sl-on-solid);
     display: flex;
     font-size: var(--sl-size-icon-sm);
     inset: 0;
@@ -674,7 +674,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     align-items: center;
     background: rgba(255, 255, 255, 0.88);
     border-radius: 999px;
-    color: var(--sl-color-text-muted);
+    color: var(--sl-text-muted);
     display: inline-flex;
     font-size: 10px;
     height: 17px;
@@ -686,14 +686,14 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-tile-cap {
-    border-top: 1px solid var(--sl-color-border);
+    border-top: 1px solid var(--sl-border);
     display: block;
     padding: 7px 8px;
     padding-right: 40px;
 }
 
 .sl-toastui-upload .sl-fm-tile-cap b {
-    color: var(--sl-color-text-heading);
+    color: var(--sl-text-strong);
     display: block;
     font-size: 12px;
     font-weight: 400;
@@ -703,14 +703,14 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-tile-cap small {
-    color: var(--sl-color-text-subtle);
+    color: var(--sl-text-subtle);
     display: block;
     font-size: 11px;
     margin-top: 2px;
 }
 
 .sl-toastui-upload .sl-fm-more {
-    color: var(--sl-color-text-muted);
+    color: var(--sl-text-muted);
     font-size: 12px;
     margin: 0;
 }
@@ -728,7 +728,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-search .bi {
-    color: var(--sl-color-text-subtle);
+    color: var(--sl-text-subtle);
     font-size: var(--sl-size-icon-xs);
     left: 11px;
     pointer-events: none;
@@ -741,9 +741,9 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     background: var(--sl-field-bg);
     border: 1px solid var(--sl-field-border);
     border-radius: 999px;
-    box-shadow: var(--sl-shadow-input);
+    box-shadow: var(--sl-field-shadow);
     box-sizing: border-box;
-    color: var(--sl-color-text);
+    color: var(--sl-text);
     font: inherit;
     height: 32px;
     padding: 0 12px 0 32px;
@@ -751,8 +751,8 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-search input:focus {
-    border-color: var(--sl-field-focus);
-    box-shadow: var(--sl-shadow-input), 0 0 0 3px var(--sl-field-focus-ring);
+    border-color: var(--sl-primary);
+    box-shadow: var(--sl-field-shadow), 0 0 0 3px var(--sl-field-ring);
     outline: 0;
 }
 
@@ -762,10 +762,10 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-filter {
-    background: var(--sl-color-bg);
-    border: 1px solid var(--sl-color-border);
+    background: var(--sl-bg);
+    border: 1px solid var(--sl-border);
     border-radius: 999px;
-    color: var(--sl-color-text-muted);
+    color: var(--sl-text-muted);
     cursor: pointer;
     font: inherit;
     font-size: 12px;
@@ -774,18 +774,18 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-filter:hover {
-    border-color: var(--sl-color-border-strong);
-    color: var(--sl-color-text);
+    border-color: var(--sl-border-strong);
+    color: var(--sl-text);
 }
 
 .sl-toastui-upload .sl-fm-filter[aria-pressed="true"] {
-    background: color-mix(in srgb, var(--sl-color-primary) 10%, transparent);
-    border-color: var(--sl-color-primary);
+    background: color-mix(in srgb, var(--sl-primary) 10%, transparent);
+    border-color: var(--sl-primary);
     color: var(--sl-color-brand-strong);
 }
 
 .sl-toastui-upload .sl-fm-modes {
-    background: var(--sl-color-bg-soft-alt);
+    background: var(--sl-bg-subtle);
     border-radius: 8px;
     display: flex;
     gap: 2px;
@@ -797,7 +797,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     background: transparent;
     border: 0;
     border-radius: 6px;
-    color: var(--sl-color-text-muted);
+    color: var(--sl-text-muted);
     cursor: pointer;
     display: inline-flex;
     font-size: var(--sl-size-icon-xs);
@@ -807,9 +807,9 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-mode[aria-pressed="true"] {
-    background: var(--sl-color-bg);
-    box-shadow: var(--sl-shadow-soft);
-    color: var(--sl-color-primary);
+    background: var(--sl-bg);
+    box-shadow: var(--sl-shadow-xs);
+    color: var(--sl-primary);
 }
 
 .sl-toastui-upload .sl-fm-lib-split {
@@ -833,8 +833,8 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-rows-head {
-    border-bottom: 1px solid var(--sl-color-border);
-    color: var(--sl-color-text-subtle);
+    border-bottom: 1px solid var(--sl-border);
+    color: var(--sl-text-subtle);
     font-size: 11px;
     letter-spacing: 0.3px;
     padding: 0 6px 6px;
@@ -849,14 +849,14 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-row:hover {
-    background: var(--sl-color-bg-soft);
-    border-color: var(--sl-color-border);
+    background: var(--sl-surface);
+    border-color: var(--sl-border);
 }
 
 .sl-toastui-upload .sl-fm-row-thumb {
     align-items: center;
-    background: var(--sl-color-bg-soft-alt);
-    color: var(--sl-color-text-muted);
+    background: var(--sl-bg-subtle);
+    color: var(--sl-text-muted);
     display: flex;
     font-size: var(--sl-size-icon-xs);
     height: 32px;
@@ -882,12 +882,12 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 .sl-toastui-upload .sl-fm-row:focus-visible,
 .sl-toastui-upload .sl-fm-cell:focus-visible {
     border-radius: 10px;
-    outline: 2px solid var(--sl-color-primary);
+    outline: 2px solid var(--sl-primary);
     outline-offset: 2px;
 }
 
 .sl-toastui-upload .sl-fm-row-name {
-    color: var(--sl-color-text-heading);
+    color: var(--sl-text-strong);
     font-size: 12px;
     min-width: 0;
     overflow: hidden;
@@ -896,20 +896,20 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-row-meta {
-    color: var(--sl-color-text-subtle);
+    color: var(--sl-text-subtle);
     font-size: 11px;
 }
 
 .sl-toastui-upload .sl-fm-props,
 .sl-shot-side .sl-fm-props {
-    background: var(--sl-color-bg-soft);
-    border: 1px solid var(--sl-color-border);
+    background: var(--sl-surface);
+    border: 1px solid var(--sl-border);
     border-radius: 10px;
     padding: 12px;
 }
 
 .sl-toastui-upload .sl-fm-props-cap {
-    color: var(--sl-color-text-subtle);
+    color: var(--sl-text-subtle);
     display: block;
     font-size: 11px;
     letter-spacing: 0.5px;
@@ -919,9 +919,9 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 
 .sl-toastui-upload .sl-fm-props-img {
     align-items: center;
-    background: var(--sl-color-bg-soft-alt);
+    background: var(--sl-bg-subtle);
     border-radius: 8px;
-    color: var(--sl-color-text-muted);
+    color: var(--sl-text-muted);
     display: flex;
     font-size: 30px;
     height: 108px;
@@ -942,7 +942,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 
 .sl-toastui-upload .sl-fm-props div,
 .sl-shot-side .sl-fm-props div {
-    border-bottom: 1px dashed var(--sl-color-border);
+    border-bottom: 1px dashed var(--sl-border);
     display: flex;
     font-size: 12px;
     gap: 10px;
@@ -957,13 +957,13 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 
 .sl-toastui-upload .sl-fm-props dt,
 .sl-shot-side .sl-fm-props dt {
-    color: var(--sl-color-text-subtle);
+    color: var(--sl-text-subtle);
     flex: 0 0 auto;
 }
 
 .sl-toastui-upload .sl-fm-props dd,
 .sl-shot-side .sl-fm-props dd {
-    color: var(--sl-color-text-heading);
+    color: var(--sl-text-strong);
     margin: 0;
     min-width: 0;
     overflow: hidden;
@@ -973,7 +973,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-props-note {
-    color: var(--sl-color-text-subtle);
+    color: var(--sl-text-subtle);
     font-size: 11px;
     line-height: 1.45;
     margin: 10px 0 0;
@@ -990,8 +990,8 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 /* The empty catalogue names its reason instead of saying nothing; the same block carries the empty filter and the list that never arrived */
 .sl-toastui-upload .sl-fm-empty {
     align-items: center;
-    background: var(--sl-color-bg-soft);
-    border: 1px dashed var(--sl-color-border-strong);
+    background: var(--sl-surface);
+    border: 1px dashed var(--sl-border-strong);
     border-radius: 10px;
     display: flex;
     flex-direction: column;
@@ -1001,17 +1001,17 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-empty .bi {
-    color: var(--sl-color-text-subtle);
+    color: var(--sl-text-subtle);
     font-size: 30px;
 }
 
 .sl-toastui-upload .sl-fm-empty b {
-    color: var(--sl-color-text-heading);
+    color: var(--sl-text-strong);
     font-weight: 400;
 }
 
 .sl-toastui-upload .sl-fm-empty p {
-    color: var(--sl-color-text-muted);
+    color: var(--sl-text-muted);
     font-size: 12px;
     line-height: 1.5;
     margin: 0;
@@ -1019,13 +1019,13 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-empty.sl-is-fail .bi {
-    color: var(--sl-color-danger);
+    color: var(--sl-danger);
 }
 
 /* The skeleton of the catalogue takes the shape of a tile, because tiles is what the compact catalogue shows and a row-shaped placeholder would jump when the answer lands */
 .sl-toastui-upload .sl-skel-tile {
-    background: var(--sl-color-bg);
-    border: 1px solid var(--sl-color-border);
+    background: var(--sl-bg);
+    border: 1px solid var(--sl-border);
     border-radius: 10px;
     overflow: hidden;
 }
@@ -1042,8 +1042,8 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 
 /* The upload queue: the files go one at a time, each with its own bar and its own cancel, and a refused one names the reason the server gave */
 .sl-toastui-upload .sl-fm-queue {
-    background: var(--sl-color-bg-soft);
-    border: 1px solid var(--sl-color-border);
+    background: var(--sl-surface);
+    border: 1px solid var(--sl-border);
     border-radius: 10px;
     display: flex;
     flex-direction: column;
@@ -1053,14 +1053,14 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 
 .sl-toastui-upload .sl-fm-queue-cap {
     align-items: center;
-    color: var(--sl-color-text-muted);
+    color: var(--sl-text-muted);
     display: flex;
     font-size: 12px;
     gap: 10px;
 }
 
 .sl-toastui-upload .sl-fm-queue-cap b {
-    color: var(--sl-color-text-heading);
+    color: var(--sl-text-strong);
     flex: 1 1 auto;
     font-weight: 400;
 }
@@ -1073,12 +1073,12 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-job > .bi {
-    color: var(--sl-color-text-muted);
+    color: var(--sl-text-muted);
     font-size: var(--sl-size-icon-sm);
 }
 
 .sl-toastui-upload .sl-fm-job-name {
-    color: var(--sl-color-text-heading);
+    color: var(--sl-text-strong);
     display: flex;
     font-size: 12px;
     gap: 10px;
@@ -1093,29 +1093,29 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-job-name small {
-    color: var(--sl-color-text-subtle);
+    color: var(--sl-text-subtle);
     flex: 0 0 auto;
 }
 
 .sl-toastui-upload .sl-fm-job-why {
-    color: var(--sl-color-danger);
+    color: var(--sl-danger);
     font-size: 12px;
     line-height: 1.4;
     margin: 0;
 }
 
 .sl-toastui-upload .sl-fm-job.sl-is-done > .bi {
-    color: var(--sl-color-success);
+    color: var(--sl-success);
 }
 
 .sl-toastui-upload .sl-fm-job.sl-is-fail > .bi {
-    color: var(--sl-color-danger);
+    color: var(--sl-danger);
 }
 
 /* An action goes at its own pace: while the server has not answered, the object is busy and says so, and nothing on the list disappears before the answer */
 .sl-toastui-upload .sl-fm-busy {
     align-items: center;
-    background: color-mix(in srgb, var(--sl-color-bg) 74%, transparent);
+    background: color-mix(in srgb, var(--sl-bg) 74%, transparent);
     border-radius: 8px;
     display: flex;
     inset: 0;
@@ -1126,14 +1126,14 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 
 .sl-toastui-upload .sl-fm-quota {
     align-items: center;
-    color: var(--sl-color-text-muted);
+    color: var(--sl-text-muted);
     display: flex;
     font-size: 12px;
     gap: 10px;
 }
 
 .sl-toastui-upload .sl-fm-quota-track {
-    background: var(--sl-color-bg-soft-alt);
+    background: var(--sl-bg-subtle);
     border-radius: 3px;
     flex: 1 1 auto;
     height: 6px;
@@ -1141,7 +1141,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-fm-quota-fill {
-    background: linear-gradient(90deg, var(--sl-color-primary), var(--sl-color-brand-strong));
+    background: linear-gradient(90deg, var(--sl-primary), var(--sl-color-brand-strong));
     border-radius: 3px;
     display: block;
     height: 100%;
@@ -1166,7 +1166,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
         grid-template-columns: 1fr;
     }
     .sl-toastui-upload .sl-fm-rail {
-        border-bottom: 1px solid var(--sl-color-border);
+        border-bottom: 1px solid var(--sl-border);
         border-right: 0;
         flex-direction: row;
         overflow-x: auto;
@@ -1225,9 +1225,9 @@ dialog.sl-editor-emoji-panel {
     background: var(--sl-field-bg);
     border: 1px solid var(--sl-field-border);
     border-radius: var(--sl-field-radius);
-    box-shadow: var(--sl-shadow-input);
+    box-shadow: var(--sl-field-shadow);
     box-sizing: border-box;
-    color: var(--sl-color-text);
+    color: var(--sl-text);
     font-size: 12px;
     height: 32px;
     padding: 0 var(--sl-space-md);
@@ -1242,10 +1242,10 @@ dialog.sl-editor-emoji-panel {
 
 /* Emoji tabs reuse the popup button pair: secondary look idle, primary (blue) when active */
 .sl-editor-emoji-tab {
-    background: var(--sl-color-bg-soft);
-    border: 1px solid var(--sl-color-border);
+    background: var(--sl-surface);
+    border: 1px solid var(--sl-border);
     border-radius: var(--sl-radius-control);
-    color: var(--sl-color-text);
+    color: var(--sl-text);
     cursor: pointer;
     flex: 0 0 auto;
     font-size: 12px;
@@ -1254,17 +1254,17 @@ dialog.sl-editor-emoji-panel {
 }
 
 .sl-editor-emoji-tab:hover {
-    border-color: var(--sl-color-border-strong);
+    border-color: var(--sl-border-strong);
 }
 
 .sl-editor-emoji-tab.active {
-    background: var(--sl-color-primary);
-    border-color: var(--sl-color-primary);
-    color: var(--sl-color-on-dark);
+    background: var(--sl-primary);
+    border-color: var(--sl-primary);
+    color: var(--sl-on-solid);
 }
 
 .sl-editor-emoji-tab.active:hover {
-    background: var(--sl-color-primary-hover);
+    background: var(--sl-primary-strong);
 }
 
 .sl-editor-emoji-grid {
@@ -1277,7 +1277,7 @@ dialog.sl-editor-emoji-panel {
 }
 
 .sl-editor-emoji-item {
-    background: var(--sl-color-bg);
+    background: var(--sl-bg);
     border: 1px solid transparent;
     border-radius: var(--sl-radius-control);
     cursor: pointer;
@@ -1291,12 +1291,12 @@ dialog.sl-editor-emoji-panel {
 
 .sl-editor-emoji-item:hover,
 .sl-editor-emoji-item:focus {
-    background: var(--sl-color-bg-soft);
-    border-color: var(--sl-color-border-strong);
+    background: var(--sl-surface);
+    border-color: var(--sl-border-strong);
 }
 
 .sl-editor-emoji-empty {
-    color: var(--sl-color-text-muted);
+    color: var(--sl-text-muted);
     grid-column: 1 / -1;
     padding: 12px 4px;
 }
@@ -1308,23 +1308,23 @@ dialog.sl-editor-emoji-panel {
 /* ===== Vendor alignment: engine surfaces mapped to theme tokens (chrome) ===== */
 /* The theme font everywhere: kills the vendor font stack so every window inherits one chain from the page */
 .toastui-editor-defaultUI {
-    border: 1px solid var(--sl-color-border);
+    border: 1px solid var(--sl-border);
     border-radius: var(--sl-radius-card);
     font-family: inherit;
 }
 
 .toastui-editor-md-container,
 .toastui-editor-ww-container {
-    background-color: var(--sl-color-bg);
+    background-color: var(--sl-bg);
 }
 
 .toastui-editor-main .toastui-editor-md-splitter {
-    background-color: var(--sl-color-border);
+    background-color: var(--sl-border);
 }
 
 .toastui-editor-toolbar {
-    background-color: var(--sl-color-bg-soft);
-    border-bottom: 1px solid var(--sl-color-border);
+    background-color: var(--sl-surface);
+    border-bottom: 1px solid var(--sl-border);
     border-radius: calc(var(--sl-radius-card) - 1px) calc(var(--sl-radius-card) - 1px) 0 0;
 }
 
@@ -1335,83 +1335,83 @@ dialog.sl-editor-emoji-panel {
 }
 
 .toastui-editor-defaultUI-toolbar button {
-    border: 1px solid var(--sl-color-bg-soft);
+    border: 1px solid var(--sl-surface);
     border-radius: var(--sl-radius-control);
 }
 
 .toastui-editor-defaultUI-toolbar button:not(:disabled):hover {
-    background-color: var(--sl-color-bg);
-    border: 1px solid var(--sl-color-border);
+    background-color: var(--sl-bg);
+    border: 1px solid var(--sl-border);
 }
 
 .toastui-editor-dropdown-toolbar {
-    background-color: var(--sl-color-bg-soft);
-    border: 1px solid var(--sl-color-border);
+    background-color: var(--sl-surface);
+    border: 1px solid var(--sl-border);
     border-radius: var(--sl-radius-control);
-    box-shadow: var(--sl-shadow-panel);
+    box-shadow: var(--sl-panel-shadow);
 }
 
 .toastui-editor-defaultUI-toolbar .scroll-sync.active::before {
-    color: var(--sl-color-primary);
+    color: var(--sl-primary);
 }
 
 .toastui-editor-defaultUI-toolbar .switch {
-    background-color: var(--sl-color-border-strong);
+    background-color: var(--sl-border-strong);
 }
 
 .toastui-editor-defaultUI-toolbar .switch::before {
-    background-color: var(--sl-color-text-muted);
+    background-color: var(--sl-text-muted);
 }
 
 .toastui-editor-defaultUI-toolbar input:checked + .switch {
-    background-color: color-mix(in srgb, var(--sl-color-primary) 35%, var(--sl-color-bg));
+    background-color: color-mix(in srgb, var(--sl-primary) 35%, var(--sl-bg));
 }
 
 .toastui-editor-defaultUI-toolbar input:checked + .switch::before {
-    background-color: var(--sl-color-primary);
+    background-color: var(--sl-primary);
 }
 
 .toastui-editor-mode-switch {
-    background-color: var(--sl-color-bg);
-    border-top: 1px solid var(--sl-color-border);
+    background-color: var(--sl-bg);
+    border-top: 1px solid var(--sl-border);
     border-radius: 0 0 var(--sl-radius-card) var(--sl-radius-card);
 }
 
 .toastui-editor-mode-switch .tab-item {
-    background: var(--sl-color-bg-soft);
-    border: 1px solid var(--sl-color-border);
-    color: var(--sl-color-text-muted);
+    background: var(--sl-surface);
+    border: 1px solid var(--sl-border);
+    color: var(--sl-text-muted);
 }
 
 .toastui-editor-mode-switch .tab-item.active {
-    background-color: var(--sl-color-bg);
-    border-top: 1px solid var(--sl-color-bg);
-    color: var(--sl-color-text);
+    background-color: var(--sl-bg);
+    border-top: 1px solid var(--sl-bg);
+    color: var(--sl-text);
 }
 
 .toastui-editor-md-tab-container .tab-item {
-    background: var(--sl-color-bg-soft);
-    border: 1px solid var(--sl-color-border);
-    color: var(--sl-color-text-muted);
+    background: var(--sl-surface);
+    border: 1px solid var(--sl-border);
+    color: var(--sl-text-muted);
 }
 
 .toastui-editor-md-tab-container .tab-item.active {
-    background-color: var(--sl-color-bg);
-    border-bottom-color: var(--sl-color-border);
-    border-top-color: var(--sl-color-bg);
-    color: var(--sl-color-text);
+    background-color: var(--sl-bg);
+    border-bottom-color: var(--sl-border);
+    border-top-color: var(--sl-bg);
+    color: var(--sl-text);
 }
 
 /* ===== Vendor alignment: dialogs and controls ===== */
 .toastui-editor-popup {
-    background: var(--sl-color-bg);
-    border: 1px solid var(--sl-color-border-strong);
+    background: var(--sl-bg);
+    border: 1px solid var(--sl-border-strong);
     border-radius: var(--sl-radius-card);
-    box-shadow: var(--sl-shadow-panel);
+    box-shadow: var(--sl-panel-shadow);
 }
 
 .toastui-editor-popup-body label {
-    color: var(--sl-color-text);
+    color: var(--sl-text);
     font-weight: 400;
 }
 
@@ -1419,117 +1419,117 @@ dialog.sl-editor-emoji-panel {
     background: var(--sl-field-bg);
     border: 1px solid var(--sl-field-border);
     border-radius: var(--sl-field-radius);
-    box-shadow: var(--sl-shadow-input);
-    color: var(--sl-color-text);
+    box-shadow: var(--sl-field-shadow);
+    color: var(--sl-text);
     padding: 0 var(--sl-space-md);
 }
 
 .toastui-editor-popup-body input[type="text"]:focus {
-    border-color: var(--sl-field-focus);
-    box-shadow: 0 0 0 3px var(--sl-field-focus-ring);
+    border-color: var(--sl-primary);
+    box-shadow: 0 0 0 3px var(--sl-field-ring);
     outline: 0;
 }
 
 .toastui-editor-popup-body input[type="text"].disabled {
-    background-color: var(--sl-color-bg-soft);
+    background-color: var(--sl-surface);
     border-color: var(--sl-field-border);
-    color: var(--sl-color-text-muted);
+    color: var(--sl-text-muted);
 }
 
 .toastui-editor-popup-body input.wrong,
 .toastui-editor-popup-body span.wrong {
-    border-color: var(--sl-color-danger);
+    border-color: var(--sl-danger);
 }
 
 .toastui-editor-defaultUI .toastui-editor-ok-button {
-    background-color: var(--sl-color-primary);
+    background-color: var(--sl-primary);
     border-radius: var(--sl-radius-control);
-    color: var(--sl-color-on-dark);
-    outline-color: var(--sl-color-primary-hover);
+    color: var(--sl-on-solid);
+    outline-color: var(--sl-primary-strong);
     padding: 0 var(--sl-space-lg);
 }
 
 .toastui-editor-defaultUI .toastui-editor-ok-button:hover {
-    background-color: var(--sl-color-primary-hover);
+    background-color: var(--sl-primary-strong);
 }
 
 .toastui-editor-defaultUI .toastui-editor-close-button {
-    background-color: var(--sl-color-bg-soft);
-    border: 1px solid var(--sl-color-border);
+    background-color: var(--sl-surface);
+    border: 1px solid var(--sl-border);
     border-radius: var(--sl-radius-control);
-    color: var(--sl-color-text);
-    outline-color: var(--sl-color-border-strong);
+    color: var(--sl-text);
+    outline-color: var(--sl-border-strong);
     padding: 0 var(--sl-space-lg);
 }
 
 .toastui-editor-defaultUI .toastui-editor-close-button:hover {
-    border-color: var(--sl-color-border-strong);
+    border-color: var(--sl-border-strong);
 }
 
 .toastui-editor-popup-add-table .toastui-editor-table-cell {
-    background: var(--sl-color-bg);
-    border: 1px solid var(--sl-color-border);
+    background: var(--sl-bg);
+    border: 1px solid var(--sl-border);
 }
 
 .toastui-editor-popup-add-table .toastui-editor-table-cell.header {
-    background: var(--sl-color-bg-soft);
+    background: var(--sl-surface);
 }
 
 .toastui-editor-popup-add-table .toastui-editor-table-selection-layer {
-    background: color-mix(in srgb, var(--sl-color-primary) 10%, transparent);
-    border: 1px solid var(--sl-color-primary);
+    background: color-mix(in srgb, var(--sl-primary) 10%, transparent);
+    border: 1px solid var(--sl-primary);
 }
 
 .toastui-editor-popup-add-table .toastui-editor-table-description {
-    color: var(--sl-color-text);
+    color: var(--sl-text);
 }
 
 .toastui-editor-popup-add-heading ul li:hover {
-    background-color: var(--sl-color-bg-soft);
+    background-color: var(--sl-surface);
 }
 
 .toastui-editor-context-menu {
-    background-color: var(--sl-color-bg);
-    border: 1px solid var(--sl-color-border);
+    background-color: var(--sl-bg);
+    border: 1px solid var(--sl-border);
     border-radius: var(--sl-radius-control);
-    box-shadow: var(--sl-shadow-panel);
-    color: var(--sl-color-text);
+    box-shadow: var(--sl-panel-shadow);
+    color: var(--sl-text);
 }
 
 .toastui-editor-context-menu .menu-group {
-    border-bottom: 1px solid var(--sl-color-border);
+    border-bottom: 1px solid var(--sl-border);
 }
 
 .toastui-editor-context-menu .menu-item:hover {
-    background-color: var(--sl-color-bg-soft);
+    background-color: var(--sl-surface);
 }
 
 /* ===== Vendor alignment: states, focus, markdown syntax ===== */
 .ProseMirror .placeholder,
 .toastui-editor-contents-placeholder::before {
-    color: var(--sl-field-placeholder);
+    color: var(--sl-field-text);
 }
 
 .toastui-editor-defaultUI button:focus-visible,
 .sl-editor-emoji-tab:focus-visible,
 .sl-editor-emoji-item:focus-visible {
-    box-shadow: 0 0 0 3px var(--sl-field-focus-ring);
+    box-shadow: 0 0 0 3px var(--sl-field-ring);
     outline: 0;
 }
 
 .sl-editor-emoji-search:focus {
-    border-color: var(--sl-field-focus);
-    box-shadow: 0 0 0 3px var(--sl-field-focus-ring);
+    border-color: var(--sl-primary);
+    box-shadow: 0 0 0 3px var(--sl-field-ring);
     outline: 0;
 }
 
 .toastui-editor-contents .toastui-editor-md-preview-highlight::after {
-    background-color: color-mix(in srgb, var(--sl-color-primary) 14%, transparent);
+    background-color: color-mix(in srgb, var(--sl-primary) 14%, transparent);
 }
 
 .toastui-editor-contents th.toastui-editor-md-preview-highlight,
 .toastui-editor-contents td.toastui-editor-md-preview-highlight {
-    background-color: color-mix(in srgb, var(--sl-color-primary) 14%, transparent);
+    background-color: color-mix(in srgb, var(--sl-primary) 14%, transparent);
 }
 
 .toastui-editor-md-delimiter,
@@ -1537,40 +1537,40 @@ dialog.sl-editor-emoji-panel {
 .toastui-editor-md-link,
 .toastui-editor-md-table,
 .toastui-editor-md-block-quote {
-    color: color-mix(in srgb, var(--sl-color-text-muted) 60%, transparent);
+    color: color-mix(in srgb, var(--sl-text-muted) 60%, transparent);
 }
 
 .toastui-editor-md-meta,
 .toastui-editor-md-html,
 .toastui-editor-md-link.toastui-editor-md-link-url.toastui-editor-md-marked-text {
-    color: var(--sl-color-text-muted);
+    color: var(--sl-text-muted);
 }
 
 .toastui-editor-ww-code-block-language {
-    background-color: var(--sl-color-bg);
-    border: 1px solid var(--sl-color-border-strong);
+    background-color: var(--sl-bg);
+    border: 1px solid var(--sl-border-strong);
     border-radius: var(--sl-radius-control);
 }
 
 .toastui-editor-custom-block .toastui-editor-custom-block-editor {
-    background: var(--sl-color-bg-soft);
-    border: solid 1px var(--sl-color-border-strong);
-    color: var(--sl-color-text);
+    background: var(--sl-surface);
+    border: solid 1px var(--sl-border-strong);
+    color: var(--sl-text);
 }
 
 .toastui-editor-custom-block.ProseMirror-selectednode .toastui-editor-custom-block-view {
-    border: solid 1px var(--sl-color-border-strong);
+    border: solid 1px var(--sl-border-strong);
     border-radius: var(--sl-radius-control);
 }
 
 .toastui-editor-tooltip {
-    background-color: var(--sl-color-text);
+    background-color: var(--sl-text);
     border-radius: var(--sl-radius-control);
-    color: var(--sl-color-bg);
+    color: var(--sl-bg);
 }
 
 .toastui-editor-tooltip .arrow {
-    background-color: var(--sl-color-text);
+    background-color: var(--sl-text);
 }
 
 /* ===== Vendor alignment: WYSIWYG content, light color pass only ===== */
@@ -1580,78 +1580,78 @@ dialog.sl-editor-emoji-panel {
 .toastui-editor-contents h4,
 .toastui-editor-contents h5,
 .toastui-editor-contents h6 {
-    color: var(--sl-color-text-heading);
+    color: var(--sl-text-strong);
 }
 
 .toastui-editor-contents h1 {
-    border-bottom-color: var(--sl-color-border-strong);
+    border-bottom-color: var(--sl-border-strong);
 }
 
 .toastui-editor-contents h2 {
-    border-bottom-color: var(--sl-color-border);
+    border-bottom-color: var(--sl-border);
 }
 
 .toastui-editor-contents p {
-    color: var(--sl-color-text);
+    color: var(--sl-text);
 }
 
 .toastui-editor-contents del {
-    color: var(--sl-color-text-muted);
+    color: var(--sl-text-muted);
 }
 
 .toastui-editor-contents blockquote {
-    border-left-color: var(--sl-color-border-strong);
+    border-left-color: var(--sl-border-strong);
 }
 
 .toastui-editor-contents blockquote,
 .toastui-editor-contents blockquote p,
 .toastui-editor-contents blockquote ul,
 .toastui-editor-contents blockquote ol {
-    color: var(--sl-color-text-muted);
+    color: var(--sl-text-muted);
 }
 
 .toastui-editor-contents pre {
-    background-color: var(--sl-color-bg-soft);
+    background-color: var(--sl-surface);
 }
 
 .toastui-editor-contents code {
-    background-color: var(--sl-color-bg-soft);
+    background-color: var(--sl-surface);
     border-radius: var(--sl-radius-control);
-    color: var(--sl-color-primary);
+    color: var(--sl-primary);
 }
 
 .toastui-editor-contents table {
-    border-color: var(--sl-color-border);
-    color: var(--sl-color-text);
+    border-color: var(--sl-border);
+    color: var(--sl-text);
 }
 
 .toastui-editor-contents table th,
 .toastui-editor-contents table td {
-    border-color: var(--sl-color-border);
+    border-color: var(--sl-border);
 }
 
 .toastui-editor-contents table th,
 .toastui-editor-contents th p {
-    background-color: var(--sl-color-bg-soft);
-    color: var(--sl-color-text);
+    background-color: var(--sl-surface);
+    color: var(--sl-text);
 }
 
 .toastui-editor-contents td.toastui-editor-cell-selected {
-    background-color: color-mix(in srgb, var(--sl-color-primary) 14%, transparent);
+    background-color: color-mix(in srgb, var(--sl-primary) 14%, transparent);
 }
 
 .toastui-editor-contents th.toastui-editor-cell-selected {
-    background-color: color-mix(in srgb, var(--sl-color-primary) 24%, transparent);
+    background-color: color-mix(in srgb, var(--sl-primary) 24%, transparent);
 }
 
 .toastui-editor-contents hr {
-    border-top-color: var(--sl-color-border-strong);
+    border-top-color: var(--sl-border-strong);
 }
 
 .toastui-editor-contents a {
-    color: var(--sl-color-primary);
+    color: var(--sl-primary);
 }
 
 .toastui-editor-contents a:hover {
-    color: var(--sl-color-primary-hover);
+    color: var(--sl-primary-strong);
 }

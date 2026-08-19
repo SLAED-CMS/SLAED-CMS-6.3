@@ -1,6 +1,7 @@
 {
   "_": "The whole screenshot rig, tracked so the next session has something to run. Credentials are never stored here: the runner reads SLAED_UI_USER and SLAED_UI_PASS from the environment and skips every page needing a session when they are absent.",
-  "base": "http://slaed.loc",
+  "_base": "the session cookie is secure when homeurl is https, so a run over http is handed a cookie the browser drops: no session and no error to read",
+  "base": "https://slaed.loc",
   "out": "tools/ui-baseline",
   "threshold": 0.002,
   "_settle": "the gap between the two shots that decide the page has stopped changing; this site keeps repainting for about two seconds after load, so a fixed wait rendered two different pages at random",

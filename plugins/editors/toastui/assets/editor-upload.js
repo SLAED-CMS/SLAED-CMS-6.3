@@ -408,7 +408,7 @@
         box.querySelector('.sl-dial-toggle').title = getLab(id, 'acts', '');
         box.querySelector('.sl-dial-toggle').setAttribute('aria-label', getLab(id, 'acts', ''));
         // The width of the fan plate is counted by the theme through this variable, so it is written down and never inferred from a child index
-        box.style.setProperty('--sl-dial-count', String(seen));
+        box.style.setProperty('--sl-d-count', String(seen));
         return seen ? box : null;
     }
 

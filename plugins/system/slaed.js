@@ -900,7 +900,7 @@
             var arrow = Math.max(14, Math.min(width - 14, center - left));
             panel.style.left = left + 'px';
             panel.style.top = top + 'px';
-            panel.style.setProperty('--sl-float-arrow', arrow + 'px');
+            panel.style.setProperty('--sl-d-arrow', arrow + 'px');
         });
     }
 
@@ -1099,8 +1099,8 @@
             feed.appendChild(clone);
         });
         window.requestAnimationFrame(function () {
-            view.style.setProperty('--sl-profile-scroll-distance', feed.scrollHeight / 2 + 'px');
-            view.style.setProperty('--sl-profile-scroll-duration', Math.max(15, items.length * 3) + 's');
+            view.style.setProperty('--sl-d-distance', feed.scrollHeight / 2 + 'px');
+            view.style.setProperty('--sl-d-duration', Math.max(15, items.length * 3) + 's');
             view.classList.add('sl-is-scrolling');
         });
     }

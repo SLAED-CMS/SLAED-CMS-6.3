@@ -1,41 +1,41 @@
 {
-    "generated": "2026-08-19T07:37:33Z",
+    "generated": "2026-08-19T10:06:58Z",
     "themes": {
         "admin": {
-            "count": 1005,
-            "bare": 109,
-            "dup": 182,
-            "names": 160,
-            "dead": 1,
-            "single": 36,
+            "count": 1003,
+            "bare": 107,
+            "dup": 181,
+            "names": 71,
+            "dead": 0,
+            "single": 31,
             "alias": 0,
-            "unsat": 1,
-            "scoped": 96,
+            "unsat": 0,
+            "scoped": 88,
             "clash": 0,
             "classes": 4,
             "important": 23,
-            "tokens": 121,
+            "tokens": 105,
             "contrast": 14
         },
         "lite": {
             "count": 1637,
             "bare": 150,
             "dup": 276,
-            "names": 198,
-            "dead": 2,
-            "single": 62,
+            "names": 102,
+            "dead": 0,
+            "single": 55,
             "alias": 0,
             "unsat": 0,
-            "scoped": 113,
+            "scoped": 109,
             "clash": 0,
             "classes": 10,
             "important": 19,
-            "tokens": 169,
+            "tokens": 154,
             "contrast": 53
         }
     },
     "global": {
-        "kinds": 1,
+        "kinds": 0,
         "markup": 143
     }
 }

@@ -1,105 +1,119 @@
-/* Root variables: color palette, spacing, radius and shadows */
+/* Root variables: the theme API. A new theme repaints this block and nothing below the marker */
 :root {
-  --sl-color-bg: #ffffff;
-  --sl-color-bg-soft: #f7fbfd;
-  --sl-color-bg-muted: #f4f6f8;
-  --sl-color-bg-subtle: #f3f4f6;
-  --sl-color-border: #e8ebee;
-  --sl-color-border-strong: #cad2da;
-  --sl-color-text: #111827;
-  --sl-color-text-heading: var(--sl-color-text);
+  /* Colour: page, surfaces, borders */
+  --sl-bg: #ffffff;
+  --sl-bg-subtle: #f3f4f6;
+  --sl-bg-muted: #f4f6f8;
+  --sl-surface: #f7fbfd;
+  --sl-border: #e8ebee;
+  --sl-border-strong: #cad2da;
+
+  /* Colour: text */
+  --sl-text: #111827;
+  --sl-text-muted: #6b7280;
+  --sl-text-strong: var(--sl-text);
+  /* Waiting on the colour ramp: one tone between text and muted, with no step of its own yet */
   --sl-color-text-soft: #374151;
-  --sl-color-text-muted: #6b7280;
-  --sl-color-primary: #0877b1;
-  --sl-color-primary-hover: #207fb6;
+
+  /* Colour: brand and status */
+  --sl-primary: #0877b1;
+  --sl-primary-strong: #207fb6;
+  --sl-primary-muted: #8fc5d9;
+  --sl-primary-subtle: #d9eef6;
+  /* Waiting on the colour ramp: the fourth blue reads as a link under the pointer, the fifth is the centre stop of the header line */
   --sl-color-primary-hover-soft: #58a0c8;
   --sl-color-primary-center: #174372;
-  --sl-color-primary-soft: #8fc5d9;
-  --sl-color-primary-tint: #d9eef6;
-  --sl-color-success: #34b94b;
-  --sl-color-success-strong: #24973a;
-  --sl-color-success-soft: #eaf7ed;
-  --sl-color-danger: #e24c4c;
-  --sl-color-danger-strong: #c73535;
-  --sl-color-danger-soft: #fdecec;
-  --sl-color-warning: #d97706;
-  --sl-color-warning-strong: #c2410c;
-  --sl-color-warning-soft: #fff4e5;
-  --sl-color-accent: #8e44ad;
-  --sl-color-info-soft: #e8f4fd;
-  --sl-color-on-dark: #ffffff;
-  --sl-changelog-card: #ffffff;
-  --sl-changelog-text: #374151;
-  --sl-changelog-meta: #6b7280;
-  --sl-changelog-code: #111827;
-  --sl-changelog-add: #34b94b;
-  --sl-changelog-del: #e24c4c;
-  --sl-changelog-header: #f3f4f6;
-  --sl-changelog-border: #e8ebee;
+  --sl-success: #34b94b;
+  --sl-success-strong: #24973a;
+  --sl-success-subtle: #eaf7ed;
+  --sl-danger: #e24c4c;
+  --sl-danger-strong: #c73535;
+  --sl-danger-subtle: #fdecec;
+  --sl-warning: #d97706;
+  --sl-warning-strong: #c2410c;
+  --sl-warning-subtle: #fff4e5;
+  --sl-accent: #8e44ad;
+  --sl-info-subtle: #e8f4fd;
+  --sl-on-solid: #ffffff;
+  --sl-scrim-subtle: rgba(0, 0, 0, 0.1);
+
+  /* Categorical: the monitor series, a set with no order */
+  --sl-chart-up: var(--sl-warning);
+  --sl-chart-down: var(--sl-success);
+  --sl-chart-cpu: var(--sl-danger);
+  --sl-chart-ram: var(--sl-primary);
+
+  /* Control and icon sizes */
   --sl-size-control: 28px;
-  --sl-size-pager: 30px;
-  --sl-size-head: 32px;
   --sl-size-chip: 26px;
+  --sl-size-tile: 44px;
   --sl-size-icon-xs: 16px;
   --sl-size-icon-sm: 18px;
   --sl-size-icon-lg: 28px;
-  --sl-size-tile: 44px;
+  /* Waiting on the size ladder: 32px is the large icon in lite and the tile icon here */
   --sl-size-tile-icon: 32px;
-  --sl-img-placeholder-size: 64px;
-  --sl-img-placeholder-icon-size: 48px;
-  --sl-hover-opacity: 0.8;
-  --sl-hover-scale-up: 1.1;
-  --sl-hover-scale-down: 0.9;
-  --sl-hover-lift-up: -1px;
-  --sl-hover-brightness-up: 1.08;
-  --sl-hover-bg-soft: #f7fbfd;
-  --sl-hover-bg-muted: #f4f6f8;
-  --sl-hover-bg-primary: #207fb6;
-  --sl-hover-color-primary: #207fb6;
-  --sl-hover-color-soft: #58a0c8;
-  --sl-hover-color-tint: #d9eef6;
-  --sl-hover-border-strong: #cad2da;
-  --sl-hover-border-soft: #8fc5d9;
-  --sl-hover-border-primary: #207fb6;
-  --sl-hover-shadow-card: 0 2px 6px rgba(35, 52, 70, 0.12);
-  --sl-hover-shadow-input:
-    inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 0 0 2px rgba(11, 135, 201, 0.08);
-  --sl-hover-preview-size: 48px;
-  --sl-hover-preview-radius: 30px;
-  --sl-radius-control: 4px;
-  --sl-radius-panel: 4px;
-  --sl-radius-soft: 6px;
-  --sl-radius-card: 8px;
+
+  /* Spacing and radius, still on the legacy scale until the ladder lands */
   --sl-space-xs: 4px;
   --sl-space-sm: 6px;
   --sl-space-md: 8px;
   --sl-space-lg: 12px;
-  --sl-space-xl: 16px;
-  --sl-shadow-soft: rgba(32, 75, 102, 0.18);
-  --sl-shadow-panel: 0 1px 3px rgba(0, 0, 0, 0.05);
-  --sl-shadow-control:
-    0 2px 4px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.42),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
-  --sl-shadow-control-active: inset 0 1px 4px 0 rgba(0, 0, 0, 0.2);
+  --sl-radius-control: 4px;
+  --sl-radius-panel: 4px;
+  --sl-radius-soft: 6px;
+  --sl-radius-card: 8px;
+  --sl-hover-opacity: 0.8;
+
+  /* Shadows */
+  --sl-shadow-color: rgba(32, 75, 102, 0.18);
+  --sl-shadow-xs: 0 1px 2px rgba(32, 75, 102, 0.08);
+  --sl-shadow-raised: 0 2px 6px rgba(35, 52, 70, 0.12);
+  --sl-shadow-float: 0 6px 18px rgba(0, 90, 130, 0.18);
+  --sl-shadow-inset: inset 0 1px 4px 0 rgba(0, 0, 0, 0.2);
+  --sl-shadow-focus: 0 0 0 2px rgba(11, 135, 201, 0.22);
+  /* Waiting on the shadow roles: composed shadows and ring colours that no role covers yet */
+  --sl-shadow-sidebar: 0 2px 6px rgba(41, 86, 109, 0.28);
+  --sl-shadow-bar:
+    0 1px 3px rgba(43, 87, 112, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.85);
   --sl-shadow-hover-soft: 0 0 0 2px rgba(32, 127, 182, 0.08);
-  --sl-text-shadow-light: 0 1px 0 var(--sl-color-bg);
-  --sl-text-shadow-dark: 0 1px 0 rgba(0, 0, 0, 0.1);
-  --sl-focus-primary: rgba(32, 127, 182, 0.38);
-  --sl-shadow-input:
-    inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 1px 1px rgba(43, 87, 112, 0.08);
   --sl-shadow-input-active:
     inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 1px 2px rgba(43, 87, 112, 0.18);
-  --sl-focus-primary-ring: 0 0 0 2px rgba(11, 135, 201, 0.22);
-  --sl-field-bg: var(--sl-color-bg);
-  --sl-field-border: var(--sl-color-border-strong);
-  --sl-field-focus: var(--sl-color-primary);
-  --sl-field-focus-ring: rgba(11, 135, 201, 0.22);
-  --sl-field-radius: var(--sl-radius-control);
-  --sl-field-placeholder: var(--sl-color-text-muted);
-  --sl-focus-success-ring:
-    inset 0 0 0 1px rgba(0, 0, 0, 0.12), 0 0 0 2px rgba(52, 185, 75, 0.22);
+  --sl-hover-shadow-input:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 0 0 2px rgba(11, 135, 201, 0.08);
+  --sl-focus-primary: rgba(32, 127, 182, 0.38);
   --sl-focus-danger: rgba(226, 76, 76, 0.3);
   --sl-focus-success: rgba(52, 185, 75, 0.3);
+  --sl-focus-success-ring:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.12), 0 0 0 2px rgba(52, 185, 75, 0.22);
+
+  /* Components: the window canon, one dialog with four axes */
+  --sl-modal-width: 560px;
+  --sl-modal-height: 42px;
+  --sl-modal-gap: 24px;
+  --sl-modal-pad-x: 20px;
+
+  /* Components */
+  --sl-btn-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  --sl-card-shadow: 0 1px 1px rgba(35, 52, 70, 0.08);
+  --sl-panel-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --sl-panel-height: 32px;
+  --sl-pager-height: 30px;
+  --sl-placeholder-height: 64px;
+  /* Waiting on the type ladder: the glyph inside the placeholder is a font size above every step */
+  --sl-img-placeholder-icon-size: 48px;
+  --sl-thumb-height: 48px;
+  --sl-thumb-radius: 30px;
+  --sl-field-bg: var(--sl-bg);
+  --sl-field-border: var(--sl-border-strong);
+  --sl-field-radius: var(--sl-radius-control);
+  --sl-field-text: var(--sl-text-muted);
+  --sl-field-ring: rgba(11, 135, 201, 0.22);
+  --sl-field-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 1px 1px rgba(43, 87, 112, 0.08);
+
+  /* Gradients, still spelled at their use sites until the gradient axis lands */
   --sl-line-gradient: linear-gradient(
     90deg,
     rgba(208, 240, 254, 0) 0%,
@@ -113,8 +127,6 @@
     rgba(208, 240, 254, 0.35) 90%,
     rgba(208, 240, 254, 0) 100%
   );
-  --sl-shadow-card: 0 1px 1px rgba(35, 52, 70, 0.08);
-  --sl-shadow-xs: 0 1px 2px rgba(32, 75, 102, 0.08);
   --sl-bg-footer-stripe:
     repeating-linear-gradient(
       135deg,
@@ -125,13 +137,9 @@
     ),
     linear-gradient(
       to bottom,
-      var(--sl-color-primary-hover) 0%,
-      var(--sl-color-primary) 100%
+      var(--sl-primary-strong) 0%,
+      var(--sl-primary) 100%
     );
-  --sl-shadow-float: 0 6px 18px rgba(0, 90, 130, 0.18);
-  --sl-shadow-sidebar: 0 2px 6px rgba(41, 86, 109, 0.28);
-  --sl-shadow-bar:
-    0 1px 3px rgba(43, 87, 112, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.85);
   --sl-progress-track-border: #e8ebee;
   --sl-progress-track-bg: #f4f6f8;
   --sl-progress-track-radius: 3px;
@@ -193,12 +201,12 @@ input {
 
 html {
   min-height: 100%;
-  background: var(--sl-color-primary-tint);
+  background: var(--sl-primary-subtle);
   background: linear-gradient(
     180deg,
-    var(--sl-color-primary-soft) 0%,
-    var(--sl-color-primary-tint) 52%,
-    var(--sl-color-bg-soft) 100%
+    var(--sl-primary-muted) 0%,
+    var(--sl-primary-subtle) 52%,
+    var(--sl-surface) 100%
   );
 }
 
@@ -218,7 +226,7 @@ button {
     Verdana,
     sans-serif,
     system-ui;
-  color: var(--sl-color-text);
+  color: var(--sl-text);
   outline: none;
 }
 
@@ -236,7 +244,7 @@ h1 {
 
 h2 {
   font-size: 1.5em;
-  color: var(--sl-color-primary-hover);
+  color: var(--sl-primary-strong);
 }
 
 h3 {
@@ -249,7 +257,7 @@ h4 {
 
 h5 {
   font-size: 1.1em;
-  color: var(--sl-color-primary-hover);
+  color: var(--sl-primary-strong);
 }
 
 p {
@@ -258,7 +266,7 @@ p {
 
 hr {
   border: 0 none;
-  border-top: 1px solid var(--sl-color-border);
+  border-top: 1px solid var(--sl-border);
   height: 1px;
 }
 
@@ -276,10 +284,10 @@ ol {
 }
 
 legend {
-  color: var(--sl-color-primary-hover);
+  color: var(--sl-primary-strong);
   font-weight: bold;
   padding: var(--sl-space-sm);
-  border: 1px solid var(--sl-color-border);
+  border: 1px solid var(--sl-border);
   border-radius: var(--sl-radius-control);
 }
 
@@ -287,13 +295,13 @@ fieldset {
   overflow: auto;
   padding: var(--sl-space-sm);
   margin: var(--sl-space-sm);
-  border: 1px solid var(--sl-color-border);
+  border: 1px solid var(--sl-border);
   border-radius: var(--sl-radius-control);
 }
 
 /* Links: default anchor colors and hover */
 a {
-  color: var(--sl-color-primary);
+  color: var(--sl-primary);
   text-decoration: none;
 }
 
@@ -312,9 +320,9 @@ input,
 textarea,
 select {
   min-height: var(--sl-size-control);
-  background: var(--sl-color-bg-soft);
-  color: var(--sl-color-text-muted);
-  border: 1px solid var(--sl-color-border-strong);
+  background: var(--sl-surface);
+  color: var(--sl-text-muted);
+  border: 1px solid var(--sl-border-strong);
   border-radius: var(--sl-radius-control);
   transition:
     background-color 0.2s ease,
@@ -331,28 +339,28 @@ input:where(
   ):hover,
 textarea:where(:not(:disabled)):hover,
 select:where(:not(:disabled)):hover {
-  background-color: var(--sl-color-bg);
-  border-color: var(--sl-color-primary-soft);
+  background-color: var(--sl-bg);
+  border-color: var(--sl-primary-muted);
   box-shadow: var(--sl-shadow-hover-soft);
 }
 
 input:user-invalid,
 textarea:user-invalid,
 select:user-invalid {
-  border-color: var(--sl-color-danger);
+  border-color: var(--sl-danger);
 }
 
 input:user-invalid:focus,
 textarea:user-invalid:focus,
 select:user-invalid:focus {
-  border-color: var(--sl-color-danger);
+  border-color: var(--sl-danger);
   box-shadow: 0 0 0 2px var(--sl-focus-danger);
 }
 
 input:user-valid:required:focus,
 textarea:user-valid:required:focus,
 select:user-valid:required:focus {
-  border-color: var(--sl-color-success);
+  border-color: var(--sl-success);
   box-shadow: 0 0 0 2px var(--sl-focus-success);
 }
 
@@ -370,7 +378,7 @@ input[type="checkbox"] {
 input:focus,
 textarea:focus,
 select:focus {
-  border-color: var(--sl-color-primary-hover);
+  border-color: var(--sl-primary-strong);
   box-shadow: 0 0 0 2px var(--sl-focus-primary);
 }
 
@@ -387,10 +395,10 @@ select[multiple] {
 
 /* Blockquote: quoted text framing */
 blockquote {
-  background: var(--sl-color-bg);
-  border-left: 1px solid var(--sl-color-border-strong);
-  border-right: 1px solid var(--sl-color-border-strong);
-  color: var(--sl-color-text-muted);
+  background: var(--sl-bg);
+  border-left: 1px solid var(--sl-border-strong);
+  border-right: 1px solid var(--sl-border-strong);
+  color: var(--sl-text-muted);
   font-family: Georgia, "Times New Roman", serif;
   font-style: italic;
   margin: 4px;
@@ -399,7 +407,7 @@ blockquote {
 }
 
 blockquote:before {
-  color: var(--sl-color-border-strong);
+  color: var(--sl-border-strong);
   content: "\201c";
   font-size: 3em;
   line-height: 0.1em;
@@ -408,7 +416,7 @@ blockquote:before {
 }
 
 blockquote:after {
-  color: var(--sl-color-border-strong);
+  color: var(--sl-border-strong);
   content: "\201d";
   font-size: 3em;
   line-height: 0.1em;

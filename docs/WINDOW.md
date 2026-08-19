@@ -58,10 +58,12 @@ head icon, the accent stripe and the primary button find them by themselves.
 
 ## Tokens
 
-`--sl-modal-gutter`, `--sl-modal-pad` and `--sl-modal-head` are theme values.
+`--sl-modal-gap`, `--sl-modal-pad-x`, `--sl-modal-height` and the default `--sl-modal-width` are theme values and
+live in the API block of `templates/<theme>/assets/css/base.css`, above the marker.
 
-`--sl-modal-w`, `--sl-modal-tone`, `--sl-modal-line` and `--sl-modal-act-tone` are internal to the component.
-The axis classes set them and a theme author never does.
+`--sl-modal-tone`, `--sl-modal-line` and `--sl-modal-act-tone` are internal to the component: they sit on the
+`.sl-modal` root, the axis classes set them, and a theme author never does. `--sl-modal-width` is both — the
+theme owns the default, `sl-modal-sm`, `-lg` and `-xl` override it on the window itself.
 
 ## Data attributes
 

@@ -8,6 +8,7 @@
   --sl-btn-pad-x: 12px;
   --sl-chart-cpu: #0877b1;
   --sl-d-level: 0%;
+  --sl-shadow-focus: 0 0 0 2px rgba(11, 135, 201, 0.22);
 }
 
 /* --- end tokens --- */
