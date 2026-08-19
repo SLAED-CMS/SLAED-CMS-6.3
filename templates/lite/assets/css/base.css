@@ -48,12 +48,15 @@
   --sl-color-brand-strong: #207fb6;
   --sl-success: #5c9425;
   --sl-success-subtle: #9fd779;
+  --sl-success-muted: #96d26d;
   --sl-warning: #f47a20;
   --sl-warning-subtle: #ffa024;
   --sl-danger: #a92c2c;
   --sl-danger-subtle: #fb7878;
   --sl-accent: #8c2ca9;
   --sl-info: #1d9bf0;
+  --sl-info-subtle: #78c6fb;
+  --sl-info-muted: #6dbaf7;
   --sl-on-solid: #ffffff;
   --sl-color-tone-neutral: #6b7280;
   --sl-color-tone-primary: #4c75a3;
@@ -174,19 +177,14 @@
   --sl-drop-pad-y: 20px;
   --sl-drop-radius: 6px;
 
-  /* Components: the button bevel, still composed at its use sites until the gradient axis lands */
-  --sl-but-neutral-text: #2a303c;
-  --sl-but-neutral-start: #f8f9fb;
-  --sl-but-neutral-end: #ebedf1;
-  --sl-but-neutral-border-inner: rgba(247, 251, 255, 0.95);
-  --sl-but-neutral-border-outer: rgba(202, 210, 218, 0.85);
-  --sl-but-text-shadow-neutral: 0 1px 0 rgba(255, 255, 255, 0.85);
-  --sl-but-border-inner: rgba(247, 251, 255, 0.94);
-  --sl-but-border-outer: rgba(202, 210, 218, 0.85);
-  --sl-but-shadow-control: 0 2px 4px rgba(42, 48, 60, 0.16);
-  --sl-but-border-shadow:
-    inset 0 0 0 1px var(--sl-but-border-inner),
-    0 0 0 1px var(--sl-but-border-outer), var(--sl-but-shadow-control);
+  /* Components: the button. Its face is one gradient, its bevel one shadow carrying both edges and the lift under
+     them, and its label a highlight one step brighter than the face; the mix is how much of that brightness it takes */
+  --sl-btn-bg: linear-gradient(to top, #f8f9fb 0%, #ebedf1 100%);
+  --sl-btn-text: #2a303c;
+  --sl-btn-shadow:
+    inset 0 0 0 1px rgba(247, 251, 255, 0.95), 0 0 0 1px rgba(202, 210, 218, 0.85),
+    0 2px 4px rgba(42, 48, 60, 0.16);
+  --sl-btn-mix: 85%;
 
   /* The changelog page, a colour island that the ramp folds onto the roles */
   --sl-changelog-bg: #f9fafb;
@@ -198,8 +196,8 @@
   --sl-changelog-del: #ef4444;
   --sl-changelog-header: #f3f4f6;
 
-  /* Gradients, still spelled at their use sites until the gradient axis lands */
-  --sl-line-gradient: linear-gradient(
+  /* Gradients: each one at a single address, its stops read from the colour tokens */
+  --sl-grad-line: linear-gradient(
     90deg,
     rgba(100, 177, 225, 0) 0%,
     rgba(100, 177, 225, 0.35) 12%,
@@ -209,46 +207,63 @@
     rgba(100, 177, 225, 0.35) 88%,
     rgba(100, 177, 225, 0) 100%
   );
-  --sl-bg-hover-gloss: linear-gradient(
+  --sl-grad-gloss: linear-gradient(
     145deg,
     rgba(255, 255, 255, 0.18),
     rgba(255, 255, 255, 0)
   );
-  --sl-grad-info-start: #78c6fb;
-  --sl-grad-info-end: #6dbaf7;
-  --sl-grad-success-start: #9fd779;
-  --sl-grad-success-end: #96d26d;
-  --sl-progress-track-border: #ccc;
-  --sl-progress-track-bg: #e7e7eb;
-  --sl-progress-track-radius: 3px;
-  --sl-progress-track-height: 10px;
-  --sl-progress-fill-height: 8px;
-  --sl-progress-fill-1-base: #5c9ade;
-  --sl-progress-fill-1-start: #00adee;
-  --sl-progress-fill-1-end: #0078a5;
-  --sl-progress-fill-2-base: #77af3f;
-  --sl-progress-fill-2-start: #8fc857;
-  --sl-progress-fill-2-end: #5c9425;
-  --sl-progress-fill-3-base: #faa51a;
-  --sl-progress-fill-3-start: #faa51a;
-  --sl-progress-fill-3-end: #f47a20;
-  --sl-progress-fill-4-base: #c44747;
-  --sl-progress-fill-4-start: #dd5f5f;
-  --sl-progress-fill-4-end: #a92c2c;
-  --sl-progress-fill-5-base: #9b36b9;
-  --sl-progress-fill-5-start: #bf5fdd;
-  --sl-progress-fill-5-end: #8c2ca9;
+  --sl-grad-progress-1: linear-gradient(to top, #00adee 10%, var(--sl-progress-1) 90%);
+  --sl-grad-progress-2: linear-gradient(to top, #8fc857 10%, var(--sl-progress-2) 90%);
+  --sl-grad-progress-3: linear-gradient(to top, #faa51a 10%, var(--sl-progress-3) 90%);
+  --sl-grad-progress-4: linear-gradient(to top, #dd5f5f 10%, var(--sl-progress-4) 90%);
+  --sl-grad-progress-5: linear-gradient(to top, #bf5fdd 10%, var(--sl-progress-5) 90%);
+
+  /* Categorical: the five tones of the level meter. A poll cycles them by option number, so they
+     are told apart by colour and never by rank */
+  --sl-progress-1: #0078a5;
+  --sl-progress-2: #5c9425;
+  --sl-progress-3: #f47a20;
+  --sl-progress-4: #a92c2c;
+  --sl-progress-5: #8c2ca9;
+
+  /* Components: the level meter track. The fill takes the track less its own hairline on each side */
+  --sl-progress-bg: #e7e7eb;
+  --sl-progress-border: #ccc;
+  --sl-progress-radius: 3px;
+  --sl-progress-height: 10px;
+
+  /* Components: the three gradients a single component owns. The head of a changelog day and the two edge tabs,
+     each a face nothing else paints, so each lives at the address of the component that wears it */
+  --sl-changelog-date-bg: linear-gradient(135deg, var(--sl-info-subtle) 0%, var(--sl-info-muted) 100%);
+  --sl-feedback-bg: linear-gradient(to right, var(--sl-info-subtle) 0%, var(--sl-info-muted) 100%);
+  --sl-idea-bg: linear-gradient(to right, var(--sl-success-subtle) 0%, var(--sl-success-muted) 100%);
 
   /* Colour: the washes and veils the editor package reads. A tint lies over what is behind it, a scrim hides it */
   --sl-scrim: color-mix(in srgb, var(--sl-text-strong) 34%, transparent);
   --sl-tint: color-mix(in srgb, var(--sl-primary) 10%, transparent);
   --sl-tint-strong: color-mix(in srgb, var(--sl-primary) 24%, transparent);
 
-  /* Motion and layers, the steps the editor package reads. The rest of both axes lands with lite's own migration */
+  /* Motion: three durations and two curves; the property a transition animates stays literal */
   --sl-time-fast: 0.15s;
+  --sl-time-base: 0.2s;
+  --sl-time-slow: 0.35s;
   --sl-ease-out: ease;
+  --sl-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Components: the step a fan opens its items by. Every transition duration in this theme sits on the ladder above,
+     so this is a stagger and not a duration of its own, and the curve below is the one shape the ladder cannot hold */
+  --sl-dial-dur: 0.05s;
+  /* The overshoot a poll option answers a click with: a curve leaving the 0-1 range is a different kind of motion */
+  --sl-vote-ease: cubic-bezier(0.3, 1.6, 0.5, 1);
+
+  /* Layers: the roles a stack may take, in the order they overlap. A value between two of them is a
+     layer the ladder is missing, never a number picked to win one argument */
+  --sl-z-base: 0;
   --sl-z-raised: 1;
   --sl-z-overlay: 3;
+  --sl-z-dropdown: 30;
+  --sl-z-popover: 1000;
+  --sl-z-modal: 3000;
   --sl-z-toast: 10000;
 
   /* The focus ring the editor package draws */

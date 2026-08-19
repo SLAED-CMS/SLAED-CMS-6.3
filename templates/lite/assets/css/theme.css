@@ -117,7 +117,7 @@ h1.sl-title {
 
 .sl-title a {
   color: var(--sl-text);
-  transition: color 0.2s ease;
+  transition: color var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-title a:hover {
@@ -555,7 +555,7 @@ a.sl-crumb::after {
   background: currentColor;
   transform: scaleX(0);
   transform-origin: left;
-  transition: transform 0.24s ease;
+  transition: transform var(--sl-time-base) var(--sl-ease-out);
 }
 
 a.sl-crumb:hover {
@@ -573,7 +573,7 @@ a.sl-crumb:hover::after {
 
 .sl-crumb-sep {
   color: var(--sl-text-subtle);
-  transition: transform 0.24s ease;
+  transition: transform var(--sl-time-base) var(--sl-ease-out);
 }
 
 a.sl-crumb:hover + .sl-crumb-sep {
@@ -740,11 +740,11 @@ a.sl-crumb:hover + .sl-crumb-sep {
   overflow: hidden;
   max-height: 200px;
   transition:
-    opacity 0.35s ease,
-    transform 0.35s ease,
-    max-height 0.35s ease,
-    margin 0.35s ease,
-    padding 0.35s ease;
+    opacity var(--sl-time-slow) var(--sl-ease-out),
+    transform var(--sl-time-slow) var(--sl-ease-out),
+    max-height var(--sl-time-slow) var(--sl-ease-out),
+    margin var(--sl-time-slow) var(--sl-ease-out),
+    padding var(--sl-time-slow) var(--sl-ease-out);
 }
 
 .sl-alert-flash-bar {
@@ -862,7 +862,7 @@ a.sl-crumb:hover + .sl-crumb-sep {
       var(--sl-cat-tone, var(--sl-info)) 26%,
       var(--sl-border)
     );
-  transition: box-shadow 0.18s ease;
+  transition: box-shadow var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-icat:hover,
@@ -875,7 +875,7 @@ a.sl-crumb:hover + .sl-crumb-sep {
   font-size: var(--sl-size-icon-lg);
   line-height: 1;
   color: var(--sl-cat-tone, var(--sl-info));
-  transition: transform 0.18s ease;
+  transition: transform var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-icat:hover .bi,
@@ -902,8 +902,8 @@ a.sl-crumb:hover + .sl-crumb-sep {
   border-radius: var(--sl-field-radius);
   box-shadow: var(--sl-field-shadow);
   transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
+    border-color var(--sl-time-fast) var(--sl-ease-out),
+    box-shadow var(--sl-time-fast) var(--sl-ease-out);
 }
 
 .sl-field::placeholder {
@@ -958,9 +958,9 @@ input[type="checkbox"] {
   cursor: pointer;
   vertical-align: middle;
   transition:
-    background-color 0.16s ease,
-    border-color 0.16s ease,
-    box-shadow 0.16s ease;
+    background-color var(--sl-time-fast) var(--sl-ease-out),
+    border-color var(--sl-time-fast) var(--sl-ease-out),
+    box-shadow var(--sl-time-fast) var(--sl-ease-out);
 }
 
 input[type="checkbox"]:checked {
@@ -1026,8 +1026,8 @@ input[type="checkbox"]:disabled {
   background: var(--sl-border);
   box-shadow: inset 0 0 0 1px var(--sl-overlay-12);
   transition:
-    background 0.22s ease,
-    box-shadow 0.22s ease;
+    background var(--sl-time-base) var(--sl-ease-out),
+    box-shadow var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-radio-group.sl-radio-switch:has(input[value="1"]:checked) {
@@ -1037,7 +1037,7 @@ input[type="checkbox"]:disabled {
 .sl-radio-group.sl-radio-switch::after {
   content: "";
   position: absolute;
-  z-index: 0;
+  z-index: var(--sl-z-base);
   top: 2px;
   left: 2px;
   width: calc(50% - 2px);
@@ -1046,8 +1046,8 @@ input[type="checkbox"]:disabled {
   background: var(--sl-bg);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
   transition:
-    left 0.24s cubic-bezier(0.2, 0.8, 0.2, 1),
-    box-shadow 0.22s ease;
+    left var(--sl-time-base) var(--sl-ease-in-out),
+    box-shadow var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-radio-group.sl-radio-switch:has(input[value="0"]:checked)::after {
@@ -1056,7 +1056,7 @@ input[type="checkbox"]:disabled {
 
 .sl-radio-group.sl-radio-switch .sl-radio {
   position: relative;
-  z-index: 1;
+  z-index: var(--sl-z-raised);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1072,7 +1072,7 @@ input[type="checkbox"]:disabled {
   white-space: nowrap;
   cursor: pointer;
   user-select: none;
-  transition: color 0.22s ease;
+  transition: color var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-radio-group.sl-radio-switch:has(input[value="1"]:checked) .sl-radio {
@@ -1301,8 +1301,8 @@ select.sl-field {
   cursor: pointer;
   vertical-align: middle;
   transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
+    background-color var(--sl-time-base) var(--sl-ease-out),
+    color var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-but-mini > .bi {
@@ -1364,7 +1364,7 @@ button.sl-but-mini:hover,
 
 .sl-dial.sl-open,
 .sl-dial:hover {
-  z-index: 30;
+  z-index: var(--sl-z-dropdown);
 }
 
 /* The same fan opened as a context menu: it leaves the corner of its object and stands where the pointer is, the items keeping the side they open to in this theme */
@@ -1372,7 +1372,7 @@ button.sl-but-mini:hover,
   position: absolute;
   right: auto;
   bottom: auto;
-  z-index: 30;
+  z-index: var(--sl-z-dropdown);
   transform: translateY(-50%);
 }
 
@@ -1390,10 +1390,10 @@ button.sl-but-mini:hover,
   opacity: 0;
   pointer-events: none;
   transition:
-    opacity 0.18s ease,
-    background-color 0.18s ease,
-    border-color 0.18s ease,
-    box-shadow 0.18s ease;
+    opacity var(--sl-time-base) var(--sl-ease-out),
+    background-color var(--sl-time-base) var(--sl-ease-out),
+    border-color var(--sl-time-base) var(--sl-ease-out),
+    box-shadow var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-dial.sl-open::before,
@@ -1445,10 +1445,10 @@ button.sl-but-mini:hover,
   transform: translateY(-50%) translateX(8px) scale(0.6);
   pointer-events: none;
   transition:
-    background-color 0.2s ease,
-    color 0.2s ease,
-    transform 0.18s ease,
-    opacity 0.18s ease;
+    background-color var(--sl-time-base) var(--sl-ease-out),
+    color var(--sl-time-base) var(--sl-ease-out),
+    transform var(--sl-time-base) var(--sl-ease-out),
+    opacity var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-dial .sl-dial-item:nth-child(3) {
@@ -1480,27 +1480,27 @@ button.sl-but-mini:hover,
 
 .sl-dial.sl-open .sl-dial-item:nth-child(3),
 .sl-dial:hover .sl-dial-item:nth-child(3) {
-  transition-delay: 0.04s;
+  transition-delay: calc(var(--sl-dial-dur) * 1);
 }
 
 .sl-dial.sl-open .sl-dial-item:nth-child(4),
 .sl-dial:hover .sl-dial-item:nth-child(4) {
-  transition-delay: 0.09s;
+  transition-delay: calc(var(--sl-dial-dur) * 2);
 }
 
 .sl-dial.sl-open .sl-dial-item:nth-child(5),
 .sl-dial:hover .sl-dial-item:nth-child(5) {
-  transition-delay: 0.14s;
+  transition-delay: calc(var(--sl-dial-dur) * 3);
 }
 
 .sl-dial.sl-open .sl-dial-item:nth-child(6),
 .sl-dial:hover .sl-dial-item:nth-child(6) {
-  transition-delay: 0.19s;
+  transition-delay: calc(var(--sl-dial-dur) * 4);
 }
 
 .sl-dial.sl-open .sl-dial-item:nth-child(7),
 .sl-dial:hover .sl-dial-item:nth-child(7) {
-  transition-delay: 0.24s;
+  transition-delay: calc(var(--sl-dial-dur) * 5);
 }
 
 .sl-forum-last:hover {
@@ -1734,7 +1734,7 @@ button.sl-but-mini:hover,
   position: absolute;
   top: 100%;
   left: 0;
-  z-index: 1000;
+  z-index: var(--sl-z-popover);
 }
 
 .sl-image-preview-mini {
@@ -1744,7 +1744,7 @@ button.sl-but-mini:hover,
   height: 24px;
   border-radius: 15px;
   overflow: hidden;
-  transition: all 0.5s;
+  transition: all var(--sl-time-slow);
 }
 
 .sl-image-preview-thumb {
@@ -1873,7 +1873,7 @@ ol.sl-sublist li:before {
   background: #7282a3;
   box-shadow: 15px 0 0 #97a8c2;
   margin-right: 20px;
-  transition: 0.5s linear;
+  transition: var(--sl-time-slow) linear;
 }
 
 ol.sl-sublist li:hover:before {
@@ -1887,7 +1887,7 @@ ol.sl-sublist-two li:before {
     15px 0 0 #cebeb1,
     30px 0 0 #d9c9bc;
   margin-right: 35px;
-  transition: 0.5s linear;
+  transition: var(--sl-time-slow) linear;
 }
 
 ol.sl-sublist-two li:hover:before {
@@ -2150,7 +2150,7 @@ ol.sl-sublist-two li:hover:before {
   position: absolute;
   top: 100%;
   left: 0;
-  z-index: 100;
+  z-index: var(--sl-z-popover);
   min-width: 150px;
   width: max-content;
   max-width: 300px;
@@ -2172,10 +2172,10 @@ ol.sl-sublist-two li:hover:before {
   /* display, not visibility: hidden tips must not add scrollable overflow */
   display: none;
   opacity: 0;
-  transition: opacity 0.5s ease;
+  transition: opacity var(--sl-time-slow) var(--sl-ease-out);
   transition:
-    opacity 0.5s ease,
-    display 0.5s allow-discrete;
+    opacity var(--sl-time-slow) var(--sl-ease-out),
+    display var(--sl-time-slow) allow-discrete;
 }
 
 /* Float panel definition rows: the one global label/value mechanism - muted label with colon left, heading value flushed right */
@@ -2243,7 +2243,7 @@ ol.sl-sublist-two li:hover:before {
   display: block;
   opacity: 1;
   visibility: visible;
-  z-index: 3000;
+  z-index: var(--sl-z-modal);
 }
 
 /* Floating transitions: display-driven fade-in entry point */
@@ -2433,7 +2433,7 @@ ol.sl-sublist-two li:hover:before {
   margin: 0 -7px 2px;
   padding: 4px 7px;
   border-radius: 8px;
-  transition: background-color 0.15s ease;
+  transition: background-color var(--sl-time-fast) var(--sl-ease-out);
 }
 
 .sl-vote-list li:hover {
@@ -2452,7 +2452,7 @@ ol.sl-sublist-two li:hover:before {
   width: 15px;
   height: 15px;
   accent-color: var(--sl-color-brand-strong);
-  transition: transform 0.18s cubic-bezier(0.3, 1.6, 0.5, 1);
+  transition: transform var(--sl-time-base) var(--sl-vote-ease);
 }
 
 .sl-vote-list input:checked {
@@ -2499,7 +2499,7 @@ ol.sl-sublist-two li:hover:before {
   position: absolute;
   top: 0.5px;
   right: 0;
-  z-index: 5;
+  z-index: var(--sl-z-overlay);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -2615,69 +2615,44 @@ ol.sl-sublist-two li:hover:before {
 .sl-progress-line {
   box-sizing: content-box;
   width: 100%;
-  height: var(--sl-progress-track-height);
-  background: var(--sl-progress-track-bg);
-  border: 1px solid var(--sl-progress-track-border);
-  border-radius: var(--sl-progress-track-radius);
+  height: var(--sl-progress-height);
+  background: var(--sl-progress-bg);
+  border: 1px solid var(--sl-progress-border);
+  border-radius: var(--sl-progress-radius);
 }
 
 .sl-progress-line div {
   box-sizing: content-box;
-  height: var(--sl-progress-fill-height);
-  border-radius: calc(var(--sl-progress-track-radius) - 1px);
+  height: calc(var(--sl-progress-height) - 1px - 1px);
+  border-radius: calc(var(--sl-progress-radius) - 1px);
   overflow: hidden;
   text-indent: -9999px;
-  transition: width 0.8s cubic-bezier(0.2, 0.7, 0.3, 1);
+  transition: width var(--sl-time-slow) var(--sl-ease-out);
 }
 
 .sl-progress-1 div {
-  border: 1px solid var(--sl-progress-fill-1-end);
-  background: var(--sl-progress-fill-1-base);
-  background: linear-gradient(
-    to top,
-    var(--sl-progress-fill-1-start) 10%,
-    var(--sl-progress-fill-1-end) 90%
-  );
+  border: 1px solid var(--sl-progress-1);
+  background: var(--sl-grad-progress-1);
 }
 
 .sl-progress-2 div {
-  border: 1px solid var(--sl-progress-fill-2-end);
-  background: var(--sl-progress-fill-2-base);
-  background: linear-gradient(
-    to top,
-    var(--sl-progress-fill-2-start) 10%,
-    var(--sl-progress-fill-2-end) 90%
-  );
+  border: 1px solid var(--sl-progress-2);
+  background: var(--sl-grad-progress-2);
 }
 
 .sl-progress-3 div {
-  border: 1px solid var(--sl-progress-fill-3-end);
-  background: var(--sl-progress-fill-3-base);
-  background: linear-gradient(
-    to top,
-    var(--sl-progress-fill-3-start) 10%,
-    var(--sl-progress-fill-3-end) 90%
-  );
+  border: 1px solid var(--sl-progress-3);
+  background: var(--sl-grad-progress-3);
 }
 
 .sl-progress-4 div {
-  border: 1px solid var(--sl-progress-fill-4-end);
-  background: var(--sl-progress-fill-4-base);
-  background: linear-gradient(
-    to top,
-    var(--sl-progress-fill-4-start) 10%,
-    var(--sl-progress-fill-4-end) 90%
-  );
+  border: 1px solid var(--sl-progress-4);
+  background: var(--sl-grad-progress-4);
 }
 
 .sl-progress-5 div {
-  border: 1px solid var(--sl-progress-fill-5-end);
-  background: var(--sl-progress-fill-5-base);
-  background: linear-gradient(
-    to top,
-    var(--sl-progress-fill-5-start) 10%,
-    var(--sl-progress-fill-5-end) 90%
-  );
+  border: 1px solid var(--sl-progress-5);
+  background: var(--sl-grad-progress-5);
 }
 
 .sl-vote-list .sl-progress-line {
@@ -2831,11 +2806,7 @@ ol.sl-sublist-two li:hover:before {
 }
 
 .sl-changelog-date-header {
-  background: linear-gradient(
-    135deg,
-    var(--sl-grad-info-start) 0%,
-    var(--sl-grad-info-end) 100%
-  );
+  background: var(--sl-changelog-date-bg);
   color: var(--sl-on-solid);
   padding: var(--sl-space-lg) 20px;
   font-weight: 600;
@@ -2846,7 +2817,7 @@ ol.sl-sublist-two li:hover:before {
 .sl-changelog-commit {
   padding: 20px;
   border-bottom: 1px solid var(--sl-changelog-border);
-  transition: background-color 0.2s;
+  transition: background-color var(--sl-time-base);
 }
 
 .sl-changelog-commit:last-child {
@@ -3003,20 +2974,14 @@ ol.sl-sublist-two li:hover:before {
   border: 0;
   -webkit-appearance: none;
   appearance: none;
-  box-shadow: var(--sl-but-border-shadow);
+  box-shadow: var(--sl-btn-shadow);
   transition:
-    opacity 0.2s ease,
-    box-shadow 0.2s ease;
-  color: var(--sl-but-neutral-text);
-  background: linear-gradient(
-    to top,
-    var(--sl-but-neutral-start) 0%,
-    var(--sl-but-neutral-end) 100%
-  );
+    opacity var(--sl-time-base) var(--sl-ease-out),
+    box-shadow var(--sl-time-base) var(--sl-ease-out);
+  color: var(--sl-btn-text);
+  background: var(--sl-btn-bg);
   background-clip: padding-box;
-  --sl-but-border-inner: var(--sl-but-neutral-border-inner);
-  --sl-but-border-outer: var(--sl-but-neutral-border-outer);
-  text-shadow: var(--sl-but-text-shadow-neutral);
+  text-shadow: 0 1px 0 color-mix(in srgb, var(--sl-on-solid) var(--sl-btn-mix), transparent);
 }
 
 .sl-but:hover {
@@ -3239,7 +3204,7 @@ ol.sl-sublist-two li:hover:before {
   border-bottom: 1px solid var(--sl-border-subtle);
   color: var(--sl-text-muted);
   font-size: 13px;
-  transition: padding-left 0.22s ease, color 0.22s ease;
+  transition: padding-left var(--sl-time-base) var(--sl-ease-out), color var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-block-pm a:hover {
@@ -3303,7 +3268,7 @@ ol.sl-sublist-two li:hover:before {
   position: absolute;
   top: 50%;
   left: 10px;
-  z-index: 1;
+  z-index: var(--sl-z-raised);
   color: var(--sl-text-muted);
   transform: translateY(-50%);
 }
@@ -3334,7 +3299,7 @@ ol.sl-sublist-two li:hover:before {
   position: absolute;
   top: 20px;
   right: 0;
-  z-index: 2;
+  z-index: var(--sl-z-overlay);
   gap: 4px;
 }
 
@@ -3407,7 +3372,7 @@ ol.sl-sublist-two li:hover:before {
 
 .sl-user-card .sl-session-list {
   position: absolute;
-  z-index: 4;
+  z-index: var(--sl-z-dropdown);
   inset: auto 0 36px;
   max-height: calc(100% - 36px);
   overflow: auto;
@@ -3445,7 +3410,7 @@ ol.sl-sublist-two li:hover:before {
 }
 
 .bx-viewport {
-  z-index: 1;
+  z-index: var(--sl-z-raised);
 }
 
 .bx-pager {
@@ -3458,7 +3423,7 @@ ol.sl-sublist-two li:hover:before {
 
 .bx-pager-item {
   position: relative;
-  z-index: 2;
+  z-index: var(--sl-z-overlay);
 }
 
 .bx-pager-item a {
@@ -3498,7 +3463,7 @@ ol.sl-sublist-two li:hover:before {
 /* Slider: controls */
 .bx-prev,
 .bx-next {
-  z-index: 2;
+  z-index: var(--sl-z-overlay);
   position: absolute;
   top: 50%;
   margin-top: -21px;
@@ -3510,7 +3475,7 @@ ol.sl-sublist-two li:hover:before {
   border-radius: 21px;
   background-color: var(--sl-overlay-20);
   color: var(--sl-on-solid);
-  transition: all 0.4s ease;
+  transition: all var(--sl-time-slow) var(--sl-ease-out);
   opacity: 0;
   visibility: hidden;
 }
@@ -3558,7 +3523,7 @@ ol.sl-sublist-two li:hover:before {
   left: 50%;
   bottom: 50px;
   margin-left: -550px;
-  z-index: 2;
+  z-index: var(--sl-z-overlay);
   color: var(--sl-on-solid);
 }
 
@@ -3673,20 +3638,20 @@ ol.sl-sublist-two li:hover:before {
   background-color: var(--sl-primary);
   opacity: 0;
   visibility: hidden;
-  transition: all 0.6s ease;
+  transition: all var(--sl-time-slow) var(--sl-ease-out);
 }
 
 .sl-site-zoom {
   position: absolute;
   top: 10%;
   left: 50%;
-  z-index: 1;
+  z-index: var(--sl-z-raised);
   transform: translate(-50%, -50%);
   font-size: var(--sl-size-icon-lg);
   color: var(--sl-on-solid);
   opacity: 0;
   visibility: hidden;
-  transition: all 0.4s ease;
+  transition: all var(--sl-time-slow) var(--sl-ease-out);
 }
 
 .sl-site-link:hover .sl-site-img:after {
@@ -3830,7 +3795,7 @@ ol.sl-sublist-two li:hover:before {
 #block-feedback {
   position: fixed;
   left: 0;
-  z-index: 2005;
+  z-index: var(--sl-z-popover);
 }
 
 #block-idea {
@@ -3864,7 +3829,7 @@ ol.sl-sublist-two li:hover:before {
   letter-spacing: 0.4px;
   text-decoration: none;
   box-shadow: var(--sl-panel-shadow);
-  transition: padding-left 0.18s ease;
+  transition: padding-left var(--sl-time-base) var(--sl-ease-out);
 }
 
 /* Hover/focus: grow to the right (left edge stays pinned, so the gradient covers everything with no see-through strip); the label rides along with the extra left padding */
@@ -3876,19 +3841,11 @@ ol.sl-sublist-two li:hover:before {
 }
 
 .sl-btn-idea .sl-font {
-  background: linear-gradient(
-    to right,
-    var(--sl-grad-success-start) 0%,
-    var(--sl-grad-success-end) 100%
-  );
+  background: var(--sl-idea-bg);
 }
 
 .sl-btn-feedback .sl-font {
-  background: linear-gradient(
-    to right,
-    var(--sl-grad-info-start) 0%,
-    var(--sl-grad-info-end) 100%
-  );
+  background: var(--sl-feedback-bg);
 }
 
 /* Messages: centered message box layout */
@@ -4046,9 +4003,9 @@ ol.sl-sublist-two li:hover:before {
   text-shadow: none;
   cursor: pointer;
   transition:
-    background-color 0.2s ease,
-    color 0.2s ease,
-    border-color 0.2s ease;
+    background-color var(--sl-time-base) var(--sl-ease-out),
+    color var(--sl-time-base) var(--sl-ease-out),
+    border-color var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-tabs-link:hover {
@@ -4243,7 +4200,7 @@ ol.sl-sublist-two li:hover:before {
 
 .sl-circle-action .bi {
   position: relative;
-  z-index: 1;
+  z-index: var(--sl-z-raised);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4254,7 +4211,7 @@ ol.sl-sublist-two li:hover:before {
 
 .sl-circle-action:hover,
 .sl-circle-action:focus-visible {
-  background-image: var(--sl-bg-hover-gloss);
+  background-image: var(--sl-grad-gloss);
   background-repeat: no-repeat;
   background-size: 100% 100%;
 }
@@ -4426,14 +4383,14 @@ ol.sl-sublist-two li:hover:before {
   position: absolute;
   top: 100%;
   left: var(--sl-login-dropdown-form-left);
-  z-index: 1000;
+  z-index: var(--sl-z-dropdown);
   /* display, not visibility: hidden forms must not add scrollable overflow */
   display: none;
   opacity: 0;
-  transition: opacity 0.18s ease;
+  transition: opacity var(--sl-time-base) var(--sl-ease-out);
   transition:
-    opacity 0.18s ease,
-    display 0.18s allow-discrete;
+    opacity var(--sl-time-base) var(--sl-ease-out),
+    display var(--sl-time-base) allow-discrete;
   width: var(--sl-login-dropdown-form-width);
   max-width: var(--sl-login-dropdown-form-max-width);
   min-width: var(--sl-drop-width);
@@ -4581,7 +4538,7 @@ ol.sl-sublist-two li:hover:before {
 #topmenu > ul > li:hover > a {
   color: var(--sl-bg-inverse);
   background-color: var(--sl-bg-subtle);
-  background-image: var(--sl-bg-hover-gloss);
+  background-image: var(--sl-grad-gloss);
   background-repeat: no-repeat;
   background-size: 100% 100%;
 }
@@ -4615,7 +4572,7 @@ ol.sl-sublist-two li:hover:before {
 #topmenu > ul > li:hover > a.sl-home-link.sl-circle-action {
   color: var(--sl-on-solid);
   background-color: var(--sl-color-tone-neutral) !important;
-  background-image: var(--sl-bg-hover-gloss) !important;
+  background-image: var(--sl-grad-gloss) !important;
   background-repeat: no-repeat;
   background-size: 100% 100%;
 }
@@ -4629,11 +4586,11 @@ ol.sl-sublist-two li:hover:before {
   min-width: 150px;
   background-color: var(--sl-bg-inverse);
   color: var(--sl-on-solid);
-  z-index: 2001;
+  z-index: var(--sl-z-dropdown);
   box-shadow: var(--sl-panel-shadow);
   opacity: 0;
   visibility: hidden;
-  transition: all 0.3s ease;
+  transition: all var(--sl-time-slow) var(--sl-ease-out);
 }
 
 #topmenu ul ul:after {
@@ -4657,7 +4614,7 @@ ol.sl-sublist-two li:hover:before {
 
 #topmenu ul ul a:hover {
   background-color: var(--sl-primary);
-  background-image: var(--sl-bg-hover-gloss);
+  background-image: var(--sl-grad-gloss);
   background-repeat: no-repeat;
   background-size: 100% 100%;
 }
@@ -4692,25 +4649,25 @@ ol.sl-sublist-two li:hover:before {
   border: 0 none;
   appearance: none;
   color: var(--sl-on-solid);
-  background-color: var(--sl-grad-info-end);
+  background-color: var(--sl-info-muted);
   background-image: none;
   box-shadow:
     inset 0 1px 1px 0 rgba(255, 255, 255, 0.18),
     0 1px 2px rgba(42, 48, 60, 0.12);
   transition:
-    background-color 0.2s ease,
-    box-shadow 0.2s ease;
+    background-color var(--sl-time-base) var(--sl-ease-out),
+    box-shadow var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-search-form button .bi {
   font-size: var(--sl-size-icon-sm);
   line-height: 1;
-  transition: color 0.2s ease;
+  transition: color var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-search-form button:hover,
 .sl-search-form button:focus-visible {
-  background-color: var(--sl-grad-info-start);
+  background-color: var(--sl-info-subtle);
   box-shadow:
     inset 0 1px 1px 0 rgba(255, 255, 255, 0.24),
     0 1px 2px rgba(42, 48, 60, 0.16);
@@ -4718,7 +4675,7 @@ ol.sl-sublist-two li:hover:before {
 
 .sl-search-form button.sl-circle-action:hover,
 .sl-search-form button.sl-circle-action:focus-visible {
-  background-image: var(--sl-bg-hover-gloss);
+  background-image: var(--sl-grad-gloss);
   background-repeat: no-repeat;
   background-size: 100% 100%;
 }
@@ -4968,7 +4925,7 @@ ol.sl-sublist-two li:hover:before {
   width: min(100% - 32px, var(--sl-layout-container));
   margin: 0 auto;
   position: relative;
-  z-index: 1;
+  z-index: var(--sl-z-raised);
   padding: 20px 0;
 }
 
@@ -5440,7 +5397,7 @@ td.sl-fl-col-stat {
 .sl-fp-nickname:after {
   bottom: -8px;
   border-top-color: var(--sl-bg);
-  z-index: 1;
+  z-index: var(--sl-z-raised);
 }
 
 .sl-fp-user-info {
@@ -5628,7 +5585,7 @@ td.sl-fl-col-stat {
   white-space: nowrap;
   vertical-align: middle;
   text-decoration: none;
-  transition: background-color 0.2s ease;
+  transition: background-color var(--sl-time-base) var(--sl-ease-out);
 
   & .bi {
     font-size: var(--sl-size-icon-xs);
@@ -5643,7 +5600,7 @@ td.sl-fl-col-stat {
 }
 
 a.sl-author {
-  transition: color 0.2s ease;
+  transition: color var(--sl-time-base) var(--sl-ease-out);
 
   &:hover {
     color: var(--sl-color-brand-strong);
@@ -6597,7 +6554,7 @@ a.sl-chip-neutral {
 .sl-msg-line {
   height: 1px;
   margin: 0 0 22px;
-  background: var(--sl-line-gradient);
+  background: var(--sl-grad-line);
 }
 
 .sl-msg-brand-text {
@@ -6786,8 +6743,8 @@ a.sl-chip-neutral {
   text-decoration: none;
   cursor: pointer;
   transition:
-    background-color 0.15s ease,
-    color 0.15s ease;
+    background-color var(--sl-time-fast) var(--sl-ease-out),
+    color var(--sl-time-fast) var(--sl-ease-out);
 }
 
 .sl-share-net:hover,
@@ -6807,8 +6764,8 @@ a.sl-chip-neutral {
   color: var(--sl-on-solid);
   font-size: var(--sl-size-icon-sm);
   transition:
-    filter 0.15s ease,
-    transform 0.15s ease;
+    filter var(--sl-time-fast) var(--sl-ease-out),
+    transform var(--sl-time-fast) var(--sl-ease-out);
 }
 
 .sl-share-net:hover .sl-share-net-ico {
@@ -7099,7 +7056,7 @@ html.sl-is-locked {
   font: inherit;
   font-size: 13px;
   cursor: pointer;
-  transition: border-color 0.16s ease, background-color 0.16s ease;
+  transition: border-color var(--sl-time-fast) var(--sl-ease-out), background-color var(--sl-time-fast) var(--sl-ease-out);
 }
 
 .sl-modal-btn > .bi { font-size: var(--sl-size-icon-xs); }
@@ -7297,7 +7254,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   position: fixed;
   left: 50%;
   bottom: calc(var(--sl-space-xl) + var(--sl-space-md));
-  z-index: 6000;
+  z-index: var(--sl-z-toast);
   display: flex;
   align-items: center;
   gap: var(--sl-space-md);
@@ -7310,8 +7267,8 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   pointer-events: none;
   transform: translate(-50%, 20px);
   transition:
-    opacity 0.24s ease,
-    transform 0.24s ease;
+    opacity var(--sl-time-base) var(--sl-ease-out),
+    transform var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-toast.sl-is-visible {
@@ -7328,7 +7285,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   position: absolute;
   top: 12px;
   right: 15px;
-  z-index: 5;
+  z-index: var(--sl-z-overlay);
 }
 
 .sl-live-chip {
@@ -7568,9 +7525,9 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   border-radius: var(--sl-radius-card);
   padding: var(--sl-space-lg);
   transition:
-    border-color 0.18s ease,
-    box-shadow 0.18s ease,
-    transform 0.18s ease;
+    border-color var(--sl-time-base) var(--sl-ease-out),
+    box-shadow var(--sl-time-base) var(--sl-ease-out),
+    transform var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-cat-tile:hover {
@@ -7611,7 +7568,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 .sl-cat-ico .bi {
   font-size: var(--sl-size-icon-lg);
   line-height: 1;
-  transition: transform 0.18s ease;
+  transition: transform var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-cat-info {
@@ -7629,7 +7586,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 .sl-cat-name {
   color: var(--sl-text-strong);
   font-weight: bold;
-  transition: color 0.15s ease;
+  transition: color var(--sl-time-fast) var(--sl-ease-out);
 }
 
 .sl-cat-main:hover .sl-cat-name {
@@ -8269,7 +8226,7 @@ a.sl-profile-hub-row:hover {
   position: absolute;
   right: 0;
   left: 0;
-  z-index: 2;
+  z-index: var(--sl-z-overlay);
   height: 18px;
   pointer-events: none;
 }
@@ -8392,8 +8349,8 @@ a.sl-profile-hub-row:hover {
   color: var(--sl-text-muted);
   text-align: center;
   transition:
-    border-color 0.2s ease,
-    transform 0.2s ease;
+    border-color var(--sl-time-base) var(--sl-ease-out),
+    transform var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-cab-act:hover {
@@ -8448,7 +8405,7 @@ a.sl-profile-hub-row:hover {
   --sl-knob-size: 46px;
   --sl-knob-width: 4;
   --sl-knob-tone: var(--sl-success);
-  --sl-knob-track: var(--sl-progress-track-bg);
+  --sl-knob-track: var(--sl-progress-bg);
   position: relative;
   display: grid;
   place-items: center;
@@ -8477,14 +8434,14 @@ a.sl-profile-hub-row:hover {
   stroke: var(--sl-knob-tone);
   stroke-width: var(--sl-knob-width);
   stroke-linecap: butt;
-  transition: stroke-dasharray 0.9s cubic-bezier(0.2, 0.7, 0.3, 1);
+  transition: stroke-dasharray var(--sl-time-slow) var(--sl-ease-out);
 }
 
 .sl-knob > .bi {
   color: var(--sl-knob-tone);
   font-size: calc(var(--sl-knob-size) * 0.45);
   line-height: 1;
-  transition: color 0.3s ease, transform 0.18s ease;
+  transition: color var(--sl-time-slow) var(--sl-ease-out), transform var(--sl-time-base) var(--sl-ease-out);
 }
 
 /* A solid ring: nothing to measure, or nothing left to fill. The track takes the tone, so a missing arc shows no pale circle and a whole one shows no join */
@@ -8758,7 +8715,7 @@ a.sl-profile-hub-row:hover {
 .sl-pmf-day {
   position: sticky;
   top: 0;
-  z-index: 2;
+  z-index: var(--sl-z-overlay);
   display: flex;
   align-items: center;
   gap: 7px;
@@ -8787,7 +8744,7 @@ a.sl-profile-hub-row:hover {
   width: 100%;
   padding: 7px 10px 7px 8px;
   border-bottom: 1px solid var(--sl-border-subtle);
-  transition: background-color 0.15s ease;
+  transition: background-color var(--sl-time-fast) var(--sl-ease-out);
 }
 
 .sl-pmf-item:hover { background: var(--sl-bg-subtle); }
@@ -9016,7 +8973,7 @@ a.sl-profile-hub-row:hover {
   border-radius: var(--sl-radius-card);
   background: linear-gradient(180deg, color-mix(in srgb, var(--sl-cat-tone) 9%, var(--sl-bg)), var(--sl-bg) 60%);
   scroll-snap-align: start;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  transition: border-color var(--sl-time-base) var(--sl-ease-out), box-shadow var(--sl-time-base) var(--sl-ease-out);
 }
 
 .sl-pmf-slot:hover {

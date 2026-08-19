@@ -167,14 +167,14 @@ return [
     # The eleven `col-*` entries are the column widths of a fixed admin list table: the track list of `table-layout: fixed`,
     # which CSS spells as one width per cell instead of one `grid-template-columns`, and each is a figure an author retunes
     'components' => [
-        'alert', 'arrow', 'avatar', 'badge', 'bar', 'brand', 'btn', 'btn-mini', 'card', 'changelog', 'changelog-body', 'changelog-files',
-        'changelog-stat', 'check', 'chip', 'code', 'col-actions', 'col-author', 'col-check', 'col-count', 'col-date',
+        'alert', 'arrow', 'avatar', 'badge', 'bar', 'brand', 'btn', 'btn-mini', 'card', 'changelog', 'changelog-body', 'changelog-date',
+        'changelog-files', 'changelog-stat', 'check', 'chip', 'code', 'col-actions', 'col-author', 'col-check', 'col-count', 'col-date',
         'col-id', 'col-ip', 'col-lang', 'col-module', 'col-sent', 'col-status', 'count', 'crumb', 'dial', 'drift',
-        'drop', 'editor', 'editor-mode', 'editor-tab', 'emoji', 'emoji-full', 'emoji-grid', 'field', 'flash', 'fm-as',
+        'drop', 'editor', 'editor-mode', 'editor-tab', 'emoji', 'emoji-full', 'emoji-grid', 'feedback', 'field', 'flash', 'fm-as',
         'fm-bar', 'fm-body', 'fm-busy', 'fm-drop', 'fm-edit', 'fm-empty', 'fm-field', 'fm-filter', 'fm-kind', 'fm-mode',
         'fm-panel', 'fm-pick', 'fm-preview', 'fm-props', 'fm-quota', 'fm-row', 'fm-search', 'fm-sep', 'fm-split', 'fm-thumb',
         'fm-tile', 'footer', 'form', 'form-label', 'forum', 'graph', 'header',
-        'ico', 'item', 'knob', 'lang', 'led', 'loading', 'login', 'login-footer', 'login-header', 'menu',
+        'ico', 'idea', 'item', 'knob', 'lang', 'led', 'loading', 'login', 'login-footer', 'login-header', 'menu',
         'meter', 'modal', 'modal-act', 'modal-btn', 'mode', 'module-head', 'monitor-table', 'move', 'msg', 'msg-brand', 'nav',
         'pager', 'panel', 'placeholder', 'pnum', 'pnum-arrow', 'popover', 'progress', 'pulse', 'quote', 'radio',
         'rail', 'ratings', 'ring', 'row', 'search', 'search-filter', 'search-order', 'search-sort', 'select', 'shot', 'shot-side', 'skel',

@@ -3,8 +3,8 @@
 Turning the two shipped themes into reference etalons that hundreds of
 independent themes are copied from.
 
-Status: batch 5 next. Batches run 5 → 8; batch 9 is independent and may run
-alongside 5 to 7. A step that is done is deleted from this file, not marked done.
+Status: batch 6 next. Batches run 6 → 8; batch 9 is independent and may run
+alongside 6 and 7. A step that is done is deleted from this file, not marked done.
 
 **`admin` is the first etalon and it is closed.** Every count it controls is at
 zero — no untokenised decision in any of its three files, no bare number, no
@@ -44,7 +44,7 @@ declaring in lite's API block exactly the names the copied file reads and no mor
 step nothing reads is a dead token, and `dead` is ratcheted at zero. Lite's API block
 therefore already carries `--sl-time-fast`, `--sl-ease-out`, `--sl-z-raised`,
 `--sl-z-overlay`, `--sl-z-toast`, `--sl-ring-width`, `--sl-ring-gap`, `--sl-tint`,
-`--sl-tint-strong` and `--sl-scrim`, which batches 5 and 7 extend rather than invent.
+`--sl-tint-strong` and `--sl-scrim`, which batch 7 extends rather than invents.
 
 **The colour mode is plumbed and admin carries the toggle.** `getThemeMode()` in
 `core/system.php` reads the `mode` cookie through `getCookies()` and answers `auto` to
@@ -173,7 +173,7 @@ Numbers here are the tool's, and drift as work lands.
 
 ## The one metric
 
-**Untokenised visual decisions: admin 0, lite 1396 → 0.** `--count`
+**Untokenised visual decisions: admin 0, lite 1209 → 0.** `--count`
 
 Measured by the tool, which is the authority. Counted over every CSS file that is
 not the API block: `theme.css`, the element styles below the marker, and
@@ -183,9 +183,9 @@ tokens. Split by file:
 | | `theme.css` | `skin.css` | `base.css` below the marker |
 |---|---|---|---|
 admin | 0 | 0 | 0 |
-lite | 1356 | 0 | 40 |
+lite | 1169 | 0 | 40 |
 
-Monotonic in one direction: **no batch raises a count it controls.** Batches 5–7
+Monotonic in one direction: **no batch raises a count it controls.** Batches 6 and 7
 lower the untokenised count; 8 and 9 hold it flat.
 
 The ratchet holds `count`, `bare`, `dup`, `names`, `dead`, `alias`, `unsat`,
@@ -213,16 +213,15 @@ drops neutral parts and judges the rest, so this line is already clean:
 border: 1px solid var(--sl-border);   /* the decision is the colour */
 ```
 
-1992 declarations in admin and 1508 in lite already reach every decision through a
+1992 declarations in admin and 1583 in lite already reach every decision through a
 token; 0 and 112 more are half done. `--count`
 
-**Second check: bare numbers.** `--bare` — admin 0, lite 133
+**Second check: bare numbers.** `--bare` — admin 0, lite 107
 
 | Property | lite sites / values | admin sites / values | Spelled |
 |---|---|---|---|
 `font-weight` | 63 / 6 | 0 | `normal` and `400`, `bold` and `700` — four weights, six spellings |
 `line-height` | 27 / 15 | 0 | `1.05`…`1.62` plus `1.428571429` and `normal` — fifteen ways to say it |
-`z-index` | 26 / 14 | 0 | — |
 `opacity` | 17 / 7 | 0 | — |
 
 These carry no unit and no colour, so the first counter is blind to them. A bare
@@ -248,21 +247,21 @@ containers.
 **Fourth check: a name that cannot invert.** `--names`
 
 **Zero, in both themes.** No `white`, `black`, `light` or `dark` is left in a
-name: the bevel that carried the last two says `--sl-but-border-inner` and
-`-outer`, which is where they sit and not what colour they are, and the admin
-switch reads `--sl-switch-inverse` off `--sl-on-solid`, which now turns over with
-the mode. `inverse` passes the law: "opposite of the page" holds in both modes.
+name: the bevel that carried the last two is one `--sl-btn-shadow` holding both
+edges and the lift under them, and the admin switch reads `--sl-switch-inverse`
+off `--sl-on-solid`, which now turns over with the mode. `inverse` passes the law:
+"opposite of the page" holds in both modes.
 
 `prefers-color-scheme` still appears zero times and must: admin carries both modes
 inside one declaration through `light-dark()`, and `ThemeContractTest` fails on either
 `light-dark(` or `prefers-color-scheme` below the marker, in any of the four files.
 
-`--names` reports **admin 0, lite 99** violations over the declared tokens, and
-every one is the fourth law alone — a name not yet registered in
+`--names` reports **admin 0, lite 44** violations over the declared tokens, and
+all but nine are the fourth law alone — a name not yet registered in
 `tools/ui-contract.php`. Each belongs to a family whose batch has not run: the
-gradients and progress fills of batch 5, the `--sl-space-*` and `--sl-radius-*`
-scales of batch 6, and the colour tail of batch 7. `--names` prints each with
-the law it breaks, which is the work list those batches inherit.
+`--sl-space-*` and `--sl-radius-*` scales of batch 6, and the colour tail and
+login geometry of batch 7. `--names` prints each with the law it breaks, which is
+the work list those batches inherit.
 
 **Decision or structure.**
 
@@ -350,8 +349,8 @@ Four laws, each machine-checkable, each with current offenders.
    prop does not fit and the shorter true name does.
 3. **One axis, one prefix, from the closed list.** Colour is the default axis and
    carries no prefix — it is the largest family and `color` bought nothing.
-4. **State is not an axis, and modifiers do not stack.** Offenders left:
-   `--sl-bg-hover-gloss` and `--sl-color-bg-soft-soft` in lite.
+4. **State is not an axis, and modifiers do not stack.** One offender left:
+   `--sl-color-bg-soft-soft` in lite.
 
 Average name length is 20.5 characters; under this grammar about 14.
 
@@ -419,7 +418,6 @@ moves the value with it.
 
 | Waiting on | Names |
 |---|---|
-gradients, batch 5 | `--sl-progress-*` and `--sl-line-gradient` in lite, with `--sl-grad-info/success-*`, `--sl-bg-hover-gloss` and the `--sl-but-*` bevel |
 the spacing and radius ladders, batch 6 | lite `--sl-space-xs/-sm/-md/-lg/-xl` onto `--sl-space-1…8`, which lite already declares because the editor skin reads them; `--sl-radius-control`/`-card` onto `--sl-radius-1…3`; `--sl-overlay-10/12/15/20` onto `--sl-scrim-*`, with `0.12` folding into `0.1` |
 the type and size ladders, batch 6 | lite `--sl-size-meta-row`, `--sl-img-placeholder-icon-size` — 48px, which admin now spells `--sl-size-icon-xl` — and the login geometry — `--sl-login-field-pad-x`/`-y`, `--sl-login-dropdown-form-left`/`-width`/`-max-width`, `--sl-login-dropdown-offset-x`, each a figure a breakpoint overrides. lite's `--sl-font-h1` at 28px and `--sl-font-h2` at 22px are off the shared ladder and fold onto 24 and 20 here |
 the shadow roles, batch 7 | lite `--sl-field-invalid-ring` and `--sl-field-valid-ring`. One component carries one `ring` and one `shadow`, so a second of either has nowhere to go until the roles are settled |
@@ -440,10 +438,12 @@ was the worst contrast failure in the theme at 2.41:1 — and `--sl-color-text-s
 folded onto `--sl-text`, the darker of its two neighbours, because folding a text tone
 upward can only raise contrast and folding it down can only lower it.
 
-One row of the map could not be written as it stood. The
-bevel row asked for `--sl-btn-border` above and `--sl-btn-shadow` below, but lite
-already spends `--sl-btn-shadow` on the control shadow, so the two edges say
-`--sl-but-border-inner` and `-outer` until batch 5 composes them.
+One row of the map could not be written as it stood. The bevel row asked for
+`--sl-btn-border` above and `--sl-btn-shadow` below, but a border and a shadow are
+two properties for one edge treatment, and lite already spent `--sl-btn-shadow` on
+the control shadow. Batch 5 settled it by composing all three — the inner edge, the
+outer edge and the lift — into the single `--sl-btn-shadow` admin already carried,
+which is why the map now has no bevel row at all.
 
 **Every mapping is checked against the target name's current occupants — in both
 themes.** `--sl-shadow-strong` already exists in admin holding a composed shadow;
@@ -512,10 +512,10 @@ spacing | 857 | 62 | `2 4 8 10 12 16 20 24` | 40% off step, `10px` the largest s
 `line-height` | 55 | 15 | `1.2` / `1.45` / `1.6`, plus neutral `1` | fifteen spellings collapse to three |
 `font-weight` | 128 | 6 spellings | `400` / `500` / `600` / `700` | nothing moves |
 `border-radius` | 120 | 15 | `4 8 12`, plus `pill`, `circle` | `999`/`9999` merge; `15`, `21`, `30` are exceptions |
-`transition` | 171 durations | 20 | `0.15s` / `0.2s` / `0.35s` | admin is on the ladder; lite holds the rest |
-easing | 192 | 11 | `ease`, one `cubic-bezier` | admin spells two; lite still holds six distinct curves |
+`transition` | 171 durations | 3 | `0.15s` / `0.2s` / `0.35s` | closed in lite with no exception; admin still holds `--sl-knob-dur` on one transition |
+easing | 192 | 3 | `ease`, one `cubic-bezier` | closed; `linear` is allowlisted and two overshoots are component `ease` tokens |
 `opacity` | 28 | 9 | `0.8` / `0.55` / `0.45`, plus `0`, `1` | — |
-`z-index` | 36 | 14 | 8 named layers | spelling only, except where a stack is deliberate |
+`z-index` | 36 | 8 | 8 named layers | closed; admin reads all eight roles, lite the seven it can show to overlap |
 `box-shadow` | 96 | 34 | 6 roles + `--sl-shadow-color` | — |
 `letter-spacing` | 16 | 5, `px`/`em` mixed | 3 roles | — |
 breakpoints | admin 4 widths, lite 11 | 12 distinct | `560` / `768` / `900` / `1200` | admin is on the ladder; lite `600`, `720`, `760`, `769`, `800`, `901`, `1040`, `1400` |
@@ -530,11 +530,56 @@ one would move about 500 sites. The eight measured steps `2 4 8 10 12 16 20 24`
 take **60%** of the sites exactly and leave 338 to snap, and the largest single
 value is `10px` at 84 lite sites against `12px` at 50.
 
-**Transitions are the worst zoo relative to meaning.** `0.14`…`0.24s` is **eight
-spellings over 140 of the 171 duration sites** — `0.14 0.15 0.16 0.18 0.19 0.2
-0.22 0.24` — indistinguishable to a viewer. Collapsing them shifts
-some sites by up to 40ms — intended, and recorded rather than hidden under
-"values preserved".
+**Transitions were the worst zoo relative to meaning, and they are collapsed.**
+`0.14`…`0.24s` had been **eight spellings over 140 of the 171 duration sites** —
+`0.14 0.15 0.16 0.18 0.19 0.2 0.22 0.24` — indistinguishable to a viewer. Lite
+held **81 duration parts over 13 spellings**; 32 were already on a step, 31 moved by
+20ms or less — `0.18` up and `0.22` and `0.16` down — and 18 moved further: `0.24`
+by 40ms, `0.3` and `0.4` by 50 to `0.35`, the seven `0.5`/`0.6` sites down to it by
+150 and 250, and the two longest of all — the poll bar filling at `0.8s` and the
+profile ring drawing itself at `0.9s` — down to the same `0.35s`. Those two were
+first argued out of the ladder as the character of one element, on the strength of
+admin's `--sl-knob-dur`; the ladder took them instead, because an exception granted
+by argument is how a zoo grows back. **Admin still spells its own ring `--sl-knob-dur:
+1s`, and that divergence is now batch 8's to settle**, in the direction lite has
+already taken. Of the five curve spellings, `ease` took 71 parts and stayed,
+`linear` is allowlisted, `cubic-bezier(0.2, 0.8, 0.2, 1)` folded onto
+`--sl-ease-in-out`, `cubic-bezier(0.2, 0.7, 0.3, 1)` onto `--sl-ease-out`, and the
+overshoot `cubic-bezier(0.3, 1.6, 0.5, 1)` became `--sl-vote-ease` because a curve
+leaving the 0-1 range is a different kind of motion. All of it is
+recorded here rather than hidden under "values preserved", and it is verified by
+reading computed `transition-duration`, `transition-delay` and
+`transition-timing-function` off the rendered page, because no screenshot sees a
+duration.
+
+**Twelve layers became seven roles, and every merge names what it was measured against.**
+Lite spelled `0 1 2 4 5 30 100 1000 2001 2005 3000 6000` over 26 sites. Five were already
+a role's own value and kept it: `0` base, `1` raised, `30` dropdown, `3000` modal, and the
+image popup at `1000` popover. `2` and `5` both mean "painted over the box it sits in" — a
+slider arrow, an online badge, a scroll fade, a sticky day header, two corner tool clusters —
+and they are one `--sl-z-overlay`. Nothing inside the old `2` set moved against anything else
+in it; the only place a `5` meets a `2` is the user card, where the tool chip is placed at
+`top: -38px` and the online badge at `top: 20px`, so they never touch. `4` is the session
+panel that unfolds over that same card: it must stay above the badge, so it went up to
+`--sl-z-dropdown` rather than across. That puts it over the tool chip that used to cover it,
+which is safe by measurement and not by argument — the chip ends 12px above the card, while
+the panel is pinned `bottom: 36px` with `max-height: calc(100% - 36px)` and cannot reach past
+the card's top edge. `6000` had no neighbour above it and became `--sl-z-toast`.
+
+**Four orders changed, and they are named here rather than buried.** The header login form
+fell from `1000` to `--sl-z-dropdown` and the top-menu submenu from `2001` to the same,
+because that is what both are; they keep their old relative order for the reason that decided
+it before, that they tie and `#topmenu` comes later in the document than the header login.
+The tooltip's anchored hover panel rose from `100` to `--sl-z-popover` and now paints over
+both of those instead of under them — both are pointer-opened and the submenu closes when the
+pointer leaves the bar, so keyboard focus is the only way to see the pair at once. The image
+popup kept `--sl-z-popover` and so also passed above the submenu. The two fixed edge tabs fell
+from `2005` to `--sl-z-popover` and now tie with the tooltip and the popup instead of standing
+above them; `partials/site-footer.html` is the last thing both layouts include, so the tie
+still resolves the tabs' way.
+
+`--sl-z-sticky` stays undeclared in lite, because nothing there reads it and a step nothing
+reads is a dead token.
 
 **Colour is two ramps split by saturation.** `--ramp` files lite's colours as
 **gray 42, blue 15, green 10, red 9, orange 6, violet 5, teal 3**, and admin's as
@@ -563,17 +608,17 @@ tool before acting on any figure; every count below is the one the ratchet holds
 | Metric | lite | admin |
 |---|---|---|
 declarations outside the API block, custom properties excluded | 5400 | 4035 |
-untokenised visual decisions | **1396** | **0** |
+untokenised visual decisions | **1209** | **0** |
   of those, half tokenised | 112 | 0 |
-  declarations fully reached through a token | 1508 | 1855 |
-bare numbers in the four properties | 133 | 0 |
+  declarations fully reached through a token | 1583 | 1855 |
+bare numbers in the four properties | 107 | 0 |
 redundant duplicate blocks | 271 | 178 |
-grammar violations | 99 | 0 |
-tokens in `base.css` | 214 | 291 |
-tokens scoped outside the API block | 109 | 84 |
+grammar violations | 44 | 0 |
+tokens in `base.css` | 215 | 291 |
+tokens scoped outside the API block | 107 | 84 |
 dead tokens | 0 | 0 |
 names read and declared nowhere | 2 | 2 |
-single-use tokens | 88 | 146 |
+single-use tokens | 81 | 146 |
 alias chains | 0 | 0 |
 tokens that cannot satisfy their property | 0 | 0 |
 one name declared twice in the API block | 0 | 0 |
@@ -648,7 +693,6 @@ Untokenised decisions by property, largest first:
 | Property | lite | admin |
 |---|---|---|
 `padding` | 177 | 0 |
-`transition` | 156 | 0 |
 `font-size` | 155 | 0 |
 `margin` | 91 | 0 |
 `width` | 79 | 0 |
@@ -662,25 +706,24 @@ Untokenised decisions by property, largest first:
 `box-shadow` | 36 | 0 |
 `background` | 32 | 0 |
 `line-height` | 27 | 0 |
-`z-index` | 26 | 0 |
 `min-height` | 17 | 0 |
 
-**In lite, no `transition` and no `z-index` reaches any value through a token** —
-63 transition declarations and 26 layers, not one of them reading a token. Admin is at
-zero on every property, in all three files. Gradients are the different case: all 39
-admin and 23 lite gradient sites already read colour tokens for their stops. What lite
-still lacks is a name for the **gradient**, spelled out at each use site instead of
-living at one address as `--sl-grad-*`.
+**Motion, layers and gradients are closed in both themes.** Every lite transition
+reaches its duration and its curve through a token, every layer sits on a named role,
+and every gradient lives at one address. What is left in lite is the scale work of
+batch 6 and the colour, animation and shadow work of batch 7.
 
-**`--sl-grad-gloss` holds nothing yet, and that is a measured limit rather than an
-omission.** The control gloss is one shape — `to bottom, A 0%, A 48%, B 100%` — under
-about twenty colour pairs, and CSS can only parameterise a shape through custom
-properties set on each element. Those are scoped declarations, `scoped` is a ratcheted
-count, and the ratchet exists exactly to stop decisions moving into scoped properties
-where no theme author can find them. So the shape waits for batch 7, which owns
-`background` in lite. A gradient assigned to one component is `--sl-<component>-bg`,
-which is how the admin header rule already reads. Admin never needed the axis role:
-every gloss it paints reads two colour tokens at its use site and counts as tokenised.
+**`--sl-grad-gloss` holds admin's nothing and lite's one gloss, which is a measured
+limit rather than an omission.** In lite it is the single hover sheen five controls
+wear, so it fitted the axis whole. In admin the control gloss is one shape —
+`to bottom, A 0%, A 48%, B 100%` — under about twenty colour pairs, and CSS can only
+parameterise a shape through custom properties set on each element. Those are scoped
+declarations, `scoped` is a ratcheted count, and the ratchet exists exactly to stop
+decisions moving into scoped properties where no theme author can find them. So
+admin's shape stays at its use sites, where every gloss it paints reads two colour
+tokens and counts as tokenised. A gradient assigned to one component is
+`--sl-<component>-bg`, which is how the admin header rule and lite's three edge
+gradients already read.
 
 **`scoped` is a fixed budget, and a batch that needs a new internal must retire one.**
 Admin ended batch 4 exactly where it started, at 84, having added
@@ -691,7 +734,7 @@ sidebar read and nothing declared — and retired three that said nothing: two
 
 **Cross-theme state.** `--cross`
 
-- 322 selectors exist in both: 109 byte-identical, **213 divergent** — including
+- 322 selectors exist in both: 118 byte-identical, **204 divergent** — including
   `body`, `h5`, `ol`, keyframe stops at `20%` and `50%`, `.sl-highlight`,
   `.sl-preview-meta`, `.sl-alert-flash-bar`, `.sl-progress-line div`,
   `.sl-debug-stats dd`. The number rises while one theme is ahead of the other and
@@ -705,46 +748,6 @@ sidebar read and nothing declared — and retired three that said nothing: two
 Package a new theme copies: `lite` 667 files / 5069 KB, `admin` 491 / 3092 KB.
 
 ## Batches
-
-### Batch 5 — lite: the zero-percent axes
-
-**Causa.** No transition, no layer and no gradient in lite has a name of its own,
-so a theme author cannot restyle 205 motion decisions, 26 layers or 23 gradient
-sites without forking rules. Admin already carries the answer: `--sl-time-*`,
-`--sl-ease-*`, `--sl-z-*` and `--sl-grad-*` are declared, their steps measured and
-their roles registered, so this batch spells lite's values onto the same names.
-Values move verbatim except where a duration collapses. The metric drops by roughly
-**230**.
-
-**Admin settled the motion questions this batch inherits.** A transition duration
-snaps to the ladder. An **animation** duration does not — it is the character of one
-element and becomes a component token, which is why admin declares `--sl-loading-dur`,
-`--sl-drift-dur`, `--sl-row-dur`, `--sl-led-dur`, `--sl-alert-dur`, `--sl-skel-dur`,
-`--sl-flash-dur` and `--sl-modal-dur` beside the `--sl-spin-dur` the plan predicted.
-The three alert durations `1.5s`, `1.8s` and `1.9s` collapsed into one, because they
-decorate the same icon and no viewer tells them apart. `ease-in` and `ease-in-out`
-both take `--sl-ease-in-out`. `linear` is **allowlisted, not collapsed**: a constant
-rate is the absence of a curve, and a looping spinner or marquee that eases stutters at
-every cycle boundary. One curve earned a component token instead of a ladder step —
-`--sl-modal-ease: cubic-bezier(0.34, 1.3, 0.64, 1)`, an overshoot that leaves the 0–1
-range and is a different kind of motion.
-
-**Steps.** Fold lite's declared gradient names into the axis — `--sl-line-gradient`,
-the five `--sl-progress-fill-*` triples with their track, `--sl-grad-info/success-*`,
-`--sl-bg-hover-gloss` and the `--sl-but-*` bevel. Snap every duration onto
-`0.15s` / `0.2s` / `0.35s` and every curve onto `ease` or the one `cubic-bezier`;
-six distinct curves collapse to one, and some sites shift by up to 40ms. A screenshot
-cannot see that, so motion is verified by measuring computed `transition-duration`,
-`transition-delay` and `transition-timing-function` on the rendered page against the
-ladder. `0.01ms` stays literal, animation durations are untouched and become component
-tokens in batch 7.
-
-**Not mechanical.** lite holds fourteen distinct `z-index` values — `0 1 2 3 4 5
-30 100 1000 2001 2005 3000 6000 10000` — against eight roles, so the merges
-must each be shown safe. Three of the eight are already declared, because the editor
-skin reads them: `--sl-z-raised`, `--sl-z-overlay` and `--sl-z-toast`. Every pair that could overlap is
-opened together: modal over dropdown, popover over modal, sticky header under
-both, and the editor, which stacks its own layers inside the page.
 
 ### Batch 6 — lite: scales
 
@@ -781,6 +784,15 @@ and `--sl-color-text-link`, `--sl-color-border-stronger` one unit from
 `-primary` which are the two service colours of the social icons,
 `--sl-login-link-hover-color`, and the eight `--sl-changelog-*` that share no
 value with a semantic colour — an island the ramp folds onto the roles.
+
+Three more names arrive from batch 5 and belong to the same fold. `--sl-grad-info-start`
+and `-end` were carrying a colour under the gradient prefix, and one of them was also
+painting the search button flat, so they could not be inlined into a gradient and had to
+take a legal colour name: `--sl-info-subtle` `#78c6fb` and `--sl-info-muted` `#6dbaf7`,
+two blues four points of lightness apart. `--sl-grad-success-start` turned out to be
+`--sl-success-subtle` spelled twice and collapsed onto it; its partner is now
+`--sl-success-muted` `#96d26d`. Whether either pair is two roles or one value written
+twice is a question for the ramp, not for the grammar.
 
 `height` (76), `width` (79), `box-shadow` (36), `background` (32) and the tail —
 **345 decisions** — plus the 112 half tokenised, plus lite's dark values. `skin.css` needs nothing here: batches 3 and 4 already
