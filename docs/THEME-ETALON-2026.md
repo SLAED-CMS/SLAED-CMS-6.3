@@ -250,6 +250,24 @@ resolves each text colour against the background it really sits on — through
 ancestors, and through the worst stop of a gradient — and the PHP tool checks
 those pairs offline on every run.
 
+**The walk passes through a sheer fill, and that is a half answer.** A mostly transparent
+layer is a texture over the real background rather than the background — a 9% wash of a
+status colour is not a status surface — and the walk applied that reading to a gradient
+stop from the start but not to a `background-color`, so an alert tint read as solid orange
+and reported `2.22:1` against a colour nobody can see. `under()` now passes through any
+fill under 0.5 alpha to the ancestor that actually paints, at the threshold `worst()`
+already used, and batch 7 measured the cost: exactly two readings disappeared, both the
+false ones it was written for.
+
+**The whole answer is to composite, not to skip.** Nine per cent of orange over a white
+page is a definite colour, and text should be measured against it. Where a sheer layer
+genuinely darkens what is under it — white text on a twenty per cent black veil over the
+slider photograph — the walk now measures nothing instead of measuring wrongly, which is
+honester but not complete. Compositing each sheer layer onto the ancestor it covers is
+about twenty lines in `getContrastPairs()`; it needs no change to either theme, but the
+registry must be re-generated afterwards and it may surface pairs that nothing reports
+today. Whoever does it re-generates both halves in one run and lists what appeared.
+
 **The tool learned four things in batch 4, and each one had been silently wrong.**
 A `color-mix()` was one opaque colour atom, so `color-mix(in srgb, var(--sl-primary)
 10%, transparent)` counted as untokenised however many tokens were inside it, and
@@ -986,6 +1004,23 @@ longer be corrected.
 
   A manual look once proves nothing about the day after the freeze, and after the
   freeze the names cannot be corrected.
+- **Decide the two open questions about the rig**, both carried over from batch 7 and
+  both about what the gates can see rather than about either theme. Neither blocks the
+  freeze; both change what a later batch is able to catch.
+
+  **Does `modes` gain `dark`?** Batch 7 shipped two dark-mode breaks green through every
+  gate — a headline that flipped colour over a photograph, and a footer wordmark that
+  vanished when the band under it inverted — and found both by looking. Both pass AA, so
+  no contrast pair could have reported either. Adding the mode doubles the committed set
+  to 168 images and about 72 MB and doubles every capture; it is the only gate that would
+  have caught them. The risk section carries the full reading.
+
+  **Does the walk composite a sheer fill instead of passing through it?** It skips any
+  fill under 0.5 alpha today, which removed two false readings and left the honest ones
+  unmeasured: white text on a twenty per cent veil over a photograph now reports nothing
+  rather than something wrong. Compositing is about twenty lines in `getContrastPairs()`,
+  touches no theme, and needs both halves of the registry re-generated in one run with
+  whatever it surfaces listed beside the reason.
 - Freeze the API and note it in the contract.
 
 **Verification.** The cross-theme diff reports only allowlisted divergences, each
@@ -1093,12 +1128,24 @@ runtime-editable configuration — and the scan returns nothing.
   that reason: a guard against a layout change has no business carrying anyone's
   address into the repository.
 
-  **Dark is unguarded by pixels.** The manifest captures one mode, the one a fresh
-  browser answers with, and doubling the set would double 36 MB of committed images
-  for a mode only admin has. Dark is guarded by the contrast half of the registry,
-  which walks both modes, and by `ThemeContractTest`, which fails on any rule outside
-  the API block that names the mode. What neither sees is a dark layout that breaks
-  without changing a colour, and both themes now have a mode the images do not cover.
+  **Dark is unguarded by pixels, and batch 7 proved what that costs.** The manifest
+  captures one mode, the one a fresh browser answers with. Dark is guarded by the
+  contrast half of the registry, which walks both modes, and by `ThemeContractTest`,
+  which fails on any rule outside the API block that names the mode. What neither sees
+  is a dark layout that breaks **without breaking a count** — and two such breaks shipped
+  green through every gate in batch 7 and were found by opening the page and looking:
+  the headline over the photo band flipped from white to near-black, because the band is
+  a photograph that has no dark variant while `--sl-on-solid` turns over; and the footer
+  wordmark disappeared, because the band under it inverted and the wordmark is an image
+  with white baked into it. **Both pass AA in both modes.** A contrast pair cannot report
+  a logo, and it cannot tell "readable" from "as designed".
+
+  The open question is whether `modes` gains `dark` beside `auto`. It doubles the
+  committed set from 84 images to 168 and roughly 36 MB to 72 MB, and doubles the
+  wall-clock of every capture; what it buys is the only gate that would have caught
+  either break. Until it is decided, **a batch that touches colour must open the pages
+  in dark and look at them**, and say in its report that it did.
+
 - **Baseline weight.** The image set is 36 MB, and a scale batch re-captures it
   whole, so each re-capture adds about that much to history permanently. If that
   becomes the wrong trade, the answer is to narrow the manifest, not to stop
