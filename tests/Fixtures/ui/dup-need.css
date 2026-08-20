@@ -1,0 +1,25 @@
+/* Three shapes the duplicate check has to tell apart, all in one context */
+
+/* One declaration reaching one token, under three selectors that share nothing else: need, not repetition */
+.sl-one {
+  display: none;
+}
+
+.sl-two {
+  display: none;
+}
+
+.sl-three {
+  display: none;
+}
+
+/* Two declarations under two selectors of one component: a group that has to be merged or given a reason */
+.sl-card-head {
+  margin: 0;
+  padding: var(--sl-space-3);
+}
+
+.sl-card-foot {
+  margin: 0;
+  padding: var(--sl-space-3);
+}

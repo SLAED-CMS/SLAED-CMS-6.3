@@ -16,8 +16,8 @@
     { "name": "xl", "width": 1200, "height": 1000 }
   ],
 
-  "_modes": "the screenshot baseline is captured in the mode a fresh browser answers with; the contrast walk drives both, because a pair that meets on screen in one mode is a different pair in the other. `cookie` is the name the CMS reads, which carries the user_c prefix of this stand",
-  "modes": ["auto"],
+  "_modes": "both modes are captured, because batch 7 shipped two dark breaks green through every gate - a headline that flipped colour over a photograph and a footer wordmark that vanished when the band under it inverted - and both pass AA, so no contrast pair could report either. The pixel gate is the only one that would have caught them, and it costs a doubled image set. `cookie` is the name the CMS reads, which carries the user_c prefix of this stand",
+  "modes": ["auto", "dark"],
   "contrastmodes": ["light", "dark"],
   "cookie": "slaed-mode",
 
@@ -41,8 +41,8 @@
   },
 
   "_mask": "hidden but still taking their space: what moves inside a box of stable size, and what must not be published. The baselines are committed, so the IP column of the user list and the mail fields of the configuration are hidden - a guard against a layout change has no business carrying anyone's address into the repository",
-  "_mask2": "the online counter and the four audience lines of the session block count whoever is on the stand at that second, including the rig's own session, so they move between two runs that render the same theme. The control beside them refetches its own block on a timer, and an element that replaces itself every four seconds cannot be part of a still image: the shot lands wherever the swap happened to be",
-  "mask": [".sl-captcha", ".sl-session-donut", "[data-sl-session-online]", ".sl-session-line b", "[hx-trigger*=\"every\"]", ".sl-avatar img", ".sl-generates", ".sl-stat-num", ".sl-views", ".sl-coms", "time", ".sl-col-ip", "input[name=\"adminmail\"]", "input[name=\"mailfmail\"]", "input[name=\"mailhost\"]", "input[name=\"mailpass\"]"],
+  "_mask2": "the online counter, the four audience lines of the session block, the two figures the profile prints from the site counter and the bars of the statistic page all count whoever is on the stand at that second, including the rig's own session, so they move between two runs that render the same theme. The control beside them refetches its own block on a timer, and an element that replaces itself every four seconds cannot be part of a still image: the shot lands wherever the swap happened to be",
+  "mask": [".sl-captcha", ".sl-session-donut", "[data-sl-session-online]", ".sl-session-line b", "[hx-trigger*=\"every\"]", ".sl-avatar img", ".sl-generates", ".sl-stat-num", ".sl-views", ".sl-coms", "time", ".sl-col-ip", ".sl-user-points b", ".sl-cab-ring b", ".sl-statx-bv", "input[name=\"adminmail\"]", "input[name=\"mailfmail\"]", "input[name=\"mailhost\"]", "input[name=\"mailpass\"]"],
 
   "_drop": "taken out of layout entirely: the site rotates these on every request, so their height is not the same twice and a diff of the whole page would be a diff of the dice. The debug sections are here because their row count follows the number of SQL queries the request happened to run",
   "drop": [".sl-head-marquee", ".sl-vote", "[data-sl-vote-live]", ".sl-block-random", ".sl-banner", ".sl-related-list", ".sl-last-list", ".sl-random", ".sl-debug-section", "#sl_debugger"],

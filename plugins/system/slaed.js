@@ -840,7 +840,7 @@
     var floatGap = 8;
     var floatStates = ['sl-float-left', 'sl-float-right', 'sl-float-up', 'sl-is-open'];
 
-    // Drop only the state classes: the panel keeps its inline fixed position and fades out in place with no jump back to the static CSS spot
+    // Drop only the state classes: data-sl-float-placed outlives them, so the panel keeps its measured spot and fades out in place with no jump back to the static one
     function clearFloatState(node) {
         for (var i = 0; i < floatStates.length; i++) node.classList.remove(floatStates[i]);
     }
@@ -849,7 +849,7 @@
         return node.querySelector(':scope > .sl-float-panel');
     }
 
-    // Open a float: inline fixed styles beat theme CSS and survive the close fade; park off-screen only on first measure so re-placing never yanks the panel from under the cursor
+    // Open a float: the script writes the two measured coordinates and the theme owns the rule that reads them; park off-screen on first measure only
     function placeFloat(node) {
         var panel = getFloatPanel(node);
         if (!panel) return;
@@ -861,16 +861,11 @@
         clearFloatState(node);
         node.classList.add('sl-is-open');
 
-        var placed = panel.style.position === 'fixed';
-        panel.style.position = 'fixed';
-        panel.style.right = 'auto';
-        panel.style.bottom = 'auto';
-        panel.style.margin = '0';
-        panel.style.transform = 'none';
-        panel.style.zIndex = '3000';
+        var placed = node.getAttribute('data-sl-float-placed') === '1';
         if (!placed) {
-            panel.style.left = '-9999px';
-            panel.style.top = '-9999px';
+            panel.style.setProperty('--sl-d-float-left', '-9999px');
+            panel.style.setProperty('--sl-d-float-top', '-9999px');
+            node.setAttribute('data-sl-float-placed', '1');
         }
 
         window.requestAnimationFrame(function () {
@@ -898,8 +893,8 @@
             }
 
             var arrow = Math.max(14, Math.min(width - 14, center - left));
-            panel.style.left = left + 'px';
-            panel.style.top = top + 'px';
+            panel.style.setProperty('--sl-d-float-left', left + 'px');
+            panel.style.setProperty('--sl-d-float-top', top + 'px');
             panel.style.setProperty('--sl-d-arrow', arrow + 'px');
         });
     }

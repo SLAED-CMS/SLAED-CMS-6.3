@@ -181,7 +181,7 @@ return [
         'calc', 'card', 'changelog', 'changelog-body', 'changelog-date',
         'changelog-files', 'changelog-stat', 'check', 'check-tick', 'chip', 'chip-tint', 'code', 'col-actions', 'col-amount', 'col-author',
         'col-check', 'col-count', 'col-date', 'col-form', 'col-id', 'col-ip', 'col-lang', 'col-last', 'col-module', 'col-num', 'col-sent',
-        'col-status', 'com', 'com-arrow', 'com-ava', 'com-item', 'count', 'crumb', 'crumb-bar', 'demo', 'dial', 'donut', 'drift',
+        'col-status', 'com', 'com-arrow', 'com-ava', 'com-item', 'count', 'crumb', 'crumb-bar', 'demo', 'dial', 'donut', 'drift', 'drift-dot',
         'drop', 'edge', 'editor', 'editor-mode', 'editor-tab', 'emoji', 'emoji-full', 'emoji-grid', 'entry', 'f-title', 'fav', 'feedback',
         'field', 'flash', 'flash-bar', 'fm-as',
         'fm-bar', 'fm-body', 'fm-busy', 'fm-drop', 'fm-edit', 'fm-empty', 'fm-field', 'fm-filter', 'fm-kind', 'fm-mode',
@@ -209,6 +209,8 @@ return [
         '--sl-d-depth' => 'comment nesting depth, templates/lite/fragments/comment.html',
         '--sl-d-distance' => 'profile feed scroll distance, plugins/system/slaed.js',
         '--sl-d-duration' => 'profile feed scroll duration, plugins/system/slaed.js',
+        '--sl-d-float-left' => 'floating panel viewport left, plugins/system/slaed.js',
+        '--sl-d-float-top' => 'floating panel viewport top, plugins/system/slaed.js',
         '--sl-d-level' => 'profile completion percentage, templates/lite/partials/account-home.html and account-profile.html',
         '--sl-d-members' => 'session donut member share, templates/lite/partials/session-summary.html',
         '--sl-d-ring' => 'profile ring colour, templates/lite/partials/account-home.html and account-profile.html',
@@ -332,7 +334,7 @@ return [
         '.bi-stars, .sl-cab-nav .sl-cab-act .sl-cat-ico .bi, .sl-msg-search .sl-home-link .bi, .sl-pmf-slot-more i',
         # The same shape in lite: three hovers in three unrelated components and one resting note, which met when
         # 0.9, 0.8 and 0.75 folded onto one step. The note is not a hover, and the three hovers share nothing else
-        '.bx-pager-item a:hover:after, .sl-forum-last:hover, .sl-rate-sites:hover, .sl-session-note',
+        '.bx-pager-item a:hover::after, .sl-forum-last:hover, .sl-rate-sites:hover, .sl-session-note',
         # The element default every page inherits, a utility that bolds any inline run, and one component label. They met
         # when `bold` and `700` became one name; merging would move the element reset into a utility block
         '.sl-label, .sl-text-bold, strong, b',
@@ -351,7 +353,7 @@ return [
         '.sl-fieldset-form-legend-success, .sl-text-success, .sl-profile-proof:nth-child(2) i, '
             .'.sl-radio-group.sl-radio-switch:has(input[value="1"]:checked) .sl-radio:has(input:checked), '
             .'.sl-session-line[data-sl-audience="users"] > .bi, .sl-toastui-upload .sl-fm-job.sl-is-done > .bi, .sl-topic-moderated .bi',
-        '.sl-fieldset-form-legend-danger, .sl-text-danger, .sl-hide:before, .sl-hide:after, .sl-profile-proof.sl-is-warn i, '
+        '.sl-fieldset-form-legend-danger, .sl-text-danger, .sl-hide::before, .sl-hide::after, .sl-profile-proof.sl-is-warn i, '
             .'.sl-profile-wide.sl-is-warn h3 i, .sl-toastui-upload .sl-fm-empty.sl-is-fail .bi, .sl-toastui-upload .sl-fm-job.sl-is-fail > .bi',
         '.sl-pmf-focus > summary .bi-lightning-charge, .sl-profile-row-private > i, .sl-session-line[data-sl-audience="bots"] > .bi, '
             .'.sl-topic-hot .bi, .sl-topic-admin .bi',
@@ -367,7 +369,7 @@ return [
         '.sl-changelog-commit-alt, .toastui-editor-popup-add-table .toastui-editor-table-cell.header, a.sl-profile-hub-row:hover',
         '.sl-i-vk:hover, .toastui-editor-defaultUI .toastui-editor-ok-button:hover',
         '.sl-urating a.sl-star:has(~ a.sl-star:hover) .bi, .sl-urating a.sl-star:hover .bi, .toastui-editor-contents a:hover',
-        '.sl-gallery > li > b, .sl-login-top--head > li > a:hover, .sl-login-top--head > li > a:focus-visible, '
+        '.sl-login-top--head > li > a:hover, .sl-login-top--head > li > a:focus-visible, '
             .'.sl-login-top--head > li > .sl-login-toggle:hover, .sl-login-top--head > li > .sl-login-toggle:focus-visible, '
             .'.sl-profile-feed .sl-tabs-link:hover, .sl-profile-hub-row b, .sl-table-head th a, .toastui-editor-contents h1, '
             .'.toastui-editor-contents h2, .toastui-editor-contents h3, .toastui-editor-contents h4, .toastui-editor-contents h5, '
@@ -391,6 +393,255 @@ return [
             .'.sl-toastui-upload .sl-fm-rail-item[disabled] b, .sl-toastui-upload .sl-fm-rail-item[disabled] .bi, '
             .'.toastui-editor-md-delimiter, .toastui-editor-md-thematic-break, .toastui-editor-md-link, '
             .'.toastui-editor-md-table, .toastui-editor-md-block-quote',
+        # the item of a tab strip beside the definition list inside a hint: two components that both open as a block with no margin and
+        # share nothing else
+        '.sl-tabs-item, .sl-tip dl',
+        # the link list of an admin block beside the count list of a sidebar block: two lists of a sidebar that happen to take the same
+        # track and gap
+        '.sl-admin-block-links, .sl-block-sidebar-count-list',
+        # the same pair one level down, on the link each list holds
+        '.sl-admin-block-link a, .sl-block-sidebar-count-label a',
+        # the control of a live chip beside the thumbnail of a file row: two buttons stripped of their browser chrome, which is need and not
+        # one component
+        '.sl-live-act, button.sl-fm-thumb',
+        # the wordmark of the login card beside the flag of a session line: two boxes that centre one child, in two screens that never meet
+        '.sl-admin-login-card .sl-admin-brand, .sl-session-icon .sl-geo-flag',
+        # the primary action of the file manager beside a pressed filter of its bar: one is a rank, the other a state, and they part the
+        # moment either stops being solid
+        '.sl-but-mini.sl-fm-main, .sl-fm-bar .sl-but-mini[aria-pressed="true"]',
+        # the open node of the file tree beside the picture kind of a thumbnail: a place the window is standing in and a kind of file, which
+        # is a coincidence of one tint
+        '.sl-fm-node[aria-current="true"], .sl-fm-thumb-img',
+        # a selected tile beside a drop target under a dragged file: two states of the same panel that mean different things and are free to
+        # part
+        '.sl-fm-cell[aria-selected="true"] .sl-fm-tile, .sl-fm-drop.sl-drag-over',
+        # the caption of the drop zone beside the caption of an empty list: two states of the panel, one inviting and one reporting
+        '.sl-toastui-upload .sl-fm-drop b, .sl-toastui-upload .sl-fm-empty b',
+        # the note beside a queued file and the term of a property list: two faint labels in two panels of the window
+        '.sl-toastui-upload .sl-fm-job-name small, .sl-toastui-upload .sl-fm-props dt, .sl-shot-side .sl-fm-props dt',
+        # the caption over the queue beside the room the module has left: two readings of the same panel, and the second is a measurement
+        # rather than a heading
+        '.sl-toastui-upload .sl-fm-queue-cap, .sl-toastui-upload .sl-fm-quota',
+        # the tab standing open in a profile feed beside a letter of the alphabet index under the pointer: a state and a rank, both painted
+        # in the brand fill
+        '.sl-profile-feed .sl-tabs-link.sl-is-active, a .sl-letter:hover',
+        # the byline of an entry, the action row of its meta line and a provider button: three inline rows that carry one icon beside one
+        # label
+        '.sl-author, .sl-meta-actions, .sl-oauth-but',
+        # a link in a sidebar block beside a link in a table cell: two places one title is cut off with an ellipsis, and they live in two
+        # layouts
+        '.sl-block-content > li > a, .sl-cell-ellipsis > a:last-child',
+        # the page a breadcrumb is standing on beside the note under a focused message: one is a position, the other a reading of the clock
+        '.sl-crumb-cur, .sl-pmf-focus > summary small',
+        # the buttons under a notice beside the chips of a message filter: two wrapping rows in two components
+        '.sl-alert-actions, .sl-pmf-chips',
+        # the foot of a reply box beside a group of radios: a toolbar and a form control that both wrap their children on one line
+        '.sl-pmf-reply-foot, .sl-radio-group',
+        # three pictures that fill the box they are given: a preview, the lead image of a list row and the thumbnail of a related entry.
+        # Merging would file three components under one selector list that names none of them
+        '.sl-image-preview-thumb, .sl-main-img img, .sl-related-img-inner',
+        # the two footer lines beside the nested list of a main row: an element default of the footer meeting a list, at the small step in
+        # the muted tone
+        '.sl-generates, .sl-license, .sl-main-list > li ul',
+        # the two parts of a speed dial beside the control of a live chip: three buttons stripped of their browser chrome, which is need
+        '.sl-dial-toggle, .sl-dial-item, .sl-live-act',
+        # a quotation in running text beside the two cells of a session line: both have to break an unbreakable run, and nothing else joins
+        # a quote to a session
+        '#content blockquote, .sl-session-name, .sl-session-module',
+        # the number column of a cart beside the number column of a file list: two fixed tracks of two tables, each retuned by whoever owns
+        # that table
+        'td.sl-cart-col-num, th.sl-fl-col-num, td.sl-fl-col-num',
+        # the title cell of a cart row beside the heading of a file row: one is inline emphasis, the other a heading, and they are the same
+        # size by chance
+        '.sl-cart-col-content strong, .sl-fl-col-content h4, .sl-fl-col-content h3',
+        # the body of a preview panel beside the info block of a profile: two grids that close their gaps
+        '.sl-preview-body, .sl-profile-info',
+        # the subject of a commit beside the count of a result set: a title and a figure, in one screen but not in one component
+        '.sl-changelog-commit-header strong, .sl-changelog-results-info strong',
+        # the name under a user avatar beside the points beside it: a name and a number, which read at one size today and need not tomorrow
+        '.sl-block-user-ava p > a, .sl-block-user-ava p > b, .sl-user-points b',
+        # the timestamp of a message slot, the note in a profile hub row and the unit beside a points figure: three smallest-step labels in
+        # three components
+        '.sl-pmf-slot-top time, .sl-profile-hub-row span, .sl-user-points small',
+        # the comment a reply link points at beside the focused mode switch: one is a place the page jumped to, the other a control under
+        # the keyboard, and both are drawn with the theme's one ring
+        '.sl-com-reply-at .sl-com-cont, .sl-mode-but:focus-visible',
+        # the round action's own gloss beside the same gloss restated for the search button. The second is there because the search button
+        # sets its own background-image at rest, and dropping it would leave that rest value in place under the pointer
+        '.sl-circle-action:hover, .sl-circle-action:focus-visible, .sl-search-form button.sl-circle-action:hover, '
+            .'.sl-search-form button.sl-circle-action:focus-visible',
+        # the work area of the cabinet beside the main column of a profile: two page regions that take one rhythm step of padding
+        '.sl-cab-main, .sl-profile-split-main',
+        # the label of a cabinet action beside the figure of a profile score: a name and a number
+        '.sl-cab-act b, .sl-profile-score > b',
+        # the glyph of a cabinet row, of a profile entry and of a profile info line: three components whose icon is centred in the brand
+        # tone
+        '.sl-cab-row > i, .sl-profile-entry > i, .sl-profile-info-row i',
+        # the title of a cabinet row beside the correspondent of a message slot: two titles cut off at the same step
+        '.sl-cab-row b, .sl-pmf-slot-top b',
+        # the rail of the cabinet beside the rail of a profile, both turning their side border into a bottom one when the two columns stack.
+        # Two page regions that stack the same way at one breakpoint
+        '.sl-cab-rail, .sl-profile-split-rail',
+    ],
+
+    # A shared selector whose two themes hold a different set of properties, each with the reason the difference is not a
+    # bug. A selector holding the same properties with different values needs no entry: that is one canon carrying many
+    # skins, which is what the theme packages are for. The key is the `@media context` and the selector joined by two
+    # spaces, which is what `--cross` prints
+    'divergent' => [
+        # The shorthand and the three longhands are not two spellings of one intent: every longhand a shorthand leaves out
+        # is reset to its initial value, so `list-style: disc outside` fixes the type where the longhands leave it alone
+        'ul' =>
+            'admin leaves list-style-type to the browser so a nested list changes its mark - disc, then circle, then square - '
+            .'and lite fixes it at a disc. The shorthand cannot express the first: writing it flattened 82 nested marks in admin',
+        'body' =>
+            'the page shell, which canon does not cover: the panel fills the viewport it owns and the site sets a floor of nothing on a document whose '
+            .'width the content decides. layouts and pages are outside canon for the same reason',
+        'a' =>
+            'lite kills the focus outline on every link and admin does not. That is a defect in lite rather than a skin difference - nothing in lite '
+            .'draws a:focus-visible in its place - and taking the outline away from admin too would spread it. Fixing it means giving the site a focus '
+            .'ring of its own, which is a pass over every link state and not a canon reconciliation',
+        'thead tr th[data-sort-method="none"]' =>
+            'admin resets the padding its own sort arrow reserved; lite reserves a wider one and never resets it, because no lite table carries a column '
+            .'the sorter is told to skip',
+        '.sl-but' =>
+            'two different controls under one name: the panel button is a bordered rectangle that inherits the form font, the site button is a pill with '
+            .'a bevel, its own height and its own type. Every property lite adds is that pill; giving the panel the same twenty declarations would make '
+            .'the admin look like the site, which is the one thing this batch may not do',
+        '.sl-hidden' =>
+            'one name over two intents, which is a defect to fix and not a skin difference: admin hides the element, lite fades it to the disabled step. '
+            .'Six lite call sites mean gone - an empty badge, a hidden row, a hidden image - and one means closed but still readable. Settling it needs a '
+            .'second class for the dimmed state, which is a new name and belongs to whoever owns it',
+        '.sl-tip' =>
+            'the panel hint is a glyph the admin draws itself - its own box, tone, size and transition - while the site puts the hint on whatever element '
+            .'carries it and only pushes the next one away. One is a control, the other a modifier',
+        '.sl-tip > .sl-float-panel' =>
+            'the whole floating panel is defined here in lite and on .sl-float-panel in admin; the two carry the same declarations under two selectors, '
+            .'so the tool sees one side as empty. Moving either would change which rule wins over the placement rule',
+        '.sl-float-panel::after' =>
+            'the arrow of the panel is drawn against a border in admin, which needs a drop-shadow to sit on it; lite gives the panel a muted border and '
+            .'paints the shadow on the two contexts that show one, so the shared rule carries none',
+        '.sl-float.sl-float-up > .sl-float-panel::after' =>
+            'the flipped half of the same arrow, and the same reason',
+        '.sl-chip' =>
+            'the panel chip is a count badge with a minimum width and a bold micro type; the site chip is a label with an icon, its own gap and a pointer '
+            .'transition. They share a name and a shape and nothing else',
+        '.sl-dial' =>
+            'the speed dial is two mechanisms: in admin an absolutely placed row that grows its items in place, in lite an inline toggle with an '
+            .'absolutely placed fan. Everything below follows from that, and the two were built that way on purpose',
+        '.sl-dial.sl-open, .sl-dial:hover' =>
+            'the open dial: admin lifts a whole row onto a surface, lite raises one fan above the page',
+        '.sl-dial-toggle, .sl-dial-item' =>
+            'lite\'s dial opens on a click and says so with a pointer; admin\'s opens on hover',
+        '.sl-dial.sl-open .sl-dial-toggle, .sl-dial:hover .sl-dial-toggle' =>
+            'the same, and the site\'s toggle carries the text that reads on its fill',
+        '.sl-dial .sl-dial-item' =>
+            'the resting item: admin collapses its width to nothing, lite parks it behind the toggle',
+        '.sl-dial.sl-open .sl-dial-item, .sl-dial:hover .sl-dial-item' =>
+            'the opened item, the other half of the same two mechanisms',
+        '.sl-bulk-bar' =>
+            'the panel bar is a strip inside a list, drawn with one rule above it; the site bar is a card of its own with a border and a radius, standing '
+            .'away from what it acts on',
+        '.sl-image-preview-mini:hover' =>
+            'the panel thumbnail grows into a circle under the pointer and the site thumbnail is already round, so only one of them has a radius left to '
+            .'change',
+        '.sl-alert' =>
+            'the panel notice is one line high with its text justified in the theme\'s text tone; the site notice is a block that lifts off the page. The '
+            .'tint law and the tone are shared, the geometry is each theme\'s own',
+        '.sl-alert::before' =>
+            'the glyph of the notice: the panel spells the weight its icon font needs beside a reset that would otherwise bolden it, the site nudges it '
+            .'down to sit on the first line of a block',
+        '.sl-alert-flash' =>
+            'the flash of the panel is placed and faded as a whole; the site flash only collapses its height, because it sits in a column that already '
+            .'holds its place',
+        '.sl-alert-flash-bar' =>
+            'the countdown: the panel draws it in the tone\'s own colour on a transparent ground and pins it to the top edge, the site gives it a height '
+            .'and fills it',
+        '.sl-pager' =>
+            'the panel pager is a row inside a list foot that has already laid it out; the site pager is a centred band with a rule above it, standing '
+            .'between the list and the page',
+        '.sl-pager-main' =>
+            'the same band: the site pager wraps onto a second line on a narrow screen and reads at heading size, the panel one never wraps',
+        '.sl-but-mini' =>
+            'the site\'s mini button is a real button element and resets the appearance the browser gives one; in admin the same chip is a link',
+        '.sl-but-mini.sl-is-muted' =>
+            'the muted chip is inert on the site and says so with the pointer; in admin it is not clickable to begin with',
+        '.sl-geo-flag img' =>
+            'the panel prints a flag as a block at icon size with its ratio free; the site prints it inline beside text at the smaller step',
+        '.sl-progress-line div' =>
+            'the site fills its bar in front of the reader, because a poll is answered on the page it is drawn on; the panel bar is a reading of '
+            .'something already counted',
+        '.sl-tabs-nav' =>
+            'the panel tab strip separates its tabs, the site\'s lets them touch and carries the gap on the item',
+        '.sl-tabs-item' =>
+            'the same, from the item\'s side: the site tab is a list item that has to lose its bullet and hold its own gap',
+        '.sl-tabs-link' =>
+            'two tabs: the panel tab is a bevelled folder with a minimum height, the site tab a bold block with its own type and a pointer transition. '
+            .'The strip is shared, the tab is not',
+        '.sl-tabs-content' =>
+            'the panel drops its panel straight under the strip with one gap; the site draws it as a surface with a border, a ground and its own padding',
+        '.sl-form-row' =>
+            'the panel form row is a horizontal pair, the site row a stacked one, which is what a narrow column asks for and a wide panel does not',
+        '.sl-form-label' =>
+            'the same pair from the label\'s side: a fixed column that may not shrink in the panel, a line above the field on the site',
+        '.sl-session-line, .sl-session-row' =>
+            'the site lays the session line out as a grid of two tracks so the count keeps its column; the panel lets it flow, because the sidebar it '
+            .'sits in is already narrow enough to hold the pair',
+        '.sl-session-icon' =>
+            'the panel tints the session glyph and holds its width; the site lets it take the line\'s own colour',
+        '.sl-session-name, .sl-session-module' =>
+            'the panel lets a long module name shrink to nothing rather than push the count off the row; the site breaks it inside the word',
+        '.sl-session-action' =>
+            'the site gives the action its own vertical room inside the grid cell; in the panel the row already has it',
+        '.sl-changelog-filter-actions' =>
+            'the site pushes the filter buttons to the end of a four-track grid; the panel grid already ends there',
+        '.sl-changelog-commit-header code' =>
+            'the panel prints a commit hash in a monospace face at the small step, the site in the face the surrounding text already uses',
+        '.sl-changelog-commit-files' =>
+            'the same face, on the file list of the same commit',
+        '.sl-knob' =>
+            'the panel gauge is a dashboard figure with room under it; the site gauge is a fixed track in a flex row. The size, the stroke and the track '
+            .'are values, the flex and the margin are the place each one stands in',
+        '.sl-code' =>
+            'the site sets a code fragment in italic because it quotes the source inside running text; the panel prints it as a block',
+        '.sl-mode' =>
+            'the panel puts the mode switch after the last toolbar item and needs the gap; the site puts it in a row that already spaces its children',
+        '.sl-msg-foot' =>
+            'the site holds the message foot to the card\'s own width, because the message page is a card centred on a wide page; the panel message fills '
+            .'the shell it is in',
+        '.sl-dial.sl-dial-point' =>
+            'the pointed dial: in admin a row that stops wrapping and closes its gap, on the site the switch from an inline dial to an absolutely placed '
+            .'one. The two mechanisms again',
+    ],
+
+    # The skeleton of a theme package: what a directory has to hold before the runtime and the tests accept it as a theme.
+    # It is the union of two lists that are not the same list, and each entry names the gate that demands it, because a
+    # skeleton nobody can trace back to a gate grows entries nobody dares delete
+    'skeleton' => [
+        # Demanded of every theme by checkThemeAssets() in core/system.php, which the runtime calls before it selects one
+        'any' => [
+            'assets/css/base.css' => 'checkThemeAssets: the API block, the marker and the element styles - the one file a new theme edits',
+            'assets/css/theme.css' => 'checkThemeAssets: the components, holding no literal visual value',
+            'assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css' => 'checkThemeAssets: the icon face every component draws its glyph from',
+            'assets/vendor/bootstrap-icons/css/fonts/bootstrap-icons.woff2' => 'checkThemeAssets: the font file that stylesheet points at',
+            'images/avatars/system/user.svg' => 'checkThemeAssets: the avatar a member falls back to',
+            'images/avatars/system/guest.svg' => 'checkThemeAssets: the avatar a visitor falls back to',
+            'images/avatars/system/deleted.svg' => 'checkThemeAssets: the avatar a removed account falls back to',
+            'images/avatars/presets/' => 'checkThemeAssets: the directory the avatar picker offers, which may be empty but must exist',
+        ],
+        # Demanded of a frontend theme by TemplateValidationTest, which is why the admin package passes without them
+        'frontend' => [
+            'fragments/title.html' => 'TemplateValidationTest: the title of a module page',
+            'partials/content-list.html' => 'TemplateValidationTest: the list a module renders its rows into',
+            'partials/view.html' => 'TemplateValidationTest: the single record a module opens',
+            'pages/module.html' => 'TemplateValidationTest: the page shell a module is drawn in',
+            'layouts/app.html' => 'TemplateValidationTest: the document every ordinary page opens',
+        ],
+        # Demanded per editor manifest that declares a `theme` block, which is a list the plugin owns rather than the theme
+        'editor' => [
+            'assets/editors/<id>/skin.css' => 'checkThemeAssets: required when the manifest declares `skin`, and held to the same zero as the theme CSS',
+            'partials/<name>.html' => 'checkThemeAssets: one file per name the manifest lists under `partials`',
+        ],
     ],
 
     # PHP the markup scan skips, each with the reason it is not a leftover

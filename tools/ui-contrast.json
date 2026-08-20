@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-20T15:35:15.887Z",
+  "generated": "2026-08-20T19:26:43.549Z",
   "pairs": [
     {
       "theme": "admin",
@@ -19,7 +19,7 @@
       "sel": "a",
       "bgsel": "div.sl-footer.sl-admin-footer",
       "fg": "rgb(255, 255, 255)",
-      "bg": "rgb(8, 119, 177)",
+      "bg": "rgb(18, 124, 180)",
       "size": 14,
       "weight": 400
     },
@@ -63,7 +63,7 @@
       "sel": "a",
       "bgsel": "div.sl-footer.sl-admin-footer",
       "fg": "rgb(11, 18, 32)",
-      "bg": "rgb(56, 169, 222)",
+      "bg": "rgb(64, 172, 223)",
       "size": 14,
       "weight": 400
     },
@@ -358,20 +358,9 @@
       "page": "admin-home",
       "mode": "light",
       "sel": "div.sl-alert-body",
-      "bgsel": "div.sl-alert.sl-alert-warn",
+      "bgsel": "main.sl-admin-content",
       "fg": "rgb(17, 24, 39)",
-      "bg": "rgb(255, 244, 229)",
-      "size": 14,
-      "weight": 400
-    },
-    {
-      "theme": "admin",
-      "page": "admin-home",
-      "mode": "light",
-      "sel": "div.sl-alert-body",
-      "bgsel": "div.sl-alert.sl-alert-info",
-      "fg": "rgb(17, 24, 39)",
-      "bg": "rgb(232, 244, 253)",
+      "bg": "rgb(255, 255, 255)",
       "size": 14,
       "weight": 400
     },
@@ -380,20 +369,9 @@
       "page": "admin-home",
       "mode": "dark",
       "sel": "div.sl-alert-body",
-      "bgsel": "div.sl-alert.sl-alert-warn",
+      "bgsel": "main.sl-admin-content",
       "fg": "rgb(229, 231, 235)",
-      "bg": "rgb(58, 42, 18)",
-      "size": 14,
-      "weight": 400
-    },
-    {
-      "theme": "admin",
-      "page": "admin-home",
-      "mode": "dark",
-      "sel": "div.sl-alert-body",
-      "bgsel": "div.sl-alert.sl-alert-info",
-      "fg": "rgb(229, 231, 235)",
-      "bg": "rgb(20, 40, 58)",
+      "bg": "rgb(17, 24, 39)",
       "size": 14,
       "weight": 400
     },
@@ -404,7 +382,7 @@
       "sel": "div.sl-copyright",
       "bgsel": "div.sl-footer.sl-admin-footer",
       "fg": "rgb(255, 255, 255)",
-      "bg": "rgb(8, 119, 177)",
+      "bg": "rgb(18, 124, 180)",
       "size": 14,
       "weight": 400
     },
@@ -415,7 +393,7 @@
       "sel": "div.sl-copyright",
       "bgsel": "div.sl-footer.sl-admin-footer",
       "fg": "rgb(11, 18, 32)",
-      "bg": "rgb(56, 169, 222)",
+      "bg": "rgb(64, 172, 223)",
       "size": 14,
       "weight": 400
     },
@@ -2062,12 +2040,45 @@
       "theme": "lite",
       "page": "private",
       "mode": "light",
+      "sel": "a.sl-pmf-slot-subj",
+      "bgsel": "article.sl-pmf-slot",
+      "fg": "rgb(34, 51, 69)",
+      "bg": "rgb(255, 255, 255)",
+      "size": 14,
+      "weight": 700
+    },
+    {
+      "theme": "lite",
+      "page": "private",
+      "mode": "dark",
+      "sel": "a.sl-pmf-slot-subj",
+      "bgsel": "article.sl-pmf-slot",
+      "fg": "rgb(243, 244, 246)",
+      "bg": "rgb(17, 24, 39)",
+      "size": 14,
+      "weight": 700
+    },
+    {
+      "theme": "lite",
+      "page": "private",
+      "mode": "light",
       "sel": "a.sl-pmf-subj",
       "bgsel": "aside.sl-pmf-aside",
       "fg": "rgb(34, 34, 34)",
       "bg": "rgb(248, 249, 251)",
       "size": 16,
       "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "private",
+      "mode": "light",
+      "sel": "a.sl-pmf-subj",
+      "bgsel": "aside.sl-pmf-aside",
+      "fg": "rgb(34, 51, 69)",
+      "bg": "rgb(248, 249, 251)",
+      "size": 16,
+      "weight": 700
     },
     {
       "theme": "lite",
@@ -2083,6 +2094,17 @@
     {
       "theme": "lite",
       "page": "private",
+      "mode": "light",
+      "sel": "a.sl-pmf-subj",
+      "bgsel": "aside.sl-pmf-aside",
+      "fg": "rgb(34, 51, 69)",
+      "bg": "rgb(248, 249, 251)",
+      "size": 14,
+      "weight": 700
+    },
+    {
+      "theme": "lite",
+      "page": "private",
       "mode": "dark",
       "sel": "a.sl-pmf-subj",
       "bgsel": "aside.sl-pmf-aside",
@@ -2097,10 +2119,32 @@
       "mode": "dark",
       "sel": "a.sl-pmf-subj",
       "bgsel": "aside.sl-pmf-aside",
+      "fg": "rgb(243, 244, 246)",
+      "bg": "rgb(21, 29, 43)",
+      "size": 16,
+      "weight": 700
+    },
+    {
+      "theme": "lite",
+      "page": "private",
+      "mode": "dark",
+      "sel": "a.sl-pmf-subj",
+      "bgsel": "aside.sl-pmf-aside",
       "fg": "rgb(229, 231, 235)",
       "bg": "rgb(21, 29, 43)",
       "size": 14,
       "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "private",
+      "mode": "dark",
+      "sel": "a.sl-pmf-subj",
+      "bgsel": "aside.sl-pmf-aside",
+      "fg": "rgb(243, 244, 246)",
+      "bg": "rgb(21, 29, 43)",
+      "size": 14,
+      "weight": 700
     },
     {
       "theme": "lite",
@@ -2434,6 +2478,28 @@
     },
     {
       "theme": "lite",
+      "page": "private",
+      "mode": "light",
+      "sel": "b.sl-pm-new",
+      "bgsel": "b.sl-pm-new",
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(169, 44, 44)",
+      "size": 12,
+      "weight": 700
+    },
+    {
+      "theme": "lite",
+      "page": "private",
+      "mode": "dark",
+      "sel": "b.sl-pm-new",
+      "bgsel": "b.sl-pm-new",
+      "fg": "rgb(11, 18, 32)",
+      "bg": "rgb(240, 106, 106)",
+      "size": 12,
+      "weight": 700
+    },
+    {
+      "theme": "lite",
       "page": "profile",
       "mode": "light",
       "sel": "b.sl-profile-feed-title",
@@ -2551,6 +2617,50 @@
       "fg": "rgb(255, 255, 255)",
       "bg": "rgb(120, 158, 102)",
       "size": 32,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "login-field-focus",
+      "mode": "light",
+      "sel": "div.sl-center",
+      "bgsel": "section.sl-block",
+      "fg": "rgb(34, 34, 34)",
+      "bg": "rgb(248, 249, 251)",
+      "size": 16,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "login-field-focus",
+      "mode": "light",
+      "sel": "div.sl-center",
+      "bgsel": "section.sl-block",
+      "fg": "rgb(34, 34, 34)",
+      "bg": "rgb(248, 249, 251)",
+      "size": 14,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "login-field-focus",
+      "mode": "dark",
+      "sel": "div.sl-center",
+      "bgsel": "section.sl-block",
+      "fg": "rgb(229, 231, 235)",
+      "bg": "rgb(21, 29, 43)",
+      "size": 16,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "login-field-focus",
+      "mode": "dark",
+      "sel": "div.sl-center",
+      "bgsel": "section.sl-block",
+      "fg": "rgb(229, 231, 235)",
+      "bg": "rgb(21, 29, 43)",
+      "size": 14,
       "weight": 400
     },
     {
@@ -2732,11 +2842,33 @@
     {
       "theme": "lite",
       "page": "private",
+      "mode": "light",
+      "sel": "div.tab-item",
+      "bgsel": "div.tab-item",
+      "fg": "rgb(34, 34, 34)",
+      "bg": "rgb(255, 255, 255)",
+      "size": 12,
+      "weight": 500
+    },
+    {
+      "theme": "lite",
+      "page": "private",
       "mode": "dark",
       "sel": "div.tab-item",
       "bgsel": "div.tab-item",
       "fg": "rgb(154, 164, 178)",
       "bg": "rgb(21, 29, 43)",
+      "size": 12,
+      "weight": 500
+    },
+    {
+      "theme": "lite",
+      "page": "private",
+      "mode": "dark",
+      "sel": "div.tab-item",
+      "bgsel": "div.tab-item",
+      "fg": "rgb(229, 231, 235)",
+      "bg": "rgb(17, 24, 39)",
       "size": 12,
       "weight": 500
     },
@@ -3295,10 +3427,10 @@
       "page": "private",
       "mode": "light",
       "sel": "p",
-      "bgsel": "div.sl-pmf-split",
+      "bgsel": "article.sl-pmf-slot",
       "fg": "rgb(100, 113, 126)",
       "bg": "rgb(255, 255, 255)",
-      "size": 14,
+      "size": 12,
       "weight": 400
     },
     {
@@ -3372,10 +3504,10 @@
       "page": "private",
       "mode": "dark",
       "sel": "p",
-      "bgsel": "div.sl-pmf-split",
+      "bgsel": "article.sl-pmf-slot",
       "fg": "rgb(154, 164, 178)",
       "bg": "rgb(17, 24, 39)",
-      "size": 14,
+      "size": 12,
       "weight": 400
     },
     {
@@ -3581,6 +3713,17 @@
       "page": "private",
       "mode": "light",
       "sel": "small",
+      "bgsel": "details.sl-pmf-focus",
+      "fg": "rgb(100, 113, 126)",
+      "bg": "rgb(255, 255, 255)",
+      "size": 12,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "private",
+      "mode": "light",
+      "sel": "small",
       "bgsel": "aside.sl-pmf-aside",
       "fg": "rgb(100, 113, 126)",
       "bg": "rgb(248, 249, 251)",
@@ -3618,6 +3761,17 @@
       "fg": "rgb(154, 164, 178)",
       "bg": "rgb(17, 24, 39)",
       "size": 10,
+      "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "private",
+      "mode": "dark",
+      "sel": "small",
+      "bgsel": "details.sl-pmf-focus",
+      "fg": "rgb(154, 164, 178)",
+      "bg": "rgb(17, 24, 39)",
+      "size": 12,
       "weight": 400
     },
     {
@@ -3905,6 +4059,28 @@
       "bg": "rgb(35, 45, 61)",
       "size": 14,
       "weight": 400
+    },
+    {
+      "theme": "lite",
+      "page": "private",
+      "mode": "light",
+      "sel": "span.sl-cab-badge",
+      "bgsel": "span.sl-cab-badge",
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(169, 44, 44)",
+      "size": 10,
+      "weight": 700
+    },
+    {
+      "theme": "lite",
+      "page": "private",
+      "mode": "dark",
+      "sel": "span.sl-cab-badge",
+      "bgsel": "span.sl-cab-badge",
+      "fg": "rgb(11, 18, 32)",
+      "bg": "rgb(240, 106, 106)",
+      "size": 10,
+      "weight": 700
     },
     {
       "theme": "lite",
@@ -4705,6 +4881,28 @@
       "sel": "strong",
       "bgsel": "body.sl-summer",
       "fg": "rgb(229, 231, 235)",
+      "bg": "rgb(17, 24, 39)",
+      "size": 14,
+      "weight": 700
+    },
+    {
+      "theme": "lite",
+      "page": "private",
+      "mode": "light",
+      "sel": "summary",
+      "bgsel": "details.sl-pmf-focus",
+      "fg": "rgb(34, 51, 69)",
+      "bg": "rgb(255, 255, 255)",
+      "size": 14,
+      "weight": 700
+    },
+    {
+      "theme": "lite",
+      "page": "private",
+      "mode": "dark",
+      "sel": "summary",
+      "bgsel": "details.sl-pmf-focus",
+      "fg": "rgb(243, 244, 246)",
       "bg": "rgb(17, 24, 39)",
       "size": 14,
       "weight": 700

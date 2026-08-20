@@ -61,14 +61,15 @@ final class UiAuditTest extends TestCase
     }
 
     #[Test]
-    public function testCountsThreeLiteralsAndOneDuplicatedBody(): void
+    public function testCountsThreeLiteralsAndReadsTheRepeatedBodyAsNeed(): void
     {
         $model = $this->getModel('count-basic.css');
         $count = checkThemeCount($model);
         $dup = checkDupBlocks($model);
         $this->assertCount(3, $count['sites'], 'padding, color and the border colour are three decisions; 1px and solid are structure');
-        $this->assertCount(1, $dup['groups']);
-        $this->assertSame(1, $dup['blocks']);
+        $this->assertCount(0, $dup['groups'], 'the repeated body is one declaration, which is need and not a group to merge');
+        $this->assertSame(0, $dup['blocks']);
+        $this->assertSame(1, $dup['need']);
     }
 
     #[Test]
@@ -85,6 +86,16 @@ final class UiAuditTest extends TestCase
         $dup = checkDupBlocks($this->getModel('dup-media.css'));
         $this->assertCount(0, $dup['groups'], 'a body repeated across contexts is a rule per context, not a duplicate');
         $this->assertSame(0, $dup['blocks']);
+    }
+
+    #[Test]
+    public function testABodyOfOneDeclarationIsNeedAndNotRepetition(): void
+    {
+        $dup = checkDupBlocks($this->getModel('dup-need.css'));
+        $this->assertSame(1, $dup['need'], 'three rules whose whole body is one declaration are one property reaching one token, not a group to merge');
+        $this->assertCount(1, $dup['groups'], 'the two-declaration body under two selectors of one component is the group a human still has to answer for');
+        $this->assertSame(1, $dup['blocks']);
+        $this->assertSame(0, $dup['split'], 'one fixture is one file, so nothing here is spread across two');
     }
 
     #[Test]
@@ -319,6 +330,17 @@ final class UiAuditTest extends TestCase
         $this->assertSame('shadow', getValueKind('0 1px 2px rgba(42, 48, 60, 0.12)'));
         $this->assertSame('gradient', getValueKind('linear-gradient(90deg, #fff 0%, #000 100%)'));
         $this->assertSame('length', getValueKind('28px'));
+    }
+
+    #[Test]
+    public function testAClassTouchingATemplateTagIsStillAUse(): void
+    {
+        $text = getFileText('tests/Fixtures/ui/classuse.html');
+        $this->assertTrue(isClassUsed('sl-collapsible', $text), 'emitted straight after {% endif %}, with no quote or space before it');
+        $this->assertTrue(isClassUsed('sl-table', $text), 'a whole name beside the longer one that only starts with it');
+        $this->assertTrue(isClassUsed('sl-home', $text), 'inside a quoted class attribute');
+        $this->assertFalse(isClassUsed('sl-nav', $text), 'only ever the head of a longer name');
+        $this->assertFalse(isClassUsed('sl-bar', $text), 'only ever the tail of a longer name');
     }
 
     #[Test]

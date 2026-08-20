@@ -584,13 +584,25 @@ function checkDupBlocks(array $model): array {
         $key = $rule['ctx']."\x00".implode(';', $keys);
         $seen[$key][] = ['sel' => $rule['sel'], 'file' => $rule['file'], 'line' => $rule['line'], 'ctx' => $rule['ctx'], 'body' => implode('; ', $keys)];
     }
-    $out = ['groups' => [], 'blocks' => 0, 'inmedia' => 0];
+    $out = ['groups' => [], 'blocks' => 0, 'inmedia' => 0, 'need' => 0, 'split' => 0];
     $cont = getContract();
     foreach ($seen as $list) {
         if (count($list) < 2) continue;
         $sels = array_map(fn($v) => $v['sel'], $list);
         sort($sels);
         if (in_array(implode(', ', $sels), $cont['duplicates'], true)) continue;
+        # One declaration reaching one token is need and not repetition, the same way `display: flex` under 122 flex
+        # containers is: a selector list of everything that happens to be hidden names nothing, and it scatters each
+        # component's definition to buy one line
+        if (!str_contains($list[0]['body'], ';')) {
+            $out['need']++;
+            continue;
+        }
+        # CSS has no selector list that crosses a file, so a body met in two files cannot be merged at all
+        if (count(array_unique(array_map(fn($v) => $v['file'], $list))) > 1) {
+            $out['split']++;
+            continue;
+        }
         $out['groups'][] = $list;
         $out['blocks'] += count($list) - 1;
         if ($list[0]['ctx'] !== '') $out['inmedia'] += count($list) - 1;
@@ -853,7 +865,7 @@ function checkClassUse(array $model): array {
     foreach (getRepoFiles(['html', 'php', 'js', 'json'], ['templates', 'admin', 'core', 'modules', 'plugins', 'config']) as $path) $text .= getFileText($path)."\n";
     $out = ['unused' => [], 'composed' => []];
     foreach (array_keys($seen) as $item) {
-        if (preg_match('/[\'"\s>({\[.]'.preg_quote($item, '/').'(?![a-z0-9-])/i', $text)) continue;
+        if (isClassUsed($item, $text)) continue;
         $part = explode('-', $item);
         $made = false;
         for ($i = count($part) - 1; $i >= 2; $i--) {
@@ -868,6 +880,12 @@ function checkClassUse(array $model): array {
     sort($out['unused']);
     sort($out['composed']);
     return $out;
+}
+
+# One class is used when the text carries its whole name. The boundary is the name alphabet itself, not a list of
+# delimiters: a class emitted straight after a template tag - `{% endif %}sl-collapsible` - is a use like any other
+function isClassUsed(string $name, string $text): bool {
+    return preg_match('/(?<![a-z0-9-])'.preg_quote($name, '/').'(?![a-z0-9-])/i', $text) === 1;
 }
 
 # Every repository file of the given extensions under the given directories, vendor and storage excluded
@@ -898,16 +916,34 @@ function checkCrossTheme(): array {
         foreach ($model['rules'] as $rule) {
             if (str_contains($rule['file'], 'skin.css')) continue;
             $body = [];
-            foreach ($rule['decls'] as $decl) $body[] = $decl['prop'].':'.filterValue($decl['val']);
-            $side[$name][$rule['ctx']."\x00".$rule['sel']] = implode(';', $body);
+            $prop = [];
+            foreach ($rule['decls'] as $decl) {
+                $body[] = $decl['prop'].':'.filterValue($decl['val']);
+                $prop[] = $decl['prop'];
+            }
+            sort($prop);
+            $side[$name][$rule['ctx']."\x00".$rule['sel']] = ['body' => implode(';', $body), 'props' => $prop];
         }
     }
-    $out = ['same' => 0, 'diff' => [], 'shared' => 0, 'templates' => []];
+    $out = ['same' => 0, 'diff' => [], 'value' => [], 'structure' => [], 'shared' => 0, 'templates' => []];
+    $allow = $cont['divergent'] ?? [];
     foreach ($side[$keys[0]] as $key => $body) {
         if (!isset($side[$keys[1]][$key])) continue;
         $out['shared']++;
-        if ($side[$keys[1]][$key] === $body) $out['same']++;
-        else $out['diff'][] = str_replace("\x00", ' ', $key);
+        $twin = $side[$keys[1]][$key];
+        if ($twin['body'] === $body['body']) {
+            $out['same']++;
+            continue;
+        }
+        $name = trim(str_replace(chr(0), ' ', $key));
+        $out['diff'][] = $name;
+        if ($twin['props'] === $body['props']) {
+            $out['value'][] = $name;
+            continue;
+        }
+        $one = implode(', ', array_diff($body['props'], $twin['props']));
+        $two = implode(', ', array_diff($twin['props'], $body['props']));
+        $out['structure'][$name] = ['only' => [$keys[0] => $one, $keys[1] => $two], 'why' => $allow[$name] ?? ''];
     }
     foreach (['fragments', 'partials', 'layouts', 'pages'] as $dir) {
         $one = UI_ROOT.'/'.$cont['themes'][$keys[0]]['root'].'/'.$dir;
@@ -1170,8 +1206,19 @@ if (isset($args['markup'])) {
 
 if (isset($args['cross'])) {
     $data = checkCrossTheme();
-    echo 'Selectors in both themes: '.$data['shared'].', identical '.$data['same'].', divergent '.count($data['diff'])."\n";
-    foreach (array_slice($data['diff'], 0, 200) as $item) echo '  '.$item."\n";
+    echo 'Selectors in both themes: '.$data['shared'].', identical '.$data['same'].', divergent '.count($data['diff']);
+    echo ' - '.count($data['value']).' in value only, '.count($data['structure'])." in structure\n";
+    echo "\nsame properties, different values: legal, because one canon carries many skins\n";
+    foreach ($data['value'] as $item) echo '  '.$item."\n";
+    $open = 0;
+    echo "\nproperty sets that differ, which canon has to answer for:\n";
+    foreach ($data['structure'] as $item => $info) {
+        if ($info['why'] === '') $open++;
+        echo '  '.$item."\n";
+        foreach ($info['only'] as $theme => $props) if ($props !== '') echo '      only in '.$theme.': '.$props."\n";
+        echo '      '.($info['why'] === '' ? 'NO REASON GIVEN' : $info['why'])."\n";
+    }
+    echo "\n  ".$open.' of '.count($data['structure'])." structural divergences carry no written reason\n";
     foreach ($data['templates'] as $dir => $stat) {
         echo "\n".$dir.': shared '.$stat['shared'].', identical '.$stat['same'].', divergent '.count($stat['diff'])."\n";
         foreach ($stat['diff'] as $item) echo '  '.$item."\n";
@@ -1227,6 +1274,8 @@ foreach ($want as $name) {
     if (isset($args['dup'])) {
         echo "\n[".$name.'] identical rule bodies: '.count($data['dup']['groups']).' groups, '.$data['dup']['blocks'];
         echo ' redundant blocks, '.$data['dup']['inmedia'].' of them inside @media'."\n";
+        echo '  not counted: '.$data['dup']['need'].' groups whose body is one declaration, which is need, and ';
+        echo $data['dup']['split']." groups spread over two files, which no selector list can join\n";
         foreach ($data['dup']['groups'] as $list) {
             echo '  { '.substr($list[0]['body'], 0, 90).' }'."\n";
             foreach ($list as $item) echo '      '.$item['sel'].'   '.$item['file'].':'.$item['line'].($item['ctx'] === '' ? '' : '   '.$item['ctx'])."\n";
@@ -1268,7 +1317,11 @@ if (!$only && count($want) === count($cont['themes'])) {
     $kinds = checkNameKinds();
     $sum = 0;
     foreach (checkPhpMarkup() as $hits) $sum += $hits['class'] + $hits['style'] + $hits['tag'];
-    $store['global'] = ['kinds' => count($kinds), 'markup' => $sum];
+    $cross = checkCrossTheme();
+    $open = [];
+    foreach ($cross['structure'] as $item => $info) if ($info['why'] === '') $open[] = $item;
+    $store['global'] = ['kinds' => count($kinds), 'cross' => count($open), 'markup' => $sum];
+    setSection('shared selectors whose property sets differ with no written reason, which --cross explains:', $open);
     $said = array_map(fn($v) => $v['name'].': '.implode(', ', array_map(fn($k, $t) => $t.' is a '.$k, $v['kinds'], array_keys($v['kinds']))), $kinds);
     setSection('one name, two kinds across themes:', $said);
     echo "\nglobal\n";

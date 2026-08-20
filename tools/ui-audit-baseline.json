@@ -1,43 +1,44 @@
 {
-    "generated": "2026-08-20T15:45:04Z",
+    "generated": "2026-08-20T19:39:10Z",
     "themes": {
         "admin": {
             "count": 0,
             "bare": 0,
-            "dup": 178,
+            "dup": 0,
             "names": 0,
             "dead": 0,
-            "single": 146,
+            "single": 147,
             "alias": 0,
             "unsat": 0,
-            "unmet": 2,
-            "scoped": 84,
+            "unmet": 0,
+            "scoped": 54,
             "clash": 0,
-            "classes": 4,
+            "classes": 0,
             "important": 23,
-            "tokens": 291,
+            "tokens": 297,
             "contrast": 0
         },
         "lite": {
             "count": 0,
             "bare": 0,
-            "dup": 246,
+            "dup": 0,
             "names": 0,
             "dead": 0,
-            "single": 206,
+            "single": 202,
             "alias": 0,
             "unsat": 0,
-            "unmet": 2,
+            "unmet": 0,
             "scoped": 92,
             "clash": 0,
-            "classes": 10,
-            "important": 19,
+            "classes": 0,
+            "important": 17,
             "tokens": 404,
             "contrast": 0
         }
     },
     "global": {
         "kinds": 0,
+        "cross": 0,
         "markup": 143
     }
 }

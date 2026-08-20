@@ -678,10 +678,10 @@ q {
   quotes: none;
 }
 
-blockquote:before,
-blockquote:after,
-q:before,
-q:after {
+blockquote::before,
+blockquote::after,
+q::before,
+q::after {
   content: "";
   content: none;
 }
@@ -717,6 +717,7 @@ a {
 
 a:hover {
   cursor: pointer;
+  color: var(--sl-primary-strong);
   text-decoration: none;
 }
 
@@ -742,26 +743,36 @@ h5 {
 h1 {
   font-size: var(--sl-font-h1);
   margin: var(--sl-space-9) 0 var(--sl-space-4) 0;
+  display: block;
+  color: var(--sl-text);
 }
 
 h2 {
   font-size: var(--sl-font-h2);
   margin: var(--sl-space-8) 0 var(--sl-space-4);
+  display: block;
+  color: var(--sl-text);
 }
 
 h3 {
   font-size: var(--sl-font-h3);
   margin: var(--sl-space-6) 0 var(--sl-space-3);
+  display: block;
+  color: var(--sl-text);
 }
 
 h4 {
   font-size: var(--sl-font-h4);
   margin: var(--sl-space-1) 0;
   display: inline;
+  color: var(--sl-text);
 }
 
 h5 {
   font-size: var(--sl-font-body);
+  margin: 0;
+  display: block;
+  color: var(--sl-text);
 }
 
 p,
@@ -783,8 +794,9 @@ legend {
 }
 
 fieldset {
+  overflow: visible;
   padding: var(--sl-space-3);
-  margin-top: var(--sl-space-3);
+  margin: var(--sl-space-3) 0 0;
   border: 1px solid var(--sl-border);
   border-radius: var(--sl-radius-1);
 }
@@ -844,8 +856,10 @@ table {
 
 input[type="radio"],
 input[type="checkbox"] {
+  min-height: 0;
   line-height: var(--sl-line-tight);
   margin: var(--sl-space-2) 0 0;
+  vertical-align: baseline;
   accent-color: var(--sl-primary);
 }
 
@@ -890,7 +904,7 @@ blockquote {
   border-radius: var(--sl-radius-2);
 }
 
-blockquote:before {
+blockquote::before {
   color: var(--sl-border-strong);
   content: "\201c";
   font-size: var(--sl-font-display);
@@ -899,7 +913,7 @@ blockquote:before {
   vertical-align: -0.4em;
 }
 
-blockquote:after {
+blockquote::after {
   color: var(--sl-border-strong);
   content: "\201d";
   font-size: var(--sl-font-display);

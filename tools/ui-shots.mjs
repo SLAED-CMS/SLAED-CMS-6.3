@@ -31,7 +31,11 @@ const args = new Map(process.argv.slice(2).map((a) => {
 
 const job = args.has('capture') ? 'capture' : args.has('contrast') ? 'contrast' : 'check';
 const only = args.get('only');
-const outDir = join(root, conf.out);
+// A batch cannot trust the committed baseline as its "before": the stand's own data moves between runs, so a
+// check against it reports the week rather than the change. --out= sends a capture somewhere outside the
+// repository, which is what lets a batch compare its own two captures instead
+const outRel = typeof args.get('out') === 'string' ? args.get('out') : conf.out;
+const outDir = resolve(root, outRel);
 const user = process.env[conf.env.user] || '';
 const pass = process.env[conf.env.pass] || '';
 
@@ -150,38 +154,87 @@ async function getContrastPairs(page, name, mode) {
       return out;
     };
     const ratio = (one, two) => (Math.max(lum(one), lum(two)) + 0.05) / (Math.min(lum(one), lum(two)) + 0.05);
-    // A gradient has no single background colour, so the stop that reads worst against the text is recorded.
-    // A mostly transparent stop is a texture laid over the real background, not the background, so the walk
-    // passes through it to the ancestor that actually paints - a 0.08 white stripe is not a white surface
-    const worst = (css, fg) => {
-      const stop = (css.backgroundImage || '').match(/rgba?\([^)]+\)/g);
-      if (!stop) return null;
+    // The alpha of one fill, 1 when it carries none and 0 when it is not a colour at all
+    const alpha = (col) => {
+      const hit = /rgba?\(([^)]+)\)/.exec(col || '');
+      if (!hit) return 0;
+      const part = hit[1].split(/[\s,\/]+/).filter(Boolean).map(Number);
+      return part.length > 3 ? part[3] : 1;
+    };
+    // One layer laid over what is already behind it. Nine per cent of orange over a white page is a definite colour and
+    // text standing on it is standing on that colour, so a sheer fill is composited rather than passed through: passing
+    // through reported the page ground for a tint nobody could see, and skipping it left the honest readings unmeasured
+    const over = (top, back, part) => top.map((one, i) => Math.round(one * part + back[i] * (1 - part)));
+    // Split one background-image into its layers: a comma at depth zero separates two layers, every comma inside a
+    // gradient's own argument list is deeper than that. The list is painted front to back, first layer on top
+    const layers = (val) => {
+      const out = [];
+      let deep = 0;
+      let cur = '';
+      for (const ch of val || '') {
+        if (ch === '(') deep++;
+        if (ch === ')') deep--;
+        if (ch === ',' && deep === 0) {
+          out.push(cur);
+          cur = '';
+          continue;
+        }
+        cur += ch;
+      }
+      if (cur.trim()) out.push(cur);
+      return out;
+    };
+    // A gradient has no single background colour, so the stop that reads worst against the text is recorded. Layers are
+    // walked back to front and each one is composited onto what the walk has gathered under it: an eight per cent white
+    // stripe laid over a brand gradient is a stripe on that gradient, never a stripe on the page two boxes further out
+    const worst = (css, fg, back) => {
+      const list = layers(css.backgroundImage || '').reverse();
       let out = null;
-      for (const item of stop) {
-        const part = /rgba?\(([^)]+)\)/.exec(item)[1].split(/[\s,\/]+/).filter(Boolean).map(Number);
-        if (part.length > 3 && part[3] < 0.5) continue;
-        const rgb = solid(item);
-        if (!rgb) continue;
-        if (out === null || ratio(fg, rgb) < ratio(fg, out)) out = rgb;
+      for (const layer of list) {
+        const stop = layer.match(/rgba?\([^)]+\)/g);
+        if (!stop) continue;
+        const under = out === null ? back : out;
+        let low = null;
+        for (const item of stop) {
+          const rgb = solid(item);
+          if (!rgb) continue;
+          const mix = over(rgb, under, alpha(item));
+          if (low === null || ratio(fg, mix) < ratio(fg, low)) low = mix;
+        }
+        if (low !== null) out = low;
       }
       return out;
     };
-    // A mostly transparent fill is a texture laid over the real background, not the background - the same reading the
-    // gradient walk above already applies to a stop. A 9% wash of a status colour over the page is not a status surface,
-    // and measuring text against it reports a failure nobody can see and nobody can fix without deleting the wash
-    const sheer = (col) => {
-      const hit = /rgba?\(([^)]+)\)/.exec(col || '');
-      if (!hit) return false;
-      const part = hit[1].split(/[\s,\/]+/).filter(Boolean).map(Number);
-      return part.length > 3 && part[3] < 0.5;
-    };
+    // Walk out to the first ancestor that paints something opaque, compositing every sheer layer met on the way back down
     const under = (node, fg) => {
+      const stack = [];
+      let hit = null;
       for (let el = node; el; el = el.parentElement) {
         const css = getComputedStyle(el);
-        const bg = (sheer(css.backgroundColor) ? null : solid(css.backgroundColor)) || worst(css, fg);
-        if (bg) return { rgb: bg, sel: el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\s+/).join('.') : '') };
+        const sel = el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\s+/).join('.') : '');
+        stack.push({ css, sel });
+        if (alpha(css.backgroundColor) >= 1 && solid(css.backgroundColor)) { hit = stack.length - 1; break; }
       }
-      return { rgb: [255, 255, 255], sel: 'html' };
+      let rgb = [255, 255, 255];
+      let sel = 'html';
+      const from = hit === null ? stack.length - 1 : hit;
+      for (let i = from; i >= 0; i--) {
+        const css = stack[i].css;
+        const fill = solid(css.backgroundColor);
+        const part = alpha(css.backgroundColor);
+        let painted = false;
+        if (fill && part > 0) {
+          rgb = over(fill, rgb, part);
+          painted = true;
+        }
+        const grad = worst(css, fg, rgb);
+        if (grad) {
+          rgb = grad;
+          painted = true;
+        }
+        if (painted) sel = stack[i].sel;
+      }
+      return { rgb, sel };
     };
     for (const el of document.querySelectorAll('body *')) {
       const text = Array.from(el.childNodes).filter((n) => n.nodeType === 3 && n.textContent.trim()).length;
@@ -278,7 +331,7 @@ async function setOneShot(page, item, view, mode, tag, pairs, report) {
   if (diff.ratio > bar) report.push('  DIFF ' + (diff.ratio * 100).toFixed(3) + '% ' + diff.note + ' ' + name + past);
 }
 
-const floorFile = join(root, conf.out, 'noise-floor.json');
+const floorFile = join(outDir, 'noise-floor.json');
 const floor = existsSync(floorFile) ? JSON.parse(readFileSync(floorFile, 'utf8')) : {};
 
 const browser = await chromium.launch();
@@ -346,6 +399,6 @@ if (noisy.length) {
 }
 
 const shots = existsSync(outDir) ? readdirSync(outDir).filter((f) => f.endsWith('.png')).length : 0;
-console.log(job + ': ' + shots + ' baseline images under ' + conf.out);
+console.log(job + ': ' + shots + ' baseline images under ' + outRel);
 for (const line of report) console.log(line);
 process.exit(report.some((l) => l.includes('DIFF') || l.includes('failed')) ? 1 : 0);

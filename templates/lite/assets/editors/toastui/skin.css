@@ -34,7 +34,7 @@ button.toastui-editor-toolbar-icons {
 
 .toastui-editor-toolbar-icons::before {
     display: block;
-    font-family: bootstrap-icons, "bootstrap-icons";
+    font-family: "bootstrap-icons";
     font-size: var(--sl-size-icon-sm);
     font-style: normal;
     font-weight: var(--sl-weight-normal);
@@ -535,12 +535,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     width: 100%;
 }
 
-.sl-toastui-upload .sl-fm-field:focus {
-    border-color: var(--sl-primary);
-    box-shadow: var(--sl-field-shadow), 0 0 0 var(--sl-ring-width) var(--sl-field-ring);
-    outline: 0;
-}
-
+.sl-toastui-upload .sl-fm-field:focus,
 .sl-toastui-upload .sl-fm-view {
     display: flex;
     flex-direction: column;
@@ -595,11 +590,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     border-color: var(--sl-border-strong);
 }
 
-.sl-toastui-upload .sl-fm-row.sl-is-current {
-    background: var(--sl-surface);
-    border-color: var(--sl-border);
-}
-
+.sl-toastui-upload .sl-fm-row.sl-is-current,
 .sl-toastui-upload .sl-fm-row:has(.sl-fm-pick input:checked) {
     background: var(--sl-tint);
     border-color: var(--sl-primary);
@@ -1377,12 +1368,7 @@ dialog.sl-editor-emoji-panel {
     border-radius: 0 0 var(--sl-radius-2) var(--sl-radius-2);
 }
 
-.toastui-editor-mode-switch .tab-item {
-    background: var(--sl-surface);
-    border: 1px solid var(--sl-border);
-    color: var(--sl-text-muted);
-}
-
+.toastui-editor-mode-switch .tab-item,
 .toastui-editor-mode-switch .tab-item.active {
     background-color: var(--sl-bg);
     border-top: 1px solid var(--sl-bg);
@@ -1424,12 +1410,7 @@ dialog.sl-editor-emoji-panel {
     padding: 0 var(--sl-space-3);
 }
 
-.toastui-editor-popup-body input[type="text"]:focus {
-    border-color: var(--sl-primary);
-    box-shadow: 0 0 0 var(--sl-ring-width) var(--sl-field-ring);
-    outline: 0;
-}
-
+.toastui-editor-popup-body input[type="text"]:focus,
 .toastui-editor-popup-body input[type="text"].disabled {
     background-color: var(--sl-surface);
     border-color: var(--sl-field-border);
