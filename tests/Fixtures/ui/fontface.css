@@ -1,0 +1,13 @@
+/* A descriptor block is not a rule: var() is invalid inside one, so nothing in it is a decision a theme can move */
+@font-face {
+  font-family: "Magistral";
+  src: url(fonts/magistral.woff2) format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  size-adjust: 96%;
+}
+
+.sl-one {
+  font-weight: bold;
+  padding: 10px;
+}

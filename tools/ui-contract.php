@@ -38,9 +38,13 @@ return [
             'roles' => ['bg', 'surface', 'border', 'text', 'primary', 'success', 'warning', 'danger', 'accent', 'info', 'on-solid', 'scrim', 'tint'],
             'steps' => ['subtle', 'muted', '', 'strong', 'inverse', 'sunken', 'raised'],
         ],
-        'space' => ['prefix' => 'space', 'roles' => ['1', '2', '3', '4', '5', '6', '7', '8']],
+        # Steps 9 to 11 are the second rhythm a page carries: the gap between its sections, which sits above every
+        # component gap. Only a frontend theme reaches that far, so admin declares none of the three
+        'space' => ['prefix' => 'space', 'roles' => ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']],
         'radius' => ['prefix' => 'radius', 'roles' => ['1', '2', '3', 'pill', 'circle']],
-        'font' => ['prefix' => 'font', 'roles' => ['display', 'h1', 'h2', 'h3', 'h4', 'body', 'small', 'micro']],
+        # `hero` is the step above every heading: the largest type a page carries - a slider headline, a dashboard number -
+        # and it exists because folding those onto `display` would size a hero like an h1 and lose the rank
+        'font' => ['prefix' => 'font', 'roles' => ['hero', 'display', 'h1', 'h2', 'h3', 'h4', 'body', 'small', 'micro']],
         'face' => ['prefix' => 'face', 'roles' => ['body', 'display', 'mono', 'quote']],
         'line' => ['prefix' => 'line', 'roles' => ['tight', 'normal', 'loose']],
         'weight' => ['prefix' => 'weight', 'roles' => ['normal', 'medium', 'semibold', 'bold']],
@@ -61,14 +65,20 @@ return [
     # Ladders. A value either sits on a step or carries an allowlist entry with a written reason
     'ladders' => [
         'space' => [
-            'steps' => [2, 4, 8, 10, 12, 16, 20, 24],
+            'steps' => [2, 4, 8, 10, 12, 16, 20, 24, 32, 40, 48],
             'unit' => 'px',
-            'tokens' => ['--sl-space-1', '--sl-space-2', '--sl-space-3', '--sl-space-4', '--sl-space-5', '--sl-space-6', '--sl-space-7', '--sl-space-8'],
+            'tokens' => [
+                '--sl-space-1', '--sl-space-2', '--sl-space-3', '--sl-space-4', '--sl-space-5', '--sl-space-6',
+                '--sl-space-7', '--sl-space-8', '--sl-space-9', '--sl-space-10', '--sl-space-11',
+            ],
         ],
         'font-size' => [
-            'steps' => [10, 12, 14, 16, 18, 20, 24, 32],
+            'steps' => [10, 12, 14, 16, 18, 20, 24, 32, 48],
             'unit' => 'px',
-            'tokens' => ['--sl-font-micro', '--sl-font-small', '--sl-font-body', '--sl-font-h4', '--sl-font-h3', '--sl-font-h2', '--sl-font-h1', '--sl-font-display'],
+            'tokens' => [
+                '--sl-font-micro', '--sl-font-small', '--sl-font-body', '--sl-font-h4', '--sl-font-h3',
+                '--sl-font-h2', '--sl-font-h1', '--sl-font-display', '--sl-font-hero',
+            ],
         ],
         'line-height' => ['steps' => [1.2, 1.45, 1.6], 'unit' => '', 'tokens' => ['--sl-line-tight', '--sl-line-normal', '--sl-line-loose']],
         'font-weight' => ['steps' => [400, 500, 600, 700], 'unit' => '', 'tokens' => ['--sl-weight-normal', '--sl-weight-medium', '--sl-weight-semibold', '--sl-weight-bold']],
@@ -174,7 +184,7 @@ return [
         'fm-bar', 'fm-body', 'fm-busy', 'fm-drop', 'fm-edit', 'fm-empty', 'fm-field', 'fm-filter', 'fm-kind', 'fm-mode',
         'fm-panel', 'fm-pick', 'fm-preview', 'fm-props', 'fm-quota', 'fm-row', 'fm-search', 'fm-sep', 'fm-split', 'fm-thumb',
         'fm-tile', 'footer', 'form', 'form-label', 'forum', 'graph', 'header',
-        'ico', 'idea', 'item', 'knob', 'lang', 'led', 'loading', 'login', 'login-footer', 'login-header', 'menu',
+        'ico', 'idea', 'item', 'knob', 'lang', 'led', 'loading', 'login', 'login-footer', 'login-header', 'menu', 'meta',
         'meter', 'modal', 'modal-act', 'modal-btn', 'mode', 'module-head', 'monitor-table', 'move', 'msg', 'msg-brand', 'nav',
         'pager', 'panel', 'placeholder', 'pnum', 'pnum-arrow', 'popover', 'progress', 'pulse', 'quote', 'radio',
         'rail', 'ratings', 'ring', 'row', 'search', 'search-filter', 'search-order', 'search-sort', 'select', 'shot', 'shot-side', 'skel',
@@ -293,13 +303,30 @@ return [
         # The paragraph reset of base.css and the list item of the markdown block: one is the element default
         # every page inherits, the other a rule scoped to rendered markdown, and they meet at one step by chance
         '.sl-markdown li, p',
-        # Two site blocks lite hides on a narrow screen, beside the rail parts the editor window hides at the same
-        # width. They met when the skin took the shared breakpoint ladder; one is page furniture, the other a
-        # dialog the page never sees
-        '#block-idea, #block-feedback, .sl-toastui-upload .sl-fm-rail-cap, .sl-toastui-upload .sl-fm-rail-sep, .sl-toastui-upload .sl-fm-rail-foot, .sl-toastui-upload .sl-fm-rail-item small, .sl-toastui-upload .sl-fm-rows-head span:nth-child(4), .sl-toastui-upload .sl-fm-row span:nth-child(4), .sl-toastui-upload .sl-fm-rows-head span:nth-child(5), .sl-toastui-upload .sl-fm-row span:nth-child(5)',
+        # Two site blocks and two cells of the profile hub that lite hides on a narrow screen, beside the rail parts
+        # the editor window hides at the same width. They met when the skin took the shared breakpoint ladder and the
+        # hub's own 760 moved onto 768; one set is page furniture, the other a dialog the page never sees
+        '#block-idea, #block-feedback, .sl-profile-hub-row > span:nth-of-type(1), .sl-profile-hub-row-head, '
+            .'.sl-toastui-upload .sl-fm-rail-cap, .sl-toastui-upload .sl-fm-rail-sep, .sl-toastui-upload .sl-fm-rail-foot, '
+            .'.sl-toastui-upload .sl-fm-rail-item small, .sl-toastui-upload .sl-fm-rows-head span:nth-child(4), '
+            .'.sl-toastui-upload .sl-fm-row span:nth-child(4), .sl-toastui-upload .sl-fm-rows-head span:nth-child(5), '
+            .'.sl-toastui-upload .sl-fm-row span:nth-child(5)',
         # Three hover states and one static note that all fade to the same step. The note is not a hover, so merging
         # would put a resting style inside a list of pointer states and hide it from whoever edits either one
         '.sl-block-sidebar h3:hover, .sl-but:hover, .sl-but-blue:hover, .sl-but-red:hover, .sl-but-green:hover, .sl-but-foot:hover, .sl-but-back:hover, .sl-dashboard-panel-head:hover, .sl-session-note',
+        # A body that is one declaration reaching one ladder step is need and not repetition, the same way `display: flex`
+        # under 122 flex containers is. These three met when lite's type sizes landed on the ladder: an element default
+        # beside three small labels, three unrelated places reaching the smallest step, and four glyphs at one icon step.
+        # Merging any of them would file an element reset or one component's glyph inside a list that names nothing
+        '.sl-chip.sl-topic-post .bi, .sl-chip.sl-topic-edit .bi, .sl-toastui-upload .sl-fm-drop small, .sl-toastui-upload .sl-fm-view .sl-pager-info, small',
+        '.sl-block-pm a > .bi:last-child, .sl-cab-nav .sl-cab-act b, .sl-pmf-mate small',
+        '.bi-stars, .sl-cab-nav .sl-cab-act .sl-cat-ico .bi, .sl-msg-search .sl-home-link .bi, .sl-pmf-slot-more i',
+        # The same shape in lite: three hovers in three unrelated components and one resting note, which met when
+        # 0.9, 0.8 and 0.75 folded onto one step. The note is not a hover, and the three hovers share nothing else
+        '.bx-pager-item a:hover:after, .sl-forum-last:hover, .sl-rate-sites:hover, .sl-session-note',
+        # The element default every page inherits, a utility that bolds any inline run, and one component label. They met
+        # when `bold` and `700` became one name; merging would move the element reset into a utility block
+        '.sl-label, .sl-text-bold, strong, b',
         # The hovered compact button and the page the pager is standing on: both are painted in the brand colour and both
         # take the text that reads on it, which is one role and not one component. Merging would file the pager's current
         # page inside a button's hover block, where nobody editing either would look for it

@@ -60,10 +60,6 @@
   --sl-on-solid: #ffffff;
   --sl-color-tone-neutral: #6b7280;
   --sl-color-tone-primary: #4c75a3;
-  --sl-overlay-10: rgba(0, 0, 0, 0.1);
-  --sl-overlay-12: rgba(0, 0, 0, 0.12);
-  --sl-overlay-15: rgba(0, 0, 0, 0.15);
-  --sl-overlay-20: rgba(0, 0, 0, 0.2);
 
   /* Categorical: the season skins, a set with no order */
   --sl-season-winter: #4c8cc9;
@@ -81,23 +77,32 @@
   --sl-size-icon-sm: 18px;
   --sl-size-icon-md: 24px;
   --sl-size-icon-lg: 32px;
-  /* Waiting on the size ladder: the meta row is a row height and no control */
-  --sl-size-meta-row: 24px;
+  --sl-size-icon-xl: 48px;
 
-  /* Type sizes */
+  /* Type sizes. `hero` is the step above every heading: the largest type a page carries, which is the slider
+     headline and the version number of the dashboard, and folding it onto `display` would size a hero like an h1 */
+  --sl-font-hero: 48px;
   --sl-font-display: 32px;
-  --sl-font-h1: 28px;
-  --sl-font-h2: 22px;
+  --sl-font-h1: 24px;
+  --sl-font-h2: 20px;
+  --sl-font-h3: 18px;
   --sl-font-h4: 16px;
   --sl-font-body: 14px;
   --sl-font-small: 12px;
   --sl-font-micro: 10px;
+  --sl-line-tight: 1.2;
   --sl-line-normal: 1.45;
+  --sl-line-loose: 1.6;
   --sl-weight-normal: 400;
+  --sl-weight-medium: 500;
+  --sl-weight-semibold: 600;
+  --sl-weight-bold: 700;
   --sl-track-wide: 0.4px;
+  --sl-fade-subtle: 0.8;
+  --sl-fade-muted: 0.55;
+  --sl-fade-disabled: 0.45;
 
-  /* The ladders the editor skin already reads, shared with admin down to the value. The steps the rest of
-     this theme has not reached yet arrive with its own migration, because a step nothing reads is a dead token */
+  /* The ladders every theme shares, values included. The steps above 8 are the second rhythm of a page */
   --sl-space-1: 2px;
   --sl-space-2: 4px;
   --sl-space-3: 8px;
@@ -106,20 +111,15 @@
   --sl-space-6: 16px;
   --sl-space-7: 20px;
   --sl-space-8: 24px;
+  /* The second rhythm: the gap between the sections of a page, which sits above every gap inside a component */
+  --sl-space-9: 32px;
+  --sl-space-10: 40px;
+  --sl-space-11: 48px;
   --sl-radius-1: 4px;
   --sl-radius-2: 8px;
   --sl-radius-3: 12px;
   --sl-radius-pill: 999px;
   --sl-radius-circle: 50%;
-
-  /* Spacing and radius, still on the legacy scale until the ladder lands */
-  --sl-space-xs: 4px;
-  --sl-space-sm: 6px;
-  --sl-space-md: 8px;
-  --sl-space-lg: 12px;
-  --sl-space-xl: 16px;
-  --sl-radius-control: 4px;
-  --sl-radius-card: 10px;
 
   /* Shadows */
   --sl-shadow-xs: 0 1px 2px rgba(42, 48, 60, 0.12);
@@ -128,11 +128,11 @@
 
   /* Components: form field, shared by input, textarea, select and file controls */
   --sl-field-height: 30px;
-  --sl-field-pad-x: var(--sl-space-lg);
-  --sl-field-pad-y: var(--sl-space-sm);
+  --sl-field-pad-x: var(--sl-space-5);
+  --sl-field-pad-y: var(--sl-space-3);
   --sl-field-bg: var(--sl-bg);
   --sl-field-border: var(--sl-border-strong);
-  --sl-field-radius: var(--sl-radius-control);
+  --sl-field-radius: var(--sl-radius-1);
   --sl-field-text: var(--sl-text-subtle);
   --sl-field-ring: rgba(48, 162, 246, 0.18);
   --sl-field-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
@@ -152,9 +152,12 @@
   --sl-switch-width: 58px;
   --sl-switch-height: 24px;
   --sl-forum-width: 64px;
+  /* The meta row of an article: a row height and no control, so the component is what names it */
+  --sl-meta-height: 24px;
+  /* The thumbnail of a list row is square, so one name carries both sides, and the row reserves a column
+     of exactly that width plus one rhythm step for the image standing in it */
+  --sl-thumb-height: 60px;
   --sl-placeholder-height: 64px;
-  /* Waiting on the type ladder: the glyph inside the placeholder is a font size above every step */
-  --sl-img-placeholder-icon-size: 48px;
   --sl-avatar-border: 6px;
 
   /* Components: the login bar and its dropdown */
@@ -164,14 +167,8 @@
   --sl-login-pad-y: 5px;
   --sl-login-gap: 8px;
   --sl-login-radius: 15px;
-  /* Waiting on the colour ramp and the spacing ladder: a hovered colour, a second padding pair and the offsets the dropdown is placed by */
+  /* Waiting on the colour ramp: the colour a login link takes under the pointer */
   --sl-login-link-hover-color: #2a303c;
-  --sl-login-field-pad-x: 6px;
-  --sl-login-field-pad-y: 4px;
-  --sl-login-dropdown-offset-x: -100px;
-  --sl-login-dropdown-form-left: 50%;
-  --sl-login-dropdown-form-width: 160px;
-  --sl-login-dropdown-form-max-width: none;
   --sl-drop-width: 180px;
   --sl-drop-pad-x: 20px;
   --sl-drop-pad-y: 20px;
@@ -238,7 +235,10 @@
   --sl-feedback-bg: linear-gradient(to right, var(--sl-info-subtle) 0%, var(--sl-info-muted) 100%);
   --sl-idea-bg: linear-gradient(to right, var(--sl-success-subtle) 0%, var(--sl-success-muted) 100%);
 
-  /* Colour: the washes and veils the editor package reads. A tint lies over what is behind it, a scrim hides it */
+  /* Colour: the washes and veils. A tint lies over what is behind it, a scrim hides it. The two lighter steps are
+     the veils the theme's own shadows and darkened discs are drawn in; the base is the one the editor package reads */
+  --sl-scrim-subtle: rgba(0, 0, 0, 0.1);
+  --sl-scrim-muted: rgba(0, 0, 0, 0.2);
   --sl-scrim: color-mix(in srgb, var(--sl-text-strong) 34%, transparent);
   --sl-tint: color-mix(in srgb, var(--sl-primary) 10%, transparent);
   --sl-tint-strong: color-mix(in srgb, var(--sl-primary) 24%, transparent);
@@ -454,11 +454,9 @@ select,
 input,
 textarea,
 button {
-  font:
-    14px/1.4 Arial,
-    system-ui,
-    -apple-system,
-    sans-serif;
+  font-family: Arial, system-ui, -apple-system, sans-serif;
+  font-size: var(--sl-font-body);
+  line-height: var(--sl-line-normal);
   color: var(--sl-text);
   outline: none;
 }
@@ -487,35 +485,35 @@ h2,
 h3,
 h4,
 h5 {
-  font-weight: normal;
-  line-height: normal;
+  font-weight: var(--sl-weight-normal);
+  line-height: var(--sl-line-tight);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
 
 h1 {
-  font-size: 26px;
-  margin: 30px 0 10px 0;
+  font-size: var(--sl-font-h1);
+  margin: var(--sl-space-9) 0 var(--sl-space-4) 0;
 }
 
 h2 {
-  font-size: 24px;
-  margin: 25px 0 10px;
+  font-size: var(--sl-font-h2);
+  margin: var(--sl-space-8) 0 var(--sl-space-4);
 }
 
 h3 {
-  font-size: 22px;
-  margin: 14px 0 8px;
+  font-size: var(--sl-font-h3);
+  margin: var(--sl-space-6) 0 var(--sl-space-3);
 }
 
 h4 {
-  font-size: 18px;
-  margin: 2px 0;
+  font-size: var(--sl-font-h4);
+  margin: var(--sl-space-1) 0;
   display: inline;
 }
 
 h5 {
-  font-size: 16px;
+  font-size: var(--sl-font-body);
 }
 
 p,
@@ -525,36 +523,35 @@ pre,
 ul,
 ol,
 blockquote {
-  margin-bottom: 18px;
+  margin-bottom: var(--sl-space-7);
 }
 
 legend {
   color: var(--sl-primary);
-  font-weight: bold;
-  padding: var(--sl-space-sm);
+  font-weight: var(--sl-weight-bold);
+  padding: var(--sl-space-3);
   border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-control);
+  border-radius: var(--sl-radius-1);
 }
 
 fieldset {
-  padding: var(--sl-space-sm);
-  margin-top: var(--sl-space-sm);
+  padding: var(--sl-space-3);
+  margin-top: var(--sl-space-3);
   border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-control);
+  border-radius: var(--sl-radius-1);
 }
 
 optgroup {
-  font:
-    14px/1.4 Arial,
-    Tahoma,
-    sans-serif;
+  font-family: Arial, Tahoma, sans-serif;
+  font-size: var(--sl-font-body);
+  line-height: var(--sl-line-normal);
   color: var(--sl-text);
   outline: none;
 }
 
 strong,
 b {
-  font-weight: bold;
+  font-weight: var(--sl-weight-bold);
 }
 
 em,
@@ -573,23 +570,23 @@ td {
 }
 
 small {
-  font-size: 0.9em;
+  font-size: var(--sl-font-small);
 }
 
 hr {
-  margin-top: 20px;
-  margin-bottom: 10px;
+  margin-top: var(--sl-space-7);
+  margin-bottom: var(--sl-space-4);
   border: 0;
   border-top: 1px solid #e4e3e7;
 }
 
 ul {
-  padding-left: 25px;
+  padding-left: var(--sl-space-8);
   list-style: disc outside;
 }
 
 ol {
-  padding-left: 25px;
+  padding-left: var(--sl-space-8);
   list-style: decimal outside;
 }
 
@@ -599,8 +596,8 @@ table {
 
 input[type="radio"],
 input[type="checkbox"] {
-  line-height: normal;
-  margin: 4px 0 0;
+  line-height: var(--sl-line-tight);
+  margin: var(--sl-space-2) 0 0;
   accent-color: var(--sl-primary);
 }
 
@@ -640,26 +637,26 @@ blockquote {
     -apple-system,
     sans-serif;
   font-style: italic;
-  margin: 4px;
-  padding: 4px;
-  border-radius: 8px;
+  margin: var(--sl-space-2);
+  padding: var(--sl-space-2);
+  border-radius: var(--sl-radius-2);
 }
 
 blockquote:before {
   color: #b8c3cd;
   content: "\201c";
-  font-size: 3em;
+  font-size: var(--sl-font-display);
   line-height: 0.1em;
-  margin-right: 0.2em;
+  margin-right: var(--sl-space-3);
   vertical-align: -0.4em;
 }
 
 blockquote:after {
   color: #b8c3cd;
   content: "\201d";
-  font-size: 3em;
+  font-size: var(--sl-font-display);
   line-height: 0.1em;
-  margin-left: 0.1em;
+  margin-left: var(--sl-space-2);
   vertical-align: -0.4em;
 }
 
@@ -671,7 +668,7 @@ blockquote > p:first-child {
 .sl-attach {
   display: inline-block;
   max-width: 100%;
-  margin: 0 var(--sl-space-sm) var(--sl-space-sm) 0;
+  margin: 0 var(--sl-space-3) var(--sl-space-3) 0;
 }
 
 .sl-attach img {
@@ -685,11 +682,11 @@ blockquote > p:first-child {
 
 .sl-attach-right {
   float: right;
-  margin: 0 0 var(--sl-space-sm) var(--sl-space-sm);
+  margin: 0 0 var(--sl-space-3) var(--sl-space-3);
 }
 
 .sl-attach-center {
   display: block;
   float: none;
-  margin: 0 auto var(--sl-space-sm);
+  margin: 0 auto var(--sl-space-3);
 }

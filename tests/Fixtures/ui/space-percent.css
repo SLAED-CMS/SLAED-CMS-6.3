@@ -1,0 +1,10 @@
+/* A percentage gap is a proportion of the container; the px ladder has no step for it */
+.sl-one {
+  column-gap: 2%;
+  margin: 5%;
+  padding: 13px;
+}
+
+.sl-two {
+  width: 40%;
+}

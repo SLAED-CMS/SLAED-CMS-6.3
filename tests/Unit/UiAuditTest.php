@@ -30,6 +30,37 @@ final class UiAuditTest extends TestCase
     }
 
     #[Test]
+    public function testAPercentageGapIsAProportionAndNotARhythmStep(): void
+    {
+        $count = checkThemeCount($this->getModel('space-percent.css'));
+        $raw = array_column($count['sites'], 'raw');
+        $this->assertSame(['13px', '40%'], $raw, 'the spacing ladder is measured in pixels, so a percentage gap has no step; a percentage width is still a size decision');
+    }
+
+    #[Test]
+    public function testTheMiddleOfAClampIsARateAndNotADecision(): void
+    {
+        $count = checkThemeCount($this->getModel('clamp.css'));
+        $sel = array_column($count['sites'], 'sel');
+        $raw = array_column($count['sites'], 'raw');
+        $this->assertSame(['.sl-one', '.sl-one', '.sl-three', '.sl-three'], $sel, 'a clamp whose bounds are tokens is done; the rate between them never counted');
+        $why = 'both bounds of the clamp are decisions and 5vw is not; min() has no rate position, so both of its arguments stay';
+        $this->assertSame(['28px', '48px', '62vh', '460px'], $raw, $why);
+    }
+
+    #[Test]
+    public function testADescriptorBlockHoldsNoDecision(): void
+    {
+        $model = $this->getModel('fontface.css');
+        $count = checkThemeCount($model);
+        $bare = checkBareValues($model);
+        $sel = array_values(array_unique(array_column($count['sites'], 'sel')));
+        $this->assertSame(['.sl-one'], $sel, 'only the ordinary rule holds decisions; the @font-face descriptors hold none');
+        $this->assertCount(1, $bare['sites'], 'the weight of the face is a descriptor, and var() cannot be written there at all');
+        $this->assertSame('.sl-one', $bare['sites'][0]['sel']);
+    }
+
+    #[Test]
     public function testCountsThreeLiteralsAndOneDuplicatedBody(): void
     {
         $model = $this->getModel('count-basic.css');

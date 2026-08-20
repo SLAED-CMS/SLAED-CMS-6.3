@@ -210,7 +210,28 @@ function filterValue(string $val): string {
     return trim((string)preg_replace('/\s+/', ' ', $val));
 }
 
-# Split one value into the atoms a decision is counted over, skipping var() and walking into functions
+# Split one function argument list at its top-level commas, so a nested function is not cut in half
+function getArgParts(string $args): array {
+    $out = [];
+    $buf = '';
+    $depth = 0;
+    $len = strlen($args);
+    for ($i = 0; $i < $len; $i++) {
+        $chr = $args[$i];
+        if ($chr === '(') $depth++;
+        if ($chr === ')') $depth--;
+        if ($chr === ',' && $depth === 0) {
+            $out[] = trim($buf);
+            $buf = '';
+            continue;
+        }
+        $buf .= $chr;
+    }
+    if (trim($buf) !== '') $out[] = trim($buf);
+    return $out;
+}
+
+# Split one value into the atoms a decision is judged on, descending into the functions that hold them
 function getValueParts(string $val, bool &$hasvar = false): array {
     $out = [];
     $len = strlen($val);
@@ -252,6 +273,20 @@ function getValueParts(string $val, bool &$hasvar = false): array {
             if ($name === 'cubic-bezier' || $name === 'steps') {
                 $out[] = ['raw' => $name.'('.$args.')', 'kind' => 'ease'];
                 continue;
+            }
+            # The middle of a clamp() is the rate the value travels between its two bounds, and both bounds are
+            # decisions of their own. No ladder in the contract carries it: every step is px, seconds or unitless,
+            # while a rate is measured against the window. Marked so it is read as arithmetic, like `fr`
+            if ($name === 'clamp') {
+                $arg = getArgParts($args);
+                if (count($arg) === 3) {
+                    foreach ([0, 2] as $side) $out = array_merge($out, getValueParts($arg[$side], $hasvar));
+                    foreach (getValueParts($arg[1], $hasvar) as $part) {
+                        $part['kind'] = 'rate';
+                        $out[] = $part;
+                    }
+                    continue;
+                }
             }
             if (in_array($name, UI_WFUNC, true) || $name === '') {
                 $out = array_merge($out, getValueParts($args, $hasvar));
@@ -316,10 +351,12 @@ function isDecisionPart(string $prop, array $part, string $val): bool {
         if (isset($cont['allowlist']['values'][$raw]) && $kind !== 'color') return false;
     }
     if ($raw === 'transparent' || $raw === 'currentcolor') return false;
-    if ($kind === 'angle' || $kind === 'fraction') return false;
+    if ($kind === 'angle' || $kind === 'fraction' || $kind === 'rate') return false;
     # How much of a colour a mix carries is a decision whatever property reads the result
     if ($kind === 'mix') return true;
-    if ($fam === 'space') return $kind === 'length' && $raw !== '0';
+    # A percentage gap is measured against the width of the container, not against the rhythm of the page. Every
+    # step of the spacing ladder is a pixel figure, so no step can express one and no rename would give it an address
+    if ($fam === 'space') return $kind === 'length' && $raw !== '0' && !str_ends_with($raw, '%');
     if ($fam === 'radius') return $kind === 'length' && $raw !== '50%';
     if ($fam === 'border') {
         if ($kind === 'color') return true;
@@ -399,6 +436,9 @@ function getTextModel(array $list, string $api = ''): array {
                 }
                 continue;
             }
+            # A descriptor block is not a rule. @font-face and its kin hold descriptors, where var() is invalid,
+            # so a figure inside one is not a decision a theme can move. @media and @keyframes never reach here
+            if (str_starts_with($rule['sel'], '@')) continue;
             foreach ($rule['decls'] as $decl) {
                 if (!str_starts_with($decl['prop'], '--')) continue;
                 $out['scoped'][] = ['name' => $decl['prop'], 'sel' => $rule['sel'], 'file' => $path, 'line' => $rule['line']];

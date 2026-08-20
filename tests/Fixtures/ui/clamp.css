@@ -1,0 +1,12 @@
+/* A fluid size: both bounds are decisions, the middle is the rate they travel at */
+.sl-one {
+  font-size: clamp(28px, 5vw, 48px);
+}
+
+.sl-two {
+  font-size: clamp(var(--sl-font-h1), 5vw, var(--sl-font-hero));
+}
+
+.sl-three {
+  max-height: min(62vh, 460px);
+}
