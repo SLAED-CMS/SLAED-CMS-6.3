@@ -177,19 +177,28 @@ return [
     # The eleven `col-*` entries are the column widths of a fixed admin list table: the track list of `table-layout: fixed`,
     # which CSS spells as one width per cell instead of one `grid-template-columns`, and each is a figure an author retunes
     'components' => [
-        'alert', 'arrow', 'avatar', 'badge', 'bar', 'brand', 'btn', 'btn-mini', 'card', 'changelog', 'changelog-body', 'changelog-date',
-        'changelog-files', 'changelog-stat', 'check', 'chip', 'code', 'col-actions', 'col-author', 'col-check', 'col-count', 'col-date',
-        'col-id', 'col-ip', 'col-lang', 'col-module', 'col-sent', 'col-status', 'count', 'crumb', 'dial', 'drift',
-        'drop', 'editor', 'editor-mode', 'editor-tab', 'emoji', 'emoji-full', 'emoji-grid', 'feedback', 'field', 'flash', 'fm-as',
+        'alert', 'arrow', 'aside', 'ava', 'avatar', 'badge', 'band', 'bar', 'brand', 'btn', 'btn-mini', 'bullet', 'cab-act', 'cab-msg', 'cab-ring',
+        'calc', 'card', 'changelog', 'changelog-body', 'changelog-date',
+        'changelog-files', 'changelog-stat', 'check', 'check-tick', 'chip', 'chip-tint', 'code', 'col-actions', 'col-amount', 'col-author',
+        'col-check', 'col-count', 'col-date', 'col-form', 'col-id', 'col-ip', 'col-lang', 'col-last', 'col-module', 'col-num', 'col-sent',
+        'col-status', 'com', 'com-arrow', 'com-ava', 'com-item', 'count', 'crumb', 'crumb-bar', 'demo', 'dial', 'donut', 'drift',
+        'drop', 'edge', 'editor', 'editor-mode', 'editor-tab', 'emoji', 'emoji-full', 'emoji-grid', 'entry', 'f-title', 'fav', 'feedback',
+        'field', 'flash', 'flash-bar', 'fm-as',
         'fm-bar', 'fm-body', 'fm-busy', 'fm-drop', 'fm-edit', 'fm-empty', 'fm-field', 'fm-filter', 'fm-kind', 'fm-mode',
         'fm-panel', 'fm-pick', 'fm-preview', 'fm-props', 'fm-quota', 'fm-row', 'fm-search', 'fm-sep', 'fm-split', 'fm-thumb',
-        'fm-tile', 'footer', 'form', 'form-label', 'forum', 'graph', 'header',
-        'ico', 'idea', 'item', 'knob', 'lang', 'led', 'loading', 'login', 'login-footer', 'login-header', 'menu', 'meta',
+        'fm-tile', 'footer', 'form', 'form-label', 'forum', 'fp', 'fp-ava', 'fresh', 'fresh-day', 'fresh-days', 'fresh-month',
+        'fresh-now', 'fresh-week', 'graph', 'header', 'hub-head', 'hub-row',
+        'ico', 'idea', 'info-row', 'invoice', 'invoice-logo', 'item', 'knob', 'lang', 'led', 'letter', 'live-dot', 'loading',
+        'loading-dot', 'login', 'login-drop', 'login-footer', 'login-header', 'logo', 'madein', 'marquee', 'menu', 'meta',
         'meter', 'modal', 'modal-act', 'modal-btn', 'mode', 'module-head', 'monitor-table', 'move', 'msg', 'msg-brand', 'nav',
-        'pager', 'panel', 'placeholder', 'pnum', 'pnum-arrow', 'popover', 'progress', 'pulse', 'quote', 'radio',
-        'rail', 'ratings', 'ring', 'row', 'search', 'search-filter', 'search-order', 'search-sort', 'select', 'shot', 'shot-side', 'skel',
-        'skel-row', 'skel-tile', 'sort', 'spin', 'switch', 'switch-knob', 't-icon', 'table', 'tab', 'thumb', 'toast',
-        'toolbar', 'toolbar-row', 'tooltip', 'tree', 'vote', 'wrap',
+        'pager', 'pager-dot', 'pager-item', 'panel', 'panel-feed', 'placeholder', 'pmf-ava', 'pmf-blank', 'pmf-chip', 'pmf-day', 'pmf-filter',
+        'pmf-head', 'pmf-mate', 'pmf-meta', 'pmf-pane', 'pmf-slot', 'pmf-text', 'pmf-who',
+        'pnum', 'pnum-arrow', 'popover', 'preview', 'profile-ava', 'profile-dot', 'progress', 'proof', 'pulse', 'qr', 'quote', 'radio',
+        'rail', 'rank', 'ratings', 'ring', 'row', 'scroll', 'search', 'search-filter', 'search-order', 'search-sort', 'select', 'sep',
+        'session', 'shot', 'shot-side', 'site', 'site-img', 'skel',
+        'skel-row', 'skel-tile', 'slide', 'slide-cont', 'sort', 'spark', 'spin', 'sublist', 'sublist-two', 'switch', 'switch-knob',
+        't-icon', 'table', 'tab', 'thumb', 'tile', 'toast',
+        'toolbar', 'toolbar-row', 'tooltip', 'topbar', 'touch', 'tree', 'veil', 'view', 'vote', 'wordmark', 'wordmark-img', 'wrap',
     ],
 
     # Written from outside CSS by a template or a script, read only by CSS. Never API
@@ -335,6 +344,41 @@ return [
         # say "on" in the same tint. Merging would put the chip's definition inside the filter's block, where nobody looking
         # at either one would find it, and the two drift apart the moment one of them stops being a tint
         '.sl-toastui-upload .sl-fm-as label:has(input:checked), .sl-toastui-upload .sl-fm-filter[aria-pressed="true"]',
+        # A status tone has one colour and many marks, and the moment every mark stopped reading a tint step and took the
+        # base tone of its family, the marks of one status met each other. A hidden-text frame, a hot topic, a moderated
+        # topic and a category tone are four components, not one: a selector list holding them would name nothing, and each
+        # would lose the block a reader opens to find it. Two of the three also reach across a file the list cannot cross
+        '.sl-fieldset-form-legend-success, .sl-text-success, .sl-profile-proof:nth-child(2) i, '
+            .'.sl-radio-group.sl-radio-switch:has(input[value="1"]:checked) .sl-radio:has(input:checked), '
+            .'.sl-session-line[data-sl-audience="users"] > .bi, .sl-toastui-upload .sl-fm-job.sl-is-done > .bi, .sl-topic-moderated .bi',
+        '.sl-fieldset-form-legend-danger, .sl-text-danger, .sl-hide:before, .sl-hide:after, .sl-profile-proof.sl-is-warn i, '
+            .'.sl-profile-wide.sl-is-warn h3 i, .sl-toastui-upload .sl-fm-empty.sl-is-fail .bi, .sl-toastui-upload .sl-fm-job.sl-is-fail > .bi',
+        '.sl-pmf-focus > summary .bi-lightning-charge, .sl-profile-row-private > i, .sl-session-line[data-sl-audience="bots"] > .bi, '
+            .'.sl-topic-hot .bi, .sl-topic-admin .bi',
+        # A category tone and the tone a kept message wears are one colour under two names on purpose: the first is a
+        # category of the catalogue, the second a state of a message, and they are free to part without touching each other
+        '.sl-cat-tone-2, .sl-pmf-slot-keep',
+        # Five groups the colour fold closed over: the changelog island, the two service tones of the social icons and the
+        # colour a heading link carried all reached a role that other places already read, and a page ground meeting an editor
+        # ground is a coincidence of one role and not one component. Four of the five cross a file boundary that no selector
+        # list can cross at all, and the fifth would file a changelog row inside a code table
+        '.sl-changelog-commit:hover, .sl-code-row-odd, .toastui-editor-contents pre, .toastui-editor-context-menu .menu-item:hover, '
+            .'.toastui-editor-popup-add-heading ul li:hover',
+        '.sl-changelog-commit-alt, .toastui-editor-popup-add-table .toastui-editor-table-cell.header, a.sl-profile-hub-row:hover',
+        '.sl-i-vk:hover, .toastui-editor-defaultUI .toastui-editor-ok-button:hover',
+        '.sl-urating a.sl-star:has(~ a.sl-star:hover) .bi, .sl-urating a.sl-star:hover .bi, .toastui-editor-contents a:hover',
+        '.sl-gallery > li > b, .sl-login-top--head > li > a:hover, .sl-login-top--head > li > a:focus-visible, '
+            .'.sl-login-top--head > li > .sl-login-toggle:hover, .sl-login-top--head > li > .sl-login-toggle:focus-visible, '
+            .'.sl-profile-feed .sl-tabs-link:hover, .sl-profile-hub-row b, .sl-table-head th a, .toastui-editor-contents h1, '
+            .'.toastui-editor-contents h2, .toastui-editor-contents h3, .toastui-editor-contents h4, .toastui-editor-contents h5, '
+            .'.toastui-editor-contents h6',
+        # Three chips meeting three freshness and liveness marks, which is what one wash of one's own colour costs: once every
+        # tinted pill in the theme reads the same ground, a tone class and a state chip carrying the same tone say the same two
+        # things. They are not one component - a chip is a label the page prints, a freshness mark is a reading of the clock -
+        # and merging either pair would file one component's tone inside the other's block
+        '.sl-chip-info, a.sl-chip-info, .sl-fresh-week',
+        '.sl-chip-success, a.sl-chip-success, .sl-live-chip.sl-is-paused .sl-live-act',
+        '.sl-chip-warn, a.sl-chip-warn, .sl-fresh-days',
         # The faint text of a rail item nobody may click, beside the syntax marks of the markdown source. One is a state of a
         # control, the other is how a language is written down; they share a tone and nothing else
         '.sl-toastui-upload .sl-fm-rail-item[disabled] b, .sl-toastui-upload .sl-fm-rail-item[disabled] .bi, '
@@ -342,7 +386,7 @@ return [
             .'.toastui-editor-md-table, .toastui-editor-md-block-quote',
         # The same meeting in lite, where the faint tone is already shared by a footer menu, the glyphs of a read forum row
         # and a nested list. None of them is the markdown source, and a selector list holding all four would name nothing
-        '.sl-fmenu a, .sl-forum-old .bi, .sl-topic-old .bi, .sl-topic-popular-old .bi, .sl-topic-closed .bi, '
+        '.sl-forum-old .bi, .sl-topic-old .bi, .sl-topic-popular-old .bi, .sl-topic-closed .bi, '
             .'.sl-forum-closed .bi, .sl-list-item > li ul, .sl-list-item > li ul a, '
             .'.sl-toastui-upload .sl-fm-rail-item[disabled] b, .sl-toastui-upload .sl-fm-rail-item[disabled] .bi, '
             .'.toastui-editor-md-delimiter, .toastui-editor-md-thematic-break, .toastui-editor-md-link, '

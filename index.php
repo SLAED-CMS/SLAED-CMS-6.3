@@ -15,6 +15,12 @@ $go = getVar('req', 'go', 'var');
 $name = getVar('req', 'name', 'var');
 $op = getVar('req', 'op', 'var');
 
+# The colour mode toggle of the site header posts here, the same route and the same token scope the panel uses
+if (empty($go) && $op === 'mode') {
+    if (checkAdminPost('mode')) setThemeMode(getVar('post', 'mode', 'var'));
+    setRedirect('index.php', true);
+}
+
 if (empty($go)) {
     Cache::setHeaders(false);
     if ($conf['alang']) {

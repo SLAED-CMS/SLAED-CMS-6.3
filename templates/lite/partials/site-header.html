@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="{{ lang }}">
+<html lang="{{ lang }}" data-theme="{{ mode }}">
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="format-detection" content="telephone=no">
@@ -13,6 +13,7 @@
     <div class="sl-wrp">
       <ul class="sl-top-contact"><li class="sl-head-marquee">{% if faqtitle %}{{{ faqtitle }}}{% endif %}</li></ul>
       <div class="sl-top-right">
+        {{{ mode_html }}}
         <div class="sl-top-social">
           <a class="sl-thd sl-circle-action sl-i-gh" rel="me noopener" target="_blank" href="https://github.com/SLAED-CMS/SLAED-CMS-6.3" title="Мы в GitHub" aria-label="Мы в GitHub"><i class="bi bi-github" aria-hidden="true"></i>Мы в GitHub</a>
           <a class="sl-thd sl-circle-action sl-i-yt" rel="me noopener" target="_blank" href="https://www.youtube.com/@SLAED-CMS" title="Мы в YouTube" aria-label="Мы в YouTube"><i class="bi bi-youtube" aria-hidden="true"></i>Мы в YouTube</a>

@@ -128,7 +128,15 @@ final class ThemeContractTest extends TestCase
     public function testEveryDocumentTemplateCarriesTheModeAttribute(): void
     {
         $root = dirname(__DIR__, 2);
-        foreach (['templates/admin/layouts/admin.html', 'templates/admin/layouts/bare.html'] as $path) {
+        $list = [
+            'templates/admin/layouts/admin.html',
+            'templates/admin/layouts/bare.html',
+            'templates/lite/layouts/admin.html',
+            'templates/lite/layouts/bare.html',
+            'templates/lite/partials/site-header.html',
+            'templates/lite/fragments/shop-invoice.html',
+        ];
+        foreach ($list as $path) {
             $html = (string)file_get_contents($root.'/'.$path);
             $why = $path.' opens a document without the mode attribute, so the page renders in the wrong mode';
             $this->assertStringContainsString('data-theme="{{ mode }}"', $html, $why);

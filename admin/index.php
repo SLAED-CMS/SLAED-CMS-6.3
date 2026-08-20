@@ -292,14 +292,7 @@ function logout() {
 # Store the colour mode the toolbar toggle asked for; anything but light or dark drops the cookie and hands the page back to the operating system
 function mode(): void {
     global $afile;
-    if (checkAdminPost('mode')) {
-        $val = getVar('post', 'mode', 'var');
-        if (in_array($val, ['light', 'dark'], true)) {
-            setCookies('mode', time() + 31536000, $val);
-        } else {
-            setCookiesDelete('mode');
-        }
-    }
+    if (checkAdminPost('mode')) setThemeMode(getVar('post', 'mode', 'var'));
     setRedirect($afile.'.php', true);
 }
 

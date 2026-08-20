@@ -166,10 +166,19 @@ async function getContrastPairs(page, name, mode) {
       }
       return out;
     };
+    // A mostly transparent fill is a texture laid over the real background, not the background - the same reading the
+    // gradient walk above already applies to a stop. A 9% wash of a status colour over the page is not a status surface,
+    // and measuring text against it reports a failure nobody can see and nobody can fix without deleting the wash
+    const sheer = (col) => {
+      const hit = /rgba?\(([^)]+)\)/.exec(col || '');
+      if (!hit) return false;
+      const part = hit[1].split(/[\s,\/]+/).filter(Boolean).map(Number);
+      return part.length > 3 && part[3] < 0.5;
+    };
     const under = (node, fg) => {
       for (let el = node; el; el = el.parentElement) {
         const css = getComputedStyle(el);
-        const bg = solid(css.backgroundColor) || worst(css, fg);
+        const bg = (sheer(css.backgroundColor) ? null : solid(css.backgroundColor)) || worst(css, fg);
         if (bg) return { rgb: bg, sel: el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\s+/).join('.') : '') };
       }
       return { rgb: [255, 255, 255], sel: 'html' };

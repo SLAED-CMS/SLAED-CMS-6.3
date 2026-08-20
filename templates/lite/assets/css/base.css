@@ -9,6 +9,10 @@
 
 /* Root variables: the theme API. A new theme repaints this block and nothing below the marker */
 :root {
+  /* Both modes live in one declaration through light-dark(), so they cannot drift apart. It resolves against the used
+     color-scheme, which is why the scheme is declared here and switched by the two selectors under the marker */
+  color-scheme: light dark;
+
   /* Layout */
   --sl-layout-container: 1320px;
   --sl-layout-sidebar: 400px;
@@ -16,57 +20,59 @@
   --sl-layout-grid: 10px;
 
   /* Colour: page, surfaces, borders */
-  --sl-bg: #ffffff;
-  --sl-bg-subtle: #f2f4f7;
-  --sl-bg-muted: #e4e9ef;
+  --sl-bg: light-dark(#ffffff, #111827);
+  --sl-bg-subtle: light-dark(#f2f4f7, #1a2130);
+  --sl-bg-muted: light-dark(#e4e9ef, #212a3a);
+  /* The band the page is not. It holds its colour in both modes, because the artwork standing on it cannot follow:
+     the footer wordmark and the flag are images with white baked into them, and no token can repaint a picture */
   --sl-bg-inverse: #2a303c;
-  --sl-surface: #f8f9fb;
+  --sl-surface: light-dark(#f8f9fb, #151d2b);
+  /* The well inside the inverse band, one step below it, and fixed for the same reason the band is */
   --sl-surface-sunken: #22272f;
-  --sl-border: #e8ebee;
-  --sl-border-subtle: #ebebee;
-  --sl-border-muted: #d9d9dc;
-  --sl-border-strong: #cad2da;
+  --sl-border: light-dark(#e8ebee, #2a3444);
+  --sl-border-subtle: light-dark(#ebebee, #232c3a);
+  --sl-border-muted: light-dark(#d9d9dc, #35404f);
+  --sl-border-strong: light-dark(#cad2da, #3b4757);
   --sl-border-inverse: #3b4049;
-  /* Waiting on the colour ramp: a fifth hairline one unit from --sl-border */
-  --sl-color-border-stronger: #e7e7eb;
 
-  /* Colour: text */
-  --sl-text: #222222;
-  --sl-text-strong: #223345;
-  --sl-text-muted: #6e7c8b;
-  --sl-text-subtle: #a5b2bf;
-  /* Waiting on the colour ramp: the darkest ink and the colour every heading link carries, neither with a step of its own */
-  --sl-color-text-ink: #111827;
-  --sl-color-text-link: #556779;
+  /* Colour: text. Every tone here is read as text on the page ground or on a panel, so every one of them sits at
+     or above AA against the darkest ground it meets; `subtle` reads the same tone, because a second faint step
+     below this one cannot be spelled without falling under the floor */
+  --sl-text: light-dark(#222222, #e5e7eb);
+  --sl-text-strong: light-dark(#223345, #f3f4f6);
+  --sl-text-muted: light-dark(#64717e, #9aa4b2);
+  --sl-text-subtle: var(--sl-text-muted);
+  /* The muted text and the link that read on the inverse band. The band does not turn over, so neither do they */
+  --sl-text-inverse: #aab3bf;
 
-  /* Colour: brand and status */
-  --sl-primary: #30a2f6;
-  --sl-primary-strong: #2a8fd8;
-  /* Waiting on the colour ramp: the brand blues and the two service tones of the social icons */
-  --sl-color-brand: #64b1e1;
-  --sl-color-brand-banner: #62b4ea;
-  --sl-color-brand-strong: #207fb6;
-  --sl-success: #5c9425;
-  --sl-success-subtle: #9fd779;
-  --sl-success-muted: #96d26d;
-  --sl-warning: #f47a20;
-  --sl-warning-subtle: #ffa024;
-  --sl-danger: #a92c2c;
-  --sl-danger-subtle: #fb7878;
-  --sl-accent: #8c2ca9;
-  --sl-info: #1d9bf0;
-  --sl-info-subtle: #78c6fb;
-  --sl-info-muted: #6dbaf7;
-  --sl-on-solid: #ffffff;
-  --sl-color-tone-neutral: #6b7280;
-  --sl-color-tone-primary: #4c75a3;
+  /* Colour: brand and status. Every step turns over with the page: the base of a family carries its marks and its
+     solid fills, and the `-subtle` and `-muted` steps are the tinted grounds, light on a light page and deep on a
+     dark one. A mark never reads a tint step, because a tint that follows the page cannot also stand on it */
+  --sl-primary: light-dark(#30a2f6, #38a9de);
+  --sl-primary-subtle: light-dark(#64b1e1, #16323f);
+  --sl-primary-strong: light-dark(#1c6e9e, #5cbcea);
+  --sl-primary-inverse: #7cc4ee;
+  --sl-success: light-dark(#4e7e1f, #46c95d);
+  --sl-success-subtle: light-dark(#9fd779, #14301b);
+  --sl-success-muted: light-dark(#96d26d, #1b3d23);
+  --sl-warning: light-dark(#f47a20, #f0932b);
+  --sl-warning-subtle: light-dark(#ffa024, #3a2a12);
+  --sl-danger: light-dark(#a92c2c, #f06a6a);
+  --sl-accent: light-dark(#8c2ca9, #b370cf);
+  --sl-info: light-dark(#1d9bf0, #4cb2f0);
+  --sl-info-subtle: light-dark(#78c6fb, #14283a);
+  --sl-info-muted: light-dark(#6dbaf7, #1a3348);
+  /* The colour that reads on a solid brand fill. In light the fill is dark and the text is white; in dark the ramp
+     reverses and the fill is the bright one, so the text goes dark. The role holds, the value turns over with it */
+  --sl-on-solid: light-dark(#ffffff, #0b1220);
 
-  /* Categorical: the season skins, a set with no order */
+  /* Categorical: the season skins, a set with no order. A season paints the photo band of the page head under a
+     white headline, so each of the five carries that headline at AA large and none of them turns over with the mode */
   --sl-season-winter: #4c8cc9;
   --sl-season-spring: #5d82b7;
-  --sl-season-summer: #98c781;
-  --sl-season-autumn: #be8a7c;
-  --sl-season-newyear: #5e9ad6;
+  --sl-season-summer: #789e66;
+  --sl-season-autumn: #bb887a;
+  --sl-season-newyear: #5e98d6;
 
   /* Control and icon sizes */
   --sl-size-control: 34px;
@@ -121,10 +127,13 @@
   --sl-radius-pill: 999px;
   --sl-radius-circle: 50%;
 
-  /* Shadows */
-  --sl-shadow-xs: 0 1px 2px rgba(42, 48, 60, 0.12);
-  --sl-shadow-float: 0 6px 12px rgba(0, 0, 0, 0.175);
-  --sl-panel-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  /* Shadows: the roles a lift takes, from the hairline under a control to the ring a focused one draws */
+  --sl-shadow-xs: 0 1px 2px light-dark(rgba(42, 48, 60, 0.12), rgba(0, 0, 0, 0.5));
+  --sl-shadow-raised: 0 1px 4px 0 var(--sl-scrim-subtle);
+  --sl-shadow-float: 0 6px 12px light-dark(rgba(0, 0, 0, 0.175), rgba(0, 0, 0, 0.66));
+  --sl-shadow-inset: inset 0 1px 2px 0 var(--sl-scrim-subtle);
+  --sl-shadow-focus: 0 0 0 var(--sl-ring-width) var(--sl-ring-bg);
+  --sl-panel-shadow: 0 4px 16px light-dark(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.62));
 
   /* Components: form field, shared by input, textarea, select and file controls */
   --sl-field-height: 30px;
@@ -133,12 +142,9 @@
   --sl-field-bg: var(--sl-bg);
   --sl-field-border: var(--sl-border-strong);
   --sl-field-radius: var(--sl-radius-1);
-  --sl-field-text: var(--sl-text-subtle);
-  --sl-field-ring: rgba(48, 162, 246, 0.18);
-  --sl-field-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
-  /* Waiting on the shadow roles: one component carries one ring, and the field already spends it */
-  --sl-field-invalid-ring: rgba(169, 44, 44, 0.16);
-  --sl-field-valid-ring: rgba(92, 148, 37, 0.16);
+  --sl-field-text: var(--sl-text-muted);
+  --sl-field-ring: var(--sl-ring-bg);
+  --sl-field-shadow: inset 0 1px 2px light-dark(rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.45));
 
   /* Components: the window canon, one dialog with four axes */
   --sl-modal-width: 560px;
@@ -167,8 +173,6 @@
   --sl-login-pad-y: 5px;
   --sl-login-gap: 8px;
   --sl-login-radius: 15px;
-  /* Waiting on the colour ramp: the colour a login link takes under the pointer */
-  --sl-login-link-hover-color: #2a303c;
   --sl-drop-width: 180px;
   --sl-drop-pad-x: 20px;
   --sl-drop-pad-y: 20px;
@@ -176,22 +180,13 @@
 
   /* Components: the button. Its face is one gradient, its bevel one shadow carrying both edges and the lift under
      them, and its label a highlight one step brighter than the face; the mix is how much of that brightness it takes */
-  --sl-btn-bg: linear-gradient(to top, #f8f9fb 0%, #ebedf1 100%);
-  --sl-btn-text: #2a303c;
+  --sl-btn-bg: linear-gradient(to top, light-dark(#f8f9fb, #232d3d) 0%, light-dark(#ebedf1, #1a2230) 100%);
+  --sl-btn-text: light-dark(#2a303c, #e5e7eb);
   --sl-btn-shadow:
-    inset 0 0 0 1px rgba(247, 251, 255, 0.95), 0 0 0 1px rgba(202, 210, 218, 0.85),
-    0 2px 4px rgba(42, 48, 60, 0.16);
+    inset 0 0 0 1px light-dark(rgba(247, 251, 255, 0.95), rgba(255, 255, 255, 0.06)),
+    0 0 0 1px light-dark(rgba(202, 210, 218, 0.85), rgba(0, 0, 0, 0.6)),
+    0 2px 4px light-dark(rgba(42, 48, 60, 0.16), rgba(0, 0, 0, 0.55));
   --sl-btn-mix: 85%;
-
-  /* The changelog page, a colour island that the ramp folds onto the roles */
-  --sl-changelog-bg: #f9fafb;
-  --sl-changelog-border: #e5e7eb;
-  --sl-changelog-text: #374151;
-  --sl-changelog-meta: #6b7280;
-  --sl-changelog-code: #1f2937;
-  --sl-changelog-add: #10b981;
-  --sl-changelog-del: #ef4444;
-  --sl-changelog-header: #f3f4f6;
 
   /* Gradients: each one at a single address, its stops read from the colour tokens */
   --sl-grad-line: linear-gradient(
@@ -199,14 +194,14 @@
     rgba(100, 177, 225, 0) 0%,
     rgba(100, 177, 225, 0.35) 12%,
     rgba(48, 162, 246, 0.7) 32%,
-    var(--sl-color-brand-strong) 50%,
+    var(--sl-primary-strong) 50%,
     rgba(48, 162, 246, 0.7) 68%,
     rgba(100, 177, 225, 0.35) 88%,
     rgba(100, 177, 225, 0) 100%
   );
   --sl-grad-gloss: linear-gradient(
     145deg,
-    rgba(255, 255, 255, 0.18),
+    light-dark(rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.07)),
     rgba(255, 255, 255, 0)
   );
   --sl-grad-progress-1: linear-gradient(to top, #00adee 10%, var(--sl-progress-1) 90%);
@@ -224,8 +219,8 @@
   --sl-progress-5: #8c2ca9;
 
   /* Components: the level meter track. The fill takes the track less its own hairline on each side */
-  --sl-progress-bg: #e7e7eb;
-  --sl-progress-border: #ccc;
+  --sl-progress-bg: var(--sl-border);
+  --sl-progress-border: var(--sl-border-strong);
   --sl-progress-radius: 3px;
   --sl-progress-height: 10px;
 
@@ -237,9 +232,10 @@
 
   /* Colour: the washes and veils. A tint lies over what is behind it, a scrim hides it. The two lighter steps are
      the veils the theme's own shadows and darkened discs are drawn in; the base is the one the editor package reads */
-  --sl-scrim-subtle: rgba(0, 0, 0, 0.1);
-  --sl-scrim-muted: rgba(0, 0, 0, 0.2);
+  --sl-scrim-subtle: light-dark(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.4));
+  --sl-scrim-muted: light-dark(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.55));
   --sl-scrim: color-mix(in srgb, var(--sl-text-strong) 34%, transparent);
+  --sl-scrim-strong: color-mix(in srgb, var(--sl-text-strong) 58%, transparent);
   --sl-tint: color-mix(in srgb, var(--sl-primary) 10%, transparent);
   --sl-tint-strong: color-mix(in srgb, var(--sl-primary) 24%, transparent);
 
@@ -255,6 +251,29 @@
   --sl-dial-dur: 0.05s;
   /* The overshoot a poll option answers a click with: a curve leaving the 0-1 range is a different kind of motion */
   --sl-vote-ease: cubic-bezier(0.3, 1.6, 0.5, 1);
+  --sl-alert-dur: 1.8s;
+  --sl-fav-dur: 0.55s;
+  /* The overshoot the favourite icon pops with, the same kind of motion as the poll option above */
+  --sl-fav-ease: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --sl-flash-dur: 5s;
+  /* Freshness is read as a rate: the chip glows at one, and each step of age breathes at its own, from the
+     fastest flame to the slowest turn. Five steps, five characters, which is why no ladder governs them */
+  --sl-fresh-dur: 1.5s;
+  --sl-fresh-now-dur: 0.8s;
+  --sl-fresh-day-dur: 1.5s;
+  --sl-fresh-days-dur: 1.9s;
+  --sl-fresh-week-dur: 4s;
+  --sl-fresh-month-dur: 2.6s;
+  --sl-loading-dur: 0.8s;
+  --sl-marquee-dur: 5s;
+  /* A marquee moves in discrete steps, one per character of the line it carries, so its curve is a step function */
+  --sl-marquee-ease: steps(50);
+  --sl-modal-dur: 0.22s;
+  /* The overshoot a dialog opens with: a curve leaving the 0-1 range is a different kind of motion, not a ladder step */
+  --sl-modal-ease: cubic-bezier(0.34, 1.3, 0.64, 1);
+  --sl-pulse-dur: 2s;
+  --sl-skel-dur: 1.2s;
+  --sl-spin-dur: 6s;
 
   /* Layers: the roles a stack may take, in the order they overlap. A value between two of them is a
      layer the ladder is missing, never a number picked to win one argument */
@@ -266,9 +285,228 @@
   --sl-z-modal: 3000;
   --sl-z-toast: 10000;
 
-  /* The focus ring the editor package draws */
+  /* The focus ring: one width, one gap and one alpha for the whole theme, so an outline and a box-shadow
+     draw the same ring. A ring in a status colour mixes that colour at the same alpha at the sites that need one */
   --sl-ring-width: 2px;
   --sl-ring-gap: 2px;
+  --sl-ring-mix: 18%;
+  --sl-ring-bg: color-mix(in srgb, var(--sl-primary) var(--sl-ring-mix), transparent);
+
+  /* Components: geometry. A figure sizing a control, a panel, a column or a page region has one address here.
+     What the figure sizes decides whether it is a token, never how large it is */
+  --sl-alert-border: 3px;
+  --sl-arrow-width: 8px;
+  --sl-aside-width: 170px;
+  --sl-ava-border: 4px;
+  /* The disc the avatar stands on: the halo it wears against the page, and the lift under it */
+  --sl-avatar-shadow: 0 0 0 4px var(--sl-bg), var(--sl-panel-shadow);
+  --sl-bar-shadow: 0 1px 2px 0 var(--sl-scrim-muted);
+  --sl-avatar-width: 64px;
+  --sl-avatar-height: 64px;
+  --sl-avatar-min-height: 78px;
+  --sl-badge-width: 20px;
+  --sl-badge-height: 20px;
+  --sl-btn-height: 30px;
+  --sl-bullet-bg: light-dark(#65486c, #b98cc2);
+  --sl-bullet-width: 9px;
+  --sl-bullet-height: 9px;
+  --sl-cab-act-width: 76px;
+  --sl-cab-msg-width: 28px;
+  --sl-cab-msg-height: 28px;
+  --sl-cab-ring-width: 112px;
+  --sl-cab-ring-height: 112px;
+  --sl-calc-width: 65px;
+  --sl-card-shadow: 0 1px 3px light-dark(rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.42));
+  --sl-changelog-width: 1400px;
+  --sl-changelog-body-border: 4px;
+  --sl-changelog-files-height: 300px;
+  --sl-changelog-stat-width: 50px;
+  --sl-check-tick-border: 2px;
+  --sl-check-tick-width: 4px;
+  --sl-check-tick-height: 8px;
+  /* Every tinted pill in this theme paints one wash of its own colour, so one declaration serves every tone,
+     and the pointer deepens the same wash rather than naming a second colour */
+  --sl-chip-mix: 14%;
+  --sl-chip-bg: color-mix(in srgb, currentColor var(--sl-chip-mix), transparent);
+  --sl-chip-tint-mix: 24%;
+  --sl-chip-tint-bg: color-mix(in srgb, currentColor var(--sl-chip-tint-mix), transparent);
+  --sl-col-amount-width: 15%;
+  --sl-col-check-width: 36px;
+  --sl-col-form-width: 35%;
+  --sl-col-last-width: 140px;
+  --sl-col-num-width: 45px;
+  --sl-col-status-width: 80px;
+  --sl-com-width: 130px;
+  --sl-com-arrow-width: 17px;
+  --sl-com-ava-border: 2px;
+  --sl-com-ava-width: 64px;
+  --sl-com-ava-height: 64px;
+  --sl-com-item-width: 93px;
+  --sl-crumb-bar-height: 2px;
+  --sl-demo-height: 76px;
+  /* The halo a speed dial opens behind its items: the step it clears the chip by on every side */
+  --sl-dial-gap: 6px;
+  --sl-donut-width: 76px;
+  --sl-donut-height: 76px;
+  /* The thickness of the session ring, which is the donut less its hole, halved */
+  --sl-donut-ring: 8px;
+  /* The two tabs standing on the page edges: how tall one is, and the gutter a wide page reserves for one per side */
+  /* The white that does not turn over. The photo band of the page head is a photograph and the footer wordmark is
+     a picture with white baked into it: neither has a light and a dark variant, so the words standing on them hold
+     their colour in both modes. Every other ground in this theme turns over, and its text turns over with it */
+  --sl-band-text: #ffffff;
+  --sl-edge-width: 40px;
+  --sl-edge-height: 190px;
+  --sl-editor-height: 100px;
+  --sl-entry-height: 42px;
+  --sl-f-title-width: 28px;
+  --sl-f-title-height: 3px;
+  /* The favourite burst: the ring it throws off, how much of the brand colour that ring carries, and the two
+     sets of sparks, one per pseudo-element, each a single artwork living at a single address */
+  --sl-fav-ring: 14px;
+  --sl-fav-mix: 60%;
+  --sl-fav-shadow:
+    13px -13px var(--sl-warning), -13px -13px var(--sl-primary), 15px 7px var(--sl-warning);
+  --sl-spark-shadow:
+    -15px 7px var(--sl-primary), 10px 14px var(--sl-warning), -10px 14px var(--sl-primary);
+  --sl-flash-max-height: 200px;
+  --sl-flash-bar-height: 2px;
+  --sl-fp-width: 160px;
+  --sl-fp-height: 40px;
+  --sl-fp-ava-width: 100px;
+  --sl-fp-ava-height: 100px;
+  --sl-header-height: 116px;
+  /* A tile paints its ground and its border from its own colour, which is what makes one rule serve every tone.
+     Where that colour is itself a scoped tone, only the ratio can be hoisted, and these two are it */
+  --sl-ico-mix: 12%;
+  --sl-ico-bg: color-mix(in srgb, currentColor var(--sl-ico-mix), var(--sl-bg));
+  --sl-ico-border: color-mix(in srgb, currentColor 26%, var(--sl-border));
+  --sl-tile-mix: 45%;
+  --sl-hub-head-height: 34px;
+  --sl-hub-row-height: 46px;
+  --sl-info-row-height: 31px;
+  --sl-invoice-width: 640px;
+  --sl-invoice-logo-width: 40%;
+  --sl-item-height: 38px;
+  --sl-letter-width: 16px;
+  --sl-letter-height: 16px;
+  --sl-live-dot-border: 2px;
+  --sl-live-dot-width: 12px;
+  --sl-live-dot-height: 12px;
+  --sl-loading-width: 73px;
+  --sl-loading-height: 17px;
+  --sl-loading-dot-width: 6px;
+  --sl-loading-dot-height: 6px;
+  /* The three dots of the loader are one element and two shadows, so the step between them lives here */
+  --sl-loading-dot-gap: 12px;
+  --sl-logo-height: 59px;
+  --sl-login-drop-width: 260px;
+  --sl-madein-width: 54px;
+  --sl-menu-width: 150px;
+  --sl-meter-height: 8px;
+  --sl-mode-width: var(--sl-size-chip);
+  --sl-mode-height: var(--sl-size-chip);
+  --sl-modal-border: 3px;
+  --sl-modal-btn-mix: 86%;
+  --sl-modal-act-bg: color-mix(in srgb, currentColor 13%, transparent);
+  --sl-modal-act-width: 28px;
+  --sl-modal-act-height: 28px;
+  --sl-modal-btn-width: 116px;
+  --sl-modal-btn-height: 32px;
+  --sl-msg-width: 440px;
+  --sl-msg-brand-width: 240px;
+  --sl-nav-width: 42px;
+  --sl-nav-height: 42px;
+  --sl-pager-item-width: 27px;
+  --sl-pager-dot-width: 13px;
+  --sl-pager-dot-height: 13px;
+  /* The current slide is the same dot turned into a ring, so its face is the dot less this edge on each side */
+  --sl-pager-dot-ring: 4px;
+  --sl-panel-feed-height: 150px;
+  --sl-pmf-ava-width: 26px;
+  --sl-pmf-ava-height: 26px;
+  --sl-pmf-blank-width: 420px;
+  --sl-pmf-chip-width: 19px;
+  --sl-pmf-chip-height: 19px;
+  --sl-pmf-day-bg: color-mix(in srgb, var(--sl-bg-subtle) 94%, transparent);
+  --sl-pmf-filter-height: 22px;
+  --sl-pmf-head-width: 40ch;
+  --sl-pmf-mate-width: 40px;
+  --sl-pmf-mate-height: 40px;
+  --sl-pmf-meta-width: 46%;
+  --sl-pmf-pane-height: 340px;
+  --sl-pmf-slot-width: 28px;
+  --sl-pmf-slot-height: 28px;
+  --sl-pmf-text-width: 62ch;
+  --sl-pmf-who-width: 44px;
+  --sl-pmf-who-height: 44px;
+  --sl-popover-min-width: 220px;
+  --sl-preview-width: 24px;
+  --sl-preview-height: 24px;
+  --sl-preview-max-width: 48px;
+  --sl-preview-max-height: 48px;
+  --sl-profile-ava-width: 112px;
+  --sl-profile-ava-height: 112px;
+  --sl-profile-dot-border: 3px;
+  --sl-profile-dot-width: 16px;
+  --sl-profile-dot-height: 16px;
+  /* A live element answers with a ring that grows out of it and fades: how far it reaches, and how much
+     of its own colour it starts with */
+  --sl-proof-bg: color-mix(in srgb, var(--sl-danger) 6%, var(--sl-surface));
+  --sl-proof-border: color-mix(in srgb, var(--sl-danger) 35%, var(--sl-border-subtle));
+  --sl-pulse-ring: 8px;
+  --sl-pulse-mix: 55%;
+  --sl-qr-width: min(64vw, 256px);
+  --sl-radio-height: 20px;
+  --sl-rank-height: 26px;
+  --sl-row-bg: color-mix(in srgb, var(--sl-warning) 7%, transparent);
+  --sl-scroll-height: 190px;
+  --sl-search-width: 340px;
+  --sl-search-min-width: 180px;
+  /* The round search button carries one bevel: an inner highlight and the drop under it. The pointer changes
+     its face, never its lift, which is the law every other control in this theme already follows */
+  --sl-search-shadow:
+    inset 0 1px 1px 0 light-dark(rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.07)),
+    0 1px 2px light-dark(rgba(42, 48, 60, 0.12), rgba(0, 0, 0, 0.5));
+  --sl-sep-height: 16px;
+  /* The panel the user card unfolds is pinned this far above the card's bottom edge and may not grow past it */
+  --sl-session-gap: 36px;
+  --sl-shot-max-height: min(62vh, 460px);
+  --sl-shot-side-height: 40vh;
+  --sl-site-height: 20px;
+  --sl-site-max-width: 170px;
+  --sl-site-img-width: 260px;
+  --sl-site-img-height: 185px;
+  --sl-skel-height: 24px;
+  --sl-skel-width: 54%;
+  --sl-slide-width: 1920px;
+  --sl-slide-height: 440px;
+  --sl-slide-min-height: 260px;
+  --sl-slide-cont-width: 450px;
+  /* The slider prints its words straight onto a photograph, so they carry their own drop against it */
+  --sl-slide-shadow: 0 1px 2px var(--sl-scrim-muted);
+  --sl-sort-width: 10px;
+  /* A nested list marks its depth by repeating its own bullet, one step to the right per level */
+  --sl-sublist-bg: light-dark(#7282a3, #97a8c2);
+  --sl-sublist-two-bg: light-dark(#b9aca6, #cebeb1);
+  --sl-sublist-shadow: 15px 0 0 light-dark(#97a8c2, #7282a3);
+  --sl-sublist-two-shadow: 15px 0 0 light-dark(#cebeb1, #b9aca6), 30px 0 0 light-dark(#d9c9bc, #a1958a);
+  /* The gap the knob of a switch keeps from its track on every side, and the lift the knob rides on */
+  --sl-switch-gap: 2px;
+  --sl-switch-knob-shadow: 0 1px 3px light-dark(rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.6));
+  --sl-table-border: 2px;
+  --sl-table-height: 30px;
+  --sl-tooltip-min-width: 150px;
+  --sl-tooltip-max-width: 300px;
+  --sl-topbar-height: 50px;
+  /* The height a dialog button takes on a narrow screen, where the pointer is a finger rather than a cursor */
+  --sl-touch-height: 40px;
+  --sl-veil-height: 18px;
+  --sl-view-max-width: 680px;
+  --sl-vote-width: 15px;
+  --sl-vote-height: 15px;
+  --sl-wordmark-width: 170px;
+  --sl-wordmark-img-width: 145px;
 
   /* Components the editor package sizes: the toolbar window, the upload panel, the emoji picker */
   --sl-editor-mode-height: 28px;
@@ -305,6 +543,16 @@
 }
 
 /* --- end tokens --- */
+
+/* The mode switch itself, and the only rules that name it. data-theme carries light, dark or auto; anything else,
+   including an absent attribute, leaves the page on the operating system's answer */
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
 
 /* Reset: the attribute wins over every class, because a component setting display would otherwise keep on the screen what the page has taken off it */
 [hidden] {
@@ -464,7 +712,7 @@ button {
 a {
   outline: none;
   text-decoration: none;
-  color: var(--sl-primary);
+  color: var(--sl-primary-strong);
 }
 
 a:hover {
@@ -577,7 +825,7 @@ hr {
   margin-top: var(--sl-space-7);
   margin-bottom: var(--sl-space-4);
   border: 0;
-  border-top: 1px solid #e4e3e7;
+  border-top: 1px solid var(--sl-border);
 }
 
 ul {
@@ -628,9 +876,9 @@ input[disabled] {
 
 blockquote {
   background: var(--sl-bg);
-  border-left: 1px solid #b8c3cd;
-  border-right: 1px solid #b8c3cd;
-  color: #798086;
+  border-left: 1px solid var(--sl-border-strong);
+  border-right: 1px solid var(--sl-border-strong);
+  color: var(--sl-text-muted);
   font-family:
     Georgia,
     system-ui,
@@ -643,7 +891,7 @@ blockquote {
 }
 
 blockquote:before {
-  color: #b8c3cd;
+  color: var(--sl-border-strong);
   content: "\201c";
   font-size: var(--sl-font-display);
   line-height: 0.1em;
@@ -652,7 +900,7 @@ blockquote:before {
 }
 
 blockquote:after {
-  color: #b8c3cd;
+  color: var(--sl-border-strong);
   content: "\201d";
   font-size: var(--sl-font-display);
   line-height: 0.1em;

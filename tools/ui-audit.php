@@ -793,6 +793,20 @@ function getResolvedValue(string $val, array $api): string {
     return $val;
 }
 
+# Whether one value is a shadow: an offset list, where a colour and a length may each arrive through a token.
+# Reading the colour off a literal alone would file a shadow built from the theme's own scrim or ring as something
+# else, and the same name would then hold two kinds across two themes for no reason a reader could see
+function isShadowValue(string $val): bool {
+    if (str_contains(strtolower($val), 'gradient(')) return false;
+    foreach (getArgParts($val) as $layer) {
+        $atom = preg_split('/\s+/', trim((string)preg_replace('/\b(var|rgba?|hsla?|color-mix|light-dark|calc)\([^()]*(\([^()]*\)[^()]*)*\)/i', 'X', $layer)));
+        if (count($atom) < 3) return false;
+    }
+    return (bool)preg_match('/^inset\s/i', $val)
+        || (bool)(preg_match('/(^|\s)-?[\d.]+(px|em|rem)(\s|$)/i', $val) && preg_match('/(#|rgba?\(|hsla?\(|currentcolor|var\()/i', $val))
+        || (bool)(preg_match('/^[0\s]+var\(/i', $val) && preg_match('/var\(.*var\(/is', $val));
+}
+
 # Name the kind of one token value, which is how one name holding two kinds across themes is caught
 function getValueKind(string $val): string {
     $val = filterValue($val);
@@ -803,7 +817,7 @@ function getValueKind(string $val): string {
     # A colour carrying both modes and a colour mixed from two others are still colours; without this a token
     # that gains its dark half reads as a different kind from the same name in a theme that has not gained it yet
     if (preg_match('/^(light-dark|color-mix)\(/i', $val)) return 'color';
-    if (preg_match('/(^|\s)-?[\d.]+(px|em|rem)(\s|$)/i', $val) && preg_match('/(^inset\s|#|rgba?\(|hsla?\(|currentcolor)/i', $val)) return 'shadow';
+    if (isShadowValue($val)) return 'shadow';
     if (getPartKind($val) === 'length') return 'length';
     if (getPartKind($val) === 'time') return 'time';
     if (getPartKind($val) === 'number') return 'number';

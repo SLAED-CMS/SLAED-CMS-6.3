@@ -553,6 +553,7 @@ function rech(): void {
 			$cenddate = ($cenddate != '0') ? date(_TIMESTRING, $cenddate) : _UNLIMITED;
 			echo $tpl->getHtmlFrag('shop-invoice', [
 				'charset' => _CHARSET,
+				'mode' => getThemeMode(),
 				'title' => $conf['sitename'].' '.$defis.' '._CLIENTINFO.' '.$defis.' '._RECHN,
 				'logo_src' => getThemeImagePath('logos/'.$conf['site_logo']),
 				'logo_alt' => $conf['sitename'],

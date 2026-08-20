@@ -133,6 +133,19 @@ final class UiAuditTest extends TestCase
     }
 
     #[Test]
+    public function testAShadowIsStillAShadowWhenItsPartsArriveThroughTokens(): void
+    {
+        $api = $this->getModel('shadow.css', true)['api'];
+        $why = 'a shadow reading the theme scrim or the ring geometry is a shadow; reading the colour off a literal alone '
+            .'would file it as something else and the same name would hold two kinds across two themes for no visible reason';
+        foreach (['--sl-shadow-literal', '--sl-shadow-tinted', '--sl-shadow-ringed', '--sl-shadow-inset'] as $name) {
+            $this->assertSame('shadow', getValueKind($api[$name]), $name.': '.$why);
+        }
+        $this->assertNotSame('shadow', getValueKind($api['--sl-not-a-shadow']), 'one token standing alone is an alias, never a shadow');
+        $this->assertNotSame('shadow', getValueKind($api['--sl-also-not']), 'one length is a length, never a shadow');
+    }
+
+    #[Test]
     public function testBareNumbersAreFoundAndNeutralOnesAreNot(): void
     {
         $model = $this->getModel('bare.css');

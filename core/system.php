@@ -1537,7 +1537,7 @@ function checkCachePoison(bool $mark = false): bool {
 
 # Validate one dynamic-region type and parameter against the approved marker contract; only these exact combinations may ever be signed or rendered
 function checkDynamicMark(string $type, string $par): bool {
-    if ($type === 'token') return in_array($par, ['ajax', 'account', 'scheduler'], true);
+    if ($type === 'token') return in_array($par, ['ajax', 'account', 'scheduler', 'mode'], true);
     if ($type === 'captcha') return in_array($par, ['login', 'register', 'comment', 'contact'], true);
     if ($type === 'voting') return preg_match('#^[1-9][0-9]{0,8}$#', $par) === 1;
     return false;
@@ -1611,6 +1611,9 @@ function checkPageCache(): bool {
     if (empty($conf['cache'])) return false;
     if ($conf['cache'] == 2 && !$home) return false;
     if (is_user() || isAdmin()) return false;
+    # A visitor who picked a colour mode carries it in the document attribute and in the toggle's own icon, and the cache key is
+    # the route alone: a stored copy would hand the next visitor someone else's mode, so only the default `auto` build is cacheable
+    if (getThemeMode() !== 'auto') return false;
     if (!empty($_SESSION[$conf['user_c'].'-flash'])) return false;
     $ops = ['news' => ['']];
     if (!in_array((string)($op ?? ''), $ops[$name ?? ''] ?? [], true)) return false;
@@ -1912,6 +1915,7 @@ function setHead(array $seo = []): void {
     $sitevars = [
         'theme' => getTheme(),
         'mode' => getThemeMode(),
+        'mode_html' => getThemeModeSwitch('index.php'),
         'lang' => substr(_LOCALE, 0, 2),
         'sitename' => $conf['sitename'] ?? '',
         'logo' => $conf['site_logo'] ?? '',
@@ -3468,6 +3472,28 @@ function getTheme(): string {
 function getThemeMode(): string {
     $mode = getCookies('mode');
     return in_array($mode, ['light', 'dark'], true) ? $mode : 'auto';
+}
+
+# Store the colour mode a toggle asked for; anything but light or dark drops the cookie and hands the page back to the operating system
+function setThemeMode(string $mode): void {
+    if (in_array($mode, ['light', 'dark'], true)) setCookies('mode', time() + 31536000, $mode);
+    else setCookiesDelete('mode');
+}
+
+# Render the colour mode toggle: one button that steps the choice on to the next mode and shows the current one, for the panel and the site alike
+# The value travels in a POST body with a token because setCookies() marks the cookie httponly, so no script can write it and a script toggle would fail without a word
+function getThemeModeSwitch(string $action): string {
+    global $tpl;
+    $next = ['auto' => 'light', 'light' => 'dark', 'dark' => 'auto'];
+    $icon = ['auto' => 'circle-half', 'light' => 'sun', 'dark' => 'moon'];
+    $name = ['auto' => _MODE_AUTO, 'light' => _MODE_LIGHT, 'dark' => _MODE_DARK];
+    $mode = getThemeMode();
+    $step = $next[$mode];
+    $html = '';
+    foreach (['op' => 'mode', 'mode' => $step, 'refer' => '1', 'token' => getPageToken('mode')] as $key => $val) {
+        $html .= $tpl->getHtmlFrag('hidden', ['name_attr' => $key, 'value_attr' => $val, 'input_attr' => '']);
+    }
+    return $tpl->getHtmlFrag('mode-switch', ['action' => $action, 'hidden' => $html, 'icon_name' => $icon[$mode], 'title' => $name[$step]]);
 }
 
 # Validate that a theme directory contains the canonical structure: base/theme CSS, icon library, system avatars, presets, and theme assets declared by editor manifests

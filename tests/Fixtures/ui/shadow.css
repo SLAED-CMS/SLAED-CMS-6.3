@@ -2,3 +2,13 @@
 .sl-one {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
+
+/* A shadow whose colour and whose length each arrive through a token is still a shadow */
+:root {
+  --sl-shadow-literal: 0 4px 16px rgba(0, 0, 0, 0.2);
+  --sl-shadow-tinted: 0 1px 4px 0 var(--sl-scrim-subtle);
+  --sl-shadow-ringed: 0 0 0 var(--sl-ring-width) var(--sl-ring-bg);
+  --sl-shadow-inset: inset 0 1px 2px 0 var(--sl-scrim-subtle);
+  --sl-not-a-shadow: var(--sl-primary);
+  --sl-also-not: 12px;
+}

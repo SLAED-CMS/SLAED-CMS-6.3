@@ -1,5 +1,5 @@
 {
-    "generated": "2026-08-20T07:16:09Z",
+    "generated": "2026-08-20T15:45:04Z",
     "themes": {
         "admin": {
             "count": 0,
@@ -19,21 +19,21 @@
             "contrast": 0
         },
         "lite": {
-            "count": 386,
+            "count": 0,
             "bare": 0,
-            "dup": 266,
-            "names": 18,
+            "dup": 246,
+            "names": 0,
             "dead": 0,
-            "single": 67,
+            "single": 206,
             "alias": 0,
             "unsat": 0,
             "unmet": 2,
-            "scoped": 103,
+            "scoped": 92,
             "clash": 0,
             "classes": 10,
             "important": 19,
-            "tokens": 212,
-            "contrast": 53
+            "tokens": 404,
+            "contrast": 0
         }
     },
     "global": {
