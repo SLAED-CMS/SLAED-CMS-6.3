@@ -906,6 +906,15 @@ function getRepoFiles(array $exts, array $dirs): array {
     return $out;
 }
 
+# The names a frozen API block used to declare and no longer does. A frozen API may still gain a role - a theme that needs
+# one is not made wrong by an addition - but it may never lose or rename one, because after distribution the copies read
+# names this repository can no longer reach. An empty answer for an unfrozen theme is the same answer as no history at all
+function getLostNames(string $theme, array $now, array $base): array {
+    if (!(getContract()['frozen'] ?? false)) return [];
+    $was = $base['api'][$theme] ?? null;
+    return $was === null ? [] : array_values(array_diff($was, $now));
+}
+
 # Selectors and templates that differ between the two themes, which is what canon has to reconcile
 function checkCrossTheme(): array {
     $cont = getContract();
@@ -945,19 +954,38 @@ function checkCrossTheme(): array {
         $two = implode(', ', array_diff($twin['props'], $body['props']));
         $out['structure'][$name] = ['only' => [$keys[0] => $one, $keys[1] => $two], 'why' => $allow[$name] ?? ''];
     }
+    $fork = $cont['templates'] ?? [];
+    $canon = $cont['canon'] ?? [];
     foreach (['fragments', 'partials', 'layouts', 'pages'] as $dir) {
         $one = UI_ROOT.'/'.$cont['themes'][$keys[0]]['root'].'/'.$dir;
         $two = UI_ROOT.'/'.$cont['themes'][$keys[1]]['root'].'/'.$dir;
         if (!is_dir($one) || !is_dir($two)) continue;
-        $stat = ['shared' => 0, 'same' => 0, 'diff' => []];
+        $stat = ['shared' => 0, 'same' => 0, 'diff' => [], 'canon' => in_array($dir, $canon, true)];
         foreach (scandir($one) ?: [] as $file) {
             if (!is_file($one.'/'.$file) || !is_file($two.'/'.$file)) continue;
             $stat['shared']++;
             if (file_get_contents($one.'/'.$file) === file_get_contents($two.'/'.$file)) $stat['same']++;
-            else $stat['diff'][] = $dir.'/'.$file;
+            else $stat['diff'][$dir.'/'.$file] = $fork[$dir.'/'.$file] ?? '';
         }
         $out['templates'][$dir] = $stat;
     }
+    return $out;
+}
+
+# Every template inside canon that the two themes spell differently, whether or not the difference is answered for
+function getCanonForks(array $data): array {
+    $out = [];
+    foreach ($data['templates'] as $stat) {
+        if (!$stat['canon']) continue;
+        foreach ($stat['diff'] as $item => $why) $out[$item] = $why;
+    }
+    return $out;
+}
+
+# The canon templates whose divergence carries no written reason, which is the half of the cross count the markup holds
+function getOpenForks(array $data): array {
+    $out = [];
+    foreach (getCanonForks($data) as $item => $why) if ($why === '') $out[] = $item;
     return $out;
 }
 
@@ -1124,6 +1152,9 @@ function setBaselineData(array $now): int {
             if ($was !== null && $val > $was && in_array($key, $held, true)) $bad[] = $name.'.'.$key.': '.$val.' is above the stored '.$was;
         }
     }
+    foreach ($now['api'] ?? [] as $name => $list) {
+        foreach (getLostNames($name, $list, $old) as $one) $bad[] = $name.' no longer declares '.$one.', which a frozen API may not do';
+    }
     foreach ($now['global'] ?? [] as $key => $val) {
         $was = $old['global'][$key] ?? null;
         if ($was !== null && $val > $was) $bad[] = 'global.'.$key.': '.$val.' is above the stored '.$was;
@@ -1220,9 +1251,14 @@ if (isset($args['cross'])) {
     }
     echo "\n  ".$open.' of '.count($data['structure'])." structural divergences carry no written reason\n";
     foreach ($data['templates'] as $dir => $stat) {
-        echo "\n".$dir.': shared '.$stat['shared'].', identical '.$stat['same'].', divergent '.count($stat['diff'])."\n";
-        foreach ($stat['diff'] as $item) echo '  '.$item."\n";
+        echo "\n".$dir.': shared '.$stat['shared'].', identical '.$stat['same'].', divergent '.count($stat['diff']);
+        echo $stat['canon'] ? ", which canon has to answer for\n" : ", outside canon: the two shells differ by nature\n";
+        foreach ($stat['diff'] as $item => $why) {
+            echo '  '.$item."\n";
+            if ($stat['canon']) echo '      '.($why === '' ? 'NO REASON GIVEN' : $why)."\n";
+        }
     }
+    echo "\n  ".count(getOpenForks($data)).' of '.count(getCanonForks($data))." divergent canon templates carry no written reason\n";
     exit(0);
 }
 
@@ -1235,6 +1271,11 @@ $base = getBaselineData();
 foreach ($want as $name) {
     $data = getThemeAudit($name);
     $store['themes'][$name] = $data['totals'];
+    $store['api'][$name] = array_keys($data['model']['api']);
+    sort($store['api'][$name]);
+    $lost = getLostNames($name, $store['api'][$name], $base);
+    setSection('names the frozen API of '.$name.' no longer declares, which every theme copied from it still reads:', $lost);
+    if ($lost) $fail = 1;
 
     if (isset($args['dist'])) {
         $prop = is_string($args['dist']) ? $args['dist'] : 'padding';
@@ -1320,8 +1361,9 @@ if (!$only && count($want) === count($cont['themes'])) {
     $cross = checkCrossTheme();
     $open = [];
     foreach ($cross['structure'] as $item => $info) if ($info['why'] === '') $open[] = $item;
+    foreach (getOpenForks($cross) as $item) $open[] = $item;
     $store['global'] = ['kinds' => count($kinds), 'cross' => count($open), 'markup' => $sum];
-    setSection('shared selectors whose property sets differ with no written reason, which --cross explains:', $open);
+    setSection('shared selectors and canon templates that diverge with no written reason, which --cross explains:', $open);
     $said = array_map(fn($v) => $v['name'].': '.implode(', ', array_map(fn($k, $t) => $t.' is a '.$k, $v['kinds'], array_keys($v['kinds']))), $kinds);
     setSection('one name, two kinds across themes:', $said);
     echo "\nglobal\n";

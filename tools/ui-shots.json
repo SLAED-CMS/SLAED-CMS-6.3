@@ -9,6 +9,9 @@
   "tries": 10,
   "env": { "user": "SLAED_UI_USER", "pass": "SLAED_UI_PASS" },
 
+  "_logs": "read before and after the --newtheme walk: a theme that renders a page and writes a notice behind it has still failed, and the page cannot be asked about it",
+  "logs": ["storage/logs/error_php.log", "storage/logs/error_sql.log", "storage/logs/error_site.log"],
+
   "viewports": [
     { "name": "sm", "width": 560, "height": 900 },
     { "name": "md", "width": 768, "height": 1000 },
@@ -41,11 +44,11 @@
   },
 
   "_mask": "hidden but still taking their space: what moves inside a box of stable size, and what must not be published. The baselines are committed, so the IP column of the user list and the mail fields of the configuration are hidden - a guard against a layout change has no business carrying anyone's address into the repository",
-  "_mask2": "the online counter, the four audience lines of the session block, the two figures the profile prints from the site counter and the bars of the statistic page all count whoever is on the stand at that second, including the rig's own session, so they move between two runs that render the same theme. The control beside them refetches its own block on a timer, and an element that replaces itself every four seconds cannot be part of a still image: the shot lands wherever the swap happened to be",
-  "mask": [".sl-captcha", ".sl-session-donut", "[data-sl-session-online]", ".sl-session-line b", "[hx-trigger*=\"every\"]", ".sl-avatar img", ".sl-generates", ".sl-stat-num", ".sl-views", ".sl-coms", "time", ".sl-col-ip", ".sl-user-points b", ".sl-cab-ring b", ".sl-statx-bv", "input[name=\"adminmail\"]", "input[name=\"mailfmail\"]", "input[name=\"mailhost\"]", "input[name=\"mailpass\"]"],
+  "_mask2": "the online counter, the four audience lines of the session block, the two figures the profile prints from the site counter and the bars of the statistic page all count whoever is on the stand at that second, including the rig's own session, so they move between two runs that render the same theme. The control beside them refetches its own block on a timer, and an element that replaces itself every four seconds cannot be part of a still image: the shot lands wherever the swap happened to be. The bar of the statistic page was masked and the count and the per cent printed beside it were not, so the page kept flapping around the threshold on a walk long enough for the rig own visits to move the figures - a floor measured from two renders seconds apart cannot see a drift that takes ten minutes",
+  "mask": [".sl-captcha", ".sl-session-donut", "[data-sl-session-online]", ".sl-session-line b", "[hx-trigger*=\"every\"]", ".sl-avatar img", ".sl-generates", ".sl-stat-num", ".sl-views", ".sl-coms", "time", ".sl-col-ip", ".sl-user-points b", ".sl-cab-ring b", ".sl-statx-bv", ".sl-statx-bc", ".sl-statx-bp", ".sl-statx-hours svg", ".sl-session-right", "input[name=\"adminmail\"]", "input[name=\"mailfmail\"]", "input[name=\"mailhost\"]", "input[name=\"mailpass\"]"],
 
-  "_drop": "taken out of layout entirely: the site rotates these on every request, so their height is not the same twice and a diff of the whole page would be a diff of the dice. The debug sections are here because their row count follows the number of SQL queries the request happened to run",
-  "drop": [".sl-head-marquee", ".sl-vote", "[data-sl-vote-live]", ".sl-block-random", ".sl-banner", ".sl-related-list", ".sl-last-list", ".sl-random", ".sl-debug-section", "#sl_debugger"],
+  "_drop": "taken out of layout entirely: the site rotates these on every request, so their height is not the same twice and a diff of the whole page would be a diff of the dice. The debug sections are here because their row count follows the number of SQL queries the request happened to run. The two monitor panels are the other shape of the same fault and the reason masking is not enough for them: each arrives after load and is then replaced out of band by a four-second poller, and what changes is their height, so hiding them while they keep their space guards nothing - measured, the page grew 6954 to 7092 to 7557 pixels in the seven seconds after load, which is why the hover shot of admin-monitor kept failing on size against a baseline captured minutes earlier",
+  "drop": [".sl-head-marquee", ".sl-vote", "[data-sl-vote-live]", ".sl-block-random", ".sl-banner", ".sl-related-list", ".sl-last-list", ".sl-random", ".sl-debug-section", "#sl_debugger", "#monitor-traffic-panel", "#monitor-status-panel"],
 
   "pages": [
     {

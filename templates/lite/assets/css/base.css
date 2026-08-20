@@ -87,7 +87,7 @@
 
   /* Type sizes. `hero` is the step above every heading: the largest type a page carries, which is the slider
      headline and the version number of the dashboard, and folding it onto `display` would size a hero like an h1 */
-  --sl-font-hero: 48px;
+  --sl-font-hero: 38px;
   --sl-font-display: 32px;
   --sl-font-h1: 24px;
   --sl-font-h2: 20px;
@@ -710,7 +710,6 @@ button {
 }
 
 a {
-  outline: none;
   text-decoration: none;
   color: var(--sl-primary-strong);
 }
@@ -719,6 +718,11 @@ a:hover {
   cursor: pointer;
   color: var(--sl-primary-strong);
   text-decoration: none;
+}
+
+a:focus-visible {
+  outline: var(--sl-ring-width) solid var(--sl-ring-bg);
+  outline-offset: var(--sl-ring-gap);
 }
 
 a img {

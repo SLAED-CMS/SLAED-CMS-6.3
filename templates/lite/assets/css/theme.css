@@ -864,10 +864,6 @@ a.sl-crumb:hover + .sl-crumb-sep {
   transform: scale(1.1);
 }
 
-.sl-none {
-  display: none;
-}
-
 /* Forms: unified field look shared by input, textarea and select */
 .sl-field {
   box-sizing: border-box;
@@ -1128,7 +1124,11 @@ select.sl-field {
 }
 
 .sl-hidden {
-  opacity: var(--sl-fade-disabled);
+  display: none;
+}
+
+.sl-dimmed {
+  opacity: var(--sl-fade-muted);
 }
 
 .sl-avatar {
@@ -2741,7 +2741,7 @@ ol.sl-sublist-two li::before {
 }
 
 .sl-changelog-commit:hover {
-  background-color: var(--sl-surface) !important;
+  background-color: var(--sl-surface);
 }
 
 .sl-changelog-commit-alt {
@@ -2909,9 +2909,9 @@ ol.sl-sublist-two li::before {
   transform: scale(0.96);
 }
 
-.sl-hidden.sl-but:hover {
+.sl-dimmed.sl-but:hover {
   cursor: not-allowed;
-  opacity: var(--sl-fade-disabled);
+  opacity: var(--sl-fade-muted);
 }
 
 /* Buttons: htmx loading state with blocked repeat clicks */
@@ -3590,10 +3590,6 @@ ol.sl-sublist-two li::before {
   opacity: var(--sl-fade-muted);
 }
 
-.sl-rate-sites.active {
-  opacity: 1 !important;
-}
-
 .sl-rate-sites:hover {
   opacity: var(--sl-fade-subtle);
 }
@@ -3852,7 +3848,8 @@ ol.sl-sublist-two li::before {
   border-radius: var(--sl-radius-2);
 }
 
-/* Tables: generic content table backgrounds and borders */
+/* Tables: generic content table backgrounds and borders. Nothing in the theme paints a cell, so this declaration is not
+   fighting another rule: it is what puts a table pasted into an article, with its own cell background, back onto the page */
 .sl-table td,
 .sl-table th {
   background-color: var(--sl-bg) !important;
@@ -3952,6 +3949,8 @@ ol.sl-sublist-two li::before {
   display: block;
 }
 
+/* On paper every panel is printed, and the tab script writes display none inline on the ones it closed: nothing but an
+   important declaration reaches past an inline style */
 @media print {
   .sl-tab-panel {
     display: block !important;
@@ -4522,8 +4521,8 @@ ol.sl-sublist-two li::before {
 #topmenu > ul > li > a.sl-home-link.sl-circle-action:focus-visible,
 #topmenu > ul > li:hover > a.sl-home-link.sl-circle-action {
   color: var(--sl-band-text);
-  background-color: var(--sl-bg-inverse) !important;
-  background-image: var(--sl-grad-gloss) !important;
+  background-color: var(--sl-bg-inverse);
+  background-image: var(--sl-grad-gloss);
   background-repeat: no-repeat;
   background-size: 100% 100%;
 }
@@ -7515,10 +7514,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   margin-top: var(--sl-space-3);
   padding-top: var(--sl-space-3);
   border-top: 1px dashed var(--sl-border);
-}
-
-.sl-cat-tile.sl-dimmed {
-  opacity: var(--sl-fade-muted);
 }
 
 /* Category colour rotation: PHP passes the order index, the palette mapping lives here */

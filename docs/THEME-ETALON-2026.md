@@ -3,16 +3,26 @@
 Turning the two shipped themes into reference etalons that hundreds of
 independent themes are copied from.
 
-Status: batch 8 is part done and its remainder is written out below. Batch 9 is
-independent and may run alongside it. A step that is done is deleted from this
+Status: batch 8 is done and gone from this file. Batch 9 is what is left, and it
+is independent of everything above it. A step that is done is deleted from this
 file, not marked done.
+
+**The API is frozen.** `frozen` in `tools/ui-contract.php` reads `true`, and it is
+not a sentence in a file: the baseline now carries a roster of every name each API
+block declares - 297 in admin, 404 in lite - the tool compares it on every run, and
+`--store` refuses to write while a name has gone missing, so the freeze cannot be
+laundered by re-storing the baseline. An addition is still legal; a rename in place
+is not, because after distribution the copies read names this repository cannot
+reach. Proved by breaking it: renaming `--sl-fade-subtle` made both the run and the
+store exit non-zero, and restoring it made them green.
 
 **Both themes are at zero on every count either of them controls, and the two are
 now measured against each other as well as against themselves.** `count`, `bare`,
 `dup`, `names`, `dead`, `alias`, `unsat`, `unmet`, `clash`, `classes` and
 `contrast` all read zero in admin and in lite, and the new global `cross` reads
-zero beside them. What is left in the baseline is `scoped` at 54 and 92,
-`important` at 23 and 17, and `markup` at 143, which is batch 9's.
+zero beside them, `cross` now counting the divergent templates of canon as well as
+the selectors. What is left in the baseline is `scoped` at 54 and 92, `important` at
+22 and 13, and `markup` at 143, which is batch 9's.
 
 **The cross-theme gate was measuring the wrong thing, and that is what made it
 unanswerable.** It reported 135 divergent shared selectors as one undifferentiated
@@ -147,6 +157,72 @@ values are the light half of lite, because there is no server here to write
 one the theme had already taken: `--sl-text-muted` `#6e7c8b` → `#64717e`, the login link
 colour folded onto `--sl-text-strong`, and the card's paddings landed on the ladder.
 
+**A shared template name is not a shared contract, and the count that says so had
+to be built before the question could be asked.** `--cross` reported the 28
+same-named templates of canon as a bare list with no way to answer it. It reads them
+the way it already read selectors now: `templates` in `tools/ui-contract.php` carries
+a written reason per divergence, `canon` names the two directories the demand applies
+to - `fragments` and `partials`, never `layouts` and `pages` - and the unanswered ones
+join the global `cross` count. **Two of the 28 were one contract with two spellings
+and are now one file.** `radio.html`: admin's is lite's plus four optional keys no lite
+caller passes, so lite took admin's file and renders the same bytes. `changelog-body.html`
+differed by one heading rank, and admin's `h3` was the wrong one - both themes put an
+`h1` above it through `module-head` and `fragments/title`, so the `h3` skipped a level;
+it is `h2` in both now, and admin's rule moved with it at the same `--sl-font-h4`, which
+is why no pixel moved. **The other 26 are two contracts under one name**, and the key-set
+diff is what shows it rather than the line count: `link` maps twelve names in the panel
+against thirty-three on the site with **not one in both**, `inline-badge` fourteen against
+twenty with none in both, `span` one against twenty-two.
+
+**The plan under-counted `.sl-hidden` because it read the class and not its producers.**
+Six lite call sites mean gone was right; one meaning "closed but still readable" was not -
+there are four. A closed comment, an unpublished forum post, a read-message marker and a
+forum action the reader may not take all carry a title and are meant to stay on the page.
+They read `sl-dimmed` now, which both themes already had. **And the second name was already
+there twice over**: `.sl-none` and `.sl-hidden` were two spellings of `display: none`, so
+the name that says the role kept the intent and `.sl-none` is retired from both themes.
+Admin's `!important` went with it - nothing in the tree ever set the flag that reached it.
+
+**`a { outline: none }` was in both themes, not one.** The divergence entry said admin did
+not do this; admin does, in the group `input, textarea, select, a`, which is why the tool
+saw a different selector and reported only lite. Neither theme draws `a:focus-visible` in
+its place, so every link on both sides was focusable with nothing to show for it. Both take
+the ring the rest of each theme already draws, spelled identically, and the entry is gone
+rather than reworded.
+
+**Three of the `!important` flags in lite were fighting nothing.** `.sl-changelog-commit:hover`
+already outscored the rule it was beating - admin's twin never carried the flag - `#topmenu >
+ul > li > a.sl-home-link.sl-circle-action:hover` is an id selector nothing in the file can
+reach, and `.sl-rate-sites.active` was a dead rule: no template or script writes that class.
+The rest is need and now says so beside itself. Admin 23 to 22, lite 17 to 13.
+
+**A gate for creating a theme that never renders one is half a gate.** `node
+tools/ui-shots.mjs --newtheme` builds a scratch copy of an etalon, points the account the
+rig signs in as at it, walks every frontend page of the manifest, restores the column and
+removes the tree in `finally`. Both halves build that copy through one lifecycle,
+`tests/Support/theme_scratch.php`, reached from the runner through the `make`, `pick` and
+`gone` jobs of `tests/Support/theme_probe.php` - a lifecycle spelled twice drifts into two.
+The `theme` column is the lever because `getTheme()` reads it before the site default and
+caches its answer in a static, so the switch has to be in place before the request rather
+than during it, and because putting a column back is a promise a config edit cannot make.
+
+**Turning a read-only probe into one that writes changed what its reachability costs.**
+`tests/Support/theme_probe.php` said "Nothing is written" and meant it; `make`, `pick` and
+`gone` are three jobs that do. The directory is served by this stand - a request for
+`tests/Support/theme_probe.php` answered 500, which is PHP running the file - and
+`register_argc_argv` turns a query string into `$argv`, so a job name could arrive over HTTP.
+`probe_boot.php` answers 404 and exits unless `PHP_SAPI` is `cli`, which covers the ten probes
+that share it and the next one somebody writes. That `tests/` is reachable at all is the
+stand's own configuration and is worth closing there too.
+
+**Its first run failed on its own check, which is the reason to run one.** It reported an
+unresolved placeholder on the private-messages page; the placeholder was `{%text%}` typed
+into a private message by a member of this stand years ago. A scan of a rendered page cannot
+tell a tag the engine failed to fill from a tag somebody wrote, so that check is gone from
+the HTTP half and stays in the static half, where the input is controlled. What replaced it
+cannot be typed into: the three site logs are read before and after the walk, and a theme
+that renders a page and writes a notice behind it has still failed.
+
 **What is in the tree.** The contract and its generated half:
 `tools/ui-contract.php`, `tools/ui-audit.php`, `tools/ui-audit-baseline.json`,
 `tools/ui-contrast.json`. The screenshot rig: `tools/ui-shots.json`,
@@ -154,8 +230,9 @@ colour folded onto `--sl-text-strong`, and the card's paddings landed on the lad
 gates: `tests/Unit/ThemeContractTest.php` over the stored baseline,
 `tests/Unit/UiAuditTest.php` over `tests/Fixtures/ui/`,
 `tests/Unit/ThemeCreationTest.php` over a scratch copy of an etalon with
-`tests/Support/theme_probe.php` behind it, and `.claude/hooks/lint-edit.php` per
-machine. Both `base.css` carry the `/* --- end tokens --- */` marker.
+`tests/Support/theme_scratch.php` and `tests/Support/theme_probe.php` behind it,
+its HTTP half `node tools/ui-shots.mjs --newtheme`, and `.claude/hooks/lint-edit.php`
+per machine. Both `base.css` carry the `/* --- end tokens --- */` marker.
 
 **The rig runs over `https`, because the scheme is part of the login.**
 `setCookies()` marks the session cookie `secure` whenever `homeurl` is `https`, so
@@ -218,7 +295,7 @@ The commands are flags of `tools/ui-audit.php`:
 `--dup` | identical rule bodies sharing one `@media` context, split from the two shapes that are exempt by construction |
 `--names` | grammar violations, including names that cannot invert |
 `--ramp` | colour families by saturation, and their lightness spread |
-`--cross` | selectors and templates that differ between themes, split into value-only and structural, with the reason beside each of the second kind |
+`--cross` | selectors and templates that differ between themes, split into value-only and structural, with the reason beside each of the second kind and beside every divergent template of canon |
 `--markup` | class, style and tag literals in PHP, by file |
 
 Plus `--file` and `--migrating` for the hook, `--strict` for a theme with no
@@ -287,7 +364,11 @@ Numbers here are the tool's, and drift as work lands.
 - **Themes are independent.** No inheritance in `Template`; the **216**
   byte-identical rules they share stay duplicated on purpose. A shared selector
   whose two rules hold the same property set is legal whatever its values say;
-  one whose property sets differ carries a written reason. `--cross`
+  one whose property sets differ carries a written reason, and so does every
+  same-named template of canon the two spell differently. `--cross`
+- **The API is frozen.** A theme package may gain a role and may never lose or
+  rename one. The roster under `api` in `tools/ui-audit-baseline.json` is what
+  holds it, on every run and against `--store` alike.
 - **The engine is not touched.** No filter added, no grammar extended,
   `getFile()` and `checkFile()` unchanged so the security boundary around theme
   paths does not move.
@@ -303,7 +384,8 @@ Numbers here are the tool's, and drift as work lands.
   skin. `assets/vendor/` stays out of scope.
 - **`admin` first**, `lite` mirrors it: admin is smaller, so mistakes are cheap.
 - **Canon scope:** CSS, `fragments`, `partials`. Not `layouts` and `pages` — the
-  page shells differ by nature.
+  page shells differ by nature. The two directories are named under `canon` in
+  `tools/ui-contract.php`, which is what `--cross` demands a reason inside.
 
 ## The one metric
 
@@ -668,7 +750,7 @@ already use identical scale values and differ in colour, not in scale.
 | Axis | Sites | Values now | Ladder | Displaced |
 |---|---|---|---|---|
 spacing | 857 | 62 | `2 4 8 10 12 16 20 24 32 40 48` | closed in both themes; steps 9 to 11 are lite's alone |
-`font-size` | 294 | 41, `px`/`em` mixed | 10 / 12 / 14 / 16 / 18 / 20 / 24 / 32 / 48 | closed; the 48 step is `hero`, which only lite reads |
+`font-size` | 294 | 41, `px`/`em` mixed | 10 / 12 / 14 / 16 / 18 / 20 / 24 / 32 / 38 | closed; the top step is `hero`, which only lite reads, and it sits at 38 rather than 48 because at 48 the dashboard version number crowded the pane it shares with its label |
 `line-height` | 55 | 15 | `1.2` / `1.45` / `1.6`, plus neutral `1` | closed; fifteen spellings collapsed to three |
 `font-weight` | 128 | 6 spellings | `400` / `500` / `600` / `700` | closed; nothing moved |
 `border-radius` | 120 | 15 | `4 8 12`, plus `pill`, `circle` | closed; `999`/`9999` merged, and `15`, `21`, `30` turned out to be a pill and two circles |
@@ -938,67 +1020,6 @@ Package a new theme copies: `lite` 667 files / 5069 KB, `admin` 491 / 3092 KB.
 
 ## Batches
 
-### Batch 8 — the rest of canon, and the freeze
-
-**Causa.** Independence makes divergence permanent. A contradiction shipped in
-the etalon is taught to every descendant, and after distribution the names can no
-longer be corrected.
-
-**What is left.**
-
-- Resolve the **28 same-named templates in canon scope** — 21 `fragments`, 7
-  `partials`. Five closed on the way here and none of them by unifying markup:
-  four differed only in line endings, which `.gitattributes` already says must be
-  LF and ten lite templates were not, and `post-button` gained in lite the
-  `form_attr` hook admin already had, which is inert when the key is absent.
-
-  **Audit the call sites first.** A shared name is not a shared contract: the two
-  `alert` fragments differ in the keys they accept (`is_flash`, `alert_attr`,
-  extra wrappers), the two `dial` fragments differ by the whole htmx half, and
-  unifying markup without reconciling keys silently drops data or changes what is
-  escaped. List every caller, diff the key sets, decide the union, then unify.
-
-  Measured on the way: `link` and `table-row` differ by over a hundred lines each
-  and `block-content`, `inline-badge`, `table` and `span` by about forty. Those
-  six are not one contract with two spellings; they are two contracts, and the
-  decision for each is whether canon wants one.
-
-- **Decide `.sl-hidden`, which means two different things.** In admin it is
-  `display: none !important`; in lite it is `opacity: var(--sl-fade-disabled)`.
-  Six lite call sites mean gone — an empty `sl-cab-badge`, a hidden row, a hidden
-  image — and one means closed but still readable. An empty badge is drawn today
-  as a red pill at 45 per cent instead of not at all. Settling it needs a second
-  class for the dimmed state, which is a new name and needs asking for.
-
-- **Decide the link focus of lite.** `a { outline: none }` kills the focus ring on
-  every link on the site and nothing draws one in its place: lite has no
-  `a:focus-visible` at all. Admin does not do this, which is why the pair sits in
-  the divergence allowlist rather than being unified — taking the outline off admin
-  too would spread the defect. The fix is a focus ring of the site's own, which is
-  a pass over every link state.
-
-- Look at **`important`**, 23 in admin and 17 in lite. Read once: most of it is
-  need — a utility that has to win, the `prefers-reduced-motion` blocks, the icon
-  face beating an element font, and the editor engine's own inline styles, which
-  `skin.css` says so beside. What is left after those is small and worth naming
-  rather than deleting blind.
-
-- Give **`ThemeCreationTest` its HTTP half**. The static half is in the tree; the
-  half that renders a real page needs HTTP and rides with the screenshot runner,
-  which walks `tools/ui-shots.json` once more against the same scratch theme. They
-  share one lifecycle — created once, both gates run, then removed in `finally`
-  against a path the harness built. The HTTP half selects the theme before the
-  request and restores it after; `getTheme()` caches in a static, so the switch
-  must precede the first call.
-
-- **Freeze the API and note it in the contract.** `frozen` is still `false`, and it
-  stays false while any of the above is open: freezing before canon is settled bakes
-  in names the remainder contradicts.
-
-**Verification.** `--cross` reports only allowlisted divergences, each with a
-reason, and the template halves of the same report reach zero or carry one.
-`ThemeCreationTest` and the HTTP pass both succeed.
-
 ### Batch 9 — markup leaves PHP
 
 **Causa.** A theme cannot restyle what PHP hardcodes, and "one address per
@@ -1120,6 +1141,12 @@ runtime-editable configuration — and the scan returns nothing.
   it whole, so each re-capture adds about that much to history permanently. If that
   becomes the wrong trade, the answer is to narrow the manifest, not to stop
   committing baselines — an uncommitted baseline is no baseline at all.
+- **Nothing may touch git while the rig is running.** `--capture` takes a quarter of an
+  hour and writes into `tools/ui-baseline/*.png`, which are tracked. A `git stash` during
+  that window reverts the theme CSS under the running browser and leaves a baseline that is
+  half one tree and half another, with nothing in the output to say so. It cost a full
+  re-capture in batch 8. If a git operation cannot wait, stop the run, `git checkout --
+  tools/ui-baseline`, and start again.
 - **The committed baseline is not a "before".** The stand's own data moves between
   runs, so a `--check` against the committed set reports the week rather than the
   change. A batch captures the tree it starts from with `--out=` into a directory
@@ -1168,6 +1195,20 @@ runtime-editable configuration — and the scan returns nothing.
   and beside the avatar, and the statistic page draws the same counters as bar widths.
   `.sl-user-points b`, `.sl-cab-ring b` and `.sl-statx-bv` joined the mask; `profile` at
   `xl` fell from a 0.38% drift to a floor of zero.
+
+  **And one that masking could never have fixed, because what moved was the height.** Two
+  states — `admin-monitor-knob-hover` at `lg` in both modes — failed a `--check` run against
+  a baseline captured minutes earlier, and failed it with `size changed`, which no threshold
+  forgives. The base shot of the same page passed, so whatever it was happened between the
+  two shots of one page load. Watched second by second, the page grew **6954 → 7092 → 7557
+  pixels in the seven seconds after load**: `#monitor-traffic-panel` arrives on `hx-trigger="load"`
+  and both it and `#monitor-status-panel` are then replaced out of band by a four-second
+  poller. `[hx-trigger*="every"]` masked the poller, which is a `div` of height zero, and left
+  the two panels it feeds untouched. **A mask hides what moves inside a box of stable size; a
+  box whose size is what moves has to leave layout.** Both are in `drop` now and the page
+  stands at a constant 6663 pixels over a twenty-four second watch. That is two panels of the
+  monitor page no longer guarded, which is the price, and it is cheaper than a state that is
+  red whatever the theme does.
 
   **A gate that is red on arrival is a gate somebody switches off**, so a batch that ships
   a fresh baseline runs `--check` against it afterwards rather than trusting the capture.

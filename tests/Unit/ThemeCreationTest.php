@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace {
     require_once __DIR__.'/../Support/ViewTestBootstrap.php';
     require_once dirname(__DIR__, 2).'/tools/ui-audit.php';
+    require_once __DIR__.'/../Support/theme_scratch.php';
 }
 
 namespace Tests\Unit {
@@ -18,8 +19,10 @@ namespace Tests\Unit {
      * count at zero, every contrast the etalon held still held, the runtime file list satisfied, and
      * every template of the package compiling through Template with no undefined token.
      *
-     * This is the static half. Rendering a real page needs HTTP, and that half rides with the
-     * screenshot runner, which walks tools/ui-shots.json once more against the same scratch theme.
+     * This is the static half. Rendering a real page needs HTTP, and that half is
+     * `node tools/ui-shots.mjs --newtheme`, which walks tools/ui-shots.json once more against a
+     * scratch theme of its own. Both halves build and remove that theme through one lifecycle,
+     * tests/Support/theme_scratch.php, because a lifecycle spelled twice drifts into two.
      * A manual look proves nothing about the day after the freeze, and after the freeze the names
      * can no longer be corrected.
      */
@@ -34,98 +37,15 @@ namespace Tests\Unit {
         public static function setUpBeforeClass(): void
         {
             self::$root = dirname(__DIR__, 2);
-            self::$name = 'scratch-'.substr(sha1((string)getmypid().self::ETALON), 0, 8);
-            self::$path = self::$root.'/templates/'.self::$name;
-            if (is_dir(self::$path)) self::setTreeGone(self::$path);
-            self::setTreeCopy(self::$root.'/templates/'.self::ETALON, self::$path);
-            self::setPalettePaint(self::$path.'/assets/css/base.css');
+            $made = setScratchTheme(self::ETALON);
+            self::$name = $made['name'];
+            self::$path = $made['path'];
         }
 
         public static function tearDownAfterClass(): void
         {
-            # Only ever the directory this harness built, never a path it guessed
-            if (self::$name !== '' && str_starts_with(basename(self::$path), 'scratch-')) self::setTreeGone(self::$path);
-        }
-
-        # Copy one directory tree whole, which is step one of creating a theme
-        private static function setTreeCopy(string $from, string $to): void
-        {
-            if (!is_dir($from)) throw new RuntimeException('No etalon at '.$from);
-            mkdir($to, 0777, true);
-            foreach (scandir($from) ?: [] as $item) {
-                if ($item === '.' || $item === '..') continue;
-                $one = $from.'/'.$item;
-                $two = $to.'/'.$item;
-                if (is_dir($one)) self::setTreeCopy($one, $two);
-                else copy($one, $two);
-            }
-        }
-
-        # Remove the scratch tree, refusing any path outside templates/scratch-*
-        private static function setTreeGone(string $path): void
-        {
-            $safe = str_replace('\\', '/', $path);
-            if (!preg_match('#/templates/scratch-[0-9a-f]{8}$#', $safe) && !str_contains($safe, '/templates/scratch-')) return;
-            foreach (scandir($path) ?: [] as $item) {
-                if ($item === '.' || $item === '..') continue;
-                $one = $path.'/'.$item;
-                if (is_dir($one)) self::setTreeGone($one);
-                else unlink($one);
-            }
-            rmdir($path);
-        }
-
-        # Repaint every colour of the API block by turning its hue half way round and then pulling it back to the
-        # relative luminance it had. Hue alone does not hold a contrast ratio: the three channels carry different
-        # weight, so the same HSL lightness in orange is brighter than in blue and #111827 turned to #272011 gains
-        # half again as much luminance. Luminance is what a ratio is made of, so a repaint that holds it holds every
-        # pair the etalon measured, in both halves of light-dark() and without a browser to ask
-        private static function setPalettePaint(string $file): void
-        {
-            $text = str_replace("\r\n", "\n", (string)file_get_contents($file));
-            $mark = strpos($text, getContract()['marker']);
-            if ($mark === false) throw new RuntimeException('The etalon has no marker, so it has no API block to repaint');
-            $head = substr($text, 0, $mark);
-            $tail = substr($text, $mark);
-            $head = (string)preg_replace_callback('/#([0-9a-fA-F]{6})\b/', static fn($m) => '#'.self::getHueTurn($m[1]), $head);
-            file_put_contents($file, $head.$tail);
-        }
-
-        # One hex colour turned half way round the wheel, then searched back onto the relative luminance it started with
-        private static function getHueTurn(string $hex): string
-        {
-            $rgb = [hexdec(substr($hex, 0, 2)), hexdec(substr($hex, 2, 2)), hexdec(substr($hex, 4, 2))];
-            [$deg, $pct, $val] = getHslValues($rgb);
-            if ($pct <= 0.0) return $hex;
-            $want = self::getLuminance($hex);
-            $hue = fmod($deg + 180.0, 360.0) / 360.0;
-            $sat = $pct / 100.0;
-            $low = 0.0;
-            $high = 1.0;
-            $out = self::getHslHex($hue, $sat, $val / 100.0);
-            for ($i = 0; $i < 40; $i++) {
-                $mid = ($low + $high) / 2;
-                $out = self::getHslHex($hue, $sat, $mid);
-                if (self::getLuminance($out) < $want) $low = $mid;
-                else $high = $mid;
-            }
-            return $out;
-        }
-
-        # One HSL triple written back as a hex colour
-        private static function getHslHex(float $hue, float $sat, float $lum): string
-        {
-            $two = $lum < 0.5 ? $lum * (1.0 + $sat) : $lum + $sat - $lum * $sat;
-            $one = 2.0 * $lum - $two;
-            $part = static function (float $at) use ($one, $two): int {
-                if ($at < 0.0) $at += 1.0;
-                if ($at > 1.0) $at -= 1.0;
-                if ($at < 1 / 6) return (int)round(255 * ($one + ($two - $one) * 6.0 * $at));
-                if ($at < 1 / 2) return (int)round(255 * $two);
-                if ($at < 2 / 3) return (int)round(255 * ($one + ($two - $one) * (2 / 3 - $at) * 6.0));
-                return (int)round(255 * $one);
-            };
-            return sprintf('%02x%02x%02x', $part($hue + 1 / 3), $part($hue), $part($hue - 1 / 3));
+            # Only ever the directory the lifecycle built, which is the guard deleteScratchTheme() applies to the path it is handed
+            if (self::$path !== '') deleteScratchTheme(self::$path);
         }
 
         # The three CSS files of the copy, read as one model the way the audit reads a declared theme
@@ -208,7 +128,7 @@ namespace Tests\Unit {
         {
             if (!preg_match('/rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/', $val, $hit)) return null;
             $hex = sprintf('%02x%02x%02x', (int)$hit[1], (int)$hit[2], (int)$hit[3]);
-            $now = self::getHueTurn($hex);
+            $now = getScratchColor($hex);
             return [hexdec(substr($now, 0, 2)), hexdec(substr($now, 2, 2)), hexdec(substr($now, 4, 2))];
         }
 
@@ -321,16 +241,5 @@ namespace Tests\Unit {
             $this->assertSame([], array_keys($bad), $why);
         }
 
-        # WCAG relative luminance, the quantity a contrast ratio is built from
-        private static function getLuminance(string $hex): float
-        {
-            $sum = 0.0;
-            $part = [0.2126, 0.7152, 0.0722];
-            foreach ([0, 2, 4] as $i => $at) {
-                $one = hexdec(substr($hex, $at, 2)) / 255;
-                $sum += $part[$i] * ($one <= 0.03928 ? $one / 12.92 : (($one + 0.055) / 1.055) ** 2.4);
-            }
-            return $sum;
-        }
     }
 }

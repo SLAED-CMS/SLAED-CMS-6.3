@@ -346,16 +346,12 @@ input.sl-but-blue[value="ОК"] {
   text-align: inherit;
 }
 
-.sl-hidden {
-  display: none !important;
-}
-
 .sl-dimmed {
   opacity: var(--sl-fade-muted);
   color: var(--sl-border);
 }
 
-.sl-none {
+.sl-hidden {
   display: none;
 }
 
@@ -485,6 +481,8 @@ input.sl-but-blue[value="ОК"] {
   vertical-align: middle;
 }
 
+/* The glyph face has to win over the element font: these pseudo-elements sit inside buttons and links that set their own
+   family and weight, and a glyph drawn in the text face is a missing-character box rather than an icon */
 .sl-status-active::before,
 .sl-status-inactive::before,
 .sl-drag-handle::before,
@@ -1055,6 +1053,8 @@ tr.sl-row-collapsed {
   content: none;
 }
 
+/* The colon is added by a selector carrying two :not(:has()) tests, which score far above a plain class pair, so the one
+   label that asks for no colon cannot take it back without winning outright */
 .sl-div-label .sl-div-label-main.sl-no-colon::after {
   content: none !important;
 }
@@ -1413,6 +1413,8 @@ tr.sl-row-collapsed {
   min-height: 0;
 }
 
+/* The editor engine writes its own height inline on the element it mounts, so the second editor of a form can only be given
+   twice the room by beating that inline value */
 .sl-div-form
   .sl-div-item:has(.ck-editor):nth-child(2 of .sl-div-item:has(.ck-editor))
   .ck.ck-editor__main
@@ -4055,6 +4057,8 @@ button.sl-but-mini {
   display: block;
 }
 
+/* On paper every panel is printed, and the tab script writes display none inline on the ones it closed: nothing but an
+   important declaration reaches past an inline style */
 @media print {
   .sl-tab-panel {
     display: block !important;
@@ -4262,7 +4266,7 @@ button.sl-but-mini {
   box-shadow: var(--sl-panel-shadow);
 }
 
-.sl-changelog-filter h3 {
+.sl-changelog-filter h2 {
   margin: 0 0 var(--sl-space-6) 0;
   font-size: var(--sl-font-h4);
   font-weight: var(--sl-weight-semibold);
@@ -5650,6 +5654,7 @@ body:has(.sl-admin-login-shell)::before {
   transform: scale(0.9);
 }
 
+/* The same glyph face rule, on a footer link that sets its own family */
 .sl-footer span a.sl-thide::before {
   position: absolute;
   inset: 0;

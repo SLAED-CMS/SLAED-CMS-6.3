@@ -7,6 +7,13 @@
 # Shared boot for every CLI probe: brings the real core up the way index.php does, with the directories a probe writes to redirected into scratch
 # A probe includes this, then requires core/system.php itself, because some probes have to prepare a session before the core reads it
 # $probework is the scratch root the caller passed; everything below it belongs to that one probe run
+# A probe runs from a terminal and never from a request: the directory is served by this stand, several probes write, and
+# register_argc_argv turns a query string into $argv, so a job name could otherwise arrive over HTTP. The guard is here
+# rather than in each probe because it has to hold for the next one somebody writes as well as for the ten there are
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit;
+}
 if (!isset($probework)) $probework = '';
 error_reporting(0);
 ini_set('display_errors', '0');

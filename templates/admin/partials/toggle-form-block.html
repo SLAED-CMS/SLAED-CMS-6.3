@@ -1,6 +1,6 @@
 <div
   id="{{ block_id }}"
-  class="sl-toggle-form-block{% if is_hidden %} sl-none{% endif %}"
+  class="sl-toggle-form-block{% if is_hidden %} sl-hidden{% endif %}"
   {% if is_toggle_block %}data-sl-toggle="{{ block_id }}" data-sl-toggle-default="{% if is_hidden %}closed{% else %}open{% endif %}"{% endif %}
 >
   <div class="sl-div-grid">

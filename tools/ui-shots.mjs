@@ -9,6 +9,12 @@
 //   node tools/ui-shots.mjs --capture    write or refresh the PNG baselines under tools/ui-baseline
 //   node tools/ui-shots.mjs --check      compare the tree against those baselines and fail on any drift
 //   node tools/ui-shots.mjs --contrast   emit tools/ui-contrast.json, the pairs that really meet on screen
+//   node tools/ui-shots.mjs --newtheme   build a scratch theme from an etalon and render every page of the manifest in it
+//
+// The last of the four is the HTTP half of the theme-creation gate. ThemeCreationTest asks the static half of the
+// same question - does a copy of an etalon with only its API block repainted audit clean - and this asks the half a
+// file cannot answer: does the CMS actually serve pages in it. Both build and remove the copy through one lifecycle,
+// tests/Support/theme_scratch.php, reached here through the make, pick and gone jobs of tests/Support/theme_probe.php.
 //
 // A contrast pair existing only on hover is invisible to a crawler that never hovers, which is why the
 // states live in the manifest and not in the runner. Credentials come from the environment, never the file.
@@ -18,7 +24,9 @@
 // a warm-cache comparison compares caches instead of renders.
 
 import { chromium } from 'playwright';
-import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { tmpdir } from 'node:os';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -29,7 +37,7 @@ const args = new Map(process.argv.slice(2).map((a) => {
   return cut === -1 ? [a.replace(/^--/, ''), true] : [a.slice(2, cut), a.slice(cut + 1)];
 }));
 
-const job = args.has('capture') ? 'capture' : args.has('contrast') ? 'contrast' : 'check';
+const job = args.has('capture') ? 'capture' : args.has('contrast') ? 'contrast' : args.has('newtheme') ? 'newtheme' : 'check';
 const only = args.get('only');
 // A batch cannot trust the committed baseline as its "before": the stand's own data moves between runs, so a
 // check against it reports the week rather than the change. --out= sends a capture somewhere outside the
@@ -331,12 +339,80 @@ async function setOneShot(page, item, view, mode, tag, pairs, report) {
   if (diff.ratio > bar) report.push('  DIFF ' + (diff.ratio * 100).toFixed(3) + '% ' + diff.note + ' ' + name + past);
 }
 
+// One job of the PHP lifecycle, answered as JSON. The scratch tree and the account row are the only things this file
+// changes on the stand, and every one of them is put back by the finally that wraps the walk. The probe writes its own
+// logs somewhere, and that somewhere is outside the repository: a directory left inside storage/cache is one the next
+// reader has to work out the provenance of
+function getProbeAnswer(name, ...rest) {
+  const work = join(tmpdir(), 'slaed_newtheme');
+  const out = execFileSync('php', [join(root, 'tests/Support/theme_probe.php'), name, work, ...rest], { encoding: 'utf8' });
+  const said = JSON.parse(out);
+  if (said.error) throw new Error('theme probe: ' + said.error);
+  return said;
+}
+
+// Render every page of the manifest that a frontend theme owns, in a scratch copy of an etalon, and report what a
+// visitor would have been served. A theme that audits clean and cannot render is still not a theme, and only a real
+// request can tell the two apart: the copy is selected through the `theme` column of the account the rig signs in as,
+// which is the lever getTheme() reads before it falls back to the site default, so no configuration of a running
+// stand is touched. getTheme() caches its answer in a static, so the switch has to be in place before the request
+// rather than during it - which is why it is a database write and not a header the runner could send
+async function checkNewTheme(browser, report) {
+  if (!user || !pass) throw new Error('the HTTP half needs a session: set ' + conf.env.user + ' and ' + conf.env.pass);
+  const made = getProbeAnswer('make', args.get('etalon') === undefined || args.get('etalon') === true ? 'lite' : args.get('etalon'));
+  let back = null;
+  try {
+    back = getProbeAnswer('pick', user, made.name).was;
+    const logs = (conf.logs || []).map((one) => [one, existsSync(join(root, one)) ? statSync(join(root, one)).size : 0]);
+    const ctx = await browser.newContext({ ignoreHTTPSErrors: true });
+    const page = await ctx.newPage();
+    await page.setViewportSize({ width: 1200, height: 1000 });
+    await setSession(page, 'site');
+    for (const item of conf.pages) {
+      if (item.theme === 'admin' || item.auth === 'admin') continue;
+      const res = await page.goto(conf.base + item.url, { waitUntil: 'load' });
+      const html = await page.content();
+      if (!res || res.status() !== 200) report.push('  ' + item.name + ': the new theme answered ' + (res ? res.status() : 'nothing'));
+      if (!html.includes('templates/' + made.name + '/')) report.push('  ' + item.name + ': served by another theme, so this page proves nothing about the copy');
+      // No test for a surviving placeholder here, and it is not an oversight: this page carries whatever a member
+      // typed, and the private messages of this stand quote template syntax at each other. A scan of a rendered page
+      // cannot tell a tag the engine failed to fill from a tag somebody wrote in a message, so it reported both. The
+      // static half asks that question of every fragment with input it controls, which is where it can be answered
+    }
+    await ctx.close();
+    // What the pages themselves cannot be asked: the server writes a notice nobody sees on the page. A log that grew
+    // over the walk is the answer, and unlike a scan of the markup no member can type their way into it
+    for (const [one, was] of logs) {
+      const now = existsSync(join(root, one)) ? statSync(join(root, one)).size : 0;
+      if (now <= was) continue;
+      const said = readFileSync(join(root, one), 'utf8').slice(was).trim().slice(0, 300);
+      report.push('  ' + one + ' grew by ' + (now - was) + ' bytes while the copy was serving: ' + said);
+    }
+    console.log('newtheme: ' + made.name + ' rendered ' + conf.pages.filter((p) => p.theme !== 'admin' && p.auth !== 'admin').length + ' pages of the manifest');
+  } finally {
+    if (back !== null) getProbeAnswer('pick', user, back);
+    getProbeAnswer('gone', made.path);
+  }
+}
+
 const floorFile = join(outDir, 'noise-floor.json');
 const floor = existsSync(floorFile) ? JSON.parse(readFileSync(floorFile, 'utf8')) : {};
 
 const browser = await chromium.launch();
 const report = [];
 const pairs = [];
+if (job === 'newtheme') {
+  const browser = await chromium.launch();
+  const report = [];
+  try {
+    await checkNewTheme(browser, report);
+  } finally {
+    await browser.close();
+  }
+  for (const line of report) console.log(line);
+  process.exit(report.length ? 1 : 0);
+}
+
 const need = new Set((conf.pages || []).filter((p) => p.auth).map((p) => p.auth));
 const sess = new Map();
 

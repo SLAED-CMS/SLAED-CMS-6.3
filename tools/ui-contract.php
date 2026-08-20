@@ -9,7 +9,10 @@
 # a tool reads lives here, because `.rules/`, `.agents/` and `.claude/` are not tracked by git.
 
 return [
-    'frozen' => false,
+    # The API is frozen: batch 8 settled the last of canon, so from here a theme package may gain a role but may never lose
+    # or rename one. What holds it is the roster under `api` in tools/ui-audit-baseline.json, which the tool compares every
+    # run and which --store refuses to write while a name has gone missing - a freeze nothing checks is a sentence in a file
+    'frozen' => true,
     'marker' => '/* --- end tokens --- */',
     'prefix' => '--sl-',
 
@@ -72,8 +75,11 @@ return [
                 '--sl-space-7', '--sl-space-8', '--sl-space-9', '--sl-space-10', '--sl-space-11',
             ],
         ],
+        # The hero step reads 38 and not 48 on purpose: it is the version number of the dashboard and the slider headline,
+        # and at 48 the number crowded the pane it shares with its label. Step count and role names are unchanged, which is
+        # what the ladder law asks of a theme that needs a different value
         'font-size' => [
-            'steps' => [10, 12, 14, 16, 18, 20, 24, 32, 48],
+            'steps' => [10, 12, 14, 16, 18, 20, 24, 32, 38],
             'unit' => 'px',
             'tokens' => [
                 '--sl-font-micro', '--sl-font-small', '--sl-font-body', '--sl-font-h4', '--sl-font-h3',
@@ -497,10 +503,6 @@ return [
         'body' =>
             'the page shell, which canon does not cover: the panel fills the viewport it owns and the site sets a floor of nothing on a document whose '
             .'width the content decides. layouts and pages are outside canon for the same reason',
-        'a' =>
-            'lite kills the focus outline on every link and admin does not. That is a defect in lite rather than a skin difference - nothing in lite '
-            .'draws a:focus-visible in its place - and taking the outline away from admin too would spread it. Fixing it means giving the site a focus '
-            .'ring of its own, which is a pass over every link state and not a canon reconciliation',
         'thead tr th[data-sort-method="none"]' =>
             'admin resets the padding its own sort arrow reserved; lite reserves a wider one and never resets it, because no lite table carries a column '
             .'the sorter is told to skip',
@@ -508,10 +510,10 @@ return [
             'two different controls under one name: the panel button is a bordered rectangle that inherits the form font, the site button is a pill with '
             .'a bevel, its own height and its own type. Every property lite adds is that pill; giving the panel the same twenty declarations would make '
             .'the admin look like the site, which is the one thing this batch may not do',
-        '.sl-hidden' =>
-            'one name over two intents, which is a defect to fix and not a skin difference: admin hides the element, lite fades it to the disabled step. '
-            .'Six lite call sites mean gone - an empty badge, a hidden row, a hidden image - and one means closed but still readable. Settling it needs a '
-            .'second class for the dimmed state, which is a new name and belongs to whoever owns it',
+        '.sl-dimmed' =>
+            'what each theme dims is a different thing: the panel dims a menu row that is off and pulls its text to the border tone, because an inactive '
+            .'row is chrome the reader is not meant to read; the site dims content a reader may still read - a comment awaiting approval, a message '
+            .'already opened, an action the reader may not take - and only lowers it, because pulling body text to the border tone would take it under AA',
         '.sl-tip' =>
             'the panel hint is a glyph the admin draws itself - its own box, tone, size and transition - while the site puts the hint on whatever element '
             .'carries it and only pushes the next one away. One is a control, the other a modifier',
@@ -642,6 +644,117 @@ return [
             'assets/editors/<id>/skin.css' => 'checkThemeAssets: required when the manifest declares `skin`, and held to the same zero as the theme CSS',
             'partials/<name>.html' => 'checkThemeAssets: one file per name the manifest lists under `partials`',
         ],
+    ],
+
+    # The directories a shared template name is canon in. layouts and pages are outside it because the page shells of a
+    # panel and a site differ by nature, so --cross reports them and demands nothing
+    'canon' => ['fragments', 'partials'],
+
+    # A template name both themes carry whose two files differ, each with the reason canon does not want one file. The
+    # question a shared name asks is not "do the two files match" but "is this one contract with two spellings, or two
+    # contracts under one name". Unifying without reconciling the key sets first silently drops data or changes what is
+    # escaped, so every entry here is the answer to a call-site audit and not an excuse for one
+    'templates' => [
+        'fragments/admin-block-links.html' =>
+            'one producer hands both themes the same two links and the editable block under them. The panel draws them as two rows of its sidebar block and rules '
+            .'the editable text off with a line; the site draws them as the logged-in half of its login list, which is the same ul the header already fills when '
+            .'nobody is logged in, so the two cannot be one element',
+        'fragments/alert.html' =>
+            'the flash notice is the panel alone: getFlashHtml() and the admin tabs are its only producers, and is_flash with alert_attr are what place it, fade it '
+            .'and start its countdown. Under that the panel prints the text as handed and the site wraps it in a paragraph, because the site notice is a block of '
+            .'running text and the panel notice is one line - the same split the .sl-alert rules already carry',
+        'fragments/block-content.html' =>
+            'a class map, and the map is each theme own vocabulary: three named containers in the panel against fifteen on the site, with the four they share '
+            .'spelled the same way. Unifying means one theme emitting class names nothing in it styles, which is how a dead class enters a package hundreds of '
+            .'themes are copied from',
+        'fragments/button.html' =>
+            'the panel needs a real button element whenever a value is posted under a name, because an input carries its value and not its label; the site has no '
+            .'such caller and stays on the input it has always drawn. On top of that the panel picks a tone class per button and the site has one button, so the '
+            .'ladder that reads the tone flags has nothing to map to there',
+        'fragments/changelog-commit.html' =>
+            'one producer hands both themes the commit hash and the author e-mail address; the panel prints them, because a moderator reads a changelog to identify '
+            .'a commit, and the public page drops both, because an address published on an open page is harvested. Guarding them on a key would move that decision '
+            .'into the producer, which feeds one call site and cannot know which theme renders',
+        'fragments/checkbox.html' =>
+            'the same box under two form systems: the panel wraps it in the label class its radio uses and can set a code sample beside the text, the site names '
+            .'its own label class per call and carries a plain shape that takes no class at all. The check-all hook is the one thing both spell, and they spell it '
+            .'the same way',
+        'fragments/dial.html' =>
+            'two mechanisms under one name, which the .sl-dial rules already answer for: the panel dial drives the file manager through data-sl-fm-act, -file, -arg '
+            .'and -run, and the site dial swaps a fragment over htmx with its own target, swap and CSRF header. Neither set is inert in the other theme - each is '
+            .'the half of the dial that theme is built on',
+        'fragments/inline-badge.html' =>
+            'two badge vocabularies: fourteen names the panel maps and twenty the site does, with no name in both. The site badge tells a reader what a topic is - '
+            .'new, hot, closed, moderated - and carries the glyph for it; the panel badge tells a moderator what a record is. A union would be thirty-four branches '
+            .'of which each theme reaches its own half',
+        'fragments/input.html' =>
+            'the field look is where the two themes part: the site gives every input one sl-field class and modifies it, the panel names the context the input sits '
+            .'in instead - a config row, a ratings day box, a search filter, a translation target. The keys do not collide and no producer sets one the other theme '
+            .'knows, so this is two class maps and not one contract spelled twice',
+        'fragments/label.html' =>
+            'the panel label is a real label element with a for, a title and a prefix, because a panel form associates its control by id; the site label defaults '
+            .'to one class and takes text or markup and nothing else. One caller feeds the site file and it passes neither for nor title',
+        'fragments/link.html' =>
+            'the largest of the two vocabularies: twelve names the panel maps against thirty-three the site does, and not one is in both. The site link is the '
+            .'whole card, cart, category and login language of a public page; the panel link is a row action. This is the pair the plan measured at over a hundred '
+            .'lines, and it is two contracts rather than one contract with two spellings',
+        'fragments/pager-link.html' =>
+            'the panel page number is its own control, sl-pnum, with a current and a nav modifier; the site reuses the mini chip every other small control on it is '
+            .'drawn as, and puts a glyph in place of the previous and next labels. One producer feeds both and hands the label and the icon name either way, so what '
+            .'differs is which of the two each theme draws',
+        'fragments/pager.html' =>
+            'the site opens its pager with the tally it paginates - how many records over how many pages at what page size - because a public list is the whole '
+            .'page; the panel pager sits under a module that already carries its own head and toolbar. The one producer passes the four labels to both themes, so '
+            .'the divergence is which theme draws them and not what either is given',
+        'fragments/popover.html' =>
+            'the hint is a control in the panel and a modifier on the site, which the .sl-tip rules already answer for: the panel draws the glyph itself and gives '
+            .'the whole thing a nav element, the site wraps the glyph in its own span so the hint can sit on whatever element carries it. The note under the panel '
+            .'hint has no producer on the site',
+        'fragments/select.html' =>
+            'the panel select renders its options from an array as well as from ready markup, and names the context it sits in - config, search sort, search order, '
+            .'save action; the site takes ready markup only and gives every select the one sl-field class. Two class maps and two option contracts, and no producer '
+            .'crosses them',
+        'fragments/span.html' =>
+            'one flag in the panel against twenty-two on the site. The site span is the chip language of a public page - price, reads, votes, cart total, the four '
+            .'message markers - each carrying its own glyph; the panel span is a drag handle and a few text tones. The hidden and dimmed names are the one thing '
+            .'both spell, and after this batch they spell it the same way',
+        'fragments/table-row.html' =>
+            'two row contracts: the panel row takes cells already rendered and adds the sort and grouping hooks its tables need, the site row builds its own cells '
+            .'from a list and knows what a title, a category and a moderator column are. The site file is over a hundred lines because the row is where a public '
+            .'list decides what a record looks like; the panel decides that in the module',
+        'fragments/table.html' =>
+            'the panel table is one shape - a sortable list inside a card, optionally unwrapped - and the site table is nine, from a cart to an FAQ to an avatar '
+            .'grid. The site also splits on an open flag so a looped row lands inside the tbody, which the panel has no producer for. The head is the same split '
+            .'again: ready markup in the panel, a column list on the site',
+        'fragments/textarea.html' =>
+            'the same field split as the input: the site gives every textarea sl-field and marks the one the editor mounts on, the panel names the config row '
+            .'instead. The site also lets the name be absent, because an editor area posts through the control it is mounted in',
+        'fragments/voting-view.html' =>
+            'the result row of a poll: the panel prints the answer and its share as a header over the bar, the site draws the leading answer with a trophy and '
+            .'hangs the raw counts on the element as data attributes for the live swap to read. One producer feeds both and passes is_lead either way',
+        'partials/block-sidebar.html' =>
+            'the panel sidebar block is a div with an h3 that collapses on a slide and carries an icon and the two collapse glyphs; the site block is a section '
+            .'with an h2 and no icon, because a heading rank follows the document it sits in and the two documents are the page shells canon does not cover. The '
+            .'collapse hook is the same name in both',
+        'partials/div.html' =>
+            'the panel container knows what it is wrapping - a search box, a menu grid, a radio group, a collapsible, a rate box - and the site container is a div '
+            .'with an id, a title and at most one of two classes. The row form differs the same way: the panel includes its own row fragment, the site writes the '
+            .'row inline',
+        'partials/foot-controls.html' =>
+            'the panel foot carries the two links the site has no producer for - the brand link and the debug switch - and prints the generation time before the '
+            .'licence, where the site prints it after. One producer feeds both and hands every key to each, so the order and the two extra links are what each theme '
+            .'chose to draw',
+        'partials/preview.html' =>
+            'the panel draws its preview inside the sl-box card every panel block sits in, and the site has no such card at all - sl-box appears nowhere in its '
+            .'CSS. Everything inside the wrapper is already byte-identical, so this entry is the wrapper and nothing else',
+        'partials/session-summary.html' =>
+            'two readings of the same numbers: the panel lists who is online and lets a moderator open each audience, so it needs a row list, a toggle id and a '
+            .'label per audience; the site draws one donut of the three shares and refreshes it on a timer. The panel has no producer for the percentages and the '
+            .'site none for the row lists',
+        'partials/voting-widget.html' =>
+            'the site widget is live - it re-fetches itself on a timer, closes itself when the poll ends and picks its heading rank from where it stands; the panel '
+            .'widget is a still section with a fixed h4. The one producer hands both themes poll_id and token and the panel file draws neither, which is safe only '
+            .'while has_form is false there: a poll form posted from the panel theme would carry no id and no CSRF token',
     ],
 
     # PHP the markup scan skips, each with the reason it is not a leftover

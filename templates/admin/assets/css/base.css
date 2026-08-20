@@ -579,6 +579,11 @@ a:hover {
   text-decoration: none;
 }
 
+a:focus-visible {
+  outline: var(--sl-ring-width) solid var(--sl-ring-bg);
+  outline-offset: var(--sl-ring-gap);
+}
+
 a img {
   border: 0 none;
 }
@@ -654,8 +659,7 @@ select:focus {
 
 input,
 textarea,
-select,
-a {
+select {
   outline: none;
 }
 

@@ -1,4 +1,4 @@
-<span class="sl-none">{{ result }}</span>
+<span class="sl-hidden">{{ result }}</span>
 <div class="sl-rate-like"{% if is_live %} hx-target="#{{ target_id }}" hx-swap="outerHTML transition:true" hx-push-url="false" hx-headers='{"X-CSRF-TOKEN": "{{ token }}"}'{% endif %}>
   <p
     {% if is_live %}hx-post="index.php?{{ vote_query }}&amp;stl=1&amp;rate=1" hx-trigger="click"{% endif %}

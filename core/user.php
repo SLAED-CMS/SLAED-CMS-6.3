@@ -801,7 +801,7 @@ function getPrivatRowData(array $row, int $typ, string $tok, int $pick = 0, stri
         ]),
         default => $tpl->getHtmlFrag('span', [
             'title' => $row['viewed'] ? _PROLD : _PRNEW,
-            'is_message_in' => true, 'is_hidden' => $row['viewed'] > 0, 'text' => '',
+            'is_message_in' => true, 'is_dimmed' => $row['viewed'] > 0, 'text' => '',
         ]),
     };
     $acts = [$mkact($link, (string)_SHOW, 'eye', true)];

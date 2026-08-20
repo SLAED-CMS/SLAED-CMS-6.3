@@ -3,7 +3,7 @@
   {% if title %}title="{{ title }}"{% elseif back_title %}title="{{ back_title }}"{% endif %}
   {% if is_back or back_text or has_back_button %}onclick="javascript:window.history.go(-1);"{% endif %}
 
-  {% if class or chip_tone or back_text or has_back_button or is_shop_price or is_card_reads or is_card_post or is_back or is_highlight or is_geo_flag or is_geo_ip or is_alpha_letter or is_success or is_message_in or is_message_out or is_message_read or is_message_save or is_cab_badge or is_votes or is_cart_total or is_hidden or is_bold or is_danger or is_form_value or is_views or is_line_stack_item or is_cat_image or is_cat_name %}
+  {% if class or chip_tone or back_text or has_back_button or is_shop_price or is_card_reads or is_card_post or is_back or is_highlight or is_geo_flag or is_geo_ip or is_alpha_letter or is_success or is_message_in or is_message_out or is_message_read or is_message_save or is_cab_badge or is_votes or is_cart_total or is_hidden or is_dimmed or is_bold or is_danger or is_form_value or is_views or is_line_stack_item or is_cat_image or is_cat_name %}
   class="
     {% if class %}{{ class }}{% endif %}
     {% if back_text or has_back_button %} sl-but{% endif %}
@@ -25,6 +25,7 @@
     {% if is_votes %} sl-chip sl-chip-success sl-votes{% endif %}
     {% if is_cart_total %} sl-chip sl-cart-total{% endif %}
     {% if is_hidden %} sl-hidden{% endif %}
+    {% if is_dimmed %} sl-dimmed{% endif %}
     {% if is_bold %} sl-text-bold{% endif %}
     {% if is_danger %} sl-text-danger{% endif %}
     {% if is_form_value %} sl-form-value{% endif %}
