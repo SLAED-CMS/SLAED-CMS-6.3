@@ -17,8 +17,8 @@ The component is declared once and byte-identically in `templates/lite/assets/cs
 produces a different window in each theme by design — the corner, the elevation and the head plate of the two
 themes differ because their tokens differ.
 
-`demo/window-canon.html` is the reference page. It loads the shipped `theme.css` and the shipped `slaed.js` and
-carries no stylesheet and no script of its own, so it cannot drift from what ships.
+There is no reference page. The canon is checked against the shipped windows themselves, listed under
+*Where the windows are*, with the Verification list at the end of this document.
 
 ## Structure
 
@@ -78,7 +78,7 @@ theme owns the default, `sl-modal-sm`, `-lg` and `-xl` override it on the window
 
 `data-sl-open` opens a window that needs no data. Every window that must be filled before it is shown — and today
 that is all of them — is opened from JavaScript with `window.setWindowOpen()` after its content is written. The
-attribute is what lets `demo/window-canon.html` open every window without a script of its own.
+attribute stays because a window whose content is already in the markup needs no script at all to open.
 
 The engine writes `data-sl-moved`, `data-sl-left` and `data-sl-top` on a windowed dialog to remember where the
 user put it. These are internal state and are never authored in a template.

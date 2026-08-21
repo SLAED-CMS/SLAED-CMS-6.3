@@ -8,6 +8,17 @@ The `Parser` class (`core/classes/parser.php`) is responsible for converting use
 
 The parser uses a caching mechanism and internally employs a stateless "stash" token strategy (`$this->stash`). This prevents block-level components and raw HTML from being mangled or double-escaped by inline filters.
 
+### The parser owns no markup
+
+Every element the parser emits is rendered by the active theme, not concatenated in PHP: paragraphs, headings, rules, lists, tables, code, quotes, callouts, links, images and the styled spans of `[color]`, `[family]` and `[size]` all come from fragments under `templates/<theme>/fragments/`. The parser passes data and semantic flags; escaping happens at the template boundary, so a value handed to a fragment arrives **unescaped** and a value that is already rendered markup travels under a `*_html` key.
+
+Two consequences matter when using the class:
+
+* **A global `$tpl` is required.** `core/system.php` creates it immediately before `$prs`, so any normal request has one. Without it the parser produces text with no markup at all — there is no plain-HTML fallback any more. A standalone or test use must set `$GLOBALS['tpl']` itself, which is what `ParserFixturesTest` does.
+* **Rendered output is theme-specific.** `getCachePath()` already carries `getTheme()` and the class file's mtime in its key, so a stored rendering is never served to a different theme or across a change to this file.
+
+Two shapes are worth knowing because they look unusual. An inline element used inside a `preg_replace` replacement is rendered with `content_html` set to the literal `$1`, which gives the template a whole element and the caller a replacement string. A pair that must wrap text the parser has not finished reading is rendered the same way with `\x01` as its content and split there, so a theme never has to spell half a tag.
+
 ## Public Endpoints
 
 The `Parser` should be instantiated and used dynamically where needed, or invoked via the global context if already bootstrapped. The primary public APIs are:

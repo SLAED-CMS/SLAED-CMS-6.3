@@ -165,9 +165,9 @@ Confirmed bootstrap responsibilities:
   request security/session handling
 - resolves and loads the active theme hook
 - loads `Template`, `Parser`, `Geoip`, `Captcha`, and `Cache`
-- creates shared runtime objects:
+- creates shared runtime objects, in this order because the second needs the first:
   - `$tpl = new Template($theme)`
-  - `$prs = new Parser()`
+  - `$prs = new Parser()` - every element the parser emits is rendered by a theme fragment, so without `$tpl` it produces text with no markup at all
 - loads helpers and admin helpers when needed
 
 Configuration loading:
@@ -485,6 +485,7 @@ Main documented commands:
 - `composer analyse`
 - `composer quality`
 - `npm run browser:audit`
+- `npm run ui:gates` (theme and markup gates; `tools/hooks/pre-commit` runs the same fast set)
 
 Detailed testing guidance lives in:
 - `docs/TESTS.md`
@@ -496,7 +497,8 @@ Use these documents as the primary sources for their topics:
 | Topic | Document |
 |---|---|
 | Engineering principles | `docs/PRINCIPLES.md` |
-| Template runtime and theme contracts | `docs/TEMPLATES.md` |
+| Template runtime, theme contract and gates | `docs/TEMPLATES.md` |
+| Window canon | `docs/WINDOW.md` |
 | Parser behavior | `docs/PARSER.md` |
 | Editor system | `docs/EDITORS.md` |
 | Plugin architecture notes | `docs/PLUGINS.md` |

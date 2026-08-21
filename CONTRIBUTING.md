@@ -28,11 +28,11 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md) before contribu
 
 ### Prerequisites
 
-- **PHP:** 8.1+
+- **PHP:** 8.4+ (`composer.json` declares `>=8.4`)
 - **Database:** PDO MySQL-compatible server (MySQL 8.0+ or MariaDB 10+)
 - **Web Server:** Apache, Nginx, or IIS
-- **Extensions:** PDO and JSON are required by the current runtime; image-related flows use GD functions
-- **Tools:** Git, Composer
+- **Extensions:** PDO, JSON, mbstring, GD and cURL are required; Fileinfo, Zip and Zlib are suggested and only sharpen upload validation
+- **Tools:** Git, Composer, Node (for the browser and visual gates)
 
 ### Fork and Clone
 
@@ -87,6 +87,7 @@ Primary rule files currently used by the repository:
 - `.rules/architecture.md`
 - `.rules/git.md`
 - `.rules/report.md`
+- `.rules/theme.md`
 
 ### Core Principles
 
@@ -192,7 +193,7 @@ $url = getVar('post', 'url', 'url', 'https://');
 $text = getVar('post', 'text', 'text', '');
 ```
 
-Available project types include: `num`, `let`, `word`, `name`, `title`, `text`, `field`, `url`, `var`, `bool`, `raw`.
+The type map in `getVar()` currently carries: `num`, `let`, `word`, `name`, `title`, `text`, `field`, `url`, `var`, `bool`, `defis`, `time`, `date`, `raw`.
 
 ### Constants
 
@@ -263,15 +264,15 @@ The active file-backed template runtime in the current repository is:
 
 - `core/classes/template.php`
 
-Some PHP-side output assembly still exists, but the active template runtime is `core/classes/template.php`.
+No PHP file hardcodes a class attribute, an inline style or an HTML tag any more, and `php tools/ui-audit.php --markup` is the gate that keeps it that way — its limit is `0`, so the next one fails the run. The one named exception is `config/filetype.php`, whose attachment templates are edited by the administrator through the panel and are configuration that happens to be markup. Language files are out of scope as well: markup inside a translated sentence moves with the translation.
 
 For new template work:
 
 - Prefer the modern `Template` runtime.
 - Use the shared `$tpl` runtime object when available.
 - Keep HTML in template files under `templates/*`.
-- Place reusable components in `partials/` (e.g., `partials/modal.html`) to take advantage of shortname syntax (`{% component 'modal' %}`).
-- Keep component CSS and JS alongside the HTML file (`partials/modal.css` and `partials/modal.js`). Asset registration stays colocated with templates; the runtime still performs the existing path and freshness checks.
+- Place reusable components in `partials/` (e.g., `partials/window-gallery.html`) to take advantage of shortname syntax (`{% component 'window-gallery' %}`).
+- A component may keep its CSS and JS beside the HTML file under the same name (`partials/<name>.css`, `partials/<name>.js`). `addAssetPath()` detects such a pair at compile time and adds the asset to the page, so registration stays colocated with the template. No shipped partial uses this today; it is available, not idiomatic.
 - Do not introduce new PHP-side rendering paths that bypass the active `Template` runtime unless the task explicitly requires it.
 
 Current modern runtime methods:
@@ -376,6 +377,18 @@ Project configuration:
 - PHPStan config: `phpstan.neon`
 - Composer dev tools: `composer.json`
 - Composer scripts: `composer test`, `composer analyse`, `composer quality`
+
+### Theme And Markup Gates
+
+A change under `templates/`, `core/`, `admin/`, `modules/`, `plugins/`, `tests/`, or to a `tools/ui-*` file, also has to pass the theme gates:
+
+```bash
+npm run ui:gates
+```
+
+`tools/hooks/pre-commit` runs the same fast set on every commit that carries such a file. Enable it once per clone with `npm run ui:hooks`; `SLAED_SKIP_GATES=1` skips one commit.
+
+No count can see a moved pixel, so a change to theme CSS or to a canon template additionally needs the visual pair — `npm run ui:before` **before** you start editing and `npm run ui:after` afterwards. Both require `SLAED_UI_USER` and `SLAED_UI_PASS` in the environment and refuse to start without them. See [docs/TEMPLATES.md](docs/TEMPLATES.md) for the full gate table.
 
 ---
 

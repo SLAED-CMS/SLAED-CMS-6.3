@@ -162,7 +162,8 @@ instead of accumulating forever.
 
 ### Changelog
 
-Current `config/changelog.php` uses:
+`config/changelog.php` is gitignored and per-installation; the values below are
+the ones this development stand carries:
 
 - `source = github`
 - `limit = 500`
@@ -247,16 +248,24 @@ Recommended direction:
 
 ### Outgoing Mail
 
-Every outgoing message is still sent synchronously inside the request that
-triggers it. Since stage 1 of `docs/MAIL-2026.md` there is exactly one entry
-point, `$mailer->addQueue()` (`core/classes/mail.php:44`), reached from 26 call
-sites in 16 files and dispatching to the transport `mail.transport` selects. The
-delivery result is now read and every failure is recorded through
-`Logger::addSite()`, so a failed delivery no longer leaves the request silently.
-Stage 2 is what moves the wait out of the request.
+No outgoing message is sent inside the request that triggers it. There is one
+entry point, `$mailer->addQueue()` in `core/classes/mail.php`, reached from 27
+call sites in 17 files, and it does nothing but store a row in `{prefix}_mail`
+and answer whether the queue accepted it. No caller learns a delivery outcome
+synchronously.
 
-Measured against the pre-stage-1 code and re-verified against the database on
-2026-07-27:
+Delivery is the `maildrain` scheduler job (`*/5 * * * *`, `lock_timeout` 900),
+which runs `addMailTask()` and through it `Mail::updateQueue()`. `getBatch()`
+claims due rows with one conditional `UPDATE` that stamps `locked`/`lockid` and
+pushes `ntime` behind a lock window, so two runs can never take the same row and
+a dead run's rows become claimable again when the window passes. A row that
+exhausts its attempts moves to `{prefix}_maildead`. Failures are recorded
+through `Logger::addSite()`.
+
+The measurements below predate that split. They are kept because the *ratio*
+they establish is the durable fact and because they are what the queue was built
+against; the absolute numbers describe a request path that no longer exists.
+Measured on 2026-07-27:
 
 - adding a comment took **26.7 s**, of which `addAdminMail()` was **26.6 s** and
   rendering **0.02 s**;
@@ -270,11 +279,14 @@ Measured against the pre-stage-1 code and re-verified against the database on
 
 Implication:
 
-- the split is the durable fact — mail dominates the request and rendering is
-  free. The absolute number is environment-specific and must be re-measured on a
-  host with a working transport before it is quoted;
+- the split is the durable fact — a synchronous transport dominates the request
+  and rendering is free, which is why delivery moved to the scheduler. The
+  absolute number is environment-specific and must be re-measured on a host with
+  a working transport before it is quoted;
 - any before/after comparison for mail work has to state which transport was
-  configured, or it compares two different timeouts.
+  configured, or it compares two different timeouts;
+- the request cost of adding a comment is now one `INSERT` into the queue,
+  whatever the transport is doing.
 
 Newsletter throughput, same date:
 
@@ -331,17 +343,15 @@ Comment storage, same date:
 
 - `{prefix}_comment`: 7353 rows — files 4821, voting 1084, news 1083, faq 141,
   pages 116, links 104, shop 2, media 0; 7348 published, 3 pending;
-- indexes are `PRIMARY(id)`, `cid`, `uid`, `modul_status(modul, status)`,
-  `time` — **nothing on `ip`**, while the flood check queries `WHERE ip = ?`
-  (`core/user.php:274`);
-- the live list query reports `type=ref key=cid rows=20`,
-  `Extra=Using where; Using filesort` — no composite index backs the sort;
 - `_comment`, `_users`, `_news`, `_files`, `_voting` and `_newsletter` are all
   InnoDB.
 
-Remediation was planned separately in `docs/MAIL-2026.md` and in the comment contract
-that `docs/CONTENT-CONTRACT-2026.md` now carries; the facts above stay here whatever
-happens to those documents.
+The index gaps that reading found are closed. `{prefix}_comment` in
+`setup/sql/table.sql` now carries `ip_time(ip, time, id)` for the flood check
+and four composite indexes that back the list orderings —
+`modul_cid_status_deleted`, `modul_cid_deleted`, `status_deleted_time` and
+`modul_cid_pid_time` — plus a `UNIQUE(reqkey)` for double-submit. Re-measure
+before quoting a filesort here.
 
 ### PHP Environment
 

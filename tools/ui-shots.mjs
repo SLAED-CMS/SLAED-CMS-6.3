@@ -26,7 +26,7 @@
 import { chromium } from 'playwright';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
-import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSync, rmSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -37,15 +37,73 @@ const args = new Map(process.argv.slice(2).map((a) => {
   return cut === -1 ? [a.replace(/^--/, ''), true] : [a.slice(2, cut), a.slice(cut + 1)];
 }));
 
-const job = args.has('capture') ? 'capture' : args.has('contrast') ? 'contrast' : args.has('newtheme') ? 'newtheme' : 'check';
+// The two-word guard. A committed baseline cannot be the "before" on a live stand: its own content moves the page height
+// between runs, so a check against it reports the week rather than the change. `--before` and `--after` capture the pair
+// minutes apart into one fixed directory outside the repository, and `--after` does every step around the comparison
+// that is otherwise a command to remember - the caches, the contrast registry when a palette moved, and the audit
+const guard = args.has('before') ? 'before' : args.has('after') ? 'after' : '';
+const guardDir = join(tmpdir(), 'slaed-ui-guard');
+const job = (guard === 'before' || args.has('capture')) ? 'capture' : args.has('contrast') ? 'contrast' : args.has('newtheme') ? 'newtheme' : 'check';
 const only = args.get('only');
 // A batch cannot trust the committed baseline as its "before": the stand's own data moves between runs, so a
 // check against it reports the week rather than the change. --out= sends a capture somewhere outside the
 // repository, which is what lets a batch compare its own two captures instead
-const outRel = typeof args.get('out') === 'string' ? args.get('out') : conf.out;
+const outRel = guard ? guardDir : (typeof args.get('out') === 'string' ? args.get('out') : conf.out);
 const outDir = resolve(root, outRel);
 const user = process.env[conf.env.user] || '';
 const pass = process.env[conf.env.pass] || '';
+
+// Run one command from the repository root and let its output through; the exit code is the caller's to read
+function runStep(cmd, list) {
+  try {
+    execFileSync(cmd, list, { cwd: root, stdio: 'inherit' });
+    return 0;
+  } catch (err) {
+    return typeof err.status === 'number' ? err.status : 1;
+  }
+}
+
+// Whatever git says has changed against HEAD, staged or not, so a step can be skipped when nothing it guards was touched
+function getChangedFiles() {
+  try {
+    const out = execFileSync('git', ['diff', 'HEAD', '--name-only'], { cwd: root, encoding: 'utf8' });
+    const add = execFileSync('git', ['ls-files', '--others', '--exclude-standard'], { cwd: root, encoding: 'utf8' });
+    return (out + add).split('\n').map((l) => l.trim()).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+// The rendered tree has to be the tree on disk: doCss() bundles when cache_css or css_h is set, and a page cache
+// serves a render made before the edit, so a comparison of caches is not a comparison of themes
+function setCachesEmpty() {
+  for (const dir of ['storage/cache/pages', 'storage/cache/templates']) {
+    const full = join(root, dir);
+    if (!existsSync(full)) continue;
+    for (const item of readdirSync(full)) rmSync(join(full, item), { recursive: true, force: true });
+  }
+}
+
+if (guard) {
+  // Without credentials the rig skips every state that needs a session and captures the rest logged out, which is a
+  // different set from the one a full run writes. A guard that quietly guards two thirds of the manifest is worse than none
+  if (!user || !pass) {
+    console.error('Set ' + conf.env.user + ' and ' + conf.env.pass + ' first: without them the walk skips every page that needs a session');
+    process.exit(1);
+  }
+  if (guard === 'before') {
+    rmSync(guardDir, { recursive: true, force: true });
+    console.log('before: capturing the tree you are about to change into ' + guardDir);
+  } else {
+    const shot = existsSync(guardDir) ? readdirSync(guardDir).filter((f) => f.endsWith('.png')).length : 0;
+    if (!shot) {
+      console.error('Nothing to compare against: run `npm run ui:before` before you start editing, not after');
+      process.exit(1);
+    }
+    console.log('after: comparing against the ' + shot + ' images captured in ' + guardDir);
+  }
+  setCachesEmpty();
+}
 
 // Count the pixels two PNGs differ in, drawn on a canvas in the page so the rig needs no image dependency
 async function getPixelDiff(page, one, two) {
@@ -321,6 +379,12 @@ async function setOneShot(page, item, view, mode, tag, pairs, report) {
   const base = item.name + tail;
   const file = join(outDir, name);
   const now = await getStableShot(page, report, name);
+  // A check whose baseline is missing must say so: writing it instead re-baselines the gate against the very tree it was
+  // asked to judge, and the run exits green having compared nothing. Only a capture is allowed to create an image
+  if (job === 'check' && !existsSync(file)) {
+    report.push('  MISSING baseline ' + name + ' - capture it before checking against it');
+    return;
+  }
   if (job === 'capture' || !existsSync(file)) {
     writeFileSync(file, now);
     if (!tag) {
@@ -477,4 +541,23 @@ if (noisy.length) {
 const shots = existsSync(outDir) ? readdirSync(outDir).filter((f) => f.endsWith('.png')).length : 0;
 console.log(job + ': ' + shots + ' baseline images under ' + outRel);
 for (const line of report) console.log(line);
-process.exit(report.some((l) => l.includes('DIFF') || l.includes('failed')) ? 1 : 0);
+let code = report.some((l) => l.includes('DIFF') || l.includes('failed') || l.includes('MISSING')) ? 1 : 0;
+
+if (guard === 'after') {
+  // A palette that moved invalidates the pair registry, and the audit would go on measuring the colours it replaced.
+  // Only a base.css can move it, so the walk it costs is paid only when one did
+  const palette = getChangedFiles().some((f) => f.endsWith('assets/css/base.css'));
+  if (palette) {
+    console.log('\na base.css changed, so the contrast registry is regenerated before the counts are read');
+    code = runStep(process.execPath, ['tools/ui-shots.mjs', '--contrast']) || code;
+  }
+  console.log('\ncounts:');
+  code = runStep('php', ['tools/ui-audit.php']) || code;
+  console.log('\nmarkup:');
+  code = runStep('php', ['tools/ui-audit.php', '--markup']) || code;
+  console.log(code ? '\nFAIL - read the lines above; nothing was stored' : '\nPASS - re-store the ratchet with `php tools/ui-audit.php --store` when the change is final');
+}
+
+if (guard === 'before' && !code) console.log('\nbefore is captured. Make the change, then run `npm run ui:after`');
+
+process.exit(code);

@@ -49,7 +49,7 @@ http://localhost/slaed-cms/
 - **PHP:** 8.4+
 - **Database:** PDO MySQL-compatible server (MySQL 8.0+ or MariaDB 10+)
 - **Web Server:** Apache, Nginx, IIS, or another PHP-capable web server
-- **Extensions:** PDO, JSON and mbstring are required by the current runtime; image-related flows use GD functions; SMTP over TLS uses OpenSSL and the Sendmail transport uses `proc_open`
+- **Extensions:** `composer.json` requires PDO, JSON, mbstring, GD and cURL. Fileinfo, Zip and Zlib are declared under `suggest`: the upload service falls back to its own structural validators without them. SMTP over TLS uses OpenSSL and the Sendmail transport uses `proc_open`
 - **Encoding:** UTF-8 / utf8mb4
 
 > [!NOTE]
@@ -152,7 +152,7 @@ Bundled themes currently present in the repository:
 - `templates/admin`
 - `templates/lite`
 
-`templates/lite` is the bundled frontend theme in the current repository. It includes local Bootstrap assets under `templates/lite/assets/vendor/bootstrap/`.
+`templates/lite` is the bundled frontend theme in the current repository. Both themes carry a local copy of Bootstrap Icons under `assets/vendor/bootstrap-icons/` — the icon stylesheet and its WOFF2 font, nothing else of Bootstrap. Icons are rendered through the theme's `fragments/bootstrap-icon.html`.
 
 ### Routing and Entry Flow
 
@@ -197,6 +197,7 @@ slaed-cms/
 ├── storage/               # Runtime-generated cache, logs, counters, GeoIP, sitemap, backups
 ├── templates/             # Themes and template trees
 ├── tests/                 # PHPUnit and validation tests
+├── tools/                 # Audit, gate and capture scripts run from the project root
 ├── uploads/               # Uploaded files
 ├── admin.php              # Admin entry point
 ├── index.php              # Frontend entry point
@@ -238,7 +239,8 @@ For upgrade guidance and currently confirmed migration notes, see [UPGRADING.md]
 | Document | Description |
 |----------|-------------|
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Current runtime architecture and request flow map |
-| [docs/TEMPLATES.md](docs/TEMPLATES.md) | Template system and theme structure |
+| [docs/TEMPLATES.md](docs/TEMPLATES.md) | Template system, theme structure, theme contract and gates |
+| [docs/WINDOW.md](docs/WINDOW.md) | Window canon: the one structure every dialog is built from |
 | [docs/TESTS.md](docs/TESTS.md) | Testing and validation commands |
 | [docs/PRINCIPLES.md](docs/PRINCIPLES.md) | Engineering principles |
 | [docs/PERFORMANCE.md](docs/PERFORMANCE.md) | Performance architecture and optimization priorities |

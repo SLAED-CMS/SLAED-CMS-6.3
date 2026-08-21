@@ -1,0 +1,55 @@
+#!/bin/sh
+# Author: Eduard Laas
+# 2005 - 2026 SLAED
+# License: MIT
+# Website: slaed.net
+#
+# The gates that are cheap enough to run on every commit, so nobody has to remember them. About twenty seconds,
+# and only when the commit carries a file that could move a count - a documentation commit pays nothing.
+#
+# Enable once per clone:  git config core.hooksPath tools/hooks
+# Skip a single commit:   SLAED_SKIP_GATES=1 git commit ...
+#
+# The visual gate is not here: it takes a quarter of an hour twice over and needs a capture of the tree taken
+# before the edit, which no hook can be in time for. This one names it instead of running it.
+
+[ "$SLAED_SKIP_GATES" = "1" ] && exit 0
+
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$staged" ] && exit 0
+
+# Nothing outside these can move a ratcheted count, the markup scan or the theme tests
+watched=$(printf '%s\n' "$staged" | grep -E '^(templates/|core/|admin/|modules/|plugins/|tests/|tools/ui-)')
+[ -z "$watched" ] && exit 0
+
+fail=0
+
+printf '\n[gates] counts and the frozen API\n'
+php tools/ui-audit.php >/dev/null || fail=1
+
+printf '[gates] markup hardcoded in PHP\n'
+php tools/ui-audit.php --markup >/dev/null || fail=1
+
+printf '[gates] theme, template and parser tests\n'
+php vendor/phpunit/phpunit/phpunit --filter "ThemeContract|UiAudit|ThemeCreation|EditorWindow|ParserFixtures|TemplateValidation" >/dev/null || fail=1
+
+if [ "$fail" != "0" ]; then
+    printf '\nCommit refused. Run these to see what and why:\n'
+    printf '  php tools/ui-audit.php\n'
+    printf '  php tools/ui-audit.php --markup\n'
+    printf '  php vendor/phpunit/phpunit/phpunit --filter "ThemeContract|UiAudit|ThemeCreation|EditorWindow|ParserFixtures|TemplateValidation"\n\n'
+    exit 1
+fi
+
+# A change to theme CSS or to canon templates can pass every count and still move pixels, which only the rig sees
+visual=$(printf '%s\n' "$staged" | grep -E '^templates/[^/]+/(assets/css/|assets/editors/|fragments/|partials/)')
+if [ -n "$visual" ]; then
+    printf '\n[gates] passed, but this commit touches theme CSS or canon templates.\n'
+    printf '        No count can see a moved pixel. Before you started editing you should have run:\n'
+    printf '          npm run ui:before\n'
+    printf '        and now:\n'
+    printf '          npm run ui:after\n'
+fi
+
+printf '[gates] ok\n\n'
+exit 0

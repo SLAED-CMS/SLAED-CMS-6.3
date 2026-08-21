@@ -4,7 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
-# CLI probe for the theme-creation gate of docs/THEME-ETALON-2026.md: the runtime file list a theme package has to satisfy
+# CLI probe for the theme-creation gate described in docs/TEMPLATES.md: the runtime file list a theme package has to satisfy
 # boots the real core like index.php, so checkThemeAssets() reads the shipped editor manifests rather than a list a fixture invented
 # The caller hands the theme names to ask about; the scratch copy itself is built and removed through tests/Support/theme_scratch.php,
 # which is the one lifecycle both halves of the theme-creation gate share - the static half in ThemeCreationTest and the HTTP half of

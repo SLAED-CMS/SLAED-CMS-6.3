@@ -39,8 +39,8 @@ into backups, into the rotation archives `addCompress()` writes beside it, and
 into any archive handed to support. Web access is only one of its exits.
 
 **The delivery declares its private areas in a dialect one server reads.** The
-tree carries 179 `.htaccess` files with `deny from all` — 116 under `modules`,
-27 under `admin`, 18 under `storage`, and the rest across `uploads`, `setup`,
+tree carries 173 `.htaccess` files with `deny from all` — 116 under `modules`,
+27 under `admin`, 12 under `storage`, and the rest across `uploads`, `setup`,
 `templates`, `core`, `lang`, `config` and `blocks`. Apache honours them. nginx
 never reads them, and nothing in the delivery states the same intent in a form
 nginx understands. On such a server every one of those directories is handed out

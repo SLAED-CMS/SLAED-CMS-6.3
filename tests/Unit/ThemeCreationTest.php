@@ -13,7 +13,7 @@ namespace Tests\Unit {
     use RuntimeException;
 
     /**
-     * The goal of docs/THEME-ETALON-2026.md, expressed as a test: a new theme is made by copying an
+     * The theme contract of docs/TEMPLATES.md, expressed as a test: a new theme is made by copying an
      * etalon and editing one block. It copies an etalon under a name nothing else uses, repaints
      * only the API block of its base.css, and then asks the whole contract of the copy - every audit
      * count at zero, every contrast the etalon held still held, the runtime file list satisfied, and

@@ -4,7 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
-# The lifecycle of a scratch theme, which is the goal of docs/THEME-ETALON-2026.md carried out in code: copy an etalon whole,
+# The lifecycle of a scratch theme, which is the theme contract of docs/TEMPLATES.md carried out in code: copy an etalon whole,
 # repaint only the API block of its base.css, and remove the copy afterwards against a path this file built and never one it guessed
 # It lives here rather than inside a test because two gates ask the same question of the same copy - the static half in
 # ThemeCreationTest and the HTTP half the screenshot runner drives - and a lifecycle spelled twice drifts into two lifecycles
@@ -37,9 +37,17 @@ function setScratchTree(string $from, string $to): void {
 # refuses the first one and leaves the tree half removed, which is how a copy outlives the test that made it
 function deleteScratchTheme(string $path): bool {
     $safe = str_replace('\\', '/', $path);
-    if (!preg_match('#/templates/scratch-[0-9a-f]{8}$#', $safe) || !is_dir($path)) return false;
+    if (!preg_match('#/templates/scratch-([0-9a-f]{8})$#', $safe, $name) || !is_dir($path)) return false;
     deleteScratchTree($path);
+    deleteScratchCache($name[1]);
     return !is_dir($path);
+}
+
+# Remove the compiled templates of a scratch theme, which the engine writes beside every other theme's and nothing else ever reads again
+# The copy is removed by name, so the cache under that name outlives it: every run of either gate left half a megabyte behind before this
+function deleteScratchCache(string $name): void {
+    $root = dirname(__DIR__, 2).'/storage/cache/templates/scratch-'.$name;
+    if (preg_match('#/scratch-[0-9a-f]{8}$#', $root) && is_dir($root)) deleteScratchTree($root);
 }
 
 # Remove one directory tree whole, called only for a path deleteScratchTheme() has already vouched for

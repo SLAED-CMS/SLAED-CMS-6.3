@@ -69,6 +69,11 @@ tests/coverage/
 # PHP CS Fixer
 .php-cs-fixer.cache
 
+# Screenshot baselines: a full-page pixel set cannot be stable on a stand whose own content moves the page height,
+# so the reference is captured per change into a temp directory by npm run ui:before / ui:after, never committed.
+# The path still works locally; ignoring it keeps 80 MB of PNGs from returning to history by accident
+/tools/ui-baseline/
+
 # OS files
 .DS_Store
 desktop.ini

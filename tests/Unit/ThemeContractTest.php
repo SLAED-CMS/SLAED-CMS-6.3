@@ -32,6 +32,21 @@ final class ThemeContractTest extends TestCase
         }
     }
 
+    # getContract() folds the generated pair registry in only when the file is there, so a missing or empty one does not fail the
+    # contrast check - it silently leaves nothing to check and every count downstream reads zero and passes. A gate whose input can
+    # vanish without a word is the failure this plan keeps finding, so the registry is asserted the same way the ratchet is
+    #[Test]
+    public function testTheContrastRegistryIsCommittedAndCarriesPairs(): void
+    {
+        $this->assertFileExists(dirname(__DIR__, 2).'/tools/ui-contrast.json', 'the contrast gate has no pairs without it and would read zero while checking nothing; regenerate with node tools/ui-shots.mjs --contrast');
+        $pairs = self::$cont['contrast']['pairs'] ?? [];
+        $this->assertNotEmpty($pairs, 'the contrast registry holds no pairs; regenerate it with node tools/ui-shots.mjs --contrast');
+        foreach (array_keys(self::$cont['themes']) as $name) {
+            $mine = array_filter($pairs, static fn(array $one): bool => ($one['theme'] ?? '') === $name);
+            $this->assertNotEmpty($mine, 'theme '.$name.' has no contrast pair recorded, so nothing about its colours is being checked');
+        }
+    }
+
     #[Test]
     public function testNoRatchetedCountGrewAgainstTheBaseline(): void
     {

@@ -27,6 +27,15 @@ NPM scripts currently present in `package.json`:
 - `npm run browser:audit`
 - `npm run browser:inspect`
 - `npm run browser:attach`
+- `npm run ui:gates`
+- `npm run ui:before`
+- `npm run ui:after`
+- `npm run ui:hooks`
+
+The `ui:*` scripts are the theme gates; [TEMPLATES.md](TEMPLATES.md) carries the
+full table of what each one checks. `tools/hooks/pre-commit` runs the fast set
+on every commit that carries a file able to move a count — enable it once per
+clone with `npm run ui:hooks`, skip a single commit with `SLAED_SKIP_GATES=1`.
 
 ## Installation
 Install dev dependencies first:
@@ -206,6 +215,8 @@ Current unit test files include:
 - `AdminPageRenderFlowTest.php`
 - `AdminPreviewBridgeFlowTest.php`
 - `AdminSearchboxBridgeFlowTest.php`
+- `BackupContractTest.php`
+- `BackupIntegrationTest.php`
 - `CommentIsolationTest.php`
 - `CommentNotifyTest.php`
 - `CommentReadTest.php`
@@ -215,10 +226,20 @@ Current unit test files include:
 - `CommentTransportTest.php`
 - `CommentTrustBoundaryTest.php`
 - `CommentWriteTest.php`
+- `DatabaseBatchTest.php`
 - `DatabaseTest.php`
+- `DeskKeysTest.php`
 - `EditorFormatTest.php`
+- `EditorRoomTest.php`
+- `EditorWindowTest.php`
 - `ExampleTest.php`
+- `FileManagerCatalogTest.php`
+- `FileManagerEditTest.php`
+- `FileManagerLockTest.php`
+- `FileManagerOpsTest.php`
+- `FileManagerPathTest.php`
 - `GeoipReaderTest.php`
+- `ImageThumbTest.php`
 - `InputFilterTest.php`
 - `InputVarContractTest.php`
 - `MailCampaignTest.php`
@@ -233,8 +254,18 @@ Current unit test files include:
 - `PageCacheContractTest.php`
 - `ParserFixturesTest.php`
 - `PasswordHashTest.php`
+- `PrivatClassTest.php`
+- `PrivatMigrationTest.php`
+- `SchedulerLockTest.php`
 - `StatsContractTest.php`
 - `StructureTest.php`
+- `ThemeContractTest.php`
+- `ThemeCreationTest.php`
+- `UiAuditTest.php`
+- `UploadContractTest.php`
+- `UploadFallbackTest.php`
+- `UploadFormatTest.php`
+- `UploadIntegrationTest.php`
 - `ViewBridgeSmokeTest.php`
 
 Contract tests (`CommentNotifyTest`, `CommentReadTest`, `CommentStateTest`, `CommentTargetTest`,
@@ -278,35 +309,6 @@ For focused code work:
 4. run PHP-CS-Fixer dry-run on changed paths when style is relevant
 5. run browser audit scripts when the change touches browser behavior, frontend
    rendering, or live UI flows
-
-## Planned Coverage
-Tests owed by the two approved 2026 plans, listed so they are added with the
-stage that introduces the behaviour rather than at the end. Nothing here exists
-yet.
-
-From `docs/MAIL-2026.md`:
-
-- stage 1 — header assembly per transport; address sanitising rejects `\r`/`\n`;
-  SMTP reply parsing for multi-line, single-line and unexpected codes;
-  dot-stuffing leaves a body line starting with `.` intact; line length stays
-  within 1000 octets; a body stored with bare LF goes on the wire as CRLF
-- stage 2 — claim atomicity across two `getBatch()` calls; backoff moves `ntime`
-  forward; the attempt cap moves a row to failed; a non-ASCII subject
-  round-trips; retention prunes per `kind`; a shared `ref` body resolves once
-  per batch and a dangling `ref` fails the row instead of sending an empty
-  message
-
-From the comment contract, now carried by `docs/CONTENT-CONTRACT-2026.md`:
-
-- stage 0 — a request cannot choose its own moderation mode or module
-- stage 1 — each of the eight modules increments its own counter and points slot;
-  markup parity through `tools/comment-baseline.php`
-- `checkRules()` measures the longest word in characters, not the last in bytes; a
-  repeated `setStatus()` leaves counters and points untouched; soft delete is
-  idempotent; the same stored source renders the same way whichever editor wrote it,
-  because no column names a storage format and nothing branches on the editor
-- two POSTs carrying one `reqkey` produce one row, and a second POST that shares only
-  the key answers a conflict and stores nothing
 
 ## Notes
 - test names such as `ViewBridgeSmokeTest` are current repository filenames

@@ -41,7 +41,11 @@ Each editor must provide a `manifest.json` file in its folder. The system uses t
     "priority": 50,
     "roles": ["user", "admin"],
     "profiles": ["simple", "full"],
-    "formats": ["markdown"]
+    "formats": ["markdown"],
+    "theme": {
+        "skin": true,
+        "partials": ["editor-toastui-files", "editor-toastui-templates"]
+    }
 }
 ```
 
@@ -58,6 +62,7 @@ Each editor must provide a `manifest.json` file in its folder. The system uses t
 - `profiles`: *Required.* Array containing `simple` and/or `full`. Represents configurations.
 - `formats`: *Required.* Array containing values such as `plain`, `html`, `markdown`, or code-related output formats. The current manifest validation expects this field for every editor.
 - `lang`: *Required for code editors.* Array of supported languages (e.g., `["php", "html", "css", "js", "json", "sql", "xml", "text"]`). This is additional code-editor metadata, not a replacement for `formats`.
+- `theme`: *Optional.* Names what the active theme must ship for this editor. `theme.skin` set to `true` makes the runtime load `assets/editors/<id>/skin.css` from the current theme and log through `Logger::addSite()` when it is missing. `theme.partials` lists partial names the driver renders, so the window markup of an editor stays theme-owned. Only `toastui` declares it today. Independently of that block, every driver renders its mount point through the shared `fragments/editor-mount.html` and hides the original textarea with the `hidden` attribute rather than an inline style, so no driver spells markup of its own.
 
 ## Driver Interfaces
 

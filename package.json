@@ -10,6 +10,10 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "ui:before": "node tools/ui-shots.mjs --before",
+    "ui:after": "node tools/ui-shots.mjs --after",
+    "ui:gates": "php tools/ui-audit.php && php tools/ui-audit.php --markup && php vendor/phpunit/phpunit/phpunit --filter \"ThemeContract|UiAudit|ThemeCreation|EditorWindow|ParserFixtures|TemplateValidation\"",
+    "ui:hooks": "git config core.hooksPath tools/hooks",
     "browser:audit": "node tools/browser-audit.mjs",
     "browser:inspect": "node tools/browser-audit.mjs --inspect",
     "browser:attach": "node tools/browser-audit.mjs --attach --current"

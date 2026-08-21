@@ -37,7 +37,7 @@ Current theme directories:
 ### `templates/lite`
 - current bundled frontend theme
 - contains frontend layouts, pages, partials, fragments, assets, and images
-- includes local Bootstrap assets under `assets/vendor/bootstrap/`
+- includes a local copy of Bootstrap Icons under `assets/vendor/bootstrap-icons/`
 
 ## Theme Independence
 
@@ -271,14 +271,14 @@ The current `Template` runtime supports:
   - `{% for item in items %}`
   - `{% endfor %}`
 - includes:
-  - `{% include 'header' %}` (auto-resolves to `partials/header.html`)
+  - `{% include 'menu' %}` (a bare name auto-resolves to `partials/<name>.html`)
   - `{% include 'partials/custom.html' %}`
   - `{% include 'fragments/foo.html' %}`
   - `{% include 'fragments/row.html' with row %}` (context passing supported)
 - layout inheritance
 - blocks
 - components:
-  - `{% component 'modal' %}` (auto-resolves to `partials/modal.html`)
+  - `{% component 'window-gallery' %}` (a bare name auto-resolves to `partials/<name>.html`)
   - `{% slot header %}`
 - free site blocks:
   - `{% freeblock 15 %}` renders the site block with the given numeric id through `getBlocks()`
@@ -294,8 +294,9 @@ Additional confirmed runtime behavior:
 - the runtime can register companion CSS and JS assets for included partials and components
 
 ## Current Migration Direction
+HTML has left PHP and `--markup` holds it at zero, so this is a rule to keep rather than a direction to travel.
 New template work should:
-- move HTML out of PHP
+- keep HTML out of PHP
 - pass plain data from PHP
 - render through `Template/$tpl`
 - avoid new bridge wrappers
@@ -342,16 +343,19 @@ Current template-related tests include:
 Theme-local assets should live inside the theme.
 
 Recommended pattern:
-- `assets/css/theme.css`
-- `assets/js/theme.js`
+- `assets/css/base.css` and `assets/css/theme.css` — the two CSS files every theme package ships
+- `assets/js/<name>.js` — theme-owned scripts; `lite` carries `lib.js`, `admin` carries `admin-ui.js`
 - `assets/vendor/<library>/...`
+- `assets/editors/<editor-id>/skin.css` — when an editor manifest declares `theme.skin`
 
-Example already present:
-- `templates/lite/assets/vendor/bootstrap/`
-- `templates/admin/assets/vendor/bootstrap/`
+Example already present — the icon stylesheet and its WOFF2 font, nothing else of Bootstrap:
+- `templates/lite/assets/vendor/bootstrap-icons/`
+- `templates/admin/assets/vendor/bootstrap-icons/`
 
 ### Automatic Asset Loading
-The current runtime automatically injects CSS and JS files for components and blocks. If a file named identically to the included partial exists (for example `partials/alerts.css` or `partials/alerts.js`), the engine detects it at compile time and injects `<link>` and `<script defer>` tags into the compiled PHP output. This keeps asset registration close to the template file instead of spreading it across PHP callers.
+The current runtime automatically injects CSS and JS files for components and blocks. If a file named identically to the included partial exists — `partials/<name>.css` or `partials/<name>.js` beside `partials/<name>.html` — the engine detects it at compile time and adds the asset to the page. No shipped partial uses this today; the mechanism is available, not idiomatic.
+
+The tag around that asset belongs to the theme, not to the engine: `addAssetPath()` renders it through `fragments/head-link.html` and `fragments/head-script-src.html`, the same two fragments every other `<link>` and `<script>` of the document goes through. They are reached with `getHtml()` rather than `getHtmlFrag()` on purpose — `getHtmlFrag()` resets the asset list it is in the middle of building, and would re-emit what it had already collected.
 
 ## Head and SEO Integration
 
@@ -389,6 +393,94 @@ Heading components use explicit boolean context flags because the template engin
 - no equality/comparison operators in `{% if %}` expressions, such as `==`, `!=`, `<`, `>`, `<=`, or `>=`
 - no complex named include arguments as a supported baseline (simple context passing like `with item` is permitted)
 - no deep inheritance chains
+
+## Theme Contract
+
+A new theme is made by copying an etalon and editing one file: `templates/<theme>/assets/css/base.css` — its `@font-face` and `:root` block, down to the `/* --- end tokens --- */` marker. Everything below the marker is reset and element styles.
+
+- **Two CSS files per theme.** `base.css` holds `@font-face`, the `:root` API block, the marker, then reset and element styles. `theme.css` holds components and no literal visual value.
+- **Themes are independent.** The engine has no inheritance. Rules two themes share stay duplicated on purpose.
+- **The API is frozen.** A theme package may gain a role and may never lose or rename one. The roster under `api` in `tools/ui-audit-baseline.json` holds it on every run and against `--store`.
+- **Canon is CSS, `fragments/` and `partials/`.** `layouts/` and `pages/` are outside it: the page shells of a panel and a site differ by nature.
+- **Breakpoints are canon, not API.** `@media` cannot read a custom property, so a theme decides how things look at a breakpoint, never where it sits.
+- **`assets/editors/*/skin.css`** consumes tokens, declares no API, and is byte-identical in both themes — `EditorWindowTest` enforces that, so it is edited in both in one commit.
+- **`checkThemeAssets()`** in `core/system.php` defines the files a theme must ship; the same list is mirrored under `skeleton` in `tools/ui-contract.php`.
+
+Axes, ladders, the allowlist, categorical sets, declared component names, the ramp and the ratchet list live in `tools/ui-contract.php`. That file is the contract: it is committed, and it is what every tool reads.
+
+- **`error.html`** is the one surface that renders when the CMS cannot, so it carries its own `:root` instead of reading a theme. Its values are the light half of `lite`, because no server is there to write `data-theme`.
+- **`--sl-size-chip`** is read by `plugins/system/slaed.js` for speed-dial geometry and cannot be renamed without touching the script in the same commit. Names written from outside CSS carry `--sl-d-*` and are registered under `data` in the contract.
+
+Both themes stand at **zero untokenised visual decisions**, and every ratcheted count is at zero except `scoped` and `important`. Neither of those two is a defect list: a scoped custom property on a component root is an internal the rules permit, and an `!important` is permitted where it is need. What the ratchet buys is that neither can grow.
+
+## Theme Gates
+
+| Command | Checks |
+|---|---|
+| `php tools/ui-audit.php` | every count for both themes; exits non-zero when a ratcheted count grew |
+| `php tools/ui-audit.php --markup` | no class attribute, inline style or HTML tag hardcoded in PHP; `limit` is `0` |
+| `php tools/ui-audit.php --file=<css> --migrating` | one file, naming the token that replaces each violation |
+| `php tools/ui-audit.php --store` | rewrites `tools/ui-audit-baseline.json` from the current tree |
+| `vendor/bin/phpunit` | `ThemeContractTest` (ratchet + contrast registry), `UiAuditTest` (the tool against fixtures), `ThemeCreationTest` (a scratch copy audits clean and renders) |
+| `npm run ui:before` | captures the tree you are about to change into a temp directory |
+| `npm run ui:after` | empties the caches, compares against that capture, regenerates the contrast registry when a `base.css` moved, then reads the counts |
+| `npm run ui:gates` | the fast gates by hand — the same set the pre-commit hook runs |
+| `node tools/ui-shots.mjs --capture --out=<dir>` | writes a PNG set and each state's measured noise floor |
+| `node tools/ui-shots.mjs --check --out=<dir>` | compares the tree against a set captured earlier; a missing image fails the run instead of being written |
+| `node tools/ui-shots.mjs --contrast` | regenerates `tools/ui-contrast.json`, the pairs that really meet on screen |
+| `node tools/ui-shots.mjs --newtheme` | builds a scratch theme and serves every frontend page of the manifest in it |
+
+**The fast gates run themselves.** `tools/hooks/pre-commit` runs the audit, the markup scan and the theme, template and parser tests on every commit that carries a file able to move a count — about twenty seconds, and nothing at all on a documentation commit. Enable it once per clone with `npm run ui:hooks` (`git config core.hooksPath tools/hooks`); skip one commit with `SLAED_SKIP_GATES=1`. When a commit touches theme CSS or a canon template it also prints the two visual commands, because no count can see a moved pixel.
+
+**The visual gate is a pair of commands, and it has to be.** `ui:before` captures the tree before the edit, which no hook can be in time for; everything after that is done for you. Both refuse to start without `SLAED_UI_USER` and `SLAED_UI_PASS`, because a run without them skips every state that needs a session and silently guards two thirds of the manifest.
+
+Re-store the audit baseline at the end of any change that moves a count. A baseline written once and never lowered lets a regression from 300 back to 350 pass against an old 570.
+
+A change to `tools/ui-audit.php` needs a fixture in `tests/Fixtures/ui/` covering it. The tool is the authority for every count, so a wrong classifier is invisible: it writes a plausible number into the baseline and everything downstream trusts it.
+
+## Theme Risks And Findings
+
+### CSS and markup
+
+- A shorthand resets every longhand it omits. Folding three longhands into one shorthand silently restores the initial value of the fourth.
+- An SVG presentation attribute — `stroke`, `fill`, `filter` — loses to any CSS rule. Where the theme styles the class, the attribute on the element is dead weight.
+- `[hidden]` carries `!important` in both resets. To hide something a component gives a `display` to, use the attribute; a class of equal specificity loses to any rule declared later.
+- A custom property substitutes its `var()` where it is **declared**, so a `:root` token that reads a scoped one resolves against the root, not against the element.
+- A theme cannot restyle what PHP hardcodes. PHP passes data, text, URLs, attributes and semantic flags; templates own structure and class mapping; CSS owns values.
+
+### Template engine
+
+- `{% if %}` is truthiness-only. A value of `0` or `'0'` is false, so pass an explicit flag when zero must still render.
+- `{% include 'x' %}` **without** `with` inherits the caller's scope. A flag name a page sets leaks into the fragment, so a flag must not reuse a name that means something else elsewhere.
+- `getHtmlFrag()` and `getHtmlPart()` reset the asset list they then re-emit. Code running while a page's assets are being gathered must reach the engine through `getHtml()` instead.
+
+### Screenshot rig
+
+- **Nothing may touch the tree while the rig runs.** A capture takes about a quarter of an hour. A `git stash` during that window leaves a set half from one tree and half from another, with nothing in the output to say so.
+- **Always compare two captures of your own.** The stand's own data moves between runs, so a `--check` against any set captured earlier than minutes ago reports the week rather than the change. `ui:before` and `ui:after` exist to make that pair the default path.
+- **Re-capture only the states that moved.** `--capture --only=<page>` writes that page's images and merges its entries into `noise-floor.json`, leaving every other floor and image untouched.
+- Before capturing, empty `storage/cache/pages/*` and `storage/cache/templates/*`, keep `cache_css` and `css_h` at `'0'`, and delete `config/local.php` after any hand edit of `config/*`.
+- Motion is switched off with `animation: none`. A near-zero duration does not stop an infinite animation; it makes it cycle as fast as the compositor can draw, and the frame a screenshot catches is then chosen by the scheduler.
+- An element that refetches itself on a timer cannot be part of a still image. `mask` hides what moves inside a box of stable size; `drop` takes out of layout what changes size. A mask cannot save a box whose height is what moves.
+- **Masking an element for the pixel gate removes it from the contrast gate.** The pair collector skips `visibility: hidden` and `display: none`, which is what `mask` and `drop` apply. The two gates trade against each other.
+- A change that moves every page height gets nothing from an image diff. Drive a geometry probe over the same manifest instead: horizontal overflow, page height, and the count of elements whose box leaves the viewport, on the pristine tree and on the changed one.
+- The rig runs over `https`. `setCookies()` marks the session cookie `secure` when `homeurl` is `https`, so a run over plain `http` fills the login form and is handed a cookie the browser drops.
+- Credentials come from `SLAED_UI_USER` and `SLAED_UI_PASS` and are never stored in the manifest. A run without them skips every state that needs a session and captures the rest logged out, which is a different baseline from the one a full run writes.
+- A gate that is red on arrival is a gate somebody switches off, so run `--check` against a freshly captured baseline rather than trusting the capture.
+
+### Contrast registry
+
+- `tools/ui-contrast.json` is generated by `--contrast` and read by the audit on every run. If it is missing, the contrast check has no pairs and reads zero while checking nothing; `ThemeContractTest` asserts the file exists and carries pairs for every theme.
+- The walk composites sheer layers instead of skipping them, and does it per layer of one `background-image`, back to front — a hatch over a gradient stands on that gradient, not on the page two boxes further out.
+- Regenerate the registry in the same session as the manifest that feeds it. Comparing a registry against one taken under a different `mask`/`drop` list measures the difference between two runs, not a change.
+
+### Why the baseline is not committed
+
+A full-page pixel baseline cannot be stable on a stand whose own content moves. Measured: a `--check` against a committed set went red hours after capture on a tree whose frontend was byte-identical — `100% size changed` at `sm`, `md` and `lg` on the front page and the forum list, and 1.6% to 3.9% even at `xl`. The page height follows the content, and a mask cannot save a box whose height is what moves.
+
+So the reference is captured per change, minutes before the comparison, into a temp directory: that is what `ui:before` and `ui:after` do, and the two captures are close enough in time that drift stays under each state's measured noise floor. `/tools/ui-baseline/` is gitignored — the path still works for a local set, it simply never enters history again.
+
+For the record, in case a stand with frozen content ever makes a committed set worth it: 168 images weigh about 80 MB, a PNG does not delta-compress, so each re-captured image is a fresh blob forever. Re-encoding is not a lever — Chromium already writes these about 9% smaller than a maximum-compression GD re-encode. Narrowing the manifest is not a lever either: every viewport and both modes have each caught a regression no other gate could see. `--capture --only=<page>` is the lever, writing one page's images and merging its entries into `noise-floor.json`.
 
 ## Migration Source Of Truth
 For active repository template guidance and current runtime status, use this document (`docs/TEMPLATES.md`).

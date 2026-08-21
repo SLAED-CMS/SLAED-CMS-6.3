@@ -5,7 +5,7 @@
 # Website: slaed.net
 
 # The theme audit. It measures what `.rules/theme.md` demands and `tools/ui-contract.php` declares,
-# and it is the authority over every number written in docs/THEME-ETALON-2026.md.
+# and it is the authority over every number written about the themes, including in docs/TEMPLATES.md.
 # Usage: php tools/ui-audit.php --theme=admin [--count|--bare|--dist=padding|--dup|--names|--ramp|--cross|--markup]
 #        php tools/ui-audit.php --file=templates/admin/assets/css/theme.css --migrating
 #        php tools/ui-audit.php --store   rewrites tools/ui-audit-baseline.json from the current tree

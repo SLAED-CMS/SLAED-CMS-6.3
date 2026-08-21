@@ -217,7 +217,7 @@ User and administrative content formatting should be passed through the unified 
 The active file-backed template runtime is `core/classes/template.php`.
 
 New template work should target the modern runtime and theme HTML files under `templates/`.
-The modern engine supports automatic CSS and JS injection for components placed in `partials/` (e.g., `{% component 'modal' %}` auto-loads `modal.css` and `modal.js` at compile time).
+The modern engine supports automatic CSS and JS injection for components placed in `partials/`: `{% component '<name>' %}` also loads `partials/<name>.css` and `partials/<name>.js` at compile time when those files exist.
 
 When upgrading custom modules:
 - Remove subdirectories from your module's `fragments/` logic (e.g. `new/`). The fragment namespace has been strictly flattened. Update `$tpl->getHtmlFrag(...)` calls accordingly.
@@ -252,7 +252,7 @@ Use this checklist when reviewing custom modules, custom admin code, or local pa
 
 - [ ] Review custom templates against the current theme structure
 - [ ] For new template work, prefer the modern `Template` runtime
-- [ ] Keep HTML in theme files instead of PHP where practical
+- [ ] Keep HTML in theme files, never in PHP - `php tools/ui-audit.php --markup` fails on a hardcoded class, inline style or tag
 
 ### Configuration
 
