@@ -969,7 +969,7 @@
             }
             var shows = document.querySelectorAll('[data-sl-tab-show][data-sl-tab-group="' + saveGroup + '"]');
             for (var s = 0; s < shows.length; s++) {
-                shows[s].style.display = (shows[s].getAttribute('data-sl-tab-show') === String(index)) ? '' : 'none';
+                shows[s].hidden = shows[s].getAttribute('data-sl-tab-show') !== String(index);
             }
             try {
                 window.sessionStorage.setItem(save, String(index));

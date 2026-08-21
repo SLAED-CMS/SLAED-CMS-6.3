@@ -395,6 +395,13 @@
   --sl-switch-height: 24px;
   --sl-switch-gap: 2px;
   --sl-switch-knob-shadow: 0 1px 3px light-dark(rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.6));
+  /* Components: the extended statistics panel - the widest a ring is drawn, the stroke of its arc, the label column
+     of a dimension bar, the height of its track and the floor under the two figure columns beside it */
+  --sl-statx-max-width: 120px;
+  --sl-statx-ring: 12px;
+  --sl-statx-width: 120px;
+  --sl-statx-height: 8px;
+  --sl-statx-min-width: 40px;
   --sl-t-icon-width: 50px;
   --sl-tab-height: 26px;
   --sl-table-height: 30px;

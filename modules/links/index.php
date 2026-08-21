@@ -273,7 +273,7 @@ function view(): void {
             $download = $tpl->getHtmlPart('form-wrap', [
                 'action' => 'index.php?name='.$conf['name'],
                 'method' => 'post',
-                'form_attr' => 'class="sl-inline-form"',
+                'is_inline' => true,
                 'content_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'id', 'value_attr' => (string)$id])
                     .$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'loading'])
                     .$tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'label' => _DOWNLLINK, 'is_legacy_green' => true, 'input_attr' => trim($onclick)]),

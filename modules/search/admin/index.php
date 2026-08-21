@@ -138,10 +138,6 @@ function getSearchinvalid(array $list): array {
     return array_values(array_filter($list, fn(array $row) => (int)$row['enabled'] === 0 && $row['type'] === _SEARCHINVALID));
 }
 
-function getSearchsection(string $title, string $html): string {
-    return '<h2>'.$title.'</h2>'.$html;
-}
-
 function getSearchauditTable(array $list, string $view = 'enabled'): string {
     global $tpl;
     if (!$list) return $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
@@ -443,13 +439,13 @@ function config(): void {
         ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$anum])],
         ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$anump])],
     ];
-    $html = $tpl->getHtmlPart('box', ['content_html' => getSearchsection(_PREFERENCES, $tpl->getHtmlPart('form', [
+    $html = $tpl->getHtmlPart('box', ['title' => _PREFERENCES, 'content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=search&op=save',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]],
         'rows' => $cfgrows,
         'submit_label' => _SAVECHANGES,
-    ]))]);
-    $html .= $tpl->getHtmlPart('box', ['content_html' => getSearchsection(_SEARCHENABLED, getSearchauditTable($elist, 'enabled'))]);
+    ])]);
+    $html .= $tpl->getHtmlPart('box', ['title' => _SEARCHENABLED, 'content_html' => getSearchauditTable($elist, 'enabled')]);
     $readyform = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=search&op=modadd',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]],
@@ -462,8 +458,8 @@ function config(): void {
         ]),
         'submit_label' => _SEARCHADDSEL,
     ]);
-    $html .= $tpl->getHtmlPart('box', ['content_html' => getSearchsection(_SEARCHREADY, $readyform)]);
-    $html .= $tpl->getHtmlPart('box', ['content_html' => getSearchsection(_SEARCHINVALID, getSearchauditTable($ilist, 'invalid'))]);
+    $html .= $tpl->getHtmlPart('box', ['title' => _SEARCHREADY, 'content_html' => $readyform]);
+    $html .= $tpl->getHtmlPart('box', ['title' => _SEARCHINVALID, 'content_html' => getSearchauditTable($ilist, 'invalid')]);
     $reform = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=search&op=reindex',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]],

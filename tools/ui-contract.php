@@ -201,7 +201,7 @@ return [
         'pmf-head', 'pmf-mate', 'pmf-meta', 'pmf-pane', 'pmf-slot', 'pmf-text', 'pmf-who',
         'pnum', 'pnum-arrow', 'popover', 'preview', 'profile-ava', 'profile-dot', 'progress', 'proof', 'pulse', 'qr', 'quote', 'radio',
         'rail', 'rank', 'ratings', 'ring', 'row', 'scroll', 'search', 'search-filter', 'search-order', 'search-sort', 'select', 'sep',
-        'session', 'shot', 'shot-side', 'site', 'site-img', 'skel',
+        'session', 'shot', 'shot-side', 'site', 'site-img', 'skel', 'statx',
         'skel-row', 'skel-tile', 'slide', 'slide-cont', 'sort', 'spark', 'spin', 'sublist', 'sublist-two', 'switch', 'switch-knob',
         't-icon', 'table', 'tab', 'thumb', 'tile', 'toast',
         'toolbar', 'toolbar-row', 'tooltip', 'topbar', 'touch', 'tree', 'veil', 'view', 'vote', 'wordmark', 'wordmark-img', 'wrap',
@@ -759,6 +759,9 @@ return [
 
     # PHP the markup scan skips, each with the reason it is not a leftover
     'markup' => [
+        # The scan reached zero, so it gets a gate under it: --markup exits non-zero on the next hardcoded class, inline
+        # style or HTML tag instead of printing a figure nobody reads. A count with no limit beside it is a report, not a check
+        'limit' => 0,
         'exclude' => [
             '/lang/' => 'a language file defines translated sentences, one file per locale; markup inside a sentence is part of that text and moves '
                 .'with the translation, not with a fragment. This is the general case of the RSS feed document the plan already excluded',

@@ -72,6 +72,8 @@
   {% if label_html %}{{{ label_html }}}{% endif %}
   {% if label_span %}
     <span{% if label_span_class %} class="{{ label_span_class }}"{% endif %}>{{ label }}</span>
+  {% elseif is_label_strong %}
+    <b>{{ label }}</b>
   {% elseif label %}
     {{ label }}
   {% endif %}

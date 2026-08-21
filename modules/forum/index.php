@@ -549,7 +549,7 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
             'action' => 'index.php?name='.$conf['name'],
             'method' => 'post',
             'form_name' => 'post',
-            'form_attr' => 'class="sl-forum-reply-form"',
+            'is_reply' => true,
             'fields' => $rows,
         ]);
         return $tpl->getHtmlFrag('title', ['title' => _QUICKREPLY, 'is_level_two' => true]).$cont;
@@ -714,7 +714,7 @@ function add(): void {
             'action' => 'index.php?name='.$conf['name'],
             'method' => 'post',
             'form_name' => 'post',
-            'form_attr' => 'class="sl-forum-reply-form"',
+            'is_reply' => true,
             'fields' => $rows,
         ]);
     } else {

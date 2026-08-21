@@ -367,7 +367,7 @@ function printresults(int|string|null $layout, int $id): string {
 function printwhois(string|array $output): string {
 	global $domainwhois, $ext, $domainopt, $tpl;
 	$lines = explode("\n", $output);
-	$content = implode('', array_map(static fn($line): string => htmlspecialchars((string)$line, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'<br>', $lines));
+	$content = getTplLines($lines);
 	return $domainopt.$tpl->getHtmlPart('fieldset-panel', [
 		'legend' => _WHOIS_INF_US,
 		'content' => $content,

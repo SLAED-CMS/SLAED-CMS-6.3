@@ -136,9 +136,8 @@ class CaptchaStore {
         $guard = CAPTCHA_DIR.'/.htaccess';
         if (!is_file($guard)) self::write($guard, 'deny from all');
         $index = CAPTCHA_DIR.'/index.html';
-        $page = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>SLAED CMS</title>'
-            .'<meta http-equiv="refresh" content="0; url=https://slaed.net"></head><body></body></html>';
-        if (!is_file($index)) self::write($index, $page);
+        $page = defined('BASE_DIR') ? BASE_DIR.'/storage/index.html' : '';
+        if (!is_file($index) && $page !== '' && is_file($page)) copy($page, $index);
         return is_writable(CAPTCHA_DIR);
     }
 

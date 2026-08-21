@@ -620,7 +620,7 @@ function productadd(): void {
         .$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _APOSTMOD, 'is_selected' => $acomm == 1])
         .$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _APOSTNOMOD, 'is_selected' => $acomm == 2]);
     $rows[] = ['label_html' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'ptime', 'time' => $ptime, 'with' => true, 'max' => 16])];
-    $rows[] = ['label_html' => _VOTING, 'field_html' => add_voting('shop', 'vote', $vote, 'sl-form-control')];
+    $rows[] = ['label_html' => _VOTING, 'field_html' => add_voting('shop', 'vote', $vote)];
     $rows[] = ['label_html' => _COMMENTS, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'acomm', 'options_html' => $commopts])];
     $rows[] = ['label_html' => _PUBHOME, 'field_html' => getTplRadioGroup(['name' => 'ihome', 'value' => $ihome, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
     $rows[] = ['label_html' => _FIXED.'?', 'field_html' => getTplRadioGroup(['name' => 'fix', 'value' => $fix, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];

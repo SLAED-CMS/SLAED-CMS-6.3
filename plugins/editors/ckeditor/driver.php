@@ -25,7 +25,7 @@ class EditorCkeditor implements ContentDriver {
         $pl = ($profile === 'full') ? self::PL_FULL : self::PL_SIMPLE;
         $tb = ($profile === 'full') ? self::TB_FULL : self::TB_SIMPLE;
         $eid = htmlspecialchars($id, ENT_QUOTES, 'UTF-8');
-        $ta = '<div id="'.$eid.'_ck"></div>';
+        $ta = $tpl->getHtmlFrag('editor-mount', ['id' => $id.'_ck']);
         $ta .= $tpl->getHtmlFrag('hidden', [
             'name_attr' => $name,
             'value_attr' => $value,

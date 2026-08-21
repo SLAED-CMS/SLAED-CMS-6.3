@@ -176,8 +176,7 @@ function activate(): void {
             [$email] = $db->getSqlRow($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_order WHERE id = :id', ['id' => $id]));
             $amail = ($conf['order']['mail'] ?? '') ? $conf['order']['mail'] : ($conf['adminmail'] ?? '');
             $subject = ($conf['sitename'] ?? '').' - '._ORDER;
-            $msg = ($conf['sitename'] ?? '').' - '._ORDER.'<br><br>';
-            $msg .= $prs->filterContent($conf['order']['sendinfo'] ?? '', false, 'all');
+            $msg = getTplLines([($conf['sitename'] ?? '').' - '._ORDER, $prs->filterContent($conf['order']['sendinfo'] ?? '', false, 'all')], true, true);
             $mailer->addQueue(['kind' => 'order', 'email' => $email, 'title' => $subject, 'body' => $msg, 'sender' => $amail, 'prio' => 3]);
         }
     }

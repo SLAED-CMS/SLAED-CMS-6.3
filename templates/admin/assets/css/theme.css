@@ -4964,10 +4964,6 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   font-weight: var(--sl-weight-bold);
 }
 
-.sl-chart-tip .muted {
-  fill: var(--sl-text);
-}
-
 .sl-chart-day:hover .sl-chart-dayline,
 .sl-chart-day:hover .sl-chart-focus,
 .sl-chart-day:hover .sl-chart-tip {
@@ -6716,6 +6712,181 @@ button.sl-fm-thumb:hover .bi-zoom-in {
 
   .sl-fm-bar input[type="text"] {
     width: var(--sl-fm-search-width);
+  }
+}
+
+/* Extended statistics: the rings, the dimension bars and the hour chart one counter archive is read into */
+.sl-statx-rings {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--sl-space-5);
+}
+
+.sl-statx-ring,
+.sl-statx-dim,
+.sl-statx-hours {
+  padding: var(--sl-space-5);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-surface);
+  box-shadow: var(--sl-shadow-xs);
+}
+
+.sl-statx-ring {
+  text-align: center;
+}
+
+.sl-statx-ring svg {
+  display: block;
+  width: 100%;
+  max-width: var(--sl-statx-max-width);
+  height: auto;
+  margin: 0 auto var(--sl-space-3);
+  transform: rotate(-90deg);
+}
+
+.sl-statx-rbg,
+.sl-statx-rval {
+  fill: none;
+  stroke-width: var(--sl-statx-ring);
+}
+
+.sl-statx-rbg {
+  stroke: var(--sl-border-strong);
+}
+
+.sl-statx-rval {
+  stroke-linecap: round;
+}
+
+.sl-statx-ring strong {
+  display: block;
+  font-size: var(--sl-font-h2);
+  line-height: var(--sl-line-tight);
+}
+
+.sl-statx-ring b {
+  display: block;
+  margin-top: var(--sl-space-2);
+  font-size: var(--sl-font-small);
+}
+
+.sl-statx-ring span {
+  display: block;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+}
+
+.sl-statx-dims {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sl-space-5);
+  margin-top: var(--sl-space-5);
+}
+
+.sl-statx-dim h4,
+.sl-statx-hours h4 {
+  margin: 0 0 var(--sl-space-3);
+  color: var(--sl-primary);
+  font-size: var(--sl-font-body);
+}
+
+.sl-statx-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  margin: var(--sl-space-2) 0;
+}
+
+.sl-statx-bl {
+  width: var(--sl-statx-width);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-statx-bg {
+  flex: 1;
+  height: var(--sl-statx-height);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-bg-subtle);
+}
+
+.sl-statx-bv {
+  display: block;
+  height: 100%;
+  border-radius: var(--sl-radius-1);
+}
+
+.sl-statx-bc,
+.sl-statx-bp {
+  min-width: var(--sl-statx-min-width);
+  text-align: right;
+}
+
+.sl-statx-hours {
+  margin-top: var(--sl-space-5);
+}
+
+.sl-statx-hours svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.sl-statx-hours rect {
+  fill: var(--sl-primary);
+}
+
+.sl-statx-hours text {
+  fill: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+}
+
+.sl-statx-unavail {
+  margin: 0;
+}
+
+/* One tone per dimension: the arc it fills on a ring, the fill it paints on a bar */
+.sl-statx-tone-primary .sl-statx-rval {
+  stroke: var(--sl-primary);
+}
+
+.sl-statx-tone-primary .sl-statx-bv {
+  background: var(--sl-primary);
+}
+
+.sl-statx-tone-success .sl-statx-rval {
+  stroke: var(--sl-success);
+}
+
+.sl-statx-tone-success .sl-statx-bv {
+  background: var(--sl-success);
+}
+
+.sl-statx-tone-warning .sl-statx-rval {
+  stroke: var(--sl-warning);
+}
+
+.sl-statx-tone-warning .sl-statx-bv {
+  background: var(--sl-warning);
+}
+
+.sl-statx-tone-accent .sl-statx-rval {
+  stroke: var(--sl-accent);
+}
+
+.sl-statx-tone-accent .sl-statx-bv {
+  background: var(--sl-accent);
+}
+
+@media (max-width: 900px) {
+  .sl-statx-rings {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sl-statx-dims {
+    grid-template-columns: 1fr;
   }
 }
 

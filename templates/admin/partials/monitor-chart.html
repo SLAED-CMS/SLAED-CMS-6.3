@@ -1,0 +1,51 @@
+<svg class="sl-chart-svg" viewBox="0 0 {{ width }} {{ height }}" preserveAspectRatio="none" role="img" aria-label="{{ label }}">
+  <defs>
+    <linearGradient id="slMonitorAreaUp" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="var(--sl-chart-up)" stop-opacity="0.55" />
+      <stop offset="1" stop-color="var(--sl-chart-up)" stop-opacity="0.06" />
+    </linearGradient>
+    <linearGradient id="slMonitorAreaDown" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="var(--sl-chart-down)" stop-opacity="0.5" />
+      <stop offset="1" stop-color="var(--sl-chart-down)" stop-opacity="0.05" />
+    </linearGradient>
+    <linearGradient id="slMonitorAreaCpu" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="var(--sl-chart-cpu)" stop-opacity="0.34" />
+      <stop offset="1" stop-color="var(--sl-chart-cpu)" stop-opacity="0.04" />
+    </linearGradient>
+    <linearGradient id="slMonitorAreaRam" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="var(--sl-chart-ram)" stop-opacity="0.34" />
+      <stop offset="1" stop-color="var(--sl-chart-ram)" stop-opacity="0.04" />
+    </linearGradient>
+    <filter id="slMonitorGlow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="1" stdDeviation="0.8" flood-color="var(--sl-text)" flood-opacity="0.1" />
+    </filter>
+  </defs>
+  <path class="sl-chart-gridline" d="{{ gridline }}"/>
+  <path class="sl-chart-vgrid" d="{{ vgrid }}"/>
+  {% for tick in ticks %}
+  <text class="sl-chart-value-label" x="28" y="{{ tick.y }}">{{ tick.label }}</text>
+  {% endfor %}
+  {% for one in series %}
+  <path class="sl-chart-area sl-chart-area-{{ one.key }}" d="{{ one.area }}" fill="url(#{{ one.grad }})"/>
+  {% endfor %}
+  {% for one in series %}
+  <path class="sl-chart-line sl-chart-line-{{ one.key }}" d="{{ one.line }}"/>
+  {% endfor %}
+  {% for slot in slots %}
+  <g class="sl-chart-day">
+    <line class="sl-chart-dayline" x1="{{ slot.x }}" y1="42" x2="{{ slot.x }}" y2="222"/>
+    <circle class="sl-chart-focus" cx="{{ slot.x }}" cy="{{ slot.y }}" r="5"/>
+    <g class="sl-chart-tip" transform="translate({{ slot.tipx }} {{ slot.tipy }})">
+      <rect width="{{ tipwidth }}" height="{{ tipheight }}" rx="6"/>
+      <text class="sl-chart-tip-title" x="9" y="18">{{ slot.title }}</text>
+      {% for row in slot.rows %}
+      <text x="9" y="{{ row.y }}">{{ row.label }}: {{ row.value }}</text>
+      {% endfor %}
+    </g>
+    <rect class="sl-chart-hover-zone" x="{{ slot.zonex }}" y="35" width="{{ slot.zonewidth }}" height="218"/>
+  </g>
+  {% endfor %}
+  {% for axis in axes %}
+  <text class="sl-chart-axis-label" x="{{ axis.x }}" y="252">{{ axis.label }}</text>
+  {% endfor %}
+</svg>

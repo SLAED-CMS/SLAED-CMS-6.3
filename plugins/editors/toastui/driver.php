@@ -65,9 +65,9 @@ class EditorToastUi implements ContentDriver {
             'rows_num' => $rows,
             'value_text' => $value,
             'input_class' => defined('ADMIN_FILE') ? 'sl-form-control' : '',
-            'input_attr' => 'id="'.$eid.'" style="display:none"',
+            'input_attr' => 'id="'.$eid.'" hidden',
         ]);
-        $ta .= '<div id="'.$eid.'_toast"></div>';
+        $ta .= $tpl->getHtmlFrag('editor-mount', ['id' => $id.'_toast']);
         $mod = strtolower((string)($data['mod'] ?? ''));
         $rul = (array)($data['rule'] ?? []);
         $room = (array)($data['room'] ?? []);

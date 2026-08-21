@@ -447,7 +447,7 @@ function checkDebugView(): bool {
 
 # Format exit and displaying information with an optional page heading
 function setExit(string $msg, string $typ = '', string $title = ''): never {
-    global $conf;
+    global $conf, $tpl;
     $file = defined('BASE_DIR') ? BASE_DIR.'/core/classes/template.php' : '';
     if (!class_exists('Template') && $file !== '' && is_file($file)) require_once $file;
     if (!class_exists('Template')) die('Template engine unavailable');

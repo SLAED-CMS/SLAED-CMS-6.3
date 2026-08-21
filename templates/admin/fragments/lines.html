@@ -1,0 +1,1 @@
+{% for line in lines %}{% if line.is_next %}<br>{% if is_wide %}<br>{% endif %}{% endif %}{% if line.has_text %}{{ line.text }}{% else %}{{{ line.html }}}{% endif %}{% endfor %}

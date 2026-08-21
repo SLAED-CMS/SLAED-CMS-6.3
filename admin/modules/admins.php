@@ -278,7 +278,7 @@ function add(): void {
                 'value_text' => $mailtext,
             ]),
             'id' => 'sl_form_admin_mail',
-            'attr' => 'data-sl-toggle-display="grid"'.($check === '' ? ' style="display:none"' : ''),
+            'attr' => 'data-sl-toggle-display="grid"'.($check === '' ? ' hidden' : ''),
             'is_full' => true,
         ],
         [

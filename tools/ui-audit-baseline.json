@@ -1,5 +1,5 @@
 {
-    "generated": "2026-08-20T23:11:51Z",
+    "generated": "2026-08-21T07:25:22Z",
     "themes": {
         "admin": {
             "count": 0,
@@ -7,7 +7,7 @@
             "dup": 0,
             "names": 0,
             "dead": 0,
-            "single": 147,
+            "single": 152,
             "alias": 0,
             "unsat": 0,
             "unmet": 0,
@@ -15,7 +15,7 @@
             "clash": 0,
             "classes": 0,
             "important": 22,
-            "tokens": 297,
+            "tokens": 302,
             "contrast": 0
         },
         "lite": {
@@ -291,6 +291,11 @@
             "--sl-space-6",
             "--sl-space-7",
             "--sl-space-8",
+            "--sl-statx-height",
+            "--sl-statx-max-width",
+            "--sl-statx-min-width",
+            "--sl-statx-ring",
+            "--sl-statx-width",
             "--sl-success",
             "--sl-success-strong",
             "--sl-success-subtle",
@@ -746,6 +751,6 @@
     "global": {
         "kinds": 0,
         "cross": 0,
-        "markup": 143
+        "markup": 0
     }
 }

@@ -510,8 +510,9 @@ function getMonitorChartTimeLabel(int $sec, bool $now = false): string {
     return sprintf(_MONITOR_TIME_AGO, $sec);
 }
 
-# Builds the monitor traffic chart SVG with grid, hover zones, cursor lines, and live tips
+# Builds the monitor traffic chart from its four series; the SVG around them lives in the theme partial
 function getMonitorChartSvg(array $snap): string {
+    global $tpl;
     $uh = is_array($snap['hist_up'] ?? null) ? $snap['hist_up'] : [];
     $dh = is_array($snap['hist_down'] ?? null) ? $snap['hist_down'] : [];
     $ch = is_array($snap['hist_cpu'] ?? null) ? $snap['hist_cpu'] : [];
@@ -530,66 +531,32 @@ function getMonitorChartSvg(array $snap): string {
     }
     $vals = array_map('floatval', array_merge($uh, $dh));
     $mx = $vals ? max(1.0, max($vals)) : 1.0;
-    $up = getHistoryPoints($uh, $mx, $pb, $ww, $px);
-    $ul = getSmoothLinePath($uh, $mx, $pb, $ww, $px);
-    $dl = getSmoothLinePath($dh, $mx, $pb, $ww, $px);
-    $cl = getSmoothLinePath($ch, 100.0, $pb, $ww, $px);
-    $rl = getSmoothLinePath($rh, 100.0, $pb, $ww, $px);
-    $ua = getSmoothAreaPath($uh, $mx, $pb, $ww, $px);
-    $da = getSmoothAreaPath($dh, $mx, $pb, $ww, $px);
-    $ca = getSmoothAreaPath($ch, 100.0, $pb, $ww, $px);
-    $ra = getSmoothAreaPath($rh, 100.0, $pb, $ww, $px);
     $upb = getHistoryBucketPoints($uh, $mx, $pb, $ww, $px, $bc);
     $dpb = getHistoryBucketPoints($dh, $mx, $pb, $ww, $px, $bc);
     $cpb = getHistoryBucketPoints($ch, 100.0, $pb, $ww, $px, $bc);
     $rpb = getHistoryBucketPoints($rh, 100.0, $pb, $ww, $px, $bc);
+    $series = [
+        ['key' => 'up', 'grad' => 'slMonitorAreaUp', 'area' => getSmoothAreaPath($uh, $mx, $pb, $ww, $px), 'line' => getSmoothLinePath($uh, $mx, $pb, $ww, $px)],
+        ['key' => 'down', 'grad' => 'slMonitorAreaDown', 'area' => getSmoothAreaPath($dh, $mx, $pb, $ww, $px), 'line' => getSmoothLinePath($dh, $mx, $pb, $ww, $px)],
+        ['key' => 'cpu', 'grad' => 'slMonitorAreaCpu', 'area' => getSmoothAreaPath($ch, 100.0, $pb, $ww, $px), 'line' => getSmoothLinePath($ch, 100.0, $pb, $ww, $px)],
+        ['key' => 'ram', 'grad' => 'slMonitorAreaRam', 'area' => getSmoothAreaPath($rh, 100.0, $pb, $ww, $px), 'line' => getSmoothLinePath($rh, 100.0, $pb, $ww, $px)],
+    ];
     $gy = [42, 82, 122, 162, 202];
     $al = ['100', '75', '50', '25', '0'];
-    $xl = [];
-    for ($ix = 0; $ix < $bc; $ix++) {
-        $sec = (($bc - 1 - $ix) * $st);
-        $xl[] = getMonitorChartTimeLabel($sec, $sec === 0);
+    $grid = '';
+    $ticks = [];
+    foreach ($gy as $ix => $yy) {
+        $grid .= 'M'.$px.' '.$yy.'H'.($ww - $px);
+        $ticks[] = ['y' => $yy + 3, 'label' => $al[$ix]];
     }
-    $svg = [];
-    $svg[] = '<svg class="sl-chart-svg" viewBox="0 0 '.$ww.' '.$hh.'" preserveAspectRatio="none" role="img" aria-label="Traffic monitoring chart">';
-    $svg[] = '  <defs>';
-    $svg[] = '    <linearGradient id="slMonitorAreaUp" x1="0" x2="0" y1="0" y2="1">';
-    $svg[] = '      <stop offset="0" stop-color="var(--sl-chart-up)" stop-opacity="0.55" />';
-    $svg[] = '      <stop offset="1" stop-color="var(--sl-chart-up)" stop-opacity="0.06" />';
-    $svg[] = '    </linearGradient>';
-    $svg[] = '    <linearGradient id="slMonitorAreaDown" x1="0" x2="0" y1="0" y2="1">';
-    $svg[] = '      <stop offset="0" stop-color="var(--sl-chart-down)" stop-opacity="0.5" />';
-    $svg[] = '      <stop offset="1" stop-color="var(--sl-chart-down)" stop-opacity="0.05" />';
-    $svg[] = '    </linearGradient>';
-    $svg[] = '    <linearGradient id="slMonitorAreaCpu" x1="0" x2="0" y1="0" y2="1">';
-    $svg[] = '      <stop offset="0" stop-color="var(--sl-chart-cpu)" stop-opacity="0.34" />';
-    $svg[] = '      <stop offset="1" stop-color="var(--sl-chart-cpu)" stop-opacity="0.04" />';
-    $svg[] = '    </linearGradient>';
-    $svg[] = '    <linearGradient id="slMonitorAreaRam" x1="0" x2="0" y1="0" y2="1">';
-    $svg[] = '      <stop offset="0" stop-color="var(--sl-chart-ram)" stop-opacity="0.34" />';
-    $svg[] = '      <stop offset="1" stop-color="var(--sl-chart-ram)" stop-opacity="0.04" />';
-    $svg[] = '    </linearGradient>';
-    $svg[] = '    <filter id="slMonitorGlow" x="-10%" y="-10%" width="120%" height="120%">';
-    $svg[] = '      <feDropShadow dx="0" dy="1" stdDeviation="0.8" flood-color="var(--sl-text)" flood-opacity="0.1" />';
-    $svg[] = '    </filter>';
-    $svg[] = '  </defs>';
-    $vgrid = [];
-    foreach ($xs as $xx) {
-        $vgrid[] = 'M'.$xx.' 42V222';
+    $vgrid = '';
+    $axes = [];
+    foreach ($xs as $ix => $xx) {
+        $vgrid .= 'M'.$xx.' 42V'.$pb;
+        $sec = ($bc - 1 - $ix) * $st;
+        $axes[] = ['x' => round($xx, 2), 'label' => getMonitorChartTimeLabel($sec, $sec === 0)];
     }
-    $svg[] = '  <path class="sl-chart-gridline" d="M8 42H892M8 82H892M8 122H892M8 162H892M8 202H892"/>';
-    $svg[] = '  <path class="sl-chart-vgrid" d="'.implode('', $vgrid).'"/>';
-    foreach ($gy as $ix => $y) {
-        $svg[] = '  <text class="sl-chart-value-label" x="28" y="'.((int)$y + 3).'">'.$al[$ix].'</text>';
-    }
-    $svg[] = '  <path class="sl-chart-area sl-chart-area-up" d="'.$ua.'" fill="url(#slMonitorAreaUp)" filter="url(#slMonitorGlow)" />';
-    $svg[] = '  <path class="sl-chart-area sl-chart-area-down" d="'.$da.'" fill="url(#slMonitorAreaDown)" filter="url(#slMonitorGlow)" />';
-    $svg[] = '  <path class="sl-chart-area sl-chart-area-cpu" d="'.$ca.'" fill="url(#slMonitorAreaCpu)" filter="url(#slMonitorGlow)" />';
-    $svg[] = '  <path class="sl-chart-area sl-chart-area-ram" d="'.$ra.'" fill="url(#slMonitorAreaRam)" filter="url(#slMonitorGlow)" />';
-    $svg[] = '  <path class="sl-chart-line sl-chart-line-up" d="'.$ul.'" stroke="var(--sl-chart-up)" filter="url(#slMonitorGlow)" />';
-    $svg[] = '  <path class="sl-chart-line sl-chart-line-down" d="'.$dl.'" stroke="var(--sl-chart-down)" filter="url(#slMonitorGlow)" />';
-    $svg[] = '  <path class="sl-chart-line sl-chart-line-cpu" d="'.$cl.'" stroke="var(--sl-chart-cpu)" filter="url(#slMonitorGlow)" />';
-    $svg[] = '  <path class="sl-chart-line sl-chart-line-ram" d="'.$rl.'" stroke="var(--sl-chart-ram)" filter="url(#slMonitorGlow)" />';
+    $slots = [];
     for ($ix = 0; $ix < $bc; $ix++) {
         $up = $upb[$ix] ?? null;
         $dp = $dpb[$ix] ?? null;
@@ -599,7 +566,6 @@ function getMonitorChartSvg(array $snap): string {
         $xx = (float)$xs[$ix];
         $stt = ($ix === 0) ? $px : round((($xs[$ix - 1]) + $xx) / 2, 2);
         $end = ($ix === $bc - 1) ? ($ww - $px) : round(($xx + ($xs[$ix + 1])) / 2, 2);
-        $wid = max($end - $stt, 1);
         $tx = $xx + 14;
         if ($tx + $tw > $ww - $px) $tx = $xx - $tw - 14;
         if ($tx < $px) $tx = $px;
@@ -607,26 +573,35 @@ function getMonitorChartSvg(array $snap): string {
         $ty = (($fy + $th + 18) > ($hh - 8)) ? max($fy - $th - 16, 8) : 56;
         $tm = time() - (($bc - 1 - $ix) * $st);
         $lb = getMonitorChartTimeLabel((int)(($bc - 1 - $ix) * $st), $ix === $bc - 1);
-        $hd = date('H:i:s', $tm).' · '.$lb;
-        $svg[] = '  <g class="sl-chart-day">';
-        $svg[] = '    <line class="sl-chart-dayline" x1="'.$xx.'" y1="42" x2="'.$xx.'" y2="222"/>';
-        $svg[] = '    <circle class="sl-chart-focus" cx="'.$xx.'" cy="'.$fy.'" r="5"/>';
-        $svg[] = '    <g class="sl-chart-tip" transform="translate('.round($tx, 2).' '.$ty.')">';
-        $svg[] = '      <rect width="'.$tw.'" height="'.$th.'" rx="6"/>';
-        $svg[] = '      <text class="sl-chart-tip-title" x="9" y="18">'.htmlspecialchars($hd, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</text>';
-        $svg[] = '      <text class="muted" x="9" y="39">CPU: '.htmlspecialchars((string)round((float)($cp['value'] ?? 0), 1), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'%</text>';
-        $svg[] = '      <text class="muted" x="9" y="57">RAM: '.htmlspecialchars((string)round((float)($rp['value'] ?? 0), 1), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'%</text>';
-        $svg[] = '      <text class="muted" x="9" y="75">Upstream: '.htmlspecialchars(filterSize((float)($up['value'] ?? 0)).'/s', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</text>';
-        $svg[] = '      <text class="muted" x="9" y="93">Downstream: '.htmlspecialchars(filterSize((float)($dp['value'] ?? 0)).'/s', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</text>';
-        $svg[] = '    </g>';
-        $svg[] = '    <rect class="sl-chart-hover-zone" x="'.$stt.'" y="35" width="'.$wid.'" height="218"/>';
-        $svg[] = '  </g>';
+        $slots[] = [
+            'x' => $xx,
+            'y' => $fy,
+            'tipx' => round($tx, 2),
+            'tipy' => $ty,
+            'title' => date('H:i:s', $tm).' · '.$lb,
+            'zonex' => $stt,
+            'zonewidth' => max($end - $stt, 1),
+            'rows' => [
+                ['y' => 39, 'label' => 'CPU', 'value' => round((float)($cp['value'] ?? 0), 1).'%'],
+                ['y' => 57, 'label' => 'RAM', 'value' => round((float)($rp['value'] ?? 0), 1).'%'],
+                ['y' => 75, 'label' => 'Upstream', 'value' => filterSize((float)($up['value'] ?? 0)).'/s'],
+                ['y' => 93, 'label' => 'Downstream', 'value' => filterSize((float)($dp['value'] ?? 0)).'/s'],
+            ],
+        ];
     }
-    foreach ($xs as $ix => $xx) {
-        $svg[] = '  <text class="sl-chart-axis-label" x="'.round($xx, 2).'" y="252">'.$xl[$ix].'</text>';
-    }
-    $svg[] = '</svg>';
-    return implode("\n", $svg);
+    return $tpl->getHtmlPart('monitor-chart', [
+        'width' => $ww,
+        'height' => $hh,
+        'label' => 'Traffic monitoring chart',
+        'gridline' => $grid,
+        'vgrid' => $vgrid,
+        'ticks' => $ticks,
+        'series' => $series,
+        'slots' => $slots,
+        'axes' => $axes,
+        'tipwidth' => $tw,
+        'tipheight' => $th,
+    ]);
 }
 
 # Calculates realtime network rates, updates history buffers, and persists metric snapshots

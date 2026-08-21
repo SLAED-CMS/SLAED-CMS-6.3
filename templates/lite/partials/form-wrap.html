@@ -3,10 +3,11 @@
   {% if form_id %}id="{{ form_id }}"{% endif %}
   {% if action %}action="{{ action }}"{% endif %}
   method="{% if method %}{{ method }}{% else %}post{% endif %}"
-  {% if form_class or is_block_languages %}
+  {% if form_class or is_block_languages or is_inline %}
   class="
     {% if form_class %}{{ form_class }}{% endif %}
     {% if is_block_languages %}{% if form_class %} {% endif %}sl-block-languages{% endif %}
+    {% if is_inline %}{% if form_class or is_block_languages %} {% endif %}sl-inline-form{% endif %}
   "
   {% endif %}
   {% if form_attr %}{{{ form_attr }}}{% endif %}

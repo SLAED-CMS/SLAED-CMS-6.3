@@ -1,0 +1,8 @@
+<table>
+<thead>
+<tr>{% for cell in head %}<th{% if cell.align %} style="text-align:{{ cell.align }}"{% endif %}>{{{ cell.content_html }}}</th>{% endfor %}</tr>
+</thead>
+<tbody>
+{% for row in rows %}<tr>{% for cell in row.cells %}<td{% if cell.align %} style="text-align:{{ cell.align }}"{% endif %}>{{{ cell.content_html }}}</td>{% endfor %}</tr>
+{% endfor %}</tbody>
+</table>

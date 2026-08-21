@@ -40,9 +40,19 @@ namespace Tests\Unit {
     {
         private static \Parser $p;
 
+        # Every element the parser emits is rendered by the theme, so the fixtures are meaningless without an engine: the expected bytes are what a theme produces, not what PHP concatenates
         public static function setUpBeforeClass(): void
         {
+            if (!class_exists('Template', false)) {
+                require_once BASE_DIR.'/core/classes/template.php';
+            }
+            $GLOBALS['tpl'] = new \Template('lite');
             self::$p = new \Parser();
+        }
+
+        public static function tearDownAfterClass(): void
+        {
+            unset($GLOBALS['tpl']);
         }
 
         public static function deterministicCases(): array

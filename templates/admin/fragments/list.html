@@ -1,5 +1,5 @@
 {% if is_unordered %}
-<ul class="{% if class %}{{ class }}{% elseif is_login_top %}sl-login-top sl-login-top--head{% if is_logged %} sl-logged{% endif %}{% elseif is_sub_two %}sl-sublist-two{% elseif is_sub %}sl-sublist{% else %}sl-list{% endif %}">{{{ items_html }}}</ul>
+<ul{% if is_classless %}{% else %} class="{% if class %}{{ class }}{% elseif is_login_top %}sl-login-top sl-login-top--head{% if is_logged %} sl-logged{% endif %}{% elseif is_sub_two %}sl-sublist-two{% elseif is_sub %}sl-sublist{% else %}sl-list{% endif %}"{% endif %}>{{{ items_html }}}</ul>
 {% else %}
-<ol class="{% if class %}{{ class }}{% elseif is_sub_two %}sl-sublist-two{% elseif is_sub %}sl-sublist{% else %}sl-list{% endif %}">{{{ items_html }}}</ol>
+<ol{% if is_classless %}{% else %} class="{% if class %}{{ class }}{% elseif is_sub_two %}sl-sublist-two{% elseif is_sub %}sl-sublist{% else %}sl-list{% endif %}"{% endif %}>{{{ items_html }}}</ol>
 {% endif %}

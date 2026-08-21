@@ -163,10 +163,10 @@ function add(): void {
         $i = 0;
         foreach ($form as $val) {
             if ($val === '') continue;
-            $lines[] = $val.': '.htmlspecialchars((string)($intro[$i] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $lines[] = $val.': '.(string)($intro[$i] ?? '');
             $i++;
         }
-        $cont .= getTplPreviewContent(['title' => $email, 'texta' => implode('<br>', $lines), 'textb' => _COMMENT.': '.$note, 'mod' => 'all']);
+        $cont .= getTplPreviewContent(['title' => $email, 'texta' => getTplLines($lines), 'textb' => _COMMENT.': '.$note, 'mod' => 'all']);
     }
     $rows = [
         [
@@ -320,10 +320,10 @@ function invoice(): void {
     $lines = [];
     foreach ($form as $val) {
         if ($val === '') continue;
-        $lines[] = $val.': '.htmlspecialchars((string)($intro[$i] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $lines[] = $val.': '.(string)($intro[$i] ?? '');
         $i++;
     }
-    $infos = implode('<br>', $lines);
+    $infos = getTplLines($lines);
     $rnum = getVar('get', 'rnum', 'text', '');
     $kurs = (float)($conf['money']['kurs'] ?? 0);
     $proz = (float)($conf['money']['proz'] ?? 0);
@@ -343,8 +343,7 @@ function activate(): void {
             [$email] = $db->getSqlRow($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $id]));
             $amail = ($conf['money']['mail'] ?? '') ? $conf['money']['mail'] : ($conf['adminmail'] ?? '');
             $subject = ($conf['sitename'] ?? '').' - '._MONEY;
-            $msg = ($conf['sitename'] ?? '').' - '._MONEY.'<br><br>';
-            $msg .= $prs->filterContent($conf['money']['sendinfo'] ?? '', false, 'all');
+            $msg = getTplLines([($conf['sitename'] ?? '').' - '._MONEY, $prs->filterContent($conf['money']['sendinfo'] ?? '', false, 'all')], true, true);
             $mailer->addQueue(['kind' => 'money', 'email' => $email, 'title' => $subject, 'body' => $msg, 'sender' => $amail, 'prio' => 3]);
         }
     }

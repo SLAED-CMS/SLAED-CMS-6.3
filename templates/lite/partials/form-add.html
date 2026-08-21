@@ -3,7 +3,12 @@
   method="{% if method %}{{ method }}{% else %}post{% endif %}"
   name="{% if form_name %}{{ form_name }}{% else %}post{% endif %}"
   {% if form_id %}id="{{ form_id }}"{% endif %}
-  {% if is_calculator %}class="sl-calculator-form"{% endif %}
+  {% if is_calculator or is_reply %}
+  class="
+    {% if is_calculator %}sl-calculator-form{% endif %}
+    {% if is_reply %}{% if is_calculator %} {% endif %}sl-forum-reply-form{% endif %}
+  "
+  {% endif %}
   {% if not no_enctype %}{% if enctype %}enctype="{{ enctype }}"{% else %}enctype="multipart/form-data"{% endif %}{% endif %}
   {% if form_attr %}{{{ form_attr }}}{% endif %}
 >

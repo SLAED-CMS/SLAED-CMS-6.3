@@ -763,7 +763,7 @@ function config(): void {
     # The cache action is its own POST form and cannot live inside the settings form: a browser drops a nested form
     # Its own fields would then be submitted with the settings, so it is rendered after the form and carries the tab attributes itself
     $hide = ['name' => 'config', 'op' => 'clearcache', 'tab' => $ctab];
-    $show = 'data-sl-tab-show="5" data-sl-tab-group="config-main" style="display:none"';
+    $show = 'data-sl-tab-show="5" data-sl-tab-group="config-main" hidden';
     $clear = getTplPostButton($hide, 'trash', _CACHECLEAR, $show);
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $form.$clear]);
     setFoot();

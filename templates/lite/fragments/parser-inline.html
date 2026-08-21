@@ -1,0 +1,23 @@
+{% if is_break %}
+<br>
+{% elseif is_strong_em %}
+<strong><em>{{{ content_html }}}</em></strong>
+{% elseif is_strong %}
+<strong>{{{ content_html }}}</strong>
+{% elseif is_em %}
+<em>{{{ content_html }}}</em>
+{% elseif is_under %}
+<u>{{{ content_html }}}</u>
+{% elseif is_del %}
+<del>{{{ content_html }}}</del>
+{% elseif is_mark %}
+<mark>{{{ content_html }}}</mark>
+{% elseif is_code %}
+<code>{{{ content_html }}}</code>
+{% elseif is_color %}
+<span style="color:{{ value }}">{{{ content_html }}}</span>
+{% elseif is_family %}
+<span style="font-family:{{ value }}">{{{ content_html }}}</span>
+{% elseif is_size %}
+<span style="font-size:{{ value }}px">{{{ content_html }}}</span>
+{% endif %}

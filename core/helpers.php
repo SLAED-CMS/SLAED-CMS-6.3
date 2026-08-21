@@ -1044,4 +1044,17 @@ function getPageNumbers(string $mod, int $count, int $pages, int $limit, string 
     return getTplPagerView((int)$num, $pages, $maxpg, $target, ['count' => $count, 'limit' => $limit]);
 }
 
+# Render a run of text parts as one block, so the break between two of them is a decision the theme owns instead of a tag every caller spells for itself
+# $iswide asks for a blank line between the parts, and $israw hands each part through untouched for callers whose parts already carry rendered markup
+function getTplLines(array $line, bool $iswide = false, bool $israw = false): string {
+    global $tpl;
+    $rows = [];
+    $next = false;
+    foreach ($line as $val) {
+        $rows[] = $israw ? ['html' => (string)$val, 'is_next' => $next] : ['has_text' => true, 'text' => (string)$val, 'is_next' => $next];
+        $next = true;
+    }
+    return $tpl->getHtmlFrag('lines', ['lines' => $rows, 'is_wide' => $iswide]);
+}
+
 # End of stable helper functions for building admin and frontend HTML from prepared data cuts and shared templates

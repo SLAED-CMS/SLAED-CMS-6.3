@@ -590,12 +590,18 @@ class Template {
         $root = $this->base.'/'.$base;
         if ($this->checkFile($root.'.css')) {
             $href = 'templates/'.$this->theme.'/'.$base.'.css';
-            $this->assets['css'][$href] = '<link rel="stylesheet" href="'.$href.'">';
+            $this->assets['css'][$href] = $this->getAssetTag('css', $href);
         }
         if ($this->checkFile($root.'.js')) {
             $src = 'templates/'.$this->theme.'/'.$base.'.js';
-            $this->assets['js'][$src] = '<script src="'.$src.'" defer></script>';
+            $this->assets['js'][$src] = $this->getAssetTag('js', $src);
         }
+    }
+
+    # Render the tag around one companion asset through the head fragments the theme owns, taken by getHtml so the assets of the current render are neither reset nor re-emitted
+    protected function getAssetTag(string $kind, string $path): string {
+        if ($kind === 'css') return $this->getHtml('fragments', 'head-link', ['rel' => 'stylesheet', 'href' => $path, 'type' => '', 'title' => '']);
+        return $this->getHtml('fragments', 'head-script-src', ['src' => $path, 'attr' => 'defer']);
     }
 
     # Render collected asset tags for fallback standalone output

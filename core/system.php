@@ -4703,7 +4703,9 @@ function rss_load(mixed $bid): void {
 
 # Build the project copyright and license line shown in page footers
 function getLicenseHtml(): string {
-    return '<a href="https://slaed.net" target="_blank" title="SLAED CMS">SLAED CMS</a> © 2005-'.date('Y').' Eduard Laas. Released under MIT License.';
+    global $tpl;
+    $link = $tpl->getHtmlFrag('link', ['href' => 'https://slaed.net', 'title' => 'SLAED CMS', 'label' => 'SLAED CMS', 'is_blank' => true]);
+    return $link.' © 2005-'.date('Y').' Eduard Laas. Released under MIT License.';
 }
 
 # Get shared footer controls through a fragment

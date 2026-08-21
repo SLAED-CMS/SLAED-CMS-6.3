@@ -3,9 +3,111 @@
 Turning the two shipped themes into reference etalons that hundreds of
 independent themes are copied from.
 
-Status: batch 8 is done and gone from this file. Batch 9 is what is left, and it
-is independent of everything above it. A step that is done is deleted from this
-file, not marked done.
+Status: batch 9 is done and gone from this file, and it was the last one. Every
+count this plan set out to close reads zero. What is left here is the contract,
+the gates and the record of what each step cost. A step that is done is deleted
+from this file, not marked done.
+
+**Markup has left PHP.** `--markup` reads 0 across the tree - 143 occurrences in 21
+files at the head of the batch, 44 `class=`, 11 `style=` and 88 tags - and
+`markup.limit` in `tools/ui-contract.php` is 0 now, so the scan exits non-zero on the
+next hardcoded class, style or tag instead of printing a figure nobody reads. A count
+with no limit beside it is a report, not a check.
+
+**The extended statistics panel had never been styled at all, and no gate could say
+so.** `admin/modules/statistic.php` printed a `<style>` block painting with `--line`,
+`--bg`, `--soft`, `--muted`, `--blue2`, `--green`, `--purple` and `--orange` - eight
+names that exist in neither theme. Every border, background, shadow and accent in it
+resolved to nothing, and the audit could not see it because the audit reads CSS files
+and this was a string inside PHP. It is `partials/statistic-extended.html` and 24 rules
+in `theme.css` now, every value on a ladder, the four accents spelled `primary`,
+`success`, `warning` and `accent`, and five component tokens under `statx`. Those eight
+images are the only ones of 168 that moved, and they moved on purpose.
+
+**A fragment cannot own a regular expression's replacement string - until the fragment
+renders the placeholder.** `preg_replace('/\*{2}(.+?)\*{2}/s', '<strong>$1</strong>', ...)`
+is not an emission site: there is no moment where PHP holds the finished element to hand
+to a template. Rendering `parser-inline.html` with `content_html` set to the literal `$1`
+gives the template a whole element and gives PHP a replacement string. The inverse case -
+`[b]`, `[color=...]`, every pair that wraps text the parser has not finished reading -
+renders the same whole element with `\x01` as its content and splits there, so a theme
+never has to spell half a tag.
+
+**Byte-exact fixtures are what made moving a renderer's markup safe, and they had to gain
+an engine to stay true.** `ParserFixturesTest` asserts the exact HTML of 86 cases and ran
+with no `$tpl` at all, so every expected string was what PHP concatenated. It builds a
+`Template('lite')` now, because the bytes it asserts are a theme's answer and not the
+engine's. All 86 pass unchanged, which is the proof that 55 tags, 7 inline styles and 4
+classes left `core/classes/parser.php` without moving a character: the fragments are
+written to be trimmed and `getPartHtml()` trims, so a template's own line endings never
+reach the document.
+
+**Masking an element for the pixel gate takes it out of the contrast gate, and nothing
+said so.** `setMasks()` writes `visibility: hidden` for every `mask` entry and
+`display: none` for every `drop` entry, and the pair collector skips an element on
+exactly those two tests. So the moment batch 8 masked `.sl-statx-bc`, `.sl-statx-bp`
+and `.sl-session-right` and dropped `#monitor-traffic-panel`, their text stopped being
+read for AA - the two gates trade against each other and the registry cannot say which
+pairs it lost or why. It showed up as a registry that shrank from 460 pairs to 438 while
+a page gained styling, which reads like a regression and is not one: the committed
+`ui-contrast.json` still carried `span.sl-but.sl-hidden` four times, a spelling batch 8
+replaced with `sl-dimmed`, so it had been generated before that batch and was stale in
+the tree. Every selector that went missing still exists in the tree; none of them is a
+retired name. **Regenerate the registry in the same session as the manifest that feeds
+it**, or the next reader measures the difference between two runs and calls it a change.
+
+**A memo keyed by its own argument is a leak when the argument is the text.** The inline
+tags the parser puts into a replacement string are a closed set - six flags, no content -
+so memoizing them turns 600 fragment renders in a long document into six. Inline `<code>`
+went through the same door by mistake, and its content is the code the author typed: one
+memo entry per distinct code span, for the life of the request. It renders directly now,
+and the memo carries the engine instance in its key, because two themes may spell one
+element differently and a request can hold more than one `Template`.
+
+**A flag name is API the moment a second file can read it.** The list fragment took
+`is_bare` for "no class of its own", and `is_bare` already meant "the bare admin layout"
+in `core/security.php` and `layouts/bare.html`. Nothing includes `fragments/list.html`
+without `with` today, so nothing broke - but an include without `with` inherits the
+caller's scope, so the day someone writes one inside a bare-layout page every list in it
+would silently lose its class. It is `is_classless` now, which nothing else can mean.
+
+**A duplicate class attribute is markup that never reached a pixel.** `add_voting()` built
+`class="sl-field sl-form-control"` into `select_attr`, and `select.html` writes
+`class="sl-select..."` before it. An HTML parser keeps the first attribute of a name and
+drops the rest, so the string had been inert since it was written. The parameter and its
+one call site are gone rather than converted.
+
+**The monitor chart carried attributes the stylesheet already set.** `stroke` on every
+line and `filter` on every line and area are SVG presentation attributes, and a
+presentation attribute loses to any CSS rule: `.sl-chart-line-up { stroke: var(--sl-chart-up) }`
+had been winning all along. `.sl-chart-tip .muted` was the same shape one level down - it set
+`fill: var(--sl-text)`, which `.sl-chart-tip text` two rules above already set - so the rule
+and the class are both gone. The chart is `partials/monitor-chart.html` taking four series,
+six hover slots and two axis lists.
+
+**A `<br>` between two sentences was eight call sites of one decision.** A registration mail,
+an alert on the page that follows it, the preview of a payment form, a whois answer and the
+header of the template editor all joined text with a tag of their own. `getTplLines()` and
+`fragments/lines.html` hold the break now, and three of the eight stopped escaping their own
+text by hand on the way, because escaping is what the template is for.
+
+**`style="display:none"` written into an attribute string is a decision the script then has to
+undo, and the attribute that says it already existed.** Four sites carried it - the mail block
+of the administrator form, the cache button of the configuration, and the textarea behind two
+editors. They carry `hidden` now, which the reset gives `!important` on purpose, so nothing a
+component sets can put back on screen what the page has taken off it. The tab script wrote
+`style.display` to match and writes `.hidden` instead.
+
+**A directory guard is not a page.** `CaptchaStore::ensureDir()` built a whole
+`<!DOCTYPE html>` document to write as `index.html`; the same bytes already ship at
+`storage/index.html` and at eleven other places in the tree. It copies that file now.
+
+**The attachment fallback belonged to the configuration it falls back from, and could not go
+there.** `filterAttach()` carried `<a href="[src]" target="_blank" title="[title]">[title]</a>`
+as the default for an extension `config/filetype.php` does not name - but `tplsave()` rewrites
+that file from the extension list alone, so a `default` key would be wiped by the first save
+an administrator makes. The fallback renders through `parser-link.html` instead and skips the
+placeholder pass entirely.
 
 **The API is frozen.** `frozen` in `tools/ui-contract.php` reads `true`, and it is
 not a sentence in a file: the baseline now carries a roster of every name each API
@@ -21,8 +123,13 @@ now measured against each other as well as against themselves.** `count`, `bare`
 `dup`, `names`, `dead`, `alias`, `unsat`, `unmet`, `clash`, `classes` and
 `contrast` all read zero in admin and in lite, and the new global `cross` reads
 zero beside them, `cross` now counting the divergent templates of canon as well as
-the selectors. What is left in the baseline is `scoped` at 54 and 92, `important` at
-22 and 13, and `markup` at 143, which is batch 9's.
+the selectors, and the global `markup` has joined them at zero. The two ratcheted
+counts still above zero are `scoped` at 54 and 92 and `important` at 22 and 13, and
+neither is a defect list: a scoped custom property on a component root is what the
+rules call an internal and permit, and an `!important` is permitted where it is need.
+They are not annotated entry by entry the way `duplicates` and `divergent` are — what
+the ratchet buys is that neither can grow, and batch 8 is where the ones that were
+fighting nothing came out.
 
 **The cross-theme gate was measuring the wrong thing, and that is what made it
 unanswerable.** It reported 135 divergent shared selectors as one undifferentiated
@@ -107,8 +214,11 @@ looks best on its own: at `0.04` the same pair reads 4.60:1.
 composite laid the hatch onto the ancestor's background instead of onto the gradient
 beneath it in the same declaration. That reported two dark pairs at 1.3:1 that
 nobody could ever see. Layers are walked back to front now and each is composited
-onto what the walk has gathered under it. The registry holds **460 pairs** — 122 in
-admin and 338 in lite — and both halves are at zero below AA.
+onto what the walk has gathered under it. The registry holds **438 pairs** — 118 in
+admin and 320 in lite — and both halves are at zero below AA. It was 460 before the
+manifest's own `mask` and `drop` lists reached the walk; see the note above on why a
+shrinking registry is not a regression and why it must be regenerated beside the
+manifest that feeds it.
 
 **The two names both themes read and nothing wrote are gone, and the fix moved a
 decision out of the script.** `placeFloat()` measured where a floating panel fits and
@@ -232,7 +342,11 @@ gates: `tests/Unit/ThemeContractTest.php` over the stored baseline,
 `tests/Unit/ThemeCreationTest.php` over a scratch copy of an etalon with
 `tests/Support/theme_scratch.php` and `tests/Support/theme_probe.php` behind it,
 its HTTP half `node tools/ui-shots.mjs --newtheme`, and `.claude/hooks/lint-edit.php`
-per machine. Both `base.css` carry the `/* --- end tokens --- */` marker.
+per machine. Both `base.css` carry the `/* --- end tokens --- */` marker. The markup
+the last batch moved out of PHP lives in six fragments both themes carry byte-identical
+- `lines.html`, `editor-mount.html`, `parser-block.html`, `parser-inline.html`,
+`parser-link.html`, `parser-table.html` - and in two partials the panel alone needs,
+`statistic-extended.html` and `monitor-chart.html`.
 
 **The rig runs over `https`, because the scheme is part of the login.**
 `setCookies()` marks the session cookie `secure` whenever `homeurl` is `https`, so
@@ -260,16 +374,18 @@ One exception, a limit of CSS rather than a gap: **breakpoint widths are canon,
 not API**. `@media` cannot read a custom property, so a theme changes how things
 look at a breakpoint, never where it sits.
 
-## How to run a batch
+## How to run a change under this contract
 
-Each batch runs in a fresh session and must not depend on any earlier
+No batch is left, but the procedure is what holds the counts where they are, so
+any change that touches theme CSS, canon templates or the markup a PHP file emits
+runs it. It runs in a fresh session and must not depend on any earlier
 conversation.
 
-1. Read `.rules/global.md`, `.rules/theme.md` and this file's batch section.
+1. Read `.rules/global.md`, `.rules/theme.md` and this file.
 2. Run `php tools/ui-audit.php --theme=<theme>` first; its counts are the
    starting point, not the numbers written here.
-3. Do the work. Commit per property group where the batch says so.
-4. Run the batch's verification in full before reporting done. Where it says
+3. Do the work. Commit per property group where one change spans many.
+4. Run the verification in full before reporting done. Where it says
    "screenshots identical", that is `node tools/ui-shots.mjs --check` after
    emptying `storage/cache/pages/*` and `storage/cache/templates/*`; where a
    batch moves pixels on purpose, review the diff and then `--capture` to adopt
@@ -737,8 +853,8 @@ component root, only as internal; two spellings of one intent, as `999px` and
 `9999px`; a dead token; a token whose value cannot satisfy the property reading
 it; a rename onto an occupied name.
 
-The names freeze when batch 8 closes, and `frozen` in the contract is what says
-so. It is still `false`.
+The names are frozen, and `frozen` in the contract is what says so. It reads `true`,
+and the roster under `api` in the baseline is what holds it on every run.
 
 ## The ladders
 
@@ -1018,79 +1134,6 @@ sidebar read and nothing declared — and retired three that said nothing: two
 
 Package a new theme copies: `lite` 667 files / 5069 KB, `admin` 491 / 3092 KB.
 
-## Batches
-
-### Batch 9 — markup leaves PHP
-
-**Causa.** A theme cannot restyle what PHP hardcodes, and "one address per
-decision" cannot hold while classes, inline styles and tags are assembled outside
-the template layer. Independent of the CSS work.
-
-**Scope**, measured with `--markup`. 21 files, 143 occurrences: 44 `class="`, 11
-`style="`, 88 literal tags. Three files carry 136.
-
-| File | `class=` | `style=` | tags |
-|---|---|---|---|
-`core/classes/parser.php` | 4 | 7 | 55 |
-`admin/modules/monitor.php` | 23 | — | 1 |
-`admin/modules/statistic.php` | 11 | — | 12 |
-`core/admin.php` | 1 | — | 4 |
-editor drivers, 3 files | 1 | 2 | 1 |
-remaining 14 files | 4 | 2 | 15 |
-
-The earlier draft put the parser at 18 tags. It emits 55: `<li>`, `<tr>`,
-`</td>`, `<blockquote><p title="`, `<pre><code`, `<code>`, `<p>` and their
-closers, each one an opening or a closing tag hardcoded in PHP.
-
-**Language files are out of scope, all of them.** The draft excluded
-`modules/rss/lang/*.php` as the XML feed a theme never styles; the same holds for
-every `lang/` directory, because a language file defines translated sentences and
-the `<br>` or `<fieldset>` inside one is part of that text and moves with the
-translation, not with a fragment. Counting them put 358 tags across 59 files into
-a scan whose job is to find markup PHP **assembles**. The exclusion and its
-reason live in `tools/ui-contract.php` under `markup.exclude`.
-
-**`modules/rss/index.php` stays in scope** — it renders a real HTML page, title,
-alert and form rows.
-
-Two things the scanner ignores on purpose, each written into `getMarkupKind()`: a
-regular expression that *matches* markup does not emit it, and an XML element is
-not something a theme styles, so the tag test names HTML elements rather than
-accepting anything shaped like a tag. Without the first, `core/system.php` reads
-as 55 hits; without the second, its sitemap `<url><loc>` reads as markup.
-
-**Steps.** Each site moves into a fragment through `getHtmlFrag()`; PHP passes
-data. The monitor chart becomes a fragment taking the four series, the statistic
-tables one taking rows, and the parser emits the existing `sl-alert` and code
-fragments instead of building its own.
-
-**Fix the escaping contract before moving anything.** Every key carries its
-suffix: `*_text` for content the template escapes, `*_attr` for an attribute
-value, `*_html` only for output a renderer already made safe. The parser is the
-hard case — it handles user content, so a value arriving escaped and escaped
-again shows entities, while one skipping both is an injection. The monitor SVG is
-the other: its attribute values are numbers and token names, so `*_attr`, never
-`*_html`.
-
-**Verification.** `php tools/ui-audit.php --markup`, the same tool — not a second
-scanner. It tokenises each PHP file and reports a string literal holding a class
-attribute, a style attribute or an HTML tag, excluding `modules/rss/lang/` and
-`config/filetype.php`. Tokenising alone is not enough: `'<di' . 'v>'` is two
-harmless tokens, so the scanner folds constant concatenations first. A grep
-cannot do this, and the shell is not neutral — the default here is PowerShell,
-where a Bash pipeline does not run.
-
-**`config/filetype.php` is a mechanism, not a leftover.** It maps each extension
-to an HTML template — `<a class="sl-attach sl-attach-[align]"><img
-style="max-width:[twidth]px">` — read by `parser.php` and **edited by the
-administrator** through `admin/modules/uploads.php`. It is user data that happens
-to be markup. Whether those templates should become fragments with fixed classes
-and editable values belongs to the parser, not here.
-
-**Done when** no PHP file **hardcodes** a class, an inline style or a tag — with
-`config/filetype.php` the one named exception, because its markup is
-runtime-editable configuration — and the scan returns nothing.
-
 ## Risks
 
 - **Snap regressions.** A batch that moves pixels on purpose has the committed
@@ -1306,14 +1349,15 @@ runtime-editable configuration — and the scan returns nothing.
   they were declared, and the sidebar gained the 4px row gap and the 20px line box the
   author had asked for and never got.
 - **Premature freeze.** Freezing before canon is settled bakes in names the
-  remainder contradicts. `frozen` is still `false`: every count is at zero, but 28
-  shared templates still carry two contracts under one name, and `.sl-hidden` still
-  means two things.
+  remainder contradicts, which is why `frozen` stayed `false` until every count was
+  at zero and every shared template name had been read. It is `true` now: an addition
+  is still legal, a rename in place is not, and `--store` refuses to write while a
+  name has gone missing.
 - **An occupied rename target.** Every mapping is checked against the target's
   current occupants; the tool reports a collision as an error.
-- **Volume.** Every count either theme controls is at zero. What is left of batch 8
-  is 28 templates and two decisions about a name, and what batch 9 carries is markup.
-  Neither is counting.
+- **Volume.** Every count either theme controls is at zero, and so is every global
+  one. Nothing is left to grind; what remains is holding the ratchet, which is what
+  the gates are for.
 - **A gate that measures the wrong thing cannot be answered, and looks like work
   instead of like a defect.** `dup` at 424 and `cross` at 135 were both one figure
   over three unlike populations, and a figure like that is answered by grinding

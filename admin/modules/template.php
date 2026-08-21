@@ -82,7 +82,7 @@ function getTemplateEditorBlock(string $templ, string $filelink, string $mode, s
         ],
         'rows' => [[
             'label_html' => '',
-            'field_html' => _FILE.': '.$filelink.'<br>'._DATE.': '.date(_TIMESTRING, filemtime($filelink)),
+            'field_html' => getTplLines([_FILE.': '.$filelink, _DATE.': '.date(_TIMESTRING, filemtime($filelink))]),
             'is_full' => true,
         ], [
             'label_html' => '',

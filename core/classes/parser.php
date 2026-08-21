@@ -206,11 +206,39 @@ class Parser {
         ]);
     }
 
-    # Render the blockquote fragment through the theme template, falling back to plain HTML when no engine is loaded (unit tests, early bootstrap)
-    private function getQuoteHtml(array $data, string $fall): string {
+    # Render the blockquote fragment through the theme template; a quote, a spoiler and a callout are one element with three faces and the theme owns all three
+    private function getQuoteHtml(array $data): string {
+        return $this->getPartHtml('blockquote', $data);
+    }
+
+    # Render one parser element through the theme fragment; a template composes its own line endings and the parser composes elements, so what comes back is trimmed
+    private function getPartHtml(string $name, array $data, bool $iswrap = false): string {
         global $tpl;
-        if (isset($tpl) && is_object($tpl) && method_exists($tpl, 'getHtmlFrag')) return (string)$tpl->getHtmlFrag('blockquote', $data);
-        return $fall;
+        if (!isset($tpl) || !is_object($tpl) || !method_exists($tpl, 'getHtmlFrag')) return '';
+        return trim((string)($iswrap ? $tpl->getHtmlPart($name, $data) : $tpl->getHtmlFrag($name, $data)));
+    }
+
+    # One inline element whose content is a placeholder instead of text, so the flags are a closed set and the answer may be memoized
+    # The engine instance is part of the key: two themes can spell one element differently and a request may hold more than one of them
+    private function getPartTag(array $data): string {
+        global $tpl;
+        static $memo = [];
+        $key = (is_object($tpl) ? spl_object_id($tpl) : 0).'|'.serialize($data);
+        return $memo[$key] ??= $this->getPartHtml('parser-inline', $data);
+    }
+
+    # The two halves of one inline element, split where the template rendered its content, so the theme keeps a whole element while the parser wraps text it has not finished reading
+    private function getPartPair(array $data): array {
+        $data['content_html'] = "\x01";
+        $part = explode("\x01", $this->getPartTag($data), 2);
+        return [$part[0], $part[1] ?? ''];
+    }
+
+    # One anchor through the theme fragment; the address, the title and a plain label arrive unescaped, because escaping them is what the template is for
+    private function getPartLink(string $href, string $lbl, string $ttl = '', bool $blank = false, bool $raw = false): string {
+        $data = ['href' => $href, 'title' => $ttl, 'is_blank' => $blank];
+        $data[$raw ? 'label_html' : 'label'] = $lbl;
+        return $this->getPartHtml('parser-link', $data);
     }
 
     # Memoized wrapper so repeated image paths hit the filesystem only once per request; the key is hashed because an inline data URI would otherwise be kept twice in memory
@@ -330,7 +358,6 @@ class Parser {
         global $tpl;
         $n   = count($lines);
         $ord = (bool)preg_match('/^\s*\d+\./', $lines[$i]);
-        $tag = $ord ? 'ol' : 'ul';
         $it  = [];
         $cur = null;
         while ($i < $n) {
@@ -345,21 +372,22 @@ class Parser {
             } else break;
         }
         if ($cur !== null) $it[] = $cur;
-        $html = '<'.$tag.">\n";
+        $rows = '';
         foreach ($it as $item) {
             $item = trim($item);
             if (preg_match('/^\[(x| )\]\s+(.*)/si', $item, $tm)) {
                 $chk = $tm[1] === 'x' ? ' checked' : '';
                 $lbl = trim($tm[2]);
                 $lbl = str_contains($lbl, "\n") ? $this->filterBlocks($lbl) : $this->filterInline($lbl);
-                $html .= '<li>'.$tpl->getHtmlFrag('checkbox', ['input_attr' => 'disabled'.$chk]).' '.$lbl."</li>\n";
+                $lbl = $tpl->getHtmlFrag('checkbox', ['input_attr' => 'disabled'.$chk]).' '.$lbl;
             } elseif (str_contains($item, "\n")) {
-                $html .= '<li>'.$this->filterBlocks($item)."</li>\n";
+                $lbl = $this->filterBlocks($item);
             } else {
-                $html .= '<li>'.$this->filterInline($item)."</li>\n";
+                $lbl = $this->filterInline($item);
             }
+            $rows .= "\n".$this->getPartHtml('list-item', ['content_html' => $lbl]);
         }
-        return [$html.'</'.$tag.">\n", $i];
+        return [$this->getPartHtml('list', ['is_unordered' => !$ord, 'is_classless' => true, 'items_html' => $rows."\n"])."\n", $i];
     }
 
     # Build a table from the header row, the separator on the next line and the body rows
@@ -368,26 +396,27 @@ class Parser {
         $seps  = array_map('trim', explode('|', trim($lines[$i+1], " |\t")));
         $cols  = max(count($heads), count($seps));
         $al    = array_map(fn($a) =>
-            preg_match('/^:-+:$/', $a) ? ' style="text-align:center"' :
-           (preg_match('/^-+:$/', $a)  ? ' style="text-align:right"'  :
-           (preg_match('/^:-+$/', $a)  ? ' style="text-align:left"'   : '')),
+            preg_match('/^:-+:$/', $a) ? 'center' :
+           (preg_match('/^-+:$/', $a)  ? 'right'  :
+           (preg_match('/^:-+$/', $a)  ? 'left'   : '')),
             $seps
         );
         $i += 2;
-        $html = "<table>\n<thead>\n<tr>";
+        $head = [];
         foreach (array_pad($heads, $cols, '') as $j => $h) {
-            $html .= '<th'.($al[$j] ?? '').'>'.$this->filterInline($h).'</th>';
+            $head[] = ['align' => $al[$j] ?? '', 'content_html' => $this->filterInline($h)];
         }
-        $html .= "</tr>\n</thead>\n<tbody>\n";
+        $rows = [];
         while (isset($lines[$i]) && str_contains($lines[$i], '|') && trim($lines[$i]) !== '') {
             $cells = array_map('trim', explode('|', trim($lines[$i], " |\t")));
-            $html .= '<tr>';
+            $cell = [];
             foreach (array_pad($cells, $cols, '') as $j => $c) {
-                $html .= '<td'.($al[$j] ?? '').'>'.$this->filterInline($c).'</td>';
+                $cell[] = ['align' => $al[$j] ?? '', 'content_html' => $this->filterInline($c)];
             }
-            $html .= "</tr>\n"; $i++;
+            $rows[] = ['cells' => $cell];
+            $i++;
         }
-        return [$html."</tbody>\n</table>\n", $i];
+        return [$this->getPartHtml('parser-table', ['head' => $head, 'rows' => $rows])."\n", $i];
     }
 
     # Process BB block tags: bracket-free *NN smilies first, then behind the [ guard: [hr], [li], [usehtml], [usephp], [tabs], [code], [php], [quote]/[hide]/alignment, [attach=]
@@ -399,7 +428,8 @@ class Parser {
                 function(array $m): string {
                     $num = $this->filterEsc($m[1]);
                     $img = getThemeImagePath('smilies/'.$num.'.gif');
-                    return $this->addStash('<img src="'.$this->filterEsc($img).'" alt="'._SMILIE.' - '.$num.'" title="'._SMILIE.' - '.$num.'">');
+                    $ttl = _SMILIE.' - '.$num;
+                    return $this->addStash($this->getParserImage($img, $ttl, $ttl));
                 },
                 $src
             ) ?? $src;
@@ -407,7 +437,7 @@ class Parser {
 
         if (!str_contains($src, '[')) return $src;
 
-        $src = preg_replace('/\[hr\]/si', $this->addStash('<hr>'), $src) ?? $src;
+        $src = preg_replace('/\[hr\]/si', $this->addStash($this->getPartHtml('parser-block', ['is_rule' => true])), $src) ?? $src;
         $src = preg_replace('/\[li\]/si', $this->addStash('&bull; '), $src) ?? $src;
 
         $src = preg_replace_callback(
@@ -461,7 +491,7 @@ class Parser {
             '/\[code\](.*?)\[\/code\]/si',
             function(array $m): string {
                 $txt  = str_replace('?', '&#063;', getDecodedText((string)$m[1]));
-                $html = '<div class="sl-code" title="'.htmlspecialchars(_CODE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.$this->filterEsc($txt).'</div>';
+                $html = $this->getPartHtml('div', ['is_code' => true, 'title' => _CODE, 'content_html' => $this->filterEsc($txt)], true);
                 return $this->addStash($html);
             },
             $src
@@ -484,11 +514,7 @@ class Parser {
                 '/\[quote\](.*?)\[\/quote\]/si',
                 function(array $m): string {
                     $txt = $this->filterNest($m[1]);
-                    $html = $this->getQuoteHtml(
-                        ['is_quote' => true, 'content_html' => $txt, 'title_text' => _QUOTE],
-                        '<blockquote><p title="'.htmlspecialchars(_QUOTE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.$txt.'</p></blockquote>'
-                    );
-                    return $this->addStash($html);
+                    return $this->addStash($this->getQuoteHtml(['is_quote' => true, 'content_html' => $txt, 'title_text' => _QUOTE]));
                 },
                 $src
             ) ?? $src;
@@ -501,11 +527,7 @@ class Parser {
                     $show = (defined('ADMIN_FILE') || is_user());
                     $this->vary = true;
                     $txt = $show ? $this->filterNest($m[1]) : (string) _HIDETEXT;
-                    $html = $this->getQuoteHtml(
-                        ['is_hide' => true, 'content_html' => $txt, 'title_text' => _HIDE],
-                        '<blockquote><p title="'.htmlspecialchars(_HIDE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.$txt.'</p></blockquote>'
-                    );
-                    return $this->addStash($html);
+                    return $this->addStash($this->getQuoteHtml(['is_hide' => true, 'content_html' => $txt, 'title_text' => _HIDE]));
                 },
                 $src
             ) ?? $src;
@@ -514,7 +536,7 @@ class Parser {
         while (preg_match('/\[(left|right|center|justify)\](.*?)\[\/\1\]/si', $src)) {
             $src = preg_replace_callback(
                 '/\[(left|right|center|justify)\](.*?)\[\/\1\]/si',
-                fn(array $m): string => $this->addStash('<div style="text-align:'.strtolower($m[1]).';">'.$this->filterNest($m[2]).'</div>'),
+                fn(array $m): string => $this->addStash($this->getPartHtml('parser-block', ['is_align' => true, 'align' => strtolower($m[1]), 'content_html' => $this->filterNest($m[2])])),
                 $src
             ) ?? $src;
         }
@@ -573,7 +595,11 @@ class Parser {
                     continue;
                 }
             }
-            $tmp = $conf['filetype'][$ext] ?? '<a href="[src]" target="_blank" title="[title]">[title]</a>';
+            $tmp = (string)($conf['filetype'][$ext] ?? '');
+            if ($tmp === '') {
+                $src = str_replace($m[0], $this->addStash($this->getPartLink($file, $tl, $tl, true)), $src);
+                continue;
+            }
             $tmp = str_replace('[src]',    $file, $tmp);
             $tmp = str_replace('[tsrc]',   (string)$timg, $tmp);
             $tmp = (!empty($wd) && (int)$wd)
@@ -598,8 +624,7 @@ class Parser {
         $src = preg_replace_callback(
             '/(^(`{3,}|~{3,})[ \t]*([\w\-]*)[^\n]*\n(.*?)\n^\2[ \t]*$)/ms',
             function(array $m): string {
-                $cls = $m[3] ? ' class="language-'.$this->filterEsc($m[3]).'"' : '';
-                return $this->addStash('<pre><code'.$cls.'>'.$this->filterEsc($m[4]).'</code></pre>');
+                return $this->addStash($this->getPartHtml('code-highlight', ['lang' => $m[3], 'code_html' => $this->filterEsc($m[4])]));
             },
             $src
         ) ?? $src;
@@ -608,7 +633,7 @@ class Parser {
             $src = preg_replace_callback(
                 '/(?:^(?:    |\t).+\n?)+/m',
                 fn(array $m): string => $this->addStash(
-                    '<pre><code>'.$this->filterEsc(preg_replace('/^(?:    |\t)/m', '', rtrim($m[0]))).'</code></pre>'
+                    $this->getPartHtml('code-highlight', ['code_html' => $this->filterEsc(preg_replace('/^(?:    |\t)/m', '', rtrim($m[0])))])
                 )."\n",
                 $src
             ) ?? $src;
@@ -618,7 +643,7 @@ class Parser {
             '/``(.+?)``|`([^`\n]+)`/s',
             function(array $m): string {
                 $txt = ($m[1] ?? '') !== '' ? $m[1] : ($m[2] ?? '');
-                return $this->addStash('<code>'.$this->filterEsc($txt).'</code>');
+                return $this->addStash($this->getPartHtml('parser-inline', ['is_code' => true, 'content_html' => $this->filterEsc($txt)]));
             },
             $src
         ) ?? $src;
@@ -644,12 +669,12 @@ class Parser {
             if (preg_match('/^(#{1,6})\s+(.*?)(?:\s+#+)?$/', $trim, $m)) {
                 $lvl  = min(6, strlen($m[1]) + $this->hoff);
                 $id   = $this->getHeadingId($m[2], $lvl);
-                $out .= $this->addStash('<h'.$lvl.' id="'.$id.'">'.$this->filterInline($m[2]).'</h'.$lvl.'>')."\n";
+                $out .= $this->addStash($this->getPartHtml('parser-block', ['is_head' => true, 'level' => $lvl, 'id' => $id, 'content_html' => $this->filterInline($m[2])]))."\n";
                 $i++; continue;
             }
 
             if (preg_match('/^(?:\*{3,}|-{3,}|_{3,})\s*$/', $trim)) {
-                $out .= $this->addStash('<hr>')."\n"; $i++; continue;
+                $out .= $this->addStash($this->getPartHtml('parser-block', ['is_rule' => true]))."\n"; $i++; continue;
             }
 
             if (str_starts_with($trim, '>')) {
@@ -673,18 +698,10 @@ class Parser {
                         };
                         array_shift($seg);
                         $inner = $this->filterBlocks(implode("\n", $seg));
-                        $html = $this->getQuoteHtml(
-                            ['is_callout' => true, 'content_html' => $inner, 'callout_type' => $tone],
-                            '<div class="sl-alert sl-alert-'.$tone.'"><div class="sl-alert-body">'.$inner.'</div></div>'
-                        );
-                        $out .= $this->addStash($html)."\n";
+                        $out .= $this->addStash($this->getQuoteHtml(['is_callout' => true, 'content_html' => $inner, 'callout_type' => $tone]))."\n";
                     } else {
                         $inner = $this->filterBlocks(implode("\n", $seg));
-                        $html = $this->getQuoteHtml(
-                            ['is_plain' => true, 'content_html' => $inner],
-                            "<blockquote>\n".$inner.'</blockquote>'
-                        );
-                        $out .= $this->addStash($html)."\n";
+                        $out .= $this->addStash($this->getQuoteHtml(['is_plain' => true, 'content_html' => $inner]))."\n";
                     }
                 }
                 continue;
@@ -706,13 +723,13 @@ class Parser {
                 if (preg_match('/^=+\s*$/', $lines[$i + 1])) {
                     $lvl  = min(6, 1 + $this->hoff);
                     $id   = $this->getHeadingId($trim, $lvl);
-                    $out .= $this->addStash('<h'.$lvl.' id="'.$id.'">'.$this->filterInline($trim).'</h'.$lvl.'>')."\n";
+                    $out .= $this->addStash($this->getPartHtml('parser-block', ['is_head' => true, 'level' => $lvl, 'id' => $id, 'content_html' => $this->filterInline($trim)]))."\n";
                     $i += 2; continue;
                 }
                 if (preg_match('/^-+\s*$/', $lines[$i + 1]) && !preg_match('/^[*+\-]\s/', $trim)) {
                     $lvl  = min(6, 2 + $this->hoff);
                     $id   = $this->getHeadingId($trim, $lvl);
-                    $out .= $this->addStash('<h'.$lvl.' id="'.$id.'">'.$this->filterInline($trim).'</h'.$lvl.'>')."\n";
+                    $out .= $this->addStash($this->getPartHtml('parser-block', ['is_head' => true, 'level' => $lvl, 'id' => $id, 'content_html' => $this->filterInline($trim)]))."\n";
                     $i += 2; continue;
                 }
             }
@@ -734,7 +751,7 @@ class Parser {
             ) {
                 $para[] = $lines[$i++];
             }
-            $out .= $this->addStash('<p>'.$this->filterInline(implode("\n", $para)).'</p>')."\n";
+            $out .= $this->addStash($this->getPartHtml('parser-block', ['is_para' => true, 'content_html' => $this->filterInline(implode("\n", $para))]))."\n";
         }
 
         return $out;
@@ -745,15 +762,16 @@ class Parser {
         $pat = '/^\x02'.preg_quote($this->salt, '/').':\d+\x03$/';
         $out = '';
         $para = [];
+        $brk = $this->getPartTag(['is_break' => true])."\n";
         foreach (explode("\n", $src) as $line) {
             if (preg_match($pat, trim($line)) || trim($line) === '') {
-                if ($para) { $out .= $this->addStash('<p>'.implode("<br>\n", $para).'</p>')."\n"; $para = []; }
+                if ($para) { $out .= $this->addStash($this->getPartHtml('parser-block', ['is_para' => true, 'content_html' => implode($brk, $para)]))."\n"; $para = []; }
                 $out .= (trim($line) === '') ? "\n" : $line."\n";
                 continue;
             }
             $para[] = $this->filterInline($line);
         }
-        if ($para) $out .= $this->addStash('<p>'.implode("<br>\n", $para).'</p>')."\n";
+        if ($para) $out .= $this->addStash($this->getPartHtml('parser-block', ['is_para' => true, 'content_html' => implode($brk, $para)]))."\n";
         return $out;
     }
 
@@ -769,13 +787,13 @@ class Parser {
         if (str_contains($src, '<')) {
             $src = preg_replace_callback(
                 '/<(https?:\/\/[^\s>]+)>/',
-                fn(array $m): string => $this->addStash('<a href="'.$this->filterEsc($m[1]).'">'.$this->filterEsc($m[1]).'</a>'),
+                fn(array $m): string => $this->addStash($this->getPartLink($m[1], $m[1])),
                 $src
             ) ?? $src;
 
             $src = preg_replace_callback(
                 '/<([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})>/',
-                fn(array $m): string => $this->addStash('<a href="mailto:'.$this->filterEsc($m[1]).'">'.$this->filterEsc($m[1]).'</a>'),
+                fn(array $m): string => $this->addStash($this->getPartLink('mailto:'.$m[1], $m[1])),
                 $src
             ) ?? $src;
 
@@ -785,15 +803,16 @@ class Parser {
         }
 
         if ($this->fmt !== 'plain' && strpbrk($src, '*_~=') !== false) {
-            $src = preg_replace(['/\*{3}(.+?)\*{3}/s', '/_{3}(.+?)_{3}/s'], '<strong><em>$1</em></strong>', $src);
-            $src = preg_replace(['/\*{2}(.+?)\*{2}/s', '/_{2}(.+?)_{2}/s'], '<strong>$1</strong>', $src);
-            $src = preg_replace(['/\*([^*\n]+)\*/', '/(?<![_\w])_([^_\n]+)_(?![_\w])/'], '<em>$1</em>', $src);
-            $src = preg_replace('/~~(.+?)~~/s', '<del>$1</del>', $src);
-            $src = preg_replace('/==(.+?)==/s', '<mark>$1</mark>', $src);
+            $src = preg_replace(['/\*{3}(.+?)\*{3}/s', '/_{3}(.+?)_{3}/s'], $this->getPartTag(['is_strong_em' => true, 'content_html' => '$1']), $src);
+            $src = preg_replace(['/\*{2}(.+?)\*{2}/s', '/_{2}(.+?)_{2}/s'], $this->getPartTag(['is_strong' => true, 'content_html' => '$1']), $src);
+            $src = preg_replace(['/\*([^*\n]+)\*/', '/(?<![_\w])_([^_\n]+)_(?![_\w])/'], $this->getPartTag(['is_em' => true, 'content_html' => '$1']), $src);
+            $src = preg_replace('/~~(.+?)~~/s', $this->getPartTag(['is_del' => true, 'content_html' => '$1']), $src);
+            $src = preg_replace('/==(.+?)==/s', $this->getPartTag(['is_mark' => true, 'content_html' => '$1']), $src);
         }
         if (str_contains($src, "\n")) {
-            $src = preg_replace(['/  \n/', '/\\\\\n/'], "<br>\n", $src);
-            if ($this->fmt === 'breaks') $src = preg_replace('/(?<!<br>)\n/', "<br>\n", $src) ?? $src;
+            $brk = $this->getPartTag(['is_break' => true])."\n";
+            $src = preg_replace(['/  \n/', '/\\\\\n/'], $brk, $src);
+            if ($this->fmt === 'breaks') $src = preg_replace('/(?<!<br>)\n/', $brk, $src) ?? $src;
         }
 
         return $src;
@@ -814,10 +833,11 @@ class Parser {
             $src
         ) ?? $src;
 
-        foreach (['b' => 'strong', 'i' => 'em', 'u' => 'u', 's' => 'del'] as $tag => $html) {
+        foreach (['b' => 'is_strong', 'i' => 'is_em', 'u' => 'is_under', 's' => 'is_del'] as $tag => $flag) {
             if (stripos($src, '['.$tag.']') === false) continue;
-            $beg = $this->addStash('<'.$html.'>');
-            $end = $this->addStash('</'.$html.'>');
+            [$open, $shut] = $this->getPartPair([$flag => true]);
+            $beg = $this->addStash($open);
+            $end = $this->addStash($shut);
             for ($i = 0; $i < 3; $i++) {
                 $prev = $src;
                 $src = preg_replace('/\['.$tag.'\](.*?)\[\/'.$tag.'\]/si', $beg.'$1'.$end, $src) ?? $src;
@@ -830,14 +850,18 @@ class Parser {
             function(array $m): string {
                 $color = strtolower(trim($m[1]));
                 if (!preg_match('/^#[0-9a-f]{6}$/', $color) && !preg_match('/^[a-z]+$/', $color)) return $m[2];
-                return $this->addStash('<span style="color:'.$this->filterEsc($color).'">').$m[2].$this->addStash('</span>');
+                [$open, $shut] = $this->getPartPair(['is_color' => true, 'value' => $color]);
+                return $this->addStash($open).$m[2].$this->addStash($shut);
             },
             $src
         ) ?? $src;
 
         $src = preg_replace_callback(
             '/\[family=([A-Za-z ]+)\](.*?)\[\/family\]/si',
-            fn(array $m): string => $this->addStash('<span style="font-family:'.$this->filterEsc(trim($m[1])).'">').$m[2].$this->addStash('</span>'),
+            function(array $m): string {
+                [$open, $shut] = $this->getPartPair(['is_family' => true, 'value' => trim($m[1])]);
+                return $this->addStash($open).$m[2].$this->addStash($shut);
+            },
             $src
         ) ?? $src;
 
@@ -845,7 +869,8 @@ class Parser {
             '/\[size=([0-9]{1,2})\](.*?)\[\/size\]/si',
             function(array $m): string {
                 $size = max(8, min(48, (int)$m[1]));
-                return $this->addStash('<span style="font-size:'.$size.'px">').$m[2].$this->addStash('</span>');
+                [$open, $shut] = $this->getPartPair(['is_size' => true, 'value' => $size]);
+                return $this->addStash($open).$m[2].$this->addStash($shut);
             },
             $src
         ) ?? $src;
@@ -920,9 +945,9 @@ class Parser {
         $src = preg_replace_callback(
             '/\[([^\]]+)\]\(([^\s)]+)(?:\s+(?:"|&quot;)(.*?)(?:"|&quot;))?\)/',
             function(array $m): string {
-                $href = $this->filterEsc($this->filterUrl($this->filterDec($m[2])));
-                $ttl  = isset($m[3]) ? ' title="'.$this->filterEsc($this->filterDec($m[3])).'"' : '';
-                return $this->addStash('<a href="'.$href.'"'.$ttl.'>'.$m[1].'</a>');
+                $href = $this->filterUrl($this->filterDec($m[2]));
+                $ttl  = isset($m[3]) ? $this->filterDec($m[3]) : '';
+                return $this->addStash($this->getPartLink($href, $m[1], $ttl, false, true));
             },
             $src
         ) ?? $src;
@@ -949,23 +974,23 @@ class Parser {
     private function getBbLink(string $url, ?string $lbl = null): string {
         $url = trim($this->filterDec($url));
         if (preg_match('/^www\./i', $url)) $url = 'https://'.$url;
-        $href = $this->filterEsc($this->filterUrl($url));
-        return $this->addStash('<a href="'.$href.'">'.($lbl ?? $this->filterEsc($url)).'</a>');
+        $href = $this->filterUrl($url);
+        return $this->addStash($lbl === null ? $this->getPartLink($href, $url) : $this->getPartLink($href, $lbl, '', false, true));
     }
 
     # Shared BB [mail] renderer: returns a stashed mailto anchor or null when the address fails validation
     private function getBbMail(string $mail, ?string $lbl = null): ?string {
         $mail = trim($this->filterDec($mail));
         if (!preg_match('/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i', $mail)) return null;
-        $mail = $this->filterEsc($mail);
-        return $this->addStash('<a href="mailto:'.$mail.'">'.($lbl ?? $mail).'</a>');
+        return $this->addStash($lbl === null ? $this->getPartLink('mailto:'.$mail, $mail) : $this->getPartLink('mailto:'.$mail, $lbl, '', false, true));
     }
 
     # Shared ed2k renderer: escapes url and file name; the bare form is prefixed and labeled with the file name
     private function getEdLink(string $url, string $name, ?string $lbl = null): string {
-        $url = $this->filterEsc($this->filterDec($url));
-        $ttl = $this->filterEsc($this->filterDec($name));
-        return $this->addStash(($lbl === null ? 'eMule/eDonkey: ' : '').'<a href="'.$url.'" target="_blank" title="'.$ttl.'">'.($lbl ?? $ttl).'</a>');
+        $url = $this->filterDec($url);
+        $ttl = $this->filterDec($name);
+        $tag = ($lbl === null) ? $this->getPartLink($url, $ttl, $ttl, true) : $this->getPartLink($url, $lbl, $ttl, true, true);
+        return $this->addStash(($lbl === null ? 'eMule/eDonkey: ' : '').$tag);
     }
 
     # Escape remaining HTML tags in safe mode; unsafe mode is a no-op because block HTML is stashed and inline HTML was already handled

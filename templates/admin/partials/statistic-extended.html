@@ -1,0 +1,45 @@
+{% if empty_text %}
+<p class="sl-statx-unavail">{{ empty_text }}</p>
+{% else %}
+{% if rings %}
+<div class="sl-statx-rings">
+  {% for ring in rings %}
+  <div class="sl-statx-ring sl-statx-tone-{{ ring.tone }}">
+    <svg viewBox="0 0 100 100" aria-hidden="true">
+      <circle class="sl-statx-rbg" cx="50" cy="50" r="38"></circle>
+      <circle class="sl-statx-rval" cx="50" cy="50" r="38" stroke-dasharray="238.76" stroke-dashoffset="{{ ring.dash }}"></circle>
+    </svg>
+    <strong>{{ ring.pct }}%</strong><b>{{ ring.label }}</b><span>{{ ring.sub }}</span>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% if dims %}
+<div class="sl-statx-dims">
+  {% for dim in dims %}
+  <div class="sl-statx-dim sl-statx-tone-{{ dim.tone }}">
+    <h4>{{ dim.title }}</h4>
+    {% for bar in dim.bars %}
+    <div class="sl-statx-bar">
+      <span class="sl-statx-bl" title="{{ bar.name }}">{{ bar.name }}</span>
+      <span class="sl-statx-bg"><span class="sl-statx-bv" style="width: {{ bar.pct }}%"></span></span>
+      <span class="sl-statx-bc">{{ bar.count }}</span>
+      <span class="sl-statx-bp">{{ bar.pct }}%</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% if hours %}
+<section class="sl-statx-hours">
+  <h4>{{ hours_title }}</h4>
+  <svg viewBox="0 0 264 64" aria-hidden="true">
+    {% for hour in hours %}
+    <rect x="{{ hour.x }}" y="{{ hour.y }}" width="9" height="{{ hour.height }}" rx="1"></rect>
+    {% if hour.is_tick %}<text x="{{ hour.tickx }}" y="62" text-anchor="middle">{{ hour.label }}</text>{% endif %}
+    {% endfor %}
+  </svg>
+</section>
+{% endif %}
+{% endif %}

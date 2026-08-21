@@ -243,14 +243,14 @@ function getAdminTopMenu(): string {
     ];
     $html = '';
     foreach ($items as $item) {
-        $label = htmlspecialchars((string)$item['label'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-        $html .= '<li>'.$tpl->getHtmlFrag('link', [
+        $html .= $tpl->getHtmlFrag('list-item', ['content_html' => $tpl->getHtmlFrag('link', [
             'href' => (string)$item['href'],
             'title' => (string)$item['label'],
             'icon_name' => (string)($item['icon'] ?? ''),
-            'label_html' => '<b>'.$label.'</b>',
+            'label' => (string)$item['label'],
+            'is_label_strong' => true,
             'is_blank' => !empty($item['blank']),
-        ]).'</li>';
+        ])]);
     }
     return $html;
 }
@@ -865,7 +865,7 @@ function getAdminPrivateList(int $obj = 0): string {
 }
 
 # Add voting
-function add_voting(string $modul, string $selectName, int $selectedId, string $extraClass = ''): string {
+function add_voting(string $modul, string $selectName, int $selectedId): string {
  global $db, $locale, $conf, $tpl;
     $modul  = filterVar($modul);
     $params = ['modul' => $modul];
@@ -882,8 +882,7 @@ function add_voting(string $modul, string $selectName, int $selectedId, string $
             $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$id, 'label_text' => $title, 'is_selected' => $selectedId == $id]);
         }
     }
-    $attr = $extraClass ? ' class="'.htmlspecialchars('sl-field '.$extraClass, ENT_QUOTES, 'UTF-8').'"' : '';
-    return $tpl->getHtmlFrag('select', ['name_attr' => $selectName, 'options_html' => $opts, 'select_attr' => $attr]);
+    return $tpl->getHtmlFrag('select', ['name_attr' => $selectName, 'options_html' => $opts]);
 }
 
 # Split one SQL script into the statements a driver can take one at a time, honouring quoting, comments and the DELIMITER directive of a stored routine

@@ -35,9 +35,9 @@ class EditorCodemirror implements CodeDriver {
             'name_attr' => $name,
             'value_text' => $value,
             'input_class' => defined('ADMIN_FILE') ? 'sl-form-control' : '',
-            'input_attr' => 'id="'.$eid.'" style="display:none"',
+            'input_attr' => 'id="'.$eid.'" hidden',
         ]);
-        $ta .= '<div id="'.$eid.'_cm" class="sl-code-editor"></div>';
+        $ta .= $tpl->getHtmlFrag('editor-mount', ['id' => $id.'_cm', 'is_code' => true]);
         $js = '(function(){var ta=document.getElementById('.$jid.');';
         $js .= 'var view=new CM6.EditorView({state:CM6.EditorState.create({doc:ta.value,extensions:'.$exts.'}),';
         $js .= 'parent:document.getElementById('.$jcm.')});';
