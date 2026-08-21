@@ -14,6 +14,7 @@
     "ui:after": "node tools/ui-shots.mjs --after",
     "ui:gates": "php tools/ui-audit.php && php tools/ui-audit.php --markup && php vendor/phpunit/phpunit/phpunit --filter \"ThemeContract|UiAudit|ThemeCreation|EditorWindow|ParserFixtures|TemplateValidation\"",
     "ui:hooks": "git config core.hooksPath tools/hooks",
+    "postinstall": "git config core.hooksPath tools/hooks || echo hooks not enabled: not a git checkout",
     "browser:audit": "node tools/browser-audit.mjs",
     "browser:inspect": "node tools/browser-audit.mjs --inspect",
     "browser:attach": "node tools/browser-audit.mjs --attach --current"

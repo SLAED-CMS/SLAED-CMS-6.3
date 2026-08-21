@@ -34,8 +34,15 @@ NPM scripts currently present in `package.json`:
 
 The `ui:*` scripts are the theme gates; [TEMPLATES.md](TEMPLATES.md) carries the
 full table of what each one checks. `tools/hooks/pre-commit` runs the fast set
-on every commit that carries a file able to move a count — enable it once per
-clone with `npm run ui:hooks`, skip a single commit with `SLAED_SKIP_GATES=1`.
+on every commit that carries a file able to move a count.
+
+It is enabled per machine, not per repository: `core.hooksPath` lives in
+`.git/config`, which a clone and a pull both leave behind. `npm install` sets it
+through `postinstall`, and `npm run ui:hooks` sets it by hand. Skip a single
+commit with `SLAED_SKIP_GATES=1`. The hook stops with a named reason when `php`
+is not on the PATH of the shell git runs hooks in or when `vendor/` is absent -
+a gate that steps aside when its tools are missing is the failure it exists to
+catch.
 
 ## Installation
 Install dev dependencies first:

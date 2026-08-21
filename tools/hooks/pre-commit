@@ -22,6 +22,21 @@ staged=$(git diff --cached --name-only --diff-filter=ACMR)
 watched=$(printf '%s\n' "$staged" | grep -E '^(templates/|core/|admin/|modules/|plugins/|tests/|tools/ui-)')
 [ -z "$watched" ] && exit 0
 
+# Neither tool is guaranteed on a fresh machine: php has to be on the PATH of the shell git runs hooks in, and vendor/
+# is gitignored, so phpunit is absent until composer install. Saying which one is missing beats a generic refusal, and
+# refusing beats stepping aside quietly - a gate that gives up when its tools are gone is the failure it exists to catch
+if ! command -v php >/dev/null 2>&1; then
+    printf '\n[gates] php is not on the PATH of this shell, so nothing could be checked.\n'
+    printf '        Add it, or pass SLAED_SKIP_GATES=1 for this commit.\n\n'
+    exit 1
+fi
+
+if [ ! -f vendor/phpunit/phpunit/phpunit ]; then
+    printf '\n[gates] vendor/ is missing, so the tests could not run. Run: composer install\n'
+    printf '        Or pass SLAED_SKIP_GATES=1 for this commit.\n\n'
+    exit 1
+fi
+
 fail=0
 
 printf '\n[gates] counts and the frozen API\n'

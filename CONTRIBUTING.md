@@ -386,7 +386,7 @@ A change under `templates/`, `core/`, `admin/`, `modules/`, `plugins/`, `tests/`
 npm run ui:gates
 ```
 
-`tools/hooks/pre-commit` runs the same fast set on every commit that carries such a file. Enable it once per clone with `npm run ui:hooks`; `SLAED_SKIP_GATES=1` skips one commit.
+`tools/hooks/pre-commit` runs the same fast set on every commit that carries such a file. **It has to be enabled per machine**: `core.hooksPath` lives in `.git/config`, which no clone or pull carries, so `npm install` sets it through `postinstall` and `npm run ui:hooks` sets it by hand. `SLAED_SKIP_GATES=1` skips one commit. The hook refuses to pass when `php` is not on the PATH of the shell git runs hooks in, or when `vendor/` is absent, rather than stepping aside quietly.
 
 No count can see a moved pixel, so a change to theme CSS or to a canon template additionally needs the visual pair — `npm run ui:before` **before** you start editing and `npm run ui:after` afterwards. Both require `SLAED_UI_USER` and `SLAED_UI_PASS` in the environment and refuse to start without them. See [docs/TEMPLATES.md](docs/TEMPLATES.md) for the full gate table.
 
