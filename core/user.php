@@ -1421,14 +1421,13 @@ function getRssChannel() {
     header('Content-Type: application/rss+xml; charset='._CHARSET);
 
     $name = filterVar(getVar('post', 'name', 'text', '') ?: getVar('get', 'name', 'text', ''));
-    $hmodul = explode(',', $conf['module']);
-    $hi = mt_rand(0, count($hmodul) - 1);
-    $cname = $hmodul[$hi];
-    $name = ($name) ? $name : $cname;
+    $hmod = explode(',', $conf['module']);
+    $name = ($name) ? $name : trim($hmod[0]);
     $cat  = getVar('post', 'cat', 'num', 0) ?: getVar('get', 'cat', 'num', 0);
     $num  = getVar('post', 'num', 'num', 0) ?: getVar('get', 'num', 'num', 0);
     $num = ($num) ? (($num <= $conf['rss']['max']) ? $num : $conf['rss']['max']) : $conf['rss']['min'];
     $id   = getVar('post', 'id',  'num', 0) ?: getVar('get', 'id',  'num', 0);
+    $self = htmlspecialchars($conf['homeurl'].'/index.php?go=rss&name='.$name.(($cat) ? '&cat='.$cat : '').(($id) ? '&id='.$id : '').'&num='.$num);
 
     if (($name == 'content') && $id) {
         $result = $db->getSqlQuery('SELECT id, title, body, time FROM '.PREFIX_DB.'_content WHERE id = :id AND time <= NOW()', ['id' => $id]);
@@ -1474,10 +1473,11 @@ function getRssChannel() {
     }
 
     $content = '<?xml version="1.0" encoding="'._CHARSET."\"?>\n"
-    ."<rss version=\"2.0\">\n"
+    ."<rss version=\"2.0\" xmlns:atom=\"http://www.w3.org/2005/Atom\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n"
     ."<channel>\n"
     .'<title>'.htmlspecialchars($conf['sitename'])."</title>\n"
     .'<link>'.htmlspecialchars($conf['homeurl'])."</link>\n"
+    .'<atom:link href="'.$self."\" rel=\"self\" type=\"application/rss+xml\"/>\n"
     .'<description>'.htmlspecialchars($conf['slogan'])."</description>\n"
     .'<generator>SLAED CMS '.$conf['version']."</generator>\n"
     .'<copyright>Copyright (c) SLAED CMS '.$conf['version']."</copyright>\n"
@@ -1495,7 +1495,7 @@ function getRssChannel() {
             .'<description>'.htmlspecialchars($prs->filterContent($rhometext, false, $name))."</description>\n"
             .'<comments>'.$rurl.'#'.$rid."</comments>\n";
             $content .= ($rctitle) ? '<category>'.htmlspecialchars($rctitle)."</category>\n" : '';
-            $content .= '<author>antispam@antispam.com ('.htmlspecialchars($rauthor).")</author>\n"
+            $content .= '<dc:creator>'.htmlspecialchars($rauthor)."</dc:creator>\n"
             ."</item>\n\n";
         }
     } elseif ($name && $name == 'content' && $result) {

@@ -1,0 +1,4 @@
+<form action="{{ action }}" method="post" class="sl-lang">
+  {{{ hidden }}}
+  {% for item in langs %}<button type="submit" class="sl-lang-cell" name="newlang" value="{{ item.key }}" title="{{ item.title }}" aria-label="{{ item.title }}"><img src="{{ item.img_src }}" alt="{{ item.title }}"></button>{% endfor %}
+</form>

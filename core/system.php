@@ -1537,7 +1537,7 @@ function checkCachePoison(bool $mark = false): bool {
 
 # Validate one dynamic-region type and parameter against the approved marker contract; only these exact combinations may ever be signed or rendered
 function checkDynamicMark(string $type, string $par): bool {
-    if ($type === 'token') return in_array($par, ['ajax', 'account', 'scheduler', 'mode'], true);
+    if ($type === 'token') return in_array($par, ['ajax', 'account', 'scheduler', 'mode', 'newlang'], true);
     if ($type === 'captcha') return in_array($par, ['login', 'register', 'comment', 'contact'], true);
     if ($type === 'voting') return preg_match('#^[1-9][0-9]{0,8}$#', $par) === 1;
     return false;
@@ -1778,6 +1778,9 @@ function setHead(array $seo = []): void {
         }
         if ($seomap['iscanon']) $strlink .= $tpl->getHtmlFrag('head-link', ['rel' => 'canonical', 'href' => $seomap['canon'], 'type' => '', 'title' => ''])."\n";
         if ($conf['rss']['act']) {
+            $rmod = explode(',', $conf['module']);
+            $rurl = $conf['homeurl'].'/index.php?go=rss&name='.trim($rmod[0]);
+            $strlink .= $tpl->getHtmlFrag('head-link', ['rel' => 'alternate', 'href' => $rurl, 'type' => 'application/rss+xml', 'title' => $conf['sitename'].' - '._RSS])."\n";
             $fieldc = explode('||', $conf['rss']['rss']);
             foreach ($fieldc as $val) {
                 if ($val != '') {
@@ -1846,7 +1849,6 @@ function setHead(array $seo = []): void {
             'license' => $licens,
             'head_html' => '',
             'menu' => '',
-            'admin_langs' => '',
             'mode_html' => '',
             'admin_blocks' => '',
             'login' => '',
@@ -5141,11 +5143,14 @@ function addFilescanTask(): array {
     ];
 }
 
-# User and admin login report
-function login_report(mixed $id, mixed $typ, mixed $login, mixed $pass): void {
- global $admin, $conf, $user;
-    $id = ($id) ? 'admin' : 'user';
-    if (($conf['security']['log_a'] && $id) || ($conf['security']['log_u'] && !$id)) {
+# Append one login attempt to the admin or the user log: who tried, from where, with which browser, and whether it was let in
+# The attempted password is written only when the caller hands one over, which it does for a refused attempt and never for an accepted one
+# Each surface answers for its own journal, and the flag is read before the kind becomes a string: a non-empty string is true either way, which left log_u unreachable
+function addLoginReport(int $id, int $typ, string $login, string $pass): void {
+    global $admin, $conf, $user;
+    $adm = ($id !== 0);
+    $id = $adm ? 'admin' : 'user';
+    if ($adm ? $conf['security']['log_a'] : $conf['security']['log_u']) {
         $typ = ($typ) ? _YES : _NO;
         $ip = getIp();
         $login = ($login) ? "\n"._NICKNAME.': '.substr($login, 0, 25) : '';

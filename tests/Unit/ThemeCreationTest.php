@@ -108,9 +108,9 @@ namespace Tests\Unit {
                 $want = self::getWantedRatio($pair);
                 if ($rate + 0.005 < $want) $bad[] = $pair['page'].' ['.$pair['mode'].'] '.$pair['sel'].': '.round($rate, 2).':1, needs '.$want;
             }
-            $this->assertSame([], $bad, "the repainted palette drops a pair below AA on a page the walk really visited:
-".implode("
-", $bad));
+            $this->assertSame([], $bad, 'the repainted palette drops a pair below AA on a page the walk really visited:
+'.implode('
+', $bad));
         }
 
         # The ratio one recorded pair has to clear, which large text is allowed to clear at a lower bar
@@ -161,8 +161,8 @@ namespace Tests\Unit {
             $skel = getContract()['skeleton'];
             $said = getFileText('core/system.php');
             $body = substr($said, (int)strpos($said, 'function checkThemeAssets('));
-            $body = substr($body, 0, (int)strpos($body, "
-}"));
+            $body = substr($body, 0, (int)strpos($body, '
+}'));
             foreach (array_keys($skel['any']) as $one) {
                 $want = rtrim($one, '/');
                 $this->assertStringContainsString("'".$want."'", $body, $want.' is in the skeleton and checkThemeAssets() never looks for it');

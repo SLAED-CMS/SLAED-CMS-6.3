@@ -21,13 +21,22 @@ if (empty($go) && $op === 'mode') {
     setRedirect('index.php', true);
 }
 
+# The language block posts here; the choice is stored and the POST turns back into a GET, so the redirected request is the one that renders in the new locale
+if (empty($go) && $op === 'newlang') {
+    setLangChoice();
+    setRedirect('index.php', true);
+}
+
 if (empty($go)) {
     Cache::setHeaders(false);
     if ($conf['alang']) {
         $coun = Geoip::getCountry(getIp());
         if ($coun !== '' && !is_bot() && empty(getCookies('language'))) {
             $lang = ['GB' => 'en', 'US' => 'en', 'CA' => 'en', 'AU' => 'en', 'FR' => 'fr', 'DE' => 'de', 'PL' => 'pl', 'RU' => 'ru', 'UA' => 'uk'][$coun] ?? '';
-            if ($lang !== '') setRedirect('index.php?newlang='.$lang);
+            if ($lang !== '') {
+                setCookies('language', time() + (int)($conf['user_c_t'] ?? 0), $lang);
+                setRedirect('index.php');
+            }
         }
     }
     $file = getVar('req', 'file', 'var') ?: 'index';

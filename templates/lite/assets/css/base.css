@@ -507,7 +507,7 @@
   --sl-vote-width: 15px;
   --sl-vote-height: 15px;
   --sl-wordmark-width: 170px;
-  --sl-wordmark-img-width: 145px;
+  --sl-wordmark-img-width: 150px;
 
   /* Components the editor package sizes: the toolbar window, the upload panel, the emoji picker */
   --sl-editor-mode-height: 28px;

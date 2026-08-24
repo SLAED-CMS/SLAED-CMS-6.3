@@ -770,7 +770,7 @@ function setUserLogin(int $uid, string $name, string $pass, int $story, int $blo
     $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $uip, 'guest' => 0]);
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET ip = :ip, lastvis = NOW(), agent = :agent WHERE id = :id', ['ip' => $uip, 'agent' => getAgent(), 'id' => $uid]);
     Captcha::clearLoginFailures('user');
-    login_report(0, 1, $name, '');
+    addLoginReport(0, 1, $name, '');
 }
 
 function login(): void {
@@ -795,7 +795,7 @@ function login(): void {
         setRedirect('index.php?name='.$conf['name'].'&op=profil', true);
     } else {
         Captcha::registerLoginFailure('user');
-        login_report(0, 0, $uname, $upass);
+        addLoginReport(0, 0, $uname, $upass);
         account();
     }
 }
@@ -1414,7 +1414,7 @@ function oauthfinish(): void {
         $badcap = checkCaptcha('login');
         if ($badcap || !$uname || !$upass || !is_array($urow) || empty($urow['id']) || !checkPassHash($upass, (string)$urow['password'])) {
             Captcha::registerLoginFailure('user');
-            login_report(0, 0, $uname, $upass);
+            addLoginReport(0, 0, $uname, $upass);
             Oauth::setLog('link_login_failed', $prov);
             oauthretry(_LOGININCOR);
         }

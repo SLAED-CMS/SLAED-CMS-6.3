@@ -10,45 +10,38 @@ if (!defined('BLOCK_FILE')) {
 }
 
 global $conf, $locale, $tpl;
-$handle = opendir(BASE_DIR.'/lang');
 $langlist = [];
-while (false !== ($file = readdir($handle))) {
-    if (preg_match("/^(.+)\.php/", $file, $matches)) {
-        $langlist[] = $matches[1];
-    }
+foreach (scandir(BASE_DIR.'/lang') ?: [] as $file) {
+    if (preg_match('#^(.+)\.php$#', $file, $part)) $langlist[] = $part[1];
 }
-closedir($handle);
 sort($langlist);
+$hide = '';
+foreach (['op' => 'newlang', 'refer' => '1', 'token' => getPageToken('newlang')] as $key => $val) {
+    $hide .= $tpl->getHtmlFrag('hidden', ['name_attr' => $key, 'value_attr' => $val, 'input_attr' => '']);
+}
 if ($conf['flags'] == 1) {
-    $cont = '';
-    for ($i = 0; $i < count($langlist); $i++) {
-        if ($langlist[$i] != '') {
-            $altlang = getLangName($langlist[$i]);
-            $cont .= $tpl->getHtmlFrag('link', [
-                'href' => 'index.php?newlang='.$langlist[$i],
-                'title' => $altlang,
-                'img_src' => getLanguageFlagSrc($langlist[$i]),
-                'img_alt' => $altlang,
-            ]);
-        }
+    $langs = [];
+    foreach ($langlist as $lang) {
+        if ($lang === '') continue;
+        $langs[] = ['key' => $lang, 'title' => getLangName($lang), 'img_src' => getLanguageFlagSrc($lang)];
     }
+    $cont = $tpl->getHtmlFrag('lang-switch', ['action' => 'index.php', 'hidden' => $hide, 'langs' => $langs]);
     $content = $tpl->getHtmlFrag('block-content', ['is_block_flags' => true, 'content' => $cont]);
 } else {
     $opts = '';
-    for ($i = 0; $i < count($langlist); $i++) {
-        if ($langlist[$i] != '') {
-            $opts .= $tpl->getHtmlFrag('select-option', [
-                'value_attr' => 'index.php?newlang='.$langlist[$i],
-                'label_text' => getLangName($langlist[$i]),
-                'is_selected' => $langlist[$i] == $locale,
-            ]);
-        }
+    foreach ($langlist as $lang) {
+        if ($lang === '') continue;
+        $opts .= $tpl->getHtmlFrag('select-option', [
+            'value_attr' => $lang,
+            'label_text' => getLangName($lang),
+            'is_selected' => $lang == $locale,
+        ]);
     }
-    $sel = $tpl->getHtmlFrag('select', ['name_attr' => 'newlang', 'select_attr' => 'onchange="location.href=this.value"', 'options_html' => $opts]);
+    $sel = $tpl->getHtmlFrag('select', ['name_attr' => 'newlang', 'select_attr' => 'onchange="this.form.submit()"', 'options_html' => $opts]);
     $content = $tpl->getHtmlPart('form-wrap', [
         'action' => 'index.php',
-        'method' => 'get',
+        'method' => 'post',
         'is_block_languages' => true,
-        'content_html' => $sel,
+        'content_html' => $hide.$sel,
     ]);
 }

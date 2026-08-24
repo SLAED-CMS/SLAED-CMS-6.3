@@ -1,9 +1,0 @@
-<form action="{{ action }}" method="post" class="sl-mode sl-set-row">
-  {{{ hidden }}}
-  <span class="sl-set-name"><i class="bi bi-{{ icon_name }}" aria-hidden="true"></i>{{ _THEME }}</span>
-  <span class="sl-set-pick">
-    <select class="sl-select" name="mode" onchange="this.form.submit()" title="{{ title }}" aria-label="{{ title }}">
-      {% for item in modes %}<option value="{{ item.key }}"{% if item.is_now %} selected{% endif %}>{{ item.title }}</option>{% endfor %}
-    </select>
-  </span>
-</form>

@@ -20,7 +20,7 @@ function checkModuleConfig(string $name, int $typ): bool {
 
 # Build one dashboard module card or one sidebar menu row from a module config entry
 function getAdminMenu(string $name, array $mod): string {
- global $panel, $afile, $tpl;
+    global $panel, $afile, $tpl;
     $url = $afile.'.php?name='.$name;
     $title = defined($mod['lang']) ? constant($mod['lang']) : $mod['lang'];
     $icon = preg_match('/^[a-z0-9-]+$/', $mod['icon'] ?? '') ? $mod['icon'] : 'puzzle';
@@ -59,8 +59,9 @@ function getAdminMenu(string $name, array $mod): string {
     ]);
 }
 
+# Build the sidebar menu blocks of a module screen: the panel modules for a super-admin, then every site module this administrator may open
 function getAdminPanelBlocks(): string {
- global $panel, $conf, $tpl;
+    global $panel, $conf, $tpl;
     if (!$panel) {
         $cont = '';
         if (isAdmin(true)) {
@@ -87,8 +88,9 @@ function getAdminPanelBlocks(): string {
     return '';
 }
 
+# Render the panel home: the setup and version warnings, the administrator notice, and the module grids this administrator may open
 function getAdminPanel(): void {
- global $conf, $panel, $tpl;
+    global $conf, $panel, $tpl;
     setHead();
     $content = '';
     $minver = '8.1.0';
@@ -122,7 +124,8 @@ function getAdminPanel(): void {
     setFoot();
 }
 
-function add_admin() {
+# Create the first administrator from the setup form, and only while the table is still empty; every later account is added from the admins module
+function addAdminAccount(): void {
     global $db, $afile, $conf, $stop, $prv;
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_admins LIMIT 1')) == 0) {
         $aname     = filterText(trim(substr($_POST['aname'] ?? '', 0, 25)));
@@ -162,14 +165,15 @@ function add_admin() {
             }
             setRedirect($afile.'.php');
         } else {
-            login();
+            getAdminLoginForm();
         }
     } else {
         setRedirect($afile.'.php');
     }
 }
 
-function check_admin() {
+# Authorize one login attempt: captcha, credentials, password rehash, session, and the report either way
+function checkAdminLogin(): void {
     global $db, $afile, $conf, $stop;
     if (checkCaptcha('adminlogin')) $stop = _SECCODEINCOR;
     $name = htmlspecialchars(trim(substr($_POST['name'] ?? '', 0, 25)));
@@ -196,17 +200,18 @@ function check_admin() {
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :ip', ['ip' => $ip]);
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_admins SET ip = :ip, lastvis = now() WHERE id = :id', ['ip' => $ip, 'id' => $aid]);
         Captcha::clearLoginFailures('admin');
-        login_report(1, 1, $name, '');
+        addLoginReport(1, 1, $name, '');
         setRedirect($afile.'.php');
     } else {
         Captcha::registerLoginFailure('admin');
-        login_report(1, 0, $name, $pwd);
-        login();
+        addLoginReport(1, 0, $name, $pwd);
+        getAdminLoginForm();
     }
 }
 
-function login() {
- global $db, $afile, $conf, $stop, $tpl;
+# Render the panel login page, or the first-administrator form while the table is still empty
+function getAdminLoginForm(): void {
+    global $db, $afile, $conf, $stop, $tpl;
     setHead();
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_admins')) == 0) {
         $cont = ($stop) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]) : '';
@@ -258,8 +263,10 @@ function isValidEditor(string $key, string $role): bool {
     return in_array($role, $roles, true);
 }
 
-function changeeditor(): void {
+# Store the editor an administrator picked, on the row and in the session, so every screen of the panel opens the same one
+function updateAdminEditor(): void {
     global $db, $admin, $afile, $conf;
+    if (!checkAdminPost('changeeditor')) setRedirect($afile.'.php', true);
     $key = getVar('post', 'editor', 'var', $conf['editor']['admin'] ?? 'plain');
     $aid = (int)($admin[0] ?? 0);
     $raw = base64_decode($_SESSION[$conf['admin_c']] ?? '', true);
@@ -281,7 +288,8 @@ function changeeditor(): void {
     setRedirect($afile.'.php', true);
 }
 
-function logout() {
+# End the panel session: drop the session row, forget the administrator, and hand the browser back to the login page
+function deleteAdminSession(): void {
     global $db, $admin, $afile, $conf;
     $aname = filterText(substr($admin[1], 0, 25), 1);
     $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :name AND guest = :guest', ['name' => $aname, 'guest' => '3']);
@@ -290,9 +298,16 @@ function logout() {
 }
 
 # Store the colour mode the toolbar toggle asked for; anything but light or dark drops the cookie and hands the page back to the operating system
-function mode(): void {
+function setAdminThemeMode(): void {
     global $afile;
     if (checkAdminPost('mode')) setThemeMode(getVar('post', 'mode', 'var'));
+    setRedirect($afile.'.php', true);
+}
+
+# The language row of the settings window posts here; the choice is stored and the POST turns back into a GET, so the redirected request is the one that renders in the new locale
+function setAdminLanguage(): void {
+    global $afile;
+    setLangChoice();
     setRedirect($afile.'.php', true);
 }
 
@@ -304,11 +319,13 @@ if (isAdmin()) {
     $act = getVar('req', 'act', 'num');
     $pagetitle = $conf['defis'].' '._ADMINMENU;
     if ($op == 'changeeditor') {
-        changeeditor();
+        updateAdminEditor();
     } elseif ($op == 'mode') {
-        mode();
+        setAdminThemeMode();
+    } elseif ($op == 'newlang') {
+        setAdminLanguage();
     } elseif ($op == 'logout') {
-        logout();
+        deleteAdminSession();
     } elseif ($panel) {
         getAdminPanel();
     } else {
@@ -330,8 +347,8 @@ if (isAdmin()) {
     $home = 1;
     $op = getVar('post', 'op', 'var');
     switch($op) {
-        default: login(); break;
-        case 'add_admin': add_admin(); break;
-        case 'check_admin': check_admin(); break;
+        default: getAdminLoginForm(); break;
+        case 'add_admin': addAdminAccount(); break;
+        case 'check_admin': checkAdminLogin(); break;
     }
 }

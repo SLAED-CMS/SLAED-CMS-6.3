@@ -714,7 +714,7 @@ function checkSiteToken(string $tok = '', string $scope = 'ajax'): bool {
     return false;
 }
 
-# Authorizes one state-changing admin request: the method must be POST and the token must come from the body, scoped to the module that renders the form
+# Authorizes one state-changing request of either surface: the method must be POST and the token must come from the body, scoped to the handler that renders the form
 # A credential in a query string ends up in browser history, server logs and the Referer header
 # A link carrying one is also followed by prefetchers, scanners and link previews without anyone clicking it
 function checkAdminPost(string $scope): bool {
@@ -731,21 +731,15 @@ function getReferer(): string {
     return '';
 }
 
-# Determine active locale, load main language file, set language cookie
+# Determine active locale from the cookie, load main language file, set language cookie
+# This runs before the rest of the bootstrap exists, so it only reads: the switch itself is setLangChoice(), which the op=newlang handlers call once everything is up
 function setLang(): void {
     global $locale, $conf;
     $mlang = $conf['language'] ?? 'en';
     $mult = ((int)($conf['multilingual'] ?? 0) === 1);
     if ($mult) {
-        $newlang = getVar('req', 'newlang', 'var', '');
         $clang = getCookies('language');
-        if ($newlang && is_readable('lang/'.$newlang.'.php')) {
-            $locale = $newlang;
-        } elseif ($clang && is_readable('lang/'.$clang.'.php')) {
-            $locale = $clang;
-        } else {
-            $locale = $mlang;
-        }
+        $locale = ($clang && is_readable('lang/'.$clang.'.php')) ? $clang : $mlang;
         if (!$clang || $clang !== $locale) {
             setCookies('language', time() + (int)($conf['user_c_t'] ?? 0), $locale);
         }
@@ -754,6 +748,15 @@ function setLang(): void {
     }
     $file = 'lang/'.$locale.'.php';
     require_once is_readable($file) ? $file : 'lang/'.$mlang.'.php';
+}
+
+# Store the locale a switch asked for; the answer travels in a POST body with a token of its own scope, because a link that changes the locale is followed by prefetchers, scanners and link previews with nobody clicking it
+# The caller redirects afterwards, so the cookie written here is read by setLang() on the very next request
+function setLangChoice(): void {
+    global $conf;
+    if (((int)($conf['multilingual'] ?? 0)) !== 1 || !checkAdminPost('newlang')) return;
+    $want = getVar('post', 'newlang', 'var', '');
+    if ($want !== '' && is_readable('lang/'.$want.'.php')) setCookies('language', time() + (int)($conf['user_c_t'] ?? 0), $want);
 }
 
 # Load module language file and return the active locale

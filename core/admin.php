@@ -212,49 +212,56 @@ function getLanguageList(): array {
     return $list;
 }
 
-# Render the standard admin language switcher
-function getAdminLanguageLinks(): string {
-    global $conf, $afile, $tpl;
-    if (($conf['multilingual'] ?? 0) != 1) return '';
-    $html = '';
-    foreach (getLanguageList() as $lang => $label) {
-        $html .= $tpl->getHtmlFrag('link', [
-            'href' => $afile.'.php?newlang='.$lang,
-            'title' => $label,
-            'img_src' => getLanguageFlagSrc($lang),
-            'img_alt' => $label,
-            'is_menu_list_image' => true,
-            'is_admin_language_link' => true,
-        ]);
+# Render one row of the settings window: the caption, the icon and the list of one axis, in the form that posts it to the handler that already owns that axis
+# The three axes differ in the handler they post to, the field they post under, the icon, the caption and where the options come from, so they are one table rather than three functions
+# An axis with nothing to offer returns an empty string and the window simply draws one row fewer: the language axis when the site is not multilingual, any axis whose option list came out empty
+function getAdminSettingsRow(string $axis): string {
+    global $admin, $conf, $afile, $locale, $tpl;
+    $opts = '';
+    if ($axis === 'mode') {
+        $mode = getThemeMode();
+        $icon = ['light' => 'sun', 'auto' => 'circle-half', 'dark' => 'moon'];
+        $name = ['light' => _MODE_LIGHT, 'auto' => _MODE_AUTO, 'dark' => _MODE_DARK];
+        foreach (['light', 'auto', 'dark'] as $step) {
+            $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $step, 'label_text' => $name[$step], 'is_selected' => $step === $mode]);
+        }
+        $row = ['op' => 'mode', 'field' => 'mode', 'icon' => $icon[$mode], 'title' => _THEME, 'hint' => $name[$mode]];
+    } elseif ($axis === 'editor') {
+        $edkey = (string)($admin[3] ?? $conf['editor']['admin'] ?? 'plain');
+        $row = ['op' => 'changeeditor', 'field' => 'editor', 'icon' => 'pencil-square', 'title' => _EDITOR, 'hint' => _EDITOR];
+    } else {
+        if (($conf['multilingual'] ?? 0) != 1) return '';
+        foreach (getLanguageList() as $lang => $label) {
+            $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $lang, 'label_text' => $label, 'is_selected' => $lang === $locale]);
+        }
+        $row = ['op' => 'newlang', 'field' => 'newlang', 'icon' => 'translate', 'title' => _LANGUAGE, 'hint' => _LANGUAGE];
     }
-    return $html;
-}
-
-# Render the language row of the settings window: the same locales the flag strip offers, as one list that posts to the handler already reading newlang
-function getAdminLanguagePick(): string {
-    global $conf, $afile, $locale, $tpl;
-    if (($conf['multilingual'] ?? 0) != 1) return '';
-    $html = '';
-    foreach (getLanguageList() as $lang => $label) {
-        $html .= $tpl->getHtmlFrag('select-option', ['value_attr' => $lang, 'label_text' => $label, 'is_selected' => $lang === $locale]);
+    $safe = htmlspecialchars($row['hint'], ENT_QUOTES, 'UTF-8');
+    $attr = 'onchange="this.form.submit()" title="'.$safe.'" aria-label="'.$safe.'"';
+    if ($axis === 'editor') {
+        $pick = Editor::getSelect('editor', $edkey, 'content', 'admin', $attr);
+    } else {
+        if ($opts === '') return '';
+        $pick = $tpl->getHtmlFrag('select', ['name_attr' => $row['field'], 'select_class' => '', 'select_attr' => $attr, 'options_html' => $opts]);
     }
-    $pick = $tpl->getHtmlFrag('select', ['name_attr' => 'newlang', 'select_class' => '', 'select_attr' => 'onchange="this.form.submit()"', 'options_html' => $html]);
-    return $tpl->getHtmlFrag('settings-row', ['action' => $afile.'.php', 'op' => '', 'icon_name' => 'translate', 'title' => _LANGUAGE, 'pick_html' => $pick]);
-}
-
-# Render the editor row of the settings window: the select the panel already ships, in the form that posts it to the handler that stores it on the administrator
-function getAdminEditorPick(): string {
-    global $admin, $conf, $afile, $tpl;
-    $key = (string)($admin[3] ?? $conf['editor']['admin'] ?? 'plain');
-    $pick = Editor::getSelect('editor', $key, 'content', 'admin', 'onchange="this.form.submit()"');
-    return $tpl->getHtmlFrag('settings-row', ['action' => $afile.'.php', 'op' => 'changeeditor', 'icon_name' => 'pencil-square', 'title' => _EDITOR, 'pick_html' => $pick]);
+    $hide = ['op' => $row['op'], 'refer' => '1', 'token' => getSiteToken($row['op'])];
+    $html = '';
+    foreach ($hide as $key => $val) $html .= $tpl->getHtmlFrag('hidden', ['name_attr' => $key, 'value_attr' => $val, 'input_attr' => '']);
+    return $tpl->getHtmlFrag('settings-row', [
+        'action' => $afile.'.php',
+        'hidden' => $html,
+        'is_mode' => $axis === 'mode',
+        'icon_name' => $row['icon'],
+        'title' => $row['title'],
+        'pick_html' => $pick,
+    ]);
 }
 
 # Render the settings window of the panel: the three answers an administrator changes from any screen, each row posting to the handler that already owns it
-# Nothing is stored here and no handler learns about the others: the colour mode writes its cookie, the editor writes the administrator row, the language writes the session
+# Nothing is stored here and no handler learns about the others: the colour mode writes its cookie, the editor writes the administrator row, the language writes its own cookie
 function getAdminSettingsWindow(): string {
-    global $afile, $tpl;
-    $rows = getThemeModeSwitch($afile.'.php').getAdminEditorPick().getAdminLanguagePick();
+    global $tpl;
+    $rows = getAdminSettingsRow('mode').getAdminSettingsRow('editor').getAdminSettingsRow('language');
     return $tpl->getHtmlFrag('window-settings', ['rows' => $rows]);
 }
 
@@ -298,7 +305,6 @@ function getAdminLayoutVars(): array {
         return ['login' => $login];
     }
     return [
-        'admin_langs' => getAdminLanguageLinks(),
         'settings_win' => getAdminSettingsWindow(),
         'menu' => getAdminTopMenu(),
         'admin_blocks' => getAdminPanelBlocks().getAdminInfo().adminblock(),
@@ -316,9 +322,9 @@ function getAdminCountRow(string $href, string $titlec, string $labelc, string $
     ]);
 }
 
-# Build the admin sidebar info blocks: pending-content counters, waiting content, and the editor selector
-function getAdminInfo() {
- global $admin, $afile, $com, $conf, $panel, $tpl;
+# Build the admin sidebar info blocks: pending-content counters and waiting content; the editor moved to the settings window and is offered there alone
+function getAdminInfo(): string {
+    global $com, $panel, $tpl;
     if (isAdmin()) {
         $ablocks = '';
         if ($panel) {
@@ -356,17 +362,6 @@ function getAdminInfo() {
             $waitingRows = [getAdminCountRow('name=comments&status=1', '_COMMENTS', '_COMMENTS', 'chat-dots', '', '', $com->getStatusCount(CommentStatus::Pending))];
             $ablocks .= $tpl->getHtmlPart('block-sidebar', ['title' => _WAITINGCONT, 'icon_name' => 'hourglass-split', 'content_html' => $tpl->getHtmlFrag('block-content', ['is_sidebar_count_list' => true, 'content' => implode('', $waitingRows)]), 'id' => '4', 'close' => _OPCL]);
         }
-        $key = (string)($admin[3] ?? $conf['editor']['admin'] ?? 'plain');
-        $edit = Editor::getSelect('editor', $key, 'content', 'admin', 'onchange="this.form.submit()"');
-        $econt = $tpl->getHtmlPart('form', [
-            'action_url' => $afile.'.php',
-            'hidden' => [
-                ['nameattr' => 'op', 'valueattr' => 'changeeditor'],
-                ['nameattr' => 'refer', 'valueattr' => '1'],
-            ],
-            'content_html' => $edit,
-        ]);
-        $ablocks .= $tpl->getHtmlPart('block-sidebar', ['title' => _EDITOR, 'icon_name' => 'pencil-square', 'content_html' => $econt, 'id' => '6', 'close' => _OPCL]);
         return $ablocks;
     }
     return '';

@@ -2994,8 +2994,19 @@ ol.sl-sublist-two li::before {
   align-items: center;
 }
 
-.sl-block-flags a {
+/* Language block: the flags are submit buttons of one form, because the switch answers only to a POST carrying a
+   token in its body, and a link could carry one only in the query string, which this tree does not allow;
+   the form itself lays out nothing, so the buttons stay flex items of the block */
+.sl-lang {
+  display: contents;
+}
+
+.sl-lang-cell {
   display: inline-flex;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
 }
 
 .sl-block-flags img {

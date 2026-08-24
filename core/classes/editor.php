@@ -143,7 +143,7 @@ class Editor {
             && in_array($role, (array)($man['roles'] ?? []), true);
     }
 
-    # Public gateway for external callers (e.g. changeeditor() in admin/index.php)
+    # Public gateway for external callers (e.g. updateAdminEditor() in admin/index.php)
     public static function isValidEditor(string $key, string $role): bool {
         return self::checkManifest(self::getManifest($key), $role);
     }
