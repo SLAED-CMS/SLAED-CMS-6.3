@@ -1,0 +1,6 @@
+<form action="{{ action }}" method="post" class="sl-set-row">
+  {% if op %}<input type="hidden" name="op" value="{{ op }}">{% endif %}
+  <input type="hidden" name="refer" value="1">
+  <span class="sl-set-name"><i class="bi bi-{{ icon_name }}" aria-hidden="true"></i>{{ title }}</span>
+  <span class="sl-set-pick">{{{ pick_html }}}</span>
+</form>

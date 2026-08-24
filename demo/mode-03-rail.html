@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Переключатель оформления · 3. Рельс · SLAED CMS</title>
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<link rel="stylesheet" href="assets/demo.css">
+<style>
+    /* Variant 3: a three position rail. The knob carries the current icon and slides by one cell per mode.
+       The groove runs from the brand colour to the sunken surface, so day and night are told by one hue */
+    .sl-mode-rail-track {
+      position: relative;
+      display: inline-grid;
+      grid-template-columns: repeat(3, var(--sl-size-control));
+      align-items: center;
+      box-sizing: border-box;
+      height: var(--sl-size-control);
+      padding: var(--sl-space-1);
+      border-radius: var(--sl-radius-pill);
+      background: linear-gradient(to right, var(--sl-primary), var(--sl-surface-sunken));
+      box-shadow: var(--sl-shadow-inset);
+    }
+
+    .sl-mode-rail-knob {
+      position: absolute;
+      z-index: var(--sl-z-raised);
+      top: var(--sl-space-1);
+      left: var(--sl-space-1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: calc(var(--sl-size-control) - var(--sl-space-1) * 2);
+      height: calc(var(--sl-size-control) - var(--sl-space-1) * 2);
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-bg);
+      color: var(--sl-text-strong);
+      font-size: var(--sl-size-icon-xs);
+      box-shadow: var(--sl-shadow-raised);
+      pointer-events: none;
+      transition: transform var(--sl-time-slow) var(--sl-ease-in-out);
+    }
+
+    .sl-mode-rail[data-sl-pick="mode" data-sl-now="auto"] .sl-mode-rail-knob {
+      transform: translateX(var(--sl-size-control));
+    }
+
+    .sl-mode-rail[data-sl-now="dark"] .sl-mode-rail-knob {
+      transform: translateX(calc(var(--sl-size-control) * 2));
+    }
+
+    .sl-mode-rail-cell {
+      position: relative;
+      z-index: var(--sl-z-overlay);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      border: 0;
+      border-radius: var(--sl-radius-circle);
+      background: transparent;
+      color: var(--sl-band-text);
+      font-size: var(--sl-size-icon-sm);
+      opacity: var(--sl-fade-muted);
+      cursor: pointer;
+      transition: opacity var(--sl-time-fast) var(--sl-ease-out);
+    }
+
+    .sl-mode-rail-cell:hover {
+      opacity: 1;
+    }
+
+    .sl-mode-rail-cell.sl-is-active {
+      opacity: 0;
+    }
+
+    .sl-mode-rail-cell:focus-visible {
+      outline: var(--sl-ring-width) solid var(--sl-ring-bg);
+      outline-offset: var(--sl-ring-gap);
+      opacity: 1;
+    }
+</style>
+</head>
+<body>
+  <div id="topbar">
+    <div class="sl-wrp">
+      <ul class="sl-top-contact"><li>Стенд вариантов переключателя оформления</li></ul>
+      <div class="sl-top-right">
+  <form class="sl-mode sl-mode-rail" data-sl-pick="mode" data-sl-now="auto" action="index.php" method="post" role="group" aria-label="Оформление">
+    <input type="hidden" name="op" value="mode">
+    <input type="hidden" name="refer" value="1">
+    <input type="hidden" name="token" value="demo">
+    <span class="sl-mode-rail-track">
+      <span class="sl-mode-rail-knob" aria-hidden="true"><i class="bi bi-circle-half" data-sl-icon></i></span>
+      <button type="submit" class="sl-mode-rail-cell" name="mode" value="light" data-sl-val="light" title="Светлая" aria-label="Светлая"><i class="bi bi-sun" aria-hidden="true"></i></button>
+      <button type="submit" class="sl-mode-rail-cell" name="mode" value="auto" data-sl-val="auto" title="Как в системе" aria-label="Как в системе"><i class="bi bi-circle-half" aria-hidden="true"></i></button>
+      <button type="submit" class="sl-mode-rail-cell" name="mode" value="dark" data-sl-val="dark" title="Тёмная" aria-label="Тёмная"><i class="bi bi-moon" aria-hidden="true"></i></button>
+    </span>
+  </form>
+        <div class="sl-top-social">
+          <a class="sl-thd sl-circle-action sl-i-gh" rel="me noopener" target="_blank" href="https://github.com/SLAED-CMS/SLAED-CMS-6.3" title="Мы в GitHub" aria-label="Мы в GitHub"><i class="bi bi-github" aria-hidden="true"></i>Мы в GitHub</a>
+          <a class="sl-thd sl-circle-action sl-i-yt" rel="me noopener" target="_blank" href="https://www.youtube.com/@SLAED-CMS" title="Мы в YouTube" aria-label="Мы в YouTube"><i class="bi bi-youtube" aria-hidden="true"></i>Мы в YouTube</a>
+          <a class="sl-thd sl-circle-action sl-i-tw" rel="me noopener" target="_blank" href="https://x.com/slaed_cms" title="Мы в X" aria-label="Мы в X"><i class="bi bi-twitter-x" aria-hidden="true"></i>Мы в X</a>
+          <a class="sl-thd sl-circle-action sl-i-vk" rel="me noopener" target="_blank" href="https://vk.com/slaed_cms" title="Мы вКонтакте" aria-label="Мы вКонтакте"><i class="bi bi-chat-square-text" aria-hidden="true"></i>Мы вКонтакте</a>
+          <a class="sl-thd sl-circle-action sl-i-rss" rel="alternate" href="index.php?go=rss&amp;name=news&amp;num=50" title="Читайте нашу RSS" aria-label="Читайте нашу RSS"><i class="bi bi-rss" aria-hidden="true"></i>Читайте нашу RSS</a>
+          <a class="sl-thd sl-circle-action sl-i-doc-de" rel="me noopener" target="_blank" href="https://slaed.de" title="Документация на немецком" aria-label="Документация на немецком"><i class="bi bi-book-half" aria-hidden="true"></i>Документация на немецком</a>
+          <a class="sl-thd sl-circle-action sl-i-doc-en" rel="me noopener" target="_blank" href="https://slaed.info" title="Документация на английском" aria-label="Документация на английском"><i class="bi bi-book" aria-hidden="true"></i>Документация на английском</a>
+          <a class="sl-thd sl-circle-action sl-i-recom" href="index.php?name=recommend" title="Рекомендовать нас" aria-label="Рекомендовать нас"><i class="bi bi-star" aria-hidden="true"></i>Рекомендовать нас</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <main class="sl-lab">
+    <div class="sl-wrp">
+      <ul class="sl-tabs-nav sl-lab-nav"><li class="sl-tabs-item"><a class="sl-tabs-link" href="index.html">Обзор</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="admin-index.html">Шапка панели</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="mode-01-fan.html">1 · Веер</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="mode-02-segment.html">2 · Сегмент</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="mode-03-rail.html" aria-current="page">3 · Рельс</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="mode-04-menu.html">4 · Меню</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="mode-05-arc.html">5 · Дуга</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="mode-06-ring.html">6 · Кольцо</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="mode-07-stack.html">7 · Стек</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="mode-08-window.html">8 · Окно</a></li></ul>
+      <div class="sl-lab-head">
+        <span class="sl-lab-num">3</span>
+        <h1>Рельс</h1>
+        <span class="sl-chip sl-lab-now">Сейчас: <b data-sl-label="mode">—</b></span>
+      </div>
+      <p class="sl-lab-lead">Физический тумблер на три позиции: жёлоб от системного голубого к ночи и круглая ручка с иконкой текущего режима, которая переезжает по нему. Родня штатному <code>.sl-radio-switch</code>, только позиций три, а не две.</p>
+      <div class="sl-lab-stage sl-lab-stage-band">
+  <form class="sl-mode sl-mode-rail" data-sl-pick="mode" data-sl-now="auto" action="index.php" method="post" role="group" aria-label="Оформление">
+    <input type="hidden" name="op" value="mode">
+    <input type="hidden" name="refer" value="1">
+    <input type="hidden" name="token" value="demo">
+    <span class="sl-mode-rail-track">
+      <span class="sl-mode-rail-knob" aria-hidden="true"><i class="bi bi-circle-half" data-sl-icon></i></span>
+      <button type="submit" class="sl-mode-rail-cell" name="mode" value="light" data-sl-val="light" title="Светлая" aria-label="Светлая"><i class="bi bi-sun" aria-hidden="true"></i></button>
+      <button type="submit" class="sl-mode-rail-cell" name="mode" value="auto" data-sl-val="auto" title="Как в системе" aria-label="Как в системе"><i class="bi bi-circle-half" aria-hidden="true"></i></button>
+      <button type="submit" class="sl-mode-rail-cell" name="mode" value="dark" data-sl-val="dark" title="Тёмная" aria-label="Тёмная"><i class="bi bi-moon" aria-hidden="true"></i></button>
+    </span>
+  </form>
+      </div>
+      <div class="sl-lab-stage">
+  <form class="sl-mode sl-mode-rail" data-sl-pick="mode" data-sl-now="auto" action="index.php" method="post" role="group" aria-label="Оформление">
+    <input type="hidden" name="op" value="mode">
+    <input type="hidden" name="refer" value="1">
+    <input type="hidden" name="token" value="demo">
+    <span class="sl-mode-rail-track">
+      <span class="sl-mode-rail-knob" aria-hidden="true"><i class="bi bi-circle-half" data-sl-icon></i></span>
+      <button type="submit" class="sl-mode-rail-cell" name="mode" value="light" data-sl-val="light" title="Светлая" aria-label="Светлая"><i class="bi bi-sun" aria-hidden="true"></i></button>
+      <button type="submit" class="sl-mode-rail-cell" name="mode" value="auto" data-sl-val="auto" title="Как в системе" aria-label="Как в системе"><i class="bi bi-circle-half" aria-hidden="true"></i></button>
+      <button type="submit" class="sl-mode-rail-cell" name="mode" value="dark" data-sl-val="dark" title="Тёмная" aria-label="Тёмная"><i class="bi bi-moon" aria-hidden="true"></i></button>
+    </span>
+  </form>
+      </div>
+      <div class="sl-lab-grid">
+        <div class="sl-lab-card">
+          <h2>Как ведёт себя</h2>
+          <ul><li>Ручка — единственный элемент, который двигается; ячейки под ней остаются кнопками.</li><li>Иконка активной ячейки гасится, её роль берёт на себя ручка.</li><li>Градиент жёлоба идёт от <code>--sl-primary</code> к <code>--sl-surface-sunken</code> и сам объясняет, где день, а где ночь.</li></ul>
+        </div>
+        <div class="sl-lab-card">
+          <h2>Что переиспользовано</h2>
+          <ul><li>Приём ползунка целиком повторяет <code>.sl-radio-switch</code> из <code>theme.css</code>.</li><li><code>--sl-size-control</code> задаёт и шаг, и высоту.</li><li>Тени — <code>--sl-shadow-inset</code> и <code>--sl-shadow-raised</code>.</li></ul>
+        </div>
+        <div class="sl-lab-card">
+          <h2>Разметка</h2>
+          <pre class="sl-code sl-lab-code">  &lt;form class=&quot;sl-mode sl-mode-rail&quot; data-sl-pick=&quot;mode&quot; data-sl-now=&quot;auto&quot; action=&quot;index.php&quot; method=&quot;post&quot; role=&quot;group&quot; aria-label=&quot;Оформление&quot;&gt;
+    &lt;input type=&quot;hidden&quot; name=&quot;op&quot; value=&quot;mode&quot;&gt;
+    &lt;input type=&quot;hidden&quot; name=&quot;refer&quot; value=&quot;1&quot;&gt;
+    &lt;input type=&quot;hidden&quot; name=&quot;token&quot; value=&quot;demo&quot;&gt;
+    &lt;span class=&quot;sl-mode-rail-track&quot;&gt;
+      &lt;span class=&quot;sl-mode-rail-knob&quot; aria-hidden=&quot;true&quot;&gt;&lt;i class=&quot;bi bi-circle-half&quot; data-sl-icon&gt;&lt;/i&gt;&lt;/span&gt;
+      &lt;button type=&quot;submit&quot; class=&quot;sl-mode-rail-cell&quot; name=&quot;mode&quot; value=&quot;light&quot; data-sl-val=&quot;light&quot; title=&quot;Светлая&quot; aria-label=&quot;Светлая&quot;&gt;&lt;i class=&quot;bi bi-sun&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;/button&gt;
+      &lt;button type=&quot;submit&quot; class=&quot;sl-mode-rail-cell&quot; name=&quot;mode&quot; value=&quot;auto&quot; data-sl-val=&quot;auto&quot; title=&quot;Как в системе&quot; aria-label=&quot;Как в системе&quot;&gt;&lt;i class=&quot;bi bi-circle-half&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;/button&gt;
+      &lt;button type=&quot;submit&quot; class=&quot;sl-mode-rail-cell&quot; name=&quot;mode&quot; value=&quot;dark&quot; data-sl-val=&quot;dark&quot; title=&quot;Тёмная&quot; aria-label=&quot;Тёмная&quot;&gt;&lt;i class=&quot;bi bi-moon&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;/button&gt;
+    &lt;/span&gt;
+  &lt;/form&gt;</pre>
+        </div>
+      </div>
+    </div>
+  </main>
+
+<script src="../plugins/system/slaed.js"></script>
+<script src="assets/demo.js"></script>
+</body>
+</html>

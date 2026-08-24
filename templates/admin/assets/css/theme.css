@@ -1345,8 +1345,7 @@ tr.sl-row-collapsed {
   transform: scale(1.1);
 }
 
-.sl-toggle-form-block-toggle:focus-visible,
-.sl-mode-but:focus-visible {
+.sl-toggle-form-block-toggle:focus-visible {
   outline: var(--sl-ring-width) solid var(--sl-ring-bg);
   outline-offset: var(--sl-ring-gap);
 }
@@ -5410,7 +5409,7 @@ body:has(.sl-admin-login-shell)::before {
   row-gap: var(--sl-space-2);
   min-width: 0;
   min-height: var(--sl-toolbar-row-height);
-  padding: var(--sl-space-2) var(--sl-space-3) var(--sl-space-2) var(--sl-space-2);
+  padding: var(--sl-space-2);
   background: none;
   box-sizing: border-box;
 }
@@ -5419,6 +5418,7 @@ body:has(.sl-admin-login-shell)::before {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  flex: 1;
   gap: var(--sl-space-2);
   min-width: 0;
 }
@@ -5436,13 +5436,25 @@ body:has(.sl-admin-login-shell)::before {
   box-shadow: none;
 }
 
-.sl-toolbar li a {
+.sl-toolbar li a,
+.sl-toolbar li button {
   display: flex;
   gap: var(--sl-space-2);
   padding: 0 var(--sl-space-5);
 }
 
-.sl-toolbar li a .bi {
+/* The one item that opens a window instead of leading somewhere: a button carries no link colour and no reset of its own */
+.sl-toolbar li button {
+  align-items: center;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--sl-primary);
+  cursor: pointer;
+}
+
+.sl-toolbar li a .bi,
+.sl-toolbar li button .bi {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -5460,6 +5472,32 @@ body:has(.sl-admin-login-shell)::before {
   background: none;
 }
 
+/* The settings item leaves the menu behind and sits against the right edge of the row, where the flags used to end */
+/* The menu holds three kinds of destination: screens of the panel, places outside it, and the way out. The row is
+   ruled where the kind changes, so the eye does not read seven equal items where there are three groups.
+   The rule stands outside the item, or the plate an item takes under the cursor would swallow it */
+.sl-toolbar li.sl-split-item {
+  position: relative;
+  margin-left: var(--sl-space-6);
+  overflow: visible;
+}
+
+.sl-toolbar li.sl-split-item::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: calc(var(--sl-space-4) * -1);
+  width: 1px;
+  height: var(--sl-size-icon-sm);
+  background: var(--sl-border-strong);
+  transform: translateY(-50%);
+}
+
+/* .sl-reset zeroes the margin of every item it holds, so the push has to answer at the strength of that reset */
+.sl-toolbar li.sl-set-item {
+  margin-left: auto;
+}
+
 .sl-toolbar li:hover {
   background-color: var(--sl-primary-strong);
   background: linear-gradient(
@@ -5472,54 +5510,62 @@ body:has(.sl-admin-login-shell)::before {
   box-shadow: var(--sl-btn-shadow);
 }
 
-.sl-toolbar li:hover a {
+.sl-toolbar li:hover a,
+.sl-toolbar li:hover button {
   background: transparent;
 }
 
 .sl-toolbar li:hover a,
-.sl-toolbar li a:hover {
+.sl-toolbar li a:hover,
+.sl-toolbar li:hover button,
+.sl-toolbar li button:hover {
   color: var(--sl-on-solid);
   text-decoration: none;
   text-shadow: 0 1px 0 var(--sl-scrim-subtle);
   background: transparent;
 }
 
-/* Language switcher: flag list and active state */
-.sl-language {
-  padding: 0;
-}
-
-/* Colour mode: the toolbar toggle, one button stepping through the system answer, light and dark */
-.sl-mode {
+/* Settings window: one row per answer the panel lets an administrator change from any screen. The name stands on
+   the left and the list on the right, and every list takes the same width so the three read as one column */
+.sl-set-row {
   display: flex;
   align-items: center;
-  flex: 0 0 auto;
-  margin-left: var(--sl-space-3);
+  gap: var(--sl-space-4);
 }
 
-.sl-mode-but {
-  display: inline-flex;
+.sl-set-name {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  width: var(--sl-mode-width);
-  height: var(--sl-mode-height);
-  padding: 0;
-  border: 1px solid var(--sl-border-strong);
-  border-radius: var(--sl-radius-1);
-  background: var(--sl-bg);
-  color: var(--sl-text-muted);
+  gap: var(--sl-space-2);
+  min-width: 0;
+}
+
+.sl-set-name .bi {
+  flex: 0 0 auto;
   font-size: var(--sl-size-icon-sm);
   line-height: 1;
-  cursor: pointer;
-  transition:
-    color var(--sl-time-fast) var(--sl-ease-out),
-    border-color var(--sl-time-fast) var(--sl-ease-out);
 }
 
-.sl-mode-but:hover {
-  border-color: var(--sl-primary-muted);
-  color: var(--sl-primary-strong);
+.sl-set-pick {
+  flex: 0 0 var(--sl-set-width);
+  margin-left: auto;
+}
+
+.sl-set-pick select {
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--sl-size-control);
+  cursor: pointer;
+}
+
+/* Colour mode: in the panel the mode is one row of the settings window rather than a control of the toolbar, and
+   the two figures its API froze are what that row spends - the width of its list and the height of the list itself */
+.sl-mode .sl-set-pick {
+  flex: 0 0 var(--sl-mode-width);
+}
+
+.sl-mode .sl-set-pick select {
+  height: var(--sl-mode-height);
 }
 
 .sl-admin-language {
@@ -5555,10 +5601,6 @@ body:has(.sl-admin-login-shell)::before {
 
 .sl-admin-language .sl-admin-language-link img {
   margin: 0;
-}
-
-.sl-language img {
-  margin: 0 var(--sl-space-1);
 }
 
 .sl-admin-main {

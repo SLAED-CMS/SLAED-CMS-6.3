@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Переключатель оформления · 5. Дуга · SLAED CMS</title>
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<link rel="stylesheet" href="assets/demo.css">
+<style>
+    /* Variant 5: the same fan on a quarter circle. Only the item offsets change, the engine is untouched */
+    .sl-mode-arc {
+      --sl-mode-arc-r: calc(var(--sl-size-control) + var(--sl-space-5));
+    }
+
+    .sl-mode-arc::before {
+      content: none;
+    }
+
+    .sl-mode-arc .sl-dial-item:nth-child(n + 2) {
+      top: 0;
+      right: 0;
+      border-radius: var(--sl-radius-circle);
+      transform: translate(0, 0) scale(0.4);
+    }
+
+    .sl-mode-arc.sl-open .sl-dial-item:nth-child(2),
+    .sl-mode-arc:hover .sl-dial-item:nth-child(2) {
+      transform: translate(calc(var(--sl-mode-arc-r) * -1), 0);
+    }
+
+    .sl-mode-arc.sl-open .sl-dial-item:nth-child(3),
+    .sl-mode-arc:hover .sl-dial-item:nth-child(3) {
+      transform: translate(calc(var(--sl-mode-arc-r) * -0.7), calc(var(--sl-mode-arc-r) * 0.7));
+    }
+
+    .sl-mode-arc.sl-open .sl-dial-item:nth-child(4),
+    .sl-mode-arc:hover .sl-dial-item:nth-child(4) {
+      transform: translate(0, var(--sl-mode-arc-r));
+    }
+
+    /* A chip of this fan leaves the band and lands on the page, so it carries its own ground instead of borrowing one */
+    .sl-mode-arc .sl-dial-item {
+      background-color: var(--sl-bg-inverse);
+      box-shadow: var(--sl-shadow-float);
+    }
+
+    .sl-mode-arc .sl-dial-item .bi {
+      color: var(--sl-band-text);
+    }
+
+    .sl-mode-arc .sl-dial-item.sl-is-active {
+      background-color: var(--sl-primary);
+    }
+</style>
+</head>
+<body>
+  <div id="topbar">
+    <div class="sl-wrp">
+      <ul class="sl-top-contact"><li>Стенд вариантов переключателя оформления</li></ul>
+      <div class="sl-top-right">
+  <form class="sl-mode" data-sl-pick="mode" data-sl-now="auto" action="index.php" method="post">
+    <input type="hidden" name="op" value="mode">
+    <input type="hidden" name="refer" value="1">
+    <input type="hidden" name="token" value="demo">
+    <span class="sl-dial sl-mode-arc">
+      <button type="button" class="sl-dial-toggle sl-circle-action sl-i-mode" data-sl-title title="Как в системе" aria-label="Как в системе"><i class="bi bi-circle-half" data-sl-icon aria-hidden="true"></i></button>
+      <button type="submit" class="sl-dial-item sl-circle-action sl-i-mode" name="mode" value="light" data-sl-val="light" title="Светлая" aria-label="Светлая"><i class="bi bi-sun" aria-hidden="true"></i></button>
+      <button type="submit" class="sl-dial-item sl-circle-action sl-i-mode" name="mode" value="dark" data-sl-val="dark" title="Тёмная" aria-label="Тёмная"><i class="bi bi-moon" aria-hidden="true"></i></button>
+      <button type="submit" class="sl-dial-item sl-circle-action sl-i-mode" name="mode" value="auto" data-sl-val="auto" title="Как в системе" aria-label="Как в системе"><i class="bi bi-circle-half" aria-hidden="true"></i></button>
+    </span>
+  </form>
+        <div class="sl-top-social">
+          <a class="sl-thd sl-circle-action sl-i-gh" rel="me noopener" target="_blank" href="https://github.com/SLAED-CMS/SLAED-CMS-6.3" title="Мы в GitHub" aria-label="Мы в GitHub"><i class="bi bi-github" aria-hidden="true"></i>Мы в GitHub</a>
+          <a class="sl-thd sl-circle-action sl-i-yt" rel="me noopener" target="_blank" href="https://www.youtube.com/@SLAED-CMS" title="Мы в YouTube" aria-label="Мы в YouTube"><i class="bi bi-youtube" aria-hidden="true"></i>Мы в YouTube</a>
+          <a class="sl-thd sl-circle-action sl-i-tw" rel="me noopener" target="_blank" href="https://x.com/slaed_cms" title="Мы в X" aria-label="Мы в X"><i class="bi bi-twitter-x" aria-hidden="true"></i>Мы в X</a>
+          <a class="sl-thd sl-circle-action sl-i-vk" rel="me noopener" target="_blank" href="https://vk.com/slaed_cms" title="Мы вКонтакте" aria-label="Мы вКонтакте"><i class="bi bi-chat-square-text" aria-hidden="true"></i>Мы вКонтакте</a>
+          <a class="sl-thd sl-circle-action sl-i-rss" rel="alternate" href="index.php?go=rss&amp;name=news&amp;num=50" title="Читайте нашу RSS" aria-label="Читайте нашу RSS"><i class="bi bi-rss" aria-hidden="true"></i>Читайте нашу RSS</a>
+          <a class="sl-thd sl-circle-action sl-i-doc-de" rel="me noopener" target="_blank" href="https://slaed.de" title="Документация на немецком" aria-label="Документация на немецком"><i class="bi bi-book-half" aria-hidden="true"></i>Документация на немецком</a>
+          <a class="sl-thd sl-circle-action sl-i-doc-en" rel="me noopener" target="_blank" href="https://slaed.info" title="Документация на английском" aria-label="Документация на английском"><i class="bi bi-book" aria-hidden="true"></i>Документация на английском</a>
+          <a class="sl-thd sl-circle-action sl-i-recom" href="index.php?name=recommend" title="Рекомендовать нас" aria-label="Рекомендовать нас"><i class="bi bi-star" aria-hidden="true"></i>Рекомендовать нас</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <main class="sl-lab">
+    <div class="sl-wrp">
+      <ul class="sl-tabs-nav sl-lab-nav"><li class="sl-tabs-item"><a class="sl-tabs-link" href="index.html">Обзор</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="admin-index.html">Шапка панели</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="mode-01-fan.html">1 · Веер</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="mode-02-segment.html">2 · Сегмент</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="mode-03-rail.html">3 · Рельс</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="mode-04-menu.html">4 · Меню</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="mode-05-arc.html" aria-current="page">5 · Дуга</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="mode-06-ring.html">6 · Кольцо</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="mode-07-stack.html">7 · Стек</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="mode-08-window.html">8 · Окно</a></li></ul>
+      <div class="sl-lab-head">
+        <span class="sl-lab-num">5</span>
+        <h1>Дуга</h1>
+        <span class="sl-chip sl-lab-now">Сейчас: <b data-sl-label="mode">—</b></span>
+      </div>
+      <p class="sl-lab-lead">Тот же веер, но чипы уходят не в строку, а по четверти окружности — влево, вниз-влево и вниз. В закрытом виде занимает ровно место одной кнопки и раскрывается в пустоту под полосой.</p>
+      <div class="sl-lab-stage sl-lab-stage-band">
+  <form class="sl-mode" data-sl-pick="mode" data-sl-now="auto" action="index.php" method="post">
+    <input type="hidden" name="op" value="mode">
+    <input type="hidden" name="refer" value="1">
+    <input type="hidden" name="token" value="demo">
+    <span class="sl-dial sl-mode-arc">
+      <button type="button" class="sl-dial-toggle sl-circle-action sl-i-mode" data-sl-title title="Как в системе" aria-label="Как в системе"><i class="bi bi-circle-half" data-sl-icon aria-hidden="true"></i></button>
+      <button type="submit" class="sl-dial-item sl-circle-action sl-i-mode" name="mode" value="light" data-sl-val="light" title="Светлая" aria-label="Светлая"><i class="bi bi-sun" aria-hidden="true"></i></button>
+      <button type="submit" class="sl-dial-item sl-circle-action sl-i-mode" name="mode" value="dark" data-sl-val="dark" title="Тёмная" aria-label="Тёмная"><i class="bi bi-moon" aria-hidden="true"></i></button>
+      <button type="submit" class="sl-dial-item sl-circle-action sl-i-mode" name="mode" value="auto" data-sl-val="auto" title="Как в системе" aria-label="Как в системе"><i class="bi bi-circle-half" aria-hidden="true"></i></button>
+    </span>
+  </form>
+      </div>
+      <div class="sl-lab-stage">
+  <form class="sl-mode" data-sl-pick="mode" data-sl-now="auto" action="index.php" method="post">
+    <input type="hidden" name="op" value="mode">
+    <input type="hidden" name="refer" value="1">
+    <input type="hidden" name="token" value="demo">
+    <span class="sl-dial sl-mode-arc">
+      <button type="button" class="sl-dial-toggle sl-circle-action sl-i-mode" data-sl-title title="Как в системе" aria-label="Как в системе"><i class="bi bi-circle-half" data-sl-icon aria-hidden="true"></i></button>
+      <button type="submit" class="sl-dial-item sl-circle-action sl-i-mode" name="mode" value="light" data-sl-val="light" title="Светлая" aria-label="Светлая"><i class="bi bi-sun" aria-hidden="true"></i></button>
+      <button type="submit" class="sl-dial-item sl-circle-action sl-i-mode" name="mode" value="dark" data-sl-val="dark" title="Тёмная" aria-label="Тёмная"><i class="bi bi-moon" aria-hidden="true"></i></button>
+      <button type="submit" class="sl-dial-item sl-circle-action sl-i-mode" name="mode" value="auto" data-sl-val="auto" title="Как в системе" aria-label="Как в системе"><i class="bi bi-circle-half" aria-hidden="true"></i></button>
+    </span>
+  </form>
+      </div>
+      <div class="sl-lab-grid">
+        <div class="sl-lab-card">
+          <h2>Как ведёт себя</h2>
+          <ul><li>Радиус дуги — одно число <code>--sl-mode-arc-r</code>, три позиции считаются от него.</li><li>Задержки появления по чипам остались штатные, поэтому дуга разворачивается, а не выпрыгивает.</li><li>Раскрывается и по наведению, и по клику.</li></ul>
+        </div>
+        <div class="sl-lab-card">
+          <h2>Что переиспользовано</h2>
+          <ul><li>Переопределены только <code>transform</code> элементов <code>.sl-dial-item</code>.</li><li>Подложка-пилюля выключена — на дуге она не нужна.</li><li>Открытие, закрытие и правый клик — прежние.</li></ul>
+        </div>
+        <div class="sl-lab-card">
+          <h2>Разметка</h2>
+          <pre class="sl-code sl-lab-code">  &lt;form class=&quot;sl-mode&quot; data-sl-pick=&quot;mode&quot; data-sl-now=&quot;auto&quot; action=&quot;index.php&quot; method=&quot;post&quot;&gt;
+    &lt;input type=&quot;hidden&quot; name=&quot;op&quot; value=&quot;mode&quot;&gt;
+    &lt;input type=&quot;hidden&quot; name=&quot;refer&quot; value=&quot;1&quot;&gt;
+    &lt;input type=&quot;hidden&quot; name=&quot;token&quot; value=&quot;demo&quot;&gt;
+    &lt;span class=&quot;sl-dial sl-mode-arc&quot;&gt;
+      &lt;button type=&quot;button&quot; class=&quot;sl-dial-toggle sl-circle-action sl-i-mode&quot; data-sl-title title=&quot;Как в системе&quot; aria-label=&quot;Как в системе&quot;&gt;&lt;i class=&quot;bi bi-circle-half&quot; data-sl-icon aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;/button&gt;
+      &lt;button type=&quot;submit&quot; class=&quot;sl-dial-item sl-circle-action sl-i-mode&quot; name=&quot;mode&quot; value=&quot;light&quot; data-sl-val=&quot;light&quot; title=&quot;Светлая&quot; aria-label=&quot;Светлая&quot;&gt;&lt;i class=&quot;bi bi-sun&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;/button&gt;
+      &lt;button type=&quot;submit&quot; class=&quot;sl-dial-item sl-circle-action sl-i-mode&quot; name=&quot;mode&quot; value=&quot;dark&quot; data-sl-val=&quot;dark&quot; title=&quot;Тёмная&quot; aria-label=&quot;Тёмная&quot;&gt;&lt;i class=&quot;bi bi-moon&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;/button&gt;
+      &lt;button type=&quot;submit&quot; class=&quot;sl-dial-item sl-circle-action sl-i-mode&quot; name=&quot;mode&quot; value=&quot;auto&quot; data-sl-val=&quot;auto&quot; title=&quot;Как в системе&quot; aria-label=&quot;Как в системе&quot;&gt;&lt;i class=&quot;bi bi-circle-half&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;/button&gt;
+    &lt;/span&gt;
+  &lt;/form&gt;</pre>
+        </div>
+      </div>
+    </div>
+  </main>
+
+<script src="../plugins/system/slaed.js"></script>
+<script src="assets/demo.js"></script>
+</body>
+</html>

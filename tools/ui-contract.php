@@ -200,7 +200,7 @@ return [
         'pager', 'pager-dot', 'pager-item', 'panel', 'panel-feed', 'placeholder', 'pmf-ava', 'pmf-blank', 'pmf-chip', 'pmf-day', 'pmf-filter',
         'pmf-head', 'pmf-mate', 'pmf-meta', 'pmf-pane', 'pmf-slot', 'pmf-text', 'pmf-who',
         'pnum', 'pnum-arrow', 'popover', 'preview', 'profile-ava', 'profile-dot', 'progress', 'proof', 'pulse', 'qr', 'quote', 'radio',
-        'rail', 'rank', 'ratings', 'ring', 'row', 'scroll', 'search', 'search-filter', 'search-order', 'search-sort', 'select', 'sep',
+        'rail', 'rank', 'ratings', 'ring', 'row', 'scroll', 'search', 'search-filter', 'search-order', 'search-sort', 'select', 'set', 'sep',
         'session', 'shot', 'shot-side', 'site', 'site-img', 'skel', 'statx',
         'skel-row', 'skel-tile', 'slide', 'slide-cont', 'sort', 'spark', 'spin', 'sublist', 'sublist-two', 'switch', 'switch-knob',
         't-icon', 'table', 'tab', 'thumb', 'tile', 'toast',
@@ -671,6 +671,11 @@ return [
             'the panel needs a real button element whenever a value is posted under a name, because an input carries its value and not its label; the site has no '
             .'such caller and stays on the input it has always drawn. On top of that the panel picks a tone class per button and the site has one button, so the '
             .'ladder that reads the tone flags has nothing to map to there',
+        'fragments/mode-switch.html' =>
+            'one producer hands both themes the same three modes with the one in force marked, and each spends the answer where its user already is. The site '
+            .'stands the three open on the top bar as a rail with a knob, because a visitor changes the mode from the page and has room for it there; the panel '
+            .'spends it as one row of the settings window beside the editor and the language, because a toolbar carrying seven menu items has no room for a third '
+            .'open control and the answer belongs with the other two an administrator changes from any screen',
         'fragments/changelog-commit.html' =>
             'one producer hands both themes the commit hash and the author e-mail address; the panel prints them, because a moderator reads a changelog to identify '
             .'a commit, and the public page drops both, because an address published on an open page is harvested. Guarding them on a key would move that decision '

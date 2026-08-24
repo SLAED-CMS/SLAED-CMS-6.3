@@ -15,8 +15,7 @@
         <div class="sl-admin-toolbar">
           <div class="sl-toolbar">
             <div>
-              <ul class="sl-reset">{{{ menu }}}</ul>
-              <span class="sl-language sl-admin-language">{{{ admin_langs }}}</span>{{{ mode_html }}}
+              <ul class="sl-reset">{{{ menu }}}<li class="sl-set-item"><button type="button" data-sl-open="sl-settings" title="{{ _FUNCTIONS }}"><i class="bi bi-sliders" aria-hidden="true"></i> <b>{{ _FUNCTIONS }}</b></button></li></ul>
             </div>
           </div>
         </div>
@@ -32,6 +31,7 @@
     </div>
     <div class="sl-wrapfoot"></div>
     {% include 'fragments/window-confirm.html' %}
+    {{{ settings_win }}}
     {% if debug_html %}
     <div id="sl_debugger" data-sl-toggle="sl_debugger" data-sl-toggle-default="open">
     {{{ debug_html }}}

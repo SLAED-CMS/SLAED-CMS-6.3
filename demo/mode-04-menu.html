@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Переключатель оформления · 4. Меню · SLAED CMS</title>
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<link rel="stylesheet" href="assets/demo.css">
+<style>
+    /* Variant 4: the fan opens a labelled pane instead of chips. The open state is still .sl-open from slaed.js,
+       but nothing here is a .sl-dial-item, so the hover opening of the fan does not apply and the pane is click only */
+    .sl-mode-menu::before {
+      content: none;
+    }
+
+    .sl-mode-menu-pane {
+      position: absolute;
+      z-index: var(--sl-z-dropdown);
+      top: calc(100% + var(--sl-space-3));
+      right: 0;
+      display: flex;
+      flex-direction: column;
+      gap: var(--sl-space-1);
+      width: var(--sl-drop-width);
+      padding: var(--sl-space-2);
+      border: 1px solid var(--sl-border-muted);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-bg);
+      box-shadow: var(--sl-panel-shadow);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(calc(var(--sl-space-2) * -1));
+      transition:
+        opacity var(--sl-time-base) var(--sl-ease-out),
+        transform var(--sl-time-base) var(--sl-ease-out),
+        visibility var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .sl-mode-menu.sl-open .sl-mode-menu-pane {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .sl-mode-menu-row {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      width: 100%;
+      height: var(--sl-size-control);
+      padding: 0 var(--sl-space-4);
+      border: 0;
+      border-radius: var(--sl-radius-1);
+      background: transparent;
+      color: var(--sl-text);
+      font-size: var(--sl-font-body);
+      text-align: left;
+      cursor: pointer;
+      transition:
+        background-color var(--sl-time-fast) var(--sl-ease-out),
+        color var(--sl-time-fast) var(--sl-ease-out);
+    }
+
+    .sl-mode-menu-row:hover {
+      background: var(--sl-bg-subtle);
+    }
+
+    .sl-mode-menu-row.sl-is-active {
+      background: var(--sl-tint);
+      color: var(--sl-primary-strong);
+    }
+
+    .sl-mode-menu-row .bi {
+      font-size: var(--sl-size-icon-xs);
+    }
+
+    .sl-mode-menu-tick {
+      margin-left: auto;
+      opacity: 0;
+    }
+
+    .sl-mode-menu-row.sl-is-active .sl-mode-menu-tick {
+      opacity: 1;
+    }
+</style>
+</head>
+<body>
+  <div id="topbar">
+    <div class="sl-wrp">
+      <ul class="sl-top-contact"><li>Стенд вариантов переключателя оформления</li></ul>
+      <div class="sl-top-right">
+  <form class="sl-mode" data-sl-pick="mode" data-sl-now="auto" action="index.php" method="post">
+    <input type="hidden" name="op" value="mode">
+    <input type="hidden" name="refer" value="1">
+    <input type="hidden" name="token" value="demo">
+    <span class="sl-dial sl-mode-menu">
+      <button type="button" class="sl-dial-toggle sl-circle-action sl-i-mode" data-sl-title title="Как в системе" aria-label="Как в системе" aria-haspopup="true"><i class="bi bi-circle-half" data-sl-icon aria-hidden="true"></i></button>
+      <span class="sl-mode-menu-pane" role="menu">
+        <button type="submit" class="sl-mode-menu-row" name="mode" value="light" data-sl-val="light" role="menuitem"><i class="bi bi-sun" aria-hidden="true"></i><span>Светлая</span><i class="bi bi-check2 sl-mode-menu-tick" aria-hidden="true"></i></button>
+        <button type="submit" class="sl-mode-menu-row" name="mode" value="dark" data-sl-val="dark" role="menuitem"><i class="bi bi-moon" aria-hidden="true"></i><span>Тёмная</span><i class="bi bi-check2 sl-mode-menu-tick" aria-hidden="true"></i></button>
+        <button type="submit" class="sl-mode-menu-row" name="mode" value="auto" data-sl-val="auto" role="menuitem"><i class="bi bi-circle-half" aria-hidden="true"></i><span>Как в системе</span><i class="bi bi-check2 sl-mode-menu-tick" aria-hidden="true"></i></button>
+      </span>
+    </span>
+  </form>
+        <div class="sl-top-social">
+          <a class="sl-thd sl-circle-action sl-i-gh" rel="me noopener" target="_blank" href="https://github.com/SLAED-CMS/SLAED-CMS-6.3" title="Мы в GitHub" aria-label="Мы в GitHub"><i class="bi bi-github" aria-hidden="true"></i>Мы в GitHub</a>
+          <a class="sl-thd sl-circle-action sl-i-yt" rel="me noopener" target="_blank" href="https://www.youtube.com/@SLAED-CMS" title="Мы в YouTube" aria-label="Мы в YouTube"><i class="bi bi-youtube" aria-hidden="true"></i>Мы в YouTube</a>
+          <a class="sl-thd sl-circle-action sl-i-tw" rel="me noopener" target="_blank" href="https://x.com/slaed_cms" title="Мы в X" aria-label="Мы в X"><i class="bi bi-twitter-x" aria-hidden="true"></i>Мы в X</a>
+          <a class="sl-thd sl-circle-action sl-i-vk" rel="me noopener" target="_blank" href="https://vk.com/slaed_cms" title="Мы вКонтакте" aria-label="Мы вКонтакте"><i class="bi bi-chat-square-text" aria-hidden="true"></i>Мы вКонтакте</a>
+          <a class="sl-thd sl-circle-action sl-i-rss" rel="alternate" href="index.php?go=rss&amp;name=news&amp;num=50" title="Читайте нашу RSS" aria-label="Читайте нашу RSS"><i class="bi bi-rss" aria-hidden="true"></i>Читайте нашу RSS</a>
+          <a class="sl-thd sl-circle-action sl-i-doc-de" rel="me noopener" target="_blank" href="https://slaed.de" title="Документация на немецком" aria-label="Документация на немецком"><i class="bi bi-book-half" aria-hidden="true"></i>Документация на немецком</a>
+          <a class="sl-thd sl-circle-action sl-i-doc-en" rel="me noopener" target="_blank" href="https://slaed.info" title="Документация на английском" aria-label="Документация на английском"><i class="bi bi-book" aria-hidden="true"></i>Документация на английском</a>
+          <a class="sl-thd sl-circle-action sl-i-recom" href="index.php?name=recommend" title="Рекомендовать нас" aria-label="Рекомендовать нас"><i class="bi bi-star" aria-hidden="true"></i>Рекомендовать нас</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <main class="sl-lab">
+    <div class="sl-wrp">
+      <ul class="sl-tabs-nav sl-lab-nav"><li class="sl-tabs-item"><a class="sl-tabs-link" href="index.html">Обзор</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="admin-index.html">Шапка панели</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="mode-01-fan.html">1 · Веер</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="mode-02-segment.html">2 · Сегмент</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="mode-03-rail.html">3 · Рельс</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="mode-04-menu.html" aria-current="page">4 · Меню</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="mode-05-arc.html">5 · Дуга</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="mode-06-ring.html">6 · Кольцо</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="mode-07-stack.html">7 · Стек</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="mode-08-window.html">8 · Окно</a></li></ul>
+      <div class="sl-lab-head">
+        <span class="sl-lab-num">4</span>
+        <h1>Меню</h1>
+        <span class="sl-chip sl-lab-now">Сейчас: <b data-sl-label="mode">—</b></span>
+      </div>
+      <p class="sl-lab-lead">Тот же механизм раскрытия <code>.sl-dial</code>, но вместо чипов — панель с подписями и галочкой на выбранном. Единственный вариант, где режим назван словами, а не иконкой: полезно, когда «авто» надо объяснить.</p>
+      <div class="sl-lab-stage sl-lab-stage-band">
+  <form class="sl-mode" data-sl-pick="mode" data-sl-now="auto" action="index.php" method="post">
+    <input type="hidden" name="op" value="mode">
+    <input type="hidden" name="refer" value="1">
+    <input type="hidden" name="token" value="demo">
+    <span class="sl-dial sl-mode-menu">
+      <button type="button" class="sl-dial-toggle sl-circle-action sl-i-mode" data-sl-title title="Как в системе" aria-label="Как в системе" aria-haspopup="true"><i class="bi bi-circle-half" data-sl-icon aria-hidden="true"></i></button>
+      <span class="sl-mode-menu-pane" role="menu">
+        <button type="submit" class="sl-mode-menu-row" name="mode" value="light" data-sl-val="light" role="menuitem"><i class="bi bi-sun" aria-hidden="true"></i><span>Светлая</span><i class="bi bi-check2 sl-mode-menu-tick" aria-hidden="true"></i></button>
+        <button type="submit" class="sl-mode-menu-row" name="mode" value="dark" data-sl-val="dark" role="menuitem"><i class="bi bi-moon" aria-hidden="true"></i><span>Тёмная</span><i class="bi bi-check2 sl-mode-menu-tick" aria-hidden="true"></i></button>
+        <button type="submit" class="sl-mode-menu-row" name="mode" value="auto" data-sl-val="auto" role="menuitem"><i class="bi bi-circle-half" aria-hidden="true"></i><span>Как в системе</span><i class="bi bi-check2 sl-mode-menu-tick" aria-hidden="true"></i></button>
+      </span>
+    </span>
+  </form>
+      </div>
+      <div class="sl-lab-stage">
+  <form class="sl-mode" data-sl-pick="mode" data-sl-now="auto" action="index.php" method="post">
+    <input type="hidden" name="op" value="mode">
+    <input type="hidden" name="refer" value="1">
+    <input type="hidden" name="token" value="demo">
+    <span class="sl-dial sl-mode-menu">
+      <button type="button" class="sl-dial-toggle sl-circle-action sl-i-mode" data-sl-title title="Как в системе" aria-label="Как в системе" aria-haspopup="true"><i class="bi bi-circle-half" data-sl-icon aria-hidden="true"></i></button>
+      <span class="sl-mode-menu-pane" role="menu">
+        <button type="submit" class="sl-mode-menu-row" name="mode" value="light" data-sl-val="light" role="menuitem"><i class="bi bi-sun" aria-hidden="true"></i><span>Светлая</span><i class="bi bi-check2 sl-mode-menu-tick" aria-hidden="true"></i></button>
+        <button type="submit" class="sl-mode-menu-row" name="mode" value="dark" data-sl-val="dark" role="menuitem"><i class="bi bi-moon" aria-hidden="true"></i><span>Тёмная</span><i class="bi bi-check2 sl-mode-menu-tick" aria-hidden="true"></i></button>
+        <button type="submit" class="sl-mode-menu-row" name="mode" value="auto" data-sl-val="auto" role="menuitem"><i class="bi bi-circle-half" aria-hidden="true"></i><span>Как в системе</span><i class="bi bi-check2 sl-mode-menu-tick" aria-hidden="true"></i></button>
+      </span>
+    </span>
+  </form>
+      </div>
+      <div class="sl-lab-grid">
+        <div class="sl-lab-card">
+          <h2>Как ведёт себя</h2>
+          <ul><li>Клик по кнопке вешает <code>.sl-open</code>, клик мимо снимает — это делает <code>setDialToggle()</code>.</li><li>Escape закрывает панель тем же обработчиком.</li><li>Галочка отмечает выбранный режим, подписи снимают догадки об «авто».</li></ul>
+        </div>
+        <div class="sl-lab-card">
+          <h2>Что переиспользовано</h2>
+          <ul><li>Открытие и закрытие — <code>.sl-dial</code> плюс <code>slaed.js</code>, без единой новой строки JS.</li><li>Панель собрана из <code>--sl-drop-width</code> и <code>--sl-panel-shadow</code>.</li><li>Подсветка выбранного — <code>--sl-tint</code>.</li></ul>
+        </div>
+        <div class="sl-lab-card">
+          <h2>Разметка</h2>
+          <pre class="sl-code sl-lab-code">  &lt;form class=&quot;sl-mode&quot; data-sl-pick=&quot;mode&quot; data-sl-now=&quot;auto&quot; action=&quot;index.php&quot; method=&quot;post&quot;&gt;
+    &lt;input type=&quot;hidden&quot; name=&quot;op&quot; value=&quot;mode&quot;&gt;
+    &lt;input type=&quot;hidden&quot; name=&quot;refer&quot; value=&quot;1&quot;&gt;
+    &lt;input type=&quot;hidden&quot; name=&quot;token&quot; value=&quot;demo&quot;&gt;
+    &lt;span class=&quot;sl-dial sl-mode-menu&quot;&gt;
+      &lt;button type=&quot;button&quot; class=&quot;sl-dial-toggle sl-circle-action sl-i-mode&quot; data-sl-title title=&quot;Как в системе&quot; aria-label=&quot;Как в системе&quot; aria-haspopup=&quot;true&quot;&gt;&lt;i class=&quot;bi bi-circle-half&quot; data-sl-icon aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;/button&gt;
+      &lt;span class=&quot;sl-mode-menu-pane&quot; role=&quot;menu&quot;&gt;
+        &lt;button type=&quot;submit&quot; class=&quot;sl-mode-menu-row&quot; name=&quot;mode&quot; value=&quot;light&quot; data-sl-val=&quot;light&quot; role=&quot;menuitem&quot;&gt;&lt;i class=&quot;bi bi-sun&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;span&gt;Светлая&lt;/span&gt;&lt;i class=&quot;bi bi-check2 sl-mode-menu-tick&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;/button&gt;
+        &lt;button type=&quot;submit&quot; class=&quot;sl-mode-menu-row&quot; name=&quot;mode&quot; value=&quot;dark&quot; data-sl-val=&quot;dark&quot; role=&quot;menuitem&quot;&gt;&lt;i class=&quot;bi bi-moon&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;span&gt;Тёмная&lt;/span&gt;&lt;i class=&quot;bi bi-check2 sl-mode-menu-tick&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;/button&gt;
+        &lt;button type=&quot;submit&quot; class=&quot;sl-mode-menu-row&quot; name=&quot;mode&quot; value=&quot;auto&quot; data-sl-val=&quot;auto&quot; role=&quot;menuitem&quot;&gt;&lt;i class=&quot;bi bi-circle-half&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;span&gt;Как в системе&lt;/span&gt;&lt;i class=&quot;bi bi-check2 sl-mode-menu-tick&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;/button&gt;
+      &lt;/span&gt;
+    &lt;/span&gt;
+  &lt;/form&gt;</pre>
+        </div>
+      </div>
+    </div>
+  </main>
+
+<script src="../plugins/system/slaed.js"></script>
+<script src="assets/demo.js"></script>
+</body>
+</html>

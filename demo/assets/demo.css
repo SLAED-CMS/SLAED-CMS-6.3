@@ -1,0 +1,429 @@
+/* SLAED demo lab: page chrome for the colour mode variants. This file ships with no theme and the theme audit
+   never reads it, but every value still comes from the token API of templates/lite/assets/css/base.css so that
+   a variant chosen here can be lifted into theme.css without a single literal travelling with it */
+
+.sl-lab {
+  padding: var(--sl-space-8) 0 calc(var(--sl-space-8) * 2);
+}
+
+.sl-lab-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--sl-space-3) var(--sl-space-6);
+  margin-bottom: var(--sl-space-6);
+}
+
+.sl-lab-head h1 {
+  margin: 0;
+  font-size: var(--sl-font-h1);
+  line-height: var(--sl-line-tight);
+}
+
+.sl-lab-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--sl-size-chip);
+  height: var(--sl-size-chip);
+  padding: 0 var(--sl-space-3);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-primary);
+  color: var(--sl-on-solid);
+  font-size: var(--sl-font-small);
+  font-weight: var(--sl-weight-bold);
+  line-height: 1;
+}
+
+.sl-lab-lead {
+  max-width: var(--sl-layout-container);
+  margin: 0 0 var(--sl-space-8);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-h4);
+  line-height: var(--sl-line-normal);
+}
+
+.sl-lab-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--sl-space-7);
+}
+
+.sl-lab-card {
+  padding: var(--sl-space-7);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-surface);
+  box-shadow: var(--sl-shadow-xs);
+}
+
+.sl-lab-card h2 {
+  margin: 0 0 var(--sl-space-4);
+  font-size: var(--sl-font-h3);
+  line-height: var(--sl-line-tight);
+}
+
+.sl-lab-card p {
+  margin: 0 0 var(--sl-space-4);
+  color: var(--sl-text-muted);
+  line-height: var(--sl-line-normal);
+}
+
+.sl-lab-card p:last-child,
+.sl-lab-card ul:last-child {
+  margin-bottom: 0;
+}
+
+.sl-lab-card ul {
+  margin: 0 0 var(--sl-space-4);
+  padding-left: var(--sl-space-7);
+  color: var(--sl-text-muted);
+  line-height: var(--sl-line-normal);
+}
+
+/* The stage is where a variant is shown twice: once on the inverse band it really stands on, once on the page */
+.sl-lab-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sl-space-6);
+  min-height: calc(var(--sl-space-8) * 4);
+  margin-bottom: var(--sl-space-6);
+  padding: var(--sl-space-7);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg-subtle);
+}
+
+.sl-lab-stage-band {
+  background: var(--sl-bg-inverse);
+  color: var(--sl-band-text);
+}
+
+/* .sl-code gives the plate, the type and the colour; a pre inside a card still needs to scroll rather than push */
+.sl-lab-code {
+  overflow-x: auto;
+  white-space: pre;
+}
+
+/* .sl-chip gives the pill; the stand only asks it to breathe, since it carries a sentence and not a count */
+.sl-lab-now {
+  gap: var(--sl-space-2);
+  font-size: var(--sl-font-small);
+}
+
+/* The tab strip of the theme carries the whole nav; the stand adds only the gap under it and the mark on the
+   page it stands on, which a tab strip has no state for */
+.sl-lab-nav {
+  margin-bottom: var(--sl-space-8);
+}
+
+.sl-lab-nav a[aria-current="page"] {
+  background: var(--sl-primary);
+  color: var(--sl-on-solid);
+}
+
+/* Every variant wears the face of the buttons already standing to its right: a round .sl-circle-action with no
+   border and no plate, which takes its own hover colour the way each social button takes one. The two rules the
+   social cluster gives its icons are repeated here because this control stands beside that cluster, not inside it */
+.sl-i-mode {
+  border: 0;
+  cursor: pointer;
+}
+
+.sl-i-mode .bi {
+  font-size: var(--sl-size-icon-sm);
+  color: var(--sl-band-text);
+}
+
+.sl-i-mode:hover {
+  background-color: var(--sl-primary);
+}
+
+.sl-i-mode:focus-visible {
+  outline: var(--sl-ring-width) solid var(--sl-ring-bg);
+  outline-offset: var(--sl-ring-gap);
+}
+
+.sl-i-mode.sl-is-active {
+  background-color: var(--sl-primary);
+}
+
+.sl-i-mode.sl-is-active .bi {
+  color: var(--sl-on-solid);
+}
+
+/* On the page rather than on the band the same face reads its icon off the surface under it */
+.sl-lab-stage:not(.sl-lab-stage-band) .sl-i-mode .bi {
+  color: var(--sl-text);
+}
+
+.sl-lab-stage:not(.sl-lab-stage-band) .sl-i-mode:hover .bi,
+.sl-lab-stage:not(.sl-lab-stage-band) .sl-i-mode.sl-is-active .bi {
+  color: var(--sl-on-solid);
+}
+
+/* Admin stand: the cluster on the right of the toolbar row, and the face its buttons wear. The face repeats the
+   contract of a toolbar item - same height, same corner, same hover plate - because those are the buttons this
+   control stands among; nothing here invents a second button look for the admin header */
+.sl-picks {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  margin-left: auto;
+}
+
+.sl-pick-but {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sl-space-2);
+  box-sizing: border-box;
+  height: var(--sl-size-control);
+  min-width: var(--sl-size-control);
+  padding: 0 var(--sl-space-3);
+  border: 1px solid transparent;
+  border-radius: var(--sl-radius-1);
+  background: transparent;
+  color: var(--sl-primary);
+  font-size: var(--sl-size-icon-xs);
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--sl-time-fast) var(--sl-ease-out),
+    border-color var(--sl-time-fast) var(--sl-ease-out),
+    color var(--sl-time-fast) var(--sl-ease-out);
+}
+
+.sl-pick-but:hover,
+.sl-dial.sl-open > .sl-dial-toggle.sl-pick-but {
+  border-color: var(--sl-primary-strong);
+  background: linear-gradient(
+    to bottom,
+    var(--sl-primary-strong) 0%,
+    var(--sl-primary-strong) 48%,
+    var(--sl-primary) 100%
+  );
+  color: var(--sl-on-solid);
+  box-shadow: var(--sl-btn-shadow);
+}
+
+.sl-pick-but:focus-visible {
+  box-shadow: var(--sl-shadow-focus);
+}
+
+.sl-pick-but.sl-is-active {
+  border-color: var(--sl-primary);
+  background: var(--sl-tint);
+  color: var(--sl-primary-strong);
+}
+
+/* The admin fan is built for a table cell: absolute, pinned to the right edge of the row, its items opening by
+   max-width rather than by offset. In the header it has to stand in the flow of the toolbar instead, and the
+   plate it draws around itself belongs to the row it came from, not to a picker that opens a pane of its own */
+.sl-picks .sl-dial {
+  position: relative;
+  top: auto;
+  right: auto;
+  transform: none;
+}
+
+
+/* The admin fan never needed a layer of its own: inside a table cell nothing overlaps it. In the toolbar three of
+   them stand side by side, so an open one has to rise above the pickers it opens across */
+.sl-picks .sl-dial.sl-open,
+.sl-picks .sl-dial:hover {
+  z-index: var(--sl-z-dropdown);
+}
+
+/* Only what the system list item does not already say: the gap between mark and label, and the tick that shows
+   which value is in force. Everything else - the box, the hover, the corner - comes from .sl-menu-list-item */
+.sl-pick-row {
+  gap: var(--sl-space-3);
+  border: 0;
+  background: transparent;
+  color: var(--sl-text);
+  font-size: var(--sl-font-small);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.sl-pick-row.sl-is-active {
+  background: var(--sl-tint);
+  color: var(--sl-primary-strong);
+}
+
+.sl-pick-tick {
+  margin-left: auto;
+  opacity: 0;
+}
+
+.sl-pick-row.sl-is-active .sl-pick-tick {
+  opacity: 1;
+}
+
+/* The toolbar clips itself: overflow:hidden keeps the bar gradient inside the rounded corner. Nothing dropped from
+   a picker survives that clip, so the stand lifts it. Adopting any variant that opens downwards means lifting it in
+   the theme as well - the corner holds without it, because the gradient is painted on the bar and not on its content */
+.sl-admin-toolbar .sl-toolbar {
+  overflow: visible;
+}
+
+/* A fan that only carries a pane draws no plate of its own - the pane is the surface, and a pill behind the button
+   would double it. The canonical fan keeps its plate, which is why this is not a blanket rule over every fan */
+.sl-pick-stack,
+.sl-pick-drawer .sl-dial {
+  padding: 0;
+}
+
+.sl-pick-stack.sl-open,
+.sl-pick-stack:hover,
+.sl-pick-drawer .sl-dial.sl-open,
+.sl-pick-drawer .sl-dial:hover {
+  border-color: transparent;
+  background: none;
+  box-shadow: none;
+}
+
+/* A slot holds the width of a resting fan so the toolbar row never moves: the fan itself is pinned to the right
+   edge of the slot and grows leftwards over the menu, the way the canonical fan grows over its own table row */
+.sl-pick-slot {
+  position: relative;
+  display: block;
+  flex: 0 0 auto;
+  width: var(--sl-size-chip);
+  height: var(--sl-size-chip);
+}
+
+.sl-picks .sl-pick-slot > .sl-dial {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+}
+
+/* The flag is the one mark the panel already standardised: .sl-menu-list-image, one icon-md wide with a border and
+   a soft corner, exactly as the language row of the header draws it. A chip carrying one drops its side padding,
+   because the standard flag is wider than the room a chip leaves beside its text */
+.sl-but-mini:has(img) {
+  padding: 0;
+  background-color: transparent;
+}
+
+/* The rail and the segment share one groove: same track, same cells, same thumb stepping by the active cell. They
+   part in what marks the current value - a thumb behind the icons, or a knob riding over them - so the track is here */
+.sl-pick-rail {
+  position: relative;
+  display: inline-grid;
+  align-items: center;
+  box-sizing: border-box;
+  height: var(--sl-size-control);
+  padding: 0;
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-bg-subtle);
+  box-shadow: var(--sl-shadow-inset);
+}
+
+.sl-pick-rail-3 {
+  grid-template-columns: repeat(3, var(--sl-size-control));
+}
+
+.sl-pick-rail-4 {
+  grid-template-columns: repeat(4, var(--sl-size-control));
+}
+
+.sl-pick-rail-6 {
+  grid-template-columns: repeat(6, var(--sl-size-control));
+}
+
+.sl-pick-rail::before {
+  content: "";
+  position: absolute;
+  z-index: var(--sl-z-base);
+  top: 0;
+  left: 0;
+  width: var(--sl-size-control);
+  height: 100%;
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-primary);
+  box-shadow: var(--sl-shadow-raised);
+  transition: transform var(--sl-time-base) var(--sl-ease-in-out);
+}
+
+.sl-pick-rail:has(.sl-pick-cell:nth-child(2).sl-is-active)::before {
+  transform: translateX(100%);
+}
+
+.sl-pick-rail:has(.sl-pick-cell:nth-child(3).sl-is-active)::before {
+  transform: translateX(200%);
+}
+
+.sl-pick-rail:has(.sl-pick-cell:nth-child(4).sl-is-active)::before {
+  transform: translateX(300%);
+}
+
+.sl-pick-rail:has(.sl-pick-cell:nth-child(5).sl-is-active)::before {
+  transform: translateX(400%);
+}
+
+.sl-pick-rail:has(.sl-pick-cell:nth-child(6).sl-is-active)::before {
+  transform: translateX(500%);
+}
+
+.sl-pick-cell {
+  position: relative;
+  z-index: var(--sl-z-raised);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--sl-radius-circle);
+  background: transparent;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-size-icon-xs);
+  cursor: pointer;
+  transition:
+    color var(--sl-time-fast) var(--sl-ease-out),
+    opacity var(--sl-time-fast) var(--sl-ease-out);
+}
+
+.sl-pick-cell:hover {
+  color: var(--sl-primary);
+}
+
+.sl-pick-cell.sl-is-active {
+  color: var(--sl-on-solid);
+}
+
+/* The admin fan paints its own toggle on hover and on open, and that rule is one step stronger than a plain
+   :hover on the button. Every picker face has to answer at the same strength or the theme wins and the hover
+   arrives as a flat plate with an unreadable glyph on it */
+.sl-picks .sl-dial:hover > .sl-dial-toggle.sl-pick-but,
+.sl-picks .sl-dial.sl-open > .sl-dial-toggle.sl-pick-but {
+  border-color: var(--sl-primary-strong);
+  background: linear-gradient(
+    to bottom,
+    var(--sl-primary-strong) 0%,
+    var(--sl-primary-strong) 48%,
+    var(--sl-primary) 100%
+  );
+  color: var(--sl-on-solid);
+  box-shadow: var(--sl-btn-shadow);
+}
+
+/* The toolbar row is padded 4px on the left and 8px on the right, so the menu starts 5px from the edge while the
+   cluster ends 9px from it. The two sides are the same distance here; adopting a variant means evening the padding
+   out in the theme, where the asymmetry has no reason behind it either */
+.sl-admin-toolbar .sl-toolbar > div:has(.sl-picks) {
+  padding-right: var(--sl-space-2);
+}
+
+/* A groove cell is one control wide, and the standard flag with its border fills it edge to edge - six of them in a
+   row then read as one striped band. Inside a groove the flag drops one step down the icon ladder so the cells
+   separate again; everywhere the flag has room of its own it keeps the standard size */
+.sl-pick-cell .sl-menu-list-image {
+  width: var(--sl-size-icon-sm);
+}

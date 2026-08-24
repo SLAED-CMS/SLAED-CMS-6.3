@@ -3480,20 +3480,23 @@ function setThemeMode(string $mode): void {
     else setCookiesDelete('mode');
 }
 
-# Render the colour mode toggle: one button that steps the choice on to the next mode and shows the current one, for the panel and the site alike
+# Render the colour mode control: the three modes with the one in force marked, so any of them is one press away and none of them has to be guessed
 # The value travels in a POST body with a token because setCookies() marks the cookie httponly, so no script can write it and a script toggle would fail without a word
+# The order is light, auto, dark: the answer that follows the system sits between the two it chooses from, which is what lets a rail read as a scale rather than a list
 function getThemeModeSwitch(string $action): string {
     global $tpl;
-    $next = ['auto' => 'light', 'light' => 'dark', 'dark' => 'auto'];
     $icon = ['auto' => 'circle-half', 'light' => 'sun', 'dark' => 'moon'];
     $name = ['auto' => _MODE_AUTO, 'light' => _MODE_LIGHT, 'dark' => _MODE_DARK];
     $mode = getThemeMode();
-    $step = $next[$mode];
     $html = '';
-    foreach (['op' => 'mode', 'mode' => $step, 'refer' => '1', 'token' => getPageToken('mode')] as $key => $val) {
+    foreach (['op' => 'mode', 'refer' => '1', 'token' => getPageToken('mode')] as $key => $val) {
         $html .= $tpl->getHtmlFrag('hidden', ['name_attr' => $key, 'value_attr' => $val, 'input_attr' => '']);
     }
-    return $tpl->getHtmlFrag('mode-switch', ['action' => $action, 'hidden' => $html, 'icon_name' => $icon[$mode], 'title' => $name[$step]]);
+    $list = [];
+    foreach (['light', 'auto', 'dark'] as $step) {
+        $list[] = ['key' => $step, 'title' => $name[$step], 'icon_name' => $icon[$step], 'is_now' => $step === $mode ? '1' : ''];
+    }
+    return $tpl->getHtmlFrag('mode-switch', ['action' => $action, 'hidden' => $html, 'icon_name' => $icon[$mode], 'title' => $name[$mode], 'modes' => $list]);
 }
 
 # Validate that a theme directory contains the canonical structure: base/theme CSS, icon library, system avatars, presets, and theme assets declared by editor manifests

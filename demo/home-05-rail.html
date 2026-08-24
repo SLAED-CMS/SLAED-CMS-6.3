@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Вариант 5 · Рельс · SLAED CMS</title>
+<link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+<link rel="stylesheet" href="assets/demo.css">
+<link rel="stylesheet" href="assets/home.css">
+</head>
+<body>
+  <div class="sl-wrapper sl-admin-shell">
+    <div class="sl-wraptop"></div>
+    <div class="sl-wrapmid">
+      <div class="sl-header sl-admin-header">
+        <div class="sl-admin-brand"><h1><a href="#" title="SLAED CMS"><img src="../templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="SLAED CMS" title="SLAED CMS"></a></h1></div>
+        <div class="sl-admin-toolbar">
+          <div class="sl-toolbar">
+            <div>
+              <ul class="sl-reset">
+                <li><a href="#" title="Главная"><i class="bi bi-house-door"></i> <b>Главная</b></a></li>
+                <li><a href="#" title="Блоки и баннеры"><i class="bi bi-grid-3x3-gap"></i> <b>Блоки и баннеры</b></a></li>
+                <li><a href="#" title="Модули"><i class="bi bi-gpu-card"></i> <b>Модули</b></a></li>
+                <li><a href="#" title="Категории"><i class="bi bi-folder"></i> <b>Категории</b></a></li>
+                <li><a href="#" title="Сайт"><i class="bi bi-globe2"></i> <b>Сайт</b></a></li>
+                <li><a href="#" title="Профиль"><i class="bi bi-person"></i> <b>Профиль</b></a></li>
+                <li><a href="#" title="Выход"><i class="bi bi-box-arrow-right"></i> <b>Выход</b></a></li>
+              </ul>
+              <span class="sl-language sl-admin-language">
+                <a href="#" title="Немецкий" class="sl-admin-language-link"><img src="../templates/admin/images/flags/de.svg" alt="Немецкий" title="Немецкий" class="sl-menu-list-image"></a>
+                <a href="#" title="Английский" class="sl-admin-language-link"><img src="../templates/admin/images/flags/gb.svg" alt="Английский" title="Английский" class="sl-menu-list-image"></a>
+                <a href="#" title="Русский" class="sl-admin-language-link"><img src="../templates/admin/images/flags/ru.svg" alt="Русский" title="Русский" class="sl-menu-list-image"></a>
+              </span>
+              <form class="sl-mode" data-sl-pick="mode" data-sl-now="auto" action="#" method="post">
+                <input type="hidden" name="op" value="mode">
+                <input type="hidden" name="token" value="demo">
+                <input type="hidden" name="mode" value="light" data-sl-step>
+                <button type="submit" class="sl-mode-but" data-sl-title-next title="Светлая" aria-label="Светлая"><i class="bi bi-circle-half" data-sl-icon aria-hidden="true"></i></button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sl-admin-main sl-home-full">
+<main class="sl-admin-content"><div class="sl-admin-content-inner">
+<ul class="sl-tabs-nav sl-lab-nav"><li class="sl-tabs-item"><a class="sl-tabs-link" href="home-index.html">Обзор</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="home-01-command.html">1 · Строка</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="home-02-sections.html">2 · Разделы</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="home-03-list.html">3 · Список</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="home-04-bento.html">4 · Сводка</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="home-05-rail.html" aria-current="page">5 · Рельс</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="home-06-pinned.html">6 · Своё</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="home-07-canvas.html">7 · Полотно</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="home-08-tiles.html">8 · Плитка</a></li></ul>
+        <div class="sl-lab-head">
+          <h1>Рельс</h1>
+          <span class="sl-chip sl-lab-now">230px, один раздел из шести</span>
+        </div>
+        <p class="sl-lab-lead">Правый столбец заменён левым: рельс из шести разделов и одна панель справа, в которой лежит только выбранный. Переключение — штатный механизм вкладок <code>data-sl-tab-link</code>, выбор запоминается в сессии, стрелки влево-вправо водят по рельсу. На экране никогда не больше тринадцати строк, и каждая может позволить себе подпись, потому что соседей мало.</p>
+        <div class="sl-home-note"><span><b>Что уходит:</b> обе плашки, 47 карточек и правый столбец — рельс занимает его место, но несёт навигацию, а не счётчики.</span><span><b>Чем платим:</b> чтобы попасть в модуль другого раздела, нужен лишний клик. Счётчики «новых» надо перенести в рельс, иначе они пропадут.</span><span><b>Что переиспользовано:</b> <code>data-sl-tabs-init</code>, <code>data-sl-tab-link</code>, <code>data-sl-tab-panel</code>, <code>.sl-chip</code>.</span><span><b>Место под модули:</b> 230px против 1 064px, которые они занимают сегодня.</span></div>
+        <div class="sl-rail" data-sl-tabs-init="sl-home-rail">
+          <ul class="sl-rail-nav">
+            <li><a class="sl-rail-but sl-is-active" href="#" data-sl-tab-link data-sl-tab-target="sl-pane-content"><i class="bi bi-file-earmark-text" aria-hidden="true"></i>Содержание<small>13</small></a></li>
+            <li><a class="sl-rail-but" href="#" data-sl-tab-link data-sl-tab-target="sl-pane-people"><i class="bi bi-people" aria-hidden="true"></i>Люди<small>10</small></a></li>
+            <li><a class="sl-rail-but" href="#" data-sl-tab-link data-sl-tab-target="sl-pane-talk"><i class="bi bi-chat-dots" aria-hidden="true"></i>Общение<small>6</small></a></li>
+            <li><a class="sl-rail-but" href="#" data-sl-tab-link data-sl-tab-target="sl-pane-shop"><i class="bi bi-cart3" aria-hidden="true"></i>Магазин<small>3</small></a></li>
+            <li><a class="sl-rail-but" href="#" data-sl-tab-link data-sl-tab-target="sl-pane-look"><i class="bi bi-palette" aria-hidden="true"></i>Оформление<small>7</small></a></li>
+            <li><a class="sl-rail-but" href="#" data-sl-tab-link data-sl-tab-target="sl-pane-sys"><i class="bi bi-sliders" aria-hidden="true"></i>Система<small>11</small></a></li>
+          </ul>
+          <div class="sl-rail-pane">
+            <div id="sl-pane-content" class="sl-tab-panel" data-sl-tab-panel="sl-pane-content">
+              <p class="sl-home-cap"><i class="bi bi-file-earmark-text" aria-hidden="true"></i>Содержание <em>13 модулей</em></p>
+              <div class="sl-rail-grid">
+                <a class="sl-rail-item" href="admin.php?name=news"><i class="bi bi-newspaper" aria-hidden="true"></i><span><b>Новости</b><em>news · Все посетители</em></span><span class="sl-chip sl-chip-warn">2</span></a>
+                <a class="sl-rail-item" href="admin.php?name=pages"><i class="bi bi-card-text" aria-hidden="true"></i><span><b>Статьи</b><em>pages · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=content"><i class="bi bi-file-earmark-text" aria-hidden="true"></i><span><b>Содержание</b><em>content · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=faq"><i class="bi bi-question-circle" aria-hidden="true"></i><span><b>Вопросы и ответы</b><em>faq · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=jokes"><i class="bi bi-emoji-laughing" aria-hidden="true"></i><span><b>Анекдоты</b><em>jokes · Все посетители</em></span><i class="sl-home-dot" title="Деактивирован"></i></a>
+                <a class="sl-rail-item" href="admin.php?name=links"><i class="bi bi-link-45deg" aria-hidden="true"></i><span><b>Каталог сайтов</b><em>links · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=auto_links"><i class="bi bi-link" aria-hidden="true"></i><span><b>Обмен ссылками</b><em>auto_links · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=files"><i class="bi bi-folder2-open" aria-hidden="true"></i><span><b>Каталог файлов</b><em>files · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=media"><i class="bi bi-image" aria-hidden="true"></i><span><b>Медиа каталог</b><em>media · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=rss"><i class="bi bi-rss" aria-hidden="true"></i><span><b>RSS каналы</b><em>rss · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=sitemap"><i class="bi bi-diagram-3" aria-hidden="true"></i><span><b>Карта сайта</b><em>sitemap · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=search"><i class="bi bi-search" aria-hidden="true"></i><span><b>Поиск</b><em>search · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=changelog"><i class="bi bi-journal-text" aria-hidden="true"></i><span><b>Журнал изменений</b><em>changelog · Все посетители</em></span></a>
+              </div>
+            </div>
+            <div id="sl-pane-people" class="sl-tab-panel" data-sl-tab-panel="sl-pane-people">
+              <p class="sl-home-cap"><i class="bi bi-people" aria-hidden="true"></i>Люди <em>10 модулей</em></p>
+              <div class="sl-rail-grid">
+                <a class="sl-rail-item" href="admin.php?name=account"><i class="bi bi-people" aria-hidden="true"></i><span><b>Пользователи</b><em>account · Все посетители</em></span><span class="sl-chip sl-chip-warn">30</span></a>
+                <a class="sl-rail-item" href="admin.php?name=users"><i class="bi bi-trophy" aria-hidden="true"></i><span><b>Топ пользователи</b><em>users · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=groups"><i class="bi bi-people-fill" aria-hidden="true"></i><span><b>Группы</b><em>groups · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=admins"><i class="bi bi-person-gear" aria-hidden="true"></i><span><b>Администрация</b><em>admins · Только администраторы</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=clients"><i class="bi bi-briefcase" aria-hidden="true"></i><span><b>Клиенты</b><em>clients · Только пользователи</em></span><span class="sl-chip sl-chip-warn">10</span></a>
+                <a class="sl-rail-item" href="admin.php?name=privat"><i class="bi bi-incognito" aria-hidden="true"></i><span><b>Личные сообщения</b><em>privat · Только пользователи</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=messages"><i class="bi bi-envelope" aria-hidden="true"></i><span><b>Сообщения</b><em>messages · Только пользователи</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=contact"><i class="bi bi-envelope-open" aria-hidden="true"></i><span><b>Обратная связь</b><em>contact · Только пользователи</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=recommend"><i class="bi bi-share" aria-hidden="true"></i><span><b>Рекомендовать</b><em>recommend · Только пользователи</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=whois"><i class="bi bi-geo-alt" aria-hidden="true"></i><span><b>Жалобы</b><em>whois · Только пользователи</em></span></a>
+              </div>
+            </div>
+            <div id="sl-pane-talk" class="sl-tab-panel" data-sl-tab-panel="sl-pane-talk">
+              <p class="sl-home-cap"><i class="bi bi-chat-dots" aria-hidden="true"></i>Общение <em>6 модулей</em></p>
+              <div class="sl-rail-grid">
+                <a class="sl-rail-item" href="admin.php?name=comments"><i class="bi bi-chat-dots" aria-hidden="true"></i><span><b>Комментарии</b><em>comments · Все посетители</em></span><span class="sl-chip sl-chip-warn">3</span></a>
+                <a class="sl-rail-item" href="admin.php?name=forum"><i class="bi bi-chat-square-text" aria-hidden="true"></i><span><b>Форум</b><em>forum · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=voting"><i class="bi bi-bar-chart" aria-hidden="true"></i><span><b>Опросы</b><em>voting · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=ratings"><i class="bi bi-star-half" aria-hidden="true"></i><span><b>Рейтинги</b><em>ratings · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=newsletter"><i class="bi bi-send" aria-hidden="true"></i><span><b>Рассылка</b><em>newsletter · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=favorites"><i class="bi bi-star" aria-hidden="true"></i><span><b>Фавориты</b><em>favorites · Все посетители</em></span></a>
+              </div>
+            </div>
+            <div id="sl-pane-shop" class="sl-tab-panel" data-sl-tab-panel="sl-pane-shop">
+              <p class="sl-home-cap"><i class="bi bi-cart3" aria-hidden="true"></i>Магазин <em>3 модулей</em></p>
+              <div class="sl-rail-grid">
+                <a class="sl-rail-item" href="admin.php?name=shop"><i class="bi bi-cart3" aria-hidden="true"></i><span><b>Магазин</b><em>shop · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=order"><i class="bi bi-receipt" aria-hidden="true"></i><span><b>Форма заказа</b><em>order · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=money"><i class="bi bi-currency-exchange" aria-hidden="true"></i><span><b>Обмен WebMoney</b><em>money · Все посетители</em></span><i class="sl-home-dot" title="Деактивирован"></i></a>
+              </div>
+            </div>
+            <div id="sl-pane-look" class="sl-tab-panel" data-sl-tab-panel="sl-pane-look">
+              <p class="sl-home-cap"><i class="bi bi-palette" aria-hidden="true"></i>Оформление <em>7 модулей</em></p>
+              <div class="sl-rail-grid">
+                <a class="sl-rail-item" href="admin.php?name=template"><i class="bi bi-palette" aria-hidden="true"></i><span><b>Шаблон</b><em>template · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=blocks"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i><span><b>Блоки и баннеры</b><em>blocks · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=editor"><i class="bi bi-pencil-square" aria-hidden="true"></i><span><b>Редактор</b><em>editor · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=fields"><i class="bi bi-input-cursor-text" aria-hidden="true"></i><span><b>Дополнительные поля</b><em>fields · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=categories"><i class="bi bi-folder" aria-hidden="true"></i><span><b>Категории</b><em>categories · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=replace"><i class="bi bi-arrow-left-right" aria-hidden="true"></i><span><b>Замена слов</b><em>replace · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=lang"><i class="bi bi-translate" aria-hidden="true"></i><span><b>Редактор языков</b><em>lang · Все посетители</em></span></a>
+              </div>
+            </div>
+            <div id="sl-pane-sys" class="sl-tab-panel" data-sl-tab-panel="sl-pane-sys">
+              <p class="sl-home-cap"><i class="bi bi-sliders" aria-hidden="true"></i>Система <em>11 модулей</em></p>
+              <div class="sl-rail-grid">
+                <a class="sl-rail-item" href="admin.php?name=config"><i class="bi bi-gear" aria-hidden="true"></i><span><b>Конфигурации</b><em>config · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=modules"><i class="bi bi-puzzle" aria-hidden="true"></i><span><b>Модули</b><em>modules · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=monitor"><i class="bi bi-display" aria-hidden="true"></i><span><b>Мониторинг</b><em>monitor · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=statistic"><i class="bi bi-graph-up" aria-hidden="true"></i><span><b>Статистика</b><em>statistic · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=security"><i class="bi bi-shield-lock" aria-hidden="true"></i><span><b>Безопасность</b><em>security · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=database"><i class="bi bi-database" aria-hidden="true"></i><span><b>База данных</b><em>database · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=uploads"><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i><span><b>Загрузки</b><em>uploads · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=scheduler"><i class="bi bi-clock-history" aria-hidden="true"></i><span><b>Планировщик</b><em>scheduler · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=referers"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i><span><b>Переходы</b><em>referers · Все посетители</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=help"><i class="bi bi-info-circle" aria-hidden="true"></i><span><b>Помощь</b><em>help · Только пользователи</em></span></a>
+                <a class="sl-rail-item" href="admin.php?name=main"><i class="bi bi-house-door" aria-hidden="true"></i><span><b>Главный</b><em>main · Все посетители</em></span></a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div></main>
+      </div>
+      <div class="sl-footer sl-admin-footer">
+        <div class="sl-copyright">Генерация: 0.298 сек. и 17 запросов к базе данных за 0.004 сек.<br>SLAED CMS © 2005-2026 Eduard Laas. Released under MIT License.</div>
+        <span><a href="#" class="sl-thide">SLAED CMS</a><a href="#" class="sl-thide"><i class="bi bi-bug"></i> Панель диагностики</a><a href="#" class="sl-thide">Наверх</a></span>
+      </div>
+    </div>
+    <div class="sl-wrapfoot"></div>
+
+  </div>
+<script src="../plugins/system/slaed.js"></script>
+<script src="assets/demo.js"></script>
+<script src="assets/home.js"></script>
+</body>
+</html>

@@ -356,8 +356,6 @@
   /* How much of the tone the pressed main button keeps; the rest is the page text colour, which inverts with the mode */
   --sl-modal-btn-mix: 86%;
   --sl-modal-border: 3px;
-  --sl-mode-width: var(--sl-size-chip);
-  --sl-mode-height: var(--sl-size-chip);
   --sl-module-head-height: 41px;
   --sl-monitor-table-width: 38%;
   --sl-msg-width: 460px;
@@ -382,6 +380,9 @@
   --sl-search-order-width: 165px;
   --sl-search-filter-width: 140px;
   --sl-select-width: 350px;
+  --sl-mode-width: var(--sl-set-width);
+  --sl-mode-height: var(--sl-size-control);
+  --sl-set-width: 220px;
   --sl-select-height: 100px;
   --sl-shot-max-height: min(62vh, 460px);
   --sl-shot-side-height: 40vh;

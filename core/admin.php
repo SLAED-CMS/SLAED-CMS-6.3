@@ -202,15 +202,22 @@ function setUnauthorized() {
     setExit(_LOGININCOR);
 }
 
+# The locales the tree ships, as code => translated name; the flag links of the plain panel and the language row of the settings window read one list
+function getLanguageList(): array {
+    $list = [];
+    foreach (scandir(BASE_DIR.'/lang') ?: [] as $file) {
+        if (!preg_match('#^(.+)\.php$#', $file, $part)) continue;
+        $list[$part[1]] = getLangName($part[1]);
+    }
+    return $list;
+}
+
 # Render the standard admin language switcher
 function getAdminLanguageLinks(): string {
     global $conf, $afile, $tpl;
     if (($conf['multilingual'] ?? 0) != 1) return '';
     $html = '';
-    foreach (scandir(BASE_DIR.'/lang') ?: [] as $file) {
-        if (!preg_match('#^(.+)\.php$#', $file, $matches)) continue;
-        $lang = $matches[1];
-        $label = getLangName($lang);
+    foreach (getLanguageList() as $lang => $label) {
         $html .= $tpl->getHtmlFrag('link', [
             'href' => $afile.'.php?newlang='.$lang,
             'title' => $label,
@@ -223,27 +230,55 @@ function getAdminLanguageLinks(): string {
     return $html;
 }
 
+# Render the language row of the settings window: the same locales the flag strip offers, as one list that posts to the handler already reading newlang
+function getAdminLanguagePick(): string {
+    global $conf, $afile, $locale, $tpl;
+    if (($conf['multilingual'] ?? 0) != 1) return '';
+    $html = '';
+    foreach (getLanguageList() as $lang => $label) {
+        $html .= $tpl->getHtmlFrag('select-option', ['value_attr' => $lang, 'label_text' => $label, 'is_selected' => $lang === $locale]);
+    }
+    $pick = $tpl->getHtmlFrag('select', ['name_attr' => 'newlang', 'select_class' => '', 'select_attr' => 'onchange="this.form.submit()"', 'options_html' => $html]);
+    return $tpl->getHtmlFrag('settings-row', ['action' => $afile.'.php', 'op' => '', 'icon_name' => 'translate', 'title' => _LANGUAGE, 'pick_html' => $pick]);
+}
+
+# Render the editor row of the settings window: the select the panel already ships, in the form that posts it to the handler that stores it on the administrator
+function getAdminEditorPick(): string {
+    global $admin, $conf, $afile, $tpl;
+    $key = (string)($admin[3] ?? $conf['editor']['admin'] ?? 'plain');
+    $pick = Editor::getSelect('editor', $key, 'content', 'admin', 'onchange="this.form.submit()"');
+    return $tpl->getHtmlFrag('settings-row', ['action' => $afile.'.php', 'op' => 'changeeditor', 'icon_name' => 'pencil-square', 'title' => _EDITOR, 'pick_html' => $pick]);
+}
+
+# Render the settings window of the panel: the three answers an administrator changes from any screen, each row posting to the handler that already owns it
+# Nothing is stored here and no handler learns about the others: the colour mode writes its cookie, the editor writes the administrator row, the language writes the session
+function getAdminSettingsWindow(): string {
+    global $afile, $tpl;
+    $rows = getThemeModeSwitch($afile.'.php').getAdminEditorPick().getAdminLanguagePick();
+    return $tpl->getHtmlFrag('window-settings', ['rows' => $rows]);
+}
+
 # Render the standard admin top menu.
 function getAdminTopMenu(): string {
     global $admin, $afile, $tpl;
     $items = !isAdmin(true) ? [
         ['href' => '#', 'label' => _HELLO.', '.substr((string)($admin[1] ?? ''), 0, 25).'!', 'blank' => false, 'icon' => 'person-badge'],
         ['href' => $afile.'.php', 'label' => _HOME, 'blank' => false, 'icon' => 'house-door'],
-        ['href' => '/', 'label' => _SITE, 'blank' => true, 'icon' => 'globe2'],
+        ['href' => '/', 'label' => _SITE, 'blank' => true, 'icon' => 'globe2', 'split' => true],
         ['href' => 'index.php?name=account', 'label' => _ACCOUNT, 'blank' => true, 'icon' => 'person'],
-        ['href' => $afile.'.php?op=logout', 'label' => _LOGOUT, 'blank' => false, 'icon' => 'box-arrow-right'],
+        ['href' => $afile.'.php?op=logout', 'label' => _LOGOUT, 'blank' => false, 'icon' => 'box-arrow-right', 'split' => true],
     ] : [
         ['href' => $afile.'.php', 'label' => _HOME, 'blank' => false, 'icon' => 'house-door'],
         ['href' => $afile.'.php?name=blocks', 'label' => _BLOCKS, 'blank' => false, 'icon' => 'grid-3x3-gap'],
         ['href' => $afile.'.php?name=modules', 'label' => _MODULES, 'blank' => false, 'icon' => 'gpu-card'],
         ['href' => $afile.'.php?name=categories', 'label' => _CATEGORIES, 'blank' => false, 'icon' => 'folder'],
-        ['href' => '/', 'label' => _SITE, 'blank' => true, 'icon' => 'globe2'],
+        ['href' => '/', 'label' => _SITE, 'blank' => true, 'icon' => 'globe2', 'split' => true],
         ['href' => 'index.php?name=account', 'label' => _ACCOUNT, 'blank' => true, 'icon' => 'person'],
-        ['href' => $afile.'.php?op=logout', 'label' => _LOGOUT, 'blank' => false, 'icon' => 'box-arrow-right'],
+        ['href' => $afile.'.php?op=logout', 'label' => _LOGOUT, 'blank' => false, 'icon' => 'box-arrow-right', 'split' => true],
     ];
     $html = '';
     foreach ($items as $item) {
-        $html .= $tpl->getHtmlFrag('list-item', ['content_html' => $tpl->getHtmlFrag('link', [
+        $html .= $tpl->getHtmlFrag('list-item', ['is_split' => !empty($item['split']), 'content_html' => $tpl->getHtmlFrag('link', [
             'href' => (string)$item['href'],
             'title' => (string)$item['label'],
             'icon_name' => (string)($item['icon'] ?? ''),
@@ -264,7 +299,7 @@ function getAdminLayoutVars(): array {
     }
     return [
         'admin_langs' => getAdminLanguageLinks(),
-        'mode_html' => getThemeModeSwitch($afile.'.php'),
+        'settings_win' => getAdminSettingsWindow(),
         'menu' => getAdminTopMenu(),
         'admin_blocks' => getAdminPanelBlocks().getAdminInfo().adminblock(),
     ];

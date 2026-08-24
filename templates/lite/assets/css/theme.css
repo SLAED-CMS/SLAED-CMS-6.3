@@ -4085,42 +4085,90 @@ ol.sl-sublist-two li::before {
   gap: var(--sl-space-6);
 }
 
-/* Colour mode: the header toggle, one button stepping through the system answer, light and dark. It stands on the
-   inverse band of the top bar, so it reads its face off that band rather than off the page the panel toggle sits on */
+/* Colour mode: the header rail. The three modes stand open side by side and a knob carrying the icon of the one in
+   force rides over them, so the current answer is read without hovering and any other is one click away. It stands on
+   the inverse band of the top bar, so it reads its face off that band rather than off the page the panel toggle sits on */
 .sl-mode {
   display: flex;
   align-items: center;
   flex: 0 0 auto;
 }
 
-.sl-mode-but {
-  display: inline-flex;
+.sl-mode-rail {
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: repeat(3, var(--sl-mode-width));
   align-items: center;
-  justify-content: center;
   box-sizing: border-box;
-  width: var(--sl-mode-width);
   height: var(--sl-mode-height);
   padding: 0;
-  border: 1px solid var(--sl-border-inverse);
-  border-radius: var(--sl-radius-1);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-mode-bg);
+  box-shadow: var(--sl-shadow-inset);
+}
+
+.sl-mode-cell {
+  position: relative;
+  z-index: var(--sl-z-raised);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--sl-radius-circle);
   background: transparent;
   color: var(--sl-band-text);
   font-size: var(--sl-size-icon-sm);
   line-height: 1;
+  opacity: var(--sl-fade-muted);
   cursor: pointer;
-  transition:
-    color var(--sl-time-fast) var(--sl-ease-out),
-    border-color var(--sl-time-fast) var(--sl-ease-out);
+  transition: opacity var(--sl-time-fast) var(--sl-ease-out);
 }
 
-.sl-mode-but:hover {
-  border-color: var(--sl-primary-inverse);
-  color: var(--sl-primary-inverse);
+.sl-mode-cell:hover {
+  opacity: 1;
 }
 
-.sl-mode-but:focus-visible {
+/* The cell the knob covers hands its icon over to it, and showing both would read as two marks on one position */
+.sl-mode-cell.sl-is-active {
+  opacity: 0;
+}
+
+.sl-mode-cell:focus-visible {
   outline: var(--sl-ring-width) solid var(--sl-ring-bg);
   outline-offset: var(--sl-ring-gap);
+  opacity: 1;
+}
+
+.sl-mode-knob {
+  position: absolute;
+  z-index: var(--sl-z-overlay);
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sl-mode-width);
+  height: var(--sl-mode-height);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-bg);
+  color: var(--sl-text-strong);
+  font-size: var(--sl-size-icon-xs);
+  line-height: 1;
+  box-shadow: var(--sl-shadow-raised);
+  pointer-events: none;
+  transition: transform var(--sl-time-slow) var(--sl-ease-in-out);
+}
+
+/* The knob steps by the position of the active cell, so the rail needs no state attribute written from PHP */
+.sl-mode-rail:has(.sl-mode-cell:nth-child(2).sl-is-active) .sl-mode-knob {
+  transform: translateX(var(--sl-mode-width));
+}
+
+.sl-mode-rail:has(.sl-mode-cell:nth-child(3).sl-is-active) .sl-mode-knob {
+  transform: translateX(calc(var(--sl-mode-width) * 2));
 }
 
 .sl-top-social {
@@ -4171,34 +4219,11 @@ ol.sl-sublist-two li::before {
   color: var(--sl-band-text);
 }
 
-.sl-i-gh:hover {
-  background-color: var(--sl-bg-inverse);
-}
-
-.sl-i-yt:hover,
-.sl-i-recom:hover {
-  background-color: var(--sl-danger);
-}
-
-.sl-i-rss:hover {
-  background-color: var(--sl-warning-subtle);
-}
-
-.sl-i-tw:hover {
-  background-color: var(--sl-info);
-}
-
-.sl-i-vk:hover {
-  background-color: var(--sl-primary-strong);
-}
-
-
-.sl-top-social .sl-circle-action.sl-i-doc-de:hover {
-  background-color: var(--sl-success);
-}
-
-.sl-top-social .sl-circle-action.sl-i-doc-en:hover {
-  background-color: var(--sl-accent);
+/* Social row: the ground a button takes under the cursor rotates through the category palette, the same six tones
+   a category list spends. One rule replaces eight hand-picked colours, and a ninth link needs no CSS to join them */
+.sl-top-social .sl-circle-action:hover,
+.sl-top-social .sl-circle-action:focus-visible {
+  background-color: var(--sl-cat-tone);
 }
 
 /* Header: brand row and toolbar area */

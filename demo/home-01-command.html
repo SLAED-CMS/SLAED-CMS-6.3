@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Вариант 1 · Командная строка · SLAED CMS</title>
+<link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+<link rel="stylesheet" href="assets/demo.css">
+<link rel="stylesheet" href="assets/home.css">
+</head>
+<body>
+  <div class="sl-wrapper sl-admin-shell">
+    <div class="sl-wraptop"></div>
+    <div class="sl-wrapmid">
+      <div class="sl-header sl-admin-header">
+        <div class="sl-admin-brand"><h1><a href="#" title="SLAED CMS"><img src="../templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="SLAED CMS" title="SLAED CMS"></a></h1></div>
+        <div class="sl-admin-toolbar">
+          <div class="sl-toolbar">
+            <div>
+              <ul class="sl-reset">
+                <li><a href="#" title="Главная"><i class="bi bi-house-door"></i> <b>Главная</b></a></li>
+                <li><a href="#" title="Блоки и баннеры"><i class="bi bi-grid-3x3-gap"></i> <b>Блоки и баннеры</b></a></li>
+                <li><a href="#" title="Модули"><i class="bi bi-gpu-card"></i> <b>Модули</b></a></li>
+                <li><a href="#" title="Категории"><i class="bi bi-folder"></i> <b>Категории</b></a></li>
+                <li><a href="#" title="Сайт"><i class="bi bi-globe2"></i> <b>Сайт</b></a></li>
+                <li><a href="#" title="Профиль"><i class="bi bi-person"></i> <b>Профиль</b></a></li>
+                <li><a href="#" title="Выход"><i class="bi bi-box-arrow-right"></i> <b>Выход</b></a></li>
+              </ul>
+              <span class="sl-language sl-admin-language">
+                <a href="#" title="Немецкий" class="sl-admin-language-link"><img src="../templates/admin/images/flags/de.svg" alt="Немецкий" title="Немецкий" class="sl-menu-list-image"></a>
+                <a href="#" title="Английский" class="sl-admin-language-link"><img src="../templates/admin/images/flags/gb.svg" alt="Английский" title="Английский" class="sl-menu-list-image"></a>
+                <a href="#" title="Русский" class="sl-admin-language-link"><img src="../templates/admin/images/flags/ru.svg" alt="Русский" title="Русский" class="sl-menu-list-image"></a>
+              </span>
+              <form class="sl-mode" data-sl-pick="mode" data-sl-now="auto" action="#" method="post">
+                <input type="hidden" name="op" value="mode">
+                <input type="hidden" name="token" value="demo">
+                <input type="hidden" name="mode" value="light" data-sl-step>
+                <button type="submit" class="sl-mode-but" data-sl-title-next title="Светлая" aria-label="Светлая"><i class="bi bi-circle-half" data-sl-icon aria-hidden="true"></i></button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sl-admin-main sl-home-full">
+<main class="sl-admin-content"><div class="sl-admin-content-inner">
+<ul class="sl-tabs-nav sl-lab-nav"><li class="sl-tabs-item"><a class="sl-tabs-link" href="home-index.html">Обзор</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="home-01-command.html" aria-current="page">1 · Строка</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="home-02-sections.html">2 · Разделы</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="home-03-list.html">3 · Список</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="home-04-bento.html">4 · Сводка</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="home-05-rail.html">5 · Рельс</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="home-06-pinned.html">6 · Своё</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="home-07-canvas.html">7 · Полотно</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="home-08-tiles.html">8 · Плитка</a></li></ul>
+        <div class="sl-lab-head">
+          <h1>Командная строка</h1>
+          <span class="sl-chip sl-lab-now">453px под модули вместо 1 064px</span>
+        </div>
+        <p class="sl-lab-lead">Панель перестаёт быть витриной модулей и становится строкой ввода. На пустой странице ничего, кроме поля, пяти действий и шести последних мест, где админ работал. Всё остальное — те же пятьдесят модулей — живёт за набором двух-трёх букв: <b>Ctrl + K</b> открывает ту же строку в штатном окне системы с любой страницы панели, стрелки водят по списку, Enter открывает.</p>
+        <div class="sl-home-note"><span><b>Что уходит:</b> обе синие плашки, 47 карточек, 47 светодиодов, 47 подписей «ключ · аудитория», 249 кнопок вееров в DOM и весь правый столбец.</span><span><b>Чем платим:</b> модуль, названия которого не помнишь, не найти взглядом — нужен вариант 2 или 7 рядом. Поиск обязан искать и по ключу, и по синонимам.</span><span><b>Что переиспользовано:</b> канон окна <code>dialog.sl-modal</code>, <code>.sl-chip</code>, токены базы.</span><span><b>Место под модули:</b> 453px против 1 064px, которые они занимают сегодня.</span></div>
+        <div class="sl-cmd" data-sl-cmd>
+          <label class="sl-cmd-box">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input class="sl-cmd-field" type="text" data-sl-cmd-field placeholder="Модуль, раздел или действие…" autocomplete="off" autofocus>
+            <kbd class="sl-kbd">Ctrl + K</kbd>
+          </label>
+          <div class="sl-cmd-quick">
+            <a href="#"><i class="bi bi-plus-lg" aria-hidden="true"></i> Новая новость</a>
+            <a href="#"><i class="bi bi-plus-lg" aria-hidden="true"></i> Новая статья</a>
+            <a href="#"><i class="bi bi-chat-dots" aria-hidden="true"></i> Комментарии на проверке <span class="sl-chip sl-chip-warn">3</span></a>
+            <a href="#"><i class="bi bi-person-plus" aria-hidden="true"></i> Новые пользователи <span class="sl-chip sl-chip-warn">30</span></a>
+            <a href="#"><i class="bi bi-trash" aria-hidden="true"></i> Очистить кэш</a>
+          </div>
+          <div class="sl-cmd-res" data-sl-cmd-res>
+            <p class="sl-home-cap"><span data-sl-cmd-cap>Недавние</span></p>
+          <a class="sl-cmd-row" href="admin.php?name=news" data-sl-name="Новости" data-sl-find="новости news содержание" data-sl-recent><i class="bi bi-newspaper" aria-hidden="true"></i><b>Новости</b><span>Содержание · 2 новых</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=pages" data-sl-name="Статьи" data-sl-find="статьи pages содержание"><i class="bi bi-card-text" aria-hidden="true"></i><b>Статьи</b><span>Содержание</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=content" data-sl-name="Содержание" data-sl-find="содержание content содержание"><i class="bi bi-file-earmark-text" aria-hidden="true"></i><b>Содержание</b><span>Содержание</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=faq" data-sl-name="Вопросы и ответы" data-sl-find="вопросы и ответы faq содержание"><i class="bi bi-question-circle" aria-hidden="true"></i><b>Вопросы и ответы</b><span>Содержание</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=jokes" data-sl-name="Анекдоты" data-sl-find="анекдоты jokes содержание"><i class="bi bi-emoji-laughing" aria-hidden="true"></i><b>Анекдоты</b><span>Содержание</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=links" data-sl-name="Каталог сайтов" data-sl-find="каталог сайтов links содержание"><i class="bi bi-link-45deg" aria-hidden="true"></i><b>Каталог сайтов</b><span>Содержание</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=auto_links" data-sl-name="Обмен ссылками" data-sl-find="обмен ссылками auto_links содержание"><i class="bi bi-link" aria-hidden="true"></i><b>Обмен ссылками</b><span>Содержание</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=files" data-sl-name="Каталог файлов" data-sl-find="каталог файлов files содержание"><i class="bi bi-folder2-open" aria-hidden="true"></i><b>Каталог файлов</b><span>Содержание</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=media" data-sl-name="Медиа каталог" data-sl-find="медиа каталог media содержание"><i class="bi bi-image" aria-hidden="true"></i><b>Медиа каталог</b><span>Содержание</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=rss" data-sl-name="RSS каналы" data-sl-find="rss каналы rss содержание"><i class="bi bi-rss" aria-hidden="true"></i><b>RSS каналы</b><span>Содержание</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=sitemap" data-sl-name="Карта сайта" data-sl-find="карта сайта sitemap содержание"><i class="bi bi-diagram-3" aria-hidden="true"></i><b>Карта сайта</b><span>Содержание</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=search" data-sl-name="Поиск" data-sl-find="поиск search содержание"><i class="bi bi-search" aria-hidden="true"></i><b>Поиск</b><span>Содержание</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=changelog" data-sl-name="Журнал изменений" data-sl-find="журнал изменений changelog содержание"><i class="bi bi-journal-text" aria-hidden="true"></i><b>Журнал изменений</b><span>Содержание</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=account" data-sl-name="Пользователи" data-sl-find="пользователи account люди" data-sl-recent><i class="bi bi-people" aria-hidden="true"></i><b>Пользователи</b><span>Люди · 30 новых</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=users" data-sl-name="Топ пользователи" data-sl-find="топ пользователи users люди"><i class="bi bi-trophy" aria-hidden="true"></i><b>Топ пользователи</b><span>Люди</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=groups" data-sl-name="Группы" data-sl-find="группы groups люди"><i class="bi bi-people-fill" aria-hidden="true"></i><b>Группы</b><span>Люди</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=admins" data-sl-name="Администрация" data-sl-find="администрация admins люди"><i class="bi bi-person-gear" aria-hidden="true"></i><b>Администрация</b><span>Люди</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=clients" data-sl-name="Клиенты" data-sl-find="клиенты clients люди"><i class="bi bi-briefcase" aria-hidden="true"></i><b>Клиенты</b><span>Люди · 10 новых</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=privat" data-sl-name="Личные сообщения" data-sl-find="личные сообщения privat люди"><i class="bi bi-incognito" aria-hidden="true"></i><b>Личные сообщения</b><span>Люди</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=messages" data-sl-name="Сообщения" data-sl-find="сообщения messages люди"><i class="bi bi-envelope" aria-hidden="true"></i><b>Сообщения</b><span>Люди</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=contact" data-sl-name="Обратная связь" data-sl-find="обратная связь contact люди"><i class="bi bi-envelope-open" aria-hidden="true"></i><b>Обратная связь</b><span>Люди</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=recommend" data-sl-name="Рекомендовать" data-sl-find="рекомендовать recommend люди"><i class="bi bi-share" aria-hidden="true"></i><b>Рекомендовать</b><span>Люди</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=whois" data-sl-name="Жалобы" data-sl-find="жалобы whois люди"><i class="bi bi-geo-alt" aria-hidden="true"></i><b>Жалобы</b><span>Люди</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=comments" data-sl-name="Комментарии" data-sl-find="комментарии comments общение" data-sl-recent><i class="bi bi-chat-dots" aria-hidden="true"></i><b>Комментарии</b><span>Общение · 3 новых</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=forum" data-sl-name="Форум" data-sl-find="форум forum общение"><i class="bi bi-chat-square-text" aria-hidden="true"></i><b>Форум</b><span>Общение</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=voting" data-sl-name="Опросы" data-sl-find="опросы voting общение"><i class="bi bi-bar-chart" aria-hidden="true"></i><b>Опросы</b><span>Общение</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=ratings" data-sl-name="Рейтинги" data-sl-find="рейтинги ratings общение"><i class="bi bi-star-half" aria-hidden="true"></i><b>Рейтинги</b><span>Общение</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=newsletter" data-sl-name="Рассылка" data-sl-find="рассылка newsletter общение"><i class="bi bi-send" aria-hidden="true"></i><b>Рассылка</b><span>Общение</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=favorites" data-sl-name="Фавориты" data-sl-find="фавориты favorites общение"><i class="bi bi-star" aria-hidden="true"></i><b>Фавориты</b><span>Общение</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=shop" data-sl-name="Магазин" data-sl-find="магазин shop магазин"><i class="bi bi-cart3" aria-hidden="true"></i><b>Магазин</b><span>Магазин</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=order" data-sl-name="Форма заказа" data-sl-find="форма заказа order магазин"><i class="bi bi-receipt" aria-hidden="true"></i><b>Форма заказа</b><span>Магазин</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=money" data-sl-name="Обмен WebMoney" data-sl-find="обмен webmoney money магазин"><i class="bi bi-currency-exchange" aria-hidden="true"></i><b>Обмен WebMoney</b><span>Магазин</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=template" data-sl-name="Шаблон" data-sl-find="шаблон template оформление"><i class="bi bi-palette" aria-hidden="true"></i><b>Шаблон</b><span>Оформление</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=blocks" data-sl-name="Блоки и баннеры" data-sl-find="блоки и баннеры blocks оформление" data-sl-recent><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i><b>Блоки и баннеры</b><span>Оформление</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=editor" data-sl-name="Редактор" data-sl-find="редактор editor оформление"><i class="bi bi-pencil-square" aria-hidden="true"></i><b>Редактор</b><span>Оформление</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=fields" data-sl-name="Дополнительные поля" data-sl-find="дополнительные поля fields оформление"><i class="bi bi-input-cursor-text" aria-hidden="true"></i><b>Дополнительные поля</b><span>Оформление</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=categories" data-sl-name="Категории" data-sl-find="категории categories оформление"><i class="bi bi-folder" aria-hidden="true"></i><b>Категории</b><span>Оформление</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=replace" data-sl-name="Замена слов" data-sl-find="замена слов replace оформление"><i class="bi bi-arrow-left-right" aria-hidden="true"></i><b>Замена слов</b><span>Оформление</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=lang" data-sl-name="Редактор языков" data-sl-find="редактор языков lang оформление"><i class="bi bi-translate" aria-hidden="true"></i><b>Редактор языков</b><span>Оформление</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=config" data-sl-name="Конфигурации" data-sl-find="конфигурации config система" data-sl-recent><i class="bi bi-gear" aria-hidden="true"></i><b>Конфигурации</b><span>Система</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=modules" data-sl-name="Модули" data-sl-find="модули modules система"><i class="bi bi-puzzle" aria-hidden="true"></i><b>Модули</b><span>Система</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=monitor" data-sl-name="Мониторинг" data-sl-find="мониторинг monitor система" data-sl-recent><i class="bi bi-display" aria-hidden="true"></i><b>Мониторинг</b><span>Система</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=statistic" data-sl-name="Статистика" data-sl-find="статистика statistic система"><i class="bi bi-graph-up" aria-hidden="true"></i><b>Статистика</b><span>Система</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=security" data-sl-name="Безопасность" data-sl-find="безопасность security система"><i class="bi bi-shield-lock" aria-hidden="true"></i><b>Безопасность</b><span>Система</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=database" data-sl-name="База данных" data-sl-find="база данных database система"><i class="bi bi-database" aria-hidden="true"></i><b>База данных</b><span>Система</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=uploads" data-sl-name="Загрузки" data-sl-find="загрузки uploads система"><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i><b>Загрузки</b><span>Система</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=scheduler" data-sl-name="Планировщик" data-sl-find="планировщик scheduler система"><i class="bi bi-clock-history" aria-hidden="true"></i><b>Планировщик</b><span>Система</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=referers" data-sl-name="Переходы" data-sl-find="переходы referers система"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i><b>Переходы</b><span>Система</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=help" data-sl-name="Помощь" data-sl-find="помощь help система"><i class="bi bi-info-circle" aria-hidden="true"></i><b>Помощь</b><span>Система</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=main" data-sl-name="Главный" data-sl-find="главный main система"><i class="bi bi-house-door" aria-hidden="true"></i><b>Главный</b><span>Система</span></a>
+            <p class="sl-cmd-empty" data-sl-cmd-empty hidden>Ничего не нашлось. Попробуйте «шаблон», «почта» или «форум».</p>
+          </div>
+        </div>
+      </div></main>
+      </div>
+      <div class="sl-footer sl-admin-footer">
+        <div class="sl-copyright">Генерация: 0.298 сек. и 17 запросов к базе данных за 0.004 сек.<br>SLAED CMS © 2005-2026 Eduard Laas. Released under MIT License.</div>
+        <span><a href="#" class="sl-thide">SLAED CMS</a><a href="#" class="sl-thide"><i class="bi bi-bug"></i> Панель диагностики</a><a href="#" class="sl-thide">Наверх</a></span>
+      </div>
+    </div>
+    <div class="sl-wrapfoot"></div>
+    <dialog class="sl-modal sl-modal-lg sl-cmd-modal" id="sl-cmd-win" aria-labelledby="sl-cmd-name">
+      <div class="sl-modal-title">
+        <i class="bi bi-terminal" aria-hidden="true"></i>
+        <span class="sl-modal-cap"><strong id="sl-cmd-name">Быстрый переход</strong><span class="sl-modal-sub">Ctrl + K из любого места панели</span></span>
+        <span class="sl-modal-acts"><button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span>
+      </div>
+      <div class="sl-modal-body sl-modal-body-flush">
+        <div class="sl-cmd" data-sl-cmd>
+          <label class="sl-cmd-box">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input class="sl-cmd-field" type="text" data-sl-cmd-field placeholder="Модуль, раздел или действие…" autocomplete="off" data-sl-focus>
+            <kbd class="sl-kbd">Ctrl + K</kbd>
+          </label>
+          <div class="sl-cmd-res" data-sl-cmd-res>
+            <p class="sl-home-cap"><span data-sl-cmd-cap>Недавние</span></p>
+          <a class="sl-cmd-row" href="admin.php?name=news" data-sl-name="Новости" data-sl-find="новости news содержание" data-sl-recent><i class="bi bi-newspaper" aria-hidden="true"></i><b>Новости</b><span>Содержание · 2 новых</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=pages" data-sl-name="Статьи" data-sl-find="статьи pages содержание"><i class="bi bi-card-text" aria-hidden="true"></i><b>Статьи</b><span>Содержание</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=content" data-sl-name="Содержание" data-sl-find="содержание content содержание"><i class="bi bi-file-earmark-text" aria-hidden="true"></i><b>Содержание</b><span>Содержание</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=faq" data-sl-name="Вопросы и ответы" data-sl-find="вопросы и ответы faq содержание"><i class="bi bi-question-circle" aria-hidden="true"></i><b>Вопросы и ответы</b><span>Содержание</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=jokes" data-sl-name="Анекдоты" data-sl-find="анекдоты jokes содержание"><i class="bi bi-emoji-laughing" aria-hidden="true"></i><b>Анекдоты</b><span>Содержание</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=links" data-sl-name="Каталог сайтов" data-sl-find="каталог сайтов links содержание"><i class="bi bi-link-45deg" aria-hidden="true"></i><b>Каталог сайтов</b><span>Содержание</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=auto_links" data-sl-name="Обмен ссылками" data-sl-find="обмен ссылками auto_links содержание"><i class="bi bi-link" aria-hidden="true"></i><b>Обмен ссылками</b><span>Содержание</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=files" data-sl-name="Каталог файлов" data-sl-find="каталог файлов files содержание"><i class="bi bi-folder2-open" aria-hidden="true"></i><b>Каталог файлов</b><span>Содержание</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=media" data-sl-name="Медиа каталог" data-sl-find="медиа каталог media содержание"><i class="bi bi-image" aria-hidden="true"></i><b>Медиа каталог</b><span>Содержание</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=rss" data-sl-name="RSS каналы" data-sl-find="rss каналы rss содержание"><i class="bi bi-rss" aria-hidden="true"></i><b>RSS каналы</b><span>Содержание</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=sitemap" data-sl-name="Карта сайта" data-sl-find="карта сайта sitemap содержание"><i class="bi bi-diagram-3" aria-hidden="true"></i><b>Карта сайта</b><span>Содержание</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=search" data-sl-name="Поиск" data-sl-find="поиск search содержание"><i class="bi bi-search" aria-hidden="true"></i><b>Поиск</b><span>Содержание</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=changelog" data-sl-name="Журнал изменений" data-sl-find="журнал изменений changelog содержание"><i class="bi bi-journal-text" aria-hidden="true"></i><b>Журнал изменений</b><span>Содержание</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=account" data-sl-name="Пользователи" data-sl-find="пользователи account люди" data-sl-recent><i class="bi bi-people" aria-hidden="true"></i><b>Пользователи</b><span>Люди · 30 новых</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=users" data-sl-name="Топ пользователи" data-sl-find="топ пользователи users люди"><i class="bi bi-trophy" aria-hidden="true"></i><b>Топ пользователи</b><span>Люди</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=groups" data-sl-name="Группы" data-sl-find="группы groups люди"><i class="bi bi-people-fill" aria-hidden="true"></i><b>Группы</b><span>Люди</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=admins" data-sl-name="Администрация" data-sl-find="администрация admins люди"><i class="bi bi-person-gear" aria-hidden="true"></i><b>Администрация</b><span>Люди</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=clients" data-sl-name="Клиенты" data-sl-find="клиенты clients люди"><i class="bi bi-briefcase" aria-hidden="true"></i><b>Клиенты</b><span>Люди · 10 новых</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=privat" data-sl-name="Личные сообщения" data-sl-find="личные сообщения privat люди"><i class="bi bi-incognito" aria-hidden="true"></i><b>Личные сообщения</b><span>Люди</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=messages" data-sl-name="Сообщения" data-sl-find="сообщения messages люди"><i class="bi bi-envelope" aria-hidden="true"></i><b>Сообщения</b><span>Люди</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=contact" data-sl-name="Обратная связь" data-sl-find="обратная связь contact люди"><i class="bi bi-envelope-open" aria-hidden="true"></i><b>Обратная связь</b><span>Люди</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=recommend" data-sl-name="Рекомендовать" data-sl-find="рекомендовать recommend люди"><i class="bi bi-share" aria-hidden="true"></i><b>Рекомендовать</b><span>Люди</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=whois" data-sl-name="Жалобы" data-sl-find="жалобы whois люди"><i class="bi bi-geo-alt" aria-hidden="true"></i><b>Жалобы</b><span>Люди</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=comments" data-sl-name="Комментарии" data-sl-find="комментарии comments общение" data-sl-recent><i class="bi bi-chat-dots" aria-hidden="true"></i><b>Комментарии</b><span>Общение · 3 новых</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=forum" data-sl-name="Форум" data-sl-find="форум forum общение"><i class="bi bi-chat-square-text" aria-hidden="true"></i><b>Форум</b><span>Общение</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=voting" data-sl-name="Опросы" data-sl-find="опросы voting общение"><i class="bi bi-bar-chart" aria-hidden="true"></i><b>Опросы</b><span>Общение</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=ratings" data-sl-name="Рейтинги" data-sl-find="рейтинги ratings общение"><i class="bi bi-star-half" aria-hidden="true"></i><b>Рейтинги</b><span>Общение</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=newsletter" data-sl-name="Рассылка" data-sl-find="рассылка newsletter общение"><i class="bi bi-send" aria-hidden="true"></i><b>Рассылка</b><span>Общение</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=favorites" data-sl-name="Фавориты" data-sl-find="фавориты favorites общение"><i class="bi bi-star" aria-hidden="true"></i><b>Фавориты</b><span>Общение</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=shop" data-sl-name="Магазин" data-sl-find="магазин shop магазин"><i class="bi bi-cart3" aria-hidden="true"></i><b>Магазин</b><span>Магазин</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=order" data-sl-name="Форма заказа" data-sl-find="форма заказа order магазин"><i class="bi bi-receipt" aria-hidden="true"></i><b>Форма заказа</b><span>Магазин</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=money" data-sl-name="Обмен WebMoney" data-sl-find="обмен webmoney money магазин"><i class="bi bi-currency-exchange" aria-hidden="true"></i><b>Обмен WebMoney</b><span>Магазин</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=template" data-sl-name="Шаблон" data-sl-find="шаблон template оформление"><i class="bi bi-palette" aria-hidden="true"></i><b>Шаблон</b><span>Оформление</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=blocks" data-sl-name="Блоки и баннеры" data-sl-find="блоки и баннеры blocks оформление" data-sl-recent><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i><b>Блоки и баннеры</b><span>Оформление</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=editor" data-sl-name="Редактор" data-sl-find="редактор editor оформление"><i class="bi bi-pencil-square" aria-hidden="true"></i><b>Редактор</b><span>Оформление</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=fields" data-sl-name="Дополнительные поля" data-sl-find="дополнительные поля fields оформление"><i class="bi bi-input-cursor-text" aria-hidden="true"></i><b>Дополнительные поля</b><span>Оформление</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=categories" data-sl-name="Категории" data-sl-find="категории categories оформление"><i class="bi bi-folder" aria-hidden="true"></i><b>Категории</b><span>Оформление</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=replace" data-sl-name="Замена слов" data-sl-find="замена слов replace оформление"><i class="bi bi-arrow-left-right" aria-hidden="true"></i><b>Замена слов</b><span>Оформление</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=lang" data-sl-name="Редактор языков" data-sl-find="редактор языков lang оформление"><i class="bi bi-translate" aria-hidden="true"></i><b>Редактор языков</b><span>Оформление</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=config" data-sl-name="Конфигурации" data-sl-find="конфигурации config система" data-sl-recent><i class="bi bi-gear" aria-hidden="true"></i><b>Конфигурации</b><span>Система</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=modules" data-sl-name="Модули" data-sl-find="модули modules система"><i class="bi bi-puzzle" aria-hidden="true"></i><b>Модули</b><span>Система</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=monitor" data-sl-name="Мониторинг" data-sl-find="мониторинг monitor система" data-sl-recent><i class="bi bi-display" aria-hidden="true"></i><b>Мониторинг</b><span>Система</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=statistic" data-sl-name="Статистика" data-sl-find="статистика statistic система"><i class="bi bi-graph-up" aria-hidden="true"></i><b>Статистика</b><span>Система</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=security" data-sl-name="Безопасность" data-sl-find="безопасность security система"><i class="bi bi-shield-lock" aria-hidden="true"></i><b>Безопасность</b><span>Система</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=database" data-sl-name="База данных" data-sl-find="база данных database система"><i class="bi bi-database" aria-hidden="true"></i><b>База данных</b><span>Система</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=uploads" data-sl-name="Загрузки" data-sl-find="загрузки uploads система"><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i><b>Загрузки</b><span>Система</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=scheduler" data-sl-name="Планировщик" data-sl-find="планировщик scheduler система"><i class="bi bi-clock-history" aria-hidden="true"></i><b>Планировщик</b><span>Система</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=referers" data-sl-name="Переходы" data-sl-find="переходы referers система"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i><b>Переходы</b><span>Система</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=help" data-sl-name="Помощь" data-sl-find="помощь help система"><i class="bi bi-info-circle" aria-hidden="true"></i><b>Помощь</b><span>Система</span></a>
+          <a class="sl-cmd-row" href="admin.php?name=main" data-sl-name="Главный" data-sl-find="главный main система"><i class="bi bi-house-door" aria-hidden="true"></i><b>Главный</b><span>Система</span></a>
+            <p class="sl-cmd-empty" data-sl-cmd-empty hidden>Ничего не нашлось. Попробуйте «шаблон», «почта» или «форум».</p>
+          </div>
+        </div>
+      </div>
+    </dialog>
+  </div>
+<script src="../plugins/system/slaed.js"></script>
+<script src="assets/demo.js"></script>
+<script src="assets/home.js"></script>
+</body>
+</html>

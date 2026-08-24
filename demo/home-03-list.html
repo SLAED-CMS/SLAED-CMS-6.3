@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Вариант 3 · Список · SLAED CMS</title>
+<link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+<link rel="stylesheet" href="assets/demo.css">
+<link rel="stylesheet" href="assets/home.css">
+</head>
+<body>
+  <div class="sl-wrapper sl-admin-shell">
+    <div class="sl-wraptop"></div>
+    <div class="sl-wrapmid">
+      <div class="sl-header sl-admin-header">
+        <div class="sl-admin-brand"><h1><a href="#" title="SLAED CMS"><img src="../templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="SLAED CMS" title="SLAED CMS"></a></h1></div>
+        <div class="sl-admin-toolbar">
+          <div class="sl-toolbar">
+            <div>
+              <ul class="sl-reset">
+                <li><a href="#" title="Главная"><i class="bi bi-house-door"></i> <b>Главная</b></a></li>
+                <li><a href="#" title="Блоки и баннеры"><i class="bi bi-grid-3x3-gap"></i> <b>Блоки и баннеры</b></a></li>
+                <li><a href="#" title="Модули"><i class="bi bi-gpu-card"></i> <b>Модули</b></a></li>
+                <li><a href="#" title="Категории"><i class="bi bi-folder"></i> <b>Категории</b></a></li>
+                <li><a href="#" title="Сайт"><i class="bi bi-globe2"></i> <b>Сайт</b></a></li>
+                <li><a href="#" title="Профиль"><i class="bi bi-person"></i> <b>Профиль</b></a></li>
+                <li><a href="#" title="Выход"><i class="bi bi-box-arrow-right"></i> <b>Выход</b></a></li>
+              </ul>
+              <span class="sl-language sl-admin-language">
+                <a href="#" title="Немецкий" class="sl-admin-language-link"><img src="../templates/admin/images/flags/de.svg" alt="Немецкий" title="Немецкий" class="sl-menu-list-image"></a>
+                <a href="#" title="Английский" class="sl-admin-language-link"><img src="../templates/admin/images/flags/gb.svg" alt="Английский" title="Английский" class="sl-menu-list-image"></a>
+                <a href="#" title="Русский" class="sl-admin-language-link"><img src="../templates/admin/images/flags/ru.svg" alt="Русский" title="Русский" class="sl-menu-list-image"></a>
+              </span>
+              <form class="sl-mode" data-sl-pick="mode" data-sl-now="auto" action="#" method="post">
+                <input type="hidden" name="op" value="mode">
+                <input type="hidden" name="token" value="demo">
+                <input type="hidden" name="mode" value="light" data-sl-step>
+                <button type="submit" class="sl-mode-but" data-sl-title-next title="Светлая" aria-label="Светлая"><i class="bi bi-circle-half" data-sl-icon aria-hidden="true"></i></button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sl-admin-main">
+<aside class="sl-admin-sidebar"><div class="sl-block-sidebar">
+  <h3 title="Свёртывание / Развёртывание" data-sl-toggle-control="sl-block-3" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b><i class="bi bi-stars"></i>Новые</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></h3>
+  <div id="sl-block-3" class="sl-block-sidebar-content" data-sl-toggle="sl-block-3" data-sl-toggle-default="open"><div class="sl-block-sidebar-count-list"><div class="sl-block-sidebar-count-row">
+  <div class="sl-block-sidebar-count-label"><a href="#" title="Пользователи"><i class="bi bi-person-plus"></i> Пользователи</a></div>
+  <div class="sl-block-sidebar-count-value"><span class="sl-chip sl-chip-warn">30</span></div>
+</div><div class="sl-block-sidebar-count-row">
+  <div class="sl-block-sidebar-count-label"><a href="#" title="Новости"><i class="bi bi-newspaper"></i> Новости</a></div>
+  <div class="sl-block-sidebar-count-value"><span class="sl-chip sl-chip-warn">2</span></div>
+</div><div class="sl-block-sidebar-count-row">
+  <div class="sl-block-sidebar-count-label"><a href="#" title="Клиенты"><i class="bi bi-bag-plus"></i> Клиенты</a></div>
+  <div class="sl-block-sidebar-count-value"><span class="sl-chip sl-chip-warn">10</span></div>
+</div><div class="sl-block-sidebar-count-row">
+  <div class="sl-block-sidebar-count-label"><a href="#" title="Партнеры"><i class="bi bi-shop"></i> Партнеры</a></div>
+  <div class="sl-block-sidebar-count-value"><span class="sl-chip sl-chip-warn">1</span></div>
+</div></div><p class="sl-home-rest">И ещё 9 разделов без новых записей</p></div>
+  <div class="sl-block-sidebar-bottom"></div>
+</div><div class="sl-block-sidebar">
+  <h3 title="Свёртывание / Развёртывание" data-sl-toggle-control="sl-block-4" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b><i class="bi bi-hourglass-split"></i>Ждут проверки</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></h3>
+  <div id="sl-block-4" class="sl-block-sidebar-content" data-sl-toggle="sl-block-4" data-sl-toggle-default="open"><div class="sl-block-sidebar-count-list"><div class="sl-block-sidebar-count-row">
+  <div class="sl-block-sidebar-count-label"><a href="#" title="Комментарии"><i class="bi bi-chat-dots"></i> Комментарии</a></div>
+  <div class="sl-block-sidebar-count-value"><span class="sl-chip sl-chip-warn">3</span></div>
+</div></div></div>
+  <div class="sl-block-sidebar-bottom"></div>
+</div><div class="sl-block-sidebar">
+  <h3 title="Свёртывание / Развёртывание" data-sl-toggle-control="sl-block-6" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b><i class="bi bi-pencil-square"></i>Редактор</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></h3>
+  <div id="sl-block-6" class="sl-block-sidebar-content" data-sl-toggle="sl-block-6" data-sl-toggle-default="open"><div class="sl-div-form"><select class="sl-select"><option>TOAST UI Markdown 3</option><option>CKEditor 5</option><option>TinyMCE 8 Community</option><option>Plain Textarea</option></select></div></div>
+  <div class="sl-block-sidebar-bottom"></div>
+</div><div class="sl-block-sidebar">
+  <h3 title="Свёртывание / Развёртывание" data-sl-toggle-control="sl-block-7" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b><i class="bi bi-person-gear"></i>Администрация</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></h3>
+  <div id="sl-block-7" class="sl-block-sidebar-content" data-sl-toggle="sl-block-7" data-sl-toggle-default="open"><div class="sl-admin-block-links"><div class="sl-admin-block-link"><a href="#" title="Панель администратора"><i class="bi bi-house-door"></i> Панель администратора</a></div><div class="sl-admin-block-link"><a href="#" title="Выход"><i class="bi bi-box-arrow-right"></i> Выход</a></div></div><hr><a href="#" title="DB Backup - Sypex Dumper">DB Backup - Sypex Dumper</a></div>
+  <div class="sl-block-sidebar-bottom"></div>
+</div><div class="sl-block-sidebar">
+  <h3 title="Свёртывание / Развёртывание" data-sl-toggle-control="sl-block-8" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b><i class="bi bi-eye"></i>Наблюдение</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></h3>
+  <div id="sl-block-8" class="sl-block-sidebar-content" data-sl-toggle="sl-block-8" data-sl-toggle-default="open"><div class="sl-session-line sl-session-line--icon"><div class="sl-session-icon"><i class="bi bi-person-gear"></i></div><div>Администрация:</div><div class="sl-session-right">1</div></div><div class="sl-session-line sl-session-line--icon"><div class="sl-session-icon"><i class="bi bi-person"></i></div><div>Пользователей:</div><div class="sl-session-right">0</div></div><div class="sl-session-line sl-session-line--icon"><div class="sl-session-icon"><i class="bi bi-person-slash"></i></div><div>Гостей:</div><div class="sl-session-right">0</div></div></div>
+  <div class="sl-block-sidebar-bottom"></div>
+</div></aside><main class="sl-admin-content"><div class="sl-admin-content-inner">
+<ul class="sl-tabs-nav sl-lab-nav"><li class="sl-tabs-item"><a class="sl-tabs-link" href="home-index.html">Обзор</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="home-01-command.html">1 · Строка</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="home-02-sections.html">2 · Разделы</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="home-03-list.html" aria-current="page">3 · Список</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="home-04-bento.html">4 · Сводка</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="home-05-rail.html">5 · Рельс</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="home-06-pinned.html">6 · Своё</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="home-07-canvas.html">7 · Полотно</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="home-08-tiles.html">8 · Плитка</a></li></ul>
+        <div class="sl-lab-head">
+          <h1>Список</h1>
+          <span class="sl-chip sl-lab-now">1 746px, зато сортировка и фильтр</span>
+        </div>
+        <p class="sl-lab-lead">Ровно то же самое, что сегодня, только таблицей: одна строка на модуль, сортировка по любому столбцу штатным <code>tablesort</code>, фильтр по имени и раздел выпадающим списком. По высоте список сетке проигрывает — 1 746px против 1 064px, — и выигрывает всем остальным: фильтр отсекает лишнее за два символа, любой из пяти столбцов сортирует, а вееры действий проявляются на строке под курсором, а не висят в разметке все сразу.</p>
+        <div class="sl-home-note"><span><b>Что уходит:</b> карточки, светодиоды, плашки, четырёхцветная ротация. Метаданные не исчезли — они переехали в столбцы, где повторяющееся значение читается как столбец, а не как шум.</span><span><b>Чем платим:</b> самый «служебный» вид из восьми и единственный, который выше сегодняшнего. Для новичка холоднее плитки.</span><span><b>Что переиспользовано:</b> <code>.sl-table-shell</code>, <code>.sl-table-list-sort</code>, <code>data-sl-table-sort</code>, <code>.sl-but-mini</code>, <code>.sl-chip</code>.</span><span><b>Место под модули:</b> 1746px против 1 064px, которые они занимают сегодня.</span></div>
+        <div data-sl-lst>
+          <div class="sl-lst-bar">
+            <input type="search" data-sl-lst-field placeholder="Фильтр по названию или ключу…" aria-label="Фильтр">
+            <select data-sl-lst-sec aria-label="Раздел">
+              <option value="">Все разделы</option>
+              <option value="content">Содержание</option>
+              <option value="people">Люди</option>
+              <option value="talk">Общение</option>
+              <option value="shop">Магазин</option>
+              <option value="look">Оформление</option>
+              <option value="sys">Система</option>
+            </select>
+            <output data-sl-lst-count>50 из 50</output>
+          </div>
+          <div class="sl-box sl-table-shell">
+            <table class="sl-table-list-sort" data-sl-table-sort>
+              <thead><tr><th>Модуль</th><th>Ключ</th><th>Раздел</th><th>Доступ</th><th data-sort-method="number">Новых</th><th class="sl-right" data-sort-method="none">Опции</th></tr></thead>
+              <tbody>
+                <tr data-sl-sec="content" data-sl-find="новости news содержание">
+                  <td><span class="sl-lst-name"><i class="bi bi-newspaper" aria-hidden="true"></i><a href="admin.php?name=news">Новости</a></span></td>
+                  <td class="sl-lst-key">news</td>
+                  <td>Содержание</td>
+                  <td>Все посетители</td>
+                  <td><span class="sl-chip sl-chip-warn">2</span></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="content" data-sl-find="статьи pages содержание">
+                  <td><span class="sl-lst-name"><i class="bi bi-card-text" aria-hidden="true"></i><a href="admin.php?name=pages">Статьи</a></span></td>
+                  <td class="sl-lst-key">pages</td>
+                  <td>Содержание</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="content" data-sl-find="содержание content содержание">
+                  <td><span class="sl-lst-name"><i class="bi bi-file-earmark-text" aria-hidden="true"></i><a href="admin.php?name=content">Содержание</a></span></td>
+                  <td class="sl-lst-key">content</td>
+                  <td>Содержание</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="content" data-sl-find="вопросы и ответы faq содержание">
+                  <td><span class="sl-lst-name"><i class="bi bi-question-circle" aria-hidden="true"></i><a href="admin.php?name=faq">Вопросы и ответы</a></span></td>
+                  <td class="sl-lst-key">faq</td>
+                  <td>Содержание</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="content" data-sl-find="анекдоты jokes содержание">
+                  <td><span class="sl-lst-name"><i class="bi bi-emoji-laughing" aria-hidden="true"></i><a href="admin.php?name=jokes">Анекдоты</a><i class="sl-home-dot" title="Деактивирован"></i></span></td>
+                  <td class="sl-lst-key">jokes</td>
+                  <td>Содержание</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Активировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="content" data-sl-find="каталог сайтов links содержание">
+                  <td><span class="sl-lst-name"><i class="bi bi-link-45deg" aria-hidden="true"></i><a href="admin.php?name=links">Каталог сайтов</a></span></td>
+                  <td class="sl-lst-key">links</td>
+                  <td>Содержание</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="content" data-sl-find="обмен ссылками auto_links содержание">
+                  <td><span class="sl-lst-name"><i class="bi bi-link" aria-hidden="true"></i><a href="admin.php?name=auto_links">Обмен ссылками</a></span></td>
+                  <td class="sl-lst-key">auto_links</td>
+                  <td>Содержание</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="content" data-sl-find="каталог файлов files содержание">
+                  <td><span class="sl-lst-name"><i class="bi bi-folder2-open" aria-hidden="true"></i><a href="admin.php?name=files">Каталог файлов</a></span></td>
+                  <td class="sl-lst-key">files</td>
+                  <td>Содержание</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="content" data-sl-find="медиа каталог media содержание">
+                  <td><span class="sl-lst-name"><i class="bi bi-image" aria-hidden="true"></i><a href="admin.php?name=media">Медиа каталог</a></span></td>
+                  <td class="sl-lst-key">media</td>
+                  <td>Содержание</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="content" data-sl-find="rss каналы rss содержание">
+                  <td><span class="sl-lst-name"><i class="bi bi-rss" aria-hidden="true"></i><a href="admin.php?name=rss">RSS каналы</a></span></td>
+                  <td class="sl-lst-key">rss</td>
+                  <td>Содержание</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="content" data-sl-find="карта сайта sitemap содержание">
+                  <td><span class="sl-lst-name"><i class="bi bi-diagram-3" aria-hidden="true"></i><a href="admin.php?name=sitemap">Карта сайта</a></span></td>
+                  <td class="sl-lst-key">sitemap</td>
+                  <td>Содержание</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="content" data-sl-find="поиск search содержание">
+                  <td><span class="sl-lst-name"><i class="bi bi-search" aria-hidden="true"></i><a href="admin.php?name=search">Поиск</a></span></td>
+                  <td class="sl-lst-key">search</td>
+                  <td>Содержание</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="content" data-sl-find="журнал изменений changelog содержание">
+                  <td><span class="sl-lst-name"><i class="bi bi-journal-text" aria-hidden="true"></i><a href="admin.php?name=changelog">Журнал изменений</a></span></td>
+                  <td class="sl-lst-key">changelog</td>
+                  <td>Содержание</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="people" data-sl-find="пользователи account люди">
+                  <td><span class="sl-lst-name"><i class="bi bi-people" aria-hidden="true"></i><a href="admin.php?name=account">Пользователи</a></span></td>
+                  <td class="sl-lst-key">account</td>
+                  <td>Люди</td>
+                  <td>Все посетители</td>
+                  <td><span class="sl-chip sl-chip-warn">30</span></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="people" data-sl-find="топ пользователи users люди">
+                  <td><span class="sl-lst-name"><i class="bi bi-trophy" aria-hidden="true"></i><a href="admin.php?name=users">Топ пользователи</a></span></td>
+                  <td class="sl-lst-key">users</td>
+                  <td>Люди</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="people" data-sl-find="группы groups люди">
+                  <td><span class="sl-lst-name"><i class="bi bi-people-fill" aria-hidden="true"></i><a href="admin.php?name=groups">Группы</a></span></td>
+                  <td class="sl-lst-key">groups</td>
+                  <td>Люди</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="people" data-sl-find="администрация admins люди">
+                  <td><span class="sl-lst-name"><i class="bi bi-person-gear" aria-hidden="true"></i><a href="admin.php?name=admins">Администрация</a></span></td>
+                  <td class="sl-lst-key">admins</td>
+                  <td>Люди</td>
+                  <td>Только администраторы</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="people" data-sl-find="клиенты clients люди">
+                  <td><span class="sl-lst-name"><i class="bi bi-briefcase" aria-hidden="true"></i><a href="admin.php?name=clients">Клиенты</a></span></td>
+                  <td class="sl-lst-key">clients</td>
+                  <td>Люди</td>
+                  <td>Только пользователи</td>
+                  <td><span class="sl-chip sl-chip-warn">10</span></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="people" data-sl-find="личные сообщения privat люди">
+                  <td><span class="sl-lst-name"><i class="bi bi-incognito" aria-hidden="true"></i><a href="admin.php?name=privat">Личные сообщения</a></span></td>
+                  <td class="sl-lst-key">privat</td>
+                  <td>Люди</td>
+                  <td>Только пользователи</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="people" data-sl-find="сообщения messages люди">
+                  <td><span class="sl-lst-name"><i class="bi bi-envelope" aria-hidden="true"></i><a href="admin.php?name=messages">Сообщения</a></span></td>
+                  <td class="sl-lst-key">messages</td>
+                  <td>Люди</td>
+                  <td>Только пользователи</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="people" data-sl-find="обратная связь contact люди">
+                  <td><span class="sl-lst-name"><i class="bi bi-envelope-open" aria-hidden="true"></i><a href="admin.php?name=contact">Обратная связь</a></span></td>
+                  <td class="sl-lst-key">contact</td>
+                  <td>Люди</td>
+                  <td>Только пользователи</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="people" data-sl-find="рекомендовать recommend люди">
+                  <td><span class="sl-lst-name"><i class="bi bi-share" aria-hidden="true"></i><a href="admin.php?name=recommend">Рекомендовать</a></span></td>
+                  <td class="sl-lst-key">recommend</td>
+                  <td>Люди</td>
+                  <td>Только пользователи</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="people" data-sl-find="жалобы whois люди">
+                  <td><span class="sl-lst-name"><i class="bi bi-geo-alt" aria-hidden="true"></i><a href="admin.php?name=whois">Жалобы</a></span></td>
+                  <td class="sl-lst-key">whois</td>
+                  <td>Люди</td>
+                  <td>Только пользователи</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="talk" data-sl-find="комментарии comments общение">
+                  <td><span class="sl-lst-name"><i class="bi bi-chat-dots" aria-hidden="true"></i><a href="admin.php?name=comments">Комментарии</a></span></td>
+                  <td class="sl-lst-key">comments</td>
+                  <td>Общение</td>
+                  <td>Все посетители</td>
+                  <td><span class="sl-chip sl-chip-warn">3</span></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="talk" data-sl-find="форум forum общение">
+                  <td><span class="sl-lst-name"><i class="bi bi-chat-square-text" aria-hidden="true"></i><a href="admin.php?name=forum">Форум</a></span></td>
+                  <td class="sl-lst-key">forum</td>
+                  <td>Общение</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="talk" data-sl-find="опросы voting общение">
+                  <td><span class="sl-lst-name"><i class="bi bi-bar-chart" aria-hidden="true"></i><a href="admin.php?name=voting">Опросы</a></span></td>
+                  <td class="sl-lst-key">voting</td>
+                  <td>Общение</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="talk" data-sl-find="рейтинги ratings общение">
+                  <td><span class="sl-lst-name"><i class="bi bi-star-half" aria-hidden="true"></i><a href="admin.php?name=ratings">Рейтинги</a></span></td>
+                  <td class="sl-lst-key">ratings</td>
+                  <td>Общение</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="talk" data-sl-find="рассылка newsletter общение">
+                  <td><span class="sl-lst-name"><i class="bi bi-send" aria-hidden="true"></i><a href="admin.php?name=newsletter">Рассылка</a></span></td>
+                  <td class="sl-lst-key">newsletter</td>
+                  <td>Общение</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="talk" data-sl-find="фавориты favorites общение">
+                  <td><span class="sl-lst-name"><i class="bi bi-star" aria-hidden="true"></i><a href="admin.php?name=favorites">Фавориты</a></span></td>
+                  <td class="sl-lst-key">favorites</td>
+                  <td>Общение</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="shop" data-sl-find="магазин shop магазин">
+                  <td><span class="sl-lst-name"><i class="bi bi-cart3" aria-hidden="true"></i><a href="admin.php?name=shop">Магазин</a></span></td>
+                  <td class="sl-lst-key">shop</td>
+                  <td>Магазин</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="shop" data-sl-find="форма заказа order магазин">
+                  <td><span class="sl-lst-name"><i class="bi bi-receipt" aria-hidden="true"></i><a href="admin.php?name=order">Форма заказа</a></span></td>
+                  <td class="sl-lst-key">order</td>
+                  <td>Магазин</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="shop" data-sl-find="обмен webmoney money магазин">
+                  <td><span class="sl-lst-name"><i class="bi bi-currency-exchange" aria-hidden="true"></i><a href="admin.php?name=money">Обмен WebMoney</a><i class="sl-home-dot" title="Деактивирован"></i></span></td>
+                  <td class="sl-lst-key">money</td>
+                  <td>Магазин</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Активировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="look" data-sl-find="шаблон template оформление">
+                  <td><span class="sl-lst-name"><i class="bi bi-palette" aria-hidden="true"></i><a href="admin.php?name=template">Шаблон</a></span></td>
+                  <td class="sl-lst-key">template</td>
+                  <td>Оформление</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="look" data-sl-find="блоки и баннеры blocks оформление">
+                  <td><span class="sl-lst-name"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i><a href="admin.php?name=blocks">Блоки и баннеры</a></span></td>
+                  <td class="sl-lst-key">blocks</td>
+                  <td>Оформление</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="look" data-sl-find="редактор editor оформление">
+                  <td><span class="sl-lst-name"><i class="bi bi-pencil-square" aria-hidden="true"></i><a href="admin.php?name=editor">Редактор</a></span></td>
+                  <td class="sl-lst-key">editor</td>
+                  <td>Оформление</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="look" data-sl-find="дополнительные поля fields оформление">
+                  <td><span class="sl-lst-name"><i class="bi bi-input-cursor-text" aria-hidden="true"></i><a href="admin.php?name=fields">Дополнительные поля</a></span></td>
+                  <td class="sl-lst-key">fields</td>
+                  <td>Оформление</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="look" data-sl-find="категории categories оформление">
+                  <td><span class="sl-lst-name"><i class="bi bi-folder" aria-hidden="true"></i><a href="admin.php?name=categories">Категории</a></span></td>
+                  <td class="sl-lst-key">categories</td>
+                  <td>Оформление</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="look" data-sl-find="замена слов replace оформление">
+                  <td><span class="sl-lst-name"><i class="bi bi-arrow-left-right" aria-hidden="true"></i><a href="admin.php?name=replace">Замена слов</a></span></td>
+                  <td class="sl-lst-key">replace</td>
+                  <td>Оформление</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="look" data-sl-find="редактор языков lang оформление">
+                  <td><span class="sl-lst-name"><i class="bi bi-translate" aria-hidden="true"></i><a href="admin.php?name=lang">Редактор языков</a></span></td>
+                  <td class="sl-lst-key">lang</td>
+                  <td>Оформление</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="sys" data-sl-find="конфигурации config система">
+                  <td><span class="sl-lst-name"><i class="bi bi-gear" aria-hidden="true"></i><a href="admin.php?name=config">Конфигурации</a></span></td>
+                  <td class="sl-lst-key">config</td>
+                  <td>Система</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="sys" data-sl-find="модули modules система">
+                  <td><span class="sl-lst-name"><i class="bi bi-puzzle" aria-hidden="true"></i><a href="admin.php?name=modules">Модули</a></span></td>
+                  <td class="sl-lst-key">modules</td>
+                  <td>Система</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="sys" data-sl-find="мониторинг monitor система">
+                  <td><span class="sl-lst-name"><i class="bi bi-display" aria-hidden="true"></i><a href="admin.php?name=monitor">Мониторинг</a></span></td>
+                  <td class="sl-lst-key">monitor</td>
+                  <td>Система</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="sys" data-sl-find="статистика statistic система">
+                  <td><span class="sl-lst-name"><i class="bi bi-graph-up" aria-hidden="true"></i><a href="admin.php?name=statistic">Статистика</a></span></td>
+                  <td class="sl-lst-key">statistic</td>
+                  <td>Система</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="sys" data-sl-find="безопасность security система">
+                  <td><span class="sl-lst-name"><i class="bi bi-shield-lock" aria-hidden="true"></i><a href="admin.php?name=security">Безопасность</a></span></td>
+                  <td class="sl-lst-key">security</td>
+                  <td>Система</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="sys" data-sl-find="база данных database система">
+                  <td><span class="sl-lst-name"><i class="bi bi-database" aria-hidden="true"></i><a href="admin.php?name=database">База данных</a></span></td>
+                  <td class="sl-lst-key">database</td>
+                  <td>Система</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="sys" data-sl-find="загрузки uploads система">
+                  <td><span class="sl-lst-name"><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i><a href="admin.php?name=uploads">Загрузки</a></span></td>
+                  <td class="sl-lst-key">uploads</td>
+                  <td>Система</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="sys" data-sl-find="планировщик scheduler система">
+                  <td><span class="sl-lst-name"><i class="bi bi-clock-history" aria-hidden="true"></i><a href="admin.php?name=scheduler">Планировщик</a></span></td>
+                  <td class="sl-lst-key">scheduler</td>
+                  <td>Система</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="sys" data-sl-find="переходы referers система">
+                  <td><span class="sl-lst-name"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i><a href="admin.php?name=referers">Переходы</a></span></td>
+                  <td class="sl-lst-key">referers</td>
+                  <td>Система</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="sys" data-sl-find="помощь help система">
+                  <td><span class="sl-lst-name"><i class="bi bi-info-circle" aria-hidden="true"></i><a href="admin.php?name=help">Помощь</a></span></td>
+                  <td class="sl-lst-key">help</td>
+                  <td>Система</td>
+                  <td>Только пользователи</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+                <tr data-sl-sec="sys" data-sl-find="главный main система">
+                  <td><span class="sl-lst-name"><i class="bi bi-house-door" aria-hidden="true"></i><a href="admin.php?name=main">Главный</a></span></td>
+                  <td class="sl-lst-key">main</td>
+                  <td>Система</td>
+                  <td>Все посетители</td>
+                  <td></td>
+                  <td><span class="sl-lst-acts"><a class="sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil-square"></i></a><a class="sl-but-mini" href="#" title="Справка"><i class="bi bi-info-circle"></i></a><a class="sl-but-mini" href="#" title="Деактивировать"><i class="bi bi-power"></i></a></span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div></main>
+      </div>
+      <div class="sl-footer sl-admin-footer">
+        <div class="sl-copyright">Генерация: 0.298 сек. и 17 запросов к базе данных за 0.004 сек.<br>SLAED CMS © 2005-2026 Eduard Laas. Released under MIT License.</div>
+        <span><a href="#" class="sl-thide">SLAED CMS</a><a href="#" class="sl-thide"><i class="bi bi-bug"></i> Панель диагностики</a><a href="#" class="sl-thide">Наверх</a></span>
+      </div>
+    </div>
+    <div class="sl-wrapfoot"></div>
+
+  </div>
+<script src="../plugins/system/slaed.js"></script>
+<script src="../plugins/tablesort/tablesort.min.js"></script>
+<script src="assets/demo.js"></script>
+<script src="assets/home.js"></script>
+</body>
+</html>

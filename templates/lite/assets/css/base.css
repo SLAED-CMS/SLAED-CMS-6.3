@@ -404,8 +404,9 @@
   --sl-madein-width: 54px;
   --sl-menu-width: 150px;
   --sl-meter-height: 8px;
-  --sl-mode-width: var(--sl-size-chip);
-  --sl-mode-height: var(--sl-size-chip);
+  --sl-mode-width: var(--sl-size-control);
+  --sl-mode-height: var(--sl-size-control);
+  --sl-mode-bg: linear-gradient(to right, color-mix(in srgb, var(--sl-primary) 35%, var(--sl-surface-sunken)), var(--sl-surface-sunken));
   --sl-modal-border: 3px;
   --sl-modal-btn-mix: 86%;
   --sl-modal-act-bg: color-mix(in srgb, currentColor 13%, transparent);

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Панель · правая часть шапки · девять вариантов · SLAED CMS</title>
+<link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+<link rel="stylesheet" href="assets/demo.css">
+<style>
+    /* The overview turns every card into a link, so the tile needs the block layout a card does not carry by itself */
+    .sl-lab-tile {
+      display: block;
+      color: var(--sl-text);
+      text-decoration: none;
+    }
+
+    .sl-lab-tile:hover {
+      border-color: var(--sl-primary);
+    }
+
+    .sl-lab-tile h2 {
+      margin-top: var(--sl-space-3);
+    }
+</style>
+</head>
+<body>
+  <div class="sl-wrapper sl-admin-shell">
+    <div class="sl-wraptop"></div>
+    <div class="sl-wrapmid">
+      <div class="sl-header sl-admin-header">
+        <div class="sl-admin-brand"><h1><a href="#" title="SLAED CMS"><img src="../templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="SLAED CMS" title="SLAED CMS"></a></h1></div>
+        <div class="sl-admin-toolbar">
+          <div class="sl-toolbar">
+            <div>
+            <ul class="sl-reset">
+              <li><a href="#" title="Главная"><i class="bi bi-house-door"></i> <b>Главная</b></a></li>
+              <li><a href="#" title="Блоки и баннеры"><i class="bi bi-grid-3x3-gap"></i> <b>Блоки и баннеры</b></a></li>
+              <li><a href="#" title="Модули"><i class="bi bi-gpu-card"></i> <b>Модули</b></a></li>
+              <li><a href="#" title="Категории"><i class="bi bi-folder"></i> <b>Категории</b></a></li>
+              <li><a href="#" title="Сайт"><i class="bi bi-globe2"></i> <b>Сайт</b></a></li>
+              <li><a href="#" title="Профиль"><i class="bi bi-person"></i> <b>Профиль</b></a></li>
+              <li><a href="#" title="Выход"><i class="bi bi-box-arrow-right"></i> <b>Выход</b></a></li>
+            </ul>
+              <span class="sl-language sl-admin-language">
+                <a href="#" title="Немецкий" class=" sl-admin-language-link "><img src="../templates/admin/images/flags/de.svg" alt="Немецкий" title="Немецкий" class="sl-menu-list-image"></a>
+                <a href="#" title="Английский" class=" sl-admin-language-link "><img src="../templates/admin/images/flags/gb.svg" alt="Английский" title="Английский" class="sl-menu-list-image"></a>
+                <a href="#" title="Французский" class=" sl-admin-language-link "><img src="../templates/admin/images/flags/fr.svg" alt="Французский" title="Французский" class="sl-menu-list-image"></a>
+                <a href="#" title="Польский" class=" sl-admin-language-link "><img src="../templates/admin/images/flags/pl.svg" alt="Польский" title="Польский" class="sl-menu-list-image"></a>
+                <a href="#" title="Русский" class=" sl-admin-language-link "><img src="../templates/admin/images/flags/ru.svg" alt="Русский" title="Русский" class="sl-menu-list-image"></a>
+                <a href="#" title="Украинский" class=" sl-admin-language-link "><img src="../templates/admin/images/flags/ua.svg" alt="Украинский" title="Украинский" class="sl-menu-list-image"></a>
+              </span>
+              <form class="sl-mode" data-sl-pick="mode" data-sl-now="auto" action="admin.php" method="post">
+                <input type="hidden" name="op" value="mode">
+                <input type="hidden" name="token" value="demo">
+                <input type="hidden" name="mode" value="light" data-sl-step>
+                <button type="submit" class="sl-mode-but" data-sl-title-next title="Светлая" aria-label="Светлая"><i class="bi bi-circle-half" data-sl-icon aria-hidden="true"></i></button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <main class="sl-lab">
+        <ul class="sl-tabs-nav sl-lab-nav"><li class="sl-tabs-item"><a class="sl-tabs-link" href="index.html">Шапка сайта</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="home-index.html">Главная панели</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="admin-index.html" aria-current="page">Обзор</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="admin-01-fan.html">1 · Веер</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="admin-02-rail.html">2 · Рельс</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="admin-03-select.html">3 · Селектор</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="admin-04-menu.html">4 · Меню</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="admin-05-one.html">5 · Одна кнопка</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="admin-06-window.html">6 · Окно</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="admin-07-stack.html">7 · Стек</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="admin-08-group.html">8 · Группа</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="admin-09-segment.html">9 · Сегмент</a></li></ul>
+        <div class="sl-lab-head">
+          <h1>Правая часть шапки панели: девять вариантов</h1>
+          <span class="sl-chip sl-lab-now">Тема: <b data-sl-label="mode">—</b> · Редактор: <b data-sl-label="editor">—</b> · Язык: <b data-sl-label="lang">—</b></span>
+        </div>
+        <p class="sl-lab-lead">В шапке этой страницы стоит то, что работает сегодня: шесть флагов подряд и кнопка режима, которой уже не хватило места — она свалилась на вторую строку, и бар вырос с 40px до 70px. Ниже девять замен: флаги уходят, вместо них встают три компактных выбора — тема, редактор, язык. Каждая замена на своей странице и в настоящей шапке панели; все девять возвращают бар в одну строку — 44–48px против сегодняшних 70px.</p>
+        <div class="sl-lab-grid">
+          <a class="sl-lab-card sl-lab-tile" href="admin-01-fan.html"><span class="sl-lab-num">1</span><h2>Веер</h2><p>Штатный веер панели — тот самый, что стоит в списке администраторов под «Опциями»: круглые чипы <code>.sl-but-mini</code> выезжают влево из белой пилюли с рамкой и тенью. Своего в нём только слот, который держит ширину строки, пока веер растёт над меню. В покое 98px против сегодняшних 261px.</p></a>
+          <a class="sl-lab-card sl-lab-tile" href="admin-02-rail.html"><span class="sl-lab-num">2</span><h2>Рельс</h2><p>Жёлоб с заливкой и белая ручка, несущая иконку текущего значения: тема и редактор открыты целиком, ручка едет по ним. Язык на шести позициях перестаёт быть компактным, поэтому единственный из трёх раскрывает свой жёлоб по клику — предел приёма назван, а не спрятан.</p></a>
+          <a class="sl-lab-card sl-lab-tile" href="admin-03-select.html"><span class="sl-lab-num">3</span><h2>Селектор</h2><p>Три нативных <code>select</code> в штатном оформлении полей админки. Самый скучный вариант и самый надёжный: клавиатура, экранный диктор, поиск по первой букве и длинные списки достаются от браузера даром. Единственный, который не сломается на двадцати языках.</p></a>
+          <a class="sl-lab-card sl-lab-tile" href="admin-04-menu.html"><span class="sl-lab-num">4</span><h2>Меню</h2><p>Три кнопки, каждая раскрывает панель с подписями и галочкой на выбранном. Единственный вариант, где «TOAST UI Markdown 3» читается целиком, а язык назван словом рядом с флагом — иконки на четырёх редакторах угадываются плохо.</p></a>
+          <a class="sl-lab-card sl-lab-tile" href="admin-05-one.html"><span class="sl-lab-num">5</span><h2>Одна кнопка</h2><p>Самое короткое из восьми: в строке остаётся одна кнопка-шестерёнка, а все три выбора живут в панели под ней — тема сегментом, редактор списком, язык флагами. Тулбар теряет 261px правой части и получает взамен 48px — ровно одну кнопку.</p></a>
+          <a class="sl-lab-card sl-lab-tile" href="admin-06-window.html"><span class="sl-lab-num">6</span><h2>Окно</h2><p>Кнопка открывает штатное окно системы: три строки, в каждой нативный список. Дороже панели по кликам, но это единственное место, куда можно без стеснения добавить четвёртую и пятую настройку, когда они появятся — панель в шапке столько не вынесет, а список не растёт в ширину от числа значений.</p></a>
+          <a class="sl-lab-card sl-lab-tile" href="admin-07-stack.html"><span class="sl-lab-num">7</span><h2>Стек</h2><p>Три кнопки, из которых вниз выпадают подписанные пилюли — по одной со своей задержкой. Похоже на выпадающий список, но без панели под ним: каждая строка сама себе кнопка и стоит на тени, а не на подложке.</p></a>
+          <a class="sl-lab-card sl-lab-tile" href="admin-08-group.html"><span class="sl-lab-num">8</span><h2>Группа</h2><p>Три сегмента в одной пилюле с разделителями: тема, редактор, язык читаются как один блок настроек, а не как три случайные кнопки рядом. Каждый сегмент показывает текущее значение и раскрывает своё меню.</p></a>
+          <a class="sl-lab-card sl-lab-tile" href="admin-09-segment.html"><span class="sl-lab-num">9</span><h2>Сегмент</h2><p>Тот же сегмент, что предложен для шапки сайта: утопленный жёлоб и круглый голубой бегунок, который переезжает <em>под</em> иконками, а иконка выбранного становится белой. От рельса отличается тем, что ничего не едет поверх — метка остаётся на месте, двигается только заливка.</p></a>
+        </div>
+      </main>
+    </div>
+    <div class="sl-wrapfoot"></div>
+  </div>
+<script src="../plugins/system/slaed.js"></script>
+<script src="assets/demo.js"></script>
+</body>
+</html>
