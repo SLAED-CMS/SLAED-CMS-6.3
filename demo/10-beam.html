@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>10 · Световой луч — стенд полос SLAED</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* 10 — Light beam. The cheapest of the moving variants: the band is left as it is, and once every seven
+       seconds a single beam crosses it while a thread of brand gradient sits along the lower edge — the same
+       gradient the theme already owns as --sl-grad-line. One transform and one opacity, in both themes. */
+
+    /* Both bands become a stacking context: effects go under the text, never over it */
+    #head-content,
+    #demo-line {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+    }
+
+    #head-content > .sl-wrp,
+    #demo-line > .sl-wrp {
+      position: relative;
+      z-index: 5;
+    }
+
+    /* The dial, and the only thing it touches. --demo-dim darkens the photo and nothing else: it runs in the
+       dark mode alone, because multiplying by white is a no-op, and at 0 the band is exactly what ships today.
+       The effect below never reads the dial, so it lives at every position of it and in both modes. */
+    body[class] #head-content,
+    body[class] #demo-line {
+      background-color: light-dark(#ffffff, color-mix(in srgb, #14293a calc(var(--demo-dim, 0) * 100%), #ffffff));
+      background-blend-mode: multiply;
+    }
+
+    /* The veil the dial fades in: darker where the headline stands, plus a vignette that gives the band edges.
+       Both stops are transparent in light, so no position of the dial puts a filter on the light theme. */
+    #head-content::before,
+    #demo-line::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      opacity: var(--demo-dim, 0);
+      background:
+        linear-gradient(
+          100deg,
+          light-dark(transparent, rgba(8, 16, 26, 0.92)) 0%,
+          light-dark(transparent, rgba(8, 16, 26, 0.55)) 60%,
+          light-dark(transparent, rgba(8, 16, 26, 0.8)) 100%
+        ),
+        radial-gradient(
+          130% 180% at 50% 50%,
+          transparent 35%,
+          light-dark(transparent, rgba(0, 0, 0, 0.5)) 100%
+        );
+    }
+
+    /* The beam */
+    #head-content::after,
+    #demo-line::after {
+      content: "";
+      position: absolute;
+      top: -60%;
+      left: -40%;
+      z-index: 2;
+      width: 26%;
+      height: 220%;
+      pointer-events: none;
+      transform: rotate(18deg);
+      mix-blend-mode: screen;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        light-dark(rgba(124, 196, 238, 0.55), rgba(124, 196, 238, 0.35)) 45%,
+        light-dark(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.3)) 50%,
+        light-dark(rgba(124, 196, 238, 0.55), rgba(124, 196, 238, 0.35)) 55%,
+        transparent 100%
+      );
+      animation: demo-beam 7s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    /* The brand thread along the lower edge. It hangs off the centred wrapper and spans the window from there,
+       which is how a full-bleed line is drawn without taking a layer away from the beam */
+    #head-content .sl-wrp::after,
+    #demo-line .sl-wrp::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      z-index: 3;
+      width: 100vw;
+      height: 2px;
+      pointer-events: none;
+      transform: translateX(-50%);
+      background: var(--sl-grad-line);
+    }
+
+    @keyframes demo-beam {
+      0% {
+        transform: translate3d(0, 0, 0) rotate(18deg);
+        opacity: 0;
+      }
+      8% {
+        opacity: 1;
+      }
+      36% {
+        opacity: 1;
+      }
+      48%,
+      100% {
+        transform: translate3d(560%, 0, 0) rotate(18deg);
+        opacity: 0;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #head-content::after,
+      #demo-line::after {
+        animation: none;
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body class="sl-summer">
+  <noscript><p style="padding:24px">Стенду нужен JavaScript: разметку страницы собирает <code>assets/demo.js</code>.</p></noscript>
+  <script src="assets/demo.js"></script>
+</body>
+</html>

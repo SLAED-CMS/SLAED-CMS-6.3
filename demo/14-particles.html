@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>14 · Сезонные частицы — стенд полос SLAED</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* 14 — Season particles. What flies over the band is what the season sends: snow in winter, pollen in
+       summer, leaves in autumn, sparks at new year. Pure addition — no layer touches the brightness of the photo,
+       so the light theme gets the same band it has today with weather on top of it. Two tiled layers of dots at
+       two speeds, and the season decides their colour, their size and how fast they fall. */
+
+    /* Both bands become a stacking context: effects go under the text, never over it */
+    #head-content,
+    #demo-line {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+    }
+
+    #head-content > .sl-wrp,
+    #demo-line > .sl-wrp {
+      position: relative;
+      z-index: 5;
+    }
+
+    /* The dial, and the only thing it touches. --demo-dim darkens the photo and nothing else: it runs in the
+       dark mode alone, because multiplying by white is a no-op, and at 0 the band is exactly what ships today.
+       The effect below never reads the dial, so it lives at every position of it and in both modes. */
+    body[class] #head-content,
+    body[class] #demo-line {
+      background-color: light-dark(#ffffff, color-mix(in srgb, #14293a calc(var(--demo-dim, 0) * 100%), #ffffff));
+      background-blend-mode: multiply;
+    }
+
+    /* The season, in four values: two tones, the fall time and the drift of the near layer */
+    body {
+      --demo-p1: rgba(255, 255, 255, 0.95);
+      --demo-p2: rgba(214, 236, 255, 0.75);
+      --demo-p-fall: 9s;
+      --demo-p-drift: 14s;
+    }
+
+    body.sl-spring {
+      --demo-p1: rgba(255, 226, 236, 0.9);
+      --demo-p2: rgba(232, 246, 210, 0.8);
+      --demo-p-fall: 11s;
+      --demo-p-drift: 17s;
+    }
+
+    body.sl-summer {
+      --demo-p1: rgba(255, 246, 196, 0.85);
+      --demo-p2: rgba(226, 245, 205, 0.7);
+      --demo-p-fall: 15s;
+      --demo-p-drift: 21s;
+    }
+
+    body.sl-autumn {
+      --demo-p1: rgba(240, 147, 43, 0.85);
+      --demo-p2: rgba(224, 122, 95, 0.7);
+      --demo-p-fall: 10s;
+      --demo-p-drift: 15s;
+    }
+
+    body.sl-newyear {
+      --demo-p1: rgba(255, 255, 255, 0.95);
+      --demo-p2: rgba(179, 112, 207, 0.8);
+      --demo-p-fall: 8s;
+      --demo-p-drift: 13s;
+    }
+
+    /* The near layer: bigger, faster, falling straight down */
+    #head-content::before,
+    #demo-line::before {
+      content: "";
+      position: absolute;
+      inset: -100% 0;
+      z-index: 1;
+      pointer-events: none;
+      background-image:
+        radial-gradient(3px 3px at 40px 20px, var(--demo-p1), transparent),
+        radial-gradient(2.6px 2.6px at 180px 70px, var(--demo-p1), transparent),
+        radial-gradient(2.2px 2.2px at 320px 40px, var(--demo-p2), transparent),
+        radial-gradient(2.8px 2.8px at 260px 110px, var(--demo-p2), transparent),
+        radial-gradient(2.4px 2.4px at 120px 130px, var(--demo-p1), transparent);
+      background-size: 380px 150px;
+      animation: demo-fall var(--demo-p-fall) linear infinite;
+    }
+
+    /* The far layer: smaller, slower, drifting sideways as it goes */
+    #head-content::after,
+    #demo-line::after {
+      content: "";
+      position: absolute;
+      inset: -100% 0;
+      z-index: 2;
+      pointer-events: none;
+      opacity: 0.7;
+      background-image:
+        radial-gradient(1.4px 1.4px at 90px 50px, var(--demo-p2), transparent),
+        radial-gradient(1.2px 1.2px at 230px 15px, var(--demo-p1), transparent),
+        radial-gradient(1.6px 1.6px at 410px 90px, var(--demo-p2), transparent);
+      background-size: 520px 190px;
+      animation: demo-drift-side var(--demo-p-drift) linear infinite;
+    }
+
+    @keyframes demo-fall {
+      from {
+        transform: translate3d(0, -150px, 0);
+      }
+      to {
+        transform: translate3d(0, 0, 0);
+      }
+    }
+
+    @keyframes demo-drift-side {
+      from {
+        transform: translate3d(60px, -190px, 0);
+      }
+      to {
+        transform: translate3d(-60px, 0, 0);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #head-content::before,
+      #demo-line::before,
+      #head-content::after,
+      #demo-line::after {
+        animation: none;
+      }
+    }
+  </style>
+</head>
+<body class="sl-summer">
+  <noscript><p style="padding:24px">Стенду нужен JavaScript: разметку страницы собирает <code>assets/demo.js</code>.</p></noscript>
+  <script src="assets/demo.js"></script>
+</body>
+</html>

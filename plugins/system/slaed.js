@@ -92,6 +92,38 @@
         window.requestAnimationFrame(function () { setFirstFocus(box); });
     }
 
+    // A row of the settings window posts and the page comes back: the browser closes every dialog on a navigation,
+    // so an administrator changing two answers had to open the window again for the second one
+    // The window that was open when the form left is named here and opened again on the next load, once
+    // Only a window carrying an id can come back, and only a form that really navigates leaves a mark:
+    // a form driven by htmx swaps in place, and marking it would open a window on some later ordinary navigation
+    var winmark = 'slaed-window:reopen';
+
+    function setWindowMark(box) {
+        try {
+            window.sessionStorage.setItem(winmark, box && box.id ? box.id : '');
+        } catch (err) {
+        }
+    }
+
+    function setWindowBack() {
+        var id = '';
+        try {
+            id = window.sessionStorage.getItem(winmark) || '';
+            window.sessionStorage.removeItem(winmark);
+        } catch (err) {
+            return;
+        }
+        if (id) setWindowOpen(document.getElementById(id));
+    }
+
+    document.addEventListener('submit', function (event) {
+        var form = event.target;
+        if (!form || !form.closest || form.hasAttribute('hx-post') || form.hasAttribute('hx-get')) return;
+        var box = form.closest('dialog');
+        if (box && box.open) setWindowMark(box);
+    });
+
     // The exit is played out first and only then made real, otherwise the window blinks
     // There is nothing to wait for when there is no animation: with motion switched off the window has to leave at once instead of sitting out a fallback timer
     function setWindowClose(box) {
@@ -1871,6 +1903,7 @@
         setProfileScrolls(document);
         setCommentKeys(document);
         setPrivatCarry(document);
+        setWindowBack();
     }
 
     // Feed lists inside inactive tabs have zero height: re-measure pending ones right after any tab switch

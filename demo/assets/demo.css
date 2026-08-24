@@ -1,0 +1,252 @@
+/* The four properties the pointer variants read. Registering them gives them a type, so a transition can
+   interpolate them instead of snapping, and an unset value is the centre of the band rather than nothing. */
+@property --demo-x {
+  syntax: "<length-percentage>";
+  inherits: true;
+  initial-value: 50%;
+}
+
+@property --demo-y {
+  syntax: "<length-percentage>";
+  inherits: true;
+  initial-value: 50%;
+}
+
+@property --demo-nx {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+@property --demo-ny {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+/* Demo rig: the shell around every band study. Nothing here is theme code -- it is the harness that
+   lets one variant be compared against another, and it never ships. */
+
+.demo-filler {
+  padding: var(--sl-space-9) 0;
+}
+
+.demo-filler p {
+  margin: 0 0 var(--sl-space-6);
+  max-width: 72ch;
+  line-height: var(--sl-line-loose);
+}
+
+.demo-note {
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-surface);
+  padding: var(--sl-space-6);
+  margin: 0 0 var(--sl-space-8);
+}
+
+.demo-note h2 {
+  margin: 0 0 var(--sl-space-3);
+  font-size: var(--sl-font-h2);
+}
+
+.demo-note ul {
+  margin: 0;
+  padding-left: var(--sl-space-7);
+}
+
+.demo-note li {
+  margin: 0 0 var(--sl-space-2);
+}
+
+/* The control rail: fixed, own colours, readable in both modes because it is not part of the theme */
+.demo-panel {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 9999;
+  width: 264px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(17, 24, 39, 0.92);
+  color: #e5e7eb;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  font: 12px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.demo-panel[data-collapsed="1"] > *:not(.demo-panel-head) {
+  display: none;
+}
+
+.demo-panel[data-collapsed="1"] {
+  width: auto;
+}
+
+.demo-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.demo-panel-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: #ffffff;
+}
+
+.demo-panel-toggle {
+  border: 0;
+  background: rgba(255, 255, 255, 0.1);
+  color: #e5e7eb;
+  border-radius: 6px;
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.demo-panel-row {
+  margin-bottom: 10px;
+}
+
+.demo-panel-row > span {
+  display: block;
+  margin-bottom: 4px;
+  color: #9aa4b2;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-size: 10px;
+}
+
+.demo-seg {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.demo-seg button {
+  flex: 1 1 auto;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: #e5e7eb;
+  border-radius: 6px;
+  padding: 5px 8px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.demo-seg button[aria-pressed="true"] {
+  background: #38a9de;
+  border-color: #38a9de;
+  color: #0b1220;
+  font-weight: 600;
+}
+
+.demo-panel input[type="range"] {
+  width: 100%;
+  accent-color: #38a9de;
+}
+
+.demo-panel-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.demo-panel-nav a {
+  color: #7cc4ee;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.demo-panel-nav a:hover {
+  text-decoration: underline;
+}
+
+/* Motion kill switch of the rig, and the platform one it mirrors */
+[data-demo-motion="off"] *,
+[data-demo-motion="off"] *::before,
+[data-demo-motion="off"] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* The gallery */
+.demo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  gap: var(--sl-space-8);
+  padding: var(--sl-space-8) 0 var(--sl-space-11);
+}
+
+.demo-card {
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-3);
+  background: var(--sl-surface);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.demo-card-frame {
+  position: relative;
+  height: 260px;
+  border-bottom: 1px solid var(--sl-border);
+  overflow: hidden;
+  background: var(--sl-bg-subtle);
+}
+
+.demo-card-frame iframe {
+  position: absolute;
+  inset: 0;
+  width: 200%;
+  height: 520px;
+  border: 0;
+  transform: scale(0.5);
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+
+.demo-card-body {
+  padding: var(--sl-space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sl-space-3);
+  flex: 1;
+}
+
+.demo-card-body h2 {
+  margin: 0;
+  font-size: var(--sl-font-h3);
+}
+
+.demo-card-body p {
+  margin: 0;
+  color: var(--sl-text-muted);
+  line-height: var(--sl-line-normal);
+}
+
+.demo-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-2);
+  margin-top: auto;
+  padding-top: var(--sl-space-3);
+}
+
+.demo-tag {
+  font-size: var(--sl-font-micro);
+  text-transform: uppercase;
+  letter-spacing: var(--sl-track-wide);
+  padding: 3px 8px;
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-bg-muted);
+  color: var(--sl-text-muted);
+}

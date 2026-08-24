@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>01 · Дуотон и вуаль — стенд полос SLAED</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* 01 — Duotone and veil. The quiet answer, and the only one with no effect at all: one tone multiplied into
+       the photo and one veil over it, both of them colours, so both turn over with light-dark() and no rule ever
+       names the mode. At 0 on the dial, and in the light theme at any position of it, this page is the tree. */
+
+    /* Both bands become a stacking context: effects go under the text, never over it */
+    #head-content,
+    #demo-line {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+    }
+
+    #head-content > .sl-wrp,
+    #demo-line > .sl-wrp {
+      position: relative;
+      z-index: 5;
+    }
+
+    /* The dial, and the only thing it touches. --demo-dim darkens the photo and nothing else: it runs in the
+       dark mode alone, because multiplying by white is a no-op, and at 0 the band is exactly what ships today.
+       The effect below never reads the dial, so it lives at every position of it and in both modes. */
+    body[class] #head-content,
+    body[class] #demo-line {
+      background-color: light-dark(#ffffff, color-mix(in srgb, #14293a calc(var(--demo-dim, 0) * 100%), #ffffff));
+      background-blend-mode: multiply;
+    }
+
+    /* The veil the dial fades in: darker where the headline stands, plus a vignette that gives the band edges.
+       Both stops are transparent in light, so no position of the dial puts a filter on the light theme. */
+    #head-content::before,
+    #demo-line::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      opacity: var(--demo-dim, 0);
+      background:
+        linear-gradient(
+          100deg,
+          light-dark(transparent, rgba(8, 16, 26, 0.92)) 0%,
+          light-dark(transparent, rgba(8, 16, 26, 0.55)) 60%,
+          light-dark(transparent, rgba(8, 16, 26, 0.8)) 100%
+        ),
+        radial-gradient(
+          130% 180% at 50% 50%,
+          transparent 35%,
+          light-dark(transparent, rgba(0, 0, 0, 0.5)) 100%
+        );
+    }
+  </style>
+</head>
+<body class="sl-summer">
+  <noscript><p style="padding:24px">Стенду нужен JavaScript: разметку страницы собирает <code>assets/demo.js</code>.</p></noscript>
+  <script src="assets/demo.js"></script>
+</body>
+</html>

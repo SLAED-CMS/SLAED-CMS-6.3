@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>11 · Кен Бёрнс и прожектор — стенд полос SLAED</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* 11 — Ken Burns and the spotlight, the two picked variants in one band. The photo pushes in over forty
+       seconds on its own, and the lamp travels with the hand over it: the band is alive before anyone touches it
+       and answers when someone does. In light the shutter is transparent and only the warm lamp is left. */
+
+    /* Both bands become a stacking context: effects go under the text, never over it */
+    #head-content,
+    #demo-line {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+    }
+
+    #head-content > .sl-wrp,
+    #demo-line > .sl-wrp {
+      position: relative;
+      z-index: 5;
+    }
+
+    /* The photo becomes a layer of its own. background-image: inherit takes whatever the season rule put on the
+       band, so the five season rules are never duplicated, and the dial's tone is multiplied into this layer
+       instead of the element beneath it. What moves here is a transform and only a transform -- the compositor's
+       work, not the painter's. Animating background-size or -position is what made the first cut stutter: it
+       repaints the band and resamples a 1920px JPEG on every single frame. */
+    #head-content::before,
+    #demo-line::before {
+      content: "";
+      position: absolute;
+      inset: -16% -6%;
+      z-index: 0;
+      pointer-events: none;
+      background-image: inherit;
+      background-repeat: no-repeat;
+      background-position: 50% 50%;
+      background-size: cover;
+      background-color: light-dark(#ffffff, color-mix(in srgb, #14293a calc(var(--demo-dim, 0) * 100%), #ffffff));
+      background-blend-mode: multiply;
+      will-change: transform;
+    }
+
+    /* The forty-second push of variant 08, on the photo layer */
+    #head-content::before,
+    #demo-line::before {
+      animation: demo-kenburns 40s ease-in-out infinite alternate;
+    }
+
+    @keyframes demo-kenburns {
+      from {
+        transform: scale(1.02) translate3d(-1.6%, 0, 0);
+      }
+      to {
+        transform: scale(1.18) translate3d(1.6%, 0, 0);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #head-content::before,
+      #demo-line::before {
+        animation: none;
+      }
+    }
+
+    /* One disc does both jobs, because two would cost two layers and this one never repaints: a warm core that
+       lightens what is under it and a dark field beyond the hole that hides the rest. Plain alpha compositing
+       lightens at the centre and darkens at the rim, so no blend mode is needed and both themes get the half
+       they should -- in light every dark stop is transparent and only the core survives.
+
+       The layer is far wider than any band on purpose: the pointer translates it, so its dark field has to still
+       reach both ends of the strip when the light sits at the far edge. Chrome tiles what is off screen, so the
+       size costs nothing, and the whole effect is one static gradient plus a transform. */
+    #head-content::after,
+    #demo-line::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 3;
+      width: 300vw;
+      height: 800px;
+      margin: -400px 0 0 -150vw;
+      pointer-events: none;
+      will-change: transform;
+      transform: translate3d(var(--demo-x, 50%), var(--demo-y, 50%), 0);
+      background: radial-gradient(
+        circle at 50% 50%,
+        light-dark(rgba(255, 246, 214, 0.3), rgba(124, 196, 238, 0.26)) 0,
+        transparent 150px,
+        light-dark(transparent, rgba(6, 14, 22, 0.28)) 240px,
+        light-dark(transparent, rgba(6, 14, 22, 0.5)) 340px
+      );
+    }
+  </style>
+</head>
+<body class="sl-summer">
+  <noscript><p style="padding:24px">Стенду нужен JavaScript: разметку страницы собирает <code>assets/demo.js</code>.</p></noscript>
+  <script src="assets/demo.js"></script>
+  <script>demoTrackPointer();</script>
+</body>
+</html>

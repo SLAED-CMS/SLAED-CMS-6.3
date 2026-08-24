@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>08 · Кен Бёрнс — стенд полос SLAED</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* 08 — Ken Burns. Nothing new is invented: the season photo stays and moves — forty seconds of a slow push
+       in and across, so slowly that the eye reads it as the page breathing rather than as an animation. The most
+       conservative of the moving variants, the only one that keeps the photograph as the subject, and with the
+       dial at zero it is the shipped band exactly, only alive. */
+
+    /* Both bands become a stacking context: effects go under the text, never over it */
+    #head-content,
+    #demo-line {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+    }
+
+    #head-content > .sl-wrp,
+    #demo-line > .sl-wrp {
+      position: relative;
+      z-index: 5;
+    }
+
+    /* The photo becomes a layer of its own. background-image: inherit takes whatever the season rule put on the
+       band, so the five season rules are never duplicated, and the dial's tone is multiplied into this layer
+       instead of the element beneath it. What moves here is a transform and only a transform -- the compositor's
+       work, not the painter's. Animating background-size or -position is what made the first cut stutter: it
+       repaints the band and resamples a 1920px JPEG on every single frame. */
+    #head-content::before,
+    #demo-line::before {
+      content: "";
+      position: absolute;
+      inset: -16% -6%;
+      z-index: 0;
+      pointer-events: none;
+      background-image: inherit;
+      background-repeat: no-repeat;
+      background-position: 50% 50%;
+      background-size: cover;
+      background-color: light-dark(#ffffff, color-mix(in srgb, #14293a calc(var(--demo-dim, 0) * 100%), #ffffff));
+      background-blend-mode: multiply;
+      will-change: transform;
+    }
+
+    /* The veil the dial fades in: darker where the headline stands, plus a vignette that gives the band edges.
+       Both stops are transparent in light, so no position of the dial puts a filter on the light theme. */
+    #head-content::after,
+    #demo-line::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      opacity: var(--demo-dim, 0);
+      background:
+        linear-gradient(
+          100deg,
+          light-dark(transparent, rgba(8, 16, 26, 0.92)) 0%,
+          light-dark(transparent, rgba(8, 16, 26, 0.55)) 60%,
+          light-dark(transparent, rgba(8, 16, 26, 0.8)) 100%
+        ),
+        radial-gradient(
+          130% 180% at 50% 50%,
+          transparent 35%,
+          light-dark(transparent, rgba(0, 0, 0, 0.5)) 100%
+        );
+    }
+
+    /* The push: forty seconds of scale and drift on the photo layer, and nothing but a transform moves */
+    #head-content::before,
+    #demo-line::before {
+      animation: demo-kenburns 40s ease-in-out infinite alternate;
+    }
+
+    @keyframes demo-kenburns {
+      from {
+        transform: scale(1.02) translate3d(-1.6%, 0, 0);
+      }
+      to {
+        transform: scale(1.18) translate3d(1.6%, 0, 0);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #head-content::before,
+      #demo-line::before {
+        animation: none;
+      }
+    }
+  </style>
+</head>
+<body class="sl-summer">
+  <noscript><p style="padding:24px">Стенду нужен JavaScript: разметку страницы собирает <code>assets/demo.js</code>.</p></noscript>
+  <script src="assets/demo.js"></script>
+</body>
+</html>

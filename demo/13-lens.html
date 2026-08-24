@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>13 · Цветная линза — стенд полос SLAED</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* 13 — Colour lens. The band is drained of colour and the season comes back only inside the circle under the
+       pointer. It is a mask over a backdrop-filter, so nothing is darkened or lightened — the same picture, one
+       part of it in colour — and the effect is identical in both themes. Off the pointer the lens goes home to
+       the centre and stays there, which is the state a phone and a keyboard see. */
+
+    /* Both bands become a stacking context: effects go under the text, never over it */
+    #head-content,
+    #demo-line {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+    }
+
+    #head-content > .sl-wrp,
+    #demo-line > .sl-wrp {
+      position: relative;
+      z-index: 5;
+    }
+
+    /* The dial, and the only thing it touches. --demo-dim darkens the photo and nothing else: it runs in the
+       dark mode alone, because multiplying by white is a no-op, and at 0 the band is exactly what ships today.
+       The effect below never reads the dial, so it lives at every position of it and in both modes. */
+    body[class] #head-content,
+    body[class] #demo-line {
+      background-color: light-dark(#ffffff, color-mix(in srgb, #14293a calc(var(--demo-dim, 0) * 100%), #ffffff));
+      background-blend-mode: multiply;
+    }
+
+    /* The drain, with the lens cut out of it */
+    #head-content::before,
+    #demo-line::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      backdrop-filter: grayscale(1) contrast(105%);
+      -webkit-backdrop-filter: grayscale(1) contrast(105%);
+      mask-image: radial-gradient(
+        circle 190px at var(--demo-x) var(--demo-y),
+        transparent 40%,
+        #000000 72%
+      );
+      -webkit-mask-image: radial-gradient(
+        circle 190px at var(--demo-x) var(--demo-y),
+        transparent 40%,
+        #000000 72%
+      );
+    }
+
+    /* The rim of the glass: a thin brand ring so the lens reads as an object and not as a bug */
+    #head-content::after,
+    #demo-line::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background: radial-gradient(
+        circle 190px at var(--demo-x) var(--demo-y),
+        transparent 62%,
+        color-mix(in srgb, var(--sl-primary) 45%, transparent) 70%,
+        transparent 76%
+      );
+    }
+
+  </style>
+</head>
+<body class="sl-summer">
+  <noscript><p style="padding:24px">Стенду нужен JavaScript: разметку страницы собирает <code>assets/demo.js</code>.</p></noscript>
+  <script src="assets/demo.js"></script>
+  <script>demoTrackPointer();</script>
+</body>
+</html>

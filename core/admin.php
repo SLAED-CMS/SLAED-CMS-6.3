@@ -213,8 +213,8 @@ function getLanguageList(): array {
 }
 
 # Render one row of the settings window: the caption, the icon and the list of one axis, in the form that posts it to the handler that already owns that axis
-# The three axes differ in the handler they post to, the field they post under, the icon, the caption and where the options come from, so they are one table rather than three functions
-# An axis with nothing to offer returns an empty string and the window simply draws one row fewer: the language axis when the site is not multilingual, any axis whose option list came out empty
+# The three axes differ in the handler, the field name, the icon, the caption and where the options come from, so they are one table rather than three functions
+# An axis with nothing to offer returns an empty string and the window draws one row fewer: the language axis when the site is not multilingual, any axis with no options
 function getAdminSettingsRow(string $axis): string {
     global $admin, $conf, $afile, $locale, $tpl;
     $opts = '';
@@ -237,7 +237,8 @@ function getAdminSettingsRow(string $axis): string {
         $row = ['op' => 'newlang', 'field' => 'newlang', 'icon' => 'translate', 'title' => _LANGUAGE, 'hint' => _LANGUAGE];
     }
     $safe = htmlspecialchars($row['hint'], ENT_QUOTES, 'UTF-8');
-    $attr = 'onchange="this.form.submit()" title="'.$safe.'" aria-label="'.$safe.'"';
+    $send = 'this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()';
+    $attr = 'onchange="'.$send.'" title="'.$safe.'" aria-label="'.$safe.'"';
     if ($axis === 'editor') {
         $pick = Editor::getSelect('editor', $edkey, 'content', 'admin', $attr);
     } else {

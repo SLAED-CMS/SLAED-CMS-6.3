@@ -750,7 +750,7 @@ function setLang(): void {
     require_once is_readable($file) ? $file : 'lang/'.$mlang.'.php';
 }
 
-# Store the locale a switch asked for; the answer travels in a POST body with a token of its own scope, because a link that changes the locale is followed by prefetchers, scanners and link previews with nobody clicking it
+# Store the locale a switch asked for; the answer travels in a POST body with a token of its own scope, because a link that changes it is followed by prefetchers and scanners
 # The caller redirects afterwards, so the cookie written here is read by setLang() on the very next request
 function setLangChoice(): void {
     global $conf;

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Стенд полос SLAED — шестнадцать вариантов оформления</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    .demo-hero {
+      padding: var(--sl-space-10) 0 var(--sl-space-8);
+    }
+
+    .demo-hero h1 {
+      margin: 0 0 var(--sl-space-5);
+      font-size: var(--sl-font-hero);
+      line-height: var(--sl-line-tight);
+    }
+
+    .demo-hero p {
+      margin: 0 0 var(--sl-space-5);
+      max-width: 78ch;
+      line-height: var(--sl-line-loose);
+      color: var(--sl-text-muted);
+    }
+
+    .demo-hero-tools {
+      display: flex;
+      gap: var(--sl-space-3);
+      flex-wrap: wrap;
+      margin-top: var(--sl-space-6);
+    }
+  </style>
+</head>
+<body class="sl-summer" data-demo-gallery>
+  <div class="sl-wrp">
+    <div class="demo-hero">
+      <h1>Полосы <code>#head-content</code> и <code>#demo-line</code> в тёмной теме</h1>
+      <p>Шестнадцать вариантов, от самого тихого к самому громкому. Каждый — одна страница, где живая разметка
+      полос и настоящий CSS темы, а сверху единственный блок <code>&lt;style&gt;</code> с самим приёмом: сравнить
+      два варианта значит сравнить два блока CSS, всё остальное у них общее.</p>
+      <p>Ползунок на странице варианта отвечает ровно за одно — за силу затемнения фото, и только в тёмной теме:
+      на нуле полоса ровно такая, какая идёт в поставке сейчас. Эффект варианта ползунка не читает и работает при
+      любом его положении. В светлой теме затемнения нет ни на одном делении — там остаются только эффекты.</p>
+      <p>Плитки ниже — живые страницы, не картинки, поэтому анимация в них идёт по-настоящему, а варианты
+      с курсором ждут указателя на самой странице варианта.</p>
+      <div class="demo-hero-tools">
+        <button type="button" class="sl-but" data-demo-set="mode" data-demo-value="dark">Тёмная</button>
+        <button type="button" class="sl-but" data-demo-set="mode" data-demo-value="light">Светлая</button>
+        <button type="button" class="sl-but" data-demo-set="season" data-demo-value="sl-winter">Зима</button>
+        <button type="button" class="sl-but" data-demo-set="season" data-demo-value="sl-spring">Весна</button>
+        <button type="button" class="sl-but" data-demo-set="season" data-demo-value="sl-summer">Лето</button>
+        <button type="button" class="sl-but" data-demo-set="season" data-demo-value="sl-autumn">Осень</button>
+        <button type="button" class="sl-but" data-demo-set="season" data-demo-value="sl-newyear">Новый год</button>
+      </div>
+    </div>
+    <div class="demo-grid" id="demo-gallery"></div>
+  </div>
+  <script src="assets/demo.js"></script>
+  <script>
+    /* The gallery: one card per manifest entry, each showing the variant itself in a frame rather than a picture of it */
+    (function () {
+      const grid = document.getElementById('demo-gallery');
+      const state = {
+        mode: localStorage.getItem('demo.mode') || 'dark',
+        season: localStorage.getItem('demo.season') || 'sl-summer',
+      };
+
+      function draw() {
+        document.documentElement.dataset.theme = state.mode;
+        document.body.className = state.season;
+        localStorage.setItem('demo.mode', state.mode);
+        localStorage.setItem('demo.season', state.season);
+        grid.innerHTML = DEMO_VARIANTS.map((v, i) => {
+          const src = v.file + '?bare=1&mode=' + state.mode + '&season=' + state.season;
+          return '<article class="demo-card">'
+            + '<div class="demo-card-frame"><iframe src="' + src + '" loading="lazy" title="' + v.title + '"></iframe></div>'
+            + '<div class="demo-card-body">'
+            + '<h2>' + String(i + 1).padStart(2, '0') + ' · <a href="' + v.file + '">' + v.title + '</a></h2>'
+            + '<p>' + v.note + '</p>'
+            + '<div class="demo-tags">' + v.tags.map((t) => '<span class="demo-tag">' + t + '</span>').join('') + '</div>'
+            + '</div></article>';
+        }).join('');
+      }
+
+      document.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-demo-set]');
+        if (!btn) return;
+        state[btn.dataset.demoSet] = btn.dataset.demoValue;
+        draw();
+      });
+
+      draw();
+    }());
+  </script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>12 · Параллакс за курсором — стенд полос SLAED</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* 12 — Pointer parallax. The photo leans a dozen pixels after the pointer and the headline follows at a
+       third of that, and between the two the band acquires a depth it never had. Nothing is darkened anywhere:
+       the whole effect is two offsets and a soft light, so the light theme gets exactly what the dark one does. */
+
+    /* Both bands become a stacking context: effects go under the text, never over it */
+    #head-content,
+    #demo-line {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+    }
+
+    #head-content > .sl-wrp,
+    #demo-line > .sl-wrp {
+      position: relative;
+      z-index: 5;
+    }
+
+    /* The photo becomes a layer of its own. background-image: inherit takes whatever the season rule put on the
+       band, so the five season rules are never duplicated, and the dial's tone is multiplied into this layer
+       instead of the element beneath it. What moves here is a transform and only a transform -- the compositor's
+       work, not the painter's. Animating background-size or -position is what made the first cut stutter: it
+       repaints the band and resamples a 1920px JPEG on every single frame. */
+    #head-content::before,
+    #demo-line::before {
+      content: "";
+      position: absolute;
+      inset: -16% -6%;
+      z-index: 0;
+      pointer-events: none;
+      background-image: inherit;
+      background-repeat: no-repeat;
+      background-position: 50% 50%;
+      background-size: cover;
+      background-color: light-dark(#ffffff, color-mix(in srgb, #14293a calc(var(--demo-dim, 0) * 100%), #ffffff));
+      background-blend-mode: multiply;
+      will-change: transform;
+    }
+
+    /* The far plane: the photo layer leaning after the pointer, on a transform */
+    #head-content::before,
+    #demo-line::before {
+      transform:
+        translate3d(calc(var(--demo-nx) * 22px), calc(var(--demo-ny) * 12px), 0)
+        scale(1.05);
+    }
+
+    /* The near plane: the headline, moving against the photo at a third of its rate */
+    #head-content > .sl-wrp,
+    #demo-line > .sl-wrp {
+      transform: translate3d(calc(var(--demo-nx) * -7px), calc(var(--demo-ny) * -4px), 0);
+      transition: transform var(--sl-time-slow) var(--sl-ease-in-out);
+    }
+
+    /* The light that hangs over the far plane and gives the lean something to catch */
+    #head-content::after,
+    #demo-line::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+      mix-blend-mode: screen;
+      background: radial-gradient(
+        60% 160% at calc(50% + var(--demo-nx) * 30%) calc(50% + var(--demo-ny) * 30%),
+        light-dark(rgba(255, 255, 255, 0.28), rgba(124, 196, 238, 0.22)) 0%,
+        transparent 70%
+      );
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #head-content > .sl-wrp,
+      #demo-line > .sl-wrp {
+        transition: none;
+      }
+    }
+  </style>
+</head>
+<body class="sl-summer">
+  <noscript><p style="padding:24px">Стенду нужен JavaScript: разметку страницы собирает <code>assets/demo.js</code>.</p></noscript>
+  <script src="assets/demo.js"></script>
+  <script>demoTrackPointer();</script>
+</body>
+</html>

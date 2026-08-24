@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>04 · Прожектор за курсором — стенд полос SLAED</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* 04 — Spotlight. A shutter over the band with a hole where the pointer is: in the dark theme the season
+       shows through the hole and nowhere else, in the light theme the shutter is transparent and what is left is
+       a warm lamp travelling over an untouched photo. A page that never gets a pointer — a phone, a keyboard —
+       leaves the light parked in the middle of the band, which is a finished picture of its own. */
+
+    /* Both bands become a stacking context: effects go under the text, never over it */
+    #head-content,
+    #demo-line {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+    }
+
+    #head-content > .sl-wrp,
+    #demo-line > .sl-wrp {
+      position: relative;
+      z-index: 5;
+    }
+
+    /* The dial, and the only thing it touches. --demo-dim darkens the photo and nothing else: it runs in the
+       dark mode alone, because multiplying by white is a no-op, and at 0 the band is exactly what ships today.
+       The effect below never reads the dial, so it lives at every position of it and in both modes. */
+    body[class] #head-content,
+    body[class] #demo-line {
+      background-color: light-dark(#ffffff, color-mix(in srgb, #14293a calc(var(--demo-dim, 0) * 100%), #ffffff));
+      background-blend-mode: multiply;
+    }
+
+    /* One disc does both jobs, because two would cost two layers and this one never repaints: a warm core that
+       lightens what is under it and a dark field beyond the hole that hides the rest. Plain alpha compositing
+       lightens at the centre and darkens at the rim, so no blend mode is needed and both themes get the half
+       they should -- in light every dark stop is transparent and only the core survives.
+
+       The layer is far wider than any band on purpose: the pointer translates it, so its dark field has to still
+       reach both ends of the strip when the light sits at the far edge. Chrome tiles what is off screen, so the
+       size costs nothing, and the whole effect is one static gradient plus a transform. */
+    #head-content::after,
+    #demo-line::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 3;
+      width: 300vw;
+      height: 800px;
+      margin: -400px 0 0 -150vw;
+      pointer-events: none;
+      will-change: transform;
+      transform: translate3d(var(--demo-x, 50%), var(--demo-y, 50%), 0);
+      background: radial-gradient(
+        circle at 50% 50%,
+        light-dark(rgba(255, 246, 214, 0.3), rgba(124, 196, 238, 0.26)) 0,
+        transparent 150px,
+        light-dark(transparent, rgba(6, 14, 22, 0.28)) 240px,
+        light-dark(transparent, rgba(6, 14, 22, 0.5)) 340px
+      );
+    }
+  </style>
+</head>
+<body class="sl-summer">
+  <noscript><p style="padding:24px">Стенду нужен JavaScript: разметку страницы собирает <code>assets/demo.js</code>.</p></noscript>
+  <script src="assets/demo.js"></script>
+  <script>demoTrackPointer();</script>
+</body>
+</html>

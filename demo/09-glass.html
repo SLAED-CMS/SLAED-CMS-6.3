@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>09 · Матовое стекло — стенд полос SLAED</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* 09 — Frosted glass. The photo is not dimmed, it is put out of focus: a sheet of glass lies over the band
+       and what shows through is colour without detail. The tint of the sheet is a colour, so it turns over with
+       the mode by itself — a white frost in light, a smoked one in dark — and the blur is the same in both. */
+
+    /* Both bands become a stacking context: effects go under the text, never over it */
+    #head-content,
+    #demo-line {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+    }
+
+    #head-content > .sl-wrp,
+    #demo-line > .sl-wrp {
+      position: relative;
+      z-index: 5;
+    }
+
+    /* The dial, and the only thing it touches. --demo-dim darkens the photo and nothing else: it runs in the
+       dark mode alone, because multiplying by white is a no-op, and at 0 the band is exactly what ships today.
+       The effect below never reads the dial, so it lives at every position of it and in both modes. */
+    body[class] #head-content,
+    body[class] #demo-line {
+      background-color: light-dark(#ffffff, color-mix(in srgb, #14293a calc(var(--demo-dim, 0) * 100%), #ffffff));
+      background-blend-mode: multiply;
+    }
+
+    /* A little more photo than the band needs, so the blur has material to smear at the edges */
+    body[class] #head-content,
+    body[class] #demo-line {
+      background-size: auto 150%;
+      background-position: 50% 50%;
+    }
+
+    /* The sheet itself. Its tint is the glass, not the dial, so it holds its own strength */
+    #head-content::before,
+    #demo-line::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      backdrop-filter: blur(18px) saturate(115%);
+      -webkit-backdrop-filter: blur(18px) saturate(115%);
+      background: linear-gradient(
+        180deg,
+        light-dark(rgba(255, 255, 255, 0.26), rgba(9, 19, 30, 0.5)) 0%,
+        light-dark(rgba(210, 232, 246, 0.32), rgba(5, 11, 20, 0.72)) 100%
+      );
+      box-shadow:
+        inset 0 1px 0 0 light-dark(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.16)),
+        inset 0 -1px 0 0 light-dark(rgba(28, 110, 158, 0.25), rgba(0, 0, 0, 0.5));
+    }
+
+    /* The specular streak sliding across the sheet, eleven seconds a pass */
+    #head-content::after,
+    #demo-line::after {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -60%;
+      z-index: 2;
+      width: 45%;
+      height: 200%;
+      pointer-events: none;
+      transform: rotate(14deg);
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        light-dark(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.16)) 50%,
+        transparent 100%
+      );
+      animation: demo-sheen 11s ease-in-out infinite;
+    }
+
+    @keyframes demo-sheen {
+      0% {
+        transform: translate3d(0, 0, 0) rotate(14deg);
+      }
+      60%,
+      100% {
+        transform: translate3d(260%, 0, 0) rotate(14deg);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #head-content::after,
+      #demo-line::after {
+        animation: none;
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body class="sl-summer">
+  <noscript><p style="padding:24px">Стенду нужен JavaScript: разметку страницы собирает <code>assets/demo.js</code>.</p></noscript>
+  <script src="assets/demo.js"></script>
+</body>
+</html>
