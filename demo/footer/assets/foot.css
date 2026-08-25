@@ -1,0 +1,252 @@
+/* Rig shell only: the stage around the frame, the panel and the gallery. Nothing here touches the variant itself —
+   a variant is its own <style> block and the real theme underneath it. */
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: light-dark(#f3f4f6, #0b1220);
+  color: light-dark(#1f2937, #e5e7eb);
+  font: 15px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.foot-stage {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 20px 220px;
+}
+
+.foot-stage .sl-title {
+  font-size: 30px;
+  margin: 0 0 16px;
+}
+
+.foot-stage .demo-note {
+  border: 1px solid light-dark(#d1d5db, #24354a);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  background: light-dark(#ffffff, #111c2b);
+}
+
+.foot-stage .demo-note h2 {
+  font-size: 15px;
+  margin: 0 0 6px;
+}
+
+.foot-stage .demo-note p {
+  margin: 0;
+}
+
+.foot-hint {
+  color: light-dark(#4b5563, #94a3b8);
+  font-size: 13px;
+  margin: 0 0 18px;
+}
+
+/* The frame is the whole point: it carries its own viewport, so the theme answers a phone width honestly */
+.foot-frame-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+  border-radius: 12px;
+  background:
+    repeating-linear-gradient(45deg, light-dark(#e5e7eb, #16233a) 0 8px, transparent 8px 16px);
+}
+
+.foot-frame {
+  width: 390px;
+  height: 360px;
+  border: 1px solid light-dark(#9ca3af, #33465f);
+  border-radius: 10px;
+  background: light-dark(#ffffff, #0f172a);
+  transition: width 0.2s ease;
+}
+
+/* Inside the frame: a little air above the block so it is not glued to the top edge */
+.foot-bare-filler {
+  padding: 18px 16px 26px;
+  color: light-dark(#6b7280, #7c8ea5);
+  font: 13px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.foot-bare-filler p {
+  margin: 0;
+}
+
+/* Gallery */
+.foot-gallery {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 32px 20px 60px;
+}
+
+.foot-gallery h1 {
+  font-size: 30px;
+  margin: 0 0 10px;
+}
+
+.foot-gallery .foot-lead {
+  color: light-dark(#4b5563, #94a3b8);
+  margin: 0 0 26px;
+}
+
+.foot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 20px;
+}
+
+.foot-card {
+  border: 1px solid light-dark(#d1d5db, #24354a);
+  border-radius: 12px;
+  overflow: hidden;
+  background: light-dark(#ffffff, #111c2b);
+}
+
+.foot-card-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 12px 14px 8px;
+}
+
+.foot-card-num {
+  font-variant-numeric: tabular-nums;
+  color: light-dark(#6b7280, #7c8ea5);
+}
+
+.foot-card-title {
+  font-weight: 600;
+}
+
+.foot-card-note {
+  padding: 0 14px 10px;
+  font-size: 13px;
+  color: light-dark(#4b5563, #94a3b8);
+}
+
+.foot-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 14px 12px;
+}
+
+.foot-card-tags span {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid light-dark(#d1d5db, #2c4058);
+  color: light-dark(#4b5563, #94a3b8);
+}
+
+.foot-card iframe {
+  display: block;
+  width: 390px;
+  height: 300px;
+  border: 0;
+  border-top: 1px solid light-dark(#e5e7eb, #24354a);
+  margin: 0 auto;
+  background: light-dark(#ffffff, #0f172a);
+}
+
+.foot-card a.foot-card-open {
+  display: block;
+  padding: 10px 14px;
+  text-align: center;
+  text-decoration: none;
+  border-top: 1px solid light-dark(#e5e7eb, #24354a);
+  color: light-dark(#1d4ed8, #7cc4ee);
+}
+
+/* Panel, borrowed in spirit from the band rig next door */
+.demo-panel {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  width: 330px;
+  z-index: 50;
+  border: 1px solid light-dark(#d1d5db, #2c4058);
+  border-radius: 12px;
+  background: light-dark(#ffffff, #111c2b);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  font-size: 13px;
+}
+
+.demo-panel[data-collapsed="1"] > :not(.demo-panel-head) {
+  display: none;
+}
+
+.demo-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid light-dark(#e5e7eb, #24354a);
+}
+
+.demo-panel[data-collapsed="1"] .demo-panel-head {
+  border-bottom: 0;
+}
+
+.demo-panel-title {
+  font-weight: 600;
+}
+
+.demo-panel-toggle {
+  border: 1px solid light-dark(#d1d5db, #2c4058);
+  background: transparent;
+  color: inherit;
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  cursor: pointer;
+}
+
+.demo-panel-row {
+  padding: 10px 12px;
+  display: grid;
+  gap: 6px;
+}
+
+.demo-panel-row > span {
+  color: light-dark(#4b5563, #94a3b8);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.demo-seg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.demo-seg button {
+  flex: 1 1 auto;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid light-dark(#d1d5db, #2c4058);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.demo-seg button[aria-pressed="true"] {
+  background: light-dark(#2563eb, #2b7fb8);
+  border-color: transparent;
+  color: #ffffff;
+}
+
+.demo-panel-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid light-dark(#e5e7eb, #24354a);
+}
+
+.demo-panel-nav a {
+  color: light-dark(#1d4ed8, #7cc4ee);
+  text-decoration: none;
+}

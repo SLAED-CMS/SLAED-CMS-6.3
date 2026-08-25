@@ -232,6 +232,10 @@
 
   /* Colour: the washes and veils. A tint lies over what is behind it, a scrim hides it. The two lighter steps are
      the veils the theme's own shadows and darkened discs are drawn in; the base is the one the editor package reads */
+  /* The bar between two items of the lower menu. It survives only on the widest step, where that menu is a
+     single row and the bar can never be pushed to the start of a wrapped line; below it the block is a grid and
+     the icons do the separating. */
+  --sl-sep-height: 16px;
   --sl-scrim-subtle: light-dark(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.4));
   --sl-scrim-muted: light-dark(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.55));
   --sl-scrim: color-mix(in srgb, var(--sl-text-strong) 34%, transparent);
@@ -351,14 +355,32 @@
   /* The thickness of the session ring, which is the donut less its hole, halved */
   --sl-donut-ring: 8px;
   /* The two tabs standing on the page edges: how tall one is, and the gutter a wide page reserves for one per side */
+  /* The veil the dark mode lays over the photo bands, so white text stands on a photograph shot for daylight.
+     The light mode gets none of it: there the photo reads as a postcard and needs no help, which is why the token
+     is transparent on that side rather than pale. */
+  --sl-band-bg: light-dark(transparent, rgba(8, 16, 26, 0.5));
   /* The white that does not turn over. The photo band of the page head is a photograph and the footer wordmark is
      a picture with white baked into it: neither has a light and a dark variant, so the words standing on them hold
      their colour in both modes. Every other ground in this theme turns over, and its text turns over with it */
   --sl-band-text: #ffffff;
+  /* The beam that crosses both photo bands: how wide the shaft is, how long one pass takes, and the light it
+     carries. It travels upright and at an even rate, because a band is far wider than it is tall and an eased
+     pass hurries through the middle — the half the eye actually watches. */
+  --sl-beam-width: 30%;
+  --sl-beam-dur: 8s;
+  --sl-beam-bg: light-dark(rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0.42));
   --sl-edge-width: 40px;
   --sl-edge-height: 190px;
   --sl-editor-height: 100px;
   --sl-entry-height: 42px;
+  /* The lower menu: how tall one link stands. It is a thumb target on a phone and a row height on a desktop,
+     which is one decision and therefore one value — the icon in front of the label does the separating that the
+     bar used to do, at every width. */
+  /* The lower menu stands as tall as the top bar, so the page closes on the same edge it opens with. One value
+     for both: retune the top bar and the footer follows, which is what keeps the two symmetric rather than equal
+     by coincidence. Like the top bar it is a floor, not a fixed height — below the wide step both blocks grow. */
+  --sl-fmenu-height: var(--sl-topbar-height);
+  --sl-fmenu-min-height: 44px;
   --sl-f-title-width: 28px;
   --sl-f-title-height: 3px;
   /* The favourite burst: the ring it throws off, how much of the brand colour that ring carries, and the two
@@ -469,7 +491,6 @@
   --sl-search-shadow:
     inset 0 1px 1px 0 light-dark(rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.07)),
     0 1px 2px light-dark(rgba(42, 48, 60, 0.12), rgba(0, 0, 0, 0.5));
-  --sl-sep-height: 16px;
   /* The panel the user card unfolds is pinned this far above the card's bottom edge and may not grow past it */
   --sl-session-gap: 36px;
   --sl-shot-max-height: min(62vh, 460px);

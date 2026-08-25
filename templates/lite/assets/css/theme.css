@@ -4686,7 +4686,7 @@ ol.sl-sublist-two li::before {
 #head-content {
   height: var(--sl-header-height);
   color: var(--sl-band-text);
-  background: var(--sl-primary-subtle) url(../../images/seasons/head-bg.jpg)
+  background: var(--sl-primary-subtle) url(../../images/seasons/head-bg.webp)
     no-repeat 50% 0;
   text-shadow: 0 1px 1px var(--sl-scrim-subtle);
   background-size: cover;
@@ -4738,6 +4738,84 @@ ol.sl-sublist-two li::before {
   color: var(--sl-band-text);
   box-shadow: var(--sl-shadow-inset);
   height: var(--sl-demo-height);
+}
+
+/* Both photo bands: a veil the dark mode lays over the photograph, and one beam crossing it every --sl-beam-dur.
+   Each band is its own stacking context, so both layers stay under the text however tall the wrapper grows. The
+   two pseudo-elements share a layer and order by source: the veil is written first and the beam lies over it. */
+#head-content,
+#demo-line {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+#head-content > .sl-wrp,
+#demo-line > .sl-wrp {
+  position: relative;
+  z-index: var(--sl-z-raised);
+}
+
+#head-content::before,
+#demo-line::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: var(--sl-z-base);
+  pointer-events: none;
+  background: var(--sl-band-bg);
+}
+
+/* The shaft starts its own width to the left of the band and ends a window past it, which is the same journey
+   whatever the band is carrying: both bands run the full width of the page. */
+#head-content::after,
+#demo-line::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: calc(-1 * var(--sl-beam-width));
+  z-index: var(--sl-z-base);
+  width: var(--sl-beam-width);
+  height: 100%;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--sl-beam-bg) 40%,
+    var(--sl-beam-bg) 60%,
+    transparent
+  );
+  animation: sl-beam var(--sl-beam-dur) linear infinite;
+}
+
+@keyframes sl-beam {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+
+  12% {
+    opacity: 1;
+  }
+
+  32% {
+    opacity: 1;
+  }
+
+  44%,
+  100% {
+    transform: translate3d(100vw, 0, 0);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #head-content::after,
+  #demo-line::after {
+    animation: none;
+    opacity: 0;
+  }
 }
 
 #demo-line .sl-wrp {
@@ -4907,7 +4985,7 @@ ol.sl-sublist-two li::before {
   margin: 0 auto;
   position: relative;
   z-index: var(--sl-z-raised);
-  padding: var(--sl-space-7) 0;
+  min-height: var(--sl-fmenu-height);
 }
 
 .sl-fmenu {
@@ -4937,6 +5015,32 @@ ol.sl-sublist-two li::before {
   margin-left: auto;
 }
 
+/* An icon in front of every label does the separating the bar used to do, and it does it at every width: a bar
+   drawn by ::before survives a line break and hangs at the start of the next row, an icon cannot. The icons ride
+   in the markup rather than in nth-child rules, or the two lists drift apart the first time a section is added. */
+.sl-fmenu ul li a,
+.sl-fmenu .sl-pull-right {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-4);
+  min-height: var(--sl-fmenu-min-height);
+}
+
+.sl-fmenu .bi {
+  font-size: var(--sl-size-icon-sm);
+  line-height: 1;
+  opacity: var(--sl-fade-subtle);
+}
+
+/* No column gap on the widest step: the separator carries its own margin, and adding a gap on top of it
+   pushed the row past the container and dropped the advertising link onto a line of its own */
+#footbox > .sl-wrp:last-child > .sl-fmenu ul {
+  row-gap: var(--sl-space-3);
+}
+
+/* On the widest step the menu is one row, and there a bar between two items is what it always was: a separator
+   that cannot wrap, because the row does not wrap. Every narrower step lays the block out as a grid, where the
+   column edge separates and the bar would only hang. */
 .sl-fmenu ul li::before {
   content: "";
   display: inline-block;
@@ -4949,6 +5053,46 @@ ol.sl-sublist-two li::before {
 
 .sl-fmenu ul li:first-child::before {
   display: none;
+}
+
+/* Below the wide step the row becomes four columns, and the advertising link takes a line of its own. It leans on
+   float: right, which is inert inside the flex row above and wakes up the moment this block stops being one. */
+@media (max-width: 1200px) {
+  #footbox > .sl-wrp:last-child > .sl-fmenu {
+    display: block;
+    padding: var(--sl-space-6) 0;
+  }
+
+  .sl-fmenu ul li::before {
+    display: none;
+  }
+
+  #footbox > .sl-wrp:last-child > .sl-fmenu ul {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    column-gap: var(--sl-space-6);
+  }
+
+  #footbox > .sl-wrp:last-child > .sl-fmenu .sl-pull-right {
+    float: none;
+    width: 100%;
+    margin: var(--sl-space-4) 0 0;
+    padding-top: var(--sl-space-4);
+    border-top: 1px solid var(--sl-border-inverse);
+  }
+}
+
+/* The phone: two columns of four */
+@media (max-width: 768px) {
+  #footbox > .sl-wrp:last-child > .sl-fmenu ul {
+    grid-template-columns: 1fr 1fr;
+    column-gap: var(--sl-space-5);
+  }
+
+  #footbox > .sl-wrp:last-child > .sl-fmenu .sl-pull-right {
+    margin-top: var(--sl-space-5);
+    padding-top: var(--sl-space-5);
+  }
 }
 
 /* Content: main column blocks and side panels */
@@ -5449,87 +5593,95 @@ td.sl-fl-col-stat {
   font-weight: var(--sl-weight-normal);
 }
 
-/* Seasonal: holiday decoration hooks */
+/* Seasonal: holiday decoration hooks. The two bands take colour and photo as longhands on purpose: the
+   `background` shorthand resets background-size, and with it the `cover` their base rules declare — on a narrow
+   screen the band grows taller than the photo and the photo hangs as a strip with the page showing above and
+   below it. #head-content also restates its position, because its base rule centres on 50% 0. */
 .sl-slide-season {
   display: block;
-  background: var(--sl-primary-subtle) url(../../images/seasons/default.jpg);
+  background: var(--sl-primary-subtle) url(../../images/seasons/default.webp);
   width: var(--sl-slide-width);
   height: var(--sl-slide-height);
 }
 
 .sl-winter .sl-slide-season {
-  background: var(--sl-season-winter) url(../../images/seasons/winter.jpg)
+  background: var(--sl-season-winter) url(../../images/seasons/winter.webp)
     no-repeat 50% 50%;
 }
 
 .sl-winter #demo-line {
-  background: var(--sl-season-winter) url(../../images/seasons/winter-foot.jpg)
-    no-repeat 50% 50%;
+  background-color: var(--sl-season-winter);
+  background-image: url(../../images/seasons/winter-foot.webp);
 }
 
 .sl-winter #head-content {
-  background: var(--sl-season-winter) url(../../images/seasons/winter-cat.jpg)
-    no-repeat 50% 50%;
+  background-color: var(--sl-season-winter);
+  background-image: url(../../images/seasons/winter-cat.webp);
+  background-position: 50% 50%;
 }
 
 .sl-autumn .sl-slide-season {
-  background: var(--sl-season-autumn) url(../../images/seasons/autumn.jpg)
+  background: var(--sl-season-autumn) url(../../images/seasons/autumn.webp)
     no-repeat 50% 50%;
 }
 
 .sl-autumn #demo-line {
-  background: var(--sl-season-autumn) url(../../images/seasons/autumn-foot.jpg)
-    no-repeat 50% 50%;
+  background-color: var(--sl-season-autumn);
+  background-image: url(../../images/seasons/autumn-foot.webp);
 }
 
 .sl-autumn #head-content {
-  background: var(--sl-season-autumn) url(../../images/seasons/autumn-cat.jpg)
-    no-repeat 50% 50%;
+  background-color: var(--sl-season-autumn);
+  background-image: url(../../images/seasons/autumn-cat.webp);
+  background-position: 50% 50%;
 }
 
 .sl-summer .sl-slide-season {
-  background: var(--sl-season-summer) url(../../images/seasons/summer.jpg)
+  background: var(--sl-season-summer) url(../../images/seasons/summer.webp)
     no-repeat 50% 50%;
 }
 
 .sl-summer #demo-line {
-  background: var(--sl-season-summer) url(../../images/seasons/summer-foot.jpg)
-    no-repeat 50% 50%;
+  background-color: var(--sl-season-summer);
+  background-image: url(../../images/seasons/summer-foot.webp);
 }
 
 .sl-summer #head-content {
-  background: var(--sl-season-summer) url(../../images/seasons/summer-cat.jpg)
-    no-repeat 50% 50%;
+  background-color: var(--sl-season-summer);
+  background-image: url(../../images/seasons/summer-cat.webp);
+  background-position: 50% 50%;
 }
 
 .sl-spring .sl-slide-season {
-  background: var(--sl-season-spring) url(../../images/seasons/spring.jpg)
+  background: var(--sl-season-spring) url(../../images/seasons/spring.webp)
     no-repeat 50% 50%;
 }
 
 .sl-spring #demo-line {
-  background: var(--sl-season-spring) url(../../images/seasons/spring-foot.jpg)
-    no-repeat 50% 50%;
+  background-color: var(--sl-season-spring);
+  background-image: url(../../images/seasons/spring-foot.webp);
 }
 
 .sl-spring #head-content {
-  background: var(--sl-season-spring) url(../../images/seasons/spring-cat.jpg)
-    no-repeat 50% 50%;
+  background-color: var(--sl-season-spring);
+  background-image: url(../../images/seasons/spring-cat.webp);
+  background-position: 50% 50%;
 }
 
 .sl-newyear .sl-slide-season {
-  background: var(--sl-season-newyear) url(../../images/seasons/newyear.jpg)
+  background: var(--sl-season-newyear) url(../../images/seasons/newyear.webp)
     no-repeat 50% 50%;
 }
 
 .sl-newyear #demo-line {
-  background: var(--sl-season-newyear)
-    url(../../images/seasons/newyear-foot.jpg) no-repeat 50% 50%;
+  background-color: var(--sl-season-newyear);
+  background-image: url(../../images/seasons/newyear-foot.webp);
 }
 
 .sl-newyear #head-content {
-  background: var(--sl-season-newyear) url(../../images/seasons/newyear-cat.jpg)
-    no-repeat 50% 50%;
+  background-color: var(--sl-season-newyear);
+  background-image: url(../../images/seasons/newyear-cat.webp);
+  background-position: 50% 50%;
 }
 
 /* Marquee: scrolling header line */

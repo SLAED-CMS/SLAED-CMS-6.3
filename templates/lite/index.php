@@ -73,13 +73,13 @@ function getThemeHeadVars(): array {
 }
 
 # Build a single LCP preload link for the hero actually rendered on this page:
-# the main-module slider uses <season>.jpg, head-content pages use <season>-cat.jpg
+# the main-module slider uses <season>.webp, head-content pages use <season>-cat.webp
 function getTemplateLcpPreload(string $season, bool $hasHead): string {
     global $conf;
     if (($conf['name'] ?? '') === 'main') {
-        $img = preg_replace('/^sl-/', '', $season).'.jpg';
+        $img = preg_replace('/^sl-/', '', $season).'.webp';
     } elseif ($hasHead) {
-        $img = preg_replace('/^sl-/', '', $season).'-cat.jpg';
+        $img = preg_replace('/^sl-/', '', $season).'-cat.webp';
     } else {
         return '';
     }

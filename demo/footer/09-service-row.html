@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>09 · Служебная строка — стенд подвала SLAED</title>
+  <link rel="stylesheet" href="../../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/foot.css">
+  <style>
+    /* 09 — A service row of its own. The menu is a grid, and under it sits a row that carries the copyright on one
+       side and the advertising link on the other. The ad stops reading as a stray navigation item because it is no
+       longer among navigation items: it is among service links, which is what it is. */
+
+    /* The theme floats this link right (theme.css:129). Inside the flex row the float is inert and margin-left:auto
+       does the work; the moment a variant turns the block into a grid or a block, the float wakes up, leaves the
+       flow and lands on top of whatever follows. Every variant here starts by putting it back in the flow. */
+    @media (max-width: 768px) {
+      .sl-fmenu .sl-pull-right {
+        float: none;
+      }
+    }
+
+    /* The phone range only: the desktop footer is not what anyone complained about */
+    @media (max-width: 768px) {
+      #footbox > .sl-wrp:last-child > .sl-fmenu {
+        display: block;
+        padding: var(--sl-space-6) 0 var(--sl-space-5);
+      }
+
+      #footbox > .sl-wrp:first-child .sl-foot-copy {
+        display: none;
+      }
+
+      .sl-fmenu ul {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        column-gap: var(--sl-space-5);
+      }
+
+      .sl-fmenu ul li::before {
+        display: none;
+      }
+
+      .sl-fmenu ul li a {
+        display: flex;
+        align-items: center;
+        min-height: 44px;
+      }
+
+      /* The service row: a rule above it, the ad on the right, the copyright written in by the pseudo-element */
+      .sl-fmenu .sl-pull-right {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        min-height: 40px;
+        margin: var(--sl-space-5) 0 0;
+        padding-top: var(--sl-space-5);
+        border-top: 1px solid rgba(255, 255, 255, 0.14);
+        font-size: var(--sl-font-small);
+        opacity: 0.85;
+        order: 2;
+        width: 100%;
+      }
+
+      .sl-fmenu::after {
+        content: "SLAED CMS © 2005–2026 Eduard Laas. Released under MIT License.";
+        display: block;
+        margin-top: var(--sl-space-3);
+        font-size: var(--sl-font-micro);
+        opacity: 0.6;
+        order: 3;
+      }
+    }
+  </style>
+</head>
+<body>
+  <noscript><p style="padding:24px">Стенду нужен JavaScript: разметку собирает <code>assets/foot.js</code>.</p></noscript>
+  <script src="assets/foot.js"></script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Стенд подвала SLAED — четырнадцать вариантов</title>
+  <link rel="stylesheet" href="../../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/foot.css">
+</head>
+<body data-foot-gallery>
+  <div class="foot-gallery">
+    <h1>Подвал на телефоне: четырнадцать вариантов</h1>
+    <p class="foot-lead">Наполнение во всех одно: восемь пунктов, строка «По вопросам рекламы» и копирайт. Меняется раскладка. <b>01–08</b> трогают только нижнее меню; <b>09–14</b> двигают всю нижнюю зону — там же решается, где живёт реклама и куда уезжает копирайт, который сейчас стоит вверху подвала под логотипом.</p>
+    <p class="foot-lead">Что чинится: висящая палка-разделитель в начале перенесённой строки, тап-зона в 23 px, и строка рекламы, которой <code>float: right</code> с <code>margin-left: auto</code> не даёт своего места. Плитки живые — рамка 390 px с настоящей разметкой и настоящим CSS темы.</p>
+    <div class="foot-grid" id="foot-grid"></div>
+  </div>
+  <script src="assets/foot.js"></script>
+  <script>
+    /* The gallery draws itself from the same manifest the pages use */
+    const grid = document.getElementById('foot-grid');
+    grid.innerHTML = FOOT_VARIANTS.map((v, i) => `
+      <div class="foot-card">
+        <div class="foot-card-head">
+          <span class="foot-card-num">${String(i + 1).padStart(2, '0')}</span>
+          <span class="foot-card-title">${v.title}</span>
+        </div>
+        <div class="foot-card-note">${v.note}</div>
+        <div class="foot-card-tags">${v.tags.map((t) => `<span>${t}</span>`).join('')}</div>
+        <iframe title="${v.title}" src="${v.file}?bare=1&amp;mode=dark" loading="lazy"></iframe>
+        <a class="foot-card-open" href="${v.file}">Открыть вариант →</a>
+      </div>`).join('');
+  </script>
+</body>
+</html>

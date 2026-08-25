@@ -9,9 +9,9 @@
   <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
   <link rel="stylesheet" href="assets/demo.css">
   <style>
-    /* 10 — Light beam. The cheapest of the moving variants: the band is left as it is, and once every seven
-       seconds a single beam crosses it while a thread of brand gradient sits along the lower edge — the same
-       gradient the theme already owns as --sl-grad-line. One transform and one opacity, in both themes. */
+    /* 10 — Light beam. The cheapest of the moving variants: the band is left as it is, and once every eight
+       seconds a soft beam crosses it. Wide, low-contrast and slow to fade in, so it reads as light moving
+       across the photo rather than a flash. One transform and one opacity, in both themes. */
 
     /* Both bands become a stacking context: effects go under the text, never over it */
     #head-content,
@@ -37,6 +37,8 @@
     }
 
     /* The veil the dial fades in: darker where the headline stands, plus a vignette that gives the band edges.
+       The vignette is deliberately shallow — at the fifty per cent this variant now runs at, the earlier
+       0.5 stop drew a visible circle in the middle of the band and the beam read as part of it.
        Both stops are transparent in light, so no position of the dial puts a filter on the light theme. */
     #head-content::before,
     #demo-line::before {
@@ -54,66 +56,56 @@
           light-dark(transparent, rgba(8, 16, 26, 0.8)) 100%
         ),
         radial-gradient(
-          130% 180% at 50% 50%,
-          transparent 35%,
-          light-dark(transparent, rgba(0, 0, 0, 0.5)) 100%
+          170% 240% at 50% 50%,
+          transparent 62%,
+          light-dark(transparent, rgba(0, 0, 0, 0.22)) 100%
         );
     }
 
-    /* The beam */
+    /* The beam. Soft comes from the seven stops and the lowered peak, not from width: the band is only some
+       hundred and twenty pixels tall, so a wide beam stops reading as a shaft of light and turns into a blur
+       drifting across. It travels upright: on a band this low a tilt makes the top edge light up before the
+       bottom, and that reads as the beam sliding rather than crossing. */
     #head-content::after,
     #demo-line::after {
       content: "";
       position: absolute;
-      top: -60%;
+      top: 0;
       left: -40%;
       z-index: 2;
-      width: 26%;
-      height: 220%;
+      width: 30%;
+      height: 100%;
       pointer-events: none;
-      transform: rotate(18deg);
       mix-blend-mode: screen;
       background: linear-gradient(
         90deg,
         transparent 0%,
-        light-dark(rgba(124, 196, 238, 0.55), rgba(124, 196, 238, 0.35)) 45%,
-        light-dark(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.3)) 50%,
-        light-dark(rgba(124, 196, 238, 0.55), rgba(124, 196, 238, 0.35)) 55%,
+        light-dark(rgba(124, 196, 238, 0.16), rgba(124, 196, 238, 0.12)) 22%,
+        light-dark(rgba(160, 214, 244, 0.34), rgba(160, 214, 244, 0.26)) 40%,
+        light-dark(rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0.36)) 50%,
+        light-dark(rgba(160, 214, 244, 0.34), rgba(160, 214, 244, 0.26)) 60%,
+        light-dark(rgba(124, 196, 238, 0.16), rgba(124, 196, 238, 0.12)) 78%,
         transparent 100%
       );
-      animation: demo-beam 7s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      animation: demo-beam 8s linear infinite;
     }
 
-    /* The brand thread along the lower edge. It hangs off the centred wrapper and spans the window from there,
-       which is how a full-bleed line is drawn without taking a layer away from the beam */
-    #head-content .sl-wrp::after,
-    #demo-line .sl-wrp::after {
-      content: "";
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      z-index: 3;
-      width: 100vw;
-      height: 2px;
-      pointer-events: none;
-      transform: translateX(-50%);
-      background: var(--sl-grad-line);
-    }
-
+    /* Eight seconds: three and a half of travel at an even pace, four and a half of rest. Linear on purpose —
+       an eased pass hurries through the middle of the band, which is the half the eye actually watches. */
     @keyframes demo-beam {
       0% {
-        transform: translate3d(0, 0, 0) rotate(18deg);
+        transform: translate3d(0, 0, 0);
         opacity: 0;
       }
-      8% {
+      12% {
         opacity: 1;
       }
-      36% {
+      32% {
         opacity: 1;
       }
-      48%,
+      44%,
       100% {
-        transform: translate3d(560%, 0, 0) rotate(18deg);
+        transform: translate3d(480%, 0, 0);
         opacity: 0;
       }
     }

@@ -203,8 +203,8 @@ namespace Tests\Unit {
 
             $this->assertSame(4, substr_count($html, 'templates/lite/images/slide/'));
             $this->assertStringNotContainsString('templates//', $html);
-            $this->assertStringContainsString('slaed_1.jpg', $html);
-            $this->assertStringContainsString('slaed_4.jpg', $html);
+            $this->assertStringContainsString('slaed_1.webp', $html);
+            $this->assertStringContainsString('slaed_4.webp', $html);
         }
 
         #[Test]

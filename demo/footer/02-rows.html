@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>02 · Список строками — стенд подвала SLAED</title>
+  <link rel="stylesheet" href="../../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/foot.css">
+  <style>
+    /* 02 — One row per item, a hairline under each. The shape every phone user already knows from a settings
+       screen, and the one where a link can never share a line with a separator. */
+
+    /* The theme floats this link right (theme.css:129). Inside the flex row the float is inert and margin-left:auto
+       does the work; the moment a variant turns the block into a grid or a block, the float wakes up, leaves the
+       flow and lands on top of whatever follows. Every variant here starts by putting it back in the flow. */
+    @media (max-width: 768px) {
+      .sl-fmenu .sl-pull-right {
+        float: none;
+      }
+    }
+
+    /* The phone range only: the desktop row is not what anyone complained about */
+    @media (max-width: 768px) {
+      #footbox > .sl-wrp:last-child > .sl-fmenu {
+        display: block;
+        padding: var(--sl-space-5) 0 var(--sl-space-6);
+      }
+
+      .sl-fmenu ul {
+        display: block;
+      }
+
+      .sl-fmenu ul li::before {
+        display: none;
+      }
+
+      .sl-fmenu ul li a {
+        display: flex;
+        align-items: center;
+        min-height: 46px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .sl-fmenu .sl-pull-right {
+        display: flex;
+        align-items: center;
+        min-height: 46px;
+        margin: 0;
+        font-weight: 600;
+      }
+    }
+  </style>
+</head>
+<body>
+  <noscript><p style="padding:24px">Стенду нужен JavaScript: разметку собирает <code>assets/foot.js</code>.</p></noscript>
+  <script src="assets/foot.js"></script>
+</body>
+</html>

@@ -59,7 +59,7 @@ const DEMO_VARIANTS = [
   {
     file: '10-beam.html',
     title: 'Световой луч',
-    note: 'Полоса спокойна, но раз в семь секунд по ней проходит блик, а по нижней кромке горит градиентная нить бренда.',
+    note: 'Полоса спокойна, но раз в восемь секунд по ней мягко проходит широкий световой луч.',
     tags: ['анимация', 'акцент', 'дёшево'],
   },
   {
@@ -97,6 +97,12 @@ const DEMO_VARIANTS = [
     title: 'Кинетическая типографика',
     note: 'Фото не трогаем совсем — оживает сам заголовок: по буквам идёт волна света, под ними просыпается нить бренда. Самый дешёвый способ сделать полосу живой.',
     tags: ['текст', 'дёшево', 'без фото-слоёв'],
+  },
+  {
+    file: '17-beam-particles.html',
+    title: 'Луч и сезонные частицы',
+    note: 'Два приёма в одной полосе: тот же восьмисекундный луч и погода сезона поверх него. Частицы сидят на центрирующей обёртке, потому что оба псевдоэлемента полосы уже заняты вуалью и лучом.',
+    tags: ['гибрид 10+14', 'анимация', 'сезоны'],
   },
 ];
 
@@ -220,7 +226,7 @@ function getDemoFiller(note) {
 const demoState = {
   mode: localStorage.getItem('demo.mode') || 'dark',
   season: localStorage.getItem('demo.season') || 'sl-summer',
-  dim: Number(localStorage.getItem('demo.dim.v3') ?? 15),
+  dim: Number(localStorage.getItem('demo.dim.v4') ?? 50),
   motion: localStorage.getItem('demo.motion') || 'on',
 };
 
@@ -258,7 +264,7 @@ function applyDemoState() {
   DEMO_SEASONS.forEach(([cls]) => document.body.classList.toggle(cls, cls === demoState.season));
   localStorage.setItem('demo.mode', demoState.mode);
   localStorage.setItem('demo.season', demoState.season);
-  localStorage.setItem('demo.dim.v3', String(demoState.dim));
+  localStorage.setItem('demo.dim.v4', String(demoState.dim));
   localStorage.setItem('demo.motion', demoState.motion);
   document.querySelectorAll('[data-demo-set]').forEach((b) => {
     b.setAttribute('aria-pressed', String(demoState[b.dataset.demoSet] === b.dataset.demoValue));
