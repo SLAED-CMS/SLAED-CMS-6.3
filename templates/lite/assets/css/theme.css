@@ -5098,9 +5098,24 @@ ol.sl-sublist-two li::before {
 /* Content: main column blocks and side panels */
 #container {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--sl-layout-sidebar);
+  grid-template-columns: minmax(0, 1fr);
   column-gap: var(--sl-layout-gutter);
   padding: var(--sl-space-8) 0;
+}
+
+/* A side track exists only when the module rendered that side; a module that switched its blocks off gives the whole width to the content instead of holding the empty column */
+@media (width > 900px) {
+  #container:has(#leftbar) {
+    grid-template-columns: var(--sl-layout-sidebar) minmax(0, 1fr);
+  }
+
+  #container:has(#sidebar) {
+    grid-template-columns: minmax(0, 1fr) var(--sl-layout-sidebar);
+  }
+
+  #container:has(#leftbar):has(#sidebar) {
+    grid-template-columns: var(--sl-layout-sidebar) minmax(0, 1fr) var(--sl-layout-sidebar);
+  }
 }
 
 #content {
@@ -6151,7 +6166,6 @@ a.sl-chip-neutral {
   }
 
   #container {
-    grid-template-columns: 1fr;
     padding: 0 0 var(--sl-space-10);
   }
 

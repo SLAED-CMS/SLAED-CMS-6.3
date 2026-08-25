@@ -48,6 +48,9 @@ if (empty($go)) {
         $mconf = $conf['modules'][$name] ?? [];
         $active = $mconf['active'] ?? 0;
         $view = $mconf['view'] ?? 0;
+        # The block positions the module allows; setFoot() reads these globals and skips the sides the module switched off
+        $blocks = (string)($mconf['side'] ?? '');
+        $blocks_c = (string)($mconf['top'] ?? '');
         $path = BASE_DIR.'/modules/'.$name.'/'.$file.'.php';
         if (intval($active) || is_moder($name)) {
             if ($view == 0 && file_exists($path)) {
