@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>01 &middot; Бенто — стенд главной SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* Bento: one twelve-column bed, and every tile says how many columns and rows it takes. Importance is
+       expressed by area rather than by order, so the eye meets the offer, the version and the speed at once. */
+    .v-bento {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: var(--sl-space-5);
+    }
+
+    .v-tile {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: var(--sl-space-4);
+      grid-column: span 4;
+      overflow: hidden;
+      padding: var(--sl-space-8);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-3);
+      background: var(--sl-surface);
+      box-shadow: var(--sl-shadow-xs);
+      transition: border-color var(--sl-time-base) var(--sl-ease-out), transform var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-tile:hover {
+      border-color: var(--sl-border-strong);
+      transform: translateY(-2px);
+    }
+
+    /* The light under the hand: one wash on the whole bed, clipped by each tile, so the tiles read as one surface */
+    .v-tile::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      background: radial-gradient(240px circle at var(--dx) var(--dy), var(--sl-tint-strong), transparent 70%);
+      transition: opacity var(--sl-time-slow) var(--sl-ease-out);
+      pointer-events: none;
+    }
+
+    .v-bento:hover .v-tile::before {
+      opacity: 1;
+    }
+
+    .v-tile > * {
+      position: relative;
+    }
+
+    .v-w4 { grid-column: span 4; }
+    .v-w6 { grid-column: span 6; }
+    .v-w7 { grid-column: span 7; }
+    .v-w5 { grid-column: span 5; }
+    .v-w8 { grid-column: span 8; }
+    .v-w12 { grid-column: span 12; }
+    .v-h2 { grid-row: span 2; }
+
+    .v-tile-brand {
+      justify-content: center;
+      background:
+        radial-gradient(120% 120% at 0% 0%, var(--sl-tint) 0%, transparent 60%),
+        var(--sl-surface);
+    }
+
+    .v-ico {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: var(--sl-size-tile);
+      height: var(--sl-size-tile);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-bg-muted);
+      color: var(--sl-primary-strong);
+      font-size: var(--sl-size-icon-md);
+    }
+
+    .v-num {
+      font-size: calc(var(--sl-font-hero) * 1.4);
+      line-height: var(--sl-line-tight);
+      color: var(--sl-text-strong);
+    }
+
+    .v-label {
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+    }
+
+    /* The load bar inside the speed tile: a figure that shows itself instead of being asserted */
+    .v-bar {
+      height: var(--sl-progress-height);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-bg-muted);
+      overflow: hidden;
+    }
+
+    .v-bar > i {
+      display: block;
+      height: 100%;
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-grad-progress-2);
+    }
+
+    /* Module orbit: three rings, one turn each, the labels riding the outer one */
+    .v-orbit {
+      position: relative;
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+    }
+
+    .v-orbit-ring {
+      position: absolute;
+      inset: 0;
+      border: 1px dashed var(--sl-border-muted);
+      border-radius: var(--sl-radius-circle);
+      animation: v-turn 40s linear infinite;
+    }
+
+    .v-orbit-ring:nth-child(2) {
+      inset: 16%;
+      animation-duration: 28s;
+      animation-direction: reverse;
+    }
+
+    .v-orbit-ring:nth-child(3) {
+      inset: 32%;
+      animation-duration: 18s;
+    }
+
+    .v-orbit-ring > span {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: var(--sl-size-chip);
+      height: var(--sl-size-chip);
+      margin: calc(var(--sl-size-chip) / -2) 0 0 calc(var(--sl-size-chip) / -2);
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-bg);
+      box-shadow: var(--sl-shadow-raised);
+      color: var(--sl-primary-strong);
+      font-size: var(--sl-size-icon-xs);
+      animation: v-turn 40s linear infinite reverse;
+    }
+
+    .v-orbit-ring > span:nth-child(2) { top: 50%; left: 100%; }
+    .v-orbit-ring > span:nth-child(3) { top: 100%; left: 50%; }
+    .v-orbit-ring > span:nth-child(4) { top: 50%; left: 0; }
+
+    .v-orbit-core {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 34%;
+      aspect-ratio: 1;
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-bg);
+      box-shadow: var(--sl-panel-shadow);
+      color: var(--sl-primary-strong);
+      font-size: var(--sl-size-icon-lg);
+    }
+
+    @keyframes v-turn {
+      to { transform: rotate(360deg); }
+    }
+
+    .v-feed {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sl-space-5);
+    }
+
+    .v-feed a {
+      display: flex;
+      gap: var(--sl-space-4);
+      align-items: flex-start;
+      text-decoration: none;
+      color: var(--sl-text);
+    }
+
+    .v-feed a:hover .v-feed-title {
+      color: var(--sl-primary-strong);
+    }
+
+    .v-feed-title {
+      display: block;
+      margin-bottom: var(--sl-space-2);
+      color: var(--sl-text-strong);
+      transition: color var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    @media (max-width: 900px) {
+      .v-tile,
+      .v-w4,
+      .v-w5,
+      .v-w6,
+      .v-w7,
+      .v-w8 {
+        grid-column: span 12;
+      }
+
+      .v-h2 {
+        grid-row: auto;
+      }
+    }
+  </style>
+</head>
+<body class="sl-summer">
+<main class="d-page" data-demo-page>
+  <div class="sl-wrp d-sec">
+    <div class="v-bento" data-demo-spot>
+
+      <section class="v-tile v-tile-brand v-w7 v-h2 d-reveal">
+        <p class="d-kicker"><i class="bi bi-git" aria-hidden="true"></i> Открытый код &middot; MIT &middot; PHP 8.4</p>
+        <h1 class="d-h1 sl-font">SLAED CMS</h1>
+        <p class="d-lead">Система управления содержимым сайта: простая в настройке, с высоким уровнем безопасности,
+        высокой скоростью работы и практически неограниченным потенциалом расширения. На её основе строят и небольшой
+        сайт, и крупный портал.</p>
+        <div class="d-actions">
+          <a class="sl-but" href="#" title="Скачать бесплатно актуальную версию системы">Скачать систему</a>
+          <a class="sl-chip sl-chip-info" href="#" title="Живая демонстрация панели управления"><i class="bi bi-play-circle" aria-hidden="true"></i> Живое демо</a>
+        </div>
+      </section>
+
+      <section class="v-tile v-w5 d-reveal">
+        <span class="v-ico"><i class="bi bi-box-seam" aria-hidden="true"></i></span>
+        <p class="v-num sl-font">6.2</p>
+        <p class="v-label">Актуальная версия, вышла 25 августа 2026 года</p>
+      </section>
+
+      <section class="v-tile v-w5 d-reveal">
+        <span class="v-ico"><i class="bi bi-speedometer2" aria-hidden="true"></i></span>
+        <p class="v-num sl-font">0.25 <small class="v-label">сек.</small></p>
+        <div class="v-bar"><i style="width: 13%"></i></div>
+        <p class="v-label">Сборка страницы: 12 запросов и 5.2 MB памяти</p>
+      </section>
+
+      <section class="v-tile v-w4 d-reveal">
+        <span class="v-ico"><i class="bi bi-hand-index-thumb" aria-hidden="true"></i></span>
+        <h2 class="d-h3 sl-font">Простота</h2>
+        <p class="d-text">Интуитивный интерфейс: управлять сайтом так же просто, как работать с документами или почтой.</p>
+      </section>
+
+      <section class="v-tile v-w4 d-reveal">
+        <span class="v-ico"><i class="bi bi-puzzle" aria-hidden="true"></i></span>
+        <h2 class="d-h3 sl-font">Функциональность</h2>
+        <p class="d-text">Модули, блоки, темы и расширения: 685 дополнений в файловом архиве проекта.</p>
+      </section>
+
+      <section class="v-tile v-w4 d-reveal">
+        <span class="v-ico"><i class="bi bi-shield-check" aria-hidden="true"></i></span>
+        <h2 class="d-h3 sl-font">Безопасность</h2>
+        <p class="d-text">Логирование действий, отслеживание инъекций и несанкционированных запросов из коробки.</p>
+      </section>
+
+      <section class="v-tile v-w8 d-reveal">
+        <h2 class="d-h3 sl-font">Эффективность</h2>
+        <p class="d-text">Низкое потребление серверных ресурсов и встроенная справка прямо в панели управления.
+        Двадцать один год развития, 26 модулей в поставке и 685 дополнений в архиве проекта.</p>
+        <div class="d-cols d-cols-4" style="margin-top: auto">
+          <p><span class="v-num sl-font" data-demo-num="21">0</span><br><span class="v-label">год разработки</span></p>
+          <p><span class="v-num sl-font" data-demo-num="685">0</span><br><span class="v-label">дополнений</span></p>
+          <p><span class="v-num sl-font" data-demo-num="26">0</span><br><span class="v-label">модулей</span></p>
+          <p><span class="v-num sl-font" data-demo-num="12">0</span><br><span class="v-label">запросов</span></p>
+        </div>
+      </section>
+
+      <section class="v-tile v-w4 d-reveal" aria-label="Модули системы">
+        <div class="v-orbit">
+          <span class="v-orbit-ring" aria-hidden="true">
+            <span><i class="bi bi-newspaper"></i></span>
+            <span><i class="bi bi-file-earmark-arrow-down"></i></span>
+            <span><i class="bi bi-chat-dots"></i></span>
+            <span><i class="bi bi-cart3"></i></span>
+          </span>
+          <span class="v-orbit-ring" aria-hidden="true">
+            <span><i class="bi bi-bar-chart"></i></span>
+            <span><i class="bi bi-people"></i></span>
+            <span><i class="bi bi-images"></i></span>
+            <span><i class="bi bi-envelope"></i></span>
+          </span>
+          <span class="v-orbit-ring" aria-hidden="true">
+            <span><i class="bi bi-search"></i></span>
+            <span><i class="bi bi-book"></i></span>
+            <span><i class="bi bi-star"></i></span>
+            <span><i class="bi bi-diagram-3"></i></span>
+          </span>
+          <span class="v-orbit-core"><i class="bi bi-hexagon-fill" aria-hidden="true"></i></span>
+        </div>
+        <p class="v-label">26 модулей в поставке, каждый включается одной галочкой</p>
+      </section>
+
+      <section class="v-tile v-w12 d-reveal">
+        <h2 class="d-h3 sl-font">Примеры внедрений системы</h2>
+        <div class="d-sites v-strip" data-demo-sites="12"></div>
+      </section>
+
+      <section class="v-tile v-w6 d-reveal">
+        <h2 class="d-h3 sl-font">Новости</h2>
+        <div class="v-feed">
+          <a href="#" title="Вышла SLAED CMS 6.2"><i class="bi bi-newspaper v-ico" aria-hidden="true"></i><span><b class="v-feed-title">Вышла SLAED CMS 6.2</b><span class="v-label">25.08.2026 &middot; Наши новости</span></span></a>
+          <a href="#" title="Тестируем Pre-Alpha 6.3 Pro"><i class="bi bi-cpu v-ico" aria-hidden="true"></i><span><b class="v-feed-title">Тестируем Pre-Alpha 6.3 Pro</b><span class="v-label">14.07.2026 &middot; Наши новости</span></span></a>
+          <a href="#" title="Обновление тем оформления"><i class="bi bi-palette v-ico" aria-hidden="true"></i><span><b class="v-feed-title">Обновление тем оформления</b><span class="v-label">01.02.2026 &middot; Программы</span></span></a>
+        </div>
+        <p><a class="sl-chip sl-chip-neutral" href="#" title="Все новости">Все новости <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>
+      </section>
+
+      <section class="v-tile v-w6 d-reveal">
+        <h2 class="d-h3 sl-font">Файлы</h2>
+        <div class="v-feed">
+          <a href="#" title="SLAED CMS 6.2 Pro"><i class="bi bi-box-seam v-ico" aria-hidden="true"></i><span><b class="v-feed-title">SLAED CMS 6.2 Pro</b><span class="v-label">25.08.2026 &middot; Система</span></span></a>
+          <a href="#" title="Модуль «Магазин» 3.1"><i class="bi bi-cart3 v-ico" aria-hidden="true"></i><span><b class="v-feed-title">Модуль &laquo;Магазин&raquo; 3.1</b><span class="v-label">12.06.2026 &middot; Модули системы</span></span></a>
+          <a href="#" title="Тема оформления Lite"><i class="bi bi-palette2 v-ico" aria-hidden="true"></i><span><b class="v-feed-title">Тема оформления Lite</b><span class="v-label">04.03.2026 &middot; Темы оформления</span></span></a>
+        </div>
+        <p><a class="sl-chip sl-chip-neutral" href="#" title="Каталог файлов">Каталог файлов <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>
+      </section>
+
+    </div>
+  </div>
+</main>
+<script src="assets/demo.js"></script>
+</body>
+</html>

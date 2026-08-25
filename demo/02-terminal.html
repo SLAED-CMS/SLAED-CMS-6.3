@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>02 &middot; Терминал — стенд главной SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* Terminal: the page speaks to the person who will install it. Sections are named like config blocks, the
+       install prints itself, and every claim is written as output rather than as a slogan. */
+    .v-page {
+      --v-mono: ui-monospace, SFMono-Regular, "Cascadia Code", Consolas, monospace;
+    }
+
+    .v-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: var(--sl-space-10);
+      align-items: center;
+    }
+
+    .v-sig {
+      font-family: var(--v-mono);
+      font-size: var(--sl-font-small);
+      color: var(--sl-success);
+    }
+
+    .v-sig::before {
+      content: "$ ";
+      color: var(--sl-text-muted);
+    }
+
+    /* The window: three dots, a title bar and a body that prints line by line */
+    .v-win {
+      border: 1px solid var(--sl-border-strong);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-bg-inverse);
+      box-shadow: var(--sl-panel-shadow);
+      overflow: hidden;
+    }
+
+    .v-win-bar {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      padding: var(--sl-space-4) var(--sl-space-5);
+      border-bottom: 1px solid var(--sl-border-inverse);
+      background: var(--sl-surface-sunken);
+      color: var(--sl-text-inverse);
+      font-family: var(--v-mono);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-dot {
+      width: var(--sl-bullet-width);
+      height: var(--sl-bullet-height);
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-danger);
+    }
+
+    .v-dot:nth-of-type(2) { background: var(--sl-warning); }
+    .v-dot:nth-of-type(3) { background: var(--sl-success); }
+
+    .v-win-body {
+      margin: 0;
+      padding: var(--sl-space-6);
+      font-family: var(--v-mono);
+      font-size: var(--sl-font-body);
+      line-height: var(--sl-line-loose);
+      color: var(--sl-text-inverse);
+      white-space: pre-wrap;
+    }
+
+    /* Each line waits its turn, then types itself out. The width animation is what draws the caret across */
+    .v-line {
+      display: block;
+      overflow: hidden;
+      white-space: nowrap;
+      width: 0;
+      animation: v-type 1.1s steps(44) forwards;
+    }
+
+    .v-line:nth-child(1) { animation-delay: 0.2s; }
+    .v-line:nth-child(2) { animation-delay: 1.4s; }
+    .v-line:nth-child(3) { animation-delay: 2.6s; }
+    .v-line:nth-child(4) { animation-delay: 3.8s; }
+    .v-line:nth-child(5) { animation-delay: 5s; }
+    .v-line:nth-child(6) { animation-delay: 6.2s; }
+
+    .v-line-in { color: var(--sl-primary-inverse); }
+    .v-line-ok { color: var(--sl-success); }
+
+    @keyframes v-type {
+      to { width: 100%; }
+    }
+
+    /* Section headings written as config blocks, so the page keeps one voice from top to bottom */
+    .v-key {
+      font-family: var(--v-mono);
+      font-size: var(--sl-font-small);
+      color: var(--sl-primary-strong);
+    }
+
+    .v-rule {
+      border: 0;
+      border-top: 1px dashed var(--sl-border-muted);
+      margin: 0 0 var(--sl-space-8);
+    }
+
+    .v-out {
+      display: grid;
+      gap: var(--sl-space-5);
+      font-family: var(--v-mono);
+    }
+
+    .v-row {
+      display: grid;
+      grid-template-columns: var(--sl-size-tile) minmax(0, 1fr) auto;
+      gap: var(--sl-space-5);
+      align-items: start;
+      padding: var(--sl-space-5) var(--sl-space-6);
+      border: 1px solid var(--sl-border);
+      border-left: var(--sl-alert-border) solid var(--sl-success);
+      border-radius: var(--sl-radius-1);
+      background: var(--sl-surface);
+    }
+
+    .v-row-i {
+      color: var(--sl-success);
+      font-size: var(--sl-size-icon-md);
+    }
+
+    .v-row b {
+      display: block;
+      margin-bottom: var(--sl-space-2);
+      color: var(--sl-text-strong);
+      font-family: var(--v-mono);
+    }
+
+    .v-row p {
+      margin: 0;
+      color: var(--sl-text-muted);
+      font-family: Arial, system-ui, sans-serif;
+      line-height: var(--sl-line-normal);
+    }
+
+    .v-stat {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1px;
+      background: var(--sl-border);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-2);
+      overflow: hidden;
+    }
+
+    .v-stat > div {
+      padding: var(--sl-space-7);
+      background: var(--sl-bg);
+      font-family: var(--v-mono);
+    }
+
+    .v-stat b {
+      display: block;
+      font-size: var(--sl-font-hero);
+      line-height: var(--sl-line-tight);
+      color: var(--sl-text-strong);
+    }
+
+    .v-stat span {
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+    }
+
+    .v-tree {
+      margin: 0;
+      padding: var(--sl-space-6);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-surface);
+      font-family: var(--v-mono);
+      font-size: var(--sl-font-small);
+      line-height: var(--sl-line-loose);
+      color: var(--sl-text-muted);
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    .v-feed {
+      display: grid;
+      gap: var(--sl-space-4);
+      font-family: var(--v-mono);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-feed a {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: var(--sl-space-5);
+      padding: var(--sl-space-4) 0;
+      border-bottom: 1px dashed var(--sl-border);
+      text-decoration: none;
+      color: var(--sl-text-strong);
+    }
+
+    .v-feed a:hover {
+      color: var(--sl-primary-strong);
+    }
+
+    .v-feed time {
+      color: var(--sl-text-muted);
+    }
+
+    @media (max-width: 900px) {
+      .v-hero {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+  </style>
+</head>
+<body class="sl-summer">
+<main class="d-page v-page" data-demo-page>
+
+  <div class="sl-wrp d-sec">
+    <div class="v-hero">
+      <div>
+        <p class="v-sig">slaed --version # 6.2, MIT, PHP 8.4</p>
+        <h1 class="d-h1 sl-font">SLAED CMS</h1>
+        <p class="d-lead">Система управления содержимым сайта: простая в настройке, с высоким уровнем безопасности,
+        высокой скоростью работы и практически неограниченным потенциалом расширения. На её основе строят и небольшой
+        сайт, и крупный портал.</p>
+        <div class="d-actions">
+          <a class="sl-but" href="#" title="Скачать бесплатно актуальную версию системы">Скачать систему</a>
+          <a class="sl-chip sl-chip-info" href="#" title="Живая демонстрация панели управления"><i class="bi bi-play-circle" aria-hidden="true"></i> Живое демо</a>
+        </div>
+      </div>
+      <div class="v-win" aria-label="Установка системы">
+        <div class="v-win-bar">
+          <i class="v-dot" aria-hidden="true"></i><i class="v-dot" aria-hidden="true"></i><i class="v-dot" aria-hidden="true"></i>
+          <span>bash &mdash; setup.php</span>
+        </div>
+        <pre class="v-win-body"><code><span class="v-line v-line-in">$ unzip slaed-6.2.zip -d /var/www/site</span><span class="v-line v-line-in">$ php setup.php --db=slaed --user=www</span><span class="v-line v-line-ok">&#10003; таблицы созданы: 42</span><span class="v-line v-line-ok">&#10003; модулей включено: 26</span><span class="v-line v-line-ok">&#10003; тема оформления: lite</span><span class="v-line v-line-ok">&#10003; готово за 11 секунд &mdash; https://site/admin.php</span></code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <p class="v-key">[features]</p>
+    <hr class="v-rule">
+    <div class="v-out">
+      <div class="v-row d-reveal"><i class="bi bi-hand-index-thumb v-row-i" aria-hidden="true"></i><span><b>simplicity = true</b><p>Интуитивный интерфейс: управлять сайтом так же просто, как работать с документами или почтой.</p></span><span class="sl-chip sl-chip-success">ok</span></div>
+      <div class="v-row d-reveal"><i class="bi bi-puzzle v-row-i" aria-hidden="true"></i><span><b>extensions = 685</b><p>Модули, блоки, темы и расширения: 685 дополнений в файловом архиве проекта.</p></span><span class="sl-chip sl-chip-success">ok</span></div>
+      <div class="v-row d-reveal"><i class="bi bi-speedometer2 v-row-i" aria-hidden="true"></i><span><b>page_time = 0.25s</b><p>Низкое потребление серверных ресурсов: страница собирается за 12 запросов и 5.2 MB памяти.</p></span><span class="sl-chip sl-chip-success">ok</span></div>
+      <div class="v-row d-reveal"><i class="bi bi-shield-check v-row-i" aria-hidden="true"></i><span><b>security.log = all</b><p>Логирование действий, отслеживание инъекций и несанкционированных запросов из коробки.</p></span><span class="sl-chip sl-chip-success">ok</span></div>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <p class="v-key">[stats]</p>
+    <hr class="v-rule">
+    <div class="v-stat d-reveal">
+      <div><b data-demo-num="21">0</b><span>год разработки, с 2005</span></div>
+      <div><b data-demo-num="685">0</b><span>дополнений в архиве</span></div>
+      <div><b data-demo-num="26">0</b><span>модулей в поставке</span></div>
+      <div><b data-demo-num="12">0</b><span>запросов на страницу</span></div>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <p class="v-key">[tree]</p>
+    <hr class="v-rule">
+    <pre class="v-tree d-reveal">slaed/
+├── admin/          панель управления, 26 разделов
+├── core/           ядро: маршрутизация, шаблонизатор, кэш
+├── modules/        новости, файлы, форум, магазин, опросы …
+├── blocks/         блоки левой и правой колонки
+├── templates/      темы оформления: admin, lite
+├── plugins/        htmx, редактор, подсветка кода
+└── config/         один файл настроек, без магии</pre>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <p class="v-key">[showcase]</p>
+    <hr class="v-rule">
+    <h2 class="d-h3 sl-font">Примеры внедрений системы</h2>
+    <div class="d-sites v-shots" data-demo-sites="12"></div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="d-cols d-cols-2">
+      <section>
+        <p class="v-key">[news]</p>
+        <hr class="v-rule">
+        <div class="v-feed">
+          <a href="#" title="Вышла SLAED CMS 6.2"><time datetime="2026-08-25">2026-08-25</time><span>Вышла SLAED CMS 6.2</span></a>
+          <a href="#" title="Тестируем Pre-Alpha 6.3 Pro"><time datetime="2026-07-14">2026-07-14</time><span>Тестируем Pre-Alpha 6.3 Pro</span></a>
+          <a href="#" title="Обновление тем оформления"><time datetime="2026-02-01">2026-02-01</time><span>Обновление тем оформления</span></a>
+        </div>
+      </section>
+      <section>
+        <p class="v-key">[files]</p>
+        <hr class="v-rule">
+        <div class="v-feed">
+          <a href="#" title="SLAED CMS 6.2 Pro"><time datetime="2026-08-25">2026-08-25</time><span>SLAED CMS 6.2 Pro</span></a>
+          <a href="#" title="Модуль «Магазин» 3.1"><time datetime="2026-06-12">2026-06-12</time><span>Модуль &laquo;Магазин&raquo; 3.1</span></a>
+          <a href="#" title="Тема оформления Lite"><time datetime="2026-03-04">2026-03-04</time><span>Тема оформления Lite</span></a>
+        </div>
+      </section>
+    </div>
+  </div>
+
+</main>
+<script src="assets/demo.js"></script>
+</body>
+</html>

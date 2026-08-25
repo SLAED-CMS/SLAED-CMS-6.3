@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>17 &middot; Мозаика — стенд главной SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* Mosaic: the strongest proof this product has is the sites already built on it, so the wall of those sites
+       IS the first screen. The headline lies over the wall; a tile answers the pointer by coming forward and
+       naming itself, and the rest of the wall recedes so the one being looked at is the only one lit. */
+    .v-wall {
+      position: relative;
+      isolation: isolate;
+      min-height: clamp(520px, 78vh, 760px);
+      display: grid;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    /* The wall behind the words: the twelve client screenshots at their own 260 pixels, laid in as many columns
+       as the window holds and cropped to 166 - the height of the shortest of them, so not one is ever enlarged.
+       The wall desaturates as a whole and the tile under the pointer takes its colour back. */
+    .v-tiles {
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      align-content: center;
+      justify-content: center;
+      gap: 2px;
+      overflow: hidden;
+    }
+
+    .v-tiles .d-site-shot {
+      height: 166px;
+      border-radius: 0;
+      box-shadow: none;
+      filter: saturate(0.45);
+      transition: filter var(--sl-time-slow) var(--sl-ease-out);
+    }
+
+    .v-tiles:hover .d-site-shot { filter: saturate(0.2) brightness(0.65); }
+    .v-tiles .d-site:hover .d-site-shot { filter: none; }
+
+    /* The name arrives only when its tile is pointed at, so the wall stays a wall until it is asked */
+    .v-tiles .d-site {
+      position: relative;
+    }
+
+    .v-tiles .d-site-cap {
+      position: absolute;
+      inset: auto var(--sl-space-3) var(--sl-space-3) var(--sl-space-3);
+      padding: var(--sl-space-2) var(--sl-space-4);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-scrim-strong);
+      color: #ffffff;
+      opacity: 0;
+      transform: translateY(var(--sl-space-3));
+      transition: opacity var(--sl-time-base) var(--sl-ease-out), transform var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-tiles .d-site-cap b { color: #ffffff; }
+    .v-tiles .d-site:hover .d-site-cap { opacity: 1; transform: none; }
+
+    /* The veil under the words: strong at the left where the type sits, gone at the right where the wall shows */
+    .v-wall::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: linear-gradient(100deg, var(--sl-scrim-strong) 0%, var(--sl-scrim) 46%, transparent 76%);
+      pointer-events: none;
+    }
+
+    .v-say {
+      max-width: 56ch;
+      padding: var(--sl-space-11) 0;
+      color: #ffffff;
+    }
+
+    .v-say .d-h1,
+    .v-say .d-lead,
+    .v-say .d-kicker { color: #ffffff; }
+
+    .v-say .d-lead,
+    .v-say .d-kicker { opacity: var(--sl-fade-subtle); }
+
+    .v-count {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sl-space-8);
+      margin-top: var(--sl-space-9);
+      padding-top: var(--sl-space-7);
+      border-top: 1px solid rgba(255, 255, 255, 0.24);
+    }
+
+    .v-count b {
+      display: block;
+      font-size: var(--sl-font-display);
+      line-height: var(--sl-line-tight);
+      color: #ffffff;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-count span {
+      font-size: var(--sl-font-small);
+      color: #ffffff;
+      opacity: var(--sl-fade-muted);
+    }
+
+    .v-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: var(--sl-space-6);
+    }
+
+    .v-card {
+      display: grid;
+      gap: var(--sl-space-4);
+      padding: var(--sl-space-8);
+      border-top: 2px solid var(--sl-primary);
+      background: var(--sl-surface);
+      border-radius: 0 0 var(--sl-radius-3) var(--sl-radius-3);
+    }
+
+    .v-card-i {
+      color: var(--sl-primary-strong);
+      font-size: var(--sl-size-icon-lg);
+    }
+
+    .v-feed {
+      display: grid;
+      gap: var(--sl-space-3);
+    }
+
+    .v-feed a {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: var(--sl-space-5);
+      padding: var(--sl-space-5) 0;
+      border-bottom: 1px solid var(--sl-border);
+      text-decoration: none;
+      color: var(--sl-text-strong);
+    }
+
+    .v-feed a:hover { color: var(--sl-primary-strong); }
+    .v-feed time { color: var(--sl-text-muted); font-size: var(--sl-font-small); }
+
+    @media (max-width: 900px) {
+      .v-tiles { justify-content: start; }
+      .v-wall::before { background: var(--sl-scrim-strong); }
+      .v-say { max-width: none; }
+    }
+  </style>
+</head>
+<body class="sl-summer">
+<main class="d-page" data-demo-page>
+
+  <div class="v-wall">
+    <div class="v-tiles d-sites" data-demo-sites="12" aria-hidden="true"></div>
+    <div class="sl-wrp">
+      <div class="v-say">
+        <p class="d-kicker">Открытый код &middot; MIT &middot; PHP 8.4</p>
+        <h1 class="d-h1 sl-font">SLAED CMS</h1>
+        <p class="d-lead">Система управления содержимым сайта: простая в настройке, с высоким уровнем безопасности,
+        высокой скоростью работы и практически неограниченным потенциалом расширения. На её основе строят и небольшой
+        сайт, и крупный портал — стена позади и есть примеры внедрений.</p>
+        <div class="d-actions">
+          <a class="sl-but" href="#" title="Скачать бесплатно актуальную версию системы">Скачать систему</a>
+          <a class="sl-chip sl-chip-info" href="#" title="Живая демонстрация панели управления"><i class="bi bi-play-circle" aria-hidden="true"></i> Живое демо</a>
+        </div>
+        <div class="v-count">
+          <div><b data-demo-num="21">0</b><span>год разработки</span></div>
+          <div><b data-demo-num="685">0</b><span>дополнений</span></div>
+          <div><b data-demo-num="26">0</b><span>модулей</span></div>
+          <div><b data-demo-num="0.25">0</b><span>сек. на страницу</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="d-head">
+      <h2 class="d-h2 sl-font">Почему они выбрали именно её</h2>
+      <p class="d-text">Четыре опоры системы, ради которых эти сайты и стоят на SLAED.</p>
+    </div>
+    <div class="v-cards">
+      <article class="v-card d-reveal"><i class="bi bi-hand-index-thumb v-card-i" aria-hidden="true"></i><h3 class="d-h3 sl-font">Простота</h3><p class="d-text">Интуитивный интерфейс: управлять сайтом так же просто, как работать с документами или почтой.</p></article>
+      <article class="v-card d-reveal"><i class="bi bi-puzzle v-card-i" aria-hidden="true"></i><h3 class="d-h3 sl-font">Функциональность</h3><p class="d-text">Модули, блоки, темы и расширения: 685 дополнений в файловом архиве проекта.</p></article>
+      <article class="v-card d-reveal"><i class="bi bi-speedometer2 v-card-i" aria-hidden="true"></i><h3 class="d-h3 sl-font">Эффективность</h3><p class="d-text">Низкое потребление серверных ресурсов: страница собирается за 12 запросов и 5.2 MB памяти.</p></article>
+      <article class="v-card d-reveal"><i class="bi bi-shield-check v-card-i" aria-hidden="true"></i><h3 class="d-h3 sl-font">Безопасность</h3><p class="d-text">Логирование действий, отслеживание инъекций и несанкционированных запросов из коробки.</p></article>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="d-head">
+      <h2 class="d-h2 sl-font">Примеры внедрений системы</h2>
+      <p class="d-text">Те же сайты в каталоге, с оценкой посетителей.</p>
+    </div>
+    <div class="d-sites v-strip" data-demo-sites="8" data-demo-sites-natural></div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="d-cols d-cols-2">
+      <section>
+        <h2 class="d-h3 sl-font">Новости</h2>
+        <div class="v-feed">
+          <a href="#" title="Вышла SLAED CMS 6.2"><i class="bi bi-newspaper" aria-hidden="true"></i><span>Вышла SLAED CMS 6.2</span><time datetime="2026-08-25">25.08.2026</time></a>
+          <a href="#" title="Тестируем Pre-Alpha 6.3 Pro"><i class="bi bi-cpu" aria-hidden="true"></i><span>Тестируем Pre-Alpha 6.3 Pro</span><time datetime="2026-07-14">14.07.2026</time></a>
+          <a href="#" title="Обновление тем оформления"><i class="bi bi-palette" aria-hidden="true"></i><span>Обновление тем оформления</span><time datetime="2026-02-01">01.02.2026</time></a>
+        </div>
+      </section>
+      <section>
+        <h2 class="d-h3 sl-font">Файлы</h2>
+        <div class="v-feed">
+          <a href="#" title="SLAED CMS 6.2 Pro"><i class="bi bi-box-seam" aria-hidden="true"></i><span>SLAED CMS 6.2 Pro</span><time datetime="2026-08-25">25.08.2026</time></a>
+          <a href="#" title="Модуль «Магазин» 3.1"><i class="bi bi-cart3" aria-hidden="true"></i><span>Модуль &laquo;Магазин&raquo; 3.1</span><time datetime="2026-06-12">12.06.2026</time></a>
+          <a href="#" title="Тема оформления Lite"><i class="bi bi-palette2" aria-hidden="true"></i><span>Тема оформления Lite</span><time datetime="2026-03-04">04.03.2026</time></a>
+        </div>
+      </section>
+    </div>
+  </div>
+
+</main>
+<script src="assets/demo.js"></script>
+</body>
+</html>

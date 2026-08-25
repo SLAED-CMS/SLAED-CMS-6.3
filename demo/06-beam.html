@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>06 &middot; Схема — стенд главной SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* Schematic: the first screen is the request itself, drawn as a chain with light running along it. The claim
+       "fast" is replaced by the path a request actually walks, each hop carrying its own measured figure. */
+    .v-hero {
+      padding: var(--sl-space-11) 0;
+      text-align: center;
+    }
+
+    .v-flow {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      margin: var(--sl-space-10) 0 0;
+    }
+
+    .v-node {
+      display: grid;
+      justify-items: center;
+      gap: var(--sl-space-3);
+      width: 132px;
+    }
+
+    .v-node-i {
+      display: grid;
+      place-items: center;
+      width: var(--sl-avatar-width);
+      height: var(--sl-avatar-height);
+      border: 1px solid var(--sl-border-strong);
+      border-radius: var(--sl-radius-3);
+      background: var(--sl-bg);
+      box-shadow: var(--sl-shadow-raised);
+      color: var(--sl-primary-strong);
+      font-size: var(--sl-size-icon-md);
+    }
+
+    .v-node b {
+      color: var(--sl-text-strong);
+      font-size: var(--sl-font-body);
+    }
+
+    .v-node span {
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* The wire: a hairline with one bright pulse travelling it. The pulse is a moving gradient rather than a
+       moving element, so nothing is laid out twice per frame and the whole chain runs on the compositor. */
+    .v-wire {
+      position: relative;
+      height: 1px;
+      min-width: 40px;
+      flex: 1;
+      align-self: start;
+      margin-top: calc(var(--sl-avatar-height) / 2);
+      background: var(--sl-border-strong);
+    }
+
+    .v-wire::after {
+      content: "";
+      position: absolute;
+      inset: -1px 0;
+      background: linear-gradient(90deg, transparent 0%, var(--sl-primary) 50%, transparent 100%);
+      background-size: 40% 100%;
+      background-repeat: no-repeat;
+      animation: v-pulse 2.6s linear infinite;
+      animation-delay: var(--v-lag, 0s);
+    }
+
+    @keyframes v-pulse {
+      from { background-position: -40% 0; }
+      to { background-position: 140% 0; }
+    }
+
+    /* The four pillars as layers of the same schematic: each layer says where in the chain it lives */
+    .v-layers {
+      display: grid;
+      gap: var(--sl-space-5);
+    }
+
+    .v-layer {
+      display: grid;
+      grid-template-columns: var(--sl-size-tile) minmax(0, 1fr) minmax(0, 1fr);
+      align-items: center;
+      gap: var(--sl-space-8);
+      padding: var(--sl-space-8);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-3);
+      background: var(--sl-surface);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .v-layer::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: var(--sl-alert-border);
+      background: var(--sl-primary);
+    }
+
+    .v-layer-i {
+      display: grid;
+      place-items: center;
+      width: var(--sl-size-tile);
+      height: var(--sl-size-tile);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-tint);
+      color: var(--sl-primary-strong);
+      font-size: var(--sl-size-icon-md);
+    }
+
+    .v-where {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sl-space-3);
+      justify-content: flex-end;
+    }
+
+    .v-stat {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1px;
+      background: var(--sl-border);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-3);
+      overflow: hidden;
+    }
+
+    .v-stat > div {
+      padding: var(--sl-space-8);
+      background: var(--sl-bg);
+    }
+
+    .v-stat b {
+      display: block;
+      font-size: var(--sl-font-hero);
+      line-height: var(--sl-line-tight);
+      color: var(--sl-text-strong);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-stat span {
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+    }
+
+    .v-feed {
+      display: grid;
+      gap: var(--sl-space-4);
+    }
+
+    .v-feed a {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: var(--sl-space-5);
+      padding: var(--sl-space-5) 0;
+      border-bottom: 1px dashed var(--sl-border);
+      text-decoration: none;
+      color: var(--sl-text-strong);
+    }
+
+    .v-feed a:hover { color: var(--sl-primary-strong); }
+    .v-feed time { color: var(--sl-text-muted); font-size: var(--sl-font-small); }
+
+    @media (max-width: 900px) {
+      .v-flow {
+        flex-direction: column;
+        align-items: center;
+        gap: var(--sl-space-5);
+      }
+
+      .v-wire {
+        width: 1px;
+        height: 32px;
+        min-width: 0;
+        margin: 0;
+      }
+
+      .v-wire::after {
+        inset: 0 -1px;
+        background: linear-gradient(180deg, transparent 0%, var(--sl-primary) 50%, transparent 100%);
+        background-size: 100% 40%;
+        animation-name: v-pulse-y;
+      }
+
+      .v-layer {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .v-where { justify-content: flex-start; }
+    }
+
+    @keyframes v-pulse-y {
+      from { background-position: 0 -40%; }
+      to { background-position: 0 140%; }
+    }
+  </style>
+</head>
+<body class="sl-summer">
+<main class="d-page" data-demo-page>
+
+  <div class="v-hero">
+    <div class="sl-wrp">
+      <p class="d-kicker" style="justify-content: center">Открытый код &middot; MIT &middot; PHP 8.4</p>
+      <h1 class="d-h1 sl-font">SLAED CMS</h1>
+      <p class="d-lead" style="margin-inline: auto; max-width: 72ch">Система управления содержимым сайта: простая
+      в настройке, с высоким уровнем безопасности, высокой скоростью работы и практически неограниченным потенциалом
+      расширения. На её основе строят и небольшой сайт, и крупный портал.</p>
+      <div class="d-actions" style="justify-content: center">
+        <a class="sl-but" href="#" title="Скачать бесплатно актуальную версию системы">Скачать систему</a>
+        <a class="sl-chip sl-chip-info" href="#" title="Живая демонстрация панели управления"><i class="bi bi-play-circle" aria-hidden="true"></i> Живое демо</a>
+      </div>
+
+      <div class="v-flow" aria-label="Путь одного запроса">
+        <div class="v-node"><span class="v-node-i"><i class="bi bi-window" aria-hidden="true"></i></span><b>Браузер</b><span>запрос</span></div>
+        <i class="v-wire" style="--v-lag: 0s" aria-hidden="true"></i>
+        <div class="v-node"><span class="v-node-i"><i class="bi bi-lightning-charge" aria-hidden="true"></i></span><b>Кэш</b><span>0.01 сек.</span></div>
+        <i class="v-wire" style="--v-lag: 0.5s" aria-hidden="true"></i>
+        <div class="v-node"><span class="v-node-i"><i class="bi bi-hexagon" aria-hidden="true"></i></span><b>Ядро</b><span>0.09 сек.</span></div>
+        <i class="v-wire" style="--v-lag: 1s" aria-hidden="true"></i>
+        <div class="v-node"><span class="v-node-i"><i class="bi bi-database" aria-hidden="true"></i></span><b>База</b><span>12 запросов</span></div>
+        <i class="v-wire" style="--v-lag: 1.5s" aria-hidden="true"></i>
+        <div class="v-node"><span class="v-node-i"><i class="bi bi-file-earmark-code" aria-hidden="true"></i></span><b>Шаблон</b><span>0.25 сек. итого</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="d-head">
+      <h2 class="d-h2 sl-font">Четыре опоры на этой же схеме</h2>
+      <p class="d-text">Каждая опора живёт на своём участке пути, а не в отдельном списке достоинств.</p>
+    </div>
+    <div class="v-layers">
+      <article class="v-layer d-reveal">
+        <span class="v-layer-i"><i class="bi bi-hand-index-thumb" aria-hidden="true"></i></span>
+        <div><h3 class="d-h3 sl-font">Простота</h3><p class="d-text">Интуитивный интерфейс: управлять сайтом так же просто, как работать с документами или почтой.</p></div>
+        <div class="v-where"><span class="sl-chip sl-chip-neutral">Браузер</span><span class="sl-chip sl-chip-neutral">Шаблон</span></div>
+      </article>
+      <article class="v-layer d-reveal">
+        <span class="v-layer-i"><i class="bi bi-puzzle" aria-hidden="true"></i></span>
+        <div><h3 class="d-h3 sl-font">Функциональность</h3><p class="d-text">Модули, блоки, темы и расширения: 685 дополнений в файловом архиве проекта.</p></div>
+        <div class="v-where"><span class="sl-chip sl-chip-neutral">Ядро</span><span class="sl-chip sl-chip-neutral">Модули</span></div>
+      </article>
+      <article class="v-layer d-reveal">
+        <span class="v-layer-i"><i class="bi bi-speedometer2" aria-hidden="true"></i></span>
+        <div><h3 class="d-h3 sl-font">Эффективность</h3><p class="d-text">Низкое потребление серверных ресурсов: страница собирается за 12 запросов и 5.2 MB памяти.</p></div>
+        <div class="v-where"><span class="sl-chip sl-chip-neutral">Кэш</span><span class="sl-chip sl-chip-neutral">База</span></div>
+      </article>
+      <article class="v-layer d-reveal">
+        <span class="v-layer-i"><i class="bi bi-shield-check" aria-hidden="true"></i></span>
+        <div><h3 class="d-h3 sl-font">Безопасность</h3><p class="d-text">Логирование действий, отслеживание инъекций и несанкционированных запросов из коробки.</p></div>
+        <div class="v-where"><span class="sl-chip sl-chip-neutral">Вход</span><span class="sl-chip sl-chip-neutral">Ядро</span></div>
+      </article>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec-tight">
+    <div class="v-stat d-reveal">
+      <div><b data-demo-num="21">0</b><span>год разработки, с 2005</span></div>
+      <div><b data-demo-num="685">0</b><span>дополнений в архиве</span></div>
+      <div><b data-demo-num="26">0</b><span>модулей в поставке</span></div>
+      <div><b data-demo-num="12">0</b><span>запросов на страницу</span></div>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="d-head">
+      <h2 class="d-h2 sl-font">Примеры внедрений системы</h2>
+      <p class="d-text">Одна и та же схема под разной нагрузкой.</p>
+    </div>
+    <div class="d-sites v-shots" data-demo-sites="12"></div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="d-cols d-cols-2">
+      <section>
+        <h2 class="d-h3 sl-font">Новости</h2>
+        <div class="v-feed">
+          <a href="#" title="Вышла SLAED CMS 6.2"><i class="bi bi-newspaper" aria-hidden="true"></i><span>Вышла SLAED CMS 6.2</span><time datetime="2026-08-25">25.08.2026</time></a>
+          <a href="#" title="Тестируем Pre-Alpha 6.3 Pro"><i class="bi bi-cpu" aria-hidden="true"></i><span>Тестируем Pre-Alpha 6.3 Pro</span><time datetime="2026-07-14">14.07.2026</time></a>
+          <a href="#" title="Обновление тем оформления"><i class="bi bi-palette" aria-hidden="true"></i><span>Обновление тем оформления</span><time datetime="2026-02-01">01.02.2026</time></a>
+        </div>
+      </section>
+      <section>
+        <h2 class="d-h3 sl-font">Файлы</h2>
+        <div class="v-feed">
+          <a href="#" title="SLAED CMS 6.2 Pro"><i class="bi bi-box-seam" aria-hidden="true"></i><span>SLAED CMS 6.2 Pro</span><time datetime="2026-08-25">25.08.2026</time></a>
+          <a href="#" title="Модуль «Магазин» 3.1"><i class="bi bi-cart3" aria-hidden="true"></i><span>Модуль &laquo;Магазин&raquo; 3.1</span><time datetime="2026-06-12">12.06.2026</time></a>
+          <a href="#" title="Тема оформления Lite"><i class="bi bi-palette2" aria-hidden="true"></i><span>Тема оформления Lite</span><time datetime="2026-03-04">04.03.2026</time></a>
+        </div>
+      </section>
+    </div>
+  </div>
+
+</main>
+<script src="assets/demo.js"></script>
+</body>
+</html>

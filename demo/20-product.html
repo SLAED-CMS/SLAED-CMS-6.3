@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>20 &middot; Витрина клиента — стенд главной SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* Client showcase: the glass of 13, but what stands on it is the product rather than a promise. The first
+       screen shows a real client site at full size in a browser frame, and the rail beside it switches between
+       four of them. This is the one argument a CMS cannot fake - somebody already shipped on it.
+
+       The screenshots are 1024 wide. The frame is capped at that, so the picture is shown at its own size or
+       smaller and never blown up. The season photograph behind the glass keeps its own 440 pixels for the same
+       reason. */
+    .v-page {
+      --v-band: min(calc(100vw * 440 / 1920), 440px);
+    }
+
+    .v-scene {
+      position: relative;
+      isolation: isolate;
+      padding: var(--sl-space-9) 0 var(--sl-space-11);
+    }
+
+    .v-scene::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      z-index: -2;
+      height: var(--v-band);
+    }
+
+    .v-scene::after {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      z-index: -1;
+      height: var(--v-band);
+      background: linear-gradient(to bottom, var(--sl-scrim) 0%, var(--sl-scrim-strong) 70%, var(--sl-bg) 100%);
+    }
+
+    .sl-winter .v-scene::before { background-image: url(../templates/lite/images/seasons/winter.webp); }
+    .sl-spring .v-scene::before { background-image: url(../templates/lite/images/seasons/spring.webp); }
+    .sl-summer .v-scene::before { background-image: url(../templates/lite/images/seasons/summer.webp); }
+    .sl-autumn .v-scene::before { background-image: url(../templates/lite/images/seasons/autumn.webp); }
+    .sl-newyear .v-scene::before { background-image: url(../templates/lite/images/seasons/newyear.webp); }
+
+    .v-say { color: #ffffff; text-align: center; }
+    .v-say .d-h1,
+    .v-say .d-kicker,
+    .v-say .d-lead { color: #ffffff; }
+    .v-say .d-kicker,
+    .v-say .d-lead { opacity: var(--sl-fade-subtle); }
+    .v-say .d-lead { margin-inline: auto; max-width: 70ch; }
+    .v-say .d-actions,
+    .v-say .d-kicker { justify-content: center; }
+
+    /* The stage: one sheet of glass carrying a browser frame and the rail that switches what is inside it */
+    .v-stage {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 260px;
+      gap: var(--sl-space-8);
+      margin-top: var(--sl-space-9);
+      padding: var(--sl-space-6);
+      border: 1px solid light-dark(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.14));
+      border-radius: var(--sl-radius-3);
+      background: light-dark(rgba(255, 255, 255, 0.66), rgba(20, 27, 38, 0.7));
+      backdrop-filter: blur(22px) saturate(1.4);
+      box-shadow: inset 0 1px 0 light-dark(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.08)), var(--sl-panel-shadow);
+    }
+
+    .v-frame {
+      border: 1px solid var(--sl-border-strong);
+      border-radius: var(--sl-radius-2);
+      overflow: hidden;
+      background: var(--sl-bg);
+      box-shadow: var(--sl-shadow-float);
+    }
+
+    .v-frame-bar {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      padding: var(--sl-space-4) var(--sl-space-5);
+      border-bottom: 1px solid var(--sl-border);
+      background: var(--sl-bg-subtle);
+    }
+
+    .v-dot {
+      width: var(--sl-bullet-width);
+      height: var(--sl-bullet-height);
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-border-strong);
+    }
+
+    .v-url {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      height: var(--sl-size-chip);
+      padding: 0 var(--sl-space-5);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-bg);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    /* The screenshot is 1024 wide: shown at its own width where there is room, scaled down where there is not,
+       and cropped from the top rather than squeezed where the frame is shorter than the page it shows */
+    .v-glassshot {
+      display: flex;
+      justify-content: center;
+      height: 420px;
+      overflow: hidden;
+      background: var(--sl-bg-muted);
+    }
+
+    /* Width first, height never: the picture is shown at its own width where the frame allows it and smaller
+       where it does not, and the frame crops the rest of the page away instead of squeezing it into view */
+    .v-glassshot img {
+      display: block;
+      width: auto;
+      max-width: 100%;
+      height: auto;
+      align-self: flex-start;
+    }
+
+    .v-pick {
+      display: grid;
+      align-content: start;
+      gap: var(--sl-space-3);
+    }
+
+    .v-pick button {
+      display: grid;
+      grid-template-columns: 64px minmax(0, 1fr);
+      align-items: center;
+      gap: var(--sl-space-4);
+      padding: var(--sl-space-3);
+      border: 1px solid transparent;
+      border-radius: var(--sl-radius-2);
+      background: transparent;
+      cursor: pointer;
+      font: inherit;
+      text-align: left;
+      color: var(--sl-text-muted);
+      transition: border-color var(--sl-time-base) var(--sl-ease-out), background-color var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-pick button:hover { background: light-dark(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.05)); }
+
+    .v-pick button[aria-selected="true"] {
+      border-color: var(--sl-primary);
+      background: light-dark(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.08));
+      color: var(--sl-text-strong);
+    }
+
+    .v-pick img {
+      display: block;
+      width: 64px;
+      height: 44px;
+      object-fit: cover;
+      object-position: 50% 0;
+      border-radius: var(--sl-radius-1);
+    }
+
+    .v-pick b { display: block; font-weight: var(--sl-weight-normal); }
+    .v-pick small { color: var(--sl-text-muted); }
+
+    .v-panel[hidden] { display: none; }
+
+    .v-deck {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: var(--sl-space-6);
+    }
+
+    .v-card {
+      display: grid;
+      gap: var(--sl-space-4);
+      padding: var(--sl-space-8);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-3);
+      background: var(--sl-surface);
+    }
+
+    .v-card-i {
+      display: grid;
+      place-items: center;
+      width: var(--sl-size-tile);
+      height: var(--sl-size-tile);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-tint);
+      color: var(--sl-primary-strong);
+      font-size: var(--sl-size-icon-md);
+    }
+
+    .v-stat {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1px;
+      background: var(--sl-border);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-3);
+      overflow: hidden;
+      text-align: center;
+    }
+
+    .v-stat > div { padding: var(--sl-space-8); background: var(--sl-bg); }
+
+    .v-stat b {
+      display: block;
+      font-size: var(--sl-font-hero);
+      line-height: var(--sl-line-tight);
+      color: var(--sl-text-strong);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-stat span { font-size: var(--sl-font-small); color: var(--sl-text-muted); }
+
+    .v-feed {
+      display: grid;
+      gap: var(--sl-space-3);
+    }
+
+    .v-feed a {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: var(--sl-space-5);
+      padding: var(--sl-space-5) var(--sl-space-6);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-surface);
+      text-decoration: none;
+      color: var(--sl-text-strong);
+    }
+
+    .v-feed a:hover { border-color: var(--sl-primary); }
+    .v-feed time { color: var(--sl-text-muted); font-size: var(--sl-font-small); }
+
+    @media (max-width: 900px) {
+      .v-stage { grid-template-columns: minmax(0, 1fr); }
+      .v-glassshot { height: 280px; }
+      .v-pick { grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); overflow-x: auto; }
+    }
+
+    @media (max-width: 768px) {
+      .v-scene::before,
+      .v-scene::after { display: none; }
+      .v-say .d-h1,
+      .v-say .d-kicker { color: var(--sl-text-strong); }
+      .v-say .d-lead { color: var(--sl-text-muted); opacity: 1; }
+    }
+  </style>
+</head>
+<body class="sl-summer">
+<main class="d-page v-page" data-demo-page>
+
+  <div class="v-scene d-band-art">
+    <div class="sl-wrp">
+      <div class="v-say">
+        <p class="d-kicker">Открытый код &middot; MIT &middot; PHP 8.4</p>
+        <h1 class="d-h1 sl-font">SLAED CMS</h1>
+        <p class="d-lead">Система управления содержимым сайта: простая в настройке, с высоким уровнем безопасности,
+        высокой скоростью работы и практически неограниченным потенциалом расширения. Вот что на ней уже работает.</p>
+        <div class="d-actions">
+          <a class="sl-but" href="#" title="Скачать бесплатно актуальную версию системы">Скачать систему</a>
+          <a class="sl-chip sl-chip-info" href="#" title="Живая демонстрация панели управления"><i class="bi bi-play-circle" aria-hidden="true"></i> Живое демо</a>
+        </div>
+      </div>
+
+      <div class="v-stage" data-demo-tabs>
+        <div>
+          <div class="v-panel" data-demo-panel="a">
+            <div class="v-frame">
+              <div class="v-frame-bar"><i class="v-dot" aria-hidden="true"></i><i class="v-dot" aria-hidden="true"></i><i class="v-dot" aria-hidden="true"></i><span class="v-url">https://hostmind.ru</span></div>
+              <span class="v-glassshot"><img src="../uploads/screens/hostmind.ru.png" alt="Сайт: Hostmind" width="1024" height="768"></span>
+            </div>
+          </div>
+          <div class="v-panel" data-demo-panel="b" hidden>
+            <div class="v-frame">
+              <div class="v-frame-bar"><i class="v-dot" aria-hidden="true"></i><i class="v-dot" aria-hidden="true"></i><i class="v-dot" aria-hidden="true"></i><span class="v-url">https://molodrk.ru</span></div>
+              <span class="v-glassshot"><img src="../uploads/screens/molodrk.ru.jpg" alt="Сайт: Molodrk" width="1024" height="768"></span>
+            </div>
+          </div>
+          <div class="v-panel" data-demo-panel="c" hidden>
+            <div class="v-frame">
+              <div class="v-frame-bar"><i class="v-dot" aria-hidden="true"></i><i class="v-dot" aria-hidden="true"></i><i class="v-dot" aria-hidden="true"></i><span class="v-url">https://mediacms.net</span></div>
+              <span class="v-glassshot"><img src="../uploads/screens/mediacms.net.jpg" alt="Сайт: Mediacms" width="1024" height="768"></span>
+            </div>
+          </div>
+          <div class="v-panel" data-demo-panel="d" hidden>
+            <div class="v-frame">
+              <div class="v-frame-bar"><i class="v-dot" aria-hidden="true"></i><i class="v-dot" aria-hidden="true"></i><i class="v-dot" aria-hidden="true"></i><span class="v-url">https://livetver.ru</span></div>
+              <span class="v-glassshot"><img src="../uploads/screens/livetver.ru.gif" alt="Сайт: Livetver" width="1024" height="768"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="v-pick" role="tablist" aria-label="Примеры внедрений системы">
+          <button type="button" role="tab" data-demo-tab="a" aria-selected="true"><img src="../uploads/screens/thumb/hostmind.ru.png" alt="" width="260" height="195"><span><b>Hostmind</b><small>хостинг &middot; 3361</small></span></button>
+          <button type="button" role="tab" data-demo-tab="b" aria-selected="false"><img src="../uploads/screens/thumb/molodrk.ru.jpg" alt="" width="260" height="455"><span><b>Molodrk</b><small>портал &middot; 1304</small></span></button>
+          <button type="button" role="tab" data-demo-tab="c" aria-selected="false"><img src="../uploads/screens/thumb/mediacms.net.jpg" alt="" width="260" height="330"><span><b>Mediacms</b><small>медиа &middot; 905</small></span></button>
+          <button type="button" role="tab" data-demo-tab="d" aria-selected="false"><img src="../uploads/screens/thumb/livetver.ru.gif" alt="" width="260" height="166">
+            <span><b>Livetver</b><small>городской &middot; 995</small></span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="d-head">
+      <h2 class="d-h2 sl-font">Почему они выбрали именно её</h2>
+      <p class="d-text">Четыре опоры системы, ради которых эти сайты и стоят на SLAED.</p>
+    </div>
+    <div class="v-deck">
+      <article class="v-card d-reveal"><span class="v-card-i"><i class="bi bi-hand-index-thumb" aria-hidden="true"></i></span><h3 class="d-h3 sl-font">Простота</h3><p class="d-text">Интуитивный интерфейс: управлять сайтом так же просто, как работать с документами или почтой.</p></article>
+      <article class="v-card d-reveal"><span class="v-card-i"><i class="bi bi-puzzle" aria-hidden="true"></i></span><h3 class="d-h3 sl-font">Функциональность</h3><p class="d-text">Модули, блоки, темы и расширения: 685 дополнений в файловом архиве проекта.</p></article>
+      <article class="v-card d-reveal"><span class="v-card-i"><i class="bi bi-speedometer2" aria-hidden="true"></i></span><h3 class="d-h3 sl-font">Эффективность</h3><p class="d-text">Низкое потребление серверных ресурсов: страница собирается за 12 запросов и 5.2 MB памяти.</p></article>
+      <article class="v-card d-reveal"><span class="v-card-i"><i class="bi bi-shield-check" aria-hidden="true"></i></span><h3 class="d-h3 sl-font">Безопасность</h3><p class="d-text">Логирование действий, отслеживание инъекций и несанкционированных запросов из коробки.</p></article>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec-tight">
+    <div class="v-stat d-reveal">
+      <div><b data-demo-num="21">0</b><span>год разработки, с 2005</span></div>
+      <div><b data-demo-num="685">0</b><span>дополнений в архиве</span></div>
+      <div><b data-demo-num="26">0</b><span>модулей в поставке</span></div>
+      <div><b data-demo-num="0.25">0</b><span>секунды на страницу</span></div>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="d-head">
+      <h2 class="d-h2 sl-font">Примеры внедрений системы</h2>
+      <p class="d-text">Весь каталог сайтов проекта: снимок и оценка посетителей у каждого.</p>
+    </div>
+    <div class="d-sites" data-demo-sites="12"></div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="d-cols d-cols-2">
+      <section>
+        <h2 class="d-h3 sl-font">Новости</h2>
+        <div class="v-feed">
+          <a href="#" title="Вышла SLAED CMS 6.2"><i class="bi bi-newspaper" aria-hidden="true"></i><span>Вышла SLAED CMS 6.2</span><time datetime="2026-08-25">25.08.2026</time></a>
+          <a href="#" title="Тестируем Pre-Alpha 6.3 Pro"><i class="bi bi-cpu" aria-hidden="true"></i><span>Тестируем Pre-Alpha 6.3 Pro</span><time datetime="2026-07-14">14.07.2026</time></a>
+          <a href="#" title="Обновление тем оформления"><i class="bi bi-palette" aria-hidden="true"></i><span>Обновление тем оформления</span><time datetime="2026-02-01">01.02.2026</time></a>
+        </div>
+      </section>
+      <section>
+        <h2 class="d-h3 sl-font">Файлы</h2>
+        <div class="v-feed">
+          <a href="#" title="SLAED CMS 6.2 Pro"><i class="bi bi-box-seam" aria-hidden="true"></i><span>SLAED CMS 6.2 Pro</span><time datetime="2026-08-25">25.08.2026</time></a>
+          <a href="#" title="Модуль «Магазин» 3.1"><i class="bi bi-cart3" aria-hidden="true"></i><span>Модуль &laquo;Магазин&raquo; 3.1</span><time datetime="2026-06-12">12.06.2026</time></a>
+          <a href="#" title="Тема оформления Lite"><i class="bi bi-palette2" aria-hidden="true"></i><span>Тема оформления Lite</span><time datetime="2026-03-04">04.03.2026</time></a>
+        </div>
+      </section>
+    </div>
+  </div>
+
+</main>
+<script src="assets/demo.js"></script>
+</body>
+</html>

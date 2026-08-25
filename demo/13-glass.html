@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>13 &middot; Стекло — стенд главной SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* Glass: the season photograph the site already ships is the ground of the first screen, and the content
+       stands on a frosted panel that overhangs its lower edge. The panel takes its colour from whatever is
+       behind it, so the season is never restated in a second palette.
+
+       The band is exactly as tall as the picture is at this width and not one pixel more: 1920x440 at width W
+       is 440 * W / 1920 tall, capped at 440 where the page is wider than the file. Nothing is ever upscaled,
+       which is the whole difference between a photograph and a blown-up photograph. */
+    .v-page {
+      --v-band: min(calc(100vw * 440 / 1920), 440px);
+      --v-lip: var(--sl-space-11);
+    }
+
+    .v-scene {
+      position: relative;
+      isolation: isolate;
+      padding-top: var(--v-band);
+    }
+
+    /* The picture itself, at its own size, pinned to the top of the scene */
+    .v-scene::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      z-index: -2;
+      height: var(--v-band);
+    }
+
+    /* The veil, exactly as tall as the picture, so it never darkens the page below the band */
+    .v-scene::after {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      z-index: -1;
+      height: var(--v-band);
+      background:
+        linear-gradient(100deg, var(--sl-scrim-strong) 0%, var(--sl-scrim) 42%, transparent 78%),
+        linear-gradient(var(--sl-scrim-subtle), var(--sl-scrim-subtle));
+    }
+
+    /* The five seasons: the only place on the page where the skin is named, and each names nothing but its file */
+    .sl-winter .v-scene::before { background-image: url(../templates/lite/images/seasons/winter.webp); }
+    .sl-spring .v-scene::before { background-image: url(../templates/lite/images/seasons/spring.webp); }
+    .sl-summer .v-scene::before { background-image: url(../templates/lite/images/seasons/summer.webp); }
+    .sl-autumn .v-scene::before { background-image: url(../templates/lite/images/seasons/autumn.webp); }
+    .sl-newyear .v-scene::before { background-image: url(../templates/lite/images/seasons/newyear.webp); }
+
+    /* The headline lies on the photograph; the panel below overhangs its lower edge onto the page */
+    .v-over {
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: calc(var(--v-band) - var(--v-lip));
+      display: grid;
+      align-content: center;
+      color: #ffffff;
+    }
+
+    .v-over .d-h1,
+    .v-over .d-kicker { color: #ffffff; }
+    .v-over .d-kicker { opacity: var(--sl-fade-subtle); }
+
+    .v-glass {
+      position: relative;
+      margin-top: calc(var(--v-lip) * -1);
+      padding: var(--sl-space-10);
+      border: 1px solid light-dark(rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.16));
+      border-radius: var(--sl-radius-3);
+      background: light-dark(rgba(255, 255, 255, 0.62), rgba(20, 27, 38, 0.62));
+      backdrop-filter: blur(20px) saturate(1.4);
+      box-shadow: var(--sl-panel-shadow);
+      overflow: hidden;
+    }
+
+    /* The light along the top edge of the glass, and the slow sheen that crosses it */
+    .v-glass::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, light-dark(rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.5)), transparent);
+    }
+
+    .v-glass::after {
+      content: "";
+      position: absolute;
+      inset: -50% -20%;
+      background: linear-gradient(75deg, transparent 42%, light-dark(rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.1)) 50%, transparent 58%);
+      animation: v-sheen 11s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes v-sheen {
+      from { transform: translateX(-60%); }
+      to { transform: translateX(60%); }
+    }
+
+    .v-glass > * { position: relative; z-index: 1; }
+
+    .v-deck {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: var(--sl-space-5);
+      margin-top: var(--sl-space-8);
+    }
+
+    .v-pane {
+      padding: var(--sl-space-7);
+      border: 1px solid light-dark(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.1));
+      border-radius: var(--sl-radius-2);
+      background: light-dark(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.05));
+    }
+
+    .v-pane-i {
+      display: grid;
+      place-items: center;
+      width: var(--sl-size-tile);
+      height: var(--sl-size-tile);
+      margin-bottom: var(--sl-space-5);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-tint-strong);
+      color: var(--sl-primary-strong);
+      font-size: var(--sl-size-icon-md);
+    }
+
+    .v-stat {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: var(--sl-space-6);
+      margin-top: var(--sl-space-8);
+      padding-top: var(--sl-space-7);
+      border-top: 1px solid light-dark(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.12));
+      text-align: center;
+    }
+
+    .v-stat b {
+      display: block;
+      font-size: var(--sl-font-hero);
+      line-height: var(--sl-line-tight);
+      color: var(--sl-text-strong);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-stat span { font-size: var(--sl-font-small); color: var(--sl-text-muted); }
+
+    /* The implementation cards wear the same glass as the panel above them: the screenshot sits in a frame
+       rather than under a wash, so nothing is laid over the picture the visitor came to look at */
+    .v-sites .d-site-shot {
+      height: calc(166px + var(--sl-space-4));
+      padding: var(--sl-space-2);
+      border: 1px solid light-dark(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.1));
+      border-radius: var(--sl-radius-3);
+      background: light-dark(rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.05));
+      backdrop-filter: blur(10px);
+      box-shadow: var(--sl-shadow-float);
+    }
+
+    .v-sites .d-site-shot img {
+      border-radius: var(--sl-radius-2);
+    }
+
+    .v-feed {
+      display: grid;
+      gap: var(--sl-space-3);
+    }
+
+    .v-feed a {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: var(--sl-space-5);
+      padding: var(--sl-space-5) var(--sl-space-6);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-surface);
+      text-decoration: none;
+      color: var(--sl-text-strong);
+      transition: border-color var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-feed a:hover { border-color: var(--sl-primary); }
+    .v-feed time { color: var(--sl-text-muted); font-size: var(--sl-font-small); }
+
+    /* Below the narrow step the picture is only 176 pixels tall, which is a strip rather than a scene, so the
+       band steps aside and the panel becomes the page */
+    @media (max-width: 768px) {
+      .v-page { --v-lip: var(--sl-space-8); }
+      .v-scene { padding-top: 0; }
+      .v-scene::before,
+      .v-scene::after { display: none; }
+      .v-over { position: static; height: auto; padding: var(--sl-space-9) 0 0; }
+      .v-over .d-h1,
+      .v-over .d-kicker { color: var(--sl-text-strong); }
+      .v-glass { margin-top: var(--sl-space-6); }
+    }
+  </style>
+</head>
+<body class="sl-summer">
+<main class="d-page v-page" data-demo-page>
+
+  <div class="v-scene d-band-art">
+    <div class="v-over">
+      <div class="sl-wrp">
+        <p class="d-kicker">Открытый код &middot; MIT &middot; PHP 8.4</p>
+        <h1 class="d-h1 sl-font">SLAED CMS</h1>
+      </div>
+    </div>
+    <div class="sl-wrp">
+      <div class="v-glass">
+        <p class="d-lead" style="max-width: 78ch">Система управления содержимым сайта: простая в настройке,
+        с высоким уровнем безопасности, высокой скоростью работы и практически неограниченным потенциалом
+        расширения. На её основе строят и небольшой сайт, и крупный портал.</p>
+        <div class="d-actions">
+          <a class="sl-but" href="#" title="Скачать бесплатно актуальную версию системы">Скачать систему</a>
+          <a class="sl-chip sl-chip-info" href="#" title="Живая демонстрация панели управления"><i class="bi bi-play-circle" aria-hidden="true"></i> Живое демо</a>
+        </div>
+
+        <div class="v-deck">
+          <article class="v-pane"><span class="v-pane-i"><i class="bi bi-hand-index-thumb" aria-hidden="true"></i></span><h2 class="d-h3 sl-font">Простота</h2><p class="d-text">Управлять сайтом так же просто, как работать с документами или почтой.</p></article>
+          <article class="v-pane"><span class="v-pane-i"><i class="bi bi-puzzle" aria-hidden="true"></i></span><h2 class="d-h3 sl-font">Функциональность</h2><p class="d-text">Модули, блоки, темы и расширения: 685 дополнений в архиве проекта.</p></article>
+          <article class="v-pane"><span class="v-pane-i"><i class="bi bi-speedometer2" aria-hidden="true"></i></span><h2 class="d-h3 sl-font">Эффективность</h2><p class="d-text">Страница собирается за 12 запросов и 5.2 MB памяти.</p></article>
+          <article class="v-pane"><span class="v-pane-i"><i class="bi bi-shield-check" aria-hidden="true"></i></span><h2 class="d-h3 sl-font">Безопасность</h2><p class="d-text">Логирование, отслеживание инъекций и запросов из коробки.</p></article>
+        </div>
+
+        <div class="v-stat">
+          <div><b data-demo-num="21">0</b><span>год разработки</span></div>
+          <div><b data-demo-num="685">0</b><span>дополнений</span></div>
+          <div><b data-demo-num="26">0</b><span>модулей</span></div>
+          <div><b data-demo-num="0.25">0</b><span>сек. на страницу</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="d-head">
+      <h2 class="d-h2 sl-font">Примеры внедрений системы</h2>
+      <p class="d-text">Настоящие сайты из каталога проекта: снимок и оценка посетителей у каждого.</p>
+    </div>
+    <div class="d-sites v-sites" data-demo-sites="12"></div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="d-cols d-cols-2">
+      <section>
+        <h2 class="d-h3 sl-font">Новости</h2>
+        <div class="v-feed">
+          <a href="#" title="Вышла SLAED CMS 6.2"><i class="bi bi-newspaper" aria-hidden="true"></i><span>Вышла SLAED CMS 6.2</span><time datetime="2026-08-25">25.08.2026</time></a>
+          <a href="#" title="Тестируем Pre-Alpha 6.3 Pro"><i class="bi bi-cpu" aria-hidden="true"></i><span>Тестируем Pre-Alpha 6.3 Pro</span><time datetime="2026-07-14">14.07.2026</time></a>
+          <a href="#" title="Обновление тем оформления"><i class="bi bi-palette" aria-hidden="true"></i><span>Обновление тем оформления</span><time datetime="2026-02-01">01.02.2026</time></a>
+        </div>
+      </section>
+      <section>
+        <h2 class="d-h3 sl-font">Файлы</h2>
+        <div class="v-feed">
+          <a href="#" title="SLAED CMS 6.2 Pro"><i class="bi bi-box-seam" aria-hidden="true"></i><span>SLAED CMS 6.2 Pro</span><time datetime="2026-08-25">25.08.2026</time></a>
+          <a href="#" title="Модуль «Магазин» 3.1"><i class="bi bi-cart3" aria-hidden="true"></i><span>Модуль &laquo;Магазин&raquo; 3.1</span><time datetime="2026-06-12">12.06.2026</time></a>
+          <a href="#" title="Тема оформления Lite"><i class="bi bi-palette2" aria-hidden="true"></i><span>Тема оформления Lite</span><time datetime="2026-03-04">04.03.2026</time></a>
+        </div>
+      </section>
+    </div>
+  </div>
+
+</main>
+<script src="assets/demo.js"></script>
+</body>
+</html>

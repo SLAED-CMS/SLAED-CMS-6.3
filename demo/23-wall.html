@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>23 &middot; Стена работ — стенд главной SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* Wall of work: a portfolio page, not a product page. The twelve client sites are laid out as a masonry
+       wall in which every screenshot keeps its own height - a short home page stays short, a long one stays
+       long - because the shape of a page is part of what it shows.
+
+       The wall is built with columns rather than with grid: a column layout gives real masonry today, in every
+       browser this theme supports, and it costs one declaration. Nothing is cropped and nothing is stretched. */
+    .v-page {
+      --v-col: 260px;
+    }
+
+    .v-hero {
+      padding: var(--sl-space-11) 0 var(--sl-space-9);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: end;
+      gap: var(--sl-space-10);
+      border-bottom: 1px solid var(--sl-border);
+    }
+
+    .v-hero h1 {
+      font-size: clamp(var(--sl-font-display), 7vw, 112px);
+      line-height: 0.92;
+      letter-spacing: -0.02em;
+    }
+
+    .v-count {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sl-space-9);
+    }
+
+    .v-count b {
+      display: block;
+      font-size: var(--sl-font-display);
+      line-height: var(--sl-line-tight);
+      color: var(--sl-text-strong);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-count span { font-size: var(--sl-font-small); color: var(--sl-text-muted); }
+
+    /* The masonry wall. Cards flow down one column and continue in the next, so heights need no alignment */
+    .v-wall {
+      columns: var(--v-col);
+      column-gap: var(--sl-space-5);
+      padding: var(--sl-space-9) 0;
+    }
+
+    .v-wall .d-site {
+      break-inside: avoid;
+      width: auto;
+      margin-bottom: var(--sl-space-5);
+    }
+
+    /* Every screenshot at its own height: this is the one place on the stand where nothing is cropped either */
+    .v-wall .d-site-shot {
+      height: auto;
+      border-radius: var(--sl-radius-2);
+      box-shadow: var(--sl-shadow-float);
+    }
+
+    .v-wall .d-site-shot img {
+      height: auto;
+      width: 100%;
+    }
+
+    .v-wall .d-site-cap {
+      padding: var(--sl-space-4) var(--sl-space-2) 0;
+    }
+
+    /* The four pillars run as a quiet band under the wall: the work argues first, the words second */
+    .v-band {
+      padding: var(--sl-space-11) 0;
+      border-top: 1px solid var(--sl-border);
+      border-bottom: 1px solid var(--sl-border);
+    }
+
+    .v-four {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: var(--sl-space-8);
+    }
+
+    .v-four h3 {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-4);
+      margin: 0 0 var(--sl-space-4);
+      font-size: var(--sl-font-h3);
+      color: var(--sl-text-strong);
+    }
+
+    .v-four h3 > i { color: var(--sl-primary); font-size: var(--sl-size-icon-md); }
+
+    .v-four p {
+      margin: 0;
+      color: var(--sl-text-muted);
+      line-height: var(--sl-line-loose);
+    }
+
+    .v-feed {
+      display: grid;
+      gap: var(--sl-space-3);
+    }
+
+    .v-feed a {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: var(--sl-space-5);
+      padding: var(--sl-space-5) 0;
+      border-bottom: 1px solid var(--sl-border);
+      text-decoration: none;
+      color: var(--sl-text-strong);
+    }
+
+    .v-feed a:hover { color: var(--sl-primary-strong); }
+    .v-feed time { color: var(--sl-text-muted); font-size: var(--sl-font-small); }
+
+    @media (max-width: 900px) {
+      .v-hero { grid-template-columns: minmax(0, 1fr); }
+    }
+  </style>
+</head>
+<body class="sl-summer">
+<main class="d-page v-page" data-demo-page>
+  <div class="sl-wrp">
+
+    <div class="v-hero">
+      <div>
+        <p class="d-kicker">Открытый код &middot; MIT &middot; PHP 8.4</p>
+        <h1 class="d-h1 sl-font">SLAED CMS</h1>
+        <p class="d-lead" style="max-width: 62ch">Система управления содержимым сайта: простая в настройке,
+        с высоким уровнем безопасности, высокой скоростью работы и практически неограниченным потенциалом
+        расширения. Ниже — сайты, которые на ней уже работают.</p>
+        <div class="d-actions">
+          <a class="sl-but" href="#" title="Скачать бесплатно актуальную версию системы">Скачать систему</a>
+          <a class="sl-chip sl-chip-info" href="#" title="Живая демонстрация панели управления"><i class="bi bi-play-circle" aria-hidden="true"></i> Живое демо</a>
+        </div>
+      </div>
+      <div class="v-count">
+        <div><b data-demo-num="21">0</b><span>год разработки</span></div>
+        <div><b data-demo-num="685">0</b><span>дополнений</span></div>
+        <div><b data-demo-num="26">0</b><span>модулей</span></div>
+        <div><b data-demo-num="0.25">0</b><span>сек. на страницу</span></div>
+      </div>
+    </div>
+
+    <section aria-label="Примеры внедрений системы">
+      <div class="d-sites v-wall" data-demo-sites="12" data-demo-sites-natural></div>
+    </section>
+
+    <div class="v-band">
+      <div class="d-head">
+        <h2 class="d-h2 sl-font">Почему они выбрали именно её</h2>
+        <p class="d-text">Четыре опоры системы, ради которых эти сайты и стоят на SLAED.</p>
+      </div>
+      <div class="v-four">
+        <div><h3 class="sl-font"><i class="bi bi-hand-index-thumb" aria-hidden="true"></i>Простота</h3><p>Интуитивный интерфейс: управлять сайтом так же просто, как работать с документами или почтой.</p></div>
+        <div><h3 class="sl-font"><i class="bi bi-puzzle" aria-hidden="true"></i>Функциональность</h3><p>Модули, блоки, темы и расширения: 685 дополнений в файловом архиве проекта.</p></div>
+        <div><h3 class="sl-font"><i class="bi bi-speedometer2" aria-hidden="true"></i>Эффективность</h3><p>Низкое потребление серверных ресурсов: страница собирается за 12 запросов и 5.2 MB памяти.</p></div>
+        <div><h3 class="sl-font"><i class="bi bi-shield-check" aria-hidden="true"></i>Безопасность</h3><p>Логирование действий, отслеживание инъекций и несанкционированных запросов из коробки.</p></div>
+      </div>
+    </div>
+
+    <div class="d-sec">
+      <div class="d-cols d-cols-2">
+        <section>
+          <h2 class="d-h3 sl-font">Новости</h2>
+          <div class="v-feed">
+            <a href="#" title="Вышла SLAED CMS 6.2"><i class="bi bi-newspaper" aria-hidden="true"></i><span>Вышла SLAED CMS 6.2</span><time datetime="2026-08-25">25.08.2026</time></a>
+            <a href="#" title="Тестируем Pre-Alpha 6.3 Pro"><i class="bi bi-cpu" aria-hidden="true"></i><span>Тестируем Pre-Alpha 6.3 Pro</span><time datetime="2026-07-14">14.07.2026</time></a>
+            <a href="#" title="Обновление тем оформления"><i class="bi bi-palette" aria-hidden="true"></i><span>Обновление тем оформления</span><time datetime="2026-02-01">01.02.2026</time></a>
+          </div>
+        </section>
+        <section>
+          <h2 class="d-h3 sl-font">Файлы</h2>
+          <div class="v-feed">
+            <a href="#" title="SLAED CMS 6.2 Pro"><i class="bi bi-box-seam" aria-hidden="true"></i><span>SLAED CMS 6.2 Pro</span><time datetime="2026-08-25">25.08.2026</time></a>
+            <a href="#" title="Модуль «Магазин» 3.1"><i class="bi bi-cart3" aria-hidden="true"></i><span>Модуль &laquo;Магазин&raquo; 3.1</span><time datetime="2026-06-12">12.06.2026</time></a>
+            <a href="#" title="Тема оформления Lite"><i class="bi bi-palette2" aria-hidden="true"></i><span>Тема оформления Lite</span><time datetime="2026-03-04">04.03.2026</time></a>
+          </div>
+        </section>
+      </div>
+    </div>
+
+  </div>
+</main>
+<script src="assets/demo.js"></script>
+</body>
+</html>

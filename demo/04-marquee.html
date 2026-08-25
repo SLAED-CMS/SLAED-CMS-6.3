@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>04 &middot; Ленты — стенд главной SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* Marquee: the page moves on its own. Three rows of implementations travel at different speeds and in
+       opposite directions, so the wall never reads as one sliding block, and the edges are masked rather than
+       cut, so nothing appears to fall off the page. */
+    .v-mask {
+      overflow: hidden;
+      mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+    }
+
+    .v-mq {
+      display: flex;
+      width: max-content;
+      gap: var(--sl-space-5);
+      animation: v-run var(--v-dur, 60s) linear infinite;
+    }
+
+    .v-mq-back {
+      animation-direction: reverse;
+    }
+
+    .v-mask:hover .v-mq {
+      animation-play-state: paused;
+    }
+
+    @keyframes v-run {
+      to { transform: translateX(-50%); }
+    }
+
+    /* The half-shift above works only because the row is duplicated once, which the rig does in markup.
+       The row of implementations is the rig's own list, laid out in a line instead of a grid: the cards keep
+       their 260 pixels, so the screenshots travel at their own size and never at a stretched one. */
+    .v-mq.d-sites {
+      display: flex;
+      grid-template-columns: none;
+      justify-content: flex-start;
+      gap: var(--sl-space-5);
+    }
+
+    .v-mq .d-site-shot {
+      box-shadow: var(--sl-shadow-float);
+    }
+
+    .v-hero {
+      position: relative;
+      padding: var(--sl-space-11) 0 var(--sl-space-9);
+      text-align: center;
+    }
+
+    /* The word that rotates: four claims in one slot, so the headline says all four without four lines */
+    .v-slot {
+      display: inline-grid;
+      vertical-align: bottom;
+      text-align: left;
+      overflow: hidden;
+      height: 1.2em;
+    }
+
+    .v-slot > span {
+      grid-area: 1 / 1;
+      color: var(--sl-primary-strong);
+      animation: v-slot 12s var(--sl-ease-in-out) infinite;
+      opacity: 0;
+    }
+
+    .v-slot > span:nth-child(2) { animation-delay: 3s; }
+    .v-slot > span:nth-child(3) { animation-delay: 6s; }
+    .v-slot > span:nth-child(4) { animation-delay: 9s; }
+
+    @keyframes v-slot {
+      0% { opacity: 0; transform: translateY(0.6em); }
+      4%, 22% { opacity: 1; transform: none; }
+      26%, 100% { opacity: 0; transform: translateY(-0.6em); }
+    }
+
+    /* The tech row: small pills travelling the other way, a quiet counterweight to the picture rows */
+    .v-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      height: var(--sl-size-control);
+      padding: 0 var(--sl-space-6);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-surface);
+      color: var(--sl-text-muted);
+      white-space: nowrap;
+    }
+
+    .v-pill > i { color: var(--sl-primary-strong); }
+
+    .v-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: var(--sl-space-6);
+    }
+
+    .v-card {
+      position: relative;
+      padding: var(--sl-space-8);
+      border-radius: var(--sl-radius-3);
+      background: var(--sl-surface);
+      border: 1px solid var(--sl-border);
+      overflow: hidden;
+    }
+
+    /* A hairline of brand light along the top edge, moving with the rows above it */
+    .v-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: var(--sl-alert-border);
+      background: var(--sl-grad-line);
+      background-size: 200% 100%;
+      animation: v-slide 6s linear infinite;
+    }
+
+    @keyframes v-slide {
+      to { background-position: -200% 0; }
+    }
+
+    .v-card-i {
+      display: grid;
+      place-items: center;
+      width: var(--sl-size-tile);
+      height: var(--sl-size-tile);
+      margin-bottom: var(--sl-space-5);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-tint);
+      color: var(--sl-primary-strong);
+      font-size: var(--sl-size-icon-md);
+    }
+
+    .v-stat {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: var(--sl-space-6);
+      text-align: center;
+    }
+
+    .v-stat b {
+      display: block;
+      font-size: calc(var(--sl-font-hero) * 1.2);
+      line-height: var(--sl-line-tight);
+      color: var(--sl-text-strong);
+    }
+
+    .v-stat span {
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+    }
+
+    .v-feed {
+      display: grid;
+      gap: var(--sl-space-5);
+    }
+
+    .v-feed a {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: var(--sl-space-5);
+      padding: var(--sl-space-5) 0;
+      border-bottom: 1px solid var(--sl-border);
+      text-decoration: none;
+      color: var(--sl-text-strong);
+    }
+
+    .v-feed a:hover { color: var(--sl-primary-strong); }
+    .v-feed time { color: var(--sl-text-muted); font-size: var(--sl-font-small); }
+
+    @media (prefers-reduced-motion: reduce) {
+      .v-mq,
+      .v-slot > span,
+      .v-card::before {
+        animation: none;
+      }
+
+      .v-slot > span:first-child { opacity: 1; }
+    }
+  </style>
+</head>
+<body class="sl-summer">
+<main class="d-page" data-demo-page>
+
+  <div class="v-hero">
+    <div class="sl-wrp">
+      <p class="d-kicker" style="justify-content: center">Открытый код &middot; MIT &middot; PHP 8.4</p>
+      <h1 class="d-h1 sl-font">SLAED CMS &mdash; это <span class="v-slot"><span>простота</span><span>функциональность</span><span>эффективность</span><span>безопасность</span></span></h1>
+      <p class="d-lead" style="margin-inline: auto; max-width: 72ch">Система управления содержимым сайта: простая в настройке,
+      с высоким уровнем безопасности, высокой скоростью работы и практически неограниченным потенциалом расширения.
+      На её основе строят и небольшой сайт, и крупный портал.</p>
+      <div class="d-actions" style="justify-content: center">
+        <a class="sl-but" href="#" title="Скачать бесплатно актуальную версию системы">Скачать систему</a>
+        <a class="sl-chip sl-chip-info" href="#" title="Живая демонстрация панели управления"><i class="bi bi-play-circle" aria-hidden="true"></i> Живое демо</a>
+      </div>
+    </div>
+  </div>
+
+  <section class="d-sec-tight" aria-label="Примеры внедрений системы">
+    <div class="sl-wrp"><h2 class="d-h3 sl-font">Примеры внедрений системы</h2></div>
+    <div class="v-mask" style="margin-bottom: var(--sl-space-5)">
+      <div class="v-mq d-sites" style="--v-dur: 72s" data-demo-sites="6" data-demo-marquee></div>
+    </div>
+    <div class="v-mask" style="margin-bottom: var(--sl-space-5)">
+      <div class="v-mq v-mq-back d-sites" style="--v-dur: 54s" data-demo-sites="6" data-demo-sites-skip="6" data-demo-marquee></div>
+    </div>
+    <div class="v-mask">
+      <div class="v-mq" style="--v-dur: 40s" data-demo-marquee>
+        <span class="v-pill"><i class="bi bi-filetype-php" aria-hidden="true"></i>PHP 8.4</span>
+        <span class="v-pill"><i class="bi bi-database" aria-hidden="true"></i>MySQL / MariaDB</span>
+        <span class="v-pill"><i class="bi bi-filetype-html" aria-hidden="true"></i>HTML 5</span>
+        <span class="v-pill"><i class="bi bi-filetype-css" aria-hidden="true"></i>CSS 3</span>
+        <span class="v-pill"><i class="bi bi-lightning-charge" aria-hidden="true"></i>htmx</span>
+        <span class="v-pill"><i class="bi bi-shield-lock" aria-hidden="true"></i>CSRF из коробки</span>
+        <span class="v-pill"><i class="bi bi-translate" aria-hidden="true"></i>6 языков</span>
+        <span class="v-pill"><i class="bi bi-award" aria-hidden="true"></i>Лицензия MIT</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="sl-wrp d-sec">
+    <div class="v-cards">
+      <article class="v-card d-reveal"><span class="v-card-i"><i class="bi bi-hand-index-thumb" aria-hidden="true"></i></span><h2 class="d-h3 sl-font">Простота</h2><p class="d-text">Интуитивный интерфейс: управлять сайтом так же просто, как работать с документами или почтой.</p></article>
+      <article class="v-card d-reveal"><span class="v-card-i"><i class="bi bi-puzzle" aria-hidden="true"></i></span><h2 class="d-h3 sl-font">Функциональность</h2><p class="d-text">Модули, блоки, темы и расширения: 685 дополнений в файловом архиве проекта.</p></article>
+      <article class="v-card d-reveal"><span class="v-card-i"><i class="bi bi-speedometer2" aria-hidden="true"></i></span><h2 class="d-h3 sl-font">Эффективность</h2><p class="d-text">Низкое потребление серверных ресурсов: страница собирается за 12 запросов и 5.2 MB памяти.</p></article>
+      <article class="v-card d-reveal"><span class="v-card-i"><i class="bi bi-shield-check" aria-hidden="true"></i></span><h2 class="d-h3 sl-font">Безопасность</h2><p class="d-text">Логирование действий, отслеживание инъекций и несанкционированных запросов из коробки.</p></article>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec-tight">
+    <div class="v-stat d-reveal">
+      <div><b data-demo-num="21">0</b><span>год разработки, с 2005</span></div>
+      <div><b data-demo-num="685">0</b><span>дополнений в архиве</span></div>
+      <div><b data-demo-num="26">0</b><span>модулей в поставке</span></div>
+      <div><b data-demo-num="0.25">0</b><span>секунды на страницу</span></div>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="d-cols d-cols-2">
+      <section>
+        <h2 class="d-h3 sl-font">Новости</h2>
+        <div class="v-feed">
+          <a href="#" title="Вышла SLAED CMS 6.2"><i class="bi bi-newspaper" aria-hidden="true"></i><span>Вышла SLAED CMS 6.2</span><time datetime="2026-08-25">25.08.2026</time></a>
+          <a href="#" title="Тестируем Pre-Alpha 6.3 Pro"><i class="bi bi-cpu" aria-hidden="true"></i><span>Тестируем Pre-Alpha 6.3 Pro</span><time datetime="2026-07-14">14.07.2026</time></a>
+          <a href="#" title="Обновление тем оформления"><i class="bi bi-palette" aria-hidden="true"></i><span>Обновление тем оформления</span><time datetime="2026-02-01">01.02.2026</time></a>
+        </div>
+      </section>
+      <section>
+        <h2 class="d-h3 sl-font">Файлы</h2>
+        <div class="v-feed">
+          <a href="#" title="SLAED CMS 6.2 Pro"><i class="bi bi-box-seam" aria-hidden="true"></i><span>SLAED CMS 6.2 Pro</span><time datetime="2026-08-25">25.08.2026</time></a>
+          <a href="#" title="Модуль «Магазин» 3.1"><i class="bi bi-cart3" aria-hidden="true"></i><span>Модуль &laquo;Магазин&raquo; 3.1</span><time datetime="2026-06-12">12.06.2026</time></a>
+          <a href="#" title="Тема оформления Lite"><i class="bi bi-palette2" aria-hidden="true"></i><span>Тема оформления Lite</span><time datetime="2026-03-04">04.03.2026</time></a>
+        </div>
+      </section>
+    </div>
+  </div>
+
+</main>
+<script src="assets/demo.js"></script>
+</body>
+</html>

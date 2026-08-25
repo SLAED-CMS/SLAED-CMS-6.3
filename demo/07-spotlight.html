@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>07 &middot; Магические карты — стенд главной SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* Spotlight: a dark, quiet page where light is the only decoration. The hand carries a soft light across the
+       cards, the primary action wears a running edge, and nothing else moves unless it is pointed at. */
+    .v-hero {
+      position: relative;
+      padding: calc(var(--sl-space-11) * 2) 0 var(--sl-space-11);
+      overflow: hidden;
+    }
+
+    /* One wide glow behind the headline, sitting under the text and never over it */
+    .v-hero::before {
+      content: "";
+      position: absolute;
+      inset: -40% 0 auto 0;
+      height: 120%;
+      background: radial-gradient(50% 50% at 50% 40%, var(--sl-tint-strong), transparent 70%);
+      pointer-events: none;
+    }
+
+    .v-hero > * { position: relative; }
+
+    .v-title {
+      background: linear-gradient(120deg, var(--sl-text-strong) 0%, var(--sl-primary) 55%, var(--sl-accent) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    /* The running edge: a conic sweep clipped to the ring the padding leaves, so only the border lights up */
+    .v-beam {
+      position: relative;
+      display: inline-flex;
+      padding: 1px;
+      border-radius: var(--sl-radius-pill);
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .v-beam::before {
+      content: "";
+      position: absolute;
+      inset: -100%;
+      background: conic-gradient(from 0deg, transparent 0deg, var(--sl-primary) 40deg, transparent 90deg);
+      animation: v-turn 3.2s linear infinite;
+      z-index: -1;
+    }
+
+    @keyframes v-turn {
+      to { transform: rotate(360deg); }
+    }
+
+    .v-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: var(--sl-space-6);
+    }
+
+    .v-card {
+      position: relative;
+      padding: var(--sl-space-9);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-3);
+      background: var(--sl-surface);
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    /* Two washes make the magic card: one lights the surface, the other lights the hairline of the border */
+    .v-card::before,
+    .v-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity var(--sl-time-slow) var(--sl-ease-out);
+      pointer-events: none;
+    }
+
+    .v-card::before {
+      background: radial-gradient(220px circle at var(--dx) var(--dy), var(--sl-tint-strong), transparent 68%);
+    }
+
+    .v-card::after {
+      padding: 1px;
+      border-radius: inherit;
+      background: radial-gradient(220px circle at var(--dx) var(--dy), var(--sl-primary), transparent 62%);
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      mask-composite: exclude;
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+    }
+
+    .v-cards:hover .v-card::before,
+    .v-cards:hover .v-card::after {
+      opacity: 1;
+    }
+
+    .v-card > * { position: relative; z-index: 1; }
+
+    .v-card-i {
+      display: grid;
+      place-items: center;
+      width: var(--sl-size-tile);
+      height: var(--sl-size-tile);
+      margin-bottom: var(--sl-space-6);
+      border: 1px solid var(--sl-border-strong);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-bg);
+      color: var(--sl-primary);
+      font-size: var(--sl-size-icon-md);
+    }
+
+    .v-stat {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: var(--sl-space-6);
+    }
+
+    .v-stat > div {
+      padding: var(--sl-space-8);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-3);
+      background: var(--sl-surface);
+      text-align: center;
+    }
+
+    .v-stat b {
+      display: block;
+      font-size: calc(var(--sl-font-hero) * 1.1);
+      line-height: var(--sl-line-tight);
+      background: linear-gradient(120deg, var(--sl-primary), var(--sl-accent));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-stat span {
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+    }
+
+    .v-feed {
+      display: grid;
+      gap: var(--sl-space-3);
+    }
+
+    .v-feed a {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: var(--sl-space-5);
+      padding: var(--sl-space-5) var(--sl-space-6);
+      border: 1px solid transparent;
+      border-radius: var(--sl-radius-2);
+      text-decoration: none;
+      color: var(--sl-text-strong);
+      transition: border-color var(--sl-time-base) var(--sl-ease-out), background-color var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-feed a:hover {
+      border-color: var(--sl-border);
+      background: var(--sl-surface);
+    }
+
+    .v-feed time { color: var(--sl-text-muted); font-size: var(--sl-font-small); }
+  </style>
+</head>
+<body class="sl-summer">
+<main class="d-page" data-demo-page>
+
+  <div class="v-hero">
+    <div class="sl-wrp" style="text-align: center">
+      <p class="d-kicker" style="justify-content: center">Открытый код &middot; MIT &middot; PHP 8.4</p>
+      <h1 class="d-h1 sl-font v-title">SLAED CMS</h1>
+      <p class="d-lead" style="margin-inline: auto; max-width: 72ch">Система управления содержимым сайта: простая
+      в настройке, с высоким уровнем безопасности, высокой скоростью работы и практически неограниченным потенциалом
+      расширения. На её основе строят и небольшой сайт, и крупный портал.</p>
+      <div class="d-actions" style="justify-content: center">
+        <span class="v-beam"><a class="sl-but" href="#" title="Скачать бесплатно актуальную версию системы">Скачать систему</a></span>
+        <a class="sl-chip sl-chip-info" href="#" title="Живая демонстрация панели управления"><i class="bi bi-play-circle" aria-hidden="true"></i> Живое демо</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="v-cards" data-demo-spot>
+      <article class="v-card d-reveal"><span class="v-card-i"><i class="bi bi-hand-index-thumb" aria-hidden="true"></i></span><h2 class="d-h3 sl-font">Простота</h2><p class="d-text">Интуитивный интерфейс: управлять сайтом так же просто, как работать с документами или почтой.</p></article>
+      <article class="v-card d-reveal"><span class="v-card-i"><i class="bi bi-puzzle" aria-hidden="true"></i></span><h2 class="d-h3 sl-font">Функциональность</h2><p class="d-text">Модули, блоки, темы и расширения: 685 дополнений в файловом архиве проекта.</p></article>
+      <article class="v-card d-reveal"><span class="v-card-i"><i class="bi bi-speedometer2" aria-hidden="true"></i></span><h2 class="d-h3 sl-font">Эффективность</h2><p class="d-text">Низкое потребление серверных ресурсов: страница собирается за 12 запросов и 5.2 MB памяти.</p></article>
+      <article class="v-card d-reveal"><span class="v-card-i"><i class="bi bi-shield-check" aria-hidden="true"></i></span><h2 class="d-h3 sl-font">Безопасность</h2><p class="d-text">Логирование действий, отслеживание инъекций и несанкционированных запросов из коробки.</p></article>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec-tight">
+    <div class="v-stat d-reveal">
+      <div><b data-demo-num="21">0</b><span>год разработки, с 2005</span></div>
+      <div><b data-demo-num="685">0</b><span>дополнений в архиве</span></div>
+      <div><b data-demo-num="26">0</b><span>модулей в поставке</span></div>
+      <div><b data-demo-num="0.25">0</b><span>секунды на страницу</span></div>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="d-head d-head-center">
+      <h2 class="d-h2 sl-font">Примеры внедрений системы</h2>
+      <p class="d-text">Наведите курсор — снимок оживает, всё остальное остаётся в покое.</p>
+    </div>
+    <div class="d-sites v-shots" data-demo-sites="12"></div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="d-cols d-cols-2">
+      <section>
+        <h2 class="d-h3 sl-font">Новости</h2>
+        <div class="v-feed">
+          <a href="#" title="Вышла SLAED CMS 6.2"><i class="bi bi-newspaper" aria-hidden="true"></i><span>Вышла SLAED CMS 6.2</span><time datetime="2026-08-25">25.08.2026</time></a>
+          <a href="#" title="Тестируем Pre-Alpha 6.3 Pro"><i class="bi bi-cpu" aria-hidden="true"></i><span>Тестируем Pre-Alpha 6.3 Pro</span><time datetime="2026-07-14">14.07.2026</time></a>
+          <a href="#" title="Обновление тем оформления"><i class="bi bi-palette" aria-hidden="true"></i><span>Обновление тем оформления</span><time datetime="2026-02-01">01.02.2026</time></a>
+        </div>
+      </section>
+      <section>
+        <h2 class="d-h3 sl-font">Файлы</h2>
+        <div class="v-feed">
+          <a href="#" title="SLAED CMS 6.2 Pro"><i class="bi bi-box-seam" aria-hidden="true"></i><span>SLAED CMS 6.2 Pro</span><time datetime="2026-08-25">25.08.2026</time></a>
+          <a href="#" title="Модуль «Магазин» 3.1"><i class="bi bi-cart3" aria-hidden="true"></i><span>Модуль &laquo;Магазин&raquo; 3.1</span><time datetime="2026-06-12">12.06.2026</time></a>
+          <a href="#" title="Тема оформления Lite"><i class="bi bi-palette2" aria-hidden="true"></i><span>Тема оформления Lite</span><time datetime="2026-03-04">04.03.2026</time></a>
+        </div>
+      </section>
+    </div>
+  </div>
+
+</main>
+<script src="assets/demo.js"></script>
+</body>
+</html>

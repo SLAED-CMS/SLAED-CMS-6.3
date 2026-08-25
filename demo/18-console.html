@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>18 &middot; Пульт — стенд главной SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* Console: the product shows itself by being itself. The presentation page is laid out as the dashboard of
+       the system it sells - widgets, dials, a live log, a table of modules - so the visitor sees the working
+       interface before deciding whether to install it. */
+    .v-top {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: var(--sl-space-8);
+      padding: var(--sl-space-9) 0 var(--sl-space-7);
+      border-bottom: 1px solid var(--sl-border);
+    }
+
+    .v-live {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      color: var(--sl-success);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-live::before {
+      content: "";
+      width: var(--sl-bullet-width);
+      height: var(--sl-bullet-height);
+      border-radius: var(--sl-radius-circle);
+      background: currentColor;
+      animation: v-blink var(--sl-pulse-dur) var(--sl-ease-in-out) infinite;
+    }
+
+    @keyframes v-blink {
+      50% { opacity: var(--sl-fade-disabled); }
+    }
+
+    .v-board {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: var(--sl-space-5);
+      padding: var(--sl-space-8) 0;
+    }
+
+    .v-widget {
+      display: flex;
+      flex-direction: column;
+      grid-column: span 3;
+      padding: var(--sl-space-7);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-3);
+      background: var(--sl-surface);
+    }
+
+    .v-widget > header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--sl-space-4);
+      margin-bottom: var(--sl-space-6);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+      letter-spacing: var(--sl-track-wide);
+      text-transform: uppercase;
+    }
+
+    .v-w6 { grid-column: span 6; }
+    .v-w4 { grid-column: span 4; }
+    .v-w8 { grid-column: span 8; }
+    .v-w12 { grid-column: span 12; }
+
+    .v-big {
+      font-size: calc(var(--sl-font-hero) * 1.1);
+      line-height: var(--sl-line-tight);
+      color: var(--sl-text-strong);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-sub {
+      margin-top: var(--sl-space-3);
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+    }
+
+    /* The dial: one conic gradient for the ring, one disc on top for the hole. No SVG, no script. */
+    .v-dial {
+      display: grid;
+      place-items: center;
+      width: calc(var(--sl-cab-ring-width) - var(--sl-space-6));
+      height: calc(var(--sl-cab-ring-width) - var(--sl-space-6));
+      margin: 0 auto;
+      border-radius: var(--sl-radius-circle);
+      background: conic-gradient(var(--v-tone, var(--sl-primary)) 0 var(--v-part, 50%), var(--sl-bg-muted) var(--v-part, 50%) 100%);
+    }
+
+    .v-dial > span {
+      display: grid;
+      place-items: center;
+      width: calc(var(--sl-cab-ring-width) - var(--sl-space-11));
+      height: calc(var(--sl-cab-ring-width) - var(--sl-space-11));
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-surface);
+      color: var(--sl-text-strong);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* The bar chart: seven columns, each a flex child whose height is its own value */
+    .v-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: var(--sl-space-3);
+      height: 120px;
+      margin-top: auto;
+    }
+
+    .v-chart > i {
+      flex: 1;
+      height: var(--v-h, 50%);
+      border-radius: var(--sl-radius-1) var(--sl-radius-1) 0 0;
+      background: var(--sl-grad-progress-1);
+      transform-origin: bottom;
+    }
+
+    @supports (animation-timeline: view()) {
+      .v-chart > i {
+        animation: v-rise linear both;
+        animation-timeline: view();
+        animation-range: entry 10% entry 90%;
+      }
+    }
+
+    @keyframes v-rise {
+      from { transform: scaleY(0); }
+      to { transform: scaleY(1); }
+    }
+
+    .v-log {
+      display: grid;
+      gap: var(--sl-space-3);
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: var(--sl-font-small);
+    }
+
+    .v-log > div {
+      display: grid;
+      grid-template-columns: auto auto minmax(0, 1fr);
+      gap: var(--sl-space-4);
+      align-items: center;
+      padding-bottom: var(--sl-space-3);
+      border-bottom: 1px dashed var(--sl-border);
+      color: var(--sl-text-muted);
+    }
+
+    .v-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: var(--sl-font-body);
+    }
+
+    .v-table th,
+    .v-table td {
+      padding: var(--sl-space-4) var(--sl-space-5);
+      border-bottom: 1px solid var(--sl-border);
+      text-align: left;
+    }
+
+    .v-table th {
+      color: var(--sl-text-muted);
+      font-weight: var(--sl-weight-medium);
+      font-size: var(--sl-font-small);
+      text-transform: uppercase;
+      letter-spacing: var(--sl-track-wide);
+    }
+
+    .v-pillars {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--sl-space-5);
+      margin-top: var(--sl-space-5);
+    }
+
+    .v-pillar {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: var(--sl-space-4);
+      align-items: start;
+      padding: var(--sl-space-6);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-bg);
+    }
+
+    .v-pillar > i {
+      color: var(--sl-primary-strong);
+      font-size: var(--sl-size-icon-md);
+    }
+
+    .v-pillar b {
+      display: block;
+      margin-bottom: var(--sl-space-2);
+      color: var(--sl-text-strong);
+    }
+
+    .v-pillar span {
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+      line-height: var(--sl-line-normal);
+    }
+
+    .v-feed {
+      display: grid;
+      gap: var(--sl-space-3);
+    }
+
+    .v-feed a {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: var(--sl-space-4);
+      padding: var(--sl-space-4) 0;
+      border-bottom: 1px solid var(--sl-border);
+      text-decoration: none;
+      color: var(--sl-text-strong);
+      font-size: var(--sl-font-body);
+    }
+
+    .v-feed a:hover { color: var(--sl-primary-strong); }
+    .v-feed time { color: var(--sl-text-muted); font-size: var(--sl-font-small); }
+
+    @media (max-width: 1200px) {
+      .v-widget,
+      .v-w4,
+      .v-w6,
+      .v-w8 { grid-column: span 6; }
+    }
+
+    @media (max-width: 768px) {
+      .v-top { grid-template-columns: minmax(0, 1fr); }
+      .v-widget,
+      .v-w4,
+      .v-w6,
+      .v-w8 { grid-column: span 12; }
+    }
+  </style>
+</head>
+<body class="sl-summer">
+<main class="d-page" data-demo-page>
+  <div class="sl-wrp">
+
+    <div class="v-top">
+      <div>
+        <p class="d-kicker">Открытый код &middot; MIT &middot; PHP 8.4 &middot; <span class="v-live">панель управления, живой снимок</span></p>
+        <h1 class="d-h1 sl-font">SLAED CMS</h1>
+        <p class="d-lead" style="max-width: 78ch">Система управления содержимым сайта: простая в настройке,
+        с высоким уровнем безопасности, высокой скоростью работы и практически неограниченным потенциалом
+        расширения. Ниже — её собственная панель: продукт показывает себя собой.</p>
+      </div>
+      <div class="d-actions">
+        <a class="sl-but" href="#" title="Скачать бесплатно актуальную версию системы">Скачать систему</a>
+        <a class="sl-chip sl-chip-info" href="#" title="Живая демонстрация панели управления"><i class="bi bi-play-circle" aria-hidden="true"></i> Живое демо</a>
+      </div>
+    </div>
+
+    <div class="v-board">
+
+      <section class="v-widget">
+        <header>Версия <i class="bi bi-box-seam" aria-hidden="true"></i></header>
+        <p class="v-big">6.2</p>
+        <p class="v-sub">вышла 25 августа 2026 &middot; MIT</p>
+      </section>
+
+      <section class="v-widget">
+        <header>Разработка <i class="bi bi-calendar3" aria-hidden="true"></i></header>
+        <p class="v-big" data-demo-num="21">0</p>
+        <p class="v-sub">год без перерывов, с 2005</p>
+      </section>
+
+      <section class="v-widget">
+        <header>Дополнения <i class="bi bi-puzzle" aria-hidden="true"></i></header>
+        <p class="v-big" data-demo-num="685">0</p>
+        <p class="v-sub">в файловом архиве проекта</p>
+      </section>
+
+      <section class="v-widget">
+        <header>Модули <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i></header>
+        <p class="v-big" data-demo-num="26">0</p>
+        <p class="v-sub">в поставке, включаются галочкой</p>
+      </section>
+
+      <section class="v-widget v-w4">
+        <header>Память на страницу <i class="bi bi-memory" aria-hidden="true"></i></header>
+        <div class="v-dial" style="--v-part: 6%; --v-tone: var(--sl-success)"><span><b>5.2 MB</b></span></div>
+        <p class="v-sub" style="text-align: center">из лимита 1 GB, почти не тронута</p>
+      </section>
+
+      <section class="v-widget v-w4">
+        <header>Время сборки <i class="bi bi-speedometer2" aria-hidden="true"></i></header>
+        <div class="v-dial" style="--v-part: 13%; --v-tone: var(--sl-primary)"><span><b>0.25 c</b></span></div>
+        <p class="v-sub" style="text-align: center">из порога 2 секунды &mdash; 12.7%</p>
+      </section>
+
+      <section class="v-widget v-w4">
+        <header>Запросы к базе <i class="bi bi-database" aria-hidden="true"></i></header>
+        <div class="v-chart" aria-label="Запросы по страницам">
+          <i style="--v-h: 100%"></i><i style="--v-h: 75%"></i><i style="--v-h: 92%"></i>
+          <i style="--v-h: 83%"></i><i style="--v-h: 66%"></i><i style="--v-h: 58%"></i><i style="--v-h: 100%"></i>
+        </div>
+        <p class="v-sub" style="text-align: center">12 запросов на главной, максимум 14</p>
+      </section>
+
+      <section class="v-widget v-w8">
+        <header>Четыре опоры системы <i class="bi bi-columns-gap" aria-hidden="true"></i></header>
+        <div class="v-pillars">
+          <div class="v-pillar"><i class="bi bi-hand-index-thumb" aria-hidden="true"></i><span><b>Простота</b><span>Управлять сайтом так же просто, как работать с документами или почтой.</span></span></div>
+          <div class="v-pillar"><i class="bi bi-puzzle" aria-hidden="true"></i><span><b>Функциональность</b><span>Модули, блоки, темы и расширения: 685 дополнений в архиве проекта.</span></span></div>
+          <div class="v-pillar"><i class="bi bi-speedometer2" aria-hidden="true"></i><span><b>Эффективность</b><span>Страница собирается за 12 запросов и 5.2 MB памяти.</span></span></div>
+          <div class="v-pillar"><i class="bi bi-shield-check" aria-hidden="true"></i><span><b>Безопасность</b><span>Логирование, отслеживание инъекций и запросов из коробки.</span></span></div>
+        </div>
+      </section>
+
+      <section class="v-widget v-w4">
+        <header>Журнал <i class="bi bi-activity" aria-hidden="true"></i></header>
+        <div class="v-log">
+          <div><span class="sl-chip sl-chip-success">ok</span><time datetime="2026-08-25T13:04">13:04</time><span>кэш парсера прогрет</span></div>
+          <div><span class="sl-chip sl-chip-info">i</span><time datetime="2026-08-25T13:02">13:02</time><span>вышла версия 6.2</span></div>
+          <div><span class="sl-chip sl-chip-success">ok</span><time datetime="2026-08-25T12:58">12:58</time><span>резервная копия базы</span></div>
+          <div><span class="sl-chip sl-chip-warn">!</span><time datetime="2026-08-25T12:41">12:41</time><span>отклонён подозрительный запрос</span></div>
+          <div><span class="sl-chip sl-chip-success">ok</span><time datetime="2026-08-25T12:30">12:30</time><span>обновлён модуль «Магазин»</span></div>
+        </div>
+      </section>
+
+      <section class="v-widget v-w6">
+        <header>Примеры внедрений <i class="bi bi-easel" aria-hidden="true"></i></header>
+        <div class="d-sites v-shots" data-demo-sites="12"></div>
+      </section>
+
+      <section class="v-widget v-w6">
+        <header>Новости и файлы <i class="bi bi-newspaper" aria-hidden="true"></i></header>
+        <div class="v-feed">
+          <a href="#" title="Вышла SLAED CMS 6.2"><i class="bi bi-newspaper" aria-hidden="true"></i><span>Вышла SLAED CMS 6.2</span><time datetime="2026-08-25">25.08.2026</time></a>
+          <a href="#" title="SLAED CMS 6.2 Pro"><i class="bi bi-box-seam" aria-hidden="true"></i><span>SLAED CMS 6.2 Pro</span><time datetime="2026-08-25">25.08.2026</time></a>
+          <a href="#" title="Тестируем Pre-Alpha 6.3 Pro"><i class="bi bi-cpu" aria-hidden="true"></i><span>Тестируем Pre-Alpha 6.3 Pro</span><time datetime="2026-07-14">14.07.2026</time></a>
+          <a href="#" title="Модуль «Магазин» 3.1"><i class="bi bi-cart3" aria-hidden="true"></i><span>Модуль &laquo;Магазин&raquo; 3.1</span><time datetime="2026-06-12">12.06.2026</time></a>
+          <a href="#" title="Тема оформления Lite"><i class="bi bi-palette2" aria-hidden="true"></i><span>Тема оформления Lite</span><time datetime="2026-03-04">04.03.2026</time></a>
+          <a href="#" title="Обновление тем оформления"><i class="bi bi-palette" aria-hidden="true"></i><span>Обновление тем оформления</span><time datetime="2026-02-01">01.02.2026</time></a>
+        </div>
+      </section>
+
+      <section class="v-widget v-w12">
+        <header>Что происходит при одном запросе <i class="bi bi-list-check" aria-hidden="true"></i></header>
+        <div class="sl-table-shell">
+          <table class="v-table">
+            <thead><tr><th>Страница</th><th>Время</th><th>Запросы</th><th>Память</th><th>Ответ</th></tr></thead>
+            <tbody>
+              <tr><td>Главная</td><td>0.25 сек.</td><td>12</td><td>5.2 MB</td><td><span class="sl-chip sl-chip-success">200</span></td></tr>
+              <tr><td>Список новостей</td><td>0.19 сек.</td><td>9</td><td>4.8 MB</td><td><span class="sl-chip sl-chip-success">200</span></td></tr>
+              <tr><td>Просмотр статьи</td><td>0.21 сек.</td><td>11</td><td>5.0 MB</td><td><span class="sl-chip sl-chip-success">200</span></td></tr>
+              <tr><td>Каталог файлов</td><td>0.23 сек.</td><td>10</td><td>5.1 MB</td><td><span class="sl-chip sl-chip-success">200</span></td></tr>
+              <tr><td>Панель управления</td><td>0.31 сек.</td><td>14</td><td>6.0 MB</td><td><span class="sl-chip sl-chip-success">200</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</main>
+<script src="assets/demo.js"></script>
+</body>
+</html>

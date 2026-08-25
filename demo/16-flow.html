@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>16 &middot; Поток — стенд главной SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* Flow: the page answers one question - what happens after the download button. Four numbered steps on a
+       rail that fills as the reader walks it, and the four pillars folded into the step where each one is felt. */
+    .v-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: var(--sl-space-10);
+      padding: var(--sl-space-11) 0 var(--sl-space-9);
+    }
+
+    /* The clock beside the offer: the whole path in one figure, so the steps below are read as a promise kept */
+    .v-clock {
+      display: grid;
+      place-items: center;
+      width: var(--sl-cab-ring-width);
+      height: var(--sl-cab-ring-width);
+      border-radius: var(--sl-radius-circle);
+      background: conic-gradient(var(--sl-primary) 0 78%, var(--sl-bg-muted) 78% 100%);
+      color: var(--sl-text-strong);
+      text-align: center;
+    }
+
+    .v-clock > span {
+      display: grid;
+      place-items: center;
+      width: calc(var(--sl-cab-ring-width) - var(--sl-space-6));
+      height: calc(var(--sl-cab-ring-width) - var(--sl-space-6));
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-bg);
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+      line-height: var(--sl-line-tight);
+    }
+
+    .v-clock b {
+      display: block;
+      font-size: var(--sl-font-h1);
+      color: var(--sl-text-strong);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-rail {
+      position: relative;
+      padding-left: calc(var(--sl-size-tile) + var(--sl-space-8));
+    }
+
+    .v-rail::before,
+    .v-rail::after {
+      content: "";
+      position: absolute;
+      top: var(--sl-space-8);
+      bottom: var(--sl-space-8);
+      left: calc(var(--sl-size-tile) / 2 - 1px);
+      width: 2px;
+    }
+
+    .v-rail::before { background: var(--sl-border); }
+
+    .v-rail::after {
+      background: var(--sl-primary);
+      transform-origin: top;
+      transform: scaleY(0);
+    }
+
+    @supports (animation-timeline: view()) {
+      .v-rail::after {
+        animation: v-grow linear both;
+        animation-timeline: view();
+        animation-range: entry 90% exit 10%;
+      }
+    }
+
+    @keyframes v-grow {
+      to { transform: scaleY(1); }
+    }
+
+    .v-step {
+      position: relative;
+      padding: var(--sl-space-8) 0;
+    }
+
+    .v-step-no {
+      position: absolute;
+      top: var(--sl-space-8);
+      left: calc((var(--sl-size-tile) + var(--sl-space-8)) * -1);
+      display: grid;
+      place-items: center;
+      width: var(--sl-size-tile);
+      height: var(--sl-size-tile);
+      border: 2px solid var(--sl-border);
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-bg);
+      color: var(--sl-text-strong);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-step-done .v-step-no {
+      border-color: var(--sl-primary);
+      background: var(--sl-primary);
+      color: var(--sl-on-solid);
+    }
+
+    .v-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+      align-items: center;
+      gap: var(--sl-space-8);
+      padding: var(--sl-space-8);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-3);
+      background: var(--sl-surface);
+    }
+
+    .v-card-side {
+      display: grid;
+      gap: var(--sl-space-4);
+      padding: var(--sl-space-6);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-bg);
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+    }
+
+    .v-card-side img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 8;
+      object-fit: cover;
+      border-radius: var(--sl-radius-1);
+    }
+
+    .v-pillar {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      margin-bottom: var(--sl-space-4);
+      color: var(--sl-primary-strong);
+      font-size: var(--sl-font-small);
+      letter-spacing: var(--sl-track-wide);
+      text-transform: uppercase;
+    }
+
+    .v-facts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sl-space-3);
+      margin-top: var(--sl-space-6);
+    }
+
+    .v-stat {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 1px;
+      background: var(--sl-border);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-3);
+      overflow: hidden;
+      text-align: center;
+    }
+
+    .v-stat > div { padding: var(--sl-space-8); background: var(--sl-bg); }
+
+    .v-stat b {
+      display: block;
+      font-size: var(--sl-font-hero);
+      line-height: var(--sl-line-tight);
+      color: var(--sl-text-strong);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-stat span { font-size: var(--sl-font-small); color: var(--sl-text-muted); }
+
+    .v-feed {
+      display: grid;
+      gap: var(--sl-space-3);
+    }
+
+    .v-feed a {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: var(--sl-space-5);
+      padding: var(--sl-space-5) var(--sl-space-6);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-surface);
+      text-decoration: none;
+      color: var(--sl-text-strong);
+    }
+
+    .v-feed a:hover { border-color: var(--sl-primary); }
+    .v-feed time { color: var(--sl-text-muted); font-size: var(--sl-font-small); }
+
+    @media (max-width: 900px) {
+      .v-hero,
+      .v-card { grid-template-columns: minmax(0, 1fr); }
+
+      .v-rail { padding-left: calc(var(--sl-size-chip) + var(--sl-space-6)); }
+      .v-rail::before,
+      .v-rail::after { left: calc(var(--sl-size-chip) / 2 - 1px); }
+
+      .v-step-no {
+        left: calc((var(--sl-size-chip) + var(--sl-space-6)) * -1);
+        width: var(--sl-size-chip);
+        height: var(--sl-size-chip);
+      }
+    }
+  </style>
+</head>
+<body class="sl-summer">
+<main class="d-page" data-demo-page>
+
+  <div class="sl-wrp">
+    <div class="v-hero">
+      <div>
+        <p class="d-kicker">Открытый код &middot; MIT &middot; PHP 8.4</p>
+        <h1 class="d-h1 sl-font">SLAED CMS</h1>
+        <p class="d-lead">Система управления содержимым сайта: простая в настройке, с высоким уровнем безопасности,
+        высокой скоростью работы и практически неограниченным потенциалом расширения. На её основе строят и небольшой
+        сайт, и крупный портал.</p>
+        <div class="d-actions">
+          <a class="sl-but" href="#" title="Скачать бесплатно актуальную версию системы">Скачать систему</a>
+          <a class="sl-chip sl-chip-info" href="#" title="Живая демонстрация панели управления"><i class="bi bi-play-circle" aria-hidden="true"></i> Живое демо</a>
+        </div>
+      </div>
+      <div class="v-clock" aria-label="От загрузки до работающего сайта"><span><b>11</b>секунд<br>до первой<br>страницы</span></div>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="d-head">
+      <h2 class="d-h2 sl-font">Что происходит после кнопки «Скачать»</h2>
+      <p class="d-text">Четыре шага, и на каждом видно, какая из четырёх опор системы за него отвечает.</p>
+    </div>
+
+    <div class="v-rail">
+      <section class="v-step v-step-done d-reveal">
+        <span class="v-step-no">1</span>
+        <div class="v-card">
+          <div>
+            <span class="v-pillar"><i class="bi bi-hand-index-thumb" aria-hidden="true"></i> Простота</span>
+            <h3 class="d-h3 sl-font">Скачали и распаковали</h3>
+            <p class="d-text">Архив кладётся в корень сайта: ни компилятора, ни менеджера пакетов, ни консоли сборки.
+            Интуитивный интерфейс: управлять сайтом так же просто, как работать с документами или почтой.</p>
+            <div class="v-facts"><span class="sl-chip sl-chip-neutral">Один архив</span><span class="sl-chip sl-chip-neutral">Без сборки</span></div>
+          </div>
+          <div class="v-card-side"><img src="../templates/lite/images/slide/slaed_1.webp" alt="Распаковка системы" width="1920" height="440">Поставка: 26 модулей, две темы оформления</div>
+        </div>
+      </section>
+
+      <section class="v-step v-step-done d-reveal">
+        <span class="v-step-no">2</span>
+        <div class="v-card">
+          <div>
+            <span class="v-pillar"><i class="bi bi-puzzle" aria-hidden="true"></i> Функциональность</span>
+            <h3 class="d-h3 sl-font">Поставили за три шага</h3>
+            <p class="d-text">Мастер спрашивает базу, администратора и язык — и заканчивает за одиннадцать секунд.
+            Модули, блоки, темы и расширения: 685 дополнений в файловом архиве проекта.</p>
+            <div class="v-facts"><span class="sl-chip sl-chip-neutral">3 шага</span><span class="sl-chip sl-chip-neutral">11 секунд</span><span class="sl-chip sl-chip-neutral">6 языков</span></div>
+          </div>
+          <div class="v-card-side"><img src="../templates/lite/images/slide/slaed_2.webp" alt="Мастер установки" width="1920" height="440">685 дополнений доступны сразу после установки</div>
+        </div>
+      </section>
+
+      <section class="v-step v-step-done d-reveal">
+        <span class="v-step-no">3</span>
+        <div class="v-card">
+          <div>
+            <span class="v-pillar"><i class="bi bi-speedometer2" aria-hidden="true"></i> Эффективность</span>
+            <h3 class="d-h3 sl-font">Настроили и открыли</h3>
+            <p class="d-text">Первая страница собирается за 0.25 секунды и 12 запросов к базе.
+            Низкое потребление серверных ресурсов заметно уже на виртуальном хостинге.</p>
+            <div class="v-facts"><span class="sl-chip sl-chip-neutral">0.25 сек.</span><span class="sl-chip sl-chip-neutral">12 запросов</span><span class="sl-chip sl-chip-neutral">5.2 MB</span></div>
+          </div>
+          <div class="v-card-side"><img src="../templates/lite/images/slide/slaed_3.webp" alt="Работающий сайт" width="1920" height="440">Монитор производительности встроен в панель</div>
+        </div>
+      </section>
+
+      <section class="v-step d-reveal">
+        <span class="v-step-no">4</span>
+        <div class="v-card">
+          <div>
+            <span class="v-pillar"><i class="bi bi-shield-check" aria-hidden="true"></i> Безопасность</span>
+            <h3 class="d-h3 sl-font">Работает и защищается</h3>
+            <p class="d-text">Логирование действий, отслеживание инъекций и несанкционированных запросов из коробки.
+            Подготовленные запросы и проверка токена стоят на каждом изменяющем состояние обработчике.</p>
+            <div class="v-facts"><span class="sl-chip sl-chip-neutral">3 журнала</span><span class="sl-chip sl-chip-neutral">CSRF везде</span></div>
+          </div>
+          <div class="v-card-side"><img src="../templates/lite/images/slide/slaed_4.webp" alt="Журналы безопасности" width="1920" height="440">Три журнала: PHP, SQL и события сайта</div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec-tight">
+    <div class="v-stat d-reveal">
+      <div><b data-demo-num="21">0</b><span>год разработки, с 2005</span></div>
+      <div><b data-demo-num="685">0</b><span>дополнений в архиве</span></div>
+      <div><b data-demo-num="26">0</b><span>модулей в поставке</span></div>
+      <div><b data-demo-num="0.25">0</b><span>секунды на страницу</span></div>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="d-head">
+      <h2 class="d-h2 sl-font">Примеры внедрений системы</h2>
+      <p class="d-text">Те же четыре шага прошли все эти сайты.</p>
+    </div>
+    <div class="d-sites v-shots" data-demo-sites="12"></div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="d-cols d-cols-2">
+      <section>
+        <h2 class="d-h3 sl-font">Новости</h2>
+        <div class="v-feed">
+          <a href="#" title="Вышла SLAED CMS 6.2"><i class="bi bi-newspaper" aria-hidden="true"></i><span>Вышла SLAED CMS 6.2</span><time datetime="2026-08-25">25.08.2026</time></a>
+          <a href="#" title="Тестируем Pre-Alpha 6.3 Pro"><i class="bi bi-cpu" aria-hidden="true"></i><span>Тестируем Pre-Alpha 6.3 Pro</span><time datetime="2026-07-14">14.07.2026</time></a>
+          <a href="#" title="Обновление тем оформления"><i class="bi bi-palette" aria-hidden="true"></i><span>Обновление тем оформления</span><time datetime="2026-02-01">01.02.2026</time></a>
+        </div>
+      </section>
+      <section>
+        <h2 class="d-h3 sl-font">Файлы</h2>
+        <div class="v-feed">
+          <a href="#" title="SLAED CMS 6.2 Pro"><i class="bi bi-box-seam" aria-hidden="true"></i><span>SLAED CMS 6.2 Pro</span><time datetime="2026-08-25">25.08.2026</time></a>
+          <a href="#" title="Модуль «Магазин» 3.1"><i class="bi bi-cart3" aria-hidden="true"></i><span>Модуль &laquo;Магазин&raquo; 3.1</span><time datetime="2026-06-12">12.06.2026</time></a>
+          <a href="#" title="Тема оформления Lite"><i class="bi bi-palette2" aria-hidden="true"></i><span>Тема оформления Lite</span><time datetime="2026-03-04">04.03.2026</time></a>
+        </div>
+      </section>
+    </div>
+  </div>
+
+</main>
+<script src="assets/demo.js"></script>
+</body>
+</html>

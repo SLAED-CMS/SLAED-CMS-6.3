@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>09 &middot; Разворот — стенд главной SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* Spread: the offer stands still on the left while the argument walks past on the right. The call to action
+       is never scrolled away, and each pillar gets a full field of its own instead of a quarter of a row. */
+    .v-split {
+      display: grid;
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+      gap: var(--sl-space-11);
+      align-items: start;
+    }
+
+    .v-stick {
+      position: sticky;
+      top: var(--sl-space-9);
+      padding: var(--sl-space-9) 0;
+    }
+
+    .v-mark {
+      display: grid;
+      place-items: center;
+      width: var(--sl-size-tile);
+      height: var(--sl-size-tile);
+      margin-bottom: var(--sl-space-6);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-primary);
+      color: var(--sl-on-solid);
+      font-size: var(--sl-size-icon-md);
+    }
+
+    /* The index of the spread: the reader always sees where the four fields are and how far they have come */
+    .v-index {
+      display: grid;
+      gap: var(--sl-space-2);
+      margin-top: var(--sl-space-9);
+      padding-top: var(--sl-space-7);
+      border-top: 1px solid var(--sl-border);
+    }
+
+    .v-index a {
+      display: grid;
+      grid-template-columns: var(--sl-space-9) minmax(0, 1fr);
+      align-items: center;
+      gap: var(--sl-space-4);
+      padding: var(--sl-space-3) 0;
+      text-decoration: none;
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+      transition: color var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-index a:hover { color: var(--sl-primary-strong); }
+
+    .v-index b {
+      font-variant-numeric: tabular-nums;
+      color: var(--sl-text-strong);
+    }
+
+    .v-field {
+      padding: var(--sl-space-11) 0;
+      border-bottom: 1px solid var(--sl-border);
+    }
+
+    .v-field:first-child { padding-top: var(--sl-space-9); }
+
+    .v-no {
+      display: block;
+      margin-bottom: var(--sl-space-5);
+      font-size: var(--sl-font-small);
+      letter-spacing: var(--sl-track-wide);
+      color: var(--sl-text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* The illustration of a field: a plate the size of the column, so the right side has weight of its own */
+    .v-plate {
+      position: relative;
+      margin-top: var(--sl-space-7);
+      border-radius: var(--sl-radius-3);
+      overflow: hidden;
+      background: var(--sl-bg-muted);
+      box-shadow: var(--sl-shadow-raised);
+    }
+
+    .v-plate img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 7;
+      object-fit: cover;
+    }
+
+    .v-facts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sl-space-3);
+      margin-top: var(--sl-space-6);
+    }
+
+    .v-stat {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: var(--sl-space-6);
+      padding: var(--sl-space-9) 0;
+      border-bottom: 1px solid var(--sl-border);
+    }
+
+    .v-stat b {
+      display: block;
+      font-size: var(--sl-font-hero);
+      line-height: var(--sl-line-tight);
+      color: var(--sl-text-strong);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-stat span { font-size: var(--sl-font-small); color: var(--sl-text-muted); }
+
+    .v-feed {
+      display: grid;
+      gap: var(--sl-space-3);
+      margin-top: var(--sl-space-6);
+    }
+
+    .v-feed a {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: var(--sl-space-5);
+      padding: var(--sl-space-4) 0;
+      border-bottom: 1px dashed var(--sl-border);
+      text-decoration: none;
+      color: var(--sl-text-strong);
+    }
+
+    .v-feed a:hover { color: var(--sl-primary-strong); }
+    .v-feed time { color: var(--sl-text-muted); font-size: var(--sl-font-small); }
+
+    @media (max-width: 900px) {
+      .v-split { grid-template-columns: minmax(0, 1fr); gap: var(--sl-space-8); }
+      .v-stick { position: static; }
+    }
+  </style>
+</head>
+<body class="sl-summer">
+<main class="d-page" data-demo-page>
+  <div class="sl-wrp">
+    <div class="v-split">
+
+      <div class="v-stick">
+        <span class="v-mark"><i class="bi bi-hexagon-fill" aria-hidden="true"></i></span>
+        <p class="d-kicker">Открытый код &middot; MIT &middot; PHP 8.4</p>
+        <h1 class="d-h1 sl-font">SLAED CMS</h1>
+        <p class="d-lead">Система управления содержимым сайта: простая в настройке, с высоким уровнем безопасности,
+        высокой скоростью работы и практически неограниченным потенциалом расширения. На её основе строят и небольшой
+        сайт, и крупный портал.</p>
+        <div class="d-actions">
+          <a class="sl-but" href="#" title="Скачать бесплатно актуальную версию системы">Скачать систему</a>
+          <a class="sl-chip sl-chip-info" href="#" title="Живая демонстрация панели управления"><i class="bi bi-play-circle" aria-hidden="true"></i> Живое демо</a>
+        </div>
+        <nav class="v-index" aria-label="Содержание">
+          <a href="#v-1"><b>01</b> Простота</a>
+          <a href="#v-2"><b>02</b> Функциональность</a>
+          <a href="#v-3"><b>03</b> Эффективность</a>
+          <a href="#v-4"><b>04</b> Безопасность</a>
+          <a href="#v-5"><b>05</b> Примеры внедрений</a>
+          <a href="#v-6"><b>06</b> Новости и файлы</a>
+        </nav>
+      </div>
+
+      <div>
+        <section class="v-field d-reveal" id="v-1">
+          <span class="v-no">01 &mdash; опора</span>
+          <h2 class="d-h2 sl-font">Простота</h2>
+          <p class="d-lead">Интуитивный интерфейс: управлять сайтом так же просто, как работать с документами или почтой.
+          Мастер установки проходит в три шага и заканчивается за одиннадцать секунд.</p>
+          <div class="v-plate"><img src="../templates/lite/images/slide/slaed_1.webp" alt="Панель управления системы" width="1920" height="440"></div>
+          <div class="v-facts"><span class="sl-chip sl-chip-neutral">3 шага установки</span><span class="sl-chip sl-chip-neutral">11 секунд</span><span class="sl-chip sl-chip-neutral">6 языков интерфейса</span></div>
+        </section>
+
+        <section class="v-field d-reveal" id="v-2">
+          <span class="v-no">02 &mdash; опора</span>
+          <h2 class="d-h2 sl-font">Функциональность</h2>
+          <p class="d-lead">Модули, блоки, темы и расширения: 685 дополнений в файловом архиве проекта.
+          Двадцать шесть модулей идут в поставке, остальное включается по мере надобности.</p>
+          <div class="v-plate"><img src="../templates/lite/images/slide/slaed_2.webp" alt="Модули и расширения системы" width="1920" height="440"></div>
+          <div class="v-facts"><span class="sl-chip sl-chip-neutral">685 дополнений</span><span class="sl-chip sl-chip-neutral">26 модулей</span><span class="sl-chip sl-chip-neutral">Открытый исходный код</span></div>
+        </section>
+
+        <section class="v-field d-reveal" id="v-3">
+          <span class="v-no">03 &mdash; опора</span>
+          <h2 class="d-h2 sl-font">Эффективность</h2>
+          <p class="d-lead">Низкое потребление серверных ресурсов: страница собирается за 12 запросов и 5.2 MB памяти.
+          Встроенная справка отвечает на вопрос прямо в панели управления.</p>
+          <div class="v-plate"><img src="../templates/lite/images/slide/slaed_3.webp" alt="Производительность системы" width="1920" height="440"></div>
+          <div class="v-facts"><span class="sl-chip sl-chip-neutral">0.25 сек. на страницу</span><span class="sl-chip sl-chip-neutral">12 запросов</span><span class="sl-chip sl-chip-neutral">5.2 MB памяти</span></div>
+        </section>
+
+        <section class="v-field d-reveal" id="v-4">
+          <span class="v-no">04 &mdash; опора</span>
+          <h2 class="d-h2 sl-font">Безопасность</h2>
+          <p class="d-lead">Логирование действий, отслеживание инъекций и несанкционированных запросов из коробки.
+          Подготовленные запросы и проверка токена стоят на каждом изменяющем состояние обработчике.</p>
+          <div class="v-plate"><img src="../templates/lite/images/slide/slaed_4.webp" alt="Безопасность системы" width="1920" height="440"></div>
+          <div class="v-facts"><span class="sl-chip sl-chip-neutral">3 журнала</span><span class="sl-chip sl-chip-neutral">CSRF везде</span><span class="sl-chip sl-chip-neutral">Подготовленные запросы</span></div>
+        </section>
+
+        <div class="v-stat d-reveal">
+          <div><b data-demo-num="21">0</b><span>год разработки</span></div>
+          <div><b data-demo-num="685">0</b><span>дополнений</span></div>
+          <div><b data-demo-num="26">0</b><span>модулей</span></div>
+          <div><b data-demo-num="0.25">0</b><span>сек. на страницу</span></div>
+        </div>
+
+        <section class="v-field d-reveal" id="v-5">
+          <span class="v-no">05 &mdash; практика</span>
+          <h2 class="d-h2 sl-font">Примеры внедрений системы</h2>
+          <div class="d-sites v-shots" data-demo-sites="12"></div>
+        </section>
+
+        <section class="v-field d-reveal" id="v-6" style="border-bottom: 0">
+          <span class="v-no">06 &mdash; свежее</span>
+          <h2 class="d-h2 sl-font">Новости и файлы</h2>
+          <div class="v-feed">
+            <a href="#" title="Вышла SLAED CMS 6.2"><i class="bi bi-newspaper" aria-hidden="true"></i><span>Вышла SLAED CMS 6.2</span><time datetime="2026-08-25">25.08.2026</time></a>
+            <a href="#" title="SLAED CMS 6.2 Pro"><i class="bi bi-box-seam" aria-hidden="true"></i><span>SLAED CMS 6.2 Pro</span><time datetime="2026-08-25">25.08.2026</time></a>
+            <a href="#" title="Тестируем Pre-Alpha 6.3 Pro"><i class="bi bi-cpu" aria-hidden="true"></i><span>Тестируем Pre-Alpha 6.3 Pro</span><time datetime="2026-07-14">14.07.2026</time></a>
+            <a href="#" title="Модуль «Магазин» 3.1"><i class="bi bi-cart3" aria-hidden="true"></i><span>Модуль &laquo;Магазин&raquo; 3.1</span><time datetime="2026-06-12">12.06.2026</time></a>
+            <a href="#" title="Тема оформления Lite"><i class="bi bi-palette2" aria-hidden="true"></i><span>Тема оформления Lite</span><time datetime="2026-03-04">04.03.2026</time></a>
+            <a href="#" title="Обновление тем оформления"><i class="bi bi-palette" aria-hidden="true"></i><span>Обновление тем оформления</span><time datetime="2026-02-01">01.02.2026</time></a>
+          </div>
+        </section>
+      </div>
+
+    </div>
+  </div>
+</main>
+<script src="assets/demo.js"></script>
+</body>
+</html>

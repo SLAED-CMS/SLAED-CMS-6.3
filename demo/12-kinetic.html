@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>12 &middot; Кинетика — стенд главной SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* Kinetic typography: almost nothing on the page but words, set very large and given room. The reveal is
+       word by word and driven by the scroll position, so reading the manifesto is what animates it. */
+    .v-hero {
+      padding: calc(var(--sl-space-11) * 2) 0 calc(var(--sl-space-11) * 1.4);
+    }
+
+    .v-huge {
+      margin: 0;
+      font-size: clamp(var(--sl-font-hero), 11vw, 160px);
+      line-height: 0.94;
+      letter-spacing: -0.02em;
+      color: var(--sl-text-strong);
+    }
+
+    .v-huge em {
+      font-style: normal;
+      color: var(--sl-primary);
+    }
+
+    .v-under {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: var(--sl-space-10);
+      align-items: end;
+      margin-top: var(--sl-space-10);
+      padding-top: var(--sl-space-8);
+      border-top: 1px solid var(--sl-border);
+    }
+
+    /* The manifesto: each word starts faint and lights up as the line crosses the middle of the screen */
+    .v-say {
+      margin: 0;
+      font-size: clamp(var(--sl-font-h1), 4.2vw, 56px);
+      line-height: var(--sl-line-tight);
+      color: var(--sl-text-strong);
+    }
+
+    .v-say i {
+      font-style: normal;
+      opacity: var(--sl-fade-disabled);
+    }
+
+    @supports (animation-timeline: view()) {
+      .v-say i {
+        animation: v-lit linear both;
+        animation-timeline: view();
+        animation-range: entry 30% cover 55%;
+      }
+
+      .v-say i:nth-child(2) { animation-range: entry 34% cover 58%; }
+      .v-say i:nth-child(3) { animation-range: entry 38% cover 61%; }
+      .v-say i:nth-child(4) { animation-range: entry 42% cover 64%; }
+      .v-say i:nth-child(5) { animation-range: entry 46% cover 67%; }
+      .v-say i:nth-child(6) { animation-range: entry 50% cover 70%; }
+      .v-say i:nth-child(7) { animation-range: entry 54% cover 73%; }
+      .v-say i:nth-child(8) { animation-range: entry 58% cover 76%; }
+    }
+
+    @keyframes v-lit {
+      to { opacity: 1; }
+    }
+
+    .v-word {
+      padding: calc(var(--sl-space-11) * 1.2) 0;
+      border-bottom: 1px solid var(--sl-border);
+    }
+
+    .v-word-no {
+      display: block;
+      margin-bottom: var(--sl-space-6);
+      font-size: var(--sl-font-small);
+      letter-spacing: var(--sl-track-wide);
+      text-transform: uppercase;
+      color: var(--sl-text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-word p {
+      max-width: 60ch;
+      margin: var(--sl-space-7) 0 0;
+      font-size: var(--sl-font-h3);
+      line-height: var(--sl-line-loose);
+      color: var(--sl-text-muted);
+    }
+
+    /* The figures set as one line of type, because on this page a number is a word too */
+    .v-nums {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sl-space-11);
+      padding: calc(var(--sl-space-11) * 1.2) 0;
+      border-bottom: 1px solid var(--sl-border);
+    }
+
+    .v-nums b {
+      display: block;
+      font-size: clamp(var(--sl-font-hero), 6vw, 88px);
+      line-height: 1;
+      color: var(--sl-text-strong);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-nums span {
+      display: block;
+      margin-top: var(--sl-space-3);
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+    }
+
+    .v-links {
+      display: grid;
+      border-top: 1px solid var(--sl-border);
+    }
+
+    /* A list of links set as headlines: the row itself is the type, and the arrow moves rather than a colour */
+    .v-links a {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      align-items: baseline;
+      gap: var(--sl-space-8);
+      padding: var(--sl-space-8) 0;
+      border-bottom: 1px solid var(--sl-border);
+      text-decoration: none;
+      color: var(--sl-text-strong);
+      font-size: clamp(var(--sl-font-h2), 2.4vw, 34px);
+      line-height: var(--sl-line-tight);
+    }
+
+    .v-links a > i {
+      transition: transform var(--sl-time-base) var(--sl-ease-out);
+      color: var(--sl-primary);
+      font-size: var(--sl-size-icon-md);
+    }
+
+    .v-links a:hover > i { transform: translateX(var(--sl-space-4)); }
+
+    .v-links time {
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+      white-space: nowrap;
+    }
+
+    @media (max-width: 900px) {
+      .v-under { grid-template-columns: minmax(0, 1fr); }
+      .v-shots { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .v-links a { grid-template-columns: minmax(0, 1fr) auto; gap: var(--sl-space-5); }
+      .v-links time { display: none; }
+    }
+  </style>
+</head>
+<body class="sl-summer">
+<main class="d-page" data-demo-page>
+  <div class="sl-wrp">
+
+    <div class="v-hero">
+      <p class="d-kicker">Открытый код &middot; MIT &middot; PHP 8.4 &middot; с 2005 года</p>
+      <h1 class="v-huge sl-font">SLAED<br><em>CMS</em></h1>
+      <div class="v-under">
+        <p class="d-lead" style="margin: 0">Система управления содержимым сайта: простая в настройке, с высоким
+        уровнем безопасности, высокой скоростью работы и практически неограниченным потенциалом расширения.
+        На её основе строят и небольшой сайт, и крупный портал.</p>
+        <div class="d-actions">
+          <a class="sl-but" href="#" title="Скачать бесплатно актуальную версию системы">Скачать систему</a>
+          <a class="sl-chip sl-chip-info" href="#" title="Живая демонстрация панели управления"><i class="bi bi-play-circle" aria-hidden="true"></i> Живое демо</a>
+        </div>
+      </div>
+    </div>
+
+    <p class="v-say sl-font" style="padding: calc(var(--sl-space-11) * 1.4) 0; border-bottom: 1px solid var(--sl-border)">
+      <i>Все</i> <i>великое</i> <i>просто.</i> <i>Четыре</i> <i>слова,</i> <i>двадцать</i> <i>один</i> <i>год.</i>
+    </p>
+
+    <section class="v-word">
+      <span class="v-word-no">01</span>
+      <h2 class="v-say sl-font"><i>Простота</i></h2>
+      <p>Интуитивный интерфейс: управлять сайтом так же просто, как работать с документами или почтой.
+      Мастер установки проходит в три шага и заканчивается за одиннадцать секунд.</p>
+    </section>
+
+    <section class="v-word">
+      <span class="v-word-no">02</span>
+      <h2 class="v-say sl-font"><i>Функциональность</i></h2>
+      <p>Модули, блоки, темы и расширения: 685 дополнений в файловом архиве проекта.
+      Двадцать шесть модулей идут в поставке, остальное включается по мере надобности.</p>
+    </section>
+
+    <section class="v-word">
+      <span class="v-word-no">03</span>
+      <h2 class="v-say sl-font"><i>Эффективность</i></h2>
+      <p>Низкое потребление серверных ресурсов: страница собирается за 12 запросов и 5.2 MB памяти.
+      Встроенная справка отвечает на вопрос прямо в панели управления.</p>
+    </section>
+
+    <section class="v-word">
+      <span class="v-word-no">04</span>
+      <h2 class="v-say sl-font"><i>Безопасность</i></h2>
+      <p>Логирование действий, отслеживание инъекций и несанкционированных запросов из коробки.
+      Подготовленные запросы и проверка токена стоят на каждом изменяющем состояние обработчике.</p>
+    </section>
+
+    <div class="v-nums">
+      <div><b data-demo-num="21">0</b><span>год разработки, с 2005</span></div>
+      <div><b data-demo-num="685">0</b><span>дополнений в архиве</span></div>
+      <div><b data-demo-num="26">0</b><span>модулей в поставке</span></div>
+      <div><b data-demo-num="0.25">0</b><span>секунды на страницу</span></div>
+    </div>
+
+    <section class="v-shots d-sites" aria-label="Примеры внедрений системы" data-demo-sites="12"></section>
+
+    <section class="d-sec" aria-label="Новости и файлы">
+      <div class="v-links">
+        <a href="#" title="Вышла SLAED CMS 6.2"><span>Вышла SLAED CMS 6.2</span><time datetime="2026-08-25">25.08.2026</time><i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+        <a href="#" title="SLAED CMS 6.2 Pro"><span>SLAED CMS 6.2 Pro</span><time datetime="2026-08-25">25.08.2026</time><i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+        <a href="#" title="Тестируем Pre-Alpha 6.3 Pro"><span>Тестируем Pre-Alpha 6.3 Pro</span><time datetime="2026-07-14">14.07.2026</time><i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+        <a href="#" title="Модуль «Магазин» 3.1"><span>Модуль &laquo;Магазин&raquo; 3.1</span><time datetime="2026-06-12">12.06.2026</time><i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+        <a href="#" title="Тема оформления Lite"><span>Тема оформления Lite</span><time datetime="2026-03-04">04.03.2026</time><i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+        <a href="#" title="Обновление тем оформления"><span>Обновление тем оформления</span><time datetime="2026-02-01">01.02.2026</time><i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+      </div>
+    </section>
+
+  </div>
+</main>
+<script src="assets/demo.js"></script>
+</body>
+</html>

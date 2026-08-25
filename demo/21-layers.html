@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>21 &middot; Слои — стенд главной SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* Layers: the glass of 13 given depth. The scene sticks while the page scrolls past it and the four
+       pillars arrive one after another as sheets of glass in perspective - the near one sharp, the ones behind
+       it blurred and shrunk. Nothing here listens to the scroll: each sheet is one scroll-driven animation.
+
+       The photograph behind the sheets keeps its own 440 pixels, so the depth is built out of the glass rather
+       than out of a stretched picture. */
+    .v-page {
+      --v-band: min(calc(100vw * 440 / 1920), 440px);
+    }
+
+    /* Three screens of scroll drive the four sheets. Capped in pixels as well as in viewports, because on a
+       tall monitor 340vh becomes a scroll nobody finishes */
+    .v-tall {
+      position: relative;
+      height: min(340vh, 2600px);
+      /* One named timeline for the whole block; the sheets inside read it and each takes its own slice of it.
+         A named view-timeline is visible to the descendants of the element that declares it, which is exactly
+         the relationship between this block and its four sheets. */
+      view-timeline: --tall block;
+    }
+
+    .v-stick {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      display: grid;
+      align-content: center;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .v-stick::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      z-index: -3;
+      height: var(--v-band);
+      background-repeat: no-repeat;
+      background-position: 50% 0;
+      background-size: min(100%, 1920px) auto;
+    }
+
+    .v-stick::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      background: linear-gradient(to bottom, var(--sl-scrim) 0%, var(--sl-bg) 62%);
+    }
+
+    .sl-winter .v-stick::before { background-image: url(../templates/lite/images/seasons/winter.webp); }
+    .sl-spring .v-stick::before { background-image: url(../templates/lite/images/seasons/spring.webp); }
+    .sl-summer .v-stick::before { background-image: url(../templates/lite/images/seasons/summer.webp); }
+    .sl-autumn .v-stick::before { background-image: url(../templates/lite/images/seasons/autumn.webp); }
+    .sl-newyear .v-stick::before { background-image: url(../templates/lite/images/seasons/newyear.webp); }
+
+    /* The whole scene must fit one screen under the site chrome, so the headline here is a size smaller than
+       on the other variants and the deck is given only the room its tallest sheet needs */
+    .v-title {
+      text-align: center;
+      margin-bottom: var(--sl-space-7);
+    }
+
+    .v-title .d-h1 {
+      font-size: clamp(var(--sl-font-display), 5vw, 64px);
+      margin-bottom: var(--sl-space-4);
+    }
+
+    .v-title .d-lead {
+      font-size: var(--sl-font-body);
+      margin-bottom: var(--sl-space-5);
+    }
+
+    .v-deck {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 250px;
+    }
+
+    .v-sheet h2 { font-size: var(--sl-font-h1); margin-bottom: var(--sl-space-4); }
+
+    /* Each sheet occupies the same cell and is separated from the others only by depth */
+    .v-sheet {
+      grid-area: 1 / 1;
+      width: min(100%, 640px);
+      padding: var(--sl-space-9);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: var(--sl-radius-3);
+      background: rgba(20, 27, 38, 0.66);
+      backdrop-filter: blur(20px) saturate(1.4);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), var(--sl-panel-shadow);
+      transform: translateY(var(--sl-space-11)) scale(0.94);
+      opacity: 0;
+      filter: blur(6px);
+    }
+
+    /* Four ranges over the same tall block: sheet N is sharp while the page is in its quarter of the scroll */
+    /* `contain` is the stretch during which the block covers the window from edge to edge - exactly the stretch
+       during which the scene is stuck - so the four slices below divide the time the reader spends looking at it */
+    @supports (animation-timeline: view()) {
+      .v-sheet {
+        animation: v-arrive linear both;
+        animation-timeline: --tall;
+      }
+
+      /* The first sheet is already there when the scene arrives, so it leaves but never enters */
+      .v-sheet:nth-child(1) { animation-name: v-leave; animation-range: contain 0% contain 24%; }
+      .v-sheet:nth-child(2) { animation-range: contain 20% contain 48%; }
+      .v-sheet:nth-child(3) { animation-range: contain 44% contain 72%; }
+      .v-sheet:nth-child(4) { animation-range: contain 68% contain 96%; }
+    }
+
+    @keyframes v-arrive {
+      0% { transform: translateY(var(--sl-space-11)) scale(0.94); opacity: 0; filter: blur(6px); }
+      26%, 74% { transform: none; opacity: 1; filter: none; }
+      100% { transform: translateY(calc(var(--sl-space-11) * -1)) scale(1.05); opacity: 0; filter: blur(6px); }
+    }
+
+    @keyframes v-leave {
+      0%, 74% { transform: none; opacity: 1; filter: none; }
+      100% { transform: translateY(calc(var(--sl-space-11) * -1)) scale(1.05); opacity: 0; filter: blur(6px); }
+    }
+
+    /* Without scroll-driven animation the sheets simply stack as four readable cards */
+    @supports not (animation-timeline: view()) {
+      .v-deck { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--sl-space-5); }
+      .v-sheet { grid-area: auto; width: auto; transform: none; opacity: 1; filter: none; padding: var(--sl-space-7); }
+    }
+
+    .v-sheet-no {
+      display: block;
+      margin-bottom: var(--sl-space-5);
+      color: var(--sl-primary-inverse);
+      font-size: var(--sl-font-small);
+      letter-spacing: var(--sl-track-wide);
+      text-transform: uppercase;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-sheet h2 { color: #ffffff; }
+    .v-sheet p { color: rgba(255, 255, 255, 0.72); }
+
+    .v-dots {
+      display: flex;
+      justify-content: center;
+      gap: var(--sl-space-3);
+      margin-top: var(--sl-space-9);
+    }
+
+    .v-dots > i {
+      width: var(--sl-bullet-width);
+      height: var(--sl-bullet-height);
+      border-radius: var(--sl-radius-circle);
+      background: rgba(255, 255, 255, 0.28);
+    }
+
+    .v-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      padding: var(--sl-space-8) var(--sl-space-6);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-3);
+      background: var(--sl-surface);
+      text-align: center;
+    }
+
+    .v-strip > div + div { border-left: 1px solid var(--sl-border); }
+
+    .v-strip b {
+      display: block;
+      font-size: var(--sl-font-hero);
+      line-height: var(--sl-line-tight);
+      color: var(--sl-text-strong);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-strip span { font-size: var(--sl-font-small); color: var(--sl-text-muted); }
+
+    .v-feed {
+      display: grid;
+      gap: var(--sl-space-3);
+    }
+
+    .v-feed a {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: var(--sl-space-5);
+      padding: var(--sl-space-5) var(--sl-space-6);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-surface);
+      text-decoration: none;
+      color: var(--sl-text-strong);
+    }
+
+    .v-feed a:hover { border-color: var(--sl-primary); }
+    .v-feed time { color: var(--sl-text-muted); font-size: var(--sl-font-small); }
+
+    @media (max-width: 768px) {
+      .v-tall { height: auto; }
+      .v-stick { position: static; height: auto; padding: var(--sl-space-9) 0; }
+      .v-deck { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sl-space-5); }
+      .v-sheet { grid-area: auto; width: auto; transform: none; opacity: 1; filter: none; animation: none; }
+      .v-strip > div + div { border-left: 0; border-top: 1px solid var(--sl-border); padding-top: var(--sl-space-6); margin-top: var(--sl-space-6); }
+    }
+  </style>
+</head>
+<body class="sl-summer">
+<main class="d-page v-page" data-demo-page>
+
+  <div class="v-tall">
+    <div class="v-stick">
+      <div class="sl-wrp">
+        <div class="v-title">
+          <p class="d-kicker" style="justify-content: center; color: rgba(255, 255, 255, 0.72)">Открытый код &middot; MIT &middot; PHP 8.4</p>
+          <h1 class="d-h1 sl-font" style="color: #ffffff">SLAED CMS</h1>
+          <p class="d-lead" style="margin-inline: auto; max-width: 66ch; color: rgba(255, 255, 255, 0.72)">Система управления
+          содержимым сайта: простая в настройке, с высоким уровнем безопасности, высокой скоростью работы
+          и практически неограниченным потенциалом расширения.</p>
+          <div class="d-actions" style="justify-content: center">
+            <a class="sl-but" href="#" title="Скачать бесплатно актуальную версию системы">Скачать систему</a>
+            <a class="sl-chip sl-chip-info" href="#" title="Живая демонстрация панели управления"><i class="bi bi-play-circle" aria-hidden="true"></i> Живое демо</a>
+          </div>
+        </div>
+
+        <div class="v-deck">
+          <article class="v-sheet"><span class="v-sheet-no">01 &mdash; опора</span><h2 class="d-h2 sl-font">Простота</h2><p class="d-text">Интуитивный интерфейс: управлять сайтом так же просто, как работать с документами или почтой. Мастер установки проходит в три шага и заканчивается за одиннадцать секунд.</p></article>
+          <article class="v-sheet"><span class="v-sheet-no">02 &mdash; опора</span><h2 class="d-h2 sl-font">Функциональность</h2><p class="d-text">Модули, блоки, темы и расширения: 685 дополнений в файловом архиве проекта. Двадцать шесть модулей идут в поставке, остальное включается по мере надобности.</p></article>
+          <article class="v-sheet"><span class="v-sheet-no">03 &mdash; опора</span><h2 class="d-h2 sl-font">Эффективность</h2><p class="d-text">Низкое потребление серверных ресурсов: страница собирается за 12 запросов и 5.2 MB памяти. Встроенная справка отвечает на вопрос прямо в панели управления.</p></article>
+          <article class="v-sheet"><span class="v-sheet-no">04 &mdash; опора</span><h2 class="d-h2 sl-font">Безопасность</h2><p class="d-text">Логирование действий, отслеживание инъекций и несанкционированных запросов из коробки. Подготовленные запросы и проверка токена стоят на каждом обработчике.</p></article>
+        </div>
+
+        <div class="v-dots" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec-tight">
+    <div class="v-strip d-reveal">
+      <div><b data-demo-num="21">0</b><span>год разработки, с 2005</span></div>
+      <div><b data-demo-num="685">0</b><span>дополнений в архиве</span></div>
+      <div><b data-demo-num="26">0</b><span>модулей в поставке</span></div>
+      <div><b data-demo-num="0.25">0</b><span>секунды на страницу</span></div>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="d-head">
+      <h2 class="d-h2 sl-font">Примеры внедрений системы</h2>
+      <p class="d-text">Настоящие сайты из каталога проекта: снимок и оценка посетителей у каждого.</p>
+    </div>
+    <div class="d-sites" data-demo-sites="12"></div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="d-cols d-cols-2">
+      <section>
+        <h2 class="d-h3 sl-font">Новости</h2>
+        <div class="v-feed">
+          <a href="#" title="Вышла SLAED CMS 6.2"><i class="bi bi-newspaper" aria-hidden="true"></i><span>Вышла SLAED CMS 6.2</span><time datetime="2026-08-25">25.08.2026</time></a>
+          <a href="#" title="Тестируем Pre-Alpha 6.3 Pro"><i class="bi bi-cpu" aria-hidden="true"></i><span>Тестируем Pre-Alpha 6.3 Pro</span><time datetime="2026-07-14">14.07.2026</time></a>
+          <a href="#" title="Обновление тем оформления"><i class="bi bi-palette" aria-hidden="true"></i><span>Обновление тем оформления</span><time datetime="2026-02-01">01.02.2026</time></a>
+        </div>
+      </section>
+      <section>
+        <h2 class="d-h3 sl-font">Файлы</h2>
+        <div class="v-feed">
+          <a href="#" title="SLAED CMS 6.2 Pro"><i class="bi bi-box-seam" aria-hidden="true"></i><span>SLAED CMS 6.2 Pro</span><time datetime="2026-08-25">25.08.2026</time></a>
+          <a href="#" title="Модуль «Магазин» 3.1"><i class="bi bi-cart3" aria-hidden="true"></i><span>Модуль &laquo;Магазин&raquo; 3.1</span><time datetime="2026-06-12">12.06.2026</time></a>
+          <a href="#" title="Тема оформления Lite"><i class="bi bi-palette2" aria-hidden="true"></i><span>Тема оформления Lite</span><time datetime="2026-03-04">04.03.2026</time></a>
+        </div>
+      </section>
+    </div>
+  </div>
+
+</main>
+<script src="assets/demo.js"></script>
+</body>
+</html>

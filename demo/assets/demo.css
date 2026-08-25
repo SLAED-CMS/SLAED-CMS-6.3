@@ -1,71 +1,282 @@
-/* The four properties the pointer variants read. Registering them gives them a type, so a transition can
-   interpolate them instead of snapping, and an unset value is the centre of the band rather than nothing. */
-@property --demo-x {
+/* Demo rig for the presentation page. Nothing here ships: it is the harness that puts every variant into the
+   real page chrome, gives them one shared rhythm, and lets two of them be compared by scrolling, not by imagining. */
+
+@property --dx {
   syntax: "<length-percentage>";
   inherits: true;
   initial-value: 50%;
 }
 
-@property --demo-y {
+@property --dy {
   syntax: "<length-percentage>";
   inherits: true;
   initial-value: 50%;
 }
 
-@property --demo-nx {
+@property --dnx {
   syntax: "<number>";
   inherits: true;
   initial-value: 0;
 }
 
-@property --demo-ny {
+@property --dny {
   syntax: "<number>";
   inherits: true;
   initial-value: 0;
 }
 
-/* Demo rig: the shell around every band study. Nothing here is theme code -- it is the harness that
-   lets one variant be compared against another, and it never ships. */
+/* --- The shared spine ------------------------------------------------------
+   Every variant carries the same content in the same order: hero, four pillars,
+   figures, showcase, news and files, closing call. These classes give that spine
+   one rhythm so a variant is judged by what it does differently, not by whether
+   its section padding happened to be larger. A variant overrides freely. */
 
-.demo-filler {
+.d-page {
+  --d-sec-pad: var(--sl-space-11);
+}
+
+/* The theme sets no global img sizing, and every showcase image carries its intrinsic width and height in the
+   markup. Without this the height attribute wins and aspect-ratio never applies, so it is declared once here. */
+.d-page img {
+  max-width: 100%;
+  height: auto;
+}
+
+.d-sec {
+  padding: var(--d-sec-pad) 0;
+}
+
+.d-sec-tight {
   padding: var(--sl-space-9) 0;
 }
 
-.demo-filler p {
-  margin: 0 0 var(--sl-space-6);
-  max-width: 72ch;
-  line-height: var(--sl-line-loose);
+.d-head {
+  max-width: 68ch;
+  margin: 0 0 var(--sl-space-9);
 }
 
-.demo-note {
-  border: 1px solid var(--sl-border);
-  border-radius: var(--sl-radius-2);
-  background: var(--sl-surface);
-  padding: var(--sl-space-6);
-  margin: 0 0 var(--sl-space-8);
+.d-head-center {
+  margin-inline: auto;
+  text-align: center;
 }
 
-.demo-note h2 {
+.d-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  margin: 0 0 var(--sl-space-5);
+  font-size: var(--sl-font-small);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+  color: var(--sl-text-muted);
+}
+
+.d-h1 {
+  margin: 0 0 var(--sl-space-5);
+  font-size: clamp(var(--sl-font-display), 6vw, calc(var(--sl-font-hero) * 1.9));
+  line-height: var(--sl-line-tight);
+  color: var(--sl-text-strong);
+}
+
+.d-h2 {
+  margin: 0 0 var(--sl-space-5);
+  font-size: clamp(var(--sl-font-h1), 3vw, var(--sl-font-hero));
+  line-height: var(--sl-line-tight);
+  color: var(--sl-text-strong);
+}
+
+.d-h3 {
   margin: 0 0 var(--sl-space-3);
   font-size: var(--sl-font-h2);
+  line-height: var(--sl-line-tight);
+  color: var(--sl-text-strong);
 }
 
-.demo-note ul {
+.d-lead {
+  margin: 0 0 var(--sl-space-6);
+  font-size: var(--sl-font-h4);
+  line-height: var(--sl-line-loose);
+  color: var(--sl-text-muted);
+}
+
+.d-text {
   margin: 0;
-  padding-left: var(--sl-space-7);
+  line-height: var(--sl-line-loose);
+  color: var(--sl-text-muted);
 }
 
-.demo-note li {
-  margin: 0 0 var(--sl-space-2);
+.d-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-4);
 }
 
-/* The control rail: fixed, own colours, readable in both modes because it is not part of the theme */
+.d-cols {
+  display: grid;
+  gap: var(--sl-space-8);
+}
+
+.d-cols-2 {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+.d-cols-3 {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.d-cols-4 {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.d-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.d-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-3);
+}
+
+/* --- The implementations ---------------------------------------------------
+   Real screenshots of real client sites, 260 wide and 166 to 455 tall. They are
+   pictures of pages, so every pixel of them is information and an upscale turns
+   that information into mush. Two laws hold everywhere on this stand:
+
+   1. Never wider than 260 - the column is sized to the picture, not the picture
+      to the column.
+   2. Never taller than its own height - a row of even tiles is made by cropping
+      the tall ones, never by stretching the short ones.
+
+   A variant repaints the card freely; these two it may not undo. */
+
+.d-sites {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 260px);
+  justify-content: space-between;
+  gap: var(--sl-space-8) var(--sl-space-6);
+}
+
+.d-site {
+  display: block;
+  width: 260px;
+  text-decoration: none;
+  color: var(--sl-text);
+}
+
+.d-site-shot {
+  display: block;
+  overflow: hidden;
+  height: var(--d-shot-height, 166px);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg-muted);
+  box-shadow: var(--sl-shadow-raised);
+}
+
+/* The tall screenshots are cropped from the top, which shows the head of the site rather than its middle */
+.d-site-shot img {
+  display: block;
+  width: 260px;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 0;
+  transition: transform var(--sl-time-slow) var(--sl-ease-out);
+}
+
+/* Where a variant wants the whole page rather than a band of it, the picture keeps its own height */
+.d-site-shot-own {
+  height: auto;
+}
+
+.d-site-shot-own img {
+  height: auto;
+}
+
+.d-site:hover .d-site-shot img {
+  transform: scale(1.03);
+}
+
+.d-site-cap {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sl-space-4);
+  padding-top: var(--sl-space-4);
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-muted);
+}
+
+.d-site-cap b {
+  color: var(--sl-text-strong);
+  font-weight: var(--sl-weight-normal);
+}
+
+.d-site:hover .d-site-cap b {
+  color: var(--sl-primary-strong);
+}
+
+.d-site-rate {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Photographic bands ----------------------------------------------------
+   Every photograph the theme ships is 1920x440. Painted with `cover` on a band
+   taller than 440 * (width / 1920) the browser scales it up, and an upscaled
+   photograph reads as a cheap one. `--d-band-bg` sizes the picture to its own
+   pixels: full width up to 1920, then centred, and never a pixel taller than
+   the file is. A band using it decides its height with padding, and where the
+   band is taller than the picture the ground below shows through - which is a
+   composition, not a stretch. */
+
+.d-band-art {
+  background-repeat: no-repeat;
+  background-position: 50% 0;
+  background-size: min(100%, 1920px) auto;
+}
+
+/* Reveal on scroll, on the compositor and without a scroll listener. Wrapped in a support query because the
+   variant must read correctly in a browser that has no scroll-driven animations at all. */
+@supports (animation-timeline: view()) {
+  .d-reveal {
+    animation: d-reveal-in linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 70%;
+  }
+}
+
+@keyframes d-reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .d-reveal {
+    animation: none;
+  }
+}
+
+/* --- The rig chrome -------------------------------------------------------- */
+
 .demo-panel {
   position: fixed;
   right: 16px;
   bottom: 16px;
   z-index: 9999;
-  width: 264px;
+  width: 268px;
   padding: 14px 16px;
   border-radius: 12px;
   background: rgba(17, 24, 39, 0.92);
@@ -75,12 +286,12 @@
   font: 12px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
-.demo-panel[data-collapsed="1"] > *:not(.demo-panel-head) {
-  display: none;
-}
-
 .demo-panel[data-collapsed="1"] {
   width: auto;
+}
+
+.demo-panel[data-collapsed="1"] > *:not(.demo-panel-head) {
+  display: none;
 }
 
 .demo-panel-head {
@@ -145,11 +356,6 @@
   font-weight: 600;
 }
 
-.demo-panel input[type="range"] {
-  width: 100%;
-  accent-color: #38a9de;
-}
-
 .demo-panel-nav {
   display: flex;
   align-items: center;
@@ -170,6 +376,26 @@
   text-decoration: underline;
 }
 
+.demo-note {
+  border: 1px solid var(--sl-border);
+  border-left: var(--sl-alert-border) solid var(--sl-primary);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-surface);
+  padding: var(--sl-space-6);
+  margin: 0;
+}
+
+.demo-note h2 {
+  margin: 0 0 var(--sl-space-3);
+  font-size: var(--sl-font-h3);
+}
+
+.demo-note p {
+  margin: 0;
+  color: var(--sl-text-muted);
+  line-height: var(--sl-line-loose);
+}
+
 /* Motion kill switch of the rig, and the platform one it mirrors */
 [data-demo-motion="off"] *,
 [data-demo-motion="off"] *::before,
@@ -178,10 +404,35 @@
   transition: none !important;
 }
 
-/* The gallery */
+/* --- The gallery ----------------------------------------------------------- */
+
+.demo-hero {
+  padding: var(--sl-space-10) 0 var(--sl-space-8);
+}
+
+.demo-hero h1 {
+  margin: 0 0 var(--sl-space-5);
+  font-size: var(--sl-font-hero);
+  line-height: var(--sl-line-tight);
+}
+
+.demo-hero p {
+  margin: 0 0 var(--sl-space-5);
+  max-width: 82ch;
+  line-height: var(--sl-line-loose);
+  color: var(--sl-text-muted);
+}
+
+.demo-hero-tools {
+  display: flex;
+  gap: var(--sl-space-3);
+  flex-wrap: wrap;
+  margin-top: var(--sl-space-6);
+}
+
 .demo-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
   gap: var(--sl-space-8);
   padding: var(--sl-space-8) 0 var(--sl-space-11);
 }
@@ -197,7 +448,7 @@
 
 .demo-card-frame {
   position: relative;
-  height: 260px;
+  height: 300px;
   border-bottom: 1px solid var(--sl-border);
   overflow: hidden;
   background: var(--sl-bg-subtle);
@@ -206,10 +457,10 @@
 .demo-card-frame iframe {
   position: absolute;
   inset: 0;
-  width: 200%;
-  height: 520px;
+  width: 250%;
+  height: 750px;
   border: 0;
-  transform: scale(0.5);
+  transform: scale(0.4);
   transform-origin: 0 0;
   pointer-events: none;
 }
@@ -225,6 +476,10 @@
 .demo-card-body h2 {
   margin: 0;
   font-size: var(--sl-font-h3);
+}
+
+.demo-card-body h2 a {
+  text-decoration: none;
 }
 
 .demo-card-body p {

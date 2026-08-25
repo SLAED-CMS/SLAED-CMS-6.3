@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>22 &middot; Антисетка — стенд главной SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* Anti-grid: the counter-move to bento. Everything soft is taken away - no shadow, no blur, no rounded
+       corner, no gradient - and what is left is a hard rule, a monospace label and a block that refuses to line
+       up with its neighbour. A page like this is remembered because it is the one that did not look like the
+       other seventeen; it is also the one that survives a repaint with no assets at all.
+
+       An open-source product with twenty one years behind it can afford this voice. A bank cannot. */
+    .v-page {
+      --v-ink: var(--sl-text-strong);
+      --v-mono: ui-monospace, SFMono-Regular, "Cascadia Code", Consolas, monospace;
+      background:
+        repeating-linear-gradient(90deg, var(--sl-border) 0 1px, transparent 1px 25%);
+    }
+
+    .v-slab {
+      border-bottom: 2px solid var(--v-ink);
+    }
+
+    .v-lab {
+      font-family: var(--v-mono);
+      font-size: var(--sl-font-small);
+      text-transform: uppercase;
+      letter-spacing: var(--sl-track-wide);
+      color: var(--v-ink);
+    }
+
+    /* The headline is set as large as it goes and cropped by the page, not fitted to it */
+    .v-shout {
+      margin: 0;
+      font-size: clamp(48px, 15vw, 220px);
+      line-height: 0.82;
+      letter-spacing: -0.04em;
+      color: var(--v-ink);
+      text-transform: uppercase;
+    }
+
+    .v-shout span {
+      display: block;
+      color: var(--sl-bg);
+      -webkit-text-stroke: 2px var(--v-ink);
+    }
+
+    .v-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      border-top: 2px solid var(--v-ink);
+    }
+
+    .v-cell {
+      padding: var(--sl-space-7) var(--sl-space-6);
+      border-right: 1px solid var(--v-ink);
+      font-family: var(--v-mono);
+      font-size: var(--sl-font-small);
+      line-height: var(--sl-line-normal);
+      color: var(--v-ink);
+    }
+
+    .v-cell:last-child { border-right: 0; }
+
+    /* Off-grid: each pillar starts on a different column and a different line, so the eye is made to walk */
+    .v-off {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      border-bottom: 1px solid var(--v-ink);
+    }
+
+    .v-off > * {
+      padding: var(--sl-space-10) var(--sl-space-6);
+      border-left: 1px solid var(--v-ink);
+    }
+
+    .v-off:nth-of-type(1) > * { grid-column: 1 / 8; }
+    .v-off:nth-of-type(2) > * { grid-column: 4 / 12; }
+    .v-off:nth-of-type(3) > * { grid-column: 2 / 9; }
+    .v-off:nth-of-type(4) > * { grid-column: 6 / 13; }
+
+    .v-off h2 {
+      margin: 0 0 var(--sl-space-5);
+      font-size: clamp(var(--sl-font-h1), 5vw, 64px);
+      line-height: 0.95;
+      text-transform: uppercase;
+      letter-spacing: -0.02em;
+      color: var(--v-ink);
+    }
+
+    .v-off p {
+      margin: 0;
+      max-width: 60ch;
+      font-family: var(--v-mono);
+      font-size: var(--sl-font-body);
+      line-height: var(--sl-line-loose);
+      color: var(--sl-text);
+    }
+
+    .v-no {
+      float: right;
+      font-family: var(--v-mono);
+      font-size: var(--sl-font-h1);
+      color: var(--v-ink);
+    }
+
+    /* The button is a rectangle with a hard shadow that snaps on press - a control, not a pill */
+    .v-hit {
+      display: inline-block;
+      padding: var(--sl-space-4) var(--sl-space-7);
+      border: 2px solid var(--v-ink);
+      background: var(--sl-bg);
+      box-shadow: 6px 6px 0 0 var(--v-ink);
+      color: var(--v-ink);
+      font-family: var(--v-mono);
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: box-shadow var(--sl-time-fast) var(--sl-ease-out), transform var(--sl-time-fast) var(--sl-ease-out);
+    }
+
+    .v-hit:hover { box-shadow: 3px 3px 0 0 var(--v-ink); transform: translate(3px, 3px); }
+    .v-hit-fill { background: var(--v-ink); color: var(--sl-bg); }
+
+    .v-nums {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      border-top: 2px solid var(--v-ink);
+      border-bottom: 2px solid var(--v-ink);
+    }
+
+    .v-nums > div {
+      padding: var(--sl-space-8) var(--sl-space-6);
+      border-right: 1px solid var(--v-ink);
+    }
+
+    .v-nums > div:last-child { border-right: 0; }
+
+    .v-nums b {
+      display: block;
+      font-size: clamp(var(--sl-font-hero), 5vw, 72px);
+      line-height: 0.9;
+      color: var(--v-ink);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-nums span {
+      font-family: var(--v-mono);
+      font-size: var(--sl-font-small);
+      text-transform: uppercase;
+      color: var(--sl-text-muted);
+    }
+
+    /* The implementations: hard frames, no radius, no shadow, the caption set as a filed record */
+    .v-sites {
+      gap: var(--sl-space-7) var(--sl-space-5);
+    }
+
+    .v-sites .d-site-shot {
+      border: 2px solid var(--v-ink);
+      border-radius: 0;
+      box-shadow: none;
+      background: var(--sl-bg);
+    }
+
+    .v-sites .d-site:hover .d-site-shot img { transform: none; }
+    .v-sites .d-site:hover .d-site-shot { box-shadow: 5px 5px 0 0 var(--v-ink); }
+
+    .v-sites .d-site-cap {
+      font-family: var(--v-mono);
+      text-transform: uppercase;
+      font-size: var(--sl-font-micro);
+      letter-spacing: var(--sl-track-wide);
+    }
+
+    .v-list {
+      border-top: 1px solid var(--v-ink);
+    }
+
+    .v-list a {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: var(--sl-space-6);
+      align-items: baseline;
+      padding: var(--sl-space-6) 0;
+      border-bottom: 1px solid var(--v-ink);
+      text-decoration: none;
+      color: var(--v-ink);
+      font-family: var(--v-mono);
+    }
+
+    .v-list a:hover { background: var(--v-ink); color: var(--sl-bg); }
+    .v-list a > span:last-child { font-size: var(--sl-font-h3); font-family: Arial, system-ui, sans-serif; }
+
+    @media (max-width: 900px) {
+      .v-page { background: none; }
+      .v-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .v-off > * { grid-column: 1 / -1 !important; }
+    }
+  </style>
+</head>
+<body class="sl-summer">
+<main class="d-page v-page" data-demo-page>
+  <div class="sl-wrp">
+
+    <div class="v-slab" style="padding: var(--sl-space-9) 0 var(--sl-space-6)">
+      <p class="v-lab">Открытый код / MIT / PHP 8.4 / с 2005 года / версия 6.2</p>
+      <h1 class="v-shout sl-font">SLAED<span>CMS</span></h1>
+    </div>
+
+    <div class="v-row">
+      <div class="v-cell">Система управления содержимым сайта: простая в настройке, с высоким уровнем безопасности,
+      высокой скоростью работы и практически неограниченным потенциалом расширения.</div>
+      <div class="v-cell">На её основе строят и небольшой сайт, и крупный портал. Исходный код открыт целиком,
+      лицензия MIT, никаких платных редакций.</div>
+      <div class="v-cell">26 модулей в поставке. 685 дополнений в файловом архиве. Шесть языков интерфейса.
+      Установка в три шага за одиннадцать секунд.</div>
+      <div class="v-cell" style="display: grid; align-content: start; gap: var(--sl-space-5)">
+        <a class="v-hit v-hit-fill" href="#" title="Скачать бесплатно актуальную версию системы">Скачать</a>
+        <a class="v-hit" href="#" title="Живая демонстрация панели управления">Демо</a>
+      </div>
+    </div>
+
+    <section class="v-off">
+      <div><span class="v-no">01</span><h2 class="sl-font">Простота</h2><p>Интуитивный интерфейс: управлять сайтом так же просто, как работать с документами или почтой. Мастер установки проходит в три шага и заканчивается за одиннадцать секунд.</p></div>
+    </section>
+    <section class="v-off">
+      <div><span class="v-no">02</span><h2 class="sl-font">Функциональность</h2><p>Модули, блоки, темы и расширения: 685 дополнений в файловом архиве проекта. Двадцать шесть модулей идут в поставке, остальное включается по мере надобности.</p></div>
+    </section>
+    <section class="v-off">
+      <div><span class="v-no">03</span><h2 class="sl-font">Эффективность</h2><p>Низкое потребление серверных ресурсов: страница собирается за 12 запросов и 5.2 MB памяти. Встроенная справка отвечает на вопрос прямо в панели управления.</p></div>
+    </section>
+    <section class="v-off">
+      <div><span class="v-no">04</span><h2 class="sl-font">Безопасность</h2><p>Логирование действий, отслеживание инъекций и несанкционированных запросов из коробки. Подготовленные запросы и проверка токена стоят на каждом изменяющем состояние обработчике.</p></div>
+    </section>
+
+    <div class="v-nums" style="margin: var(--sl-space-11) 0">
+      <div><b data-demo-num="21">0</b><span>год разработки</span></div>
+      <div><b data-demo-num="685">0</b><span>дополнений</span></div>
+      <div><b data-demo-num="26">0</b><span>модулей</span></div>
+      <div><b data-demo-num="0.25">0</b><span>сек. страница</span></div>
+    </div>
+
+    <section style="padding-bottom: var(--sl-space-11)">
+      <p class="v-lab" style="margin-bottom: var(--sl-space-6)">Примеры внедрений системы / каталог проекта</p>
+      <div class="d-sites v-sites" data-demo-sites="12"></div>
+    </section>
+
+    <section style="padding-bottom: var(--sl-space-11)">
+      <p class="v-lab" style="margin-bottom: var(--sl-space-6)">Новости и файлы</p>
+      <div class="v-list">
+        <a href="#" title="Вышла SLAED CMS 6.2"><span>2026-08-25</span><span>NEWS</span><span>Вышла SLAED CMS 6.2</span></a>
+        <a href="#" title="SLAED CMS 6.2 Pro"><span>2026-08-25</span><span>FILE</span><span>SLAED CMS 6.2 Pro</span></a>
+        <a href="#" title="Тестируем Pre-Alpha 6.3 Pro"><span>2026-07-14</span><span>NEWS</span><span>Тестируем Pre-Alpha 6.3 Pro</span></a>
+        <a href="#" title="Модуль «Магазин» 3.1"><span>2026-06-12</span><span>FILE</span><span>Модуль &laquo;Магазин&raquo; 3.1</span></a>
+        <a href="#" title="Тема оформления Lite"><span>2026-03-04</span><span>FILE</span><span>Тема оформления Lite</span></a>
+        <a href="#" title="Обновление тем оформления"><span>2026-02-01</span><span>NEWS</span><span>Обновление тем оформления</span></a>
+      </div>
+    </section>
+
+  </div>
+</main>
+<script src="assets/demo.js"></script>
+</body>
+</html>

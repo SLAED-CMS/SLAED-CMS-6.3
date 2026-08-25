@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>14 &middot; Журнал — стенд главной SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* Editorial: the page is laid out as a printed spread. Rules instead of boxes, section numbers in the
+       margin, a drop cap on the lead, and not a single animation - the composition does all the work. */
+    .v-plate {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: var(--sl-space-6) var(--sl-space-8);
+      padding: var(--sl-space-11) 0 var(--sl-space-9);
+      border-bottom: 2px solid var(--sl-text-strong);
+    }
+
+    .v-masthead {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--sl-space-6);
+      padding-bottom: var(--sl-space-6);
+      border-bottom: 1px solid var(--sl-border-strong);
+      font-size: var(--sl-font-small);
+      letter-spacing: var(--sl-track-wide);
+      text-transform: uppercase;
+      color: var(--sl-text-muted);
+    }
+
+    .v-title {
+      grid-column: 1 / 9;
+      margin: 0;
+      font-size: clamp(var(--sl-font-hero), 7vw, 104px);
+      line-height: 0.95;
+      letter-spacing: -0.02em;
+      color: var(--sl-text-strong);
+    }
+
+    .v-side {
+      grid-column: 9 / -1;
+      align-self: end;
+      font-size: var(--sl-font-small);
+      line-height: var(--sl-line-loose);
+      color: var(--sl-text-muted);
+      border-left: 1px solid var(--sl-border-strong);
+      padding-left: var(--sl-space-6);
+    }
+
+    /* The lead runs in two columns like a magazine, and the drop cap is the entry point of the page */
+    .v-lead {
+      grid-column: 1 / 9;
+      margin: 0;
+      columns: 2;
+      column-gap: var(--sl-space-8);
+      font-size: var(--sl-font-h4);
+      line-height: var(--sl-line-loose);
+      color: var(--sl-text);
+    }
+
+    .v-lead::first-letter {
+      float: left;
+      margin: var(--sl-space-1) var(--sl-space-4) 0 0;
+      font-size: 3.6em;
+      line-height: 0.8;
+      color: var(--sl-primary-strong);
+    }
+
+    .v-cta {
+      grid-column: 9 / -1;
+      display: flex;
+      flex-direction: column;
+      gap: var(--sl-space-4);
+      align-items: flex-start;
+    }
+
+    /* Numbered sections, the number set in the margin the way a magazine sets a folio */
+    .v-part {
+      display: grid;
+      grid-template-columns: var(--sl-space-11) minmax(0, 1fr);
+      gap: var(--sl-space-8);
+      padding: var(--sl-space-10) 0;
+      border-bottom: 1px solid var(--sl-border);
+    }
+
+    .v-no {
+      font-size: var(--sl-font-h2);
+      line-height: 1;
+      color: var(--sl-primary-strong);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-part h2 {
+      margin: 0 0 var(--sl-space-5);
+      font-size: clamp(var(--sl-font-h1), 2.6vw, 40px);
+      line-height: var(--sl-line-tight);
+      color: var(--sl-text-strong);
+    }
+
+    .v-part p {
+      max-width: 68ch;
+      margin: 0;
+      line-height: var(--sl-line-loose);
+      color: var(--sl-text-muted);
+    }
+
+    .v-pairs {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: var(--sl-space-8);
+      margin-top: var(--sl-space-7);
+    }
+
+    .v-pairs dt {
+      padding-bottom: var(--sl-space-3);
+      border-bottom: 1px solid var(--sl-border);
+      font-size: var(--sl-font-small);
+      letter-spacing: var(--sl-track-wide);
+      text-transform: uppercase;
+      color: var(--sl-text-muted);
+    }
+
+    .v-pairs dd {
+      margin: var(--sl-space-4) 0 0;
+      font-size: var(--sl-font-h1);
+      color: var(--sl-text-strong);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-index {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: var(--sl-space-9);
+      padding: var(--sl-space-10) 0;
+    }
+
+    .v-index h2 {
+      margin: 0 0 var(--sl-space-5);
+      padding-bottom: var(--sl-space-4);
+      border-bottom: 2px solid var(--sl-text-strong);
+      font-size: var(--sl-font-h3);
+      letter-spacing: var(--sl-track-wide);
+      text-transform: uppercase;
+      color: var(--sl-text-strong);
+    }
+
+    .v-index a {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: baseline;
+      gap: var(--sl-space-5);
+      padding: var(--sl-space-4) 0;
+      border-bottom: 1px solid var(--sl-border);
+      text-decoration: none;
+      color: var(--sl-text-strong);
+    }
+
+    .v-index a:hover { color: var(--sl-primary-strong); }
+    .v-index time { color: var(--sl-text-muted); font-size: var(--sl-font-small); }
+
+    @media (max-width: 900px) {
+      .v-title,
+      .v-side,
+      .v-lead,
+      .v-cta { grid-column: 1 / -1; }
+
+      .v-side { border-left: 0; padding-left: 0; }
+      .v-lead { columns: 1; }
+      .v-fig,
+      .v-fig:nth-child(1),
+      .v-fig:nth-child(4),
+      .v-fig:nth-child(5),
+      .v-fig:nth-child(6) { grid-column: span 12; }
+    }
+  </style>
+</head>
+<body class="sl-summer">
+<main class="d-page" data-demo-page>
+  <div class="sl-wrp">
+
+    <div class="v-plate">
+      <div class="v-masthead">
+        <span>Презентация системы &middot; выпуск 6.2</span>
+        <span>Открытый код &middot; MIT &middot; PHP 8.4</span>
+        <span>25 августа 2026</span>
+      </div>
+      <h1 class="v-title sl-font">SLAED CMS</h1>
+      <p class="v-side">Все великое просто.<br>Двадцать один год разработки,<br>26 модулей в поставке,<br>685 дополнений в архиве.</p>
+      <p class="v-lead">Система управления содержимым сайта: простая в настройке, с высоким уровнем безопасности,
+      высокой скоростью работы и практически неограниченным потенциалом расширения. На её основе строят и небольшой
+      сайт, и крупный портал. Всё, что нужно для запуска, входит в поставку; всё остальное берётся из архива проекта
+      и включается одной галочкой в панели управления.</p>
+      <div class="v-cta">
+        <a class="sl-but" href="#" title="Скачать бесплатно актуальную версию системы">Скачать систему</a>
+        <a class="sl-chip sl-chip-info" href="#" title="Живая демонстрация панели управления"><i class="bi bi-play-circle" aria-hidden="true"></i> Живое демо</a>
+      </div>
+    </div>
+
+    <section class="v-part">
+      <span class="v-no">01</span>
+      <div>
+        <h2 class="sl-font">Простота</h2>
+        <p>Интуитивный интерфейс: управлять сайтом так же просто, как работать с документами или почтой.
+        Мастер установки проходит в три шага и заканчивается за одиннадцать секунд, а интерфейс говорит на шести языках.</p>
+      </div>
+    </section>
+
+    <section class="v-part">
+      <span class="v-no">02</span>
+      <div>
+        <h2 class="sl-font">Функциональность</h2>
+        <p>Модули, блоки, темы и расширения: 685 дополнений в файловом архиве проекта. Двадцать шесть модулей идут
+        в поставке, остальное включается по мере надобности. Исходный код открыт целиком.</p>
+      </div>
+    </section>
+
+    <section class="v-part">
+      <span class="v-no">03</span>
+      <div>
+        <h2 class="sl-font">Эффективность</h2>
+        <p>Низкое потребление серверных ресурсов: страница собирается за 12 запросов и 5.2 MB памяти.
+        Встроенная справка отвечает на вопрос прямо в панели управления, не отправляя читателя в интернет.</p>
+        <dl class="v-pairs">
+          <div><dt>Время сборки</dt><dd data-demo-num="0.25">0</dd></div>
+          <div><dt>Запросы к базе</dt><dd data-demo-num="12">0</dd></div>
+          <div><dt>Память</dt><dd>5.2 MB</dd></div>
+          <div><dt>Модулей</dt><dd data-demo-num="26">0</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <section class="v-part">
+      <span class="v-no">04</span>
+      <div>
+        <h2 class="sl-font">Безопасность</h2>
+        <p>Логирование действий, отслеживание инъекций и несанкционированных запросов из коробки.
+        Подготовленные запросы и проверка токена стоят на каждом изменяющем состояние обработчике.</p>
+      </div>
+    </section>
+
+    <section class="v-part">
+      <span class="v-no">05</span>
+      <div>
+        <h2 class="sl-font">Примеры внедрений системы</h2>
+        <p>Каталог сайтов проекта: оценка рядом с каждым — средний балл посетителей каталога.</p>
+        <div class="d-sites v-plates" data-demo-sites="12"></div>
+      </div>
+    </section>
+
+    <div class="v-index">
+      <section>
+        <h2 class="sl-font">Новости</h2>
+        <a href="#" title="Вышла SLAED CMS 6.2"><span>Вышла SLAED CMS 6.2</span><time datetime="2026-08-25">25.08.2026</time></a>
+        <a href="#" title="Тестируем Pre-Alpha 6.3 Pro"><span>Тестируем Pre-Alpha 6.3 Pro</span><time datetime="2026-07-14">14.07.2026</time></a>
+        <a href="#" title="Обновление тем оформления"><span>Обновление тем оформления</span><time datetime="2026-02-01">01.02.2026</time></a>
+      </section>
+      <section>
+        <h2 class="sl-font">Файлы</h2>
+        <a href="#" title="SLAED CMS 6.2 Pro"><span>SLAED CMS 6.2 Pro</span><time datetime="2026-08-25">25.08.2026</time></a>
+        <a href="#" title="Модуль «Магазин» 3.1"><span>Модуль &laquo;Магазин&raquo; 3.1</span><time datetime="2026-06-12">12.06.2026</time></a>
+        <a href="#" title="Тема оформления Lite"><span>Тема оформления Lite</span><time datetime="2026-03-04">04.03.2026</time></a>
+      </section>
+    </div>
+
+  </div>
+</main>
+<script src="assets/demo.js"></script>
+</body>
+</html>

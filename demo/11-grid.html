@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>11 &middot; Ретро-сетка — стенд главной SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* Retro grid: no photograph anywhere. The page is drawn - a grid running into perspective under the first
+       screen, a dot field under the sections - so the whole first screen weighs a few kilobytes of CSS. */
+    .v-hero {
+      position: relative;
+      padding: calc(var(--sl-space-11) * 1.6) 0 calc(var(--sl-space-11) * 2);
+      overflow: hidden;
+      text-align: center;
+    }
+
+    /* The floor: one repeating gradient, tilted on the X axis and pulled toward the horizon */
+    .v-floor {
+      position: absolute;
+      inset: 45% -60% -20% -60%;
+      background-image:
+        repeating-linear-gradient(90deg, var(--sl-border-strong) 0 1px, transparent 1px 80px),
+        repeating-linear-gradient(0deg, var(--sl-border-strong) 0 1px, transparent 1px 80px);
+      transform: perspective(340px) rotateX(62deg);
+      mask-image: linear-gradient(to bottom, transparent, #000 45%);
+      animation: v-drift 8s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes v-drift {
+      to { background-position: 0 80px, 0 80px; }
+    }
+
+    /* The horizon glow, which is what makes the floor read as distance rather than as a tilted table */
+    .v-glow {
+      position: absolute;
+      inset: 30% 0 auto 0;
+      height: 40%;
+      background: radial-gradient(60% 100% at 50% 100%, var(--sl-tint-strong), transparent 70%);
+      pointer-events: none;
+    }
+
+    .v-hero > .sl-wrp { position: relative; }
+
+    .v-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      height: var(--sl-size-chip);
+      padding: 0 var(--sl-space-5);
+      border: 1px solid var(--sl-primary);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-tint);
+      color: var(--sl-primary-strong);
+      font-size: var(--sl-font-small);
+      letter-spacing: var(--sl-track-wide);
+      text-transform: uppercase;
+    }
+
+    /* Dot field behind the ordinary sections: the same drawing at a quieter volume */
+    .v-dots {
+      position: relative;
+      isolation: isolate;
+    }
+
+    .v-dots::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background-image: radial-gradient(var(--sl-border-strong) 1px, transparent 1px);
+      background-size: 22px 22px;
+      mask-image: radial-gradient(70% 60% at 50% 50%, #000, transparent);
+      pointer-events: none;
+    }
+
+    .v-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: var(--sl-space-6);
+    }
+
+    .v-card {
+      position: relative;
+      padding: var(--sl-space-8);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-2);
+      background: color-mix(in srgb, var(--sl-surface) 88%, transparent);
+      backdrop-filter: blur(2px);
+    }
+
+    /* Corner marks instead of a decorated border: a technical drawing, not a picture frame */
+    .v-card::before,
+    .v-card::after {
+      content: "";
+      position: absolute;
+      width: var(--sl-space-6);
+      height: var(--sl-space-6);
+      border: 1px solid var(--sl-primary);
+    }
+
+    .v-card::before {
+      top: -1px;
+      left: -1px;
+      border-width: 1px 0 0 1px;
+    }
+
+    .v-card::after {
+      right: -1px;
+      bottom: -1px;
+      border-width: 0 1px 1px 0;
+    }
+
+    .v-card-i {
+      display: grid;
+      place-items: center;
+      width: var(--sl-size-tile);
+      height: var(--sl-size-tile);
+      margin-bottom: var(--sl-space-6);
+      border: 1px solid var(--sl-border-strong);
+      border-radius: var(--sl-radius-1);
+      color: var(--sl-primary);
+      font-size: var(--sl-size-icon-md);
+    }
+
+    .v-stat {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: var(--sl-space-6);
+      text-align: center;
+    }
+
+    .v-stat > div {
+      padding: var(--sl-space-8) var(--sl-space-5);
+      border-top: 1px solid var(--sl-primary);
+      background: linear-gradient(to bottom, var(--sl-tint), transparent);
+    }
+
+    .v-stat b {
+      display: block;
+      font-size: calc(var(--sl-font-hero) * 1.1);
+      line-height: var(--sl-line-tight);
+      color: var(--sl-primary-strong);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-stat span { font-size: var(--sl-font-small); color: var(--sl-text-muted); }
+
+    .v-feed {
+      display: grid;
+      gap: var(--sl-space-3);
+    }
+
+    .v-feed a {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: var(--sl-space-5);
+      padding: var(--sl-space-5) var(--sl-space-6);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-1);
+      text-decoration: none;
+      color: var(--sl-text-strong);
+      transition: border-color var(--sl-time-base) var(--sl-ease-out), background-color var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-feed a:hover {
+      border-color: var(--sl-primary);
+      background: var(--sl-tint);
+    }
+
+    .v-feed time { color: var(--sl-text-muted); font-size: var(--sl-font-small); }
+  </style>
+</head>
+<body class="sl-summer">
+<main class="d-page" data-demo-page>
+
+  <div class="v-hero">
+    <div class="v-glow" aria-hidden="true"></div>
+    <div class="v-floor" aria-hidden="true"></div>
+    <div class="sl-wrp">
+      <p><span class="v-badge"><i class="bi bi-git" aria-hidden="true"></i> Открытый код &middot; MIT &middot; PHP 8.4</span></p>
+      <h1 class="d-h1 sl-font" style="margin-top: var(--sl-space-6)">SLAED CMS</h1>
+      <p class="d-lead" style="margin-inline: auto; max-width: 72ch">Система управления содержимым сайта: простая
+      в настройке, с высоким уровнем безопасности, высокой скоростью работы и практически неограниченным потенциалом
+      расширения. На её основе строят и небольшой сайт, и крупный портал.</p>
+      <div class="d-actions" style="justify-content: center">
+        <a class="sl-but" href="#" title="Скачать бесплатно актуальную версию системы">Скачать систему</a>
+        <a class="sl-chip sl-chip-info" href="#" title="Живая демонстрация панели управления"><i class="bi bi-play-circle" aria-hidden="true"></i> Живое демо</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="v-dots">
+    <div class="sl-wrp d-sec">
+      <div class="d-head d-head-center">
+        <h2 class="d-h2 sl-font">Четыре опоры системы</h2>
+        <p class="d-text">Ни одной фотографии: весь этот экран — несколько килобайт CSS.</p>
+      </div>
+      <div class="v-cards">
+        <article class="v-card d-reveal"><span class="v-card-i"><i class="bi bi-hand-index-thumb" aria-hidden="true"></i></span><h3 class="d-h3 sl-font">Простота</h3><p class="d-text">Интуитивный интерфейс: управлять сайтом так же просто, как работать с документами или почтой.</p></article>
+        <article class="v-card d-reveal"><span class="v-card-i"><i class="bi bi-puzzle" aria-hidden="true"></i></span><h3 class="d-h3 sl-font">Функциональность</h3><p class="d-text">Модули, блоки, темы и расширения: 685 дополнений в файловом архиве проекта.</p></article>
+        <article class="v-card d-reveal"><span class="v-card-i"><i class="bi bi-speedometer2" aria-hidden="true"></i></span><h3 class="d-h3 sl-font">Эффективность</h3><p class="d-text">Низкое потребление серверных ресурсов: страница собирается за 12 запросов и 5.2 MB памяти.</p></article>
+        <article class="v-card d-reveal"><span class="v-card-i"><i class="bi bi-shield-check" aria-hidden="true"></i></span><h3 class="d-h3 sl-font">Безопасность</h3><p class="d-text">Логирование действий, отслеживание инъекций и несанкционированных запросов из коробки.</p></article>
+      </div>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec-tight">
+    <div class="v-stat d-reveal">
+      <div><b data-demo-num="21">0</b><span>год разработки, с 2005</span></div>
+      <div><b data-demo-num="685">0</b><span>дополнений в архиве</span></div>
+      <div><b data-demo-num="26">0</b><span>модулей в поставке</span></div>
+      <div><b data-demo-num="0.25">0</b><span>секунды на страницу</span></div>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="d-head d-head-center">
+      <h2 class="d-h2 sl-font">Примеры внедрений системы</h2>
+      <p class="d-text">Снимки берут цвет под курсором и отдают его обратно.</p>
+    </div>
+    <div class="d-sites v-shots" data-demo-sites="12"></div>
+  </div>
+
+  <div class="v-dots">
+    <div class="sl-wrp d-sec">
+      <div class="d-cols d-cols-2">
+        <section>
+          <h2 class="d-h3 sl-font">Новости</h2>
+          <div class="v-feed">
+            <a href="#" title="Вышла SLAED CMS 6.2"><i class="bi bi-newspaper" aria-hidden="true"></i><span>Вышла SLAED CMS 6.2</span><time datetime="2026-08-25">25.08.2026</time></a>
+            <a href="#" title="Тестируем Pre-Alpha 6.3 Pro"><i class="bi bi-cpu" aria-hidden="true"></i><span>Тестируем Pre-Alpha 6.3 Pro</span><time datetime="2026-07-14">14.07.2026</time></a>
+            <a href="#" title="Обновление тем оформления"><i class="bi bi-palette" aria-hidden="true"></i><span>Обновление тем оформления</span><time datetime="2026-02-01">01.02.2026</time></a>
+          </div>
+        </section>
+        <section>
+          <h2 class="d-h3 sl-font">Файлы</h2>
+          <div class="v-feed">
+            <a href="#" title="SLAED CMS 6.2 Pro"><i class="bi bi-box-seam" aria-hidden="true"></i><span>SLAED CMS 6.2 Pro</span><time datetime="2026-08-25">25.08.2026</time></a>
+            <a href="#" title="Модуль «Магазин» 3.1"><i class="bi bi-cart3" aria-hidden="true"></i><span>Модуль &laquo;Магазин&raquo; 3.1</span><time datetime="2026-06-12">12.06.2026</time></a>
+            <a href="#" title="Тема оформления Lite"><i class="bi bi-palette2" aria-hidden="true"></i><span>Тема оформления Lite</span><time datetime="2026-03-04">04.03.2026</time></a>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+</main>
+<script src="assets/demo.js"></script>
+</body>
+</html>

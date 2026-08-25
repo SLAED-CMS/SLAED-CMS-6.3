@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>05 &middot; Цифры — стенд главной SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* Figures: the page argues with numbers instead of adjectives. Every claim carries the measurement that
+       backs it, and the measurements are shown - a bar, a counter, a table - rather than asserted in prose. */
+    .v-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      gap: var(--sl-space-10);
+      align-items: center;
+      padding: var(--sl-space-11) 0;
+    }
+
+    .v-board {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1px;
+      background: var(--sl-border);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-3);
+      overflow: hidden;
+    }
+
+    .v-cell {
+      padding: var(--sl-space-8);
+      background: var(--sl-bg);
+    }
+
+    .v-cell b {
+      display: block;
+      font-size: calc(var(--sl-font-hero) * 1.3);
+      line-height: var(--sl-line-tight);
+      color: var(--sl-text-strong);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-cell small {
+      font-size: var(--sl-font-h3);
+      color: var(--sl-text-muted);
+    }
+
+    .v-cell span {
+      display: block;
+      margin-top: var(--sl-space-3);
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+    }
+
+    .v-trend {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-2);
+      margin-top: var(--sl-space-3);
+      color: var(--sl-success);
+      font-size: var(--sl-font-small);
+    }
+
+    /* Claim plus proof: the sentence on the left, the measurement on the right, on one baseline */
+    .v-proof {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+      gap: var(--sl-space-8);
+      align-items: center;
+      padding: var(--sl-space-8) 0;
+      border-bottom: 1px solid var(--sl-border);
+    }
+
+    .v-proof:first-of-type { border-top: 1px solid var(--sl-border); }
+
+    .v-proof h3 {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-4);
+    }
+
+    .v-proof h3 > i {
+      color: var(--sl-primary-strong);
+      font-size: var(--sl-size-icon-md);
+    }
+
+    .v-meter {
+      display: grid;
+      gap: var(--sl-space-3);
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+    }
+
+    .v-meter-row {
+      display: grid;
+      grid-template-columns: 88px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: var(--sl-space-4);
+    }
+
+    .v-track {
+      height: var(--sl-progress-height);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-bg-muted);
+      overflow: hidden;
+    }
+
+    /* The fill grows from nothing when the row reaches the viewport, so the comparison is watched, not read */
+    .v-track > i {
+      display: block;
+      height: 100%;
+      width: var(--v-w, 50%);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-grad-progress-2);
+      transform-origin: left;
+    }
+
+    .v-track-alt > i { background: var(--sl-grad-progress-4); }
+
+    @supports (animation-timeline: view()) {
+      .v-track > i {
+        animation: v-fill linear both;
+        animation-timeline: view();
+        animation-range: entry 10% entry 80%;
+      }
+    }
+
+    @keyframes v-fill {
+      from { transform: scaleX(0); }
+      to { transform: scaleX(1); }
+    }
+
+    .v-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: var(--sl-font-body);
+    }
+
+    .v-table th,
+    .v-table td {
+      padding: var(--sl-space-5) var(--sl-space-6);
+      border-bottom: 1px solid var(--sl-border);
+      text-align: left;
+    }
+
+    .v-table th {
+      color: var(--sl-text-muted);
+      font-weight: var(--sl-weight-medium);
+      font-size: var(--sl-font-small);
+      text-transform: uppercase;
+      letter-spacing: var(--sl-track-wide);
+    }
+
+    .v-table td:not(:first-child) {
+      font-variant-numeric: tabular-nums;
+      color: var(--sl-text-strong);
+    }
+
+    .v-feed {
+      display: grid;
+      gap: var(--sl-space-4);
+    }
+
+    .v-feed a {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: var(--sl-space-5);
+      padding: var(--sl-space-5) var(--sl-space-6);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-surface);
+      text-decoration: none;
+      color: var(--sl-text-strong);
+    }
+
+    .v-feed a:hover { border-color: var(--sl-primary); }
+    .v-feed time { color: var(--sl-text-muted); font-size: var(--sl-font-small); }
+
+    @media (max-width: 900px) {
+      .v-hero,
+      .v-proof {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+  </style>
+</head>
+<body class="sl-summer">
+<main class="d-page" data-demo-page>
+
+  <div class="sl-wrp">
+    <div class="v-hero">
+      <div>
+        <p class="d-kicker">Открытый код &middot; MIT &middot; PHP 8.4</p>
+        <h1 class="d-h1 sl-font">SLAED CMS</h1>
+        <p class="d-lead">Система управления содержимым сайта: простая в настройке, с высоким уровнем безопасности,
+        высокой скоростью работы и практически неограниченным потенциалом расширения. На её основе строят и небольшой
+        сайт, и крупный портал.</p>
+        <div class="d-actions">
+          <a class="sl-but" href="#" title="Скачать бесплатно актуальную версию системы">Скачать систему</a>
+          <a class="sl-chip sl-chip-info" href="#" title="Живая демонстрация панели управления"><i class="bi bi-play-circle" aria-hidden="true"></i> Живое демо</a>
+        </div>
+      </div>
+      <div class="v-board">
+        <div class="v-cell"><b data-demo-num="21">0</b><span>год разработки, с 2005 года</span></div>
+        <div class="v-cell"><b data-demo-num="685">0</b><span>дополнений в архиве проекта</span><span class="v-trend"><i class="bi bi-arrow-up-right" aria-hidden="true"></i> +34 за год</span></div>
+        <div class="v-cell"><b data-demo-num="26">0</b><span>модулей в поставке</span></div>
+        <div class="v-cell"><b data-demo-num="0.25">0</b><small> сек.</small><span>сборка страницы на типовом хостинге</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="d-head">
+      <h2 class="d-h2 sl-font">Четыре опоры и то, чем они измеряются</h2>
+      <p class="d-text">Каждое утверждение слева имеет измерение справа.</p>
+    </div>
+
+    <div class="v-proof d-reveal">
+      <div>
+        <h3 class="d-h3 sl-font"><i class="bi bi-hand-index-thumb" aria-hidden="true"></i> Простота</h3>
+        <p class="d-text">Интуитивный интерфейс: управлять сайтом так же просто, как работать с документами или почтой.</p>
+      </div>
+      <div class="v-meter">
+        <div class="v-meter-row"><span>Установка</span><span class="v-track"><i style="--v-w: 18%"></i></span><b>11 сек.</b></div>
+        <div class="v-meter-row"><span>Шагов мастера</span><span class="v-track"><i style="--v-w: 24%"></i></span><b>3</b></div>
+      </div>
+    </div>
+
+    <div class="v-proof d-reveal">
+      <div>
+        <h3 class="d-h3 sl-font"><i class="bi bi-puzzle" aria-hidden="true"></i> Функциональность</h3>
+        <p class="d-text">Модули, блоки, темы и расширения: 685 дополнений в файловом архиве проекта.</p>
+      </div>
+      <div class="v-meter">
+        <div class="v-meter-row"><span>Дополнения</span><span class="v-track"><i style="--v-w: 100%"></i></span><b>685</b></div>
+        <div class="v-meter-row"><span>Модули</span><span class="v-track"><i style="--v-w: 42%"></i></span><b>26</b></div>
+      </div>
+    </div>
+
+    <div class="v-proof d-reveal">
+      <div>
+        <h3 class="d-h3 sl-font"><i class="bi bi-speedometer2" aria-hidden="true"></i> Эффективность</h3>
+        <p class="d-text">Низкое потребление серверных ресурсов: страница собирается за 12 запросов и 5.2 MB памяти.</p>
+      </div>
+      <div class="v-meter">
+        <div class="v-meter-row"><span>Память</span><span class="v-track"><i style="--v-w: 12%"></i></span><b>5.2 MB</b></div>
+        <div class="v-meter-row"><span>Запросы</span><span class="v-track"><i style="--v-w: 16%"></i></span><b>12</b></div>
+      </div>
+    </div>
+
+    <div class="v-proof d-reveal">
+      <div>
+        <h3 class="d-h3 sl-font"><i class="bi bi-shield-check" aria-hidden="true"></i> Безопасность</h3>
+        <p class="d-text">Логирование действий, отслеживание инъекций и несанкционированных запросов из коробки.</p>
+      </div>
+      <div class="v-meter">
+        <div class="v-meter-row"><span>Журналы</span><span class="v-track"><i style="--v-w: 100%"></i></span><b>3 из 3</b></div>
+        <div class="v-meter-row"><span>CSRF</span><span class="v-track"><i style="--v-w: 100%"></i></span><b>везде</b></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="d-head">
+      <h2 class="d-h2 sl-font">Что происходит при одном запросе</h2>
+      <p class="d-text">Замер на типовом виртуальном хостинге, тема оформления Lite, кэш парсера включён.</p>
+    </div>
+    <div class="sl-table-shell d-reveal">
+      <table class="v-table">
+        <thead><tr><th>Страница</th><th>Время</th><th>Запросы</th><th>Память</th><th>Ответ</th></tr></thead>
+        <tbody>
+          <tr><td>Главная</td><td>0.25 сек.</td><td>12</td><td>5.2 MB</td><td><span class="sl-chip sl-chip-success">200</span></td></tr>
+          <tr><td>Список новостей</td><td>0.19 сек.</td><td>9</td><td>4.8 MB</td><td><span class="sl-chip sl-chip-success">200</span></td></tr>
+          <tr><td>Просмотр статьи</td><td>0.21 сек.</td><td>11</td><td>5.0 MB</td><td><span class="sl-chip sl-chip-success">200</span></td></tr>
+          <tr><td>Каталог файлов</td><td>0.23 сек.</td><td>10</td><td>5.1 MB</td><td><span class="sl-chip sl-chip-success">200</span></td></tr>
+          <tr><td>Панель управления</td><td>0.31 сек.</td><td>14</td><td>6.0 MB</td><td><span class="sl-chip sl-chip-success">200</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="d-head">
+      <h2 class="d-h2 sl-font">Примеры внедрений системы</h2>
+      <p class="d-text">Оценка рядом с каждым сайтом — средний балл посетителей каталога.</p>
+    </div>
+    <div class="d-sites v-shots" data-demo-sites="12"></div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="d-cols d-cols-2">
+      <section>
+        <h2 class="d-h3 sl-font">Новости</h2>
+        <div class="v-feed">
+          <a href="#" title="Вышла SLAED CMS 6.2"><i class="bi bi-newspaper" aria-hidden="true"></i><span>Вышла SLAED CMS 6.2</span><time datetime="2026-08-25">25.08.2026</time></a>
+          <a href="#" title="Тестируем Pre-Alpha 6.3 Pro"><i class="bi bi-cpu" aria-hidden="true"></i><span>Тестируем Pre-Alpha 6.3 Pro</span><time datetime="2026-07-14">14.07.2026</time></a>
+          <a href="#" title="Обновление тем оформления"><i class="bi bi-palette" aria-hidden="true"></i><span>Обновление тем оформления</span><time datetime="2026-02-01">01.02.2026</time></a>
+        </div>
+      </section>
+      <section>
+        <h2 class="d-h3 sl-font">Файлы</h2>
+        <div class="v-feed">
+          <a href="#" title="SLAED CMS 6.2 Pro"><i class="bi bi-box-seam" aria-hidden="true"></i><span>SLAED CMS 6.2 Pro</span><time datetime="2026-08-25">25.08.2026</time></a>
+          <a href="#" title="Модуль «Магазин» 3.1"><i class="bi bi-cart3" aria-hidden="true"></i><span>Модуль &laquo;Магазин&raquo; 3.1</span><time datetime="2026-06-12">12.06.2026</time></a>
+          <a href="#" title="Тема оформления Lite"><i class="bi bi-palette2" aria-hidden="true"></i><span>Тема оформления Lite</span><time datetime="2026-03-04">04.03.2026</time></a>
+        </div>
+      </section>
+    </div>
+  </div>
+
+</main>
+<script src="assets/demo.js"></script>
+</body>
+</html>

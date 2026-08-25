@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>08 &middot; Хронология — стенд главной SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* Timeline: twenty one years is the strongest thing this product has to say, so the page says it first and
+       keeps saying it. The four pillars are not a separate block - they are the turning points of the story. */
+    .v-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: var(--sl-space-10);
+      align-items: end;
+      padding: var(--sl-space-11) 0 var(--sl-space-9);
+      border-bottom: 1px solid var(--sl-border);
+    }
+
+    .v-since {
+      text-align: right;
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+      line-height: var(--sl-line-loose);
+    }
+
+    .v-since b {
+      display: block;
+      font-size: calc(var(--sl-font-hero) * 1.2);
+      line-height: var(--sl-line-tight);
+      color: var(--sl-primary-strong);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* The rail: one line down the page, filled as far as the reader has come. The fill is a scroll-driven
+       scaleY rather than a listener writing a height, so the browser owns it end to end. */
+    .v-rail {
+      position: relative;
+      padding-left: calc(var(--sl-space-11) + var(--sl-space-3));
+    }
+
+    .v-rail::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 var(--sl-space-8);
+      width: 1px;
+      background: var(--sl-border);
+    }
+
+    .v-rail::after {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 var(--sl-space-8);
+      width: 1px;
+      background: var(--sl-primary);
+      transform-origin: top;
+      transform: scaleY(0);
+    }
+
+    @supports (animation-timeline: view()) {
+      .v-rail::after {
+        animation: v-grow linear both;
+        animation-timeline: view();
+        animation-range: entry 100% exit 0%;
+      }
+    }
+
+    @keyframes v-grow {
+      to { transform: scaleY(1); }
+    }
+
+    .v-step {
+      position: relative;
+      padding: 0 0 var(--sl-space-10);
+    }
+
+    .v-step::before {
+      content: "";
+      position: absolute;
+      top: var(--sl-space-2);
+      left: calc((var(--sl-space-11) + var(--sl-space-3)) * -1 + var(--sl-space-8) - var(--sl-bullet-width) / 2 + 0.5px);
+      width: var(--sl-bullet-width);
+      height: var(--sl-bullet-height);
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-bg);
+      box-shadow: 0 0 0 1px var(--sl-border-strong);
+    }
+
+    .v-step-key::before {
+      background: var(--sl-primary);
+      box-shadow: 0 0 0 var(--sl-space-2) var(--sl-tint);
+    }
+
+    .v-year {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      margin-bottom: var(--sl-space-3);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+      letter-spacing: var(--sl-track-wide);
+      text-transform: uppercase;
+    }
+
+    .v-step p {
+      max-width: 74ch;
+    }
+
+    /* A turning point gets a card, so the four pillars still read as the four pillars inside the story */
+    .v-pillar {
+      display: grid;
+      grid-template-columns: var(--sl-size-tile) minmax(0, 1fr);
+      gap: var(--sl-space-6);
+      align-items: start;
+      max-width: 74ch;
+      margin-top: var(--sl-space-5);
+      padding: var(--sl-space-7);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-3);
+      background: var(--sl-surface);
+    }
+
+    .v-pillar-i {
+      display: grid;
+      place-items: center;
+      width: var(--sl-size-tile);
+      height: var(--sl-size-tile);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-tint);
+      color: var(--sl-primary-strong);
+      font-size: var(--sl-size-icon-md);
+    }
+
+    .v-stat {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: var(--sl-space-6);
+      max-width: 74ch;
+      margin-top: var(--sl-space-5);
+    }
+
+    .v-stat b {
+      display: block;
+      font-size: var(--sl-font-hero);
+      line-height: var(--sl-line-tight);
+      color: var(--sl-text-strong);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-stat span { font-size: var(--sl-font-small); color: var(--sl-text-muted); }
+
+    .v-feed {
+      display: grid;
+      gap: var(--sl-space-3);
+      max-width: 74ch;
+      margin-top: var(--sl-space-5);
+    }
+
+    .v-feed a {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: var(--sl-space-5);
+      padding: var(--sl-space-4) 0;
+      border-bottom: 1px dashed var(--sl-border);
+      text-decoration: none;
+      color: var(--sl-text-strong);
+    }
+
+    .v-feed a:hover { color: var(--sl-primary-strong); }
+    .v-feed time { color: var(--sl-text-muted); font-size: var(--sl-font-small); }
+
+    @media (max-width: 768px) {
+      .v-hero {
+        grid-template-columns: minmax(0, 1fr);
+        align-items: start;
+      }
+
+      .v-since { text-align: left; }
+      .v-rail { padding-left: var(--sl-space-9); }
+      .v-rail::before,
+      .v-rail::after { left: var(--sl-space-5); }
+      .v-step::before { left: calc(var(--sl-space-9) * -1 + var(--sl-space-5) - var(--sl-bullet-width) / 2 + 0.5px); }
+    }
+  </style>
+</head>
+<body class="sl-summer">
+<main class="d-page" data-demo-page>
+
+  <div class="sl-wrp">
+    <div class="v-hero">
+      <div>
+        <p class="d-kicker">Открытый код &middot; MIT &middot; PHP 8.4</p>
+        <h1 class="d-h1 sl-font">SLAED CMS</h1>
+        <p class="d-lead">Система управления содержимым сайта: простая в настройке, с высоким уровнем безопасности,
+        высокой скоростью работы и практически неограниченным потенциалом расширения. На её основе строят и небольшой
+        сайт, и крупный портал.</p>
+        <div class="d-actions">
+          <a class="sl-but" href="#" title="Скачать бесплатно актуальную версию системы">Скачать систему</a>
+          <a class="sl-chip sl-chip-info" href="#" title="Живая демонстрация панели управления"><i class="bi bi-play-circle" aria-hidden="true"></i> Живое демо</a>
+        </div>
+      </div>
+      <p class="v-since"><b data-demo-num="21">0</b>год в разработке<br>с 2005 года без перерывов</p>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="v-rail">
+
+      <section class="v-step">
+        <p class="v-year"><i class="bi bi-flag" aria-hidden="true"></i> 2005</p>
+        <h2 class="d-h3 sl-font">Первый релиз</h2>
+        <p class="d-text">Система начиналась как движок одного портала и с самого начала собиралась вокруг одной мысли:
+        владелец сайта не обязан быть программистом.</p>
+      </section>
+
+      <section class="v-step v-step-key">
+        <p class="v-year"><i class="bi bi-hand-index-thumb" aria-hidden="true"></i> 2008 &middot; поворот</p>
+        <h2 class="d-h3 sl-font">Простота</h2>
+        <div class="v-pillar">
+          <span class="v-pillar-i"><i class="bi bi-hand-index-thumb" aria-hidden="true"></i></span>
+          <p class="d-text">Интуитивный интерфейс: управлять сайтом так же просто, как работать с документами или почтой.</p>
+        </div>
+      </section>
+
+      <section class="v-step v-step-key">
+        <p class="v-year"><i class="bi bi-puzzle" aria-hidden="true"></i> 2012 &middot; поворот</p>
+        <h2 class="d-h3 sl-font">Функциональность</h2>
+        <div class="v-pillar">
+          <span class="v-pillar-i"><i class="bi bi-puzzle" aria-hidden="true"></i></span>
+          <p class="d-text">Модули, блоки, темы и расширения: 685 дополнений в файловом архиве проекта.</p>
+        </div>
+      </section>
+
+      <section class="v-step">
+        <p class="v-year"><i class="bi bi-graph-up" aria-hidden="true"></i> 2016</p>
+        <h2 class="d-h3 sl-font">Каталог внедрений</h2>
+        <p class="d-text">На системе выросли порталы, магазины и сообщества. Часть из них показана в каталоге сайтов проекта.</p>
+        <div class="d-sites v-shots" data-demo-sites="12"></div>
+      </section>
+
+      <section class="v-step v-step-key">
+        <p class="v-year"><i class="bi bi-speedometer2" aria-hidden="true"></i> 2020 &middot; поворот</p>
+        <h2 class="d-h3 sl-font">Эффективность</h2>
+        <div class="v-pillar">
+          <span class="v-pillar-i"><i class="bi bi-speedometer2" aria-hidden="true"></i></span>
+          <p class="d-text">Низкое потребление серверных ресурсов: страница собирается за 12 запросов и 5.2 MB памяти.</p>
+        </div>
+        <div class="v-stat">
+          <div><b data-demo-num="0.25">0</b><span>секунды на страницу</span></div>
+          <div><b data-demo-num="12">0</b><span>запросов к базе</span></div>
+          <div><b data-demo-num="26">0</b><span>модулей в поставке</span></div>
+        </div>
+      </section>
+
+      <section class="v-step v-step-key">
+        <p class="v-year"><i class="bi bi-shield-check" aria-hidden="true"></i> 2023 &middot; поворот</p>
+        <h2 class="d-h3 sl-font">Безопасность</h2>
+        <div class="v-pillar">
+          <span class="v-pillar-i"><i class="bi bi-shield-check" aria-hidden="true"></i></span>
+          <p class="d-text">Логирование действий, отслеживание инъекций и несанкционированных запросов из коробки.</p>
+        </div>
+      </section>
+
+      <section class="v-step">
+        <p class="v-year"><i class="bi bi-box-seam" aria-hidden="true"></i> 2026 &middot; сейчас</p>
+        <h2 class="d-h3 sl-font">Версия 6.2 и что вышло к ней</h2>
+        <div class="v-feed">
+          <a href="#" title="Вышла SLAED CMS 6.2"><i class="bi bi-newspaper" aria-hidden="true"></i><span>Вышла SLAED CMS 6.2</span><time datetime="2026-08-25">25.08.2026</time></a>
+          <a href="#" title="SLAED CMS 6.2 Pro"><i class="bi bi-box-seam" aria-hidden="true"></i><span>SLAED CMS 6.2 Pro</span><time datetime="2026-08-25">25.08.2026</time></a>
+          <a href="#" title="Тестируем Pre-Alpha 6.3 Pro"><i class="bi bi-cpu" aria-hidden="true"></i><span>Тестируем Pre-Alpha 6.3 Pro</span><time datetime="2026-07-14">14.07.2026</time></a>
+          <a href="#" title="Модуль «Магазин» 3.1"><i class="bi bi-cart3" aria-hidden="true"></i><span>Модуль &laquo;Магазин&raquo; 3.1</span><time datetime="2026-06-12">12.06.2026</time></a>
+          <a href="#" title="Тема оформления Lite"><i class="bi bi-palette2" aria-hidden="true"></i><span>Тема оформления Lite</span><time datetime="2026-03-04">04.03.2026</time></a>
+          <a href="#" title="Обновление тем оформления"><i class="bi bi-palette" aria-hidden="true"></i><span>Обновление тем оформления</span><time datetime="2026-02-01">01.02.2026</time></a>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+</main>
+<script src="assets/demo.js"></script>
+</body>
+</html>

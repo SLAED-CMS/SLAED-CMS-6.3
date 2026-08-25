@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>03 &middot; Орбита — стенд главной SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* Orbit: the system is drawn as what it is - a small core with everything else turning around it. The page
+       keeps that geometry: rings in the hero, an arc of pillars, a wheel of figures. Nothing is a column. */
+    .v-hero {
+      position: relative;
+      display: grid;
+      place-items: center;
+      padding: var(--sl-space-11) 0;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    /* The rings live behind the words and are drawn once, so the text never sits on a moving edge */
+    .v-sky {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+    }
+
+    .v-ring {
+      position: absolute;
+      width: min(148vmin, 1180px);
+      aspect-ratio: 1;
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-circle);
+      animation: v-turn 90s linear infinite;
+    }
+
+    .v-ring:nth-child(2) { width: min(108vmin, 860px); animation-duration: 62s; animation-direction: reverse; }
+    .v-ring:nth-child(3) { width: min(72vmin, 580px); animation-duration: 40s; }
+    .v-ring:nth-child(4) { width: min(40vmin, 320px); animation-duration: 26s; animation-direction: reverse; }
+
+    /* A satellite rides the top of its ring; the counter-turn keeps its own icon upright */
+    .v-sat {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      height: var(--sl-size-chip);
+      padding: 0 var(--sl-space-4);
+      margin: calc(var(--sl-size-chip) / -2) 0 0;
+      transform: translateX(-50%);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-bg);
+      box-shadow: var(--sl-shadow-raised);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+      white-space: nowrap;
+    }
+
+    .v-sat > i { color: var(--sl-primary-strong); }
+
+    .v-sat-r { top: 50%; left: 100%; }
+    .v-sat-b { top: 100%; left: 50%; }
+    .v-sat-l { top: 50%; left: 0; }
+
+    .v-ring > .v-sat { animation: v-turn 90s linear infinite reverse; }
+    .v-ring:nth-child(2) > .v-sat { animation-duration: 62s; animation-direction: normal; }
+    .v-ring:nth-child(3) > .v-sat { animation-duration: 40s; }
+    .v-ring:nth-child(4) > .v-sat { animation-duration: 26s; animation-direction: normal; }
+
+    @keyframes v-turn {
+      to { transform: rotate(360deg); }
+    }
+
+    .v-core {
+      position: relative;
+      max-width: 60ch;
+      padding: var(--sl-space-10) var(--sl-space-8);
+      border-radius: var(--sl-radius-3);
+      background: color-mix(in srgb, var(--sl-bg) 82%, transparent);
+      backdrop-filter: blur(6px);
+    }
+
+    .v-mark {
+      display: grid;
+      place-items: center;
+      width: var(--sl-cab-msg-width);
+      height: var(--sl-cab-msg-height);
+      margin: 0 auto var(--sl-space-6);
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-primary);
+      color: var(--sl-on-solid);
+      font-size: var(--sl-size-icon-sm);
+      box-shadow: 0 0 0 var(--sl-space-3) var(--sl-tint);
+      animation: v-pulse var(--sl-pulse-dur) var(--sl-ease-in-out) infinite;
+    }
+
+    @keyframes v-pulse {
+      50% { box-shadow: 0 0 0 var(--sl-space-7) transparent; }
+    }
+
+    /* The four pillars sit on an arc: each card is nudged by its own offset so the row reads as a curve */
+    .v-arc {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--sl-space-6);
+      align-items: end;
+    }
+
+    .v-arc > * {
+      transform: translateY(var(--v-off, 0));
+    }
+
+    .v-arc > *:nth-child(1) { --v-off: var(--sl-space-10); }
+    .v-arc > *:nth-child(2) { --v-off: 0; }
+    .v-arc > *:nth-child(3) { --v-off: 0; }
+    .v-arc > *:nth-child(4) { --v-off: var(--sl-space-10); }
+
+    .v-card {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sl-space-4);
+      padding: var(--sl-space-8);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-3);
+      background: var(--sl-surface);
+      text-align: center;
+      align-items: center;
+      transition: transform var(--sl-time-base) var(--sl-ease-out), box-shadow var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-card:hover {
+      transform: translateY(calc(var(--v-off, 0px) - var(--sl-space-2)));
+      box-shadow: var(--sl-panel-shadow);
+    }
+
+    .v-card-i {
+      display: grid;
+      place-items: center;
+      width: var(--sl-size-tile);
+      height: var(--sl-size-tile);
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-tint);
+      color: var(--sl-primary-strong);
+      font-size: var(--sl-size-icon-md);
+    }
+
+    /* The figures as a wheel: four spokes around one hub, the hub carrying the version */
+    .v-wheel {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 1px;
+      background: var(--sl-border);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-3);
+      overflow: hidden;
+      text-align: center;
+    }
+
+    .v-wheel > div {
+      padding: var(--sl-space-9) var(--sl-space-5);
+      background: var(--sl-bg);
+    }
+
+    .v-wheel b {
+      display: block;
+      font-size: var(--sl-font-hero);
+      line-height: var(--sl-line-tight);
+      color: var(--sl-primary-strong);
+    }
+
+    .v-wheel span {
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+    }
+
+    .v-feed {
+      display: grid;
+      gap: var(--sl-space-4);
+    }
+
+    .v-feed a {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-5);
+      padding: var(--sl-space-5) var(--sl-space-6);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-surface);
+      text-decoration: none;
+      color: var(--sl-text-strong);
+      transition: border-color var(--sl-time-base) var(--sl-ease-out), background-color var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-feed a:hover {
+      border-color: var(--sl-primary);
+      background: var(--sl-tint);
+    }
+
+    .v-feed time {
+      margin-left: auto;
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    @media (max-width: 900px) {
+      .v-arc {
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      }
+
+      .v-arc > * { --v-off: 0; }
+      .v-sat { display: none; }
+    }
+  </style>
+</head>
+<body class="sl-summer">
+<main class="d-page" data-demo-page>
+
+  <div class="v-hero">
+    <div class="v-sky" aria-hidden="true">
+      <div class="v-ring">
+        <span class="v-sat"><i class="bi bi-newspaper"></i>Новости</span>
+        <span class="v-sat v-sat-r"><i class="bi bi-cart3"></i>Магазин</span>
+        <span class="v-sat v-sat-b"><i class="bi bi-chat-dots"></i>Форум</span>
+        <span class="v-sat v-sat-l"><i class="bi bi-images"></i>Галерея</span>
+      </div>
+      <div class="v-ring">
+        <span class="v-sat"><i class="bi bi-file-earmark-arrow-down"></i>Файлы</span>
+        <span class="v-sat v-sat-r"><i class="bi bi-people"></i>Пользователи</span>
+        <span class="v-sat v-sat-b"><i class="bi bi-bar-chart"></i>Опросы</span>
+        <span class="v-sat v-sat-l"><i class="bi bi-book"></i>Документация</span>
+      </div>
+      <div class="v-ring">
+        <span class="v-sat"><i class="bi bi-envelope"></i>Рассылка</span>
+        <span class="v-sat v-sat-b"><i class="bi bi-search"></i>Поиск</span>
+      </div>
+      <div class="v-ring"></div>
+    </div>
+    <div class="v-core sl-wrp">
+      <span class="v-mark"><i class="bi bi-hexagon-fill" aria-hidden="true"></i></span>
+      <p class="d-kicker">Открытый код &middot; MIT &middot; PHP 8.4</p>
+      <h1 class="d-h1 sl-font">SLAED CMS</h1>
+      <p class="d-lead">Система управления содержимым сайта: простая в настройке, с высоким уровнем безопасности,
+      высокой скоростью работы и практически неограниченным потенциалом расширения. На её основе строят и небольшой
+      сайт, и крупный портал.</p>
+      <div class="d-actions" style="justify-content: center">
+        <a class="sl-but" href="#" title="Скачать бесплатно актуальную версию системы">Скачать систему</a>
+        <a class="sl-chip sl-chip-info" href="#" title="Живая демонстрация панели управления"><i class="bi bi-play-circle" aria-hidden="true"></i> Живое демо</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="d-head d-head-center">
+      <h2 class="d-h2 sl-font">Четыре опоры системы</h2>
+      <p class="d-text">Всё остальное вращается вокруг них.</p>
+    </div>
+    <div class="v-arc">
+      <article class="v-card d-reveal"><span class="v-card-i"><i class="bi bi-hand-index-thumb" aria-hidden="true"></i></span><h3 class="d-h3 sl-font">Простота</h3><p class="d-text">Интуитивный интерфейс: управлять сайтом так же просто, как работать с документами или почтой.</p></article>
+      <article class="v-card d-reveal"><span class="v-card-i"><i class="bi bi-puzzle" aria-hidden="true"></i></span><h3 class="d-h3 sl-font">Функциональность</h3><p class="d-text">Модули, блоки, темы и расширения: 685 дополнений в файловом архиве проекта.</p></article>
+      <article class="v-card d-reveal"><span class="v-card-i"><i class="bi bi-speedometer2" aria-hidden="true"></i></span><h3 class="d-h3 sl-font">Эффективность</h3><p class="d-text">Низкое потребление серверных ресурсов: страница собирается за 12 запросов и 5.2 MB памяти.</p></article>
+      <article class="v-card d-reveal"><span class="v-card-i"><i class="bi bi-shield-check" aria-hidden="true"></i></span><h3 class="d-h3 sl-font">Безопасность</h3><p class="d-text">Логирование действий, отслеживание инъекций и несанкционированных запросов из коробки.</p></article>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="v-wheel d-reveal">
+      <div><b data-demo-num="21">0</b><span>год разработки, с 2005</span></div>
+      <div><b data-demo-num="685">0</b><span>дополнений в архиве</span></div>
+      <div><b data-demo-num="26">0</b><span>модулей в поставке</span></div>
+      <div><b data-demo-num="0.25">0</b><span>секунды на страницу</span></div>
+    </div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="d-head d-head-center">
+      <h2 class="d-h2 sl-font">Примеры внедрений системы</h2>
+      <p class="d-text">Одна система, разные орбиты применения.</p>
+    </div>
+    <div class="d-sites v-shots" data-demo-sites="12"></div>
+  </div>
+
+  <div class="sl-wrp d-sec">
+    <div class="d-cols d-cols-2">
+      <section>
+        <h2 class="d-h3 sl-font">Новости</h2>
+        <div class="v-feed">
+          <a href="#" title="Вышла SLAED CMS 6.2"><i class="bi bi-newspaper" aria-hidden="true"></i>Вышла SLAED CMS 6.2<time datetime="2026-08-25">25.08.2026</time></a>
+          <a href="#" title="Тестируем Pre-Alpha 6.3 Pro"><i class="bi bi-cpu" aria-hidden="true"></i>Тестируем Pre-Alpha 6.3 Pro<time datetime="2026-07-14">14.07.2026</time></a>
+          <a href="#" title="Обновление тем оформления"><i class="bi bi-palette" aria-hidden="true"></i>Обновление тем оформления<time datetime="2026-02-01">01.02.2026</time></a>
+        </div>
+      </section>
+      <section>
+        <h2 class="d-h3 sl-font">Файлы</h2>
+        <div class="v-feed">
+          <a href="#" title="SLAED CMS 6.2 Pro"><i class="bi bi-box-seam" aria-hidden="true"></i>SLAED CMS 6.2 Pro<time datetime="2026-08-25">25.08.2026</time></a>
+          <a href="#" title="Модуль «Магазин» 3.1"><i class="bi bi-cart3" aria-hidden="true"></i>Модуль &laquo;Магазин&raquo; 3.1<time datetime="2026-06-12">12.06.2026</time></a>
+          <a href="#" title="Тема оформления Lite"><i class="bi bi-palette2" aria-hidden="true"></i>Тема оформления Lite<time datetime="2026-03-04">04.03.2026</time></a>
+        </div>
+      </section>
+    </div>
+  </div>
+
+</main>
+<script src="assets/demo.js"></script>
+</body>
+</html>
