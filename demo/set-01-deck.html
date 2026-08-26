@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>01 &middot; Палуба — стенд настроек аккаунта SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* The deck: settings as the continuation of the cabinet rather than a form pretending to be a page. The rail
+       on the left never leaves — it holds who you are, how full the profile is and where every section sits — and
+       the sections themselves run down the right in one ribbon. Nothing is hidden behind a tab, so a setting is
+       found by scrolling past it, which is a gesture that needs no learning. */
+    .v-deck {
+      display: grid;
+      grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+      gap: var(--sl-space-9);
+      align-items: start;
+      padding: var(--sl-space-7) 0 var(--sl-space-11);
+    }
+
+    .v-rail {
+      position: sticky;
+      top: var(--sl-space-6);
+      padding: var(--sl-space-7);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-3);
+      background: var(--sl-surface);
+      text-align: center;
+    }
+
+    .v-rail .sl-profile-avatar {
+      margin: 0 auto var(--sl-space-4);
+    }
+
+    .v-name {
+      margin: 0 0 var(--sl-space-2);
+      font-size: var(--sl-font-h3);
+      color: var(--sl-text-strong);
+    }
+
+    .v-mail {
+      margin: 0;
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+      overflow-wrap: anywhere;
+    }
+
+    .v-ring .sl-knob-val {
+      stroke-dasharray: var(--d-meter) 100;
+    }
+
+    /* The table of contents of the deck: the rail is the only navigation the page has, so every section is one
+       click away and the eye can count how many are left */
+    .v-toc {
+      display: grid;
+      gap: 1px;
+      margin-top: var(--sl-space-6);
+      padding-top: var(--sl-space-6);
+      border-top: 1px solid var(--sl-border);
+      text-align: left;
+    }
+
+    .v-toc a {
+      display: grid;
+      grid-template-columns: var(--sl-size-tile) minmax(0, 1fr) auto;
+      align-items: center;
+      gap: var(--sl-space-3);
+      padding: var(--sl-space-3);
+      border-radius: var(--sl-radius-1);
+      color: var(--sl-text);
+      font-size: var(--sl-font-small);
+      text-decoration: none;
+      transition:
+        background var(--sl-time-base) var(--sl-ease-out),
+        color var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-toc a:hover {
+      background: var(--sl-tint);
+      color: var(--sl-primary-strong);
+    }
+
+    .v-toc .bi {
+      display: grid;
+      place-items: center;
+      width: var(--sl-size-tile);
+      height: var(--sl-size-tile);
+      border-radius: var(--sl-radius-1);
+      background: var(--sl-bg-muted);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-size-icon-sm);
+    }
+
+    .v-toc a:hover .bi {
+      background: var(--sl-primary);
+      color: var(--sl-on-solid);
+    }
+
+    .v-toc small {
+      color: var(--sl-text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-flow {
+      display: grid;
+      gap: var(--sl-space-7);
+      min-width: 0;
+    }
+
+    /* A section is a card, and the card carries its subject in the head: the icon, the name and the one sentence
+       that says what the reader is deciding here. Below it the rows, and nothing else. */
+    .v-card {
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-3);
+      background: var(--sl-bg);
+      box-shadow: var(--sl-shadow-xs);
+      scroll-margin-top: var(--sl-space-9);
+      overflow: hidden;
+    }
+
+    .v-card-head {
+      display: grid;
+      grid-template-columns: var(--sl-size-tile) minmax(0, 1fr);
+      align-items: center;
+      gap: var(--sl-space-5);
+      padding: var(--sl-space-6) var(--sl-space-7);
+      border-bottom: 1px solid var(--sl-border);
+      background: var(--sl-surface);
+    }
+
+    .v-card-head .bi {
+      display: grid;
+      place-items: center;
+      width: var(--sl-size-tile);
+      height: var(--sl-size-tile);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-cat-tone, var(--sl-primary));
+      color: var(--sl-on-solid);
+      font-size: var(--sl-size-icon-md);
+    }
+
+    .v-card-head h2 {
+      margin: 0;
+      font-size: var(--sl-font-h4);
+      color: var(--sl-text-strong);
+    }
+
+    .v-card-head p {
+      margin: 0;
+      font-size: var(--sl-font-small);
+      color: var(--sl-text-muted);
+    }
+
+    .v-card-body {
+      padding: var(--sl-space-7);
+    }
+
+    .v-card-body .sl-form-row:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Facts, not settings: what the account is, told in three figures under the rail */
+    .v-facts {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--sl-space-4);
+      margin-top: var(--sl-space-6);
+      padding-top: var(--sl-space-6);
+      border-top: 1px solid var(--sl-border);
+      text-align: left;
+    }
+
+    .v-facts div {
+      min-width: 0;
+    }
+
+    .v-facts b {
+      display: block;
+      color: var(--sl-text-strong);
+      font-size: var(--sl-font-small);
+      font-variant-numeric: tabular-nums;
+      overflow-wrap: anywhere;
+    }
+
+    .v-facts small {
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-micro);
+    }
+
+    .v-two {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: var(--sl-space-6);
+      align-items: start;
+    }
+
+    /* The bar the deck saves from: it is the one thing that appears out of nothing, and only after something has
+       actually changed, so its arrival always means the same sentence */
+    .v-bar {
+      position: sticky;
+      bottom: var(--sl-space-4);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--sl-space-5);
+      margin-top: var(--sl-space-3);
+      padding: var(--sl-space-4) var(--sl-space-6);
+      border: 1px solid var(--sl-border-strong);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-bg);
+      box-shadow: var(--sl-shadow-float);
+      opacity: 0;
+      transform: translateY(var(--sl-space-6));
+      pointer-events: none;
+      transition:
+        opacity var(--sl-time-base) var(--sl-ease-out),
+        transform var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    [data-dirty="1"] .v-bar {
+      opacity: 1;
+      transform: none;
+      pointer-events: auto;
+    }
+
+    .v-bar span {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-bar .bi {
+      color: var(--sl-warning);
+    }
+
+    @media (max-width: 900px) {
+      .v-deck {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .v-rail {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body class="sl-summer">
+<main class="d-page" data-demo-page data-demo-band="Профиль">
+  <h1 class="sl-title">Настройки</h1>
+  <nav class="sl-cab-nav">
+  <a class="sl-cab-act sl-cat-tone-0" href="#" title="Возврат на страницу учетной записи"><span class="sl-cat-ico"><i class="bi bi-house" aria-hidden="true"></i></span><b>Главная</b></a>
+  <a class="sl-cab-act sl-cat-tone-1" href="#" title="Личные сообщения"><span class="sl-cab-badge">6</span><span class="sl-cat-ico"><i class="bi bi-envelope" aria-hidden="true"></i></span><b>Сообщения</b></a>
+  <a class="sl-cab-act sl-cat-tone-2" href="#" title="Персональный отдел клиента"><span class="sl-cat-ico"><i class="bi bi-people" aria-hidden="true"></i></span><b>Клиент</b></a>
+  <a class="sl-cab-act sl-cat-tone-3" href="#" title="Фавориты"><span class="sl-cat-ico"><i class="bi bi-star" aria-hidden="true"></i></span><b>Фавориты</b></a>
+  <a class="sl-cab-act sl-cat-tone-4" href="#" title="Персональная информация"><span class="sl-cat-ico"><i class="bi bi-person-vcard" aria-hidden="true"></i></span><b>Информация</b></a>
+  <a class="sl-cab-act sl-cat-tone-5" href="#" title="Настройки"><span class="sl-cat-ico"><i class="bi bi-gear" aria-hidden="true"></i></span><b>Настройки</b></a>
+  <a class="sl-cab-act sl-cat-tone-0" href="#" title="Выход"><span class="sl-cat-ico"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></span><b>Выход</b></a>
+</nav>
+
+  <form class="v-deck" method="post" action="#" data-demo-dirty>
+
+    <aside class="v-rail">
+      <div class="sl-profile-avatar">
+        <img src="../templates/lite/images/avatars/presets/004.svg" alt="Eduard" data-demo-face>
+        <span class="sl-profile-status" title="На сайте"></span>
+      </div>
+      <h2 class="sl-font v-name">Eduard</h2>
+      <p class="v-mail">slaed@example.com</p>
+      <div class="sl-knob sl-knob-ok sl-cab-ring v-ring" data-demo-meter title="Заполненность профиля">
+        <svg class="sl-knob-svg" viewBox="0 0 124 124" aria-hidden="true">
+          <circle class="sl-knob-bg" cx="62" cy="62" r="59"></circle>
+          <circle class="sl-knob-val" cx="62" cy="62" r="59" pathLength="100"></circle>
+        </svg>
+        <span><span><b data-demo-meter-num>0%</b><small>профиль заполнен</small><small>осталось полей: <span data-demo-meter-left>0</span></small></span></span>
+      </div>
+
+      <div class="v-toc">
+        <a href="#v-s1" title="Личные данные"><i class="bi bi-person-lines-fill" aria-hidden="true"></i><span>Личные данные</span><small>9</small></a>
+        <a href="#v-s2" title="Публикации и почта"><i class="bi bi-envelope-paper" aria-hidden="true"></i><span>Публикации и почта</span><small>4</small></a>
+        <a href="#v-s3" title="Приватность и вид"><i class="bi bi-shield-lock" aria-hidden="true"></i><span>Приватность и вид</span><small>4</small></a>
+        <a href="#v-s4" title="Настройки аватара"><i class="bi bi-person-badge" aria-hidden="true"></i><span>Настройки аватара</span><small>3</small></a>
+        <a href="#v-s5" title="Смена пароля"><i class="bi bi-key" aria-hidden="true"></i><span>Смена пароля</span><small>3</small></a>
+        <a href="#v-s6" title="Внешние сервисы"><i class="bi bi-diagram-3" aria-hidden="true"></i><span>Внешние сервисы</span><small>4</small></a>
+      </div>
+
+      <div class="v-facts">
+        <div><b>192.168.1.24</b><small>IP Адрес</small></div>
+        <div><b>14.03.2019</b><small>Регистрация</small></div>
+        <div><b>1&thinsp;240</b><small>Пункты</small></div>
+      </div>
+    </aside>
+
+    <div class="v-flow">
+
+      <section class="v-card sl-cat-tone-0" id="v-s1">
+        <div class="v-card-head">
+          <i class="bi bi-person-lines-fill" aria-hidden="true"></i>
+          <div><h2>Личные данные</h2><p>Что о вас видят другие пользователи сайта</p></div>
+        </div>
+        <div class="v-card-body">
+          <div class="sl-form-row">
+            <label class="sl-form-label">Ваше имя</label>
+            <div class="sl-form-field"><input class="sl-field" type="text" value="Eduard" readonly></div>
+          </div>
+          <div class="sl-form-row">
+            <label class="sl-form-label">Ваш E-Mail</label>
+            <div class="sl-form-field"><input class="sl-field" type="email" name="mail" value="slaed@example.com" maxlength="60" placeholder="Ваш E-Mail" data-demo-fill required></div>
+          </div>
+          <div class="sl-form-row">
+            <label class="sl-form-label">Адрес сайта</label>
+            <div class="sl-form-field"><input class="sl-field" type="text" name="site" value="https://slaed.net" maxlength="100" placeholder="Адрес сайта" data-demo-fill></div>
+          </div>
+          <div class="sl-form-row">
+            <label class="sl-form-label">Дата рождения</label>
+            <div class="sl-form-field"><input class="sl-field" type="date" name="user_birthday" value="1986-05-17" data-demo-fill></div>
+          </div>
+          <div class="sl-form-row">
+            <label class="sl-form-label">Пол</label>
+            <div class="sl-form-field">
+              <select class="sl-field sl-field--auto sl-field--account" name="gender" data-demo-fill>
+                <option value="0">Нет информации</option>
+                <option value="1" selected>Мужчина</option>
+                <option value="2">Женщина</option>
+              </select>
+            </div>
+          </div>
+          <div class="sl-form-row">
+            <label class="sl-form-label">Род занятий</label>
+            <div class="sl-form-field"><input class="sl-field" type="text" name="occ" value="Разработчик" maxlength="100" placeholder="Род занятий" data-demo-fill></div>
+          </div>
+          <div class="sl-form-row">
+            <label class="sl-form-label">Место жительства</label>
+            <div class="sl-form-field"><input class="sl-field" type="text" name="from" value="" maxlength="100" placeholder="Место жительства" data-demo-fill></div>
+          </div>
+          <div class="sl-form-row">
+            <label class="sl-form-label">Интересы</label>
+            <div class="sl-form-field"><input class="sl-field" type="text" name="inter" value="" maxlength="150" placeholder="Интересы" data-demo-fill></div>
+          </div>
+          <div class="sl-form-row">
+            <label class="sl-form-label">Подпись</label>
+            <div class="sl-form-field">
+              <textarea class="sl-field" name="sig" rows="4" placeholder="Подпись" data-demo-fill>SLAED CMS — просто, быстро, безопасно.</textarea>
+              <p class="d-hint">Это текст, который будет добавлять к размещаемым сообщениям.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="v-card sl-cat-tone-1" id="v-s2">
+        <div class="v-card-head">
+          <i class="bi bi-envelope-paper" aria-hidden="true"></i>
+          <div><h2>Публикации и почта</h2><p>Сколько показывать и о чём сообщать письмом</p></div>
+        </div>
+        <div class="v-card-body">
+          <div class="sl-form-row">
+            <label class="sl-form-label">Количество публикаций на страницу</label>
+            <div class="sl-form-field">
+              <select class="sl-field sl-field--auto sl-field--account" name="story">
+                <option>3</option><option>5</option><option selected>10</option><option>15</option><option>20</option>
+              </select>
+            </div>
+          </div>
+          <div class="sl-form-row">
+            <label class="sl-form-label">Получать новости по почте?</label>
+            <div class="sl-form-field">
+              <div class="sl-radio-group sl-radio-switch">
+                <label class="sl-radio"><input type="radio" name="news" value="1" checked>Да</label>
+                <label class="sl-radio"><input type="radio" name="news" value="0">Нет</label>
+              </div>
+            </div>
+          </div>
+          <div class="sl-form-row">
+            <label class="sl-form-label">Получать уведомления о новых сообщениях в моих темах форума?</label>
+            <div class="sl-form-field">
+              <div class="sl-radio-group sl-radio-switch">
+                <label class="sl-radio"><input type="radio" name="fsmail" value="1" checked>Да</label>
+                <label class="sl-radio"><input type="radio" name="fsmail" value="0">Нет</label>
+              </div>
+            </div>
+          </div>
+          <div class="sl-form-row">
+            <label class="sl-form-label">Получать уведомления о новых личных сообщениях?</label>
+            <div class="sl-form-field">
+              <div class="sl-radio-group sl-radio-switch">
+                <label class="sl-radio"><input type="radio" name="psmail" value="1">Да</label>
+                <label class="sl-radio"><input type="radio" name="psmail" value="0" checked>Нет</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="v-card sl-cat-tone-2" id="v-s3">
+        <div class="v-card-head">
+          <i class="bi bi-shield-lock" aria-hidden="true"></i>
+          <div><h2>Приватность и вид</h2><p>Что видно другим и как выглядит сайт лично для вас</p></div>
+        </div>
+        <div class="v-card-body">
+          <div class="sl-form-row">
+            <label class="sl-form-label">Разрешить другим пользователям видеть E-Mail?</label>
+            <div class="sl-form-field">
+              <div class="sl-radio-group sl-radio-switch">
+                <label class="sl-radio"><input type="radio" name="view" value="1">Да</label>
+                <label class="sl-radio"><input type="radio" name="view" value="0" checked>Нет</label>
+              </div>
+            </div>
+          </div>
+          <div class="sl-form-row">
+            <label class="sl-form-label">Активировать собственное меню?</label>
+            <div class="sl-form-field">
+              <div class="sl-radio-group sl-radio-switch">
+                <label class="sl-radio"><input type="radio" name="blockon" value="1" checked>Да</label>
+                <label class="sl-radio"><input type="radio" name="blockon" value="0">Нет</label>
+              </div>
+            </div>
+          </div>
+          <div class="sl-form-row">
+            <label class="sl-form-label">Собственное меню</label>
+            <div class="sl-form-field">
+              <textarea class="sl-field" name="block" rows="5" placeholder="Собственное меню">[url=index.php?name=news]Новости[/url]</textarea>
+              <p class="d-hint">Собственное меню будет отражаться в блоке с правой или с левой стороны на всех страница сайта. Вы должны использовать BB код для указания адреса или ссылки.</p>
+            </div>
+          </div>
+          <div class="sl-form-row">
+            <label class="sl-form-label">Тема оформления</label>
+            <div class="sl-form-field">
+              <select class="sl-field sl-field--auto sl-field--account" name="theme">
+                <option selected>lite</option><option>slaed</option><option>retro</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="v-card sl-cat-tone-3" id="v-s4">
+        <div class="v-card-head">
+          <i class="bi bi-person-badge" aria-hidden="true"></i>
+          <div><h2>Настройки аватара</h2><p>Изображение под вашим именем в сообщениях</p></div>
+        </div>
+        <div class="v-card-body">
+          <div class="v-two">
+            <div>
+              <label class="sl-form-label">Текущее изображение</label>
+              <p class="d-hint">Показывает небольшое изображение под информацией о вас в сообщениях. Может быть показано только одно изображение, шириной не более 100 пикселов, высотой не более 100 пикселов и объёмом не более 50 Кб.</p>
+            </div>
+            <div class="sl-profile-avatar" style="margin: 0">
+              <img src="../templates/lite/images/avatars/presets/004.svg" alt="Текущее изображение" data-demo-face>
+            </div>
+          </div>
+          <div class="sl-form-row" style="margin-top: var(--sl-space-6)">
+            <label class="sl-form-label">Загрузить аватар с компьютера</label>
+            <div class="sl-form-field"><input type="file" name="userfile" class="sl-field-auto"></div>
+          </div>
+          <p class="d-hint" style="margin-bottom: var(--sl-space-4)">Выберите понравившийся вам аватар из галереи, для этого достаточно нажатия левой кнопкой мыши на желаемом изображении.</p>
+          <div class="d-avas" data-demo-presets="18" data-demo-presets-pick="4"></div>
+        </div>
+      </section>
+
+      <section class="v-card sl-cat-tone-4" id="v-s5">
+        <div class="v-card-head">
+          <i class="bi bi-key" aria-hidden="true"></i>
+          <div><h2>Смена пароля</h2><p>После смены система обновит сеанс и попросит войти заново</p></div>
+        </div>
+        <div class="v-card-body">
+          <div class="sl-alert sl-alert-info">
+            <div class="sl-alert-body"><p class="sl-alert-text">После успешного изменения пароля, система обновить ваш сеанс и вам нужно войти заново. Если ничего не получится, обратитесь к администратору сайта для разрешения этой проблемы.</p></div>
+          </div>
+          <div class="sl-form-row">
+            <label class="sl-form-label">Введите новый пароль</label>
+            <div class="sl-form-field"><input class="sl-field" type="password" name="newpass" maxlength="25" placeholder="Введите новый пароль"></div>
+          </div>
+          <div class="sl-form-row">
+            <label class="sl-form-label">Повторите новый пароль</label>
+            <div class="sl-form-field"><input class="sl-field" type="password" name="newpass2" maxlength="25" placeholder="Повторите новый пароль"></div>
+          </div>
+          <div class="sl-form-row">
+            <label class="sl-form-label">Введите текущий пароль</label>
+            <div class="sl-form-field"><input class="sl-field" type="password" name="oldpass" maxlength="25" placeholder="Введите текущий пароль"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="v-card sl-cat-tone-5" id="v-s6">
+        <div class="v-card-head">
+          <i class="bi bi-diagram-3" aria-hidden="true"></i>
+          <div><h2>Внешние сервисы</h2><p>Вход через сторонний аккаунт вместо пароля</p></div>
+        </div>
+        <div class="v-card-body">
+          <ul class="sl-oauth-list">
+            <li class="sl-oauth-item">
+              <span class="sl-oauth-name"><i class="bi bi-github" aria-hidden="true"></i> Github</span>
+              <span class="sl-oauth-mail">slaed@example.com</span>
+              <span class="sl-oauth-since">02.02.2026</span>
+              <span class="sl-post-button"><button class="sl-but-mini" type="button" title="Удалить"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span>
+            </li>
+          </ul>
+          <div class="sl-oauth-row">
+            <span class="sl-oauth-label">Привязать ещё:</span>
+            <a class="sl-but sl-oauth-but" href="#" rel="nofollow"><i class="bi bi-google" aria-hidden="true"></i> Google</a>
+            <a class="sl-but sl-oauth-but" href="#" rel="nofollow"><i class="bi bi-chat-square-text" aria-hidden="true"></i> Yandex</a>
+            <a class="sl-but sl-oauth-but" href="#" rel="nofollow"><i class="bi bi-people" aria-hidden="true"></i> ВКонтакте</a>
+          </div>
+        </div>
+      </section>
+
+      <div class="v-bar">
+        <span><i class="bi bi-exclamation-circle-fill" aria-hidden="true"></i> Есть несохранённые изменения</span>
+        <span style="gap: var(--sl-space-3)">
+          <button class="sl-but-mini" type="button" data-demo-clean title="Отменить">Отменить</button>
+          <button class="sl-but" type="submit">Сохранить изменения</button>
+        </span>
+      </div>
+
+    </div>
+  </form>
+</main>
+<script src="assets/demo.js"></script>
+</body>
+</html>

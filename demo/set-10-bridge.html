@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>10 &middot; Рубка — стенд настроек аккаунта SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* The bridge. Four parts of four variants, put together under the one constraint the first nine ignored: the
+       cabinet gives settings a column of 896 and not the whole 1320. That single figure decides the composition —
+       a 300-point rail down the left would leave the form 556, so the rail from the wizard is laid across the top
+       instead, where it costs height and not width, and the deck's table of contents disappears into it. What is
+       left of the width goes to the tiles.
+
+         · lamps of the console — the state of the account before anything that changes it
+         · rail of the wizard — but no wizard: nothing is hidden, the marks only say where the reader stands
+         · tiles of the bento — each setting takes the area it deserves, six columns instead of twelve
+         · journal of the console — beside the password, because that is what its entries are about
+         · save bar of the deck — appears out of nothing, and only once something has actually changed
+    */
+    .v-bridge {
+      --v-cols: repeat(6, minmax(0, 1fr));
+      --v-mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+      padding: var(--sl-space-6) 0 var(--sl-space-11);
+    }
+
+    /* --- Lamps, from the console ------------------------------------------------------------------------- */
+    .v-lamps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: var(--sl-space-4);
+    }
+
+    .v-lamp {
+      position: relative;
+      padding: var(--sl-space-4) var(--sl-space-5) var(--sl-space-4) var(--sl-space-6);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-bg);
+      overflow: hidden;
+    }
+
+    .v-lamp::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: var(--d-line-thick);
+      background: var(--v-tone, var(--sl-text-muted));
+    }
+
+    .v-lamp small {
+      display: block;
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-micro);
+      text-transform: uppercase;
+      letter-spacing: var(--sl-track-wide);
+    }
+
+    .v-lamp b {
+      display: block;
+      margin: var(--sl-space-1) 0;
+      color: var(--v-tone, var(--sl-text-strong));
+      font-family: var(--v-mono);
+      font-size: var(--sl-font-h3);
+      line-height: var(--sl-line-tight);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-lamp span:last-child {
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-ok { --v-tone: var(--sl-success); }
+    .v-warn { --v-tone: var(--sl-warning); }
+    .v-info { --v-tone: var(--sl-primary); }
+
+    .v-pulse {
+      position: absolute;
+      top: var(--sl-space-3);
+      right: var(--sl-space-3);
+      width: var(--sl-space-2);
+      height: var(--sl-space-2);
+      border-radius: var(--sl-radius-circle);
+      background: var(--v-tone, var(--sl-text-muted));
+      animation: v-blink var(--d-pulse-dur) var(--sl-ease-in-out) infinite;
+    }
+
+    @keyframes v-blink { 50% { opacity: var(--sl-fade-muted); } }
+
+    [data-demo-motion="off"] .v-pulse { animation: none; }
+
+    /* --- Rail, from the wizard --------------------------------------------------------------------------- */
+    /* It sticks, because a table of contents that scrolls away is a table of contents used once */
+    .v-rail {
+      position: sticky;
+      top: 0;
+      z-index: var(--sl-z-dropdown);
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: var(--sl-space-2);
+      margin: var(--sl-space-6) 0;
+      padding: var(--sl-space-5) 0 var(--sl-space-4);
+      background: var(--sl-bg);
+      border-bottom: 1px solid var(--sl-border);
+    }
+
+    .v-rail::before,
+    .v-rail::after {
+      content: "";
+      position: absolute;
+      top: calc(var(--sl-space-5) + var(--sl-size-chip) / 2);
+      left: calc(100% / 12);
+      right: calc(100% / 12);
+      height: var(--d-line);
+      background: var(--sl-border);
+    }
+
+    .v-rail::after {
+      right: auto;
+      width: calc((var(--d-step, 1) - 1) / 5 * (100% - 100% / 6));
+      background: var(--sl-success);
+      transition: width var(--sl-time-slow) var(--sl-ease-out);
+    }
+
+    .v-mark {
+      position: relative;
+      z-index: var(--sl-z-raised);
+      display: grid;
+      justify-items: center;
+      gap: var(--sl-space-2);
+      padding: 0;
+      border: 0;
+      background: none;
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-micro);
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .v-mark i {
+      display: grid;
+      place-items: center;
+      width: var(--sl-size-chip);
+      height: var(--sl-size-chip);
+      border: var(--d-line) solid var(--sl-border);
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-bg);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-size-icon-sm);
+      transition:
+        border-color var(--sl-time-base) var(--sl-ease-out),
+        background var(--sl-time-base) var(--sl-ease-out),
+        color var(--sl-time-base) var(--sl-ease-out),
+        transform var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-mark[data-done="true"] i {
+      border-color: var(--sl-success);
+      background: var(--sl-success);
+      color: var(--sl-on-solid);
+    }
+
+    .v-mark[aria-current="true"] i {
+      border-color: var(--sl-primary);
+      background: var(--sl-primary);
+      color: var(--sl-on-solid);
+      transform: scale(1.1);
+    }
+
+    .v-mark[aria-current="true"] {
+      color: var(--sl-text-strong);
+      font-weight: var(--sl-weight-semibold);
+    }
+
+    /* --- Sections and tiles, from the bento -------------------------------------------------------------- */
+    .v-sec {
+      margin-bottom: var(--sl-space-7);
+      scroll-margin-top: var(--sl-space-11);
+    }
+
+    .v-sec > h2 {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      margin: 0 0 var(--sl-space-4);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-micro);
+      font-weight: var(--sl-weight-semibold);
+      letter-spacing: var(--sl-track-wide);
+      text-transform: uppercase;
+      font-family: var(--v-mono);
+    }
+
+    .v-sec > h2 .bi { color: var(--sl-primary); font-size: var(--sl-size-icon-sm); }
+
+    .v-grid {
+      display: grid;
+      grid-template-columns: var(--v-cols);
+      gap: var(--sl-space-4);
+    }
+
+    .v-tile {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sl-space-4);
+      grid-column: span 2;
+      padding: var(--sl-space-5);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-bg);
+      transition:
+        border-color var(--sl-time-base) var(--sl-ease-out),
+        box-shadow var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-tile:hover {
+      border-color: var(--sl-border-strong);
+      box-shadow: var(--sl-shadow-raised);
+    }
+
+    .v-s3 { grid-column: span 3; }
+    .v-s4 { grid-column: span 4; }
+    .v-s6 { grid-column: span 6; }
+
+    .v-th {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+    }
+
+    .v-th .bi {
+      display: grid;
+      place-items: center;
+      width: var(--sl-size-chip);
+      height: var(--sl-size-chip);
+      flex: 0 0 var(--sl-size-chip);
+      border-radius: var(--sl-radius-1);
+      background: var(--sl-cat-tone, var(--sl-primary));
+      color: var(--sl-on-solid);
+      font-size: var(--sl-size-icon-sm);
+    }
+
+    .v-th b {
+      color: var(--sl-text-strong);
+      font-weight: var(--sl-weight-semibold);
+      line-height: var(--sl-line-tight);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-tile p {
+      margin: 0;
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+      line-height: var(--sl-line-normal);
+    }
+
+    .v-tile .sl-field { width: 100%; }
+
+    /* A tile that holds a whole family instead of one setting: the questions become lines inside it, each with
+       its control flush right and a hairline between. Four separate tiles put four switches at four different
+       heights across the grid; one block puts them in one column, where the eye compares them at a glance. */
+    .v-lines {
+      display: grid;
+    }
+
+    .v-line {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, auto);
+      align-items: center;
+      gap: var(--sl-space-5);
+      padding: var(--sl-space-4) 0;
+      border-top: 1px solid var(--sl-border-subtle);
+    }
+
+    .v-line:first-child { border-top: 0; }
+
+    /* The two controls a line cannot hold at its end — an editor and the plate of themes — drop below the
+       question and keep the same left edge, so the block still reads as one list */
+    .v-line-wide {
+      grid-template-columns: minmax(0, 1fr);
+      align-items: start;
+    }
+
+    .v-line-wide > :last-child {
+      width: 100%;
+      margin-top: var(--sl-space-3);
+    }
+
+    .v-line b {
+      display: block;
+      color: var(--sl-text-strong);
+      font-size: var(--sl-font-small);
+      font-weight: var(--sl-weight-medium);
+    }
+
+    .v-line small {
+      display: block;
+      margin-top: var(--sl-space-1);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+      line-height: var(--sl-line-normal);
+    }
+
+    .v-line .sl-field--auto { min-width: var(--d-field-sm); }
+
+    .v-fields {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: var(--sl-space-4);
+    }
+
+    .v-fields label {
+      display: block;
+      margin-bottom: var(--sl-space-2);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-span2 { grid-column: 1 / -1; }
+
+    .v-face {
+      display: grid;
+      place-items: center;
+      padding: var(--sl-space-4);
+      border-radius: var(--sl-radius-1);
+      background: var(--sl-surface);
+    }
+
+    .v-face img {
+      width: var(--d-face-lg);
+      height: var(--d-face-lg);
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-bg-muted);
+      box-shadow: var(--sl-avatar-shadow);
+    }
+
+    /* A value the account carries but the user cannot change — the name, and the three figures below it. It takes
+       the height of a field so the column of controls beside it does not step, but it is text and looks like text. */
+    .v-val {
+      display: flex;
+      align-items: center;
+      min-height: var(--sl-size-control);
+      color: var(--sl-text-strong);
+    }
+
+    /* The extra fields are the one part of this page the code does not know: the administrator declares up to ten
+       slots in `config/fields.php`, each with its own label, type and whether it is required. The block below shows
+       the three this installation declares; another site gets another set, and the block simply grows or vanishes. */
+    .v-extra .v-th .bi { background: var(--sl-accent); }
+
+    /* --- Journal, from the console ----------------------------------------------------------------------- */
+    .v-log { gap: var(--sl-space-3); }
+
+    .v-log ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .v-log li {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: baseline;
+      gap: var(--sl-space-3);
+      padding: var(--sl-space-3) 0;
+      border-bottom: 1px solid var(--sl-border-subtle);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-log li:last-child { border-bottom: 0; }
+
+    .v-log time {
+      color: var(--sl-text-muted);
+      font-family: var(--v-mono);
+      font-size: var(--sl-font-micro);
+      white-space: nowrap;
+    }
+
+    /* --- Profile meter ----------------------------------------------------------------------------------- */
+    /* The cabinet already has a figure that means "how far along": the point ring on `name=account`. The same
+       component, the same size, the same green — only the arc is fed by the filled fields instead of the points,
+       so the two pages say the same thing in the same shape and the reader learns it once. */
+    .v-ring {
+      margin: 0 auto;
+    }
+
+    .v-ring .sl-knob-val {
+      stroke-dasharray: var(--d-meter) 100;
+    }
+
+    .v-facts {
+      display: grid;
+      gap: var(--sl-space-2);
+      margin-top: auto;
+      padding-top: var(--sl-space-4);
+      border-top: 1px solid var(--sl-border-subtle);
+    }
+
+    .v-facts div {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--sl-space-4);
+    }
+
+    .v-facts b {
+      color: var(--sl-text-strong);
+      font-size: var(--sl-font-small);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .v-facts small {
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-micro);
+      text-transform: uppercase;
+      letter-spacing: var(--sl-track-wide);
+    }
+
+    /* --- Save bar, from the deck ------------------------------------------------------------------------- */
+    .v-save {
+      position: sticky;
+      bottom: var(--sl-space-4);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--sl-space-5);
+      margin-top: var(--sl-space-7);
+      padding: var(--sl-space-4) var(--sl-space-6);
+      border: 1px solid var(--sl-border-strong);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-bg);
+      box-shadow: var(--sl-shadow-float);
+      opacity: 0;
+      transform: translateY(var(--sl-space-6));
+      pointer-events: none;
+      transition:
+        opacity var(--sl-time-base) var(--sl-ease-out),
+        transform var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    [data-dirty="1"] .v-save {
+      opacity: 1;
+      transform: none;
+      pointer-events: auto;
+    }
+
+    .v-save > span {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-save .bi { color: var(--sl-warning); }
+
+    @media (max-width: 768px) {
+      .v-bridge { --v-cols: repeat(2, minmax(0, 1fr)); }
+      .v-s3, .v-s4, .v-s6 { grid-column: span 2; }
+      .v-rail { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+      .v-mark span { display: none; }
+    }
+  </style>
+</head>
+<body class="sl-summer">
+<main class="d-page" data-demo-page data-demo-band="Профиль">
+  <h1 class="sl-title">Настройки</h1>
+  <nav class="sl-cab-nav">
+    <a class="sl-cab-act sl-cat-tone-0" href="#" title="Возврат на страницу учетной записи"><span class="sl-cat-ico"><i class="bi bi-house" aria-hidden="true"></i></span><b>Главная</b></a>
+    <a class="sl-cab-act sl-cat-tone-1" href="#" title="Личные сообщения"><span class="sl-cab-badge">6</span><span class="sl-cat-ico"><i class="bi bi-envelope" aria-hidden="true"></i></span><b>Сообщения</b></a>
+    <a class="sl-cab-act sl-cat-tone-2" href="#" title="Персональный отдел клиента"><span class="sl-cat-ico"><i class="bi bi-people" aria-hidden="true"></i></span><b>Клиент</b></a>
+    <a class="sl-cab-act sl-cat-tone-3" href="#" title="Фавориты"><span class="sl-cat-ico"><i class="bi bi-star" aria-hidden="true"></i></span><b>Фавориты</b></a>
+    <a class="sl-cab-act sl-cat-tone-4" href="#" title="Персональная информация"><span class="sl-cat-ico"><i class="bi bi-person-vcard" aria-hidden="true"></i></span><b>Информация</b></a>
+    <a class="sl-cab-act sl-cat-tone-5" href="#" title="Настройки"><span class="sl-cat-ico"><i class="bi bi-gear" aria-hidden="true"></i></span><b>Настройки</b></a>
+    <a class="sl-cab-act sl-cat-tone-0" href="#" title="Выход"><span class="sl-cat-ico"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></span><b>Выход</b></a>
+  </nav>
+
+  <form class="v-bridge" method="post" action="#" data-demo-dirty>
+
+    <div class="v-lamps">
+      <div class="v-lamp v-ok"><span class="v-pulse"></span><small>Безопасность</small><b>OK</b><span>пароль + Github</span></div>
+      <div class="v-lamp v-ok"><small>Приватность</small><b>СКРЫТ</b><span>E-Mail не виден другим</span></div>
+      <div class="v-lamp v-warn"><small>Почта</small><b>2 / 3</b><span>личные сообщения выключены</span></div>
+      <div class="v-lamp v-info" data-demo-meter><small>Профиль</small><b data-demo-meter-num>0%</b><span>не заполнено: <span data-demo-meter-left>0</span></span></div>
+    </div>
+
+    <nav class="v-rail" data-demo-spy aria-label="Разделы настроек">
+      <button class="v-mark" type="button" data-demo-spy-mark="v-s1"><i class="bi bi-person-lines-fill" aria-hidden="true"></i><span>Личные</span></button>
+      <button class="v-mark" type="button" data-demo-spy-mark="v-s2"><i class="bi bi-person-badge" aria-hidden="true"></i><span>Аватар</span></button>
+      <button class="v-mark" type="button" data-demo-spy-mark="v-s3"><i class="bi bi-envelope-paper" aria-hidden="true"></i><span>Почта</span></button>
+      <button class="v-mark" type="button" data-demo-spy-mark="v-s4"><i class="bi bi-shield-lock" aria-hidden="true"></i><span>Приватность</span></button>
+      <button class="v-mark" type="button" data-demo-spy-mark="v-s5"><i class="bi bi-key" aria-hidden="true"></i><span>Ключи</span></button>
+      <button class="v-mark" type="button" data-demo-spy-mark="v-s6"><i class="bi bi-diagram-3" aria-hidden="true"></i><span>Сервисы</span></button>
+    </nav>
+
+    <section class="v-sec" id="v-s1">
+      <h2><i class="bi bi-person-lines-fill" aria-hidden="true"></i> Личные данные</h2>
+      <div class="v-grid">
+        <div class="v-tile v-s4 sl-cat-tone-0">
+          <div class="v-th"><i class="bi bi-person" aria-hidden="true"></i><b>Кто вы на сайте</b></div>
+          <div class="v-fields">
+            <div><label>Ваше имя</label><span class="v-val">Eduard</span></div>
+            <div><label>Дата рождения</label><input class="sl-field" type="date" name="user_birthday" value="1986-05-17" data-demo-fill></div>
+            <div><label>Пол</label><select class="sl-field sl-field--auto sl-field--account" name="gender" data-demo-fill><option value="0">Нет информации</option><option value="1" selected>Мужчина</option><option value="2">Женщина</option></select></div>
+            <div><label>Ваш E-Mail</label><input class="sl-field" type="email" name="mail" value="slaed@example.com" maxlength="60" placeholder="Ваш E-Mail" data-demo-fill required></div>
+            <div><label>Адрес сайта</label><input class="sl-field" type="url" name="site" value="https://slaed.net" maxlength="100" placeholder="Адрес сайта" data-demo-fill></div>
+            <div><label>Род занятий</label><input class="sl-field" type="text" name="occ" value="Разработчик" maxlength="100" placeholder="Род занятий" data-demo-fill></div>
+            <div><label>Место жительства</label><input class="sl-field" type="text" name="from" value="" maxlength="100" placeholder="Место жительства" data-demo-fill></div>
+            <div><label>Интересы</label><input class="sl-field" type="text" name="inter" value="" maxlength="150" placeholder="Интересы" data-demo-fill></div>
+            <div class="v-span2"><label>Подпись</label><textarea class="sl-field" name="sig" rows="3" data-demo-fill>SLAED CMS — просто, быстро, безопасно.</textarea>
+              <p class="d-hint">Это текст, который будет добавлять к размещаемым сообщениям. На живой странице здесь стоит редактор во всю ширину строки.</p></div>
+          </div>
+        </div>
+
+        <div class="v-tile v-meter" data-demo-meter>
+          <div class="v-th"><i class="bi bi-clipboard-check" aria-hidden="true"></i><b>Заполненность</b></div>
+          <div class="sl-knob sl-knob-ok sl-cab-ring v-ring" title="Заполненность профиля">
+            <svg class="sl-knob-svg" viewBox="0 0 124 124" aria-hidden="true">
+              <circle class="sl-knob-bg" cx="62" cy="62" r="59"></circle>
+              <circle class="sl-knob-val" cx="62" cy="62" r="59" pathLength="100"></circle>
+            </svg>
+            <span><span><b data-demo-meter-num>0%</b><small>профиль заполнен</small><small>осталось полей: <span data-demo-meter-left>0</span></small></span></span>
+          </div>
+          <p>Заполненный профиль виднее в поиске по пользователям.</p>
+          <div class="v-facts">
+            <div><small>Пункты</small><b>1&thinsp;240</b></div>
+            <div><small>Регистрация</small><b>14.03.2019</b></div>
+            <div><small>IP Адрес</small><b>192.168.1.24</b></div>
+          </div>
+        </div>
+
+        <div class="v-tile v-s6 v-extra">
+          <div class="v-th"><i class="bi bi-plus-square-dotted" aria-hidden="true"></i><b>Дополнительные поля</b></div>
+          <p>Состав задаёт администратор: до десяти слотов, каждый со своей меткой, типом и обязательностью.
+          Типы — строка, многострочный текст, список, дата, дата и время. На этом сайте объявлены три.</p>
+          <div class="v-lines">
+            <div class="v-line">
+              <span><b>Версия системы</b><small>Список &middot; обязательное</small></span>
+              <select class="sl-field sl-field--auto sl-field--account" name="field[]" required>
+                <option value="">Нет</option><option>2.3 Lite</option><option>2.4 Lite</option><option selected>3.3 Pro</option>
+              </select>
+            </div>
+            <div class="v-line">
+              <span><b>Ваше имя</b><small>Строка &middot; обязательное</small></span>
+              <input class="sl-field sl-field--auto" type="text" name="field[]" value="Андрей" placeholder="Андрей" required>
+            </div>
+            <div class="v-line">
+              <span><b>Ваше мыло</b><small>Строка</small></span>
+              <input class="sl-field sl-field--auto" type="text" name="field[]" value="email@domain.net" placeholder="email@domain.net">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="v-sec" id="v-s2">
+      <h2><i class="bi bi-person-badge" aria-hidden="true"></i> Настройки аватара</h2>
+      <div class="v-grid">
+        <div class="v-tile sl-cat-tone-3">
+          <div class="v-th"><i class="bi bi-image" aria-hidden="true"></i><b>Текущее изображение</b></div>
+          <div class="v-face"><img src="../templates/lite/images/avatars/presets/004.svg" alt="Текущее изображение" data-demo-face></div>
+          <p>Не более 100&times;100 точек и 50 Кб.</p>
+          <input type="file" name="userfile" class="sl-field-auto">
+        </div>
+        <div class="v-tile v-s4 sl-cat-tone-3">
+          <div class="v-th"><i class="bi bi-images" aria-hidden="true"></i><b>Галерея темы</b></div>
+          <p>Выберите понравившийся вам аватар из галереи, для этого достаточно нажатия левой кнопкой мыши на желаемом изображении.</p>
+          <div class="d-avas" data-demo-presets="24" data-demo-presets-pick="4"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="v-sec" id="v-s3">
+      <h2><i class="bi bi-envelope-paper" aria-hidden="true"></i> Публикации и почта</h2>
+      <div class="v-grid">
+        <div class="v-tile v-s6 sl-cat-tone-1">
+          <div class="v-th"><i class="bi bi-envelope-paper" aria-hidden="true"></i><b>Сколько показывать и о чём писать на почту</b></div>
+          <div class="v-lines">
+            <div class="v-line">
+              <span><b>Количество публикаций на страницу</b><small>Сколько записей показывать в списках новостей и статей.</small></span>
+              <select class="sl-field sl-field--auto sl-field--account" name="story"><option>3</option><option>5</option><option selected>10</option><option>15</option><option>20</option></select>
+            </div>
+            <div class="v-line">
+              <span><b>Получать новости по почте?</b><small>Рассылка выходит не чаще раза в неделю.</small></span>
+              <div class="sl-radio-group sl-radio-switch"><label class="sl-radio"><input type="radio" name="news" value="1" checked>Да</label><label class="sl-radio"><input type="radio" name="news" value="0">Нет</label></div>
+            </div>
+            <div class="v-line">
+              <span><b>Получать уведомления о новых сообщениях в моих темах форума?</b><small>Одно письмо на тему, а не на сообщение.</small></span>
+              <div class="sl-radio-group sl-radio-switch"><label class="sl-radio"><input type="radio" name="fsmail" value="1" checked>Да</label><label class="sl-radio"><input type="radio" name="fsmail" value="0">Нет</label></div>
+            </div>
+            <div class="v-line">
+              <span><b>Получать уведомления о новых личных сообщениях?</b><small>В кабинете они видны и без письма.</small></span>
+              <div class="sl-radio-group sl-radio-switch"><label class="sl-radio"><input type="radio" name="psmail" value="1">Да</label><label class="sl-radio"><input type="radio" name="psmail" value="0" checked>Нет</label></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="v-sec" id="v-s4">
+      <h2><i class="bi bi-shield-lock" aria-hidden="true"></i> Приватность и вид</h2>
+      <div class="v-grid">
+        <div class="v-tile v-s6 sl-cat-tone-2">
+          <div class="v-th"><i class="bi bi-shield-lock" aria-hidden="true"></i><b>Что видно другим и как сайт выглядит для вас</b></div>
+          <div class="v-lines">
+            <div class="v-line">
+              <span><b>Разрешить другим пользователям видеть E-Mail?</b><small>Скрытый адрес не показывается даже в вашей информации.</small></span>
+              <div class="sl-radio-group sl-radio-switch"><label class="sl-radio"><input type="radio" name="view" value="1">Да</label><label class="sl-radio"><input type="radio" name="view" value="0" checked>Нет</label></div>
+            </div>
+            <div class="v-line">
+              <span><b>Активировать собственное меню?</b><small>Выключенное меню не показывается, но текст ниже сохраняется.</small></span>
+              <div class="sl-radio-group sl-radio-switch"><label class="sl-radio"><input type="radio" name="blockon" value="1" checked>Да</label><label class="sl-radio"><input type="radio" name="blockon" value="0">Нет</label></div>
+            </div>
+            <div class="v-line v-line-wide">
+              <span><b>Собственное меню</b><small>Собственное меню будет отражаться в блоке с правой или с левой стороны на всех страница сайта. Вы должны использовать BB код для указания адреса или ссылки.</small></span>
+              <textarea class="sl-field" name="block" rows="3">[url=index.php?name=news]Новости[/url]</textarea>
+            </div>
+            <div class="v-line">
+              <span><b>Тема оформления</b><small>Как сайт выглядит лично для вас. На других пользователей выбор не влияет. Строка появляется, только когда установлено больше одной темы.</small></span>
+              <select class="sl-field sl-field--auto sl-field--account" name="theme">
+                <option selected>lite</option><option>slaed</option><option>retro</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="v-sec" id="v-s5">
+      <h2><i class="bi bi-key" aria-hidden="true"></i> Смена пароля</h2>
+      <div class="v-grid">
+        <div class="v-tile v-s3 sl-cat-tone-4">
+          <div class="v-th"><i class="bi bi-shield-plus" aria-hidden="true"></i><b>Новый пароль</b></div>
+          <div class="v-fields">
+            <div class="v-span2"><label>Введите новый пароль</label><input class="sl-field" type="password" name="newpass" maxlength="25"></div>
+            <div class="v-span2"><label>Повторите новый пароль</label><input class="sl-field" type="password" name="newpass2" maxlength="25"></div>
+            <div class="v-span2"><label>Введите текущий пароль</label><input class="sl-field" type="password" name="oldpass" maxlength="25"></div>
+          </div>
+          <p>После успешного изменения пароля, система обновить ваш сеанс и вам нужно войти заново. Если ничего не получится, обратитесь к администратору сайта для разрешения этой проблемы.</p>
+        </div>
+        <div class="v-tile v-s3 v-log">
+          <div class="v-th"><i class="bi bi-clock-history" aria-hidden="true"></i><b>Журнал изменений</b></div>
+          <ul>
+            <li><span>Привязан Github</span><time datetime="2026-02-02">02.02.2026</time></li>
+            <li><span>Изменён пароль</span><time datetime="2026-02-02">02.02.2026</time></li>
+            <li><span>Выбран аватар из галереи</span><time datetime="2025-11-19">19.11.2025</time></li>
+            <li><span>Тема оформления &rarr; lite</span><time datetime="2025-09-04">04.09.2025</time></li>
+            <li><span>E-Mail скрыт от других</span><time datetime="2025-06-11">11.06.2025</time></li>
+            <li><span>Регистрация</span><time datetime="2019-03-14">14.03.2019</time></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="v-sec" id="v-s6">
+      <h2><i class="bi bi-diagram-3" aria-hidden="true"></i> Внешние сервисы</h2>
+      <div class="v-grid">
+        <div class="v-tile v-s6 sl-cat-tone-5">
+          <div class="v-th"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i><b>Вход через сторонний аккаунт</b></div>
+          <ul class="sl-oauth-list">
+            <li class="sl-oauth-item">
+              <span class="sl-oauth-name"><i class="bi bi-github" aria-hidden="true"></i> Github</span>
+              <span class="sl-oauth-mail">slaed@example.com</span>
+              <span class="sl-oauth-since">02.02.2026</span>
+              <span class="sl-post-button"><button class="sl-but-mini" type="button" title="Удалить"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span>
+            </li>
+          </ul>
+          <div class="sl-oauth-row">
+            <span class="sl-oauth-label">Привязать ещё:</span>
+            <a class="sl-but sl-oauth-but" href="#" rel="nofollow"><i class="bi bi-google" aria-hidden="true"></i> Google</a>
+            <a class="sl-but sl-oauth-but" href="#" rel="nofollow"><i class="bi bi-chat-square-text" aria-hidden="true"></i> Yandex</a>
+            <a class="sl-but sl-oauth-but" href="#" rel="nofollow"><i class="bi bi-people" aria-hidden="true"></i> ВКонтакте</a>
+          </div>
+          <p>Вход через сторонний аккаунт заменяет ввод пароля, но не отменяет сам пароль. Отвязать можно в любой момент.</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="v-save">
+      <span><i class="bi bi-exclamation-circle-fill" aria-hidden="true"></i> Есть несохранённые изменения</span>
+      <span>
+        <button class="sl-but-mini" type="button" data-demo-clean>Отменить</button>
+        <button class="sl-but" type="submit">Сохранить изменения</button>
+      </span>
+    </div>
+
+  </form>
+</main>
+<script src="assets/demo.js"></script>
+</body>
+</html>

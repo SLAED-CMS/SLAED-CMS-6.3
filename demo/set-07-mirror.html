@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>07 &middot; Зеркало — стенд настроек аккаунта SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* The mirror. Every other variant asks the reader to fill a form and trust that the result is what they meant;
+       this one shows the result while it is being typed. On the right stands the profile card exactly as other
+       users see it — the same avatar, the same chips, the same signature — and it changes on the keystroke. A
+       field left empty does not vanish from the card, it greys out, so the gap is visible rather than merely absent. */
+    .v-mir {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 360px);
+      gap: var(--sl-space-9);
+      align-items: start;
+      padding: var(--sl-space-7) 0 var(--sl-space-11);
+    }
+
+    .v-form {
+      min-width: 0;
+    }
+
+    .v-sec {
+      margin-bottom: var(--sl-space-7);
+      padding-bottom: var(--sl-space-7);
+      border-bottom: 1px solid var(--sl-border);
+    }
+
+    .v-sec:last-of-type { border-bottom: 0; }
+
+    .v-sec > h2 {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      margin: 0 0 var(--sl-space-5);
+      font-size: var(--sl-font-h4);
+      color: var(--sl-text-strong);
+    }
+
+    .v-sec > h2 .bi { color: var(--sl-primary); }
+
+    .v-sec .sl-form-row:last-child { margin-bottom: 0; }
+
+    /* The card: the theme's own profile chrome, so the preview is the real component and not a drawing of it */
+    .v-card {
+      /* The one figure this variant sizes itself: the depleting track under the card foot */
+      --v-track: 72px;
+      position: sticky;
+      top: var(--sl-space-6);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-3);
+      background: var(--sl-bg);
+      box-shadow: var(--sl-shadow-raised);
+      overflow: hidden;
+    }
+
+    .v-card-top {
+      position: relative;
+      padding: var(--sl-space-9) var(--sl-space-6) var(--sl-space-6);
+      background: var(--sl-grad-gloss), var(--sl-primary-subtle);
+      text-align: center;
+    }
+
+    .v-card-top .sl-profile-avatar { margin: 0 auto var(--sl-space-4); }
+
+    .v-tag {
+      position: absolute;
+      top: var(--sl-space-4);
+      left: var(--sl-space-4);
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-2);
+      padding: var(--sl-space-1) var(--sl-space-3);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-scrim-subtle);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-micro);
+      text-transform: uppercase;
+      letter-spacing: var(--sl-track-wide);
+    }
+
+    .v-card-name {
+      margin: 0;
+      font-size: var(--sl-font-h3);
+      color: var(--sl-text-strong);
+    }
+
+    .v-card-occ {
+      margin: var(--sl-space-1) 0 0;
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-card-body {
+      padding: var(--sl-space-6);
+    }
+
+    .v-line {
+      display: grid;
+      grid-template-columns: var(--sl-size-icon-md) minmax(0, 1fr);
+      align-items: center;
+      gap: var(--sl-space-4);
+      padding: var(--sl-space-3) 0;
+      border-bottom: 1px solid var(--sl-border-subtle);
+      font-size: var(--sl-font-small);
+      overflow-wrap: anywhere;
+    }
+
+    .v-line:last-child { border-bottom: 0; }
+
+    .v-line .bi {
+      color: var(--sl-text-muted);
+      text-align: center;
+    }
+
+    /* An empty value: shown, not hidden. A profile with holes should look like a profile with holes. */
+    [data-demo-off] {
+      color: var(--sl-text-muted);
+      font-style: italic;
+      opacity: var(--sl-fade-subtle);
+    }
+
+    .v-quote {
+      font-style: italic;
+      margin: var(--sl-space-5) 0 0;
+      padding: var(--sl-space-4) var(--sl-space-5);
+      border-left: var(--d-line) solid var(--sl-primary);
+      border-radius: var(--sl-radius-1);
+      background: var(--sl-surface);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+      line-height: var(--sl-line-normal);
+    }
+
+    .v-card-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--sl-space-4);
+      padding: var(--sl-space-4) var(--sl-space-6);
+      border-top: 1px solid var(--sl-border);
+      background: var(--sl-surface);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-micro);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-fill {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+    }
+
+    .v-fill-track {
+      width: var(--v-track);
+      height: var(--sl-space-1);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-bg-muted);
+      overflow: hidden;
+    }
+
+    .v-fill-track span {
+      display: block;
+      height: 100%;
+      width: calc(var(--d-meter) * 1%);
+      background: var(--sl-success);
+      transition: width var(--sl-time-slow) var(--sl-ease-out);
+    }
+
+    .v-two {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: var(--sl-space-6);
+      align-items: center;
+    }
+
+    .v-save {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--sl-space-3);
+      padding-top: var(--sl-space-6);
+      border-top: 1px solid var(--sl-border);
+    }
+
+    @media (max-width: 900px) {
+      .v-mir { grid-template-columns: minmax(0, 1fr); }
+      .v-card { position: static; order: -1; }
+    }
+  </style>
+</head>
+<body class="sl-summer">
+<main class="d-page" data-demo-page data-demo-band="Профиль">
+  <h1 class="sl-title">Настройки</h1>
+  <nav class="sl-cab-nav">
+  <a class="sl-cab-act sl-cat-tone-0" href="#" title="Возврат на страницу учетной записи"><span class="sl-cat-ico"><i class="bi bi-house" aria-hidden="true"></i></span><b>Главная</b></a>
+  <a class="sl-cab-act sl-cat-tone-1" href="#" title="Личные сообщения"><span class="sl-cab-badge">6</span><span class="sl-cat-ico"><i class="bi bi-envelope" aria-hidden="true"></i></span><b>Сообщения</b></a>
+  <a class="sl-cab-act sl-cat-tone-2" href="#" title="Персональный отдел клиента"><span class="sl-cat-ico"><i class="bi bi-people" aria-hidden="true"></i></span><b>Клиент</b></a>
+  <a class="sl-cab-act sl-cat-tone-3" href="#" title="Фавориты"><span class="sl-cat-ico"><i class="bi bi-star" aria-hidden="true"></i></span><b>Фавориты</b></a>
+  <a class="sl-cab-act sl-cat-tone-4" href="#" title="Персональная информация"><span class="sl-cat-ico"><i class="bi bi-person-vcard" aria-hidden="true"></i></span><b>Информация</b></a>
+  <a class="sl-cab-act sl-cat-tone-5" href="#" title="Настройки"><span class="sl-cat-ico"><i class="bi bi-gear" aria-hidden="true"></i></span><b>Настройки</b></a>
+  <a class="sl-cab-act sl-cat-tone-0" href="#" title="Выход"><span class="sl-cat-ico"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></span><b>Выход</b></a>
+</nav>
+
+  <form class="v-mir" method="post" action="#" data-demo-dirty>
+
+    <div class="v-form">
+
+      <section class="v-sec">
+        <h2><i class="bi bi-person-lines-fill" aria-hidden="true"></i> Личные данные</h2>
+        <div class="sl-form-row">
+          <label class="sl-form-label">Ваше имя</label>
+          <div class="sl-form-field"><input class="sl-field" type="text" value="Eduard" readonly></div>
+        </div>
+        <div class="sl-form-row">
+          <label class="sl-form-label">Ваш E-Mail</label>
+          <div class="sl-form-field"><input class="sl-field" type="email" name="mail" value="slaed@example.com" maxlength="60" placeholder="Ваш E-Mail" data-demo-fill data-demo-live-src="mail" required></div>
+        </div>
+        <div class="sl-form-row">
+          <label class="sl-form-label">Адрес сайта</label>
+          <div class="sl-form-field"><input class="sl-field" type="text" name="site" value="https://slaed.net" maxlength="100" placeholder="Адрес сайта" data-demo-fill data-demo-live-src="site"></div>
+        </div>
+        <div class="sl-form-row">
+          <label class="sl-form-label">Дата рождения</label>
+          <div class="sl-form-field"><input class="sl-field" type="date" name="user_birthday" value="1986-05-17" data-demo-fill data-demo-live-src="birth"></div>
+        </div>
+        <div class="sl-form-row">
+          <label class="sl-form-label">Пол</label>
+          <div class="sl-form-field"><select class="sl-field sl-field--auto sl-field--account" name="gender" data-demo-fill data-demo-live-src="gender"><option value="0">Нет информации</option><option value="1" selected>Мужчина</option><option value="2">Женщина</option></select></div>
+        </div>
+        <div class="sl-form-row">
+          <label class="sl-form-label">Род занятий</label>
+          <div class="sl-form-field"><input class="sl-field" type="text" name="occ" value="Разработчик" maxlength="100" placeholder="Род занятий" data-demo-fill data-demo-live-src="occ"></div>
+        </div>
+        <div class="sl-form-row">
+          <label class="sl-form-label">Место жительства</label>
+          <div class="sl-form-field"><input class="sl-field" type="text" name="from" value="" maxlength="100" placeholder="Место жительства" data-demo-fill data-demo-live-src="from"></div>
+        </div>
+        <div class="sl-form-row">
+          <label class="sl-form-label">Интересы</label>
+          <div class="sl-form-field"><input class="sl-field" type="text" name="inter" value="" maxlength="150" placeholder="Интересы" data-demo-fill data-demo-live-src="inter"></div>
+        </div>
+        <div class="sl-form-row">
+          <label class="sl-form-label">Подпись</label>
+          <div class="sl-form-field">
+            <textarea class="sl-field" name="sig" rows="3" placeholder="Подпись" data-demo-fill data-demo-live-src="sig">SLAED CMS — просто, быстро, безопасно.</textarea>
+            <p class="d-hint">Это текст, который будет добавлять к размещаемым сообщениям.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="v-sec">
+        <h2><i class="bi bi-person-badge" aria-hidden="true"></i> Настройки аватара</h2>
+        <div class="v-two">
+          <p class="d-hint" style="margin: 0">Показывает небольшое изображение под информацией о вас в сообщениях. Может быть показано только одно изображение, шириной не более 100 пикселов, высотой не более 100 пикселов и объёмом не более 50 Кб.</p>
+          <input type="file" name="userfile" class="sl-field-auto">
+        </div>
+        <p class="d-hint">Выберите понравившийся вам аватар из галереи, для этого достаточно нажатия левой кнопкой мыши на желаемом изображении.</p>
+        <div class="d-avas" data-demo-presets="24" data-demo-presets-pick="4"></div>
+      </section>
+
+      <section class="v-sec">
+        <h2><i class="bi bi-envelope-paper" aria-hidden="true"></i> Публикации и почта</h2>
+        <div class="sl-form-row">
+          <label class="sl-form-label">Количество публикаций на страницу</label>
+          <div class="sl-form-field"><select class="sl-field sl-field--auto sl-field--account" name="story"><option>3</option><option>5</option><option selected>10</option><option>15</option><option>20</option></select></div>
+        </div>
+        <div class="sl-form-row">
+          <label class="sl-form-label">Получать новости по почте?</label>
+          <div class="sl-form-field"><div class="sl-radio-group sl-radio-switch"><label class="sl-radio"><input type="radio" name="news" value="1" checked>Да</label><label class="sl-radio"><input type="radio" name="news" value="0">Нет</label></div></div>
+        </div>
+        <div class="sl-form-row">
+          <label class="sl-form-label">Получать уведомления о новых сообщениях в моих темах форума?</label>
+          <div class="sl-form-field"><div class="sl-radio-group sl-radio-switch"><label class="sl-radio"><input type="radio" name="fsmail" value="1" checked>Да</label><label class="sl-radio"><input type="radio" name="fsmail" value="0">Нет</label></div></div>
+        </div>
+        <div class="sl-form-row">
+          <label class="sl-form-label">Получать уведомления о новых личных сообщениях?</label>
+          <div class="sl-form-field"><div class="sl-radio-group sl-radio-switch"><label class="sl-radio"><input type="radio" name="psmail" value="1">Да</label><label class="sl-radio"><input type="radio" name="psmail" value="0" checked>Нет</label></div></div>
+        </div>
+      </section>
+
+      <section class="v-sec">
+        <h2><i class="bi bi-shield-lock" aria-hidden="true"></i> Приватность и вид</h2>
+        <div class="sl-form-row">
+          <label class="sl-form-label">Разрешить другим пользователям видеть E-Mail?</label>
+          <div class="sl-form-field"><div class="sl-radio-group sl-radio-switch"><label class="sl-radio"><input type="radio" name="view" value="1">Да</label><label class="sl-radio"><input type="radio" name="view" value="0" checked>Нет</label></div></div>
+        </div>
+        <div class="sl-form-row">
+          <label class="sl-form-label">Активировать собственное меню?</label>
+          <div class="sl-form-field"><div class="sl-radio-group sl-radio-switch"><label class="sl-radio"><input type="radio" name="blockon" value="1" checked>Да</label><label class="sl-radio"><input type="radio" name="blockon" value="0">Нет</label></div></div>
+        </div>
+        <div class="sl-form-row">
+          <label class="sl-form-label">Собственное меню</label>
+          <div class="sl-form-field">
+            <textarea class="sl-field" name="block" rows="4" placeholder="Собственное меню">[url=index.php?name=news]Новости[/url]</textarea>
+            <p class="d-hint">Собственное меню будет отражаться в блоке с правой или с левой стороны на всех страница сайта. Вы должны использовать BB код для указания адреса или ссылки.</p>
+          </div>
+        </div>
+        <div class="sl-form-row">
+          <label class="sl-form-label">Тема оформления</label>
+          <div class="sl-form-field"><select class="sl-field sl-field--auto sl-field--account" name="theme"><option selected>lite</option><option>slaed</option><option>retro</option></select></div>
+        </div>
+      </section>
+
+      <section class="v-sec">
+        <h2><i class="bi bi-key" aria-hidden="true"></i> Смена пароля</h2>
+        <div class="sl-alert sl-alert-info"><div class="sl-alert-body"><p class="sl-alert-text">После успешного изменения пароля, система обновить ваш сеанс и вам нужно войти заново. Если ничего не получится, обратитесь к администратору сайта для разрешения этой проблемы.</p></div></div>
+        <div class="sl-form-row">
+          <label class="sl-form-label">Введите новый пароль</label>
+          <div class="sl-form-field"><input class="sl-field" type="password" name="newpass" maxlength="25" placeholder="Введите новый пароль"></div>
+        </div>
+        <div class="sl-form-row">
+          <label class="sl-form-label">Повторите новый пароль</label>
+          <div class="sl-form-field"><input class="sl-field" type="password" name="newpass2" maxlength="25" placeholder="Повторите новый пароль"></div>
+        </div>
+        <div class="sl-form-row">
+          <label class="sl-form-label">Введите текущий пароль</label>
+          <div class="sl-form-field"><input class="sl-field" type="password" name="oldpass" maxlength="25" placeholder="Введите текущий пароль"></div>
+        </div>
+      </section>
+
+      <section class="v-sec">
+        <h2><i class="bi bi-diagram-3" aria-hidden="true"></i> Внешние сервисы</h2>
+        <ul class="sl-oauth-list">
+          <li class="sl-oauth-item">
+            <span class="sl-oauth-name"><i class="bi bi-github" aria-hidden="true"></i> Github</span>
+            <span class="sl-oauth-mail">slaed@example.com</span>
+            <span class="sl-oauth-since">02.02.2026</span>
+            <span class="sl-post-button"><button class="sl-but-mini" type="button" title="Удалить"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span>
+          </li>
+        </ul>
+        <div class="sl-oauth-row">
+          <span class="sl-oauth-label">Привязать ещё:</span>
+          <a class="sl-but sl-oauth-but" href="#" rel="nofollow"><i class="bi bi-google" aria-hidden="true"></i> Google</a>
+          <a class="sl-but sl-oauth-but" href="#" rel="nofollow"><i class="bi bi-chat-square-text" aria-hidden="true"></i> Yandex</a>
+          <a class="sl-but sl-oauth-but" href="#" rel="nofollow"><i class="bi bi-people" aria-hidden="true"></i> ВКонтакте</a>
+        </div>
+      </section>
+
+      <div class="v-save">
+        <button class="sl-but-mini" type="button" data-demo-clean>Отменить</button>
+        <button class="sl-but" type="submit">Сохранить изменения</button>
+      </div>
+    </div>
+
+    <aside class="v-card">
+      <div class="v-card-top">
+        <span class="v-tag"><i class="bi bi-eye" aria-hidden="true"></i> так видят другие</span>
+        <div class="sl-profile-avatar">
+          <img src="../templates/lite/images/avatars/presets/004.svg" alt="Eduard" data-demo-face>
+          <span class="sl-profile-status" title="На сайте"></span>
+        </div>
+        <h2 class="sl-font v-card-name">Eduard</h2>
+        <p class="v-card-occ" data-demo-live="occ" data-demo-live-empty="Род занятий не указан">&nbsp;</p>
+        <div class="sl-profile-chips" style="justify-content: center; margin-top: var(--sl-space-4)">
+          <span class="sl-chip sl-chip-accent"><i class="bi bi-people-fill" aria-hidden="true"></i> Пользователи</span>
+          <span class="sl-chip sl-chip-success"><i class="bi bi-wifi" aria-hidden="true"></i> На сайте</span>
+        </div>
+      </div>
+      <div class="v-card-body">
+        <div class="v-line"><i class="bi bi-at" aria-hidden="true"></i><span data-demo-live="mail" data-demo-live-empty="E-Mail не указан">&nbsp;</span></div>
+        <div class="v-line"><i class="bi bi-link-45deg" aria-hidden="true"></i><span data-demo-live="site" data-demo-live-empty="Сайт не указан">&nbsp;</span></div>
+        <div class="v-line"><i class="bi bi-cake2" aria-hidden="true"></i><span data-demo-live="birth" data-demo-live-empty="Дата рождения не указана">&nbsp;</span></div>
+        <div class="v-line"><i class="bi bi-gender-ambiguous" aria-hidden="true"></i><span data-demo-live="gender" data-demo-live-empty="Пол не указан">&nbsp;</span></div>
+        <div class="v-line"><i class="bi bi-geo-alt" aria-hidden="true"></i><span data-demo-live="from" data-demo-live-empty="Место жительства не указано">&nbsp;</span></div>
+        <div class="v-line"><i class="bi bi-stars" aria-hidden="true"></i><span data-demo-live="inter" data-demo-live-empty="Интересы не указаны">&nbsp;</span></div>
+        <p class="v-quote" data-demo-live="sig" data-demo-live-empty="Подпись не задана">&nbsp;</p>
+      </div>
+      <div class="v-card-foot">
+        <span>IP 192.168.1.24 &middot; с 14.03.2019 &middot; 1&thinsp;240</span>
+        <span class="v-fill" data-demo-meter title="Заполненность профиля">
+          <span class="v-fill-track"><span></span></span>
+          <b data-demo-meter-num>0%</b>
+        </span>
+      </div>
+    </aside>
+
+  </form>
+</main>
+<script src="assets/demo.js"></script>
+</body>
+</html>

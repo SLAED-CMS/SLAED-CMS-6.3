@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>04 &middot; Бенто — стенд настроек аккаунта SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* Bento. A form is a column because a form has always been a column, not because thirty settings are equally
+       important. Here each one takes the area it deserves: the avatar and the theme get a whole tile with the
+       thing itself inside it, a yes/no question gets a small square with the switch on it, and the eight text
+       fields of the profile share one wide tile. Nothing is nested and nothing scrolls twice. */
+    .v-bento {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: var(--sl-space-5);
+      padding: var(--sl-space-7) 0 var(--sl-space-11);
+    }
+
+    .v-tile {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sl-space-4);
+      grid-column: span 4;
+      padding: var(--sl-space-6);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-3);
+      background: var(--sl-bg);
+      box-shadow: var(--sl-shadow-xs);
+      transition:
+        transform var(--sl-time-base) var(--sl-ease-out),
+        box-shadow var(--sl-time-base) var(--sl-ease-out),
+        border-color var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-tile:hover {
+      transform: translateY(calc(var(--d-lift) * -1));
+      border-color: var(--sl-border-strong);
+      box-shadow: var(--sl-shadow-raised);
+    }
+
+    .v-w3 { grid-column: span 3; }
+    .v-w6 { grid-column: span 6; }
+    .v-w12 { grid-column: span 12; }
+
+    /* The head of a tile is one line: the glyph says which family the setting belongs to, the name says what it is */
+    .v-th {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-4);
+    }
+
+    .v-th .bi {
+      display: grid;
+      place-items: center;
+      width: var(--sl-size-chip);
+      height: var(--sl-size-chip);
+      flex: 0 0 var(--sl-size-chip);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-cat-tone, var(--sl-primary));
+      color: var(--sl-on-solid);
+      font-size: var(--sl-size-icon-sm);
+    }
+
+    .v-th b {
+      color: var(--sl-text-strong);
+      font-weight: var(--sl-weight-semibold);
+      line-height: var(--sl-line-tight);
+    }
+
+    .v-tile p {
+      margin: 0;
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+      line-height: var(--sl-line-normal);
+    }
+
+    .v-tile .sl-field { width: 100%; }
+
+    /* The switch tile: the question fills it and the switch sits at the bottom edge, so a row of them reads as a
+       row of answers rather than as a row of labels */
+    .v-ask {
+      justify-content: space-between;
+      min-height: var(--d-tile-ask);
+    }
+
+    .v-ask .sl-radio-switch { align-self: flex-start; }
+
+    /* The profile tile: the eight plain fields, two across, because each of them is one word wide */
+    .v-fields {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--sl-space-4);
+    }
+
+    .v-fields label {
+      display: block;
+      margin-bottom: var(--sl-space-2);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-span2 { grid-column: 1 / -1; }
+
+    /* The face tile: the avatar is the tile, the gallery lives under it, and the picked face lands on both at once */
+    .v-face {
+      display: grid;
+      place-items: center;
+      padding: var(--sl-space-5);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-surface);
+    }
+
+    .v-face img {
+      width: var(--d-face-lg);
+      height: var(--d-face-lg);
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-bg-muted);
+      box-shadow: var(--sl-avatar-shadow);
+    }
+
+    /* The theme tile shows the themes, not their names: three plates in the three palettes the packages ship */
+    .v-skins {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--sl-space-4);
+    }
+
+    .v-skin {
+      padding: 0;
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-bg);
+      cursor: pointer;
+      overflow: hidden;
+      transition: box-shadow var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-skin span {
+      display: block;
+      height: var(--sl-space-9);
+      background: var(--v-skin-tone);
+    }
+
+    .v-skin b {
+      display: block;
+      padding: var(--sl-space-3);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+      font-weight: var(--sl-weight-normal);
+    }
+
+    .v-skin[aria-pressed="true"] {
+      box-shadow: 0 0 0 var(--d-line) var(--sl-primary);
+    }
+
+    .v-skin[aria-pressed="true"] b {
+      color: var(--sl-text-strong);
+      font-weight: var(--sl-weight-semibold);
+    }
+
+    /* The three figures of the account, stacked: the profile tile is a narrow column and a figure that wraps
+       across two lines stops being a figure */
+    .v-facts {
+      display: grid;
+      gap: var(--sl-space-2);
+      margin-top: auto;
+      padding-top: var(--sl-space-5);
+      border-top: 1px solid var(--sl-border-subtle);
+    }
+
+    .v-facts div {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--sl-space-4);
+    }
+
+    .v-facts b {
+      color: var(--sl-text-strong);
+      font-size: var(--sl-font-small);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .v-facts small {
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-micro);
+      text-transform: uppercase;
+      letter-spacing: var(--sl-track-wide);
+    }
+
+    /* Only the tile's own figure, never the name in its head or the three below it */
+    .v-meter > b {
+      font-size: var(--sl-font-hero);
+      color: var(--sl-success);
+      font-variant-numeric: tabular-nums;
+      line-height: var(--sl-line-tight);
+    }
+
+    .v-bar-track {
+      height: var(--sl-space-2);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-bg-muted);
+      overflow: hidden;
+    }
+
+    .v-bar-track span {
+      display: block;
+      height: 100%;
+      width: calc(var(--d-meter) * 1%);
+      background: var(--sl-success);
+      transition: width var(--sl-time-slow) var(--sl-ease-out);
+    }
+
+    .v-save {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--sl-space-5);
+    }
+
+    @media (max-width: 900px) {
+      .v-tile, .v-w3, .v-w6 { grid-column: span 6; }
+    }
+
+    @media (max-width: 560px) {
+      .v-tile, .v-w3, .v-w6, .v-w12 { grid-column: span 12; }
+    }
+  </style>
+</head>
+<body class="sl-summer">
+<main class="d-page" data-demo-page data-demo-band="Профиль">
+  <h1 class="sl-title">Настройки</h1>
+  <nav class="sl-cab-nav">
+  <a class="sl-cab-act sl-cat-tone-0" href="#" title="Возврат на страницу учетной записи"><span class="sl-cat-ico"><i class="bi bi-house" aria-hidden="true"></i></span><b>Главная</b></a>
+  <a class="sl-cab-act sl-cat-tone-1" href="#" title="Личные сообщения"><span class="sl-cab-badge">6</span><span class="sl-cat-ico"><i class="bi bi-envelope" aria-hidden="true"></i></span><b>Сообщения</b></a>
+  <a class="sl-cab-act sl-cat-tone-2" href="#" title="Персональный отдел клиента"><span class="sl-cat-ico"><i class="bi bi-people" aria-hidden="true"></i></span><b>Клиент</b></a>
+  <a class="sl-cab-act sl-cat-tone-3" href="#" title="Фавориты"><span class="sl-cat-ico"><i class="bi bi-star" aria-hidden="true"></i></span><b>Фавориты</b></a>
+  <a class="sl-cab-act sl-cat-tone-4" href="#" title="Персональная информация"><span class="sl-cat-ico"><i class="bi bi-person-vcard" aria-hidden="true"></i></span><b>Информация</b></a>
+  <a class="sl-cab-act sl-cat-tone-5" href="#" title="Настройки"><span class="sl-cat-ico"><i class="bi bi-gear" aria-hidden="true"></i></span><b>Настройки</b></a>
+  <a class="sl-cab-act sl-cat-tone-0" href="#" title="Выход"><span class="sl-cat-ico"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></span><b>Выход</b></a>
+</nav>
+
+  <form class="v-bento" method="post" action="#" data-demo-dirty>
+
+    <div class="v-tile v-w3 sl-cat-tone-3">
+      <div class="v-th"><i class="bi bi-person-badge" aria-hidden="true"></i><b>Аватар</b></div>
+      <div class="v-face"><img src="../templates/lite/images/avatars/presets/004.svg" alt="Текущее изображение" data-demo-face></div>
+      <p>Не более 100&times;100 точек и 50 Кб.</p>
+      <input type="file" name="userfile" class="sl-field-auto">
+    </div>
+
+    <div class="v-tile v-w6 sl-cat-tone-0">
+      <div class="v-th"><i class="bi bi-person-lines-fill" aria-hidden="true"></i><b>Личные данные</b></div>
+      <div class="v-fields">
+        <div><label>Ваше имя</label><input class="sl-field" type="text" value="Eduard" readonly></div>
+        <div><label>Ваш E-Mail</label><input class="sl-field" type="email" name="mail" value="slaed@example.com" maxlength="60" data-demo-fill required></div>
+        <div><label>Адрес сайта</label><input class="sl-field" type="text" name="site" value="https://slaed.net" maxlength="100" data-demo-fill></div>
+        <div><label>Дата рождения</label><input class="sl-field" type="date" name="user_birthday" value="1986-05-17" data-demo-fill></div>
+        <div><label>Пол</label><select class="sl-field sl-field--auto sl-field--account" name="gender" data-demo-fill><option value="0">Нет информации</option><option value="1" selected>Мужчина</option><option value="2">Женщина</option></select></div>
+        <div><label>Род занятий</label><input class="sl-field" type="text" name="occ" value="Разработчик" maxlength="100" data-demo-fill></div>
+        <div><label>Место жительства</label><input class="sl-field" type="text" name="from" value="" maxlength="100" data-demo-fill></div>
+        <div><label>Интересы</label><input class="sl-field" type="text" name="inter" value="" maxlength="150" data-demo-fill></div>
+        <div class="v-span2"><label>Подпись</label><textarea class="sl-field" name="sig" rows="3" data-demo-fill>SLAED CMS — просто, быстро, безопасно.</textarea>
+          <p class="d-hint">Это текст, который будет добавлять к размещаемым сообщениям.</p></div>
+      </div>
+    </div>
+
+    <div class="v-tile v-w3 v-meter" data-demo-meter>
+      <div class="v-th"><i class="bi bi-clipboard-check" aria-hidden="true"></i><b>Профиль</b></div>
+      <b data-demo-meter-num>0%</b>
+      <div class="v-bar-track"><span></span></div>
+      <p>Не заполнено полей: <span data-demo-meter-left>0</span>. Заполненный профиль виднее в поиске по пользователям.</p>
+      <div class="v-facts">
+        <div><small>Пункты</small><b>1&thinsp;240</b></div>
+        <div><small>Регистрация</small><b>14.03.2019</b></div>
+        <div><small>IP Адрес</small><b>192.168.1.24</b></div>
+      </div>
+    </div>
+
+    <div class="v-tile v-ask sl-cat-tone-1">
+      <div class="v-th"><i class="bi bi-newspaper" aria-hidden="true"></i><b>Получать новости по почте?</b></div>
+      <p>Рассылка выходит не чаще раза в неделю.</p>
+      <div class="sl-radio-group sl-radio-switch"><label class="sl-radio"><input type="radio" name="news" value="1" checked>Да</label><label class="sl-radio"><input type="radio" name="news" value="0">Нет</label></div>
+    </div>
+
+    <div class="v-tile v-ask sl-cat-tone-1">
+      <div class="v-th"><i class="bi bi-chat-dots" aria-hidden="true"></i><b>Уведомления о новых сообщениях в моих темах форума?</b></div>
+      <p>Одно письмо на тему, а не на сообщение.</p>
+      <div class="sl-radio-group sl-radio-switch"><label class="sl-radio"><input type="radio" name="fsmail" value="1" checked>Да</label><label class="sl-radio"><input type="radio" name="fsmail" value="0">Нет</label></div>
+    </div>
+
+    <div class="v-tile v-ask sl-cat-tone-1">
+      <div class="v-th"><i class="bi bi-envelope" aria-hidden="true"></i><b>Уведомления о новых личных сообщениях?</b></div>
+      <p>В кабинете они видны и без письма.</p>
+      <div class="sl-radio-group sl-radio-switch"><label class="sl-radio"><input type="radio" name="psmail" value="1">Да</label><label class="sl-radio"><input type="radio" name="psmail" value="0" checked>Нет</label></div>
+    </div>
+
+    <div class="v-tile v-ask sl-cat-tone-2">
+      <div class="v-th"><i class="bi bi-eye-slash" aria-hidden="true"></i><b>Разрешить другим пользователям видеть E-Mail?</b></div>
+      <p>Скрытый адрес не показывается нигде.</p>
+      <div class="sl-radio-group sl-radio-switch"><label class="sl-radio"><input type="radio" name="view" value="1">Да</label><label class="sl-radio"><input type="radio" name="view" value="0" checked>Нет</label></div>
+    </div>
+
+    <div class="v-tile v-w6 sl-cat-tone-2">
+      <div class="v-th"><i class="bi bi-palette2" aria-hidden="true"></i><b>Тема оформления</b></div>
+      <p>Как сайт выглядит лично для вас. На других пользователей выбор не влияет.</p>
+      <div class="v-skins">
+        <button class="v-skin" type="button" aria-pressed="true" style="--v-skin-tone: var(--sl-primary)"><span></span><b>lite</b></button>
+        <button class="v-skin" type="button" aria-pressed="false" style="--v-skin-tone: var(--sl-accent)"><span></span><b>slaed</b></button>
+        <button class="v-skin" type="button" aria-pressed="false" style="--v-skin-tone: var(--sl-warning)"><span></span><b>retro</b></button>
+      </div>
+    </div>
+
+    <div class="v-tile v-w3">
+      <div class="v-th"><i class="bi bi-list-ol" aria-hidden="true"></i><b>Публикаций на страницу</b></div>
+      <p>Сколько записей в списках новостей и статей.</p>
+      <select class="sl-field sl-field--auto sl-field--account" name="story" style="margin-top: auto"><option>3</option><option>5</option><option selected>10</option><option>15</option><option>20</option></select>
+    </div>
+
+    <div class="v-tile v-w6 sl-cat-tone-2">
+      <div class="v-th"><i class="bi bi-list-ul" aria-hidden="true"></i><b>Собственное меню</b></div>
+      <div class="sl-radio-group sl-radio-switch"><label class="sl-radio"><input type="radio" name="blockon" value="1" checked>Да</label><label class="sl-radio"><input type="radio" name="blockon" value="0">Нет</label></div>
+      <textarea class="sl-field" name="block" rows="4">[url=index.php?name=news]Новости[/url]</textarea>
+      <p>Собственное меню будет отражаться в блоке с правой или с левой стороны на всех страница сайта. Вы должны использовать BB код для указания адреса или ссылки.</p>
+    </div>
+
+    <div class="v-tile v-w6 sl-cat-tone-4">
+      <div class="v-th"><i class="bi bi-key" aria-hidden="true"></i><b>Смена пароля</b></div>
+      <div class="v-fields">
+        <div><label>Введите новый пароль</label><input class="sl-field" type="password" name="newpass" maxlength="25"></div>
+        <div><label>Повторите новый пароль</label><input class="sl-field" type="password" name="newpass2" maxlength="25"></div>
+        <div class="v-span2"><label>Введите текущий пароль</label><input class="sl-field" type="password" name="oldpass" maxlength="25"></div>
+      </div>
+      <p>После успешного изменения пароля, система обновить ваш сеанс и вам нужно войти заново. Если ничего не получится, обратитесь к администратору сайта для разрешения этой проблемы.</p>
+    </div>
+
+    <div class="v-tile v-w6 sl-cat-tone-5">
+      <div class="v-th"><i class="bi bi-diagram-3" aria-hidden="true"></i><b>Внешние сервисы</b></div>
+      <ul class="sl-oauth-list">
+        <li class="sl-oauth-item">
+          <span class="sl-oauth-name"><i class="bi bi-github" aria-hidden="true"></i> Github</span>
+          <span class="sl-oauth-mail">slaed@example.com</span>
+          <span class="sl-oauth-since">02.02.2026</span>
+          <span class="sl-post-button"><button class="sl-but-mini" type="button" title="Удалить"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span>
+        </li>
+      </ul>
+      <div class="sl-oauth-row">
+        <a class="sl-but sl-oauth-but" href="#" rel="nofollow"><i class="bi bi-google" aria-hidden="true"></i> Google</a>
+        <a class="sl-but sl-oauth-but" href="#" rel="nofollow"><i class="bi bi-chat-square-text" aria-hidden="true"></i> Yandex</a>
+        <a class="sl-but sl-oauth-but" href="#" rel="nofollow"><i class="bi bi-people" aria-hidden="true"></i> ВКонтакте</a>
+      </div>
+    </div>
+
+    <div class="v-tile v-w12 sl-cat-tone-3">
+      <div class="v-th"><i class="bi bi-images" aria-hidden="true"></i><b>Галерея аватаров</b></div>
+      <p>Выберите понравившийся вам аватар из галереи, для этого достаточно нажатия левой кнопкой мыши на желаемом изображении.</p>
+      <div class="d-avas" data-demo-presets="32" data-demo-presets-pick="4"></div>
+    </div>
+
+    <div class="v-tile v-w12 v-save">
+      <p>Изменения применяются ко всем разделам сразу.</p>
+      <span style="display: inline-flex; gap: var(--sl-space-3)">
+        <button class="sl-but-mini" type="button" data-demo-clean>Отменить</button>
+        <button class="sl-but" type="submit">Сохранить изменения</button>
+      </span>
+    </div>
+
+  </form>
+</main>
+<script src="assets/demo.js"></script>
+</body>
+</html>

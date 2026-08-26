@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Стенд презентационной страницы SLAED CMS — двадцать три варианта</title>
+  <title>Стенд оформления SLAED CMS — две серии вариантов</title>
   <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
   <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
   <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
@@ -12,15 +12,15 @@
 <body class="sl-summer" data-demo-gallery>
   <div class="sl-wrp">
     <div class="demo-hero">
-      <h1 class="sl-font">Презентационная страница <code>index.php?name=main</code>, двадцать три варианта</h1>
-      <p>Каждый вариант — целая страница в настоящей обвязке сайта: та же шапка, то же меню, тот же подвал,
-      те же CSS-переменные и классы темы <code>lite</code>. Отличается только композиция главной: как расставлены
-      первый экран, четыре опоры системы, цифры, примеры внедрений, новости и файлы.</p>
-      <p>Наполнение во всех вариантах одинаковое до буквы — иначе сравнивались бы тексты, а не оформление.
-      Ни один вариант ничего не добавляет в тему: всё, что нужно варианту сверх темы, живёт в единственном блоке
-      <code>&lt;style&gt;</code> внутри его файла, а общий ритм разделов задаёт <code>assets/demo.css</code>.</p>
+      <h1 class="sl-font">Стенд оформления: две серии вариантов</h1>
+      <p>Первая серия — презентационная страница <code>index.php?name=main</code>. Вторая — отдел настроек аккаунта
+      <code>index.php?name=account&amp;op=edithome</code>. Каждый вариант — целая страница в настоящей обвязке сайта:
+      та же шапка, то же меню, тот же подвал, те же CSS-переменные и классы темы <code>lite</code>.</p>
+      <p>Наполнение внутри серии одинаковое до буквы — иначе сравнивались бы тексты, а не оформление. Ни один вариант
+      ничего не добавляет в тему: всё, что нужно варианту сверх темы, живёт в единственном блоке
+      <code>&lt;style&gt;</code> внутри его файла, а общий ритм задаёт <code>assets/demo.css</code>.</p>
       <p>Плитки ниже — живые страницы во фреймах, а не картинки, поэтому анимация в них идёт по-настоящему.
-      Варианты, отвечающие на курсор, ждут указателя на самой странице варианта.</p>
+      Варианты, отвечающие на курсор или на ввод, ждут указателя на самой странице варианта.</p>
       <div class="demo-hero-tools">
         <button type="button" class="sl-but" data-demo-set="mode" data-demo-value="light">Светлая</button>
         <button type="button" class="sl-but" data-demo-set="mode" data-demo-value="auto">Системная</button>
@@ -32,35 +32,41 @@
         <button type="button" class="sl-but" data-demo-set="season" data-demo-value="sl-newyear">Новый год</button>
       </div>
     </div>
-    <div class="demo-grid" id="demo-gallery"></div>
+    <div id="demo-gallery"></div>
   </div>
   <script src="assets/demo.js"></script>
   <script>
-    /* The gallery: one card per manifest entry, each showing the variant itself in a frame rather than a picture
-       of it. The frame carries the current mode and season in its query, so the whole wall repaints at once. */
+    /* The gallery: one section per series, one card per manifest entry, each showing the variant itself in a frame
+       rather than a picture of it. The frame carries the current mode and season in its query, so the whole wall
+       repaints at once. Numbering restarts in every series, because a series is its own subject. */
     (function () {
-      const grid = document.getElementById('demo-gallery');
+      const wrap = document.getElementById('demo-gallery');
       const state = {
         mode: localStorage.getItem('demo.mode') || 'auto',
         season: localStorage.getItem('demo.season') || 'sl-summer',
       };
+
+      function drawCard(v, i) {
+        const src = v.file + '?bare=1&mode=' + state.mode + '&season=' + state.season;
+        const no = String(i + 1).padStart(2, '0');
+        return '<article class="demo-card">'
+          + '<div class="demo-card-frame"><iframe src="' + src + '" loading="lazy" title="' + v.title + '"></iframe></div>'
+          + '<div class="demo-card-body">'
+          + '<h2><a href="' + v.file + '" title="' + v.title + '">' + no + ' &middot; ' + v.title + '</a></h2>'
+          + '<p>' + v.note + '</p>'
+          + '<div class="demo-tags">' + v.tags.map((t) => '<span class="demo-tag">' + t + '</span>').join('') + '</div>'
+          + '</div></article>';
+      }
 
       function draw() {
         document.documentElement.dataset.theme = state.mode;
         document.body.className = state.season;
         localStorage.setItem('demo.mode', state.mode);
         localStorage.setItem('demo.season', state.season);
-        grid.innerHTML = DEMO_VARIANTS.map((v, i) => {
-          const src = v.file + '?bare=1&mode=' + state.mode + '&season=' + state.season;
-          const no = String(i + 1).padStart(2, '0');
-          return '<article class="demo-card">'
-            + '<div class="demo-card-frame"><iframe src="' + src + '" loading="lazy" title="' + v.title + '"></iframe></div>'
-            + '<div class="demo-card-body">'
-            + '<h2><a href="' + v.file + '" title="' + v.title + '">' + no + ' &middot; ' + v.title + '</a></h2>'
-            + '<p>' + v.note + '</p>'
-            + '<div class="demo-tags">' + v.tags.map((t) => '<span class="demo-tag">' + t + '</span>').join('') + '</div>'
-            + '</div></article>';
-        }).join('');
+        wrap.innerHTML = DEMO_SERIES.map((s) =>
+          '<h2 class="demo-series">' + s.title + ' <code>' + s.addr + '</code> <small>'
+          + s.items.length + '</small></h2>'
+          + '<div class="demo-grid">' + s.items.map(drawCard).join('') + '</div>').join('');
         document.querySelectorAll('[data-demo-set]').forEach((b) => {
           b.setAttribute('aria-pressed', String(state[b.dataset.demoSet] === b.dataset.demoValue));
         });

@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>06 &middot; Палитра — стенд настроек аккаунта SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* The palette. Tabs and accordions both answer the same question — where does this setting live — and both
+       demand that the reader already know the answer. A search field does not: type "почт" and the four mail
+       settings stand alone on the page, wherever they were filed. The groups stay, because with an empty field
+       the page has to be readable as a list; they simply fold away when nothing in them survives the query. */
+    .v-pal {
+      --v-mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+      max-width: var(--d-page);
+      margin-inline: auto;
+      padding: var(--sl-space-7) 0 var(--sl-space-11);
+    }
+
+    /* The field is the header of the page: large, sticky and the only thing above the list */
+    .v-seek {
+      position: sticky;
+      top: 0;
+      z-index: var(--sl-z-dropdown);
+      padding: var(--sl-space-5) 0;
+      background: var(--sl-bg);
+    }
+
+    .v-seek-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-4);
+      padding: var(--sl-space-4) var(--sl-space-6);
+      border: 1px solid var(--sl-border-strong);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-surface);
+      box-shadow: var(--sl-shadow-raised);
+      transition: box-shadow var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-seek-box:focus-within {
+      box-shadow: var(--sl-shadow-focus), var(--sl-shadow-raised);
+    }
+
+    .v-seek-box > .bi {
+      color: var(--sl-text-muted);
+      font-size: var(--sl-size-icon-md);
+    }
+
+    .v-seek input {
+      flex: 1;
+      min-width: 0;
+      border: 0;
+      background: none;
+      color: var(--sl-text-strong);
+      font-size: var(--sl-font-h4);
+      font-family: inherit;
+      outline: none;
+    }
+
+    .v-seek input::placeholder { color: var(--sl-text-muted); }
+
+    .v-kbd {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-1);
+      padding: var(--sl-space-1) var(--sl-space-3);
+      border: 1px solid var(--sl-border-muted);
+      border-radius: var(--sl-radius-1);
+      color: var(--sl-text-muted);
+      font-family: var(--v-mono);
+      font-size: var(--sl-font-micro);
+      white-space: nowrap;
+    }
+
+    .v-hints {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--sl-space-3);
+      margin-top: var(--sl-space-4);
+    }
+
+    .v-hints button {
+      padding: var(--sl-space-2) var(--sl-space-4);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-bg);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+      cursor: pointer;
+      transition:
+        border-color var(--sl-time-base) var(--sl-ease-out),
+        color var(--sl-time-base) var(--sl-ease-out),
+        background var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-hints button:hover {
+      border-color: var(--sl-primary);
+      background: var(--sl-tint);
+      color: var(--sl-primary-strong);
+    }
+
+    .v-hints span {
+      margin-left: auto;
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .v-grp {
+      margin-top: var(--sl-space-7);
+    }
+
+    .v-grp > h2 {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      margin: 0 0 var(--sl-space-3);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-micro);
+      font-weight: var(--sl-weight-semibold);
+      letter-spacing: var(--sl-track-wide);
+      text-transform: uppercase;
+    }
+
+    /* A hit: the whole row is one line of a result list, and the control stands where the answer would be */
+    .v-hit {
+      display: grid;
+      grid-template-columns: var(--sl-size-chip) minmax(0, 1fr) minmax(0, auto);
+      align-items: center;
+      gap: var(--sl-space-5);
+      padding: var(--sl-space-4) var(--sl-space-5);
+      border-radius: var(--sl-radius-2);
+      transition: background var(--sl-time-fast) var(--sl-ease-out);
+    }
+
+    .v-hit:hover { background: var(--sl-surface); }
+
+    .v-hit > .bi {
+      display: grid;
+      place-items: center;
+      width: var(--sl-size-chip);
+      height: var(--sl-size-chip);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-bg-muted);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-size-icon-sm);
+    }
+
+    .v-hit b {
+      display: block;
+      color: var(--sl-text-strong);
+      font-weight: var(--sl-weight-medium);
+    }
+
+    .v-hit small {
+      display: block;
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+      line-height: var(--sl-line-normal);
+    }
+
+    .v-hit .sl-field { min-width: var(--d-field); }
+
+    .v-hit-wide {
+      grid-template-columns: var(--sl-size-chip) minmax(0, 1fr);
+      align-items: start;
+    }
+
+    .v-hit-wide > div:last-child {
+      grid-column: 2;
+      width: 100%;
+      margin-top: var(--sl-space-3);
+    }
+
+    .v-hit-wide .sl-field { width: 100%; min-width: 0; }
+
+    .v-none {
+      padding: var(--sl-space-9);
+      border: 1px dashed var(--sl-border-muted);
+      border-radius: var(--sl-radius-3);
+      color: var(--sl-text-muted);
+      text-align: center;
+    }
+
+    .v-save {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--sl-space-3);
+      margin-top: var(--sl-space-9);
+      padding-top: var(--sl-space-6);
+      border-top: 1px solid var(--sl-border);
+    }
+
+    @media (max-width: 768px) {
+      .v-hit {
+        grid-template-columns: var(--sl-size-chip) minmax(0, 1fr);
+      }
+
+      .v-hit > div:last-child {
+        grid-column: 2;
+        margin-top: var(--sl-space-3);
+      }
+
+      .v-hit .sl-field { min-width: 0; width: 100%; }
+      .v-kbd { display: none; }
+    }
+  </style>
+</head>
+<body class="sl-summer">
+<main class="d-page" data-demo-page data-demo-band="Профиль">
+  <h1 class="sl-title">Настройки</h1>
+  <nav class="sl-cab-nav">
+  <a class="sl-cab-act sl-cat-tone-0" href="#" title="Возврат на страницу учетной записи"><span class="sl-cat-ico"><i class="bi bi-house" aria-hidden="true"></i></span><b>Главная</b></a>
+  <a class="sl-cab-act sl-cat-tone-1" href="#" title="Личные сообщения"><span class="sl-cab-badge">6</span><span class="sl-cat-ico"><i class="bi bi-envelope" aria-hidden="true"></i></span><b>Сообщения</b></a>
+  <a class="sl-cab-act sl-cat-tone-2" href="#" title="Персональный отдел клиента"><span class="sl-cat-ico"><i class="bi bi-people" aria-hidden="true"></i></span><b>Клиент</b></a>
+  <a class="sl-cab-act sl-cat-tone-3" href="#" title="Фавориты"><span class="sl-cat-ico"><i class="bi bi-star" aria-hidden="true"></i></span><b>Фавориты</b></a>
+  <a class="sl-cab-act sl-cat-tone-4" href="#" title="Персональная информация"><span class="sl-cat-ico"><i class="bi bi-person-vcard" aria-hidden="true"></i></span><b>Информация</b></a>
+  <a class="sl-cab-act sl-cat-tone-5" href="#" title="Настройки"><span class="sl-cat-ico"><i class="bi bi-gear" aria-hidden="true"></i></span><b>Настройки</b></a>
+  <a class="sl-cab-act sl-cat-tone-0" href="#" title="Выход"><span class="sl-cat-ico"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></span><b>Выход</b></a>
+</nav>
+
+  <form class="v-pal" method="post" action="#" data-demo-dirty>
+
+    <div class="v-seek">
+      <div class="v-seek-box">
+        <i class="bi bi-search" aria-hidden="true"></i>
+        <input type="search" data-demo-filter placeholder="Найти настройку: почта, пароль, аватар, тема&hellip;" aria-label="Поиск по настройкам">
+        <span class="v-kbd">Ctrl + K</span>
+      </div>
+      <div class="v-hints">
+        <button type="button" data-demo-seek="почт">почта</button>
+        <button type="button" data-demo-seek="пароль">пароль</button>
+        <button type="button" data-demo-seek="аватар">аватар</button>
+        <button type="button" data-demo-seek="тема">тема</button>
+        <button type="button" data-demo-seek="меню">меню</button>
+        <span>найдено: <b data-demo-tally>0</b></span>
+      </div>
+    </div>
+
+    <section class="v-grp" data-demo-group>
+      <h2><i class="bi bi-person-lines-fill" aria-hidden="true"></i> Личные данные</h2>
+      <div class="v-hit" data-demo-find="имя логин ник">
+        <i class="bi bi-person" aria-hidden="true"></i>
+        <div><b>Ваше имя</b><small>Изменить его может только администратор</small></div>
+        <div><input class="sl-field" type="text" value="Eduard" readonly></div>
+      </div>
+      <div class="v-hit" data-demo-find="email почта адрес письма">
+        <i class="bi bi-at" aria-hidden="true"></i>
+        <div><b>Ваш E-Mail</b><small>Адрес для писем системы и восстановления пароля</small></div>
+        <div><input class="sl-field" type="email" name="mail" value="slaed@example.com" maxlength="60" data-demo-fill required></div>
+      </div>
+      <div class="v-hit" data-demo-find="сайт url ссылка">
+        <i class="bi bi-link-45deg" aria-hidden="true"></i>
+        <div><b>Адрес сайта</b></div>
+        <div><input class="sl-field" type="text" name="site" value="https://slaed.net" maxlength="100" data-demo-fill></div>
+      </div>
+      <div class="v-hit" data-demo-find="день рождения возраст дата">
+        <i class="bi bi-cake2" aria-hidden="true"></i>
+        <div><b>Дата рождения</b></div>
+        <div><input class="sl-field" type="date" name="user_birthday" value="1986-05-17" data-demo-fill></div>
+      </div>
+      <div class="v-hit" data-demo-find="пол мужчина женщина">
+        <i class="bi bi-gender-ambiguous" aria-hidden="true"></i>
+        <div><b>Пол</b></div>
+        <div><select class="sl-field sl-field--auto sl-field--account" name="gender" data-demo-fill><option value="0">Нет информации</option><option value="1" selected>Мужчина</option><option value="2">Женщина</option></select></div>
+      </div>
+      <div class="v-hit" data-demo-find="занятие работа профессия">
+        <i class="bi bi-briefcase" aria-hidden="true"></i>
+        <div><b>Род занятий</b></div>
+        <div><input class="sl-field" type="text" name="occ" value="Разработчик" maxlength="100" data-demo-fill></div>
+      </div>
+      <div class="v-hit" data-demo-find="город страна место жительства">
+        <i class="bi bi-geo-alt" aria-hidden="true"></i>
+        <div><b>Место жительства</b></div>
+        <div><input class="sl-field" type="text" name="from" value="" maxlength="100" data-demo-fill></div>
+      </div>
+      <div class="v-hit" data-demo-find="интересы увлечения хобби">
+        <i class="bi bi-stars" aria-hidden="true"></i>
+        <div><b>Интересы</b></div>
+        <div><input class="sl-field" type="text" name="inter" value="" maxlength="150" data-demo-fill></div>
+      </div>
+      <div class="v-hit v-hit-wide" data-demo-find="подпись сообщения форум">
+        <i class="bi bi-pen" aria-hidden="true"></i>
+        <div><b>Подпись</b><small>Это текст, который будет добавлять к размещаемым сообщениям.</small></div>
+        <div><textarea class="sl-field" name="sig" rows="3" data-demo-fill>SLAED CMS — просто, быстро, безопасно.</textarea></div>
+      </div>
+    </section>
+
+    <section class="v-grp" data-demo-group>
+      <h2><i class="bi bi-envelope-paper" aria-hidden="true"></i> Публикации и почта</h2>
+      <div class="v-hit" data-demo-find="публикаций страница новости количество">
+        <i class="bi bi-list-ol" aria-hidden="true"></i>
+        <div><b>Количество публикаций на страницу</b></div>
+        <div><select class="sl-field sl-field--auto sl-field--account" name="story"><option>3</option><option>5</option><option selected>10</option><option>15</option><option>20</option></select></div>
+      </div>
+      <div class="v-hit" data-demo-find="почта рассылка новости письма">
+        <i class="bi bi-newspaper" aria-hidden="true"></i>
+        <div><b>Получать новости по почте?</b></div>
+        <div><div class="sl-radio-group sl-radio-switch"><label class="sl-radio"><input type="radio" name="news" value="1" checked>Да</label><label class="sl-radio"><input type="radio" name="news" value="0">Нет</label></div></div>
+      </div>
+      <div class="v-hit" data-demo-find="почта форум уведомления темы">
+        <i class="bi bi-chat-dots" aria-hidden="true"></i>
+        <div><b>Получать уведомления о новых сообщениях в моих темах форума?</b></div>
+        <div><div class="sl-radio-group sl-radio-switch"><label class="sl-radio"><input type="radio" name="fsmail" value="1" checked>Да</label><label class="sl-radio"><input type="radio" name="fsmail" value="0">Нет</label></div></div>
+      </div>
+      <div class="v-hit" data-demo-find="почта личные сообщения уведомления">
+        <i class="bi bi-envelope" aria-hidden="true"></i>
+        <div><b>Получать уведомления о новых личных сообщениях?</b></div>
+        <div><div class="sl-radio-group sl-radio-switch"><label class="sl-radio"><input type="radio" name="psmail" value="1">Да</label><label class="sl-radio"><input type="radio" name="psmail" value="0" checked>Нет</label></div></div>
+      </div>
+    </section>
+
+    <section class="v-grp" data-demo-group>
+      <h2><i class="bi bi-shield-lock" aria-hidden="true"></i> Приватность и вид</h2>
+      <div class="v-hit" data-demo-find="email приватность видимость">
+        <i class="bi bi-eye-slash" aria-hidden="true"></i>
+        <div><b>Разрешить другим пользователям видеть E-Mail?</b></div>
+        <div><div class="sl-radio-group sl-radio-switch"><label class="sl-radio"><input type="radio" name="view" value="1">Да</label><label class="sl-radio"><input type="radio" name="view" value="0" checked>Нет</label></div></div>
+      </div>
+      <div class="v-hit" data-demo-find="меню блок собственное">
+        <i class="bi bi-toggles" aria-hidden="true"></i>
+        <div><b>Активировать собственное меню?</b></div>
+        <div><div class="sl-radio-group sl-radio-switch"><label class="sl-radio"><input type="radio" name="blockon" value="1" checked>Да</label><label class="sl-radio"><input type="radio" name="blockon" value="0">Нет</label></div></div>
+      </div>
+      <div class="v-hit v-hit-wide" data-demo-find="меню блок bb код ссылки">
+        <i class="bi bi-list-ul" aria-hidden="true"></i>
+        <div><b>Собственное меню</b><small>Собственное меню будет отражаться в блоке с правой или с левой стороны на всех страница сайта. Вы должны использовать BB код для указания адреса или ссылки.</small></div>
+        <div><textarea class="sl-field" name="block" rows="4">[url=index.php?name=news]Новости[/url]</textarea></div>
+      </div>
+      <div class="v-hit" data-demo-find="тема оформление шаблон дизайн">
+        <i class="bi bi-palette2" aria-hidden="true"></i>
+        <div><b>Тема оформления</b><small>Как сайт выглядит лично для вас</small></div>
+        <div><select class="sl-field sl-field--auto sl-field--account" name="theme"><option selected>lite</option><option>slaed</option><option>retro</option></select></div>
+      </div>
+    </section>
+
+    <section class="v-grp" data-demo-group>
+      <h2><i class="bi bi-person-badge" aria-hidden="true"></i> Аватар</h2>
+      <div class="v-hit" data-demo-find="аватар картинка изображение">
+        <i class="bi bi-image" aria-hidden="true"></i>
+        <div><b>Текущее изображение</b><small>Не более 100&times;100 точек и 50 Кб</small></div>
+        <div><span class="sl-profile-avatar" style="margin: 0"><img src="../templates/lite/images/avatars/presets/004.svg" alt="Текущее изображение" data-demo-face></span></div>
+      </div>
+      <div class="v-hit" data-demo-find="аватар загрузить файл">
+        <i class="bi bi-upload" aria-hidden="true"></i>
+        <div><b>Загрузить аватар с компьютера</b></div>
+        <div><input type="file" name="userfile" class="sl-field-auto"></div>
+      </div>
+      <div class="v-hit v-hit-wide" data-demo-find="аватар галерея выбрать">
+        <i class="bi bi-images" aria-hidden="true"></i>
+        <div><b>Галерея аватаров</b><small>Выберите понравившийся вам аватар из галереи, для этого достаточно нажатия левой кнопкой мыши на желаемом изображении.</small></div>
+        <div><span class="d-avas" data-demo-presets="24" data-demo-presets-pick="4"></span></div>
+      </div>
+    </section>
+
+    <section class="v-grp" data-demo-group>
+      <h2><i class="bi bi-key" aria-hidden="true"></i> Безопасность</h2>
+      <div class="v-hit" data-demo-find="пароль новый смена">
+        <i class="bi bi-shield-plus" aria-hidden="true"></i>
+        <div><b>Введите новый пароль</b><small>После смены система обновит сеанс и попросит войти заново</small></div>
+        <div><input class="sl-field" type="password" name="newpass" maxlength="25"></div>
+      </div>
+      <div class="v-hit" data-demo-find="пароль повтор">
+        <i class="bi bi-shield-check" aria-hidden="true"></i>
+        <div><b>Повторите новый пароль</b></div>
+        <div><input class="sl-field" type="password" name="newpass2" maxlength="25"></div>
+      </div>
+      <div class="v-hit" data-demo-find="пароль текущий старый">
+        <i class="bi bi-shield-lock" aria-hidden="true"></i>
+        <div><b>Введите текущий пароль</b></div>
+        <div><input class="sl-field" type="password" name="oldpass" maxlength="25"></div>
+      </div>
+      <div class="v-hit" data-demo-find="github oauth внешние сервисы вход">
+        <i class="bi bi-github" aria-hidden="true"></i>
+        <div><b>Github</b><small>slaed@example.com &middot; привязан 02.02.2026</small></div>
+        <div><button class="sl-but-mini" type="button" title="Удалить"><i class="bi bi-x-lg" aria-hidden="true"></i></button></div>
+      </div>
+      <div class="v-hit v-hit-wide" data-demo-find="google yandex вконтакте oauth привязать вход">
+        <i class="bi bi-diagram-3" aria-hidden="true"></i>
+        <div><b>Привязать внешний сервис</b><small>Вход через сторонний аккаунт заменяет пароль, но не отменяет его</small></div>
+        <div><span class="sl-oauth-row">
+          <a class="sl-but sl-oauth-but" href="#" rel="nofollow"><i class="bi bi-google" aria-hidden="true"></i> Google</a>
+          <a class="sl-but sl-oauth-but" href="#" rel="nofollow"><i class="bi bi-chat-square-text" aria-hidden="true"></i> Yandex</a>
+          <a class="sl-but sl-oauth-but" href="#" rel="nofollow"><i class="bi bi-people" aria-hidden="true"></i> ВКонтакте</a>
+        </span></div>
+      </div>
+    </section>
+
+    <section class="v-grp" data-demo-group>
+      <h2><i class="bi bi-info-circle" aria-hidden="true"></i> Об аккаунте</h2>
+      <div class="v-hit" data-demo-find="ip адрес"><i class="bi bi-hdd-network" aria-hidden="true"></i><div><b>IP Адрес</b></div><div>192.168.1.24</div></div>
+      <div class="v-hit" data-demo-find="регистрация дата"><i class="bi bi-calendar3" aria-hidden="true"></i><div><b>Регистрация</b></div><div>14.03.2019</div></div>
+      <div class="v-hit" data-demo-find="пункты очки рейтинг"><i class="bi bi-trophy" aria-hidden="true"></i><div><b>Пункты</b></div><div>1&thinsp;240</div></div>
+    </section>
+
+    <p class="v-none" data-demo-empty hidden>По этому запросу ничего не нашлось. Попробуйте «почта», «пароль» или «аватар».</p>
+
+    <div class="v-save">
+      <button class="sl-but-mini" type="button" data-demo-clean>Отменить</button>
+      <button class="sl-but" type="submit">Сохранить изменения</button>
+    </div>
+  </form>
+</main>
+<script src="assets/demo.js"></script>
+</body>
+</html>

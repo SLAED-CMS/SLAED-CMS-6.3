@@ -31,6 +31,67 @@
    one rhythm so a variant is judged by what it does differently, not by whether
    its section padding happened to be larger. A variant overrides freely. */
 
+/* --- Stand tokens ---------------------------------------------------------------------------------------
+   The theme is the authority. A value the theme already names reads its `--sl-*` token and never appears here;
+   what lands here is what the theme legitimately does not carry, because it is the decision of a stand page and
+   not of the CMS — the measure of a column of prose, the size a variant draws a face at, the floor a question
+   tile stands on, the thickness of a mark's ring.
+
+   Where a value goes follows the theme's own law for component tokens. A value read by two or more variants is
+   hoisted here as `--d-*`. A value read by exactly one stays in that variant as a `--v-*` declared on its root
+   and holding its own literal, which is how the theme itself spells `--sl-spin-dur`. An alias with one use and
+   no shared intent is a defect in either file.
+
+   One part of the stand is deliberately outside this: the floating control panel (`.demo-panel*`) must look the
+   same whatever theme is loaded and whatever a variant does to the page, so it carries its own values and reads
+   no token. The rest of the chrome — the gallery, the hero, the note card — is ordinary stand markup and reads
+   the theme like any variant. */
+:root {
+  /* Border widths above the hairline. The theme allowlists `1px` and needs nothing thicker; a stand that draws
+     rails, selection rings and status edges does. */
+  --d-line: 2px;
+  --d-line-thick: 3px;
+
+  /* The lift a plate takes under the pointer. Not a spacing step: it is the distance of a motion, read against
+     the shadow that grows with it. */
+  --d-lift: 2px;
+
+  /* Measure: how wide a column of prose may run. Counted in characters, because that is what a measure is —
+     the theme has no such axis, it sizes regions and controls in pixels. */
+  --d-measure: 60ch;
+  --d-measure-tight: 48ch;
+
+  /* The column a variant centres its composition on. One value, so ten compositions are compared at one width
+     and not at four. */
+  --d-page: 900px;
+
+  /* Faces: the sizes a variant draws a person at. Both stand above `--sl-size-avatar`, which is the size a row
+     of a list gives a face and not the size a profile card does. */
+  --d-face: 72px;
+  --d-face-lg: 96px;
+
+  /* A field that must not shrink to its content when it stands at the end of a row */
+  --d-field: 240px;
+  --d-field-sm: 140px;
+
+  /* The floor a yes/no tile stands on, so a row of them lines up instead of stepping with the length of its
+     question */
+  --d-tile-ask: 140px;
+
+  /* One pulse. Duration carries the character of an animation and has no ladder — the theme spells this the
+     same way, with a component token holding its own literal. */
+  --d-pulse-dur: 2s;
+
+  /* Written from outside CSS, by `demo.js`: the filled share of the profile and the section the rail stands on.
+     The theme carries the same idea under `--sl-d-*`. The values below are what a page shows before the script
+     has run, so a variant opened with JavaScript off is still a correct page rather than an empty one. */
+  --d-meter: 0;
+  --d-step: 1;
+
+  /* Written the same way, by a variant rather than by the rig: the natural height of one screenshot */
+  --d-shot-height: 166px;
+}
+
 .d-page {
   --d-sec-pad: var(--sl-space-11);
 }
@@ -504,4 +565,101 @@
   border-radius: var(--sl-radius-pill);
   background: var(--sl-bg-muted);
   color: var(--sl-text-muted);
+}
+
+
+/* The preset avatar, written by setDemoPresets() into every variant that shows the gallery. The button is the
+   picture and nothing else: no chrome around a face, only the ring that says which face is the chosen one. */
+.d-ava {
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg-muted);
+  cursor: pointer;
+  line-height: 0;
+  outline-offset: var(--sl-space-1);
+  box-shadow: 0 0 0 1px var(--sl-border);
+  transition:
+    box-shadow var(--sl-time-base) var(--sl-ease-out),
+    transform var(--sl-time-base) var(--sl-ease-out);
+}
+
+.d-ava img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: inherit;
+}
+
+.d-ava:hover {
+  transform: translateY(calc(var(--d-lift) * -1));
+  box-shadow: 0 0 0 1px var(--sl-border-strong), var(--sl-shadow-raised);
+}
+
+.d-ava[aria-pressed="true"] {
+  box-shadow: 0 0 0 var(--d-line) var(--sl-primary), var(--sl-shadow-raised);
+}
+
+/* The gallery itself: as many faces as fit, never fewer than four across */
+.d-avas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: var(--sl-space-3);
+}
+
+/* The hint under a field: the sentence the CMS already carries for it, set small and muted so the field stays
+   the thing being read and the explanation stays available. */
+.d-hint {
+  margin: var(--sl-space-2) 0 0;
+  font-size: var(--sl-font-small);
+  line-height: var(--sl-line-normal);
+  color: var(--sl-text-muted);
+}
+
+/* The gallery heading of a series: the subject and the address it stands for, plus how many variants it holds */
+.demo-series {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sl-space-4);
+  margin: var(--sl-space-11) 0 var(--sl-space-6);
+  padding-bottom: var(--sl-space-4);
+  border-bottom: 1px solid var(--sl-border);
+  font-size: var(--sl-font-h2);
+  color: var(--sl-text-strong);
+}
+
+.demo-series code {
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+.demo-series small {
+  margin-left: auto;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Nothing picked yet: the sentence that stands where the row will stand, so the place is never simply blank */
+.d-pick-none {
+  display: block;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+/* The limits of a place, printed under its zone in the words the module already uses */
+.d-limits {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-2) var(--sl-space-4);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+.d-limits code {
+  color: var(--sl-text);
+  font-size: var(--sl-font-micro);
 }

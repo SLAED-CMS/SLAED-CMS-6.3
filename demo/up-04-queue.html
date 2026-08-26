@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>04 &middot; Очередь — стенд добавления файла SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="../templates/lite/assets/editors/toastui/skin.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* The queue. A file is rarely one file — a theme package is an archive and three screenshots, and the form
+       that takes them one at a time makes the reader submit four times. The zone takes a handful, and under it
+       stands the list: a line per file, its kind, its name, its weight, and the way back out. The quota bar of
+       the window comes down with it, because "will this fit" is a question asked before the upload and not after.
+       Nothing here invents a progress bar: the stand shows the shape of the gesture, not a transfer it never made. */
+    .v-sec {
+      margin-top: var(--sl-space-9);
+      padding-top: var(--sl-space-7);
+      border-top: 1px solid var(--sl-border);
+    }
+
+    .v-note {
+      margin: var(--sl-space-4) 0 0;
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+      line-height: var(--sl-line-normal);
+    }
+
+    .v-editor {
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-1);
+      background: var(--sl-surface);
+      padding: var(--sl-space-3) var(--sl-space-4);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+  </style>
+</head>
+<body class="sl-summer">
+<main class="d-page" data-demo-page data-demo-band="Каталог файлов">
+  <ul class="sl-navi-menu">
+    <li><a href="#" title="Каталог файлов" class="sl-but">Главная</a></li>
+    <li><a href="#" title="Лучшие" class="sl-but">Лучшие</a></li>
+    <li><a href="#" title="Популярные" class="sl-but">Популярные</a></li>
+    <li><a href="#" title="Список" class="sl-but">Список</a></li>
+    <li><a href="#" title="Добавить" class="sl-but">Добавить</a></li>
+  </ul>
+
+  <h1 class="sl-title">Добавить</h1>
+
+  <div class="sl-alert sl-alert-info">
+    <div class="sl-alert-body"><p class="sl-alert-text">Все файлы проходят проверку перед публикацией! Будьте внимательны при заполнении формы. Допустимые к загрузке на сервер форматы файлов: zip, gz, 7z, rar, tar. Максимально допустимый размер загружаемого файла 10 MB. Если файл, который Вы хотите предложить, не соответствует указанным требованиям, воспользуйтесь возможностью указать к нему ссылку. Обращаем внимание на то, что ссылка должна указывать непосредственно на файл, а не на страницу сайта, каталога и т.д.</p></div>
+  </div>
+
+  <form class="sl-form" method="post" action="#" enctype="multipart/form-data">
+    <div class="sl-form-row">
+      <label class="sl-form-label">Ваше имя</label>
+      <div class="sl-form-field"><span class="sl-form-value">SLAED CMS</span></div>
+    </div>
+    <div class="sl-form-row">
+      <label class="sl-form-label">E-Mail автора</label>
+      <div class="sl-form-field"><input class="sl-field" type="email" name="mail" value="support@slaed.net" maxlength="100" placeholder="E-Mail автора"></div>
+    </div>
+    <div class="sl-form-row">
+      <label class="sl-form-label">Название</label>
+      <div class="sl-form-field"><input class="sl-field" type="text" name="title" value="" placeholder="Название" required></div>
+    </div>
+    <div class="sl-form-row">
+      <label class="sl-form-label">Категория</label>
+      <div class="sl-form-field"><select class="sl-field sl-field--auto" name="cid"><option selected>На главной странице модуля</option><option>Скрипты</option><option>Модули</option><option>Темы оформления</option></select></div>
+    </div>
+    <div class="sl-form-row">
+      <label class="sl-form-label">Текст</label>
+      <div class="sl-form-field"><p class="v-editor"><i class="bi bi-pencil-square" aria-hidden="true"></i> Редактор Toast UI во всю ширину строки — здесь он же и открывает файловый менеджер кнопкой с папкой.</p></div>
+    </div>
+    <div class="sl-form-row">
+      <label class="sl-form-label">Сайт</label>
+      <div class="sl-form-field"><input class="sl-field" type="url" name="home" value="https://slaed.net" maxlength="100" placeholder="Сайт"></div>
+    </div>
+
+    <div class="sl-form-row">
+      <label class="sl-form-label">Загрузить файлы с компьютера</label>
+      <div class="sl-form-field sl-toastui-upload">
+        <div data-demo-msg></div>
+        <div class="sl-fm-drop" data-demo-drop="file" data-demo-ext="zip,gz,7z,rar,tar" data-demo-maxbytes="10485760" data-demo-maxfiles="5" data-demo-maxquota="104857600" data-demo-used="0" tabindex="0" role="button" aria-label="Перетащите файлы сюда или нажмите на поле">
+          <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
+          <b>Перетащите файлы сюда или нажмите на поле</b>
+          <small data-demo-limits></small>
+          <input type="file" name="userfile[]" class="sl-toastui-file-input" multiple>
+        </div>
+        <div class="sl-fm-queue" data-demo-queue style="margin-top: var(--sl-space-4)">
+          <span class="sl-fm-queue-cap">
+            <b data-demo-queue-cap></b>
+            <button type="button" class="sl-but-mini sl-is-muted" data-demo-stopall hidden title="Остановить очередь" aria-label="Остановить очередь"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+          </span>
+          <div data-demo-picked="file">
+            <span class="d-pick-none">Пока пусто. Можно бросить сразу несколько — архив, скриншоты, описание. Отказ одного файла не останавливает остальные.</span>
+          </div>
+        </div>
+        <div class="sl-fm-quota" data-demo-quota>
+          <span>Занято в модуле</span>
+          <span class="sl-fm-quota-track"><span class="sl-fm-quota-fill"></span></span>
+          <span data-demo-quota-num></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sl-form-row">
+      <label class="sl-form-label">Ссылка</label>
+      <div class="sl-form-field">
+        <input class="sl-field" type="url" name="url" value="" maxlength="100" placeholder="Ссылка">
+        <p class="v-note">Если файл не подходит по формату или весу — укажите ссылку прямо на файл, а не на страницу сайта.</p>
+      </div>
+    </div>
+
+    <div class="sl-form-row">
+      <label class="sl-form-label">Версия</label>
+      <div class="sl-form-field"><input class="sl-field" type="text" name="fversion" value="" maxlength="10" placeholder="Версия"></div>
+    </div>
+    <div class="sl-form-row">
+      <label class="sl-form-label">Размер</label>
+      <div class="sl-form-field"><input class="sl-field" type="text" name="fsize" value="" maxlength="10" placeholder="Размер"></div>
+    </div>
+
+    <div class="sl-form-submit"><button class="sl-but" type="submit">Добавить</button></div>
+  </form>
+
+  <div class="v-sec">
+    <h2 class="sl-title">Настройки аватара</h2>
+    <form class="sl-form" method="post" action="#" enctype="multipart/form-data">
+      <div class="sl-form-row">
+        <label class="sl-form-label">Текущее изображение</label>
+        <div class="sl-form-field sl-toastui-upload">
+          <p style="margin: 0 0 var(--sl-space-4)"><img src="../templates/lite/images/avatars/presets/004.svg" alt="Текущее изображение" data-demo-face width="72" height="72" style="border-radius: var(--sl-radius-circle); background: var(--sl-bg-muted); box-shadow: var(--sl-avatar-shadow)"></p>
+          <div data-demo-msg></div>
+          <div class="sl-fm-drop" data-demo-drop="avatar" data-demo-drop-face data-demo-ext="jpg,jpeg,gif,png" data-demo-maxbytes="51200" data-demo-maxfiles="1" data-demo-maxwidth="100" data-demo-maxheight="100" tabindex="0" role="button" aria-label="Перетащите изображение сюда или нажмите на поле">
+            <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
+            <b>Перетащите изображение сюда или нажмите на поле</b>
+            <small data-demo-limits></small>
+            <input type="file" name="userfile" class="sl-toastui-file-input" accept="image/*">
+          </div>
+          <div class="sl-fm-queue" data-demo-queue style="margin-top: var(--sl-space-4)">
+            <span class="sl-fm-queue-cap">
+              <b data-demo-queue-cap></b>
+              <button type="button" class="sl-but-mini sl-is-muted" data-demo-stopall hidden title="Остановить очередь" aria-label="Остановить очередь"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+            </span>
+            <div data-demo-picked="avatar">
+              <span class="d-pick-none">Своё изображение не выбрано. Аватар всегда один: правило этого места разрешает один файл за раз.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sl-form-row">
+        <label class="sl-form-label">Галерея темы</label>
+        <div class="sl-form-field">
+          <div class="d-avas" data-demo-presets="24" data-demo-presets-pick="4"></div>
+          <p class="v-note">Выберите понравившийся вам аватар из галереи, для этого достаточно нажатия левой кнопкой мыши на желаемом изображении.</p>
+        </div>
+      </div>
+      <div class="sl-form-submit"><button class="sl-but" type="submit">Загрузить</button></div>
+    </form>
+  </div>
+</main>
+<script src="assets/demo.js"></script>
+</body>
+</html>
