@@ -243,13 +243,13 @@ function setComShow(int $id = 0, int $acomm = 0): string {
                 'input_attr' => 'maxlength="25"',
                 'itype' => 'text',
                 'name_attr' => 'name',
+                'input_id' => 'f-name',
                 'value_attr' => _ANONYM,
             ]);
         }
-        $fields = $tpl->getHtmlFrag('form-field-row', ['label' => _YOURNAME, 'field_html' => $name_field])
+        $fields = $tpl->getHtmlFrag('form-field-row', ['label_for' => is_user() ? '' : 'f-name', 'label' => _YOURNAME, 'field_html' => $name_field])
             .$tpl->getHtmlFrag('form-field-row', [
                 'label' => _COMMENT,
-                'hide_label' => true,
                 'field_html' => getTplTextarea([
                     'id' => 'ctext',
                     'name' => 'text',
@@ -900,7 +900,7 @@ function getPrivateMessageView(string|array $stop = '', string $info = '', int $
         $mass['delete'] = (string)_DELETE;
         $opts = '';
         foreach ($mass as $key => $lab) $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $key, 'label_text' => $lab]);
-        $bulk = $tpl->getHtmlFrag('inline-badge', ['is_action_label' => true, 'label' => _CHECKOP])
+        $bulk = $tpl->getHtmlFrag('inline-badge', ['label' => _CHECKOP])
             .$tpl->getHtmlFrag('select', [
                 'name_attr' => 'act', 'title' => _CHECKOP, 'options_html' => $opts, 'select_attr' => 'form="prbulk"',
             ])

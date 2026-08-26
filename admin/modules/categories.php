@@ -79,16 +79,18 @@ function add(): void {
     ];
     $rows0 = [
         ['label_html' => _ACTIVATE2, 'field_html' => getTplRadioGroup(['name' => 'status', 'value' => '0', 'options' => $yesno])],
-        ['label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', [
+        ['label_for' => 'f-title', 'label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'text',
             'name_attr' => 'title',
+            'input_id' => 'f-title',
             'value_attr' => '',
             'maxlength_num' => 255,
             'placeholder_text' => _TITLE,
             'is_required' => true,
         ])],
-        ['label_html' => _DESCRIPTION, 'field_html' => $tpl->getHtmlFrag('textarea', [
+        ['label_for' => 'f-description', 'label_html' => _DESCRIPTION, 'field_html' => $tpl->getHtmlFrag('textarea', [
             'name_attr' => 'description',
+            'input_id' => 'f-description',
             'value_text' => '',
             'is_config' => true,
         ])],
@@ -96,7 +98,7 @@ function add(): void {
         ['label_html' => _MODUL, 'field_html' => getTplCategoryModule('modul', 'sl-form-control', $modul)],
     ];
     if ($conf['multilingual'] == 1) {
-        $rows0[] = ['label_html' => _LANGUAGE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => getTplLanguageOptions()])];
+        $rows0[] = ['label_for' => 'f-lang', 'label_html' => _LANGUAGE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options_html' => getTplLanguageOptions()])];
     }
     $rows1 = [
         ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_VIEW, 'hint' => $hint]), 'field_html' => catacess('pview', 'sl-form-control', '', 0)],
@@ -165,16 +167,18 @@ function subadd(): void {
         $rows0 = [
             ['label_html' => _ACTIVATE2, 'field_html' => getTplRadioGroup(['name' => 'status', 'value' => '0', 'options' => $yesno])],
             ['label_html' => _CATEGORY, 'field_html' => getTplCategorySelect($modul, 0, 'cid', 'sl-form-control')],
-            ['label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', [
+            ['label_for' => 'f-title', 'label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
                 'name_attr' => 'title',
+                'input_id' => 'f-title',
                 'value_attr' => '',
                 'maxlength_num' => 255,
                 'placeholder_text' => _TITLE,
                 'is_required' => true,
             ])],
-            ['label_html' => _DESCRIPTION, 'field_html' => $tpl->getHtmlFrag('textarea', [
+            ['label_for' => 'f-description', 'label_html' => _DESCRIPTION, 'field_html' => $tpl->getHtmlFrag('textarea', [
                 'name_attr' => 'description',
+                'input_id' => 'f-description',
                 'value_text' => '',
                 'is_config' => true,
             ])],
@@ -182,7 +186,7 @@ function subadd(): void {
             ['label_html' => _MODUL, 'field_html' => getTplCategoryModule('modul', 'sl-form-control', $modul)],
         ];
         if ($conf['multilingual'] == 1) {
-            $rows0[] = ['label_html' => _LANGUAGE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => getTplLanguageOptions()])];
+            $rows0[] = ['label_for' => 'f-lang', 'label_html' => _LANGUAGE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options_html' => getTplLanguageOptions()])];
         }
         $rows1 = [
             ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_VIEW, 'hint' => $hint]), 'field_html' => catacess('pview', 'sl-form-control', '', 0)],
@@ -310,16 +314,18 @@ function edit(): void {
     ];
     $rows0 = [
         ['label_html' => _ACTIVATE2, 'field_html' => getTplRadioGroup(['name' => 'status', 'value' => $status, 'options' => $yesno])],
-        ['label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', [
+        ['label_for' => 'f-title', 'label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'text',
             'name_attr' => 'title',
+            'input_id' => 'f-title',
             'value_attr' => (string)$title,
             'maxlength_num' => 255,
             'placeholder_text' => _TITLE,
             'is_required' => true,
         ])],
-        ['label_html' => _DESCRIPTION, 'field_html' => $tpl->getHtmlFrag('textarea', [
+        ['label_for' => 'f-description', 'label_html' => _DESCRIPTION, 'field_html' => $tpl->getHtmlFrag('textarea', [
             'name_attr' => 'description',
+            'input_id' => 'f-description',
             'value_text' => (string)$desc,
             'is_config' => true,
         ])],
@@ -330,7 +336,7 @@ function edit(): void {
         $rows0[] = ['label_html' => _CATEGORY, 'field_html' => getTplCategorySelect($modul, $parent, 'parent', 'sl-form-control')];
     }
     if ($conf['multilingual'] == 1) {
-        $rows0[] = ['label_html' => _LANGUAGE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => getTplLanguageOptions($lang)])];
+        $rows0[] = ['label_for' => 'f-lang', 'label_html' => _LANGUAGE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options_html' => getTplLanguageOptions($lang)])];
     }
     $rows1 = [
         ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_VIEW, 'hint' => $hint]), 'field_html' => catacess('pview', 'sl-form-control', $pview, 0)],

@@ -396,35 +396,38 @@ function add(): void {
         if (!is_user()) $postname = $postname ?: _ANONYM;
         $extra = '';
         if ($conf['files']['upload'] == 1) {
-            $extra .= $tpl->getHtmlFrag('form-field-row', ['label' => _FILE_USER, 'field_html' => $tpl->getHtmlFrag('file-input', ['name_attr' => 'userfile'])]);
+            $extra .= $tpl->getHtmlFrag('form-field-row', ['label_for' => 'f-userfile', 'label' => _FILE_USER, 'field_html' => $tpl->getHtmlFrag('file-input', ['name_attr' => 'userfile', 'input_id' => 'f-userfile'])]);
         }
         $extra .= $tpl->getHtmlFrag('form-field-row', [
+            'label_for' => 'f-url',
             'label' => _URL,
-            'hide_label' => true,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'name_attr' => 'url',
+                'input_id' => 'f-url',
                 'value_attr' => $url,
                 'maxlength_num' => '100',
                 'placeholder_text' => _URL,
             ]),
         ]);
         $extra .= $tpl->getHtmlFrag('form-field-row', [
+            'label_for' => 'f-fversion',
             'label' => _VERSION,
-            'hide_label' => true,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
                 'name_attr' => 'fversion',
+                'input_id' => 'f-fversion',
                 'value_attr' => $fversion,
                 'maxlength_num' => '10',
                 'placeholder_text' => _VERSION,
             ]),
         ]);
         $extra .= $tpl->getHtmlFrag('form-field-row', [
+            'label_for' => 'f-fsize',
             'label' => _SIZE,
-            'hide_label' => true,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
                 'name_attr' => 'fsize',
+                'input_id' => 'f-fsize',
                 'value_attr' => $fsize,
                 'maxlength_num' => '10',
                 'placeholder_text' => _SIZE,
@@ -433,13 +436,14 @@ function add(): void {
         $fields = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('files')]);
         $nameField = is_user()
             ? $tpl->getHtmlFrag('span', ['is_form_value' => true, 'text' => filterText(substr($user[1], 0, 25))])
-            : $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'postname', 'value_attr' => $postname, 'placeholder_text' => _YOURNAME, 'is_required' => true]);
-        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _YOURNAME, 'hide_label' => !is_user(), 'field_html' => $nameField]);
+            : $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'postname', 'input_id' => 'f-postname', 'value_attr' => $postname, 'placeholder_text' => _YOURNAME, 'is_required' => true]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', ['label_for' => is_user() ? '' : 'f-postname', 'label' => _YOURNAME, 'field_html' => $nameField]);
         $fields .= $tpl->getHtmlFrag('form-field-row', [
+            'label_for' => 'f-mail',
             'label' => _AUEMAIL,
-            'hide_label' => true,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'name_attr' => 'mail',
+                'input_id' => 'f-mail',
                 'value_attr' => $mail,
                 'maxlength_num' => 100,
                 'placeholder_text' => _AUEMAIL,
@@ -447,21 +451,21 @@ function add(): void {
             ]),
         ]);
         $fields .= $tpl->getHtmlFrag('form-field-row', [
+            'label_for' => 'f-title',
             'label' => _NAME,
-            'hide_label' => true,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
                 'name_attr' => 'title',
+                'input_id' => 'f-title',
                 'value_attr' => $title,
                 'maxlength_num' => 100,
                 'placeholder_text' => _NAME,
                 'is_required' => true,
             ]),
         ]);
-        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _CATEGORY, 'field_html' => getTplCategorySelect($conf['name'], $cid, 'cid', '', $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => false]))]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', ['label_for' => 'f-cid', 'label' => _CATEGORY, 'field_html' => getTplCategorySelect($conf['name'], $cid, 'cid', '', $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => false]))]);
         $fields .= $tpl->getHtmlFrag('form-field-row', [
             'label' => _TEXT,
-            'hide_label' => true,
             'field_html' => getTplTextarea([
                 'id' => '1',
                 'name' => 'description',
@@ -475,7 +479,6 @@ function add(): void {
         ]);
         $fields .= $tpl->getHtmlFrag('form-field-row', [
             'label' => _ENDTEXT,
-            'hide_label' => true,
             'field_html' => getTplTextarea([
                 'id' => '2',
                 'name' => 'bodytext',
@@ -488,10 +491,11 @@ function add(): void {
             ]),
         ]);
         $fields .= $tpl->getHtmlFrag('form-field-row', [
+            'label_for' => 'f-home',
             'label' => _SITE,
-            'hide_label' => true,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'name_attr' => 'home',
+                'input_id' => 'f-home',
                 'value_attr' => $home,
                 'maxlength_num' => 100,
                 'placeholder_text' => _SITE,

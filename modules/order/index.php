@@ -25,14 +25,13 @@ function order(): void {
         $note = getVar('post', 'note', 'text');
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
         $rows = $tpl->getHtmlFrag('form-field-row', [
+            'label_for' => 'f-mail',
             'label' => _OR_2,
-            'hide_label' => true,
-            'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'maxlength="255" placeholder="'._OR_2.'" required', 'name_attr' => 'mail', 'value_attr' => $mail]),
+            'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'maxlength="255" placeholder="'._OR_2.'" required', 'name_attr' => 'mail', 'input_id' => 'f-mail', 'value_attr' => $mail]),
         ]);
         $rows .= getTplFieldsIn(['field' => $field, 'mod' => $conf['name']]);
         $rows .= $tpl->getHtmlFrag('form-field-row', [
             'label' => _OR_3,
-            'hide_label' => true,
             'field_html' => getTplTextarea([
                 'id' => '1',
                 'name' => 'note',

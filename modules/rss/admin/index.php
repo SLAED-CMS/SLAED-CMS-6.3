@@ -43,9 +43,9 @@ function rss(): void {
     }
     $sourcehtml = implode('', $rows);
     $prefs = [
-        ['label_html' => _RSSMIN, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'min', 'value_attr' => (string)($conf['rss']['min'] ?? 10), 'is_required' => true])],
-        ['label_html' => _RSSMAX, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'max', 'value_attr' => (string)($conf['rss']['max'] ?? 100), 'is_required' => true])],
-        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _RSSTEMP, 'hint' => _RSSTEMPINFO]), 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'temp', 'value_text' => (string)($conf['rss']['temp'] ?? ''), 'rows_num' => 5, 'is_required' => true]), 'is_full' => true],
+        ['label_for' => 'f-min', 'label_html' => _RSSMIN, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'min', 'input_id' => 'f-min', 'value_attr' => (string)($conf['rss']['min'] ?? 10), 'is_required' => true])],
+        ['label_for' => 'f-max', 'label_html' => _RSSMAX, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'max', 'input_id' => 'f-max', 'value_attr' => (string)($conf['rss']['max'] ?? 100), 'is_required' => true])],
+        ['label_for' => 'f-temp', 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _RSSTEMP, 'hint' => _RSSTEMPINFO]), 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'temp', 'input_id' => 'f-temp', 'value_text' => (string)($conf['rss']['temp'] ?? ''), 'rows_num' => 5, 'is_required' => true]), 'is_full' => true],
         ['label_html' => _RSSACT, 'field_html' => getTplRadioGroup(['name' => 'act', 'value' => (string)($conf['rss']['act'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _RSSUSE, 'field_html' => getTplRadioGroup(['name' => 'use', 'value' => (string)($conf['rss']['use'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
     ];

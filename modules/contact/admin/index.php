@@ -26,9 +26,11 @@ function contact(): void {
             ]),
         ],
         [
+            'label_for' => 'f-info',
             'label_html' => _CONTACTINFO,
             'field_html' => $tpl->getHtmlFrag('textarea', [
                 'name_attr' => 'info',
+                'input_id' => 'f-info',
                 'value_text' => $conf['contact']['info'],
                 'rows_num' => 10,
             ]),

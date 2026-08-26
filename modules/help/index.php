@@ -336,7 +336,6 @@ function addview(int $id): string {
             .$rows
             .$tpl->getHtmlFrag('form-field-row', [
                 'label' => _TEXT,
-                'hide_label' => true,
                 'field_html' => getTplTextarea([
                     'id' => '1',
                     'name' => 'hometext',
@@ -371,21 +370,21 @@ function add(): void {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _HSUBMIT]);
         $fields = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('help')]);
         $fields .= $tpl->getHtmlFrag('form-field-row', [
+            'label_for' => 'f-title',
             'label' => _TITLE,
-            'hide_label' => true,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
                 'name_attr' => 'title',
+                'input_id' => 'f-title',
                 'value_attr' => $title,
                 'maxlength_num' => 100,
                 'placeholder_text' => _TITLE,
                 'is_required' => true,
             ]),
         ]);
-        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _CATEGORY, 'field_html' => getTplCategorySelect($conf['name'], $cid, 'catid', '', $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => false]))]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', ['label_for' => 'f-catid', 'label' => _CATEGORY, 'field_html' => getTplCategorySelect($conf['name'], $cid, 'catid', '', $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => false]))]);
         $fields .= $tpl->getHtmlFrag('form-field-row', [
             'label' => _TEXT,
-            'hide_label' => true,
             'field_html' => getTplTextarea([
                 'id' => '1',
                 'name' => 'hometext',

@@ -147,7 +147,7 @@ function news(): void {
             .$tpl->getHtmlFrag('select-optgroup', ['label_text' => _OPMOD, 'options_html' => $modopts])
             .$tpl->getHtmlFrag('select-optgroup', ['label_text' => _MOVETO, 'options_html' => $catopts]);
         $pager = getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => $field, 'table' => '_news', 'field' => 'id', 'where' => $wcnt, 'where_params' => $pars]);
-        $actions = $tpl->getHtmlFrag('inline-badge', ['is_action_label' => true, 'label' => _CHECKOP]).' '.$tpl->getHtmlFrag('select', ['name_attr' => 'typ', 'options_html' => $actopts])
+        $actions = $tpl->getHtmlFrag('inline-badge', ['label' => _CHECKOP]).' '.$tpl->getHtmlFrag('select', ['name_attr' => 'typ', 'options_html' => $actopts])
             .$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'submit_label' => _OK]);
         $body = $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php?name=news&op=actions',
@@ -277,8 +277,8 @@ function add(): void {
                 'value' => $postname,
             ]),
         ],
-        ['label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'subject', 'value_attr' => $subject, 'maxlength_num' => 255, 'is_required' => true])],
-        ['label_html' => _CATEGORY, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cat', 'options_html' => $catopts])],
+        ['label_for' => 'f-subject', 'label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'subject', 'input_id' => 'f-subject', 'value_attr' => $subject, 'maxlength_num' => 255, 'is_required' => true])],
+        ['label_for' => 'f-cat', 'label_html' => _CATEGORY, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cat', 'selectid' => 'f-cat', 'options_html' => $catopts])],
         ['label_html' => _TEXT, 'field_html' => getTplTextarea([
             'id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => 'news', 'store' => 'news.intro', 'rows' => 5, 'placeholder' => _TEXT, 'required' => '1',
             'autofocus' => true,
@@ -287,9 +287,9 @@ function add(): void {
             'id' => '2', 'name' => 'bodytext', 'value' => $bodytext, 'mod' => 'news', 'store' => 'news.body', 'rows' => 15, 'placeholder' => _ENDTEXT, 'required' => '0',
         ]), 'is_full' => true, 'field_unwrapped' => true],
         ['label_html' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])],
-        ['label_html' => _VOTING, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'vote', 'options_html' => $voteopts])],
+        ['label_for' => 'f-vote', 'label_html' => _VOTING, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'vote', 'selectid' => 'f-vote', 'options_html' => $voteopts])],
         ['label_html' => _PUBHOME, 'field_html' => getTplRadioGroup(['name' => 'ihome', 'value' => (string)$ihome, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => _COMMENTS, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'acomm', 'options_html' => $commopts])],
+        ['label_for' => 'f-acomm', 'label_html' => _COMMENTS, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'acomm', 'selectid' => 'f-acomm', 'options_html' => $commopts])],
         ['label_html' => _FIXED.'?', 'field_html' => getTplRadioGroup(['name' => 'fix', 'value' => (string)$fix, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _ASSOTOPIC, 'hint' => _ASSOTOPICI]), 'field_html' => $assohtml, 'is_full' => true],
     ];
@@ -428,14 +428,14 @@ function config(): void {
     $cont .= checkPerms(CONFIG_DIR.'/news.php');
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows = [
-        ['label_html' => _CDEFIS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'defis', 'value_attr' => urldecode($conf['news']['defis'] ?? '')])],
-        ['label_html' => _BASCOL, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'bascol', 'value_attr' => $conf['news']['bascol'] ?? 1])],
-        ['label_html' => _C_11, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'asocnum', 'value_attr' => $conf['news']['asocnum'] ?? 10])],
-        ['label_html' => _C_13, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'listnum', 'value_attr' => $conf['news']['listnum'] ?? 10])],
-        ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => $conf['news']['num'] ?? 25])],
-        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => $conf['news']['anum'] ?? 25])],
-        ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => $conf['news']['nump'] ?? 10])],
-        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => $conf['news']['anump'] ?? 10])],
+        ['label_for' => 'f-defis', 'label_html' => _CDEFIS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'defis', 'input_id' => 'f-defis', 'value_attr' => urldecode($conf['news']['defis'] ?? '')])],
+        ['label_for' => 'f-bascol', 'label_html' => _BASCOL, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'bascol', 'input_id' => 'f-bascol', 'value_attr' => $conf['news']['bascol'] ?? 1])],
+        ['label_for' => 'f-asocnum', 'label_html' => _C_11, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'asocnum', 'input_id' => 'f-asocnum', 'value_attr' => $conf['news']['asocnum'] ?? 10])],
+        ['label_for' => 'f-listnum', 'label_html' => _C_13, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'listnum', 'input_id' => 'f-listnum', 'value_attr' => $conf['news']['listnum'] ?? 10])],
+        ['label_for' => 'f-num', 'label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'input_id' => 'f-num', 'value_attr' => $conf['news']['num'] ?? 25])],
+        ['label_for' => 'f-anum', 'label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => $conf['news']['anum'] ?? 25])],
+        ['label_for' => 'f-nump', 'label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'input_id' => 'f-nump', 'value_attr' => $conf['news']['nump'] ?? 10])],
+        ['label_for' => 'f-anump', 'label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => $conf['news']['anump'] ?? 10])],
         ['label_html' => _HOMCAT, 'field_html' => getTplRadioGroup(['name' => 'homcat', 'value' => (string)($conf['news']['homcat'] ?? 0), 'options' => $yesno])],
         ['label_html' => _VIEWCAT, 'field_html' => getTplRadioGroup(['name' => 'viewcat', 'value' => (string)($conf['news']['viewcat'] ?? 0), 'options' => $yesno])],
         ['label_html' => _C_32, 'field_html' => getTplRadioGroup(['name' => 'catdesc', 'value' => (string)($conf['news']['catdesc'] ?? 0), 'options' => $yesno])],

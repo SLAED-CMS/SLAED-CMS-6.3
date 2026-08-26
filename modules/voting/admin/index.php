@@ -174,13 +174,13 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
     if ($id) $cont .= $tpl->getHtmlPart('box', ['content_html' => getVotingView($id, 'voting', true)]);
     $rows = [
-        ['label_html' => _TITLE.' / '._POLLTITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'is_required' => true, 'maxlength_num' => 255])],
+        ['label_for' => 'f-title', 'label_html' => _TITLE.' / '._POLLTITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'input_id' => 'f-title', 'value_attr' => $title, 'is_required' => true, 'maxlength_num' => 255])],
         ['label_html' => _MODUL, 'field_html' => getVotingModuleSelect($modul)],
         ['label_html' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'date', 'time' => $date, 'with' => true, 'max' => 16])],
         ['label_html' => _ENDDATE, 'field_html' => getTplAddDateTime(['name' => 'enddate', 'time' => $enddate, 'with' => true, 'max' => 16])],
     ];
     if ($conf['multilingual'] == 1) {
-        $rows[] = ['label_html' => _LANGUAGE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => getTplLanguageOptions($lang)])];
+        $rows[] = ['label_for' => 'f-lang', 'label_html' => _LANGUAGE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options_html' => getTplLanguageOptions($lang)])];
     }
     $rows[] = ['label_html' => _COMMENTS, 'field_html' => getVotingCommentSelect((int)$acomm)];
     $rows[] = ['label_html' => _MULTI, 'field_html' => getTplRadioGroup(['name' => 'multi', 'value' => $multi, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
@@ -306,12 +306,12 @@ function config(): void {
     $cont .= checkPerms(CONFIG_DIR.'/voting.php');
     $bval = (string)($conf['voting']['block'] ?? '0');
     $rows = [
-        ['label_html' => _VOTING_TIME, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'time', 'value_attr' => (string)intval($conf['voting']['voting_t'] / 86400), 'is_config' => true])],
-        ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)$conf['voting']['num'], 'is_config' => true])],
-        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$conf['voting']['anum'], 'is_config' => true])],
-        ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => (string)$conf['voting']['nump'], 'is_config' => true])],
-        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$conf['voting']['anump'], 'is_config' => true])],
-        ['label_html' => _VANSW, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'answ', 'value_attr' => (string)$conf['voting']['answ'], 'is_config' => true])],
+        ['label_for' => 'f-time', 'label_html' => _VOTING_TIME, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'time', 'input_id' => 'f-time', 'value_attr' => (string)intval($conf['voting']['voting_t'] / 86400), 'is_config' => true])],
+        ['label_for' => 'f-num', 'label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'input_id' => 'f-num', 'value_attr' => (string)$conf['voting']['num'], 'is_config' => true])],
+        ['label_for' => 'f-anum', 'label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => (string)$conf['voting']['anum'], 'is_config' => true])],
+        ['label_for' => 'f-nump', 'label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'input_id' => 'f-nump', 'value_attr' => (string)$conf['voting']['nump'], 'is_config' => true])],
+        ['label_for' => 'f-anump', 'label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => (string)$conf['voting']['anump'], 'is_config' => true])],
+        ['label_for' => 'f-answ', 'label_html' => _VANSW, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'answ', 'input_id' => 'f-answ', 'value_attr' => (string)$conf['voting']['answ'], 'is_config' => true])],
         ['label_html' => _VBLOCK, 'field_html' => getVotingBlockSelect($bval)],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [

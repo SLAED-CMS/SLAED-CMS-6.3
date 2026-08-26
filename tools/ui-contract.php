@@ -583,9 +583,8 @@ return [
         '.sl-tabs-content' =>
             'the panel drops its panel straight under the strip with one gap; the site draws it as a surface with a border, a ground and its own padding',
         '.sl-form-row' =>
-            'the panel form row is a horizontal pair, the site row a stacked one, which is what a narrow column asks for and a wide panel does not',
-        '.sl-form-label' =>
-            'the same pair from the label\'s side: a fixed column that may not shrink in the panel, a line above the field on the site',
+            'both rows put the label left and the field right; the panel builds the pair out of a flex box whose label carries the width, the site out of '
+            .'two grid tracks it can collapse to one on a narrow screen and for the editor, which is the one field a half row cannot hold',
         '.sl-session-line, .sl-session-row' =>
             'the site lays the session line out as a grid of two tracks so the count keeps its column; the panel lets it flow, because the sidebar it '
             .'sits in is already narrow enough to hold the pair',

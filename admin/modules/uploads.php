@@ -348,10 +348,10 @@ function config(): void {
     $tlab = $tpl->getHtmlFrag('label-hint', ['label' => _TPFORM, 'hint' => _TPFORMIN.' '.$typs]);
     $tarea = $tpl->getHtmlFrag('textarea', ['name_attr' => 'ttyp', 'is_config' => true, 'is_required' => true, 'value_text' => $conf['uploads']['typ']]);
     $rows = [
-        ['label_html' => _DIRDEF, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'dir', 'is_config' => true, 'options_html' => $directory])],
+        ['label_for' => 'f-dir', 'label_html' => _DIRDEF, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'dir', 'selectid' => 'f-dir', 'is_config' => true, 'options_html' => $directory])],
         ['label_html' => $tlab, 'field_html' => $tarea],
-        ['label_html' => _TPWIDTH, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'twidth', 'is_config' => true, 'is_required' => true, 'value_attr' => (string)$conf['uploads']['width']])],
-        ['label_html' => _TPHEIGHT, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'theight', 'is_config' => true, 'is_required' => true, 'value_attr' => (string)$conf['uploads']['height']])],
+        ['label_for' => 'f-twidth', 'label_html' => _TPWIDTH, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'twidth', 'input_id' => 'f-twidth', 'is_config' => true, 'is_required' => true, 'value_attr' => (string)$conf['uploads']['width']])],
+        ['label_for' => 'f-theight', 'label_html' => _TPHEIGHT, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'theight', 'input_id' => 'f-theight', 'is_config' => true, 'is_required' => true, 'value_attr' => (string)$conf['uploads']['height']])],
     ];
     $tabone = $tpl->getHtmlPart('div', ['rows' => $rows]);
     $blocks = '';

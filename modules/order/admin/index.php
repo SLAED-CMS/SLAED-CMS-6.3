@@ -98,9 +98,9 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => array_values((array)$stop)]);
     if ($field) $cont .= getTplPreviewContent(['title' => $email, 'texta' => $field, 'textb' => _COMMENT.': '.$note, 'mod' => 'all']);
     $rows = [
-        ['label_html' => _OR_9, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'email', 'value_attr' => $email, 'is_required' => true])],
+        ['label_for' => 'f-email', 'label_html' => _OR_9, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'email', 'input_id' => 'f-email', 'value_attr' => $email, 'is_required' => true])],
         ['label_html' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'date', 'time' => $date, 'with' => true, 'max' => 16])],
-        ['label_html' => _OR_10, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'note', 'value_text' => $note, 'placeholder_text' => _OR_10]), 'is_full' => true],
+        ['label_for' => 'f-note', 'label_html' => _OR_10, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'note', 'input_id' => 'f-note', 'value_text' => $note, 'placeholder_text' => _OR_10]), 'is_full' => true],
     ];
     $rows = array_merge($rows, getTplAddFieldRows(['field' => $field, 'mod' => 'order']));
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
@@ -194,9 +194,9 @@ function config(): void {
     $cont .= checkPerms(CONFIG_DIR.'/order.php');
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows = [
-        ['label_html' => _OR_1, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mail', 'value_attr' => $conf['order']['mail'] ?? ''])],
-        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => $conf['order']['anum'] ?? 25])],
-        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => $conf['order']['anump'] ?? 10])],
+        ['label_for' => 'f-mail', 'label_html' => _OR_1, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mail', 'input_id' => 'f-mail', 'value_attr' => $conf['order']['mail'] ?? ''])],
+        ['label_for' => 'f-anum', 'label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => $conf['order']['anum'] ?? 25])],
+        ['label_for' => 'f-anump', 'label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => $conf['order']['anump'] ?? 10])],
         ['label_html' => _OR_2, 'field_html' => getTplRadioGroup(['name' => 'an', 'value' => (string)($conf['order']['an'] ?? 0), 'options' => $yesno])],
         ['label_html' => _OR_3, 'field_html' => getTplRadioGroup(['name' => 'pr', 'value' => (string)($conf['order']['pr'] ?? 0), 'options' => $yesno])],
         ['label_html' => _OR_4, 'field_html' => getTplRadioGroup(['name' => 'ad', 'value' => (string)($conf['order']['ad'] ?? 0), 'options' => $yesno])],

@@ -124,10 +124,10 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
     $rows = [
         ['label_html' => _POSTEDBY, 'field_html' => getTplUserSearchInput(['name' => 'postname', 'input_id' => 'postname', 'list_id' => 'postname_list', 'value' => $postname])],
-        ['label_html' => _SITE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'domain', 'value_attr' => $domain, 'is_required' => true])],
-        ['label_html' => _HOST, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'host', 'value_attr' => $host])],
-        ['label_html' => _DC, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'dc', 'value_attr' => $dc])],
-        ['label_html' => _COMMENT, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'hometext', 'value_text' => $hometext, 'rows_num' => 5]), 'is_full' => true],
+        ['label_for' => 'f-domain', 'label_html' => _SITE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'domain', 'input_id' => 'f-domain', 'value_attr' => $domain, 'is_required' => true])],
+        ['label_for' => 'f-host', 'label_html' => _HOST, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'host', 'input_id' => 'f-host', 'value_attr' => $host])],
+        ['label_for' => 'f-dc', 'label_html' => _DC, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'dc', 'input_id' => 'f-dc', 'value_attr' => $dc])],
+        ['label_for' => 'f-hometext', 'label_html' => _COMMENT, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'hometext', 'input_id' => 'f-hometext', 'value_text' => $hometext, 'rows_num' => 5]), 'is_full' => true],
     ];
     $actions = $tpl->getHtmlFrag('button', ['label' => _SAVECHANGES, 'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'save\'; this.form.submit();"']);
     if ($wid) {
@@ -200,8 +200,8 @@ function config(): void {
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/whois.php');
     $rows = [
-        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)($conf['whois']['anum'] ?? 10), 'is_config' => true])],
-        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)($conf['whois']['anump'] ?? 10), 'is_config' => true])],
+        ['label_for' => 'f-anum', 'label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => (string)($conf['whois']['anum'] ?? 10), 'is_config' => true])],
+        ['label_for' => 'f-anump', 'label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => (string)($conf['whois']['anump'] ?? 10), 'is_config' => true])],
         ['label_html' => _ADDAMAIL, 'field_html' => getTplRadioGroup(['name' => 'addmail', 'value' => $conf['whois']['addmail'] ?? 0, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _WHOISADD, 'field_html' => getTplRadioGroup(['name' => 'add', 'value' => $conf['whois']['add'] ?? 0, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _WHOISADDG, 'field_html' => getTplRadioGroup(['name' => 'addquest', 'value' => $conf['whois']['addquest'] ?? 0, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],

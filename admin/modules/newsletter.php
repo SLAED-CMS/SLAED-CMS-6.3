@@ -219,18 +219,20 @@ function add(): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken('newsletter')],
         ],
         'rows' => [
-            ['label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', [
+            ['label_for' => 'f-title', 'label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
                 'name_attr' => 'title',
+                'input_id' => 'f-title',
                 'value_attr' => $title,
                 'maxlength_num' => 50,
                 'placeholder_text' => _TITLE,
                 'is_required' => true,
             ])],
-            ['label_html' => _NLWHERE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'audit', 'options' => getCampOptions($pick)])],
+            ['label_for' => 'f-audit', 'label_html' => _NLWHERE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'audit', 'selectid' => 'f-audit', 'options' => getCampOptions($pick)])],
             [
+                'label_for' => 'f-days',
                 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _NLDAYS, 'hint' => _NLDAYSI]),
-                'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'days', 'value_attr' => (string)$days, 'is_config' => true]),
+                'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'days', 'input_id' => 'f-days', 'value_attr' => (string)$days, 'is_config' => true]),
                 'attr' => 'data-sl-show-when="audit" data-sl-show-value="active-"',
             ],
             [

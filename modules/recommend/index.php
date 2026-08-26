@@ -26,24 +26,24 @@ function recommend(): void {
     $cont = $tpl->getHtmlFrag('title', ['title' => _RECOMMTITLE, 'is_level_one' => true]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
     $fields = $tpl->getHtmlFrag('form-field-row', [
+        'label_for' => 'f-'.$unkey,
         'label' => _YOURNAME,
-        'hide_label' => true,
-        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => $unkey, 'value_attr' => $sname, 'placeholder_text' => _YOURNAME, 'is_required' => true]),
+        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => $unkey, 'input_id' => 'f-'.$unkey, 'value_attr' => $sname, 'placeholder_text' => _YOURNAME, 'is_required' => true]),
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
+        'label_for' => 'f-semail',
         'label' => _YOUREMAIL,
-        'hide_label' => true,
-        'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'semail', 'value_attr' => $semail, 'placeholder_text' => _YOUREMAIL, 'is_required' => true]),
+        'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'semail', 'input_id' => 'f-semail', 'value_attr' => $semail, 'placeholder_text' => _YOUREMAIL, 'is_required' => true]),
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
+        'label_for' => 'f-fname',
         'label' => _FFRIENDNAME,
-        'hide_label' => true,
-        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'fname', 'value_attr' => $fname, 'placeholder_text' => _FFRIENDNAME, 'is_required' => true]),
+        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'fname', 'input_id' => 'f-fname', 'value_attr' => $fname, 'placeholder_text' => _FFRIENDNAME, 'is_required' => true]),
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
+        'label_for' => 'f-femail',
         'label' => _FFRIENDEMAIL,
-        'hide_label' => true,
-        'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'femail', 'value_attr' => $femail, 'placeholder_text' => _FFRIENDEMAIL, 'is_required' => true]),
+        'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'femail', 'input_id' => 'f-femail', 'value_attr' => $femail, 'placeholder_text' => _FFRIENDEMAIL, 'is_required' => true]),
     ]);
     $cont .= $tpl->getHtmlPart('form-add', [
         'action' => 'index.php?name='.$conf['name'],

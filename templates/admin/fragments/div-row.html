@@ -10,7 +10,7 @@
   "
   {% if attr %}{{{ attr }}}{% endif %}
 >
-  <div class="sl-div-label">{{{ label_html }}}</div>
+  <div class="sl-div-label">{% if label_for %}<label for="{{ label_for }}">{{{ label_html }}}</label>{% else %}{{{ label_html }}}{% endif %}</div>
   {% if field_unwrapped %}
     {% if has_field_text %}{{ field_text }}{% else %}{{{ field_html }}}{% endif %}
   {% else %}

@@ -64,10 +64,10 @@ function getGeoipPanel(): string {
     $test = getVar('req', 'testip', 'text', (string)($conf['geoip_test'] ?? ''));
     $rows = [
         ['label_html' => _GEO_IP, 'field_html' => getTplRadioGroup(['name' => 'geoipenabled', 'value' => (string)(int)($conf['geoip_enabled'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => _GEOIP_CACHE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'geoipcache', 'value_attr' => (string)($conf['geoip_cache'] ?? 86400), 'is_config' => true])],
+        ['label_for' => 'f-geoipcache', 'label_html' => _GEOIP_CACHE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'geoipcache', 'input_id' => 'f-geoipcache', 'value_attr' => (string)($conf['geoip_cache'] ?? 86400), 'is_config' => true])],
         ['label_html' => _GEOIP_ANON, 'field_html' => getTplRadioGroup(['name' => 'geoipanon', 'value' => (string)(int)($conf['geoip_anon'] ?? 1), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _GEOIP_STORE, 'field_html' => getTplRadioGroup(['name' => 'geoipstore', 'value' => (string)(int)($conf['geoip_store'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => _GEOIP_TESTIP, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'testip', 'value_attr' => $test, 'is_config' => true])],
+        ['label_for' => 'f-testip', 'label_html' => _GEOIP_TESTIP, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'testip', 'input_id' => 'f-testip', 'value_attr' => $test, 'is_config' => true])],
     ];
     $head = [
         ['content' => _DATABASE],
@@ -247,18 +247,20 @@ function config(): void {
         ['value' => '0', 'label' => _NO],
     ];
     $rows[] = ['label_html' => _VERSION, 'field_html' => $tpl->getHtmlFrag('link', ['href' => '//slaed.net', 'title' => _VERSION, 'label' => 'SLAED CMS '.$conf['version'], 'is_blank' => true])];
-    $rows[] = ['label_html' => _SITENAME, 'field_html' => $tpl->getHtmlFrag('input', [
+    $rows[] = ['label_for' => 'f-sitename', 'label_html' => _SITENAME, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'sitename',
+        'input_id' => 'f-sitename',
         'value_attr' => (string)$conf['sitename'],
         'maxlength_num' => 255,
         'placeholder_text' => _SITENAME,
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => _SITEURL, 'field_html' => $tpl->getHtmlFrag('input', [
+    $rows[] = ['label_for' => 'f-homeurl', 'label_html' => _SITEURL, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'url',
         'name_attr' => 'homeurl',
+        'input_id' => 'f-homeurl',
         'value_attr' => (string)$conf['homeurl'],
         'maxlength_num' => 255,
         'placeholder_text' => _SITEURL,
@@ -325,64 +327,72 @@ function config(): void {
         'title_text' => _ADMINLOGOP,
         'is_popup' => true,
     ])];
-    $rows[] = ['label_html' => _DESCRIPTION, 'field_html' => $tpl->getHtmlFrag('textarea', [
+    $rows[] = ['label_for' => 'f-slogan', 'label_html' => _DESCRIPTION, 'field_html' => $tpl->getHtmlFrag('textarea', [
         'name_attr' => 'slogan',
+        'input_id' => 'f-slogan',
         'value_text' => (string)$conf['slogan'],
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _ADMININFO, 'hint' => _ADMININFODES]), 'field_html' => $tpl->getHtmlFrag('textarea', [
+    $rows[] = ['label_for' => 'f-admininfo', 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _ADMININFO, 'hint' => _ADMININFODES]), 'field_html' => $tpl->getHtmlFrag('textarea', [
         'name_attr' => 'admininfo',
+        'input_id' => 'f-admininfo',
         'value_text' => (string)$conf['admininfo'],
         'is_config' => true,
     ])];
     $rows[] = ['label_html' => _STARTDATE, 'field_html' => getTplAddDateTime(['name' => 'startdate', 'time' => (string)$conf['startdate'], 'with' => true, 'max' => 16, 'is_config' => true])];
-    $rows[] = ['label_html' => _ADMINEMAIL, 'field_html' => $tpl->getHtmlFrag('input', [
+    $rows[] = ['label_for' => 'f-adminmail', 'label_html' => _ADMINEMAIL, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'email',
         'name_attr' => 'adminmail',
+        'input_id' => 'f-adminmail',
         'value_attr' => (string)$conf['adminmail'],
         'maxlength_num' => 255,
         'placeholder_text' => _ADMINEMAIL,
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => _USER_COOKIE, 'field_html' => $tpl->getHtmlFrag('input', [
+    $rows[] = ['label_for' => 'f-user-c', 'label_html' => _USER_COOKIE, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'user_c',
+        'input_id' => 'f-user-c',
         'value_attr' => (string)$conf['user_c'],
         'maxlength_num' => 255,
         'placeholder_text' => _USER_COOKIE,
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => _ADMIN_SESSION, 'field_html' => $tpl->getHtmlFrag('input', [
+    $rows[] = ['label_for' => 'f-admin-c', 'label_html' => _ADMIN_SESSION, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'admin_c',
+        'input_id' => 'f-admin-c',
         'value_attr' => (string)$conf['admin_c'],
         'maxlength_num' => 255,
         'placeholder_text' => _ADMIN_SESSION,
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => _USER_COOKIE_T, 'field_html' => $tpl->getHtmlFrag('input', [
+    $rows[] = ['label_for' => 'f-user-c-t', 'label_html' => _USER_COOKIE_T, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'number',
         'name_attr' => 'user_c_t',
+        'input_id' => 'f-user-c-t',
         'value_attr' => (string)intval($conf['user_c_t'] / 86400),
         'placeholder_text' => _USER_COOKIE_T,
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => _SESS_T, 'field_html' => $tpl->getHtmlFrag('input', [
+    $rows[] = ['label_for' => 'f-sess-t', 'label_html' => _SESS_T, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'number',
         'name_attr' => 'sess_t',
+        'input_id' => 'f-sess-t',
         'value_attr' => (string)intval($conf['sess_t'] / 60),
         'placeholder_text' => _SESS_T,
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => _IP_LINK, 'field_html' => $tpl->getHtmlFrag('input', [
+    $rows[] = ['label_for' => 'f-ip-link', 'label_html' => _IP_LINK, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'url',
         'name_attr' => 'ip_link',
+        'input_id' => 'f-ip-link',
         'value_attr' => (string)$conf['ip_link'],
         'maxlength_num' => 255,
         'placeholder_text' => _IP_LINK,
@@ -402,8 +412,9 @@ function config(): void {
             }
         }
     }
-    $rows[] = ['label_html' => _THEME, 'field_html' => $tpl->getHtmlFrag('select', [
+    $rows[] = ['label_for' => 'f-theme', 'label_html' => _THEME, 'field_html' => $tpl->getHtmlFrag('select', [
         'name_attr' => 'theme',
+        'selectid' => 'f-theme',
         'options_html' => $opts,
         'is_config' => true,
     ])];
@@ -424,8 +435,9 @@ function config(): void {
             $ival++;
         }
     }
-    $rows[] = ['label_html' => _PUTINAHOME, 'field_html' => $tpl->getHtmlFrag('select', [
+    $rows[] = ['label_for' => 'f-amod', 'label_html' => _PUTINAHOME, 'field_html' => $tpl->getHtmlFrag('select', [
         'name_attr' => 'amod',
+        'selectid' => 'f-amod',
         'options_html' => $opts,
         'is_config' => true,
     ])];
@@ -440,8 +452,9 @@ function config(): void {
             'is_selected' => $name === $val,
         ]);
     }
-    $rows[] = ['label_html' => _GTIME, 'field_html' => $tpl->getHtmlFrag('select', [
+    $rows[] = ['label_for' => 'f-gtime', 'label_html' => _GTIME, 'field_html' => $tpl->getHtmlFrag('select', [
         'name_attr' => 'gtime',
+        'selectid' => 'f-gtime',
         'options_html' => $opts,
         'is_config' => true,
     ])];
@@ -472,8 +485,9 @@ function config(): void {
         'label_text' => _MVALL,
         'is_selected' => $conf['var_view'] == '1',
     ]);
-    $rows[] = ['label_html' => _VAR_VIEW, 'field_html' => $tpl->getHtmlFrag('select', [
+    $rows[] = ['label_for' => 'f-var-view', 'label_html' => _VAR_VIEW, 'field_html' => $tpl->getHtmlFrag('select', [
         'name_attr' => 'var_view',
+        'selectid' => 'f-var-view',
         'options_html' => $opts,
         'is_config' => true,
     ])];
@@ -490,14 +504,16 @@ function config(): void {
         'label_text' => _SYNTAXSH,
         'is_selected' => $conf['syntax'] == '2',
     ]);
-    $rows[] = ['label_html' => _SYNTAX, 'field_html' => $tpl->getHtmlFrag('select', [
+    $rows[] = ['label_for' => 'f-syntax', 'label_html' => _SYNTAX, 'field_html' => $tpl->getHtmlFrag('select', [
         'name_attr' => 'syntax',
+        'selectid' => 'f-syntax',
         'options_html' => $opts,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => _ADMCOL, 'field_html' => $tpl->getHtmlFrag('input', [
+    $rows[] = ['label_for' => 'f-admcol', 'label_html' => _ADMCOL, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'number',
         'name_attr' => 'admcol',
+        'input_id' => 'f-admcol',
         'value_attr' => (string)$conf['admcol'],
         'placeholder_text' => _ADMCOL,
         'is_required' => true,
@@ -505,9 +521,10 @@ function config(): void {
     ])];
     $rows[] = ['label_html' => _DB_SYNC, 'field_html' => getTplRadioGroup(['name' => 'dbsync', 'value' => $conf['dbsync'], 'options' => $yesno])];
     $rows[] = ['label_html' => _SESSION, 'field_html' => getTplRadioGroup(['name' => 'session', 'value' => $conf['session'], 'options' => $yesno])];
-    $rows[] = ['label_html' => _LIVE_UPD, 'field_html' => $tpl->getHtmlFrag('input', [
+    $rows[] = ['label_for' => 'f-live-u', 'label_html' => _LIVE_UPD, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'number',
         'name_attr' => 'live_u',
+        'input_id' => 'f-live-u',
         'value_attr' => (string)($conf['live_u'] ?? 0),
         'placeholder_text' => _LIVE_UPD,
         'is_config' => true,
@@ -520,18 +537,20 @@ function config(): void {
     $taba = $tpl->getHtmlPart('div', ['rows' => $rows]);
 
     $rows = [];
-    $rows[] = ['label_html' => _DEFIS, 'field_html' => $tpl->getHtmlFrag('input', [
+    $rows[] = ['label_for' => 'f-defis', 'label_html' => _DEFIS, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'defis',
+        'input_id' => 'f-defis',
         'value_attr' => urldecode($conf['defis']),
         'maxlength_num' => 255,
         'placeholder_text' => _DEFIS,
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => _DLETTER, 'field_html' => $tpl->getHtmlFrag('input', [
+    $rows[] = ['label_for' => 'f-dletter', 'label_html' => _DLETTER, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'number',
         'name_attr' => 'dletter',
+        'input_id' => 'f-dletter',
         'value_attr' => (string)$conf['dletter'],
         'placeholder_text' => _DLETTER,
         'is_required' => true,
@@ -539,18 +558,20 @@ function config(): void {
     ])];
     $rows[] = ['label_html' => _LTITLE, 'field_html' => getTplRadioGroup(['name' => 'ltitle', 'value' => $conf['ltitle'], 'options' => $yesno])];
     $rows[] = ['label_html' => _ADESC, 'field_html' => getTplRadioGroup(['name' => 'adesc', 'value' => $conf['adesc'], 'options' => $yesno])];
-    $rows[] = ['label_html' => _RSEP, 'field_html' => $tpl->getHtmlFrag('input', [
+    $rows[] = ['label_for' => 'f-sep', 'label_html' => _RSEP, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'sep',
+        'input_id' => 'f-sep',
         'value_attr' => urldecode($conf['sep']),
         'maxlength_num' => 255,
         'placeholder_text' => _RSEP,
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => _TSEP, 'field_html' => $tpl->getHtmlFrag('input', [
+    $rows[] = ['label_for' => 'f-tsep', 'label_html' => _TSEP, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'tsep',
+        'input_id' => 'f-tsep',
         'value_attr' => urldecode($conf['tsep']),
         'maxlength_num' => 255,
         'placeholder_text' => _TSEP,
@@ -563,16 +584,18 @@ function config(): void {
     $rows[] = ['label_html' => _SEOTITLE, 'field_html' => getTplRadioGroup(['name' => 'title', 'value' => $conf['title'] ?? 1, 'options' => $yesno])];
     $rows[] = ['label_html' => _SEOCTITLE, 'field_html' => getTplRadioGroup(['name' => 'ctitle', 'value' => $conf['ctitle'] ?? 1, 'options' => $yesno])];
     $rows[] = ['label_html' => _OGRAPH, 'field_html' => getTplRadioGroup(['name' => 'agraph', 'value' => $conf['agraph'] ?? 1, 'options' => $yesno])];
-    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _OGRAPHT, 'hint' => _TPLVARS]), 'field_html' => $tpl->getHtmlFrag('textarea', [
+    $rows[] = ['label_for' => 'f-graph', 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _OGRAPHT, 'hint' => _TPLVARS]), 'field_html' => $tpl->getHtmlFrag('textarea', [
         'name_attr' => 'graph',
+        'input_id' => 'f-graph',
         'value_text' => (string)($conf['graph'] ?? ''),
         'cols_num' => 65,
         'rows_num' => 8,
         'is_config' => true,
     ])];
     $rows[] = ['label_html' => _SCHEMA, 'field_html' => getTplRadioGroup(['name' => 'aschema', 'value' => $conf['aschema'] ?? 1, 'options' => $yesno])];
-    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SCHEMAT, 'hint' => _TPLVARS]), 'field_html' => $tpl->getHtmlFrag('textarea', [
+    $rows[] = ['label_for' => 'f-schema', 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SCHEMAT, 'hint' => _TPLVARS]), 'field_html' => $tpl->getHtmlFrag('textarea', [
         'name_attr' => 'schema',
+        'input_id' => 'f-schema',
         'value_text' => (string)($conf['schema'] ?? ''),
         'cols_num' => 65,
         'rows_num' => 15,
@@ -595,8 +618,9 @@ function config(): void {
         }
     }
     $rows = [];
-    $rows[] = ['label_html' => _SELLANGUAGE, 'field_html' => $tpl->getHtmlFrag('select', [
+    $rows[] = ['label_for' => 'f-language', 'label_html' => _SELLANGUAGE, 'field_html' => $tpl->getHtmlFrag('select', [
         'name_attr' => 'language',
+        'selectid' => 'f-language',
         'options_html' => $opts,
         'is_config' => true,
     ])];
@@ -615,22 +639,25 @@ function config(): void {
         'label_text' => _MATCHANY,
         'is_selected' => $conf['censor'] == 1,
     ]);
-    $rows[] = ['label_html' => _CENSORMODE, 'field_html' => $tpl->getHtmlFrag('select', [
+    $rows[] = ['label_for' => 'f-censor', 'label_html' => _CENSORMODE, 'field_html' => $tpl->getHtmlFrag('select', [
         'name_attr' => 'censor',
+        'selectid' => 'f-censor',
         'options_html' => $opts,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => _CENSORREPLACE, 'field_html' => $tpl->getHtmlFrag('input', [
+    $rows[] = ['label_for' => 'f-censor-r', 'label_html' => _CENSORREPLACE, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'censor_r',
+        'input_id' => 'f-censor-r',
         'value_attr' => (string)$conf['censor_r'],
         'maxlength_num' => 10,
         'placeholder_text' => _CENSORREPLACE,
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CENSOR, 'hint' => _NOKOMA]), 'field_html' => $tpl->getHtmlFrag('textarea', [
+    $rows[] = ['label_for' => 'f-censor-l', 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CENSOR, 'hint' => _NOKOMA]), 'field_html' => $tpl->getHtmlFrag('textarea', [
         'name_attr' => 'censor_l',
+        'input_id' => 'f-censor-l',
         'value_text' => (string)$conf['censor_l'],
         'is_required' => true,
         'is_config' => true,
@@ -639,16 +666,18 @@ function config(): void {
     $tabd = $tpl->getHtmlPart('div', ['rows' => $rows]);
 
     $rows = [];
-    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _BOTSLIST, 'hint' => _NOKOMA.' '._BOTSINFO]), 'field_html' => $tpl->getHtmlFrag('textarea', [
+    $rows[] = ['label_for' => 'f-bots', 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _BOTSLIST, 'hint' => _NOKOMA.' '._BOTSINFO]), 'field_html' => $tpl->getHtmlFrag('textarea', [
         'name_attr' => 'bots',
+        'input_id' => 'f-bots',
         'value_text' => (string)$conf['bots'],
         'cols_num' => 65,
         'rows_num' => 10,
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _BOTSSITE, 'hint' => _NOKOMA]), 'field_html' => $tpl->getHtmlFrag('textarea', [
+    $rows[] = ['label_for' => 'f-fbots', 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _BOTSSITE, 'hint' => _NOKOMA]), 'field_html' => $tpl->getHtmlFrag('textarea', [
         'name_attr' => 'fbots',
+        'input_id' => 'f-fbots',
         'value_text' => (string)$conf['fbots'],
         'cols_num' => 65,
         'rows_num' => 10,
@@ -690,22 +719,25 @@ function config(): void {
         'label_text' => _CACHE_2,
         'is_selected' => $conf['cache'] == 2,
     ]);
-    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CACHE, 'hint' => _CACHEINFO]), 'field_html' => $tpl->getHtmlFrag('select', [
+    $rows[] = ['label_for' => 'f-cache', 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CACHE, 'hint' => _CACHEINFO]), 'field_html' => $tpl->getHtmlFrag('select', [
         'name_attr' => 'cache',
+        'selectid' => 'f-cache',
         'options_html' => $opts,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CACHETIME, 'hint' => _CACHETIMEINFO]), 'field_html' => $tpl->getHtmlFrag('input', [
+    $rows[] = ['label_for' => 'f-cache-t', 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CACHETIME, 'hint' => _CACHETIMEINFO]), 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'number',
         'name_attr' => 'cache_t',
+        'input_id' => 'f-cache-t',
         'value_attr' => (string)$conf['cache_t'],
         'placeholder_text' => _CACHETIME,
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => _CACHEBROW, 'field_html' => $tpl->getHtmlFrag('input', [
+    $rows[] = ['label_for' => 'f-cache-b', 'label_html' => _CACHEBROW, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'number',
         'name_attr' => 'cache_b',
+        'input_id' => 'f-cache-b',
         'value_attr' => (string)$conf['cache_b'],
         'placeholder_text' => _CACHEBROW,
         'is_required' => true,
@@ -713,8 +745,9 @@ function config(): void {
     ])];
     $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CACHELOCK, 'hint' => _CACHELOCKINFO]), 'field_html' => getTplRadioGroup(['name' => 'cache_l', 'value' => $conf['cache_l'] ?? '0', 'options' => $yesno])];
     $rows[] = ['label_html' => _CACHECSS, 'field_html' => getTplRadioGroup(['name' => 'cache_css', 'value' => $conf['cache_css'], 'options' => $yesno])];
-    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CSSDIR, 'hint' => _CSSDIRINFO.' '._NOKOMA]), 'field_html' => $tpl->getHtmlFrag('textarea', [
+    $rows[] = ['label_for' => 'f-css-f', 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CSSDIR, 'hint' => _CSSDIRINFO.' '._NOKOMA]), 'field_html' => $tpl->getHtmlFrag('textarea', [
         'name_attr' => 'css_f',
+        'input_id' => 'f-css-f',
         'value_text' => (string)$conf['css_f'],
         'is_required' => true,
         'is_config' => true,
@@ -723,8 +756,9 @@ function config(): void {
     $rows[] = ['label_html' => _CSSCOMP, 'field_html' => getTplRadioGroup(['name' => 'css_c', 'value' => $conf['css_c'], 'options' => $yesno])];
     $rows[] = ['label_html' => _CSSENC, 'field_html' => getTplRadioGroup(['name' => 'css_e', 'value' => $conf['css_e'], 'options' => $yesno])];
     $rows[] = ['label_html' => _CACHESCRIPT, 'field_html' => getTplRadioGroup(['name' => 'cache_script', 'value' => $conf['cache_script'], 'options' => $yesno])];
-    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SCRIPTFILE, 'hint' => _SCRIPTFILEINFO.' '._NOKOMA]), 'field_html' => $tpl->getHtmlFrag('textarea', [
+    $rows[] = ['label_for' => 'f-script-f', 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SCRIPTFILE, 'hint' => _SCRIPTFILEINFO.' '._NOKOMA]), 'field_html' => $tpl->getHtmlFrag('textarea', [
         'name_attr' => 'script_f',
+        'input_id' => 'f-script-f',
         'value_text' => (string)$conf['script_f'],
         'is_required' => true,
         'is_config' => true,

@@ -141,19 +141,19 @@ function add(): void {
             'tip' => sprintf(_USERSEARCHTIP, (int)$conf['search']['slet']),
             'value' => $postname,
         ])],
-        ['label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 255, 'is_required' => true])],
-        ['label_html' => _CATEGORY, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cid', 'options_html' => $catopts])],
+        ['label_for' => 'f-title', 'label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'input_id' => 'f-title', 'value_attr' => $title, 'maxlength_num' => 255, 'is_required' => true])],
+        ['label_for' => 'f-cid', 'label_html' => _CATEGORY, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cid', 'selectid' => 'f-cid', 'options_html' => $catopts])],
         ['label_html' => _TEXT, 'field_html' => getTplTextarea([
             'id' => '1', 'name' => 'description', 'value' => $description, 'mod' => 'links', 'store' => 'links.intro', 'rows' => '5', 'placeholder' => _TEXT, 'required' => '1',
         ]), 'is_full' => true, 'field_unwrapped' => true],
         ['label_html' => _ENDTEXT, 'field_html' => getTplTextarea([
             'id' => '2', 'name' => 'bodytext', 'value' => $bodytext, 'mod' => 'links', 'store' => 'links.body', 'rows' => '15', 'placeholder' => _ENDTEXT, 'required' => '0',
         ]), 'is_full' => true, 'field_unwrapped' => true],
-        ['label_html' => $link, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'site', 'value_attr' => $site, 'placeholder_text' => _URL])],
+        ['label_for' => 'f-site', 'label_html' => $link, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'site', 'input_id' => 'f-site', 'value_attr' => $site, 'placeholder_text' => _URL])],
         ['label_html' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'date', 'time' => $date, 'with' => true, 'max' => 16])],
         ['label_html' => _PUBHOME, 'field_html' => getTplRadioGroup(['name' => 'ihome', 'value' => (string)$ihome, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => _COMMENTS, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'acomm', 'options_html' => $commopts])],
-        ['label_html' => _AUEMAIL, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'email', 'value_attr' => $email])],
+        ['label_for' => 'f-acomm', 'label_html' => _COMMENTS, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'acomm', 'selectid' => 'f-acomm', 'options_html' => $commopts])],
+        ['label_for' => 'f-email', 'label_html' => _AUEMAIL, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'email', 'input_id' => 'f-email', 'value_attr' => $email])],
     ];
     $posttypeopts
         = $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW])
@@ -252,13 +252,13 @@ function config(): void {
     $cont .= checkPerms(CONFIG_DIR.'/links.php');
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows = [
-        ['label_html' => _CDEFIS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'defis', 'value_attr' => urldecode($conf['links']['defis'] ?? ''), 'is_config' => true])],
-        ['label_html' => _PAGELINKNUM, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'linknum', 'value_attr' => (string)($conf['links']['linknum'] ?? 0), 'is_config' => true])],
-        ['label_html' => _C_13, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'listnum', 'value_attr' => (string)($conf['links']['listnum'] ?? 0), 'is_config' => true])],
-        ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)($conf['links']['num'] ?? 0), 'is_config' => true])],
-        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)($conf['links']['anum'] ?? 0), 'is_config' => true])],
-        ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => (string)($conf['links']['nump'] ?? 0), 'is_config' => true])],
-        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)($conf['links']['anump'] ?? 0), 'is_config' => true])],
+        ['label_for' => 'f-defis', 'label_html' => _CDEFIS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'defis', 'input_id' => 'f-defis', 'value_attr' => urldecode($conf['links']['defis'] ?? ''), 'is_config' => true])],
+        ['label_for' => 'f-linknum', 'label_html' => _PAGELINKNUM, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'linknum', 'input_id' => 'f-linknum', 'value_attr' => (string)($conf['links']['linknum'] ?? 0), 'is_config' => true])],
+        ['label_for' => 'f-listnum', 'label_html' => _C_13, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'listnum', 'input_id' => 'f-listnum', 'value_attr' => (string)($conf['links']['listnum'] ?? 0), 'is_config' => true])],
+        ['label_for' => 'f-num', 'label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'input_id' => 'f-num', 'value_attr' => (string)($conf['links']['num'] ?? 0), 'is_config' => true])],
+        ['label_for' => 'f-anum', 'label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => (string)($conf['links']['anum'] ?? 0), 'is_config' => true])],
+        ['label_for' => 'f-nump', 'label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'input_id' => 'f-nump', 'value_attr' => (string)($conf['links']['nump'] ?? 0), 'is_config' => true])],
+        ['label_for' => 'f-anump', 'label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => (string)($conf['links']['anump'] ?? 0), 'is_config' => true])],
         ['label_html' => _HOMCAT, 'field_html' => getTplRadioGroup(['name' => 'homcat', 'value' => (string)($conf['links']['homcat'] ?? 0), 'options' => $yesno])],
         ['label_html' => _VIEWCAT, 'field_html' => getTplRadioGroup(['name' => 'viewcat', 'value' => (string)($conf['links']['viewcat'] ?? 0), 'options' => $yesno])],
         ['label_html' => _C_32, 'field_html' => getTplRadioGroup(['name' => 'catdesc', 'value' => (string)($conf['links']['catdesc'] ?? 0), 'options' => $yesno])],

@@ -1,5 +1,6 @@
 <select
   name="{{ name_attr }}{% if is_name_array %}[]{% endif %}"
+  {% if input_id %}id="{{ input_id }}"{% endif %}
   {% if title %}title="{{ title }}"{% endif %}
   class="sl-field sl-field--auto{% if is_account %} sl-field--account{% endif %}{% if select_class %} {{ select_class }}{% endif %}"
   {% if is_multiple %}multiple{% endif %}

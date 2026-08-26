@@ -13,8 +13,7 @@
       <input type="hidden" name="op" value="oauth_finish">
       <input type="hidden" name="act" value="link">
       <input type="hidden" name="token" value="{{ token }}">
-      <p><input type="text" name="user_name" maxlength="25" class="sl-field sl-field--block" placeholder="{{ name_label }}" autocomplete="username" required></p>
-      <p><input type="password" name="user_password" maxlength="25" class="sl-field sl-field--block" placeholder="{{ password_label }}" autocomplete="current-password" required></p>
+      {{{ link_fields_html }}}
       {% if captcha %}<div class="sl-oauth-captcha">{{{ captcha }}}</div>{% endif %}
       <p><button type="submit" class="sl-but"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> {{ login_label }}</button></p>
     </form>
@@ -26,7 +25,7 @@
       <input type="hidden" name="op" value="oauth_finish">
       <input type="hidden" name="act" value="create">
       <input type="hidden" name="token" value="{{ token }}">
-      <p><input type="text" name="uname" maxlength="25" class="sl-field sl-field--block" placeholder="{{ name_label }}" value="{{ suggest }}" required></p>
+      {{{ create_fields_html }}}
       <p><button type="submit" class="sl-but"><i class="bi bi-person-plus" aria-hidden="true"></i> {{ create_label }}</button></p>
     </form>
   </section>

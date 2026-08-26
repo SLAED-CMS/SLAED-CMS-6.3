@@ -25,17 +25,19 @@ function money(): void {
     $cont .= $tpl->getHtmlPart('money-calc-scripts', ['kurs' => $conf['money']['kurs'], 'kurs2' => $conf['money']['kurs2'], 'proz' => $conf['money']['proz']]);
     $cont .= $tpl->getHtmlFrag('title', ['is_level_two' => true, 'title' => _MO_1]);
     foreach ([
-        ['Rechner', _MO_3.' Z:', 'USD'],
-        ['Rechner1', _MO_3.' R:', 'RUB'],
-        ['Rechner2', _MO_3.' E:', 'EUR'],
+        ['Rechner', _MO_3.' Z', 'USD'],
+        ['Rechner1', _MO_3.' R', 'RUB'],
+        ['Rechner2', _MO_3.' E', 'EUR'],
     ] as [$fnname, $tolbl, $tocur]) {
         $fields = $tpl->getHtmlFrag('form-field-row', [
+            'label_for' => 'f-a-'.$tocur,
             'label' => _MO_2,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'a', 'is_calculator' => true]).' EUR',
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'a', 'input_id' => 'f-a-'.$tocur, 'is_calculator' => true]).' EUR',
         ]);
         $fields .= $tpl->getHtmlFrag('form-field-row', [
+            'label_for' => 'f-total-'.$tocur,
             'label' => $tolbl,
-            'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'total', 'is_calculator' => true]).' '.$tocur,
+            'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'total', 'input_id' => 'f-total-'.$tocur, 'is_calculator' => true]).' '.$tocur,
         ]);
         $fields .= $tpl->getHtmlFrag('form-field-row', [
             'label' => '',
@@ -56,32 +58,32 @@ function money(): void {
         $note = getVar('post', 'note', 'text');
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
         $rows = '';
-        $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => _MO_7, 'hide_label' => true, 'field_html' => $tpl->getHtmlFrag('input', [
+        $rows .= $tpl->getHtmlFrag('form-field-row', ['label_for' => 'f-sum', 'label' => _MO_7, 'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'number',
             'name_attr' => 'sum',
+            'input_id' => 'f-sum',
             'value_attr' => (string)$sum,
             'input_attr' => 'placeholder="'._MO_7.'" required',
         ])]);
         $rows .= $tpl->getHtmlFrag('form-field-row', [
+            'label_for' => 'f-email',
             'label' => _MO_8,
-            'hide_label' => true,
-            'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'placeholder="'._MO_8.'" required', 'name_attr' => 'email', 'value_attr' => $email]),
+            'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'placeholder="'._MO_8.'" required', 'name_attr' => 'email', 'input_id' => 'f-email', 'value_attr' => $email]),
         ]);
         $form = explode(',', $conf['money']['form']);
         $i = 0;
         foreach ($form as $val) {
             if ($val != '') {
                 $rows .= $tpl->getHtmlFrag('form-field-row', [
+                    'label_for' => 'f-intro-'.$i,
                     'label' => $val,
-                    'hide_label' => true,
-                    'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'maxlength="255" placeholder="'.$val.'" required', 'itype' => 'text', 'name_attr' => 'intro[]', 'value_attr' => filterHtml($intro[$i] ?? '', 1)]),
+                    'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'maxlength="255" placeholder="'.$val.'" required', 'itype' => 'text', 'name_attr' => 'intro[]', 'input_id' => 'f-intro-'.$i, 'value_attr' => filterHtml($intro[$i] ?? '', 1)]),
                 ]);
                 $i++;
             }
         }
         $rows .= $tpl->getHtmlFrag('form-field-row', [
             'label' => _MO_9,
-            'hide_label' => true,
             'field_html' => getTplTextarea([
                 'id' => '1',
                 'name' => 'note',

@@ -1507,43 +1507,50 @@ button.sl-but-mini:hover,
 }
 
 .sl-form-row {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: 1fr 3fr;
+  gap: var(--sl-space-6);
+  align-items: center;
   margin-bottom: var(--sl-space-4);
   width: 100%;
 }
 
-.sl-form-label {
-  margin-bottom: var(--sl-space-3);
-  padding-top: 0;
-  width: auto;
+/* A row asked to hide has to outrank the display the row itself sets, which a single class cannot do from further up the file */
+.sl-form-row.sl-hidden {
+  display: none;
 }
 
-.sl-form-label::after,
-.sl-action-label::after {
-  content: ":";
+/* The editor is the one field a half row cannot hold: it takes both tracks and the label moves above it */
+.sl-form-row:has(.toastui-editor-defaultUI),
+.sl-form-row:has(.ck-editor),
+.sl-form-row:has(.cm-editor),
+.sl-form-row:has(.tox-tinymce),
+.sl-form-row:has(.sl-code-editor) {
+  grid-template-columns: 1fr;
+  gap: var(--sl-space-3);
+  align-items: start;
 }
 
-.sl-form-row .sl-field {
-  flex: 1;
-  min-width: 0;
+/* A tall field is read from its first line, so the label meets it there instead of floating at half its height */
+.sl-form-row:has(textarea) {
+  align-items: start;
 }
 
-.sl-form-row .sl-field--auto {
-  margin-right: 0;
+.sl-form-row:has(textarea) .sl-form-label {
+  padding-top: var(--sl-space-3);
 }
 
 .sl-form-field {
   width: 100%;
 }
 
-.sl-form-field > .sl-field:not(.sl-field--auto) {
+.sl-form-field > .sl-field:not(.sl-field--auto),
+.sl-form-field > .sl-field--auto:only-child {
   width: 100%;
 }
 
-.sl-form-value {
-  padding-top: var(--sl-space-3);
+.sl-form-field > .sl-field--auto:only-child {
+  margin-right: 0;
 }
 
 .sl-form-submit {
@@ -2118,10 +2125,6 @@ ol.sl-sublist-two li::before {
   color: var(--sl-text-muted);
 }
 
-.sl-float-panel dt::after {
-  content: ":";
-}
-
 .sl-float-panel dd {
   margin: 0;
   min-width: 0;
@@ -2688,10 +2691,6 @@ ol.sl-sublist-two li::before {
   font-weight: var(--sl-weight-medium);
   margin-bottom: var(--sl-space-2);
   color: var(--sl-text-muted);
-}
-
-.sl-changelog-filter-field label::after {
-  content: ":";
 }
 
 .sl-changelog-filter-field input {
@@ -3755,7 +3754,8 @@ ol.sl-sublist-two li::before {
   min-height: var(--sl-edge-height);
   padding: var(--sl-space-3) var(--sl-space-3);
   border-radius: 0 var(--sl-radius-2) var(--sl-radius-2) 0;
-  color: var(--sl-band-text);
+  /* The plate is a pastel wash at both ends of its gradient, so the band white every other band uses reads at 1.7:1 here */
+  color: var(--sl-text-strong);
   font-weight: var(--sl-weight-normal);
   white-space: nowrap;
   text-transform: uppercase;
@@ -5992,6 +5992,12 @@ a.sl-chip-neutral {
 @media (max-width: 900px) {
   .sl-wrp {
     width: min(100% - var(--sl-space-8), var(--sl-layout-container));
+  }
+
+  .sl-form-row {
+    grid-template-columns: 1fr;
+    gap: var(--sl-space-3);
+    align-items: start;
   }
 
   .sl-grid-1-3,
@@ -9300,12 +9306,7 @@ a.sl-profile-hub-row:hover {
   color: var(--sl-mate-tone);
 }
 
-.sl-pm-editor {
-  width: 100%;
-  min-width: 0;
-}
-
-.sl-pm-editor .toastui-editor-defaultUI { border-radius: var(--sl-radius-1); }
+.sl-pmf-reply .toastui-editor-defaultUI { border-radius: var(--sl-radius-1); }
 
 /* Three different empty states share one shape: what is missing, and what the reader can do about it */
 .sl-pmf-blank {

@@ -107,7 +107,7 @@ function add(): void {
         $expire_text = $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'expire', 'value_attr' => '0', 'placeholder_text' => _EXPIRATION, 'is_required' => true]);
     }
     $rows = [
-        ['label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => (string)$title, 'maxlength_num' => 100, 'placeholder_text' => _TITLE, 'is_required' => true])],
+        ['label_for' => 'f-title', 'label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'input_id' => 'f-title', 'value_attr' => (string)$title, 'maxlength_num' => 100, 'placeholder_text' => _TITLE, 'is_required' => true])],
         ['label_html' => _TEXT, 'field_html' => getTplTextarea([
             'id' => '1', 'name' => 'body', 'value' => (string)$body, 'mod' => 'all', 'store' => 'message.body', 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1',
         ]), 'is_full' => true],
@@ -116,8 +116,9 @@ function add(): void {
         $rows[] = ['label_html' => _LANGUAGE, 'field_html' => $langsel];
     }
     $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _EXPIRATION, 'hint' => _CONFINES]), 'field_html' => $expire_text];
-    $rows[] = ['label_html' => _VIEWPRIV, 'field_html' => $tpl->getHtmlFrag('select', [
+    $rows[] = ['label_for' => 'f-view', 'label_html' => _VIEWPRIV, 'field_html' => $tpl->getHtmlFrag('select', [
         'name_attr' => 'view',
+        'selectid' => 'f-view',
         'options_html' =>
             $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _MVALL, 'is_selected' => (string)$view === '1']).
             $tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _MVANON, 'is_selected' => (string)$view === '2']).

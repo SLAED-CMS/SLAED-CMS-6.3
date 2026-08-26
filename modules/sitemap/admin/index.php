@@ -166,7 +166,7 @@ function config(): void {
     ]);
     $rows = [
         ['label_html' => _MODULES, 'field_html' => getTplModuleSelect('mod', $conf['sitemap']['mod'] ?? '', 1), 'is_full' => true],
-        ['label_html' => _MAP_AUTO_T, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'auto_t', 'value_attr' => (string)intval(($conf['sitemap']['auto_t'] ?? 0) / 3600), 'is_config' => true])],
+        ['label_for' => 'f-auto-t', 'label_html' => _MAP_AUTO_T, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'auto_t', 'input_id' => 'f-auto-t', 'value_attr' => (string)intval(($conf['sitemap']['auto_t'] ?? 0) / 3600), 'is_config' => true])],
         ['label_html' => _MAP_AUTO, 'field_html' => $yesno('auto', $conf['sitemap']['auto'] ?? 0)],
         ['label_html' => _MAP_FR_H, 'field_html' => getSitemapFreqSelect('fr_h', (string)($conf['sitemap']['fr_h'] ?? '0'))],
         ['label_html' => _MAP_FR_M, 'field_html' => getSitemapFreqSelect('fr_m', (string)($conf['sitemap']['fr_m'] ?? '0'))],

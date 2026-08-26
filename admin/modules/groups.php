@@ -98,10 +98,12 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
     $rows = [];
     $rows[] = [
+        'label_for' => 'f-grname',
         'label_html' => _NAME,
         'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'text',
             'name_attr' => 'grname',
+            'input_id' => 'f-grname',
             'value_attr' => $grname,
             'placeholder_text' => _NAME,
             'input_attr' => 'maxlength="255"',
@@ -109,9 +111,11 @@ function add(): void {
         ]),
     ];
     $rows[] = [
+        'label_for' => 'f-description',
         'label_html' => _DESCRIPTION,
         'field_html' => $tpl->getHtmlFrag('textarea', [
             'name_attr' => 'description',
+            'input_id' => 'f-description',
             'value_text' => $description,
             'placeholder_text' => _DESCRIPTION,
         ]),
@@ -128,9 +132,11 @@ function add(): void {
         }
     }
     $rows[] = [
+        'label_for' => 'f-rank',
         'label_html' => _IMG,
         'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'rank',
+            'selectid' => 'f-rank',
             'options_html' => $pickopts,
             'select_attr' => 'id="img_replace"',
         ]),
@@ -140,26 +146,32 @@ function add(): void {
         'field_html' => $tpl->getHtmlFrag('image-preview', ['src_attr' => $path.$rank, 'image_id' => 'picture', 'alt_text' => _RANK]),
     ];
     $rows[] = [
+        'label_for' => 'f-color',
         'label_html' => _COLOR,
         'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'color',
             'name_attr' => 'color',
+            'input_id' => 'f-color',
             'value_attr' => $color,
         ]),
     ];
     $rows[] = [
+        'label_for' => 'f-points',
         'label_html' => _POINTSNEEDED,
         'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'number',
             'name_attr' => 'points',
+            'input_id' => 'f-points',
             'value_attr' => (string)$points,
             'placeholder_text' => _POINTSNEEDED,
         ]),
     ];
     $rows[] = [
+        'label_for' => 'f-grextra',
         'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SPEC_GROUP, 'hint' => _GRSINFO]),
         'field_html' => $tpl->getHtmlFrag('checkbox', [
             'name_attr' => 'grextra',
+            'input_id' => 'f-grextra',
             'value_attr' => '1',
             'is_checked' => !empty($check),
         ]),

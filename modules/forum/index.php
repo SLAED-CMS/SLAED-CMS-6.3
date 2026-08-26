@@ -205,7 +205,7 @@ function forum(): void {
                         }
                         $topicList .= $tpl->getHtmlFrag('forum-category-table', []);
                         if ($ismod) {
-                            $topicList .= $tpl->getHtmlPart('fieldset-panel', ['legend' => _CHECKOP, 'is_moder_mass' => true, 'is_action_label' => true, 'content' => tmoder(1)
+                            $topicList .= $tpl->getHtmlPart('fieldset-panel', ['legend' => _CHECKOP, 'is_moder_mass' => true, 'content' => tmoder(1)
                                 .$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'move', 'input_attr' => ''])
                                 .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$catid, 'input_attr' => ''])
                                 .$tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'label' => _OK])]);
@@ -503,7 +503,7 @@ function view(): void {
             if ($ismod) {
                 $selmm = tmoder(1)
                     .$tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'move', 'extra' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$rows[0][2], 'input_attr' => '']).$tpl->getHtmlFrag('hidden', ['name_attr' => 'id[]', 'value_attr' => (string)$topic, 'input_attr' => '']), 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]);
-                $cont .= $tpl->getHtmlPart('form-wrap', ['action' => 'index.php?name='.$conf['name'], 'content_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getPageToken(), 'input_attr' => '']).$tpl->getHtmlPart('fieldset-panel', ['legend' => _OPMOD, 'is_moder_mass' => true, 'is_action_label' => true, 'content' => $selmm])]);
+                $cont .= $tpl->getHtmlPart('form-wrap', ['action' => 'index.php?name='.$conf['name'], 'content_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getPageToken(), 'input_attr' => '']).$tpl->getHtmlPart('fieldset-panel', ['legend' => _OPMOD, 'is_moder_mass' => true, 'content' => $selmm])]);
             }
             if (is_moder($conf['name']) || ($isreply && $tstatus)) $cont .= quickreply($topic, $rows[0][2], $rows[0][5]);
         }
@@ -520,13 +520,12 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
     $catid = (int)$catid;
     if ($conf['forum']['qreply'] == 1 && $id > 0 && $catid > 0) {
         $rows = (!is_user()) ? $tpl->getHtmlFrag('form-field-row', [
+            'label_for' => 'f-postname',
             'label' => _YOURNAME,
-            'hide_label' => true,
-            'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'placeholder="'._YOURNAME.'" required', 'itype' => 'text', 'name_attr' => 'postname', 'value_attr' => _ANONYM]),
+            'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'placeholder="'._YOURNAME.'" required', 'itype' => 'text', 'name_attr' => 'postname', 'input_id' => 'f-postname', 'value_attr' => _ANONYM]),
         ]) : '';
         $rows .= $tpl->getHtmlFrag('form-field-row', [
             'label' => _TEXT,
-            'hide_label' => true,
             'field_html' => getTplTextarea([
                 'id' => '1',
                 'name' => 'hometext',
@@ -679,18 +678,17 @@ function add(): void {
         if (($userinfo['access'] ?? false) || (!is_user() && !$conf['forum']['anonpost'])) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _POSTNOTE]);
         $cont .= $tpl->getHtmlFrag('title', ['title' => $info, 'is_level_one' => true]);
         $rows = (!is_user()) ? $tpl->getHtmlFrag('form-field-row', [
+            'label_for' => 'f-postname',
             'label' => _YOURNAME,
-            'hide_label' => true,
-            'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'placeholder="'._YOURNAME.'" required', 'itype' => 'text', 'name_attr' => 'postname', 'value_attr' => _ANONYM]),
+            'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'placeholder="'._YOURNAME.'" required', 'itype' => 'text', 'name_attr' => 'postname', 'input_id' => 'f-postname', 'value_attr' => _ANONYM]),
         ]) : '';
         $rows .= ($subh) ? $tpl->getHtmlFrag('hidden', ['name_attr' => 'subject', 'value_attr' => $subject, 'input_attr' => '']) : $tpl->getHtmlFrag('form-field-row', [
+            'label_for' => 'f-subject',
             'label' => _TITLE,
-            'hide_label' => true,
-            'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'maxlength="100" placeholder="'._TITLE.'" required', 'itype' => 'text', 'name_attr' => 'subject', 'value_attr' => $subject]),
+            'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'maxlength="100" placeholder="'._TITLE.'" required', 'itype' => 'text', 'name_attr' => 'subject', 'input_id' => 'f-subject', 'value_attr' => $subject]),
         ]);
         $rows .= $tpl->getHtmlFrag('form-field-row', [
             'label' => _TEXT,
-            'hide_label' => true,
             'field_html' => getTplTextarea([
                 'id' => '1',
                 'name' => 'hometext',

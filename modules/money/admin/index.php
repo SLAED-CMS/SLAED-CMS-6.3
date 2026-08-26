@@ -170,19 +170,23 @@ function add(): void {
     }
     $rows = [
         [
+            'label_for' => 'f-sum',
             'label_html' => _MA_17,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'number',
                 'name_attr' => 'sum',
+                'input_id' => 'f-sum',
                 'value_attr' => (string)$sum,
                 'is_required' => true,
             ]),
         ],
         [
+            'label_for' => 'f-email',
             'label_html' => _MA_18,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'email',
                 'name_attr' => 'email',
+                'input_id' => 'f-email',
                 'value_attr' => $email,
                 'is_required' => true,
                 'maxlength_num' => 255,
@@ -206,9 +210,11 @@ function add(): void {
         $i++;
     }
     $rows[] = [
+        'label_for' => 'f-note',
         'label_html' => _MA_19,
         'field_html' => $tpl->getHtmlFrag('textarea', [
             'name_attr' => 'note',
+            'input_id' => 'f-note',
             'value_text' => $note,
             'rows_num' => 5,
             'input_attr' => ' placeholder="'._MA_19.'"',
@@ -361,14 +367,14 @@ function config(): void {
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/money.php');
     $rows = [
-        ['label_html' => _MA_3, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'proz', 'value_attr' => (string)($conf['money']['proz'] ?? '0')])],
-        ['label_html' => _MA_4.': EUR > USD', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'kurs', 'value_attr' => (string)($conf['money']['kurs'] ?? '')])],
+        ['label_for' => 'f-proz', 'label_html' => _MA_3, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'proz', 'input_id' => 'f-proz', 'value_attr' => (string)($conf['money']['proz'] ?? '0')])],
+        ['label_for' => 'f-kurs', 'label_html' => _MA_4.': EUR > USD', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'kurs', 'input_id' => 'f-kurs', 'value_attr' => (string)($conf['money']['kurs'] ?? '')])],
         ['label_html' => _MA_4.': EUR > RUB', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'kurs2', 'value_attr' => (string)($conf['money']['kurs2'] ?? '')])],
-        ['label_html' => _MA_5, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'bal', 'value_attr' => (string)($conf['money']['bal'] ?? '')])],
-        ['label_html' => _MA_6, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mail', 'value_attr' => (string)($conf['money']['mail'] ?? '')])],
-        ['label_html' => _MA_7, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'form', 'value_text' => (string)($conf['money']['form'] ?? ''), 'rows_num' => 3]), 'is_full' => true],
-        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)($conf['money']['anum'] ?? 25)])],
-        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)($conf['money']['anump'] ?? 10)])],
+        ['label_for' => 'f-bal', 'label_html' => _MA_5, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'bal', 'input_id' => 'f-bal', 'value_attr' => (string)($conf['money']['bal'] ?? '')])],
+        ['label_for' => 'f-mail', 'label_html' => _MA_6, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mail', 'input_id' => 'f-mail', 'value_attr' => (string)($conf['money']['mail'] ?? '')])],
+        ['label_for' => 'f-form', 'label_html' => _MA_7, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'form', 'input_id' => 'f-form', 'value_text' => (string)($conf['money']['form'] ?? ''), 'rows_num' => 3]), 'is_full' => true],
+        ['label_for' => 'f-anum', 'label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => (string)($conf['money']['anum'] ?? 25)])],
+        ['label_for' => 'f-anump', 'label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => (string)($conf['money']['anump'] ?? 10)])],
         ['label_html' => _MA_8, 'field_html' => getTplRadioGroup(['name' => 'an', 'value' => (string)($conf['money']['an'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _MA_9, 'field_html' => getTplRadioGroup(['name' => 'pr', 'value' => (string)($conf['money']['pr'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _MA_10, 'field_html' => getTplRadioGroup(['name' => 'ad', 'value' => (string)($conf['money']['ad'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],

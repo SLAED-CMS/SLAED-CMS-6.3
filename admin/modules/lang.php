@@ -246,10 +246,10 @@ function config(): void {
     $cont .= checkPerms(CONFIG_DIR.'/lang.php');
     $s_lang = $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => getTplLanguageOptions($conf['lang']['lang'], 1), 'is_config' => true]);
     $rows = [
-        ['label_html' => _LANGKEY, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'key', 'value_attr' => (string)$conf['lang']['key'], 'is_config' => true])],
+        ['label_for' => 'f-key', 'label_html' => _LANGKEY, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'key', 'input_id' => 'f-key', 'value_attr' => (string)$conf['lang']['key'], 'is_config' => true])],
         ['label_html' => _LANGTR, 'field_html' => $s_lang],
-        ['label_html' => _LANGCOUNT, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'count', 'value_attr' => (string)$conf['lang']['count'], 'is_config' => true])],
-        ['label_html' => _PERPAGE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'per_page', 'value_attr' => (string)($conf['lang']['per_page'] ?? 100), 'is_config' => true])],
+        ['label_for' => 'f-count', 'label_html' => _LANGCOUNT, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'count', 'input_id' => 'f-count', 'value_attr' => (string)$conf['lang']['count'], 'is_config' => true])],
+        ['label_for' => 'f-per-page', 'label_html' => _PERPAGE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'per_page', 'input_id' => 'f-per-page', 'value_attr' => (string)($conf['lang']['per_page'] ?? 100), 'is_config' => true])],
     ];
     $confv = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',

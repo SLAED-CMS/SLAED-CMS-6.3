@@ -260,12 +260,12 @@ function add(): void {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
     }
     $rows = [
-        ['label_html' => _SITENAME, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'name', 'value_attr' => $name, 'maxlength_num' => 255])],
-        ['label_html' => _A_LINKS_L, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'site', 'value_attr' => $site, 'maxlength_num' => 255])],
-        ['label_html' => _A_LINKS_E, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mail', 'value_attr' => $email, 'maxlength_num' => 255])],
-        ['label_html' => _HITS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'hits', 'value_attr' => (string)$hits])],
-        ['label_html' => _OUTS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'outs', 'value_attr' => (string)$outs])],
-        ['label_html' => _A_LINKS_TEXT, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'desc', 'value_text' => $desc, 'rows_num' => 5])],
+        ['label_for' => 'f-name', 'label_html' => _SITENAME, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'name', 'input_id' => 'f-name', 'value_attr' => $name, 'maxlength_num' => 255])],
+        ['label_for' => 'f-site', 'label_html' => _A_LINKS_L, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'site', 'input_id' => 'f-site', 'value_attr' => $site, 'maxlength_num' => 255])],
+        ['label_for' => 'f-mail', 'label_html' => _A_LINKS_E, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mail', 'input_id' => 'f-mail', 'value_attr' => $email, 'maxlength_num' => 255])],
+        ['label_for' => 'f-hits', 'label_html' => _HITS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'hits', 'input_id' => 'f-hits', 'value_attr' => (string)$hits])],
+        ['label_for' => 'f-outs', 'label_html' => _OUTS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'outs', 'input_id' => 'f-outs', 'value_attr' => (string)$outs])],
+        ['label_for' => 'f-desc', 'label_html' => _A_LINKS_TEXT, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'desc', 'input_id' => 'f-desc', 'value_text' => $desc, 'rows_num' => 5])],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=auto_links&op=save',
@@ -363,14 +363,14 @@ function config(): void {
     }
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows = [
-        ['label_html' => _A_1, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'img', 'options_html' => $pickopts, 'is_config' => true, 'select_attr' => 'id="img_replace"'])],
+        ['label_for' => 'f-img', 'label_html' => _A_1, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'img', 'selectid' => 'f-img', 'options_html' => $pickopts, 'is_config' => true, 'select_attr' => 'id="img_replace"'])],
         ['label_html' => _A_2, 'field_html' => $tpl->getHtmlFrag('image-preview', ['src_attr' => $path.$conf['auto_links']['img'], 'image_id' => 'picture', 'alt_text' => _SITELOGO])],
-        ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)$conf['auto_links']['num'], 'is_config' => true])],
-        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$conf['auto_links']['anum'], 'is_config' => true])],
-        ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => (string)$conf['auto_links']['nump'], 'is_config' => true])],
-        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$conf['auto_links']['anump'], 'is_config' => true])],
-        ['label_html' => _A_4, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'strip', 'value_attr' => (string)$conf['auto_links']['strip'], 'is_config' => true])],
-        ['label_html' => _A_5, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'limit', 'value_attr' => (string)$conf['auto_links']['limit'], 'is_config' => true])],
+        ['label_for' => 'f-num', 'label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'input_id' => 'f-num', 'value_attr' => (string)$conf['auto_links']['num'], 'is_config' => true])],
+        ['label_for' => 'f-anum', 'label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => (string)$conf['auto_links']['anum'], 'is_config' => true])],
+        ['label_for' => 'f-nump', 'label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'input_id' => 'f-nump', 'value_attr' => (string)$conf['auto_links']['nump'], 'is_config' => true])],
+        ['label_for' => 'f-anump', 'label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => (string)$conf['auto_links']['anump'], 'is_config' => true])],
+        ['label_for' => 'f-strip', 'label_html' => _A_4, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'strip', 'input_id' => 'f-strip', 'value_attr' => (string)$conf['auto_links']['strip'], 'is_config' => true])],
+        ['label_for' => 'f-limit', 'label_html' => _A_5, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'limit', 'input_id' => 'f-limit', 'value_attr' => (string)$conf['auto_links']['limit'], 'is_config' => true])],
         ['label_html' => _ADDAMAIL, 'field_html' => getTplRadioGroup(['name' => 'addmail', 'value' => (string)$conf['auto_links']['addmail'], 'options' => $yesno])],
     ];
     setHead();

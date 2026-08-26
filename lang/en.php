@@ -395,7 +395,7 @@ define('_NONE','None');
 define('_NOPASS','Sie haben kein Kennwort eingegeben und das Kennwort nicht wiederholt!');
 define('_NOTE','Note');
 define('_NO_INFO','No info');
-define('_OAUTHWITH','Sign in via:');
+define('_OAUTHWITH','Sign in via');
 define('_OCCUPATION','Occupation');
 define('_OK','OK');
 define('_OFFLINE','Offline');

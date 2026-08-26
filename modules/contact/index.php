@@ -47,23 +47,24 @@ function contact(): void {
     setHead(['title' => $title]);
     $cont = $tpl->getHtmlFrag('title', ['title' => $title, 'is_level_one' => true]);
     $fields = $asend ? $tpl->getHtmlFrag('form-field-row', [
+        'label_for' => 'f-id',
         'label' => _TO,
-        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'id', 'options_html' => $asend]),
+        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'id', 'input_id' => 'f-id', 'options_html' => $asend]),
     ]) : '';
     $fields .= $tpl->getHtmlFrag('form-field-row', [
+        'label_for' => 'f-sname',
         'label' => _YOURNAME,
-        'hide_label' => true,
-        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'sname', 'value_attr' => $sname, 'placeholder_text' => _YOURNAME, 'is_required' => true]),
+        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'sname', 'input_id' => 'f-sname', 'value_attr' => $sname, 'placeholder_text' => _YOURNAME, 'is_required' => true]),
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
+        'label_for' => 'f-semail',
         'label' => _YOUREMAIL,
-        'hide_label' => true,
-        'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'semail', 'value_attr' => $semail, 'placeholder_text' => _YOUREMAIL, 'is_required' => true]),
+        'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'semail', 'input_id' => 'f-semail', 'value_attr' => $semail, 'placeholder_text' => _YOUREMAIL, 'is_required' => true]),
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
+        'label_for' => 'f-message',
         'label' => _MESSAGE,
-        'hide_label' => true,
-        'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'message', 'rows_num' => 10, 'value_text' => $message, 'placeholder_text' => _MESSAGE, 'is_required' => true]),
+        'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'message', 'input_id' => 'f-message', 'rows_num' => 10, 'value_text' => $message, 'placeholder_text' => _MESSAGE, 'is_required' => true]),
     ]);
     $form = ($info ? $tpl->getHtmlFrag('block-content', ['is_section' => true, 'content' => $info, 'has_hr' => true]) : '').$tpl->getHtmlPart('form-add', [
         'action' => 'index.php?name='.$conf['name'],

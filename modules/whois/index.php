@@ -26,8 +26,9 @@ function mwhois(): void {
 			'form_name' => 'post',
 			'no_enctype' => true,
 			'fields' => $tpl->getHtmlFrag('form-field-row', [
+				'label_for' => 'f-domain-licens',
 				'label' => _WHOIS_LICENS,
-				'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'domain_licens', 'value_attr' => $domainlicens]),
+				'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'domain_licens', 'input_id' => 'f-domain-licens', 'value_attr' => $domainlicens]),
 			]),
 			'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit',
 				'extra' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'option', 'value_attr' => 'licens']),
@@ -173,11 +174,12 @@ function add(): void {
 		$dc = getVar('post', 'dc', 'url', 'http://');
 
 		$fields = $tpl->getHtmlFrag('form-field-row', [
+			'label_for' => 'f-domain',
 			'label' => _SITE,
-			'hide_label' => true,
 			'field_html' => $tpl->getHtmlFrag('input', [
 				'itype' => 'url',
 				'name_attr' => 'domain',
+				'input_id' => 'f-domain',
 				'value_attr' => $domain,
 				'maxlength_num' => '255',
 				'placeholder_text' => _SITE,
@@ -185,22 +187,24 @@ function add(): void {
 			]),
 		]);
 		$fields .= $tpl->getHtmlFrag('form-field-row', [
+			'label_for' => 'f-host',
 			'label' => _HOST,
-			'hide_label' => true,
 			'field_html' => $tpl->getHtmlFrag('input', [
 				'itype' => 'url',
 				'name_attr' => 'host',
+				'input_id' => 'f-host',
 				'value_attr' => $host,
 				'maxlength_num' => '255',
 				'placeholder_text' => _HOST,
 			]),
 		]);
 		$fields .= $tpl->getHtmlFrag('form-field-row', [
+			'label_for' => 'f-dc',
 			'label' => _DC,
-			'hide_label' => true,
 			'field_html' => $tpl->getHtmlFrag('input', [
 				'itype' => 'url',
 				'name_attr' => 'dc',
+				'input_id' => 'f-dc',
 				'value_attr' => $dc,
 				'maxlength_num' => '255',
 				'placeholder_text' => _DC,
@@ -208,15 +212,16 @@ function add(): void {
 		]);
 		$nameField = is_user()
 			? $tpl->getHtmlFrag('span', ['is_form_value' => true, 'text' => $userNameValue])
-			: $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'postname', 'value_attr' => $userNameValue, 'placeholder_text' => _YOURNAME, 'is_required' => true]);
+			: $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'postname', 'input_id' => 'f-postname', 'value_attr' => $userNameValue, 'placeholder_text' => _YOURNAME, 'is_required' => true]);
 		$fields = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('whois')])
-			.$tpl->getHtmlFrag('form-field-row', ['label' => _YOURNAME, 'hide_label' => !is_user(), 'field_html' => $nameField])
+			.$tpl->getHtmlFrag('form-field-row', ['label_for' => is_user() ? '' : 'f-postname', 'label' => _YOURNAME, 'field_html' => $nameField])
 			.$fields
 			.$tpl->getHtmlFrag('form-field-row', [
+				'label_for' => 'f-hometext',
 				'label' => _COMMENT,
-				'hide_label' => true,
 				'field_html' => $tpl->getHtmlFrag('textarea', [
 					'name_attr' => 'hometext',
+					'input_id' => 'f-hometext',
 					'rows_num' => 5,
 					'value_text' => $hometext,
 					'placeholder_text' => _COMMENT,

@@ -8,6 +8,7 @@
     {% if is_config %} sl-select-config{% endif %}
   "
   {% endif %}
+  {% if input_id %}id="{{ input_id }}"{% endif %}
   {% if placeholder_text %}placeholder="{{ placeholder_text }}"{% endif %}
   {% if is_required %}required{% endif %}
   {% if is_readonly %}readonly{% endif %}

@@ -1023,6 +1023,11 @@ tr.sl-row-collapsed {
   background-color: var(--sl-surface);
 }
 
+/* A row asked to hide has to outrank the display the row itself sets, which a single class cannot do from further up the file */
+.sl-div-item.sl-hidden {
+  display: none;
+}
+
 .sl-div-item:has(.toastui-editor-defaultUI),
 .sl-div-item:has(.ck-editor),
 .sl-div-item:has(.cm-editor),
@@ -1047,25 +1052,13 @@ tr.sl-row-collapsed {
   line-height: var(--sl-size-control);
 }
 
-.sl-div-label:not(:empty):not(:has(.sl-div-label-main)):not(
-    :has(+ .sl-div-field .sl-radio-group)
-  )::after,
-.sl-div-label:not(:has(+ .sl-div-field .sl-radio-group))
-  .sl-div-label-main::after {
-  content: ":";
-}
-
-.sl-div-label .sl-no-colon::after {
-  content: none;
-}
-
-/* The colon is added by a selector carrying two :not(:has()) tests, which score far above a plain class pair, so the one
-   label that asks for no colon cannot take it back without winning outright */
-.sl-div-label .sl-div-label-main.sl-no-colon::after {
-  content: none !important;
+/* A tall field is read from its first line, so the label meets it there instead of floating at half its height */
+.sl-div-item:has(textarea) {
+  align-items: start;
 }
 
 .sl-div-label .sl-small {
+  display: block;
   margin: var(--sl-space-2) 0 0 0;
 }
 
@@ -1299,20 +1292,6 @@ tr.sl-row-collapsed {
 .sl-toggle-form-block > .sl-div-grid > .sl-div-item:last-child {
   border-bottom: 0;
   padding-bottom: 0;
-}
-
-.sl-toggle-form-block
-  > .sl-div-grid
-  > .sl-div-item
-  > .sl-div-label:not(:empty):not(:has(.sl-div-label-main)):not(
-    :has(+ .sl-div-field .sl-radio-group)
-  )::after,
-.sl-toggle-form-block
-  > .sl-div-grid
-  > .sl-div-item
-  > .sl-div-label:not(:has(+ .sl-div-field .sl-radio-group))
-  .sl-div-label-main::after {
-  content: none;
 }
 
 .sl-toggle-form-block-title {
@@ -4084,16 +4063,8 @@ button.sl-but-mini {
   padding-top: var(--sl-space-3);
 }
 
-.sl-form-label::after {
-  content: ":";
-}
-
 .sl-form-value {
   padding-top: var(--sl-space-3);
-}
-
-.sl-action-label::after {
-  content: ":";
 }
 
 .sl-form-submit {
@@ -4308,10 +4279,6 @@ button.sl-but-mini {
   font-weight: var(--sl-weight-medium);
   margin-bottom: var(--sl-space-2);
   color: var(--sl-text-muted);
-}
-
-.sl-changelog-filter-field label::after {
-  content: ":";
 }
 
 .sl-changelog-filter-field input {

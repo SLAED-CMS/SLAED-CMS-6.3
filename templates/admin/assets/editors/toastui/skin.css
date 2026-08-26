@@ -421,11 +421,17 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     outline-offset: var(--sl-ring-gap);
 }
 
+/* One field standard for the window too: the caption stands left of what it names, the way every other form in the system reads */
+.sl-toastui-upload div:has(> .sl-fm-label) {
+    align-items: center;
+    display: grid;
+    gap: var(--sl-space-6);
+    grid-template-columns: 1fr 3fr;
+}
+
 .sl-toastui-upload .sl-fm-label {
     color: var(--sl-text-strong);
-    display: block;
     font-size: var(--sl-font-small);
-    margin-bottom: var(--sl-space-3);
 }
 
 .sl-toastui-upload .sl-fm-drop {

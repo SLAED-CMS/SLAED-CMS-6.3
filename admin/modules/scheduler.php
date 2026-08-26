@@ -121,10 +121,12 @@ function add(string $name = ''): void {
     $cont .= checkPerms(CONFIG_DIR.'/scheduler.php');
     $cont .= $tpl->getHtmlFrag('alert', ['text' => $info]);
     $rows = [[
+        'label_for' => 'f-job',
         'label_html' => _SCHEDULER_JOBKEY,
         'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'text',
             'name_attr' => 'job',
+            'input_id' => 'f-job',
             'value_attr' => (string)$key,
             'maxlength_num' => 32,
             'is_required' => true,
@@ -132,10 +134,12 @@ function add(string $name = ''): void {
             'input_attr' => $readonly,
         ]),
     ], [
+        'label_for' => 'f-title',
         'label_html' => _TITLE,
         'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'text',
             'name_attr' => 'title',
+            'input_id' => 'f-title',
             'value_attr' => (string)$job['title'],
             'maxlength_num' => 100,
             'is_required' => true,
@@ -152,10 +156,12 @@ function add(string $name = ''): void {
     ]];
     if ($iscustom) {
         $rows[] = [
+            'label_for' => 'f-url',
             'label_html' => _SCHEDULER_URL,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'url',
                 'name_attr' => 'url',
+                'input_id' => 'f-url',
                 'value_attr' => $url,
                 'maxlength_num' => 255,
                 'placeholder_text' => 'https://example.com/task',
@@ -175,10 +181,12 @@ function add(string $name = ''): void {
         ];
     }
     $rows[] = [
+        'label_for' => 'f-schedule',
         'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SCHEDULER_SCHED, 'hint' => _SCHEDULER_CRONFMT]),
         'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'text',
             'name_attr' => 'schedule',
+            'input_id' => 'f-schedule',
             'value_attr' => $schedule,
             'maxlength_num' => 100,
             'placeholder_text' => '0 2 * * *',
@@ -187,10 +195,12 @@ function add(string $name = ''): void {
         ]),
     ];
     $rows[] = [
+        'label_for' => 'f-priority',
         'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SCHEDULER_PRIO, 'hint' => _SCHEDULER_PRIOTIP]),
         'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'number',
             'name_attr' => 'priority',
+            'input_id' => 'f-priority',
             'value_attr' => (string)$job['priority'],
             'is_required' => true,
             'is_config' => true,
@@ -198,10 +208,12 @@ function add(string $name = ''): void {
         ]),
     ];
     $rows[] = [
+        'label_for' => 'f-lock-timeout',
         'label_html' => _SCHEDULER_LOCK,
         'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'number',
             'name_attr' => 'lock_timeout',
+            'input_id' => 'f-lock-timeout',
             'value_attr' => (string)$job['lock_timeout'],
             'is_required' => true,
             'is_config' => true,

@@ -395,7 +395,7 @@ define('_NONE','Немає');
 define('_NOPASS','Ви не вказали і не повторили пароль!');
 define('_NOTE','Примітка');
 define('_NO_INFO','Немає інформації');
-define('_OAUTHWITH','Увійти через:');
+define('_OAUTHWITH','Увійти через');
 define('_OCCUPATION','Рід занять');
 define('_OK','OK');
 define('_OFFLINE','Офлайн');

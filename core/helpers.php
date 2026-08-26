@@ -511,30 +511,34 @@ function getTplFieldsIn(array $data = []): string {
                 $fieldin   = !empty($fieldb[$i]) ? $fieldb[$i] : ($m[2] ?? '');
                 $requir    = (($m[4] ?? '0') == '1') ? ' required' : '';
                 $fhtml = '';
+                $fid = 'f-field-'.$i;
                 if (($m[3] ?? '') == '1') {
                     $dval = $fieldin ? getConst($fieldin) : '';
                     $fhtml = $tpl->getHtmlFrag('input', [
                         'input_attr' => 'placeholder="'.$dval.'"'.$requir,
                         'itype' => 'text',
                         'name_attr' => 'field[]',
+                        'input_id' => $fid,
                         'value_attr' => $dval,
                     ]);
                 } elseif ($m[3] == '2') {
-                    $fhtml = $tpl->getHtmlFrag('textarea', ['name_attr' => 'field[]', 'rows_num' => 5, 'value_text' => $fieldin, 'input_attr' => trim($requir)]);
+                    $fhtml = $tpl->getHtmlFrag('textarea', ['name_attr' => 'field[]', 'input_id' => $fid, 'rows_num' => 5, 'value_text' => $fieldin, 'input_attr' => trim($requir)]);
                 } elseif ($m[3] == '3') {
                     $opts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _NO, 'is_selected' => $fieldin === '']);
                     foreach (explode(',', $m[2] ?? '') as $opt) {
                         if ($opt === '') continue;
                         $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $opt, 'label_text' => $opt, 'is_selected' => $opt === $fieldin]);
                     }
-                    $fhtml = $tpl->getHtmlFrag('select', ['name_attr' => 'field[]', 'options_html' => $opts, 'select_attr' => trim($requir)]);
+                    $fhtml = $tpl->getHtmlFrag('select', ['name_attr' => 'field[]', 'input_id' => $fid, 'options_html' => $opts, 'select_attr' => trim($requir)]);
                 } elseif ($m[3] == '4') {
+                    $fid = '';
                     $fhtml = getTplAddDateTime(['name' => 'field[]', 'time' => $fieldin, 'with' => true, 'max' => 16]);
                 } elseif ($m[3] == '5') {
+                    $fid = '';
                     $fhtml = getTplAddDateTime(['name' => 'field[]', 'time' => $fieldin, 'with' => false, 'max' => 10]);
                 }
                 if ($fhtml !== '') {
-                    $out .= $tpl->getHtmlFrag('form-field-row', ['label' => getConst($m[1]), 'field_html' => $fhtml]);
+                    $out .= $tpl->getHtmlFrag('form-field-row', ['label_for' => $fid, 'label' => getConst($m[1]), 'field_html' => $fhtml]);
                 }
             }
         }
@@ -939,9 +943,9 @@ function getTplCategorySelect(string $mod = '', int $id = 0, string $name = '', 
                 'is_selected' => $id == $key,
             ]);
         }
-        return !$raw ? $tpl->getHtmlFrag('select', ['name_attr' => $name, 'select_class' => $clas, 'title' => _CATEGORIES, 'options_html' => $opts]) : $opts;
+        return !$raw ? $tpl->getHtmlFrag('select', ['name_attr' => $name, 'input_id' => 'f-'.$name, 'select_class' => $clas, 'title' => _CATEGORIES, 'options_html' => $opts]) : $opts;
     }
-    if ($empty) return $tpl->getHtmlFrag('select', ['name_attr' => $name, 'select_class' => $clas, 'title' => _CATEGORIES, 'options_html' => $empty]);
+    if ($empty) return $tpl->getHtmlFrag('select', ['name_attr' => $name, 'input_id' => 'f-'.$name, 'select_class' => $clas, 'title' => _CATEGORIES, 'options_html' => $empty]);
     return '';
 }
 

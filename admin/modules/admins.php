@@ -194,53 +194,63 @@ function add(): void {
             'field_html' => $nameField,
         ],
         [
+            'label_for' => 'f-title',
             'label_html' => _URANK,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
                 'maxlength_num' => 50,
                 'name_attr' => 'title',
+                'input_id' => 'f-title',
                 'placeholder_text' => _URANK,
                 'value_attr' => (string)$title,
             ]),
         ],
         [
+            'label_for' => 'f-email',
             'label_html' => _EMAIL,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'email',
                 'is_required' => true,
                 'maxlength_num' => 255,
                 'name_attr' => 'email',
+                'input_id' => 'f-email',
                 'placeholder_text' => _EMAIL,
                 'value_attr' => (string)$email,
             ]),
         ],
         [
+            'label_for' => 'f-url',
             'label_html' => _URL,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'url',
                 'maxlength_num' => 255,
                 'name_attr' => 'url',
+                'input_id' => 'f-url',
                 'placeholder_text' => _URL,
                 'value_attr' => (string)$url,
             ]),
         ],
         [
+            'label_for' => 'f-pwd',
             'label_html' => $aid
                 ? $tpl->getHtmlFrag('label-hint', ['label' => _PASSWORD, 'hint' => _ADMINPASSKEEP])
                 : _PASSWORD,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'password',
                 'name_attr' => 'pwd',
+                'input_id' => 'f-pwd',
                 'placeholder_text' => _PASSWORD,
                 'input_attr' => $need.' autocomplete="new-password"',
                 'value_attr' => '',
             ]),
         ],
         [
+            'label_for' => 'f-pwdtwo',
             'label_html' => _RETYPEPASSWORD,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'password',
                 'name_attr' => 'pwdtwo',
+                'input_id' => 'f-pwdtwo',
                 'placeholder_text' => _RETYPEPASSWORD,
                 'input_attr' => $need.' autocomplete="new-password"',
                 'value_attr' => '',
@@ -251,29 +261,35 @@ function add(): void {
             'field_html' => getTplRadioGroup(['name' => 'smail', 'value' => (string)(int)$smail, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
         ],
         [
+            'label_for' => 'f-super',
             'label_html' => _SUPERUSER,
             'field_html' => $tpl->getHtmlFrag('checkbox', [
                 'is_checked' => (int)$super === 1,
                 'name_attr' => 'super',
+                'input_id' => 'f-super',
                 'value_attr' => '1',
             ]),
         ],
         [
+            'label_for' => 'f-mail',
             'label_html' => $tpl->getHtmlFrag('span', [
                 'text' => _MAIL_SENDE,
-                'class' => 'sl-div-label-main sl-no-colon',
+                'class' => 'sl-div-label-main',
             ]),
             'field_html' => $tpl->getHtmlFrag('checkbox', [
                 'input_attr' => 'data-sl-toggle-control="sl_form_admin_mail"',
                 'is_checked' => $check !== '',
                 'name_attr' => 'mail',
+                'input_id' => 'f-mail',
                 'value_attr' => '1',
             ]),
         ],
         [
+            'label_for' => 'f-mailtext',
             'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _MAIL_TEXT, 'hint' => _MAIL_PASS_INFO]),
             'field_html' => $tpl->getHtmlFrag('textarea', [
                 'name_attr' => 'mailtext',
+                'input_id' => 'f-mailtext',
                 'rows_num' => 10,
                 'value_text' => $mailtext,
             ]),

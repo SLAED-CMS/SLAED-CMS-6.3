@@ -232,26 +232,31 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
     $rows = [
         [
+            'label_for' => 'f-uname',
             'label_html' => _NICKNAME,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'uname', 'value_attr' => $uname, 'maxlength_num' => 25, 'placeholder_text' => _NICKNAME, 'is_required' => true]),
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'uname', 'input_id' => 'f-uname', 'value_attr' => $uname, 'maxlength_num' => 25, 'placeholder_text' => _NICKNAME, 'is_required' => true]),
         ],
         [
+            'label_for' => 'f-rank',
             'label_html' => _URANK,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'rank', 'value_attr' => $rank, 'maxlength_num' => 25, 'placeholder_text' => _URANK]),
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'rank', 'input_id' => 'f-rank', 'value_attr' => $rank, 'maxlength_num' => 25, 'placeholder_text' => _URANK]),
         ],
         [
+            'label_for' => 'f-email',
             'label_html' => _EMAIL,
-            'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'email', 'value_attr' => $email, 'maxlength_num' => 255, 'placeholder_text' => _EMAIL, 'is_required' => true]),
+            'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'email', 'input_id' => 'f-email', 'value_attr' => $email, 'maxlength_num' => 255, 'placeholder_text' => _EMAIL, 'is_required' => true]),
         ],
         [
+            'label_for' => 'f-site',
             'label_html' => _SITEURL,
-            'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'site', 'value_attr' => $site, 'maxlength_num' => 255, 'placeholder_text' => _SITEURL]),
+            'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'site', 'input_id' => 'f-site', 'value_attr' => $site, 'maxlength_num' => 255, 'placeholder_text' => _SITEURL]),
         ],
     ];
     if ($avatar !== '') {
         $rows[] = [
+            'label_for' => 'f-avatar',
             'label_html' => _AVATAR,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'avatar', 'value_attr' => $avatar, 'maxlength_num' => 255, 'placeholder_text' => _AVATAR]),
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'avatar', 'input_id' => 'f-avatar', 'value_attr' => $avatar, 'maxlength_num' => 255, 'placeholder_text' => _AVATAR]),
         ];
     }
     $rows[] = [
@@ -259,16 +264,19 @@ function add(): void {
         'field_html' => getTplAddDateTime(['name' => 'reg', 'time' => (string)($reg ?? ''), 'with' => true, 'max' => 16, 'is_config' => true]),
     ];
     $rows[] = [
+        'label_for' => 'f-occ',
         'label_html' => _OCCUPATION,
-        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'occ', 'value_attr' => $occ, 'maxlength_num' => 100, 'placeholder_text' => _OCCUPATION]),
+        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'occ', 'input_id' => 'f-occ', 'value_attr' => $occ, 'maxlength_num' => 100, 'placeholder_text' => _OCCUPATION]),
     ];
     $rows[] = [
+        'label_for' => 'f-from',
         'label_html' => _LOCATION,
-        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'from', 'value_attr' => $from, 'maxlength_num' => 100, 'placeholder_text' => _LOCATION]),
+        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'from', 'input_id' => 'f-from', 'value_attr' => $from, 'maxlength_num' => 100, 'placeholder_text' => _LOCATION]),
     ];
     $rows[] = [
+        'label_for' => 'f-inter',
         'label_html' => _INTERESTS,
-        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'inter', 'value_attr' => $inter, 'maxlength_num' => 150, 'placeholder_text' => _INTERESTS]),
+        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'inter', 'input_id' => 'f-inter', 'value_attr' => $inter, 'maxlength_num' => 150, 'placeholder_text' => _INTERESTS]),
     ];
     $rows[] = [
         'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SIGNATURE, 'hint' => _SIGNATURE_TEXT]),
@@ -291,8 +299,9 @@ function add(): void {
             ]);
         }
         $rows[] = [
+            'label_for' => 'f-story',
             'label_html' => _C_12,
-            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'story', 'options_html' => $storyopts]),
+            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'story', 'selectid' => 'f-story', 'options_html' => $storyopts]),
         ];
     }
     $rows[] = [
@@ -320,8 +329,9 @@ function add(): void {
         }
         if ($themecount > 1) {
             $rows[] = [
+                'label_for' => 'f-theme',
                 'label_html' => _THEME,
-                'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'theme', 'options_html' => $themeopts]),
+                'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'theme', 'selectid' => 'f-theme', 'options_html' => $themeopts]),
             ];
         }
     }
@@ -331,13 +341,15 @@ function add(): void {
     ];
     if ($conf['multilingual'] == 1) {
         $rows[] = [
+            'label_for' => 'f-lang',
             'label_html' => _LANGUAGE,
-            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => getTplLanguageOptions($lang)]),
+            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options_html' => getTplLanguageOptions($lang)]),
         ];
     }
     $rows[] = [
+        'label_for' => 'f-point',
         'label_html' => _POINTS,
-        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'point', 'value_attr' => $point, 'placeholder_text' => _POINTS]),
+        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'point', 'input_id' => 'f-point', 'value_attr' => $point, 'placeholder_text' => _POINTS]),
     ];
     for ($i = 0; $i < 5; $i++) {
         $a = $i + 1;
@@ -369,16 +381,18 @@ function add(): void {
         ]);
     }
     $rows[] = [
+        'label_for' => 'f-group',
         'label_html' => _SPEC_GROUP,
-        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'group', 'options_html' => $grpopts]),
+        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'group', 'selectid' => 'f-group', 'options_html' => $grpopts]),
     ];
     $rows[] = [
         'label_html' => _BIRTHDAY,
         'field_html' => getTplAddDateTime(['name' => 'birth', 'time' => (string)$birth, 'with' => false, 'max' => 10, 'is_config' => true]),
     ];
     $rows[] = [
+        'label_for' => 'f-gender',
         'label_html' => _GENDER,
-        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'gender', 'is_config' => true, 'options_html' => $genderopts]),
+        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'gender', 'selectid' => 'f-gender', 'is_config' => true, 'options_html' => $genderopts]),
     ];
     $fieldvals = explode('|', $field);
     $fieldcfgs = explode('||', (string)$conf['fields']['account']);
@@ -418,16 +432,18 @@ function add(): void {
         }
     }
     $rows[] = [
+        'label_for' => 'f-pass',
         'label_html' => _PASSWORD,
-        'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'pass', 'value_attr' => '', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD]),
+        'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'pass', 'input_id' => 'f-pass', 'value_attr' => '', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD]),
     ];
     $rows[] = [
         'label_html' => _RETYPEPASSWORD,
         'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'pass2', 'value_attr' => '', 'maxlength_num' => 25, 'placeholder_text' => _RETYPEPASSWORD]),
     ];
     $rows[] = [
+        'label_for' => 'f-mail',
         'label_html' => _MAIL_SENDE,
-        'field_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'mail', 'value_attr' => '1', 'is_checked' => false, 'input_attr' => 'data-sl-toggle-control="sl_form_account_mail"']),
+        'field_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'mail', 'input_id' => 'f-mail', 'value_attr' => '1', 'is_checked' => false, 'input_attr' => 'data-sl-toggle-control="sl_form_account_mail"']),
     ];
     $rows[] = [
         'label_html' => '',
@@ -725,45 +741,56 @@ function config(): void {
     }
     $rows = [
         [
+            'label_for' => 'f-adirectory',
             'label_html' => _ADIR,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'adirectory', 'value_attr' => (string)$conf['users']['adirectory'], 'is_config' => true]),
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'adirectory', 'input_id' => 'f-adirectory', 'value_attr' => (string)$conf['users']['adirectory'], 'is_config' => true]),
         ],
         [
+            'label_for' => 'f-atypefile',
             'label_html' => _ATYPE,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'atypefile', 'value_attr' => (string)$conf['users']['atypefile'], 'is_config' => true]),
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'atypefile', 'input_id' => 'f-atypefile', 'value_attr' => (string)$conf['users']['atypefile'], 'is_config' => true]),
         ],
         [
+            'label_for' => 'f-amaxsize',
             'label_html' => _ASIZE,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'amaxsize', 'value_attr' => (string)$conf['users']['amaxsize'], 'is_config' => true]),
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'amaxsize', 'input_id' => 'f-amaxsize', 'value_attr' => (string)$conf['users']['amaxsize'], 'is_config' => true]),
         ],
         [
+            'label_for' => 'f-awidth',
             'label_html' => _AWIDTH._AIN,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'awidth', 'value_attr' => (string)$conf['users']['awidth'], 'is_config' => true]),
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'awidth', 'input_id' => 'f-awidth', 'value_attr' => (string)$conf['users']['awidth'], 'is_config' => true]),
         ],
         [
+            'label_for' => 'f-aheight',
             'label_html' => _AHEIGHT._AIN,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'aheight', 'value_attr' => (string)$conf['users']['aheight'], 'is_config' => true]),
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'aheight', 'input_id' => 'f-aheight', 'value_attr' => (string)$conf['users']['aheight'], 'is_config' => true]),
         ],
         [
+            'label_for' => 'f-user',
             'label_html' => _VOTING_TIME,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'user', 'value_attr' => (string)intval($conf['users']['user_t'] / 86400), 'is_config' => true]),
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'user', 'input_id' => 'f-user', 'value_attr' => (string)intval($conf['users']['user_t'] / 86400), 'is_config' => true]),
         ],
         [
+            'label_for' => 'f-anum',
             'label_html' => _C_34,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$conf['users']['anum'], 'is_config' => true]),
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => (string)$conf['users']['anum'], 'is_config' => true]),
         ],
         [
+            'label_for' => 'f-anump',
             'label_html' => _C_36,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$conf['users']['anump'], 'is_config' => true]),
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => (string)$conf['users']['anump'], 'is_config' => true]),
         ],
         [
+            'label_for' => 'f-minpass',
             'label_html' => _PASSWDLEN,
-            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'minpass', 'options_html' => $minpassopts, 'is_config' => true]),
+            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'minpass', 'selectid' => 'f-minpass', 'options_html' => $minpassopts, 'is_config' => true]),
         ],
         [
+            'label_for' => 'f-enter',
             'label_html' => _LOGINFL,
             'field_html' => $tpl->getHtmlFrag('select', [
                 'name_attr' => 'enter',
+                'selectid' => 'f-enter',
                 'options_html' =>
                     $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _LOGINL, 'is_selected' => $conf['users']['enter'] == '0']).
                     $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _LOGINF, 'is_selected' => $conf['users']['enter'] == '1']),
@@ -807,8 +834,9 @@ function config(): void {
             'field_html' => getTplRadioGroup(['name' => 'rule', 'value' => (string)$conf['users']['rule'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
         ],
         [
+            'label_for' => 'f-rules',
             'label_html' => _RULES,
-            'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'rules', 'value_text' => (string)$conf['users']['rules'], 'rows_num' => 6, 'is_config' => true]),
+            'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'rules', 'input_id' => 'f-rules', 'value_text' => (string)$conf['users']['rules'], 'rows_num' => 6, 'is_config' => true]),
         ],
         [
             'label_html' => _OAUTHACT,
@@ -819,32 +847,38 @@ function config(): void {
             'field_html' => getTplRadioGroup(['name' => 'gactive', 'value' => (string)($conf['oauth']['google']['active'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
         ],
         [
+            'label_for' => 'f-gclientid',
             'label_html' => _OAUTHGID,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'gclientid', 'value_attr' => (string)($conf['oauth']['google']['clientid'] ?? ''), 'is_config' => true]),
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'gclientid', 'input_id' => 'f-gclientid', 'value_attr' => (string)($conf['oauth']['google']['clientid'] ?? ''), 'is_config' => true]),
         ],
         [
+            'label_for' => 'f-gsecret',
             'label_html' => _OAUTHGKEY,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'gsecret', 'value_attr' => (string)($conf['oauth']['google']['secret'] ?? ''), 'is_config' => true]),
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'gsecret', 'input_id' => 'f-gsecret', 'value_attr' => (string)($conf['oauth']['google']['secret'] ?? ''), 'is_config' => true]),
         ],
         [
             'label_html' => _OAUTHMACT,
             'field_html' => getTplRadioGroup(['name' => 'mactive', 'value' => (string)($conf['oauth']['microsoft']['active'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
         ],
         [
+            'label_for' => 'f-mclientid',
             'label_html' => _OAUTHMID,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mclientid', 'value_attr' => (string)($conf['oauth']['microsoft']['clientid'] ?? ''), 'is_config' => true]),
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mclientid', 'input_id' => 'f-mclientid', 'value_attr' => (string)($conf['oauth']['microsoft']['clientid'] ?? ''), 'is_config' => true]),
         ],
         [
+            'label_for' => 'f-msecret',
             'label_html' => _OAUTHMKEY,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'msecret', 'value_attr' => (string)($conf['oauth']['microsoft']['secret'] ?? ''), 'is_config' => true]),
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'msecret', 'input_id' => 'f-msecret', 'value_attr' => (string)($conf['oauth']['microsoft']['secret'] ?? ''), 'is_config' => true]),
         ],
         [
+            'label_for' => 'f-name',
             'label_html' => _NAME_BLOCK,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'name', 'value_attr' => (string)$conf['users']['name_b'], 'is_config' => true]),
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'name', 'input_id' => 'f-name', 'value_attr' => (string)$conf['users']['name_b'], 'is_config' => true]),
         ],
         [
+            'label_for' => 'f-mail',
             'label_html' => _MAIL_BLOCK,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mail', 'value_attr' => (string)$conf['users']['mail_b'], 'is_config' => true]),
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mail', 'input_id' => 'f-mail', 'value_attr' => (string)$conf['users']['mail_b'], 'is_config' => true]),
         ],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [

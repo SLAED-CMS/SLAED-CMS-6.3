@@ -116,13 +116,13 @@ function add(): void {
         $cont .= getTplPreviewContent(['title' => $title, 'texta' => $body, 'mod' => 'all']);
     }
     $rows = [
-        ['label_html' => _CTITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 255])],
-        ['label_html' => _CVERSION, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'num', 'value_attr' => $num, 'maxlength_num' => 255])],
-        ['label_html' => _CURL, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'url', 'value_attr' => $url, 'maxlength_num' => 255])],
-        ['label_html' => _CODE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'code', 'value_attr' => $code, 'maxlength_num' => 255])],
-        ['label_html' => _ID, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'prod', 'value_attr' => (string)$prod])],
+        ['label_for' => 'f-title', 'label_html' => _CTITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'input_id' => 'f-title', 'value_attr' => $title, 'maxlength_num' => 255])],
+        ['label_for' => 'f-num', 'label_html' => _CVERSION, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'num', 'input_id' => 'f-num', 'value_attr' => $num, 'maxlength_num' => 255])],
+        ['label_for' => 'f-url', 'label_html' => _CURL, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'url', 'input_id' => 'f-url', 'value_attr' => $url, 'maxlength_num' => 255])],
+        ['label_for' => 'f-code', 'label_html' => _CODE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'code', 'input_id' => 'f-code', 'value_attr' => $code, 'maxlength_num' => 255])],
+        ['label_for' => 'f-prod', 'label_html' => _ID, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'prod', 'input_id' => 'f-prod', 'value_attr' => (string)$prod])],
         ['label_html' => _CADOWN, 'field_html' => getTplRadioGroup(['name' => 'status', 'value' => (string)$status, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => _TEXT, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'body', 'value_text' => $body, 'rows_num' => 15])],
+        ['label_for' => 'f-body', 'label_html' => _TEXT, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'body', 'input_id' => 'f-body', 'value_text' => $body, 'rows_num' => 15])],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=clients&op=save',

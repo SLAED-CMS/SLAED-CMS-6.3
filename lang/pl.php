@@ -395,7 +395,7 @@ define('_NONE','Nie');
 define('_NOPASS','Nie podałeś i nie powtarzać hasło!');
 define('_NOTE','Uwaga');
 define('_NO_INFO','Brak informacji');
-define('_OAUTHWITH','Zaloguj się przez:');
+define('_OAUTHWITH','Zaloguj się przez');
 define('_OCCUPATION','Zawód');
 define('_OK','OK');
 define('_OFFLINE','Offline');

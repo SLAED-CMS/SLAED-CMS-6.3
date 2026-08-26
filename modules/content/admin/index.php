@@ -101,22 +101,26 @@ function add(): void {
     $cont .= getTplPreviewContent($prev);
     $rows = [
         [
+            'label_for' => 'f-title',
             'label_html' => _TITLE,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'is_required' => true,
                 'itype' => 'text',
                 'maxlength_num' => 100,
                 'name_attr' => 'title',
+                'input_id' => 'f-title',
                 'placeholder_text' => _TITLE,
                 'value_attr' => $title,
             ]),
         ],
         [
+            'label_for' => 'f-url',
             'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _RSSFILE, 'hint' => _RSSINFO]),
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
                 'maxlength_num' => 200,
                 'name_attr' => 'url',
+                'input_id' => 'f-url',
                 'placeholder_text' => _RSSFILE,
                 'value_attr' => $url,
             ]),
@@ -217,10 +221,10 @@ function config(): void {
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/content.php');
     $rows = [
-        ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => $conf['content']['num']])],
-        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => $conf['content']['anum']])],
-        ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => $conf['content']['nump']])],
-        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => $conf['content']['anump']])],
+        ['label_for' => 'f-num', 'label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'input_id' => 'f-num', 'value_attr' => $conf['content']['num']])],
+        ['label_for' => 'f-anum', 'label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => $conf['content']['anum']])],
+        ['label_for' => 'f-nump', 'label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'input_id' => 'f-nump', 'value_attr' => $conf['content']['nump']])],
+        ['label_for' => 'f-anump', 'label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => $conf['content']['anump']])],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=content&op=configsave',

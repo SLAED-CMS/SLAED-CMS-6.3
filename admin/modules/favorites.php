@@ -28,11 +28,11 @@ function config(): void {
     $cont = getTplAdminTabs(['ops' => ['name=favorites', 'name=favorites&op=config', 'name=favorites&op=info'], 'tabs' => [_HOME, _PREFERENCES, _DOCS], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/favorites.php');
     $rows = [
-        ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)$conf['favorites']['num'], 'is_config' => true])],
-        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$conf['favorites']['anum'], 'is_config' => true])],
-        ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => (string)$conf['favorites']['nump'], 'is_config' => true])],
-        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$conf['favorites']['anump'], 'is_config' => true])],
-        ['label_html' => _FAVOR_UMAX, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'favorites', 'value_attr' => (string)$conf['favorites']['favorites'], 'is_config' => true])],
+        ['label_for' => 'f-num', 'label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'input_id' => 'f-num', 'value_attr' => (string)$conf['favorites']['num'], 'is_config' => true])],
+        ['label_for' => 'f-anum', 'label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => (string)$conf['favorites']['anum'], 'is_config' => true])],
+        ['label_for' => 'f-nump', 'label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'input_id' => 'f-nump', 'value_attr' => (string)$conf['favorites']['nump'], 'is_config' => true])],
+        ['label_for' => 'f-anump', 'label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => (string)$conf['favorites']['anump'], 'is_config' => true])],
+        ['label_for' => 'f-favorites', 'label_html' => _FAVOR_UMAX, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'favorites', 'input_id' => 'f-favorites', 'value_attr' => (string)$conf['favorites']['favorites'], 'is_config' => true])],
         ['label_html' => _FAVOR_ACT, 'field_html' => getTplRadioGroup([
             'name' => 'favact',
             'value' => (string)$conf['favorites']['favact'],
