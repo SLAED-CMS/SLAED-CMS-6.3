@@ -42,15 +42,17 @@
                 files: [],
                 view: [],
                 pick: [],
+                sent: [],
                 cur: 0,
                 pane: '',
                 full: false,
                 mode: 'list',
                 kind: '',
                 find: '',
-                page: 0,
                 state: 'skel',
                 queue: null,
+                want: null,
+                sort: { key: 'date', dir: -1 },
                 anch: -1
             };
         }
@@ -65,6 +67,17 @@
     function getSlot(id, name) {
         var el = getPanel(id);
         return el ? el.querySelector('[data-sl-slot="' + name + '"]') : null;
+    }
+
+    // The options window stands beside the catalogue and not inside it, so it carries a family of its own
+    function getOpts(id) {
+        var opt = getOpt(id);
+        return opt.opts ? doc.getElementById(opt.opts) : null;
+    }
+
+    function getOptsPart(id, name) {
+        var el = getOpts(id);
+        return el ? el.querySelector('[data-sl-opts="' + name + '"]') : null;
     }
 
     function getShot(id) {
@@ -92,6 +105,7 @@
         if (root && el.parentNode !== root && !el.classList.contains('sl-is-full')) root.appendChild(el);
         if (room.pane === '') setPane(id, '');
         if (opt.canlist) getFiles(id);
+        setRoom(id);
         win.setWindowOpen(el);
     }
 
@@ -151,9 +165,24 @@
         ed.exec('addImage', { imageUrl: url, altText: text || 'image' });
     }
 
-    function addAttach(id, file) {
-        var txt = '[attach=' + file + ' align=left title=title]';
+    function addAttach(id, file, title, align) {
+        var txt = '[attach=' + file + ' align=' + (align || 'none') + ' title=' + getTagText(title || file) + ']';
         if (api.insertText) api.insertText(id, txt);
+    }
+
+    // A markdown picture carries no side, so one that takes a side is written as the tag the parser reads instead
+    function addImage(id, url, title, align) {
+        if (align === '') {
+            addSource(id, url, title);
+            return;
+        }
+        if (api.insertText) api.insertText(id, '[img=' + align + ' alt=' + getTagText(title) + ']' + url + '[/img]');
+    }
+
+    // The parser reads a caption out of a tag by a narrow alphabet, and a character outside it would cut the tag in half
+    function getTagText(text) {
+        var out = String(text || '').replace(/[^\p{L}0-9_\-. "]+/gu, ' ').replace(/\s+/g, ' ').trim();
+        return out === '' ? 'title' : out;
     }
 
     function getAltText(id, pane) {
@@ -209,11 +238,12 @@
         var url = opt.url ? doc.getElementById(opt.url) : null;
         var src = url ? String(url.value || '').trim() : '';
         var alt = opt.urlalt ? doc.getElementById(opt.urlalt) : null;
+        var text = getAltText(id, 'url');
         if (src === '') return;
-        addSource(id, src, getAltText(id, 'url'));
+        // A picture from another server takes a side like any other, so it goes through the same options window
+        askInsert(id, 'image', [{ url: src, file: text || src, image: true, path: '' }], text);
         if (url) url.value = '';
         if (alt) alt.value = '';
-        setPanel(id, false);
     }
 
     // The queue runs the files one at a time: each carries its own bar and its own cancel, and a refusal names the reason the server gave and never stops the rest
@@ -298,7 +328,7 @@
             var why = row ? '' : ((json && json.error) || getLab(id, 'upload', 'Upload failed'));
             if (box) setJobDone(id, box, why);
             if (row) job.done++;
-            if (row && job.list.length === 1) addUploaded(id, row);
+            if (row) addUploaded(id, row, box);
             job.at++;
             setQueueStep(id);
         });
@@ -311,6 +341,9 @@
         var stop = getPanel(id) ? getPanel(id).querySelector('[data-sl-act="stop"]') : null;
         if (!jobs || !box || !files.length) return;
         jobs.replaceChildren();
+        // A new run starts with a clean slate: the marks of the previous run leave with the cards that carried them
+        room.pick = room.pick.filter(function(one) { return room.sent.indexOf(one) < 0; });
+        room.sent = [];
         files.forEach(function(file, i) {
             var one = getJobBox(id, file, i);
             if (one) jobs.appendChild(one);
@@ -331,14 +364,29 @@
     }
 
     // One successful upload adds one object instead of reloading the whole catalogue, which is what keeps the marks and the current object where they were
-    function addUploaded(id, row) {
+    // An upload no longer inserts by itself: the queue marks what it brought in, the window inserts what stays marked,
+    // because a batch of several files is a choice and a single one has to be confirmed the same way
+    function addUploaded(id, row, box) {
         var room = getRoom(id);
-        var mode = getInsertMode(id);
         setInfo(id, row.file);
-        if (mode === 'attach' || !row.image) addAttach(id, row.file);
-        else addSource(id, row.url, getAltText(id, 'up') || row.file);
         room.files.unshift(row);
+        room.sent.push(row.path);
+        if (room.pick.indexOf(row.path) < 0) room.pick.push(row.path);
+        addJobPick(id, box, row);
         setList(id);
+        setPicks(id);
+    }
+
+    // The mark of an uploaded file rides its own queue card, so it survives the list being redrawn under it, and it
+    // takes the cell the stop button has just left, which is why the card keeps its three columns
+    function addJobPick(id, box, row) {
+        var pick = box ? api.getTpl(id, 'fm-pick') : null;
+        var one = pick ? pick.querySelector('input') : null;
+        if (!one) return;
+        one.setAttribute('data-sl-sent', row.path);
+        one.setAttribute('data-editor', String(id));
+        one.checked = true;
+        box.appendChild(pick);
     }
 
     function addFileList(id, list, mode) {
@@ -482,6 +530,9 @@
         ];
         if (row.width && row.height) out.push([getLab(id, 'dim', ''), row.width + ' × ' + row.height]);
         out.push([getLab(id, 'date', ''), row.timetext]);
+        // The mode and the account arrive for a module moderator alone, and a host that cannot answer for the account sends none
+        if (row.perms) out.push([getLab(id, 'perms', ''), row.perms]);
+        if (row.owner) out.push([getLab(id, 'owner', ''), row.owner]);
         out.push([getLab(id, 'addr', ''), row.url || row.path]);
         return out;
     }
@@ -514,9 +565,37 @@
         if (img) {
             img.replaceChildren();
             img.appendChild((row.image && row.thumb) ? getShotImage(row) : getIconNode(row));
+            // The picture beside the properties opens the same gallery a tile opens, on the same object and with the same walk
+            if (row.able && row.able.preview) img.appendChild(getZoomNode(id, num));
         }
         setProps(id, getSlot(id, 'propslist'), getProps(id, row));
+        setPropsActs(id, row, num);
         setInfo(id, row.file + ' · ' + row.sizetext);
+    }
+
+    // The panel of an object offers what the object offers, which is the fan its own row and tile carry: one builder,
+    // so an action the descriptor withholds is missing from all three at once
+    function setPropsActs(id, row, num) {
+        var box = getSlot(id, 'propsacts');
+        var dial = box ? getDial(id, row, num) : null;
+        if (!box) return;
+        box.replaceChildren();
+        if (dial) box.appendChild(dial);
+    }
+
+    // The overlay of the properties picture is the overlay of a tile: one class, one attribute and the same route into the gallery
+    function getZoomNode(id, num) {
+        var el = doc.createElement('a');
+        var icon = doc.createElement('i');
+        icon.className = 'bi bi-arrows-fullscreen';
+        icon.setAttribute('aria-hidden', 'true');
+        el.className = 'sl-fm-zoom';
+        el.href = '#';
+        el.title = getLab(id, 'preview', '');
+        el.setAttribute('data-sl-zoom', String(num));
+        el.setAttribute('data-editor', String(id));
+        el.appendChild(icon);
+        return el;
     }
 
     function getIconNode(row) {
@@ -548,6 +627,9 @@
             var row = room.view[parseInt(box.getAttribute('data-sl-pick'), 10)];
             box.checked = !!row && room.pick.indexOf(row.path) >= 0;
         });
+        Array.prototype.forEach.call(el.querySelectorAll('[data-sl-sent]'), function(box) {
+            box.checked = room.pick.indexOf(box.getAttribute('data-sl-sent')) >= 0;
+        });
         if (bulk) bulk.hidden = num === 0;
         if (count) count.textContent = getLab(id, 'marked', '') + ': ' + num;
         // One mark speaks in the singular, because "insert as images" about a single file reads as a defect
@@ -561,7 +643,7 @@
             all.checked = num > 0 && num === room.view.length;
             all.indeterminate = num > 0 && num < room.view.length;
         }
-        if (okay) okay.disabled = (room.pane === 'lib') ? num === 0 : room.pane !== 'url';
+        if (okay) okay.disabled = room.pane !== 'url' && num === 0;
     }
 
     // A mark belongs to the file and not to the box drawing it, so it is set on the path of the object and the row and the tile read it back from the one set of names
@@ -652,41 +734,50 @@
         return true;
     }
 
+    // The expanded catalogue is drawn whole and scrolled, as the administrative one is: a directory is one answer and
+    // a walk of pages over an answer already in hand buys nothing. The compact view still shows the last few files
     function getPageRows(id) {
         var room = getRoom(id);
-        var opt = getOpt(id);
-        var size = parseInt(opt.page || 12, 10);
-        var from = room.page * size;
-        return room.full ? room.view.slice(from, from + size) : room.view.slice(0, parseInt(opt.last || 6, 10));
+        return room.full ? room.view : room.view.slice(0, parseInt(getOpt(id).last || 6, 10));
     }
 
-    function setPager(id) {
-        var room = getRoom(id);
-        var opt = getOpt(id);
-        var size = parseInt(opt.page || 12, 10);
-        var pages = Math.ceil(room.view.length / size);
-        var box = getSlot(id, 'pages');
-        var pager = getSlot(id, 'pager');
-        var info = getSlot(id, 'pagerinfo');
-        var from = room.page * size;
-        var i;
-        if (!box || !pager || !info) return;
-        box.replaceChildren();
-        pager.hidden = pages < 2;
-        info.hidden = pages < 2;
-        if (pages < 2) return;
-        info.textContent = (from + 1) + '–' + Math.min(from + size, room.view.length) + ' / ' + room.view.length;
-        for (i = 0; i < pages; i++) {
-            (function(at) {
-                var one = api.getTpl(id, 'fm-page');
-                if (!one) return;
-                one.textContent = String(at + 1);
-                one.setAttribute('data-sl-page', String(at));
-                one.setAttribute('data-editor', id);
-                one.classList.toggle('sl-is-active', at === room.page);
-                box.appendChild(one);
-            })(i);
-        }
+    // The list is not a table, so Tablesort cannot drive it; what is reused is the contract the eye reads — the same
+    // three head classes and the same order the printed column stands for, with the raw figure sorted and not its text
+    function getSortKey(row, key) {
+        if (key === 'name') return String(row.file || '').toLowerCase();
+        if (key === 'type') return String(row.kind || '') + ' ' + String(row.type || '');
+        if (key === 'size') return Number(row.size) || 0;
+        return Number(row.time) || 0;
+    }
+
+    function setSortRows(id) {
+        var sort = getRoom(id).sort;
+        var rows = getRoom(id).view;
+        rows.sort(function(one, two) {
+            var a = getSortKey(one, sort.key);
+            var b = getSortKey(two, sort.key);
+            if (a === b) return String(one.file).localeCompare(String(two.file));
+            return (a > b ? 1 : -1) * sort.dir;
+        });
+    }
+
+    function setSortHead(id) {
+        var el = getPanel(id);
+        var sort = getRoom(id).sort;
+        if (!el) return;
+        Array.prototype.forEach.call(el.querySelectorAll('[data-sl-sort]'), function(one) {
+            var on = one.getAttribute('data-sl-sort') === sort.key;
+            one.className = on ? (sort.dir > 0 ? 'sl-sort-asc' : 'sl-sort-desc') : 'sl-sort';
+            one.setAttribute('aria-sort', on ? (sort.dir > 0 ? 'ascending' : 'descending') : 'none');
+        });
+    }
+
+    function setSortRun(id, key) {
+        var sort = getRoom(id).sort;
+        // A column asked for again turns over; a new one starts the way that column reads first — names up, figures down
+        sort.dir = (sort.key === key) ? -sort.dir : (key === 'name' || key === 'type' ? 1 : -1);
+        sort.key = key;
+        setList(id);
     }
 
     function setList(id) {
@@ -710,6 +801,7 @@
                 return row.path === path;
             });
         });
+        setSortRows(id);
         // A drawing of the catalogue again means other places for the same files, so the object a range of marks would start from is no longer the object it was
         room.anch = -1;
         page = getPageRows(id);
@@ -730,8 +822,8 @@
                 ? getText(getLab(id, 'more', '%1$d / %2$d'), page.length, room.view.length)
                 : '';
         }
-        setPager(id);
         setPicks(id);
+        setSortHead(id);
         if (room.view.length) setCurrent(id, Math.min(room.cur, room.view.length - 1));
         setState(id, getListState(id));
     }
@@ -813,7 +905,8 @@
         el.querySelector('[data-sl-slot="title"]').textContent = meta[0];
         el.querySelector('[data-sl-slot="lead"]').textContent = meta[1];
         okay = el.querySelector('[data-sl-act="apply"]');
-        if (okay) okay.disabled = (name === 'lib') ? room.pick.length === 0 : name !== 'url';
+        if (okay) okay.disabled = name !== 'url' && room.pick.length === 0;
+        setRoom(id);
     }
 
     function setQuota(id, json) {
@@ -830,13 +923,44 @@
         if (note) note.textContent = getText(getLab(id, 'mynote', '%d'), room.files.length);
     }
 
+    // The record meter answers for the column the text is stored in, not for the upload quota of the module: it counts
+    // what the editor holds right now against that capacity, and an empty field has to read as empty
+    function setRoom(id) {
+        var opt = getOpt(id);
+        var fill = getSlot(id, 'roomfill');
+        var num = getSlot(id, 'roomnum');
+        var cap = parseInt(opt.room || 0, 10);
+        var ed = api.getEditor ? api.getEditor(id) : null;
+        var text = (ed && ed.getMarkdown) ? String(ed.getMarkdown() || '') : '';
+        var used = getByteSize(text);
+        var part = (cap > 0) ? Math.min(100, Math.round((used / cap) * 100)) : 0;
+        if (fill) fill.style.width = part + '%';
+        if (num) num.textContent = getText(getLab(id, 'quota', '%1$s / %2$s'), getSizeText(used), getSizeText(cap));
+    }
+
+    // A character of the text is one byte only while it stays inside ASCII, and the column counts bytes
+    function getByteSize(text) {
+        return win.Blob ? new win.Blob([text]).size : text.length;
+    }
+
+    // Reading the catalogue again is the one action whose result can look exactly like doing nothing, so the button says it is
+    // working and the status line says what came back: a listing that did not change is an answer and has to read as one
+    function setBusyList(id, on) {
+        var el = getPanel(id);
+        var act = el ? el.querySelector('[data-sl-act="refresh"]') : null;
+        if (!act) return;
+        act.disabled = on;
+    }
+
     function getFiles(id) {
         var opt = getOpt(id);
         var room = getRoom(id);
         if (!opt.files) return;
         room.state = 'skel';
         setView(id, room.full);
+        setBusyList(id, true);
         getReq(id, opt.files, new FormData()).then(function(json) {
+            setBusyList(id, false);
             if (!json || !json.ok) {
                 room.state = 'fail';
                 setState(id, 'fail');
@@ -847,9 +971,12 @@
             room.files = json.files || [];
             setList(id);
             setQuota(id, json);
+            setInfo(id, getText(getLab(id, 'mynote', '%d'), room.files.length));
         }).catch(function() {
+            setBusyList(id, false);
             room.state = 'fail';
             setState(id, 'fail');
+            setInfo(id, getLab(id, 'fail', ''));
         });
     }
 
@@ -899,22 +1026,79 @@
         var shot = getShot(id);
         if (!row) return;
         if (shot && shot.open && way !== 'down') shot.close();
-        if (way === 'image') {
-            addSource(id, row.url, row.file);
-            setPanel(id, false);
-            return;
-        }
-        if (way === 'attach') {
-            addAttach(id, row.file);
-            setPanel(id, false);
+        if (way === 'image' || way === 'attach') {
+            askInsert(id, way, [row], row.file);
             return;
         }
         if (way === 'delete' || way === 'zip') setFileRun(id, way, [row.path], num);
     }
 
+    // The side and the caption belong to the object and not to the pane it was picked in, so every route into the text
+    // stops at the same small window: one answer covers the whole batch, and an empty caption falls back to the file name
+    function askInsert(id, way, rows, title) {
+        var el = getOpts(id);
+        var one;
+        if (!rows.length) return;
+        if (!el) {
+            addInsertRows(id, way, rows, '', title || '');
+            return;
+        }
+        getRoom(id).want = { way: way, rows: rows, at: 0, title: title || '' };
+        one = el.querySelector('[data-sl-opts="align"] input[value=""]');
+        if (one) one.checked = true;
+        setInsertStep(id);
+        win.setWindowOpen(el);
+    }
+
+    // A batch is answered file by file, because a side and a caption belong to the picture and not to the marking that
+    // collected it; the side stays on what the previous answer chose, which is the half of the pair that usually repeats
+    function setInsertStep(id) {
+        var want = getRoom(id).want;
+        var name = getOptsPart(id, 'name');
+        var note = getOptsPart(id, 'info');
+        var field = getOptsPart(id, 'title');
+        var row = want ? want.rows[want.at] : null;
+        if (!row) return;
+        if (name) name.textContent = row.file;
+        if (note) note.textContent = (want.rows.length > 1) ? getText(getLab(id, 'quota', '%1$s / %2$s'), want.at + 1, want.rows.length) : '';
+        if (field) field.value = (want.at === 0) ? want.title : '';
+        if (field) field.focus();
+    }
+
+    function addInsert(id) {
+        var room = getRoom(id);
+        var want = room.want;
+        var field = getOptsPart(id, 'title');
+        var mark = getOptsPart(id, 'align');
+        var sel = mark ? mark.querySelector('input:checked') : null;
+        if (!want) return;
+        addInsertRows(id, want.way, [want.rows[want.at]], sel ? sel.value : '', field ? String(field.value || '').trim() : '');
+        want.at++;
+        if (want.at < want.rows.length) {
+            setInsertStep(id);
+            return;
+        }
+        room.want = null;
+        room.pick = [];
+        room.sent = [];
+        setPicks(id);
+        win.setWindowClose(getOpts(id));
+        setPanel(id, false);
+    }
+
+    function addInsertRows(id, way, rows, align, title) {
+        rows.forEach(function(row) {
+            if (way === 'image' && row.image) addImage(id, row.url, title || row.file, align);
+            else addAttach(id, row.file, title || row.file, align);
+        });
+    }
+
     function setBulk(id, way) {
         var room = getRoom(id);
-        var rows = room.view.filter(function(row) {
+        // The upload pane marks what it has just brought in, and those objects are in the catalogue and not yet on the drawn page
+        var src = room.pane === 'up' ? room.files : room.view;
+        var alt = room.pane === 'up' ? getAltText(id, 'up') : '';
+        var rows = src.filter(function(row) {
             return room.pick.indexOf(row.path) >= 0;
         });
         if (way === 'clear') {
@@ -928,13 +1112,7 @@
             setPicks(id);
             return;
         }
-        rows.forEach(function(row) {
-            if (way === 'image' && row.image) addSource(id, row.url, row.file);
-            else addAttach(id, row.file);
-        });
-        room.pick = [];
-        setPicks(id);
-        setPanel(id, false);
+        askInsert(id, way, rows, alt);
     }
 
     // The gallery walks the objects that can be previewed at all, so the counter counts them and never the length of the list
@@ -1030,6 +1208,7 @@
         var num;
         var room;
         var row;
+        var path;
         if (!el.classList) return;
         if (el.classList.contains('js-slaed-upload-file')) {
             zone = el.closest('.js-slaed-upload-drop');
@@ -1045,7 +1224,15 @@
             row = room.view[num];
             if (!row) return;
             if (el.checked && room.pick.indexOf(row.path) < 0) room.pick.push(row.path);
-            if (!el.checked) room.pick = room.pick.filter(function(path) { return path !== row.path; });
+            if (!el.checked) room.pick = room.pick.filter(function(one) { return one !== row.path; });
+            setPicks(id);
+            return;
+        }
+        if (el.hasAttribute('data-sl-sent')) {
+            room = getRoom(id);
+            path = el.getAttribute('data-sl-sent');
+            if (el.checked && room.pick.indexOf(path) < 0) room.pick.push(path);
+            if (!el.checked) room.pick = room.pick.filter(function(one) { return one !== path; });
             setPicks(id);
             return;
         }
@@ -1161,9 +1348,9 @@
         var zone = el.closest ? el.closest('.js-slaed-upload-drop') : null;
         var zoom = el.closest ? el.closest('[data-sl-zoom]') : null;
         var pane = el.closest ? el.closest('[data-sl-pane].sl-fm-rail-item') : null;
+        var sort = el.closest ? el.closest('[data-sl-sort]') : null;
         var act = el.closest ? el.closest('[data-sl-act]') : null;
         var bulk = el.closest ? el.closest('[data-sl-bulk]') : null;
-        var page = el.closest ? el.closest('[data-sl-page]') : null;
         var kind = el.closest ? el.closest('[data-sl-kind]') : null;
         var mode = el.closest ? el.closest('[data-sl-mode].sl-fm-mode') : null;
         var shot = el.closest ? el.closest('dialog[data-sl-shot="editor"]') : null;
@@ -1187,6 +1374,10 @@
             setPane(pane.getAttribute('data-editor'), pane.getAttribute('data-sl-pane'));
             return;
         }
+        if (sort && sort.hasAttribute('data-editor')) {
+            setSortRun(sort.getAttribute('data-editor'), sort.getAttribute('data-sl-sort'));
+            return;
+        }
         if (walk) {
             setStep(shot.getAttribute('data-editor'), parseInt(walk.getAttribute('data-sl-shot-step'), 10));
             return;
@@ -1200,7 +1391,6 @@
             id = kind.getAttribute('data-editor');
             room = getRoom(id);
             room.kind = kind.getAttribute('data-sl-kind');
-            room.page = 0;
             Array.prototype.forEach.call(getPanel(id).querySelectorAll('[data-sl-kind]'), function(one) {
                 one.setAttribute('aria-pressed', String(one === kind));
             });
@@ -1216,13 +1406,6 @@
             Array.prototype.forEach.call(getPanel(id).querySelectorAll('[data-sl-modeview]'), function(one) {
                 one.hidden = one.getAttribute('data-sl-modeview') !== getRoom(id).mode;
             });
-            return;
-        }
-        if (page) {
-            ev.preventDefault();
-            id = page.getAttribute('data-editor');
-            getRoom(id).page = parseInt(page.getAttribute('data-sl-page'), 10);
-            setList(id);
             return;
         }
         if (bulk) {
@@ -1257,9 +1440,13 @@
             getFiles(id);
             return;
         }
+        if (way === 'insopts') {
+            addInsert(id);
+            return;
+        }
         if (way === 'apply') {
             if (getRoom(id).pane === 'url') addUrl(id);
-            else setBulk(id, 'image');
+            else setBulk(id, getRoom(id).pane === 'up' ? getInsertMode(id) : 'image');
             return;
         }
         if (way === 'full') {

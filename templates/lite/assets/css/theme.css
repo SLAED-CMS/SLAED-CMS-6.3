@@ -428,39 +428,45 @@ td.sl-cell-ellipsis {
   background: none;
 }
 
-/* Tables: sort indicators */
-thead tr .sl-sort,
-thead tr .sl-sort-asc,
-thead tr .sl-sort-desc {
+/* Sort indicators. The three classes are the whole contract between a sortable head and the eye, so they hang on the
+   class alone: a table head wears them through Tablesort, and the head of the file list wears the same three by hand */
+.sl-sort,
+.sl-sort-asc,
+.sl-sort-desc {
   position: relative;
   cursor: pointer;
   padding-right: var(--sl-space-8);
 }
 
-thead tr .sl-sort::after,
-thead tr .sl-sort-asc::after,
-thead tr .sl-sort-desc::after {
+/* The three marks are drawn in the icon font the rest of the interface is drawn in: the arrows of the text font are
+   missing from more than one system face, and a mark that falls back to a hex box is not a mark */
+.sl-sort::after,
+.sl-sort-asc::after,
+.sl-sort-desc::after {
   position: absolute;
   top: 50%;
   right: 8px;
   transform: translateY(-50%);
   width: var(--sl-sort-width);
+  font-family: "bootstrap-icons";
   font-size: var(--sl-font-micro);
+  font-style: normal;
+  font-weight: var(--sl-weight-normal);
   line-height: 1;
   opacity: var(--sl-fade-muted);
   text-align: center;
 }
 
-thead tr .sl-sort::after {
-  content: "\2195";
+.sl-sort::after {
+  content: "\f127";
 }
 
-thead tr .sl-sort-asc::after {
-  content: "\25B2";
+.sl-sort-asc::after {
+  content: "\f235";
 }
 
-thead tr .sl-sort-desc::after {
-  content: "\25BC";
+.sl-sort-desc::after {
+  content: "\f229";
 }
 
 thead tr th[data-sort-method="none"] {
@@ -1421,11 +1427,18 @@ button.sl-but-mini:hover,
   opacity: 0;
   transform: translateY(-50%) translateX(8px) scale(0.6);
   pointer-events: none;
+  color: var(--sl-band-text);
   transition:
     background-color var(--sl-time-base) var(--sl-ease-out),
     color var(--sl-time-base) var(--sl-ease-out),
     transform var(--sl-time-base) var(--sl-ease-out),
     opacity var(--sl-time-base) var(--sl-ease-out);
+}
+
+/* Keyboard focus paints the chip solid, and a mark on a solid chip is the one the theme turns over; the fixed light
+   tone above is declared later than the shared chip rule, so it has to step aside here by hand */
+.sl-dial .sl-dial-item:focus-visible {
+  color: var(--sl-on-solid);
 }
 
 .sl-dial .sl-dial-item:nth-child(3) {
@@ -3742,7 +3755,7 @@ ol.sl-sublist-two li::before {
   min-height: var(--sl-edge-height);
   padding: var(--sl-space-3) var(--sl-space-3);
   border-radius: 0 var(--sl-radius-2) var(--sl-radius-2) 0;
-  color: var(--sl-text-strong);
+  color: var(--sl-band-text);
   font-weight: var(--sl-weight-normal);
   white-space: nowrap;
   text-transform: uppercase;
@@ -7084,6 +7097,7 @@ html.sl-is-locked {
   cursor: pointer;
 }
 
+.sl-modal-act > .bi { font-size: var(--sl-size-icon-xs); }
 /* The hover tone follows the meaning of the action, as the File Manager head does; expand takes the default tone and needs no class of its own */
 .sl-modal-act:hover {
   background: var(--sl-modal-act-bg);

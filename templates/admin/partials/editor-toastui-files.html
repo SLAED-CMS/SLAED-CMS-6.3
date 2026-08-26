@@ -102,7 +102,7 @@
           <div class="sl-fm-quota">
             <span>{{ room_label }}</span>
             <span class="sl-fm-quota-track"><span class="sl-fm-quota-fill" data-sl-slot="roomfill"></span></span>
-            <span>{{ room_text }}</span>
+            <span data-sl-slot="roomnum">{{ room_text }}</span>
           </div>
         </section>
         {% endif %}
@@ -131,21 +131,16 @@
             <div class="sl-fm-lib-split">
               <div>
                 <div class="sl-fm-rows" data-sl-modeview="list">
-                  <div class="sl-fm-rows-head"><label class="sl-fm-pick" title="{{ markall_label }}"><input type="checkbox" data-sl-slot="pickall" data-editor="{{ editor_id }}"></label><span></span><span>{{ name_label }}</span><span>{{ type_label }}</span><span>{{ size_label }}</span><span>{{ date_label }}</span><span></span></div>
+                  <div class="sl-fm-rows-head"><label class="sl-fm-pick" title="{{ markall_label }}"><input type="checkbox" data-sl-slot="pickall" data-editor="{{ editor_id }}"></label><span></span><button type="button" data-sl-sort="name" data-editor="{{ editor_id }}">{{ name_label }}</button><button type="button" data-sl-sort="type" data-editor="{{ editor_id }}">{{ type_label }}</button><button type="button" data-sl-sort="size" data-editor="{{ editor_id }}">{{ size_label }}</button><button type="button" data-sl-sort="date" data-editor="{{ editor_id }}">{{ date_label }}</button><span></span></div>
                   <div data-sl-slot="rows"></div>
                 </div>
                 <div class="sl-fm-grid" data-sl-modeview="grid" data-sl-slot="fulltiles" hidden></div>
-                <p class="sl-pager-info" data-sl-slot="pagerinfo" hidden></p>
-                <div class="sl-pager" data-sl-slot="pager" hidden>
-                  <div class="sl-pager-main">
-                    <div class="sl-pager-pages" data-sl-slot="pages"></div>
-                  </div>
-                </div>
               </div>
               <aside class="sl-fm-props">
                 <span class="sl-fm-props-cap">{{ props_label }}</span>
                 <span class="sl-fm-props-img" data-sl-slot="propsimg"><i class="bi bi-image" aria-hidden="true"></i></span>
                 <dl data-sl-slot="propslist"></dl>
+                <div class="sl-fm-props-acts" data-sl-slot="propsacts"></div>
                 <p class="sl-fm-props-note">{{ props_note }}</p>
               </aside>
             </div>

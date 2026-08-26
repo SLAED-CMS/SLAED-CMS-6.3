@@ -768,6 +768,8 @@ define('_UPLOADS_BADDEST','Назначение находится внутри 
 define('_UPLOADS_CRITDEL','Файл участвует в работе сайта: после удаления сайт может остановиться. Операция попадёт в журнал.');
 define('_UPLOADS_DIRS','Директории загрузок');
 define('_UPLOADS_ADDR','Адрес');
+define('_UPLOADS_PERMS','Права доступа');
+define('_UPLOADS_USER','Владелец на сервере');
 define('_UPLOADS_OWNER','Владелец');
 define('_UPLOADS_OWNSITE','Администрация');
 define('_UPLOADS_LINKWARN','Переименование и перенос не обновляют ссылки в уже опубликованных материалах: старый адрес перестанет открываться.');

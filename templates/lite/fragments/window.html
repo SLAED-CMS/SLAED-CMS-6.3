@@ -1,0 +1,10 @@
+<dialog class="sl-modal{% if size_class %} {{ size_class }}{% endif %}{% if tone_class %} {{ tone_class }}{% endif %}{% if win_class %} {{ win_class }}{% endif %}"{% if win_id %} id="{{ win_id }}"{% endif %}{% if is_static %} data-sl-static{% endif %}{% if win_attr %} {{{ win_attr }}}{% endif %} aria-label="{{ title_text }}">
+  <div class="sl-modal-title">
+    <i class="bi bi-{{ icon_name }}" aria-hidden="true"></i>
+    <span class="sl-modal-cap"><strong>{{ title_text }}</strong>{% if has_sub %}<span class="sl-modal-sub"{% if sub_attr %} {{{ sub_attr }}}{% endif %} title="{{ sub_text }}">{{ sub_text }}</span>{% endif %}</span>
+    <span class="sl-modal-acts">{% if close_url %}<a class="sl-modal-act sl-modal-act-close" href="{{ close_url }}" title="{{ close_text }}" aria-label="{{ close_text }}"><i class="bi bi-x-lg" aria-hidden="true"></i></a>{% else %}<button type="button" class="sl-modal-act sl-modal-act-close" data-sl-close title="{{ close_text }}" aria-label="{{ close_text }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button>{% endif %}</span>
+  </div>
+  {% if bar_html %}<div class="sl-modal-bar">{{{ bar_html }}}</div>{% endif %}
+  <div class="sl-modal-body{% if is_flush %} sl-modal-body-flush{% endif %}">{{{ body_html }}}</div>
+  {% if foot_html %}<div class="sl-modal-foot">{{{ foot_html }}}</div>{% endif %}
+</dialog>

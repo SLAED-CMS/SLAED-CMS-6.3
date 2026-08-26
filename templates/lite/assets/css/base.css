@@ -359,9 +359,10 @@
      The light mode gets none of it: there the photo reads as a postcard and needs no help, which is why the token
      is transparent on that side rather than pale. */
   --sl-band-bg: light-dark(transparent, rgba(8, 16, 26, 0.5));
-  /* The white that does not turn over. The photo band of the page head is a photograph and the footer wordmark is
-     a picture with white baked into it: neither has a light and a dark variant, so the words standing on them hold
-     their colour in both modes. Every other ground in this theme turns over, and its text turns over with it */
+  /* The one tone that does not turn over, and the only white this theme spells out. The photo band of the page head is
+     a photograph, the footer wordmark is a picture with white baked into it, an edge tab stands on its own gradient and
+     a dial chip on its own fill: not one of those grounds has a light and a dark variant, so the marks on them hold
+     their colour in both modes. Every other ground here turns over, and its text turns over with it */
   --sl-band-text: #ffffff;
   /* The beam that crosses both photo bands: how wide the shaft is, how long one pass takes, and the light it
      carries. It travels upright and at an even rate, because a band is far wider than it is tall and an eased

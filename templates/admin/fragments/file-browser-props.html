@@ -4,15 +4,13 @@
   <p class="sl-fm-hint">{{ hint_text }}</p>
   {% else %}
   <span class="sl-fm-preview sl-fm-thumb-{{ tone }}">
-    {% if image_url %}<img src="{{ image_url }}" alt="{{ name }}">{% else %}<i class="bi bi-{{ icon }}" aria-hidden="true"></i>{% endif %}
+    {% if image_url %}<img src="{{ image_url }}" alt="{{ name }}"><button type="button" class="sl-fm-zoom" title="{{ shot_text }}" aria-label="{{ shot_text }}" data-sl-fm-show data-sl-fm-file="{{ pick_value }}" data-sl-fm-name="{{ name }}" data-sl-fm-img="{{ image_url }}" data-sl-fm-info="{{ info_url }}" data-sl-fm-down="{{ down_url }}"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i></button>{% else %}<i class="bi bi-{{ icon }}" aria-hidden="true"></i>{% endif %}
   </span>
   <dl class="sl-fm-props">
     {% for row in rows %}<div><dt>{{ row.label }}</dt><dd title="{{ row.value }}">{{ row.value }}</dd></div>{% endfor %}
   </dl>
-  {% if acts %}
-  <div class="sl-fm-acts">
-    {% for act in acts %}<a class="sl-but-mini {% if act.is_main %}sl-fm-main{% else %}sl-is-muted{% endif %}" href="{{ act.url }}"{% if act.is_load %} download{% endif %} title="{{ act.title }}" aria-label="{{ act.title }}"><i class="bi bi-{{ act.icon }}" aria-hidden="true"></i></a>{% endfor %}
-  </div>
+  {% if dial_html %}
+  <div class="sl-fm-acts">{{{ dial_html }}}</div>
   {% endif %}
   {% if note_html %}{{{ note_html }}}{% endif %}
   {% endif %}

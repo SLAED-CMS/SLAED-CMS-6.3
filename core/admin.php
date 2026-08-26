@@ -263,7 +263,30 @@ function getAdminSettingsRow(string $axis): string {
 function getAdminSettingsWindow(): string {
     global $tpl;
     $rows = getAdminSettingsRow('mode').getAdminSettingsRow('editor').getAdminSettingsRow('language');
-    return $tpl->getHtmlFrag('window-settings', ['rows' => $rows]);
+    return $tpl->getHtmlFrag('window', [
+        'win_id' => 'sl-settings',
+        'size_class' => 'sl-modal-sm',
+        'icon_name' => 'sliders',
+        'title_text' => _FUNCTIONS,
+        'close_text' => _CLOSE,
+        'body_html' => $rows,
+    ]);
+}
+
+# Render the icon picker window: one window for every screen that offers an icon field, so the four callers name the
+# screen they stand on and nothing about the window itself
+function getAdminIconWindow(): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('window', [
+        'win_id' => 'sl-icon-window',
+        'size_class' => 'sl-modal-lg',
+        'icon_name' => 'grid-3x3-gap-fill',
+        'title_text' => _ICONPICK,
+        'close_text' => _CLOSE,
+        'bar_html' => $tpl->getHtmlFrag('window-bar-icons', ['search_text' => _SEARCH]),
+        'is_flush' => true,
+        'body_html' => $tpl->getHtmlFrag('window-body-icons', []),
+    ]);
 }
 
 # Render the standard admin top menu.
@@ -1246,7 +1269,7 @@ function getAdminFileActs(array $one): string {
     $dir = str_contains($path, '/') ? substr($path, 0, (int)strrpos($path, '/')) : '';
     $ask = _DELETE.' "'.$name.'"?'.(empty($one['critical']) ? '' : ' '._UPLOADS_CRITDEL);
     $dial = [];
-    if (!empty($able['edit'])) $dial[] = ['href' => $afile.'.php?name=uploads&op=fmedit&file='.rawurlencode($path), 'icon_name' => 'pencil-square', 'title' => _EDIT];
+    if (!empty($able['edit'])) $dial[] = ['href' => $afile.'.php?name=uploads&op=fmedit&file='.rawurlencode($path), 'run' => 'fmedit', 'icon_name' => 'pencil-square', 'title' => _EDIT];
     if (!empty($able['preview']) && $one['kind'] === 'image') $dial[] = ['href' => '#', 'run' => 'preview', 'icon_name' => 'zoom-in', 'title' => _UPLOADS_PREVIEW];
     if (!empty($able['download'])) $dial[] = ['href' => getAdminFileLink('getAdminFileDownload', ['file' => $path]), 'icon_name' => 'download', 'title' => _DOWNLOAD];
     if (!empty($able['rename'])) $dial[] = ['href' => '#', 'act' => 'fmrename', 'file' => $path, 'arg' => $name, 'icon_name' => 'input-cursor-text', 'title' => _UPLOADS_TORENAME];
@@ -1278,25 +1301,28 @@ function getAdminFileProps(string $path): string {
     $rows[] = ['label' => _DATE, 'value' => date(_TIMESTRING, $one['mtime'])];
     $rows[] = ['label' => ($one['url'] === '') ? _UPLOADS_PATH : _UPLOADS_ADDR, 'value' => ($one['path'] === '') ? '/' : ($one['url'] ?: $one['path'])];
     $rows[] = ['label' => _UPLOADS_FULL, 'value' => $one['realpath'] ?? ''];
+    if ($one['perms'] !== '') $rows[] = ['label' => _UPLOADS_PERMS, 'value' => $one['perms']];
+    // Windows answers no account for a file at all, so the row is written only where the host has one to give
+    if ($one['owner'] !== '') $rows[] = ['label' => _UPLOADS_USER, 'value' => $one['owner']];
     if ($body !== []) $rows[] = ['label' => _UPLOADS_VERSION, 'value' => substr($body['version'], 0, 6)];
     if ($one['managed']) $rows[] = ['label' => _UPLOADS_OWNER, 'value' => FileManager::getFileOwner($one['name']) ?? _UPLOADS_OWNSITE];
-    $acts = [];
-    if ($body !== [] && !empty($one['capabilities']['edit'])) {
-        $acts[] = ['url' => $afile.'.php?name=uploads&op=fmedit&file='.rawurlencode($one['path']), 'icon' => 'pencil-square', 'title' => _EDIT, 'is_main' => true];
-    }
-    if (!empty($one['capabilities']['download'])) {
-        $acts[] = ['url' => getAdminFileLink('getAdminFileDownload', ['file' => $one['path']]), 'icon' => 'download', 'title' => _DOWNLOAD, 'is_load' => true];
-    }
     $warn = empty($one['critical']) ? '' : _UPLOADS_CRIT;
     if ($warn === '' && $one['managed'] && !empty($one['capabilities']['rename'])) $warn = _UPLOADS_LINKWARN;
+    // The panel offers the fan of the object and nothing beside it: the fan already answers for every capability the
+    // descriptor grants, and a second row of links over the same three or four of them is the same answer written twice
     return $tpl->getHtmlFrag('file-browser-props', [
+        'dial_html' => getAdminFileActs($one),
         'cap_text' => _UPLOADS_PROPS,
         'name' => $one['name'],
         'icon' => $icon,
         'tone' => $tone,
         'image_url' => getAdminFileShot($one),
+        // The picture of the panel opens the gallery the list opens, so it carries the same four addresses a row carries
+        'pick_value' => $one['path'],
+        'info_url' => getAdminFileLink('getAdminFileData', ['file' => $one['path']]),
+        'down_url' => empty($one['capabilities']['download']) ? '' : getAdminFileLink('getAdminFileDownload', ['file' => $one['path']]),
+        'shot_text' => _UPLOADS_PREVIEW,
         'rows' => $rows,
-        'acts' => $acts,
         'note_html' => ($warn === '') ? '' : $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $warn]),
     ]);
 }
@@ -1312,19 +1338,10 @@ function getAdminFileEditor(array $edit): string {
     $dir = str_contains($path, '/') ? substr($path, 0, (int)strrpos($path, '/')) : '';
     $ver = (string)($edit['version'] ?? '');
     $code = 'slfmcode';
-    return $tpl->getHtmlPart('file-browser-editor', [
+    $back = $afile.'.php?name=uploads&op=sysfiles'.(($dir === '') ? '' : '&dir='.rawurlencode($dir));
+    $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
-        'back_url' => $afile.'.php?name=uploads&op=sysfiles'.(($dir === '') ? '' : '&dir='.rawurlencode($dir)),
-        'back_text' => _BACK,
-        'path_text' => $path,
-        'ver_label' => _UPLOADS_VERSION,
-        'ver_text' => substr($ver, 0, 6),
-        'ver_hint' => _UPLOADS_VERHINT,
-        'save_text' => _SAVECHANGES,
-        'code_id' => $code,
-        'ask_text' => _UPLOADS_LEAVE,
-        'confirm_text' => empty($one['critical']) ? '' : _UPLOADS_CRITASK,
-        'note_html' => ($edit['note'] ?? '') === '' ? '' : $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $edit['note']]),
+        'form_attr' => 'id="slfmeditform"',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'uploads'],
             ['nameattr' => 'op', 'valueattr' => 'fmsave'],
@@ -1332,12 +1349,38 @@ function getAdminFileEditor(array $edit): string {
             ['nameattr' => 'ver', 'valueattr' => $ver],
             ['nameattr' => 'token', 'valueattr' => getSiteToken('uploads')],
         ],
-        'code_html' => Editor::getCode([
-            'id' => $code,
-            'name' => 'text',
-            'lang' => $man->getCodeLanguage($path),
-            'text' => (string)($edit['text'] ?? ''),
-        ]),
+        'content_html' => (($edit['note'] ?? '') === '' ? '' : $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $edit['note']]))
+            .Editor::getCode([
+                'id' => $code,
+                'name' => 'text',
+                'lang' => $man->getCodeLanguage($path),
+                'text' => (string)($edit['text'] ?? ''),
+            ]),
+    ]);
+    $foot = $tpl->getHtmlFrag('window-foot-edit', [
+        'ver_hint' => _UPLOADS_VERHINT,
+        'ver_label' => _UPLOADS_VERSION,
+        'ver_text' => substr($ver, 0, 6),
+        'back_url' => $back,
+        'back_text' => _BACK,
+        'form_id' => 'slfmeditform',
+        'save_text' => _SAVECHANGES,
+        'confirm_text' => empty($one['critical']) ? '' : _UPLOADS_CRITASK,
+    ]);
+    return $tpl->getHtmlFrag('window', [
+        'win_id' => 'slfmedit',
+        'size_class' => 'sl-modal-xl',
+        'win_class' => 'sl-fm-edit',
+        'is_static' => true,
+        'win_attr' => 'data-sl-fm-code="'.$code.'" data-sl-fm-ask="'.htmlspecialchars(_UPLOADS_LEAVE, ENT_QUOTES, 'UTF-8').'"',
+        'icon_name' => 'pencil-square',
+        'title_text' => _EDIT,
+        'has_sub' => true,
+        'sub_text' => $path,
+        'close_url' => $back,
+        'close_text' => _BACK,
+        'body_html' => $form,
+        'foot_html' => $foot,
     ]);
 }
 
@@ -1364,7 +1407,9 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
     $sum = 0;
     foreach ($all as $row) $sum += $row['size'];
     $rule = getAdminUploadRule($dir);
-    $show = ($pick === '') ? $all : [];
+    // An open source file no longer takes the place of the list: the editor is a window over the screen, so the screen
+    // it stands on keeps its own directory drawn underneath and the reader never loses where the file came from
+    $show = $all;
     $mark = !empty($able['delete']) || !empty($able['compress']) || !empty($able['move']);
     $rows = '';
     $tiles = '';
@@ -1389,6 +1434,10 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
             'shot_text' => _UPLOADS_PREVIEW,
             'kind_text' => $isdir ? _DIR : strtoupper($row['extension']),
             'size_text' => $isdir ? '—' : filterSize($row['size']),
+            // The printed size and date are read by a human and the two figures beside them by the sort, because
+            // "1.2 MB" and "900 Bytes" compare as text in the wrong order and a formatted date compares by its day
+            'size_num' => (string)($isdir ? -1 : (int)$row['size']),
+            'date_num' => (string)(int)$row['mtime'],
             'date_text' => date(_TIMESTRING, $row['mtime']),
             'day_text' => date(_DATESTRING, $row['mtime']),
             'acts_html' => getAdminFileActs($row),
@@ -1404,12 +1453,17 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
         $walk = ($walk === '') ? $part : $walk.'/'.$part;
         $crumbs[] = ['name' => $part, 'url' => ($walk === $dir) ? '' : getAdminFileLink('getAdminFileList', ['dir' => $walk])];
     }
+    // The gallery offers what the fan of the row offers, because it presses that fan: every key here is a key the fan
+    // carries, and one the context withholds is absent from both
     $acts = [['icon' => 'download', 'name' => _DOWNLOAD, 'tone' => 'neutral', 'is_load' => true]];
+    if (!empty($able['edit'])) $acts[] = ['key' => 'fmedit', 'icon' => 'pencil-square', 'name' => _EDIT, 'tone' => 'info'];
+    if (!empty($able['rename'])) $acts[] = ['key' => 'fmrename', 'icon' => 'input-cursor-text', 'name' => _UPLOADS_TORENAME, 'tone' => 'neutral'];
+    if (!empty($able['copy'])) $acts[] = ['key' => 'fmcopy', 'icon' => 'files', 'name' => _UPLOADS_TOCOPY, 'tone' => 'neutral'];
+    if (!empty($able['move'])) $acts[] = ['key' => 'fmmove', 'icon' => 'folder-symlink', 'name' => _UPLOADS_TOMOVE, 'tone' => 'neutral'];
     if (!empty($able['compress'])) $acts[] = ['key' => 'fmcompress', 'icon' => 'file-zip', 'name' => _UPLOADS_TOZIP, 'tone' => 'neutral'];
     if (!empty($able['delete'])) $acts[] = ['key' => 'fmdelete', 'icon' => 'trash3', 'name' => _DELETE, 'tone' => 'danger'];
-    $shot = !$full ? '' : $tpl->getHtmlPart('window-gallery', [
-        'shot_own' => 'files',
-        'shot_text' => _UPLOADS_PREVIEW,
+    $shot = !$full ? '' : getWindowShot([
+        'own' => 'files',
         'prev_text' => _BACK,
         'next_text' => _NEXT,
         'can_walk' => true,
@@ -1465,7 +1519,8 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
         'info_text' => _OVERALL.': '.count($all).' · '.filterSize($sum),
         'tree_html' => getAdminFileNodes($dir),
         'props_html' => getAdminFileProps($pick),
-        'list_html' => ($pick !== '') ? getAdminFileEditor($edit) : $tpl->getHtmlPart('file-browser-list', [
+        'edit_html' => ($pick === '') ? '' : getAdminFileEditor($edit),
+        'list_html' => $tpl->getHtmlPart('file-browser-list', [
             'is_empty' => $rows === '',
             'empty_icon' => ($find === '') ? 'folder' : 'search',
             'empty_title' => ($find === '') ? _UPLOADS_EMPTY : _UPLOADS_NOFIND,
@@ -1478,6 +1533,7 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
             'can_mark' => $mark,
             'mark_all_text' => _UPLOADS_MARKALL,
             'name_text' => _NAME,
+            'kind_text' => _TYPE,
             'size_text' => _SIZE,
             'date_text' => _DATE,
             'acts_text' => _FUNCTIONS,

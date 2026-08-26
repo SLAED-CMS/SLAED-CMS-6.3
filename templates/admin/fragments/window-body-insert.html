@@ -1,0 +1,12 @@
+<div>
+  <span class="sl-fm-label">{{ align_label }}</span>
+  <div class="sl-fm-as" data-sl-opts="align">
+    <label><input type="radio" name="{{ opts_id }}a" value="" checked>{{ alignno_label }}</label>
+    <label><input type="radio" name="{{ opts_id }}a" value="left">{{ alignleft_label }}</label>
+    <label><input type="radio" name="{{ opts_id }}a" value="right">{{ alignright_label }}</label>
+  </div>
+</div>
+<div>
+  <label class="sl-fm-label" for="{{ opts_id }}t">{{ caption_label }}</label>
+  <input type="text" id="{{ opts_id }}t" class="sl-fm-field" data-sl-opts="title" data-sl-focus placeholder="{{ caption_label }}">
+</div>

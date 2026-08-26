@@ -89,6 +89,8 @@ class FileManager {
             'thumbnail' => ($kind === 'image') ? $this->getThumbLink($pair['full']) : '',
             'width' => $dims['width'],
             'height' => $dims['height'],
+            'perms' => substr(sprintf('%o', fileperms($pair['full'])), -4),
+            'owner' => $this->getFileUser($pair['full']),
             'managed' => !$isdir && self::checkFileName($pair['rel']),
             'editable' => $edit,
             'previewable' => $prev,
@@ -464,6 +466,16 @@ class FileManager {
         $out['delete'] = $out['delete'] && $rule['delete'];
         $out['compress'] = $out['compress'] && !$isdir && $rule['read'];
         return $out;
+    }
+
+    # Returns the account one object belongs to, which only a POSIX host can answer at all: Windows reports every file as
+    # owned by the same synthetic id, so the field stays empty there and the interface drops the row instead of printing a zero
+    private function getFileUser(string $full): string {
+        if (DIRECTORY_SEPARATOR !== '/') return '';
+        $uid = fileowner($full);
+        if ($uid === false) return '';
+        $row = function_exists('posix_getpwuid') ? (posix_getpwuid($uid) ?: []) : [];
+        return (string)($row['name'] ?? $uid);
     }
 
     # Returns the kind one object is shown and treated as; html, htm and js resolve to code and are therefore never previewable, which is the rule the preview boundary needs

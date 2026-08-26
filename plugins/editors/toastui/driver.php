@@ -85,6 +85,7 @@ class EditorToastUi implements ContentDriver {
         $aid = $id.'_toast_alt';
         $bid = $id.'_toast_urlalt';
         $cid = $id.'_toast_embed';
+        $sid = $id.'_toast_insert';
         $exts = array_values(array_filter(array_map('trim', explode(',', (string)($rul['extensions'] ?? '')))));
         $quot = (int)($rul['maxquota'] ?? 0);
         $mbyt = (int)($rul['maxbytes'] ?? 0);
@@ -153,6 +154,8 @@ class EditorToastUi implements ContentDriver {
                 'size' => _SIZE,
                 'dim' => _EDITOR_DIM,
                 'date' => _DATE,
+                'perms' => _EDITOR_PERMS,
+                'owner' => _EDITOR_OWNER,
                 'addr' => _EDITOR_ADDR,
             ],
             'panes' => [
@@ -170,13 +173,13 @@ class EditorToastUi implements ContentDriver {
             'candel' => $mdr,
             'room' => (int)($room['bytes'] ?? 65535),
             'panel' => $pid,
+            'opts' => $sid,
             'msg' => $mid,
             'object' => $oid,
             'url' => $uid,
             'alt' => $aid,
             'urlalt' => $bid,
             'last' => 6,
-            'page' => 12,
             'maxfiles' => (int)($rul['maxfiles'] ?? 0),
             'token' => $tok,
             'ajax' => $atk,
@@ -266,15 +269,38 @@ class EditorToastUi implements ContentDriver {
         ];
         if ($mdr) $acts[] = ['key' => 'zip', 'icon' => 'file-zip', 'name' => _EDITOR_ZIP, 'tone' => 'warn'];
         if ($mdr) $acts[] = ['key' => 'delete', 'icon' => 'trash3', 'name' => _DELETE, 'tone' => 'danger'];
-        if ($upl) $panel .= $tpl->getHtmlPart('window-gallery', [
-            'shot_own' => 'editor',
-            'editor_id' => $eid,
-            'shot_text' => _PREVIEW,
+        if ($upl) $panel .= getWindowShot([
+            'own' => 'editor',
+            'editor' => $eid,
             'prev_text' => _EDITOR_PREV,
             'next_text' => _EDITOR_NEXT,
             'can_walk' => true,
             'can_props' => true,
             'acts' => $acts,
+        ]);
+        if ($upl) $panel .= $tpl->getHtmlFrag('window', [
+            'win_id' => htmlspecialchars($sid, ENT_QUOTES, 'UTF-8'),
+            'size_class' => 'sl-modal-sm',
+            'win_class' => 'sl-toastui-upload',
+            'win_attr' => 'data-editor="'.$eid.'"',
+            'icon_name' => 'sliders',
+            'title_text' => _EDITOR_OPTS,
+            'has_sub' => true,
+            'sub_attr' => 'data-sl-opts="name"',
+            'close_text' => _CLOSE,
+            'body_html' => $tpl->getHtmlFrag('window-body-insert', [
+                'opts_id' => htmlspecialchars($sid, ENT_QUOTES, 'UTF-8'),
+                'align_label' => _EDITOR_ALIGN,
+                'alignno_label' => _EDITOR_ALIGNNO,
+                'alignleft_label' => _EDITOR_ALIGNLEFT,
+                'alignright_label' => _EDITOR_ALIGNRIGHT,
+                'caption_label' => _EDITOR_CAPTION,
+            ]),
+            'foot_html' => $tpl->getHtmlFrag('window-foot-insert', [
+                'editor_id' => $eid,
+                'close_label' => _CLOSE,
+                'insert_label' => _EDITOR_INSERT,
+            ]),
         ]);
         $jopt = json_encode($opt, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         $js = '(function(){var ta=document.getElementById('.$jid.');var root=window.toastui&&window.toastui.Editor;';

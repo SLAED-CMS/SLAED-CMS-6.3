@@ -703,6 +703,66 @@ function getTplPostAction(array $hide, string $icon, string $title, string $conf
     return $out;
 }
 
+# Build the gallery window from the one window frame: the owner tells whose gallery it is, and the walk, the property
+# panel and the row of actions are what that owner offers; nothing else about the window is decided here twice
+function getWindowShot(array $data = []): string {
+    global $tpl;
+    $own = (string)($data['own'] ?? 'view');
+    $eid = (string)($data['editor'] ?? '');
+    $acts = (array)($data['acts'] ?? []);
+    return $tpl->getHtmlFrag('window', [
+        'size_class' => 'sl-modal-xl',
+        'win_attr' => 'data-sl-shot="'.$own.'"'.($eid === '' ? '' : ' data-editor="'.$eid.'"'),
+        'icon_name' => 'image',
+        'title_text' => _PREVIEW,
+        'has_sub' => true,
+        'sub_attr' => 'data-sl-shot-name',
+        'close_text' => _CLOSE,
+        'is_flush' => true,
+        'body_html' => $tpl->getHtmlFrag('window-body-shot', [
+            'can_walk' => !empty($data['can_walk']),
+            'can_props' => !empty($data['can_props']),
+            'prev_text' => (string)($data['prev_text'] ?? ''),
+            'next_text' => (string)($data['next_text'] ?? ''),
+        ]),
+        'foot_html' => ($acts === []) ? '' : $tpl->getHtmlFrag('window-foot-shot', ['acts' => $acts]),
+    ]);
+}
+
+# Build the windows a page carries whatever it shows: the question every screen asks, and on the site the share sheet,
+# the QR code and the image viewer. Each is the one window frame filled differently, and the layout prints the set
+function getWindowSet(bool $admin = false): string {
+    global $tpl;
+    $out = $tpl->getHtmlFrag('window', [
+        'win_id' => 'sl-confirm',
+        'size_class' => 'sl-modal-sm',
+        'tone_class' => 'sl-modal-danger',
+        'icon_name' => 'exclamation-triangle-fill',
+        'title_text' => _CONFIRM,
+        'close_text' => _CLOSE,
+        'body_html' => $tpl->getHtmlFrag('window-body-confirm', []),
+        'foot_html' => $tpl->getHtmlFrag('window-foot-confirm', ['no_text' => _NO, 'yes_text' => _YES]),
+    ]);
+    if ($admin) return $out;
+    $out .= $tpl->getHtmlFrag('window', [
+        'win_id' => 'sl-share-sheet',
+        'icon_name' => 'share-fill',
+        'title_text' => _SHARE,
+        'close_text' => _CLOSE,
+        'body_html' => $tpl->getHtmlFrag('window-body-share', []),
+    ]);
+    $out .= $tpl->getHtmlFrag('window', [
+        'win_id' => 'sl-share-qr',
+        'size_class' => 'sl-modal-sm',
+        'icon_name' => 'qr-code',
+        'title_text' => _QRCODE,
+        'close_text' => _CLOSE,
+        'body_html' => $tpl->getHtmlFrag('window-body-qr', []),
+        'foot_html' => $tpl->getHtmlFrag('window-foot-qr', ['done_text' => _COPIED, 'copy_text' => _COPYLINK]),
+    ]);
+    return $out.getWindowShot(['own' => 'view', 'can_walk' => true]);
+}
+
 # Build the htmx attributes of one in-place admin action: the values travel in a POST body, so the credential never becomes part of an address the browser may prefetch or store
 function getTplPostVals(array $hide, string $target): string {
     $hide['token'] = getSiteToken((string)($hide['name'] ?? 'ajax'));

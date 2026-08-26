@@ -768,6 +768,8 @@ define('_UPLOADS_BADDEST','Das Ziel liegt innerhalb des Objekts selbst.');
 define('_UPLOADS_CRITDEL','Die Datei ist am Betrieb der Website beteiligt: nach dem Löschen kann die Website stehen bleiben. Der Vorgang wird protokolliert.');
 define('_UPLOADS_DIRS','Upload-Verzeichnisse');
 define('_UPLOADS_ADDR','Adresse');
+define('_UPLOADS_PERMS','Zugriffsrechte');
+define('_UPLOADS_USER','Eigentümer auf dem Server');
 define('_UPLOADS_OWNER','Eigentümer');
 define('_UPLOADS_OWNSITE','Verwaltung');
 define('_UPLOADS_LINKWARN','Umbenennen und Verschieben aktualisieren die Links in bereits veröffentlichten Materialien nicht: die alte Adresse lässt sich nicht mehr öffnen.');

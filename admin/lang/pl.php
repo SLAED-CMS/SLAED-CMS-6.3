@@ -768,6 +768,8 @@ define('_UPLOADS_BADDEST','Cel znajduje się wewnątrz samego obiektu.');
 define('_UPLOADS_CRITDEL','Plik uczestniczy w pracy witryny: po usunięciu witryna może się zatrzymać. Operacja trafi do dziennika.');
 define('_UPLOADS_DIRS','Katalogi wysyłania');
 define('_UPLOADS_ADDR','Adres');
+define('_UPLOADS_PERMS','Prawa dostępu');
+define('_UPLOADS_USER','Właściciel na serwerze');
 define('_UPLOADS_OWNER','Właściciel');
 define('_UPLOADS_OWNSITE','Administracja');
 define('_UPLOADS_LINKWARN','Zmiana nazwy i przeniesienie nie aktualizują odnośników w już opublikowanych materiałach: stary adres przestanie się otwierać.');

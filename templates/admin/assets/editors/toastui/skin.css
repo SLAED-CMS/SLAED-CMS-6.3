@@ -167,11 +167,15 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     border-radius: 0;
 }
 
-/* !important below overrides the inline display/width styles set by the engine and SLAED JS at runtime */
+/* !important below overrides the inline display/width styles set by the engine and SLAED JS at runtime.
+   The strip also refuses to shrink: it is the last item of a fixed-height flex column, and the wysiwyg pane
+   asks for more room than the markdown one, which shaved five pixels off the strip and dropped the two mode
+   tabs onto the bottom edge of the frame on every switch */
 
 .toastui-editor-mode-switch {
     align-items: flex-start;
     display: flex !important;
+    flex: 0 0 auto;
     justify-content: flex-end;
     padding-left: var(--sl-space-4);
 }
@@ -596,6 +600,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     border-color: var(--sl-primary);
 }
 
+.sl-toastui-upload .sl-fm-job .sl-fm-pick,
 .sl-toastui-upload .sl-fm-row .sl-fm-pick,
 .sl-toastui-upload .sl-fm-rows-head .sl-fm-pick {
     background: none;
@@ -832,6 +837,24 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     text-transform: uppercase;
 }
 
+/* A sortable column of the head is a button so the keyboard reaches it, and it has to read as the label it replaced:
+   the frame, the ground and the type of the head are the head's own, the sort glyph comes from the shared classes */
+.sl-toastui-upload .sl-fm-rows-head [data-sl-sort] {
+    background: none;
+    border: 0;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    letter-spacing: inherit;
+    padding: 0 var(--sl-space-6) 0 0;
+    text-align: left;
+    text-transform: inherit;
+}
+
+.sl-toastui-upload .sl-fm-rows-head [data-sl-sort]:hover {
+    color: var(--sl-text);
+}
+
 .sl-toastui-upload .sl-fm-row {
     border: 1px solid transparent;
     border-radius: var(--sl-radius-2);
@@ -908,17 +931,20 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     text-transform: uppercase;
 }
 
+/* The picture of the properties holds the zoom overlay of a tile, so it has to be the frame that overlay is measured
+   against; with no picture to show it holds one glyph, and a glyph alone in a frame this size is drawn at the top step */
 .sl-toastui-upload .sl-fm-props-img {
     align-items: center;
     background: var(--sl-bg-subtle);
     border-radius: var(--sl-radius-2);
     color: var(--sl-text-muted);
     display: flex;
-    font-size: var(--sl-size-icon-lg);
+    font-size: var(--sl-size-icon-xl);
     height: var(--sl-fm-props-height);
     justify-content: center;
     margin-bottom: var(--sl-space-4);
     overflow: hidden;
+    position: relative;
 }
 
 .sl-toastui-upload .sl-fm-props-img img {
@@ -963,19 +989,20 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     white-space: nowrap;
 }
 
+/* The fan of the object stands under its properties, opened upward: below it there is only the note, and a fan that
+   opened downward would leave the panel */
+.sl-toastui-upload .sl-fm-props-acts {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: var(--sl-space-4);
+    min-height: var(--sl-size-chip);
+}
+
 .sl-toastui-upload .sl-fm-props-note {
     color: var(--sl-text-subtle);
     font-size: var(--sl-font-micro);
     line-height: var(--sl-line-normal);
     margin: var(--sl-space-4) 0 0;
-}
-
-.sl-toastui-upload .sl-fm-view .sl-pager {
-    padding: var(--sl-space-4) 0 0;
-}
-
-.sl-toastui-upload .sl-fm-view .sl-pager-info {
-    font-size: var(--sl-font-small);
 }
 
 /* The empty catalogue names its reason instead of saying nothing; the same block carries the empty filter and the list that never arrived */
@@ -1142,8 +1169,20 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     display: none;
 }
 
+/* Expanded, the window is as tall as the screen and the body takes what the head and the foot leave. It drops its own
+   ceiling and takes the one the window gives it instead, or a catalogue of a full page grows past the frame and the
+   last rows stand below the bottom edge with nothing to scroll */
 .sl-toastui-upload.sl-is-full .sl-fm-body {
+    flex: 1 1 auto;
     max-height: none;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+/* The column between the frame and the body is a grid item, and a grid item is as tall as what it holds unless it is
+   told otherwise: without this the body never learns it has a ceiling and the last rows stand below the bottom edge */
+.sl-toastui-upload.sl-is-full .sl-fm-main {
+    min-height: 0;
 }
 
 @media (max-width: 900px) {
@@ -1368,24 +1407,82 @@ dialog.sl-editor-emoji-panel {
     border-radius: 0 0 var(--sl-radius-2) var(--sl-radius-2);
 }
 
-.toastui-editor-mode-switch .tab-item,
-.toastui-editor-mode-switch .tab-item.active {
-    background-color: var(--sl-bg);
-    border-top: 1px solid var(--sl-bg);
-    color: var(--sl-text);
-}
-
-.toastui-editor-md-tab-container .tab-item {
+/* All four tabs of the strip wear one dress, the pane pair inside the md container included: the vendor frames the
+   two mode tabs in a light tone of its own, which stayed light on a dark page and made that pair read as a foreign
+   box pinned over the strip. An active tab drops its top edge into the panel it hangs from */
+.toastui-editor-mode-switch .tab-item {
     background: var(--sl-surface);
     border: 1px solid var(--sl-border);
     color: var(--sl-text-muted);
 }
 
-.toastui-editor-md-tab-container .tab-item.active {
+.toastui-editor-mode-switch .tab-item.active {
     background-color: var(--sl-bg);
-    border-bottom-color: var(--sl-border);
     border-top-color: var(--sl-bg);
     color: var(--sl-text);
+}
+
+/* The file manager window is moved inside the editor root so it survives the fullscreen editor, and the vendor sizes
+   and paints every button under that root: 28px tall, 13px type, a 2px corner and #333. That outranks a component
+   class, so each control the window carries names its own height, corner, type and tone again here */
+.toastui-editor-defaultUI .sl-modal-act {
+    border-radius: var(--sl-radius-1);
+    color: var(--sl-text);
+    font-size: var(--sl-font-body);
+}
+
+.toastui-editor-defaultUI .sl-modal-act:hover {
+    color: var(--sl-modal-act-tone, var(--sl-primary));
+}
+
+.toastui-editor-defaultUI .sl-modal-btn {
+    border-radius: var(--sl-radius-1);
+    color: var(--sl-text-strong);
+    font-size: var(--sl-font-body);
+    height: var(--sl-modal-btn-height);
+}
+
+.toastui-editor-defaultUI .sl-modal-btn-main {
+    color: var(--sl-on-solid);
+}
+
+/* Geometry is the same for every chip of this window and carries no state, so one rule answers for all of them */
+.toastui-editor-defaultUI .sl-chip,
+.toastui-editor-defaultUI .sl-but-mini {
+    border-radius: var(--sl-radius-pill);
+    font-size: var(--sl-font-small);
+    height: var(--sl-size-chip);
+}
+
+/* Tone is named only where the vendor took it away, which is the button and never the anchor: a dial item and a page
+   link are anchors and keep what the theme gives them, hovered and pointed states included */
+.toastui-editor-defaultUI .sl-chip {
+    color: var(--sl-text-strong);
+}
+
+.toastui-editor-defaultUI .sl-but-mini.sl-is-muted {
+    color: var(--sl-text-muted);
+}
+
+.toastui-editor-defaultUI .sl-dial-toggle {
+    color: var(--sl-text-strong);
+}
+
+.toastui-editor-defaultUI .sl-dial.sl-open .sl-dial-toggle,
+.toastui-editor-defaultUI .sl-dial:hover .sl-dial-toggle {
+    color: var(--sl-on-solid);
+}
+
+.toastui-editor-defaultUI .sl-chip-info {
+    color: var(--sl-primary-strong);
+}
+
+.toastui-editor-defaultUI .sl-chip-warn {
+    color: var(--sl-warning);
+}
+
+.toastui-editor-defaultUI .sl-chip-danger {
+    color: var(--sl-danger);
 }
 
 /* ===== Vendor alignment: dialogs and controls ===== */
@@ -1555,6 +1652,13 @@ dialog.sl-editor-emoji-panel {
 }
 
 /* ===== Vendor alignment: WYSIWYG content, light color pass only ===== */
+/* The typing surface itself. The vendor paints .ProseMirror #222, and markdown source is written as bare lines with no
+   paragraph around them, so the rules further down never reached the text an author is actually typing */
+.toastui-editor-md-container .ProseMirror,
+.toastui-editor-ww-container .ProseMirror {
+    color: var(--sl-text);
+}
+
 .toastui-editor-contents h1,
 .toastui-editor-contents h2,
 .toastui-editor-contents h3,

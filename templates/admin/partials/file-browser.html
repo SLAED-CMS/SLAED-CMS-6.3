@@ -63,6 +63,7 @@
       <div class="sl-fm-work">{{{ list_html }}}</div>
       <aside class="sl-fm-side" id="slfmside">{{{ props_html }}}</aside>
     </div>
+    {% if edit_html %}{{{ edit_html }}}{% endif %}
     {% if can_mark %}
     <div class="sl-bulk-bar" hidden>
       <span class="sl-bulk-count" data-sl-fm-count="{{ marks_text }}"></span>

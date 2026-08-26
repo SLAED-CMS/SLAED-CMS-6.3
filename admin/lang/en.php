@@ -768,6 +768,8 @@ define('_UPLOADS_BADDEST','The destination lies inside the object itself.');
 define('_UPLOADS_CRITDEL','The file takes part in the work of the site: after the deletion the site may stop. The operation goes into the journal.');
 define('_UPLOADS_DIRS','Upload directories');
 define('_UPLOADS_ADDR','Address');
+define('_UPLOADS_PERMS','Permissions');
+define('_UPLOADS_USER','Owner on the server');
 define('_UPLOADS_OWNER','Owner');
 define('_UPLOADS_OWNSITE','Administration');
 define('_UPLOADS_LINKWARN','Renaming and moving do not update the links in already published materials: the old address stops opening.');

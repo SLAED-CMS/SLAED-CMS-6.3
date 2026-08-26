@@ -1,0 +1,2 @@
+<span class="sl-modal-info" aria-live="polite" data-sl-shot-num></span>
+{% for act in acts %}{% if act.is_load %}<a class="sl-chip sl-chip-{{ act.tone }} sl-live-act" data-sl-shot-down href="#" download><i class="bi bi-{{ act.icon }}" aria-hidden="true"></i>&nbsp;{{ act.name }}</a>{% else %}<button type="button" class="sl-chip sl-chip-{{ act.tone }} sl-live-act" data-sl-shot-act="{{ act.key }}"><i class="bi bi-{{ act.icon }}" aria-hidden="true"></i>&nbsp;{{ act.name }}</button>{% endif %}{% endfor %}

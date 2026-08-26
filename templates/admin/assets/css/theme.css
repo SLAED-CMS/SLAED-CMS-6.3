@@ -74,39 +74,45 @@
   margin-right: 0;
 }
 
-/* Tables: sort indicators */
-thead tr .sl-sort,
-thead tr .sl-sort-asc,
-thead tr .sl-sort-desc {
+/* Sort indicators. The three classes are the whole contract between a sortable head and the eye, so they hang on the
+   class alone: a table head wears them through Tablesort, and the head of the file list wears the same three by hand */
+.sl-sort,
+.sl-sort-asc,
+.sl-sort-desc {
   position: relative;
   cursor: pointer;
   padding-right: var(--sl-space-6);
 }
 
-thead tr .sl-sort::after,
-thead tr .sl-sort-asc::after,
-thead tr .sl-sort-desc::after {
+/* The three marks are drawn in the icon font the rest of the interface is drawn in: a text font is not required to
+   carry these arrows, and this theme had lost the escape of all three and printed a control character and the hex */
+.sl-sort::after,
+.sl-sort-asc::after,
+.sl-sort-desc::after {
   position: absolute;
   top: 50%;
   right: 6px;
   transform: translateY(-50%);
   width: var(--sl-sort-width);
+  font-family: "bootstrap-icons";
   font-size: var(--sl-font-micro);
+  font-style: normal;
+  font-weight: var(--sl-weight-normal);
   line-height: 1;
   opacity: var(--sl-fade-muted);
   text-align: center;
 }
 
-thead tr .sl-sort::after {
-  content: "95";
+.sl-sort::after {
+  content: "\f127";
 }
 
-thead tr .sl-sort-asc::after {
-  content: "B2";
+.sl-sort-asc::after {
+  content: "\f235";
 }
 
-thead tr .sl-sort-desc::after {
-  content: "BC";
+.sl-sort-desc::after {
+  content: "\f229";
 }
 
 thead tr th[data-sort-method="none"] {
@@ -2321,6 +2327,7 @@ html.sl-is-locked {
   cursor: pointer;
 }
 
+.sl-modal-act > .bi { font-size: var(--sl-size-icon-xs); }
 /* The hover tone follows the meaning of the action, as the File Manager head does; expand takes the default tone and needs no class of its own */
 .sl-modal-act:hover {
   background: var(--sl-modal-act-bg);
@@ -6364,6 +6371,8 @@ body:has(.sl-admin-login-shell)::before {
   color: var(--sl-text-muted);
 }
 
+/* The picture of the panel carries the overlay that opens the gallery, so it is the frame that overlay is measured
+   against; with no picture to show it holds one glyph, and a glyph alone in a frame this size is drawn at the top step */
 .sl-fm-preview {
   display: flex;
   align-items: center;
@@ -6372,8 +6381,30 @@ body:has(.sl-admin-login-shell)::before {
   margin-bottom: var(--sl-space-4);
   border: 1px solid var(--sl-border);
   border-radius: var(--sl-radius-2);
-  font-size: var(--sl-size-icon-lg);
+  font-size: var(--sl-size-icon-xl);
   overflow: hidden;
+  position: relative;
+}
+
+.sl-fm-preview .sl-fm-zoom {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  background: var(--sl-scrim);
+  color: var(--sl-on-solid);
+  font-size: var(--sl-size-icon-sm);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity var(--sl-time-fast) var(--sl-ease-out);
+}
+
+.sl-fm-preview .sl-fm-zoom:hover,
+.sl-fm-preview .sl-fm-zoom:focus-visible {
+  opacity: 1;
 }
 
 .sl-fm-preview img {
@@ -6482,30 +6513,14 @@ body:has(.sl-admin-login-shell)::before {
 }
 
 /* Source editor of the system area: it takes the place of the list and the tree stays beside it (§10) */
-.sl-fm-edit,
+/* The source editor is a window of the canon, and the form inside it is the column the canon expects: the body between
+   the plate and the buttons is the only part that scrolls, and the code area takes whatever height that body has */
 .sl-fm-edit-form {
   display: flex;
   flex-direction: column;
-  min-width: 0;
-}
-
-.sl-fm-edit-head {
-  display: flex;
-  align-items: center;
-  gap: var(--sl-space-4);
-  padding: var(--sl-space-3) var(--sl-space-5);
-  border-bottom: 1px solid var(--sl-border);
-  background: var(--sl-surface);
-}
-
-.sl-fm-edit-head b {
   flex: 1 1 auto;
-  overflow: hidden;
-  font-weight: var(--sl-weight-normal);
-  font-size: var(--sl-font-body);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--sl-text);
+  min-width: 0;
+  min-height: 0;
 }
 
 .sl-fm-edit .sl-code-editor {

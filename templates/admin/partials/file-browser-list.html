@@ -23,14 +23,15 @@
     </div>
     {% else %}
     <div class="sl-table-shell" data-sl-fm-view="list">
-      <table class="sl-table-list-sort">
+      <table class="sl-table-list-sort" data-sl-table-sort>
         <thead>
           <tr>
-            <th class="sl-col-check">{% if can_mark %}<input type="checkbox" aria-label="{{ mark_all_text }}" data-sl-fm-all>{% endif %}</th>
+            <th class="sl-col-check" data-sort-method="none">{% if can_mark %}<input type="checkbox" aria-label="{{ mark_all_text }}" data-sl-fm-all>{% endif %}</th>
             <th>{{ name_text }}</th>
+            <th>{{ kind_text }}</th>
             <th>{{ size_text }}</th>
             <th class="sl-col-date">{{ date_text }}</th>
-            <th class="sl-col-actions">{{ acts_text }}</th>
+            <th class="sl-col-actions" data-sort-method="none">{{ acts_text }}</th>
           </tr>
         </thead>
         <tbody>{{{ rows_html }}}</tbody>

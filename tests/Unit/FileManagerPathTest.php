@@ -239,7 +239,7 @@ final class FileManagerPathTest extends TestCase
     #[Test]
     public function theDescriptorIsOneShapeAndTheEditorNeverSeesTheServerPath(): void
     {
-        $keys = ['name', 'path', 'kind', 'extension', 'size', 'mtime', 'url', 'thumbnail', 'width', 'height', 'managed', 'editable', 'previewable', 'capabilities'];
+        $keys = ['name', 'path', 'kind', 'extension', 'size', 'mtime', 'url', 'thumbnail', 'width', 'height', 'perms', 'owner', 'managed', 'editable', 'previewable', 'capabilities'];
         $edit = $this->getManager('editor', ['list' => true])->getFileData('files/note.md');
         $this->assertSame($keys, array_keys($edit), 'The editor descriptor is not the model of the plan');
         $this->assertStringNotContainsString(self::$root, json_encode($edit), 'The editor descriptor carries the server path of the file');

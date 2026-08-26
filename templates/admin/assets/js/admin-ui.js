@@ -343,8 +343,16 @@
         fmback.pop();
         return fmback.pop();
     }
+    /* The source editor is a window over the browser and the route that opens it is a page of its own, so the window is
+       raised as soon as that page is drawn; the screen underneath keeps the directory the file belongs to */
+    function setFileEditWin() {
+        var box = document.getElementById('slfmedit');
+        if (box && !box.open && window.setWindowOpen) window.setWindowOpen(box);
+    }
+
     function addFileStep() {
         var split = document.querySelector('[data-sl-fm-url]');
+        setFileEditWin();
         var back = document.querySelector('[data-sl-fm-go="back"]');
         var mode = document.querySelector('button[data-sl-fm-view][aria-pressed="true"]');
         var find = document.querySelector('.sl-fm-bar input[name="find"]');

@@ -315,10 +315,11 @@ final class FileManagerEditTest extends TestCase
     #[Test]
     public function theOpenEditorGuardsUnsavedWork(): void
     {
-        $part = $this->getFile('templates/admin/partials/file-browser-editor.html');
-        $this->assertStringContainsString('data-sl-fm-ask="{{ ask_text }}"', $part, 'The editor carries no question for the guard, so the guard has nothing to ask with');
+        // The editor is the one window frame filled by core/admin.php, so the marks the guard reads are written there
+        $part = $this->getFile('core/admin.php');
+        $this->assertStringContainsString('data-sl-fm-ask=', $part, 'The editor carries no question for the guard, so the guard has nothing to ask with');
         $note = 'The editor does not name its widget, so the guard cannot find the document';
-        $this->assertStringContainsString('data-sl-fm-code="{{ code_id }}"', $part, $note);
+        $this->assertStringContainsString('data-sl-fm-code=', $part, $note);
         $this->assertStringContainsString('_UPLOADS_LEAVE', $this->getFile('core/admin.php'), 'The question of the guard is not taken from a language constant');
         $js = $this->getFile('templates/admin/assets/js/admin-ui.js');
         foreach (['htmx:confirm', 'beforeunload', 'setConfirmTask', 'fmfree'] as $mark) {

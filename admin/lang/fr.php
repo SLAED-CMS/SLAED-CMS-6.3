@@ -768,6 +768,8 @@ define('_UPLOADS_BADDEST','La destination se trouve à l\'intérieur de l\'objet
 define('_UPLOADS_CRITDEL','Le fichier participe au fonctionnement du site : après la suppression, le site peut s\'arrêter. L\'opération est journalisée.');
 define('_UPLOADS_DIRS','Répertoires de téléversement');
 define('_UPLOADS_ADDR','Adresse');
+define('_UPLOADS_PERMS','Droits d’accès');
+define('_UPLOADS_USER','Propriétaire sur le serveur');
 define('_UPLOADS_OWNER','Propriétaire');
 define('_UPLOADS_OWNSITE','Administration');
 define('_UPLOADS_LINKWARN','Le renommage et le déplacement ne mettent pas à jour les liens des matériaux déjà publiés : l\'ancienne adresse cesse de s\'ouvrir.');

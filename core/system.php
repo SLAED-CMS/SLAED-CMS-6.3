@@ -1985,6 +1985,7 @@ function setFoot(): void {
             'time_html' => $time,
             'foot_html' => getFootControls(_PAGETOP, _PAGETOP, '', '', '', true, $debug !== ''),
             'debug_html' => $debug,
+            'windows_html' => getWindowSet(true),
         ]);
         $page = (is_string($adminpage ?? '') && $adminpage !== '') ? $adminpage : 'admin';
         echo getTimedHtml($tpl->getHtmlPage($page, $vars, $page === 'login' ? 'bare' : 'admin'));
@@ -2030,6 +2031,7 @@ function setFoot(): void {
     $vars = array_replace($vars, [
         'foot_html' => $foot,
         'debug_html' => $debug,
+        'windows_html' => getWindowSet(),
     ]);
     $page = (is_string($sitepage ?? '') && $sitepage !== '') ? $sitepage : ($home ? 'home' : 'module');
     $html = getOutputHtml($tpl->getHtmlPage($page, $vars, $page === 'home' ? 'home' : 'app'));
@@ -4372,7 +4374,12 @@ function getEditorRouteRule(string $src = 'post'): array {
 # Return one stored editor file row for JSON output: the descriptor of the file layer plus the two strings the window prints, so the client never formats a size or a date of its own
 # Which actions a row offers is the capability set of its own descriptor and never a role the window derives again, which is what keeps the interface from computing a permission
 # The absolute server path is absent because the file layer gives an editor context none, and the thumbnail falls back to the file itself so a listing always has one to draw
-function getEditorFileData(array $one): array {
+# The mode and the account of the stored object travel only to a module moderator, because they answer for the server and not for the text: the author who inserts a picture has no use for either
+function getEditorFileData(array $one, bool $moder = false): array {
+    if ($moder) return getEditorFileData($one) + [
+        'perms' => (string)($one['perms'] ?? ''),
+        'owner' => (string)($one['owner'] ?? ''),
+    ];
     return [
         'file' => $one['name'],
         'path' => $one['path'],
@@ -4415,7 +4422,7 @@ function addEditorUpload(): void {
             'result' => $res['ok'] ? 'ok' : (string)$res['error'],
         ]);
         if ($one !== []) {
-            $out[] = getEditorFileData($one);
+            $out[] = getEditorFileData($one, is_moder($mod));
             continue;
         }
         $bad[] = getUploadFailText($res['ok'] ? 'write' : (string)$res['error'], $rul);
@@ -4441,7 +4448,7 @@ function getEditorFileJson(): void {
         if ($one['kind'] === 'dir' || in_array($one['name'], ['index.html', '.htaccess'], true)) continue;
         $used += $one['size'];
         if (!$all && ($tok === null || FileManager::getFileOwner($one['name']) !== $tok)) continue;
-        $row[] = getEditorFileData($one);
+        $row[] = getEditorFileData($one, $all);
     }
     usort($row, static fn(array $one, array $two): int => $two['time'] <=> $one['time']);
     if ($lim > 0) $row = array_slice($row, 0, $lim);
