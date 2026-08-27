@@ -653,7 +653,8 @@ function privat(): void {
                 ]),
                 'text_row_html' => $tpl->getHtmlFrag('form-field-row', [
                     'label' => _MESSAGE,
-                    'field_html' => getTplTextarea([
+                    'label_id' => $labid = getFieldIds('', 'text')['label'],
+                    'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _MESSAGE,
                         'id' => 'privat',
                         'name' => 'text',
                         'value' => '',
@@ -925,7 +926,10 @@ function edithome(): void {
             ])
             .$tpl->getHtmlFrag('form-field-row', [
                 'label' => _SIGNATURE,
+                'label_id' => $labid = getFieldIds('', 'sig')['label'],
                 'field_html' => getTplTitleTip(_SIGNATURE_TEXT).getTplTextarea([
+                    'labelledby' => $labid,
+                    'label' => _SIGNATURE,
                     'id' => '1',
                     'name' => 'sig',
                     'value' => $userinfo['sig'],
@@ -943,18 +947,21 @@ function edithome(): void {
         } else {
             $submitExtra .= $tpl->getHtmlFrag('hidden', ['name_attr' => 'story', 'value_attr' => $conf['news']['num'] ?? 0]);
         }
-        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _RNEWSLETTER, 'field_html' => getTplRadioGroup(['name' => 'news', 'value' => ((string)$userinfo['newslet'] === '0') ? '0' : '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _RNEWSLETTER, 'label_id' => $labid = getFieldIds('', 'news')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'news', 'value' => ((string)$userinfo['newslet'] === '0') ? '0' : '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])]);
         if (is_active('forum')) {
-            $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _FSMAIL, 'field_html' => getTplRadioGroup(['name' => 'fsmail', 'value' => ((string)$userinfo['fsmail'] === '0') ? '0' : '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])]);
+            $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _FSMAIL, 'label_id' => $labid = getFieldIds('', 'fsmail')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'fsmail', 'value' => ((string)$userinfo['fsmail'] === '0') ? '0' : '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])]);
         }
         if (!empty($conf['privat']['act'])) {
-            $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _PSMAIL, 'field_html' => getTplRadioGroup(['name' => 'psmail', 'value' => ((string)$userinfo['psmail'] === '0') ? '0' : '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])]);
+            $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _PSMAIL, 'label_id' => $labid = getFieldIds('', 'psmail')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'psmail', 'value' => ((string)$userinfo['psmail'] === '0') ? '0' : '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])]);
         }
-        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _ALLOWUSERS, 'field_html' => getTplRadioGroup(['name' => 'view', 'value' => ((string)$userinfo['viewmail'] === '0') ? '0' : '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])])
-            .$tpl->getHtmlFrag('form-field-row', ['label' => _ACTIVATEPERSONAL, 'field_html' => getTplRadioGroup(['name' => 'blockon', 'value' => ((string)$userinfo['blockon'] === '0') ? '0' : '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])])
+        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _ALLOWUSERS, 'label_id' => $labid = getFieldIds('', 'view')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'view', 'value' => ((string)$userinfo['viewmail'] === '0') ? '0' : '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])])
+            .$tpl->getHtmlFrag('form-field-row', ['label' => _ACTIVATEPERSONAL, 'label_id' => $labid = getFieldIds('', 'blockon')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'blockon', 'value' => ((string)$userinfo['blockon'] === '0') ? '0' : '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])])
             .$tpl->getHtmlFrag('form-field-row', [
                 'label' => _MENUCONF,
+                'label_id' => $labid = getFieldIds('', 'block')['label'],
                 'field_html' => getTplTitleTip(_MENUINFO).getTplTextarea([
+                    'labelledby' => $labid,
+                    'label' => _MENUCONF,
                     'id' => '2',
                     'name' => 'block',
                     'value' => $userinfo['block'],

@@ -183,7 +183,7 @@ function add(): void {
         $rows[] = ['label_for' => 'f-lang', 'label_html' => _LANGUAGE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options_html' => getTplLanguageOptions($lang)])];
     }
     $rows[] = ['label_html' => _COMMENTS, 'field_html' => getVotingCommentSelect((int)$acomm)];
-    $rows[] = ['label_html' => _MULTI, 'field_html' => getTplRadioGroup(['name' => 'multi', 'value' => $multi, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
+    $rows[] = ['label_html' => _MULTI, 'label_id' => $labid = getFieldIds('', 'multi')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'multi', 'value' => $multi, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
     $rows[] = ['label_html' => _TYPE, 'field_html' => getVotingTypeSelect($typ)];
     $rows[] = ['label_html' => _AFTEREXPIRATION, 'field_html' => getVotingStatusSelect($status)];
     $answ = '';

@@ -32,5 +32,6 @@
   {% if is_required %}required{% endif %}
   {% if is_readonly %}readonly{% endif %}
   {% if is_disabled %}disabled{% endif %}
+  {% if describedby %}aria-describedby="{{ describedby }}"{% endif %}
   {% if input_attr %}{{{ input_attr }}}{% endif %}
 >{% if list_id %}<datalist id="{{ list_id }}"></datalist>{% endif %}

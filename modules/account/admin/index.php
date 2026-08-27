@@ -279,15 +279,17 @@ function add(): void {
         'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'inter', 'input_id' => 'f-inter', 'value_attr' => $inter, 'maxlength_num' => 150, 'placeholder_text' => _INTERESTS]),
     ];
     $rows[] = [
-        'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SIGNATURE, 'hint' => _SIGNATURE_TEXT]),
-        'field_html' => getTplTextarea([
+        'label_html' => _SIGNATURE, 'hint_html' => _SIGNATURE_TEXT,
+        'label_id' => ($fids = getFieldIds('', 'sig'))['label'], 'hint_id' => $fids['hint'],
+        'field_html' => getTplTextarea(['describedby' => $fids['hint'], 'labelledby' => $fids['label'], 'label' => _SIGNATURE,
             'id' => '1', 'name' => 'sig', 'value' => $sig, 'mod' => 'account', 'store' => 'users.sig', 'rows' => '5', 'placeholder' => _SIGNATURE, 'required' => '',
             'autofocus' => true,
         ]),
     ];
     $rows[] = [
         'label_html' => _ALLOWUSERS,
-        'field_html' => getTplRadioGroup(['name' => 'view', 'value' => (string)$view, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+        'label_id' => $labid = getFieldIds('', 'view')['label'],
+        'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'view', 'value' => (string)$view, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
     ];
     if ($conf['users']['news'] == 1) {
         $storyopts = '';
@@ -306,11 +308,13 @@ function add(): void {
     }
     $rows[] = [
         'label_html' => _ACTIVATEPERSONAL,
-        'field_html' => getTplRadioGroup(['name' => 'blockon', 'value' => (string)$blockon, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+        'label_id' => $labid = getFieldIds('', 'blockon')['label'],
+        'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'blockon', 'value' => (string)$blockon, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
     ];
     $rows[] = [
-        'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _MENUCONF, 'hint' => _MENUINFO]),
-        'field_html' => getTplTextarea([
+        'label_html' => _MENUCONF, 'hint_html' => _MENUINFO,
+        'label_id' => ($fids = getFieldIds('', 'block'))['label'], 'hint_id' => $fids['hint'],
+        'field_html' => getTplTextarea(['describedby' => $fids['hint'], 'labelledby' => $fids['label'], 'label' => _MENUCONF,
             'id' => '2', 'name' => 'block', 'value' => $block, 'mod' => 'account', 'store' => 'users.block', 'rows' => '5', 'placeholder' => _MENUCONF, 'required' => '',
         ]),
     ];
@@ -337,7 +341,8 @@ function add(): void {
     }
     $rows[] = [
         'label_html' => _RNEWSLETTER,
-        'field_html' => getTplRadioGroup(['name' => 'news', 'value' => (string)$news, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+        'label_id' => $labid = getFieldIds('', 'news')['label'],
+        'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'news', 'value' => (string)$news, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
     ];
     if ($conf['multilingual'] == 1) {
         $rows[] = [
@@ -360,7 +365,8 @@ function add(): void {
     }
     $rows[] = [
         'label_html' => _UACESS,
-        'field_html' => getTplRadioGroup(['name' => 'access', 'value' => (string)$access, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+        'label_id' => $labid = getFieldIds('', 'access')['label'],
+        'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'access', 'value' => (string)$access, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
     ];
     $grpopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NO]);
     $result = $db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_groups WHERE extra = :extra', ['extra' => '1']);
@@ -451,8 +457,9 @@ function add(): void {
             'id' => 'sl_form_account_mail',
             'is_collapsible' => true,
             'content_html' => $tpl->getHtmlPart('div', ['rows' => [[
-                'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _MAIL_TEXT, 'hint' => _MAIL_PASS_INFO]),
-                'field_html' => getTplTextarea([
+                'label_html' => _MAIL_TEXT, 'hint_html' => _MAIL_PASS_INFO,
+                'label_id' => ($fids = getFieldIds('', 'mailtext'))['label'], 'hint_id' => $fids['hint'],
+                'field_html' => getTplTextarea(['describedby' => $fids['hint'], 'labelledby' => $fids['label'], 'label' => _MAIL_TEXT,
                     'id' => '3', 'name' => 'mailtext',
                     'value' => replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp'])), 'mod' => 'account',
                     'store' => 'config', 'rows' => '10', 'placeholder' => _MAIL_TEXT, 'required' => '',
@@ -648,7 +655,8 @@ function pointreset(): void {
     $rows = [
         [
             'label_html' => _POINTS,
-            'field_html' => getTplRadioGroup([
+            'label_id' => $labid = getFieldIds('', 'points')['label'],
+            'field_html' => getTplRadioGroup(['labelledby' => $labid,
                 'name' => 'points',
                 'value' => '0',
                 'options' => [
@@ -659,7 +667,8 @@ function pointreset(): void {
         ],
         [
             'label_html' => _RATINGS,
-            'field_html' => getTplRadioGroup([
+            'label_id' => $labid = getFieldIds('', 'votes')['label'],
+            'field_html' => getTplRadioGroup(['labelledby' => $labid,
                 'name' => 'votes',
                 'value' => '0',
                 'options' => [
@@ -670,7 +679,8 @@ function pointreset(): void {
         ],
         [
             'label_html' => _SIGNATURE,
-            'field_html' => getTplRadioGroup([
+            'label_id' => $labid = getFieldIds('', 'sig')['label'],
+            'field_html' => getTplRadioGroup(['labelledby' => $labid,
                 'name' => 'sig',
                 'value' => '0',
                 'options' => [
@@ -681,7 +691,8 @@ function pointreset(): void {
         ],
         [
             'label_html' => _UWARNS,
-            'field_html' => getTplRadioGroup([
+            'label_id' => $labid = getFieldIds('', 'warnings')['label'],
+            'field_html' => getTplRadioGroup(['labelledby' => $labid,
                 'name' => 'warnings',
                 'value' => '0',
                 'options' => [
@@ -799,39 +810,48 @@ function config(): void {
         ],
         [
             'label_html' => _UPDATE_POINTS,
-            'field_html' => getTplRadioGroup(['name' => 'point', 'value' => (string)$conf['users']['point'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+            'label_id' => $labid = getFieldIds('', 'point')['label'],
+            'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'point', 'value' => (string)$conf['users']['point'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
         ],
         [
             'label_html' => _AUPLOAD,
-            'field_html' => getTplRadioGroup(['name' => 'aupload', 'value' => (string)$conf['users']['aupload'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+            'label_id' => $labid = getFieldIds('', 'aupload')['label'],
+            'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'aupload', 'value' => (string)$conf['users']['aupload'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
         ],
         [
             'label_html' => _NO_MAIL_REG,
-            'field_html' => getTplRadioGroup(['name' => 'nomail', 'value' => (string)$conf['users']['nomail'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+            'label_id' => $labid = getFieldIds('', 'nomail')['label'],
+            'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'nomail', 'value' => (string)$conf['users']['nomail'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
         ],
         [
             'label_html' => _USERSHOMENUM,
-            'field_html' => getTplRadioGroup(['name' => 'news', 'value' => (string)$conf['users']['news'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+            'label_id' => $labid = getFieldIds('', 'news')['label'],
+            'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'news', 'value' => (string)$conf['users']['news'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
         ],
         [
             'label_html' => _USERIPCHECK,
-            'field_html' => getTplRadioGroup(['name' => 'check', 'value' => (string)$conf['users']['check'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+            'label_id' => $labid = getFieldIds('', 'check')['label'],
+            'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'check', 'value' => (string)$conf['users']['check'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
         ],
         [
             'label_html' => _REGACT,
-            'field_html' => getTplRadioGroup(['name' => 'reg', 'value' => (string)$conf['users']['reg'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+            'label_id' => $labid = getFieldIds('', 'reg')['label'],
+            'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'reg', 'value' => (string)$conf['users']['reg'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
         ],
         [
             'label_html' => _SELTHEME,
-            'field_html' => getTplRadioGroup(['name' => 'theme', 'value' => (string)$conf['users']['theme'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+            'label_id' => $labid = getFieldIds('', 'theme')['label'],
+            'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'theme', 'value' => (string)$conf['users']['theme'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
         ],
         [
             'label_html' => _PROFACT,
-            'field_html' => getTplRadioGroup(['name' => 'prof', 'value' => (string)$conf['users']['prof'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+            'label_id' => $labid = getFieldIds('', 'prof')['label'],
+            'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'prof', 'value' => (string)$conf['users']['prof'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
         ],
         [
             'label_html' => _RULACT,
-            'field_html' => getTplRadioGroup(['name' => 'rule', 'value' => (string)$conf['users']['rule'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+            'label_id' => $labid = getFieldIds('', 'rule')['label'],
+            'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'rule', 'value' => (string)$conf['users']['rule'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
         ],
         [
             'label_for' => 'f-rules',
@@ -840,11 +860,13 @@ function config(): void {
         ],
         [
             'label_html' => _OAUTHACT,
-            'field_html' => getTplRadioGroup(['name' => 'oactive', 'value' => (string)($conf['oauth']['active'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+            'label_id' => $labid = getFieldIds('', 'oactive')['label'],
+            'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'oactive', 'value' => (string)($conf['oauth']['active'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
         ],
         [
             'label_html' => _OAUTHGACT,
-            'field_html' => getTplRadioGroup(['name' => 'gactive', 'value' => (string)($conf['oauth']['google']['active'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+            'label_id' => $labid = getFieldIds('', 'gactive')['label'],
+            'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'gactive', 'value' => (string)($conf['oauth']['google']['active'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
         ],
         [
             'label_for' => 'f-gclientid',
@@ -858,7 +880,8 @@ function config(): void {
         ],
         [
             'label_html' => _OAUTHMACT,
-            'field_html' => getTplRadioGroup(['name' => 'mactive', 'value' => (string)($conf['oauth']['microsoft']['active'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+            'label_id' => $labid = getFieldIds('', 'mactive')['label'],
+            'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'mactive', 'value' => (string)($conf['oauth']['microsoft']['active'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
         ],
         [
             'label_for' => 'f-mclientid',

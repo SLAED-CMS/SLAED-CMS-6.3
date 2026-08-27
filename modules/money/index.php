@@ -84,7 +84,8 @@ function money(): void {
         }
         $rows .= $tpl->getHtmlFrag('form-field-row', [
             'label' => _MO_9,
-            'field_html' => getTplTextarea([
+            'label_id' => $labid = getFieldIds('', 'note')['label'],
+            'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _MO_9,
                 'id' => '1',
                 'name' => 'note',
                 'value' => $note,

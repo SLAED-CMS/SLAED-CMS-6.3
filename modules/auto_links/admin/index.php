@@ -371,7 +371,7 @@ function config(): void {
         ['label_for' => 'f-anump', 'label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => (string)$conf['auto_links']['anump'], 'is_config' => true])],
         ['label_for' => 'f-strip', 'label_html' => _A_4, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'strip', 'input_id' => 'f-strip', 'value_attr' => (string)$conf['auto_links']['strip'], 'is_config' => true])],
         ['label_for' => 'f-limit', 'label_html' => _A_5, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'limit', 'input_id' => 'f-limit', 'value_attr' => (string)$conf['auto_links']['limit'], 'is_config' => true])],
-        ['label_html' => _ADDAMAIL, 'field_html' => getTplRadioGroup(['name' => 'addmail', 'value' => (string)$conf['auto_links']['addmail'], 'options' => $yesno])],
+        ['label_html' => _ADDAMAIL, 'label_id' => $labid = getFieldIds('', 'addmail')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'addmail', 'value' => (string)$conf['auto_links']['addmail'], 'options' => $yesno])],
     ];
     setHead();
     $cont = getTplAdminTabs([

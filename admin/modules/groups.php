@@ -168,8 +168,8 @@ function add(): void {
     ];
     $rows[] = [
         'label_for' => 'f-grextra',
-        'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SPEC_GROUP, 'hint' => _GRSINFO]),
-        'field_html' => $tpl->getHtmlFrag('checkbox', [
+        'label_html' => _SPEC_GROUP, 'hint_html' => _GRSINFO, 'hint_id' => $hntid = getFieldIds('f-grextra')['hint'],
+        'field_html' => $tpl->getHtmlFrag('checkbox', ['describedby' => $hntid,
             'name_attr' => 'grextra',
             'input_id' => 'f-grextra',
             'value_attr' => '1',

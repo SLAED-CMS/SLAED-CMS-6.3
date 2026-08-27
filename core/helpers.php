@@ -9,6 +9,20 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 # Temporary home for new helper functions while shared APIs are stabilized
 
 # New, stable helper functions for building admin and frontend HTML from prepared data cuts and shared templates
+# Build the three ids one form row needs - the control, the caption naming it, the hint explaining it - so the two ends of a row cannot disagree about the name that joins them
+# The id is taken and never derived from the field name: this tree writes ids by hand and the mapping is no rule - dump_skip is f-dump-skip, and a loop position gives f-field-0
+# Re-deriving one from the name would quietly rewrite an id that JavaScript, CSS or an outside reference hangs on, so an existing id passes through untouched, duplicates included
+# Only a row whose field has no labelable control of its own - a radio group, an editor, a date pair - mints one, from the seed the caller names and a per-request counter
+function getFieldIds(string $id, string $mint = ''): array {
+    static $seq = 0;
+    if ($id === '') {
+        $seq++;
+        $seed = $mint !== '' ? strtolower(preg_replace('#[^a-zA-Z0-9]+#', '-', $mint)) : 'field';
+        $id = 'f-'.trim($seed, '-').'-'.$seq;
+    }
+    return ['input' => $id, 'label' => $id.'-label', 'hint' => $id.'-hint'];
+}
+
 # Build add-div rows from dynamic module field definitions without table markup
 function getTplAddFieldRows(array $data = []): array {
     global $conf, $tpl;
@@ -33,11 +47,13 @@ function getTplAddFieldRows(array $data = []): array {
         $text = !empty($vals[$pos]) ? $vals[$pos] : ($out[2] ?? '');
         $need = (($out[4] ?? '0') == '1') ? ' required' : '';
         $type = $out[3] ?? '';
+        $fid = 'f-field-'.$pos;
         if ($type == '1') {
             $dval = $text ? getConst($text) : '';
             $html = $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
                 'name_attr' => 'field[]',
+                'input_id' => $fid,
                 'value_attr' => $dval,
                 'placeholder_text' => $dval,
                 'input_attr' => trim($need),
@@ -45,6 +61,7 @@ function getTplAddFieldRows(array $data = []): array {
         } elseif ($type == '2') {
             $html = $tpl->getHtmlFrag('textarea', [
                 'name_attr' => 'field[]',
+                'input_id' => $fid,
                 'rows_num' => 5,
                 'value_text' => $text,
                 'input_attr' => trim($need),
@@ -62,6 +79,7 @@ function getTplAddFieldRows(array $data = []): array {
             }
             $html = $tpl->getHtmlFrag('select', [
                 'name_attr' => 'field[]',
+                'selectid' => $fid,
                 'options_html' => $tpl->getHtmlFrag('select-option', [
                     'value_attr' => '',
                     'label_text' => _NO,
@@ -70,13 +88,15 @@ function getTplAddFieldRows(array $data = []): array {
                 'select_attr' => trim($need),
             ]);
         } elseif ($type == '4') {
+            $fid = '';
             $html = getTplAddDateTime(['name' => 'field[]', 'time' => $text, 'with' => true, 'max' => 16]);
         } elseif ($type == '5') {
+            $fid = '';
             $html = getTplAddDateTime(['name' => 'field[]', 'time' => $text, 'with' => false, 'max' => 10]);
         } else {
             $html = '';
         }
-        if ($html != '') $rows[] = ['label_html' => getConst($out[1]), 'field_html' => $html];
+        if ($html != '') $rows[] = ['label_for' => $fid, 'label_html' => getConst($out[1]), 'field_html' => $html];
         $pos++;
     }
     return $rows;
@@ -173,6 +193,8 @@ function getTplRefreshTimeSelect(array $data = []): string {
     }
     return $tpl->getHtmlFrag('select', [
         'name_attr' => $name,
+        'selectid' => (string)($data['input_id'] ?? ''),
+        'describedby' => (string)($data['describedby'] ?? ''),
         'options_html' => $opts,
     ]);
 }
@@ -417,7 +439,7 @@ function setTplAdminInfoPage(array $data = []): void {
     if (!empty($conf['adminfo'])) {
         $rows = [[
             'label_html' => '',
-            'field_html' => getTplTextarea(['id' => '1', 'name' => 'text', 'value' => $text, 'mod' => $mod, 'rows' => '25', 'store' => 'config']),
+            'field_html' => getTplTextarea(['label' => _ADMININFO, 'id' => '1', 'name' => 'text', 'value' => $text, 'mod' => $mod, 'rows' => '25', 'store' => 'config']),
             'is_full' => true,
             'field_unwrapped' => true,
         ]];
@@ -436,6 +458,8 @@ function setTplAdminInfoPage(array $data = []): void {
 }
 
 # Render one shared radio group from prepared option rows
+# The group is the element a reader lands in, so it carries the role and the reference to the caption of its own row: a radio hears "Yes" and never the question without it
+# The switch variant is a group too - two radios sharing one name still answer one question, and a reader landing on either has to be told which
 function getTplRadioGroup(array $data = []): string {
     global $tpl;
     $name = $data['name'] ?? '';
@@ -454,7 +478,7 @@ function getTplRadioGroup(array $data = []): string {
             'value_attr' => $valu,
         ]);
     }
-    return $tpl->getHtmlFrag('block-content', ['switch' => $swit, 'is_radio_group' => true, 'content' => $items]);
+    return $tpl->getHtmlFrag('block-content', ['switch' => $swit, 'is_radio_group' => true, 'labelledby' => (string)($data['labelledby'] ?? ''), 'describedby' => (string)($data['describedby'] ?? ''), 'content' => $items]);
 }
 
 # Render one shared user autocomplete input with datalist-backed lookup
@@ -607,6 +631,9 @@ function getTplTextarea(array $data = []): string {
     $rul = getUploadRuleData(strtolower($mod));
     $store = (string)($data['store'] ?? '');
     return Editor::getContent([
+        'labelledby' => (string)($data['labelledby'] ?? ''),
+        'describedby' => (string)($data['describedby'] ?? ''),
+        'label' => (string)($data['label'] ?? ''),
         'editor' => $key,
         'format' => $fmt,
         'id' => $id,
@@ -653,6 +680,7 @@ function getTplAjaxTextarea(array $data = []): string {
     $head    = ' hx-headers=\'{"X-CSRF-TOKEN": "'.getPageToken().'"}\'';
     $cerror  = addslashes((string)_CERROR1);
     $content = getTplTextarea([
+            'label'       => _TEXT,
             'id'          => $fieldId,
             'name'        => 'text',
             'value'       => $text,
@@ -1008,7 +1036,7 @@ function getTplLanguageOptions(string $lang = '', string $typ = ''): string {
 }
 
 # Render a multi-select for modules
-function getTplModuleSelect(string $name, string $mod, string $no = '', array $allow = []): string {
+function getTplModuleSelect(string $name, string $mod, string $no = '', array $allow = [], string $sid = '', string $desc = ''): string {
     global $tpl;
     $cont = '';
     if ($no !== '') $cont .= $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => empty($mod)]);
@@ -1025,7 +1053,7 @@ function getTplModuleSelect(string $name, string $mod, string $no = '', array $a
         }
         $cont .= $tpl->getHtmlFrag('select-option', ['value_attr' => $file, 'label_text' => getModuleName($file), 'is_selected' => $isel]);
     }
-    return $tpl->getHtmlFrag('select', ['name_attr' => $name, 'is_config' => true, 'options_html' => $cont, 'is_multiple' => true, 'is_name_array' => true]);
+    return $tpl->getHtmlFrag('select', ['name_attr' => $name, 'selectid' => $sid, 'describedby' => $desc, 'is_config' => true, 'options_html' => $cont, 'is_multiple' => true, 'is_name_array' => true]);
 }
 
 # Return the names of modules that support categories

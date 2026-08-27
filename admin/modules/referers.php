@@ -136,8 +136,8 @@ function config(): void {
         ['label_for' => 'f-anum', 'label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => (string)$conf['referers']['anum'], 'is_config' => true])],
         ['label_for' => 'f-anump', 'label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => (string)$conf['referers']['anump'], 'is_config' => true])],
         ['label_for' => 'f-refer-t', 'label_html' => _REFER_T, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'refer_t', 'input_id' => 'f-refer-t', 'value_attr' => (string)intval($conf['referers']['refer_t'] / 86400), 'is_config' => true])],
-        ['label_html' => _REFER, 'field_html' => getTplRadioGroup(['name' => 'refer', 'value' => (string)$conf['referers']['refer'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => _REFERB, 'field_html' => getTplRadioGroup(['name' => 'referb', 'value' => (string)$conf['referers']['referb'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+        ['label_html' => _REFER, 'label_id' => $labid = getFieldIds('', 'refer')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'refer', 'value' => (string)$conf['referers']['refer'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+        ['label_html' => _REFERB, 'label_id' => $labid = getFieldIds('', 'referb')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'referb', 'value' => (string)$conf['referers']['referb'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
     ];
     $confv = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',

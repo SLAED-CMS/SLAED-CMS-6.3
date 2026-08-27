@@ -520,7 +520,7 @@ function updateAdminCategoryOrder(): void {
     getAdminCategoryList(filterVar(getVar('get', 'mod', 'var', '')), 0);
 }
 
-function catacess(string $name, string $class, string $selected, int $limit): string {
+function catacess(string $name, string $class, string $selected, int $limit, string $sid = '', string $desc = ''): string {
     global $db, $tpl;
     $gids = explode('|', $selected);
     $opts = '';
@@ -569,6 +569,8 @@ function catacess(string $name, string $class, string $selected, int $limit): st
     ]);
     return $tpl->getHtmlFrag('select', [
         'name_attr' => $name.'[]',
+        'selectid' => $sid,
+        'describedby' => $desc,
         'options_html' => $opts,
         'select_attr' => 'multiple="multiple"',
     ]);

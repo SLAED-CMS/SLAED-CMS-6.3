@@ -466,7 +466,8 @@ function add(): void {
         $fields .= $tpl->getHtmlFrag('form-field-row', ['label_for' => 'f-cid', 'label' => _CATEGORY, 'field_html' => getTplCategorySelect($conf['name'], $cid, 'cid', '', $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => false]))]);
         $fields .= $tpl->getHtmlFrag('form-field-row', [
             'label' => _TEXT,
-            'field_html' => getTplTextarea([
+            'label_id' => $labid = getFieldIds('', 'description')['label'],
+            'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _TEXT,
                 'id' => '1',
                 'name' => 'description',
                 'value' => $description,
@@ -479,7 +480,8 @@ function add(): void {
         ]);
         $fields .= $tpl->getHtmlFrag('form-field-row', [
             'label' => _ENDTEXT,
-            'field_html' => getTplTextarea([
+            'label_id' => $labid = getFieldIds('', 'bodytext')['label'],
+            'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _ENDTEXT,
                 'id' => '2',
                 'name' => 'bodytext',
                 'value' => $bodytext,

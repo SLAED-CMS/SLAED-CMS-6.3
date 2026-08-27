@@ -324,7 +324,7 @@ function addview(int $id): string {
     if ((is_user() && $conf['help']['add'] == 1)) {
         $result = $db->getSqlQuery('SELECT cid, status FROM '.PREFIX_DB.'_help WHERE id = :id', ['id' => $id]);
         [$cid, $status] = $db->getSqlRow($result);
-        $rows = $tpl->getHtmlFrag('form-field-row', ['label' => _HELPGLOS, 'field_html' => getTplRadioGroup([
+        $rows = $tpl->getHtmlFrag('form-field-row', ['label' => _HELPGLOS, 'label_id' => $labid = getFieldIds('', 'status')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid,
             'name' => 'status',
             'value' => ((string)$status === '0') ? '0' : '1',
             'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
@@ -336,7 +336,8 @@ function addview(int $id): string {
             .$rows
             .$tpl->getHtmlFrag('form-field-row', [
                 'label' => _TEXT,
-                'field_html' => getTplTextarea([
+                'label_id' => $labid = getFieldIds('', 'hometext')['label'],
+                'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _TEXT,
                     'id' => '1',
                     'name' => 'hometext',
                     'value' => '',
@@ -385,7 +386,8 @@ function add(): void {
         $fields .= $tpl->getHtmlFrag('form-field-row', ['label_for' => 'f-catid', 'label' => _CATEGORY, 'field_html' => getTplCategorySelect($conf['name'], $cid, 'catid', '', $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => false]))]);
         $fields .= $tpl->getHtmlFrag('form-field-row', [
             'label' => _TEXT,
-            'field_html' => getTplTextarea([
+            'label_id' => $labid = getFieldIds('', 'hometext')['label'],
+            'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _TEXT,
                 'id' => '1',
                 'name' => 'hometext',
                 'value' => $hometext,

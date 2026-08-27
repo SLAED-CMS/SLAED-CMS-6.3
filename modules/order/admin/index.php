@@ -197,16 +197,16 @@ function config(): void {
         ['label_for' => 'f-mail', 'label_html' => _OR_1, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mail', 'input_id' => 'f-mail', 'value_attr' => $conf['order']['mail'] ?? ''])],
         ['label_for' => 'f-anum', 'label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => $conf['order']['anum'] ?? 25])],
         ['label_for' => 'f-anump', 'label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => $conf['order']['anump'] ?? 10])],
-        ['label_html' => _OR_2, 'field_html' => getTplRadioGroup(['name' => 'an', 'value' => (string)($conf['order']['an'] ?? 0), 'options' => $yesno])],
-        ['label_html' => _OR_3, 'field_html' => getTplRadioGroup(['name' => 'pr', 'value' => (string)($conf['order']['pr'] ?? 0), 'options' => $yesno])],
-        ['label_html' => _OR_4, 'field_html' => getTplRadioGroup(['name' => 'ad', 'value' => (string)($conf['order']['ad'] ?? 0), 'options' => $yesno])],
-        ['label_html' => _OR_5, 'field_html' => getTplTextarea([
+        ['label_html' => _OR_2, 'label_id' => $labid = getFieldIds('', 'an')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'an', 'value' => (string)($conf['order']['an'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _OR_3, 'label_id' => $labid = getFieldIds('', 'pr')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'pr', 'value' => (string)($conf['order']['pr'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _OR_4, 'label_id' => $labid = getFieldIds('', 'ad')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'ad', 'value' => (string)($conf['order']['ad'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _OR_5, 'label_id' => $labid = getFieldIds('', 'text')['label'], 'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _OR_5,
             'id' => '1', 'name' => 'text', 'value' => $conf['order']['text'] ?? '', 'mod' => 'all', 'store' => 'config', 'rows' => 5, 'placeholder' => _OR_5, 'required' => '1',
         ]), 'is_full' => true],
-        ['label_html' => _OR_6, 'field_html' => getTplTextarea([
+        ['label_html' => _OR_6, 'label_id' => $labid = getFieldIds('', 'info')['label'], 'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _OR_6,
             'id' => '2', 'name' => 'info', 'value' => $conf['order']['info'] ?? '', 'mod' => 'all', 'store' => 'config', 'rows' => 5, 'placeholder' => _OR_6, 'required' => '1',
         ]), 'is_full' => true],
-        ['label_html' => _OR_7, 'field_html' => getTplTextarea([
+        ['label_html' => _OR_7, 'label_id' => $labid = getFieldIds('', 'sendinfo')['label'], 'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _OR_7,
             'id' => '3', 'name' => 'sendinfo', 'value' => $conf['order']['sendinfo'] ?? '', 'mod' => 'all', 'store' => 'config', 'rows' => 5, 'placeholder' => _OR_7,
             'required' => '1',
         ]), 'is_full' => true],

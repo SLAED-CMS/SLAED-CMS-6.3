@@ -124,7 +124,7 @@ function add(): void {
         ['label_for' => 'f-title', 'label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'input_id' => 'f-title', 'value_attr' => $title, 'maxlength_num' => 255, 'is_required' => true])],
         ['label_for' => 'f-cat', 'label_html' => _CATEGORY, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cat', 'selectid' => 'f-cat', 'options_html' => $catopts])],
         ['label_html' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'date', 'time' => $date, 'with' => true, 'max' => 16])],
-        ['label_html' => _JOKE, 'field_html' => getTplTextarea([
+        ['label_html' => _JOKE, 'label_id' => $labid = getFieldIds('', 'joke')['label'], 'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _JOKE,
             'id' => '1', 'name' => 'joke', 'value' => $joke, 'mod' => 'jokes', 'store' => 'jokes.body', 'rows' => '10', 'placeholder' => _JOKE, 'required' => '1',
         ]), 'is_full' => true, 'field_unwrapped' => true],
     ];
@@ -213,14 +213,14 @@ function config(): void {
         ['label_for' => 'f-anum', 'label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => (string)($conf['jokes']['anum'] ?? 0), 'is_config' => true])],
         ['label_for' => 'f-nump', 'label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'input_id' => 'f-nump', 'value_attr' => (string)($conf['jokes']['nump'] ?? 0), 'is_config' => true])],
         ['label_for' => 'f-anump', 'label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => (string)($conf['jokes']['anump'] ?? 0), 'is_config' => true])],
-        ['label_html' => _HOMCAT, 'field_html' => getTplRadioGroup(['name' => 'homcat', 'value' => (string)($conf['jokes']['homcat'] ?? 0), 'options' => $yesno])],
-        ['label_html' => _C_32, 'field_html' => getTplRadioGroup(['name' => 'catdesc', 'value' => (string)($conf['jokes']['catdesc'] ?? 0), 'options' => $yesno])],
-        ['label_html' => _C_15, 'field_html' => getTplRadioGroup(['name' => 'subcat', 'value' => (string)($conf['jokes']['subcat'] ?? 0), 'options' => $yesno])],
-        ['label_html' => _ADDAMAIL, 'field_html' => getTplRadioGroup(['name' => 'addmail', 'value' => (string)($conf['jokes']['addmail'] ?? 0), 'options' => $yesno])],
-        ['label_html' => _J_1, 'field_html' => getTplRadioGroup(['name' => 'add', 'value' => (string)($conf['jokes']['add'] ?? 0), 'options' => $yesno])],
-        ['label_html' => _J_2, 'field_html' => getTplRadioGroup(['name' => 'addquest', 'value' => (string)($conf['jokes']['addquest'] ?? 0), 'options' => $yesno])],
-        ['label_html' => _C_17, 'field_html' => getTplRadioGroup(['name' => 'date', 'value' => (string)($conf['jokes']['date'] ?? 0), 'options' => $yesno])],
-        ['label_html' => _C_19, 'field_html' => getTplRadioGroup(['name' => 'rate', 'value' => (string)($conf['jokes']['rate'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _HOMCAT, 'label_id' => $labid = getFieldIds('', 'homcat')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'homcat', 'value' => (string)($conf['jokes']['homcat'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_32, 'label_id' => $labid = getFieldIds('', 'catdesc')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'catdesc', 'value' => (string)($conf['jokes']['catdesc'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_15, 'label_id' => $labid = getFieldIds('', 'subcat')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'subcat', 'value' => (string)($conf['jokes']['subcat'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _ADDAMAIL, 'label_id' => $labid = getFieldIds('', 'addmail')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'addmail', 'value' => (string)($conf['jokes']['addmail'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _J_1, 'label_id' => $labid = getFieldIds('', 'add')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'add', 'value' => (string)($conf['jokes']['add'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _J_2, 'label_id' => $labid = getFieldIds('', 'addquest')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'addquest', 'value' => (string)($conf['jokes']['addquest'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_17, 'label_id' => $labid = getFieldIds('', 'date')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'date', 'value' => (string)($conf['jokes']['date'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_19, 'label_id' => $labid = getFieldIds('', 'rate')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'rate', 'value' => (string)($conf['jokes']['rate'] ?? 0), 'options' => $yesno])],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=jokes&op=configsave',

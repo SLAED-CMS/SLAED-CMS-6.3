@@ -344,7 +344,7 @@ function config(): void {
     $rows = [
         ['label_for' => 'f-bet', 'label_html' => _STATBET, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'bet', 'input_id' => 'f-bet', 'value_attr' => (string)$conf['statistic']['bet'], 'is_config' => true])],
         ['label_for' => 'f-shi', 'label_html' => _STATSHI, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'shi', 'input_id' => 'f-shi', 'value_attr' => (string)$conf['statistic']['shi'], 'is_config' => true])],
-        ['label_html' => _STATACT, 'field_html' => getTplRadioGroup(['name' => 'stat', 'value' => (string)(int)$conf['statistic']['stat'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+        ['label_html' => _STATACT, 'label_id' => $labid = getFieldIds('', 'stat')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'stat', 'value' => (string)(int)$conf['statistic']['stat'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
     ];
     $confv = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',

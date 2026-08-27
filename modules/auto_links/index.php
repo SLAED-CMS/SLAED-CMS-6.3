@@ -146,7 +146,8 @@ function add(): void {
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label' => _A_LINKS_TEXT,
-        'field_html' => getTplTextarea([
+        'label_id' => $labid = getFieldIds('', 'desc')['label'],
+        'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _A_LINKS_TEXT,
             'id' => '1',
             'name' => 'desc',
             'value' => $desc,

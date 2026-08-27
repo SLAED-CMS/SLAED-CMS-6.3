@@ -182,8 +182,8 @@ function add(string $name = ''): void {
     }
     $rows[] = [
         'label_for' => 'f-schedule',
-        'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SCHEDULER_SCHED, 'hint' => _SCHEDULER_CRONFMT]),
-        'field_html' => $tpl->getHtmlFrag('input', [
+        'label_html' => _SCHEDULER_SCHED, 'hint_html' => _SCHEDULER_CRONFMT, 'hint_id' => $hntid = getFieldIds('f-schedule')['hint'],
+        'field_html' => $tpl->getHtmlFrag('input', ['describedby' => $hntid,
             'itype' => 'text',
             'name_attr' => 'schedule',
             'input_id' => 'f-schedule',
@@ -196,8 +196,8 @@ function add(string $name = ''): void {
     ];
     $rows[] = [
         'label_for' => 'f-priority',
-        'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SCHEDULER_PRIO, 'hint' => _SCHEDULER_PRIOTIP]),
-        'field_html' => $tpl->getHtmlFrag('input', [
+        'label_html' => _SCHEDULER_PRIO, 'hint_html' => _SCHEDULER_PRIOTIP, 'hint_id' => $hntid = getFieldIds('f-priority')['hint'],
+        'field_html' => $tpl->getHtmlFrag('input', ['describedby' => $hntid,
             'itype' => 'number',
             'name_attr' => 'priority',
             'input_id' => 'f-priority',
@@ -221,8 +221,8 @@ function add(string $name = ''): void {
         ]),
     ];
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
-    $rows[] = ['label_html' => _ACTIVATE2, 'field_html' => getTplRadioGroup(['name' => 'active', 'value' => (string)(int)$job['active'], 'options' => $yesno])];
-    $rows[] = ['label_html' => _SCHEDULER_MANUAL, 'field_html' => getTplRadioGroup(['name' => 'manual', 'value' => (string)(int)$job['manual'], 'options' => $yesno])];
+    $rows[] = ['label_html' => _ACTIVATE2, 'label_id' => $labid = getFieldIds('', 'active')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'active', 'value' => (string)(int)$job['active'], 'options' => $yesno])];
+    $rows[] = ['label_html' => _SCHEDULER_MANUAL, 'label_id' => $labid = getFieldIds('', 'manual')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'manual', 'value' => (string)(int)$job['manual'], 'options' => $yesno])];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [

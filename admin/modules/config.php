@@ -63,10 +63,10 @@ function getGeoipPanel(): string {
     global $conf, $tpl;
     $test = getVar('req', 'testip', 'text', (string)($conf['geoip_test'] ?? ''));
     $rows = [
-        ['label_html' => _GEO_IP, 'field_html' => getTplRadioGroup(['name' => 'geoipenabled', 'value' => (string)(int)($conf['geoip_enabled'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+        ['label_html' => _GEO_IP, 'label_id' => $labid = getFieldIds('', 'geoipenabled')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'geoipenabled', 'value' => (string)(int)($conf['geoip_enabled'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_for' => 'f-geoipcache', 'label_html' => _GEOIP_CACHE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'geoipcache', 'input_id' => 'f-geoipcache', 'value_attr' => (string)($conf['geoip_cache'] ?? 86400), 'is_config' => true])],
-        ['label_html' => _GEOIP_ANON, 'field_html' => getTplRadioGroup(['name' => 'geoipanon', 'value' => (string)(int)($conf['geoip_anon'] ?? 1), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => _GEOIP_STORE, 'field_html' => getTplRadioGroup(['name' => 'geoipstore', 'value' => (string)(int)($conf['geoip_store'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+        ['label_html' => _GEOIP_ANON, 'label_id' => $labid = getFieldIds('', 'geoipanon')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'geoipanon', 'value' => (string)(int)($conf['geoip_anon'] ?? 1), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+        ['label_html' => _GEOIP_STORE, 'label_id' => $labid = getFieldIds('', 'geoipstore')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'geoipstore', 'value' => (string)(int)($conf['geoip_store'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_for' => 'f-testip', 'label_html' => _GEOIP_TESTIP, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'testip', 'input_id' => 'f-testip', 'value_attr' => $test, 'is_config' => true])],
     ];
     $head = [
@@ -88,8 +88,9 @@ function getGeoipPanel(): string {
 }
 
 # Render one mail settings row, carrying the transport it belongs to so the value hook can hide it for every other transport
-function getMailRow(string $label, string $field, string $trans = ''): array {
-    return ['label_html' => $label, 'field_html' => $field, 'attr' => ($trans !== '') ? 'data-sl-show-when="mailtrans" data-sl-show-value="'.$trans.'"' : ''];
+# The hint is taken apart from the caption because the row owns both cells: a caption that swallowed it would read the explanation out as the name of the field
+function getMailRow(string $label, string $field, string $trans = '', string $hint = '', array $ids = []): array {
+    return ['label_html' => $label, 'label_id' => (string)($ids['label'] ?? ''), 'hint_html' => $hint, 'hint_id' => (string)($ids['hint'] ?? ''), 'field_html' => $field, 'attr' => ($trans !== '') ? 'data-sl-show-when="mailtrans" data-sl-show-value="'.$trans.'"' : ''];
 }
 
 # Render the mail delivery settings: transport, sender identity, SMTP, the Sendmail path, the test send and the message template
@@ -108,27 +109,33 @@ function getMailPanel(): string {
     $noprc = function_exists('proc_open') ? '' : $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _MAIL_NOPROC]);
     $rows = [];
     $rows[] = getMailRow(_MAIL_TRANS, $tpl->getHtmlFrag('select', ['name_attr' => 'mailtrans', 'options' => $tlist, 'is_config' => true]));
-    $rows[] = getMailRow($tpl->getHtmlFrag('label-hint', ['label' => _MAIL_FROMNAME, 'hint' => _MAIL_NAMEINFO]), $tpl->getHtmlFrag('input', [
+    $fids = getFieldIds('', 'mailfname');
+    $rows[] = getMailRow(_MAIL_FROMNAME, $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'mailfname',
+        'describedby' => $fids['hint'],
         'value_attr' => (string)($mail['fromname'] ?? ''),
         'maxlength_num' => 100,
         'is_config' => true,
-    ]));
-    $rows[] = getMailRow($tpl->getHtmlFrag('label-hint', ['label' => _MAIL_FROMMAIL, 'hint' => _MAIL_MAILINFO]), $tpl->getHtmlFrag('input', [
+    ]), '', _MAIL_NAMEINFO, $fids);
+    $fids = getFieldIds('', 'mailfmail');
+    $rows[] = getMailRow(_MAIL_FROMMAIL, $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'mailfmail',
+        'describedby' => $fids['hint'],
         'value_attr' => (string)($mail['frommail'] ?? ''),
         'maxlength_num' => 100,
         'is_config' => true,
-    ]));
-    $rows[] = getMailRow($tpl->getHtmlFrag('label-hint', ['label' => _MAIL_REPLYTO, 'hint' => _MAIL_REPLYINFO]), $tpl->getHtmlFrag('input', [
+    ]), '', _MAIL_MAILINFO, $fids);
+    $fids = getFieldIds('', 'mailreply');
+    $rows[] = getMailRow(_MAIL_REPLYTO, $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'mailreply',
+        'describedby' => $fids['hint'],
         'value_attr' => (string)($mail['replyto'] ?? ''),
         'maxlength_num' => 100,
         'is_config' => true,
-    ]));
+    ]), '', _MAIL_REPLYINFO, $fids);
     $rows[] = getMailRow(_MAIL_HOST, $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'mailhost',
@@ -143,7 +150,8 @@ function getMailPanel(): string {
         'is_config' => true,
     ]), 'smtp');
     $rows[] = getMailRow(_MAIL_SECURE, $tpl->getHtmlFrag('select', ['name_attr' => 'mailsecure', 'options' => $slist, 'is_config' => true]).$nossl, 'smtp');
-    $rows[] = getMailRow(_MAIL_AUTH, getTplRadioGroup(['name' => 'mailauth', 'value' => (string)(int)($mail['auth'] ?? 0), 'options' => $yesno]), 'smtp');
+    $fids = getFieldIds('', 'mailauth');
+    $rows[] = getMailRow(_MAIL_AUTH, getTplRadioGroup(['labelledby' => $fids['label'], 'name' => 'mailauth', 'value' => (string)(int)($mail['auth'] ?? 0), 'options' => $yesno]), 'smtp', '', $fids);
     $rows[] = getMailRow(_USER, $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'mailuser',
@@ -152,27 +160,31 @@ function getMailPanel(): string {
         'autocomplete_attr' => 'off',
         'is_config' => true,
     ]), 'smtp');
-    $rows[] = getMailRow($tpl->getHtmlFrag('label-hint', ['label' => _PASSWORD, 'hint' => _MAIL_PASSINFO]), $tpl->getHtmlFrag('input', [
+    $fids = getFieldIds('', 'mailpass');
+    $rows[] = getMailRow(_PASSWORD, $tpl->getHtmlFrag('input', [
         'itype' => 'password',
         'name_attr' => 'mailpass',
+        'describedby' => $fids['hint'],
         'value_attr' => '',
         'maxlength_num' => 100,
         'autocomplete_attr' => 'new-password',
         'is_config' => true,
-    ]), 'smtp');
+    ]), 'smtp', _MAIL_PASSINFO, $fids);
     $rows[] = getMailRow(_MAIL_TIMEOUT, $tpl->getHtmlFrag('input', [
         'itype' => 'number',
         'name_attr' => 'mailtime',
         'value_attr' => (string)($mail['timeout'] ?? '10'),
         'is_config' => true,
     ]), 'smtp');
-    $rows[] = getMailRow($tpl->getHtmlFrag('label-hint', ['label' => _MAIL_SENDPATH, 'hint' => _MAIL_PATHINFO]), $tpl->getHtmlFrag('input', [
+    $fids = getFieldIds('', 'mailpath');
+    $rows[] = getMailRow(_MAIL_SENDPATH, $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'mailpath',
+        'describedby' => $fids['hint'],
         'value_attr' => (string)($mail['sendmail'] ?? ''),
         'maxlength_num' => 255,
         'is_config' => true,
-    ]).$noprc, 'sendmail');
+    ]).$noprc, 'sendmail', _MAIL_PATHINFO, $fids);
     foreach ([['mailbatch', _MAIL_BATCH, 'batch', '25'], ['mailrate', _MAIL_RATE, 'rate', '60'], ['mailtries', _MAIL_TRIES, 'tries', '5'],
         ['mailback', _MAIL_BACKOFF, 'backoff', '300'], ['mailkeep', _MAIL_KEEP, 'keep', '30'], ['mailbulk', _MAIL_KEEPBULK, 'keepbulk', '3']] as $item) {
         $rows[] = getMailRow($item[1], $tpl->getHtmlFrag('input', [
@@ -182,33 +194,41 @@ function getMailPanel(): string {
             'is_config' => true,
         ]));
     }
-    $rows[] = getMailRow($tpl->getHtmlFrag('label-hint', ['label' => _MAIL_VERIFY, 'hint' => _MAIL_VERIFYI]), getTplRadioGroup([
+    $fids = getFieldIds('', 'mailverify');
+    $rows[] = getMailRow(_MAIL_VERIFY, getTplRadioGroup([
+        'labelledby' => $fids['label'],
+        'describedby' => $fids['hint'],
         'name' => 'mailverify',
         'value' => (string)(int)($mail['verify'] ?? 1),
         'options' => $yesno,
-    ]));
+    ]), '', _MAIL_VERIFYI, $fids);
     $rows[] = getMailRow(_MAIL_DNSTTL, $tpl->getHtmlFrag('input', [
         'itype' => 'number',
         'name_attr' => 'mailttl',
         'value_attr' => (string)($mail['dnsttl'] ?? '604800'),
         'is_config' => true,
     ]));
-    $rows[] = getMailRow($tpl->getHtmlFrag('label-hint', ['label' => _MAIL_TEST, 'hint' => _MAIL_TESTINFO]), $tpl->getHtmlFrag('input', [
+    $fids = getFieldIds('', 'mailto');
+    $rows[] = getMailRow(_MAIL_TEST, $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'mailto',
+        'describedby' => $fids['hint'],
         'value_attr' => '',
         'maxlength_num' => 100,
         'placeholder_text' => (string)$conf['adminmail'],
         'is_config' => true,
-    ]).$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'name_attr' => 'op', 'value_attr' => 'mailtest', 'label' => _SEND, 'is_green' => true]));
-    $rows[] = getMailRow($tpl->getHtmlFrag('label-hint', ['label' => _MAILTEMP, 'hint' => _MAILTEMPINFO]), $tpl->getHtmlFrag('textarea', [
+    ]).$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'name_attr' => 'op', 'value_attr' => 'mailtest', 'label' => _SEND, 'is_green' => true]), '', _MAIL_TESTINFO, $fids);
+    $fids = getFieldIds('', 'mtemp');
+    $rows[] = getMailRow(_MAILTEMP, $tpl->getHtmlFrag('textarea', [
         'name_attr' => 'mtemp',
         'value_text' => (string)$conf['mtemp'],
         'cols_num' => 65,
         'rows_num' => 10,
         'is_required' => true,
         'is_config' => true,
-    ]));
+        'labelledby' => $fids['label'],
+        'describedby' => $fids['hint'],
+    ]), '', _MAILTEMPINFO, $fids);
     return $tpl->getHtmlPart('div', ['rows' => $rows]);
 }
 
@@ -334,7 +354,7 @@ function config(): void {
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_for' => 'f-admininfo', 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _ADMININFO, 'hint' => _ADMININFODES]), 'field_html' => $tpl->getHtmlFrag('textarea', [
+    $rows[] = ['label_for' => 'f-admininfo', 'label_html' => _ADMININFO, 'hint_html' => _ADMININFODES, 'hint_id' => $hntid = getFieldIds('f-admininfo')['hint'], 'field_html' => $tpl->getHtmlFrag('textarea', ['describedby' => $hntid,
         'name_attr' => 'admininfo',
         'input_id' => 'f-admininfo',
         'value_text' => (string)$conf['admininfo'],
@@ -418,7 +438,8 @@ function config(): void {
         'options_html' => $opts,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _PUTINHOME, 'hint' => _PUTINHOMEINFO.' '._CTRLINFO]), 'field_html' => getTplModuleSelect('module', $conf['module'], 1)];
+    $fids = getFieldIds('f-module');
+    $rows[] = ['label_for' => $fids['input'], 'label_html' => _PUTINHOME, 'hint_html' => _PUTINHOMEINFO.' '._CTRLINFO, 'hint_id' => $fids['hint'], 'field_html' => getTplModuleSelect('module', $conf['module'], 1, [], $fids['input'], $fids['hint'])];
     $mods = ['auto_links', 'faq', 'files', 'links', 'media', 'news', 'order', 'page', 'shop_clients', 'voting'];
     $mname = ['auto_links', 'faq', 'files', 'links', 'media', 'news', 'order', 'pages', 'shop', 'voting'];
     $ival = 0;
@@ -470,7 +491,7 @@ function config(): void {
             ]);
         }
     }
-    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _VARIABLES, 'hint' => _CTRLINFO]), 'field_html' => $tpl->getHtmlFrag('select', [
+    $rows[] = ['label_html' => _VARIABLES, 'hint_html' => _CTRLINFO, 'hint_id' => $hntid = getFieldIds('', 'variables[]')['hint'], 'field_html' => $tpl->getHtmlFrag('select', ['describedby' => $hntid,
         'name_attr' => 'variables[]',
         'options_html' => $opts,
         'is_config' => true,
@@ -519,8 +540,8 @@ function config(): void {
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => _DB_SYNC, 'field_html' => getTplRadioGroup(['name' => 'dbsync', 'value' => $conf['dbsync'], 'options' => $yesno])];
-    $rows[] = ['label_html' => _SESSION, 'field_html' => getTplRadioGroup(['name' => 'session', 'value' => $conf['session'], 'options' => $yesno])];
+    $rows[] = ['label_html' => _DB_SYNC, 'label_id' => $labid = getFieldIds('', 'dbsync')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'dbsync', 'value' => $conf['dbsync'], 'options' => $yesno])];
+    $rows[] = ['label_html' => _SESSION, 'label_id' => $labid = getFieldIds('', 'session')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'session', 'value' => $conf['session'], 'options' => $yesno])];
     $rows[] = ['label_for' => 'f-live-u', 'label_html' => _LIVE_UPD, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'number',
         'name_attr' => 'live_u',
@@ -529,11 +550,11 @@ function config(): void {
         'placeholder_text' => _LIVE_UPD,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => _MESSAGE_BOX, 'field_html' => getTplRadioGroup(['name' => 'message', 'value' => $conf['message'], 'options' => $yesno])];
-    $rows[] = ['label_html' => _TIME_DB, 'field_html' => getTplRadioGroup(['name' => 'db_t', 'value' => $conf['db_t'], 'options' => $yesno])];
-    $rows[] = ['label_html' => _ADMINFOEDIT, 'field_html' => getTplRadioGroup(['name' => 'adminfo', 'value' => $conf['adminfo'], 'options' => $yesno])];
-    $rows[] = ['label_html' => _SITE_CLOSE, 'field_html' => getTplRadioGroup(['name' => 'close', 'value' => $conf['close'], 'options' => $yesno])];
-    $rows[] = ['label_html' => _DEVMODE, 'field_html' => getTplRadioGroup(['name' => 'dev_mode', 'value' => $conf['dev_mode'] ?? 0, 'options' => $yesno])];
+    $rows[] = ['label_html' => _MESSAGE_BOX, 'label_id' => $labid = getFieldIds('', 'message')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'message', 'value' => $conf['message'], 'options' => $yesno])];
+    $rows[] = ['label_html' => _TIME_DB, 'label_id' => $labid = getFieldIds('', 'db_t')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'db_t', 'value' => $conf['db_t'], 'options' => $yesno])];
+    $rows[] = ['label_html' => _ADMINFOEDIT, 'label_id' => $labid = getFieldIds('', 'adminfo')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'adminfo', 'value' => $conf['adminfo'], 'options' => $yesno])];
+    $rows[] = ['label_html' => _SITE_CLOSE, 'label_id' => $labid = getFieldIds('', 'close')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'close', 'value' => $conf['close'], 'options' => $yesno])];
+    $rows[] = ['label_html' => _DEVMODE, 'label_id' => $labid = getFieldIds('', 'dev_mode')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'dev_mode', 'value' => $conf['dev_mode'] ?? 0, 'options' => $yesno])];
     $taba = $tpl->getHtmlPart('div', ['rows' => $rows]);
 
     $rows = [];
@@ -556,8 +577,8 @@ function config(): void {
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => _LTITLE, 'field_html' => getTplRadioGroup(['name' => 'ltitle', 'value' => $conf['ltitle'], 'options' => $yesno])];
-    $rows[] = ['label_html' => _ADESC, 'field_html' => getTplRadioGroup(['name' => 'adesc', 'value' => $conf['adesc'], 'options' => $yesno])];
+    $rows[] = ['label_html' => _LTITLE, 'label_id' => $labid = getFieldIds('', 'ltitle')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'ltitle', 'value' => $conf['ltitle'], 'options' => $yesno])];
+    $rows[] = ['label_html' => _ADESC, 'label_id' => $labid = getFieldIds('', 'adesc')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'adesc', 'value' => $conf['adesc'], 'options' => $yesno])];
     $rows[] = ['label_for' => 'f-sep', 'label_html' => _RSEP, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'sep',
@@ -578,13 +599,13 @@ function config(): void {
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => _REWRITE_MOD, 'field_html' => getTplRadioGroup(['name' => 'rewrite', 'value' => $conf['rewrite'], 'options' => $yesno])];
-    $rows[] = ['label_html' => _FORCESSL, 'field_html' => getTplRadioGroup(['name' => 'forcessl', 'value' => $conf['forcessl'] ?? 0, 'options' => $yesno])];
-    $rows[] = ['label_html' => _FORCEHOST, 'field_html' => getTplRadioGroup(['name' => 'forcehost', 'value' => $conf['forcehost'] ?? 0, 'options' => $yesno])];
-    $rows[] = ['label_html' => _SEOTITLE, 'field_html' => getTplRadioGroup(['name' => 'title', 'value' => $conf['title'] ?? 1, 'options' => $yesno])];
-    $rows[] = ['label_html' => _SEOCTITLE, 'field_html' => getTplRadioGroup(['name' => 'ctitle', 'value' => $conf['ctitle'] ?? 1, 'options' => $yesno])];
-    $rows[] = ['label_html' => _OGRAPH, 'field_html' => getTplRadioGroup(['name' => 'agraph', 'value' => $conf['agraph'] ?? 1, 'options' => $yesno])];
-    $rows[] = ['label_for' => 'f-graph', 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _OGRAPHT, 'hint' => _TPLVARS]), 'field_html' => $tpl->getHtmlFrag('textarea', [
+    $rows[] = ['label_html' => _REWRITE_MOD, 'label_id' => $labid = getFieldIds('', 'rewrite')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'rewrite', 'value' => $conf['rewrite'], 'options' => $yesno])];
+    $rows[] = ['label_html' => _FORCESSL, 'label_id' => $labid = getFieldIds('', 'forcessl')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'forcessl', 'value' => $conf['forcessl'] ?? 0, 'options' => $yesno])];
+    $rows[] = ['label_html' => _FORCEHOST, 'label_id' => $labid = getFieldIds('', 'forcehost')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'forcehost', 'value' => $conf['forcehost'] ?? 0, 'options' => $yesno])];
+    $rows[] = ['label_html' => _SEOTITLE, 'label_id' => $labid = getFieldIds('', 'title')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'title', 'value' => $conf['title'] ?? 1, 'options' => $yesno])];
+    $rows[] = ['label_html' => _SEOCTITLE, 'label_id' => $labid = getFieldIds('', 'ctitle')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'ctitle', 'value' => $conf['ctitle'] ?? 1, 'options' => $yesno])];
+    $rows[] = ['label_html' => _OGRAPH, 'label_id' => $labid = getFieldIds('', 'agraph')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'agraph', 'value' => $conf['agraph'] ?? 1, 'options' => $yesno])];
+    $rows[] = ['label_for' => 'f-graph', 'label_html' => _OGRAPHT, 'hint_html' => _TPLVARS, 'hint_id' => $hntid = getFieldIds('f-graph')['hint'], 'field_html' => $tpl->getHtmlFrag('textarea', ['describedby' => $hntid,
         'name_attr' => 'graph',
         'input_id' => 'f-graph',
         'value_text' => (string)($conf['graph'] ?? ''),
@@ -592,8 +613,8 @@ function config(): void {
         'rows_num' => 8,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => _SCHEMA, 'field_html' => getTplRadioGroup(['name' => 'aschema', 'value' => $conf['aschema'] ?? 1, 'options' => $yesno])];
-    $rows[] = ['label_for' => 'f-schema', 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SCHEMAT, 'hint' => _TPLVARS]), 'field_html' => $tpl->getHtmlFrag('textarea', [
+    $rows[] = ['label_html' => _SCHEMA, 'label_id' => $labid = getFieldIds('', 'aschema')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'aschema', 'value' => $conf['aschema'] ?? 1, 'options' => $yesno])];
+    $rows[] = ['label_for' => 'f-schema', 'label_html' => _SCHEMAT, 'hint_html' => _TPLVARS, 'hint_id' => $hntid = getFieldIds('f-schema')['hint'], 'field_html' => $tpl->getHtmlFrag('textarea', ['describedby' => $hntid,
         'name_attr' => 'schema',
         'input_id' => 'f-schema',
         'value_text' => (string)($conf['schema'] ?? ''),
@@ -624,9 +645,9 @@ function config(): void {
         'options_html' => $opts,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => _ACTMULTILINGUAL, 'field_html' => getTplRadioGroup(['name' => 'multilingual', 'value' => $conf['multilingual'], 'options' => $yesno])];
-    $rows[] = ['label_html' => _ACTUSEFLAGS, 'field_html' => getTplRadioGroup(['name' => 'flags', 'value' => $conf['flags'], 'options' => $yesno])];
-    $rows[] = ['label_html' => _ACTUSELANG, 'field_html' => getTplRadioGroup(['name' => 'alang', 'value' => $conf['alang'], 'options' => $yesno])];
+    $rows[] = ['label_html' => _ACTMULTILINGUAL, 'label_id' => $labid = getFieldIds('', 'multilingual')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'multilingual', 'value' => $conf['multilingual'], 'options' => $yesno])];
+    $rows[] = ['label_html' => _ACTUSEFLAGS, 'label_id' => $labid = getFieldIds('', 'flags')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'flags', 'value' => $conf['flags'], 'options' => $yesno])];
+    $rows[] = ['label_html' => _ACTUSELANG, 'label_id' => $labid = getFieldIds('', 'alang')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'alang', 'value' => $conf['alang'], 'options' => $yesno])];
     $tabc = $tpl->getHtmlPart('div', ['rows' => $rows]).getGeoipPanel();
 
     $rows = [];
@@ -655,18 +676,18 @@ function config(): void {
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_for' => 'f-censor-l', 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CENSOR, 'hint' => _NOKOMA]), 'field_html' => $tpl->getHtmlFrag('textarea', [
+    $rows[] = ['label_for' => 'f-censor-l', 'label_html' => _CENSOR, 'hint_html' => _NOKOMA, 'hint_id' => $hntid = getFieldIds('f-censor-l')['hint'], 'field_html' => $tpl->getHtmlFrag('textarea', ['describedby' => $hntid,
         'name_attr' => 'censor_l',
         'input_id' => 'f-censor-l',
         'value_text' => (string)$conf['censor_l'],
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CLICABLE, 'hint' => _CLICABLEINFO]), 'field_html' => getTplRadioGroup(['name' => 'clickable', 'value' => $conf['clickable'], 'options' => $yesno])];
+    $rows[] = ['label_html' => _CLICABLE, 'hint_html' => _CLICABLEINFO, 'label_id' => ($fids = getFieldIds('', 'clickable'))['label'], 'hint_id' => $fids['hint'], 'field_html' => getTplRadioGroup(['describedby' => $fids['hint'], 'labelledby' => $fids['label'], 'name' => 'clickable', 'value' => $conf['clickable'], 'options' => $yesno])];
     $tabd = $tpl->getHtmlPart('div', ['rows' => $rows]);
 
     $rows = [];
-    $rows[] = ['label_for' => 'f-bots', 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _BOTSLIST, 'hint' => _NOKOMA.' '._BOTSINFO]), 'field_html' => $tpl->getHtmlFrag('textarea', [
+    $rows[] = ['label_for' => 'f-bots', 'label_html' => _BOTSLIST, 'hint_html' => _NOKOMA.' '._BOTSINFO, 'hint_id' => $hntid = getFieldIds('f-bots')['hint'], 'field_html' => $tpl->getHtmlFrag('textarea', ['describedby' => $hntid,
         'name_attr' => 'bots',
         'input_id' => 'f-bots',
         'value_text' => (string)$conf['bots'],
@@ -675,7 +696,7 @@ function config(): void {
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_for' => 'f-fbots', 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _BOTSSITE, 'hint' => _NOKOMA]), 'field_html' => $tpl->getHtmlFrag('textarea', [
+    $rows[] = ['label_for' => 'f-fbots', 'label_html' => _BOTSSITE, 'hint_html' => _NOKOMA, 'hint_id' => $hntid = getFieldIds('f-fbots')['hint'], 'field_html' => $tpl->getHtmlFrag('textarea', ['describedby' => $hntid,
         'name_attr' => 'fbots',
         'input_id' => 'f-fbots',
         'value_text' => (string)$conf['fbots'],
@@ -684,7 +705,7 @@ function config(): void {
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => _BOTSACT, 'field_html' => getTplRadioGroup(['name' => 'botsact', 'value' => $conf['botsact'], 'options' => $yesno])];
+    $rows[] = ['label_html' => _BOTSACT, 'label_id' => $labid = getFieldIds('', 'botsact')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'botsact', 'value' => $conf['botsact'], 'options' => $yesno])];
     $tabe = $tpl->getHtmlPart('div', ['rows' => $rows]);
 
     $cnt = 0;
@@ -719,13 +740,13 @@ function config(): void {
         'label_text' => _CACHE_2,
         'is_selected' => $conf['cache'] == 2,
     ]);
-    $rows[] = ['label_for' => 'f-cache', 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CACHE, 'hint' => _CACHEINFO]), 'field_html' => $tpl->getHtmlFrag('select', [
+    $rows[] = ['label_for' => 'f-cache', 'label_html' => _CACHE, 'hint_html' => _CACHEINFO, 'hint_id' => $hntid = getFieldIds('f-cache')['hint'], 'field_html' => $tpl->getHtmlFrag('select', ['describedby' => $hntid,
         'name_attr' => 'cache',
         'selectid' => 'f-cache',
         'options_html' => $opts,
         'is_config' => true,
     ])];
-    $rows[] = ['label_for' => 'f-cache-t', 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CACHETIME, 'hint' => _CACHETIMEINFO]), 'field_html' => $tpl->getHtmlFrag('input', [
+    $rows[] = ['label_for' => 'f-cache-t', 'label_html' => _CACHETIME, 'hint_html' => _CACHETIMEINFO, 'hint_id' => $hntid = getFieldIds('f-cache-t')['hint'], 'field_html' => $tpl->getHtmlFrag('input', ['describedby' => $hntid,
         'itype' => 'number',
         'name_attr' => 'cache_t',
         'input_id' => 'f-cache-t',
@@ -743,29 +764,29 @@ function config(): void {
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CACHELOCK, 'hint' => _CACHELOCKINFO]), 'field_html' => getTplRadioGroup(['name' => 'cache_l', 'value' => $conf['cache_l'] ?? '0', 'options' => $yesno])];
-    $rows[] = ['label_html' => _CACHECSS, 'field_html' => getTplRadioGroup(['name' => 'cache_css', 'value' => $conf['cache_css'], 'options' => $yesno])];
-    $rows[] = ['label_for' => 'f-css-f', 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CSSDIR, 'hint' => _CSSDIRINFO.' '._NOKOMA]), 'field_html' => $tpl->getHtmlFrag('textarea', [
+    $rows[] = ['label_html' => _CACHELOCK, 'hint_html' => _CACHELOCKINFO, 'label_id' => ($fids = getFieldIds('', 'cache_l'))['label'], 'hint_id' => $fids['hint'], 'field_html' => getTplRadioGroup(['describedby' => $fids['hint'], 'labelledby' => $fids['label'], 'name' => 'cache_l', 'value' => $conf['cache_l'] ?? '0', 'options' => $yesno])];
+    $rows[] = ['label_html' => _CACHECSS, 'label_id' => $labid = getFieldIds('', 'cache_css')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'cache_css', 'value' => $conf['cache_css'], 'options' => $yesno])];
+    $rows[] = ['label_for' => 'f-css-f', 'label_html' => _CSSDIR, 'hint_html' => _CSSDIRINFO.' '._NOKOMA, 'hint_id' => $hntid = getFieldIds('f-css-f')['hint'], 'field_html' => $tpl->getHtmlFrag('textarea', ['describedby' => $hntid,
         'name_attr' => 'css_f',
         'input_id' => 'f-css-f',
         'value_text' => (string)$conf['css_f'],
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => _CSSHEAD, 'field_html' => getTplRadioGroup(['name' => 'css_h', 'value' => $conf['css_h'], 'options' => $yesno])];
-    $rows[] = ['label_html' => _CSSCOMP, 'field_html' => getTplRadioGroup(['name' => 'css_c', 'value' => $conf['css_c'], 'options' => $yesno])];
-    $rows[] = ['label_html' => _CSSENC, 'field_html' => getTplRadioGroup(['name' => 'css_e', 'value' => $conf['css_e'], 'options' => $yesno])];
-    $rows[] = ['label_html' => _CACHESCRIPT, 'field_html' => getTplRadioGroup(['name' => 'cache_script', 'value' => $conf['cache_script'], 'options' => $yesno])];
-    $rows[] = ['label_for' => 'f-script-f', 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SCRIPTFILE, 'hint' => _SCRIPTFILEINFO.' '._NOKOMA]), 'field_html' => $tpl->getHtmlFrag('textarea', [
+    $rows[] = ['label_html' => _CSSHEAD, 'label_id' => $labid = getFieldIds('', 'css_h')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'css_h', 'value' => $conf['css_h'], 'options' => $yesno])];
+    $rows[] = ['label_html' => _CSSCOMP, 'label_id' => $labid = getFieldIds('', 'css_c')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'css_c', 'value' => $conf['css_c'], 'options' => $yesno])];
+    $rows[] = ['label_html' => _CSSENC, 'label_id' => $labid = getFieldIds('', 'css_e')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'css_e', 'value' => $conf['css_e'], 'options' => $yesno])];
+    $rows[] = ['label_html' => _CACHESCRIPT, 'label_id' => $labid = getFieldIds('', 'cache_script')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'cache_script', 'value' => $conf['cache_script'], 'options' => $yesno])];
+    $rows[] = ['label_for' => 'f-script-f', 'label_html' => _SCRIPTFILE, 'hint_html' => _SCRIPTFILEINFO.' '._NOKOMA, 'hint_id' => $hntid = getFieldIds('f-script-f')['hint'], 'field_html' => $tpl->getHtmlFrag('textarea', ['describedby' => $hntid,
         'name_attr' => 'script_f',
         'input_id' => 'f-script-f',
         'value_text' => (string)$conf['script_f'],
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => _SCRIPTHEAD, 'field_html' => getTplRadioGroup(['name' => 'script_h', 'value' => $conf['script_h'], 'options' => $yesno])];
-    $rows[] = ['label_html' => _SCRIPTASIN, 'field_html' => getTplRadioGroup(['name' => 'script_a', 'value' => $conf['script_a'], 'options' => $yesno])];
-    $rows[] = ['label_html' => _SCRIPTBOT, 'field_html' => getTplRadioGroup(['name' => 'script_b', 'value' => $conf['script_b'], 'options' => $yesno])];
+    $rows[] = ['label_html' => _SCRIPTHEAD, 'label_id' => $labid = getFieldIds('', 'script_h')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'script_h', 'value' => $conf['script_h'], 'options' => $yesno])];
+    $rows[] = ['label_html' => _SCRIPTASIN, 'label_id' => $labid = getFieldIds('', 'script_a')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'script_a', 'value' => $conf['script_a'], 'options' => $yesno])];
+    $rows[] = ['label_html' => _SCRIPTBOT, 'label_id' => $labid = getFieldIds('', 'script_b')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'script_b', 'value' => $conf['script_b'], 'options' => $yesno])];
     $lines = [_DIR.': storage/cache'];
     foreach ($dirs as $dk => $dv) $lines[] = $dk.': '.$dv;
     $lines[] = _FILE_M.': '.$cnt;

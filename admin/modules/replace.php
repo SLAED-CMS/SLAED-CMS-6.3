@@ -47,21 +47,27 @@ function replace(): void {
             if ($out[0] === '0') $out[0] = '';
             if ($out[1] === '0') $out[1] = '';
             $next = $c + 1;
+            $wid = 'f-word-'.$k.'-'.$c;
+            $tid = 'f-repl-'.$k.'-'.$c;
             $rows = [
                 [
+                    'label_for' => $wid,
                     'label_html' => _WORD,
                     'field_html' => $tpl->getHtmlFrag('input', [
                         'itype' => 'text',
                         'name_attr' => 'field1'.$k.'[]',
+                        'input_id' => $wid,
                         'value_attr' => $out[0],
                         'placeholder_text' => _WORD,
                         'is_config' => true,
                     ]),
                 ],
                 [
-                    'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CONTENT, 'hint' => _REPLACEIN]),
-                    'field_html' => $tpl->getHtmlFrag('textarea', [
+                    'label_for' => $tid,
+                    'label_html' => _CONTENT, 'hint_html' => _REPLACEIN, 'hint_id' => $hntid = getFieldIds('', 'field2')['hint'],
+                    'field_html' => $tpl->getHtmlFrag('textarea', ['describedby' => $hntid,
                         'name_attr' => 'field2'.$k.'[]',
+                        'input_id' => $tid,
                         'value_text' => $out[1],
                         'rows_num' => '5',
                         'is_config' => true,

@@ -33,7 +33,7 @@ function config(): void {
         ['label_for' => 'f-nump', 'label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'input_id' => 'f-nump', 'value_attr' => (string)$conf['favorites']['nump'], 'is_config' => true])],
         ['label_for' => 'f-anump', 'label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => (string)$conf['favorites']['anump'], 'is_config' => true])],
         ['label_for' => 'f-favorites', 'label_html' => _FAVOR_UMAX, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'favorites', 'input_id' => 'f-favorites', 'value_attr' => (string)$conf['favorites']['favorites'], 'is_config' => true])],
-        ['label_html' => _FAVOR_ACT, 'field_html' => getTplRadioGroup([
+        ['label_html' => _FAVOR_ACT, 'label_id' => $labid = getFieldIds('', 'favact')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid,
             'name' => 'favact',
             'value' => (string)$conf['favorites']['favact'],
             'options' => [

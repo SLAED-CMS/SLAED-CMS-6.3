@@ -394,6 +394,29 @@ Heading components use explicit boolean context flags because the template engin
 - no complex named include arguments as a supported baseline (simple context passing like `with item` is permitted)
 - no deep inheritance chains
 
+## Form Row Contract
+
+A form row is a caption and a control, joined by explicit ids and never by wrapping the row in a `<label>` — the field cell is a `<div>`, and a `<div>` inside a `<label>` breaks the content model. The panel row is `fragments/div-row.html` (`.sl-div-item` inside `.sl-div-grid`), the site row `fragments/form-field-row.html` (`.sl-form-row` inside `.sl-form`).
+
+**`getFieldIds(string $id, string $mint = ''): array`** in `core/helpers.php` is the one owner of the three ids a row needs, returning `input`, `label` and `hint`. It **takes** the control id and derives the other two from it — `f-dump-skip` gives `f-dump-skip-label` and `f-dump-skip-hint`. It never derives the control id from the field name: this tree writes ids by hand and the mapping is no rule, so re-deriving one would rewrite an id that JavaScript, CSS or an outside reference hangs on. An existing id passes through untouched, duplicates included; the crawl's duplicate-id assertion is what guards those.
+
+Only a row whose field has no labelable control of its own — a radio group, an editor, a date pair — mints an id, from the seed the caller names and a per-request counter, so two rows of the same shape on one page cannot collide.
+
+| Key | On | Carries |
+|---|---|---|
+| `label_for` | the row | the id of a labelable control; renders `<label for>`, and a `<span>` without it |
+| `label_id` | the row | the id of the caption, for a field that cannot be pointed at with `for` |
+| `hint_html` | the row | the explanation, a `<span class="sl-small">` beside the caption and outside the `<label>` |
+| `hint_id` | the row | the id of that hint |
+| `labelledby` | `getTplRadioGroup()`, `getTplTextarea()`, `block-content`, `editor-mount` | the caption id the group or editor is named by |
+| `describedby` | `input`, `select`, `textarea`, `checkbox`, `block-content`, `div` | the hint id the control is described by |
+
+- **A radio group carries the name, not its radios.** `getTplRadioGroup()` renders `fragments/block-content.html` with `is_radio_group`, which writes `role="group"` and `aria-labelledby`. The switch variant is a group too: two radios sharing one name still answer one question. A checkbox list built through `partials/div.html` with `is_radio_group` takes the same two attributes.
+- **The hint is never part of the caption.** It sits in the label cell and outside the `<label>`, because a caption that swallowed it would read the explanation out as the name of the field and the description would then be announced twice.
+- **An editor is named server-side and moved by its driver.** `Editor::getContent()` settles the name once — `labelledby` when the row has a caption, `aria-label` when it has none — and hands both down. `plain` writes them onto its `<textarea>`; `toastui` and `ckeditor` write them onto the mount and their own JS moves them to the element that actually holds `role="textbox"`; **TinyMCE takes `aria-label` only**, because it puts its editable body in a second document and an IDREF does not cross that boundary. `codemirror` implements a different interface, is reached only by `Editor::getCode()`, and has no naming contract yet.
+- **The read-only value row is not a form row.** `fragments/field-value.html` renders `.sl-value-row` / `.sl-value-label` / `.sl-value-text` in both themes, with a `<span>` caption that labels nothing. `.sl-form-*` means the editable row and nothing else. The width token of the panel caption keeps the name `--sl-form-label-width`: that API block is frozen, and a theme copied from it reads a name this tree cannot reach to rename.
+- **A row folds on the box it stands in.** Both themes keep the viewport step at 900px and add a container step beside it: `.sl-div-grid` and `.sl-form` (and `.sl-oauth-form`) declare `container-name`, so a grid nested in another row's field cell, a composer in a narrow pane and an OAuth card in a `minmax(280px, 1fr)` column fold on their own width. The radio-group ladder moves with the row — both steps or neither, or a single-column row ends up holding a four-across group.
+
 ## Theme Contract
 
 A new theme is made by copying an etalon and editing one file: `templates/<theme>/assets/css/base.css` — its `@font-face` and `:root` block, down to the `/* --- end tokens --- */` marker. Everything below the marker is reset and element styles.
@@ -425,6 +448,7 @@ Both themes stand at **zero untokenised visual decisions**, and every ratcheted 
 | `npm run ui:before` | captures the tree you are about to change into a temp directory |
 | `npm run ui:after` | empties the caches, compares against that capture, regenerates the contrast registry when a `base.css` moved, then reads the counts |
 | `npm run ui:gates` | the fast gates by hand — the same set the pre-commit hook runs |
+| `npm run ui:label` | the label crawl: every `for`, id and aria reference on every rendered route, against `tools/label-audit-baseline.json` |
 | `node tools/ui-shots.mjs --capture --out=<dir>` | writes a PNG set and each state's measured noise floor |
 | `node tools/ui-shots.mjs --check --out=<dir>` | compares the tree against a set captured earlier; a missing image fails the run instead of being written |
 | `node tools/ui-shots.mjs --contrast` | regenerates `tools/ui-contrast.json`, the pairs that really meet on screen |
@@ -467,6 +491,26 @@ A change to `tools/ui-audit.php` needs a fixture in `tests/Fixtures/ui/` coverin
 - The rig runs over `https`. `setCookies()` marks the session cookie `secure` when `homeurl` is `https`, so a run over plain `http` fills the login form and is handed a cookie the browser drops.
 - Credentials come from `SLAED_UI_USER` and `SLAED_UI_PASS` and are never stored in the manifest. A run without them skips every state that needs a session and captures the rest logged out, which is a different baseline from the one a full run writes.
 - A gate that is red on arrival is a gate somebody switches off, so run `--check` against a freshly captured baseline rather than trusting the capture.
+
+### Label crawl
+
+`node tools/label-audit.mjs`, own script `npm run ui:label`. It walks the panel, the site as a member and the site as a guest — three sets of form rows, and only the guest is shown the login, registration and lost-password forms — and asks of every rendered document the questions no count in `tools/ui-audit.php` can ask, because they are questions about a document rather than about a file.
+
+| Flag | What |
+|---|---|
+| *(none)* | crawl, and fail on anything outside `tools/label-audit-baseline.json` |
+| `--store` | rewrite that baseline, refusing to store a count that grew or coverage that fell |
+| `--census` | also print, per route, how many rows, groups, editors and hints were seen |
+| `--only=x` | audit only routes whose signature contains `x`; the walk itself is unchanged |
+
+Forward, if the attribute is there it must be right: every `for` resolves to a labelable element, no id repeats, no `<label>` nests, every `<label>` has a `for` or a labelable descendant, every aria IDREF resolves to an element with text. Reverse, the attribute must exist: every `.sl-radio-group` carries `role="group"` and a resolving `aria-labelledby`, every visible editable has a name, and every element carrying a `-hint` id is referenced by an `aria-describedby` in its own row.
+
+- **Not part of `npm run ui:gates`**, deliberately: the gates run from `tools/hooks/pre-commit` on every commit and this needs an HTTPS stand, a browser and administrator credentials. The hook prints a reminder instead. Moving it into the gates means changing the hook in the same commit.
+- **It walks frames, not the main document.** TinyMCE puts its editable body in a separate document; a main-frame query sees the `<iframe>` and stops, so an unnamed editor reads as clean.
+- **Coverage is stored beside the violations and judged apart from them.** Record-bound forms are reached by following the first `op=edit&id=…` link of each list page, so an empty list or a renamed link makes violations vanish — and a baseline holding violations alone reads that as a fix. Violations down is a pass; coverage down is its own failure and offsets nothing.
+- **Run one at a time.** Two crawls share one stand and one set of sessions, and neither result means anything.
+- **Three keys are normalised or the baseline never settles**: parameters naming a record are out of the route signature, runtime state classes are out of the selector, and an id that is nothing but digits reads `<record>`.
+- **The editor is a per-account setting**, so one crawl of the stand proves one driver. `ckeditor` and `tinymce` are admin-only and are switched through `admin.php?name=admins`; the setting is read into the session at sign-in, so each driver needs a session of its own.
 
 ### Contrast registry
 

@@ -104,18 +104,18 @@ function add(): void {
         $expire_text = $tpl->getHtmlFrag('hidden', ['nameattr' => 'expire', 'valueattr' => (string)$oldexpire])._PURCHASED.': '.getDuration($expire).' ('.round($exp_day, 3).' '._DAYS.')';
     } else {
         $newexpire = 1;
-        $expire_text = $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'expire', 'value_attr' => '0', 'placeholder_text' => _EXPIRATION, 'is_required' => true]);
+        $expire_text = $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'expire', 'input_id' => 'f-expire', 'describedby' => 'f-expire-hint', 'value_attr' => '0', 'placeholder_text' => _EXPIRATION, 'is_required' => true]);
     }
     $rows = [
         ['label_for' => 'f-title', 'label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'input_id' => 'f-title', 'value_attr' => (string)$title, 'maxlength_num' => 100, 'placeholder_text' => _TITLE, 'is_required' => true])],
-        ['label_html' => _TEXT, 'field_html' => getTplTextarea([
+        ['label_html' => _TEXT, 'label_id' => $labid = getFieldIds('', 'body')['label'], 'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _TEXT,
             'id' => '1', 'name' => 'body', 'value' => (string)$body, 'mod' => 'all', 'store' => 'message.body', 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1',
         ]), 'is_full' => true],
     ];
     if ($langsel) {
         $rows[] = ['label_html' => _LANGUAGE, 'field_html' => $langsel];
     }
-    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _EXPIRATION, 'hint' => _CONFINES]), 'field_html' => $expire_text];
+    $rows[] = ['label_for' => $newexpire ? 'f-expire' : '', 'label_html' => _EXPIRATION, 'hint_html' => _CONFINES, 'hint_id' => $newexpire ? getFieldIds('f-expire')['hint'] : '', 'field_html' => $expire_text];
     $rows[] = ['label_for' => 'f-view', 'label_html' => _VIEWPRIV, 'field_html' => $tpl->getHtmlFrag('select', [
         'name_attr' => 'view',
         'selectid' => 'f-view',
@@ -125,7 +125,7 @@ function add(): void {
             $tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _MVUSERS, 'is_selected' => (string)$view === '3']).
             $tpl->getHtmlFrag('select-option', ['value_attr' => '4', 'label_text' => _MVADMIN, 'is_selected' => (string)$view === '4']),
     ])];
-    $rows[] = ['label_html' => _ACTIVATE2, 'field_html' => getTplRadioGroup([
+    $rows[] = ['label_html' => _ACTIVATE2, 'label_id' => $labid = getFieldIds('', 'status')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid,
         'name' => 'status',
         'value' => (string)(int)$active,
         'options' => [

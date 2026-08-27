@@ -25,16 +25,23 @@ class EditorCkeditor implements ContentDriver {
         $pl = ($profile === 'full') ? self::PL_FULL : self::PL_SIMPLE;
         $tb = ($profile === 'full') ? self::TB_FULL : self::TB_SIMPLE;
         $eid = htmlspecialchars($id, ENT_QUOTES, 'UTF-8');
-        $ta = $tpl->getHtmlFrag('editor-mount', ['id' => $id.'_ck']);
+        $ta = $tpl->getHtmlFrag('editor-mount', ['id' => $id.'_ck', 'labelledby' => (string)($data['labelledby'] ?? ''), 'aria_label' => (string)($data['arialabel'] ?? ''), 'describedby' => (string)($data['describedby'] ?? '')]);
         $ta .= $tpl->getHtmlFrag('hidden', [
             'name_attr' => $name,
             'value_attr' => $value,
             'input_attr' => 'id="'.$eid.'"',
         ]);
-        $js = '(function(){CK5.ClassicEditor.create(document.getElementById('.$jid.'+"_ck"),{';
+        $js = '(function(){var mnt=document.getElementById('.$jid.'+"_ck");';
+        $js .= 'var lab=mnt?mnt.getAttribute("aria-labelledby"):"";var alt=mnt?mnt.getAttribute("aria-label"):"";';
+        $js .= 'var des=mnt?mnt.getAttribute("aria-describedby"):"";';
+        $js .= 'if(mnt){mnt.removeAttribute("aria-labelledby");mnt.removeAttribute("aria-label");mnt.removeAttribute("aria-describedby");}';
+        $js .= 'CK5.ClassicEditor.create(mnt,{';
         $js .= 'plugins:'.$pl.',toolbar:'.$tb.',placeholder:'.$jph.',language:"'.$lang.'",licenseKey:"GPL",';
         $js .= 'table:{contentToolbar:["tableColumn","tableRow","mergeTableCells"]}}).then(function(ed){';
         $js .= 'ed.setData('.$jval.');';
+        $js .= 'var box=ed.ui&&ed.ui.getEditableElement?ed.ui.getEditableElement():null;';
+        $js .= 'if(box&&lab){box.setAttribute("aria-labelledby",lab);}else if(box&&alt){box.setAttribute("aria-label",alt);}';
+        $js .= 'if(box&&des){box.setAttribute("aria-describedby",des);}';
         $js .= 'var inp=document.getElementById('.$jid.');';
         $js .= 'inp.form&&inp.form.addEventListener("submit",function(){inp.value=ed.getData();},true);';
         $js .= '});})();';

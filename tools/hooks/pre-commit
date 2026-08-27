@@ -66,5 +66,15 @@ if [ -n "$visual" ]; then
     printf '          npm run ui:after\n'
 fi
 
+# A row, a caption or a control fragment decides whether a `for` reaches anything and whether a group, an editor or a
+# hint carries a name. No count in ui-audit can see that: it is a question about a rendered document, so it needs a
+# stand, a browser and a session, which is exactly why the crawl is not one of the gates above
+label=$(printf '%s\n' "$staged" | grep -E '^templates/[^/]+/fragments/(div-row|form-field-row|label|label-hint|field-value|block-content|editor-mount|input|select|textarea|radio|checkbox|file-input)\.html$')
+if [ -n "$label" ]; then
+    printf '\n[gates] this commit touches a row, caption or control fragment.\n'
+    printf '        No count can see a broken `for` or an unnamed group. Run:\n'
+    printf '          npm run ui:label\n'
+fi
+
 printf '[gates] ok\n\n'
 exit 0

@@ -115,8 +115,8 @@ function add(): void {
         ],
         [
             'label_for' => 'f-url',
-            'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _RSSFILE, 'hint' => _RSSINFO]),
-            'field_html' => $tpl->getHtmlFrag('input', [
+            'label_html' => _RSSFILE, 'hint_html' => _RSSINFO, 'hint_id' => $hntid = getFieldIds('f-url')['hint'],
+            'field_html' => $tpl->getHtmlFrag('input', ['describedby' => $hntid,
                 'itype' => 'text',
                 'maxlength_num' => 200,
                 'name_attr' => 'url',
@@ -126,10 +126,11 @@ function add(): void {
             ]),
         ],
         [
-            'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _REFRESHTIME, 'hint' => _REFINFO]),
-            'field_html' => getTplRefreshTimeSelect(['valu' => $refresh]),
+            'label_for' => 'f-refresh',
+            'label_html' => _REFRESHTIME, 'hint_html' => _REFINFO, 'hint_id' => 'f-refresh-hint',
+            'field_html' => getTplRefreshTimeSelect(['valu' => $refresh, 'input_id' => 'f-refresh', 'describedby' => 'f-refresh-hint']),
         ],
-        ['label_html' => _TEXT, 'field_html' => getTplTextarea([
+        ['label_html' => _TEXT, 'label_id' => $labid = getFieldIds('', 'body')['label'], 'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _TEXT,
             'id' => '1', 'name' => 'body', 'value' => $body, 'mod' => 'content', 'store' => 'content.body', 'rows' => '25', 'placeholder' => _TEXT, 'required' => '0',
         ]), 'is_full' => true, 'field_unwrapped' => true],
         ['label_html' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])],

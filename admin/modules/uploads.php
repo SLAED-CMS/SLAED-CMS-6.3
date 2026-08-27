@@ -335,7 +335,6 @@ function config(): void {
     $cont .= checkPerms(CONFIG_DIR.'/uploads.php');
     $serv = getUploadService();
     $typs = implode(', ', $serv::getSupportedTypes());
-    $flab = $tpl->getHtmlFrag('label-hint', ['label' => _FTYPE, 'hint' => $typs]);
     $directory = '';
     foreach (scandir(UPLOADS_DIR) as $file) {
         if (preg_match('/\./', $file)) continue;
@@ -345,11 +344,10 @@ function config(): void {
             'is_selected' => $conf['uploads']['dir'] == $file,
         ]);
     }
-    $tlab = $tpl->getHtmlFrag('label-hint', ['label' => _TPFORM, 'hint' => _TPFORMIN.' '.$typs]);
-    $tarea = $tpl->getHtmlFrag('textarea', ['name_attr' => 'ttyp', 'is_config' => true, 'is_required' => true, 'value_text' => $conf['uploads']['typ']]);
+    $tarea = $tpl->getHtmlFrag('textarea', ['name_attr' => 'ttyp', 'input_id' => 'f-ttyp', 'describedby' => 'f-ttyp-hint', 'is_config' => true, 'is_required' => true, 'value_text' => $conf['uploads']['typ']]);
     $rows = [
         ['label_for' => 'f-dir', 'label_html' => _DIRDEF, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'dir', 'selectid' => 'f-dir', 'is_config' => true, 'options_html' => $directory])],
-        ['label_html' => $tlab, 'field_html' => $tarea],
+        ['label_for' => 'f-ttyp', 'label_html' => _TPFORM, 'hint_html' => _TPFORMIN.' '.$typs, 'hint_id' => getFieldIds('f-ttyp')['hint'], 'field_html' => $tarea],
         ['label_for' => 'f-twidth', 'label_html' => _TPWIDTH, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'twidth', 'input_id' => 'f-twidth', 'is_config' => true, 'is_required' => true, 'value_attr' => (string)$conf['uploads']['width']])],
         ['label_for' => 'f-theight', 'label_html' => _TPHEIGHT, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'theight', 'input_id' => 'f-theight', 'is_config' => true, 'is_required' => true, 'value_attr' => (string)$conf['uploads']['height']])],
     ];
@@ -360,21 +358,22 @@ function config(): void {
     foreach ($mods as $val) {
         if ($val != '') {
             $rul = getUploadRuleData($val);
-            $tfld = $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'type[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['extensions']]);
+            $fids = getFieldIds('', 'ftype');
+            $tfld = $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'type[]', 'input_id' => $fids['input'], 'describedby' => $fids['hint'], 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['extensions']]);
             $mrows = [
                 ['label_html' => _MODUL, 'field_html' => getModuleName($val)],
-                ['label_html' => $flab, 'field_html' => $tfld],
+                ['label_for' => $fids['input'], 'label_html' => _FTYPE, 'hint_html' => $typs, 'hint_id' => $fids['hint'], 'field_html' => $tfld],
                 ['label_html' => _FSIZEALL._FIN, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'allsize[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['maxquota']])],
                 ['label_html' => _FSIZE._FIN, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'size[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['maxbytes']])],
                 ['label_html' => _AWIDTH._AIN, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'width[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['maxwidth']])],
                 ['label_html' => _AHEIGHT._AIN, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'height[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['maxheight']])],
                 ['label_html' => _FILEUP, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'up[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['maxfiles']])],
                 ['label_html' => _GDWIDTH, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'gdwidth[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['thumbwidth']])],
-                ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _EDFILEA, 'hint' => _CONFINES]), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'asum[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['moderfiles']])],
-                ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _EDFILEU, 'hint' => _CONFINES]), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'usum[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['userfiles']])],
-                ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _EDFILEG, 'hint' => _CONFINES]), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'gsum[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['guestfiles']])],
-                ['label_html' => _F_8, 'field_html' => getTplRadioGroup(['name' => $i.'upload', 'value' => $rul['userupload'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-                ['label_html' => _F_9, 'field_html' => getTplRadioGroup(['name' => $i.'upguest', 'value' => $rul['guestupload'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+                ['label_html' => _EDFILEA, 'hint_html' => _CONFINES, 'hint_id' => $hntid = getFieldIds('', 'asum[]')['hint'], 'field_html' => $tpl->getHtmlFrag('input', ['describedby' => $hntid, 'itype' => 'number', 'name_attr' => 'asum[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['moderfiles']])],
+                ['label_html' => _EDFILEU, 'hint_html' => _CONFINES, 'hint_id' => $hntid = getFieldIds('', 'usum[]')['hint'], 'field_html' => $tpl->getHtmlFrag('input', ['describedby' => $hntid, 'itype' => 'number', 'name_attr' => 'usum[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['userfiles']])],
+                ['label_html' => _EDFILEG, 'hint_html' => _CONFINES, 'hint_id' => $hntid = getFieldIds('', 'gsum[]')['hint'], 'field_html' => $tpl->getHtmlFrag('input', ['describedby' => $hntid, 'itype' => 'number', 'name_attr' => 'gsum[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['guestfiles']])],
+                ['label_html' => _F_8, 'label_id' => $labid = getFieldIds('', $i.'upload')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => $i.'upload', 'value' => $rul['userupload'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+                ['label_html' => _F_9, 'label_id' => $labid = getFieldIds('', $i.'upguest')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => $i.'upguest', 'value' => $rul['guestupload'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
             ];
             $blocks .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('div', ['rows' => $mrows])]);
             $i++;

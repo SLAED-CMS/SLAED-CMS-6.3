@@ -181,7 +181,8 @@ function add(): void {
         ]);
         $fields .= $tpl->getHtmlFrag('form-field-row', [
             'label' => _JOKE,
-            'field_html' => getTplTextarea([
+            'label_id' => $labid = getFieldIds('', 'joke')['label'],
+            'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _JOKE,
                 'id' => '1',
                 'name' => 'joke',
                 'value' => $joke,

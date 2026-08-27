@@ -526,7 +526,8 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
         ]) : '';
         $rows .= $tpl->getHtmlFrag('form-field-row', [
             'label' => _TEXT,
-            'field_html' => getTplTextarea([
+            'label_id' => $labid = getFieldIds('', 'hometext')['label'],
+            'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _TEXT,
                 'id' => '1',
                 'name' => 'hometext',
                 'value' => '',
@@ -689,7 +690,8 @@ function add(): void {
         ]);
         $rows .= $tpl->getHtmlFrag('form-field-row', [
             'label' => _TEXT,
-            'field_html' => getTplTextarea([
+            'label_id' => $labid = getFieldIds('', 'hometext')['label'],
+            'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _TEXT,
                 'id' => '1',
                 'name' => 'hometext',
                 'value' => $hometext,

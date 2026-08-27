@@ -162,7 +162,8 @@ function add(): void {
             ]),
         ]);
     }
-    $perm = $tpl->getHtmlPart('div', ['is_radio_group' => true, 'content_html' => $items]);
+    $perid = getFieldIds('', 'modules')['label'];
+    $perm = $tpl->getHtmlPart('div', ['is_radio_group' => true, 'labelledby' => $perid, 'content_html' => $items]);
     $txt = _FOLLOWINGMEM."\n\n"
         ._NICKNAME.': [login]'."\n"
         ._PASSWORD.': [pass]';
@@ -232,10 +233,9 @@ function add(): void {
         ],
         [
             'label_for' => 'f-pwd',
-            'label_html' => $aid
-                ? $tpl->getHtmlFrag('label-hint', ['label' => _PASSWORD, 'hint' => _ADMINPASSKEEP])
-                : _PASSWORD,
-            'field_html' => $tpl->getHtmlFrag('input', [
+            'label_html' => _PASSWORD,
+            'hint_html' => $aid ? _ADMINPASSKEEP : '', 'hint_id' => $hntid = $aid ? getFieldIds('f-pwd')['hint'] : '',
+            'field_html' => $tpl->getHtmlFrag('input', ['describedby' => $hntid,
                 'itype' => 'password',
                 'name_attr' => 'pwd',
                 'input_id' => 'f-pwd',
@@ -258,7 +258,8 @@ function add(): void {
         ],
         [
             'label_html' => _SMAIL,
-            'field_html' => getTplRadioGroup(['name' => 'smail', 'value' => (string)(int)$smail, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+            'label_id' => $labid = getFieldIds('', 'smail')['label'],
+            'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'smail', 'value' => (string)(int)$smail, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
         ],
         [
             'label_for' => 'f-super',
@@ -272,10 +273,7 @@ function add(): void {
         ],
         [
             'label_for' => 'f-mail',
-            'label_html' => $tpl->getHtmlFrag('span', [
-                'text' => _MAIL_SENDE,
-                'class' => 'sl-div-label-main',
-            ]),
+            'label_html' => _MAIL_SENDE,
             'field_html' => $tpl->getHtmlFrag('checkbox', [
                 'input_attr' => 'data-sl-toggle-control="sl_form_admin_mail"',
                 'is_checked' => $check !== '',
@@ -286,8 +284,8 @@ function add(): void {
         ],
         [
             'label_for' => 'f-mailtext',
-            'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _MAIL_TEXT, 'hint' => _MAIL_PASS_INFO]),
-            'field_html' => $tpl->getHtmlFrag('textarea', [
+            'label_html' => _MAIL_TEXT, 'hint_html' => _MAIL_PASS_INFO, 'hint_id' => $hntid = getFieldIds('f-mailtext')['hint'],
+            'field_html' => $tpl->getHtmlFrag('textarea', ['describedby' => $hntid,
                 'name_attr' => 'mailtext',
                 'input_id' => 'f-mailtext',
                 'rows_num' => 10,
@@ -310,6 +308,7 @@ function add(): void {
     }
     $rows[] = [
         'label_html' => _PERMISSIONS,
+        'label_id' => $perid,
         'field_html' => $perm,
         'is_full' => true,
     ];

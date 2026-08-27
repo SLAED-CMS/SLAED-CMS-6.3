@@ -582,9 +582,12 @@ return [
             .'The strip is shared, the tab is not',
         '.sl-tabs-content' =>
             'the panel drops its panel straight under the strip with one gap; the site draws it as a surface with a border, a ground and its own padding',
-        '.sl-form-row' =>
-            'both rows put the label left and the field right; the panel builds the pair out of a flex box whose label carries the width, the site out of '
-            .'two grid tracks it can collapse to one on a narrow screen and for the editor, which is the one field a half row cannot hold',
+        '@media (max-width: 900px) .sl-value-row' =>
+            'the fold follows the mechanism: the panel row is a flex box, so folding it is display block and a caption that gives up its fixed width; '
+            .'the site row is two grid tracks, so folding it is one track. There is no property set that expresses both',
+        '.sl-value-row' =>
+            'both read-only rows put the caption left and the value right; the panel builds the pair out of a flex box whose caption carries the width, '
+            .'the site out of two grid tracks. Both collapse to one track on a narrow screen, and the panel row did not until it was given a name of its own',
         '.sl-session-line, .sl-session-row' =>
             'the site lays the session line out as a grid of two tracks so the count keeps its column; the panel lets it flow, because the sidebar it '
             .'sits in is already narrow enough to hold the pair',

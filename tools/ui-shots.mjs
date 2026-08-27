@@ -16,6 +16,9 @@
 // file cannot answer: does the CMS actually serve pages in it. Both build and remove the copy through one lifecycle,
 // tests/Support/theme_scratch.php, reached here through the make, pick and gone jobs of tests/Support/theme_probe.php.
 //
+// A page may also name a `probe` of its own, for a state no address carries - the OAuth card renders only for a browser
+// already holding a pending flow. That seeding is shared with the label crawl and lives in tools/ui-probe.mjs.
+//
 // A contrast pair existing only on hover is invisible to a crawler that never hovers, which is why the
 // states live in the manifest and not in the runner. Credentials come from the environment, never the file.
 //
@@ -29,6 +32,7 @@ import { tmpdir } from 'node:os';
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSync, rmSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { getProbeAnswer, setSeededState, deleteSeededState } from './ui-probe.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const conf = JSON.parse(readFileSync(join(root, 'tools/ui-shots.json'), 'utf8'));
@@ -403,18 +407,6 @@ async function setOneShot(page, item, view, mode, tag, pairs, report) {
   if (diff.ratio > bar) report.push('  DIFF ' + (diff.ratio * 100).toFixed(3) + '% ' + diff.note + ' ' + name + past);
 }
 
-// One job of the PHP lifecycle, answered as JSON. The scratch tree and the account row are the only things this file
-// changes on the stand, and every one of them is put back by the finally that wraps the walk. The probe writes its own
-// logs somewhere, and that somewhere is outside the repository: a directory left inside storage/cache is one the next
-// reader has to work out the provenance of
-function getProbeAnswer(name, ...rest) {
-  const work = join(tmpdir(), 'slaed_newtheme');
-  const out = execFileSync('php', [join(root, 'tests/Support/theme_probe.php'), name, work, ...rest], { encoding: 'utf8' });
-  const said = JSON.parse(out);
-  if (said.error) throw new Error('theme probe: ' + said.error);
-  return said;
-}
-
 // Render every page of the manifest that a frontend theme owns, in a scratch copy of an etalon, and report what a
 // visitor would have been served. A theme that audits clean and cannot render is still not a theme, and only a real
 // request can tell the two apart: the copy is selected through the `theme` column of the account the rig signs in as,
@@ -423,10 +415,10 @@ function getProbeAnswer(name, ...rest) {
 // rather than during it - which is why it is a database write and not a header the runner could send
 async function checkNewTheme(browser, report) {
   if (!user || !pass) throw new Error('the HTTP half needs a session: set ' + conf.env.user + ' and ' + conf.env.pass);
-  const made = getProbeAnswer('make', args.get('etalon') === undefined || args.get('etalon') === true ? 'lite' : args.get('etalon'));
+  const made = getProbeAnswer('theme', 'make', args.get('etalon') === undefined || args.get('etalon') === true ? 'lite' : args.get('etalon'));
   let back = null;
   try {
-    back = getProbeAnswer('pick', user, made.name).was;
+    back = getProbeAnswer('theme', 'pick', user, made.name).was;
     const logs = (conf.logs || []).map((one) => [one, existsSync(join(root, one)) ? statSync(join(root, one)).size : 0]);
     const ctx = await browser.newContext({ ignoreHTTPSErrors: true });
     const page = await ctx.newPage();
@@ -454,8 +446,8 @@ async function checkNewTheme(browser, report) {
     }
     console.log('newtheme: ' + made.name + ' rendered ' + conf.pages.filter((p) => p.theme !== 'admin' && p.auth !== 'admin').length + ' pages of the manifest');
   } finally {
-    if (back !== null) getProbeAnswer('pick', user, back);
-    getProbeAnswer('gone', made.path);
+    if (back !== null) getProbeAnswer('theme', 'pick', user, back);
+    getProbeAnswer('theme', 'gone', made.path);
   }
 }
 
@@ -502,6 +494,9 @@ for (const kind of need) {
 // A development stand serves its own certificate, and the manifest names https because the session cookie needs it
 const open = await browser.newContext({ ignoreHTTPSErrors: true });
 
+const seed = setSeededState(conf);
+for (const ctx of [...sess.values(), open]) if (seed.cookies.length) await ctx.addCookies(seed.cookies);
+
 for (const mode of (job === 'contrast' ? conf.contrastmodes || conf.modes : conf.modes)) {
   for (const item of conf.pages) {
     if (only && item.name !== only) continue;
@@ -519,6 +514,7 @@ for (const mode of (job === 'contrast' ? conf.contrastmodes || conf.modes : conf
 }
 
 await browser.close();
+deleteSeededState(seed);
 
 if (job === 'contrast') {
   const seen = new Map();

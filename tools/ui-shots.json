@@ -24,6 +24,8 @@
   "contrastmodes": ["light", "dark"],
   "cookie": "slaed-mode",
 
+  "_probe": "a page whose state no address carries names the CLI probe that seeds it: tests/Support/<name>_probe.php, `make` before the walk and `gone` after it, answering with the cookie every context is then handed. The OAuth card is the case that needed it - it renders only for a browser holding a pending flow, and asking for its address without one is served the account page instead, so the route would have captured the wrong screen and reported it as guarded",
+
   "auth": {
     "site": {
       "url": "/index.php?name=account",
@@ -76,6 +78,7 @@
     },
     { "name": "profile", "url": "/index.php?name=account&op=profile", "auth": "site" },
     { "name": "private", "url": "/index.php?name=account&op=privat", "auth": "site" },
+    { "name": "oauth-finish", "url": "/index.php?name=account&op=oauth_finish", "probe": "oauth" },
     { "name": "admin-home", "url": "/admin.php", "auth": "admin", "theme": "admin" },
     {
       "name": "admin-monitor",
@@ -85,6 +88,7 @@
       "steps": [{ "do": "hover", "sel": ".sl-knob, .sl-but", "shot": "knob-hover" }]
     },
     { "name": "admin-statistic", "url": "/admin.php?name=statistic", "auth": "admin", "theme": "admin" },
+    { "name": "admin-help-view", "url": "/admin.php?name=help&op=view&id=1260", "auth": "admin", "theme": "admin" },
     { "name": "admin-account", "url": "/admin.php?name=account", "auth": "admin", "theme": "admin" },
     {
       "name": "admin-config",

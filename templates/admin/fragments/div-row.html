@@ -10,7 +10,7 @@
   "
   {% if attr %}{{{ attr }}}{% endif %}
 >
-  <div class="sl-div-label">{% if label_for %}<label for="{{ label_for }}">{{{ label_html }}}</label>{% else %}{{{ label_html }}}{% endif %}</div>
+  <div class="sl-div-label">{% if label_for %}<label{% if label_id %} id="{{ label_id }}"{% endif %} for="{{ label_for }}">{{{ label_html }}}</label>{% elseif label_id %}<span id="{{ label_id }}">{{{ label_html }}}</span>{% else %}{{{ label_html }}}{% endif %}{% if hint_html %}<span class="sl-small"{% if hint_id %} id="{{ hint_id }}"{% endif %}>{{{ hint_html }}}</span>{% endif %}</div>
   {% if field_unwrapped %}
     {% if has_field_text %}{{ field_text }}{% else %}{{{ field_html }}}{% endif %}
   {% else %}

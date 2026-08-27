@@ -54,8 +54,9 @@ function info(): void {
         'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'num', 'input_id' => 'f-num', 'options_html' => $numOptions]),
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
+        'label_for' => 'f-rsscode',
         'label' => _CODE,
-        'field_html' => $tpl->getHtmlFrag('textarea', ['cols_num' => 45, 'rows_num' => 3, 'value_text' => $rsslink, 'input_attr' => 'OnClick="this.select()"']),
+        'field_html' => $tpl->getHtmlFrag('textarea', ['cols_num' => 45, 'rows_num' => 3, 'input_id' => 'f-rsscode', 'value_text' => $rsslink, 'input_attr' => 'OnClick="this.select()"']),
     ]);
     $cont .= $tpl->getHtmlPart('form-add', [
         'action' => 'index.php?name='.$conf['name'],

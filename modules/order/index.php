@@ -32,7 +32,8 @@ function order(): void {
         $rows .= getTplFieldsIn(['field' => $field, 'mod' => $conf['name']]);
         $rows .= $tpl->getHtmlFrag('form-field-row', [
             'label' => _OR_3,
-            'field_html' => getTplTextarea([
+            'label_id' => $labid = getFieldIds('', 'note')['label'],
+            'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _OR_3,
                 'id' => '1',
                 'name' => 'note',
                 'value' => $note,

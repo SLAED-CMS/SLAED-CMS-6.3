@@ -16,6 +16,9 @@
       {% if is_sidebar_count_list %} sl-block-sidebar-count-list{% endif %}
     "
     {% endif %}
+    {% if is_radio_group %}role="group"{% endif %}
+    {% if labelledby %}aria-labelledby="{{ labelledby }}"{% endif %}
+    {% if describedby %}aria-describedby="{{ describedby }}"{% endif %}
   >{{{ content }}}</div>
   {% if has_hr %}<hr>{% endif %}
 {% endif %}

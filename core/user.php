@@ -250,7 +250,8 @@ function setComShow(int $id = 0, int $acomm = 0): string {
         $fields = $tpl->getHtmlFrag('form-field-row', ['label_for' => is_user() ? '' : 'f-name', 'label' => _YOURNAME, 'field_html' => $name_field])
             .$tpl->getHtmlFrag('form-field-row', [
                 'label' => _COMMENT,
-                'field_html' => getTplTextarea([
+                'label_id' => $labid = getFieldIds('', 'text')['label'],
+                'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _COMMENT,
                     'id' => 'ctext',
                     'name' => 'text',
                     'value' => '',

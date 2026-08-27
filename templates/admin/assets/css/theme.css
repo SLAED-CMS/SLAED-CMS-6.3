@@ -3040,6 +3040,14 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   }
 }
 
+/* A grid inside the field cell of another row is half a row wide whatever the window does - measured 496, 704, 816 and
+   591px at the four rig widths, and narrower at the widest window than at the one it used to fold on. It folded at the
+   wrong end of the ladder, and no threshold tells it apart from the outer grid, so it is named instead of measured */
+.sl-div-field .sl-div-grid .sl-div-item {
+  grid-template-columns: 1fr;
+  gap: var(--sl-space-3);
+}
+
 /* Alert: unified notice — shared class vocabulary with the lite theme and parser callouts */
 .sl-alert {
   --sl-alert-c: var(--sl-primary);
@@ -4050,21 +4058,37 @@ button.sl-but-mini {
   }
 }
 
-/* Forms: classic row layout and inline filters */
-.sl-form-row {
+/* Forms: the read-only value pair of a view page, and inline filters */
+.sl-value-row {
   display: flex;
   align-items: flex-start;
   margin-bottom: var(--sl-space-4);
 }
 
-.sl-form-label {
+/* The width keeps the name it was distributed under: this API block is frozen, and a copied theme reads a name this tree cannot reach to rename */
+.sl-value-label {
   width: var(--sl-form-label-width);
   flex-shrink: 0;
   padding-top: var(--sl-space-3);
 }
 
-.sl-form-value {
+.sl-value-text {
   padding-top: var(--sl-space-3);
+}
+
+/* A fixed caption column survived down to a phone, because this row folded at no width at all */
+@media (max-width: 900px) {
+  .sl-value-row {
+    display: block;
+  }
+
+  .sl-value-label {
+    width: auto;
+  }
+
+  .sl-value-text {
+    padding-top: var(--sl-space-1);
+  }
 }
 
 .sl-form-submit {

@@ -48,7 +48,21 @@ class Editor {
         $id = (string)($data['id'] ?? 'editor');
         $name = (string)($data['name'] ?? 'text');
         $value = (string)($data['value'] ?? '');
+        $data = self::getNameData($data);
         return $driver instanceof ContentDriver ? $driver->getAssets($profile).self::getThemeSkin($key).$driver->getWidget($id, $name, $value, $profile, $data) : '';
+    }
+
+    # Settle the accessible name of one editor once, so four drivers cannot answer it four ways and none of them has to guess
+    # A caption of its own row is pointed at, because a reference follows the caption when it changes; a row with no caption at all is named by its own text instead
+    # An empty target is a worse answer than no attribute, since the name computes to the empty string with the attribute visibly in place, so the text can never be empty here
+    # The text is kept beside the reference and not instead of it: TinyMCE puts its editable in a second document, where an IDREF resolves to nothing, and only a copy of the text crosses that boundary
+    private static function getNameData(array $data): array {
+        $data['labelledby'] = (string)($data['labelledby'] ?? '');
+        $data['label'] = (string)($data['label'] ?? '');
+        if ($data['label'] === '') $data['label'] = _TEXT;
+        $data['arialabel'] = ($data['labelledby'] === '') ? $data['label'] : '';
+        $data['describedby'] = (string)($data['describedby'] ?? '');
+        return $data;
     }
 
     # Render code editor widget; lang required, validated against manifest

@@ -20,6 +20,7 @@ class EditorTinymce implements ContentDriver {
         global $tpl;
         $jid = json_encode($id);
         $jph = json_encode((string)($data['placeholder'] ?? ''));
+        $jlab = json_encode((string)($data['label'] ?? ''));
         $pl = ($profile === 'full') ? self::PL_FULL : self::PL_SIMPLE;
         $tb = ($profile === 'full') ? self::TB_FULL : self::TB_SIMPLE;
         $eid = htmlspecialchars($id, ENT_QUOTES, 'UTF-8');
@@ -29,13 +30,17 @@ class EditorTinymce implements ContentDriver {
             'rows_num' => $rows,
             'value_text' => $value,
             'input_class' => defined('ADMIN_FILE') ? 'sl-form-control' : '',
+            'labelledby' => (string)($data['labelledby'] ?? ''),
+            'aria_label' => (string)($data['arialabel'] ?? ''),
+            'describedby' => (string)($data['describedby'] ?? ''),
             'input_attr' => 'id="'.$eid.'"',
         ]);
         $js = '(function(){var el=document.getElementById('.$jid.');';
         $js .= 'if(!el||typeof tinymce==="undefined"){return;}';
         $js .= 'tinymce.init({target:el,placeholder:'.$jph.',license_key:"gpl",base_url:"'.self::BASE_URL.'",';
         $js .= 'suffix:".min",icons:"default",plugins:"'.$pl.'",toolbar:"'.$tb.'",skin:"oxide",';
-        $js .= 'promotion:false,branding:false,menubar:false,statusbar:true});';
+        $js .= 'promotion:false,branding:false,menubar:false,statusbar:true,';
+        $js .= 'init_instance_callback:function(ed){var box=ed.getBody&&ed.getBody();if(box){box.setAttribute("aria-label",'.$jlab.');}}});';
         $js .= '})();';
         return $ta.$tpl->getHtmlFrag('head-script-inline', ['js' => $js]);
     }

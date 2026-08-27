@@ -35,7 +35,8 @@ function ratings(): void {
                     [
                         'label_html' => _C_21,
                         'is_ratings_inner' => true,
-                        'field_html' => getTplRadioGroup([
+                        'label_id' => $labid = getFieldIds('', $i.'in')['label'],
+                        'field_html' => getTplRadioGroup(['labelledby' => $labid,
                             'name' => $i.'in',
                             'value' => (string) $con[1],
                             'options' => [
@@ -47,7 +48,8 @@ function ratings(): void {
                     [
                         'label_html' => _C_22,
                         'is_ratings_inner' => true,
-                        'field_html' => getTplRadioGroup([
+                        'label_id' => $labid = getFieldIds('', $i.'view')['label'],
+                        'field_html' => getTplRadioGroup(['labelledby' => $labid,
                             'name' => $i.'view',
                             'value' => (string) $con[2],
                             'options' => [

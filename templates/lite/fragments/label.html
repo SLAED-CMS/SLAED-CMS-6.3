@@ -1,3 +1,9 @@
-<label{% if label_class %} class="{{ label_class }}"{% else %} class="sl-form-label"{% endif %}{% if label_for %} for="{{ label_for }}"{% endif %}>
+{% if label_for %}
+<label{% if label_id %} id="{{ label_id }}"{% endif %} class="{% if label_class %}{{ label_class }}{% else %}sl-form-label{% endif %}" for="{{ label_for }}">
   {% if label_html %}{{{ label_html }}}{% else %}{{ label }}{% endif %}
 </label>
+{% else %}
+<span{% if label_id %} id="{{ label_id }}"{% endif %} class="{% if label_class %}{{ label_class }}{% else %}sl-form-label{% endif %}">
+  {% if label_html %}{{{ label_html }}}{% else %}{{ label }}{% endif %}
+</span>
+{% endif %}

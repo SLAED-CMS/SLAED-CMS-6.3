@@ -16,7 +16,8 @@ function contact(): void {
     $rows = [
         [
             'label_html' => _CONTACTALL,
-            'field_html' => getTplRadioGroup([
+            'label_id' => $labid = getFieldIds('', 'admins')['label'],
+            'field_html' => getTplRadioGroup(['labelledby' => $labid,
                 'name' => 'admins',
                 'value' => (string)$conf['contact']['admins'],
                 'options' => [

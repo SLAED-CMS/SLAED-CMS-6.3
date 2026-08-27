@@ -581,7 +581,8 @@ function add(): void {
         $fields .= $fieldsBeforeText;
         $fields .= $tpl->getHtmlFrag('form-field-row', [
             'label' => _DESCRIPTION,
-            'field_html' => getTplTextarea([
+            'label_id' => $labid = getFieldIds('', 'description')['label'],
+            'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _DESCRIPTION,
                 'id' => '1',
                 'name' => 'description',
                 'value' => $description,
@@ -594,7 +595,8 @@ function add(): void {
         ]);
         $fields .= $tpl->getHtmlFrag('form-field-row', [
             'label' => _NOTE,
-            'field_html' => getTplTextarea([
+            'label_id' => $labid = getFieldIds('', 'note')['label'],
+            'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _NOTE,
                 'id' => '2',
                 'name' => 'note',
                 'value' => $note,

@@ -14,5 +14,6 @@
   {% if is_checked %}checked{% endif %}
   {% if is_required %}required{% endif %}
   {% if is_disabled %}disabled{% endif %}
+  {% if describedby %}aria-describedby="{{ describedby }}"{% endif %}
   {% if input_attr %}{{{ input_attr }}}{% endif %}
->{% if label_html or label_text or code_text %} {% if label_html %}{{{ label_html }}}{% else %}{{ label_text }}{% endif %}{% if code_text %} <code>{{ code_text }}</code>{% endif %}</label>{% endif %}
+>{% if label_html or label_text or code_text %} {% if label_html %}{{{ label_html }}}{% else %}{{ label_text }}{% endif %}{% if code_text %} <code>{{ code_text }}</code>{% endif %}</label>{% endif %}{% if hint_html %}<span class="sl-small"{% if hint_id %} id="{{ hint_id }}"{% endif %}>{{{ hint_html }}}</span>{% endif %}

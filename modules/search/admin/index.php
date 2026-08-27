@@ -422,6 +422,7 @@ function config(): void {
         if ($allow && !in_array($file, $allow, true)) continue;
         $modshtml .= $tpl->getHtmlFrag('checkbox', [
             'is_right' => true,
+            'describedby' => 'f-search-hint',
             'name_attr' => 'search[]',
             'value_attr' => $file,
             'is_checked' => in_array($file, $curr, true),
@@ -430,10 +431,10 @@ function config(): void {
         ]);
     }
     $cfgrows = [
-        ['label_html' => _ASEARCH, 'field_html' => getTplRadioGroup(['name' => 'asearch', 'value' => (string)$conf['search']['asearch'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SMODULE, 'hint' => _CTRLINFO]), 'field_html' => $modshtml, 'is_full' => true],
-        ['label_for' => 'f-slet', 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SEARCHLETMIN, 'hint' => _SEARCHLETINFO]), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'slet', 'input_id' => 'f-slet', 'value_attr' => (string)$conf['search']['slet']])],
-        ['label_for' => 'f-slimit', 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SEARCHLIMIT, 'hint' => _SEARCHLIMITINFO]), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'slimit', 'input_id' => 'f-slimit', 'value_attr' => (string)$conf['search']['slimit']])],
+        ['label_html' => _ASEARCH, 'label_id' => $labid = getFieldIds('', 'asearch')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'asearch', 'value' => (string)$conf['search']['asearch'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+        ['label_html' => _SMODULE, 'hint_html' => _CTRLINFO, 'hint_id' => 'f-search-hint', 'field_html' => $modshtml, 'is_full' => true],
+        ['label_for' => 'f-slet', 'label_html' => _SEARCHLETMIN, 'hint_html' => _SEARCHLETINFO, 'hint_id' => $hntid = getFieldIds('f-slet')['hint'], 'field_html' => $tpl->getHtmlFrag('input', ['describedby' => $hntid, 'itype' => 'number', 'name_attr' => 'slet', 'input_id' => 'f-slet', 'value_attr' => (string)$conf['search']['slet']])],
+        ['label_for' => 'f-slimit', 'label_html' => _SEARCHLIMIT, 'hint_html' => _SEARCHLIMITINFO, 'hint_id' => $hntid = getFieldIds('f-slimit')['hint'], 'field_html' => $tpl->getHtmlFrag('input', ['describedby' => $hntid, 'itype' => 'number', 'name_attr' => 'slimit', 'input_id' => 'f-slimit', 'value_attr' => (string)$conf['search']['slimit']])],
         ['label_for' => 'f-snum', 'label_html' => _SEARCHNUM, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'snum', 'input_id' => 'f-snum', 'value_attr' => (string)$conf['search']['snum']])],
         ['label_for' => 'f-snump', 'label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'snump', 'input_id' => 'f-snump', 'value_attr' => (string)$conf['search']['snump']])],
         ['label_for' => 'f-anum', 'label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => (string)$anum])],
@@ -454,7 +455,10 @@ function config(): void {
             'is_right' => true,
             'name_attr' => 'all',
             'value_attr' => '1',
-            'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SEARCHADDALL, 'hint' => _SEARCHAUTOINFO]),
+            'label_html' => _SEARCHADDALL,
+            'hint_html' => _SEARCHAUTOINFO,
+            'hint_id' => 'f-addall-note',
+            'describedby' => 'f-addall-note',
         ]),
         'submit_label' => _SEARCHADDSEL,
     ]);

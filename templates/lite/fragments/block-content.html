@@ -25,6 +25,9 @@
     {% if is_bulk_bar %} sl-bulk-bar{% endif %}
   "
   {% endif %}
+  {% if is_radio_group %}role="group"{% endif %}
+  {% if labelledby %}aria-labelledby="{{ labelledby }}"{% endif %}
+  {% if describedby %}aria-describedby="{{ describedby }}"{% endif %}
 >{{{ content }}}{% if is_comments_section %}</section>{% else %}</div>{% endif %}
 {% if has_hr %}<hr>{% endif %}
 {% endif %}

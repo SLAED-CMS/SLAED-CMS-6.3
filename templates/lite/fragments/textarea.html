@@ -8,5 +8,8 @@
   {% if is_required %}required{% endif %}
   {% if is_readonly %}readonly{% endif %}
   {% if is_disabled %}disabled{% endif %}
+  {% if labelledby %}aria-labelledby="{{ labelledby }}"{% endif %}
+  {% if aria_label %}aria-label="{{ aria_label }}"{% endif %}
+  {% if describedby %}aria-describedby="{{ describedby }}"{% endif %}
   {% if input_attr %}{{{ input_attr }}}{% endif %}
 >{{ value_text }}</textarea>

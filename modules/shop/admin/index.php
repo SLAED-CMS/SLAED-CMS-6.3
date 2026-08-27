@@ -317,7 +317,7 @@ function clientadd(): void {
     $rows[] = ['label_html' => _CLIENTSTR, 'field_html' => getTplAddDateTime(['name' => 'cregdate', 'time' => $cregdate, 'with' => true, 'max' => 16])];
     $rows[] = ['label_html' => _CLIENTEND, 'field_html' => getTplAddDateTime(['name' => 'cenddate', 'time' => $cenddate, 'with' => true, 'max' => 16])];
     $rows[] = ['label_for' => 'f-product', 'label_html' => _PRODUCT, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'product', 'selectid' => 'f-product', 'options_html' => $prodopts])];
-    $rows[] = ['label_html' => _ACTIVATE2, 'field_html' => getTplRadioGroup(['name' => 'cactive', 'value' => $cactive, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
+    $rows[] = ['label_html' => _ACTIVATE2, 'label_id' => $labid = getFieldIds('', 'cactive')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'cactive', 'value' => $cactive, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
     $rows[] = ['label_for' => 'f-cinfo', 'label_html' => _NOTE, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'cinfo', 'input_id' => 'f-cinfo', 'value_text' => $cinfo, 'rows_num' => 5]), 'is_full' => true];
     $posttypeopts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SAVECHANGES])
         .($cid ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
@@ -604,17 +604,17 @@ function productadd(): void {
             if ($associated) foreach ((array)$associated as $val) if ($val == $id) $isch = true;
             $assoc .= $tpl->getHtmlFrag('label', [
                 'is_associated_option' => true,
-                'prefix_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'associated[]', 'value_attr' => (string)$id, 'is_checked' => $isch]),
+                'prefix_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'associated[]', 'describedby' => 'f-associated-hint', 'value_attr' => (string)$id, 'is_checked' => $isch]),
                 'has_content_text' => true,
                 'content_text' => (string)$title,
             ]);
         }
-        $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _ASSOTOPIC, 'hint' => _ASSOTOPICI]), 'field_html' => $assoc, 'is_full' => true];
+        $rows[] = ['label_html' => _ASSOTOPIC, 'hint_html' => _ASSOTOPICI, 'hint_id' => 'f-associated-hint', 'field_html' => $assoc, 'is_full' => true];
     }
-    $rows[] = ['label_html' => _TEXT, 'field_html' => getTplTextarea([
+    $rows[] = ['label_html' => _TEXT, 'label_id' => $labid = getFieldIds('', 'ptext')['label'], 'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _TEXT,
         'id' => '1', 'name' => 'ptext', 'value' => $ptext, 'mod' => 'shop', 'store' => 'products.intro', 'rows' => '5', 'placeholder' => _TEXT, 'required' => '1',
     ]), 'is_full' => true, 'field_unwrapped' => true];
-    $rows[] = ['label_html' => _ENDTEXT, 'field_html' => getTplTextarea([
+    $rows[] = ['label_html' => _ENDTEXT, 'label_id' => $labid = getFieldIds('', 'pbodytext')['label'], 'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _ENDTEXT,
         'id' => '2', 'name' => 'pbodytext', 'value' => $pbodytext, 'mod' => 'shop', 'store' => 'products.body', 'rows' => '15', 'placeholder' => _ENDTEXT, 'required' => '0',
     ]), 'is_full' => true, 'field_unwrapped' => true];
     $rows[] = ['label_for' => 'f-pprice', 'label_html' => _PREIS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'pprice', 'input_id' => 'f-pprice', 'value_attr' => $pprice, 'maxlength_num' => 10, 'placeholder_text' => _PREIS, 'is_required' => true])];
@@ -624,9 +624,9 @@ function productadd(): void {
     $rows[] = ['label_html' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'ptime', 'time' => $ptime, 'with' => true, 'max' => 16])];
     $rows[] = ['label_html' => _VOTING, 'field_html' => add_voting('shop', 'vote', $vote)];
     $rows[] = ['label_for' => 'f-acomm', 'label_html' => _COMMENTS, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'acomm', 'selectid' => 'f-acomm', 'options_html' => $commopts])];
-    $rows[] = ['label_html' => _PUBHOME, 'field_html' => getTplRadioGroup(['name' => 'ihome', 'value' => $ihome, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
-    $rows[] = ['label_html' => _FIXED.'?', 'field_html' => getTplRadioGroup(['name' => 'fix', 'value' => $fix, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
-    $rows[] = ['label_html' => _ACTIVATEP, 'field_html' => getTplRadioGroup(['name' => 'pactive', 'value' => $pactive, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
+    $rows[] = ['label_html' => _PUBHOME, 'label_id' => $labid = getFieldIds('', 'ihome')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'ihome', 'value' => $ihome, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
+    $rows[] = ['label_html' => _FIXED.'?', 'label_id' => $labid = getFieldIds('', 'fix')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'fix', 'value' => $fix, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
+    $rows[] = ['label_html' => _ACTIVATEP, 'label_id' => $labid = getFieldIds('', 'pactive')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'pactive', 'value' => $pactive, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
     $posttypeopts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW])
         .$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SAVECHANGES])
         .($pid ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
@@ -908,7 +908,7 @@ function partneradd(): void {
         $rows[] = ['label_for' => 'f-parest', 'label_html' => _PARTNERREST, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'parest', 'input_id' => 'f-parest', 'value_attr' => $parest])];
         $rows[] = ['label_for' => 'f-pabek', 'label_html' => _PARTNERBEK, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'pabek', 'input_id' => 'f-pabek', 'value_attr' => $pabek])];
     }
-    $rows[] = ['label_html' => _ACTIVATE2, 'field_html' => getTplRadioGroup(['name' => 'paactive', 'value' => $paactive, 'options' => [['value' => '2', 'label' => _NEW], ['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
+    $rows[] = ['label_html' => _ACTIVATE2, 'label_id' => $labid = getFieldIds('', 'paactive')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'paactive', 'value' => $paactive, 'options' => [['value' => '2', 'label' => _NEW], ['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
     $posttypeopts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SAVECHANGES])
         .($paid ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
@@ -1290,9 +1290,10 @@ function config(): void {
         'subtitle_html' => buildShopSearchBox(),
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/shop.php');
-    $yesno = static fn(string $name, int|string $value): string => getTplRadioGroup([
+    $yesno = static fn(string $name, int|string $value, string $lbl = ''): string => getTplRadioGroup([
         'name' => $name,
         'value' => $value,
+        'labelledby' => $lbl,
         'options' => [
             ['value' => '1', 'label' => _YES],
             ['value' => '0', 'label' => _NO],
@@ -1317,23 +1318,23 @@ function config(): void {
         ['label_for' => 'f-anum', 'label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => (string)$conf['shop']['anum']])],
         ['label_for' => 'f-nump', 'label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'input_id' => 'f-nump', 'value_attr' => (string)$conf['shop']['nump']])],
         ['label_for' => 'f-anump', 'label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => (string)$conf['shop']['anump']])],
-        ['label_html' => _HOMCAT, 'field_html' => $yesno('homcat', $conf['shop']['homcat'])],
-        ['label_html' => _VIEWCAT, 'field_html' => $yesno('viewcat', $conf['shop']['viewcat'])],
-        ['label_html' => _C_32, 'field_html' => $yesno('catdesc', $conf['shop']['catdesc'])],
-        ['label_html' => _C_15, 'field_html' => $yesno('subcat', $conf['shop']['subcat'])],
-        ['label_html' => _C_14, 'field_html' => $yesno('mailuser', $conf['shop']['mailuser'])],
-        ['label_html' => _C_17, 'field_html' => $yesno('date', $conf['shop']['date'])],
-        ['label_html' => _C_18, 'field_html' => $yesno('read', $conf['shop']['read'])],
-        ['label_html' => _C_19, 'field_html' => $yesno('rate', $conf['shop']['rate'])],
-        ['label_html' => _C_20, 'field_html' => $yesno('letter', $conf['shop']['letter'])],
-        ['label_html' => _C_23, 'field_html' => $yesno('assoc', $conf['shop']['assoc'])],
-        ['label_html' => _C_24, 'field_html' => $yesno('mailsend', $conf['shop']['mailsend'])],
-        ['label_html' => _C_25, 'field_html' => $yesno('part', $conf['shop']['part'])],
-        ['label_for' => 'f-partlink-view', 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _C_26, 'hint' => _PART_ID]), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'partlink_view', 'input_id' => 'f-partlink-view', 'value_attr' => (string)$conf['shop']['partlink'], 'input_attr' => ' readonly']), 'is_full' => true],
+        ['label_html' => _HOMCAT, 'label_id' => $labid = getFieldIds('', 'homcat')['label'], 'field_html' => $yesno('homcat', $conf['shop']['homcat'], $labid)],
+        ['label_html' => _VIEWCAT, 'label_id' => $labid = getFieldIds('', 'viewcat')['label'], 'field_html' => $yesno('viewcat', $conf['shop']['viewcat'], $labid)],
+        ['label_html' => _C_32, 'label_id' => $labid = getFieldIds('', 'catdesc')['label'], 'field_html' => $yesno('catdesc', $conf['shop']['catdesc'], $labid)],
+        ['label_html' => _C_15, 'label_id' => $labid = getFieldIds('', 'subcat')['label'], 'field_html' => $yesno('subcat', $conf['shop']['subcat'], $labid)],
+        ['label_html' => _C_14, 'label_id' => $labid = getFieldIds('', 'mailuser')['label'], 'field_html' => $yesno('mailuser', $conf['shop']['mailuser'], $labid)],
+        ['label_html' => _C_17, 'label_id' => $labid = getFieldIds('', 'date')['label'], 'field_html' => $yesno('date', $conf['shop']['date'], $labid)],
+        ['label_html' => _C_18, 'label_id' => $labid = getFieldIds('', 'read')['label'], 'field_html' => $yesno('read', $conf['shop']['read'], $labid)],
+        ['label_html' => _C_19, 'label_id' => $labid = getFieldIds('', 'rate')['label'], 'field_html' => $yesno('rate', $conf['shop']['rate'], $labid)],
+        ['label_html' => _C_20, 'label_id' => $labid = getFieldIds('', 'letter')['label'], 'field_html' => $yesno('letter', $conf['shop']['letter'], $labid)],
+        ['label_html' => _C_23, 'label_id' => $labid = getFieldIds('', 'assoc')['label'], 'field_html' => $yesno('assoc', $conf['shop']['assoc'], $labid)],
+        ['label_html' => _C_24, 'label_id' => $labid = getFieldIds('', 'mailsend')['label'], 'field_html' => $yesno('mailsend', $conf['shop']['mailsend'], $labid)],
+        ['label_html' => _C_25, 'label_id' => $labid = getFieldIds('', 'part')['label'], 'field_html' => $yesno('part', $conf['shop']['part'], $labid)],
+        ['label_for' => 'f-partlink-view', 'label_html' => _C_26, 'hint_html' => _PART_ID, 'hint_id' => $hntid = getFieldIds('f-partlink-view')['hint'], 'field_html' => $tpl->getHtmlFrag('input', ['describedby' => $hntid, 'itype' => 'text', 'name_attr' => 'partlink_view', 'input_id' => 'f-partlink-view', 'value_attr' => (string)$conf['shop']['partlink'], 'input_attr' => ' readonly']), 'is_full' => true],
         ['label_for' => 'f-sende', 'label_html' => _C_27, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'sende', 'input_id' => 'f-sende', 'value_text' => (string)$conf['shop']['sende'], 'rows_num' => 5]), 'is_full' => true],
         ['label_for' => 'f-userinfo', 'label_html' => _C_28, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'userinfo', 'input_id' => 'f-userinfo', 'value_text' => (string)$conf['shop']['userinfo'], 'rows_num' => 5]), 'is_full' => true],
         ['label_for' => 'f-partinfo', 'label_html' => _C_29, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'partinfo', 'input_id' => 'f-partinfo', 'value_text' => (string)$conf['shop']['partinfo'], 'rows_num' => 5]), 'is_full' => true],
-        ['label_html' => _C_30, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'partinfo2', 'value_text' => (string)$conf['shop']['partinfo2'], 'rows_num' => 5]), 'is_full' => true],
+        ['label_for' => 'f-partinfo2', 'label_html' => _C_30, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'partinfo2', 'input_id' => 'f-partinfo2', 'value_text' => (string)$conf['shop']['partinfo2'], 'rows_num' => 5]), 'is_full' => true],
         ['label_for' => 'f-shopinfo', 'label_html' => _C_31, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'shopinfo', 'input_id' => 'f-shopinfo', 'value_text' => (string)$conf['shop']['shopinfo'], 'rows_num' => 5]), 'is_full' => true],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [

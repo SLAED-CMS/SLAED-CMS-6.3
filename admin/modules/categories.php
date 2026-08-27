@@ -78,7 +78,7 @@ function add(): void {
         ['value' => '0', 'label' => _NO],
     ];
     $rows0 = [
-        ['label_html' => _ACTIVATE2, 'field_html' => getTplRadioGroup(['name' => 'status', 'value' => '0', 'options' => $yesno])],
+        ['label_html' => _ACTIVATE2, 'label_id' => $labid = getFieldIds('', 'status')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'status', 'value' => '0', 'options' => $yesno])],
         ['label_for' => 'f-title', 'label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'text',
             'name_attr' => 'title',
@@ -101,15 +101,15 @@ function add(): void {
         $rows0[] = ['label_for' => 'f-lang', 'label_html' => _LANGUAGE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options_html' => getTplLanguageOptions()])];
     }
     $rows1 = [
-        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_VIEW, 'hint' => $hint]), 'field_html' => catacess('pview', 'sl-form-control', '', 0)],
-        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_READ, 'hint' => $hint]), 'field_html' => catacess('pread', 'sl-form-control', '', 0)],
+        ['label_for' => ($fids = getFieldIds('f-pview'))['input'], 'label_html' => _CAN.' '._AUTH_VIEW, 'hint_html' => $hint, 'hint_id' => $fids['hint'], 'field_html' => catacess('pview', 'sl-form-control', '', 0, $fids['input'], $fids['hint'])],
+        ['label_for' => ($fids = getFieldIds('f-pread'))['input'], 'label_html' => _CAN.' '._AUTH_READ, 'hint_html' => $hint, 'hint_id' => $fids['hint'], 'field_html' => catacess('pread', 'sl-form-control', '', 0, $fids['input'], $fids['hint'])],
     ];
     $rows2 = [
-        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_POST, 'hint' => $hint]), 'field_html' => catacess('ppost', 'sl-form-control', '', 0)],
-        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_REPLY, 'hint' => $hint]), 'field_html' => catacess('preply', 'sl-form-control', '', 0)],
-        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_EDIT, 'hint' => $hint]), 'field_html' => catacess('pedit', 'sl-form-control', '', 1)],
-        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_DELETE, 'hint' => $hint]), 'field_html' => catacess('pdelete', 'sl-form-control', '', 1)],
-        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_MOD, 'hint' => $hint]), 'field_html' => catacess('pmod', 'sl-form-control', '', 2)],
+        ['label_for' => ($fids = getFieldIds('f-ppost'))['input'], 'label_html' => _CAN.' '._AUTH_POST, 'hint_html' => $hint, 'hint_id' => $fids['hint'], 'field_html' => catacess('ppost', 'sl-form-control', '', 0, $fids['input'], $fids['hint'])],
+        ['label_for' => ($fids = getFieldIds('f-preply'))['input'], 'label_html' => _CAN.' '._AUTH_REPLY, 'hint_html' => $hint, 'hint_id' => $fids['hint'], 'field_html' => catacess('preply', 'sl-form-control', '', 0, $fids['input'], $fids['hint'])],
+        ['label_for' => ($fids = getFieldIds('f-pedit'))['input'], 'label_html' => _CAN.' '._AUTH_EDIT, 'hint_html' => $hint, 'hint_id' => $fids['hint'], 'field_html' => catacess('pedit', 'sl-form-control', '', 1, $fids['input'], $fids['hint'])],
+        ['label_for' => ($fids = getFieldIds('f-pdelete'))['input'], 'label_html' => _CAN.' '._AUTH_DELETE, 'hint_html' => $hint, 'hint_id' => $fids['hint'], 'field_html' => catacess('pdelete', 'sl-form-control', '', 1, $fids['input'], $fids['hint'])],
+        ['label_for' => ($fids = getFieldIds('f-pmod'))['input'], 'label_html' => _CAN.' '._AUTH_MOD, 'hint_html' => $hint, 'hint_id' => $fids['hint'], 'field_html' => catacess('pmod', 'sl-form-control', '', 2, $fids['input'], $fids['hint'])],
     ];
     $tabs = $tpl->getHtmlPart('tabs', [
         'id' => 'categories-add',
@@ -165,7 +165,7 @@ function subadd(): void {
             ['value' => '0', 'label' => _NO],
         ];
         $rows0 = [
-            ['label_html' => _ACTIVATE2, 'field_html' => getTplRadioGroup(['name' => 'status', 'value' => '0', 'options' => $yesno])],
+            ['label_html' => _ACTIVATE2, 'label_id' => $labid = getFieldIds('', 'status')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'status', 'value' => '0', 'options' => $yesno])],
             ['label_html' => _CATEGORY, 'field_html' => getTplCategorySelect($modul, 0, 'cid', 'sl-form-control')],
             ['label_for' => 'f-title', 'label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
@@ -189,15 +189,15 @@ function subadd(): void {
             $rows0[] = ['label_for' => 'f-lang', 'label_html' => _LANGUAGE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options_html' => getTplLanguageOptions()])];
         }
         $rows1 = [
-            ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_VIEW, 'hint' => $hint]), 'field_html' => catacess('pview', 'sl-form-control', '', 0)],
-            ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_READ, 'hint' => $hint]), 'field_html' => catacess('pread', 'sl-form-control', '', 0)],
+            ['label_for' => ($fids = getFieldIds('f-pview'))['input'], 'label_html' => _CAN.' '._AUTH_VIEW, 'hint_html' => $hint, 'hint_id' => $fids['hint'], 'field_html' => catacess('pview', 'sl-form-control', '', 0, $fids['input'], $fids['hint'])],
+            ['label_for' => ($fids = getFieldIds('f-pread'))['input'], 'label_html' => _CAN.' '._AUTH_READ, 'hint_html' => $hint, 'hint_id' => $fids['hint'], 'field_html' => catacess('pread', 'sl-form-control', '', 0, $fids['input'], $fids['hint'])],
         ];
         $rows2 = [
-            ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_POST, 'hint' => $hint]), 'field_html' => catacess('ppost', 'sl-form-control', '', 0)],
-            ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_REPLY, 'hint' => $hint]), 'field_html' => catacess('preply', 'sl-form-control', '', 0)],
-            ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_EDIT, 'hint' => $hint]), 'field_html' => catacess('pedit', 'sl-form-control', '', 1)],
-            ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_DELETE, 'hint' => $hint]), 'field_html' => catacess('pdelete', 'sl-form-control', '', 1)],
-            ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_MOD, 'hint' => $hint]), 'field_html' => catacess('pmod', 'sl-form-control', '', 2)],
+            ['label_for' => ($fids = getFieldIds('f-ppost'))['input'], 'label_html' => _CAN.' '._AUTH_POST, 'hint_html' => $hint, 'hint_id' => $fids['hint'], 'field_html' => catacess('ppost', 'sl-form-control', '', 0, $fids['input'], $fids['hint'])],
+            ['label_for' => ($fids = getFieldIds('f-preply'))['input'], 'label_html' => _CAN.' '._AUTH_REPLY, 'hint_html' => $hint, 'hint_id' => $fids['hint'], 'field_html' => catacess('preply', 'sl-form-control', '', 0, $fids['input'], $fids['hint'])],
+            ['label_for' => ($fids = getFieldIds('f-pedit'))['input'], 'label_html' => _CAN.' '._AUTH_EDIT, 'hint_html' => $hint, 'hint_id' => $fids['hint'], 'field_html' => catacess('pedit', 'sl-form-control', '', 1, $fids['input'], $fids['hint'])],
+            ['label_for' => ($fids = getFieldIds('f-pdelete'))['input'], 'label_html' => _CAN.' '._AUTH_DELETE, 'hint_html' => $hint, 'hint_id' => $fids['hint'], 'field_html' => catacess('pdelete', 'sl-form-control', '', 1, $fids['input'], $fids['hint'])],
+            ['label_for' => ($fids = getFieldIds('f-pmod'))['input'], 'label_html' => _CAN.' '._AUTH_MOD, 'hint_html' => $hint, 'hint_id' => $fids['hint'], 'field_html' => catacess('pmod', 'sl-form-control', '', 2, $fids['input'], $fids['hint'])],
         ];
         $tabs = $tpl->getHtmlPart('tabs', [
             'id' => 'categories-subadd',
@@ -313,7 +313,7 @@ function edit(): void {
         ['value' => '0', 'label' => _NO],
     ];
     $rows0 = [
-        ['label_html' => _ACTIVATE2, 'field_html' => getTplRadioGroup(['name' => 'status', 'value' => $status, 'options' => $yesno])],
+        ['label_html' => _ACTIVATE2, 'label_id' => $labid = getFieldIds('', 'status')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'status', 'value' => $status, 'options' => $yesno])],
         ['label_for' => 'f-title', 'label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'text',
             'name_attr' => 'title',
@@ -339,15 +339,15 @@ function edit(): void {
         $rows0[] = ['label_for' => 'f-lang', 'label_html' => _LANGUAGE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options_html' => getTplLanguageOptions($lang)])];
     }
     $rows1 = [
-        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_VIEW, 'hint' => $hint]), 'field_html' => catacess('pview', 'sl-form-control', $pview, 0)],
-        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_READ, 'hint' => $hint]), 'field_html' => catacess('pread', 'sl-form-control', $pread, 0)],
+        ['label_for' => ($fids = getFieldIds('f-pview'))['input'], 'label_html' => _CAN.' '._AUTH_VIEW, 'hint_html' => $hint, 'hint_id' => $fids['hint'], 'field_html' => catacess('pview', 'sl-form-control', $pview, 0, $fids['input'], $fids['hint'])],
+        ['label_for' => ($fids = getFieldIds('f-pread'))['input'], 'label_html' => _CAN.' '._AUTH_READ, 'hint_html' => $hint, 'hint_id' => $fids['hint'], 'field_html' => catacess('pread', 'sl-form-control', $pread, 0, $fids['input'], $fids['hint'])],
     ];
     $rows2 = [
-        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_POST, 'hint' => $hint]), 'field_html' => catacess('ppost', 'sl-form-control', $ppost, 0)],
-        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_REPLY, 'hint' => $hint]), 'field_html' => catacess('preply', 'sl-form-control', $preply, 0)],
-        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_EDIT, 'hint' => $hint]), 'field_html' => catacess('pedit', 'sl-form-control', $pedit, 1)],
-        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_DELETE, 'hint' => $hint]), 'field_html' => catacess('pdelete', 'sl-form-control', $pdelete, 1)],
-        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_MOD, 'hint' => $hint]), 'field_html' => catacess('pmod', 'sl-form-control', $pmod, 2)],
+        ['label_for' => ($fids = getFieldIds('f-ppost'))['input'], 'label_html' => _CAN.' '._AUTH_POST, 'hint_html' => $hint, 'hint_id' => $fids['hint'], 'field_html' => catacess('ppost', 'sl-form-control', $ppost, 0, $fids['input'], $fids['hint'])],
+        ['label_for' => ($fids = getFieldIds('f-preply'))['input'], 'label_html' => _CAN.' '._AUTH_REPLY, 'hint_html' => $hint, 'hint_id' => $fids['hint'], 'field_html' => catacess('preply', 'sl-form-control', $preply, 0, $fids['input'], $fids['hint'])],
+        ['label_for' => ($fids = getFieldIds('f-pedit'))['input'], 'label_html' => _CAN.' '._AUTH_EDIT, 'hint_html' => $hint, 'hint_id' => $fids['hint'], 'field_html' => catacess('pedit', 'sl-form-control', $pedit, 1, $fids['input'], $fids['hint'])],
+        ['label_for' => ($fids = getFieldIds('f-pdelete'))['input'], 'label_html' => _CAN.' '._AUTH_DELETE, 'hint_html' => $hint, 'hint_id' => $fids['hint'], 'field_html' => catacess('pdelete', 'sl-form-control', $pdelete, 1, $fids['input'], $fids['hint'])],
+        ['label_for' => ($fids = getFieldIds('f-pmod'))['input'], 'label_html' => _CAN.' '._AUTH_MOD, 'hint_html' => $hint, 'hint_id' => $fids['hint'], 'field_html' => catacess('pmod', 'sl-form-control', $pmod, 2, $fids['input'], $fids['hint'])],
     ];
     $tabs = $tpl->getHtmlPart('tabs', [
         'id' => 'categories-edit',

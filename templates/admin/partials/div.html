@@ -16,6 +16,9 @@
   "
   {% endif %}
   {% if title %}title="{{ title }}"{% endif %}
+  {% if is_radio_group %}role="group"{% endif %}
+  {% if labelledby %}aria-labelledby="{{ labelledby }}"{% endif %}
+  {% if describedby %}aria-describedby="{{ describedby }}"{% endif %}
   {% if is_collapsible and id %}data-sl-toggle="{{ id }}"{% endif %}
   {% if attr %}{{{ attr }}}{% endif %}
 >{{{ content_html }}}</div>

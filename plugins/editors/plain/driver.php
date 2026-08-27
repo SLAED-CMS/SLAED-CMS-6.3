@@ -9,17 +9,17 @@ class EditorPlain implements ContentDriver {
     public function getWidget(string $id, string $name, string $value, string $profile, array $data = []): string {
         global $tpl;
         $rows = (int)($data['rows'] ?? (($profile === 'full') ? 20 : 10));
-        $placeholder = (string)($data['placeholder'] ?? '');
-        $required = !empty($data['required']);
-        $attr = 'id="'.htmlspecialchars($id, ENT_QUOTES, 'UTF-8').'"';
-        if ($placeholder !== '') $attr .= ' placeholder="'.htmlspecialchars($placeholder, ENT_QUOTES, 'UTF-8').'"';
-        if ($required) $attr .= ' required';
         return $tpl->getHtmlFrag('textarea', [
             'name_attr' => $name,
             'rows_num' => $rows,
             'value_text' => $value,
             'input_class' => defined('ADMIN_FILE') ? 'sl-form-control' : '',
-            'input_attr' => $attr,
+            'input_id' => $id,
+            'placeholder_text' => (string)($data['placeholder'] ?? ''),
+            'is_required' => !empty($data['required']),
+            'labelledby' => (string)($data['labelledby'] ?? ''),
+            'aria_label' => (string)($data['arialabel'] ?? ''),
+            'describedby' => (string)($data['describedby'] ?? ''),
         ]);
     }
 }
