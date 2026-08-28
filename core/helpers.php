@@ -473,6 +473,7 @@ function getTplRadioGroup(array $data = []): string {
         $items .= $tpl->getHtmlFrag('radio', [
             'input_attr' => (string)($option['input_attr'] ?? ''),
             'is_checked' => (string)$value === $valu,
+            'label_html' => (string)($option['label_html'] ?? ''),
             'label_text' => (string)($option['label'] ?? ''),
             'name_attr' => $name,
             'value_attr' => $valu,

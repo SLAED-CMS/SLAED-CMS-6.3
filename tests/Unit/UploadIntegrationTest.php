@@ -17,7 +17,7 @@ final class UploadIntegrationTest extends TestCase
 {
     private const ADAPTERS = [
         'core/system.php' => 'addEditorUpload',
-        'modules/account/index.php' => 'saveavatar',
+        'modules/account/index.php' => 'savehome',
         'modules/files/index.php' => 'send',
         'modules/files/admin/index.php' => 'save',
         'admin/modules/uploads.php' => 'fmupload',
@@ -233,7 +233,7 @@ final class UploadIntegrationTest extends TestCase
     #[Test]
     public function everyDatabaseWriteIsCheckedAndCompensated(): void
     {
-        foreach (['modules/account/index.php' => 'saveavatar', 'modules/files/index.php' => 'send', 'modules/files/admin/index.php' => 'save'] as $path => $name) {
+        foreach (['modules/account/index.php' => 'savehome', 'modules/files/index.php' => 'send', 'modules/files/admin/index.php' => 'save'] as $path => $name) {
             $body = $this->getBody($path, $name);
             $this->assertStringContainsString('deleteStoredFile(', $body, $name.'() does not compensate a failed row write');
             $this->assertStringContainsString('Logger::addFile(', $body, $name.'() does not log a compensation that failed');

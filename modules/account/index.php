@@ -832,7 +832,9 @@ function edithome(): void {
             $birthday = '';
         }
         $userinfo['theme'] = (!$userinfo['theme']) ? $conf['theme'] : $userinfo['theme'];
-        $cont = ($stop) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]) : '';
+        $msgs = [];
+        foreach ((array)$stop as $item) $msgs[] = is_array($item) ? (string)($item['text'] ?? '') : (string)$item;
+        $cont = ($msgs) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => $msgs]) : '';
         $story = '';
         if ($conf['users']['news'] == 1) {
             $xusnum = 3;
@@ -975,11 +977,6 @@ function edithome(): void {
         if ($tcount > 1) {
             $fields .= $tpl->getHtmlFrag('form-field-row', ['label_for' => 'f-theme', 'label' => _THEME, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'theme', 'input_id' => 'f-theme', 'options_html' => $theme])]);
         }
-        $change = $tpl->getHtmlPart('form-add', [
-            'action' => 'index.php?name='.$conf['name'],
-            'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$fields,
-            'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'extra' => $submitExtra, 'op' => 'savehome', 'label' => _SAVECHANGES]),
-        ]);
         $avatar = getUserAvatarUrl($userinfo);
         $asetup = $tpl->getHtmlPart('content-list', [
             'rows' => [[
@@ -992,55 +989,43 @@ function edithome(): void {
             'table_close' => [],
         ]);
         if ($conf['users']['aupload']) {
-            $asetup .= $tpl->getHtmlPart('form-add', [
-                'action' => 'index.php?name='.$conf['name'],
-                'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$tpl->getHtmlFrag('form-field-row', [
-                    'label_for' => 'f-userfile',
-                    'label' => _AVATAR_USER,
-                    'field_html' => $tpl->getHtmlFrag('file-input', ['name_attr' => 'userfile']), 'input_id' => 'f-userfile',
-                ]),
-                'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'saveavatar', 'label' => _UPLOAD]),
+            $asetup .= $tpl->getHtmlFrag('form-field-row', [
+                'label_for' => 'f-userfile',
+                'label' => _AVATAR_USER,
+                'field_html' => $tpl->getHtmlFrag('file-input', ['name_attr' => 'userfile', 'input_id' => 'f-userfile']),
             ]);
         }
-        $a = 6;
-        $i = 1;
         $aset = [];
-        $arows = [];
         $adir = 'templates/'.getTheme().'/images/avatars/presets';
-        $tokn = getSiteToken('account');
         $list = scandir($adir);
         foreach ($list ?: [] as $file) {
-            if (preg_match("#\.(gif|png|jpe?g|svg)$#is", $file)) {
-                $filename = str_replace('_', ' ', preg_replace("/^(.*)\..*$/", '\\1', $file));
-                $aset[] = [
-                    'action' => 'index.php?name='.$conf['name'],
-                    'hidden' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'saveavatar'])
-                        .$tpl->getHtmlFrag('hidden', ['name_attr' => 'avatar', 'value_attr' => $file])
-                        .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => $tokn]),
-                    'title' => _AVATARSAVE.' '._ID.' '.$filename,
-                    'is_avatar_link' => true,
-                    'img_src' => $adir.'/'.$file,
-                    'img_alt' => _AVATARSAVE.' '._ID.' '.$filename,
-                    'img_title' => _AVATARSAVE.' '._ID.' '.$filename,
+            if (!preg_match("#\.(gif|png|jpe?g|svg)$#is", $file)) continue;
+            $alt = _AVATARSAVE.' '._ID.' '.str_replace('_', ' ', preg_replace("/^(.*)\..*$/", '\\1', $file));
+            $aset[] = [
+                'value' => $file,
+                'label_html' => $tpl->getHtmlFrag('image', [
+                    'src' => $adir.'/'.$file,
+                    'alt' => $alt,
+                    'title' => $alt,
                     'is_avatar' => true,
-                ];
-                if ($i % $a == 0) {
-                    $arows[] = ['cells' => $aset];
-                    $aset = [];
-                }
-                $i++;
-            }
+                    'img_attr' => 'width="64" height="64" loading="lazy" decoding="async"',
+                ]),
+            ];
         }
-        if ($aset) $arows[] = ['cells' => $aset];
-        if ($i >= 1) {
-            $asetup .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _AVATARSELECT])
-                .$tpl->getHtmlPart('content-list', [
-                    'rows' => $arows,
-                    'table_open' => ['open' => true, 'is_form' => true, 'is_avatar_grid' => true],
-                    'table_close' => [],
-                    'empty_alert' => ['is_warn' => false, 'text' => _NO_INFO],
-                ]);
+        if ($aset) {
+            $asetup .= $tpl->getHtmlFrag('form-field-row', [
+                'label' => _AVATARSELECT,
+                'label_id' => $labid = getFieldIds('', 'avatar')['label'],
+                'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'avatar', 'value' => '', 'switch' => false, 'options' => $aset]),
+            ]);
         }
+        $change = $tpl->getHtmlPart('form-add', [
+            'action' => 'index.php?name='.$conf['name'],
+            'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')])
+                .$tpl->getHtmlFrag('title', ['title' => _PERSONALINFO, 'is_level_two' => true]).$fields
+                .$tpl->getHtmlFrag('title', ['title' => _AVATARSETUP, 'is_level_two' => true]).$asetup,
+            'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'extra' => $submitExtra, 'op' => 'savehome', 'label' => _SAVECHANGES]),
+        ]);
         if (str_starts_with((string)($userinfo['password'] ?? ''), '!')) {
             $psetup = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _OAUTHNOPW])
                 .$tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']), 'title' => _PASSWORDLOST, 'label' => _PASSWORDLOST, 'is_footer_button' => true]);
@@ -1048,14 +1033,37 @@ function edithome(): void {
             $fields = $tpl->getHtmlFrag('form-field-row', [
                 'label_for' => 'f-newpass',
                 'label' => _PASSNEW,
-                'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'newpass', 'input_id' => 'f-newpass', 'maxlength_num' => 25, 'placeholder_text' => _PASSNEW, 'is_required' => true]),
+                'field_html' => $tpl->getHtmlFrag('input', [
+                    'name_attr' => 'newpass',
+                    'input_id' => 'f-newpass',
+                    'itype' => 'password',
+                    'autocomplete_attr' => 'new-password',
+                    'maxlength_num' => 25,
+                    'placeholder_text' => _PASSNEW,
+                    'is_required' => true,
+                ]),
             ]).$tpl->getHtmlFrag('form-field-row', [
                 'label' => _PASSNEW2,
-                'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'newpass2', 'maxlength_num' => 25, 'placeholder_text' => _PASSNEW2, 'is_required' => true]),
+                'field_html' => $tpl->getHtmlFrag('input', [
+                    'name_attr' => 'newpass2',
+                    'itype' => 'password',
+                    'autocomplete_attr' => 'new-password',
+                    'maxlength_num' => 25,
+                    'placeholder_text' => _PASSNEW2,
+                    'is_required' => true,
+                ]),
             ]).$tpl->getHtmlFrag('form-field-row', [
                 'label_for' => 'f-oldpass',
                 'label' => _PASSOLD,
-                'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'oldpass', 'input_id' => 'f-oldpass', 'maxlength_num' => 25, 'placeholder_text' => _PASSOLD, 'is_required' => true]),
+                'field_html' => $tpl->getHtmlFrag('input', [
+                    'name_attr' => 'oldpass',
+                    'input_id' => 'f-oldpass',
+                    'itype' => 'password',
+                    'autocomplete_attr' => 'current-password',
+                    'maxlength_num' => 25,
+                    'placeholder_text' => _PASSOLD,
+                    'is_required' => true,
+                ]),
             ]);
             $psetup = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PASSTEXT])
                 .$tpl->getHtmlPart('form-add', [
@@ -1084,11 +1092,9 @@ function edithome(): void {
             ];
         }
         $obtn = Oauth::getButtons();
-        $tabs = [_CHANGE, _AVATARSETUP, _PASSSETUP];
-        $texts = [$change, $asetup, $psetup];
+        $osetup = '';
         if ($orows || $obtn !== '') {
-            $tabs[] = _OAUTHTAB;
-            $texts[] = $tpl->getHtmlPart('account-oauth-links', [
+            $osetup = $tpl->getHtmlFrag('title', ['title' => _OAUTHTAB, 'is_level_two' => true]).$tpl->getHtmlPart('account-oauth-links', [
                 'nopw_text' => '',
                 'nopw_href' => '',
                 'nopw_label' => '',
@@ -1097,7 +1103,8 @@ function edithome(): void {
                 'buttons_html' => $obtn,
             ]);
         }
-        echo $tpl->getHtmlFrag('title', ['title' => _CHANGE, 'is_level_one' => true]).getUserNav().$cont.getNaviTabs(0, 'tab', $tabs, $texts);
+        echo $tpl->getHtmlFrag('title', ['title' => _CHANGE, 'is_level_one' => true]).getUserNav().$cont.$change
+            .$tpl->getHtmlFrag('title', ['title' => _PASSSETUP, 'is_level_two' => true]).$psetup.$osetup;
         setFoot();
     } else {
         account();
@@ -1110,9 +1117,12 @@ function savehome(): void {
     $mail = getVar('post', 'mail', 'text');
     $sig = getVar('post', 'sig', 'text');
     $block = getVar('post', 'block', 'text');
+    $prev = count((array)$stop);
     checkemail($mail);
-    if ($room = checkEditorTextRoom($sig, 'users.sig')) $stop[] = $room;
-    if ($room = checkEditorTextRoom($block, 'users.block')) $stop[] = $room;
+    $last = count((array)$stop);
+    for ($i = $prev; $i < $last; $i++) $stop[$i] = ['text' => (string)$stop[$i], 'sect' => 'personal'];
+    if ($room = checkEditorTextRoom($sig, 'users.sig')) $stop[] = ['text' => $room, 'sect' => 'personal'];
+    if ($room = checkEditorTextRoom($block, 'users.block')) $stop[] = ['text' => $room, 'sect' => 'privacy'];
     if (!$stop) {
         $uid = (int)$user[0];
         $checkn = htmlspecialchars(substr($user[1], 0, 25));
@@ -1135,8 +1145,43 @@ function savehome(): void {
             $gender = getVar('post', 'gender', 'num');
             $field = getVar('post', 'field', 'field');
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET email = :email, website = :website, viewmail = :viewmail, occ = :occ, origin = :origin, interest = :interest, sig = :sig, storynum = :storynum, blockon = :blockon, block = :block, theme = :theme, newslet = :newslet, fsmail = :fsmail, psmail = :psmail, birthday = :birthday, gender = :gender, field = :field WHERE id = :id', ['email' => $mail, 'website' => $site, 'viewmail' => $view, 'occ' => $occ, 'origin' => $from, 'interest' => $inter, 'sig' => $sig, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme, 'newslet' => $news, 'fsmail' => $fsmail, 'psmail' => $psmail, 'birthday' => $birth, 'gender' => $gender, 'field' => $field, 'id' => $uid]);
+            $avat = getVar('post', 'avatar', 'text');
+            $errn = (int)($_FILES['userfile']['error'] ?? UPLOAD_ERR_NO_FILE);
+            $newa = '';
+            $path = '';
+            if ($avat) {
+                $avat = basename($avat);
+                $newa = (preg_match("#\.(gif|png|jpe?g|svg)$#is", $avat) && file_exists('templates/'.getTheme().'/images/avatars/presets/'.$avat)) ? 'presets/'.$avat : '';
+                if (!$newa) $stop[] = ['text' => _ERROR_FILE, 'sect' => 'avatar'];
+            } elseif ($errn !== UPLOAD_ERR_NO_FILE && $conf['users']['aupload']) {
+                $adir = trim(str_replace('\\', '/', $conf['users']['adirectory']), '/');
+                $adir = str_starts_with($adir, 'uploads/') ? substr($adir, 8) : (($adir === 'uploads') ? '' : $adir);
+                $rule = [
+                    'extensions' => $conf['users']['atypefile'],
+                    'maxbytes' => (int)$conf['users']['amaxsize'],
+                    'maxwidth' => (int)$conf['users']['awidth'],
+                    'maxheight' => (int)$conf['users']['aheight'],
+                    'maxfiles' => 1,
+                    'maxquota' => 0,
+                ];
+                $res = getUploadService()->addUploadedFile($_FILES['userfile'], $rule, $adir, $conf['name'], $uid);
+                $newa = ($res['ok']) ? (string)$res['file'] : '';
+                $path = ($res['ok']) ? (string)$res['path'] : '';
+                if (!$res['ok']) $stop[] = ['text' => getUploadFailText((string)$res['error'], $rule), 'sect' => 'avatar'];
+            }
+            if ($newa !== '' && !$db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET avatar = :avatar WHERE id = :id', ['avatar' => filterText($newa), 'id' => $uid])) {
+                $stop[] = ['text' => _ERROR, 'sect' => 'avatar'];
+                if ($path !== '' && !getUploadService()->deleteStoredFile($path)) {
+                    $stop[] = ['text' => _ERROR_UP, 'sect' => 'avatar'];
+                    Logger::addFile('error', 'Avatar upload could not be removed after a failed profile write', ['path' => $path]);
+                }
+            }
             $theme = $theme ?: ($conf['theme'] ?? '');
             setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $name, $pass, $story, $blockon, $theme]);
+            if ($stop) {
+                edithome();
+                return;
+            }
             setRedirect('index.php?name='.$conf['name'].'&op=edithome');
         }
     } else {
@@ -1144,78 +1189,33 @@ function savehome(): void {
     }
 }
 
-function saveavatar(): void {
-    global $user, $db, $conf, $stop;
-    if (!is_user()) {
-        edithome();
-        return;
-    }
-    if (strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'POST' || !checkSiteToken(getVar('post', 'token', 'raw', ''), 'account')) {
-        $stop[] = _ERROR;
-        edithome();
-        return;
-    }
-    $uid = (int)$user[0];
-    $avatar = getVar('post', 'avatar', 'text');
-    $path = '';
-    if ($avatar) {
-        $avatar = basename($avatar);
-        $avatar = (preg_match("#\.(gif|png|jpe?g|svg)$#is", $avatar) && file_exists('templates/'.getTheme().'/images/avatars/presets/'.$avatar)) ? 'presets/'.$avatar : '';
-        if (!$avatar) $stop[] = _ERROR_FILE;
-    } elseif ($conf['users']['aupload']) {
-        $adir = trim(str_replace('\\', '/', $conf['users']['adirectory']), '/');
-        $adir = str_starts_with($adir, 'uploads/') ? substr($adir, 8) : (($adir === 'uploads') ? '' : $adir);
-        $rule = [
-            'extensions' => $conf['users']['atypefile'],
-            'maxbytes' => (int)$conf['users']['amaxsize'],
-            'maxwidth' => (int)$conf['users']['awidth'],
-            'maxheight' => (int)$conf['users']['aheight'],
-            'maxfiles' => 1,
-            'maxquota' => 0,
-        ];
-        $res = getUploadService()->addUploadedFile($_FILES['userfile'] ?? [], $rule, $adir, $conf['name'], $uid);
-        $avatar = ($res['ok']) ? (string)$res['file'] : '';
-        $path = ($res['ok']) ? (string)$res['path'] : '';
-        if (!$res['ok']) $stop[] = getUploadFailText((string)$res['error'], $rule);
-    }
-    if ($stop || !$avatar) {
-        edithome();
-        return;
-    }
-    if (!$db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET avatar = :avatar WHERE id = :id', ['avatar' => filterText($avatar), 'id' => $uid])) {
-        $stop[] = _ERROR;
-        if ($path !== '' && !getUploadService()->deleteStoredFile($path)) {
-            $stop[] = _ERROR_UP;
-            Logger::addFile('error', 'Avatar upload could not be removed after a failed profile write', ['path' => $path]);
-        }
-        edithome();
-        return;
-    }
-    setRedirect('index.php?name='.$conf['name'].'&op=edithome');
-}
-
 function savepass(): void {
     global $user, $db, $conf, $stop, $tpl, $mailer;
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'account')) $stop[] = _ERROR;
     $newpass = getVar('post', 'newpass', 'text', false);
-    $newpass2 = getVar('post', 'newpass2', 'text', false);
+    $repeat = getVar('post', 'newpass2', 'text', false);
     $oldpass = getVar('post', 'oldpass', 'text', false);
-    if (is_user() && $oldpass && $newpass && $newpass2) {
+    if (!$stop && is_user() && $oldpass && $newpass && $repeat) {
         if (strlen($newpass) >= $conf['users']['minpass']) {
             $uid = (int)$user[0];
-            [$pass] = $db->getSqlRow($db->getSqlQuery('SELECT password FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $uid]));
+            [$nick, $mail, $pass, $story, $blockon, $theme] = $db->getSqlRow($db->getSqlQuery(
+                'SELECT name, email, password, storynum, blockon, theme FROM '.PREFIX_DB.'_users WHERE id = :id',
+                ['id' => $uid]
+            ));
             if (!empty($pass) && checkPassHash($oldpass, $pass)) {
-                if ($newpass == $newpass2) {
-                    $userinfo = getUserInfo();
-                    $mail = $userinfo['email'];
-                    $nick = $userinfo['name'];
+                if ($newpass == $repeat) {
+                    $hash = getPassHash($newpass);
+                    if (!$db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET password = :password WHERE id = :id', ['password' => $hash, 'id' => $uid])) {
+                        $stop[] = _ERROR;
+                        edithome();
+                        return;
+                    }
                     $link = $tpl->getHtmlFrag('link', ['href' => $conf['homeurl'].'/index.php?name='.$conf['name'], 'title' => $conf['homeurl'].'/index.php?name='.$conf['name'], 'label_html' => $conf['homeurl'].'/index.php?name='.$conf['name']]);
                     $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$nick;
-                    $message = str_replace('[text]', sprintf(_PASSESEND, $nick, $conf['sitename'], $nick, $newpass, $link), $conf['mtemp']);
+                    $message = str_replace('[text]', sprintf(_PASSESEND, $nick, $conf['sitename'], $nick, $link), $conf['mtemp']);
                     $mailer->addQueue(['kind' => 'account', 'email' => $mail, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 3]);
-                    $newpass = getPassHash($newpass);
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET password = :password WHERE id = :id', ['password' => $newpass, 'id' => $uid]);
-                    setRedirect('index.php?name='.$conf['name']);
+                    setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $nick, $hash, $story, $blockon, $theme ?: ($conf['theme'] ?? '')]);
+                    setRedirect('index.php?name='.$conf['name'].'&op=edithome', false, 302, _SUCCSAVE);
                 } else {
                     $stop[] = _ERROR_PASS;
                     edithome();
@@ -1580,7 +1580,6 @@ switch ($op) {
     case 'passlost': passlost(); break;
     case 'passmail': passmail(); break;
     case 'activate': activate(); break;
-    case 'saveavatar': saveavatar(); break;
     case 'savepass': savepass(); break;
     case 'oauth_init': oauthinit(); break;
     case 'oauth': oauthback(); break;

@@ -77,6 +77,7 @@
       "steps": [{ "do": "focus", "sel": ".sl-block-login input[name=\"user_name\"]", "shot": "field-focus" }]
     },
     { "name": "profile", "url": "/index.php?name=account&op=profile", "auth": "site" },
+    { "name": "settings", "url": "/index.php?name=account&op=edithome", "auth": "site" },
     { "name": "private", "url": "/index.php?name=account&op=privat", "auth": "site" },
     { "name": "oauth-finish", "url": "/index.php?name=account&op=oauth_finish", "probe": "oauth" },
     { "name": "admin-home", "url": "/admin.php", "auth": "admin", "theme": "admin" },

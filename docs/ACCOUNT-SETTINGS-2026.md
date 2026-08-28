@@ -227,7 +227,13 @@ outcome.
 password branch must read `storynum`, `blockon` and `theme` for the current user
 before writing, not pass a short array.
 
-## Three findings fixed on the way
+## Four findings fixed on the way
+
+**The CSRF check in `savepass()` gates nothing.** `checkSiteToken()` writes
+`_ERROR` into `$stop` and the function then never reads `$stop` — unlike
+`savehome()`, which opens its whole body with `if (!$stop)`. A forged token
+therefore changed the password. Found while rewriting the function in batch 0 and
+closed there by gating the same way `savehome()` does.
 
 **The new password is mailed in clear text.** `savepass()` interpolates the
 plaintext password into `_PASSESEND` through `sprintf()` before hashing it, as
@@ -372,8 +378,8 @@ Filled in as the work goes. `—` means not started.
 
 | # | Batch | State | Note |
 |---|---|---|---|
-| 0 | Password: fields, order, mail, session, rig route | — | |
-| 1 | One form, one handler, tabs gone | — | |
+| 0 | Password: fields, order, mail, session, rig route | done | `settings` is in `tools/ui-shots.json`, the pair is green because everything this batch touches sits behind a tab the rig does not open — batch 1 removes the tabs and the pair starts covering it. Four findings closed, the fourth being the dead CSRF gate. Mask checked and deliberately left alone: the page does print the IP and the registration date, both through `.sl-value-text`, so neither `.sl-col-ip` nor `time` covers them — but both are constant between runs and `tools/ui-baseline/` is gitignored, so nothing flaps and nothing is published. Batch 6 changes that: `lastvis` is refreshed on every request and its tile will need a mask entry. |
+| 1 | One form, one handler, tabs gone | done | Three sibling forms confirmed in the rendered DOM: `form form` counts zero, the page carries `savehome`, `savepass` and the unlink buttons side by side, and three tokens instead of 128. The gallery is one radio group of 127 options named `avatar`, every image `loading="lazy"`; `getTplRadioGroup()` gained a `label_html` pass-through, which `fragments/radio.html` already supported. **No preset is pre-checked** — deliberately: the plan's "the preset wins over a file" rule only holds while a preset reaches the POST by a click, and reflecting the stored avatar would have made every upload by a preset-using member lose silently. Batch 2 must not add a `checked` there without changing that rule. Batch 1 introduced **no CSS class**, so the 127 thumbnails are sized by `width`/`height` attributes carried through `img_attr` — an interim the tile CSS of batch 2 replaces. `$stop` entries now carry `sect` (`personal`, `privacy`, `avatar`); `checkemail()` still pushes bare strings, so its messages are re-tagged by index right after the call, and `edithome()` normalises both shapes before the alert. `saveavatar()` and its route are gone — `tests/Unit/UploadIntegrationTest` pinned that name as the module's upload adapter and now names `savehome`. The `f-userfile` orphan `for` closed by itself: `ui:label` reports it below the baseline. **A trap every later batch inherits:** the first live save of this form changed how `_users.block` renders — the member's custom menu collapsed from seventeen lines to six paragraphs, about 245px, and because that block sits in the sidebar of every page the pair then reported `profile`, `private` and `forum-topic` as changed by a batch that never touched them. The line-per-item layout was restored by writing markdown hard breaks — two trailing spaces — into `_users.block` and `_users.sig`. **The mechanism was not pinned down and the first guess was wrong:** the editor does not strip those spaces, measured over three saves with and without waiting for the mount, which leave the value byte-identical apart from a one-off trim of trailing whitespace at the very end of the field. The restored value is stable; what the very first save did to the original bytes could not be reproduced once those bytes were gone. A residual ~3px per paragraph gap survives — the original spaced its groups by exactly two line heights, so it rendered through `<br>` and not through `<p>`, and the reconstruction does not. Before trusting a pair, capture the sidebar-carrying routes twice with no edit at all: on this stand `profile` never settles byte-for-byte anyway. |
 | 2 | Six sections and tiles | — | |
 | 3 | Rail and spy | — | |
 | 4 | Lamps and meter | — | |
@@ -770,6 +776,13 @@ explainable.
   `fragments/select.html` emits a class that exists in neither `base.css` nor
   `theme.css` of either theme. Either the rule is missing or the flag is — and
   deciding that needs to know what it was for, which nobody remembers.
+- **A failed write puts its parameters into `error_sql.log`.** `filterSqlQuery()`
+  in `core/classes/pdo.php` rebuilds the statement with the values inlined, so
+  the password UPDATE that batch 0 was made to survive logs the bcrypt hash when
+  it fails. It also substitutes positionally into every `?` it finds, including
+  the ones inside a body text, so a logged INSERT of a mail row is not the
+  statement that ran. Both are log fidelity, both live outside this module, and
+  neither is this work.
 - **`checkemail()` writes into the global `$stop` and also returns it.** Two
   contracts for one function. Not this work.
 

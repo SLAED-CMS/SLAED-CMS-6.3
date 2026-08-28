@@ -58,7 +58,7 @@ define('_OAUTHOFF','Konto zewnętrzne zostało odłączone od Twojego profilu!')
 define('_OAUTHTAB','Usługi zewnętrzne');
 define('_OAUTHTITLE','Kończenie logowania');
 define('_PASSCSEND','Dla użytkownika %1$s zarejestrowana na witrynie «%2$s» został wykonany żądanie przywrócenia hasła. Do tych celów wysyłamy potwierdzający kod, który należy wpisać, w podanej poniżej.<br><br>Kod: %3$s<br>Link: %4$s');
-define('_PASSESEND','Dla użytkownika %1$s zarejestrowana na witrynie «%2$s» została pomyślnie przeprowadzona zmiana hasła.<br><br>Twój login: %3$s<br>Twoje nowe hasło: %4$s<br>Link wejścia: %5$s');
+define('_PASSESEND','Dla użytkownika %1$s zarejestrowana na witrynie «%2$s» została pomyślnie przeprowadzona zmiana hasła.<br><br>Twój login: %3$s<br>Link wejścia: %4$s');
 define('_PASSFSEND','Ty lub ktoś inny za pomocą E-Mail: %1$s założył konto na witrynie «%2$s».<br><br>w Celu zakończenia rejestracji na naszej stronie internetowej, należy aktywować konto należy postępować w poniższy link. W razie potrzeby należy skopiować link z paska adresu przeglądarki ręcznie. Aby to zrobić należy w ciągu 24 godzin od momentu złożenia wniosku, w przeciwnym razie, musisz powtórzyć procedurę rejestracji.<br><br>Link aktywacji: %3$s<br><br>Twój login: %4$s<br>hasło: %5$s');
 define('_PASSLOSC','Wpisz swój adres E-Mail, którego użyłeś przy rejestracji i kliknij na przycisk «Wyślij».');
 define('_PASSLOSP','Na Twój E-Mail został wysłany kod, który należy wpisać do pola «kod Potwierdzający». Następnie kliknij na przycisk «Wyślij hasło», nowe hasło zostanie przesłane na podany przy rejestracji adres E-Mail.');
@@ -67,7 +67,7 @@ define('_PASSNEW2','Powtórz nowe hasło');
 define('_PASSOLD','Wprowadź bieżące hasło');
 define('_PASSSEND','Dla użytkownika %1$s zarejestrowana na witrynie «%2$s» został pomyślnie potwierdzone żądanie odzyskiwania hasła.<br><br>Twój login: %3$s<br>Twoje nowe hasło: %4$s<br>Link wejścia: 5%$s');
 define('_PASSSETUP','Zmiana hasła');
-define('_PASSTEXT','Po udanej zmiany hasła, system uaktualnić swój sesja i trzeba będzie zalogować się ponownie. Jeśli nic nie działa, skontaktuj się z administratorem w celu rozwiązania tego problemu.');
+define('_PASSTEXT','Po udanej zmianie nowe hasło działa od razu, a Twoja sesja pozostaje otwarta i nie trzeba logować się ponownie. Jeśli nic nie działa, skontaktuj się z administratorem w celu rozwiązania tego problemu.');
 define('_PASSWORDLOST','Odzyskiwanie hasła');
 define('_PSMAIL','Otrzymywać powiadomienia o nowych prywatnych wiadomościach?');
 define('_REGNEWUSER','Rejestracja nowego użytkownika');
