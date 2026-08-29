@@ -24,9 +24,19 @@ config key. A name survives drift; a number does not.
 
 Three plans run back to back:
 
-1. `docs/FORM-FIELDS-2026.md` — the form row standard and its accessibility;
-2. `docs/ACCOUNT-SETTINGS-2026.md` — the account settings page redesign;
+1. the form row standard and its accessibility;
+2. the account settings page redesign;
 3. **this one**.
+
+The first two are **finished, committed and deleted** — each plan document dies
+with its own last batch. Do not go looking for them: what outlived plan 1 is the **Form Row Contract** of `docs/TEMPLATES.md` and `getFieldIds()` in `core/helpers.php`; what outlived plan 2 is the
+**Settings Page Contract** section of `docs/TEMPLATES.md`, which carries the
+`sections`/`tiles` structure, who owns tile width, why the password sits outside
+the shared form and the three `data-sl-*` behaviours. Two live defects it left
+open are recorded where their subject lives: the editor dropping every `<br>` on
+save in `docs/EDITORS.md`, and a validation stop discarding the typed input
+beside that contract. The section below says what plan 2 hands to this one; it is
+a summary written while that document still existed and it is now the only copy.
 
 ### Git
 
