@@ -122,6 +122,15 @@ echo Editor::getCode([
 ]);
 ```
 
+## Open Defect: the editor drops every `<br>` on save
+
+**Live, unfixed, and it loses member data.** A value that reaches a driver carrying `<br>` comes back without them. Measured across one save of `_users.block`: 1475 bytes fell to 1387, which is exactly 22 tags of four bytes; `_users.sig` fell 213 to 201, exactly 3. Nothing else in either value changed.
+
+The reach is wider than one field. The account settings page rewrites `sig` and `block` on every save of its shared form, so **every member who opens settings and saves anything at all loses every line break in their signature and their custom menu** — a member editing their e-mail address pays for it with their sidebar menu. Both columns sit in a block shown on every page, so the damage is visible site-wide the moment it happens.
+
+Two wrong guesses are already recorded so the next reader does not spend them again. It is **not** a trim of trailing whitespace: three saves with and without waiting for the mount leave the value byte-identical apart from a one-off trim at the very end of the field. It is **not** lost markdown hard breaks: an earlier repair wrote two trailing spaces in their place and produced a residual gap it could not explain, because the original carried no hard break at all — it carried `<br>`.
+
+The byte arithmetic points at the driver rather than at the parser or the handler, but which of the four `ContentDriver` implementations eats them, and whether it happens on mount or on submit, is not pinned down. Pin it before writing a repair: the last two attempts each fixed a symptom and left the mechanism alone.
 ## Content Heading Rule
 
 The module title field owns the page `H1`. Inside an article body, authors start with a first-level Markdown section (`# Section`); the rendering call uses heading offset `1`, so it becomes `H2` on the public detail page. Card, comment, block, and forum contexts apply their own deeper offsets. Do not copy the page title into the body and do not use headings only to change font size.
