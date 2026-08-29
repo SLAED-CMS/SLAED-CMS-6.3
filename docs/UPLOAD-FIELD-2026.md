@@ -744,6 +744,10 @@ guest never reaches this: `guestupload` and `guestfiles` are zero.
 The owner argument moves to `getEditorFileOwner($rul['mod'])` here too; for a
 member it is the same value that is written today, so nothing shifts.
 
+**`tools/upload-route-check.php` still walks the route plan 2 deleted, and it must be corrected in this batch.** Found by plan 2's own closing search, which is why it is written here rather than lost with that document. Nine call sites name `op=saveavatar`, and the damage runs both ways. `setUserSession()` proves a login by looking for the string `saveavatar` in the settings page, so it now returns false and the whole user half of the matrix never starts. The row `the preset grid renders no saveavatar link` is now true for the wrong reason and can never fail again. Three guard rows — a preset without a token, a guest preset, an inadmissible avatar — pass because the request reaches no handler at all rather than because a guard turned it away, which is the worst kind of green. Two rows that assert a write, `a preset click stores the preset path` and `an avatar upload stores the filename only`, now fail on a stand where the feature works.
+
+Nothing in `ui:gates`, `phpunit` or `tools/hooks/pre-commit` runs this tool — it is a manual walker taken against a stand with a base URL — so no gate reported any of it and none will. Migrating it means more than renaming the `op`: a preset now travels inside the profile POST, so every scenario has to carry the fields `savehome()` requires, and the arbitration table above is what the rows must assert against.
+
 **Verification.** Live: upload an avatar; take one from your own past uploads;
 pick a gallery preset; pick a preset **and** a file in one submit — the preset
 must win; refusal by dimensions (over 100 × 100); refusal by weight (over 50 KB);

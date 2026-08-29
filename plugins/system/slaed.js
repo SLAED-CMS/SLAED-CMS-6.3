@@ -1138,6 +1138,125 @@
         for (var i = 0; i < views.length; i++) initProfileScroll(views[i]);
     }
 
+    // The rail of the settings page marks where the reader stands: a section counts as the one being read when its top
+    // has passed the fold but its body still fills the screen, which is the band the eye is actually in
+    function setSectionSpy(node) {
+        var root = node && node.querySelectorAll ? node : document;
+        var list = root.querySelectorAll('[data-sl-spy]');
+        for (var i = 0; i < list.length; i++) setSpyRail(list[i]);
+    }
+
+    // One rail: the marks name their sections by id, and a rail whose sections are not all on the page is left alone.
+    // The band alone cannot reach the last section - a short one at the foot of the page never rises into it - so the
+    // bottom of the document is read as the last mark, which is where the reader plainly is
+    function setSpyRail(rail) {
+        if (rail.getAttribute('data-sl-spy-ready') === '1' || !window.IntersectionObserver) return;
+        var marks = rail.querySelectorAll('[data-sl-spy-mark]');
+        var secs = [];
+        for (var i = 0; i < marks.length; i++) {
+            var sect = document.getElementById(marks[i].getAttribute('data-sl-spy-mark'));
+            if (!sect) return;
+            secs.push(sect);
+        }
+        if (!secs.length) return;
+        rail.setAttribute('data-sl-spy-ready', '1');
+        var at = 0;
+        var draw = function () {
+            for (var j = 0; j < marks.length; j++) {
+                marks[j].setAttribute('aria-current', j === at ? 'true' : 'false');
+                marks[j].setAttribute('data-sl-spy-done', j < at ? '1' : '0');
+            }
+        };
+        var watch = new IntersectionObserver(function (rows) {
+            for (var k = 0; k < rows.length; k++) {
+                if (!rows[k].isIntersecting) continue;
+                at = secs.indexOf(rows[k].target);
+                draw();
+            }
+        }, { rootMargin: '-20% 0px -70% 0px' });
+        for (var n = 0; n < secs.length; n++) watch.observe(secs[n]);
+        window.addEventListener('scroll', function () {
+            if (at === marks.length - 1 || window.innerHeight + window.scrollY < document.documentElement.scrollHeight - 2) return;
+            at = marks.length - 1;
+            draw();
+        }, { passive: true });
+        rail.addEventListener('click', function (event) {
+            var mark = event.target && event.target.closest ? event.target.closest('[data-sl-spy-mark]') : null;
+            if (!mark) return;
+            event.preventDefault();
+            var sect = document.getElementById(mark.getAttribute('data-sl-spy-mark'));
+            if (sect) sect.scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+        });
+        draw();
+    }
+
+    // How far the profile is filled, over the fields the server marked as counting. It draws the same rule the server drew,
+    // so the figure the page arrives with and the one after the first keystroke are the same figure and cannot drift apart
+    // Each field carries the value that counts as empty for it, which is how a select whose zero is a real option is counted
+    function setFillMeters() {
+        var meters = document.querySelectorAll('[data-sl-meter]');
+        var fields = document.querySelectorAll('[data-sl-meter-fill]');
+        if (!meters.length || !fields.length) return;
+        var draw = function () {
+            var full = 0;
+            for (var i = 0; i < fields.length; i++) {
+                var valu = (fields[i].value || '').trim();
+                if (valu !== '' && valu !== fields[i].getAttribute('data-sl-meter-fill')) full++;
+            }
+            var rate = Math.round(full / fields.length * 100);
+            for (var j = 0; j < meters.length; j++) {
+                var item = meters[j];
+                item.style.setProperty('--sl-d-meter', String(rate));
+                if (item.classList.contains('sl-knob')) item.classList.toggle('sl-knob-full', rate >= 100);
+                var num = item.querySelector('[data-sl-meter-num]');
+                if (num) num.textContent = rate + '%';
+                var rest = item.querySelector('[data-sl-meter-left]');
+                if (rest) rest.textContent = String(fields.length - full);
+            }
+        };
+        document.addEventListener('input', draw);
+        document.addEventListener('change', draw);
+        draw();
+    }
+
+    // The save bar of the shared form: nothing is offered until something has actually been touched, and the touch is
+    // any input or change that reaches the form - which is every control it holds, the editors included, because a
+    // contenteditable emits the same event the plain field does
+    // The hidden state is armed here and never in the markup: a page whose script did not run keeps a bar that is
+    // simply always there, instead of a form whose only button can no longer be made to appear
+    function setDirtyForms(node) {
+        var root = node && node.querySelectorAll ? node : document;
+        var list = root.querySelectorAll('[data-sl-dirty=""]');
+        for (var i = 0; i < list.length; i++) setDirtyScope(list[i]);
+    }
+
+    function setDirtyScope(scope) {
+        scope.setAttribute('data-sl-dirty', '0');
+        var wake = function () { scope.setAttribute('data-sl-dirty', '1'); };
+        scope.addEventListener('input', wake);
+        scope.addEventListener('change', wake);
+        scope.addEventListener('click', function (event) {
+            var back = event.target && event.target.closest ? event.target.closest('[data-sl-clean]') : null;
+            if (!back) return;
+            event.preventDefault();
+            if (typeof scope.reset === 'function') scope.reset();
+            setEditorsBack(scope);
+            scope.setAttribute('data-sl-dirty', '0');
+        });
+    }
+
+    // Resetting a form puts the default back into every textarea, but an editor draws what it shows from its own
+    // instance and would keep the typed text - and write it back over the restored value on its next change
+    function setEditorsBack(scope) {
+        var api = window.SlaedToastUi;
+        if (!api || typeof api.getEditor !== 'function') return;
+        var list = scope.querySelectorAll('textarea[id]');
+        for (var i = 0; i < list.length; i++) {
+            var edit = api.getEditor(list[i].id);
+            if (edit && typeof edit.setMarkdown === 'function') edit.setMarkdown(list[i].value);
+        }
+    }
+
     function setAlerts(node) {
         var root = node && node.querySelectorAll ? node : document;
         var list = root.querySelectorAll('[data-sl-autohide]');
@@ -1901,6 +2020,9 @@
         setUiActions();
         setLiveChips(document);
         setProfileScrolls(document);
+        setSectionSpy(document);
+        setFillMeters();
+        setDirtyForms(document);
         setCommentKeys(document);
         setPrivatCarry(document);
         setWindowBack();

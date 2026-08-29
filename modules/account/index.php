@@ -820,185 +820,211 @@ function logout(): void {
     setRedirect('index.php', true);
 }
 
+# Build one yes/no line of the settings page: the caption names the group, and the group is two radios sharing one name
+# Anything that is not the stored zero is a yes, which is the reading every one of these switches had before they met here
+function getSetupSwitch(string $capt, string $name, string $valu): array {
+    $ids = getFieldIds('', $name);
+    return [
+        'label' => $capt,
+        'label_id' => $ids['label'],
+        'control_html' => getTplRadioGroup([
+            'labelledby' => $ids['label'],
+            'name' => $name,
+            'value' => ($valu === '0') ? '0' : '1',
+            'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
+        ]),
+    ];
+}
+
+# The one declaration of what a filled profile is: the counted controls of the settings form against the columns behind them, each with the value that counts as empty
+# The birthday is out because the date helper writes today into an empty field, and the signature is out because the editor owns its textarea and no attribute reaches it
+function getProfileFillRate(array $info): array {
+    $list = ['gender' => ['gender', '0'], 'mail' => ['email', ''], 'site' => ['website', ''], 'occ' => ['occ', ''], 'from' => ['origin', ''], 'inter' => ['interest', '']];
+    $full = 0;
+    $zero = [];
+    foreach ($list as $name => $pair) {
+        $valu = trim((string)($info[$pair[0]] ?? ''));
+        if ($valu !== '' && $valu !== $pair[1]) $full++;
+        $zero[$name] = $pair[1];
+    }
+    $tot = count($list);
+    return ['rate' => (int)round($full / $tot * 100), 'left' => $tot - $full, 'zero' => $zero];
+}
+
+# The state of the account before anything on the page changes it: what protects it, who sees the address, how many notices are on and how far the profile is filled
+function getAccountLamps(array $info, array $lnks, array $fill): array {
+    global $conf;
+    $haspw = !str_starts_with((string)($info['password'] ?? ''), '!');
+    $ways = ($haspw) ? [_PASSWORD] : [];
+    foreach ($lnks as $lnk) $ways[] = ucfirst((string)$lnk['provider']);
+    $seen = (string)($info['viewmail'] ?? '') !== '0';
+    $subs = [!empty($info['newslet'])];
+    if (is_active('forum')) $subs[] = !empty($info['fsmail']);
+    if (!empty($conf['privat']['act'])) $subs[] = !empty($info['psmail']);
+    $ons = count(array_filter($subs));
+    $all = count($subs);
+    return [
+        ['tone' => ($haspw) ? 'ok' : 'warn', 'label' => _SECURITY, 'value' => ($haspw) ? _ACCOUNT_SAFE : _ACCOUNT_NOPASS, 'note' => implode(', ', $ways)],
+        ['tone' => ($seen) ? 'info' : 'ok', 'label' => _EMAIL, 'value' => ($seen) ? _ACCOUNT_SHOWN : _ACCOUNT_HIDDEN, 'note' => ($seen) ? _ACCOUNT_MAILSHOW : _ACCOUNT_MAILHIDE],
+        ['tone' => ($ons === $all) ? 'ok' : 'info', 'label' => _ACCOUNT_MAIL, 'value' => $ons.' / '.$all, 'note' => ($ons === $all) ? _ACCOUNT_MAILALL : _ACCOUNT_MAILOFF],
+        ['tone' => 'info', 'label' => _ACCOUNT_FILLED, 'value' => $fill['rate'].'%', 'note' => _ACCOUNT_LEFT, 'left' => $fill['left'], 'is_meter' => true],
+    ];
+}
+
+# The account's own timeline from the columns that already carry a time: registration and last activity from the member row, the linking moment and the last sign-in from each link
+# A sign-in that is not later than the linking is the linking itself and never a second event, so it is left out rather than printed twice
+function getAccountLog(array $info, array $lnks): array {
+    $make = fn(int $time, string $text): array => ['text' => $text, 'time' => $time, 'stamp' => date('c', $time), 'date' => format_time(date('Y-m-d H:i:s', $time), _TIMESTRING)];
+    $rows = [];
+    $regs = (int)strtotime((string)($info['regdate'] ?? ''));
+    if ($regs) $rows[] = $make($regs, _REG);
+    $seen = (int)strtotime((string)($info['lastvis'] ?? ''));
+    if ($seen) $rows[] = $make($seen, _LAST_VISIT);
+    foreach ($lnks as $lnk) {
+        $name = ucfirst((string)$lnk['provider']);
+        $link = (int)($lnk['linked'] ?? 0);
+        $back = (int)($lnk['lastlog'] ?? 0);
+        if ($link) $rows[] = $make($link, sprintf(_ACCOUNT_LINKED, $name));
+        if ($back > $link) $rows[] = $make($back, sprintf(_ACCOUNT_SIGNIN, $name));
+    }
+    usort($rows, fn(array $one, array $two): int => $two['time'] <=> $one['time']);
+    return $rows;
+}
+
 function edithome(): void {
-    global $db, $user, $conf, $stop, $tpl;
+    global $conf, $stop, $tpl;
     if (is_user()) {
         setHead([
             'title' => _CHANGE,
         ]);
-        $userinfo = getUserInfo();
-        $birthday = trim((string)($userinfo['birthday'] ?? ''));
-        if ($birthday !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $birthday)) {
-            $birthday = '';
+        $info = getUserInfo();
+        $bday = trim((string)($info['birthday'] ?? ''));
+        if ($bday !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $bday)) $bday = '';
+        $info['theme'] = (!$info['theme']) ? $conf['theme'] : $info['theme'];
+        $fill = getProfileFillRate($info);
+        $lnks = Oauth::getLinks((int)($info['id'] ?? 0));
+        $mark = fn(string $key): string => 'data-sl-meter-fill="'.($fill['zero'][$key] ?? '').'"';
+        $errs = [];
+        $tops = [];
+        foreach ((array)$stop as $item) {
+            $text = is_array($item) ? (string)($item['text'] ?? '') : (string)$item;
+            $sect = is_array($item) ? (string)($item['sect'] ?? '') : '';
+            if ($sect === '') $tops[] = $text;
+            else $errs[$sect][] = $text;
         }
-        $userinfo['theme'] = (!$userinfo['theme']) ? $conf['theme'] : $userinfo['theme'];
-        $msgs = [];
-        foreach ((array)$stop as $item) $msgs[] = is_array($item) ? (string)($item['text'] ?? '') : (string)$item;
-        $cont = ($msgs) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => $msgs]) : '';
-        $story = '';
-        if ($conf['users']['news'] == 1) {
-            $xusnum = 3;
-            while ($xusnum <= 20) {
-                $story .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$xusnum, 'label_text' => (string)$xusnum, 'is_selected' => $xusnum == $userinfo['storynum']]);
-                $xusnum++;
-            }
-        }
-        $theme = '';
-        $tcount = 0;
-        if ($conf['users']['theme']) {
-            $list = scandir(BASE_DIR.'/templates');
-            foreach ($list ?: [] as $file) {
-                if ($file === '.' || $file === '..' || $file === 'admin') continue;
-                if (!is_dir(BASE_DIR.'/templates/'.$file) || !checkThemeAssets($file)) continue;
-                $theme .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$file, 'label_text' => (string)$file, 'is_selected' => $file == $userinfo['theme']]);
-                $tcount++;
-            }
-        }
-        $genderOptions = '';
+        $secs = [];
+        $flds = [['label' => _BIRTHDAY, 'control_html' => getTplAddDateTime(['name' => 'user_birthday', 'time' => $bday, 'with' => false, 'max' => 10])]];
+        $gopt = '';
         foreach ([_NO_INFO, _MAN, _WOMAN] as $key => $val) {
-            $genderOptions .= $tpl->getHtmlFrag('select-option', [
-                'value_attr' => (string)$key,
-                'label_text' => $val,
-                'is_selected' => $key == (int)$userinfo['gender'],
-            ]);
+            $gopt .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$key, 'label_text' => $val, 'is_selected' => $key == (int)$info['gender']]);
         }
-        $fields = $tpl->getHtmlFrag('field-value', ['label' => _IP, 'value_text' => $userinfo['ip']])
-            .$tpl->getHtmlFrag('field-value', ['label' => _REG, 'value_text' => format_time($userinfo['regdate'])]);
-        if (!empty($conf['users']['point'])) {
-            $fields .= $tpl->getHtmlFrag('field-value', ['label' => _POINTS, 'value_text' => $userinfo['points']]);
-        }
-        $fields .= $tpl->getHtmlFrag('field-value', ['label' => _YOURNAME, 'value_text' => $userinfo['name']])
-            .$tpl->getHtmlFrag('form-field-row', ['label' => _BIRTHDAY, 'field_html' => getTplAddDateTime(['name' => 'user_birthday', 'time' => $birthday, 'with' => false, 'max' => 10])])
-            .$tpl->getHtmlFrag('form-field-row', ['label_for' => 'f-gender', 'label' => _GENDER, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'gender', 'input_id' => 'f-gender', 'is_account' => true, 'options_html' => $genderOptions])])
-            .$tpl->getHtmlFrag('form-field-row', [
-                'label_for' => 'f-mail',
-                'label' => _YOUREMAIL,
-                'field_html' => $tpl->getHtmlFrag('input', [
-                    'name_attr' => 'mail',
-                    'input_id' => 'f-mail',
-                    'value_attr' => $userinfo['email'],
-                    'maxlength_num' => 60,
-                    'placeholder_text' => _YOUREMAIL,
-                    'is_required' => true,
-                ]),
-            ])
-            .$tpl->getHtmlFrag('form-field-row', [
-                'label_for' => 'f-site',
-                'label' => _SITEURL,
-                'field_html' => $tpl->getHtmlFrag('input', [
-                    'name_attr' => 'site',
-                    'input_id' => 'f-site',
-                    'value_attr' => $userinfo['website'],
-                    'maxlength_num' => 100,
-                    'placeholder_text' => _SITEURL,
-                ]),
-            ])
-            .$tpl->getHtmlFrag('form-field-row', [
-                'label_for' => 'f-occ',
-                'label' => _OCCUPATION,
-                'field_html' => $tpl->getHtmlFrag('input', [
-                    'name_attr' => 'occ',
-                    'input_id' => 'f-occ',
-                    'value_attr' => $userinfo['occ'],
-                    'maxlength_num' => 100,
-                    'placeholder_text' => _OCCUPATION,
-                ]),
-            ])
-            .$tpl->getHtmlFrag('form-field-row', [
-                'label_for' => 'f-from',
-                'label' => _LOCALITYLANG,
-                'field_html' => $tpl->getHtmlFrag('input', [
-                    'name_attr' => 'from',
-                    'input_id' => 'f-from',
-                    'value_attr' => $userinfo['origin'],
-                    'maxlength_num' => 100,
-                    'placeholder_text' => _LOCALITYLANG,
-                ]),
-            ])
-            .$tpl->getHtmlFrag('form-field-row', [
-                'label_for' => 'f-inter',
-                'label' => _INTERESTS,
-                'field_html' => $tpl->getHtmlFrag('input', [
-                    'name_attr' => 'inter',
-                    'input_id' => 'f-inter',
-                    'value_attr' => $userinfo['interest'],
-                    'maxlength_num' => 150,
-                    'placeholder_text' => _INTERESTS,
-                ]),
-            ])
-            .$tpl->getHtmlFrag('form-field-row', [
+        $flds[] = ['label' => _GENDER, 'label_for' => 'f-gender', 'control_html' => $tpl->getHtmlFrag('select', [
+            'name_attr' => 'gender',
+            'input_id' => 'f-gender',
+            'is_account' => true,
+            'select_attr' => $mark('gender'),
+            'options_html' => $gopt,
+        ])];
+        $flds[] = ['label' => _YOUREMAIL, 'label_for' => 'f-mail', 'control_html' => $tpl->getHtmlFrag('input', [
+            'name_attr' => 'mail',
+            'input_id' => 'f-mail',
+            'value_attr' => $info['email'],
+            'maxlength_num' => 60,
+            'placeholder_text' => _YOUREMAIL,
+            'input_attr' => $mark('mail'),
+            'is_required' => true,
+        ])];
+        $flds[] = ['label' => _SITEURL, 'label_for' => 'f-site', 'control_html' => $tpl->getHtmlFrag('input', [
+            'name_attr' => 'site',
+            'input_id' => 'f-site',
+            'value_attr' => $info['website'],
+            'maxlength_num' => 100,
+            'placeholder_text' => _SITEURL,
+            'input_attr' => $mark('site'),
+        ])];
+        $flds[] = ['label' => _OCCUPATION, 'label_for' => 'f-occ', 'control_html' => $tpl->getHtmlFrag('input', [
+            'name_attr' => 'occ',
+            'input_id' => 'f-occ',
+            'value_attr' => $info['occ'],
+            'maxlength_num' => 100,
+            'placeholder_text' => _OCCUPATION,
+            'input_attr' => $mark('occ'),
+        ])];
+        $flds[] = ['label' => _LOCALITYLANG, 'label_for' => 'f-from', 'control_html' => $tpl->getHtmlFrag('input', [
+            'name_attr' => 'from',
+            'input_id' => 'f-from',
+            'value_attr' => $info['origin'],
+            'maxlength_num' => 100,
+            'placeholder_text' => _LOCALITYLANG,
+            'input_attr' => $mark('from'),
+        ])];
+        $flds[] = ['label' => _INTERESTS, 'label_for' => 'f-inter', 'control_html' => $tpl->getHtmlFrag('input', [
+            'name_attr' => 'inter',
+            'input_id' => 'f-inter',
+            'value_attr' => $info['interest'],
+            'maxlength_num' => 150,
+            'placeholder_text' => _INTERESTS,
+            'input_attr' => $mark('inter'),
+        ])];
+        $sids = getFieldIds('', 'sig');
+        $flds[] = [
+            'label' => _SIGNATURE,
+            'label_id' => $sids['label'],
+            'hint' => _SIGNATURE_TEXT,
+            'hint_id' => $sids['hint'],
+            'is_span' => true,
+            'control_html' => getTplTextarea([
+                'labelledby' => $sids['label'],
+                'describedby' => $sids['hint'],
                 'label' => _SIGNATURE,
-                'label_id' => $labid = getFieldIds('', 'sig')['label'],
-                'field_html' => getTplTitleTip(_SIGNATURE_TEXT).getTplTextarea([
-                    'labelledby' => $labid,
-                    'label' => _SIGNATURE,
-                    'id' => '1',
-                    'name' => 'sig',
-                    'value' => $userinfo['sig'],
-                    'mod' => $conf['name'],
-                    'store' => 'users.sig',
-                    'rows' => '5',
-                    'placeholder' => _SIGNATURE,
-                    'required' => '0',
-                ]),
-            ])
-            .getTplFieldsIn(['field' => $userinfo['field'], 'mod' => $conf['name']]);
-        $submitExtra = $tpl->getHtmlFrag('hidden', ['name_attr' => 'user_name', 'value_attr' => $userinfo['name']]);
-        if ($conf['users']['news'] == 1) {
-            $fields .= $tpl->getHtmlFrag('form-field-row', ['label_for' => 'f-story', 'label' => _C_12, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'story', 'input_id' => 'f-story', 'options_html' => $story])]);
-        } else {
-            $submitExtra .= $tpl->getHtmlFrag('hidden', ['name_attr' => 'story', 'value_attr' => $conf['news']['num'] ?? 0]);
-        }
-        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _RNEWSLETTER, 'label_id' => $labid = getFieldIds('', 'news')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'news', 'value' => ((string)$userinfo['newslet'] === '0') ? '0' : '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])]);
-        if (is_active('forum')) {
-            $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _FSMAIL, 'label_id' => $labid = getFieldIds('', 'fsmail')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'fsmail', 'value' => ((string)$userinfo['fsmail'] === '0') ? '0' : '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])]);
-        }
-        if (!empty($conf['privat']['act'])) {
-            $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _PSMAIL, 'label_id' => $labid = getFieldIds('', 'psmail')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'psmail', 'value' => ((string)$userinfo['psmail'] === '0') ? '0' : '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])]);
-        }
-        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _ALLOWUSERS, 'label_id' => $labid = getFieldIds('', 'view')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'view', 'value' => ((string)$userinfo['viewmail'] === '0') ? '0' : '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])])
-            .$tpl->getHtmlFrag('form-field-row', ['label' => _ACTIVATEPERSONAL, 'label_id' => $labid = getFieldIds('', 'blockon')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'blockon', 'value' => ((string)$userinfo['blockon'] === '0') ? '0' : '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])])
-            .$tpl->getHtmlFrag('form-field-row', [
-                'label' => _MENUCONF,
-                'label_id' => $labid = getFieldIds('', 'block')['label'],
-                'field_html' => getTplTitleTip(_MENUINFO).getTplTextarea([
-                    'labelledby' => $labid,
-                    'label' => _MENUCONF,
-                    'id' => '2',
-                    'name' => 'block',
-                    'value' => $userinfo['block'],
-                    'mod' => $conf['name'],
-                    'store' => 'users.block',
-                    'rows' => '10',
-                    'placeholder' => _MENUCONF,
-                    'required' => '0',
-                ]),
-            ]);
-        if ($tcount > 1) {
-            $fields .= $tpl->getHtmlFrag('form-field-row', ['label_for' => 'f-theme', 'label' => _THEME, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'theme', 'input_id' => 'f-theme', 'options_html' => $theme])]);
-        }
-        $avatar = getUserAvatarUrl($userinfo);
-        $asetup = $tpl->getHtmlPart('content-list', [
-            'rows' => [[
-                'cells' => [
-                    ['primary_text' => _AVATAR, 'secondary_text' => sprintf(_AVATARINFO, $conf['users']['awidth'], $conf['users']['aheight'], filterSize($conf['users']['amaxsize']))],
-                    ['img_src' => $avatar, 'img_alt' => _AVATAR, 'img_title' => _AVATAR, 'is_avatar' => true],
-                ],
+                'id' => '1',
+                'name' => 'sig',
+                'value' => $info['sig'],
+                'mod' => $conf['name'],
+                'store' => 'users.sig',
+                'rows' => '5',
+                'placeholder' => _SIGNATURE,
+                'required' => '0',
+            ]),
+        ];
+        $vals = $tpl->getHtmlFrag('field-value', ['label' => _YOURNAME, 'value_text' => $info['name']])
+            .$tpl->getHtmlFrag('field-value', ['label' => _IP, 'value_text' => $info['ip']]);
+        if (!empty($conf['users']['point'])) $vals .= $tpl->getHtmlFrag('field-value', ['label' => _POINTS, 'value_text' => $info['points']]);
+        $tils = [
+            ['icon' => 'person', 'title' => _ACCOUNT_PERSON, 'width' => 4, 'tone' => 0, 'fields' => $flds],
+            ['icon' => 'person-vcard', 'title' => _ACCOUNT_SYSTEM, 'width' => 2, 'tone' => 1, 'text' => _ACCOUNT_FILLNOTE, 'rows_html' => $vals, 'meter' => [
+                'rate' => $fill['rate'],
+                'text' => $fill['rate'].'%',
+                'label' => _ACCOUNT_FILLED,
+                'left' => $fill['left'],
+                'left_label' => _ACCOUNT_LEFT,
+                'is_full' => $fill['rate'] >= 100,
             ]],
-            'table_open' => ['open' => true, 'is_form' => true],
-            'table_close' => [],
-        ]);
+        ];
+        $xtra = getTplFieldsIn(['field' => $info['field'], 'mod' => $conf['name']]);
+        if ($xtra !== '') $tils[] = ['icon' => 'plus-square-dotted', 'title' => _ACCOUNT_FIELDS, 'width' => 6, 'tone' => 3, 'rows_html' => $xtra];
+        $secs[] = ['id' => 'personal', 'icon' => 'person-lines-fill', 'title' => _PERSONALINFO, 'inform' => true, 'tiles' => $tils];
+        $upld = '';
         if ($conf['users']['aupload']) {
-            $asetup .= $tpl->getHtmlFrag('form-field-row', [
+            $upld = $tpl->getHtmlFrag('form-field-row', [
                 'label_for' => 'f-userfile',
                 'label' => _AVATAR_USER,
                 'field_html' => $tpl->getHtmlFrag('file-input', ['name_attr' => 'userfile', 'input_id' => 'f-userfile']),
             ]);
         }
+        $tils = [[
+            'icon' => 'image',
+            'title' => _AVATAR,
+            'width' => 2,
+            'tone' => 3,
+            'face_src' => getUserAvatarUrl($info),
+            'face_alt' => _AVATAR,
+            'text' => sprintf(_AVATARINFO, $conf['users']['awidth'], $conf['users']['aheight'], filterSize($conf['users']['amaxsize'])),
+            'rows_html' => $upld,
+        ]];
         $aset = [];
         $adir = 'templates/'.getTheme().'/images/avatars/presets';
-        $list = scandir($adir);
-        foreach ($list ?: [] as $file) {
+        foreach (scandir($adir) ?: [] as $file) {
             if (!preg_match("#\.(gif|png|jpe?g|svg)$#is", $file)) continue;
             $alt = _AVATARSAVE.' '._ID.' '.str_replace('_', ' ', preg_replace("/^(.*)\..*$/", '\\1', $file));
             $aset[] = [
@@ -1013,24 +1039,98 @@ function edithome(): void {
             ];
         }
         if ($aset) {
-            $asetup .= $tpl->getHtmlFrag('form-field-row', [
-                'label' => _AVATARSELECT,
-                'label_id' => $labid = getFieldIds('', 'avatar')['label'],
-                'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'avatar', 'value' => '', 'switch' => false, 'options' => $aset]),
-            ]);
+            $aids = getFieldIds('', 'avatar');
+            $tils[] = ['width' => 4, 'tone' => 3, 'fields' => [[
+                'label' => _AVATARSAVE,
+                'label_id' => $aids['label'],
+                'hint' => _AVATARSELECT,
+                'hint_id' => $aids['hint'],
+                'is_span' => true,
+                'control_html' => getTplRadioGroup([
+                    'labelledby' => $aids['label'],
+                    'describedby' => $aids['hint'],
+                    'name' => 'avatar',
+                    'value' => '',
+                    'switch' => false,
+                    'options' => $aset,
+                ]),
+            ]]];
         }
-        $change = $tpl->getHtmlPart('form-add', [
-            'action' => 'index.php?name='.$conf['name'],
-            'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')])
-                .$tpl->getHtmlFrag('title', ['title' => _PERSONALINFO, 'is_level_two' => true]).$fields
-                .$tpl->getHtmlFrag('title', ['title' => _AVATARSETUP, 'is_level_two' => true]).$asetup,
-            'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'extra' => $submitExtra, 'op' => 'savehome', 'label' => _SAVECHANGES]),
-        ]);
-        if (str_starts_with((string)($userinfo['password'] ?? ''), '!')) {
-            $psetup = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _OAUTHNOPW])
-                .$tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']), 'title' => _PASSWORDLOST, 'label' => _PASSWORDLOST, 'is_footer_button' => true]);
+        $secs[] = ['id' => 'avatar', 'icon' => 'person-badge', 'title' => _AVATARSETUP, 'inform' => true, 'tiles' => $tils];
+        $extra = $tpl->getHtmlFrag('hidden', ['name_attr' => 'user_name', 'value_attr' => $info['name']]);
+        $lins = [];
+        if ($conf['users']['news'] == 1) {
+            $sopt = '';
+            $numb = 3;
+            while ($numb <= 20) {
+                $sopt .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$numb, 'label_text' => (string)$numb, 'is_selected' => $numb == $info['storynum']]);
+                $numb++;
+            }
+            $lins[] = ['label' => _C_12, 'label_for' => 'f-story', 'control_html' => $tpl->getHtmlFrag('select', [
+                'name_attr' => 'story',
+                'input_id' => 'f-story',
+                'options_html' => $sopt,
+            ])];
         } else {
-            $fields = $tpl->getHtmlFrag('form-field-row', [
+            $extra .= $tpl->getHtmlFrag('hidden', ['name_attr' => 'story', 'value_attr' => $conf['news']['num'] ?? 0]);
+        }
+        $lins[] = getSetupSwitch(_RNEWSLETTER, 'news', (string)$info['newslet']);
+        if (is_active('forum')) $lins[] = getSetupSwitch(_FSMAIL, 'fsmail', (string)$info['fsmail']);
+        if (!empty($conf['privat']['act'])) $lins[] = getSetupSwitch(_PSMAIL, 'psmail', (string)$info['psmail']);
+        $tils = [['width' => 6, 'tone' => 1, 'lines' => $lins]];
+        $secs[] = ['id' => 'mail', 'icon' => 'envelope-paper', 'title' => _ACCOUNT_MAIL, 'inform' => true, 'tiles' => $tils];
+        $lins = [getSetupSwitch(_ALLOWUSERS, 'view', (string)$info['viewmail'])];
+        $lins[] = getSetupSwitch(_ACTIVATEPERSONAL, 'blockon', (string)$info['blockon']);
+        $mids = getFieldIds('', 'block');
+        $lins[] = [
+            'label' => _MENUCONF,
+            'label_id' => $mids['label'],
+            'hint' => _MENUINFO,
+            'hint_id' => $mids['hint'],
+            'is_wide' => true,
+            'control_html' => getTplTextarea([
+                'labelledby' => $mids['label'],
+                'describedby' => $mids['hint'],
+                'label' => _MENUCONF,
+                'id' => '2',
+                'name' => 'block',
+                'value' => $info['block'],
+                'mod' => $conf['name'],
+                'store' => 'users.block',
+                'rows' => '10',
+                'placeholder' => _MENUCONF,
+                'required' => '0',
+            ]),
+        ];
+        $topt = '';
+        $tcnt = 0;
+        if ($conf['users']['theme']) {
+            foreach (scandir(BASE_DIR.'/templates') ?: [] as $file) {
+                if ($file === '.' || $file === '..' || $file === 'admin') continue;
+                if (!is_dir(BASE_DIR.'/templates/'.$file) || !checkThemeAssets($file)) continue;
+                $topt .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$file, 'label_text' => (string)$file, 'is_selected' => $file == $info['theme']]);
+                $tcnt++;
+            }
+        }
+        if ($tcnt > 1) {
+            $lins[] = ['label' => _THEME, 'label_for' => 'f-theme', 'control_html' => $tpl->getHtmlFrag('select', [
+                'name_attr' => 'theme',
+                'input_id' => 'f-theme',
+                'options_html' => $topt,
+            ])];
+        }
+        $tils = [['width' => 6, 'tone' => 2, 'lines' => $lins]];
+        $secs[] = ['id' => 'privacy', 'icon' => 'shield-lock', 'title' => _ACCOUNT_PRIVACY, 'inform' => true, 'tiles' => $tils];
+        if (str_starts_with((string)($info['password'] ?? ''), '!')) {
+            $keys = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _OAUTHNOPW])
+                .$tpl->getHtmlFrag('link', [
+                    'href' => getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']),
+                    'title' => _PASSWORDLOST,
+                    'label' => _PASSWORDLOST,
+                    'is_footer_button' => true,
+                ]);
+        } else {
+            $pass = $tpl->getHtmlFrag('form-field-row', [
                 'label_for' => 'f-newpass',
                 'label' => _PASSNEW,
                 'field_html' => $tpl->getHtmlFrag('input', [
@@ -1065,19 +1165,22 @@ function edithome(): void {
                     'is_required' => true,
                 ]),
             ]);
-            $psetup = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PASSTEXT])
-                .$tpl->getHtmlPart('form-add', [
+            $keys = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PASSTEXT]).$tpl->getHtmlPart('form-add', [
                 'action' => 'index.php?name='.$conf['name'],
-                'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$fields,
+                'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$pass,
                 'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'savepass', 'label' => _SAVECHANGES]),
             ]);
         }
-        $orows = [];
-        foreach (Oauth::getLinks((int)($userinfo['id'] ?? 0)) as $lnk) {
+        $secs[] = ['id' => 'keys', 'icon' => 'key', 'title' => _PASSSETUP, 'tiles' => [
+            ['icon' => 'shield-plus', 'title' => _PASSWORD, 'width' => 3, 'tone' => 4, 'rows_html' => $keys],
+            ['icon' => 'clock-history', 'title' => _ACCOUNT_LOG, 'width' => 3, 'tone' => 0, 'log' => getAccountLog($info, $lnks)],
+        ]];
+        $orws = [];
+        foreach ($lnks as $lnk) {
             $ohid = $tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'oauth_unlink'])
                 .$tpl->getHtmlFrag('hidden', ['name_attr' => 'prov', 'value_attr' => (string)$lnk['provider']])
                 .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]);
-            $orows[] = [
+            $orws[] = [
                 'prov' => (string)$lnk['provider'],
                 'label' => ucfirst((string)$lnk['provider']),
                 'email' => (string)$lnk['email'],
@@ -1092,19 +1195,44 @@ function edithome(): void {
             ];
         }
         $obtn = Oauth::getButtons();
-        $osetup = '';
-        if ($orows || $obtn !== '') {
-            $osetup = $tpl->getHtmlFrag('title', ['title' => _OAUTHTAB, 'is_level_two' => true]).$tpl->getHtmlPart('account-oauth-links', [
-                'nopw_text' => '',
-                'nopw_href' => '',
-                'nopw_label' => '',
-                'rows' => $orows,
-                'none_text' => ($orows) ? '' : _OAUTHNONE,
-                'buttons_html' => $obtn,
-            ]);
+        if ($orws || $obtn !== '') {
+            $secs[] = ['id' => 'oauth', 'icon' => 'diagram-3', 'title' => _OAUTHTAB, 'tiles' => [[
+                'width' => 6,
+                'tone' => 5,
+                'rows_html' => $tpl->getHtmlPart('account-oauth-links', [
+                    'nopw_text' => '',
+                    'nopw_href' => '',
+                    'nopw_label' => '',
+                    'rows' => $orws,
+                    'none_text' => ($orws) ? '' : _OAUTHNONE,
+                    'buttons_html' => $obtn,
+                ]),
+            ]]];
         }
-        echo $tpl->getHtmlFrag('title', ['title' => _CHANGE, 'is_level_one' => true]).getUserNav().$cont.$change
-            .$tpl->getHtmlFrag('title', ['title' => _PASSSETUP, 'is_level_two' => true]).$psetup.$osetup;
+        $last = -1;
+        $rail = [];
+        foreach ($secs as $key => $sec) {
+            if (!empty($sec['inform'])) {
+                if ($last < 0) $secs[$key]['form_open'] = true;
+                $last = $key;
+            }
+            if (!empty($errs[$sec['id']])) $secs[$key]['alert_html'] = $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => $errs[$sec['id']]]);
+            $rail[] = ['id' => $sec['id'], 'icon' => $sec['icon'], 'title' => $sec['title']];
+        }
+        if ($last >= 0) $secs[$last]['form_close'] = true;
+        if (count($rail) < 2) $rail = [];
+        echo $tpl->getHtmlFrag('title', ['title' => _CHANGE, 'is_level_one' => true]).getUserNav().$tpl->getHtmlPart('account-settings', [
+            'alert_html' => ($tops) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => $tops]) : '',
+            'form_action' => 'index.php?name='.$conf['name'],
+            'form_hidden' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]),
+            'form_submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'extra' => $extra, 'op' => 'savehome', 'label' => _SAVECHANGES]),
+            'lamps' => getAccountLamps($info, $lnks, $fill),
+            'rail' => $rail,
+            'rail_label' => _ACCOUNT_SECTIONS,
+            'save_note' => _ACCOUNT_UNSAVED,
+            'save_undo' => _ACCOUNT_UNDO,
+            'sections' => $secs,
+        ]);
         setFoot();
     } else {
         account();

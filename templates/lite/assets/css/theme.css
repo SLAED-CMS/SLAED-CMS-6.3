@@ -160,7 +160,8 @@ h1.sl-title {
 .sl-block-contact,
 #topbar ul,
 #topmenu ul,
-.sl-forum-list-info ul {
+.sl-forum-list-info ul,
+.sl-opt-log {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -1044,7 +1045,9 @@ input[type="checkbox"]:disabled {
   margin: 0;
   padding: 0;
   gap: 0;
-  color: var(--sl-text-muted);
+  /* The side that is not chosen is still a choice and still has to be read: muted grey on this track measures
+     4.17 at twelve points, which is below AA, and the body colour is the nearest role that clears it */
+  color: var(--sl-text);
   font-size: var(--sl-font-small);
   line-height: var(--sl-radio-height);
   text-align: center;
@@ -1063,10 +1066,9 @@ input[type="checkbox"]:disabled {
   color: var(--sl-success);
 }
 
-.sl-radio-group.sl-radio-switch:has(input[value="0"]:checked)
-  .sl-radio:has(input:checked) {
-  color: var(--sl-text-muted);
-}
+/* The chosen side of an off switch says so by standing on the knob, not by going quiet: muted grey there measured
+   4.17 against the track the crawler can see behind it, and the knob is a pseudo-element no crawler can look through.
+   It takes the body colour the rule above already gives it, so the rule that dimmed it is gone rather than retuned */
 
 .sl-radio-group.sl-radio-switch input {
   position: absolute;
@@ -1811,28 +1813,6 @@ td.sl-cart-col-stat {
 
 .sl-table-amount td:first-child {
   width: var(--sl-col-amount-width);
-}
-
-.sl-avatar-grid {
-  table-layout: fixed;
-}
-
-.sl-avatar-grid td {
-  width: calc(100% / 6);
-}
-
-.sl-avatar-link {
-  display: block;
-}
-
-.sl-avatar-link button {
-  display: block;
-  width: 100%;
-  padding: 0;
-  border: 0;
-  line-height: 0;
-  background: none;
-  cursor: pointer;
 }
 
 .sl-list,
@@ -7622,7 +7602,8 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   .sl-live-icon,
   .sl-live-avatar::after,
   .sl-fresh,
-  .sl-fresh > .bi {
+  .sl-fresh > .bi,
+  .sl-opt-save {
     animation: none !important;
     transition: none !important;
   }
@@ -7769,6 +7750,499 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 .sl-cat-tone-5 {
   --sl-cat-tone: var(--sl-danger);
+}
+
+/* Account settings: six sections of tiles read top to bottom, one form for everything that is a setting.
+   The cabinet leaves this page a content column of about 896 points and not the whole container, and that single
+   figure decides the composition: the grid is six columns, so a tile of two is about 290 and one of three about 440,
+   which is why a rail down the left was never an option and the widths below are measured against those numbers */
+/* What the account is before anything on this page changes it: four tiles read at a glance, each pointing at the section
+   that would change it. Nothing here is a control, which is why a lamp carries no link and no button */
+/* The track count is written down and not fitted: the lamps are four, and an auto-fit over four passes through three at
+   some width whatever the minimum says - which leaves the fourth alone on a row of its own. The column this page gets is
+   not monotonic in the window either, 838 points at the 900 step where the side column is gone and 707 at 1200 where it
+   is back, so the widest window was the one that broke */
+.sl-opt-lamps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sl-space-4);
+  margin-bottom: var(--sl-space-6);
+}
+
+.sl-opt-lamp {
+  padding: var(--sl-space-4) var(--sl-space-5);
+  border: 1px solid var(--sl-border);
+  border-left: var(--sl-opt-lamp-border) solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg);
+}
+
+/* The tone is the edge and never the figure: a warning or a success colour set as text over the page background is the
+   pair the contrast crawler fails, and the reader is told the same thing by the bar without anyone having to read it */
+.sl-opt-lamp.sl-is-ok { border-left-color: var(--sl-success); }
+.sl-opt-lamp.sl-is-warn { border-left-color: var(--sl-warning); }
+.sl-opt-lamp.sl-is-info { border-left-color: var(--sl-primary); }
+
+.sl-opt-lamp small {
+  display: block;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+}
+
+.sl-opt-lamp b {
+  display: block;
+  margin: var(--sl-space-1) 0;
+  color: var(--sl-text-strong);
+  font-size: var(--sl-font-h3);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--sl-line-tight);
+}
+
+.sl-opt-lamp > span {
+  display: block;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  line-height: var(--sl-line-normal);
+}
+
+/* The table of contents of the page, laid across the top because the cabinet leaves the content about 896 points and
+   a rail down the left would leave the form 556. It hides nothing - the marks only say where the reader stands - and
+   it sticks, because a table of contents that scrolls away is a table of contents used once */
+.sl-opt-rail {
+  position: sticky;
+  top: 0;
+  z-index: var(--sl-z-dropdown);
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  margin: 0 0 var(--sl-space-9);
+  padding: var(--sl-space-5) 0 var(--sl-space-4);
+  background: var(--sl-bg);
+  border-bottom: 1px solid var(--sl-border);
+}
+
+/* The road between the marks belongs to the marks: each one draws the segment back to its predecessor, so the line is
+   as long as the number of sections that actually rendered and no figure has to be written down beside them */
+.sl-opt-mark {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: var(--sl-space-2);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+  line-height: var(--sl-line-tight);
+  text-align: center;
+  cursor: pointer;
+}
+
+.sl-opt-mark::before {
+  content: "";
+  position: absolute;
+  top: calc(var(--sl-size-chip) / 2);
+  right: 50%;
+  left: -50%;
+  height: 1px;
+  background: var(--sl-border);
+}
+
+.sl-opt-mark:first-child::before {
+  content: none;
+}
+
+.sl-opt-mark[data-sl-spy-done="1"]::before,
+.sl-opt-mark[aria-current="true"]::before {
+  background: var(--sl-success);
+}
+
+.sl-opt-mark .bi {
+  position: relative;
+  z-index: var(--sl-z-raised);
+  display: grid;
+  place-items: center;
+  width: var(--sl-size-chip);
+  height: var(--sl-size-chip);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-bg);
+  font-size: var(--sl-size-icon-sm);
+  transition:
+    border-color var(--sl-time-base) var(--sl-ease-out),
+    background var(--sl-time-base) var(--sl-ease-out),
+    color var(--sl-time-base) var(--sl-ease-out);
+}
+
+.sl-opt-mark[data-sl-spy-done="1"] .bi {
+  border-color: var(--sl-success);
+  background: var(--sl-success);
+  color: var(--sl-on-solid);
+}
+
+/* The caption keeps to one line whatever it says, because the height of the rail is the margin every section scrolls
+   to and a caption that wraps in one locale and not in another would move that figure out from under it. What the cut
+   takes off is still in the title the button carries, which is also where its name comes from */
+.sl-opt-mark span {
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sl-opt-mark[aria-current="true"] {
+  color: var(--sl-text-strong);
+  font-weight: var(--sl-weight-semibold);
+}
+
+.sl-opt-mark[aria-current="true"] .bi {
+  border-color: var(--sl-primary);
+  background: var(--sl-primary);
+  color: var(--sl-on-solid);
+}
+
+/* The rail above stands over the top of the window, so a section scrolled to would start under it: the margin the
+   scroll leaves is the height of the rail and a step of air, and not a spacing step alone */
+.sl-opt-sec {
+  margin-bottom: var(--sl-space-9);
+  scroll-margin-top: calc(var(--sl-opt-rail-height) + var(--sl-space-4));
+}
+
+.sl-opt-sec > h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  margin: 0 0 var(--sl-space-4);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-semibold);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+}
+
+.sl-opt-sec > h2 .bi {
+  color: var(--sl-primary);
+  font-size: var(--sl-size-icon-sm);
+}
+
+.sl-opt-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--sl-space-4);
+}
+
+/* Every row a tile holds folds on the tile and never on the window: two columns of six is about 290 points, where a
+   caption-left row does not live however wide the viewport is. `sl-form-box` is the name the form row already
+   watches, so the rows inside fold by the rule the rest of the tree carries rather than by a second one */
+.sl-opt-tile {
+  container-type: inline-size;
+  container-name: sl-form-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sl-space-4);
+  padding: var(--sl-space-5);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg);
+  transition:
+    border-color var(--sl-time-base) var(--sl-ease-out),
+    box-shadow var(--sl-time-base) var(--sl-ease-out);
+}
+
+.sl-opt-tile:hover {
+  border-color: var(--sl-border-strong);
+  box-shadow: var(--sl-shadow-raised);
+}
+
+.sl-opt-w2 {
+  grid-column: span 2;
+}
+
+.sl-opt-w3 {
+  grid-column: span 3;
+}
+
+.sl-opt-w4 {
+  grid-column: span 4;
+}
+
+.sl-opt-w6 {
+  grid-column: span 6;
+}
+
+.sl-opt-tile-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+}
+
+.sl-opt-tile-head .bi {
+  display: grid;
+  place-items: center;
+  flex: 0 0 var(--sl-size-chip);
+  width: var(--sl-size-chip);
+  height: var(--sl-size-chip);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-cat-tone, var(--sl-primary));
+  color: var(--sl-on-solid);
+  font-size: var(--sl-size-icon-sm);
+}
+
+.sl-opt-tile-head b {
+  color: var(--sl-text-strong);
+  font-size: var(--sl-font-small);
+  font-weight: var(--sl-weight-semibold);
+  line-height: var(--sl-line-tight);
+}
+
+.sl-opt-tile > p {
+  margin: 0;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  line-height: var(--sl-line-normal);
+}
+
+/* A row a fragment renders carries its own bottom margin, which would double the gap the tile already sets */
+.sl-opt-tile .sl-form-row,
+.sl-opt-tile .sl-value-row {
+  margin-bottom: 0;
+}
+
+/* The face of the account: a value the page shows rather than a control, at the size the account pages already
+   give an avatar they mean to be looked at */
+.sl-opt-face {
+  display: grid;
+  place-items: center;
+  padding: var(--sl-space-4);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-surface);
+}
+
+.sl-opt-face img {
+  width: var(--sl-profile-ava-width);
+  height: var(--sl-profile-ava-height);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-bg-muted);
+  box-shadow: var(--sl-avatar-shadow);
+}
+
+/* The account's own timeline, and the one thing on this page read instead of changed: the label runs down a column
+   of its own and the stamp keeps one line at the right, so the dates line up without a table around them */
+.sl-opt-log li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: var(--sl-space-3);
+  padding: var(--sl-space-3) 0;
+  border-bottom: 1px solid var(--sl-border-subtle);
+  font-size: var(--sl-font-small);
+}
+
+.sl-opt-log li:last-child {
+  border-bottom: 0;
+}
+
+.sl-opt-log time {
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* A tile holding a whole family instead of one setting: the questions become lines, each with its control flush
+   right and a hairline between, so the eye compares them down one column instead of across four tiles */
+.sl-opt-lines {
+  display: grid;
+}
+
+.sl-opt-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, auto);
+  align-items: center;
+  gap: var(--sl-space-5);
+}
+
+.sl-opt-lines > .sl-opt-line {
+  padding: var(--sl-space-4) 0;
+  border-top: 1px solid var(--sl-border-subtle);
+}
+
+.sl-opt-lines > .sl-opt-line:first-child {
+  border-top: 0;
+}
+
+/* The controls a line cannot hold at its end - an editor, and anything else that wants the width - drop below the
+   question and keep the same left edge, so the block still reads as one list */
+.sl-opt-line-wide {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+.sl-opt-line-wide > :last-child {
+  width: 100%;
+  margin-top: var(--sl-space-3);
+}
+
+.sl-opt-line .sl-form-label {
+  display: block;
+  color: var(--sl-text-strong);
+  font-size: var(--sl-font-small);
+  font-weight: var(--sl-weight-medium);
+}
+
+.sl-opt-line small {
+  display: block;
+  margin-top: var(--sl-space-1);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  line-height: var(--sl-line-normal);
+}
+
+/* The same line inside a field grid: the caption goes above its control and the cells fill the tile, in two
+   columns where the tile itself is wide enough to hold two and in one where it is not */
+.sl-opt-fields {
+  display: grid;
+  gap: var(--sl-space-4);
+}
+
+.sl-opt-fields > .sl-opt-line {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: var(--sl-space-2);
+}
+
+.sl-opt-fields > .sl-opt-line > :last-child {
+  width: 100%;
+}
+
+.sl-opt-span {
+  grid-column: 1 / -1;
+}
+
+/* The step is the tile and not the window, so it carries the tile's own arithmetic and not a breakpoint: two fields
+   of the 180 the narrowest one needs, the gap between them and the padding the tile holds them in */
+@container sl-form-box (width > 420px) {
+  .sl-opt-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* The read-only pair folds on the same step, and it has to: a value track of three quarters leaves the caption 45 points
+   in a tile of two columns, where every caption in this theme wraps to three lines and the tile is read as a column of them */
+@container sl-form-box (width <= 420px) {
+  .sl-opt-tile .sl-value-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sl-space-2);
+    align-items: start;
+  }
+}
+
+/* How far the profile is filled is drawn by the point ring of the cabinet, at the same size and the same tone, fed by the
+   counted fields instead of by the points - so the two pages say the same thing in one shape and the reader learns it once */
+/* The arc is a custom property and not the markup attribute the cabinet uses, because this figure changes while the member
+   types and only a property can be rewritten without touching the drawn circle */
+[data-sl-meter] .sl-knob-val {
+  stroke-dasharray: var(--sl-d-meter, 0) 100;
+}
+
+.sl-opt-tile .sl-cab-ring {
+  margin: 0 auto;
+}
+
+/* The gallery of theme presets is 127 options and not the two dozen a picture can show, so the pick area is capped
+   and scrolls; the switch of a yes/no line is a group too and keeps its own geometry */
+.sl-opt-tile .sl-radio-group:not(.sl-radio-switch) {
+  max-height: var(--sl-opt-max-height);
+  overflow-y: auto;
+}
+
+.sl-opt-tile .sl-radio-group:not(.sl-radio-switch) .sl-avatar {
+  width: var(--sl-avatar-width);
+  height: var(--sl-avatar-height);
+}
+
+/* The save bar of the shared form, and of that form alone: the password tile keeps its own button, because a bar
+   that rose over the whole page would be promising to save something it does not carry. It sticks to the foot of the
+   window while the form is on screen and leaves with it, which is the boundary of what it can save drawn in pixels */
+/* The tone is the edge here as it is on a lamp: `--sl-warning` as text over `--sl-bg` is 2.75:1, so the word and the
+   icon take the body colours and the ring around them carries the state */
+.sl-opt-save {
+  position: sticky;
+  bottom: var(--sl-space-4);
+  z-index: var(--sl-z-dropdown);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-5);
+  margin-top: var(--sl-space-7);
+  padding: var(--sl-space-4) var(--sl-space-6);
+  border: 1px solid var(--sl-warning);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-bg);
+  box-shadow: var(--sl-shadow-float);
+  transition:
+    opacity var(--sl-time-base) var(--sl-ease-out),
+    transform var(--sl-time-base) var(--sl-ease-out),
+    visibility 0s;
+}
+
+/* Out of the tab order as well as out of sight: an invisible submit the keyboard still reaches is a button the reader
+   cannot see themselves press. The visibility waits for the fade on the way out and never on the way in, which is the
+   one delay in the list and the reason the shorthand is not repeated */
+[data-sl-dirty="0"] .sl-opt-save {
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(var(--sl-space-6));
+  pointer-events: none;
+  transition-delay: 0s, 0s, var(--sl-time-base);
+}
+
+.sl-opt-save > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+/* The button carries a gutter of its own for a row of buttons, and this row is spaced by a gap */
+.sl-opt-save .sl-but {
+  margin: 0;
+}
+
+/* Below the step the grid loses four of its six tracks: a tile of two is the narrowest one that still holds a
+   field, so every wider tile falls back to the pair rather than to a column of six */
+@media (max-width: 768px) {
+  .sl-opt-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Two and two rather than four of 127 points, where the caption of a lamp takes three lines and its note takes five */
+  .sl-opt-lamps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Six marks over a phone leave under ninety points each, which the caption cannot have without wrapping to a second
+     line. It goes, and the name of the mark comes from the title the button already carries, so the reader is never
+     handed a button that announces nothing. What the caption gave back in height is paid as a floor, so the thumb
+     still aims at the size of a control */
+  .sl-opt-mark {
+    min-height: var(--sl-size-control);
+    align-content: center;
+  }
+
+  .sl-opt-mark span {
+    display: none;
+  }
+
+  .sl-opt-w3,
+  .sl-opt-w4,
+  .sl-opt-w6 {
+    grid-column: span 2;
+  }
 }
 
 /* Account profile: dense split card with identity rail, trust strip, fact panels and module hub */

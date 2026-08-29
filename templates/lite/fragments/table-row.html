@@ -29,14 +29,7 @@
       "
       {% if cell.colspan %}colspan="{{ cell.colspan }}"{% endif %}
     >
-      {% if cell.is_avatar_link and cell.action %}
-        <form action="{{ cell.action }}" method="post" class="sl-avatar-link">
-          {{{ cell.hidden }}}
-          <button type="submit" title="{{ cell.title }}">
-            <img src="{{ cell.img_src }}" alt="{{ cell.img_alt }}" title="{{ cell.img_title }}"{% if cell.is_avatar %} class="sl-avatar"{% endif %}>
-          </button>
-        </form>
-      {% elseif cell.href %}
+      {% if cell.href %}
         <a
           href="{{ cell.href }}"
           title="{{ cell.title }}"

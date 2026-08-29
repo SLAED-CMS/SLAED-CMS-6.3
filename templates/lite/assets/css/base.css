@@ -441,6 +441,15 @@
   --sl-msg-brand-width: 240px;
   --sl-nav-width: 42px;
   --sl-nav-height: 42px;
+  /* The tone of a state lamp is the bar down its left edge and nothing else: an amber figure on the page background
+     is the pair the contrast crawler fails, while an edge carries the same word without a colour anyone must read */
+  --sl-opt-lamp-border: 3px;
+  /* The preset gallery of the settings page is 127 options: the pick area is capped here and scrolls, so one
+     field cannot run its tile past a thousand points */
+  --sl-opt-max-height: 280px;
+  /* The section rail stands over the top of the window, so a section scrolled to must clear it. Its height is a sum of
+     tokens and not of text - the caption is held to one line for exactly that reason - so it can be named once here */
+  --sl-opt-rail-height: 68px;
   --sl-pager-item-width: 27px;
   --sl-pager-dot-width: 13px;
   --sl-pager-dot-height: 13px;

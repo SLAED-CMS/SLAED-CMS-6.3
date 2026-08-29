@@ -1,0 +1,78 @@
+{% if alert_html %}{{{ alert_html }}}{% endif %}
+{% if lamps %}
+<div class="sl-opt-lamps">
+  {% for lamp in lamps %}
+  <div class="sl-opt-lamp sl-is-{{ lamp.tone }}"{% if lamp.is_meter %} data-sl-meter{% endif %}><small>{{ lamp.label }}</small><b{% if lamp.is_meter %} data-sl-meter-num{% endif %}>{{ lamp.value }}</b><span>{{ lamp.note }}{% if lamp.is_meter %} <span data-sl-meter-left>{{ lamp.left }}</span>{% endif %}</span></div>
+  {% endfor %}
+</div>
+{% endif %}
+{% if rail %}
+<nav class="sl-opt-rail" data-sl-spy aria-label="{{ rail_label }}">
+  {% for mark in rail %}
+  <button class="sl-opt-mark" type="button" title="{{ mark.title }}" data-sl-spy-mark="{{ mark.id }}"><i class="bi bi-{{ mark.icon }}" aria-hidden="true"></i><span>{{ mark.title }}</span></button>
+  {% endfor %}
+</nav>
+{% endif %}
+{% for sec in sections %}
+{% if sec.form_open %}
+<form action="{{ form_action }}" method="post" name="post" enctype="multipart/form-data" data-sl-dirty>
+{{{ form_hidden }}}
+{% endif %}
+<section class="sl-opt-sec" id="{{ sec.id }}">
+  <h2><i class="bi bi-{{ sec.icon }}" aria-hidden="true"></i> {{ sec.title }}</h2>
+  {% if sec.alert_html %}{{{ sec.alert_html }}}{% endif %}
+  <div class="sl-opt-grid">
+    {% for tile in sec.tiles %}
+    <div class="sl-opt-tile sl-opt-w{{ tile.width }} sl-cat-tone-{{ tile.tone }}">
+      {% if tile.title %}<div class="sl-opt-tile-head"><i class="bi bi-{{ tile.icon }}" aria-hidden="true"></i><b>{{ tile.title }}</b></div>{% endif %}
+      {% if tile.face_src %}<div class="sl-opt-face"><img src="{{ tile.face_src }}" alt="{{ tile.face_alt }}" title="{{ tile.face_alt }}"></div>{% endif %}
+      {% if tile.meter %}
+      <div class="sl-knob sl-knob-ok sl-cab-ring{% if tile.meter.is_full %} sl-knob-full{% endif %}" data-sl-meter style="--sl-d-meter:{{ tile.meter.rate }};">
+        <svg class="sl-knob-svg" viewBox="0 0 124 124" aria-hidden="true">
+          <circle class="sl-knob-bg" cx="62" cy="62" r="59"></circle>
+          <circle class="sl-knob-val" cx="62" cy="62" r="59" pathLength="100"></circle>
+        </svg>
+        <span><span><b data-sl-meter-num>{{ tile.meter.text }}</b><small>{{ tile.meter.label }}</small><small>{{ tile.meter.left_label }} <span data-sl-meter-left>{{ tile.meter.left }}</span></small></span></span>
+      </div>
+      {% endif %}
+      {% if tile.text %}<p>{{ tile.text }}</p>{% endif %}
+      {% if tile.fields %}
+      <div class="sl-opt-fields">
+        {% for fld in tile.fields %}
+        <div class="sl-opt-line{% if fld.is_span %} sl-opt-span{% endif %}">
+          <span>{% include 'fragments/label.html' with fld %}{% if fld.hint %}<small id="{{ fld.hint_id }}">{{ fld.hint }}</small>{% endif %}</span>
+          {{{ fld.control_html }}}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% if tile.lines %}
+      <div class="sl-opt-lines">
+        {% for line in tile.lines %}
+        <div class="sl-opt-line{% if line.is_wide %} sl-opt-line-wide{% endif %}">
+          <span>{% include 'fragments/label.html' with line %}{% if line.hint %}<small id="{{ line.hint_id }}">{{ line.hint }}</small>{% endif %}</span>
+          {{{ line.control_html }}}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% if tile.log %}
+      <ul class="sl-opt-log">
+        {% for row in tile.log %}
+        <li><span>{{ row.text }}</span><time datetime="{{ row.stamp }}">{{ row.date }}</time></li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+      {% if tile.rows_html %}{{{ tile.rows_html }}}{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% if sec.form_close %}
+<div class="sl-opt-save">
+  <span><i class="bi bi-exclamation-circle" aria-hidden="true"></i> {{ save_note }}</span>
+  <span><button class="sl-but-mini" type="button" data-sl-clean>{{ save_undo }}</button> {{{ form_submit }}}</span>
+</div>
+</form>
+{% endif %}
+{% endfor %}

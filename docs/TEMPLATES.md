@@ -417,6 +417,35 @@ Only a row whose field has no labelable control of its own — a radio group, an
 - **The read-only value row is not a form row.** `fragments/field-value.html` renders `.sl-value-row` / `.sl-value-label` / `.sl-value-text` in both themes, with a `<span>` caption that labels nothing. `.sl-form-*` means the editable row and nothing else. The width token of the panel caption keeps the name `--sl-form-label-width`: that API block is frozen, and a theme copied from it reads a name this tree cannot reach to rename.
 - **A row folds on the box it stands in.** Both themes keep the viewport step at 900px and add a container step beside it: `.sl-div-grid` and `.sl-form` (and `.sl-oauth-form`) declare `container-name`, so a grid nested in another row's field cell, a composer in a narrow pane and an OAuth card in a `minmax(280px, 1fr)` column fold on their own width. The radio-group ladder moves with the row — both steps or neither, or a single-column row ends up holding a four-across group.
 
+## Settings Page Contract
+
+`index.php?name=account&op=edithome` is the one page in the tree whose whole body is nested data: `modules/account/index.php` hands `partials/account-settings.html` a list of sections, each holding tiles, each tile holding lines, fields, rows or a log, and the template owns every tag and every class. PHP names a width number and a tone number; the template maps both. No CSS class name crosses that boundary.
+
+| Level | Key | Carries |
+|---|---|---|
+| page | `sections` | the sections that actually rendered, in reading order |
+| page | `lamps`, `rail` | the state tiles above the form and the marks of the scroll spy |
+| section | `id`, `icon`, `title` | the anchor the rail points at, and its heading |
+| section | `inform` | this section's tiles belong inside the shared form |
+| section | `alert_html` | a validation message tagged with this section's name, rendered beside its cause |
+| tile | `width` | 2, 3, 4 or 6 of a six-track grid; the template writes `sl-opt-w<n>` |
+| tile | `tone` | 0 to 5; the template writes `sl-cat-tone-<n>` |
+| tile | `fields`, `lines`, `rows_html`, `log`, `meter`, `face_src`, `text` | the six shapes a tile can hold |
+
+- **The width is a number and never a class.** PHP owns how much of the row a tile deserves, the theme owns what that means in pixels, and the four widths are the only arithmetic the page carries. A tile at 3 is about 345 points on this layout, which is where a caption-left row folds — so the fold is a property of the tile, not of the window.
+- **The tile is the fold container.** `.sl-opt-tile` declares `container-type: inline-size` and `container-name: sl-form-box`, the name the form row already watches, so every row inside folds by the rule the rest of the tree carries rather than by a second one.
+- **The form opens and closes around sections, not inside them.** The template opens the shared form before the first section marked `inform` and closes it after the last, so the form, the password form and the OAuth unlink buttons are siblings and never nest. The password keeps its own form on purpose: a member who filled fifteen fields and mistyped the old password must not be told "saved" about half the page.
+- **The rail counts what rendered.** A section that produces nothing is never appended, so the rail is five marks on an account with no external links and never a fixed six; below two sections there is no rail at all.
+- **A read-only value is not a row.** The settings tiles reuse `fragments/field-value.html`, and `.sl-opt-tile .sl-value-text` is masked in the screenshot rig because a points counter and a last-activity stamp move on their own.
+
+**Three page behaviours live in `plugins/system/slaed.js` and only on this page.**
+
+| Attribute | On | Does |
+|---|---|---|
+| `data-sl-spy` with `data-sl-spy-mark="<id>"` | the rail and each mark | marks the section under the observer band as current and colours the road behind it; the bottom of the document reads as the last mark, because a short final section never rises into the band |
+| `data-sl-meter` with `data-sl-meter-fill`, `data-sl-meter-num`, `data-sl-meter-left` | the ring, the lamp and each counted control | recomputes profile completeness as the member types; `data-sl-meter-fill` carries the value that counts as empty, so one rule serves a text field and a select whose zero is a real option |
+| `data-sl-dirty` with `data-sl-clean` | the shared form and the discard button | raises the save bar on the first change and reverts on discard. The hidden state is armed by the script and never by the markup: a page whose JavaScript never ran keeps a bar that is simply always there, instead of a form whose only submit can no longer be made to appear |
+
 ## Theme Contract
 
 A new theme is made by copying an etalon and editing one file: `templates/<theme>/assets/css/base.css` — its `@font-face` and `:root` block, down to the `/* --- end tokens --- */` marker. Everything below the marker is reset and element styles.

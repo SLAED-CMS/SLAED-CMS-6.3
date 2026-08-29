@@ -196,7 +196,7 @@ return [
         'fresh-now', 'fresh-week', 'graph', 'header', 'hub-head', 'hub-row',
         'ico', 'idea', 'info-row', 'invoice', 'invoice-logo', 'item', 'knob', 'lang', 'led', 'letter', 'live-dot', 'loading',
         'loading-dot', 'login', 'login-drop', 'login-footer', 'login-header', 'logo', 'madein', 'marquee', 'menu', 'meta',
-        'meter', 'modal', 'modal-act', 'modal-btn', 'mode', 'module-head', 'monitor-table', 'move', 'msg', 'msg-brand', 'nav',
+        'meter', 'modal', 'modal-act', 'modal-btn', 'mode', 'module-head', 'monitor-table', 'move', 'msg', 'msg-brand', 'nav', 'opt', 'opt-lamp', 'opt-rail',
         'pager', 'pager-dot', 'pager-item', 'panel', 'panel-feed', 'placeholder', 'pmf-ava', 'pmf-blank', 'pmf-chip', 'pmf-day', 'pmf-filter',
         'pmf-head', 'pmf-mate', 'pmf-meta', 'pmf-pane', 'pmf-slot', 'pmf-text', 'pmf-who',
         'pnum', 'pnum-arrow', 'popover', 'preview', 'profile-ava', 'profile-dot', 'progress', 'proof', 'pulse', 'qr', 'quote', 'radio',
@@ -219,6 +219,7 @@ return [
         '--sl-d-float-top' => 'floating panel viewport top, plugins/system/slaed.js',
         '--sl-d-level' => 'profile completion percentage, templates/lite/partials/account-home.html and account-profile.html',
         '--sl-d-members' => 'session donut member share, templates/lite/partials/session-summary.html',
+        '--sl-d-meter' => 'profile completeness percentage, templates/lite/partials/account-settings.html and plugins/system/slaed.js',
         '--sl-d-ring' => 'profile ring colour, templates/lite/partials/account-home.html and account-profile.html',
         '--sl-d-user' => 'user group colour, templates/lite/partials/block-user-info.html',
         '--sl-d-usrlevel' => 'user group progress, templates/lite/partials/block-user-info.html',
@@ -234,6 +235,7 @@ return [
         'templates/lite/fragments/comment.html',
         'templates/lite/partials/account-home.html',
         'templates/lite/partials/account-profile.html',
+        'templates/lite/partials/account-settings.html',
         'templates/lite/partials/block-user-info.html',
         'templates/lite/partials/session-summary.html',
         'admin/modules/monitor.php',
@@ -366,6 +368,9 @@ return [
         # A category tone and the tone a kept message wears are one colour under two names on purpose: the first is a
         # category of the catalogue, the second a state of a message, and they are free to part without touching each other
         '.sl-cat-tone-2, .sl-pmf-slot-keep',
+        # The action row of a forum listing beside the head of a settings tile: the shortest way to put two things on one
+        # line, met by two components that share nothing else. Merging would file the tile's head inside the forum block
+        '.sl-forum-top .sl-pull-right, .sl-forum-foot .sl-pull-right, .sl-opt-tile-head',
         # Five groups the colour fold closed over: the changelog island, the two service tones of the social icons and the
         # colour a heading link carried all reached a role that other places already read, and a page ground meeting an editor
         # ground is a coincidence of one role and not one component. Four of the five cross a file boundary that no selector

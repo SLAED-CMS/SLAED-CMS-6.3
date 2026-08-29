@@ -119,7 +119,9 @@ async function setSession(page, kind) {
 // editor with no name at all reads as clean. Ids are unique per document, which is the same reason
 function getFrameFindings() {
   const LABELABLE = 'button, input:not([type="hidden"]), meter, output, progress, select, textarea';
-  const ROW = '.sl-div-item, .sl-form-row, .sl-value-row';
+  // `.sl-opt-line` is the third row shape: the settings page owns its own markup, so a caption, its hint and the
+  // control they belong to sit in a line of a tile and not in a form row, and a hint there has a row like any other
+  const ROW = '.sl-div-item, .sl-form-row, .sl-value-row, .sl-opt-line';
   const out = [];
   // A selector is only how a violation is named, but the name is the key the baseline is stored under, so a class the
   // page puts on and takes off would file the same element under two keys - and a run where the editor happened not to
