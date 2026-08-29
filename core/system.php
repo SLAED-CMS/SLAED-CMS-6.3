@@ -3458,12 +3458,17 @@ function filterSlug(string $text, string $sep = '-'): string {
 }
 
 # Format theme
+# The panel forces its own theme at bootstrap and a member's site theme may not take it back: the panel is built from
+# partials no site theme carries - the login form among them - so a member who once saved a theme preference and then
+# opened the panel was served a page whose form could not render at all
+# `index.php` declares the same constant for its admin endpoints, but long after the answer here is cached, and that
+# branch builds its Template by name anyway; the constant is therefore read only where it is set before the bootstrap
 function getTheme(): string {
     static $cached = null;
     if ($cached !== null) return $cached;
     global $user, $conf;
     $default = $conf['theme'] ?? 'default';
-    if (is_user()) {
+    if (is_user() && !defined('ADMIN_FILE')) {
         $utheme = $user[5] ?? '';
         if ($utheme !== '' && checkThemeAssets($utheme)) return $cached = $utheme;
     }

@@ -1176,7 +1176,8 @@ function savehome(): void {
                     Logger::addFile('error', 'Avatar upload could not be removed after a failed profile write', ['path' => $path]);
                 }
             }
-            $theme = $theme ?: ($conf['theme'] ?? '');
+            # The cookie carries what the member chose and never what the site defaults to: an empty slot means no
+            # preference, which every reader already resolves for itself, while a name written in means a decision
             setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $name, $pass, $story, $blockon, $theme]);
             if ($stop) {
                 edithome();
@@ -1214,7 +1215,7 @@ function savepass(): void {
                     $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$nick;
                     $message = str_replace('[text]', sprintf(_PASSESEND, $nick, $conf['sitename'], $nick, $link), $conf['mtemp']);
                     $mailer->addQueue(['kind' => 'account', 'email' => $mail, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 3]);
-                    setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $nick, $hash, $story, $blockon, $theme ?: ($conf['theme'] ?? '')]);
+                    setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $nick, $hash, $story, $blockon, $theme]);
                     setRedirect('index.php?name='.$conf['name'].'&op=edithome', false, 302, _SUCCSAVE);
                 } else {
                     $stop[] = _ERROR_PASS;
