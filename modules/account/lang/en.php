@@ -44,7 +44,6 @@ define('_AVATARINFO','Displays a small graphic image below your details in posts
 define('_AVATARSAVE','Select Avatar from gallery');
 define('_AVATARSELECT','Choose your favorite avatar from the gallery, it is enough to press the left mouse button on the desired image.');
 define('_AVATARSETUP','Select avatar');
-define('_AVATAR_USER','Upload Avatar from your machine');
 define('_BLANKFORAUTO','Leave blank for auto-generate your password');
 define('_CHARMIN','Minimum number of characters in the password');
 define('_CODEFOR','Confirmation Code for');

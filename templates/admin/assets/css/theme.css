@@ -4,10 +4,6 @@
 }
 
 /* Forms: field width utilities */
-.sl-field-auto {
-  width: auto;
-}
-
 .sl-form-control {
   width: var(--sl-form-width);
   max-width: 100%;
@@ -6947,5 +6943,1047 @@ button.sl-fm-thumb:hover .bi-zoom-in {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* The door of a form row onto that window: one button wherever the system asks for a file, the chip of what came back
+   beside it and the limits of the place spelled out after both (docs/WINDOW.md). It carries none of the window's own
+   component names, because the administrative browser owns those and this row stands outside the window root */
+.sl-file-door {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-3);
+}
+
+.sl-file-door > small {
+  color: var(--sl-text-muted);
+}
+
+/* The cross of the chip is the same control the window uses, worn down to the line height of the chip it stands in */
+.sl-file-door .sl-but-mini {
+  min-width: auto;
+  height: auto;
+  padding: 0;
+  background-color: transparent;
+  color: inherit;
+}
+
+/* The window of the file manager: the rail of insertion ways on the left, the work area on the right, one permanent
+   status line below (docs/WINDOW.md). It is the one door the whole system asks for a file through and it opens on
+   pages carrying no editor at all, so the theme dresses it and the skin of one plugin no longer can */
+/* Every rule below is scoped under the window root: the administrative browser owns the same component names in its
+   own theme, and the two must never reach each other */
+.sl-fm-win .sl-fm-split {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.sl-fm-win .sl-fm-split {
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  min-height: var(--sl-fm-panel-height);
+}
+
+.sl-fm-win .sl-fm-rail {
+  background: var(--sl-surface);
+  border-right: 1px solid var(--sl-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sl-space-1);
+  overflow-y: auto;
+  padding: var(--sl-space-5) var(--sl-space-4);
+}
+
+/* Nothing in the rail gives way under pressure: a shrinking section slides under the next one and the whole column reads as one heap of words */
+.sl-fm-win .sl-fm-rail > * {
+  flex: 0 0 auto;
+}
+
+.sl-fm-win .sl-fm-rail-cap {
+  color: var(--sl-text-subtle);
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  padding: var(--sl-space-2) var(--sl-space-4) var(--sl-space-3);
+  text-transform: uppercase;
+}
+
+/* The window is mounted inside the editor root, where the vendor stylesheet gives every button one fixed height */
+/* A section of the rail is as tall as its own words, so it takes its height back; every other control of the window names its own and is therefore left alone */
+.sl-fm-win .sl-fm-rail-item {
+  align-items: flex-start;
+  background: transparent;
+  border: 0;
+  border-radius: var(--sl-radius-2);
+  height: auto;
+  color: var(--sl-text-strong);
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  gap: var(--sl-space-4);
+  padding: var(--sl-space-4) var(--sl-space-5);
+  position: relative;
+  text-align: left;
+  transition: background-color var(--sl-time-fast) var(--sl-ease-out);
+}
+
+.sl-fm-win .sl-fm-rail-item .bi {
+  color: var(--sl-text-muted);
+  flex: 0 0 auto;
+  font-size: var(--sl-size-icon-sm);
+  margin-top: 1px;
+}
+
+.sl-fm-win .sl-fm-rail-item > span {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sl-fm-win .sl-fm-rail-item b {
+  display: block;
+  font-size: var(--sl-font-body);
+  font-weight: var(--sl-weight-normal);
+}
+
+.sl-fm-win .sl-fm-rail-item small {
+  color: var(--sl-text-subtle);
+  display: block;
+  font-size: var(--sl-font-micro);
+  line-height: var(--sl-line-normal);
+  margin-top: var(--sl-space-2);
+}
+
+.sl-fm-win .sl-fm-rail-item:hover:not([disabled]) {
+  background: var(--sl-bg);
+}
+
+.sl-fm-win .sl-fm-rail-item[aria-selected="true"] {
+  background: var(--sl-bg);
+  box-shadow: inset 0 0 0 1px var(--sl-border);
+}
+
+.sl-fm-win .sl-fm-rail-item[aria-selected="true"]::before {
+  background: var(--sl-primary);
+  border-radius: 0 var(--sl-radius-1) var(--sl-radius-1) 0;
+  bottom: 10px;
+  content: "";
+  left: -10px;
+  position: absolute;
+  top: 10px;
+  width: var(--sl-rail-width);
+}
+
+.sl-fm-win .sl-fm-rail-item[aria-selected="true"] .bi,
+.sl-fm-win .sl-fm-rail-item[aria-selected="true"] b {
+  color: var(--sl-primary);
+}
+
+/* A section the settings close stays where it is and says why, because a control that vanishes is looked for and one that explains itself is understood */
+.sl-fm-win .sl-fm-rail-item[disabled] {
+  cursor: not-allowed;
+}
+
+.sl-fm-win .sl-fm-rail-item[disabled] b,
+.sl-fm-win .sl-fm-rail-item[disabled] .bi {
+  color: var(--sl-text-subtle);
+}
+
+.sl-fm-win .sl-fm-rail-item[disabled] small {
+  color: var(--sl-text-subtle);
+  font-style: italic;
+}
+
+.sl-fm-win .sl-fm-rail-lock {
+  color: var(--sl-text-subtle) !important;
+  font-size: var(--sl-size-icon-xs) !important;
+  margin: 0 !important;
+  position: absolute;
+  right: 10px;
+  top: 11px;
+}
+
+.sl-fm-win .sl-fm-rail-sep {
+  background: var(--sl-border);
+  height: 1px;
+  margin: var(--sl-space-3) var(--sl-space-4);
+}
+
+.sl-fm-win .sl-fm-rail-foot {
+  color: var(--sl-text-subtle);
+  font-size: var(--sl-font-micro);
+  line-height: var(--sl-line-normal);
+  margin-top: auto;
+  padding: var(--sl-space-4);
+}
+
+.sl-fm-win .sl-fm-rail-foot b {
+  color: var(--sl-text-muted);
+  display: block;
+  font-weight: var(--sl-weight-normal);
+}
+
+.sl-fm-win .sl-fm-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sl-fm-win .sl-fm-main-head {
+  padding: var(--sl-space-6) var(--sl-space-7) 0;
+}
+
+.sl-fm-win .sl-fm-main-head h2 {
+  color: var(--sl-text-strong);
+  font: normal var(--sl-font-h4)/1.2 inherit;
+  margin: 0 0 var(--sl-space-2);
+}
+
+.sl-fm-win .sl-fm-main-head p {
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  line-height: var(--sl-line-normal);
+  margin: 0;
+}
+
+.sl-fm-win .sl-fm-body {
+  flex: 1 1 auto;
+  max-height: var(--sl-fm-body-height);
+  overflow: auto;
+  padding: var(--sl-space-6) var(--sl-space-7);
+}
+
+.sl-fm-win .sl-fm-pane {
+  display: none;
+  flex-direction: column;
+  gap: var(--sl-space-5);
+}
+
+.sl-fm-win .sl-fm-pane.sl-is-open {
+  display: flex;
+}
+
+/* The catalogue takes a drop of its own: files dragged onto the storage go up into the same module, and the sheet says so before the pointer is let go */
+.sl-fm-win .sl-fm-pane.sl-drag-over {
+  background: var(--sl-tint);
+  border-radius: var(--sl-radius-3);
+  outline: var(--sl-ring-width) dashed var(--sl-primary);
+  outline-offset: var(--sl-ring-gap);
+}
+
+/* One field standard for the window too: the caption stands left of what it names, the way every other form in the system reads */
+.sl-fm-win div:has(> .sl-fm-label) {
+  align-items: center;
+  display: grid;
+  gap: var(--sl-space-6);
+  grid-template-columns: 1fr 3fr;
+}
+
+.sl-fm-win .sl-fm-label {
+  color: var(--sl-text-strong);
+  font-size: var(--sl-font-small);
+}
+
+.sl-fm-win .sl-fm-drop {
+  align-items: center;
+  background: var(--sl-surface);
+  border: 1px dashed var(--sl-border-strong);
+  border-radius: var(--sl-radius-3);
+  color: var(--sl-text-muted);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sl-space-3);
+  justify-content: center;
+  min-height: var(--sl-fm-drop-height);
+  padding: var(--sl-space-7);
+  text-align: center;
+  transition: border-color var(--sl-time-fast) var(--sl-ease-out), background-color var(--sl-time-fast) var(--sl-ease-out);
+}
+
+.sl-fm-win .sl-fm-drop:hover,
+.sl-fm-win .sl-fm-drop:focus-visible,
+.sl-fm-win .sl-fm-drop.sl-drag-over {
+  background: var(--sl-tint);
+  border-color: var(--sl-primary);
+  outline: 0;
+}
+
+.sl-fm-win .sl-fm-drop .bi {
+  color: var(--sl-primary);
+  font-size: var(--sl-size-icon-lg);
+}
+
+.sl-fm-win .sl-fm-drop b {
+  color: var(--sl-text-strong);
+  font-weight: var(--sl-weight-normal);
+}
+
+.sl-fm-win .sl-fm-drop small {
+  font-size: var(--sl-font-small);
+}
+
+.sl-fm-win .sl-fm-as {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-3);
+}
+
+.sl-fm-win .sl-fm-as label {
+  align-items: center;
+  background: var(--sl-surface);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-pill);
+  color: var(--sl-text-strong);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: var(--sl-font-small);
+  gap: var(--sl-space-3);
+  height: var(--sl-fm-as-height);
+  padding: 0 var(--sl-space-5);
+}
+
+.sl-fm-win .sl-fm-as input {
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+.sl-fm-win .sl-fm-as label:has(input:checked) {
+  background: var(--sl-tint);
+  border-color: var(--sl-primary);
+  color: var(--sl-primary-strong);
+}
+
+/* The action sits in the row of the view choice: the same shape, pushed to the right, because it is not one of the choices */
+.sl-fm-win .sl-fm-as button {
+  align-items: center;
+  background: var(--sl-surface);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-pill);
+  color: var(--sl-text-strong);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: var(--sl-font-small);
+  gap: var(--sl-space-3);
+  height: var(--sl-fm-as-height);
+  margin-left: auto;
+  padding: 0 var(--sl-space-5);
+}
+
+.sl-fm-win .sl-fm-as button:hover {
+  border-color: var(--sl-primary);
+  color: var(--sl-primary);
+}
+
+.sl-fm-win .sl-fm-as button .bi {
+  font-size: var(--sl-size-icon-xs);
+}
+
+.sl-fm-win .sl-fm-field {
+  background: var(--sl-field-bg);
+  border: 1px solid var(--sl-field-border);
+  border-radius: var(--sl-field-radius);
+  box-shadow: var(--sl-field-shadow);
+  box-sizing: border-box;
+  color: var(--sl-text);
+  display: block;
+  font: inherit;
+  height: var(--sl-fm-field-height);
+  padding: 0 var(--sl-space-5);
+  width: 100%;
+}
+
+.sl-fm-win .sl-fm-field:focus,
+.sl-fm-win .sl-fm-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sl-space-5);
+}
+
+/* The tile is as wide as the open fan needs, because the fan unfolds to the left and has to fit inside the tile it belongs to */
+.sl-fm-win .sl-fm-grid {
+  display: grid;
+  gap: var(--sl-space-4);
+  grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
+}
+
+/* The wrapper holds the fan above the tile: the tile itself clips its own overflow, or the open fan would be cut off by it */
+.sl-fm-win .sl-fm-cell {
+  position: relative;
+}
+
+.sl-fm-win .sl-fm-cell > .sl-dial {
+  bottom: 9px;
+  position: absolute;
+  right: 6px;
+}
+
+/* The mark of a file: the plain checkbox of base.css on a round backing, so it stays readable over a picture */
+.sl-fm-win .sl-fm-pick {
+  align-items: center;
+  background: var(--sl-fm-pick-bg);
+  border-radius: var(--sl-radius-circle);
+  cursor: pointer;
+  display: inline-flex;
+  height: var(--sl-fm-pick-height);
+  justify-content: center;
+  left: 6px;
+  position: absolute;
+  top: 6px;
+  width: var(--sl-fm-pick-width);
+  z-index: var(--sl-z-raised);
+}
+
+.sl-fm-win .sl-fm-pick input {
+  margin: 0;
+}
+
+.sl-fm-win .sl-fm-cell:has(.sl-fm-pick input:checked) .sl-fm-tile {
+  border-color: var(--sl-primary);
+  box-shadow: 0 0 0 var(--sl-ring-width) var(--sl-field-ring);
+}
+
+/* The current file is the one whose properties stand on the right; a mark is a separate thing and serves the actions over several files */
+.sl-fm-win .sl-fm-cell.sl-is-current .sl-fm-tile {
+  border-color: var(--sl-border-strong);
+}
+
+.sl-fm-win .sl-fm-row.sl-is-current,
+.sl-fm-win .sl-fm-row:has(.sl-fm-pick input:checked) {
+  background: var(--sl-tint);
+  border-color: var(--sl-primary);
+}
+
+.sl-fm-win .sl-fm-job .sl-fm-pick,
+.sl-fm-win .sl-fm-row .sl-fm-pick,
+.sl-fm-win .sl-fm-rows-head .sl-fm-pick {
+  background: none;
+  height: auto;
+  position: static;
+  width: auto;
+}
+
+.sl-fm-win .sl-fm-view .sl-bulk-bar {
+  margin-top: 0;
+}
+
+.sl-fm-win .sl-fm-tile {
+  background: var(--sl-bg);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-3);
+  display: block;
+  overflow: hidden;
+  padding: 0;
+  position: relative;
+}
+
+.sl-fm-win .sl-fm-cell:hover .sl-fm-tile {
+  border-color: var(--sl-border-strong);
+}
+
+.sl-fm-win .sl-fm-tile-img {
+  align-items: center;
+  background: var(--sl-bg-subtle);
+  color: var(--sl-text-muted);
+  display: flex;
+  font-size: var(--sl-size-icon-md);
+  height: var(--sl-fm-tile-height);
+  justify-content: center;
+  position: relative;
+}
+
+.sl-fm-win .sl-fm-tile-img img,
+.sl-fm-win .sl-fm-row-thumb img {
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+/* The whole preview is one link: the shared lightbox opens by the picture of the object */
+.sl-fm-win .sl-fm-zoom {
+  align-items: center;
+  background: var(--sl-scrim);
+  color: var(--sl-on-solid);
+  display: flex;
+  font-size: var(--sl-size-icon-sm);
+  inset: 0;
+  justify-content: center;
+  opacity: 0;
+  position: absolute;
+  text-decoration: none;
+  transition: opacity var(--sl-time-fast) var(--sl-ease-out);
+}
+
+.sl-fm-win .sl-fm-zoom:hover,
+.sl-fm-win .sl-fm-zoom:focus-visible {
+  opacity: 1;
+}
+
+/* The kind badge went right: the mark of the file stands top left now */
+.sl-fm-win .sl-fm-tile-kind {
+  align-items: center;
+  background: var(--sl-fm-kind-bg);
+  border-radius: var(--sl-radius-pill);
+  color: var(--sl-text-muted);
+  display: inline-flex;
+  font-size: var(--sl-font-micro);
+  height: var(--sl-fm-kind-height);
+  letter-spacing: var(--sl-track-wide);
+  padding: 0 var(--sl-space-3);
+  position: absolute;
+  right: 6px;
+  top: 6px;
+}
+
+.sl-fm-win .sl-fm-tile-cap {
+  border-top: 1px solid var(--sl-border);
+  display: block;
+  padding: var(--sl-space-3);
+  padding-right: calc(var(--sl-size-chip) + var(--sl-space-3) * 2);
+}
+
+.sl-fm-win .sl-fm-tile-cap b {
+  color: var(--sl-text-strong);
+  display: block;
+  font-size: var(--sl-font-small);
+  font-weight: var(--sl-weight-normal);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-fm-win .sl-fm-tile-cap small {
+  color: var(--sl-text-subtle);
+  display: block;
+  font-size: var(--sl-font-micro);
+  margin-top: var(--sl-space-1);
+}
+
+.sl-fm-win .sl-fm-more {
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  margin: 0;
+}
+
+.sl-fm-win .sl-fm-lib-bar {
+  align-items: center;
+  display: flex;
+  gap: var(--sl-space-3);
+}
+
+.sl-fm-win .sl-fm-search {
+  flex: 1 1 auto;
+  min-width: 0;
+  position: relative;
+}
+
+.sl-fm-win .sl-fm-search .bi {
+  color: var(--sl-text-subtle);
+  font-size: var(--sl-size-icon-xs);
+  left: 11px;
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.sl-fm-win .sl-fm-search input {
+  background: var(--sl-field-bg);
+  border: 1px solid var(--sl-field-border);
+  border-radius: var(--sl-radius-pill);
+  box-shadow: var(--sl-field-shadow);
+  box-sizing: border-box;
+  color: var(--sl-text);
+  font: inherit;
+  height: var(--sl-fm-search-height);
+  padding: 0 var(--sl-space-5) 0 calc(var(--sl-size-icon-xs) + var(--sl-space-6));
+  width: 100%;
+}
+
+.sl-fm-win .sl-fm-search input:focus {
+  border-color: var(--sl-primary);
+  box-shadow: var(--sl-field-shadow), 0 0 0 var(--sl-ring-width) var(--sl-field-ring);
+  outline: 0;
+}
+
+.sl-fm-win .sl-fm-filters {
+  display: flex;
+  gap: var(--sl-space-2);
+}
+
+.sl-fm-win .sl-fm-filter {
+  background: var(--sl-bg);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-pill);
+  color: var(--sl-text-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--sl-font-small);
+  height: var(--sl-fm-filter-height);
+  padding: 0 var(--sl-space-5);
+}
+
+.sl-fm-win .sl-fm-filter:hover {
+  border-color: var(--sl-border-strong);
+  color: var(--sl-text);
+}
+
+.sl-fm-win .sl-fm-filter[aria-pressed="true"] {
+  background: var(--sl-tint);
+  border-color: var(--sl-primary);
+  color: var(--sl-primary-strong);
+}
+
+.sl-fm-win .sl-fm-modes {
+  background: var(--sl-bg-subtle);
+  border-radius: var(--sl-radius-2);
+  display: flex;
+  gap: var(--sl-space-1);
+  padding: var(--sl-space-1);
+}
+
+.sl-fm-win .sl-fm-mode {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: var(--sl-radius-2);
+  color: var(--sl-text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: var(--sl-size-icon-xs);
+  height: var(--sl-size-chip);
+  justify-content: center;
+  width: var(--sl-fm-mode-width);
+}
+
+.sl-fm-win .sl-fm-mode[aria-pressed="true"] {
+  background: var(--sl-bg);
+  box-shadow: var(--sl-shadow-xs);
+  color: var(--sl-primary);
+}
+
+.sl-fm-win .sl-fm-lib-split {
+  align-items: start;
+  display: grid;
+  gap: var(--sl-space-6);
+  grid-template-columns: minmax(0, 1fr) 246px;
+}
+
+.sl-fm-win .sl-fm-rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.sl-fm-win .sl-fm-rows-head,
+.sl-fm-win .sl-fm-row {
+  align-items: center;
+  display: grid;
+  gap: var(--sl-space-4);
+  grid-template-columns: 22px 44px minmax(0, 1fr) 68px 78px 88px 34px;
+}
+
+.sl-fm-win .sl-fm-rows-head {
+  border-bottom: 1px solid var(--sl-border);
+  color: var(--sl-text-subtle);
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  padding: 0 var(--sl-space-3) var(--sl-space-3);
+  text-transform: uppercase;
+}
+
+/* A sortable column of the head is a button so the keyboard reaches it, and it has to read as the label it replaced:
+   the frame, the ground and the type of the head are the head's own, the sort glyph comes from the shared classes */
+.sl-fm-win .sl-fm-rows-head [data-sl-sort] {
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  letter-spacing: inherit;
+  padding: 0 var(--sl-space-6) 0 0;
+  text-align: left;
+  text-transform: inherit;
+}
+
+.sl-fm-win .sl-fm-rows-head [data-sl-sort]:hover {
+  color: var(--sl-text);
+}
+
+.sl-fm-win .sl-fm-row {
+  border: 1px solid transparent;
+  border-radius: var(--sl-radius-2);
+  padding: var(--sl-space-3);
+  position: relative;
+}
+
+.sl-fm-win .sl-fm-row:hover {
+  background: var(--sl-surface);
+  border-color: var(--sl-border);
+}
+
+.sl-fm-win .sl-fm-row-thumb {
+  align-items: center;
+  background: var(--sl-bg-subtle);
+  color: var(--sl-text-muted);
+  display: flex;
+  font-size: var(--sl-size-icon-xs);
+  height: var(--sl-fm-row-height);
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  width: var(--sl-fm-row-width);
+}
+
+.sl-fm-win .sl-fm-row .sl-dial {
+  justify-self: end;
+}
+
+/* The fan opened at the pointer leaves the corner of its object: the rule stands after both anchors of this window, because a menu at the pointer overrules both */
+.sl-fm-win .sl-dial.sl-dial-point {
+  bottom: auto;
+  justify-self: auto;
+  position: absolute;
+  right: auto;
+}
+
+/* The object the keys walk to must be seen as the object the keys will act on */
+.sl-fm-win .sl-fm-row:focus-visible,
+.sl-fm-win .sl-fm-cell:focus-visible {
+  border-radius: var(--sl-radius-3);
+  outline: var(--sl-ring-width) solid var(--sl-primary);
+  outline-offset: var(--sl-ring-gap);
+}
+
+.sl-fm-win .sl-fm-row-name {
+  color: var(--sl-text-strong);
+  font-size: var(--sl-font-small);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-fm-win .sl-fm-row-meta {
+  color: var(--sl-text-subtle);
+  font-size: var(--sl-font-micro);
+}
+
+.sl-fm-win .sl-fm-props,
+.sl-shot-side .sl-fm-props {
+  background: var(--sl-surface);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-3);
+  padding: var(--sl-space-5);
+}
+
+.sl-fm-win .sl-fm-props-cap {
+  color: var(--sl-text-subtle);
+  display: block;
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  margin-bottom: var(--sl-space-4);
+  text-transform: uppercase;
+}
+
+/* The picture of the properties holds the zoom overlay of a tile, so it has to be the frame that overlay is measured
+   against; with no picture to show it holds one glyph, and a glyph alone in a frame this size is drawn at the top step */
+.sl-fm-win .sl-fm-props-img {
+  align-items: center;
+  background: var(--sl-bg-subtle);
+  border-radius: var(--sl-radius-2);
+  color: var(--sl-text-muted);
+  display: flex;
+  font-size: var(--sl-size-icon-xl);
+  height: var(--sl-fm-props-height);
+  justify-content: center;
+  margin-bottom: var(--sl-space-4);
+  overflow: hidden;
+  position: relative;
+}
+
+.sl-fm-win .sl-fm-props-img img {
+  height: 100%;
+  object-fit: contain;
+  width: 100%;
+}
+
+.sl-fm-win .sl-fm-props dl {
+  margin: 0;
+}
+
+.sl-fm-win .sl-fm-props div,
+.sl-shot-side .sl-fm-props div {
+  border-bottom: 1px dashed var(--sl-border);
+  display: flex;
+  font-size: var(--sl-font-small);
+  gap: var(--sl-space-4);
+  justify-content: space-between;
+  padding: var(--sl-space-2) 0;
+}
+
+.sl-fm-win .sl-fm-props div:last-child,
+.sl-shot-side .sl-fm-props div:last-child {
+  border-bottom: 0;
+}
+
+.sl-fm-win .sl-fm-props dt,
+.sl-shot-side .sl-fm-props dt {
+  color: var(--sl-text-subtle);
+  flex: 0 0 auto;
+}
+
+.sl-fm-win .sl-fm-props dd,
+.sl-shot-side .sl-fm-props dd {
+  color: var(--sl-text-strong);
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The fan of the object stands under its properties, opened upward: below it there is only the note, and a fan that
+   opened downward would leave the panel */
+.sl-fm-win .sl-fm-props-acts {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--sl-space-4);
+  min-height: var(--sl-size-chip);
+}
+
+.sl-fm-win .sl-fm-props-note {
+  color: var(--sl-text-subtle);
+  font-size: var(--sl-font-micro);
+  line-height: var(--sl-line-normal);
+  margin: var(--sl-space-4) 0 0;
+}
+
+/* The empty catalogue names its reason instead of saying nothing; the same block carries the empty filter and the list that never arrived */
+.sl-fm-win .sl-fm-empty {
+  align-items: center;
+  background: var(--sl-surface);
+  border: 1px dashed var(--sl-border-strong);
+  border-radius: var(--sl-radius-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sl-space-3);
+  padding: var(--sl-space-8) var(--sl-space-7);
+  text-align: center;
+}
+
+.sl-fm-win .sl-fm-empty .bi {
+  color: var(--sl-text-subtle);
+  font-size: var(--sl-size-icon-lg);
+}
+
+.sl-fm-win .sl-fm-empty b {
+  color: var(--sl-text-strong);
+  font-weight: var(--sl-weight-normal);
+}
+
+.sl-fm-win .sl-fm-empty p {
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  line-height: var(--sl-line-normal);
+  margin: 0;
+  max-width: var(--sl-fm-empty-width);
+}
+
+.sl-fm-win .sl-fm-empty.sl-is-fail .bi {
+  color: var(--sl-danger);
+}
+
+/* The skeleton of the catalogue takes the shape of a tile, because tiles is what the compact catalogue shows and a row-shaped placeholder would jump when the answer lands */
+.sl-fm-win .sl-skel-tile {
+  background: var(--sl-bg);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-3);
+  overflow: hidden;
+}
+
+.sl-fm-win .sl-skel-tile .sl-skel-cell {
+  border-radius: 0;
+  height: var(--sl-skel-tile-height);
+}
+
+.sl-fm-win .sl-skel-tile .sl-skel-line {
+  height: var(--sl-skel-row-height);
+  margin: var(--sl-space-3);
+}
+
+/* The upload queue: the files go one at a time, each with its own bar and its own cancel, and a refused one names the reason the server gave */
+.sl-fm-win .sl-fm-queue {
+  background: var(--sl-surface);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sl-space-4);
+  padding: var(--sl-space-5);
+}
+
+.sl-fm-win .sl-fm-queue-cap {
+  align-items: center;
+  color: var(--sl-text-muted);
+  display: flex;
+  font-size: var(--sl-font-small);
+  gap: var(--sl-space-4);
+}
+
+.sl-fm-win .sl-fm-queue-cap b {
+  color: var(--sl-text-strong);
+  flex: 1 1 auto;
+  font-weight: var(--sl-weight-normal);
+}
+
+.sl-fm-win .sl-fm-job {
+  align-items: center;
+  display: grid;
+  gap: var(--sl-space-4);
+  grid-template-columns: 22px minmax(0, 1fr) 28px;
+}
+
+.sl-fm-win .sl-fm-job > .bi {
+  color: var(--sl-text-muted);
+  font-size: var(--sl-size-icon-sm);
+}
+
+.sl-fm-win .sl-fm-job-name {
+  color: var(--sl-text-strong);
+  display: flex;
+  font-size: var(--sl-font-small);
+  gap: var(--sl-space-4);
+  justify-content: space-between;
+  margin-bottom: var(--sl-space-2);
+}
+
+.sl-fm-win .sl-fm-job-name span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-fm-win .sl-fm-job-name small {
+  color: var(--sl-text-subtle);
+  flex: 0 0 auto;
+}
+
+.sl-fm-win .sl-fm-job-why {
+  color: var(--sl-danger);
+  font-size: var(--sl-font-small);
+  line-height: var(--sl-line-normal);
+  margin: 0;
+}
+
+.sl-fm-win .sl-fm-job.sl-is-done > .bi {
+  color: var(--sl-success);
+}
+
+.sl-fm-win .sl-fm-job.sl-is-fail > .bi {
+  color: var(--sl-danger);
+}
+
+/* An action goes at its own pace: while the server has not answered, the object is busy and says so, and nothing on the list disappears before the answer */
+.sl-fm-win .sl-fm-busy {
+  align-items: center;
+  background: var(--sl-fm-busy-bg);
+  border-radius: var(--sl-radius-2);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  position: absolute;
+  z-index: var(--sl-z-overlay);
+}
+
+.sl-fm-win .sl-fm-quota {
+  align-items: center;
+  color: var(--sl-text-muted);
+  display: flex;
+  font-size: var(--sl-font-small);
+  gap: var(--sl-space-4);
+}
+
+.sl-fm-win .sl-fm-quota-track {
+  background: var(--sl-bg-subtle);
+  border-radius: var(--sl-radius-1);
+  flex: 1 1 auto;
+  height: var(--sl-fm-quota-height);
+  overflow: hidden;
+}
+
+.sl-fm-win .sl-fm-quota-fill {
+  background: linear-gradient(90deg, var(--sl-primary), var(--sl-primary-strong));
+  border-radius: var(--sl-radius-1);
+  display: block;
+  height: 100%;
+}
+
+.sl-toastui-file-input {
+  display: none;
+}
+
+/* Expanded, the window is as tall as the screen and the body takes what the head and the foot leave. It drops its own
+   ceiling and takes the one the window gives it instead, or a catalogue of a full page grows past the frame and the
+   last rows stand below the bottom edge with nothing to scroll */
+.sl-fm-win.sl-is-full .sl-fm-body {
+  flex: 1 1 auto;
+  max-height: none;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* The column between the frame and the body is a grid item, and a grid item is as tall as what it holds unless it is
+   told otherwise: without this the body never learns it has a ceiling and the last rows stand below the bottom edge */
+.sl-fm-win.sl-is-full .sl-fm-main {
+  min-height: 0;
+}
+
+@media (max-width: 900px) {
+  .sl-fm-win .sl-fm-lib-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .sl-fm-win .sl-fm-split {
+    grid-template-columns: 1fr;
+  }
+  .sl-fm-win .sl-fm-rail {
+    border-bottom: 1px solid var(--sl-border);
+    border-right: 0;
+    flex-direction: row;
+    overflow-x: auto;
+  }
+  .sl-fm-win .sl-fm-rail-cap,
+  .sl-fm-win .sl-fm-rail-sep,
+  .sl-fm-win .sl-fm-rail-foot {
+    display: none;
+  }
+  .sl-fm-win .sl-fm-rail-item small {
+    display: none;
+  }
+  .sl-fm-win .sl-fm-rail-item[disabled] small {
+    display: block;
+    max-width: var(--sl-rail-max-width);
+  }
+  .sl-fm-win .sl-fm-rail-item[aria-selected="true"]::before {
+    bottom: -12px;
+    height: var(--sl-rail-width);
+    left: 10px;
+    right: 10px;
+    top: auto;
+    width: auto;
+  }
+  .sl-fm-win .sl-fm-rows-head,
+  .sl-fm-win .sl-fm-row {
+    grid-template-columns: 22px 44px minmax(0, 1fr) 88px 34px;
+  }
+  .sl-fm-win .sl-fm-rows-head span:nth-child(4),
+  .sl-fm-win .sl-fm-row span:nth-child(4),
+  .sl-fm-win .sl-fm-rows-head span:nth-child(5),
+  .sl-fm-win .sl-fm-row span:nth-child(5) {
+    display: none;
   }
 }

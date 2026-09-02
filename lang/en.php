@@ -216,7 +216,6 @@ define('_ETEXTLONG','The text is longer than this field can hold — %s at most.
 define('_EUPLOAD','File Manager');
 define('_EUSEHTML','Use HTML code');
 define('_EUSEPHP','Use PHP code');
-define('_EDITOR_ADD','Add');
 define('_EDITOR_STORE','Storage');
 define('_EDITOR_LINK','Image link');
 define('_EDITOR_LINKNOTE','The file is not uploaded, but the image stays available at the given address.');
@@ -286,7 +285,6 @@ define('_FILES','Files');
 define('_FILEUP','Quantity of simultaneously loaded files');
 define('_FILE_RENAMED','File uploaded and named');
 define('_FILE_SITE','Load a file under the link');
-define('_FILE_USER','Load a file from a computer');
 define('_FIN',', in bytes');
 define('_FMODC','Close to the verification of the');
 define('_FOLLOWINGMEM','Following is the member information');

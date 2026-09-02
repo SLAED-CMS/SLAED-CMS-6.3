@@ -209,8 +209,8 @@ const DEMO_SETTINGS = [
 ];
 
 /* The third series: adding a file. The mechanism is already built and it is good — the file manager window of
-   the editor, `sl-toastui-upload` with its `sl-fm-*` parts. Its geometry tokens already live in the theme's own
-   `base.css`; only the rules sit in `assets/editors/toastui/skin.css`, scoped under the window. So everywhere
+   the editor, `sl-fm-win` with its `sl-fm-*` parts. Its geometry tokens and its rules both live in the theme's own
+   `base.css` and `theme.css`, scoped under the window root. So everywhere
    outside an editor — the avatar, the file of the catalogue — falls back to a bare `<input type="file">` with a
    class that has no CSS at all. These variants ask one question: in what shape does that mechanism come out of
    the window, so that one gesture serves the whole system. */
@@ -1043,7 +1043,7 @@ function setDemoDrop() {
     const input = zone.querySelector('input[type="file"]');
     const key = zone.dataset.demoDrop;
     const out = document.querySelector('[data-demo-picked="' + key + '"]');
-    const scope = zone.closest('.sl-toastui-upload') || document;
+    const scope = zone.closest('.sl-fm-win') || document;
     const rule = getRule(zone);
     if (!input) return;
     let used = rule.used;

@@ -1,7 +1,10 @@
 (function(win, doc) {
     'use strict';
 
-    var api = win.SlaedToastUi || {};
+    var api = win.SlaedFileManager || {};
+    var edits = new Map();
+    // The box of every form row the window was opened from, which is what tells the two modes apart: a window registered here has a form behind it and no editor at all
+    var fields = new Map();
     var rooms = {};
     // The kind of an object decides the glyph it is drawn with; the type resolver itself stays on the server and this map only dresses its answer
     var icons = {
@@ -53,7 +56,8 @@
                 queue: null,
                 want: null,
                 sort: { key: 'date', dir: -1 },
-                anch: -1
+                anch: -1,
+                take: null
             };
         }
         return rooms[key];
@@ -158,8 +162,21 @@
         });
     }
 
+    // The runtime holds the editor of every window opened from one, because it no longer lives beside the editor plugin and cannot ask it back
+    // A window opened as a form field registers no editor, so this answers null there and every editor-only path disables itself on that answer
+    function getEditor(id) {
+        return edits.get(String(id)) || null;
+    }
+
+    // Writing into a window that has no editor behind it is the field mode, and it has to stay silent rather than fail
+    function addText(ed, text) {
+        if (!ed) return;
+        ed.focus();
+        ed.insertText(text);
+    }
+
     function addSource(id, url, text) {
-        var ed = api.getEditor ? api.getEditor(id) : null;
+        var ed = getEditor(id);
         if (!ed || !url) return;
         ed.focus();
         ed.exec('addImage', { imageUrl: url, altText: text || 'image' });
@@ -167,7 +184,7 @@
 
     function addAttach(id, file, title, align) {
         var txt = '[attach=' + file + ' align=' + (align || 'none') + ' title=' + getTagText(title || file) + ']';
-        if (api.insertText) api.insertText(id, txt);
+        addText(getEditor(id), txt);
     }
 
     // A markdown picture carries no side, so one that takes a side is written as the tag the parser reads instead
@@ -176,7 +193,7 @@
             addSource(id, url, title);
             return;
         }
-        if (api.insertText) api.insertText(id, '[img=' + align + ' alt=' + getTagText(title) + ']' + url + '[/img]');
+        addText(getEditor(id), '[img=' + align + ' alt=' + getTagText(title) + ']' + url + '[/img]');
     }
 
     // The parser reads a caption out of a tag by a narrow alphabet, and a character outside it would cut the tag in half
@@ -394,6 +411,19 @@
         var files = Array.prototype.slice.call(list || []);
         var max = parseInt(opt.maxfiles || 0, 10);
         if (!files.length) return;
+        // A form row takes one file and reads none of it: the pick waits in the window until the insert is pressed and the submit is what carries it to the server
+        if (checkField(id)) {
+            // A drop carries as many files as the pointer held, whatever the picker was told to allow, so the count is refused here and not left to the markup
+            if (max > 0 && files.length > max) {
+                setMsg(id, getLab(id, 'fileup', 'Files') + ': ' + max, true);
+                return;
+            }
+            checkFieldFile(id, files[0], function() {
+                setMsg(id, '', false);
+                setFieldTake(id, 'file', files[0]);
+            });
+            return;
+        }
         if (mode === 'embed') {
             addEmbed(id, files[0]);
             return;
@@ -643,7 +673,7 @@
             all.checked = num > 0 && num === room.view.length;
             all.indeterminate = num > 0 && num < room.view.length;
         }
-        if (okay) okay.disabled = room.pane !== 'url' && num === 0;
+        if (okay) okay.disabled = room.pane !== 'url' && num === 0 && !(room.pane === 'up' && room.take);
     }
 
     // A mark belongs to the file and not to the box drawing it, so it is set on the path of the object and the row and the tile read it back from the one set of names
@@ -881,7 +911,8 @@
         var room = getRoom(id);
         var opt = getOpt(id);
         var el = getPanel(id);
-        var able = { up: !!opt.canupload, url: true, emb: !!opt.canembed, lib: !!opt.canlist };
+        // A place storing a file name carries no address tab in the markup, so counting one here would open the window on a pane that was never drawn
+        var able = { up: !!opt.canupload, url: !!opt.canlink, emb: !!opt.canembed, lib: !!opt.canlist };
         var panes = opt.panes || {};
         var okay;
         var meta;
@@ -905,7 +936,7 @@
         el.querySelector('[data-sl-slot="title"]').textContent = meta[0];
         el.querySelector('[data-sl-slot="lead"]').textContent = meta[1];
         okay = el.querySelector('[data-sl-act="apply"]');
-        if (okay) okay.disabled = name !== 'url' && room.pick.length === 0;
+        if (okay) okay.disabled = name !== 'url' && room.pick.length === 0 && !(name === 'up' && room.take);
         setRoom(id);
     }
 
@@ -930,7 +961,7 @@
         var fill = getSlot(id, 'roomfill');
         var num = getSlot(id, 'roomnum');
         var cap = parseInt(opt.room || 0, 10);
-        var ed = api.getEditor ? api.getEditor(id) : null;
+        var ed = getEditor(id);
         var text = (ed && ed.getMarkdown) ? String(ed.getMarkdown() || '') : '';
         var used = getByteSize(text);
         var part = (cap > 0) ? Math.min(100, Math.round((used / cap) * 100)) : 0;
@@ -1039,6 +1070,12 @@
         var el = getOpts(id);
         var one;
         if (!rows.length) return;
+        // Every route into a text stops here, so a form row is answered here too: it takes no side and no caption, and the options window never opens for it
+        if (checkField(id)) {
+            setFieldTake(id, '', null);
+            if (setFieldPick(id, rows[0].path ? 'path' : 'url', rows[0])) setPanel(id, false);
+            return;
+        }
         if (!el) {
             addInsertRows(id, way, rows, '', title || '');
             return;
@@ -1167,6 +1204,129 @@
         else if (win.confirm(text)) run();
     }
 
+    // Outside the editor the window only picks and the form uploads, so nothing here reads a file: the pick is written into the row the button stands in and rides the ordinary submit
+    function getField(id) {
+        return fields.get(String(id)) || null;
+    }
+
+    function checkField(id) {
+        return fields.has(String(id));
+    }
+
+    function getFieldPart(id, name) {
+        var el = getField(id);
+        return el ? el.querySelector('[data-sl-field="' + name + '"]') : null;
+    }
+
+    // Name and weight, because those are the two things a visitor checks against the limits the row spells out beside the button
+    function getFieldText(take) {
+        var one = (take && take.data) || {};
+        if (take.mode === 'file') return String(one.name || '') + ' · ' + getSizeText(one.size);
+        if (take.mode === 'path') return String(one.file || '') + (one.sizetext ? ' · ' + one.sizetext : '');
+        return String(one.url || '');
+    }
+
+    // What the window holds is not yet what the form carries: the chip in the foot says what the insert would hand over, and the insert is what hands it over
+    function setFieldTake(id, mode, data) {
+        var room = getRoom(id);
+        var chip = getSlot(id, 'pick');
+        var el = getPanel(id);
+        var okay = el ? el.querySelector('[data-sl-act="apply"]') : null;
+        room.take = mode ? { mode: mode, data: data } : null;
+        if (chip) {
+            chip.textContent = room.take ? getFieldText(room.take) : '';
+            chip.hidden = !room.take;
+        }
+        if (okay && room.pane === 'up') okay.disabled = !room.take;
+    }
+
+    // The three outcomes are exclusive by construction, so writing one clears the other two here rather than trusting the window to have handed back a single answer
+    // It answers whether the write landed, because a chip drawn over a field that stayed empty states a file the form is not carrying, which is the one lie this row must not tell
+    function setFieldPick(id, mode, data) {
+        var file = getFieldPart(id, 'file');
+        var path = getFieldPart(id, 'path');
+        var link = getFieldPart(id, 'url');
+        var chip = getFieldPart(id, 'chip');
+        var name = getFieldPart(id, 'name');
+        var one = data || {};
+        var done = mode === '';
+        var box;
+        if (!getField(id)) return false;
+        if (file) file.value = '';
+        if (path) path.value = '';
+        if (link) link.value = '';
+        // A file object cannot be assigned to a file field, so it travels through the one carrier the browser accepts for it
+        if (mode === 'file' && file && win.DataTransfer) {
+            box = new win.DataTransfer();
+            box.items.add(one);
+            file.files = box.files;
+            done = true;
+        }
+        if (mode === 'path' && path) {
+            path.value = String(one.path || '');
+            done = true;
+        }
+        if (mode === 'url' && link) {
+            link.value = String(one.url || '');
+            done = true;
+        }
+        if (!done) setMsg(id, getLab(id, 'upload', 'Upload failed'), true);
+        if (name) name.textContent = (done && mode) ? getFieldText({ mode: mode, data: one }) : '';
+        if (chip) chip.hidden = !(done && mode);
+        return done;
+    }
+
+    // One cross clears all three, because a row has to be able to go back to carrying nothing and a leftover of any of them is a file the visitor did not choose
+    function deleteFieldPick(id) {
+        setFieldPick(id, '', null);
+        setFieldTake(id, '', null);
+        setMsg(id, '', false);
+    }
+
+    // The window closes on a pick that landed and stays open on one that did not, because the message saying why is drawn inside it
+    function setFieldApply(id) {
+        var take = getRoom(id).take;
+        if (!take) return;
+        if (setFieldPick(id, take.mode, take.data)) setPanel(id, false);
+    }
+
+    // Nothing is read until the form is submitted, so the rule is checked at the pick or the visitor learns of a refusal only after the page they filled in has gone
+    // The words are the ones the server would answer with, so a refusal reads the same whichever side of the submit it was raised on
+    function checkFieldFile(id, file, done) {
+        var opt = getOpt(id);
+        var list = opt.exts || [];
+        var max = parseInt(opt.maxbytes || 0, 10);
+        var wid = parseInt(opt.maxwidth || 0, 10);
+        var hei = parseInt(opt.maxheight || 0, 10);
+        var name = String(file.name || '');
+        var ext = name.indexOf('.') > 0 ? name.split('.').pop().toLowerCase() : '';
+        var img;
+        if (list.length && list.indexOf(ext) < 0) {
+            setMsg(id, getLab(id, 'badtype', 'Unsupported file type'), true);
+            return;
+        }
+        if (max > 0 && file.size > max) {
+            setMsg(id, getLab(id, 'big', 'File is too big'), true);
+            return;
+        }
+        if (wid <= 0 || hei <= 0 || String(file.type || '').indexOf('image/') !== 0) {
+            done();
+            return;
+        }
+        // The bounds belong to the picture and not to the file, so they can only be answered once the browser has decoded it
+        img = new win.Image();
+        img.onload = function() {
+            win.URL.revokeObjectURL(img.src);
+            if (img.naturalWidth > wid || img.naturalHeight > hei) setMsg(id, getLab(id, 'toobig', 'Image is too large'), true);
+            else done();
+        };
+        img.onerror = function() {
+            win.URL.revokeObjectURL(img.src);
+            setMsg(id, getLab(id, 'badtype', 'Unsupported file type'), true);
+        };
+        img.src = win.URL.createObjectURL(file);
+    }
+
     function addPanel(id) {
         var el = getPanel(id);
         if (!el) return;
@@ -1254,7 +1414,7 @@
     });
 
     function getPanelOwn(node) {
-        var el = node && node.closest ? node.closest('.sl-toastui-upload') : null;
+        var el = node && node.closest ? node.closest('.sl-fm-win') : null;
         return el ? el.getAttribute('data-editor-id') : '';
     }
 
@@ -1294,7 +1454,7 @@
     doc.addEventListener('keydown', function(ev) {
         var zone = ev.target.closest ? ev.target.closest('.js-slaed-upload-drop') : null;
         var shot = ev.target.closest ? ev.target.closest('dialog[data-sl-shot="editor"]') : null;
-        var el = ev.target.closest ? ev.target.closest('.sl-toastui-upload') : null;
+        var el = ev.target.closest ? ev.target.closest('.sl-fm-win') : null;
         var file;
         var lib;
         var id;
@@ -1426,9 +1586,9 @@
             return;
         }
         // The canon toggles the window on this press; the catalogue inside it follows once the class is on, which is the next frame
-        wide = el.closest ? el.closest('.sl-toastui-upload [data-sl-full]') : null;
+        wide = el.closest ? el.closest('.sl-fm-win [data-sl-full]') : null;
         if (wide) {
-            id = wide.closest('.sl-toastui-upload').getAttribute('data-editor-id');
+            id = wide.closest('.sl-fm-win').getAttribute('data-editor-id');
             win.requestAnimationFrame(function() { setPanelView(id); });
         }
     });
@@ -1436,6 +1596,15 @@
     function setActRun(id, act, way) {
         var num = act.hasAttribute('data-sl-num') ? parseInt(act.getAttribute('data-sl-num'), 10) : getRoom(id).cur;
         var box;
+        // The button and the cross of a form row stand outside the window and reach it by the same delegation everything inside it uses
+        if (way === 'open') {
+            addPanel(id);
+            return;
+        }
+        if (way === 'clear') {
+            deleteFieldPick(id);
+            return;
+        }
         if (way === 'refresh') {
             getFiles(id);
             return;
@@ -1445,6 +1614,11 @@
             return;
         }
         if (way === 'apply') {
+            // A picked file never became a row, so it is the one answer the shared insert path cannot carry and is handed over from what the window is holding
+            if (checkField(id) && getRoom(id).pane === 'up') {
+                setFieldApply(id);
+                return;
+            }
             if (getRoom(id).pane === 'url') addUrl(id);
             else setBulk(id, getRoom(id).pane === 'up' ? getInsertMode(id) : 'image');
             return;
@@ -1483,16 +1657,25 @@
     api.options = api.options || {};
     api.getTpl = api.getTpl || function(id, name) {
         var opt = (api.options || {})[String(id)] || {};
-        var root = doc.querySelector('.' + (opt.tpl || 'js-slaed-editor-tpl'));
+        var root = doc.querySelector('.' + (opt.tpl || 'js-slaed-fm-tpl'));
         var tpl = root ? root.querySelector('template[data-tpl="' + name + '"]') : null;
         return tpl && tpl.content && tpl.content.firstElementChild ? tpl.content.firstElementChild.cloneNode(true) : null;
     };
     api.addUpload = function(id, ed, opt) {
         if (!opt) return;
         api.options[String(id)] = opt;
+        edits.set(String(id), ed);
         addHook(id, ed);
         addBtn(id, ed);
         setPane(id, '');
     };
-    win.SlaedToastUi = api;
+    // The second entry of the runtime: the window of a form row registers a box and no editor, so the four editor-only paths find null and disable themselves
+    // The hook and the toolbar icon return on a missing editor by themselves, which is why a field installs neither and needs no guard of its own
+    api.addField = function(id, node, opt) {
+        if (!opt || !node) return;
+        api.options[String(id)] = opt;
+        fields.set(String(id), node);
+        setPane(id, '');
+    };
+    win.SlaedFileManager = api;
 })(window, document);

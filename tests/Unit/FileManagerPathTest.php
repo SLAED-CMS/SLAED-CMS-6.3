@@ -473,6 +473,24 @@ final class FileManagerPathTest extends TestCase
         $this->assertFalse($fm->getFileData('files')['managed'], 'A directory is marked as a managed file');
     }
 
+    # A context over an empty root stays closed, which is what an unconfigured upload place hands the constructor
+    # realpath('') answers the working directory rather than false, so without the guard the whole site would open below a place that names no directory of its own
+    # The refusal is asked of every reader, because a root that resolved to the site would let one of them answer for a path no route ever offered
+    #[Test]
+    public function theEmptyRootBuildsAClosedContext(): void
+    {
+        foreach (\FileManager::MODES as $mode) {
+            $fm = new \FileManager($mode, '', ['upload' => true, 'list' => true, 'moder' => true]);
+            $this->assertSame([], $fm->getFileList(''), 'A context over an empty root lists the working directory in mode '.$mode);
+            $this->assertSame([], $fm->getFileData('index.php'), 'A context over an empty root resolves a site file in mode '.$mode);
+            $this->assertSame([], $fm->getFileData(''), 'A context over an empty root describes its own root in mode '.$mode);
+            foreach (\FileManager::OPS as $op) {
+                $this->assertFalse($fm->checkFileAccess('index.php', $op), 'A context over an empty root allows '.$op.' in mode '.$mode);
+            }
+            $this->assertSame([], $this->getGrantNames($fm->getCapabilities()), 'A context over an empty root grants a capability in mode '.$mode);
+        }
+    }
+
     # The names of one listing, in the order the listing carries them
     private function getListNames(array $rows): array
     {

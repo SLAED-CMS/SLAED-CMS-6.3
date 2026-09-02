@@ -1,4 +1,4 @@
-<dialog id="{{ panel_id }}" class="sl-modal sl-modal-lg sl-toastui-upload" data-sl-window data-editor-id="{{ editor_id }}" aria-labelledby="{{ title_id }}">
+<dialog id="{{ panel_id }}" class="sl-modal sl-modal-lg sl-fm-win sl-toastui-upload"{% if not is_field %} data-sl-window{% endif %} data-editor-id="{{ editor_id }}" aria-labelledby="{{ title_id }}">
   <div class="sl-modal-title">
     <i class="bi bi-folder" aria-hidden="true"></i>
     <span class="sl-modal-cap"><strong id="{{ title_id }}">{{ title_label }}</strong></span>
@@ -16,15 +16,19 @@
         <span><b>{{ up_label }}</b><small>{% if can_upload %}{{ up_note }}{% else %}{{ up_why }}{% endif %}</small></span>
         {% if not can_upload %}<i class="bi bi-lock-fill sl-fm-rail-lock" aria-hidden="true"></i>{% endif %}
       </button>
+      {% if can_link %}
       <button type="button" class="sl-fm-rail-item" role="tab" aria-selected="false" data-sl-pane="url" data-editor="{{ editor_id }}">
         <i class="bi bi-link-45deg" aria-hidden="true"></i>
         <span><b>{{ link_label }}</b><small>{{ link_note }}</small></span>
       </button>
+      {% endif %}
+      {% if not is_field %}
       <button type="button" class="sl-fm-rail-item" role="tab" aria-selected="false" data-sl-pane="emb" data-editor="{{ editor_id }}"{% if not can_embed %} disabled{% endif %}>
         <i class="bi bi-file-earmark-code" aria-hidden="true"></i>
         <span><b>{{ embed_label }}</b><small>{% if can_embed %}{{ embed_note }}{% else %}{{ embed_why }}{% endif %}</small></span>
         {% if not can_embed %}<i class="bi bi-lock-fill sl-fm-rail-lock" aria-hidden="true"></i>{% endif %}
       </button>
+      {% endif %}
       <span class="sl-fm-rail-sep"></span>
       <span class="sl-fm-rail-cap">{{ store_label }}</span>
       <button type="button" class="sl-fm-rail-item" role="tab" aria-selected="false" data-sl-pane="lib" data-editor="{{ editor_id }}"{% if not can_list %} disabled{% endif %}>
@@ -48,8 +52,9 @@
             <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
             <b>{{ drop_label }}</b>
             <small>{{ limits_text }}</small>
-            <input type="file" id="{{ file_id }}" class="sl-toastui-file-input js-slaed-upload-file" data-editor="{{ editor_id }}" accept="{{ accept_attr }}" multiple="multiple">
+            <input type="file" id="{{ file_id }}" class="sl-toastui-file-input js-slaed-upload-file" data-editor="{{ editor_id }}" accept="{{ accept_attr }}"{% if not is_field %} multiple="multiple"{% endif %}>
           </div>
+          {% if not is_field %}
           <div>
             <span class="sl-fm-label">{{ insas_label }}</span>
             <div class="sl-fm-as" id="{{ object_id }}">
@@ -57,10 +62,12 @@
               <label><input type="radio" name="{{ object_id }}m" value="attach">{{ object_label }}</label>
             </div>
           </div>
+          {% endif %}
           <div>
             <label class="sl-fm-label" for="{{ alt_id }}">{{ alt_label }}</label>
             <input type="text" id="{{ alt_id }}" class="sl-fm-field js-slaed-image-alt" data-editor="{{ editor_id }}" placeholder="{{ alt_label }}">
           </div>
+          {% if not is_field %}
           <div class="sl-fm-queue" data-sl-slot="queue" hidden>
             <span class="sl-fm-queue-cap">
               <b data-sl-slot="queuecap"></b>
@@ -68,6 +75,7 @@
             </span>
             <div data-sl-slot="jobs"></div>
           </div>
+          {% endif %}
           <div class="sl-fm-quota">
             <span>{{ used_label }}</span>
             <span class="sl-fm-quota-track"><span class="sl-fm-quota-fill" data-sl-slot="quotafill"></span></span>
@@ -75,6 +83,7 @@
           </div>
         </section>
         {% endif %}
+        {% if can_link %}
         <section class="sl-fm-pane" data-sl-pane="url" role="tabpanel">
           <div>
             <label class="sl-fm-label" for="{{ url_id }}">{{ address_label }}</label>
@@ -88,6 +97,7 @@
             <div class="sl-alert-body">{{ link_warn }}</div>
           </div>
         </section>
+        {% endif %}
         {% if can_embed %}
         <section class="sl-fm-pane" data-sl-pane="emb" role="tabpanel">
           <div class="sl-alert sl-alert-warn">
@@ -178,6 +188,7 @@
       <div id="{{ msg_id }}"></div>
       <div class="sl-modal-foot">
         <span class="sl-modal-info" data-sl-slot="info" aria-live="polite">{{ nofile_label }}</span>
+        {% if is_field %}<span class="sl-chip sl-chip-neutral" data-sl-slot="pick" hidden></span>{% endif %}
         <button type="button" class="sl-modal-btn" data-sl-act="refresh" data-editor="{{ editor_id }}"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i>{{ refresh_label }}</button>
         <button type="button" class="sl-modal-btn" data-sl-close><i class="bi bi-x-lg" aria-hidden="true"></i>{{ close_label }}</button>
         <button type="button" class="sl-modal-btn sl-modal-btn-main" data-sl-act="apply" data-editor="{{ editor_id }}"><i class="bi bi-check-lg" aria-hidden="true"></i>{{ insert_label }}</button>

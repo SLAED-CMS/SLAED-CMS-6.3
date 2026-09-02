@@ -153,7 +153,7 @@
         api.options[String(id)] = opt || {};
         addTags(id, ed, opt || {});
         if (api.addEmoji) api.addEmoji(id, ed, opt || {});
-        if (api.addUpload) api.addUpload(id, ed, opt || {});
+        if (win.SlaedFileManager) win.SlaedFileManager.addUpload(id, ed, opt || {});
         setTabs(id);
         if (typeof ed.on === 'function') ed.on('changeMode', function() { setWidth(id); });
         if (doc.readyState === 'complete') setWidth(id);

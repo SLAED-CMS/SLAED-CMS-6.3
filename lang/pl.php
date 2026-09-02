@@ -216,7 +216,6 @@ define('_ETEXTLONG','Tekst jest dłuższy, niż to pole może pomieścić — na
 define('_EUPLOAD','Menedżer plików');
 define('_EUSEHTML','Korzystać z kodu HTML');
 define('_EUSEPHP','Kod wykorzystanie PHP');
-define('_EDITOR_ADD','Dodaj');
 define('_EDITOR_STORE','Magazyn');
 define('_EDITOR_LINK','Adres obrazu');
 define('_EDITOR_LINKNOTE','Plik nie jest przesyłany, ale obraz pozostaje dostępny pod podanym adresem.');
@@ -286,7 +285,6 @@ define('_FILES','Katalog plików');
 define('_FILEUP','Liczbę jednocześnie pobieranych plików');
 define('_FILE_RENAMED','Plik przesłany i nazwany');
 define('_FILE_SITE','Pobierz plik z linku');
-define('_FILE_USER','Załadowanie pliku z komputera');
 define('_FIN',', w bajtach');
 define('_FMODC','Zamknij na sprawdzanie');
 define('_FOLLOWINGMEM','Informacje dla dostępu');

@@ -44,7 +44,6 @@ define('_AVATARINFO',"Affiche une petite image sous informations sur vous dans l
 define('_AVATARSAVE','Choisir un avatar');
 define('_AVATARSELECT',"Choisissez votre avatar favori de la galerie, il suffit d'appuyer sur le bouton gauche de la souris sur l'image souhaitée.");
 define('_AVATARSETUP','Paramètres avatar');
-define('_AVATAR_USER',"Télécharger l'avatar de votre ordinateur");
 define('_BLANKFORAUTO','Le mot de passe peut ne pas indiquer, dans ce cas, le système génère automatiquement');
 define('_CHARMIN','Minimum le nombre de caractères de mot de passe');
 define('_CODEFOR',"Le code d'enregistrement pour");

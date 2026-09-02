@@ -211,7 +211,7 @@ return [
     'data' => [
         '--sl-d-arrow' => 'popover arrow offset, plugins/system/slaed.js',
         '--sl-d-bots' => 'session donut bot share, templates/lite/partials/session-summary.html',
-        '--sl-d-count' => 'speed dial item count, plugins/editors/toastui/assets/editor-upload.js',
+        '--sl-d-count' => 'speed dial item count, plugins/system/filemanager.js',
         '--sl-d-depth' => 'comment nesting depth, templates/lite/fragments/comment.html',
         '--sl-d-distance' => 'profile feed scroll distance, plugins/system/slaed.js',
         '--sl-d-duration' => 'profile feed scroll duration, plugins/system/slaed.js',
@@ -241,7 +241,7 @@ return [
         'admin/modules/monitor.php',
         'admin/modules/admins.php',
         'plugins/system/slaed.js',
-        'plugins/editors/toastui/assets/editor-upload.js',
+        'plugins/system/filemanager.js',
         'tests/Unit/EditorWindowTest.php',
         'error.html',
     ],
@@ -315,8 +315,9 @@ return [
         # The head of the monitor and the count badge of a sidebar block: two components that share three
         # declarations by coincidence and nothing else
         '.sl-monitor-head-left, .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-block-sidebar-count-label',
-        # The tab strip of the icon picker and the filter row of the upload panel, in two different files
-        '.sl-icon-modal-tabs, .sl-toastui-upload .sl-fm-filters',
+        # The tab strip of the icon picker and the filter row of the file manager window: two rows of one gap, met by two
+        # components that share nothing else. They were in two files until the window became the theme's
+        '.sl-fm-win .sl-fm-filters, .sl-icon-modal-tabs',
         # The name cell of the file manager and a field row of the language editor
         '.sl-fm-name, .sl-lang-edit-row .sl-div-field',
         # The paragraph reset of base.css and the list item of the markdown block: one is the element default
@@ -326,10 +327,10 @@ return [
         # the editor window hides at the same width. They met when the skin took the shared breakpoint ladder and the
         # hub's own 760 moved onto 768; one set is page furniture, the other a dialog the page never sees
         '#block-idea, #block-feedback, .sl-profile-hub-row > span:nth-of-type(1), .sl-profile-hub-row-head, '
-            .'.sl-toastui-upload .sl-fm-rail-cap, .sl-toastui-upload .sl-fm-rail-sep, .sl-toastui-upload .sl-fm-rail-foot, '
-            .'.sl-toastui-upload .sl-fm-rail-item small, .sl-toastui-upload .sl-fm-rows-head span:nth-child(4), '
-            .'.sl-toastui-upload .sl-fm-row span:nth-child(4), .sl-toastui-upload .sl-fm-rows-head span:nth-child(5), '
-            .'.sl-toastui-upload .sl-fm-row span:nth-child(5)',
+            .'.sl-fm-win .sl-fm-rail-cap, .sl-fm-win .sl-fm-rail-sep, .sl-fm-win .sl-fm-rail-foot, '
+            .'.sl-fm-win .sl-fm-rail-item small, .sl-fm-win .sl-fm-rows-head span:nth-child(4), '
+            .'.sl-fm-win .sl-fm-row span:nth-child(4), .sl-fm-win .sl-fm-rows-head span:nth-child(5), '
+            .'.sl-fm-win .sl-fm-row span:nth-child(5)',
         # Three hover states and one static note that all fade to the same step. The note is not a hover, so merging
         # would put a resting style inside a list of pointer states and hide it from whoever edits either one
         '.sl-block-sidebar h3:hover, .sl-but:hover, .sl-but-blue:hover, .sl-but-red:hover, .sl-but-green:hover, .sl-but-foot:hover, .sl-but-back:hover, .sl-dashboard-panel-head:hover, .sl-session-note',
@@ -337,7 +338,7 @@ return [
         # under 122 flex containers is. These three met when lite's type sizes landed on the ladder: an element default
         # beside three small labels, three unrelated places reaching the smallest step, and four glyphs at one icon step.
         # Merging any of them would file an element reset or one component's glyph inside a list that names nothing
-        '.sl-chip.sl-topic-post .bi, .sl-chip.sl-topic-edit .bi, .sl-toastui-upload .sl-fm-drop small, .sl-toastui-upload .sl-fm-view .sl-pager-info, small',
+        '.sl-chip.sl-topic-post .bi, .sl-chip.sl-topic-edit .bi, .sl-fm-win .sl-fm-drop small, .sl-fm-win .sl-fm-view .sl-pager-info, small',
         '.sl-block-pm a > .bi:last-child, .sl-cab-nav .sl-cab-act b, .sl-pmf-mate small',
         '.bi-stars, .sl-cab-nav .sl-cab-act .sl-cat-ico .bi, .sl-msg-search .sl-home-link .bi, .sl-pmf-slot-more i',
         # The same shape in lite: three hovers in three unrelated components and one resting note, which met when
@@ -353,16 +354,16 @@ return [
         # A chip that carries a checked radio and a filter button that is pressed: two controls of the upload panel that both
         # say "on" in the same tint. Merging would put the chip's definition inside the filter's block, where nobody looking
         # at either one would find it, and the two drift apart the moment one of them stops being a tint
-        '.sl-toastui-upload .sl-fm-as label:has(input:checked), .sl-toastui-upload .sl-fm-filter[aria-pressed="true"]',
+        '.sl-fm-win .sl-fm-as label:has(input:checked), .sl-fm-win .sl-fm-filter[aria-pressed="true"]',
         # A status tone has one colour and many marks, and the moment every mark stopped reading a tint step and took the
         # base tone of its family, the marks of one status met each other. A hidden-text frame, a hot topic, a moderated
         # topic and a category tone are four components, not one: a selector list holding them would name nothing, and each
         # would lose the block a reader opens to find it. Two of the three also reach across a file the list cannot cross
         '.sl-fieldset-form-legend-success, .sl-text-success, .sl-profile-proof:nth-child(2) i, '
             .'.sl-radio-group.sl-radio-switch:has(input[value="1"]:checked) .sl-radio:has(input:checked), '
-            .'.sl-session-line[data-sl-audience="users"] > .bi, .sl-toastui-upload .sl-fm-job.sl-is-done > .bi, .sl-topic-moderated .bi',
+            .'.sl-session-line[data-sl-audience="users"] > .bi, .sl-fm-win .sl-fm-job.sl-is-done > .bi, .sl-topic-moderated .bi',
         '.sl-fieldset-form-legend-danger, .sl-text-danger, .sl-hide::before, .sl-hide::after, .sl-profile-proof.sl-is-warn i, '
-            .'.sl-profile-wide.sl-is-warn h3 i, .sl-toastui-upload .sl-fm-empty.sl-is-fail .bi, .sl-toastui-upload .sl-fm-job.sl-is-fail > .bi',
+            .'.sl-profile-wide.sl-is-warn h3 i, .sl-fm-win .sl-fm-empty.sl-is-fail .bi, .sl-fm-win .sl-fm-job.sl-is-fail > .bi',
         '.sl-pmf-focus > summary .bi-lightning-charge, .sl-profile-row-private > i, .sl-session-line[data-sl-audience="bots"] > .bi, '
             .'.sl-topic-hot .bi, .sl-topic-admin .bi',
         # A category tone and the tone a kept message wears are one colour under two names on purpose: the first is a
@@ -394,14 +395,14 @@ return [
         '.sl-chip-warn, a.sl-chip-warn, .sl-fresh-days',
         # The faint text of a rail item nobody may click, beside the syntax marks of the markdown source. One is a state of a
         # control, the other is how a language is written down; they share a tone and nothing else
-        '.sl-toastui-upload .sl-fm-rail-item[disabled] b, .sl-toastui-upload .sl-fm-rail-item[disabled] .bi, '
+        '.sl-fm-win .sl-fm-rail-item[disabled] b, .sl-fm-win .sl-fm-rail-item[disabled] .bi, '
             .'.toastui-editor-md-delimiter, .toastui-editor-md-thematic-break, .toastui-editor-md-link, '
             .'.toastui-editor-md-table, .toastui-editor-md-block-quote',
         # The same meeting in lite, where the faint tone is already shared by a footer menu, the glyphs of a read forum row
         # and a nested list. None of them is the markdown source, and a selector list holding all four would name nothing
         '.sl-forum-old .bi, .sl-topic-old .bi, .sl-topic-popular-old .bi, .sl-topic-closed .bi, '
             .'.sl-forum-closed .bi, .sl-list-item > li ul, .sl-list-item > li ul a, '
-            .'.sl-toastui-upload .sl-fm-rail-item[disabled] b, .sl-toastui-upload .sl-fm-rail-item[disabled] .bi, '
+            .'.sl-fm-win .sl-fm-rail-item[disabled] b, .sl-fm-win .sl-fm-rail-item[disabled] .bi, '
             .'.toastui-editor-md-delimiter, .toastui-editor-md-thematic-break, .toastui-editor-md-link, '
             .'.toastui-editor-md-table, .toastui-editor-md-block-quote',
         # the item of a tab strip beside the definition list inside a hint: two components that both open as a block with no margin and
@@ -427,12 +428,12 @@ return [
         # part
         '.sl-fm-cell[aria-selected="true"] .sl-fm-tile, .sl-fm-drop.sl-drag-over',
         # the caption of the drop zone beside the caption of an empty list: two states of the panel, one inviting and one reporting
-        '.sl-toastui-upload .sl-fm-drop b, .sl-toastui-upload .sl-fm-empty b',
+        '.sl-fm-win .sl-fm-drop b, .sl-fm-win .sl-fm-empty b',
         # the note beside a queued file and the term of a property list: two faint labels in two panels of the window
-        '.sl-toastui-upload .sl-fm-job-name small, .sl-toastui-upload .sl-fm-props dt, .sl-shot-side .sl-fm-props dt',
+        '.sl-fm-win .sl-fm-job-name small, .sl-fm-win .sl-fm-props dt, .sl-shot-side .sl-fm-props dt',
         # the caption over the queue beside the room the module has left: two readings of the same panel, and the second is a measurement
         # rather than a heading
-        '.sl-toastui-upload .sl-fm-queue-cap, .sl-toastui-upload .sl-fm-quota',
+        '.sl-fm-win .sl-fm-queue-cap, .sl-fm-win .sl-fm-quota',
         # the tab standing open in a profile feed beside a letter of the alphabet index under the pointer: a state and a rank, both painted
         # in the brand fill
         '.sl-profile-feed .sl-tabs-link.sl-is-active, a .sl-letter:hover',
@@ -446,8 +447,9 @@ return [
         '.sl-crumb-cur, .sl-pmf-focus > summary small',
         # the buttons under a notice beside the chips of a message filter: two wrapping rows in two components
         '.sl-alert-actions, .sl-pmf-chips',
-        # the foot of a reply box beside a group of radios: a toolbar and a form control that both wrap their children on one line
-        '.sl-pmf-reply-foot, .sl-radio-group',
+        # the foot of a reply box beside a group of radios and the door of a file row: a toolbar, a form control and a row of a form that
+        # all wrap their children on one line, and joining them would file three components under a selector list naming none of them
+        '.sl-file-door, .sl-pmf-reply-foot, .sl-radio-group',
         # three pictures that fill the box they are given: a preview, the lead image of a list row and the thumbnail of a related entry.
         # Merging would file three components under one selector list that names none of them
         '.sl-image-preview-thumb, .sl-main-img img, .sl-related-img-inner',
@@ -483,8 +485,9 @@ return [
             .'.sl-search-form button.sl-circle-action:focus-visible',
         # the work area of the cabinet beside the main column of a profile: two page regions that take one rhythm step of padding
         '.sl-cab-main, .sl-profile-split-main',
-        # the label of a cabinet action beside the figure of a profile score: a name and a number
-        '.sl-cab-act b, .sl-profile-score > b',
+        # the label of a cabinet action beside the figure of a profile score and the caption of a field of the file manager window:
+        # a name, a number and a caption, which is three components reaching one tone at one step
+        '.sl-cab-act b, .sl-fm-win .sl-fm-label, .sl-profile-score > b',
         # the glyph of a cabinet row, of a profile entry and of a profile info line: three components whose icon is centred in the brand
         # tone
         '.sl-cab-row > i, .sl-profile-entry > i, .sl-profile-info-row i',
@@ -493,6 +496,35 @@ return [
         # the rail of the cabinet beside the rail of a profile, both turning their side border into a bottom one when the two columns stack.
         # Two page regions that stack the same way at one breakpoint
         '.sl-cab-rail, .sl-profile-split-rail',
+
+        # The seven below met when the file manager window left the editor skin for the theme. Nothing about them changed:
+        # each was already a body shared with the window, and a body met in two files is one no selector list can join at
+        # all. Now that the window is dressed by the theme they stand in one file, and each has to say why it is still not
+        # one component
+        # five columns that grow into the room their neighbours leave and may shrink below their own text: the body of a
+        # notice, the field of the cabinet RSS form, the right half of a comment, the words of a rail item and the right
+        # half of a footprint row. The pair is the whole way flexbox is told a column may shrink, which is need
+        '.sl-alert-body, .sl-cab-rss-form .sl-form-control, .sl-com-right, .sl-fm-win .sl-fm-rail-item > span, .sl-fp-right',
+        # the same growing column in the administrative theme, where a search field, the bottom pager, the three controls of
+        # the language editor and the name field of the file browser reach it too
+        '.sl-alert-body, .sl-fm-ops input[type="text"], .sl-fm-win .sl-fm-rail-item > span, '
+            .'.sl-lang-edit-row .sl-div-field input[type="text"], .sl-lang-edit-row .sl-div-field .sl-select-config, '
+            .'.sl-lang-edit-row .sl-div-field .sl-select, .sl-list-bottom-pager, .sl-modal-bar [data-sl-icon-search]',
+        # a filter field, the row list of the window, a panel of the profile facts and the frame every modal opens as: four
+        # boxes that stack their children. The dialog is the canon of the window, and filing it inside one component's block
+        # would hide it from whoever edits either
+        '.sl-changelog-filter-field, .sl-fm-win .sl-fm-rows, .sl-profile-facts .sl-profile-panel, dialog.sl-modal[open]',
+        # the same three in the administrative theme, which carries no profile facts
+        '.sl-changelog-filter-field, .sl-fm-win .sl-fm-rows, dialog.sl-modal[open]',
+        # the row of insertion ways beside the tag list of a profile: two rows that wrap at one gap, in two screens that
+        # never meet
+        '.sl-fm-win .sl-fm-as, .sl-profile-tags',
+        # the typing surface of the editor beside the two columns of the window: both take the height their frame leaves and
+        # are allowed to shrink inside it. One is the vendor's, the other the window's own split
+        '.sl-div-form .sl-div-item:has(.toastui-editor-defaultUI) .toastui-editor-main, .sl-fm-win .sl-fm-split',
+        # the name of a file in the browser, the name of a node in its tree and the name of a queued file in the window:
+        # three names cut off at one line. The browser and the window are two screens, and the ellipsis is need
+        '.sl-fm-name > a, .sl-fm-node > span:last-child, .sl-fm-win .sl-fm-job-name span',
     ],
 
     # A shared selector whose two themes hold a different set of properties, each with the reason the difference is not a

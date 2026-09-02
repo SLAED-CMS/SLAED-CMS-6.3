@@ -147,14 +147,86 @@ in `fragments/`.
 | QR code | `fragments/window-qr.html` | lite |
 | Gallery and lightbox | `partials/window-gallery.html` | lite, admin |
 | Icon picker | `partials/window-icons.html` | admin |
-| File Manager | `partials/editor-toastui-files.html` | lite, admin |
+| File Manager | `partials/file-manager.html` | lite, admin |
 | Emoji panel | `partials/editor-toastui-templates.html` | lite, admin |
 
-The File Manager and the emoji panel keep their editor partial names: those files carry an editor subsystem and
-not only a window. Both are `data-sl-window`.
+The emoji panel keeps its editor partial name: that file carries an editor subsystem and not only a window, and it
+is `data-sl-window`. The File Manager left the editor for the theme and is built by `getFileManagerWindow()` from the
+rule of one upload place; it is `data-sl-window` inside the editor, where the text under it has to stay reachable, and
+modal beside a form field, where nothing else is worked on at once.
 
 `core/admin.php` and `plugins/editors/toastui/driver.php` render `window-gallery` with their own data;
 `partials/site-footer.html` includes it with none, which produces the site image viewer.
+
+## The file manager as a form field
+
+The File Manager window has two modes, and `is_field` is the flag that tells them apart.
+`getFileManagerWindow(['is_field' => true, …])` draws no queue, no progress bar and no
+"insert as" switch: in field mode nothing is being read, so there is nothing to report the
+progress of. The quota line still draws. What was picked is drawn as a chip in the row that
+opened the window.
+
+**Outside the editor the window only picks — the form uploads.** Inside the editor the window
+keeps uploading over AJAX because there is no form there to carry the file. Beside a form row
+the file rides an ordinary multipart POST on submit, which is why field mode needs no progress
+bar of its own.
+
+The window can hand back exactly one of three things, and the three are exclusive by
+construction — the rail offers one tab at a time and `setFieldPick()` clears the other two
+carriers whenever it writes one:
+
+| Tab | What reaches the form | Uploads |
+|---|---|---|
+| Upload to server | the `File`, through `DataTransfer` into the hidden `<input type="file">` | yes, on submit |
+| My files | the path of an already stored file | no |
+| Link to file | the address | no |
+
+**The handler still reads them in a fixed defensive order** — `$_FILES`, then the storage path,
+then the address — because the exclusivity is a property of the client and a handler must not
+depend on one. The storage path arrives from the client and is **never taken on trust**: it is
+resolved by `getUploadTakenFile()`, which reads it through the place context and refuses it unless
+`FileManager::getFileOwner()` matches `getEditorFileOwner()` — a module moderator is excused that
+last test and nothing before it. Both form handlers call that one resolver and keep only the wording
+of their own refusal: the guard is written once, because a guard written twice is one that drifts.
+
+**`canlink` decides whether the link tab exists at all.** It is a key of the place rule, not a
+choice of the caller. `users.avatar` stores a file name resolved against `adirectory`, so an
+external address could never be resolved there: its rule answers `canlink` false, the window
+draws no link tab, and `getFileManagerField()` emits no address field for it to be posted into.
+An interface that simply does not draw a tab is not a guard — the route refuses it too.
+
+`getFileManagerField()` in `core/helpers.php` builds the row: the button, the chip and the three
+hidden carriers. The runtime reads these names and nothing else does:
+
+| Where | Name | What it is |
+|---|---|---|
+| the row | `data-sl-act="open"` + `data-editor="<id>"` | the button that opens the window |
+| the row | `data-sl-act="clear"` + `data-editor="<id>"` | the cross of the chip; clears all three |
+| the box | `data-sl-field="file"` | the hidden `<input type="file">` the form uploads |
+| the box | `data-sl-field="path"` | the hidden text field carrying a storage path |
+| the box | `data-sl-field="url"` | the hidden text field carrying an address |
+| the box | `data-sl-field="chip"` | the chip; hidden while nothing is picked |
+| the box | `data-sl-field="name"` | the text inside it — name and weight |
+
+**The rule is checked at the pick, not only at the submit.** `addFileList()` refuses on count
+first — a drop carries as many files as the pointer held, whatever the picker was told to allow —
+and then hands the one file to `checkFieldFile()`, which refuses on extension, weight and finally
+image dimensions, the last only once the browser has decoded the picture. The words are the ones
+`getUploadFailText()` would have answered with and arrive in `opt.labels`; no refusal phrase is
+invented for the client.
+`setFieldPick()` answers whether the write landed and the window closes on that answer alone: a
+chip drawn over a field that stayed empty states a file the form is not carrying.
+
+**The window keeps its own id scheme.** The ids of its nodes are minted from the instance id —
+`<id>-fm`, `-fm-msg`, `-fm-url` and the rest — and the runtime finds every node of one instance
+by exactly those. `getFieldIds()` governs the form row the button lives in and nothing inside
+the window; two windows on one page stay apart because the instance id differs.
+
+**Where the row is assembled matters.** `getFileManagerWindow()` emits
+`plugins/system/filemanager.js` on its first call of the request under a `static $done`, and the
+tag lands where that call's output is printed. A door assembled before an editor of the same page
+would let that editor's inline `register()` run before the runtime exists, and the editor loses
+its file button with no console error. Assemble the door after every editor of the page.
 
 ## Traps
 

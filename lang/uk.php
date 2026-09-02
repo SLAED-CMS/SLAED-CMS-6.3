@@ -216,7 +216,6 @@ define('_ETEXTLONG','Текст довший, ніж вміщає це поле 
 define('_EUPLOAD','Файловий менеджер');
 define('_EUSEHTML','Використовувати HTML код');
 define('_EUSEPHP','Використовувати PHP код');
-define('_EDITOR_ADD','Додати');
 define('_EDITOR_STORE','Сховище');
 define('_EDITOR_LINK','Посилання на зображення');
 define('_EDITOR_LINKNOTE','Файл не завантажується, але зображення доступне за вказаною адресою.');
@@ -286,7 +285,6 @@ define('_FILES','Каталог файлів');
 define('_FILEUP','Кількість одночасно завантажуваних файлів');
 define('_FILE_RENAMED','Файл завантажений і отримав назву');
 define('_FILE_SITE','Завантажити файл за посиланням');
-define('_FILE_USER',"Завантажити файл з комп'ютера");
 define('_FIN',', в байтах');
 define('_FMODC','Закрити на перевірку');
 define('_FOLLOWINGMEM','Інформація для доступу');

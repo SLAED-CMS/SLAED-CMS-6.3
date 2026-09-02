@@ -12,8 +12,8 @@
   <style>
     /* The strip. The most direct move there is: the drop zone the file manager already ships — `sl-fm-drop`, its
        cloud, its dashed edge, its line of limits — steps out of the window and stands in the row of the form. Not
-       one rule is written here for it: the variant loads `assets/editors/toastui/skin.css` and wraps the block in
-       `.sl-toastui-upload`, which is the scope those rules are already written under. That is the whole point of
+       one rule is written here for it: the variant wraps the block in `.sl-fm-win`, which is the scope those rules
+       of the theme are already written under. That is the whole point of
        this variant — it shows that the mechanism needs no redesign to leave the window, only a wider scope.
 
        The avatar gets the same zone lying down: a face cannot ask for 140 points of dashed field, so the strip
@@ -116,7 +116,7 @@
 
     <div class="sl-form-row">
       <label class="sl-form-label">Загрузить файл с компьютера</label>
-      <div class="sl-form-field sl-toastui-upload">
+      <div class="sl-form-field sl-fm-win sl-toastui-upload">
         <div data-demo-msg></div>
         <div class="sl-fm-drop" data-demo-drop="file" data-demo-ext="zip,gz,7z,rar,tar" data-demo-maxbytes="10485760" data-demo-maxfiles="5" data-demo-maxquota="104857600" data-demo-used="0" tabindex="0" role="button" aria-label="Перетащите файлы сюда или нажмите на поле">
           <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
@@ -165,7 +165,7 @@
     <form class="sl-form" method="post" action="#" enctype="multipart/form-data">
       <div class="sl-form-row">
         <label class="sl-form-label">Текущее изображение</label>
-        <div class="sl-form-field sl-toastui-upload">
+        <div class="sl-form-field sl-fm-win sl-toastui-upload">
           <div class="v-face">
             <img src="../templates/lite/images/avatars/presets/004.svg" alt="Текущее изображение" data-demo-face>
             <div class="sl-fm-drop v-drop-flat" data-demo-drop="avatar" data-demo-drop-face data-demo-ext="jpg,jpeg,gif,png" data-demo-maxbytes="51200" data-demo-maxfiles="1" data-demo-maxwidth="100" data-demo-maxheight="100" tabindex="0" role="button" aria-label="Перетащите изображение сюда или нажмите на поле">

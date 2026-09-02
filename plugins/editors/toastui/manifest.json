@@ -11,6 +11,6 @@
     "formats": ["markdown"],
     "theme": {
         "skin": true,
-        "partials": ["editor-toastui-files", "editor-toastui-templates"]
+        "partials": ["file-manager", "file-manager-templates", "editor-toastui-templates"]
     }
 }

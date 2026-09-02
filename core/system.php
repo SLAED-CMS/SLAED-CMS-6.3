@@ -4271,6 +4271,101 @@ function getEditorJson(array $dat): void {
     exit;
 }
 
+# Return the upload rule of one place, a place being a module and the thing inside it a file is asked for, written with a dot: it is the one name every upload route travels under
+# The grammar is defined here and nowhere else - <mod>.<slot>, lowercase letters, digits and underscore on both sides - so no caller carries a pattern of its own
+# Three slots answer: <mod>.attach is the editor attachment rule of a module, files.dist the distributed catalogue file and users.avatar the picture of one account
+# The module is the one that owns the place and never the first segment of the name, so users.avatar answers account, whose moderator moderates it and whose page carries it
+# The listing caps are the shipped ones of every record in config/uploads.php, so the two new places invent no number and no administrative setting is added to hold one
+# The upload right of files.dist is two settings and not one, because add opens the form and upload only the row inside it, and a member may not upload where adding is off
+# A guest owns no account, so users.avatar answers zero for both guest fields without reading a setting, and the route refuses a guest before it asks anything else
+# ops names which of the four editor routes the place permits: a field place uploads through its own form, so the other three left reachable would create the orphans that avoids
+# The directory comes in the three forms its readers need - dir site relative, store relative to the upload root as the service takes it, path absolute as the file layer opens it
+# Which directory files.dist means depends on the role, a visitor writing into the temporary one and a moderator into the public one, and that choice belongs here and not a module
+function getUploadPlaceRule(string $place): array {
+    global $conf;
+    $good = preg_match('#^[a-z0-9_]+\.[a-z0-9_]+$#', $place) === 1;
+    $part = $good ? explode('.', $place) : ['', ''];
+    $mod = $part[0];
+    $slot = $part[1];
+    if ($slot === 'attach') {
+        return getUploadRuleData($mod) + [
+            'place' => $place,
+            'mod' => $mod,
+            'store' => $mod,
+            'canlink' => true,
+            'ops' => ['editorUpload', 'editorFiles', 'editorDelete', 'editorArchive'],
+        ];
+    }
+    $room = '';
+    $keep = [];
+    if ($place === 'files.dist') {
+        $room = is_moder('files') ? (string)($conf['files']['path'] ?? '') : (string)($conf['files']['temp'] ?? '');
+        $keep = [
+            'mod' => 'files',
+            'extensions' => (string)($conf['files']['typefile'] ?? ''),
+            'maxbytes' => (int)($conf['files']['max_size'] ?? 0),
+            'maxwidth' => 1600,
+            'maxheight' => 1600,
+            'maxfiles' => 1,
+            'moderfiles' => 250,
+            'userfiles' => 100,
+            'guestfiles' => 100,
+            'userupload' => ((int)($conf['files']['upload'] ?? 0) === 1 && (int)($conf['files']['add'] ?? 0) === 1) ? 1 : 0,
+            'guestupload' => ((int)($conf['files']['upload'] ?? 0) === 1 && (int)($conf['files']['addquest'] ?? 0) === 1) ? 1 : 0,
+            'canlink' => true,
+            'ops' => ['editorFiles'],
+        ];
+    } elseif ($place === 'users.avatar') {
+        $room = (string)($conf['users']['adirectory'] ?? '');
+        $keep = [
+            'mod' => 'account',
+            'extensions' => (string)($conf['users']['atypefile'] ?? ''),
+            'maxbytes' => (int)($conf['users']['amaxsize'] ?? 0),
+            'maxwidth' => (int)($conf['users']['awidth'] ?? 0),
+            'maxheight' => (int)($conf['users']['aheight'] ?? 0),
+            'maxfiles' => 1,
+            'moderfiles' => 250,
+            'userfiles' => 100,
+            'guestfiles' => 0,
+            'userupload' => ((int)($conf['users']['aupload'] ?? 0) === 1) ? 1 : 0,
+            'guestupload' => 0,
+            'canlink' => false,
+            'ops' => ['editorFiles'],
+        ];
+    }
+    $err = $good ? 'Upload place is unknown' : 'Upload place is malformed';
+    if ($keep !== []) {
+        $room = trim(str_replace('\\', '/', $room), '/');
+        $room = str_starts_with($room, 'uploads/') ? substr($room, 8) : (($room === 'uploads') ? '' : $room);
+        $path = ($room === '') ? '' : UPLOADS_DIR.'/'.$room;
+        $err = ($path === '') ? 'Upload configuration is missing' : (is_dir($path) ? '' : 'Upload directory is missing');
+        $keep += ['dir' => ($room === '') ? '' : 'uploads/'.$room, 'store' => $room, 'path' => $path];
+    }
+    return $keep + [
+        'ok' => $err === '',
+        'error' => $err,
+        'place' => $place,
+        'mod' => $mod,
+        'dir' => '',
+        'store' => '',
+        'path' => '',
+        'extensions' => '',
+        'maxquota' => 0,
+        'maxbytes' => 0,
+        'maxwidth' => 0,
+        'maxheight' => 0,
+        'maxfiles' => 0,
+        'thumbwidth' => 0,
+        'moderfiles' => 0,
+        'userfiles' => 0,
+        'guestfiles' => 0,
+        'userupload' => 0,
+        'guestupload' => 0,
+        'canlink' => false,
+        'ops' => [],
+    ];
+}
+
 # Split the pipe-separated upload configuration of one directory into named rule keys; all twelve are returned even when ok is false, so a caller needing one limit can read it
 # The order is the stored one and the stored strings carry exactly these twelve fields; a rule written short by hand keeps its guest limit at the user one, because zero there means no limit at all
 function getUploadRuleData(string $mod): array {
@@ -4356,24 +4451,41 @@ function getEditorFileOwner(string $mod): ?string {
     return ($sid === '') ? null : substr(hash_hmac('sha256', 'upload|'.$sid, getSecret('upload')), 0, 16);
 }
 
-# Return the file context of one editor module; core/classes has no runtime autoload, so the file layer is required on first use and the module directory is named the root here alone
-# The client passes a name inside that directory and never a root of its own, and what may be done there is the answer of the upload rule and not a role the window worked out again
+# Return the file context of one upload place; core/classes has no runtime autoload, so the file layer is required on first use and the directory is named the root here alone
+# The client passes a name inside that directory and never a root of its own, and what may be done there is the answer of the place rule and not a role the window worked out again
+# The place rule already carries the directory and the module it is moderated as, so the context takes the rule alone and no caller hands the place down a second time beside it
 # Listing and uploading are one decision, checkEditorUploadAccess(), and the two operations a module moderator additionally holds ride on is_moder(), the one role rule of this area
-function getEditorFileArea(string $mod, array $rule): FileManager {
+function getUploadFileArea(array $rule): FileManager {
     require_once BASE_DIR.'/core/classes/filemanager.php';
+    $mod = (string)$rule['mod'];
     $able = checkEditorUploadAccess($mod, $rule);
     return new FileManager('editor', (string)$rule['path'], ['upload' => $able, 'list' => $able, 'moder' => is_moder($mod)]);
 }
 
-# Answer the upload rule of one editor route once the three questions every one of them asks have been answered: the settings of the module, the right of the visitor and the token
-# A refusal answers the JSON here and never returns, so no route restates the guards and none of them can ship with one of the three quietly missing from its own opening lines
+# Resolve one storage path handed in by the client and answer the stored row only when it exists in that place and belongs to whoever is asking
+# The path arrives from the browser and is never taken on trust: it is read through the place context, so a name reaching outside the directory answers nothing at all
+# Both form handlers outside the editor asked these two questions in their own words, and a guard written twice is a guard that drifts, so the refusal lives here and the wording stays theirs
+# A module moderator is excused the ownership test alone, which is the same excuse getUploadFileArea() grants for deletion and packing, and never the existence test above it
+function getUploadTakenFile(array $rule, string $take): array {
+    $one = getUploadFileArea($rule)->getFileData($take);
+    if ($one === [] || $one['kind'] === 'dir' || $one['url'] === '' || in_array($one['name'], ['index.html', '.htaccess'], true)) return ['ok' => false, 'error' => 'gone', 'file' => []];
+    $mod = (string)$rule['mod'];
+    $own = getEditorFileOwner($mod);
+    if (!is_moder($mod) && ($own === null || FileManager::getFileOwner($one['name']) !== $own)) return ['ok' => false, 'error' => 'owner', 'file' => []];
+    return ['ok' => true, 'error' => '', 'file' => $one];
+}
+
+# Answer the upload rule of one editor route once the four questions it asks have been answered: the place, the route it permits, the right of the visitor and the token
+# A refusal answers the JSON here and never returns, so no route restates the guards and none of them can ship with one of the four quietly missing from its own opening lines
+# The place travels in the address as the module name did and is read raw, because filterVar() empties a string carrying a dot and the grammar of getUploadPlaceRule() validates it
+# Which route was asked for is read the way index.php dispatched it, so a place permitting the listing alone is refused an upload here and not by a window drawing no button
 function getEditorRouteRule(string $src = 'post'): array {
-    $mod = strtolower(getVar('get', 'mod', 'var', ''));
-    $rul = getUploadRuleData($mod);
+    $rul = getUploadPlaceRule(getVar('get', 'place', 'raw', ''));
     if (!$rul['ok']) getEditorJson(['ok' => false, 'error' => $rul['error']]);
-    if (!checkEditorUploadAccess($mod, $rul)) getEditorJson(['ok' => false, 'error' => _ACCESSDENIED]);
+    if (!in_array(getVar('req', 'op', 'var', ''), $rul['ops'], true)) getEditorJson(['ok' => false, 'error' => _ACCESSDENIED]);
+    if (!checkEditorUploadAccess((string)$rul['mod'], $rul)) getEditorJson(['ok' => false, 'error' => _ACCESSDENIED]);
     if (!checkSiteToken(getVar($src, 'token', 'raw', ''), 'upload')) getEditorJson(['ok' => false, 'error' => _TOKENMISS]);
-    return $rul + ['mod' => $mod];
+    return $rul;
 }
 
 # Return one stored editor file row for JSON output: the descriptor of the file layer plus the two strings the window prints, so the client never formats a size or a date of its own
@@ -4410,13 +4522,13 @@ function addEditorUpload(): void {
     global $admin, $user;
     $rul = getEditorRouteRule();
     $mod = (string)$rul['mod'];
-    $area = getEditorFileArea($mod, $rul);
+    $area = getUploadFileArea($rul);
     $own = getEditorFileOwner($mod);
     $who = (string)($user[1] ?? '');
     if ($who === '') $who = (string)($admin[1] ?? '');
     $out = [];
     $bad = [];
-    foreach (getUploadService()->addUploadedFiles($_FILES['file'] ?? [], $rul, $mod, $mod, $own) as $res) {
+    foreach (getUploadService()->addUploadedFiles($_FILES['file'] ?? [], $rul, (string)$rul['store'], $mod, $own) as $res) {
         $one = $res['ok'] ? $area->getFileData((string)$res['file']) : [];
         Logger::addFile($res['ok'] ? 'notice' : 'warning', 'Editor file operation', [
             'user' => substr($who, 0, 25),
@@ -4443,7 +4555,7 @@ function addEditorUpload(): void {
 function getEditorFileJson(): void {
     $rul = getEditorRouteRule('req');
     $mod = (string)$rul['mod'];
-    $area = getEditorFileArea($mod, $rul);
+    $area = getUploadFileArea($rul);
     $all = is_moder($mod);
     $tok = getEditorFileOwner($mod);
     $lim = $all ? $rul['moderfiles'] : (is_user() ? $rul['userfiles'] : $rul['guestfiles']);
@@ -4476,7 +4588,7 @@ function setEditorFileRun(string $op): void {
     $rul = getEditorRouteRule();
     $who = (string)($user[1] ?? '');
     if ($who === '') $who = (string)($admin[1] ?? '');
-    $area = getEditorFileArea((string)$rul['mod'], $rul);
+    $area = getUploadFileArea($rul);
     $mark = getVar('post', 'mark[]', 'array', []);
     $file = getVar('post', 'file', 'raw', '');
     if ($mark === [] && is_string($file) && $file !== '') $mark = [$file];

@@ -109,6 +109,194 @@ final class UploadIntegrationTest extends TestCase
         $this->assertFalse($data['empty']['ok'], 'An empty record resolved successfully');
     }
 
+    # docs/ARCHITECTURE.md, Upload Place Boundary: the two field places must answer exactly the arrays modules/files/index.php and modules/account/index.php assembled by hand before it
+    # The claim is field for field and not shape only, because batches 7 and 8 change markup on the promise that the rule behind it did not move
+    #[Test]
+    public function thePlaceResolverAnswersWhatTheModulesAssembledByHand(): void
+    {
+        $data = $this->getProbe('place');
+        $this->assertSame([], $data['hand']['files.dist'], 'files.dist no longer answers what modules/files/index.php built by hand');
+        $this->assertSame([], $data['hand']['users.avatar'], 'users.avatar no longer answers what modules/account/index.php built by hand');
+    }
+
+    # An attachment place is getUploadRuleData() and never a second reading of the same configuration, so every key that helper answers survives the resolver unchanged
+    #[Test]
+    public function anAttachmentPlaceIsTheModuleRuleItself(): void
+    {
+        $data = $this->getProbe('place');
+        $this->assertSame([], $data['attach'], 'news.attach no longer equals getUploadRuleData(news)');
+        $rule = $data['rules']['news.attach'];
+        $this->assertSame('news', $rule['mod'], 'An attachment place lost the module it belongs to');
+        $this->assertSame('news', $rule['store'], 'An attachment place no longer stores into the directory of its own module');
+        $this->assertTrue($rule['canlink'], 'An attachment place refuses an address, which the editor has always accepted');
+        $this->assertSame(['editorUpload', 'editorFiles', 'editorDelete', 'editorArchive'], $rule['ops'], 'An attachment place no longer permits all four editor routes');
+    }
+
+    # The grammar lives in the resolver alone, so everything that is not one module and one slot separated by one dot is refused before a configuration is read
+    #[Test]
+    public function everyMalformedPlaceIsRefused(): void
+    {
+        $data = $this->getProbe('place');
+        foreach ($data['bad'] as $place => $okay) {
+            $this->assertFalse($okay, 'The place '.($place === '' ? 'an empty string' : $place).' resolved successfully');
+        }
+        $this->assertArrayHasKey('Files.Dist', $data['bad'], 'The uppercase probe is gone, so the grammar is no longer proven case sensitive');
+        $this->assertArrayHasKey('files.dist.x', $data['bad'], 'The three segment probe is gone, so the grammar is no longer proven to hold one dot');
+    }
+
+    # The access matrix of the two field places is the load bearing half of the batch: the module they are moderated as, the caps they list under and the routes they permit
+    # A field place uploads through its own form, so it permits the listing route alone; leaving the other three reachable is what would create orphaned files
+    #[Test]
+    public function theAccessMatrixOfTheTwoFieldPlacesHolds(): void
+    {
+        $data = $this->getProbe('place');
+        $dist = $data['rules']['files.dist'];
+        $avat = $data['rules']['users.avatar'];
+        $this->assertSame('files', $dist['mod'], 'files.dist is no longer moderated as the files module');
+        $this->assertSame('account', $avat['mod'], 'users.avatar is moderated as the first segment of its own name instead of as account');
+        $this->assertSame(['editorFiles'], $dist['ops'], 'files.dist permits a route its window never offers');
+        $this->assertSame(['editorFiles'], $avat['ops'], 'users.avatar permits a route its window never offers');
+        $this->assertTrue($dist['canlink'], 'files.dist no longer accepts an address, which the catalogue has always taken');
+        $this->assertFalse($avat['canlink'], 'users.avatar accepts an address, which resolves against no avatar directory');
+        $this->assertSame(0, $avat['guestupload'], 'A guest may upload an avatar, and a guest owns no account to upload one into');
+        $this->assertSame(0, $avat['guestfiles'], 'A guest is offered a listing of avatars, and a guest owns none');
+        foreach (['files.dist' => $dist, 'users.avatar' => $avat] as $place => $rule) {
+            $this->assertSame(250, $rule['moderfiles'], 'The moderator cap of '.$place.' is not the shipped one of config/uploads.php');
+            $this->assertSame(100, $rule['userfiles'], 'The member cap of '.$place.' is not the shipped one of config/uploads.php');
+            $this->assertSame(1, $rule['maxfiles'], 'A field place takes more than one file, and nothing outside the editor offers a batch');
+            $this->assertSame(0, $rule['maxquota'], 'A field place carries a quota, so its window would draw a bar over a number nobody set');
+        }
+    }
+
+    # The upload right of files.dist is two settings and not one: add opens the form and upload only the row inside it, so a member may not upload where adding is switched off
+    #[Test]
+    public function theCatalogueUploadRightIsBothSettings(): void
+    {
+        $data = $this->getProbe('place');
+        $dist = $data['rules']['files.dist'];
+        $more = $data['rights'];
+        $user = ($more['upload'] === 1 && $more['add'] === 1) ? 1 : 0;
+        $lost = ($more['upload'] === 1 && $more['addquest'] === 1) ? 1 : 0;
+        $this->assertSame($user, $dist['userupload'], 'The member upload right of files.dist is not upload and add together');
+        $this->assertSame($lost, $dist['guestupload'], 'The guest upload right of files.dist is not upload and addquest together');
+        $this->assertSame(($more['aupload'] === 1) ? 1 : 0, $data['rules']['users.avatar']['userupload'], 'The member upload right of users.avatar is not aupload');
+        $shut = $data['locked'];
+        $this->assertSame(0, $shut['add'], 'A member may upload a catalogue file into a module where adding is switched off');
+        $this->assertSame(0, $shut['addquest'], 'A guest may upload a catalogue file where guest adding is switched off');
+        $this->assertSame([0, 0], $shut['upload'], 'The upload switch alone no longer closes both upload rights of files.dist');
+        $this->assertSame(0, $shut['aupload'], 'An avatar may be uploaded where the avatar upload switch is off');
+    }
+
+    # The directory of a place is the configured one in the three forms its readers need, and which one files.dist means is a role question the resolver answers alone
+    #[Test]
+    public function theDirectoryOfAPlaceIsTheConfiguredOne(): void
+    {
+        $data = $this->getProbe('place');
+        $dist = $data['rules']['files.dist'];
+        $avat = $data['rules']['users.avatar'];
+        $this->assertSame($data['dirs']['files.dist'], $dist['dir'], 'A visitor no longer uploads a catalogue file into the temporary directory');
+        $this->assertNotSame($data['dirs']['files.public'], $dist['dir'], 'A visitor uploads a catalogue file straight into the public directory');
+        $this->assertSame($data['dirs']['users.avatar'], $avat['dir'], 'An avatar no longer lands in the configured avatar directory');
+        foreach (['files.dist' => $dist, 'users.avatar' => $avat] as $place => $rule) {
+            $this->assertSame('uploads/'.$rule['store'], $rule['dir'], 'The two relative directory forms of '.$place.' disagree');
+            $this->assertStringEndsWith('/'.$rule['store'], $rule['path'], 'The absolute directory of '.$place.' is not the relative one below the upload root');
+        }
+    }
+
+    # docs/ARCHITECTURE.md, Upload Place Boundary: every editor route travels on the place and no longer on the module, because filterVar() empties a string carrying a dot
+    # The entry guard of index.php is the load bearing half: a request the branch drops never reaches a case at all, so a guard written in a route below it would never run
+    #[Test]
+    public function everyEditorRouteTravelsOnThePlace(): void
+    {
+        $rule = $this->getBody('core/system.php', 'getEditorRouteRule');
+        $this->assertStringContainsString("getVar('get', 'place', 'raw', '')", $rule, 'The shared guard reads the place through a filter that empties a dot');
+        $this->assertStringContainsString('getUploadPlaceRule(', $rule, 'The shared guard resolves something other than the place rule');
+        $this->assertStringNotContainsString("getVar('get', 'mod'", $rule, 'The shared guard still reads the module parameter, which cannot carry a place at all');
+        $code = $this->getFile('index.php');
+        $from = strpos($code, '$go == 4');
+        $stop = strpos($code, '$go == 5');
+        $this->assertNotFalse($from, 'The editor branch of the front controller is gone');
+        $this->assertNotFalse($stop, 'The branch after the editor one is gone, so the slice below would run past the routes it claims about');
+        $part = substr($code, $from, $stop - $from);
+        $this->assertStringContainsString("getVar('get', 'place', 'raw', '')", $part, 'The entry guard reads no place, so a request carrying one dies before any route');
+        $this->assertStringNotContainsString("getVar('get', 'mod'", $part, 'The entry guard of the editor branch still demands a module, which no endpoint URL carries any more');
+    }
+
+    # The ops gate is the security assertion of the batch: a field place uploads through its own form, so the three routes its window never offers are refused by the server
+    # It stands in the shared guard and before the two guards that answer for the visitor, so no route restates it and none can ship with it quietly missing
+    #[Test]
+    public function aPlaceIsRefusedTheRouteItDoesNotPermit(): void
+    {
+        $rule = $this->getBody('core/system.php', 'getEditorRouteRule');
+        $gate = strpos($rule, "in_array(getVar('req', 'op', 'var', ''), \$rul['ops'], true)");
+        $this->assertNotFalse($gate, 'The shared guard never asks whether the place permits the route that was dispatched');
+        $this->assertStringContainsString("\$rul['ops'], true)) getEditorJson(['ok' => false, 'error' => _ACCESSDENIED])", $rule, 'The ops gate refuses in words of its own');
+        $this->assertLessThan(strpos($rule, 'checkEditorUploadAccess('), $gate, 'The ops gate runs after the right of the visitor and not before it');
+        $this->assertLessThan(strpos($rule, 'checkSiteToken('), $gate, 'The ops gate runs after the token, so a valid token decides a route the place never permitted');
+        $data = $this->getProbe('place');
+        foreach (['files.dist', 'users.avatar'] as $place) {
+            $ops = $data['rules'][$place]['ops'];
+            $this->assertNotContains('editorUpload', $ops, $place.' permits the upload route, so the gate above would let a file in beside its own form');
+            $this->assertNotContains('editorDelete', $ops, $place.' permits the deletion route, whose window offers no button for it');
+            $this->assertNotContains('editorArchive', $ops, $place.' permits the packing route, whose window offers no button for it');
+        }
+    }
+
+    # Both ends of the contract migrate together: the four endpoint URLs are built beside the editor and carry the attachment place of the module instead of its name
+    #[Test]
+    public function everyEndpointUrlCarriesThePlace(): void
+    {
+        $drv = $this->getFile('plugins/editors/toastui/driver.php');
+        $this->assertStringContainsString(".'.attach'", $drv, 'The editor no longer names the attachment place of its module, so its URLs carry nothing the routes can resolve');
+        foreach (['editorUpload', 'editorFiles', 'editorDelete', 'editorArchive'] as $op) {
+            $this->assertStringContainsString('op='.$op.'&place=', $drv, 'The endpoint URL of '.$op.' does not carry a place');
+        }
+        $this->assertStringNotContainsString('&mod=', $drv, 'An endpoint URL still carries the module parameter, which the front controller no longer reads');
+    }
+
+    # The file context is built from the place rule alone, which already carries the directory and the module it is moderated as, so no caller hands the same place down beside it
+    #[Test]
+    public function theFileContextIsBuiltFromThePlaceRule(): void
+    {
+        $code = $this->getFile('core/system.php');
+        $this->assertSame(1, substr_count($code, 'function getUploadFileArea('), 'The file context of an upload place is built somewhere other than the one resolver');
+        $this->assertStringNotContainsString('getEditorFileArea', $code, 'The former module context survives beside the place one, so two readings of the same directory exist');
+        $area = $this->getBody('core/system.php', 'getUploadFileArea');
+        $this->assertStringContainsString("\$rule['mod']", $area, 'The context works out the module beside the rule that already answers it');
+        $this->assertStringContainsString("(string)\$rule['path']", $area, 'The context opens a root other than the directory of the place');
+        foreach (['addEditorUpload', 'getEditorFileJson', 'setEditorFileRun'] as $name) {
+            $this->assertStringContainsString('getUploadFileArea($rul)', $this->getBody('core/system.php', $name), $name.'() builds its context on something else');
+        }
+    }
+
+    # A path handed in by a form is resolved in one place for both handlers, because the two questions it answers - does the file exist in this place, does it belong to whoever is posting -
+    # were written twice in words that differed, and the copy that drifts is the one that stops asking. The wording of the refusal stays with each caller; the refusal itself does not
+    #[Test]
+    public function theTakenPathIsResolvedInOnePlace(): void
+    {
+        $code = $this->getFile('core/system.php');
+        $this->assertSame(1, substr_count($code, 'function getUploadTakenFile('), 'The stored pick of a form is resolved somewhere other than the one resolver');
+        $body = $this->getBody('core/system.php', 'getUploadTakenFile');
+        $this->assertStringContainsString('getUploadFileArea($rule)->getFileData($take)', $body, 'The path is read past the place context, so a name reaching outside the directory would answer');
+        $this->assertStringContainsString("\$one['kind'] === 'dir'", $body, 'A directory answers as a file, so a pick could name the store itself');
+        $this->assertStringContainsString("'index.html', '.htaccess'", $body, 'The two names that are never content are offered as content');
+        $this->assertStringContainsString('FileManager::getFileOwner(', $body, 'A stored file is taken on the word of the client, which is the one thing a path from a form may never be');
+        $this->assertStringContainsString('getEditorFileOwner($mod)', $body, 'The resolver writes an owner of its own, so its answer and the listing disagree about whose file it is');
+        $this->assertStringContainsString('!is_moder($mod)', $body, 'The ownership test excuses nobody, or excuses more than the module moderator the deletion route already excuses');
+        $this->assertLessThan(strpos($body, 'is_moder('), strpos($body, "'gone'"), 'The role is consulted before the file is known to exist, so the moderator would be excused the existence test as well');
+        foreach (['modules/files/index.php' => 'send', 'modules/account/index.php' => 'savehome'] as $path => $name) {
+            $this->assertStringContainsString('getUploadTakenFile(', $this->getBody($path, $name), $path.' resolves a stored pick on its own again');
+        }
+    }
+
+    # The upload route stores into the directory the place named and never into a module directory it derived from the name, which is what lets a field place point anywhere
+    #[Test]
+    public function theUploadRouteStoresIntoTheDirectoryOfThePlace(): void
+    {
+        $body = $this->getBody('core/system.php', 'addEditorUpload');
+        $this->assertStringContainsString("(string)\$rul['store']", $body, 'The upload route names its destination itself instead of taking the one the place resolved');
+    }
+
     # The accessor builds one instance over the upload root and is the only place that names it; the lock directory belongs to the protocol and is named by FileManager alone
     #[Test]
     public function theServiceIsBuiltOnceOverTheDocumentedPaths(): void
@@ -296,5 +484,72 @@ final class UploadIntegrationTest extends TestCase
         $body = substr($code, $from, (int)strpos($code, 'elseif ($go == 5)', $from) - $from);
         $this->assertStringContainsString('http_response_code(400)', $body, 'An unknown editor operation no longer answers 400');
         $this->assertStringNotContainsString('upload(', $body, 'The editor entry still reaches a generic upload');
+    }
+
+    # The catalogue asks for a file through the one door: the form keeps no file field and no address row of its own, and what the window handed back rides the ordinary submit
+    # The three outcomes are read in a fixed defensive order - the upload, then the stored file, then the address - because the window cannot hand back two and a leftover of one must never answer for another
+    # A path arrives from the client and is never taken on trust: the file layer answers whether it exists in the place, and the owner token answers whether it belongs to whoever is posting
+    #[Test]
+    public function theCatalogueAsksForAFileThroughTheOneDoor(): void
+    {
+        $form = $this->getBody('modules/files/index.php', 'add');
+        $this->assertStringContainsString('getFileManagerField([', $form, 'The catalogue form carries no door, so the window is reachable from an editor alone again');
+        $this->assertStringContainsString("'place' => 'files.dist'", $form, 'The door of the catalogue opens on something other than the place of the distributed file');
+        $this->assertStringNotContainsString("getHtmlFrag('file-input'", $form, 'The catalogue still prints a bare file field beside the door, so two ways of adding a file stand in one form');
+        $this->assertStringNotContainsString("'input_id' => 'f-url'", $form, 'The address row is still typed into the form, which the window now owns');
+        $body = $this->getBody('modules/files/index.php', 'send');
+        $up = strpos($body, 'addUploadedFile(');
+        $take = strpos($body, 'getUploadTakenFile(');
+        $this->assertNotFalse($up, 'The catalogue no longer publishes an upload at all');
+        $this->assertNotFalse($take, 'The catalogue never resolves a stored file, so a pick from the storage reaches the database unchecked');
+        $this->assertLessThan($take, $up, 'The stored file is read before the upload, so a leftover path would answer for a file the visitor just chose');
+        $this->assertStringNotContainsString('FileManager::getFileOwner(', $body, 'The catalogue tests ownership in words of its own beside the one resolver, and a guard written twice is a guard that drifts');
+        $this->assertStringContainsString('getEditorFileOwner(', $body, 'The catalogue writes an owner of its own again, so its names and the listing disagree about whose file it is');
+        $this->assertStringNotContainsString('(int)$user[0]', substr($body, 0, $up), 'The owner is cast to an integer again, which turns every guest token into zero and matches one guest against another');
+        $this->assertStringContainsString('checkEditorUploadAccess(', $body, 'The handler decides the upload right beside the one gate that answers it for every other place');
+    }
+
+    # The avatar asks for a file through the same door, and the row that used to carry a bare file field is the only thing in its tile that changed
+    # A preset is picked by a click and beats anything the window produced, so the arbitration reads it first and the two window outcomes after it in a fixed order
+    # The place keeps a file name resolved against the avatar directory, so the stored arm writes the name and never the address the catalogue writes out of the same shape
+    #[Test]
+    public function theAvatarAsksForAFileThroughTheOneDoor(): void
+    {
+        $form = $this->getBody('modules/account/index.php', 'edithome');
+        $this->assertStringContainsString('getFileManagerField([', $form, 'The avatar tile carries no door, so the window is reachable from an editor alone again');
+        $this->assertStringContainsString("'place' => 'users.avatar'", $form, 'The door of the avatar opens on something other than the place of the avatar');
+        $this->assertStringNotContainsString("getHtmlFrag('file-input'", $form, 'The avatar tile still prints a bare file field beside the door');
+        $this->assertStringNotContainsString("'url' => ", $form, 'The avatar door is handed an address field, which resolves against no avatar directory');
+        $this->assertStringNotContainsString("\$conf['users']['aupload']", $form, 'The form decides the upload right off a configuration key again instead of off the one gate');
+        $body = $this->getBody('modules/account/index.php', 'savehome');
+        $pre = strpos($body, "getVar('post', 'avatar'");
+        $up = strpos($body, 'addUploadedFile(');
+        $take = strpos($body, 'getUploadTakenFile(');
+        $this->assertNotFalse($pre, 'The preset arm is gone, so a gallery click reaches no arbitration at all');
+        $this->assertNotFalse($up, 'The avatar handler no longer publishes an upload at all');
+        $this->assertNotFalse($take, 'The avatar handler never resolves a stored file, so a pick from the storage reaches the profile unchecked');
+        $this->assertLessThan($up, $pre, 'The upload is read before the preset, so a leftover file beats a gallery click the member just made');
+        $this->assertLessThan($take, $up, 'The stored file is read before the upload, so a leftover path would answer for a file the member just chose');
+        $this->assertStringNotContainsString('FileManager::getFileOwner(', $body, 'The avatar tests ownership in words of its own beside the one resolver');
+        $this->assertStringContainsString('getEditorFileOwner(', $body, 'The avatar writes an owner of its own, so its names and the listing disagree');
+        $this->assertStringNotContainsString("\$rule['mod'], \$uid)", $body, 'The owner is the numeric identifier again instead of the token every other place stores');
+        $this->assertStringContainsString('checkEditorUploadAccess(', $body, 'The handler decides the upload right beside the one gate that answers it for every other place');
+        $this->assertStringNotContainsString("\$conf['users']['aupload']", $body, 'The handler decides the upload right off a configuration key again instead of off the one gate');
+    }
+
+    # The profile write carries the avatar now, so the two guards that stood in front of the route it replaced stand in front of it: a member, and a POST
+    # Both are read before the token, because a token proves a session and never an identity, and a visitor holding one would otherwise reach the write itself
+    #[Test]
+    public function theProfileWriteIsClosedToAVisitorAndToAGet(): void
+    {
+        $body = $this->getBody('modules/account/index.php', 'savehome');
+        $user = strpos($body, 'is_user()');
+        $post = strpos($body, 'REQUEST_METHOD');
+        $tok = strpos($body, 'checkSiteToken(');
+        $this->assertNotFalse($user, 'A signed out visitor reaches the profile write, where the member of the row is read off an identity that was never proven');
+        $this->assertNotFalse($post, 'The profile write answers a GET, so an address alone changes an account');
+        $this->assertNotFalse($tok, 'The profile write asks for no token at all');
+        $this->assertLessThan($tok, $user, 'The token is checked before the visitor, so a session with no member behind it reaches further than it should');
+        $this->assertLessThan($tok, $post, 'The token is checked before the method, so a GET reaches further than it should');
     }
 }

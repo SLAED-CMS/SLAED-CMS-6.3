@@ -38,9 +38,10 @@ class FileManager {
     private array $flags = [];
 
     # Builds one context over the root the server chose; an unknown mode or an unresolvable root leaves it closed, which is what makes a miswired route refuse instead of browse
+    # An empty root is refused before it is resolved, because realpath() answers the working directory for one and would open the whole site below a place that is not configured
     # The flags carry the decisions the route already made with the module rule and is_moder(), because the upload rule stays the only place a permission is computed
     public function __construct(string $mode, string $root, array $flags = []) {
-        $path = in_array($mode, self::MODES, true) ? realpath($root) : false;
+        $path = ($root !== '' && in_array($mode, self::MODES, true)) ? realpath($root) : false;
         if ($path === false) return;
         $this->mode = $mode;
         $this->root = rtrim(str_replace('\\', '/', $path), '/');

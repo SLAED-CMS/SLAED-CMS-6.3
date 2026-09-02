@@ -209,7 +209,7 @@ function add(): void {
 }
 
 function save(): void {
-    global $db, $afile, $stop, $conf;
+    global $db, $afile, $stop;
     $fid = getVar('post', 'fid', 'num', 0);
     $cid = getVar('post', 'cid', 'num', 0);
     $postname = getVar('post', 'postname', 'name', '');
@@ -238,17 +238,10 @@ function save(): void {
         $sent = (int)($_FILES['filesite']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE;
         $rpath = '';
         if (!$stop && $posttype === 'save' && $sent) {
-            $fdir = trim(str_replace('\\', '/', $path ?: ($conf['files']['path'] ?? 'uploads/files')), '/');
+            $rule = getUploadPlaceRule('files.dist');
+            $fdir = trim(str_replace('\\', '/', $path ?: $rule['dir']), '/');
             $fdir = str_starts_with($fdir, 'uploads/') ? substr($fdir, 8) : (($fdir === 'uploads') ? '' : $fdir);
-            $rule = [
-                'extensions' => $conf['files']['typefile'] ?? 'zip,rar',
-                'maxbytes' => (int)($conf['files']['max_size'] ?? 1048576),
-                'maxwidth' => 1600,
-                'maxheight' => 1600,
-                'maxfiles' => 1,
-                'maxquota' => 0,
-            ];
-            $res = getUploadService()->addUploadedFile($_FILES['filesite'], $rule, $fdir, 'files', null);
+            $res = getUploadService()->addUploadedFile($_FILES['filesite'], $rule, $fdir, $rule['mod'], null);
             if ($res['ok']) {
                 $url = 'uploads/'.$res['path'];
                 $filesize = $res['size'];

@@ -466,6 +466,41 @@ Axes, ladders, the allowlist, categorical sets, declared component names, the ra
 
 Both themes stand at **zero untokenised visual decisions**, and every ratcheted count is at zero except `scoped` and `important`. Neither of those two is a defect list: a scoped custom property on a component root is an internal the rules permit, and an `!important` is permitted where it is need. What the ratchet buys is that neither can grow.
 
+### What Belongs In A Skin And What Belongs In The Theme
+
+A skin dresses the vendor. A component that renders on pages where the vendor is
+absent belongs in `theme.css`, because `Editor::getThemeSkin()` delivers a skin
+only where an editor lives, and a rule left behind there is a component stripped
+on every other page.
+
+The file manager window is the worked example. Its rules moved from
+`templates/{lite,admin}/assets/editors/toastui/skin.css` into
+`templates/{lite,admin}/assets/css/theme.css`, values unchanged — a move, not a
+rewrite. Five of them do not start with the window root: `.sl-shot-side .sl-fm-props`
+and its four relatives dress the properties panel of the shot window, which
+`getWindowShot()` builds from `core/helpers.php` and which is already system-wide;
+they moved with the rest and kept their `.sl-shot-side` scope. `tools/ui-contract.php`
+names them and was updated with them.
+
+What stayed in the skin is the vendor's own: toolbar, icons, mode switch,
+fullscreen, and `.sl-toastui-upload button` / `.sl-toastui-upload input`, which
+cure the fixed button height the vendor root imposes on the two dialogs mounted
+inside it. `sl-toastui-upload` therefore survives as a **second** class on the
+window, beside its own root.
+
+**The window could not simply be unscoped.** The administrative file browser in
+`templates/admin/assets/css/theme.css` owns the same `sl-fm-*` names — it shares
+`sl-fm-split`, `sl-fm-drop`, `sl-fm-queue`, `sl-fm-queue-cap`, `sl-fm-empty`,
+`sl-fm-props` and `sl-fm-main`, the last a *button* class there. The window took a
+root of its own, `sl-fm-win`, and stays scoped under it. The eight `--sl-fm-*`
+tokens admin's `base.css` carries beyond lite's twenty — `bar-width`,
+`edit-height`, `preview-height`, `search-width`, `sep-height`, `split-height`,
+`thumb-height`, `thumb-width` — belong to that browser and not to the window.
+
+The markup moved the same way and for the same reason:
+`partials/editor-toastui-files.html` became `partials/file-manager.html`, still
+byte-identical between the themes.
+
 ## Theme Gates
 
 | Command | Checks |

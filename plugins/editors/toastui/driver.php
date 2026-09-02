@@ -35,8 +35,7 @@ class EditorToastUi implements ContentDriver {
         ]);
         return $assets
             .$tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/editors/toastui/assets/editor-tags.js', 'attr' => ''])
-            .$tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/editors/toastui/assets/editor-emoji.js', 'attr' => ''])
-            .$tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/editors/toastui/assets/editor-upload.js', 'attr' => '']);
+            .$tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/editors/toastui/assets/editor-emoji.js', 'attr' => '']);
     }
 
     # Render one editor instance together with the single image and file window that replaces the vendor image dialog and the former file catalogue
@@ -70,7 +69,9 @@ class EditorToastUi implements ContentDriver {
         ]);
         $ta .= $tpl->getHtmlFrag('editor-mount', ['id' => $id.'_toast', 'labelledby' => (string)($data['labelledby'] ?? ''), 'aria_label' => (string)($data['arialabel'] ?? ''), 'describedby' => (string)($data['describedby'] ?? '')]);
         $mod = strtolower((string)($data['mod'] ?? ''));
+        $plc = ($mod !== '') ? $mod.'.attach' : '';
         $rul = (array)($data['rule'] ?? []);
+        $plr = ($plc !== '') ? getUploadPlaceRule($plc) : [];
         $room = (array)($data['room'] ?? []);
         $upl = $mod !== '' && checkEditorUploadAccess($mod, $rul);
         $emb = !empty($room['embed']);
@@ -87,18 +88,10 @@ class EditorToastUi implements ContentDriver {
         $bid = $id.'_toast_urlalt';
         $cid = $id.'_toast_embed';
         $sid = $id.'_toast_insert';
-        $exts = array_values(array_filter(array_map('trim', explode(',', (string)($rul['extensions'] ?? '')))));
-        $quot = (int)($rul['maxquota'] ?? 0);
-        $mbyt = (int)($rul['maxbytes'] ?? 0);
-        $mwid = (int)($rul['maxwidth'] ?? 0);
-        $mhei = (int)($rul['maxheight'] ?? 0);
-        $lims = [implode(', ', $exts)];
-        if ($mbyt > 0) $lims[] = filterSize($mbyt);
-        if ($mwid > 0 && $mhei > 0) $lims[] = $mwid.' × '.$mhei.' px';
+        $txt = getFileManagerText();
         $opt = [
             'super' => isAdmin(true),
-            'tpl' => 'js-slaed-editor-tpl',
-            'labels' => [
+            'labels' => $txt['labels'] + [
                 'quote' => _EQUOTE,
                 'hide' => _HIDE,
                 'tabs' => _ETABS,
@@ -110,10 +103,7 @@ class EditorToastUi implements ContentDriver {
                 'image' => _IMG,
                 'attach' => _EATTACH,
                 'nofiles' => _NO_INFO,
-                'upload' => _ERROR_UP,
-                'load' => _ERROR,
                 'uploaded' => _FILE_RENAMED,
-                'fileup' => _FILEUP,
                 'nofile' => _ENOFILE,
                 'emoji_recent' => _EEMOJIRECENT,
                 'emoji_smileys' => _EEMOJISMILE,
@@ -121,55 +111,16 @@ class EditorToastUi implements ContentDriver {
                 'emoji_notices' => _EEMOJINOTICE,
                 'emoji_symbols' => _EEMOJISYMBOL,
                 'emoji_empty' => _EEMOJIEMPTY,
-                'toobig' => _ERROR_SIZE,
-                'badtype' => _ERROR_FILE,
-                'noembed' => _ENOEMBED,
-                'insert' => _INSERTIMG,
-                'insobj' => _EINSOBJ,
-                'download' => _DOWNLOAD,
-                'zip' => _EDITOR_ZIP,
-                'delete' => _DELETE,
-                'acts' => _FUNCTIONS,
-                'mark' => _EDITOR_MARK,
-                'marked' => _EDITOR_MARKED,
-                'insimgs' => _EDITOR_INSIMGS,
-                'insobjs' => _EDITOR_INSOBJS,
-                'askdel' => _EDITOR_ASKDEL,
-                'askdels' => _EDITOR_ASKDELS,
-                'preview' => _PREVIEW,
-                'empty' => _EDITOR_EMPTY,
-                'emptywhy' => _EDITOR_EMPTYWHY,
-                'none' => _EDITOR_NONE,
-                'nonewhy' => _EDITOR_NONEWHY,
-                'fail' => _EDITOR_FAIL,
-                'failwhy' => _EDITOR_FAILWHY,
-                'reset' => _FRESET,
-                'retry' => _RETRY,
-                'queue' => _EDITOR_QUEUE,
-                'queueend' => _EDITOR_QUEUEEND,
-                'quota' => _EDITOR_QUOTA,
-                'more' => _EDITOR_MORE,
-                'mynote' => _EDITOR_MYNOTE,
-                'name' => _NAME,
-                'type' => _TYPE,
-                'size' => _SIZE,
-                'dim' => _EDITOR_DIM,
-                'date' => _DATE,
-                'perms' => _EDITOR_PERMS,
-                'owner' => _EDITOR_OWNER,
-                'addr' => _EDITOR_ADDR,
             ],
-            'panes' => [
-                'up' => [_EMODEUPLOAD, _EMODEUPLOADINFO],
-                'url' => [_EDITOR_LINK, _EDITOR_LINKINFO],
+            'panes' => $txt['panes'] + [
                 'emb' => [_EMODEEMBED, _EMODEEMBEDINFO],
-                'lib' => [_EDITOR_MY, _EDITOR_MYINFO],
             ],
             'embedmax' => Parser::EMBEDMAX,
             'embedimg' => Parser::EMBEDIMG,
             'canupload' => $upl,
             'canlist' => $upl,
             'canembed' => $emb,
+            'canlink' => !empty($plr['canlink']),
             'canzip' => $mdr,
             'candel' => $mdr,
             'room' => (int)($room['bytes'] ?? 65535),
@@ -182,86 +133,33 @@ class EditorToastUi implements ContentDriver {
             'urlalt' => $bid,
             'last' => 6,
             'maxfiles' => (int)($rul['maxfiles'] ?? 0),
+            'exts' => array_values(array_filter(array_map('trim', explode(',', strtolower((string)($rul['extensions'] ?? '')))))),
+            'maxbytes' => (int)($rul['maxbytes'] ?? 0),
+            'maxwidth' => (int)($rul['maxwidth'] ?? 0),
+            'maxheight' => (int)($rul['maxheight'] ?? 0),
             'token' => $tok,
             'ajax' => $atk,
-            'upload' => $upl ? 'index.php?go=4&op=editorUpload&mod='.rawurlencode($mod) : '',
-            'files' => $upl ? 'index.php?go=4&op=editorFiles&mod='.rawurlencode($mod) : '',
-            'remove' => $mdr ? 'index.php?go=4&op=editorDelete&mod='.rawurlencode($mod) : '',
-            'archive' => $mdr ? 'index.php?go=4&op=editorArchive&mod='.rawurlencode($mod) : '',
+            'upload' => $upl ? 'index.php?go=4&op=editorUpload&place='.rawurlencode($plc) : '',
+            'files' => $upl ? 'index.php?go=4&op=editorFiles&place='.rawurlencode($plc) : '',
+            'remove' => $mdr ? 'index.php?go=4&op=editorDelete&place='.rawurlencode($plc) : '',
+            'archive' => $mdr ? 'index.php?go=4&op=editorArchive&place='.rawurlencode($plc) : '',
         ];
-        $panel = $tpl->getHtmlPart('editor-toastui-files', [
-            'panel_id' => htmlspecialchars($pid, ENT_QUOTES, 'UTF-8'),
-            'title_id' => htmlspecialchars($tid, ENT_QUOTES, 'UTF-8'),
-            'msg_id' => htmlspecialchars($mid, ENT_QUOTES, 'UTF-8'),
-            'file_id' => htmlspecialchars($fid, ENT_QUOTES, 'UTF-8'),
-            'embed_id' => htmlspecialchars($cid, ENT_QUOTES, 'UTF-8'),
-            'object_id' => htmlspecialchars($oid, ENT_QUOTES, 'UTF-8'),
-            'url_id' => htmlspecialchars($uid, ENT_QUOTES, 'UTF-8'),
-            'alt_id' => htmlspecialchars($aid, ENT_QUOTES, 'UTF-8'),
-            'urlalt_id' => htmlspecialchars($bid, ENT_QUOTES, 'UTF-8'),
-            'editor_id' => $eid,
-            'can_upload' => $upl,
-            'can_list' => $upl,
+        $panel = getFileManagerWindow([
+            'place' => $plc,
+            'panel' => $pid,
+            'title' => $tid,
+            'msg' => $mid,
+            'upfile' => $fid,
+            'embed' => $cid,
+            'object' => $oid,
+            'url' => $uid,
+            'alt' => $aid,
+            'urlalt' => $bid,
+            'editor' => $id,
             'can_embed' => $emb,
-            'can_zip' => $mdr,
-            'can_delete' => $mdr,
-            'accept_attr' => implode(',', array_map(static fn(string $ext): string => '.'.$ext, $exts)),
             'embed_accept' => implode(',', array_map(static fn(string $ext): string => '.'.$ext, Parser::EMBEDIMG)),
             'embed_types' => implode(', ', Parser::EMBEDIMG).' · '.filterSize(Parser::EMBEDMAX),
-            'title_label' => _EUPLOAD,
-            'close_label' => _CLOSE,
-            'move_label' => _EMOVEWIN,
-            'expand_label' => _EEXPAND,
-            'restore_label' => _ERESTORE,
-            'add_label' => _EDITOR_ADD,
-            'store_label' => _EDITOR_STORE,
-            'up_label' => _EMODEUPLOAD,
-            'up_note' => _EMODEUPLOADINFO,
-            'up_why' => _EDITOR_NOUP,
-            'link_label' => _EDITOR_LINK,
-            'link_note' => _EDITOR_LINKNOTE,
-            'link_lead' => _EDITOR_LINKINFO,
-            'link_warn' => _EDITOR_LINKWARN,
-            'embed_label' => _EMODEEMBED,
-            'embed_note' => _EMODEEMBEDINFO,
-            'embed_why' => _ENOEMBED,
-            'files_label' => _EDITOR_MY,
-            'files_note' => '',
-            'files_why' => _EDITOR_NOMY,
-            'quota_text' => $upl ? sprintf(_EDITOR_QUOTA, '—', filterSize($quot)) : _EDITOR_NOUP,
-            'module_text' => sprintf(_EDITOR_MODULE, $mod),
-            'address_label' => _EIMGURL,
-            'alt_label' => _DESCRIPTION,
-            'insas_label' => _EDITOR_INSAS,
-            'image_label' => _IMG,
-            'object_label' => _EINSOBJ,
-            'nofile_label' => _ENOFILE,
-            'drop_label' => _EDROPFILES,
-            'limits_text' => implode(' · ', $lims),
-            'stop_label' => _EDITOR_STOP,
-            'used_label' => _EDITOR_USED,
-            'room_label' => _EDITOR_ROOM,
             'room_text' => filterSize((int)($room['bytes'] ?? 0)),
-            'full_label' => _EDITOR_FULL,
-            'filter_label' => _EDITOR_FILTER,
-            'all_label' => _ALL,
-            'images_label' => _EDITOR_IMAGES,
-            'others_label' => _EDITOR_OTHERS,
-            'list_label' => _EDITOR_ASLIST,
-            'tiles_label' => _EDITOR_ASGRID,
-            'markall_label' => _EDITOR_MARKALL,
-            'name_label' => _NAME,
-            'type_label' => _TYPE,
-            'size_label' => _SIZE,
-            'date_label' => _DATE,
-            'props_label' => _EDITOR_PROPS,
-            'props_note' => _EDITOR_NOTE,
-            'zip_label' => _EDITOR_ZIP,
-            'delete_label' => _DELETE,
-            'unmark_label' => _EDITOR_UNMARK,
-            'wait_text' => _EDITOR_WAIT,
-            'insert_label' => _EDITOR_INSERT,
-            'refresh_label' => _UPDATE,
         ]);
         $acts = [
             ['key' => 'image', 'icon' => 'image', 'name' => _INSERTIMG, 'tone' => 'info'],
@@ -282,7 +180,7 @@ class EditorToastUi implements ContentDriver {
         if ($upl) $panel .= $tpl->getHtmlFrag('window', [
             'win_id' => htmlspecialchars($sid, ENT_QUOTES, 'UTF-8'),
             'size_class' => 'sl-modal-sm',
-            'win_class' => 'sl-toastui-upload',
+            'win_class' => 'sl-fm-win sl-toastui-upload',
             'win_attr' => 'data-editor="'.$eid.'"',
             'icon_name' => 'sliders',
             'title_text' => _EDITOR_OPTS,

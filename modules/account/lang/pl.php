@@ -44,7 +44,6 @@ define('_AVATARINFO','Wyświetla mały obrazek pod informacjami o tobie w wiadom
 define('_AVATARSAVE','Wybierz awatar');
 define('_AVATARSELECT','Wybierz swój ulubiony awatara z galerii, wystarczy nacisnąć lewy przycisk myszy na wybranym zdjęciu.');
 define('_AVATARSETUP','Ustawienia awatar');
-define('_AVATAR_USER','Wgrać avatar z komputera');
 define('_BLANKFORAUTO','Hasło może zostać pominięty, w tym przypadku system wygeneruje automatycznie');
 define('_CHARMIN','Minimalna dozwolona ilość znaków w haśle');
 define('_CODEFOR','Kod rejestracyjny do');

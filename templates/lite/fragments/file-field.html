@@ -1,0 +1,8 @@
+<div class="sl-file-door" id="{{ box_id }}">
+  <button type="button" class="sl-but" id="{{ input_id }}" data-sl-act="open" data-editor="{{ editor_id }}"><i class="bi bi-folder2-open" aria-hidden="true"></i> {{ open_label }}</button>
+  <span class="sl-chip sl-chip-neutral" data-sl-field="chip"{% if not chip_text %} hidden{% endif %}><i class="bi bi-paperclip" aria-hidden="true"></i><span data-sl-field="name">{{ chip_text }}</span><button type="button" class="sl-but-mini" data-sl-act="clear" data-editor="{{ editor_id }}" title="{{ clear_label }}" aria-label="{{ clear_label }}"><i class="bi bi-x-lg" aria-hidden="true"></i></button></span>
+  <small>{{ limits_text }}</small>
+  <input type="file" name="{{ file_name }}" data-sl-field="file" accept="{{ accept_attr }}" hidden>
+  <input type="hidden" name="{{ path_name }}" data-sl-field="path" value="{{ path_value }}">
+  {% if url_name %}<input type="hidden" name="{{ url_name }}" data-sl-field="url" value="{{ url_value }}">{% endif %}
+</div>

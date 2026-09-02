@@ -1004,12 +1004,21 @@ function edithome(): void {
         $xtra = getTplFieldsIn(['field' => $info['field'], 'mod' => $conf['name']]);
         if ($xtra !== '') $tils[] = ['icon' => 'plus-square-dotted', 'title' => _ACCOUNT_FIELDS, 'width' => 6, 'tone' => 3, 'rows_html' => $xtra];
         $secs[] = ['id' => 'personal', 'icon' => 'person-lines-fill', 'title' => _PERSONALINFO, 'inform' => true, 'tiles' => $tils];
+        $arul = getUploadPlaceRule('users.avatar');
+        $take = getVar('post', 'filepath', 'raw', '');
+        $take = is_string($take) ? mb_substr(trim($take), 0, 512) : '';
         $upld = '';
-        if ($conf['users']['aupload']) {
+        if (checkEditorUploadAccess((string)$arul['mod'], $arul)) {
             $upld = $tpl->getHtmlFrag('form-field-row', [
                 'label_for' => 'f-userfile',
-                'label' => _AVATAR_USER,
-                'field_html' => $tpl->getHtmlFrag('file-input', ['name_attr' => 'userfile', 'input_id' => 'f-userfile']),
+                'label' => _FILE,
+                'field_html' => getFileManagerField([
+                    'id' => 'f-userfile',
+                    'place' => 'users.avatar',
+                    'name' => 'userfile',
+                    'path' => 'filepath',
+                    'path_value' => $take,
+                ]),
             ]);
         }
         $tils = [[
@@ -1241,6 +1250,14 @@ function edithome(): void {
 
 function savehome(): void {
     global $db, $user, $conf, $stop;
+    if (!is_user()) {
+        account();
+        return;
+    }
+    if (strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'POST') {
+        edithome();
+        return;
+    }
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'account')) $stop[] = _ERROR;
     $mail = getVar('post', 'mail', 'text');
     $sig = getVar('post', 'sig', 'text');
@@ -1274,6 +1291,10 @@ function savehome(): void {
             $field = getVar('post', 'field', 'field');
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET email = :email, website = :website, viewmail = :viewmail, occ = :occ, origin = :origin, interest = :interest, sig = :sig, storynum = :storynum, blockon = :blockon, block = :block, theme = :theme, newslet = :newslet, fsmail = :fsmail, psmail = :psmail, birthday = :birthday, gender = :gender, field = :field WHERE id = :id', ['email' => $mail, 'website' => $site, 'viewmail' => $view, 'occ' => $occ, 'origin' => $from, 'interest' => $inter, 'sig' => $sig, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme, 'newslet' => $news, 'fsmail' => $fsmail, 'psmail' => $psmail, 'birthday' => $birth, 'gender' => $gender, 'field' => $field, 'id' => $uid]);
             $avat = getVar('post', 'avatar', 'text');
+            $take = getVar('post', 'filepath', 'raw', '');
+            $take = is_string($take) ? mb_substr(trim($take), 0, 512) : '';
+            $rule = getUploadPlaceRule('users.avatar');
+            $able = checkEditorUploadAccess((string)$rule['mod'], $rule);
             $errn = (int)($_FILES['userfile']['error'] ?? UPLOAD_ERR_NO_FILE);
             $newa = '';
             $path = '';
@@ -1281,21 +1302,15 @@ function savehome(): void {
                 $avat = basename($avat);
                 $newa = (preg_match("#\.(gif|png|jpe?g|svg)$#is", $avat) && file_exists('templates/'.getTheme().'/images/avatars/presets/'.$avat)) ? 'presets/'.$avat : '';
                 if (!$newa) $stop[] = ['text' => _ERROR_FILE, 'sect' => 'avatar'];
-            } elseif ($errn !== UPLOAD_ERR_NO_FILE && $conf['users']['aupload']) {
-                $adir = trim(str_replace('\\', '/', $conf['users']['adirectory']), '/');
-                $adir = str_starts_with($adir, 'uploads/') ? substr($adir, 8) : (($adir === 'uploads') ? '' : $adir);
-                $rule = [
-                    'extensions' => $conf['users']['atypefile'],
-                    'maxbytes' => (int)$conf['users']['amaxsize'],
-                    'maxwidth' => (int)$conf['users']['awidth'],
-                    'maxheight' => (int)$conf['users']['aheight'],
-                    'maxfiles' => 1,
-                    'maxquota' => 0,
-                ];
-                $res = getUploadService()->addUploadedFile($_FILES['userfile'], $rule, $adir, $conf['name'], $uid);
+            } elseif ($able && $errn !== UPLOAD_ERR_NO_FILE) {
+                $res = getUploadService()->addUploadedFile($_FILES['userfile'], $rule, $rule['store'], $rule['mod'], getEditorFileOwner((string)$rule['mod']));
                 $newa = ($res['ok']) ? (string)$res['file'] : '';
                 $path = ($res['ok']) ? (string)$res['path'] : '';
                 if (!$res['ok']) $stop[] = ['text' => getUploadFailText((string)$res['error'], $rule), 'sect' => 'avatar'];
+            } elseif ($able && $take !== '') {
+                $got = getUploadTakenFile($rule, $take);
+                if (!$got['ok']) $stop[] = ['text' => ($got['error'] === 'owner') ? _ACCESSDENIED : _ERROR_FILE, 'sect' => 'avatar'];
+                else $newa = (string)$got['file']['name'];
             }
             if ($newa !== '' && !$db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET avatar = :avatar WHERE id = :id', ['avatar' => filterText($newa), 'id' => $uid])) {
                 $stop[] = ['text' => _ERROR, 'sect' => 'avatar'];

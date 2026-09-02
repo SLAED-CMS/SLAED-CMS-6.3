@@ -44,10 +44,41 @@ $GLOBALS['news'] = [];
 
 # Derive one scoped CSRF token exactly as core/security.php derives it, from the session the cookie jar holds
 function getScopeToken(string $jar, string $scope): string {
-    $cfg = require ROOTDIR.'/config/security.php';
-    $key = hash_hmac('sha256', 'csrf', (string)$cfg['security']['secret']);
+    $key = hash_hmac('sha256', 'csrf', getSiteSecret());
     $sid = getSessionId($jar);
     return hash_hmac('sha256', $sid !== '' ? $scope.'|'.$sid : $scope, $key);
+}
+
+# Read the master secret the way getSecret() reads it, which is off the merged configuration and not off the shipped file
+# The panel keeps the generated secret in the merge alone, so the shipped file answers an empty string and every token derived from it matches nothing on the stand
+# It is re-read on every call rather than held for the process, because this walk drops the merge between rows and getSecret() mints a new master whenever the
+# server rebuilds onto an empty one; a value taken once at the start would outlive that and every later token would fail the check while looking well formed
+# What is held is the last non-empty answer, and that is the load-bearing half: between the drop and the next request the merge simply does not exist, the
+# shipped file answers the empty string it ships with, and a token derived from an empty secret matches nothing - which reads exactly like a broken guard
+function getSiteSecret(): string {
+    static $key = '';
+    $now = '';
+    if (is_file(ROOTDIR.'/config/local.php')) {
+        $loc = require ROOTDIR.'/config/local.php';
+        $now = (string)($loc['_config']['security']['secret'] ?? '');
+    }
+    if ($now === '') {
+        $cfg = require ROOTDIR.'/config/security.php';
+        $now = (string)($cfg['security']['secret'] ?? '');
+    }
+    if ($now !== '') $key = $now;
+    return $key;
+}
+
+# Drop the compiled configuration so the next request rebuilds it from the files this walk has just rewritten, and answer whether it is really gone
+# The deletion is verified and never assumed: getConfig() answers the merge on a fast path that compares it against nothing, so a file that survived the unlink -
+# a lock held by the server on this platform is enough - leaves every later row reading the configuration this walk believed it had replaced. That is a red that
+# blames the code for the walk, and the same mechanism can as easily hand back a green, so a caller that cannot drop the merge must stop rather than carry on
+function deleteConfigMerge(): bool {
+    $path = ROOTDIR.'/config/local.php';
+    if (is_file($path)) @unlink($path);
+    clearstatcache(true, $path);
+    return !is_file($path);
 }
 
 # Read the session identifier back out of a cookie jar written by cURL
@@ -101,13 +132,14 @@ function setAdminSession(string $jar, string $name, string $pass): bool {
     return str_contains(getHttpReply($jar, '/admin.php?name=uploads')['body'], 'slfmbody');
 }
 
-# Open a site user session and prove it landed by fetching the profile route that carries the avatar form
+# Open a site user session and prove it landed by fetching the settings route, which answers the login form to anyone who is not signed in
+# The proof is the save operation of that form and never a field of it, because a field name may also stand on the login form the same route answers a guest with
 function setUserSession(string $jar, string $name, string $pass): bool {
     if (is_file($jar)) unlink($jar);
     getHttpReply($jar, '/index.php?name=account');
     $post = ['op' => 'login', 'user_name' => $name, 'user_password' => $pass, 'token' => getScopeToken($jar, 'account')];
     getHttpReply($jar, '/index.php?name=account&op=login', $post);
-    return str_contains(getHttpReply($jar, '/index.php?name=account&op=edithome')['body'], 'saveavatar');
+    return str_contains(getHttpReply($jar, '/index.php?name=account&op=edithome')['body'], 'value="savehome"');
 }
 
 # List one directory tree as a map of project relative path to byte size, which is what every before and after comparison is made of
@@ -251,87 +283,200 @@ function checkReadRows(string $ajar, string $ujar, string $gjar): void {
     $cut = addTestFixture('cut.png', 'cut');
     $txt = addTestFixture('ed.txt', 'txt');
     foreach (['moderator' => $ajar, 'user' => $ujar] as $who => $jar) {
-        $url = '/index.php?go=4&op=editorFiles&mod=news&token='.getScopeToken($jar, 'ajax');
+        $url = '/index.php?go=4&op=editorFiles&place=news.attach&token='.getScopeToken($jar, 'ajax');
         $out = json_decode(getHttpReply($jar, $url)['body'], true);
         $good = is_array($out['files'] ?? null);
         checkMatrixRow('editor listing answers '.$who, $good, $good ? count($out['files']).' files' : 'no file list');
     }
     # A guest reaches the listing only where the record enables guest upload; where it does not, the access check answers first
-    $url = '/index.php?go=4&op=editorFiles&mod=news&token='.getScopeToken($gjar, 'ajax');
+    $url = '/index.php?go=4&op=editorFiles&place=news.attach&token='.getScopeToken($gjar, 'ajax');
     $out = json_decode(getHttpReply($gjar, $url)['body'], true);
     $open = is_array($out['files'] ?? null);
-    $done = $open ? $out['files'] === [] : ($out['error'] ?? '') === 'Access denied';
+    $done = $open ? $out['files'] === [] : ($out['ok'] ?? null) === false;
     checkMatrixRow('a guest receives no historical file', $done, $open ? 'listed and empty' : 'refused by the record');
-    $res = getHttpReply($ujar, '/index.php?go=4&op=nosuchop&mod=news&token='.getScopeToken($ujar, 'ajax'));
+    $res = getHttpReply($ujar, '/index.php?go=4&op=nosuchop&place=news.attach&token='.getScopeToken($ujar, 'ajax'));
     checkMatrixRow('unknown editor operation answers 400', $res['code'] === 400 && str_contains($res['body'], '"ok":false'));
-    $res = getHttpReply($ujar, '/index.php?go=4&op=nosuchop&mod=nosuchmodule&token='.getScopeToken($ujar, 'ajax'));
+    $res = getHttpReply($ujar, '/index.php?go=4&op=nosuchop&place=nosuchmodule.attach&token='.getScopeToken($ujar, 'ajax'));
     checkMatrixRow('unknown operation with unknown module answers 400', $res['code'] === 400);
     $cases = ['tampered token' => ['bogus', $png], 'inadmissible type' => ['', $txt], 'undecodable image' => ['', $cut]];
     foreach ($cases as $name => [$tok, $file]) {
         $was = getDirTree($base);
         $send = ['token' => $tok !== '' ? $tok : getScopeToken($ujar, 'upload')];
-        getHttpReply($ujar, '/index.php?go=4&op=editorUpload&mod=news', $send, ['file' => $file]);
+        getHttpReply($ujar, '/index.php?go=4&op=editorUpload&place=news.attach', $send, ['file' => $file]);
         checkMatrixRow('editor write with '.$name.' publishes nothing', getTreeDelta($base, $was) === []);
     }
     $was = getDirTree(ROOTDIR.'/uploads/screens');
     $send = ['token' => getScopeToken($ujar, 'upload')];
-    $res = getHttpReply($ujar, '/index.php?go=4&op=editorUpload&mod=screens', $send, ['file' => $png]);
+    $res = getHttpReply($ujar, '/index.php?go=4&op=editorUpload&place=screens.attach', $send, ['file' => $png]);
     $done = getTreeDelta(ROOTDIR.'/uploads/screens', $was) === [] && str_contains($res['body'], 'configuration');
     checkMatrixRow('write to an unconfigured module is refused', $done);
+    checkOpsGateRows($ujar, $png);
 }
 
-# The avatar rows: the preset branch, a real upload and every path that must change nothing
+# A field place permits the listing route alone, and the routes its window never offers are refused by the server rather than by an interface that draws no button
+# Every row carries a deliberately wrong body token, so the gate is told apart from the token check that would otherwise answer the same request with the same shape
+# A refusal phrase is never compared against a literal, because the stand answers in its own locale: the field place is held against the attachment place of the same operation
+function checkOpsGateRows(string $ujar, string $png): void {
+    $was = getDirTree(ROOTDIR.'/uploads/files');
+    $send = ['token' => 'bogus'];
+    $deny = getHttpReply($ujar, '/index.php?go=4&op=editorUpload&place=files.dist', $send, ['file' => $png])['body'];
+    $miss = getHttpReply($ujar, '/index.php?go=4&op=editorUpload&place=news.attach', $send, ['file' => $png])['body'];
+    $done = getTreeDelta(ROOTDIR.'/uploads/files', $was) === [] && $deny !== $miss && str_contains($deny, '"ok":false');
+    checkMatrixRow('a field place is refused the upload route before its token', $done, substr($deny, 0, 90));
+    $good = getScopeToken($ujar, 'ajax');
+    # The body token is left out rather than made wrong: index.php reads the token as 'req', so a wrong one in the body outranks the good one in the address and the
+    # request dies on the dispatcher gate with an HTML alert, before any route runs. An absent body token still fails the route's own check, which is all this row needs
+    $send = ['file' => 'nosuchfile.png'];
+    $deny = getHttpReply($ujar, '/index.php?go=4&op=editorDelete&place=users.avatar&token='.$good, $send)['body'];
+    $miss = getHttpReply($ujar, '/index.php?go=4&op=editorDelete&place=news.attach&token='.$good, $send)['body'];
+    $done = $deny !== $miss && str_contains($deny, '"ok":false');
+    checkMatrixRow('a field place is refused the deletion route before its token', $done, substr($deny, 0, 90));
+    $res = getHttpReply($ujar, '/index.php?go=4&op=editorFiles&place=files&token='.$good);
+    checkMatrixRow('a place without a slot is refused', str_contains($res['body'], 'malformed'), substr($res['body'], 0, 90));
+    $res = getHttpReply($ujar, '/index.php?go=4&op=editorFiles&mod=news&token='.$good);
+    checkMatrixRow('the former module parameter reaches no route', str_contains($res['body'], 'Illegal file access'), substr($res['body'], 0, 90));
+}
+
+# The columns of the profile the settings form writes, read before the walk and written back after it, because a save that carried none of them would empty every one
+const PROFCOLS = [
+    'avatar', 'email', 'website', 'viewmail', 'occ', 'origin', 'interest', 'sig', 'storynum',
+    'blockon', 'block', 'theme', 'newslet', 'fsmail', 'psmail', 'birthday', 'gender', 'field',
+];
+
+# Replay the rendered settings form verbatim: the avatar travels inside the profile save, so a row about the avatar has to send everything the member would have sent
+# The page carries the password form and the unlink buttons beside the profile form, whose own hidden operation would answer for this one, so both keys are written last
+function getAccountPost(string $jar, string $page): array {
+    $out = [];
+    foreach (getFormFields($page) as [$name, $val]) $out[$name] = $val;
+    $out['op'] = 'savehome';
+    $out['token'] = getScopeToken($jar, 'account');
+    return $out;
+}
+
+# Read the stored profile of the configured site user as the map the restore pass writes back
+function getProfileRow(): array {
+    $rows = getDbRows('SELECT id, '.implode(', ', PROFCOLS).' FROM {p}_users WHERE name = :n', ['n' => (string)getenv('SLAED_USER_NAME')]);
+    return $rows[0] ?? [];
+}
+
+# The avatar rows: the preset branch, an upload, a pick out of the own storage and every path that must change nothing
+# The avatar is no longer a route of its own: it rides the one profile POST, so every row here replays the rendered form and changes the single field it is about
+# That means the profile of the configured site user is written while these rows run; it is read before them and written back after them, and the last row proves the restore landed
 function checkAvatarRows(string $ujar, string $gjar): void {
     echo "Account avatar rows\n";
     $base = ROOTDIR.'/uploads/avatars';
     $good = addTestFixture('av.png', 'png', 80, 60);
     $txt = addTestFixture('av.txt', 'txt');
-    $rows = getDbRows('SELECT id, avatar FROM {p}_users WHERE name = :n', ['n' => (string)getenv('SLAED_USER_NAME')]);
-    if ($rows === []) {
+    $keep = getProfileRow();
+    if ($keep === []) {
         setSkipRow('avatar rows', 'the site user has no row of its own', true);
         return;
     }
-    $befo = (string)$rows[0]['avatar'];
+    $befo = (string)$keep['avatar'];
     $page = getHttpReply($ujar, '/index.php?name=account&op=edithome')['body'];
-    checkMatrixRow('the preset grid renders no saveavatar link', preg_match('#<a[^>]+op=saveavatar#', $page) === 0);
+    $form = getAccountPost($ujar, $page);
+    checkMatrixRow('the settings form asks for a file through the door', str_contains($page, 'data-sl-field="path"'));
+    checkMatrixRow('the settings form carries no bare file field', preg_match('#<input[^>]+type="file"[^>]+class="sl-field#i', $page) === 0);
     $pre = preg_match('#name="avatar"\s+value="([^"]+)"#', $page, $hit) ? $hit[1] : '';
-    getHttpReply($ujar, '/index.php?name=account&op=saveavatar&avatar='.rawurlencode($pre));
+    getHttpReply($ujar, '/index.php?name=account&op=savehome&avatar='.rawurlencode($pre));
     checkMatrixRow('a GET preset changes nothing', getAvatarValue() === $befo);
-    getHttpReply($ujar, '/index.php?name=account', ['op' => 'saveavatar', 'avatar' => $pre]);
+    $send = $form;
+    $send['avatar'] = $pre;
+    unset($send['token']);
+    getHttpReply($ujar, '/index.php?name=account', $send);
     checkMatrixRow('a preset without a token changes nothing', getAvatarValue() === $befo);
-    $send = ['op' => 'saveavatar', 'avatar' => $pre, 'token' => getScopeToken($gjar, 'account')];
+    $send = $form;
+    $send['avatar'] = $pre;
+    $send['token'] = getScopeToken($gjar, 'account');
     getHttpReply($gjar, '/index.php?name=account', $send);
     checkMatrixRow('a guest preset changes nothing', getAvatarValue() === $befo);
     $was = getDirTree($base);
-    $send = ['op' => 'saveavatar', 'token' => getScopeToken($ujar, 'account')];
+    getHttpReply($ujar, '/index.php?name=account', $form, ['userfile' => $txt]);
+    checkMatrixRow('an inadmissible avatar publishes nothing', getTreeDelta($base, $was) === [] && getAvatarValue() === $befo);
+    $send = $form;
+    $send['occ'] = 'route check occupation';
     getHttpReply($ujar, '/index.php?name=account', $send, ['userfile' => $txt]);
-    checkMatrixRow('an inadmissible avatar publishes nothing', getTreeDelta($base, $was) === []);
-    if ($pre !== '') {
-        $send = ['op' => 'saveavatar', 'avatar' => $pre, 'token' => getScopeToken($ujar, 'account')];
+    $has = getProfileRow();
+    checkMatrixRow('a refused avatar saves the profile beside it', (string)($has['occ'] ?? '') === 'route check occupation' && getAvatarValue() === $befo);
+    if ($pre === '') {
+        setSkipRow('the preset rows', 'the settings page rendered no preset gallery', true);
+    } else {
+        $send = $form;
+        $send['avatar'] = $pre;
         getHttpReply($ujar, '/index.php?name=account', $send);
         checkMatrixRow('a preset click stores the preset path', getAvatarValue() === 'presets/'.basename($pre));
     }
     $was = getDirTree($base);
-    $send = ['op' => 'saveavatar', 'token' => getScopeToken($ujar, 'account')];
-    getHttpReply($ujar, '/index.php?name=account', $send, ['userfile' => $good]);
+    getHttpReply($ujar, '/index.php?name=account', $form, ['userfile' => $good]);
     $new = getTreeDelta($base, $was);
-    $done = count($new) === 1 && getAvatarValue() === basename($new[0] ?? '');
+    $mine = basename($new[0] ?? '');
+    $done = count($new) === 1 && getAvatarValue() === $mine;
     checkMatrixRow('an avatar upload stores the filename only', $done, implode(', ', $new).' vs '.getAvatarValue());
+    if ($pre !== '') {
+        $was = getDirTree($base);
+        $send = $form;
+        $send['avatar'] = $pre;
+        getHttpReply($ujar, '/index.php?name=account', $send, ['userfile' => $good]);
+        $left = getTreeDelta($base, $was);
+        $done = $left === [] && getAvatarValue() === 'presets/'.basename($pre);
+        checkMatrixRow('a preset beats a file picked in the same submit', $done, implode(', ', $left).' vs '.getAvatarValue());
+    }
+    checkAvatarTakeRows($ujar, $base, $form, $mine);
     setFailTrigger('users', 'UPDATE');
     $was = getDirTree($base);
-    $send = ['op' => 'saveavatar', 'token' => getScopeToken($ujar, 'account')];
-    getHttpReply($ujar, '/index.php?name=account', $send, ['userfile' => $good]);
+    getHttpReply($ujar, '/index.php?name=account', $form, ['userfile' => $good]);
     $left = getTreeDelta($base, $was);
     getDbRows('DROP TRIGGER IF EXISTS slaed_route_guard');
     checkMatrixRow('a failed profile write leaves no avatar behind', $left === [], implode(', ', $left));
-    getDbRows('UPDATE {p}_users SET avatar = :a WHERE id = :i', ['a' => $befo, 'i' => (int)$rows[0]['id']]);
-    checkMatrixRow('the avatar value was restored', getAvatarValue() === $befo);
+    setProfileRow($keep);
+    checkMatrixRow('the profile was restored', getProfileRow() == $keep);
+}
+
+# The storage arm: a name the member owns is taken without an upload, and a name carrying somebody else's owner segment is refused however real the file behind it is
+# The foreign name is made by copying the member's own file over the owner segment of its managed name, because no second account is needed to prove whose file a name says it is
+function checkAvatarTakeRows(string $ujar, string $base, array $form, string $mine): void {
+    if ($mine === '') {
+        setSkipRow('the storage rows', 'the upload row published no file to take', true);
+        return;
+    }
+    $was = getDirTree($base);
+    $send = $form;
+    $send['filepath'] = $mine;
+    getHttpReply($ujar, '/index.php?name=account', $send);
+    $left = getTreeDelta($base, $was);
+    checkMatrixRow('a stored avatar is taken by name and uploads nothing', $left === [] && getAvatarValue() === $mine, implode(', ', $left).' vs '.getAvatarValue());
+    if (!preg_match('#^(.+-[a-zA-Z0-9]+)-([a-zA-Z0-9]+)(\.[a-zA-Z0-9]+)$#', $mine, $hit)) {
+        setSkipRow('a stored avatar of another owner is refused', 'the published name carries no owner segment to rewrite');
+        return;
+    }
+    $was = getDirTree($base);
+    $alien = $hit[1].'-x'.$hit[2].$hit[3];
+    if (!copy($base.'/'.$mine, $base.'/'.$alien)) {
+        setSkipRow('a stored avatar of another owner is refused', 'the foreign copy could not be written', true);
+        return;
+    }
+    getTreeDelta($base, $was);
+    $send = $form;
+    $send['filepath'] = $alien;
+    getHttpReply($ujar, '/index.php?name=account', $send);
+    checkMatrixRow('a stored avatar of another owner is refused', getAvatarValue() !== $alien, getAvatarValue());
 }
 
 # Read the stored avatar of the configured site user
 function getAvatarValue(): string {
     $rows = getDbRows('SELECT avatar FROM {p}_users WHERE name = :n', ['n' => (string)getenv('SLAED_USER_NAME')]);
     return (string)($rows[0]['avatar'] ?? '');
+}
+
+# Write one profile map back, which is how the avatar rows leave the account exactly as they found it
+function setProfileRow(array $row): void {
+    $set = [];
+    $arg = ['id' => (int)$row['id']];
+    foreach (PROFCOLS as $col) {
+        $set[] = $col.' = :'.$col;
+        $arg[$col] = $row[$col];
+    }
+    getDbRows('UPDATE {p}_users SET '.implode(', ', $set).' WHERE id = :id', $arg);
 }
 
 # The write rows of the matrix: one publication per flow, each verified in the tree and in the row it belongs to
@@ -345,7 +490,7 @@ function checkWriteRows(string $ajar, string $ujar): void {
     $base = ROOTDIR.'/uploads/news';
     $was = getDirTree($base);
     $send = ['token' => getScopeToken($ujar, 'upload')];
-    $out = json_decode(getHttpReply($ujar, '/index.php?go=4&op=editorUpload&mod=news', $send, ['file' => $png])['body'], true);
+    $out = json_decode(getHttpReply($ujar, '/index.php?go=4&op=editorUpload&place=news.attach', $send, ['file' => $png])['body'], true);
     $new = getTreeDelta($base, $was);
     checkMatrixRow('editor write publishes one owned file', ($out['ok'] ?? false) && count($new) === 1, implode(', ', $new));
 
@@ -510,7 +655,11 @@ function checkCaptchaRow(string $gjar): void {
         return;
     }
     file_put_contents($file, $open);
-    if (is_file(ROOTDIR.'/config/local.php')) unlink(ROOTDIR.'/config/local.php');
+    if (!deleteConfigMerge()) {
+        file_put_contents($file, $befo);
+        setSkipRow('a failed captcha publishes nothing', 'config/local.php could not be dropped, so the switched off captcha would not have been read', true);
+        return;
+    }
     $zip = addTestFixture('fr.zip', 'zip');
     $base = ROOTDIR.'/uploads/files/temp';
     $mark = 'routecheck-'.bin2hex(random_bytes(4));
@@ -520,9 +669,10 @@ function checkCaptchaRow(string $gjar): void {
     $none = getDbRows('SELECT id FROM {p}_files WHERE title = :t', ['t' => $mark]) === [];
     checkMatrixRow('a failed captcha publishes nothing', $new === [] && $none, implode(', ', $new));
     file_put_contents($file, $befo);
-    if (is_file(ROOTDIR.'/config/local.php')) unlink(ROOTDIR.'/config/local.php');
+    $gone = deleteConfigMerge();
     clearstatcache();
     checkMatrixRow('config/security.php was restored byte for byte', (string)file_get_contents($file) === $befo);
+    checkMatrixRow('the compiled configuration was dropped after the captcha restore', $gone);
     getHttpReply($gjar, '/index.php?name=account');
 }
 
@@ -551,9 +701,9 @@ function setUploadSwitch(int $user, int $guest): bool {
     $rule[$upos] = (string)$user;
     $rule[$gpos] = (string)$guest;
     $done = file_put_contents($file, str_replace($hit[0], "'news' => '".implode('|', $rule)."',", $code)) !== false;
-    if (is_file(ROOTDIR.'/config/local.php')) unlink(ROOTDIR.'/config/local.php');
+    $gone = deleteConfigMerge();
     clearstatcache();
-    return $done;
+    return $done && $gone;
 }
 
 # Publish one editor file as the given visitor and report whether the route accepted it and what the destination gained
@@ -561,13 +711,13 @@ function addEditorFile(string $jar, string $png): array {
     $base = ROOTDIR.'/uploads/news';
     $was = getDirTree($base);
     $send = ['token' => getScopeToken($jar, 'upload')];
-    $out = json_decode(getHttpReply($jar, '/index.php?go=4&op=editorUpload&mod=news', $send, ['file' => $png])['body'], true);
+    $out = json_decode(getHttpReply($jar, '/index.php?go=4&op=editorUpload&place=news.attach', $send, ['file' => $png])['body'], true);
     return ['ok' => (bool)($out['ok'] ?? false), 'new' => getTreeDelta($base, $was)];
 }
 
 # List the editor files of the given visitor and report whether a list was answered at all and which names it carried
 function getEditorFiles(string $jar): array {
-    $url = '/index.php?go=4&op=editorFiles&mod=news&token='.getScopeToken($jar, 'ajax');
+    $url = '/index.php?go=4&op=editorFiles&place=news.attach&token='.getScopeToken($jar, 'ajax');
     $out = json_decode(getHttpReply($jar, $url)['body'], true);
     $rows = is_array($out['files'] ?? null) ? array_column($out['files'], 'file') : null;
     return ['ok' => $rows !== null, 'files' => $rows ?? []];
@@ -738,9 +888,10 @@ if ($mode === 'editor' || $mode === 'all') {
     checkEditorGuestRows($gjar);
     checkEditorGuardRows($ajar);
     file_put_contents($path, $befo);
-    if (is_file(ROOTDIR.'/config/local.php')) unlink(ROOTDIR.'/config/local.php');
+    $gone = deleteConfigMerge();
     clearstatcache();
     checkMatrixRow('config/uploads.php was restored byte for byte', (string)file_get_contents($path) === $befo);
+    checkMatrixRow('the compiled configuration was dropped after the editor restore', $gone);
 }
 if ($mode === 'captcha' || $mode === 'all') checkCaptchaRow($gjar);
 deleteWalkTraces();

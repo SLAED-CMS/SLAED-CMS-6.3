@@ -382,11 +382,15 @@ function add(): void {
             $mail = getVar('post', 'mail', 'text');
             $home = getVar('post', 'home', 'url', 'http://');
         }
-        $url      = getVar('post', 'url', 'url', 'http://');
+        $url      = getVar('post', 'url', 'url');
+        $url      = is_string($url) ? mb_substr($url, 0, 100) : '';
+        $take     = getVar('post', 'filepath', 'raw', '');
+        $take     = is_string($take) ? mb_substr(trim($take), 0, 512) : '';
         $fversion = getVar('post', 'fversion', 'text');
         $fsize    = getVar('post', 'fsize', 'num');
+        $rul = getUploadPlaceRule('files.dist');
         $info = _ADDFNOTE;
-        if ($conf['files']['upload'] == 1) $info .= sprintf(' '._ADDFNOTE2, str_replace(',', ', ', $conf['files']['typefile']), filterSize($conf['files']['max_size']));
+        if (checkEditorUploadAccess((string)$rul['mod'], $rul)) $info .= sprintf(' '._ADDFNOTE2, str_replace(',', ', ', (string)$rul['extensions']), filterSize((int)$rul['maxbytes']));
         $info .= ' '._ADDFNOTE3;
         setHead(['title' => _ADD]);
         $cont = getModuleNavi(['title' => _ADD, 'htitle' => _FILES]);
@@ -394,22 +398,7 @@ function add(): void {
         if ($description) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $description, 'textb' => $bodytext, 'field' => '', 'mod' => $conf['name']]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $info]);
         if (!is_user()) $postname = $postname ?: _ANONYM;
-        $extra = '';
-        if ($conf['files']['upload'] == 1) {
-            $extra .= $tpl->getHtmlFrag('form-field-row', ['label_for' => 'f-userfile', 'label' => _FILE_USER, 'field_html' => $tpl->getHtmlFrag('file-input', ['name_attr' => 'userfile', 'input_id' => 'f-userfile'])]);
-        }
-        $extra .= $tpl->getHtmlFrag('form-field-row', [
-            'label_for' => 'f-url',
-            'label' => _URL,
-            'field_html' => $tpl->getHtmlFrag('input', [
-                'name_attr' => 'url',
-                'input_id' => 'f-url',
-                'value_attr' => $url,
-                'maxlength_num' => '100',
-                'placeholder_text' => _URL,
-            ]),
-        ]);
-        $extra .= $tpl->getHtmlFrag('form-field-row', [
+        $extra = $tpl->getHtmlFrag('form-field-row', [
             'label_for' => 'f-fversion',
             'label' => _VERSION,
             'field_html' => $tpl->getHtmlFrag('input', [
@@ -503,6 +492,19 @@ function add(): void {
                 'placeholder_text' => _SITE,
             ]),
         ]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', [
+            'label_for' => 'f-userfile',
+            'label' => _FILE,
+            'field_html' => getFileManagerField([
+                'id' => 'f-userfile',
+                'place' => 'files.dist',
+                'name' => 'userfile',
+                'path' => 'filepath',
+                'url' => 'url',
+                'path_value' => $take,
+                'url_value' => $url,
+            ]),
+        ]);
         $fields .= $extra;
         $cont .= $tpl->getHtmlPart('form-add', [
             'name'        => $conf['name'],
@@ -528,6 +530,7 @@ function send(): void {
         $mail        = getVar('post', 'mail', 'text');
         $home        = getVar('post', 'home', 'url');
         $url         = getVar('post', 'url', 'url');
+        $url         = is_string($url) ? mb_substr($url, 0, 100) : '';
         $fversion    = getVar('post', 'fversion', 'text');
         $fsize       = getVar('post', 'fsize', 'num');
         $posttype    = getVar('post', 'posttype', 'var');
@@ -541,26 +544,27 @@ function send(): void {
         checkemail($mail);
         if (checkCaptcha('comment')) $stop[] = _SECCODEINCOR;
         if ($db->getSqlRowCount($db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_files WHERE title = :title', ['title' => $title])) > 0) $stop[] = _MEDIAEXIST;
-        $sent = $conf['files']['upload'] == 1 && (int)($_FILES['userfile']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE;
+        $rul = getUploadPlaceRule('files.dist');
+        $able = checkEditorUploadAccess((string)$rul['mod'], $rul);
+        $sent = $able && (int)($_FILES['userfile']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE;
+        $take = getVar('post', 'filepath', 'raw', '');
+        $take = is_string($take) ? mb_substr(trim($take), 0, 512) : '';
         $rpath = '';
         if (!$stop && $posttype == 'save' && $sent) {
-            $fdir = trim(str_replace('\\', '/', $conf['files']['temp']), '/');
-            $fdir = str_starts_with($fdir, 'uploads/') ? substr($fdir, 8) : (($fdir === 'uploads') ? '' : $fdir);
-            $rule = [
-                'extensions' => $conf['files']['typefile'],
-                'maxbytes' => (int)$conf['files']['max_size'],
-                'maxwidth' => 1600,
-                'maxheight' => 1600,
-                'maxfiles' => 1,
-                'maxquota' => 0,
-            ];
-            $res = getUploadService()->addUploadedFile($_FILES['userfile'], $rule, $fdir, 'files', isset($user[0]) ? (int)$user[0] : 0);
+            $res = getUploadService()->addUploadedFile($_FILES['userfile'], $rul, $rul['store'], $rul['mod'], getEditorFileOwner((string)$rul['mod']));
             if ($res['ok']) {
                 $url = 'uploads/'.$res['path'];
                 $fsize = $res['size'];
                 $rpath = (string)$res['path'];
             } else {
-                $stop[] = getUploadFailText((string)$res['error'], $rule);
+                $stop[] = getUploadFailText((string)$res['error'], $rul);
+            }
+        } elseif (!$stop && $posttype == 'save' && $able && $take !== '') {
+            $got = getUploadTakenFile($rul, $take);
+            if (!$got['ok']) $stop[] = ($got['error'] === 'owner') ? _ACCESSDENIED : _UPLOADEROR2;
+            else {
+                $url = $got['file']['url'];
+                $fsize = $got['file']['size'];
             }
         }
         if (!$stop && !$url && $posttype == 'save') $stop[] = _UPLOADEROR2;

@@ -44,7 +44,6 @@ define('_AVATARINFO','Zeigt eine kleine Grafik neben deinen Details zu jedem dei
 define('_AVATARSAVE','Avatar auswählen');
 define('_AVATARSELECT','Wählen Sie Ihr Lieblingsbild aus der Galerie, mit der linke Maustaste auf das gewünschte Bild klicken.');
 define('_AVATARSETUP','Avatar Einstellungen');
-define('_AVATAR_USER','Avatar von deinem Computer hochladen');
 define('_BLANKFORAUTO','Bitte leerlassen, wenn das Passwort automatisch generiert werden soll.');
 define('_CHARMIN','Die minimal zulässige Anzahl von Zeichen in einem Kennwort');
 define('_CODEFOR','Bestätigungs-Code für');

@@ -216,7 +216,6 @@ define('_ETEXTLONG','Le texte est plus long que ce champ ne peut contenir — %s
 define('_EUPLOAD','Gestionnaire de fichiers');
 define('_EUSEHTML','Utilisez le code HTML');
 define('_EUSEPHP','Utilisez le code PHP');
-define('_EDITOR_ADD','Ajouter');
 define('_EDITOR_STORE','Stockage');
 define('_EDITOR_LINK','Adresse de l\'image');
 define('_EDITOR_LINKNOTE',"Le fichier n'est pas téléversé, mais l'image reste disponible à cette adresse.");
@@ -286,7 +285,6 @@ define('_FILES','Répertoire de fichiers');
 define('_FILEUP','Le nombre que vous pouvez télécharger simultanément des fichiers');
 define('_FILE_RENAMED','Fichier chargé et nommé');
 define('_FILE_SITE','Télécharger le fichier de lien');
-define('_FILE_USER','Télécharger le fichier de votre ordinateur');
 define('_FIN',', en octets');
 define('_FMODC','Fermer la vérification de la');
 define('_FOLLOWINGMEM','Pour accéder informations');

@@ -736,6 +736,266 @@ function getTplPostAction(array $hide, string $icon, string $title, string $conf
     return $out;
 }
 
+# Answer every word the file window prints and the runtime reads off its option object, so the editor driver and the form row take one set and can never disagree about a phrase
+# The editor adds its own toolbar words on top of this one and keeps the embed section beside these three, because both belong to the text it writes into and not to the window
+# The limit sentence is derived from the place rule and answers empty without one, since it is the three facts the drop zone spells out and the row beside the button repeats
+function getFileManagerText(array $rule = []): array {
+    $exts = array_values(array_filter(array_map('trim', explode(',', (string)($rule['extensions'] ?? '')))));
+    $mbyt = (int)($rule['maxbytes'] ?? 0);
+    $mwid = (int)($rule['maxwidth'] ?? 0);
+    $mhei = (int)($rule['maxheight'] ?? 0);
+    $lims = [implode(', ', $exts)];
+    if ($mbyt > 0) $lims[] = filterSize($mbyt);
+    if ($mwid > 0 && $mhei > 0) $lims[] = $mwid.' × '.$mhei.' px';
+    return [
+        'labels' => [
+            'upload' => _ERROR_UP,
+            'load' => _ERROR,
+            'fileup' => _FILEUP,
+            'toobig' => _ERROR_SIZE,
+            'big' => _ERROR_BIG,
+            'badtype' => _ERROR_FILE,
+            'noembed' => _ENOEMBED,
+            'insert' => _INSERTIMG,
+            'insobj' => _EINSOBJ,
+            'download' => _DOWNLOAD,
+            'zip' => _EDITOR_ZIP,
+            'delete' => _DELETE,
+            'acts' => _FUNCTIONS,
+            'mark' => _EDITOR_MARK,
+            'marked' => _EDITOR_MARKED,
+            'insimgs' => _EDITOR_INSIMGS,
+            'insobjs' => _EDITOR_INSOBJS,
+            'askdel' => _EDITOR_ASKDEL,
+            'askdels' => _EDITOR_ASKDELS,
+            'preview' => _PREVIEW,
+            'empty' => _EDITOR_EMPTY,
+            'emptywhy' => _EDITOR_EMPTYWHY,
+            'none' => _EDITOR_NONE,
+            'nonewhy' => _EDITOR_NONEWHY,
+            'fail' => _EDITOR_FAIL,
+            'failwhy' => _EDITOR_FAILWHY,
+            'reset' => _FRESET,
+            'retry' => _RETRY,
+            'queue' => _EDITOR_QUEUE,
+            'queueend' => _EDITOR_QUEUEEND,
+            'quota' => _EDITOR_QUOTA,
+            'more' => _EDITOR_MORE,
+            'mynote' => _EDITOR_MYNOTE,
+            'name' => _NAME,
+            'type' => _TYPE,
+            'size' => _SIZE,
+            'dim' => _EDITOR_DIM,
+            'date' => _DATE,
+            'perms' => _EDITOR_PERMS,
+            'owner' => _EDITOR_OWNER,
+            'addr' => _EDITOR_ADDR,
+        ],
+        'panes' => [
+            'up' => [_EMODEUPLOAD, _EMODEUPLOADINFO],
+            'url' => [_EDITOR_LINK, _EDITOR_LINKINFO],
+            'lib' => [_EDITOR_MY, _EDITOR_MYINFO],
+        ],
+        'limits' => implode(' · ', $lims),
+    ];
+}
+
+# Answer what one upload place lets a caller draw: the module it is moderated as, whether this visitor may upload and list there, and the extension list in one normalised form
+# The window and the form row asked the same four questions of the same rule and each worked out its own answer, and a field renders both, so the pair was computed twice per row
+# The extension list is lowercased once here rather than in one of the two callers, because the client compares a picked name against it in lower case and the two must not disagree
+function getUploadPlaceView(array $rule): array {
+    $mod = (string)$rule['mod'];
+    $upl = $mod !== '' && checkEditorUploadAccess($mod, $rule);
+    $exts = array_values(array_filter(array_map('trim', explode(',', strtolower((string)$rule['extensions'])))));
+    return [
+        'mod' => $mod,
+        'ops' => (array)$rule['ops'],
+        'able' => $upl,
+        'moder' => $upl && is_moder($mod),
+        'exts' => $exts,
+        'accept' => implode(',', array_map(static fn(string $ext): string => '.'.$ext, $exts)),
+    ];
+}
+
+# Build the file manager window of one place: the one door the system opens wherever a file is asked for, inside the editor and beside a form row alike
+# The place rule answers what the sections may do, so a caller names the place and never a right, and the window can offer nothing the routes of that place refuse
+# Field mode is the window of a form: it picks and the form uploads, so the queue, its progress and the insert-as switch are absent and the pick is drawn as a chip
+# A place refusing an address carries no link tab at all, because canlink says the store keeps a file name against which an external address could never be resolved
+# Outside the editor the window is modal, so data-sl-window is written for the editor alone, where the text under it stays reachable while a file is being chosen
+# Packing and deletion follow the routes the place permits as well as the role, because a window offering a button the server refuses states a right that does not exist
+# The runtime and the draw templates it needs travel with the window rather than with an editor, once per request, so a page carrying no editor still gets a window that behaves and draws
+function getFileManagerWindow(array $opt): string {
+    global $tpl;
+    static $done = false;
+    $head = '';
+    if (!$done) {
+        $done = true;
+        $head = $tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/system/filemanager.js', 'attr' => ''])
+            .$tpl->getHtmlPart('file-manager-templates', []);
+    }
+    $rul = getUploadPlaceRule((string)($opt['place'] ?? ''));
+    $fld = !empty($opt['is_field']);
+    $see = getUploadPlaceView($rul);
+    $mod = $see['mod'];
+    $ops = $see['ops'];
+    $upl = $see['able'];
+    $mdr = $see['moder'];
+    $txt = getFileManagerText($rul);
+    return $head.$tpl->getHtmlPart('file-manager', [
+        'panel_id' => (string)($opt['panel'] ?? ''),
+        'title_id' => (string)($opt['title'] ?? ''),
+        'msg_id' => (string)($opt['msg'] ?? ''),
+        'file_id' => (string)($opt['upfile'] ?? ''),
+        'embed_id' => (string)($opt['embed'] ?? ''),
+        'object_id' => (string)($opt['object'] ?? ''),
+        'url_id' => (string)($opt['url'] ?? ''),
+        'alt_id' => (string)($opt['alt'] ?? ''),
+        'urlalt_id' => (string)($opt['urlalt'] ?? ''),
+        'editor_id' => (string)($opt['editor'] ?? ''),
+        'is_field' => $fld,
+        'can_upload' => $upl,
+        'can_list' => $upl,
+        'can_link' => !empty($rul['canlink']),
+        'can_embed' => !$fld && !empty($opt['can_embed']),
+        'can_zip' => $mdr && in_array('editorArchive', $ops, true),
+        'can_delete' => $mdr && in_array('editorDelete', $ops, true),
+        'accept_attr' => $see['accept'],
+        'embed_accept' => (string)($opt['embed_accept'] ?? ''),
+        'embed_types' => (string)($opt['embed_types'] ?? ''),
+        'title_label' => _EUPLOAD,
+        'close_label' => _CLOSE,
+        'move_label' => _EMOVEWIN,
+        'expand_label' => _EEXPAND,
+        'restore_label' => _ERESTORE,
+        'add_label' => _ADD,
+        'store_label' => _EDITOR_STORE,
+        'up_label' => _EMODEUPLOAD,
+        'up_note' => _EMODEUPLOADINFO,
+        'up_why' => _EDITOR_NOUP,
+        'link_label' => _EDITOR_LINK,
+        'link_note' => _EDITOR_LINKNOTE,
+        'link_lead' => _EDITOR_LINKINFO,
+        'link_warn' => _EDITOR_LINKWARN,
+        'embed_label' => _EMODEEMBED,
+        'embed_note' => _EMODEEMBEDINFO,
+        'embed_why' => _ENOEMBED,
+        'files_label' => _EDITOR_MY,
+        'files_note' => '',
+        'files_why' => _EDITOR_NOMY,
+        'quota_text' => $upl ? sprintf(_EDITOR_QUOTA, '—', filterSize((int)$rul['maxquota'])) : _EDITOR_NOUP,
+        'module_text' => sprintf(_EDITOR_MODULE, $mod),
+        'address_label' => _EIMGURL,
+        'alt_label' => _DESCRIPTION,
+        'insas_label' => _EDITOR_INSAS,
+        'image_label' => _IMG,
+        'object_label' => _EINSOBJ,
+        'nofile_label' => _ENOFILE,
+        'drop_label' => _EDROPFILES,
+        'limits_text' => $txt['limits'],
+        'stop_label' => _EDITOR_STOP,
+        'used_label' => _EDITOR_USED,
+        'room_label' => _EDITOR_ROOM,
+        'room_text' => (string)($opt['room_text'] ?? ''),
+        'full_label' => _EDITOR_FULL,
+        'filter_label' => _EDITOR_FILTER,
+        'all_label' => _ALL,
+        'images_label' => _EDITOR_IMAGES,
+        'others_label' => _EDITOR_OTHERS,
+        'list_label' => _EDITOR_ASLIST,
+        'tiles_label' => _EDITOR_ASGRID,
+        'markall_label' => _EDITOR_MARKALL,
+        'name_label' => _NAME,
+        'type_label' => _TYPE,
+        'size_label' => _SIZE,
+        'date_label' => _DATE,
+        'props_label' => _EDITOR_PROPS,
+        'props_note' => _EDITOR_NOTE,
+        'zip_label' => _EDITOR_ZIP,
+        'delete_label' => _DELETE,
+        'unmark_label' => _EDITOR_UNMARK,
+        'wait_text' => _EDITOR_WAIT,
+        'insert_label' => _EDITOR_INSERT,
+        'refresh_label' => _UPDATE,
+    ]);
+}
+
+# Build the door of one form row onto the file window: the button that opens it, the chip of what came back and the three hidden carriers the submit takes to the handler
+# Outside the editor the window only picks and the form uploads, so the file rides an ordinary multipart submit and the runtime is handed a box instead of an editor to insert into
+# The three outcomes are exclusive and each has its own carrier, because the handler reads them in a fixed defensive order and a leftover of one would answer for another
+# A place refusing an address carries no address field at all, so nothing can be posted into a store that keeps a file name and could never resolve an external one
+# The row keeps the id it was given and the window mints its own from it, because the runtime finds every node of one instance by those ids and two rows of a page must not collide
+function getFileManagerField(array $opt): string {
+    global $tpl;
+    $plc = (string)($opt['place'] ?? '');
+    $rul = getUploadPlaceRule($plc);
+    $see = getUploadPlaceView($rul);
+    $txt = getFileManagerText($rul);
+    $ops = $see['ops'];
+    $upl = $see['able'];
+    $mdr = $see['moder'];
+    $link = !empty($rul['canlink']);
+    $ids = getFieldIds((string)($opt['id'] ?? ''), 'file');
+    $eid = $ids['input'];
+    $exts = $see['exts'];
+    $take = (string)($opt['path_value'] ?? '');
+    $addr = $link ? (string)($opt['url_value'] ?? '') : '';
+    $run = [
+        'labels' => $txt['labels'],
+        'panes' => $txt['panes'],
+        'canupload' => $upl,
+        'canlist' => $upl,
+        'canembed' => false,
+        'canlink' => $link,
+        'panel' => $eid.'-fm',
+        'msg' => $eid.'-fm-msg',
+        'url' => $eid.'-fm-url',
+        'alt' => $eid.'-fm-alt',
+        'urlalt' => $eid.'-fm-urlalt',
+        'last' => 6,
+        'maxfiles' => (int)$rul['maxfiles'],
+        'exts' => $exts,
+        'maxbytes' => (int)$rul['maxbytes'],
+        'maxwidth' => (int)$rul['maxwidth'],
+        'maxheight' => (int)$rul['maxheight'],
+        'token' => $upl ? getSiteToken('upload') : '',
+        'ajax' => $upl ? getSiteToken() : '',
+        'upload' => ($upl && in_array('editorUpload', $ops, true)) ? 'index.php?go=4&op=editorUpload&place='.rawurlencode($plc) : '',
+        'files' => ($upl && in_array('editorFiles', $ops, true)) ? 'index.php?go=4&op=editorFiles&place='.rawurlencode($plc) : '',
+        'remove' => ($mdr && in_array('editorDelete', $ops, true)) ? 'index.php?go=4&op=editorDelete&place='.rawurlencode($plc) : '',
+        'archive' => ($mdr && in_array('editorArchive', $ops, true)) ? 'index.php?go=4&op=editorArchive&place='.rawurlencode($plc) : '',
+    ];
+    $box = $tpl->getHtmlFrag('file-field', [
+        'box_id' => $eid.'-box',
+        'input_id' => $eid,
+        'editor_id' => $eid,
+        'open_label' => _EUPLOAD,
+        'clear_label' => _DELETE,
+        'limits_text' => $txt['limits'],
+        'file_name' => (string)($opt['name'] ?? ''),
+        'path_name' => (string)($opt['path'] ?? ''),
+        'url_name' => $link ? (string)($opt['url'] ?? '') : '',
+        'path_value' => $take,
+        'url_value' => $addr,
+        'chip_text' => ($take !== '') ? $take : $addr,
+        'accept_attr' => $see['accept'],
+    ]);
+    $win = getFileManagerWindow([
+        'place' => $plc,
+        'is_field' => true,
+        'panel' => $eid.'-fm',
+        'title' => $eid.'-fm-title',
+        'msg' => $eid.'-fm-msg',
+        'upfile' => $eid.'-fm-file',
+        'url' => $eid.'-fm-url',
+        'alt' => $eid.'-fm-alt',
+        'urlalt' => $eid.'-fm-urlalt',
+        'editor' => $eid,
+    ]);
+    $js = '(function(){var box=document.getElementById('.json_encode($eid.'-box').');';
+    $js .= 'if(box&&window.SlaedFileManager){window.SlaedFileManager.addField('.json_encode($eid).',box,'.json_encode($run, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES).');}})();';
+    return $box.$win.$tpl->getHtmlFrag('head-script-inline', ['js' => $js]);
+}
+
 # Build the gallery window from the one window frame: the owner tells whose gallery it is, and the walk, the property
 # panel and the row of actions are what that owner offers; nothing else about the window is decided here twice
 function getWindowShot(array $data = []): string {

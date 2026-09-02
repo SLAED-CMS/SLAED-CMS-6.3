@@ -216,7 +216,6 @@ define('_ETEXTLONG','Der Text ist länger, als dieses Feld aufnehmen kann — h�
 define('_EUPLOAD','Datei-Manager');
 define('_EUSEHTML','HTML-Code verwenden');
 define('_EUSEPHP','PHP-Code verwenden');
-define('_EDITOR_ADD','Hinzufügen');
 define('_EDITOR_STORE','Speicher');
 define('_EDITOR_LINK','Bildadresse');
 define('_EDITOR_LINKNOTE','Die Datei wird nicht hochgeladen, das Bild bleibt unter seiner Adresse verfügbar.');
@@ -286,7 +285,6 @@ define('_FILES','Dateien');
 define('_FILEUP','Die Menge der gleichzeitig geladenen Dateien');
 define('_FILE_RENAMED','Datei ist hochgeladen und wurde benannt');
 define('_FILE_SITE','Datei nach von dem Link laden');
-define('_FILE_USER','Datei vom Rechner laden');
 define('_FIN',', in den Bytes');
 define('_FMODC','Schließen für die Überprüfung');
 define('_FOLLOWINGMEM','Folgende Informationen liegen von Ihnen vor');

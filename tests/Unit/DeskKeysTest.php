@@ -16,7 +16,7 @@ final class DeskKeysTest extends TestCase
 {
     private const THEMES = ['admin', 'lite'];
     private const ADMINJS = 'templates/admin/assets/js/admin-ui.js';
-    private const EDITJS = 'plugins/editors/toastui/assets/editor-upload.js';
+    private const EDITJS = 'plugins/system/filemanager.js';
     private const SITEJS = 'plugins/system/slaed.js';
 
     private static array $files = [];
@@ -64,19 +64,18 @@ final class DeskKeysTest extends TestCase
         }
     }
 
-    # A component missing in one theme is added to the other under the same name (§32), and the window of the editor overrules both anchors of its own fan
+    # A component missing in one theme is added to the other under the same name (§32), and the window of the file manager overrules both anchors of its own fan
     #[Test]
-    public function bothThemesAndBothSkinsCarryTheMenuState(): void
+    public function bothThemesCarryTheMenuState(): void
     {
         foreach (self::THEMES as $name) {
             $css = $this->getFile('templates/'.$name.'/assets/css/theme.css');
             $note = 'Theme '.$name.' has no placement for the fan opened at the pointer';
             $this->assertStringContainsString('.sl-dial.sl-dial-point {', $css, $note);
-            $skin = $this->getFile('templates/'.$name.'/assets/editors/toastui/skin.css');
             $note = 'The window of theme '.$name.' keeps its own anchor, so the menu would stand in the corner of the row';
-            $this->assertStringContainsString('.sl-toastui-upload .sl-dial.sl-dial-point {', $skin, $note);
+            $this->assertStringContainsString('.sl-fm-win .sl-dial.sl-dial-point {', $css, $note);
             $note = 'The catalogue of theme '.$name.' says nothing while a file is dragged over it';
-            $this->assertStringContainsString('.sl-toastui-upload .sl-fm-pane.sl-drag-over {', $skin, $note);
+            $this->assertStringContainsString('.sl-fm-win .sl-fm-pane.sl-drag-over {', $css, $note);
         }
         $css = $this->getFile('templates/admin/assets/css/theme.css');
         foreach (['.sl-fm-drop.sl-drag-over {', '.sl-fm-node.sl-drag-over,', '.sl-fm-cell[aria-selected="true"] .sl-fm-tile {'] as $rule) {
@@ -171,7 +170,7 @@ final class DeskKeysTest extends TestCase
         $note = 'The editor keeps a second answer to the key, so two handlers race for one press';
         $this->assertStringNotContainsString("ev.key === 'Escape'", $this->getFile(self::EDITJS), $note);
         foreach (self::THEMES as $name) {
-            $tpl = $this->getFile('templates/'.$name.'/partials/editor-toastui-templates.html');
+            $tpl = $this->getFile('templates/'.$name.'/partials/file-manager-templates.html');
             $note = 'A row of theme '.$name.' cannot take the focus, so the arrows never reach the catalogue';
             $this->assertStringContainsString('<div class="sl-fm-row" tabindex="-1">', $tpl, $note);
             $note = 'A tile of theme '.$name.' cannot take the focus, so the arrows never reach the catalogue';

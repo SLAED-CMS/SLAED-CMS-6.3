@@ -186,8 +186,8 @@ if (empty($go)) {
         }
     } elseif ($go == 4) {
         Cache::setHeaders(false);
-        $mod = (getVar('get', 'mod', 'var')) ? strtolower(getVar('get', 'mod', 'var')) : '';
-        if ($mod) {
+        $place = getVar('get', 'place', 'raw', '');
+        if ($place) {
             switch($op) {
                 case 'editorUpload':
                 addEditorUpload();

@@ -44,7 +44,7 @@ Each editor must provide a `manifest.json` file in its folder. The system uses t
     "formats": ["markdown"],
     "theme": {
         "skin": true,
-        "partials": ["editor-toastui-files", "editor-toastui-templates"]
+        "partials": ["file-manager", "file-manager-templates", "editor-toastui-templates"]
     }
 }
 ```
@@ -121,6 +121,69 @@ echo Editor::getCode([
     'lang' => 'php'
 ]);
 ```
+
+## The File Manager Left The Plugin
+
+The file window is no longer an editor ability. It is built by
+`getFileManagerWindow(array $opt): string` in `core/helpers.php` from the rule of
+one upload place — `docs/ARCHITECTURE.md`, *Upload Place Boundary* — and drawn from
+`partials/file-manager.html`, which is the theme's markup in both themes. The
+editor driver calls that helper instead of assembling markup of its own; a form
+row calls `getFileManagerField()`, which wraps the same helper in field mode.
+
+**The runtime lives in `plugins/system/filemanager.js`**, beside `slaed.js`, and
+publishes `window.SlaedFileManager` with two entries:
+
+| Entry | Use |
+|---|---|
+| `addUpload(id, ed, opt)` | the window bound to an editor instance; installs the paste hook and the toolbar button |
+| `addField(id, node, opt)` | the window bound to a form row's box; installs neither, because both return early on a missing editor |
+
+It was delivered by one line in `plugins/editors/toastui/driver.php`, so a page
+carrying no Toast UI editor never received it and the window had no behaviour
+there. Delivery is now `getFileManagerWindow()` under a `static $done` — the
+pattern `Editor::getThemeSkin()` already uses — and not `$conf['global']['script_f']`,
+which would load it on every page of the site.
+
+**The namespaces are split and there is no alias.** All three editor plugin
+scripts share one object: each opens with `var api = win.SlaedToastUi || {}` and
+republishes it, and the `i18n/emoji-*.js` files hang `emojiWords` on it too. So
+`SlaedToastUi` stays — it is the editor plugin's own namespace for tags, emoji and
+the word lists — and only the file-manager runtime left it. `editor-tags.js`
+calls the new namespace explicitly:
+
+```js
+if (win.SlaedFileManager) win.SlaedFileManager.addUpload(id, ed, opt || {});
+```
+
+An alias would have hidden the coupling rather than cut it, and the failure it
+hides is silent: a condition that is simply false leaves the editor without its
+file button and writes nothing to the console. The runtime keeps its own editor
+map, written in `addUpload()` and never in `addField()`, with local `getEditor()`
+and `insertText()` over it; `editor-tags.js` keeps its own copies for its own use.
+
+**The null editor is the field mode and it stays silent.** A field place has no
+editor in the map, so `getEditor()` answers null and the four editor-only paths —
+`addSource`, `addAttach`, `addImage`, `setRoom` — disable themselves through
+guards that were already there. That is designed behaviour, not leftover code.
+
+**The draw templates travelled with the runtime.** `api.getTpl()` finds
+`<template data-tpl="…">` inside the container named by `opt.tpl`. The eleven the
+runtime needs — `fm-act`, `fm-busy`, `fm-dial`, `fm-job`, `fm-pick`, `fm-prop`,
+`fm-row`, `fm-tile`, `fm-why`, `msg-info`, `msg-warn` — live in
+`partials/file-manager-templates.html`, delivered by `getFileManagerWindow()`
+under the same `static $done` as the script. The four the emoji panel needs —
+`emoji-panel`, `emoji-tab`, `emoji-item`, `emoji-empty` — stay in
+`partials/editor-toastui-templates.html` and stay with the driver. Without this
+split the window opens on a page with no editor and draws no tile, no row, no
+queue card and no message, every one of them silently, because `getTpl()` answers
+null and every caller tolerates null.
+
+`data-editor` was deliberately **not** renamed. It is read from the runtime, from
+`editor-emoji.js`, from the partial itself, from `getWindowShot()` and from the
+insert-options window in `driver.php`; a template-only rename breaks the editor
+silently, and the gain is cosmetic — the attribute names the window instance,
+which is true in both modes.
 
 ## Open Defect: the editor drops every `<br>` on save
 
