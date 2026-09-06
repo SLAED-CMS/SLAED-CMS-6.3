@@ -453,6 +453,7 @@ function view(): void {
                 'tot_favs' => (string)$sumf,
                 'feed_html' => getProfileLastView($uid),
             ]);
+            echo setComShow($uid, CommentMode::Open->value);
             setFoot();
         } else {
             setHead(['title' => _USERNOEXIST]);

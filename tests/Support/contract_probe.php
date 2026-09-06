@@ -176,12 +176,12 @@ function getProbeCommentRead(): array {
     return $out;
 }
 
-# Report what the write path of the Comment class stores, counts and awards for each of the eight modules, inside a transaction that is always rolled back
+# Report what the write path of the Comment class stores, counts and awards for every comment target, inside a transaction that is always rolled back
 # The registered run needs an account whose stored hash is_user() accepts, because the moderation state, the counter and the points slot of a published add all depend on it
 function getProbeCommentWrite(bool $guest): array {
     global $db, $com, $conf, $user;
-    $map = ['faq' => '_faq', 'files' => '_files', 'links' => '_links', 'media' => '_media', 'news' => '_news', 'pages' => '_pages', 'shop' => '_products', 'voting' => '_voting'];
-    $slot = ['faq' => 7, 'files' => 10, 'links' => 22, 'media' => 26, 'news' => 32, 'pages' => 36, 'shop' => 40, 'voting' => 43];
+    $map = ['account' => '_users', 'faq' => '_faq', 'files' => '_files', 'links' => '_links', 'media' => '_media', 'news' => '_news', 'pages' => '_pages', 'shop' => '_products', 'voting' => '_voting'];
+    $slot = ['account' => 3, 'faq' => 7, 'files' => 10, 'links' => 22, 'media' => 26, 'news' => 32, 'pages' => 36, 'shop' => 40, 'voting' => 43];
     $pts = explode(',', (string)$conf['users']['points']);
     $out = ['guest' => $guest, 'user' => true, 'rows' => [], 'refuse' => [], 'clean' => false];
     $uid = 0;
@@ -203,7 +203,7 @@ function getProbeCommentWrite(bool $guest): array {
     foreach ($map as $mod => $tab) {
         $tid = 0;
         foreach ($db->getSqlRows($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.$tab.' ORDER BY id DESC LIMIT 25')) ?: [] as $one) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.$tab.' SET acomm = 2 WHERE id = :id', ['id' => intval($one['id'])]);
+            if ($mod !== 'account') $db->getSqlQuery('UPDATE '.PREFIX_DB.$tab.' SET acomm = 2 WHERE id = :id', ['id' => intval($one['id'])]);
             if ($com->getTargetMode($mod, intval($one['id'])) === CommentMode::Open) {
                 $tid = intval($one['id']);
                 break;
@@ -214,12 +214,12 @@ function getProbeCommentWrite(bool $guest): array {
             continue;
         }
         if ($mod === 'news') $open = $tid;
-        $cnt = $db->getSqlRow($db->getSqlQuery('SELECT comments FROM '.PREFIX_DB.$tab.' WHERE id = :id', ['id' => $tid]));
+        $cnt = ($mod === 'account') ? ['comments' => 0] : $db->getSqlRow($db->getSqlQuery('SELECT comments FROM '.PREFIX_DB.$tab.' WHERE id = :id', ['id' => $tid]));
         $pnt = $uid ? $db->getSqlRow($db->getSqlQuery('SELECT points FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $uid])) : [];
         $new = $com->addComment($mod, $tid, 'probe body for '.$mod, 'Probe');
         setDeferredTasks();
         $row = $new['id'] ? $db->getSqlRow($db->getSqlQuery('SELECT cid, modul, uid, name, ip, body, status FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $new['id']])) : [];
-        $cnn = $db->getSqlRow($db->getSqlQuery('SELECT comments FROM '.PREFIX_DB.$tab.' WHERE id = :id', ['id' => $tid]));
+        $cnn = ($mod === 'account') ? ['comments' => 0] : $db->getSqlRow($db->getSqlQuery('SELECT comments FROM '.PREFIX_DB.$tab.' WHERE id = :id', ['id' => $tid]));
         $pnn = $uid ? $db->getSqlRow($db->getSqlQuery('SELECT points FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $uid])) : [];
         $gain = ($uid && $conf['users']['point'] == 1) ? intval($pts[$slot[$mod] - 1] ?? 0) : 0;
         $out['rows'][$mod] = [
@@ -228,7 +228,7 @@ function getProbeCommentWrite(bool $guest): array {
             'stored' => $row ? [intval($row['cid']), (string)$row['modul'], intval($row['uid']), (string)$row['ip'], intval($row['status'])] : [],
             'want' => [$tid, $mod, $uid, $ip, $guest ? 0 : 1],
             'delta' => [intval($cnn['comments']) - intval($cnt['comments']), intval($pnn['points'] ?? 0) - intval($pnt['points'] ?? 0)],
-            'wantdelta' => [$guest ? 0 : 1, $guest ? 0 : $gain],
+            'wantdelta' => [($guest || $mod === 'account') ? 0 : 1, $guest ? 0 : $gain],
         ];
         if ($new['id']) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE id = :id', ['id' => $new['id']]);
     }

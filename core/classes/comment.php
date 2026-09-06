@@ -24,9 +24,10 @@ enum CommentMode: int {
 # Add, edit, status and delete wrap their own writes; when a transaction is already open they join it and leave begin, commit and rollback to whoever owns it
 class Comment {
 
-    # The eight modules that render comments, each with the table its target rows live in and the points slot its author is credited from
-    # One map answers both questions, because the modules a comment may be written against and the modules whose counter moves are the same eight by construction
+    # The targets that render comments, each with the table its rows live in and the points slot its author is credited from
+    # Account has no denormalised comment counter; its target exists only to restore profile discussions and their points
     private const MODULES = [
+        'account' => ['_users', 3],
         'faq' => ['_faq', 7],
         'files' => ['_files', 10],
         'links' => ['_links', 22],
@@ -58,6 +59,7 @@ class Comment {
             'cens' => !empty($conf['censor']),
             'from' => (string)($conf['censor_l'] ?? ''),
             'to' => (string)($conf['censor_r'] ?? ''),
+            'prof' => intval($conf['users']['prof'] ?? 0),
         ];
     }
 
@@ -68,6 +70,7 @@ class Comment {
         $out = [];
         foreach (self::MODULES as $name => $one) {
             if ($mod !== '' && $mod !== $name) continue;
+            if ($name === 'account') continue;
             $tab = PREFIX_DB.$one[0];
             $live = 'SELECT COUNT(*) FROM '.PREFIX_DB.'_comment AS c WHERE c.modul = :mod AND c.cid = x.id AND c.status = :stat AND c.deleted IS NULL';
             $held = 'SELECT 1 FROM '.PREFIX_DB.'_comment AS d WHERE d.modul = :dmod AND d.cid = x.id';
@@ -85,7 +88,7 @@ class Comment {
     # The number is counted inside the statement rather than moved by a delta, so a row that had drifted comes back correct instead of drifting further
     # This also means a comment written between a drift report and its repair cannot be overwritten by the stale figure that report carried
     private function setTargetCount(int $id, string $mod): bool {
-        if ($id < 1 || !isset(self::MODULES[$mod])) return false;
+        if ($id < 1 || !isset(self::MODULES[$mod]) || $mod === 'account') return false;
         $live = 'SELECT COUNT(*) FROM '.PREFIX_DB.'_comment AS c WHERE c.modul = :mod AND c.cid = :cid AND c.status = :stat AND c.deleted IS NULL';
         $sql = 'UPDATE '.PREFIX_DB.self::MODULES[$mod][0].' SET comments = ('.$live.') WHERE id = :tid';
         $pars = ['mod' => $mod, 'cid' => $id, 'stat' => CommentStatus::Published->value, 'tid' => $id];
@@ -202,7 +205,11 @@ class Comment {
     public function getTargetMode(string $mod, int $id): CommentMode {
         if (!$id || !isset(self::MODULES[$mod])) return CommentMode::Disabled;
         $tab = PREFIX_DB.self::MODULES[$mod][0];
-        if ($mod == 'voting') {
+        if ($mod === 'account') {
+            if ($this->site['prof'] === 1 && !is_user() && !isAdmin()) return CommentMode::Disabled;
+            $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT id FROM '.$tab.' WHERE id = :id', ['id' => $id]));
+            return $row ? CommentMode::Open : CommentMode::Disabled;
+        } elseif ($mod == 'voting') {
             $sql = 'SELECT acomm FROM '.$tab.' WHERE id = :id AND modul = \'\' AND time <= NOW() AND (enddate >= NOW() AND status = \'0\' OR status = \'1\')';
         } else {
             $sql = 'SELECT acomm FROM '.$tab.' AS t WHERE t.id = :id AND t.time <= NOW() AND t.status != \'0\' '.catmids($mod, 't.cid');
@@ -469,7 +476,7 @@ class Comment {
     # Two visitors commenting on one target at the same moment would otherwise wait on each other, and the loser of that wait would lose the comment
     # A deferred task rather than a call after the commit, because the class may run inside a transaction it did not open and whose commit it never sees
     private function addTargetCount(int $id, string $mod): void {
-        if ($id < 1 || !isset(self::MODULES[$mod])) return;
+        if ($id < 1 || !isset(self::MODULES[$mod]) || $mod === 'account') return;
         addDeferredTask(function() use ($id, $mod): void {
             $this->setTargetCount($id, $mod);
         });

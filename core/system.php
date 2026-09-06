@@ -5534,7 +5534,7 @@ function getRatingView(): void {
     $stl = getVar('get', 'stl', 'num', 0);
     $con = explode('|', $conf['ratings'][strtolower($mod)] ?? '');
     $map = [
-        'account' => ['_users', 'votes', 'tvotes', 0],
+        'account' => ['_users', 'votes', 'tvotes', 2],
         'faq' => ['_faq', 'ratings', 'score', 8],
         'files' => ['_files', 'votes', 'tvotes', 12],
         'forum' => ['_forum', 'ratings', 'score', 15],

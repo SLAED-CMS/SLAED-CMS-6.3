@@ -116,12 +116,13 @@ final class CommentIsolationTest extends TestCase
         }
     }
 
-    # The counter map holds the eight modules that render comments, with the points slot each of them awarded before the move
+    # The target map holds every module that renders comments, with the points slot each of them awarded before the move
     #[Test]
-    public function theCounterMapKeepsTheEightModulesAndTheirSlots(): void
+    public function theTargetMapKeepsTheModulesAndTheirSlots(): void
     {
         $code = (string)file_get_contents(dirname(__DIR__, 2).'/'.self::OWNER);
         $want = [
+            'account' => ['_users', 3],
             'faq' => ['_faq', 7],
             'files' => ['_files', 10],
             'links' => ['_links', 22],
@@ -137,7 +138,7 @@ final class CommentIsolationTest extends TestCase
         foreach ($want as $mod => [$tab, $slot]) {
             $this->assertStringContainsString('\''.$mod.'\' => [\''.$tab.'\', '.$slot.']', $hit[1], 'Module '.$mod.' lost its table or its points slot');
         }
-        foreach ([3, 17, 29] as $slot) {
+        foreach ([17, 29] as $slot) {
             $this->assertStringNotContainsString(', '.$slot.']', $hit[1], 'The retired points slot '.$slot.' is back in the module map');
         }
     }
@@ -150,5 +151,7 @@ final class CommentIsolationTest extends TestCase
         preg_match('#\'points\' => \'([0-9,]+)\'#', $conf, $hit);
         $this->assertNotEmpty($hit, 'The points list is gone from config/users.php');
         $this->assertCount(45, explode(',', $hit[1]), 'The points list changed length, which renumbers every slot above the removed one');
+        $code = (string)file_get_contents(dirname(__DIR__, 2).'/core/system.php');
+        $this->assertStringContainsString("'account' => ['_users', 'votes', 'tvotes', 2]", $code, 'Account ratings no longer award points slot 2');
     }
 }

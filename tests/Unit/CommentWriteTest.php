@@ -7,7 +7,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Stage 1, batch 3 of docs/COMMENTS-REDESIGN-2026.md: the frontend write path moved into the Comment class, and the
- * stage promises that each of the eight modules still stores the same row, increments its own target counter and
+ * stage promises that every comment target still stores the same row, updates its target counter where one exists and
  * awards its own points slot. Both author kinds run through tests/Support/contract_probe.php, which boots the real
  * core in an isolated CLI process and drives the class against the live rows of this installation inside a
  * transaction it always rolls back. filter_input() cannot be driven from CLI, so the request half of the submit —
@@ -50,7 +50,7 @@ final class CommentWriteTest extends TestCase
     public function everyModuleStoresTheRowItResolved(): void
     {
         $data = $this->getUserProbe();
-        $this->assertCount(8, $data['rows']);
+        $this->assertCount(9, $data['rows']);
         $seen = 0;
         foreach ($data['rows'] as $mod => $one) {
             if (intval($one['target']) === 0) continue;
@@ -59,7 +59,7 @@ final class CommentWriteTest extends TestCase
             $seen++;
         }
         if ($seen === 0) $this->markTestSkipped('No module of this installation carries a writable target');
-        $this->assertGreaterThan(6, $seen, 'Only '.$seen.' of the eight modules carry a writable target here');
+        $this->assertGreaterThan(7, $seen, 'Only '.$seen.' of the nine targets are writable here');
     }
 
     # Each module increments its own target counter by one and awards its own points slot
@@ -79,7 +79,7 @@ final class CommentWriteTest extends TestCase
     public function anonymousAddLandsPendingAndMovesNothing(): void
     {
         $data = $this->getProbe('commentguest');
-        $this->assertCount(8, $data['rows']);
+        $this->assertCount(9, $data['rows']);
         $seen = 0;
         foreach ($data['rows'] as $mod => $one) {
             if (($one['error'] ?? null) === null) continue;
