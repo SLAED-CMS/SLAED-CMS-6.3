@@ -15,6 +15,7 @@
 # Optional: SLAED_ROUTE_INSECURE=1 disables TLS verification, for a stand with a self signed certificate only
 #
 # The comp and captcha modes fail one write on purpose and edit config/security.php; the editor mode rewrites the two upload switches of the news record in config/uploads.php
+# Every mode that drops the compiled configuration also makes the server mint a fresh master secret into config/security.php, so that file is guarded and restored whatever happens
 # All three restore what they changed byte for byte, but they change it while they run; run them against a stand, never against production data
 
 if (PHP_SAPI !== 'cli') die('Illegal file access');
@@ -41,6 +42,7 @@ $GLOBALS['undone'] = 0;
 $GLOBALS['made'] = [];
 $GLOBALS['rows'] = [];
 $GLOBALS['news'] = [];
+$GLOBALS['guard'] = '';
 
 # Derive one scoped CSRF token exactly as core/security.php derives it, from the session the cookie jar holds
 function getScopeToken(string $jar, string $scope): string {
@@ -68,6 +70,30 @@ function getSiteSecret(): string {
     }
     if ($now !== '') $key = $now;
     return $key;
+}
+
+# Take the shipped security file under guard for the length of the walk and give it back byte for byte, however the walk ends
+# Dropping the merge is what makes this necessary: the compiled configuration is the only place the master secret lives on a checkout, so a rebuild onto the
+# shipped file - which ships the secret empty - has getSecret() mint a new master and persist it into that tracked file. Measured on this stand: one request
+# after the drop replaced a80474b7 with be7578f7, and every token derived from the old master went stale with it
+# The restore is a shutdown handler rather than a line at the end of the walk, because an interrupted run is precisely the run that would otherwise leave a
+# generated secret sitting in a tracked file, where nothing in the gates would ever notice it
+# Cleaning up after the mint is not enough on its own: a token is derived before the request that carries it, and it is that request which rebuilds and mints, so
+# the answer comes back refused however carefully the walk re-reads afterwards. The shipped secret is therefore seeded with the live one for the length of the
+# walk, which leaves the rebuild nothing to mint and the master stable throughout. Without a merge to read the live secret from there is nothing to seed with,
+# and the walk then runs as it would have anyway
+function setConfigGuard(): void {
+    $path = ROOTDIR.'/config/security.php';
+    $befo = (string)file_get_contents($path);
+    $GLOBALS['guard'] = $befo;
+    register_shutdown_function(static function () use ($path, $befo): void {
+        clearstatcache(true, $path);
+        if ((string)file_get_contents($path) !== $befo) file_put_contents($path, $befo);
+    });
+    $key = getSiteSecret();
+    if ($key === '' || !str_contains($befo, "'secret' => '',")) return;
+    file_put_contents($path, str_replace("'secret' => '',", "'secret' => '".$key."',", $befo));
+    clearstatcache(true, $path);
 }
 
 # Drop the compiled configuration so the next request rebuilds it from the files this walk has just rewritten, and answer whether it is really gone
@@ -851,6 +877,21 @@ function deleteWalkTraces(): void {
     checkMatrixRow('every seeded row was removed', $rest === []);
     $rest = getDbRows("SELECT id FROM {p}_news WHERE title LIKE 'routeguard-%'");
     checkMatrixRow('every seeded article was removed', $rest === []);
+    if ((string)$GLOBALS['guard'] === '') return;
+    # One request before the file goes back, so the merge is rebuilt while the seeded secret is still readable. The walk leaves the compiled configuration deleted
+    # behind it, and a merge that is missing when the shipped secret is empty again means the next visitor to the stand - not this walk - mints the master and
+    # writes it back into the tracked file, minutes after the run reported a clean tree. Measured: that is exactly how it came back between two runs here
+    getHttpReply(WORKDIR.'/jar-warm.txt', '/index.php');
+    # The row asserts the restore and never the absence of a change: the walk seeds the shipped secret on purpose, and the server mints one of its own whenever
+    # it rebuilds onto an empty file. Neither is a failure of the code under walk. What must never pass is a walk that ends with a secret left in a tracked file
+    $path = ROOTDIR.'/config/security.php';
+    clearstatcache(true, $path);
+    $drift = (string)file_get_contents($path) !== (string)$GLOBALS['guard'];
+    if ($drift) file_put_contents($path, (string)$GLOBALS['guard']);
+    clearstatcache(true, $path);
+    checkMatrixRow('config/security.php was left as the walk found it',
+        (string)file_get_contents($path) === (string)$GLOBALS['guard'],
+        $drift ? 'the shipped secret changed during the walk and has been put back' : '');
 }
 
 $mode = (string)($argn[2] ?? 'all');
@@ -862,6 +903,7 @@ if ($aname === '' || $apass === '' || $uname === '' || $upass === '') {
     fwrite(STDERR, "set SLAED_ADMIN_NAME, SLAED_ADMIN_PASS, SLAED_USER_NAME and SLAED_USER_PASS in the environment\n");
     exit(1);
 }
+setConfigGuard();
 $ajar = WORKDIR.'/jar-admin.txt';
 $ujar = WORKDIR.'/jar-user.txt';
 $gjar = WORKDIR.'/jar-guest.txt';
