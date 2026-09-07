@@ -11,6 +11,9 @@
 //   node tools/ui-shots.mjs --contrast   emit tools/ui-contrast.json, the pairs that really meet on screen
 //   node tools/ui-shots.mjs --newtheme   build a scratch theme from an etalon and render every page of the manifest in it
 //
+// `--only=settings,profile` limits any job to the named pages, and the two modes of the manifest walk side by side
+// in contexts of their own, because a context is what holds the mode cookie.
+//
 // The last of the four is the HTTP half of the theme-creation gate. ThemeCreationTest asks the static half of the
 // same question - does a copy of an etalon with only its API block repainted audit clean - and this asks the half a
 // file cannot answer: does the CMS actually serve pages in it. Both build and remove the copy through one lifecycle,
@@ -48,7 +51,8 @@ const args = new Map(process.argv.slice(2).map((a) => {
 const guard = args.has('before') ? 'before' : args.has('after') ? 'after' : '';
 const guardDir = join(tmpdir(), 'slaed-ui-guard');
 const job = (guard === 'before' || args.has('capture')) ? 'capture' : args.has('contrast') ? 'contrast' : args.has('newtheme') ? 'newtheme' : 'check';
-const only = args.get('only');
+// `--only=a,b` walks the named pages and nothing else, one login for all of them
+const only = typeof args.get('only') === 'string' ? new Set(args.get('only').split(',').map((s) => s.trim()).filter(Boolean)) : null;
 // A batch cannot trust the committed baseline as its "before": the stand's own data moves between runs, so a
 // check against it reports the week rather than the change. --out= sends a capture somewhere outside the
 // repository, which is what lets a batch compare its own two captures instead
@@ -470,40 +474,56 @@ if (job === 'newtheme') {
 }
 
 const need = new Set((conf.pages || []).filter((p) => p.auth).map((p) => p.auth));
-const sess = new Map();
 
 mkdirSync(outDir, { recursive: true });
 
-for (const kind of need) {
-  if (!user || !pass) {
-    report.push('  skipped every ' + kind + ' page: set ' + conf.env.user + ' and ' + conf.env.pass + ' in the environment');
-    continue;
-  }
-  const ctx = await browser.newContext({ ignoreHTTPSErrors: true });
-  const page = await ctx.newPage();
-  try {
-    await setSession(page, kind);
-    sess.set(kind, ctx);
-  } catch (err) {
-    report.push('  ' + kind + ' login failed: ' + err.message);
-    await ctx.close();
-  }
-  await page.close();
+const seed = setSeededState(conf);
+
+// One line of the report per fact, however many walks meet it: two modes sign in twice and would otherwise say twice
+// that the credentials are missing
+function addReportOnce(line) {
+  if (!report.includes(line)) report.push(line);
 }
 
-// A development stand serves its own certificate, and the manifest names https because the session cookie needs it
-const open = await browser.newContext({ ignoreHTTPSErrors: true });
+// The contexts of one mode: a session per auth kind the manifest needs and one open context, each carrying the seeded
+// state and the mode cookie. A context is what holds a cookie, so two modes cannot share one and every walk signs in
+// for itself - seconds, against the minutes the walk costs
+async function getModeContexts(mode) {
+  const sess = new Map();
+  for (const kind of need) {
+    if (!user || !pass) {
+      addReportOnce('  skipped every ' + kind + ' page: set ' + conf.env.user + ' and ' + conf.env.pass + ' in the environment');
+      continue;
+    }
+    const ctx = await browser.newContext({ ignoreHTTPSErrors: true });
+    const page = await ctx.newPage();
+    try {
+      await setSession(page, kind);
+      sess.set(kind, ctx);
+    } catch (err) {
+      addReportOnce('  ' + kind + ' login failed: ' + err.message);
+      await ctx.close();
+    }
+    await page.close();
+  }
+  // A development stand serves its own certificate, and the manifest names https because the session cookie needs it
+  const open = await browser.newContext({ ignoreHTTPSErrors: true });
+  for (const ctx of [...sess.values(), open]) {
+    if (seed.cookies.length) await ctx.addCookies(seed.cookies);
+    if (mode !== 'auto') await ctx.addCookies([{ name: conf.cookie, value: mode, url: conf.base }]);
+  }
+  return { sess, open };
+}
 
-const seed = setSeededState(conf);
-for (const ctx of [...sess.values(), open]) if (seed.cookies.length) await ctx.addCookies(seed.cookies);
-
-for (const mode of (job === 'contrast' ? conf.contrastmodes || conf.modes : conf.modes)) {
+// One mode walks every page of the manifest through contexts of its own; the modes walk side by side, which halves
+// the wall clock of a pair whose cost is the walk and not the comparison
+async function setModeWalk(mode) {
+  const { sess, open } = await getModeContexts(mode);
   for (const item of conf.pages) {
-    if (only && item.name !== only) continue;
+    if (only && !only.has(item.name)) continue;
     const ctx = item.auth ? sess.get(item.auth) : open;
     if (!ctx) continue;
     const page = await ctx.newPage();
-    if (mode !== 'auto') await ctx.addCookies([{ name: conf.cookie, value: mode, url: conf.base }]);
     try {
       for (const view of conf.viewports) await checkOnePage(page, item, view, mode, pairs, report);
     } catch (err) {
@@ -511,7 +531,10 @@ for (const mode of (job === 'contrast' ? conf.contrastmodes || conf.modes : conf
     }
     await page.close();
   }
+  for (const ctx of [...sess.values(), open]) await ctx.close();
 }
+
+await Promise.all((job === 'contrast' ? conf.contrastmodes || conf.modes : conf.modes).map((mode) => setModeWalk(mode)));
 
 await browser.close();
 deleteSeededState(seed);

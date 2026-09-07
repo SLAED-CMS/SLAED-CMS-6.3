@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>01 &middot; Полки — стенд фаворитов SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* The shelves. The live page is one table of thirty-two titles with a number and a gear at the end of each row,
+       and nothing on it says what a favourite is: a news item, a file, a forum topic, a page. Here the list is put
+       on shelves, one per module and one under another, in the tiles the settings page and the cabinet already use -
+       the same head with the chip of tone, the same entry row as the activity feed, the same chips, the same mini
+       buttons. The search of the palette variant stands above them; a chip seeks a whole module. */
+    /* Shared by the four variants of the series: a tile packs its rows from the top, because a tile is a grid and a grid
+       would spread the rows of a short shelf over the height of a tall one; the count of a head stands at its right edge,
+       where the live indicator of a cabinet panel stands; the two mini buttons of a row lose the gutter a button carries */
+    .v-fav .sl-opt-tile {
+      align-content: start;
+    }
+
+    .v-fav .sl-opt-tile-head .sl-profile-hub-total {
+      margin-left: auto;
+    }
+
+    .v-fav .sl-profile-entry {
+      grid-template-columns: 30px minmax(0, 1fr) auto;
+    }
+
+    .v-fav .sl-profile-entry .sl-but-mini {
+      margin: 0;
+    }
+
+    .v-fav .sl-opt-grid {
+      margin-bottom: var(--sl-space-4);
+    }
+
+    .v-seek .sl-field {
+      width: 100%;
+    }
+
+    .v-fav [data-demo-empty] {
+      color: var(--sl-text-muted);
+      text-align: center;
+    }
+
+    [data-demo-empty]:not([hidden]) ~ .sl-opt-grid { display: none; }
+  </style>
+</head>
+<body class="sl-summer">
+<main class="d-page" data-demo-page data-demo-band="Профиль">
+  <h1 class="sl-title">Фавориты</h1>
+  <nav class="sl-cab-actions sl-cab-nav">
+    <a class="sl-cab-act sl-cat-tone-0" href="#" title="Возврат на страницу учетной записи"><span class="sl-cat-ico"><i class="bi bi-house" aria-hidden="true"></i></span><b>Главная</b><small>Возврат на страницу учетной записи</small></a>
+    <a class="sl-cab-act sl-cat-tone-1" href="#" title="Личные сообщения"><span class="sl-cab-badge">6</span><span class="sl-cat-ico"><i class="bi bi-envelope" aria-hidden="true"></i></span><b>Сообщения</b><small>Личные сообщения</small></a>
+    <a class="sl-cab-act sl-cat-tone-2" href="#" title="Персональный отдел клиента"><span class="sl-cat-ico"><i class="bi bi-people" aria-hidden="true"></i></span><b>Клиент</b><small>Персональный отдел клиента</small></a>
+    <a class="sl-cab-act sl-cat-tone-3" href="#" title="Фавориты" aria-current="page"><span class="sl-cat-ico"><i class="bi bi-star" aria-hidden="true"></i></span><b>Фавориты</b><small>32 / 500</small></a>
+    <a class="sl-cab-act sl-cat-tone-4" href="#" title="Персональная информация"><span class="sl-cat-ico"><i class="bi bi-person-vcard" aria-hidden="true"></i></span><b>Информация</b><small>Персональная информация</small></a>
+    <a class="sl-cab-act sl-cat-tone-5" href="#" title="Настройки"><span class="sl-cat-ico"><i class="bi bi-gear" aria-hidden="true"></i></span><b>Настройки</b><small>Профиль, аватар, пароль</small></a>
+    <a class="sl-cab-act sl-cat-tone-0" href="#" title="Выход"><span class="sl-cat-ico"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></span><b>Выход</b><small>Завершить сеанс</small></a>
+  </nav>
+
+  <div class="v-fav v-shelf">
+    <div class="sl-opt-grid">
+      <div class="sl-opt-tile sl-opt-w6 sl-cat-tone-3 v-seek">
+        <div class="sl-opt-tile-head"><i class="bi bi-search" aria-hidden="true"></i><b>Найти среди фаворитов</b><span class="sl-profile-hub-total"><span class="sl-chip sl-chip-info" title="Занято из 500"><i class="bi bi-star" aria-hidden="true"></i> 32 / 500</span></span></div>
+        <input class="sl-field" type="search" placeholder="Название материала или модуль" data-demo-filter aria-label="Найти среди фаворитов">
+        <div class="sl-profile-chips">
+          <a class="sl-chip sl-chip-info" href="#" data-demo-seek="Новости"><i class="bi bi-newspaper" aria-hidden="true"></i> Новости</a>
+          <a class="sl-chip sl-chip-info" href="#" data-demo-seek="Каталог файлов"><i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i> Каталог файлов</a>
+          <a class="sl-chip sl-chip-info" href="#" data-demo-seek="Вопросы и ответы"><i class="bi bi-question-circle" aria-hidden="true"></i> Вопросы и ответы</a>
+          <a class="sl-chip sl-chip-info" href="#" data-demo-seek="Форум"><i class="bi bi-chat-square-text" aria-hidden="true"></i> Форум</a>
+          <a class="sl-chip sl-chip-info" href="#" data-demo-seek="Статьи"><i class="bi bi-file-text" aria-hidden="true"></i> Статьи</a>
+          <a class="sl-chip sl-chip-neutral" href="#" data-demo-seek=""><i class="bi bi-x-lg" aria-hidden="true"></i> Все</a>
+        </div>
+        <p>Показано <b data-demo-tally>32</b> из 32. Полка без совпадений сворачивается; чип ищет весь модуль.</p>
+      </div>
+    </div>
+    <p class="sl-opt-tile" data-demo-empty hidden>Ничего не найдено. Сотрите запрос или выберите модуль чипом выше.</p>
+    <div class="sl-opt-grid">
+      <div class="sl-opt-tile sl-opt-w6 sl-cat-tone-0" data-demo-group>
+        <div class="sl-opt-tile-head"><i class="bi bi-newspaper" aria-hidden="true"></i><b>Новости</b><span class="sl-profile-hub-total"><span class="sl-chip sl-chip-neutral" title="Материалов">10</span></span></div>
+        <div class="sl-profile-entry" data-demo-find="Новости"><i class="bi bi-newspaper" aria-hidden="true"></i><a href="#">SLAED CMS возвращается - мощнее, быстрее, безопаснее</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Новости"><i class="bi bi-newspaper" aria-hidden="true"></i><a href="#">Sitemap, XML Карта сайта SEO инструмент новой версии системы</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Новости"><i class="bi bi-newspaper" aria-hidden="true"></i><a href="#">На пороге 2014 года встречаем «SLAED CMS Pro 5.3»</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Новости"><i class="bi bi-newspaper" aria-hidden="true"></i><a href="#">Преобразование адресов в гиперссылки в SLAED CMS 4.3 Pro</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Новости"><i class="bi bi-newspaper" aria-hidden="true"></i><a href="#">Фавориты и рейтинги в новой SLAED CMS 4.4 Pro</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Новости"><i class="bi bi-newspaper" aria-hidden="true"></i><a href="#">Новый год с новой версией SLAED CMS 4.3 Pro</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Новости"><i class="bi bi-newspaper" aria-hidden="true"></i><a href="#">Денвер, локальный сервер - Джентльменский набор веб разработчика</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Новости"><i class="bi bi-newspaper" aria-hidden="true"></i><a href="#">Lightbox и его клоны</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Новости"><i class="bi bi-newspaper" aria-hidden="true"></i><a href="#">Новые возможности проекта, фавориты, рейтинги</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Новости"><i class="bi bi-newspaper" aria-hidden="true"></i><a href="#">Облако тегов</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div>
+      </div>
+      <div class="sl-opt-tile sl-opt-w6 sl-cat-tone-1" data-demo-group>
+        <div class="sl-opt-tile-head"><i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i><b>Каталог файлов</b><span class="sl-profile-hub-total"><span class="sl-chip sl-chip-neutral" title="Материалов">6</span></span></div>
+        <div class="sl-profile-entry" data-demo-find="Каталог файлов"><i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i><a href="#">SLAED CMS 2.6 Lite Final</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Каталог файлов"><i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i><a href="#">Open SLAED 1.3.1</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Каталог файлов"><i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i><a href="#">SLAED CMS 6.2 Pro - Система управления содержимым сайта</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Каталог файлов"><i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i><a href="#">Украинские языковые файлы для Open SLAED 1.0</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Каталог файлов"><i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i><a href="#">Блок обновлений Nod32 (NEW)</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Каталог файлов"><i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i><a href="#">Мини чат на AJAX для SLAED Lite 2.5</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div>
+      </div>
+      <div class="sl-opt-tile sl-opt-w6 sl-cat-tone-2" data-demo-group>
+        <div class="sl-opt-tile-head"><i class="bi bi-question-circle" aria-hidden="true"></i><b>Вопросы и ответы</b><span class="sl-profile-hub-total"><span class="sl-chip sl-chip-neutral" title="Материалов">4</span></span></div>
+        <div class="sl-profile-entry" data-demo-find="Вопросы и ответы"><i class="bi bi-question-circle" aria-hidden="true"></i><a href="#">Какие дополнительные возможности даёт регистрация?</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Вопросы и ответы"><i class="bi bi-question-circle" aria-hidden="true"></i><a href="#">Зачем нужна регистрация?</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Вопросы и ответы"><i class="bi bi-question-circle" aria-hidden="true"></i><a href="#">Решение проблемы с русскими словами в блоке "Meta keywords"</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Вопросы и ответы"><i class="bi bi-question-circle" aria-hidden="true"></i><a href="#">Правильный переход на https/ssl</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div>
+      </div>
+      <div class="sl-opt-tile sl-opt-w6 sl-cat-tone-5" data-demo-group>
+        <div class="sl-opt-tile-head"><i class="bi bi-chat-square-text" aria-hidden="true"></i><b>Форум</b><span class="sl-profile-hub-total"><span class="sl-chip sl-chip-neutral" title="Материалов">5</span></span></div>
+        <div class="sl-profile-entry" data-demo-find="Форум"><i class="bi bi-chat-square-text" aria-hidden="true"></i><a href="#">Пожелания к версии SLAED CMS 6.3</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Форум"><i class="bi bi-chat-square-text" aria-hidden="true"></i><a href="#">SEO, ЧПУ, Open Graph - Маршрутизатор и генерация ссылок системы</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Форум"><i class="bi bi-chat-square-text" aria-hidden="true"></i><a href="#">CSS фреймворки Bootstrap, Foundation, Semantic UI, UIkit</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Форум"><i class="bi bi-chat-square-text" aria-hidden="true"></i><a href="#">SLAED CMS 6.2 Pro - Проблемы и решения</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Форум"><i class="bi bi-chat-square-text" aria-hidden="true"></i><a href="#">Переход проекта на протокол HTTPS и систему сертификации SSL</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div>
+      </div>
+      <div class="sl-opt-tile sl-opt-w6 sl-cat-tone-4" data-demo-group>
+        <div class="sl-opt-tile-head"><i class="bi bi-file-text" aria-hidden="true"></i><b>Статьи</b><span class="sl-profile-hub-total"><span class="sl-chip sl-chip-neutral" title="Материалов">7</span></span></div>
+        <div class="sl-profile-entry" data-demo-find="Статьи"><i class="bi bi-file-text" aria-hidden="true"></i><a href="#">Создание темы оформления с нуля</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Статьи"><i class="bi bi-file-text" aria-hidden="true"></i><a href="#">Оптимизация и Кеширование</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Статьи"><i class="bi bi-file-text" aria-hidden="true"></i><a href="#">PageSpeed Insights от Google – Ускорение и оптимизация сайта</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Статьи"><i class="bi bi-file-text" aria-hidden="true"></i><a href="#">Блок часы с календарём</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Статьи"><i class="bi bi-file-text" aria-hidden="true"></i><a href="#">Базовые инструменты веб-мастера SLAED CMS</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Статьи"><i class="bi bi-file-text" aria-hidden="true"></i><a href="#">Базовые инструменты веб-мастера SLAED CMS</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Статьи"><i class="bi bi-file-text" aria-hidden="true"></i><a href="#">Мини чат на AJAX для SLAED Lite 2.5</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div>
+      </div>
+    </div>
+  </div>
+</main>
+<script src="assets/demo.js"></script>
+</body>
+</html>

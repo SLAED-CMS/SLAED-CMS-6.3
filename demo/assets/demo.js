@@ -255,10 +255,39 @@ const DEMO_UPLOAD = [
 
 /* The stand carries three series now, so a file finds its own neighbours and its own gallery section rather
    than the first list that happens to be declared. */
+/* The favourites of the cabinet: `index.php?name=account&op=favorites`, a table of titles today */
+const DEMO_FAVORITES = [
+  {
+    file: 'fav-01-shelf.html',
+    title: 'Полки',
+    note: 'Фавориты разложены по полкам во всю ширину, полка на модуль: плитки настроек, строки ленты активности, чипсы и мини-кнопки — ничего своего. Число на полке — чип в правом углу заголовка, поле над полками ищет по названиям вживую, чип ищет весь модуль.',
+    tags: ['полки', 'поиск', 'чип-счётчик'],
+  },
+  {
+    file: 'fav-02-tabs.html',
+    title: 'Вкладки',
+    note: 'Четыре лампы настроек с фактами о фаворитах, под ними один блок: чип на модуль переключает список, как вкладки ленты активности. Каждая строка ведёт датой добавления.',
+    tags: ['лампы', 'вкладки', 'дата'],
+  },
+  {
+    file: 'fav-03-bays.html',
+    title: 'Отсеки',
+    note: 'Отсек на модуль, как в «Отсеках» настроек: крышка — заголовок плитки со счётчиком, закрытый отсек говорит, сколько в нём. Без единой строки JS, отсек — details.',
+    tags: ['details', 'без JS', 'счётчик на крышке'],
+  },
+  {
+    file: 'fav-04-table.html',
+    title: 'Таблица',
+    note: 'Живая страница, которой досказали недостающее: колонка модуля чипом, дата добавления, два действия из шестерёнки развёрнуты рядом с номером, поиск над таблицей фильтрует строки вживую.',
+    tags: ['таблица', 'поиск', 'минимум правок'],
+  },
+];
+
 const DEMO_SERIES = [
   { key: 'main', title: 'Презентационная страница', addr: 'index.php?name=main', items: DEMO_VARIANTS },
   { key: 'settings', title: 'Настройки аккаунта', addr: 'index.php?name=account&op=edithome', items: DEMO_SETTINGS },
   { key: 'upload', title: 'Добавление файла', addr: 'index.php?name=files&op=add', items: DEMO_UPLOAD },
+  { key: 'favorites', title: 'Фавориты', addr: 'index.php?name=account&op=favorites', items: DEMO_FAVORITES },
 ];
 
 /* Which series a file belongs to, and where it stands in it. An unknown file gets the first series at index -1,
@@ -533,7 +562,7 @@ const CHROME_SIDE = `
 function setCabinetShell(page) {
   const wrap = document.createElement('div');
   wrap.className = 'sl-wrp';
-  wrap.innerHTML = '<div id="container"><main id="content"></main>' + CHROME_SIDE + '</div>';
+  wrap.innerHTML = '<div id="container" class="sl-has-right"><main id="content"></main>' + CHROME_SIDE + '</div>';
   page.parentNode.insertBefore(wrap, page);
   wrap.querySelector('#content').appendChild(page);
   return wrap;

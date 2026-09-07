@@ -545,9 +545,9 @@ A change to `tools/ui-audit.php` needs a fixture in `tests/Fixtures/ui/` coverin
 
 ### Screenshot rig
 
-- **Nothing may touch the tree while the rig runs.** A capture takes about a quarter of an hour. A `git stash` during that window leaves a set half from one tree and half from another, with nothing in the output to say so.
+- **Nothing may touch the tree while the rig runs.** A capture takes about five minutes: the two modes of the manifest walk side by side, each in contexts of its own, because a context is what holds the mode cookie. A `git stash` during that window leaves a set half from one tree and half from another, with nothing in the output to say so.
 - **Always compare two captures of your own.** The stand's own data moves between runs, so a `--check` against any set captured earlier than minutes ago reports the week rather than the change. `ui:before` and `ui:after` exist to make that pair the default path.
-- **Re-capture only the states that moved.** `--capture --only=<page>` writes that page's images and merges its entries into `noise-floor.json`, leaving every other floor and image untouched.
+- **Re-capture only the states that moved.** `--capture --only=<page>` writes that page's images and merges its entries into `noise-floor.json`, leaving every other floor and image untouched. `--only` takes a comma list, `--only=settings,profile`, and serves every job: `--after --only=<pages>` re-compares the pages a change touched in about a minute, one login for all of them.
 - Before capturing, empty `storage/cache/pages/*` and `storage/cache/templates/*`, keep `cache_css` and `css_h` at `'0'`, and delete `config/local.php` after any hand edit of `config/*`.
 - Motion is switched off with `animation: none`. A near-zero duration does not stop an infinite animation; it makes it cycle as fast as the compositor can draw, and the frame a screenshot catches is then chosen by the scheduler.
 - An element that refetches itself on a timer cannot be part of a still image. `mask` hides what moves inside a box of stable size; `drop` takes out of layout what changes size. A mask cannot save a box whose height is what moves.

@@ -56,6 +56,7 @@
   --sl-success-subtle: light-dark(#9fd779, #14301b);
   --sl-success-muted: light-dark(#96d26d, #1b3d23);
   --sl-warning: light-dark(#f47a20, #f0932b);
+  --sl-warning-strong: light-dark(#c2410c, #ffb057);
   --sl-warning-subtle: light-dark(#ffa024, #3a2a12);
   --sl-danger: light-dark(#a92c2c, #f06a6a);
   --sl-accent: light-dark(#8c2ca9, #b370cf);
@@ -145,6 +146,9 @@
   --sl-field-text: var(--sl-text-muted);
   --sl-field-ring: var(--sl-ring-bg);
   --sl-field-shadow: inset 0 1px 2px light-dark(rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.45));
+  /* The ceiling of the caption column of a form: the column is as wide as its longest caption and never wider than this
+     share of the form, so a short caption does not hold a quarter of the row and a long one wraps here and not sooner */
+  --sl-form-label-width: 40%;
 
   /* Components: the window canon, one dialog with four axes */
   --sl-modal-width: 560px;

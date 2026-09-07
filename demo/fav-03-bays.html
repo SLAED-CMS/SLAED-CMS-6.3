@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>03 &middot; Отсеки — стенд фаворитов SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <link rel="stylesheet" href="assets/demo.css">
+  <style>
+    /* The bays. The compartments of the second settings variant, one per module: the lid is the head of a tile with the
+       count on it, so a closed bay still says what it holds, and the rows inside are the entries of the activity feed
+       with the date they were added. No script: a bay is a details element and the browser opens and closes it. */
+    /* Shared by the four variants of the series: a tile packs its rows from the top, because a tile is a grid and a grid
+       would spread the rows of a short shelf over the height of a tall one; the count of a head stands at its right edge,
+       where the live indicator of a cabinet panel stands; the two mini buttons of a row lose the gutter a button carries */
+    .v-fav .sl-opt-tile {
+      align-content: start;
+    }
+
+    .v-fav .sl-opt-tile-head .sl-profile-hub-total {
+      margin-left: auto;
+    }
+
+    .v-fav .sl-profile-entry {
+      grid-template-columns: 30px minmax(0, 1fr) auto;
+    }
+
+    .v-fav .sl-profile-entry .sl-but-mini {
+      margin: 0;
+    }
+
+    .v-fav .sl-opt-grid {
+      margin-bottom: var(--sl-space-4);
+    }
+
+    .v-bays .sl-profile-entry {
+      grid-template-columns: auto 30px minmax(0, 1fr) auto;
+    }
+
+    /* A details element keeps its content in a box of its own, which a grid would put into the first track: the bay is a
+       block, and the lid keeps the air of the tile's gap under it by margin */
+    .v-bays details.sl-opt-tile {
+      display: block;
+    }
+
+    .v-bays details[open] summary {
+      margin-bottom: var(--sl-space-4);
+    }
+
+    /* The chevron is a mark of the lid and not an icon of the head: it sheds the plate of tone the head gives its icon */
+    .v-bays summary .bi-chevron-down {
+      width: auto;
+      height: auto;
+      background: none;
+      color: var(--sl-text-muted);
+    }
+
+    .v-bays summary {
+      list-style: none;
+      cursor: pointer;
+    }
+
+    .v-bays summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .v-bays summary .bi-chevron-down {
+      margin-left: var(--sl-space-3);
+      color: var(--sl-text-muted);
+      transition: transform var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-bays details[open] summary .bi-chevron-down {
+      transform: rotate(180deg);
+    }
+  </style>
+</head>
+<body class="sl-summer">
+<main class="d-page" data-demo-page data-demo-band="Профиль">
+  <h1 class="sl-title">Фавориты</h1>
+  <nav class="sl-cab-actions sl-cab-nav">
+    <a class="sl-cab-act sl-cat-tone-0" href="#" title="Возврат на страницу учетной записи"><span class="sl-cat-ico"><i class="bi bi-house" aria-hidden="true"></i></span><b>Главная</b><small>Возврат на страницу учетной записи</small></a>
+    <a class="sl-cab-act sl-cat-tone-1" href="#" title="Личные сообщения"><span class="sl-cab-badge">6</span><span class="sl-cat-ico"><i class="bi bi-envelope" aria-hidden="true"></i></span><b>Сообщения</b><small>Личные сообщения</small></a>
+    <a class="sl-cab-act sl-cat-tone-2" href="#" title="Персональный отдел клиента"><span class="sl-cat-ico"><i class="bi bi-people" aria-hidden="true"></i></span><b>Клиент</b><small>Персональный отдел клиента</small></a>
+    <a class="sl-cab-act sl-cat-tone-3" href="#" title="Фавориты" aria-current="page"><span class="sl-cat-ico"><i class="bi bi-star" aria-hidden="true"></i></span><b>Фавориты</b><small>32 / 500</small></a>
+    <a class="sl-cab-act sl-cat-tone-4" href="#" title="Персональная информация"><span class="sl-cat-ico"><i class="bi bi-person-vcard" aria-hidden="true"></i></span><b>Информация</b><small>Персональная информация</small></a>
+    <a class="sl-cab-act sl-cat-tone-5" href="#" title="Настройки"><span class="sl-cat-ico"><i class="bi bi-gear" aria-hidden="true"></i></span><b>Настройки</b><small>Профиль, аватар, пароль</small></a>
+    <a class="sl-cab-act sl-cat-tone-0" href="#" title="Выход"><span class="sl-cat-ico"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></span><b>Выход</b><small>Завершить сеанс</small></a>
+  </nav>
+
+  <div class="v-fav v-bays">
+    <div class="sl-opt-grid">
+      <div class="sl-opt-tile sl-opt-w6 sl-cat-tone-3">
+        <div class="sl-opt-tile-head"><i class="bi bi-star" aria-hidden="true"></i><b>Место в фаворитах</b><span class="sl-profile-hub-total"><span class="sl-chip sl-chip-info"><i class="bi bi-star" aria-hidden="true"></i> 32 / 500</span></span></div>
+        <p>Фаворит — закладка на материал сайта. Звезда у материала кладёт его сюда и убирает отсюда. Отсеки ниже открываются по одному: закладки читаются модуль за модулем, а закрытый отсек говорит, сколько в нём, не открываясь.</p>
+      </div>
+    </div>
+    <div class="sl-opt-grid">
+      <details class="sl-opt-tile sl-opt-w6 sl-cat-tone-0" open>
+        <summary><div class="sl-opt-tile-head"><i class="bi bi-newspaper" aria-hidden="true"></i><b>Новости</b><span class="sl-profile-hub-total"><span class="sl-chip sl-chip-neutral" title="Материалов">10</span><i class="bi bi-chevron-down" aria-hidden="true"></i></span></div></summary>
+        <div class="sl-profile-entry" data-demo-find="Новости"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 14.08.2026</span><i class="bi bi-newspaper" aria-hidden="true"></i><a href="#">SLAED CMS возвращается - мощнее, быстрее, безопаснее</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Новости"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 02.07.2026</span><i class="bi bi-newspaper" aria-hidden="true"></i><a href="#">Sitemap, XML Карта сайта SEO инструмент новой версии системы</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Новости"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 11.05.2026</span><i class="bi bi-newspaper" aria-hidden="true"></i><a href="#">На пороге 2014 года встречаем «SLAED CMS Pro 5.3»</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Новости"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 30.04.2026</span><i class="bi bi-newspaper" aria-hidden="true"></i><a href="#">Преобразование адресов в гиперссылки в SLAED CMS 4.3 Pro</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Новости"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 19.03.2026</span><i class="bi bi-newspaper" aria-hidden="true"></i><a href="#">Фавориты и рейтинги в новой SLAED CMS 4.4 Pro</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Новости"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 02.01.2026</span><i class="bi bi-newspaper" aria-hidden="true"></i><a href="#">Новый год с новой версией SLAED CMS 4.3 Pro</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Новости"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 17.12.2025</span><i class="bi bi-newspaper" aria-hidden="true"></i><a href="#">Денвер, локальный сервер - Джентльменский набор веб разработчика</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Новости"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 03.11.2025</span><i class="bi bi-newspaper" aria-hidden="true"></i><a href="#">Lightbox и его клоны</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Новости"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 21.09.2025</span><i class="bi bi-newspaper" aria-hidden="true"></i><a href="#">Новые возможности проекта, фавориты, рейтинги</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Новости"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 14.08.2025</span><i class="bi bi-newspaper" aria-hidden="true"></i><a href="#">Облако тегов</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div>
+      </details>
+      <details class="sl-opt-tile sl-opt-w6 sl-cat-tone-1">
+        <summary><div class="sl-opt-tile-head"><i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i><b>Каталог файлов</b><span class="sl-profile-hub-total"><span class="sl-chip sl-chip-neutral" title="Материалов">6</span><i class="bi bi-chevron-down" aria-hidden="true"></i></span></div></summary>
+        <div class="sl-profile-entry" data-demo-find="Каталог файлов"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 10.08.2026</span><i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i><a href="#">SLAED CMS 2.6 Lite Final</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Каталог файлов"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 29.06.2026</span><i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i><a href="#">Open SLAED 1.3.1</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Каталог файлов"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 03.05.2026</span><i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i><a href="#">SLAED CMS 6.2 Pro - Система управления содержимым сайта</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Каталог файлов"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 15.02.2026</span><i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i><a href="#">Украинские языковые файлы для Open SLAED 1.0</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Каталог файлов"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 08.12.2025</span><i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i><a href="#">Блок обновлений Nod32 (NEW)</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Каталог файлов"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 20.10.2025</span><i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i><a href="#">Мини чат на AJAX для SLAED Lite 2.5</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div>
+      </details>
+      <details class="sl-opt-tile sl-opt-w6 sl-cat-tone-2">
+        <summary><div class="sl-opt-tile-head"><i class="bi bi-question-circle" aria-hidden="true"></i><b>Вопросы и ответы</b><span class="sl-profile-hub-total"><span class="sl-chip sl-chip-neutral" title="Материалов">4</span><i class="bi bi-chevron-down" aria-hidden="true"></i></span></div></summary>
+        <div class="sl-profile-entry" data-demo-find="Вопросы и ответы"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 01.08.2026</span><i class="bi bi-question-circle" aria-hidden="true"></i><a href="#">Какие дополнительные возможности даёт регистрация?</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Вопросы и ответы"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 01.08.2026</span><i class="bi bi-question-circle" aria-hidden="true"></i><a href="#">Зачем нужна регистрация?</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Вопросы и ответы"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 12.04.2026</span><i class="bi bi-question-circle" aria-hidden="true"></i><a href="#">Решение проблемы с русскими словами в блоке "Meta keywords"</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Вопросы и ответы"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 27.01.2026</span><i class="bi bi-question-circle" aria-hidden="true"></i><a href="#">Правильный переход на https/ssl</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div>
+      </details>
+      <details class="sl-opt-tile sl-opt-w6 sl-cat-tone-5">
+        <summary><div class="sl-opt-tile-head"><i class="bi bi-chat-square-text" aria-hidden="true"></i><b>Форум</b><span class="sl-profile-hub-total"><span class="sl-chip sl-chip-neutral" title="Материалов">5</span><i class="bi bi-chevron-down" aria-hidden="true"></i></span></div></summary>
+        <div class="sl-profile-entry" data-demo-find="Форум"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 14.07.2026</span><i class="bi bi-chat-square-text" aria-hidden="true"></i><a href="#">Пожелания к версии SLAED CMS 6.3</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Форум"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 22.05.2026</span><i class="bi bi-chat-square-text" aria-hidden="true"></i><a href="#">SEO, ЧПУ, Open Graph - Маршрутизатор и генерация ссылок системы</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Форум"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 09.04.2026</span><i class="bi bi-chat-square-text" aria-hidden="true"></i><a href="#">CSS фреймворки Bootstrap, Foundation, Semantic UI, UIkit</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Форум"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 01.02.2026</span><i class="bi bi-chat-square-text" aria-hidden="true"></i><a href="#">SLAED CMS 6.2 Pro - Проблемы и решения</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Форум"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 18.11.2025</span><i class="bi bi-chat-square-text" aria-hidden="true"></i><a href="#">Переход проекта на протокол HTTPS и систему сертификации SSL</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div>
+      </details>
+      <details class="sl-opt-tile sl-opt-w6 sl-cat-tone-4">
+        <summary><div class="sl-opt-tile-head"><i class="bi bi-file-text" aria-hidden="true"></i><b>Статьи</b><span class="sl-profile-hub-total"><span class="sl-chip sl-chip-neutral" title="Материалов">7</span><i class="bi bi-chevron-down" aria-hidden="true"></i></span></div></summary>
+        <div class="sl-profile-entry" data-demo-find="Статьи"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 25.07.2026</span><i class="bi bi-file-text" aria-hidden="true"></i><a href="#">Создание темы оформления с нуля</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Статьи"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 13.06.2026</span><i class="bi bi-file-text" aria-hidden="true"></i><a href="#">Оптимизация и Кеширование</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Статьи"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 28.04.2026</span><i class="bi bi-file-text" aria-hidden="true"></i><a href="#">PageSpeed Insights от Google – Ускорение и оптимизация сайта</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Статьи"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 03.03.2026</span><i class="bi bi-file-text" aria-hidden="true"></i><a href="#">Блок часы с календарём</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Статьи"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 19.01.2026</span><i class="bi bi-file-text" aria-hidden="true"></i><a href="#">Базовые инструменты веб-мастера SLAED CMS</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Статьи"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 19.01.2026</span><i class="bi bi-file-text" aria-hidden="true"></i><a href="#">Базовые инструменты веб-мастера SLAED CMS</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div><div class="sl-profile-entry" data-demo-find="Статьи"><span class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 30.09.2025</span><i class="bi bi-file-text" aria-hidden="true"></i><a href="#">Мини чат на AJAX для SLAED Lite 2.5</a><span class="sl-profile-hub-total"><a class="sl-but-mini" href="#" title="Показать"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="#" title="Удалить"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div>
+      </details>
+    </div>
+  </div>
+</main>
+<script src="assets/demo.js"></script>
+</body>
+</html>

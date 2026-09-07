@@ -160,8 +160,7 @@ h1.sl-title {
 .sl-block-contact,
 #topbar ul,
 #topmenu ul,
-.sl-forum-list-info ul,
-.sl-opt-log {
+.sl-forum-list-info ul {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -621,7 +620,13 @@ a.sl-crumb:hover + .sl-crumb-sep {
   content: "\f430";
 }
 
-.sl-alert-body {
+/* The one part of a row that takes what the others leave and may shrink below its content: the body of an alert, the
+   right pane of a comment and of a forum post, the field of the RSS form, the label of a file-manager rail item */
+.sl-alert-body,
+.sl-com-right,
+.sl-fp-right,
+.sl-cab-rss-form .sl-field,
+.sl-fm-win .sl-fm-rail-item > span {
   flex: 1 1 auto;
   min-width: 0;
 }
@@ -1070,7 +1075,9 @@ input[type="checkbox"]:disabled {
    4.17 against the track the crawler can see behind it, and the knob is a pseudo-element no crawler can look through.
    It takes the body colour the rule above already gives it, so the rule that dimmed it is gone rather than retuned */
 
-.sl-radio-group.sl-radio-switch input {
+/* The same disappearance serves the preset gallery of the settings page, where each option is its picture and nothing else */
+.sl-radio-group.sl-radio-switch input,
+.sl-opt-tile .sl-radio-group:not(.sl-radio-switch) input {
   position: absolute;
   opacity: 0;
   pointer-events: none;
@@ -1503,9 +1510,21 @@ button.sl-but-mini:hover,
   font-weight: var(--sl-weight-bold);
 }
 
-/* Forms: add form layout */
+/* Forms: add form layout. The form lays the two tracks of its rows - a caption column as wide as the longest caption
+   and no wider than the ceiling the token sets, and the field column taking the rest - and every row standing directly
+   in it inherits them, so the captions of one form line up on one edge and the fields on another. Anything else the
+   form holds spans both tracks and reads as before */
 .sl-form {
+  display: grid;
+  grid-template-columns: fit-content(var(--sl-form-label-width)) minmax(0, 1fr);
+  column-gap: var(--sl-space-6);
   margin-bottom: var(--sl-space-7);
+}
+
+.sl-form > *,
+.sl-opt-tile > *,
+.sl-profile-panel > * {
+  grid-column: 1 / -1;
 }
 
 /* One pair of tracks serves both rows: the editable form row and the read-only value row of a view page draw the same two columns */
@@ -1519,18 +1538,30 @@ button.sl-but-mini:hover,
   width: 100%;
 }
 
+/* A row standing directly in a form, or in a settings tile, draws the tracks its parent laid instead of a quarter of its
+   own. A browser without subgrid drops the declaration and keeps the quarter. The selector carries no weight of its own,
+   so every rule below that stacks a row - the editor, the narrow box, the phone - still wins on order alone */
+:where(.sl-form, .sl-opt-tile) > .sl-form-row {
+  grid-template-columns: subgrid;
+}
+
 /* A row asked to hide has to outrank the display the row itself sets, which a single class cannot do from further up the file */
 .sl-form-row.sl-hidden {
   display: none;
 }
 
 /* The editor is the one field a half row cannot hold: it takes both tracks and the label moves above it */
+/* The track has a floor of zero and not of its content: a bare 1fr cannot shrink below the toolbar, which at 768 is
+   thirty points wider than the row and made the page scroll sideways under every form carrying an editor */
+/* The mount point of the editor is on the list too: the row folds on the first frame and not when the script arrives,
+   so the caption column of the form is not sized by the editor's hint for the moments in between */
+.sl-form-row:has([id$="_toast"]),
 .sl-form-row:has(.toastui-editor-defaultUI),
 .sl-form-row:has(.ck-editor),
 .sl-form-row:has(.cm-editor),
 .sl-form-row:has(.tox-tinymce),
 .sl-form-row:has(.sl-code-editor) {
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--sl-space-3);
   align-items: start;
 }
@@ -2865,10 +2896,12 @@ ol.sl-sublist-two li::before {
 }
 
 /* Buttons: base pill component and gradient variants */
+/* The icon and the label of a button are flex items, and a flex row drops the space between them: the gap is that space */
 .sl-but {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: var(--sl-space-2);
   vertical-align: middle;
   white-space: nowrap;
   padding: var(--sl-space-2) var(--sl-space-6);
@@ -3105,7 +3138,12 @@ ol.sl-sublist-two li::before {
 .sl-user-points b,
 .sl-user-points small { display: block; }
 .sl-user-points b { color: var(--sl-text); font-size: var(--sl-font-h4); }
-.sl-user-points small { color: var(--sl-text-muted); font-size: var(--sl-font-micro); }
+/* The small print of a points figure and the stamp of a message slot are one small print */
+.sl-user-points small,
+.sl-pmf-slot-top time {
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+}
 
 .sl-block-pm {
   margin: var(--sl-space-3) 0 0;
@@ -5099,16 +5137,19 @@ ol.sl-sublist-two li::before {
 }
 
 /* A side track exists only when the module rendered that side; a module that switched its blocks off gives the whole width to the content instead of holding the empty column */
+/* The layout names the sides it rendered on the container, because the aside stands after the content in the document: a
+   first frame painted before the parser reached it saw no aside, laid the content over the full width and then pulled
+   it back, and a long page was seen to jump on every arrival */
 @media (width > 900px) {
-  #container:has(#leftbar) {
+  #container.sl-has-left {
     grid-template-columns: var(--sl-layout-sidebar) minmax(0, 1fr);
   }
 
-  #container:has(#sidebar) {
+  #container.sl-has-right {
     grid-template-columns: minmax(0, 1fr) var(--sl-layout-sidebar);
   }
 
-  #container:has(#leftbar):has(#sidebar) {
+  #container.sl-has-left.sl-has-right {
     grid-template-columns: var(--sl-layout-sidebar) minmax(0, 1fr) var(--sl-layout-sidebar);
   }
 }
@@ -5235,11 +5276,6 @@ ol.sl-sublist-two li::before {
   width: var(--sl-com-item-width);
   margin: 0 auto;
   text-align: center;
-}
-
-.sl-com-right {
-  flex: 1 1 auto;
-  min-width: 0;
 }
 
 .sl-com-left .sl-min-rate {
@@ -5403,8 +5439,11 @@ td.sl-fl-col-stat {
   margin: -1px var(--sl-space-2) 0 0;
 }
 
+/* The same row serves the head of a settings tile and the heading of a cabinet panel or the activity feed */
 .sl-forum-top .sl-pull-right,
-.sl-forum-foot .sl-pull-right {
+.sl-forum-foot .sl-pull-right,
+.sl-opt-tile-head,
+:is(.sl-profile-panel, .sl-profile-feed, .sl-profile-head, .sl-cab-head, .sl-profile-hub-head) h3 {
   display: flex;
   align-items: center;
   gap: var(--sl-space-3);
@@ -5540,11 +5579,6 @@ td.sl-fl-col-stat {
   margin: var(--sl-space-5) 0 0;
   padding: 0;
   font-size: var(--sl-font-small);
-}
-
-.sl-fp-right {
-  flex: 1 1 auto;
-  min-width: 0;
 }
 
 .sl-fp-meta {
@@ -5713,7 +5747,9 @@ td.sl-fl-col-stat {
 }
 
 /* Chips: one pill component for every meta label - 26px tall, tone by semantics; emitters add sl-chip plus a tone, legacy meta names stay in markup as semantic hooks only */
-.sl-chip {
+/* The tabs of the activity feed wear the chip, so the feed carries no pill of its own */
+.sl-chip,
+.sl-profile-feed .sl-tabs-link {
   display: inline-flex;
   align-items: center;
   gap: var(--sl-space-3);
@@ -5769,7 +5805,9 @@ a.sl-chip {
 
 /* Tone classes come after the link default, so an explicit sl-chip-* tone wins on spans and links alike */
 .sl-chip-info,
-a.sl-chip-info {
+a.sl-chip-info,
+.sl-profile-feed .sl-tabs-link.sl-is-active,
+.sl-fresh-week {
   background: var(--sl-chip-bg);
   color: var(--sl-primary-strong);
 }
@@ -7524,10 +7562,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   animation: sl-fresh-sway var(--sl-fresh-days-dur) var(--sl-ease-in-out) infinite;
 }
 
-.sl-fresh-week {
-  background: var(--sl-chip-bg);
-  color: var(--sl-primary-strong);
-}
 
 .sl-fresh-week > .bi {
   animation: sl-fresh-turn var(--sl-fresh-week-dur) linear infinite;
@@ -7603,7 +7637,8 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   .sl-live-avatar::after,
   .sl-fresh,
   .sl-fresh > .bi,
-  .sl-opt-save {
+  .sl-opt-save,
+  .sl-opt-rail::after {
     animation: none !important;
     transition: none !important;
   }
@@ -7772,16 +7807,16 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 .sl-opt-lamp {
   padding: var(--sl-space-4) var(--sl-space-5);
   border: 1px solid var(--sl-border);
-  border-left: var(--sl-opt-lamp-border) solid var(--sl-border-strong);
+  border-left: var(--sl-opt-lamp-border) solid var(--sl-cat-tone);
   border-radius: var(--sl-radius-2);
   background: var(--sl-bg);
 }
 
-/* The tone is the edge and never the figure: a warning or a success colour set as text over the page background is the
-   pair the contrast crawler fails, and the reader is told the same thing by the bar without anyone having to read it */
-.sl-opt-lamp.sl-is-ok { border-left-color: var(--sl-success); }
-.sl-opt-lamp.sl-is-warn { border-left-color: var(--sl-warning); }
-.sl-opt-lamp.sl-is-info { border-left-color: var(--sl-primary); }
+/* The state is the tone a category tile carries, and the edge and the figure both read it. The figure is text over the
+   page, so a state takes the step of its colour that passes AA for large bold type: the success and the strong primary
+   of the category classes as they are, and for the warning state - whose base step is the pair the crawler fails - the
+   strong step, which no category class names and the lamp therefore scopes for itself */
+.sl-opt-lamp.sl-is-warn { --sl-cat-tone: var(--sl-warning-strong); }
 
 .sl-opt-lamp small {
   display: block;
@@ -7794,7 +7829,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 .sl-opt-lamp b {
   display: block;
   margin: var(--sl-space-1) 0;
-  color: var(--sl-text-strong);
+  color: var(--sl-cat-tone);
   font-size: var(--sl-font-h3);
   font-variant-numeric: tabular-nums;
   line-height: var(--sl-line-tight);
@@ -7815,21 +7850,48 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   top: 0;
   z-index: var(--sl-z-dropdown);
   display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   margin: 0 0 var(--sl-space-9);
   padding: var(--sl-space-5) 0 var(--sl-space-4);
   background: var(--sl-bg);
   border-bottom: 1px solid var(--sl-border);
 }
 
-/* The road between the marks belongs to the marks: each one draws the segment back to its predecessor, so the line is
-   as long as the number of sections that actually rendered and no figure has to be written down beside them */
+/* The road runs behind every mark from edge to edge, and the part already walked is drawn over it up to the mark the
+   reader stands at: a width the script measures and writes as --sl-d-spy, because a stylesheet that does not know where
+   the marks landed cannot draw a line to one of them */
+.sl-opt-rail::before,
+.sl-opt-rail::after {
+  content: "";
+  position: absolute;
+  top: calc(var(--sl-space-5) + var(--sl-size-chip) / 2);
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: var(--sl-border);
+}
+
+.sl-opt-rail::after {
+  right: auto;
+  width: var(--sl-d-spy, 0%);
+  background: var(--sl-success);
+  transition: width var(--sl-time-slow) var(--sl-ease-out);
+}
+
+/* Every mark shares the one cell of the rail and stands at its own fraction of the width, written on it as --sl-d-at of
+   --sl-d-of, so the marks are spaced evenly whatever their captions weigh: the first keeps to the left edge, the last to
+   the right, and the ones between are centred on their fraction. A mark may not be wider than one step of the road,
+   which is what keeps two captions from meeting */
 .sl-opt-mark {
   position: relative;
+  z-index: var(--sl-z-raised);
+  grid-area: 1 / 1;
+  justify-self: start;
   display: grid;
   justify-items: center;
   gap: var(--sl-space-2);
+  max-width: calc(100% / var(--sl-d-of, 1));
+  margin-left: calc(var(--sl-d-at, 0) / var(--sl-d-of, 1) * 100%);
   padding: 0;
   border: 0;
   background: none;
@@ -7837,26 +7899,22 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   font-size: var(--sl-font-micro);
   line-height: var(--sl-line-tight);
   text-align: center;
+  transform: translateX(-50%);
   cursor: pointer;
 }
 
-.sl-opt-mark::before {
-  content: "";
-  position: absolute;
-  top: calc(var(--sl-size-chip) / 2);
-  right: 50%;
-  left: -50%;
-  height: 1px;
-  background: var(--sl-border);
+.sl-opt-mark:first-child {
+  justify-items: start;
+  text-align: left;
+  transform: none;
 }
 
-.sl-opt-mark:first-child::before {
-  content: none;
-}
-
-.sl-opt-mark[data-sl-spy-done="1"]::before,
-.sl-opt-mark[aria-current="true"]::before {
-  background: var(--sl-success);
+.sl-opt-mark:last-child {
+  justify-self: end;
+  justify-items: end;
+  margin-left: 0;
+  text-align: right;
+  transform: none;
 }
 
 .sl-opt-mark .bi {
@@ -7933,15 +7991,17 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   gap: var(--sl-space-4);
 }
 
-/* Every row a tile holds folds on the tile and never on the window: two columns of six is about 290 points, where a
-   caption-left row does not live however wide the viewport is. `sl-form-box` is the name the form row already
-   watches, so the rows inside fold by the rule the rest of the tree carries rather than by a second one */
-.sl-opt-tile {
+/* The tile is the box its rows watch, under a name of its own - see the fold below the rows - and, like a form, it lays
+   the two tracks its rows inherit: everything it holds spans both, so the head, the face and the text read as a column */
+.sl-opt-tile,
+.sl-profile-panel {
   container-type: inline-size;
-  container-name: sl-form-box;
-  display: flex;
-  flex-direction: column;
+  container-name: sl-opt-box;
+  display: grid;
+  min-width: 0;
+  grid-template-columns: fit-content(var(--sl-form-label-width)) minmax(0, 1fr);
   gap: var(--sl-space-4);
+  column-gap: var(--sl-space-6);
   padding: var(--sl-space-5);
   border: 1px solid var(--sl-border);
   border-radius: var(--sl-radius-2);
@@ -7951,7 +8011,10 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
     box-shadow var(--sl-time-base) var(--sl-ease-out);
 }
 
-.sl-opt-tile:hover {
+/* A plate of the preset gallery lifts under the pointer exactly as the tile around it does */
+.sl-opt-tile:hover,
+.sl-profile-panel:hover,
+.sl-opt-tile .sl-radio-group:not(.sl-radio-switch) .sl-radio:hover {
   border-color: var(--sl-border-strong);
   box-shadow: var(--sl-shadow-raised);
 }
@@ -7972,13 +8035,10 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   grid-column: span 6;
 }
 
-.sl-opt-tile-head {
-  display: flex;
-  align-items: center;
-  gap: var(--sl-space-3);
-}
-
-.sl-opt-tile-head .bi {
+/* The heading of a panel and of the activity feed - which also stands outside a panel, on the profile page - is the
+   head of a settings tile: the same chip of tone, the same type. Its row is laid by the forum bar's rule above */
+.sl-opt-tile-head .bi,
+:is(.sl-profile-panel, .sl-profile-feed, .sl-profile-head, .sl-cab-head, .sl-profile-hub-head) h3 > .bi {
   display: grid;
   place-items: center;
   flex: 0 0 var(--sl-size-chip);
@@ -7990,7 +8050,8 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   font-size: var(--sl-size-icon-sm);
 }
 
-.sl-opt-tile-head b {
+.sl-opt-tile-head b,
+:is(.sl-profile-panel, .sl-profile-feed, .sl-profile-head, .sl-cab-head, .sl-profile-hub-head) h3 {
   color: var(--sl-text-strong);
   font-size: var(--sl-font-small);
   font-weight: var(--sl-weight-semibold);
@@ -8004,9 +8065,9 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   line-height: var(--sl-line-normal);
 }
 
-/* A row a fragment renders carries its own bottom margin, which would double the gap the tile already sets */
-.sl-opt-tile .sl-form-row,
-.sl-opt-tile .sl-value-row {
+/* A row standing directly in the tile is spaced by the tile's own gap and drops the margin the row carries; a row
+   inside a form the tile holds - the password form - keeps it, because there nothing else spaces the rows */
+.sl-opt-tile > .sl-form-row {
   margin-bottom: 0;
 }
 
@@ -8028,139 +8089,78 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   box-shadow: var(--sl-avatar-shadow);
 }
 
-/* The account's own timeline, and the one thing on this page read instead of changed: the label runs down a column
-   of its own and the stamp keeps one line at the right, so the dates line up without a table around them */
-.sl-opt-log li {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: baseline;
-  gap: var(--sl-space-3);
-  padding: var(--sl-space-3) 0;
-  border-bottom: 1px solid var(--sl-border-subtle);
-  font-size: var(--sl-font-small);
-}
-
-.sl-opt-log li:last-child {
-  border-bottom: 0;
-}
-
-.sl-opt-log time {
-  color: var(--sl-text-muted);
-  font-size: var(--sl-font-micro);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-/* A tile holding a whole family instead of one setting: the questions become lines, each with its control flush
-   right and a hairline between, so the eye compares them down one column instead of across four tiles */
-.sl-opt-lines {
-  display: grid;
-}
-
-.sl-opt-line {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, auto);
-  align-items: center;
-  gap: var(--sl-space-5);
-}
-
-.sl-opt-lines > .sl-opt-line {
-  padding: var(--sl-space-4) 0;
-  border-top: 1px solid var(--sl-border-subtle);
-}
-
-.sl-opt-lines > .sl-opt-line:first-child {
-  border-top: 0;
-}
-
-/* The controls a line cannot hold at its end - an editor, and anything else that wants the width - drop below the
-   question and keep the same left edge, so the block still reads as one list */
-.sl-opt-line-wide {
-  grid-template-columns: minmax(0, 1fr);
-  align-items: start;
-}
-
-.sl-opt-line-wide > :last-child {
-  width: 100%;
-  margin-top: var(--sl-space-3);
-}
-
-.sl-opt-line .sl-form-label {
-  display: block;
-  color: var(--sl-text-strong);
-  font-size: var(--sl-font-small);
-  font-weight: var(--sl-weight-medium);
-}
-
-.sl-opt-line small {
-  display: block;
-  margin-top: var(--sl-space-1);
-  color: var(--sl-text-muted);
-  font-size: var(--sl-font-small);
-  line-height: var(--sl-line-normal);
-}
-
-/* The same line inside a field grid: the caption goes above its control and the cells fill the tile, in two
-   columns where the tile itself is wide enough to hold two and in one where it is not */
-.sl-opt-fields {
-  display: grid;
-  gap: var(--sl-space-4);
-}
-
-.sl-opt-fields > .sl-opt-line {
-  grid-template-columns: minmax(0, 1fr);
-  align-items: start;
-  gap: var(--sl-space-2);
-}
-
-.sl-opt-fields > .sl-opt-line > :last-child {
-  width: 100%;
-}
-
-.sl-opt-span {
-  grid-column: 1 / -1;
-}
-
-/* The step is the tile and not the window, so it carries the tile's own arithmetic and not a breakpoint: two fields
-   of the 180 the narrowest one needs, the gap between them and the padding the tile holds them in */
-@container sl-form-box (width > 420px) {
-  .sl-opt-fields {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-/* The read-only pair folds on the same step, and it has to: a value track of three quarters leaves the caption 45 points
-   in a tile of two columns, where every caption in this theme wraps to three lines and the tile is read as a column of them */
-@container sl-form-box (width <= 420px) {
-  .sl-opt-tile .sl-value-row {
+/* The rows of a tile are the rows of every form in the tree - caption left, control right, the same two tracks and the
+   same air - and they fold on the tile and never on the window: a tile of two columns is about 250 points, where a
+   caption track of a quarter cannot hold a word. The tile watches itself under a name of its own, because the shared
+   name folds at 900 and would stack every tile there is */
+@container sl-opt-box (width <= 420px) {
+  .sl-opt-tile .sl-form-row {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--sl-space-2);
     align-items: start;
   }
 }
 
-/* How far the profile is filled is drawn by the point ring of the cabinet, at the same size and the same tone, fed by the
-   counted fields instead of by the points - so the two pages say the same thing in one shape and the reader learns it once */
-/* The arc is a custom property and not the markup attribute the cabinet uses, because this figure changes while the member
-   types and only a property can be rewritten without touching the drawn circle */
-[data-sl-meter] .sl-knob-val {
-  stroke-dasharray: var(--sl-d-meter, 0) 100;
+/* The gallery is the one control taller than its caption: the caption meets it at the top, as it meets a textarea */
+.sl-opt-tile .sl-form-row:has(.sl-radio-group:not(.sl-radio-switch)) {
+  align-items: start;
 }
 
-.sl-opt-tile .sl-cab-ring {
-  margin: 0 auto;
+/* The hint of a row stands under its caption, in the muted colour every hint of the tree wears and at the size the
+   element already has; the caption and the hint share one cell so the row keeps its two tracks. The hint wraps to the
+   cell and asks for no width of its own: a hint long enough to ask would size the caption column of the whole form,
+   and it did, for the moments the parser stood on the scripts of the editor before the row could fold */
+.sl-opt-tile .sl-form-row > div > small {
+  display: block;
+  width: 0;
+  min-width: 100%;
+  margin-top: var(--sl-space-2);
+  color: var(--sl-text-muted);
+}
+
+/* A control that does not fill its track - the switch - stands at the right edge of it, where the edge of every full
+   field is */
+.sl-opt-tile .sl-form-field:has(> .sl-radio-switch) {
+  display: flex;
+  justify-content: flex-end;
 }
 
 /* The gallery of theme presets is 127 options and not the two dozen a picture can show, so the pick area is capped
    and scrolls; the switch of a yes/no line is a group too and keeps its own geometry */
+/* A step of air inside the scroll box, because the ring around the picked plate stands outside the plate and a box that
+   scrolls clips whatever crosses its edge */
 .sl-opt-tile .sl-radio-group:not(.sl-radio-switch) {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--sl-avatar-width), 1fr));
+  padding: var(--sl-space-1);
   max-height: var(--sl-opt-max-height);
   overflow-y: auto;
 }
 
+/* Each option is its picture and nothing else: the radio is out of sight the way the one under a switch is (the rule beside
+   that switch), the picture takes the plate, the plate lifts with the tile (the rule beside the tile), and the pick is the ring
+   the file manager draws around a picked tile (the rule beside that tile) */
+.sl-opt-tile .sl-radio-group:not(.sl-radio-switch) .sl-radio {
+  position: relative;
+  display: grid;
+  padding: var(--sl-space-2);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg-muted);
+  transition:
+    border-color var(--sl-time-base) var(--sl-ease-out),
+    box-shadow var(--sl-time-base) var(--sl-ease-out);
+}
+
+.sl-opt-tile .sl-radio-group:not(.sl-radio-switch) .sl-radio:has(input:focus-visible) {
+  box-shadow: var(--sl-shadow-focus);
+}
+
 .sl-opt-tile .sl-radio-group:not(.sl-radio-switch) .sl-avatar {
-  width: var(--sl-avatar-width);
-  height: var(--sl-avatar-height);
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: inherit;
 }
 
 /* The save bar of the shared form, and of that form alone: the password tile keeps its own button, because a bar
@@ -8192,8 +8192,16 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 /* Out of the tab order as well as out of sight: an invisible submit the keyboard still reaches is a button the reader
    cannot see themselves press. The visibility waits for the fade on the way out and never on the way in, which is the
    one delay in the list and the reason the shorthand is not repeated */
+/* And out of the flow: a bar that is not there may not hold its height at the foot of the form, where the next section
+   would otherwise start a bar's height too low */
 [data-sl-dirty="0"] .sl-opt-save {
   visibility: hidden;
+  max-height: 0;
+  margin-top: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-width: 0;
+  overflow: hidden;
   opacity: 0;
   transform: translateY(var(--sl-space-6));
   pointer-events: none;
@@ -8246,12 +8254,14 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 /* Account profile: dense split card with identity rail, trust strip, fact panels and module hub */
-.sl-profile-card {
+/* The card of the profile and the deck of the cabinet are boxed like the tile they hold: the same border and the same
+   radius, and no shadow at rest */
+.sl-profile-card,
+.sl-cab-deck {
   overflow: hidden;
-  border: 1px solid var(--sl-border-subtle);
-  border-radius: var(--sl-radius-3);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
   background: var(--sl-bg);
-  box-shadow: var(--sl-shadow-xs);
 }
 
 .sl-profile-split {
@@ -8419,14 +8429,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   min-width: 0;
 }
 
-.sl-profile-kicker,
-.sl-cab-kicker {
-  color: var(--sl-text-muted);
-  font-size: var(--sl-font-micro);
-  letter-spacing: var(--sl-track-wide);
-  text-transform: uppercase;
-}
-
 .sl-profile-trust {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
@@ -8500,28 +8502,23 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   grid-auto-rows: minmax(var(--sl-info-row-height), 1fr);
 }
 
-.sl-profile-panel {
-  min-width: 0;
-  padding: var(--sl-space-5);
-  border: 1px solid var(--sl-border-subtle);
-  border-radius: var(--sl-radius-3);
-  background: var(--sl-surface);
-}
-
-.sl-profile-panel h3 {
-  display: flex;
-  align-items: center;
-  gap: var(--sl-space-2);
+/* The panel of the cabinet and of the profile is the tile of the settings page - one box, one head - and the rules
+   are the tile's, joined by selector; only the margin under the head is the panel's own, because a tile spaces its
+   children by its gap and the panel's heading stands in normal flow. A heading standing in a head row - the card, the
+   deck, the hub - is spaced by that row and carries none */
+.sl-profile-panel h3,
+.sl-profile-feed h3 {
   margin: 0 0 var(--sl-space-4);
-  color: var(--sl-text-strong);
-  font-size: var(--sl-font-body);
 }
 
-.sl-profile-panel h3 i {
-  color: var(--sl-primary);
+.sl-profile-head h3,
+.sl-cab-head h3,
+.sl-profile-hub-head h3 {
+  margin: 0;
 }
 
-.sl-profile-panel h3 .sl-profile-feed-live {
+.sl-profile-panel h3 .sl-profile-feed-live,
+.sl-profile-feed h3 .sl-profile-feed-live {
   margin-left: auto;
 }
 
@@ -8533,8 +8530,8 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   border-color: var(--sl-proof-border);
 }
 
-.sl-profile-wide.sl-is-warn h3 i {
-  color: var(--sl-danger);
+.sl-profile-wide.sl-is-warn h3 > .bi {
+  background: var(--sl-danger);
 }
 
 .sl-profile-wide .sl-profile-tags + h3 {
@@ -8559,7 +8556,10 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   border-bottom: 0;
 }
 
-.sl-profile-info-row i {
+/* The icon of an info row, of a feed entry and of a cabinet row is one icon */
+.sl-profile-info-row i,
+.sl-profile-entry > i,
+.sl-cab-row > i {
   color: var(--sl-primary);
   text-align: center;
 }
@@ -8610,8 +8610,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   color: var(--sl-text-muted);
 }
 
-.sl-profile-tag i,
-.sl-profile-hub-row span i {
+.sl-profile-tag i {
   margin-right: var(--sl-space-2);
   color: var(--sl-primary);
 }
@@ -8629,25 +8628,12 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   padding: var(--sl-space-3) var(--sl-space-6);
 }
 
-.sl-profile-hub {
-  grid-column: 1 / -1;
-  min-width: 0;
-  padding: var(--sl-space-7) var(--sl-space-8) var(--sl-space-8);
-  border-top: 1px solid var(--sl-border-subtle);
-}
-
 .sl-profile-hub-head {
   display: flex;
-  align-items: end;
+  align-items: center;
   justify-content: space-between;
   gap: var(--sl-space-7);
-}
-
-.sl-profile-hub-head h2 {
-  margin: 0;
-  color: var(--sl-text-strong);
-  font-size: var(--sl-font-h3);
-  line-height: var(--sl-line-tight);
+  min-height: var(--sl-hub-head-height);
 }
 
 .sl-profile-hub-total {
@@ -8659,78 +8645,14 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   margin: 0;
 }
 
-.sl-profile-hub-table {
-  min-width: 0;
-  margin-top: var(--sl-space-6);
-  overflow: hidden;
-  border: 1px solid var(--sl-border-subtle);
-  border-radius: var(--sl-radius-3);
-}
-
+/* A row of the hub is an entry of the activity feed - the count where the entry keeps its date, the module where it
+   keeps its text, the rating and the favourites where it keeps its rating - in the same scroll; it is a step taller,
+   because it carries a chip at either end */
 .sl-profile-hub-row {
-  display: grid;
-  grid-template-columns: 34px minmax(0, 1.4fr) minmax(90px, 0.55fr) minmax(110px, 0.7fr) minmax(90px, 0.55fr);
-  align-items: center;
-  gap: var(--sl-space-4);
   min-height: var(--sl-hub-row-height);
-  padding: 0 var(--sl-space-5);
-  border-bottom: 1px solid var(--sl-border-subtle);
 }
 
-.sl-profile-hub-row:last-child {
-  border-bottom: 0;
-}
-
-a.sl-profile-hub-row:hover {
-  background: var(--sl-surface);
-}
-
-.sl-profile-hub-row > i {
-  color: var(--sl-primary);
-  font-size: var(--sl-size-icon-xs);
-  text-align: center;
-}
-
-.sl-profile-hub-row b {
-  color: var(--sl-text-strong);
-}
-
-.sl-profile-hub-row span {
-  color: var(--sl-text-muted);
-  font-size: var(--sl-font-micro);
-}
-
-.sl-profile-hub-row-head {
-  min-height: var(--sl-hub-head-height);
-  background: var(--sl-surface);
-  color: var(--sl-text-muted);
-  font-size: var(--sl-font-micro);
-  letter-spacing: var(--sl-track-wide);
-  text-transform: uppercase;
-}
-
-.sl-profile-hub-row-head span:first-of-type {
-  grid-column: 2;
-}
-
-.sl-profile-feed {
-  position: relative;
-  margin-top: var(--sl-space-6);
-}
-
-.sl-profile-feed-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sl-space-5);
-}
-
-.sl-profile-feed-title {
-  color: var(--sl-text-strong);
-  font-size: var(--sl-font-body);
-}
-
-/* Live indicator circle; inside the feed it pins to the title line, inside a panel heading it flows to the right corner */
+/* Live indicator circle, flowing to the right corner of the panel heading it stands in */
 .sl-profile-feed-live {
   display: grid;
   place-items: center;
@@ -8740,12 +8662,6 @@ a.sl-profile-hub-row:hover {
   background: var(--sl-chip-bg);
   color: var(--sl-primary);
   font-size: var(--sl-size-icon-xs);
-}
-
-.sl-profile-feed .sl-profile-feed-live {
-  position: absolute;
-  top: -5px;
-  right: 0;
 }
 
 .sl-profile-feed-live i {
@@ -8786,24 +8702,9 @@ a.sl-profile-hub-row:hover {
   padding: 0;
 }
 
+/* The one thing the chip does not say and the tab would otherwise bring: its weight */
 .sl-profile-feed .sl-tabs-link {
-  display: inline-flex;
-  align-items: center;
-  height: var(--sl-size-chip);
-  padding: 0 var(--sl-space-5);
-  border: 0;
-  border-radius: var(--sl-radius-pill);
-  background: var(--sl-bg-subtle);
-  color: var(--sl-text-muted);
-}
-
-.sl-profile-feed .sl-tabs-link:hover {
-  color: var(--sl-text-strong);
-}
-
-.sl-profile-feed .sl-tabs-link.sl-is-active {
-  background: var(--sl-primary-strong);
-  color: var(--sl-on-solid);
+  font-weight: var(--sl-weight-normal);
 }
 
 .sl-profile-feed .sl-tabs-content {
@@ -8815,8 +8716,9 @@ a.sl-profile-hub-row:hover {
   padding: 0;
 }
 
+/* The feed is doubled by the script, so half of its own height is exactly one pass and no figure has to be measured:
+   a distance taken before the avatars had loaded fell short and the loop turned back before the last rows */
 .sl-profile-scroll {
-  --sl-d-distance: 0px;
   --sl-d-duration: 18s;
   position: relative;
   height: var(--sl-scroll-height);
@@ -8859,8 +8761,8 @@ a.sl-profile-hub-row:hover {
   animation-play-state: paused;
 }
 
-/* The spinning indicator freezes together with the hovered feed scroll */
-.sl-profile-feed:has(.sl-profile-scroll:hover) .sl-profile-feed-live i {
+/* The spinning indicator of a panel freezes together with the hovered feed scroll under it */
+:is(.sl-profile-panel, .sl-profile-feed):has(.sl-profile-scroll:hover) .sl-profile-feed-live i {
   animation-play-state: paused;
 }
 
@@ -8873,18 +8775,17 @@ a.sl-profile-hub-row:hover {
   border-bottom: 1px solid var(--sl-border-subtle);
 }
 
-.sl-profile-entry:last-child {
+.sl-profile-entry:last-child,
+.sl-cab-row:last-child {
   border-bottom: 0;
 }
 
-.sl-profile-entry > i {
-  color: var(--sl-primary);
-  text-align: center;
-}
-
-.sl-profile-entry a {
+/* The title of a cabinet row is the title of a feed entry: the same height of row, the same body type, no weight */
+.sl-profile-entry a,
+.sl-cab-row b {
   overflow: hidden;
   color: var(--sl-text-strong);
+  font-weight: var(--sl-weight-normal);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -8893,7 +8794,8 @@ a.sl-profile-hub-row:hover {
   color: var(--sl-primary);
 }
 
-.sl-profile-entry .sl-chip {
+.sl-profile-entry .sl-chip,
+.sl-cab-row .sl-chip {
   margin: 0;
 }
 
@@ -8901,11 +8803,6 @@ a.sl-profile-hub-row:hover {
 .sl-cab-deck {
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
-  overflow: hidden;
-  border: 1px solid var(--sl-border-subtle);
-  border-radius: var(--sl-radius-3);
-  background: var(--sl-bg);
-  box-shadow: var(--sl-shadow-xs);
 }
 
 .sl-cab-rail {
@@ -8977,6 +8874,12 @@ a.sl-profile-hub-row:hover {
 
 /* Counter badge: centered like sl-pm-new, because a single digit is narrower than the min-width and would otherwise sit against the left padding */
 /* The theme has no global border-box, so the badge declares its own: without it the padding is added to the 20px minimum and one digit gets a 32px oval instead of a circle */
+/* A badge asked to hide has to outrank the display the badge itself sets, as the form row does: with one class alone
+   the empty counter of the inner strip stayed on the tile as a red dot with nothing in it */
+.sl-cab-badge.sl-hidden {
+  display: none;
+}
+
 .sl-cab-badge {
   position: absolute;
   top: 8px;
@@ -9086,29 +8989,15 @@ a.sl-profile-hub-row:hover {
   font-size: var(--sl-font-micro);
 }
 
-/* Compact strip of the same tiles for inner cabinet pages */
+/* The inner cabinet pages carry the same tiles as the cabinet home, at the same size - one standard - and the strip
+   only adds the air under it. The floor the tiles had as a compact strip stays as the one reader of its token; the
+   grid track is wider than it wherever the tiles render */
 .sl-cab-nav {
-  --sl-cat-tone: var(--sl-info);
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sl-space-3);
   margin-bottom: var(--sl-space-6);
 }
 
 .sl-cab-nav .sl-cab-act {
-  --sl-size-tile: 34px;
-  flex: 0 0 auto;
-  gap: var(--sl-space-2);
-  padding: var(--sl-space-3) var(--sl-space-4) var(--sl-space-3);
   min-width: var(--sl-cab-act-width);
-}
-
-.sl-cab-nav .sl-cab-act b {
-  font-size: var(--sl-font-micro);
-}
-
-.sl-cab-nav .sl-cab-act .sl-cat-ico .bi {
-  font-size: var(--sl-size-icon-sm);
 }
 
 /* The shelf strip is the cabinet tile strip with a wider minimum: the box, the border, the radius, the hover lift and the badge all come from sl-cab-actions and sl-cab-act */
@@ -9606,11 +9495,6 @@ a.sl-profile-hub-row:hover {
   white-space: nowrap;
 }
 
-.sl-pmf-slot-top time {
-  color: var(--sl-text-muted);
-  font-size: var(--sl-font-micro);
-}
-
 .sl-pmf-slot-subj {
   display: -webkit-box;
   overflow: hidden;
@@ -9878,35 +9762,16 @@ a.sl-profile-hub-row:hover {
   background: linear-gradient(0deg, var(--sl-bg), transparent);
 }
 
+/* A row of the cabinet feeds: the entry of the activity feed with the icon column of the entry and its height; the
+   rest of its rules stand beside the entry's, joined by selector */
 .sl-cab-row {
   display: grid;
-  grid-template-columns: 26px minmax(0, 1fr) auto;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--sl-space-4);
-  min-height: var(--sl-item-height);
+  min-height: var(--sl-entry-height);
   border-bottom: 1px solid var(--sl-border-subtle);
   color: var(--sl-text-muted);
-}
-
-.sl-cab-row:last-child {
-  border-bottom: 0;
-}
-
-.sl-cab-row > i {
-  color: var(--sl-primary);
-  text-align: center;
-}
-
-.sl-cab-row b {
-  overflow: hidden;
-  color: var(--sl-text-strong);
-  font-size: var(--sl-font-small);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.sl-cab-row .sl-chip {
-  margin: 0;
 }
 
 .sl-cab-msg-ava {
@@ -9929,11 +9794,6 @@ a.sl-profile-hub-row:hover {
   margin-top: var(--sl-space-4);
 }
 
-.sl-cab-rss-form .sl-form-control {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
 .sl-cab-rss-form .sl-but {
   flex: 0 0 auto;
   margin: 0;
@@ -9942,10 +9802,6 @@ a.sl-profile-hub-row:hover {
 
 .sl-cab-rss-out:empty {
   display: none;
-}
-
-.sl-profile-panel .sl-profile-feed {
-  margin-top: 0;
 }
 
 @media (max-width: 768px) {
@@ -9977,7 +9833,7 @@ a.sl-profile-hub-row:hover {
   }
 
   to {
-    transform: translateY(calc(-1 * var(--sl-d-distance)));
+    transform: translateY(-50%);
   }
 }
 
@@ -10003,34 +9859,6 @@ a.sl-profile-hub-row:hover {
   .sl-profile-hub-head {
     align-items: flex-start;
     flex-direction: column;
-  }
-
-  .sl-profile-hub-row {
-    grid-template-columns: 30px minmax(0, 1fr) auto;
-    min-height: calc(var(--sl-hub-row-height) + var(--sl-space-4));
-    padding: var(--sl-space-3) var(--sl-space-4);
-    row-gap: var(--sl-space-1);
-  }
-
-  .sl-profile-hub-row > span:nth-of-type(1),
-  .sl-profile-hub-row-head {
-    display: none;
-  }
-
-  .sl-profile-hub-row > i {
-    grid-row: 1 / span 2;
-  }
-
-  .sl-profile-hub-row > b {
-    grid-column: 2 / 4;
-  }
-
-  .sl-profile-hub-row > span:nth-of-type(2) {
-    grid-column: 2;
-  }
-
-  .sl-profile-hub-row > span:nth-of-type(3) {
-    grid-column: 3;
   }
 
   .sl-profile-entry {
@@ -10225,11 +10053,6 @@ a.sl-profile-hub-row:hover {
   flex: 0 0 auto;
   font-size: var(--sl-size-icon-sm);
   margin-top: 1px;
-}
-
-.sl-fm-win .sl-fm-rail-item > span {
-  flex: 1 1 auto;
-  min-width: 0;
 }
 
 .sl-fm-win .sl-fm-rail-item b {
@@ -10532,7 +10355,9 @@ a.sl-profile-hub-row:hover {
   margin: 0;
 }
 
-.sl-fm-win .sl-fm-cell:has(.sl-fm-pick input:checked) .sl-fm-tile {
+/* The same ring marks the picked plate of the preset gallery on the settings page, so one pick looks like one pick everywhere */
+.sl-fm-win .sl-fm-cell:has(.sl-fm-pick input:checked) .sl-fm-tile,
+.sl-opt-tile .sl-radio-group:not(.sl-radio-switch) .sl-radio:has(input:checked) {
   border-color: var(--sl-primary);
   box-shadow: 0 0 0 var(--sl-ring-width) var(--sl-field-ring);
 }

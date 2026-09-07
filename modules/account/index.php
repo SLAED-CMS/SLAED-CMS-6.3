@@ -821,20 +821,31 @@ function logout(): void {
     setRedirect('index.php', true);
 }
 
-# Build one yes/no line of the settings page: the caption names the group, and the group is two radios sharing one name
+# Build one yes/no line of the settings page: the caption names the group, the hint under it says what the yes costs, and the group is two radios sharing one name
 # Anything that is not the stored zero is a yes, which is the reading every one of these switches had before they met here
-function getSetupSwitch(string $capt, string $name, string $valu): array {
+function getSetupSwitch(string $capt, string $name, string $valu, string $hint = ''): array {
     $ids = getFieldIds('', $name);
     return [
         'label' => $capt,
         'label_id' => $ids['label'],
+        'hint' => $hint,
+        'hint_id' => $ids['hint'],
         'control_html' => getTplRadioGroup([
             'labelledby' => $ids['label'],
+            'describedby' => ($hint !== '') ? $ids['hint'] : '',
             'name' => $name,
             'value' => ($valu === '0') ? '0' : '1',
             'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
         ]),
     ];
+}
+
+# The one reading of a preset picked from the gallery: a file name of a picture that really lies in the presets of the current theme, or nothing
+# Both writers of the avatar column - the settings form and the pick that saves itself - read this, so a name neither of them would take is refused in one place
+function getAvatarPreset(string $avat): string {
+    $avat = basename($avat);
+    if ($avat === '' || !preg_match("#\.(gif|png|jpe?g|svg)$#is", $avat)) return '';
+    return file_exists('templates/'.getTheme().'/images/avatars/presets/'.$avat) ? 'presets/'.$avat : '';
 }
 
 # The one declaration of what a filled profile is: the counted controls of the settings form against the columns behind them, each with the value that counts as empty
@@ -853,6 +864,7 @@ function getProfileFillRate(array $info): array {
 }
 
 # The state of the account before anything on the page changes it: what protects it, who sees the address, how many notices are on and how far the profile is filled
+# A state names the category tone it paints with where one passes contrast as text - success and the strong primary - and the warning state carries no category, because that tone needs a step of its own
 function getAccountLamps(array $info, array $lnks, array $fill): array {
     global $conf;
     $haspw = !str_starts_with((string)($info['password'] ?? ''), '!');
@@ -864,32 +876,15 @@ function getAccountLamps(array $info, array $lnks, array $fill): array {
     if (!empty($conf['privat']['act'])) $subs[] = !empty($info['psmail']);
     $ons = count(array_filter($subs));
     $all = count($subs);
+    $ok = ['tone' => 'ok', 'cat' => 1];
+    $info = ['tone' => 'info', 'cat' => 4];
+    $warn = ['tone' => 'warn', 'cat' => 0];
     return [
-        ['tone' => ($haspw) ? 'ok' : 'warn', 'label' => _SECURITY, 'value' => ($haspw) ? _ACCOUNT_SAFE : _ACCOUNT_NOPASS, 'note' => implode(', ', $ways)],
-        ['tone' => ($seen) ? 'info' : 'ok', 'label' => _EMAIL, 'value' => ($seen) ? _ACCOUNT_SHOWN : _ACCOUNT_HIDDEN, 'note' => ($seen) ? _ACCOUNT_MAILSHOW : _ACCOUNT_MAILHIDE],
-        ['tone' => ($ons === $all) ? 'ok' : 'info', 'label' => _ACCOUNT_MAIL, 'value' => $ons.' / '.$all, 'note' => ($ons === $all) ? _ACCOUNT_MAILALL : _ACCOUNT_MAILOFF],
-        ['tone' => 'info', 'label' => _ACCOUNT_FILLED, 'value' => $fill['rate'].'%', 'note' => _ACCOUNT_LEFT, 'left' => $fill['left'], 'is_meter' => true],
+        (($haspw) ? $ok : $warn) + ['label' => _SECURITY, 'value' => ($haspw) ? _ACCOUNT_SAFE : _ACCOUNT_NOPASS, 'note' => implode(', ', $ways)],
+        (($seen) ? $info : $ok) + ['label' => _EMAIL, 'value' => ($seen) ? _ACCOUNT_SHOWN : _ACCOUNT_HIDDEN, 'note' => ($seen) ? _ACCOUNT_MAILSHOW : _ACCOUNT_MAILHIDE],
+        (($ons === $all) ? $ok : $info) + ['label' => _ACCOUNT_MAIL, 'value' => $ons.' / '.$all, 'note' => ($ons === $all) ? _ACCOUNT_MAILALL : _ACCOUNT_MAILOFF],
+        $info + ['label' => _ACCOUNT_FILLED, 'value' => $fill['rate'].'%', 'note' => _ACCOUNT_LEFT, 'left' => $fill['left'], 'is_meter' => true],
     ];
-}
-
-# The account's own timeline from the columns that already carry a time: registration and last activity from the member row, the linking moment and the last sign-in from each link
-# A sign-in that is not later than the linking is the linking itself and never a second event, so it is left out rather than printed twice
-function getAccountLog(array $info, array $lnks): array {
-    $make = fn(int $time, string $text): array => ['text' => $text, 'time' => $time, 'stamp' => date('c', $time), 'date' => format_time(date('Y-m-d H:i:s', $time), _TIMESTRING)];
-    $rows = [];
-    $regs = (int)strtotime((string)($info['regdate'] ?? ''));
-    if ($regs) $rows[] = $make($regs, _REG);
-    $seen = (int)strtotime((string)($info['lastvis'] ?? ''));
-    if ($seen) $rows[] = $make($seen, _LAST_VISIT);
-    foreach ($lnks as $lnk) {
-        $name = ucfirst((string)$lnk['provider']);
-        $link = (int)($lnk['linked'] ?? 0);
-        $back = (int)($lnk['lastlog'] ?? 0);
-        if ($link) $rows[] = $make($link, sprintf(_ACCOUNT_LINKED, $name));
-        if ($back > $link) $rows[] = $make($back, sprintf(_ACCOUNT_SIGNIN, $name));
-    }
-    usort($rows, fn(array $one, array $two): int => $two['time'] <=> $one['time']);
-    return $rows;
 }
 
 function edithome(): void {
@@ -973,7 +968,6 @@ function edithome(): void {
             'label_id' => $sids['label'],
             'hint' => _SIGNATURE_TEXT,
             'hint_id' => $sids['hint'],
-            'is_span' => true,
             'control_html' => getTplTextarea([
                 'labelledby' => $sids['label'],
                 'describedby' => $sids['hint'],
@@ -988,22 +982,9 @@ function edithome(): void {
                 'required' => '0',
             ]),
         ];
-        $vals = $tpl->getHtmlFrag('field-value', ['label' => _YOURNAME, 'value_text' => $info['name']])
-            .$tpl->getHtmlFrag('field-value', ['label' => _IP, 'value_text' => $info['ip']]);
-        if (!empty($conf['users']['point'])) $vals .= $tpl->getHtmlFrag('field-value', ['label' => _POINTS, 'value_text' => $info['points']]);
-        $tils = [
-            ['icon' => 'person', 'title' => _ACCOUNT_PERSON, 'width' => 4, 'tone' => 0, 'fields' => $flds],
-            ['icon' => 'person-vcard', 'title' => _ACCOUNT_SYSTEM, 'width' => 2, 'tone' => 1, 'text' => _ACCOUNT_FILLNOTE, 'rows_html' => $vals, 'meter' => [
-                'rate' => $fill['rate'],
-                'text' => $fill['rate'].'%',
-                'label' => _ACCOUNT_FILLED,
-                'left' => $fill['left'],
-                'left_label' => _ACCOUNT_LEFT,
-                'is_full' => $fill['rate'] >= 100,
-            ]],
-        ];
-        $xtra = getTplFieldsIn(['field' => $info['field'], 'mod' => $conf['name']]);
-        if ($xtra !== '') $tils[] = ['icon' => 'plus-square-dotted', 'title' => _ACCOUNT_FIELDS, 'width' => 6, 'tone' => 3, 'rows_html' => $xtra];
+        $tils = [['icon' => 'person', 'title' => _ACCOUNT_PERSON, 'width' => 6, 'tone' => 0, 'fields' => $flds]];
+        $xtra = getFieldsInRows(['field' => $info['field'], 'mod' => $conf['name']]);
+        if ($xtra) $tils[] = ['icon' => 'plus-square-dotted', 'title' => _ACCOUNT_FIELDS, 'width' => 6, 'tone' => 3, 'fields' => $xtra];
         $secs[] = ['id' => 'personal', 'icon' => 'person-lines-fill', 'title' => _PERSONALINFO, 'inform' => true, 'tiles' => $tils];
         $arul = getUploadPlaceRule('users.avatar');
         $take = getVar('post', 'filepath', 'raw', '');
@@ -1027,6 +1008,7 @@ function edithome(): void {
             'title' => _AVATAR,
             'width' => 2,
             'tone' => 3,
+            'face_id' => 'f-face',
             'face_src' => getUserAvatarUrl($info),
             'face_alt' => _AVATAR,
             'text' => sprintf(_AVATARINFO, $conf['users']['awidth'], $conf['users']['aheight'], filterSize($conf['users']['amaxsize'])),
@@ -1050,13 +1032,19 @@ function edithome(): void {
         }
         if ($aset) {
             $aids = getFieldIds('', 'avatar');
-            $tils[] = ['width' => 4, 'tone' => 3, 'fields' => [[
-                'label' => _AVATARSAVE,
-                'label_id' => $aids['label'],
-                'hint' => _AVATARSELECT,
-                'hint_id' => $aids['hint'],
-                'is_span' => true,
-                'control_html' => getTplRadioGroup([
+            $tils[] = [
+                'icon' => 'images',
+                'title' => _AVATARSAVE,
+                'title_id' => $aids['label'],
+                'text' => _AVATARSELECT,
+                'text_id' => $aids['hint'],
+                'width' => 4,
+                'tone' => 3,
+                'hx_post' => 'index.php?name='.$conf['name'].'&op=setavatar',
+                'hx_params' => 'avatar,token',
+                'hx_target' => '#f-face',
+                'done_text' => _SUCCSAVE,
+                'rows_html' => getTplRadioGroup([
                     'labelledby' => $aids['label'],
                     'describedby' => $aids['hint'],
                     'name' => 'avatar',
@@ -1064,7 +1052,7 @@ function edithome(): void {
                     'switch' => false,
                     'options' => $aset,
                 ]),
-            ]]];
+            ];
         }
         $secs[] = ['id' => 'avatar', 'icon' => 'person-badge', 'title' => _AVATARSETUP, 'inform' => true, 'tiles' => $tils];
         $extra = $tpl->getHtmlFrag('hidden', ['name_attr' => 'user_name', 'value_attr' => $info['name']]);
@@ -1076,28 +1064,28 @@ function edithome(): void {
                 $sopt .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$numb, 'label_text' => (string)$numb, 'is_selected' => $numb == $info['storynum']]);
                 $numb++;
             }
-            $lins[] = ['label' => _C_12, 'label_for' => 'f-story', 'control_html' => $tpl->getHtmlFrag('select', [
+            $lins[] = ['label' => _C_12, 'label_for' => 'f-story', 'hint' => _ACCOUNT_STORYNOTE, 'hint_id' => 'f-story-hint', 'control_html' => $tpl->getHtmlFrag('select', [
                 'name_attr' => 'story',
                 'input_id' => 'f-story',
+                'describedby' => 'f-story-hint',
                 'options_html' => $sopt,
             ])];
         } else {
             $extra .= $tpl->getHtmlFrag('hidden', ['name_attr' => 'story', 'value_attr' => $conf['news']['num'] ?? 0]);
         }
-        $lins[] = getSetupSwitch(_RNEWSLETTER, 'news', (string)$info['newslet']);
-        if (is_active('forum')) $lins[] = getSetupSwitch(_FSMAIL, 'fsmail', (string)$info['fsmail']);
-        if (!empty($conf['privat']['act'])) $lins[] = getSetupSwitch(_PSMAIL, 'psmail', (string)$info['psmail']);
-        $tils = [['width' => 6, 'tone' => 1, 'lines' => $lins]];
+        $lins[] = getSetupSwitch(_RNEWSLETTER, 'news', (string)$info['newslet'], _ACCOUNT_NEWSNOTE);
+        if (is_active('forum')) $lins[] = getSetupSwitch(_FSMAIL, 'fsmail', (string)$info['fsmail'], _ACCOUNT_FSMAILNOTE);
+        if (!empty($conf['privat']['act'])) $lins[] = getSetupSwitch(_PSMAIL, 'psmail', (string)$info['psmail'], _ACCOUNT_PSMAILNOTE);
+        $tils = [['icon' => 'envelope-paper', 'title' => _ACCOUNT_MAILHEAD, 'width' => 6, 'tone' => 1, 'fields' => $lins]];
         $secs[] = ['id' => 'mail', 'icon' => 'envelope-paper', 'title' => _ACCOUNT_MAIL, 'inform' => true, 'tiles' => $tils];
-        $lins = [getSetupSwitch(_ALLOWUSERS, 'view', (string)$info['viewmail'])];
-        $lins[] = getSetupSwitch(_ACTIVATEPERSONAL, 'blockon', (string)$info['blockon']);
+        $lins = [getSetupSwitch(_ALLOWUSERS, 'view', (string)$info['viewmail'], _ACCOUNT_VIEWNOTE)];
+        $lins[] = getSetupSwitch(_ACTIVATEPERSONAL, 'blockon', (string)$info['blockon'], _ACCOUNT_BLOCKNOTE);
         $mids = getFieldIds('', 'block');
         $lins[] = [
             'label' => _MENUCONF,
             'label_id' => $mids['label'],
             'hint' => _MENUINFO,
             'hint_id' => $mids['hint'],
-            'is_wide' => true,
             'control_html' => getTplTextarea([
                 'labelledby' => $mids['label'],
                 'describedby' => $mids['hint'],
@@ -1123,22 +1111,23 @@ function edithome(): void {
             }
         }
         if ($tcnt > 1) {
-            $lins[] = ['label' => _THEME, 'label_for' => 'f-theme', 'control_html' => $tpl->getHtmlFrag('select', [
+            $lins[] = ['label' => _THEME, 'label_for' => 'f-theme', 'hint' => _ACCOUNT_THEMENOTE, 'hint_id' => 'f-theme-hint', 'control_html' => $tpl->getHtmlFrag('select', [
                 'name_attr' => 'theme',
                 'input_id' => 'f-theme',
+                'describedby' => 'f-theme-hint',
                 'options_html' => $topt,
             ])];
         }
-        $tils = [['width' => 6, 'tone' => 2, 'lines' => $lins]];
+        $tils = [['icon' => 'shield-lock', 'title' => _ACCOUNT_PRIVHEAD, 'width' => 6, 'tone' => 2, 'fields' => $lins]];
         $secs[] = ['id' => 'privacy', 'icon' => 'shield-lock', 'title' => _ACCOUNT_PRIVACY, 'inform' => true, 'tiles' => $tils];
         if (str_starts_with((string)($info['password'] ?? ''), '!')) {
-            $keys = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _OAUTHNOPW])
-                .$tpl->getHtmlFrag('link', [
-                    'href' => getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']),
-                    'title' => _PASSWORDLOST,
-                    'label' => _PASSWORDLOST,
-                    'is_footer_button' => true,
-                ]);
+            $note = _OAUTHNOPW;
+            $keys = $tpl->getHtmlFrag('link', [
+                'href' => getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']),
+                'title' => _PASSWORDLOST,
+                'label' => _PASSWORDLOST,
+                'is_footer_button' => true,
+            ]);
         } else {
             $pass = $tpl->getHtmlFrag('form-field-row', [
                 'label_for' => 'f-newpass',
@@ -1175,15 +1164,15 @@ function edithome(): void {
                     'is_required' => true,
                 ]),
             ]);
-            $keys = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PASSTEXT]).$tpl->getHtmlPart('form-add', [
+            $note = _PASSTEXT;
+            $keys = $tpl->getHtmlPart('form-add', [
                 'action' => 'index.php?name='.$conf['name'],
                 'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$pass,
                 'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'savepass', 'label' => _SAVECHANGES]),
             ]);
         }
         $secs[] = ['id' => 'keys', 'icon' => 'key', 'title' => _PASSSETUP, 'tiles' => [
-            ['icon' => 'shield-plus', 'title' => _PASSWORD, 'width' => 3, 'tone' => 4, 'rows_html' => $keys],
-            ['icon' => 'clock-history', 'title' => _ACCOUNT_LOG, 'width' => 3, 'tone' => 0, 'log' => getAccountLog($info, $lnks)],
+            ['icon' => 'shield-plus', 'title' => _PASSWORD, 'width' => 6, 'tone' => 4, 'text' => $note, 'rows_html' => $keys],
         ]];
         $orws = [];
         foreach ($lnks as $lnk) {
@@ -1227,10 +1216,11 @@ function edithome(): void {
                 $last = $key;
             }
             if (!empty($errs[$sec['id']])) $secs[$key]['alert_html'] = $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => $errs[$sec['id']]]);
-            $rail[] = ['id' => $sec['id'], 'icon' => $sec['icon'], 'title' => $sec['title']];
+            $rail[] = ['id' => $sec['id'], 'icon' => $sec['icon'], 'title' => $sec['title'], 'at' => count($rail)];
         }
         if ($last >= 0) $secs[$last]['form_close'] = true;
         if (count($rail) < 2) $rail = [];
+        foreach ($rail as $key => $mark) $rail[$key]['of'] = count($rail) - 1;
         echo $tpl->getHtmlFrag('title', ['title' => _CHANGE, 'is_level_one' => true]).getUserNav().$tpl->getHtmlPart('account-settings', [
             'alert_html' => ($tops) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => $tops]) : '',
             'form_action' => 'index.php?name='.$conf['name'],
@@ -1300,8 +1290,7 @@ function savehome(): void {
             $newa = '';
             $path = '';
             if ($avat) {
-                $avat = basename($avat);
-                $newa = (preg_match("#\.(gif|png|jpe?g|svg)$#is", $avat) && file_exists('templates/'.getTheme().'/images/avatars/presets/'.$avat)) ? 'presets/'.$avat : '';
+                $newa = getAvatarPreset($avat);
                 if (!$newa) $stop[] = ['text' => _ERROR_FILE, 'sect' => 'avatar'];
             } elseif ($able && $errn !== UPLOAD_ERR_NO_FILE) {
                 $res = getUploadService()->addUploadedFile($_FILES['userfile'], $rule, $rule['store'], $rule['mod'], getEditorFileOwner((string)$rule['mod']));
@@ -1332,6 +1321,22 @@ function savehome(): void {
     } else {
         edithome();
     }
+}
+
+function setavatar(): void {
+    global $db, $user, $tpl;
+    if (!is_user() || strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'POST') exit;
+    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'account')) {
+        header('HTTP/1.1 403 Forbidden');
+        exit;
+    }
+    $newa = getAvatarPreset((string)getVar('post', 'avatar', 'text'));
+    if ($newa === '' || !$db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET avatar = :avatar WHERE id = :id', ['avatar' => filterText($newa), 'id' => (int)$user[0]])) {
+        header('HTTP/1.1 422 Unprocessable Content');
+        exit;
+    }
+    echo $tpl->getHtmlFrag('image', ['src' => getUserAvatarUrl(['avatar' => $newa]), 'alt' => _AVATAR, 'title' => _AVATAR]);
+    exit;
 }
 
 function savepass(): void {
@@ -1726,6 +1731,7 @@ switch ($op) {
     case 'passmail': passmail(); break;
     case 'activate': activate(); break;
     case 'savepass': savepass(); break;
+    case 'setavatar': setavatar(); break;
     case 'oauth_init': oauthinit(); break;
     case 'oauth': oauthback(); break;
     case 'oauth_finish': oauthfinish(); break;

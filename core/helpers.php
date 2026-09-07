@@ -516,6 +516,17 @@ function getTplUserSearchInput(array $data = []): string {
 
 # Render extra field rows for new/ form layout (getTplFieldsIn() replacement for new/form-add)
 function getTplFieldsIn(array $data = []): string {
+    global $tpl;
+    $out = '';
+    foreach (getFieldsInRows($data) as $row) {
+        $out .= $tpl->getHtmlFrag('form-field-row', ['label_for' => $row['label_for'], 'label' => $row['label'], 'field_html' => $row['control_html']]);
+    }
+    return $out;
+}
+
+# The extra fields of a module as data and not as markup: one entry per declared slot with its caption, the id its caption points at and the rendered control
+# A page that lays the fields out its own way - the settings page puts them on lines - reads this, and getTplFieldsIn() is the same list folded into form rows
+function getFieldsInRows(array $data = []): array {
     global $conf, $tpl;
     $field  = $data['field'] ?? '';
     $mod    = strtolower($data['mod'] ?? '');
@@ -528,7 +539,7 @@ function getTplFieldsIn(array $data = []): string {
     }
     $fieldc = explode('||', $fieldc);
     $i = 0;
-    $out = '';
+    $rows = [];
     foreach ($fieldc as $item) {
         if ($item !== '') {
             preg_match('#(.*)\|(.*)\|(.*)\|(.*)#i', $item, $m);
@@ -562,14 +573,12 @@ function getTplFieldsIn(array $data = []): string {
                     $fid = '';
                     $fhtml = getTplAddDateTime(['name' => 'field[]', 'time' => $fieldin, 'with' => false, 'max' => 10]);
                 }
-                if ($fhtml !== '') {
-                    $out .= $tpl->getHtmlFrag('form-field-row', ['label_for' => $fid, 'label' => getConst($m[1]), 'field_html' => $fhtml]);
-                }
+                if ($fhtml !== '') $rows[] = ['label' => getConst($m[1]), 'label_for' => $fid, 'control_html' => $fhtml];
             }
         }
         $i++;
     }
-    return $out;
+    return $rows;
 }
 
 # Map one declared storage to the room it has, so the editor that renders a field and the write path that stores it read the same number and can never disagree about it

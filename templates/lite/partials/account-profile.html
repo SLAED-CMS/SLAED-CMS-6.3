@@ -31,7 +31,7 @@
   </aside>
   <div class="sl-profile-split-main">
     <div class="sl-profile-head">
-      <span class="sl-profile-kicker">{{ kicker }}</span>
+      <h3><i class="bi bi-person-vcard" aria-hidden="true"></i> {{ kicker }}</h3>
       <div class="sl-meta-actions">{{{ user_menu_html }}}{% if has_admin_actions %}{{{ admin_actions_html }}}{% endif %}{% if share_url %}{% include 'fragments/share.html' %}{% endif %}</div>
     </div>
     <div class="sl-profile-trust">
@@ -72,23 +72,28 @@
     {% endif %}
     {% if has_sign %}<div class="sl-profile-sign"><blockquote>{{{ sign }}}</blockquote></div>{% endif %}
   </div>
-  <section class="sl-profile-hub">
+</div>
+<div class="sl-profile-panel sl-profile-wide sl-cat-tone-1">
     <div class="sl-profile-hub-head">
-      <h2 class="sl-font">{{ hub_title }}</h2>
+      <h3><i class="bi bi-grid" aria-hidden="true"></i> {{ hub_title }}</h3>
       <div class="sl-profile-hub-total">
         <span class="sl-chip sl-chip-info" title="{{ col_items }}"><i class="bi bi-grid" aria-hidden="true"></i> {{ tot_items }}</span>
         {% if tot_rating %}<span class="sl-chip sl-chip-success" title="{{ col_rating }}"><i class="bi bi-star-fill" aria-hidden="true"></i> {{ tot_rating }}</span>{% endif %}
         <span class="sl-chip sl-chip-accent" title="{{ col_favs }}"><i class="bi bi-bookmark-fill" aria-hidden="true"></i> {{ tot_favs }}</span>
+        <span class="sl-profile-feed-live" title="{{ hub_title }}"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></span>
       </div>
     </div>
-    <div class="sl-profile-hub-table">
-      <div class="sl-profile-hub-row sl-profile-hub-row-head"><span>{{ col_module }}</span><span>{{ col_items }}</span><span>{{ col_rating }}</span><span>{{ col_favs }}</span></div>
-      {% for row in hub %}
-      {% if row.href %}<a class="sl-profile-hub-row" href="{{ row.href }}" title="{{ row.title }}">{% else %}<div class="sl-profile-hub-row">{% endif %}
-        <i class="bi bi-{{ row.icon }}" aria-hidden="true"></i><b>{{ row.title }}</b><span>{{ row.count }}</span><span>{% if row.rating %}<i class="bi bi-star-fill" aria-hidden="true"></i>{{ row.rating }}{% endif %}</span><span>{% if row.favs %}<i class="bi bi-bookmark-fill" aria-hidden="true"></i>{{ row.favs }}{% endif %}</span>
-      {% if row.href %}</a>{% else %}</div>{% endif %}
-      {% endfor %}
+    <div class="sl-profile-scroll" data-sl-profile-scroll>
+      <div class="sl-profile-scroll-feed">
+        {% for row in hub %}
+        <div class="sl-profile-entry sl-profile-hub-row">
+          <span class="sl-chip sl-chip-info" title="{{ col_items }}"><i class="bi bi-grid" aria-hidden="true"></i> {{ row.count }}</span>
+          <i class="bi bi-{{ row.icon }}" aria-hidden="true"></i>
+          <a{% if row.href %} href="{{ row.href }}"{% endif %} title="{{ row.title }}">{{ row.title }}</a>
+          <span class="sl-profile-hub-total">{% if row.rating %}<span class="sl-chip sl-chip-success" title="{{ col_rating }}"><i class="bi bi-star-fill" aria-hidden="true"></i> {{ row.rating }}</span>{% endif %}{% if row.favs %}<span class="sl-chip sl-chip-accent" title="{{ col_favs }}"><i class="bi bi-bookmark-fill" aria-hidden="true"></i> {{ row.favs }}</span>{% endif %}</span>
+        </div>
+        {% endfor %}
+      </div>
     </div>
-    {{{ feed_html }}}
-  </section>
 </div>
+<div class="sl-profile-panel sl-profile-wide sl-cat-tone-2">{{{ feed_html }}}</div>

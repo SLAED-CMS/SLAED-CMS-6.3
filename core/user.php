@@ -374,8 +374,8 @@ function getUserNavItems(bool $home = false): array {
         ];
     }
     $items[] = ['label' => _INFO, 'title' => _PERSONALINFO, 'href' => 'index.php?name=account&op=view&id='.$uid, 'icon' => 'person-vcard'];
-    $items[] = ['label' => _CHANGE, 'title' => _CHANGE, 'href' => 'index.php?name=account&op=edithome', 'icon' => 'gear'];
-    $items[] = ['label' => _LOGOUT, 'title' => _LOGOUT, 'href' => 'index.php?name=account&op=logout', 'icon' => 'box-arrow-right'];
+    $items[] = ['label' => _CHANGE, 'title' => _CHANGE, 'href' => 'index.php?name=account&op=edithome', 'icon' => 'gear', 'sub' => _ACCOUNT_SETUPNOTE];
+    $items[] = ['label' => _LOGOUT, 'title' => _LOGOUT, 'href' => 'index.php?name=account&op=logout', 'icon' => 'box-arrow-right', 'sub' => _ACCOUNT_EXITNOTE];
     foreach ($items as $pos => $item) {
         $items[$pos]['tone'] = $pos % 6;
         if (!isset($item['sub'])) $items[$pos]['sub'] = ($item['title'] !== $item['label']) ? $item['title'] : '';
@@ -1249,6 +1249,7 @@ function getProfileLastView(int $uid): string {
     }
     return $tpl->getHtmlPart('account-profile-feed', [
         'title' => _LASTACTIVITY,
+        'icon' => 'activity',
         'tabs_html' => getNaviTabs(0, 'profeed', $tabs, $texts),
     ]);
 }

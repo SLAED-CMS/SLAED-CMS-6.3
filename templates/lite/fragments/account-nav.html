@@ -1,9 +1,10 @@
-<nav class="sl-cab-nav">
+<nav class="sl-cab-actions sl-cab-nav">
   {% for item in items %}
   <a class="sl-cab-act sl-cat-tone-{{ item.tone }}" href="{{ item.href }}" title="{{ item.title }}">
     {% if item.badge_id %}<span class="sl-cab-badge{% if !item.badge %} sl-hidden{% endif %}" id="{{ item.badge_id }}">{{ item.badge }}</span>{% elseif item.badge %}<span class="sl-cab-badge">{{ item.badge }}</span>{% endif %}
     <span class="sl-cat-ico"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i></span>
     <b>{{ item.label }}</b>
+    {% if item.sub %}<small>{{ item.sub }}</small>{% endif %}
   </a>
   {% endfor %}
 </nav>

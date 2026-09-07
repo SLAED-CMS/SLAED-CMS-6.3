@@ -11,7 +11,7 @@
       <span class="sl-chip sl-chip-success"><i class="bi bi-wifi" aria-hidden="true"></i> {{ online_label }}</span>
     </div>
     <div class="sl-profile-chips">
-      {% if rating %}<span class="sl-chip sl-chip-success" title="{{ rating_label }}"><i class="bi bi-star-fill" aria-hidden="true"></i> {{ rating }}</span>{% endif %}
+      {% if rating %}<span class="sl-chip sl-chip-info" title="{{ rating_label }}"><i class="bi bi-star-fill" aria-hidden="true"></i> {{ rating }}</span>{% endif %}
       {% if has_points and not has_level %}<span class="sl-chip sl-chip-info" title="{{ points_label }}"><i class="bi bi-stars" aria-hidden="true"></i> {{ points_text }}</span>{% endif %}
     </div>
     {% if has_level %}
@@ -26,7 +26,7 @@
   </aside>
   <div class="sl-cab-main">
     <div class="sl-cab-head">
-      <span class="sl-cab-kicker">{{ kicker }}</span>
+      <h3><i class="bi bi-house-door" aria-hidden="true"></i> {{ kicker }}</h3>
       {% if lastvisit %}<span class="sl-chip sl-chip-neutral" title="{{ lastvisit_label }}"><i class="bi bi-clock-history" aria-hidden="true"></i> {{ lastvisit }}</span>{% endif %}
     </div>
     <div class="sl-cab-actions">
@@ -40,7 +40,7 @@
       {% endfor %}
     </div>
     {% if pms %}
-    <div class="sl-profile-panel">
+    <div class="sl-profile-panel sl-cat-tone-0">
       <h3><i class="bi bi-envelope" aria-hidden="true"></i> {{ pm_title }}<span class="sl-profile-feed-live" title="{{ pm_title }}"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></span></h3>
       <div class="sl-profile-scroll" data-sl-profile-scroll>
         <div class="sl-profile-scroll-feed">
@@ -54,7 +54,7 @@
   </div>
   <div class="sl-cab-lower">
     {% if favs %}
-    <div class="sl-profile-panel">
+    <div class="sl-profile-panel sl-cat-tone-3">
       <h3><i class="bi bi-star" aria-hidden="true"></i> {{ fav_title }}<span class="sl-profile-feed-live" title="{{ fav_title }}"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></span></h3>
       <div class="sl-profile-scroll" data-sl-profile-scroll>
         <div class="sl-profile-scroll-feed">
@@ -65,18 +65,18 @@
       </div>
     </div>
     {% endif %}
-    {% if activity_html %}<div class="sl-profile-panel">{{{ activity_html }}}</div>{% endif %}
+    {% if activity_html %}<div class="sl-profile-panel sl-cat-tone-1">{{{ activity_html }}}</div>{% endif %}
     {% if has_rss %}
-    <div class="sl-profile-panel">
+    <div class="sl-profile-panel sl-cat-tone-2">
       <h3><i class="bi bi-rss" aria-hidden="true"></i> {{ rss_title }}</h3>
       {% if rss_options_html %}
       <form class="sl-cab-rss-form" method="post" action="{{ rss_action }}" hx-post="{{ rss_action }}" hx-target="#repcabrss" hx-swap="innerHTML" hx-push-url="false">
-        <select class="sl-form-control" name="url" title="{{ rss_select_label }}">{{{ rss_options_html }}}</select>
+        <select class="sl-field" name="url" title="{{ rss_select_label }}">{{{ rss_options_html }}}</select>
         <button class="sl-but" type="submit">{{ rss_select_label }}</button>
       </form>
       {% endif %}
       <form class="sl-cab-rss-form" method="post" action="{{ rss_action }}" hx-post="{{ rss_action }}" hx-target="#repcabrss" hx-swap="innerHTML" hx-push-url="false">
-        <input class="sl-form-control" type="text" name="url" maxlength="200" placeholder="{{ rss_url_label }}" title="{{ rss_url_label }}">
+        <input class="sl-field" type="text" name="url" maxlength="200" placeholder="{{ rss_url_label }}" title="{{ rss_url_label }}">
         <button class="sl-but" type="submit">{{ ok_label }}</button>
       </form>
     </div>

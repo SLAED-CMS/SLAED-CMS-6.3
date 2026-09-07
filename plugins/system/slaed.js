@@ -1126,7 +1126,6 @@
             feed.appendChild(clone);
         });
         window.requestAnimationFrame(function () {
-            view.style.setProperty('--sl-d-distance', feed.scrollHeight / 2 + 'px');
             view.style.setProperty('--sl-d-duration', Math.max(15, items.length * 3) + 's');
             view.classList.add('sl-is-scrolling');
         });
@@ -1161,12 +1160,20 @@
         if (!secs.length) return;
         rail.setAttribute('data-sl-spy-ready', '1');
         var at = 0;
+        // The road walked so far is the distance to the icon of the current mark, written as a share of the rail's width so the
+        // stylesheet can draw it; the marks land where their fractions put them, which is why the figure is measured and not derived
         var draw = function () {
             for (var j = 0; j < marks.length; j++) {
                 marks[j].setAttribute('aria-current', j === at ? 'true' : 'false');
                 marks[j].setAttribute('data-sl-spy-done', j < at ? '1' : '0');
             }
+            var icon = marks[at] ? marks[at].querySelector('.bi') : null;
+            if (!icon) return;
+            var box = rail.getBoundingClientRect();
+            var dot = icon.getBoundingClientRect();
+            if (box.width) rail.style.setProperty('--sl-d-spy', ((dot.left + dot.width / 2 - box.left) / box.width * 100) + '%');
         };
+        window.addEventListener('resize', draw, { passive: true });
         var watch = new IntersectionObserver(function (rows) {
             for (var k = 0; k < rows.length; k++) {
                 if (!rows[k].isIntersecting) continue;
@@ -1230,9 +1237,13 @@
         for (var i = 0; i < list.length; i++) setDirtyScope(list[i]);
     }
 
+    // A control that saves itself the moment it changes - the gallery pick posting over htmx - is not an unsaved change
     function setDirtyScope(scope) {
         scope.setAttribute('data-sl-dirty', '0');
-        var wake = function () { scope.setAttribute('data-sl-dirty', '1'); };
+        var wake = function (event) {
+            if (event.target && event.target.closest && event.target.closest('[hx-post]')) return;
+            scope.setAttribute('data-sl-dirty', '1');
+        };
         scope.addEventListener('input', wake);
         scope.addEventListener('change', wake);
         scope.addEventListener('click', function (event) {
@@ -2058,7 +2069,18 @@
             if (detail && rows && query) window.htmx.ajax('GET', query, { source: detail, target: rows, swap: 'innerHTML' });
         }
         setFavoriteBurst();
+        setSwapDone(event);
     });
+
+    // A request whose source carries the done text confirms its swap with the toast; the favorite star has its own
+    // moment for that, after the burst, and is left to it
+    function setSwapDone(event) {
+        var conf = event.detail ? event.detail.requestConfig : null;
+        var from = conf && conf.elt && conf.elt.getAttribute ? conf.elt : null;
+        if (!from || from.closest('[data-sl-fav]')) return;
+        var done = from.getAttribute('data-sl-done') || '';
+        if (done !== '') setToast(done);
+    }
 
     window.addEventListener('resize', refitFloating);
     window.addEventListener('scroll', refitFloating, true);
