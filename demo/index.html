@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Стенд оформления SLAED CMS — две серии вариантов</title>
+  <title>Стенд оформления SLAED CMS — 18 новых презентаций</title>
   <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
   <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
   <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
@@ -12,18 +12,17 @@
 <body class="sl-summer" data-demo-gallery>
   <div class="sl-wrp">
     <div class="demo-hero">
-      <h1 class="sl-font">Стенд оформления: две серии вариантов</h1>
-      <p>Первая серия — презентационная страница <code>index.php?name=main</code>. Вторая — отдел настроек аккаунта
-      <code>index.php?name=account&amp;op=edithome</code>. Каждый вариант — целая страница в настоящей обвязке сайта:
-      та же шапка, то же меню, тот же подвал, те же CSS-переменные и классы темы <code>lite</code>.</p>
-      <p>Наполнение внутри серии одинаковое до буквы — иначе сравнивались бы тексты, а не оформление. Ни один вариант
-      ничего не добавляет в тему: всё, что нужно варианту сверх темы, живёт в единственном блоке
-      <code>&lt;style&gt;</code> внутри его файла, а общий ритм задаёт <code>assets/demo.css</code>.</p>
-      <p>Плитки ниже — живые страницы во фреймах, а не картинки, поэтому анимация в них идёт по-настоящему.
-      Варианты, отвечающие на курсор или на ввод, ждут указателя на самой странице варианта.</p>
+      <h1 class="sl-font">SLAED CMS 8 — новая коллекция</h1>
+      <p>Презентационная страница: <strong>00 — ваш лидер</strong>, <strong>01–06 — шесть его интерпретаций</strong>,
+      <strong>07–18 — двенадцать вариантов по референсам</strong>. Откройте страницу, чтобы рассмотреть детали,
+      переключить период графика, найти модуль в таблице и попробовать состав сайта.</p>
+      <p>Каждый вариант получил собственную композицию и палитру. Примеры статистики подписаны внутри страниц.
+      Остальные серии стенда — настройки, добавление файла и фавориты — расположены ниже.</p>
+      <p>Галерея показывает живые страницы. Цветовую схему можно переключить для всей коллекции;
+      сезонные переключатели относятся к сериям, использующим обвязку темы lite.</p>
       <div class="demo-hero-tools">
         <button type="button" class="sl-but" data-demo-set="mode" data-demo-value="light">Светлая</button>
-        <button type="button" class="sl-but" data-demo-set="mode" data-demo-value="auto">Системная</button>
+        <button type="button" class="sl-but" data-demo-set="mode" data-demo-value="auto">По умолчанию</button>
         <button type="button" class="sl-but" data-demo-set="mode" data-demo-value="dark">Тёмная</button>
         <button type="button" class="sl-but" data-demo-set="season" data-demo-value="sl-winter">Зима</button>
         <button type="button" class="sl-but" data-demo-set="season" data-demo-value="sl-spring">Весна</button>
@@ -47,12 +46,15 @@
       };
 
       function drawCard(v, i) {
-        const src = v.file + '?bare=1&mode=' + state.mode + '&season=' + state.season;
-        const no = String(i + 1).padStart(2, '0');
+        const main = /^\d{2}-/.test(v.file);
+        const mode = main ? (v.file.startsWith('14-') || v.file.startsWith('18-') ? 'light' : 'dark') : 'auto';
+        const src = v.file + '?bare=1&mode=' + (state.mode === 'auto' ? mode : state.mode) + '&season=' + state.season;
+        const href = src.replace('?bare=1&', '?');
+        const no = v.file.match(/^(\d{2})-/)?.[1] || String(i + 1).padStart(2, '0');
         return '<article class="demo-card">'
           + '<div class="demo-card-frame"><iframe src="' + src + '" loading="lazy" title="' + v.title + '"></iframe></div>'
           + '<div class="demo-card-body">'
-          + '<h2><a href="' + v.file + '" title="' + v.title + '">' + no + ' &middot; ' + v.title + '</a></h2>'
+          + '<h2><a href="' + href + '" title="' + v.title + '">' + no + ' &middot; ' + v.title + '</a></h2>'
           + '<p>' + v.note + '</p>'
           + '<div class="demo-tags">' + v.tags.map((t) => '<span class="demo-tag">' + t + '</span>').join('') + '</div>'
           + '</div></article>';
