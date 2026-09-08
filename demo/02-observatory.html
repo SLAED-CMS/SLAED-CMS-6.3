@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Обсерватория — SLAED CMS 8</title>
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<link rel="stylesheet" href="assets/demo.css">
+<link rel="stylesheet" href="assets/deck.css">
+<script src="assets/demo.js" defer></script>
+<script src="assets/deck.js" defer></script>
+<style>
+/* 02 · Observatory. The leader's DNA with no sidebar: a sticky top bar carries the map, a full-width telemetry
+   wall carries the title, and the instruments fall into two masonry columns - a week x hour matrix, three
+   gauges, a radar of the principles, a timeline, the guard court, the registry, the commits. Cooler blue. */
+.p-page {
+  --p-bg: light-dark(#eef4fa, #061019);
+  --p-bg2: light-dark(#e3ecf5, #081726);
+  --p-panel: light-dark(#ffffff, #0a1a2a);
+  --p-panel2: light-dark(#f3f8fc, #0e2234);
+  --p-line: light-dark(#d6e3ee, #17364d);
+  --p-line2: light-dark(#bcd0e0, #245069);
+  --p-ink: light-dark(#071522, #eaf7ff);
+  --p-ink2: light-dark(#2b4558, #b3d2e6);
+  --p-muted: light-dark(#5f7a8f, #7ea2ba);
+  --p-accent: light-dark(#0284c7, #7dd3fc);
+  --p-accent2: light-dark(#036aa3, #38bdf8);
+  --p-good: light-dark(#0f9d6f, #6ee7b7);
+  --p-warn: light-dark(#b7791f, #fcd34d);
+  --p-bad: light-dark(#c2344f, #fb7d92);
+  --p-info: light-dark(#6d5ce6, #b7a6ff);
+  --p-on-accent: light-dark(#ffffff, #061019);
+  --p-grid: light-dark(rgba(2, 132, 199, 0.07), rgba(125, 211, 252, 0.045));
+  --p-glow: light-dark(0 8px 26px rgba(2, 132, 199, 0.14), 0 0 30px rgba(125, 211, 252, 0.2));
+  --p-shadow: light-dark(0 10px 30px rgba(7, 21, 34, 0.08), 0 18px 55px rgba(0, 0, 0, 0.32));
+  --p-radius: 14px;
+  background:
+    radial-gradient(900px 480px at 18% -120px, light-dark(rgba(2, 132, 199, 0.10), rgba(56, 189, 248, 0.13)), transparent 62%),
+    linear-gradient(180deg, light-dark(#eef4fa, #07131f) 0, var(--p-bg) 40%, light-dark(#e9f0f7, #071422) 100%);
+  padding-bottom: 40px;
+}
+
+/* The engineering grid of the leader, fixed behind the whole page */
+.p-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.7;
+  background-image: linear-gradient(var(--p-grid) 1px, transparent 1px), linear-gradient(90deg, var(--p-grid) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: linear-gradient(180deg, #000 0, #000 60%, transparent);
+}
+
+.p-page > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* The sticky top bar: brand, the tab line as the map, the guard switch at the end */
+.v-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  border-bottom: 1px solid var(--p-line);
+  background: color-mix(in srgb, var(--p-bg) 84%, transparent);
+  backdrop-filter: blur(14px);
+}
+
+.v-topbar .p-topbar {
+  padding: 0;
+  min-height: 54px;
+}
+
+.v-topbar .p-brand b {
+  font-size: 15px;
+}
+
+.v-topbar .p-brand small {
+  display: block;
+  font: 600 9px var(--p-mono);
+  letter-spacing: 0.16em;
+  color: var(--p-muted);
+}
+
+.v-topbar .p-tabs-line {
+  border-bottom: 0;
+  align-self: stretch;
+}
+
+.v-topbar .p-tabs-line a {
+  height: 54px;
+  padding: 0 12px;
+  font-size: 12.5px;
+  margin-bottom: 0;
+}
+
+.v-topbar .p-tabs-line a em {
+  font: 600 9.5px var(--p-mono);
+  font-style: normal;
+  color: var(--p-accent);
+  opacity: 0.8;
+}
+
+.v-topbar .p-switch {
+  margin-left: auto;
+}
+
+/* The telemetry wall: a wide response chart, the title laid over its left half */
+.v-wall {
+  position: relative;
+  margin-top: 18px;
+  border: 1px solid var(--p-line);
+  border-radius: var(--p-radius-lg);
+  background:
+    linear-gradient(var(--p-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--p-grid) 1px, transparent 1px),
+    linear-gradient(180deg, color-mix(in srgb, var(--p-panel) 88%, transparent), color-mix(in srgb, var(--p-panel2) 80%, transparent));
+  background-size: 24px 24px, 24px 24px, auto;
+  box-shadow: var(--p-shadow);
+  overflow: hidden;
+}
+
+.v-wall {
+  min-height: 330px;
+}
+
+.v-wall-chart {
+  position: absolute;
+  inset: 16px 12px 8px;
+  height: auto;
+}
+
+.v-wall-shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--p-panel) 96%, transparent) 0, color-mix(in srgb, var(--p-panel) 90%, transparent) 34%, transparent 64%);
+}
+
+.v-wall-copy {
+  position: relative;
+  z-index: 1;
+  width: min(560px, 56%);
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 30px 0 26px 30px;
+  pointer-events: none;
+}
+
+.v-wall-copy .p-h1 {
+  font-size: clamp(32px, 3.3vw, 52px);
+}
+
+.v-wall-copy .p-lead {
+  font-size: 15px;
+  max-width: 52ch;
+}
+
+.v-wall-copy .p-btn {
+  pointer-events: auto;
+}
+
+.v-wall-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.v-wall-tags {
+  position: absolute;
+  right: 16px;
+  top: 14px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  pointer-events: none;
+}
+
+.v-kpis {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.v-kpis .p-kpi b {
+  font-size: 26px;
+}
+
+/* Two masonry columns of instruments */
+.v-masonry {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: var(--p-gap);
+  margin-top: 18px;
+}
+
+.v-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--p-line);
+}
+
+.v-head .p-h2 {
+  font-size: 17px;
+  white-space: nowrap;
+}
+
+.v-head > p {
+  margin-left: auto;
+  min-width: 0;
+  font-size: 11.5px;
+  color: var(--p-muted);
+  text-align: right;
+}
+
+.v-head > .p-seg,
+.v-head > .p-switch,
+.v-head > .p-search,
+.v-head > .p-chip {
+  margin-left: auto;
+}
+
+.v-head > p + * {
+  margin-left: 0;
+}
+
+.v-sums {
+  display: flex;
+  gap: 18px;
+  align-items: end;
+  padding: 10px 14px 0;
+}
+
+.v-sums div {
+  font: 600 10px var(--p-mono);
+  letter-spacing: 0.08em;
+  color: var(--p-muted);
+}
+
+.v-sums b {
+  display: block;
+  font-size: 21px;
+  letter-spacing: -0.03em;
+  color: var(--p-ink);
+  font-family: var(--p-font);
+}
+
+/* The matrix: day labels at the left, hour marks under the canvas */
+.v-heat {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 4px 8px;
+}
+
+.v-heat-days {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 2px 0;
+  font: 600 9.5px var(--p-mono);
+  letter-spacing: 0.08em;
+  color: var(--p-muted);
+}
+
+.v-heat-hours {
+  grid-column: 2;
+  display: flex;
+  justify-content: space-between;
+  font: 600 9.5px var(--p-mono);
+  letter-spacing: 0.08em;
+  color: var(--p-muted);
+}
+
+/* Three gauges in a row, the figure written over the arc */
+.v-gauges {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.v-gauge {
+  position: relative;
+  text-align: center;
+  padding: 6px 4px 8px;
+  border: 1px solid var(--p-line);
+  border-radius: var(--p-radius-sm);
+  background: var(--p-panel2);
+}
+
+.v-gauge-val {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 58px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.v-gauge-val small {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--p-muted);
+  margin-left: 2px;
+}
+
+.v-gauge .p-label {
+  display: block;
+  margin-top: -6px;
+}
+
+.v-cal .p-cal i {
+  aspect-ratio: auto;
+  padding: 7px 0;
+}
+
+.v-dna-list .p-kv {
+  padding: 8px 0;
+}
+
+.v-dna-list .p-kv span {
+  color: var(--p-ink2);
+}
+
+.v-dna-list small {
+  display: block;
+  font-size: 11px;
+  color: var(--p-muted);
+}
+
+.v-sites .p-sites-row {
+  grid-template-columns: repeat(auto-fill, 260px);
+  justify-content: space-between;
+}
+
+.v-pulse {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--p-gap);
+}
+
+.v-pulse .p-card {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+.v-pulse .p-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--pc), transparent);
+}
+
+.v-pulse time {
+  font: 600 10px var(--p-mono);
+  letter-spacing: 0.08em;
+  color: var(--p-accent);
+}
+
+.v-pulse h3 {
+  margin: 4px 0 6px;
+  font-size: 13.5px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.v-final {
+  min-height: 210px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding: 28px;
+}
+
+.v-final .p-h2 {
+  font-size: 26px;
+  max-width: 24ch;
+}
+
+@media (max-width: 1100px) {
+  .v-masonry {
+    grid-template-columns: 1fr;
+  }
+
+  .v-kpis {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .v-pulse {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .v-wall-copy {
+    width: 62%;
+  }
+}
+
+@media (max-width: 720px) {
+  .v-topbar .p-tabs-line {
+    display: none;
+  }
+
+  .v-wall-copy {
+    position: static;
+    width: auto;
+    padding: 18px 16px 0;
+  }
+
+  .v-wall-shade,
+  .v-wall-tags {
+    display: none;
+  }
+
+  .v-wall-chart {
+    --h: 160px;
+  }
+
+  .v-kpis,
+  .v-pulse {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .v-final {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+<body class="sl-summer">
+<div data-site-head></div>
+<main class="p-page">
+<div class="p-progress"></div>
+
+<div class="v-topbar">
+  <div class="p-wrap p-topbar">
+    <div class="p-brand"><img src="../templates/lite/images/logos/slaed-logo-mark-gradient-blue.svg" alt="SLAED"><div><b>SLAED CMS</b><small>OBSERVATORY · 8.0</small></div></div>
+    <nav class="p-tabs p-tabs-line" data-spy aria-label="Разделы">
+      <a href="#wall"><em>00</em>Телеметрия</a>
+      <a href="#matrix"><em>01</em>Матрица</a>
+      <a href="#guard"><em>02</em>Защита</a>
+      <a href="#registry"><em>03</em>Модули</a>
+      <a href="#dev"><em>04</em>Разработка</a>
+      <a href="#sites"><em>05</em>Внедрения</a>
+      <a href="#pulse"><em>06</em>Сообщество</a>
+    </nav>
+    <button type="button" class="p-switch" data-toggle="guard" aria-pressed="true"><span data-toggle-label="guard" data-on="Guard on" data-off="Guard off">Guard on</span><i></i></button>
+  </div>
+</div>
+
+<div class="p-wrap">
+
+<section class="v-wall p-reveal" id="wall">
+  <div class="v-wall-chart" data-chart="area" data-key="response" data-fields="ms,sql" data-names="ответ ms,sql" data-colors="accent,good" data-dash style="--h:300px"></div>
+  <div class="v-wall-shade"></div>
+  <div class="v-wall-tags"><span class="p-chip p-chip-good"><i class="p-dot p-dot-live"></i>live</span><span class="p-chip">RESPONSE · 24H · avg <span data-avg="response:ms">—</span> · peak <span data-peak="response:ms">—</span> ms</span><span class="p-legend"><span><i style="--c:var(--p-accent)"></i>ms</span><span><i style="--c:var(--p-good)"></i>sql</span></span></div>
+  <div class="v-wall-copy">
+    <span class="p-eyebrow">Content Management System · Open Source</span>
+    <h1 class="p-h1">Всё великое <em>просто.</em><br>Но не примитивно.</h1>
+    <p class="p-lead">SLAED — модульная CMS с открытым кодом: контент, пользователи, файлы, поиск и 685+ дополнений в одной системе. Сервер, данные и код остаются под вашим контролем.</p>
+    <div class="v-wall-actions">
+      <a class="p-btn p-btn-fill" href="#matrix"><i class="bi bi-play-fill"></i>Смотреть систему</a>
+      <a class="p-btn" href="../index.php?name=files"><i class="bi bi-download"></i>Скачать 8.0</a>
+    </div>
+  </div>
+</section>
+
+<div class="v-kpis p-reveal">
+  <div class="p-kpi"><b>8.0</b><small>Phoenix · актуальная версия</small></div>
+  <div class="p-kpi"><b>685+</b><small>дополнений в архиве</small></div>
+  <div class="p-kpi"><b>21 <span class="p-unit">год</span></b><small>развития · с 2005</small></div>
+  <div class="p-kpi"><b>MIT</b><small>открытый код</small></div>
+  <div class="p-kpi"><b>0.027 <span class="p-unit">сек</span></b><small>генерация страницы</small></div>
+  <div class="p-kpi"><b>12</b><small>запросов к базе</small></div>
+</div>
+
+<div class="v-masonry">
+  <div class="p-stack">
+
+    <section class="p-card p-reveal" id="matrix">
+      <div class="v-head"><span class="p-no">01</span><span class="p-icon"><i class="bi bi-grid-3x3"></i></span><h2 class="p-h2">Матрица нагрузки</h2><p>неделя × час · хиты</p></div>
+      <div class="p-card-body">
+        <div class="v-heat">
+          <div class="v-heat-days"><span>ПН</span><span>ВТ</span><span>СР</span><span>ЧТ</span><span>ПТ</span><span>СБ</span><span>ВС</span></div>
+          <div data-chart="heat" data-rows="7" data-cols="24" data-color="accent" style="--h:176px"></div>
+          <div class="v-heat-hours"><span>00</span><span>04</span><span>08</span><span>12</span><span>16</span><span>20</span><span>23</span></div>
+        </div>
+      </div>
+      <div class="p-card-foot"><span>Пик приходится на вечер: 21:00 держит 82% дневного максимума</span><span class="p-mono">Statistics · hourly</span></div>
+    </section>
+
+    <section class="p-card p-reveal" id="traffic">
+      <div class="v-head"><span class="p-icon"><i class="bi bi-graph-up-arrow"></i></span><h2 class="p-h2">Трафик</h2>
+        <div class="p-seg" data-periods="30d"><button type="button" data-period-for="traffic" data-period="7d">7 дн</button><button type="button" data-period-for="traffic" data-period="30d">30 дн</button><button type="button" data-period-for="traffic" data-period="90d">90 дн</button></div>
+      </div>
+      <div class="v-sums">
+        <div>ВИЗИТЫ<b data-sum="traffic:visits">—</b></div>
+        <div>ЛЮДИ<b data-sum="traffic:humans">—</b></div>
+        <div>БОТЫ<b data-sum="traffic:bots">—</b></div>
+        <div>ПИК<b data-peak="traffic:visits">—</b></div>
+        <div class="p-end p-legend"><span><i style="--c:var(--p-accent)"></i>визиты</span><span><i style="--c:var(--p-good)"></i>люди</span><span><i style="--c:var(--p-warn)"></i>боты</span></div>
+      </div>
+      <div class="p-card-body"><div data-chart="line" data-key="traffic" data-fields="visits,humans,bots" data-names="визиты,люди,боты" data-colors="accent,good,warn" style="--h:200px"></div></div>
+    </section>
+
+    <section class="p-card p-reveal" id="guard">
+      <div class="v-head"><span class="p-no">02</span><span class="p-icon"><i class="bi bi-shield-lock-fill"></i></span><h2 class="p-h2">Request guard</h2><p>люди, поисковики, AI и боты проходят; атаки уходят в карантин</p></div>
+      <div class="p-card-body">
+        <div class="p-guard p-stage p-stage-glow" data-guard-scene data-lanes="4" style="min-height:280px">
+          <span class="p-guard-tag" style="left:14px;top:12px">01 / INGRESS</span>
+          <span class="p-guard-tag" style="left:46%;top:12px;transform:translateX(-50%)">02 / CLASSIFY + FILTER</span>
+          <span class="p-guard-tag" style="right:14px;top:12px">03 / TRUSTED ZONE</span>
+          <div class="p-gate" data-gate><i class="bi bi-shield-lock-fill"></i></div>
+          <div class="p-quarantine"><span>QUARANTINE</span><b data-guard-deny>0</b></div>
+          <div class="p-house"><i class="bi bi-house-door-fill"></i></div>
+          <span class="p-guard-tag" style="left:14px;bottom:12px"><b data-tick="112,154">128</b> req/min</span>
+          <span class="p-guard-tag" style="right:14px;bottom:12px">passed <b data-guard-allow>0</b> · missed <b data-guard-miss>0</b></span>
+        </div>
+      </div>
+      <div class="p-card-foot"><span>Классификация ≠ блокировка: роботы и AI-поток могут быть разрешены</span><span class="p-chip p-chip-accent" data-toggle-label="guard" data-on="GUARD ON" data-off="GUARD OFF">GUARD ON</span></div>
+    </section>
+
+    <section class="p-card p-reveal" id="registry">
+      <div class="v-head"><span class="p-no">03</span><span class="p-icon"><i class="bi bi-table"></i></span><h2 class="p-h2">Реестр модулей</h2>
+        <label class="p-search"><i class="bi bi-search"></i><input type="search" placeholder="Найти модуль" data-table-search="modules"></label>
+      </div>
+      <div data-table="modules" data-cols="name:Модуль:name,cat:Раздел:chip,hits:Просмотры:num,time:Ответ:ms,share:Нагрузка:bar,status:Статус:state" data-rows="9" data-sort="hits:desc"></div>
+      <div class="p-card-foot"><span>Показано <b data-table-count="modules">9</b> из 685 дополнений архива</span><span class="p-mono">сортировка · клик по заголовку</span></div>
+    </section>
+
+    <section class="p-card p-reveal" id="dev">
+      <div class="v-head"><span class="p-no">04</span><span class="p-icon"><i class="bi bi-git"></i></span><h2 class="p-h2">Development live</h2><p>реальная история master из GitHub</p><span class="p-chip p-chip-accent">HEAD f360f6a</span></div>
+      <div class="p-card-body"><div class="p-stack" style="gap:6px" data-list="commits"></div></div>
+      <div class="p-card-body" style="padding-top:0">
+        <div class="p-between"><span class="p-label">Delivery pipeline</span><span class="p-small p-mono">code → release</span></div>
+        <div class="p-pipe" style="--n:5" data-walk="900">
+          <span class="p-packet" style="--dur:4.5s"></span>
+          <div class="p-pipe-step" data-step><span class="p-icon"><i class="bi bi-code-slash"></i></span><span>CODE</span></div>
+          <div class="p-pipe-step" data-step><span class="p-icon"><i class="bi bi-check2-square"></i></span><span>TEST</span></div>
+          <div class="p-pipe-step" data-step><span class="p-icon"><i class="bi bi-git"></i></span><span>COMMIT</span></div>
+          <div class="p-pipe-step" data-step><span class="p-icon"><i class="bi bi-journal-code"></i></span><span>CHANGELOG</span></div>
+          <div class="p-pipe-step" data-step><span class="p-icon"><i class="bi bi-box-seam"></i></span><span>RELEASE</span></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+  <div class="p-stack">
+
+    <section class="p-card p-reveal">
+      <div class="v-head"><span class="p-icon"><i class="bi bi-speedometer2"></i></span><h2 class="p-h2">Приборы</h2><p>runtime · page cache · база</p></div>
+      <div class="p-card-body">
+        <div class="v-gauges">
+          <div class="v-gauge"><div data-chart="gauge" data-value="27" data-max="100" data-ticks data-color="accent" style="--h:118px"></div><div class="v-gauge-val">27<small>ms</small></div><span class="p-label">Генерация</span></div>
+          <div class="v-gauge"><div data-chart="gauge" data-value="88" data-max="100" data-ticks data-color="good" style="--h:118px"></div><div class="v-gauge-val">88<small>%</small></div><span class="p-label">Cache hit</span></div>
+          <div class="v-gauge"><div data-chart="gauge" data-value="11" data-max="27" data-ticks data-color="info" style="--h:118px"></div><div class="v-gauge-val">11<small>ms</small></div><span class="p-label">DB time</span></div>
+        </div>
+        <div class="p-kv" style="margin-top:10px"><span>Queries</span><b>12 · PDO / MySQL</b></div>
+        <div class="p-kv"><span>Prepares</span><b class="p-good">NATIVE</b></div>
+        <div class="p-kv"><span>Error mode</span><b class="p-good">EXCEPTION</b></div>
+        <div class="p-kv"><span>Page cache 8.0</span><b>body + sidecar</b></div>
+      </div>
+    </section>
+
+    <section class="p-card p-reveal" id="dna">
+      <div class="v-head"><span class="p-icon"><i class="bi bi-fingerprint"></i></span><h2 class="p-h2">DNA продукта</h2><p>шесть измерений</p></div>
+      <div class="p-card-body" style="padding-top:6px">
+        <div data-chart="radar" data-values="92,98,95,96,94,97" data-labels="Простота,Функциональность,Эффективность,Безопасность,Скорость,Модульность" data-names="SLAED 8.0" data-colors="accent" data-max="100" data-tip="0" style="--h:250px"></div>
+        <div class="v-dna-list">
+          <div class="p-kv"><span><b class="p-accent p-mono">01</b> &nbsp;Простота<small>Путь от идеи до публикации короткий.</small></span><b>92</b></div>
+          <div class="p-kv"><span><b class="p-accent p-mono">02</b> &nbsp;Функциональность<small>Модули расширяют, ядро не становится монолитом.</small></span><b>98</b></div>
+          <div class="p-kv"><span><b class="p-accent p-mono">03</b> &nbsp;Эффективность<small>Минимум лишней нагрузки на запрос.</small></span><b>95</b></div>
+          <div class="p-kv"><span><b class="p-accent p-mono">04</b> &nbsp;Безопасность<small>Фильтрация, контроль, журналирование.</small></span><b>96</b></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="p-card p-reveal">
+      <div class="v-head"><span class="p-icon"><i class="bi bi-clock-history"></i></span><h2 class="p-h2">История</h2><p>2005 → 2026</p></div>
+      <div class="p-card-body">
+        <ol class="p-timeline">
+          <li><time>2005</time><b>Старт проекта</b><p>Первый публичный релиз, слоган «Все великое просто».</p></li>
+          <li><time>6.2</time><b>Актуальная публичная версия</b><p>Сборка на slaed.net, HTMX-интерфейс, кэш страниц.</p></li>
+          <li><time>6.3</time><b>Pre-Alpha</b><p>Тестируется сообществом на форуме проекта.</p></li>
+          <li><time>8.0</time><b>Phoenix</b><p>Новое ядро, PDO, request guard, единый кабинет.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="p-card p-reveal">
+      <div class="v-head"><span class="p-icon"><i class="bi bi-list-check"></i></span><h2 class="p-h2">Решения guard</h2><span class="p-chip p-chip-good"><i class="p-dot p-dot-live"></i>live</span></div>
+      <div class="p-card-body p-card-body-tight"><div data-log="guard" data-log-max="6" data-log-every="1900"></div></div>
+      <div class="p-card-body" style="padding-top:0" data-list="classes"></div>
+    </section>
+
+    <section class="p-card p-reveal" id="live">
+      <div class="v-head"><span class="p-icon"><i class="bi bi-reception-4"></i></span><h2 class="p-h2">SLAED.net live</h2><p>snapshot 03–26.08.2026</p></div>
+      <div class="p-card-body">
+        <div class="p-cols" style="--n:2;gap:8px">
+          <div class="p-kpi"><b data-demo-num="10693">0</b><small>visits · period</small></div>
+          <div class="p-kpi"><b data-demo-num="915">0</b><small>main page entrances</small></div>
+          <div class="p-kpi"><b class="p-good">85%</b><small>returning</small></div>
+          <div class="p-kpi"><b class="p-good">100%</b><small>human traffic</small></div>
+        </div>
+        <div class="p-between" style="margin:12px 0 6px"><span class="p-label">Hits by hour</span><span class="p-small p-mono"><b data-tick="72,91">76</b> online</span></div>
+        <div data-bars="hourly" style="--h:56px"></div>
+      </div>
+    </section>
+
+    <section class="p-card p-reveal">
+      <div class="v-head"><span class="p-icon"><i class="bi bi-calendar3"></i></span><h2 class="p-h2">Август 2026</h2><span class="p-chip p-chip-accent">5 коммитов</span></div>
+      <div class="p-card-body p-card-body-tight v-cal"><div data-cal="2026-08" data-cal-marks="24,25,26" data-cal-now="26"></div></div>
+    </section>
+
+  </div>
+</div>
+
+<div class="p-stack" style="margin-top:14px">
+
+  <section class="p-card p-reveal v-sites" id="sites">
+    <div class="v-head"><span class="p-no">05</span><span class="p-icon"><i class="bi bi-window-stack"></i></span><h2 class="p-h2">Сайты на SLAED</h2><p>Не макеты — реальные внедрения из архива проекта · 71 снимок</p></div>
+    <div class="p-card-body"><div class="p-sites p-sites-row" data-demo-sites="8"></div></div>
+    <div class="p-card-foot"><span>Снимки страниц в натуральную ширину 260 px</span><a class="p-accent" href="../uploads/screens/"><i class="bi bi-box-arrow-up-right"></i> Открыть полный каталог</a></div>
+  </section>
+
+  <section class="p-reveal" id="pulse">
+    <div class="p-between" style="margin-bottom:10px"><span class="p-row" style="gap:10px"><span class="p-no">06</span><h2 class="p-h2">Пульс проекта</h2></span><span class="p-small">новости · форум · документация · файлы</span></div>
+    <div class="v-pulse">
+      <section class="p-card" style="--pc:var(--p-accent)"><div class="p-card-head"><span class="p-icon"><i class="bi bi-newspaper"></i></span><b class="p-h3">Новости проекта</b></div><div class="p-card-body"><time>28.11.2025</time><h3>SLAED CMS возвращается — мощнее, быстрее, безопаснее</h3><p class="p-small">Официальная новость проекта остаётся в контентном канале.</p></div><div class="p-card-foot"><span class="p-dot p-dot-live"></span><a class="p-accent" href="../index.php?name=news">Все новости <i class="bi bi-arrow-up-right"></i></a></div></section>
+      <section class="p-card" style="--pc:var(--p-info)"><div class="p-card-head"><span class="p-icon"><i class="bi bi-chat-dots"></i></span><b class="p-h3">Сообщество</b></div><div class="p-card-body"><time>18.07.2025</time><h3>Дата выхода новой версии SLAED CMS 6.3</h3><p class="p-small">Форум остаётся местом обсуждений и истории сообщества.</p></div><div class="p-card-foot"><span class="p-dot p-dot-live"></span><a class="p-accent" href="../index.php?name=forum">Открыть форум <i class="bi bi-arrow-up-right"></i></a></div></section>
+      <section class="p-card" style="--pc:var(--p-good)"><div class="p-card-head"><span class="p-icon"><i class="bi bi-journal-text"></i></span><b class="p-h3">Документация</b></div><div class="p-card-body"><time>CONTENT BASE</time><h3>59 страниц · 8 категорий</h3><p class="p-small">Устройство, темы, модули, блоки — база знаний проекта.</p></div><div class="p-card-foot"><span class="p-dot p-dot-live"></span><a class="p-accent" href="../index.php?name=pages">Читать статьи <i class="bi bi-arrow-up-right"></i></a></div></section>
+      <section class="p-card" style="--pc:var(--p-warn)"><div class="p-card-head"><span class="p-icon"><i class="bi bi-box-seam"></i></span><b class="p-h3">Файлы и расширения</b></div><div class="p-card-body"><time>PROJECT ARCHIVE</time><h3>702 файла · 13 категорий</h3><p class="p-small">Система, модули, блоки, темы, языки — экосистема, а не одна загрузка.</p></div><div class="p-card-foot"><span class="p-dot p-dot-live"></span><a class="p-accent" href="../index.php?name=files">Каталог файлов <i class="bi bi-arrow-up-right"></i></a></div></section>
+    </div>
+  </section>
+
+  <section class="p-card p-reveal" id="voices">
+    <div class="v-head"><span class="p-icon"><i class="bi bi-people-fill"></i></span><h2 class="p-h2">Голоса владельцев</h2><span class="p-chip p-chip-warn">DEMO TEXT · заменить на реальные отзывы</span></div>
+    <div class="p-card-body p-cols" style="--n:3">
+      <article class="p-voice"><p>Перенесли форум за один вечер: восемь лет тем, вложения, права доступа. Утром никто из пользователей не заметил переезда.</p><div class="p-voice-who"><span class="p-avatar">АК</span><div><b>Андрей Кузьмин</b><small>avto-club.ru · сообщество · с 2011</small></div></div></article>
+      <article class="p-voice"><p>Держим сорок разделов на обычном хостинге. Кэш включён, страница собирается быстрее, чем приходит ответ от платёжного шлюза.</p><div class="p-voice-who"><span class="p-avatar" style="--c:var(--p-good)">МС</span><div><b>Марина Соловьёва</b><small>gorod-news.ru · медиа · с 2016</small></div></div></article>
+      <article class="p-voice"><p>Свой модуль записи к мастеру написали за выходные, ядро трогать не пришлось. Обновления с тех пор ставим без правок.</p><div class="p-voice-who"><span class="p-avatar" style="--c:var(--p-info)">ИД</span><div><b>Игорь Демченко</b><small>studio-remont.ru · сервис · с 2019</small></div></div></article>
+    </div>
+  </section>
+
+  <section class="p-band p-reveal v-final" style="background-image:url(../templates/lite/images/seasons/winter.webp)">
+    <div>
+      <span class="p-eyebrow">Все великое просто · 2005 → 2026</span>
+      <h2 class="p-h2" style="margin-top:8px">Скачайте SLAED 8.0 Phoenix и соберите сайт из готовых модулей.</h2>
+      <p class="p-text" style="margin-top:6px;max-width:56ch">Меньше плакатности, больше продукта и движения: обсерватория показывает систему такой, какая она есть.</p>
+    </div>
+    <div class="p-row"><a class="p-btn p-btn-fill" href="../index.php?name=files"><i class="bi bi-download"></i>Скачать систему</a><a class="p-btn" href="../index.php?name=pages"><i class="bi bi-book"></i>Документация</a></div>
+  </section>
+
+</div>
+
+<p class="p-note" style="margin-top:16px"><i class="bi bi-info-circle"></i><span>Графики, матрица, потоки и календарь — иллюстративные данные стенда. Реальные факты: версия, лицензия, число дополнений, коммиты master, снимок статистики и снимки внедрений.</span></p>
+</div>
+</main>
+<div data-site-foot></div>
+</body>
+</html>

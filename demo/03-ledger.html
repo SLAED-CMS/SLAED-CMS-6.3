@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Системный журнал — SLAED CMS 8</title>
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<link rel="stylesheet" href="assets/demo.css">
+<link rel="stylesheet" href="assets/deck.css">
+<script src="assets/demo.js" defer></script>
+<script src="assets/deck.js" defer></script>
+<style>
+/* 03 · Ledger. The leader's DNA in slate and steel: rules instead of glow, tabular numerals, the right sticky
+   column, and tables before charts. A statement header, three ledgers, and small instruments in the margins. */
+.p-page {
+  --p-bg: light-dark(#f2f4f7, #0b1620);
+  --p-bg2: light-dark(#e8ecf1, #0d1a25);
+  --p-panel: light-dark(#ffffff, #10202c);
+  --p-panel2: light-dark(#f6f8fa, #142634);
+  --p-line: light-dark(#dde3ea, #1f3442);
+  --p-line2: light-dark(#c4cfda, #2e4a5c);
+  --p-ink: light-dark(#0f1a24, #e6eef5);
+  --p-ink2: light-dark(#334a5e, #b3c6d6);
+  --p-muted: light-dark(#66798b, #8fa3b4);
+  --p-accent: light-dark(#2b6cb0, #93c5fd);
+  --p-accent2: light-dark(#1f4f85, #60a5fa);
+  --p-good: light-dark(#1e8b5a, #6ee7b7);
+  --p-warn: light-dark(#b06f0a, #fcd34d);
+  --p-bad: light-dark(#c0334c, #fca5a5);
+  --p-info: light-dark(#6b4fd1, #c4b5fd);
+  --p-grid: light-dark(rgba(43, 108, 176, 0.06), rgba(147, 197, 253, 0.04));
+  --p-glow: none;
+  --p-shadow: light-dark(0 6px 20px rgba(15, 26, 36, 0.06), 0 10px 30px rgba(0, 0, 0, 0.25));
+  --p-radius: 8px;
+  --p-radius-sm: 6px;
+  font-variant-numeric: tabular-nums;
+  padding-bottom: 40px;
+}
+
+.v-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 18px;
+  margin-top: 22px;
+}
+
+.v-stage > * {
+  min-width: 0;
+}
+
+.v-aside {
+  position: sticky;
+  top: 16px;
+  align-self: start;
+  display: grid;
+  gap: 10px;
+}
+
+/* The statement header: eyebrow, title, and the six facts as one ruled row */
+.v-statement {
+  padding: 26px 0 0;
+  border-top: 3px solid var(--p-ink);
+}
+
+.v-statement-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  font: 600 11px var(--p-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--p-muted);
+}
+
+.v-statement .p-h1 {
+  margin: 14px 0 10px;
+  font-size: clamp(32px, 3vw, 46px);
+  max-width: 20ch;
+}
+
+.v-statement .p-lead {
+  max-width: 64ch;
+}
+
+.v-facts {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  margin-top: 22px;
+  border-top: 1px solid var(--p-line2);
+  border-bottom: 1px solid var(--p-line2);
+}
+
+.v-facts div {
+  padding: 12px 12px 12px 0;
+  border-right: 1px solid var(--p-line);
+}
+
+.v-facts div + div {
+  padding-left: 12px;
+}
+
+.v-facts div:last-child {
+  border-right: 0;
+}
+
+.v-facts b {
+  display: block;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+.v-facts b small {
+  font-size: 12px;
+  color: var(--p-muted);
+  font-weight: 500;
+}
+
+.v-facts span {
+  display: block;
+  margin-top: 3px;
+  font: 600 10px var(--p-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--p-muted);
+}
+
+/* Ledger sections: a numbered ruled head, no card chrome around the table */
+.v-ledger {
+  margin-top: 28px;
+}
+
+.v-ledger-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 0 10px;
+  border-bottom: 2px solid var(--p-ink);
+}
+
+.v-ledger-head .p-h2 {
+  white-space: nowrap;
+}
+
+.v-ledger-head > p {
+  min-width: 0;
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--p-muted);
+}
+
+.v-ledger-head > .p-search,
+.v-ledger-head > .p-seg,
+.v-ledger-head > .p-switch {
+  margin-left: auto;
+}
+
+.v-ledger-head > p + * {
+  margin-left: 0;
+}
+
+.v-ledger .p-table th {
+  background: transparent;
+  border-bottom: 1px solid var(--p-line2);
+  padding-left: 0;
+}
+
+.v-ledger .p-table td {
+  padding-left: 0;
+}
+
+.v-ledger .p-table td:last-child,
+.v-ledger .p-table th:last-child {
+  padding-right: 0;
+}
+
+.v-filters {
+  display: flex;
+  gap: 6px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--p-line);
+}
+
+.v-filters button {
+  height: 24px;
+  padding: 0 10px;
+  border: 1px solid var(--p-line2);
+  border-radius: 4px;
+  background: transparent;
+  font: 600 10.5px var(--p-mono);
+  letter-spacing: 0.06em;
+  color: var(--p-muted);
+}
+
+.v-filters button[aria-pressed="true"] {
+  background: var(--p-ink);
+  border-color: var(--p-ink);
+  color: var(--p-bg);
+}
+
+.v-ledger-foot {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-top: 1px solid var(--p-line2);
+  font: 11px var(--p-mono);
+  color: var(--p-muted);
+}
+
+.v-commits td .tags {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: 8px;
+}
+
+.v-commits td .tags i {
+  font: 9.5px var(--p-mono);
+  font-style: normal;
+  color: var(--p-muted);
+  border: 1px solid var(--p-line);
+  border-radius: 3px;
+  padding: 1px 4px;
+}
+
+.v-decisions .p-logrow {
+  grid-template-columns: 70px minmax(0, 1fr) 90px;
+  padding: 8px 0;
+  font-size: 12px;
+}
+
+.v-decisions .p-logrow em {
+  text-align: right;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.v-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.v-mini {
+  border-top: 1px solid var(--p-line2);
+  padding-top: 10px;
+}
+
+.v-mini .p-label {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.v-aside .p-card {
+  border-radius: 6px;
+}
+
+.v-aside .p-road a {
+  min-height: 34px;
+}
+
+.v-guard-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 18px;
+  align-items: start;
+}
+
+.v-sites .d-site-cap {
+  border-top: 1px solid var(--p-line);
+  padding-top: 8px;
+}
+
+.v-pulse {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--p-line2);
+}
+
+.v-pulse > div {
+  padding: 14px 14px 14px 0;
+  border-right: 1px solid var(--p-line);
+}
+
+.v-pulse > div + div {
+  padding-left: 14px;
+}
+
+.v-pulse > div:last-child {
+  border-right: 0;
+}
+
+.v-pulse time {
+  font: 10px var(--p-mono);
+  color: var(--p-accent);
+}
+
+.v-pulse h3 {
+  margin: 4px 0 6px;
+  font-size: 13.5px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.v-final {
+  margin-top: 28px;
+  min-height: 190px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding: 26px;
+  border-radius: 8px;
+}
+
+@media (max-width: 1100px) {
+  .v-stage {
+    grid-template-columns: 1fr;
+  }
+
+  .v-aside {
+    display: none;
+  }
+
+  .v-facts {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .v-guard-row,
+  .v-two {
+    grid-template-columns: 1fr;
+  }
+
+  .v-pulse {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .v-facts,
+  .v-pulse {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .v-final {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+<body class="sl-summer">
+<div data-site-head></div>
+<main class="p-page">
+<div class="p-progress"></div>
+<div class="p-wrap">
+<div class="v-stage">
+
+<div>
+  <header class="v-statement p-reveal" id="top">
+    <div class="v-statement-top"><span>SLAED CMS · System ledger</span><span>Snapshot 03–26.08.2026 · master f360f6a</span></div>
+    <h1 class="p-h1">Всё великое <em>просто.</em> Но не примитивно.</h1>
+    <p class="p-lead">SLAED — модульная CMS с открытым исходным кодом: контент, пользователи, файлы, поиск и расширения в одной системе. Никакой SaaS-зависимости — сервер, данные и код остаются под вашим контролем.</p>
+    <div class="v-facts">
+      <div><b>8.0</b><span>Phoenix · версия</span></div>
+      <div><b>685+</b><span>дополнений</span></div>
+      <div><b>21 <small>год</small></b><span>с 2005</span></div>
+      <div><b>MIT</b><span>открытый код</span></div>
+      <div><b>0.027 <small>с</small></b><span>генерация</span></div>
+      <div><b>12</b><span>SQL-запросов</span></div>
+    </div>
+  </header>
+
+  <section class="v-ledger p-reveal" id="registry">
+    <div class="v-ledger-head"><span class="p-no">01</span><h2 class="p-h2">Реестр модулей</h2><p>показано <b data-table-count="modules">16</b> из 685 дополнений архива</p><label class="p-search"><i class="bi bi-search"></i><input type="search" placeholder="Найти модуль" data-table-search="modules"></label></div>
+    <div class="v-filters"><button type="button" data-table-filter="modules" data-value="" aria-pressed="true">ВСЕ</button><button type="button" data-table-filter="modules" data-value="Core">CORE</button><button type="button" data-table-filter="modules" data-value="Content">CONTENT</button><button type="button" data-table-filter="modules" data-value="Community">COMMUNITY</button><button type="button" data-table-filter="modules" data-value="Control">CONTROL</button><button type="button" data-table-filter="modules" data-value="Commerce">COMMERCE</button></div>
+    <div data-table="modules" data-table-class="p-table-lined" data-cols="name:Модуль:text,cat:Раздел:mono,ver:Версия:mono,hits:Просмотры:num,time:Ответ:ms,share:Нагрузка:bar,status:Статус:state" data-rows="16" data-sort="hits:desc"></div>
+    <div class="v-ledger-foot"><span>Сортировка — клик по заголовку · фильтр — раздел</span><span>ФАКТ: имена модулей · ИЛЛЮСТРАЦИЯ: просмотры и время</span></div>
+  </section>
+
+  <section class="v-ledger p-reveal" id="traffic">
+    <div class="v-ledger-head"><span class="p-no">02</span><h2 class="p-h2">Трафик</h2><p><span data-sum="traffic:visits">—</span> визитов · <span data-sum="traffic:humans">—</span> людей · пик <span data-peak="traffic:visits">—</span> / день</p><div class="p-seg p-seg-square" data-periods="30d"><button type="button" data-period-for="traffic" data-period="7d">7Д</button><button type="button" data-period-for="traffic" data-period="30d">30Д</button><button type="button" data-period-for="traffic" data-period="90d">90Д</button></div></div>
+    <div class="v-two" style="margin-top:14px">
+      <div><div data-chart="line" data-key="traffic" data-fields="visits,humans" data-names="визиты,люди" data-colors="accent,good" data-thick="1.5" style="--h:190px"></div></div>
+      <div class="v-two" style="gap:14px">
+        <div class="v-mini"><span class="p-label">Runtime · доля времени, ms</span><div data-chart="hbars" data-values="11,9,5,2" data-labels="Генерация,SQL,Шаблон,Кэш" data-colors="accent" data-mono data-labelw="80" data-unit=" ms" style="--h:110px"></div></div>
+        <div class="v-mini"><span class="p-label">Хиты по часам · 00 → 24</span><div data-bars="hourly" style="--h:70px;--c:var(--p-accent)"></div><div class="p-kv" style="margin-top:6px"><span>Пик</span><b>21:00 · 82%</b></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="v-ledger p-reveal" id="security">
+    <div class="v-ledger-head"><span class="p-no">03</span><h2 class="p-h2">Журнал решений защиты</h2><p>request guard · Security / Crawler</p><button type="button" class="p-switch" data-toggle="guard" aria-pressed="true"><span data-toggle-label="guard" data-on="Защита включена" data-off="Защита выключена">Защита включена</span><i></i></button></div>
+    <div class="v-guard-row" style="margin-top:6px">
+      <div class="v-decisions" data-log="guard" data-log-max="10" data-log-every="1700"></div>
+      <div class="v-mini" style="border-top:0;padding-top:12px"><span class="p-label">Классы трафика</span><div data-list="classes"></div></div>
+    </div>
+    <div class="v-mini" style="margin-top:14px"><span class="p-label">Суд запросов · итог с открытия страницы</span>
+      <div class="p-guard" data-guard-scene data-lanes="3" style="min-height:170px;border-radius:6px"><div class="p-gate" data-gate style="width:44px;height:44px;font-size:18px;border-radius:12px"><i class="bi bi-shield-lock-fill"></i></div><div class="p-quarantine"><span>DENY</span><b data-guard-deny>0</b></div><div class="p-house" style="width:64px;height:64px;font-size:26px;border-radius:14px"><i class="bi bi-house-door-fill"></i></div><span class="p-guard-tag" style="left:14px;top:10px">INGRESS · <b data-tick="112,154">128</b> req/min</span><span class="p-guard-tag" style="right:14px;bottom:10px">PASS <b data-guard-allow>0</b> · MISS <b data-guard-miss>0</b></span></div>
+    </div>
+  </section>
+
+  <section class="v-ledger p-reveal v-commits" id="development">
+    <div class="v-ledger-head"><span class="p-no">04</span><h2 class="p-h2">Хроника master</h2><p>реальные коммиты GitHub · HEAD f360f6a</p></div>
+    <table class="p-table p-table-lined">
+      <thead><tr><th>SHA</th><th>Изменение</th><th class="p-num">Дата</th></tr></thead>
+      <tbody>
+        <tr><td class="p-mono p-accent">f360f6a</td><td><b>One window frame for the whole system; file manager grows up</b><span class="tags"><i>UI</i><i>file manager</i><i>refactor</i></span></td><td class="p-num p-mono">26.08.2026 · 15:43</td></tr>
+        <tr><td class="p-mono p-accent">1a200a8</td><td><b>Module block setting works again; content gets its width back</b><span class="tags"><i>layout</i><i>modules</i><i>fix</i></span></td><td class="p-num p-mono">25.08.2026 · 22:39</td></tr>
+        <tr><td class="p-mono p-accent">687d958</td><td><b>Presentation stand gets 23 designs; 71 site screenshots restored</b><span class="tags"><i>demo</i><i>showcase</i><i>design</i></span></td><td class="p-num p-mono">25.08.2026 · 15:32</td></tr>
+        <tr><td class="p-mono p-accent">7cd6144</td><td><b>Photo bands gain a light beam; season art ships as WebP</b><span class="tags"><i>theme</i><i>WebP</i><i>motion</i></span></td><td class="p-num p-mono">25.08.2026 · 13:03</td></tr>
+        <tr><td class="p-mono p-accent">12e1c35</td><td><b>Settings window reopens after POST; demo carries 16 band treatments</b><span class="tags"><i>admin</i><i>UX</i><i>prototype</i></span></td><td class="p-num p-mono">24.08.2026 · 23:12</td></tr>
+      </tbody>
+    </table>
+    <div class="v-two" style="margin-top:14px">
+      <div class="v-mini"><span class="p-label">Delivery pipeline</span><div class="p-pipe" style="--n:5;padding-top:8px" data-walk="900"><div class="p-pipe-step" data-step><span class="p-icon"><i class="bi bi-code-slash"></i></span><span>CODE</span></div><div class="p-pipe-step" data-step><span class="p-icon"><i class="bi bi-check2-square"></i></span><span>TEST</span></div><div class="p-pipe-step" data-step><span class="p-icon"><i class="bi bi-git"></i></span><span>COMMIT</span></div><div class="p-pipe-step" data-step><span class="p-icon"><i class="bi bi-journal-code"></i></span><span>CHANGELOG</span></div><div class="p-pipe-step" data-step><span class="p-icon"><i class="bi bi-box-seam"></i></span><span>RELEASE</span></div></div></div>
+      <div class="v-mini"><span class="p-label">Итоги набора</span><div class="p-kv"><span>Тестов</span><b>915</b></div><div class="p-kv"><span>Гейтов темы</span><b>193</b></div><div class="p-kv"><span>Ветка</span><b>master</b></div><div class="p-kv"><span>Последний коммит</span><b class="p-good">26.08.2026</b></div></div>
+    </div>
+  </section>
+
+  <section class="v-ledger p-reveal" id="showcase">
+    <div class="v-ledger-head"><span class="p-no">05</span><h2 class="p-h2">Внедрения</h2><p>реальные сайты из архива · 71 снимок в натуральную ширину 260 px</p></div>
+    <div class="p-sites-strip v-sites" data-demo-sites="12" style="margin-top:14px"></div>
+  </section>
+
+  <section class="v-ledger p-reveal" id="pulse">
+    <div class="v-ledger-head"><span class="p-no">06</span><h2 class="p-h2">Пульс проекта</h2><p>новости · форум · документация · файлы</p></div>
+    <div class="v-pulse">
+      <div><time>28.11.2025 · NEWS</time><h3>SLAED CMS возвращается — мощнее, быстрее, безопаснее</h3><a class="p-small p-accent" href="../index.php?name=news">Все новости →</a></div>
+      <div><time>18.07.2025 · FORUM</time><h3>Дата выхода новой версии SLAED CMS 6.3</h3><a class="p-small p-accent" href="../index.php?name=forum">Открыть форум →</a></div>
+      <div><time>PAGES</time><h3>59 страниц · 8 категорий документации</h3><a class="p-small p-accent" href="../index.php?name=pages">Читать статьи →</a></div>
+      <div><time>FILES</time><h3>702 файла · 13 категорий каталога</h3><a class="p-small p-accent" href="../index.php?name=files">Каталог файлов →</a></div>
+    </div>
+  </section>
+
+  <section class="v-ledger p-reveal" id="dna">
+    <div class="v-ledger-head"><span class="p-no">07</span><h2 class="p-h2">Принципы и хроника</h2><p>оригинальные идеи SLAED как измеримые свойства</p></div>
+    <div class="v-two" style="margin-top:14px">
+      <div>
+        <div class="p-kv"><span>01 · Простота</span><b>92%</b></div><div class="p-bar p-bar-thin"><i style="--w:92%"></i></div>
+        <div class="p-kv"><span>02 · Функциональность</span><b>98%</b></div><div class="p-bar p-bar-thin"><i style="--w:98%"></i></div>
+        <div class="p-kv"><span>03 · Эффективность</span><b>95%</b></div><div class="p-bar p-bar-thin"><i style="--w:95%"></i></div>
+        <div class="p-kv"><span>04 · Безопасность</span><b>96%</b></div><div class="p-bar p-bar-thin"><i style="--w:96%"></i></div>
+      </div>
+      <ol class="p-timeline">
+        <li><time>2005</time><b>Старт проекта</b><p>Первый публичный релиз, слоган «Все великое просто».</p></li>
+        <li><time>6.2</time><b>Актуальная версия</b><p>Публичная сборка на slaed.net, HTMX-интерфейс, кэш страниц.</p></li>
+        <li><time>6.3</time><b>Pre-Alpha</b><p>Тестируется сообществом на форуме проекта.</p></li>
+        <li><time>8.0</time><b>Phoenix</b><p>Новое ядро, PDO, request guard, единый кабинет.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="v-ledger p-reveal" id="voices">
+    <div class="v-ledger-head"><span class="p-no">08</span><h2 class="p-h2">Голоса владельцев</h2><span class="p-chip p-chip-warn" style="margin-left:auto">DEMO TEXT</span></div>
+    <div class="p-cols" style="--n:3;margin-top:14px">
+      <article class="p-voice" style="border-radius:6px"><p>Перенесли форум за один вечер: восемь лет тем, вложения, права доступа. Утром никто из пользователей не заметил переезда.</p><div class="p-voice-who"><span class="p-avatar">АК</span><div><b>Андрей Кузьмин</b><small>avto-club.ru · с 2011</small></div></div></article>
+      <article class="p-voice" style="border-radius:6px"><p>Держим сорок разделов на обычном хостинге. Кэш включён, страница собирается быстрее, чем приходит ответ от платёжного шлюза.</p><div class="p-voice-who"><span class="p-avatar" style="--c:var(--p-good)">МС</span><div><b>Марина Соловьёва</b><small>gorod-news.ru · с 2016</small></div></div></article>
+      <article class="p-voice" style="border-radius:6px"><p>Свой модуль записи к мастеру написали за выходные, ядро трогать не пришлось. Обновления с тех пор ставим без правок.</p><div class="p-voice-who"><span class="p-avatar" style="--c:var(--p-info)">ИД</span><div><b>Игорь Демченко</b><small>studio-remont.ru · с 2019</small></div></div></article>
+    </div>
+  </section>
+
+  <section class="p-band v-final p-reveal" style="background-image:url(../templates/lite/images/seasons/autumn.webp)">
+    <div><span class="p-eyebrow">Все великое просто · 2005 → 2026</span><h2 class="p-h2" style="margin-top:8px;font-size:24px;max-width:26ch">Скачайте SLAED 8.0 Phoenix и соберите сайт из готовых модулей.</h2></div>
+    <div class="p-row"><a class="p-btn p-btn-fill" href="../index.php?name=files"><i class="bi bi-download"></i>Скачать систему</a><a class="p-btn" href="../index.php?name=pages"><i class="bi bi-book"></i>Документация</a></div>
+  </section>
+</div>
+
+<aside class="v-aside">
+  <div class="p-card">
+    <div class="p-card-head"><span class="p-label">Оглавление</span><span class="p-chip p-end" data-spy-step>01 / 08</span></div>
+    <nav class="p-road" data-spy aria-label="Разделы">
+      <a href="#registry"><i></i><span><b>Реестр модулей</b><small>REGISTRY</small></span><em>01</em></a>
+      <a href="#traffic"><i></i><span><b>Трафик</b><small>STATISTICS</small></span><em>02</em></a>
+      <a href="#security"><i></i><span><b>Журнал защиты</b><small>REQUEST GUARD</small></span><em>03</em></a>
+      <a href="#development"><i></i><span><b>Хроника master</b><small>GITHUB</small></span><em>04</em></a>
+      <a href="#showcase"><i></i><span><b>Внедрения</b><small>71 SCREENS</small></span><em>05</em></a>
+      <a href="#pulse"><i></i><span><b>Пульс проекта</b><small>COMMUNITY</small></span><em>06</em></a>
+      <a href="#dna"><i></i><span><b>Принципы</b><small>BRAND DNA</small></span><em>07</em></a>
+      <a href="#voices"><i></i><span><b>Голоса</b><small>EXPERIENCE</small></span><em>08</em></a>
+    </nav>
+  </div>
+  <div class="p-card">
+    <div class="p-card-head"><span class="p-label">Текущее состояние</span><span class="p-chip p-chip-good p-end"><i class="p-dot p-dot-live"></i>online</span></div>
+    <div class="p-card-body p-card-body-tight">
+      <div class="p-kv"><span>Генерация</span><b>0.027 s</b></div>
+      <div class="p-kv"><span>Online</span><b data-tick="72,91">76</b></div>
+      <div class="p-kv"><span>Page cache</span><b class="p-good">HIT 88%</b></div>
+      <div class="p-kv"><span>PDO</span><b>native · exception</b></div>
+      <div class="p-kv"><span>Guard</span><b data-toggle-label="guard" data-on="ACTIVE" data-off="BYPASS">ACTIVE</b></div>
+      <div data-chart="spark" data-key="response" data-fields="ms" data-live data-axis="0" data-grid="0" data-tip="0" data-colors="accent" style="--h:48px;margin-top:8px"></div>
+    </div>
+  </div>
+  <div class="p-card">
+    <div class="p-card-head"><span class="p-label">Runtime</span></div>
+    <div class="p-card-body p-card-body-tight"><div data-log="runtime" data-log-max="6" data-log-every="2500" style="font-size:10.5px"></div></div>
+  </div>
+</aside>
+
+</div>
+<p class="p-note" style="margin-top:22px;border-radius:6px"><i class="bi bi-info-circle"></i><span>Графики, журналы и доли — иллюстративные данные стенда. Реальные факты: версия, лицензия, число дополнений, коммиты master и снимки внедрений.</span></p>
+</div>
+</main>
+<div data-site-foot></div>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Стенд оформления SLAED CMS — 18 новых презентаций</title>
+  <title>Стенд оформления SLAED CMS</title>
   <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
   <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
   <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
@@ -12,11 +12,12 @@
 <body class="sl-summer" data-demo-gallery>
   <div class="sl-wrp">
     <div class="demo-hero">
-      <h1 class="sl-font">SLAED CMS 8 — новая коллекция</h1>
-      <p>Презентационная страница: <strong>00 — ваш лидер</strong>, <strong>01–06 — шесть его интерпретаций</strong>,
-      <strong>07–18 — двенадцать вариантов по референсам</strong>. Откройте страницу, чтобы рассмотреть детали,
-      переключить период графика, найти модуль в таблице и попробовать состав сайта.</p>
-      <p>Каждый вариант получил собственную композицию и палитру. Примеры статистики подписаны внутри страниц.
+      <h1 class="sl-font">SLAED CMS 8 — стенд оформления</h1>
+      <p>Презентационная страница: <strong>00 — ваш лидер</strong>, <strong>01–06 — шесть его развитий</strong>,
+      <strong>07–18 — двенадцать лиц по референсам</strong>, <strong>19 — эталон 00 в обвязке системы</strong>. Каждое лицо — своя композиция: другой скелет страницы, другой первый экран,
+      другой набор графиков, таблиц, виджетов и сайдбаров, своя палитра в обоих режимах. Откройте страницу, переключите период графика,
+      найдите модуль в таблице, выключите защиту и посмотрите, что изменится.</p>
+      <p>Графики и потоки — иллюстративные данные стенда; версия, лицензия, коммиты и снимки внедрений — настоящие.
       Остальные серии стенда — настройки, добавление файла и фавориты — расположены ниже.</p>
       <p>Галерея показывает живые страницы. Цветовую схему можно переключить для всей коллекции;
       сезонные переключатели относятся к сериям, использующим обвязку темы lite.</p>
@@ -46,8 +47,7 @@
       };
 
       function drawCard(v, i) {
-        const main = /^\d{2}-/.test(v.file);
-        const mode = main ? (v.file.startsWith('14-') || v.file.startsWith('18-') ? 'light' : 'dark') : 'auto';
+        const mode = v.mode || 'auto';
         const src = v.file + '?bare=1&mode=' + (state.mode === 'auto' ? mode : state.mode) + '&season=' + state.season;
         const href = src.replace('?bare=1&', '?');
         const no = v.file.match(/^(\d{2})-/)?.[1] || String(i + 1).padStart(2, '0');
