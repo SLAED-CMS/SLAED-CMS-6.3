@@ -195,6 +195,7 @@ CREATE TABLE `{prefix}_favorites` (
   `uid` INT UNSIGNED NOT NULL DEFAULT 0,
   `fid` INT UNSIGNED NOT NULL DEFAULT 0,
   `modul` VARCHAR(50) NOT NULL,
+  `time` DATETIME DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `uid` (`uid`),
   KEY `fid` (`fid`),

@@ -1,6 +1,7 @@
 <div class="sl-pmf-page">
   {{{ shelves_html }}}
   {% if focus_html %}{{{ focus_html }}}{% endif %}
+  {{{ notes_html }}}
   <form class="sl-pmf-bar" id="prtools" role="search" action="index.php" method="get" hx-get="{{ find_url }}" hx-target="#prlist" hx-swap="innerHTML" hx-push-url="false" hx-params="not name,op" hx-trigger="submit, change from:#prsort">
     {{{ tools_html }}}
     <label class="sl-visually-hidden" for="prfind">{{ seek_label }}</label>
@@ -14,8 +15,9 @@
   {% if chips %}
   <div class="sl-pmf-active" id="prchips" role="group" aria-label="{{ filter_label }}">
     <b>{{ filter_label }}</b>
-    {% for chip in chips %}<button type="button" class="sl-chip sl-chip-neutral" aria-pressed="{% if chip.on %}true{% else %}false{% endif %}" data-sl-pm-chip="{{ chip.grp }}" data-sl-pm-value="{{ chip.val }}">{{ chip.label }} <b>· {{ chip.num }}</b></button>{% endfor %}
-    <button type="button" class="sl-pmf-clear" data-sl-pm-clear>{{ reset_label }}</button>
+    {% for chip in chips %}<button type="button" class="sl-chip sl-chip-neutral" aria-pressed="{% if chip.on %}true{% else %}false{% endif %}" data-sl-pm-chip="{{ chip.grp }}" data-sl-pm-value="{{ chip.val }}">{{ chip.label }} <b>{{ chip.num }}</b></button>{% endfor %}
+    <button type="button" class="sl-chip sl-chip-neutral" data-sl-pm-clear><i class="bi bi-x-lg" aria-hidden="true"></i> {{ reset_label }}</button>
+    <span class="sl-pmf-shown" id="prshown">{{ shown }}</span>
   </div>
   {% endif %}
   <div class="sl-pmf-split" id="prpage" data-sl-pane="{{ pane }}">
@@ -33,6 +35,7 @@
             <b data-sl-user-slot="name"></b>
             <small><span data-sl-user-slot="group"></span><span data-sl-user-slot="seen"></span></small>
             <span class="sl-chip" data-sl-user-slot="fill"></span>
+            {% if wait_note %}<span class="sl-chip sl-chip-warn"><i class="bi bi-hourglass-split" aria-hidden="true"></i> {{ wait_note }}</span>{% endif %}
           </span>
           <span class="sl-knob sl-knob-full" aria-hidden="true">
             <svg class="sl-knob-svg" viewBox="0 0 44 44"><circle class="sl-knob-bg" cx="22" cy="22" r="18"></circle></svg>
@@ -41,7 +44,7 @@
         </div>
         {{{ head_row_html }}}
         {{{ text_row_html }}}
-        <div class="sl-pmf-reply-foot"><input type="submit" class="sl-but" value="{{ send_label }}" title="{{ send_label }}">{% if wait_note %}<small>{{ wait_note }}</small>{% endif %}</div>
+        <div class="sl-pmf-reply-foot"><input type="submit" class="sl-but" value="{{ send_label }}" title="{{ send_label }}"></div>
       </form>
     </section>
   </div>

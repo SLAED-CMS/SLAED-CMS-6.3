@@ -3084,10 +3084,11 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   margin-top: var(--sl-space-3);
 }
 
+/* Several messages stand one under another as lines of the alert, not as a bulleted list: the tone icon already marks the alert, and a single message arriving as a list must look like a single message */
 .sl-alert-list {
   margin: 0;
-  padding-left: var(--sl-space-7);
-  list-style: disc outside;
+  padding-left: 0;
+  list-style: none;
 }
 
 .sl-alert-list li {

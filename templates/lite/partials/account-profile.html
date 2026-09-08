@@ -8,8 +8,8 @@
     {% if urank %}<div class="sl-profile-rank">{{ urank }}</div>{% endif %}
     {% if has_rank_image %}<img class="sl-profile-rank-img" src="{{ rank_src }}" alt="{{ rank_alt }}" title="{{ rank_alt }}">{% endif %}
     <div class="sl-profile-chips">
-      {% if has_special_group %}<span class="sl-chip sl-chip-accent" title="{{ sgroup_label }}: {{ sgroup }}"><i class="bi bi-people-fill" aria-hidden="true"></i> {{ sgroup }}</span>{% endif %}
-      {% if is_online %}<span class="sl-chip sl-chip-success"><i class="bi bi-wifi" aria-hidden="true"></i> {{ online_label }}</span>{% else %}<span class="sl-chip sl-chip-danger"><i class="bi bi-wifi-off" aria-hidden="true"></i> {{ offline_label }}</span>{% endif %}
+      {% if has_special_group %}<span class="sl-chip sl-chip-accent" title="{{ sgroup_label }}: {{ sgroup }}"><i class="bi bi-people-fill" aria-hidden="true"></i>{{ sgroup }}</span>{% endif %}
+      {% if is_online %}<span class="sl-chip sl-chip-success"><i class="bi bi-wifi" aria-hidden="true"></i>{{ online_label }}</span>{% else %}<span class="sl-chip sl-chip-danger"><i class="bi bi-wifi-off" aria-hidden="true"></i>{{ offline_label }}</span>{% endif %}
     </div>
     {% if pm_href %}<div class="sl-profile-actions"><a class="sl-but sl-but-blue" href="{{ pm_href }}" title="{{ pm_label }}">{{ pm_label }}</a></div>{% endif %}
     {% if rating_html %}
@@ -24,7 +24,7 @@
       <div class="sl-profile-meter-track"><span style="width:{{ level }}%"></span></div>
     </div>
     <div class="sl-profile-chips">
-      <span class="sl-chip sl-chip-info" title="{{ points_label }}"><i class="bi bi-stars" aria-hidden="true"></i> {{ points_text }}</span>
+      <span class="sl-chip sl-chip-info" title="{{ points_label }}"><i class="bi bi-stars" aria-hidden="true"></i>{{ points_text }}</span>
       {% if level_next %}<span class="sl-chip sl-chip-neutral" title="{{ level_next }}">{{ level_next }}</span>{% endif %}
     </div>
     {% endif %}
@@ -77,9 +77,9 @@
     <div class="sl-profile-hub-head">
       <h3><i class="bi bi-grid" aria-hidden="true"></i> {{ hub_title }}</h3>
       <div class="sl-profile-hub-total">
-        <span class="sl-chip sl-chip-info" title="{{ col_items }}"><i class="bi bi-grid" aria-hidden="true"></i> {{ tot_items }}</span>
-        {% if tot_rating %}<span class="sl-chip sl-chip-success" title="{{ col_rating }}"><i class="bi bi-star-fill" aria-hidden="true"></i> {{ tot_rating }}</span>{% endif %}
-        <span class="sl-chip sl-chip-accent" title="{{ col_favs }}"><i class="bi bi-bookmark-fill" aria-hidden="true"></i> {{ tot_favs }}</span>
+        <span class="sl-chip sl-chip-info" title="{{ col_items }}"><i class="bi bi-grid" aria-hidden="true"></i>{{ tot_items }}</span>
+        {% if tot_rating %}<span class="sl-chip sl-chip-success" title="{{ col_rating }}"><i class="bi bi-star-fill" aria-hidden="true"></i>{{ tot_rating }}</span>{% endif %}
+        <span class="sl-chip sl-chip-accent" title="{{ col_favs }}"><i class="bi bi-bookmark-fill" aria-hidden="true"></i>{{ tot_favs }}</span>
         <span class="sl-profile-feed-live" title="{{ hub_title }}"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></span>
       </div>
     </div>
@@ -87,10 +87,10 @@
       <div class="sl-profile-scroll-feed">
         {% for row in hub %}
         <div class="sl-profile-entry sl-profile-hub-row">
-          <span class="sl-chip sl-chip-info" title="{{ col_items }}"><i class="bi bi-grid" aria-hidden="true"></i> {{ row.count }}</span>
+          <span class="sl-chip sl-chip-info" title="{{ col_items }}"><i class="bi bi-grid" aria-hidden="true"></i>{{ row.count }}</span>
           <i class="bi bi-{{ row.icon }}" aria-hidden="true"></i>
           <a{% if row.href %} href="{{ row.href }}"{% endif %} title="{{ row.title }}">{{ row.title }}</a>
-          <span class="sl-profile-hub-total">{% if row.rating %}<span class="sl-chip sl-chip-success" title="{{ col_rating }}"><i class="bi bi-star-fill" aria-hidden="true"></i> {{ row.rating }}</span>{% endif %}{% if row.favs %}<span class="sl-chip sl-chip-accent" title="{{ col_favs }}"><i class="bi bi-bookmark-fill" aria-hidden="true"></i> {{ row.favs }}</span>{% endif %}</span>
+          <span class="sl-profile-hub-total">{% if row.rating %}<span class="sl-chip sl-chip-success" title="{{ col_rating }}"><i class="bi bi-star-fill" aria-hidden="true"></i>{{ row.rating }}</span>{% endif %}{% if row.favs %}<span class="sl-chip sl-chip-accent" title="{{ col_favs }}"><i class="bi bi-bookmark-fill" aria-hidden="true"></i>{{ row.favs }}</span>{% endif %}</span>
         </div>
         {% endfor %}
       </div>

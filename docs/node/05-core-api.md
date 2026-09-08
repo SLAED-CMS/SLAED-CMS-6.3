@@ -268,7 +268,8 @@ final readonly class NodeContext
         public bool $manage,
         public bool $super,
         public string $ip,
-        public string $lang
+        public string $lang,
+        public bool $task = false
     ) {}
 }
 ```
@@ -909,3 +910,13 @@ public function getNodeView(NodeType $type, Node|NodeTarget $node, string $mode)
 ## Удаление связи с общим опросом
 
 Для удаления общего опроса NodeService получает deleteNodePoll(int $id): void. Метод доступен только доверенному административному контексту с правом удаления опросов, внутри транзакции владельца после блокировки всех затронутых типов по ID и до строки опроса. Он очищает только poll, увеличивает version и updated материалов, инвалидирует кеш после COMMIT владельца; произвольная форма Node не вызывает этот метод. Это не удаление материала и не каскадное удаление глобального опроса из Node.
+
+## Системные задачи и отложенная публикация
+
+NodeContext.task по умолчанию false. Только фиксированные адаптеры штатного планировщика создают task=true с uid=aid=0, groups=mods=[], manage=super=false. Публичный/admin/AJAX bootstrap не читает task из запроса и всегда оставляет false. Системный контекст разрешает только updateNodePublishList и пакетный NodeSync; он не даёт права обычного CRUD, публикации произвольного ID или аннулирования рейтинга. NodeQuery не снимает ACL лишь из-за task.
+
+NodeService::updateNodePublishList(int $limit = 50): array принимает 1..500 и требует task=true. Результат ровно status:string, message:string, extra:array; status=success|error, message — безопасный текст, extra содержит processed/failed/skipped как int. Метод использует _node_publish по 03, общий Point и отдельную транзакцию каждого материала. Обработка очереди не меняет version/updated материала и не начисляет в публичном просмотре.
+
+Фиксированный addNodePublishTask() в core/system.php создаёт системный контекст, собирает NodeService и вызывает этот метод. Задание nodepublish: * * * * *, limit=50, lock_timeout=180. Первый успешный запуск после срока начисляет награду; точность до секунды и работа остановленного планировщика не обещаются. Ручной запуск — только штатный административный экран планировщика, отдельного HTTP op нет.
+
+addNodeSyncTask() также создаёт task=true. updateNodeSyncList требует этот контекст; одиночный административный updateNodeSync требует обычного права модератора. Внутренний вызов одиночной синхронизации из очереди допускается только для выбранного очередью ID в системном контексте; этот контекст не расширяет публичные права Node.

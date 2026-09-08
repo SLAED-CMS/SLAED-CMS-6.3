@@ -233,7 +233,7 @@ if (empty($go)) {
         }
     }
     $cvar = explode(',', $conf['variables']);
-    if (!$cvar[0] && is_moder()) echo getVariables();
+    if (!$cvar[0] && is_moder()) echo getTimedHtml(getVariables());
 } elseif ($go == 'rss') {
     Cache::setHeaders(false);
     echo getRssChannel();

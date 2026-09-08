@@ -260,8 +260,8 @@ const DEMO_FAVORITES = [
   {
     file: 'fav-01-shelf.html',
     title: 'Полки',
-    note: 'Фавориты разложены по полкам во всю ширину, полка на модуль: плитки настроек, строки ленты активности, чипсы и мини-кнопки — ничего своего. Число на полке — чип в правом углу заголовка, поле над полками ищет по названиям вживую, чип ищет весь модуль.',
-    tags: ['полки', 'поиск', 'чип-счётчик'],
+    note: 'Окончательный вариант, эталон для переноса. Четыре лампы настроек с фактами, поле поиска с чипом счёта, и полка на модуль как отсек details: заголовок плитки с числом в углу сворачивает и разворачивает полку, поиск раскрывает полки с совпадениями и закрывает их обратно.',
+    tags: ['эталон', 'лампы', 'details', 'поиск'],
   },
   {
     file: 'fav-02-tabs.html',
@@ -779,7 +779,7 @@ function setDemoFilter() {
   if (!field) return;
   const rows = [...document.querySelectorAll('[data-demo-find]')];
   const groups = [...document.querySelectorAll('[data-demo-group]')];
-  const tally = document.querySelector('[data-demo-tally]');
+  const tally = document.querySelectorAll('[data-demo-tally]');
   const empty = document.querySelector('[data-demo-empty]');
 
   function apply() {
@@ -792,9 +792,17 @@ function setDemoFilter() {
       if (on) live++;
     });
     groups.forEach((g) => {
-      g.toggleAttribute('hidden', ![...g.querySelectorAll('[data-demo-find]')].some((r) => !r.hasAttribute('hidden')));
+      const seen = [...g.querySelectorAll('[data-demo-find]')].filter((r) => !r.hasAttribute('hidden')).length;
+      g.toggleAttribute('hidden', seen === 0);
+      const count = g.querySelector('[data-demo-count]');
+      if (count) count.textContent = String(seen);
+      if (g.tagName !== 'DETAILS') return;
+      /* A search opens the shelves it found something on and closes them again when it is cleared; a shelf the reader
+         opened by hand is not touched either way */
+      if (q && seen && !g.open) { g.open = true; g.setAttribute('data-demo-opened', ''); }
+      if (!q && g.hasAttribute('data-demo-opened')) { g.open = false; g.removeAttribute('data-demo-opened'); }
     });
-    if (tally) tally.textContent = String(live);
+    tally.forEach((node) => { node.textContent = String(live); });
     if (empty) empty.toggleAttribute('hidden', live > 0);
   }
 

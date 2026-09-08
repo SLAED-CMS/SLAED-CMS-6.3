@@ -293,7 +293,7 @@ function getAdminIconWindow(): string {
 function getAdminTopMenu(): string {
     global $admin, $afile, $tpl;
     $items = !isAdmin(true) ? [
-        ['href' => '#', 'label' => _HELLO.', '.substr((string)($admin[1] ?? ''), 0, 25).'!', 'blank' => false, 'icon' => 'person-badge'],
+        ['href' => '#', 'label' => _HELLO.', '.substr((string)($admin[1] ?? ''), 0, 25).'!', 'blank' => false, 'icon' => 'person-vcard'],
         ['href' => $afile.'.php', 'label' => _HOME, 'blank' => false, 'icon' => 'house-door'],
         ['href' => '/', 'label' => _SITE, 'blank' => true, 'icon' => 'globe2', 'split' => true],
         ['href' => 'index.php?name=account', 'label' => _ACCOUNT, 'blank' => true, 'icon' => 'person'],
@@ -375,7 +375,7 @@ function getAdminInfo(): string {
                     ['name=shop&op=clients', '_CLIENTS', '_CLIENTS', 'bag-plus', 'clients', "status = '2'"],
                     ['name=shop&op=partners', '_PARTNERS', '_PARTNERS', 'shop', 'partners', "status = '2'"],
                 ],
-                'whois'   => [['name=whois&status=1', '_WHOIS', '_WHOIS', 'person-badge', 'whois', "status = '0'"]],
+                'whois'   => [['name=whois&status=1', '_WHOIS', '_WHOIS', 'person-vcard', 'whois', "status = '0'"]],
             ];
             $newRows = [];
             foreach ($groups as $mod => $defs) {

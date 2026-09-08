@@ -736,8 +736,22 @@
     }
 
     // Speed dial: click on the toggle pins the fan open, any other click closes every open dial;
+    // An element that issues its own htmx request instead of following its address
+    function isHtmxOwn(node) {
+        return ['hx-get', 'hx-post', 'hx-put', 'hx-patch', 'hx-delete'].some(function (name) { return node.hasAttribute(name); });
+    }
+
     // links carrying data-sl-confirm (plain text, escaped by the template) must pass a confirm dialog first
     function setDialToggle() {
+        // The same question for an htmx element goes through the hook htmx opens before every request: the request waits for the answer, is issued on yes and never leaves on no
+        document.addEventListener('htmx:confirm', function (event) {
+            var own = event.detail && event.detail.elt;
+            if (!own || !own.closest) return;
+            var ask = own.closest('[data-sl-confirm]');
+            if (!ask || own.hasAttribute('hx-confirm')) return;
+            event.preventDefault();
+            window.setConfirmTask(ask.getAttribute('data-sl-confirm'), function () { event.detail.issueRequest(true); });
+        });
         document.addEventListener('contextmenu', function (event) {
             var dial = getDialOwn(event.target);
             if (!dial || !dial.querySelector('.sl-dial-item')) return;
@@ -754,6 +768,8 @@
             var node = event.target;
             if (!node || !node.closest) return;
             var ask = node.closest('[data-sl-confirm]');
+            // An htmx element asks through htmx:confirm below, where the answer can hold the request back; a dialog raised here would run beside a request already sent
+            if (ask && isHtmxOwn(ask)) ask = null;
             if (ask) {
                 var dlg = document.getElementById('sl-confirm');
                 if (dlg) {

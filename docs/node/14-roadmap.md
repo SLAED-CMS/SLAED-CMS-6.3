@@ -66,7 +66,7 @@
 
 - Зависит: S06.
 - Читать: 01; 02; 03 кроме ссылок на общие классы; 04; 05 — DTO/контекст/ошибки.
-- Файлы: setup/sql/table.sql и штатное обновление; core/classes/node/{entity,type,typeinput,input,relation,asset,target,context,status,exception,extension,load}.php; core/classes/node/ext/load.php; core/system.php; NodeModelTest.php, tests/Support/node_probe.php.
+- Файлы: setup/sql/table.sql (включая _node_publish) и штатное обновление; core/classes/node/{entity,type,typeinput,input,relation,asset,target,context,status,exception,extension,load}.php; core/classes/node/ext/load.php; core/system.php; NodeModelTest.php, tests/Support/node_probe.php.
 - Готово: Схема чистой установки/обновления, _admins.modules TEXT, readonly-модели и загрузка без Composer. Фабрика расширений закрыта; классы support/sync появляются на S14/S15, пустых файлов не создавать.
 
 ### S09 — NodeQuery — чтение
@@ -87,8 +87,8 @@
 
 - Зависит: S04, S09, S10.
 - Читать: 03 — состояния/связи/ресурсы; 05 — запись/счётчики/ресурсы; 06 — workflow; 11 — locks; 13 — запись.
-- Файлы: core/classes/node/service.php; admin/modules/categories.php; tests/Unit/NodeServiceTest.php.
-- Готово: Создание/preview/изменение/состояния/удаление, категории, дерево, assets/link, жалоба, counters и Point. Версии, общий порядок lock, конкурентный цикл, откат. Проверяется сервис на изолированной БД.
+- Файлы: core/classes/node/service.php; admin/modules/categories.php; core/system.php (addNodePublishTask), реестр планировщика; tests/Unit/NodeServiceTest.php.
+- Готово: Создание/preview/изменение/состояния/удаление, категории, дерево, assets/link, жалоба, counters и Point. Версии, общий порядок lock, конкурентный цикл, откат; _node_publish и обработка наступившей публикации без ранних/двойных баллов. Проверяется сервис на изолированной БД и штатный запуск задания.
 
 ### S12 — Файлы и кеш Node
 

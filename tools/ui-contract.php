@@ -439,9 +439,9 @@ return [
         # the tab standing open in a profile feed beside a letter of the alphabet index under the pointer: a state and a rank, both painted
         # in the brand fill
         '.sl-profile-feed .sl-tabs-link.sl-is-active, a .sl-letter:hover',
-        # the byline of an entry, the action row of its meta line and a provider button: three inline rows that carry one icon beside one
-        # label
-        '.sl-author, .sl-meta-actions, .sl-oauth-but',
+        # the action row of a meta line and a provider button: two inline rows that carry one icon beside one label at the row gap; the
+        # byline of an entry left the group when it took the chip gap
+        '.sl-meta-actions, .sl-oauth-but',
         # a link in a sidebar block beside a link in a table cell: two places one title is cut off with an ellipsis, and they live in two
         # layouts
         '.sl-block-content > li > a, .sl-cell-ellipsis > a:last-child',

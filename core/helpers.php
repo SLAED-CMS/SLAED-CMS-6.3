@@ -230,7 +230,11 @@ function getTplPagerView(int $num, int $pages, int $maxpg, callable $target, arr
     global $tpl;
     if ($pages <= 1) return '';
     $num  = max(1, min($num, $pages));
-    $nnum = $maxpg + 1;
+    # The window holds maxpg numbers and slides with the current page, so the setting names what the reader sees; the first and the last page stand outside it as anchors with the dots between
+    $maxpg = max(1, $maxpg);
+    $from = max(1, $num - intdiv($maxpg, 2));
+    $to = min($pages, $from + $maxpg - 1);
+    $from = max(1, $to - $maxpg + 1);
     $link = static function(int $page, string $label, bool $cur, bool $nav, string $icon) use ($tpl, $target): string {
         $opt = ['label' => $label, 'title' => $label, 'is_cur' => $cur, 'is_nav' => $nav, 'icon_name' => $icon];
         if (!$cur) $opt += $target($page);
@@ -242,13 +246,11 @@ function getTplPagerView(int $num, int $pages, int $maxpg, callable $target, arr
     for ($i = 1; $i <= $pages; $i++) {
         if ($i === $num) {
             $items .= $link($i, (string)$i, true, false, '').' ';
-        } elseif ($i === 1 || $i === $pages || (($i > ($num - $maxpg)) && ($i < ($num + $maxpg)))) {
+        } elseif ($i === 1 || $i === $pages || ($i >= $from && $i <= $to)) {
             $items .= $link($i, (string)$i, false, false, '').' ';
         }
-        if ($i < $pages) {
-            if (($num > $nnum) && ($i === 1)) $items .= $dots;
-            if (($num < ($pages - $maxpg)) && ($i === ($pages - 1))) $items .= $dots;
-        }
+        if ($i === 1 && $from > 2) $items .= $dots;
+        if ($i === $to && $to < $pages - 1) $items .= $dots;
     }
     $next = ($num < $pages) ? $link($num + 1, _NEXT, false, true, 'chevron-right') : $link(0, _NEXT, true, true, 'chevron-right');
     return $tpl->getHtmlFrag('pager', array_merge([
@@ -788,7 +790,7 @@ function getFileManagerText(array $rule = []): array {
             'retry' => _RETRY,
             'queue' => _EDITOR_QUEUE,
             'queueend' => _EDITOR_QUEUEEND,
-            'quota' => _EDITOR_QUOTA,
+            'quota' => _NUMOF,
             'more' => _EDITOR_MORE,
             'mynote' => _EDITOR_MYNOTE,
             'name' => _NAME,
@@ -891,7 +893,7 @@ function getFileManagerWindow(array $opt): string {
         'files_label' => _EDITOR_MY,
         'files_note' => '',
         'files_why' => _EDITOR_NOMY,
-        'quota_text' => $upl ? sprintf(_EDITOR_QUOTA, '—', filterSize((int)$rul['maxquota'])) : _EDITOR_NOUP,
+        'quota_text' => $upl ? sprintf(_NUMOF, '—', filterSize((int)$rul['maxquota'])) : _EDITOR_NOUP,
         'module_text' => sprintf(_EDITOR_MODULE, $mod),
         'address_label' => _EIMGURL,
         'alt_label' => _DESCRIPTION,

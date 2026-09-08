@@ -305,7 +305,7 @@ function view(): void {
                     $mkrow('stars', _POINTS, $points),
                     $mkrow('people', _SPEC_GROUP, $gname ?: _NO),
                 ]],
-                ['title' => _ACCOUNT_PERSON, 'icon' => 'person-badge', 'rows' => [
+                ['title' => _ACCOUNT_PERSON, 'icon' => 'person-vcard', 'rows' => [
                     $mkrow('cake2', _BIRTHDAY, $birth),
                     $mkrow('geo-alt', _LOCALITYLANG, $from ?: _NO_INFO),
                     $mkrow('person', _GENDER, getGenderText($gender)),
@@ -500,13 +500,12 @@ function profil(): void {
         while ([$fid, $fmod] = $db->getSqlRow($result)) {
             if (preg_match('/^[a-z_]+$/', (string)$fmod)) $fmap[$fmod][] = (int)$fid;
         }
-        $micons = getProfileModules();
         foreach ($fmap as $fmod => $fids) {
             $ftable = ($fmod === 'shop') ? 'products' : $fmod;
             $fres = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_'.$ftable.' WHERE id IN ('.implode(', ', $fids).')');
             while ([$fid, $ftitle] = $db->getSqlRow($fres)) {
                 $favs[] = [
-                    'icon' => $micons[$fmod]['icon'] ?? (($fmod === 'help') ? 'life-preserver' : (($fmod === 'shop') ? 'bag' : 'star')),
+                    'icon' => getFavoriteIcon($fmod),
                     'chip_icon' => $conf['modules'][$fmod]['icon'] ?? 'folder',
                     'title' => cutstr($ftitle, 60),
                     'href' => 'index.php?name='.$fmod.'&op=view&id='.$fid,
@@ -592,20 +591,19 @@ function privat(): void {
         foreach (['' => _PRBYNEW, 'old' => _PRBYOLD, 'unread' => _PRBYUNS, 'name' => _PRBYMATE] as $key => $lab) {
             $sorts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $key, 'label_text' => $lab, 'is_selected' => $pick['sort'] === $key]);
         }
-        $chips = [];
-        if ($list != 2) {
-            $face = $prv->getBoxFacets($uid, $box);
-            $chips[] = ['grp' => 'all', 'val' => '', 'label' => (string)_ALL, 'num' => $face['total'], 'on' => $pick['stat'] === '' && $pick['perd'] === ''];
-            $chips[] = ['grp' => 'stat', 'val' => 'unread', 'label' => (string)_PRUNSEEN, 'num' => $face['unread'], 'on' => $pick['stat'] === 'unread'];
-            $chips[] = ['grp' => 'stat', 'val' => 'read', 'label' => (string)_PRSEEN, 'num' => $face['read'], 'on' => $pick['stat'] === 'read'];
-            $chips[] = ($list == 3)
-                ? ['grp' => 'perd', 'val' => 'old', 'label' => (string)_PRSTALE, 'num' => $face['stale'], 'on' => $pick['perd'] === 'old']
-                : ['grp' => 'perd', 'val' => 'new', 'label' => (string)_PRFRESH, 'num' => $face['fresh'], 'on' => $pick['perd'] === 'new'];
-        }
+        $face = $prv->getBoxFacets($uid, $box);
+        $chips = [
+            ['grp' => 'all', 'val' => '', 'label' => (string)_ALL, 'num' => $face['total'], 'on' => $pick['stat'] === '' && $pick['perd'] === ''],
+            ['grp' => 'stat', 'val' => 'unread', 'label' => (string)_PRUNSEEN, 'num' => $face['unread'], 'on' => $pick['stat'] === 'unread'],
+            ['grp' => 'stat', 'val' => 'read', 'label' => (string)_PRSEEN, 'num' => $face['read'], 'on' => $pick['stat'] === 'read'],
+            ['grp' => 'perd', 'val' => 'new', 'label' => (string)_PRFRESH, 'num' => $face['fresh'], 'on' => $pick['perd'] === 'new'],
+            ['grp' => 'perd', 'val' => 'old', 'label' => (string)_PRSTALE, 'num' => $face['stale'], 'on' => $pick['perd'] === 'old'],
+        ];
         echo $tpl->getHtmlFrag('title', ['title' => _PRIVAT, 'is_level_one' => true]).getUserNav()
             .$tpl->getHtmlPart('privat-page', [
                 'shelves_html' => getPrivatShelves($typ),
                 'focus_html' => getPrivatFocus($typ),
+                'notes_html' => getPrivatNotes('', '', $list),
                 'find_url' => 'index.php?go=1&op=getPrivateMessageView',
                 'find' => $pick['find'],
                 'seek_label' => (string)_PRSEEK,
@@ -629,6 +627,7 @@ function privat(): void {
                 'token' => $tok,
                 'open_post' => $open,
                 'list_html' => getPrivateMessageView('', '', $list),
+                'shown' => getPrivatShown(),
                 'view_html' => getPrivateMessageView('', '', ($typ == 4) ? 4 : 0),
                 'send_url' => 'index.php?go=1&op=addPrivateMessage',
                 'token_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => $tok, 'input_attr' => '']),
@@ -882,7 +881,7 @@ function getAccountLamps(array $info, array $lnks, array $fill): array {
     return [
         (($haspw) ? $ok : $warn) + ['label' => _SECURITY, 'value' => ($haspw) ? _ACCOUNT_SAFE : _ACCOUNT_NOPASS, 'note' => implode(', ', $ways)],
         (($seen) ? $info : $ok) + ['label' => _EMAIL, 'value' => ($seen) ? _ACCOUNT_SHOWN : _ACCOUNT_HIDDEN, 'note' => ($seen) ? _ACCOUNT_MAILSHOW : _ACCOUNT_MAILHIDE],
-        (($ons === $all) ? $ok : $info) + ['label' => _ACCOUNT_MAIL, 'value' => $ons.' / '.$all, 'note' => ($ons === $all) ? _ACCOUNT_MAILALL : _ACCOUNT_MAILOFF],
+        (($ons === $all) ? $ok : $info) + ['label' => _ACCOUNT_MAIL, 'value' => sprintf(_NUMOF, $ons, $all), 'note' => ($ons === $all) ? _ACCOUNT_MAILALL : _ACCOUNT_MAILOFF],
         $info + ['label' => _ACCOUNT_FILLED, 'value' => $fill['rate'].'%', 'note' => _ACCOUNT_LEFT, 'left' => $fill['left'], 'is_meter' => true],
     ];
 }
@@ -1054,7 +1053,7 @@ function edithome(): void {
                 ]),
             ];
         }
-        $secs[] = ['id' => 'avatar', 'icon' => 'person-badge', 'title' => _AVATARSETUP, 'inform' => true, 'tiles' => $tils];
+        $secs[] = ['id' => 'avatar', 'icon' => 'person-vcard', 'title' => _AVATARSETUP, 'inform' => true, 'tiles' => $tils];
         $extra = $tpl->getHtmlFrag('hidden', ['name_attr' => 'user_name', 'value_attr' => $info['name']]);
         $lins = [];
         if ($conf['users']['news'] == 1) {

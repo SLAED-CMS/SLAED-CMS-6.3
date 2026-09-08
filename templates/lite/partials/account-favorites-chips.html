@@ -1,0 +1,4 @@
+<div class="sl-profile-chips" id="favchips"{% if is_oob %} hx-swap-oob="true"{% endif %}>
+  <input type="hidden" id="favmod" name="mod" value="{{ mod }}">
+  {% for chip in chips %}<a class="sl-chip {% if chip.is_now %}sl-chip-neutral{% else %}sl-chip-info{% endif %}" href="{{ chip.href }}" title="{{ chip.label }}"{% if chip.is_now %} aria-current="page"{% endif %} hx-get="{{ chip.hx_url }}" hx-target="#favshelves" hx-swap="outerHTML" hx-include="#favseek" hx-push-url="false"><i class="bi bi-{{ chip.icon }}" aria-hidden="true"></i>{{ chip.label }}</a>{% endfor %}
+</div>

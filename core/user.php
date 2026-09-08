@@ -370,7 +370,7 @@ function getUserNavItems(bool $home = false): array {
         [$fnum] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid', ['uid' => $uid]));
         $items[] = [
             'label' => _FAVORITES, 'title' => _FAVORITES, 'href' => 'index.php?name=account&op=favorites',
-            'icon' => 'star', 'sub' => $fnum.' / '.$conf['favorites']['favorites'],
+            'icon' => 'star', 'sub' => sprintf(_NUMOF, $fnum, $conf['favorites']['favorites']),
         ];
     }
     $items[] = ['label' => _INFO, 'title' => _PERSONALINFO, 'href' => 'index.php?name=account&op=view&id='.$uid, 'icon' => 'person-vcard'];
@@ -658,7 +658,7 @@ function getPrivatShelves(int $typ = 1): string {
             'part' => number_format($part, 1, '.', ''),
             'full' => $max < 1 || $part >= 100,
             'ring' => ($max > 0) ? sprintf(_PRFILLED, $lab, round($part)) : '',
-            'count' => ($max > 0) ? sprintf(_PRQUOTA, $has, $max) : (string)$has,
+            'count' => ($max > 0) ? sprintf(_NUMOF, $has, $max) : (string)$has,
             'note' => ($max > 0) ? '' : (string)_PRNOLIMIT,
             'free' => ($tone === 'danger') ? sprintf(_PRFREE, max(0, $max - $has)) : '',
             'badge' => $new ? (($new > 99) ? '99+' : (string)$new) : '',
@@ -720,6 +720,7 @@ function getPrivatFocus(int $typ = 1): string {
             'href' => 'index.php?name=account&op=privat&id='.$one['id'],
             'open' => $open,
             'is_keep' => $one['saved'] > 0,
+            'tone' => count($slots) % 6,
             'acts' => $acts,
         ];
     }
@@ -835,6 +836,49 @@ function getPrivatRowData(array $row, int $typ, string $tok, int $pick = 0, stri
     ];
 }
 
+# The range a mailbox column shows is written by the column and read by whoever prints the filter bar - the page on its build, the htmx wrapper out of band - so the one list query answers both
+function getPrivatShown(?string $set = null): string {
+    static $last = '';
+    if ($set !== null) $last = $set;
+    return $last;
+}
+
+# The notices of the private-message page stand in one slot under the focus deck, never inside a column: a refusal of an action, the report of a send, and the quota of the mailbox shown. The slot is rebuilt whole, so a note of the previous action never outlives the next one
+function getPrivatNotes(string|array $stop, string $info, int $typ, bool $oob = false): string {
+    global $user, $tpl, $prv;
+    $note = '';
+    if ($stop) {
+        $note = $tpl->getHtmlFrag('alert', [
+            'text' => is_array($stop) ? '' : $stop, 'messages' => is_array($stop) ? $stop : [],
+            'meta' => '', 'type' => 'error', 'is_warn' => true,
+        ]);
+    } elseif ($info) {
+        $note = $tpl->getHtmlFrag('alert', ['text' => $info, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
+    }
+    if ($typ >= 1 && $typ <= 3) {
+        $box = match ($typ) {2 => PrivatBox::Outbox, 3 => PrivatBox::Saved, default => PrivatBox::Inbox};
+        $max = $prv->getBoxLimit($box);
+        if ($max > 0 && $prv->getMessageCount(intval($user[0] ?? 0), $box) >= $max) {
+            $note .= $tpl->getHtmlFrag('alert', [
+                'text' => sprintf(($typ == 3) ? _PRSAVEEXIT : _PRINEXIT, $max),
+                'meta' => '', 'type' => 'error', 'is_warn' => true,
+            ]);
+        }
+    }
+    return $tpl->getHtmlFrag('privat-notes', ['notes_html' => $note, 'is_oob' => $oob]);
+}
+
+# The column an htmx call asked for, followed by the notice slot out of band: a mailbox always carries it, because its quota may have changed under the action, and a message or the compose state only when it has something to say
+function getPrivateMessageView(string|array $stop = '', string $info = '', int $typ = -1, array $view = []): string {
+    global $tpl;
+    if ($typ < 0) $typ = getVar('req', 'typ', 'num', 0);
+    $cont = getPrivateMessagePane($stop, $info, $typ, $view);
+    if (empty($_SERVER['HTTP_HX_REQUEST']) || !is_user()) return $cont;
+    if (($typ >= 1 && $typ <= 3) || $stop || $info) $cont .= getPrivatNotes($stop, $info, $typ, true);
+    if ($typ >= 1 && $typ <= 3) $cont .= $tpl->getHtmlFrag('span', ['id' => 'prshown', 'class' => 'sl-pmf-shown', 'title' => '', 'text' => getPrivatShown(), 'is_oob' => true]);
+    return $cont;
+}
+
 # Render one column of the private message layout: a mailbox as the left one for typ 1 to 3, one message or the compose state as the right one, the empty pane for nothing at all
 # Every mailbox read runs through the private-message subsystem, so no state column is restated here and a list, its counter and its quota can never disagree
 # This function only reads: opening a message is what marks it read and that is a POST route of its own, which hands the row it has already loaded down instead of having it read twice
@@ -843,35 +887,19 @@ function getPrivatRowData(array $row, int $typ, string $tok, int $pick = 0, stri
 # The bulk action and its button stand in the footer of the column while the selection lives in the scrolling form above it, so both are bound back to that form by name instead of by nesting
 # Only a caller that names no column at all is answered from the request: zero means the empty pane, and a page that asks for it while the address carries a mailbox must not be handed that mailbox instead
 # The compose state names what bounds a send before the writer runs into it: the interval out of the settings, and the two lengths the stored columns allow
-function getPrivateMessageView(string|array $stop = '', string $info = '', int $typ = -1, array $view = []): string {
+function getPrivateMessagePane(string|array $stop, string $info, int $typ, array $view): string {
     global $db, $user, $conf, $tpl, $prs, $prv;
     if (!is_user() || !$conf['privat']['act']) return $tpl->getHtmlFrag('alert', ['text' => _ERROR, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
     if ($typ < 0) $typ = getVar('req', 'typ', 'num', 0);
     $uid = intval($user[0]);
     $tok = getSiteToken();
     $conf['name'] = 'account';
-    $note = '';
-    if ($stop) {
-        $note = $tpl->getHtmlFrag('alert', [
-            'text' => is_array($stop) ? '' : $stop, 'messages' => is_array($stop) ? $stop : [],
-            'meta' => '', 'type' => 'warn', 'is_warn' => true,
-        ]);
-    } elseif ($info) {
-        $note = $tpl->getHtmlFrag('alert', ['text' => $info, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
-    }
     if ($typ >= 1 && $typ <= 3) {
         $box = match ($typ) {2 => PrivatBox::Outbox, 3 => PrivatBox::Saved, default => PrivatBox::Inbox};
         $pick = getPrivatPick();
         $data = $prv->getMessageList($uid, $box, getVar('req', 'pnum', 'num', 1), $pick);
         $seek = $pick['find'] !== '' || $pick['stat'] !== '' || $pick['perd'] !== '';
         $state = '&pnum='.$data['page'].$pick['link'];
-        $max = $prv->getBoxLimit($box);
-        if ($max > 0 && $data['total'] >= $max) {
-            $note .= $tpl->getHtmlFrag('alert', [
-                'text' => sprintf(($typ == 3) ? _PRSAVEEXIT : _PRINEXIT, $max),
-                'meta' => '', 'type' => 'warn', 'is_warn' => true,
-            ]);
-        }
         $open = getVar('req', 'id', 'num', 0);
         $past = date('Y-m-d', strtotime('-1 day'));
         $days = [];
@@ -901,8 +929,7 @@ function getPrivateMessageView(string|array $stop = '', string $info = '', int $
         $mass['delete'] = (string)_DELETE;
         $opts = '';
         foreach ($mass as $key => $lab) $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $key, 'label_text' => $lab]);
-        $bulk = $tpl->getHtmlFrag('inline-badge', ['label' => _CHECKOP])
-            .$tpl->getHtmlFrag('select', [
+        $bulk = $tpl->getHtmlFrag('select', [
                 'name_attr' => 'act', 'title' => _CHECKOP, 'options_html' => $opts, 'select_attr' => 'form="prbulk"',
             ])
             .$tpl->getHtmlFrag('button', [
@@ -916,13 +943,13 @@ function getPrivateMessageView(string|array $stop = '', string $info = '', int $
         foreach (['query' => $pick['find'], 'stat' => $pick['stat'], 'perd' => $pick['perd'], 'sort' => $pick['sort']] as $key => $val) {
             if ($val !== '') $keys .= $tpl->getHtmlFrag('hidden', ['name_attr' => $key, 'value_attr' => $val, 'input_attr' => '']);
         }
+        $found = $seek ? sprintf(_PRFOUND, $data['total'], $prv->getMessageCount($uid, $box)) : '';
+        getPrivatShown(($found !== '') ? $found : ($data['total'] ? sprintf(_PRSHOWN, $data['offset'] + 1, min($data['offset'] + $data['limit'], $data['total'])) : ''));
         return $tpl->getHtmlPart('privat-list', [
-            'alert_html' => $note,
             'groups' => array_values($days),
             'empty_title' => $seek ? (string)_PRNOHIT : (string)_NO_INFO,
             'empty_icon' => $seek ? 'funnel' : 'inbox',
-            'found' => $seek ? sprintf(_PRFOUND, $data['total'], $prv->getMessageCount($uid, $box)) : '',
-            'shown' => $data['total'] ? sprintf(_PRSHOWN, $data['offset'] + 1, min($data['offset'] + $data['limit'], $data['total'])) : '',
+            'found' => $found,
             'bulk_url' => 'index.php?go=1&op=updatePrivatBox',
             'hidden_html' => $keys,
             'pager_html' => getTplPagerView($data['page'], $data['pages'], intval($conf['privat']['nump']), static fn(int $i): array => [
@@ -952,7 +979,6 @@ function getPrivateMessageView(string|array $stop = '', string $info = '', int $
             $chips .= $tpl->getHtmlFrag('span', ['title' => '', 'chip_tone' => 'neutral', 'icon_name' => 'person', 'text' => sprintf(_PRLIMTO, 25)]);
             $chips .= $tpl->getHtmlFrag('span', ['title' => '', 'chip_tone' => 'neutral', 'icon_name' => 'type', 'text' => sprintf(_PRLIMSUB, 100)]);
             return $tpl->getHtmlPart('privat-view', [
-                'alert_html' => $note,
                 'token' => $tok,
                 'title' => (string)_PRNEW,
                 'chips_html' => $chips,
@@ -991,24 +1017,24 @@ function getPrivateMessageView(string|array $stop = '', string $info = '', int $
             $chips .= $tpl->getHtmlFrag('span', ['title' => _PRMOVE, 'is_message_save' => true, 'text' => _PRMOVE]);
         } elseif (!$mine) {
             $chips .= $tpl->getHtmlFrag('span', [
-                'title' => $view['viewed'] ? _PROLD : _PROUTNEW, 'text' => $view['viewed'] ? _PROLD : _PROUTNEW,
+                'title' => $view['viewed'] ? _PROLD : _PROUTNEW, 'text' => $view['viewed'] ? _READS : _PROUTNEW,
                 'is_message_out' => !$view['viewed'], 'is_message_read' => $view['viewed'] > 0,
             ]);
         } else {
             $chips .= $tpl->getHtmlFrag('span', [
-                'title' => $view['viewed'] ? _PROLD : _PRNEW, 'text' => $view['viewed'] ? _PROLD : _PRNEW,
+                'title' => $view['viewed'] ? _PROLD : _PRNEW, 'text' => $view['viewed'] ? _READS : _PRNEW,
                 'is_message_in' => true,
             ]);
         }
         if ($conf['privat']['profil'] && $pname !== '') {
             $chips .= $tpl->getHtmlFrag('link', [
                 'href' => 'index.php?name=account&op=view&uname='.urlencode($pname),
-                'title' => _PERSONALINFO, 'label' => _PERSONALINFO, 'icon_name' => 'person-badge', 'chip_tone' => 'neutral',
+                'title' => _PERSONALINFO, 'label' => _ACCOUNT, 'icon_name' => 'person-vcard', 'chip_tone' => 'neutral',
             ]);
         }
         if ($conf['privat']['web'] && ($mate['website'] ?? '')) {
             $chips .= $tpl->getHtmlFrag('link', [
-                'href' => (string)$mate['website'], 'title' => _DOWNLLINK, 'label' => _DOWNLLINK,
+                'href' => (string)$mate['website'], 'title' => _DOWNLLINK, 'label' => _SITE,
                 'icon_name' => 'globe', 'chip_tone' => 'neutral', 'is_blank' => true,
             ]);
         }
@@ -1016,7 +1042,6 @@ function getPrivateMessageView(string|array $stop = '', string $info = '', int $
         $quote = '[quote]'.$view['body'].'[/quote]';
         if (getEditorMode() !== 'html') $quote = getDecodedText(replace_break($quote));
         return $tpl->getHtmlPart('privat-view', [
-            'alert_html' => $note,
             'token' => $tok,
             'title' => $view['title'],
             'avatar' => ($pname !== '') ? getUserAvatarUrl(['avatar' => (string)($mate['avatar'] ?? '')]) : getUserAvatarUrl([], true),
@@ -1038,7 +1063,6 @@ function getPrivateMessageView(string|array $stop = '', string $info = '', int $
         ]);
     }
     return $tpl->getHtmlPart('privat-view', [
-        'alert_html' => $note,
         'token' => $tok,
         'is_blank' => true,
         'blank_icon' => 'envelope-open',
@@ -1287,121 +1311,132 @@ function addFavorite() {
         if ($fav) {
             echo getFavoriteButton($id, $mod);
         } else {
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_favorites VALUES (NULL, :uid, :fid, :modul)', ['uid' => $uid, 'fid' => $id, 'modul' => $mod]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_favorites VALUES (NULL, :uid, :fid, :modul, NOW())', ['uid' => $uid, 'fid' => $id, 'modul' => $mod]);
             updatePoints(44);
         }
     }
     echo getFavoriteButton($id, $mod);
 }
 
-# Render the paginated favorites list for the logged-in user
+# Resolve the icon a favourite of one module carries: the profile module map first, then the modules that map does not list
+function getFavoriteIcon(string $mod): string {
+    static $icons = null;
+    $icons ??= getProfileModules();
+    return $icons[$mod]['icon'] ?? match ($mod) {
+        'help' => 'life-preserver',
+        'shop' => 'bag',
+        default => 'star',
+    };
+}
+
+# Render the favorites of the logged-in user as shelves, one per module, under a lamp row and a search tile; the whole list is read in one pass because a shelf and the lamps need every row of the member. mod narrows the shelves to one module, q to the titles that carry the words, and part=shelves answers the htmx call of the search field and the chips with the shelves alone plus the out-of-band tally and chips
 function getFavoriteList(int $obj = 0): string {
     global $db, $conf, $user, $tpl;
     $uid = intval($user[0]);
-    $newlistnum = intval($conf['favorites']['num']);
-    $cid = getVar('get', 'cid', 'num', 1);
-    $offset = ($cid - 1) * $newlistnum;
-    $offset = intval($offset);
-    $a = ($cid) ? $offset + 1 : 1;
+    $max = intval($conf['favorites']['favorites']);
+    $mod = filterVar(getVar('get', 'mod', 'text', ''));
+    $seek = mb_substr(trim((string)getVar('get', 'q', 'word', '')), 0, 60, 'utf-8');
+    $part = getVar('get', 'part', 'text', '') === 'shelves';
+    $tables = ['faq' => 'faq', 'files' => 'files', 'forum' => 'forum', 'help' => 'help', 'links' => 'links', 'media' => 'media', 'news' => 'news', 'pages' => 'pages', 'shop' => 'products'];
 
-    [$fav_num] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid', ['uid' => $uid]));
-    if ($fav_num >= $conf['favorites']['favorites']) {
-        $favinfo = sprintf(_FAVOR_EXIT, $conf['favorites']['favorites']);
-        $fstatus = 'warn';
-    } else {
-        $acfavor = ($conf['favorites']['favorites'] - $fav_num);
-        $favinfo = sprintf(_FAVOR_MAX, $conf['favorites']['favorites'], $fav_num, $acfavor);
-        $fstatus = 'info';
+    $fmap = [];
+    $times = [];
+    $num = 0;
+    $result = $db->getSqlQuery('SELECT id, fid, modul, time FROM '.PREFIX_DB.'_favorites WHERE uid = :uid ORDER BY id DESC', ['uid' => $uid]);
+    while ([$id, $fid, $modul, $time] = $db->getSqlRow($result)) {
+        $num++;
+        if (!isset($tables[$modul]) || intval($fid) < 1) continue;
+        $fmap[$modul][intval($fid)][] = intval($id);
+        $times[intval($id)] = (string)$time;
     }
 
-    $fmassiv = [];
-    $ffmassiv = [];
-    $result = $db->getSqlQuery('SELECT fid, modul FROM '.PREFIX_DB.'_favorites WHERE uid = :uid ORDER BY id DESC LIMIT '.intval($offset).', '.intval($newlistnum), ['uid' => $uid]);
-    while ([$fid, $modul] = $db->getSqlRow($result)) $fmassiv[$modul][] = $fid;
-
-    if ($fmassiv) {
-        foreach ($fmassiv as $key => $val) {
-            $ids = array_values(array_filter(array_map('intval', $val), static fn($v) => $v > 0));
-            if (!$ids) continue;
-            $pp = [];
-            $pm = ['uid' => $uid];
-            foreach ($ids as $k => $v) {
-                $ph = 'f'.$k;
-                $pp[] = ':'.$ph;
-                $pm[$ph] = $v;
-            }
-            $in = implode(', ', $pp);
-            $numl = count($val);
-            if ($key == 'faq') {
-                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_faq AS n ON (f.fid=n.id) WHERE f.uid = :uid AND n.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while ([$id, $fid, $modul, $title] = $db->getSqlRow($result)) $ffmassiv[] = [$id, $fid, $modul, $title];
-            } elseif ($key == 'files') {
-                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_files AS n ON (f.fid=n.id) WHERE f.uid = :uid AND n.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while ([$id, $fid, $modul, $title] = $db->getSqlRow($result)) $ffmassiv[] = [$id, $fid, $modul, $title];
-            } elseif ($key == 'forum') {
-                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_forum AS n ON (f.fid=n.id) WHERE f.uid = :uid AND n.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while ([$id, $fid, $modul, $title] = $db->getSqlRow($result)) $ffmassiv[] = [$id, $fid, $modul, $title];
-            } elseif ($key == 'help') {
-                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_help AS n ON (f.fid=n.id) WHERE f.uid = :uid AND n.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while ([$id, $fid, $modul, $title] = $db->getSqlRow($result)) $ffmassiv[] = [$id, $fid, $modul, $title];
-            } elseif ($key == 'links') {
-                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_links AS n ON (f.fid=n.id) WHERE f.uid = :uid AND n.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while ([$id, $fid, $modul, $title] = $db->getSqlRow($result)) $ffmassiv[] = [$id, $fid, $modul, $title];
-            } elseif ($key == 'media') {
-                $conf['media'] = $conf['media'] ?? [];
-                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title, n.subtitle FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_media AS n ON (f.fid=n.id) WHERE f.uid = :uid AND n.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while ([$id, $fid, $modul, $title, $subtitle] = $db->getSqlRow($result)) {
-                    $title = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
-                    $ffmassiv[] = [$id, $fid, $modul, $title];
-                }
-            } elseif ($key == 'news') {
-                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_news AS n ON (f.fid=n.id) WHERE f.uid = :uid AND n.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while ([$id, $fid, $modul, $title] = $db->getSqlRow($result)) $ffmassiv[] = [$id, $fid, $modul, $title];
-            } elseif ($key == 'pages') {
-                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_pages AS n ON (f.fid=n.id) WHERE f.uid = :uid AND n.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while ([$id, $fid, $modul, $title] = $db->getSqlRow($result)) $ffmassiv[] = [$id, $fid, $modul, $title];
-            } elseif ($key == 'shop') {
-                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_products AS n ON (f.fid=n.id) WHERE f.uid = :uid AND n.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while ([$id, $fid, $modul, $title] = $db->getSqlRow($result)) $ffmassiv[] = [$id, $fid, $modul, $title];
-            }
+    $shelves = [];
+    $last = [];
+    foreach ($fmap as $modul => $fids) {
+        $pp = [];
+        $pm = [];
+        foreach (array_keys($fids) as $idx => $val) {
+            $pp[] = ':f'.$idx;
+            $pm['f'.$idx] = $val;
         }
-    }
-    $cont = $tpl->getHtmlFrag('alert', ['text' => $favinfo, 'meta' => '', 'type' => $fstatus, 'is_warn' => $fstatus !== 'info']);
-    if ($ffmassiv) {
         $rows = [];
-        foreach ($ffmassiv as $key => $val) {
-            $id = $val[0];
-            $fid = $val[1];
-            $modul = $val[2];
-            $title = $val[3];
-            $surl = 'index.php?name='.$modul.'&op=view&id='.$fid;
-            $items = [
-                ['href' => $surl, 'title' => _SHOW, 'icon_name' => 'eye'],
-                [
-                    'href' => 'index.php?go=1&op=deleteFavorite&id='.$id.'&token='.getSiteToken(),
-                    'title' => _DELETE, 'icon_name' => 'trash', 'is_htmx' => true, 'hx_target' => '#repfavorliste',
-                ],
-            ];
-            $rows[] = [
-                'id' => (string)$a,
-                'cells' => [
-                    ['href' => $surl, 'title' => $title, 'text' => cutstr($title, 100)],
-                    ['is_num' => true, 'content_html' => getActionMenu($items).' '.$tpl->getHtmlFrag('link', ['href' => '#'.$a, 'title' => (string)$a, 'label' => (string)$a, 'is_num_anchor' => true])],
-                ],
-            ];
-            $a++;
+        $extra = ($modul === 'media') ? ', subtitle' : '';
+        $result = $db->getSqlQuery('SELECT id, title'.$extra.' FROM '.PREFIX_DB.'_'.$tables[$modul].' WHERE id IN ('.implode(', ', $pp).')', $pm);
+        while ($row = $db->getSqlRow($result)) {
+            $fid = intval($row[0]);
+            $title = (string)$row[1];
+            $sub = (string)($row[2] ?? '');
+            if ($sub !== '') $title .= ' '.urldecode($conf['media']['mdefis'] ?? '').' '.$sub;
+            foreach ($fids[$fid] ?? [] as $id) {
+                $rows[$id] = [
+                    'title' => $title,
+                    'label_html' => filterTextHighlight(htmlspecialchars(cutstr($title, 100), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), $seek),
+                    'href' => 'index.php?name='.$modul.'&op=view&id='.$fid,
+                    'del_href' => 'index.php?go=1&op=deleteFavorite&id='.$id.'&token='.getSiteToken(),
+                ];
+            }
         }
-        $cont .= $tpl->getHtmlPart('content-list', [
-            'rows' => $rows,
-            'table_open' => ['open' => true, 'col_id' => _ID, 'col_title' => _TITLE],
-            'table_close' => [],
-        ]);
-        $numpages = ceil($fav_num / $newlistnum);
-        $cont .= getAsyncPager('pagenum', $fav_num, $numpages, $newlistnum, $conf['favorites']['nump'], $cid, '0', 1, 'getFavoriteList', 'favorliste', 0, '', '');
-    } else {
-        $cont = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
+        if (!$rows) continue;
+        krsort($rows);
+        $top = array_key_first($rows);
+        if (!$last || $top > $last['id']) $last = ['id' => $top, 'title' => $rows[$top]['title'], 'mod' => $modul, 'time' => $times[$top] ?? ''];
+        $shelves[$modul] = ['key' => $modul, 'title' => getModuleName($modul), 'title_html' => filterTextHighlight(htmlspecialchars(getModuleName($modul), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), $seek), 'icon' => getFavoriteIcon($modul), 'count' => count($rows), 'rows' => array_values($rows)];
     }
-    if ($obj) { return $cont; }
+    if (!$shelves) {
+        $cont = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
+        if ($obj) return $cont;
+        echo $cont;
+        return '';
+    }
+    uasort($shelves, static fn(array $a, array $b): int => $b['count'] <=> $a['count']);
+    if (!isset($shelves[$mod])) $mod = '';
+    $total = array_sum(array_column($shelves, 'count'));
+    $lead = array_key_first($shelves);
+
+    # The chips list every module the member has; the view keeps the shelves the module and the words leave standing
+    $base = 'index.php?go=1&op=getFavoriteList&part=shelves&token='.getSiteToken();
+    $link = 'index.php?name=account&op=favorites'.(($seek !== '') ? '&q='.rawurlencode($seek) : '');
+    $chips = [];
+    $view = [];
+    $pos = 0;
+    foreach ($shelves as $key => $shelf) {
+        $shelf['tone'] = $pos++ % 6;
+        $chips[] = ['label' => $shelf['title'], 'icon' => $shelf['icon'], 'href' => $link.'&mod='.$key, 'hx_url' => $base.'&mod='.$key, 'is_now' => $key === $mod];
+        if ($mod !== '' && $key !== $mod) continue;
+        if ($seek !== '' && mb_stripos($shelf['title'], $seek, 0, 'utf-8') === false) {
+            $shelf['rows'] = array_values(array_filter($shelf['rows'], static fn(array $row): bool => mb_stripos($row['title'], $seek, 0, 'utf-8') !== false));
+            $shelf['count'] = count($shelf['rows']);
+        }
+        if ($shelf['rows']) $view[] = $shelf;
+    }
+    $chips[] = ['label' => _ALL, 'icon' => 'grid', 'href' => $link, 'hx_url' => $base.'&mod=', 'is_now' => $mod === ''];
+
+    # A bookmark stored before the time column existed has no date: the lamp then names its module where the date would stand
+    $quota = ($num >= $max) ? ['tone' => 'warn', 'cat' => 0] : ['tone' => 'info', 'cat' => 4];
+    $lamps = [
+        $quota + ['label' => _FAVORITES, 'value' => sprintf(_NUMOF, $num, $max), 'note' => sprintf(_FAVOR_FREE, max($max - $num, 0), $max)],
+        ['tone' => 'ok', 'cat' => 1, 'label' => _FAVOR_MODS, 'value' => (string)count($shelves), 'note' => implode(', ', array_column($shelves, 'title'))],
+        ['tone' => 'info', 'cat' => 4, 'label' => _FAVOR_TOP, 'value' => $shelves[$lead]['title'], 'note' => sprintf(_NUMOF, $shelves[$lead]['count'], $total)],
+        ['tone' => 'ok', 'cat' => 1, 'label' => _FAVOR_LAST, 'value' => ($last['time'] !== '') ? format_time($last['time']) : getModuleName($last['mod']), 'note' => $last['title']],
+    ];
+    $cont = $tpl->getHtmlPart($part ? 'account-favorites-part' : 'account-favorites', [
+        'is_oob' => $part,
+        'lamps' => $lamps,
+        'chips' => $chips,
+        'shelves' => $view,
+        'mod' => $mod,
+        'seek' => $seek,
+        'seek_url' => $base,
+        'tally' => sprintf(_NUMOF, array_sum(array_column($view, 'count')), $total),
+        'seek_label' => _FAVOR_SEEK,
+        'seek_note' => _FAVOR_SEEKNOTE,
+        'none_text' => _FAVOR_NONE,
+        'fav_label' => _FAVORITES,
+        'fold_note' => _FAVOR_FOLD,
+        'show_label' => _SHOW,
+        'del_label' => _DELETE,
+    ]);
+    if ($obj) return $cont;
     echo $cont;
     return '';
 }

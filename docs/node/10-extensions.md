@@ -172,3 +172,9 @@ public function updateNodeSyncList(int $limit): array;
 ## Состояние проектирования
 
 Контракты сверены с документами-владельцами; результаты закрытия задач указаны в TODO.md. Проверки реализации определены в 13-testing.md.
+
+## Конструкторы и системный запуск
+
+NodeSupport::__construct(Database $db, NodeContext $context); NodeSync::__construct(Database $db, NodeContext $context, Feed $feed). Зависимости создаёт закрытая фабрика в core/classes/node/ext/load.php. Field не хранит состояния: внутреннее использование NodeQuery получает обычный экземпляр Field, без нового слоя фабрик.
+
+Системный NodeSync получает task=true по 05; updateNodeSyncList требует его, обычный административный updateNodeSync проверяет модератора. Флаг не приходит из запроса и не заменяет aid/super. Это тот же договор системного запуска, что у очереди nodepublish.

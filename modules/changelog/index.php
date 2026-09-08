@@ -79,6 +79,7 @@ function changelog(): void {
         'totcom' => $totcom,
         'page' => $page,
         'totpage' => $totpage,
+        'page_text' => sprintf(_NUMOF, $page, $totpage),
         'commits' => chlogRenderCommits($compg, $config + ['highlight' => $filters['search']]),
         'paging' => chlogRenderPaging($conf['name'], $totcom, $totpage, $config['perpage'], $page, $filters),
         'txt_filter_heading' => _CHLOG_FILTER,

@@ -789,6 +789,7 @@ CALL addidx('{prefix}_favorites', 'uid',          '`uid`',                     0
 CALL addidx('{prefix}_favorites', 'fid',          '`fid`',                     0);
 CALL addidx('{prefix}_favorites', 'modul',        '`modul`',                   0);
 CALL addidx('{prefix}_favorites', 'uid_fid_modul','`uid`, `fid`, `modul`',     1);
+CALL addcol('{prefix}_favorites', 'time',         'DATETIME DEFAULT NULL');
 
 # =============================================================================
 # Batch G — _files
