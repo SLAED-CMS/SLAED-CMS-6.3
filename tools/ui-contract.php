@@ -366,14 +366,10 @@ return [
             .'.sl-session-line[data-sl-audience="users"] > .bi, .sl-fm-win .sl-fm-job.sl-is-done > .bi, .sl-topic-moderated .bi',
         '.sl-fieldset-form-legend-danger, .sl-text-danger, .sl-hide::before, .sl-hide::after, .sl-profile-proof.sl-is-warn i, '
             .'.sl-profile-wide.sl-is-warn h3 i, .sl-fm-win .sl-fm-empty.sl-is-fail .bi, .sl-fm-win .sl-fm-job.sl-is-fail > .bi',
-        '.sl-pmf-focus > summary .bi-lightning-charge, .sl-profile-row-private > i, .sl-session-line[data-sl-audience="bots"] > .bi, '
-            .'.sl-topic-hot .bi, .sl-topic-admin .bi',
+        '.sl-profile-row-private > i, .sl-session-line[data-sl-audience="bots"] > .bi, .sl-topic-hot .bi, .sl-topic-admin .bi',
         # A category tone and the tone a kept message wears are one colour under two names on purpose: the first is a
         # category of the catalogue, the second a state of a message, and they are free to part without touching each other
         '.sl-cat-tone-2, .sl-pmf-slot-keep',
-        # The action row of a forum listing beside the head of a settings tile: the shortest way to put two things on one
-        # line, met by two components that share nothing else. Merging would file the tile's head inside the forum block
-        '.sl-forum-top .sl-pull-right, .sl-forum-foot .sl-pull-right, .sl-opt-tile-head',
         # Five groups the colour fold closed over: the changelog island, the two service tones of the social icons and the
         # colour a heading link carried all reached a role that other places already read, and a page ground meeting an editor
         # ground is a coincidence of one role and not one component. Four of the five cross a file boundary that no selector
@@ -445,8 +441,6 @@ return [
         # a link in a sidebar block beside a link in a table cell: two places one title is cut off with an ellipsis, and they live in two
         # layouts
         '.sl-block-content > li > a, .sl-cell-ellipsis > a:last-child',
-        # the page a breadcrumb is standing on beside the note under a focused message: one is a position, the other a reading of the clock
-        '.sl-crumb-cur, .sl-pmf-focus > summary small',
         # the buttons under a notice beside the chips of a message filter: two wrapping rows in two components
         '.sl-alert-actions, .sl-pmf-chips',
         # the foot of a reply box beside a group of radios and the door of a file row: a toolbar, a form control and a row of a form that
@@ -490,9 +484,6 @@ return [
         # the label of a cabinet action beside the figure of a profile score and the caption of a field of the file manager window:
         # a name, a number and a caption, which is three components reaching one tone at one step
         '.sl-cab-act b, .sl-fm-win .sl-fm-label, .sl-profile-score > b',
-        # the glyph of a cabinet row, of a profile entry and of a profile info line: three components whose icon is centred in the brand
-        # tone
-        '.sl-cab-row > i, .sl-profile-entry > i, .sl-profile-info-row i',
         # the title of a cabinet row beside the correspondent of a message slot: two titles cut off at the same step
         '.sl-cab-row b, .sl-pmf-slot-top b',
         # the rail of the cabinet beside the rail of a profile, both turning their side border into a bottom one when the two columns stack.

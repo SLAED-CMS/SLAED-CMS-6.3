@@ -228,13 +228,13 @@ function getAdminSettingsRow(string $axis): string {
         $row = ['op' => 'mode', 'field' => 'mode', 'icon' => $icon[$mode], 'title' => _THEME, 'hint' => $name[$mode]];
     } elseif ($axis === 'editor') {
         $edkey = (string)($admin[3] ?? $conf['editor']['admin'] ?? 'plain');
-        $row = ['op' => 'changeeditor', 'field' => 'editor', 'icon' => 'pencil-square', 'title' => _EDITOR, 'hint' => _EDITOR];
+        $row = ['op' => 'changeeditor', 'field' => 'editor', 'icon' => getIconName('editor'), 'title' => _EDITOR, 'hint' => _EDITOR];
     } else {
         if (($conf['multilingual'] ?? 0) != 1) return '';
         foreach (getLanguageList() as $lang => $label) {
             $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $lang, 'label_text' => $label, 'is_selected' => $lang === $locale]);
         }
-        $row = ['op' => 'newlang', 'field' => 'newlang', 'icon' => 'translate', 'title' => _LANGUAGE, 'hint' => _LANGUAGE];
+        $row = ['op' => 'newlang', 'field' => 'newlang', 'icon' => getIconName('language'), 'title' => _LANGUAGE, 'hint' => _LANGUAGE];
     }
     $safe = htmlspecialchars($row['hint'], ENT_QUOTES, 'UTF-8');
     $send = 'this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()';
@@ -293,19 +293,19 @@ function getAdminIconWindow(): string {
 function getAdminTopMenu(): string {
     global $admin, $afile, $tpl;
     $items = !isAdmin(true) ? [
-        ['href' => '#', 'label' => _HELLO.', '.substr((string)($admin[1] ?? ''), 0, 25).'!', 'blank' => false, 'icon' => 'person-vcard'],
-        ['href' => $afile.'.php', 'label' => _HOME, 'blank' => false, 'icon' => 'house-door'],
-        ['href' => '/', 'label' => _SITE, 'blank' => true, 'icon' => 'globe2', 'split' => true],
-        ['href' => 'index.php?name=account', 'label' => _ACCOUNT, 'blank' => true, 'icon' => 'person'],
-        ['href' => $afile.'.php?op=logout', 'label' => _LOGOUT, 'blank' => false, 'icon' => 'box-arrow-right', 'split' => true],
+        ['href' => '#', 'label' => _HELLO.', '.substr((string)($admin[1] ?? ''), 0, 25).'!', 'blank' => false, 'icon' => getIconName('profile')],
+        ['href' => $afile.'.php', 'label' => _HOME, 'blank' => false, 'icon' => getIconName('home')],
+        ['href' => '/', 'label' => _SITE, 'blank' => true, 'icon' => getIconName('site'), 'split' => true],
+        ['href' => 'index.php?name=account', 'label' => _ACCOUNT, 'blank' => true, 'icon' => getIconName('account')],
+        ['href' => $afile.'.php?op=logout', 'label' => _LOGOUT, 'blank' => false, 'icon' => getIconName('logout'), 'split' => true],
     ] : [
-        ['href' => $afile.'.php', 'label' => _HOME, 'blank' => false, 'icon' => 'house-door'],
-        ['href' => $afile.'.php?name=blocks', 'label' => _BLOCKS, 'blank' => false, 'icon' => 'grid-3x3-gap'],
-        ['href' => $afile.'.php?name=modules', 'label' => _MODULES, 'blank' => false, 'icon' => 'gpu-card'],
-        ['href' => $afile.'.php?name=categories', 'label' => _CATEGORIES, 'blank' => false, 'icon' => 'folder'],
-        ['href' => '/', 'label' => _SITE, 'blank' => true, 'icon' => 'globe2', 'split' => true],
-        ['href' => 'index.php?name=account', 'label' => _ACCOUNT, 'blank' => true, 'icon' => 'person'],
-        ['href' => $afile.'.php?op=logout', 'label' => _LOGOUT, 'blank' => false, 'icon' => 'box-arrow-right', 'split' => true],
+        ['href' => $afile.'.php', 'label' => _HOME, 'blank' => false, 'icon' => getIconName('home')],
+        ['href' => $afile.'.php?name=blocks', 'label' => _BLOCKS, 'blank' => false, 'icon' => getIconName('blocks')],
+        ['href' => $afile.'.php?name=modules', 'label' => _MODULES, 'blank' => false, 'icon' => getIconName('modules')],
+        ['href' => $afile.'.php?name=categories', 'label' => _CATEGORIES, 'blank' => false, 'icon' => getIconName('categories')],
+        ['href' => '/', 'label' => _SITE, 'blank' => true, 'icon' => getIconName('site'), 'split' => true],
+        ['href' => 'index.php?name=account', 'label' => _ACCOUNT, 'blank' => true, 'icon' => getIconName('account')],
+        ['href' => $afile.'.php?op=logout', 'label' => _LOGOUT, 'blank' => false, 'icon' => getIconName('logout'), 'split' => true],
     ];
     $html = '';
     foreach ($items as $item) {
@@ -1457,13 +1457,13 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
     }
     // The gallery offers what the fan of the row offers, because it presses that fan: every key here is a key the fan
     // carries, and one the context withholds is absent from both
-    $acts = [['icon' => 'download', 'name' => _DOWNLOAD, 'tone' => 'neutral', 'is_load' => true]];
-    if (!empty($able['edit'])) $acts[] = ['key' => 'fmedit', 'icon' => 'pencil-square', 'name' => _EDIT, 'tone' => 'info'];
-    if (!empty($able['rename'])) $acts[] = ['key' => 'fmrename', 'icon' => 'input-cursor-text', 'name' => _UPLOADS_TORENAME, 'tone' => 'neutral'];
-    if (!empty($able['copy'])) $acts[] = ['key' => 'fmcopy', 'icon' => 'files', 'name' => _UPLOADS_TOCOPY, 'tone' => 'neutral'];
-    if (!empty($able['move'])) $acts[] = ['key' => 'fmmove', 'icon' => 'folder-symlink', 'name' => _UPLOADS_TOMOVE, 'tone' => 'neutral'];
-    if (!empty($able['compress'])) $acts[] = ['key' => 'fmcompress', 'icon' => 'file-zip', 'name' => _UPLOADS_TOZIP, 'tone' => 'neutral'];
-    if (!empty($able['delete'])) $acts[] = ['key' => 'fmdelete', 'icon' => 'trash3', 'name' => _DELETE, 'tone' => 'danger'];
+    $acts = [['icon' => getIconName('download'), 'name' => _DOWNLOAD, 'tone' => 'neutral', 'is_load' => true]];
+    if (!empty($able['edit'])) $acts[] = ['key' => 'fmedit', 'icon' => getIconName('fmedit'), 'name' => _EDIT, 'tone' => 'info'];
+    if (!empty($able['rename'])) $acts[] = ['key' => 'fmrename', 'icon' => getIconName('fmrename'), 'name' => _UPLOADS_TORENAME, 'tone' => 'neutral'];
+    if (!empty($able['copy'])) $acts[] = ['key' => 'fmcopy', 'icon' => getIconName('fmcopy'), 'name' => _UPLOADS_TOCOPY, 'tone' => 'neutral'];
+    if (!empty($able['move'])) $acts[] = ['key' => 'fmmove', 'icon' => getIconName('fmmove'), 'name' => _UPLOADS_TOMOVE, 'tone' => 'neutral'];
+    if (!empty($able['compress'])) $acts[] = ['key' => 'fmcompress', 'icon' => getIconName('fmcompress'), 'name' => _UPLOADS_TOZIP, 'tone' => 'neutral'];
+    if (!empty($able['delete'])) $acts[] = ['key' => 'fmdelete', 'icon' => getIconName('fmdelete'), 'name' => _DELETE, 'tone' => 'danger'];
     $shot = !$full ? '' : getWindowShot([
         'own' => 'files',
         'prev_text' => _BACK,

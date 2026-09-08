@@ -1,4 +1,4 @@
 <div class="sl-profile-feed">
-  <h3><i class="bi bi-{{ icon }}" aria-hidden="true"></i> {{ title }}<span class="sl-profile-feed-live" title="{{ title }}"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></span></h3>
+  {% include 'fragments/panel-head.html' with head %}
   {{{ tabs_html }}}
 </div>

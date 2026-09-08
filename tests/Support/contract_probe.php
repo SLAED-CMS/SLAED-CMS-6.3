@@ -673,7 +673,7 @@ function getProbeFeedLegacy(int $uid): string {
         $tabs[] = $inf['title'];
         $texts[] = $tpl->getHtmlPart('account-profile-feed-list', ['entries' => $lists[$mod], 'icon_name' => $inf['icon'], 'empty_text' => _NO_INFO]);
     }
-    return $tpl->getHtmlPart('account-profile-feed', ['title' => _LASTACTIVITY, 'icon' => 'activity', 'tabs_html' => getNaviTabs(0, 'profeed', $tabs, $texts)]);
+    return $tpl->getHtmlPart('account-profile-feed', ['head' => ['icon' => getIconName('activity'), 'title' => _LASTACTIVITY, 'live_title' => _LASTACTIVITY], 'tabs_html' => getNaviTabs(0, 'profeed', $tabs, $texts)]);
 }
 
 # Report whether the migrated profile feed renders the same markup as the UNION it replaces, and whether the hub writes the three fields the comment branch of its own UNION wrote

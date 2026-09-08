@@ -7,12 +7,12 @@
     <h1 class="sl-font sl-profile-name">{{ name }}</h1>
     {% if rank %}<div class="sl-profile-rank">{{ rank }}</div>{% endif %}
     <div class="sl-profile-chips">
-      {% if group_name %}<span class="sl-chip sl-chip-accent" title="{{ group_label }}"><i class="bi bi-people-fill" aria-hidden="true"></i>{{ group_name }}</span>{% endif %}
-      <span class="sl-chip sl-chip-success"><i class="bi bi-wifi" aria-hidden="true"></i>{{ online_label }}</span>
+      {% if group_name %}<span class="sl-chip sl-chip-accent" title="{{ group_label }}"><i class="bi bi-people-fill" aria-hidden="true"></i><span>{{ group_name }}</span></span>{% endif %}
+      <span class="sl-chip sl-chip-success"><i class="bi bi-wifi" aria-hidden="true"></i><span>{{ online_label }}</span></span>
     </div>
     <div class="sl-profile-chips">
-      {% if rating %}<span class="sl-chip sl-chip-info" title="{{ rating_label }}"><i class="bi bi-star-fill" aria-hidden="true"></i>{{ rating }}</span>{% endif %}
-      {% if has_points and not has_level %}<span class="sl-chip sl-chip-info" title="{{ points_label }}"><i class="bi bi-stars" aria-hidden="true"></i>{{ points_text }}</span>{% endif %}
+      {% if rating %}<span class="sl-chip sl-chip-info" title="{{ rating_label }}"><i class="bi bi-star-fill" aria-hidden="true"></i><span>{{ rating }}</span></span>{% endif %}
+      {% if has_points and not has_level %}<span class="sl-chip sl-chip-info" title="{{ points_label }}"><i class="bi bi-stars" aria-hidden="true"></i><span>{{ points_text }}</span></span>{% endif %}
     </div>
     {% if has_level %}
     <div class="sl-knob sl-knob-ok sl-cab-ring{% if level_full %} sl-knob-full{% endif %}"{% if level_next %} title="{{ level_next }}"{% endif %}>
@@ -25,10 +25,7 @@
     {% endif %}
   </aside>
   <div class="sl-cab-main">
-    <div class="sl-cab-head">
-      <h3><i class="bi bi-house-door" aria-hidden="true"></i> {{ kicker }}</h3>
-      {% if lastvisit %}<span class="sl-chip sl-chip-neutral" title="{{ lastvisit_label }}"><i class="bi bi-clock-history" aria-hidden="true"></i>{{ lastvisit }}</span>{% endif %}
-    </div>
+    {% include 'fragments/panel-head.html' with home_head %}
     <div class="sl-cab-actions">
       {% for item in actions %}
       <a class="sl-cab-act sl-cat-tone-{{ item.tone }}" href="{{ item.href }}" title="{{ item.title }}">
@@ -41,7 +38,7 @@
     </div>
     {% if pms %}
     <div class="sl-profile-panel sl-cat-tone-0">
-      <h3><i class="bi bi-envelope" aria-hidden="true"></i> {{ pm_title }}<span class="sl-profile-feed-live" title="{{ pm_title }}"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></span></h3>
+      {% include 'fragments/panel-head.html' with pm_head %}
       <div class="sl-profile-scroll" data-sl-profile-scroll>
         <div class="sl-profile-scroll-feed">
           {% for pm in pms %}
@@ -55,7 +52,7 @@
   <div class="sl-cab-lower">
     {% if favs %}
     <div class="sl-profile-panel sl-cat-tone-3">
-      <h3><i class="bi bi-star" aria-hidden="true"></i> {{ fav_title }}<span class="sl-profile-feed-live" title="{{ fav_title }}"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></span></h3>
+      {% include 'fragments/panel-head.html' with fav_head %}
       <div class="sl-profile-scroll" data-sl-profile-scroll>
         <div class="sl-profile-scroll-feed">
           {% for fav in favs %}
@@ -68,7 +65,7 @@
     {% if activity_html %}<div class="sl-profile-panel sl-cat-tone-1">{{{ activity_html }}}</div>{% endif %}
     {% if has_rss %}
     <div class="sl-profile-panel sl-cat-tone-2">
-      <h3><i class="bi bi-rss" aria-hidden="true"></i> {{ rss_title }}</h3>
+      {% include 'fragments/panel-head.html' with rss_head %}
       {% if rss_options_html %}
       <form class="sl-cab-rss-form" method="post" action="{{ rss_action }}" hx-post="{{ rss_action }}" hx-target="#repcabrss" hx-swap="innerHTML" hx-push-url="false">
         <select class="sl-field" name="url" title="{{ rss_select_label }}">{{{ rss_options_html }}}</select>

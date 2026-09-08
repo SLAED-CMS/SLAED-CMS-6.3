@@ -5446,11 +5446,8 @@ td.sl-fl-col-stat {
   margin: -1px var(--sl-space-2) 0 0;
 }
 
-/* The same row serves the head of a settings tile and the heading of a cabinet panel or the activity feed */
 .sl-forum-top .sl-pull-right,
-.sl-forum-foot .sl-pull-right,
-.sl-opt-tile-head,
-:is(.sl-profile-panel, .sl-profile-feed, .sl-profile-head, .sl-cab-head, .sl-profile-hub-head) h3 {
+.sl-forum-foot .sl-pull-right {
   display: flex;
   align-items: center;
   gap: var(--sl-space-3);
@@ -8050,10 +8047,10 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   grid-column: span 6;
 }
 
-/* The heading of a panel and of the activity feed - which also stands outside a panel, on the profile page - is the
-   head of a settings tile: the same chip of tone, the same type. Its row is laid by the forum bar's rule above */
-.sl-opt-tile-head .bi,
-:is(.sl-profile-panel, .sl-profile-feed, .sl-profile-head, .sl-cab-head, .sl-profile-hub-head) h3 > .bi {
+/* The one head of the cabinet, fragments/panel-head.html: a settings tile, a cabinet panel, the activity feed, the
+   profile hub and a favourites shelf all open with the same row - a heading with the chip of tone on the left, and on
+   the right whatever the head carries: chips, actions, the live mark or the chevrons of a fold */
+.sl-profile-hub-head h3 > .bi {
   display: grid;
   place-items: center;
   flex: 0 0 var(--sl-size-chip);
@@ -8065,8 +8062,11 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   font-size: var(--sl-size-icon-sm);
 }
 
-.sl-opt-tile-head b,
-:is(.sl-profile-panel, .sl-profile-feed, .sl-profile-head, .sl-cab-head, .sl-profile-hub-head) h3 {
+.sl-profile-hub-head h3 {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  margin: 0;
   color: var(--sl-text-strong);
   font-size: var(--sl-font-small);
   font-weight: var(--sl-weight-semibold);
@@ -8361,19 +8361,16 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   margin-top: var(--sl-space-5);
 }
 
-/* Long chip labels (special groups, level hints) truncate with an ellipsis instead of breaking the rail width; full text stays in the title attribute */
+/* A chip of the rail is the one flex chip of the theme, held to the rail width; its label stands in a span of its own so a long
+   special group or level hint ends in an ellipsis where an anonymous flex text item could not, and the full text stays in the title */
 .sl-profile-chips .sl-chip {
-  display: inline-block;
   max-width: 100%;
   margin: 0;
-  overflow: hidden;
-  line-height: 24px;
-  text-overflow: ellipsis;
 }
 
-/* A block chip has no flex gap, so its icon carries the same distance to the text every other chip gets from the gap; the templates write the text right after the icon, with no space to add to it */
-.sl-profile-chips .sl-chip > .bi {
-  margin-right: var(--sl-space-2);
+.sl-profile-chips .sl-chip > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* The offline status chip is informational, not clickable */
@@ -8439,14 +8436,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, var(--sl-primary-subtle), var(--sl-primary));
-}
-
-.sl-profile-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sl-space-5);
-  min-width: 0;
 }
 
 .sl-profile-trust {
@@ -8523,23 +8512,11 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 /* The panel of the cabinet and of the profile is the tile of the settings page - one box, one head - and the rules
-   are the tile's, joined by selector; only the margin under the head is the panel's own, because a tile spaces its
-   children by its gap and the panel's heading stands in normal flow. A heading standing in a head row - the card, the
-   deck, the hub - is spaced by that row and carries none */
-.sl-profile-panel h3,
-.sl-profile-feed h3 {
-  margin: 0 0 var(--sl-space-4);
-}
-
-.sl-profile-head h3,
-.sl-cab-head h3,
-.sl-profile-hub-head h3 {
-  margin: 0;
-}
-
-.sl-profile-panel h3 .sl-profile-feed-live,
-.sl-profile-feed h3 .sl-profile-feed-live {
-  margin-left: auto;
+   are the tile's, joined by selector; only the margin under the head is the panel's own, the room the panel's content
+   asks for beyond the gap of the box. In the settings tile and the favourites shelf the gap alone spaces the head */
+.sl-profile-panel > .sl-profile-hub-head,
+.sl-profile-feed > .sl-profile-hub-head {
+  margin-bottom: var(--sl-space-4);
 }
 
 .sl-profile-wide {
@@ -8554,7 +8531,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   background: var(--sl-danger);
 }
 
-.sl-profile-wide .sl-profile-tags + h3 {
+.sl-profile-wide .sl-profile-tags + .sl-profile-hub-head {
   margin-top: var(--sl-space-5);
 }
 
@@ -8576,9 +8553,8 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   border-bottom: 0;
 }
 
-/* The icon of an info row, of a feed entry and of a cabinet row is one icon */
+/* The icon of an info row and of a cabinet row is one icon */
 .sl-profile-info-row i,
-.sl-profile-entry > i,
 .sl-cab-row > i {
   color: var(--sl-primary);
   text-align: center;
@@ -8668,7 +8644,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 /* A row of the hub is an entry of the activity feed - the count where the entry keeps its date, the module where it
    keeps its text, the rating and the favourites where it keeps its rating - in the same scroll; it is a step taller,
    because it carries a chip at either end */
-.sl-profile-hub-row {
+.sl-cab-row.sl-profile-hub-row {
   min-height: var(--sl-hub-row-height);
 }
 
@@ -8786,16 +8762,23 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   animation-play-state: paused;
 }
 
-.sl-profile-entry {
+/* The one row of the cabinet lists: an icon column, the title and a right slot, at the entry height. The activity feed
+   and the profile hub put a date or a count chip before the icon and say so with the entry modifier, which opens the
+   fourth track; the message row of the private page keeps its own tracks, padding and states as a modifier further on */
+.sl-cab-row {
   display: grid;
-  grid-template-columns: auto 30px minmax(0, 1fr) auto;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--sl-space-4);
   min-height: var(--sl-entry-height);
   border-bottom: 1px solid var(--sl-border-subtle);
+  color: var(--sl-text-muted);
 }
 
-.sl-profile-entry:last-child,
+.sl-cab-row.sl-profile-entry {
+  grid-template-columns: auto 30px minmax(0, 1fr) auto;
+}
+
 .sl-cab-row:last-child {
   border-bottom: 0;
 }
@@ -8814,7 +8797,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   color: var(--sl-primary);
 }
 
-.sl-profile-entry .sl-chip,
 .sl-cab-row .sl-chip {
   margin: 0;
 }
@@ -8837,12 +8819,8 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   padding: var(--sl-space-7);
 }
 
-.sl-cab-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sl-space-3);
+/* The head of the deck stands in normal flow over the action tiles, so it carries the room the tiles keep from it */
+.sl-cab-main > .sl-profile-hub-head {
   margin-bottom: var(--sl-space-5);
 }
 
@@ -9227,14 +9205,13 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 /* Two levels instead of three: the row carries the subject with its time above the sender with the snippet, which puts twice as many messages on one screen without losing either of them */
-.sl-pmf-item {
+/* The message row is the cabinet row with a checkbox and an avatar before the body, which is why it opens with its own tracks, sits its cells at the top and keeps a padding the flush cabinet rows do not have */
+.sl-cab-row.sl-pmf-item {
   position: relative;
-  display: grid;
   grid-template-columns: 22px 26px minmax(0, 1fr) auto;
   align-items: start;
   gap: var(--sl-space-3);
   padding: var(--sl-space-3) var(--sl-space-4) var(--sl-space-3) var(--sl-space-3);
-  border-bottom: 1px solid var(--sl-border-subtle);
   transition: background-color var(--sl-time-fast) var(--sl-ease-out);
 }
 
@@ -9399,9 +9376,8 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   margin-left: auto;
 }
 
-/* The focus deck: a strip of the unread above the list, folded by a plain details so no script decides whether it is open */
-/* The folded content of a details is not clipped by the overflow of the element that folds it, so the strip that scrolls sideways inside would take the whole page with it */
-/* Paint containment is what really stops it — overflow: clip on this element does not — and nothing inside the deck is meant to paint outside its own border box */
+/* The focus deck: a strip of the unread above the list, folded by the cabinet head through the toggle mechanic of slaed.js, the way a favourites shelf folds, so the state outlives the page */
+/* The strip scrolls sideways inside, and paint containment keeps it inside its own border box — overflow: clip on this element does not */
 .sl-pmf-focus {
   contain: paint;
   margin-bottom: var(--sl-space-6);
@@ -9410,38 +9386,12 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   background: var(--sl-bg);
 }
 
-.sl-pmf-focus > summary {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--sl-space-3);
+/* The head of the deck is the one cabinet head with the padding of the box it stands in; the line under it belongs to an open deck only */
+.sl-pmf-focus > .sl-profile-hub-head {
   padding: var(--sl-space-4) var(--sl-space-5);
-  color: var(--sl-text-strong);
-  font-size: var(--sl-font-body);
-  font-weight: var(--sl-weight-bold);
-  list-style: none;
-  cursor: pointer;
 }
 
-.sl-pmf-focus > summary::-webkit-details-marker { display: none; }
-.sl-pmf-focus > summary .bi-lightning-charge { color: var(--sl-warning); }
-
-.sl-pmf-focus > summary small {
-  color: var(--sl-text-muted);
-  font-weight: var(--sl-weight-normal);
-}
-
-.sl-pmf-focus > summary::after {
-  content: "\F282";
-  margin-left: auto;
-  color: var(--sl-text-subtle);
-  font-family: "bootstrap-icons";
-  font-size: var(--sl-font-small);
-  font-weight: var(--sl-weight-normal);
-}
-
-.sl-pmf-focus[open] > summary::after { content: "\F286"; }
-.sl-pmf-focus[open] > summary { border-bottom: 1px solid var(--sl-border-subtle); }
+.sl-pmf-focus > .sl-profile-hub-head:not(.sl-is-closed) { border-bottom: 1px solid var(--sl-border-subtle); }
 
 .sl-pmf-deck {
   display: flex;
@@ -9779,18 +9729,6 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   background: linear-gradient(0deg, var(--sl-bg), transparent);
 }
 
-/* A row of the cabinet feeds: the entry of the activity feed with the icon column of the entry and its height; the
-   rest of its rules stand beside the entry's, joined by selector */
-.sl-cab-row {
-  display: grid;
-  grid-template-columns: 30px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--sl-space-4);
-  min-height: var(--sl-entry-height);
-  border-bottom: 1px solid var(--sl-border-subtle);
-  color: var(--sl-text-muted);
-}
-
 .sl-cab-msg-ava {
   width: var(--sl-cab-msg-width);
   height: var(--sl-cab-msg-height);
@@ -9878,7 +9816,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
     flex-direction: column;
   }
 
-  .sl-profile-entry {
+  .sl-cab-row.sl-profile-entry {
     grid-template-columns: auto 22px minmax(0, 1fr) auto;
     gap: var(--sl-space-3);
   }

@@ -43,7 +43,7 @@ function modules(): void {
             if (!isset($conf['modules'][$module])) {
                 $conf['modules'][$module] = [
                     'lang' => '_'.strtoupper($module),
-                    'icon' => 'puzzle',
+                    'icon' => getIconName('module'),
                     'active' => 1,
                     'view' => 0,
                     'menu' => 1,
@@ -63,7 +63,7 @@ function modules(): void {
             if (!isset($conf['modules'][$file])) {
                 $conf['modules'][$file] = [
                     'lang' => '_'.strtoupper($file),
-                    'icon' => 'puzzle',
+                    'icon' => getIconName('module'),
                     'active' => 0,
                     'view' => 0,
                     'menu' => 1,

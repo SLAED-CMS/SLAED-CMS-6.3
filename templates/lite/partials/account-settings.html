@@ -1,11 +1,5 @@
 {% if alert_html %}{{{ alert_html }}}{% endif %}
-{% if lamps %}
-<div class="sl-opt-lamps">
-  {% for lamp in lamps %}
-  <div class="sl-opt-lamp{% if lamp.cat %} sl-cat-tone-{{ lamp.cat }}{% else %} sl-is-{{ lamp.tone }}{% endif %}"{% if lamp.is_meter %} data-sl-meter{% endif %}><small>{{ lamp.label }}</small><b{% if lamp.is_meter %} data-sl-meter-num{% endif %}>{{ lamp.value }}</b><span title="{{ lamp.note }}">{{ lamp.note }}{% if lamp.is_meter %} <span data-sl-meter-left>{{ lamp.left }}</span>{% endif %}</span></div>
-  {% endfor %}
-</div>
-{% endif %}
+{% if lamps %}{% include 'fragments/opt-lamps.html' %}{% endif %}
 {% if rail %}
 <nav class="sl-opt-rail" data-sl-spy aria-label="{{ rail_label }}">
   {% for mark in rail %}
@@ -24,7 +18,7 @@
   <div class="sl-opt-grid">
     {% for tile in sec.tiles %}
     <div class="sl-opt-tile sl-opt-w{{ tile.width }} sl-cat-tone-{{ tile.tone }}"{% if tile.hx_post %} hx-post="{{ tile.hx_post }}" hx-trigger="change" hx-params="{{ tile.hx_params }}" hx-target="{{ tile.hx_target }}" hx-swap="innerHTML" hx-push-url="false" data-sl-done="{{ tile.done_text }}"{% endif %}>
-      {% if tile.title %}<div class="sl-opt-tile-head"><i class="bi bi-{{ tile.icon }}" aria-hidden="true"></i><b{% if tile.title_id %} id="{{ tile.title_id }}"{% endif %}>{{ tile.title }}</b></div>{% endif %}
+      {% if tile.title %}{% include 'fragments/panel-head.html' with tile %}{% endif %}
       {% if tile.face_src %}<div class="sl-opt-face"{% if tile.face_id %} id="{{ tile.face_id }}"{% endif %}><img src="{{ tile.face_src }}" alt="{{ tile.face_alt }}" title="{{ tile.face_alt }}"></div>{% endif %}
       {% if tile.text %}<p{% if tile.text_id %} id="{{ tile.text_id }}"{% endif %}>{{ tile.text }}</p>{% endif %}
       {% for fld in tile.fields %}

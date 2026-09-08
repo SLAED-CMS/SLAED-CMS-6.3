@@ -2,7 +2,7 @@
 <div class="sl-profile-scroll" data-sl-profile-scroll>
   <div class="sl-profile-scroll-feed">
     {% for entry in entries %}
-    <div class="sl-profile-entry">
+    <div class="sl-cab-row sl-profile-entry">
       {{{ entry.datehtml }}}
       <i class="bi bi-{{ icon_name }}" aria-hidden="true"></i>
       <a href="{{ entry.href }}" title="{{ entry.label }}">{{ entry.label }}</a>

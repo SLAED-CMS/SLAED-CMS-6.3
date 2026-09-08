@@ -1,5 +1,5 @@
 {
-    "generated": "2026-08-31T20:46:12Z",
+    "generated": "2026-09-08T14:44:58Z",
     "themes": {
         "admin": {
             "count": 0,
@@ -24,15 +24,15 @@
             "dup": 0,
             "names": 0,
             "dead": 0,
-            "single": 204,
+            "single": 207,
             "alias": 0,
             "unsat": 0,
             "unmet": 0,
-            "scoped": 92,
+            "scoped": 89,
             "clash": 0,
             "classes": 0,
             "important": 13,
-            "tokens": 414,
+            "tokens": 416,
             "contrast": 0
         }
     },
@@ -490,6 +490,7 @@
             "--sl-font-hero",
             "--sl-font-micro",
             "--sl-font-small",
+            "--sl-form-label-width",
             "--sl-forum-width",
             "--sl-fp-ava-height",
             "--sl-fp-ava-width",
@@ -743,6 +744,7 @@
             "--sl-vote-height",
             "--sl-vote-width",
             "--sl-warning",
+            "--sl-warning-strong",
             "--sl-warning-subtle",
             "--sl-weight-bold",
             "--sl-weight-medium",

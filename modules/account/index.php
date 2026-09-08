@@ -299,24 +299,24 @@ function view(): void {
             $trank = ($gname) ? _GROUP.': '.$gname : (($rgroup) ? _USER_GROUPS.': '.implode(', ', $rgroup) : _RANK);
             $rankImage = ($grank && file_exists(getThemeImagePath('ranks/'.$grank))) ? getThemeImagePath('ranks/'.$grank) : '';
             $panels = [
-                ['title' => _ACCOUNT, 'icon' => 'person-vcard', 'rows' => [
+                ['title' => _ACCOUNT, 'icon' => getIconName('profile'), 'rows' => [
                     $mkrow('calendar3', _REG, $regdate),
                     $mkrow('clock-history', _LAST_VISIT, $lastvisit),
                     $mkrow('stars', _POINTS, $points),
                     $mkrow('people', _SPEC_GROUP, $gname ?: _NO),
                 ]],
-                ['title' => _ACCOUNT_PERSON, 'icon' => 'person-vcard', 'rows' => [
+                ['title' => _ACCOUNT_PERSON, 'icon' => getIconName('profile'), 'rows' => [
                     $mkrow('cake2', _BIRTHDAY, $birth),
                     $mkrow('geo-alt', _LOCALITYLANG, $from ?: _NO_INFO),
                     $mkrow('person', _GENDER, getGenderText($gender)),
                     $mkrow('translate', _LANGUAGE, $lang),
                 ]],
-                ['title' => _ACCOUNT_WORK, 'icon' => 'briefcase', 'rows' => [
+                ['title' => _ACCOUNT_WORK, 'icon' => getIconName('work'), 'rows' => [
                     $mkrow('person-workspace', _OCCUPATION, $occ ?: _NO_INFO),
                     ($sitev !== _HIDE && $sitev !== _NO_INFO) ? $mkrow('globe', _SITEURL, '', $sitev) : $mkrow('globe', _SITEURL, $sitev),
                     $mkrow('envelope-at', _EMAIL, $mailv, '', $adm && !$view && $mailv !== _HIDE),
                 ]],
-                ['title' => _ACCOUNT_SYSTEM, 'icon' => 'pc-display', 'rows' => [
+                ['title' => _ACCOUNT_SYSTEM, 'icon' => getIconName('system'), 'rows' => [
                     $mkrow('hash', _ID, $idv, '', $adm),
                     $georow,
                     $mkrow('browser-chrome', _BROWSER, $agentv, '', $adm),
@@ -393,7 +393,13 @@ function view(): void {
             $uacts[] = ['href' => '#', 'title' => _BACK, 'icon_name' => 'arrow-left', 'onclick_attr' => 'onclick="window.history.go(-1);return false;"'];
             echo $tpl->getHtmlPart('account-profile', [
                 'name' => $nick,
-                'kicker' => _PERSONALINFO,
+                'main_head' => [
+                    'icon' => getIconName('profile'), 'title' => _PERSONALINFO,
+                    'total_html' => getActionMenu($uacts, true).$acts.$tpl->getHtmlFrag('share', [
+                        'share_url' => getPublicUrl(['name' => $conf['name'], 'op' => 'view', 'uname' => urlencode($nick)]),
+                        'share_title' => $nick,
+                    ]),
+                ],
                 'avatar' => $avatar,
                 'avatar_html' => $tpl->getHtmlFrag('image', ['src' => $avatar, 'alt' => $nick, 'title' => $nick, 'is_avatar' => true]),
                 'is_online' => $ison,
@@ -417,11 +423,6 @@ function view(): void {
                 'level_next' => $nextlab,
                 'points_text' => $points,
                 'points_label' => _POINTS,
-                'user_menu_html' => getActionMenu($uacts, true),
-                'has_admin_actions' => $adm,
-                'admin_actions_html' => $acts,
-                'share_url' => getPublicUrl(['name' => $conf['name'], 'op' => 'view', 'uname' => urlencode($nick)]),
-                'share_title' => $nick,
                 'years' => max(0, intval((time() - strtotime($reg)) / 31556952)),
                 'years_label' => _ACCOUNT_YEARS,
                 'reg_note' => _REG.': '.format_time($reg),
@@ -431,26 +432,26 @@ function view(): void {
                 'group_title' => $gname ?: _ACCOUNT_MEMBER,
                 'group_note' => ($gname) ? _SPEC_GROUP : _SPEC_GROUP.': '._NO,
                 'panels' => $panels,
-                'interests_label' => _INTERESTS,
+                'tags_head' => ['icon' => getIconName('tags'), 'title' => _INTERESTS],
                 'tags' => $tags,
-                'groups_label' => _USER_GROUPS,
+                'groups_head' => ['icon' => getIconName('groups'), 'title' => _USER_GROUPS],
                 'group_chips' => $chips,
                 'has_field' => !empty($field),
                 'field' => $field,
                 'has_warn_list' => $wnum > 0,
-                'warn_label' => _UWARNS,
+                'warn_head' => ['icon' => getIconName('warn'), 'title' => _UWARNS],
                 'warn_html' => $warnhtml,
                 'has_sign' => !empty($sign),
                 'sign' => $sign,
-                'hub_title' => _ACCOUNT_HUB,
+                'hub_head' => ['icon' => getIconName('hub'), 'title' => _ACCOUNT_HUB, 'live_title' => _ACCOUNT_HUB, 'chips' => array_values(array_filter([
+                    ['tone' => 'info', 'icon' => getIconName('items'), 'title' => _ACCOUNT_ITEMS, 'text' => (string)$sumn],
+                    ($sumc > 0) ? ['tone' => 'success', 'icon' => getIconName('rating'), 'title' => _RATING, 'text' => number_format($sumt / $sumc, 2)] : [],
+                    ['tone' => 'accent', 'icon' => getIconName('bookmark'), 'title' => _FAVORITES, 'text' => (string)$sumf],
+                ]))],
                 'hub' => $hub,
-                'col_module' => _MODUL,
                 'col_items' => _ACCOUNT_ITEMS,
                 'col_rating' => _RATING,
                 'col_favs' => _FAVORITES,
-                'tot_items' => (string)$sumn,
-                'tot_rating' => ($sumc > 0) ? number_format($sumt / $sumc, 2) : '',
-                'tot_favs' => (string)$sumf,
                 'feed_html' => getProfileLastView($uid),
             ]);
             echo setComShow($uid, CommentMode::Open->value);
@@ -505,7 +506,7 @@ function profil(): void {
             $fres = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_'.$ftable.' WHERE id IN ('.implode(', ', $fids).')');
             while ([$fid, $ftitle] = $db->getSqlRow($fres)) {
                 $favs[] = [
-                    'icon' => getFavoriteIcon($fmod),
+                    'icon' => getIconName($fmod),
                     'chip_icon' => $conf['modules'][$fmod]['icon'] ?? 'folder',
                     'title' => cutstr($ftitle, 60),
                     'href' => 'index.php?name='.$fmod.'&op=view&id='.$fid,
@@ -514,8 +515,9 @@ function profil(): void {
             }
         }
     }
+    $seen = ($inf['lastvis'] ?? '') ? format_time($inf['lastvis'], _TIMESTRING) : '';
     echo $tpl->getHtmlPart('account-home', [
-        'kicker' => _THISISYOURPAGE,
+        'home_head' => ['icon' => getIconName('home'), 'title' => _THISISYOURPAGE, 'chips' => ($seen !== '') ? [['tone' => 'neutral', 'icon' => getIconName('visit'), 'title' => _LAST_VISIT, 'text' => $seen]] : []],
         'name' => (string)$inf['name'],
         'avatar' => getUserAvatarUrl(['avatar' => (string)($inf['avatar'] ?? '')]),
         'ring' => $lvl['ring'],
@@ -535,16 +537,14 @@ function profil(): void {
         'rating_label' => _RATING,
         'profile_href' => 'index.php?name='.$conf['name'].'&op=view&id='.$uid,
         'profile_label' => _PERSONALINFO,
-        'lastvisit' => ($inf['lastvis'] ?? '') ? format_time($inf['lastvis'], _TIMESTRING) : '',
-        'lastvisit_label' => _LAST_VISIT,
         'actions' => getUserNavItems(),
-        'pm_title' => _PRIVAT,
+        'pm_head' => ['icon' => getIconName('messages'), 'title' => _PRIVAT, 'live_title' => _PRIVAT],
         'pm_href' => 'index.php?name='.$conf['name'].'&op=privat',
         'pms' => $pms,
-        'fav_title' => _FAVORITES,
+        'fav_head' => ['icon' => getIconName('favorites'), 'title' => _FAVORITES, 'live_title' => _FAVORITES],
         'favs' => $favs,
         'has_rss' => ($conf['rss']['use'] ?? 0) == 1,
-        'rss_title' => _RSS,
+        'rss_head' => ['icon' => getIconName('rss'), 'title' => _RSS],
         'rss_action' => 'index.php?name='.$conf['name'].'&op=rss',
         'rss_select_label' => _SELECTASITE,
         'rss_options_html' => (($conf['rss']['use'] ?? 0) == 1) ? rss_select() : '',
@@ -603,7 +603,7 @@ function privat(): void {
             .$tpl->getHtmlPart('privat-page', [
                 'shelves_html' => getPrivatShelves($typ),
                 'focus_html' => getPrivatFocus($typ),
-                'notes_html' => getPrivatNotes('', '', $list),
+                'notes_html' => getCabinetNotes('', '', $list),
                 'find_url' => 'index.php?go=1&op=getPrivateMessageView',
                 'find' => $pick['find'],
                 'seek_label' => (string)_PRSEEK,
@@ -679,7 +679,10 @@ function favorites(): void {
         setHead([
             'title' => _FAVORITES,
         ]);
-        echo $tpl->getHtmlFrag('title', ['title' => _FAVORITES, 'is_level_one' => true]).getUserNav().$tpl->getHtmlFrag('block-content', ['id' => 'repfavorliste', 'content' => getFavoriteList(1)]);
+        $list = getFavoriteList(1);
+        echo $tpl->getHtmlFrag('title', ['title' => _FAVORITES, 'is_level_one' => true]).getUserNav()
+            .getCabinetNotes('', ($list === '') ? _NO_INFO : '', 0)
+            .$tpl->getHtmlFrag('block-content', ['id' => 'repfavorliste', 'content' => $list]);
         setFoot();
     } else {
         account();
@@ -981,10 +984,10 @@ function edithome(): void {
                 'required' => '0',
             ]),
         ];
-        $tils = [['icon' => 'person', 'title' => _ACCOUNT_PERSON, 'width' => 6, 'tone' => 0, 'fields' => $flds]];
+        $tils = [['icon' => getIconName('person'), 'title' => _ACCOUNT_PERSON, 'width' => 6, 'tone' => 0, 'fields' => $flds]];
         $xtra = getFieldsInRows(['field' => $info['field'], 'mod' => $conf['name']]);
-        if ($xtra) $tils[] = ['icon' => 'plus-square-dotted', 'title' => _ACCOUNT_FIELDS, 'width' => 6, 'tone' => 3, 'fields' => $xtra];
-        $secs[] = ['id' => 'personal', 'icon' => 'person-lines-fill', 'title' => _PERSONALINFO, 'inform' => true, 'tiles' => $tils];
+        if ($xtra) $tils[] = ['icon' => getIconName('fields'), 'title' => _ACCOUNT_FIELDS, 'width' => 6, 'tone' => 3, 'fields' => $xtra];
+        $secs[] = ['id' => 'personal', 'icon' => getIconName('personal'), 'title' => _PERSONALINFO, 'inform' => true, 'tiles' => $tils];
         $arul = getUploadPlaceRule('users.avatar');
         $take = getVar('post', 'filepath', 'raw', '');
         $take = is_string($take) ? mb_substr(trim($take), 0, 512) : '';
@@ -1003,7 +1006,7 @@ function edithome(): void {
             ]);
         }
         $tils = [[
-            'icon' => 'image',
+            'icon' => getIconName('image'),
             'title' => _AVATAR,
             'width' => 2,
             'tone' => 3,
@@ -1032,7 +1035,7 @@ function edithome(): void {
         if ($aset) {
             $aids = getFieldIds('', 'avatar');
             $tils[] = [
-                'icon' => 'images',
+                'icon' => getIconName('images'),
                 'title' => _AVATARSAVE,
                 'title_id' => $aids['label'],
                 'text' => _AVATARSELECT,
@@ -1053,7 +1056,7 @@ function edithome(): void {
                 ]),
             ];
         }
-        $secs[] = ['id' => 'avatar', 'icon' => 'person-vcard', 'title' => _AVATARSETUP, 'inform' => true, 'tiles' => $tils];
+        $secs[] = ['id' => 'avatar', 'icon' => getIconName('profile'), 'title' => _AVATARSETUP, 'inform' => true, 'tiles' => $tils];
         $extra = $tpl->getHtmlFrag('hidden', ['name_attr' => 'user_name', 'value_attr' => $info['name']]);
         $lins = [];
         if ($conf['users']['news'] == 1) {
@@ -1075,8 +1078,8 @@ function edithome(): void {
         $lins[] = getSetupSwitch(_RNEWSLETTER, 'news', (string)$info['newslet'], _ACCOUNT_NEWSNOTE);
         if (is_active('forum')) $lins[] = getSetupSwitch(_FSMAIL, 'fsmail', (string)$info['fsmail'], _ACCOUNT_FSMAILNOTE);
         if (!empty($conf['privat']['act'])) $lins[] = getSetupSwitch(_PSMAIL, 'psmail', (string)$info['psmail'], _ACCOUNT_PSMAILNOTE);
-        $tils = [['icon' => 'envelope-paper', 'title' => _ACCOUNT_MAILHEAD, 'width' => 6, 'tone' => 1, 'fields' => $lins]];
-        $secs[] = ['id' => 'mail', 'icon' => 'envelope-paper', 'title' => _ACCOUNT_MAIL, 'inform' => true, 'tiles' => $tils];
+        $tils = [['icon' => getIconName('mail'), 'title' => _ACCOUNT_MAILHEAD, 'width' => 6, 'tone' => 1, 'fields' => $lins]];
+        $secs[] = ['id' => 'mail', 'icon' => getIconName('mail'), 'title' => _ACCOUNT_MAIL, 'inform' => true, 'tiles' => $tils];
         $lins = [getSetupSwitch(_ALLOWUSERS, 'view', (string)$info['viewmail'], _ACCOUNT_VIEWNOTE)];
         $lins[] = getSetupSwitch(_ACTIVATEPERSONAL, 'blockon', (string)$info['blockon'], _ACCOUNT_BLOCKNOTE);
         $mids = getFieldIds('', 'block');
@@ -1117,8 +1120,8 @@ function edithome(): void {
                 'options_html' => $topt,
             ])];
         }
-        $tils = [['icon' => 'shield-lock', 'title' => _ACCOUNT_PRIVHEAD, 'width' => 6, 'tone' => 2, 'fields' => $lins]];
-        $secs[] = ['id' => 'privacy', 'icon' => 'shield-lock', 'title' => _ACCOUNT_PRIVACY, 'inform' => true, 'tiles' => $tils];
+        $tils = [['icon' => getIconName('privacy'), 'title' => _ACCOUNT_PRIVHEAD, 'width' => 6, 'tone' => 2, 'fields' => $lins]];
+        $secs[] = ['id' => 'privacy', 'icon' => getIconName('privacy'), 'title' => _ACCOUNT_PRIVACY, 'inform' => true, 'tiles' => $tils];
         if (str_starts_with((string)($info['password'] ?? ''), '!')) {
             $note = _OAUTHNOPW;
             $keys = $tpl->getHtmlFrag('link', [
@@ -1170,8 +1173,8 @@ function edithome(): void {
                 'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'savepass', 'label' => _SAVECHANGES]),
             ]);
         }
-        $secs[] = ['id' => 'keys', 'icon' => 'key', 'title' => _PASSSETUP, 'tiles' => [
-            ['icon' => 'shield-plus', 'title' => _PASSWORD, 'width' => 6, 'tone' => 4, 'text' => $note, 'rows_html' => $keys],
+        $secs[] = ['id' => 'keys', 'icon' => getIconName('keys'), 'title' => _PASSSETUP, 'tiles' => [
+            ['icon' => getIconName('password'), 'title' => _PASSWORD, 'width' => 6, 'tone' => 4, 'text' => $note, 'rows_html' => $keys],
         ]];
         $orws = [];
         foreach ($lnks as $lnk) {
@@ -1194,7 +1197,7 @@ function edithome(): void {
         }
         $obtn = Oauth::getButtons();
         if ($orws || $obtn !== '') {
-            $secs[] = ['id' => 'oauth', 'icon' => 'diagram-3', 'title' => _OAUTHTAB, 'tiles' => [[
+            $secs[] = ['id' => 'oauth', 'icon' => getIconName('oauth'), 'title' => _OAUTHTAB, 'tiles' => [[
                 'width' => 6,
                 'tone' => 5,
                 'rows_html' => $tpl->getHtmlPart('account-oauth-links', [

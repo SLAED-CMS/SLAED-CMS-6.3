@@ -254,8 +254,8 @@ function getTplPagerView(int $num, int $pages, int $maxpg, callable $target, arr
     }
     $next = ($num < $pages) ? $link($num + 1, _NEXT, false, true, 'chevron-right') : $link(0, _NEXT, true, true, 'chevron-right');
     return $tpl->getHtmlFrag('pager', array_merge([
-        'overall' => _OVERALL, 'by' => _BY, 'page_s' => _PAGE_S, 'perpage' => _PERPAGE,
-        'pages' => $pages, 'prev' => $prev, 'items' => $items, 'next' => $next,
+        'overall' => _OVERALL, 'page_label' => _PAGE, 'page_of' => sprintf(_NUMOF, $num, $pages),
+        'prev' => $prev, 'items' => $items, 'next' => $next,
     ], $meta));
 }
 

@@ -1,14 +1,7 @@
-<div class="sl-opt-lamps">
-  {% for lamp in lamps %}
-  <div class="sl-opt-lamp{% if lamp.cat %} sl-cat-tone-{{ lamp.cat }}{% else %} sl-is-{{ lamp.tone }}{% endif %}"><small>{{ lamp.label }}</small><b title="{{ lamp.value }}">{{ lamp.value }}</b><span title="{{ lamp.note }}">{{ lamp.note }}</span></div>
-  {% endfor %}
-</div>
+{% include 'fragments/opt-lamps.html' %}
 <div class="sl-opt-grid">
   <div class="sl-opt-tile sl-opt-w6 sl-cat-tone-3">
-    <div class="sl-profile-hub-head">
-      <h3><i class="bi bi-search" aria-hidden="true"></i> {{ seek_label }}</h3>
-      <div class="sl-profile-hub-total"><span class="sl-chip sl-chip-info" id="favtally" title="{{ fav_label }}" aria-live="polite" aria-atomic="true">{{ tally }}</span></div>
-    </div>
+    {% include 'fragments/panel-head.html' with seek_head %}
     <input class="sl-field" id="favseek" type="search" name="q" value="{{ seek }}" maxlength="60" placeholder="{{ seek_note }}" aria-label="{{ seek_label }}" hx-get="{{ seek_url }}" hx-trigger="input changed delay:300ms, search" hx-target="#favshelves" hx-swap="outerHTML" hx-include="#favmod" hx-push-url="false">
     {% include 'partials/account-favorites-chips.html' %}
     <p>{{ fold_note }}</p>

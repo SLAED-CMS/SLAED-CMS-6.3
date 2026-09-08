@@ -1,0 +1,5 @@
+<div class="sl-opt-lamps">
+  {% for lamp in lamps %}
+  <div class="sl-opt-lamp{% if lamp.cat %} sl-cat-tone-{{ lamp.cat }}{% else %} sl-is-{{ lamp.tone }}{% endif %}"{% if lamp.is_meter %} data-sl-meter{% endif %}><small>{{ lamp.label }}</small><b{% if lamp.is_meter %} data-sl-meter-num{% else %} title="{{ lamp.value }}"{% endif %}>{{ lamp.value }}</b><span title="{{ lamp.note }}">{{ lamp.note }}{% if lamp.is_meter %} <span data-sl-meter-left>{{ lamp.left }}</span>{% endif %}</span></div>
+  {% endfor %}
+</div>

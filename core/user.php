@@ -342,40 +342,40 @@ function getUserNavItems(bool $home = false): array {
     $uid = intval((getUserInfo() ?? [])['id'] ?? 0);
     if ($conf['name'] !== 'account') getLang('account');
     $items = [];
-    if ($home) $items[] = ['label' => _HOME, 'title' => _RETURNACCOUNT, 'href' => 'index.php?name=account', 'icon' => 'house'];
+    if ($home) $items[] = ['label' => _HOME, 'title' => _RETURNACCOUNT, 'href' => 'index.php?name=account', 'icon' => getIconName('cabinet')];
     if ($conf['privat']['act']) {
         $new = $prv->getUnreadCount($uid);
         $mark = ($new > 99) ? '99+' : (string)$new;
         $items[] = [
-            'label' => _MESSAGES, 'title' => _PRIVAT, 'href' => 'index.php?name=account&op=privat', 'icon' => 'envelope',
+            'label' => _MESSAGES, 'title' => _PRIVAT, 'href' => 'index.php?name=account&op=privat', 'icon' => getIconName('messages'),
             'badge' => $new ? $mark : '', 'badge_id' => $home ? 'pmbadgenav' : '',
         ];
     }
     if (is_active('clients') && isModGroup('clients')) {
         getLang('clients');
-        $items[] = ['label' => _PRODUCTS, 'title' => _PRODUCTSINFO, 'href' => 'index.php?name=clients', 'icon' => 'box-seam'];
+        $items[] = ['label' => _PRODUCTS, 'title' => _PRODUCTSINFO, 'href' => 'index.php?name=clients', 'icon' => getIconName('products')];
     }
     if (is_active('shop')) {
         getLang('shop');
-        $items[] = ['label' => _CLIENT, 'title' => _CLIENTINFO, 'href' => 'index.php?name=shop&op=clients', 'icon' => 'people'];
+        $items[] = ['label' => _CLIENT, 'title' => _CLIENTINFO, 'href' => 'index.php?name=shop&op=clients', 'icon' => getIconName('clients')];
         if (($conf['shop']['part'] ?? 0) === 1) {
-            $items[] = ['label' => _PARTNER, 'title' => _PARTNERINFO, 'href' => 'index.php?name=shop&op=partners', 'icon' => 'briefcase'];
+            $items[] = ['label' => _PARTNER, 'title' => _PARTNERINFO, 'href' => 'index.php?name=shop&op=partners', 'icon' => getIconName('partners')];
         }
     }
     if (is_active('help') && isModGroup('help')) {
         getLang('help');
-        $items[] = ['label' => _HELP, 'title' => _HELPINFO, 'href' => 'index.php?name=help', 'icon' => 'life-preserver'];
+        $items[] = ['label' => _HELP, 'title' => _HELPINFO, 'href' => 'index.php?name=help', 'icon' => getIconName('help')];
     }
     if ($conf['favorites']['favact']) {
         [$fnum] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid', ['uid' => $uid]));
         $items[] = [
             'label' => _FAVORITES, 'title' => _FAVORITES, 'href' => 'index.php?name=account&op=favorites',
-            'icon' => 'star', 'sub' => sprintf(_NUMOF, $fnum, $conf['favorites']['favorites']),
+            'icon' => getIconName('favorites'), 'sub' => sprintf(_NUMOF, $fnum, $conf['favorites']['favorites']),
         ];
     }
-    $items[] = ['label' => _INFO, 'title' => _PERSONALINFO, 'href' => 'index.php?name=account&op=view&id='.$uid, 'icon' => 'person-vcard'];
-    $items[] = ['label' => _CHANGE, 'title' => _CHANGE, 'href' => 'index.php?name=account&op=edithome', 'icon' => 'gear', 'sub' => _ACCOUNT_SETUPNOTE];
-    $items[] = ['label' => _LOGOUT, 'title' => _LOGOUT, 'href' => 'index.php?name=account&op=logout', 'icon' => 'box-arrow-right', 'sub' => _ACCOUNT_EXITNOTE];
+    $items[] = ['label' => _INFO, 'title' => _PERSONALINFO, 'href' => 'index.php?name=account&op=view&id='.$uid, 'icon' => getIconName('profile')];
+    $items[] = ['label' => _CHANGE, 'title' => _CHANGE, 'href' => 'index.php?name=account&op=edithome', 'icon' => getIconName('settings'), 'sub' => _ACCOUNT_SETUPNOTE];
+    $items[] = ['label' => _LOGOUT, 'title' => _LOGOUT, 'href' => 'index.php?name=account&op=logout', 'icon' => getIconName('logout'), 'sub' => _ACCOUNT_EXITNOTE];
     foreach ($items as $pos => $item) {
         $items[$pos]['tone'] = $pos % 6;
         if (!isset($item['sub'])) $items[$pos]['sub'] = ($item['title'] !== $item['label']) ? $item['title'] : '';
@@ -666,7 +666,7 @@ function getPrivatShelves(int $typ = 1): string {
         ];
     }
     $items[] = [
-        'label' => (string)_PRWRITE, 'icon' => 'pencil-square', 'tone' => 'info', 'part' => '0.0', 'full' => true,
+        'label' => (string)_PRWRITE, 'icon' => getIconName('write'), 'tone' => 'info', 'part' => '0.0', 'full' => true,
         'href' => 'index.php?name=account&op=privat&typ=4', 'current' => $typ === 4,
         'ring' => '', 'count' => '', 'note' => (string)_PRNEW, 'free' => '', 'badge' => '', 'badge_id' => '',
     ];
@@ -725,8 +725,10 @@ function getPrivatFocus(int $typ = 1): string {
         ];
     }
     return $tpl->getHtmlFrag('privat-focus', [
-        'label' => (string)_PRFOCUS,
-        'count' => sprintf(_PRFOCUSN, $new),
+        'head' => [
+            'icon' => getIconName('focus'), 'title' => _PRFOCUS, 'fold' => 'prfocus',
+            'chips' => [['tone' => 'neutral', 'title' => _PRFOCUS, 'text' => sprintf(_PRFOCUSN, $new)]],
+        ],
         'token' => $tok,
         'slots' => $slots,
         'more' => ($new > count($slots)) ? (string)($new - count($slots)) : '',
@@ -843,8 +845,8 @@ function getPrivatShown(?string $set = null): string {
     return $last;
 }
 
-# The notices of the private-message page stand in one slot under the focus deck, never inside a column: a refusal of an action, the report of a send, and the quota of the mailbox shown. The slot is rebuilt whole, so a note of the previous action never outlives the next one
-function getPrivatNotes(string|array $stop, string $info, int $typ, bool $oob = false): string {
+# The notices of a cabinet page stand in one slot, never inside a column or a list; the slot is rebuilt whole, so a note of the previous action never outlives the next one
+function getCabinetNotes(string|array $stop, string $info, int $typ, bool $oob = false): string {
     global $user, $tpl, $prv;
     $note = '';
     if ($stop) {
@@ -865,7 +867,7 @@ function getPrivatNotes(string|array $stop, string $info, int $typ, bool $oob = 
             ]);
         }
     }
-    return $tpl->getHtmlFrag('privat-notes', ['notes_html' => $note, 'is_oob' => $oob]);
+    return $tpl->getHtmlFrag('cabinet-notes', ['notes_html' => $note, 'is_oob' => $oob]);
 }
 
 # The column an htmx call asked for, followed by the notice slot out of band: a mailbox always carries it, because its quota may have changed under the action, and a message or the compose state only when it has something to say
@@ -874,7 +876,7 @@ function getPrivateMessageView(string|array $stop = '', string $info = '', int $
     if ($typ < 0) $typ = getVar('req', 'typ', 'num', 0);
     $cont = getPrivateMessagePane($stop, $info, $typ, $view);
     if (empty($_SERVER['HTTP_HX_REQUEST']) || !is_user()) return $cont;
-    if (($typ >= 1 && $typ <= 3) || $stop || $info) $cont .= getPrivatNotes($stop, $info, $typ, true);
+    if (($typ >= 1 && $typ <= 3) || $stop || $info) $cont .= getCabinetNotes($stop, $info, $typ, true);
     if ($typ >= 1 && $typ <= 3) $cont .= $tpl->getHtmlFrag('span', ['id' => 'prshown', 'class' => 'sl-pmf-shown', 'title' => '', 'text' => getPrivatShown(), 'is_oob' => true]);
     return $cont;
 }
@@ -1003,13 +1005,13 @@ function getPrivateMessagePane(string|array $stop, string $info, int $typ, array
         $acts = [];
         if ($mine) {
             $acts[] = $view['saved']
-                ? ['href' => $base.'unsave', 'title' => (string)_PRIVAT_UNSAVE, 'icon' => 'bookmark-dash', 'on' => true, 'confirm' => '']
-                : ['href' => $base.'save', 'title' => (string)_SAVE, 'icon' => 'archive', 'on' => false, 'confirm' => ''];
+                ? ['href' => $base.'unsave', 'title' => (string)_PRIVAT_UNSAVE, 'icon' => getIconName('unsave'), 'on' => true, 'confirm' => '']
+                : ['href' => $base.'save', 'title' => (string)_SAVE, 'icon' => getIconName('save'), 'on' => false, 'confirm' => ''];
             $acts[] = $view['viewed']
-                ? ['href' => $base.'unread', 'title' => (string)_PRIVAT_NEW, 'icon' => 'envelope', 'on' => false, 'confirm' => '']
-                : ['href' => $base.'read', 'title' => (string)_PRIVAT_READ, 'icon' => 'envelope-open', 'on' => false, 'confirm' => ''];
+                ? ['href' => $base.'unread', 'title' => (string)_PRIVAT_NEW, 'icon' => getIconName('unread'), 'on' => false, 'confirm' => '']
+                : ['href' => $base.'read', 'title' => (string)_PRIVAT_READ, 'icon' => getIconName('read'), 'on' => false, 'confirm' => ''];
         }
-        $acts[] = ['href' => $base.'delete', 'title' => (string)_DELETE, 'icon' => 'trash', 'on' => false, 'confirm' => (string)_ONDELETE];
+        $acts[] = ['href' => $base.'delete', 'title' => (string)_DELETE, 'icon' => getIconName('delete'), 'on' => false, 'confirm' => (string)_ONDELETE];
         $chips = $tpl->getHtmlFrag('inline-badge', [
             'title_text' => _PADD, 'label' => format_time($view['time'], _TIMESTRING), 'is_comment_date' => true,
         ]);
@@ -1106,7 +1108,7 @@ function addPrivateMessage(): void {
             'no_room' => (string)($new['note'] ?? _ERROR),
             default => (string)_ERROR,
         };
-        echo getPrivateMessageView([$note], '', 4);
+        echo getPrivateMessageView($note, '', 4);
         return;
     }
     updatePoints(45);
@@ -1207,15 +1209,15 @@ function updatePrivatBox(): void {
 # The comment entry carries no table, where or rate: its rows are read through the comment subsystem, and a table name left here would be a second way into a table with one owner
 function getProfileModules(): array {
     return [
-        'comm' => ['title' => _COMMENTS, 'icon' => 'chat-text', 'fav' => ''],
-        'faq' => ['title' => _FAQ, 'icon' => 'question-circle', 'table' => 'faq', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['ratings', 'score'], 'fav' => 'faq'],
-        'files' => ['title' => _FILES, 'icon' => 'file-earmark-arrow-down', 'table' => 'files', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['votes', 'tvotes'], 'fav' => 'files'],
-        'forum' => ['title' => _FORUM, 'icon' => 'window-stack', 'table' => 'forum', 'where' => "uid = :uid AND pid = '0' AND time <= NOW() AND status > '1'", 'rate' => ['ratings', 'score'], 'fav' => 'forum'],
-        'jokes' => ['title' => _JOKES, 'icon' => 'emoji-smile', 'table' => 'jokes', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['ratetot', 'rating'], 'fav' => ''],
-        'links' => ['title' => _LINKS, 'icon' => 'link-45deg', 'table' => 'links', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['votes', 'tvotes'], 'fav' => 'links'],
-        'media' => ['title' => _MEDIA, 'icon' => 'camera-reels', 'table' => 'media', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['votes', 'tvotes'], 'fav' => 'media'],
-        'news' => ['title' => _NEWS, 'icon' => 'newspaper', 'table' => 'news', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['ratings', 'score'], 'fav' => 'news'],
-        'pages' => ['title' => _PAGES, 'icon' => 'file-text', 'table' => 'pages', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['ratings', 'score'], 'fav' => 'pages'],
+        'comm' => ['title' => _COMMENTS, 'icon' => getIconName('comm'), 'fav' => ''],
+        'faq' => ['title' => _FAQ, 'icon' => getIconName('faq'), 'table' => 'faq', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['ratings', 'score'], 'fav' => 'faq'],
+        'files' => ['title' => _FILES, 'icon' => getIconName('files'), 'table' => 'files', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['votes', 'tvotes'], 'fav' => 'files'],
+        'forum' => ['title' => _FORUM, 'icon' => getIconName('forum'), 'table' => 'forum', 'where' => "uid = :uid AND pid = '0' AND time <= NOW() AND status > '1'", 'rate' => ['ratings', 'score'], 'fav' => 'forum'],
+        'jokes' => ['title' => _JOKES, 'icon' => getIconName('jokes'), 'table' => 'jokes', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['ratetot', 'rating'], 'fav' => ''],
+        'links' => ['title' => _LINKS, 'icon' => getIconName('links'), 'table' => 'links', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['votes', 'tvotes'], 'fav' => 'links'],
+        'media' => ['title' => _MEDIA, 'icon' => getIconName('media'), 'table' => 'media', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['votes', 'tvotes'], 'fav' => 'media'],
+        'news' => ['title' => _NEWS, 'icon' => getIconName('news'), 'table' => 'news', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['ratings', 'score'], 'fav' => 'news'],
+        'pages' => ['title' => _PAGES, 'icon' => getIconName('pages'), 'table' => 'pages', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['ratings', 'score'], 'fav' => 'pages'],
     ];
 }
 
@@ -1272,8 +1274,7 @@ function getProfileLastView(int $uid): string {
         $texts[] = $tpl->getHtmlPart('account-profile-feed-list', ['entries' => $lists[$mod], 'icon_name' => $inf['icon'], 'empty_text' => _NO_INFO]);
     }
     return $tpl->getHtmlPart('account-profile-feed', [
-        'title' => _LASTACTIVITY,
-        'icon' => 'activity',
+        'head' => ['icon' => getIconName('activity'), 'title' => _LASTACTIVITY, 'live_title' => _LASTACTIVITY],
         'tabs_html' => getNaviTabs(0, 'profeed', $tabs, $texts),
     ]);
 }
@@ -1316,17 +1317,6 @@ function addFavorite() {
         }
     }
     echo getFavoriteButton($id, $mod);
-}
-
-# Resolve the icon a favourite of one module carries: the profile module map first, then the modules that map does not list
-function getFavoriteIcon(string $mod): string {
-    static $icons = null;
-    $icons ??= getProfileModules();
-    return $icons[$mod]['icon'] ?? match ($mod) {
-        'help' => 'life-preserver',
-        'shop' => 'bag',
-        default => 'star',
-    };
 }
 
 # Render the favorites of the logged-in user as shelves, one per module, under a lamp row and a search tile; the whole list is read in one pass because a shelf and the lamps need every row of the member. mod narrows the shelves to one module, q to the titles that carry the words, and part=shelves answers the htmx call of the search field and the chips with the shelves alone plus the out-of-band tally and chips
@@ -1380,12 +1370,15 @@ function getFavoriteList(int $obj = 0): string {
         krsort($rows);
         $top = array_key_first($rows);
         if (!$last || $top > $last['id']) $last = ['id' => $top, 'title' => $rows[$top]['title'], 'mod' => $modul, 'time' => $times[$top] ?? ''];
-        $shelves[$modul] = ['key' => $modul, 'title' => getModuleName($modul), 'title_html' => filterTextHighlight(htmlspecialchars(getModuleName($modul), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), $seek), 'icon' => getFavoriteIcon($modul), 'count' => count($rows), 'rows' => array_values($rows)];
+        $shelves[$modul] = [
+            'key' => $modul, 'title' => getModuleName($modul), 'hint' => getModuleName($modul), 'fold' => 'favshelf-'.$modul,
+            'title_html' => filterTextHighlight(htmlspecialchars(getModuleName($modul), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), $seek),
+            'icon' => getIconName($modul), 'count' => count($rows), 'rows' => array_values($rows),
+        ];
     }
     if (!$shelves) {
-        $cont = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
-        if ($obj) return $cont;
-        echo $cont;
+        if ($obj) return '';
+        echo getCabinetNotes('', _NO_INFO, 0, true);
         return '';
     }
     uasort($shelves, static fn(array $a, array $b): int => $b['count'] <=> $a['count']);
@@ -1407,9 +1400,11 @@ function getFavoriteList(int $obj = 0): string {
             $shelf['rows'] = array_values(array_filter($shelf['rows'], static fn(array $row): bool => mb_stripos($row['title'], $seek, 0, 'utf-8') !== false));
             $shelf['count'] = count($shelf['rows']);
         }
+        $shelf['chips'] = [['tone' => 'neutral', 'title' => _FAVORITES, 'text' => (string)$shelf['count']]];
         if ($shelf['rows']) $view[] = $shelf;
     }
-    $chips[] = ['label' => _ALL, 'icon' => 'grid', 'href' => $link, 'hx_url' => $base.'&mod=', 'is_now' => $mod === ''];
+    $chips[] = ['label' => _ALL, 'icon' => getIconName('all'), 'href' => $link, 'hx_url' => $base.'&mod=', 'is_now' => $mod === ''];
+    $tally = sprintf(_NUMOF, array_sum(array_column($view, 'count')), $total);
 
     # A bookmark stored before the time column existed has no date: the lamp then names its module where the date would stand
     $quota = ($num >= $max) ? ['tone' => 'warn', 'cat' => 0] : ['tone' => 'info', 'cat' => 4];
@@ -1427,7 +1422,8 @@ function getFavoriteList(int $obj = 0): string {
         'mod' => $mod,
         'seek' => $seek,
         'seek_url' => $base,
-        'tally' => sprintf(_NUMOF, array_sum(array_column($view, 'count')), $total),
+        'tally' => $tally,
+        'seek_head' => ['icon' => getIconName('search'), 'title' => _FAVOR_SEEK, 'chips' => [['tone' => 'info', 'id' => 'favtally', 'title' => _FAVORITES, 'text' => $tally, 'is_live' => true]]],
         'seek_label' => _FAVOR_SEEK,
         'seek_note' => _FAVOR_SEEKNOTE,
         'none_text' => _FAVOR_NONE,

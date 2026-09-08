@@ -3755,6 +3755,27 @@ function getModuleName(string $con): string {
     return $map[$con] ?? $con;
 }
 
+# Resolve a module key or a concept key to its Bootstrap Icons glyph: the one icon map of the site and the panel, read wherever PHP names an icon
+# A module the map does not name takes the icon its module config carries, so a module chip and a module menu agree, and puzzle stands for anything unknown
+function getIconName(string $con): string {
+    global $conf;
+    $map = [
+        'comm' => 'chat-text', 'faq' => 'question-circle', 'files' => 'file-earmark-arrow-down', 'forum' => 'window-stack', 'help' => 'life-preserver',
+        'jokes' => 'emoji-smile', 'links' => 'link-45deg', 'media' => 'camera-reels', 'news' => 'newspaper', 'pages' => 'file-text', 'shop' => 'bag',
+        'account' => 'person', 'activity' => 'activity', 'all' => 'grid', 'blocks' => 'grid-3x3-gap', 'bookmark' => 'bookmark-fill', 'cabinet' => 'house',
+        'categories' => 'folder', 'clients' => 'people', 'delete' => 'trash', 'download' => 'download', 'editor' => 'pencil-square', 'favorites' => 'star',
+        'fields' => 'plus-square-dotted', 'fmcompress' => 'file-zip', 'fmcopy' => 'files', 'fmdelete' => 'trash3', 'fmedit' => 'pencil-square',
+        'fmmove' => 'folder-symlink', 'fmrename' => 'input-cursor-text', 'focus' => 'lightning-charge', 'groups' => 'people', 'home' => 'house-door',
+        'hub' => 'grid', 'image' => 'image', 'images' => 'images', 'items' => 'grid', 'keys' => 'key', 'language' => 'translate', 'logout' => 'box-arrow-right',
+        'mail' => 'envelope-paper', 'messages' => 'envelope', 'module' => 'puzzle', 'modules' => 'gpu-card', 'oauth' => 'diagram-3', 'partners' => 'briefcase',
+        'password' => 'shield-plus', 'person' => 'person', 'personal' => 'person-lines-fill', 'privacy' => 'shield-lock', 'products' => 'box-seam',
+        'profile' => 'person-vcard', 'rating' => 'star-fill', 'read' => 'envelope-open', 'rss' => 'rss', 'save' => 'archive', 'search' => 'search',
+        'settings' => 'gear', 'site' => 'globe2', 'system' => 'pc-display', 'tags' => 'tags', 'unread' => 'envelope', 'unsave' => 'bookmark-dash',
+        'visit' => 'clock-history', 'warn' => 'exclamation-triangle', 'work' => 'briefcase', 'write' => 'pencil-square',
+    ];
+    return $map[$con] ?? (trim((string)($conf['modules'][$con]['icon'] ?? '')) ?: 'puzzle');
+}
+
 # Resolve a language code to its localised name constant
 function getLangName(string $con): string {
     $map = ['en' => _ENGLISH, 'fr' => _FRENCH, 'de' => _GERMAN, 'pl' => _POLISH, 'ru' => _RUSSIAN, 'uk' => _UKRAINIAN];
