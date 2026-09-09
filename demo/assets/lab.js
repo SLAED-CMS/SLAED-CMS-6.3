@@ -11,28 +11,30 @@
     const media = matchMedia('(prefers-color-scheme: dark)');
     const seasons = ['winter', 'spring', 'summer', 'autumn', 'newyear'];
     const layouts = ['overview', 'studio', 'monitor'];
+    const months = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
     const builds = {
         portal: ['News', 'Files', 'Users', 'Security', 'Search', 'SEO', 'Pages'],
         media: ['News', 'Users', 'Security', 'Search', 'SEO', 'Media'],
         knowledge: ['Files', 'Users', 'Security', 'Search', 'SEO', 'Pages']
     };
+    const spans = {day: {size: 24, base: 980, hour: true}, week: {size: 7, base: 21400}, month: {size: 30, base: 25600}};
     let saved = {};
-    try { saved = JSON.parse(localStorage.getItem('slaed.nineteen.restored') ?? '{}'); } catch {}
-    const theme = params.get('mode') ?? saved.theme ?? 'dark';
+    try { saved = JSON.parse(localStorage.getItem('slaed.lab') ?? '{}'); } catch {}
+    const theme = params.get('mode') ?? saved.theme ?? 'auto';
     const season = (params.get('season') ?? saved.season ?? 'autumn').replace(/^sl-/, '');
     const state = {
         theme: ['light', 'dark', 'auto'].includes(theme) ? theme : 'auto',
         season: seasons.includes(season) ? season : 'autumn',
         layout: layouts.includes(saved.layout) ? saved.layout : 'overview',
         motion: saved.motion ?? !matchMedia('(prefers-reduced-motion: reduce)').matches,
-        span: 'day',
+        span: 'month',
         kind: 'area',
         desc: false
     };
 
     /* Keep the choices of the settings panel across visits, and never let a full storage break the page */
     function setStore() {
-        try { localStorage.setItem('slaed.nineteen.restored', JSON.stringify(state)); } catch {}
+        try { localStorage.setItem('slaed.lab', JSON.stringify(state)); } catch {}
     }
 
     /* Say back what a control just changed, in one line that fades on its own */
@@ -103,113 +105,129 @@
         return getComputedStyle(probe).color || '#888888';
     }
 
-    /* Restore the original deterministic illustration and its three series. */
-    const sets = {day: [24862, '18,4', 24, 0], week: [186420, '12,8', 28, 2], month: [782641, '24,1', 30, 5]};
-    let hover = -1;
+    /* One repeatable series per span, so the demo chart shows the same shape on every visit instead of new noise */
     function getSeriesData(span) {
-        const conf = sets[span];
-        return [0, 1, 2].map(line => Array.from({length: conf[2]}, (_, i) => {
-            const wave = Math.sin(i * .48 + conf[3]) * .15 + Math.cos(i * 1.15 + line) * .065;
-            return Math.max(.07, .42 - line * .115 + wave + i / conf[2] * .27);
-        }));
+        const plan = spans[span];
+        const rows = {mark: [], reqs: [], cach: [], base: []};
+        const now = new Date();
+        let seed = plan.size * 7919;
+        const getNext = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+        for (let i = 0; i < plan.size; i++) {
+            const wave = Math.sin((i / plan.size) * Math.PI * 2) * 0.28 + Math.sin((i / plan.size) * Math.PI * 6) * 0.08;
+            const reqs = Math.round(plan.base * (1 + wave + getNext() * 0.22));
+            rows.reqs.push(reqs);
+            rows.cach.push(Math.round(reqs * (0.62 + getNext() * 0.16)));
+            rows.base.push(Math.round(reqs * (0.14 + getNext() * 0.08)));
+            if (plan.hour) {
+                rows.mark.push(String(i).padStart(2, '0') + ':00');
+            } else {
+                const when = new Date(now.getTime() - (plan.size - 1 - i) * 86400000);
+                rows.mark.push(when.getDate() + ' ' + months[when.getMonth()]);
+            }
+        }
+        return rows;
     }
-    function getChartLabel(index) {
-        if (state.span === 'day') return String(index).padStart(2, '0') + ':00';
-        if (state.span === 'week') return ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'][Math.min(6, Math.floor(index / 4))];
-        return String(index + 1) + ' авг';
+
+    /* The figure above the plot: how much the span carries, and how its second half stands against its first */
+    function updateChartInfo(rows) {
+        const total = rows.reqs.reduce((sum, item) => sum + item, 0);
+        const half = Math.floor(rows.reqs.length / 2);
+        const head = rows.reqs.slice(0, half).reduce((sum, item) => sum + item, 0) || 1;
+        const tail = rows.reqs.slice(half).reduce((sum, item) => sum + item, 0);
+        const grow = ((tail - head) / head) * 100;
+        const size = getOne('[data-lab-volume]');
+        const move = getOne('[data-lab-change]');
+        if (size) size.textContent = total.toLocaleString('ru-RU').replace(/\s/g, ' ');
+        if (move) {
+            move.textContent = (grow >= 0 ? '+' : '−') + Math.abs(grow).toFixed(1).replace('.', ',') + '%';
+            move.style.color = grow >= 0 ? getToneValue('--sl-success') : getToneValue('--sl-danger');
+        }
     }
+
+    /* Paint the plot for the current span and shape, in the colours the mode resolves to right now */
+    let rows = null;
     function setChartView() {
         const face = getOne('#labChart');
         if (!face) return;
-        const rect = face.parentElement.getBoundingClientRect();
-        if (!rect.width || !rect.height) return;
-        const dpr = Math.min(devicePixelRatio || 1, 2);
-        face.width = Math.round(rect.width * dpr);
-        face.height = Math.round(rect.height * dpr);
+        const plot = face.closest('.sl-lab-plot');
+        const step = window.devicePixelRatio || 1;
+        const wide = Math.max(plot.clientWidth, 120);
+        const high = Math.max(plot.clientHeight, 80);
+        face.width = Math.round(wide * step);
+        face.height = Math.round(high * step);
+        rows = getSeriesData(state.span);
+        updateChartInfo(rows);
         const draw = face.getContext('2d');
-        draw.setTransform(dpr, 0, 0, dpr, 0, 0);
-        const width = rect.width, height = rect.height, left = 34, right = width - 10, top = 12, bottom = height - 30;
-        const colors = ['--sl-primary-strong', '--sl-accent', '--sl-success'].map(getToneValue);
-        const muted = getToneValue('--sl-text-muted');
-        const border = getToneValue('--sl-border');
-        const series = getSeriesData(state.span);
-        getOne('[data-lab-volume]').textContent = sets[state.span][0].toLocaleString('ru-RU');
-        getOne('[data-lab-change]').textContent = '+' + sets[state.span][1] + '%';
-        draw.font = getComputedStyle(root).getPropertyValue('--sl-font-micro').trim() + ' Arial';
-        draw.textBaseline = 'middle';
+        draw.setTransform(step, 0, 0, step, 0, 0);
+        draw.clearRect(0, 0, wide, high);
+        const pad = 18;
+        const top = getToneValue('--sl-primary');
+        const good = getToneValue('--sl-success');
+        const mark = getToneValue('--sl-accent');
+        const line = getToneValue('--sl-border');
+        const peak = Math.max(...rows.reqs) * 1.15;
+        const getX = i => pad + (i / Math.max(rows.reqs.length - 1, 1)) * (wide - pad * 2);
+        const getY = value => high - pad - (value / peak) * (high - pad * 2);
+        draw.strokeStyle = line;
+        draw.lineWidth = 1;
         for (let i = 0; i <= 4; i++) {
-            const ypos = top + (bottom - top) * i / 4;
-            draw.strokeStyle = border;
-            draw.setLineDash([3, 5]);
-            draw.beginPath(); draw.moveTo(left, ypos); draw.lineTo(right, ypos); draw.stroke();
-            draw.fillStyle = muted;
-            draw.fillText(String((4 - i) * 250), 0, ypos);
-        }
-        draw.setLineDash([]);
-        series.forEach((data, line) => {
-            const points = data.map((value, i) => [left + i / (data.length - 1) * (right - left), bottom - value * (bottom - top)]);
-            draw.strokeStyle = colors[line];
-            draw.fillStyle = colors[line];
-            draw.lineWidth = line ? 1.5 : 2.5;
-            if (state.kind === 'bar') {
-                const span = (right - left) / data.length;
-                draw.globalAlpha = line ? .6 : .9;
-                points.forEach(([xx, yy]) => draw.fillRect(xx + (line - 1) * span * .22, yy, Math.max(1, span * .2), bottom - yy));
-                draw.globalAlpha = 1;
-                return;
-            }
-            draw.beginPath(); draw.moveTo(...points[0]);
-            for (let i = 1; i < points.length; i++) {
-                const prev = points[i - 1], curr = points[i], mid = (prev[0] + curr[0]) / 2;
-                draw.bezierCurveTo(mid, prev[1], mid, curr[1], curr[0], curr[1]);
-            }
+            const y = pad + (i / 4) * (high - pad * 2);
+            draw.beginPath();
+            draw.moveTo(pad, y);
+            draw.lineTo(wide - pad, y);
             draw.stroke();
-            if (!line) {
-                draw.lineTo(right, bottom); draw.lineTo(left, bottom); draw.closePath();
-                const grad = draw.createLinearGradient(0, top, 0, bottom);
-                grad.addColorStop(0, colors[line]); grad.addColorStop(1, 'transparent');
-                draw.fillStyle = grad; draw.globalAlpha = .17; draw.fill(); draw.globalAlpha = 1;
-            }
+        }
+        if (state.kind === 'bar') {
+            const size = Math.max((wide - pad * 2) / rows.reqs.length - 4, 2);
+            draw.fillStyle = top;
+            rows.reqs.forEach((value, i) => draw.fillRect(getX(i) - size / 2, getY(value), size, high - pad - getY(value)));
+        } else {
+            const wash = draw.createLinearGradient(0, pad, 0, high - pad);
+            wash.addColorStop(0, top);
+            wash.addColorStop(1, 'transparent');
+            draw.beginPath();
+            rows.reqs.forEach((value, i) => i ? draw.lineTo(getX(i), getY(value)) : draw.moveTo(getX(i), getY(value)));
+            draw.lineTo(getX(rows.reqs.length - 1), high - pad);
+            draw.lineTo(getX(0), high - pad);
+            draw.closePath();
+            draw.globalAlpha = 0.22;
+            draw.fillStyle = wash;
+            draw.fill();
+            draw.globalAlpha = 1;
+            draw.beginPath();
+            rows.reqs.forEach((value, i) => i ? draw.lineTo(getX(i), getY(value)) : draw.moveTo(getX(i), getY(value)));
+            draw.strokeStyle = top;
+            draw.lineWidth = 2;
+            draw.stroke();
+        }
+        [[rows.cach, good], [rows.base, mark]].forEach(([list, tone]) => {
+            draw.beginPath();
+            list.forEach((value, i) => i ? draw.lineTo(getX(i), getY(value)) : draw.moveTo(getX(i), getY(value)));
+            draw.strokeStyle = tone;
+            draw.lineWidth = 1.5;
+            draw.stroke();
         });
-        draw.fillStyle = muted;
-        draw.textAlign = 'center';
-        for (let i = 0; i < 5; i++) {
-            const index = Math.round((series[0].length - 1) * i / 4);
-            draw.fillText(getChartLabel(index), left + 10 + i / 4 * (right - left - 25), height - 10);
-        }
-        if (hover >= 0) {
-            const index = Math.min(series[0].length - 1, hover);
-            const xpos = left + index / (series[0].length - 1) * (right - left);
-            draw.strokeStyle = muted; draw.setLineDash([3, 3]);
-            draw.beginPath(); draw.moveTo(xpos, top); draw.lineTo(xpos, bottom); draw.stroke(); draw.setLineDash([]);
-            series.forEach((data, line) => {
-                draw.fillStyle = colors[line]; draw.beginPath();
-                draw.arc(xpos, bottom - data[index] * (bottom - top), 4, 0, Math.PI * 2); draw.fill();
-            });
-        }
     }
+
+    /* The reading under the pointer: the nearest point of the span, named and counted */
     function updateChartTip(event) {
-        const face = getOne('#labChart'), tip = getOne('.sl-lab-tooltip');
-        const rect = face.getBoundingClientRect();
-        hover = Math.max(0, Math.min(sets[state.span][2] - 1,
-            Math.round((event.clientX - rect.left - 34) / (rect.width - 44) * (sets[state.span][2] - 1))));
-        const series = getSeriesData(state.span);
-        tip.textContent = getChartLabel(hover) + ' · ' + Math.round(series[0][hover] * 1000) + ' запросов';
-        tip.hidden = false;
-        setChartView();
+        const face = getOne('#labChart');
+        const note = getOne('.sl-lab-tooltip');
+        if (!face || !note || !rows) return;
+        const box = face.getBoundingClientRect();
+        const pad = 18;
+        const part = (event.clientX - box.left - pad) / Math.max(box.width - pad * 2, 1);
+        const spot = Math.min(Math.max(Math.round(part * (rows.reqs.length - 1)), 0), rows.reqs.length - 1);
+        note.hidden = false;
+        note.textContent = rows.mark[spot] + ' · ' + rows.reqs[spot].toLocaleString('ru-RU') + ' запросов';
+        note.style.left = Math.min(Math.max(event.clientX - box.left - 60, 0), Math.max(box.width - 150, 0)) + 'px';
+        note.style.top = '0px';
     }
-    getOne('#labChart').addEventListener('pointerleave', () => {
-        hover = -1;
-        getOne('.sl-lab-tooltip').hidden = true;
-        setChartView();
-    });
-    new ResizeObserver(setChartView).observe(getOne('.sl-lab-plot'));
 
     /* The registry follows the map of the hero: the same eight modules, the same state, counted in three places */
     function updateRegistry() {
         const mods = getAll('.module-map .mod[data-mod]');
         const live = mods.filter(el => el.dataset.on === '1').map(el => el.dataset.mod);
-        mods.forEach(el => el.setAttribute('aria-pressed', String(el.dataset.on === '1')));
         getAll('[data-lab-module]').forEach(el => {
             const on = live.includes(el.dataset.labModule);
             const cell = el.closest('tr')?.querySelector('.sl-lab-status');
@@ -288,7 +306,8 @@
         list[next].scrollIntoView({block: 'nearest'});
     }
 
-    /* Borrow the live head and foot of the CMS, retaining the standalone presentation if the request fails */
+    /* Borrow the live head and foot of the CMS, so the face is framed by the system it presents. The markup baked
+       into the page stays in place when the request fails, which is what a page opened from the file system shows */
     async function getShell() {
         if (params.has('bare')) {
             document.body.dataset.labBare = '';
@@ -306,7 +325,7 @@
             let node = doc.body.firstElementChild;
             while (node && node !== wrap) {
                 const next = node.nextElementSibling;
-                if (node.id !== 'head-content') head.append(node);
+                head.append(node);
                 node = next;
             }
             const foot = document.createDocumentFragment();
@@ -402,15 +421,6 @@
         }
     });
     const map = getOne('.module-map');
-    getAll('.module-map .mod[data-mod]').forEach(el => {
-        el.tabIndex = 0;
-        el.setAttribute('role', 'button');
-        el.addEventListener('keydown', event => {
-            if (event.key !== 'Enter' && event.key !== ' ') return;
-            event.preventDefault();
-            el.click();
-        });
-    });
     if (map) new MutationObserver(updateRegistry).observe(map, {subtree: true, attributes: true, attributeFilter: ['data-on']});
     const marks = getAll('.sl-lab-nav-links a[href^="#"]');
     const watch = new IntersectionObserver(rest => rest.forEach(item => {
