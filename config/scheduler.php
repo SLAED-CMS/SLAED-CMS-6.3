@@ -63,6 +63,18 @@ return [
                 'settings' => [
                 ],
             ],
+            'monitor' => [
+                'title' => 'Server monitor sample',
+                'type' => 'system',
+                'active' => '1',
+                'system' => 'monitor',
+                'schedule' => '* * * * *',
+                'priority' => '9',
+                'lock_timeout' => '120',
+                'manual' => '1',
+                'settings' => [
+                ],
+            ],
             'newsletter' => [
                 'title' => 'Newsletter',
                 'type' => 'system',

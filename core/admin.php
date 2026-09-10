@@ -339,7 +339,7 @@ function getAdminLayoutVars(): array {
 # A caller whose table is owned by a subsystem class hands the number over in $num and leaves the table empty, so the row can be built without this helper reaching that table
 function getAdminCountRow(string $href, string $titlec, string $labelc, string $icon, string $table = '', string $where = '', ?int $num = null): string {
     global $db, $afile, $tpl;
-    if ($num === null) [$num] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_'.$table.($where !== '' ? ' WHERE '.$where : '')));
+    if ($num === null) $num = getTableCount($table, $where);
     return $tpl->getHtmlFrag('block-sidebar-count-row', [
         'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?'.$href, 'title' => constant($titlec), 'label' => constant($labelc), 'icon_name' => $icon]),
         'value_html' => $tpl->getHtmlFrag('inline-badge', ['chip_tone' => (int)$num >= 1 ? 'warn' : 'success', 'label' => (string)$num]),

@@ -134,6 +134,9 @@ require_once BASE_DIR.'/core/classes/mail.php';
 # System file include
 require_once BASE_DIR.'/core/security.php';
 
+# Server metrics shared by the admin monitor, the scheduler sampler and the presentation module
+require_once BASE_DIR.'/core/monitor.php';
+
 $theme = getTheme();
 if (is_file(BASE_DIR.'/templates/'.$theme.'/index.php')) require_once BASE_DIR.'/templates/'.$theme.'/index.php';
 require_once BASE_DIR.'/core/classes/template.php';
@@ -279,7 +282,8 @@ function getSchedulerPlannedTime(array $job, array $state = []): int {
 # Reads a job by key from config when $job is null, otherwise normalizes the given array; enforces canonical type/system for built-in jobs and drops legacy keys so stale configs self-heal
 function getSchedulerJob(string $name, ?array $job = null): array {
     global $conf;
-    static $map = ['dbbackup' => 'backup', 'filescan' => 'filescan', 'maildrain' => 'maildrain', 'newsletter' => 'newsletter', 'sitemap' => 'sitemap', 'cachegc' => 'cachegc'];
+    static $map = ['dbbackup' => 'backup', 'filescan' => 'filescan', 'maildrain' => 'maildrain', 'newsletter' => 'newsletter', 'sitemap' => 'sitemap',
+        'cachegc' => 'cachegc', 'monitor' => 'monitor'];
     $read = $job === null;
     if ($read) $job = $conf['scheduler']['jobs'][$name] ?? [];
     if (!is_array($job)) $job = [];
@@ -598,6 +602,7 @@ function addSchedulerSystemJob(string $name): array {
         'maildrain' => addMailTask(),
         'newsletter' => updateNewsletter(),
         'cachegc' => addCacheGcTask(),
+        'monitor' => addMonitorSample(),
         default => ['status' => 'failed', 'message' => 'Unknown system job: '.$name],
     };
 }
@@ -933,6 +938,46 @@ function updateRefererTrack(int $ctime, string $request, string $uname): void {
     if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) {
         $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, url, time, lid) VALUES (:uid, :name, :ip, :referer, :url, NOW(), :lid)', $args);
     }
+}
+
+# Counts the rows of one system table behind an optional WHERE clause; the table comes from the caller's own list, never from input, the clause binds named placeholders
+function getTableCount(string $table, string $where = '', array $bind = []): int {
+    global $db;
+    [$num] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_'.$table.($where !== '' ? ' WHERE '.$where : ''), $bind));
+    return (int)$num;
+}
+
+# Reads the running day of statistic.log into named counters, hours as twenty-four integers and the session maps parsed; an unreadable or empty log yields zeros
+function getStatsToday(): array {
+    $file = COUNTER_DIR.'/statistic.log';
+    $line = (is_file($file) && is_readable($file)) ? trim((string)file_get_contents($file)) : '';
+    $con = ($line !== '') ? explode('|', $line) : [];
+    $hours = ($con[13] ?? '') !== '' ? explode(',', $con[13]) : [];
+    return [
+        'date' => $con[0] ?? '',
+        'hosts' => (int)($con[1] ?? 0),
+        'visits' => (int)($con[2] ?? 0),
+        'total' => (int)($con[3] ?? 0),
+        'home' => (int)($con[6] ?? 0),
+        'hours' => array_map('intval', array_pad(array_slice($hours, 0, 24), 24, 0)),
+        'session' => getCounterField($con[14] ?? ''),
+        'depth' => getCounterField($con[15] ?? ''),
+    ];
+}
+
+# Reads the last days of the visit history oldest first: one row per archived day from days.log plus the running day from statistic.log, each with its date, unique hosts and visits
+function getStatsDays(int $days): array {
+    $file = COUNTER_DIR.'/days.log';
+    $lines = (is_file($file) && is_readable($file)) ? file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) : [];
+    $rows = [];
+    foreach ($lines ?: [] as $line) {
+        $con = explode('|', trim($line));
+        if (count($con) < 3) continue;
+        $rows[] = ['date' => $con[0], 'hosts' => (int)$con[1], 'visits' => (int)$con[2]];
+    }
+    $today = getStatsToday();
+    if ($today['date'] !== '') $rows[] = ['date' => $today['date'], 'hosts' => $today['hosts'], 'visits' => $today['visits']];
+    return array_slice($rows, -max($days, 1));
 }
 
 # Parse a key count field into a normalized map
@@ -1639,6 +1684,24 @@ function addCacheGcTask(): array {
     $num = Cache::deleteStale('html', $ttl) + Cache::deleteStale('locks', $ttl) + Cache::deleteStale('data', $ttl)
         + Cache::deleteStale('assets', $ttl) + Cache::deleteStaleTree(CACHE_DIR.'/templates', $ttl);
     return ['status' => 'success', 'message' => 'Removed '.$num.' cache files'];
+}
+
+# Scheduler job sampling the server once a minute for the presentation module: the two history writers of monitor.json run first, then the snapshot keys join their rows
+# This is the only writer outside the admin monitor, so a stale sampled_at tells the module that nobody sampled for a while and the section hides instead of showing old figures
+function addMonitorSample(): array {
+    global $db;
+    [$cpu] = getCpuLoad();
+    $mem = getMemoryInfo();
+    getRealtimePanelMetrics((float)$cpu, (float)$mem['percent']);
+    getDiskIoMetrics();
+    [$dbver] = $db->getSqlRow($db->getSqlQuery('SELECT VERSION()'));
+    $store = getMonitorDiskSnapshot() + getMetricStore();
+    $store['uptime'] = getUptimeInfo();
+    $store['cores'] = getCpuCores();
+    $store['soft'] = getServerSoftware() + ['php' => PHP_VERSION, 'db' => $dbver];
+    $store['sampled_at'] = time();
+    setMetricStore($store);
+    return ['status' => 'success', 'message' => 'Monitor sample written: CPU '.$cpu.'%, RAM '.$mem['percent'].'%'];
 }
 
 # Format head
@@ -3214,16 +3277,16 @@ function getPercentTone(float $part): string {
     return 'ok';
 }
 
+# The four ceilings every load gauge is measured against: memory limit, two seconds of generation, fifty queries, ten milliseconds per query; debug panel and presentation agree
+function getLoadLimits(): array {
+    return ['mem' => getMemoryLimitBytes(), 'gen' => 2.0, 'qnum' => 50, 'qtime' => 0.010];
+}
+
 # Returns rendered system debug information
 function getDebugSystemInfo(array $stats = []): string {
     global $tpl;
     if ($stats === []) $stats = getLoadStats();
-    $max = [
-        'mem' => getMemoryLimitBytes(),
-        'gen' => 2.0,
-        'qnum' => 50,
-        'qtime' => 0.010,
-    ];
+    $max = getLoadLimits();
     $metric = static function (float $value, float $max): array {
         $percent = ($max > 0) ? ($value * 100 / $max) : 0.0;
         $percent = min(100.0, max(0.0, $percent));
@@ -3850,14 +3913,21 @@ function replace_break(string $text): string {
     return '';
 }
 
+# Counts the live sessions in one query as members, bots and all rows; the raw bot figure is returned and the caller decides whether bots are shown
+function getSessionCounts(): array {
+    global $db;
+    [$mem, $bots, $all] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(CASE WHEN guest = 2 THEN 1 END), COUNT(CASE WHEN guest = 1 THEN 1 END), COUNT(*) FROM '.PREFIX_DB.'_session'));
+    return ['users' => (int)$mem, 'bots' => (int)$bots, 'all' => (int)$all];
+}
+
 # User information for user
 function getUserSessionInfo(string $id = ''): string {
  global $db, $conf, $tpl;
     if ($conf['session']) {
-        [$mem, $bots, $all] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(CASE WHEN guest = 2 THEN 1 END), COUNT(CASE WHEN guest = 1 THEN 1 END), COUNT(*) FROM '.PREFIX_DB.'_session'));
-        $mem = intval($mem);
-        $bot = ($conf['botsact']) ? intval($bots) : 0;
-        $all = intval($all);
+        $cnt = getSessionCounts();
+        $mem = $cnt['users'];
+        $bot = ($conf['botsact']) ? $cnt['bots'] : 0;
+        $all = $cnt['all'];
         $gst = $all - $mem - $bot;
         $mper = ($all > 0) ? intval(round($mem / $all * 100)) : 0;
         $bend = ($all > 0) ? intval(round(($mem + $bot) / $all * 100)) : 0;
