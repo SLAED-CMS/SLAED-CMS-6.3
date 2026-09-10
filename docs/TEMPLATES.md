@@ -344,7 +344,7 @@ Theme-local assets should live inside the theme.
 
 Recommended pattern:
 - `assets/css/base.css` and `assets/css/theme.css` — the two CSS files every theme package ships
-- `assets/js/<name>.js` — theme-owned scripts; `lite` carries `lib.js`, `admin` carries `admin-ui.js`
+- `assets/js/<name>.js` — theme-owned scripts; `admin` carries `admin-ui.js`, `lite` ships none
 - `assets/vendor/<library>/...`
 - `assets/editors/<editor-id>/skin.css` — when an editor manifest declares `theme.skin`
 

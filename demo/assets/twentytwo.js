@@ -28,7 +28,7 @@
             el.classList.toggle('sl-is-active', el.value === value);
             el.setAttribute('aria-pressed', String(el.value === value));
         });
-        setGauges();
+        setRadials();
         setLabChart();
         setStore();
     }
@@ -49,12 +49,19 @@
         setStore();
     }
     async function getShell() {
-        if (params.has('bare')) { document.body.dataset.leaderBare = ''; root.dataset.shell = 'bare'; return; }
+        if (params.has('bare')) { document.body.dataset.leaderBare = ''; root.dataset.shell = 'bare'; }
         try {
-            const url = new URL('../index.php?name=main', location.href);
+            const url = new URL('../index.php?name=presentation', location.href);
             const reply = await fetch(url, {credentials: 'same-origin', cache: 'no-store'});
             if (!reply.ok) throw new Error('CMS response: ' + reply.status);
             const doc = new DOMParser().parseFromString(await reply.text(), 'text/html');
+            const modal = doc.querySelector('dialog[data-sl-shot="view"]');
+            if (!modal) throw new Error('CMS image viewer is missing');
+            modal.id = 'sl-presentation-gallery';
+            modal.append(getOne('#sl-gallery-actions').content.cloneNode(true));
+            document.body.append(modal);
+            document.dispatchEvent(new CustomEvent('sl:gallery-ready', {detail: modal}));
+            if (params.has('bare')) return;
             const wrap = doc.querySelector('body > .sl-wrp');
             if (!wrap) throw new Error('CMS content boundary is missing');
             const head = document.createDocumentFragment();
@@ -93,91 +100,66 @@
             console.error(error);
         }
     }
-    /* The cockpit gauges: a 240-degree arc per value, drawn on a canvas at device resolution.
-       Colours are read off the element, so the same call repaints the row after a scheme change. */
-    function getGaugeColor(el, name) {
-        const probe = document.createElement('i');
-        probe.style.color = 'var(--' + name + ')';
-        probe.style.display = 'none';
-        el.append(probe);
-        const out = getComputedStyle(probe).color;
-        probe.remove();
-        return out || '#888';
-    }
-    function setGauge(el) {
-        let cv = el.querySelector('canvas');
-        if (!cv) { cv = document.createElement('canvas'); el.append(cv); }
-        const dpr = Math.min(devicePixelRatio || 1, 2);
-        const w = el.clientWidth;
-        const h = el.clientHeight;
-        if (!w || !h) return;
-        const pad = 16;
-        cv.width = Math.round((w + pad * 2) * dpr);
-        cv.height = Math.round((h + pad * 2) * dpr);
-        const ctx = cv.getContext('2d');
-        ctx.setTransform(dpr, 0, 0, dpr, pad * dpr, pad * dpr);
-        ctx.clearRect(-pad, -pad, w + pad * 2, h + pad * 2);
-        const val = Number(el.dataset.value || 0);
-        const max = Number(el.dataset.max || 100) || 100;
-        const rad = Math.min(w / 2, h / 1.25) - 8;
-        const cx = w / 2;
-        const cy = h / 2 + rad * 0.2;
-        const a0 = Math.PI * 0.75;
-        const a1 = Math.PI * 2.25;
-        const bar = 12;
-        ctx.lineCap = 'round';
-        ctx.lineWidth = bar;
-        ctx.beginPath();
-        ctx.arc(cx, cy, rad, a0, a1);
-        ctx.strokeStyle = getGaugeColor(el, 'line');
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(cx, cy, rad, a0, a0 + (a1 - a0) * Math.max(0, Math.min(1, val / max)));
-        ctx.strokeStyle = getGaugeColor(el, el.dataset.color || 'blue');
-        ctx.save();
-        ctx.shadowColor = ctx.strokeStyle;
-        ctx.shadowBlur = 10 * dpr;
-        ctx.stroke();
-        ctx.restore();
-        ctx.strokeStyle = getGaugeColor(el, 'muted');
-        ctx.lineWidth = 1;
-        for (let i = 0; i <= 12; i++) {
-            const ang = a0 + (a1 - a0) * (i / 12);
-            const out = rad - bar;
-            const len = out - (i % 3 === 0 ? 7 : 4);
-            ctx.beginPath();
-            ctx.moveTo(cx + Math.cos(ang) * out, cy + Math.sin(ang) * out);
-            ctx.lineTo(cx + Math.cos(ang) * len, cy + Math.sin(ang) * len);
-            ctx.stroke();
+    /* One renderer owns every radial scale, including multi-track rings and cockpit tick marks */
+    function setRadial(el) {
+        const config = JSON.parse(el.dataset.radial);
+        const icon = el.querySelector(':scope > i');
+        if (icon) icon.style.color = `var(${config.arcs[0].tone})`;
+        let canvas = el.querySelector(':scope > .sl-radial-canvas');
+        if (!canvas) {
+            canvas = document.createElement('canvas');
+            canvas.className = 'sl-radial-canvas';
+            canvas.setAttribute('aria-hidden', 'true');
+            el.prepend(canvas);
+        }
+        const width = el.clientWidth, height = el.clientHeight;
+        if (!width || !height) return;
+        const dpr = Math.min(devicePixelRatio || 1, 2), pad = 16;
+        canvas.width = Math.round((width + pad * 2) * dpr);
+        canvas.height = Math.round((height + pad * 2) * dpr);
+        const draw = canvas.getContext('2d');
+        draw.setTransform(dpr, 0, 0, dpr, pad * dpr, pad * dpr);
+        const start = (config.start ?? -90) * Math.PI / 180;
+        const sweep = (config.sweep ?? 360) * Math.PI / 180;
+        const radius = config.ticks ? Math.min(width / 2, height / 1.25) - 8 : Math.min(width, height) / 2;
+        const cx = width / 2, cy = height / 2 + radius * (config.offset ?? 0);
+        draw.lineCap = 'round';
+        config.arcs.forEach(arc => {
+            const thick = arc.width ?? 5;
+            const rad = radius - (arc.inset ?? (config.ticks ? 0 : thick / 2));
+            const value = Math.max(0, Math.min(1, arc.value / (arc.max ?? 100)));
+            draw.lineWidth = thick;
+            draw.strokeStyle = getChartTone('--line');
+            draw.beginPath();
+            draw.arc(cx, cy, rad, start, start + sweep);
+            draw.stroke();
+            if (!value) return;
+            draw.save();
+            draw.strokeStyle = getChartTone(arc.tone);
+            draw.shadowColor = getChartTone(arc.tone, .5);
+            draw.shadowBlur = 10 * dpr;
+            draw.beginPath();
+            draw.arc(cx, cy, rad, start, start + sweep * value);
+            draw.stroke();
+            draw.restore();
+        });
+        if (!config.ticks) return;
+        draw.strokeStyle = getChartTone('--muted');
+        draw.lineWidth = 1;
+        for (let i = 0; i <= config.ticks; i++) {
+            const angle = start + sweep * i / config.ticks;
+            const outer = radius - config.arcs[0].width;
+            const inner = outer - (i % 3 === 0 ? 7 : 4);
+            draw.beginPath();
+            draw.moveTo(cx + Math.cos(angle) * outer, cy + Math.sin(angle) * outer);
+            draw.lineTo(cx + Math.cos(angle) * inner, cy + Math.sin(angle) * inner);
+            draw.stroke();
         }
     }
-    function setGauges() { getAll('[data-gauge]').forEach(setGauge); }
 
-    /* Trace only the active CSS arc with SVG so its shadow can extend beyond the ring without blurring its label */
-    function addRingGlow() {
-        const ns = 'http://www.w3.org/2000/svg';
-        getAll('.monitor-ring, .live-ring .r').forEach(el => {
-            const css = getComputedStyle(el);
-            const size = el.clientWidth;
-            const inset = parseFloat(getComputedStyle(el, '::after').top);
-            const key = el.matches('.monitor-ring') ? '--m' : '--p';
-            const value = Math.max(0, Math.min(100, parseFloat(css.getPropertyValue(key)) || 0));
-            const svg = document.createElementNS(ns, 'svg');
-            const circle = document.createElementNS(ns, 'circle');
-            svg.setAttribute('class', 'sl-ring-glow');
-            svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
-            svg.setAttribute('aria-hidden', 'true');
-            circle.setAttribute('cx', size / 2);
-            circle.setAttribute('cy', size / 2);
-            circle.setAttribute('r', (size - inset) / 2);
-            circle.setAttribute('stroke-width', inset);
-            circle.setAttribute('pathLength', '100');
-            circle.setAttribute('stroke-dasharray', `${value} ${100 - value}`);
-            circle.setAttribute('transform', `rotate(-90 ${size / 2} ${size / 2})`);
-            svg.append(circle);
-            el.prepend(svg);
-        });
-    }
+    /* The same redraw path handles theme changes and explicit repaint requests */
+    function setRadials() { getAll('[data-radial]').forEach(setRadial); }
+
 
     /* The rail scrolls sideways when the labels outrun the width, so the department the page is on
        is pulled into view instead of being left off the edge. */
@@ -216,10 +198,10 @@
 
 
     const lab = {span: 'day', kind: 'area'};
-    function getLabTone(name) {
+    function getChartTone(name, alpha = 1) {
         const probe = document.createElement('span');
         probe.hidden = true;
-        probe.style.color = 'var(' + name + ')';
+        probe.style.color = `color-mix(in srgb, var(${name}) ${alpha * 100}%, transparent)`;
         host.append(probe);
         const out = getComputedStyle(probe).color;
         probe.remove();
@@ -251,9 +233,9 @@
         const draw = face.getContext('2d');
         draw.setTransform(dpr, 0, 0, dpr, 0, 0);
         const width = rect.width, height = rect.height, left = 34, right = width - 10, top = 12, bottom = height - 30;
-        const colors = ['--sl-primary-strong', '--sl-accent', '--sl-success'].map(getLabTone);
-        const muted = getLabTone('--sl-text-muted');
-        const border = getLabTone('--sl-border');
+        const colors = ['--sl-primary-strong', '--sl-accent', '--sl-success'].map(tone => getChartTone(tone));
+        const muted = getChartTone('--sl-text-muted');
+        const border = getChartTone('--sl-border');
         const series = getSeriesData(lab.span);
         getOne('[data-lab-volume]').textContent = sets[lab.span][0].toLocaleString('ru-RU');
         getOne('[data-lab-change]').textContent = '+' + sets[lab.span][1] + '%';
@@ -368,10 +350,6 @@
             if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); el.click(); }
         });
     });
-    getOne('#leaderSearch').addEventListener('input', event => {
-        const query = event.target.value.toLowerCase().trim();
-        getAll('#pageRoad a').forEach(el => el.hidden = !el.textContent.toLowerCase().includes(query));
-    });
     getAll('[data-leader-theme]').forEach(el => el.addEventListener('click', () => setTheme(el.dataset.leaderTheme)));
     getOne('#leaderSeason').addEventListener('change', event => setSeason(event.target.value));
     getOne('.sl-leader-motion').addEventListener('click', () => setMotion(!state.motion));
@@ -385,12 +363,174 @@
     setSeason(state.season);
     setMotion(state.motion);
     updateModules();
-    setGauges();
-    addRingGlow();
+    setRadials();
+    const rings = new ResizeObserver(entries => entries.forEach(entry => setRadial(entry.target)));
+    getAll('[data-radial]').forEach(el => rings.observe(el));
     setRailFollow();
     setPointerLight();
     setLabControls();
     setLabChart();
-    addEventListener('resize', () => { setGauges(); setLabChart(); }, {passive: true});
+    addEventListener('resize', () => { setRadials(); setLabChart(); }, {passive: true});
     getShell();
+})();
+
+/* Collections share one CMS viewer, its download action and the same navigation state. */
+(() => {
+    'use strict';
+    const host = document.querySelector('.sl-leader');
+    let modal = null, items = [], current = 0, touch = null, select = null, origin = null;
+
+    /* Every step updates the original, its caption, download and the featured archive material */
+    function setGalleryView(index) {
+        current = (index + items.length) % items.length;
+        const item = items[current];
+        const image = modal.querySelector('[data-sl-shot-img]');
+        const title = modal.querySelector('[data-sl-shot-name]');
+        const down = modal.querySelector('[data-sl-shot-down]');
+        image.src = item.href;
+        image.alt = item.dataset.title;
+        title.textContent = item.dataset.title;
+        title.title = item.dataset.title;
+        modal.querySelector('[data-sl-shot-num]').textContent = `${current + 1} / ${items.length}`;
+        down.href = item.href;
+        down.download = decodeURIComponent(new URL(item.href).pathname.split('/').pop());
+        if (select) select(current, false);
+    }
+
+    document.addEventListener('sl:gallery-ready', event => {
+        modal = event.detail;
+        const stage = modal.querySelector('.sl-shot-stage');
+        modal.querySelector('[data-sl-shot-img]').draggable = false;
+        modal.querySelectorAll('[data-sl-shot-step]').forEach(el => {
+            const step = Number(el.dataset.slShotStep);
+            const label = step < 0 ? 'Предыдущее изображение' : 'Следующее изображение';
+            el.title = label;
+            el.setAttribute('aria-label', label);
+            el.addEventListener('click', () => setGalleryView(current + step));
+        });
+        modal.addEventListener('keydown', event => {
+            if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+            event.preventDefault();
+            const next = event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1 : current + (event.key === 'ArrowRight' ? 1 : -1);
+            setGalleryView(next);
+        });
+        modal.addEventListener('close', () => {
+            modal.querySelector('[data-sl-shot-img]').removeAttribute('src');
+            if (origin && !origin.checkVisibility()) items[current].focus({preventScroll: true});
+        });
+        stage.addEventListener('pointerdown', event => {
+            if (event.pointerType !== 'mouse') touch = event.clientX;
+        });
+        stage.addEventListener('pointerup', event => {
+            if (touch !== null && Math.abs(event.clientX - touch) > 50) setGalleryView(current + (event.clientX < touch ? 1 : -1));
+            touch = null;
+        });
+        stage.addEventListener('pointercancel', () => { touch = null; });
+    }, {once: true});
+
+    host.querySelectorAll('[data-gallery]').forEach(gallery => {
+        const track = gallery.querySelector('.sl-gallery-track');
+        const cards = [...track.children];
+        const links = [...track.querySelectorAll('.sl-gallery-open')];
+        const range = gallery.querySelector('input');
+        const output = gallery.querySelector('output');
+        const brand = gallery.dataset.gallery === 'brand';
+        let active = 0, visible = 1, limit = 0;
+
+        /* Site cards come in a fresh order on every load, and the position labels follow that order */
+        if (gallery.dataset.gallery === 'sites') {
+            for (let i = cards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cards[i], cards[j]] = [cards[j], cards[i]];
+            }
+            track.append(...cards);
+            track.scrollTo({left: 0, behavior: 'instant'});
+            cards.forEach((card, index) => card.setAttribute('aria-label', `${index + 1} из ${cards.length}`));
+        }
+
+        /* The archive shows a feature with four neighbours; site cards retain their scroll-snap strip */
+        function updateGallery() {
+            if (brand) {
+                visible = 1;
+                limit = cards.length - 1;
+                cards.forEach((card, index) => {
+                    const slot = (index - active + cards.length) % cards.length;
+                    card.hidden = slot > 4;
+                    card.style.order = slot;
+                    card.toggleAttribute('data-gallery-feature', slot === 0);
+                });
+            } else {
+                const width = cards[0].getBoundingClientRect().width;
+                const gap = parseFloat(getComputedStyle(track).columnGap);
+                visible = Math.max(1, Math.round((track.clientWidth + gap) / (width + gap)));
+                limit = Math.max(0, cards.length - visible);
+                active = Math.min(limit, Math.max(0, Math.round(track.scrollLeft / (width + gap))));
+            }
+            range.max = limit;
+            range.value = active;
+            range.setAttribute('aria-valuetext', `${active + 1} из ${cards.length}`);
+            output.textContent = `${active + 1}${visible > 1 ? '–' + Math.min(cards.length, active + visible) : ''} / ${cards.length}`;
+        }
+
+        /* One position control drives arrows, keyboard and range input */
+        function setGallerySlide(index, smooth = true) {
+            const next = Math.min(limit, Math.max(0, index));
+            if (brand) {
+                active = next;
+                updateGallery();
+            } else {
+                const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+                const motion = smooth && host.dataset.motion !== 'off' && !reduce;
+                track.scrollTo({left: cards[next].offsetLeft, behavior: motion ? 'smooth' : 'instant'});
+            }
+        }
+
+        gallery.querySelectorAll('[data-gallery-step]').forEach(el => {
+            el.addEventListener('click', () => {
+                const step = Number(el.dataset.galleryStep);
+                setGallerySlide(step > 0 && active === limit ? 0 : step < 0 && active === 0 ? limit : active + step * visible);
+            });
+        });
+        range.addEventListener('input', () => setGallerySlide(Number(range.value), false));
+        if (!brand) track.addEventListener('scroll', updateGallery, {passive: true});
+        track.addEventListener('keydown', event => {
+            if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+            event.preventDefault();
+            setGallerySlide(event.key === 'Home' ? 0 : event.key === 'End' ? limit : active + (event.key === 'ArrowRight' ? 1 : -1));
+            if (brand) track.focus({preventScroll: true});
+        });
+        links.forEach(link => link.closest('.sl-gallery-card').querySelector('.sl-gallery-expand')?.addEventListener('click', () => link.click()));
+        links.forEach((link, index) => link.addEventListener('click', event => {
+            if (!modal || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+            event.preventDefault();
+            items = links;
+            select = brand ? setGallerySlide : null;
+            origin = link;
+            setGalleryView(index);
+            window.setWindowOpen(modal);
+        }));
+        new ResizeObserver(updateGallery).observe(track);
+        updateGallery();
+
+        /* The site strip turns by itself while it is on screen and nobody hovers or focuses it; motion off holds it */
+        if (gallery.dataset.gallery === 'sites') {
+            let held = false, shown = false, timer = 0;
+            function setAutoplay() {
+                window.clearInterval(timer);
+                timer = shown && !held ? window.setInterval(() => {
+                    if (host.dataset.motion === 'off' || document.hidden || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+                    setGallerySlide(active >= limit ? 0 : active + 1);
+                }, 4000) : 0;
+            }
+            gallery.addEventListener('pointerenter', () => { held = true; setAutoplay(); });
+            gallery.addEventListener('pointerleave', () => { held = false; setAutoplay(); });
+            gallery.addEventListener('focusin', () => { held = true; setAutoplay(); });
+            gallery.addEventListener('focusout', event => {
+                if (gallery.contains(event.relatedTarget)) return;
+                held = false;
+                setAutoplay();
+            });
+            new IntersectionObserver(([entry]) => { shown = entry.isIntersecting; setAutoplay(); }, {threshold: .25}).observe(gallery);
+        }
+    });
 })();

@@ -307,7 +307,7 @@ const DEMO_FAVORITES = [
 ];
 
 const DEMO_SERIES = [
-  { key: 'main', title: 'Презентационная страница', addr: 'index.php?name=main', items: DEMO_VARIANTS },
+  { key: 'presentation', title: 'Презентационная страница', addr: 'index.php?name=presentation', items: DEMO_VARIANTS },
   { key: 'settings', title: 'Настройки аккаунта', addr: 'index.php?name=account&op=edithome', items: DEMO_SETTINGS },
   { key: 'upload', title: 'Добавление файла', addr: 'index.php?name=files&op=add', items: DEMO_UPLOAD },
   { key: 'favorites', title: 'Фавориты', addr: 'index.php?name=account&op=favorites', items: DEMO_FAVORITES },
@@ -323,25 +323,26 @@ function getDemoPlace(file) {
   return { series: DEMO_SERIES[0], idx: -1, item: null };
 }
 
-/* The implementations, taken from the live catalogue of the site: real screenshots of real client sites, with
-   the names and ratings they carry there. They live at one address so every variant shows the same twelve, and
+/* The implementations, taken from the live catalogue of the site: real screenshots of real client sites. The name
+   and the category were read from each screenshot, the rating is the thumbnail weight in twenty-byte steps as the
+   old main module counted it. They live at one address so every variant shows the same twelve, and
    so no variant can quietly substitute a stock banner for the proof this page exists to give.
 
    Every thumbnail is 260 wide and between 166 and 455 tall - a screenshot of a page, not a cropped photograph.
    That is the natural size and nothing may draw them larger than it. */
 const DEMO_SITES = [
-  { file: 'hostmind.ru.png', name: 'Hostmind', rate: 3361, height: 195 },
-  { file: 'mylove-you.ru.png', name: 'Mylove-you', rate: 2459, height: 195 },
-  { file: 'molodrk.ru.jpg', name: 'Molodrk', rate: 1304, height: 455 },
-  { file: 'feldsher.ru.gif', name: 'Feldsher', rate: 1013, height: 166 },
-  { file: 'hayfilm.info.gif', name: 'Hayfilm', rate: 1010, height: 166 },
-  { file: 'start-drive.com.ua.gif', name: 'Start-drive', rate: 1002, height: 166 },
-  { file: 'livetver.ru.gif', name: 'Livetver', rate: 995, height: 166 },
-  { file: 'stepashka.com.gif', name: 'Stepashka', rate: 956, height: 166 },
-  { file: 'most-konsalt.ru.gif', name: 'Most-konsalt', rate: 935, height: 166 },
-  { file: 'mayolica.ru.gif', name: 'Mayolica', rate: 933, height: 166 },
-  { file: 'mediacms.net.jpg', name: 'Mediacms', rate: 905, height: 330 },
-  { file: 'keyelement.ru.gif', name: 'Keyelement', rate: 842, height: 166 },
+  { file: 'hostmind.ru.png', name: 'HostMind', cat: 'Хостинг', rate: 3361, height: 195 },
+  { file: 'mylove-you.ru.png', name: 'Признания в любви', cat: 'Развлечения', rate: 2459, height: 195 },
+  { file: 'molodrk.ru.jpg', name: 'Молодёжный портал Коми', cat: 'Портал', rate: 1304, height: 455 },
+  { file: 'feldsher.ru.gif', name: 'Feldsher', cat: 'Форум', rate: 1013, height: 166 },
+  { file: 'hayfilm.info.gif', name: 'HayFilm Studio', cat: 'Музыка', rate: 1010, height: 166 },
+  { file: 'start-drive.com.ua.gif', name: 'Start-Drive', cat: 'Автосервис', rate: 1002, height: 166 },
+  { file: 'livetver.ru.gif', name: 'Живая Тверь', cat: 'Городской портал', rate: 995, height: 166 },
+  { file: 'stepashka.com.gif', name: 'Степашка', cat: 'Кино', rate: 956, height: 166 },
+  { file: 'most-konsalt.ru.gif', name: 'МОСТ', cat: 'Компания', rate: 935, height: 166 },
+  { file: 'mayolica.ru.gif', name: 'Mayolica', cat: 'Дизайн', rate: 933, height: 166 },
+  { file: 'mediacms.net.jpg', name: 'Media CMS', cat: 'Софт', rate: 905, height: 330 },
+  { file: 'keyelement.ru.gif', name: 'Ключевой Элемент', cat: 'Софт', rate: 842, height: 166 },
 ];
 
 const DEMO_SEASONS = [
@@ -740,12 +741,12 @@ function setDemoSites() {
     const many = Number(box.dataset.demoSites) || DEMO_SITES.length;
     const own = box.dataset.demoSitesNatural !== undefined;
     box.innerHTML = DEMO_SITES.slice(skip, skip + many).map((site) => {
-      const alt = 'Сайт: ' + site.name;
-      return '<a class="d-site" href="../uploads/screens/' + site.file + '" title="' + alt + ', Рейтинг: ' + site.rate + '">'
+      const alt = site.name + ' · ' + site.cat;
+      return '<a class="d-site" href="../uploads/presentation/sites/' + site.file + '" title="' + alt + ', Рейтинг: ' + site.rate + '">'
         + '<span class="d-site-shot' + (own ? ' d-site-shot-own' : '') + '">'
-        + '<img src="../uploads/screens/thumb/' + site.file + '" alt="' + alt + '" width="260" height="' + site.height + '" loading="lazy">'
+        + '<img src="../uploads/presentation/sites/thumb/' + site.file + '" alt="' + alt + '" width="260" height="' + site.height + '" loading="lazy">'
         + '</span>'
-        + '<span class="d-site-cap"><b>' + alt + '</b>'
+        + '<span class="d-site-cap"><span><b>' + site.name + '</b> · ' + site.cat + '</span>'
         + '<span class="d-site-rate"><i class="bi bi-hand-thumbs-up" aria-hidden="true"></i>' + site.rate + '</span></span></a>';
     }).join('');
   });

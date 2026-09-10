@@ -259,8 +259,8 @@ return [
             'top' => '0',
             'type' => '1',
         ],
-        'main' => [
-            'lang' => '_MAIN',
+        'presentation' => [
+            'lang' => '_PRESENTATION',
             'icon' => 'house-door',
             'active' => '1',
             'view' => '0',

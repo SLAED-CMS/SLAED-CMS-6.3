@@ -263,7 +263,7 @@ class TemplateValidationTest extends TestCase
         $base = str_replace('/', '\\', self::$basePath);
         $front = self::getFrontendThemes();
         $this->assertSame('modules/news/index.php', self::getRelativePath($base.'\\modules\\news\\index.php'));
-        $this->assertSame('templates/lite/partials/main-slider.html', self::getRelativePath($base.'\\templates/lite\\partials\\main-slider.html'));
+        $this->assertSame('templates/lite/partials/menu.html', self::getRelativePath($base.'\\templates/lite\\partials\\menu.html'));
         $this->assertSame('modules/news/index.php', self::getRelativePath(str_replace('\\', '/', self::$basePath).'/modules/news/index.php'));
         $this->assertSame($front, self::getThemesForPath('modules/news/index.php', $front));
         $this->assertSame(['admin'], self::getThemesForPath('admin/modules/news.php', $front));

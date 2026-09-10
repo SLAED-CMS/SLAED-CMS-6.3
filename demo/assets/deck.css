@@ -1,4 +1,4 @@
-/* The deck: the shared engine of the presentation series. Eighteen faces of `index.php?name=main` read the same
+/* The deck: the shared engine of the presentation series. Eighteen faces of `index.php?name=presentation` read the same
    widgets from here - cards, grids, tables, rings, logs, rails - and paint them with their own palette. A variant
    sets the `--p-*` tokens on its `.p-page` root and adds what only it needs as `v-*` rules in its own <style>.
 

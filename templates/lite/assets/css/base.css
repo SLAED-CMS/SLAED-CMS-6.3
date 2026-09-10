@@ -316,8 +316,6 @@
   --sl-badge-height: 20px;
   --sl-btn-height: 30px;
   --sl-bullet-bg: light-dark(#65486c, #b98cc2);
-  --sl-bullet-width: 9px;
-  --sl-bullet-height: 9px;
   --sl-cab-act-width: 76px;
   --sl-cab-msg-width: 28px;
   --sl-cab-msg-height: 28px;
@@ -443,8 +441,6 @@
   --sl-modal-btn-height: 32px;
   --sl-msg-width: 440px;
   --sl-msg-brand-width: 240px;
-  --sl-nav-width: 42px;
-  --sl-nav-height: 42px;
   /* The tone of a state lamp is the bar down its left edge and nothing else: an amber figure on the page background
      is the pair the contrast crawler fails, while an edge carries the same word without a colour anyone must read */
   --sl-opt-lamp-border: 3px;
@@ -454,11 +450,6 @@
   /* The section rail stands over the top of the window, so a section scrolled to must clear it. Its height is a sum of
      tokens and not of text - the caption is held to one line for exactly that reason - so it can be named once here */
   --sl-opt-rail-height: 68px;
-  --sl-pager-item-width: 27px;
-  --sl-pager-dot-width: 13px;
-  --sl-pager-dot-height: 13px;
-  /* The current slide is the same dot turned into a ring, so its face is the dot less this edge on each side */
-  --sl-pager-dot-ring: 4px;
   --sl-panel-feed-height: 150px;
   --sl-pmf-ava-width: 26px;
   --sl-pmf-ava-height: 26px;
@@ -509,18 +500,8 @@
   --sl-session-gap: 36px;
   --sl-shot-max-height: min(62vh, 460px);
   --sl-shot-side-height: 40vh;
-  --sl-site-height: 20px;
-  --sl-site-max-width: 170px;
-  --sl-site-img-width: 260px;
-  --sl-site-img-height: 185px;
   --sl-skel-height: 24px;
   --sl-skel-width: 54%;
-  --sl-slide-width: 1920px;
-  --sl-slide-height: 440px;
-  --sl-slide-min-height: 260px;
-  --sl-slide-cont-width: 450px;
-  /* The slider prints its words straight onto a photograph, so they carry their own drop against it */
-  --sl-slide-shadow: 0 1px 2px var(--sl-scrim-muted);
   --sl-sort-width: 10px;
   /* A nested list marks its depth by repeating its own bullet, one step to the right per level */
   --sl-sublist-bg: light-dark(#7282a3, #97a8c2);

@@ -331,10 +331,10 @@ function checkReadRows(string $ajar, string $ujar, string $gjar): void {
         getHttpReply($ujar, '/index.php?go=4&op=editorUpload&place=news.attach', $send, ['file' => $file]);
         checkMatrixRow('editor write with '.$name.' publishes nothing', getTreeDelta($base, $was) === []);
     }
-    $was = getDirTree(ROOTDIR.'/uploads/screens');
+    $was = getDirTree(ROOTDIR.'/uploads/presentation');
     $send = ['token' => getScopeToken($ujar, 'upload')];
-    $res = getHttpReply($ujar, '/index.php?go=4&op=editorUpload&place=screens.attach', $send, ['file' => $png]);
-    $done = getTreeDelta(ROOTDIR.'/uploads/screens', $was) === [] && str_contains($res['body'], 'configuration');
+    $res = getHttpReply($ujar, '/index.php?go=4&op=editorUpload&place=presentation.attach', $send, ['file' => $png]);
+    $done = getTreeDelta(ROOTDIR.'/uploads/presentation', $was) === [] && str_contains($res['body'], 'configuration');
     checkMatrixRow('write to an unconfigured module is refused', $done);
     checkOpsGateRows($ujar, $png);
 }
@@ -520,8 +520,8 @@ function checkWriteRows(string $ajar, string $ujar): void {
     $new = getTreeDelta($base, $was);
     checkMatrixRow('editor write publishes one owned file', ($out['ok'] ?? false) && count($new) === 1, implode(', ', $new));
 
-    $base = ROOTDIR.'/uploads/screens';
-    $send = ['op' => 'fmupload', 'dir' => 'screens', 'token' => getScopeToken($ajar, 'uploads')];
+    $base = ROOTDIR.'/uploads/presentation';
+    $send = ['op' => 'fmupload', 'dir' => 'presentation', 'token' => getScopeToken($ajar, 'uploads')];
     $was = getDirTree($base);
     getHttpReply($ajar, '/admin.php?name=uploads', $send, ['userfile[]' => $png]);
     $new = getTreeDelta($base, $was);
@@ -534,7 +534,7 @@ function checkWriteRows(string $ajar, string $ujar): void {
 
     foreach (['http://127.0.0.1/a.png', 'http://169.254.169.254/a.png', 'http://[::1]/a.png'] as $one) {
         $was = getDirTree($base);
-        $send = ['op' => 'fmupload', 'dir' => 'screens', 'token' => getScopeToken($ajar, 'uploads'), 'sitefile' => $one];
+        $send = ['op' => 'fmupload', 'dir' => 'presentation', 'token' => getScopeToken($ajar, 'uploads'), 'sitefile' => $one];
         getHttpReply($ajar, '/admin.php?name=uploads', $send);
         checkMatrixRow('remote target '.$one.' is refused', getTreeDelta($base, $was) === []);
     }
@@ -543,7 +543,7 @@ function checkWriteRows(string $ajar, string $ujar): void {
         setSkipRow('a public remote file publishes', 'SLAED_REMOTE_URL is not set');
     } else {
         $was = getDirTree($base);
-        $send = ['op' => 'fmupload', 'dir' => 'screens', 'token' => getScopeToken($ajar, 'uploads'), 'sitefile' => $link];
+        $send = ['op' => 'fmupload', 'dir' => 'presentation', 'token' => getScopeToken($ajar, 'uploads'), 'sitefile' => $link];
         getHttpReply($ajar, '/admin.php?name=uploads', $send);
         $new = getTreeDelta($base, $was);
         checkMatrixRow('a public remote file publishes', count($new) === 1, implode(', ', $new));

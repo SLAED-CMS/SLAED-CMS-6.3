@@ -11,7 +11,9 @@
 return [
     # The API is frozen: batch 8 settled the last of canon, so from here a theme package may gain a role but may never lose
     # or rename one. What holds it is the roster under `api` in tools/ui-audit-baseline.json, which the tool compares every
-    # run and which --store refuses to write while a name has gone missing - a freeze nothing checks is a sentence in a file
+    # run and which --store refuses to write while a name has gone missing - a freeze nothing checks is a sentence in a file.
+    # One exception was decided by hand on 2026-09-10: the seventeen names of the home slider and the site carousel left with
+    # the main module, and were struck from the roster before the baseline was stored again
     'frozen' => true,
     'marker' => '/* --- end tokens --- */',
     'prefix' => '--sl-',
@@ -343,9 +345,9 @@ return [
         '.sl-chip.sl-topic-post .bi, .sl-chip.sl-topic-edit .bi, .sl-fm-win .sl-fm-drop small, .sl-fm-win .sl-fm-view .sl-pager-info, small',
         '.sl-block-pm a > .bi:last-child, .sl-cab-nav .sl-cab-act b, .sl-pmf-mate small',
         '.bi-stars, .sl-cab-nav .sl-cab-act .sl-cat-ico .bi, .sl-msg-search .sl-home-link .bi, .sl-pmf-slot-more i',
-        # The same shape in lite: three hovers in three unrelated components and one resting note, which met when
-        # 0.9, 0.8 and 0.75 folded onto one step. The note is not a hover, and the three hovers share nothing else
-        '.bx-pager-item a:hover::after, .sl-forum-last:hover, .sl-rate-sites:hover, .sl-session-note',
+        # The same shape in lite: the hover of a forum row and one resting note, which met when 0.9 and 0.75 folded onto
+        # one step. The note is not a hover, and the two share nothing else
+        '.sl-forum-last:hover, .sl-session-note',
         # The element default every page inherits, a utility that bolds any inline run, and one component label. They met
         # when `bold` and `700` became one name; merging would move the element reset into a utility block
         '.sl-label, .sl-text-bold, strong, b',
@@ -446,12 +448,11 @@ return [
         # the foot of a reply box beside a group of radios and the door of a file row: a toolbar, a form control and a row of a form that
         # all wrap their children on one line, and joining them would file three components under a selector list naming none of them
         '.sl-file-door, .sl-pmf-reply-foot, .sl-radio-group',
-        # three pictures that fill the box they are given: a preview, the lead image of a list row and the thumbnail of a related entry.
-        # Merging would file three components under one selector list that names none of them
-        '.sl-image-preview-thumb, .sl-main-img img, .sl-related-img-inner',
-        # the two footer lines beside the nested list of a main row: an element default of the footer meeting a list, at the small step in
-        # the muted tone
-        '.sl-generates, .sl-license, .sl-main-list > li ul',
+        # two pictures that fill the box they are given: a preview and the thumbnail of a related entry.
+        # Merging would file two components under one selector list that names neither of them
+        '.sl-image-preview-thumb, .sl-related-img-inner',
+        # the two footer lines: two element defaults of the footer at the small step in the muted tone
+        '.sl-generates, .sl-license',
         # the two parts of a speed dial beside the control of a live chip: three buttons stripped of their browser chrome, which is need
         '.sl-dial-toggle, .sl-dial-item, .sl-live-act',
         # a quotation in running text beside the two cells of a session line: both have to break an unbreakable run, and nothing else joins

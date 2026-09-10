@@ -296,7 +296,7 @@
             return;
         }
         try {
-            const url = new URL('../index.php?name=main', location.href);
+            const url = new URL('../index.php?name=presentation', location.href);
             const reply = await fetch(url, {credentials: 'same-origin', cache: 'no-store'});
             if (!reply.ok) throw new Error('CMS response: ' + reply.status);
             const doc = new DOMParser().parseFromString(await reply.text(), 'text/html');

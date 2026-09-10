@@ -10,7 +10,7 @@ if (!defined('BLOCK_FILE')) {
 }
 
 global $tpl;
-$path = UPLOADS_DIR.'/screens/thumb';
+$path = UPLOADS_DIR.'/presentation/sites/thumb';
 $ban = [];
 $dir = opendir($path);
 if ($dir) {
@@ -25,10 +25,10 @@ if ($ban !== []) {
     $list = (count($ban) > 1) ? array_rand($ban, count($ban)) : array_keys($ban);
     shuffle($list);
     foreach ($list as $val) {
-        $img = ($cont === '') ? 'uploads/screens/thumb/'.$ban[$val] : '';
+        $img = ($cont === '') ? 'uploads/presentation/sites/thumb/'.$ban[$val] : '';
         $cont .= $tpl->getHtmlFrag('link', [
             'title' => 'Лучшие сайты системы',
-            'href' => 'uploads/screens/'.$ban[$val],
+            'href' => 'uploads/presentation/sites/'.$ban[$val],
             'img_src' => $img,
             'img_alt' => 'Лучшие сайты системы',
         ]);

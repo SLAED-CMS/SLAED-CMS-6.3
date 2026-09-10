@@ -125,7 +125,7 @@ Frontend coverage includes home/main slider, news list and detail, voting page/w
 ### SEO HTTP Audit
 ```bash
 php tools/seo-audit.php https://slaed.loc
-php tools/seo-audit.php https://slaed.loc '/index.php?name=main'
+php tools/seo-audit.php https://slaed.loc '/index.php?name=presentation'
 ```
 
 The default audit discovers one current detail URL for each active content module from its landing page. Additional installation-specific routes may be passed as further arguments. The audit fails on HTTP errors, a missing or duplicate `H1` inside `main`, a heading level that deepens by more than one step, invalid JSON-LD, a missing schema type, an invalid canonical, an Open Graph URL mismatch, or an indexability mismatch. Each route report includes the full `main` heading sequence.

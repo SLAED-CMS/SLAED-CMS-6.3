@@ -197,17 +197,6 @@ namespace Tests\Unit {
         }
 
         #[Test]
-        public function mainSliderUsesExplicitThemeAssetPaths(): void
-        {
-            $html = (new \Template('lite'))->getHtmlPart('main-slider', ['is_home' => true, 'theme' => 'lite']);
-
-            $this->assertSame(4, substr_count($html, 'templates/lite/images/slide/'));
-            $this->assertStringNotContainsString('templates//', $html);
-            $this->assertStringContainsString('slaed_1.webp', $html);
-            $this->assertStringContainsString('slaed_4.webp', $html);
-        }
-
-        #[Test]
         public function linkAndListItemCompositionPreservesEscapingAndBlankTarget(): void
         {
             $tpl = new \Template('lite');

@@ -1190,7 +1190,7 @@ function setDeckShell() {
   const foot = document.querySelector('[data-site-foot]');
   const page = document.querySelector('.p-page');
   if (params.has('bare') || !head || !foot) return;
-  const url = new URL('../index.php?name=main', location.href);
+  const url = new URL('../index.php?name=presentation', location.href);
   fetch(url, { credentials: 'same-origin', cache: 'no-store' }).then(async (reply) => {
     if (!reply.ok) throw new Error('HTTP ' + reply.status);
     const doc = new DOMParser().parseFromString(await reply.text(), 'text/html');
