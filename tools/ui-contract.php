@@ -252,6 +252,11 @@ return [
     # Names read by JavaScript through getComputedStyle. Renaming one edits the script in the same commit
     'js' => [
         '--sl-size-chip' => 'plugins/system/slaed.js, drives speed dial geometry',
+        '--sl-primary' => 'plugins/presentation/presentation.js, paints the visits of the rhythm chart',
+        '--sl-accent' => 'plugins/presentation/presentation.js, paints the hosts of the rhythm chart',
+        '--sl-text-muted' => 'plugins/presentation/presentation.js, paints the axis labels of the rhythm chart',
+        '--sl-border' => 'plugins/presentation/presentation.js, paints the grid of the rhythm chart',
+        '--sl-font-micro' => 'plugins/presentation/presentation.js, sizes the axis labels of the rhythm chart',
     ],
 
     # Files outside the theme packages that declare or read theme token names
@@ -270,6 +275,7 @@ return [
         'admin/modules/admins.php',
         'plugins/system/slaed.js',
         'plugins/system/filemanager.js',
+        'plugins/presentation/presentation.js',
         'tests/Unit/EditorWindowTest.php',
         'error.html',
     ],

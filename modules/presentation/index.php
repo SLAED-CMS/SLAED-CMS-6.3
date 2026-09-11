@@ -568,6 +568,7 @@ function getPresentationData(): array {
             'over' => _PRES_VO_OVER, 'pill' => _PRES_NAV_VOICES.' · '.count($voices), 'items' => $voices, 'note' => _PRES_L_VOICES, 'back' => _PRES_VO_BACK,
         ],
         'pulse' => $pulse,
+        'script' => ['src' => 'plugins/presentation/presentation.js', 'attr' => 'defer'],
     ];
 }
 

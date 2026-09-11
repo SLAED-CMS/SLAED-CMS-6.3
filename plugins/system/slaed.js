@@ -273,7 +273,7 @@
             image.removeAttribute('src');
         });
         document.addEventListener('click', function (event) {
-            var trigger = event.target.closest('a.sl-attach, a.site-link');
+            var trigger = event.target.closest('a.sl-attach, a[data-sl-shot-open]');
             if (!trigger) return;
             var href = trigger.getAttribute('href') || '';
             if (!/\.(?:avif|gif|jpe?g|png|webp|svg)(?:[?#].*)?$/i.test(href)) return;
@@ -1163,7 +1163,9 @@
 
     // One rail: the marks name their sections by id, and a rail whose sections are not all on the page is left alone.
     // The band alone cannot reach the last section - a short one at the foot of the page never rises into it - so the
-    // bottom of the document is read as the last mark, which is where the reader plainly is
+    // bottom of the document is read as the last mark, which is where the reader plainly is.
+    // A rail marked px is a scrolling dock of pills: the road is written in pixels to the middle of the current pill, the pill
+    // is pulled into the visible band, and the height of the dock is published on the document so the sections can clear it
     function setSpyRail(rail) {
         if (rail.getAttribute('data-sl-spy-ready') === '1' || !window.IntersectionObserver) return;
         var marks = rail.querySelectorAll('[data-sl-spy-mark]');
@@ -1176,6 +1178,8 @@
         if (!secs.length) return;
         rail.setAttribute('data-sl-spy-ready', '1');
         var at = 0;
+        var px = rail.getAttribute('data-sl-spy') === 'px';
+        var dock = px && rail.parentElement ? rail.parentElement : rail;
         // The road walked so far is the distance to the icon of the current mark, written as a share of the rail's width so the
         // stylesheet can draw it; the marks land where their fractions put them, which is why the figure is measured and not derived
         var draw = function () {
@@ -1183,7 +1187,18 @@
                 marks[j].setAttribute('aria-current', j === at ? 'true' : 'false');
                 marks[j].setAttribute('data-sl-spy-done', j < at ? '1' : '0');
             }
-            var icon = marks[at] ? marks[at].querySelector('.bi') : null;
+            var mark = marks[at];
+            if (!mark) return;
+            if (px) {
+                rail.style.setProperty('--sl-d-spy', (mark.offsetLeft + mark.offsetWidth / 2) + 'px');
+                document.documentElement.style.setProperty('--sl-d-rail', dock.getBoundingClientRect().height + 'px');
+                if (mark.offsetLeft < rail.scrollLeft || mark.offsetLeft + mark.offsetWidth > rail.scrollLeft + rail.clientWidth) {
+                    var still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                    rail.scrollTo({ left: mark.offsetLeft - rail.clientWidth / 2 + mark.offsetWidth / 2, behavior: still ? 'instant' : 'smooth' });
+                }
+                return;
+            }
+            var icon = mark.querySelector('.bi');
             if (!icon) return;
             var box = rail.getBoundingClientRect();
             var dot = icon.getBoundingClientRect();
