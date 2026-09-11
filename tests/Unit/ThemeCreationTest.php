@@ -52,7 +52,7 @@ namespace Tests\Unit {
         private function getModel(): array
         {
             $list = [];
-            foreach (['assets/css/base.css', 'assets/css/theme.css', 'assets/editors/toastui/skin.css'] as $one) {
+            foreach (['assets/css/base.css', 'assets/css/presentation.css', 'assets/css/theme.css', 'assets/editors/toastui/skin.css'] as $one) {
                 $full = self::$path.'/'.$one;
                 if (is_file($full)) $list['templates/'.self::$name.'/'.$one] = str_replace("\r\n", "\n", (string)file_get_contents($full));
             }
@@ -64,7 +64,7 @@ namespace Tests\Unit {
         {
             $etalon = self::$root.'/templates/'.self::ETALON;
             $mark = getContract()['marker'];
-            foreach (['assets/css/theme.css', 'assets/editors/toastui/skin.css'] as $one) {
+            foreach (['assets/css/presentation.css', 'assets/css/theme.css', 'assets/editors/toastui/skin.css'] as $one) {
                 $this->assertFileEquals($etalon.'/'.$one, self::$path.'/'.$one, $one.' changed, so the copy is not "edit one block" any more');
             }
             $was = str_replace("\r\n", "\n", (string)file_get_contents($etalon.'/assets/css/base.css'));

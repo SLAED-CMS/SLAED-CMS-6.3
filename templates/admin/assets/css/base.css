@@ -60,7 +60,8 @@
   --sl-size-icon-xl: 48px;
 
   /* Type: the size ladder, and the three line heights every block of text sits on */
-  --sl-font-micro: 10px;
+  /* The smallest step reads 11 in both themes: a monospace face at 10 reads smaller than it is */
+  --sl-font-micro: 11px;
   --sl-font-small: 12px;
   --sl-font-body: 14px;
   --sl-font-h4: 16px;

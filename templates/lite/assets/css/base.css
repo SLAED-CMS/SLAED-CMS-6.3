@@ -96,7 +96,10 @@
   --sl-font-h4: 16px;
   --sl-font-body: 14px;
   --sl-font-small: 12px;
-  --sl-font-micro: 10px;
+  /* The smallest step reads 11: most micro labels are monospace, and a monospace face at 10 reads smaller than it is */
+  --sl-font-micro: 11px;
+  /* The one face the running text does not use: the ornament quotation mark behind an owner voice */
+  --sl-face-quote: Georgia, "Times New Roman", serif;
   --sl-line-tight: 1.2;
   --sl-line-normal: 1.45;
   --sl-line-loose: 1.6;
@@ -105,6 +108,8 @@
   --sl-weight-semibold: 600;
   --sl-weight-bold: 700;
   --sl-track-wide: 0.4px;
+  /* A headline number at the hero step is set tighter than the face spaces it, so the digits read as one figure */
+  --sl-track-tight: -1px;
   --sl-fade-subtle: 0.8;
   --sl-fade-muted: 0.55;
   --sl-fade-disabled: 0.45;
@@ -208,6 +213,15 @@
     light-dark(rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.07)),
     rgba(255, 255, 255, 0)
   );
+  /* The shade a caption lies on when it stands on a picture: clear over the top of the picture, the surface at the
+     foot, so the picture darkens towards the words rather than under a box. The site strip and the brand archive
+     carry the same caption, so the stops are one decision at one address */
+  --sl-grad-caption: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--sl-surface) 10%, transparent) 28%,
+    color-mix(in srgb, var(--sl-surface) 43%, transparent) 58%,
+    var(--sl-surface) 100%
+  );
   --sl-grad-progress-1: linear-gradient(to top, #00adee 10%, var(--sl-progress-1) 90%);
   --sl-grad-progress-2: linear-gradient(to top, #8fc857 10%, var(--sl-progress-2) 90%);
   --sl-grad-progress-3: linear-gradient(to top, #faa51a 10%, var(--sl-progress-3) 90%);
@@ -289,6 +303,8 @@
   --sl-z-raised: 1;
   --sl-z-overlay: 3;
   --sl-z-dropdown: 30;
+  /* The section rail of the presentation page stays over the content it scrolls, under every dropdown of the header */
+  --sl-z-sticky: 40;
   --sl-z-popover: 1000;
   --sl-z-modal: 3000;
   --sl-z-toast: 10000;
@@ -469,6 +485,32 @@
   --sl-pmf-who-width: 44px;
   --sl-pmf-who-height: 44px;
   --sl-popover-min-width: 220px;
+  /* Components: the presentation page. One beat for every animation it carries - a sweep, an orbit, a lane, a breathing
+     bar - each a multiple of it; the glow a live element throws; the grid ground of an illustrated scene; the height a
+     scene stands at; the width of a node inside one; the floor of a card that must hold its row even when short */
+  --sl-pres-dur: 4s;
+  --sl-pres-shadow: 0 0 var(--sl-space-5) var(--sl-tint-strong);
+  --sl-pres-bg: linear-gradient(var(--sl-border-subtle) 1px, transparent 1px), linear-gradient(90deg, var(--sl-border-subtle) 1px, transparent 1px);
+  --sl-pres-height: 360px;
+  --sl-pres-width: 132px;
+  --sl-pres-min-height: 200px;
+  /* The gauge rings of the presentation: the cockpit and vitals size, and the small size of the statistics rings */
+  --sl-gauge-width: 128px;
+  --sl-gauge-height: 128px;
+  --sl-gauge-min-width: 56px;
+  --sl-gauge-min-height: 56px;
+  /* The request guard scene: the height the court stands at, and the width of the house every other part of the
+     drawing is measured against */
+  --sl-guard-height: 420px;
+  --sl-guard-width: 224px;
+  /* The chart plot of the rhythm section and the hourly bars, and the sparkline floor of a runtime card */
+  --sl-plot-height: 238px;
+  --sl-plot-min-height: 54px;
+  /* The tone the ornament quotation mark carries behind an owner voice */
+  --sl-quote-mix: 18%;
+  /* A site screenshot card and a brand archive tile row */
+  --sl-site-height: 270px;
+  --sl-brand-height: 210px;
   --sl-preview-width: 24px;
   --sl-preview-height: 24px;
   --sl-preview-max-width: 48px;

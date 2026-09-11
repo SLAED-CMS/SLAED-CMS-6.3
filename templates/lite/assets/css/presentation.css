@@ -1,0 +1,5101 @@
+/* The presentation page: the one page of the presentation module, dressed under one root. Bundled by name between
+   base.css and theme.css, so a rule here that restyles a shared component (the knob ring, a chip) stands under the
+   .sl-pres ancestor, where it outranks the later file. No custom property is declared here: every figure a template or
+   a script writes arrives as --sl-d-*, every visual decision reads a token of base.css, and every animation is a
+   multiple of --sl-pres-dur. Tones are carried by data-sl-tone on the element and read through currentColor: a state word
+   (a title state, an event verdict, a log result, a trace result, a cockpit lamp) carries its tone from the template and
+   this file gives it only its shape */
+
+/* ===== Root, tones and the shared shapes =====
+   partials/presentation.html: <div class="sl-pres"> hero, rail, twelve <section class="sl-pres-section" id="..."> */
+.sl-pres {
+  position: relative;
+  isolation: isolate;
+  overflow-x: clip;
+  color: var(--sl-text);
+}
+
+.sl-pres img {
+  display: block;
+  max-width: 100%;
+}
+
+.sl-pres a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.sl-pres button {
+  font: inherit;
+}
+
+/* The tone an element carries, read by everything drawn in currentColor below it */
+.sl-pres [data-sl-tone="primary"] { color: var(--sl-primary-strong); }
+.sl-pres [data-sl-tone="success"] { color: var(--sl-success); }
+.sl-pres [data-sl-tone="warning"] { color: var(--sl-warning); }
+.sl-pres [data-sl-tone="danger"] { color: var(--sl-danger); }
+.sl-pres [data-sl-tone="accent"] { color: var(--sl-accent); }
+.sl-pres [data-sl-tone="info"] { color: var(--sl-info); }
+.sl-pres [data-sl-tone="muted"] { color: var(--sl-text-muted); }
+
+/* The glyph standing before a caption, in the brand tone, and the two sizes it comes in */
+.sl-pres-cockpit-top .bi,
+.sl-pres-blocks-head b > .bi,
+.sl-pres-note > .bi,
+.sl-pres-vars header > .bi,
+.sl-pres-stats-board > .sl-pres-panel-head > span > .bi {
+  margin-right: var(--sl-space-2);
+  color: var(--sl-primary-strong);
+}
+
+.sl-pres-core-stack .bi,
+.sl-pres-rate > .bi {
+  color: var(--sl-primary-strong);
+  font-size: var(--sl-font-micro);
+}
+
+.sl-pres-router > .bi,
+.sl-pres-result > .bi {
+  color: var(--sl-primary-strong);
+  font-size: var(--sl-font-small);
+}
+
+/* The monospace micro caption: one role wherever a small figure, a date, a sha or a note stands beside a value,
+   so every element that carries it is listed here once and only its placement lives with its component */
+.sl-pres-mono,
+.sl-pres-plate small,
+.sl-pres-page-content > small,
+.sl-pres-router > span,
+.sl-pres-evt > time,
+.sl-pres-case > strong,
+.sl-pres-pulse-body > time,
+.sl-pres-when > time,
+.sl-pres-when > small,
+.sl-pres-since > span,
+.sl-pres-mini span,
+.sl-pres-voice-person small,
+.sl-pres-pipe > div > span,
+.sl-pres-rings > div > span,
+.sl-pres-flow-core small {
+  display: block;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-mono {
+  display: inline;
+}
+
+/* The overline: the same caption in capitals, standing over a panel or under a value */
+.sl-pres-over,
+.sl-pres-stat > span,
+.sl-pres-ring > div > span,
+.sl-pres-tech-card span {
+  display: block;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+  color: var(--sl-text-muted);
+}
+
+/* A framed card inside a section body: the illustrated scenes, the runtime cards, the guard console */
+.sl-pres-card {
+  position: relative;
+  min-width: 0;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-surface);
+  padding: var(--sl-space-5);
+}
+
+.sl-pres-card > h3 {
+  margin: 0 0 var(--sl-space-4);
+  font-size: var(--sl-font-body);
+  font-weight: var(--sl-weight-semibold);
+  color: var(--sl-text);
+}
+
+.sl-pres-card > h3 > .bi {
+  margin-right: var(--sl-space-3);
+  color: var(--sl-primary-strong);
+  font-size: var(--sl-size-icon-xs);
+}
+
+/* An illustrated scene: a framed ground with the faint grid every drawing of the page stands on */
+.sl-pres-scene {
+  position: relative;
+  isolation: isolate;
+  min-height: var(--sl-pres-height);
+  overflow: hidden;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-3);
+  background-color: var(--sl-surface);
+  background-image: var(--sl-pres-bg);
+  background-size: 24px 24px;
+}
+
+/* A node standing inside a scene: one width for the module map, the block router, the PDO bus and the cache ring */
+.sl-pres-node {
+  position: absolute;
+  z-index: var(--sl-z-overlay);
+  width: var(--sl-pres-width);
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-surface);
+  padding: var(--sl-space-3) var(--sl-space-4);
+  box-shadow: var(--sl-shadow-raised);
+  color: var(--sl-text-muted);
+  text-align: left;
+  transition: border-color var(--sl-time-slow) var(--sl-ease-in-out), background-color var(--sl-time-slow) var(--sl-ease-in-out), transform var(--sl-time-slow) var(--sl-ease-in-out);
+}
+
+.sl-pres-node > .bi {
+  float: left;
+  margin-right: var(--sl-space-3);
+  color: var(--sl-primary-strong);
+  font-size: var(--sl-font-body);
+}
+
+.sl-pres-node > span {
+  float: right;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+}
+
+.sl-pres-node > b {
+  display: block;
+  clear: both;
+  margin-top: var(--sl-space-2);
+  font-size: var(--sl-font-small);
+  color: var(--sl-text);
+}
+
+.sl-pres-node > small {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sl-space-2);
+  margin-top: var(--sl-space-2);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+}
+
+.sl-pres-node.sl-is-on,
+.sl-pres-node:hover {
+  border-color: var(--sl-primary);
+  background: var(--sl-bg-subtle);
+  transform: translateY(-2px);
+}
+
+.sl-pres-node.sl-is-on > b {
+  color: var(--sl-text-strong);
+}
+
+.sl-pres-node.sl-is-on > .bi,
+.sl-pres-node.sl-is-on > span {
+  color: var(--sl-success);
+}
+
+.sl-pres-node.sl-is-off {
+  opacity: var(--sl-fade-disabled);
+}
+
+/* A wire drawn in an SVG over a scene, running its dashes towards the centre */
+.sl-pres-wires {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.sl-pres-wires path {
+  fill: none;
+  stroke: var(--sl-border-strong);
+  stroke-width: 1;
+  stroke-dasharray: 5 7;
+  animation: sl-pres-dash calc(var(--sl-pres-dur) * 4) linear infinite;
+}
+
+.sl-pres-wires path.sl-is-on {
+  stroke: var(--sl-primary);
+}
+
+@keyframes sl-pres-dash {
+  to { stroke-dashoffset: -180; }
+}
+
+/* A live lamp: a small disc in its tone, with the tone's own halo */
+.sl-pres-dot {
+  display: inline-block;
+  width: var(--sl-space-3);
+  height: var(--sl-space-3);
+  border-radius: var(--sl-radius-circle);
+  background: currentColor;
+  box-shadow: 0 0 0 var(--sl-space-1) color-mix(in srgb, currentColor var(--sl-chip-mix), transparent);
+}
+
+.sl-pres-dot.sl-is-live {
+  animation: sl-pres-breathe calc(var(--sl-pres-dur) / 4) var(--sl-ease-in-out) infinite alternate;
+}
+
+@keyframes sl-pres-breathe {
+  to { opacity: var(--sl-fade-disabled); transform: scale(0.72); }
+}
+
+/* A small monospace pill: a version, a status, a count */
+.sl-pres-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-pill);
+  padding: var(--sl-space-1) var(--sl-space-3);
+  background: var(--sl-bg-subtle);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  white-space: nowrap;
+}
+
+/* A segmented control: the chart period, the chart view. Static in CSS, the plugin moves aria-pressed */
+.sl-pres-segment {
+  display: inline-flex;
+  gap: var(--sl-space-1);
+  padding: var(--sl-space-1);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-bg-subtle);
+}
+
+.sl-pres-segment button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  border: 0;
+  border-radius: var(--sl-radius-pill);
+  padding: var(--sl-space-2) var(--sl-space-5);
+  background: transparent;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  cursor: pointer;
+}
+
+.sl-pres-segment button[aria-pressed="true"] {
+  background: var(--sl-bg);
+  color: var(--sl-primary-strong);
+  box-shadow: var(--sl-shadow-xs);
+}
+
+/* Every focusable control of the page draws the theme's one ring */
+.sl-pres :is(a, button, input, [tabindex]):focus-visible {
+  outline: var(--sl-ring-width) solid var(--sl-primary);
+  outline-offset: var(--sl-ring-gap);
+}
+
+/* ===== fragments/presentation-stat.html =====
+   <div class="sl-pres-stat" data-sl-tone="..." style="--sl-d-part: N%"><span>label</span><b>value <small>unit</small></b><em>note</em><i></i></div>
+   The bar at the foot is drawn only when the fragment carries a share */
+.sl-pres-stat {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-surface);
+  padding: var(--sl-space-4) var(--sl-space-5);
+}
+
+
+
+.sl-pres-stat > b {
+  display: block;
+  margin-top: var(--sl-space-2);
+  font-size: var(--sl-font-h2);
+  line-height: var(--sl-line-tight);
+  letter-spacing: var(--sl-track-tight);
+  color: var(--sl-text-strong);
+  white-space: nowrap;
+}
+
+.sl-pres-stat > b > small {
+  font-size: var(--sl-font-small);
+  font-weight: var(--sl-weight-medium);
+  letter-spacing: 0;
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-stat > em {
+  display: block;
+  margin-top: var(--sl-space-1);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  font-style: normal;
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-stat[data-sl-tone] > b {
+  color: currentColor;
+}
+
+.sl-pres-stat > i {
+  position: absolute;
+  right: var(--sl-space-3);
+  bottom: var(--sl-space-3);
+  left: var(--sl-space-3);
+  height: var(--sl-space-2);
+  overflow: hidden;
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-bg-muted);
+}
+
+.sl-pres-stat > i::after {
+  content: "";
+  display: block;
+  width: var(--sl-d-part, 0%);
+  height: 100%;
+  border-radius: var(--sl-radius-pill);
+  background: linear-gradient(90deg, var(--sl-primary-strong), var(--sl-success));
+  transition: width var(--sl-time-slow) var(--sl-ease-out);
+}
+
+.sl-pres-stat:has(> i) {
+  padding-bottom: var(--sl-space-8);
+}
+
+/* A sweeping hairline under a stat, lit under the pointer */
+.sl-pres-stat::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--sl-primary), transparent);
+  transform: translateX(-100%);
+  transition: transform var(--sl-time-slow) var(--sl-ease-in-out);
+}
+
+.sl-pres-stat:hover::after {
+  transform: translateX(100%);
+}
+
+/* ===== fragments/presentation-ring.html =====
+   <div class="sl-pres-ring sl-knob sl-knob-{ok|info|warn|danger}"><svg class="sl-knob-svg" viewBox="0 0 44 44"><circle class="sl-knob-bg" .../>
+   <circle class="sl-knob-val" ... pathLength="100" stroke-dasharray="{{ part }} 100"/></svg><div><b>27<small>ms</small></b><span>label</span></div></div>
+   The theme's one ring at the gauge sizes: the cockpit and the vitals orb, the small statistics rings, the monitor tiles */
+.sl-pres .sl-pres-ring {
+  flex-basis: var(--sl-gauge-width);
+  width: var(--sl-gauge-width);
+  height: var(--sl-gauge-height);
+  margin: 0 auto;
+}
+
+.sl-pres .sl-pres-ring-sm {
+  flex-basis: var(--sl-gauge-min-width);
+  width: var(--sl-gauge-min-width);
+  height: var(--sl-gauge-min-height);
+}
+
+.sl-pres .sl-pres-ring-xs {
+  flex-basis: var(--sl-size-tile);
+  width: var(--sl-size-tile);
+  height: var(--sl-size-tile);
+}
+
+.sl-pres-ring > div {
+  position: relative;
+  z-index: var(--sl-z-raised);
+  text-align: center;
+  pointer-events: none;
+}
+
+.sl-pres-ring > div > b {
+  display: block;
+  font-size: var(--sl-font-h1);
+  line-height: var(--sl-line-tight);
+  letter-spacing: var(--sl-track-tight);
+  color: var(--sl-text-strong);
+}
+
+.sl-pres-ring-sm > div > b {
+  font-size: var(--sl-font-small);
+  letter-spacing: 0;
+}
+
+.sl-pres-ring > div > b > small {
+  font-size: var(--sl-font-small);
+  font-weight: var(--sl-weight-normal);
+  letter-spacing: 0;
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-ring > div > span {
+  margin-top: var(--sl-space-2);
+}
+
+/* ===== fragments/presentation-head.html =====
+   <div class="sl-pres-head"><span class="sl-pres-num">01</span><i class="bi bi-... sl-pres-icon"></i><h2>title</h2><p>lead</p>
+   {% if state %}<span class="sl-pres-pill" data-sl-tone="success">state</span>{% endif %}</div> */
+.sl-pres-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-5);
+  padding: var(--sl-space-5) var(--sl-space-6);
+  border-bottom: 1px solid var(--sl-border);
+}
+
+.sl-pres-num {
+  display: inline-flex;
+  align-items: center;
+  height: var(--sl-size-control);
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-2);
+  padding: 0 var(--sl-space-3);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-small);
+  color: var(--sl-primary-strong);
+}
+
+.sl-pres-icon {
+  display: inline-flex;
+  flex: 0 0 var(--sl-size-control);
+  align-items: center;
+  justify-content: center;
+  width: var(--sl-size-control);
+  height: var(--sl-size-control);
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg-subtle);
+  color: var(--sl-primary-strong);
+  font-size: var(--sl-size-icon-sm);
+  line-height: 1;
+}
+
+.sl-pres-head > h2 {
+  margin: 0;
+  font-size: var(--sl-font-h2);
+  color: var(--sl-text-strong);
+}
+
+.sl-pres-head > p {
+  min-width: 0;
+  margin: 0 0 0 auto;
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-head > .sl-pres-pill {
+  margin-left: auto;
+}
+
+.sl-pres-head > p + .sl-pres-pill {
+  margin-left: 0;
+}
+
+/* ===== The section frame =====
+   <section class="sl-pres-section" id="..."><div class="sl-pres-head">...</div><div class="sl-pres-body">...</div></section> */
+.sl-pres-stage {
+  display: grid;
+  gap: var(--sl-space-6);
+  margin-top: var(--sl-space-6);
+}
+
+.sl-pres-section {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-3);
+  background: var(--sl-surface);
+  scroll-margin-top: calc(var(--sl-d-rail, 0px) + var(--sl-space-4));
+}
+
+.sl-pres-body {
+  padding: var(--sl-space-6);
+}
+
+/* A section rises into place as it enters the window, by the scroll timeline alone: no script, and no motion at all where the reader asked for none */
+@supports (animation-timeline: view()) {
+  .sl-pres-section {
+    animation: sl-pres-reveal both;
+    animation-timeline: view();
+    animation-range: entry 0 entry 30%;
+  }
+}
+
+@keyframes sl-pres-reveal {
+  from { opacity: var(--sl-fade-disabled); transform: translateY(var(--sl-space-4)); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ===== partials/presentation-hero.html =====
+   <div class="sl-pres-hero"><div class="sl-pres-hero-grid"><div class="sl-pres-copy">cockpit, eyebrow, h1, lead</div>
+   <div class="sl-pres-core">the control / runtime panel</div></div><div class="sl-pres-facts">6 stats</div>
+   <div class="sl-pres-ticker">...</div><div class="sl-pres-tech">6 cards</div></div> */
+.sl-pres-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-3);
+  background: var(--sl-surface);
+  padding: var(--sl-space-7) var(--sl-space-7) var(--sl-space-6);
+  box-shadow: var(--sl-shadow-raised);
+}
+
+/* The rings of the corner: the arc every dashboard of the page repeats, drawn once behind the headline */
+.sl-pres-hero::before {
+  content: "";
+  position: absolute;
+  top: -210px;
+  right: -180px;
+  width: calc(var(--sl-pres-height) + var(--sl-space-7));
+  height: calc(var(--sl-pres-height) + var(--sl-space-7));
+  border: 1px solid var(--sl-tint);
+  border-radius: var(--sl-radius-circle);
+  box-shadow: 0 0 0 var(--sl-space-10) var(--sl-tint), 0 0 0 var(--sl-space-11) var(--sl-tint);
+  pointer-events: none;
+}
+
+.sl-pres-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 420px;
+  gap: var(--sl-space-8);
+  align-items: stretch;
+}
+
+.sl-pres-copy {
+  min-width: 0;
+}
+
+/* The cockpit: the gauges of this very request above the headline, swept by one scanning line */
+.sl-pres-cockpit {
+  position: relative;
+  margin-bottom: var(--sl-space-6);
+  overflow: hidden;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-3);
+  background: linear-gradient(180deg, var(--sl-bg-subtle), var(--sl-surface));
+  padding: var(--sl-space-6);
+}
+
+.sl-pres-scan {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(transparent, var(--sl-primary), transparent);
+  box-shadow: var(--sl-pres-shadow);
+  opacity: var(--sl-fade-muted);
+  animation: sl-pres-scan var(--sl-pres-dur) linear infinite;
+  pointer-events: none;
+}
+
+@keyframes sl-pres-scan {
+  from { left: -1%; }
+  to { left: 101%; }
+}
+
+.sl-pres-cockpit-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-4);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-cockpit-top .sl-pres-dot {
+  margin-right: var(--sl-space-2);
+}
+
+.sl-pres-gauges {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.1fr 1fr 1fr;
+  gap: var(--sl-space-4);
+  align-items: center;
+  margin-top: var(--sl-space-5);
+}
+
+/* The plate in the middle of the gauges: the mark on a dashed ring that turns once per six beats */
+.sl-pres-plate {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: var(--sl-space-2);
+  aspect-ratio: 1;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-circle);
+  background: radial-gradient(circle at 50% 38%, var(--sl-tint-strong), var(--sl-surface) 68%);
+  padding: var(--sl-space-5) var(--sl-space-4);
+  box-shadow: var(--sl-shadow-focus);
+  text-align: center;
+}
+
+.sl-pres-plate::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border: 1px dashed var(--sl-primary-subtle);
+  border-radius: var(--sl-radius-circle);
+  animation: sl-pres-spin calc(var(--sl-pres-dur) * 6) linear infinite;
+}
+
+@keyframes sl-pres-spin {
+  to { transform: rotate(360deg); }
+}
+
+.sl-pres-plate img {
+  width: var(--sl-size-icon-xl);
+}
+
+.sl-pres-plate b {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  color: var(--sl-text-strong);
+}
+
+.sl-pres-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-4);
+  font-size: var(--sl-font-small);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+  color: var(--sl-primary-strong);
+}
+
+.sl-pres-eyebrow::before {
+  content: "";
+  width: var(--sl-space-8);
+  height: 1px;
+  background: var(--sl-primary);
+}
+
+.sl-pres-copy > h1 {
+  max-width: calc(var(--sl-view-max-width) + var(--sl-space-10));
+  margin: var(--sl-space-5) 0;
+  font-size: var(--sl-font-hero);
+  font-weight: var(--sl-weight-bold);
+  line-height: var(--sl-line-tight);
+  letter-spacing: var(--sl-track-tight);
+  color: var(--sl-text-strong);
+}
+
+.sl-pres-copy > h1 > span {
+  color: var(--sl-primary-strong);
+}
+
+.sl-pres-lead {
+  max-width: var(--sl-view-max-width);
+  margin: 0;
+  font-size: var(--sl-font-h4);
+  line-height: var(--sl-line-loose);
+  color: var(--sl-text-muted);
+}
+
+/* The control / runtime panel: a window with a menu rail and a view, the live figures of this request inside it */
+.sl-pres-core {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-3);
+  background: var(--sl-bg);
+  box-shadow: var(--sl-shadow-float);
+}
+
+.sl-pres-core-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  height: var(--sl-field-height);
+  border-bottom: 1px solid var(--sl-border);
+  padding: 0 var(--sl-space-4);
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-core-bar > span:first-child {
+  display: flex;
+  gap: var(--sl-space-2);
+  margin-right: var(--sl-space-2);
+}
+
+.sl-pres-core-bar > span:first-child > i {
+  width: var(--sl-space-3);
+  height: var(--sl-space-3);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-border-strong);
+}
+
+.sl-pres-core-bar > span:last-child {
+  margin-left: auto;
+  text-transform: none;
+}
+
+.sl-pres-core-body {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: 126px minmax(0, 1fr);
+}
+
+.sl-pres-core-menu {
+  border-right: 1px solid var(--sl-border);
+  background: var(--sl-surface);
+  padding: var(--sl-space-4) var(--sl-space-3);
+}
+
+.sl-pres-core-menu > div {
+  position: relative;
+  margin: var(--sl-space-1) 0;
+  border-radius: var(--sl-radius-1);
+  padding: var(--sl-space-2) var(--sl-space-3);
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-muted);
+  white-space: nowrap;
+}
+
+.sl-pres-core-menu > div > .bi {
+  width: var(--sl-size-icon-sm);
+  margin-right: var(--sl-space-2);
+  color: var(--sl-primary-subtle);
+  font-size: var(--sl-font-small);
+}
+
+.sl-pres-core-menu > div.sl-is-on {
+  background: var(--sl-bg-subtle);
+  color: var(--sl-text-strong);
+}
+
+.sl-pres-core-menu > div.sl-is-on > .bi {
+  color: var(--sl-primary-strong);
+}
+
+.sl-pres-core-menu > div.sl-is-on::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 0;
+  width: var(--sl-space-1);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-primary);
+}
+
+.sl-pres-core-view {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: var(--sl-space-4);
+}
+
+.sl-pres-core-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sl-space-3);
+}
+
+.sl-pres-core-title > b,
+.sl-pres-detail-head > b {
+  font-size: var(--sl-font-body);
+  color: var(--sl-text-strong);
+}
+
+.sl-pres-core-title > span {
+  font-size: var(--sl-font-micro);
+}
+
+.sl-pres-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sl-space-3);
+}
+
+.sl-pres-metric {
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-surface);
+  padding: var(--sl-space-2) var(--sl-space-3);
+}
+
+.sl-pres-metric > b {
+  display: block;
+  font-size: var(--sl-font-h4);
+  color: var(--sl-text-strong);
+}
+
+.sl-pres-metric > small,
+.sl-pres-mod > small,
+.sl-pres-epoch-row > small {
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-muted);
+}
+
+/* The pulse strip of the panel: a framed band with the scan line, the plugin draws the sparkline into it */
+.sl-pres-core-pulse {
+  position: relative;
+  flex: 0 0 var(--sl-plot-min-height);
+  height: var(--sl-plot-min-height);
+  margin-top: var(--sl-space-3);
+  overflow: hidden;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: linear-gradient(180deg, var(--sl-tint), transparent);
+}
+
+.sl-pres-core-pulse::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: var(--sl-border);
+}
+
+.sl-pres-core-pulse canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.sl-pres-core-stack {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sl-space-2);
+  margin-top: var(--sl-space-3);
+}
+
+.sl-pres-core-stack > span {
+  display: grid;
+  grid-template-columns: var(--sl-size-icon-xs) auto minmax(0, 1fr);
+  gap: var(--sl-space-2);
+  align-items: center;
+  min-width: 0;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-surface);
+  padding: var(--sl-space-2);
+}
+
+.sl-pres-core-stack b {
+  font-size: var(--sl-font-micro);
+  white-space: nowrap;
+}
+
+.sl-pres-core-stack em {
+  min-width: 0;
+  overflow: hidden;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  font-style: normal;
+  color: var(--sl-text-muted);
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-pres-core-stack em.sl-is-ok {
+  color: var(--sl-success);
+}
+
+.sl-pres-core-flow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-2);
+  margin-top: var(--sl-space-2);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-surface);
+  padding: var(--sl-space-2);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-core-flow > span {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  white-space: nowrap;
+}
+
+.sl-pres-core-flow > span > i {
+  width: var(--sl-space-2);
+  height: var(--sl-space-2);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-primary);
+  box-shadow: var(--sl-pres-shadow);
+}
+
+.sl-pres-core-flow > b {
+  font-weight: var(--sl-weight-normal);
+  color: var(--sl-border-strong);
+}
+
+/* The six facts under the headline */
+.sl-pres-facts {
+  position: relative;
+  z-index: var(--sl-z-raised);
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--sl-space-3);
+  margin-top: var(--sl-space-7);
+}
+
+/* The ticker: one line of module names running at a constant rate, held under the pointer */
+.sl-pres-ticker {
+  margin-top: var(--sl-space-3);
+  overflow: hidden;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-3);
+  background: var(--sl-surface);
+}
+
+.sl-pres-ticker-track {
+  display: flex;
+  width: max-content;
+  animation: sl-pres-ticker calc(var(--sl-pres-dur) * 8) linear infinite;
+}
+
+.sl-pres-ticker:hover .sl-pres-ticker-track {
+  animation-play-state: paused;
+}
+
+@keyframes sl-pres-ticker {
+  to { transform: translateX(-50%); }
+}
+
+.sl-pres-ticker-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  border-right: 1px solid var(--sl-border);
+  padding: var(--sl-space-3) var(--sl-space-6);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-muted);
+  white-space: nowrap;
+}
+
+.sl-pres-ticker-item > b {
+  color: var(--sl-primary-strong);
+}
+
+.sl-pres-ticker-item > i {
+  width: var(--sl-space-2);
+  height: var(--sl-space-2);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-primary);
+}
+
+/* The technology row: six cards, each in the tone of its stack */
+.sl-pres-tech {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--sl-space-3);
+  margin-top: var(--sl-space-3);
+}
+
+.sl-pres-tech-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  min-width: 0;
+  min-height: var(--sl-size-icon-xl);
+  overflow: hidden;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-surface);
+  padding: var(--sl-space-4) var(--sl-space-5);
+  transition: transform var(--sl-time-slow) var(--sl-ease-in-out), border-color var(--sl-time-slow) var(--sl-ease-in-out);
+}
+
+.sl-pres-tech-card::before {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, currentColor, transparent);
+  opacity: var(--sl-fade-muted);
+  transform: translateX(-65%);
+  transition: transform var(--sl-time-slow) var(--sl-ease-in-out), opacity var(--sl-time-slow) var(--sl-ease-in-out);
+}
+
+.sl-pres-tech-card:hover {
+  border-color: color-mix(in srgb, currentColor var(--sl-tile-mix), var(--sl-border));
+  transform: translateY(-3px);
+}
+
+.sl-pres-tech-card:hover::before {
+  opacity: 1;
+  transform: translateX(65%);
+}
+
+.sl-pres-tech-card > i {
+  display: grid;
+  flex: 0 0 var(--sl-size-control);
+  place-items: center;
+  width: var(--sl-size-control);
+  height: var(--sl-size-control);
+  border: 1px solid var(--sl-ico-border);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-ico-bg);
+  font-size: var(--sl-size-icon-xs);
+}
+
+.sl-pres-tech-card > div {
+  min-width: 0;
+}
+
+.sl-pres-tech-card b {
+  display: block;
+  overflow: hidden;
+  font-size: var(--sl-font-h4);
+  color: var(--sl-text-strong);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-pres-tech-card span {
+  margin-top: var(--sl-space-2);
+}
+
+/* ===== partials/presentation-rail.html =====
+   <div class="sl-pres-rail"><div class="sl-pres-rail-head"><b>01 / 12</b></div><nav class="sl-pres-rail-nav" data-sl-spy="px">
+   <a class="sl-pres-rail-item" href="#id" data-sl-spy-mark="id"><i class="sl-pres-rail-node"></i><b>label</b><em>01</em></a>...</nav></div>
+   A sticky dock over the sections: the script marks aria-current and data-sl-spy-done, writes the walked road as
+   --sl-d-spy in pixels and the dock height as --sl-d-rail, which every section clears when it is scrolled to */
+.sl-pres-rail {
+  position: sticky;
+  top: 0;
+  z-index: var(--sl-z-sticky);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--sl-space-4);
+  margin: var(--sl-space-3) 0;
+  border-radius: var(--sl-radius-2);
+  background: color-mix(in srgb, var(--sl-surface) var(--sl-modal-btn-mix), transparent);
+  padding: var(--sl-space-3) var(--sl-space-4);
+  box-shadow: var(--sl-shadow-raised);
+  backdrop-filter: blur(var(--sl-space-4));
+}
+
+.sl-pres-rail-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  padding-bottom: var(--sl-space-4);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-body);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+  color: var(--sl-text-muted);
+  white-space: nowrap;
+}
+
+.sl-pres-rail-head > b {
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-bg-subtle);
+  padding: var(--sl-space-1) var(--sl-space-3);
+  color: var(--sl-primary-strong);
+}
+
+.sl-pres-rail-nav {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sl-space-2);
+  padding: 0 0 var(--sl-space-4);
+  overflow-x: auto;
+  overflow-anchor: none;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+}
+
+.sl-pres-rail-nav::-webkit-scrollbar {
+  display: none;
+}
+
+/* The track under the labels, and the part already walked drawn over it up to the current pill */
+.sl-pres-rail-nav::before,
+.sl-pres-rail-nav::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: var(--sl-space-1);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-border);
+  pointer-events: none;
+}
+
+.sl-pres-rail-nav::after {
+  width: var(--sl-d-spy, 0px);
+  background: linear-gradient(90deg, var(--sl-primary), var(--sl-primary-strong));
+  transition: width var(--sl-time-fast) linear;
+}
+
+.sl-pres-rail-item {
+  position: relative;
+  display: grid;
+  flex: 0 0 auto;
+  grid-template-columns: auto auto auto;
+  align-items: center;
+  gap: var(--sl-space-2);
+  border-radius: var(--sl-radius-2);
+  padding: var(--sl-space-3) var(--sl-space-4);
+  color: var(--sl-text-muted);
+  white-space: nowrap;
+  transition: color var(--sl-time-base) var(--sl-ease-out), background-color var(--sl-time-base) var(--sl-ease-out);
+}
+
+.sl-pres-rail-item:hover {
+  background: var(--sl-bg-subtle);
+  color: var(--sl-text);
+}
+
+.sl-pres-rail-item > b {
+  font-size: var(--sl-font-body);
+  font-weight: var(--sl-weight-medium);
+  text-transform: uppercase;
+}
+
+.sl-pres-rail-item > em {
+  display: none;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  font-style: normal;
+}
+
+.sl-pres-rail-node {
+  width: var(--sl-space-3);
+  height: var(--sl-space-3);
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-surface);
+  transition: background-color var(--sl-time-base) var(--sl-ease-out), border-color var(--sl-time-base) var(--sl-ease-out);
+}
+
+.sl-pres-rail-item[data-sl-spy-done="1"] .sl-pres-rail-node {
+  border-color: var(--sl-primary);
+  background: var(--sl-primary-subtle);
+}
+
+.sl-pres-rail-item[aria-current="true"] {
+  background: var(--sl-tint);
+  color: var(--sl-primary-strong);
+}
+
+.sl-pres-rail-item[aria-current="true"] > b {
+  font-weight: var(--sl-weight-semibold);
+}
+
+.sl-pres-rail-item[aria-current="true"] .sl-pres-rail-node {
+  width: var(--sl-space-4);
+  height: var(--sl-space-4);
+  border-color: var(--sl-primary-strong);
+  background: var(--sl-primary);
+  box-shadow: var(--sl-pres-shadow);
+}
+
+/* ===== 01 partials/presentation-rhythm.html =====
+   <div class="sl-pres-rhythm"><article class="sl-pres-chart" data-sl-pres="chart" data-sl-pres-series="{json}">
+   <div class="sl-pres-chart-meta"><div><strong>volume</strong><span>label <b>change</b></span></div><div class="sl-pres-segment">3 buttons</div></div>
+   <div class="sl-pres-plot"><canvas></canvas><output class="sl-pres-tip" hidden></output></div>
+   <div class="sl-pres-chart-foot"><div class="sl-pres-legend"><span><i></i>label</span>...</div><div class="sl-pres-segment">2 buttons</div></div></article>
+   <article class="sl-pres-vitals"><div class="sl-pres-vitals-head"><span class="sl-pres-over"></span><i class="bi"></i></div>ring, h3, p,
+   <div class="sl-pres-vitals-list"><span>label <b>value</b></span>...</div><span class="sl-pres-pill">note</span></article></div> */
+.sl-pres-rhythm {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sl-space-6);
+  align-items: stretch;
+}
+
+.sl-pres-chart {
+  grid-column: span 3;
+}
+
+.sl-pres-chart,
+.sl-pres-vitals {
+  min-width: 0;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-surface);
+  padding: var(--sl-space-6);
+}
+
+.sl-pres-chart-meta,
+.sl-pres-chart-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-5);
+}
+
+.sl-pres-chart-meta strong {
+  font-size: var(--sl-font-hero);
+  line-height: var(--sl-line-tight);
+  letter-spacing: var(--sl-track-tight);
+  color: var(--sl-text-strong);
+}
+
+.sl-pres-chart-meta span {
+  display: block;
+  margin-top: var(--sl-space-3);
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-chart-meta b {
+  margin-left: var(--sl-space-3);
+  color: var(--sl-success);
+}
+
+/* The plot: the plugin draws the series into the canvas, the tooltip follows the pointer over it */
+.sl-pres-plot {
+  position: relative;
+  height: var(--sl-plot-height);
+  margin-top: var(--sl-space-6);
+}
+
+.sl-pres-plot canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.sl-pres-tip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-bg);
+  padding: var(--sl-space-2) var(--sl-space-4);
+  box-shadow: var(--sl-shadow-float);
+  color: var(--sl-text);
+  font-size: var(--sl-font-small);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity var(--sl-time-fast) var(--sl-ease-out);
+  pointer-events: none;
+}
+
+.sl-pres-plot:hover .sl-pres-tip:not([hidden]) {
+  opacity: 1;
+}
+
+.sl-pres-chart-foot {
+  margin-top: var(--sl-space-5);
+  border-top: 1px solid var(--sl-border);
+  padding-top: var(--sl-space-5);
+}
+
+.sl-pres-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-6);
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+}
+
+.sl-pres-legend i {
+  width: var(--sl-space-3);
+  height: var(--sl-space-3);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-primary);
+}
+
+.sl-pres-legend > span:nth-child(2) i {
+  background: var(--sl-accent);
+}
+
+.sl-pres-legend > span:nth-child(3) i {
+  background: var(--sl-success);
+}
+
+/* The vitals card: the one big ring of the page over the three figures of this request */
+.sl-pres-vitals {
+  background: linear-gradient(145deg, var(--sl-tint), var(--sl-surface));
+  text-align: center;
+}
+
+.sl-pres-vitals-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-5);
+  text-align: left;
+}
+
+.sl-pres-vitals-head > .bi {
+  color: var(--sl-success);
+  font-size: var(--sl-size-icon-sm);
+}
+
+.sl-pres-vitals > .sl-pres-ring {
+  margin: var(--sl-space-5) auto;
+}
+
+.sl-pres-vitals > h3 {
+  margin: var(--sl-space-3) 0;
+  font-size: var(--sl-font-h4);
+  color: var(--sl-text-strong);
+}
+
+.sl-pres-vitals > p {
+  margin: var(--sl-space-5) 0;
+  font-size: var(--sl-font-small);
+  line-height: var(--sl-line-loose);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-vitals-list {
+  display: grid;
+  gap: var(--sl-space-3);
+  margin: var(--sl-space-5) 0;
+}
+
+.sl-pres-vitals-list > span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-4);
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-vitals-list b {
+  color: var(--sl-text);
+}
+
+.sl-pres-vitals-list .bi {
+  color: var(--sl-success);
+}
+
+/* ===== 02 partials/presentation-modules.html =====
+   <div class="sl-pres-modules"><div class="sl-pres-map sl-pres-scene"><svg class="sl-pres-wires">8 paths</svg>
+   <div class="sl-pres-map-core"><i class="sl-pres-orbit"></i><img></div>
+   fragments/presentation-module.html x8: <a class="sl-pres-mod sl-is-on" href><i class="sl-pres-dot"></i><b>name</b><small>tag · tag</small></a></div>
+   <div class="sl-pres-detail">4 x <div class="sl-pres-card"><div class="sl-pres-detail-head"><b>Core</b><span>state</span></div><div class="sl-pres-tags"><span>tag</span></div></div></div></div>
+   The eight modules stand on the map by their order: four corners, two flanks, two on the diagonal */
+.sl-pres-modules {
+  display: grid;
+  grid-template-columns: 1.55fr 0.75fr;
+  gap: var(--sl-space-4);
+}
+
+.sl-pres-map {
+  background-image: radial-gradient(circle at 50% 50%, var(--sl-tint), transparent 35%), var(--sl-pres-bg);
+  background-size: auto, 24px 24px, 24px 24px;
+}
+
+.sl-pres-map-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: var(--sl-z-raised);
+  display: grid;
+  place-items: center;
+  width: calc(var(--sl-pres-width) * 0.75);
+  height: calc(var(--sl-pres-width) * 0.75);
+  border: 1px solid var(--sl-primary-subtle);
+  border-radius: var(--sl-radius-circle);
+  background: radial-gradient(circle, var(--sl-tint-strong), var(--sl-surface) 68%);
+  box-shadow: var(--sl-shadow-focus);
+  transform: translate(-50%, -50%);
+}
+
+.sl-pres-map-core img {
+  width: calc(var(--sl-pres-width) * 0.5);
+}
+
+.sl-pres-orbit {
+  position: absolute;
+  inset: -12px;
+  border: 1px solid var(--sl-primary-subtle);
+  border-radius: var(--sl-radius-circle);
+  animation: sl-pres-spin calc(var(--sl-pres-dur) * 4) linear infinite;
+}
+
+.sl-pres-orbit::before,
+.sl-pres-orbit::after {
+  content: "";
+  position: absolute;
+  width: var(--sl-space-2);
+  height: var(--sl-space-2);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-primary);
+  box-shadow: var(--sl-pres-shadow);
+}
+
+.sl-pres-orbit::before {
+  top: -3px;
+  left: 50%;
+}
+
+.sl-pres-orbit::after {
+  top: 50%;
+  right: -3px;
+}
+
+.sl-pres-mod {
+  position: absolute;
+  width: calc(var(--sl-pres-width) * 0.85);
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg-subtle);
+  padding: var(--sl-space-3) var(--sl-space-4);
+  transition: transform var(--sl-time-slow) var(--sl-ease-in-out), border-color var(--sl-time-slow) var(--sl-ease-in-out), box-shadow var(--sl-time-slow) var(--sl-ease-in-out);
+}
+
+.sl-pres-mod:hover {
+  border-color: var(--sl-primary);
+  box-shadow: var(--sl-shadow-float);
+  transform: translateY(-3px) scale(1.02);
+}
+
+.sl-pres-mod > b {
+  display: block;
+  font-size: var(--sl-font-body);
+  color: var(--sl-text-strong);
+}
+
+.sl-pres-mod > .sl-pres-dot {
+  position: absolute;
+  top: var(--sl-space-3);
+  right: var(--sl-space-3);
+  width: var(--sl-space-2);
+  height: var(--sl-space-2);
+  color: var(--sl-border-strong);
+  box-shadow: none;
+}
+
+.sl-pres-mod.sl-is-on > .sl-pres-dot {
+  color: var(--sl-success);
+}
+
+.sl-pres-mod.sl-is-off {
+  opacity: var(--sl-fade-disabled);
+}
+
+.sl-pres-mod:nth-child(1 of .sl-pres-mod) { top: 9%; left: 4%; }
+.sl-pres-mod:nth-child(2 of .sl-pres-mod) { bottom: 9%; left: 4%; }
+.sl-pres-mod:nth-child(3 of .sl-pres-mod) { top: 9%; right: 4%; }
+.sl-pres-mod:nth-child(4 of .sl-pres-mod) { right: 4%; bottom: 9%; }
+.sl-pres-mod:nth-child(5 of .sl-pres-mod) { top: 43%; left: 19%; }
+.sl-pres-mod:nth-child(6 of .sl-pres-mod) { top: 43%; right: 19%; }
+.sl-pres-mod:nth-child(7 of .sl-pres-mod) { top: 13%; left: 27%; }
+.sl-pres-mod:nth-child(8 of .sl-pres-mod) { right: 27%; bottom: 13%; }
+
+.sl-pres-detail,
+.sl-pres-guard-console,
+.sl-pres-dev-side,
+.sl-pres-stats-side {
+  display: grid;
+  gap: var(--sl-space-3);
+  align-content: start;
+}
+
+.sl-pres-detail-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--sl-font-small);
+}
+
+.sl-pres-detail-head > span {
+  color: var(--sl-success);
+}
+
+.sl-pres-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-2);
+  margin-top: var(--sl-space-3);
+}
+
+.sl-pres-tags > span {
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-bg);
+  padding: var(--sl-space-1) var(--sl-space-2);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  color: var(--sl-primary-strong);
+}
+
+/* The block router: the page mock in the middle, the block nodes on both sides wired to the slot they fill
+   <div class="sl-pres-blocks"><div class="sl-pres-blocks-head"><div><span class="sl-pres-over"></span><b><i class="bi"></i> title</b></div>
+   <div class="sl-pres-blocks-state"><i class="sl-pres-dot" data-sl-tone="success"></i><b>N active</b></div></div>
+   <div class="sl-pres-blocks-layout"><div class="sl-pres-blocks-stage sl-pres-scene"><svg class="sl-pres-wires"></svg>
+   <div class="sl-pres-page"><div class="sl-pres-slot">BANNER</div><div class="sl-pres-page-grid"><aside class="sl-pres-slot"><span>LEFT</span></aside>
+   <div><div class="sl-pres-slot">CENTER TOP</div><div class="sl-pres-page-content"><i class="bi"></i><b>CONTENT</b><small>module output</small></div><div class="sl-pres-slot">CENTER BOTTOM</div></div>
+   <aside class="sl-pres-slot"><span>RIGHT</span></aside></div><div class="sl-pres-slot">FOOTER</div></div>
+   <div class="sl-pres-node sl-is-on">block</div> x8 (1-4 left, 5-8 right) <div class="sl-pres-router"><i class="bi"></i><b>POSITION</b><span>router</span></div></div>
+   <aside class="sl-pres-blocks-panel">...</aside></div></div> */
+.sl-pres-blocks {
+  grid-column: 1 / -1;
+  margin-top: var(--sl-space-4);
+  overflow: hidden;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-3);
+  background: var(--sl-surface);
+}
+
+.sl-pres-blocks-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-5);
+  border-bottom: 1px solid var(--sl-border);
+  background: linear-gradient(90deg, var(--sl-bg-subtle), var(--sl-surface));
+  padding: var(--sl-space-4);
+}
+
+.sl-pres-blocks-head b {
+  display: block;
+  margin-top: var(--sl-space-2);
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-strong);
+}
+
+.sl-pres-blocks-state {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-blocks-state > b {
+  margin: 0;
+  color: var(--sl-success);
+}
+
+.sl-pres-blocks-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 0.55fr);
+  gap: var(--sl-space-3);
+  padding: var(--sl-space-3);
+}
+
+.sl-pres-blocks-stage {
+  border-radius: var(--sl-radius-2);
+}
+
+/* The page mock: the slots of the layout drawn as dashed boxes, the content in the middle, each slot lit while a block fills it */
+.sl-pres-page {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: var(--sl-z-raised);
+  width: calc(var(--sl-pres-width) * 1.35);
+  border: 1px solid var(--sl-primary-subtle);
+  border-radius: var(--sl-radius-3);
+  background: var(--sl-bg-subtle);
+  padding: var(--sl-space-3);
+  box-shadow: var(--sl-shadow-focus), var(--sl-shadow-float);
+  transform: translate(-50%, -50%);
+}
+
+.sl-pres-slot {
+  display: grid;
+  place-items: center;
+  min-height: var(--sl-space-8);
+  border: 1px dashed var(--sl-border-strong);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-surface);
+  color: var(--sl-text-muted);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  transition: border-color var(--sl-time-slow) var(--sl-ease-out), background-color var(--sl-time-slow) var(--sl-ease-out), color var(--sl-time-slow) var(--sl-ease-out);
+}
+
+.sl-pres-slot.sl-is-on {
+  border-color: var(--sl-primary);
+  background: var(--sl-tint);
+  color: var(--sl-primary-strong);
+}
+
+.sl-pres-page-grid {
+  display: grid;
+  grid-template-columns: var(--sl-space-9) 1fr var(--sl-space-9);
+  gap: var(--sl-space-2);
+  margin: var(--sl-space-3) 0;
+}
+
+.sl-pres-page-grid > div {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: var(--sl-space-2);
+}
+
+.sl-pres-page-grid > aside > span {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+.sl-pres-page-content {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: var(--sl-space-1);
+  min-height: calc(var(--sl-pres-width) * 0.75);
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-bg);
+  color: var(--sl-primary-strong);
+}
+
+.sl-pres-page-content > .bi {
+  font-size: var(--sl-font-body);
+}
+
+.sl-pres-page-content > b {
+  font-size: var(--sl-font-micro);
+}
+
+/* The block nodes: the first four down the left edge, the next four down the right */
+.sl-pres-blocks-stage > .sl-pres-node:nth-child(1 of .sl-pres-node) { top: 5%; left: 3%; }
+.sl-pres-blocks-stage > .sl-pres-node:nth-child(2 of .sl-pres-node) { top: 27%; left: 3%; }
+.sl-pres-blocks-stage > .sl-pres-node:nth-child(3 of .sl-pres-node) { top: 49%; left: 3%; }
+.sl-pres-blocks-stage > .sl-pres-node:nth-child(4 of .sl-pres-node) { top: 71%; left: 3%; }
+.sl-pres-blocks-stage > .sl-pres-node:nth-child(5 of .sl-pres-node) { top: 5%; right: 3%; }
+.sl-pres-blocks-stage > .sl-pres-node:nth-child(6 of .sl-pres-node) { top: 27%; right: 3%; }
+.sl-pres-blocks-stage > .sl-pres-node:nth-child(7 of .sl-pres-node) { top: 49%; right: 3%; }
+.sl-pres-blocks-stage > .sl-pres-node:nth-child(8 of .sl-pres-node) { top: 71%; right: 3%; }
+
+.sl-pres-router {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: var(--sl-z-overlay);
+  display: grid;
+  place-items: center;
+  align-content: center;
+  width: var(--sl-size-icon-xl);
+  height: var(--sl-size-icon-xl);
+  border: 1px solid var(--sl-primary);
+  border-radius: var(--sl-radius-circle);
+  background: radial-gradient(circle, var(--sl-tint-strong), var(--sl-surface) 70%);
+  box-shadow: var(--sl-shadow-focus);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.sl-pres-router > b,
+.sl-pres-bcard > b,
+.sl-pres-rules b {
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-strong);
+}
+
+/* The side panel of the router: the active layout, its block list and the four rules
+   <aside class="sl-pres-blocks-panel"><div class="sl-pres-panel-head"><span>ACTIVE LAYOUT</span><b>CENTER TOP</b></div>
+   <div class="sl-pres-blocks-list"><div class="sl-pres-bcard"><b>title</b><span>pos</span><small>note</small></div></div>
+   <div class="sl-pres-rules"><span><i class="bi"></i><b>Visibility</b><em>all / guests / users</em></span> x4</div></aside> */
+.sl-pres-blocks-panel {
+  overflow: hidden;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-surface);
+}
+
+.sl-pres-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-3);
+  border-bottom: 1px solid var(--sl-border);
+  padding: var(--sl-space-3) var(--sl-space-4);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-panel-head > b,
+.sl-pres-ambient b,
+.sl-pres-sql b,
+.sl-pres-gallery-head > b {
+  font-weight: var(--sl-weight-medium);
+  color: var(--sl-primary-strong);
+}
+
+.sl-pres-blocks-list {
+  display: grid;
+  gap: var(--sl-space-2);
+  align-content: start;
+  min-height: calc(var(--sl-pres-height) / 2);
+  padding: var(--sl-space-3);
+}
+
+.sl-pres-bcard {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--sl-space-2);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-bg);
+  padding: var(--sl-space-3);
+}
+
+.sl-pres-bcard > span {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  color: var(--sl-success);
+}
+
+.sl-pres-bcard > small {
+  grid-column: 1 / -1;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-rules {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid var(--sl-border);
+}
+
+.sl-pres-rules > span {
+  display: grid;
+  grid-template-columns: var(--sl-size-icon-xs) 1fr;
+  gap: var(--sl-space-1) var(--sl-space-2);
+  border-right: 1px solid var(--sl-border);
+  border-bottom: 1px solid var(--sl-border);
+  padding: var(--sl-space-3);
+}
+
+.sl-pres-rules > span:nth-child(2n) {
+  border-right: 0;
+}
+
+.sl-pres-rules > span:nth-last-child(-n + 2) {
+  border-bottom: 0;
+}
+
+.sl-pres-rules .bi {
+  grid-row: 1 / 3;
+  color: var(--sl-primary-strong);
+  font-size: var(--sl-font-micro);
+}
+
+.sl-pres-rules em {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  font-style: normal;
+  color: var(--sl-text-muted);
+}
+
+/* ===== 03 partials/presentation-guard.html =====
+   <div class="sl-pres-guard"><div class="sl-pres-guard-scene sl-pres-scene">
+   <span class="sl-pres-zone">01 / INGRESS</span><span class="sl-pres-zone">02 / CLASSIFY + FILTER</span><span class="sl-pres-zone">03 / TRUSTED ZONE</span>
+   <i class="sl-pres-radar"></i><div class="sl-pres-lanes"><div><i></i></div> x5</div>
+   <span class="sl-pres-ambient"><strong>N</strong> req/min</span><span class="sl-pres-ambient"><i class="bi"></i><b>policy</b> text</span><span class="sl-pres-ambient">...</span>
+   <div class="sl-pres-traffic"><span data-sl-tone="primary"><i class="bi"></i>human</span> x5</div><span class="sl-pres-badge">GUARD ON</span>
+   <div class="sl-pres-net"><i class="bi bi-globe2"></i><span>PUBLIC INTERNET</span></div>
+   <div class="sl-pres-allow"><span>ALLOW BUS</span></div><div class="sl-pres-deny"><span>DENY</span></div><div class="sl-pres-track"><span>GUARD TRACK</span></div>
+   <div class="sl-pres-gate"><span class="sl-pres-beam"></span><div class="sl-pres-shield"><i class="bi"></i><small>SCAN</small></div></div>
+   <div class="sl-pres-quarantine"><div><span>QUARANTINE</span><b>0</b></div><div class="sl-pres-traps"><i></i> x10</div></div>
+   <div class="sl-pres-house"><div class="sl-pres-chimney"><span></span></div><div class="sl-pres-roof"><div class="sl-pres-roof-plane"></div><div class="sl-pres-roof-gable"></div><div class="sl-pres-roof-fascia"></div></div>
+   <div class="sl-pres-house-body"><div class="sl-pres-corner"></div><div class="sl-pres-corner"></div><div class="sl-pres-panes"><div class="sl-pres-pane sl-is-on" title><i class="bi"></i></div> x4</div>
+   <div class="sl-pres-door sl-is-on"><i class="bi"></i><span>ENTRY</span></div><div class="sl-pres-foundation"></div></div><div class="sl-pres-ground"><i></i><i></i><i></i></div></div>
+   </div><div class="sl-pres-guard-console">3 cards</div></div>
+   Every figure of the drawing is a share of the house width or the court height, so one token retunes the whole scene */
+.sl-pres-guard {
+  display: grid;
+  grid-template-columns: minmax(0, 1.62fr) minmax(0, 0.38fr);
+  gap: var(--sl-space-4);
+}
+
+.sl-pres-guard-scene {
+  min-height: var(--sl-guard-height);
+  background-image: radial-gradient(circle at 85% 28%, var(--sl-tint), transparent 40%), var(--sl-pres-bg);
+  background-size: auto, 24px 24px, 24px 24px;
+}
+
+/* The ground line the house stands on, and the paving under it */
+.sl-pres-guard-scene::before {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: calc(var(--sl-guard-height) * 0.22);
+  left: 0;
+  height: 1px;
+  background: var(--sl-primary-subtle);
+  box-shadow: var(--sl-pres-shadow);
+}
+
+.sl-pres-zone {
+  position: absolute;
+  top: calc(var(--sl-guard-height) * 0.16);
+  z-index: var(--sl-z-overlay);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-zone::after {
+  content: "";
+  display: block;
+  width: calc(var(--sl-guard-width) * 0.24);
+  height: 1px;
+  margin-top: var(--sl-space-2);
+  background: var(--sl-primary-subtle);
+}
+
+.sl-pres-zone:nth-child(1 of .sl-pres-zone) {
+  left: var(--sl-space-7);
+}
+
+.sl-pres-zone:nth-child(2 of .sl-pres-zone) {
+  left: 50%;
+  text-align: center;
+  transform: translateX(-50%);
+}
+
+.sl-pres-zone:nth-child(2 of .sl-pres-zone)::after {
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.sl-pres-zone:nth-child(3 of .sl-pres-zone) {
+  right: var(--sl-space-8);
+  text-align: right;
+}
+
+.sl-pres-zone:nth-child(3 of .sl-pres-zone)::after {
+  margin-left: auto;
+}
+
+/* The radar behind the ingress: two rings and a sweeping hand */
+.sl-pres-radar {
+  position: absolute;
+  top: calc(var(--sl-guard-height) * 0.3);
+  left: var(--sl-space-6);
+  width: calc(var(--sl-guard-width) * 0.53);
+  height: calc(var(--sl-guard-width) * 0.53);
+  border: 1px solid var(--sl-tint);
+  border-radius: var(--sl-radius-circle);
+  box-shadow: 0 0 0 var(--sl-space-6) var(--sl-tint);
+}
+
+.sl-pres-radar::before {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  border: 1px dashed var(--sl-tint-strong);
+  border-radius: var(--sl-radius-circle);
+  animation: sl-pres-spin calc(var(--sl-pres-dur) * 3) linear infinite;
+}
+
+.sl-pres-radar::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(var(--sl-guard-width) * 0.24);
+  height: 1px;
+  background: linear-gradient(90deg, var(--sl-primary), transparent);
+  transform-origin: left;
+  animation: sl-pres-spin var(--sl-pres-dur) linear infinite;
+}
+
+/* The ingress node: the globe the traffic comes from */
+.sl-pres-net {
+  position: absolute;
+  top: calc(var(--sl-guard-height) * 0.33);
+  left: var(--sl-space-9);
+  z-index: var(--sl-z-overlay);
+  display: grid;
+  place-items: center;
+  width: calc(var(--sl-guard-width) * 0.375);
+  height: calc(var(--sl-guard-width) * 0.375);
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-circle);
+  background: radial-gradient(circle, var(--sl-bg-subtle), var(--sl-surface) 66%);
+  box-shadow: var(--sl-shadow-focus);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-net > .bi {
+  color: var(--sl-primary-strong);
+  font-size: var(--sl-font-h1);
+}
+
+.sl-pres-net > span {
+  position: absolute;
+  top: 100%;
+  width: calc(var(--sl-guard-width) * 0.58);
+  margin-top: var(--sl-space-3);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  color: var(--sl-text-muted);
+  text-align: center;
+}
+
+/* The five lanes the requests travel: each carries one dot at its own pace */
+.sl-pres-lanes {
+  position: absolute;
+  top: calc(var(--sl-guard-height) * 0.25);
+  right: calc(var(--sl-guard-width) * 0.71);
+  left: calc(var(--sl-guard-width) * 0.51);
+  z-index: var(--sl-z-raised);
+  display: grid;
+  grid-template-rows: repeat(5, 1fr);
+  height: calc(var(--sl-guard-height) * 0.44);
+  pointer-events: none;
+}
+
+.sl-pres-lanes > div {
+  position: relative;
+  border-bottom: 1px dashed var(--sl-border);
+}
+
+.sl-pres-lanes > div::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--sl-border-strong), transparent);
+}
+
+.sl-pres-lanes i {
+  position: absolute;
+  top: calc(50% - 2px);
+  width: var(--sl-space-2);
+  height: var(--sl-space-2);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-primary);
+  box-shadow: var(--sl-pres-shadow);
+  opacity: var(--sl-fade-muted);
+  animation: sl-pres-lane calc(var(--sl-pres-dur) * 2) linear infinite;
+}
+
+.sl-pres-lanes > div:nth-child(2) i { animation-duration: calc(var(--sl-pres-dur) * 2.2); animation-delay: calc(var(--sl-pres-dur) * -1.3); }
+.sl-pres-lanes > div:nth-child(3) i { animation-duration: calc(var(--sl-pres-dur) * 1.7); animation-delay: calc(var(--sl-pres-dur) * -0.9); }
+.sl-pres-lanes > div:nth-child(4) i { animation-duration: calc(var(--sl-pres-dur) * 2.4); animation-delay: calc(var(--sl-pres-dur) * -1.7); }
+.sl-pres-lanes > div:nth-child(5) i { animation-duration: calc(var(--sl-pres-dur) * 2); animation-delay: calc(var(--sl-pres-dur) * -0.6); }
+
+@keyframes sl-pres-lane {
+  from { left: 0; opacity: 0; }
+  8% { opacity: var(--sl-fade-muted); }
+  88% { opacity: var(--sl-fade-muted); }
+  to { left: 100%; opacity: 0; }
+}
+
+/* The three ambient readings pinned to the corners of the court */
+.sl-pres-ambient {
+  position: absolute;
+  z-index: var(--sl-z-overlay);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: color-mix(in srgb, var(--sl-surface) var(--sl-modal-btn-mix), transparent);
+  padding: var(--sl-space-2) var(--sl-space-3);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-ambient strong {
+  margin-right: var(--sl-space-2);
+  font-size: var(--sl-font-small);
+  color: var(--sl-primary-strong);
+}
+
+.sl-pres-ambient .bi {
+  margin-right: var(--sl-space-2);
+  color: var(--sl-success);
+}
+
+.sl-pres-ambient:nth-child(1 of .sl-pres-ambient) { bottom: var(--sl-space-7); left: var(--sl-space-7); }
+.sl-pres-ambient:nth-child(2 of .sl-pres-ambient) { top: calc(var(--sl-guard-height) * 0.11); left: var(--sl-space-7); }
+.sl-pres-ambient:nth-child(3 of .sl-pres-ambient) { right: var(--sl-space-7); bottom: var(--sl-space-7); }
+
+.sl-pres-traffic {
+  position: absolute;
+  top: var(--sl-space-4);
+  left: var(--sl-space-5);
+  z-index: var(--sl-z-overlay);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-2);
+  max-width: calc(100% - var(--sl-guard-width) * 0.7);
+}
+
+.sl-pres-traffic > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-pill);
+  background: color-mix(in srgb, var(--sl-surface) var(--sl-modal-btn-mix), transparent);
+  padding: var(--sl-space-2) var(--sl-space-3);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-traffic .bi {
+  font-size: var(--sl-font-micro);
+  color: currentColor;
+}
+
+.sl-pres-badge {
+  position: absolute;
+  top: var(--sl-space-4);
+  right: var(--sl-space-5);
+  z-index: var(--sl-z-overlay);
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-surface);
+  padding: var(--sl-space-2) var(--sl-space-3);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  color: var(--sl-success);
+}
+
+/* The allow bus from the gate to the house, and the deny drop from the gate to the quarantine */
+.sl-pres-allow {
+  position: absolute;
+  top: calc(var(--sl-guard-height) * 0.476);
+  right: calc(var(--sl-guard-width) * 0.76);
+  left: calc(50% + var(--sl-space-9));
+  z-index: var(--sl-z-overlay);
+  height: 1px;
+  background: repeating-linear-gradient(90deg, var(--sl-primary) 0 7px, transparent 7px 14px);
+  opacity: var(--sl-fade-disabled);
+  animation: sl-pres-bus calc(var(--sl-pres-dur) / 2) linear infinite;
+}
+
+.sl-pres-allow::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  right: -2px;
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+  border-left: var(--sl-space-3) solid var(--sl-primary);
+}
+
+@keyframes sl-pres-bus {
+  to { background-position: 28px 0; }
+}
+
+.sl-pres-allow > span,
+.sl-pres-deny > span,
+.sl-pres-track > span {
+  position: absolute;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  color: var(--sl-text-muted);
+  white-space: nowrap;
+}
+
+.sl-pres-allow > span {
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.sl-pres-deny {
+  position: absolute;
+  top: calc(var(--sl-guard-height) * 0.7);
+  bottom: calc(var(--sl-guard-height) * 0.19);
+  left: 50%;
+  z-index: var(--sl-z-overlay);
+  width: 1px;
+  background: repeating-linear-gradient(180deg, var(--sl-danger) 0 6px, transparent 6px 12px);
+  opacity: var(--sl-fade-disabled);
+  animation: sl-pres-drop calc(var(--sl-pres-dur) / 2) linear infinite;
+}
+
+.sl-pres-deny::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: -3px;
+  border-top: var(--sl-space-3) solid var(--sl-danger);
+  border-right: 3px solid transparent;
+  border-left: 3px solid transparent;
+}
+
+@keyframes sl-pres-drop {
+  to { background-position: 0 24px; }
+}
+
+.sl-pres-deny > span {
+  top: 42%;
+  left: var(--sl-space-3);
+  color: var(--sl-danger);
+}
+
+/* The court the gate stands on */
+.sl-pres-track {
+  position: absolute;
+  top: calc(var(--sl-guard-height) * 0.22);
+  bottom: calc(var(--sl-guard-height) * 0.24);
+  left: 50%;
+  z-index: var(--sl-z-raised);
+  width: 1px;
+  border-left: 1px dashed var(--sl-primary-subtle);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.sl-pres-track::before,
+.sl-pres-track::after {
+  content: "";
+  position: absolute;
+  left: -4px;
+  width: var(--sl-space-3);
+  height: var(--sl-space-3);
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-surface);
+}
+
+.sl-pres-track::before {
+  top: -3px;
+}
+
+.sl-pres-track::after {
+  bottom: -3px;
+}
+
+.sl-pres-track > span {
+  top: 50%;
+  left: var(--sl-space-3);
+  transform: translateY(-50%) rotate(-90deg);
+  transform-origin: left center;
+}
+
+/* The gate: a shield on a beam, the status under it */
+.sl-pres-gate {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: var(--sl-z-dropdown);
+  display: grid;
+  place-items: center;
+  width: calc(var(--sl-guard-width) * 0.33);
+  height: calc(var(--sl-guard-width) * 0.28);
+  transform: translate(-50%, -50%);
+}
+
+.sl-pres-beam {
+  position: absolute;
+  top: calc(var(--sl-space-6) * -1);
+  bottom: calc(var(--sl-space-6) * -1);
+  left: 50%;
+  width: var(--sl-space-1);
+  border-radius: var(--sl-radius-pill);
+  background: linear-gradient(transparent, var(--sl-primary) 30%, var(--sl-primary) 70%, transparent);
+  opacity: var(--sl-fade-muted);
+}
+
+.sl-pres-shield {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: calc(var(--sl-guard-width) * 0.25);
+  height: calc(var(--sl-guard-width) * 0.25);
+  border: 1px solid var(--sl-primary);
+  border-radius: var(--sl-radius-3);
+  background: var(--sl-bg-subtle);
+  box-shadow: var(--sl-pres-shadow);
+  color: var(--sl-primary-strong);
+}
+
+.sl-pres-shield::before {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border: 1px dashed var(--sl-primary-subtle);
+  border-radius: var(--sl-radius-3);
+  animation: sl-pres-spin calc(var(--sl-pres-dur) * 2) linear infinite;
+}
+
+.sl-pres-shield > .bi {
+  font-size: var(--sl-font-h2);
+}
+
+.sl-pres-shield > small {
+  position: absolute;
+  bottom: calc(var(--sl-space-8) * -1);
+  left: 50%;
+  min-width: var(--sl-size-icon-xl);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-surface);
+  padding: var(--sl-space-1) var(--sl-space-2);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  text-align: center;
+  transform: translateX(-50%);
+}
+
+/* The quarantine: a striped box under the gate with its traps */
+.sl-pres-quarantine {
+  position: absolute;
+  bottom: var(--sl-space-7);
+  left: calc(50% - var(--sl-guard-width) * 0.3);
+  z-index: var(--sl-z-overlay);
+  width: calc(var(--sl-guard-width) * 0.6);
+  height: calc(var(--sl-guard-width) * 0.28);
+  overflow: hidden;
+  border: 1px solid var(--sl-proof-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-proof-bg);
+}
+
+.sl-pres-quarantine::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(90deg, transparent 0 10px, var(--sl-tint) 10px 11px);
+}
+
+.sl-pres-quarantine > div:first-child {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  padding: var(--sl-space-3);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-quarantine b {
+  color: var(--sl-danger);
+}
+
+.sl-pres-traps {
+  position: absolute;
+  right: var(--sl-space-3);
+  bottom: var(--sl-space-3);
+  left: var(--sl-space-3);
+  display: flex;
+  align-items: end;
+  gap: var(--sl-space-2);
+  height: var(--sl-space-7);
+}
+
+.sl-pres-traps > i {
+  display: block;
+  width: var(--sl-space-3);
+  height: var(--sl-space-3);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-danger);
+  opacity: var(--sl-fade-muted);
+}
+
+/* The house: roof, chimney, body, four panes, door, foundation, ground. Every part is a share of the house width */
+.sl-pres-house {
+  position: absolute;
+  right: var(--sl-space-6);
+  bottom: calc(var(--sl-guard-height) * 0.12);
+  z-index: var(--sl-z-overlay);
+  width: var(--sl-guard-width);
+  height: calc(var(--sl-guard-width) * 1.06);
+  filter: drop-shadow(0 var(--sl-space-5) var(--sl-space-8) var(--sl-scrim-subtle));
+}
+
+.sl-pres-chimney {
+  position: absolute;
+  top: calc(var(--sl-guard-width) * 0.09);
+  right: calc(var(--sl-guard-width) * 0.17);
+  z-index: var(--sl-z-raised);
+  width: calc(var(--sl-guard-width) * 0.1);
+  height: calc(var(--sl-guard-width) * 0.24);
+  border: 1px solid var(--sl-border-strong);
+  border-bottom: 0;
+  background: linear-gradient(90deg, var(--sl-surface), var(--sl-primary-subtle) 40%, var(--sl-bg-subtle));
+  transform: skewY(-3deg);
+}
+
+.sl-pres-chimney::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  right: -4px;
+  left: -4px;
+  height: var(--sl-space-3);
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-bg-subtle);
+}
+
+.sl-pres-chimney > span {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  width: var(--sl-space-7);
+  height: var(--sl-space-6);
+  border: 1px solid var(--sl-primary-subtle);
+  border-radius: var(--sl-radius-circle);
+  opacity: 0;
+  transform: translateX(-50%);
+  animation: sl-pres-smoke calc(var(--sl-pres-dur) * 0.75) var(--sl-ease-out) infinite;
+}
+
+@keyframes sl-pres-smoke {
+  0% { opacity: 0; transform: translate(-50%, 6px) scale(0.35); }
+  35% { opacity: var(--sl-fade-disabled); }
+  100% { opacity: 0; transform: translate(-35%, -20px) scale(1.25); }
+}
+
+.sl-pres-roof {
+  position: absolute;
+  top: var(--sl-space-3);
+  right: 5px;
+  left: 7px;
+  z-index: var(--sl-z-overlay);
+  height: calc(var(--sl-guard-width) * 0.41);
+}
+
+.sl-pres-roof-plane {
+  position: absolute;
+  top: calc(var(--sl-guard-width) * 0.11);
+  right: 0;
+  left: calc(var(--sl-guard-width) * 0.08);
+  height: calc(var(--sl-guard-width) * 0.28);
+  border-bottom: 1px solid var(--sl-border-strong);
+  background: linear-gradient(155deg, var(--sl-primary-subtle) 0, var(--sl-bg-muted) 52%, var(--sl-bg-subtle) 100%);
+  clip-path: polygon(12% 0, 74% 0, 100% 100%, 0 100%);
+}
+
+.sl-pres-roof-gable {
+  position: absolute;
+  top: 0;
+  left: 2px;
+  width: calc(var(--sl-guard-width) * 0.78);
+  height: calc(var(--sl-guard-width) * 0.39);
+  background: linear-gradient(160deg, var(--sl-primary-subtle), var(--sl-bg-muted));
+  clip-path: polygon(50% 0, 100% 91%, 96% 100%, 4% 100%, 0 91%);
+}
+
+.sl-pres-roof-gable::after {
+  content: "";
+  position: absolute;
+  right: 7px;
+  bottom: 0;
+  left: 7px;
+  height: var(--sl-space-2);
+  border-radius: var(--sl-radius-1);
+  background: linear-gradient(90deg, var(--sl-surface), var(--sl-primary-strong) 12%, var(--sl-primary-strong) 88%, var(--sl-surface));
+}
+
+.sl-pres-roof-fascia {
+  position: absolute;
+  right: 2px;
+  bottom: 3px;
+  left: 0;
+  height: var(--sl-space-2);
+  border-radius: var(--sl-radius-1);
+  background: linear-gradient(90deg, var(--sl-surface), var(--sl-primary-strong) 10%, var(--sl-primary-strong) 88%, var(--sl-surface));
+  box-shadow: var(--sl-shadow-xs);
+}
+
+.sl-pres-house-body {
+  position: absolute;
+  top: calc(var(--sl-guard-width) * 0.37);
+  right: calc(var(--sl-guard-width) * 0.11);
+  bottom: var(--sl-space-5);
+  left: calc(var(--sl-guard-width) * 0.13);
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-1) var(--sl-radius-1) var(--sl-radius-2) var(--sl-radius-2);
+  background: linear-gradient(180deg, var(--sl-bg-muted), var(--sl-bg-subtle) 58%, var(--sl-surface));
+  box-shadow: var(--sl-shadow-float);
+}
+
+.sl-pres-house-body::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: var(--sl-space-3);
+  left: var(--sl-space-3);
+  height: var(--sl-space-2);
+  background: linear-gradient(90deg, transparent, var(--sl-primary-subtle) 13%, var(--sl-primary-subtle) 87%, transparent);
+  opacity: var(--sl-fade-muted);
+}
+
+.sl-pres-corner {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  width: var(--sl-space-2);
+  border-right: 1px solid var(--sl-scrim-subtle);
+  border-left: 1px solid var(--sl-primary-subtle);
+}
+
+.sl-pres-corner:nth-child(1 of .sl-pres-corner) {
+  left: 7px;
+}
+
+.sl-pres-corner:nth-child(2 of .sl-pres-corner) {
+  right: 7px;
+}
+
+.sl-pres-panes {
+  position: absolute;
+  top: calc(var(--sl-guard-width) * 0.21);
+  right: var(--sl-space-6);
+  left: var(--sl-space-6);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--sl-space-3);
+  height: calc(var(--sl-guard-width) * 0.16);
+}
+
+.sl-pres-pane {
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-2);
+  background: linear-gradient(180deg, var(--sl-bg-subtle), var(--sl-surface));
+  color: var(--sl-text-muted);
+  box-shadow: var(--sl-shadow-inset);
+  transition: background-color var(--sl-time-slow) var(--sl-ease-out), color var(--sl-time-slow) var(--sl-ease-out);
+}
+
+.sl-pres-pane > .bi {
+  font-size: var(--sl-font-micro);
+}
+
+.sl-pres-pane.sl-is-on {
+  border-color: var(--sl-primary);
+  background: linear-gradient(180deg, var(--sl-primary-subtle), var(--sl-bg-subtle));
+  color: var(--sl-primary-strong);
+  box-shadow: var(--sl-pres-shadow);
+}
+
+.sl-pres-door {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  place-items: center;
+  width: calc(var(--sl-guard-width) * 0.21);
+  height: calc(var(--sl-guard-width) * 0.21);
+  overflow: hidden;
+  border: 1px solid var(--sl-border-strong);
+  border-bottom: 0;
+  border-radius: var(--sl-radius-2) var(--sl-radius-2) var(--sl-radius-1) var(--sl-radius-1);
+  background: linear-gradient(180deg, var(--sl-bg-subtle), var(--sl-surface));
+  padding-top: var(--sl-space-3);
+  color: var(--sl-primary-strong);
+  transform: translateX(-50%);
+}
+
+.sl-pres-door > .bi {
+  font-size: var(--sl-font-body);
+}
+
+.sl-pres-door > span {
+  margin-bottom: var(--sl-space-2);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-door.sl-is-on {
+  border-color: var(--sl-primary);
+  background: linear-gradient(180deg, var(--sl-primary-subtle), var(--sl-bg-subtle));
+}
+
+.sl-pres-door.sl-is-on > span {
+  color: var(--sl-primary-strong);
+}
+
+.sl-pres-foundation {
+  position: absolute;
+  right: 6px;
+  bottom: 1px;
+  left: 6px;
+  height: var(--sl-space-1);
+  background: linear-gradient(90deg, transparent, var(--sl-primary), transparent);
+  opacity: var(--sl-fade-muted);
+}
+
+.sl-pres-ground {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 4px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-around;
+  height: var(--sl-space-6);
+  border-top: 1px solid var(--sl-tint-strong);
+}
+
+.sl-pres-ground > i {
+  display: block;
+  width: var(--sl-space-8);
+  height: var(--sl-space-2);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-tint);
+  filter: blur(1px);
+}
+
+/* The guard console: the classifier with its three 24-hour counters, the traffic types, the six-line legend
+   <div class="sl-pres-guard-console"><div class="sl-pres-card"><div class="sl-pres-guard-row"><div><h3>..</h3><p>..</p></div><span class="sl-pres-pill" data-sl-tone="success">ACTIVE</span></div>
+   <div class="sl-pres-guard-stats">3 x sl-pres-stat</div></div>
+   <div class="sl-pres-card"><h3>..</h3><div class="sl-pres-rows"><div class="sl-pres-row" data-sl-tone><i class="bi"></i><span>Human</span><b>ALLOW</b></div> x5</div></div>
+   <div class="sl-pres-card"><h3>..</h3><div class="sl-pres-log"><div><span>label</span><em data-sl-tone="success|danger">result</em></div> x6</div><p class="sl-pres-note"><i class="bi"></i>note</p></div></div> */
+
+.sl-pres-guard-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-4);
+}
+
+.sl-pres-guard-row p {
+  margin: 0;
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-guard-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sl-space-3);
+  margin-top: var(--sl-space-4);
+}
+
+.sl-pres-rows,
+.sl-pres-log,
+.sl-pres-errors,
+.sl-pres-sql {
+  display: grid;
+  gap: var(--sl-space-2);
+}
+
+.sl-pres-row {
+  display: grid;
+  grid-template-columns: var(--sl-size-icon-sm) 1fr auto;
+  gap: var(--sl-space-3);
+  align-items: center;
+  border-bottom: 1px solid var(--sl-border);
+  padding: var(--sl-space-2) 0;
+}
+
+.sl-pres-row:last-child {
+  border-bottom: 0;
+}
+
+.sl-pres-row > .bi {
+  font-size: var(--sl-font-small);
+}
+
+.sl-pres-row > span {
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-row > b {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  font-weight: var(--sl-weight-medium);
+  color: var(--sl-text);
+}
+
+.sl-pres-log > div {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--sl-space-2);
+  border-bottom: 1px solid var(--sl-border);
+  padding: var(--sl-space-2) 0;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+}
+
+.sl-pres-log > div > span,
+.sl-pres-sql code {
+  overflow: hidden;
+  color: var(--sl-text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-pres-log em {
+  font-style: normal;
+}
+
+.sl-pres-note {
+  margin: var(--sl-space-3) 0 0;
+  font-size: var(--sl-font-micro);
+  line-height: var(--sl-line-normal);
+  color: var(--sl-text-muted);
+}
+
+/* ===== 04 partials/presentation-runtime.html =====
+   <div class="sl-pres-speed"><div class="sl-pres-card"><h3>..</h3><div class="sl-pres-big">0.027<small> sec</small></div><div class="sl-pres-spark"><canvas></canvas></div></div>
+   <div class="sl-pres-card"><h3>..</h3><div class="sl-pres-rows"><div class="sl-pres-row"><span>Queries</span><b>12</b></div><div class="sl-pres-bar" style="--sl-d-part: N%"><i></i></div>...</div></div>
+   <div class="sl-pres-card"><h3>..</h3><div class="sl-pres-big">76<small> online</small></div><div class="sl-pres-rows">...</div></div>
+   <div class="sl-pres-pdo">stage + console</div><div class="sl-pres-devtools">..</div><div class="sl-pres-events">5 x sl-pres-evt</div></div> */
+.sl-pres-speed {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr 0.85fr;
+  gap: var(--sl-space-3);
+}
+
+.sl-pres-big {
+  font-size: var(--sl-font-hero);
+  font-weight: var(--sl-weight-bold);
+  line-height: 1;
+  letter-spacing: var(--sl-track-tight);
+  color: var(--sl-text-strong);
+}
+
+.sl-pres-big > small {
+  font-size: var(--sl-font-body);
+  font-weight: var(--sl-weight-medium);
+  letter-spacing: 0;
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-spark {
+  height: var(--sl-plot-min-height);
+  margin-top: var(--sl-space-4);
+}
+
+.sl-pres-spark canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.sl-pres-speed .sl-pres-row {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 0;
+  padding: 0;
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-speed .sl-pres-row > b {
+  font-family: inherit;
+  font-size: var(--sl-font-small);
+  color: var(--sl-text);
+}
+
+.sl-pres-bar {
+  height: var(--sl-space-1);
+  overflow: hidden;
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-bg-muted);
+}
+
+.sl-pres-bar > i {
+  display: block;
+  width: var(--sl-d-part, 0%);
+  height: 100%;
+  background: linear-gradient(90deg, var(--sl-primary-strong), var(--sl-primary));
+}
+
+/* The PDO layer: the bus with its five stations on the left, the console on the right
+   <div class="sl-pres-pdo"><div class="sl-pres-pdo-stage sl-pres-scene"><div class="sl-pres-pdo-head"><b><i class="bi"></i> DATABASE / PDO</b><span>mode</span><em>READY</em></div>
+   <div class="sl-pres-query"><span>SELECT</span><code>sql</code><span class="sl-pres-params"><i>:cat</i></span></div><div class="sl-pres-bus"></div><i class="sl-pres-packet"></i>
+   <div class="sl-pres-node"><i class="bi"></i><span>01</span><b>Module</b><small>note</small></div> x5
+   <div class="sl-pres-return"><div class="sl-pres-result"><i class="bi"></i><span>result → <b>rows</b></span><em>ready</em></div><div class="sl-pres-bars"><i></i> x10</div></div>
+   <span class="sl-pres-epoch"><i class="bi"></i> ADMIN WRITE → EPOCH +1</span></div>
+   <div class="sl-pres-console"><div class="sl-pres-console-head"><i class="bi"></i><b>Database::getSqlQuery()</b><span>PREPARED</span></div>
+   <pre class="sl-pres-code"><span class="sl-is-com">..</span></pre><div class="sl-pres-console-grid">4 x sl-pres-stat</div><div class="sl-pres-trace"><div><time>..</time><b>..</b><em data-sl-tone="success">..</em></div> x3</div></div></div> */
+.sl-pres-pdo {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 0.72fr);
+  gap: var(--sl-space-4);
+  align-items: stretch;
+}
+
+.sl-pres-pdo-stage {
+  min-height: calc(var(--sl-pres-height) * 0.97);
+}
+
+.sl-pres-pdo-head {
+  position: absolute;
+  top: var(--sl-space-4);
+  right: var(--sl-space-5);
+  left: var(--sl-space-5);
+  z-index: var(--sl-z-overlay);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: var(--sl-space-4);
+  align-items: center;
+}
+
+.sl-pres-pdo-head > b {
+  min-width: 0;
+  overflow: hidden;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  color: var(--sl-primary-strong);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-pres-pdo-head > span {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-muted);
+  white-space: nowrap;
+}
+
+.sl-pres-pdo-head > em {
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-surface);
+  padding: var(--sl-space-2) var(--sl-space-3);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  font-style: normal;
+  color: var(--sl-success);
+  white-space: nowrap;
+}
+
+.sl-pres-query {
+  position: absolute;
+  top: calc(var(--sl-space-11) - var(--sl-space-2));
+  right: var(--sl-space-5);
+  left: var(--sl-space-5);
+  z-index: var(--sl-z-overlay);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  gap: var(--sl-space-2) var(--sl-space-3);
+  align-items: center;
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-2);
+  background: color-mix(in srgb, var(--sl-surface) var(--sl-modal-btn-mix), transparent);
+  padding: var(--sl-space-2) var(--sl-space-4);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+}
+
+.sl-pres-query > span:first-child {
+  grid-row: 1 / 3;
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-bg-subtle);
+  padding: var(--sl-space-2) var(--sl-space-3);
+  color: var(--sl-primary-strong);
+}
+
+.sl-pres-query > code {
+  overflow: hidden;
+  color: var(--sl-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-pres-params {
+  display: flex;
+  gap: var(--sl-space-2);
+}
+
+.sl-pres-params > i {
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-surface);
+  padding: var(--sl-space-1) var(--sl-space-2);
+  font-style: normal;
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-bus {
+  position: absolute;
+  top: calc(var(--sl-pres-height) * 0.42);
+  right: 10%;
+  left: 10%;
+  height: var(--sl-space-1);
+  background: linear-gradient(90deg, transparent, var(--sl-primary-subtle) 7%, var(--sl-primary) 50%, var(--sl-primary-subtle) 93%, transparent);
+  box-shadow: var(--sl-pres-shadow);
+}
+
+.sl-pres-bus::before,
+.sl-pres-bus::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  width: var(--sl-space-3);
+  height: var(--sl-space-3);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-primary);
+  box-shadow: var(--sl-pres-shadow);
+}
+
+.sl-pres-bus::before {
+  left: 0;
+}
+
+.sl-pres-bus::after {
+  right: 0;
+}
+
+/* The packet rides the bus from the module to the statement and back, at one beat each way */
+.sl-pres-packet {
+  position: absolute;
+  top: calc(var(--sl-pres-height) * 0.42 - var(--sl-space-3));
+  left: 10%;
+  z-index: var(--sl-z-dropdown);
+  width: var(--sl-size-icon-xs);
+  height: var(--sl-size-icon-xs);
+  border: 1px solid var(--sl-primary-strong);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-bg-muted);
+  box-shadow: var(--sl-pres-shadow);
+  transform: translateX(-50%);
+  animation: sl-pres-packet calc(var(--sl-pres-dur) * 2) var(--sl-ease-in-out) infinite alternate;
+}
+
+@keyframes sl-pres-packet {
+  from { left: 10%; }
+  to { left: 90%; }
+}
+
+.sl-pres-pdo-stage > .sl-pres-node {
+  top: calc(var(--sl-pres-height) * 0.32);
+  transform: translateX(-50%);
+}
+
+.sl-pres-pdo-stage > .sl-pres-node:hover {
+  transform: translateX(-50%) translateY(-2px);
+}
+
+.sl-pres-pdo-stage > .sl-pres-node:nth-child(1 of .sl-pres-node) { left: 10%; }
+.sl-pres-pdo-stage > .sl-pres-node:nth-child(2 of .sl-pres-node) { left: 30%; }
+.sl-pres-pdo-stage > .sl-pres-node:nth-child(3 of .sl-pres-node) { left: 50%; }
+.sl-pres-pdo-stage > .sl-pres-node:nth-child(4 of .sl-pres-node) { left: 70%; }
+.sl-pres-pdo-stage > .sl-pres-node:nth-child(5 of .sl-pres-node) { left: 90%; }
+
+.sl-pres-return {
+  position: absolute;
+  top: calc(var(--sl-pres-height) * 0.63);
+  right: var(--sl-space-5);
+  left: var(--sl-space-5);
+  height: calc(var(--sl-pres-height) * 0.26);
+  border-top: 1px dashed var(--sl-border-strong);
+  border-bottom: 1px dashed var(--sl-border-strong);
+  background: linear-gradient(180deg, var(--sl-tint), transparent);
+  padding: var(--sl-space-4);
+}
+
+.sl-pres-result {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  height: var(--sl-space-8);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-result > span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-pres-result b {
+  font-weight: var(--sl-weight-semibold);
+  color: var(--sl-text);
+}
+
+.sl-pres-result > em {
+  margin-left: auto;
+  font-style: normal;
+  color: var(--sl-primary-strong);
+  white-space: nowrap;
+}
+
+.sl-pres-bars {
+  display: flex;
+  align-items: end;
+  gap: var(--sl-space-2);
+  height: var(--sl-space-10);
+  margin: var(--sl-space-4) 0 0 var(--sl-space-7);
+}
+
+.sl-pres-bars > i {
+  flex: 1;
+  min-height: var(--sl-space-2);
+  border-radius: var(--sl-radius-1) var(--sl-radius-1) 0 0;
+  background: linear-gradient(180deg, var(--sl-primary), var(--sl-primary-strong));
+  opacity: var(--sl-fade-muted);
+}
+
+.sl-pres-bars > i:nth-child(1) { height: calc(100% * 0.30); }
+.sl-pres-bars > i:nth-child(2) { height: calc(100% * 0.55); }
+.sl-pres-bars > i:nth-child(3) { height: calc(100% * 0.76); }
+.sl-pres-bars > i:nth-child(4) { height: calc(100% * 0.44); }
+.sl-pres-bars > i:nth-child(5) { height: calc(100% * 0.68); }
+.sl-pres-bars > i:nth-child(6) { height: calc(100% * 0.88); }
+.sl-pres-bars > i:nth-child(7) { height: calc(100% * 0.57); }
+.sl-pres-bars > i:nth-child(8) { height: calc(100% * 0.72); }
+.sl-pres-bars > i:nth-child(9) { height: calc(100% * 0.49); }
+.sl-pres-bars > i:nth-child(10) { height: calc(100% * 0.64); }
+
+.sl-pres-epoch {
+  position: absolute;
+  right: 5%;
+  bottom: var(--sl-space-3);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-surface);
+  padding: var(--sl-space-2) var(--sl-space-3);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  color: var(--sl-warning-strong);
+  opacity: var(--sl-fade-muted);
+}
+
+.sl-pres-console {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  overflow: hidden;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-3);
+  background: var(--sl-surface);
+}
+
+.sl-pres-console-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  min-height: var(--sl-size-control);
+  border-bottom: 1px solid var(--sl-border);
+  padding: var(--sl-space-3) var(--sl-space-4);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-console-head > .bi {
+  color: var(--sl-primary-strong);
+}
+
+.sl-pres-console-head > b {
+  color: var(--sl-text);
+}
+
+.sl-pres-console-head > span {
+  margin-left: auto;
+  color: var(--sl-success);
+}
+
+.sl-pres-code {
+  margin: 0;
+  border-bottom: 1px solid var(--sl-border);
+  padding: var(--sl-space-4);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  line-height: var(--sl-line-loose);
+  color: var(--sl-text-muted);
+  white-space: pre-wrap;
+}
+
+.sl-pres-code .sl-is-kw,
+.sl-pres-code .sl-is-var {
+  color: var(--sl-accent);
+}
+
+.sl-pres-code .sl-is-fn {
+  color: var(--sl-primary-strong);
+}
+
+.sl-pres-code .sl-is-str {
+  color: var(--sl-success);
+}
+
+.sl-pres-console-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sl-space-3);
+  padding: var(--sl-space-3);
+}
+
+.sl-pres-trace {
+  display: grid;
+  gap: var(--sl-space-2);
+  align-content: center;
+  border-top: 1px solid var(--sl-border);
+  padding: var(--sl-space-3) var(--sl-space-4);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-trace > div {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--sl-space-3);
+}
+
+.sl-pres-trace b {
+  font-weight: var(--sl-weight-medium);
+  color: var(--sl-text);
+}
+
+.sl-pres-trace em {
+  font-style: normal;
+}
+
+/* The debugger: a tab bar and its panes, the performance pane open
+   <div class="sl-pres-devtools"><div class="sl-pres-devtools-bar"><div><span class="sl-pres-over">..</span><b><i class="bi"></i> title</b></div><nav class="sl-pres-tabs"><button class="sl-is-on">..</button> x4</nav></div>
+   <div class="sl-pres-pane sl-is-on"><div class="sl-pres-perf">4 x sl-pres-stat</div><div class="sl-pres-note-row"><i class="bi"></i><span>..</span><b>..</b></div></div>
+   <div class="sl-pres-pane"><div class="sl-pres-errors"><div><time>..</time><i class="bi"></i><b>..</b><span>..</span><em>..</em></div></div><p class="sl-pres-note">..</p></div>
+   <div class="sl-pres-pane"><div class="sl-pres-vars"><article><header><i class="bi"></i> GET</header><code>..</code></article> x3</div></div>
+   <div class="sl-pres-pane"><div class="sl-pres-sql"><div><time>..</time><b>..</b><code>..</code></div></div></div></div> */
+.sl-pres-devtools {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-3);
+  background: var(--sl-surface);
+}
+
+.sl-pres-devtools-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-5);
+  border-bottom: 1px solid var(--sl-border);
+  background: linear-gradient(90deg, var(--sl-bg-subtle), var(--sl-surface));
+  padding: var(--sl-space-3) var(--sl-space-4);
+}
+
+.sl-pres-devtools-bar b {
+  display: block;
+  margin-top: var(--sl-space-1);
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-strong);
+}
+
+.sl-pres-devtools-bar b > .bi {
+  margin-right: var(--sl-space-2);
+  color: var(--sl-danger);
+}
+
+.sl-pres-tabs {
+  display: flex;
+  gap: var(--sl-space-2);
+}
+
+.sl-pres-tabs > button {
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-surface);
+  padding: var(--sl-space-2) var(--sl-space-3);
+  color: var(--sl-text-muted);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  cursor: pointer;
+  transition: color var(--sl-time-base) var(--sl-ease-out), border-color var(--sl-time-base) var(--sl-ease-out);
+}
+
+.sl-pres-tabs > button:hover {
+  border-color: var(--sl-primary);
+  color: var(--sl-text);
+}
+
+.sl-pres-tabs > button.sl-is-on {
+  border-color: var(--sl-primary);
+  background: var(--sl-bg-subtle);
+  color: var(--sl-text-strong);
+  box-shadow: inset 0 -1px var(--sl-primary);
+}
+
+.sl-pres-pane {
+  display: none;
+  min-height: calc(var(--sl-pres-height) * 0.43);
+  padding: var(--sl-space-4);
+}
+
+.sl-pres-pane.sl-is-on {
+  display: block;
+}
+
+.sl-pres-perf,
+.sl-pres-pulse {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--sl-space-3);
+}
+
+.sl-pres-note-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  margin-top: var(--sl-space-3);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg);
+  padding: var(--sl-space-3);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-note-row > .bi {
+  color: var(--sl-primary-strong);
+}
+
+.sl-pres-note-row > b {
+  margin-left: auto;
+  font-weight: var(--sl-weight-medium);
+  color: var(--sl-primary-strong);
+}
+
+.sl-pres-errors > div {
+  display: grid;
+  grid-template-columns: auto auto auto minmax(0, 1fr) auto;
+  gap: var(--sl-space-3);
+  align-items: center;
+  border: 1px solid var(--sl-proof-border);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-proof-bg);
+  padding: var(--sl-space-2) var(--sl-space-3);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-errors .bi {
+  color: var(--sl-danger);
+}
+
+.sl-pres-errors b {
+  color: var(--sl-text);
+}
+
+.sl-pres-errors span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-pres-errors em {
+  font-style: normal;
+  text-align: right;
+}
+
+.sl-pres-vars {
+  display: grid;
+  grid-template-columns: 0.55fr 1.25fr 1fr;
+  gap: var(--sl-space-3);
+}
+
+.sl-pres-vars > article {
+  overflow: hidden;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg);
+}
+
+.sl-pres-vars header {
+  border-bottom: 1px solid var(--sl-border);
+  padding: var(--sl-space-3);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text);
+}
+
+.sl-pres-vars code {
+  display: block;
+  padding: var(--sl-space-3);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  line-height: var(--sl-line-loose);
+  color: var(--sl-text-muted);
+  white-space: normal;
+}
+
+.sl-pres-sql > div {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  gap: var(--sl-space-3);
+  align-items: center;
+  border-bottom: 1px solid var(--sl-border);
+  padding: var(--sl-space-2) var(--sl-space-3);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+}
+
+.sl-pres-sql time {
+  color: var(--sl-success);
+}
+
+/* The event stream under the runtime cards: five events of one request, each with its verdict */
+.sl-pres-events {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--sl-space-3);
+}
+
+.sl-pres-evt {
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-surface);
+  padding: var(--sl-space-3);
+}
+
+.sl-pres-evt > b {
+  display: block;
+  margin: var(--sl-space-2) 0 var(--sl-space-1);
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-strong);
+}
+
+.sl-pres-evt > span {
+  font-size: var(--sl-font-micro);
+}
+
+/* ===== 05 partials/presentation-dev.html =====
+   <div class="sl-pres-dev"><div class="sl-pres-dev-board sl-pres-scene"><div class="sl-pres-dev-head"><span class="sl-pres-pill"><i class="bi"></i>version · branch</span><span class="sl-pres-live"><i class="sl-pres-dot sl-is-live"></i>ACTIVE DEVELOPMENT</span></div>
+   <div class="sl-pres-commits">fragments/presentation-commit.html x5: <a class="sl-pres-commit sl-is-on" href><span class="sl-pres-sha">f360f6a</span><div><b>title</b></div><div class="sl-pres-when"><time>date</time><small>note</small></div></a></div></div>
+   <div class="sl-pres-dev-side"><div class="sl-pres-focus"><div class="sl-pres-panel-head"><span>COMMIT / FOCUS</span><b>HEAD</b></div><div class="sl-pres-focus-body"><span class="sl-pres-mono">sha · date</span><h3>title</h3><div class="sl-pres-tags">..</div></div></div>
+   <div class="sl-pres-card"><div class="sl-pres-panel-head">..</div><div class="sl-pres-pipe"><i class="sl-pres-pipe-packet"></i><div><i class="bi"></i><span>CODE</span></div> x5</div></div>
+   <div class="sl-pres-dev-foot">2 x sl-pres-stat</div></div></div> */
+.sl-pres-dev {
+  display: grid;
+  grid-template-columns: minmax(0, 1.48fr) minmax(0, 0.52fr);
+  gap: var(--sl-space-4);
+}
+
+.sl-pres-dev-board {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: var(--sl-space-3);
+  padding: var(--sl-space-4);
+  background-image: radial-gradient(circle at 19% 50%, var(--sl-tint), transparent 60%), var(--sl-pres-bg);
+  background-size: auto, 24px 24px, 24px 24px;
+}
+
+.sl-pres-dev-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-3);
+}
+
+.sl-pres-dev-head .sl-pres-pill > .bi {
+  color: var(--sl-success);
+}
+
+.sl-pres-live {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  color: var(--sl-success);
+}
+
+/* The commit list stands beside a rail: the line runs down the left, each row hangs on it by its own tick */
+.sl-pres-commits {
+  position: relative;
+  display: grid;
+  gap: var(--sl-space-3);
+  padding-left: var(--sl-space-10);
+}
+
+.sl-pres-commits::before {
+  content: "";
+  position: absolute;
+  top: var(--sl-space-2);
+  bottom: var(--sl-space-2);
+  left: var(--sl-space-6);
+  width: var(--sl-space-1);
+  background: linear-gradient(var(--sl-primary), var(--sl-primary-subtle) 78%, transparent);
+  box-shadow: var(--sl-pres-shadow);
+}
+
+.sl-pres-commit {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--sl-space-4);
+  align-items: center;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: color-mix(in srgb, var(--sl-surface) var(--sl-modal-btn-mix), transparent);
+  padding: var(--sl-space-3) var(--sl-space-4);
+  transition: transform var(--sl-time-slow) var(--sl-ease-in-out), border-color var(--sl-time-slow) var(--sl-ease-in-out), background-color var(--sl-time-slow) var(--sl-ease-in-out);
+}
+
+.sl-pres-commit::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: calc(var(--sl-space-8) * -1);
+  width: var(--sl-space-8);
+  height: 1px;
+  background: var(--sl-primary-subtle);
+}
+
+.sl-pres-commit::after {
+  content: "";
+  position: absolute;
+  top: calc(50% - var(--sl-space-2));
+  left: calc(var(--sl-space-8) * -1 - var(--sl-space-2));
+  width: var(--sl-space-3);
+  height: var(--sl-space-3);
+  border: 1px solid var(--sl-primary);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-surface);
+  box-shadow: 0 0 0 var(--sl-space-2) var(--sl-surface);
+}
+
+.sl-pres-commit:hover,
+.sl-pres-commit.sl-is-on {
+  border-color: var(--sl-primary);
+  background: var(--sl-bg-subtle);
+  transform: translateX(3px);
+}
+
+.sl-pres-commit.sl-is-on::after {
+  background: var(--sl-primary);
+  box-shadow: 0 0 0 var(--sl-space-2) var(--sl-surface), var(--sl-pres-shadow);
+}
+
+.sl-pres-sha {
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-surface);
+  padding: var(--sl-space-2);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  color: var(--sl-primary-strong);
+  text-align: center;
+}
+
+.sl-pres-commit > div {
+  min-width: 0;
+}
+
+.sl-pres-commit b {
+  display: block;
+  overflow: hidden;
+  font-size: var(--sl-font-small);
+  color: var(--sl-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-pres-when {
+  text-align: right;
+}
+
+.sl-pres-when > small {
+  margin-top: var(--sl-space-1);
+}
+
+.sl-pres-focus,
+.sl-pres-tree {
+  overflow: hidden;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-3);
+  background: var(--sl-surface);
+}
+
+.sl-pres-focus-body {
+  padding: var(--sl-space-4);
+}
+
+.sl-pres-focus-body > .sl-pres-mono {
+  color: var(--sl-primary-strong);
+}
+
+.sl-pres-focus-body > h3 {
+  margin: var(--sl-space-2) 0 var(--sl-space-3);
+  font-size: var(--sl-font-body);
+  line-height: var(--sl-line-normal);
+  color: var(--sl-text-strong);
+}
+
+/* The delivery pipeline: five stations on one line, a packet travelling them in order */
+.sl-pres-pipe {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--sl-space-2);
+  margin-top: var(--sl-space-5);
+}
+
+.sl-pres-pipe::before {
+  content: "";
+  position: absolute;
+  top: var(--sl-space-5);
+  right: 8%;
+  left: 8%;
+  height: 1px;
+  background: var(--sl-primary-subtle);
+}
+
+.sl-pres-pipe > div {
+  position: relative;
+  z-index: var(--sl-z-raised);
+  text-align: center;
+}
+
+.sl-pres-pipe > div > .bi {
+  display: grid;
+  place-items: center;
+  width: var(--sl-size-icon-md);
+  height: var(--sl-size-icon-md);
+  margin: auto;
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg-subtle);
+  color: var(--sl-primary-strong);
+  font-size: var(--sl-font-micro);
+}
+
+.sl-pres-pipe > div > span {
+  margin-top: var(--sl-space-2);
+}
+
+.sl-pres-pipe-packet {
+  position: absolute;
+  top: var(--sl-space-3);
+  left: 8%;
+  z-index: var(--sl-z-overlay);
+  width: var(--sl-space-4);
+  height: var(--sl-space-4);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-bg-muted);
+  box-shadow: var(--sl-pres-shadow);
+  animation: sl-pres-pipe calc(var(--sl-pres-dur) * 1.5) var(--sl-ease-in-out) infinite;
+}
+
+@keyframes sl-pres-pipe {
+  0%, 6% { left: 8%; opacity: 0; }
+  10% { opacity: 1; }
+  30% { left: 28%; }
+  50% { left: 49%; }
+  70% { left: 70%; }
+  90% { left: 91%; opacity: 1; }
+  100% { left: 91%; opacity: 0; }
+}
+
+.sl-pres-dev-foot,
+.sl-pres-states {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sl-space-3);
+}
+
+/* ===== 06 partials/presentation-stats.html =====
+   <div class="sl-pres-stats"><div class="sl-pres-stats-board sl-pres-scene"><div class="sl-pres-panel-head"><span><i class="bi"></i> STATISTICS / SITE TRAFFIC</span><b>today ..</b></div>
+   <div class="sl-pres-stats-grid">5 x sl-pres-stat</div>
+   <div class="sl-pres-hours"><div class="sl-pres-hours-head"><b>HITS BY HOUR</b><span>Statistics module</span></div><div class="sl-pres-hours-bars"><i style="--sl-d-part: N%"></i> x24</div><div class="sl-pres-hours-axis"><span>00</span>..</div></div></div>
+   <div class="sl-pres-stats-side"><div class="sl-pres-claim"><span class="sl-pres-over">..</span><h3>..</h3><p>..</p><div class="sl-pres-tags">..</div></div>
+   <div class="sl-pres-rings">3 x <div><div class="sl-pres-ring sl-pres-ring-sm sl-knob ..">..</div><span>RETURN</span></div></div><p class="sl-pres-note">..</p></div></div> */
+.sl-pres-stats {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.65fr);
+  gap: var(--sl-space-4);
+}
+
+.sl-pres-stats-board {
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  background-image: radial-gradient(circle at 25% 25%, var(--sl-tint), transparent 60%), var(--sl-pres-bg);
+  background-size: auto, 24px 24px, 24px 24px;
+}
+
+.sl-pres-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--sl-space-3);
+  padding: var(--sl-space-4);
+}
+
+.sl-pres-hours {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: var(--sl-space-3);
+  min-height: var(--sl-plot-height);
+  margin: 0 var(--sl-space-4) var(--sl-space-4);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: color-mix(in srgb, var(--sl-surface) var(--sl-fav-mix), transparent);
+  padding: var(--sl-space-4);
+}
+
+.sl-pres-hours-head,
+.sl-pres-hours-axis {
+  display: flex;
+  justify-content: space-between;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-hours-head > b {
+  color: var(--sl-primary-strong);
+}
+
+.sl-pres-hours-bars {
+  display: grid;
+  grid-template-columns: repeat(24, 1fr);
+  gap: var(--sl-space-2);
+  align-items: end;
+  min-height: calc(var(--sl-plot-height) / 2);
+}
+
+/* Every bar stands at its share of the busiest hour and breathes at its own delay, read from its place in the row */
+.sl-pres-hours-bars > i {
+  display: block;
+  height: var(--sl-d-part, 0%);
+  min-height: 1px;
+  border-radius: var(--sl-radius-1) var(--sl-radius-1) 0 0;
+  background: linear-gradient(180deg, var(--sl-primary), var(--sl-primary-strong));
+  opacity: var(--sl-fade-subtle);
+  transform-origin: bottom;
+  animation: sl-pres-hour var(--sl-pres-dur) var(--sl-ease-in-out) infinite alternate;
+}
+
+.sl-pres-hours-bars > i:nth-child(3n + 1) { animation-delay: calc(var(--sl-pres-dur) * -0.3); }
+.sl-pres-hours-bars > i:nth-child(3n + 2) { animation-delay: calc(var(--sl-pres-dur) * -0.6); }
+.sl-pres-hours-bars > i:nth-child(4n + 3) { animation-delay: calc(var(--sl-pres-dur) * -0.9); }
+
+@keyframes sl-pres-hour {
+  to { opacity: var(--sl-fade-muted); transform: scaleY(0.91); }
+}
+
+.sl-pres-claim {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-3);
+  background: var(--sl-surface);
+  padding: var(--sl-space-5);
+}
+
+.sl-pres-claim::after {
+  content: "";
+  position: absolute;
+  top: -85px;
+  right: -75px;
+  width: calc(var(--sl-pres-width) + var(--sl-space-8));
+  height: calc(var(--sl-pres-width) + var(--sl-space-8));
+  border: 1px solid var(--sl-tint-strong);
+  border-radius: var(--sl-radius-circle);
+  box-shadow: 0 0 0 var(--sl-space-8) var(--sl-tint), 0 0 0 var(--sl-space-11) var(--sl-tint);
+  pointer-events: none;
+}
+
+.sl-pres-claim > .sl-pres-over {
+  color: var(--sl-primary-strong);
+}
+
+.sl-pres-claim > h3 {
+  max-width: calc(var(--sl-pres-width) * 2);
+  margin: var(--sl-space-2) 0 var(--sl-space-3);
+  font-size: var(--sl-font-h3);
+  line-height: var(--sl-line-tight);
+  color: var(--sl-text-strong);
+}
+
+.sl-pres-claim > p {
+  max-width: calc(var(--sl-pres-width) * 2);
+  margin: 0;
+  font-size: var(--sl-font-micro);
+  line-height: var(--sl-line-loose);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-rings {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sl-space-3);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-3);
+  background: var(--sl-surface);
+  padding: var(--sl-space-4);
+}
+
+.sl-pres-rings > div {
+  text-align: center;
+}
+
+.sl-pres-rings > div > span {
+  margin-top: var(--sl-space-2);
+}
+
+.sl-pres-stats-side > .sl-pres-note,
+.sl-pres-arch-side > .sl-pres-note {
+  margin: 0;
+  border: 1px dashed var(--sl-border-strong);
+  border-radius: var(--sl-radius-2);
+  padding: var(--sl-space-3) var(--sl-space-4);
+}
+
+/* ===== 07 partials/presentation-pipeline.html =====
+   <div class="sl-pres-arch"><div class="sl-pres-flow sl-pres-scene" data-sl-mode="miss|hit|off"><div class="sl-pres-flow-top"><span class="sl-pres-mono">route</span><span class="sl-pres-pill" data-sl-tone>MISS · BUILD</span></div>
+   <svg class="sl-pres-paths" viewBox="0 0 700 460"><path class="sl-pres-path-ring"/><path class="sl-pres-path-live"/><path class="sl-pres-path-short"/><circle class="sl-pres-path-packet"><animateMotion/></circle></svg>
+   <div class="sl-pres-flow-core"><img><b>PAGE CACHE</b><small>note</small><span class="sl-pres-pill" data-sl-tone>state</span></div><span class="sl-pres-flow-chip"><i class="bi"></i> dynamic regions</span>
+   <div class="sl-pres-node"><i class="bi"></i><span>01</span><b>Request</b><small><span>..</span><span>..</span></small></div> x7</div>
+   <div class="sl-pres-arch-side"><div class="sl-pres-tree"><div class="sl-pres-panel-head">..</div><div class="sl-pres-case sl-is-on"><strong>HIT</strong><span>..</span></div> x3</div>
+   <div class="sl-pres-states">4 x sl-pres-stat + <div class="sl-pres-stat sl-pres-epoch-row">..</div></div><p class="sl-pres-note">..</p></div></div> */
+.sl-pres-arch {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 0.55fr);
+  gap: var(--sl-space-4);
+}
+
+.sl-pres-flow {
+  min-height: calc(var(--sl-pres-height) * 1.4);
+  background-image: radial-gradient(circle at 50% 48%, var(--sl-tint), transparent 31%), var(--sl-pres-bg);
+  background-size: auto, 24px 24px, 24px 24px;
+}
+
+.sl-pres-flow-top {
+  position: absolute;
+  top: var(--sl-space-4);
+  right: var(--sl-space-5);
+  left: var(--sl-space-5);
+  z-index: var(--sl-z-dropdown);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-3);
+}
+
+.sl-pres-flow-top > .sl-pres-mono {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-pres-paths {
+  position: absolute;
+  inset: var(--sl-space-11) var(--sl-space-3) var(--sl-space-5);
+  width: calc(100% - var(--sl-space-6));
+  height: calc(100% - var(--sl-space-11) - var(--sl-space-5));
+  overflow: visible;
+}
+
+.sl-pres-path-ring {
+  fill: none;
+  stroke: var(--sl-border-strong);
+  stroke-width: 1.2;
+  stroke-dasharray: 3 8;
+}
+
+.sl-pres-path-live {
+  fill: none;
+  stroke: var(--sl-primary-subtle);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 9;
+  opacity: var(--sl-fade-subtle);
+  transition: opacity var(--sl-time-slow) var(--sl-ease-out);
+}
+
+.sl-pres-path-short {
+  fill: none;
+  stroke: var(--sl-primary);
+  stroke-width: 2;
+  stroke-dasharray: 7 8;
+  opacity: 0;
+  transition: opacity var(--sl-time-slow) var(--sl-ease-out);
+}
+
+.sl-pres-flow[data-sl-mode="hit"] .sl-pres-path-short {
+  opacity: 1;
+}
+
+.sl-pres-flow[data-sl-mode="hit"] .sl-pres-path-live {
+  opacity: var(--sl-fade-disabled);
+}
+
+.sl-pres-path-packet {
+  fill: var(--sl-text-strong);
+  stroke: var(--sl-primary);
+  stroke-width: 1;
+}
+
+.sl-pres-flow-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: var(--sl-z-overlay);
+  display: grid;
+  place-items: center;
+  width: calc(var(--sl-pres-width) * 1.25);
+  height: calc(var(--sl-pres-width) * 1.25);
+  border: 1px solid var(--sl-primary-subtle);
+  border-radius: var(--sl-radius-circle);
+  background: radial-gradient(circle at 50% 38%, var(--sl-tint-strong), var(--sl-surface) 64%);
+  box-shadow: var(--sl-shadow-focus);
+  text-align: center;
+  transform: translate(-50%, -44%);
+}
+
+.sl-pres-flow-core::before,
+.sl-pres-flow-core::after {
+  content: "";
+  position: absolute;
+  inset: -13px;
+  border: 1px solid var(--sl-tint-strong);
+  border-radius: var(--sl-radius-circle);
+}
+
+.sl-pres-flow-core::after {
+  inset: -27px;
+  border-style: dashed;
+  animation: sl-pres-spin calc(var(--sl-pres-dur) * 5) linear infinite;
+}
+
+.sl-pres-flow-core img {
+  width: calc(var(--sl-pres-width) * 0.65);
+  margin: 0 auto var(--sl-space-2);
+}
+
+.sl-pres-flow-core b {
+  display: block;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  color: var(--sl-text-strong);
+}
+
+.sl-pres-flow-core small {
+  margin-top: var(--sl-space-2);
+}
+
+.sl-pres-flow-core > div > .sl-pres-pill {
+  margin-top: var(--sl-space-3);
+}
+
+.sl-pres-flow-chip {
+  position: absolute;
+  top: calc(var(--sl-pres-height) * 0.4);
+  left: 50%;
+  z-index: var(--sl-z-overlay);
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-pill);
+  background: color-mix(in srgb, var(--sl-surface) var(--sl-modal-btn-mix), transparent);
+  padding: var(--sl-space-2) var(--sl-space-3);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  color: var(--sl-primary-strong);
+  opacity: var(--sl-fade-disabled);
+  transform: translateX(-50%);
+  transition: opacity var(--sl-time-slow) var(--sl-ease-out);
+}
+
+.sl-pres-flow[data-sl-mode="hit"] .sl-pres-flow-chip {
+  color: var(--sl-success);
+  opacity: 1;
+}
+
+/* The seven stations of a request around the core, by their order */
+.sl-pres-flow > .sl-pres-node:nth-child(1 of .sl-pres-node) { top: calc(var(--sl-space-11) + var(--sl-space-3)); left: 50%; transform: translateX(-50%); }
+.sl-pres-flow > .sl-pres-node:nth-child(2 of .sl-pres-node) { top: calc(var(--sl-pres-height) * 0.3); right: 9%; }
+.sl-pres-flow > .sl-pres-node:nth-child(3 of .sl-pres-node) { top: calc(var(--sl-pres-height) * 0.63); right: 4%; }
+.sl-pres-flow > .sl-pres-node:nth-child(4 of .sl-pres-node) { right: 15%; bottom: calc(var(--sl-pres-height) * 0.17); }
+.sl-pres-flow > .sl-pres-node:nth-child(5 of .sl-pres-node) { bottom: var(--sl-space-8); left: 50%; transform: translateX(-50%); }
+.sl-pres-flow > .sl-pres-node:nth-child(6 of .sl-pres-node) { bottom: calc(var(--sl-pres-height) * 0.17); left: 15%; }
+.sl-pres-flow > .sl-pres-node:nth-child(7 of .sl-pres-node) { top: calc(var(--sl-pres-height) * 0.63); left: 4%; }
+
+.sl-pres-flow > .sl-pres-node:nth-child(1 of .sl-pres-node):hover,
+.sl-pres-flow > .sl-pres-node:nth-child(5 of .sl-pres-node):hover {
+  transform: translateX(-50%) translateY(-2px);
+}
+
+.sl-pres-flow[data-sl-mode="hit"] > .sl-pres-node:nth-child(n + 4 of .sl-pres-node):nth-child(-n + 6 of .sl-pres-node),
+.sl-pres-flow[data-sl-mode="off"] > .sl-pres-node:nth-child(3 of .sl-pres-node) {
+  opacity: var(--sl-fade-disabled);
+}
+
+.sl-pres-arch-side {
+  display: grid;
+  gap: var(--sl-space-4);
+  align-content: start;
+}
+
+.sl-pres-case {
+  display: grid;
+  grid-template-columns: var(--sl-size-icon-xl) 1fr;
+  gap: var(--sl-space-3);
+  border-bottom: 1px solid var(--sl-border);
+  padding: var(--sl-space-4);
+  transition: background-color var(--sl-time-slow) var(--sl-ease-out);
+}
+
+.sl-pres-case:last-child {
+  border-bottom: 0;
+}
+
+.sl-pres-case > span {
+  font-size: var(--sl-font-micro);
+  line-height: var(--sl-line-normal);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-case.sl-is-on {
+  background: var(--sl-bg-subtle);
+}
+
+.sl-pres-case.sl-is-on > strong {
+  color: var(--sl-text-strong);
+}
+
+.sl-pres-case.sl-is-on[data-sl-tone] > strong {
+  color: currentColor;
+}
+
+.sl-pres-states > .sl-pres-stat > b {
+  font-size: var(--sl-font-small);
+  letter-spacing: 0;
+  white-space: normal;
+}
+
+.sl-pres-epoch-row {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-3);
+}
+
+.sl-pres-epoch-row > small > .sl-pres-dot {
+  margin-right: var(--sl-space-2);
+  width: var(--sl-space-2);
+  height: var(--sl-space-2);
+  color: var(--sl-success);
+}
+
+.sl-pres-arch-side > .sl-pres-note b {
+  color: var(--sl-text);
+}
+
+/* ===== 08 partials/presentation-dna.html =====
+   <div class="sl-pres-dna"><article class="sl-pres-principle"><img><div class="sl-pres-principle-copy"><header><i class="bi"></i><h3>..</h3></header><p>..</p><p>..</p></div></article> x4</div>
+   The band picture wears the film every picture of the page wears, and a light crosses it under the pointer */
+.sl-pres-dna {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sl-space-6);
+}
+
+.sl-pres-principle {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-3);
+  background: var(--sl-surface);
+  transition: border-color var(--sl-time-slow) var(--sl-ease-out), box-shadow var(--sl-time-slow) var(--sl-ease-out);
+}
+
+.sl-pres-principle > img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1920 / 440;
+  object-fit: cover;
+}
+
+.sl-pres-principle::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: var(--sl-z-raised);
+  width: 100%;
+  aspect-ratio: 1920 / 440;
+  background: linear-gradient(115deg, transparent, var(--sl-tint-strong), transparent) -80% 50% / 45% 100% no-repeat;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sl-pres-principle:hover {
+    border-color: var(--sl-primary-subtle);
+    box-shadow: var(--sl-shadow-raised);
+  }
+
+  .sl-pres-principle:hover::before {
+    animation: sl-pres-light calc(var(--sl-pres-dur) * 0.3) var(--sl-ease-out) both;
+  }
+}
+
+@keyframes sl-pres-light {
+  0% { background-position: -80% 50%; opacity: 0; }
+  20%, 70% { opacity: 1; }
+  100% { background-position: 180% 50%; opacity: 0; }
+}
+
+.sl-pres-principle-copy {
+  padding: var(--sl-space-7);
+}
+
+.sl-pres-principle-copy > header {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-5);
+  margin-bottom: var(--sl-space-6);
+}
+
+.sl-pres-principle-copy > header > .bi {
+  color: var(--sl-primary-strong);
+}
+
+.sl-pres-principle-copy h3 {
+  margin: 0;
+  font-size: var(--sl-font-h2);
+  line-height: var(--sl-line-tight);
+  color: var(--sl-text-strong);
+}
+
+.sl-pres-principle-copy p {
+  margin: 0 0 var(--sl-space-5);
+  font-size: var(--sl-font-body);
+  line-height: var(--sl-line-loose);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-principle-copy p:last-child {
+  margin-bottom: 0;
+}
+
+/* ===== 09 partials/presentation-archive.html and 10 partials/presentation-sites.html =====
+   <div class="sl-pres-gallery" data-sl-pres="brand|sites"><div class="sl-pres-gallery-head"><span>..</span><b>N items</b></div>
+   <div class="sl-pres-gallery-track" tabindex="0">
+   fragments/presentation-brand.html: <article class="sl-pres-tile" data-sl-pres-fit="contain"><a class="sl-pres-tile-open" href="original" data-sl-shot-open title="..."><img src="thumb"></a>
+   <span class="sl-pres-tile-tools"><button type="button"><i class="bi"></i></button><a href="original" download><i class="bi"></i></a></span><div class="sl-pres-tile-copy"><small>group</small><h3>title</h3></div></article>
+   fragments/presentation-site.html: <article class="sl-pres-tile"><figure class="sl-pres-shot"><img><b class="sl-pres-rate"><i class="bi"></i>723</b></figure><div class="sl-pres-tile-copy"><small>cat</small><h3>name</h3></div></article>
+   </div><div class="sl-pres-gallery-controls"><button data-sl-pres-step="-1">..</button><output></output><input type="range" data-sl-pres-range><button data-sl-pres-step="1">..</button></div></div>
+   One picture treatment for the principles, the brand archive and the site strip: a film of the brand colour and a soft filter rest on the picture and lift under the pointer */
+.sl-pres-tile-open::before,
+.sl-pres-shot::before,
+.sl-pres-principle::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: var(--sl-z-raised);
+  background: var(--sl-tint);
+  transition: opacity var(--sl-time-slow) var(--sl-ease-out);
+  pointer-events: none;
+}
+
+.sl-pres-principle::after {
+  bottom: auto;
+  aspect-ratio: 1920 / 440;
+}
+
+.sl-pres-tile-open > img,
+.sl-pres-shot > img,
+.sl-pres-principle > img {
+  filter: grayscale(0.35) saturate(0.75) contrast(1.02) brightness(0.85);
+  transition: transform var(--sl-time-slow) var(--sl-ease-out), filter var(--sl-time-slow) var(--sl-ease-out);
+}
+
+.sl-pres-tile:hover .sl-pres-tile-open::before,
+.sl-pres-tile:hover .sl-pres-shot::before,
+.sl-pres-principle:hover::after {
+  opacity: 0;
+}
+
+.sl-pres-tile:hover .sl-pres-tile-open > img,
+.sl-pres-tile:hover .sl-pres-shot > img,
+.sl-pres-principle:hover > img {
+  filter: saturate(1) brightness(0.98);
+  transform: scale(1.03);
+}
+
+.sl-pres-gallery {
+  min-width: 0;
+}
+
+.sl-pres-gallery-head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sl-space-5);
+  margin-bottom: var(--sl-space-6);
+  color: var(--sl-text-muted);
+}
+
+/* The site strip: a row of cards four to the view, snapping by card, the range under it is the position control */
+.sl-pres-gallery-track {
+  position: relative;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100% - 3 * var(--sl-space-5)) / 4);
+  gap: var(--sl-space-5);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.sl-pres-gallery-track::-webkit-scrollbar {
+  display: none;
+}
+
+.sl-pres-tile {
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-3);
+  background: var(--sl-surface);
+  scroll-snap-align: start;
+}
+
+.sl-pres-tile-open,
+.sl-pres-shot {
+  position: relative;
+  display: block;
+  height: var(--sl-site-height);
+  margin: 0;
+  overflow: hidden;
+  background: var(--sl-bg-subtle);
+}
+
+.sl-pres-tile-open > img,
+.sl-pres-shot > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+}
+
+/* Logotypes and partner badges are artwork on a clear ground: they sit inside the tile instead of being cropped to it */
+.sl-pres-tile[data-sl-pres-fit="contain"] .sl-pres-tile-open > img {
+  object-fit: contain;
+  padding: var(--sl-space-6);
+}
+
+/* Open and download stand on the picture, faint until the card is pointed at or a tool is focused */
+.sl-pres-tile-tools {
+  position: absolute;
+  top: var(--sl-space-4);
+  right: var(--sl-space-4);
+  z-index: var(--sl-z-overlay);
+  display: flex;
+  gap: var(--sl-space-2);
+  opacity: var(--sl-fade-muted);
+  transition: opacity var(--sl-time-slow) var(--sl-ease-out);
+}
+
+.sl-pres-tile:hover .sl-pres-tile-tools,
+.sl-pres-tile-tools:focus-within {
+  opacity: 1;
+}
+
+.sl-pres-tile-tools > button,
+.sl-pres-tile-tools > a,
+.sl-pres-gallery-controls > button {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: var(--sl-size-control);
+  height: var(--sl-size-control);
+  border: 1px solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-2);
+  padding: 0;
+  background: color-mix(in srgb, var(--sl-surface) var(--sl-fav-mix), transparent);
+  color: var(--sl-primary-strong);
+  cursor: pointer;
+  backdrop-filter: blur(var(--sl-space-3));
+}
+
+.sl-pres-tile-tools > button:hover,
+.sl-pres-tile-tools > a:hover,
+.sl-pres-gallery-controls > button:hover {
+  border-color: var(--sl-primary);
+  background: var(--sl-tint);
+}
+
+/* The site rating is the thumbnail weight in twenty-byte steps, as the old main module counted it */
+.sl-pres-rate {
+  position: absolute;
+  top: var(--sl-space-4);
+  right: var(--sl-space-4);
+  z-index: var(--sl-z-overlay);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-surface);
+  padding: var(--sl-space-1) var(--sl-space-4);
+  color: var(--sl-text);
+  font-size: var(--sl-font-small);
+  font-weight: var(--sl-weight-medium);
+}
+
+/* The caption lies on the picture over the shade that darkens the picture towards it */
+.sl-pres-tile-copy {
+  position: absolute;
+  inset: 0;
+  z-index: var(--sl-z-raised);
+  display: grid;
+  align-content: end;
+  background: var(--sl-grad-caption);
+  padding: var(--sl-space-6);
+  pointer-events: none;
+}
+
+.sl-pres-tile-copy > small {
+  font-size: var(--sl-font-micro);
+  color: var(--sl-primary-strong);
+}
+
+.sl-pres-tile-copy > h3 {
+  margin: var(--sl-space-2) 0 0;
+  font-size: var(--sl-font-h3);
+  color: var(--sl-text-strong);
+  overflow-wrap: anywhere;
+}
+
+.sl-pres-gallery-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-5);
+  margin-top: var(--sl-space-5);
+}
+
+.sl-pres-gallery-controls > output {
+  min-width: var(--sl-cab-act-width);
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-muted);
+  text-align: center;
+}
+
+.sl-pres-gallery-controls > input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  cursor: pointer;
+  accent-color: var(--sl-primary);
+  appearance: none;
+}
+
+.sl-pres-gallery-controls > input::-webkit-slider-runnable-track {
+  height: var(--sl-space-2);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-border);
+}
+
+.sl-pres-gallery-controls > input::-moz-range-track {
+  height: var(--sl-space-2);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-border);
+}
+
+.sl-pres-gallery-controls > input::-webkit-slider-thumb {
+  width: var(--sl-space-6);
+  height: var(--sl-space-6);
+  margin-top: calc(-1 * var(--sl-space-5) / 2);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-primary);
+  appearance: none;
+}
+
+.sl-pres-gallery-controls > input::-moz-range-thumb {
+  width: var(--sl-space-6);
+  height: var(--sl-space-6);
+  border: 0;
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-primary);
+}
+
+/* The brand archive: the featured material takes the left column, the next four fill a two-by-two grid */
+.sl-pres-gallery[data-sl-pres="brand"] .sl-pres-gallery-track {
+  grid-auto-flow: row;
+  grid-auto-columns: auto;
+  grid-template-columns: minmax(0, 1.3fr) repeat(2, minmax(0, 0.65fr));
+  grid-template-rows: repeat(2, var(--sl-brand-height));
+  overflow: visible;
+  scroll-snap-type: none;
+}
+
+.sl-pres-gallery[data-sl-pres="brand"] .sl-pres-tile {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.sl-pres-gallery[data-sl-pres="brand"] .sl-pres-tile[hidden] {
+  display: none;
+}
+
+.sl-pres-tile[data-sl-pres-feature] {
+  grid-row: 1 / span 2;
+  grid-column: 1;
+}
+
+.sl-pres-gallery[data-sl-pres="brand"] .sl-pres-tile-open {
+  height: 100%;
+  min-height: 0;
+}
+
+.sl-pres-gallery[data-sl-pres="brand"] .sl-pres-tile-copy {
+  padding: var(--sl-space-5);
+}
+
+.sl-pres-gallery[data-sl-pres="brand"] .sl-pres-tile-copy > h3 {
+  font-size: var(--sl-font-body);
+}
+
+.sl-pres-tile[data-sl-pres-feature] .sl-pres-tile-copy {
+  padding: var(--sl-space-7);
+}
+
+.sl-pres-tile[data-sl-pres-feature] .sl-pres-tile-copy > h3 {
+  font-size: var(--sl-font-h2);
+}
+
+/* ===== 11 partials/presentation-voices.html =====
+   <div class="sl-pres-voices"><div class="sl-pres-panel-head"><span>OWNER SIGNALS</span><b class="sl-pres-pill" data-sl-tone="warning">note</b></div>
+   <div class="sl-pres-voices-track">fragments/presentation-voice.html: <article class="sl-pres-voice" data-sl-tone="primary"><p>quote</p><i class="sl-pres-voice-sep"></i>
+   <div class="sl-pres-voice-person"><span class="sl-pres-voice-ava">AK</span><div><strong>name</strong><small>site · role</small></div><div class="sl-pres-since"><span>SINCE</span><b>2011</b></div></div>
+   <div class="sl-pres-voice-marks"><span><i class="bi"></i>Forum</span>..</div></article></div>
+   <div class="sl-pres-voices-foot"><span><i class="sl-pres-dot sl-is-live"></i>note</span><a href="#showcase"><i class="bi"></i> back</a></div></div> */
+.sl-pres-voices {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-3);
+  background-color: var(--sl-surface);
+  background-image: radial-gradient(circle at 85% 0, var(--sl-tint), transparent 40%), var(--sl-pres-bg);
+  background-size: auto, 24px 24px, 24px 24px;
+}
+
+.sl-pres-voices > .sl-pres-panel-head {
+  padding: var(--sl-space-4) var(--sl-space-5);
+}
+
+.sl-pres-voices-track {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sl-space-3);
+  padding: var(--sl-space-4);
+}
+
+.sl-pres-voice {
+  position: relative;
+  isolation: isolate;
+  min-height: var(--sl-pres-min-height);
+  overflow: hidden;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-surface);
+  padding: var(--sl-space-5);
+  color: var(--sl-text);
+  transition: transform var(--sl-time-slow) var(--sl-ease-in-out), border-color var(--sl-time-slow) var(--sl-ease-in-out), box-shadow var(--sl-time-slow) var(--sl-ease-in-out);
+}
+
+/* The ornament quotation mark behind the words, and the hairline of the tone across the top */
+.sl-pres-voice::before {
+  content: "\201C";
+  position: absolute;
+  top: -14px;
+  right: var(--sl-space-5);
+  font-family: var(--sl-face-quote);
+  font-size: 80px;
+  line-height: 1;
+  color: color-mix(in srgb, currentColor var(--sl-quote-mix), transparent);
+}
+
+.sl-pres-voice::after,
+.sl-pres-pulse-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: var(--sl-space-1);
+  background: linear-gradient(90deg, transparent, currentColor, transparent);
+  opacity: var(--sl-fade-subtle);
+}
+
+.sl-pres-voice:hover {
+  border-color: color-mix(in srgb, currentColor var(--sl-tile-mix), var(--sl-border));
+  box-shadow: var(--sl-shadow-float);
+  transform: translateY(-4px);
+}
+
+.sl-pres-voice > p {
+  position: relative;
+  z-index: var(--sl-z-raised);
+  min-height: calc(var(--sl-pres-min-height) / 2);
+  margin: 0;
+  font-size: var(--sl-font-small);
+  line-height: var(--sl-line-loose);
+  color: var(--sl-text);
+}
+
+.sl-pres-voice-sep {
+  display: block;
+  height: 1px;
+  margin: var(--sl-space-4) 0;
+  background: linear-gradient(90deg, currentColor, transparent);
+  opacity: var(--sl-fade-disabled);
+}
+
+.sl-pres-voice-person {
+  display: grid;
+  grid-template-columns: var(--sl-size-control) 1fr auto;
+  gap: var(--sl-space-3);
+  align-items: center;
+  transition: transform var(--sl-time-slow) var(--sl-ease-in-out);
+}
+
+.sl-pres-voice-ava {
+  display: grid;
+  place-items: center;
+  width: var(--sl-size-control);
+  height: var(--sl-size-control);
+  border: 1px solid var(--sl-ico-border);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-ico-bg);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+}
+
+.sl-pres-voice-person strong {
+  display: block;
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-strong);
+}
+
+.sl-pres-voice-person small {
+  margin-top: var(--sl-space-1);
+}
+
+.sl-pres-since {
+  text-align: right;
+}
+
+.sl-pres-since > b {
+  display: block;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  color: var(--sl-primary-strong);
+}
+
+/* The marks rise from under the card while the person line makes room for them */
+.sl-pres-voice-marks {
+  position: absolute;
+  right: var(--sl-space-4);
+  bottom: var(--sl-space-3);
+  left: var(--sl-space-4);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sl-space-2);
+  opacity: 0;
+  transform: translateY(var(--sl-space-6));
+  transition: transform var(--sl-time-slow) var(--sl-ease-in-out), opacity var(--sl-time-slow) var(--sl-ease-in-out);
+}
+
+.sl-pres-voice:hover .sl-pres-voice-marks {
+  opacity: 1;
+  transform: none;
+}
+
+.sl-pres-voice:hover .sl-pres-voice-person {
+  transform: translateY(calc(var(--sl-space-9) * -1));
+}
+
+.sl-pres-voice-marks > span {
+  overflow: hidden;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-bg);
+  padding: var(--sl-space-2);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-muted);
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-pres-voice-marks .bi {
+  margin-right: var(--sl-space-2);
+  color: currentColor;
+}
+
+.sl-pres-voices-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-4);
+  border-top: 1px solid var(--sl-border);
+  background: color-mix(in srgb, var(--sl-surface) var(--sl-fav-mix), transparent);
+  padding: var(--sl-space-3) var(--sl-space-5);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-voices-foot > span {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+}
+
+.sl-pres-voices-foot .sl-pres-dot {
+  width: var(--sl-space-2);
+  height: var(--sl-space-2);
+  color: var(--sl-success);
+}
+
+.sl-pres-voices-foot > a {
+  color: var(--sl-primary-strong);
+}
+
+.sl-pres-voices-foot > a:hover {
+  color: var(--sl-text-strong);
+}
+
+/* ===== 12 partials/presentation-pulse.html =====
+   <div class="sl-pres-pulse"><article class="sl-pres-pulse-card" data-sl-tone="primary"><div class="sl-pres-pulse-head"><span><i class="bi"></i></span><div><b>title</b><span>OVERLINE</span></div></div>
+   <div class="sl-pres-pulse-body"><time>date</time><h3>title</h3><p>text</p></div><div class="sl-pres-pulse-foot"><i class="sl-pres-dot sl-is-live"></i><a href><span>All news</span> <i class="bi"></i></a></div></article> x4
+   <div class="sl-pres-monitor"><div class="sl-pres-monitor-title"><span class="sl-pres-over">..</span><h3>..</h3><p>..</p></div>
+   <div class="sl-pres-mini"><div class="sl-pres-ring sl-pres-ring-xs sl-knob .."><svg/><i class="bi"></i></div><div><span>CPU</span><b>6 / 12</b></div></div> x3
+   <div class="sl-pres-soft"><span><i class="bi"></i>SLAED 8.0</span>..</div></div></div> */
+
+.sl-pres-pulse-card {
+  position: relative;
+  min-height: var(--sl-pres-min-height);
+  overflow: hidden;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-3);
+  background: linear-gradient(180deg, var(--sl-surface), var(--sl-bg));
+  padding-bottom: var(--sl-space-10);
+  transition: transform var(--sl-time-slow) var(--sl-ease-in-out), border-color var(--sl-time-slow) var(--sl-ease-in-out), box-shadow var(--sl-time-slow) var(--sl-ease-in-out);
+}
+
+.sl-pres-pulse-card:hover {
+  border-color: color-mix(in srgb, currentColor var(--sl-tile-mix), var(--sl-border));
+  box-shadow: var(--sl-shadow-float);
+  transform: translateY(-3px);
+}
+
+.sl-pres-pulse-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  border-bottom: 1px solid var(--sl-border);
+  padding: var(--sl-space-4);
+}
+
+.sl-pres-pulse-head > span {
+  display: grid;
+  flex: 0 0 var(--sl-size-control);
+  place-items: center;
+  width: var(--sl-size-control);
+  height: var(--sl-size-control);
+  border: 1px solid var(--sl-ico-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-ico-bg);
+  font-size: var(--sl-font-small);
+}
+
+.sl-pres-pulse-head > div {
+  min-width: 0;
+}
+
+.sl-pres-pulse-head b {
+  display: block;
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-strong);
+}
+
+.sl-pres-pulse-head div > span {
+  display: block;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-pulse-body {
+  padding: var(--sl-space-4);
+}
+
+.sl-pres-pulse-body > h3 {
+  margin: var(--sl-space-2) 0 var(--sl-space-3);
+  font-size: var(--sl-font-small);
+  line-height: var(--sl-line-normal);
+  color: var(--sl-text-strong);
+}
+
+.sl-pres-pulse-body > p,
+.sl-pres-monitor-title > p {
+  margin: 0;
+  font-size: var(--sl-font-micro);
+  line-height: var(--sl-line-normal);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-pulse-foot {
+  position: absolute;
+  right: var(--sl-space-4);
+  bottom: var(--sl-space-3);
+  left: var(--sl-space-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-pulse-foot .sl-pres-dot {
+  width: var(--sl-space-2);
+  height: var(--sl-space-2);
+}
+
+.sl-pres-pulse-foot > a {
+  color: var(--sl-primary-strong);
+}
+
+.sl-pres-pulse-foot > a:hover {
+  color: var(--sl-text-strong);
+}
+
+.sl-pres-monitor {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: calc(var(--sl-pres-width) * 1.35) 1fr 1fr 1fr 1.3fr;
+  gap: var(--sl-space-3);
+  align-items: stretch;
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-3);
+  background: var(--sl-surface);
+  padding: var(--sl-space-4);
+}
+
+.sl-pres-monitor-title {
+  padding: var(--sl-space-3);
+}
+
+.sl-pres-monitor-title > h3 {
+  margin: var(--sl-space-2) 0;
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-strong);
+}
+
+.sl-pres-mini {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg);
+  padding: var(--sl-space-3);
+}
+
+.sl-pres-mini > div:last-child {
+  min-width: 0;
+}
+
+.sl-pres-mini b {
+  display: block;
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text);
+}
+
+.sl-pres-soft {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sl-space-2);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-bg);
+  padding: var(--sl-space-3);
+}
+
+.sl-pres-soft > span {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+  color: var(--sl-text-muted);
+}
+
+.sl-pres-soft .bi {
+  color: var(--sl-primary-strong);
+}
+
+/* ===== The narrower steps of the ladder ===== */
+@media (max-width: 1200px) {
+  .sl-pres-gauges {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .sl-pres-plate {
+    display: none;
+  }
+
+  .sl-pres-hero-grid,
+  .sl-pres-modules,
+  .sl-pres-dev,
+  .sl-pres-stats,
+  .sl-pres-arch,
+  .sl-pres-blocks-layout,
+  .sl-pres-pdo {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sl-pres-facts,
+  .sl-pres-tech {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .sl-pres-rail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sl-pres-rail-head {
+    display: none;
+  }
+
+  .sl-pres-dev-side {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .sl-pres-focus {
+    grid-row: span 2;
+  }
+
+  .sl-pres-pulse {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .sl-pres-monitor {
+    grid-template-columns: calc(var(--sl-pres-width) * 1.35) repeat(2, 1fr);
+  }
+
+  .sl-pres-soft {
+    grid-column: 2 / -1;
+  }
+
+  .sl-pres-stats-side {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .sl-pres-stats-side > .sl-pres-note {
+    grid-column: 1 / -1;
+  }
+
+  .sl-pres-speed {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .sl-pres-speed > .sl-pres-card:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .sl-pres-events {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .sl-pres-detail {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .sl-pres-blocks-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .sl-pres-blocks-panel > .sl-pres-panel-head {
+    grid-column: 1 / -1;
+  }
+
+  .sl-pres-rules {
+    border-top: 0;
+    border-left: 1px solid var(--sl-border);
+  }
+
+  .sl-pres-guard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sl-pres-guard-console {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .sl-pres-rhythm {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sl-pres-chart {
+    grid-column: auto;
+  }
+
+  .sl-pres-gallery[data-sl-pres="sites"] .sl-pres-gallery-track {
+    grid-auto-columns: calc((100% - var(--sl-space-5)) / 2);
+  }
+
+  .sl-pres-voices-track {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sl-pres-devtools-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .sl-pres-tabs {
+    width: 100%;
+    overflow: auto;
+  }
+
+  .sl-pres-perf {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .sl-pres-vars {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sl-pres-errors > div {
+    grid-template-columns: auto auto minmax(0, 1fr);
+  }
+
+  .sl-pres-errors span {
+    grid-column: 3;
+  }
+
+  .sl-pres-errors em {
+    display: none;
+  }
+
+  .sl-pres-guard-console {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .sl-pres-hero {
+    padding: var(--sl-space-7) var(--sl-space-6);
+  }
+
+  .sl-pres-copy > h1 {
+    font-size: var(--sl-font-display);
+  }
+
+  .sl-pres-facts,
+  .sl-pres-tech,
+  .sl-pres-gauges,
+  .sl-pres-events,
+  .sl-pres-detail,
+  .sl-pres-stats-grid,
+  .sl-pres-speed {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sl-pres-dna,
+  .sl-pres-dev-side,
+  .sl-pres-stats-side,
+  .sl-pres-pulse {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sl-pres-focus {
+    grid-row: auto;
+  }
+
+  .sl-pres-monitor {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .sl-pres-monitor-title,
+  .sl-pres-soft {
+    grid-column: 1 / -1;
+  }
+
+  .sl-pres-principle-copy {
+    padding: var(--sl-space-6);
+  }
+
+  .sl-pres-head > p {
+    flex-basis: 100%;
+    margin: 0;
+  }
+
+  .sl-pres-commit {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .sl-pres-when {
+    display: none;
+  }
+
+  .sl-pres-gallery[data-sl-pres="brand"] .sl-pres-gallery-track {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: calc(var(--sl-brand-height) * 1.5) repeat(2, calc(var(--sl-brand-height) * 0.9));
+  }
+
+  .sl-pres-tile[data-sl-pres-feature] {
+    grid-row: 1;
+    grid-column: 1 / -1;
+  }
+
+  /* The scenes fold: the nodes leave their absolute places and stand in a grid, the wiring and the bus are hidden */
+  .sl-pres-map,
+  .sl-pres-blocks-stage,
+  .sl-pres-pdo-stage,
+  .sl-pres-flow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sl-space-4);
+    min-height: 0;
+    padding: var(--sl-space-4);
+  }
+
+  .sl-pres-flow {
+    padding-top: var(--sl-space-11);
+  }
+
+  .sl-pres-pdo-stage {
+    padding-top: calc(var(--sl-space-11) * 2);
+  }
+
+  .sl-pres-map > .sl-pres-mod,
+  .sl-pres-blocks-stage > .sl-pres-node,
+  .sl-pres-pdo-stage > .sl-pres-node,
+  .sl-pres-flow > .sl-pres-node {
+    position: relative;
+    inset: auto;
+    width: auto;
+    min-width: 0;
+    transform: none;
+  }
+
+  .sl-pres-map-core,
+  .sl-pres-page,
+  .sl-pres-router,
+  .sl-pres-flow-core {
+    position: relative;
+    inset: auto;
+    grid-column: 1 / -1;
+    justify-self: center;
+    margin: var(--sl-space-5);
+    transform: none;
+  }
+
+  .sl-pres-wires,
+  .sl-pres-paths,
+  .sl-pres-bus,
+  .sl-pres-packet,
+  .sl-pres-flow-chip,
+  .sl-pres-epoch {
+    display: none;
+  }
+
+  .sl-pres-return {
+    position: relative;
+    inset: auto;
+    grid-column: 1 / -1;
+    height: auto;
+  }
+
+  .sl-pres-pdo-head,
+  .sl-pres-query {
+    right: var(--sl-space-4);
+    left: var(--sl-space-4);
+  }
+
+  .sl-pres-query > code {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .sl-pres-guard-scene {
+    min-height: calc(var(--sl-guard-height) * 1.15);
+  }
+
+  .sl-pres-lanes {
+    right: calc(var(--sl-guard-width) * 0.55);
+    left: calc(var(--sl-guard-width) * 0.36);
+  }
+
+  .sl-pres-net {
+    left: var(--sl-space-5);
+  }
+
+  .sl-pres-radar {
+    left: 0;
+  }
+
+  .sl-pres-house {
+    right: calc(var(--sl-space-3) * -1);
+    transform: scale(0.78);
+    transform-origin: right bottom;
+  }
+
+  .sl-pres-zone,
+  .sl-pres-ambient:nth-child(2 of .sl-pres-ambient),
+  .sl-pres-ambient:nth-child(3 of .sl-pres-ambient) {
+    display: none;
+  }
+
+  .sl-pres-traffic {
+    max-width: calc(100% - var(--sl-guard-width) * 0.5);
+  }
+}
+
+@media (max-width: 560px) {
+  .sl-pres-facts,
+  .sl-pres-tech,
+  .sl-pres-gauges,
+  .sl-pres-events,
+  .sl-pres-detail,
+  .sl-pres-stats-grid,
+  .sl-pres-speed,
+  .sl-pres-perf,
+  .sl-pres-monitor,
+  .sl-pres-states,
+  .sl-pres-guard-stats,
+  .sl-pres-core-body,
+  .sl-pres-map,
+  .sl-pres-blocks-stage,
+  .sl-pres-pdo-stage,
+  .sl-pres-flow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sl-pres-core-menu {
+    display: none;
+  }
+
+  .sl-pres-gallery[data-sl-pres="sites"] .sl-pres-gallery-track {
+    grid-auto-columns: 100%;
+  }
+
+  .sl-pres-gallery[data-sl-pres="brand"] .sl-pres-gallery-track {
+    grid-template-rows: calc(var(--sl-brand-height) * 1.25) repeat(2, calc(var(--sl-brand-height) * 0.8));
+  }
+
+  .sl-pres-gallery[data-sl-pres="brand"] .sl-pres-tile-copy > small {
+    display: none;
+  }
+
+  .sl-pres-tile[data-sl-pres-feature] .sl-pres-tile-copy > small {
+    display: block;
+  }
+
+  .sl-pres-gallery[data-sl-pres="brand"] .sl-pres-tile-copy > h3 {
+    font-size: var(--sl-font-small);
+  }
+
+  .sl-pres-tile[data-sl-pres-feature] .sl-pres-tile-copy > h3 {
+    font-size: var(--sl-font-h3);
+  }
+
+  .sl-pres-gallery-head {
+    font-size: var(--sl-font-small);
+  }
+
+  .sl-pres-gallery-controls {
+    gap: var(--sl-space-3);
+  }
+
+  .sl-pres-chart,
+  .sl-pres-vitals,
+  .sl-pres-body {
+    padding: var(--sl-space-5);
+  }
+
+  .sl-pres-guard-scene {
+    min-height: calc(var(--sl-guard-height) * 1.3);
+  }
+
+  .sl-pres-house {
+    bottom: var(--sl-space-10);
+    transform: scale(0.64);
+  }
+
+  .sl-pres-quarantine {
+    bottom: var(--sl-space-6);
+    left: var(--sl-space-5);
+  }
+
+  .sl-pres-ambient:nth-child(1 of .sl-pres-ambient) {
+    bottom: calc(var(--sl-guard-height) * 0.24);
+    left: var(--sl-space-5);
+  }
+
+  .sl-pres-allow,
+  .sl-pres-deny,
+  .sl-pres-track {
+    display: none;
+  }
+}
+
+/* No motion at all where the reader asked for none: every sweep, orbit, lane and packet stands still */
+@media (prefers-reduced-motion: reduce) {
+  .sl-pres *,
+  .sl-pres *::before,
+  .sl-pres *::after {
+    animation: none;
+    transition: none;
+  }
+
+  .sl-pres-rail-nav {
+    scroll-behavior: auto;
+  }
+}

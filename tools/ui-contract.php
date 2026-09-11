@@ -29,7 +29,13 @@ return [
         'lite' => [
             'root' => 'templates/lite',
             'api' => 'templates/lite/assets/css/base.css',
-            'css' => ['templates/lite/assets/css/base.css', 'templates/lite/assets/css/theme.css', 'templates/lite/assets/editors/toastui/skin.css'],
+            # presentation.css dresses the one page of the presentation module. The runtime bundles every file of the
+            # directory by name, so it lands between base and theme without a config entry; the audit walks a list, so it
+            # is named here or it is bundled and never checked
+            'css' => [
+                'templates/lite/assets/css/base.css', 'templates/lite/assets/css/presentation.css',
+                'templates/lite/assets/css/theme.css', 'templates/lite/assets/editors/toastui/skin.css',
+            ],
             'kind' => 'frontend',
         ],
     ],
@@ -55,7 +61,10 @@ return [
         'weight' => ['prefix' => 'weight', 'roles' => ['normal', 'medium', 'semibold', 'bold']],
         'track' => ['prefix' => 'track', 'roles' => ['tight', 'normal', 'wide']],
         'shadow' => ['prefix' => 'shadow', 'roles' => ['xs', 'raised', 'float', 'overlay', 'inset', 'focus', 'color']],
-        'grad' => ['prefix' => 'grad', 'roles' => ['line', 'gloss', 'stripe', 'progress-1', 'progress-2', 'progress-3', 'progress-4', 'progress-5']],
+        # `caption` is the shade a caption lies on when it stands on a picture: clear at the top, the surface at the foot,
+        # so the picture darkens towards the words rather than under a box. One role, because the site strip and the
+        # brand archive carry the same caption and the stops are one decision
+        'grad' => ['prefix' => 'grad', 'roles' => ['line', 'gloss', 'stripe', 'caption', 'progress-1', 'progress-2', 'progress-3', 'progress-4', 'progress-5']],
         'time' => ['prefix' => 'time', 'roles' => ['fast', 'base', 'slow']],
         'ease' => ['prefix' => 'ease', 'roles' => ['out', 'in-out']],
         # `raised` is the layer measurement asked for: a component whose decorative floor opens a local stack needs
@@ -79,9 +88,11 @@ return [
         ],
         # The hero step reads 38 and not 48 on purpose: it is the version number of the dashboard and the slider headline,
         # and at 48 the number crowded the pane it shares with its label. Step count and role names are unchanged, which is
-        # what the ladder law asks of a theme that needs a different value
+        # what the ladder law asks of a theme that needs a different value.
+        # The micro step reads 11 and not 10 since the presentation page: most of its labels are monospace micro text, and
+        # a monospace face at 10 reads smaller than it is. One step for both themes, decided by the owner on 2026-09-10
         'font-size' => [
-            'steps' => [10, 12, 14, 16, 18, 20, 24, 32, 38],
+            'steps' => [11, 12, 14, 16, 18, 20, 24, 32, 38],
             'unit' => 'px',
             'tokens' => [
                 '--sl-font-micro', '--sl-font-small', '--sl-font-body', '--sl-font-h4', '--sl-font-h3',
@@ -137,6 +148,10 @@ return [
             # A size hint for content-visibility: it estimates the box of what the browser has not rendered yet and paints nothing.
             # Wrong, it costs a scroll jump; repainted by a theme, it changes no pixel
             'contain-intrinsic-size' => 'a rendering hint for skipped content, never a painted value',
+            # One formula rests every picture of the presentation page - the principles, the brand archive and the site
+            # strip - and lifts under the pointer. Its four factors are neither a colour nor a size a theme repaints: they
+            # are how much of the picture's own colour shows through, and a ladder step would make a photograph a decision
+            'filter' => 'a treatment of a picture measured against the picture itself, not a colour or a size of the theme',
         ],
         'values' => [
             '0' => 'the absence of a value is not a decision',
@@ -157,6 +172,9 @@ return [
             # cycle boundary, because the curve restarts where it ended. It is the absence of a curve, not one curve among many
             'linear' => 'a constant rate, which is what a looping animation needs instead of a curve',
             '-9999px' => 'text pushed off the canvas so an icon can stand where it was: a hiding technique, not a typographic decision',
+            # The opening quotation mark drawn behind an owner voice (.sl-pres-voice::before) is a glyph used as ornament: its size is
+            # the optics of one sign against one card, not a step of the type ladder, which no text on the page reads at
+            '80px' => 'the ornament glyph of a quotation, sized as a sign and not as type',
         ],
         'shapes' => [
             'circle-radius' => '50% on border-radius makes a circle and is geometry',
@@ -195,13 +213,13 @@ return [
         'fm-bar', 'fm-body', 'fm-busy', 'fm-drop', 'fm-edit', 'fm-empty', 'fm-field', 'fm-filter', 'fm-kind', 'fm-mode',
         'fmenu', 'fm-panel', 'fm-pick', 'fm-preview', 'fm-props', 'fm-quota', 'fm-row', 'fm-search', 'fm-sep', 'fm-split', 'fm-thumb',
         'fm-tile', 'footer', 'form', 'form-label', 'forum', 'fp', 'fp-ava', 'fresh', 'fresh-day', 'fresh-days', 'fresh-month',
-        'fresh-now', 'fresh-week', 'graph', 'header', 'hub-head', 'hub-row',
+        'fresh-now', 'fresh-week', 'gauge', 'graph', 'guard', 'header', 'hub-head', 'hub-row',
         'ico', 'idea', 'info-row', 'invoice', 'invoice-logo', 'item', 'knob', 'lang', 'led', 'letter', 'live-dot', 'loading',
         'loading-dot', 'login', 'login-drop', 'login-footer', 'login-header', 'logo', 'madein', 'marquee', 'menu', 'meta',
         'meter', 'modal', 'modal-act', 'modal-btn', 'mode', 'module-head', 'monitor-table', 'move', 'msg', 'msg-brand', 'nav', 'opt', 'opt-lamp', 'opt-rail',
-        'pager', 'pager-dot', 'pager-item', 'panel', 'panel-feed', 'placeholder', 'pmf-ava', 'pmf-blank', 'pmf-chip', 'pmf-day', 'pmf-filter',
+        'pager', 'pager-dot', 'pager-item', 'panel', 'panel-feed', 'placeholder', 'plot', 'pmf-ava', 'pmf-blank', 'pmf-chip', 'pmf-day', 'pmf-filter',
         'pmf-head', 'pmf-mate', 'pmf-meta', 'pmf-pane', 'pmf-slot', 'pmf-text', 'pmf-who',
-        'pnum', 'pnum-arrow', 'popover', 'preview', 'profile-ava', 'profile-dot', 'progress', 'proof', 'pulse', 'qr', 'quote', 'radio',
+        'pnum', 'pnum-arrow', 'popover', 'pres', 'preview', 'profile-ava', 'profile-dot', 'progress', 'proof', 'pulse', 'qr', 'quote', 'radio',
         'rail', 'rank', 'ratings', 'ring', 'row', 'scroll', 'search', 'search-filter', 'search-order', 'search-sort', 'select', 'set', 'sep',
         'session', 'shot', 'shot-side', 'site', 'site-img', 'skel', 'statx',
         'skel-row', 'skel-tile', 'slide', 'slide-cont', 'sort', 'spark', 'spin', 'sublist', 'sublist-two', 'switch', 'switch-knob',
@@ -223,8 +241,10 @@ return [
         '--sl-d-meter' => 'profile completeness percentage, templates/lite/partials/account-settings.html and plugins/system/slaed.js',
         '--sl-d-at' => 'settings rail mark index, templates/lite/partials/account-settings.html',
         '--sl-d-of' => 'settings rail mark count less one, templates/lite/partials/account-settings.html',
+        '--sl-d-part' => 'share of a measured figure as a percentage, templates/lite/fragments/presentation-stat.html and partials/presentation-stats.html',
+        '--sl-d-rail' => 'height of the sticky section rail of the presentation page, plugins/system/slaed.js',
         '--sl-d-ring' => 'profile ring colour, templates/lite/partials/account-home.html and account-profile.html',
-        '--sl-d-spy' => 'settings rail progress width, plugins/system/slaed.js',
+        '--sl-d-spy' => 'settings rail progress width, and the presentation rail progress in pixels, plugins/system/slaed.js',
         '--sl-d-user' => 'user group colour, templates/lite/partials/block-user-info.html',
         '--sl-d-usrlevel' => 'user group progress, templates/lite/partials/block-user-info.html',
     ],
@@ -242,6 +262,10 @@ return [
         'templates/lite/partials/account-settings.html',
         'templates/lite/partials/block-user-info.html',
         'templates/lite/partials/session-summary.html',
+        'templates/lite/partials/presentation-hero.html',
+        'templates/lite/partials/presentation-stats.html',
+        'templates/lite/fragments/presentation-ring.html',
+        'templates/lite/fragments/presentation-stat.html',
         'admin/modules/monitor.php',
         'admin/modules/admins.php',
         'plugins/system/slaed.js',
@@ -519,6 +543,9 @@ return [
         # the name of a file in the browser, the name of a node in its tree and the name of a queued file in the window:
         # three names cut off at one line. The browser and the window are two screens, and the ellipsis is need
         '.sl-fm-name > a, .sl-fm-node > span:last-child, .sl-fm-win .sl-fm-job-name span',
+        # the track of the gallery range under its two vendor names: one drawing, but a selector list carrying a pseudo-element one
+        # engine does not know is dropped whole by that engine, so the two spellings cannot share a rule
+        '.sl-pres-gallery-controls > input::-moz-range-track, .sl-pres-gallery-controls > input::-webkit-slider-runnable-track',
     ],
 
     # A shared selector whose two themes hold a different set of properties, each with the reason the difference is not a
