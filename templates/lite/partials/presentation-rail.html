@@ -1,0 +1,6 @@
+<div class="sl-pres-rail">
+  <div class="sl-pres-rail-head"><b>{{ first }} / {{ total }}</b></div>
+  <nav class="sl-pres-rail-nav" data-sl-spy="px" aria-label="{{ label }}">
+    {% for item in items %}<a class="sl-pres-rail-item" href="#{{ item.id }}" data-sl-spy-mark="{{ item.id }}" title="{{ item.sub }}"{% if item.is_current %} aria-current="true"{% endif %}><i class="sl-pres-rail-node"></i><b>{{ item.label }}</b><em>{{ item.num }}</em></a>{% endfor %}
+  </nav>
+</div>

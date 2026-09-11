@@ -1,0 +1,44 @@
+<section class="sl-pres-section" id="development">
+{% include 'fragments/presentation-head.html' with head %}
+<div class="sl-pres-body">
+  <div class="sl-pres-dev">
+    <div class="sl-pres-dev-board sl-pres-scene">
+      <div class="sl-pres-dev-head">
+        <span class="sl-pres-pill"><i class="bi bi-git" aria-hidden="true"></i>{{ version }}</span>
+        <span class="sl-pres-live"><i class="sl-pres-dot sl-is-live"></i>{{ live }}</span>
+      </div>
+      {% if has_commits %}
+      <div class="sl-pres-commits">
+        {% for item in commits %}{% include 'fragments/presentation-commit.html' with item %}{% endfor %}
+      </div>
+      {% else %}
+      <p class="sl-pres-note">{{ none }}</p>
+      {% endif %}
+    </div>
+    <div class="sl-pres-dev-side">
+      <div class="sl-pres-focus">
+        <div class="sl-pres-panel-head"><span>{{ focus }}</span><b>{{ focus_state }}</b></div>
+        <div class="sl-pres-focus-body">
+          {% if has_commits %}
+          <span class="sl-pres-mono">{{ first.short }} · {{ first.date }}</span>
+          <h3>{{ first.title }}</h3>
+          <div class="sl-pres-tags">{% for tag in focus_tags %}<span>{{ tag }}</span>{% endfor %}</div>
+          {% else %}
+          <h3>{{ none }}</h3>
+          {% endif %}
+        </div>
+      </div>
+      <div class="sl-pres-card">
+        <div class="sl-pres-panel-head"><span>{{ pipe }}</span><b>{{ pipe_note }}</b></div>
+        <div class="sl-pres-pipe">
+          <i class="sl-pres-pipe-packet" aria-hidden="true"></i>
+          {% for item in steps %}<div><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span>{{ item.label }}</span></div>{% endfor %}
+        </div>
+      </div>
+      <div class="sl-pres-dev-foot">
+        {% for item in foot %}{% include 'fragments/presentation-stat.html' with item %}{% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+</section>

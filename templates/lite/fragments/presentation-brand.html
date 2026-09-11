@@ -1,0 +1,5 @@
+<article class="sl-pres-tile"{% if is_contain %} data-sl-pres-fit="contain"{% endif %}{% if is_first %} data-sl-pres-feature{% endif %}{% if is_hidden %} hidden{% endif %}>
+  <a class="sl-pres-tile-open" href="{{ href }}" data-sl-shot-open title="{{ title }}"><img src="{{ src }}" width="{{ w }}" height="{{ h }}" alt="{{ title }}" loading="lazy" decoding="async"></a>
+  <span class="sl-pres-tile-tools"><button type="button" data-sl-pres-open title="{{ open }}" aria-label="{{ open }}: {{ title }}"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i></button><a href="{{ href }}" download title="{{ down }}" aria-label="{{ down }}: {{ title }}"><i class="bi bi-download" aria-hidden="true"></i></a></span>
+  <div class="sl-pres-tile-copy"><small>{{ group }}</small><h3>{{ title }}</h3></div>
+</article>

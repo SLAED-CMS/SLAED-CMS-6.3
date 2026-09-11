@@ -1,0 +1,7 @@
+<div class="sl-pres-ring sl-knob{% if is_ok %} sl-knob-ok{% endif %}{% if is_info %} sl-knob-info{% endif %}{% if is_warn %} sl-knob-warn{% endif %}{% if is_danger %} sl-knob-danger{% endif %}{% if is_sm %} sl-pres-ring-sm{% endif %}{% if is_xs %} sl-pres-ring-xs{% endif %}" title="{{ label }}">
+  <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true">
+    <circle class="sl-knob-bg" cx="22" cy="22" r="20"></circle>
+    <circle class="sl-knob-val" cx="22" cy="22" r="20" pathLength="100" stroke-dasharray="{{ part }} 100"></circle>
+  </svg>
+  {% if icon %}<i class="bi bi-{{ icon }}" aria-hidden="true"></i>{% else %}<div><b>{{ value }}{% if unit %}<small>{{ unit }}</small>{% endif %}</b>{% if not is_sm %}<span>{{ label }}</span>{% endif %}</div>{% endif %}
+</div>

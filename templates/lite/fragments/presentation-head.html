@@ -1,0 +1,7 @@
+<div class="sl-pres-head">
+  <span class="sl-pres-num">{{ num }}</span>
+  <i class="bi bi-{{ icon }} sl-pres-icon" aria-hidden="true"></i>
+  <h2>{{ title }}</h2>
+  <p>{{ lead }}</p>
+  {% if state %}<span class="sl-pres-pill"{% if tone %} data-sl-tone="{{ tone }}"{% endif %}>{{ state }}</span>{% endif %}
+</div>

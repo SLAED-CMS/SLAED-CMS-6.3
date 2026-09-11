@@ -1,0 +1,93 @@
+<section class="sl-pres-section" id="runtime">
+{% include 'fragments/presentation-head.html' with head %}
+<div class="sl-pres-body">
+  <div class="sl-pres-speed">
+    <div class="sl-pres-card">
+      <h3><i class="bi bi-speedometer2" aria-hidden="true"></i>{{ resp.title }}</h3>
+      <div class="sl-pres-big">{{ resp.value }}<small> {{ resp.unit }}</small></div>
+      <div class="sl-pres-spark" data-sl-pres="spark" data-sl-pres-series="{{ resp.series }}"><canvas role="img" aria-label="{{ resp.chart }}"></canvas></div>
+    </div>
+    <div class="sl-pres-card">
+      <h3><i class="bi bi-database" aria-hidden="true"></i>{{ db.title }}</h3>
+      <div class="sl-pres-rows">
+        {% for item in db.rows %}<div class="sl-pres-row"><span>{{ item.label }}</span><b>{{ item.value }}</b></div>{% if item.has_part %}<div class="sl-pres-bar" style="--sl-d-part:{{ item.part }}%"><i></i></div>{% endif %}{% endfor %}
+      </div>
+    </div>
+    <div class="sl-pres-card">
+      <h3><i class="bi bi-people" aria-hidden="true"></i>{{ online.title }}</h3>
+      <div class="sl-pres-big">{{ online.value }}<small> {{ online.unit }}</small></div>
+      <div class="sl-pres-rows">
+        {% for item in online.rows %}<div class="sl-pres-row"><span>{{ item.label }}</span><b>{{ item.value }}</b></div>{% endfor %}
+      </div>
+    </div>
+    <div class="sl-pres-pdo">
+      <div class="sl-pres-pdo-stage sl-pres-scene">
+        <div class="sl-pres-pdo-head"><b><i class="bi bi-database-gear" aria-hidden="true"></i> {{ pdo.title }}</b><span>native prepares · ERRMODE_EXCEPTION · FETCH_BOTH</span><em>{{ pdo.state }}</em></div>
+        <div class="sl-pres-query"><span>SELECT</span><code>SELECT id, title FROM slaed_news WHERE cid = :cid LIMIT ?</code><span class="sl-pres-params"><i>:cid</i><i>?</i></span></div>
+        <div class="sl-pres-bus" aria-hidden="true"></div>
+        <i class="sl-pres-packet" aria-hidden="true"></i>
+        {% for item in pdo.nodes %}<div class="sl-pres-node"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span>{{ item.num }}</span><b>{{ item.title }}</b>{% if item.note %}<small>{{ item.note }}</small>{% endif %}</div>{% endfor %}
+        <div class="sl-pres-return">
+          <div class="sl-pres-result"><i class="bi bi-arrow-return-left" aria-hidden="true"></i><span>{{ pdo.result }} → <b>{{ pdo.rows }}</b></span><em>{{ pdo.state }}</em></div>
+          <div class="sl-pres-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
+        <span class="sl-pres-epoch"><i class="bi bi-arrow-repeat" aria-hidden="true"></i> {{ pdo.epoch }}</span>
+      </div>
+      <div class="sl-pres-console">
+        <div class="sl-pres-console-head"><i class="bi bi-terminal" aria-hidden="true"></i><b>Database::getSqlQuery()</b><span>{{ pdo.mode }}</span></div>
+        <pre class="sl-pres-code"><span class="sl-is-com">// {{ pdo.comment }}</span>
+<span class="sl-is-var">$stmt</span> = <span class="sl-is-var">$pdo</span>-&gt;<span class="sl-is-fn">prepare</span>(<span class="sl-is-var">$query</span>);
+<span class="sl-is-var">$stmt</span>-&gt;<span class="sl-is-fn">execute</span>([<span class="sl-is-str">'cid'</span> =&gt; <span class="sl-is-var">$cid</span>]);
+<span class="sl-is-var">$rows</span> = <span class="sl-is-var">$stmt</span>-&gt;<span class="sl-is-fn">fetchAll</span>(PDO::<span class="sl-is-kw">FETCH_BOTH</span>);</pre>
+        <div class="sl-pres-console-grid">
+          {% for item in pdo.stats %}{% include 'fragments/presentation-stat.html' with item %}{% endfor %}
+        </div>
+        <div class="sl-pres-trace">
+          <div><span>01</span><b>pdo.prepare</b><em data-sl-tone="success">{{ pdo.mode }}</em></div>
+          <div><span>02</span><b>stmt.execute</b><em data-sl-tone="success">{{ pdo.state }}</em></div>
+          <div><span>03</span><b>fetchAll</b><em data-sl-tone="success">{{ pdo.rows }}</em></div>
+        </div>
+      </div>
+    </div>
+    <div class="sl-pres-devtools">
+      <div class="sl-pres-devtools-bar">
+        <div><span class="sl-pres-over">{{ devtools.over }}</span><b><i class="bi bi-bug" aria-hidden="true"></i>{{ devtools.title }}</b></div>
+        <nav class="sl-pres-tabs">
+          {% for item in devtools.tabs %}<button type="button" data-sl-pres-tab{% if item.is_on %} class="sl-is-on"{% endif %}>{{ item.label }}</button>{% endfor %}
+        </nav>
+      </div>
+      <div class="sl-pres-tab-pane sl-is-on">
+        <div class="sl-pres-perf">
+          {% for item in devtools.perf %}{% include 'fragments/presentation-stat.html' with item %}{% endfor %}
+        </div>
+        <div class="sl-pres-note-row"><i class="bi bi-activity" aria-hidden="true"></i><span>{{ devtools.note }}</span><b>{{ devtools.profile }}</b></div>
+      </div>
+      <div class="sl-pres-tab-pane">
+        <div class="sl-pres-note-row"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i><span>{{ devtools.errhead }}</span><b>{{ devtools.captured }}</b></div>
+        <div class="sl-pres-errors">
+          <div><span>—</span><i class="bi bi-bug-fill" aria-hidden="true"></i><b>{{ devtools.phperr }}</b><span>{{ devtools.demo }}</span><em>/ index.php</em></div>
+        </div>
+        <p class="sl-pres-note">{{ devtools.demo }}</p>
+      </div>
+      <div class="sl-pres-tab-pane">
+        <div class="sl-pres-vars">
+          <article><header><i class="bi bi-arrow-down-right-circle" aria-hidden="true"></i> GET</header><code>name = "{{ devtools.route }}"</code></article>
+          <article><header><i class="bi bi-cookie" aria-hidden="true"></i> COOKIE</header><code>language = "…"<br>mode = "…"<br>account = "…"</code></article>
+          <article><header><i class="bi bi-person-lock" aria-hidden="true"></i> SESSION</header><code>panel = "…"<br>csrf = "••••••••"</code></article>
+        </div>
+        <p class="sl-pres-note">{{ devtools.masked }}</p>
+      </div>
+      <div class="sl-pres-tab-pane">
+        <div class="sl-pres-sql">
+          <div><span class="sl-pres-mono">[PDO]</span><b>:name</b><code>SELECT name, ip, super FROM …admins WHERE id = :id</code></div>
+          <div><span class="sl-pres-mono">[PDO]</span><b>:name</b><code>SELECT password FROM …users WHERE id = :id AND name = :name</code></div>
+          <div><span class="sl-pres-mono">[PDO]</span><b>—</b><code>SELECT id, bkey, title, bpos, weight, status FROM …blocks ORDER BY bpos, weight</code></div>
+        </div>
+      </div>
+    </div>
+    <div class="sl-pres-events">
+      {% for item in events %}<div class="sl-pres-evt"><b>{{ item.name }}</b><span data-sl-tone="{{ item.tone }}">{{ item.verdict }}</span></div>{% endfor %}
+    </div>
+  </div>
+</div>
+</section>

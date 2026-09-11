@@ -1,0 +1,32 @@
+<section class="sl-pres-section" id="workbench">
+{% include 'fragments/presentation-head.html' with head %}
+<div class="sl-pres-body">
+  <div class="sl-pres-rhythm">
+    <article class="sl-pres-chart" data-sl-pres="chart" data-sl-pres-series="{{ series }}">
+      <div class="sl-pres-chart-meta">
+        <div><strong>{{ volume }}</strong><span>{{ volume_label }}{% if has_change %} <b>{{ change }}</b>{% endif %}</span></div>
+        <div class="sl-pres-segment" role="group" aria-label="{{ period_label }}">
+          {% for item in periods %}<button type="button" data-sl-pres-period="{{ item.key }}" aria-pressed="{% if item.is_on %}true{% else %}false{% endif %}">{{ item.label }}</button>{% endfor %}
+        </div>
+      </div>
+      <div class="sl-pres-plot"><canvas role="img" aria-label="{{ chart_label }}"></canvas><output class="sl-pres-tip" hidden></output></div>
+      <div class="sl-pres-chart-foot">
+        <div class="sl-pres-legend">{% for item in legend %}<span><i></i>{{ item }}</span>{% endfor %}</div>
+        <div class="sl-pres-segment" role="group" aria-label="{{ view_label }}">
+          {% for item in views %}<button type="button" data-sl-pres-view="{{ item.key }}" aria-pressed="{% if item.is_on %}true{% else %}false{% endif %}" aria-label="{{ item.label }}"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i></button>{% endfor %}
+        </div>
+      </div>
+    </article>
+    <article class="sl-pres-vitals">
+      <div class="sl-pres-vitals-head"><span class="sl-pres-over">{{ vitals.over }}</span><i class="bi bi-heart-pulse" aria-hidden="true"></i></div>
+      {% include 'fragments/presentation-ring.html' with vring %}
+      <h3>{{ vitals.title }}</h3>
+      <p>{{ vitals.text }}</p>
+      <div class="sl-pres-vitals-list">
+        {% for item in vitals.rows %}<span>{{ item.label }} <b>{% if item.icon %}<i class="bi bi-{{ item.icon }}" aria-hidden="true"></i> {% endif %}{{ item.value }}</b></span>{% endfor %}
+      </div>
+      <span class="sl-pres-pill">{{ vitals.note }}</span>
+    </article>
+  </div>
+</div>
+</section>

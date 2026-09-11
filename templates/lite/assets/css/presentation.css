@@ -66,7 +66,6 @@
 .sl-pres-plate small,
 .sl-pres-page-content > small,
 .sl-pres-router > span,
-.sl-pres-evt > time,
 .sl-pres-case > strong,
 .sl-pres-pulse-body > time,
 .sl-pres-when > time,
@@ -2600,7 +2599,7 @@
 
 .sl-pres-guard-stats {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(var(--sl-gauge-width), 1fr));
   gap: var(--sl-space-3);
   margin-top: var(--sl-space-4);
 }
@@ -3090,10 +3089,11 @@
 
 /* The debugger: a tab bar and its panes, the performance pane open
    <div class="sl-pres-devtools"><div class="sl-pres-devtools-bar"><div><span class="sl-pres-over">..</span><b><i class="bi"></i> title</b></div><nav class="sl-pres-tabs"><button class="sl-is-on">..</button> x4</nav></div>
-   <div class="sl-pres-pane sl-is-on"><div class="sl-pres-perf">4 x sl-pres-stat</div><div class="sl-pres-note-row"><i class="bi"></i><span>..</span><b>..</b></div></div>
-   <div class="sl-pres-pane"><div class="sl-pres-errors"><div><time>..</time><i class="bi"></i><b>..</b><span>..</span><em>..</em></div></div><p class="sl-pres-note">..</p></div>
-   <div class="sl-pres-pane"><div class="sl-pres-vars"><article><header><i class="bi"></i> GET</header><code>..</code></article> x3</div></div>
-   <div class="sl-pres-pane"><div class="sl-pres-sql"><div><time>..</time><b>..</b><code>..</code></div></div></div></div> */
+   <div class="sl-pres-tab-pane sl-is-on"><div class="sl-pres-perf">4 x sl-pres-stat</div><div class="sl-pres-note-row"><i class="bi"></i><span>..</span><b>..</b></div></div>
+   <div class="sl-pres-tab-pane"><div class="sl-pres-errors"><div><span>..</span><i class="bi"></i><b>..</b><span>..</span><em>..</em></div></div><p class="sl-pres-note">..</p></div>
+   <div class="sl-pres-tab-pane"><div class="sl-pres-vars"><article><header><i class="bi"></i> GET</header><code>..</code></article> x3</div></div>
+   <div class="sl-pres-tab-pane"><div class="sl-pres-sql"><div><span class="sl-pres-mono">..</span><b>..</b><code>..</code></div></div></div></div>
+   The tab pane carries its own name: the house of the guard scene has window panes of the same word, and one class cannot be a window and a tab */
 .sl-pres-devtools {
   grid-column: 1 / -1;
   overflow: hidden;
@@ -3153,13 +3153,13 @@
   box-shadow: inset 0 -1px var(--sl-primary);
 }
 
-.sl-pres-pane {
+.sl-pres-tab-pane {
   display: none;
   min-height: calc(var(--sl-pres-height) * 0.43);
   padding: var(--sl-space-4);
 }
 
-.sl-pres-pane.sl-is-on {
+.sl-pres-tab-pane.sl-is-on {
   display: block;
 }
 
@@ -3267,10 +3267,6 @@
   padding: var(--sl-space-2) var(--sl-space-3);
   font-family: ui-monospace, Consolas, monospace;
   font-size: var(--sl-font-micro);
-}
-
-.sl-pres-sql time {
-  color: var(--sl-success);
 }
 
 /* The event stream under the runtime cards: five events of one request, each with its verdict */

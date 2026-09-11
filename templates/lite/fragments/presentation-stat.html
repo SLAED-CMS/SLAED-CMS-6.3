@@ -1,0 +1,6 @@
+<div class="sl-pres-stat"{% if tone %} data-sl-tone="{{ tone }}"{% endif %}{% if has_part %} style="--sl-d-part:{{ part }}%"{% endif %}>
+  <span>{{ label }}</span>
+  <b>{{ value }}{% if unit %} <small>{{ unit }}</small>{% endif %}</b>
+  {% if note %}<em>{{ note }}</em>{% endif %}
+  {% if has_part %}<i></i>{% endif %}
+</div>

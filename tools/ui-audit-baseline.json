@@ -1,5 +1,5 @@
 {
-    "generated": "2026-09-11T10:00:41Z",
+    "generated": "2026-09-11T11:11:23Z",
     "themes": {
         "admin": {
             "count": 0,
@@ -30,7 +30,7 @@
             "unmet": 0,
             "scoped": 89,
             "clash": 0,
-            "classes": 222,
+            "classes": 0,
             "important": 13,
             "tokens": 420,
             "contrast": 0

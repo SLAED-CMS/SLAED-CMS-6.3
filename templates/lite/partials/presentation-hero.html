@@ -1,0 +1,55 @@
+<div class="sl-pres-hero">
+  <div class="sl-pres-hero-grid">
+    <div class="sl-pres-copy">
+      <div class="sl-pres-cockpit">
+        <span class="sl-pres-scan"></span>
+        <div class="sl-pres-cockpit-top">
+          <span><i class="bi bi-hexagon-half" aria-hidden="true"></i>SLAED CMS · {{ cockpit }}</span>
+          <span><i class="sl-pres-dot sl-is-live" data-sl-tone="success"></i>{{ nominal }}</span>
+          <span>{{ version }}</span>
+        </div>
+        <div class="sl-pres-gauges">
+          {% include 'fragments/presentation-ring.html' with gen_ring %}
+          {% include 'fragments/presentation-ring.html' with cache_ring %}
+          <div class="sl-pres-plate"><img src="templates/{{ plate.theme }}/images/logos/{{ plate.logo }}" alt="SLAED" width="48" height="48"><b>{{ plate.name }}</b><small>{{ plate.text }}</small></div>
+          {% include 'fragments/presentation-ring.html' with qnum_ring %}
+          {% include 'fragments/presentation-ring.html' with online_ring %}
+        </div>
+      </div>
+      <div class="sl-pres-eyebrow">{{ eyebrow }}</div>
+      <h1>{{ head_a }} <span>{{ head_b }}</span><br>{{ head_c }}</h1>
+      <p class="sl-pres-lead">{{ lead }}</p>
+    </div>
+    <div class="sl-pres-core">
+      <div class="sl-pres-core-bar"><span><i></i><i></i><i></i></span><span>{{ core.title }}</span><span>{{ core.route }}</span></div>
+      <div class="sl-pres-core-body">
+        <div class="sl-pres-core-menu">
+          {% for item in core.menu %}<div{% if item.is_on %} class="sl-is-on"{% endif %}><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i>{{ item.label }}</div>{% endfor %}
+        </div>
+        <div class="sl-pres-core-view">
+          <div class="sl-pres-core-title"><b>{{ core.view }}</b><span data-sl-tone="success">● {{ core.online }}</span></div>
+          <div class="sl-pres-metrics">
+            {% for item in core.metrics %}<div class="sl-pres-metric"><b>{{ item.value }}</b><small>{{ item.label }}</small></div>{% endfor %}
+          </div>
+          <div class="sl-pres-core-pulse" data-sl-pres="pulse" data-sl-pres-series="{{ core.series }}"><canvas role="img" aria-label="{{ core.chart }}"></canvas></div>
+          <div class="sl-pres-core-stack">
+            {% for item in core.stack %}<span><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><b>{{ item.name }}</b><em{% if item.is_ok %} class="sl-is-ok"{% endif %}>{{ item.note }}</em></span>{% endfor %}
+          </div>
+          <div class="sl-pres-core-flow">{% for item in core.flow %}<span><i></i>{{ item }}</span><b>→</b>{% endfor %}<span><i></i>200</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sl-pres-facts">
+    {% for item in facts %}{% include 'fragments/presentation-stat.html' with item %}{% endfor %}
+  </div>
+  <div class="sl-pres-ticker" aria-hidden="true">
+    <div class="sl-pres-ticker-track">
+      {% for item in ticks %}<div class="sl-pres-ticker-item"><i></i><b>{{ item.name }}</b> {{ item.text }}</div>{% endfor %}
+      {% for item in ticks %}<div class="sl-pres-ticker-item"><i></i><b>{{ item.name }}</b> {{ item.text }}</div>{% endfor %}
+    </div>
+  </div>
+  <div class="sl-pres-tech" aria-label="{{ tech_label }}">
+    {% for item in tech %}<div class="sl-pres-tech-card" data-sl-tone="{{ item.tone }}"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><div><b>{{ item.name }}</b><span>{{ item.note }}</span></div></div>{% endfor %}
+  </div>
+</div>

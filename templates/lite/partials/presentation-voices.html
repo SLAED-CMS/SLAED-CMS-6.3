@@ -1,0 +1,12 @@
+<section class="sl-pres-section" id="voices">
+{% include 'fragments/presentation-head.html' with head %}
+<div class="sl-pres-body">
+  <div class="sl-pres-voices">
+    <div class="sl-pres-panel-head"><span>{{ over }}</span><b class="sl-pres-pill" data-sl-tone="success">{{ pill }}</b></div>
+    <div class="sl-pres-voices-track">
+      {% for item in items %}{% include 'fragments/presentation-voice.html' with item %}{% endfor %}
+    </div>
+    <div class="sl-pres-voices-foot"><span><i class="sl-pres-dot sl-is-live"></i>{{ note }}</span><a href="#showcase"><i class="bi bi-arrow-up" aria-hidden="true"></i> {{ back }}</a></div>
+  </div>
+</div>
+</section>

@@ -1,0 +1,10 @@
+<article class="sl-pres-voice"{% if tone %} data-sl-tone="{{ tone }}"{% endif %}>
+  <p>{{ text }}</p>
+  <i class="sl-pres-voice-sep"></i>
+  <div class="sl-pres-voice-person">
+    <span class="sl-pres-voice-ava">{{ initials }}</span>
+    <div><strong>{{ name }}</strong><small>{{ site }}{% if role %} · {{ role }}{% endif %}</small></div>
+    {% if since %}<div class="sl-pres-since"><span>{{ since_label }}</span><b>{{ since }}</b></div>{% endif %}
+  </div>
+  {% if marks %}<div class="sl-pres-voice-marks">{% for item in marks %}<span><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i>{{ item.label }}</span>{% endfor %}</div>{% endif %}
+</article>

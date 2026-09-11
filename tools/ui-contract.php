@@ -241,7 +241,7 @@ return [
         '--sl-d-meter' => 'profile completeness percentage, templates/lite/partials/account-settings.html and plugins/system/slaed.js',
         '--sl-d-at' => 'settings rail mark index, templates/lite/partials/account-settings.html',
         '--sl-d-of' => 'settings rail mark count less one, templates/lite/partials/account-settings.html',
-        '--sl-d-part' => 'share of a measured figure as a percentage, templates/lite/fragments/presentation-stat.html and partials/presentation-stats.html',
+        '--sl-d-part' => 'share of a measured figure as a percentage, templates/lite/fragments/presentation-stat.html, partials/presentation-stats.html and partials/presentation-runtime.html',
         '--sl-d-rail' => 'height of the sticky section rail of the presentation page, plugins/system/slaed.js',
         '--sl-d-ring' => 'profile ring colour, templates/lite/partials/account-home.html and account-profile.html',
         '--sl-d-spy' => 'settings rail progress width, and the presentation rail progress in pixels, plugins/system/slaed.js',

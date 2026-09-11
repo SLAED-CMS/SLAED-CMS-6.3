@@ -1,0 +1,17 @@
+<section class="sl-pres-section" id="archive">
+{% include 'fragments/presentation-head.html' with head %}
+<div class="sl-pres-body">
+  <div class="sl-pres-gallery" data-sl-pres="brand" role="region" aria-label="{{ title }}" aria-roledescription="{{ role }}" data-sl-pres-of="{{ of }}">
+    <div class="sl-pres-gallery-head"><span>{{ over }}</span><b>{{ count }}</b></div>
+    <div class="sl-pres-gallery-track" tabindex="0" aria-label="{{ hint }}">
+      {% for item in items %}{% include 'fragments/presentation-brand.html' with item %}{% endfor %}
+    </div>
+    <div class="sl-pres-gallery-controls">
+      <button type="button" data-sl-pres-step="-1" aria-label="{{ prev }}"><i class="bi bi-arrow-left" aria-hidden="true"></i></button>
+      <output aria-live="polite" aria-atomic="true"></output>
+      <input type="range" min="0" max="{{ last }}" value="0" data-sl-pres-range aria-label="{{ hint }}">
+      <button type="button" data-sl-pres-step="1" aria-label="{{ next }}"><i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+    </div>
+  </div>
+</div>
+</section>

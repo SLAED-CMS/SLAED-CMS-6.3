@@ -1,0 +1,23 @@
+<section class="sl-pres-section" id="pulse">
+{% include 'fragments/presentation-head.html' with head %}
+<div class="sl-pres-body">
+  <div class="sl-pres-pulse">
+    {% for item in cards %}<article class="sl-pres-pulse-card" data-sl-tone="{{ item.tone }}">
+      <div class="sl-pres-pulse-head"><span><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i></span><div><b>{{ item.title }}</b><span>{{ item.over }}</span></div></div>
+      <div class="sl-pres-pulse-body">{% if item.has_date %}<time>{{ item.when }}</time>{% else %}<span class="sl-pres-over">{{ item.when }}</span>{% endif %}<h3>{{ item.heading }}</h3><p>{{ item.text }}</p></div>
+      <div class="sl-pres-pulse-foot"><i class="sl-pres-dot sl-is-live"></i><a href="{{ item.href }}"><span>{{ item.link }}</span> <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a></div>
+    </article>{% endfor %}
+    <div class="sl-pres-monitor">
+      <div class="sl-pres-monitor-title"><span class="sl-pres-over">{{ monitor.over }}</span><h3>{{ monitor.title }}</h3><p>{{ monitor.text }}</p></div>
+      {% if monitor.has_monitor %}
+      {% for item in monitor.minis %}<div class="sl-pres-mini">{% include 'fragments/presentation-ring.html' with item %}<div><span>{{ item.label }}</span><b>{{ item.text }}</b></div></div>{% endfor %}
+      <div class="sl-pres-soft">
+        {% for item in monitor.soft %}<span><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i>{{ item.text }}</span>{% endfor %}
+      </div>
+      {% else %}
+      <p class="sl-pres-note"><i class="bi bi-info-circle" aria-hidden="true"></i>{{ monitor.off }}</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+</section>

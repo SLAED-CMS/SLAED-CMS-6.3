@@ -1,0 +1,5 @@
+<a class="sl-pres-commit{% if is_on %} sl-is-on{% endif %}" href="{{ href }}"{% if is_ext %} target="_blank" rel="noopener"{% endif %}>
+  <span class="sl-pres-sha">{{ short }}</span>
+  <div><b>{{ title }}</b></div>
+  <div class="sl-pres-when"><time datetime="{{ iso }}">{{ date }}</time><small>{{ note }}</small></div>
+</a>

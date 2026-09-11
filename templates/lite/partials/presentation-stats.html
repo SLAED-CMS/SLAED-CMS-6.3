@@ -1,0 +1,29 @@
+<section class="sl-pres-section" id="live-project">
+{% include 'fragments/presentation-head.html' with head %}
+<div class="sl-pres-body">
+  <div class="sl-pres-stats">
+    <div class="sl-pres-stats-board sl-pres-scene">
+      <div class="sl-pres-panel-head"><span><i class="bi bi-reception-4" aria-hidden="true"></i>{{ over }}</span>{% if has_today %}<b>{{ today }}</b>{% endif %}</div>
+      <div class="sl-pres-stats-grid">
+        {% for item in board %}{% include 'fragments/presentation-stat.html' with item %}{% endfor %}
+      </div>
+      <div class="sl-pres-hours">
+        <div class="sl-pres-hours-head"><b>{{ hours_title }}</b><span>{{ hours_note }}</span></div>
+        <div class="sl-pres-hours-bars" aria-hidden="true">{% for item in hours %}<i style="--sl-d-part:{{ item.part }}%"></i>{% endfor %}</div>
+        <div class="sl-pres-hours-axis" aria-hidden="true"><span>00</span><span>03</span><span>06</span><span>09</span><span>12</span><span>15</span><span>18</span><span>21</span><span>24</span></div>
+      </div>
+    </div>
+    <div class="sl-pres-stats-side">
+      <div class="sl-pres-claim">
+        <span class="sl-pres-over">{{ claim }}</span>
+        <h3>{{ claim_title }}</h3>
+        <p>{{ claim_text }}</p>
+        <div class="sl-pres-tags">{% for tag in claim_tags %}<span>{{ tag }}</span>{% endfor %}</div>
+      </div>
+      <div class="sl-pres-rings">
+        {% for item in rings %}<div>{% include 'fragments/presentation-ring.html' with item %}<span>{{ item.label }}</span></div>{% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+</section>

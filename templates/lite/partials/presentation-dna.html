@@ -1,0 +1,15 @@
+<section class="sl-pres-section" id="dna">
+{% include 'fragments/presentation-head.html' with head %}
+<div class="sl-pres-body">
+  <div class="sl-pres-dna">
+    {% for item in items %}<article class="sl-pres-principle">
+      <img src="{{ item.src }}" width="{{ item.w }}" height="{{ item.h }}" alt="" loading="lazy" decoding="async">
+      <div class="sl-pres-principle-copy">
+        <header><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><h3>{{ item.title }}</h3></header>
+        <p>{{ item.text }}</p>
+        {% if item.more %}<p>{{ item.more }}</p>{% endif %}
+      </div>
+    </article>{% endfor %}
+  </div>
+</div>
+</section>

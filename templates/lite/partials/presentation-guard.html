@@ -1,0 +1,69 @@
+<section class="sl-pres-section" id="security">
+{% include 'fragments/presentation-head.html' with head %}
+<div class="sl-pres-body">
+  <div class="sl-pres-guard">
+    <div class="sl-pres-guard-scene sl-pres-scene">
+      {% for item in zones %}<span class="sl-pres-zone">{{ item.num }} / {{ item.label }}</span>{% endfor %}
+      <i class="sl-pres-radar" aria-hidden="true"></i>
+      <div class="sl-pres-lanes" aria-hidden="true"><div><i></i></div><div><i></i></div><div><i></i></div><div><i></i></div><div><i></i></div></div>
+      <span class="sl-pres-ambient"><strong>{{ rate }}</strong>{{ rate_label }}</span>
+      <span class="sl-pres-ambient"><i class="bi bi-check2-circle" aria-hidden="true"></i><b>{{ policy }}</b> {{ policy_text }}</span>
+      <span class="sl-pres-ambient"><i class="bi bi-house-check" aria-hidden="true"></i><b>{{ trusted }}</b> {{ trusted_text }}</span>
+      <div class="sl-pres-traffic">
+        {% for item in legend %}<span data-sl-tone="{{ item.tone }}"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i>{{ item.label }}</span>{% endfor %}
+      </div>
+      <span class="sl-pres-badge">{{ badge }}</span>
+      <div class="sl-pres-net"><i class="bi bi-globe2" aria-hidden="true"></i><span>{{ net }}</span></div>
+      <div class="sl-pres-allow" aria-hidden="true"><span>{{ allow }}</span></div>
+      <div class="sl-pres-deny" aria-hidden="true"><span>{{ deny }}</span></div>
+      <div class="sl-pres-track" aria-hidden="true"><span>{{ track }}</span></div>
+      <div class="sl-pres-gate">
+        <span class="sl-pres-beam"></span>
+        <div class="sl-pres-shield"><i class="bi bi-shield-lock-fill" aria-hidden="true"></i><small>{{ scan }}</small></div>
+      </div>
+      <div class="sl-pres-quarantine">
+        <div><span>{{ quarantine }}</span><b>{{ caught }}</b></div>
+        <div class="sl-pres-traps" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+      <div class="sl-pres-house" aria-hidden="true">
+        <div class="sl-pres-chimney"><span></span></div>
+        <div class="sl-pres-roof"><div class="sl-pres-roof-plane"></div><div class="sl-pres-roof-gable"></div><div class="sl-pres-roof-fascia"></div></div>
+        <div class="sl-pres-house-body">
+          <div class="sl-pres-corner"></div>
+          <div class="sl-pres-corner"></div>
+          <div class="sl-pres-panes">
+            {% for item in panes %}<div class="sl-pres-pane sl-is-on" title="{{ item.title }}"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i></div>{% endfor %}
+          </div>
+          <div class="sl-pres-door sl-is-on"><i class="bi bi-door-open" aria-hidden="true"></i><span>{{ entry }}</span></div>
+          <div class="sl-pres-foundation"></div>
+        </div>
+        <div class="sl-pres-ground"><i></i><i></i><i></i></div>
+      </div>
+    </div>
+    <div class="sl-pres-guard-console">
+      <div class="sl-pres-card">
+        <div class="sl-pres-guard-row">
+          <div><h3><i class="bi bi-radar" aria-hidden="true"></i>{{ classifier.title }}</h3><p>{{ classifier.text }}</p></div>
+          <span class="sl-pres-pill" data-sl-tone="success">{{ classifier.state }}</span>
+        </div>
+        <div class="sl-pres-guard-stats">
+          {% for item in classifier.stats %}{% include 'fragments/presentation-stat.html' with item %}{% endfor %}
+        </div>
+      </div>
+      <div class="sl-pres-card">
+        <h3><i class="bi bi-diagram-2" aria-hidden="true"></i>{{ types_title }}</h3>
+        <div class="sl-pres-rows">
+          {% for item in types %}<div class="sl-pres-row" data-sl-tone="{{ item.tone }}"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span>{{ item.label }}</span><b>{{ item.verdict }}</b></div>{% endfor %}
+        </div>
+      </div>
+      <div class="sl-pres-card">
+        <h3><i class="bi bi-list-check" aria-hidden="true"></i>{{ log_title }}</h3>
+        <div class="sl-pres-log">
+          {% for item in log %}<div><span>{{ item.label }}</span><em data-sl-tone="{{ item.tone }}">{{ item.result }}</em></div>{% endfor %}
+        </div>
+        <p class="sl-pres-note"><i class="bi bi-info-circle" aria-hidden="true"></i>{{ note }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+</section>

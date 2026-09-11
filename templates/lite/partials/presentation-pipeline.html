@@ -1,0 +1,37 @@
+<section class="sl-pres-section" id="pipeline">
+{% include 'fragments/presentation-head.html' with head %}
+<div class="sl-pres-body">
+  <div class="sl-pres-arch">
+    <div class="sl-pres-flow sl-pres-scene" data-sl-mode="{{ mode }}">
+      <div class="sl-pres-flow-top"><span class="sl-pres-mono">{{ route }}</span><span class="sl-pres-pill"{% if is_on %} data-sl-tone="success"{% else %} data-sl-tone="warning"{% endif %}>{{ decision }}</span></div>
+      <svg class="sl-pres-paths" viewBox="0 0 700 460" preserveAspectRatio="none" aria-hidden="true">
+        <path class="sl-pres-path-ring" d="M350,33 Q475,38 570,96 Q648,151 642,226 Q640,330 560,382 Q460,446 350,433 Q240,446 140,382 Q60,330 58,226 Q52,145 145,88 Q248,28 350,33Z"></path>
+        <path class="sl-pres-path-live" d="M350,33 Q475,38 570,96 Q648,151 642,226 Q640,330 560,382 Q460,446 350,433 Q240,446 140,382 Q60,330 58,226 Q52,145 145,88 Q248,28 350,33"></path>
+        <path class="sl-pres-path-short" d="M350,33 Q475,38 570,96 Q648,151 642,226 C555,159 463,126 350,138 C238,126 145,159 58,226 Q52,145 145,88 Q248,28 350,33"></path>
+        <circle class="sl-pres-path-packet" r="5"><animateMotion dur="7s" repeatCount="indefinite" path="M350,33 Q475,38 570,96 Q648,151 642,226 Q640,330 560,382 Q460,446 350,433 Q240,446 140,382 Q60,330 58,226 Q52,145 145,88 Q248,28 350,33Z"></animateMotion></circle>
+      </svg>
+      <div class="sl-pres-flow-core">
+        <div>
+          <img src="templates/{{ theme }}/images/logos/{{ logo }}" alt="SLAED" width="64" height="64">
+          <b>{{ cache }}</b>
+          <small>{{ cache_note }}</small>
+          <span class="sl-pres-pill"{% if is_on %} data-sl-tone="success"{% else %} data-sl-tone="warning"{% endif %}>{{ cache_state }}</span>
+        </div>
+      </div>
+      <span class="sl-pres-flow-chip"><i class="bi bi-lightning-charge" aria-hidden="true"></i> {{ chip }}</span>
+      {% for item in nodes %}<div class="sl-pres-node"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span>{{ item.num }}</span><b>{{ item.title }}</b><small><span>{{ item.a }}</span><span>{{ item.b }}</span></small></div>{% endfor %}
+    </div>
+    <div class="sl-pres-arch-side">
+      <div class="sl-pres-tree">
+        <div class="sl-pres-panel-head"><span>{{ tree }}</span><b>{{ tree_mode }}</b></div>
+        {% for item in cases %}<div class="sl-pres-case{% if item.is_on %} sl-is-on{% endif %}" data-sl-tone="{{ item.tone }}"><strong>{{ item.name }}</strong><span>{{ item.text }}</span></div>{% endfor %}
+      </div>
+      <div class="sl-pres-states">
+        {% for item in states %}{% include 'fragments/presentation-stat.html' with item %}{% endfor %}
+        <div class="sl-pres-stat sl-pres-epoch-row"><span>{{ invalid }}</span><b>{{ epoch }}</b><small><i class="sl-pres-dot"></i>{{ epoch_note }}</small></div>
+      </div>
+      <p class="sl-pres-note"><i class="bi bi-info-circle" aria-hidden="true"></i><b>{{ ttl }}</b> · {{ note }}</p>
+    </div>
+  </div>
+</div>
+</section>
