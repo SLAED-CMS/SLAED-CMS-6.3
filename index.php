@@ -102,6 +102,10 @@ if (empty($go)) {
             $hi = mt_rand(0, count($hmodul) - 1);
             $name = $hmodul[$hi];
             $conf['name'] = $name;
+            # The start page listens to the same block positions as the named route, so admin.php?name=modules governs both
+            $mconf = $conf['modules'][$name] ?? [];
+            $blocks = (string)($mconf['side'] ?? '');
+            $blocks_c = (string)($mconf['top'] ?? '');
             $path = BASE_DIR.'/modules/'.$name.'/'.$file.'.php';
             if (file_exists($path)) {
                 getLang($name);

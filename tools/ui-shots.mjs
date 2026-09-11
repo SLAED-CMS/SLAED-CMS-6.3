@@ -183,13 +183,19 @@ async function setMasks(page) {
   const still = '*, *::before, *::after { animation: none !important; transition: none !important; }';
   const caret = '* { caret-color: transparent !important; }';
   await page.addStyleTag({ content: hide + drop + still + caret });
+  // A path animated by SMIL - the dot walking the pipeline of the presentation page - is not a CSS animation, so the
+  // rule above leaves it moving and the page never renders the same twice; the SVG API holds it in place
+  await page.evaluate(() => { for (const svg of document.querySelectorAll('svg')) if (svg.pauseAnimations) svg.pauseAnimations(); });
 }
 
 // Walk the page to the bottom and back so every lazy image has been asked for and decoded, and wait for
 // the fonts. A full-page screenshot scrolls by itself, so without the walk the first capture triggers the
 // loading and the second finds it done. And `font-display: swap` paints the fallback until the face
 // arrives: a shot taken before that lands differs from every later one on every line of text at once,
-// with the page height unchanged - which reads as a theme change and is not one
+// with the page height unchanged - which reads as a theme change and is not one.
+// The image wait is bounded: a lazy image the walk never brings into view - a tile a script hid, a card past the
+// edge of a horizontal strip - fires neither load nor error, and the presentation page holds ninety of them, so an
+// unbounded wait held the whole run for good
 async function setScrolled(page) {
   await page.evaluate(async () => {
     const step = window.innerHeight;
@@ -199,10 +205,11 @@ async function setScrolled(page) {
       await new Promise((ok) => setTimeout(ok, 60));
     }
     window.scrollTo(0, 0);
-    await Promise.all(Array.from(document.images).filter((i) => !i.complete).map((i) => new Promise((ok) => {
+    const shown = Promise.all(Array.from(document.images).filter((i) => !i.complete).map((i) => new Promise((ok) => {
       i.addEventListener('load', ok, { once: true });
       i.addEventListener('error', ok, { once: true });
     })));
+    await Promise.race([shown, new Promise((ok) => setTimeout(ok, 3000))]);
     await Promise.all(Array.from(document.fonts).map((f) => (f.status === 'loaded' ? null : f.load().catch(() => {}))));
     await document.fonts.ready;
   });

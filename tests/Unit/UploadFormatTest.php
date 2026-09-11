@@ -187,13 +187,14 @@ final class UploadFormatTest extends TestCase
         $this->assertSame($want, $mime, 'The image entries of the MIME map disagree on the image set');
     }
 
-    # The lightbox follows the styling hook the new image template emits, because the class it used to hook onto no longer exists
+    # The lightbox follows the styling hook the new image template emits and the data hook of the presentation archive, because the classes it used to hook onto no longer exist
     #[Test]
     public function theLightboxFollowsTheAttachmentClass(): void
     {
         $code = $this->getFile('plugins/system/slaed.js');
-        $this->assertStringContainsString("closest('a.sl-attach, a.site-link')", $code, 'The lightbox no longer triggers on the attachment class');
+        $this->assertStringContainsString("closest('a.sl-attach, a[data-sl-shot-open]')", $code, 'The lightbox no longer triggers on the attachment class and the shot hook');
         $this->assertStringNotContainsString('a.screens', $code, 'The lightbox still triggers on the dead screens class');
+        $this->assertStringNotContainsString('a.site-link', $code, 'The lightbox still triggers on the dead site-link class of the old main module');
         $this->assertStringContainsString('/\\.(?:avif|gif|jpe?g|png|webp|svg)(?:[?#].*)?$/i', $code, 'The lightbox extension test disagrees on the image set');
     }
 

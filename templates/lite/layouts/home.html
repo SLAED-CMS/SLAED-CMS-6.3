@@ -5,7 +5,7 @@
       <aside id="leftbar">{{{ blocks_left }}}</aside>
       {% endif %}
       <main id="content">
-        <h1 class="sl-title">{{ sitename }}</h1>
+        {% if not has_own_title %}<h1 class="sl-title">{{ sitename }}</h1>{% endif %}
         {% block content %}{{{ content }}}{% endblock %}
       </main>
       {% if blocks_right %}

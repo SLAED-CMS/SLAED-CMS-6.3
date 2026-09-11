@@ -21,7 +21,6 @@ final class CommentIsolationTest extends TestCase
 
     # Every production file that builds a table name from a variable, measured on 2026-07-28; a new entry has to be reviewed before it is added here
     private const ASSEMBLED = [
-        'core/admin.php',
         'core/system.php',
         'core/user.php',
         'modules/account/index.php',

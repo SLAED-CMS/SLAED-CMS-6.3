@@ -572,12 +572,14 @@ function getPresentationData(): array {
     ];
 }
 
+# Renders the page; the hero carries the h1, so the flag set after setHead() rebuilt $sitevars tells layouts/home.html to skip the site name heading
 function presentation(): void {
-    global $tpl;
+    global $tpl, $sitevars;
     setHead([
         'title' => _PRES_TITLE,
         'desc' => _PRES_DESC,
     ]);
+    $sitevars['has_own_title'] = true;
     echo $tpl->getHtmlPart('presentation', getPresentationData());
     setFoot();
 }

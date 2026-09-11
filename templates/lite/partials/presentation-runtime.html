@@ -53,7 +53,7 @@
       <div class="sl-pres-devtools-bar">
         <div><span class="sl-pres-over">{{ devtools.over }}</span><b><i class="bi bi-bug" aria-hidden="true"></i>{{ devtools.title }}</b></div>
         <nav class="sl-pres-tabs">
-          {% for item in devtools.tabs %}<button type="button" data-sl-pres-tab{% if item.is_on %} class="sl-is-on"{% endif %}>{{ item.label }}</button>{% endfor %}
+          {% for item in devtools.tabs %}<button type="button"{% if item.is_on %} class="sl-is-on"{% endif %}>{{ item.label }}</button>{% endfor %}
         </nav>
       </div>
       <div class="sl-pres-tab-pane sl-is-on">
