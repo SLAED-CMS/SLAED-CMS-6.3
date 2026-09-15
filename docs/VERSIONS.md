@@ -1,5 +1,44 @@
 # Versions
 
+## 2026-09-11
+
+### The presentation module renders the etalon home page from live figures, and the start page listens to its module
+
+The etalon `demo/22-dashboard-layout-etalon.html` became `modules/presentation`: twelve
+sections in a fixed order, each a partial of the `lite` theme with its repeated card as a
+fragment, dressed by one stylesheet `assets/css/presentation.css`, moved by one plugin
+`plugins/presentation/presentation.js`, and fed by PHP that hands over data and `is_*`/`has_*`
+flags only. Every figure on the page has a source in the system: the request timing and
+the memory come from `getLoadStats()` against the limits of the new `getLoadLimits()`, the
+online figures from `getSessionCounts()`, today's visits and the day rows from
+`getStatsToday()` and `getStatsDays()`, the table counts from `getTableCount()`, the commits
+from the changelog module, the cache state from the cache config. Sites, brand materials,
+principles and testimonials come from `config/presentation.php`, whose dictionary fields
+name `_PRES_*` constants in six locales while proper names and quotes stay raw text.
+The seventy-one site cards carry no address and open no window; the brand tiles open the
+site lightbox through `a[data-sl-shot-open]`, the hook that replaced the dead `a.site-link`.
+
+The server metrics left the admin monitor for `core/monitor.php`, and the scheduler samples
+them once a minute through the `monitor` job at the lowest priority, so the public page
+never runs `exec()` on a visit: it reads `storage/logs/monitor.json` and hides the section
+while the sample is missing or older than five minutes. The guard section shows counts of
+the last twenty-four hours and six static legend lines; the tail of the security logs stays
+in the admin panel.
+
+The start page now reads the `side` and `top` positions of its module like every named
+route, so the block columns of the home page are set in `admin.php?name=modules`. This is a
+breaking change for a site whose start module is `news` with `side = 2`: the empty value
+used to mean both columns, and the left one disappears until the setting says `0`. A module
+that prints its own `h1` raises `has_own_title` and `layouts/home.html` drops the site name
+heading, so the page keeps one `h1` on either route.
+
+The micro font step reads 11 px in both themes and the contract ladder follows: the
+monospace labels of the page were unreadable at 10, and every page reading `--sl-font-micro`
+grew by the same pixel. `setSpyRail()` gained the pixel mode of the presentation rail
+(`data-sl-spy="px"`, `--sl-d-rail`), and the screenshot rig captures the presentation page
+on its own, masks the shuffled site strip, bounds its wait for lazy images and pauses SMIL
+animations before a shot.
+
 ## 2026-08-07
 
 ### One window and one icon insert an image, and a denied upload no longer means an unbounded one

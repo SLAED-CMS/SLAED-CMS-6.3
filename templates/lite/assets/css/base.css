@@ -218,9 +218,9 @@
      carry the same caption, so the stops are one decision at one address */
   --sl-grad-caption: linear-gradient(
     to bottom,
-    color-mix(in srgb, var(--sl-surface) 10%, transparent) 28%,
-    color-mix(in srgb, var(--sl-surface) 43%, transparent) 58%,
-    var(--sl-surface) 100%
+    transparent 20%,
+    color-mix(in srgb, var(--sl-pres-ground-bg) 20%, transparent) 45%,
+    var(--sl-pres-ground-bg) 100%
   );
   --sl-grad-progress-1: linear-gradient(to top, #00adee 10%, var(--sl-progress-1) 90%);
   --sl-grad-progress-2: linear-gradient(to top, #8fc857 10%, var(--sl-progress-2) 90%);
@@ -490,10 +490,21 @@
      scene stands at; the width of a node inside one; the floor of a card that must hold its row even when short */
   --sl-pres-dur: 4s;
   --sl-pres-shadow: 0 0 var(--sl-space-5) var(--sl-tint-strong);
-  --sl-pres-bg: linear-gradient(var(--sl-border-subtle) 1px, transparent 1px), linear-gradient(90deg, var(--sl-border-subtle) 1px, transparent 1px);
+  --sl-pres-bg: linear-gradient(color-mix(in srgb, var(--sl-pres-border) 20%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--sl-pres-border) 20%, transparent) 1px, transparent 1px);
   --sl-pres-height: 360px;
   --sl-pres-width: 132px;
   --sl-pres-min-height: 200px;
+  --sl-pres-panel-bg: light-dark(var(--sl-surface), #0b1d2c);
+  --sl-pres-ground-bg: light-dark(var(--sl-bg), #081824);
+  --sl-pres-inset-bg: light-dark(var(--sl-bg-subtle), #10283b);
+  --sl-pres-border: light-dark(var(--sl-border), #1c4159);
+  --sl-pres-frame-border: light-dark(var(--sl-border-strong), #27546c);
+  --sl-pres-text: light-dark(var(--sl-text), #ecf8ff);
+  --sl-pres-muted-text: light-dark(var(--sl-text-muted), #83a5ba);
+  --sl-pres-link-text: light-dark(var(--sl-primary-strong), #6fc8ff);
+  --sl-pres-good-text: light-dark(color-mix(in srgb, var(--sl-success) 90%, var(--sl-text)), #72e6b0);
+  --sl-pres-warn-text: light-dark(var(--sl-warning-strong), #ffd37d);
   /* The gauge rings of the presentation: the cockpit and vitals size, and the small size of the statistics rings */
   --sl-gauge-width: 128px;
   --sl-gauge-height: 128px;

@@ -24,7 +24,7 @@
       <div class="sl-pres-core-bar"><span><i></i><i></i><i></i></span><span>{{ core.title }}</span><span>{{ core.route }}</span></div>
       <div class="sl-pres-core-body">
         <div class="sl-pres-core-menu">
-          {% for item in core.menu %}<div{% if item.is_on %} class="sl-is-on"{% endif %}><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i>{{ item.label }}</div>{% endfor %}
+          {% for item in core.menu %}<a href="{{ item.href }}"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i>{{ item.label }}</a>{% endfor %}
         </div>
         <div class="sl-pres-core-view">
           <div class="sl-pres-core-title"><b>{{ core.view }}</b><span data-sl-tone="success">● {{ core.online }}</span></div>
@@ -36,6 +36,7 @@
             {% for item in core.stack %}<span><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><b>{{ item.name }}</b><em{% if item.is_ok %} class="sl-is-ok"{% endif %}>{{ item.note }}</em></span>{% endfor %}
           </div>
           <div class="sl-pres-core-flow">{% for item in core.flow %}<span><i></i>{{ item }}</span><b>→</b>{% endfor %}<span><i></i>200</span></div>
+          <div class="sl-pres-log">{% for item in core.trace %}<div><span>{{ item.name }}</span><em data-sl-tone="success">{{ item.value }}</em></div>{% endfor %}</div>
         </div>
       </div>
     </div>

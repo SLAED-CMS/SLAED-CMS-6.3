@@ -1,7 +1,13 @@
 <div class="sl-pres-ring sl-knob{% if is_ok %} sl-knob-ok{% endif %}{% if is_info %} sl-knob-info{% endif %}{% if is_warn %} sl-knob-warn{% endif %}{% if is_danger %} sl-knob-danger{% endif %}{% if is_sm %} sl-pres-ring-sm{% endif %}{% if is_xs %} sl-pres-ring-xs{% endif %}" title="{{ label }}">
   <svg class="sl-knob-svg" viewBox="0 0 44 44" aria-hidden="true">
+    {% if not is_sm and not is_xs and not is_round %}
+    <path class="sl-knob-bg" d="M7.858 36.142 A20 20 0 1 1 36.142 36.142"></path>
+    <path class="sl-knob-val" d="M7.858 36.142 A20 20 0 1 1 36.142 36.142" pathLength="100" stroke-dasharray="{{ part }} 100"></path>
+    <path d="M10.7 33.3 11.8 32.2 M7.2 28.1 8.7 27.5 M6 22 H7.6 M7.2 15.9 8.7 16.5 M10.7 10.7 11.8 11.8 M15.9 7.2 16.5 8.7 M22 6 V7.6 M28.1 7.2 27.5 8.7 M33.3 10.7 32.2 11.8 M36.8 15.9 35.3 16.5 M38 22 H36.4 M36.8 28.1 35.3 27.5 M33.3 33.3 32.2 32.2"></path>
+    {% else %}
     <circle class="sl-knob-bg" cx="22" cy="22" r="20"></circle>
     <circle class="sl-knob-val" cx="22" cy="22" r="20" pathLength="100" stroke-dasharray="{{ part }} 100"></circle>
+    {% endif %}
   </svg>
   {% if icon %}<i class="bi bi-{{ icon }}" aria-hidden="true"></i>{% else %}<div><b>{{ value }}{% if unit %}<small>{{ unit }}</small>{% endif %}</b>{% if not is_sm %}<span>{{ label }}</span>{% endif %}</div>{% endif %}
 </div>

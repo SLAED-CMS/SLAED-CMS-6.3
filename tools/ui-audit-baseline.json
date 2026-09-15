@@ -1,5 +1,5 @@
 {
-    "generated": "2026-09-11T17:38:35Z",
+    "generated": "2026-09-15T14:32:18Z",
     "themes": {
         "admin": {
             "count": 0,
@@ -24,7 +24,7 @@
             "dup": 0,
             "names": 0,
             "dead": 0,
-            "single": 200,
+            "single": 199,
             "alias": 0,
             "unsat": 0,
             "unmet": 0,
@@ -32,7 +32,7 @@
             "clash": 0,
             "classes": 0,
             "important": 13,
-            "tokens": 420,
+            "tokens": 430,
             "contrast": 0
         }
     },
@@ -608,10 +608,20 @@
             "--sl-pmf-who-width",
             "--sl-popover-min-width",
             "--sl-pres-bg",
+            "--sl-pres-border",
             "--sl-pres-dur",
+            "--sl-pres-frame-border",
+            "--sl-pres-good-text",
+            "--sl-pres-ground-bg",
             "--sl-pres-height",
+            "--sl-pres-inset-bg",
+            "--sl-pres-link-text",
             "--sl-pres-min-height",
+            "--sl-pres-muted-text",
+            "--sl-pres-panel-bg",
             "--sl-pres-shadow",
+            "--sl-pres-text",
+            "--sl-pres-warn-text",
             "--sl-pres-width",
             "--sl-preview-height",
             "--sl-preview-max-height",

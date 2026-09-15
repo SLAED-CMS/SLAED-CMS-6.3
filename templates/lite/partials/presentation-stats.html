@@ -23,6 +23,7 @@
       <div class="sl-pres-rings">
         {% for item in rings %}<div>{% include 'fragments/presentation-ring.html' with item %}<span>{{ item.label }}</span></div>{% endfor %}
       </div>
+      <p class="sl-pres-note"><i class="bi bi-info-circle" aria-hidden="true"></i>{{ note }}</p>
     </div>
   </div>
 </div>

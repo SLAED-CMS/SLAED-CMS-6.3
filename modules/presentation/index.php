@@ -280,6 +280,10 @@ function getPresentationData(): array {
                 ['icon' => 'device-ssd', 'name' => _PRES_STK_CACHE, 'note' => $state, 'is_ok' => $cache > 0],
             ],
             'flow' => [_PRES_FLOW_REQ, _PRES_FLOW_GUARD, _PRES_FLOW_MODULE, _PRES_FLOW_TPL],
+            'trace' => [
+                ['name' => 'route.resolve', 'value' => $conf['name']], ['name' => 'runtime.php', 'value' => PHP_VERSION],
+                ['name' => 'storage.driver', 'value' => $driver], ['name' => 'template.theme', 'value' => $theme],
+            ],
         ],
         'facts' => [
             $stat(_PRES_FACT_VER, $ver[0], '', $ver[1] ?? ''),
@@ -314,7 +318,7 @@ function getPresentationData(): array {
         'views' => [
             ['key' => 'area', 'label' => _PRES_RH_AREA, 'icon' => 'graph-up', 'is_on' => true], ['key' => 'bar', 'label' => _PRES_RH_BARS, 'icon' => 'bar-chart', 'is_on' => false],
         ],
-        'legend' => [_PRES_RH_HITS, _PRES_ST_HOSTS], 'vring' => $ring((string)$gen, 'ms', _PRES_GEN, $gpart),
+        'legend' => [_PRES_RH_HITS, _PRES_ST_HOSTS], 'vring' => ['is_round' => true] + $ring((string)$gen, 'ms', _PRES_GEN, $gpart),
         'vitals' => [
             'over' => _PRES_RH_VITALS, 'title' => _PRES_RH_FAST, 'text' => _PRES_RH_FAST_T,
             'rows' => [
@@ -472,6 +476,7 @@ function getPresentationData(): array {
             $stat(_PRES_ST_TOTAL, $num($today['total']), '', _PRES_ST_TOTAL_T),
         ],
         'hours_title' => _PRES_ST_HOURS, 'hours_note' => _PRES_ST_MODULE, 'hours' => $hours,
+        'note' => _PRES_RH_NOTE,
         'claim' => _PRES_ST_CLAIM, 'claim_title' => _PRES_ST_CLAIM_T, 'claim_text' => _PRES_ST_CLAIM_P, 'claim_tags' => [_PRES_NAV_STATS, _PRES_STK_RUNTIME, _BOTS, 'HTMX'],
         'rings' => [
             $ring((string)$rpart, '%', _PRES_ST_RETURN, $rpart, 'sm', true), $ring((string)$npart, '%', _PRES_ST_NEW, $npart, 'sm', true),

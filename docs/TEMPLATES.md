@@ -343,8 +343,9 @@ Current template-related tests include:
 Theme-local assets should live inside the theme.
 
 Recommended pattern:
-- `assets/css/base.css` and `assets/css/theme.css` — the two CSS files every theme package ships
+- `assets/css/base.css` and `assets/css/theme.css` — the two CSS files every theme package ships; `lite` adds `assets/css/presentation.css`, the stylesheet of the one page of the presentation module, and the runtime bundles every file of `assets/css/` in name order, so it sits between the two
 - `assets/js/<name>.js` — theme-owned scripts; `admin` carries `admin-ui.js`, `lite` ships none
+- a script one page needs stays out of the global `script_f` list: the module hands `script => ['src' => 'plugins/<name>/<name>.js', 'attr' => 'defer']` to its partial, which prints it through `fragments/head-script-src.html` — `plugins/presentation/presentation.js` is loaded this way, the captcha provider the same
 - `assets/vendor/<library>/...`
 - `assets/editors/<editor-id>/skin.css` — when an editor manifest declares `theme.skin`
 
@@ -443,7 +444,7 @@ Only a row whose field has no labelable control of its own — a radio group, an
 
 | Attribute | On | Does |
 |---|---|---|
-| `data-sl-spy` with `data-sl-spy-mark="<id>"` | the rail and each mark | marks the section under the observer band as current and colours the road behind it; the bottom of the document reads as the last mark, because a short final section never rises into the band |
+| `data-sl-spy` with `data-sl-spy-mark="<id>"` | the rail and each mark | marks the section under the observer band as current and colours the road behind it; the bottom of the document reads as the last mark, because a short final section never rises into the band. `data-sl-spy="px"` is the mode of the presentation rail: `--sl-d-spy` then carries the centre of the current mark in pixels instead of a percentage, the mark is scrolled into the visible part of the rail, and the rail height is published as `--sl-d-rail` on the root so every section clears the sticky dock |
 | `data-sl-meter` with `data-sl-meter-fill`, `data-sl-meter-num`, `data-sl-meter-left` | the ring, the lamp and each counted control | recomputes profile completeness as the member types; `data-sl-meter-fill` carries the value that counts as empty, so one rule serves a text field and a select whose zero is a real option |
 | `data-sl-dirty` with `data-sl-clean` | the shared form and the discard button | raises the save bar on the first change and reverts on discard. The hidden state is armed by the script and never by the markup: a page whose JavaScript never ran keeps a bar that is simply always there, instead of a form whose only submit can no longer be made to appear |
 

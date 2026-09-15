@@ -145,9 +145,10 @@
         if (root.getAttribute('data-sl-pres-ready') === '1') return;
         var face = root.querySelector('canvas');
         var tip = root.querySelector('output');
+        var mini = ['pulse', 'spark'].indexOf(root.getAttribute('data-sl-pres')) >= 0;
         var sets = {};
         try { sets = JSON.parse(root.getAttribute('data-sl-pres-series') || '{}'); } catch (err) { sets = {}; }
-        if (!face || !tip || !sets.day) return;
+        if (!face || (!tip && !mini) || !sets.day) return;
         root.setAttribute('data-sl-pres-ready', '1');
         var plot = face.parentElement;
         var head = root.querySelector('.sl-pres-chart-meta strong');
@@ -206,15 +207,15 @@
             var style = window.getComputedStyle(root);
             pen.font = style.getPropertyValue('--sl-font-micro').trim() + ' ' + style.fontFamily;
             pen.textBaseline = 'middle';
-            var left = Math.ceil(pen.measureText(getFigure(top)).width) + 8;
-            var right = rect.width - 10;
-            var high = 12;
-            var low = rect.height - 30;
+            var left = mini ? 0 : Math.ceil(pen.measureText(getFigure(top)).width) + 8;
+            var right = rect.width - (mini ? 0 : 10);
+            var high = mini ? 4 : 12;
+            var low = rect.height - (mini ? 4 : 30);
             var count = rows[0].length;
             geo = { left: left, right: right, count: count };
             var getX = function (i) { return left + (count > 1 ? i / (count - 1) : 0) * (right - left); };
             var getY = function (val) { return low - val / top * (low - high); };
-            for (var i = 0; i <= 4; i++) {
+            for (var i = 0; !mini && i <= 4; i++) {
                 var y = high + (low - high) * i / 4;
                 pen.strokeStyle = line;
                 pen.setLineDash([3, 5]);
@@ -259,7 +260,7 @@
                 pen.globalAlpha = 1;
             }
             pen.fillStyle = mute;
-            for (var t = 0; t < 5; t++) {
+            for (var t = 0; !mini && t < 5; t++) {
                 var idx = Math.round((count - 1) * t / 4);
                 pen.textAlign = t === 0 ? 'left' : t === 4 ? 'right' : 'center';
                 pen.fillText(getLabel(idx), getX(idx), rect.height - 10);
@@ -281,6 +282,7 @@
             }
         };
         face.addEventListener('pointermove', function (event) {
+            if (!tip) return;
             var rect = face.getBoundingClientRect();
             var rows = getRows();
             if (geo.count < 1 || geo.right <= geo.left) return;
@@ -293,7 +295,7 @@
         });
         face.addEventListener('pointerleave', function () {
             hover = -1;
-            tip.hidden = true;
+            if (tip) tip.hidden = true;
             draw();
         });
         root.addEventListener('click', function (event) {
@@ -318,8 +320,51 @@
     function setPresentation() {
         var list = document.querySelectorAll('[data-sl-pres]');
         for (var i = 0; i < list.length; i++) {
-            if (list[i].getAttribute('data-sl-pres') === 'chart') setChart(list[i]);
+            if (['chart', 'pulse', 'spark'].indexOf(list[i].getAttribute('data-sl-pres')) >= 0) setChart(list[i]);
             else setGallery(list[i]);
+        }
+        var tabs = document.querySelectorAll('.sl-pres-tabs');
+        for (var j = 0; j < tabs.length; j++) {
+            if (tabs[j].getAttribute('data-sl-pres-ready') === '1') continue;
+            tabs[j].setAttribute('data-sl-pres-ready', '1');
+            tabs[j].setAttribute('role', 'tablist');
+            var btns = tabs[j].querySelectorAll('button');
+            var panes = tabs[j].closest('.sl-pres-devtools').querySelectorAll('.sl-pres-tab-pane');
+            for (var k = 0; k < btns.length; k++) {
+                var on = btns[k].classList.contains('sl-is-on');
+                btns[k].id = 'pres-tab-' + j + '-' + k;
+                btns[k].setAttribute('role', 'tab');
+                btns[k].setAttribute('aria-selected', String(on));
+                btns[k].setAttribute('aria-controls', 'pres-pane-' + j + '-' + k);
+                btns[k].tabIndex = on ? 0 : -1;
+                panes[k].id = 'pres-pane-' + j + '-' + k;
+                panes[k].setAttribute('role', 'tabpanel');
+                panes[k].setAttribute('aria-labelledby', btns[k].id);
+                panes[k].hidden = !on;
+            }
+            tabs[j].addEventListener('click', function (event) {
+                var pick = event.target.closest('button');
+                if (!pick) return;
+                var btns = event.currentTarget.querySelectorAll('button');
+                var panes = event.currentTarget.closest('.sl-pres-devtools').querySelectorAll('.sl-pres-tab-pane');
+                for (var i = 0; i < btns.length; i++) {
+                    var on = btns[i] === pick;
+                    btns[i].classList.toggle('sl-is-on', on);
+                    btns[i].setAttribute('aria-selected', String(on));
+                    btns[i].tabIndex = on ? 0 : -1;
+                    panes[i].classList.toggle('sl-is-on', on);
+                    panes[i].hidden = !on;
+                }
+            });
+            tabs[j].addEventListener('keydown', function (event) {
+                if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].indexOf(event.key) < 0) return;
+                event.preventDefault();
+                var btns = Array.prototype.slice.call(event.currentTarget.querySelectorAll('button'));
+                var at = btns.indexOf(event.target);
+                at = event.key === 'Home' ? 0 : event.key === 'End' ? btns.length - 1 : (at + (event.key === 'ArrowRight' ? 1 : -1) + btns.length) % btns.length;
+                btns[at].click();
+                btns[at].focus();
+            });
         }
     }
 

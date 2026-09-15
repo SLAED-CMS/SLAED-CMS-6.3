@@ -78,6 +78,13 @@ If `config/global.php` contains a comma-separated module list, the home route
 selects one entry for the request. If no home module is configured, the runtime
 renders an empty page shell.
 
+The home route reads the `side` and `top` positions of the selected module from
+`config/modules.php` the same way the named route does, so `admin.php?name=modules`
+governs the block columns of the start page too. A module whose output carries its
+own `h1` sets `$sitevars['has_own_title']` after `setHead()` — `setHead()` rebuilds
+that array — and `layouts/home.html` then skips the site name heading; `layouts/app.html`
+never prints one. `modules/presentation` is the module that does this.
+
 Frontend module access checks are performed before including module files:
 
 - `view = 0`: public module
@@ -359,6 +366,21 @@ Scheduler integration:
 
 The confirmed current runner is HTTP/admin-triggered. Heavy jobs should stay out
 of synchronous page-render side effects.
+
+Server metrics:
+- `core/monitor.php` holds the CPU, memory, network, disk, uptime, log-tail and
+  security counters; `admin/modules/monitor.php` keeps only its page, charts and
+  template variables
+- the `monitor` scheduler job (`* * * * *`, priority 9, the lowest, so it never
+  takes a tick from `maildrain` or `newsletter`) calls `addMonitorSample()`, which
+  runs the two history writers of `storage/logs/monitor.json` and then stores
+  `disk_pct`, `disk_used`, `disk_total`, `uptime`, `cores`, `soft` and `sampled_at`
+- a public reader (`modules/presentation`) only calls `getMetricStore()` and treats a
+  missing store or a `sampled_at` older than five minutes as "no monitor": the
+  pseudo-cron ticks once per page view, so after a quiet spell the first visitor
+  sees the section without figures until the job runs again
+- the tail of the security logs never reaches a public page; `getSecurityEventCount()`
+  returns a number, `getSecurityEventHours()` stays admin-only
 
 ## Upload Place Boundary
 
