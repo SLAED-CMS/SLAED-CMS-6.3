@@ -23,7 +23,7 @@
       <h3>{{ vitals.title }}</h3>
       <p>{{ vitals.text }}</p>
       <div class="sl-pres-vitals-list">
-        {% for item in vitals.rows %}<span>{{ item.label }} <b>{% if item.icon %}<i class="bi bi-{{ item.icon }}" aria-hidden="true"></i> {% endif %}{{ item.value }}</b></span>{% endfor %}
+        {% for item in vitals.rows %}<span>{{ item.label }} <b{% if item.tone %} data-sl-tone="{{ item.tone }}"{% endif %}>{% if item.icon %}<i class="bi bi-{{ item.icon }}" aria-hidden="true"></i> {% endif %}{{ item.value }}</b></span>{% endfor %}
       </div>
       <span class="sl-pres-pill">{{ vitals.note }}</span>
     </article>

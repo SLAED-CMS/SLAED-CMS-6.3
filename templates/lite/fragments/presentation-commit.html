@@ -1,5 +1,5 @@
-<a class="sl-pres-commit{% if is_on %} sl-is-on{% endif %}" href="{{ href }}"{% if is_ext %} target="_blank" rel="noopener"{% endif %}>
+<a class="sl-pres-commit{% if is_on %} sl-is-on{% endif %}" href="{{ href }}"{% if is_ext %} target="_blank" rel="noopener"{% endif %} data-sl-pres-text="{{ text }}">
   <span class="sl-pres-sha">{{ short }}</span>
-  <div><b>{{ title }}</b></div>
+  <div><b>{{ title }}</b>{% if has_tags %}<span class="sl-pres-tags">{% for tag in tags %}<span>{{ tag }}</span>{% endfor %}</span>{% endif %}</div>
   <div class="sl-pres-when"><time datetime="{{ iso }}">{{ date }}</time><small>{{ note }}</small></div>
 </a>

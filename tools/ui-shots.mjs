@@ -176,7 +176,9 @@ async function setSession(page, kind) {
 // Motion is switched off with `animation: none`, not with a duration near zero: a duration near zero on an
 // infinite animation does not stop it, it makes it cycle as fast as the compositor can draw, and the frame
 // a screenshot catches is then chosen by the scheduler. That produced a page whose DOM was identical over
-// four seconds and whose pixels were not, and the caret does the same on a focused field
+// four seconds and whose pixels were not, and the caret does the same on a focused field. A script that draws by itself -
+// the pulse strip and the breathing figure of the presentation cockpit - is outside the reach of a stylesheet, so every
+// context asks for reduced motion and the scripts that honour the media query hold still
 async function setMasks(page) {
   const hide = (conf.mask || []).length ? (conf.mask || []).join(', ') + ' { visibility: hidden !important; }\n' : '';
   const drop = (conf.drop || []).length ? (conf.drop || []).join(', ') + ' { display: none !important; }\n' : '';
@@ -431,7 +433,7 @@ async function checkNewTheme(browser, report) {
   try {
     back = getProbeAnswer('theme', 'pick', user, made.name).was;
     const logs = (conf.logs || []).map((one) => [one, existsSync(join(root, one)) ? statSync(join(root, one)).size : 0]);
-    const ctx = await browser.newContext({ ignoreHTTPSErrors: true });
+    const ctx = await browser.newContext({ ignoreHTTPSErrors: true, reducedMotion: 'reduce' });
     const page = await ctx.newPage();
     await page.setViewportSize({ width: 1200, height: 1000 });
     await setSession(page, 'site');
@@ -502,7 +504,7 @@ async function getModeContexts(mode) {
       addReportOnce('  skipped every ' + kind + ' page: set ' + conf.env.user + ' and ' + conf.env.pass + ' in the environment');
       continue;
     }
-    const ctx = await browser.newContext({ ignoreHTTPSErrors: true });
+    const ctx = await browser.newContext({ ignoreHTTPSErrors: true, reducedMotion: 'reduce' });
     const page = await ctx.newPage();
     try {
       await setSession(page, kind);
@@ -514,7 +516,7 @@ async function getModeContexts(mode) {
     await page.close();
   }
   // A development stand serves its own certificate, and the manifest names https because the session cookie needs it
-  const open = await browser.newContext({ ignoreHTTPSErrors: true });
+  const open = await browser.newContext({ ignoreHTTPSErrors: true, reducedMotion: 'reduce' });
   for (const ctx of [...sess.values(), open]) {
     if (seed.cookies.length) await ctx.addCookies(seed.cookies);
     if (mode !== 'auto') await ctx.addCookies([{ name: conf.cookie, value: mode, url: conf.base }]);

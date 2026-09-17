@@ -1,7 +1,8 @@
 <section class="sl-pres-section" id="pipeline">
 {% include 'fragments/presentation-head.html' with head %}
 <div class="sl-pres-body">
-  <div class="sl-pres-arch">
+  <div class="sl-pres-arch" data-sl-pres="flow" data-sl-pres-store="{{ store }}">
+    <div data-sl-pres-flows="" hidden>{% for item in flows %}<div data-sl-pres-mode="{{ item.mode }}" data-sl-pres-badge="{{ item.badge }}" data-sl-pres-btone="{{ item.btone }}" data-sl-pres-route="{{ item.route }}" data-sl-pres-sub="{{ item.sub }}" data-sl-pres-state="{{ item.state }}" data-sl-pres-gate-a="{{ item.gatea }}" data-sl-pres-gate-b="{{ item.gateb }}" data-sl-pres-mod-b="{{ item.modb }}" data-sl-pres-states="{{ item.states }}" data-sl-pres-tones="{{ item.tones }}" data-sl-pres-seq="{{ item.seq }}"></div>{% endfor %}</div>
     <div class="sl-pres-flow sl-pres-scene" data-sl-mode="{{ mode }}">
       <div class="sl-pres-flow-top"><span class="sl-pres-mono">{{ route }}</span><span class="sl-pres-pill"{% if is_on %} data-sl-tone="success"{% else %} data-sl-tone="warning"{% endif %}>{{ decision }}</span></div>
       <svg class="sl-pres-paths" viewBox="0 0 700 460" preserveAspectRatio="none" aria-hidden="true">
@@ -9,6 +10,7 @@
         <path class="sl-pres-path-live" d="M350,33 Q475,38 570,96 Q648,151 642,226 Q640,330 560,382 Q460,446 350,433 Q240,446 140,382 Q60,330 58,226 Q52,145 145,88 Q248,28 350,33"></path>
         <path class="sl-pres-path-short" d="M350,33 Q475,38 570,96 Q648,151 642,226 C555,159 463,126 350,138 C238,126 145,159 58,226 Q52,145 145,88 Q248,28 350,33"></path>
         <circle class="sl-pres-path-packet" r="5"><animateMotion dur="7s" repeatCount="indefinite" path="M350,33 Q475,38 570,96 Q648,151 642,226 Q640,330 560,382 Q460,446 350,433 Q240,446 140,382 Q60,330 58,226 Q52,145 145,88 Q248,28 350,33Z"></animateMotion></circle>
+        <circle class="sl-pres-path-packet" r="5"><animateMotion dur="4.4s" repeatCount="indefinite" path="M350,33 Q475,38 570,96 Q648,151 642,226 C555,159 463,126 350,138 C238,126 145,159 58,226 Q52,145 145,88 Q248,28 350,33"></animateMotion></circle>
       </svg>
       <div class="sl-pres-flow-core">
         <div>

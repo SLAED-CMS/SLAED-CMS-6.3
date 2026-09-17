@@ -16,6 +16,17 @@
   font: var(--sl-font-body)/var(--sl-line-normal) Arial, system-ui, sans-serif;
 }
 
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .sl-pres[data-sl-pres-pointer]::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: var(--sl-z-popover);
+    pointer-events: none;
+    background: radial-gradient(circle calc(var(--sl-gauge-width) * 3) at var(--sl-d-pointer-x) var(--sl-d-pointer-y), var(--sl-tint-strong), transparent 70%);
+  }
+}
+
 .sl-pres :is(h1, h2, h3) {
   font-family: inherit;
   font-weight: var(--sl-weight-bold);
@@ -54,6 +65,7 @@
 /* The glyph standing before a caption, in the brand tone, and the two sizes it comes in */
 .sl-pres-cockpit-top .bi,
 .sl-pres-blocks-head b > .bi,
+.sl-pres-presets > span > .bi,
 .sl-pres-note > .bi,
 .sl-pres-vars header > .bi,
 .sl-pres-stats-board > .sl-pres-panel-head > span > .bi {
@@ -83,6 +95,7 @@
 .sl-pres-pulse-body > time,
 .sl-pres-when > time,
 .sl-pres-when > small,
+.sl-pres-evt > time,
 .sl-pres-since > span,
 .sl-pres-mini span,
 .sl-pres-voice-person small,
@@ -544,7 +557,7 @@
 
 /* ===== partials/presentation-hero.html =====
    <div class="sl-pres-hero"><div class="sl-pres-hero-grid"><div class="sl-pres-copy">cockpit, eyebrow, h1, lead</div>
-   <div class="sl-pres-core">the control / runtime panel</div></div><div class="sl-pres-facts">6 stats</div>
+   <div class="sl-pres-core" data-sl-pres="core">the control / runtime window: a menu of buttons, each carrying its trace, and the view</div></div><div class="sl-pres-facts">6 stats</div>
    <div class="sl-pres-ticker">...</div><div class="sl-pres-tech">6 cards</div></div> */
 .sl-pres-hero {
   position: relative;
@@ -591,16 +604,30 @@
   transform: none;
 }
 
+.sl-pres .sl-pres-ring .sl-knob-svg {
+  overflow: visible;
+}
+
+.sl-pres .sl-pres-ring .sl-knob-val {
+  color: var(--sl-pres-link-text);
+  stroke: currentColor;
+  filter: drop-shadow(0 0 var(--sl-space-4) color-mix(in srgb, currentColor var(--sl-gauge-mix), transparent));
+}
+
 .sl-pres .sl-pres-ring path.sl-knob-bg {
   stroke: var(--sl-pres-border);
 }
 
 .sl-pres .sl-knob-ok .sl-knob-val {
-  stroke: var(--sl-pres-good-text);
+  color: var(--sl-pres-good-text);
 }
 
 .sl-pres .sl-knob-warn .sl-knob-val {
-  stroke: var(--sl-pres-warn-text);
+  color: var(--sl-pres-warn-text);
+}
+
+.sl-pres .sl-knob-danger .sl-knob-val {
+  color: var(--sl-danger);
 }
 
 .sl-pres .sl-pres-ring path.sl-knob-val {
@@ -613,14 +640,10 @@
   stroke-width: calc(var(--sl-space-1) / 10);
 }
 
-.sl-pres-gauges > .sl-pres-ring {
+.sl-pres .sl-pres-gauges > .sl-pres-ring {
   width: 100%;
   height: auto;
   aspect-ratio: 1;
-}
-
-.sl-pres-gauges > .sl-pres-ring:nth-child(2) b {
-  font-size: var(--sl-font-h4);
 }
 
 .sl-pres-hero-grid {
@@ -681,32 +704,35 @@
 
 .sl-pres-gauges {
   display: grid;
-  grid-template-columns: 1fr 1fr 1.1fr 1fr 1fr;
-  gap: var(--sl-space-4);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--sl-space-8);
   align-items: center;
-  margin-top: var(--sl-space-5);
+  margin: var(--sl-space-7) 0 var(--sl-space-3);
 }
 
-/* The plate in the middle of the gauges: the mark on a dashed ring that turns once per six beats */
+/* The central plate: a centred mark inside a faint halo and a slow dashed orbit. The orbit runs outside the border, so
+   the plate steps in by the orbit's width and the orbit lands on the column edge, one gap from the rings either side */
 .sl-pres-plate {
   position: relative;
   display: grid;
   place-items: center;
+  align-content: center;
   gap: var(--sl-space-2);
   aspect-ratio: 1;
-  border: 1px solid var(--sl-pres-border);
+  margin: var(--sl-space-2);
+  border: 1px solid var(--sl-pres-link-text);
   border-radius: var(--sl-radius-circle);
-  background: radial-gradient(circle at 50% 38%, var(--sl-tint-strong), var(--sl-pres-panel-bg) 68%);
-  padding: var(--sl-space-5) var(--sl-space-4);
-  box-shadow: var(--sl-shadow-focus);
+  background: radial-gradient(circle at 50% 38%, var(--sl-pres-core-bg), var(--sl-pres-panel-bg) 68%);
+  padding: var(--sl-space-4) var(--sl-space-3);
+  box-shadow: 0 0 0 var(--sl-space-3) var(--sl-tint), inset 0 0 var(--sl-space-6) var(--sl-tint);
   text-align: center;
 }
 
 .sl-pres-plate::before {
   content: "";
   position: absolute;
-  inset: -6px;
-  border: 1px dashed var(--sl-primary-subtle);
+  inset: calc(0px - var(--sl-space-2));
+  border: 1px dashed var(--sl-pres-link-text);
   border-radius: var(--sl-radius-circle);
   animation: sl-pres-spin calc(var(--sl-pres-dur) * 6) linear infinite;
 }
@@ -715,14 +741,34 @@
   to { transform: rotate(360deg); }
 }
 
-.sl-pres-plate img {
+#content .sl-pres-plate img {
   width: var(--sl-size-icon-xl);
+  height: var(--sl-size-icon-xl);
+  object-fit: contain;
+  filter: drop-shadow(0 0 var(--sl-space-3) var(--sl-tint));
+}
+
+.sl-pres-gauges > .sl-pres-ring > div {
+  width: 100%;
+  padding: 0 var(--sl-space-5);
+}
+
+.sl-pres-gauges > .sl-pres-ring > div > b {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: var(--sl-space-1);
+}
+
+.sl-pres-gauges > .sl-pres-ring > div > span {
+  letter-spacing: 0;
 }
 
 .sl-pres-plate b {
   font-family: ui-monospace, Consolas, monospace;
   font-size: var(--sl-font-micro);
   letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
   color: var(--sl-pres-text);
 }
 
@@ -819,41 +865,52 @@
   padding: var(--sl-space-4) var(--sl-space-3);
 }
 
-.sl-pres-core-menu > a {
+.sl-pres-core-menu > button {
   position: relative;
   display: block;
+  width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   margin: var(--sl-space-1) 0;
+  border: 0;
   border-radius: var(--sl-radius-1);
+  background: none;
   padding: var(--sl-space-2) var(--sl-space-3);
   font-size: var(--sl-font-micro);
   color: var(--sl-pres-muted-text);
+  text-align: left;
   white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--sl-time-base), color var(--sl-time-base), transform var(--sl-time-base);
 }
 
-.sl-pres-core-menu > a > .bi {
+.sl-pres-core-menu > button > .bi {
   width: var(--sl-size-icon-sm);
   margin-right: var(--sl-space-2);
   color: var(--sl-primary-subtle);
   font-size: var(--sl-font-small);
 }
 
-.sl-pres-core-menu > a:first-child,
+.sl-pres-core-menu > button:hover,
+.sl-pres-core-menu > button[aria-pressed="true"],
 .sl-pres-rail-item:hover {
   background: var(--sl-pres-inset-bg);
   color: var(--sl-pres-text);
 }
 
-.sl-pres-core-menu > a:first-child > .bi {
+.sl-pres-core-menu > button:hover {
+  transform: translateX(var(--sl-space-1));
+}
+
+.sl-pres-core-menu > button[aria-pressed="true"] > .bi {
   color: var(--sl-pres-link-text);
 }
 
-.sl-pres-core-menu > a:first-child::before {
+.sl-pres-core-menu > button[aria-pressed="true"]::before {
   content: "";
   position: absolute;
-  top: 4px;
-  bottom: 4px;
+  top: var(--sl-space-2);
+  bottom: var(--sl-space-2);
   left: 0;
   width: var(--sl-space-1);
   border-radius: var(--sl-radius-1);
@@ -1011,6 +1068,32 @@
 .sl-pres-core-flow > b {
   font-weight: var(--sl-weight-normal);
   color: var(--sl-pres-muted-text);
+}
+
+/* The trace of the window: a framed log with the minute, the operation and its result, rewritten by the plugin for the pressed section */
+.sl-pres-core .sl-pres-log {
+  gap: 0;
+  margin-top: var(--sl-space-3);
+  overflow: hidden;
+  border: 1px solid var(--sl-pres-border);
+  border-radius: var(--sl-radius-2);
+}
+
+.sl-pres-core .sl-pres-log > div {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  padding: var(--sl-space-2);
+}
+
+.sl-pres-core .sl-pres-log > div:last-child {
+  border-bottom: 0;
+}
+
+.sl-pres-core .sl-pres-log time {
+  color: var(--sl-pres-muted-text);
+}
+
+.sl-pres-core .sl-pres-log > div > span {
+  color: var(--sl-pres-link-text);
 }
 
 /* The six facts under the headline */
@@ -1404,7 +1487,8 @@
   background: var(--sl-pres-good-text);
 }
 
-/* The vitals card: the one big ring of the page over the three figures of this request */
+/* The vitals card: the one big ring of the page over the three figures of this request. The ring carries two inner arcs,
+   the third to sixth circles of its svg, drawn thinner and in the accent and the good tone, the tones of the chart's bands */
 .sl-pres-vitals {
   background: linear-gradient(145deg, var(--sl-tint), var(--sl-pres-panel-bg));
   text-align: center;
@@ -1433,12 +1517,16 @@
   stroke-width: 1;
 }
 
-.sl-pres-vitals > .sl-pres-ring::after {
-  content: "";
-  position: absolute;
-  inset: var(--sl-space-6);
-  border: 1px solid var(--sl-accent);
-  border-radius: var(--sl-radius-circle);
+.sl-pres-vitals .sl-knob-svg > circle:nth-child(n + 3) {
+  stroke-width: 0.5;
+}
+
+.sl-pres .sl-pres-vitals .sl-knob-svg > circle:nth-child(4) {
+  color: var(--sl-accent);
+}
+
+.sl-pres .sl-pres-vitals .sl-knob-svg > circle:nth-child(6) {
+  color: var(--sl-pres-good-text);
 }
 
 .sl-pres-vitals > h3 {
@@ -1489,9 +1577,33 @@
   gap: var(--sl-space-4);
 }
 
+/* The build presets over the map: the caption, the segment of builds and the demo note on its own line */
+.sl-pres-presets {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-4);
+  font-size: var(--sl-font-small);
+  color: var(--sl-pres-text);
+}
+
+.sl-pres-presets > small {
+  flex-basis: 100%;
+  font-size: var(--sl-font-micro);
+  color: var(--sl-pres-muted-text);
+}
+
 .sl-pres-map {
   background-image: radial-gradient(circle at 50% 50%, var(--sl-tint), transparent 35%), var(--sl-pres-bg);
   background-size: auto, 24px 24px, 24px 24px;
+}
+
+.sl-pres-map-core,
+.sl-pres-router,
+.sl-pres-net,
+.sl-pres-flow-core {
+  box-shadow: var(--sl-shadow-focus), 0 0 var(--sl-space-8) var(--sl-tint-strong), inset 0 0 var(--sl-space-5) var(--sl-tint);
 }
 
 .sl-pres-map-core {
@@ -1503,10 +1615,9 @@
   place-items: center;
   width: calc(var(--sl-pres-width) * 0.75);
   height: calc(var(--sl-pres-width) * 0.75);
-  border: 1px solid var(--sl-primary-subtle);
+  border: 1px solid var(--sl-pres-link-text);
   border-radius: var(--sl-radius-circle);
-  background: radial-gradient(circle, var(--sl-tint-strong), var(--sl-pres-panel-bg) 68%);
-  box-shadow: var(--sl-shadow-focus);
+  background: radial-gradient(circle, var(--sl-pres-core-bg), var(--sl-pres-panel-bg) 68%);
   transform: translate(-50%, -50%);
 }
 
@@ -1520,6 +1631,7 @@
   border: 1px solid var(--sl-primary-subtle);
   border-radius: var(--sl-radius-circle);
   animation: sl-pres-spin calc(var(--sl-pres-dur) * 4) linear infinite;
+  box-shadow: var(--sl-pres-shadow);
 }
 
 .sl-pres-orbit::before,
@@ -1786,10 +1898,9 @@
   align-content: center;
   width: calc(var(--sl-size-icon-xl) + var(--sl-space-11));
   height: calc(var(--sl-size-icon-xl) + var(--sl-space-11));
-  border: 1px solid var(--sl-primary);
+  border: 1px solid var(--sl-pres-link-text);
   border-radius: var(--sl-radius-circle);
-  background: radial-gradient(circle, var(--sl-tint-strong), var(--sl-pres-panel-bg) 70%);
-  box-shadow: var(--sl-shadow-focus);
+  background: radial-gradient(circle, var(--sl-pres-core-bg), var(--sl-pres-panel-bg) 70%);
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
@@ -1825,6 +1936,10 @@
   color: var(--sl-pres-muted-text);
 }
 
+.sl-pres-panel-head em {
+  font-style: normal;
+}
+
 .sl-pres-panel-head > b,
 .sl-pres-ambient b,
 .sl-pres-sql b,
@@ -1856,10 +1971,6 @@
   overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-}
-
-.sl-pres-blocks-stage > .sl-pres-wires > path {
-  stroke: var(--sl-primary);
 }
 
 .sl-pres-bcard > span {
@@ -2043,10 +2154,9 @@
   place-items: center;
   width: calc(var(--sl-guard-width) * 0.375);
   height: calc(var(--sl-guard-width) * 0.375);
-  border: 1px solid var(--sl-pres-frame-border);
+  border: 1px solid var(--sl-pres-link-text);
   border-radius: var(--sl-radius-circle);
   background: radial-gradient(circle, var(--sl-pres-inset-bg), var(--sl-pres-panel-bg) 66%);
-  box-shadow: var(--sl-shadow-focus);
   color: var(--sl-pres-muted-text);
   transform: translateY(-50%);
 }
@@ -2372,7 +2482,110 @@
   font-size: var(--sl-font-micro);
   letter-spacing: var(--sl-track-wide);
   text-align: center;
+  white-space: nowrap;
   transform: translateX(-50%);
+}
+
+/* The gate on its track once the plugin drives it: the height it patrols at arrives as --sl-d-gate-y, and its state
+   colours the shield and the word under it */
+.sl-pres-guard-scene[data-sl-pres-live] .sl-pres-gate {
+  top: var(--sl-d-gate-y);
+  transform: translateX(-50%);
+}
+
+.sl-pres-gate[data-sl-pres-state="check"] .sl-pres-shield {
+  border-color: var(--sl-pres-link-text);
+  box-shadow: 0 0 var(--sl-space-9) var(--sl-tint-strong);
+}
+
+.sl-pres-gate[data-sl-pres-state="pass"] .sl-pres-shield {
+  border-color: var(--sl-pres-good-text);
+  color: var(--sl-pres-good-text);
+  box-shadow: 0 0 var(--sl-space-9) color-mix(in srgb, var(--sl-success) var(--sl-chip-tint-mix), transparent);
+}
+
+.sl-pres-gate[data-sl-pres-state="block"] .sl-pres-shield {
+  border-color: var(--sl-danger);
+  color: var(--sl-danger);
+  box-shadow: 0 0 var(--sl-space-10) color-mix(in srgb, var(--sl-danger) var(--sl-tile-mix), transparent);
+}
+
+/* The traveller: a request card cloned from the hidden pool by the plugin, carried by --sl-d-x and --sl-d-y over one
+   share of the beat, then dropped into quarantine or flown to its window; the tone arrives as data-sl-tone
+   <div class="sl-pres-traveler" data-sl-tone="danger" data-sl-pres-zone="1" data-sl-pres-result=".." data-sl-pres-bad><i class="bi"></i><span><b>SQLi</b><small>id=1 UNION …</small></span></div> */
+.sl-pres-traveler {
+  position: absolute;
+  top: var(--sl-d-y);
+  left: var(--sl-d-x);
+  z-index: var(--sl-z-overlay);
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  transition: left calc(var(--sl-pres-dur) * 0.43) var(--sl-ease-in-out), top calc(var(--sl-pres-dur) * 0.43) var(--sl-ease-in-out);
+  pointer-events: none;
+}
+
+.sl-pres-traveler > .bi {
+  display: grid;
+  place-items: center;
+  width: var(--sl-size-chip);
+  height: var(--sl-size-chip);
+  border: 1px solid color-mix(in srgb, currentColor var(--sl-tile-mix), var(--sl-pres-frame-border));
+  border-radius: var(--sl-radius-circle);
+  background: color-mix(in srgb, currentColor var(--sl-ico-mix), var(--sl-pres-panel-bg));
+  box-shadow: 0 0 var(--sl-space-5) color-mix(in srgb, currentColor var(--sl-chip-tint-mix), transparent);
+  font-size: var(--sl-font-small);
+}
+
+.sl-pres-traveler > span {
+  max-width: calc(var(--sl-guard-width) * 0.75);
+  border: 1px solid color-mix(in srgb, currentColor var(--sl-tile-mix), var(--sl-pres-frame-border));
+  border-radius: var(--sl-radius-2);
+  background: var(--sl-pres-panel-bg);
+  padding: var(--sl-space-2) var(--sl-space-3);
+  box-shadow: var(--sl-shadow-raised);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--sl-font-micro);
+}
+
+.sl-pres-traveler b {
+  display: block;
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+}
+
+.sl-pres-traveler small {
+  display: block;
+  overflow: hidden;
+  color: var(--sl-pres-muted-text);
+  font-size: var(--sl-font-micro);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-pres-traveler[data-sl-pres-bad] > .bi {
+  animation: sl-pres-evil calc(var(--sl-pres-dur) / 4) var(--sl-ease-in-out) infinite alternate;
+}
+
+@keyframes sl-pres-evil {
+  to {
+    box-shadow: 0 0 var(--sl-space-7) color-mix(in srgb, currentColor var(--sl-pulse-mix), transparent);
+    transform: scale(1.06);
+  }
+}
+
+.sl-pres-traveler.sl-is-caught {
+  opacity: var(--sl-fade-disabled);
+  transform: rotate(45deg) scale(0.5);
+  transition: left calc(var(--sl-pres-dur) * 0.17) var(--sl-ease-in-out), top calc(var(--sl-pres-dur) * 0.17) var(--sl-ease-in-out),
+    transform calc(var(--sl-pres-dur) * 0.17) var(--sl-ease-in-out), opacity calc(var(--sl-pres-dur) * 0.17) var(--sl-ease-in-out);
+}
+
+.sl-pres-traveler.sl-is-passed {
+  opacity: 0;
+  transform: scale(0.84);
+  transition: left calc(var(--sl-pres-dur) * 0.25) var(--sl-ease-out), top calc(var(--sl-pres-dur) * 0.25) var(--sl-ease-out),
+    transform calc(var(--sl-pres-dur) * 0.25) var(--sl-ease-out), opacity calc(var(--sl-pres-dur) * 0.08) var(--sl-ease-out) calc(var(--sl-pres-dur) * 0.25);
 }
 
 /* The quarantine: a striped box under the gate with its traps */
@@ -2609,6 +2822,14 @@
   background: linear-gradient(180deg, var(--sl-primary-subtle), var(--sl-pres-inset-bg));
   color: var(--sl-pres-link-text);
   box-shadow: var(--sl-pres-shadow);
+}
+
+/* A window or the door lit for a moment while a request arrives at it */
+.sl-pres-pane.sl-is-lit,
+.sl-pres-door.sl-is-lit {
+  background: var(--sl-primary);
+  color: var(--sl-on-solid);
+  box-shadow: 0 0 var(--sl-space-7) var(--sl-primary);
 }
 
 .sl-pres-door {
@@ -3032,6 +3253,34 @@
   to { left: 90%; }
 }
 
+/* The stage once the plugin drives it: the packet stands where --sl-d-x says and walks between nodes over one step,
+   the row bars take the share the plugin wrote, and the epoch pill shows only while a write flashes it; a write turns
+   the query line and the packet to the warning tone through data-sl-tone */
+.sl-pres-pdo-stage[data-sl-pres-live] .sl-pres-packet {
+  left: var(--sl-d-x);
+  animation: none;
+  transition: left calc(var(--sl-pres-dur) * 0.15) var(--sl-ease-in-out);
+}
+
+.sl-pres-packet[data-sl-tone],
+.sl-pres-query[data-sl-tone] {
+  border-color: currentColor;
+}
+
+.sl-pres-pdo-stage[data-sl-pres-live] .sl-pres-bars > i {
+  height: var(--sl-d-part);
+  transition: height calc(var(--sl-pres-dur) * 0.15) var(--sl-ease-out);
+}
+
+.sl-pres-pdo-stage[data-sl-pres-live] .sl-pres-epoch {
+  opacity: 0;
+  transition: opacity var(--sl-time-base) var(--sl-ease-out);
+}
+
+.sl-pres-pdo-stage[data-sl-pres-live] .sl-pres-epoch.sl-is-on {
+  opacity: 1;
+}
+
 .sl-pres-pdo-stage > .sl-pres-node {
   top: calc(var(--sl-pres-height) * 0.32);
   transform: translateX(-50%);
@@ -3435,6 +3684,11 @@
   font-size: var(--sl-font-micro);
 }
 
+/* Eight cards stand in the strip, five show; the plugin turns the strip so the hidden three take their turn */
+.sl-pres-evt:nth-child(n + 6) {
+  display: none;
+}
+
 /* ===== 05 partials/presentation-dev.html =====
    <div class="sl-pres-dev"><div class="sl-pres-dev-board sl-pres-scene"><div class="sl-pres-dev-head"><span class="sl-pres-pill"><i class="bi"></i>version · branch</span><span class="sl-pres-live"><i class="sl-pres-dot sl-is-live"></i>ACTIVE DEVELOPMENT</span></div>
    <div class="sl-pres-commits">fragments/presentation-commit.html x5: <a class="sl-pres-commit sl-is-on" href><span class="sl-pres-sha">f360f6a</span><div><b>title</b></div><div class="sl-pres-when"><time>date</time><small>note</small></div></a></div></div>
@@ -3562,12 +3816,16 @@
 }
 
 .sl-pres-commit b {
-  display: -webkit-box;
+  display: block;
   overflow: hidden;
   font-size: var(--sl-font-small);
   color: var(--sl-pres-text);
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-pres-commit .sl-pres-tags {
+  margin-top: var(--sl-space-2);
 }
 
 .sl-pres-when {
@@ -3599,6 +3857,13 @@
   font-size: var(--sl-font-body);
   line-height: var(--sl-line-normal);
   color: var(--sl-pres-text);
+}
+
+.sl-pres-focus-body > p {
+  margin: 0 0 var(--sl-space-3);
+  font-size: var(--sl-font-small);
+  line-height: var(--sl-line-loose);
+  color: var(--sl-pres-muted-text);
 }
 
 /* The delivery pipeline: five stations on one line, a packet travelling them in order */
@@ -3905,6 +4170,12 @@
   stroke-width: 1;
 }
 
+/* Two packets, one per path: the ring one rides every mode but a hit, the short one rides the hit alone */
+.sl-pres-flow[data-sl-mode="hit"] .sl-pres-path-packet:nth-of-type(1),
+.sl-pres-flow:not([data-sl-mode="hit"]) .sl-pres-path-packet:nth-of-type(2) {
+  display: none;
+}
+
 .sl-pres-flow-core {
   position: absolute;
   top: 50%;
@@ -3914,10 +4185,9 @@
   place-items: center;
   width: calc(var(--sl-pres-width) * 1.25);
   height: calc(var(--sl-pres-width) * 1.25);
-  border: 1px solid var(--sl-primary-subtle);
+  border: 1px solid var(--sl-pres-link-text);
   border-radius: var(--sl-radius-circle);
-  background: radial-gradient(circle at 50% 38%, var(--sl-tint-strong), var(--sl-pres-panel-bg) 64%);
-  box-shadow: var(--sl-shadow-focus);
+  background: radial-gradient(circle at 50% 38%, var(--sl-pres-core-bg), var(--sl-pres-panel-bg) 64%);
   text-align: center;
   transform: translate(-50%, -44%);
 }
@@ -3929,6 +4199,7 @@
   inset: -13px;
   border: 1px solid var(--sl-tint-strong);
   border-radius: var(--sl-radius-circle);
+  box-shadow: var(--sl-pres-shadow);
 }
 
 .sl-pres-flow-core::after {
@@ -4011,7 +4282,8 @@
 }
 
 .sl-pres-flow[data-sl-mode="hit"] > .sl-pres-node:nth-child(n + 4 of .sl-pres-node):nth-child(-n + 6 of .sl-pres-node),
-.sl-pres-flow[data-sl-mode="off"] > .sl-pres-node:nth-child(3 of .sl-pres-node) {
+.sl-pres-flow[data-sl-mode="off"] > .sl-pres-node:nth-child(3 of .sl-pres-node),
+.sl-pres-flow[data-sl-mode="bypass"] > .sl-pres-node:nth-child(3 of .sl-pres-node) {
   opacity: var(--sl-fade-disabled);
 }
 
@@ -4603,6 +4875,17 @@
   transform: none;
 }
 
+/* The avatar greets the pointer with one small bounce */
+.sl-pres-voice:hover .sl-pres-voice-ava {
+  animation: sl-pres-pop var(--sl-time-slow) var(--sl-ease-out);
+}
+
+@keyframes sl-pres-pop {
+  from { transform: scale(0.94); }
+  50% { transform: scale(1.08); }
+  to { transform: none; }
+}
+
 .sl-pres-voice:hover .sl-pres-voice-person {
   transform: translateY(calc(var(--sl-space-9) * -1));
 }
@@ -4831,14 +5114,6 @@
 
 /* ===== The narrower steps of the ladder ===== */
 @media (max-width: 1200px) {
-  .sl-pres-gauges {
-    grid-template-columns: repeat(4, 1fr);
-  }
-
-  .sl-pres-plate {
-    display: none;
-  }
-
   .sl-pres-hero-grid,
   .sl-pres-modules,
   .sl-pres-dev,
@@ -4982,6 +5257,23 @@
 }
 
 @media (max-width: 768px) {
+  .sl-pres-gauges {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-items: center;
+    gap: var(--sl-space-6);
+    max-width: calc(var(--sl-gauge-width) * 2 + var(--sl-space-6));
+  }
+
+  .sl-pres-plate {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    width: calc(var(--sl-gauge-width) + var(--sl-space-8));
+  }
+
+  .sl-pres .sl-pres-gauges > .sl-pres-ring {
+    max-width: var(--sl-gauge-width);
+  }
+
   .sl-pres-hero {
     padding: var(--sl-space-7) var(--sl-space-6);
   }
@@ -4992,7 +5284,6 @@
 
   .sl-pres-facts,
   .sl-pres-tech,
-  .sl-pres-gauges,
   .sl-pres-events,
   .sl-pres-detail,
   .sl-pres-stats-grid,

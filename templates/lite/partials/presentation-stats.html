@@ -3,7 +3,7 @@
 <div class="sl-pres-body">
   <div class="sl-pres-stats">
     <div class="sl-pres-stats-board sl-pres-scene">
-      <div class="sl-pres-panel-head"><span><i class="bi bi-reception-4" aria-hidden="true"></i>{{ over }}</span>{% if has_today %}<b>{{ today }}</b>{% endif %}</div>
+      <div class="sl-pres-panel-head"><span><i class="bi bi-reception-4" aria-hidden="true"></i>{{ over }}</span>{% if has_today %}<b>{{ today }} · <em data-sl-pres="sync" data-sl-tone="success">{{ sync }}</em></b>{% endif %}</div>
       <div class="sl-pres-stats-grid">
         {% for item in board %}{% include 'fragments/presentation-stat.html' with item %}{% endfor %}
       </div>

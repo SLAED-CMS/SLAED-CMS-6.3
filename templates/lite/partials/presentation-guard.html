@@ -1,7 +1,7 @@
 <section class="sl-pres-section" id="security">
 {% include 'fragments/presentation-head.html' with head %}
 <div class="sl-pres-body">
-  <div class="sl-pres-guard">
+  <div class="sl-pres-guard" data-sl-pres="guard">
     <div class="sl-pres-guard-scene sl-pres-scene">
       {% for item in zones %}<span class="sl-pres-zone">{{ item.num }} / {{ item.label }}</span>{% endfor %}
       <i class="sl-pres-radar" aria-hidden="true"></i>
@@ -17,7 +17,7 @@
       <div class="sl-pres-allow" aria-hidden="true"><span>{{ allow }}</span></div>
       <div class="sl-pres-deny" aria-hidden="true"><span>{{ deny }}</span></div>
       <div class="sl-pres-track" aria-hidden="true"><span>{{ track }}</span></div>
-      <div class="sl-pres-gate">
+      <div class="sl-pres-gate" data-sl-pres-pass="{{ pass }}" data-sl-pres-block="{{ block }}">
         <span class="sl-pres-beam"></span>
         <div class="sl-pres-shield"><i class="bi bi-shield-lock-fill" aria-hidden="true"></i><small>{{ scan }}</small></div>
       </div>
@@ -38,6 +38,9 @@
           <div class="sl-pres-foundation"></div>
         </div>
         <div class="sl-pres-ground"><i></i><i></i><i></i></div>
+      </div>
+      <div class="sl-pres-travelers" hidden>
+        {% for item in travellers %}<div class="sl-pres-traveler" data-sl-tone="{{ item.tone }}" data-sl-pres-zone="{{ item.zone }}" data-sl-pres-result="{{ item.result }}" data-sl-pres-verdict="{{ item.verdict }}"{% if item.is_bad %} data-sl-pres-bad=""{% endif %}><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span><b>{{ item.label }}</b><small>{{ item.text }}</small></span></div>{% endfor %}
       </div>
     </div>
     <div class="sl-pres-guard-console">

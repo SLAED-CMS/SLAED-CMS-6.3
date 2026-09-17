@@ -1687,7 +1687,7 @@ function addCacheGcTask(): array {
 }
 
 # Scheduler job sampling the server once a minute for the presentation module: the two history writers of monitor.json run first, then the snapshot keys join their rows
-# This is the only writer outside the admin monitor, so a stale sampled_at tells the module that nobody sampled for a while and the section hides instead of showing old figures
+# This is the only writer outside the admin monitor; while no sample exists the module falls back to the figures a public page can afford - the histories, its own disk snapshot and the request's server - and leaves the core count and the uptime out
 function addMonitorSample(): array {
     global $db;
     [$cpu] = getCpuLoad();

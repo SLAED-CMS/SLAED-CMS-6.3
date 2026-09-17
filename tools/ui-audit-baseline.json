@@ -1,5 +1,5 @@
 {
-    "generated": "2026-09-15T14:32:18Z",
+    "generated": "2026-09-17T15:30:44Z",
     "themes": {
         "admin": {
             "count": 0,
@@ -32,7 +32,7 @@
             "clash": 0,
             "classes": 0,
             "important": 13,
-            "tokens": 430,
+            "tokens": 432,
             "contrast": 0
         }
     },
@@ -505,6 +505,7 @@
             "--sl-gauge-height",
             "--sl-gauge-min-height",
             "--sl-gauge-min-width",
+            "--sl-gauge-mix",
             "--sl-gauge-width",
             "--sl-grad-caption",
             "--sl-grad-gloss",
@@ -609,6 +610,7 @@
             "--sl-popover-min-width",
             "--sl-pres-bg",
             "--sl-pres-border",
+            "--sl-pres-core-bg",
             "--sl-pres-dur",
             "--sl-pres-frame-border",
             "--sl-pres-good-text",

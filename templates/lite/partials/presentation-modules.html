@@ -1,7 +1,12 @@
 <section class="sl-pres-section" id="system">
 {% include 'fragments/presentation-head.html' with head %}
 <div class="sl-pres-body">
-  <div class="sl-pres-modules">
+  <div class="sl-pres-modules" data-sl-pres="build">
+    <div class="sl-pres-presets" role="group" aria-label="{{ presets.label }}">
+      <span><i class="bi bi-sliders2" aria-hidden="true"></i>{{ presets.label }}</span>
+      <div class="sl-pres-segment">{% for item in presets.items %}<button type="button" data-sl-pres-build="{{ item.mods }}" aria-pressed="{% if item.is_on %}true{% else %}false{% endif %}">{{ item.label }}</button>{% endfor %}</div>
+      <small>{{ presets.note }}</small>
+    </div>
     <div class="sl-pres-map sl-pres-scene">
       <svg class="sl-pres-wires" viewBox="0 0 900 346" preserveAspectRatio="none" aria-hidden="true">
         <path{% if lit.one %} class="sl-is-on"{% endif %} d="M118 58 C260 58 295 160 450 173"></path>
@@ -27,14 +32,7 @@
       <div class="sl-pres-blocks-layout">
         <div class="sl-pres-blocks-stage sl-pres-scene">
           <svg class="sl-pres-wires" viewBox="0 0 760 340" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M126 34 C226 34 255 55 340 170"></path>
-            <path d="M126 102 C220 102 245 168 340 170"></path>
-            <path d="M126 185 C224 185 253 124 340 170"></path>
-            <path d="M126 282 C226 282 251 218 340 170"></path>
-            <path d="M634 38 C540 38 516 124 420 170"></path>
-            <path d="M634 108 C542 108 516 168 420 170"></path>
-            <path d="M634 194 C540 194 516 218 420 170"></path>
-            <path d="M634 286 C540 286 516 286 420 170"></path>
+            {% for item in blocks.nodes %}<path{% if item.is_on %} class="sl-is-on"{% endif %} d="M{{ item.x1 }} {{ item.y1 }} C{{ item.cx1 }} {{ item.y1 }} {{ item.cx2 }} {{ item.y2 }} {{ item.x2 }} {{ item.y2 }}"></path>{% endfor %}
           </svg>
           <div class="sl-pres-page">
             <div class="sl-pres-slot{% if blocks.fill.banner %} sl-is-on{% endif %}">{{ blocks.slots.banner }}</div>

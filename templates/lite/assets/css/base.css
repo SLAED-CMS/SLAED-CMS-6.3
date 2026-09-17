@@ -498,6 +498,8 @@
   --sl-pres-panel-bg: light-dark(var(--sl-surface), #0b1d2c);
   --sl-pres-ground-bg: light-dark(var(--sl-bg), #081824);
   --sl-pres-inset-bg: light-dark(var(--sl-bg-subtle), #10283b);
+  /* The centre of a core: the brand wash laid opaque over the panel, so the wires meeting behind a core never show through */
+  --sl-pres-core-bg: color-mix(in srgb, var(--sl-primary) 24%, var(--sl-pres-panel-bg));
   --sl-pres-border: light-dark(var(--sl-border), #1c4159);
   --sl-pres-frame-border: light-dark(var(--sl-border-strong), #27546c);
   --sl-pres-text: light-dark(var(--sl-text), #ecf8ff);
@@ -505,11 +507,13 @@
   --sl-pres-link-text: light-dark(var(--sl-primary-strong), #6fc8ff);
   --sl-pres-good-text: light-dark(color-mix(in srgb, var(--sl-success) 90%, var(--sl-text)), #72e6b0);
   --sl-pres-warn-text: light-dark(var(--sl-warning-strong), #ffd37d);
-  /* The gauge rings of the presentation: the cockpit and vitals size, and the small size of the statistics rings */
+  /* The gauge rings of the presentation: the cockpit and vitals size, the small size of the statistics rings, and how
+     much of its tone the glow behind an arc carries */
   --sl-gauge-width: 128px;
   --sl-gauge-height: 128px;
   --sl-gauge-min-width: 56px;
   --sl-gauge-min-height: 56px;
+  --sl-gauge-mix: 50%;
   /* The request guard scene: the height the court stands at, and the width of the house every other part of the
      drawing is measured against */
   --sl-guard-height: 420px;

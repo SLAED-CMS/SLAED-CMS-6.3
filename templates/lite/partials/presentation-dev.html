@@ -1,7 +1,7 @@
 <section class="sl-pres-section" id="development">
 {% include 'fragments/presentation-head.html' with head %}
 <div class="sl-pres-body">
-  <div class="sl-pres-dev">
+  <div class="sl-pres-dev" data-sl-pres="dev" data-sl-pres-recent="{{ focus_recent }}">
     <div class="sl-pres-dev-board sl-pres-scene">
       <div class="sl-pres-dev-head">
         <span class="sl-pres-pill"><i class="bi bi-git" aria-hidden="true"></i>{{ version }}</span>
@@ -22,7 +22,8 @@
           {% if has_commits %}
           <span class="sl-pres-mono">{{ first.short }} · {{ first.date }}</span>
           <h3>{{ first.title }}</h3>
-          <div class="sl-pres-tags">{% for tag in focus_tags %}<span>{{ tag }}</span>{% endfor %}</div>
+          <p{% if not first.text %} hidden{% endif %}>{{ first.text }}</p>
+          <div class="sl-pres-tags">{% for tag in first.tags %}<span>{{ tag }}</span>{% endfor %}<span>{{ first.note }}</span></div>
           {% else %}
           <h3>{{ none }}</h3>
           {% endif %}

@@ -20,23 +20,23 @@
       <h1>{{ head_a }} <span>{{ head_b }}</span><br>{{ head_c }}</h1>
       <p class="sl-pres-lead">{{ lead }}</p>
     </div>
-    <div class="sl-pres-core">
+    <div class="sl-pres-core" data-sl-pres="core">
       <div class="sl-pres-core-bar"><span><i></i><i></i><i></i></span><span>{{ core.title }}</span><span>{{ core.route }}</span></div>
       <div class="sl-pres-core-body">
         <div class="sl-pres-core-menu">
-          {% for item in core.menu %}<a href="{{ item.href }}"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i>{{ item.label }}</a>{% endfor %}
+          {% for item in core.menu %}<button type="button" data-sl-pres-trace="{{ item.trace }}" data-sl-pres-path="{{ item.path }}"{% if item.is_on %} aria-pressed="true"{% endif %}><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i>{{ item.label }}</button>{% endfor %}
         </div>
         <div class="sl-pres-core-view">
           <div class="sl-pres-core-title"><b>{{ core.view }}</b><span data-sl-tone="success">● {{ core.online }}</span></div>
           <div class="sl-pres-metrics">
-            {% for item in core.metrics %}<div class="sl-pres-metric"><b>{{ item.value }}</b><small>{{ item.label }}</small></div>{% endfor %}
+            {% for item in core.metrics %}<div class="sl-pres-metric"><b{% if item.is_live %} data-sl-pres-live=""{% endif %}>{{ item.value }}</b><small>{{ item.label }}</small></div>{% endfor %}
           </div>
-          <div class="sl-pres-core-pulse" data-sl-pres="pulse" data-sl-pres-series="{{ core.series }}"><canvas role="img" aria-label="{{ core.chart }}"></canvas></div>
+          <div class="sl-pres-core-pulse" data-sl-pres="pulse"><span class="sl-pres-scan"></span><canvas role="img" aria-label="{{ core.chart }}"></canvas></div>
           <div class="sl-pres-core-stack">
             {% for item in core.stack %}<span><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><b>{{ item.name }}</b><em{% if item.is_ok %} class="sl-is-ok"{% endif %}>{{ item.note }}</em></span>{% endfor %}
           </div>
           <div class="sl-pres-core-flow">{% for item in core.flow %}<span><i></i>{{ item }}</span><b>→</b>{% endfor %}<span><i></i>200</span></div>
-          <div class="sl-pres-log">{% for item in core.trace %}<div><span>{{ item.name }}</span><em data-sl-tone="success">{{ item.value }}</em></div>{% endfor %}</div>
+          <div class="sl-pres-log">{% for item in core.trace %}<div><time>{{ item.time }}</time><span>{{ item.name }}</span><em data-sl-tone="success">{{ item.value }}</em></div>{% endfor %}</div>
         </div>
       </div>
     </div>

@@ -20,15 +20,16 @@
         {% for item in online.rows %}<div class="sl-pres-row"><span>{{ item.label }}</span><b>{{ item.value }}</b></div>{% endfor %}
       </div>
     </div>
-    <div class="sl-pres-pdo">
+    <div class="sl-pres-pdo" data-sl-pres="pdo">
       <div class="sl-pres-pdo-stage sl-pres-scene">
         <div class="sl-pres-pdo-head"><b><i class="bi bi-database-gear" aria-hidden="true"></i> {{ pdo.title }}</b><span>native prepares · ERRMODE_EXCEPTION · FETCH_BOTH</span><em>{{ pdo.state }}</em></div>
-        <div class="sl-pres-query"><span>SELECT</span><code>SELECT id, title FROM slaed_news WHERE cid = :cid LIMIT ?</code><span class="sl-pres-params"><i>:cid</i><i>?</i></span></div>
+        <div class="sl-pres-query"><span>{{ pdo.first.verb }}</span><code>{{ pdo.first.query }}</code><span class="sl-pres-params">{% for item in pdo.first.plist %}<i>{{ item }}</i>{% endfor %}</span></div>
+        <div data-sl-pres-cases="" hidden>{% for item in pdo.cases %}<div data-sl-pres-verb="{{ item.verb }}" data-sl-pres-query="{{ item.query }}" data-sl-pres-params="{{ item.params }}" data-sl-pres-result="{{ item.result }}" data-sl-pres-elapsed="{{ item.elapsed }}" data-sl-pres-mode="{{ item.mode }}" data-sl-pres-state="{{ item.state }}"{% if item.is_write %} data-sl-pres-write=""{% endif %}{% if item.is_prepared %} data-sl-pres-prepared=""{% endif %}></div>{% endfor %}</div>
         <div class="sl-pres-bus" aria-hidden="true"></div>
         <i class="sl-pres-packet" aria-hidden="true"></i>
         {% for item in pdo.nodes %}<div class="sl-pres-node"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i><span>{{ item.num }}</span><b>{{ item.title }}</b>{% if item.note %}<small>{{ item.note }}</small>{% endif %}</div>{% endfor %}
         <div class="sl-pres-return">
-          <div class="sl-pres-result"><i class="bi bi-arrow-return-left" aria-hidden="true"></i><span>{{ pdo.result }} → <b>{{ pdo.rows }}</b></span><em>{{ pdo.state }}</em></div>
+          <div class="sl-pres-result"><i class="bi bi-arrow-return-left" aria-hidden="true"></i><span>{{ pdo.result }} → <b>{{ pdo.first.result }}</b></span><em>{{ pdo.first.elapsed }} s</em></div>
           <div class="sl-pres-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
         </div>
         <span class="sl-pres-epoch"><i class="bi bi-arrow-repeat" aria-hidden="true"></i> {{ pdo.epoch }}</span>
@@ -39,13 +40,16 @@
 <span class="sl-is-var">$stmt</span> = <span class="sl-is-var">$pdo</span>-&gt;<span class="sl-is-fn">prepare</span>(<span class="sl-is-var">$query</span>);
 <span class="sl-is-var">$stmt</span>-&gt;<span class="sl-is-fn">execute</span>([<span class="sl-is-str">'cid'</span> =&gt; <span class="sl-is-var">$cid</span>]);
 <span class="sl-is-var">$rows</span> = <span class="sl-is-var">$stmt</span>-&gt;<span class="sl-is-fn">fetchAll</span>(PDO::<span class="sl-is-kw">FETCH_BOTH</span>);</pre>
+        <pre class="sl-pres-code" hidden><span class="sl-is-com">// {{ pdo.nocomment }}</span>
+<span class="sl-is-var">$stmt</span> = <span class="sl-is-var">$pdo</span>-&gt;<span class="sl-is-fn">query</span>(<span class="sl-is-var">$query</span>);
+<span class="sl-is-var">$rows</span> = <span class="sl-is-var">$stmt</span>-&gt;<span class="sl-is-fn">fetchAll</span>(PDO::<span class="sl-is-kw">FETCH_BOTH</span>);</pre>
         <div class="sl-pres-console-grid">
           {% for item in pdo.stats %}{% include 'fragments/presentation-stat.html' with item %}{% endfor %}
         </div>
         <div class="sl-pres-trace">
           <div><span>01</span><b>pdo.prepare</b><em data-sl-tone="success">{{ pdo.mode }}</em></div>
           <div><span>02</span><b>stmt.execute</b><em data-sl-tone="success">{{ pdo.state }}</em></div>
-          <div><span>03</span><b>fetchAll</b><em data-sl-tone="success">{{ pdo.rows }}</em></div>
+          <div><span>03</span><b>fetchAll</b><em data-sl-tone="success">{{ pdo.first.result }}</em></div>
         </div>
       </div>
     </div>
@@ -85,8 +89,8 @@
         </div>
       </div>
     </div>
-    <div class="sl-pres-events">
-      {% for item in events %}<div class="sl-pres-evt"><b>{{ item.name }}</b><span data-sl-tone="{{ item.tone }}">{{ item.verdict }}</span></div>{% endfor %}
+    <div class="sl-pres-events" data-sl-pres="events">
+      {% for item in events %}<div class="sl-pres-evt"><time>{{ item.time }}</time><b>{{ item.name }}</b><span data-sl-tone="{{ item.tone }}">{{ item.verdict }}</span></div>{% endfor %}
     </div>
   </div>
 </div>
