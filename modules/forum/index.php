@@ -472,7 +472,7 @@ function view(): void {
                 $edit = getActionMenu($eitems);
                 $body_html = filterTextHighlight($prs->filterContent($val[7], false, $conf['name'], 2), $word);
                 $text = $tpl->getHtmlFrag('block-content', ['id' => 'repfor'.$fid, 'content' => $body_html]);
-                if ($fields) $text .= filterTextHighlight($prs->filterContent("\n\n".$fields, false, $conf['name'], 2), $word);
+                if ($fields) $text .= filterTextHighlight($fields, $word);
                 $cont .= $tpl->getHtmlFrag('forum-post', [
                     'id' => $fid,
                     'username' => $avname,
@@ -538,7 +538,7 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
                 'required' => '1',
             ]),
         ]);
-        $rows .= getTplFieldsIn(['mod' => $conf['name']]);
+        $rows .= getTplFieldsIn(['mod' => $conf['name'], 'new' => true]);
         $hide = $tpl->getHtmlFrag('hidden', ['name_attr' => 'subject', 'value_attr' => $subject, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'pid', 'value_attr' => (string)$id, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$catid, 'input_attr' => ''])
@@ -663,7 +663,6 @@ function add(): void {
         $subject = $ftitle ?: $subject;
         $hometext = getVar('post', 'hometext', 'text');
         $hometext = ($qid && $ftext) ? '[quote]'.$ftext.'[/quote]' : $hometext;
-        $field = getVar('post', 'field', 'field');
         $status = getVar('post', 'status', 'num', 3);
         $time = getVar('req', 'time', 'time');
         $info = (!empty($ftext)) ? _PUBLICIN.': '.$ftitle : _PUBLICIN.': '.$ctitle;
@@ -702,7 +701,7 @@ function add(): void {
                 'required' => '1',
             ]),
         ]);
-        $rows .= getTplFieldsIn(['field' => $field, 'mod' => $conf['name']]);
+        $rows .= getTplFieldsIn(['field' => $field, 'mod' => $conf['name'], 'new' => !$fid]);
         $rows .= ($ismod) ? $tpl->getHtmlFrag('form-field-row', ['label' => _OPMOD, 'field_html' => pmoder($status, $subh)]).$tpl->getHtmlFrag('form-field-row', ['label' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])]) : '';
         $hide = $tpl->getHtmlFrag('hidden', ['name_attr' => 'id', 'value_attr' => (string)$id, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'fid', 'value_attr' => (string)$fid, 'input_attr' => ''])
@@ -783,7 +782,9 @@ function send(): void {
         $long = intval($conf['forum']['letter']);
         $status = getVar('post', 'status', 'num', 0);
 
-        $field = getVar('post', 'field', 'field');
+        [$fold] = $id ? ($db->getSqlRow($db->getSqlQuery('SELECT field FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id])) ?: ['']) : [''];
+        $flds = getFieldsPost($conf['name'], (string)$fold);
+        $field = $flds['json'];
         $time = ($ismod) ? getVar('req', 'time', 'time') : date('Y-m-d H:i:s');
         $postid = (is_user()) ? (int)$user[0] : 0;
         $ip = getIp();
@@ -796,6 +797,7 @@ function send(): void {
         if ($long > 0 && $size > $long) $stop[] = _CERROR2;
         if (!$postname && !is_user()) $stop[] = _CERROR3;
         if ($room = checkEditorTextRoom($hometext, 'forum.body')) $stop[] = $room;
+        $stop = array_merge($stop, $flds['stop']);
 
         if (!$stop && getVar('post', 'posttype', 'var') == 'save') {
             $where = (is_moder($conf['name'])) ? 'WHERE id = :pid' : 'WHERE id = :pid AND status != \'0\'';

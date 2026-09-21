@@ -23,81 +23,66 @@ function getFieldIds(string $id, string $mint = ''): array {
     return ['input' => $id, 'label' => $id.'-label', 'hint' => $id.'-hint'];
 }
 
-# Build add-div rows from dynamic module field definitions without table markup
-function getTplAddFieldRows(array $data = []): array {
-    global $conf, $tpl;
-    $field = $data['field'] ?? '';
-    $mod = $data['mod'] ?? '';
+# Answer the checked definitions of the extra fields of one area; the set stays empty until the 6.3 data update has left its mark, so no form shows a field before that
+# A stored set that fails the shared check is reported once with the path of its first error and then counts as empty, which keeps a page alive over a broken configuration
+function getFieldRules(string $mod): array {
+    global $conf, $fld;
+    static $memo = [];
     $mod = strtolower($mod);
-    if (is_array($field)) $field = filterFields($field);
-    $vals = explode('|', $field ?? '');
-    $defs = explode('||', $conf['fields'][$mod] ?? '');
+    if (isset($memo[$mod])) return $memo[$mod];
+    $set = (($conf['update']['fields'] ?? '') === '6.3.0') ? ($conf['fields'][$mod] ?? []) : [];
+    try {
+        return $memo[$mod] = $fld->filterFieldList(is_array($set) ? $set : []);
+    } catch (InvalidArgumentException $err) {
+        Logger::addSite('error', 'Field: the definitions of '.$mod.' are refused', ['path' => $err->getMessage()]);
+        return $memo[$mod] = [];
+    }
+}
+
+# Read the posted extra fields of one area and answer json - the text to store, errors - field name => code, and stop - one plain message per refused field
+# Active fields are replaced as a whole, a stored value of a switched off field survives the form that hides it, and a stored name without a definition is dropped at this write
+# While the 6.3 data update has not left its mark the stored text comes back untouched and the refusal is reported, because positional data is never rewritten by the running system
+# A set that failed the shared check keeps the stored text too, and the trusted tags leave every posted text here: a value is stored raw and the tag is the capability itself
+function getFieldsPost(string $mod, string $old = ''): array {
+    global $conf, $fld;
+    if (($conf['update']['fields'] ?? '') !== '6.3.0') {
+        Logger::addSite('error', 'Field: the 6.3 data update has not run, extra fields are closed for writing', ['area' => $mod]);
+        return ['json' => $old, 'errors' => [], 'stop' => []];
+    }
+    $rules = getFieldRules($mod);
+    if (!$rules && !empty($conf['fields'][strtolower($mod)])) return ['json' => $old, 'errors' => [], 'stop' => []];
+    $post = getVar('post', 'field[]', '', []);
+    $trust = isAdmin(true);
+    array_walk_recursive($post, function (mixed &$val) use ($trust): void {
+        if (is_string($val)) $val = filterTrustedTags($val, $trust);
+    });
+    $errs = $fld->checkFieldValues($rules, $post);
+    $texts = ['required' => _FIELDS_REQ, 'type' => _FIELDS_TYPE, 'format' => _FIELDS_FORMAT, 'choice' => _FIELDS_CHOICE, 'min' => _FIELDS_MIN, 'max' => _FIELDS_MAX];
+    $stop = [];
+    foreach ($errs as $name => $code) $stop[] = getConst($rules[$name]['title']).': '.$texts[$code];
+    if ($errs) return ['json' => $old, 'errors' => $errs, 'stop' => $stop];
+    $vals = $fld->filterFieldValues($rules, $post);
+    $prev = json_decode($old, true);
+    $keep = [];
+    foreach ($rules as $name => $rule) {
+        if ($rule['active'] && isset($vals[$name])) $keep[$name] = $vals[$name];
+        if (!$rule['active'] && is_array($prev) && isset($prev[$name])) $keep[$name] = $prev[$name];
+    }
+    $json = $keep ? (string)json_encode($keep, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : '';
+    return (strlen($json) > 1048576) ? ['json' => $old, 'errors' => [], 'stop' => [_FIELDS_MAX]] : ['json' => $json, 'errors' => [], 'stop' => []];
+}
+
+# Build add-div rows of the extra fields of one area for an administration form; the caption and the hint are escaped here because the row fragment takes them as markup
+function getTplAddFieldRows(array $data = []): array {
     $rows = [];
-    $pos = 0;
-    foreach ($defs as $item) {
-        if ($item == '') {
-            $pos++;
-            continue;
-        }
-        preg_match('#(.*)\|(.*)\|(.*)\|(.*)#i', $item, $out);
-        if (($out[1] ?? '0') == '0') {
-            $pos++;
-            continue;
-        }
-        $text = !empty($vals[$pos]) ? $vals[$pos] : ($out[2] ?? '');
-        $need = (($out[4] ?? '0') == '1') ? ' required' : '';
-        $type = $out[3] ?? '';
-        $fid = 'f-field-'.$pos;
-        if ($type == '1') {
-            $dval = $text ? getConst($text) : '';
-            $html = $tpl->getHtmlFrag('input', [
-                'itype' => 'text',
-                'name_attr' => 'field[]',
-                'input_id' => $fid,
-                'value_attr' => $dval,
-                'placeholder_text' => $dval,
-                'input_attr' => trim($need),
-            ]);
-        } elseif ($type == '2') {
-            $html = $tpl->getHtmlFrag('textarea', [
-                'name_attr' => 'field[]',
-                'input_id' => $fid,
-                'rows_num' => 5,
-                'value_text' => $text,
-                'input_attr' => trim($need),
-            ]);
-        } elseif ($type == '3') {
-            $opts = '';
-            $list = explode(',', $out[2] ?? '');
-            foreach ($list as $name) {
-                if ($name == '') continue;
-                $opts .= $tpl->getHtmlFrag('select-option', [
-                    'value_attr' => $name,
-                    'label_text' => $name,
-                    'is_selected' => $name == $text,
-                ]);
-            }
-            $html = $tpl->getHtmlFrag('select', [
-                'name_attr' => 'field[]',
-                'selectid' => $fid,
-                'options_html' => $tpl->getHtmlFrag('select-option', [
-                    'value_attr' => '',
-                    'label_text' => _NO,
-                    'is_selected' => $text === '',
-                ]).$opts,
-                'select_attr' => trim($need),
-            ]);
-        } elseif ($type == '4') {
-            $fid = '';
-            $html = getTplAddDateTime(['name' => 'field[]', 'time' => $text, 'with' => true, 'max' => 16]);
-        } elseif ($type == '5') {
-            $fid = '';
-            $html = getTplAddDateTime(['name' => 'field[]', 'time' => $text, 'with' => false, 'max' => 10]);
-        } else {
-            $html = '';
-        }
-        if ($html != '') $rows[] = ['label_for' => $fid, 'label_html' => getConst($out[1]), 'field_html' => $html];
-        $pos++;
+    foreach (getFieldsInRows($data) as $row) {
+        $rows[] = [
+            'label_for' => $row['label_for'],
+            'label_html' => htmlspecialchars($row['label'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+            'hint_html' => htmlspecialchars($row['hint'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+            'hint_id' => $row['hint_id'],
+            'field_html' => $row['control_html'],
+        ];
     }
     return $rows;
 }
@@ -133,38 +118,15 @@ function getTplAddDateTime(array $data = []): string {
         ]);
 }
 
-# Render preview field rows from dynamic module field definitions
+# Render the stored extra field values of one area as value rows; the shared class decides what is shown, and only a textarea arrives as parser output
 function getTplViewFieldRows(array $data = []): string {
-    global $conf, $tpl, $prs;
-    $field = $data['field'] ?? '';
-    $mod = $data['mod'] ?? '';
-    $mod = strtolower($mod);
-    if (is_array($field)) $field = filterFields($field);
-    if (!$field || !$mod) return '';
-    $vals = explode('|', (string)$field);
-    $defs = explode('||', $conf['fields'][$mod] ?? '');
+    global $tpl, $prs, $fld;
+    $mod = strtolower($data['mod'] ?? '');
+    $vals = json_decode($data['field'] ?? '', true);
+    if (!$mod || !is_array($vals)) return '';
     $rows = '';
-    $pos = 0;
-    foreach ($defs as $item) {
-        if ($item == '' || empty($vals[$pos])) {
-            $pos++;
-            continue;
-        }
-        preg_match('#(.*)\|(.*)\|(.*)\|(.*)#i', $item, $out);
-        if (($out[1] ?? '0') != '0') {
-            $valu = $vals[$pos];
-            $type = $out[3] ?? '';
-            if ($type == '2') {
-                $valu = $prs->filterContent($valu, false, $mod);
-            } else {
-                $valu = htmlspecialchars((string)$valu, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-            }
-            $rows .= $tpl->getHtmlFrag('field-value', [
-                'label' => getConst($out[1]),
-                'value_html' => $valu,
-            ]);
-        }
-        $pos++;
+    foreach ($fld->getFieldView($prs, getFieldRules($mod), $vals, $mod) as $row) {
+        $rows .= $tpl->getHtmlFrag('field-value', ['label' => $row['label_text'], 'value_html' => $row['value_html'], 'value_text' => $row['value_text']]);
     }
     return $rows;
 }
@@ -516,69 +478,32 @@ function getTplUserSearchInput(array $data = []): string {
 }
 
 
-# Render extra field rows for new/ form layout (getTplFieldsIn() replacement for new/form-add)
+# Render the extra field rows of one area for a site form; the hint of a row carries the message of a refused value as well
 function getTplFieldsIn(array $data = []): string {
     global $tpl;
     $out = '';
     foreach (getFieldsInRows($data) as $row) {
-        $out .= $tpl->getHtmlFrag('form-field-row', ['label_for' => $row['label_for'], 'label' => $row['label'], 'field_html' => $row['control_html']]);
+        $out .= $tpl->getHtmlFrag('form-field-row', ['field_html' => $row['control_html']] + $row);
     }
     return $out;
 }
 
-# The extra fields of a module as data and not as markup: one entry per declared slot with its caption, the id its caption points at and the rendered control
+# The extra fields of an area as data and not as markup: one entry per active field with its caption, the id its caption points at, its hint and the rendered control
 # A page that lays the fields out its own way - the settings page puts them on lines - reads this, and getTplFieldsIn() is the same list folded into form rows
+# Values come from the posted form when there is one, else from the stored JSON, else - for a new entity only - from the defaults; a posted form is shown with its refusals
 function getFieldsInRows(array $data = []): array {
-    global $conf, $tpl;
-    $field  = $data['field'] ?? '';
-    $mod    = strtolower($data['mod'] ?? '');
-    $fieldc = $conf['fields'][$mod] ?? '';
-    $posted = getVar('post', 'field[]', 'raw', []);
-    if (is_array($posted) && $posted) {
-        $fieldb = array_values(array_map('strval', $posted));
-    } else {
-        $fieldb = explode('|', is_string($field) ? $field : '');
+    global $tpl, $fld;
+    $rules = getFieldRules($data['mod'] ?? '');
+    $post = getVar('post', 'field[]', '', []);
+    $vals = $post ?: json_decode($data['field'] ?? '', true);
+    if (!is_array($vals)) $vals = [];
+    foreach ((!$post && !empty($data['new'])) ? $rules : [] as $name => $rule) {
+        if (!in_array($rule['default'], ['', [], null], true)) $vals[$name] = $rule['default'];
     }
-    $fieldc = explode('||', $fieldc);
-    $i = 0;
     $rows = [];
-    foreach ($fieldc as $item) {
-        if ($item !== '') {
-            preg_match('#(.*)\|(.*)\|(.*)\|(.*)#i', $item, $m);
-            if (($m[1] ?? '0') !== '0') {
-                $fieldin   = !empty($fieldb[$i]) ? $fieldb[$i] : ($m[2] ?? '');
-                $requir    = (($m[4] ?? '0') == '1') ? ' required' : '';
-                $fhtml = '';
-                $fid = 'f-field-'.$i;
-                if (($m[3] ?? '') == '1') {
-                    $dval = $fieldin ? getConst($fieldin) : '';
-                    $fhtml = $tpl->getHtmlFrag('input', [
-                        'input_attr' => 'placeholder="'.$dval.'"'.$requir,
-                        'itype' => 'text',
-                        'name_attr' => 'field[]',
-                        'input_id' => $fid,
-                        'value_attr' => $dval,
-                    ]);
-                } elseif ($m[3] == '2') {
-                    $fhtml = $tpl->getHtmlFrag('textarea', ['name_attr' => 'field[]', 'input_id' => $fid, 'rows_num' => 5, 'value_text' => $fieldin, 'input_attr' => trim($requir)]);
-                } elseif ($m[3] == '3') {
-                    $opts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _NO, 'is_selected' => $fieldin === '']);
-                    foreach (explode(',', $m[2] ?? '') as $opt) {
-                        if ($opt === '') continue;
-                        $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $opt, 'label_text' => $opt, 'is_selected' => $opt === $fieldin]);
-                    }
-                    $fhtml = $tpl->getHtmlFrag('select', ['name_attr' => 'field[]', 'input_id' => $fid, 'options_html' => $opts, 'select_attr' => trim($requir)]);
-                } elseif ($m[3] == '4') {
-                    $fid = '';
-                    $fhtml = getTplAddDateTime(['name' => 'field[]', 'time' => $fieldin, 'with' => true, 'max' => 16]);
-                } elseif ($m[3] == '5') {
-                    $fid = '';
-                    $fhtml = getTplAddDateTime(['name' => 'field[]', 'time' => $fieldin, 'with' => false, 'max' => 10]);
-                }
-                if ($fhtml !== '') $rows[] = ['label' => getConst($m[1]), 'label_for' => $fid, 'control_html' => $fhtml];
-            }
-        }
-        $i++;
+    foreach ($fld->getFieldForm($tpl, $rules, $vals, $post ? $fld->checkFieldValues($rules, $post) : []) as $row) {
+        $hint = trim($row['hint_text'].' '.$row['error_text']);
+        $rows[] = ['label' => $row['label_text'], 'label_for' => $row['label_for'], 'hint' => $hint, 'hint_id' => $row['hint_id'], 'control_html' => $row['field_html']];
     }
     return $rows;
 }
@@ -592,7 +517,7 @@ function getEditorRoomData(string $store): array {
     $room = [
         'comment.body' => 'mediumtext', 'forum.body' => 'mediumtext', 'message.body' => 'mediumtext', 'money.note' => 'mediumtext',
         'newsletter.body' => 'mediumtext', 'order.note' => 'mediumtext', 'privat.body' => 'mediumtext', 'products.body' => 'mediumtext',
-        'auto_links.intro' => 'text', 'money.intro' => 'text', 'order.info' => 'text', 'products.intro' => 'text',
+        'auto_links.intro' => 'text', 'money.intro' => 'text', 'products.intro' => 'text',
         'users.block' => 'text', 'users.sig' => 'text',
         'config' => 'config',
     ];

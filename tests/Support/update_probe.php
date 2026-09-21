@@ -4,8 +4,8 @@
 # License: MIT
 # Website: slaed.net
 
-# CLI probe for the points unit and the ratings unit of the 6.3 data update in setup/index.php, whose contracts are docs/node/12-migration.md and docs/node/ratings.md
-# The second argument names the unit, points when it is left out; both share the schema, the lifted installer code and the scratch site
+# CLI probe for the points, ratings and fields units of the 6.3 data update in setup/index.php, whose contracts are docs/node/12-migration.md and docs/node/ratings.md
+# The second argument names the unit, points when it is left out; all three share the schema, the lifted installer code and the scratch site
 # The installer cannot be required from CLI: it is a request handler that acts on load, so its functions are lifted out of the shipped source by name
 # BASE_DIR and CONFIG_DIR point into scratch, so the manifest, the snapshot, the mark and every configuration file the unit writes stay away from the site
 # Nothing touches the site database either: the probe creates its own schema, works only in it, and drops it again
@@ -39,6 +39,7 @@ const PROBEROWS = [
 # The installer defines the same guard before it loads the database facade on its own
 if (!defined('FUNC_FILE')) define('FUNC_FILE', true);
 require_once PROBEROOT.'/core/classes/pdo.php';
+require_once PROBEROOT.'/core/classes/field.php';
 foreach (['_TABLE' => 'Table', '_OK' => 'probe-ok', '_ERROR' => 'probe-error'] as $name => $text) define($name, $text);
 
 # A database facade that can name another server version, which is the one fact of the preflight a real server cannot be asked to change
@@ -92,7 +93,7 @@ function addProbeSchema(): void {
     $root = getProbeSide(true);
     $root->exec('CREATE DATABASE `'.$GLOBALS['pname'].'` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
     $root->exec('USE `'.$GLOBALS['pname'].'`');
-    foreach (['users', 'points', 'forum', 'products', 'rating', 'rating_targets', 'rating_actors', 'rating_votes'] as $name) $root->exec(getProbeTable($name));
+    foreach (['users', 'points', 'forum', 'order', 'products', 'rating', 'rating_targets', 'rating_actors', 'rating_votes'] as $name) $root->exec(getProbeTable($name));
     foreach (PROBEBAL as $id => $sum) {
         $root->exec('INSERT INTO `'.PROBEPREF.'_users` (`id`, `name`, `email`, `password`, `block`, `warnings`, `field`, `points`)'
             .' VALUES ('.$id.', \'user'.$id.'\', \'user'.$id.'@probe.test\', \'x\', \'\', \'\', \'\', '.$sum.')');
@@ -385,14 +386,157 @@ function getRateFlight(): array {
     return $out;
 }
 
+# The definitions of a 6.2 site: a select, a text with a default, a switched off position, a date, a moment and a textarea, with the duty slot as 1, 2, 0 and empty
+# An empty slot is written as 0 the way the 6.2 form did, because two pipes in a row already part two positions; only the very last slot of the string can be empty
+# The forum keeps a switched off position between two selects, so a row can follow the full or the short layout; the order has two texts around a switched off position
+const PROBEDEFS = [
+    'account' => 'Version|A,B,C|3|1||Name|John|1|2||0|0|1|1||Born|0|5|2||Seen|0|4|0||Notes|0|2|',
+    'forum' => 'Sys|X,Y|3|2||0|0|1|1||Host|L,R|3|2',
+    'order' => 'Wallet|0|1|1||0|0|1|1||First|0|1|2',
+];
+
+# The value rows of that site: every type filled, placeholders next to an empty text and a text zero, an empty row, the full and the short layout of the forum, and a gap in an order
+const PROBEVALS = ['users' => [2 => 'B|Änn "Q"||2001-02-03|2020-05-06 07:08|one', 3 => '0|||0|0|0', 4 => ''], 'forum' => [5 => 'X||R', 7 => 'Y|L', 9 => '0|0|0'], 'order' => [1 => 'Z1||Bob']];
+
+# Put the scratch site and the disposable schema back to a 6.2 installation with extra fields: positional definitions, the marks of the two units before, and positional value rows
+# The twelve hundred extra accounts make the unit write its rows in three batches; $bulk = false leaves them without a value
+function setFieldSite(array $defs = PROBEDEFS, array $mark = ['points' => '6.3.0', 'ratings' => '6.3.0'], array $rows = PROBEVALS, bool $bulk = true): void {
+    deleteProbeTree(BASE_DIR);
+    mkdir(CONFIG_DIR, 0777, true);
+    setConfigFile('fields.php', $defs);
+    if ($mark) setConfigFile('update.php', $mark);
+    $side = getProbeSide();
+    foreach (['forum', 'order'] as $name) $side->exec('DELETE FROM `'.PROBEPREF.'_'.$name.'`');
+    $side->exec('DELETE FROM `'.PROBEPREF.'_users` WHERE id >= 100');
+    $list = [];
+    for ($i = 100; $i < 1300; $i++) $list[] = '('.$i.', \'bulk'.$i.'\', \'bulk'.$i.'@probe.test\', \'x\', \'\', \'\', \''.($bulk ? 'A|user '.$i : '').'\')';
+    $side->exec('INSERT INTO `'.PROBEPREF.'_users` (`id`, `name`, `email`, `password`, `block`, `warnings`, `field`) VALUES '.implode(', ', $list));
+    $set = $side->prepare('UPDATE `'.PROBEPREF.'_users` SET field = ? WHERE id = ?');
+    foreach ($rows['users'] as $id => $text) $set->execute([$text, $id]);
+    $add = $side->prepare('INSERT INTO `'.PROBEPREF.'_forum` (`id`, `pid`, `uid`, `name`, `title`, `field`, `status`) VALUES (?, 0, 2, \'user2\', \'topic\', ?, 2)');
+    foreach ($rows['forum'] as $id => $text) $add->execute([$id, $text]);
+    $add = $side->prepare('INSERT INTO `'.PROBEPREF.'_order` (`id`, `email`, `info`, `note`) VALUES (?, \'order@probe.test\', ?, \'\')');
+    foreach ($rows['order'] as $id => $text) $add->execute([$id, $text]);
+}
+
+# Everything the fields unit leaves behind, read fresh from disk and from the schema: its answer, the manifest, the snapshots, the three columns, the published definitions and the mark
+function getFieldState(string $html): array {
+    $dir = BASE_DIR.'/storage/backup/update/fields';
+    $info = is_file($dir.'/manifest.json') ? json_decode((string)file_get_contents($dir.'/manifest.json'), true) : null;
+    $side = getProbeSide();
+    $pref = '`'.PROBEPREF.'_';
+    clearstatcache();
+    $files = is_array($info);
+    foreach ($files ? $info['source'] : [] as $name => $hash) $files = $files && is_file($dir.'/'.$name) && hash_file('sha256', $dir.'/'.$name) === $hash;
+    $like = 'SELECT field LIKE \'{"field1":"option1","field2":"user %"}\', COUNT(*) FROM '.$pref.'users` WHERE id >= 100 GROUP BY 1';
+    return [
+        'done' => str_contains($html, _OK) && !str_contains($html, _ERROR),
+        'text' => trim(strip_tags($html)),
+        'dir' => is_dir($dir),
+        'state' => $info['state'] ?? null,
+        'cursor' => $info['cursor'] ?? null,
+        'count' => $info['count'] ?? null,
+        'files' => $files,
+        'sealed' => is_array($info) && count($info['target']) === 4 && ($info['target']['fields.php'] ?? '') === hash_file('sha256', CONFIG_DIR.'/fields.php'),
+        'users' => $side->query('SELECT id, field FROM '.$pref.'users` WHERE id < 100 ORDER BY id')->fetchAll(PDO::FETCH_KEY_PAIR),
+        'bulk' => array_map('intval', $side->query($like)->fetchAll(PDO::FETCH_KEY_PAIR)),
+        'forum' => $side->query('SELECT id, field FROM '.$pref.'forum` ORDER BY id')->fetchAll(PDO::FETCH_KEY_PAIR),
+        'order' => $side->query('SELECT id, info FROM '.$pref.'order` ORDER BY id')->fetchAll(PDO::FETCH_KEY_PAIR),
+        'rules' => (include CONFIG_DIR.'/fields.php')['fields'],
+        'mark' => is_file(CONFIG_DIR.'/update.php') ? (include CONFIG_DIR.'/update.php')['update'] : null,
+    ];
+}
+
+# Run the fields unit once and read what it left
+function getFieldRun(): array {
+    return getFieldState(setUpdateFields($GLOBALS['pdb'], PROBEPREF));
+}
+
+# The clean path and its repeats: a value saved after the site opened is left alone, a lost mark is written again, and nothing of the backup changes
+# A site whose definitions are already named and whose columns are empty has nothing to carry over and gets its mark
+function getFieldClean(): array {
+    setFieldSite();
+    $out = ['first' => getFieldRun()];
+    $dir = BASE_DIR.'/storage/backup/update/fields';
+    $names = ['manifest.json', 'definitions.json', 'account.json', 'forum.json', 'order.json'];
+    $kept = array_map(fn($v) => file_get_contents($dir.'/'.$v), $names);
+    getProbeSide()->exec('UPDATE `'.PROBEPREF.'_users` SET field = \'{"field2":"later"}\' WHERE id = 4');
+    $out['again'] = getFieldRun();
+    unlink(CONFIG_DIR.'/update.php');
+    $out['nomark'] = getFieldRun();
+    $out['same'] = $kept === array_map(fn($v) => file_get_contents($dir.'/'.$v), $names);
+    $named = $out['first']['rules'];
+    setFieldSite(PROBEDEFS, ['points' => '6.3.0'], ['users' => [2 => '', 3 => '', 4 => ''], 'forum' => [], 'order' => []], false);
+    setConfigFile('fields.php', $named, [], true);
+    $out['named'] = getFieldRun();
+    return $out;
+}
+
+# The interrupted run: the manifest is put back with the cursor after none, one and two batches of accounts, and the rows behind the cursor are positional again
+function getFieldResume(): array {
+    $out = [];
+    $dir = BASE_DIR.'/storage/backup/update/fields';
+    foreach ([0, 500, 1000] as $stop) {
+        setFieldSite();
+        getFieldRun();
+        $keep = (string)file_get_contents($dir.'/manifest.json');
+        $list = json_decode((string)file_get_contents($dir.'/account.json'), true);
+        $set = getProbeSide()->prepare('UPDATE `'.PROBEPREF.'_users` SET field = ? WHERE id = ?');
+        foreach (array_slice($list, $stop) as [$id, $from]) $set->execute([$from, $id]);
+        $info = ['state' => $stop ? 'applying' : 'prepared', 'cursor' => ['account' => $stop, 'forum' => 0, 'order' => 0], 'target' => []] + json_decode($keep, true);
+        file_put_contents($dir.'/manifest.json', json_encode($info));
+        unlink(CONFIG_DIR.'/update.php');
+        setConfigFile('fields.php', PROBEDEFS);
+        $out['cursor'.$stop] = getFieldRun();
+    }
+    return $out;
+}
+
+# The stops: a mark without a manifest, named definitions over positional rows, a forged snapshot, a stored row that is neither source nor target,
+# and every broken row and every broken definition the preflight has to name together without writing anything
+function getFieldStop(): array {
+    $out = [];
+    setFieldSite(PROBEDEFS, ['points' => '6.3.0', 'ratings' => '6.3.0', 'fields' => '6.3.0']);
+    $out['mark'] = getFieldRun();
+    setFieldSite();
+    $named = getFieldRun()['rules'];
+    setFieldSite();
+    setConfigFile('fields.php', $named, [], true);
+    $out['named'] = getFieldRun();
+    setFieldSite();
+    getFieldRun();
+    unlink(CONFIG_DIR.'/update.php');
+    file_put_contents(BASE_DIR.'/storage/backup/update/fields/order.json', '[[1,"Z1||Bob","{\"field1\":\"forged\"}"]]');
+    $out['forged'] = getFieldRun();
+    setFieldSite();
+    getFieldRun();
+    $file = BASE_DIR.'/storage/backup/update/fields/manifest.json';
+    $info = ['state' => 'applying', 'cursor' => ['account' => 0, 'forum' => 0, 'order' => 0], 'target' => []] + json_decode((string)file_get_contents($file), true);
+    file_put_contents($file, json_encode($info));
+    unlink(CONFIG_DIR.'/update.php');
+    setConfigFile('fields.php', PROBEDEFS);
+    getProbeSide()->exec('UPDATE `'.PROBEPREF.'_forum` SET field = \'{"field1":"foreign"}\' WHERE id = 7');
+    $out['foreign'] = getFieldRun();
+    $rows = ['users' => [2 => 'D|x', 3 => 'A|n||03.02.2001', 4 => 'A|n||||t|extra'], 'forum' => [5 => 'X|L|R', 7 => 'Y'], 'order' => [1 => 'a|0', 2 => "two\nlines"]];
+    setFieldSite(PROBEDEFS, ['points' => '6.3.0', 'ratings' => '6.3.0'], $rows);
+    $out['rows'] = getFieldRun();
+    $defs = ['account' => 'Kind|A,B,A|3|1||Wide|x|7|1||Five|a|b|1|2', 'forum' => 'Born|31.12.2000|5|2', 'order' => PROBEDEFS['order']];
+    setFieldSite($defs, ['points' => '6.3.0', 'ratings' => '6.3.0'], ['users' => [2 => '', 3 => '', 4 => ''], 'forum' => [], 'order' => [1 => 'a||b']], false);
+    $out['defs'] = getFieldRun();
+    return $out;
+}
+
 $report = ['error' => '', 'clean' => false, 'runs' => []];
 
 try {
-    foreach (['setConfigFile', 'getInfo', 'checkUpdateBase', 'setUpdateBackup', 'setUpdatePoints', 'setUpdateRatings'] as $name) addProbeCode($name);
+    $units = ['setConfigFile', 'getInfo', 'checkUpdateBase', 'setUpdateBackup', 'setUpdatePoints', 'setUpdateRatings', 'getUpdateRules', 'getUpdateValue', 'setUpdateFields'];
+    foreach ($units as $name) addProbeCode($name);
     addProbeSchema();
-    $report['runs'] = (($argv[2] ?? 'points') === 'ratings')
-        ? ['clean' => getRateClean(), 'resume' => getRateResume(), 'stop' => getRateStop(), 'flight' => getRateFlight()]
-        : ['clean' => getProbeClean(), 'resume' => getProbeResume(), 'stop' => getProbeStop(), 'flight' => getProbeFlight()];
+    $report['runs'] = match ($argv[2] ?? 'points') {
+        'ratings' => ['clean' => getRateClean(), 'resume' => getRateResume(), 'stop' => getRateStop(), 'flight' => getRateFlight()],
+        'fields' => ['clean' => getFieldClean(), 'resume' => getFieldResume(), 'stop' => getFieldStop()],
+        default => ['clean' => getProbeClean(), 'resume' => getProbeResume(), 'stop' => getProbeStop(), 'flight' => getProbeFlight()],
+    };
 } catch (Throwable $err) {
     $report['error'] = $err->getMessage().' @ '.basename($err->getFile()).':'.$err->getLine();
 }

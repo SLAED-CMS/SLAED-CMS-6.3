@@ -202,7 +202,7 @@ function add(): void {
         $group = getVar('post', 'group', 'num', 0);
         $birth = getVar('post', 'birth', 'time', '');
         $gender = getVar('post', 'gender', 'num', 0);
-        $field = getVar('post', 'field', 'field', '');
+        $field = '';
     }
     $uname = (string)$uname;
     $rank = (string)$rank;
@@ -418,43 +418,7 @@ function add(): void {
         'label_html' => _GENDER,
         'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'gender', 'selectid' => 'f-gender', 'is_config' => true, 'options_html' => $genderopts]),
     ];
-    $fieldvals = explode('|', $field);
-    $fieldcfgs = explode('||', (string)$conf['fields']['account']);
-    foreach ($fieldcfgs as $idx => $cfg) {
-        if ($cfg === '') {
-            continue;
-        }
-        preg_match('#(.*)\|(.*)\|(.*)\|(.*)#i', $cfg, $out);
-        if (($out[1] ?? '0') === '0') {
-            continue;
-        }
-        $fieldvalue = $fieldvals[$idx] ?? ($out[2] ?? '');
-        $required = (($out[4] ?? '0') == 1);
-        $fieldhtml = '';
-        if (($out[3] ?? '0') == 1) {
-            $fieldhtml = $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'field[]', 'value_attr' => $fieldvalue ? getConst($fieldvalue) : '', 'placeholder_text' => $fieldvalue ? getConst($fieldvalue) : '', 'is_required' => $required]);
-        } elseif (($out[3] ?? '0') == 2) {
-            $fieldhtml = $tpl->getHtmlFrag('textarea', ['name_attr' => 'field[]', 'value_text' => $fieldvalue, 'rows_num' => 5, 'is_required' => $required]);
-        } elseif (($out[3] ?? '0') == 3) {
-            $fieldopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _NO]);
-            foreach (explode(',', (string)($out[2] ?? '')) as $value) {
-                if ($value !== '') {
-                    $fieldopts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $value, 'label_text' => $value, 'is_selected' => $value == $fieldvalue]);
-                }
-            }
-            $fieldhtml = $tpl->getHtmlFrag('select', ['name_attr' => 'field[]', 'options_html' => $fieldopts, 'select_attr' => $required ? 'required' : '']);
-        } elseif (($out[3] ?? '0') == 4) {
-            $fieldhtml = getTplAddDateTime(['name' => 'field[]', 'time' => (string)$fieldvalue, 'with' => true, 'max' => 16, 'is_config' => true]);
-        } elseif (($out[3] ?? '0') == 5) {
-            $fieldhtml = getTplAddDateTime(['name' => 'field[]', 'time' => (string)$fieldvalue, 'with' => false, 'max' => 10, 'is_config' => true]);
-        }
-        if ($fieldhtml !== '') {
-            $rows[] = [
-                'label_html' => getConst((string)$out[1]),
-                'field_html' => $fieldhtml,
-            ];
-        }
-    }
+    $rows = array_merge($rows, getTplAddFieldRows(['field' => $field, 'mod' => 'account', 'new' => !$uid]));
     $rows[] = [
         'label_for' => 'f-pass',
         'label_html' => _PASSWORD,
@@ -536,10 +500,13 @@ function addsave(): void {
         $group = getVar('post', 'group');
         $birth = getVar('req', 'birth', 'date');
         $gender = getVar('post', 'gender');
-        $field = getVar('post', 'field', 'field');
+        [$fold] = $uid ? ($db->getSqlRow($db->getSqlQuery('SELECT field FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $uid])) ?: ['']) : [''];
+        $flds = getFieldsPost('account', (string)$fold);
+        $field = $flds['json'];
         $mail = getVar('post', 'mail', 'num');
 
         if (!$uid && (!$uname || !$email || !$pass || !$pass2)) $stop[] = _ERROR_ALL;
+        $stop = array_merge((array)$stop, $flds['stop']);
         if ($uname) {
             [$existId, $existName] = $db->getSqlRow($db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $uname]));
             [$tempId, $tempName] = $db->getSqlRow($db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_users_temp WHERE name = :name', ['name' => $uname]));

@@ -779,6 +779,28 @@ function getProbeCommentTarget(): array {
     return $out;
 }
 
+# The write helper of the extra fields over a posted form: trusted tags leave every text, a switched off field keeps its stored value, a stored name without a definition goes,
+# a refused value and a refused set and a missing mark each hand the stored text back untouched, and the rendered rows of a stored tag never reach eval through a trusted parse
+function getProbeFieldPost(): array {
+    global $conf, $fld, $prs, $tpl;
+    $rule = ['title' => 'Probe', 'intro' => '', 'type' => 'text', 'default' => '', 'options' => [], 'req' => false, 'multi' => false, 'active' => true, 'sort' => 10];
+    $conf['update']['fields'] = '6.3.0';
+    $conf['fields']['probea'] = ['note' => $rule, 'area' => ['type' => 'textarea', 'sort' => 20] + $rule, 'off' => ['active' => false, 'sort' => 30] + $rule];
+    $conf['fields']['probeb'] = ['note' => ['options' => ['max' => 3]] + $rule];
+    $conf['fields']['probec'] = ['Broken-Name' => $rule];
+    $old = '{"note":"before","off":"kept","ghost":"gone"}';
+    $_POST['field'] = ['note' => ' [use[usephp]php]echo 6*7;[/UsePhp] [b]x[/b] ', 'area' => "[usehtml]<script>1</script>[/usehtml]\r\nline", 'off' => 'forged', 'ghost' => 'x'];
+    $out = ['saved' => getFieldsPost('probea', $old)];
+    $out['refused'] = getFieldsPost('probeb', $old);
+    $out['broken'] = getFieldsPost('probec', $old);
+    $conf['update']['fields'] = '';
+    $out['nomark'] = getFieldsPost('probea', $old);
+    $rows = '';
+    $vals = ['note' => '[usephp]echo 6*7, "-proof";[/usephp]'];
+    foreach ($fld->getFieldView($prs, ['note' => $rule], $vals, 'forum') as $row) $rows .= $tpl->getHtmlFrag('field-value', ['label' => $row['label_text'], 'value_text' => $row['value_text']]);
+    $out['view'] = [str_contains($rows, '[usephp]'), str_contains($rows, '42-proof')];
+    return $out;
+}
 $mode = $argv[1] ?? 'core';
 $conf = $GLOBALS['conf'];
 $chost = strtolower((string)parse_url((string)$conf['homeurl'], PHP_URL_HOST));
@@ -905,6 +927,8 @@ if ($mode === 'core') {
     $out = getProbeCommentFormat();
 } elseif ($mode === 'commentfeed') {
     $out = getProbeCommentFeed();
+} elseif ($mode === 'fieldpost') {
+    $out = getProbeFieldPost();
 } elseif ($mode === 'geoip') {
     $peak = memory_get_peak_usage(true);
     $out['country'] = Geoip::getCountry((string)($conf['geoip_test'] ?? '217.50.80.228'));

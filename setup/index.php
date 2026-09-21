@@ -40,8 +40,8 @@ foreach (['mbstring', 'pdo', 'json'] as $ext) {
 }
 $copy = '<a href="https://slaed.net" target="_blank" title="SLAED CMS">SLAED CMS</a> © 2005-'.date('Y').' Eduard Laas. Released under MIT License.';
 
-# Saving configurations to a file
-function setConfigFile(string $fp, array $arr, array $act = []): void {
+# Saving configurations to a file; every scalar is stored as a string unless $raw keeps the native types the definitions of the extra fields are made of
+function setConfigFile(string $fp, array $arr, array $act = [], bool $raw = false): void {
     $fp = BASE_DIR.'/config/'.$fp;
     if (!empty($act)) $arr = array_replace_recursive($arr, $act);
     ksort($arr);
@@ -56,7 +56,7 @@ function setConfigFile(string $fp, array $arr, array $act = []): void {
         if (is_null($val)) return '';
         return (string)$val;
     };
-    foreach ($arr as $key => $val) $arr[$key] = $norm($val);
+    if (!$raw) $arr = $norm($arr);
     $key = pathinfo(basename($fp), PATHINFO_FILENAME);
     $data = ($key === 'global') ? $arr : [$key => $arr];
     $exp = function (array $arr, int $dep = 0) use (&$exp): string {
@@ -542,6 +542,205 @@ function setUpdateRatings(Database $db, string $prefix): string {
     return getInfo($text, true);
 }
 
+# Read the positional 6.2 definitions of one area and answer [named definitions, slot map by position, number of positions]; every refusal goes to $bad and nothing is guessed
+# The four slots are caption, content, type and duty: caption 0 switches a position off, content is the default of a text, the comma list of a select or the default of a date
+# Keys are field1, field2 and so on by the original position without closing gaps, options are option1, option2 in their original order, and only an exact 1 makes a field required
+function getUpdateRules(string $area, mixed $text, Field $fld, array &$bad): array {
+    if (!is_string($text)) {
+        $bad[] = 'config/fields.php '.$area.' (not a 6.2 definition string)';
+        return [[], [], 0];
+    }
+    $types = ['1' => 'text', '2' => 'textarea', '3' => 'select', '4' => 'datetime', '5' => 'date'];
+    $list = explode('||', $text);
+    $rules = [];
+    $slots = [];
+    foreach ($list as $pos => $item) {
+        $part = explode('|', $item);
+        if ($item === '' || $part[0] === '0') continue;
+        $type = $types[$part[2] ?? ''] ?? '';
+        if (count($part) !== 4 || $type === '') {
+            $bad[] = 'config/fields.php '.$area.' position '.($pos + 1).' (four slots and a type from 1 to 5 are expected)';
+            continue;
+        }
+        $rule = ['title' => $part[0], 'intro' => '', 'type' => $type, 'default' => '', 'options' => [], 'req' => $part[3] === '1', 'multi' => false];
+        $rule += ['active' => true, 'sort' => ($pos + 1) * 10];
+        $items = [];
+        foreach ($type === 'select' ? explode(',', $part[1]) : [] as $label) {
+            if ($label === '') continue;
+            if (isset($items[$label])) $bad[] = 'config/fields.php '.$area.' position '.($pos + 1).' (an option caption repeats)';
+            $items[$label] = 'option'.(count($items) + 1);
+            $rule['options']['items'][$items[$label]] = ['title' => (string)$label, 'active' => true, 'sort' => count($items) * 10];
+        }
+        if ($type !== 'select' && $part[1] !== '' && $part[1] !== '0') $rule['default'] = ($type === 'datetime') ? str_replace(' ', 'T', $part[1]) : $part[1];
+        $rules['field'.($pos + 1)] = $rule;
+        $slots[$pos] = ['name' => 'field'.($pos + 1), 'type' => $type, 'items' => $items];
+    }
+    try {
+        $rules = $fld->filterFieldList($rules);
+    } catch (InvalidArgumentException $err) {
+        $bad[] = 'config/fields.php '.$area.' '.$err->getMessage().' (the shared check of definitions refused it)';
+    }
+    return [$rules, $slots, count($list)];
+}
+
+# Turn one positional 6.2 value row into the canonical JSON of its area and answer ['json' => text], or ['why' => reason] without any of the stored data in it
+# The old view indexed every position while a posted form could leave the switched off ones out, so both layouts are tried and only one confirmed result is accepted
+# An empty part is absence; 0 is a value of a text and the placeholder of an empty choice in a select without such an option, in a date and in a position without a definition
+function getUpdateValue(array $rules, array $slots, int $size, string $text, Field $fld): array {
+    $part = explode('|', $text);
+    $found = [];
+    $why = '';
+    foreach (['full' => range(0, max($size, count($part)) - 1), 'short' => array_keys($slots)] as $plan => $order) {
+        $vals = [];
+        $fail = '';
+        foreach ($part as $num => $val) {
+            $slot = isset($order[$num]) ? ($slots[$order[$num]] ?? null) : null;
+            $spot = 'value '.($num + 1);
+            if ($slot === null) {
+                if ($val !== '' && $val !== '0') $fail = $spot.' holds data and has no definition';
+            } elseif ($slot['type'] === 'select') {
+                if (isset($slot['items'][$val])) $vals[$slot['name']] = $slot['items'][$val];
+                elseif ($val !== '' && $val !== '0') $fail = $spot.' is no option of '.$slot['name'];
+            } elseif ($slot['type'] === 'date' || $slot['type'] === 'datetime') {
+                if ($val !== '' && $val !== '0') $vals[$slot['name']] = ($slot['type'] === 'datetime') ? str_replace(' ', 'T', $val) : $val;
+            } elseif ($val !== '') {
+                $vals[$slot['name']] = $val;
+            }
+            if ($fail !== '') break;
+        }
+        $errs = ($fail === '') ? $fld->checkFieldValues($rules, $vals, false) : [];
+        foreach ($errs as $name => $code) $fail = $name.' is refused by the shared check: '.$code;
+        if ($fail === '') {
+            $data = $fld->filterFieldValues($rules, $vals);
+            $found[$data ? (string)json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : ''] = true;
+        } elseif ($plan === 'full') {
+            $why = $fail;
+        }
+    }
+    if (count($found) === 1) return ['json' => array_key_first($found)];
+    return ['why' => $found ? 'the full and the short layout both fit and differ' : $why];
+}
+
+# The fields unit of the 6.3 data update: name the positional definitions of account, forum and order and turn every stored value row into one canonical JSON object
+# Nothing is written before the whole preflight passed: a definition or a row that cannot be mapped without guessing stops the unit with the table, the id and the reason
+# The unit resumes from its manifest: verified is skipped, applying and prepared continue by cursor, and a stored row has to equal its source or its target
+# Definitions that are already named while positional rows exist and no manifest does stop it, because the old definitions are the only key to those rows
+function setUpdateFields(Database $db, string $prefix): string {
+    $dir = BASE_DIR.'/storage/backup/update/fields';
+    $file = $dir.'/manifest.json';
+    $maps = ['account' => ['users', 'field'], 'forum' => ['forum', 'field'], 'order' => ['order', 'info']];
+    $mark = is_file(CONFIG_DIR.'/update.php') ? ((require CONFIG_DIR.'/update.php')['update'] ?? []) : [];
+    $info = is_file($file) ? json_decode((string)file_get_contents($file), true) : null;
+    $flag = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
+    if (!class_exists('Field', false)) require_once BASE_DIR.'/core/classes/field.php';
+    $fld = new Field();
+    $stored = function (string $area) use ($db, $prefix, $maps): array|false {
+        [$tab, $col] = $maps[$area];
+        $res = $db->getSqlQuery('SELECT id, '.$col.' FROM `'.$prefix.'_'.$tab.'` WHERE '.$col.' != \'\' ORDER BY id ASC');
+        $list = [];
+        while ($res && ([$mid, $text] = $db->getSqlRow($res))) $list[] = [intval($mid), $text];
+        return $res ? $list : false;
+    };
+    if (!is_array($info)) {
+        if (isset($mark['fields'])) return getInfo('fields: the mark is set and no manifest exists, the unit is stopped', false);
+        $old = is_file(CONFIG_DIR.'/fields.php') ? ((require CONFIG_DIR.'/fields.php')['fields'] ?? []) : [];
+        $named = count(array_filter(array_intersect_key($old, $maps), 'is_array'));
+        $bad = [];
+        $rules = [];
+        $snaps = [];
+        $read = [];
+        $done = $db->setSqlBegin();
+        foreach (array_keys($maps) as $area) $read[$area] = $done ? $stored($area) : false;
+        if ($done) $db->setSqlCommit();
+        foreach ($maps as $area => [$tab]) {
+            $base = count($bad);
+            [$rules[$area], $slots, $size] = $named ? [$old[$area] ?? null, [], 0] : getUpdateRules($area, $old[$area] ?? '', $fld, $bad);
+            $rows = $read[$area];
+            if ($rows === false) return getInfo('fields: the values of '.$prefix.'_'.$tab.' could not be read, the unit is stopped', false);
+            if ($named && ($rows || !is_array($rules[$area]))) {
+                $text = 'fields: config/fields.php is already in the 6.3 format while '.$prefix.'_'.$tab.' still holds positional rows and no manifest exists';
+                return getInfo($text.' - put the 6.2 config/fields.php back and start the update again', false);
+            }
+            $memo = [];
+            $snaps[$area] = [];
+            foreach (count($bad) > $base ? [] : $rows as [$mid, $text]) {
+                $memo[$text] ??= getUpdateValue($rules[$area], $slots, $size, $text, $fld);
+                if (isset($memo[$text]['why'])) $bad[] = $prefix.'_'.$tab.' '.$mid.' ('.$memo[$text]['why'].')';
+                else $snaps[$area][] = [$mid, $text, $memo[$text]['json']];
+            }
+        }
+        if ($bad) return getInfo('fields: the preflight found data it will not guess, nothing was written ('.count($bad).'): '.implode(', ', array_slice($bad, 0, 50)), false);
+        try {
+            foreach ($rules as $area => $set) $rules[$area] = $fld->filterFieldList($set);
+            if ($named) $rules += $old;
+            ksort($rules);
+        } catch (InvalidArgumentException $err) {
+            return getInfo('fields: config/fields.php '.$area.' '.$err->getMessage().' is refused by the shared check of definitions, nothing was written', false);
+        }
+        if (!is_dir($dir) && !mkdir($dir, 0750, true)) return getInfo('fields: '.$dir.' could not be created', false);
+        $text = ['definitions.json' => json_encode(['source' => $old, 'rules' => $rules], $flag)];
+        foreach ($snaps as $area => $list) $text[$area.'.json'] = json_encode($list, $flag);
+        $info = ['version' => '6.3.0', 'state' => 'prepared', 'cursor' => array_fill_keys(array_keys($maps), 0), 'source' => [], 'target' => []];
+        $info['count'] = array_map('count', $snaps);
+        foreach ($text as $name => $body) {
+            if (!is_string($body) || !setUpdateBackup($dir.'/'.$name, $body)) return getInfo('fields: the snapshot '.$name.' could not be written', false);
+            $info['source'][$name] = hash('sha256', $body);
+        }
+        if (!setUpdateBackup($file, (string)json_encode($info))) return getInfo('fields: the manifest could not be written', false);
+    }
+    foreach (array_keys($info['source']) as $name) {
+        $same = is_file($dir.'/'.$name) && hash_file('sha256', $dir.'/'.$name) === $info['source'][$name];
+        if (!$same) return getInfo('fields: the snapshot '.$name.' does not match its manifest', false);
+    }
+    if ($info['state'] !== 'verified') {
+        $info['state'] = 'applying';
+        if (!setUpdateBackup($file, (string)json_encode($info))) return getInfo('fields: the manifest could not be written', false);
+        $real = [];
+        foreach ($maps as $area => [$tab, $col]) {
+            $list = json_decode((string)file_get_contents($dir.'/'.$area.'.json'), true);
+            for ($pos = intval($info['cursor'][$area]); $pos < count($list); $pos += 500) {
+                $pack = array_slice($list, $pos, 500);
+                $ids = [];
+                foreach ($pack as $key => $row) $ids['i'.$key] = $row[0];
+                $good = $db->setSqlBegin();
+                $res = $good ? $db->getSqlQuery('SELECT id, '.$col.' FROM `'.$prefix.'_'.$tab.'` WHERE id IN (:'.implode(', :', array_keys($ids)).') FOR UPDATE', $ids) : false;
+                $have = [];
+                while ($res && ([$mid, $text] = $db->getSqlRow($res))) $have[intval($mid)] = $text;
+                foreach ($res ? $pack : [] as [$mid, $from, $into]) {
+                    $cur = $have[$mid] ?? null;
+                    $sql = 'UPDATE `'.$prefix.'_'.$tab.'` SET '.$col.' = :val WHERE id = :id';
+                    if ($cur !== $into) $good = $cur === $from && $db->getSqlQuery($sql, ['val' => $into, 'id' => $mid]) !== false;
+                    if (!$good) break;
+                }
+                if (!$res || !$good || !$db->setSqlCommit()) {
+                    $db->setSqlRollback();
+                    $text = 'fields: a batch of '.$prefix.'_'.$tab.' was refused at row '.$pos;
+                    return getInfo($text.' - a stored row equals neither its source nor its target or could not be written', false);
+                }
+                $info['cursor'][$area] = min($pos + 500, count($list));
+                if (!setUpdateBackup($file, (string)json_encode($info))) return getInfo('fields: the manifest could not be written', false);
+            }
+            $want = [];
+            foreach ($list as [$mid, $from, $into]) {
+                if ($into !== '') $want[] = [$mid, $into];
+            }
+            $rows = $stored($area);
+            if ($rows !== $want) return getInfo('fields: the stored values of '.$prefix.'_'.$tab.' do not match the manifest, the definitions are not published', false);
+            $real[$area.'.json'] = hash('sha256', (string)json_encode($rows, $flag));
+        }
+        $rules = json_decode((string)file_get_contents($dir.'/definitions.json'), true)['rules'] ?? [];
+        if (((require CONFIG_DIR.'/fields.php')['fields'] ?? null) !== $rules) setConfigFile('fields.php', $rules, [], true);
+        if (((require CONFIG_DIR.'/fields.php')['fields'] ?? null) !== $rules) return getInfo('fields: config/fields.php could not be published', false);
+        $info['target'] = $real + ['fields.php' => hash_file('sha256', CONFIG_DIR.'/fields.php')];
+        $info['state'] = 'verified';
+        if (!setUpdateBackup($file, (string)json_encode($info))) return getInfo('fields: the manifest could not be written', false);
+    }
+    setConfigFile('update.php', ['fields' => '6.3.0'] + $mark);
+    $stat = $info['count'];
+    $text = 'fields: named definitions published, value rows carried over: '.intval($stat['account']).' accounts, '.intval($stat['forum']).' forum posts, ';
+    return getInfo($text.intval($stat['order']).' orders; the subsystem is open', true);
+}
+
 function save(): void {
     global $title, $clang, $conf, $url;
     $setup = (isset($_POST['setup'])) ? $_POST['setup'] : '';
@@ -848,6 +1047,7 @@ function save(): void {
         $bodytext .= getSqlFile('setup/sql/table_update6_3.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
         $bodytext .= setUpdatePoints($db, $xprefix);
         $bodytext .= setUpdateRatings($db, $xprefix);
+        $bodytext .= setUpdateFields($db, $xprefix);
         $nsent = 0;
         foreach ($nlist as $nid => $one) {
             $mails = array_values(array_unique(array_filter(array_map('trim', explode(',', $one['mails'])), 'strlen')));

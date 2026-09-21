@@ -142,12 +142,15 @@ require_once BASE_DIR.'/core/classes/geoip.php';
 require_once BASE_DIR.'/core/classes/captcha.php';
 require_once BASE_DIR.'/core/classes/cache.php';
 require_once BASE_DIR.'/core/classes/oauth.php';
+require_once BASE_DIR.'/core/classes/field.php';
 require_once BASE_DIR.'/core/classes/point.php';
 require_once BASE_DIR.'/core/classes/rating.php';
 require_once BASE_DIR.'/core/classes/comment.php';
 require_once BASE_DIR.'/core/classes/privat.php';
 $tpl = new Template($theme);
 $prs = new Parser();
+# The one stateless instance of the extra fields; Node gets it handed in, so no second mechanism of fields ever appears
+$fld = new Field();
 # Points stay closed until the 6.3 data update has left its mark: an empty scope switches the class off and reports it
 $pnt = new Point($db, ($conf['update']['points'] ?? '') === '6.3.0' ? ($conf['points'] ?? []) : []);
 $com = new Comment($db, $prs, $pnt, $conf);

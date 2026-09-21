@@ -17,7 +17,6 @@ function order(): void {
     } else {
         $mail = getVar('post', 'mail', 'text');
     }
-    $field = getVar('post', 'field', 'field');
     setHead(['title' => _ORDER]);
     $cont = $tpl->getHtmlFrag('title', ['title' => _ORDER, 'is_level_one' => true]);
     $cont .= $prs->filterContent($conf['order']['text'], false, 'all');
@@ -29,7 +28,7 @@ function order(): void {
             'label' => _OR_2,
             'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'maxlength="255" placeholder="'._OR_2.'" required', 'name_attr' => 'mail', 'input_id' => 'f-mail', 'value_attr' => $mail]),
         ]);
-        $rows .= getTplFieldsIn(['field' => $field, 'mod' => $conf['name']]);
+        $rows .= getTplFieldsIn(['mod' => $conf['name'], 'new' => true]);
         $rows .= $tpl->getHtmlFrag('form-field-row', [
             'label' => _OR_3,
             'label_id' => $labid = getFieldIds('', 'note')['label'],
@@ -61,21 +60,21 @@ function send(): void {
     global $db, $conf, $stop, $tpl, $prs, $mailer, $user;
     if ($conf['order']['an']) {
         $mail = getVar('post', 'mail', 'text');
-        $field = getVar('post', 'field', 'field');
         $note = getVar('post', 'note', 'text');
         $stop = [];
         checkemail($mail);
-        if ($room = checkEditorTextRoom($field, 'order.info')) $stop[] = $room;
+        $flds = getFieldsPost($conf['name']);
+        $stop = array_merge($stop, $flds['stop']);
         if ($room = checkEditorTextRoom($note, 'order.note')) $stop[] = $room;
         if (checkCaptcha('comment')) $stop[] = _SECCODEINCOR;
         if (!$stop) {
             $status = ($conf['order']['pr']) ? '0' : '1';
             $db->getSqlQuery(
                 'INSERT INTO '.PREFIX_DB.'_order (uid, email, info, note, ip, agent, time, status) VALUES (:uid, :email, :info, :note, :ip, :agent, NOW(), :status)',
-                ['uid' => is_user() ? intval($user[0]) : 0, 'email' => $mail, 'info' => $field, 'note' => $note, 'ip' => getIp(), 'agent' => getAgent(), 'status' => $status]
+                ['uid' => is_user() ? intval($user[0]) : 0, 'email' => $mail, 'info' => $flds['json'], 'note' => $note, 'ip' => getIp(), 'agent' => getAgent(), 'status' => $status]
             );
             if ($conf['order']['ad']) {
-                $infos = getTplViewFieldRows(['field' => $field, 'mod' => $conf['name']]);
+                $infos = getTplViewFieldRows(['field' => $flds['json'], 'mod' => $conf['name']]);
                 $amail = ($conf['order']['mail']) ? $conf['order']['mail'] : $conf['adminmail'];
                 $subject = $conf['sitename'].' - '._ORDER;
                 $msg = $tpl->getHtmlPart('message-block', [

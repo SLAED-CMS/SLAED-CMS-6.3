@@ -5,5 +5,6 @@
   {% include 'fragments/label.html' %}
   <div class="sl-form-field">
   {{{ field_html }}}
+  {% if hint %}<small id="{{ hint_id }}">{{ hint }}</small>{% endif %}
   </div>
 </div>

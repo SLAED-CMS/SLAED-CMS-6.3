@@ -817,7 +817,6 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
         'name' => fn($v) => is_string($v) ? filterText(mb_substr(trim($v), 0, 25, 'utf-8')) : $v,
         'title' => fn($v) => is_string($v) ? filterHtml(trim($v), 1) : $v,
         'text' => fn($v) => is_string($v) ? filterHtml(trim($v)) : $v,
-        'field' => fn($v) => is_string($v) ? filterFields(trim($v)) : $v,
         'url' => fn($v) => is_string($v) ? filterWebUrl(trim($v)) : $v,
         'var' => fn($v) => is_string($v) ? filterVar($v) : $v,
         'bool' => fn($v) => filter_var($v, FILTER_VALIDATE_BOOLEAN),

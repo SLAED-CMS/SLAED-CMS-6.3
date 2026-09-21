@@ -86,8 +86,7 @@ function add(): void {
     } else {
         $mid = getVar('post', 'mid', 'num', 0);
         $email = getVar('post', 'email', 'text', '');
-        $fieldp = getVar('post', 'field[]', 'raw', []);
-        $field = is_array($fieldp) ? filterFields($fieldp) : getVar('post', 'field', 'field');
+        $field = getFieldsPost('order')['json'];
         $note = getVar('post', 'note', 'text', '');
         $date = getVar('req', 'date', 'time');
     }
@@ -96,13 +95,13 @@ function add(): void {
     $tabs = [_HOME, _ADD, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => array_values((array)$stop)]);
-    if ($field) $cont .= getTplPreviewContent(['title' => $email, 'texta' => $field, 'textb' => _COMMENT.': '.$note, 'mod' => 'all']);
+    if ($field) $cont .= getTplPreviewContent(['title' => $email, 'field' => $field, 'textb' => _COMMENT.': '.$note, 'mod' => 'order']);
     $rows = [
         ['label_for' => 'f-email', 'label_html' => _OR_9, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'email', 'input_id' => 'f-email', 'value_attr' => $email, 'is_required' => true])],
         ['label_html' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'date', 'time' => $date, 'with' => true, 'max' => 16])],
         ['label_for' => 'f-note', 'label_html' => _OR_10, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'note', 'input_id' => 'f-note', 'value_text' => $note, 'placeholder_text' => _OR_10]), 'is_full' => true],
     ];
-    $rows = array_merge($rows, getTplAddFieldRows(['field' => $field, 'mod' => 'order']));
+    $rows = array_merge($rows, getTplAddFieldRows(['field' => $field, 'mod' => 'order', 'new' => !$mid]));
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=order&op=save',
         'hidden' => [
@@ -121,8 +120,6 @@ function save(): void {
     global $db, $afile, $stop;
     $mid = getVar('post', 'mid', 'num', 0);
     $email = getVar('post', 'email', 'text', '');
-    $fieldp = getVar('post', 'field[]', 'raw', []);
-    $field = is_array($fieldp) ? filterFields($fieldp) : getVar('post', 'field', 'field');
     $note = getVar('post', 'note', 'text', '');
     $date = getVar('req', 'date', 'time');
     $posttype = getVar('post', 'posttype', 'text', '');
@@ -130,15 +127,17 @@ function save(): void {
     $stop = [];
     if (!$iswarn) {
         checkemail($email);
-        if ($room = checkEditorTextRoom($field, 'order.info')) $stop[] = $room;
+        [$old] = $mid ? ($db->getSqlRow($db->getSqlQuery('SELECT info FROM '.PREFIX_DB.'_order WHERE id = :mid', ['mid' => $mid])) ?: ['']) : [''];
+        $flds = getFieldsPost('order', (string)$old);
+        $stop = array_merge($stop, $flds['stop']);
         if ($room = checkEditorTextRoom($note, 'order.note')) $stop[] = $room;
         if (!$stop && $posttype === 'save') {
             if ($mid) {
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_order SET email = :email, info = :info, note = :note, time = :time WHERE id = :mid', ['email' => $email, 'info' => $field, 'note' => $note, 'time' => $date, 'mid' => $mid]);
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_order SET email = :email, info = :info, note = :note, time = :time WHERE id = :mid', ['email' => $email, 'info' => $flds['json'], 'note' => $note, 'time' => $date, 'mid' => $mid]);
             } else {
                 $ip = getip();
                 $agent = getagent();
-                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_order (email, info, note, ip, agent, time, status) VALUES (:email, :info, :note, :ip, :agent, :time, \'1\')', ['email' => $email, 'info' => $field, 'note' => $note, 'ip' => $ip, 'agent' => $agent, 'time' => $date]);
+                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_order (email, info, note, ip, agent, time, status) VALUES (:email, :info, :note, :ip, :agent, :time, \'1\')', ['email' => $email, 'info' => $flds['json'], 'note' => $note, 'ip' => $ip, 'agent' => $agent, 'time' => $date]);
             }
         }
     }

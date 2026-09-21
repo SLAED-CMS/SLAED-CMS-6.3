@@ -1262,6 +1262,9 @@ function savehome(): void {
     for ($i = $prev; $i < $last; $i++) $stop[$i] = ['text' => (string)$stop[$i], 'sect' => 'personal'];
     if ($room = checkEditorTextRoom($sig, 'users.sig')) $stop[] = ['text' => $room, 'sect' => 'personal'];
     if ($room = checkEditorTextRoom($block, 'users.block')) $stop[] = ['text' => $room, 'sect' => 'privacy'];
+    [$fold] = $db->getSqlRow($db->getSqlQuery('SELECT field FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => (int)$user[0]])) ?: [''];
+    $flds = getFieldsPost($conf['name'], (string)$fold);
+    foreach ($flds['stop'] as $text) $stop[] = ['text' => $text, 'sect' => 'personal'];
     if (!$stop) {
         $uid = (int)$user[0];
         $checkn = htmlspecialchars(substr($user[1], 0, 25));
@@ -1282,7 +1285,7 @@ function savehome(): void {
             $psmail = getVar('post', 'psmail', 'num');
             $birth = getVar('req', 'user_birthday', 'date');
             $gender = getVar('post', 'gender', 'num');
-            $field = getVar('post', 'field', 'field');
+            $field = $flds['json'];
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET email = :email, website = :website, viewmail = :viewmail, occ = :occ, origin = :origin, interest = :interest, sig = :sig, storynum = COALESCE(NULLIF(:storynum, 0), storynum), blockon = :blockon, block = :block, theme = :theme, newslet = :newslet, fsmail = :fsmail, psmail = :psmail, birthday = :birthday, gender = :gender, field = :field WHERE id = :id', ['email' => $mail, 'website' => $site, 'viewmail' => $view, 'occ' => $occ, 'origin' => $from, 'interest' => $inter, 'sig' => $sig, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme, 'newslet' => $news, 'fsmail' => $fsmail, 'psmail' => $psmail, 'birthday' => $birth, 'gender' => $gender, 'field' => $field, 'id' => $uid]);
             $avat = getVar('post', 'avatar', 'text');
             $take = getVar('post', 'filepath', 'raw', '');

@@ -21,7 +21,7 @@ final class EditorRoomTest extends TestCase
     ];
 
     private const SUMMARIES = [
-        'auto_links.intro', 'money.intro', 'order.info', 'products.intro', 'users.block', 'users.sig',
+        'auto_links.intro', 'money.intro', 'products.intro', 'users.block', 'users.sig',
     ];
 
     private static array $files = [];
