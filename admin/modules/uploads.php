@@ -396,6 +396,7 @@ function config(): void {
 function configsave(): void {
     global $afile;
     $warn = !checkAdminPost('uploads');
+    $text = _TOKENMISS;
     $drop = [];
     if (!$warn) {
     $serv = getUploadService();
@@ -418,10 +419,10 @@ function configsave(): void {
     $xtheight = (!$theight) ? 500 : $theight;
     $dir = getVar('post', 'dir', 'var');
     $cont = [];
-    $cont['dir'] = $dir;
+    $cont['dir'] = is_string($dir) ? $dir : '';
     $cont['typ'] = $xttyp;
-    $cont['width'] = $xtwidth;
-    $cont['height'] = $xtheight;
+    $cont['width'] = (string)$xtwidth;
+    $cont['height'] = (string)$xtheight;
     $mods = getUploadModuleList();
     $type = getVar('post', 'type[]');
     $allsize = getVar('post', 'allsize[]');
@@ -465,10 +466,15 @@ function configsave(): void {
             $i++;
         }
     }
-    setConfigFile('uploads.php', $cont);
-    }
+    $warn = !setConfigFile(static function (array $base, Closure $save) use ($cont): string {
+        $base['uploads'] = array_replace($base['uploads'], $cont);
+        ksort($base['uploads']);
+        return $save($base) ? 'committed' : 'aborted';
+    });
     $done = $drop ? _SUCCSAVE.' '._ERROR_FILE.': '.implode(', ', $drop) : _SUCCSAVE;
-    setRedirect($afile.'.php?name=uploads&op=config', false, 302, $warn ? _TOKENMISS : $done, $warn);
+    $text = $warn ? (getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP) : $done;
+    }
+    setRedirect($afile.'.php?name=uploads&op=config', false, 302, $text, $warn);
 }
 
 function info(): void {

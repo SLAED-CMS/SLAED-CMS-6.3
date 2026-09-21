@@ -285,6 +285,7 @@
 | Дата добавления ресурса | `created` |
 | Дата изменения ресурса | `updated` |
 | Состояние внешней синхронизации | `_node_sync` |
+| Доставка отложенной публикации | `_node_publish` |
 | Идентификатор строки синхронизации | `id` |
 | Материал внешней синхронизации | `nid` |
 | Адрес источника | `url` |
@@ -314,12 +315,12 @@
 ## Обязательные правила проекта
 
 - Классы и `enum` используют PascalCase, только буквы, длина 4–24 символа.
-- PHP-файлы используют только строчные латинские буквы до расширения `.php`.
+- PHP-файлы классов Node используют только строчные латинские буквы до расширения `.php`, например `typeinput.php`. Вспомогательные файлы tests/Support следуют существующему там `snake_case`, например `node_probe.php`.
 - Предпочтительно одно короткое слово; контекст каталога в имени файла не повторяется.
 - Методы используют camelCase, начинаются с `get`, `set`, `add`, `update`, `delete`, `is`, `check` или `filter`.
 - Методы содержат глагол и существительное, только буквы, длина 6–24 символа.
 - Переменные соответствуют строгим правилам SLAED по длине и регистру.
-- Специфичные для Node языковые константы используют префикс `_NODE_*`; существующие глобальные константы для общих понятий переиспользуются без дублирования.
+- Специфичные для Node языковые константы используют префикс `_NODE_*`; по `.rules/constants.md` языковая константа занимает 2–18 символов вместе с начальным `_`, поэтому после префикса остаётся 12. Новые подписи типов полей принадлежат области fields и называются `_FIELDS_BOOL`, `_FIELDS_INT`, `_FIELDS_DECIMAL`. В остальном существующие глобальные константы для общих понятий переиспользуются без дублирования.
 
 ### Файлы тестирования
 
@@ -331,6 +332,8 @@
 | публичные и административные маршруты | `tests/Unit/NodeRouteTest.php` |
 | настройки, поля и загрузка без Composer | `tests/Unit/NodeConfigTest.php` |
 | RSS/Atom и безопасность внешних источников | `tests/Unit/FeedTest.php` |
+| общая запись конфигурации, журнал и восстановление | `tests/Unit/ConfigFileTest.php` |
+| изолированный процесс и scratch-копия конфигурации | `tests/Support/config_probe.php` |
 | изолированный процесс и тестовые данные MariaDB | `tests/Support/node_probe.php` |
 | явный профиль большой выборки | `tools/node-profile.php` |
 | временный тип браузерной приёмки | `nodeprobe` |
@@ -375,9 +378,12 @@
 | Point | getEventId — поиск исходного начисления для компенсации, отдельно от Rating |
 | Rating | getRating, addRating, deleteRating, getRatingList; точные сигнатуры в 05 |
 | Общая сборка core/system.php | getNodeContext, getRatingService |
-| NodeQuery | setNodeTypes, setNodeSearch, setNodeHome, getNodeTree, getNodeSitemap, getNodeDeadline |
-| NodeService | updateNodeViews, updateNodeComments, updateNodeRating |
-| Cache | getWriteGuard, deleteWriteGuard; addEpoch получает force и результат bool |
+| Конфигурация core/system.php | getConfigCode, setConfigSource, getConfigJournal, setConfigRestore; getConfig получает fresh; контракт — 06-types.md → «Заметки реализации S03» |
+| NodeQuery | setNodeTypes, setNodeSearch, setNodeHome, getNodeTree, getNodeSitemap, getNodeDeadline, getNodeTypeExport |
+| NodeService | updateNodeViews, updateNodeComments, updateNodeRating, addNodeTypeImport |
+| Template | checkTemplateFile — наличие файла представления для fallback режима Node |
+| FileManager | getPathLock и deletePathLock становятся повторно входимыми, новых имён нет |
+| Cache | getWriteGuard, deleteWriteGuard, checkWriteGuard — отсутствие незавершённых маркеров после попытки восстановления и читаемость поколения; addEpoch получает force и результат bool |
 
 Сигнатуры и закрытые формы результатов определены в 05/07/11. Дополнения реализуют уже перечисленные сценарии; отдельные Registry, Provider и контроллеры по имени профиля не создаются.
 
@@ -386,3 +392,7 @@
 ## Отложенная публикация и фоновые права
 
 _node_publish — таблица доставки; nodepublish — фиксированный ключ задания; addNodePublishTask() — адаптер в core/system.php; NodeService::updateNodePublishList(int $limit = 50): array — обработка. NodeContext.task — доверенный флаг фонового вызова, не право администратора и не поле запроса. Контракты: 03/05.
+
+## Имена аудита готовности
+
+Область конфигурации update и файл config/update.php — отметки завершённых преобразований 6.3 с ключами points, ratings, fields. Колонки: `_order`.`uid` — получатель баллов заказа, `_blocks`.`param` — параметры экземпляра блока. Административные операции Node: typestatus, typedelete, clone, export, import, report; общий вход восстановления конфигурации — op=restore в admin/modules/config.php. Файловый блок — blocks/node.php; профили — modules/node/profiles/<name>.json. Ограничения таблиц именуются `{prefix}_fk_<таблица без префикса>_<колонка или роль>` и `{prefix}_chk_<таблица>_<колонка>`.

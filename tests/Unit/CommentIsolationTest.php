@@ -25,7 +25,6 @@ final class CommentIsolationTest extends TestCase
         'core/user.php',
         'modules/account/index.php',
         'modules/search/admin/index.php',
-        'modules/search/index.php',
         'modules/shop/admin/index.php',
     ];
 
@@ -115,42 +114,33 @@ final class CommentIsolationTest extends TestCase
         }
     }
 
-    # The target map holds every module that renders comments, with the points slot each of them awarded before the move
+    # The target map holds every module that renders comments with its table and nothing else: the key is the scope of the points journal, and no positional slot may return
     #[Test]
-    public function theTargetMapKeepsTheModulesAndTheirSlots(): void
+    public function theTargetMapKeepsTheModulesAndNoSlot(): void
     {
         $code = (string)file_get_contents(dirname(__DIR__, 2).'/'.self::OWNER);
-        $want = [
-            'account' => ['_users', 3],
-            'faq' => ['_faq', 7],
-            'files' => ['_files', 10],
-            'links' => ['_links', 22],
-            'media' => ['_media', 26],
-            'news' => ['_news', 32],
-            'pages' => ['_pages', 36],
-            'shop' => ['_products', 40],
-            'voting' => ['_voting', 43],
-        ];
+        $want = ['account' => '_users', 'shop' => '_products', 'voting' => '_voting'];
         preg_match('#private const MODULES = \[(.+?)\];#s', $code, $hit);
         $this->assertNotEmpty($hit, 'The module map is gone from the class');
         $this->assertSame(count($want), substr_count($hit[1], '=>'), 'The module map holds a different number of modules');
-        foreach ($want as $mod => [$tab, $slot]) {
-            $this->assertStringContainsString('\''.$mod.'\' => [\''.$tab.'\', '.$slot.']', $hit[1], 'Module '.$mod.' lost its table or its points slot');
+        foreach ($want as $mod => $tab) {
+            $this->assertStringContainsString("'".$mod."' => '".$tab."'", $hit[1], 'Module '.$mod.' lost its table');
         }
-        foreach ([17, 29] as $slot) {
-            $this->assertStringNotContainsString(', '.$slot.']', $hit[1], 'The retired points slot '.$slot.' is back in the module map');
-        }
+        $this->assertDoesNotMatchRegularExpression('#[0-9]#', $hit[1], 'A positional points slot is back in the module map');
     }
 
-    # The retired slots were dropped from the code alone; removing their CSV positions would renumber every event above them
+    # Points are awarded by named actions of the Point class alone: the positional list, its switch and both numeric helpers left the tree together with their callers
     #[Test]
-    public function thePointsListKeepsItsRetiredPositions(): void
+    public function thePositionalPointsAreGone(): void
     {
-        $conf = (string)file_get_contents(dirname(__DIR__, 2).'/config/users.php');
-        preg_match('#\'points\' => \'([0-9,]+)\'#', $conf, $hit);
-        $this->assertNotEmpty($hit, 'The points list is gone from config/users.php');
-        $this->assertCount(45, explode(',', $hit[1]), 'The points list changed length, which renumbers every slot above the removed one');
-        $code = (string)file_get_contents(dirname(__DIR__, 2).'/core/system.php');
-        $this->assertStringContainsString("'account' => ['_users', 'votes', 'tvotes', 2]", $code, 'Account ratings no longer award points slot 2');
+        $root = dirname(__DIR__, 2);
+        $conf = (require $root.'/config/users.php')['users'];
+        $this->assertArrayNotHasKey('point', $conf, 'The old points switch is back in config/users.php');
+        $this->assertArrayNotHasKey('points', $conf, 'The positional points list is back in config/users.php');
+        $code = (string)file_get_contents($root.'/core/system.php');
+        foreach (['function updatePoints', 'function addPointsAction', 'updatePoints(', 'addPointsAction('] as $name) {
+            $this->assertStringNotContainsString($name, $code, 'The numeric points helper is back in core/system.php: '.$name);
+        }
+        $this->assertStringContainsString("'account' => ['_users', 'votes', 'tvotes'],", $code, 'The rating map of accounts carries a points slot again');
     }
 }

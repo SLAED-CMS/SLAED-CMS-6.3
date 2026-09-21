@@ -190,13 +190,13 @@ function add(): void {
         $sig = getVar('post', 'sig', 'text', '');
         $view = getVar('post', 'view', 'num', 0);
         $pass = getVar('post', 'pass', 'text', '');
-        $story = getVar('post', 'story', 'num', (int)($conf['news']['num'] ?? 10));
+        $story = getVar('post', 'story', 'num', 10);
         $blockon = getVar('post', 'blockon', 'num', 0);
         $block = getVar('post', 'block', 'text', '');
         $theme = getVar('post', 'theme', 'text', '');
         $news = getVar('post', 'news', 'num', 0);
         $lang = getVar('post', 'lang', 'text', '');
-        $point = getVar('post', 'point', 'text', '0');
+        $point = $uid ? ($db->getSqlRow($db->getSqlQuery('SELECT points FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $uid]))['points'] ?? 0) : 0;
         $warn = getVar('post', 'warn[]', '', []);
         $access = getVar('post', 'access', 'num', 0);
         $group = getVar('post', 'group', 'num', 0);
@@ -229,7 +229,7 @@ function add(): void {
         'subtitle_html' => getAccountSearch(),
         'tab'  => 1,
     ]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
     $rows = [
         [
             'label_for' => 'f-uname',
@@ -354,7 +354,25 @@ function add(): void {
     $rows[] = [
         'label_for' => 'f-point',
         'label_html' => _POINTS,
-        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'point', 'input_id' => 'f-point', 'value_attr' => $point, 'placeholder_text' => _POINTS]),
+        'field_html' => $tpl->getHtmlFrag('input', [
+            'itype' => 'number', 'name_attr' => 'point', 'input_id' => 'f-point', 'value_attr' => $point, 'placeholder_text' => _POINTS, 'is_readonly' => true,
+        ]),
+    ];
+    if ($uid) $rows[] = [
+        'label_for' => 'f-pdiff',
+        'label_html' => _POINTS_DIFF,
+        'field_html' => $tpl->getHtmlFrag('input', [
+            'itype' => 'text', 'name_attr' => 'pdiff', 'input_id' => 'f-pdiff', 'value_attr' => getVar('post', 'pdiff', 'text', ''),
+            'maxlength_num' => 8, 'placeholder_text' => _POINTS_DIFF,
+        ]),
+    ];
+    if ($uid) $rows[] = [
+        'label_for' => 'f-pnote',
+        'label_html' => _POINTS_NOTE,
+        'field_html' => $tpl->getHtmlFrag('input', [
+            'itype' => 'text', 'name_attr' => 'pnote', 'input_id' => 'f-pnote', 'value_attr' => getVar('post', 'pnote', 'text', ''),
+            'maxlength_num' => 255, 'placeholder_text' => _POINTS_NOTE,
+        ]),
     ];
     for ($i = 0; $i < 5; $i++) {
         $a = $i + 1;
@@ -474,9 +492,6 @@ function add(): void {
         ['nameattr' => 'op', 'valueattr' => 'addsave'],
         ['nameattr' => 'token', 'valueattr' => getSiteToken()],
     ];
-    if ($conf['users']['news'] != 1) {
-        $hidden[] = ['nameattr' => 'story', 'valueattr' => (string)$conf['news']['num']];
-    }
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => $hidden,
@@ -488,7 +503,7 @@ function add(): void {
 }
 
 function addsave(): void {
-    global $db, $afile, $conf, $stop, $prs, $mailer;
+    global $db, $afile, $conf, $stop, $prs, $mailer, $pnt, $admin;
     $stop = [];
     $iswarn = !checkSiteToken();
     if (!$iswarn) {
@@ -513,7 +528,8 @@ function addsave(): void {
         if ($theme !== '' && !checkThemeAssets($theme)) $theme = '';
         $news = getVar('post', 'news', 'num');
         $lang = getVar('post', 'lang');
-        $point = getVar('post', 'point', 'num');
+        $pdiff = trim((string)getVar('post', 'pdiff', 'raw', ''));
+        $pnote = trim(strip_tags((string)getVar('post', 'pnote', 'raw', '')));
         $warnvals = getVar('post', 'warn[]', 'num');
         $warnings = is_array($warnvals) ? filterText(implode('|', str_replace('|', '', $warnvals))) : 0;
         $access = getVar('post', 'access', 'num');
@@ -537,6 +553,7 @@ function addsave(): void {
         if (!analyze_name($uname)) $stop[] = _ERRORINVNICK;
         checkemail($email);
         if ($pass != $pass2) $stop[] = _ERROR_PASS;
+        if ($pdiff !== '' && (!$uid || !preg_match('/^-?[1-9][0-9]{0,6}$/D', $pdiff) || abs(intval($pdiff)) > 1000000 || $pnote === '')) $stop[] = _POINTS_BADDIFF;
         if ($room = checkEditorTextRoom($sig, 'users.sig')) $stop[] = $room;
         if ($room = checkEditorTextRoom($block, 'users.block')) $stop[] = $room;
         if (!$stop) {
@@ -544,19 +561,23 @@ function addsave(): void {
             if ($uid) {
                 if ($pass && $pass == $pass2) {
                     $saltpass = getPassHash($pass);
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET name = :name, rank = :rank, email = :email, website = :website, avatar = :avatar, regdate = :regdate, occ = :occ, origin = :from, interest = :interests, sig = :sig, viewmail = :viewemail, password = :password, storynum = :storynum, blockon = :blockon, block = :block, theme = :theme, newslet = :newsletter, lang = :lang, points = :points, warnings = :warnings, access = :access, grp = :group, birthday = :birthday, gender = :gender, field = :field WHERE id = :id', [
-                        'name' => $uname, 'rank' => $rank, 'email' => $email, 'website' => $site, 'avatar' => $avatar, 'regdate' => $reg, 'occ' => $occ, 'from' => $from, 'interests' => $inter, 'sig' => $sig, 'viewemail' => $view, 'password' => $saltpass, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme, 'newsletter' => $news, 'lang' => $lang, 'points' => $point, 'warnings' => $warnings, 'access' => $access, 'group' => $group, 'birthday' => $birth, 'gender' => $gender, 'field' => $field, 'id' => $uid
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET name = :name, rank = :rank, email = :email, website = :website, avatar = :avatar, regdate = :regdate, occ = :occ, origin = :from, interest = :interests, sig = :sig, viewmail = :viewemail, password = :password, storynum = COALESCE(NULLIF(:storynum, 0), storynum), blockon = :blockon, block = :block, theme = :theme, newslet = :newsletter, lang = :lang, warnings = :warnings, access = :access, grp = :group, birthday = :birthday, gender = :gender, field = :field WHERE id = :id', [
+                        'name' => $uname, 'rank' => $rank, 'email' => $email, 'website' => $site, 'avatar' => $avatar, 'regdate' => $reg, 'occ' => $occ, 'from' => $from, 'interests' => $inter, 'sig' => $sig, 'viewemail' => $view, 'password' => $saltpass, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme, 'newsletter' => $news, 'lang' => $lang, 'warnings' => $warnings, 'access' => $access, 'group' => $group, 'birthday' => $birth, 'gender' => $gender, 'field' => $field, 'id' => $uid
                     ]);
                 } else {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET name = :name, rank = :rank, email = :email, website = :website, avatar = :avatar, regdate = :regdate, occ = :occ, origin = :from, interest = :interests, sig = :sig, viewmail = :viewemail, storynum = :storynum, blockon = :blockon, block = :block, theme = :theme, newslet = :newsletter, lang = :lang, points = :points, warnings = :warnings, access = :access, grp = :group, birthday = :birthday, gender = :gender, field = :field WHERE id = :id', [
-                        'name' => $uname, 'rank' => $rank, 'email' => $email, 'website' => $site, 'avatar' => $avatar, 'regdate' => $reg, 'occ' => $occ, 'from' => $from, 'interests' => $inter, 'sig' => $sig, 'viewemail' => $view, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme, 'newsletter' => $news, 'lang' => $lang, 'points' => $point, 'warnings' => $warnings, 'access' => $access, 'group' => $group, 'birthday' => $birth, 'gender' => $gender, 'field' => $field, 'id' => $uid
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET name = :name, rank = :rank, email = :email, website = :website, avatar = :avatar, regdate = :regdate, occ = :occ, origin = :from, interest = :interests, sig = :sig, viewmail = :viewemail, storynum = COALESCE(NULLIF(:storynum, 0), storynum), blockon = :blockon, block = :block, theme = :theme, newslet = :newsletter, lang = :lang, warnings = :warnings, access = :access, grp = :group, birthday = :birthday, gender = :gender, field = :field WHERE id = :id', [
+                        'name' => $uname, 'rank' => $rank, 'email' => $email, 'website' => $site, 'avatar' => $avatar, 'regdate' => $reg, 'occ' => $occ, 'from' => $from, 'interests' => $inter, 'sig' => $sig, 'viewemail' => $view, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme, 'newsletter' => $news, 'lang' => $lang, 'warnings' => $warnings, 'access' => $access, 'group' => $group, 'birthday' => $birth, 'gender' => $gender, 'field' => $field, 'id' => $uid
                     ]);
                 }
             } else {
                 $saltpass = getPassHash($pass);
-                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (name, rank, email, website, avatar, regdate, occ, origin, interest, sig, viewmail, password, storynum, blockon, block, theme, newslet, lang, points, warnings, access, grp, birthday, gender, field) VALUES (:name, :rank, :email, :website, :avatar, :regdate, :occ, :from, :interests, :sig, :viewemail, :password, :storynum, :blockon, :block, :theme, :newsletter, :lang, :points, :warnings, :access, :group, :birthday, :gender, :field)', [
-                    'name' => $uname, 'rank' => $rank, 'email' => $email, 'website' => $site, 'avatar' => $avatar, 'regdate' => $reg, 'occ' => $occ, 'from' => $from, 'interests' => $inter, 'sig' => $sig, 'viewemail' => $view, 'password' => $saltpass, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme, 'newsletter' => $news, 'lang' => $lang, 'points' => $point, 'warnings' => $warnings, 'access' => $access, 'group' => $group, 'birthday' => $birth, 'gender' => $gender, 'field' => $field
+                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (name, rank, email, website, avatar, regdate, occ, origin, interest, sig, viewmail, password, storynum, blockon, block, theme, newslet, lang, warnings, access, grp, birthday, gender, field) VALUES (:name, :rank, :email, :website, :avatar, :regdate, :occ, :from, :interests, :sig, :viewemail, :password, COALESCE(NULLIF(:storynum, 0), DEFAULT(storynum)), :blockon, :block, :theme, :newsletter, :lang, :warnings, :access, :group, :birthday, :gender, :field)', [
+                    'name' => $uname, 'rank' => $rank, 'email' => $email, 'website' => $site, 'avatar' => $avatar, 'regdate' => $reg, 'occ' => $occ, 'from' => $from, 'interests' => $inter, 'sig' => $sig, 'viewemail' => $view, 'password' => $saltpass, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme, 'newsletter' => $news, 'lang' => $lang, 'warnings' => $warnings, 'access' => $access, 'group' => $group, 'birthday' => $birth, 'gender' => $gender, 'field' => $field
                 ]);
+            }
+            $data = ['aid' => intval(substr($admin[0], 0, 11)), 'note' => $pnote, 'points' => intval($pdiff)];
+            if ($pdiff !== '' && !$pnt->addEvent('adjust', 'account', 'adjust:'.bin2hex(random_bytes(16)), (int)$uid, $data)) {
+                setRedirect($afile.'.php?name=account&op=add&id='.$uid, false, 302, _POINTS_BADSAVE, true);
             }
             if ($mail) {
                 $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$uname;
@@ -716,6 +737,37 @@ function pointreset(): void {
     setFoot();
 }
 
+# Debit every positive balance through adjust events in batches of 500 accounts, one transaction per account and one part per million points
+# The operation id and the confirmed cursor live in the admin session, so a repeat after a failure resumes with the same sources and debits nothing twice
+function setPointsReset(): bool {
+    global $db, $conf, $pnt, $admin;
+    $skey = $conf['admin_c'].'-reset';
+    $_SESSION[$skey] ??= ['id' => bin2hex(random_bytes(8)), 'cur' => 0];
+    $aid = intval(substr($admin[0], 0, 11));
+    $start = time();
+    do {
+        $list = [];
+        $res = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_users WHERE id > :cur AND points > 0 ORDER BY id ASC LIMIT 500', ['cur' => $_SESSION[$skey]['cur']]);
+        while ([$uid] = $db->getSqlRow($res)) $list[] = intval($uid);
+        foreach ($list as $uid) {
+            if (time() - $start > 20 || !$db->setSqlBegin()) return false;
+            for ($part = 1, $done = true; $done && $part <= 5000; $part++) {
+                [$bal] = $db->getSqlRow($db->getSqlQuery('SELECT points FROM '.PREFIX_DB.'_users WHERE id = :id FOR UPDATE', ['id' => $uid]));
+                if ($bal < 1) break;
+                $data = ['aid' => $aid, 'note' => 'reset', 'points' => -min(intval($bal), 1000000)];
+                $done = $pnt->addEvent('adjust', 'account', 'reset:'.$_SESSION[$skey]['id'].':'.$uid.':'.$part, $uid, $data);
+            }
+            if (!$done || !$db->setSqlCommit()) {
+                $db->setSqlRollback();
+                return false;
+            }
+            $_SESSION[$skey]['cur'] = $uid;
+        }
+    } while (count($list) === 500);
+    unset($_SESSION[$skey]);
+    return true;
+}
+
 function resave(): void {
     global $db, $afile;
     $warn = !checkSiteToken();
@@ -724,7 +776,7 @@ function resave(): void {
     $warnings = getVar('post', 'warnings', 'num');
     $sig = getVar('post', 'sig', 'num');
     if (!$warn) {
-        if ($points == 1) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET points = :zero', ['zero' => '0']);
+        if ($points == 1 && !setPointsReset()) setRedirect($afile.'.php?name=account&op=pointreset', false, 302, _POINTS_RESETMORE, true);
         if ($votes == 1) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET votes = :zero, tvotes = :zero', ['zero' => '0']);
         if ($warnings == 1) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET warnings = :zero', ['zero' => '0']);
         if ($sig == 1) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET sig = :empty', ['empty' => '']);
@@ -807,11 +859,6 @@ function config(): void {
                     $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _LOGINF, 'is_selected' => $conf['users']['enter'] == '1']),
                 'is_config' => true,
             ]),
-        ],
-        [
-            'label_html' => _UPDATE_POINTS,
-            'label_id' => $labid = getFieldIds('', 'point')['label'],
-            'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'point', 'value' => (string)$conf['users']['point'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
         ],
         [
             'label_html' => _AUPLOAD,
@@ -934,7 +981,6 @@ function save(): void {
             'anump' => getVar('post', 'anump', 'num', 10),
             'minpass' => getVar('post', 'minpass', 'num'),
             'enter' => getVar('post', 'enter', 'num'),
-            'point' => getVar('post', 'point', 'num'),
             'aupload' => getVar('post', 'aupload', 'num'),
             'nomail' => getVar('post', 'nomail', 'num'),
             'news' => getVar('post', 'news', 'num'),
@@ -946,7 +992,6 @@ function save(): void {
             'rules' => getVar('post', 'rules', 'text'),
             'name_b' => strtolower(strtr(getVar('post', 'name', 'text'), $protect)),
             'mail_b' => strtolower(strtr(getVar('post', 'mail', 'text'), $protect)),
-            'points' => $conf['users']['points']
         ];
         setConfigFile('users.php', $cont);
         $oanew = [

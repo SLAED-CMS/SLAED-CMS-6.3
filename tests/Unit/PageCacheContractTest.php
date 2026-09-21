@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
  */
 final class PageCacheContractTest extends TestCase
 {
-    private const NEWS_ALLOW = ['name' => '#^news$#', 'op' => '#^$#', 'cat' => '#^[1-9][0-9]{0,8}$#', 'num' => '#^[1-9][0-9]{0,8}$#'];
+    private const ROUTE_ALLOW = ['name' => '#^shop$#', 'op' => '#^$#', 'cat' => '#^[1-9][0-9]{0,8}$#', 'num' => '#^[1-9][0-9]{0,8}$#'];
     private static array $probes = [];
     private array $temps = [];
 
@@ -57,9 +57,9 @@ final class PageCacheContractTest extends TestCase
     #[Test]
     public function pathWithoutQueryIsValidAndEmpty(): void
     {
-        $this->assertSame([], \Cache::getQueryVars('/index.php', self::NEWS_ALLOW));
-        $this->assertSame([], \Cache::getQueryVars('/index.php?', self::NEWS_ALLOW));
-        $this->assertSame([], \Cache::getQueryVars('/', self::NEWS_ALLOW));
+        $this->assertSame([], \Cache::getQueryVars('/index.php', self::ROUTE_ALLOW));
+        $this->assertSame([], \Cache::getQueryVars('/index.php?', self::ROUTE_ALLOW));
+        $this->assertSame([], \Cache::getQueryVars('/', self::ROUTE_ALLOW));
     }
 
     # Known tracking parameters are silently dropped instead of rejecting the request
@@ -67,59 +67,59 @@ final class PageCacheContractTest extends TestCase
     public function trackingParametersAreDroppedNotRejected(): void
     {
         $url = '/index.php?utm_source=x&utm_medium=y&gclid=abc&fbclid=def&yclid=1&_openstat=z';
-        $this->assertSame([], \Cache::getQueryVars($url, self::NEWS_ALLOW));
-        $url = '/index.php?name=news&utm_campaign=promo&cat=3';
-        $this->assertSame(['name' => 'news', 'cat' => '3'], \Cache::getQueryVars($url, self::NEWS_ALLOW));
+        $this->assertSame([], \Cache::getQueryVars($url, self::ROUTE_ALLOW));
+        $url = '/index.php?name=shop&utm_campaign=promo&cat=3';
+        $this->assertSame(['name' => 'shop', 'cat' => '3'], \Cache::getQueryVars($url, self::ROUTE_ALLOW));
     }
 
-    # A fully valid news list query returns the decoded parameter map
+    # A fully valid list query returns the decoded parameter map
     #[Test]
-    public function validNewsListQueryReturnsDecodedMap(): void
+    public function validListQueryReturnsDecodedMap(): void
     {
-        $vars = \Cache::getQueryVars('/index.php?name=news&cat=3&num=2', self::NEWS_ALLOW);
-        $this->assertSame(['name' => 'news', 'cat' => '3', 'num' => '2'], $vars);
-        $this->assertSame(['name' => 'news', 'op' => ''], \Cache::getQueryVars('/index.php?name=news&op=', self::NEWS_ALLOW));
+        $vars = \Cache::getQueryVars('/index.php?name=shop&cat=3&num=2', self::ROUTE_ALLOW);
+        $this->assertSame(['name' => 'shop', 'cat' => '3', 'num' => '2'], $vars);
+        $this->assertSame(['name' => 'shop', 'op' => ''], \Cache::getQueryVars('/index.php?name=shop&op=', self::ROUTE_ALLOW));
     }
 
     # Any query key outside the route contract makes the request non-cacheable
     #[Test]
     public function unknownKeysRejectTheRequest(): void
     {
-        $this->assertNull(\Cache::getQueryVars('/index.php?name=news&foo=1', self::NEWS_ALLOW));
-        $this->assertNull(\Cache::getQueryVars('/index.php?rnd991234', self::NEWS_ALLOW));
-        $this->assertNull(\Cache::getQueryVars('/index.php?=x', self::NEWS_ALLOW));
-        $this->assertNull(\Cache::getQueryVars('/index.php?name=news&amp;cat=1', self::NEWS_ALLOW));
+        $this->assertNull(\Cache::getQueryVars('/index.php?name=shop&foo=1', self::ROUTE_ALLOW));
+        $this->assertNull(\Cache::getQueryVars('/index.php?rnd991234', self::ROUTE_ALLOW));
+        $this->assertNull(\Cache::getQueryVars('/index.php?=x', self::ROUTE_ALLOW));
+        $this->assertNull(\Cache::getQueryVars('/index.php?name=shop&amp;cat=1', self::ROUTE_ALLOW));
     }
 
     # A semantic key appearing more than once makes the request non-cacheable
     #[Test]
     public function duplicateKeysRejectTheRequest(): void
     {
-        $this->assertNull(\Cache::getQueryVars('/index.php?cat=1&cat=2', self::NEWS_ALLOW));
-        $this->assertNull(\Cache::getQueryVars('/index.php?name=news&%6Eame=news', self::NEWS_ALLOW));
+        $this->assertNull(\Cache::getQueryVars('/index.php?cat=1&cat=2', self::ROUTE_ALLOW));
+        $this->assertNull(\Cache::getQueryVars('/index.php?name=shop&%6Eame=shop', self::ROUTE_ALLOW));
     }
 
     # Values that do not match the per-key format make the request non-cacheable
     #[Test]
     public function malformedValuesRejectTheRequest(): void
     {
-        $this->assertNull(\Cache::getQueryVars('/index.php?cat=abc', self::NEWS_ALLOW));
-        $this->assertNull(\Cache::getQueryVars('/index.php?cat=0', self::NEWS_ALLOW));
-        $this->assertNull(\Cache::getQueryVars('/index.php?cat=-1', self::NEWS_ALLOW));
-        $this->assertNull(\Cache::getQueryVars('/index.php?cat=1e3', self::NEWS_ALLOW));
-        $this->assertNull(\Cache::getQueryVars('/index.php?cat=1234567890', self::NEWS_ALLOW));
-        $this->assertNull(\Cache::getQueryVars('/index.php?cat', self::NEWS_ALLOW));
-        $this->assertNull(\Cache::getQueryVars('/index.php?num=+1', self::NEWS_ALLOW));
-        $this->assertNull(\Cache::getQueryVars('/index.php?op=liste', self::NEWS_ALLOW));
-        $this->assertNull(\Cache::getQueryVars('/index.php?name=NEWS', self::NEWS_ALLOW));
+        $this->assertNull(\Cache::getQueryVars('/index.php?cat=abc', self::ROUTE_ALLOW));
+        $this->assertNull(\Cache::getQueryVars('/index.php?cat=0', self::ROUTE_ALLOW));
+        $this->assertNull(\Cache::getQueryVars('/index.php?cat=-1', self::ROUTE_ALLOW));
+        $this->assertNull(\Cache::getQueryVars('/index.php?cat=1e3', self::ROUTE_ALLOW));
+        $this->assertNull(\Cache::getQueryVars('/index.php?cat=1234567890', self::ROUTE_ALLOW));
+        $this->assertNull(\Cache::getQueryVars('/index.php?cat', self::ROUTE_ALLOW));
+        $this->assertNull(\Cache::getQueryVars('/index.php?num=+1', self::ROUTE_ALLOW));
+        $this->assertNull(\Cache::getQueryVars('/index.php?op=liste', self::ROUTE_ALLOW));
+        $this->assertNull(\Cache::getQueryVars('/index.php?name=SHOP', self::ROUTE_ALLOW));
     }
 
     # Percent-encoded keys and values decode to the same parameter map as their plain form
     #[Test]
     public function alternateEncodingsDecodeToTheSameMap(): void
     {
-        $plain = \Cache::getQueryVars('/index.php?name=news&cat=3', self::NEWS_ALLOW);
-        $coded = \Cache::getQueryVars('/index.php?name=%6E%65%77%73&cat=%33', self::NEWS_ALLOW);
+        $plain = \Cache::getQueryVars('/index.php?name=shop&cat=3', self::ROUTE_ALLOW);
+        $coded = \Cache::getQueryVars('/index.php?name=%73%68%6F%70&cat=%33', self::ROUTE_ALLOW);
         $this->assertSame($plain, $coded);
     }
 
@@ -180,14 +180,14 @@ final class PageCacheContractTest extends TestCase
         $this->assertSame(1, $data['v1_depth']);
     }
 
-    # The real getCacheRouteVars()/checkPageCache() accept a clean request and produce a stable identity
+    # The real getCacheRouteVars() accepts a clean request and produces a stable identity; the route map is empty until the Node routes arrive, so checkPageCache() stores nothing
     #[Test]
-    public function cacheableRouteProducesStableIdentity(): void
+    public function cleanRouteProducesStableIdentity(): void
     {
         $route = $this->getProbe('route');
         $again = $this->getProbe('routenum');
         $this->assertIsArray($route['vars']);
-        $this->assertTrue($route['cache']);
+        $this->assertFalse($route['cache'], 'A route is cached although the route map names none');
         $this->assertMatchesRegularExpression('#^[a-f0-9]{40}$#', $route['hash']);
         $this->assertSame($route['hash'], $again['hash'], 'identity must be stable across processes');
     }

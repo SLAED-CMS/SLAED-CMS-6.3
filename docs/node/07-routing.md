@@ -144,6 +144,13 @@ POST, request, CSRF, ошибки и аннулирование: [ratings.md](ra
 | `admin.php?name=node&op=types` | `GET` | список типов |
 | `admin.php?name=node&op=type` | `GET`, `POST` | форма и создание типа |
 | `admin.php?name=node&op=type&type=news` | `GET`, `POST` | форма и изменение типа |
+| `admin.php?name=node&op=type&profile=news` | `GET` | форма создания, заполненная штатным профилем |
+| `admin.php?name=node&op=typestatus&type=news` | `POST` | включение и отключение типа |
+| `admin.php?name=node&op=typedelete&type=news` | `POST` | удаление пустого типа |
+| `admin.php?name=node&op=clone&type=news` | `GET`, `POST` | форма нового имени и клонирование типа |
+| `admin.php?name=node&op=export&type=news` | `GET` | выгрузка `node-<name>.json` |
+| `admin.php?name=node&op=import` | `GET`, `POST` | форма и импорт определения типа |
+| `admin.php?name=node&op=report&id=77` | `POST` | разбор жалобы на ресурс: полезная или отклонённая |
 | `admin.php?name=node&op=config` | `GET`, `POST` | общие настройки Node |
 | `admin.php?name=node&op=info` | `GET` | документация модуля |
 | `admin.php?name=node&op=support&id=1050` | `GET`, `POST` | рабочая карточка обращения поддержки |
@@ -162,6 +169,9 @@ POST, request, CSRF, ошибки и аннулирование: [ratings.md](ra
 - `GET` для `status` и `delete` отклоняется без изменения данных.
 - Отдельные операции `save`, `saveadd` и `saveedit` не создаются: `GET` показывает форму, а `POST` на тот же маршрут сохраняет её.
 - Неизвестные `op` не переходят на список молча и отвечают `404`.
+- Таблица выше — закрытый набор. typestatus, typedelete, clone, import и создание из профиля требуют manage или главного администратора и вызывают updateNodeTypeStatus(), deleteNodeType() и addNodeTypeImport(); export вызывает getNodeTypeExport(); report требует права модерации типа и вызывает deleteNodeAssetReport(), `id` — ID ресурса. Восстановление конфигурации после сбоя не является op Node: это общий вход `admin.php?name=config&op=restore` по 06-types.md.
+- Ворота admin/index.php пропускают к name=node главного администратора и администратора, у которого в `_admins.modules` есть `node` либо хотя бы один `node-<type>`; меню показывает Node при том же условии. Дальше обработчик ограничивает модератора его типами через NodeContext.mods, а управление типами — правом manage. Редактор прав admin/modules/admins.php и его filterAdminmods принимают `node` и `node-<type>` зарегистрированных типов.
+- Навигация знает типы без списка имён в общем коде: getModuleName(), getModuleNavi(), blocks/modules.php, выбор главной в getTplModuleSelect() и ссылка «на сайт» админки получают активные типы из реестра `node.types`; выбор модулей в sitemap и поиске подключается на S16.
 - Для типа `help` обычный `admin.php?name=node&type=help` выводит очередь через `NodeSupport::getNodeSupportList()` и остаётся её единственным каноническим списком. Необязательные `state`, `aid`, `prio` и `num` фильтруют очередь; их отсутствие показывает ожидающие поддержку обращения по убыванию приоритета и возрастанию `activity`.
 - `GET op=support` показывает материал, переписку и рабочие поля `aid`, `state`, `prio`, `version`. `POST` принимает эти четыре значения только от главного администратора или модератора типа, вызывает `updateNodeSupport()` и завершает операцию через Post/Redirect/Get. Для типа без расширения `support` маршрут отвечает `404`.
 - `POST op=sync` требует CSRF, право модерации типа и расширение `sync`, вызывает `updateNodeSync()` для текущего материала независимо от `due` и завершает успешную либо неизменившую содержимое проверку через Post/Redirect/Get. Ошибка источника показывает безопасное сообщение и сохраняет прежний текст; `GET`, публичный маршрут и произвольный URL в этой операции отсутствуют.
@@ -177,4 +187,4 @@ POST, request, CSRF, ошибки и аннулирование: [ratings.md](ra
 
 Публичного маршрута `index.php?name=node` нет, а `node` запрещён как имя типа. Техническое имя используется только для каталога кода и административной точки `admin.php?name=node`.
 
-При совпадении имени тестовый старый модуль не рассматривается как альтернативный обработчик: зарегистрированный ключ Node безусловно принадлежит Node. Перед выпуском заменённые каталоги модулей удаляются из поставки.
+При совпадении имени тестовый старый модуль не рассматривается как альтернативный обработчик: зарегистрированный ключ Node безусловно принадлежит Node. Заменённые каталоги модулей удалены из дерева этапом S03A (NOD-224), задолго до первого маршрута Node.

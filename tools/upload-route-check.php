@@ -8,21 +8,21 @@
 # The unit suite proves the class; this proves the adapters, which only exist as request handlers and cannot be reached by a double
 # Every scenario compares the upload tree and the database before and after itself and removes what it created, so a run leaves the stand as it found it
 #
-# Usage: php tools/upload-route-check.php <base-url> [read|write|comp|editor|captcha|all]
+# Usage: php tools/upload-route-check.php <base-url> [read|write|editor|all]
 # Credentials come from the environment and never from the command line, because an argument list is readable by every process on the host:
 #   SLAED_ADMIN_NAME, SLAED_ADMIN_PASS, SLAED_USER_NAME, SLAED_USER_PASS
 # Optional: SLAED_REMOTE_URL names a public file for the positive remote row; without it that row reports as not run rather than as passed
 # Optional: SLAED_ROUTE_INSECURE=1 disables TLS verification, for a stand with a self signed certificate only
 #
-# The comp and captcha modes fail one write on purpose and edit config/security.php; the editor mode rewrites the two upload switches of the news record in config/uploads.php
+# The editor mode rewrites the two upload switches of the shop record in config/uploads.php
 # Every mode that drops the compiled configuration also makes the server mint a fresh master secret into config/security.php, so that file is guarded and restored whatever happens
-# All three restore what they changed byte for byte, but they change it while they run; run them against a stand, never against production data
+# It restores what it changed byte for byte, but it changes it while it runs; run it against a stand, never against production data
 
 if (PHP_SAPI !== 'cli') die('Illegal file access');
 
 $argn = $argv ?? [];
 if (count($argn) < 2) {
-    fwrite(STDERR, "Usage: php tools/upload-route-check.php <base-url> [read|write|comp|editor|captcha|all]\n");
+    fwrite(STDERR, "Usage: php tools/upload-route-check.php <base-url> [read|write|editor|all]\n");
     fwrite(STDERR, "Credentials are read from SLAED_ADMIN_NAME, SLAED_ADMIN_PASS, SLAED_USER_NAME and SLAED_USER_PASS\n");
     exit(1);
 }
@@ -31,17 +31,12 @@ define('ROOTDIR', str_replace('\\', '/', dirname(__DIR__)));
 define('SITEURL', rtrim((string)$argn[1], '/'));
 define('WORKDIR', str_replace('\\', '/', sys_get_temp_dir()).'/slaed_route_check');
 define('NOVERIFY', (string)getenv('SLAED_ROUTE_INSECURE') === '1');
-# The embed cap is read off the one constant that defines it rather than repeated here, because a number copied into a walk drifts away from the guard it is walking
-if (!defined('FUNC_FILE')) define('FUNC_FILE', true);
-require_once ROOTDIR.'/core/classes/parser.php';
 if (!is_dir(WORKDIR) && !mkdir(WORKDIR, 0777, true)) die("cannot create the scratch directory\n");
 
 $GLOBALS['fails'] = 0;
 $GLOBALS['skips'] = 0;
 $GLOBALS['undone'] = 0;
 $GLOBALS['made'] = [];
-$GLOBALS['rows'] = [];
-$GLOBALS['news'] = [];
 $GLOBALS['guard'] = '';
 
 # Derive one scoped CSRF token exactly as core/security.php derives it, from the session the cookie jar holds
@@ -227,14 +222,6 @@ function getDbRows(string $sql, array $arg = []): array {
     return str_starts_with(strtoupper(ltrim($sql)), 'SELECT') ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
 }
 
-# Install a trigger that fails one write of the named table on purpose, so the compensation branch of an adapter can be reached
-function setFailTrigger(string $table, string $when): void {
-    $cfg = require ROOTDIR.'/config/db.php';
-    getDbRows('DROP TRIGGER IF EXISTS slaed_route_guard');
-    $body = "BEGIN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'route check'; END";
-    getDbRows('CREATE TRIGGER slaed_route_guard BEFORE '.$when.' ON '.$cfg['db']['prefix'].'_'.$table.' FOR EACH ROW '.$body);
-}
-
 # Record one matrix expectation and its outcome
 function checkMatrixRow(string $name, bool $done, string $note = ''): void {
     if (!$done) $GLOBALS['fails']++;
@@ -283,44 +270,26 @@ function setFormBody(array $pair): string {
     return implode('&', $out);
 }
 
-# The frontend file submission body, which several rows reuse with a different posttype or title
-function getFilePost(string $jar, string $mark, string $type): array {
-    return [
-        'op' => 'send', 'posttype' => $type, 'token' => getScopeToken($jar, 'files'), 'title' => $mark, 'cid' => 1,
-        'description' => 'route check', 'bodytext' => 'route check', 'postname' => 'route check',
-        'mail' => 'route@example.net', 'home' => '', 'url' => '', 'fversion' => '1', 'fsize' => 0,
-    ];
-}
-
-# The admin file submission body, which the write, update and relocation rows reuse
-function getAdminPost(string $jar, string $mark, string $path): array {
-    return [
-        'op' => 'save', 'posttype' => 'save', 'token' => getScopeToken($jar, 'files'), 'fid' => 0, 'cid' => 1,
-        'postname' => 'route check', 'title' => $mark, 'description' => 'route check', 'bodytext' => 'route check',
-        'url' => '', 'path' => $path, 'filesize' => 0, 'version' => '1', 'email' => '', 'website' => '', 'ihome' => 0, 'acomm' => 0,
-    ];
-}
-
 # The read rows of the matrix: listings, unknown operations and every refusal that must not touch the tree
 function checkReadRows(string $ajar, string $ujar, string $gjar): void {
     echo "Editor read and refusal rows\n";
-    $base = ROOTDIR.'/uploads/news';
+    $base = ROOTDIR.'/uploads/shop';
     $png = addTestFixture('ed.png', 'png', 120, 90);
     $cut = addTestFixture('cut.png', 'cut');
     $txt = addTestFixture('ed.txt', 'txt');
     foreach (['moderator' => $ajar, 'user' => $ujar] as $who => $jar) {
-        $url = '/index.php?go=4&op=editorFiles&place=news.attach&token='.getScopeToken($jar, 'ajax');
+        $url = '/index.php?go=4&op=editorFiles&place=shop.attach&token='.getScopeToken($jar, 'ajax');
         $out = json_decode(getHttpReply($jar, $url)['body'], true);
         $good = is_array($out['files'] ?? null);
         checkMatrixRow('editor listing answers '.$who, $good, $good ? count($out['files']).' files' : 'no file list');
     }
     # A guest reaches the listing only where the record enables guest upload; where it does not, the access check answers first
-    $url = '/index.php?go=4&op=editorFiles&place=news.attach&token='.getScopeToken($gjar, 'ajax');
+    $url = '/index.php?go=4&op=editorFiles&place=shop.attach&token='.getScopeToken($gjar, 'ajax');
     $out = json_decode(getHttpReply($gjar, $url)['body'], true);
     $open = is_array($out['files'] ?? null);
     $done = $open ? $out['files'] === [] : ($out['ok'] ?? null) === false;
     checkMatrixRow('a guest receives no historical file', $done, $open ? 'listed and empty' : 'refused by the record');
-    $res = getHttpReply($ujar, '/index.php?go=4&op=nosuchop&place=news.attach&token='.getScopeToken($ujar, 'ajax'));
+    $res = getHttpReply($ujar, '/index.php?go=4&op=nosuchop&place=shop.attach&token='.getScopeToken($ujar, 'ajax'));
     checkMatrixRow('unknown editor operation answers 400', $res['code'] === 400 && str_contains($res['body'], '"ok":false'));
     $res = getHttpReply($ujar, '/index.php?go=4&op=nosuchop&place=nosuchmodule.attach&token='.getScopeToken($ujar, 'ajax'));
     checkMatrixRow('unknown operation with unknown module answers 400', $res['code'] === 400);
@@ -328,7 +297,7 @@ function checkReadRows(string $ajar, string $ujar, string $gjar): void {
     foreach ($cases as $name => [$tok, $file]) {
         $was = getDirTree($base);
         $send = ['token' => $tok !== '' ? $tok : getScopeToken($ujar, 'upload')];
-        getHttpReply($ujar, '/index.php?go=4&op=editorUpload&place=news.attach', $send, ['file' => $file]);
+        getHttpReply($ujar, '/index.php?go=4&op=editorUpload&place=shop.attach', $send, ['file' => $file]);
         checkMatrixRow('editor write with '.$name.' publishes nothing', getTreeDelta($base, $was) === []);
     }
     $was = getDirTree(ROOTDIR.'/uploads/presentation');
@@ -343,23 +312,23 @@ function checkReadRows(string $ajar, string $ujar, string $gjar): void {
 # Every row carries a deliberately wrong body token, so the gate is told apart from the token check that would otherwise answer the same request with the same shape
 # A refusal phrase is never compared against a literal, because the stand answers in its own locale: the field place is held against the attachment place of the same operation
 function checkOpsGateRows(string $ujar, string $png): void {
-    $was = getDirTree(ROOTDIR.'/uploads/files');
+    $was = getDirTree(ROOTDIR.'/uploads/avatars');
     $send = ['token' => 'bogus'];
-    $deny = getHttpReply($ujar, '/index.php?go=4&op=editorUpload&place=files.dist', $send, ['file' => $png])['body'];
-    $miss = getHttpReply($ujar, '/index.php?go=4&op=editorUpload&place=news.attach', $send, ['file' => $png])['body'];
-    $done = getTreeDelta(ROOTDIR.'/uploads/files', $was) === [] && $deny !== $miss && str_contains($deny, '"ok":false');
+    $deny = getHttpReply($ujar, '/index.php?go=4&op=editorUpload&place=users.avatar', $send, ['file' => $png])['body'];
+    $miss = getHttpReply($ujar, '/index.php?go=4&op=editorUpload&place=shop.attach', $send, ['file' => $png])['body'];
+    $done = getTreeDelta(ROOTDIR.'/uploads/avatars', $was) === [] && $deny !== $miss && str_contains($deny, '"ok":false');
     checkMatrixRow('a field place is refused the upload route before its token', $done, substr($deny, 0, 90));
     $good = getScopeToken($ujar, 'ajax');
     # The body token is left out rather than made wrong: index.php reads the token as 'req', so a wrong one in the body outranks the good one in the address and the
     # request dies on the dispatcher gate with an HTML alert, before any route runs. An absent body token still fails the route's own check, which is all this row needs
     $send = ['file' => 'nosuchfile.png'];
     $deny = getHttpReply($ujar, '/index.php?go=4&op=editorDelete&place=users.avatar&token='.$good, $send)['body'];
-    $miss = getHttpReply($ujar, '/index.php?go=4&op=editorDelete&place=news.attach&token='.$good, $send)['body'];
+    $miss = getHttpReply($ujar, '/index.php?go=4&op=editorDelete&place=shop.attach&token='.$good, $send)['body'];
     $done = $deny !== $miss && str_contains($deny, '"ok":false');
     checkMatrixRow('a field place is refused the deletion route before its token', $done, substr($deny, 0, 90));
-    $res = getHttpReply($ujar, '/index.php?go=4&op=editorFiles&place=files&token='.$good);
+    $res = getHttpReply($ujar, '/index.php?go=4&op=editorFiles&place=users&token='.$good);
     checkMatrixRow('a place without a slot is refused', str_contains($res['body'], 'malformed'), substr($res['body'], 0, 90));
-    $res = getHttpReply($ujar, '/index.php?go=4&op=editorFiles&mod=news&token='.$good);
+    $res = getHttpReply($ujar, '/index.php?go=4&op=editorFiles&mod=shop&token='.$good);
     checkMatrixRow('the former module parameter reaches no route', str_contains($res['body'], 'Illegal file access'), substr($res['body'], 0, 90));
 }
 
@@ -509,14 +478,12 @@ function setProfileRow(array $row): void {
 function checkWriteRows(string $ajar, string $ujar): void {
     echo "Publication rows\n";
     $png = addTestFixture('ed.png', 'png', 120, 90);
-    $zip = addTestFixture('fr.zip', 'zip');
     $txt = addTestFixture('ed.txt', 'txt');
-    $mark = 'routecheck-'.bin2hex(random_bytes(4));
 
-    $base = ROOTDIR.'/uploads/news';
+    $base = ROOTDIR.'/uploads/shop';
     $was = getDirTree($base);
     $send = ['token' => getScopeToken($ujar, 'upload')];
-    $out = json_decode(getHttpReply($ujar, '/index.php?go=4&op=editorUpload&place=news.attach', $send, ['file' => $png])['body'], true);
+    $out = json_decode(getHttpReply($ujar, '/index.php?go=4&op=editorUpload&place=shop.attach', $send, ['file' => $png])['body'], true);
     $new = getTreeDelta($base, $was);
     checkMatrixRow('editor write publishes one owned file', ($out['ok'] ?? false) && count($new) === 1, implode(', ', $new));
 
@@ -549,81 +516,7 @@ function checkWriteRows(string $ajar, string $ujar): void {
         checkMatrixRow('a public remote file publishes', count($new) === 1, implode(', ', $new));
     }
 
-    $base = ROOTDIR.'/uploads/files/temp';
-    $was = getDirTree($base);
-    getHttpReply($ujar, '/index.php?name=files', getFilePost($ujar, $mark, 'preview'), ['userfile' => $zip]);
-    $none = getDbRows('SELECT id FROM {p}_files WHERE title = :t', ['t' => $mark]) === [];
-    checkMatrixRow('a frontend preview publishes nothing', getTreeDelta($base, $was) === [] && $none);
-    $was = getDirTree($base);
-    getHttpReply($ujar, '/index.php?name=files', getFilePost($ujar, $mark, 'save'), ['userfile' => $zip]);
-    $new = getTreeDelta($base, $was);
-    $row = getDbRows('SELECT id, url, filesize FROM {p}_files WHERE title = :t', ['t' => $mark]);
-    foreach ($row as $one) $GLOBALS['rows'][] = (int)$one['id'];
-    $done = count($new) === 1 && count($row) === 1 && ($row[0]['url'] ?? '') === ($new[0] ?? '');
-    checkMatrixRow('a frontend save stores the file and the project relative url', $done, implode(', ', $new));
-
-    checkAdminFileRows($ajar, $zip, $mark);
     checkSettingsRows($ajar);
-}
-
-# The admin file rows: a first publication into the selected directory, an update of an existing row, and a relocation with no new upload
-function checkAdminFileRows(string $ajar, string $zip, string $mark): void {
-    $pub = ROOTDIR.'/uploads/files/public';
-    $tmp = ROOTDIR.'/uploads/files/temp';
-    $was = getDirTree($pub);
-    $post = getAdminPost($ajar, $mark.'-a', 'uploads/files/public');
-    getHttpReply($ajar, '/admin.php?name=files&op=save', ['posttype' => 'preview'] + $post, ['filesite' => $zip]);
-    checkMatrixRow('an admin preview publishes nothing', getTreeDelta($pub, $was) === []);
-    $was = getDirTree($pub);
-    getHttpReply($ajar, '/admin.php?name=files&op=save', $post, ['filesite' => $zip]);
-    $new = getTreeDelta($pub, $was);
-    $row = getDbRows('SELECT id, url FROM {p}_files WHERE title = :t', ['t' => $mark.'-a']);
-    foreach ($row as $one) $GLOBALS['rows'][] = (int)$one['id'];
-    checkMatrixRow('an admin save publishes into the selected directory in one step', count($new) === 1 && count($row) === 1);
-    $fid = (int)($row[0]['id'] ?? 0);
-    if ($fid === 0) {
-        setSkipRow('admin update and relocation rows', 'the first admin save produced no row', true);
-        return;
-    }
-    $was = getDirTree($pub);
-    $edit = getAdminPost($ajar, $mark.'-a', 'uploads/files/public');
-    $edit['fid'] = $fid;
-    $edit['url'] = (string)$row[0]['url'];
-    $edit['description'] = 'route check updated';
-    getHttpReply($ajar, '/admin.php?name=files&op=save', $edit);
-    $after = getDbRows('SELECT intro, url FROM {p}_files WHERE id = :i', ['i' => $fid]);
-    $done = ($after[0]['intro'] ?? '') === 'route check updated' && ($after[0]['url'] ?? '') === $edit['url'];
-    checkMatrixRow('an update of an existing row keeps its stored file', $done && getTreeDelta($pub, $was) === []);
-    $was = getDirTree($tmp);
-    $move = $edit;
-    $move['path'] = 'uploads/files/temp';
-    getHttpReply($ajar, '/admin.php?name=files&op=save', $move);
-    $new = getTreeDelta($tmp, $was);
-    $after = getDbRows('SELECT url FROM {p}_files WHERE id = :i', ['i' => $fid]);
-    $gone = !is_file(ROOTDIR.'/'.$edit['url']);
-    checkMatrixRow('a relocation without an upload moves the stored file', count($new) === 1 && $gone, implode(', ', $new));
-    checkMatrixRow('the relocated row points at the new path', ($after[0]['url'] ?? '') === ($new[0] ?? ''));
-    checkAdminDeleteGuards($ajar, $fid, $edit, $tmp);
-    $was = getDirTree($tmp);
-    getHttpReply($ajar, '/admin.php?name=files&op=save', ['posttype' => 'delete', 'fid' => $fid] + $edit, ['filesite' => $zip]);
-    checkMatrixRow('a delete with a file attached publishes nothing', getTreeDelta($tmp, $was) === []);
-}
-
-# The two halves of the delete authorization: a refused token must not reach the delete branch of save(), and a delete may not travel as an address at all
-# Both rows run before the delete that really removes the row, because each of them proves that the row and its file are still there afterwards
-function checkAdminDeleteGuards(string $ajar, int $fid, array $edit, string $tmp): void {
-    $was = getDirTree($tmp);
-    $post = ['posttype' => 'delete', 'fid' => $fid] + $edit;
-    $post['token'] = 'tampered';
-    getHttpReply($ajar, '/admin.php?name=files&op=save', $post);
-    $left = getDbRows('SELECT id FROM {p}_files WHERE id = :i', ['i' => $fid]);
-    $done = count($left) === 1 && getDirTree($tmp) === $was;
-    checkMatrixRow('a delete carrying a tampered token removes neither the row nor the file', $done);
-    $url = '/admin.php?name=files&op=delete&id='.$fid.'&token='.getScopeToken($ajar, 'files');
-    getHttpReply($ajar, $url);
-    $left = getDbRows('SELECT id FROM {p}_files WHERE id = :i', ['i' => $fid]);
-    $done = count($left) === 1 && getDirTree($tmp) === $was;
-    checkMatrixRow('a delete sent as a GET address changes nothing even with a valid token', $done);
 }
 
 # The two settings rows plus the documentation tab
@@ -648,60 +541,6 @@ function checkSettingsRows(string $ajar): void {
     checkMatrixRow('the docs tab renders without a warning', !preg_match('#(Warning|Fatal error)#', getHttpReply($ajar, '/admin.php?name=uploads&op=info')['body']));
 }
 
-# The compensation rows: a write that fails on purpose must leave neither a file nor a row behind
-function checkCompRows(string $ajar, string $ujar): void {
-    echo "Compensation rows\n";
-    $zip = addTestFixture('fr.zip', 'zip');
-    $base = ROOTDIR.'/uploads/files/temp';
-    $mark = 'routecomp-'.bin2hex(random_bytes(4));
-    setFailTrigger('files', 'INSERT');
-    $was = getDirTree($base);
-    getHttpReply($ujar, '/index.php?name=files', getFilePost($ujar, $mark, 'save'), ['userfile' => $zip]);
-    $new = getTreeDelta($base, $was);
-    checkMatrixRow('a failed frontend row write leaves no published file', $new === [], implode(', ', $new));
-    checkMatrixRow('a failed frontend row write leaves no row', getDbRows('SELECT id FROM {p}_files WHERE title = :t', ['t' => $mark]) === []);
-    $pub = ROOTDIR.'/uploads/files/public';
-    $was = getDirTree($pub);
-    getHttpReply($ajar, '/admin.php?name=files&op=save', getAdminPost($ajar, $mark.'-a', 'uploads/files/public'), ['filesite' => $zip]);
-    $new = getTreeDelta($pub, $was);
-    checkMatrixRow('a failed admin row write leaves no published file', $new === [], implode(', ', $new));
-    getDbRows('DROP TRIGGER IF EXISTS slaed_route_guard');
-    $left = getDbRows("SELECT trigger_name FROM information_schema.triggers WHERE trigger_name = 'slaed_route_guard'");
-    checkMatrixRow('the guard trigger is gone', $left === []);
-}
-
-# The captcha row: it only exists for a guest, because Captcha::isActive() exempts an authenticated visitor
-function checkCaptchaRow(string $gjar): void {
-    echo "Captcha row\n";
-    $file = ROOTDIR.'/config/security.php';
-    $befo = (string)file_get_contents($file);
-    $open = str_replace("'captcha' => [\n            'active' => '0',", "'captcha' => [\n            'active' => '1',", $befo);
-    if ($open === $befo) {
-        setSkipRow('a failed captcha publishes nothing', 'captcha is not switched off in config/security.php');
-        return;
-    }
-    file_put_contents($file, $open);
-    if (!deleteConfigMerge()) {
-        file_put_contents($file, $befo);
-        setSkipRow('a failed captcha publishes nothing', 'config/local.php could not be dropped, so the switched off captcha would not have been read', true);
-        return;
-    }
-    $zip = addTestFixture('fr.zip', 'zip');
-    $base = ROOTDIR.'/uploads/files/temp';
-    $mark = 'routecheck-'.bin2hex(random_bytes(4));
-    $was = getDirTree($base);
-    getHttpReply($gjar, '/index.php?name=files', getFilePost($gjar, $mark, 'save'), ['userfile' => $zip]);
-    $new = getTreeDelta($base, $was);
-    $none = getDbRows('SELECT id FROM {p}_files WHERE title = :t', ['t' => $mark]) === [];
-    checkMatrixRow('a failed captcha publishes nothing', $new === [] && $none, implode(', ', $new));
-    file_put_contents($file, $befo);
-    $gone = deleteConfigMerge();
-    clearstatcache();
-    checkMatrixRow('config/security.php was restored byte for byte', (string)file_get_contents($file) === $befo);
-    checkMatrixRow('the compiled configuration was dropped after the captcha restore', $gone);
-    getHttpReply($gjar, '/index.php?name=account');
-}
-
 # The key order of one upload record, lifted out of setUploadRuleData() rather than repeated here, because a position copied into a walk drifts away from the record it walks
 # A walk driving the same stand over HTTP cannot require the core, so the list is read off the serializer that owns it and an unreadable list answers empty, which reads as not run
 function getUploadRuleKeys(): array {
@@ -711,7 +550,7 @@ function getUploadRuleKeys(): array {
     return $all[1];
 }
 
-# Rewrite the two upload switches of the news record and drop the merged configuration cache, so the next request reads the record this row is about
+# Rewrite the two upload switches of the shop record and drop the merged configuration cache, so the next request reads the record this row is about
 # The record is a pipe separated string in a fixed key order; only the two positions of the switches are touched and every other value the record carries is kept
 # Both positions and the field count come from the shipped key order, so a key added to or removed from the record moves this walk with it instead of writing into the wrong field
 function setUploadSwitch(int $user, int $guest): bool {
@@ -721,12 +560,12 @@ function setUploadSwitch(int $user, int $guest): bool {
     if ($upos === false || $gpos === false) return false;
     $file = ROOTDIR.'/config/uploads.php';
     $code = (string)file_get_contents($file);
-    if (!preg_match("#'news' => '([^']*)',#", $code, $hit)) return false;
+    if (!preg_match("#'shop' => '([^']*)',#", $code, $hit)) return false;
     $rule = explode('|', $hit[1]);
     if (count($rule) !== count($keys)) return false;
     $rule[$upos] = (string)$user;
     $rule[$gpos] = (string)$guest;
-    $done = file_put_contents($file, str_replace($hit[0], "'news' => '".implode('|', $rule)."',", $code)) !== false;
+    $done = file_put_contents($file, str_replace($hit[0], "'shop' => '".implode('|', $rule)."',", $code)) !== false;
     $gone = deleteConfigMerge();
     clearstatcache();
     return $done && $gone;
@@ -734,16 +573,16 @@ function setUploadSwitch(int $user, int $guest): bool {
 
 # Publish one editor file as the given visitor and report whether the route accepted it and what the destination gained
 function addEditorFile(string $jar, string $png): array {
-    $base = ROOTDIR.'/uploads/news';
+    $base = ROOTDIR.'/uploads/shop';
     $was = getDirTree($base);
     $send = ['token' => getScopeToken($jar, 'upload')];
-    $out = json_decode(getHttpReply($jar, '/index.php?go=4&op=editorUpload&place=news.attach', $send, ['file' => $png])['body'], true);
+    $out = json_decode(getHttpReply($jar, '/index.php?go=4&op=editorUpload&place=shop.attach', $send, ['file' => $png])['body'], true);
     return ['ok' => (bool)($out['ok'] ?? false), 'new' => getTreeDelta($base, $was)];
 }
 
 # List the editor files of the given visitor and report whether a list was answered at all and which names it carried
 function getEditorFiles(string $jar): array {
-    $url = '/index.php?go=4&op=editorFiles&place=news.attach&token='.getScopeToken($jar, 'ajax');
+    $url = '/index.php?go=4&op=editorFiles&place=shop.attach&token='.getScopeToken($jar, 'ajax');
     $out = json_decode(getHttpReply($jar, $url)['body'], true);
     $rows = is_array($out['files'] ?? null) ? array_column($out['files'], 'file') : null;
     return ['ok' => $rows !== null, 'files' => $rows ?? []];
@@ -757,7 +596,7 @@ function checkEditorMatrixRows(string $ajar, string $ujar, string $gjar): void {
     $who = ['moderator' => $ajar, 'member' => $ujar, 'guest' => $gjar];
     foreach ([[0, 0], [1, 0], [0, 1], [1, 1]] as [$user, $guest]) {
         if (!setUploadSwitch($user, $guest)) {
-            setSkipRow('the access matrix', 'the news record of config/uploads.php could not be rewritten', true);
+            setSkipRow('the access matrix', 'the shop record of config/uploads.php could not be rewritten', true);
             return;
         }
         $name = 'userupload='.$user.' guestupload='.$guest;
@@ -776,7 +615,7 @@ function checkEditorMatrixRows(string $ajar, string $ujar, string $gjar): void {
 function checkEditorGuestRows(string $gjar): void {
     echo "Editor guest isolation\n";
     if (!setUploadSwitch(1, 1)) {
-        setSkipRow('the guest isolation rows', 'the news record of config/uploads.php could not be rewritten', true);
+        setSkipRow('the guest isolation rows', 'the shop record of config/uploads.php could not be rewritten', true);
         return;
     }
     $png = addTestFixture('gx.png', 'png', 60, 40);
@@ -800,68 +639,6 @@ function checkEditorGuestRows(string $gjar): void {
     checkMatrixRow('the second guest sees the own file and not the other one', $done, implode(', ', $list['files']));
 }
 
-# The first news category of the stand: catmids() filters an article filed under none out of the article page, so the render row would never run on a stand that has categories
-function getNewsCategory(): int {
-    $rows = getDbRows("SELECT id FROM {p}_categories WHERE modul = 'news' ORDER BY id LIMIT 1");
-    return (int)($rows[0]['id'] ?? 0);
-}
-
-# One news submission body, which every write guard row reuses with a different summary and a different body
-function getNewsPost(string $jar, string $mark, string $intro, string $body): array {
-    return [
-        'op' => 'save', 'posttype' => 'save', 'token' => getScopeToken($jar, 'ajax'), 'id' => 0, 'cat' => getNewsCategory(),
-        'subject' => $mark, 'postname' => 'route check', 'hometext' => $intro, 'bodytext' => $body,
-        'time' => date('Y-m-d H:i'), 'vote' => 0, 'ihome' => 1, 'acomm' => 0, 'fix' => 0,
-    ];
-}
-
-# One embedded image of exactly the requested binary weight under the requested media type, written the way the editor writes it so the parser can draw what survives the round trip
-function getEmbedText(string $type, int $size): string {
-    return '![photo](data:'.$type.';base64,'.base64_encode(str_repeat("\x01", $size)).')';
-}
-
-# The write guard over real HTTP: what the editor refuses first has to be refused again when the client is bypassed and the body is posted directly
-# Every row is read back from the stored row and not from the rendered answer, because the claim is that nothing reached the database and not that a message was shown
-function checkEditorGuardRows(string $ajar): void {
-    echo "Write guard rows\n";
-    $cap = Parser::EMBEDMAX;
-    $mark = 'routeguard-'.bin2hex(random_bytes(4));
-    $link = '![photo](https://files.example.net/photo.png)';
-    $rows = [
-        'an embed at the cap is stored' => ['intro' => 'route check', 'body' => getEmbedText('image/png', $cap), 'want' => true],
-        'an embed one byte past the cap is refused' => ['intro' => 'route check', 'body' => getEmbedText('image/png', $cap + 1), 'want' => false],
-        'a document data URI is refused' => ['intro' => 'route check', 'body' => getEmbedText('application/pdf', 512), 'want' => false],
-        'an SVG data URI is refused' => ['intro' => 'route check', 'body' => getEmbedText('image/svg+xml', 512), 'want' => false],
-        'a small embed into a summary field is refused' => ['intro' => getEmbedText('image/png', 512), 'body' => 'route check', 'want' => false],
-        'a linked image into the same field is stored' => ['intro' => $link, 'body' => 'route check', 'want' => true],
-        'plain prose one byte past the column is refused' => ['intro' => str_repeat('a', 65536), 'body' => 'route check', 'want' => false],
-        'a Cyrillic summary past the column is refused' => ['intro' => str_repeat('я', 32768), 'body' => 'route check', 'want' => false],
-    ];
-    $i = 0;
-    foreach ($rows as $name => $one) {
-        $title = $mark.'-'.$i++;
-        getHttpReply($ajar, '/admin.php?name=news&op=save', getNewsPost($ajar, $title, $one['intro'], $one['body']));
-        $row = getDbRows('SELECT id, intro, body FROM {p}_news WHERE title = :t', ['t' => $title]);
-        foreach ($row as $has) $GLOBALS['news'][] = (int)$has['id'];
-        checkMatrixRow($name, (count($row) === 1) === $one['want'], count($row).' row(s)');
-        if ($one['want'] && $row !== [] && str_contains($one['body'], 'data:')) checkEditorRenderRow($row[0], $one['body']);
-    }
-}
-
-# The stored embed has to survive the round trip whole and then reach the page through the parser, which is the pair the widening of the seventeen columns exists for
-# A stand that answers no article page at all reports the render row as not run rather than as passed, because a missing page proves nothing about what the parser would have drawn
-function checkEditorRenderRow(array $row, string $want): void {
-    $has = (string)($row['body'] ?? '');
-    checkMatrixRow('the stored embed carries every byte it was given', $has === $want, strlen($has).' of '.strlen($want));
-    $page = getHttpReply(WORKDIR.'/jar-render.txt', '/index.php?name=news&op=view&id='.(int)($row['id'] ?? 0));
-    if (!str_contains($page['body'], '<img')) {
-        setSkipRow('the stored embed reaches the page through the parser', 'the article page carried no image at all, which a draft or a moderated stand also produces');
-        return;
-    }
-    $src = substr($want, strlen('![photo]('), 200);
-    checkMatrixRow('the stored embed reaches the page through the parser', str_contains($page['body'], $src));
-}
-
 # Remove every file and row the walk created, and report anything that survived
 function deleteWalkTraces(): void {
     echo "Cleanup\n";
@@ -870,13 +647,7 @@ function deleteWalkTraces(): void {
         $path = ROOTDIR.'/'.$one;
         if (is_file($path) && !unlink($path)) $left[] = $one;
     }
-    foreach (array_unique($GLOBALS['rows']) as $id) getDbRows('DELETE FROM {p}_files WHERE id = :i', ['i' => $id]);
-    foreach (array_unique($GLOBALS['news']) as $id) getDbRows('DELETE FROM {p}_news WHERE id = :i', ['i' => $id]);
     checkMatrixRow('every published file was removed', $left === [], implode(', ', $left));
-    $rest = getDbRows("SELECT id FROM {p}_files WHERE title LIKE 'routecheck-%' OR title LIKE 'routecomp-%'");
-    checkMatrixRow('every seeded row was removed', $rest === []);
-    $rest = getDbRows("SELECT id FROM {p}_news WHERE title LIKE 'routeguard-%'");
-    checkMatrixRow('every seeded article was removed', $rest === []);
     if ((string)$GLOBALS['guard'] === '') return;
     # One request before the file goes back, so the merge is rebuilt while the seeded secret is still readable. The walk leaves the compiled configuration deleted
     # behind it, and a merge that is missing when the shipped secret is empty again means the next visitor to the stand - not this walk - mints the master and
@@ -921,21 +692,18 @@ if ($GLOBALS['fails'] > 0) {
 if ($mode === 'read' || $mode === 'all') checkReadRows($ajar, $ujar, $gjar);
 if ($mode === 'write' || $mode === 'all') checkWriteRows($ajar, $ujar);
 if ($mode === 'write' || $mode === 'all') checkAvatarRows($ujar, $gjar);
-if ($mode === 'comp' || $mode === 'all') checkCompRows($ajar, $ujar);
-# The editor rows rewrite the two upload switches of the news record between themselves, so the file is kept and restored byte for byte around the whole block
+# The editor rows rewrite the two upload switches of the shop record between themselves, so the file is kept and restored byte for byte around the whole block
 if ($mode === 'editor' || $mode === 'all') {
     $path = ROOTDIR.'/config/uploads.php';
     $befo = (string)file_get_contents($path);
     checkEditorMatrixRows($ajar, $ujar, $gjar);
     checkEditorGuestRows($gjar);
-    checkEditorGuardRows($ajar);
     file_put_contents($path, $befo);
     $gone = deleteConfigMerge();
     clearstatcache();
     checkMatrixRow('config/uploads.php was restored byte for byte', (string)file_get_contents($path) === $befo);
     checkMatrixRow('the compiled configuration was dropped after the editor restore', $gone);
 }
-if ($mode === 'captcha' || $mode === 'all') checkCaptchaRow($gjar);
 deleteWalkTraces();
 echo ($GLOBALS['fails'] === 0 ? 'all rows passed' : $GLOBALS['fails'].' row(s) failed');
 echo ($GLOBALS['skips'] > 0 ? ', '.$GLOBALS['skips'].' not run of which '.$GLOBALS['undone']." required\n" : "\n");

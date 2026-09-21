@@ -590,14 +590,10 @@ function getFieldsInRows(array $data = []): array {
 # Whether a field may embed is derived and never stored: the room has to hold a whole data URI of Parser::EMBEDMAX, which TEXT cannot, so a summary field refuses one at any size and not only a large one
 function getEditorRoomData(string $store): array {
     $room = [
-        'comment.body' => 'mediumtext', 'content.body' => 'mediumtext', 'faq.body' => 'mediumtext', 'files.body' => 'mediumtext',
-        'forum.body' => 'mediumtext', 'help.body' => 'mediumtext', 'jokes.body' => 'mediumtext', 'links.body' => 'mediumtext',
-        'media.note' => 'mediumtext', 'message.body' => 'mediumtext', 'money.note' => 'mediumtext', 'news.body' => 'mediumtext',
-        'newsletter.body' => 'mediumtext', 'order.note' => 'mediumtext', 'pages.body' => 'mediumtext', 'privat.body' => 'mediumtext',
-        'products.body' => 'mediumtext',
-        'auto_links.intro' => 'text', 'files.intro' => 'text', 'links.intro' => 'text', 'media.intro' => 'text',
-        'money.intro' => 'text', 'news.intro' => 'text', 'order.info' => 'text', 'pages.intro' => 'text',
-        'products.intro' => 'text', 'users.block' => 'text', 'users.sig' => 'text',
+        'comment.body' => 'mediumtext', 'forum.body' => 'mediumtext', 'message.body' => 'mediumtext', 'money.note' => 'mediumtext',
+        'newsletter.body' => 'mediumtext', 'order.note' => 'mediumtext', 'privat.body' => 'mediumtext', 'products.body' => 'mediumtext',
+        'auto_links.intro' => 'text', 'money.intro' => 'text', 'order.info' => 'text', 'products.intro' => 'text',
+        'users.block' => 'text', 'users.sig' => 'text',
         'config' => 'config',
     ];
     $byte = ['text' => 65535, 'mediumtext' => 16777215, 'config' => 65535];
@@ -1149,7 +1145,7 @@ function getUserTip(string $gname, string|int $points, string $regdate, int $gen
     if ($anon) return getTplTitleTip([['label' => _STATUS, 'value' => (string)($deleted ? _USERDEL : _ANONYM)]]);
     $items = [];
     if ($gname !== '') $items[] = ['label' => _GROUP, 'value' => htmlspecialchars($gname, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')];
-    if ($conf['users']['point'] && $points) $items[] = ['label' => _POINTS, 'value' => htmlspecialchars((string)$points, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')];
+    if ($conf['points']['active'] && $points) $items[] = ['label' => _POINTS, 'value' => htmlspecialchars((string)$points, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')];
     $items[] = ['label' => _REG, 'value' => ($regdate !== '') ? format_time($regdate) : (string)_NO_INFO];
     if ($gender) $items[] = ['label' => _GENDER, 'value' => getGenderText($gender)];
     if ($from !== '') $items[] = ['label' => _FROM, 'value' => htmlspecialchars($from, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')];
@@ -1330,7 +1326,7 @@ function getTplModuleSelect(string $name, string $mod, string $no = '', array $a
 
 # Return the names of modules that support categories
 function getCategoryModules(): array {
-    return ['faq', 'files', 'forum', 'help', 'jokes', 'links', 'media', 'news', 'pages', 'shop'];
+    return ['forum', 'shop'];
 }
 
 # Render a select with category-enabled modules

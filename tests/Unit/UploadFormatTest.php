@@ -107,7 +107,6 @@ final class UploadFormatTest extends TestCase
         foreach ($upl as $mod => $val) {
             if (is_string($val) && str_contains($val, '|')) $lists['uploads.'.$mod] = explode('|', $val)[0];
         }
-        $lists['files.typefile'] = $this->getConfig('files')['files']['typefile'];
         $lists['users.atypefile'] = $this->getConfig('users')['users']['atypefile'];
         foreach ($lists as $name => $list) {
             foreach (explode(',', $list) as $ext) {
@@ -131,7 +130,6 @@ final class UploadFormatTest extends TestCase
         }
         $this->assertArrayNotHasKey('album', $upl, 'The album record has no module and must be gone');
         $this->assertArrayNotHasKey('info', $upl, 'The info record has no module and must be gone');
-        $this->assertSame('zip,gz,7z,rar,tar', $this->getConfig('files')['files']['typefile'], 'The file module list still uses the gzip spelling');
         $this->assertSame('jpg,jpeg,gif,png', $this->getConfig('users')['users']['atypefile'], 'The avatar allowlist was widened, which this migration does not do');
     }
 

@@ -12,7 +12,7 @@ function ratings(): void {
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=ratings', 'name=ratings&op=info'], 'tabs' => [_HOME, _DOCS]]);
     $cont .= checkPerms(CONFIG_DIR.'/ratings.php');
-    $mods = ['account', 'faq', 'files', 'forum', 'help', 'jokes', 'links', 'media', 'news', 'pages', 'shop'];
+    $mods = ['account', 'forum', 'shop'];
     $blocks = '';
     foreach ($mods as $i => $val) {
         $con = explode('|', $conf['ratings'][$val]);
@@ -79,8 +79,9 @@ function ratings(): void {
 function save(): void {
     global $afile;
     $warn = !checkSiteToken();
+    $text = _TOKENMISS;
     $content = [];
-    $mods = ['account', 'faq', 'files', 'forum', 'help', 'jokes', 'links', 'media', 'news', 'pages', 'shop'];
+    $mods = ['account', 'forum', 'shop'];
     if (!$warn) {
         foreach ($mods as $i => $val) {
             $time_days = getVar('post', 'time['.$i.']', 'num', 0);
@@ -89,9 +90,14 @@ function save(): void {
             $view = getVar('post', $i.'view', 'num', 0);
             $content[$val] = $time.'|'.$in.'|'.$view;
         }
-        setConfigFile('ratings.php', $content);
+        $warn = !setConfigFile(static function (array $base, Closure $save) use ($content): string {
+            $base['ratings'] = array_replace($base['ratings'], $content);
+            ksort($base['ratings']);
+            return $save($base) ? 'committed' : 'aborted';
+        });
+        $text = $warn ? (getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP) : _SUCCSAVE;
     }
-    setRedirect($afile.'.php?name=ratings', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($afile.'.php?name=ratings', false, 302, $text, $warn);
 }
 
 function info(): void {

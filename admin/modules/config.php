@@ -261,6 +261,10 @@ function config(): void {
         'tabs_sync_selector' => 'input[name="tab"]',
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/global.php').checkPerms(CONFIG_DIR.'/mail.php');
+    if (getConfigJournal()) {
+        $link = $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=config&op=restore', 'title' => _CONFIG_RESTORE, 'label' => _CONFIG_RESTORE]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _CONFIG_PENDING.' '.$link]);
+    }
     $rows = [];
     $yesno = [
         ['value' => '1', 'label' => _YES],
@@ -440,8 +444,8 @@ function config(): void {
     ])];
     $fids = getFieldIds('f-module');
     $rows[] = ['label_for' => $fids['input'], 'label_html' => _PUTINHOME, 'hint_html' => _PUTINHOMEINFO.' '._CTRLINFO, 'hint_id' => $fids['hint'], 'field_html' => getTplModuleSelect('module', $conf['module'], 1, [], $fids['input'], $fids['hint'])];
-    $mods = ['auto_links', 'faq', 'files', 'links', 'media', 'news', 'order', 'page', 'shop_clients', 'voting'];
-    $mname = ['auto_links', 'faq', 'files', 'links', 'media', 'news', 'order', 'pages', 'shop', 'voting'];
+    $mods = ['auto_links', 'order', 'shop_clients', 'voting'];
+    $mname = ['auto_links', 'order', 'shop', 'voting'];
     $ival = 0;
     $opts = '';
     foreach ($mods as $val) {
@@ -1042,6 +1046,48 @@ function clearcache(): void {
     setRedirect($afile.'.php?name=config&tab='.$ctab, false, 302, $warn ? _TOKENMISS : _SUCCCLEAR, $warn);
 }
 
+# The restore entry of the configuration journal: GET shows what the unfinished operation left, POST with the scoped token lets setConfigRestore() finish it
+# It is an entry of its own and reads nothing but the journal, so it still opens when the configuration it would repair cannot render the settings screen
+function restore(): void {
+    global $afile, $tpl;
+    if (getVar('post', 'op', 'var') === 'restore') {
+        $warn = !checkAdminPost('config');
+        $text = _TOKENMISS;
+        if (!$warn) {
+            $warn = !setConfigRestore();
+            $why = $warn ? (string)(getConfigJournal()['why'] ?? '') : '';
+            $text = $warn ? (($why !== '') ? sprintf(_CONFIG_BLOCKED, $why) : _ERROR_UP) : _CONFIG_RESTORED;
+        }
+        setRedirect($afile.'.php?name=config&op=restore', false, 302, $text, $warn);
+    }
+    setHead();
+    $cont = getTplAdminTabs(['ops' => ['name=config', 'name=config&op=restore', 'name=config&op=info'], 'tabs' => [_PREFERENCES, _CONFIG_RESTORE, _DOCS], 'tab' => 1]);
+    $jour = getConfigJournal();
+    if (!$jour) {
+        echo $cont.$tpl->getHtmlFrag('alert', ['text' => _CONFIG_CLEAN]);
+        setFoot();
+        return;
+    }
+    $rows = [[_CONFIG_OP, $jour['op']], [_DATE, date(_TIMESTRING, $jour['time'])], [_CONFIG_PHASE, $jour['phase']]];
+    if ($jour['types']) $rows[] = [_TYPE, implode(', ', array_map('strval', $jour['types']))];
+    foreach ($jour['files'] as $name => $one) $rows[] = [_FILE.': '.$name, $one['state']];
+    $rows[] = [_CONFIG_VERDICT, ($jour['verdict'] !== '') ? $jour['verdict'] : sprintf(_CONFIG_BLOCKED, $jour['why'])];
+    $body = '';
+    foreach ($rows as $row) {
+        $body .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
+            'cells' => [
+                ['content_html' => $row[0]],
+                ['content_html' => htmlspecialchars($row[1], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+            ],
+        ])]);
+    }
+    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _CONFIG_PENDING]);
+    $info = $tpl->getHtmlFrag('table', ['head' => [['content' => _PARAMETERS], ['content' => _VALUE]], 'rows_html' => $body]);
+    $send = ($jour['verdict'] !== '') ? getTplPostButton(['name' => 'config', 'op' => 'restore'], 'arrow-repeat', _CONFIG_RESTORE) : '';
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $info.$send]);
+    setFoot();
+}
+
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=config&tab=0', 'name=config&tab=1', 'name=config&tab=2', 'name=config&tab=3', 'name=config&tab=4', 'name=config&tab=5', 'name=config&tab=6', 'name=config&op=info'],
@@ -1054,5 +1100,6 @@ switch ($op) {
     case 'save': save(); break;
     case 'clearcache': clearcache(); break;
     case 'mailtest': mailtest(); break;
+    case 'restore': restore(); break;
     case 'info': info(); break;
 }

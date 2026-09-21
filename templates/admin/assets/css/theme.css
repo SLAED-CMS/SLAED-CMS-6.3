@@ -4645,7 +4645,7 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   border-radius: var(--sl-radius-2);
   padding: var(--sl-space-6) var(--sl-space-8);
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
   gap: var(--sl-space-7);
   margin-bottom: var(--sl-space-7);
   align-items: center;

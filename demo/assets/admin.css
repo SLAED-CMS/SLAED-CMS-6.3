@@ -1,0 +1,511 @@
+/* The shared parts of the admin dashboard series. The admin theme is the authority: every colour, step, radius and
+   duration below is one of its `--sl-*` tokens, and what the theme legitimately does not carry - the measure of a
+   stand page, the thickness of a gauge, the face of a figure - lives in the `--a-*` block. A part read by one face
+   only is not here; it stands in that face under a `v-*` name. */
+
+:root {
+  --a-face-ui: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  --a-face-mono: ui-monospace, "Cascadia Mono", Consolas, "Courier New", monospace;
+  --a-page-width: 1180px;
+  --a-top-height: 56px;
+  --a-mark-height: 30px;
+  --a-gauge-size: 132px;
+  --a-gauge-width: 10px;
+  --a-spark-height: 72px;
+  --a-spark-width: 2px;
+  --a-dot-size: 8px;
+  --a-face-size: 32px;
+  --a-hair: 1px;
+  --a-insp-mark: 64px;
+}
+
+/* The live shell paints a gradient behind a boxed page; the series stands on one flat, quiet ground instead */
+html:has(.a-page) {
+  background: var(--sl-bg-subtle);
+}
+
+.a-page,
+.a-page input,
+.a-page button {
+  font-family: var(--a-face-ui);
+}
+
+.a-page {
+  min-height: 100vh;
+  color: var(--sl-text);
+  line-height: var(--sl-line-normal);
+}
+
+.a-page a {
+  text-decoration: none;
+}
+
+.a-page code {
+  font-family: var(--a-face-mono);
+  font-size: var(--sl-font-small);
+}
+
+.a-wrap {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--a-page-width);
+  margin: 0 auto;
+  padding: 0 var(--sl-space-8);
+}
+
+[data-adm-on="0"],
+[data-adm-on=""] {
+  display: none !important;
+}
+
+/* A tone is the colour of a group, and a group is the only thing on these pages colour speaks for */
+[data-tone="primary"] { --tone: var(--sl-primary); }
+[data-tone="success"] { --tone: var(--sl-success); }
+[data-tone="accent"] { --tone: var(--sl-accent); }
+[data-tone="warning"] { --tone: var(--sl-warning); }
+[data-tone="danger"] { --tone: var(--sl-danger); }
+
+/* --- Top bar ------------------------------------------------------------------------------------------------ */
+.a-top {
+  position: sticky;
+  top: 0;
+  z-index: var(--sl-z-sticky);
+  border-bottom: var(--a-hair) solid var(--sl-border);
+  background: color-mix(in srgb, var(--sl-bg) 86%, transparent);
+  backdrop-filter: blur(var(--sl-space-5));
+}
+
+.a-top-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-6);
+  height: var(--a-top-height);
+}
+
+.a-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-4);
+  color: var(--sl-text);
+  font-weight: var(--sl-weight-semibold);
+}
+
+.a-brand img {
+  display: block;
+  height: var(--a-mark-height);
+}
+
+.a-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+}
+
+.a-nav a,
+.a-act {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  height: var(--sl-size-control);
+  padding: 0 var(--sl-space-5);
+  border: 0;
+  border-radius: var(--sl-radius-pill);
+  background: transparent;
+  color: var(--sl-text-muted);
+  font-weight: var(--sl-weight-medium);
+  cursor: pointer;
+  transition:
+    background-color var(--sl-time-fast) var(--sl-ease-out),
+    color var(--sl-time-fast) var(--sl-ease-out);
+}
+
+.a-nav a:hover,
+.a-act:hover {
+  background: var(--sl-tint);
+  color: var(--sl-primary-strong);
+}
+
+.a-nav a[aria-current="page"] {
+  background: var(--sl-tint);
+  color: var(--sl-primary-strong);
+}
+
+.a-top-end {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-2);
+  margin-left: auto;
+}
+
+.a-act .bi {
+  font-size: var(--sl-size-icon-xs);
+}
+
+.a-face {
+  display: grid;
+  place-items: center;
+  width: var(--a-face-size);
+  height: var(--a-face-size);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-primary);
+  color: var(--sl-on-solid);
+  font-size: var(--sl-font-small);
+  font-weight: var(--sl-weight-bold);
+}
+
+/* --- Small parts -------------------------------------------------------------------------------------------- */
+.a-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-3);
+  color: var(--sl-text-muted);
+  font-family: var(--a-face-mono);
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+}
+
+.a-dot {
+  flex: 0 0 auto;
+  width: var(--a-dot-size);
+  height: var(--a-dot-size);
+  border-radius: var(--sl-radius-circle);
+  background: var(--tone, var(--sl-success));
+}
+
+.a-dot-live {
+  animation: sl-led-pulse var(--sl-led-dur) var(--sl-ease-in-out) infinite;
+}
+
+.a-kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: var(--sl-chip-width);
+  height: var(--sl-chip-height);
+  padding: 0 var(--sl-space-2);
+  box-sizing: border-box;
+  border: var(--a-hair) solid var(--sl-border-strong);
+  border-radius: var(--sl-radius-1);
+  background: var(--sl-bg);
+  color: var(--sl-text-muted);
+  font-family: var(--a-face-mono);
+  font-size: var(--sl-font-micro);
+}
+
+.a-card {
+  box-sizing: border-box;
+  border: var(--a-hair) solid var(--sl-border);
+  border-radius: var(--sl-radius-3);
+  background: var(--sl-bg);
+  box-shadow: var(--sl-shadow-xs);
+}
+
+.a-num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* The search of a face: the theme field, grown to the size of the first thing on the page */
+.a-seek {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.a-seek > .bi {
+  position: absolute;
+  left: var(--sl-space-5);
+  color: var(--sl-text-subtle);
+  pointer-events: none;
+}
+
+.a-seek input {
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--sl-size-control);
+  padding: 0 var(--sl-space-8) 0 calc(var(--sl-space-8) + var(--sl-space-4));
+  border: var(--a-hair) solid var(--sl-border);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-bg-subtle);
+  color: var(--sl-text);
+  outline: 0;
+  transition:
+    border-color var(--sl-time-fast) var(--sl-ease-out),
+    box-shadow var(--sl-time-fast) var(--sl-ease-out),
+    background-color var(--sl-time-fast) var(--sl-ease-out);
+}
+
+.a-seek input:focus {
+  border-color: var(--sl-primary);
+  background: var(--sl-bg);
+  box-shadow: var(--sl-shadow-focus);
+}
+
+.a-seek .a-kbd {
+  position: absolute;
+  right: var(--sl-space-3);
+}
+
+/* --- Gauge: a three-quarter ring, the value in `--v` from 0 to 100 --------------------------------------------- */
+.a-gauge {
+  --v: 0;
+  position: relative;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  width: var(--a-gauge-size);
+  aspect-ratio: 1;
+  text-align: center;
+}
+
+.a-gauge::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--sl-radius-circle);
+  background: conic-gradient(
+    from 225deg,
+    var(--tone, var(--sl-primary)) calc(var(--v) * 2.7deg),
+    var(--sl-border) 0 270deg,
+    transparent 0
+  );
+  mask: radial-gradient(farthest-side, transparent calc(100% - var(--a-gauge-width)), #000 calc(100% - var(--a-gauge-width) + 1px));
+}
+
+.a-gauge strong {
+  font-size: var(--sl-font-h1);
+  font-weight: var(--sl-weight-bold);
+  line-height: var(--sl-line-tight);
+  font-variant-numeric: tabular-nums;
+}
+
+.a-gauge strong small {
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  font-weight: var(--sl-weight-normal);
+}
+
+.a-gauge > span {
+  color: var(--sl-text-muted);
+  font-family: var(--a-face-mono);
+  font-size: var(--sl-font-micro);
+  letter-spacing: var(--sl-track-wide);
+  text-transform: uppercase;
+}
+
+/* --- Sparkline ---------------------------------------------------------------------------------------------- */
+.a-spark {
+  position: relative;
+  height: var(--a-spark-height);
+}
+
+.a-spark svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.a-spark-line {
+  fill: none;
+  stroke: var(--tone, var(--sl-primary));
+  stroke-width: var(--a-spark-width);
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.a-spark-fill {
+  fill: color-mix(in srgb, var(--tone, var(--sl-primary)) 12%, transparent);
+  stroke: none;
+}
+
+.a-spark-dot {
+  position: absolute;
+  width: var(--a-dot-size);
+  height: var(--a-dot-size);
+  margin: calc(var(--a-dot-size) / -2) 0 0 calc(var(--a-dot-size) / -2);
+  border-radius: var(--sl-radius-circle);
+  background: var(--tone, var(--sl-primary));
+  box-shadow: 0 0 0 var(--sl-space-2) color-mix(in srgb, var(--tone, var(--sl-primary)) 24%, transparent);
+}
+
+/* --- Meter: one thin line for one figure of the debug footer -------------------------------------------------- */
+.a-meter {
+  --v: 0;
+  height: var(--sl-space-2);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-border);
+  overflow: hidden;
+}
+
+.a-meter::before {
+  content: "";
+  display: block;
+  width: calc(var(--v) * 1%);
+  height: 100%;
+  border-radius: inherit;
+  background: var(--tone, var(--sl-success));
+}
+
+/* --- Inspector: the speed dial of the live tile opened out - named actions, the theme switch for the status, and
+   the session block and the journal while nothing is chosen ------------------------------------------------------ */
+.a-who {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-4);
+  padding: var(--sl-space-3) 0;
+}
+
+.a-who .bi {
+  color: var(--sl-text-subtle);
+}
+
+.a-who b {
+  margin-left: auto;
+}
+
+.a-log {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0 var(--sl-space-4);
+  padding: var(--sl-space-4) 0;
+  border-bottom: var(--a-hair) solid var(--sl-border);
+  font-size: var(--sl-font-small);
+}
+
+.a-log .a-dot {
+  margin-top: var(--sl-space-2);
+}
+
+.a-log span {
+  grid-column: 2;
+  color: var(--sl-text-muted);
+  font-family: var(--a-face-mono);
+  font-size: var(--sl-font-micro);
+}
+
+.a-insp-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sl-space-5);
+}
+
+.a-insp-head > .bi {
+  display: grid;
+  place-items: center;
+  flex: 0 0 var(--a-insp-mark);
+  height: var(--a-insp-mark);
+  border-radius: var(--sl-radius-3);
+  background: color-mix(in srgb, var(--tone) 12%, transparent);
+  color: var(--tone);
+  font-size: var(--sl-size-icon-lg);
+}
+
+.a-insp-head h3 {
+  color: var(--sl-text);
+  font-size: var(--sl-font-h3);
+  font-weight: var(--sl-weight-semibold);
+}
+
+.a-insp-head .a-act {
+  margin-left: auto;
+  padding: 0 var(--sl-space-3);
+}
+
+.a-insp-about {
+  margin: var(--sl-space-6) 0;
+  color: var(--sl-text-muted);
+}
+
+.a-facts {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--sl-space-4) var(--sl-space-6);
+  align-items: center;
+  padding: var(--sl-space-6) 0;
+  border-top: var(--a-hair) solid var(--sl-border);
+  border-bottom: var(--a-hair) solid var(--sl-border);
+}
+
+.a-facts dt {
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+.a-facts dd {
+  justify-self: end;
+}
+
+.a-acts {
+  display: grid;
+  gap: var(--sl-space-2);
+  margin-top: var(--sl-space-6);
+}
+
+.a-acts a {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-4);
+  padding: var(--sl-space-4) var(--sl-space-5);
+  border-radius: var(--sl-radius-2);
+  color: var(--sl-text);
+  transition: background-color var(--sl-time-fast) var(--sl-ease-out);
+}
+
+.a-acts a:hover {
+  background: var(--sl-bg);
+  color: var(--sl-primary);
+}
+
+.a-acts a:first-child {
+  justify-content: center;
+  margin-bottom: var(--sl-space-3);
+  background: var(--sl-primary);
+  color: var(--sl-on-solid);
+  font-weight: var(--sl-weight-semibold);
+}
+
+.a-acts a:first-child:hover {
+  background: var(--sl-primary-strong);
+  color: var(--sl-on-solid);
+}
+
+.a-acts .bi {
+  color: var(--sl-text-subtle);
+}
+
+.a-acts a:first-child .bi {
+  color: inherit;
+}
+
+.a-meter-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--sl-space-3);
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+.a-meter-row b {
+  color: var(--sl-text);
+}
+
+/* --- Closing note --------------------------------------------------------------------------------------------- */
+.a-note {
+  padding-top: var(--sl-space-8);
+  padding-bottom: calc(var(--sl-space-8) * 3);
+}
+
+.a-note .demo-note p + p {
+  margin-top: var(--sl-space-3);
+}
+
+@media (max-width: 900px) {
+  .a-nav b,
+  .a-act b {
+    display: none;
+  }
+
+  .a-wrap {
+    padding: 0 var(--sl-space-6);
+  }
+}

@@ -36,16 +36,30 @@ define('UPLOADS_DIR', BASE_DIR.'/uploads');
 define('ASSETS_VER', 3);
 
 # Load the runtime config from cache, rebuilding it from source if needed; the rebuild also stores derived data (asset manifests per theme, parsed SEO graph/schema, logo sizes) under $conf['derived'], so theme asset or logo changes need a config rebuild (admin save or deleting config/local.php) to take effect
-function getConfig(): array {
-    $local_file = CONFIG_DIR.'/local.php';
-    if (is_file($local_file) && is_readable($local_file)) {
-        $cache = require $local_file;
+# A hit on local.php costs no lock and reads no journal; the rebuild runs under the shared configuration lock and looks at local.php again, as the awaited writer has published it
+# An unfinished operation forbids a rebuild from half replaced sources: the snapshot is assembled in memory with the touched files read from the journal, and nothing is published
+# $fresh is the publication step of setConfigFile() and setConfigRestore(), which own the journal: it skips cache and marker and answers an empty array on a failed publication
+function getConfig(bool $fresh = false): array {
+    $local = CONFIG_DIR.'/local.php';
+    $read = static function () use ($local): array {
+        if (!is_file($local) || !is_readable($local)) return [];
+        $cache = require $local;
         $valid = is_array($cache) && isset($cache['_meta'], $cache['_config']) && is_array($cache['_meta']) && is_array($cache['_config']);
-        if ($valid && (($cache['_meta']['cache_version'] ?? 0) === 4)) {
-            return $cache['_config'];
-        }
+        return ($valid && (($cache['_meta']['cache_version'] ?? 0) === 4)) ? $cache['_config'] : [];
+    };
+    if (!$fresh && ($conf = $read())) return $conf;
+    require_once BASE_DIR.'/core/classes/filemanager.php';
+    $lock = FileManager::getPathLock(CONFIG_DIR);
+    if (!$fresh && $lock !== false && ($conf = $read())) {
+        FileManager::deletePathLock($lock);
+        return $conf;
     }
+    $jour = $fresh ? [] : getConfigJournal();
+    $swap = ($jour && !in_array($jour['why'], ['journal', 'backup'], true)) ? $jour['files'] : [];
+    $side = $swap ? BACKUP_DIR.'/config/'.$jour['op'].'/'.(($jour['phase'] === 'committed') ? 'new' : 'old') : '';
     $files = glob(CONFIG_DIR.'/*.php') ?: [];
+    foreach (array_keys($swap) as $name) $files[] = CONFIG_DIR.'/'.$name;
+    $files = array_unique($files);
     sort($files);
     $skip = ['local.php', 'system.php', 'header.php', 'chmod.php'];
     $hash = '';
@@ -53,10 +67,12 @@ function getConfig(): array {
     foreach ($files as $file) {
         $name = basename($file);
         if (in_array($name, $skip, true)) continue;
+        if (isset($swap[$name])) $file = $side.'/'.$name;
+        if (!is_file($file)) continue;
         $data = require $file;
         if (is_array($data)) $conf = array_merge($conf, $data);
-        $file_hash = sha1_file($file);
-        if ($file_hash !== false) $hash .= $name.$file_hash;
+        $fhash = sha1_file($file);
+        if ($fhash !== false) $hash .= $name.$fhash;
     }
     $conf['dev_mode'] ??= false;
     unset($conf['style']);
@@ -82,41 +98,22 @@ function getConfig(): array {
         } catch (Throwable) {
         }
     }
-    $export = function (array $arr, int $dep = 0) use (&$export): string {
-        $pad = str_repeat('    ', $dep);
-        $ind = $pad.'    ';
-        $out = '['."\n";
-        foreach ($arr as $key => $val) {
-            $out .= $ind.var_export($key, true).' => ';
-            $out .= is_array($val) ? $export($val, $dep + 1) : var_export($val, true);
-            $out .= ','."\n";
-        }
-        return $out.$pad.']';
-    };
-    $data = [
-        '_meta' => [
-            'base_fingerprint' => sha1($hash),
-            'cache_version' => 4,
-            'generated_at' => time(),
-        ],
-        '_config' => $conf,
-    ];
-    $tmp = $local_file.'.tmp';
-    $is_new = !file_exists($local_file);
-    $cnt = '<?php'."\n"
-    .'# Author: Eduard Laas'."\n"
-    .'# 2005 - '.date('Y').' SLAED'."\n"
-    .'# License: MIT'."\n"
-    .'# Website: slaed.net'."\n\n"
-    .'return '.$export($data).';'."\n";
-    if (file_put_contents($tmp, $cnt, LOCK_EX) !== false) {
-        if (!rename($tmp, $local_file)) {
-            unlink($tmp);
-        } elseif ($is_new) {
-            chmod($local_file, 0640);
-        }
+    $done = false;
+    if ($lock !== false && !$jour) {
+        $data = [
+            '_meta' => [
+                'base_fingerprint' => sha1($hash),
+                'cache_version' => 4,
+                'generated_at' => time(),
+            ],
+            '_config' => $conf,
+        ];
+        $fnew = !file_exists($local);
+        $done = setConfigSource($local, getConfigCode($data));
+        if ($done && $fnew) chmod($local, 0640);
     }
-    return $conf;
+    FileManager::deletePathLock($lock);
+    return ($fresh && !$done) ? [] : $conf;
 }
 
 # Editor bootstrap must load before security POST processing, because security helpers may
@@ -145,11 +142,14 @@ require_once BASE_DIR.'/core/classes/geoip.php';
 require_once BASE_DIR.'/core/classes/captcha.php';
 require_once BASE_DIR.'/core/classes/cache.php';
 require_once BASE_DIR.'/core/classes/oauth.php';
+require_once BASE_DIR.'/core/classes/point.php';
 require_once BASE_DIR.'/core/classes/comment.php';
 require_once BASE_DIR.'/core/classes/privat.php';
 $tpl = new Template($theme);
 $prs = new Parser();
-$com = new Comment($db, $prs, $conf);
+# Points stay closed until the 6.3 data update has left its mark: an empty scope switches the class off and reports it
+$pnt = new Point($db, ($conf['update']['points'] ?? '') === '6.3.0' ? ($conf['points'] ?? []) : []);
+$com = new Comment($db, $prs, $pnt, $conf);
 $prv = new Privat($db, $conf);
 
 # Helpers include
@@ -1638,7 +1638,7 @@ function getCacheRouteVars(): ?array {
     $port = parse_url((string)($conf['homeurl'] ?? ''), PHP_URL_PORT);
     if ($canon === '' || strtolower(getHost()) !== $canon.($port ? ':'.$port : '')) return $memo = null;
     $url = $_SERVER['REQUEST_URI'] ?? getenv('REQUEST_URI') ?: '';
-    $allow = ['name' => '#^news$#', 'op' => '#^$#', 'cat' => '#^[1-9][0-9]{0,8}$#', 'num' => '#^[1-9][0-9]{0,8}$#'];
+    $allow = ['name' => '#^$#', 'op' => '#^$#', 'cat' => '#^[1-9][0-9]{0,8}$#', 'num' => '#^[1-9][0-9]{0,8}$#'];
     if (Cache::getQueryVars($url, $allow) === null) return $memo = null;
     $vars = ['name' => getVar('get', 'name', 'var')];
     $cat = getVar('get', 'cat', 'num');
@@ -1649,8 +1649,11 @@ function getCacheRouteVars(): ?array {
 }
 
 # Decide whether the request may be served from or stored into the page cache; routes are default-deny per module and op and must satisfy the parameter contract
+# The last word belongs to the write-guard journal: while a content write is unfinished, or the generation cannot be read, no page is read from the cache or stored into it
+# That answer is taken once per request, so every block of one page agrees on it; the fill asks the journal again, because a writer may have started during the render
 function checkPageCache(): bool {
     global $conf, $home, $name, $op;
+    static $free = null;
     if (defined('ADMIN_FILE')) return false;
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') return false;
     if (empty($conf['cache'])) return false;
@@ -1660,20 +1663,25 @@ function checkPageCache(): bool {
     # the route alone: a stored copy would hand the next visitor someone else's mode, so only the default `auto` build is cacheable
     if (getThemeMode() !== 'auto') return false;
     if (!empty($_SESSION[$conf['user_c'].'-flash'])) return false;
-    $ops = ['news' => ['']];
+    $ops = [];
     if (!in_array((string)($op ?? ''), $ops[$name ?? ''] ?? [], true)) return false;
-    return getCacheRouteVars() !== null;
+    if (getCacheRouteVars() === null) return false;
+    return $free ??= Cache::checkWriteGuard();
 }
 
 # Build the pc3 page cache identity from version, epoch, canonical host, scheme, theme, locale, and validated route parameters; old cache files stay unreachable until GC
 # The prefix is the version field of the key: an entry written under earlier rules must not be served now, and bumping the literal retires all of them at once
-function getPageHash(): string {
+# The first answer of a request is remembered: it carries the generation the page was built from, taken before its data was read, and the fill compares it with a live one
+function getPageHash(bool $live = false): string {
     global $theme, $locale, $conf;
+    static $memo = '';
+    if (!$live && $memo !== '') return $memo;
     $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
     $canon = strtolower((string)parse_url((string)($conf['homeurl'] ?? ''), PHP_URL_HOST));
     $vars = getCacheRouteVars() ?? [];
     ksort($vars);
-    return Cache::getHash(['pc3', $conf['version'] ?? '', Cache::getEpoch(), $canon, $scheme, $theme, $locale, http_build_query($vars)]);
+    $hash = Cache::getHash(['pc3', $conf['version'] ?? '', Cache::getEpoch(), $canon, $scheme, $theme, $locale, http_build_query($vars)]);
+    return $live ? $hash : $memo = $hash;
 }
 
 # Sweep stale page-cache files older than the retention window as a scheduler job and report the removed count
@@ -2030,13 +2038,13 @@ function setHead(array $seo = []): void {
     $sitevars = array_replace($sitevars, getThemeHookVars('getThemeHeadVars'));
     $sitepage = $home ? 'home' : 'module';
     ob_start();
-    updatePoints(1);
     return;
 }
 
 # Format foot
 # What is stored is what is served: the entry holds the same HTML the first visitor received, with the serve-time markers still in it, so no later visitor is given a different page
 # The response that is also handed to the browser cache drops the generation-time marker rather than filling it, because a frozen copy would report the timing of a foreign request
+# Nothing is stored when the generation moved during the render or a write guard is open: the page may come from an older SQL snapshot and must not be published under the new generation
 function setFoot(): void {
     global $home, $name, $conf, $tpl, $adminpage, $adminvars, $sitepage, $sitevars, $blocks, $blocks_c, $foot;
     if (defined('ADMIN_FILE')) {
@@ -2102,7 +2110,7 @@ function setFoot(): void {
     if ($docache && $html !== '' && !checkCachePoison()) {
         $dyn = str_contains($html, '[[sldyn:');
         $file = Cache::getPath('html', getPageHash(), 'html');
-        $done = Cache::setBody($file, $html) && Cache::setMeta($file, $html, $dyn);
+        $done = getPageHash() === getPageHash(true) && Cache::checkWriteGuard() && Cache::setBody($file, $html) && Cache::setMeta($file, $html, $dyn);
         $days = (int)$conf['cache_b'];
         if ($done && !$dyn && $days > 0) {
             clearstatcache(true, $file);
@@ -2501,16 +2509,8 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
 
 # Per-category published-material counts for a module (grouped by cid) plus the summed total and the unit label
 function getCategoryCounts(string $mod, array $catid): array {
- global $db, $user;
+ global $db;
     switch ($mod) {
-        case 'faq':   $table = 'faq';      $cond = "time <= NOW() AND status != '0'"; $in = _INFA; break;
-        case 'files': $table = 'files';    $cond = "time <= NOW() AND status != '0'"; $in = _INF;  break;
-        case 'help':  $table = 'help';     $cond = "time <= NOW() AND pid = '0' AND uid = :uid"; $in = _INH; break;
-        case 'jokes': $table = 'jokes';    $cond = "time <= NOW() AND status != '0'"; $in = _INJ;  break;
-        case 'links': $table = 'links';    $cond = "time <= NOW() AND status != '0'"; $in = _INL;  break;
-        case 'media': $table = 'media';    $cond = "time <= NOW() AND status != '0'"; $in = _INM;  break;
-        case 'news':  $table = 'news';     $cond = "time <= NOW() AND status != '0'"; $in = _INN;  break;
-        case 'pages': $table = 'pages';    $cond = "time <= NOW() AND status != '0'"; $in = _INP;  break;
         case 'shop':  $table = 'products'; $cond = "time <= NOW() AND status != '0'"; $in = _INS;  break;
         default: return [[], 0, ''];
     }
@@ -2520,7 +2520,6 @@ function getCategoryCounts(string $mod, array $catid): array {
         $ph[] = ':c'.$k;
         $pm['c'.$k] = (int)$v;
     }
-    if ($mod === 'help') $pm['uid'] = is_user() ? intval($user[0]) : 0;
     $res = $db->getSqlQuery('SELECT cid, COUNT(id) FROM '.PREFIX_DB.'_'.$table.' WHERE cid IN ('.implode(', ', $ph).') AND '.$cond.' GROUP BY cid', $pm);
     $counts = [];
     $total = 0;
@@ -2567,27 +2566,10 @@ function checkFileChmod(string $dir, int $chm): string {
     return $out;
 }
 
-# Saving configurations to a file
+# Returns the text of one configuration file: the standard header and the exported array
 # One value is one line however long it is: this file is stored data, not code anybody reads, and the line limit of .rules/global.md governs what a person writes
-# Line endings are normalized on the way in, because a textarea posts CRLF and a stored configuration is a source file of this repository, which is LF only
 # The output is deterministic, so a save of an unchanged configuration reproduces the file byte for byte and the round trip the settings tabs rely on still holds
-function setConfigFile(string $fp, array $arr, array $act = []): void {
-    static $reserved = ['system.php', 'header.php', 'chmod.php', 'local.php'];
-    if (in_array($fp, $reserved)) return;
-    $fp = CONFIG_DIR.'/'.$fp;
-    if (!empty($act)) $arr = array_replace_recursive($act, $arr);
-    ksort($arr);
-    $norm = function ($val) use (&$norm) {
-        if (is_array($val)) {
-            foreach ($val as $k => $vv) $val[$k] = $norm($vv);
-            return $val;
-        }
-        if (is_bool($val)) return (string)(int)$val;
-        return str_replace(["\r\n", "\r"], "\n", (string)$val);
-    };
-    foreach ($arr as $key => $val) $arr[$key] = $norm($val);
-    $key  = pathinfo(basename($fp), PATHINFO_FILENAME);
-    $data = ($key === 'global') ? $arr : [$key => $arr];
+function getConfigCode(array $data): string {
     $export = function (array $arr, int $dep = 0) use (&$export): string {
         $pad = str_repeat('    ', $dep);
         $ind = $pad.'    ';
@@ -2598,15 +2580,226 @@ function setConfigFile(string $fp, array $arr, array $act = []): void {
         }
         return $out.$pad.']';
     };
-    $cnt = '<?php'."\n"
+    return '<?php'."\n"
     .'# Author: Eduard Laas'."\n"
     .'# 2005 - '.date('Y').' SLAED'."\n"
     .'# License: MIT'."\n"
     .'# Website: slaed.net'."\n\n"
     .'return '.$export($data).';'."\n";
-    file_put_contents($fp, $cnt, LOCK_EX);
-    if (is_file(CONFIG_DIR.'/local.php')) unlink(CONFIG_DIR.'/local.php');
-    getConfig();
+}
+
+# Replaces one file of the configuration protocol as a whole or not at all: the text is flushed to a temporary neighbour, renamed over the target and dropped from OPcache
+# A PHP target that does not parse is refused before anything is written, and an empty text removes the target, which is how a restore takes back a file the operation created
+# The rename is retried briefly, because a reader on Windows holds the target open for the moment it includes it and the replacement is refused for exactly that long
+function setConfigSource(string $file, string $code): bool {
+    if ($code !== '' && str_ends_with($file, '.php')) {
+        try {
+            token_get_all($code, TOKEN_PARSE);
+        } catch (ParseError) {
+            return false;
+        }
+    }
+    $done = ($code === '') ? (!is_file($file) || unlink($file)) : false;
+    if ($code !== '') {
+        $temp = $file.'.tmp';
+        $fh = fopen($temp, 'wb');
+        if ($fh === false) return false;
+        $done = fwrite($fh, $code) === strlen($code) && fflush($fh) && fsync($fh);
+        fclose($fh);
+        for ($i = 0; $done && $i < 5; $i++) {
+            if (rename($temp, $file)) break;
+            usleep(20000);
+            if ($i === 4) $done = false;
+        }
+        if (!$done && is_file($temp)) unlink($temp);
+    }
+    if ($done && function_exists('opcache_invalidate')) opcache_invalidate($file, true);
+    clearstatcache(true, $file);
+    return $done;
+}
+
+# Returns the unfinished configuration operation for the restore screen, getConfig() and setConfigRestore(), or an empty array when no marker exists
+# Every touched file answers the journal hashes, the hash it has now and which side that is; verdict names the snapshot a restore applies or stays empty with the reason in why
+# journal - the marker has no readable journal, backup - a snapshot does not match its hash, source - a file is neither side, proof - only the database decides, which S10 connects
+function getConfigJournal(): array {
+    $root = BACKUP_DIR.'/config';
+    if (!is_file($root.'/marker.json')) return [];
+    $mark = json_decode((string)file_get_contents($root.'/marker.json'), true);
+    $op = (is_array($mark) && preg_match('#^[a-z0-9-]{1,40}$#', (string)($mark['op'] ?? ''))) ? (string)$mark['op'] : '';
+    $jour = ($op !== '' && is_file($root.'/'.$op.'/journal.json')) ? json_decode((string)file_get_contents($root.'/'.$op.'/journal.json'), true) : null;
+    $out = ['op' => $op, 'phase' => '', 'time' => 0, 'types' => [], 'proof' => [], 'files' => [], 'verdict' => '', 'why' => 'journal'];
+    if (!is_array($jour) || ($jour['op'] ?? '') !== $op || !is_array($jour['files'] ?? null) || !$jour['files'] || $jour['files'] !== ($mark['files'] ?? null)) return $out;
+    $out['phase'] = (($jour['phase'] ?? '') === 'committed') ? 'committed' : 'prepared';
+    $out['time'] = (int)($jour['time'] ?? 0);
+    $out['types'] = is_array($mark['types'] ?? null) ? $mark['types'] : [];
+    $out['proof'] = is_array($jour['proof'] ?? null) ? $jour['proof'] : [];
+    $why = $out['proof'] ? 'proof' : '';
+    $list = [];
+    foreach ($jour['files'] as $name => $pair) {
+        if (!is_string($name) || !preg_match('#^[a-z][a-z0-9_]*\.php$#', $name) || !is_string($pair['old'] ?? null) || !is_string($pair['new'] ?? null)) return $out;
+        $now = is_file(CONFIG_DIR.'/'.$name) ? (string)sha1_file(CONFIG_DIR.'/'.$name) : '';
+        $state = ($now === $pair['new']) ? 'new' : (($now === $pair['old']) ? 'old' : 'other');
+        if ($state === 'other' && $why !== 'backup') $why = 'source';
+        foreach (['old', 'new'] as $side) {
+            $snap = $root.'/'.$op.'/'.$side.'/'.$name;
+            $good = ($pair[$side] === '') ? !is_file($snap) : (is_file($snap) && sha1_file($snap) === $pair[$side]);
+            if (!$good) $why = 'backup';
+        }
+        $list[$name] = ['old' => $pair['old'], 'new' => $pair['new'], 'now' => $now, 'state' => $state];
+    }
+    $out['files'] = $list;
+    $out['why'] = $why;
+    $out['verdict'] = ($why === '') ? (($out['phase'] === 'committed') ? 'new' : 'old') : '';
+    return $out;
+}
+
+# Finishes the unfinished configuration operation under the shared lock: applies one snapshot of the journal, publishes local.php, checks the hashes again and then drops the marker
+# Without an argument it is the administrative restore: it follows the verdict of getConfigJournal() and clears the HTML cache; old and new come from setConfigFile() alone
+# The run is repeatable: a file already on the wanted side is left alone and a failed step keeps the marker; with no marker left the operation directories with their copies go
+function setConfigRestore(string $force = ''): bool {
+    require_once BASE_DIR.'/core/classes/filemanager.php';
+    $lock = FileManager::getPathLock(CONFIG_DIR);
+    if ($lock === false) return false;
+    $root = BACKUP_DIR.'/config';
+    $jour = getConfigJournal();
+    $done = !$jour;
+    $side = ($jour && in_array($force, ['old', 'new'], true) && in_array($jour['why'], ['', 'proof'], true)) ? $force : ($jour['verdict'] ?? '');
+    if ($side !== '') {
+        $done = true;
+        foreach ($jour['files'] as $name => $one) {
+            if ($one['now'] === $one[$side]) continue;
+            $code = ($one[$side] === '') ? '' : (string)file_get_contents($root.'/'.$jour['op'].'/'.$side.'/'.$name);
+            if (!setConfigSource(CONFIG_DIR.'/'.$name, $code)) $done = false;
+        }
+        if ($done) $done = getConfig(true) !== [];
+        if ($done && $force === '') Cache::deleteAll();
+        foreach ($jour['files'] as $name => $one) {
+            $now = is_file(CONFIG_DIR.'/'.$name) ? (string)sha1_file(CONFIG_DIR.'/'.$name) : '';
+            if ($now !== $one[$side]) $done = false;
+        }
+        if ($done) $done = unlink($root.'/marker.json');
+    }
+    if ($done) {
+        foreach (glob($root.'/*', GLOB_ONLYDIR) ?: [] as $dir) {
+            foreach (array_merge(glob($dir.'/*/*') ?: [], glob($dir.'/*.json*') ?: []) as $file) unlink($file);
+            foreach (glob($dir.'/*', GLOB_ONLYDIR) ?: [] as $sub) rmdir($sub);
+            rmdir($dir);
+        }
+    }
+    FileManager::deletePathLock($lock);
+    return $done;
+}
+
+# Saves configuration sources and publishes local.php; true means a finished consistent result, false a refusal that left the working snapshot in place
+# The string form writes one independent source with every scalar stored as a string and line endings normalized, because a textarea posts CRLF and a stored source is LF only
+# The Closure form owns node, fields, uploads and ratings: it gets their fresh areas and $save(array $package, array $proof = []): bool and answers committed, aborted or uncertain
+# Both forms run one pipeline under the shared lock: refuse while a marker exists, store both snapshots and the journal, write the marker, replace the sources, commit, publish
+# A package keeps string, int, bool, null and arrays as they are and refuses everything else before anything is written; only an area that differs from its base is replaced
+function setConfigFile(string|Closure $fp, array $arr = [], array $act = []): bool {
+    static $reserved = ['system.php', 'header.php', 'chmod.php', 'local.php'];
+    static $shared = ['node', 'fields', 'uploads', 'ratings'];
+    static $busy = false;
+    $call = $fp instanceof Closure;
+    if ($busy || ($call && ($arr || $act))) return false;
+    if (!$call && (!preg_match('#^[a-z][a-z0-9_]*\.php$#', $fp) || in_array($fp, $reserved, true) || in_array(substr($fp, 0, -4), $shared, true))) return false;
+    require_once BASE_DIR.'/core/classes/filemanager.php';
+    $lock = FileManager::getPathLock(CONFIG_DIR);
+    if ($lock === false) return false;
+    if (is_file(BACKUP_DIR.'/config/marker.json')) {
+        FileManager::deletePathLock($lock);
+        return false;
+    }
+    $busy = true;
+    $state = ['called' => false, 'saved' => false, 'jour' => [], 'proof' => []];
+    $json = static fn(array $data): string => (string)json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    $publish = static function (array $files, array $proof) use (&$state, $json): bool {
+        $list = [];
+        $codes = [];
+        $olds = [];
+        foreach ($files as $name => $data) {
+            $path = CONFIG_DIR.'/'.$name;
+            $old = is_file($path) ? (string)file_get_contents($path) : '';
+            $code = getConfigCode($data);
+            if ($old === $code) continue;
+            $list[$name] = ['old' => ($old === '') ? '' : sha1($old), 'new' => sha1($code)];
+            $codes[$name] = $code;
+            $olds[$name] = $old;
+        }
+        if (!$list) return $state['saved'] = true;
+        $op = date('Ymd-His').'-'.bin2hex(random_bytes(4));
+        $root = BACKUP_DIR.'/config/'.$op;
+        $done = mkdir($root.'/old', 0750, true) && mkdir($root.'/new', 0750, true);
+        foreach ($codes as $name => $code) {
+            $done = $done && ($olds[$name] === '' || setConfigSource($root.'/old/'.$name, $olds[$name])) && setConfigSource($root.'/new/'.$name, $code);
+        }
+        $jour = ['op' => $op, 'phase' => 'prepared', 'time' => time(), 'proof' => $proof, 'files' => $list];
+        $mark = ['op' => $op, 'types' => isset($proof['name']) ? [(string)$proof['name']] : [], 'files' => $list];
+        $jtext = $json($jour);
+        $mtext = $json($mark);
+        $done = $done && $jtext !== '' && $mtext !== '' && setConfigSource($root.'/journal.json', $jtext) && setConfigSource(BACKUP_DIR.'/config/marker.json', $mtext);
+        if ($done) $state['jour'] = $jour;
+        if ($done) $state['proof'] = $proof;
+        foreach ($codes as $name => $code) $done = $done && setConfigSource(CONFIG_DIR.'/'.$name, $code);
+        if (!$done) setConfigRestore('old');
+        if (!$done) $state['jour'] = [];
+        return $state['saved'] = $done;
+    };
+    $base = [];
+    $save = null;
+    $key = '';
+    if ($call) {
+        foreach ($shared as $one) {
+            $path = CONFIG_DIR.'/'.$one.'.php';
+            if (function_exists('opcache_invalidate')) opcache_invalidate($path, true);
+            $data = is_file($path) ? require $path : [];
+            $base[$one] = (is_array($data) && is_array($data[$one] ?? null)) ? $data[$one] : [];
+        }
+        $check = static function (mixed $val) use (&$check): bool {
+            if (!is_array($val)) return is_string($val) || is_int($val) || is_bool($val) || $val === null;
+            foreach ($val as $one) if (!$check($one)) return false;
+            return true;
+        };
+        $save = static function (array $pack, array $proof = []) use (&$state, $base, $shared, $check, $publish): bool {
+            if ($state['called']) return false;
+            $state['called'] = true;
+            if (count($pack) !== count($shared) || !$check($pack) || !$check($proof)) return false;
+            $files = [];
+            foreach ($shared as $one) {
+                if (!is_array($pack[$one] ?? null)) return false;
+                if ($pack[$one] !== $base[$one]) $files[$one.'.php'] = [$one => $pack[$one]];
+            }
+            return $publish($files, $proof);
+        };
+    } else {
+        if ($act) $arr = array_replace_recursive($act, $arr);
+        ksort($arr);
+        $norm = static function (mixed $val) use (&$norm): array|string {
+            if (is_array($val)) return array_map($norm, $val);
+            return is_bool($val) ? (string)(int)$val : str_replace(["\r\n", "\r"], "\n", (string)$val);
+        };
+        $arr = array_map($norm, $arr);
+        $key = substr($fp, 0, -4);
+    }
+    try {
+        $res = $call ? $fp($base, $save) : ($publish([$fp => ($key === 'global') ? $arr : [$key => $arr]], []) ? 'committed' : 'aborted');
+    } catch (Throwable) {
+        $res = $state['proof'] ? 'uncertain' : 'aborted';
+    }
+    $done = false;
+    if ($res === 'committed' && $state['saved'] && !$state['jour']) {
+        $done = getConfig(true) !== [];
+    } elseif ($res === 'committed' && $state['saved']) {
+        $jour = ['phase' => 'committed'] + $state['jour'];
+        $text = $json($jour);
+        $done = $text !== '' && setConfigSource(BACKUP_DIR.'/config/'.$jour['op'].'/journal.json', $text);
+        if (!$done) setConfigRestore('old');
+        $done = $done && setConfigRestore('new');
+    } elseif ($state['jour'] && ($res !== 'uncertain' || !$state['proof'])) {
+        setConfigRestore('old');
+    }
+    $busy = false;
+    FileManager::deletePathLock($lock);
+    return $done;
 }
 
 # Returns list of asset files found in standard theme subdirectories
@@ -2789,35 +2982,8 @@ function addSitemapTask(bool $force = false): array {
                 if ($mod[$i] == 'account' && is_active($mod[$i], '0')) {
                     $result = $db->getSqlQuery('SELECT id, name, lastvis FROM '.PREFIX_DB.'_users');
                     while (list($id, $title, $time) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, '', $title, $time, $mod[$i]];
-                } elseif ($mod[$i] == 'content' && is_active($mod[$i], '0')) {
-                    $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB.'_content WHERE time <= NOW()');
-                    while (list($id, $title, $time) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, '', $title, $time, $mod[$i]];
-                } elseif ($mod[$i] == 'faq' && is_active($mod[$i], '0')) {
-                    $result = $db->getSqlQuery('SELECT id, cid, title, time FROM '.PREFIX_DB."_faq WHERE time <= NOW() AND status != '0'");
-                    while (list($id, $cat, $title, $time) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
-                } elseif ($mod[$i] == 'files' && is_active($mod[$i], '0')) {
-                    $result = $db->getSqlQuery('SELECT id, cid, title, time FROM '.PREFIX_DB."_files WHERE time <= NOW() AND status != '0'");
-                    while (list($id, $cat, $title, $time) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
                 } elseif ($mod[$i] == 'forum' && is_active($mod[$i], '0')) {
                     $result = $db->getSqlQuery('SELECT id, cid, title, time FROM '.PREFIX_DB."_forum WHERE pid = '0' AND time <= NOW() AND status > '1'");
-                    while (list($id, $cat, $title, $time) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
-                } elseif ($mod[$i] == 'jokes' && is_active($mod[$i], '0')) {
-                    $result = $db->getSqlQuery('SELECT id, time, title, cid FROM '.PREFIX_DB."_jokes WHERE time <= NOW() AND status != '0'");
-                    while (list($id, $time, $title, $cat) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
-                } elseif ($mod[$i] == 'links' && is_active($mod[$i], '0')) {
-                    $result = $db->getSqlQuery('SELECT id, cid, title, time FROM '.PREFIX_DB."_links WHERE time <= NOW() AND status != '0'");
-                    while (list($id, $cat, $title, $time) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
-                } elseif ($mod[$i] == 'media' && is_active($mod[$i], '0')) {
-                    $result = $db->getSqlQuery('SELECT id, cid, title, subtitle, time FROM '.PREFIX_DB."_media WHERE time <= NOW() AND status != '0'");
-                    while (list($id, $cat, $title, $subtitle, $time) = $db->getSqlRow($result)) {
-                        $title = ($subtitle) ? $title.' - '.$subtitle : $title;
-                        $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
-                    }
-                } elseif ($mod[$i] == 'news' && is_active($mod[$i], '0')) {
-                    $result = $db->getSqlQuery('SELECT id, cid, title, time FROM '.PREFIX_DB."_news WHERE time <= NOW() AND status != '0'");
-                    while (list($id, $cat, $title, $time) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
-                } elseif ($mod[$i] == 'pages' && is_active($mod[$i], '0')) {
-                    $result = $db->getSqlQuery('SELECT id, cid, title, time FROM '.PREFIX_DB."_pages WHERE time <= NOW() AND status != '0'");
                     while (list($id, $cat, $title, $time) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
                 } elseif ($mod[$i] == 'shop' && is_active($mod[$i], '0')) {
                     $result = $db->getSqlQuery('SELECT id, cid, time, title FROM '.PREFIX_DB."_products WHERE time <= NOW() AND status != '0'");
@@ -4364,14 +4530,12 @@ function getEditorJson(array $dat): void {
 
 # Return the upload rule of one place, a place being a module and the thing inside it a file is asked for, written with a dot: it is the one name every upload route travels under
 # The grammar is defined here and nowhere else - <mod>.<slot>, lowercase letters, digits and underscore on both sides - so no caller carries a pattern of its own
-# Three slots answer: <mod>.attach is the editor attachment rule of a module, files.dist the distributed catalogue file and users.avatar the picture of one account
+# Two slots answer: <mod>.attach is the editor attachment rule of a module and users.avatar the picture of one account
 # The module is the one that owns the place and never the first segment of the name, so users.avatar answers account, whose moderator moderates it and whose page carries it
-# The listing caps are the shipped ones of every record in config/uploads.php, so the two new places invent no number and no administrative setting is added to hold one
-# The upload right of files.dist is two settings and not one, because add opens the form and upload only the row inside it, and a member may not upload where adding is off
+# The listing caps are the shipped ones of every record in config/uploads.php, so the field place invents no number and no administrative setting is added to hold one
 # A guest owns no account, so users.avatar answers zero for both guest fields without reading a setting, and the route refuses a guest before it asks anything else
 # ops names which of the four editor routes the place permits: a field place uploads through its own form, so the other three left reachable would create the orphans that avoids
 # The directory comes in the three forms its readers need - dir site relative, store relative to the upload root as the service takes it, path absolute as the file layer opens it
-# Which directory files.dist means depends on the role, a visitor writing into the temporary one and a moderator into the public one, and that choice belongs here and not a module
 function getUploadPlaceRule(string $place): array {
     global $conf;
     $good = preg_match('#^[a-z0-9_]+\.[a-z0-9_]+$#', $place) === 1;
@@ -4389,24 +4553,7 @@ function getUploadPlaceRule(string $place): array {
     }
     $room = '';
     $keep = [];
-    if ($place === 'files.dist') {
-        $room = is_moder('files') ? (string)($conf['files']['path'] ?? '') : (string)($conf['files']['temp'] ?? '');
-        $keep = [
-            'mod' => 'files',
-            'extensions' => (string)($conf['files']['typefile'] ?? ''),
-            'maxbytes' => (int)($conf['files']['max_size'] ?? 0),
-            'maxwidth' => 1600,
-            'maxheight' => 1600,
-            'maxfiles' => 1,
-            'moderfiles' => 250,
-            'userfiles' => 100,
-            'guestfiles' => 100,
-            'userupload' => ((int)($conf['files']['upload'] ?? 0) === 1 && (int)($conf['files']['add'] ?? 0) === 1) ? 1 : 0,
-            'guestupload' => ((int)($conf['files']['upload'] ?? 0) === 1 && (int)($conf['files']['addquest'] ?? 0) === 1) ? 1 : 0,
-            'canlink' => true,
-            'ops' => ['editorFiles'],
-        ];
-    } elseif ($place === 'users.avatar') {
+    if ($place === 'users.avatar') {
         $room = (string)($conf['users']['adirectory'] ?? '');
         $keep = [
             'mod' => 'account',
@@ -4725,23 +4872,8 @@ function getFileStream(string $path, string $name): void {
 
 # Format letter
 function letter(string $mod): string {
- global $db, $user, $tpl;
-    if ($mod == 'faq') {
-        $result = $db->getSqlQuery('SELECT title FROM '.PREFIX_DB."_faq WHERE time <= NOW() AND status != '0'");
-    } elseif ($mod == 'files') {
-        $result = $db->getSqlQuery('SELECT title FROM '.PREFIX_DB."_files WHERE time <= NOW() AND status != '0'");
-    } elseif ($mod == 'help') {
-        $uid = intval($user[0]);
-        $result = $db->getSqlQuery('SELECT title FROM '.PREFIX_DB."_help WHERE time <= NOW() AND pid = '0' AND uid = :uid", ['uid' => $uid]);
-    } elseif ($mod == 'links') {
-        $result = $db->getSqlQuery('SELECT title FROM '.PREFIX_DB."_links WHERE time <= NOW() AND status != '0'");
-    } elseif ($mod == 'media') {
-        $result = $db->getSqlQuery('SELECT title FROM '.PREFIX_DB."_media WHERE time <= NOW() AND status != '0'");
-    } elseif ($mod == 'news') {
-        $result = $db->getSqlQuery('SELECT title FROM '.PREFIX_DB."_news WHERE time <= NOW() AND status != '0'");
-    } elseif ($mod == 'pages') {
-        $result = $db->getSqlQuery('SELECT title FROM '.PREFIX_DB."_pages WHERE time <= NOW() AND status != '0'");
-    } elseif ($mod == 'shop') {
+ global $db, $tpl;
+    if ($mod == 'shop') {
         $result = $db->getSqlQuery('SELECT title FROM '.PREFIX_DB."_products WHERE time <= NOW() AND status != '0'");
     } else {
         $result = '';
@@ -5625,20 +5757,12 @@ function getRatingView(): void {
     $stl = getVar('get', 'stl', 'num', 0);
     $con = explode('|', $conf['ratings'][strtolower($mod)] ?? '');
     $map = [
-        'account' => ['_users', 'votes', 'tvotes', 2],
-        'faq' => ['_faq', 'ratings', 'score', 8],
-        'files' => ['_files', 'votes', 'tvotes', 12],
-        'forum' => ['_forum', 'ratings', 'score', 15],
-        'help' => ['_help', 'ratings', 'score', 0],
-        'jokes' => ['_jokes', 'ratetot', 'rating', 20],
-        'links' => ['_links', 'votes', 'tvotes', 24],
-        'media' => ['_media', 'votes', 'tvotes', 27],
-        'news' => ['_news', 'ratings', 'score', 33],
-        'pages' => ['_pages', 'ratings', 'score', 37],
-        'shop' => ['_products', 'votes', 'tvotes', 41],
+        'account' => ['_users', 'votes', 'tvotes'],
+        'forum' => ['_forum', 'ratings', 'score'],
+        'shop' => ['_products', 'votes', 'tvotes'],
     ];
     if (!$id || !$mod || !isset($map[$mod])) return;
-    [$tab, $cnt, $scr, $pts] = $map[$mod];
+    [$tab, $cnt, $scr] = $map[$mod];
     $ip = getIp();
     $cmod = substr($mod, 0, 2).'-'.$id;
     $cook = isset($_COOKIE[$cmod]) ? intval($_COOKIE[$cmod]) : 0;
@@ -5655,13 +5779,7 @@ function getRatingView(): void {
         $pdo = $db->sqlconnid instanceof PDO ? $db->sqlconnid : null;
         if ($pdo) $pdo->beginTransaction();
         $ins = $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_rating (mid, modul, time, uid, ip) VALUES (:mid, :modul, :time, :uid, :ip)', ['mid' => $id, 'modul' => $mod, 'time' => time(), 'uid' => $uid, 'ip' => $ip]);
-        if ($ins) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.$tab.' SET '.$cnt.' = '.$cnt.' + 1, '.$scr.' = '.$scr.' + :rate WHERE id = :id', ['rate' => $rate, 'id' => $id]);
-            if ($pts && $uid) {
-                [$spent] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_rating WHERE uid = :uid AND time > :since', ['uid' => $uid, 'since' => time() - 86400]));
-                if ($spent <= 30) updatePoints($pts);
-            }
-        }
+        if ($ins) $db->getSqlQuery('UPDATE '.PREFIX_DB.$tab.' SET '.$cnt.' = '.$cnt.' + 1, '.$scr.' = '.$scr.' + :rate WHERE id = :id', ['rate' => $rate, 'id' => $id]);
         if ($pdo) { $ins ? $pdo->commit() : $pdo->rollBack(); }
         $voted = true;
     }
@@ -5739,7 +5857,7 @@ function deleteComment(): void {
 
 # Voting result save
 function updateVotingResult(): void {
- global $db, $conf, $user, $locale, $tpl;
+ global $db, $conf, $user, $locale, $tpl, $pnt;
     $id = getVar('post', 'id', 'num', 0);
     $body = isset($_POST['body']) && is_array($_POST['body']) ? $_POST['body'] : [];
     if ($conf['multilingual'] == 1) {
@@ -5787,7 +5905,7 @@ function updateVotingResult(): void {
                     }
                     $answ = implode('|', $answ);
                     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_voting SET answer = :answer WHERE id = :id', ['answer' => $answ, 'id' => $id]);
-                    updatePoints(42);
+                    if ($uid) $pnt->addEvent('poll', 'voting', 'poll:'.$id, $uid);
                 }
                 $votid = filterVar(getVar('get', 'votid', 'text', 'voting')) ?: 'voting';
                 $cont = getVotingView($id, $votid);
@@ -5798,51 +5916,6 @@ function updateVotingResult(): void {
         $cont = $tpl->getHtmlFrag('alert', ['text' => _ERROR, 'meta' => $meta, 'type' => 'warn', 'is_warn' => true]);
     }
     echo $cont;
-}
-
-# Update points
-function updatePoints(int $id, int $uid = 0, bool $del = false): void {
- global $db, $conf, $user;
-    $uid = $uid ?: (is_user() ? intval($user[0]) : 0);
-    if ($id && $uid && $conf['users']['point'] == 1) {
-        $upoints = explode(',', $conf['users']['points']);
-        $a       = $id - 1;
-        $delta   = isset($upoints[$a]) ? intval($upoints[$a]) : 0;
-        $delta   = $del ? -$delta : $delta;
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET points = points + :delta WHERE id = :uid', ['delta' => $delta, 'uid' => $uid]);
-    }
-}
-
-# Add action points once per (event, item, user/ip) within a retention window; reuses the _rating dedup table
-function addPointsAction(string $event, int $mid, int $pts, int $ttl = 2592000): void {
-    global $db, $user;
-    if (!$mid || !$pts || !is_user()) return;
-    $uid = intval($user[0]);
-    $ip  = getIp();
-    $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_rating WHERE time < :past AND modul = :event', ['past' => time() - $ttl, 'event' => $event]);
-    [$num] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB."_rating WHERE (mid = :mid AND modul = :event AND ip = :ip) OR (mid = :mid2 AND modul = :event2 AND uid = :uid AND uid != '0')", ['mid' => $mid, 'event' => $event, 'ip' => $ip, 'mid2' => $mid, 'event2' => $event, 'uid' => $uid]));
-    if ($num > 0) return;
-    $ins = $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_rating (mid, modul, time, uid, ip) VALUES (:mid, :event, :time, :uid, :ip)', ['mid' => $mid, 'event' => $event, 'time' => time(), 'uid' => $uid, 'ip' => $ip]);
-    if ($ins) updatePoints($pts);
-}
-
-# Promote pending items to active (status 0 -> 1) and credit submission points to their authors in one step
-function setContentActive(string $tab, array $ids, int $pts): void {
-    global $db;
-    $ids = array_values(array_filter(array_map('intval', $ids), static fn($val): bool => $val > 0));
-    if (!$ids) return;
-    $keys = [];
-    $pars = [];
-    foreach ($ids as $pos => $val) {
-        $keys[] = ':id'.$pos;
-        $pars['id'.$pos] = $val;
-    }
-    $in = implode(', ', $keys);
-    if ($pts) {
-        $res = $db->getSqlQuery('SELECT uid FROM '.PREFIX_DB.$tab.' WHERE id IN ('.$in.") AND status = '0' AND uid > 0", $pars);
-        while ([$uid] = $db->getSqlRow($res)) updatePoints($pts, (int)$uid);
-    }
-    $db->getSqlQuery('UPDATE '.PREFIX_DB.$tab." SET status = '1' WHERE id IN (".$in.')', $pars);
 }
 
 # Resample an image down to the requested width through GD and write it to the thumb path; returns the source path unchanged when GD, the format or the write is unavailable

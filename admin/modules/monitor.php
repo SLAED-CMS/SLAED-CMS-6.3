@@ -548,8 +548,6 @@ function getMonitorPartial(array $snapshot, bool $showstat, bool $showtraf, bool
 # Collects monitor counts and database size statistics needed for dashboard summary
 function getMonitorDbStats(object $db, array $conf): array {
     $userson = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_session'));
-    $cntfile = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_files WHERE status != '0'"));
-    $cntnews = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_news WHERE status != '0'"));
     $dbsize = 0;
     $dbtabs = 0;
     $dbname = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($conf['db']['name'] ?? ''));
@@ -565,8 +563,6 @@ function getMonitorDbStats(object $db, array $conf): array {
     }
     return [
         'userson' => $userson,
-        'cntfile' => $cntfile,
-        'cntnews' => $cntnews,
         'dbsize' => $dbsize,
         'dbtabs' => $dbtabs,
     ];
@@ -748,8 +744,6 @@ function getMonitorTemplateVars(?array $snapshot, array $ctx, array $conf, objec
             'syncurl' => $afile.'.php?name=monitor&op=sync',
             'status_oob' => '',
             'traffic_oob' => '',
-            'cntnews' => $ctx['cntnews'],
-            'cntfile' => $ctx['cntfile'],
             'dbtabs' => $ctx['dbtabs'],
             'userson' => $ctx['userson'],
             'servsoftname' => $ctx['servname'],

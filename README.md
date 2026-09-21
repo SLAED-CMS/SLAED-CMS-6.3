@@ -211,7 +211,7 @@ slaed-cms/
 - Current runtime code and actively modernized components coexist in the repository.
 - New template work targets `core/classes/template.php`, the shared `$tpl` runtime object, and HTML files under `templates/*`.
 - Current theme directories are `admin` and `lite`.
-- Current module directories are `account`, `auto_links`, `changelog`, `clients`, `contact`, `content`, `faq`, `files`, `forum`, `help`, `jokes`, `links`, `main`, `media`, `money`, `news`, `order`, `pages`, `recommend`, `rss`, `search`, `shop`, `sitemap`, `users`, `voting`, and `whois`.
+- Current module directories are `account`, `auto_links`, `changelog`, `clients`, `contact`, `forum`, `money`, `order`, `presentation`, `recommend`, `rss`, `search`, `shop`, `sitemap`, `users`, `voting`, and `whois`.
 - Public documentation aims to describe the current repository state, not a future fully completed migration.
 
 For contribution rules and coding conventions, see [CONTRIBUTING.md](CONTRIBUTING.md).

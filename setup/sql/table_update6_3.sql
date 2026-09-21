@@ -2,7 +2,7 @@
 # 2005 - 2026 SLAED
 # License: MIT
 # Website: slaed.net
-# Compatible: MySQL 8.0+ & MariaDB 10.5+
+# Compatible: MySQL 8.0.16+ & MariaDB 10.5+
 #
 # table_update6_3.sql — public update from SLAED 6.2 to SLAED 6.3 Phoenix
 #
@@ -768,20 +768,6 @@ CALL addidx('{prefix}_comment', 'time', '`time`', 0);
 # cid and modul_status are not created here: batch Y below adds the composites that supersede them and drops both
 
 # =============================================================================
-# Batch G — _faq
-# =============================================================================
-
-CALL rencol('{prefix}_faq', 'fid', 'id');
-CALL rencol('{prefix}_faq', 'catid', 'cid');
-CALL rencol('{prefix}_faq', 'ip_sender', 'ip');
-CALL renidx('{prefix}_faq', 'catid', 'cid');
-CALL addidx('{prefix}_faq', 'cid', '`cid`', 0);
-CALL addidx('{prefix}_faq', 'counter', '`counter`', 0);
-CALL addidx('{prefix}_faq', 'uid', '`uid`', 0);
-CALL addidx('{prefix}_faq', 'status', '`status`', 0);
-CALL addidx('{prefix}_faq', 'ihome', '`ihome`', 0);
-
-# =============================================================================
 # Batch G — _favorites
 # =============================================================================
 
@@ -790,22 +776,6 @@ CALL addidx('{prefix}_favorites', 'fid',          '`fid`',                     0
 CALL addidx('{prefix}_favorites', 'modul',        '`modul`',                   0);
 CALL addidx('{prefix}_favorites', 'uid_fid_modul','`uid`, `fid`, `modul`',     1);
 CALL addcol('{prefix}_favorites', 'time',         'DATETIME DEFAULT NULL');
-
-# =============================================================================
-# Batch G — _files
-# =============================================================================
-
-CALL rencol('{prefix}_files', 'lid', 'id');
-CALL rencol('{prefix}_files', 'date', 'time');
-CALL rencol('{prefix}_files', 'ip_sender', 'ip');
-CALL rencol('{prefix}_files', 'totalvotes', 'tvotes');
-CALL rencol('{prefix}_files', 'totalcomments', 'tcom');
-CALL addidx('{prefix}_files', 'cid', '`cid`', 0);
-CALL addidx('{prefix}_files', 'title', '`title`', 0);
-CALL addidx('{prefix}_files', 'uid', '`uid`', 0);
-CALL addidx('{prefix}_files', 'status', '`status`', 0);
-CALL addidx('{prefix}_files', 'ihome', '`ihome`', 0);
-CALL addidx('{prefix}_files', 'counter', '`counter`', 0);
 
 # =============================================================================
 # Batch G — _forum
@@ -831,64 +801,6 @@ CALL addidx('{prefix}_forum', 'cid_status', '`cid`, `status`', 0);
 CALL addidx('{prefix}_forum', 'time', '`time`', 0);
 
 # =============================================================================
-# Batch H — _help
-# =============================================================================
-
-CALL rencol('{prefix}_help', 'sid', 'id');
-CALL rencol('{prefix}_help', 'catid', 'cid');
-CALL rencol('{prefix}_help', 'ip_sender', 'ip');
-CALL renidx('{prefix}_help', 'catid', 'cid');
-CALL addidx('{prefix}_help', 'pid', '`pid`', 0);
-CALL addidx('{prefix}_help', 'cid', '`cid`', 0);
-CALL addidx('{prefix}_help', 'counter', '`counter`', 0);
-CALL addidx('{prefix}_help', 'uid', '`uid`', 0);
-CALL addidx('{prefix}_help', 'status', '`status`', 0);
-
-# =============================================================================
-# Batch H — _jokes
-# =============================================================================
-
-CALL rencol('{prefix}_jokes', 'jokeid', 'id');
-CALL rencol('{prefix}_jokes', 'date', 'time');
-CALL rencol('{prefix}_jokes', 'cat', 'cid');
-CALL rencol('{prefix}_jokes', 'joke', 'hometext');
-CALL rencol('{prefix}_jokes', 'ratingtot', 'ratetot');
-CALL rencol('{prefix}_jokes', 'ip_sender', 'ip');
-CALL renidx('{prefix}_jokes', 'cat', 'cid');
-CALL addidx('{prefix}_jokes', 'cid', '`cid`', 0);
-CALL addidx('{prefix}_jokes', 'uid', '`uid`', 0);
-CALL addidx('{prefix}_jokes', 'status', '`status`', 0);
-
-# =============================================================================
-# Batch I — _links
-# =============================================================================
-
-CALL rencol('{prefix}_links', 'lid', 'id');
-CALL rencol('{prefix}_links', 'date', 'time');
-CALL rencol('{prefix}_links', 'ip_sender', 'ip');
-CALL rencol('{prefix}_links', 'totalvotes', 'tvotes');
-CALL rencol('{prefix}_links', 'totalcomments', 'tcom');
-CALL addidx('{prefix}_links', 'cid', '`cid`', 0);
-CALL addidx('{prefix}_links', 'title', '`title`', 0);
-CALL addidx('{prefix}_links', 'uid', '`uid`', 0);
-CALL addidx('{prefix}_links', 'status', '`status`', 0);
-CALL addidx('{prefix}_links', 'ihome', '`ihome`', 0);
-
-# =============================================================================
-# Batch J — _media
-# =============================================================================
-
-CALL rencol('{prefix}_media', 'createdby', 'author');
-CALL rencol('{prefix}_media', 'date', 'time');
-CALL rencol('{prefix}_media', 'totalvotes', 'tvotes');
-CALL rencol('{prefix}_media', 'totalcom', 'tcom');
-CALL rencol('{prefix}_media', 'ip_sender', 'ip');
-CALL addidx('{prefix}_media', 'cid', '`cid`', 0);
-CALL addidx('{prefix}_media', 'title', '`title`', 0);
-CALL addidx('{prefix}_media', 'uid', '`uid`', 0);
-CALL addidx('{prefix}_media', 'status', '`status`', 0);
-
-# =============================================================================
 # Batch J — _message
 # =============================================================================
 
@@ -901,26 +813,12 @@ CALL addidx('{prefix}_message', 'status', '`status`', 0);
 CALL addidx('{prefix}_message', 'lang', '`lang`', 0);
 
 # =============================================================================
-# Batch J — _news
-# =============================================================================
-
-CALL rencol('{prefix}_news', 'sid', 'id');
-CALL rencol('{prefix}_news', 'catid', 'cid');
-CALL rencol('{prefix}_news', 'ip_sender', 'ip');
-CALL renidx('{prefix}_news', 'catid', 'cid');
-CALL addidx('{prefix}_news', 'cid', '`cid`', 0);
-CALL addidx('{prefix}_news', 'counter', '`counter`', 0);
-CALL addidx('{prefix}_news', 'uid', '`uid`', 0);
-CALL addidx('{prefix}_news', 'status', '`status`', 0);
-CALL addidx('{prefix}_news', 'ihome', '`ihome`', 0);
-CALL addidx('{prefix}_news', 'time', '`time`', 0);
-
-# =============================================================================
 # Batch J — _order
 # =============================================================================
 
 CREATE TABLE IF NOT EXISTS `{prefix}_order` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `uid` INT UNSIGNED NOT NULL DEFAULT 0,
   `email` VARCHAR(255) NOT NULL,
   `info` TEXT NOT NULL,
   `note` TEXT NOT NULL,
@@ -937,20 +835,37 @@ CALL rencol('{prefix}_order', 'com',   'note');
 CALL renidx('{prefix}_order', 'date',  'time');
 CALL addidx('{prefix}_order', 'status', '`status`', 0);
 CALL addidx('{prefix}_order', 'time',   '`time`',   0);
+CALL addcol('{prefix}_order', 'uid', 'INT UNSIGNED NOT NULL DEFAULT 0');
+CALL poscol('{prefix}_order', 'uid', 'INT UNSIGNED NOT NULL DEFAULT 0', 'id');
 
 # =============================================================================
-# Batch K — _pages
+# Batch J — _points
 # =============================================================================
 
-CALL rencol('{prefix}_pages', 'pid', 'id');
-CALL rencol('{prefix}_pages', 'catid', 'cid');
-CALL rencol('{prefix}_pages', 'ip_sender', 'ip');
-CALL renidx('{prefix}_pages', 'catid', 'cid');
-CALL addidx('{prefix}_pages', 'cid', '`cid`', 0);
-CALL addidx('{prefix}_pages', 'uid', '`uid`', 0);
-CALL addidx('{prefix}_pages', 'status', '`status`', 0);
-CALL addidx('{prefix}_pages', 'ihome', '`ihome`', 0);
-CALL delidx('{prefix}_pages', 'counter');
+# The journal of the points subsystem; the balance stays in _users.points and no historic row is invented
+CREATE TABLE IF NOT EXISTS `{prefix}_points` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `uid` INT UNSIGNED NOT NULL,
+  `aid` INT UNSIGNED NOT NULL DEFAULT 0,
+  `action` VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `scope` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `mid` INT UNSIGNED NOT NULL DEFAULT 0,
+  `source` VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `points` INT NOT NULL,
+  `rid` BIGINT UNSIGNED DEFAULT NULL,
+  `note` VARCHAR(255) NOT NULL DEFAULT '',
+  `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `event` (`uid`, `action`, `scope`, `source`),
+  UNIQUE KEY `rid` (`rid`),
+  KEY `uid_created` (`uid`, `created`),
+  KEY `uid_action_created` (`uid`, `action`, `created`),
+  KEY `action_created` (`action`, `created`),
+  KEY `created` (`created`),
+  KEY `target` (`scope`, `mid`),
+  CONSTRAINT `{prefix}_fk_points_rid` FOREIGN KEY (`rid`) REFERENCES `{prefix}_points` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `{prefix}_chk_points_uid` CHECK (`uid` > 0)
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
 # =============================================================================
 # Batch K — _partners
@@ -1082,62 +997,6 @@ CALL addidx('{prefix}_voting', 'status', '`status`', 0);
 # =============================================================================
 # Batch M — missing target tables and legacy side tables
 # =============================================================================
-
-CREATE TABLE IF NOT EXISTS `{prefix}_jokes` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `uid` INT UNSIGNED NOT NULL DEFAULT 0,
-  `name` VARCHAR(25) NOT NULL,
-  `time` DATETIME DEFAULT NULL,
-  `title` VARCHAR(100) NOT NULL,
-  `cid` INT UNSIGNED NOT NULL DEFAULT 0,
-  `body` TEXT NOT NULL,
-  `rating` VARCHAR(100) NOT NULL DEFAULT '0',
-  `ratetot` VARCHAR(100) NOT NULL DEFAULT '0',
-  `ip` VARCHAR(45) NOT NULL DEFAULT '',
-  `status` BOOLEAN NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CALL addidx('{prefix}_jokes', 'cid', '`cid`', 0);
-CALL addidx('{prefix}_jokes', 'uid', '`uid`', 0);
-CALL addidx('{prefix}_jokes', 'status', '`status`', 0);
-
-CREATE TABLE IF NOT EXISTS `{prefix}_media` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `cid` INT UNSIGNED NOT NULL DEFAULT 0,
-  `uid` INT UNSIGNED NOT NULL DEFAULT 0,
-  `name` VARCHAR(25) NOT NULL,
-  `title` VARCHAR(100) NOT NULL,
-  `subtitle` VARCHAR(100) NOT NULL DEFAULT '',
-  `year` SMALLINT UNSIGNED NOT NULL DEFAULT 0,
-  `director` VARCHAR(100) NOT NULL DEFAULT '',
-  `roles` VARCHAR(255) NOT NULL DEFAULT '',
-  `intro` TEXT NOT NULL,
-  `author` VARCHAR(100) NOT NULL DEFAULT '',
-  `duration` VARCHAR(100) NOT NULL DEFAULT '',
-  `lang` VARCHAR(100) NOT NULL DEFAULT '',
-  `note` TEXT NOT NULL,
-  `format` VARCHAR(100) NOT NULL DEFAULT '',
-  `quality` VARCHAR(100) NOT NULL DEFAULT '',
-  `size` VARCHAR(100) NOT NULL DEFAULT '',
-  `released` VARCHAR(100) NOT NULL DEFAULT '',
-  `links` TEXT NOT NULL,
-  `time` DATETIME DEFAULT NULL,
-  `ihome` BOOLEAN NOT NULL DEFAULT 0,
-  `acomm` BOOLEAN NOT NULL DEFAULT 0,
-  `votes` INT UNSIGNED NOT NULL DEFAULT 0,
-  `tvotes` INT UNSIGNED NOT NULL DEFAULT 0,
-  `comments` INT UNSIGNED NOT NULL DEFAULT 0,
-  `hits` INT UNSIGNED NOT NULL DEFAULT 0,
-  `ip` VARCHAR(45) NOT NULL DEFAULT '',
-  `status` BOOLEAN NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CALL addidx('{prefix}_media', 'cid', '`cid`', 0);
-CALL addidx('{prefix}_media', 'title', '`title`', 0);
-CALL addidx('{prefix}_media', 'uid', '`uid`', 0);
-CALL addidx('{prefix}_media', 'status', '`status`', 0);
 
 CREATE TABLE IF NOT EXISTS `{prefix}_clients_down` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -1329,47 +1188,18 @@ CALL addidx('{prefix}_voting',     'lang', '`lang`', 0);
 # Batch Q: field naming unification — step 3 (comment counters)
 # =============================================================================
 
-CALL rencol('{prefix}_files',    'tcom', 'comments');
-CALL rencol('{prefix}_links',    'tcom', 'comments');
-CALL rencol('{prefix}_media',    'tcom', 'comments');
 CALL rencol('{prefix}_products', 'com',  'comments');
 
 # =============================================================================
-# Batch R: field naming unification — step 4 (associated → assoc)
-# =============================================================================
-
-CALL rencol('{prefix}_news', 'associated', 'assoc');
-
-# =============================================================================
 # Batch S: content column renames — step 5
-#   _news:     hometext → intro,  bodytext → body
-#   _pages:    hometext → intro,  bodytext → body
 #   _forum:    hometext → body
-#   _faq:      hometext → body
-#   _help:     hometext → body
-#   _jokes:    hometext → body
 #   _products: text     → intro,  bodytext → body
-#   _files:    description → intro, bodytext → body
-#   _links:    description → intro, bodytext → body
-#   _media:    description → intro
 #   _comment:  comment  → body
 # =============================================================================
 
-CALL rencol('{prefix}_news',     'hometext',    'intro');
-CALL rencol('{prefix}_news',     'bodytext',    'body');
-CALL rencol('{prefix}_pages',    'hometext',    'intro');
-CALL rencol('{prefix}_pages',    'bodytext',    'body');
 CALL rencol('{prefix}_forum',    'hometext',    'body');
-CALL rencol('{prefix}_faq',      'hometext',    'body');
-CALL rencol('{prefix}_help',     'hometext',    'body');
-CALL rencol('{prefix}_jokes',    'hometext',    'body');
 CALL rencol('{prefix}_products', 'text',        'intro');
 CALL rencol('{prefix}_products', 'bodytext',    'body');
-CALL rencol('{prefix}_files',    'description', 'intro');
-CALL rencol('{prefix}_files',    'bodytext',    'body');
-CALL rencol('{prefix}_links',    'description', 'intro');
-CALL rencol('{prefix}_links',    'bodytext',    'body');
-CALL rencol('{prefix}_media',    'description', 'intro');
 CALL rencol('{prefix}_comment',  'comment',     'body');
 
 # =============================================================================
@@ -1398,9 +1228,6 @@ CALL addidx('{prefix}_whois',      'time', '`time`', 0);
 CALL rencol('{prefix}_auto_links', 'link',        'url');
 CALL rencol('{prefix}_auto_links', 'mail',        'email');
 
-# _files: homepage → website
-CALL rencol('{prefix}_files',      'homepage',    'website');
-
 # _referer: link → url
 CALL rencol('{prefix}_referer',    'link',        'url');
 
@@ -1419,7 +1246,6 @@ CALL rencol('{prefix}_categories', 'auth_mod',    'pmod');
 # =============================================================================
 # Batch W: body column unification
 #   _clients_down: infotext   → body,  prod_id   → pid
-#   _content:      text       → body
 #   _message:      content    → body
 #   _newsletter:   content    → body
 #   _privat:       content    → body
@@ -1430,9 +1256,6 @@ CALL rencol('{prefix}_clients_down', 'infotext',   'body');
 CALL rencol('{prefix}_clients_down', 'prod_id',    'pid');
 CALL addidx('{prefix}_clients_down', 'pid',    '`pid`',    0);
 CALL addidx('{prefix}_clients_down', 'status', '`status`', 0);
-CALL rencol('{prefix}_content',      'text',       'body');
-CALL addidx('{prefix}_content',      'counter', '`counter`',   0);
-CALL addidx('{prefix}_content',      'url',     '`url`(191)',  0);
 CALL rencol('{prefix}_message',      'content',    'body');
 CALL rencol('{prefix}_newsletter',   'content',    'body');
 CALL addidx('{prefix}_newsletter',   'time',    '`time`',      0);
@@ -1551,30 +1374,9 @@ ALTER TABLE `{prefix}_comment`
   MODIFY `modul` VARCHAR(60) NOT NULL,
   MODIFY `body` MEDIUMTEXT NOT NULL;
 
-ALTER TABLE `{prefix}_content`
-  MODIFY `id`      INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  MODIFY `title`   VARCHAR(100) DEFAULT NULL,
-  MODIFY `body`    MEDIUMTEXT NOT NULL,
-  MODIFY `field`   TEXT NOT NULL,
-  MODIFY `url`     VARCHAR(200) NOT NULL,
-  MODIFY `time`    DATETIME DEFAULT NULL,
-  MODIFY `refresh` INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `counter` INT UNSIGNED NOT NULL DEFAULT 0;
-
 ALTER TABLE `{prefix}_favorites`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `modul` VARCHAR(50) NOT NULL;
-
-ALTER TABLE `{prefix}_faq`
-  MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  MODIFY `title` VARCHAR(100) NOT NULL,
-  MODIFY `body` MEDIUMTEXT;
-
-ALTER TABLE `{prefix}_files`
-  MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  MODIFY `intro` TEXT NOT NULL,
-  MODIFY `body` MEDIUMTEXT NOT NULL,
-  MODIFY `url` VARCHAR(100) NOT NULL;
 
 ALTER TABLE `{prefix}_forum`
   MODIFY `id`   INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -1591,74 +1393,6 @@ ALTER TABLE `{prefix}_groups`
   MODIFY `extra`  BOOLEAN NOT NULL DEFAULT 0,
   MODIFY `rank`   VARCHAR(255) NOT NULL DEFAULT '',
   MODIFY `color`  VARCHAR(7) NOT NULL DEFAULT '';
-
-ALTER TABLE `{prefix}_help`
-  MODIFY `id`   INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  MODIFY `body` MEDIUMTEXT,
-  MODIFY `field` TEXT NOT NULL;
-
-ALTER TABLE `{prefix}_jokes`
-  MODIFY `id`      INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  MODIFY `name`    VARCHAR(25) NOT NULL,
-  MODIFY `title`   VARCHAR(100) NOT NULL,
-  MODIFY `body`    MEDIUMTEXT NOT NULL,
-  MODIFY `rating`  VARCHAR(100) NOT NULL DEFAULT '0',
-  MODIFY `ratetot` VARCHAR(100) NOT NULL DEFAULT '0',
-  MODIFY `ip`      VARCHAR(45) NOT NULL DEFAULT '',
-  MODIFY `status`  BOOLEAN NOT NULL DEFAULT 0;
-
-ALTER TABLE `{prefix}_links`
-  MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  MODIFY `intro` TEXT NOT NULL,
-  MODIFY `body` MEDIUMTEXT NOT NULL,
-  MODIFY `url` VARCHAR(100) NOT NULL;
-
-UPDATE `{prefix}_media` SET `name`     = '' WHERE `name`     IS NULL;
-UPDATE `{prefix}_media` SET `title`    = '' WHERE `title`    IS NULL;
-UPDATE `{prefix}_media` SET `subtitle` = '' WHERE `subtitle` IS NULL;
-UPDATE `{prefix}_media` SET `director` = '' WHERE `director` IS NULL;
-UPDATE `{prefix}_media` SET `roles`    = '' WHERE `roles`    IS NULL;
-UPDATE `{prefix}_media` SET `intro`    = '' WHERE `intro`    IS NULL;
-UPDATE `{prefix}_media` SET `author`   = '' WHERE `author`   IS NULL;
-UPDATE `{prefix}_media` SET `duration` = '' WHERE `duration` IS NULL;
-UPDATE `{prefix}_media` SET `lang`     = '' WHERE `lang`     IS NULL;
-UPDATE `{prefix}_media` SET `note`     = '' WHERE `note`     IS NULL;
-UPDATE `{prefix}_media` SET `format`   = '' WHERE `format`   IS NULL;
-UPDATE `{prefix}_media` SET `quality`  = '' WHERE `quality`  IS NULL;
-UPDATE `{prefix}_media` SET `size`     = '' WHERE `size`     IS NULL;
-UPDATE `{prefix}_media` SET `released` = '' WHERE `released` IS NULL;
-UPDATE `{prefix}_media` SET `links`    = '' WHERE `links`    IS NULL;
-UPDATE `{prefix}_media` SET `ip`       = '' WHERE `ip`       IS NULL;
-
-ALTER TABLE `{prefix}_media`
-  MODIFY `id`       INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  MODIFY `cid`      INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `uid`      INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `name`     VARCHAR(25) NOT NULL,
-  MODIFY `title`    VARCHAR(100) NOT NULL,
-  MODIFY `subtitle` VARCHAR(100) NOT NULL DEFAULT '',
-  MODIFY `year`     SMALLINT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `director` VARCHAR(100) NOT NULL DEFAULT '',
-  MODIFY `roles`    VARCHAR(255) NOT NULL DEFAULT '',
-  MODIFY `intro`    TEXT NOT NULL,
-  MODIFY `author`   VARCHAR(100) NOT NULL DEFAULT '',
-  MODIFY `duration` VARCHAR(100) NOT NULL DEFAULT '',
-  MODIFY `lang`     VARCHAR(100) NOT NULL DEFAULT '',
-  MODIFY `note`     MEDIUMTEXT NOT NULL,
-  MODIFY `format`   VARCHAR(100) NOT NULL DEFAULT '',
-  MODIFY `quality`  VARCHAR(100) NOT NULL DEFAULT '',
-  MODIFY `size`     VARCHAR(100) NOT NULL DEFAULT '',
-  MODIFY `released` VARCHAR(100) NOT NULL DEFAULT '',
-  MODIFY `links`    TEXT NOT NULL,
-  MODIFY `time`     DATETIME DEFAULT NULL,
-  MODIFY `ihome`    BOOLEAN NOT NULL DEFAULT 0,
-  MODIFY `acomm`    BOOLEAN NOT NULL DEFAULT 0,
-  MODIFY `votes`    INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `tvotes`   INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `comments` INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `hits`     INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `ip`       VARCHAR(45) NOT NULL DEFAULT '',
-  MODIFY `status`   BOOLEAN NOT NULL DEFAULT 0;
 
 ALTER TABLE `{prefix}_message`
   MODIFY `id`     INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -1686,14 +1420,6 @@ ALTER TABLE `{prefix}_money`
   MODIFY `time`   DATETIME DEFAULT NULL,
   MODIFY `status` BOOLEAN NOT NULL DEFAULT 0;
 
-ALTER TABLE `{prefix}_news`
-  MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  MODIFY `title` VARCHAR(100) NOT NULL,
-  MODIFY `intro` TEXT,
-  MODIFY `body` MEDIUMTEXT NOT NULL,
-  MODIFY `field` TEXT NOT NULL,
-  MODIFY `assoc` TEXT NOT NULL;
-
 ALTER TABLE `{prefix}_newsletter`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `title` VARCHAR(50) NOT NULL,
@@ -1711,12 +1437,6 @@ ALTER TABLE `{prefix}_order`
   MODIFY `agent`  VARCHAR(255) NOT NULL DEFAULT '',
   MODIFY `time`   DATETIME DEFAULT NULL,
   MODIFY `status` BOOLEAN NOT NULL DEFAULT 0;
-
-ALTER TABLE `{prefix}_pages`
-  MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  MODIFY `title` VARCHAR(100) NOT NULL,
-  MODIFY `intro` TEXT,
-  MODIFY `body` MEDIUMTEXT NOT NULL;
 
 ALTER TABLE `{prefix}_partners`
   MODIFY `id`   INT UNSIGNED NOT NULL AUTO_INCREMENT,

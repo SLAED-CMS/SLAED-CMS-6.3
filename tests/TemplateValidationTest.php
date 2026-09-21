@@ -262,12 +262,12 @@ class TemplateValidationTest extends TestCase
     {
         $base = str_replace('/', '\\', self::$basePath);
         $front = self::getFrontendThemes();
-        $this->assertSame('modules/news/index.php', self::getRelativePath($base.'\\modules\\news\\index.php'));
+        $this->assertSame('modules/shop/index.php', self::getRelativePath($base.'\\modules\\shop\\index.php'));
         $this->assertSame('templates/lite/partials/menu.html', self::getRelativePath($base.'\\templates/lite\\partials\\menu.html'));
-        $this->assertSame('modules/news/index.php', self::getRelativePath(str_replace('\\', '/', self::$basePath).'/modules/news/index.php'));
-        $this->assertSame($front, self::getThemesForPath('modules/news/index.php', $front));
-        $this->assertSame(['admin'], self::getThemesForPath('admin/modules/news.php', $front));
-        $this->assertSame(['admin'], self::getThemesForPath('modules/news/admin/index.php', $front));
+        $this->assertSame('modules/shop/index.php', self::getRelativePath(str_replace('\\', '/', self::$basePath).'/modules/shop/index.php'));
+        $this->assertSame($front, self::getThemesForPath('modules/shop/index.php', $front));
+        $this->assertSame(['admin'], self::getThemesForPath('admin/modules/blocks.php', $front));
+        $this->assertSame(['admin'], self::getThemesForPath('modules/shop/admin/index.php', $front));
     }
 
     public function testConcreteTemplateReferencesExist(): void

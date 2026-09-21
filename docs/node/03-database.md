@@ -238,9 +238,9 @@ DDL, индексы, исходный баланс и журнал _points: [poi
 
 | Индекс | Назначение |
 |---|---|
-| `PRIMARY (id)` | обращение к типу по `_nodes.tid` |
-| `UNIQUE (name)` | однозначный публичный маршрут и технический ключ |
-| `INDEX (active, sort, id)` | стабильный список активных типов в заданном порядке |
+| `PRIMARY KEY (id)` | обращение к типу по `_nodes.tid` |
+| `UNIQUE KEY name (name)` | однозначный публичный маршрут и технический ключ |
+| `KEY active (active, sort, id)` | стабильный список активных типов в заданном порядке |
 
 ### Вместимость прав администраторов
 
@@ -324,11 +324,11 @@ PRIMARY KEY (`id`),
 UNIQUE KEY `edge` (`nid`, `type`, `rid`),
 KEY `source` (`nid`, `type`, `sort`, `rid`),
 KEY `target` (`rid`, `type`, `sort`, `nid`),
-CONSTRAINT `{prefix}_fk_relations_node`
+CONSTRAINT `{prefix}_fk_node_relations_node`
   FOREIGN KEY (`nid`) REFERENCES `{prefix}_nodes` (`id`) ON DELETE CASCADE,
-CONSTRAINT `{prefix}_fk_relations_related`
+CONSTRAINT `{prefix}_fk_node_relations_related`
   FOREIGN KEY (`rid`) REFERENCES `{prefix}_nodes` (`id`) ON DELETE CASCADE,
-CHECK (`nid` <> `rid`)
+CONSTRAINT `{prefix}_chk_node_relations_self` CHECK (`nid` <> `rid`)
 ```
 
 - `id` используется в журнале, административных действиях и будущих расширениях; логическую уникальность связи задаёт `edge`.
@@ -640,7 +640,10 @@ CONSTRAINT `{prefix}_chk_node_sync_refresh`
 ## Источник DDL
 
 - Единственным исполняемым источником DDL таблиц Node при реализации будет `setup/sql/table.sql`; таблицы и фрагменты SQL этого документа описывают проектируемый контракт, но не заявляют наличие уже реализованной схемы.
-- Обновление существующей установки выполняется штатным SQL-файлом версии SLAED и после применения должно приводить к той же схеме.
+- Обновление существующей установки выполняется setup/sql/table_update6_3.sql и после применения должно приводить к той же схеме по таблицам table.sql.
+- table.sql упорядочен по алфавиту, и дочерние `_node_*` оказались бы раньше `_nodes`. Порядок определяет зависимость: `_node_types`, затем `_nodes`, затем остальные `_node_*` по алфавиту; FOREIGN_KEY_CHECKS не отключается. В файле обновления порядок тот же.
+- Все ограничения именованы с `{prefix}_`: имя внешнего ключа уникально в пределах базы, а две установки с разными префиксами допустимы в одной базе. Проверка файла обновления не считает имя после CONSTRAINT именем таблицы.
+- `_admins`.`modules` получает TEXT правкой уже существующего оператора MODIFY этой колонки в table_update6_3.sql; второй MODIFY той же колонки не добавляется.
 - `modules/node/sql/` не создаётся: Node является общей системной подсистемой, а установка и удаление её таблиц через менеджер одного модуля недопустимы.
 - Отдельная копия DDL не поддерживается даже ради ручной установки, поскольку она неизбежно становится вторым расходящимся контрактом.
 
@@ -650,7 +653,20 @@ CONSTRAINT `{prefix}_chk_node_sync_refresh`
 
 ## Доставка отложенной публикации
 
-_node_publish: nid INT UNSIGNED PRIMARY KEY, pubdate DATETIME NOT NULL, due DATETIME NOT NULL; KEY queue(due,nid); FOREIGN KEY(nid) REFERENCES _nodes(id) ON UPDATE RESTRICT ON DELETE CASCADE; InnoDB. pubdate фиксирует дату задания, due — следующую попытку в том же каноническом времени, что _nodes.published. Отдельного ID, события Rating или новой общей очереди нет. На материал не более одной строки.
+```sql
+CREATE TABLE `{prefix}_node_publish` (
+  `nid` INT UNSIGNED NOT NULL,
+  `published` DATETIME NOT NULL,
+  `due` DATETIME NOT NULL,
+  PRIMARY KEY (`nid`),
+  KEY `queue` (`due`, `nid`),
+  CONSTRAINT `{prefix}_fk_node_publish_node`
+    FOREIGN KEY (`nid`) REFERENCES `{prefix}_nodes` (`id`)
+    ON UPDATE RESTRICT ON DELETE CASCADE
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+```
+
+Колонка называется `published`, как `_nodes.published`; `pubdate` в тексте ниже и в 05 — короткое имя переменной и свойства для этого же значения. published фиксирует дату задания, due — следующую попытку в том же каноническом времени, что _nodes.published. Отдельного ID, события Rating или новой общей очереди нет. На материал не более одной строки.
 
 При переходе в Published с будущим pubdate сервис добавляет/заменяет задание в одной транзакции с материалом. Перенос будущей даты обновляет обе даты. Снятие с Published/удаление отменяет задание. При немедленной публикации старое задание удаляется и Point вызывается в транзакции владельца. Обычное редактирование уже опубликованного материала не повторяет начисление; перенос ещё ожидающего задания за прошедшую дату обрабатывается как наступившая публикация.
 

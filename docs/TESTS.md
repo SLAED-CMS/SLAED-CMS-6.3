@@ -120,7 +120,7 @@ The `admin` and `lite` reports are independent. Never compare token values, sele
 
 Admin coverage includes login, dashboard/menu grid, module list/searchbox, config forms, monitor charts, voting tables, message/error UI, and desktop/mobile responsive states. Authenticate through the real admin form before checking protected routes.
 
-Frontend coverage includes home/main slider, news list and detail, voting page/widget, search, account forms, forum list/topic, category list, message/error UI, and desktop/mobile responsive states. Record HTTP status, console/page errors, failed resources, screenshots, and relevant DOM or computed-style assertions. Static fixture rendering alone is not a browser check.
+Frontend coverage includes home and presentation page, voting page/widget, search, account forms, forum list/topic, category list, message/error UI, and desktop/mobile responsive states. Record HTTP status, console/page errors, failed resources, screenshots, and relevant DOM or computed-style assertions. Static fixture rendering alone is not a browser check.
 
 ### SEO HTTP Audit
 ```bash
@@ -149,49 +149,21 @@ inside `hx-headers`, `[[sldyn:...]]` markers and the captcha field — otherwise
 the list never compares equal even to itself. On a difference the fresh capture
 is written next to the baseline as `<module>.actual.html` for diffing.
 
-All eight modules are meant to be covered: `faq`, `files`, `links`, `media`,
-`news`, `pages`, `shop`, `voting`. That baseline was captured on 2026-07-28 with all
-eight present, after re-preparing the two fixtures below. A `capture` that reports
-fewer than eight has lost one of them again — re-prepare it and capture once
-more, or the parity claim silently excludes a module.
+Both modules that render comments are meant to be covered: `shop` and `voting`. A
+`capture` that reports fewer than two has lost one of them — re-prepare it and
+capture once more, or the parity claim silently excludes a module.
 
 Coverage assumes **every module is enabled**, and `config/modules.php` now has
-all 50 active. An inactive module is a gap in the test stand, not a reason to
-skip it — the comment engine has to keep working for all eight regardless of what
+all 41 active. An inactive module is a gap in the test stand, not a reason to
+skip it — the comment engine has to keep working for both regardless of what
 any single site switches on.
 
-Two needed the stand prepared, and both causes are worth knowing because they
-look identical from the outside:
+One needed the stand prepared:
 
 - `shop` — product 24 carried two comments while its `acomm` mode was `0`, so the
   region was never rendered. Prepare with
   `UPDATE {prefix}_products SET acomm = 1 WHERE id = 24;`, revert with
   `UPDATE {prefix}_products SET acomm = 0 WHERE id = 24;`
-- `media` — the module was **inactive**, so the view page answered 404 before
-  comments were ever reached, *and* the table was empty. It is enabled in
-  `config/modules.php` and stays enabled; the content is a fixture. Prepare it with
-  one category, one item and two comments:
-
-```sql
-INSERT INTO {prefix}_categories (id, modul, title, intro, img, parent, status, ordern, pview, pread, ppost, preply, pedit, pdelete, pmod)
-  VALUES (110, 'media', 'Демонстрация', 'Категория для проверки комментариев', 'image', 0, 1, 1, '0|0', '0|0', '0|0', '0|0', '3|0', '3|0', '3|0');
-INSERT INTO {prefix}_media (id, cid, uid, name, title, intro, note, links, time, acomm, comments, ip, status)
-  VALUES (1, 110, 7885, 'SLAED CMS', 'Демонстрационный материал', 'Материал существует ради проверки разметки комментариев.', '', '', '2026-01-01 12:00:00', 1, 2, '127.0.0.1', 1);
-INSERT INTO {prefix}_comment (cid, modul, time, uid, name, ip, body, status) VALUES
-  (1, 'media', '2026-01-02 10:00:00', 7885, 'SLAED CMS', '127.0.0.1', 'Первый комментарий к демонстрационному материалу.', 1),
-  (1, 'media', '2026-01-02 11:00:00', 0, 'Гость', '127.0.0.1', 'Второй комментарий, оставленный гостем.', 1);
-```
-
-  Every other column takes its schema default. `note` and `links` are named even
-  though they are empty, because both are `TEXT NOT NULL` **without** a default
-  (`setup/sql/table.sql`) and this server runs `STRICT_TRANS_TABLES`, which
-  refuses the row rather than inventing one. The permission values are the ones
-  the existing categories of the other modules carry, because `catmids()` filters
-  the view by them and the schema default is an empty string, not an open state.
-  Revert the fixture rows with
-  `DELETE FROM {prefix}_comment WHERE cid = 1 AND modul = 'media';`,
-  `DELETE FROM {prefix}_media WHERE id = 1;`,
-  `DELETE FROM {prefix}_categories WHERE id = 110;`. The module stays enabled.
 
 After any change to `config/modules.php`, delete `config/local.php` so the
 generated config cache rebuilds — a direct edit to a source config file is not

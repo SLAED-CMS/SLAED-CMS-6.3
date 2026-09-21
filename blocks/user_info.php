@@ -27,7 +27,7 @@ if (is_user()) {
     $ngpts = 0;
     $points = intval($userinfo['points'] ?? 0);
     $grp = intval($userinfo['grp'] ?? 0);
-    if ($conf['users']['point'] || $grp) {
+    if ($conf['points']['active'] || $grp) {
         $result = $db->getSqlQuery('SELECT id, name, points, extra, rank, color FROM '.PREFIX_DB.'_groups ORDER BY points ASC');
         while ([$gid, $name, $gpts, $extra, $grimg, $color] = $db->getSqlRow($result)) {
             if ($extra == 1) {
@@ -38,7 +38,7 @@ if (is_user()) {
                 }
                 continue;
             }
-            if (!$conf['users']['point']) continue;
+            if (!$conf['points']['active']) continue;
             if ($gpts <= $points) {
                 $rank = $name;
                 if ($gname === '') {
@@ -54,18 +54,18 @@ if (is_user()) {
     }
     $gcolor = ($gcolor && preg_match('/^#[0-9a-f]{6}$/i', $gcolor)) ? $gcolor : '';
     $rankurl = ($grank && file_exists(getThemeImagePath('ranks/'.$grank))) ? getThemeImagePath('ranks/'.$grank) : '';
-    $level = ($conf['users']['point'] && $points) ? (($ngpts > 0) ? min(99, intval(floor($points / $ngpts * 100))) : 100) : (($grp) ? 100 : 0);
+    $level = ($conf['points']['active'] && $points) ? (($ngpts > 0) ? min(99, intval(floor($points / $ngpts * 100))) : 100) : (($grp) ? 100 : 0);
     $data = [
         'is_user' => true,
         'avatar_url' => getUserAvatarUrl($userinfo),
         'greeting_label' => _HELLO.',',
         'greeting_name' => $userinfo['name'],
-        'has_meta' => ($gname !== '' || ($conf['users']['point'] && $points)),
+        'has_meta' => ($gname !== '' || ($conf['points']['active'] && $points)),
         'group_name' => $gname,
         'group_color' => $gcolor,
         'rank_url' => $rankurl,
         'rank_alt' => ($gname !== '') ? _GROUP.': '.$gname : _RANK,
-        'points_label' => ($conf['users']['point'] && $points) ? _POINTS : '',
+        'points_label' => ($conf['points']['active'] && $points) ? _POINTS : '',
         'points_count' => number_format($points, 0, '', ' '),
         'ngroup_pct' => $level,
         'has_privat' => $conf['privat']['act'],

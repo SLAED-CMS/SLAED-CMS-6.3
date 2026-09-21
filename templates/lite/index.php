@@ -35,7 +35,7 @@ function setTemplateForum(): string {
 
 # Provide head-time variables for the lite theme layout
 function getThemeHeadVars(): array {
-    global $db, $conf, $tpl, $sitevars;
+    global $conf, $tpl, $sitevars;
     $mname = $conf['name'] ? getModuleName($conf['name']) : '';
     $fcat = (int)getVar('get', 'cat', 'num', 0);
     $ctitle = '';
@@ -43,21 +43,11 @@ function getThemeHeadVars(): array {
         $fcat = (int)($sitevars['head_cid'] ?? 0);
         $ctitle = (string)($sitevars['head_item'] ?? '');
     }
-    $sep = $conf[$conf['name']]['defis'] ?? ($conf['files']['defis'] ?? $conf['defis']);
+    $sep = $conf[$conf['name']]['defis'] ?? $conf['defis'];
     $cname = ($fcat && $conf['name']) ? getTplCategoryTrail($conf['name'], $fcat, $sep, $mname, false) : '';
     if ($cname !== '' && $ctitle !== '') {
         $cname .= ' '.urldecode($sep).' '.htmlspecialchars(getDecodedText($ctitle), ENT_QUOTES, 'UTF-8');
     }
-    [$count] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB."_faq WHERE time <= now() AND status != '0'"));
-    $random = mt_rand(0, max(0, (int)$count - 1));
-    [$fid, $title] = $db->getSqlRow($db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_faq ORDER BY id DESC LIMIT '.$random.', 1'));
-    $ftitle = getDecodedText((string)$title);
-    $faq = $tpl->getHtmlFrag('link', [
-        'href' => 'index.php?name=faq&op=view&id='.$fid,
-        'title' => $ftitle,
-        'icon_name' => 'stars',
-        'label' => $ftitle,
-    ]);
     $head = '';
     if ($mname !== '' || $cname !== '') {
         $head = $tpl->getHtmlFrag('lite-head-banner', ['module' => $mname, 'category' => $cname]);
@@ -66,7 +56,6 @@ function getThemeHeadVars(): array {
     return [
         'season' => $season,
         'modul' => $conf['name'] ?? '',
-        'faqtitle' => $faq,
         'head_html' => $head,
         'preload' => getTemplateLcpPreload($season, $head !== ''),
     ];

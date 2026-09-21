@@ -140,9 +140,6 @@ final class DatabaseBatchTest extends TestCase
         $sql = "CREATE TABLE `{prefix}_one` (a INT);\nINSERT INTO `{prefix}_two` (a) VALUES (1);\nCREATE TABLE `{prefix}_one` (b INT);";
         $this->assertSame([PREFIX_DB.'_one', PREFIX_DB.'_two'], getSqlFileTables($sql), 'The full table set is wrong');
         $this->assertSame([PREFIX_DB.'_one'], getSqlFileTables($sql, 'CREATE'), 'An uninstall would touch a table the script never created');
-        $file = dirname(__DIR__, 2).'/modules/news/sql/table.sql';
-        if (!is_file($file)) $this->markTestSkipped('The news module carries no table.sql on this installation');
-        $this->assertSame([PREFIX_DB.'_news'], getSqlFileTables((string)file_get_contents($file), 'CREATE'));
     }
 
     # All three callers split with the same code: the Inquiry tab, the module installer and the system installer

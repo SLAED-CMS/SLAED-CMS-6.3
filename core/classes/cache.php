@@ -13,8 +13,11 @@ class Cache {
     private const DROP = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid', 'yclid', 'fbclid', '_openstat'];
     # How long a generated static document may sit in a browser cache; the OpenSearch and XSL descriptions change with a release, not with a setting, so no field governs them
     public const STATICDAYS = 7;
+    # The name of one write-guard marker: 32 lowercase hex characters made by this class, never a value of the request
+    private const GUARD = '/^[a-f0-9]{32}\.lock$/D';
     private static bool $bumped = false;
     private static $hold = null;
+    private static array $guards = [];
 
     # Build a validated cache path inside storage/cache/pages and reject anything outside the whitelist
     public static function getPath(string $type, string $hash, string $ext): string {
@@ -88,7 +91,7 @@ class Cache {
         return true;
     }
 
-    # Remove every cached file under storage/cache, keeping protected markers and the directory tree
+    # Remove every cached file under storage/cache, keeping protected markers, the write-guard journal and the directory tree
     # The generation is bumped afterwards because unlink reports failure silently: a page the sweep could not remove stays unreachable instead of being served again
     public static function deleteAll(): int {
         $num = 0;
@@ -97,7 +100,7 @@ class Cache {
             foreach ($iter as $file) {
                 if (!$file->isFile()) continue;
                 $name = $file->getFilename();
-                if ($name === '.htaccess' || $name === 'index.html') continue;
+                if ($name === '.htaccess' || $name === 'index.html' || self::checkGuardPath($file->getPathname())) continue;
                 if (unlink($file->getPathname())) $num++;
             }
         }
@@ -134,7 +137,8 @@ class Cache {
         return ['dyn' => (bool)$data['dyn'], 'valid' => true];
     }
 
-    # Recursively remove cached files under one directory older than the retention window, keeping protected markers and the directory tree; evicted live entries only trigger a cheap rebuild
+    # Recursively remove cached files under one directory older than the retention window, keeping protected markers, the write-guard journal and the directory tree
+    # Evicted live entries only trigger a cheap rebuild
     public static function deleteStaleTree(string $dir, int $ttl): int {
         if ($ttl < 1 || !is_dir($dir)) return 0;
         $num = 0;
@@ -143,38 +147,132 @@ class Cache {
         foreach ($iter as $file) {
             if (!$file->isFile()) continue;
             $name = $file->getFilename();
-            if ($name === '.htaccess' || $name === 'index.html') continue;
+            if ($name === '.htaccess' || $name === 'index.html' || self::checkGuardPath($file->getPathname())) continue;
             if ($file->getMTime() < $edge && unlink($file->getPathname())) $num++;
         }
         return $num;
     }
 
-    # Read the current page-cache generation counter, returning zero when it is missing
-    # The counter lives with the other persistent counters in storage/counter and not inside the tree it governs, so clearing the cache cannot reset it
-    public static function getEpoch(): int {
+    # Read the generation counter under a shared lock, so a bump in progress is never seen as an empty file
+    # A missing counter is generation zero; a counter that cannot be read or is no plain number answers false, which switches the page cache off instead of serving generation zero
+    private static function getEpochValue(): int|false {
         $file = COUNTER_DIR.'/cache.log';
         if (!is_file($file)) return 0;
-        $val = file_get_contents($file);
-        return ($val !== false) ? (int)$val : 0;
+        if (!is_readable($file)) return false;
+        $hand = fopen($file, 'r');
+        if ($hand === false) return false;
+        $val = flock($hand, LOCK_SH) ? stream_get_contents($hand) : false;
+        fclose($hand);
+        return is_string($val) && preg_match('/^[0-9]{1,18}$/D', $val) ? intval($val) : false;
     }
 
-    # Bump the page-cache generation counter once per request through an exclusive lock to invalidate every cached page
-    public static function addEpoch(): void {
-        if (self::$bumped) return;
-        self::$bumped = true;
+    # Read the current page-cache generation counter, returning zero when it is missing or unreadable; the page cache itself asks checkWriteGuard() first and never trusts that zero
+    # The counter lives with the other persistent counters in storage/counter and not inside the tree it governs, so clearing the cache cannot reset it
+    public static function getEpoch(): int {
+        $val = self::getEpochValue();
+        return $val === false ? 0 : $val;
+    }
+
+    # Bump the page-cache generation counter through an exclusive lock to invalidate every cached page, and answer whether the new generation is proven to be on disk
+    # One bump per request is enough for ordinary writers, so a repeat answers true without work; the owner of a write guard forces the final bump that follows its commit
+    # A growing number never gets shorter, so it is written over the old one in place and the file is never empty between two states; only a malformed counter is truncated first
+    public static function addEpoch(bool $force = false): bool {
+        if (self::$bumped && !$force) return true;
         $dir = COUNTER_DIR;
-        if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) return;
+        if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) return false;
         $hand = fopen($dir.'/cache.log', 'c+');
-        if ($hand === false) return;
+        if ($hand === false) return false;
+        $done = false;
         if (flock($hand, LOCK_EX)) {
-            $val = (int)stream_get_contents($hand);
-            ftruncate($hand, 0);
+            $raw = (string)stream_get_contents($hand);
+            $text = (string)(intval($raw) + 1);
+            if (strlen($text) < strlen($raw)) ftruncate($hand, 0);
             rewind($hand);
-            fwrite($hand, (string)($val + 1));
-            fflush($hand);
+            $done = fwrite($hand, $text) === strlen($text) && fflush($hand) && rewind($hand) && stream_get_contents($hand) === $text;
             flock($hand, LOCK_UN);
         }
         fclose($hand);
+        if ($done) self::$bumped = true;
+        return $done;
+    }
+
+    # Report whether a path belongs to the write-guard journal, which no sweep may touch: only the completion and the recovery of a guard remove a marker, after a proven bump
+    private static function checkGuardPath(string $path): bool {
+        $path = str_replace('\\', '/', $path);
+        $root = str_replace('\\', '/', CACHE_DIR);
+        return $path === $root.'/guards.lock' || str_starts_with($path, $root.'/guards/');
+    }
+
+    # Take the short shared lock of the guard journal, which serializes the creation, the removal and the recovery of every marker; closing the handle releases it
+    # It is what keeps a marker from being taken for abandoned between the creation of its file and the grab of its own lock
+    private static function getGuardGate(): mixed {
+        $dir = CACHE_DIR.'/guards';
+        if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) return false;
+        $gate = fopen(CACHE_DIR.'/guards.lock', 'c');
+        if ($gate === false) return false;
+        if (flock($gate, LOCK_EX)) return $gate;
+        fclose($gate);
+        return false;
+    }
+
+    # Open the journal entry of one unfinished invalidation: a unique marker in storage/cache/guards whose file lock this process holds, or false when it cannot be made
+    # The owner of a content write takes it before BEGIN and may not start its SQL without it; while any marker exists the page cache is neither read nor filled
+    # The class keeps the handle itself, so a marker whose owner forgot it stays locked until the process ends and is recovered by the next request after that
+    public static function getWriteGuard(): mixed {
+        $gate = self::getGuardGate();
+        if ($gate === false) return false;
+        $path = CACHE_DIR.'/guards/'.bin2hex(random_bytes(16)).'.lock';
+        $hand = fopen($path, 'x');
+        $done = $hand !== false && flock($hand, LOCK_EX | LOCK_NB);
+        if ($hand !== false && !$done) {
+            fclose($hand);
+            unlink($path);
+        }
+        fclose($gate);
+        if (!$done) return false;
+        self::$guards[get_resource_id($hand)] = [$hand, $path];
+        return $hand;
+    }
+
+    # Close the journal entry of a finished write: only a handle this class registered is accepted, and its marker is removed under the lock of the journal
+    # The owner calls it after the forced bump that follows its commit, or after a proven rollback; a marker that could not be removed is left to the recovery, which bumps again
+    public static function deleteWriteGuard(mixed $guard): bool {
+        if (!is_resource($guard)) return false;
+        $id = get_resource_id($guard);
+        $path = self::$guards[$id][1] ?? '';
+        if ($path === '' || !self::checkGuardPath($path) || !preg_match(self::GUARD, basename($path))) return false;
+        $gate = self::getGuardGate();
+        if ($gate === false) return false;
+        flock($guard, LOCK_UN);
+        fclose($guard);
+        unset(self::$guards[$id]);
+        $done = !is_file($path) || unlink($path);
+        fclose($gate);
+        return $done;
+    }
+
+    # Report whether the page cache may be read and filled right now: the generation is readable and no marker of an unfinished write is left
+    # A marker whose lock is free belongs to a process that died; bumping the generation and removing it is all the recovery needs, whatever became of the SQL behind it
+    # A marker whose lock is held belongs to a live writer and is never touched or waited for; an unreadable journal switches the cache off like an unreadable generation does
+    public static function checkWriteGuard(): bool {
+        if (self::getEpochValue() === false) return false;
+        $dir = CACHE_DIR.'/guards';
+        if (!is_dir($dir)) return true;
+        $list = scandir($dir);
+        if ($list === false) return false;
+        if (!preg_grep(self::GUARD, $list)) return true;
+        $gate = self::getGuardGate();
+        if ($gate === false) return false;
+        $left = 0;
+        foreach (preg_grep(self::GUARD, scandir($dir) ?: []) as $name) {
+            $path = $dir.'/'.$name;
+            $hand = fopen($path, 'r+');
+            $free = $hand !== false && flock($hand, LOCK_EX | LOCK_NB) && self::addEpoch(true);
+            if ($hand !== false) fclose($hand);
+            if (!$free || !unlink($path)) $left++;
+        }
+        fclose($gate);
+        return $left === 0;
     }
 
     # Try to grab the single-flight rebuild lock for one page; true means rebuild here, false means another worker already rebuilds it

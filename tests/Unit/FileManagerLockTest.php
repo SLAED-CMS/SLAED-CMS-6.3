@@ -19,10 +19,10 @@ final class FileManagerLockTest extends TestCase
     private static array $files = [];
 
     # Run one probe scenario in a fresh process and memoize its report for every test in this class
-    private function getProbe(string $mode): array
+    private function getProbe(string $mode, string $file = 'upload_probe.php'): array
     {
         if (isset(self::$probe[$mode])) return self::$probe[$mode];
-        $script = dirname(__DIR__).'/Support/upload_probe.php';
+        $script = dirname(__DIR__).'/Support/'.$file;
         $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_upload_lock_'.$mode;
         $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($mode).' '.escapeshellarg($work).' 2>&1');
         $data = json_decode($out, true);
@@ -59,8 +59,8 @@ final class FileManagerLockTest extends TestCase
     public function theKeyOfALockIsTheDirectoryItGuards(): void
     {
         $file = $this->getFile('core/classes/filemanager.php');
-        $key = "substr(sha1(rtrim(str_replace('\\\\', '/', \$dir), '/')), 0, 16).'.lock'";
-        $this->assertStringContainsString($key, $file, 'The lock key is no longer the canonical directory path');
+        $this->assertStringContainsString("\$key = rtrim(str_replace('\\\\', '/', \$dir), '/');", $file, 'The lock key is no longer the canonical directory path');
+        $this->assertStringContainsString("substr(sha1(\$key), 0, 16).'.lock'", $file, 'The lock file is no longer named by its key');
         $note = 'The upload service locks something other than its destination directory';
         $this->assertStringContainsString('FileManager::getPathLock($canon)', $this->getFile('core/classes/upload.php'), $note);
     }
@@ -92,6 +92,22 @@ final class FileManagerLockTest extends TestCase
         $this->assertStringContainsString('FileManager::checkFileName($file)', $upl, 'The compensation no longer asks the file layer what a managed name is');
         $this->assertStringContainsString("FileManager::getFileOwner(\$one['name']) !== \$tok", $sys, 'The editor listing no longer asks the file layer who owns a stored file');
         $this->assertStringContainsString('public const SALTLEN = 10;', $this->getFile('core/classes/filemanager.php'), 'The file layer does not publish the salt length');
+    }
+
+    # The lock is owned by the request: a second entry of one key answers the same handle without waiting, the flock goes with the last release, and another process still queues
+    # Without this an owner holding the root of a type would wait for itself the moment Upload or a file operation below it took the same key
+    #[Test]
+    public function theLockIsReentrantWithinOneRequest(): void
+    {
+        $data = $this->getProbe('lock', 'config_probe.php')['data'];
+        $this->assertTrue($data['held'], 'The file layer could not take the lock at all');
+        $this->assertTrue($data['same'], 'A second entry of one key opened a second handle');
+        $this->assertTrue($data['sub'], 'A directory below the key shares its lock, so root and subdirectory are no longer two keys');
+        $this->assertFalse($data['both'], 'Another process took the key while this request held it twice');
+        $this->assertFalse($data['inner'], 'The inner release freed the lock its outer owner still holds');
+        $this->assertSame([true, true, true], $data['queue'], 'A second process did not wait for the last release');
+        $this->assertTrue($data['outer'], 'The last release left the key locked');
+        $this->assertTrue($data['again'], 'The key cannot be taken again after it was released');
     }
 
     # Two writers of one directory stand in one queue: while the file layer holds the lock, an upload of another process publishes nothing and gets through only once it is released

@@ -103,13 +103,13 @@ function autolink(): void {
 }
 
 function view(): void {
-    global $db, $conf;
+    global $db, $conf, $user, $pnt;
     $id = getVar('get', 'id', 'num');
     if ($id) {
         [$url] = $db->getSqlRow($db->getSqlQuery('SELECT url FROM '.PREFIX_DB.'_auto_links WHERE id = :id', ['id' => $id]));
         if (!$url) setRedirect('index.php?name='.$conf['name']);
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_auto_links SET outs = outs+1 WHERE id = :id', ['id' => $id]);
-        addPointsAction('autolink', $id, 4);
+        if (is_user()) $pnt->addEvent('visit', 'auto_links', 'link:'.$id, intval($user[0]), ['mid' => $id]);
         setRedirect($url);
     } else {
         setRedirect('index.php?name='.$conf['name']);

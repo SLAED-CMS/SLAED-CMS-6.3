@@ -10,7 +10,7 @@ if (!defined('MODULE_FILE')) {
 }
 
 function contact(): void {
-    global $db, $conf, $locale, $stop, $tpl, $prs, $mailer;
+    global $db, $conf, $locale, $stop, $tpl, $prs, $mailer, $user, $pnt;
     if (is_user()) {
         $userinfo = getUserInfo();
         $sname = getVar('post', 'sname', 'name', $userinfo['name']);
@@ -108,7 +108,7 @@ function contact(): void {
                 'body_html' => $message,
             ]);
             $mailer->addQueue(['kind' => 'contact', 'email' => $to, 'title' => $subject, 'body' => $msg, 'sender' => $semail, 'prio' => 1, 'client' => true]);
-            updatePoints(5);
+            if (is_user()) $pnt->addEvent('message', 'contact', 'req:'.bin2hex(random_bytes(16)), intval($user[0]));
             $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php', 'secs' => 5]);
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _FBMAILSENT, 'meta' => $meta]);
         } else {

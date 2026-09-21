@@ -7,7 +7,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Stage 1, batch 5 of docs/COMMENTS-REDESIGN-2026.md: the activity feed, the profile hub counter and the
- * eight module delete handlers stop reaching the comment table themselves. The behaviour half runs through
+ * module delete handlers stop reaching the comment table themselves. The behaviour half runs through
  * tests/Support/contract_probe.php, which drives deleteTarget() against the live rows inside a transaction it
  * always rolls back; the contract half reads the migrated call sites and asserts that none of them still
  * carries a comment statement of its own. The id list and the module name are driven with hostile values
@@ -48,13 +48,13 @@ final class CommentTargetTest extends TestCase
         return self::$src[$file] = (string)file_get_contents(dirname(__DIR__, 2).'/'.$file);
     }
 
-    # Deleting a target removes every comment written against it, in each of the eight modules that render comments
+    # Deleting a target removes every comment written against it, in each of the modules that render comments
     #[Test]
     public function deletingTargetRemovesItsCommentsInEveryModule(): void
     {
         $data = $this->getProbe();
         $this->assertTrue($data['clean'], 'The probe transaction was not rolled back');
-        foreach (['faq', 'files', 'links', 'media', 'news', 'pages', 'shop', 'voting'] as $mod) {
+        foreach (['shop', 'voting'] as $mod) {
             if (!$data['rows'][$mod]) {
                 $this->addToAssertionCount(1);
                 continue;
@@ -154,17 +154,11 @@ final class CommentTargetTest extends TestCase
         }
     }
 
-    # The eight module delete handlers hold no comment statement any more and route the target through the class
+    # The module delete handlers hold no comment statement any more and route the target through the class
     #[Test]
     public function moduleDeleteHandlersHoldNoCommentSql(): void
     {
         $files = [
-            'faq' => 'modules/faq/admin/index.php',
-            'files' => 'modules/files/admin/index.php',
-            'links' => 'modules/links/admin/index.php',
-            'media' => 'modules/media/admin/index.php',
-            'news' => 'modules/news/admin/index.php',
-            'pages' => 'modules/pages/admin/index.php',
             'shop' => 'modules/shop/admin/index.php',
             'voting' => 'modules/voting/admin/index.php',
         ];

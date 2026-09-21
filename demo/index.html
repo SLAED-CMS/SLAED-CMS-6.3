@@ -7,7 +7,9 @@
   <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
   <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
   <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
-  <link rel="stylesheet" href="assets/demo.css">
+  <!-- The stand is served without Cache-Control, so a browser keeps demo.css and demo.js by heuristic for days and the
+       gallery would go on drawing a manifest that no longer exists. Both are stamped, so the wall is always complete. -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '">');</script>
 </head>
 <body class="sl-summer" data-demo-gallery>
   <div class="sl-wrp">
@@ -19,7 +21,7 @@
       другой набор графиков, таблиц, виджетов и сайдбаров, своя палитра в обоих режимах. Откройте страницу, переключите период графика,
       найдите модуль в таблице, выключите защиту и посмотрите, что изменится.</p>
       <p>Графики и потоки — иллюстративные данные стенда; версия, лицензия, коммиты и снимки внедрений — настоящие.
-      Остальные серии стенда — настройки, добавление файла и фавориты — расположены ниже.</p>
+      Остальные серии стенда — настройки, добавление файла, фавориты и панель администратора — расположены ниже.</p>
       <p>Галерея показывает живые страницы. Цветовую схему можно переключить для всей коллекции;
       сезонные переключатели относятся к сериям, использующим обвязку темы lite.</p>
       <div class="demo-hero-tools">
@@ -33,25 +35,43 @@
         <button type="button" class="sl-but" data-demo-set="season" data-demo-value="sl-newyear">Новый год</button>
       </div>
     </div>
+    <nav id="demo-toc" class="demo-toc" aria-label="Все варианты"></nav>
     <div id="demo-gallery"></div>
   </div>
-  <script src="assets/demo.js"></script>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
   <script>
-    /* The gallery: one section per series, one card per manifest entry, each showing the variant itself in a frame
+    /* The contents: every variant of every series as a plain link, so any of them is one click away without waiting
+       for half a hundred frames; it is drawn from the same manifests as the wall and cannot list less than the wall.
+       The gallery: one section per series, one card per manifest entry, each showing the variant itself in a frame
        rather than a picture of it. The frame carries the current mode and season in its query, so the whole wall
        repaints at once. Numbering restarts in every series, because a series is its own subject. */
     (function () {
       const wrap = document.getElementById('demo-gallery');
+      const toc = document.getElementById('demo-toc');
       const state = {
         mode: localStorage.getItem('demo.mode') || 'auto',
         season: localStorage.getItem('demo.season') || 'sl-summer',
       };
 
+      function getHref(v) {
+        return v.file + '?mode=' + (state.mode === 'auto' ? (v.mode || 'auto') : state.mode) + '&season=' + state.season;
+      }
+
+      function getNo(v, i) {
+        return v.file.match(/^(\d{2})-/)?.[1] || String(i + 1).padStart(2, '0');
+      }
+
+      function drawToc(s) {
+        return '<div class="demo-toc-row"><a class="demo-toc-name" href="#demo-' + s.key + '" title="' + s.title + '">'
+          + s.title + ' <small>' + s.items.length + '</small></a><div class="demo-toc-list">'
+          + s.items.map((v, i) => '<a href="' + getHref(v) + '" title="' + v.title + '"><b>' + getNo(v, i) + '</b>' + v.title + '</a>').join('')
+          + '</div></div>';
+      }
+
       function drawCard(v, i) {
-        const mode = v.mode || 'auto';
-        const src = v.file + '?bare=1&mode=' + (state.mode === 'auto' ? mode : state.mode) + '&season=' + state.season;
-        const href = src.replace('?bare=1&', '?');
-        const no = v.file.match(/^(\d{2})-/)?.[1] || String(i + 1).padStart(2, '0');
+        const href = getHref(v);
+        const src = href.replace('?', '?bare=1&');
+        const no = getNo(v, i);
         return '<article class="demo-card">'
           + '<div class="demo-card-frame"><iframe src="' + src + '" loading="lazy" title="' + v.title + '"></iframe></div>'
           + '<div class="demo-card-body">'
@@ -66,8 +86,9 @@
         document.body.className = state.season;
         localStorage.setItem('demo.mode', state.mode);
         localStorage.setItem('demo.season', state.season);
+        toc.innerHTML = DEMO_SERIES.map(drawToc).join('');
         wrap.innerHTML = DEMO_SERIES.map((s) =>
-          '<h2 class="demo-series">' + s.title + ' <code>' + s.addr + '</code> <small>'
+          '<h2 class="demo-series" id="demo-' + s.key + '">' + s.title + ' <code>' + s.addr + '</code> <small>'
           + s.items.length + '</small></h2>'
           + '<div class="demo-grid">' + s.items.map(drawCard).join('') + '</div>').join('');
         document.querySelectorAll('[data-demo-set]').forEach((b) => {

@@ -153,20 +153,13 @@ function getPresentationData(): array {
     $bots = ($conf['botsact']) ? $cnt['bots'] : 0;
     $guests = $cnt['all'] - $cnt['users'] - $bots;
     $human = ($cnt['all'] > 0) ? (int)round(($cnt['all'] - $bots) * 100 / $cnt['all']) : 0;
-    $news = getTableCount('news', "time <= NOW() AND status != '0'");
-    $pages = getTableCount('pages', "status != '0'");
-    $files = getTableCount('files', "status != '0'");
     $users = getTableCount('users');
     $cats = getTableCount('categories');
-    $pcats = getTableCount('categories', 'modul = :mod', ['mod' => 'pages']);
-    $fcats = getTableCount('categories', 'modul = :mod', ['mod' => 'files']);
     $bcount = getTableCount('blocks', "status = '1'");
     $events = getSecurityEventCount(24);
     $failed = getFailedLoginCountHours(24);
     $failed = is_int($failed) ? $failed : 0;
     $langs = count(glob(BASE_DIR.'/lang/*.php') ?: []);
-    $nsql = 'SELECT id, title, time FROM '.PREFIX_DB."_news WHERE time <= NOW() AND status != '0' ORDER BY time DESC LIMIT 1";
-    [$nid, $ntitle, $ntime] = $db->getSqlRow($db->getSqlQuery($nsql));
     [$tid, $ttitle, $ttime] = $db->getSqlRow(getForumTopics('id, title, ltime', '', 1));
     $slots = ['b' => _PRES_BL_BANNER, 'l' => _PRES_BL_LEFT, 'c' => _PRES_BL_TOP, 'd' => _PRES_BL_BOTTOM, 'r' => _PRES_BL_RIGHT, 'f' => _PRES_BL_FOOTER];
     # The wire of a block node runs from its card to the slot it fills, in the 760 x 340 viewBox of the stage: four rows
@@ -188,7 +181,7 @@ function getPresentationData(): array {
     $cur = array_find($nodes, static fn(array $node): bool => $node['is_on'])['pos'] ?? _PRES_BL_CONTENT;
     # The eight modules of the map: the ones a reader knows a CMS by come first, whatever their place in the config, and
     # the rest follow in config order when the install lacks one of them
-    $rank = array_flip(['news', 'files', 'account', 'search', 'pages', 'content', 'forum', 'media', 'contact', 'faq', 'voting', 'shop']);
+    $rank = array_flip(['account', 'search', 'forum', 'contact', 'voting', 'shop']);
     $keys = array_keys($conf['modules']);
     usort($keys, static fn(string $a, string $b): int => ($rank[$a] ?? count($rank)) <=> ($rank[$b] ?? count($rank)));
     $mods = [];
@@ -209,8 +202,8 @@ function getPresentationData(): array {
     $build = static fn(string $label, array $set): array => ['label' => $label, 'mods' => implode(',', array_values(array_intersect($set, $shown)))];
     $presets = [
         $build(_PRES_MD_ALL, $shown) + ['is_on' => !in_array(false, array_column($mods, 'is_on'), true)],
-        $build(_PRES_MD_PORTAL, ['news', 'files', 'account', 'search', 'pages', 'forum']), $build(_PRES_MD_MEDIA, ['news', 'media', 'account', 'search', 'content']),
-        $build(_PRES_MD_KNOW, ['files', 'pages', 'content', 'search', 'faq', 'help']),
+        $build(_PRES_MD_PORTAL, ['account', 'search', 'forum']), $build(_PRES_MD_MEDIA, ['account', 'search']),
+        $build(_PRES_MD_KNOW, ['search']),
     ];
     $commits = [];
     $chlog = $conf['changelog'] ?? [];
@@ -323,10 +316,8 @@ function getPresentationData(): array {
     $when = static fn(int $i): string => date('H:i', time() - 60 * (3 - $i));
     $ops = [
         [getIconName('system'), _PRES_CO_SYSTEM, [['kernel.boot', 'ok'], ['config.load', 'ok'], ['module.resolve', $gen.' ms'], ['response.send', '200']]],
-        [getIconName('news'), _NEWS, [['news.index', 'ok'], ['news.count', (string)$news], ['categories.load', (string)$cats], ['cache.store', 'ok']]],
         [getIconName('groups'), _USERS, [['session.verify', 'ok'], ['group.rights', 'admin'], ['users.online', (string)$live], ['login.attempt', 'ok']]],
-        [getIconName('modules'), _PRES_NAV_MODULES, [['modules.scan', (string)$mtot], ['module.enable', (string)($mods[0]['note'] ?? 'news')], ['hooks.bind', (string)$mon], ['registry.save', 'ok']]],
-        [getIconName('files'), _PRES_CO_FILES, [['files.index', (string)$files], ['upload.check', 'clean'], ['download.count', '+1'], ['meta.write', 'ok']]],
+        [getIconName('modules'), _PRES_NAV_MODULES, [['modules.scan', (string)$mtot], ['module.enable', (string)($mods[0]['note'] ?? 'account')], ['hooks.bind', (string)$mon], ['registry.save', 'ok']]],
         [getIconName('search'), 'SEO', [['canonical.resolve', 'ok'], ['meta.compose', 'ok'], ['sitemap.queue', 'ready'], ['robots.check', 'ok']]],
         [getIconName('privacy'), _SECURITY, [['request.filter', 'allow'], ['injection.scan', 'block'], ['log.append', (string)$events], ['session.guard', 'ok']]],
         ['layout-text-window-reverse', _PRES_CO_TPL, [['template.load', $theme], ['blocks.render', (string)$bcount], ['partials.merge', 'ok'], ['render.total', $gen.' ms']]],
@@ -381,7 +372,6 @@ function getPresentationData(): array {
         ],
         'facts' => [
             $stat((isset($ver[1]) ? $ver[1].' · ' : '')._PRES_FACT_VER, $ver[0]),
-            $stat(_PRES_FACT_FILES, $num($files)),
             $stat(sprintf(_PRES_FACT_SINCE, '2005'), (string)$years, $yunit),
             $stat(_PRES_FACT_MIT, 'MIT'),
             $stat(_PRES_FACT_GEN, $gsec, _SEC),
@@ -431,7 +421,7 @@ function getPresentationData(): array {
                 _PRES_NAV_MODULES.' '.$mon.' / '.$mtot, _LANGUAGE.' '.$langs, _PRES_CACHE.' '.$state, _VERSION.' '.$ver[0],
             ]],
             ['title' => _PRES_MD_CONTENT, 'state' => _PRES_MD_LIVE, 'tags' => [
-                _NEWS.' '.$num($news), _PAGES.' '.$num($pages), _FILES.' '.$num($files), _CATEGORIES.' '.$num($cats),
+                _CATEGORIES.' '.$num($cats),
             ]],
             ['title' => _PRES_MD_CONTROL, 'state' => _PRES_MD_SECURED, 'tags' => [
                 _USERS.' '.$num($users), _ONLINE.' '.$cnt['all'], _BOTS.' '.$bots, _PRES_GD_EVENTS.' '.$events,
@@ -475,7 +465,7 @@ function getPresentationData(): array {
             'tone' => $t[0], 'icon' => $t[1], 'label' => $t[2], 'text' => $t[3], 'zone' => $t[4], 'is_bad' => $t[5],
             'result' => $t[5] ? _PRES_GD_BLOCK.' → '._PRES_GD_QUARANT : $t[6], 'verdict' => $t[5] ? 'danger' : ($t[6] === _PRES_GD_CLASSIFY ? 'info' : 'success'),
         ], [
-            ['primary', 'person-fill', _PRES_GD_HUMAN, 'GET /index.php?name=news', 'door', false, _PRES_GD_ALLOW],
+            ['primary', 'person-fill', _PRES_GD_HUMAN, 'GET /index.php?name=forum', 'door', false, _PRES_GD_ALLOW],
             ['info', 'search', _PRES_GD_SEARCH, 'GET /index.php?name=sitemap', '2', false, _PRES_GD_INDEX],
             ['accent', 'stars', 'AI', 'GET /index.php?name=content', '3', false, _PRES_GD_CLASSIFY],
             ['muted', 'robot', _PRES_GD_BOT, 'GET /index.php?name=rss', '4', false, _PRES_GD_ALLOW],
@@ -523,9 +513,9 @@ function getPresentationData(): array {
         'result' => $result, 'elapsed' => $elapsed, 'mode' => $prepared ? _PRES_SP_PREPARED : _PRES_SP_DIRECT, 'state' => $write ? _PRES_SP_WRITE : _PRES_SP_READY,
     ];
     $cases = [
-        $case('SELECT', 'SELECT id, title FROM '.PREFIX_DB.'_news WHERE cid = :cid LIMIT ?', [':cid = 2', '? = 10'], true, false, 'rowCount() = 10 · FETCH_BOTH', '0.00083'),
+        $case('SELECT', 'SELECT id, title FROM '.PREFIX_DB.'_products WHERE cid = :cid LIMIT ?', [':cid = 2', '? = 10'], true, false, 'rowCount() = 10 · FETCH_BOTH', '0.00083'),
         $case('SELECT', 'SELECT COUNT(*) AS total FROM '.PREFIX_DB.'_comments WHERE status = ?', ['? = 1'], true, false, 'rowCount() = 1 · FETCH_BOTH', '0.00061'),
-        $case('UPDATE', 'UPDATE '.PREFIX_DB.'_news SET counter = counter + 1 WHERE id = :id', [':id = 125'], true, true, 'rowCount() = 1', '0.00074'),
+        $case('UPDATE', 'UPDATE '.PREFIX_DB.'_products SET counter = counter + 1 WHERE id = :id', [':id = 125'], true, true, 'rowCount() = 1', '0.00074'),
         $case('SHOW', 'SHOW TABLE STATUS', [], false, false, 'rowCount() = 34 · PDOStatement', '0.00112'),
     ];
     $runtime = [
@@ -621,20 +611,20 @@ function getPresentationData(): array {
         'modb' => $modb, 'states' => implode('|', $states), 'tones' => implode('|', $tones), 'seq' => $seq,
     ];
     $flows = $cache ? [
-        $flow('hit', 'HIT', 'success', 'GET /index.php?name=news · '._PRES_AR_S_GUEST, _PRES_AR_DYNAMIC, _PRES_AR_WARM, _PRES_AR_S_LOOKUP, 'HIT', _PRES_AR_S_ALLOW,
+        $flow('hit', 'HIT', 'success', 'GET /index.php?name=forum · '._PRES_AR_S_GUEST, _PRES_AR_DYNAMIC, _PRES_AR_WARM, _PRES_AR_S_LOOKUP, 'HIT', _PRES_AR_S_ALLOW,
             ['HIT', _PRES_AR_S_ALLOW, _PRES_AR_LIVE, '—'], ['success', 'muted', 'success', 'muted'], '1,2,3,7'),
-        $flow('miss', 'MISS', 'warning', 'GET /index.php?name=news&cat=1 · '._PRES_AR_S_GUEST, _PRES_AR_REBUILD, 'MISS', _PRES_AR_S_LOOKUP, 'MISS', _PRES_AR_S_WARM,
+        $flow('miss', 'MISS', 'warning', 'GET /index.php?name=forum&cat=1 · '._PRES_AR_S_GUEST, _PRES_AR_REBUILD, 'MISS', _PRES_AR_S_LOOKUP, 'MISS', _PRES_AR_S_WARM,
             ['MISS', _PRES_AR_WARM, _PRES_AR_LIVE, _PRES_AR_ACQUIRED], ['warning', 'success', 'success', ''], '1,2,3,4,5,6,7'),
         $flow('bypass', 'BYPASS', 'info', 'POST /index.php?name=account', _PRES_AR_NOSTORE, 'BYPASS', _PRES_AR_S_LIVE, 'BYPASS', _PRES_AR_S_LIVE,
             ['BYPASS', _PRES_AR_WARM, _PRES_AR_LIVE, '—'], ['muted', 'success', 'success', 'muted'], '1,2,4,5,6,7'),
     ] : [
-        $flow('off', _PRES_AR_MODE_OFF, 'warning', 'GET /index.php?name=news · '._PRES_AR_S_GUEST, _PRES_AR_NOSTORE, _PRES_AR_MODE_OFF, _PRES_AR_MODE_OFF, 'OFF', _PRES_AR_S_LIVE,
+        $flow('off', _PRES_AR_MODE_OFF, 'warning', 'GET /index.php?name=forum · '._PRES_AR_S_GUEST, _PRES_AR_NOSTORE, _PRES_AR_MODE_OFF, _PRES_AR_MODE_OFF, 'OFF', _PRES_AR_S_LIVE,
             [_PRES_AR_MODE_OFF, _PRES_AR_MODE_OFF, _PRES_AR_LIVE, '—'], ['warning', 'muted', 'success', 'muted'], '1,2,4,5,6,7'),
     ];
     $pipeline = [
         'head' => $head(7, getIconName('system'), _PRES_H_ARCH, _PRES_L_ARCH, $cache ? _PRES_AR_ON : _PRES_AR_OFF, $cache ? 'success' : 'warning'),
         'flows' => $flows, 'store' => 'STORE',
-        'mode' => $cache ? 'hit' : 'off', 'route' => 'GET /'.($cache === 1 ? 'index.php?name=news' : '').' · '._PRES_AR_S_GUEST,
+        'mode' => $cache ? 'hit' : 'off', 'route' => 'GET /'.($cache === 1 ? 'index.php?name=forum' : '').' · '._PRES_AR_S_GUEST,
         'decision' => $cache ? 'HIT' : 'BYPASS', 'is_on' => $cache > 0, 'theme' => $theme, 'logo' => $logo, 'cache' => _PRES_AR_CACHE,
         'cache_note' => $cache ? _PRES_AR_DYNAMIC : _PRES_AR_REBUILD, 'cache_state' => $cache ? _PRES_AR_WARM : _PRES_AR_MODE_OFF, 'chip' => _PRES_AR_DYNAMIC,
         'nodes' => [
@@ -664,24 +654,9 @@ function getPresentationData(): array {
         'head' => $head(12, getIconName('rss'), _PRES_H_PULSE, _PRES_L_PULSE),
         'cards' => [
             [
-                'icon' => getIconName('news'), 'title' => _PRES_PU_NEWS, 'over' => _PRES_PU_NEWS_S, 'when' => $ntime ? format_time($ntime, _DATESTRING) : '',
-                'heading' => $ntitle ?: _PRES_PU_NONE, 'text' => _PRES_PU_NEWS_P, 'link' => _PRES_PU_NEWS_A, 'tone' => 'primary', 'has_date' => (bool)$ntime,
-                'href' => $nid ? getSeoUrl(['name' => 'news', 'op' => 'view', 'id' => $nid, 'title' => $ntitle]) : 'index.php?name=news',
-            ],
-            [
                 'icon' => getIconName('forum'), 'title' => _PRES_PU_FORUM, 'over' => _PRES_PU_FORUM_S, 'when' => $ttime ? format_time($ttime, _DATESTRING) : '',
                 'heading' => $ttitle ?: _PRES_PU_NONE, 'text' => _PRES_PU_FORUM_P, 'link' => _PRES_PU_FORUM_A, 'tone' => 'accent', 'has_date' => (bool)$ttime,
                 'href' => $tid ? 'index.php?name=forum&op=view&id='.$tid : 'index.php?name=forum',
-            ],
-            [
-                'icon' => getIconName('pages'), 'title' => _PRES_PU_PAGES, 'over' => _PRES_PU_PAGES_S, 'when' => _PRES_PU_PAGES_T,
-                'heading' => sprintf(_PRES_PU_PAGES_N, $pages, $pcats), 'text' => _PRES_PU_PAGES_P, 'link' => _PRES_PU_PAGES_A,
-                'tone' => 'success', 'href' => 'index.php?name=pages', 'has_date' => false,
-            ],
-            [
-                'icon' => getIconName('files'), 'title' => _PRES_PU_FILES, 'over' => _PRES_PU_FILES_S, 'when' => _PRES_PU_FILES_T,
-                'heading' => sprintf(_PRES_PU_FILES_N, $files, $fcats), 'text' => _PRES_PU_FILES_P, 'link' => _PRES_PU_FILES_A,
-                'tone' => 'warning', 'href' => 'index.php?name=files', 'has_date' => false,
             ],
         ],
         'monitor' => [

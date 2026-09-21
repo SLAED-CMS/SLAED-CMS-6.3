@@ -1155,21 +1155,12 @@ function getProbeResolver(): array {
     return $out;
 }
 
-# The place resolver answered against the shipped configuration: the two field places are compared field for field with the arrays the modules assembled by hand before batch 1
+# The place resolver answered against the shipped configuration: the field place is compared field for field with the array the module assembled by hand before batch 1
 # The attachment place must still answer exactly what getUploadRuleData() answers, because <mod>.attach is that helper and not a second reading of the same configuration
-# A probe runs as a visitor, so files.dist resolves to the temporary directory here, which is the branch the frontend module took before it moved onto the resolver
-# The upload switches are flipped one at a time and restored, because the shipped record has all of them open and a rule reading one setting would answer alike on it
+# The upload switch is flipped and restored, because the shipped record has it open and a rule that never read the setting would answer alike on it
 function getProbePlace(): array {
     global $conf;
     $hand = [
-        'files.dist' => [
-            'extensions' => (string)$conf['files']['typefile'],
-            'maxbytes' => (int)$conf['files']['max_size'],
-            'maxwidth' => 1600,
-            'maxheight' => 1600,
-            'maxfiles' => 1,
-            'maxquota' => 0,
-        ],
         'users.avatar' => [
             'extensions' => (string)$conf['users']['atypefile'],
             'maxbytes' => (int)$conf['users']['amaxsize'],
@@ -1189,43 +1180,28 @@ function getProbePlace(): array {
         }
         $out['hand'][$place] = $diff;
     }
-    $rule = getUploadPlaceRule('news.attach');
-    $plain = getUploadRuleData('news');
+    $rule = getUploadPlaceRule('shop.attach');
+    $plain = getUploadRuleData('shop');
     $diff = [];
     foreach ($plain as $key => $val) {
         if (($rule[$key] ?? null) !== $val) $diff[] = $key;
     }
-    $out['rules']['news.attach'] = $rule;
+    $out['rules']['shop.attach'] = $rule;
     $out['attach'] = $diff;
-    foreach (['files', 'files.', '.dist', 'files.dist.x', 'Files.Dist', '', 'files dist', 'files.bogus', 'nosuch.attach'] as $bad) {
+    foreach (['users', 'users.', '.avatar', 'users.avatar.x', 'Users.Avatar', '', 'users avatar', 'users.bogus', 'nosuch.attach', 'files.dist'] as $bad) {
         $out['bad'][$bad] = (bool)getUploadPlaceRule($bad)['ok'];
     }
     $out['dirs'] = [
-        'files.dist' => (string)$conf['files']['temp'],
         'users.avatar' => (string)$conf['users']['adirectory'],
-        'files.public' => (string)$conf['files']['path'],
     ];
     $out['rights'] = [
-        'upload' => (int)$conf['files']['upload'],
-        'add' => (int)$conf['files']['add'],
-        'addquest' => (int)$conf['files']['addquest'],
         'aupload' => (int)$conf['users']['aupload'],
     ];
-    $more = $conf['files'];
     $out['locked'] = [];
-    foreach (['add' => 'userupload', 'addquest' => 'guestupload'] as $key => $name) {
-        $conf['files'][$key] = '0';
-        $out['locked'][$key] = (int)getUploadPlaceRule('files.dist')[$name];
-        $conf['files'][$key] = $more[$key];
-    }
-    $conf['files']['upload'] = '0';
-    $shut = getUploadPlaceRule('files.dist');
-    $out['locked']['upload'] = [(int)$shut['userupload'], (int)$shut['guestupload']];
     $avat = $conf['users']['aupload'];
     $conf['users']['aupload'] = '0';
     $out['locked']['aupload'] = (int)getUploadPlaceRule('users.avatar')['userupload'];
     $conf['users']['aupload'] = $avat;
-    $conf['files'] = $more;
     return $out;
 }
 

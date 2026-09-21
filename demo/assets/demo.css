@@ -642,6 +642,82 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* The contents of the gallery: a row per series, the name at the left, every variant of it as a link at the right */
+.demo-toc {
+  display: grid;
+  gap: var(--sl-space-5);
+  padding: var(--sl-space-6);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius-3);
+  background: var(--sl-surface);
+}
+
+.demo-toc-row {
+  display: grid;
+  grid-template-columns: minmax(0, 16em) minmax(0, 1fr);
+  gap: var(--sl-space-3) var(--sl-space-6);
+  align-items: baseline;
+}
+
+.demo-toc-row + .demo-toc-row {
+  padding-top: var(--sl-space-5);
+  border-top: 1px solid var(--sl-border);
+}
+
+.demo-toc-name {
+  color: var(--sl-text-strong);
+  font-weight: var(--sl-weight-semibold);
+  text-decoration: none;
+}
+
+.demo-toc-name small {
+  color: var(--sl-text-muted);
+  font-weight: var(--sl-weight-normal);
+  font-variant-numeric: tabular-nums;
+}
+
+.demo-toc-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-2) var(--sl-space-3);
+}
+
+.demo-toc-list a {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--sl-space-3);
+  padding: var(--sl-space-2) var(--sl-space-4);
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-bg-muted);
+  color: var(--sl-text);
+  font-size: var(--sl-font-small);
+  text-decoration: none;
+  transition:
+    background-color var(--sl-time-fast) var(--sl-ease-out),
+    color var(--sl-time-fast) var(--sl-ease-out);
+}
+
+.demo-toc-list a:hover {
+  background: var(--sl-primary);
+  color: var(--sl-on-solid);
+}
+
+.demo-toc-list b {
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-micro);
+  font-variant-numeric: tabular-nums;
+}
+
+.demo-toc-list a:hover b {
+  color: inherit;
+}
+
+@media (max-width: 768px) {
+  .demo-toc-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* Nothing picked yet: the sentence that stands where the row will stand, so the place is never simply blank */
 .d-pick-none {
   display: block;

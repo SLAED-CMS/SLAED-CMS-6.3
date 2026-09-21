@@ -354,23 +354,6 @@ function getAdminInfo(): string {
         if ($panel) {
             $groups = [
                 'account' => [['name=account&op=newuser', '_NEW_USER', '_USERS', 'person-plus', 'users_temp', '']],
-                'faq'     => [['name=faq&status=1', '_FAQ', '_FAQ', 'question-circle', 'faq', "status = '0'"]],
-                'files'   => [
-                    ['name=files&status=1', '_FILES', '_FILES', 'file-earmark-plus', 'files', "status = '0'"],
-                    ['name=files&status=2', '_BROCFILES', '_BROCFILES', 'file-earmark-x', 'files', "status = '2'"],
-                ],
-                'help'    => [['name=help', '_HELP', '_HELP', 'info-circle', 'help', "pid = '0' AND status = '0'"]],
-                'jokes'   => [['name=jokes&status=1', '_JOKES', '_JOKES', 'emoji-laughing', 'jokes', "status = '0'"]],
-                'links'   => [
-                    ['name=links&status=1', '_LINKS', '_LINKS', 'link-45deg', 'links', "status = '0'"],
-                    ['name=links&status=2', '_BROCLINKS', '_BROCLINKS', 'slash-circle', 'links', "status = '2'"],
-                ],
-                'media'   => [
-                    ['name=media&status=1', '_MEDIA', '_MEDIA', 'camera', 'media', "status = '0'"],
-                    ['name=media&status=2', '_BROCMFILES', '_BROCMFILES', 'camera-video-off', 'media', "status = '2'"],
-                ],
-                'news'    => [['name=news&status=1', '_NEWS', '_NEWS', 'newspaper', 'news', "status = '0'"]],
-                'pages'   => [['name=pages&status=1', '_PAGES', '_PAGES', 'file-richtext', 'pages', "status = '0'"]],
                 'shop'    => [
                     ['name=shop&op=clients', '_CLIENTS', '_CLIENTS', 'bag-plus', 'clients', "status = '2'"],
                     ['name=shop&op=partners', '_PARTNERS', '_PARTNERS', 'shop', 'partners', "status = '2'"],
@@ -405,7 +388,7 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
     $where = ($modul) ? 'WHERE modul = :modul' : '';
     $params = ($modul) ? ['modul' => $modul] : [];
     $modlink = ($modul) ? '&modul='.$modul : '';
-    $tabs = ['faq' => '_faq', 'files' => '_files', 'forum' => '_forum', 'help' => '_help', 'jokes' => '_jokes', 'links' => '_links', 'media' => '_media', 'news' => '_news', 'pages' => '_pages', 'shop' => '_products'];
+    $tabs = ['forum' => '_forum', 'shop' => '_products'];
     $cats = [];
     $result = $db->getSqlQuery('SELECT id, modul, title, intro, img, lang, parent, ordern, status FROM '.PREFIX_DB.'_categories '.$where.' ORDER BY modul, ordern', $params);
     while ([$cid, $cmod, $title, $intro, $img, $lang, $parent, , $status] = $db->getSqlRow($result)) {
@@ -754,33 +737,8 @@ function getAdminFavoriteList(int $obj = 0): string {
             }
             $in = implode(', ', $pp);
             $numl = count($val);
-            if ($key == 'faq') {
-                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title, u.name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_faq AS n ON (f.fid = n.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while (list($id, $fid, $modul, $title, $uname) = $db->getSqlRow($result)) $ffmassiv[] = [$id, $fid, $modul, $title, $uname];
-            } elseif ($key == 'files') {
-                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title, u.name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_files AS n ON (f.fid = n.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while (list($id, $fid, $modul, $title, $uname) = $db->getSqlRow($result)) $ffmassiv[] = [$id, $fid, $modul, $title, $uname];
-            } elseif ($key == 'forum') {
+            if ($key == 'forum') {
                 $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title, u.name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_forum AS n ON (f.fid = n.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while (list($id, $fid, $modul, $title, $uname) = $db->getSqlRow($result)) $ffmassiv[] = [$id, $fid, $modul, $title, $uname];
-            } elseif ($key == 'help') {
-                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title, u.name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_help AS n ON (f.fid = n.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while (list($id, $fid, $modul, $title, $uname) = $db->getSqlRow($result)) $ffmassiv[] = [$id, $fid, $modul, $title, $uname];
-            } elseif ($key == 'links') {
-                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title, u.name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_links AS n ON (f.fid = n.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while (list($id, $fid, $modul, $title, $uname) = $db->getSqlRow($result)) $ffmassiv[] = [$id, $fid, $modul, $title, $uname];
-            } elseif ($key == 'media') {
-                $conf['media'] = $conf['media'] ?? [];
-                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title, n.subtitle, u.name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_media AS n ON (f.fid = n.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while (list($id, $fid, $modul, $title, $subtitle, $uname) = $db->getSqlRow($result)) {
-                    $title = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
-                    $ffmassiv[] = [$id, $fid, $modul, $title, $uname];
-                }
-            } elseif ($key == 'news') {
-                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title, u.name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_news AS n ON (f.fid = n.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while (list($id, $fid, $modul, $title, $uname) = $db->getSqlRow($result)) $ffmassiv[] = [$id, $fid, $modul, $title, $uname];
-            } elseif ($key == 'pages') {
-                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title, u.name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_pages AS n ON (f.fid = n.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while (list($id, $fid, $modul, $title, $uname) = $db->getSqlRow($result)) $ffmassiv[] = [$id, $fid, $modul, $title, $uname];
             } elseif ($key == 'shop') {
                 $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title, u.name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_products AS n ON (f.fid = n.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);

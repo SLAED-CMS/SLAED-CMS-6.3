@@ -138,7 +138,7 @@ function save(): void {
             } else {
                 $ip = getip();
                 $agent = getagent();
-                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_order VALUES (NULL, :email, :info, :note, :ip, :agent, :time, \'1\')', ['email' => $email, 'info' => $field, 'note' => $note, 'ip' => $ip, 'agent' => $agent, 'time' => $date]);
+                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_order (email, info, note, ip, agent, time, status) VALUES (:email, :info, :note, :ip, :agent, :time, \'1\')', ['email' => $email, 'info' => $field, 'note' => $note, 'ip' => $ip, 'agent' => $agent, 'time' => $date]);
             }
         }
     }
@@ -158,20 +158,42 @@ function save(): void {
 }
 
 function delete(int $did = 0): void {
-    global $db, $afile;
+    global $db, $afile, $pnt, $admin;
     $id = $did ?: getVar('req', 'id', 'num', 0);
     $iswarn = !$did && !checkSiteToken();
-    if (!$iswarn && $id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_order WHERE id = :id', ['id' => $id]);
-    setRedirect($afile.'.php?name=order', false, 302, $iswarn ? _TOKENMISS : _SUCCDELETE, $iswarn);
+    $note = $iswarn ? _TOKENMISS : _SUCCDELETE;
+    if (!$iswarn && $id) {
+        $done = $db->setSqlBegin();
+        if ($done) {
+            [$uid, $was] = $db->getSqlRow($db->getSqlQuery('SELECT uid, status FROM '.PREFIX_DB.'_order WHERE id = :id FOR UPDATE', ['id' => $id]));
+            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_order WHERE id = :id', ['id' => $id]);
+            $rid = ($uid && $was) ? $pnt->getEventId('order', 'order', 'order:'.$id, (int)$uid) : 0;
+            if ($rid) $pnt->addEvent('order', 'order', 'reverse:'.$rid, (int)$uid, ['rid' => $rid, 'mid' => $id, 'aid' => intval(substr($admin[0], 0, 11))]);
+            $done = $db->setSqlCommit();
+        }
+        if (!$done) $db->setSqlRollback();
+        if (!$done) [$iswarn, $note] = [true, _ERROR];
+    }
+    setRedirect($afile.'.php?name=order', false, 302, $note, $iswarn);
 }
 
 function activate(): void {
-    global $db, $afile, $conf, $prs, $mailer;
+    global $db, $afile, $conf, $prs, $mailer, $pnt, $admin;
     $act = getVar('get', 'act', 'num', 0);
     $id = getVar('get', 'id', 'num', 0);
     $iswarn = !checkSiteToken();
-    if (!$iswarn && $id) {
+    $done = !$iswarn && $id && $db->setSqlBegin();
+    if ($done) {
+        [$uid, $was] = $db->getSqlRow($db->getSqlQuery('SELECT uid, status FROM '.PREFIX_DB.'_order WHERE id = :id FOR UPDATE', ['id' => $id]));
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_order SET status = :act WHERE id = :id', ['act' => $act, 'id' => $id]);
+        $data = ['mid' => $id, 'aid' => intval(substr($admin[0], 0, 11))];
+        if ($uid && $act && !$was) $pnt->addEvent('order', 'order', 'order:'.$id, (int)$uid, $data);
+        $rid = ($uid && !$act && $was) ? $pnt->getEventId('order', 'order', 'order:'.$id, (int)$uid) : 0;
+        if ($rid) $pnt->addEvent('order', 'order', 'reverse:'.$rid, (int)$uid, ['rid' => $rid] + $data);
+        $done = $db->setSqlCommit();
+        if (!$done) $db->setSqlRollback();
+    }
+    if ($done) {
         if ($act) {
             [$email] = $db->getSqlRow($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_order WHERE id = :id', ['id' => $id]));
             $amail = ($conf['order']['mail'] ?? '') ? $conf['order']['mail'] : ($conf['adminmail'] ?? '');
@@ -182,6 +204,7 @@ function activate(): void {
     }
     $succ = $act ? _OR_8 : _SUCCSTATUS;
     $url = $act ? $afile.'.php?name=order&send=1' : $afile.'.php?name=order';
+    if (!$iswarn && $id && !$done) setRedirect($afile.'.php?name=order', false, 302, _ERROR, true);
     setRedirect($url, false, 302, $iswarn ? _TOKENMISS : $succ, $iswarn);
 }
 

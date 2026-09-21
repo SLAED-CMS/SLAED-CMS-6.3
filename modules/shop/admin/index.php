@@ -203,15 +203,26 @@ function clients(): void {
 }
 
 function clientset(): void {
-    global $db, $afile;
+    global $db, $afile, $pnt, $admin;
     $iswarn = !checkSiteToken();
     $id = getVar('get', 'id', 'num');
+    $note = $iswarn ? _TOKENMISS : _SUCCSAVE;
     if (!$iswarn && $id) {
-        [$active] = $db->getSqlRow($db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_clients WHERE id = :id', ['id' => $id]));
-        $active = ($active) ? 0 : 1;
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_clients SET status = :active WHERE id = :id', ['active' => $active, 'id' => $id]);
+        $done = $db->setSqlBegin();
+        if ($done) {
+            [$uid, $was] = $db->getSqlRow($db->getSqlQuery('SELECT uid, status FROM '.PREFIX_DB.'_clients WHERE id = :id FOR UPDATE', ['id' => $id]));
+            $active = ($was) ? 0 : 1;
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_clients SET status = :active WHERE id = :id', ['active' => $active, 'id' => $id]);
+            $data = ['mid' => $id, 'aid' => intval(substr($admin[0], 0, 11))];
+            if ($uid && $active) $pnt->addEvent('order', 'shop', 'client:'.$id, (int)$uid, $data);
+            $rid = ($uid && $was == 1) ? $pnt->getEventId('order', 'shop', 'client:'.$id, (int)$uid) : 0;
+            if ($rid) $pnt->addEvent('order', 'shop', 'reverse:'.$rid, (int)$uid, ['rid' => $rid] + $data);
+            $done = $db->setSqlCommit();
+        }
+        if (!$done) $db->setSqlRollback();
+        if (!$done) [$iswarn, $note] = [true, _ERROR];
     }
-    setRedirect($afile.'.php?name=shop&op=clients', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
+    setRedirect($afile.'.php?name=shop&op=clients', false, 302, $note, $iswarn);
 }
 
 function clientadd(): void {
@@ -340,7 +351,7 @@ function clientadd(): void {
 }
 
 function clientsave(): void {
-    global $db, $afile, $conf, $stop;
+    global $db, $afile, $conf, $stop, $pnt, $admin;
     $iswarn = !checkSiteToken();
     $partner = getVar('post', 'partner', 'num');
     $uid = getVar('post', 'uid', 'num');
@@ -365,7 +376,10 @@ function clientsave(): void {
     if ($iswarn) {
         setRedirect($afile.'.php?name=shop&op=clients', false, 302, _TOKENMISS, true);
     } elseif (!$stop && $posttype == 'save') {
+        $data = ['mid' => $cid, 'aid' => intval(substr($admin[0], 0, 11))];
         if ($cid) {
+            $own = $db->setSqlBegin();
+            [$ouid, $was] = $db->getSqlRow($db->getSqlQuery('SELECT uid, status FROM '.PREFIX_DB.'_clients WHERE id = :cid FOR UPDATE', ['cid' => $cid]));
             if ($partner && $cppi) {
                 [$pprice] = $db->getSqlRow($db->getSqlQuery('SELECT price FROM '.PREFIX_DB.'_products WHERE id = :product', ['product' => $product]));
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT part FROM '.PREFIX_DB.'_clients WHERE part = :partner AND status != 2', ['partner' => $partner]));
@@ -387,8 +401,16 @@ function clientsave(): void {
             } else {
                 $db->getSqlQuery('UPDATE '.PREFIX_DB.'_clients SET uid = :uid, prod = :product, name = :cname, addr = :caddr, phone = :cphone, email = :cemail, website = :cwebsite, regdate = :cregdate, enddate = :cenddate, info = :cinfo, status = :cactive WHERE id = :cid', ['uid' => $uid, 'product' => $product, 'cname' => $cname, 'caddr' => $caddr, 'cphone' => $cphone, 'cemail' => $cemail, 'cwebsite' => $cwebsite, 'cregdate' => $cregdate, 'cenddate' => $cenddate, 'cinfo' => $cinfo, 'cactive' => $cactive, 'cid' => $cid]);
             }
+            $left = $was == 1 && ($cactive != 1 || $ouid != $uid);
+            $came = $cactive == 1 && ($was != 1 || $ouid != $uid);
+            $rid = ($left && $ouid) ? $pnt->getEventId('order', 'shop', 'client:'.$cid, (int)$ouid) : 0;
+            if ($rid) $pnt->addEvent('order', 'shop', 'reverse:'.$rid, (int)$ouid, ['rid' => $rid] + $data);
+            if ($came && $uid) $pnt->addEvent('order', 'shop', 'client:'.$cid, (int)$uid, $data);
+            if ($own && !$db->setSqlCommit()) $db->setSqlRollback();
         } else {
             $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_clients VALUES(NULL, :uid, :product, \'0\', \'0\', :cname, :caddr, :cphone, :cemail, :cwebsite, :cregdate, :cenddate, :cinfo, :cactive)', ['uid' => $uid, 'product' => $product, 'cname' => $cname, 'caddr' => $caddr, 'cphone' => $cphone, 'cemail' => $cemail, 'cwebsite' => $cwebsite, 'cregdate' => $cregdate, 'cenddate' => $cenddate, 'cinfo' => $cinfo, 'cactive' => $cactive]);
+            $data['mid'] = intval($db->getSqlLastId());
+            if ($cactive == 1 && $uid && $data['mid']) $pnt->addEvent('order', 'shop', 'client:'.$data['mid'], (int)$uid, $data);
         }
         setRedirect($afile.'.php?name=shop&op=clients');
     } elseif ($posttype == 'delete') {
@@ -399,11 +421,23 @@ function clientsave(): void {
 }
 
 function clientdel(int $id = 0): void {
-    global $db, $afile;
+    global $db, $afile, $pnt, $admin;
     $iswarn = !checkSiteToken();
     $id = ($id) ? $id : getVar('req', 'id', 'num', 0);
-    if (!$iswarn && $id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_clients WHERE id = :id', ['id' => $id]);
-    setRedirect($afile.'.php?name=shop&op=clients', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
+    $note = $iswarn ? _TOKENMISS : _SUCCSAVE;
+    if (!$iswarn && $id) {
+        $done = $db->setSqlBegin();
+        if ($done) {
+            [$uid, $was] = $db->getSqlRow($db->getSqlQuery('SELECT uid, status FROM '.PREFIX_DB.'_clients WHERE id = :id FOR UPDATE', ['id' => $id]));
+            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_clients WHERE id = :id', ['id' => $id]);
+            $rid = ($uid && $was == 1) ? $pnt->getEventId('order', 'shop', 'client:'.$id, (int)$uid) : 0;
+            if ($rid) $pnt->addEvent('order', 'shop', 'reverse:'.$rid, (int)$uid, ['rid' => $rid, 'mid' => $id, 'aid' => intval(substr($admin[0], 0, 11))]);
+            $done = $db->setSqlCommit();
+        }
+        if (!$done) $db->setSqlRollback();
+        if (!$done) [$iswarn, $note] = [true, _ERROR];
+    }
+    setRedirect($afile.'.php?name=shop&op=clients', false, 302, $note, $iswarn);
 }
 
 function products(): void {

@@ -12,7 +12,7 @@ if (!defined('MODULE_FILE')) {
 function info(): void {
     global $db, $conf, $tpl;
     $url = getVar('post', 'url', 'url');
-    $mod = getVar('post', 'mod', 'text', 'news');
+    $mod = getVar('post', 'mod', 'text', 'shop');
     $cat = getVar('post', 'cat', 'num');
     $num = getVar('post', 'num', 'num');
     
@@ -22,7 +22,7 @@ function info(): void {
     $rsslink = $conf['homeurl'].'/index.php?go=rss'.$rssmod.$rsscat.$rssnum;
     
     $modsOptions = '';
-    $mods = ['faq' => _FAQ, 'files' => _FILES, 'links' => _LINKS, 'media' => _MEDIA, 'news' => _NEWS, 'pages' => _PAGES, 'shop' => _SHOP];
+    $mods = ['shop' => _SHOP];
     foreach ($mods as $key => $val) {
         if (is_active($key)) {
             $modsOptions .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$key, 'label_text' => (string)$val, 'is_selected' => $key == $mod]);

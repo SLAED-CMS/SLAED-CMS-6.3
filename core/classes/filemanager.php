@@ -33,6 +33,8 @@ class FileManager {
     private const CRIT = ['index.php', 'admin.php', 'setup.php', '.htaccess'];
     private const CRITDIR = ['config', 'core'];
 
+    # The directory locks this request holds: canonical key => the open handle and the number of entries that took it
+    private static array $held = [];
     private string $mode = '';
     private string $root = '';
     private array $flags = [];
@@ -296,21 +298,35 @@ class FileManager {
     # Takes the exclusive lock of one directory and answers the open handle, or false when it cannot be taken; every writer of the project serializes on this one protocol
     # The key is the directory and not the file, because the upload service draws a free name below it and the file it is about to write does not exist yet to be locked
     # Two writers holding two protocols of their own would not wait for each other at all, which is why the pair is public here instead of private in whoever writes first
+    # The lock is owned by the request: a key this request already holds answers the same handle and only counts the entry, because a second flock on a new handle would wait for this very process
     public static function getPathLock(string $dir): mixed {
+        $key = rtrim(str_replace('\\', '/', $dir), '/');
+        if (isset(self::$held[$key])) {
+            self::$held[$key]['count']++;
+            return self::$held[$key]['lock'];
+        }
         $locks = self::getLockDir();
         if ($locks === '' || (!is_dir($locks) && !mkdir($locks, 0750, true) && !is_dir($locks))) return false;
-        $lock = fopen($locks.'/'.substr(sha1(rtrim(str_replace('\\', '/', $dir), '/')), 0, 16).'.lock', 'cb');
+        $lock = fopen($locks.'/'.substr(sha1($key), 0, 16).'.lock', 'cb');
         if ($lock === false) return false;
         if (!flock($lock, LOCK_EX)) {
             fclose($lock);
             return false;
         }
+        self::$held[$key] = ['lock' => $lock, 'count' => 1];
         return $lock;
     }
 
     # Releases one lock taken by getPathLock(); the lock file itself is never deleted, because deleting it would break the lock for a process that still holds it
+    # One entry of a held key only counts down, and the flock goes with the last one, so an inner operation never frees the directory its outer owner still works in
     public static function deletePathLock(mixed $lock): void {
         if (!is_resource($lock)) return;
+        foreach (self::$held as $key => $one) {
+            if ($one['lock'] !== $lock) continue;
+            if (--self::$held[$key]['count'] > 0) return;
+            unset(self::$held[$key]);
+            break;
+        }
         flock($lock, LOCK_UN);
         fclose($lock);
     }

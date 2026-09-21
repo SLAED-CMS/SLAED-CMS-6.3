@@ -32,7 +32,7 @@ final class StructureTest extends TestCase
     #[Test]
     public function keyModulesExist(): void
     {
-        $this->assertFileExists(BASE_DIR.'/modules/news/index.php');
+        $this->assertFileExists(BASE_DIR.'/modules/shop/index.php');
         $this->assertFileExists(BASE_DIR.'/modules/account/index.php');
         $this->assertFileExists(BASE_DIR.'/modules/forum/index.php');
     }

@@ -195,7 +195,7 @@ function finnewuser(): void {
 }
 
 function activate(): void {
-    global $db, $conf, $locale, $tpl;
+    global $db, $conf, $locale, $tpl, $pnt;
     $user = getVar('get', 'user', 'name', '');
     $num = getVar('get', 'num', 'text', '');
     $past = time() - 86400;
@@ -209,6 +209,8 @@ function activate(): void {
             $uagent = getAgent();
             $rank = '';
             $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (id, name, rank, email, avatar, regdate, password, lang, ip, agent, block, warnings, field) VALUES (NULL, :uname, :rank, :email, :avatar, :regdate, :pwd, :lang, :ip, :agent, :block, :warnings, :field)', ['uname' => $nick, 'rank' => $rank, 'email' => $mail, 'avatar' => '', 'regdate' => $reg, 'pwd' => str_starts_with($pass, '$2') ? $pass : getPassHash($pass), 'lang' => $locale, 'ip' => $uip, 'agent' => $uagent, 'block' => '', 'warnings' => '', 'field' => '']);
+            $nuid = intval($db->getSqlLastId());
+            if ($nuid) $pnt->addEvent('register', 'account', 'user:'.$nuid, $nuid);
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users_temp WHERE name = :uname AND code = :cnum', ['uname' => $nick, 'cnum' => $check]);
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = 0', ['uname' => $uip]);
             $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 15]);
@@ -275,7 +277,7 @@ function view(): void {
             $avatar = getUserAvatarUrl(['avatar' => $avatar]);
             $sign = ($sig) ? $prs->filterContent($sig, false, $conf['name']) : '';
             $lang = getLangName($lang ?: $conf['language']);
-            $points = ($conf['users']['point'] && $point) ? number_format((int)$point, 0, '', "\u{202F}") : _NO_INFO;
+            $points = ($conf['points']['active'] && $point) ? number_format((int)$point, 0, '', "\u{202F}") : _NO_INFO;
             $wnum = count(array_filter(explode('|', (string)$warn)));
             $warnhtml = ($wnum) ? warnings($warn) : '';
             if ($birth) {
@@ -417,7 +419,7 @@ function view(): void {
                 'pm_label' => _MESSAGE,
                 'rating_label' => _RATING,
                 'rating_html' => $rating,
-                'has_level' => !empty($conf['users']['point']) && !empty($point),
+                'has_level' => !empty($conf['points']['active']) && !empty($point),
                 'level' => $level,
                 'level_group' => ($rgroup) ? end($rgroup) : '',
                 'level_next' => $nextlab,
@@ -521,7 +523,7 @@ function profil(): void {
         'name' => (string)$inf['name'],
         'avatar' => getUserAvatarUrl(['avatar' => (string)($inf['avatar'] ?? '')]),
         'ring' => $lvl['ring'],
-        'has_level' => !empty($conf['users']['point']) && !empty($inf['points']),
+        'has_level' => !empty($conf['points']['active']) && !empty($inf['points']),
         'level' => $lvl['level'],
         'level_full' => $lvl['level'] >= 100,
         'level_group' => ($lvl['groups']) ? end($lvl['groups']) : '',
@@ -530,7 +532,7 @@ function profil(): void {
         'online_label' => _ONLINE,
         'group_name' => (string)($grow['name'] ?? ''),
         'group_label' => _SPEC_GROUP,
-        'has_points' => !empty($conf['users']['point']),
+        'has_points' => !empty($conf['points']['active']),
         'points_text' => number_format((int)($inf['points'] ?? 0), 0, '', "\u{202F}"),
         'points_label' => _POINTS,
         'rating' => ((int)($inf['votes'] ?? 0) > 0) ? number_format($inf['tvotes'] / $inf['votes'], 2) : '',
@@ -778,11 +780,12 @@ function passmail(): void {
 }
 
 function setUserLogin(int $uid, string $name, string $pass, int $story, int $blockon, string $theme): void {
-    global $db, $conf;
+    global $db, $conf, $pnt;
     setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $name, $pass, $story, $blockon, $theme]);
     $uip = getIp();
     $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $uip, 'guest' => 0]);
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET ip = :ip, lastvis = NOW(), agent = :agent WHERE id = :id', ['ip' => $uip, 'agent' => getAgent(), 'id' => $uid]);
+    $pnt->addEvent('login', 'account', 'day:'.gmdate('Ymd'), $uid);
     Captcha::clearLoginFailures('user');
     addLoginReport(0, 1, $name, '');
 }
@@ -1072,8 +1075,6 @@ function edithome(): void {
                 'describedby' => 'f-story-hint',
                 'options_html' => $sopt,
             ])];
-        } else {
-            $extra .= $tpl->getHtmlFrag('hidden', ['name_attr' => 'story', 'value_attr' => $conf['news']['num'] ?? 0]);
         }
         $lins[] = getSetupSwitch(_RNEWSLETTER, 'news', (string)$info['newslet'], _ACCOUNT_NEWSNOTE);
         if (is_active('forum')) $lins[] = getSetupSwitch(_FSMAIL, 'fsmail', (string)$info['fsmail'], _ACCOUNT_FSMAILNOTE);
@@ -1282,7 +1283,7 @@ function savehome(): void {
             $birth = getVar('req', 'user_birthday', 'date');
             $gender = getVar('post', 'gender', 'num');
             $field = getVar('post', 'field', 'field');
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET email = :email, website = :website, viewmail = :viewmail, occ = :occ, origin = :origin, interest = :interest, sig = :sig, storynum = :storynum, blockon = :blockon, block = :block, theme = :theme, newslet = :newslet, fsmail = :fsmail, psmail = :psmail, birthday = :birthday, gender = :gender, field = :field WHERE id = :id', ['email' => $mail, 'website' => $site, 'viewmail' => $view, 'occ' => $occ, 'origin' => $from, 'interest' => $inter, 'sig' => $sig, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme, 'newslet' => $news, 'fsmail' => $fsmail, 'psmail' => $psmail, 'birthday' => $birth, 'gender' => $gender, 'field' => $field, 'id' => $uid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET email = :email, website = :website, viewmail = :viewmail, occ = :occ, origin = :origin, interest = :interest, sig = :sig, storynum = COALESCE(NULLIF(:storynum, 0), storynum), blockon = :blockon, block = :block, theme = :theme, newslet = :newslet, fsmail = :fsmail, psmail = :psmail, birthday = :birthday, gender = :gender, field = :field WHERE id = :id', ['email' => $mail, 'website' => $site, 'viewmail' => $view, 'occ' => $occ, 'origin' => $from, 'interest' => $inter, 'sig' => $sig, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme, 'newslet' => $news, 'fsmail' => $fsmail, 'psmail' => $psmail, 'birthday' => $birth, 'gender' => $gender, 'field' => $field, 'id' => $uid]);
             $avat = getVar('post', 'avatar', 'text');
             $take = getVar('post', 'filepath', 'raw', '');
             $take = is_string($take) ? mb_substr(trim($take), 0, 512) : '';
@@ -1521,7 +1522,7 @@ function oauthback(): void {
 }
 
 function oauthfinish(): void {
-    global $db, $conf, $locale, $tpl;
+    global $db, $conf, $locale, $tpl, $pnt;
     header('Cache-Control: no-store, no-cache, must-revalidate');
     header('Referrer-Policy: no-referrer');
     if (strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'POST') {
@@ -1683,6 +1684,7 @@ function oauthfinish(): void {
         );
         $nuid = ($ok !== false) ? (int)$db->getSqlLastId() : 0;
         $ecode = ($nuid > 0) ? Oauth::setLink($nuid, $prov, (string)$row['uid'], $mail) : 'link_failed';
+        if ($nuid > 0 && $ecode === '') $pnt->addEvent('register', 'account', 'user:'.$nuid, $nuid);
         if ($nuid < 1 || $ecode !== '') {
             $db->setSqlRollback();
             if ($ecode === 'link_duplicate') {

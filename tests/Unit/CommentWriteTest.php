@@ -50,7 +50,7 @@ final class CommentWriteTest extends TestCase
     public function everyModuleStoresTheRowItResolved(): void
     {
         $data = $this->getUserProbe();
-        $this->assertCount(9, $data['rows']);
+        $this->assertCount(3, $data['rows']);
         $seen = 0;
         foreach ($data['rows'] as $mod => $one) {
             if (intval($one['target']) === 0) continue;
@@ -59,7 +59,7 @@ final class CommentWriteTest extends TestCase
             $seen++;
         }
         if ($seen === 0) $this->markTestSkipped('No module of this installation carries a writable target');
-        $this->assertGreaterThan(7, $seen, 'Only '.$seen.' of the nine targets are writable here');
+        $this->assertGreaterThan(1, $seen, 'Only '.$seen.' of the three targets are writable here');
     }
 
     # Each module increments its own target counter by one and awards its own points slot
@@ -79,7 +79,7 @@ final class CommentWriteTest extends TestCase
     public function anonymousAddLandsPendingAndMovesNothing(): void
     {
         $data = $this->getProbe('commentguest');
-        $this->assertCount(9, $data['rows']);
+        $this->assertCount(3, $data['rows']);
         $seen = 0;
         foreach ($data['rows'] as $mod => $one) {
             if (($one['error'] ?? null) === null) continue;
@@ -97,7 +97,7 @@ final class CommentWriteTest extends TestCase
     {
         foreach (['commentwrite', 'commentguest'] as $mode) {
             $data = $this->getProbe($mode);
-            if (!$data['refuse']) $this->markTestSkipped('No writable news target on this installation');
+            if (!$data['refuse']) $this->markTestSkipped('No writable shop target on this installation');
             foreach ($data['refuse'] as $case => $pair) {
                 if ($case === 'flood') continue;
                 $this->assertSame($pair[1], $pair[0], 'Case "'.$case.'" of '.$mode.' answered another refusal');
@@ -118,11 +118,11 @@ final class CommentWriteTest extends TestCase
     public function theAuthorEditsInsideTheWindow(): void
     {
         $data = $this->getUserProbe();
-        if (!$data['edit']) $this->markTestSkipped('No writable news target on this installation');
+        if (!$data['edit']) $this->markTestSkipped('No writable shop target on this installation');
         [$allow, $saved, $mod, $body, $row] = $data['edit']['fresh'];
         $this->assertTrue($allow);
         $this->assertTrue($saved);
-        $this->assertSame('news', $mod);
+        $this->assertSame('shop', $mod);
         $this->assertSame($body, $row);
         $this->assertSame('probe body edited', $row);
     }
@@ -132,7 +132,7 @@ final class CommentWriteTest extends TestCase
     public function theEditWindowClosesForTheAuthor(): void
     {
         $data = $this->getUserProbe();
-        if (!$data['edit']) $this->markTestSkipped('No writable news target on this installation');
+        if (!$data['edit']) $this->markTestSkipped('No writable shop target on this installation');
         $this->assertFalse($data['edit']['stale']);
         $this->assertSame(abs($data['skew']) <= 5, $data['edit']['skewed'], 'The edit window and the clock skew of this installation disagree');
     }
@@ -142,7 +142,7 @@ final class CommentWriteTest extends TestCase
     public function aVisitorEditsAndModeratesNothing(): void
     {
         $data = $this->getProbe('commentguest');
-        if (!$data['edit']) $this->markTestSkipped('No writable news target on this installation');
+        if (!$data['edit']) $this->markTestSkipped('No writable shop target on this installation');
         [$allow, $saved, , $body, $row] = $data['edit']['fresh'];
         $this->assertFalse($allow);
         $this->assertFalse($saved);

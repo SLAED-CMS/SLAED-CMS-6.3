@@ -7,10 +7,8 @@
 $base = rtrim((string)($argv[1] ?? 'https://slaed.loc'), '/');
 $routes = [
     '/' => ['types' => ['WebSite', 'WebPage'], 'index' => true],
-    '/index.php?name=news' => ['types' => ['CollectionPage'], 'index' => true],
     '/index.php?name=voting' => ['types' => ['CollectionPage'], 'index' => true],
     '/index.php?name=rss' => ['types' => ['WebPage'], 'index' => true],
-    '/index.php?name=content' => ['types' => ['CollectionPage'], 'index' => true],
     '/index.php?name=changelog' => ['types' => ['CollectionPage'], 'index' => true],
     '/index.php?name=search' => ['types' => ['WebPage'], 'index' => false],
 ];
@@ -44,9 +42,7 @@ function getSeoAuditPage(string $url): array {
 }
 
 $details = [
-    'news' => 'NewsArticle', 'pages' => 'Article', 'faq' => 'Article',
-    'files' => 'WebPage', 'links' => 'WebPage', 'shop' => 'WebPage',
-    'forum' => 'WebPage', 'voting' => 'WebPage',
+    'shop' => 'WebPage', 'forum' => 'WebPage', 'voting' => 'WebPage',
 ];
 foreach ($details as $mod => $type) {
     $page = getSeoAuditPage($base.'/index.php?name='.$mod);

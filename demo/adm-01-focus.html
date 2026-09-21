@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>01 &middot; Фокус — стенд панели администратора SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; the sheets and scripts of the series are stamped so an edit is seen at once -->
+  <script>
+    ['demo', 'admin'].forEach((n) => document.write('<link rel="stylesheet" href="assets/' + n + '.css?v=' + Date.now() + '">'));
+  </script>
+  <style>
+    /* The focus - the dashboard stops being a catalogue. The live page gives thirty-eight modules the same tile and
+       the same weight, and spends its sidebar on thirteen queues of which nine are zero. Here the page answers three
+       questions in the order an administrator asks them: what needs me now, where do I go most, where is everything
+       else.
+
+       Transfer map - what each block is on the live page (admin.php, panelAdmin() and the sidebar blocks):
+
+         · inbox      the rows of the "New" and "Awaiting review" blocks with a number above zero; the zero rows are
+                      named once, in one muted sentence, instead of nine chips saying 0
+         · notices    the two sl-alert of the head, as lines: the text and the one action each of them implies
+         · pinned     eight modules; on the live page the choice would be the administrator's own - a `pin` flag
+                      beside the module status, or the eight opened most - a decision
+         · index      all thirty-eight as text links in five groups by meaning; the group is a new field of the
+                      module row, today the page knows only "system" and "public"
+         · signal     a module says something only when it differs: a chip when its queue is not empty, a lock when
+                      it is not open to everyone; thirty-eight pulsing green LEDs saying "fine" are gone
+         · pulse      the four bars of the debug footer, as one line of four thin meters */
+    .v-focus {
+      padding-top: calc(var(--sl-space-8) * 2);
+    }
+
+    .v-hello h1 {
+      margin: var(--sl-space-5) 0 var(--sl-space-3);
+      font-size: var(--sl-font-display);
+      font-weight: var(--sl-weight-semibold);
+      line-height: var(--sl-line-tight);
+      letter-spacing: -0.02em;
+    }
+
+    .v-hello h1 em {
+      color: var(--sl-text-muted);
+      font-style: normal;
+      font-weight: var(--sl-weight-normal);
+    }
+
+    .v-hello p {
+      max-width: 62ch;
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-h4);
+    }
+
+    .v-inbox {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: var(--sl-space-5);
+      margin-top: var(--sl-space-8);
+    }
+
+    .v-task {
+      position: relative;
+      display: grid;
+      gap: var(--sl-space-2);
+      padding: var(--sl-space-7);
+      color: var(--sl-text);
+      transition:
+        border-color var(--sl-time-base) var(--sl-ease-out),
+        box-shadow var(--sl-time-base) var(--sl-ease-out),
+        transform var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-task:hover {
+      border-color: var(--sl-primary-muted);
+      box-shadow: var(--sl-shadow-float);
+      transform: translateY(calc(var(--sl-space-1) * -1));
+    }
+
+    .v-task > .bi {
+      color: var(--sl-text-subtle);
+      font-size: var(--sl-size-icon-sm);
+    }
+
+    .v-task strong {
+      margin-top: var(--sl-space-5);
+      font-size: var(--sl-font-display);
+      font-weight: var(--sl-weight-semibold);
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+
+    .v-task b {
+      font-weight: var(--sl-weight-semibold);
+    }
+
+    .v-task span {
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-task .bi-arrow-up-right {
+      position: absolute;
+      top: var(--sl-space-7);
+      right: var(--sl-space-7);
+      opacity: 0;
+      color: var(--sl-primary);
+      transition: opacity var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-task:hover .bi-arrow-up-right {
+      opacity: 1;
+    }
+
+    .v-quiet {
+      display: flex;
+      gap: var(--sl-space-3);
+      margin-top: var(--sl-space-6);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-quiet .bi {
+      color: var(--sl-success);
+    }
+
+    .v-notices {
+      display: grid;
+      gap: var(--a-hair);
+      margin-top: var(--sl-space-8);
+      overflow: hidden;
+      background: var(--sl-border);
+    }
+
+    .v-notice {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-5);
+      padding: var(--sl-space-5) var(--sl-space-7);
+      background: var(--sl-bg);
+    }
+
+    .v-notice p {
+      flex: 1;
+    }
+
+    .v-notice a {
+      color: var(--sl-primary);
+      font-weight: var(--sl-weight-medium);
+      white-space: nowrap;
+    }
+
+    .v-head {
+      display: flex;
+      align-items: baseline;
+      gap: var(--sl-space-5);
+      margin: calc(var(--sl-space-8) * 2) 0 var(--sl-space-6);
+    }
+
+    .v-head h2 {
+      color: var(--sl-text);
+      font-size: var(--sl-font-h2);
+      font-weight: var(--sl-weight-semibold);
+    }
+
+    .v-head span {
+      color: var(--sl-text-muted);
+    }
+
+    .v-pins {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--sl-space-5);
+    }
+
+    .v-pin {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: var(--sl-space-2) var(--sl-space-5);
+      padding: var(--sl-space-6);
+      border-radius: var(--sl-radius-3);
+      color: var(--sl-text);
+      transition: background-color var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-pin:hover {
+      background: var(--sl-bg);
+      box-shadow: var(--sl-shadow-raised);
+    }
+
+    .v-pin > .bi {
+      grid-row: span 2;
+      color: var(--tone);
+      font-size: var(--sl-size-icon-md);
+    }
+
+    .v-pin b {
+      font-weight: var(--sl-weight-semibold);
+    }
+
+    .v-pin span {
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-index {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: var(--sl-space-8);
+      align-items: start;
+    }
+
+    .v-index h3 {
+      padding-bottom: var(--sl-space-4);
+      margin-bottom: var(--sl-space-3);
+      border-bottom: var(--a-hair) solid var(--sl-border);
+    }
+
+    .v-index h3 small {
+      margin-left: auto;
+    }
+
+    .v-link {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-4);
+      margin: 0 calc(var(--sl-space-3) * -1);
+      padding: var(--sl-space-3);
+      border-radius: var(--sl-radius-2);
+      color: var(--sl-text);
+      transition: background-color var(--sl-time-fast) var(--sl-ease-out);
+    }
+
+    .v-link:hover {
+      background: var(--sl-tint);
+      color: var(--sl-primary-strong);
+    }
+
+    .v-link > .bi:first-child {
+      color: var(--sl-text-subtle);
+      font-size: var(--sl-size-icon-xs);
+    }
+
+    .v-link:hover > .bi:first-child {
+      color: var(--tone);
+    }
+
+    .v-link b {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      font-weight: var(--sl-weight-normal);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .v-link .bi-lock {
+      color: var(--sl-text-subtle);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-pulse {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--sl-space-8);
+      margin-top: calc(var(--sl-space-8) * 2);
+      padding-top: var(--sl-space-7);
+      border-top: var(--a-hair) solid var(--sl-border);
+    }
+
+    @media (max-width: 900px) {
+      .v-inbox,
+      .v-pins,
+      .v-index,
+      .v-pulse {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="a-page">
+    <header class="a-top">
+      <div class="a-wrap a-top-row">
+        <a class="a-brand" href="../admin.php" title="Панель администратора"><img src="../templates/admin/images/logos/slaed-logo-mark-gradient-blue.svg" alt="SLAED CMS"></a>
+        <nav class="a-nav">
+          <a href="../admin.php" aria-current="page" title="Главная"><b>Главная</b></a>
+          <a href="../admin.php?name=blocks" title="Блоки и баннеры"><b>Блоки и баннеры</b></a>
+          <a href="../admin.php?name=modules" title="Модули"><b>Модули</b></a>
+          <a href="../admin.php?name=categories" title="Категории"><b>Категории</b></a>
+        </nav>
+        <div class="a-top-end">
+          <label class="a-seek" title="Поиск модуля">
+            <i class="bi bi-search"></i>
+            <input type="search" placeholder="Найти модуль" data-demo-filter>
+            <span class="a-kbd">/</span>
+          </label>
+          <a class="a-act" href="../" target="_blank" rel="noopener noreferrer" title="Сайт"><i class="bi bi-globe2"></i><b>Сайт</b></a>
+          <button class="a-act" type="button" title="Опции"><i class="bi bi-sliders"></i></button>
+          <a class="a-face" href="../index.php?name=account" title="Профиль: SLAED CMS">SL</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="a-wrap v-focus">
+      <section class="v-hello">
+        <p class="a-eyebrow"><i class="a-dot a-dot-live"></i>SLAED CMS &middot; 6.3.0 Phoenix &middot; все системы в норме &middot; <span data-adm-clock></span></p>
+        <h1><span data-adm-greet>Добрый день</span>. <em><span data-adm-count="hot">5</span> очередей ждут решения.</em></h1>
+        <p>Остальные <span data-adm-count="zero">9</span> пусты, поэтому их здесь нет. Все <span data-adm-count="mods">38</span> модулей включены и работают.</p>
+      </section>
+
+      <section class="v-inbox" data-adm-list="queue" data-adm-only="hot">
+        <template>
+          <a class="a-card v-task" href="{{ href }}" title="{{ title }}">
+            <i class="bi {{ icon }}"></i>
+            <strong class="a-num">{{ num }}</strong>
+            <b>{{ title }}</b>
+            <span>{{ note }}</span>
+            <i class="bi bi-arrow-up-right"></i>
+          </a>
+        </template>
+      </section>
+      <p class="v-quiet"><i class="bi bi-check2-circle"></i><span>Пусто и спокойно: <span data-adm-count="zeronames"></span>.</span></p>
+
+      <section class="a-card v-notices">
+        <div class="v-notice" data-tone="warning">
+          <i class="a-dot"></i>
+          <p>Файл установки <code>setup.php</code> всё ещё лежит в корне сайта — удалите или переименуйте его.</p>
+          <a href="../admin.php?name=security" title="Безопасность">Безопасность &rarr;</a>
+        </div>
+        <div class="v-notice" data-tone="primary">
+          <i class="a-dot"></i>
+          <p>Информация, которая будет доступна всем авторам.</p>
+          <a href="../admin.php?name=config" title="Изменить">Изменить &rarr;</a>
+        </div>
+      </section>
+
+      <div class="v-head"><h2>Часто нужные</h2><span>восемь модулей, закреплённых вами</span></div>
+      <section class="v-pins" data-adm-list="mods" data-adm-pin>
+        <template>
+          <a class="v-pin" href="{{ href }}" title="{{ title }}" data-tone="{{ tone }}">
+            <i class="bi {{ icon }}"></i>
+            <b>{{ title }}</b>
+            <span>{{ desc }}</span>
+          </a>
+        </template>
+      </section>
+
+      <div class="v-head"><h2>Все модули</h2><span><span data-demo-tally>38</span> из <span data-adm-count="mods">38</span></span></div>
+      <template id="v-link">
+        <a class="v-link" href="{{ href }}" title="{{ desc }}" data-demo-find="{{ key }} {{ gtitle }} {{ desc }}">
+          <i class="bi {{ icon }}"></i><b>{{ title }}</b>
+          <i class="bi bi-lock" data-adm-on="{{ access }}" title="{{ accessname }}"></i>
+          <span class="sl-chip sl-chip-warn" data-adm-on="{{ badge }}">{{ badge }}</span>
+        </a>
+      </template>
+      <section class="v-index">
+        <div data-demo-group data-tone="primary">
+          <h3 class="a-eyebrow"><i class="a-dot"></i>Контент<small data-demo-count></small></h3>
+          <div data-adm-list="mods" data-adm-group="content" data-adm-tpl="v-link"></div>
+        </div>
+        <div data-demo-group data-tone="success">
+          <h3 class="a-eyebrow"><i class="a-dot"></i>Люди<small data-demo-count></small></h3>
+          <div data-adm-list="mods" data-adm-group="people" data-adm-tpl="v-link"></div>
+        </div>
+        <div data-demo-group data-tone="accent">
+          <h3 class="a-eyebrow"><i class="a-dot"></i>Сайт<small data-demo-count></small></h3>
+          <div data-adm-list="mods" data-adm-group="site" data-adm-tpl="v-link"></div>
+        </div>
+        <div data-demo-group data-tone="warning">
+          <h3 class="a-eyebrow"><i class="a-dot"></i>Система<small data-demo-count></small></h3>
+          <div data-adm-list="mods" data-adm-group="system" data-adm-tpl="v-link"></div>
+        </div>
+        <div data-demo-group data-tone="danger">
+          <h3 class="a-eyebrow"><i class="a-dot"></i>Коммерция<small data-demo-count></small></h3>
+          <div data-adm-list="mods" data-adm-group="trade" data-adm-tpl="v-link"></div>
+        </div>
+      </section>
+      <div class="sl-alert sl-alert-info" data-demo-empty hidden><div class="sl-alert-body">Такого модуля нет. Escape очищает поиск.</div></div>
+
+      <section class="v-pulse">
+        <div><div class="a-meter-row"><span>Память</span><b class="a-num">6.13 MB / 1 GB</b></div><p class="a-meter" style="--v: 1"></p></div>
+        <div><div class="a-meter-row"><span>Генерация страницы</span><b class="a-num">0.306 с</b></div><p class="a-meter" style="--v: 15"></p></div>
+        <div><div class="a-meter-row"><span>Запросов к базе</span><b class="a-num">17</b></div><p class="a-meter" style="--v: 34"></p></div>
+        <div><div class="a-meter-row"><span>Время запросов</span><b class="a-num">0.005 с</b></div><p class="a-meter" style="--v: 3"></p></div>
+      </section>
+    </main>
+    <div class="a-wrap a-note" data-adm-note></div>
+  </div>
+  <script>
+    ['demo', 'admin'].forEach((n) => document.write('<script src="assets/' + n + '.js?v=' + Date.now() + '"><\/script>'));
+  </script>
+</body>
+</html>

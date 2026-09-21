@@ -363,7 +363,7 @@ final class FileManagerCatalogTest extends TestCase
         $this->assertStringContainsString("'application/octet-stream'", $body, 'A download is answered with a type the browser may execute');
         $this->assertStringContainsString('rawurlencode(basename($name))', $body, 'The name of a download reaches the header as it was given');
         $this->assertStringContainsString('exit;', $body, 'A download does not end the request it answers');
-        foreach (['admin/modules/security.php', 'modules/clients/index.php', 'modules/files/index.php', 'modules/shop/admin/index.php'] as $path) {
+        foreach (['admin/modules/security.php', 'modules/clients/index.php', 'modules/shop/admin/index.php'] as $path) {
             $this->assertDoesNotMatchRegularExpression('/(?<![\w>])stream\(/', $this->getFile($path), 'A download of '.$path.' still goes through the legacy helper');
         }
         $down = $this->getBody('core/admin.php', 'getAdminFileDownload');

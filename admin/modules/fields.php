@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function fields(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $mods = ['account', 'content', 'forum', 'help', 'news', 'order'];
+    $mods = ['account', 'forum', 'order'];
     $panels = [];
     $labs = [_ACCOUNT, _CONTENT, _FORUM, _HELP, _NEWS, _ORDER];
     $links = [];
@@ -144,9 +144,10 @@ function save(): void {
     global $afile;
     $ctab = getVar('post', 'tab', 'num', 0);
     $warn = !checkSiteToken();
+    $text = _TOKENMISS;
     if (!$warn) {
         $cont = [];
-        $mods = ['account', 'content', 'forum', 'help', 'news', 'order'];
+        $mods = ['account', 'forum', 'order'];
         $a = 0;
         foreach ($mods as $val) {
             $fields = '';
@@ -161,9 +162,14 @@ function save(): void {
             $a++;
             $cont[$val] = $fields;
         }
-        setConfigFile('fields.php', $cont);
+        $warn = !setConfigFile(static function (array $base, Closure $save) use ($cont): string {
+            $base['fields'] = array_replace($base['fields'], $cont);
+            ksort($base['fields']);
+            return $save($base) ? 'committed' : 'aborted';
+        });
+        $text = $warn ? (getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP) : _SUCCSAVE;
     }
-    setRedirect($afile.'.php?name=fields&tab='.$ctab, false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($afile.'.php?name=fields&tab='.$ctab, false, 302, $text, $warn);
 }
 
 function info(): void {

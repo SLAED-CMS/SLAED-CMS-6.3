@@ -59,7 +59,7 @@ function recommend(): void {
 }
 
 function send(): void {
-    global $conf, $stop, $tpl, $mailer;
+    global $conf, $stop, $tpl, $mailer, $user, $pnt;
     $unkey = substr(getSecret('field'), 0, 32);
     $sname = getVar('post', $unkey, 'name');
     $semail = getVar('post', 'semail', 'text');
@@ -83,7 +83,7 @@ function send(): void {
             ],
         ]);
         $mailer->addQueue(['kind' => 'recommend', 'email' => $femail, 'title' => $subject, 'body' => $message, 'sender' => $semail, 'prio' => 3]);
-        updatePoints(38);
+        if (is_user()) $pnt->addEvent('recommend', 'recommend', 'req:'.bin2hex(random_bytes(16)), intval($user[0]));
         setHead(['title' => _RECOMMTITLE]);
         $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 10]);
         echo $tpl->getHtmlFrag('title', ['title' => _RECOMMTITLE, 'is_level_one' => true]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'messages' => [_FREFERENCE.' '.$fname.'.', _THANKSREC], 'meta' => $meta]);

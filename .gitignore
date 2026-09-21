@@ -23,6 +23,9 @@
 /config/changelog.php
 /config/local.php
 
+# Marks of finished 6.3 data updates: written by setup on the site itself, a shipped mark would open a subsystem that was never updated
+/config/update.php
+
 # Backups
 *.bak
 *.backup

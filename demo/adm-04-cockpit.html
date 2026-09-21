@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>04 &middot; Кокпит — стенд панели администратора SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; the sheets and scripts of the series are stamped so an edit is seen at once -->
+  <script>
+    ['demo', 'admin'].forEach((n) => document.write('<link rel="stylesheet" href="assets/' + n + '.css?v=' + Date.now() + '">'));
+  </script>
+  <style>
+    /* The cockpit - the face of the presentation page, brought home. The leader shows the system as instruments: five
+       gauges, a monitor window, a request walking from guard to template. The live panel has every one of those figures
+       already - they sit under the footer as four green bars and a wall of debug text. Here they move to the first
+       screen, and the modules become a switchboard of small keys instead of thirty-eight tiles.
+
+       Transfer map (admin.php, panelAdmin(), the sidebar blocks and the debug footer):
+
+         · deck        generation time, query count and sessions from the debug footer and the "Observation" block;
+                       the queue gauge is the share of non-empty queues; the mark in the middle is the status lamp
+         · path        decorative, the request route of the leader; on the live page it could light the stage that
+                       took the longest in this very request
+         · monitor     the "Errors and warnings" list of the debug footer as a window with a journal
+         · waiting     the "New" and "Awaiting review" blocks, non-zero rows only, with a level bar
+         · traffic     the statistic module; the curve on the stand is illustrative
+         · notices     the two sl-alert of the head as lines with their one action
+         · board       thirty-eight keys in five bays by meaning; a key is icon and name, a chip appears when a queue
+                       waits; bays are sized by what they hold, so the grid is a bento and not a table */
+    .v-cockpit {
+      --v-mark-size: 148px;
+      --v-key-height: 34px;
+      --v-path-dur: 4s;
+      --v-turn-dur: 60s;
+      padding-top: var(--sl-space-8);
+    }
+
+    .v-bento {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: var(--sl-space-6);
+    }
+
+    .v-bento > * {
+      grid-column: span var(--v-span, 4);
+      padding: var(--sl-space-7);
+    }
+
+    .v-cell-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--sl-space-5);
+      margin-bottom: var(--sl-space-6);
+    }
+
+    .v-cell-head a {
+      color: var(--sl-primary);
+      font-size: var(--sl-font-small);
+    }
+
+    /* --- deck --- */
+    .v-deck {
+      --v-span: 8;
+      background:
+        radial-gradient(60% 90% at 50% 0%, var(--sl-tint), transparent 70%),
+        var(--sl-bg);
+    }
+
+    .v-gauges {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--sl-space-5);
+    }
+
+    .v-mark {
+      position: relative;
+      display: grid;
+      place-items: center;
+      align-content: center;
+      gap: var(--sl-space-2);
+      width: var(--v-mark-size);
+      aspect-ratio: 1;
+      border-radius: var(--sl-radius-circle);
+      background: radial-gradient(circle, var(--sl-bg) 55%, var(--sl-primary-subtle));
+      box-shadow: var(--sl-shadow-float);
+    }
+
+    .v-mark::before {
+      content: "";
+      position: absolute;
+      inset: var(--sl-space-3);
+      border: var(--sl-ring-width) dotted var(--sl-primary-muted);
+      border-radius: inherit;
+      animation: v-turn var(--v-turn-dur) linear infinite;
+    }
+
+    .v-mark img {
+      height: var(--sl-size-icon-xl);
+    }
+
+    @keyframes v-turn {
+      to { transform: rotate(1turn); }
+    }
+
+    .v-path {
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      margin-top: var(--sl-space-8);
+      padding-top: var(--sl-space-6);
+    }
+
+    .v-path::before,
+    .v-path::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--sl-ring-width);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-border);
+    }
+
+    .v-path::after {
+      background: linear-gradient(90deg, transparent, var(--sl-primary), transparent) 0 0 / 30% 100% no-repeat;
+      animation: v-walk var(--v-path-dur) var(--sl-ease-in-out) infinite;
+    }
+
+    @keyframes v-walk {
+      from { background-position: -40% 0; }
+      to { background-position: 140% 0; }
+    }
+
+    .v-path span {
+      position: relative;
+    }
+
+    .v-path span::before {
+      content: "";
+      position: absolute;
+      top: calc((var(--sl-space-6) + (var(--a-dot-size) - var(--sl-ring-width)) / 2) * -1);
+      left: calc(50% - var(--a-dot-size) / 2);
+      width: var(--a-dot-size);
+      height: var(--a-dot-size);
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-primary);
+      box-shadow: 0 0 0 var(--sl-space-2) var(--sl-bg);
+    }
+
+    /* --- monitor --- */
+    .v-mon {
+      --v-span: 4;
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .v-mon-bar {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      padding: var(--sl-space-5) var(--sl-space-6);
+      border-bottom: var(--a-hair) solid var(--sl-border);
+      background: var(--sl-bg-subtle);
+    }
+
+    .v-mon-bar .a-dot {
+      --tone: var(--sl-border-strong);
+    }
+
+    .v-mon-bar p {
+      margin-left: var(--sl-space-3);
+    }
+
+    .v-mon-body {
+      flex: 1;
+      padding: var(--sl-space-4) var(--sl-space-6);
+      font-family: var(--a-face-mono);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-line {
+      display: grid;
+      grid-template-columns: auto auto minmax(0, 1fr);
+      align-items: center;
+      gap: var(--sl-space-4);
+      padding: var(--sl-space-3) 0;
+      border-bottom: var(--a-hair) solid var(--sl-border);
+    }
+
+    .v-line:last-child {
+      border-bottom: 0;
+    }
+
+    .v-line time {
+      color: var(--sl-text-subtle);
+    }
+
+    .v-line p {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* --- widgets --- */
+    .v-big {
+      display: flex;
+      align-items: baseline;
+      gap: var(--sl-space-4);
+      margin-bottom: var(--sl-space-5);
+    }
+
+    .v-big strong {
+      font-size: var(--sl-font-display);
+      font-weight: var(--sl-weight-semibold);
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+
+    .v-big span {
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-big .sl-chip {
+      margin-left: auto;
+    }
+
+    .v-queue {
+      display: grid;
+      grid-template-columns: minmax(0, 9em) minmax(0, 1fr) 3ch;
+      align-items: center;
+      gap: var(--sl-space-5);
+      padding: var(--sl-space-3) 0;
+      color: var(--sl-text);
+    }
+
+    .v-queue:hover b {
+      color: var(--sl-primary);
+    }
+
+    .v-queue b {
+      font-weight: var(--sl-weight-normal);
+    }
+
+    .v-queue .a-meter {
+      --tone: var(--sl-warning);
+    }
+
+    .v-queue strong {
+      text-align: right;
+    }
+
+    .v-zero {
+      margin-top: var(--sl-space-5);
+      padding-top: var(--sl-space-5);
+      border-top: var(--a-hair) solid var(--sl-border);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-zero .bi {
+      color: var(--sl-success);
+    }
+
+    .v-traffic {
+      --v-span: 5;
+    }
+
+    .v-traffic .a-spark {
+      --a-spark-height: 112px;
+    }
+
+    .v-days {
+      display: flex;
+      justify-content: space-between;
+      margin-top: var(--sl-space-4);
+      color: var(--sl-text-subtle);
+      font-family: var(--a-face-mono);
+      font-size: var(--sl-font-micro);
+    }
+
+    .v-side {
+      --v-span: 3;
+      display: grid;
+      align-content: start;
+      gap: var(--sl-space-6);
+    }
+
+    .v-notice {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: var(--sl-space-2) var(--sl-space-4);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-notice .a-dot {
+      margin-top: var(--sl-space-2);
+    }
+
+    .v-notice a {
+      grid-column: 2;
+      color: var(--sl-primary);
+    }
+
+    .v-who {
+      display: flex;
+      justify-content: space-between;
+      padding: var(--sl-space-2) 0;
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-who b {
+      color: var(--sl-text);
+    }
+
+    /* --- board --- */
+    .v-bay h2 {
+      margin-bottom: var(--sl-space-5);
+    }
+
+    .v-bay h2 small {
+      margin-left: auto;
+      color: var(--sl-text-subtle);
+    }
+
+    .v-keys {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sl-space-3);
+    }
+
+    .v-key {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      height: var(--v-key-height);
+      padding: 0 var(--sl-space-5) 0 var(--sl-space-4);
+      border: var(--a-hair) solid var(--sl-border);
+      border-radius: var(--sl-radius-2);
+      background: var(--sl-bg-subtle);
+      color: var(--sl-text);
+      transition:
+        border-color var(--sl-time-fast) var(--sl-ease-out),
+        background-color var(--sl-time-fast) var(--sl-ease-out),
+        transform var(--sl-time-fast) var(--sl-ease-out);
+    }
+
+    .v-key:hover {
+      border-color: color-mix(in srgb, var(--tone) 50%, var(--sl-border));
+      background: color-mix(in srgb, var(--tone) 8%, var(--sl-bg));
+      transform: translateY(calc(var(--a-hair) * -1));
+    }
+
+    .v-key > .bi:first-child {
+      color: var(--tone);
+      font-size: var(--sl-size-icon-xs);
+    }
+
+    .v-key .bi-lock {
+      color: var(--sl-text-subtle);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-pulse {
+      --v-span: 3;
+      display: grid;
+      align-content: start;
+      gap: var(--sl-space-5);
+    }
+
+    @media (max-width: 1200px) {
+      .v-bento > * {
+        --v-span: 6;
+      }
+
+      .v-deck,
+      .v-traffic {
+        --v-span: 12;
+      }
+
+      .a-gauge {
+        --a-gauge-size: 112px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .v-bento > * {
+        --v-span: 12;
+      }
+
+      .v-gauges {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="a-page">
+    <header class="a-top">
+      <div class="a-wrap a-top-row">
+        <a class="a-brand" href="../admin.php" title="Панель администратора"><img src="../templates/admin/images/logos/slaed-logo-mark-gradient-blue.svg" alt="SLAED CMS"></a>
+        <nav class="a-nav">
+          <a href="../admin.php" aria-current="page" title="Главная"><b>Кокпит</b></a>
+          <a href="../admin.php?name=blocks" title="Блоки и баннеры"><b>Блоки и баннеры</b></a>
+          <a href="../admin.php?name=modules" title="Модули"><b>Модули</b></a>
+          <a href="../admin.php?name=categories" title="Категории"><b>Категории</b></a>
+        </nav>
+        <div class="a-top-end">
+          <label class="a-seek" title="Поиск модуля">
+            <i class="bi bi-search"></i>
+            <input type="search" placeholder="Найти модуль" data-demo-filter>
+            <span class="a-kbd">/</span>
+          </label>
+          <a class="a-act" href="../" target="_blank" rel="noopener noreferrer" title="Сайт"><i class="bi bi-globe2"></i><b>Сайт</b></a>
+          <button class="a-act" type="button" title="Опции"><i class="bi bi-sliders"></i></button>
+          <a class="a-face" href="../index.php?name=account" title="Профиль: SLAED CMS">SL</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="a-wrap v-cockpit">
+      <div class="v-bento">
+        <section class="a-card v-deck">
+          <div class="v-cell-head">
+            <p class="a-eyebrow"><i class="bi bi-shield-check"></i>SLAED CMS &middot; кокпит</p>
+            <p class="a-eyebrow"><i class="a-dot a-dot-live"></i>все системы в норме</p>
+            <p class="a-eyebrow">6.3.0 &middot; Phoenix</p>
+          </div>
+          <div class="v-gauges">
+            <div class="a-gauge" style="--v: 31" data-tone="primary"><strong><span data-demo-num="306">306</span><small>ms</small></strong><span>генерация</span></div>
+            <div class="a-gauge" style="--v: 34" data-tone="success"><strong><span data-demo-num="17">17</span><small>/50</small></strong><span>sql-запросов</span></div>
+            <div class="v-mark"><img src="../templates/admin/images/logos/slaed-logo-mark-gradient-blue.svg" alt=""><span class="a-eyebrow" data-adm-clock></span></div>
+            <div class="a-gauge" style="--v: 36" data-tone="warning"><strong><span data-demo-num="46">46</span></strong><span>в очередях</span></div>
+            <div class="a-gauge" style="--v: 10" data-tone="accent"><strong><span data-demo-num="1">1</span></strong><span>онлайн</span></div>
+          </div>
+          <div class="v-path a-eyebrow"><span>запрос</span><span>охрана</span><span>модуль</span><span>шаблон</span><span>200 ok</span></div>
+        </section>
+
+        <section class="a-card v-mon">
+          <div class="v-mon-bar"><i class="a-dot"></i><i class="a-dot"></i><i class="a-dot"></i><p class="a-eyebrow">журнал / среда</p></div>
+          <div class="v-mon-body" data-adm-list="log">
+            <template><div class="v-line" data-tone="{{ tone }}"><i class="a-dot"></i><time>{{ time }}</time><p title="{{ text }} — {{ src }}">{{ chan }}: {{ text }}</p></div></template>
+          </div>
+        </section>
+
+        <section class="a-card">
+          <div class="v-cell-head"><h2 class="a-eyebrow">Ждут решения</h2></div>
+          <div class="v-big"><strong class="a-num" data-adm-count="sum">46</strong><span>записей в <span data-adm-count="hot">5</span> очередях</span></div>
+          <div data-adm-list="queue" data-adm-only="hot">
+            <template><a class="v-queue" href="{{ href }}" title="{{ title }}: {{ note }}"><b>{{ title }}</b><p class="a-meter" style="--v: {{ part }}"></p><strong class="a-num">{{ num }}</strong></a></template>
+          </div>
+          <p class="v-zero"><i class="bi bi-check2-circle"></i> Ещё <span data-adm-count="zero">9</span> очередей пусты</p>
+        </section>
+
+        <section class="a-card v-traffic">
+          <div class="v-cell-head"><h2 class="a-eyebrow">Посещения &middot; 14 дней</h2><a href="../admin.php?name=statistic" title="Статистика">Статистика &rarr;</a></div>
+          <div class="v-big"><strong class="a-num">3 625</strong><span>хитов</span><span class="sl-chip sl-chip-success">+8 %</span></div>
+          <div class="a-spark" data-adm-spark="hits"></div>
+          <div class="v-days"><span>07.09</span><span>10.09</span><span>13.09</span><span>16.09</span><span>20.09</span></div>
+        </section>
+
+        <section class="a-card v-side">
+          <h2 class="a-eyebrow">Заметки</h2>
+          <div class="v-notice" data-tone="warning"><i class="a-dot"></i><p>Файл <code>setup.php</code> лежит в корне сайта.</p><a href="../admin.php?name=security" title="Безопасность">Безопасность &rarr;</a></div>
+          <div class="v-notice" data-tone="primary"><i class="a-dot"></i><p>Информация, которая будет доступна всем авторам.</p><a href="../admin.php?name=config" title="Изменить">Изменить &rarr;</a></div>
+          <h2 class="a-eyebrow">Сейчас на сайте</h2>
+          <div data-adm-list="online"><template><p class="v-who">{{ title }}<b class="a-num">{{ num }}</b></p></template></div>
+        </section>
+
+        <template id="v-key">
+          <a class="v-key" href="{{ href }}" title="{{ desc }}" data-demo-find="{{ key }} #{{ gtitle }} {{ desc }}">
+            <i class="bi {{ icon }}"></i>{{ title }}
+            <i class="bi bi-lock" data-adm-on="{{ access }}" title="{{ accessname }}"></i>
+            <span class="sl-chip sl-chip-warn" data-adm-on="{{ badge }}">{{ badge }}</span>
+          </a>
+        </template>
+
+        <section class="a-card v-bay" style="--v-span: 5" data-demo-group data-tone="primary">
+          <h2 class="a-eyebrow"><i class="a-dot"></i>Контент<small data-demo-count></small></h2>
+          <div class="v-keys" data-adm-list="mods" data-adm-group="content" data-adm-tpl="v-key"></div>
+        </section>
+        <section class="a-card v-bay" style="--v-span: 4" data-demo-group data-tone="success">
+          <h2 class="a-eyebrow"><i class="a-dot"></i>Люди<small data-demo-count></small></h2>
+          <div class="v-keys" data-adm-list="mods" data-adm-group="people" data-adm-tpl="v-key"></div>
+        </section>
+        <section class="a-card v-bay" style="--v-span: 3" data-demo-group data-tone="danger">
+          <h2 class="a-eyebrow"><i class="a-dot"></i>Коммерция<small data-demo-count></small></h2>
+          <div class="v-keys" data-adm-list="mods" data-adm-group="trade" data-adm-tpl="v-key"></div>
+        </section>
+        <section class="a-card v-bay" style="--v-span: 5" data-demo-group data-tone="accent">
+          <h2 class="a-eyebrow"><i class="a-dot"></i>Сайт<small data-demo-count></small></h2>
+          <div class="v-keys" data-adm-list="mods" data-adm-group="site" data-adm-tpl="v-key"></div>
+        </section>
+        <section class="a-card v-bay" style="--v-span: 4" data-demo-group data-tone="warning">
+          <h2 class="a-eyebrow"><i class="a-dot"></i>Система<small data-demo-count></small></h2>
+          <div class="v-keys" data-adm-list="mods" data-adm-group="system" data-adm-tpl="v-key"></div>
+        </section>
+        <section class="a-card v-pulse">
+          <h2 class="a-eyebrow">Пульс запроса</h2>
+          <div><div class="a-meter-row"><span>Память</span><b class="a-num">6.13 MB / 1 GB</b></div><p class="a-meter" style="--v: 1"></p></div>
+          <div><div class="a-meter-row"><span>Генерация</span><b class="a-num">0.306 с</b></div><p class="a-meter" style="--v: 15"></p></div>
+          <div><div class="a-meter-row"><span>Время SQL</span><b class="a-num">0.005 с</b></div><p class="a-meter" style="--v: 3"></p></div>
+        </section>
+      </div>
+      <div class="sl-alert sl-alert-info" data-demo-empty hidden><div class="sl-alert-body">Такого модуля нет. Escape очищает поиск.</div></div>
+    </main>
+    <div class="a-wrap a-note" data-adm-note></div>
+  </div>
+  <script>
+    ['demo', 'admin'].forEach((n) => document.write('<script src="assets/' + n + '.js?v=' + Date.now() + '"><\/script>'));
+  </script>
+</body>
+</html>

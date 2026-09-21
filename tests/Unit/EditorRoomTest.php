@@ -16,14 +16,12 @@ use PHPUnit\Framework\TestCase;
 final class EditorRoomTest extends TestCase
 {
     private const BODIES = [
-        'comment.body', 'content.body', 'faq.body', 'files.body', 'forum.body', 'help.body', 'jokes.body',
-        'links.body', 'media.note', 'message.body', 'money.note', 'news.body', 'newsletter.body',
-        'order.note', 'pages.body', 'privat.body', 'products.body',
+        'comment.body', 'forum.body', 'message.body', 'money.note', 'newsletter.body', 'order.note', 'privat.body',
+        'products.body',
     ];
 
     private const SUMMARIES = [
-        'auto_links.intro', 'files.intro', 'links.intro', 'media.intro', 'money.intro', 'news.intro',
-        'order.info', 'pages.intro', 'products.intro', 'users.block', 'users.sig',
+        'auto_links.intro', 'money.intro', 'order.info', 'products.intro', 'users.block', 'users.sig',
     ];
 
     private static array $files = [];
@@ -317,22 +315,6 @@ final class EditorRoomTest extends TestCase
         $this->assertMatchesRegularExpression('#addFileList\(id, ev\.dataTransfer#', $js, 'A dropped file misses the one file entry point');
         $this->assertMatchesRegularExpression('#addFileList\(el\.getAttribute\(.data-editor.\), el\.files,#', $js, 'A picked file misses the one file entry point');
         $this->assertStringContainsString('addEmbed(id, files[0]);', $js, 'The embed mode no longer routes through the guarded embed path');
-    }
-
-    # A column of this contract written by a path that never rendered an editor is guarded too, and a refusal there keeps the stored body rather than losing it
-    #[Test]
-    public function theFeedWriterAsksTheGuardAndKeepsTheStoredBody(): void
-    {
-        $code = $this->getFile('modules/content/index.php');
-        $from = (int)strpos($code, 'rss_read(');
-        $this->assertGreaterThan(0, $from, 'The feed writer is gone from the content module');
-        $body = substr($code, $from, 500);
-        $gate = strpos($body, "checkEditorTextRoom(\$rss, 'content.body')");
-        $call = strpos($body, 'UPDATE ');
-        $this->assertNotFalse($gate, 'The feed writer no longer measures what the far end served against the column it writes into');
-        $this->assertNotFalse($call, 'The feed writer no longer stores anything');
-        $this->assertLessThan($call, $gate, 'The feed is stored before it is measured, so ERROR 1406 reaches a page a visitor asked for');
-        $this->assertStringContainsString('Logger::addSite(', $body, 'A refused feed leaves no line in the log, so a stale item looks like a working one');
     }
 
     # One window behind one icon, present for every visitor, and no reduced second editor in either theme

@@ -362,10 +362,6 @@ function getUserNavItems(bool $home = false): array {
             $items[] = ['label' => _PARTNER, 'title' => _PARTNERINFO, 'href' => 'index.php?name=shop&op=partners', 'icon' => getIconName('partners')];
         }
     }
-    if (is_active('help') && isModGroup('help')) {
-        getLang('help');
-        $items[] = ['label' => _HELP, 'title' => _HELPINFO, 'href' => 'index.php?name=help', 'icon' => getIconName('help')];
-    }
     if ($conf['favorites']['favact']) {
         [$fnum] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid', ['uid' => $uid]));
         $items[] = [
@@ -446,7 +442,7 @@ function getUserLevelData(int $point, string $gcolor = '', string $grank = ''): 
     $next = 0;
     $level = 0;
     $nextlab = '';
-    if ($conf['users']['point'] && $point) {
+    if ($conf['points']['active'] && $point) {
         $result = $db->getSqlQuery('SELECT name, rank, points, color FROM '.PREFIX_DB."_groups WHERE extra != '1' ORDER BY points ASC");
         while ([$guname, $gurank, $gupts, $gucol] = $db->getSqlRow($result)) {
             if ((int)$gupts > $point) {
@@ -1080,7 +1076,7 @@ function getPrivateMessagePane(string|array $stop, string $info, int $typ, array
 # Points and the queued mail are side effects of a send that was really stored: both run after the subsystem answered ok, and neither can take an accepted message back
 # Both fields travel to the subsystem as the author submitted them: from stage 2 on a message stores source, and the writer that used to escape it on the way in is gone
 function addPrivateMessage(): void {
-    global $user, $conf, $tpl, $mailer, $db, $prv;
+    global $user, $conf, $tpl, $mailer, $db, $prv, $pnt;
     $name = filterText(mb_substr((string)getVar('post', 'name', 'raw', ''), 0, 25));
     $uid = (is_user()) ? intval($user[0]) : 0;
     if (!$conf['privat']['act'] || !$uid) {
@@ -1111,7 +1107,7 @@ function addPrivateMessage(): void {
         echo getPrivateMessageView($note, '', 4);
         return;
     }
-    updatePoints(45);
+    $pnt->addEvent('message', 'privat', 'privat:'.$new['id'], $uid);
     if ($conf['privat']['newmail']) {
         $sent = $prv->getMessageView($uid, $new['id'], PrivatBox::Outbox);
         [$mail, $wish] = $db->getSqlRow($db->getSqlQuery(
@@ -1210,14 +1206,7 @@ function updatePrivatBox(): void {
 function getProfileModules(): array {
     return [
         'comm' => ['title' => _COMMENTS, 'icon' => getIconName('comm'), 'fav' => ''],
-        'faq' => ['title' => _FAQ, 'icon' => getIconName('faq'), 'table' => 'faq', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['ratings', 'score'], 'fav' => 'faq'],
-        'files' => ['title' => _FILES, 'icon' => getIconName('files'), 'table' => 'files', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['votes', 'tvotes'], 'fav' => 'files'],
         'forum' => ['title' => _FORUM, 'icon' => getIconName('forum'), 'table' => 'forum', 'where' => "uid = :uid AND pid = '0' AND time <= NOW() AND status > '1'", 'rate' => ['ratings', 'score'], 'fav' => 'forum'],
-        'jokes' => ['title' => _JOKES, 'icon' => getIconName('jokes'), 'table' => 'jokes', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['ratetot', 'rating'], 'fav' => ''],
-        'links' => ['title' => _LINKS, 'icon' => getIconName('links'), 'table' => 'links', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['votes', 'tvotes'], 'fav' => 'links'],
-        'media' => ['title' => _MEDIA, 'icon' => getIconName('media'), 'table' => 'media', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['votes', 'tvotes'], 'fav' => 'media'],
-        'news' => ['title' => _NEWS, 'icon' => getIconName('news'), 'table' => 'news', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['ratings', 'score'], 'fav' => 'news'],
-        'pages' => ['title' => _PAGES, 'icon' => getIconName('pages'), 'table' => 'pages', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['ratings', 'score'], 'fav' => 'pages'],
     ];
 }
 
@@ -1251,9 +1240,7 @@ function getProfileLastView(int $uid): string {
     if ($parts) {
         $result = $db->getSqlQuery(implode(' UNION ALL ', $parts), $params);
         while ([$key, $id, $cid, $cmod, $label, $time, $cnt, $tot] = $db->getSqlRow($result)) {
-            if ($key == 'jokes') {
-                $href = getSeoUrl(['name' => 'jokes']).'#'.$id;
-            } elseif ($key == 'forum') {
+            if ($key == 'forum') {
                 $href = getSeoUrl(['name' => $key, 'op' => 'view', 'id' => $id, 'title' => $label]);
             } else {
                 $href = getSeoUrl(['name' => $key, 'op' => 'view', 'id' => $id, 'title' => $label]).'#'.$id;
@@ -1303,7 +1290,7 @@ function getFavoriteButton(?int $fid, string $mod): string {
 
 # Add an item to the user's favorites list and echo the updated toggle button
 function addFavorite() {
-    global $db, $conf, $user;
+    global $db, $conf, $user, $pnt;
     $id = getVar('get', 'id',  'num',  0);
     $mod = filterVar(getVar('get', 'mod', 'text', ''));
     $uid = (is_user()) ? intval($user[0]) : 0;
@@ -1313,7 +1300,7 @@ function addFavorite() {
             echo getFavoriteButton($id, $mod);
         } else {
             $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_favorites VALUES (NULL, :uid, :fid, :modul, NOW())', ['uid' => $uid, 'fid' => $id, 'modul' => $mod]);
-            updatePoints(44);
+            $pnt->addEvent('favorite', 'favorites', $mod.':'.$id, $uid, ['mid' => $id]);
         }
     }
     echo getFavoriteButton($id, $mod);
@@ -1327,7 +1314,7 @@ function getFavoriteList(int $obj = 0): string {
     $mod = filterVar(getVar('get', 'mod', 'text', ''));
     $seek = mb_substr(trim((string)getVar('get', 'q', 'word', '')), 0, 60, 'utf-8');
     $part = getVar('get', 'part', 'text', '') === 'shelves';
-    $tables = ['faq' => 'faq', 'files' => 'files', 'forum' => 'forum', 'help' => 'help', 'links' => 'links', 'media' => 'media', 'news' => 'news', 'pages' => 'pages', 'shop' => 'products'];
+    $tables = ['forum' => 'forum', 'shop' => 'products'];
 
     $fmap = [];
     $times = [];
@@ -1350,13 +1337,10 @@ function getFavoriteList(int $obj = 0): string {
             $pm['f'.$idx] = $val;
         }
         $rows = [];
-        $extra = ($modul === 'media') ? ', subtitle' : '';
-        $result = $db->getSqlQuery('SELECT id, title'.$extra.' FROM '.PREFIX_DB.'_'.$tables[$modul].' WHERE id IN ('.implode(', ', $pp).')', $pm);
+        $result = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_'.$tables[$modul].' WHERE id IN ('.implode(', ', $pp).')', $pm);
         while ($row = $db->getSqlRow($result)) {
             $fid = intval($row[0]);
             $title = (string)$row[1];
-            $sub = (string)($row[2] ?? '');
-            if ($sub !== '') $title .= ' '.urldecode($conf['media']['mdefis'] ?? '').' '.$sub;
             foreach ($fids[$fid] ?? [] as $id) {
                 $rows[$id] = [
                     'title' => $title,
@@ -1462,44 +1446,11 @@ function getRssChannel() {
     $id   = getVar('post', 'id',  'num', 0) ?: getVar('get', 'id',  'num', 0);
     $self = htmlspecialchars($conf['homeurl'].'/index.php?go=rss&name='.$name.(($cat) ? '&cat='.$cat : '').(($id) ? '&id='.$id : '').'&num='.$num);
 
-    if (($name == 'content') && $id) {
-        $result = $db->getSqlQuery('SELECT id, title, body, time FROM '.PREFIX_DB.'_content WHERE id = :id AND time <= NOW()', ['id' => $id]);
-    } elseif ($name == 'faq') {
-        $params = [];
-        $where = $cat ? 'WHERE s.cid = :cat AND s.time <= NOW() AND s.status != 0' : 'WHERE s.time <= NOW() AND s.status != 0';
-        if ($cat) $params['cat'] = $cat;
-        $result = $db->getSqlQuery('SELECT s.id, s.name, s.title, s.time, s.body, c.title, u.name FROM '.PREFIX_DB.'_faq AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.id) '.$where.' ORDER BY s.time DESC LIMIT '.intval($num), $params);
-    } elseif ($name == 'files') {
-        $params = [];
-        $where = $cat ? 'WHERE s.cid = :cat AND s.time <= NOW() AND s.status != 0' : 'WHERE s.time <= NOW() AND s.status != 0';
-        if ($cat) $params['cat'] = $cat;
-        $result = $db->getSqlQuery('SELECT s.id, s.name, s.title, s.time, s.intro, c.title, u.name FROM '.PREFIX_DB.'_files AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.id) '.$where.' ORDER BY s.time DESC LIMIT '.intval($num), $params);
-    } elseif ($name == 'links') {
-        $params = [];
-        $where = $cat ? 'WHERE s.cid = :cat AND s.time <= NOW() AND s.status != 0' : 'WHERE s.time <= NOW() AND s.status != 0';
-        if ($cat) $params['cat'] = $cat;
-        $result = $db->getSqlQuery('SELECT s.id, s.name, s.title, s.time, s.intro, c.title, u.name FROM '.PREFIX_DB.'_links AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.id) '.$where.' ORDER BY s.time DESC LIMIT '.intval($num), $params);
-    } elseif ($name == 'media') {
-        $params = [];
-        $where = $cat ? 'WHERE s.cid = :cat AND s.time <= NOW() AND s.status != 0' : 'WHERE s.time <= NOW() AND s.status != 0';
-        if ($cat) $params['cat'] = $cat;
-        $result = $db->getSqlQuery('SELECT s.id, s.name, s.title, s.time, s.intro, c.title, u.name FROM '.PREFIX_DB.'_media AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.id) '.$where.' ORDER BY s.time DESC LIMIT '.intval($num), $params);
-    } elseif ($name == 'pages') {
-        $params = [];
-        $where = $cat ? 'WHERE s.cid = :cat AND s.time <= NOW() AND s.status != 0' : 'WHERE s.time <= NOW() AND s.status != 0';
-        if ($cat) $params['cat'] = $cat;
-        $result = $db->getSqlQuery('SELECT s.id, s.name, s.title, s.time, s.intro, c.title, u.name FROM '.PREFIX_DB.'_pages AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.id) '.$where.' ORDER BY s.time DESC LIMIT '.intval($num), $params);
-    } elseif ($name == 'shop') {
+    if ($name == 'shop') {
         $params = [];
         $where = $cat ? 'WHERE s.cid = :cat AND s.time <= NOW() AND s.status = 1' : 'WHERE s.time <= NOW() AND s.status = 1';
         if ($cat) $params['cat'] = $cat;
         $result = $db->getSqlQuery('SELECT s.id, s.title, s.time, s.intro, c.title FROM '.PREFIX_DB.'_products AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) '.$where.' ORDER BY s.time DESC LIMIT '.intval($num), $params);
-    } elseif ($name == 'news') {
-        $params = [];
-        $where = $cat ? 'WHERE s.cid = :cat AND s.time <= NOW() AND s.status != 0' : 'WHERE s.time <= NOW() AND s.status != 0';
-        if ($cat) $params['cat'] = $cat;
-        $result = $db->getSqlQuery('SELECT s.id, s.name, s.title, s.time, s.intro, c.title, u.name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.id) '.$where.' ORDER BY s.time DESC LIMIT '.intval($num), $params);
-        $name = 'news';
     } else {
         $result = '';
         $name = '';
@@ -1516,32 +1467,7 @@ function getRssChannel() {
     .'<copyright>Copyright (c) SLAED CMS '.$conf['version']."</copyright>\n"
     .'<language>'.htmlspecialchars(substr(_LOCALE, 0, 2))."</language>\n"
     .'<lastBuildDate>'.date('D, j M Y H:i:s O')."</lastBuildDate>\n\n";
-    if ($name && $name != 'content' && $name != 'shop' && $result) {
-        while ([$rid, $uname, $rtitle, $rtime, $rhometext, $rctitle, $user_name] = $db->getSqlRow($result)) {
-            $rauthor = ($user_name) ? $user_name : (($uname) ? $uname : _ANONYM);
-            $rurl = htmlspecialchars($conf['homeurl'].'/index.php?name='.$name.'&op=view&id='.$rid);
-            $content .= "<item>\n"
-            .'<title>'.htmlspecialchars($rtitle)."</title>\n"
-            .'<pubDate>'.htmlspecialchars(date('D, j M Y H:i:s O', strtotime($rtime)))."</pubDate>\n"
-            .'<guid>'.$rurl."</guid>\n"
-            .'<link>'.$rurl."</link>\n"
-            .'<description>'.htmlspecialchars($prs->filterContent($rhometext, false, $name))."</description>\n"
-            .'<comments>'.$rurl.'#'.$rid."</comments>\n";
-            $content .= ($rctitle) ? '<category>'.htmlspecialchars($rctitle)."</category>\n" : '';
-            $content .= '<dc:creator>'.htmlspecialchars($rauthor)."</dc:creator>\n"
-            ."</item>\n\n";
-        }
-    } elseif ($name && $name == 'content' && $result) {
-        [$rid, $rtitle, $rhometext, $rtime] = $db->getSqlRow($result);
-        $rurl = htmlspecialchars($conf['homeurl'].'/index.php?name='.$name.'&op=view&id='.$rid);
-        $content .= "<item>\n"
-        .'<title>'.htmlspecialchars($rtitle)."</title>\n"
-        .'<pubDate>'.htmlspecialchars(date('D, j M Y H:i:s O', strtotime($rtime)))."</pubDate>\n"
-        .'<guid>'.$rurl."</guid>\n"
-        .'<link>'.$rurl."</link>\n"
-        .'<description>'.htmlspecialchars($prs->filterContent($rhometext, false, $name))."</description>\n"
-        ."</item>\n\n";
-    } elseif ($name && $name == 'shop' && $result) {
+    if ($name && $name == 'shop' && $result) {
         while ([$rid, $rtitle, $rtime, $rhometext, $rctitle] = $db->getSqlRow($result)) {
             $rurl = htmlspecialchars($conf['homeurl'].'/index.php?name='.$name.'&op=view&id='.$rid);
             $content .= "<item>\n"

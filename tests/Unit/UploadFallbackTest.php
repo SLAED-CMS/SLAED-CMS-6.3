@@ -241,7 +241,7 @@ final class UploadFallbackTest extends TestCase
         }
         $code = $this->getFile('core/system.php');
         $this->assertStringContainsString("'unsupported' => _ERROR_SERV,", $code, 'A capability this build lacks is still explained as an inadmissible file');
-        foreach (['modules/files/index.php', 'modules/files/admin/index.php', 'modules/account/index.php'] as $path) {
+        foreach (['modules/account/index.php'] as $path) {
             $one = $this->getFile($path);
             $this->assertStringContainsString('getUploadFailText(', $one, $path.' does not explain a refused upload through the one resolver');
             $this->assertStringNotContainsString("'extension', 'mime', 'image', 'unsupported' => _ERROR_FILE", $one, $path.' still carries a mapping of its own');

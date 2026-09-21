@@ -2,7 +2,7 @@
 # 2005 - 2026 SLAED
 # License: MIT
 # Website: slaed.net
-# Compatible: MySQL 8.0+ & MariaDB 10+
+# Compatible: MySQL 8.0.16+ & MariaDB 10.2.1+
 
 CREATE TABLE `{prefix}_admins` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -152,44 +152,6 @@ CREATE TABLE `{prefix}_comment` (
   KEY `ip_time` (`ip`, `time`, `id`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
-CREATE TABLE `{prefix}_content` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `title` VARCHAR(100) DEFAULT NULL,
-  `body` MEDIUMTEXT NOT NULL,
-  `field` TEXT NOT NULL,
-  `url` VARCHAR(200) NOT NULL,
-  `time` DATETIME DEFAULT NULL,
-  `refresh` INT UNSIGNED NOT NULL DEFAULT 0,
-  `counter` INT UNSIGNED NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`),
-  KEY `counter` (`counter`),
-  KEY `url` (`url`(191))
-) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
-
-CREATE TABLE `{prefix}_faq` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `cid` INT UNSIGNED NOT NULL DEFAULT 0,
-  `uid` INT UNSIGNED NOT NULL DEFAULT 0,
-  `name` VARCHAR(25) NOT NULL,
-  `title` VARCHAR(100) NOT NULL,
-  `time` DATETIME DEFAULT NULL,
-  `body` MEDIUMTEXT,
-  `comments` INT UNSIGNED NOT NULL DEFAULT 0,
-  `counter` INT UNSIGNED NOT NULL DEFAULT 0,
-  `ihome` BOOLEAN NOT NULL DEFAULT 0,
-  `acomm` BOOLEAN NOT NULL DEFAULT 0,
-  `score` INT UNSIGNED NOT NULL DEFAULT 0,
-  `ratings` INT UNSIGNED NOT NULL DEFAULT 0,
-  `ip` VARCHAR(45) NOT NULL DEFAULT '',
-  `status` BOOLEAN NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`),
-  KEY `cid` (`cid`),
-  KEY `counter` (`counter`),
-  KEY `uid` (`uid`),
-  KEY `status` (`status`),
-  KEY `ihome` (`ihome`)
-) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
-
 CREATE TABLE `{prefix}_favorites` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `uid` INT UNSIGNED NOT NULL DEFAULT 0,
@@ -201,38 +163,6 @@ CREATE TABLE `{prefix}_favorites` (
   KEY `fid` (`fid`),
   KEY `modul` (`modul`),
   UNIQUE KEY `uid_fid_modul` (`uid`, `fid`, `modul`)
-) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
-
-CREATE TABLE `{prefix}_files` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `cid` INT UNSIGNED NOT NULL DEFAULT 0,
-  `uid` INT UNSIGNED NOT NULL DEFAULT 0,
-  `name` VARCHAR(25) NOT NULL,
-  `title` VARCHAR(100) NOT NULL,
-  `intro` TEXT NOT NULL,
-  `body` MEDIUMTEXT NOT NULL,
-  `url` VARCHAR(100) NOT NULL,
-  `time` DATETIME DEFAULT NULL,
-  `filesize` INT UNSIGNED NOT NULL DEFAULT 0,
-  `version` VARCHAR(10) NOT NULL DEFAULT '',
-  `email` VARCHAR(100) NOT NULL DEFAULT '',
-  `website` VARCHAR(200) NOT NULL DEFAULT '',
-  `ip` VARCHAR(45) NOT NULL DEFAULT '',
-  `counter` INT UNSIGNED NOT NULL DEFAULT 0,
-  `ihome` BOOLEAN NOT NULL DEFAULT 0,
-  `acomm` BOOLEAN NOT NULL DEFAULT 0,
-  `votes` INT UNSIGNED NOT NULL DEFAULT 0,
-  `tvotes` INT UNSIGNED NOT NULL DEFAULT 0,
-  `comments` INT UNSIGNED NOT NULL DEFAULT 0,
-  `hits` INT UNSIGNED NOT NULL DEFAULT 0,
-  `status` BOOLEAN NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`),
-  KEY `cid` (`cid`),
-  KEY `title` (`title`),
-  KEY `uid` (`uid`),
-  KEY `status` (`status`),
-  KEY `ihome` (`ihome`),
-  KEY `counter` (`counter`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
 CREATE TABLE `{prefix}_forum` (
@@ -280,76 +210,6 @@ CREATE TABLE `{prefix}_groups` (
   KEY `name` (`name`(191))
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
-CREATE TABLE `{prefix}_help` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `pid` INT UNSIGNED NOT NULL DEFAULT 0,
-  `cid` INT UNSIGNED NOT NULL DEFAULT 0,
-  `uid` INT UNSIGNED NOT NULL DEFAULT 0,
-  `aid` INT UNSIGNED NOT NULL DEFAULT 0,
-  `title` VARCHAR(100) NOT NULL,
-  `time` DATETIME DEFAULT NULL,
-  `body` MEDIUMTEXT,
-  `field` TEXT NOT NULL,
-  `comments` INT UNSIGNED DEFAULT 0,
-  `counter` INT UNSIGNED NOT NULL DEFAULT 0,
-  `score` INT UNSIGNED NOT NULL DEFAULT 0,
-  `ratings` INT UNSIGNED NOT NULL DEFAULT 0,
-  `ip` VARCHAR(45) NOT NULL DEFAULT '',
-  `status` BOOLEAN NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`),
-  KEY `pid` (`pid`),
-  KEY `cid` (`cid`),
-  KEY `counter` (`counter`),
-  KEY `uid` (`uid`),
-  KEY `status` (`status`)
-) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
-
-CREATE TABLE `{prefix}_jokes` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `uid` INT UNSIGNED NOT NULL DEFAULT 0,
-  `name` VARCHAR(25) NOT NULL,
-  `time` DATETIME DEFAULT NULL,
-  `title` VARCHAR(100) NOT NULL,
-  `cid` INT UNSIGNED NOT NULL DEFAULT 0,
-  `body` MEDIUMTEXT NOT NULL,
-  `rating` VARCHAR(100) NOT NULL DEFAULT '0',
-  `ratetot` VARCHAR(100) NOT NULL DEFAULT '0',
-  `ip` VARCHAR(45) NOT NULL DEFAULT '',
-  `status` BOOLEAN NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`),
-  KEY `cid` (`cid`),
-  KEY `uid` (`uid`),
-  KEY `status` (`status`)
-) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
-
-CREATE TABLE `{prefix}_links` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `cid` INT UNSIGNED NOT NULL DEFAULT 0,
-  `uid` INT UNSIGNED NOT NULL DEFAULT 0,
-  `name` VARCHAR(25) NOT NULL,
-  `title` VARCHAR(100) NOT NULL,
-  `intro` TEXT NOT NULL,
-  `body` MEDIUMTEXT NOT NULL,
-  `url` VARCHAR(100) NOT NULL,
-  `time` DATETIME DEFAULT NULL,
-  `email` VARCHAR(100) NOT NULL DEFAULT '',
-  `ip` VARCHAR(45) NOT NULL DEFAULT '',
-  `counter` INT UNSIGNED NOT NULL DEFAULT 0,
-  `ihome` BOOLEAN NOT NULL DEFAULT 0,
-  `acomm` BOOLEAN NOT NULL DEFAULT 0,
-  `votes` INT UNSIGNED NOT NULL DEFAULT 0,
-  `tvotes` INT UNSIGNED NOT NULL DEFAULT 0,
-  `comments` INT UNSIGNED NOT NULL DEFAULT 0,
-  `hits` INT UNSIGNED NOT NULL DEFAULT 0,
-  `status` BOOLEAN NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`),
-  KEY `cid` (`cid`),
-  KEY `title` (`title`),
-  KEY `uid` (`uid`),
-  KEY `status` (`status`),
-  KEY `ihome` (`ihome`)
-) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
-
 CREATE TABLE `{prefix}_mail` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `kind` VARCHAR(20) NOT NULL DEFAULT '',
@@ -389,42 +249,6 @@ CREATE TABLE `{prefix}_maildead` (
   UNIQUE KEY `email` (`email`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
-CREATE TABLE `{prefix}_media` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `cid` INT UNSIGNED NOT NULL DEFAULT 0,
-  `uid` INT UNSIGNED NOT NULL DEFAULT 0,
-  `name` VARCHAR(25) NOT NULL,
-  `title` VARCHAR(100) NOT NULL,
-  `subtitle` VARCHAR(100) NOT NULL DEFAULT '',
-  `year` SMALLINT UNSIGNED NOT NULL DEFAULT 0,
-  `director` VARCHAR(100) NOT NULL DEFAULT '',
-  `roles` VARCHAR(255) NOT NULL DEFAULT '',
-  `intro` TEXT NOT NULL,
-  `author` VARCHAR(100) NOT NULL DEFAULT '',
-  `duration` VARCHAR(100) NOT NULL DEFAULT '',
-  `lang` VARCHAR(100) NOT NULL DEFAULT '',
-  `note` MEDIUMTEXT NOT NULL,
-  `format` VARCHAR(100) NOT NULL DEFAULT '',
-  `quality` VARCHAR(100) NOT NULL DEFAULT '',
-  `size` VARCHAR(100) NOT NULL DEFAULT '',
-  `released` VARCHAR(100) NOT NULL DEFAULT '',
-  `links` TEXT NOT NULL,
-  `time` DATETIME DEFAULT NULL,
-  `ihome` BOOLEAN NOT NULL DEFAULT 0,
-  `acomm` BOOLEAN NOT NULL DEFAULT 0,
-  `votes` INT UNSIGNED NOT NULL DEFAULT 0,
-  `tvotes` INT UNSIGNED NOT NULL DEFAULT 0,
-  `comments` INT UNSIGNED NOT NULL DEFAULT 0,
-  `hits` INT UNSIGNED NOT NULL DEFAULT 0,
-  `ip` VARCHAR(45) NOT NULL DEFAULT '',
-  `status` BOOLEAN NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`),
-  KEY `cid` (`cid`),
-  KEY `title` (`title`),
-  KEY `uid` (`uid`),
-  KEY `status` (`status`)
-) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
-
 CREATE TABLE `{prefix}_message` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `title` VARCHAR(100) NOT NULL,
@@ -451,36 +275,6 @@ CREATE TABLE `{prefix}_money` (
   PRIMARY KEY (`id`),
   KEY `email` (`email`(191)),
   KEY `status` (`status`),
-  KEY `time` (`time`)
-) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
-
-CREATE TABLE `{prefix}_news` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `cid` INT UNSIGNED NOT NULL DEFAULT 0,
-  `uid` INT UNSIGNED NOT NULL DEFAULT 0,
-  `name` VARCHAR(25) NOT NULL,
-  `title` VARCHAR(100) NOT NULL,
-  `time` DATETIME DEFAULT NULL,
-  `intro` TEXT,
-  `body` MEDIUMTEXT NOT NULL,
-  `field` TEXT NOT NULL,
-  `vote` INT UNSIGNED NOT NULL DEFAULT 0,
-  `comments` INT UNSIGNED DEFAULT 0,
-  `counter` INT UNSIGNED NOT NULL DEFAULT 0,
-  `ihome` BOOLEAN NOT NULL DEFAULT 0,
-  `acomm` BOOLEAN NOT NULL DEFAULT 0,
-  `score` INT UNSIGNED NOT NULL DEFAULT 0,
-  `ratings` INT UNSIGNED NOT NULL DEFAULT 0,
-  `assoc` TEXT NOT NULL,
-  `ip` VARCHAR(45) NOT NULL DEFAULT '',
-  `fix` BOOLEAN NOT NULL DEFAULT 0,
-  `status` BOOLEAN NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`),
-  KEY `cid` (`cid`),
-  KEY `counter` (`counter`),
-  KEY `uid` (`uid`),
-  KEY `status` (`status`),
-  KEY `ihome` (`ihome`),
   KEY `time` (`time`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
@@ -520,6 +314,7 @@ CREATE TABLE `{prefix}_oauth_temp` (
 
 CREATE TABLE `{prefix}_order` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `uid` INT UNSIGNED NOT NULL DEFAULT 0,
   `email` VARCHAR(255) NOT NULL,
   `info` TEXT NOT NULL,
   `note` MEDIUMTEXT NOT NULL,
@@ -530,30 +325,6 @@ CREATE TABLE `{prefix}_order` (
   PRIMARY KEY (`id`),
   KEY `status` (`status`),
   KEY `time` (`time`)
-) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
-
-CREATE TABLE `{prefix}_pages` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `cid` INT UNSIGNED NOT NULL DEFAULT 0,
-  `uid` INT UNSIGNED NOT NULL DEFAULT 0,
-  `name` VARCHAR(25) NOT NULL,
-  `title` VARCHAR(100) NOT NULL,
-  `time` DATETIME DEFAULT NULL,
-  `intro` TEXT,
-  `body` MEDIUMTEXT NOT NULL,
-  `comments` INT UNSIGNED NOT NULL DEFAULT 0,
-  `counter` INT UNSIGNED NOT NULL DEFAULT 0,
-  `ihome` BOOLEAN NOT NULL DEFAULT 0,
-  `acomm` BOOLEAN NOT NULL DEFAULT 0,
-  `score` INT UNSIGNED NOT NULL DEFAULT 0,
-  `ratings` INT UNSIGNED NOT NULL DEFAULT 0,
-  `ip` VARCHAR(45) NOT NULL DEFAULT '',
-  `status` BOOLEAN NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`),
-  KEY `cid` (`cid`),
-  KEY `uid` (`uid`),
-  KEY `status` (`status`),
-  KEY `ihome` (`ihome`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
 CREATE TABLE `{prefix}_partners` (
@@ -574,6 +345,30 @@ CREATE TABLE `{prefix}_partners` (
   KEY `uid` (`uid`),
   KEY `status` (`status`),
   KEY `email` (`email`(191))
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
+CREATE TABLE `{prefix}_points` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `uid` INT UNSIGNED NOT NULL,
+  `aid` INT UNSIGNED NOT NULL DEFAULT 0,
+  `action` VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `scope` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `mid` INT UNSIGNED NOT NULL DEFAULT 0,
+  `source` VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `points` INT NOT NULL,
+  `rid` BIGINT UNSIGNED DEFAULT NULL,
+  `note` VARCHAR(255) NOT NULL DEFAULT '',
+  `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `event` (`uid`, `action`, `scope`, `source`),
+  UNIQUE KEY `rid` (`rid`),
+  KEY `uid_created` (`uid`, `created`),
+  KEY `uid_action_created` (`uid`, `action`, `created`),
+  KEY `action_created` (`action`, `created`),
+  KEY `created` (`created`),
+  KEY `target` (`scope`, `mid`),
+  CONSTRAINT `{prefix}_fk_points_rid` FOREIGN KEY (`rid`) REFERENCES `{prefix}_points` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `{prefix}_chk_points_uid` CHECK (`uid` > 0)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
 CREATE TABLE `{prefix}_privat` (
@@ -633,6 +428,42 @@ CREATE TABLE `{prefix}_rating` (
   KEY `modul` (`modul`),
   KEY `uid` (`uid`),
   UNIQUE KEY `mid_modul_ip` (`mid`, `modul`, `ip`)
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
+CREATE TABLE `{prefix}_rating_actors` (
+  `scope` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `mid` INT UNSIGNED NOT NULL,
+  `actor` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `last` BIGINT UNSIGNED NOT NULL,
+  PRIMARY KEY (`scope`, `mid`, `actor`)
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
+CREATE TABLE `{prefix}_rating_targets` (
+  `scope` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `mid` INT UNSIGNED NOT NULL,
+  `base` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `votes` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `created` BIGINT UNSIGNED NOT NULL,
+  PRIMARY KEY (`scope`, `mid`)
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
+CREATE TABLE `{prefix}_rating_votes` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `scope` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `mid` INT UNSIGNED NOT NULL,
+  `actor` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `uid` INT UNSIGNED NOT NULL DEFAULT 0,
+  `value` TINYINT UNSIGNED NOT NULL,
+  `request` CHAR(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `created` BIGINT UNSIGNED NOT NULL,
+  `annulled` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `aid` INT UNSIGNED NOT NULL DEFAULT 0,
+  `reason` VARCHAR(255) NOT NULL DEFAULT '',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `request` (`scope`, `mid`, `actor`, `request`),
+  KEY `target` (`scope`, `mid`, `id`),
+  KEY `scope` (`scope`, `id`),
+  CONSTRAINT `{prefix}_chk_rating_votes_value` CHECK (`value` BETWEEN 1 AND 5)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
 CREATE TABLE `{prefix}_referer` (

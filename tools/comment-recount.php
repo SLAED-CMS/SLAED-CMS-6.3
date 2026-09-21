@@ -14,7 +14,7 @@
 #   php tools/comment-recount.php report                  # read-only, prints every target that disagrees
 #   php tools/comment-recount.php fix                     # writes the live count back into those targets
 #
-# Options: --mod=news  --limit=50
+# Options: --mod=shop  --limit=50
 #
 # The live number is the public one: published, not deleted. It is recomputed inside the UPDATE rather
 # than carried over from the report, so a comment written between the two cannot be lost.
@@ -41,7 +41,7 @@ function getOption(array $args, string $name, string $def): string {
 
 $mode = $argv[1] ?? '';
 if (!in_array($mode, ['report', 'fix'], true)) {
-    fwrite(STDERR, "Usage: php tools/comment-recount.php report|fix [--mod=news] [--limit=50]\n");
+    fwrite(STDERR, "Usage: php tools/comment-recount.php report|fix [--mod=shop] [--limit=50]\n");
     exit(1);
 }
 

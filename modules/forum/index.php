@@ -751,7 +751,7 @@ function pmoder(int|string $status, int $subh): string {
 }
 
 function send(): void {
-    global $db, $user, $conf, $stop, $tpl, $mailer;
+    global $db, $user, $conf, $stop, $tpl, $mailer, $pnt;
     # Both forms that reach this handler carry the token of the page they were rendered on, and neither may write without it
     if (!checkSiteToken()) {
         setHead(['title' => _FORUM, 'kind' => 'utility', 'robots' => 'noindex, follow']);
@@ -802,12 +802,15 @@ function send(): void {
             [$fstatus] = $db->getSqlRow($db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_forum '.$where, ['pid' => $pid]));
 
             if ($id) {
-                [$fpid, $uid, $ftime] = $db->getSqlRow($db->getSqlQuery('SELECT pid, uid, time FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
+                [$fpid, $uid, $ftime, $fwas] = $db->getSqlRow($db->getSqlQuery('SELECT pid, uid, time, status FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
+                $ftop = !$fpid;
                 $fpid = ($fpid) ? $fpid : $id;
                 if ($ismod || ($isedit && $uid == (int)$user[0] && $fstatus > 2)) {
                     $ftime = ($ismod) ? $time : $ftime;
                     if ($ismod) {
                         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET title = :subject, time = :ftime, body = :body, field = :field, euid = :postid, eip = :ip, etime = NOW(), status = :status WHERE id = :id', ['subject' => $subject, 'ftime' => $ftime, 'body' => $hometext, 'field' => $field, 'postid' => $postid, 'ip' => $ip, 'status' => $status, 'id' => $id]);
+                        $fsrc = ($ftop ? 'topic:' : 'post:').$id;
+                        if ($uid && $status && !$fwas) $pnt->addEvent($ftop ? 'publish' : 'comment', 'forum.topic', $fsrc, (int)$uid, ['mid' => (int)$fpid]);
                     } else {
                         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET title = :subject, time = :ftime, body = :body, field = :field, euid = :postid, eip = :ip, etime = NOW() WHERE id = :id', ['subject' => $subject, 'ftime' => $ftime, 'body' => $hometext, 'field' => $field, 'postid' => $postid, 'ip' => $ip, 'id' => $id]);
                     }
@@ -860,14 +863,14 @@ function send(): void {
                                 }
                             }
                         }
-                        updatePoints(14);
+                        if ($postid && $status) $pnt->addEvent('comment', 'forum.topic', 'post:'.$lpid, (int)$postid, ['mid' => (int)$pid]);
                     } else {
                         if (strtotime($ltime) > time()) {
                             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics+1, posts = posts+1 WHERE id IN ('.$catids.')');
                         } else {
                             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics+1, posts = posts+1, lpost = :lpost WHERE id IN ('.$catids.')', ['lpost' => $lpid]);
                         }
-                        updatePoints(13);
+                        if ($postid && $status) $pnt->addEvent('publish', 'forum.topic', 'topic:'.$lpid, (int)$postid, ['mid' => (int)$lpid]);
                     }
                 }
             }
@@ -883,7 +886,7 @@ function send(): void {
 }
 
 function delete(int|string|null $catid = null, int|string|null $id = null): void {
-    global $db, $user, $conf;
+    global $db, $user, $conf, $pnt;
     $hasargs = ($catid !== null || $id !== null);
     # A request that names its own target must carry the token; a call from move() was already checked by the handler that owns the request
     if (!$hasargs && !checkSiteToken()) {
@@ -934,19 +937,14 @@ function delete(int|string|null $catid = null, int|string|null $id = null): void
             }
 
             if (!$recycle || $recycle == $catid) {
-                if ($uid) {
-                    if ($pid) {
-                        updatePoints(14, $uid, 1);
-                    } else {
-                        updatePoints(13, $uid, 1);
-                    }
-                }
-                [$fid, $fuid] = $db->getSqlRow($db->getSqlQuery('SELECT id, uid FROM '.PREFIX_DB."_favorites WHERE fid = :id AND modul = 'forum'", ['id' => $id]));
-                if ($fid) {
-                    if ($fuid) updatePoints(44, $fuid, 1);
-                    $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE id = :fid', ['fid' => $fid]);
-                }
+                $own = $db->setSqlBegin();
+                $act = $pid ? 'comment' : 'publish';
+                $rid = ($own && $uid) ? $pnt->getEventId($act, 'forum.topic', ($pid ? 'post:' : 'topic:').$id, (int)$uid) : 0;
+                if ($rid) $pnt->addEvent($act, 'forum.topic', 'reverse:'.$rid, (int)$uid, ['rid' => $rid, 'mid' => (int)($pid ?: $id)]);
+                [$fid] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_favorites WHERE fid = :id AND modul = 'forum'", ['id' => $id]));
+                if ($fid) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE id = :fid', ['fid' => $fid]);
                 $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_forum WHERE id = :id1 OR pid = :id2', ['id1' => $id, 'id2' => $id]);
+                if ($own && !$db->setSqlCommit()) $db->setSqlRollback();
             }
 
             # Run once the rows have gone or moved, otherwise the branch would still answer with what was just removed

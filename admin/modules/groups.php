@@ -228,33 +228,32 @@ function points(): void {
     global $afile, $conf, $tpl;
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=groups', 'name=groups&op=add', 'name=groups&op=points', 'name=groups&op=info'], 'tabs' => [_HOME, _ADD, _POINTS, _DOCS], 'tab' => 2]);
-    $p = [_POINTS01, _POINTS02, _POINTS03, _POINTS04, _POINTS05, _POINTS06, _POINTS07, _POINTS08, _POINTS09, _POINTS10, _POINTS11, _POINTS12, _POINTS13, _POINTS14, _POINTS15, _POINTS16, _POINTS17, _POINTS18, _POINTS19, _POINTS20, _POINTS21, _POINTS22, _POINTS23, _POINTS24, _POINTS25, _POINTS26, _POINTS27, _POINTS28, _POINTS29, _POINTS30, _POINTS31, _POINTS32, _POINTS33, _POINTS34, _POINTS35, _POINTS36, _POINTS37, _POINTS38, _POINTS39, _POINTS40, _POINTS41, _POINTS42, _POINTS43, _POINTS44, _POINTS45];
-    $d = [_DESC01, _DESC02, _DESC03, _DESC04, _DESC05, _DESC06, _DESC07, _DESC08, _DESC09, _DESC10, _DESC11, _DESC12, _DESC13, _DESC14, _DESC15, _DESC16, _DESC17, _DESC18, _DESC19, _DESC20, _DESC21, _DESC22, _DESC23, _DESC24, _DESC25, _DESC26, _DESC27, _DESC28, _DESC29, _DESC30, _DESC31, _DESC32, _DESC33, _DESC34, _DESC35, _DESC36, _DESC37, _DESC38, _DESC39, _DESC40, _DESC41, _DESC42, _DESC43, _DESC44, _DESC45];
-    $pts = explode(',', $conf['users']['points']);
+    $cont .= checkPerms(CONFIG_DIR.'/points.php');
+    $mark = ($conf['update']['points'] ?? '') === '6.3.0';
+    if (!$mark) $cont .= $tpl->getHtmlFrag('alert', ['text' => _POINTS_NOMARK, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
     $phead = [
-        ['content' => _ID],
         ['content' => _NAME],
-        ['content' => _DESCRIPTION],
         ['content' => _POINTS, 'nosort' => 1],
+        ['content' => _POINTS_PERIOD, 'nosort' => 1],
+        ['content' => _POINTS_LIMIT, 'nosort' => 1],
     ];
+    $heads = ['points' => _POINTS, 'period' => _POINTS_PERIOD, 'limit' => _POINTS_LIMIT];
     $prows = '';
-    $count = count($p);
-    for ($i = 0; $i < $count; $i++) {
-        $prows .= $tpl->getHtmlFrag('table-row', [
-            'cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
-                ['content_html' => (string)($i + 1)],
-                ['content_html' => $p[$i]],
-                ['content_html' => $d[$i]],
-                ['content_html' => $tpl->getHtmlFrag('input', [
-                    'itype' => 'number',
-                    'name_attr' => 'spoints[]',
-                    'value_attr' => (string)$pts[$i],
-                    'placeholder_text' => _POINTS,
-                    'is_required' => true,
-                ])],
-            ]]),
-        ]);
+    foreach ($conf['points']['actions'] as $name => $rule) {
+        if ($name === 'adjust') continue;
+        $cells = [['has_content_text' => true, 'content_text' => constant('_POINTS_'.strtoupper($name))]];
+        foreach ($heads as $key => $head) {
+            $cells[] = ['content_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number',
+                'name_attr' => 'rule['.$name.']['.$key.']',
+                'value_attr' => (string)$rule[$key],
+                'placeholder_text' => $head,
+                'is_required' => true,
+            ])];
+        }
+        $prows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => $cells])]);
     }
+    $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $pointv = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
@@ -262,7 +261,11 @@ function points(): void {
             ['nameattr' => 'op', 'valueattr' => 'pointssave'],
             ['nameattr' => 'token', 'valueattr' => getSiteToken('groups')],
         ],
-        'content_html' => $tpl->getHtmlFrag('table', [
+        'content_html' => $tpl->getHtmlPart('div', ['rows' => [[
+            'label_html' => _UPDATE_POINTS,
+            'label_id' => $labid = getFieldIds('', 'active')['label'],
+            'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'active', 'value' => (string)$conf['points']['active'], 'options' => $yesno]),
+        ]]]).$tpl->getHtmlFrag('table', [
         'is_fixed' => true,
             'head' => $phead,
             'rows_html' => $prows,
@@ -270,22 +273,93 @@ function points(): void {
         ]),
         'submit_label' => _SAVE,
     ]);
-    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $pointv]);
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $pointv]).($mark ? getPointsJournal() : '');
     setFoot();
+}
+
+function getPointsJournal(): string {
+    global $db, $afile, $conf, $tpl;
+    $uid = getVar('get', 'uid', 'num', 0);
+    $act = getVar('get', 'act', 'word', '');
+    $day = getVar('get', 'day', 'text', '');
+    $num = max(1, getVar('get', 'num', 'num', 1));
+    $names = array_keys($conf['points']['actions']);
+    $act = in_array($act, $names, true) ? $act : '';
+    $day = (preg_match('/^\d{4}-\d{2}-\d{2}$/D', $day) && strtotime($day) !== false) ? $day : '';
+    $where = [];
+    $pars = [];
+    if ($uid) [$where[], $pars['uid']] = ['p.uid = :uid', $uid];
+    if ($act !== '') [$where[], $pars['act']] = ['p.action = :act', $act];
+    if ($day !== '') [$where[], $pars['from'], $pars['to']] = ['p.created >= :from AND p.created < :to', $day.' 00:00:00', date('Y-m-d', strtotime($day.' +1 day')).' 00:00:00'];
+    $cond = $where ? ' WHERE '.implode(' AND ', $where) : '';
+    [$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) FROM '.PREFIX_DB.'_points AS p'.$cond, $pars));
+    $sql = 'SELECT p.id, p.uid, u.name, p.aid, p.action, p.scope, p.mid, p.source, p.points, p.rid, p.note, p.created FROM '.PREFIX_DB.'_points AS p'
+        .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = p.uid)'.$cond.' ORDER BY p.created DESC, p.id DESC LIMIT :offset, :limit';
+    $result = $db->getSqlQuery($sql, $pars + ['offset' => ($num - 1) * 50, 'limit' => 50]);
+    $opts = [['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $act === '']];
+    foreach ($names as $name) $opts[] = ['value_attr' => $name, 'label_text' => constant('_POINTS_'.strtoupper($name)), 'is_selected' => $name === $act];
+    $form = $tpl->getHtmlPart('form', [
+        'action_url' => $afile.'.php',
+        'method' => 'get',
+        'is_inline_filter' => true,
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'groups'],
+            ['nameattr' => 'op', 'valueattr' => 'points'],
+        ],
+        'content_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'uid', 'value_attr' => $uid ? (string)$uid : '', 'placeholder_text' => _USER.' '._ID])
+            .$tpl->getHtmlFrag('select', ['name_attr' => 'act', 'options' => $opts])
+            .$tpl->getHtmlFrag('input', ['itype' => 'date', 'name_attr' => 'day', 'value_attr' => $day, 'placeholder_text' => _DATE])
+            .$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'submit_label' => _OK]),
+    ]);
+    $rows = '';
+    while ($result && ($row = $db->getSqlRow($result))) {
+        $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
+            ['is_col_id' => true, 'content_html' => (string)intval($row['id'])],
+            ['is_col_date' => true, 'has_content_text' => true, 'content_text' => (string)$row['created']],
+            ['is_truncate' => true, 'has_content_text' => true, 'content_text' => (string)($row['name'] ?? '').' #'.intval($row['uid'])],
+            ['has_content_text' => true, 'content_text' => (string)$row['action']],
+            ['is_truncate' => true, 'has_content_text' => true, 'content_text' => (string)$row['scope'].' / '.(string)$row['source']],
+            ['is_col_count' => true, 'content_html' => (string)intval($row['points'])],
+            ['is_truncate' => true, 'has_content_text' => true, 'title_text' => (string)$row['note'], 'content_text' => (string)$row['note']],
+        ]])]);
+    }
+    $none = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
+    if ($rows === '') return $tpl->getHtmlPart('box', ['title' => _POINTS_JOURNAL, 'content_html' => $form.$none]);
+    $head = [
+        ['content' => _ID],
+        ['content' => _DATE],
+        ['content' => _USER],
+        ['content' => _TYPE],
+        ['content' => _POINTS_SCOPE.' / '._POINTS_SOURCE],
+        ['content' => _POINTS],
+        ['content' => _NOTE],
+    ];
+    $link = 'name=groups&op=points'.($uid ? '&uid='.$uid : '').($act !== '' ? '&act='.$act : '').($day !== '' ? '&day='.$day : '').'&';
+    $body = $form.$tpl->getHtmlFrag('table', ['head' => $head, 'rows_html' => $rows]).getPageNumbers('', (int)$count, (int)ceil($count / 50), 50, $link, 10, $num, '', 'num');
+    return $tpl->getHtmlPart('box', ['title' => _POINTS_JOURNAL, 'content_html' => $body]);
 }
 
 function pointssave(): void {
     global $afile, $conf;
     $warn = !checkAdminPost('groups');
+    $text = $warn ? _TOKENMISS : _SUCCSAVE;
     if (!$warn) {
-        $spoints = getVar('post', 'spoints[]', 'num');
-        if ($spoints) {
-            $npoints = implode(',', $spoints);
-            $cont = ['points' => $npoints];
-            setConfigFile('users.php', $cont, $conf['users']);
+        $cont = ['active' => getVar('post', 'active', 'num') ? '1' : '0', 'actions' => $conf['points']['actions']];
+        $tops = ['points' => 1000, 'period' => 31536000, 'limit' => 10000];
+        foreach (array_keys($cont['actions']) as $name) {
+            if ($name === 'adjust') continue;
+            foreach ($tops as $key => $top) {
+                $val = trim((string)getVar('post', 'rule['.$name.']['.$key.']', 'raw', ''));
+                if (!preg_match('/^(?:0|[1-9][0-9]{0,8})$/D', $val) || intval($val) > $top) $warn = true;
+                $cont['actions'][$name][$key] = $val;
+            }
+            $per = intval($cont['actions'][$name]['period']);
+            if (($per === 0) !== ($cont['actions'][$name]['limit'] === '0') || ($per > 0 && $per < 60)) $warn = true;
         }
+        $text = $warn ? _NONUMVALUE : _SUCCSAVE;
+        if (!$warn && !setConfigFile('points.php', $cont)) [$warn, $text] = [true, getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP];
     }
-    setRedirect($afile.'.php?name=groups&op=points', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($afile.'.php?name=groups&op=points', false, 302, $text, $warn);
 }
 
 function delete(): void {

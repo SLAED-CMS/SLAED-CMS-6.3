@@ -343,7 +343,7 @@ Comment storage, same date:
 
 - `{prefix}_comment`: 7353 rows — files 4821, voting 1084, news 1083, faq 141,
   pages 116, links 104, shop 2, media 0; 7348 published, 3 pending;
-- `_comment`, `_users`, `_news`, `_files`, `_voting` and `_newsletter` are all
+- `_comment`, `_users`, `_products`, `_voting` and `_newsletter` are all
   InnoDB.
 
 The index gaps that reading found are closed. `{prefix}_comment` in
@@ -561,8 +561,8 @@ Before changing performance-sensitive code:
 Recommended focused targets:
 
 - `/`
-- `/index.php?name=news`
+- `/index.php?name=forum`
 - `/admin.php`
-- one heavy admin module page, such as `admin.php?name=news`
+- one heavy admin module page, such as `admin.php?name=shop`
 - one changelog cache miss and one changelog cache hit
 - one page with active right/left blocks

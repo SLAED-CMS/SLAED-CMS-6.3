@@ -62,7 +62,7 @@ const OPEN = new Set(['', 'view', 'edit', 'add', 'new', 'newuser', 'passlost', '
 // record-bound. Measured, without this the panel alone offered more than five hundred signatures - eighty six category
 // ids, forty nine banned addresses - and the walk hit its own limit with the queue still full.
 // Everything not named here keeps its value in the signature, which is what holds the tab strips of the panel apart:
-// name=help&status=1 is a different screen from the tab beside it, name=categories&modul=faq is the same screen twice
+// name=whois&status=1 is a different screen from the tab beside it, name=categories&modul=forum is the same screen twice
 // Addresses the walk asks for outright instead of waiting to be linked to them. The registration and lost-password
 // forms are linked only from the page a guest is shown, so whether the member side ever opened them depended on the
 // walk - measured, `site:account:newuser` was in one baseline and not in the next, for no change anybody made. They

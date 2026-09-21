@@ -24,18 +24,12 @@ enum CommentMode: int {
 # Add, edit, status and delete wrap their own writes; when a transaction is already open they join it and leave begin, commit and rollback to whoever owns it
 class Comment {
 
-    # The targets that render comments, each with the table its rows live in and the points slot its author is credited from
+    # The targets that render comments, each with the table its rows live in; the key is also the scope the points journal files a comment under
     # Account has no denormalised comment counter; its target exists only to restore profile discussions and their points
     private const MODULES = [
-        'account' => ['_users', 3],
-        'faq' => ['_faq', 7],
-        'files' => ['_files', 10],
-        'links' => ['_links', 22],
-        'media' => ['_media', 26],
-        'news' => ['_news', 32],
-        'pages' => ['_pages', 36],
-        'shop' => ['_products', 40],
-        'voting' => ['_voting', 43],
+        'account' => '_users',
+        'shop' => '_products',
+        'voting' => '_voting',
     ];
 
     # How many levels one thread may carry, so a reply chain cannot be driven past the depth the rendering was sized for and no upward walk can spin on a crafted parent
@@ -46,13 +40,15 @@ class Comment {
 
     private Database $db;
     private Parser $prs;
+    private Point $pnt;
     private array $conf;
     private array $site;
 
     # Build the subsystem from the services the request already carries; the settings the write normalization needs are snapshotted so no method reaches for a global
-    public function __construct(Database $db, Parser $prs, array $conf) {
+    public function __construct(Database $db, Parser $prs, Point $pnt, array $conf) {
         $this->db = $db;
         $this->prs = $prs;
+        $this->pnt = $pnt;
         $this->conf = is_array($conf['comments'] ?? null) ? $conf['comments'] : [];
         $this->site = [
             'click' => !empty($conf['clickable']),
@@ -71,7 +67,7 @@ class Comment {
         foreach (self::MODULES as $name => $one) {
             if ($mod !== '' && $mod !== $name) continue;
             if ($name === 'account') continue;
-            $tab = PREFIX_DB.$one[0];
+            $tab = PREFIX_DB.$one;
             $live = 'SELECT COUNT(*) FROM '.PREFIX_DB.'_comment AS c WHERE c.modul = :mod AND c.cid = x.id AND c.status = :stat AND c.deleted IS NULL';
             $held = 'SELECT 1 FROM '.PREFIX_DB.'_comment AS d WHERE d.modul = :dmod AND d.cid = x.id';
             $sql = 'SELECT t.cid, t.col, t.live FROM (SELECT x.id AS cid, x.comments AS col, ('.$live.') AS live FROM '.$tab.' AS x'
@@ -90,7 +86,7 @@ class Comment {
     private function setTargetCount(int $id, string $mod): bool {
         if ($id < 1 || !isset(self::MODULES[$mod]) || $mod === 'account') return false;
         $live = 'SELECT COUNT(*) FROM '.PREFIX_DB.'_comment AS c WHERE c.modul = :mod AND c.cid = :cid AND c.status = :stat AND c.deleted IS NULL';
-        $sql = 'UPDATE '.PREFIX_DB.self::MODULES[$mod][0].' SET comments = ('.$live.') WHERE id = :tid';
+        $sql = 'UPDATE '.PREFIX_DB.self::MODULES[$mod].' SET comments = ('.$live.') WHERE id = :tid';
         $pars = ['mod' => $mod, 'cid' => $id, 'stat' => CommentStatus::Published->value, 'tid' => $id];
         return $this->db->getSqlQuery($sql, $pars) !== false;
     }
@@ -204,7 +200,7 @@ class Comment {
     # Visibility is the module's own view predicate, so an unpublished, hidden or out-of-category target refuses a write exactly as its own page refuses a read
     public function getTargetMode(string $mod, int $id): CommentMode {
         if (!$id || !isset(self::MODULES[$mod])) return CommentMode::Disabled;
-        $tab = PREFIX_DB.self::MODULES[$mod][0];
+        $tab = PREFIX_DB.self::MODULES[$mod];
         if ($mod === 'account') {
             if ($this->site['prof'] === 1 && !is_user() && !isAdmin()) return CommentMode::Disabled;
             $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT id FROM '.$tab.' WHERE id = :id', ['id' => $id]));
@@ -291,7 +287,7 @@ class Comment {
             return $fail ? $this->getKeyResult($key, $name, $mod, $id, $pid, $uid, $body) : ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
         }
         $new = intval($this->db->getSqlLastId());
-        if ($stat === CommentStatus::Published) $this->updateTargetPoints($mod, false, $uid);
+        if ($stat === CommentStatus::Published) $this->updateTargetPoints($mod, false, $uid, $new, $id);
         if ($own && !$this->db->setSqlCommit()) {
             $this->db->setSqlRollback();
             return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
@@ -338,7 +334,7 @@ class Comment {
         return $out;
     }
 
-    # Publish or hide one comment as a moderator of the module the stored row names, and move the counter and the points of its target with it
+    # Publish or hide one comment as a moderator of the module the stored row names, move the counter of its target with it and award a first publication
     # The state is changed by a conditional update rather than by a read followed by a write, so two parallel requests cannot both count the same transition
     # The wanted state is bound twice under two names because a native prepared statement rejects one named placeholder used in two positions
     public function setStatus(int $id, bool $open): bool {
@@ -362,7 +358,7 @@ class Comment {
             return false;
         }
         $moved = intval($this->db->getSqlAffected()) > 0;
-        if ($moved) $this->updateTargetPoints($mod, !$open, intval($row['uid']));
+        if ($moved && $open) $this->updateTargetPoints($mod, false, intval($row['uid']), $id, $cid);
         if ($own && !$this->db->setSqlCommit()) {
             $this->db->setSqlRollback();
             return false;
@@ -374,7 +370,7 @@ class Comment {
         return true;
     }
 
-    # Remove one comment as a moderator of the module the stored row names, and take the counter and the points of its target back when the removed row was published
+    # Remove one comment as a moderator of the module the stored row names, take the counter of its target back when the removed row was published and compensate its award
     # The row is marked rather than erased and the mark is set by a conditional update, so a repeated delete answers the same result without moving a counter twice
     public function deleteComment(int $id): bool {
         $own = !$this->db->checkSqlActive();
@@ -394,7 +390,7 @@ class Comment {
         }
         $hid = intval($this->db->getSqlAffected()) > 0;
         $gone = $hid && intval($row['status']) === CommentStatus::Published->value;
-        if ($gone) $this->updateTargetPoints($mod, true, intval($row['uid']));
+        if ($hid) $this->updateTargetPoints($mod, true, intval($row['uid']), $id, $cid);
         if ($own && !$this->db->setSqlCommit()) {
             $this->db->setSqlRollback();
             return false;
@@ -464,11 +460,13 @@ class Comment {
         return $stop;
     }
 
-    # Award or take back the points of one comment author in the direction the write that calls this took
-    # This half belongs to the transaction of that write and rolls back with it, which is why it stayed where the counter left
-    private function updateTargetPoints(string $mod, bool $del, int $uid): void {
-        if (!isset(self::MODULES[$mod])) return;
-        updatePoints(self::MODULES[$mod][1], $uid, $del ? 1 : 0);
+    # Award the author of a comment the first time it is visible, or compensate that award once when the comment is removed; hiding a comment moves no points
+    # The event is keyed by the comment id, so a second publication is an empty repeat, and both halves join the transaction of the write and roll back with it
+    private function updateTargetPoints(string $mod, bool $del, int $uid, int $id, int $cid): void {
+        if ($uid < 1 || !isset(self::MODULES[$mod])) return;
+        if (!$del) $this->pnt->addEvent('comment', $mod, 'comment:'.$id, $uid, ['mid' => $cid]);
+        $rid = $del ? $this->pnt->getEventId('comment', $mod, 'comment:'.$id, $uid) : 0;
+        if ($rid) $this->pnt->addEvent('comment', $mod, 'reverse:'.$rid, $uid, ['rid' => $rid, 'mid' => $cid]);
     }
 
     # Queue the counter of one target to be rewritten once the request is over

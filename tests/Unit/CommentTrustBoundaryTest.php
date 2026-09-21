@@ -49,7 +49,7 @@ final class CommentTrustBoundaryTest extends TestCase
     public function visibleTargetReportsItsStoredMode(): void
     {
         $data = $this->getProbe();
-        if (!$data['open']) $this->markTestSkipped('No published news row with comments enabled on this installation');
+        if (!$data['open']) $this->markTestSkipped('No published shop row with comments enabled on this installation');
         $this->assertSame($data['open'][0], $data['open'][1]);
         $this->assertContains($data['open'][1], [1, 2]);
         if ($data['vote']) $this->assertSame($data['vote'][0], $data['vote'][1]);
@@ -64,7 +64,7 @@ final class CommentTrustBoundaryTest extends TestCase
         $this->assertSame(0, $data['zero']);
         if ($data['off']) $this->assertSame(0, $data['off'][1]);
         if ($data['hide']) $this->assertSame(0, $data['hide'][1]);
-        if (!$data['off'] && !$data['hide']) $this->markTestSkipped('No disabled or hidden news row on this installation');
+        if (!$data['off'] && !$data['hide']) $this->markTestSkipped('No disabled or hidden shop row on this installation');
     }
 
     # A module name outside the fixed map never resolves a target, whatever the request sends
@@ -72,7 +72,7 @@ final class CommentTrustBoundaryTest extends TestCase
     public function unknownModuleNeverResolvesTarget(): void
     {
         $data = $this->getProbe();
-        if (!$data['open']) $this->markTestSkipped('No published news row with comments enabled on this installation');
+        if (!$data['open']) $this->markTestSkipped('No published shop row with comments enabled on this installation');
         foreach ($data['unknown'] as $mod => $mode) {
             $this->assertSame(0, $mode, 'Module "'.$mod.'" resolved a target');
         }

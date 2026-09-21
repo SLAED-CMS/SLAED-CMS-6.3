@@ -33,7 +33,7 @@ final class CommentStateTest extends TestCase
     {
         $data = $this->getProbe('commentstage');
         if (!$data['admin']) $this->markTestSkipped('No super administrator with a stored address on this installation');
-        if (empty($data['target'])) $this->markTestSkipped('No writable news target on this installation');
+        if (empty($data['target'])) $this->markTestSkipped('No writable shop target on this installation');
         return $data;
     }
 
@@ -135,14 +135,16 @@ final class CommentStateTest extends TestCase
         $this->assertFalse($data['gone']['status']);
     }
 
-    # Deleting a comment that was never published takes nothing back, because nothing was ever counted for it
+    # Deleting a hidden comment moves no counter, because a hidden comment is not counted, and compensates exactly the award its first publication earned
+    # Hiding moves no points any more, so the removal is the one moment the award is taken back, once and by the amount of the origin event
     #[Test]
-    public function deletingAPendingCommentMovesNoCounter(): void
+    public function deletingAHiddenCommentCompensatesItsAwardOnce(): void
     {
         $data = $this->getState();
         [$done, $was, $now] = $data['pending'];
         $this->assertTrue($done);
-        $this->assertSame($was, $now, 'The delete of a pending comment moved the counter or the points');
+        $this->assertSame($was[0], $now[0], 'The delete of a hidden comment moved the counter of its target');
+        $this->assertSame($was[1] - $data['counters'][2], $now[1], 'The delete of a hidden comment did not compensate exactly the award of its publication');
     }
 
     # The write path stores source: the trusted-html tokens a visitor may not open are gone, the censor still applies, and nothing else about the text is rewritten
@@ -150,7 +152,7 @@ final class CommentStateTest extends TestCase
     public function theWritePathStoresSourceAndNotEscapedHtml(): void
     {
         $data = $this->getProbe('commentguest');
-        if (!isset($data['norm'])) $this->markTestSkipped('No writable news target on this installation');
+        if (!isset($data['norm'])) $this->markTestSkipped('No writable shop target on this installation');
         [$error, $body, $word, $cens, $repl] = $data['norm'];
         $this->assertSame('', $error, 'The crafted body was refused');
         $this->assertStringNotContainsString('[usehtml]', $body, 'A visitor stored the trusted html token');

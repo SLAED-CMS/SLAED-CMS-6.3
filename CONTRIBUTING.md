@@ -290,7 +290,7 @@ The current frontend runtime also supports central SEO overrides through `setHea
 ```php
 setHead([
     'title' => $title,
-    'canon' => 'index.php?name=news&op=view&id='.$id,
+    'canon' => 'index.php?name=shop&op=view&id='.$id,
     'robots' => 'noindex, follow',
 ]);
 ```

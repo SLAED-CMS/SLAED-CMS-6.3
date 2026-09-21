@@ -395,37 +395,31 @@ involved.
 
 **The grammar lives in `getUploadPlaceRule()` (`core/system.php`) and nowhere
 else.** A place is `^[a-z0-9_]+\.[a-z0-9_]+$`. Anything else answers `ok => false`.
-No caller carries a pattern of its own. Three branches on the suffix:
+No caller carries a pattern of its own. Two branches on the suffix:
 
 - `<mod>.attach` — `getUploadRuleData(<mod>)`, the pipe-separated config string;
-- `files.dist` — `$conf['files']`;
 - `users.avatar` — `$conf['users']`.
 
 **The returned array answers every field the routes read**, not only the limits,
 so no route reassembles a right from config:
 
-| Key | `<mod>.attach` | `files.dist` | `users.avatar` |
-|---|---|---|---|
-| `mod` | `<mod>` | `files` | `account` |
-| `extensions` | config | `typefile` | `atypefile` |
-| `maxbytes` | config | `max_size` | `amaxsize` |
-| `maxwidth` / `maxheight` | config | 1600 / 1600 | `awidth` / `aheight` |
-| `maxfiles` | config | 1 | 1 |
-| `maxquota` | config | 0 | 0 |
-| `thumbwidth` | config | 0 | 0 |
-| `userupload` | config | `upload` **and** `add` | `aupload` |
-| `guestupload` | config | `upload` **and** `addquest` | 0 — always |
-| `moderfiles` | config | 250 | 250 |
-| `userfiles` | config | 100 | 100 |
-| `guestfiles` | config | 100 | 0 — always |
-| `dir` | `uploads/<mod>` | `temp` for a visitor, `path` for a moderator | `adirectory` |
-| `canlink` | true | true | false |
-| `ops` | all four | `editorFiles` only | `editorFiles` only |
-
-**The upload right is two settings, not one.** The catalogue form opens on
-`add` / `addquest`, while `upload` only decides whether the file row appears
-inside an already-open form. A rule reading `upload` alone would let a member
-upload into a module where adding is switched off, so both sides are `AND`ed.
+| Key | `<mod>.attach` | `users.avatar` |
+|---|---|---|
+| `mod` | `<mod>` | `account` |
+| `extensions` | config | `atypefile` |
+| `maxbytes` | config | `amaxsize` |
+| `maxwidth` / `maxheight` | config | `awidth` / `aheight` |
+| `maxfiles` | config | 1 |
+| `maxquota` | config | 0 |
+| `thumbwidth` | config | 0 |
+| `userupload` | config | `aupload` |
+| `guestupload` | config | 0 — always |
+| `moderfiles` | config | 250 |
+| `userfiles` | config | 100 |
+| `guestfiles` | config | 0 — always |
+| `dir` | `uploads/<mod>` | `adirectory` |
+| `canlink` | true | false |
+| `ops` | all four | `editorFiles` only |
 
 **`mod` is not the first segment of the place.** `users.avatar` maps to module
 `account`, because that is the module whose moderator may moderate it and whose
@@ -437,8 +431,8 @@ are hard zero rather than read from config: an avatar belongs to an account and 
 guest has none.
 
 **A field place answers only one operation.** `ops` names which of the four
-routes a place permits. `<mod>.attach` permits all four; `files.dist` and
-`users.avatar` permit `editorFiles` alone, because outside the editor the form
+routes a place permits. `<mod>.attach` permits all four; `users.avatar` permits
+`editorFiles` alone, because outside the editor the form
 uploads and a reachable `editorUpload` would create orphaned files, while
 `editorDelete` and `editorArchive` would hand a direct deletion route to a place
 whose window never offers one. The gate is enforced in `getEditorRouteRule()`
@@ -446,10 +440,10 @@ beside the three guards it already runs, so no route restates it and none can
 ship with it quietly missing. An interface that draws no button is not a guard.
 
 **The place travels in the address as `place` and is read `raw`.** `filterVar()`
-empties any string carrying a dot, so `files.dist` cannot travel as `mod` at all;
+empties any string carrying a dot, so `users.avatar` cannot travel as `mod` at all;
 the grammar above is what validates it. The `$go == 4` entry guard in `index.php`
 reads `place`, and every endpoint URL is built server side —
-`index.php?go=4&op=editorUpload&place=news.attach`.
+`index.php?go=4&op=editorUpload&place=shop.attach`.
 
 The window built on this boundary is documented in `docs/WINDOW.md`; the runtime
 that drives it in `docs/EDITORS.md`.

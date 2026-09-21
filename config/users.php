@@ -21,8 +21,6 @@ return [
         'name_b' => 'alter,drop,insert,outfile,select,truncate,union',
         'news' => '1',
         'nomail' => '1',
-        'point' => '1',
-        'points' => '1,3,5,3,3,10,5,3,10,5,3,3,10,3,10,5,3,3,10,5,3,10,5,3,10,5,3,1,5,3,10,5,3,10,10,5,3,10,10,5,3,10,5,3,3',
         'prof' => '0',
         'reg' => '1',
         'rule' => '0',

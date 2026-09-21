@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>02 &middot; Рельс — стенд панели администратора SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; the sheets and scripts of the series are stamped so an edit is seen at once -->
+  <script>
+    ['demo', 'admin'].forEach((n) => document.write('<link rel="stylesheet" href="assets/' + n + '.css?v=' + Date.now() + '">'));
+  </script>
+  <style>
+    /* The rail - an application shell instead of a page. Three panes, each scrolling by itself: a rail of six places,
+       the list of the place chosen, and an inspector. The screen never holds more than twelve modules at once, and
+       a module is a row with one sentence about what it does instead of a tile with its directory name.
+
+       Transfer map (admin.php, panelAdmin(), the sidebar blocks and the speed dial):
+
+         · rail        the toolbar of the head and the two panel headings, turned into six places: the overview and
+                       five groups by meaning; a dot on a place says a queue inside it is not empty
+         · overview    the "New" and "Awaiting review" blocks as rows with a level bar, zero queues folded into one
+                       line; below them the pinned modules
+         · row         icon, name, one sentence, and only the signals that differ - queue chip, lock; the directory
+                       name moves into the inspector, where someone who needs it looks for it
+         · inspector   the speed dial opened out: the five actions hidden behind three dots stand as named buttons,
+                       the status is the theme switch (sl-radio-switch) instead of a power icon; idle, the pane shows
+                       who is online and the journal
+         · the click   a row selects, its name opens - so one click reads about a module and one opens it */
+    .v-shell {
+      display: grid;
+      grid-template-columns: var(--v-rail-width) minmax(0, 1fr) var(--v-side-width);
+      height: 100vh;
+      --v-rail-width: 88px;
+      --v-side-width: 360px;
+      --v-head-height: 64px;
+    }
+
+    .v-shell > * {
+      min-height: 0;
+    }
+
+    /* --- rail --- */
+    .v-rail {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--sl-space-2);
+      padding: var(--sl-space-6) 0;
+      border-right: var(--a-hair) solid var(--sl-border);
+      background: var(--sl-bg);
+    }
+
+    .v-rail .a-brand {
+      margin-bottom: var(--sl-space-6);
+    }
+
+    .v-place {
+      position: relative;
+      display: grid;
+      justify-items: center;
+      gap: var(--sl-space-2);
+      width: calc(var(--v-rail-width) - var(--sl-space-6));
+      padding: var(--sl-space-4) 0;
+      border: 0;
+      border-radius: var(--sl-radius-3);
+      background: transparent;
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-micro);
+      cursor: pointer;
+      transition:
+        background-color var(--sl-time-fast) var(--sl-ease-out),
+        color var(--sl-time-fast) var(--sl-ease-out);
+    }
+
+    .v-place .bi {
+      font-size: var(--sl-size-icon-sm);
+    }
+
+    .v-place:hover {
+      background: var(--sl-bg-subtle);
+      color: var(--sl-text);
+    }
+
+    .v-place[aria-selected="true"] {
+      background: var(--sl-tint);
+      color: var(--sl-primary-strong);
+    }
+
+    .v-place .a-dot {
+      position: absolute;
+      top: var(--sl-space-3);
+      right: var(--sl-space-6);
+      --tone: var(--sl-warning);
+    }
+
+    .v-rail-end {
+      display: grid;
+      justify-items: center;
+      gap: var(--sl-space-2);
+      margin-top: auto;
+    }
+
+    .v-rail-end .a-act {
+      padding: 0 var(--sl-space-4);
+    }
+
+    /* --- list --- */
+    .v-main {
+      display: flex;
+      flex-direction: column;
+      background: var(--sl-bg);
+    }
+
+    .v-bar {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-6);
+      flex: 0 0 var(--v-head-height);
+      padding: 0 var(--sl-space-8);
+      border-bottom: var(--a-hair) solid var(--sl-border);
+    }
+
+    .v-bar .a-seek {
+      flex: 1;
+      max-width: 420px;
+    }
+
+    .v-bar .a-eyebrow {
+      margin-left: auto;
+    }
+
+    .v-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--sl-space-8);
+    }
+
+    .v-title {
+      display: flex;
+      align-items: baseline;
+      gap: var(--sl-space-5);
+      margin-bottom: var(--sl-space-2);
+    }
+
+    .v-title h1 {
+      color: var(--sl-text);
+      font-size: var(--sl-font-h1);
+      font-weight: var(--sl-weight-semibold);
+      letter-spacing: -0.02em;
+    }
+
+    .v-lead {
+      margin-bottom: var(--sl-space-7);
+      color: var(--sl-text-muted);
+    }
+
+    .v-sub {
+      margin: var(--sl-space-8) 0 var(--sl-space-3);
+    }
+
+    .v-row {
+      display: grid;
+      grid-template-columns: var(--sl-size-tile) minmax(0, 1fr) auto auto auto;
+      align-items: center;
+      gap: var(--sl-space-5);
+      padding: var(--sl-space-4) var(--sl-space-5);
+      margin: 0 calc(var(--sl-space-5) * -1);
+      border-radius: var(--sl-radius-3);
+      cursor: pointer;
+      transition: background-color var(--sl-time-fast) var(--sl-ease-out);
+    }
+
+    .v-row + .v-row {
+      margin-top: var(--sl-space-1);
+    }
+
+    .v-row:hover {
+      background: var(--sl-bg-subtle);
+    }
+
+    .v-row[aria-current="true"] {
+      background: var(--sl-tint);
+    }
+
+    .v-row > .bi:first-child {
+      display: grid;
+      place-items: center;
+      height: var(--sl-size-tile);
+      border-radius: var(--sl-radius-3);
+      background: color-mix(in srgb, var(--tone) 10%, transparent);
+      color: var(--tone);
+      font-size: var(--sl-size-icon-sm);
+    }
+
+    .v-row a {
+      color: var(--sl-text);
+      font-weight: var(--sl-weight-semibold);
+    }
+
+    .v-row a:hover {
+      color: var(--sl-primary);
+    }
+
+    .v-row p {
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-row .bi-lock,
+    .v-row .bi-chevron-right {
+      color: var(--sl-text-subtle);
+    }
+
+    .v-row .bi-chevron-right {
+      opacity: 0;
+      transition: opacity var(--sl-time-fast) var(--sl-ease-out);
+    }
+
+    .v-row:hover .bi-chevron-right,
+    .v-row[aria-current="true"] .bi-chevron-right {
+      opacity: 1;
+    }
+
+    /* queue rows of the overview */
+    .v-queue {
+      display: grid;
+      grid-template-columns: var(--sl-size-icon-md) minmax(0, 12em) minmax(0, 1fr) auto;
+      align-items: center;
+      gap: var(--sl-space-5);
+      padding: var(--sl-space-4) 0;
+      border-bottom: var(--a-hair) solid var(--sl-border);
+      color: var(--sl-text);
+    }
+
+    .v-queue:hover b {
+      color: var(--sl-primary);
+    }
+
+    .v-queue .bi {
+      color: var(--sl-text-subtle);
+      font-size: var(--sl-size-icon-xs);
+    }
+
+    .v-queue b {
+      font-weight: var(--sl-weight-medium);
+    }
+
+    .v-queue .a-meter {
+      --tone: var(--sl-warning);
+    }
+
+    .v-queue strong {
+      min-width: 3ch;
+      font-weight: var(--sl-weight-semibold);
+      text-align: right;
+    }
+
+    .v-zero {
+      padding: var(--sl-space-5) 0;
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    /* --- inspector --- */
+    .v-side {
+      overflow-y: auto;
+      padding: var(--sl-space-8);
+      border-left: var(--a-hair) solid var(--sl-border);
+    }
+
+    .v-side h2 {
+      margin-bottom: var(--sl-space-4);
+    }
+
+    .v-side section + section {
+      margin-top: var(--sl-space-8);
+    }
+
+    @media (max-width: 1200px) {
+      .v-shell {
+        --v-side-width: 300px;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .v-shell {
+        grid-template-columns: var(--v-rail-width) minmax(0, 1fr);
+      }
+
+      .v-side {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="a-page v-shell" data-demo-tabs>
+    <aside class="v-rail">
+      <a class="a-brand" href="../admin.php" title="Панель администратора"><img src="../templates/admin/images/logos/slaed-logo-mark-gradient-blue.svg" alt="SLAED CMS"></a>
+      <button class="v-place" type="button" data-demo-tab="home" aria-selected="true" title="Обзор"><i class="bi bi-house-door"></i>Обзор<i class="a-dot"></i></button>
+      <button class="v-place" type="button" data-demo-tab="content" aria-selected="false" title="Контент"><i class="bi bi-layers"></i>Контент</button>
+      <button class="v-place" type="button" data-demo-tab="people" aria-selected="false" title="Люди"><i class="bi bi-people"></i>Люди</button>
+      <button class="v-place" type="button" data-demo-tab="site" aria-selected="false" title="Сайт"><i class="bi bi-globe2"></i>Сайт</button>
+      <button class="v-place" type="button" data-demo-tab="system" aria-selected="false" title="Система"><i class="bi bi-cpu"></i>Система</button>
+      <button class="v-place" type="button" data-demo-tab="trade" aria-selected="false" title="Коммерция"><i class="bi bi-bag"></i>Коммерция</button>
+      <div class="v-rail-end">
+        <a class="a-act" href="../" target="_blank" rel="noopener noreferrer" title="Сайт"><i class="bi bi-box-arrow-up-right"></i></a>
+        <button class="a-act" type="button" title="Опции"><i class="bi bi-sliders"></i></button>
+        <a class="a-act" href="../admin.php?op=logout" title="Выход"><i class="bi bi-box-arrow-right"></i></a>
+        <a class="a-face" href="../index.php?name=account" title="Профиль: SLAED CMS">SL</a>
+      </div>
+    </aside>
+
+    <main class="v-main">
+      <div class="v-bar">
+        <label class="a-seek" title="Фильтр списка">
+          <i class="bi bi-search"></i>
+          <input type="search" placeholder="Фильтр списка" data-demo-filter>
+          <span class="a-kbd">/</span>
+        </label>
+        <p class="a-eyebrow"><i class="a-dot a-dot-live"></i>6.3.0 Phoenix &middot; 0.306 с &middot; 17 sql</p>
+      </div>
+
+      <template id="v-row">
+        <div class="v-row" data-adm-key="{{ key }}" data-tone="{{ tone }}" data-demo-find="{{ key }} {{ desc }}" tabindex="0">
+          <i class="bi {{ icon }}"></i>
+          <div><a href="{{ href }}" title="Открыть: {{ title }}">{{ title }}</a><p>{{ desc }}</p></div>
+          <span class="sl-chip sl-chip-warn" data-adm-on="{{ badge }}">{{ badge }}</span>
+          <i class="bi bi-lock" data-adm-on="{{ access }}" title="{{ accessname }}"></i>
+          <i class="bi bi-chevron-right"></i>
+        </div>
+      </template>
+
+      <div class="v-scroll">
+        <section data-demo-panel="home">
+          <div class="v-title"><h1><span data-adm-greet>Добрый день</span></h1></div>
+          <p class="v-lead">Ждут решения <span data-adm-count="sum">46</span> записей в <span data-adm-count="hot">5</span> очередях.</p>
+          <div data-adm-list="queue" data-adm-only="hot">
+            <template>
+              <a class="v-queue" href="{{ href }}" title="{{ title }}">
+                <i class="bi {{ icon }}"></i><b>{{ title }}</b>
+                <p class="a-meter" style="--v: {{ part }}"></p>
+                <strong class="a-num">{{ num }}</strong>
+              </a>
+            </template>
+          </div>
+          <p class="v-zero"><i class="bi bi-check2"></i> Ещё <span data-adm-count="zero">9</span> очередей пусты: <span data-adm-count="zeronames"></span>.</p>
+          <h2 class="a-eyebrow v-sub">Закреплённые</h2>
+          <div data-adm-list="mods" data-adm-pin data-adm-tpl="v-row"></div>
+        </section>
+        <section data-demo-panel="content" hidden>
+          <div class="v-title"><h1>Контент</h1><span class="sl-chip" data-adm-count="mods:content"></span></div>
+          <p class="v-lead">Что видит посетитель: блоки, категории, обсуждения.</p>
+          <div data-adm-list="mods" data-adm-group="content" data-adm-tpl="v-row"></div>
+        </section>
+        <section data-demo-panel="people" hidden>
+          <div class="v-title"><h1>Люди</h1><span class="sl-chip" data-adm-count="mods:people"></span></div>
+          <p class="v-lead">Учётные записи, группы и переписка.</p>
+          <div data-adm-list="mods" data-adm-group="people" data-adm-tpl="v-row"></div>
+        </section>
+        <section data-demo-panel="site" hidden>
+          <div class="v-title"><h1>Сайт</h1><span class="sl-chip" data-adm-count="mods:site"></span></div>
+          <p class="v-lead">Оформление, языки, поиск и посещаемость.</p>
+          <div data-adm-list="mods" data-adm-group="site" data-adm-tpl="v-row"></div>
+        </section>
+        <section data-demo-panel="system" hidden>
+          <div class="v-title"><h1>Система</h1><span class="sl-chip" data-adm-count="mods:system"></span></div>
+          <p class="v-lead">Ядро, база данных, защита и расписание.</p>
+          <div data-adm-list="mods" data-adm-group="system" data-adm-tpl="v-row"></div>
+        </section>
+        <section data-demo-panel="trade" hidden>
+          <div class="v-title"><h1>Коммерция</h1><span class="sl-chip" data-adm-count="mods:trade"></span></div>
+          <p class="v-lead">Магазин, клиенты и оплата.</p>
+          <div data-adm-list="mods" data-adm-group="trade" data-adm-tpl="v-row"></div>
+        </section>
+        <div class="sl-alert sl-alert-info" data-demo-empty hidden><div class="sl-alert-body">В списках ничего не нашлось. Escape очищает фильтр.</div></div>
+        <div class="a-note" data-adm-note></div>
+      </div>
+    </main>
+
+    <aside class="v-side" data-adm-inspector>
+      <div data-adm-idle>
+        <section>
+          <h2 class="a-eyebrow">Сейчас на сайте</h2>
+          <div data-adm-list="online">
+            <template><div class="a-who"><i class="bi {{ icon }}"></i>{{ title }}<b class="a-num">{{ num }}</b></div></template>
+          </div>
+        </section>
+        <section>
+          <h2 class="a-eyebrow">Журнал</h2>
+          <div data-adm-list="log" data-adm-rows="5">
+            <template><div class="a-log" data-tone="{{ tone }}"><i class="a-dot"></i><p>{{ text }}</p><span>{{ time }} &middot; {{ src }}</span></div></template>
+          </div>
+        </section>
+        <section>
+          <h2 class="a-eyebrow">Подсказка</h2>
+          <p class="a-insp-about">Клик по строке показывает модуль здесь, клик по названию открывает его. <span class="a-kbd">/</span> — фильтр, <span class="a-kbd">Enter</span> — первый найденный.</p>
+        </section>
+      </div>
+      <div data-adm-slot></div>
+      <template>
+        <div data-tone="{{ tone }}">
+          <div class="a-insp-head">
+            <i class="bi {{ icon }}"></i>
+            <div><h3>{{ title }}</h3><p class="a-eyebrow">{{ gtitle }} &middot; {{ key }}</p></div>
+            <button class="a-act" type="button" data-adm-close title="Закрыть"><i class="bi bi-x-lg"></i></button>
+          </div>
+          <p class="a-insp-about">{{ desc }}.</p>
+          <dl class="a-facts">
+            <dt>Состояние</dt>
+            <dd>
+              <span class="sl-radio-group sl-radio-switch">
+                <label class="sl-radio"><input type="radio" name="act-{{ key }}" value="1" checked>Да</label>
+                <label class="sl-radio"><input type="radio" name="act-{{ key }}" value="0">Нет</label>
+              </span>
+            </dd>
+            <dt>Доступ</dt><dd>{{ accessname }}</dd>
+            <dt data-adm-on="{{ badge }}">В очереди</dt><dd data-adm-on="{{ badge }}"><span class="sl-chip sl-chip-warn">{{ badge }}</span></dd>
+          </dl>
+          <div class="a-acts">
+            <a href="{{ href }}" title="Открыть"><i class="bi bi-arrow-right-circle"></i>Открыть модуль</a>
+            <a href="../admin.php?name=modules&amp;op=edit&amp;mod={{ key }}" title="Полное редактирование"><i class="bi bi-pencil-square"></i>Полное редактирование</a>
+            <a href="{{ href }}&amp;op=config" title="Конфигурации" data-adm-on="{{ conf }}"><i class="bi bi-gear"></i>Конфигурации</a>
+            <a href="../index.php?name={{ key }}" title="Просмотр на сайте" data-adm-on="{{ view }}"><i class="bi bi-arrow-up-right-circle"></i>Просмотр на сайте</a>
+            <a href="{{ href }}&amp;op=info" title="Справка"><i class="bi bi-info-circle"></i>Справка</a>
+          </div>
+        </div>
+      </template>
+    </aside>
+  </div>
+  <script>
+    ['demo', 'admin'].forEach((n) => document.write('<script src="assets/' + n + '.js?v=' + Date.now() + '"><\/script>'));
+  </script>
+</body>
+</html>

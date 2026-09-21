@@ -26,14 +26,12 @@ function getSearchState(): array {
     $word = trim(getVar('req', 'word', 'word', ''));
     $mod = getVar('req', 'mod', 'var', '');
     $mod = in_array($mod, $mods, true) ? $mod : '';
-    $typ = getVar('req', 'typ', 'num', 0);
     $num = getVar('req', 'num', 'num', 1);
     $stop = ($word !== '' && mb_strlen($word) < (int)$conf['search']['slet']) ? _SEARCHLETMIN.': '.$conf['search']['slet'] : '';
     return [
         'mods' => $mods,
         'word' => $word,
         'mod' => $mod,
-        'typ' => $typ,
         'num' => $num,
         'stop' => $stop,
         'lim' => (int)($conf['search']['slimit'] ?? 500),
@@ -51,17 +49,7 @@ function getSearchModList(array $mods, string $curr): string {
     return $cont;
 }
 
-function getSearchTypeList(int $typ): string {
-    global $tpl;
-    $list = [1 => _MTITLE, 2 => _DESCRIPTION, 3 => _MDIRECTOR, 4 => _MROLES, 5 => _MYEAR];
-    $cont = '';
-    foreach ($list as $key => $val) {
-        $cont .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$key, 'label_text' => $val, 'is_selected' => $key === $typ || (!$typ && $key === 2)]);
-    }
-    return $cont;
-}
-
-# One-row search panel: module select (+ media type), query input, submit
+# One-row search panel: module select, query input, submit
 function getSearchForm(array $state): string {
     global $conf, $tpl;
     $all_opt = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _SEARCHALL, 'is_selected' => false]);
@@ -70,9 +58,6 @@ function getSearchForm(array $state): string {
         'options_html' => $all_opt.getSearchModList($state['mods'], (string)$state['mod']),
         'select_attr' => 'onchange="submit()"',
     ]);
-    $typ_html = ($state['mod'] === 'media')
-        ? $tpl->getHtmlFrag('select', ['name_attr' => 'typ', 'options_html' => getSearchTypeList((int)$state['typ'])])
-        : '';
     $word_html = $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'word',
@@ -84,7 +69,6 @@ function getSearchForm(array $state): string {
     return $tpl->getHtmlFrag('search-form', [
         'action' => 'index.php?name='.$conf['name'],
         'mod_html' => $mod_html,
-        'typ_html' => $typ_html,
         'word_html' => $word_html,
         'ok_label' => _SEARCH,
     ]);
@@ -123,50 +107,12 @@ function getSearchUrl(array $params, string $word, string $anchor = ''): string 
     return $url.$anchor;
 }
 
-function getSimpleCfg(string $mod, array $find, string $content, bool $count = true): array {
-    return ['kind' => 'simple', 'table' => PREFIX_DB.'_'.$mod, 'find' => $find, 'content' => $content, 'count' => $count];
-}
-
 function getSearchMap(): array {
     return [
-        'faq' => getSimpleCfg('faq', ['title', 'body'], 'body'),
-        'files' => getSimpleCfg('files', ['title', 'intro', 'body'], 'intro'),
-        'jokes' => getSimpleCfg('jokes', ['title', 'body'], 'body', false),
-        'links' => getSimpleCfg('links', ['title', 'intro', 'body', 'url'], 'intro'),
-        'news' => getSimpleCfg('news', ['title', 'intro', 'body'], 'intro'),
-        'pages' => getSimpleCfg('pages', ['title', 'intro', 'body'], 'intro'),
         'auto_links' => ['kind' => 'auto'],
         'forum' => ['kind' => 'forum'],
-        'media' => ['kind' => 'media'],
         'shop' => ['kind' => 'shop'],
     ];
-}
-
-function getSearchSimple(string $mod, array $cfg, array $state): array {
-    global $db, $afile;
-    $rows = [];
-    $keys = ['worda', 'wordb', 'wordc', 'wordd', 'worde'];
-    $pars = ['lim' => $state['lim']];
-    $cond = [];
-    foreach ($cfg['find'] as $indx => $col) {
-        $cond[] = 's.'.$col.' LIKE :'.$keys[$indx];
-        $pars[$keys[$indx]] = '%'.$state['word'].'%';
-    }
-    $cnts = $cfg['count'] ? 's.comments, s.counter' : 'NULL, NULL';
-    $sql = 'SELECT s.id, s.name, s.title, s.time, s.cid, s.'.$cfg['content'].', '.$cnts.', u.name'
-        .' FROM '.$cfg['table'].' AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id)'
-        .' WHERE s.time <= NOW() AND s.status != \'0\' AND ('.implode(' OR ', $cond).') ORDER BY s.time DESC LIMIT :lim';
-    $result = $db->getSqlQuery($sql, $pars);
-    while ([$mid, $user, $titl, $time, $cid, $cont, $comm, $reads, $nick] = $db->getSqlRow($result)) {
-        $url = ($mod === 'jokes')
-            ? getSearchUrl(['name' => $mod, 'cat' => $cid], $state['word'], '#'.$mid)
-            : getSearchUrl(['name' => $mod, 'op' => 'view', 'id' => $mid, 'title' => $titl], $state['word']);
-        $rows[] = getSearchItem($mod, $url, $afile.'.php?name='.$mod.'&op=add&id='.$mid, [
-            'title' => $titl, 'time' => $time, 'cid' => $cid, 'content' => $cont,
-            'nick' => $nick, 'user' => $user, 'post' => true, 'comments' => $comm, 'reads' => $reads,
-        ]);
-    }
-    return $rows;
 }
 
 function getSearchAuto(array $state): array {
@@ -208,30 +154,6 @@ function getSearchForum(array $state): array {
     return $rows;
 }
 
-function getSearchMedia(array $state): array {
-    global $db, $afile, $conf;
-    $rows = [];
-    $cond = match ($state['typ']) {
-        1 => '(m.title LIKE :worda OR m.subtitle LIKE :wordb) ORDER BY m.title ASC',
-        2 => '(m.intro LIKE :worda) ORDER BY m.intro ASC',
-        3 => '(m.director LIKE :worda) ORDER BY m.director ASC',
-        4 => '(m.roles LIKE :worda) ORDER BY m.roles ASC',
-        5 => '(m.year LIKE :worda) ORDER BY m.year ASC',
-        default => '(m.title LIKE :worda OR m.subtitle LIKE :wordb OR m.intro LIKE :wordc) ORDER BY m.time DESC',
-    };
-    $pars = ['worda' => '%'.$state['word'].'%', 'wordb' => '%'.$state['word'].'%', 'wordc' => '%'.$state['word'].'%', 'lim' => $state['lim']];
-    $result = $db->getSqlQuery('SELECT m.id, m.name, m.title, m.subtitle, m.time, m.cid, m.intro, m.comments, m.counter, u.name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.id) WHERE m.time <= NOW() AND m.status != \'0\' AND '.$cond.' LIMIT :lim', $pars);
-    while ([$mid, $user, $titl, $subt, $time, $cid, $cont, $comm, $reads, $nick] = $db->getSqlRow($result)) {
-        $titl = $subt ? $titl.' '.urldecode($conf['media']['mdefis']).' '.$subt : $titl;
-        $url = getSearchUrl(['name' => 'media', 'op' => 'view', 'id' => $mid, 'title' => $titl], $state['word']);
-        $rows[] = getSearchItem('media', $url, $afile.'.php?name=media&op=add&id='.$mid, [
-            'title' => $titl, 'time' => $time, 'cid' => $cid, 'content' => $cont,
-            'nick' => $nick, 'user' => $user, 'post' => true, 'comments' => $comm, 'reads' => $reads,
-        ]);
-    }
-    return $rows;
-}
-
 function getSearchShop(array $state): array {
     global $db, $afile;
     $rows = [];
@@ -254,10 +176,8 @@ function getSearchRows(array $state): array {
         $cfg = $list[$mod] ?? null;
         if (!$cfg) continue;
         $rows = array_merge($rows, match ($cfg['kind']) {
-            'simple' => getSearchSimple($mod, $cfg, $state),
             'auto' => getSearchAuto($state),
             'forum' => getSearchForum($state),
-            'media' => getSearchMedia($state),
             'shop' => getSearchShop($state),
         });
     }
@@ -333,8 +253,7 @@ function getSearchList(array $rows, array $state): string {
         $numb++;
     }
     if (!$anum) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NOMATCHES]);
-    $tail = $state['typ'] ? '&typ='.$state['typ'] : '';
-    $cont .= ($anum > $snum) ? getPageNumbers($conf['name'], $anum, $pnum, $snum, 'mod='.$state['mod'].'&word='.urlencode($state['word']).$tail.'&', $state['snump'], $page) : $tpl->getHtmlPart('navi-lower', [
+    $cont .= ($anum > $snum) ? getPageNumbers($conf['name'], $anum, $pnum, $snum, 'mod='.$state['mod'].'&word='.urlencode($state['word']).'&', $state['snump'], $page) : $tpl->getHtmlPart('navi-lower', [
         'back_button' => ['button_type' => 'button', 'title' => _BACK, 'label' => _BACK, 'is_back' => true, 'is_navi_lower' => true],
         'home_link' => ['href' => 'index.php?name='.$conf['name'], 'title' => _PAGEHOME, 'label' => _PAGEHOME, 'is_navi_lower' => true],
         'top_link' => ['href' => '#top', 'title' => _PAGETOP, 'label' => _PAGETOP, 'is_navi_lower' => true],

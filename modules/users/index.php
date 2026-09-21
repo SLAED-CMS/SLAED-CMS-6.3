@@ -12,7 +12,7 @@ if (!defined('MODULE_FILE')) {
 function users(): void {
     global $db, $conf, $tpl;
     setHead(['title' => _TOPUSERS, 'kind' => 'collection']);
-    $cont = getModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'rules']), 'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _TU_STATS, 'liste_href' => '', 'add_href' => '']);
+    $cont = getModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => $conf['points']['active'] ? getSeoUrl(['name' => $conf['name'], 'op' => 'rules']) : '', 'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _TU_STATS, 'liste_href' => '', 'add_href' => '']);
     $lim = 50;
     $num = getVar('get', 'num', 'num', '1');
     $offset = (int)(($num - 1) * $lim);
@@ -41,7 +41,7 @@ function users(): void {
                     ['content_html' => $info],
                     ['content_html' => getGenderText($gender)],
                     ['content_html' => $rating],
-                    ['text' => (string)$point],
+                    ...($conf['points']['active'] ? [['text' => (string)$point]] : []),
                 ],
             ];
             $count++;
@@ -57,7 +57,7 @@ function users(): void {
                     ['text' => $head],
                     ['text' => _GENDER],
                     ['text' => $sort],
-                    ['text' => _POINTS],
+                    ...($conf['points']['active'] ? [['text' => _POINTS]] : []),
                 ],
             ],
             'table_close' => [],
@@ -82,21 +82,19 @@ function users(): void {
 
 function rules(): void {
     global $conf, $tpl;
+    if (!$conf['points']['active']) setRedirect('index.php?name='.$conf['name']);
     setHead(['title' => _TU_RULES, 'kind' => 'collection']);
-    $cont = getModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'rules']), 'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _TU_STATS, 'liste_href' => '', 'add_href' => '']);
-    $p = [_POINTS01, _POINTS02, _POINTS03, _POINTS04, _POINTS05, _POINTS06, _POINTS07, _POINTS08, _POINTS09, _POINTS10, _POINTS11, _POINTS12, _POINTS13, _POINTS14, _POINTS15, _POINTS16, _POINTS17, _POINTS18, _POINTS19, _POINTS20, _POINTS21, _POINTS22, _POINTS23, _POINTS24, _POINTS25, _POINTS26, _POINTS27, _POINTS28, _POINTS29, _POINTS30, _POINTS31, _POINTS32, _POINTS33, _POINTS34, _POINTS35, _POINTS36, _POINTS37, _POINTS38, _POINTS39, _POINTS40, _POINTS41, _POINTS42, _POINTS43, _POINTS44, _POINTS45];
-    $d = [_DESC01, _DESC02, _DESC03, _DESC04, _DESC05, _DESC06, _DESC07, _DESC08, _DESC09, _DESC10, _DESC11, _DESC12, _DESC13, _DESC14, _DESC15, _DESC16, _DESC17, _DESC18, _DESC19, _DESC20, _DESC21, _DESC22, _DESC23, _DESC24, _DESC25, _DESC26, _DESC27, _DESC28, _DESC29, _DESC30, _DESC31, _DESC32, _DESC33, _DESC34, _DESC35, _DESC36, _DESC37, _DESC38, _DESC39, _DESC40, _DESC41, _DESC42, _DESC43, _DESC44, _DESC45];
-    $points = explode(',', $conf['users']['points']);
+    $cont = getModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => $conf['points']['active'] ? getSeoUrl(['name' => $conf['name'], 'op' => 'rules']) : '', 'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _TU_STATS, 'liste_href' => '', 'add_href' => '']);
     $rows = [];
-    for ($i = 0; $i < count($p); $i++) {
-        $a = $i + 1;
+    foreach ($conf['points']['actions'] as $name => $rule) {
+        if ($name === 'adjust') continue;
         $rows[] = [
-            'id' => (string)$a,
+            'id' => $name,
             'cells' => [
-                ['text' => (string)$a, 'href' => '#'.$a, 'title' => (string)$a, 'is_num' => true],
-                ['text' => $p[$i]],
-                ['text' => $d[$i]],
-                ['text' => (string)$points[$i]],
+                ['text' => constant('_POINTS_'.strtoupper($name))],
+                ['text' => (string)$rule['points'], 'is_num' => true],
+                ['text' => (string)$rule['period'], 'is_num' => true],
+                ['text' => (string)$rule['limit'], 'is_num' => true],
             ],
         ];
     }
@@ -106,10 +104,10 @@ function rules(): void {
             'open' => true,
             'sortable' => true,
             'headers' => [
-                ['text' => _ID, 'is_num' => true],
                 ['text' => _TYPE],
-                ['text' => _DESCRIPTION],
-                ['text' => _POINTS],
+                ['text' => _POINTS, 'is_num' => true],
+                ['text' => _POINTS_PERIOD, 'is_num' => true],
+                ['text' => _POINTS_LIMIT, 'is_num' => true],
             ],
         ],
         'table_close' => [],
@@ -126,7 +124,7 @@ function rules(): void {
 function stats(): void {
     global $db, $conf, $tpl;
     setHead(['title' => _TU_STATS, 'kind' => 'collection']);
-    $cont = getModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'rules']), 'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _TU_STATS, 'liste_href' => '', 'add_href' => '']);
+    $cont = getModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => $conf['points']['active'] ? getSeoUrl(['name' => $conf['name'], 'op' => 'rules']) : '', 'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _TU_STATS, 'liste_href' => '', 'add_href' => '']);
     $result = $db->getSqlQuery('SELECT id, name, intro, points, extra, rank, color FROM '.PREFIX_DB.'_groups ORDER BY points');
     if ($result) {
         $rows = [];

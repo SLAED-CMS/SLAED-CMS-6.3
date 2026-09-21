@@ -58,7 +58,7 @@ function order(): void {
 }
 
 function send(): void {
-    global $db, $conf, $stop, $tpl, $prs, $mailer;
+    global $db, $conf, $stop, $tpl, $prs, $mailer, $user;
     if ($conf['order']['an']) {
         $mail = getVar('post', 'mail', 'text');
         $field = getVar('post', 'field', 'field');
@@ -71,8 +71,8 @@ function send(): void {
         if (!$stop) {
             $status = ($conf['order']['pr']) ? '0' : '1';
             $db->getSqlQuery(
-                'INSERT INTO '.PREFIX_DB.'_order VALUES (NULL, :email, :info, :note, :ip, :agent, NOW(), :status)',
-                ['email' => $mail, 'info' => $field, 'note' => $note, 'ip' => getIp(), 'agent' => getAgent(), 'status' => $status]
+                'INSERT INTO '.PREFIX_DB.'_order (uid, email, info, note, ip, agent, time, status) VALUES (:uid, :email, :info, :note, :ip, :agent, NOW(), :status)',
+                ['uid' => is_user() ? intval($user[0]) : 0, 'email' => $mail, 'info' => $field, 'note' => $note, 'ip' => getIp(), 'agent' => getAgent(), 'status' => $status]
             );
             if ($conf['order']['ad']) {
                 $infos = getTplViewFieldRows(['field' => $field, 'mod' => $conf['name']]);
@@ -99,7 +99,6 @@ function send(): void {
                 ]);
                 $mailer->addQueue(['kind' => 'order', 'email' => $mail, 'title' => $subject, 'body' => $msg, 'sender' => $amail, 'prio' => 3]);
             }
-            updatePoints(34);
             setHead(['title' => _ORDER]);
             $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 30]);
             echo $tpl->getHtmlFrag('title', ['title' => _ORDER, 'is_level_one' => true]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $prs->filterContent($conf['order']['info'], false, 'all'), 'meta' => $meta]);

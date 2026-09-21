@@ -29,7 +29,7 @@ function getVotingModuleSelect(string $modul = ''): string {
         'label_text' => _NO,
         'is_selected' => $modul === '',
     ]);
-    foreach (['news', 'shop'] as $val) {
+    foreach (['shop'] as $val) {
         $opts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => $val,
             'label_text' => getModuleName($val),

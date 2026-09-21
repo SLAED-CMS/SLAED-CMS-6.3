@@ -315,6 +315,73 @@ function config(): void {
     setFoot();
 }
 
+# Check what the 6.3 data update needs before anything is changed and answer the refusal, or an empty string when the update may start
+# The site has to be closed, the server has to enforce CHECK constraints, and every table a points transaction touches has to be InnoDB; nothing is converted automatically
+function checkUpdateBase(Database $db, string $prefix, array $conf): string {
+    if (($conf['close'] ?? '0') != '1') return 'The site is open: close it in the settings before the data update runs.';
+    [$ver] = $db->getSqlRow($db->getSqlQuery('SELECT VERSION()'));
+    $min = (stripos((string)$ver, 'mariadb') !== false) ? '10.2.1' : '8.0.16';
+    if (version_compare(preg_replace('/[^0-9.].*$/', '', (string)$ver), $min, '<')) return 'The database server '.$ver.' is older than '.$min.'.';
+    $list = [];
+    foreach (['users', 'comment', 'forum', 'order', 'clients', 'favorites', 'user_oauth', 'points'] as $key => $name) $list['t'.$key] = $prefix.'_'.$name;
+    $sql = 'SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN (:'.implode(', :', array_keys($list)).')'
+        .' AND engine IS NOT NULL AND engine != \'InnoDB\'';
+    $res = $db->getSqlQuery($sql, $list);
+    $fix = [];
+    while ($res && ([$name] = $db->getSqlRow($res))) $fix[] = 'ALTER TABLE `'.$name.'` ENGINE=InnoDB;';
+    return $fix ? 'These tables are not InnoDB, convert them and start the update again: '.implode(' ', $fix) : '';
+}
+
+# Write one file of the update backup through a temporary file and a rename, so a reader never meets a half-written snapshot or manifest
+function setUpdateBackup(string $path, string $text): bool {
+    $temp = $path.'.'.bin2hex(random_bytes(4)).'.tmp';
+    return file_put_contents($temp, $text, LOCK_EX) === strlen($text) && rename($temp, $path);
+}
+
+# The points unit of the 6.3 data update: keep the starting balances as a hashed snapshot, carry users.point into points.active and leave the mark that opens the subsystem
+# The unit resumes from its manifest: verified is skipped, applying and prepared continue
+# Journal rows without a manifest stop it, because a current balance is never taken for a starting one
+function setUpdatePoints(Database $db, string $prefix): string {
+    $dir = BASE_DIR.'/storage/backup/update/points';
+    $file = $dir.'/manifest.json';
+    $mark = is_file(CONFIG_DIR.'/update.php') ? ((require CONFIG_DIR.'/update.php')['update'] ?? []) : [];
+    $info = is_file($file) ? json_decode((string)file_get_contents($file), true) : null;
+    if (!is_array($info)) {
+        [$rows] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) FROM `'.$prefix.'_points`'));
+        if ($rows > 0 || isset($mark['points'])) return getInfo('points: the journal already has rows and no manifest exists, the unit is stopped', false);
+        if (!is_dir($dir) && !mkdir($dir, 0750, true)) return getInfo('points: '.$dir.' could not be created', false);
+        $list = [];
+        $done = $db->setSqlBegin();
+        $res = $done ? $db->getSqlQuery('SELECT id, points FROM `'.$prefix.'_users` ORDER BY id ASC') : false;
+        while ($res && ([$uid, $sum] = $db->getSqlRow($res))) $list[(string)$uid] = intval($sum);
+        if ($done) $db->setSqlCommit();
+        $text = (string)json_encode($list);
+        if (!$res || !setUpdateBackup($dir.'/balances.json', $text)) return getInfo('points: the snapshot of the balances could not be written', false);
+        $info = ['version' => '6.3.0', 'state' => 'prepared', 'cursor' => 0, 'count' => count($list), 'source' => ['balances.json' => hash('sha256', $text)], 'target' => []];
+        if (!setUpdateBackup($file, (string)json_encode($info))) return getInfo('points: the manifest could not be written', false);
+    }
+    if (hash_file('sha256', $dir.'/balances.json') !== ($info['source']['balances.json'] ?? '')) return getInfo('points: the snapshot does not match its manifest', false);
+    if ($info['state'] !== 'verified') {
+        $info['state'] = 'applying';
+        if (!setUpdateBackup($file, (string)json_encode($info))) return getInfo('points: the manifest could not be written', false);
+        $users = (require CONFIG_DIR.'/users.php')['users'] ?? [];
+        $point = (require CONFIG_DIR.'/points.php')['points'] ?? [];
+        $flag = isset($users['point']) ? ($users['point'] ? '1' : '0') : ($point['active'] ?? '');
+        $moved = $flag !== ($point['active'] ?? '');
+        $stale = isset($users['point']) || isset($users['points']);
+        $point['active'] = $flag;
+        unset($users['point'], $users['points']);
+        if (count($point['actions'] ?? []) !== 15 || !in_array($point['active'], ['0', '1'], true)) return getInfo('points: config/points.php is not a valid points scope', false);
+        if ($moved) setConfigFile('points.php', $point);
+        if ($stale) setConfigFile('users.php', $users);
+        $info['target'] = ['points.php' => hash_file('sha256', CONFIG_DIR.'/points.php'), 'users.php' => hash_file('sha256', CONFIG_DIR.'/users.php')];
+        $info['state'] = 'verified';
+        if (!setUpdateBackup($file, (string)json_encode($info))) return getInfo('points: the manifest could not be written', false);
+    }
+    setConfigFile('update.php', ['points' => '6.3.0'] + $mark);
+    return getInfo('points: starting balances kept ('.intval($info['count']).' accounts), the subsystem is open', true);
+}
+
 function save(): void {
     global $title, $clang, $conf, $url;
     $setup = (isset($_POST['setup'])) ? $_POST['setup'] : '';
@@ -357,6 +424,7 @@ function save(): void {
         $title = _SAVE_NEW;
         $bodytext .= getSqlFile('setup/sql/table.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
         $bodytext .= getSqlFile('setup/sql/insert.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
+        setConfigFile('update.php', ['points' => '6.3.0', 'ratings' => '6.3.0', 'fields' => '6.3.0']);
     } elseif ($setup == 'update4_1') {
         $title = _SAVE_UPDATE;
         $bodytext .= getSqlFile('setup/sql/table_update4_1.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
@@ -454,6 +522,8 @@ function save(): void {
         $title = _SAVE_UPDATE;
         $bodytext .= getSqlFile('setup/sql/table_update6_2.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
     } elseif ($setup == 'update6_3') {
+        $stop = checkUpdateBase($db, $xprefix, $conf);
+        if ($stop !== '') setExit($stop);
         $cont = [];
         $apath = BASE_DIR.'/admin/modules';
         if (is_dir($apath) && ($handle = opendir($apath))) {
@@ -613,6 +683,7 @@ function save(): void {
         setConfigFile('newsletter.php', ['abort' => '10', 'bouncemax' => '2', 'breakwin' => '100', 'canary' => '100', 'canarymin' => '500']);
         $title = _SAVE_UPDATE;
         $bodytext .= getSqlFile('setup/sql/table_update6_3.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
+        $bodytext .= setUpdatePoints($db, $xprefix);
         $nsent = 0;
         foreach ($nlist as $nid => $one) {
             $mails = array_values(array_unique(array_filter(array_map('trim', explode(',', $one['mails'])), 'strlen')));
@@ -630,6 +701,7 @@ function save(): void {
         [$acount] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) FROM `'.$xprefix.'_users` WHERE `avatar` LIKE \'default/%\''));
         $bodytext .= getInfo($xprefix.'_users avatar migration (legacy rows left: '.(int)$acount.')', (int)$acount === 0);
     }
+    if (is_file(CONFIG_DIR.'/local.php')) unlink(CONFIG_DIR.'/local.php');
     setHead();
     echo '<table class="sl_table">'.$bodytext.'</table>'
     .'<div class="sl_center"><form action="'.$conf['security']['afile'].'.php" method="post">'._GOBACK.' <input type="submit" value="'._ADMIN_SE.'" class="sl_but_blue"></form></div>';

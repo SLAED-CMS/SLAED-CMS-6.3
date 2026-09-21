@@ -29,9 +29,6 @@ if (!function_exists('adminmenu')) {
 if (!function_exists('get_modules')) {
     function get_modules(...$args) { return []; }
 }
-if (!function_exists('news')) {
-    function news(...$args) {}
-}
 if (!function_exists('whois')) {
     function whois(...$args) {}
 }

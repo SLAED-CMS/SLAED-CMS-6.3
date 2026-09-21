@@ -35,7 +35,7 @@ function getProbeRoute(string $uri, array $get, string $host): array {
     putenv('HTTP_HOST='.$host);
     $_SERVER['REQUEST_URI'] = $uri;
     $_GET = $get;
-    $name = 'news';
+    $name = 'presentation';
     $op = '';
     $home = 0;
     $theme = $theme ?? getTheme();
@@ -67,20 +67,20 @@ function getProbeComment(): array {
         $row = $db->getSqlRow($db->getSqlQuery('SELECT id, acomm FROM '.PREFIX_DB.'_'.$tab.' WHERE '.$where.' ORDER BY id DESC LIMIT 1'));
         return $row ? ['id' => intval($row['id']), 'acomm' => intval($row['acomm'])] : [];
     };
-    $open = $pick('news', 'acomm != 0 AND time <= NOW() AND status != \'0\'');
-    $off = $pick('news', 'acomm = 0 AND time <= NOW() AND status != \'0\'');
-    $hide = $pick('news', 'acomm != 0 AND (status = \'0\' OR time > NOW())');
+    $open = $pick('products', 'acomm != 0 AND time <= NOW() AND status != \'0\'');
+    $off = $pick('products', 'acomm = 0 AND time <= NOW() AND status != \'0\'');
+    $hide = $pick('products', 'acomm != 0 AND (status = \'0\' OR time > NOW())');
     $vote = $pick('voting', 'acomm != 0 AND modul = \'\' AND time <= NOW() AND (enddate >= NOW() AND status = \'0\' OR status = \'1\')');
     $out = [
-        'open' => $open ? [$open['acomm'], $com->getTargetMode('news', $open['id'])->value] : [],
-        'off' => $off ? [0, $com->getTargetMode('news', $off['id'])->value] : [],
-        'hide' => $hide ? [0, $com->getTargetMode('news', $hide['id'])->value] : [],
+        'open' => $open ? [$open['acomm'], $com->getTargetMode('shop', $open['id'])->value] : [],
+        'off' => $off ? [0, $com->getTargetMode('shop', $off['id'])->value] : [],
+        'hide' => $hide ? [0, $com->getTargetMode('shop', $hide['id'])->value] : [],
         'vote' => $vote ? [$vote['acomm'], $com->getTargetMode('voting', $vote['id'])->value] : [],
-        'missing' => $com->getTargetMode('news', 999999999)->value,
-        'zero' => $open ? $com->getTargetMode('news', 0)->value : 0,
+        'missing' => $com->getTargetMode('shop', 999999999)->value,
+        'zero' => $open ? $com->getTargetMode('shop', 0)->value : 0,
     ];
     $out['unknown'] = [];
-    foreach (['gallery', 'account', 'members', 'multimedia', 'forum', '', 'news_', 'news; DROP'] as $mod) {
+    foreach (['gallery', 'account', 'members', 'multimedia', 'forum', '', 'shop_', 'shop; DROP'] as $mod) {
         $out['unknown'][$mod] = $open ? $com->getTargetMode($mod, $open['id'])->value : -1;
     }
     return $out;
@@ -161,7 +161,7 @@ function getProbeCommentRead(): array {
     $cases = [
         ['status != :status', ['status' => 0], CommentStatus::Published, '', 2, ''],
         ['status = :status', ['status' => 0], CommentStatus::Pending, '', 2, ''],
-        ['status != :status AND s.modul LIKE :find', ['status' => 0, 'find' => '%news%'], CommentStatus::Published, '', 4, 'news'],
+        ['status != :status AND s.modul LIKE :find', ['status' => 0, 'find' => '%shop%'], CommentStatus::Published, '', 4, 'shop'],
         ['status != :status AND (s.name LIKE :fnam OR u.name LIKE :fusr)', ['status' => 0, 'fnam' => '%a%', 'fusr' => '%a%'], CommentStatus::Published, '', 3, 'a'],
         ['status != :status AND s.modul = :mod', ['status' => 0, 'mod' => $mod], CommentStatus::Published, $mod, 2, ''],
     ];
@@ -177,12 +177,11 @@ function getProbeCommentRead(): array {
 }
 
 # Report what the write path of the Comment class stores, counts and awards for every comment target, inside a transaction that is always rolled back
-# The registered run needs an account whose stored hash is_user() accepts, because the moderation state, the counter and the points slot of a published add all depend on it
+# The registered run needs an account whose stored hash is_user() accepts, because the moderation state, the counter and the points event of a published add all depend on it
 function getProbeCommentWrite(bool $guest): array {
     global $db, $com, $conf, $user;
-    $map = ['account' => '_users', 'faq' => '_faq', 'files' => '_files', 'links' => '_links', 'media' => '_media', 'news' => '_news', 'pages' => '_pages', 'shop' => '_products', 'voting' => '_voting'];
-    $slot = ['account' => 3, 'faq' => 7, 'files' => 10, 'links' => 22, 'media' => 26, 'news' => 32, 'pages' => 36, 'shop' => 40, 'voting' => 43];
-    $pts = explode(',', (string)$conf['users']['points']);
+    $map = ['account' => '_users', 'shop' => '_products', 'voting' => '_voting'];
+    $gain = (($conf['update']['points'] ?? '') === '6.3.0' && $conf['points']['active'] === '1') ? intval($conf['points']['actions']['comment']['points']) : 0;
     $out = ['guest' => $guest, 'user' => true, 'rows' => [], 'refuse' => [], 'clean' => false];
     $uid = 0;
     if (!$guest) {
@@ -213,7 +212,7 @@ function getProbeCommentWrite(bool $guest): array {
             $out['rows'][$mod] = ['target' => 0];
             continue;
         }
-        if ($mod === 'news') $open = $tid;
+        if ($mod === 'shop') $open = $tid;
         $cnt = ($mod === 'account') ? ['comments' => 0] : $db->getSqlRow($db->getSqlQuery('SELECT comments FROM '.PREFIX_DB.$tab.' WHERE id = :id', ['id' => $tid]));
         $pnt = $uid ? $db->getSqlRow($db->getSqlQuery('SELECT points FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $uid])) : [];
         $new = $com->addComment($mod, $tid, 'probe body for '.$mod, 'Probe');
@@ -221,20 +220,19 @@ function getProbeCommentWrite(bool $guest): array {
         $row = $new['id'] ? $db->getSqlRow($db->getSqlQuery('SELECT cid, modul, uid, name, ip, body, status FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $new['id']])) : [];
         $cnn = ($mod === 'account') ? ['comments' => 0] : $db->getSqlRow($db->getSqlQuery('SELECT comments FROM '.PREFIX_DB.$tab.' WHERE id = :id', ['id' => $tid]));
         $pnn = $uid ? $db->getSqlRow($db->getSqlQuery('SELECT points FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $uid])) : [];
-        $gain = ($uid && $conf['users']['point'] == 1) ? intval($pts[$slot[$mod] - 1] ?? 0) : 0;
         $out['rows'][$mod] = [
             'target' => $tid,
             'error' => $new['error'],
             'stored' => $row ? [intval($row['cid']), (string)$row['modul'], intval($row['uid']), (string)$row['ip'], intval($row['status'])] : [],
             'want' => [$tid, $mod, $uid, $ip, $guest ? 0 : 1],
             'delta' => [intval($cnn['comments']) - intval($cnt['comments']), intval($pnn['points'] ?? 0) - intval($pnt['points'] ?? 0)],
-            'wantdelta' => [($guest || $mod === 'account') ? 0 : 1, $guest ? 0 : $gain],
+            'wantdelta' => [($guest || $mod === 'account') ? 0 : 1, $uid ? $gain : 0],
         ];
         if ($new['id']) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE id = :id', ['id' => $new['id']]);
     }
     $out['edit'] = [];
     if ($open) {
-        $new = $com->addComment('news', $open, 'probe body for the edit window', 'Probe');
+        $new = $com->addComment('shop', $open, 'probe body for the edit window', 'Probe');
         $eid = intval($new['id']);
         $out['edit']['skewed'] = $eid ? $com->updateComment($eid, 'probe body edited')['allow'] : null;
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = :time WHERE id = :id', ['time' => date('Y-m-d H:i:s'), 'id' => $eid]);
@@ -248,22 +246,22 @@ function getProbeCommentWrite(bool $guest): array {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE id = :id', ['id' => $eid]);
     }
     if ($open) {
-        $off = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_news WHERE acomm = 0 ORDER BY id DESC LIMIT 1'));
+        $off = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_products WHERE acomm = 0 ORDER BY id DESC LIMIT 1'));
         $out['refuse'] = [
-            'empty' => [$com->addComment('news', $open, '', 'Probe')['error'], _CERROR1],
-            'long' => [$com->addComment('news', $open, str_repeat('a', intval($conf['comments']['letter']) + 1), 'Probe')['error'], _CERROR2],
+            'empty' => [$com->addComment('shop', $open, '', 'Probe')['error'], _CERROR1],
+            'long' => [$com->addComment('shop', $open, str_repeat('a', intval($conf['comments']['letter']) + 1), 'Probe')['error'], _CERROR2],
             'unknown' => [$com->addComment('gallery', $open, 'probe body', 'Probe')['error'], _ERROR],
-            'missing' => [$com->addComment('news', 999999999, 'probe body', 'Probe')['error'], _ERROR],
-            'off' => [$off ? $com->addComment('news', intval($off['id']), 'probe body', 'Probe')['error'] : _ERROR, _ERROR],
-            'noname' => [$guest ? $com->addComment('news', $open, 'probe body', '')['error'] : _CERROR3, _CERROR3],
+            'missing' => [$com->addComment('shop', 999999999, 'probe body', 'Probe')['error'], _ERROR],
+            'off' => [$off ? $com->addComment('shop', intval($off['id']), 'probe body', 'Probe')['error'] : _ERROR, _ERROR],
+            'noname' => [$guest ? $com->addComment('shop', $open, 'probe body', '')['error'] : _CERROR3, _CERROR3],
         ];
-        $mark = $com->addComment('news', $open, 'probe body for the flood window', 'Probe');
+        $mark = $com->addComment('shop', $open, 'probe body for the flood window', 'Probe');
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = :now WHERE id = :id', ['now' => date('Y-m-d H:i:s'), 'id' => intval($mark['id'])]);
-        $out['refuse']['flood'] = [$com->addComment('news', $open, 'probe body again', 'Probe')['error'], sprintf(_CERROR5, $conf['comments']['send'])];
+        $out['refuse']['flood'] = [$com->addComment('shop', $open, 'probe body again', 'Probe')['error'], sprintf(_CERROR5, $conf['comments']['send'])];
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE ip = :ip', ['ip' => $ip]);
         $word = trim(explode(',', (string)$conf['censor_l'])[0]);
         $text = '[usehtml]<b>x</b>[/usehtml] '.$word.' cost $5 back\\slash <i>kept</i>';
-        $new = $com->addComment('news', $open, $text, 'Probe');
+        $new = $com->addComment('shop', $open, $text, 'Probe');
         $row = $new['id'] ? $db->getSqlRow($db->getSqlQuery('SELECT body FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $new['id']])) : [];
         $out['norm'] = [$new['error'], (string)($row['body'] ?? ''), $word, (bool)$conf['censor'], (string)$conf['censor_r']];
     }
@@ -277,33 +275,32 @@ function getProbeCommentWrite(bool $guest): array {
 # The run signs in as the administrator whose stored address this process reports, because the moderator half of the class cannot be reached otherwise from a CLI probe
 function getProbeCommentStage2(): array {
     global $db, $com, $conf, $user;
-    $out = ['admin' => isAdmin(true), 'moder' => (bool)is_moder('news'), 'clean' => false];
+    $out = ['admin' => isAdmin(true), 'moder' => (bool)is_moder('shop'), 'clean' => false];
     if (!$out['admin']) return $out;
     $sql = 'SELECT id, name, password FROM '.PREFIX_DB.'_users WHERE access = 0 AND password != \'\' AND name REGEXP \'^[A-Za-z0-9_.-]+$\' ORDER BY id ASC LIMIT 1';
     $one = $db->getSqlRow($db->getSqlQuery($sql));
     $uid = $one ? intval($one['id']) : 0;
     if ($one) $user = [(string)$one['id'], (string)$one['name'], (string)$one['password']];
     $out['user'] = [$uid, is_user() ? $uid : 0];
-    $pts = explode(',', (string)$conf['users']['points']);
-    $gain = ($conf['users']['point'] == 1) ? intval($pts[31] ?? 0) : 0;
+    $gain = (($conf['update']['points'] ?? '') === '6.3.0' && $conf['points']['active'] === '1') ? intval($conf['points']['actions']['comment']['points']) : 0;
     $long = intval($conf['comments']['letter']);
     $word = str_repeat('a', $long + 1);
     $out['rules'] = [
-        'longest' => $com->checkRules('news', $word.' tail', 'Probe', '', false),
-        'last' => $com->checkRules('news', 'tail '.$word, 'Probe', '', false),
-        'chars' => $com->checkRules('news', str_repeat('я', $long), 'Probe', '', false),
+        'longest' => $com->checkRules('shop', $word.' tail', 'Probe', '', false),
+        'last' => $com->checkRules('shop', 'tail '.$word, 'Probe', '', false),
+        'chars' => $com->checkRules('shop', str_repeat('я', $long), 'Probe', '', false),
         'bytes' => strlen(str_repeat('я', $long)),
         'limit' => $long,
-        'empty' => $com->checkRules('news', '', 'Probe', '', false),
+        'empty' => $com->checkRules('shop', '', 'Probe', '', false),
     ];
     $all = getProbeCommentCount();
     $db->setSqlBegin();
     $addr = getIp();
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE ip = :ip', ['ip' => $addr]);
     $tid = 0;
-    foreach ($db->getSqlRows($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_news ORDER BY id DESC LIMIT 25')) ?: [] as $row) {
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET acomm = 2 WHERE id = :id', ['id' => intval($row['id'])]);
-        if ($com->getTargetMode('news', intval($row['id'])) === CommentMode::Open) {
+    foreach ($db->getSqlRows($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_products ORDER BY id DESC LIMIT 25')) ?: [] as $row) {
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET acomm = 2 WHERE id = :id', ['id' => intval($row['id'])]);
+        if ($com->getTargetMode('shop', intval($row['id'])) === CommentMode::Open) {
             $tid = intval($row['id']);
             break;
         }
@@ -313,12 +310,12 @@ function getProbeCommentStage2(): array {
         return $out + ['target' => 0];
     }
     $read = static function () use ($db, $tid, $uid): array {
-        $cnt = $db->getSqlRow($db->getSqlQuery('SELECT comments FROM '.PREFIX_DB.'_news WHERE id = :id', ['id' => $tid]));
+        $cnt = $db->getSqlRow($db->getSqlQuery('SELECT comments FROM '.PREFIX_DB.'_products WHERE id = :id', ['id' => $tid]));
         $pnt = $db->getSqlRow($db->getSqlQuery('SELECT points FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $uid]));
         return [intval($cnt['comments'] ?? 0), intval($pnt['points'] ?? 0)];
     };
     $out['target'] = $tid;
-    $new = $com->addComment('news', $tid, 'stage two probe body', 'Probe', 'abcdef0123456789abcdef0123456789');
+    $new = $com->addComment('shop', $tid, 'stage two probe body', 'Probe', 'abcdef0123456789abcdef0123456789');
     $cid = intval($new['id']);
     $row = $db->getSqlRow($db->getSqlQuery('SELECT LOWER(HEX(reqkey)) AS rkey, status, deleted, edited FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $cid]));
     $out['stored'] = [
@@ -331,13 +328,13 @@ function getProbeCommentStage2(): array {
     # The window is measured against the stored time with the clock of PHP, so the marker is written from the clock of PHP too
     # A stand whose database clock differs from its PHP clock would otherwise never let the window fire, and the rule would go untested rather than proven
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = :now WHERE id = :id', ['now' => date('Y-m-d H:i:s'), 'id' => $cid]);
-    $out['rules']['flood'] = [$com->checkRules('news', 'body', 'Probe', $addr, true), $com->checkRules('news', 'body', 'Probe', $addr, false)];
+    $out['rules']['flood'] = [$com->checkRules('shop', 'body', 'Probe', $addr, true), $com->checkRules('shop', 'body', 'Probe', $addr, false)];
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE ip = :ip', ['ip' => $addr]);
-    $out['rules']['freed'] = $com->checkRules('news', 'body', 'Probe', $addr, true);
+    $out['rules']['freed'] = $com->checkRules('shop', 'body', 'Probe', $addr, true);
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE id = :id', ['id' => $cid]);
-    $again = $com->addComment('news', $tid, 'stage two probe body', 'Probe', 'abcdef0123456789abcdef0123456789');
+    $again = $com->addComment('shop', $tid, 'stage two probe body', 'Probe', 'abcdef0123456789abcdef0123456789');
     $out['replay'] = [$cid, intval($again['id']), $again['error'], getProbeCommentCount('reqkey = UNHEX(:key)', ['key' => 'abcdef0123456789abcdef0123456789'])];
-    $other = $com->addComment('news', $tid, 'stage two probe conflict', 'Probe', 'abcdef0123456789abcdef0123456789');
+    $other = $com->addComment('shop', $tid, 'stage two probe conflict', 'Probe', 'abcdef0123456789abcdef0123456789');
     $out['conflict'] = [intval($other['id']), $other['error'], getProbeCommentCount('reqkey = UNHEX(:key)', ['key' => 'abcdef0123456789abcdef0123456789'])];
     $was = $read();
     $out['hide'] = [$com->setStatus($cid, false), $read()];
@@ -357,12 +354,12 @@ function getProbeCommentStage2(): array {
     $out['deletedagain'] = [(string)($row['deleted'] ?? ''), $read()];
     $out['gone'] = [
         'single' => $com->getComment($cid),
-        'list' => in_array($cid, array_column($com->getList('news', $tid, 1)['rows'], 'id'), true),
-        'admin' => in_array($cid, array_column($com->getAdminList(CommentStatus::Published, 'news', 2, '', 1)['rows'], 'id'), true),
+        'list' => in_array($cid, array_column($com->getList('shop', $tid, 1)['rows'], 'id'), true),
+        'admin' => in_array($cid, array_column($com->getAdminList(CommentStatus::Published, 'shop', 2, '', 1)['rows'], 'id'), true),
         'edit' => $com->updateComment($cid, 'after the delete')['saved'],
         'status' => $com->setStatus($cid, false),
     ];
-    $pend = $com->addComment('news', $tid, 'stage two pending probe', 'Probe', '');
+    $pend = $com->addComment('shop', $tid, 'stage two pending probe', 'Probe', '');
     $pid = intval($pend['id']);
     $com->setStatus($pid, false);
     $was = $read();
@@ -379,9 +376,14 @@ function getProbeCommentStage2(): array {
         $out['round'][$fmt] = [$was === $now, $edit['saved'], $was === ($com->getComment($one)['body'] ?? ''), mb_substr($was, 0, 60)];
     }
     $out['sort'] = [];
-    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = \'2020-01-01 00:00:00\' WHERE cid = :cid AND modul = \'news\'', ['cid' => $tid]);
+    foreach (['stage two sort probe one', 'stage two sort probe two'] as $text) {
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE ip = :ip', ['ip' => $addr]);
+        $seed = $com->addComment('shop', $tid, $text, 'Probe');
+        $com->setStatus(intval($seed['id']), true);
+    }
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = \'2020-01-01 00:00:00\' WHERE cid = :cid AND modul = \'shop\'', ['cid' => $tid]);
     for ($i = 0; $i < 2; $i++) {
-        $out['sort'][] = array_column($com->getList('news', $tid, 1)['rows'], 'id');
+        $out['sort'][] = array_column($com->getList('shop', $tid, 1)['rows'], 'id');
     }
     $db->setSqlRollback();
     $out['clean'] = ($all === getProbeCommentCount());
@@ -393,13 +395,13 @@ function getProbeCommentFormat(): array {
     global $prs;
     $body = "**bold** *it* [b]bb[/b]\nsecond # not a heading\n\n- item";
     return [
-        'plain' => $prs->filterContent($body, true, 'news', 0, 'plain'),
-        'markdown' => $prs->filterContent($body, true, 'news', 0, 'markdown'),
-        'empty' => $prs->filterContent($body, true, 'news', 0, ''),
-        'html' => $prs->filterContent('<b>x</b> <img src=x onerror=alert(1)>', true, 'news', 0, 'markdown'),
-        'htmlplain' => $prs->filterContent('<b>x</b> <img src=x onerror=alert(1)>', true, 'news', 0, 'plain'),
-        'url' => $prs->filterContent('[url=javascript:alert(1)]click[/url]', true, 'news', 0, 'plain'),
-        'usehtml' => $prs->filterContent('[usehtml]<b>raw</b>[/usehtml]', true, 'news', 0, 'markdown'),
+        'plain' => $prs->filterContent($body, true, 'shop', 0, 'plain'),
+        'markdown' => $prs->filterContent($body, true, 'shop', 0, 'markdown'),
+        'empty' => $prs->filterContent($body, true, 'shop', 0, ''),
+        'html' => $prs->filterContent('<b>x</b> <img src=x onerror=alert(1)>', true, 'shop', 0, 'markdown'),
+        'htmlplain' => $prs->filterContent('<b>x</b> <img src=x onerror=alert(1)>', true, 'shop', 0, 'plain'),
+        'url' => $prs->filterContent('[url=javascript:alert(1)]click[/url]', true, 'shop', 0, 'plain'),
+        'usehtml' => $prs->filterContent('[usehtml]<b>raw</b>[/usehtml]', true, 'shop', 0, 'markdown'),
     ];
 }
 
@@ -407,20 +409,20 @@ function getProbeCommentFormat(): array {
 # Every write runs inside one transaction that is rolled back at the end, so the tree is measured against the live table without a row of it surviving the run
 function getProbeCommentThread(): array {
     global $db, $com, $conf;
-    $out = ['admin' => isAdmin(true), 'moder' => (bool)is_moder('news'), 'clean' => false];
+    $out = ['admin' => isAdmin(true), 'moder' => (bool)is_moder('shop'), 'clean' => false];
     if (!$out['admin']) return $out;
     $all = getProbeCommentCount();
     $db->setSqlBegin();
     $addr = getIp();
     $free = static fn(): mixed => $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE ip = :ip', ['ip' => $addr]);
-    $row = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_news WHERE time <= NOW() AND status != \'0\' ORDER BY id DESC LIMIT 1'));
+    $row = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_products WHERE time <= NOW() AND status != \'0\' ORDER BY id DESC LIMIT 1'));
     $tid = $row ? intval($row['id']) : 0;
     $out['target'] = $tid;
     if (!$tid) {
         $db->setSqlRollback();
         return $out;
     }
-    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET acomm = 2 WHERE id = :id', ['id' => $tid]);
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET acomm = 2 WHERE id = :id', ['id' => $tid]);
     $orph = 'SELECT COUNT(*) AS num FROM '.PREFIX_DB.'_comment AS c WHERE c.pid != 0 AND NOT EXISTS'
         .' (SELECT 1 FROM '.PREFIX_DB.'_comment AS p WHERE p.id = c.pid AND p.modul = c.modul AND p.cid = c.cid)';
     $self = 'SELECT COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE pid = id';
@@ -429,11 +431,11 @@ function getProbeCommentThread(): array {
         intval($db->getSqlRow($db->getSqlQuery($self))['num']),
     ];
     $free();
-    $root = $com->addComment('news', $tid, 'thread probe root', 'Probe');
+    $root = $com->addComment('shop', $tid, 'thread probe root', 'Probe');
     $free();
-    $kid = $com->addComment('news', $tid, 'thread probe reply', 'Probe', '', intval($root['id']));
+    $kid = $com->addComment('shop', $tid, 'thread probe reply', 'Probe', '', intval($root['id']));
     $free();
-    $sub = $com->addComment('news', $tid, 'thread probe sub reply', 'Probe', '', intval($kid['id']));
+    $sub = $com->addComment('shop', $tid, 'thread probe sub reply', 'Probe', '', intval($kid['id']));
     $rows = [];
     foreach ([$root, $kid, $sub] as $one) {
         $got = $com->getComment(intval($one['id']));
@@ -444,18 +446,18 @@ function getProbeCommentThread(): array {
     foreach ($com->getBranch(intval($root['id']), 50)['rows'] as $one) $seen[intval($one['id'])] = intval($one['depth']);
     $out['nested'] = [$seen[intval($kid['id'])] ?? -1, $seen[intval($sub['id'])] ?? -1];
     $free();
-    $other = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_news WHERE id != :id AND time <= NOW() AND status != \'0\' ORDER BY id DESC LIMIT 1', ['id' => $tid]));
+    $other = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_products WHERE id != :id AND time <= NOW() AND status != \'0\' ORDER BY id DESC LIMIT 1', ['id' => $tid]));
     $out['refuse'] = ['wrong' => '', 'zero' => '', 'foreign' => ''];
-    $out['refuse']['wrong'] = $com->addComment('news', $tid, 'thread probe crafted', 'Probe', '', 999999999)['error'];
+    $out['refuse']['wrong'] = $com->addComment('shop', $tid, 'thread probe crafted', 'Probe', '', 999999999)['error'];
     $free();
-    if ($other) $out['refuse']['foreign'] = $com->addComment('news', intval($other['id']), 'thread probe foreign parent', 'Probe', '', intval($root['id']))['error'];
+    if ($other) $out['refuse']['foreign'] = $com->addComment('shop', intval($other['id']), 'thread probe foreign parent', 'Probe', '', intval($root['id']))['error'];
     $free();
-    $out['refuse']['zero'] = $com->addComment('news', $tid, 'thread probe root two', 'Probe', '', 0)['error'];
+    $out['refuse']['zero'] = $com->addComment('shop', $tid, 'thread probe root two', 'Probe', '', 0)['error'];
     $deep = intval($sub['id']);
     $made = [intval($root['id']), intval($kid['id']), $deep];
     for ($i = 4; $i <= 21; $i++) {
         $free();
-        $one = $com->addComment('news', $tid, 'thread probe depth '.$i, 'Probe', '', $deep);
+        $one = $com->addComment('shop', $tid, 'thread probe depth '.$i, 'Probe', '', $deep);
         $out['depth'][$i] = [$one['error'], intval($one['id'])];
         if ($one['error'] !== '') break;
         $deep = intval($one['id']);
@@ -466,10 +468,10 @@ function getProbeCommentThread(): array {
     foreach ($out['depth'] as $lvl => $pair) {
         $out['depth'][$lvl][1] = $seen[$pair[1]] ?? -1;
     }
-    $page = $com->getList('news', $tid, 1);
+    $page = $com->getList('shop', $tid, 1);
     $out['page'] = [
         'total' => $page['total'],
-        'roots' => intval($db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE modul = \'news\' AND cid = :cid AND pid = 0 AND status = 1 AND deleted IS NULL', ['cid' => $tid]))['num']),
+        'roots' => intval($db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE modul = \'shop\' AND cid = :cid AND pid = 0 AND status = 1 AND deleted IS NULL', ['cid' => $tid]))['num']),
         'rows' => count($page['rows']),
         'order' => array_slice(array_column($page['rows'], 'id'), 0, 4),
         'depths' => array_slice(array_column($page['rows'], 'depth'), 0, 4),
@@ -482,23 +484,23 @@ function getProbeCommentThread(): array {
         'skip' => count($com->getBranch(intval($root['id']), 3, 3)['rows']),
         'past' => count($com->getBranch(intval($root['id']), 3, 9999)['rows']),
     ];
-    $cap = $com->getList('news', $tid, 1);
+    $cap = $com->getList('shop', $tid, 1);
     $wide = [];
     foreach ($cap['rows'] as $one) {
         if (!$one['depth']) $wide[] = [$one['kids'], $one['shown']];
     }
     $out['cap'] = ['reps' => max(1, intval($conf['comments']['reps'] ?? 5)), 'roots' => $wide];
     $com->deleteComment(intval($kid['id']));
-    $tomb = $com->getList('news', $tid, 1);
+    $tomb = $com->getList('shop', $tid, 1);
     $ids = array_column($tomb['rows'], 'id');
     $out['tomb'] = [
         'kept' => in_array(intval($kid['id']), $ids, true),
         'child' => in_array(intval($sub['id']), $ids, true),
         'marked' => (string)($db->getSqlRow($db->getSqlQuery('SELECT deleted FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => intval($kid['id'])]))['deleted'] ?? ''),
-        'reply' => $com->addComment('news', $tid, 'thread probe under a tombstone', 'Probe', '', intval($kid['id']))['error'],
+        'reply' => $com->addComment('shop', $tid, 'thread probe under a tombstone', 'Probe', '', intval($kid['id']))['error'],
     ];
     foreach (array_reverse(array_slice($made, 2)) as $one) $com->deleteComment($one);
-    $bare = $com->getList('news', $tid, 1);
+    $bare = $com->getList('shop', $tid, 1);
     $out['tomb']['gone'] = !in_array(intval($kid['id']), array_column($bare['rows'], 'id'), true);
     $count = static function (string $where, array $pars = []) use ($db): int {
         $row = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE '.$where, $pars));
@@ -520,24 +522,24 @@ function getProbeCommentThread(): array {
     # to carry, so the case proves the mechanism instead of the history of one stand
     $out['drift'] = ['seeded' => 0, 'found' => 0, 'fixed' => 0, 'left' => 0, 'bad' => 0, 'clean' => false];
     $pick = $db->getSqlRows($db->getSqlQuery(
-        'SELECT cid FROM '.PREFIX_DB.'_comment WHERE modul = \'news\' AND status = 1 AND deleted IS NULL GROUP BY cid ORDER BY COUNT(*) DESC LIMIT 2'
+        'SELECT cid FROM '.PREFIX_DB.'_comment WHERE modul = \'shop\' AND status = 1 AND deleted IS NULL GROUP BY cid ORDER BY COUNT(*) DESC LIMIT 2'
     )) ?: [];
     $seed = [];
     foreach ($pick as $key => $one) {
         $tid = intval($one['cid']);
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET comments = comments + :delta WHERE id = :id', ['delta' => ($key === 0) ? 7 : -1, 'id' => $tid]);
-        $seed[] = ['modul' => 'news', 'cid' => $tid];
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET comments = comments + :delta WHERE id = :id', ['delta' => ($key === 0) ? 7 : -1, 'id' => $tid]);
+        $seed[] = ['modul' => 'shop', 'cid' => $tid];
     }
     $out['drift']['seeded'] = count($seed);
     if ($seed) {
-        $found = $com->getCountDrift('news');
+        $found = $com->getCountDrift('shop');
         $mine = array_values(array_filter($found, static fn(array $one): bool => in_array(['modul' => $one['modul'], 'cid' => $one['cid']], $seed, true)));
         $out['drift']['found'] = count($mine);
         $out['drift']['whole'] = count($com->getCountDrift()) >= count($found);
         $out['drift']['fixed'] = $com->updateCountDrift($mine);
-        $rest = $com->getCountDrift('news');
+        $rest = $com->getCountDrift('shop');
         $out['drift']['left'] = count(array_filter($rest, static fn(array $one): bool => in_array(['modul' => $one['modul'], 'cid' => $one['cid']], $seed, true)));
-        $out['drift']['bad'] = $com->updateCountDrift([['modul' => 'gallery', 'cid' => 1], ['modul' => 'news', 'cid' => 0], []]);
+        $out['drift']['bad'] = $com->updateCountDrift([['modul' => 'gallery', 'cid' => 1], ['modul' => 'shop', 'cid' => 0], []]);
         $out['drift']['clean'] = ($com->updateCountDrift($mine) === 0);
     }
     $db->setSqlRollback();
@@ -558,18 +560,18 @@ function getProbeCommentNotify(): array {
         return $row ? intval($row['num']) : 0;
     };
     $post = static function (int $tid, string $body, string $key) use ($com, $conf, $tpl): array {
-        $new = $com->addComment('news', $tid, $body, 'Probe', $key);
+        $new = $com->addComment('shop', $tid, $body, 'Probe', $key);
         if ($new['error'] === '' && $new['new']) {
-            $link = $conf['homeurl'].'/index.php?name=news&op=view&id='.$tid.'#'.$new['id'];
+            $link = $conf['homeurl'].'/index.php?name=shop&op=view&id='.$tid.'#'.$new['id'];
             $clink = $tpl->getHtmlFrag('link', ['href' => $link, 'title' => '', 'label_html' => $link]);
-            addAdminMail((bool)$conf['comments']['addmail'], 'news', $new['name'], getModuleName('news'), 1, $clink);
+            addAdminMail((bool)$conf['comments']['addmail'], 'shop', $new['name'], getModuleName('shop'), 1, $clink);
         }
         return $new;
     };
     $scope = $conf['multilingual'] ? ' AND (lang = :lang OR lang = \'\')' : '';
     $langs = $conf['multilingual'] ? ['lang' => $locale] : [];
     foreach ($db->getSqlRows($db->getSqlQuery('SELECT super, modules FROM '.PREFIX_DB.'_admins WHERE smail = \'1\''.$scope, $langs)) ?: [] as $one) {
-        if ($one['super'] || in_array('news', getAdminModuleNames((string)$one['modules']), true)) $out['subs']++;
+        if ($one['super'] || in_array('shop', getAdminModuleNames((string)$one['modules']), true)) $out['subs']++;
     }
     $addr = getIp();
     $free = static fn(): mixed => $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE ip = :ip', ['ip' => $addr]);
@@ -578,9 +580,9 @@ function getProbeCommentNotify(): array {
     $db->setSqlBegin();
     $free();
     $tid = 0;
-    foreach ($db->getSqlRows($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_news ORDER BY id DESC LIMIT 25')) ?: [] as $one) {
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET acomm = 2 WHERE id = :id', ['id' => intval($one['id'])]);
-        if ($com->getTargetMode('news', intval($one['id'])) === CommentMode::Open) {
+    foreach ($db->getSqlRows($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_products ORDER BY id DESC LIMIT 25')) ?: [] as $one) {
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET acomm = 2 WHERE id = :id', ['id' => intval($one['id'])]);
+        if ($com->getTargetMode('shop', intval($one['id'])) === CommentMode::Open) {
             $tid = intval($one['id']);
             break;
         }
@@ -614,7 +616,7 @@ function getProbeCommentNotify(): array {
     $bad = $mailer->addQueue(['kind' => 'comment', 'email' => 'not an address', 'title' => 'probe', 'body' => 'probe', 'sender' => $conf['adminmail'], 'prio' => 1]);
     $out['fail'] = [$bad, $db->checkSqlActive(), getProbeCommentCount('id = :id', ['id' => $cid]), $mailer->getError()];
     $time = hrtime(true);
-    addAdminMail((bool)$conf['comments']['addmail'], 'news', 'Probe', getModuleName('news'), 1, 'probe link');
+    addAdminMail((bool)$conf['comments']['addmail'], 'shop', 'Probe', getModuleName('shop'), 1, 'probe link');
     $out['notify'] = round((hrtime(true) - $time) / 1000000, 1);
     $db->setSqlRollback();
     $out['gone'] = [getProbeCommentCount() - $all, $mails() - $sent];
@@ -711,11 +713,11 @@ function getProbeCommentCount(string $where = '', array $pars = []): int {
     return $row ? intval($row['num']) : 0;
 }
 
-# Report whether deleteTarget() removes exactly the rows the eight module delete handlers removed before the move, inside a transaction that is always rolled back
+# Report whether deleteTarget() removes exactly the rows the module delete handlers removed before the move, inside a transaction that is always rolled back
 # The crafted arguments matter because the target id list is the one place a delete handler used to interpolate, so both the list and the module name are driven with hostile values
 function getProbeCommentTarget(): array {
     global $db, $com;
-    $mods = ['faq', 'files', 'links', 'media', 'news', 'pages', 'shop', 'voting'];
+    $mods = ['shop', 'voting'];
     $out = ['rows' => [], 'bulk' => [], 'cross' => [], 'refuse' => [], 'craft' => [], 'count' => [], 'clean' => false];
     $urow = $db->getSqlRow($db->getSqlQuery('SELECT uid FROM '.PREFIX_DB.'_comment WHERE uid > 0 GROUP BY uid ORDER BY COUNT(*) DESC LIMIT 1'));
     $uid = $urow ? intval($urow['uid']) : 0;
@@ -737,12 +739,12 @@ function getProbeCommentTarget(): array {
         $out['rows'][$mod] = [$done, intval($pick['num']), $left, $tot - getProbeCommentCount()];
     }
     $two = [];
-    $sql = 'SELECT cid, COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE modul = \'news\' GROUP BY cid ORDER BY num DESC LIMIT 2';
+    $sql = 'SELECT cid, COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE modul = \'shop\' GROUP BY cid ORDER BY num DESC LIMIT 2';
     foreach ($db->getSqlRows($db->getSqlQuery($sql)) ?: [] as $row) $two[intval($row['cid'])] = intval($row['num']);
     if (count($two) === 2) {
         $tot = getProbeCommentCount();
-        $done = $com->deleteTarget('news', array_keys($two));
-        $left = getProbeCommentCount('modul = \'news\' AND cid IN ('.implode(', ', array_keys($two)).')');
+        $done = $com->deleteTarget('shop', array_keys($two));
+        $left = getProbeCommentCount('modul = \'shop\' AND cid IN ('.implode(', ', array_keys($two)).')');
         $out['bulk'] = [$done, array_sum($two), $left, $tot - getProbeCommentCount()];
     }
     $sql = 'SELECT cid FROM '.PREFIX_DB.'_comment GROUP BY cid HAVING COUNT(DISTINCT modul) > 1 ORDER BY COUNT(DISTINCT modul) DESC, cid ASC LIMIT 1';
@@ -760,17 +762,17 @@ function getProbeCommentTarget(): array {
     $tot = getProbeCommentCount();
     $out['refuse'] = [
         'nomod' => $com->deleteTarget('', [1]),
-        'noids' => $com->deleteTarget('news', []),
-        'zero' => $com->deleteTarget('news', [0, -3, 'abc']),
+        'noids' => $com->deleteTarget('shop', []),
+        'zero' => $com->deleteTarget('shop', [0, -3, 'abc']),
         'unknown' => $com->deleteTarget('gallery', [1]),
         'kept' => ($tot === getProbeCommentCount()),
     ];
-    $mine = getProbeCommentCount('modul = \'news\' AND cid = 1');
+    $mine = getProbeCommentCount('modul = \'shop\' AND cid = 1');
     $tot = getProbeCommentCount();
-    $done = $com->deleteTarget('news', ['1) OR 1=1 -- ', '1; DROP TABLE x']);
+    $done = $com->deleteTarget('shop', ['1) OR 1=1 -- ', '1; DROP TABLE x']);
     $out['craft'] = [$done, $mine, $tot - getProbeCommentCount(), getProbeCommentCount() > 0];
     $tot = getProbeCommentCount();
-    $out['craftmod'] = [$com->deleteTarget('news\' OR modul != \'', [1]), $tot - getProbeCommentCount()];
+    $out['craftmod'] = [$com->deleteTarget('shop\' OR modul != \'', [1]), $tot - getProbeCommentCount()];
     $db->setSqlRollback();
     $out['clean'] = ($all === getProbeCommentCount());
     return $out;
@@ -827,18 +829,18 @@ if ($mode === 'core') {
     $rlog = is_file(LOGS_DIR.'/error_file.log') ? (string)file_get_contents(LOGS_DIR.'/error_file.log') : '';
     $out['reject_logged'] = str_contains($rlog, 'Rejected dynamic-region marker: shell');
 } elseif ($mode === 'route') {
-    $out = getProbeRoute('/index.php?name=news&num=1', ['name' => 'news', 'num' => '1'], $chost);
+    $out = getProbeRoute('/index.php?num=1', ['num' => '1'], $chost);
 } elseif ($mode === 'routenum') {
-    $out = getProbeRoute('/index.php?name=news', ['name' => 'news'], $chost);
+    $out = getProbeRoute('/index.php', [], $chost);
 } elseif ($mode === 'routebad') {
-    $out = getProbeRoute('/index.php?name=news&foo=1', ['name' => 'news', 'foo' => '1'], $chost);
+    $out = getProbeRoute('/index.php?foo=1', ['foo' => '1'], $chost);
 } elseif ($mode === 'routehost') {
-    $out = getProbeRoute('/index.php?name=news', ['name' => 'news'], 'evil.example');
+    $out = getProbeRoute('/index.php', [], 'evil.example');
 } elseif ($mode === 'stathit') {
     $_SERVER['REMOTE_ADDR'] = $argv[3] ?? '127.0.0.1';
     $rep = max(1, (int)($argv[4] ?? 1));
     for ($num = 0; $num < $rep; $num++) {
-        updateStatsTrack('/index.php?name=news', 0, ['sess' => null, 'country' => 'DE']);
+        updateStatsTrack('/index.php?name=shop', 0, ['sess' => null, 'country' => 'DE']);
     }
     $out = getProbeCounter();
 } elseif ($mode === 'appendfail') {

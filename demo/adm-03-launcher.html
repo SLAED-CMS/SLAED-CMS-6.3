@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>03 &middot; Лаунчер — стенд панели администратора SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; the sheets and scripts of the series are stamped so an edit is seen at once -->
+  <script>
+    ['demo', 'admin'].forEach((n) => document.write('<link rel="stylesheet" href="assets/' + n + '.css?v=' + Date.now() + '">'));
+  </script>
+  <style>
+    /* The launcher - the panel as a home screen. Nobody reads thirty-eight tiles; one either knows the name and types
+       three letters, or knows the picture and aims at it. So the first thing on the page is a search field, and under
+       it the modules are what a phone makes of applications: an icon, a name, and a badge when something waits.
+
+       Transfer map (admin.php, panelAdmin() and the sidebar blocks):
+
+         · search      new on the live page; the stand filter (data-demo-filter) would become a behaviour of
+                       plugins/system/slaed.js, as the favourites transfer already asks - one script, two pages
+         · chips       the five groups by meaning, a chip types the group name into the field
+         · waiting     the non-zero rows of "New" and "Awaiting review" as one line of chips; the sidebar is gone
+         · badge       the same numbers once more where the hand goes anyway - on the icon of the module that owns
+                       the queue; thirteen sidebar rows dissolve into three badges
+         · app         icon and name; the sentence about the module is said by the hint line at the bottom, for the
+                       one module the pointer rests on, not for all thirty-eight at once
+         · dial        absent by design: status, access and help live on the modules page, which is one click away
+                       and the only place where they are edited in earnest - a decision */
+    .v-launch {
+      --v-seek-height: 56px;
+      --v-app-size: 64px;
+      --v-app-cell: 116px;
+      --v-hint-width: 640px;
+      padding-bottom: calc(var(--sl-space-8) * 4);
+    }
+
+    .v-hero {
+      position: relative;
+      display: grid;
+      justify-items: center;
+      gap: var(--sl-space-6);
+      padding: calc(var(--sl-space-8) * 2.5) 0 calc(var(--sl-space-8) * 1.5);
+      text-align: center;
+    }
+
+    .v-hero::before {
+      content: "";
+      position: absolute;
+      inset: 0 calc(var(--sl-space-8) * -4);
+      z-index: var(--sl-z-base);
+      background: radial-gradient(420px circle at var(--dx) var(--dy), var(--sl-tint-strong), transparent 70%);
+      opacity: var(--sl-fade-muted);
+      pointer-events: none;
+    }
+
+    .v-hero > * {
+      position: relative;
+      z-index: var(--sl-z-raised);
+    }
+
+    .v-hero h1 {
+      color: var(--sl-text);
+      font-size: var(--sl-font-display);
+      font-weight: var(--sl-weight-semibold);
+      letter-spacing: -0.02em;
+    }
+
+    .v-hero .a-seek {
+      width: min(100%, var(--v-hint-width));
+    }
+
+    .v-hero .a-seek input {
+      height: var(--v-seek-height);
+      padding-left: calc(var(--sl-space-8) * 2);
+      border-color: var(--sl-border-strong);
+      background: var(--sl-bg);
+      box-shadow: var(--sl-shadow-raised);
+      font-size: var(--sl-font-h4);
+    }
+
+    .v-hero .a-seek input:focus {
+      box-shadow: var(--sl-shadow-focus), var(--sl-shadow-float);
+    }
+
+    .v-hero .a-seek > .bi {
+      left: var(--sl-space-7);
+      font-size: var(--sl-size-icon-sm);
+    }
+
+    .v-hero .a-seek .a-kbd {
+      right: var(--sl-space-6);
+    }
+
+    .v-chips {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: var(--sl-space-3);
+    }
+
+    .v-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      height: var(--sl-size-control);
+      padding: 0 var(--sl-space-5);
+      border: var(--a-hair) solid var(--sl-border);
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-bg);
+      color: var(--sl-text-muted);
+      cursor: pointer;
+      transition:
+        border-color var(--sl-time-fast) var(--sl-ease-out),
+        color var(--sl-time-fast) var(--sl-ease-out);
+    }
+
+    .v-chip:hover {
+      border-color: var(--tone, var(--sl-primary));
+      color: var(--sl-text);
+    }
+
+    .v-wait {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: var(--sl-space-3) var(--sl-space-6);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-wait a {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      color: var(--sl-text);
+    }
+
+    .v-wait a:hover {
+      color: var(--sl-primary);
+    }
+
+    .v-group {
+      margin-top: var(--sl-space-8);
+    }
+
+    .v-group h2 {
+      margin-bottom: var(--sl-space-5);
+    }
+
+    .v-group h2 small {
+      color: var(--sl-text-subtle);
+    }
+
+    .v-apps {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(var(--v-app-cell), 1fr));
+      gap: var(--sl-space-5) var(--sl-space-3);
+    }
+
+    .v-apps > template {
+      display: none;
+    }
+
+    .v-app {
+      display: grid;
+      justify-items: center;
+      align-content: start;
+      gap: var(--sl-space-4);
+      padding: var(--sl-space-5) var(--sl-space-2);
+      border-radius: var(--sl-radius-3);
+      color: var(--sl-text);
+      font-size: var(--sl-font-small);
+      text-align: center;
+      outline: 0;
+    }
+
+    .v-app-ico {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: var(--v-app-size);
+      height: var(--v-app-size);
+      border-radius: calc(var(--sl-radius-3) + var(--sl-radius-2));
+      background: linear-gradient(
+        160deg,
+        color-mix(in srgb, var(--tone) 16%, var(--sl-bg)),
+        color-mix(in srgb, var(--tone) 6%, var(--sl-bg))
+      );
+      box-shadow: inset 0 0 0 var(--a-hair) color-mix(in srgb, var(--tone) 22%, transparent);
+      color: var(--tone);
+      font-size: var(--sl-size-icon-lg);
+      transition:
+        transform var(--sl-time-base) var(--sl-modal-ease),
+        box-shadow var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-app-ico > .bi:first-child {
+      font-size: var(--sl-size-icon-lg);
+    }
+
+    .v-app:hover .v-app-ico,
+    .v-app:focus-visible .v-app-ico {
+      box-shadow:
+        inset 0 0 0 var(--a-hair) color-mix(in srgb, var(--tone) 40%, transparent),
+        var(--sl-shadow-float);
+      transform: translateY(calc(var(--sl-space-2) * -1)) scale(1.06);
+    }
+
+    .v-app:focus-visible .v-app-ico {
+      outline: var(--sl-ring-width) solid var(--sl-primary);
+      outline-offset: var(--sl-ring-gap);
+    }
+
+    .v-app-ico .sl-chip {
+      position: absolute;
+      top: calc(var(--sl-space-3) * -1);
+      right: calc(var(--sl-space-4) * -1);
+      border: var(--sl-led-border) solid var(--sl-bg-subtle);
+      background: var(--sl-danger);
+      color: var(--sl-on-solid);
+      box-sizing: content-box;
+    }
+
+    .v-app-ico .bi-lock-fill {
+      position: absolute;
+      right: calc(var(--sl-space-2) * -1);
+      bottom: calc(var(--sl-space-2) * -1);
+      display: grid;
+      place-items: center;
+      width: var(--sl-chip-width);
+      height: var(--sl-chip-height);
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-bg);
+      box-shadow: var(--sl-shadow-xs);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-micro);
+    }
+
+    .v-hint {
+      position: fixed;
+      left: 50%;
+      bottom: var(--sl-space-8);
+      z-index: var(--sl-z-sticky);
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-5);
+      box-sizing: border-box;
+      max-width: min(var(--v-hint-width), calc(100vw - var(--sl-space-8) * 2));
+      padding: var(--sl-space-4) var(--sl-space-7);
+      border: var(--a-hair) solid var(--sl-border);
+      border-radius: var(--sl-radius-pill);
+      background: color-mix(in srgb, var(--sl-bg) 88%, transparent);
+      box-shadow: var(--sl-shadow-float);
+      backdrop-filter: blur(var(--sl-space-5));
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+      transform: translateX(-50%);
+      white-space: nowrap;
+    }
+
+    .v-hint p {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .v-hint p[data-live] {
+      color: var(--sl-text);
+    }
+
+    .v-hint-keys {
+      display: flex;
+      gap: var(--sl-space-2);
+      padding-left: var(--sl-space-5);
+      border-left: var(--a-hair) solid var(--sl-border);
+    }
+  </style>
+</head>
+<body>
+  <div class="a-page">
+    <header class="a-top">
+      <div class="a-wrap a-top-row">
+        <a class="a-brand" href="../admin.php" title="Панель администратора"><img src="../templates/admin/images/logos/slaed-logo-mark-gradient-blue.svg" alt="SLAED CMS">SLAED CMS</a>
+        <p class="a-eyebrow"><i class="a-dot a-dot-live"></i>6.3.0 Phoenix &middot; в норме</p>
+        <div class="a-top-end">
+          <a class="a-act" href="../" target="_blank" rel="noopener noreferrer" title="Сайт"><i class="bi bi-globe2"></i><b>Сайт</b></a>
+          <button class="a-act" type="button" title="Опции"><i class="bi bi-sliders"></i><b>Опции</b></button>
+          <a class="a-act" href="../admin.php?op=logout" title="Выход"><i class="bi bi-box-arrow-right"></i></a>
+          <a class="a-face" href="../index.php?name=account" title="Профиль: SLAED CMS">SL</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="a-wrap v-launch">
+      <section class="v-hero" data-demo-spot>
+        <h1>Куда сегодня?</h1>
+        <label class="a-seek" title="Поиск модуля">
+          <i class="bi bi-search"></i>
+          <input type="search" placeholder="Модуль, раздел или задача: «блоки», «люди», «защита»" data-demo-filter autofocus>
+          <span class="a-kbd">Ctrl K</span>
+        </label>
+        <div class="v-chips">
+          <button class="v-chip" type="button" data-demo-seek="">Все <b class="a-num" data-adm-count="mods"></b></button>
+          <button class="v-chip" type="button" data-demo-seek="#Контент" data-tone="primary"><i class="a-dot"></i>Контент</button>
+          <button class="v-chip" type="button" data-demo-seek="#Люди" data-tone="success"><i class="a-dot"></i>Люди</button>
+          <button class="v-chip" type="button" data-demo-seek="#Сайт" data-tone="accent"><i class="a-dot"></i>Сайт</button>
+          <button class="v-chip" type="button" data-demo-seek="#Система" data-tone="warning"><i class="a-dot"></i>Система</button>
+          <button class="v-chip" type="button" data-demo-seek="#Коммерция" data-tone="danger"><i class="a-dot"></i>Коммерция</button>
+        </div>
+        <div class="v-wait" data-adm-list="queue" data-adm-only="hot">
+          <span>Ждут решения:</span>
+          <template><a href="{{ href }}" title="{{ title }}: {{ note }}"><span class="sl-chip sl-chip-warn">{{ num }}</span>{{ title }}</a></template>
+        </div>
+      </section>
+
+      <template id="v-app">
+        <a class="v-app" href="{{ href }}" title="{{ title }}" data-tone="{{ tone }}" data-demo-find="{{ key }} #{{ gtitle }} {{ desc }}" data-adm-say="{{ title }} — {{ desc }}">
+          <span class="v-app-ico">
+            <i class="bi {{ icon }}"></i>
+            <span class="sl-chip" data-adm-on="{{ badge }}">{{ badge }}</span>
+            <i class="bi bi-lock-fill" data-adm-on="{{ access }}" title="{{ accessname }}"></i>
+          </span>
+          {{ title }}
+        </a>
+      </template>
+
+      <section class="v-group" data-demo-group data-tone="primary">
+        <h2 class="a-eyebrow"><i class="a-dot"></i>Контент <small data-demo-count></small></h2>
+        <div class="v-apps" data-adm-list="mods" data-adm-group="content" data-adm-tpl="v-app"></div>
+      </section>
+      <section class="v-group" data-demo-group data-tone="success">
+        <h2 class="a-eyebrow"><i class="a-dot"></i>Люди <small data-demo-count></small></h2>
+        <div class="v-apps" data-adm-list="mods" data-adm-group="people" data-adm-tpl="v-app"></div>
+      </section>
+      <section class="v-group" data-demo-group data-tone="accent">
+        <h2 class="a-eyebrow"><i class="a-dot"></i>Сайт <small data-demo-count></small></h2>
+        <div class="v-apps" data-adm-list="mods" data-adm-group="site" data-adm-tpl="v-app"></div>
+      </section>
+      <section class="v-group" data-demo-group data-tone="warning">
+        <h2 class="a-eyebrow"><i class="a-dot"></i>Система <small data-demo-count></small></h2>
+        <div class="v-apps" data-adm-list="mods" data-adm-group="system" data-adm-tpl="v-app"></div>
+      </section>
+      <section class="v-group" data-demo-group data-tone="danger">
+        <h2 class="a-eyebrow"><i class="a-dot"></i>Коммерция <small data-demo-count></small></h2>
+        <div class="v-apps" data-adm-list="mods" data-adm-group="trade" data-adm-tpl="v-app"></div>
+      </section>
+      <div class="sl-alert sl-alert-info" data-demo-empty hidden><div class="sl-alert-body">Такого модуля нет. Escape очищает поиск.</div></div>
+      <div class="a-note" data-adm-note></div>
+    </main>
+
+    <div class="v-hint">
+      <p data-adm-hint>Наведите на модуль — здесь появится, что он делает</p>
+      <span class="v-hint-keys"><span class="a-kbd">/</span><span class="a-kbd">Enter</span><span class="a-kbd">Esc</span></span>
+    </div>
+  </div>
+  <script>
+    ['demo', 'admin'].forEach((n) => document.write('<script src="assets/' + n + '.js?v=' + Date.now() + '"><\/script>'));
+  </script>
+</body>
+</html>
