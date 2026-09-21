@@ -940,6 +940,7 @@ function delete(int|string|null $catid = null, int|string|null $id = null): void
                 $own = $db->setSqlBegin();
                 $act = $pid ? 'comment' : 'publish';
                 $rid = ($own && $uid) ? $pnt->getEventId($act, 'forum.topic', ($pid ? 'post:' : 'topic:').$id, (int)$uid) : 0;
+                if ($rid === 0 && !$pid && $own && $uid && ($rid = $pnt->getEventId('comment', 'forum.topic', 'post:'.$id, (int)$uid))) $act = 'comment';
                 if ($rid) $pnt->addEvent($act, 'forum.topic', 'reverse:'.$rid, (int)$uid, ['rid' => $rid, 'mid' => (int)($pid ?: $id)]);
                 [$fid] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_favorites WHERE fid = :id AND modul = 'forum'", ['id' => $id]));
                 if ($fid) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE id = :fid', ['fid' => $fid]);

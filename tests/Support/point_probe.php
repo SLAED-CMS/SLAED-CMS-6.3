@@ -22,9 +22,18 @@ const PROBEMAX = 4294967295;
 # A database facade whose commit can be made to answer unknown, which is the one outcome a real server cannot be asked to produce on demand
 final class ProbeBase extends Database {
     public bool $deny = false;
+    public int $left = -1;
+    public bool $mute = false;
 
     # Refuse the commit while the switch is on, after taking the transaction back so the connection stays usable for the next scenario
+    # The countdown lets a number of commits through before the next one fails: refused after a rollback, or kept on the server and answered false when the answer is muted
     function setSqlCommit(): bool {
+        if ($this->left > 0) $this->left--;
+        elseif ($this->left === 0) {
+            $this->left = -1;
+            $this->mute ? parent::setSqlCommit() : parent::setSqlRollback();
+            return false;
+        }
         if (!$this->deny) return parent::setSqlCommit();
         parent::setSqlRollback();
         return false;
@@ -196,12 +205,15 @@ function getProbeConfig(): array {
     ];
     setProbeSeed();
     $pdb = $GLOBALS['pdb'];
+    $shut = new Point($pdb, []);
+    $adm = ['aid' => 1, 'note' => 'x', 'points' => 5];
+    $void = [$shut->addEvent('publish', 'probe', 'node:1', 2), $shut->addEvent('adjust', 'probe', 'adm:1', 2, $adm), checkProbeLog('the points configuration is invalid')];
     $dead = new Point($pdb, $list['sumover']);
     $pdb->setSqlBegin();
-    $adm = ['aid' => 1, 'note' => 'x', 'points' => 5];
     $gone = [$dead->addEvent('publish', 'probe', 'node:1', 2), $dead->getEventId('publish', 'probe', 'node:1', 2), $dead->addEvent('adjust', 'probe', 'adm:1', 2, $adm)];
     $pdb->setSqlRollback();
-    return ['valid' => array_map('checkProbeConf', $list), 'dead' => $gone, 'rows' => getProbeRows(), 'log' => checkProbeLog('the points configuration is invalid')];
+    $log = checkProbeLog('the points configuration is invalid');
+    return ['valid' => array_map('checkProbeConf', $list), 'void' => $void, 'dead' => $gone, 'rows' => getProbeRows(), 'log' => $log];
 }
 
 # The closed input: every refused key and every refused data value, and the statements all of them together and both kinds of empty reward cost
@@ -580,6 +592,90 @@ function getProbeRace(): array {
     return $out;
 }
 
+# Lift one function out of a shipped file that guards itself with a request, so the probe drives the code an installation really runs and never a copy of it
+function addProbeCode(string $path, string $name): void {
+    $code = (string)file_get_contents(BASE_DIR.'/'.$path);
+    $from = strpos($code, 'function '.$name.'(');
+    $to = $from === false ? false : strpos($code, "\n}\n", $from);
+    if ($from === false || $to === false) throw new RuntimeException($name.'() is gone from '.$path);
+    eval(substr($code, $from, $to - $from + 3));
+}
+
+# One call of the shipped reset with the core globals pointed at the disposable schema, and what it left in the admin session
+function getProbeWipe(): array {
+    global $conf;
+    $done = setPointsReset();
+    return [$done, $_SESSION[$conf['admin_c'].'-reset'] ?? null];
+}
+
+# The journal of the reset as one connection of its own sees it: rows, their total, the distinct operation ids, and every row that is not an attributed reset correction
+function getProbeWiped(): array {
+    $side = getProbeSide();
+    $base = 'FROM '.PREFIX_DB.'_points';
+    $ids = $side->query('SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(source, \':\', 2), \':\', -1) '.$base)->fetchAll(PDO::FETCH_COLUMN);
+    $cond = 'action != \'adjust\' OR scope != \'account\' OR aid != 1 OR note != \'reset\' OR points >= 0 OR source NOT LIKE \'reset:%\'';
+    $odd = $side->query('SELECT COUNT(*) '.$base.' WHERE '.$cond);
+    return [
+        'rows' => intval($side->query('SELECT COUNT(*) '.$base)->fetchColumn()),
+        'sum' => intval($side->query('SELECT COALESCE(SUM(points), 0) '.$base)->fetchColumn()),
+        'ids' => $ids,
+        'odd' => intval($odd->fetchColumn()),
+        'held' => intval($side->query('SELECT COALESCE(SUM(points), 0) FROM '.PREFIX_DB.'_users')->fetchColumn()),
+    ];
+}
+
+# The journal rows of one account as source tail and amount, in the order they were written
+function getProbeParts(int $uid): array {
+    $out = [];
+    foreach (getProbeSide()->query('SELECT source, points FROM '.PREFIX_DB.'_points WHERE uid = '.$uid.' ORDER BY id')->fetchAll(PDO::FETCH_NUM) as [$src, $sum]) {
+        $out[] = [substr($src, strrpos($src, ':') + 1), intval($sum)];
+    }
+    return $out;
+}
+
+# The shared reset of the account admin screen: more than one batch of 500, a balance of several million parts, a refused commit and an unanswered one in the middle, and the repeat
+# Accounts 1000-1619 carry 3 points, every tenth of them none, account 1000 carries 2500000; the core globals point at the disposable schema only while the scenario runs
+function getProbeReset(): array {
+    global $db, $pnt, $admin;
+    setProbeSeed();
+    $pdb = $GLOBALS['pdb'];
+    $rows = [];
+    for ($i = 1000; $i < 1620; $i++) $rows[] = '('.$i.', \'wipe'.$i.'\', \'wipe'.$i.'@probe.test\', \'x\', \'\', \'\', \'\', '.($i === 1000 ? 2500000 : ($i % 10 ? 3 : 0)).')';
+    getProbeSide()->exec('INSERT INTO `'.PREFIX_DB.'_users` (`id`, `name`, `email`, `password`, `block`, `warnings`, `field`, `points`) VALUES '.implode(', ', $rows));
+    $total = 2500000 + 3 * 558;
+    addProbeCode('modules/account/admin/index.php', 'setPointsReset');
+    $keep = [$db, $pnt, $admin, $_SESSION ?? null];
+    [$db, $pnt, $admin, $_SESSION] = [$pdb, getProbePoint([], '0'), ['1'], []];
+    $out = ['total' => $total];
+    try {
+        $pdb->left = 520;
+        $out['refused'] = getProbeWipe();
+        $out['first'] = getProbeWiped();
+        $stop = intval($out['refused'][1]['cur'] ?? 0);
+        $next = intval(getProbeSide()->query('SELECT MIN(id) FROM '.PREFIX_DB.'_users WHERE id > '.$stop.' AND points > 0')->fetchColumn());
+        $out['intact'] = [getProbeBal($next), getProbeParts($next)];
+        [$pdb->left, $pdb->mute] = [10, true];
+        $out['muted'] = getProbeWipe();
+        $lost = intval(getProbeSide()->query('SELECT MAX(uid) FROM '.PREFIX_DB.'_points')->fetchColumn());
+        $out['kept'] = [$lost > intval($out['muted'][1]['cur'] ?? 0), getProbeBal($lost), getProbeParts($lost)];
+        getProbeSide()->exec('UPDATE '.PREFIX_DB.'_users SET points = 4 WHERE id = '.$lost);
+        $pdb->mute = false;
+        $out['last'] = getProbeWipe();
+        $out['again'] = [getProbeBal($lost), getProbeParts($lost)];
+        $out['final'] = getProbeWiped();
+        $out['large'] = getProbeParts(1000);
+        $out['none'] = getProbeParts(1010);
+        $out['idle'] = getProbeWipe();
+        $out['after'] = getProbeWiped()['rows'];
+    } finally {
+        [$db, $pnt, $admin, $_SESSION] = $keep;
+        [$pdb->left, $pdb->mute] = [-1, false];
+        getProbeSide()->exec('DELETE FROM '.PREFIX_DB.'_points');
+        getProbeSide()->exec('DELETE FROM '.PREFIX_DB.'_users WHERE id >= 1000');
+    }
+    return $out;
+}
+
 if ((string)($argv[2] ?? '') === 'rival') {
     echo json_encode(getProbeRival((string)$argv[3], (float)$argv[4], (string)$argv[5]));
     exit;
@@ -605,6 +701,7 @@ try {
         'lost' => getProbeLost(),
         'stale' => getProbeStale(),
         'race' => getProbeRace(),
+        'reset' => getProbeReset(),
     ];
 } catch (Throwable $err) {
     $report['error'] = $err->getMessage().' @ '.basename($err->getFile()).':'.$err->getLine();

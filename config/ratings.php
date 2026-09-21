@@ -6,8 +6,23 @@
 
 return [
     'ratings' => [
-        'account' => '2592000|1|0',
-        'forum'   => '2592000|1|0',
-        'shop'    => '2592000|1|0',
+        'account' => [
+            'active' => '1',
+            'period' => '2592000',
+            'detail' => '0',
+            'guests' => '1',
+        ],
+        'forum' => [
+            'active' => '1',
+            'period' => '2592000',
+            'detail' => '0',
+            'guests' => '1',
+        ],
+        'shop' => [
+            'active' => '1',
+            'period' => '2592000',
+            'detail' => '0',
+            'guests' => '1',
+        ],
     ],
 ];

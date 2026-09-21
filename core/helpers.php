@@ -1167,7 +1167,8 @@ function getRatingStars(int $width): array {
     return $stars;
 }
 
-# Render the shared ajax rating block for stars or like-style controls
+# Render the shared rating block for stars or like-style controls; type 2 answers a stored vote with the inner block alone, which replaces the content of the live one
+# The block is live only behind the mark of the 6.3 data update and an active rule; the vote itself travels in the body of a POST and the page carries no voting address
 function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $scor, string $obj = '', string $stl = ''): string {
     global $conf, $tpl;
     if (intval($rat)) {
@@ -1186,10 +1187,10 @@ function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $sc
         $title = _RATING.': 0/0 '._AVERAGESCORE.': 0';
         $scored = false;
     }
-    $con = explode('|', $conf['ratings'][strtolower((string)$mod)] ?? '');
-    if ($typ != 2 && !((($con[1] ?? '') && $id && $mod) || ($rat && $scor))) return '';
-    $live = $typ != 2 && ($con[1] ?? '') && ($typ || !($con[2] ?? ''));
-    $vote = 'go=1&op=getRatingView&id='.$id.'&typ='.$obj.'&mod='.$mod;
+    $rule = (($conf['update']['ratings'] ?? '') === '6.3.0') ? ($conf['ratings'][strtolower((string)$mod)] ?? []) : [];
+    $on = ($rule['active'] ?? '') === '1';
+    if ($typ != 2 && !(($on && $id && $mod) || ($rat && $scor))) return '';
+    $live = $typ != 2 && $on && ($typ || ($rule['detail'] ?? '') !== '1');
     $part = $stl == '1'
         ? ['rate1_title' => _RATE1, 'rate5_title' => _RATE5]
         : ['width' => (string)$width, 'stars' => getRatingStars($width), 'votes' => (string)$votnum, 'votes_title' => _VOTES];
@@ -1198,11 +1199,13 @@ function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $sc
         'title' => $title,
         'has_score' => $scored,
         'target_id' => 'rep'.$id.$obj,
-        'vote_query' => $vote,
+        'mod' => strtolower((string)$mod),
+        'mid' => (string)intval($id),
         'token' => $live ? getPageToken() : '',
         'is_live' => $live,
     ] + $part);
-    $wrap = $live || $typ == 2 ? ['id' => 'rep'.$id.$obj] : [];
+    if ($typ == 2) return $body;
+    $wrap = $live ? ['id' => 'rep'.$id.$obj] : [];
     return $tpl->getHtmlPart('div', $wrap + ['is_rate' => true, 'content_html' => $body]);
 }
 

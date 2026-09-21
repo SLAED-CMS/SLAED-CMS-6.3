@@ -76,6 +76,7 @@ function setConfigFile(string $fp, array $arr, array $act = []): void {
     .'# Website: slaed.net'."\n\n"
     .'return '.$exp($data).';'."\n";
     file_put_contents($fp, $cnt, LOCK_EX);
+    if (function_exists('opcache_invalidate')) opcache_invalidate($fp, true);
 }
 
 function getProtocol(): string {
@@ -316,14 +317,14 @@ function config(): void {
 }
 
 # Check what the 6.3 data update needs before anything is changed and answer the refusal, or an empty string when the update may start
-# The site has to be closed, the server has to enforce CHECK constraints, and every table a points transaction touches has to be InnoDB; nothing is converted automatically
-function checkUpdateBase(Database $db, string $prefix, array $conf): string {
-    if (($conf['close'] ?? '0') != '1') return 'The site is open: close it in the settings before the data update runs.';
+# The server has to enforce CHECK constraints and every table of a points or ratings transaction has to be InnoDB; nothing is converted, and the branch closes the site itself
+function checkUpdateBase(Database $db, string $prefix): string {
     [$ver] = $db->getSqlRow($db->getSqlQuery('SELECT VERSION()'));
     $min = (stripos((string)$ver, 'mariadb') !== false) ? '10.2.1' : '8.0.16';
     if (version_compare(preg_replace('/[^0-9.].*$/', '', (string)$ver), $min, '<')) return 'The database server '.$ver.' is older than '.$min.'.';
     $list = [];
-    foreach (['users', 'comment', 'forum', 'order', 'clients', 'favorites', 'user_oauth', 'points'] as $key => $name) $list['t'.$key] = $prefix.'_'.$name;
+    $tabs = ['users', 'comment', 'forum', 'order', 'clients', 'favorites', 'user_oauth', 'points', 'products', 'rating_targets', 'rating_actors', 'rating_votes'];
+    foreach ($tabs as $key => $name) $list['t'.$key] = $prefix.'_'.$name;
     $sql = 'SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN (:'.implode(', :', array_keys($list)).')'
         .' AND engine IS NOT NULL AND engine != \'InnoDB\'';
     $res = $db->getSqlQuery($sql, $list);
@@ -380,6 +381,165 @@ function setUpdatePoints(Database $db, string $prefix): string {
     }
     setConfigFile('update.php', ['points' => '6.3.0'] + $mark);
     return getInfo('points: starting balances kept ('.intval($info['count']).' accounts), the subsystem is open', true);
+}
+
+# The ratings unit of the 6.3 data update: keep the aggregate of every remaining target as its starting balance, carry the last participation over and publish the four-key rules
+# Nothing is written before the whole preflight passed: a broken aggregate, a broken time or address of a kept row and a broken rule stop the unit with the table and the id
+# The unit resumes from its manifest: verified is skipped, applying and prepared continue by cursor, and a row that is already stored has to equal its snapshot
+# Rows of the new tables without a manifest stop it, because a current aggregate is never taken for a starting one; rows of polls and of other events are counted and left alone
+function setUpdateRatings(Database $db, string $prefix): string {
+    $dir = BASE_DIR.'/storage/backup/update/ratings';
+    $file = $dir.'/manifest.json';
+    $maps = ['account' => ['users', 'votes', 'tvotes', ''], 'forum' => ['forum', 'ratings', 'score', ' WHERE pid = 0'], 'shop' => ['products', 'votes', 'tvotes', '']];
+    $mark = is_file(CONFIG_DIR.'/update.php') ? ((require CONFIG_DIR.'/update.php')['update'] ?? []) : [];
+    $info = is_file($file) ? json_decode((string)file_get_contents($file), true) : null;
+    $bad = [];
+    $owners = function () use ($db, $prefix, $maps, &$bad): array|false {
+        $list = [];
+        foreach ($maps as $scope => [$tab, $cnt, $sum, $cond]) {
+            $res = $db->getSqlQuery('SELECT id, '.$cnt.', '.$sum.' FROM `'.$prefix.'_'.$tab.'`'.$cond.' ORDER BY id ASC');
+            if (!$res) return false;
+            while ([$mid, $num, $tot] = $db->getSqlRow($res)) {
+                [$mid, $num, $tot] = [intval($mid), intval($num), intval($tot)];
+                if ($num ? ($tot < $num || $tot > 5 * $num) : $tot > 0) $bad[] = $prefix.'_'.$tab.' '.$mid;
+                $list[] = [$scope, $mid, $tot, $num];
+            }
+        }
+        return $list;
+    };
+    $count = function (string $sql) use ($db): int {
+        $res = $db->getSqlQuery($sql);
+        return $res ? intval($db->getSqlRow($res)[0] ?? -1) : -1;
+    };
+    $polls = 'SELECT COUNT(*) FROM `'.$prefix.'_rating` WHERE modul = \'voting\'';
+    if (!is_array($info)) {
+        $rows = 0;
+        foreach (['targets', 'actors', 'votes'] as $name) {
+            $num = $count('SELECT COUNT(*) FROM `'.$prefix.'_rating_'.$name.'`');
+            if ($num < 0) return getInfo('ratings: the table '.$prefix.'_rating_'.$name.' could not be read, the unit is stopped', false);
+            $rows += $num;
+        }
+        if ($rows > 0 || isset($mark['ratings'])) return getInfo('ratings: the new tables already have rows or the mark is set and no manifest exists, the unit is stopped', false);
+        $old = is_file(CONFIG_DIR.'/ratings.php') ? ((require CONFIG_DIR.'/ratings.php')['ratings'] ?? []) : [];
+        $rules = [];
+        $stat = ['voting' => 0, 'foreign' => 0, 'orphan' => 0, 'dropped' => 0];
+        foreach ($old as $name => $rule) {
+            if (!isset($maps[$name]) && !preg_match('/^node\.[a-z][a-z0-9]{0,19}$/D', $name)) {
+                $stat['dropped']++;
+                continue;
+            }
+            $part = is_string($rule) ? explode('|', $rule) : [];
+            if (count($part) === 3) $rule = ['active' => $part[1], 'period' => $part[0], 'detail' => $part[2], 'guests' => '1'];
+            $good = is_array($rule) && count($rule) === 4 && is_string($rule['period'] ?? null) && preg_match('/^(?:0|[1-9][0-9]{0,17})$/D', $rule['period']);
+            $good = $good && intval($rule['period']) % 86400 === 0;
+            foreach (['active', 'detail', 'guests'] as $key) $good = $good && in_array($rule[$key] ?? null, ['0', '1'], true);
+            if ($good) $rules[$name] = ['active' => $rule['active'], 'period' => $rule['period'], 'detail' => $rule['detail'], 'guests' => $rule['guests']];
+            else $bad[] = 'config/ratings.php '.$name;
+        }
+        foreach (array_diff(array_keys($maps), array_keys($old)) as $name) $bad[] = 'config/ratings.php '.$name.' (missing)';
+        $done = $db->setSqlBegin();
+        $now = $done ? $count('SELECT UNIX_TIMESTAMP()') : -1;
+        $list = $done ? $owners() : false;
+        $seen = [];
+        foreach ($list ?: [] as $row) $seen[$row[0].':'.$row[1]] = true;
+        $last = [];
+        $res = $done ? $db->getSqlQuery('SELECT id, mid, modul, time, uid, ip FROM `'.$prefix.'_rating` ORDER BY id ASC') : false;
+        while ($res && ([$rid, $mid, $mod, $time, $uid, $ip] = $db->getSqlRow($res))) {
+            if (!isset($maps[$mod]) || !isset($seen[$mod.':'.$mid])) {
+                $stat[$mod === 'voting' ? 'voting' : (isset($maps[$mod]) ? 'orphan' : 'foreign')]++;
+                continue;
+            }
+            $pack = (!intval($uid) && filter_var($ip, FILTER_VALIDATE_IP)) ? inet_pton($ip) : false;
+            $norm = $pack === false ? false : inet_ntop($pack);
+            $actor = intval($uid) ? 'u:'.intval($uid) : (in_array($norm, [false, '0.0.0.0', '::'], true) ? '' : 'g:'.$norm);
+            if ($actor === '' || !preg_match('/^[1-9][0-9]{0,13}$/D', $time) || intval($time) > $now) {
+                $bad[] = $prefix.'_rating '.intval($rid);
+                continue;
+            }
+            $last[$mod][intval($mid)][$actor] = max($last[$mod][intval($mid)][$actor] ?? 0, intval($time));
+        }
+        if ($done) $db->setSqlCommit();
+        if (!$done || $now < 1 || $list === false || !$res) return getInfo('ratings: the aggregates and the kept terms could not be read', false);
+        if ($bad) return getInfo('ratings: the preflight found broken data, nothing was written ('.count($bad).'): '.implode(', ', array_slice($bad, 0, 50)), false);
+        if (!is_dir($dir) && !mkdir($dir, 0750, true)) return getInfo('ratings: '.$dir.' could not be created', false);
+        $terms = [];
+        foreach (array_intersect_key($maps, $last) as $scope => $void) {
+            ksort($last[$scope]);
+            foreach ($last[$scope] as $mid => $acts) {
+                ksort($acts, SORT_STRING);
+                foreach ($acts as $actor => $time) $terms[] = [$scope, $mid, $actor, $time];
+            }
+        }
+        $text = ['targets.json' => (string)json_encode($list), 'terms.json' => (string)json_encode($terms)];
+        $text['rules.json'] = (string)json_encode(['source' => $old, 'rules' => $rules]);
+        $info = ['version' => '6.3.0', 'state' => 'prepared', 'cursor' => ['targets' => 0, 'terms' => 0], 'moment' => $now, 'source' => [], 'target' => []];
+        $info['count'] = ['targets' => count($list), 'terms' => count($terms)] + $stat;
+        foreach ($text as $name => $body) {
+            if (!setUpdateBackup($dir.'/'.$name, $body)) return getInfo('ratings: the snapshot '.$name.' could not be written', false);
+            $info['source'][$name] = hash('sha256', $body);
+        }
+        if (!setUpdateBackup($file, (string)json_encode($info))) return getInfo('ratings: the manifest could not be written', false);
+    }
+    foreach (['targets.json', 'terms.json', 'rules.json'] as $name) {
+        $same = is_file($dir.'/'.$name) && hash_file('sha256', $dir.'/'.$name) === ($info['source'][$name] ?? '');
+        if (!$same) return getInfo('ratings: the snapshot '.$name.' does not match its manifest', false);
+    }
+    if ($info['state'] !== 'verified') {
+        $info['state'] = 'applying';
+        if (!setUpdateBackup($file, (string)json_encode($info))) return getInfo('ratings: the manifest could not be written', false);
+        $sets = ['targets' => ['targets.json', 'rating_targets', ['scope', 'mid', 'base', 'votes'], 2]];
+        $sets['terms'] = ['terms.json', 'rating_actors', ['scope', 'mid', 'actor', 'last'], 3];
+        foreach ($sets as $kind => [$snap, $tab, $cols, $knum]) {
+            $list = json_decode((string)file_get_contents($dir.'/'.$snap), true);
+            $keys = array_slice($cols, 0, $knum);
+            $cond = implode(' AND ', array_map(fn($v) => $v.' = :'.$v, $keys));
+            $more = $kind === 'targets' ? ['created' => intval($info['moment'])] : [];
+            $into = array_merge($cols, array_keys($more));
+            $sql = 'INSERT INTO `'.$prefix.'_'.$tab.'` ('.implode(', ', $into).') VALUES (:'.implode(', :', $into).')';
+            $find = 'SELECT '.implode(', ', $cols).' FROM `'.$prefix.'_'.$tab.'` WHERE '.$cond.' FOR UPDATE';
+            for ($pos = intval($info['cursor'][$kind]); $pos < count($list); $pos += 500) {
+                $good = $db->setSqlBegin();
+                foreach (array_slice($list, $pos, 500) as $row) {
+                    $pars = array_combine($cols, $row);
+                    $res = $good ? $db->getSqlQuery($find, array_intersect_key($pars, array_flip($keys))) : false;
+                    $cur = $res ? $db->getSqlRow($res) : false;
+                    if ($cur) $good = array_map('strval', $pars) === array_map('strval', array_intersect_key($cur, $pars));
+                    else $good = $res && $db->getSqlQuery($sql, $pars + $more) !== false;
+                    if (!$good) break;
+                }
+                if (!$good || !$db->setSqlCommit()) {
+                    $db->setSqlRollback();
+                    return getInfo('ratings: a batch of '.$kind.' was refused at row '.$pos.' - a stored row differs from the snapshot or could not be written', false);
+                }
+                $info['cursor'][$kind] = min($pos + 500, count($list));
+                if (!setUpdateBackup($file, (string)json_encode($info))) return getInfo('ratings: the manifest could not be written', false);
+            }
+        }
+        $real = [];
+        foreach ($sets as $kind => [$snap, $tab, $cols]) {
+            $list = [];
+            $res = $db->getSqlQuery('SELECT '.implode(', ', $cols).' FROM `'.$prefix.'_'.$tab.'` ORDER BY scope ASC, mid ASC'.($kind === 'terms' ? ', actor ASC' : ''));
+            while ($res && ($row = $db->getSqlRow($res))) {
+                $list[] = [$row['scope'], intval($row['mid']), $kind === 'terms' ? $row['actor'] : intval($row['base']), intval($row[$cols[3]])];
+            }
+            $real[$snap] = hash('sha256', (string)json_encode($list));
+        }
+        $list = $owners();
+        $same = $real === array_intersect_key($info['source'], $real) && $list !== false && !$bad && hash('sha256', (string)json_encode($list)) === $info['source']['targets.json'];
+        $same = $same && $count('SELECT COUNT(*) FROM `'.$prefix.'_rating_votes`') === 0 && $count($polls) === intval($info['count']['voting']);
+        if (!$same) return getInfo('ratings: the stored targets, terms, owner aggregates or poll rows do not match the manifest, the rules are not published', false);
+        $rules = json_decode((string)file_get_contents($dir.'/rules.json'), true)['rules'] ?? [];
+        if (((require CONFIG_DIR.'/ratings.php')['ratings'] ?? null) !== $rules) setConfigFile('ratings.php', $rules);
+        $info['target'] = $real + ['ratings.php' => hash_file('sha256', CONFIG_DIR.'/ratings.php')];
+        $info['state'] = 'verified';
+        if (!setUpdateBackup($file, (string)json_encode($info))) return getInfo('ratings: the manifest could not be written', false);
+    }
+    setConfigFile('update.php', ['ratings' => '6.3.0'] + $mark);
+    $stat = $info['count'];
+    $text = 'ratings: starting aggregates kept ('.intval($stat['targets']).' targets, '.intval($stat['terms']).' terms), left alone in the old table: '
+        .intval($stat['voting']).' poll rows, '
+        .intval($stat['foreign']).' rows of other events, '.intval($stat['orphan']).' rows of missing targets; rules dropped: '.intval($stat['dropped']).'; the subsystem is open';
+    return getInfo($text, true);
 }
 
 function save(): void {
@@ -522,8 +682,11 @@ function save(): void {
         $title = _SAVE_UPDATE;
         $bodytext .= getSqlFile('setup/sql/table_update6_2.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
     } elseif ($setup == 'update6_3') {
-        $stop = checkUpdateBase($db, $xprefix, $conf);
+        $stop = checkUpdateBase($db, $xprefix);
         if ($stop !== '') setExit($stop);
+        setConfigFile('global.php', array_diff_key($conf, ['security' => '', 'db' => '']), ['close' => '1']);
+        $conf['close'] = '1';
+        $bodytext .= getInfo('the site is closed for the data update (close = 1), open it in the settings after the result is checked', true);
         $cont = [];
         $apath = BASE_DIR.'/admin/modules';
         if (is_dir($apath) && ($handle = opendir($apath))) {
@@ -684,6 +847,7 @@ function save(): void {
         $title = _SAVE_UPDATE;
         $bodytext .= getSqlFile('setup/sql/table_update6_3.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
         $bodytext .= setUpdatePoints($db, $xprefix);
+        $bodytext .= setUpdateRatings($db, $xprefix);
         $nsent = 0;
         foreach ($nlist as $nid => $one) {
             $mails = array_values(array_unique(array_filter(array_map('trim', explode(',', $one['mails'])), 'strlen')));

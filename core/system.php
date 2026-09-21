@@ -143,6 +143,7 @@ require_once BASE_DIR.'/core/classes/captcha.php';
 require_once BASE_DIR.'/core/classes/cache.php';
 require_once BASE_DIR.'/core/classes/oauth.php';
 require_once BASE_DIR.'/core/classes/point.php';
+require_once BASE_DIR.'/core/classes/rating.php';
 require_once BASE_DIR.'/core/classes/comment.php';
 require_once BASE_DIR.'/core/classes/privat.php';
 $tpl = new Template($theme);
@@ -5747,45 +5748,81 @@ function render_blocks(string $side, string $bfile, string $blocktitle, string $
     return '';
 }
 
-# Handle an ajax rating request: enforce one vote per user or ip, persist the vote, and echo the refreshed rating block
-function getRatingView(): void {
-    global $db, $conf, $user;
-    $id = getVar('get', 'id', 'num', 0);
-    $typ = filterVar(getVar('get', 'typ', 'text', ''));
-    $mod = filterVar(getVar('get', 'mod', 'text', ''));
-    $rate = min(5, getVar('get', 'rate', 'num', 0));
-    $stl = getVar('get', 'stl', 'num', 0);
-    $con = explode('|', $conf['ratings'][strtolower($mod)] ?? '');
-    $map = [
-        'account' => ['_users', 'votes', 'tvotes'],
-        'forum' => ['_forum', 'ratings', 'score'],
-        'shop' => ['_products', 'votes', 'tvotes'],
+# Build the rating subsystem of the request once: the rules behind the mark of the 6.3 data update, the trusted actor of the two sessions and the closed map of the fixed targets
+# The read adapter answers only a target the actor may reach; under the lock its first statement is the locking read of the owner row, and a failed statement throws
+# The main administrator reaches every existing target and a forum moderator every topic; the write adapter stores the checked aggregate and refuses what the column cannot hold
+function getRatingService(): Rating {
+    global $db, $conf, $user, $admin;
+    static $rate = null;
+    if ($rate !== null) return $rate;
+    $maps = [
+        'account' => ['_users', 'votes', 'tvotes', 'id', '', ''],
+        'forum' => ['_forum', 'ratings', 'score', 'uid', " AND pid = '0'", " AND time <= NOW() AND status > '1'"],
+        'shop' => ['_products', 'votes', 'tvotes', '0', '', " AND time <= NOW() AND status != '0'"],
     ];
-    if (!$id || !$mod || !isset($map[$mod])) return;
-    [$tab, $cnt, $scr] = $map[$mod];
-    $ip = getIp();
-    $cmod = substr($mod, 0, 2).'-'.$id;
-    $cook = isset($_COOKIE[$cmod]) ? intval($_COOKIE[$cmod]) : 0;
-    $uid = is_user() ? intval(substr($user[0], 0, 11)) : 0;
-    $self = $mod === 'account' && $uid && $uid === $id;
-    $where = $mod === 'account' ? 'id = :id' : "id = :id AND status != '0'";
-    [$exists] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.$tab.' WHERE '.$where, ['id' => $id]));
-    $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_rating WHERE time < :past AND modul = :mod', ['past' => time() - intval($con[0]), 'mod' => $mod]);
-    $cq = 'SELECT COUNT(id) FROM '.PREFIX_DB."_rating WHERE (mid = :id AND modul = :mod AND ip = :ip) OR (mid = :id2 AND modul = :mod2 AND uid = :uid AND uid != '0')";
-    [$num] = $db->getSqlRow($db->getSqlQuery($cq, ['id' => $id, 'mod' => $mod, 'ip' => $ip, 'id2' => $id, 'mod2' => $mod, 'uid' => $uid]));
-    $voted = $cook == $id || $num > 0 || $self;
-    if (!$voted && $rate && $exists) {
-        setcookie($cmod, $id, time() + intval($con[0]));
-        $pdo = $db->sqlconnid instanceof PDO ? $db->sqlconnid : null;
-        if ($pdo) $pdo->beginTransaction();
-        $ins = $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_rating (mid, modul, time, uid, ip) VALUES (:mid, :modul, :time, :uid, :ip)', ['mid' => $id, 'modul' => $mod, 'time' => time(), 'uid' => $uid, 'ip' => $ip]);
-        if ($ins) $db->getSqlQuery('UPDATE '.PREFIX_DB.$tab.' SET '.$cnt.' = '.$cnt.' + 1, '.$scr.' = '.$scr.' + :rate WHERE id = :id', ['rate' => $rate, 'id' => $id]);
-        if ($pdo) { $ins ? $pdo->commit() : $pdo->rollBack(); }
-        $voted = true;
+    $actor = ['uid' => is_user() ? intval(substr($user[0], 0, 11)) : 0, 'ip' => getIp(), 'aid' => isAdmin() ? intval(substr($admin[0], 0, 11)) : 0, 'super' => isAdmin(true)];
+    $moder = is_moder('forum') === 1;
+    $read = static function (string $scope, int $id, array $actor, bool $lock) use ($db, $maps, $moder): ?array {
+        if (!isset($maps[$scope])) return null;
+        [$tab, $cnt, $sum, $own, $base, $shut] = $maps[$scope];
+        $open = $actor['super'] || ($scope === 'forum' && $moder);
+        $sql = 'SELECT '.$cnt.' AS ratings, '.$sum.' AS score, '.$own.' AS owner'.($scope === 'forum' ? ', cid' : '').' FROM '.PREFIX_DB.$tab.' WHERE id = :id'.$base;
+        $res = $db->getSqlQuery($sql.($open ? '' : $shut).($lock ? ' FOR UPDATE' : ''), ['id' => $id]);
+        if ($res === false) throw new RuntimeException('the target of '.$scope.' could not be read');
+        $row = $db->getSqlRow($res);
+        if (!$row) return null;
+        if ($scope === 'forum' && !$open) {
+            $res = $db->getSqlQuery('SELECT pread FROM '.PREFIX_DB.'_categories WHERE id = :cid', ['cid' => $row['cid']]);
+            if ($res === false) throw new RuntimeException('the category of a forum target could not be read');
+            $cat = $db->getSqlRow($res);
+            if (!$cat || !is_acess((string)$cat['pread'])) return null;
+        }
+        return ['owner' => intval($row['owner']), 'score' => intval($row['score']), 'ratings' => intval($row['ratings']), 'enabled' => true];
+    };
+    $write = static function (string $scope, int $id, int $score, int $num) use ($db, $maps): bool {
+        if (!isset($maps[$scope]) || $score > 4294967295 || $num > 4294967295) return false;
+        [$tab, $cnt, $sum] = $maps[$scope];
+        return $db->getSqlQuery('UPDATE '.PREFIX_DB.$tab.' SET '.$cnt.' = :num, '.$sum.' = :score WHERE id = :id', ['num' => $num, 'score' => $score, 'id' => $id]) !== false;
+    };
+    $rate = new Rating($db, ($conf['update']['ratings'] ?? '') === '6.3.0' ? ($conf['ratings'] ?? []) : [], $actor, $read, $write);
+    return $rate;
+}
+
+# Answer one vote of the shared rating: POST only, the site token from the body, the closed form of the five fields, and the status the result of the subsystem maps to
+# Nothing of the address is read, so an old link with query parameters is a wrong form; a refusal answers its own status with an alert and never the refreshed block
+function getRatingView(): void {
+    global $tpl;
+    $forms = [
+        'mod' => '/^(?:account|forum|shop|node\.[a-z][a-z0-9]{0,19})$/D',
+        'id' => '/^[1-9][0-9]{0,9}$/D',
+        'rate' => '/^[1-5]$/D',
+        'request' => '/^[a-f0-9]{32}$/D',
+        'typ' => '/^(?:stars|thumbs)$/D',
+    ];
+    $vals = [];
+    foreach ($forms as $key => $form) {
+        $val = getVar('post', $key, 'raw', '');
+        $vals[$key] = (is_string($val) && preg_match($form, $val)) ? $val : null;
     }
-    if (!$voted) return;
-    [$votes, $total] = $db->getSqlRow($db->getSqlQuery('SELECT '.$cnt.', '.$scr.' FROM '.PREFIX_DB.$tab.' WHERE id = :id', ['id' => $id]));
-    echo getRatingAsync(2, $id, $mod, $votes, $total, $typ, $stl);
+    $tok = getVar('post', 'token', 'raw', '');
+    $codes = ['invalid' => [422, _RATINGS_FORM], 'denied' => [403, _RATINGS_DENY], 'unavailable' => [404, _RATINGS_GONE], 'conflict' => [409, _RATINGS_TWICE]];
+    $codes['storage'] = [500, _RATINGS_FAIL];
+    $res = [];
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        header('Allow: POST');
+        [$stat, $text] = [405, _ERROR];
+    } elseif (!is_string($tok) || $tok === '' || !checkSiteToken($tok)) {
+        [$stat, $text] = [403, _TOKENMISS];
+    } elseif (in_array(null, $vals, true)) {
+        [$stat, $text] = $codes['invalid'];
+    } else {
+        $res = getRatingService()->addRating($vals['mod'], intval($vals['id']), intval($vals['rate']), $vals['request']);
+        [$stat, $text] = $res['ok'] ? [200, ''] : ($codes[$res['code']] ?? [429, sprintf(_RATINGS_WAIT, ceil($res['wait'] / 86400))]);
+        if ($stat === 429) header('Retry-After: '.$res['wait']);
+    }
+    http_response_code($stat);
+    if ($stat !== 200) echo $tpl->getHtmlFrag('alert', ['text' => $text, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
+    else echo getRatingAsync(2, $vals['id'], $vals['mod'], $res['ratings'], $res['score'], '', $vals['typ'] === 'thumbs' ? '1' : '');
 }
 
 # Format nummer page for Ajax

@@ -56,12 +56,13 @@ final class Point {
 
     # Build the subsystem over the connection of the request and the points scope of the configuration, which is checked whole and exactly once
     # A scope that fails the check switches the class off and is reported to the site log; no partly usable rule is ever applied
+    # An exactly empty scope is a subsystem closed on purpose, which is how the core builds it before the data update left its mark: switched off the same way, without a log line
     public function __construct(Database $db, array $conf) {
         $this->db = $db;
         $this->rules = $this->filterConfig($conf);
         $this->valid = $this->rules !== [];
         $this->active = $this->valid && $conf['active'] === '1';
-        if (!$this->valid) Logger::addSite('error', 'Point: the points configuration is invalid and the subsystem is switched off');
+        if (!$this->valid && $conf !== []) Logger::addSite('error', 'Point: the points configuration is invalid and the subsystem is switched off');
     }
 
     # Turn one canonical decimal string into its number, or answer false for anything else: a native number, a sign, a space, a leading zero or a value above the bound

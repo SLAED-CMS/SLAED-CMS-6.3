@@ -120,8 +120,9 @@ if (empty($go)) {
         }
     }
 } elseif (is_numeric($go)) {
-    # Reads that guard themselves: each answers nothing to a visitor who may not see it, so a token would only add one to an address
-    $public = ($go == 1 && in_array($op, ['getUserSessionInfo', 'getUserSessionRows', 'getPrivateMessageView'], true))
+    # Handlers that guard themselves: the reads answer nothing to a visitor who may not see them, so a token would only add one to an address
+    # The rating vote checks its method before its token and answers both refusals with a status of their own
+    $public = ($go == 1 && in_array($op, ['getUserSessionInfo', 'getUserSessionRows', 'getPrivateMessageView', 'getRatingView'], true))
         || (($go == 1 || $go == 5) && $op === 'getUserSessionAdminInfo');
     if ($go != 3 && !$public) {
         $fdsize = intval($_FILES['file']['size'] ?? 0);

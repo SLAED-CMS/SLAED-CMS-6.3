@@ -948,6 +948,43 @@ CALL addidx('{prefix}_rating', 'modul', '`modul`', 0);
 CALL addidx('{prefix}_rating', 'uid', '`uid`', 0);
 CALL addidx('{prefix}_rating', 'mid_modul_ip', '`mid`, `modul`, `ip`', 1);
 
+# The three tables of the rating subsystem; the ratings unit of the data update fills the targets and the actors, and no historic vote is invented
+CREATE TABLE IF NOT EXISTS `{prefix}_rating_actors` (
+  `scope` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `mid` INT UNSIGNED NOT NULL,
+  `actor` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `last` BIGINT UNSIGNED NOT NULL,
+  PRIMARY KEY (`scope`, `mid`, `actor`)
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
+CREATE TABLE IF NOT EXISTS `{prefix}_rating_targets` (
+  `scope` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `mid` INT UNSIGNED NOT NULL,
+  `base` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `votes` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `created` BIGINT UNSIGNED NOT NULL,
+  PRIMARY KEY (`scope`, `mid`)
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
+CREATE TABLE IF NOT EXISTS `{prefix}_rating_votes` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `scope` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `mid` INT UNSIGNED NOT NULL,
+  `actor` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `uid` INT UNSIGNED NOT NULL DEFAULT 0,
+  `value` TINYINT UNSIGNED NOT NULL,
+  `request` CHAR(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `created` BIGINT UNSIGNED NOT NULL,
+  `annulled` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `aid` INT UNSIGNED NOT NULL DEFAULT 0,
+  `reason` VARCHAR(255) NOT NULL DEFAULT '',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `request` (`scope`, `mid`, `actor`, `request`),
+  KEY `target` (`scope`, `mid`, `id`),
+  KEY `scope` (`scope`, `id`),
+  CONSTRAINT `{prefix}_chk_rating_votes_value` CHECK (`value` BETWEEN 1 AND 5)
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
 # =============================================================================
 # Batch K — _referer
 # =============================================================================

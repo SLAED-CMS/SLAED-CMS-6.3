@@ -141,6 +141,6 @@ final class CommentIsolationTest extends TestCase
         foreach (['function updatePoints', 'function addPointsAction', 'updatePoints(', 'addPointsAction('] as $name) {
             $this->assertStringNotContainsString($name, $code, 'The numeric points helper is back in core/system.php: '.$name);
         }
-        $this->assertStringContainsString("'account' => ['_users', 'votes', 'tvotes'],", $code, 'The rating map of accounts carries a points slot again');
+        $this->assertStringContainsString("'account' => ['_users', 'votes', 'tvotes', 'id', '', ''],", $code, 'The rating map of accounts carries a points slot again');
     }
 }

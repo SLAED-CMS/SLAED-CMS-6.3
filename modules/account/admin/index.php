@@ -687,18 +687,6 @@ function pointreset(): void {
             ]),
         ],
         [
-            'label_html' => _RATINGS,
-            'label_id' => $labid = getFieldIds('', 'votes')['label'],
-            'field_html' => getTplRadioGroup(['labelledby' => $labid,
-                'name' => 'votes',
-                'value' => '0',
-                'options' => [
-                    ['value' => '1', 'label' => _YES],
-                    ['value' => '0', 'label' => _NO],
-                ],
-            ]),
-        ],
-        [
             'label_html' => _SIGNATURE,
             'label_id' => $labid = getFieldIds('', 'sig')['label'],
             'field_html' => getTplRadioGroup(['labelledby' => $labid,
@@ -772,12 +760,10 @@ function resave(): void {
     global $db, $afile;
     $warn = !checkSiteToken();
     $points = getVar('post', 'points', 'num');
-    $votes = getVar('post', 'votes', 'num');
     $warnings = getVar('post', 'warnings', 'num');
     $sig = getVar('post', 'sig', 'num');
     if (!$warn) {
         if ($points == 1 && !setPointsReset()) setRedirect($afile.'.php?name=account&op=pointreset', false, 302, _POINTS_RESETMORE, true);
-        if ($votes == 1) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET votes = :zero, tvotes = :zero', ['zero' => '0']);
         if ($warnings == 1) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET warnings = :zero', ['zero' => '0']);
         if ($sig == 1) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET sig = :empty', ['empty' => '']);
     }

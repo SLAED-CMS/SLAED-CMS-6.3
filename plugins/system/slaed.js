@@ -1585,17 +1585,19 @@
         return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + dim + ' ' + dim + '" shape-rendering="crispEdges" role="img" aria-label="QR"><rect width="100%" height="100%" fill="#ffffff"/><path d="' + path + '" fill="#111827"/></svg>';
     }
 
-    // Toast: singleton confirmation pill, created on first use and reused
-    function setToast(text) {
+    // Toast: singleton pill, created on first use and reused; it confirms by default and warns when a refusal has to be told
+    function setToast(text, warn) {
         if (!text) return;
         var toast = document.querySelector('.sl-toast');
         if (!toast) {
             toast = document.createElement('div');
             toast.className = 'sl-toast';
             toast.setAttribute('role', 'status');
-            toast.innerHTML = '<i class="bi bi-check-lg" aria-hidden="true"></i> <span></span>';
+            toast.innerHTML = '<i class="bi" aria-hidden="true"></i> <span></span>';
             document.body.appendChild(toast);
         }
+        toast.classList.toggle('sl-toast-warn', !!warn);
+        toast.querySelector('.bi').className = 'bi ' + (warn ? 'bi-exclamation-triangle' : 'bi-check-lg');
         toast.querySelector('span').textContent = text;
         toast.classList.add('sl-is-visible');
         window.clearTimeout(toast.sltimer);
@@ -1845,17 +1847,43 @@
     function setCommentKeys(root) {
         var list = (root && root.querySelectorAll) ? root.querySelectorAll('[data-sl-reqkey]') : [];
         for (var i = 0; i < list.length; i++) {
-            if (list[i].value) continue;
-            var raw = new Uint8Array(16);
-            if (window.crypto && window.crypto.getRandomValues) {
-                window.crypto.getRandomValues(raw);
-            } else {
-                for (var r = 0; r < raw.length; r++) raw[r] = Math.floor(Math.random() * 256);
-            }
-            var key = '';
-            for (var j = 0; j < raw.length; j++) key += ('0' + raw[j].toString(16)).slice(-2);
-            list[i].value = key;
+            if (!list[i].value) list[i].value = getRequestKey();
         }
+    }
+
+    // One delivery key: 16 random bytes as 32 lowercase hex characters
+    function getRequestKey() {
+        var raw = new Uint8Array(16);
+        if (window.crypto && window.crypto.getRandomValues) {
+            window.crypto.getRandomValues(raw);
+        } else {
+            for (var r = 0; r < raw.length; r++) raw[r] = Math.floor(Math.random() * 256);
+        }
+        var key = '';
+        for (var j = 0; j < raw.length; j++) key += ('0' + raw[j].toString(16)).slice(-2);
+        return key;
+    }
+
+    // Rating votes: every intended click carries a fresh delivery key, and the key stays on the control while the outcome is unknown - a lost connection or a
+    // server failure - so the repeat of the same click answers the stored vote instead of placing a second one. A refusal keeps the block and is told by the warning toast
+    function setRatingVotes() {
+        document.addEventListener('htmx:configRequest', function (event) {
+            var elt = event.detail ? event.detail.elt : null;
+            if (!elt || !elt.closest || !elt.closest('[data-sl-rate]')) return;
+            if (!elt.getAttribute('data-sl-rate-key')) elt.setAttribute('data-sl-rate-key', getRequestKey());
+            event.detail.parameters.request = elt.getAttribute('data-sl-rate-key');
+        });
+        document.addEventListener('htmx:afterRequest', function (event) {
+            var elt = event.detail ? event.detail.elt : null;
+            var xhr = event.detail ? event.detail.xhr : null;
+            if (!elt || !xhr || !elt.getAttribute || !elt.getAttribute('data-sl-rate-key')) return;
+            if (xhr.status > 0 && xhr.status < 500) elt.removeAttribute('data-sl-rate-key');
+            if (xhr.status < 400) return;
+            var box = document.createElement('div');
+            box.innerHTML = xhr.responseText || '';
+            var line = box.querySelector('.sl-alert-text') || box;
+            setToast((line.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 200) || String(xhr.status), true);
+        });
     }
 
     // Replying points the submit form at one comment: the same action taken twice takes the reply back to the top level, so a reader can always undo the choice
@@ -2066,6 +2094,7 @@
         setFillMeters();
         setDirtyForms(document);
         setCommentKeys(document);
+        setRatingVotes();
         setPrivatCarry(document);
         setWindowBack();
     }

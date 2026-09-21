@@ -102,6 +102,7 @@ final class PointTest extends TestCase
         $this->assertSame([false, false, false], $run['dead'], 'A class with a broken scope still answered an event, an origin or a correction');
         $this->assertSame([], $run['rows'], 'A class with a broken scope wrote a journal row');
         $this->assertTrue($run['log'], 'The broken scope was not reported to the site log');
+        $this->assertSame([false, false, false], $run['void'], 'An empty scope is a subsystem closed on purpose: it answers nothing and writes no log line');
     }
 
     # Every refused key and data value answers false, and the whole list of them costs no statement
@@ -298,5 +299,28 @@ final class PointTest extends TestCase
         $this->assertSame([[5], 5], $run['once'], 'Concurrent writers of one source wrote more than one row');
         $this->assertSame([true, true, true, true], $run['many']);
         $this->assertSame([[5, 5], 10], $run['bound'], 'Concurrent writers passed the limit between them');
+    }
+
+    # The shared reset of the account admin screen runs in batches of 500, splits a balance above a million into parts, and a repeat after a failed commit debits nothing twice
+    # The function is lifted out of modules/account/admin/index.php by name and driven with the core globals pointed at the disposable schema
+    #[Test]
+    public function theSharedResetResumesWithoutASecondDebit(): void
+    {
+        $run = $this->getRun('reset');
+        $this->assertFalse($run['refused'][0], 'A refused commit was reported as a finished reset');
+        $this->assertSame(16, strlen($run['refused'][1]['id']), 'The operation id did not stay in the admin session');
+        $this->assertGreaterThan(1500, $run['refused'][1]['cur'], 'The first run never left its first batch of 500 accounts');
+        $this->assertSame(0, $run['first']['odd'], 'A reset row is not an attributed negative correction');
+        $this->assertSame($run['total'], $run['first']['held'] - $run['first']['sum'], 'The journal and the balances disagree after the refused commit');
+        $this->assertSame([3, []], $run['intact'], 'The account of the refused commit lost points or gained a row');
+        $this->assertSame([false, $run['refused'][1]['id']], [$run['muted'][0], $run['muted'][1]['id']], 'The repeat did not keep the operation id');
+        $this->assertSame([true, 0, [['1', -3]]], $run['kept'], 'The commit without an answer moved the cursor or was not kept');
+        $this->assertSame([true, null], $run['last'], 'The finished reset left its state in the session');
+        $this->assertSame([0, [['1', -3], ['2', -4]]], $run['again'], 'The repeat debited the first part twice or missed the new points');
+        $this->assertSame([['1', -1000000], ['2', -1000000], ['3', -500000]], $run['large'], 'A balance above a million was not debited in parts');
+        $this->assertSame([], $run['none'], 'An empty account got a reset row');
+        $this->assertSame([[$run['refused'][1]['id']], 0, 0], [$run['final']['ids'], $run['final']['odd'], $run['final']['held']]);
+        $this->assertSame(-$run['total'] - 4, $run['final']['sum'], 'The journal does not carry exactly what the accounts held');
+        $this->assertSame([[true, null], $run['final']['rows']], [$run['idle'], $run['after']], 'A reset with nothing to debit wrote rows or kept a state');
     }
 }

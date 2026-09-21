@@ -230,7 +230,7 @@ function clientadd(): void {
     if (getVar('req', 'cid', 'num', 0)) {
         $cid = getVar('req', 'cid', 'num');
         $result = $db->getSqlQuery('SELECT c.id, c.uid, c.prod, c.part, c.proz, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.status, u.id, u.name FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = c.part) WHERE c.id = :cid', ['cid' => $cid]);
-        [$cid, $uid, $product, $partner, $proz, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $uid, $nick] = $db->getSqlRow($result);
+        [$cid, $uid, $product, $partner, $proz, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, , $nick] = $db->getSqlRow($result);
         $cregdate = date('Y-m-d H:i:s', $cregdate);
         $cenddate = ($cenddate) ? date('Y-m-d H:i:s', $cenddate) : date('Y-m-d H:i:s');
     } else {

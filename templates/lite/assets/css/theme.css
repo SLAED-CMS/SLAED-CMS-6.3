@@ -6995,6 +6995,10 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   font-size: var(--sl-size-icon-sm);
 }
 
+.sl-toast-warn > .bi {
+  color: var(--sl-warning);
+}
+
 .sl-live-tools {
   position: absolute;
   top: 12px;

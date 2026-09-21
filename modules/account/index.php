@@ -330,7 +330,7 @@ function view(): void {
             foreach (getProfileModules() as $mod => $inf) {
                 if ($mod != 'comm' && !is_active($mod)) continue;
                 if ($mod != 'comm') {
-                    $ron = !empty(explode('|', (string)($conf['ratings'][$mod] ?? ''))[1]);
+                    $ron = ($conf['ratings'][$mod]['active'] ?? '') === '1';
                     $rsel = ($ron && $inf['rate']) ? 'SUM('.$inf['rate'][0].') AS rc, SUM('.$inf['rate'][1].') AS rt' : '0 AS rc, 0 AS rt';
                     $ftab = PREFIX_DB.'_'.$inf['table'];
                     $fsel = '0';

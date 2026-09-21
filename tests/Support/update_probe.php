@@ -1,0 +1,403 @@
+<?php
+# Author: Eduard Laas
+# 2005 - 2026 SLAED
+# License: MIT
+# Website: slaed.net
+
+# CLI probe for the points unit and the ratings unit of the 6.3 data update in setup/index.php, whose contracts are docs/node/12-migration.md and docs/node/ratings.md
+# The second argument names the unit, points when it is left out; both share the schema, the lifted installer code and the scratch site
+# The installer cannot be required from CLI: it is a request handler that acts on load, so its functions are lifted out of the shipped source by name
+# BASE_DIR and CONFIG_DIR point into scratch, so the manifest, the snapshot, the mark and every configuration file the unit writes stay away from the site
+# Nothing touches the site database either: the probe creates its own schema, works only in it, and drops it again
+$probework = str_replace('\\', '/', (string)($argv[1] ?? ''));
+if ($probework === '') $probework = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_update_probe';
+define('BASE_DIR', $probework.'/site');
+define('CONFIG_DIR', BASE_DIR.'/config');
+require_once __DIR__.'/probe_boot.php';
+
+# The tree the shipped sources are read from
+const PROBEROOT = __DIR__.'/../..';
+
+# The table prefix of the disposable schema
+const PROBEPREF = 'probe';
+
+# The balances the snapshot has to carry, the top of the unsigned column among them
+const PROBEBAL = [2 => 10, 3 => 0, 4 => 4294967295];
+
+# The rules of a 6.2 site: period, switch and place of three remaining scopes, a zero period among them, and one scope of a module that left the release
+const PROBEOLD = ['account' => '2592000|1|0', 'forum' => '0|0|1', 'shop' => '86400|1|1', 'news' => '2592000|1|0'];
+
+# The rows of the old shared table as id, target, module, time, account and address: two addresses of one account, a guest, two spellings of one IPv6 address,
+# a poll, two other events, a missing product, a forum reply that is no target, and an account without an address
+const PROBEROWS = [
+    [1, 2, 'account', '1000000000', 9, '1.1.1.1'], [2, 2, 'account', '1700000000', 9, '2.2.2.2'], [3, 2, 'account', '1700000100', 0, '3.3.3.3'],
+    [4, 5, 'forum', '1700000200', 0, '2001:DB8:0:0:0:0:0:1'], [5, 5, 'forum', '1700000205', 0, '2001:db8::1'], [6, 35, 'voting', '1700000300', 9, '4.4.4.4'],
+    [7, 1, 'download', '1700000300', 0, '4.4.4.4'], [8, 1, 'news', '1700000300', 0, '4.4.4.4'], [9, 999, 'shop', '1700000300', 0, '4.4.4.4'],
+    [10, 7, 'forum', '1700000300', 0, '4.4.4.4'], [11, 8, 'shop', '1700000400', 9, ''],
+];
+
+# The installer defines the same guard before it loads the database facade on its own
+if (!defined('FUNC_FILE')) define('FUNC_FILE', true);
+require_once PROBEROOT.'/core/classes/pdo.php';
+foreach (['_TABLE' => 'Table', '_OK' => 'probe-ok', '_ERROR' => 'probe-error'] as $name => $text) define($name, $text);
+
+# A database facade that can name another server version, which is the one fact of the preflight a real server cannot be asked to change
+final class ProbeBase extends Database {
+    public string $fake = '';
+    private bool $asked = false;
+
+    # Remember that the version was asked for, and let the real statement run so the facade stays a working connection
+    function getSqlQuery(string $query = '', array $params = []): PDOStatement|false {
+        $this->asked = $this->fake !== '' && $query === 'SELECT VERSION()';
+        return parent::getSqlQuery($query, $params);
+    }
+
+    # Answer the named version in place of the real one
+    function getSqlRow(PDOStatement|int $query_id = 0): array|false {
+        if (!$this->asked) return parent::getSqlRow($query_id);
+        $this->asked = false;
+        return [$this->fake];
+    }
+}
+
+$GLOBALS['pname'] = 'slaed_up_'.bin2hex(random_bytes(4));
+$GLOBALS['pcred'] = (require PROBEROOT.'/config/db.php')['db'];
+$GLOBALS['pdb'] = null;
+
+# Open one connection to the server, with the disposable schema selected once it exists
+function getProbeSide(bool $root = false): PDO {
+    $cred = $GLOBALS['pcred'];
+    $dsn = 'mysql:host='.$cred['host'].($root ? '' : ';dbname='.$GLOBALS['pname']).';charset=utf8mb4';
+    return new PDO($dsn, $cred['uname'], $cred['pass'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+}
+
+# One shipped CREATE TABLE out of the fresh schema, filled for the disposable database
+function getProbeTable(string $name, string $engine = 'InnoDB'): string {
+    $text = (string)file_get_contents(PROBEROOT.'/setup/sql/table.sql');
+    if (!preg_match('/CREATE TABLE `\{prefix\}_'.$name.'`.*?\n\)\s*ENGINE=[^;]*;/s', $text, $hit)) throw new RuntimeException('table.sql carries no '.$name.' table');
+    return str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [PROBEPREF, $engine, 'utf8mb4', 'utf8mb4_unicode_ci'], $hit[0]);
+}
+
+# Lift one function out of the shipped installer into this process
+function addProbeCode(string $name): void {
+    $code = (string)file_get_contents(PROBEROOT.'/setup/index.php');
+    $from = strpos($code, 'function '.$name.'(');
+    $to = $from === false ? false : strpos($code, "\n}\n", $from);
+    if ($from === false || $to === false) throw new RuntimeException($name.'() is gone from setup/index.php');
+    eval(substr($code, $from, $to - $from + 3));
+}
+
+# Create the disposable schema with the account table, the journal and three accounts, and connect the project facade to it
+function addProbeSchema(): void {
+    $root = getProbeSide(true);
+    $root->exec('CREATE DATABASE `'.$GLOBALS['pname'].'` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+    $root->exec('USE `'.$GLOBALS['pname'].'`');
+    foreach (['users', 'points', 'forum', 'products', 'rating', 'rating_targets', 'rating_actors', 'rating_votes'] as $name) $root->exec(getProbeTable($name));
+    foreach (PROBEBAL as $id => $sum) {
+        $root->exec('INSERT INTO `'.PROBEPREF.'_users` (`id`, `name`, `email`, `password`, `block`, `warnings`, `field`, `points`)'
+            .' VALUES ('.$id.', \'user'.$id.'\', \'user'.$id.'@probe.test\', \'x\', \'\', \'\', \'\', '.$sum.')');
+    }
+    $cred = $GLOBALS['pcred'];
+    $GLOBALS['pdb'] = new ProbeBase($cred['host'], $cred['uname'], $cred['pass'], $GLOBALS['pname']);
+}
+
+# Drop the disposable schema again and report whether the server is left without it
+function deleteProbeSchema(): bool {
+    try {
+        getProbeSide(true)->exec('DROP DATABASE IF EXISTS `'.$GLOBALS['pname'].'`');
+    } catch (Throwable) {
+        return false;
+    }
+    return true;
+}
+
+# Remove one scratch directory with everything below it
+function deleteProbeTree(string $path): void {
+    if (!is_dir($path)) return;
+    foreach (array_diff(scandir($path), ['.', '..']) as $name) is_dir($path.'/'.$name) ? deleteProbeTree($path.'/'.$name) : unlink($path.'/'.$name);
+    rmdir($path);
+}
+
+# Put the scratch site back to a 6.2 installation: the shipped points scope, an account scope that still carries the positional rules, no backup, no mark, an empty journal
+function setProbeSite(string $point = '0'): void {
+    deleteProbeTree(BASE_DIR);
+    mkdir(CONFIG_DIR, 0777, true);
+    copy(PROBEROOT.'/config/points.php', CONFIG_DIR.'/points.php');
+    $users = (require PROBEROOT.'/config/users.php')['users'];
+    setConfigFile('users.php', ['point' => $point, 'points' => '1,2,3'] + $users);
+    getProbeSide()->exec('DELETE FROM `'.PROBEPREF.'_points`');
+    foreach (PROBEBAL as $id => $sum) getProbeSide()->exec('UPDATE `'.PROBEPREF.'_users` SET points = '.$sum.' WHERE id = '.$id);
+}
+
+# Everything the unit leaves behind, read fresh from disk: its answer, the manifest, the snapshot, the mark and the two scopes it carries over
+function getProbeState(string $html): array {
+    $dir = BASE_DIR.'/storage/backup/update/points';
+    $info = is_file($dir.'/manifest.json') ? json_decode((string)file_get_contents($dir.'/manifest.json'), true) : null;
+    $snap = is_file($dir.'/balances.json') ? (string)file_get_contents($dir.'/balances.json') : null;
+    clearstatcache();
+    $users = (include CONFIG_DIR.'/users.php')['users'];
+    $hash = fn(string $name): string => (string)hash_file('sha256', CONFIG_DIR.'/'.$name);
+    return [
+        'done' => str_contains($html, _OK) && !str_contains($html, _ERROR),
+        'text' => trim(strip_tags($html)),
+        'state' => $info['state'] ?? null,
+        'count' => $info['count'] ?? null,
+        'source' => $snap !== null && ($info['source']['balances.json'] ?? '') === hash('sha256', $snap),
+        'target' => is_array($info) && $info['target'] === ['points.php' => $hash('points.php'), 'users.php' => $hash('users.php')],
+        'snap' => $snap === null ? null : json_decode($snap, true),
+        'mark' => is_file(CONFIG_DIR.'/update.php') ? (include CONFIG_DIR.'/update.php')['update'] : null,
+        'stale' => isset($users['point']) || isset($users['points']),
+        'active' => (include CONFIG_DIR.'/points.php')['points']['active'],
+        'rules' => (include CONFIG_DIR.'/points.php')['points']['actions'] === (require PROBEROOT.'/config/points.php')['points']['actions'],
+    ];
+}
+
+# Run the unit once and read what it left
+function getProbeRun(): array {
+    return getProbeState(setUpdatePoints($GLOBALS['pdb'], PROBEPREF));
+}
+
+# Rewrite the state of the manifest the way an interrupted run would have left it
+function setProbeStage(string $state): void {
+    $file = BASE_DIR.'/storage/backup/update/points/manifest.json';
+    $info = json_decode((string)file_get_contents($file), true);
+    $info['state'] = $state;
+    $info['target'] = [];
+    file_put_contents($file, json_encode($info));
+}
+
+# The clean path and its repeats: the snapshot is taken once, a later balance is never taken for a starting one, and a lost mark is written again
+function getProbeClean(): array {
+    setProbeSite('0');
+    $out = ['first' => getProbeRun()];
+    $dir = BASE_DIR.'/storage/backup/update/points';
+    $kept = [file_get_contents($dir.'/manifest.json'), file_get_contents($dir.'/balances.json')];
+    getProbeSide()->exec('UPDATE `'.PROBEPREF.'_users` SET points = 77 WHERE id = 2');
+    $out['again'] = getProbeRun();
+    unlink(CONFIG_DIR.'/update.php');
+    $out['nomark'] = getProbeRun();
+    $out['same'] = $kept === [file_get_contents($dir.'/manifest.json'), file_get_contents($dir.'/balances.json')];
+    $out['users'] = array_map('intval', getProbeSide()->query('SELECT id, points FROM `'.PROBEPREF.'_users` ORDER BY id')->fetchAll(PDO::FETCH_KEY_PAIR));
+    setProbeSite('1');
+    $out['on'] = getProbeRun();
+    return $out;
+}
+
+# The interrupted run: a manifest left at prepared or at applying continues over the old snapshot and carries the scopes over
+function getProbeResume(): array {
+    $out = [];
+    foreach (['prepared', 'applying'] as $state) {
+        setProbeSite('0');
+        getProbeRun();
+        $snap = BASE_DIR.'/storage/backup/update/points';
+        $keep = [file_get_contents($snap.'/manifest.json'), file_get_contents($snap.'/balances.json')];
+        setProbeSite('0');
+        mkdir($snap, 0777, true);
+        file_put_contents($snap.'/manifest.json', $keep[0]);
+        file_put_contents($snap.'/balances.json', $keep[1]);
+        setProbeStage($state);
+        getProbeSide()->exec('UPDATE `'.PROBEPREF.'_users` SET points = 77 WHERE id = 2');
+        $out[$state] = getProbeRun();
+    }
+    return $out;
+}
+
+# The stops: journal rows or a mark without a manifest, a snapshot that no longer matches its manifest, and a points scope that is not the shipped shape
+function getProbeStop(): array {
+    $out = [];
+    setProbeSite('0');
+    getProbeSide()->exec('INSERT INTO `'.PROBEPREF.'_points` (uid, action, scope, source, points) VALUES (2, \'login\', \'account\', \'day:20260921\', 1)');
+    $out['rows'] = getProbeRun();
+    setProbeSite('0');
+    setConfigFile('update.php', ['points' => '6.3.0']);
+    $out['mark'] = getProbeRun();
+    setProbeSite('0');
+    getProbeRun();
+    unlink(CONFIG_DIR.'/update.php');
+    file_put_contents(BASE_DIR.'/storage/backup/update/points/balances.json', '{"2":999999}');
+    $out['forged'] = getProbeRun();
+    setProbeSite('0');
+    $point = (require PROBEROOT.'/config/points.php')['points'];
+    unset($point['actions']['login']);
+    setConfigFile('points.php', $point);
+    $out['scope'] = getProbeRun();
+    return $out;
+}
+
+# The preflight: the stand server, the oldest accepted and the newest refused version of both servers, and a table of the points transactions on another engine
+function getProbeFlight(): array {
+    $pdb = $GLOBALS['pdb'];
+    $out = ['real' => checkUpdateBase($pdb, PROBEPREF)];
+    foreach (['10.2.0-MariaDB', '10.2.1-MariaDB', '11.7.2-MariaDB-log', '8.0.15', '8.0.16', '5.7.44-log'] as $ver) {
+        $pdb->fake = $ver;
+        $out['server'][$ver] = checkUpdateBase($pdb, PROBEPREF);
+    }
+    $pdb->fake = '';
+    getProbeSide()->exec('CREATE TABLE `'.PROBEPREF.'_favorites` (`id` INT) ENGINE=MyISAM');
+    getProbeSide()->exec('CREATE TABLE `other_forum` (`id` INT) ENGINE=MyISAM');
+    $out['engine'] = checkUpdateBase($pdb, PROBEPREF);
+    getProbeSide()->exec('DROP TABLE `'.PROBEPREF.'_favorites`, `other_forum`');
+    return $out;
+}
+
+# Put the scratch site and the disposable schema back to a 6.2 installation with ratings: the old rules, the points mark of the unit that ran before, the aggregates and the old rows
+# The twelve hundred extra accounts make the unit write its targets in more than one batch; every third of them carries an aggregate
+function setRateSite(array $rules = PROBEOLD, array $mark = ['points' => '6.3.0'], array $rows = PROBEROWS): void {
+    deleteProbeTree(BASE_DIR);
+    mkdir(CONFIG_DIR, 0777, true);
+    setConfigFile('ratings.php', $rules);
+    if ($mark) setConfigFile('update.php', $mark);
+    $side = getProbeSide();
+    foreach (['rating_targets', 'rating_actors', 'rating_votes', 'rating', 'forum', 'products'] as $name) $side->exec('DELETE FROM `'.PROBEPREF.'_'.$name.'`');
+    $side->exec('DELETE FROM `'.PROBEPREF.'_users` WHERE id >= 100');
+    $bulk = [];
+    for ($i = 100; $i < 1300; $i++) $bulk[] = '('.$i.', \'bulk'.$i.'\', \'bulk'.$i.'@probe.test\', \'x\', \'\', \'\', \'\', '.($i % 3).', '.(($i % 3) * 4).')';
+    $side->exec('INSERT INTO `'.PROBEPREF.'_users` (`id`, `name`, `email`, `password`, `block`, `warnings`, `field`, `votes`, `tvotes`) VALUES '.implode(', ', $bulk));
+    foreach ([2 => [10, 37], 3 => [0, 0], 4 => [1, 5]] as $id => [$num, $sum]) $side->exec('UPDATE `'.PROBEPREF.'_users` SET votes = '.$num.', tvotes = '.$sum.' WHERE id = '.$id);
+    $side->exec('INSERT INTO `'.PROBEPREF.'_forum` (`id`, `pid`, `uid`, `name`, `title`, `field`, `score`, `ratings`, `status`) VALUES'
+        .' (5, 0, 2, \'user2\', \'topic\', \'\', 6, 2, 2), (7, 5, 3, \'user3\', \'reply\', \'\', 5, 1, 2)');
+    $side->exec('INSERT INTO `'.PROBEPREF.'_products` (`id`, `title`, `intro`, `body`, `assoc`, `votes`, `tvotes`, `status`) VALUES (8, \'product\', \'\', \'\', \'\', 3, 15, 1)');
+    $add = $side->prepare('INSERT INTO `'.PROBEPREF.'_rating` (`id`, `mid`, `modul`, `time`, `uid`, `ip`) VALUES (?, ?, ?, ?, ?, ?)');
+    foreach ($rows as $row) $add->execute($row);
+}
+
+# Everything the ratings unit leaves behind, read fresh from disk and from the schema: its answer, the manifest, the snapshots, the three new tables, the owners, the old table, the rules and the mark
+function getRateState(string $html): array {
+    $dir = BASE_DIR.'/storage/backup/update/ratings';
+    $info = is_file($dir.'/manifest.json') ? json_decode((string)file_get_contents($dir.'/manifest.json'), true) : null;
+    $side = getProbeSide();
+    $list = fn(string $sql): array => array_map(fn($row) => array_map(fn($v) => is_numeric($v) ? intval($v) : $v, $row), $side->query($sql)->fetchAll(PDO::FETCH_NUM));
+    $pref = '`'.PROBEPREF.'_';
+    clearstatcache();
+    $files = is_array($info);
+    foreach ($files ? $info['source'] : [] as $name => $hash) $files = $files && is_file($dir.'/'.$name) && hash_file('sha256', $dir.'/'.$name) === $hash;
+    return [
+        'done' => str_contains($html, _OK) && !str_contains($html, _ERROR),
+        'text' => trim(strip_tags($html)),
+        'dir' => is_dir($dir),
+        'state' => $info['state'] ?? null,
+        'cursor' => $info['cursor'] ?? null,
+        'count' => $info['count'] ?? null,
+        'files' => $files,
+        'sealed' => is_array($info) && count($info['target']) === 3 && ($info['target']['ratings.php'] ?? '') === hash_file('sha256', CONFIG_DIR.'/ratings.php'),
+        'targets' => $list('SELECT scope, mid, base, votes FROM '.$pref.'rating_targets` WHERE mid < 100 ORDER BY scope, mid'),
+        'total' => intval($list('SELECT COUNT(*) FROM '.$pref.'rating_targets`')[0][0]),
+        'moment' => $list('SELECT DISTINCT created FROM '.$pref.'rating_targets`') === (is_array($info) ? [[$info['moment']]] : []),
+        'actors' => $list('SELECT scope, mid, actor, last FROM '.$pref.'rating_actors` ORDER BY scope, mid, actor'),
+        'votes' => intval($list('SELECT COUNT(*) FROM '.$pref.'rating_votes`')[0][0]),
+        'owners' => $list('SELECT id, votes, tvotes FROM '.$pref.'users` WHERE id < 100 ORDER BY id'),
+        'old' => intval($list('SELECT COUNT(*) FROM '.$pref.'rating`')[0][0]),
+        'rules' => (include CONFIG_DIR.'/ratings.php')['ratings'],
+        'mark' => is_file(CONFIG_DIR.'/update.php') ? (include CONFIG_DIR.'/update.php')['update'] : null,
+    ];
+}
+
+# Run the ratings unit once and read what it left
+function getRateRun(): array {
+    return getRateState(setUpdateRatings($GLOBALS['pdb'], PROBEPREF));
+}
+
+# Rewrite the manifest the way an interrupted run would have left it, with the cursors back at the start, and take the mark away
+function setRateStage(string $state): void {
+    $file = BASE_DIR.'/storage/backup/update/ratings/manifest.json';
+    $info = json_decode((string)file_get_contents($file), true);
+    $info = ['state' => $state, 'cursor' => ['targets' => 0, 'terms' => 0], 'target' => []] + $info;
+    file_put_contents($file, json_encode($info));
+    if (is_file(CONFIG_DIR.'/update.php')) unlink(CONFIG_DIR.'/update.php');
+}
+
+# The clean path and its repeats: a vote that arrived after the site opened is never taken for a starting balance, a lost mark is written again, and rules already converted keep a closed guest switch
+function getRateClean(): array {
+    setRateSite();
+    $out = ['first' => getRateRun()];
+    $dir = BASE_DIR.'/storage/backup/update/ratings';
+    $names = ['manifest.json', 'targets.json', 'terms.json', 'rules.json'];
+    $kept = array_map(fn($v) => file_get_contents($dir.'/'.$v), $names);
+    getProbeSide()->exec('UPDATE `'.PROBEPREF.'_users` SET votes = 11, tvotes = 42 WHERE id = 2');
+    getProbeSide()->exec('INSERT INTO `'.PROBEPREF.'_rating_votes` (scope, mid, actor, uid, value, request, created) VALUES (\'account\', 2, \'u:3\', 3, 5, \''.str_repeat('a', 32).'\', 1700000500)');
+    $out['again'] = getRateRun();
+    unlink(CONFIG_DIR.'/update.php');
+    $out['nomark'] = getRateRun();
+    $out['same'] = $kept === array_map(fn($v) => file_get_contents($dir.'/'.$v), $names);
+    $rule = ['active' => '1', 'period' => '86400', 'detail' => '0', 'guests' => '0'];
+    setRateSite(['account' => $rule, 'forum' => $rule, 'shop' => $rule, 'node.news' => $rule]);
+    $out['ready'] = getRateRun();
+    return $out;
+}
+
+# The interrupted run: a manifest left at prepared starts over its snapshot, and one left at applying meets rows that are already stored and rows that are not
+function getRateResume(): array {
+    $out = [];
+    $dir = BASE_DIR.'/storage/backup/update/ratings';
+    foreach (['prepared', 'applying'] as $state) {
+        setRateSite();
+        getRateRun();
+        $keep = [];
+        foreach (array_diff(scandir($dir), ['.', '..']) as $name) $keep[$name] = file_get_contents($dir.'/'.$name);
+        if ($state === 'prepared') setRateSite();
+        if ($state === 'prepared') mkdir($dir, 0777, true);
+        foreach ($keep as $name => $body) file_put_contents($dir.'/'.$name, $body);
+        setRateStage($state);
+        getProbeSide()->exec('DELETE FROM `'.PROBEPREF.'_rating_targets` WHERE mid BETWEEN 600 AND 700');
+        getProbeSide()->exec('DELETE FROM `'.PROBEPREF.'_rating_actors` WHERE scope = \'forum\'');
+        $out[$state] = getRateRun();
+    }
+    return $out;
+}
+
+# The stops: target rows or a mark without a manifest, a forged snapshot, a stored row and an owner that left the snapshot, and the broken sources the preflight has to name together
+function getRateStop(): array {
+    $out = [];
+    setRateSite();
+    getProbeSide()->exec('INSERT INTO `'.PROBEPREF.'_rating_targets` (scope, mid, base, votes, created) VALUES (\'account\', 2, 42, 11, 1700000500)');
+    $out['rows'] = getRateRun();
+    setRateSite(PROBEOLD, ['points' => '6.3.0', 'ratings' => '6.3.0']);
+    $out['mark'] = getRateRun();
+    setRateSite();
+    getRateRun();
+    setRateStage('verified');
+    file_put_contents(BASE_DIR.'/storage/backup/update/ratings/targets.json', '[["account",2,50,10]]');
+    $out['forged'] = getRateRun();
+    setRateSite();
+    getRateRun();
+    setRateStage('applying');
+    getProbeSide()->exec('UPDATE `'.PROBEPREF.'_rating_targets` SET base = 38 WHERE scope = \'account\' AND mid = 2');
+    $out['differ'] = getRateRun();
+    setRateSite();
+    getRateRun();
+    setRateStage('applying');
+    getProbeSide()->exec('UPDATE `'.PROBEPREF.'_users` SET tvotes = 38 WHERE id = 2');
+    $out['owner'] = getRateRun();
+    $rows = [[20, 2, 'account', 'abc', 9, '5.5.5.5'], [21, 2, 'account', '9999999999', 9, '6.6.6.6'], [22, 2, 'account', '1700000000', 0, '0.0.0.0'], [23, 2, 'account', '1700000000', 0, 'x']];
+    setRateSite(['account' => '100|1|0', 'forum' => '0|2|1'], ['points' => '6.3.0'], array_merge(PROBEROWS, $rows));
+    getProbeSide()->exec('UPDATE `'.PROBEPREF.'_users` SET votes = 0, tvotes = 4 WHERE id = 3');
+    getProbeSide()->exec('UPDATE `'.PROBEPREF.'_products` SET votes = 2, tvotes = 11 WHERE id = 8');
+    getProbeSide()->exec('UPDATE `'.PROBEPREF.'_forum` SET ratings = 3, score = 2 WHERE id = 5');
+    $out['broken'] = getRateRun();
+    return $out;
+}
+
+# The preflight of the branch names a table of the ratings transactions that is on another engine
+function getRateFlight(): array {
+    getProbeSide()->exec('ALTER TABLE `'.PROBEPREF.'_products` ENGINE=MyISAM');
+    $out = ['engine' => checkUpdateBase($GLOBALS['pdb'], PROBEPREF)];
+    getProbeSide()->exec('ALTER TABLE `'.PROBEPREF.'_products` ENGINE=InnoDB');
+    return $out;
+}
+
+$report = ['error' => '', 'clean' => false, 'runs' => []];
+
+try {
+    foreach (['setConfigFile', 'getInfo', 'checkUpdateBase', 'setUpdateBackup', 'setUpdatePoints', 'setUpdateRatings'] as $name) addProbeCode($name);
+    addProbeSchema();
+    $report['runs'] = (($argv[2] ?? 'points') === 'ratings')
+        ? ['clean' => getRateClean(), 'resume' => getRateResume(), 'stop' => getRateStop(), 'flight' => getRateFlight()]
+        : ['clean' => getProbeClean(), 'resume' => getProbeResume(), 'stop' => getProbeStop(), 'flight' => getProbeFlight()];
+} catch (Throwable $err) {
+    $report['error'] = $err->getMessage().' @ '.basename($err->getFile()).':'.$err->getLine();
+}
+
+$report['clean'] = deleteProbeSchema();
+deleteProbeTree(BASE_DIR);
+
+echo json_encode($report);

@@ -109,7 +109,7 @@ function view(): void {
         [$url] = $db->getSqlRow($db->getSqlQuery('SELECT url FROM '.PREFIX_DB.'_auto_links WHERE id = :id', ['id' => $id]));
         if (!$url) setRedirect('index.php?name='.$conf['name']);
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_auto_links SET outs = outs+1 WHERE id = :id', ['id' => $id]);
-        if (is_user()) $pnt->addEvent('visit', 'auto_links', 'link:'.$id, intval($user[0]), ['mid' => $id]);
+        if (is_user()) $pnt->addEvent('visit', 'auto-links', 'link:'.$id, intval($user[0]), ['mid' => $id]);
         setRedirect($url);
     } else {
         setRedirect('index.php?name='.$conf['name']);

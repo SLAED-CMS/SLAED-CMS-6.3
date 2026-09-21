@@ -147,7 +147,7 @@ function getProbeCommentRead(): array {
     $out['mods'] = [$was, $com->getModuleList()];
     $join = PREFIX_DB.'_comment AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) ';
     $sel = 'SELECT s.id, s.cid, s.modul, s.time, s.uid, s.name, s.ip, s.body, s.status, u.name AS unam FROM '.$join;
-    $eid = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_comment ORDER BY id DESC LIMIT 1'));
+    $eid = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_comment WHERE deleted IS NULL ORDER BY id DESC LIMIT 1'));
     $eid = $eid ? intval($eid['id']) : 0;
     $one = $db->getSqlRow($db->getSqlQuery($sel.'WHERE s.id = :id', ['id' => $eid]));
     $now = $com->getComment($eid);
@@ -167,9 +167,10 @@ function getProbeCommentRead(): array {
     ];
     foreach ($cases as $case) {
         [$where, $args, $stat, $amod, $find, $term] = $case;
-        $cnt = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) AS num FROM '.$join.'WHERE '.$where, $args));
+        $cnt = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) AS num FROM '.$join.'WHERE s.deleted IS NULL AND '.$where, $args));
         $was = [];
-        foreach ($db->getSqlRows($db->getSqlQuery($sel.'WHERE '.$where.' ORDER BY s.time '.$aord.' LIMIT 0, '.$anum, $args)) ?: [] as $one) $was[] = intval($one['id']);
+        $list = $db->getSqlRows($db->getSqlQuery($sel.'WHERE s.deleted IS NULL AND '.$where.' ORDER BY s.time '.$aord.' LIMIT 0, '.$anum, $args)) ?: [];
+        foreach ($list as $one) $was[] = intval($one['id']);
         $now = $com->getAdminList($stat, $amod, $find, $term, 1);
         $out['admin'][] = [$was, array_column($now['rows'], 'id'), intval($cnt['num']), $now['total']];
     }
@@ -639,7 +640,7 @@ function getProbeFeedLegacy(int $uid): string {
             $from = PREFIX_DB.'_comment WHERE uid = :ucomm AND status != \'0\' AND deleted IS NULL';
             $parts[] = "(SELECT 'comm' AS mkey, id, cid AS ref, modul AS sub, body AS title, time, 0 AS rc, 0 AS rt FROM ".$from.' ORDER BY id DESC LIMIT 0,'.$limit.')';
         } else {
-            $ron = !empty(explode('|', (string)($conf['ratings'][$mod] ?? ''))[1]);
+            $ron = ($conf['ratings'][$mod]['active'] ?? '') === '1';
             $rsel = ($ron && $inf['rate']) ? $inf['rate'][0].' AS rc, '.$inf['rate'][1].' AS rt' : '0 AS rc, 0 AS rt';
             $from = PREFIX_DB.'_'.$inf['table'].' WHERE '.str_replace(':uid', ':u'.$mod, $inf['where']);
             $parts[] = "(SELECT '".$mod."' AS mkey, id, 0 AS ref, '' AS sub, title, time, ".$rsel.' FROM '.$from.' ORDER BY id DESC LIMIT 0,'.$limit.')';

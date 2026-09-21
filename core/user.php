@@ -1220,7 +1220,7 @@ function getProfileLastView(int $uid): string {
     $lists = ['comm' => []];
     foreach (getProfileModules() as $mod => $inf) {
         if ($mod == 'comm' || !is_active($mod)) continue;
-        $ron = !empty(explode('|', (string)($conf['ratings'][$mod] ?? ''))[1]);
+        $ron = ($conf['ratings'][$mod]['active'] ?? '') === '1';
         $rsel = ($ron && $inf['rate']) ? $inf['rate'][0].' AS rc, '.$inf['rate'][1].' AS rt' : '0 AS rc, 0 AS rt';
         $from = PREFIX_DB.'_'.$inf['table'].' WHERE '.str_replace(':uid', ':u'.$mod, $inf['where']);
         $parts[] = "(SELECT '".$mod."' AS mkey, id, 0 AS ref, '' AS sub, title, time, ".$rsel.' FROM '.$from.' ORDER BY id DESC LIMIT 0,'.$limit.')';
