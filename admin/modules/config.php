@@ -1048,6 +1048,7 @@ function clearcache(): void {
 
 # The restore entry of the configuration journal: GET shows what the unfinished operation left, POST with the scoped token lets setConfigRestore() finish it
 # It is an entry of its own and reads nothing but the journal, so it still opens when the configuration it would repair cannot render the settings screen
+# A Node operation has no verdict of its own: its side is decided by the database when the restore runs, so its button is offered as well
 function restore(): void {
     global $afile, $tpl;
     if (getVar('post', 'op', 'var') === 'restore') {
@@ -1071,7 +1072,9 @@ function restore(): void {
     $rows = [[_CONFIG_OP, $jour['op']], [_DATE, date(_TIMESTRING, $jour['time'])], [_CONFIG_PHASE, $jour['phase']]];
     if ($jour['types']) $rows[] = [_TYPE, implode(', ', array_map('strval', $jour['types']))];
     foreach ($jour['files'] as $name => $one) $rows[] = [_FILE.': '.$name, $one['state']];
-    $rows[] = [_CONFIG_VERDICT, ($jour['verdict'] !== '') ? $jour['verdict'] : sprintf(_CONFIG_BLOCKED, $jour['why'])];
+    $proof = $jour['why'] === 'proof';
+    $pname = (string)($jour['proof']['name'] ?? '');
+    $rows[] = [_CONFIG_VERDICT, ($jour['verdict'] !== '') ? $jour['verdict'] : ($proof ? sprintf(_NODE_PROOF, $pname) : sprintf(_CONFIG_BLOCKED, $jour['why']))];
     $body = '';
     foreach ($rows as $row) {
         $body .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
@@ -1083,7 +1086,7 @@ function restore(): void {
     }
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _CONFIG_PENDING]);
     $info = $tpl->getHtmlFrag('table', ['head' => [['content' => _PARAMETERS], ['content' => _VALUE]], 'rows_html' => $body]);
-    $send = ($jour['verdict'] !== '') ? getTplPostButton(['name' => 'config', 'op' => 'restore'], 'arrow-repeat', _CONFIG_RESTORE) : '';
+    $send = ($jour['verdict'] !== '' || $proof) ? getTplPostButton(['name' => 'config', 'op' => 'restore'], 'arrow-repeat', _CONFIG_RESTORE) : '';
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $info.$send]);
     setFoot();
 }

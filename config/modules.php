@@ -259,6 +259,17 @@ return [
             'top' => '0',
             'type' => '0',
         ],
+        'node' => [
+            'lang' => '_NODE',
+            'icon' => 'collection',
+            'active' => '1',
+            'view' => '0',
+            'menu' => '0',
+            'group' => '0',
+            'side' => '2',
+            'top' => '0',
+            'type' => '1',
+        ],
         'order' => [
             'lang' => '_ORDER',
             'icon' => 'receipt',

@@ -151,7 +151,7 @@ POST, request, CSRF, ошибки и аннулирование: [ratings.md](ra
 | `admin.php?name=node&op=export&type=news` | `GET` | выгрузка `node-<name>.json` |
 | `admin.php?name=node&op=import` | `GET`, `POST` | форма и импорт определения типа |
 | `admin.php?name=node&op=report&id=77` | `POST` | разбор жалобы на ресурс: полезная или отклонённая |
-| `admin.php?name=node&op=config` | `GET`, `POST` | общие настройки Node |
+| `admin.php?name=node&op=config` | `GET`, `POST` | общие пределы Node: изменяются только `limits`, остальное показывается (решение пользователя 2026-09-23, S13) |
 | `admin.php?name=node&op=info` | `GET` | документация модуля |
 | `admin.php?name=node&op=support&id=1050` | `GET`, `POST` | рабочая карточка обращения поддержки |
 | `admin.php?name=node&op=sync&id=1050` | `POST` | ручное обновление внешнего материала |

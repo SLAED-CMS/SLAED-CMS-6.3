@@ -459,7 +459,7 @@
         var acts = [];
         var seen = 0;
         if (!box) return null;
-        if (row.image && able.insert) acts.push(['image', 'image', getLab(id, 'insert', 'Insert image')]);
+        if (row.image && !row.bytag && able.insert) acts.push(['image', 'image', getLab(id, 'insert', 'Insert image')]);
         if (able.insert) acts.push(['attach', 'paperclip', getLab(id, 'insobj', 'Insert file')]);
         if (able.download) acts.push(['down', 'download', getLab(id, 'download', 'Download')]);
         if (able.compress) acts.push(['zip', 'file-zip', getLab(id, 'zip', 'ZIP')]);
@@ -746,7 +746,7 @@
         row = room.view[num] || {};
         if (ev.key === 'Enter') {
             if (!row.able || !row.able.insert) return false;
-            setAct(id, (row.image ? 'image' : 'attach'), num);
+            setAct(id, ((row.image && !row.bytag) ? 'image' : 'attach'), num);
             return true;
         }
         if (ev.key === ' ') {
@@ -1125,7 +1125,8 @@
 
     function addInsertRows(id, way, rows, align, title) {
         rows.forEach(function(row) {
-            if (way === 'image' && row.image) addImage(id, row.url, title || row.file, align);
+            // A file of a closed directory has no address a reader could open, so it enters the text as the tag the stored material resolves
+            if (way === 'image' && row.image && !row.bytag) addImage(id, row.url, title || row.file, align);
             else addAttach(id, row.file, title || row.file, align);
         });
     }

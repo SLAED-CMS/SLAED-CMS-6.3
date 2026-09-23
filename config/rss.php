@@ -7,13 +7,12 @@
 return [
     'rss' => [
         'act' => '1',
+        'bytes' => '2097152',
         'max' => '50',
         'min' => '10',
+        'redirects' => '3',
         'rss' => '0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0',
-        'temp' => '&lt;table class=&quot;sl_table_form&quot;&gt;<br>
-&lt;tr&gt;&lt;td&gt;&lt;span title=&quot;[date]&quot; class=&quot;sl_date&quot;&gt;[date]&lt;/span&gt; - &lt;a href=&quot;[guid]&quot; target=&quot;_blank&quot; title=&quot;[title]&quot;&gt;[title]&lt;/a&gt;&lt;/td&gt;&lt;/tr&gt;<br>
-&lt;tr&gt;&lt;td style=&quot;text-align: justify;&quot;&gt;[description]&lt;/td&gt;&lt;/tr&gt;<br>
-&lt;/table&gt;',
+        'timeout' => '10',
         'use' => '1',
     ],
 ];

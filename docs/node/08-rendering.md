@@ -38,11 +38,11 @@ getTplTextarea([
     'name' => 'intro',
     'value' => $intro,
     'mod' => $type->name,
-    'store' => 'node.intro',
+    'store' => 'nodes.intro',
 ]);
 ```
 
-Для `body` меняются только `id`, `name`, `value` и `store = node.body`. Выбор активного редактора остаётся в существующем `$conf['editor']`; Node не хранит и не переопределяет его в `config/node.php`. В `getEditorRoomData()` добавляются только стандартные хранилища `node.intro` как `TEXT` и `node.body` как `MEDIUMTEXT`, после чего размер и возможность встроенного изображения проверяются общими `checkEditorTextRoom()` и Parser.
+Для `body` меняются только `id`, `name`, `value` и `store = nodes.body`. Выбор активного редактора остаётся в существующем `$conf['editor']`; Node не хранит и не переопределяет его в `config/node.php`. В `getEditorRoomData()` добавляются только стандартные хранилища `nodes.intro` как `TEXT` и `nodes.body` как `MEDIUMTEXT`, после чего размер и возможность встроенного изображения проверяются общими `checkEditorTextRoom()` и Parser.
 
 `mod = $type->name` автоматически передаёт драйверу штатное место `<type>.attach`, правило `$conf['uploads'][<type>]` и каталог `uploads/<type>`. Встроенное файловое окно создаёт существующий `getFileManagerWindow()`; собственные шаблоны, JavaScript, маршруты загрузки и обработчик файлов Node не создаются. Повторяемые строки ресурсов в форме материала обслуживает общий компонент plugins/system/slaed.js по data-хуку, не знающий о Node и доступный любой форме; без JavaScript форма показывает фиксированное число пустых строк и остаётся рабочей.
 
@@ -92,7 +92,7 @@ fragments/node/faq/block.html  -> fragments/node/block.html
 fragments/node/faq/search.html -> fragments/node/search.html
 ```
 
-Та же схема применяется к `image`, `gallery`, `download`, `player` и `link`. Режим может переопределить только отличающиеся файлы, а остальные получит из базового комплекта. Произвольного пути из запроса, fallback между темам и fallback к старым шаблонам нет. Отсутствие базового файла является ошибкой темы. Template сам fallback не выполняет: у него есть только getHtmlPage(), getHtmlPart() и getHtmlFrag(), а отсутствующий файл — ошибка. S13 добавляет `Template::checkTemplateFile(string $kind, string $name): bool` — проверку наличия файла текущей темы без вывода; NodeView спрашивает файл режима, при отказе берёт базовый и запоминает ответ на запрос.
+Та же схема применяется к `image`, `gallery`, `download`, `player` и `link`. Режим может переопределить только отличающиеся файлы, а остальные получит из базового комплекта. Произвольного пути из запроса, fallback между темам и fallback к старым шаблонам нет. Отсутствие базового файла является ошибкой темы. Template сам fallback не выполняет: у него есть только getHtmlPage(), getHtmlPart() и getHtmlFrag(), а отсутствующий файл — ошибка. S13 добавляет `Template::checkTemplateFile(string $kind, string $name): bool` — проверку наличия файла текущей темы без вывода; выбор делает контроллер модуля (`getNodeTplName()` в modules/node/index.php): он спрашивает файл режима, при отказе берёт базовый и запоминает ответ на запрос. NodeView шаблон не вызывает и имён файлов не знает.
 
 ## Граница переопределения
 

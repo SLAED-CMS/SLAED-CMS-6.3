@@ -7,6 +7,7 @@
 # CLI probe for the configuration protocol of docs/node/06-types.md and the request-owned directory lock of the file layer
 # It boots the real core the way index.php does, with the configuration, the journal, the cache and the logs redirected into scratch
 # The scratch configuration is a copy of the sources of the stand without local.php, so no scenario ever writes below config/ or storage/ of the site
+# The shipped node.php is left out as well: the scenarios of a missing Node area and of a file born with its first area need a site without it
 # A process that dies in the middle of an operation is a real child that exits inside its closure, and concurrency is made of real processes
 $pmode = (string)($argv[1] ?? '');
 $probework = (string)($argv[2] ?? '');
@@ -16,7 +17,7 @@ $preal = BASE_DIR.'/config';
 if (!is_dir($probework.'/config')) {
     mkdir($probework.'/config', 0777, true);
     foreach (glob($preal.'/*.php') ?: [] as $file) {
-        if (basename($file) !== 'local.php') copy($file, $probework.'/config/'.basename($file));
+        if (!in_array(basename($file), ['local.php', 'node.php'], true)) copy($file, $probework.'/config/'.basename($file));
     }
 }
 define('CONFIG_DIR', $probework.'/config');

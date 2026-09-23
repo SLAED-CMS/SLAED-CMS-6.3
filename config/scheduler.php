@@ -87,6 +87,19 @@ return [
                 'settings' => [
                 ],
             ],
+            'nodepublish' => [
+                'title' => 'Node publication',
+                'type' => 'system',
+                'active' => '1',
+                'system' => 'nodepublish',
+                'schedule' => '* * * * *',
+                'priority' => '6',
+                'lock_timeout' => '180',
+                'manual' => '1',
+                'settings' => [
+                    'limit' => '50',
+                ],
+            ],
             'sitemap' => [
                 'title' => 'Sitemap',
                 'type' => 'system',

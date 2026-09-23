@@ -1013,6 +1013,21 @@ function save(): void {
                 ];
                 $sdone = true;
             }
+            # Node delivers the reward of a future publication when its date comes, through a system job of its own that an upgraded site has not carried yet
+            if (is_array($sched) && !isset($sched['jobs']['nodepublish'])) {
+                $sched['jobs']['nodepublish'] = [
+                    'title' => 'Node publication',
+                    'type' => 'system',
+                    'active' => '1',
+                    'system' => 'nodepublish',
+                    'schedule' => '* * * * *',
+                    'priority' => '6',
+                    'lock_timeout' => '180',
+                    'manual' => '1',
+                    'settings' => ['limit' => '50'],
+                ];
+                $sdone = true;
+            }
             # A site upgraded while the nightly counter sweep still existed carries the job in its own config, and the sweep now happens on every write
             if (is_array($sched) && isset($sched['jobs']['commentsync'])) {
                 unset($sched['jobs']['commentsync']);
@@ -1048,6 +1063,14 @@ function save(): void {
         $bodytext .= setUpdatePoints($db, $xprefix);
         $bodytext .= setUpdateRatings($db, $xprefix);
         $bodytext .= setUpdateFields($db, $xprefix);
+        $rfile = CONFIG_DIR.'/rss.php';
+        $rdata = is_file($rfile) ? ((require $rfile)['rss'] ?? []) : [];
+        if (is_array($rdata) && $rdata !== [] && (isset($rdata['temp']) || !isset($rdata['bytes'], $rdata['redirects'], $rdata['timeout']))) {
+            unset($rdata['temp']);
+            setConfigFile('rss.php', $rdata + ['bytes' => '2097152', 'redirects' => '3', 'timeout' => '10']);
+        }
+        $rnum = $db->getSqlQuery('UPDATE `'.$xprefix.'_blocks` SET content = \'\', time = \'0\' WHERE url != \'\'');
+        $bodytext .= getInfo($xprefix.'_blocks RSS bodies cleared for Markdown (rows: '.($rnum ? $db->getSqlRowCount($rnum) : 0).')', $rnum !== false);
         $nsent = 0;
         foreach ($nlist as $nid => $one) {
             $mails = array_values(array_unique(array_filter(array_map('trim', explode(',', $one['mails'])), 'strlen')));

@@ -41,6 +41,27 @@ if (empty($go)) {
     }
     $file = getVar('req', 'file', 'var') ?: 'index';
     $theme = getTheme();
+    $hname = '';
+    if (!$name && !empty($conf['module'])) {
+        $hmodul = explode(',', $conf['module']);
+        $hname = $hmodul[mt_rand(0, count($hmodul) - 1)];
+    }
+    # A registered Node type reaches the one fixed entry point of Node by its name or as the start page; the registry is the loaded configuration, so no query runs here
+    # The layout and the block positions are the ones of the module node, the name stays the public name of the type, and the reserved name node has no public route at all
+    $nname = $name ?: $hname;
+    if ($nname === 'node' || isset($conf['node']['types'][$nname])) {
+        if ($nname === 'node' || $file !== 'index') setError(404);
+        if (!$name) $home = 1;
+        $name = $nname;
+        $conf['name'] = $name;
+        $conf['style'] = 'sl_mod_'.$name;
+        $mconf = $conf['modules']['node'] ?? [];
+        $blocks = (string)($mconf['side'] ?? '');
+        $blocks_c = (string)($mconf['top'] ?? '');
+        getLang('node');
+        require_once BASE_DIR.'/modules/node/index.php';
+        exit;
+    }
     if ($name) {
         $conf['name'] = $name;
         $conf['style'] = 'sl_mod_'.strtolower($name);
@@ -98,9 +119,7 @@ if (empty($go)) {
             setFoot();
             exit;
         } else {
-            $hmodul = explode(',', $conf['module']);
-            $hi = mt_rand(0, count($hmodul) - 1);
-            $name = $hmodul[$hi];
+            $name = $hname;
             $conf['name'] = $name;
             # The start page listens to the same block positions as the named route, so admin.php?name=modules governs both
             $mconf = $conf['modules'][$name] ?? [];

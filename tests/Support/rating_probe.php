@@ -733,9 +733,11 @@ function getProbeRace(): array {
 }
 
 # The decision of the real page cache for a cacheable route, which has to follow the guard journal
+# The cacheable routes are the lists of the registered Node types, so the process registers a type news in its loaded configuration and nowhere else
 function getProbeRoute(): array {
     global $name, $op, $home, $theme, $conf;
     $conf['cache'] = 1;
+    $conf['node']['types']['news'] = ['version' => 1];
     putenv('HTTP_HOST='.strtolower((string)parse_url((string)$conf['homeurl'], PHP_URL_HOST)));
     $_SERVER['REQUEST_URI'] = '/index.php?name=news';
     $_GET = ['name' => 'news'];
@@ -754,6 +756,7 @@ function getProbeRoute(): array {
 function getProbeRender(string $case): void {
     global $name, $op, $home, $theme, $conf;
     $conf['cache'] = 1;
+    $conf['node']['types']['news'] = ['version' => 1];
     $conf['session'] = 0;
     $conf['referers']['refer'] = 0;
     $conf['statistic']['stat'] = 0;

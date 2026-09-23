@@ -27,6 +27,7 @@ final class PageCacheContractTest extends TestCase
 
     protected function tearDown(): void
     {
+        (new \ReflectionProperty(\Cache::class, 'until'))->setValue(null, null);
         foreach ($this->temps as $file) {
             if (is_file($file)) unlink($file);
             if (is_file($file.'.json')) unlink($file.'.json');
@@ -180,16 +181,22 @@ final class PageCacheContractTest extends TestCase
         $this->assertSame(1, $data['v1_depth']);
     }
 
-    # The real getCacheRouteVars() accepts a clean request and produces a stable identity; the route map is empty until the Node routes arrive, so checkPageCache() stores nothing
+    # The real getCacheRouteVars() accepts a clean request and produces a stable identity; only the list of a registered Node type is cached,
+    # with the parameters name, cat and num alone, while a module outside the registry, a material and a letter filter are rendered live
     #[Test]
     public function cleanRouteProducesStableIdentity(): void
     {
         $route = $this->getProbe('route');
         $again = $this->getProbe('routenum');
         $this->assertIsArray($route['vars']);
-        $this->assertFalse($route['cache'], 'A route is cached although the route map names none');
+        $this->assertFalse($route['cache'], 'A module outside the Node registry is cached');
         $this->assertMatchesRegularExpression('#^[a-f0-9]{40}$#', $route['hash']);
         $this->assertSame($route['hash'], $again['hash'], 'identity must be stable across processes');
+        $node = $this->getProbe('routenode');
+        $this->assertTrue($node['cache'], 'The list of a registered Node type is not cached');
+        $this->assertIsArray($node['vars'], 'The clean list address of a Node type broke the parameter contract');
+        $this->assertFalse($this->getProbe('routenodeop')['cache'], 'A material of a Node type is cached');
+        $this->assertFalse($this->getProbe('routenodelet')['cache'], 'A letter filter of a Node type is cached');
     }
 
     # A sidecar written next to one body validates that exact body and reports its dynamic flag
@@ -200,24 +207,58 @@ final class PageCacheContractTest extends TestCase
         $body = '<html>cached body</html>';
         $this->assertTrue(\Cache::setBody($file, $body));
         $this->assertTrue(\Cache::setMeta($file, $body, false));
-        $this->assertSame(['dyn' => false, 'valid' => true], \Cache::getMeta($file, $body));
+        $this->assertSame(['dyn' => false, 'valid' => true, 'until' => 0], \Cache::getMeta($file, $body));
         $this->assertTrue(\Cache::setMeta($file, $body, true));
-        $this->assertSame(['dyn' => true, 'valid' => true], \Cache::getMeta($file, $body));
+        $this->assertSame(['dyn' => true, 'valid' => true, 'until' => 0], \Cache::getMeta($file, $body));
     }
 
-    # A missing, corrupt, or mismatched sidecar fails closed to dynamic so the body is never served with public headers
+    # A page bound to the moment its data changes keeps the earliest moment of the request; null binds it without a moment, and the sidecar carries the bound
+    #[Test]
+    public function boundPageCarriesItsEarliestMoment(): void
+    {
+        $file = $this->getScratchFile();
+        $body = '<html>node list</html>';
+        \Cache::setPageUntil(null);
+        \Cache::setMeta($file, $body, false);
+        $this->assertSame(PHP_INT_MAX, \Cache::getMeta($file, $body)['until'], 'a page bound without a moment is still bound');
+        \Cache::setPageUntil(2000000000);
+        \Cache::setPageUntil(1900000000);
+        \Cache::setPageUntil(null);
+        \Cache::setMeta($file, $body, false);
+        $this->assertSame(['dyn' => false, 'valid' => true, 'until' => 1900000000], \Cache::getMeta($file, $body));
+        file_put_contents($file.'.json', json_encode(['sha1' => sha1($body), 'dyn' => 0, 'until' => -5]));
+        $this->assertSame(1, \Cache::getMeta($file, $body)['until'], 'a negative moment is the past');
+        file_put_contents($file.'.json', json_encode(['sha1' => sha1($body), 'dyn' => 0, 'until' => '1900000000']));
+        $this->assertSame(1, \Cache::getMeta($file, $body)['until'], 'a moment that is no integer is the past');
+    }
+
+    # The page head and foot never serve a bound entry once its moment has come, neither fresh nor stale, and never hand a bound page to a browser cache
+    #[Test]
+    public function boundPageIsNeitherServedPastItsMomentNorPublic(): void
+    {
+        $code = (string)file_get_contents(dirname(__DIR__, 2).'/core/system.php');
+        $head = substr($code, strpos($code, "\nfunction setHead("), 4000);
+        $this->assertSame(2, substr_count($head, 'if ($meta && ($meta[\'until\'] === 0 || time() < $meta[\'until\'])) {'), 'the fresh and the stale serve both check the moment');
+        $this->assertStringContainsString('if (!$meta[\'dyn\'] && $days > 0 && $meta[\'until\'] === 0) {', $head, 'only an unbound page is public');
+        $foot = substr($code, strpos($code, "\nfunction setFoot("), 5000);
+        $this->assertStringContainsString('if ($done && !$dyn && !$bound && $days > 0) {', $foot, 'a bound page is never stored public');
+        $this->assertStringContainsString('if (($dyn || $bound) && !headers_sent()) Cache::setHeaders(false);', $foot, 'a bound page is sent no-store');
+    }
+
+    # A missing, corrupt, or mismatched sidecar fails closed to dynamic and to a past moment, so the body is served neither public nor at all
     #[Test]
     public function brokenSidecarFailsClosedToDynamic(): void
     {
         $file = $this->getScratchFile();
         $body = '<html>cached body</html>';
-        $this->assertSame(['dyn' => true, 'valid' => false], \Cache::getMeta($file, $body), 'a missing sidecar must fail closed');
+        $shut = ['dyn' => true, 'valid' => false, 'until' => 1];
+        $this->assertSame($shut, \Cache::getMeta($file, $body), 'a missing sidecar must fail closed');
         \Cache::setMeta($file, $body, false);
-        $this->assertSame(['dyn' => true, 'valid' => false], \Cache::getMeta($file, $body.'tampered'), 'a mismatched body must fail closed');
+        $this->assertSame($shut, \Cache::getMeta($file, $body.'tampered'), 'a mismatched body must fail closed');
         file_put_contents($file.'.json', '{"sha1":');
-        $this->assertSame(['dyn' => true, 'valid' => false], \Cache::getMeta($file, $body), 'a corrupt sidecar must fail closed');
+        $this->assertSame($shut, \Cache::getMeta($file, $body), 'a corrupt sidecar must fail closed');
         file_put_contents($file.'.json', json_encode(['dyn' => 0]));
-        $this->assertSame(['dyn' => true, 'valid' => false], \Cache::getMeta($file, $body), 'an incomplete sidecar must fail closed');
+        $this->assertSame($shut, \Cache::getMeta($file, $body), 'an incomplete sidecar must fail closed');
     }
 
     # The real contract makes unknown query keys and foreign hosts non-cacheable

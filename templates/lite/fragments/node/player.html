@@ -1,0 +1,9 @@
+<section class="sl-section">
+  <h2 class="sl-related-title">{{ role_title }}</h2>
+  {% for item in items %}
+  {% if item.href %}
+  {% if item.is_video %}<p><video controls preload="metadata" src="{{ item.href }}"{% if poster %} poster="{{ poster }}"{% endif %}></video></p>{% else %}<p><audio controls preload="metadata" src="{{ item.href }}"></audio></p>{% endif %}
+  {% if item.title %}<p>{{ item.title }}</p>{% endif %}
+  {% endif %}
+  {% endfor %}
+</section>

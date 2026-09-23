@@ -1329,7 +1329,7 @@ ALTER TABLE `{prefix}_admins`
   MODIFY `super`    BOOLEAN DEFAULT NULL,
   MODIFY `editor`   VARCHAR(32) NOT NULL DEFAULT 'plain',
   MODIFY `smail`    BOOLEAN DEFAULT NULL,
-  MODIFY `modules`  VARCHAR(255) NOT NULL DEFAULT '',
+  MODIFY `modules`  TEXT NOT NULL,
   MODIFY `lang`     VARCHAR(30) NOT NULL DEFAULT '',
   MODIFY `ip`       VARCHAR(45) NOT NULL DEFAULT '',
   MODIFY `regdate`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1698,6 +1698,169 @@ CALL addcol('{prefix}_newsletter', 'note',   'VARCHAR(255) NOT NULL DEFAULT \'\'
 UPDATE `{prefix}_newsletter` SET `status` = 6 WHERE `status` = 0 AND `send` > 0;
 
 CALL delcol('{prefix}_newsletter', 'mails');
+
+# =============================================================================
+# Batch Node — the content tables of 6.3
+# =============================================================================
+
+# The tables are new in 6.3 and have no legacy source: the nine removed modules are not imported, and the creates carry the fresh definitions verbatim
+# They follow their foreign keys, types first and materials second, so the update runs with the foreign key checks left on exactly like a fresh install
+
+CREATE TABLE IF NOT EXISTS `{prefix}_node_types` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `title` VARCHAR(100) NOT NULL,
+  `intro` TEXT NOT NULL,
+  `ext` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '',
+  `active` BOOLEAN NOT NULL DEFAULT 0,
+  `sort` INT UNSIGNED NOT NULL DEFAULT 0,
+  `version` INT UNSIGNED NOT NULL DEFAULT 1,
+  `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`),
+  KEY `active` (`active`, `sort`, `id`)
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
+CREATE TABLE IF NOT EXISTS `{prefix}_nodes` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `tid` INT UNSIGNED NOT NULL,
+  `cid` INT UNSIGNED NOT NULL DEFAULT 0,
+  `uid` INT UNSIGNED NOT NULL DEFAULT 0,
+  `aname` VARCHAR(25) NOT NULL DEFAULT '',
+  `ip` VARCHAR(45) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '',
+  `title` VARCHAR(100) NOT NULL,
+  `intro` TEXT NOT NULL,
+  `body` MEDIUMTEXT NOT NULL,
+  `field` MEDIUMTEXT NOT NULL,
+  `poll` INT UNSIGNED NOT NULL DEFAULT 0,
+  `home` BOOLEAN NOT NULL DEFAULT 0,
+  `comon` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `pinned` BOOLEAN NOT NULL DEFAULT 0,
+  `comnum` INT UNSIGNED NOT NULL DEFAULT 0,
+  `views` INT UNSIGNED NOT NULL DEFAULT 0,
+  `score` INT UNSIGNED NOT NULL DEFAULT 0,
+  `ratings` INT UNSIGNED NOT NULL DEFAULT 0,
+  `status` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `version` INT UNSIGNED NOT NULL DEFAULT 1,
+  `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `published` DATETIME DEFAULT NULL,
+  `expires` DATETIME DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `pub` (`tid`, `status`, `pinned`, `published`, `id`),
+  KEY `cat` (`tid`, `cid`, `status`, `pinned`, `published`, `id`),
+  KEY `home` (`tid`, `home`, `status`, `pinned`, `published`, `id`),
+  KEY `admin` (`tid`, `status`, `updated`, `id`),
+  KEY `views` (`tid`, `status`, `pinned`, `views`, `published`, `id`),
+  KEY `title` (`tid`, `status`, `title`, `id`),
+  KEY `queue` (`status`, `created`, `id`),
+  KEY `author` (`uid`, `status`, `published`, `id`),
+  KEY `ip` (`ip`, `created`, `id`),
+  KEY `poll` (`poll`),
+  CONSTRAINT `{prefix}_fk_nodes_type` FOREIGN KEY (`tid`) REFERENCES `{prefix}_node_types` (`id`) ON UPDATE RESTRICT ON DELETE RESTRICT
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
+CREATE TABLE IF NOT EXISTS `{prefix}_node_assets` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `nid` INT UNSIGNED NOT NULL,
+  `kind` VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `role` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `src` VARCHAR(2048) NOT NULL,
+  `name` VARCHAR(255) NOT NULL DEFAULT '',
+  `title` VARCHAR(100) NOT NULL DEFAULT '',
+  `intro` TEXT NOT NULL,
+  `mime` VARCHAR(100) CHARACTER SET ascii COLLATE ascii_bin NULL DEFAULT NULL,
+  `size` BIGINT UNSIGNED NULL DEFAULT NULL,
+  `width` INT UNSIGNED NULL DEFAULT NULL,
+  `height` INT UNSIGNED NULL DEFAULT NULL,
+  `duration` INT UNSIGNED NULL DEFAULT NULL,
+  `hits` INT UNSIGNED NOT NULL DEFAULT 0,
+  `reported` DATETIME NULL DEFAULT NULL,
+  `ruid` INT UNSIGNED NOT NULL DEFAULT 0,
+  `sort` INT UNSIGNED NOT NULL DEFAULT 0,
+  `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `node` (`nid`, `role`, `sort`, `id`),
+  KEY `report` (`reported`, `id`),
+  KEY `src` (`src`(191)),
+  CONSTRAINT `{prefix}_fk_node_assets_node` FOREIGN KEY (`nid`) REFERENCES `{prefix}_nodes` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE,
+  CONSTRAINT `{prefix}_chk_node_assets_kind` CHECK (`kind` IN ('file', 'image', 'audio', 'video')),
+  CONSTRAINT `{prefix}_chk_node_assets_role` CHECK (`role` <> ''),
+  CONSTRAINT `{prefix}_chk_node_assets_src` CHECK (`src` <> '')
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
+CREATE TABLE IF NOT EXISTS `{prefix}_node_categories` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `nid` INT UNSIGNED NOT NULL,
+  `cid` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `node` (`nid`, `cid`),
+  KEY `cat` (`cid`, `nid`),
+  CONSTRAINT `{prefix}_fk_node_categories_node` FOREIGN KEY (`nid`) REFERENCES `{prefix}_nodes` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
+CREATE TABLE IF NOT EXISTS `{prefix}_node_publish` (
+  `nid` INT UNSIGNED NOT NULL,
+  `published` DATETIME NOT NULL,
+  `due` DATETIME NOT NULL,
+  PRIMARY KEY (`nid`),
+  KEY `queue` (`due`, `nid`),
+  CONSTRAINT `{prefix}_fk_node_publish_node` FOREIGN KEY (`nid`) REFERENCES `{prefix}_nodes` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
+CREATE TABLE IF NOT EXISTS `{prefix}_node_relations` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `nid` INT UNSIGNED NOT NULL,
+  `rid` INT UNSIGNED NOT NULL,
+  `type` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `sort` INT UNSIGNED NOT NULL DEFAULT 0,
+  `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `edge` (`nid`, `type`, `rid`),
+  KEY `source` (`nid`, `type`, `sort`, `rid`),
+  KEY `target` (`rid`, `type`, `sort`, `nid`),
+  CONSTRAINT `{prefix}_fk_node_relations_node` FOREIGN KEY (`nid`) REFERENCES `{prefix}_nodes` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `{prefix}_fk_node_relations_related` FOREIGN KEY (`rid`) REFERENCES `{prefix}_nodes` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `{prefix}_chk_node_relations_self` CHECK (`nid` <> `rid`)
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
+CREATE TABLE IF NOT EXISTS `{prefix}_node_support` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `nid` INT UNSIGNED NOT NULL,
+  `aid` INT UNSIGNED NOT NULL DEFAULT 0,
+  `state` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `prio` TINYINT UNSIGNED NOT NULL DEFAULT 1,
+  `version` INT UNSIGNED NOT NULL DEFAULT 1,
+  `activity` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `node` (`nid`),
+  KEY `queue` (`state`, `prio`, `activity`, `id`),
+  KEY `admin` (`aid`, `state`, `activity`, `id`),
+  CONSTRAINT `{prefix}_fk_node_support_node` FOREIGN KEY (`nid`) REFERENCES `{prefix}_nodes` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE,
+  CONSTRAINT `{prefix}_chk_node_support_state` CHECK (`state` <= 2),
+  CONSTRAINT `{prefix}_chk_node_support_prio` CHECK (`prio` <= 3)
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
+CREATE TABLE IF NOT EXISTS `{prefix}_node_sync` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `nid` INT UNSIGNED NOT NULL,
+  `url` VARCHAR(2048) NOT NULL,
+  `refresh` INT UNSIGNED NOT NULL DEFAULT 3600,
+  `due` DATETIME NULL DEFAULT NULL,
+  `checked` DATETIME NULL DEFAULT NULL,
+  `synced` DATETIME NULL DEFAULT NULL,
+  `etag` VARCHAR(255) NOT NULL DEFAULT '',
+  `modified` VARCHAR(100) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '',
+  `fails` SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  `error` VARCHAR(255) NOT NULL DEFAULT '',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `node` (`nid`),
+  KEY `due` (`due`, `id`),
+  CONSTRAINT `{prefix}_fk_node_sync_node` FOREIGN KEY (`nid`) REFERENCES `{prefix}_nodes` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE,
+  CONSTRAINT `{prefix}_chk_node_sync_refresh` CHECK (`refresh` = 0 OR `refresh` BETWEEN 300 AND 31536000)
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
 # =============================================================================
 # Cleanup

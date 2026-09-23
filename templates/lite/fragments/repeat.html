@@ -1,0 +1,4 @@
+<div data-sl-repeat>
+  {% for row in rows %}<div data-sl-repeat-row{% if row.is_empty %} data-sl-repeat-empty{% endif %}>{{{ row.content_html }}}</div>{% endfor %}
+  <button type="button" class="sl-but" data-sl-repeat-add hidden>{{ add_label }}</button>
+</div>

@@ -361,7 +361,7 @@ final class FileManagerCatalogTest extends TestCase
         $this->assertStringNotContainsString('function stream(', $this->getFile('core/system.php'), 'The download helper of the legacy contract is still defined');
         $body = $this->getBody('core/system.php', 'getFileStream');
         $this->assertStringContainsString("'application/octet-stream'", $body, 'A download is answered with a type the browser may execute');
-        $this->assertStringContainsString('rawurlencode(basename($name))', $body, 'The name of a download reaches the header as it was given');
+        $this->assertStringContainsString("rawurlencode(basename(str_replace('\\\\', '/', \$name)))", $body, 'The name of a download reaches the header as it was given');
         $this->assertStringContainsString('exit;', $body, 'A download does not end the request it answers');
         foreach (['admin/modules/security.php', 'modules/clients/index.php', 'modules/shop/admin/index.php'] as $path) {
             $this->assertDoesNotMatchRegularExpression('/(?<![\w>])stream\(/', $this->getFile($path), 'A download of '.$path.' still goes through the legacy helper');

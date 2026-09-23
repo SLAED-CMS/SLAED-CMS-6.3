@@ -135,6 +135,7 @@
 | Получение лёгких целей | `NodeQuery::getNodeTargetList()` |
 | Получение одного типа | `NodeQuery::getNodeType()` |
 | Получение списка типов | `NodeQuery::getNodeTypeList()` |
+| Проверка настроек типа | `NodeQuery::filterNodeSettings()` |
 | Ограничение выборки типом | `NodeQuery::setNodeType()` |
 | Ограничение выборки категорией | `NodeQuery::setNodeCategory()` |
 | Ограничение выборки первой буквой | `NodeQuery::setNodeLetter()` |
@@ -152,6 +153,7 @@
 | Опубликован | `NodeStatus::Published` |
 | Отключён | `NodeStatus::Disabled` |
 | Удалён в корзину | `NodeStatus::Deleted` |
+| Проверка допустимого перехода состояния | `NodeStatus::checkStatusMove()` |
 | Ошибка ядра Node | `NodeException` |
 | Файл ошибки ядра | `exception.php` |
 | Материал не найден | `NodeException::NOTFOUND` |
@@ -377,11 +379,14 @@
 |---|---|
 | Point | getEventId — поиск исходного начисления для компенсации, отдельно от Rating |
 | Rating | getRating, addRating, deleteRating, getRatingList; точные сигнатуры в 05 |
-| Общая сборка core/system.php | getNodeContext, getRatingService |
+| Общая сборка core/system.php | getNodeContext, getRatingService, getNodeTypeMap (перенесена из core/admin.php на S13: её читают и публичные getModuleName(), blocks/modules.php, getTplModuleSelect()), getUserMail — адрес существующего аккаунта для письма Node или пустая строка (решение пользователя 2026-09-23, S13); checkUploadModer — право модератора места загрузки: для типа Node только ключ node-<name>, для остальных модулей — ключ модуля; заменяет is_moder() в шести upload helpers (решение пользователя 2026-09-23, S11) |
+| Общие экраны core/admin.php | updateNodeTypePart — сохранение одной части типа (fields, uploads, rating) через NodeService с версией формы (решение пользователя 2026-09-23, S10) |
+| Константы admin/lang | `_NODE_STALE`, `_NODE_BAD`, `_NODE_PROOF`, `_NODE_MANAGE` — отказ по версии, отказ типа, вердикт Node-proof на экране restore, подпись права `node` (S10); модульные константы S13 эти имена не повторяют |
 | Конфигурация core/system.php | getConfigCode, setConfigSource, getConfigJournal, setConfigRestore; getConfig получает fresh; контракт — 06-types.md → «Заметки реализации S03» |
-| NodeQuery | setNodeTypes, setNodeSearch, setNodeHome, getNodeTree, getNodeSitemap, getNodeDeadline, getNodeTypeExport |
-| NodeService | updateNodeViews, updateNodeComments, updateNodeRating, addNodeTypeImport |
+| NodeQuery | setNodeTypes, setNodeSearch, setNodeHome, getNodeTree, getNodeSitemap, getNodeDeadline, getNodeTypeExport, filterNodeSettings — единый валидатор настроек типа для чтения и записи (решение пользователя 2026-09-23, S09) |
+| NodeService | updateNodeViews, updateNodeComments, updateNodeRating, addNodeTypeImport; getNodePreview — полная проверка и нормализация создания без записи для preview; updateNodeCategory, deleteNodeCategory — изменение и удаление категории типа Node под общим порядком блокировок (решения пользователя 2026-09-23, S11) |
 | Template | checkTemplateFile — наличие файла представления для fallback режима Node |
+| Фрагмент темы | fragments/repeat.html — повторяемые строки формы, канон обеих тем (решение пользователя 2026-09-23, S13) |
 | FileManager | getPathLock и deletePathLock становятся повторно входимыми, новых имён нет |
 | Cache | getWriteGuard, deleteWriteGuard, checkWriteGuard — отсутствие незавершённых маркеров после попытки восстановления и читаемость поколения; addEpoch получает force и результат bool |
 

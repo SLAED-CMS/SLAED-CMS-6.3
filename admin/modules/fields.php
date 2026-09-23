@@ -6,9 +6,18 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
-# The areas whose extra fields this manager owns, as area => caption; a later owner of fields joins here and nowhere else
+# The areas whose extra fields this manager owns, as area => caption and saved definitions; a later owner of fields joins here and nowhere else
+# Every registered Node type is the area node.<name> with the checked definitions of its type, which only its service writes
 function getFieldAreas(): array {
-    return ['account' => _ACCOUNT, 'forum' => _FORUM, 'order' => _ORDER];
+    global $conf;
+    $out = [];
+    foreach (['account' => _ACCOUNT, 'forum' => _FORUM, 'order' => _ORDER] as $area => $label) {
+        $out[$area] = ['label' => $label, 'defs' => is_array($conf['fields'][$area] ?? null) ? $conf['fields'][$area] : []];
+    }
+    foreach (getNodeTypeMap() as $name => $type) {
+        $out['node.'.$name] = ['label' => (str_starts_with($type->title, '_') && defined($type->title)) ? constant($type->title) : $type->title, 'defs' => $type->fields];
+    }
+    return $out;
 }
 
 # Turn one posted block into a definition with native types; a text that is no whole number or no switch stays a string, so the shared check refuses it by its path
@@ -54,7 +63,8 @@ function getFieldInput(array $post): array {
 function getFieldBlock(string $area, int $pos, string $name, array $def, bool $kept, bool $hide): string {
     global $tpl, $fld;
     $base = 'def['.$area.']['.$pos.']';
-    $fid = 'f-'.$area.'-'.$pos.'-';
+    $slug = str_replace('.', '-', $area);
+    $fid = 'f-'.$slug.'-'.$pos.'-';
     $show = fn(mixed $val): string => is_array($val) ? implode(',', array_filter($val, 'is_scalar')) : (is_bool($val) ? ($val ? '1' : '0') : (is_scalar($val) ? (string)$val : ''));
     $opts = is_array($def['options'] ?? null) ? $def['options'] : [];
     $types = '';
@@ -107,10 +117,10 @@ function getFieldBlock(string $area, int $pos, string $name, array $def, bool $k
     ];
     if ($kept) $rows[] = $flag('drop', _DELETE, false);
     return $tpl->getHtmlPart('toggle-form-block', [
-        'block_id' => 'fi-'.$area.'-'.$pos,
+        'block_id' => 'fi-'.$slug.'-'.$pos,
         'is_toggle_block' => true,
         'is_hidden' => $hide,
-        'toggle_target_id' => $kept ? 'fi-'.$area.'-'.($pos + 1) : '',
+        'toggle_target_id' => $kept ? 'fi-'.$slug.'-'.($pos + 1) : '',
         'title' => _ADD,
         'label_html' => $kept ? _FIELD.': '.htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : _FIELD.': '._ADD,
         'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows]),
@@ -127,12 +137,13 @@ function fields(array $sent = [], string $fail = ''): void {
     $links = [];
     $panels = [];
     $k = 0;
-    foreach ($areas as $area => $label) {
+    foreach ($areas as $area => $info) {
+        $label = $info['label'];
         $links[] = ['href' => '#', 'is_active' => $ctab === $k, 'label' => $label, 'rel' => 'fields-panel-'.$k, 'title' => $label];
         $blok = '';
         $pos = 0;
         $list = $sent[$area] ?? [];
-        $saved = (!$sent && $mark && is_array($conf['fields'][$area] ?? null)) ? $conf['fields'][$area] : [];
+        $saved = (!$sent && $mark) ? $info['defs'] : [];
         foreach ($saved as $name => $def) $list[] = ['name' => $name, 'kept' => '1'] + $def;
         foreach ($list as $def) {
             $kept = !empty($def['kept']);
@@ -154,14 +165,16 @@ function fields(array $sent = [], string $fail = ''): void {
     }
     if ($fail !== '') $cont .= $tpl->getHtmlFrag('alert', ['text' => $fail, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
     $cont .= $tpl->getHtmlFrag('alert', ['text' => _FIELDINFO]);
+    $hidden = [
+        ['nameattr' => 'name', 'valueattr' => 'fields'],
+        ['nameattr' => 'op', 'valueattr' => 'save'],
+        ['nameattr' => 'tab', 'valueattr' => (string)$ctab],
+        ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+    ];
+    foreach (getNodeTypeMap() as $name => $type) $hidden[] = ['nameattr' => 'ver['.$name.']', 'valueattr' => (string)$type->version];
     $fieldv = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
-        'hidden' => [
-            ['nameattr' => 'name', 'valueattr' => 'fields'],
-            ['nameattr' => 'op', 'valueattr' => 'save'],
-            ['nameattr' => 'tab', 'valueattr' => (string)$ctab],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
-        ],
+        'hidden' => $hidden,
         'content_html' => $tpl->getHtmlPart('tabs', ['content_html' => implode('', $panels)]),
         'submit_label' => _SAVECHANGES,
     ]);
@@ -175,17 +188,18 @@ function save(): void {
     $good = checkSiteToken();
     if (!$good || ($conf['update']['fields'] ?? '') !== '6.3.0') setRedirect($afile.'.php?name=fields&tab='.$ctab, false, 302, $good ? _FIELDS_NOMARK : _TOKENMISS, true);
     $post = getVar('post', 'def[]', '', []);
+    $vers = getVar('post', 'ver[]', '', []);
     $cont = [];
     $sent = [];
     $fail = '';
-    foreach (array_keys(getFieldAreas()) as $area) {
+    foreach (getFieldAreas() as $area => $info) {
         $defs = [];
         foreach (is_array($post[$area] ?? null) ? $post[$area] : [] as $one) {
             if (!is_array($one)) continue;
             $name = is_string($one['name'] ?? null) ? trim($one['name']) : '';
-            $kept = is_array($conf['fields'][$area] ?? null) && isset($conf['fields'][$area][$name]);
+            $kept = isset($info['defs'][$name]);
             $def = getFieldInput($one);
-            if ($kept) $def['type'] = $conf['fields'][$area][$name]['type'];
+            if ($kept) $def['type'] = $info['defs'][$name]['type'];
             if ($name === '' && $def['title'] === '') continue;
             $sent[$area][] = ['name' => $name, 'kept' => $kept ? '1' : ''] + $def;
             if (!empty($one['drop']) && $kept) continue;
@@ -202,20 +216,28 @@ function save(): void {
         fields(['' => []] + $sent, sprintf(_FIELDS_BAD, htmlspecialchars($fail, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')));
         return;
     }
-    $warn = !setConfigFile(static function (array $base, Closure $save) use ($cont): string {
-        $base['fields'] = array_replace($base['fields'], $cont);
+    $own = array_filter($cont, fn($v) => !str_starts_with($v, 'node.'), ARRAY_FILTER_USE_KEY);
+    $warn = !setConfigFile(static function (array $base, Closure $save) use ($own): string {
+        $base['fields'] = array_replace($base['fields'], $own);
         ksort($base['fields']);
         return $save($base) ? 'committed' : 'aborted';
     });
     $text = $warn ? (getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP) : _SUCCSAVE;
+    foreach (getNodeTypeMap() as $name => $type) {
+        if ($warn || !isset($cont['node.'.$name]) || $cont['node.'.$name] === $type->fields) continue;
+        $fail = updateNodeTypePart($name, 'fields', $cont['node.'.$name], intval($vers[$name] ?? 0));
+        $warn = $fail !== '';
+        if ($warn) $text = $fail;
+    }
     setRedirect($afile.'.php?name=fields&tab='.$ctab, false, 302, $text, $warn);
 }
 
 function info(): void {
     $ops = [];
-    foreach (array_keys(array_values(getFieldAreas())) as $key) $ops[] = 'name=fields&tab='.$key;
+    $areas = array_column(getFieldAreas(), 'label');
+    foreach (array_keys($areas) as $key) $ops[] = 'name=fields&tab='.$key;
     $ops[] = 'name=fields&op=info';
-    setTplAdminInfoPage(['ops' => $ops, 'tabs' => array_merge(array_values(getFieldAreas()), [_DOCS])]);
+    setTplAdminInfoPage(['ops' => $ops, 'tabs' => array_merge($areas, [_DOCS])]);
 }
 
 switch ($op) {

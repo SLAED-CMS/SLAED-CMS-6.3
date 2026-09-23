@@ -57,7 +57,7 @@ final class EditorWindowTest extends TestCase
         $this->assertStringContainsString("new FileManager('editor'", $area, 'The window is handed a context that is not the editor one and holds the rights of another screen');
         # What narrows the list is the owner and nothing else: a name the upload service did not draw is still a file of the module, and an archive packed in the window carries one
         $this->assertStringNotContainsString("\$one['managed']", $body, 'The listing drops what the naming does not know, so an archive packed here would vanish from the catalogue');
-        $this->assertStringContainsString("['index.html', '.htaccess']", $body, 'The listing shows the sentinels of the upload directory as if they were files of the module');
+        $this->assertStringContainsString("isset(FileManager::getGuardFiles()[\$one['name']])", $body, 'The listing shows the sentinels of the upload directory as if they were files of the module');
     }
 
     # The quota of the module is measured on the way through the listing and never by a second walk of the same directory
@@ -122,7 +122,7 @@ final class EditorWindowTest extends TestCase
         $this->assertStringContainsString("'can_delete' => \$mdr && in_array('editorDelete'", $win, 'Deletion follows something other than the role and the routes of the place');
         $this->assertStringContainsString("\$mdr = \$see['moder'];", $win, 'The window works out the role beside the resolver that already answers it for the field as well');
         $view = $this->getBody('core/helpers.php', 'getUploadPlaceView');
-        $this->assertStringContainsString("'moder' => \$upl && is_moder(\$mod),", $view, 'The moderator of the module is decided by something other than is_moder()');
+        $this->assertStringContainsString("'moder' => \$upl && checkUploadModer(\$mod),", $view, 'The moderator of the place is decided by something other than checkUploadModer()');
         $this->assertStringContainsString("\$upl = \$mod !== '' && checkEditorUploadAccess(\$mod, \$rule);", $view, 'The upload right is decided beside the one gate that answers it for every other place');
     }
 

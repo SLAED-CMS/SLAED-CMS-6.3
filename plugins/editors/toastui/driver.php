@@ -75,7 +75,7 @@ class EditorToastUi implements ContentDriver {
         $room = (array)($data['room'] ?? []);
         $upl = $mod !== '' && checkEditorUploadAccess($mod, $rul);
         $emb = !empty($room['embed']);
-        $mdr = $upl && is_moder($mod);
+        $mdr = $upl && checkUploadModer($mod);
         $tok = $upl ? getSiteToken('upload') : '';
         $atk = $upl ? getSiteToken() : '';
         $pid = $id.'_toast_upload';

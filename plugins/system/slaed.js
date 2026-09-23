@@ -1118,6 +1118,33 @@
         }
     }
 
+    // Repeatable rows of any form: the server writes every row the form may take and marks the empty ones, and this only folds all but the first empty row
+    // behind the add button, which reveals the next one; a page without this script shows every row, so the form works the same with fewer clicks
+    function setRepeatRows(node) {
+        var root = node && node.querySelectorAll ? node : document;
+        var groups = root.querySelectorAll('[data-sl-repeat]');
+        for (var i = 0; i < groups.length; i++) {
+            var box = groups[i];
+            if (box.getAttribute('data-sl-repeat-ready') === '1') continue;
+            box.setAttribute('data-sl-repeat-ready', '1');
+            var add = box.querySelector(':scope > [data-sl-repeat-add]');
+            var rows = box.querySelectorAll(':scope > [data-sl-repeat-row][data-sl-repeat-empty]');
+            for (var j = 1; j < rows.length; j++) rows[j].hidden = true;
+            if (!add || rows.length < 2) continue;
+            add.hidden = false;
+            add.addEventListener('click', function () {
+                var group = this.closest('[data-sl-repeat]');
+                var next = group ? group.querySelector(':scope > [data-sl-repeat-row][hidden]') : null;
+                if (next) {
+                    next.hidden = false;
+                    var pick = next.querySelector('input:not([type="hidden"]), select, textarea');
+                    if (pick) pick.focus();
+                }
+                if (!group || !group.querySelector(':scope > [data-sl-repeat-row][hidden]')) this.hidden = true;
+            });
+        }
+    }
+
     function setTabs(node) {
         var root = node && node.querySelectorAll ? node : document;
         var groups = root.querySelectorAll('[data-sl-tabs-init]');
@@ -2085,6 +2112,7 @@
         setDialToggle();
         setTabs(document);
         setFieldShows(document);
+        setRepeatRows(document);
         setAlerts(document);
         setVoteBlocks(document);
         setUiActions();
@@ -2111,6 +2139,7 @@
         setFloating(event.target);
         setTabs(event.target);
         setFieldShows(event.target);
+        setRepeatRows(event.target);
         setAlerts(event.target);
         setVoteBlocks(event.target);
         var live = event.target && event.target.closest ? event.target.closest('[data-sl-live-box]') : null;

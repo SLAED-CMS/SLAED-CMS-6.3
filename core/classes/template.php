@@ -68,6 +68,11 @@ class Template {
         return $this->getAssetMarkup().$html;
     }
 
+    # Whether the current theme carries one template file of a group, without rendering or reporting anything; a caller with a fallback asks this before choosing a name
+    public function checkTemplateFile(string $kind, string $name): bool {
+        return $this->checkType($kind) && $this->checkName($name) && $this->checkFile($this->getFile($kind, $name));
+    }
+
     # Derive the input control type from the field name when no explicit type is provided
     protected function getInputType(array $data): string {
         if (!empty($data['itype'])) return $data['itype'];

@@ -517,7 +517,7 @@ function getEditorRoomData(string $store): array {
     $room = [
         'comment.body' => 'mediumtext', 'forum.body' => 'mediumtext', 'message.body' => 'mediumtext', 'money.note' => 'mediumtext',
         'newsletter.body' => 'mediumtext', 'order.note' => 'mediumtext', 'privat.body' => 'mediumtext', 'products.body' => 'mediumtext',
-        'auto_links.intro' => 'text', 'money.intro' => 'text', 'products.intro' => 'text',
+        'nodes.body' => 'mediumtext', 'auto_links.intro' => 'text', 'money.intro' => 'text', 'nodes.intro' => 'text', 'products.intro' => 'text',
         'users.block' => 'text', 'users.sig' => 'text',
         'config' => 'config',
     ];
@@ -743,7 +743,7 @@ function getUploadPlaceView(array $rule): array {
         'mod' => $mod,
         'ops' => (array)$rule['ops'],
         'able' => $upl,
-        'moder' => $upl && is_moder($mod),
+        'moder' => $upl && checkUploadModer($mod),
         'exts' => $exts,
         'accept' => implode(',', array_map(static fn(string $ext): string => '.'.$ext, $exts)),
     ];
@@ -1237,7 +1237,9 @@ function getTplModuleSelect(string $name, string $mod, string $no = '', array $a
     $cont = '';
     if ($no !== '') $cont .= $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => empty($mod)]);
     $mods = explode(',', $mod);
-    foreach (scandir('modules') as $file) {
+    # The directory node is the code of every registered type and has no route of its own; the active types stand beside the modules under their public names
+    $list = array_merge(array_diff(scandir('modules'), ['node']), array_keys(array_filter(getNodeTypeMap(), fn($v) => $v->active)));
+    foreach ($list as $file) {
         if (str_contains($file, '.')) continue;
         if ($allow && !in_array($file, $allow, true)) continue;
         $isel = false;
@@ -1252,9 +1254,11 @@ function getTplModuleSelect(string $name, string $mod, string $no = '', array $a
     return $tpl->getHtmlFrag('select', ['name_attr' => $name, 'selectid' => $sid, 'describedby' => $desc, 'is_config' => true, 'options_html' => $cont, 'is_multiple' => true, 'is_name_array' => true]);
 }
 
-# Return the names of modules that support categories
+# Return the names of modules that support categories: the two physical ones and every registered Node type with the category feature, as the administrative screens read them
+# The types are never listed by name here, so a new type appears on the category screen as soon as it is registered and a site without the Node tables lists the two alone
 function getCategoryModules(): array {
-    return ['forum', 'shop'];
+    $types = array_filter(getNodeTypeMap(), fn($v) => $v->settings['features']['categories']);
+    return array_merge(['forum', 'shop'], array_keys($types));
 }
 
 # Render a select with category-enabled modules
@@ -1287,22 +1291,24 @@ function getQueryString(array $data = [], bool $tail = false, string $hash = '')
 }
 
 # Render a module navigation block from module config and optional overrides
+# A registered Node type has no best, pop or liste operation and no module config of its own: its links come only from the overrides its controller computes
 function getModuleNavi(array $p): string {
     global $conf, $tpl;
-    $mconf = $conf[$conf['name']] ?? [];
+    $node = isset($conf['node']['types'][$conf['name']]);
+    $mconf = $node ? [] : ($conf[$conf['name']] ?? []);
     $cat = getVar('get', 'cat', 'num');
     $cpar = $cat ? ['cat' => $cat] : [];
     $title = $p['title'] ?? '';
     $htitle = $p['htitle'] ?? $title;
     $bop = $p['bop'] ?? 'best';
-    $always = $p['always'] ?? false;
+    $always = !$node && ($p['always'] ?? false);
     $addquest = $p['addquest'] ?? true;
     $showrate = $always || !empty($mconf['rate']);
     $canadd = (is_user() && ($mconf['add'] ?? 0) == 1) || (!is_user() && $addquest && ($mconf['addquest'] ?? 0) == 1);
     $home = $p['home_href'] ?? getSeoUrl(['name' => $conf['name']]);
     $best = $p['best_href'] ?? ($showrate ? getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => $bop]) : '');
     $pop = $p['pop_href'] ?? ($showrate ? getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'pop']) : '');
-    $list = $p['liste_href'] ?? getSeoUrl(['name' => $conf['name'], 'op' => 'liste']);
+    $list = $p['liste_href'] ?? ($node ? '' : getSeoUrl(['name' => $conf['name'], 'op' => 'liste']));
     $add = $p['add_href'] ?? ($canadd ? getSeoUrl(['name' => $conf['name'], 'op' => 'add']) : '');
     $btit = $p['btitle'] ?? _BEST;
     $ptit = $p['ptitle'] ?? _POP;

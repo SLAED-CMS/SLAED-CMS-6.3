@@ -1,0 +1,14 @@
+<section class="sl-section">
+  <h2 class="sl-related-title">{{ role_title }}</h2>
+  <ul class="sl-list">
+    {% for item in items %}
+    <li>
+      {% if item.href %}<a href="{{ item.href }}" title="{{ download_label }}" class="sl-but"><i class="bi bi-download" aria-hidden="true"></i> {% if item.title %}{{ item.title }}{% else %}{{ item.name }}{% endif %}</a>{% else %}{% if item.title %}{{ item.title }}{% else %}{{ item.name }}{% endif %}{% endif %}
+      {% if item.stext %}<span class="sl-chip">{{ item.stext }}</span>{% endif %}
+      {% if item.hits %}<span title="{{ hits_label }}" class="sl-chip sl-card-reads"><i class="bi bi-download" aria-hidden="true"></i> {{ item.hits }}</span>{% endif %}
+      {% if item.intro %}<br>{{ item.intro }}{% endif %}
+      {% if item.rhref %}<form method="post" action="{{ item.rhref }}" class="sl-inline-form"><input type="hidden" name="token" value="{{ token }}"><input type="hidden" name="refer" value="1"><button type="submit" title="{{ report_label }}" aria-label="{{ report_label }}" class="sl-but-mini"><i class="bi bi-flag" aria-hidden="true"></i></button></form>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>

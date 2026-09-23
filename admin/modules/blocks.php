@@ -350,7 +350,7 @@ function addsave(): void {
     }
     if ($url) {
         $btime = time();
-        $content = rss_read($url, 1);
+        $content = getRssBody($url) ?? '';
     }
     if ($warn) {
         setRedirect($afile.'.php?name=blocks&op=add', false, 302, _TOKENMISS, true);
@@ -747,7 +747,8 @@ function editsave(): void {
     }
     if ($url) {
         $bkey = '';
-        $content = rss_read($url, 1);
+        $content = getRssBody($url);
+        if ($content === null) [$content] = $db->getSqlRow($db->getSqlQuery('SELECT content FROM '.PREFIX_DB.'_blocks WHERE id = :bid', ['bid' => $bid]));
         if ($oldpos != $bpos) {
             $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_blocks WHERE weight >= :weight AND bpos = :bpos', ['weight' => $weight, 'bpos' => $bpos]);
             $fweight = $weight;

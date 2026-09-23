@@ -168,6 +168,7 @@ final class UpdateFieldsTest extends TestCase
             $this->assertSame(1, preg_match('/CREATE TABLE `\{prefix\}_'.$tab.'` \((?:(?!CREATE TABLE).)*?`'.$col.'` MEDIUMTEXT NOT NULL,/s', $fresh), $tab.'.'.$col.' is not MEDIUMTEXT in table.sql');
         }
         $sql = (string)file_get_contents($root.'/setup/sql/table_update6_3.sql');
+        $sql = (string)preg_replace('/CREATE TABLE IF NOT EXISTS `\{prefix\}_node[a-z_]*` \(.*?\n\)\s*ENGINE[^;]*;/s', '', $sql);
         $this->assertSame(0, preg_match('/`(?:field|info)`\s+TEXT NOT NULL/', $sql), 'The update narrows a column of extra field values back to TEXT');
         $this->assertSame(4, preg_match_all('/`(?:field|info)`\s+MEDIUMTEXT NOT NULL/', $sql), 'The update does not widen forum.field, order.info and users.field');
         $code = (string)file_get_contents($root.'/setup/index.php');

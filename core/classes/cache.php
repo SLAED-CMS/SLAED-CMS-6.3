@@ -18,6 +18,7 @@ class Cache {
     private static bool $bumped = false;
     private static $hold = null;
     private static array $guards = [];
+    private static ?int $until = null;
 
     # Build a validated cache path inside storage/cache/pages and reject anything outside the whitelist
     public static function getPath(string $type, string $hash, string $ext): string {
@@ -125,16 +126,24 @@ class Cache {
         return $num;
     }
 
-    # Write the page sidecar describing one stored body: body hash plus dynamic flag, published after the body so a mismatched pair fails closed
+    # Bind the page of this request to the moment its data changes on its own; null binds it with no known moment, and several calls keep the earliest one
+    # A bound page is stored with that moment, is never served from the cache once it has come, and is never handed to a browser cache that would outlive it
+    public static function setPageUntil(?int $until): void {
+        self::$until = min(self::$until ?? PHP_INT_MAX, $until ?? PHP_INT_MAX);
+    }
+
+    # Write the page sidecar describing one stored body: body hash, dynamic flag and the moment the page is bound to, published after the body so a mismatched pair fails closed
     public static function setMeta(string $file, string $body, bool $dyn): bool {
-        return self::setBody($file.'.json', json_encode(['sha1' => sha1($body), 'dyn' => $dyn ? 1 : 0]));
+        return self::setBody($file.'.json', json_encode(['sha1' => sha1($body), 'dyn' => $dyn ? 1 : 0, 'until' => self::$until ?? 0]));
     }
 
     # Read and validate the page sidecar against the actual body; a missing, corrupt, or mismatched sidecar reports dynamic so serving fails closed to no-store
+    # The moment a page is bound to comes back as until, zero for an unbound one; a sidecar that cannot be trusted reports the past, so a bound page is never served from it
     public static function getMeta(string $file, string $body): array {
         $data = json_decode(self::getBody($file.'.json'), true);
-        if (!is_array($data) || !isset($data['sha1'], $data['dyn']) || !hash_equals((string)$data['sha1'], sha1($body))) return ['dyn' => true, 'valid' => false];
-        return ['dyn' => (bool)$data['dyn'], 'valid' => true];
+        if (!is_array($data) || !isset($data['sha1'], $data['dyn']) || !hash_equals((string)$data['sha1'], sha1($body))) return ['dyn' => true, 'valid' => false, 'until' => 1];
+        $until = $data['until'] ?? 0;
+        return ['dyn' => (bool)$data['dyn'], 'valid' => true, 'until' => (is_int($until) && $until >= 0) ? $until : 1];
     }
 
     # Recursively remove cached files under one directory older than the retention window, keeping protected markers, the write-guard journal and the directory tree
@@ -325,8 +334,26 @@ class Cache {
         header('Referrer-Policy: strict-origin-when-cross-origin');
     }
 
-    # Send a 304 status and report a match when the client cached copy is not older than the stored file
-    public static function checkNotModified(int $mtime): bool {
+    # Emit the headers of a private response the browser may keep but has to revalidate on every use: type, validators and the security headers of setHeaders()
+    # Pending cookies stay, because the answer belongs to one visitor; the Pragma and Expires a session emits go, as they would contradict the revalidation
+    public static function setPrivateHeaders(string $type, int $mtime, string $etag): void {
+        self::setHeaders(false, 0, $type, $mtime);
+        header_remove('Pragma');
+        header_remove('Expires');
+        header('Cache-Control: private, no-cache, must-revalidate, no-transform');
+        if ($etag !== '') header('ETag: '.$etag);
+    }
+
+    # Send a 304 status and report a match when the client cached copy is still current; a given entity tag decides an If-None-Match on its own
+    # Only a request without If-None-Match falls back to the If-Modified-Since date, and a call without a tag ignores If-None-Match as before
+    public static function checkNotModified(int $mtime, string $etag = ''): bool {
+        $none = trim((string)($_SERVER['HTTP_IF_NONE_MATCH'] ?? ''));
+        if ($etag !== '' && $none !== '') {
+            $tags = array_map(fn($v) => preg_replace('#^W/#', '', trim($v)), explode(',', $none));
+            if ($none !== '*' && !in_array(preg_replace('#^W/#', '', $etag), $tags, true)) return false;
+            http_response_code(304);
+            return true;
+        }
         if ($mtime <= 0) return false;
         $since = $_SERVER['HTTP_IF_MODIFIED_SINCE'] ?? '';
         if ($since === '') return false;

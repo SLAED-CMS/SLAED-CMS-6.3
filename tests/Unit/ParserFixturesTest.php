@@ -150,6 +150,25 @@ namespace Tests\Unit {
                 'usephp safe'       => ['[usephp]echo 6*7;[/usephp]',         true,  '', '<p>[usephp]echo 6*7;[/usephp]</p>'],
 
                 'unclosed backtick' => ['незакрытый `backtick', true, '', '<p>незакрытый `backtick</p>'],
+
+                # Stage S07 of docs/node: a backslash before ASCII punctuation is a literal in every mode and format, and the character returns HTML-escaped after the parse
+                'literal emphasis'        => ['\*not em\*',        true,  '', '<p>*not em*</p>'],
+                'literal backslash pair'  => ['a\\\\b',            true,  '', '<p>a\\b</p>'],
+                'literal bb pair'         => ['\[b]x\[/b]',        true,  '', '<p>[b]x[/b]</p>'],
+                'literal hide trusted'    => ['\[hide]x\[/hide]',  false, '', '<p>[hide]x[/hide]</p>'],
+                'literal heading'         => ['\# not heading',    true,  '', '<p># not heading</p>'],
+                'literal list'            => ['\- item',           true,  '', '<p>- item</p>'],
+                'literal tag safe'        => ['\<b\>',             true,  '', '<p>&lt;b&gt;</p>'],
+                'literal tag trusted'     => ['\<b\>x',            false, '', '<p>&lt;b&gt;x</p>'],
+                'literal alone on a line' => ['\*',                true,  '', '<p>*</p>'],
+                'literal smilie'          => ['\*01',              true,  '', '<p>*01</p>'],
+                'literal plain format'    => ['\*a\*',             true,  '', '<p>*a*</p>', 'plain'],
+                'literal heading id'      => ['# A \# B',          true,  '', '<h1 id="a-b">A # B</h1>'],
+                'letter keeps backslash'  => ['C:\new',            true,  '', '<p>C:\new</p>'],
+                'code span keeps pair'    => ['`a\*b`',            true,  '', '<code>a\*b</code>'],
+                'escaped backtick'        => ['\`x`',              true,  '', '<p>`x`</p>'],
+                'trusted script is raw'   => ['<script>var q = "\"";</script>', false, '', '<script>var q = "\"";</script>'],
+                'trusted attribute is raw'=> ['<a title="x\*y">t</a>', false, '', '<a title="x\*y">t</a>'],
             ];
         }
 
@@ -448,6 +467,117 @@ namespace Tests\Unit {
 
             $center = self::$p->filterDoc('[center]Mid[/center]', true, '');
             $this->assertStringContainsString('<div style="text-align:center;">', $center);
+        }
+
+        # One set of valid, escaped and broken tags for both readers: a tag filterAttach() renders is always listed, and outside code the two answer the same
+        public static function attachCases(): array
+        {
+            return [
+                'short form'         => ['[attach=a.pdf align=left title=A]',                              'a.pdf', true,  true],
+                'upper case tag'     => ['[ATTACH=a.pdf align=left title=A]',                              'a.pdf', true,  true],
+                'size form'          => ['[attach=a.pdf align=left title=A width=10 height=20]',           'a.pdf', true,  true],
+                'relation form'      => ['[attach=a.pdf align=left title=A width=1 height=2 rel=g]',       'a.pdf', true,  true],
+                'escaped bracket'    => ['\[attach=a.pdf align=left title=A]',                             'a.pdf', false, false],
+                'escaped backslash'  => ['\\\\[attach=a.pdf align=left title=A]',                          'a.pdf', true,  true],
+                'escaped trusted'    => ['\[attach=a.pdf align=left title=A]',                             'a.pdf', false, false, false],
+                'slash in name'      => ['[attach=x/a.pdf align=left title=A]',                            'x/a.pdf', false, false],
+                'no alignment'       => ['[attach=a.pdf title=A]',                                         'a.pdf', false, false],
+                'relation alone'     => ['[attach=a.pdf align=left title=A rel=g]',                        'a.pdf', false, false],
+                'trusted raw pair'   => ['[usehtml]\[attach=a.pdf align=left title=A][/usehtml]',          'a.pdf', true,  true],
+                'inside code span'   => ['`[attach=a.pdf align=left title=A]`',                            'a.pdf', true,  false],
+                'inside bb code'     => ['[code][attach=a.pdf align=left title=A][/code]',                 'a.pdf', true,  false],
+                'tag across code'    => ['<a `x>` \[attach=a.pdf align=left title=A] >',                   'a.pdf', true,  true],
+                'tag across trusted' => ['<a `x>` \[attach=a.pdf align=left title=A] >',                   'a.pdf', true,  true, false],
+                'escape after code'  => ['`x` \[attach=a.pdf align=left title=A]',                         'a.pdf', false, false],
+            ];
+        }
+
+        #[Test]
+        #[DataProvider('attachCases')]
+        public function checkAttachListFollowsTheRenderedGrammar(string $src, string $name, bool $listed, bool $shown, bool $safe = true): void
+        {
+            $html = self::$p->filterDoc($src, $safe, '');
+            $this->assertSame($shown, str_contains($html, 'uploads/all/'.$name), 'The rendered verdict of this tag is wrong');
+            $this->assertSame($listed, in_array($name, self::$p->getAttachList($src), true), 'The listed verdict of this tag is wrong');
+        }
+
+        #[Test]
+        public function checkAttachListKeepsOrderAndUniqueness(): void
+        {
+            $src = "[attach=b.png align=left title=B] [attach=a.pdf align=right title=A width=10 height=20]\n"
+                .'[attach=b.png align=left title=again] [attach=c.jpg align=center title=C width=1 height=2 rel=g]';
+            $this->assertSame(['b.png', 'a.pdf', 'c.jpg'], self::$p->getAttachList($src));
+            $this->assertSame([], self::$p->getAttachList('no tag at all'));
+        }
+
+        # A stored Node material (nid above zero) links the controlled attach route of its type with an encoded key, escaped once for the attribute, and never the closed directory;
+        # the thumb gets thumb=1 for the copy that exists, the old call keeps the direct address, and the memory of a request keeps both renderings apart
+        #[Test]
+        public function checkAttachOfAStoredMaterialUsesTheControlledRoute(): void
+        {
+            if (!defined('UPLOADS_DIR')) define('UPLOADS_DIR', BASE_DIR.'/uploads');
+            $mod = 'zzparsernid';
+            $dir = BASE_DIR.'/uploads/'.$mod;
+            $keep = $GLOBALS['conf']['filetype'] ?? null;
+            $GLOBALS['conf']['filetype'] = ['pdf' => '<a href="[src]">[title]</a>', 'png' => '<a href="[src]"><img src="[tsrc]" alt="[title]"></a>'];
+            mkdir($dir.'/thumb', 0777, true);
+            try {
+                $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==');
+                file_put_contents($dir.'/a-abcdefghij-2.png', $png);
+                file_put_contents($dir.'/thumb/a-abcdefghij-2.png', $png);
+                $src = '[attach=my file.pdf align=left title=Doc] [attach=a-abcdefghij-2.png align=left title=A]';
+                $old = self::$p->filterDoc($src, true, $mod);
+                $new = self::$p->filterDoc($src, true, $mod, 0, '', 7);
+                $this->assertStringContainsString('href="uploads/'.$mod.'/my file.pdf"', $old, 'The old call lost its direct address');
+                $this->assertStringContainsString('src="uploads/'.$mod.'/thumb/a-abcdefghij-2.png"', $old);
+                $base = 'index.php?name='.$mod.'&amp;op=attach&amp;id=7&amp;key=';
+                $this->assertStringContainsString('href="'.$base.'my%20file.pdf"', $new);
+                $this->assertStringContainsString('href="'.$base.'a-abcdefghij-2.png"><img src="'.$base.'a-abcdefghij-2.png&amp;thumb=1"', $new);
+                $this->assertStringNotContainsString('uploads/', $new, 'A stored material links the closed directory');
+                $this->assertSame($new, self::$p->filterDoc($src, true, $mod, 0, '', 7));
+                $this->assertSame($old, self::$p->filterDoc($src, true, $mod, 0, '', 0));
+                $this->assertSame($old, self::$p->filterDoc($src, true, $mod, 0, '', -3), 'A negative nid is no material');
+            } finally {
+                $GLOBALS['conf']['filetype'] = $keep;
+                if ($keep === null) unset($GLOBALS['conf']['filetype']);
+                foreach (['thumb/a-abcdefghij-2.png', 'a-abcdefghij-2.png'] as $one) if (is_file($dir.'/'.$one)) unlink($dir.'/'.$one);
+                if (is_dir($dir.'/thumb')) rmdir($dir.'/thumb');
+                if (is_dir($dir)) rmdir($dir);
+            }
+        }
+
+        #[Test]
+        public function checkRawBbPairsKeepTheirBackslashes(): void
+        {
+            $this->assertStringContainsString('a\.b', self::$p->filterDoc('[code]a\.b[/code]', true));
+            $this->assertStringContainsString('<i>a\*b</i>', self::$p->filterDoc('[usehtml]<i>a\*b</i>[/usehtml]', false));
+            $this->assertSame('<p>[usehtml]a\*b[/usehtml]</p>', self::$p->filterDoc('[usehtml]a\*b[/usehtml]', true));
+        }
+
+        # The canonical feed document escapes everything it received, so neither mode of the full parser lets a remote tag, link, heading or smilie through
+        #[Test]
+        public function checkFeedDocumentRendersAsLiteralTextInBothModes(): void
+        {
+            require_once BASE_DIR.'/core/classes/feed.php';
+            $title = '[hide]H[/hide] [attach=a.pdf align=left title=A] [url=javascript:alert(1)]u[/url] **s** ~~d~~ ==m== *01 [block=1] [usephp]echo 1;[/usephp] `c` # h';
+            $desc = '<p>&lt;script&gt;alert(1)&lt;/script&gt; [quote]q[/quote] | a | b |</p><p>- item</p><p>1. item</p><p>&gt; quote</p><p>    code</p>';
+            $xml = '<?xml version="1.0"?><rss version="2.0"><channel><item><title>'.htmlspecialchars($title, ENT_XML1).'</title>'
+                .'<link>https://ex.org/a(b)[c]*01`d\\e</link><description>'.htmlspecialchars($desc, ENT_XML1).'</description></item></channel></rss>';
+            $send = fn(string $op, array $req): array => ($op === 'resolve') ? ['addresses' => ['93.184.216.34']] : ['code' => 200, 'headers' => [], 'body' => $xml];
+            $body = (new \Feed(['bytes' => '2097152', 'timeout' => '10', 'redirects' => '3', 'max' => '50'], $send))->getFeedContent('https://ex.org/f')['body'];
+            foreach ([true, false] as $safe) {
+                $html = self::$p->filterDoc($body, $safe, '');
+                $mode = $safe ? ' (safe)' : ' (trusted)';
+                $tags = ['<script', 'href="javascript', '<strong>', '<del>', '<mark>', '<code>', '<blockquote', '<ul>', '<ol>', '<pre>', '<table>', 'uploads/', '<img', '<h1'];
+                foreach ($tags as $bad) {
+                    $this->assertStringNotContainsString($bad, $html, $bad.$mode);
+                }
+                $want = '[hide]H[/hide] [attach=a.pdf align=left title=A] [url=javascript:alert(1)]u[/url] **s** ~~d~~ ==m== *01';
+                $this->assertStringContainsString($want, html_entity_decode($html), 'The title is shown as typed'.$mode);
+                $this->assertSame(1, substr_count($html, '<h2'), 'Exactly the one heading Feed wrote'.$mode);
+                $this->assertStringContainsString('href="https://ex.org/a%28b%29%5Bc%5D%2A01%60d%5Ce"', $html, 'The link keeps the whole address'.$mode);
+                $this->assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;', $html, $mode);
+            }
         }
     }
 }

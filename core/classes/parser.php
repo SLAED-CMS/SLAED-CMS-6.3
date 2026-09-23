@@ -12,6 +12,14 @@ class Parser {
     private const CACHETTL = 86400;
     # The shortest source worth storing, counted in bytes because parsing cost scales with bytes: below it one write costs more than the hits it saves before the entry ages out
     private const CACHEMIN = 2048;
+    # One backslash turns the ASCII punctuation after it into a literal; raw regions keep every backslash: the four raw BB pairs, an HTML tag and a script or style element
+    # Alternative one is the pair, so group 1 is set for a literal alone; the raw regions are matched only to be stepped over, which is what keeps scripts and attributes intact
+    private const PAIR = '\\\\([!-\/:-@\[-`{-~])';
+    private const LITERAL = '/'.self::PAIR.'|\[(code|php|usephp|usehtml)(?:=[^\]]*)?\].*?\[\/\2\]|<(script|style)\b.*?<\/\3\s*>|<[a-zA-Z\/!][^>]*>/si';
+    # The attachment grammar: file name, alignment and title always, width and height together, a relation only after both; getAttachList() reads all three forms in one pass
+    private const ATTACH = '\[attach=([a-zA-Z0-9_\-\. ]+) align=([a-zA-Z]+) title=([\pL0-9_\-\.\"\s]+)';
+    private const ATTSIZE = ' width=([0-5]?[0-9]?[0-9]+) height=([0-5]?[0-9]?[0-9]+)';
+    private const ATTREL = ' rel=([a-zA-Z0-9_\-]+)';
     public static bool $freeoff = false;
     private static array $pcache = [];
     private array $stash = [];
@@ -19,6 +27,7 @@ class Parser {
     private int $scnt = 0;
     private bool $safe = true;
     private string $mod = '';
+    private int $nid = 0;
     private int $hoff = 0;
     private string $fmt = '';
     private array $hids = [];
@@ -28,10 +37,12 @@ class Parser {
     # The format names how the source is to be read, not who wrote it: plain recognizes no Markdown construct and turns every line ending into a break, breaks is Markdown that
     # also breaks on a single line ending, and anything else is plain Markdown, where a lone line ending joins the lines around it
     # breaks is what a conversation channel asks for: a reader of a comment or a message typed the line endings they meant, and every one of them renders the same way whoever wrote it
-    public function filterDoc(string $src, bool $safe = true, string $mod = '', int $hoff = 0, string $fmt = ''): string {
+    # A positive nid names the stored Node material the text belongs to: its attachments then point at the controlled attach route of the type instead of the closed directory
+    public function filterDoc(string $src, bool $safe = true, string $mod = '', int $hoff = 0, string $fmt = '', int $nid = 0): string {
         $hoff = max(0, min(5, $hoff));
         $fmt = in_array($fmt, ['plain', 'breaks'], true) ? $fmt : '';
-        $key = md5($src.(int)$safe.$mod.$hoff.$fmt);
+        $nid = max(0, $nid);
+        $key = md5($src.(int)$safe.$mod.$hoff.$fmt.'|'.$nid);
         if (isset(self::$pcache[$key])) {
             $this->vary = self::$pcache[$key][1];
             return self::$pcache[$key][0];
@@ -43,10 +54,12 @@ class Parser {
         $this->scnt  = 0;
         $this->safe  = $safe;
         $this->mod   = $mod;
+        $this->nid   = $nid;
         $this->hoff  = $hoff;
         $this->fmt   = $fmt;
         $src = str_replace(["\r\n", "\r"], "\n", $src);
         if ($fmt !== 'plain') $src = $this->filterCode($src);
+        $src = $this->filterLiteral($src);
         $src = $this->filterBbBlocks($src);
         $src = $this->filterFreeBlocks($src);
         $out = ($fmt === 'plain') ? $this->filterPlain($src) : $this->filterBlocks($src);
@@ -75,14 +88,15 @@ class Parser {
     # Standard rendering pipeline: filterDoc() plus replace rules and img repair; call filterDoc() directly when replacement rules must not apply (changelog, search)
     # Stored is the finished rendering of a source of at least CACHEMIN bytes whose parse does not vary; a [block=] or [usephp] source is rendered anew on every serve
     # The stored rendering lives here and not in a caller, because the key is built from what this class itself reads and only this class knows whether a parse may be reused at all
-    public function filterContent(string $src, bool $safe, string $mod, int $hoff = 0, string $fmt = ''): string {
-        $file = $this->getCachePath($src, $safe, $mod, $hoff, $fmt);
+    public function filterContent(string $src, bool $safe, string $mod, int $hoff = 0, string $fmt = '', int $nid = 0): string {
+        $nid = max(0, $nid);
+        $file = $this->getCachePath($src, $safe, $mod, $hoff, $fmt, $nid);
         if ($file !== '' && Cache::isFresh($file, self::CACHETTL)) {
             $out = Cache::getBody($file);
             if ($out !== '') return $out;
         }
         $out = $this->normalizeHtmlImages(
-            $this->replaceText($this->filterDoc($src, $safe, $mod, $hoff, $fmt), $mod)
+            $this->replaceText($this->filterDoc($src, $safe, $mod, $hoff, $fmt, $nid), $mod)
         );
         if ($file !== '' && $out !== '' && !$this->vary) Cache::setBody($file, $out);
         return $out;
@@ -112,12 +126,12 @@ class Parser {
     }
 
     # The cache path of one rendering, or an empty string when nothing may be stored; the key carries every input the output depends on, the class version included
-    private function getCachePath(string $src, bool $safe, string $mod, int $hoff, string $fmt): string {
+    private function getCachePath(string $src, bool $safe, string $mod, int $hoff, string $fmt, int $nid): string {
         static $ver = '';
         if (strlen($src) < self::CACHEMIN || !$this->checkCacheReady()) return '';
         if ($ver === '') $ver = (string)filemtime(__FILE__);
         return Cache::getPath('data', Cache::getHash([
-            'parser', $ver, $this->getConfigHash($mod), sha1($src), (int)$safe, $mod, $hoff, $fmt, getTheme(), _LOCALE,
+            'parser', $ver, $this->getConfigHash($mod), sha1($src), (int)$safe, $mod, $hoff, $fmt, $nid, getTheme(), _LOCALE,
         ]), 'html');
     }
 
@@ -143,11 +157,44 @@ class Parser {
     }
 
     # Store a protected fragment and return its salted control-char stash token
-    private function addStash(string $val): string {
-        $tok = "\x02{$this->salt}:{$this->scnt}\x03";
-        $this->stash["{$this->salt}:{$this->scnt}"] = $val;
+    # A literal token carries an L before its number, so a line holding one still counts as text and the block and paragraph scanners never mistake it for a stashed element
+    private function addStash(string $val, bool $lit = false): string {
+        $key = $this->salt.':'.($lit ? 'L' : '').$this->scnt;
+        $this->stash[$key] = $val;
         $this->scnt++;
-        return $tok;
+        return "\x02{$key}\x03";
+    }
+
+    # Turn every backslash pair outside the raw regions into a literal token that returns HTML-escaped after the whole parse, so no BB, Markdown or HTML pass sees it
+    # It runs after the Markdown code layer and before the bracket layer; a feed document escapes every punctuation mark it received, so remote text never becomes a command
+    # When the engine gives up on the raw regions every pair becomes a literal, so a failed match hides markup instead of handing an escaped tag to the bracket layer
+    private function filterLiteral(string $src): string {
+        if (!str_contains($src, '\\')) return $src;
+        $put = fn(array $m): string => ($m[1] ?? '') !== '' ? $this->addStash($this->filterEsc($m[1]), true) : $m[0];
+        return preg_replace_callback(self::LITERAL, $put, $src) ?? preg_replace_callback('/'.self::PAIR.'/', $put, $src) ?? $src;
+    }
+
+    # Return the unique attachment names of a source in order of appearance, read by the grammar filterAttach() renders and the literal rule of filterLiteral()
+    # The code layer decides where that rule reaches, so the text is read the way each rendering reads it - plain, trusted and safe Markdown - and the names are united
+    # The plain reading lists a tag inside code too: naming a file the text will not display costs a check, and a failed match lists more rather than less
+    public function getAttachList(string $src): array {
+        if (stripos($src, '[attach=') === false) return [];
+        $src = str_replace(["\r\n", "\r"], "\n", $src);
+        $pat = '/'.self::ATTACH.'(?:'.self::ATTSIZE.'(?:'.self::ATTREL.')?)?\]/siu';
+        $out = [];
+        foreach ([['plain', true], ['', false], ['', true]] as [$fmt, $safe]) {
+            $this->salt = bin2hex(random_bytes(8));
+            $this->stash = [];
+            $this->scnt = 0;
+            $this->safe = $safe;
+            $this->fmt = $fmt;
+            $txt = ($fmt === 'plain') ? $src : $this->filterCode($src);
+            if (str_contains($txt, '\\')) $txt = preg_replace_callback(self::LITERAL, fn(array $m): string => ($m[1] ?? '') !== '' ? "\x02" : $m[0], $txt) ?? $txt;
+            if (preg_match_all($pat, $txt, $mm)) $out = array_merge($out, $mm[1]);
+        }
+        $out = array_values(array_unique($out));
+        usort($out, fn($a, $b) => stripos($src, '[attach='.$a) <=> stripos($src, '[attach='.$b));
+        return $out;
     }
 
     # Restore all stash tokens iteratively to handle nested fragments
@@ -326,7 +373,7 @@ class Parser {
 
     # Generate a unique heading id: unicode letters and digits are kept (cyrillic included), the rest collapses to hyphens, duplicates get a numeric suffix
     private function getHeadingId(string $raw, int $lvl): string {
-        $txt = preg_replace('/\x02'.preg_quote($this->salt, '/').':\d+\x03/', '', $raw);
+        $txt = preg_replace('/\x02'.preg_quote($this->salt, '/').':L?\d+\x03/', '', $raw);
         $id = preg_replace('/[^\p{L}\p{N}]+/u', '-', strip_tags($txt)) ?? '';
         $id = mb_strtolower(trim($id, '-'), 'UTF-8');
         if ($id === '') $id = 'h'.$lvl;
@@ -548,15 +595,16 @@ class Parser {
 
     # Resolve [attach=file align=X title=Y ...] to image or file link HTML with per-request file probe memoization and atomic thumb regeneration
     # An attachment is resolved against the upload directory, so like an image it renders what the filesystem holds right now and the result is never stored
+    # A text of a stored Node material links the controlled attach route of its type instead of the closed directory, with thumb=1 only for a thumb that exists
     private function filterAttach(string $src): string {
         global $conf;
         $mod = $this->mod !== '' ? $this->mod : 'all';
         if (stripos($src, 'rel=') !== false && stripos($src, 'width=') !== false) {
-            $re = '/\[attach=([a-zA-Z0-9_\-\. ]+) align=([a-zA-Z]+) title=([\pL0-9_\-\.\"\s]+) width=([0-5]?[0-9]?[0-9]+) height=([0-5]?[0-9]?[0-9]+) rel=([a-zA-Z0-9_\-]+)\]/siu';
+            $re = '/'.self::ATTACH.self::ATTSIZE.self::ATTREL.'\]/siu';
         } elseif (stripos($src, 'width=') !== false) {
-            $re = '/\[attach=([a-zA-Z0-9_\-\. ]+) align=([a-zA-Z]+) title=([\pL0-9_\-\.\"\s]+) width=([0-5]?[0-9]?[0-9]+) height=([0-5]?[0-9]?[0-9]+)\]/siu';
+            $re = '/'.self::ATTACH.self::ATTSIZE.'\]/siu';
         } else {
-            $re = '/\[attach=([a-zA-Z0-9_\-\. ]+) align=([a-zA-Z]+) title=([\pL0-9_\-\.\"\s]+)\]/siu';
+            $re = '/'.self::ATTACH.'\]/siu';
         }
         if (!preg_match_all($re, $src, $mm, PREG_SET_ORDER)) return $src;
         $this->vary = true;
@@ -573,12 +621,14 @@ class Parser {
             $rl  = $m[6] ?? '';
             $ext = strtolower((string)substr((string)strrchr($fn, '.'), 1));
             $file = 'uploads/'.$mod.'/'.$fn;
-            $path = BASE_DIR.'/'.ltrim(str_replace('\\', '/', $file), '/');
-            $timg = $file;
+            $path = UPLOADS_DIR.'/'.$mod.'/'.$fn;
+            $link = ($this->nid > 0) ? 'index.php?name='.$mod.'&op=attach&id='.$this->nid.'&key='.rawurlencode($fn) : $file;
+            $href = str_replace('&', '&amp;', $link);
+            $timg = $href;
             if ($tl === '' || strtolower($tl) === 'title') $tl = $fn;
             if (in_array($ext, $img, true)) {
                 $tfile = 'uploads/'.$mod.'/thumb/'.$fn;
-                $tpath = BASE_DIR.'/'.ltrim(str_replace('\\', '/', $tfile), '/');
+                $tpath = UPLOADS_DIR.'/'.$mod.'/thumb/'.$fn;
                 $tdir  = UPLOADS_DIR.'/'.$mod.'/thumb';
                 if ($mod !== '' && ($fex[$path] ??= file_exists($path)) && !($fex[$tpath] ??= file_exists($tpath))) {
                     if (!file_exists($tdir)) mkdir($tdir, 0777, true);
@@ -586,7 +636,7 @@ class Parser {
                     if (getImageThumb($path, $tmp, $twd) === $tmp && is_file($tmp) && rename($tmp, $tpath)) $fex[$tpath] = true;
                     elseif (is_file($tmp)) unlink($tmp);
                 }
-                if ($fex[$tpath] ?? false) $timg = $tfile;
+                if ($fex[$tpath] ?? false) $timg = ($this->nid > 0) ? $href.'&amp;thumb=1' : $tfile;
                 if ($fex[$path] ??= file_exists($path)) {
                     $isz[$path] ??= getimagesize($path);
                     [$wd, $hg] = $isz[$path];
@@ -597,10 +647,10 @@ class Parser {
             }
             $tmp = (string)($conf['filetype'][$ext] ?? '');
             if ($tmp === '') {
-                $src = str_replace($m[0], $this->addStash($this->getPartLink($file, $tl, $tl, true)), $src);
+                $src = str_replace($m[0], $this->addStash($this->getPartLink($link, $tl, $tl, true)), $src);
                 continue;
             }
-            $tmp = str_replace('[src]',    $file, $tmp);
+            $tmp = str_replace('[src]',    $href, $tmp);
             $tmp = str_replace('[tsrc]',   (string)$timg, $tmp);
             $tmp = (!empty($wd) && (int)$wd)
                  ? str_replace('[width]',  (string)$wd, $tmp)
@@ -620,6 +670,7 @@ class Parser {
 
     # Protect code from parsing in order fenced → indented (safe mode only) → inline; unclosed fences and backticks stay as-is
     # This runs before the bracket layer, so a BB tag written inside code stays the text the author typed instead of being executed as markup
+    # A backslash pair is stepped over rather than read, so an escaped backtick opens no span, while a backslash inside a span stays as typed and filterLiteral() never sees it
     private function filterCode(string $src): string {
         $src = preg_replace_callback(
             '/(^(`{3,}|~{3,})[ \t]*([\w\-]*)[^\n]*\n(.*?)\n^\2[ \t]*$)/ms',
@@ -640,8 +691,9 @@ class Parser {
         }
 
         $src = preg_replace_callback(
-            '/``(.+?)``|`([^`\n]+)`/s',
+            '/\\\\[!-\/:-@\[-`{-~]|``(.+?)``|`([^`\n]+)`/s',
             function(array $m): string {
+                if ($m[0][0] === '\\') return $m[0];
                 $txt = ($m[1] ?? '') !== '' ? $m[1] : ($m[2] ?? '');
                 return $this->addStash($this->getPartHtml('parser-inline', ['is_code' => true, 'content_html' => $this->filterEsc($txt)]));
             },

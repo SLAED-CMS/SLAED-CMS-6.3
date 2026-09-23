@@ -114,7 +114,6 @@ final class RatingTest extends TestCase
     #[Test]
     public function thePageCacheFollowsTheJournal(): void
     {
-        $this->markTestSkipped('The route map of checkPageCache() is empty until the Node routes arrive, and this scenario needs a cacheable route');
         $run = $this->getRun('page');
         foreach (['free' => true, 'held' => false, 'after' => true] as $name => $want) {
             $this->assertIsArray($run[$name], 'The route child answered nothing');
@@ -127,7 +126,6 @@ final class RatingTest extends TestCase
     #[Test]
     public function thePageIsFilledAndReadByGenerationAndMarkers(): void
     {
-        $this->markTestSkipped('The route map of checkPageCache() is empty until the Node routes arrive, and this scenario needs a cacheable route');
         $want = ['moved' => ['moved', 0], 'held' => ['held', 0], 'plain' => ['plain', 1], 'again' => ['plain', 1]];
         $want += ['fresh' => ['fresh', 1], 'cached' => ['plain', 1], 'later' => ['later', 2]];
         $this->assertSame($want, $this->getRun('fill'));

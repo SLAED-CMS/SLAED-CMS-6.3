@@ -32,6 +32,8 @@ class FileManager {
     private const PACKS = ['zip', 'rar', 'gz', '7z', 'tar'];
     private const CRIT = ['index.php', 'admin.php', 'setup.php', '.htaccess'];
     private const CRITDIR = ['config', 'core'];
+    # The bytes of the guard that closes a directory on Apache and LiteSpeed and marks it closed for the shared nginx rule; the upload directories ship the same line
+    private const DENY = 'deny from all';
 
     # The directory locks this request holds: canonical key => the open handle and the number of entries that took it
     private static array $held = [];
@@ -41,7 +43,7 @@ class FileManager {
 
     # Builds one context over the root the server chose; an unknown mode or an unresolvable root leaves it closed, which is what makes a miswired route refuse instead of browse
     # An empty root is refused before it is resolved, because realpath() answers the working directory for one and would open the whole site below a place that is not configured
-    # The flags carry the decisions the route already made with the module rule and is_moder(), because the upload rule stays the only place a permission is computed
+    # The flags carry the decisions the route already made with the module rule and checkUploadModer(), because the upload rule stays the only place a permission is computed
     public function __construct(string $mode, string $root, array $flags = []) {
         $path = ($root !== '' && in_array($mode, self::MODES, true)) ? realpath($root) : false;
         if ($path === false) return;
@@ -281,6 +283,15 @@ class FileManager {
         if (!$done && $stop === 'write' && is_file($new['full'])) unlink($new['full']);
         self::deletePathLock($lock);
         return $done ? ['ok' => true, 'error' => '', 'path' => $new['rel']] : self::getPathFail($stop);
+    }
+
+    # Answers the guard files of an upload directory by name with the exact bytes each one has to hold: the index page the upload root ships and the deny rule
+    # A file of that name with other bytes is no guard, so whoever checks a directory for user data compares both; an empty index means the release is broken
+    public static function getGuardFiles(): array {
+        static $memo = null;
+        if ($memo !== null) return $memo;
+        $page = (defined('UPLOADS_DIR') && is_file(UPLOADS_DIR.'/index.html')) ? file_get_contents(UPLOADS_DIR.'/index.html') : false;
+        return $memo = ['index.html' => is_string($page) ? $page : '', '.htaccess' => self::DENY];
     }
 
     # Answers whether one name follows the managed format the upload service publishes under, which tells a file this project stored apart from one that arrived otherwise

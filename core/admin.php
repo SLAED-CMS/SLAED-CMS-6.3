@@ -1080,6 +1080,28 @@ function checkSqlTable(string $name): bool {
     return (int)($row['num'] ?? 0) > 0;
 }
 
+# Save one part of a registered Node type from a shared screen: fields, uploads or rating replaced in the stored type, sent to the service with the version the form was built from
+# Answers an empty string on success, otherwise a safe text chosen by the cause of the refusal; the text of the exception never reaches the page
+function updateNodeTypePart(string $name, string $part, array $value, int $version): string {
+    global $db, $fld, $pnt;
+    $type = getNodeTypeMap()[$name] ?? null;
+    $label = htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    if ($type === null || !in_array($part, ['fields', 'uploads', 'rating'], true)) return sprintf(_NODE_BAD, $label);
+    $data = ['fields' => $type->fields, 'uploads' => $type->uploads, 'rating' => $type->rating];
+    $data[$part] = $value;
+    try {
+        $input = new NodeTypeInput($type->title, $type->intro, $type->ext, $type->sort, $type->settings, $data['fields'], $data['uploads'], $data['rating']);
+        (new NodeService($db, getNodeContext(), $fld, $pnt))->updateNodeType($name, $input, $version);
+    } catch (NodeException $err) {
+        return match ($err->getCode()) {
+            NodeException::CONFLICT => sprintf(_NODE_STALE, $label),
+            NodeException::STORAGE => getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP,
+            default => sprintf(_NODE_BAD, $label),
+        };
+    }
+    return '';
+}
+
 # Return which of the two administrative file areas the current request works in; a page names its own area once, and every route of it reads the name back out of the request
 # The client never names a root, only which of the two screens it is on, and what that screen is allowed to mean is decided by the context the file layer is built with
 function getAdminFileMode(string $set = ''): string {

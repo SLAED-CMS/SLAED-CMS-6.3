@@ -16,6 +16,7 @@ define('CONFIG_DIR', BASE_DIR.'/config');
 define('CACHE_DIR', BASE_DIR.'/storage/cache');
 define('COUNTER_DIR', BASE_DIR.'/storage/counter');
 define('LOGS_DIR', BASE_DIR.'/storage/logs');
+define('UPLOADS_DIR', BASE_DIR.'/uploads');
 
 // Test-Konfiguration laden
 $GLOBALS['conf'] = [

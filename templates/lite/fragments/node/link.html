@@ -1,0 +1,9 @@
+<section class="sl-section">
+  {% for item in items %}
+  <p>
+    {% if item.href %}<a href="{{ item.href }}" title="{{ visit_label }}" class="sl-but" rel="nofollow noopener" target="_blank"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i> {% if item.title %}{{ item.title }}{% else %}{{ visit_label }}{% endif %}</a>{% endif %}
+    {% if item.hits %}<span title="{{ hits_label }}" class="sl-chip sl-card-reads"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i> {{ item.hits }}</span>{% endif %}
+    {% if item.rhref %}<form method="post" action="{{ item.rhref }}" class="sl-inline-form"><input type="hidden" name="token" value="{{ token }}"><input type="hidden" name="refer" value="1"><button type="submit" title="{{ report_label }}" aria-label="{{ report_label }}" class="sl-but-mini"><i class="bi bi-flag" aria-hidden="true"></i></button></form>{% endif %}
+  </p>
+  {% endfor %}
+</section>

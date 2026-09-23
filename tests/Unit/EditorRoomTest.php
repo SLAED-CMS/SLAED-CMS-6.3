@@ -16,12 +16,12 @@ use PHPUnit\Framework\TestCase;
 final class EditorRoomTest extends TestCase
 {
     private const BODIES = [
-        'comment.body', 'forum.body', 'message.body', 'money.note', 'newsletter.body', 'order.note', 'privat.body',
+        'comment.body', 'forum.body', 'message.body', 'money.note', 'newsletter.body', 'nodes.body', 'order.note', 'privat.body',
         'products.body',
     ];
 
     private const SUMMARIES = [
-        'auto_links.intro', 'money.intro', 'products.intro', 'users.block', 'users.sig',
+        'auto_links.intro', 'money.intro', 'nodes.intro', 'products.intro', 'users.block', 'users.sig',
     ];
 
     private static array $files = [];

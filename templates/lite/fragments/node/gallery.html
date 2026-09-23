@@ -1,0 +1,4 @@
+<section class="sl-section">
+  <h2 class="sl-related-title">{{ role_title }}</h2>
+  <p>{% for item in items %}{% if item.href %}<a href="{{ item.href }}" title="{% if item.title %}{{ item.title }}{% else %}{{ item.name }}{% endif %}"><img src="{{ item.href }}" alt="{% if item.title %}{{ item.title }}{% else %}{{ item.name }}{% endif %}" class="sl-img sl-img-left" loading="lazy"></a>{% endif %}{% endfor %}</p>
+</section>

@@ -416,7 +416,7 @@ function addsave(): void {
 }
 
 function save(): void {
-    global $db, $afile;
+    global $db, $afile, $fld;
     $warn = !checkAdminPost('categories');
     $id = getVar('post', 'id', 'num');
     $modul = getVar('post', 'modul', 'var');
@@ -442,36 +442,81 @@ function save(): void {
     $pedit = (is_array($pedit_raw) && $pedit_raw) ? scatacess($pedit_raw) : '3|0';
     $pdelete = (is_array($pdelete_raw) && $pdelete_raw) ? scatacess($pdelete_raw) : '3|0';
     $pmod = (is_array($pmod_raw) && $pmod_raw) ? scatacess($pmod_raw) : '3|0';
-    if (!$warn) {
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET modul = :modul, title = :title, intro = :intro, img = :img, lang = :lang, parent = :parent, status = :status, pview = :pview, pread = :pread, ppost = :ppost, preply = :preply, pedit = :pedit, pdelete = :pdelete, pmod = :pmod WHERE id = :id', [
-            'modul' => $modul, 'title' => $title, 'intro' => $description, 'img' => $imgcat, 'lang' => $lang, 'parent' => $parent, 'status' => $status, 'pview' => $pview, 'pread' => $pread, 'ppost' => $ppost, 'preply' => $preply, 'pedit' => $pedit, 'pdelete' => $pdelete, 'pmod' => $pmod, 'id' => $id
-        ]);
+    $row = ['modul' => $modul, 'title' => $title, 'intro' => $description, 'img' => $imgcat, 'lang' => $lang, 'parent' => $parent, 'status' => $status, 'pview' => $pview,
+        'pread' => $pread, 'ppost' => $ppost, 'preply' => $preply, 'pedit' => $pedit, 'pdelete' => $pdelete, 'pmod' => $pmod];
+    $was = (string)$db->getSqlQuery('SELECT modul FROM '.PREFIX_DB.'_categories WHERE id = :id', ['id' => $id])->fetchColumn();
+    $types = getNodeTypeMap();
+    $text = $warn ? _TOKENMISS : _SUCCSAVE;
+    if (!$warn && (isset($types[$was]) || isset($types[$modul]))) {
+        $label = htmlspecialchars(isset($types[$was]) ? $was : $modul, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        try {
+            (new NodeService($db, getNodeContext(), $fld))->updateNodeCategory($id, $row);
+        } catch (NodeException $err) {
+            $warn = true;
+            $text = match ($err->getCode()) {
+                NodeException::CONFLICT => sprintf(_NODE_STALE, $label),
+                NodeException::STORAGE => _ERROR_UP,
+                default => sprintf(_NODE_BAD, $label),
+            };
+        }
+    } elseif (!$warn) {
+        $set = implode(', ', array_map(fn($v) => $v.' = :'.$v, array_keys($row)));
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET '.$set.' WHERE id = :id', $row + ['id' => $id]);
     }
-    setRedirect($afile.'.php?name=categories&modul='.$modul, false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($afile.'.php?name=categories&modul='.$modul, false, 302, $text, $warn);
 }
 
 function change(): void {
-    global $db, $afile;
+    global $db, $afile, $fld;
     $id = getVar('post', 'id', 'num');
     $act = getVar('post', 'act', 'num', 0);
     $modul = getVar('post', 'modul', 'var', '');
     $warn = !checkAdminPost('categories');
-    if (!$warn && $id) {
+    $text = $warn ? _TOKENMISS : _SUCCSTATUS;
+    $sql = 'SELECT modul, title, intro, img, lang, parent, status, pview, pread, ppost, preply, pedit, pdelete, pmod FROM '.PREFIX_DB.'_categories WHERE id = :id';
+    $row = (!$warn && $id) ? $db->getSqlQuery($sql, ['id' => $id])->fetch(PDO::FETCH_ASSOC) : false;
+    $types = getNodeTypeMap();
+    if ($row && isset($types[$row['modul']])) {
+        $label = htmlspecialchars((string)$row['modul'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        try {
+            (new NodeService($db, getNodeContext(), $fld))->updateNodeCategory($id, ['status' => $act ? 0 : 1] + $row);
+        } catch (NodeException $err) {
+            $warn = true;
+            $text = match ($err->getCode()) {
+                NodeException::CONFLICT => sprintf(_NODE_STALE, $label),
+                NodeException::STORAGE => _ERROR_UP,
+                default => sprintf(_NODE_BAD, $label),
+            };
+        }
+    } elseif ($row) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET status = :status WHERE id = :id', ['status' => $act ? 0 : 1, 'id' => $id]);
     }
-    setRedirect($afile.'.php?name=categories'.($modul ? '&modul='.$modul : ''), false, 302, $warn ? _TOKENMISS : _SUCCSTATUS, $warn);
+    setRedirect($afile.'.php?name=categories'.($modul ? '&modul='.$modul : ''), false, 302, $text, $warn);
 }
 
 function delete(): void {
-    global $db, $afile;
+    global $db, $afile, $fld;
     $id = getVar('post', 'id', 'num');
     $modul = getVar('post', 'modul', 'var', 'forum');
     $warn = !checkAdminPost('categories');
-    if (!$warn && $id) {
+    $text = $warn ? _TOKENMISS : _SUCCDELETE;
+    $was = (!$warn && $id) ? (string)$db->getSqlQuery('SELECT modul FROM '.PREFIX_DB.'_categories WHERE id = :id', ['id' => $id])->fetchColumn() : '';
+    if (isset(getNodeTypeMap()[$was])) {
+        try {
+            (new NodeService($db, getNodeContext(), $fld))->deleteNodeCategory($id);
+        } catch (NodeException $err) {
+            $warn = true;
+            $text = match ($err->getCode()) {
+                NodeException::CONFLICT => sprintf(_NODE_STALE, htmlspecialchars($was, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')),
+                NodeException::STORAGE => _ERROR_UP,
+                default => _INFOCATDEL,
+            };
+        }
+    } elseif (!$warn && $id) {
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_categories WHERE id = :id', ['id' => $id]);
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_categories WHERE parent = :id', ['id' => $id]);
     }
-    setRedirect($afile.'.php?name=categories&modul='.$modul, false, 302, $warn ? _TOKENMISS : _SUCCDELETE, $warn);
+    setRedirect($afile.'.php?name=categories&modul='.$modul, false, 302, $text, $warn);
 }
 
 function info(): void {

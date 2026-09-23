@@ -21,7 +21,6 @@ class Upload {
     private const CHAIN = 5;
     private const CONNSEC = 5;
     private const LOADSEC = 30;
-    private const KEEP = ['index.html', '.htaccess'];
     private const BLOCK = ['phtml', 'js', 'htm', 'html', 'cgi', 'pl', 'perl', 'asp', 'swf'];
     private const IMAGES = ['avif', 'gif', 'jpeg', 'jpg', 'png', 'webp'];
     # Every IPv4 network the IANA special-purpose registry marks as not globally reachable, plus the ranges that are reachable but never a legitimate fetch target
@@ -1057,7 +1056,7 @@ class Upload {
     # A refusal by the address policy is reported apart from a lookup that found nothing, because the two need opposite answers from whoever reads the log
     private function getHostAddress(string $host): array {
         if (filter_var($host, FILTER_VALIDATE_IP) !== false) {
-            return $this->checkPublicAddress($host) ? ['addr' => $host, 'error' => ''] : $this->getAddressFail($host, $host);
+            return self::checkPublicAddress($host) ? ['addr' => $host, 'error' => ''] : $this->getAddressFail($host, $host);
         }
         $name = $host;
         $seen = [];
@@ -1079,7 +1078,7 @@ class Upload {
                 continue;
             }
             foreach ($list as $addr) {
-                if (!$this->checkPublicAddress($addr)) return $this->getAddressFail($name, $addr);
+                if (!self::checkPublicAddress($addr)) return $this->getAddressFail($name, $addr);
             }
             sort($list);
             return ['addr' => $list[0], 'error' => ''];
@@ -1096,30 +1095,31 @@ class Upload {
 
     # Returns whether one address is publicly routable: IPv4 against the blocked networks, IPv6 against the delegated prefixes and the one exception inside them
     # A mapped or compatible form is judged as the address it embeds, so a v6 spelling cannot smuggle a v4 target in
-    private function checkPublicAddress(string $addr): bool {
+    # Public and static because Feed judges every address it connects to by this same policy, so the networks and their registry check exist in one place
+    public static function checkPublicAddress(string $addr): bool {
         $bin = inet_pton($addr);
         if ($bin === false) return false;
         if (strlen($bin) === 16) {
             $head = substr($bin, 0, 12);
             $tail = substr($bin, 12);
             $flat = $head === str_repeat("\x00", 10)."\xff\xff" || ($head === str_repeat("\x00", 12) && $tail !== str_repeat("\x00", 4));
-            if ($flat) return $this->checkPublicAddress((string)inet_ntop($tail));
+            if ($flat) return self::checkPublicAddress((string)inet_ntop($tail));
             foreach (self::BLOCKSIX as $net) {
-                if ($this->checkNetBlock($bin, $net)) return false;
+                if (self::checkNetBlock($bin, $net)) return false;
             }
             foreach (self::ALLOWSIX as $net) {
-                if ($this->checkNetBlock($bin, $net)) return true;
+                if (self::checkNetBlock($bin, $net)) return true;
             }
             return false;
         }
         foreach (self::BLOCKNET as $net) {
-            if ($this->checkNetBlock($bin, $net)) return false;
+            if (self::checkNetBlock($bin, $net)) return false;
         }
         return true;
     }
 
     # Returns whether one packed address falls into one CIDR block of the same family
-    private function checkNetBlock(string $bin, string $net): bool {
+    private static function checkNetBlock(string $bin, string $net): bool {
         [$base, $bits] = explode('/', $net);
         $pack = inet_pton($base);
         if ($pack === false || strlen($pack) !== strlen($bin)) return false;
@@ -1233,7 +1233,7 @@ class Upload {
         $sum = 0;
         foreach (scandir($canon) ?: [] as $file) {
             $path = $canon.'/'.$file;
-            if ($file === '.' || $file === '..' || in_array($file, self::KEEP, true)) continue;
+            if ($file === '.' || $file === '..' || isset(FileManager::getGuardFiles()[$file])) continue;
             if ($this->checkPartName($file) || !is_file($path)) continue;
             $sum += max(0, (int)filesize($path));
         }

@@ -354,14 +354,18 @@ function config(): void {
     $tabone = $tpl->getHtmlPart('div', ['rows' => $rows]);
     $blocks = '';
     $mods = getUploadModuleList();
+    $types = getNodeTypeMap();
     $i = 0;
     foreach ($mods as $val) {
         if ($val != '') {
             $rul = getUploadRuleData($val);
+            $type = $types[$val] ?? null;
+            $modn = $type ? ((str_starts_with($type->title, '_') && defined($type->title)) ? constant($type->title) : $type->title) : '';
+            $modn = $type ? htmlspecialchars($modn, ENT_QUOTES, 'UTF-8') : getModuleName($val);
             $fids = getFieldIds('', 'ftype');
             $tfld = $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'type[]', 'input_id' => $fids['input'], 'describedby' => $fids['hint'], 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['extensions']]);
             $mrows = [
-                ['label_html' => _MODUL, 'field_html' => getModuleName($val)],
+                ['label_html' => _MODUL, 'field_html' => $modn],
                 ['label_for' => $fids['input'], 'label_html' => _FTYPE, 'hint_html' => $typs, 'hint_id' => $fids['hint'], 'field_html' => $tfld],
                 ['label_html' => _FSIZEALL._FIN, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'allsize[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['maxquota']])],
                 ['label_html' => _FSIZE._FIN, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'size[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['maxbytes']])],
@@ -379,13 +383,16 @@ function config(): void {
             $i++;
         }
     }
+    $hidden = [
+        ['nameattr' => 'name', 'valueattr' => 'uploads'],
+        ['nameattr' => 'op', 'valueattr' => 'configsave'],
+        ['nameattr' => 'token', 'valueattr' => getSiteToken('uploads')],
+    ];
+    $hidden[] = ['nameattr' => 'mods', 'valueattr' => implode(',', $mods)];
+    foreach ($types as $name => $type) $hidden[] = ['nameattr' => 'ver['.$name.']', 'valueattr' => (string)$type->version];
     $confv = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
-        'hidden' => [
-            ['nameattr' => 'name', 'valueattr' => 'uploads'],
-            ['nameattr' => 'op', 'valueattr' => 'configsave'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken('uploads')],
-        ],
+        'hidden' => $hidden,
         'content_html' => $tpl->getHtmlPart('box', ['content_html' => $tabone]).$blocks,
         'submit_label' => _SAVECHANGES,
     ]);
@@ -434,6 +441,9 @@ function configsave(): void {
     $asum = getVar('post', 'asum[]');
     $usum = getVar('post', 'usum[]');
     $gsum = getVar('post', 'gsum[]');
+    $vers = getVar('post', 'ver[]', '', []);
+    $types = getNodeTypeMap();
+    $parts = [];
     $i = 0;
     foreach ($mods as $val) {
         if ($val != '') {
@@ -449,7 +459,7 @@ function configsave(): void {
             $xgsum = (!intval($gsum[$i] ?? 0)) ? $xusum : intval($gsum[$i]);
             $upload = getVar('post', $i.'upload', 'num');
             $upguest = getVar('post', $i.'upguest', 'num');
-            $cont[$val] = setUploadRuleData([
+            $rule = [
                 'extensions' => $xtype,
                 'maxquota' => $xallsize,
                 'maxbytes' => $xsize,
@@ -462,17 +472,30 @@ function configsave(): void {
                 'userupload' => $upload,
                 'guestupload' => $upguest,
                 'guestfiles' => $xgsum,
-            ]);
+            ];
+            if (isset($types[$val])) $parts[$val] = array_replace($rule, ['userupload' => intval($upload), 'guestupload' => intval($upguest)]);
+            else $cont[$val] = setUploadRuleData($rule);
             $i++;
         }
     }
-    $warn = !setConfigFile(static function (array $base, Closure $save) use ($cont): string {
+    $sent = getVar('post', 'mods', 'raw', '');
+    $seen = explode(',', is_string($sent) ? $sent : '');
+    $shift = array_merge(array_diff($mods, $seen), array_diff($seen, $mods));
+    if ($sent !== implode(',', $mods)) $cont = [];
+    $warn = ($cont === []) || !setConfigFile(static function (array $base, Closure $save) use ($cont): string {
         $base['uploads'] = array_replace($base['uploads'], $cont);
         ksort($base['uploads']);
         return $save($base) ? 'committed' : 'aborted';
     });
     $done = $drop ? _SUCCSAVE.' '._ERROR_FILE.': '.implode(', ', $drop) : _SUCCSAVE;
     $text = $warn ? (getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP) : $done;
+    if ($cont === []) $text = sprintf(_NODE_STALE, htmlspecialchars(implode(', ', $shift), ENT_QUOTES, 'UTF-8'));
+    foreach ($parts as $name => $rule) {
+        if ($warn || $rule === $types[$name]->uploads) continue;
+        $fail = updateNodeTypePart($name, 'uploads', $rule, intval($vers[$name] ?? 0));
+        $warn = $fail !== '';
+        if ($warn) $text = $fail;
+    }
     }
     setRedirect($afile.'.php?name=uploads&op=config', false, 302, $text, $warn);
 }

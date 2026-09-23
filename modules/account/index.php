@@ -560,7 +560,7 @@ function profil(): void {
 function rssfeed(): void {
     global $conf;
     if (!is_user() || ($conf['rss']['use'] ?? 0) != 1) exit;
-    echo rss_read(getVar('req', 'url', 'url', ''), '');
+    echo getRssView(getVar('req', 'url', 'url', ''));
     exit;
 }
 

@@ -20,8 +20,14 @@ function ratings(): void {
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $flags = ['in' => ['active', _C_21], 'view' => ['detail', _C_22], 'guest' => ['guests', _RATINGS_GUESTS]];
     $blocks = '';
-    foreach (['account', 'forum', 'shop'] as $i => $val) {
-        $rule = $conf['ratings'][$val] ?? [];
+    $types = getNodeTypeMap();
+    $scopes = ['account' => getModuleName('account'), 'forum' => getModuleName('forum'), 'shop' => getModuleName('shop')];
+    foreach ($types as $name => $type) {
+        $label = (str_starts_with($type->title, '_') && defined($type->title)) ? constant($type->title) : $type->title;
+        $scopes['node.'.$name] = htmlspecialchars($label, ENT_QUOTES, 'UTF-8');
+    }
+    foreach (array_keys($scopes) as $i => $val) {
+        $rule = str_starts_with($val, 'node.') ? $types[substr($val, 5)]->rating : ($conf['ratings'][$val] ?? []);
         $rows = [[
             'label_html' => _VOTING_TIME,
             'is_ratings_inner' => true,
@@ -43,17 +49,20 @@ function ratings(): void {
         }
         $blocks .= $tpl->getHtmlPart('toggle-form-block', [
             'block_id' => 'ratings'.$i,
-            'label_html' => getModuleName($val).' - '.$val,
+            'label_html' => $scopes[$val].' - '.$val,
             'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows]),
         ]);
     }
+    $hidden = [
+        ['nameattr' => 'name', 'valueattr' => 'ratings'],
+        ['nameattr' => 'op', 'valueattr' => 'save'],
+        ['nameattr' => 'token', 'valueattr' => getSiteToken('ratings')],
+    ];
+    $hidden[] = ['nameattr' => 'scopes', 'valueattr' => implode(',', array_keys($scopes))];
+    foreach ($types as $name => $type) $hidden[] = ['nameattr' => 'ver['.$name.']', 'valueattr' => (string)$type->version];
     $confv = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
-        'hidden' => [
-            ['nameattr' => 'name', 'valueattr' => 'ratings'],
-            ['nameattr' => 'op', 'valueattr' => 'save'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken('ratings')],
-        ],
+        'hidden' => $hidden,
         'content_html' => $blocks,
         'submit_label' => _SAVECHANGES,
     ]);
@@ -66,8 +75,10 @@ function save(): void {
     $warn = !checkAdminPost('ratings') || ($conf['update']['ratings'] ?? '') !== '6.3.0';
     $text = _TOKENMISS;
     $content = [];
+    $types = getNodeTypeMap();
+    $scopes = array_merge(['account', 'forum', 'shop'], array_map(fn($v) => 'node.'.$v, array_keys($types)));
     if (!$warn) {
-        foreach (['account', 'forum', 'shop'] as $i => $val) {
+        foreach ($scopes as $i => $val) {
             $days = trim((string)getVar('post', 'time['.$i.']', 'raw', ''));
             if (!preg_match('/^(?:0|[1-9][0-9]{0,15})$/D', $days) || intval($days) > intdiv(PHP_INT_MAX, 86400)) $warn = true;
             $content[$val] = ['active' => getVar('post', $i.'in', 'num', 0) ? '1' : '0', 'period' => (string)(intval($days) * 86400)];
@@ -75,13 +86,27 @@ function save(): void {
         }
         $text = _RATINGS_BADDAYS;
     }
+    $sent = getVar('post', 'scopes', 'raw', '');
+    if (!$warn && $sent !== implode(',', $scopes)) {
+        $warn = true;
+        $seen = explode(',', (string)$sent);
+        $text = sprintf(_NODE_STALE, htmlspecialchars(implode(', ', array_merge(array_diff($scopes, $seen), array_diff($seen, $scopes))), ENT_QUOTES, 'UTF-8'));
+    }
     if (!$warn) {
-        $warn = !setConfigFile(static function (array $base, Closure $save) use ($content): string {
-            $base['ratings'] = array_replace($base['ratings'], $content);
+        $own = array_filter($content, fn($v) => !str_starts_with($v, 'node.'), ARRAY_FILTER_USE_KEY);
+        $warn = !setConfigFile(static function (array $base, Closure $save) use ($own): string {
+            $base['ratings'] = array_replace($base['ratings'], $own);
             ksort($base['ratings']);
             return $save($base) ? 'committed' : 'aborted';
         });
         $text = $warn ? (getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP) : _SUCCSAVE;
+        $vers = getVar('post', 'ver[]', '', []);
+        foreach ($types as $name => $type) {
+            if ($warn || $content['node.'.$name] === $type->rating) continue;
+            $fail = updateNodeTypePart($name, 'rating', $content['node.'.$name], intval($vers[$name] ?? 0));
+            $warn = $fail !== '';
+            if ($warn) $text = $fail;
+        }
     }
     setRedirect($afile.'.php?name=ratings', false, 302, $text, $warn);
 }

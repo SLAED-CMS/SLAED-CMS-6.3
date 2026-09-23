@@ -16,6 +16,8 @@ function filterAdminmods(array $mods): array {
         if (!file_exists(BASE_DIR.'/modules/'.$name.'/admin/index.php')) continue;
         $allow[] = (string)$name;
     }
+    $allow[] = 'node';
+    foreach (array_keys(getNodeTypeMap()) as $name) $allow[] = 'node-'.$name;
     sort($allow);
     foreach ($mods as $name) {
         $name = filterVar((string)$name);
@@ -160,6 +162,18 @@ function add(): void {
                 'label_text' => getModuleName($mod),
                 'title_text' => _MODUL.': '.$mod,
             ]),
+        ]);
+    }
+    $nodes = ['node' => [_NODE_MANAGE, 'node']];
+    foreach (getNodeTypeMap() as $name => $type) {
+        $nodes['node-'.$name] = [(str_starts_with($type->title, '_') && defined($type->title)) ? constant($type->title) : $type->title, $name];
+    }
+    foreach ($nodes as $key => [$label, $hint]) {
+        $items .= $tpl->getHtmlFrag('checkbox', [
+            'is_checked' => in_array($key, $mods, true),
+            'name_attr' => 'modules[]',
+            'value_attr' => $key,
+            'label_html' => $tpl->getHtmlFrag('popover', ['label_text' => $label, 'title_text' => _MODUL.': '.$hint]),
         ]);
     }
     $perid = getFieldIds('', 'modules')['label'];
@@ -338,6 +352,11 @@ function save(): void {
     $ptwo = getVar('post', 'pwdtwo', 'raw', '');
     $lang = getVar('post', 'lang', 'var', $conf['language']);
     $mods = filterAdminmods(getVar('post', 'modules[]', 'var', []));
+    $held = $aid ? getAdminModuleNames((string)(getAdminrow($aid)['modules'] ?? '')) : [];
+    foreach ($held as $key) {
+        if (preg_match('/^node-([a-z][a-z0-9]{0,19})$/D', $key, $hit) && !isset(getNodeTypeMap()[$hit[1]]) && !in_array($key, $mods, true)) $mods[] = $key;
+    }
+    sort($mods);
     $mods = $mods ? implode(',', $mods) : '';
     $super = getVar('post', 'super', 'bool', 0) ? 1 : 0;
     $edit = getVar('post', 'editor', 'var', (string)($conf['editor']['admin'] ?? 'plain'));

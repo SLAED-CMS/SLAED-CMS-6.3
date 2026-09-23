@@ -93,7 +93,7 @@ function info(): void {
             ]),
             'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'label' => _OK]),
         ]);
-        $cont .= rss_read($url, '');
+        $cont .= getRssView($url);
     }
     echo $cont;
     setFoot();

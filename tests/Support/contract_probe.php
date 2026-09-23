@@ -30,13 +30,15 @@ function getProbeCookie(array $part): string {
 }
 
 # Prepare one cacheable-route request context and report the real contract decision and identity
-function getProbeRoute(string $uri, array $get, string $host): array {
-    global $name, $op, $home, $theme;
+# A registered Node type is added to the loaded configuration of this process alone, because the lists of those types are the routes the page cache knows
+function getProbeRoute(string $uri, array $get, string $host, string $mod = 'presentation', string $act = ''): array {
+    global $name, $op, $home, $theme, $conf;
     putenv('HTTP_HOST='.$host);
     $_SERVER['REQUEST_URI'] = $uri;
     $_GET = $get;
-    $name = 'presentation';
-    $op = '';
+    if ($mod !== 'presentation') $conf['node']['types'][$mod] = ['version' => 1];
+    $name = $mod;
+    $op = $act;
     $home = 0;
     $theme = $theme ?? getTheme();
     $vars = getCacheRouteVars();
@@ -855,6 +857,12 @@ if ($mode === 'core') {
     $out = getProbeRoute('/index.php?num=1', ['num' => '1'], $chost);
 } elseif ($mode === 'routenum') {
     $out = getProbeRoute('/index.php', [], $chost);
+} elseif ($mode === 'routenode') {
+    $out = getProbeRoute('/index.php?name=news&cat=3&num=2', ['name' => 'news', 'cat' => '3', 'num' => '2'], $chost, 'news');
+} elseif ($mode === 'routenodeop') {
+    $out = getProbeRoute('/index.php?name=news&op=view&id=5', ['name' => 'news', 'op' => 'view', 'id' => '5'], $chost, 'news', 'view');
+} elseif ($mode === 'routenodelet') {
+    $out = getProbeRoute('/index.php?name=news&let=A', ['name' => 'news', 'let' => 'A'], $chost, 'news');
 } elseif ($mode === 'routebad') {
     $out = getProbeRoute('/index.php?foo=1', ['foo' => '1'], $chost);
 } elseif ($mode === 'routehost') {

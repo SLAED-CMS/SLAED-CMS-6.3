@@ -1,0 +1,3 @@
+{% for item in items %}
+{% if item.href %}<p><a href="{{ item.href }}" title="{% if item.title %}{{ item.title }}{% else %}{{ role_title }}{% endif %}"><img src="{{ item.href }}" alt="{% if item.title %}{{ item.title }}{% else %}{{ role_title }}{% endif %}" class="sl-img" loading="lazy"></a></p>{% endif %}
+{% endfor %}

@@ -147,6 +147,8 @@ require_once BASE_DIR.'/core/classes/point.php';
 require_once BASE_DIR.'/core/classes/rating.php';
 require_once BASE_DIR.'/core/classes/comment.php';
 require_once BASE_DIR.'/core/classes/privat.php';
+# Only the closed class map of Node is registered here; its classes load when a request really uses one of them
+require_once BASE_DIR.'/core/classes/node/load.php';
 $tpl = new Template($theme);
 $prs = new Parser();
 # The one stateless instance of the extra fields; Node gets it handed in, so no second mechanism of fields ever appears
@@ -287,7 +289,7 @@ function getSchedulerPlannedTime(array $job, array $state = []): int {
 function getSchedulerJob(string $name, ?array $job = null): array {
     global $conf;
     static $map = ['dbbackup' => 'backup', 'filescan' => 'filescan', 'maildrain' => 'maildrain', 'newsletter' => 'newsletter', 'sitemap' => 'sitemap',
-        'cachegc' => 'cachegc', 'monitor' => 'monitor'];
+        'cachegc' => 'cachegc', 'monitor' => 'monitor', 'nodepublish' => 'nodepublish'];
     $read = $job === null;
     if ($read) $job = $conf['scheduler']['jobs'][$name] ?? [];
     if (!is_array($job)) $job = [];
@@ -607,6 +609,7 @@ function addSchedulerSystemJob(string $name): array {
         'newsletter' => updateNewsletter(),
         'cachegc' => addCacheGcTask(),
         'monitor' => addMonitorSample(),
+        'nodepublish' => addNodePublishTask(),
         default => ['status' => 'failed', 'message' => 'Unknown system job: '.$name],
     };
 }
@@ -679,7 +682,7 @@ function getBlocks(string $side, string $fly = ''): void {
         $result = $db->getSqlQuery('SELECT id, bkey, title, content, url, bfile, view, expire, action, bpos, which FROM '.PREFIX_DB."_blocks WHERE status = '1' ".$querylang.' ORDER BY weight ASC', $qlang_params);
         while(list($bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $which) = $db->getSqlRow($result)) {
             $bid = intval($bid);
-            $content = $prs->filterContent($content, false, 'all', 2);
+            $content = ($url == '') ? $prs->filterContent($content, false, 'all', 2) : '';
             $view = intval($view);
             $where_mas = explode(',', $which);
             $barr[] = [$bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $where_mas];
@@ -1642,7 +1645,7 @@ function getCacheRouteVars(): ?array {
     $port = parse_url((string)($conf['homeurl'] ?? ''), PHP_URL_PORT);
     if ($canon === '' || strtolower(getHost()) !== $canon.($port ? ':'.$port : '')) return $memo = null;
     $url = $_SERVER['REQUEST_URI'] ?? getenv('REQUEST_URI') ?: '';
-    $allow = ['name' => '#^$#', 'op' => '#^$#', 'cat' => '#^[1-9][0-9]{0,8}$#', 'num' => '#^[1-9][0-9]{0,8}$#'];
+    $allow = ['name' => '#^[a-z][a-z0-9]{0,19}$#', 'op' => '#^$#', 'cat' => '#^[1-9][0-9]{0,8}$#', 'num' => '#^[1-9][0-9]{0,8}$#'];
     if (Cache::getQueryVars($url, $allow) === null) return $memo = null;
     $vars = ['name' => getVar('get', 'name', 'var')];
     $cat = getVar('get', 'cat', 'num');
@@ -1652,7 +1655,8 @@ function getCacheRouteVars(): ?array {
     return $memo = $vars;
 }
 
-# Decide whether the request may be served from or stored into the page cache; routes are default-deny per module and op and must satisfy the parameter contract
+# Decide whether the request may be served from or stored into the page cache; routes are default-deny and must satisfy the parameter contract
+# The routes of the map are the lists of the registered Node types, taken from the loaded registry without a query; the list is the empty op alone
 # The last word belongs to the write-guard journal: while a content write is unfinished, or the generation cannot be read, no page is read from the cache or stored into it
 # That answer is taken once per request, so every block of one page agrees on it; the fill asks the journal again, because a writer may have started during the render
 function checkPageCache(): bool {
@@ -1667,8 +1671,7 @@ function checkPageCache(): bool {
     # the route alone: a stored copy would hand the next visitor someone else's mode, so only the default `auto` build is cacheable
     if (getThemeMode() !== 'auto') return false;
     if (!empty($_SESSION[$conf['user_c'].'-flash'])) return false;
-    $ops = [];
-    if (!in_array((string)($op ?? ''), $ops[$name ?? ''] ?? [], true)) return false;
+    if (($op ?? '') !== '' || !isset($conf['node']['types'][$name ?? ''])) return false;
     if (getCacheRouteVars() === null) return false;
     return $free ??= Cache::checkWriteGuard();
 }
@@ -1719,7 +1722,8 @@ function addMonitorSample(): array {
 # Format head
 # A stored page may be handed to the browser cache too: that needs an entry with no dynamic region and a cache_b in days, and such a response drops the generation-time
 # marker, because a copy the browser answers from its own store would keep showing the moment the first visitor was served
-function setHead(array $seo = []): void {
+# The page facts may come as a closure that runs only when the page is really built: a route whose facts cost queries answers a stored copy without running one of them
+function setHead(array|Closure $seo = []): void {
     global $home, $conf, $user, $name, $theme, $op, $tpl, $adminpage, $adminvars, $sitepage, $sitevars;
     $name = $name ?? '';
     $ctime = time();
@@ -1742,10 +1746,10 @@ function setHead(array $seo = []): void {
         $file = Cache::getPath('html', $hash, 'html');
         if (Cache::isFresh($file, $conf['cache_t'])) {
             $body = Cache::getBody($file);
-            if ($body !== '') {
-                $meta = Cache::getMeta($file, $body);
+            $meta = ($body !== '') ? Cache::getMeta($file, $body) : [];
+            if ($meta && ($meta['until'] === 0 || time() < $meta['until'])) {
                 $days = (int)$conf['cache_b'];
-                if (!$meta['dyn'] && $days > 0) {
+                if (!$meta['dyn'] && $days > 0 && $meta['until'] === 0) {
                     $mtime = filemtime($file);
                     Cache::setHeaders(true, $days, 'text/html', $mtime);
                     if (Cache::checkNotModified($mtime)) {
@@ -1753,7 +1757,7 @@ function setHead(array $seo = []): void {
                         exit;
                     }
                     $body = str_replace(GEN_MARK, '', $body);
-                } elseif ($meta['dyn']) {
+                } elseif ($meta['dyn'] || $meta['until'] > 0) {
                     Cache::setHeaders(false);
                 }
                 echo getTimedHtml(setDynamicRegions($body));
@@ -1763,9 +1767,9 @@ function setHead(array $seo = []): void {
         }
         if (!empty($conf['cache_l']) && is_file($file) && !Cache::getRebuildLock($hash)) {
             $body = Cache::getBody($file);
-            if ($body !== '') {
-                $meta = Cache::getMeta($file, $body);
-                if ($meta['dyn']) Cache::setHeaders(false);
+            $meta = ($body !== '') ? Cache::getMeta($file, $body) : [];
+            if ($meta && ($meta['until'] === 0 || time() < $meta['until'])) {
+                if ($meta['dyn'] || $meta['until'] > 0) Cache::setHeaders(false);
                 echo getTimedHtml(setDynamicRegions($body));
                 setDeferredTasks();
                 exit;
@@ -1773,6 +1777,7 @@ function setHead(array $seo = []): void {
         }
         ob_start();
     }
+    if ($seo instanceof Closure) $seo = $seo();
     $licens = getLicenseHtml();
     $strmeta = '<meta charset="'._CHARSET.'">'."\n";
     $strlink = $stscript = '';
@@ -2116,12 +2121,13 @@ function setFoot(): void {
         $file = Cache::getPath('html', getPageHash(), 'html');
         $done = getPageHash() === getPageHash(true) && Cache::checkWriteGuard() && Cache::setBody($file, $html) && Cache::setMeta($file, $html, $dyn);
         $days = (int)$conf['cache_b'];
-        if ($done && !$dyn && $days > 0) {
+        $bound = $done && Cache::getMeta($file, $html)['until'] > 0;
+        if ($done && !$dyn && !$bound && $days > 0) {
             clearstatcache(true, $file);
             Cache::setHeaders(true, $days, 'text/html', filemtime($file));
             $html = str_replace(GEN_MARK, '', $html);
         }
-        if ($dyn && !headers_sent()) Cache::setHeaders(false);
+        if (($dyn || $bound) && !headers_sent()) Cache::setHeaders(false);
     }
     Cache::setRebuildFree();
     echo getTimedHtml(setDynamicRegions($html));
@@ -2624,7 +2630,7 @@ function setConfigSource(string $file, string $code): bool {
 
 # Returns the unfinished configuration operation for the restore screen, getConfig() and setConfigRestore(), or an empty array when no marker exists
 # Every touched file answers the journal hashes, the hash it has now and which side that is; verdict names the snapshot a restore applies or stays empty with the reason in why
-# journal - the marker has no readable journal, backup - a snapshot does not match its hash, source - a file is neither side, proof - only the database decides, which S10 connects
+# journal - the marker has no readable journal, backup - a snapshot does not match its hash, source - a file is neither side, proof - only the database decides the side
 function getConfigJournal(): array {
     $root = BACKUP_DIR.'/config';
     if (!is_file($root.'/marker.json')) return [];
@@ -2659,8 +2665,10 @@ function getConfigJournal(): array {
 
 # Finishes the unfinished configuration operation under the shared lock: applies one snapshot of the journal, publishes local.php, checks the hashes again and then drops the marker
 # Without an argument it is the administrative restore: it follows the verdict of getConfigJournal() and clears the HTML cache; old and new come from setConfigFile() alone
+# A Node operation carries a proof instead of a verdict: a locking read of the type row on the connection of this request waits for the writer and names the side by its version
 # The run is repeatable: a file already on the wanted side is left alone and a failed step keeps the marker; with no marker left the operation directories with their copies go
 function setConfigRestore(string $force = ''): bool {
+    global $db;
     require_once BASE_DIR.'/core/classes/filemanager.php';
     $lock = FileManager::getPathLock(CONFIG_DIR);
     if ($lock === false) return false;
@@ -2668,18 +2676,31 @@ function setConfigRestore(string $force = ''): bool {
     $jour = getConfigJournal();
     $done = !$jour;
     $side = ($jour && in_array($force, ['old', 'new'], true) && in_array($jour['why'], ['', 'proof'], true)) ? $force : ($jour['verdict'] ?? '');
+    $proof = ($jour && $force === '' && $jour['why'] === 'proof') ? $jour['proof'] : [];
+    $name = (string)($proof['name'] ?? '');
+    $now = -1;
+    $good = $proof && preg_match('/^[a-z][a-z0-9]{0,19}$/D', $name) && in_array($proof['kind'] ?? '', ['add', 'update', 'status', 'delete'], true);
+    $good = $good && is_int($proof['id'] ?? null) && is_int($proof['old'] ?? null) && is_int($proof['new'] ?? null) && $db instanceof Database;
+    if ($good && $db->setSqlBegin()) {
+        $res = $db->getSqlQuery('SELECT id, version FROM '.PREFIX_DB.'_node_types WHERE name = :name FOR UPDATE', ['name' => $name]);
+        $row = ($res !== false) ? $res->fetch(PDO::FETCH_ASSOC) : null;
+        if ($res !== false) $now = !$row ? 0 : ((intval($row['id']) === $proof['id']) ? intval($row['version']) : -1);
+        $db->setSqlRollback();
+        $side = ($now === $proof['new']) ? 'new' : (($now === $proof['old'] && $now > -1) ? 'old' : '');
+    }
     if ($side !== '') {
         $done = true;
-        foreach ($jour['files'] as $name => $one) {
+        foreach ($jour['files'] as $file => $one) {
             if ($one['now'] === $one[$side]) continue;
-            $code = ($one[$side] === '') ? '' : (string)file_get_contents($root.'/'.$jour['op'].'/'.$side.'/'.$name);
-            if (!setConfigSource(CONFIG_DIR.'/'.$name, $code)) $done = false;
+            $code = ($one[$side] === '') ? '' : (string)file_get_contents($root.'/'.$jour['op'].'/'.$side.'/'.$file);
+            if (!setConfigSource(CONFIG_DIR.'/'.$file, $code)) $done = false;
         }
-        if ($done) $done = getConfig(true) !== [];
+        $pub = $done ? getConfig(true) : [];
+        $done = $pub !== [] && (!$proof || (($pub['node']['types'][$name]['version'] ?? 0) === $now));
         if ($done && $force === '') Cache::deleteAll();
-        foreach ($jour['files'] as $name => $one) {
-            $now = is_file(CONFIG_DIR.'/'.$name) ? (string)sha1_file(CONFIG_DIR.'/'.$name) : '';
-            if ($now !== $one[$side]) $done = false;
+        foreach ($jour['files'] as $file => $one) {
+            $hash = is_file(CONFIG_DIR.'/'.$file) ? (string)sha1_file(CONFIG_DIR.'/'.$file) : '';
+            if ($hash !== $one[$side]) $done = false;
         }
         if ($done) $done = unlink($root.'/marker.json');
     }
@@ -3982,8 +4003,13 @@ function getConst(string $con): string {
     return defined($con) ? constant($con) : $con;
 }
 
-# Resolve a module key to its localised name constant
+# Resolve a module key to its localised name constant; a registered Node type answers its own title, a language constant or plain text, read from the shared type map
 function getModuleName(string $con): string {
+    global $conf;
+    if (isset($conf['node']['types'][$con])) {
+        $type = getNodeTypeMap()[$con] ?? null;
+        return ($type !== null) ? getConst($type->title) : $con;
+    }
     $map = ['account' => _ACCOUNT, 'album' => _ALBUM, 'all' => _ALL, 'auto_links' => _A_LINKS, 'changelog' => _CHANGELOG, 'clients' => _CLIENTS, 'contact' => _FEEDBACK, 'content' => _CONTENT, 'faq' => _FAQ, 'files' => _FILES, 'forum' => _FORUM, 'gallery' => _ALBUM, 'help' => _HELP, 'info' => _INFO, 'jokes' => _JOKES, 'links' => _LINKS, 'media' => _MEDIA, 'members' => _USERS, 'money' => _MONEY, 'news' => _NEWS, 'order' => _ORDER, 'pages' => _PAGES, 'presentation' => _PRESENTATION, 'radio' => _RADIO, 'recommend' => _RECOMMEND, 'rss' => _RSS, 'rss_info' => _RSS, 'search' => _SEARCH, 'shop' => _SHOP, 'sitemap' => _SITEMAP, 'users' => _TOPUSERS, 'voting' => _VOTING, 'whois' => _WHOIS];
     return $map[$con] ?? $con;
 }
@@ -4674,21 +4700,28 @@ function getUploadService(): Upload {
     return $upl;
 }
 
+# Answer whether the current administrator moderates the files of one upload place: a Node type through its right node-<name> alone, any other module through its own key
+# The mapping of a registered type to its right lives in is_admin_modul(), so this and every other moderator question about a type name agree
+# The key is read from the stored rights of the session and never from the request, so a type name cannot turn into a right, and every upload helper asks this one question
+function checkUploadModer(string $mod): bool {
+    return $mod !== '' && is_moder($mod) === 1;
+}
+
 # Check whether the current visitor may use the module editor upload
 function checkEditorUploadAccess(string $mod, array $rule): bool {
-    if (is_moder($mod)) return true;
+    if (checkUploadModer($mod)) return true;
     if (is_user() && (int)($rule['userupload'] ?? 0) === 1) return true;
     return !is_user() && (int)($rule['guestupload'] ?? 0) === 1;
 }
 
 # Resolve the owner token the stored file name of the current visitor carries: the site user id for a member, none for a moderator, and a per-session token for a guest
-# A moderator is answered null because is_moder() reads the admin session: an administrator need not be a site user, so there is no id to own the file with and no segment
+# A moderator is answered null because checkUploadModer() reads the admin session: an administrator need not be a site user, so there is no id to own the file with and no segment
 # The guest token is derived from the session and is never the session id, because the segment ends up in a public file name and must authenticate nothing when it is read off a URL
 # A guest without a session is answered null and not a token derived from an empty id, because that one derivation is the same for every guest and is the defect this token removes
 function getEditorFileOwner(string $mod): ?string {
     global $user;
     if (is_user()) return (string)(int)($user[0] ?? 0);
-    if (is_moder($mod)) return null;
+    if (checkUploadModer($mod)) return null;
     $sid = (string)session_id();
     return ($sid === '') ? null : substr(hash_hmac('sha256', 'upload|'.$sid, getSecret('upload')), 0, 16);
 }
@@ -4696,12 +4729,12 @@ function getEditorFileOwner(string $mod): ?string {
 # Return the file context of one upload place; core/classes has no runtime autoload, so the file layer is required on first use and the directory is named the root here alone
 # The client passes a name inside that directory and never a root of its own, and what may be done there is the answer of the place rule and not a role the window worked out again
 # The place rule already carries the directory and the module it is moderated as, so the context takes the rule alone and no caller hands the place down a second time beside it
-# Listing and uploading are one decision, checkEditorUploadAccess(), and the two operations a module moderator additionally holds ride on is_moder(), the one role rule of this area
+# Listing and uploading are one decision, checkEditorUploadAccess(), and the two operations a module moderator additionally holds ride on checkUploadModer(), the one role rule here
 function getUploadFileArea(array $rule): FileManager {
     require_once BASE_DIR.'/core/classes/filemanager.php';
     $mod = (string)$rule['mod'];
     $able = checkEditorUploadAccess($mod, $rule);
-    return new FileManager('editor', (string)$rule['path'], ['upload' => $able, 'list' => $able, 'moder' => is_moder($mod)]);
+    return new FileManager('editor', (string)$rule['path'], ['upload' => $able, 'list' => $able, 'moder' => checkUploadModer($mod)]);
 }
 
 # Resolve one storage path handed in by the client and answer the stored row only when it exists in that place and belongs to whoever is asking
@@ -4710,10 +4743,10 @@ function getUploadFileArea(array $rule): FileManager {
 # A module moderator is excused the ownership test alone, which is the same excuse getUploadFileArea() grants for deletion and packing, and never the existence test above it
 function getUploadTakenFile(array $rule, string $take): array {
     $one = getUploadFileArea($rule)->getFileData($take);
-    if ($one === [] || $one['kind'] === 'dir' || $one['url'] === '' || in_array($one['name'], ['index.html', '.htaccess'], true)) return ['ok' => false, 'error' => 'gone', 'file' => []];
+    if ($one === [] || $one['kind'] === 'dir' || $one['url'] === '' || isset(FileManager::getGuardFiles()[$one['name']])) return ['ok' => false, 'error' => 'gone', 'file' => []];
     $mod = (string)$rule['mod'];
     $own = getEditorFileOwner($mod);
-    if (!is_moder($mod) && ($own === null || FileManager::getFileOwner($one['name']) !== $own)) return ['ok' => false, 'error' => 'owner', 'file' => []];
+    if (!checkUploadModer($mod) && ($own === null || FileManager::getFileOwner($one['name']) !== $own)) return ['ok' => false, 'error' => 'owner', 'file' => []];
     return ['ok' => true, 'error' => '', 'file' => $one];
 }
 
@@ -4734,16 +4767,23 @@ function getEditorRouteRule(string $src = 'post'): array {
 # Which actions a row offers is the capability set of its own descriptor and never a role the window derives again, which is what keeps the interface from computing a permission
 # The absolute server path is absent because the file layer gives an editor context none, and the thumbnail falls back to the file itself so a listing always has one to draw
 # The mode and the account of the stored object travel only to a module moderator, because they answer for the server and not for the text: the author who inserts a picture has no use for either
-function getEditorFileData(array $one, bool $moder = false): array {
-    if ($moder) return getEditorFileData($one) + [
+# The directory of a registered Node type is closed to direct access, so its rows carry the controlled preview route of the type instead of a file address,
+# and bytag tells the window that such a file enters a text only as the [attach] tag, which the stored material turns into its own controlled address
+function getEditorFileData(array $one, bool $moder = false, string $mod = ''): array {
+    global $conf;
+    if ($moder) return getEditorFileData($one, false, $mod) + [
         'perms' => (string)($one['perms'] ?? ''),
         'owner' => (string)($one['owner'] ?? ''),
     ];
+    $node = $mod !== '' && isset($conf['node']['types'][$mod]);
+    $url = $node ? 'index.php?name='.$mod.'&op=attach&key='.rawurlencode($one['name']).'&preview=1' : $one['url'];
+    $shot = ($one['thumbnail'] === '') ? $url : ($node ? $url.'&thumb=1' : $one['thumbnail']);
     return [
         'file' => $one['name'],
         'path' => $one['path'],
-        'url' => $one['url'],
-        'thumb' => ($one['thumbnail'] !== '') ? $one['thumbnail'] : $one['url'],
+        'url' => $url,
+        'thumb' => $shot,
+        'bytag' => $node,
         'kind' => $one['kind'],
         'type' => $one['extension'],
         'size' => $one['size'],
@@ -4781,7 +4821,7 @@ function addEditorUpload(): void {
             'result' => $res['ok'] ? 'ok' : (string)$res['error'],
         ]);
         if ($one !== []) {
-            $out[] = getEditorFileData($one, is_moder($mod));
+            $out[] = getEditorFileData($one, checkUploadModer($mod), $mod);
             continue;
         }
         $bad[] = getUploadFailText($res['ok'] ? 'write' : (string)$res['error'], $rul);
@@ -4798,16 +4838,16 @@ function getEditorFileJson(): void {
     $rul = getEditorRouteRule('req');
     $mod = (string)$rul['mod'];
     $area = getUploadFileArea($rul);
-    $all = is_moder($mod);
+    $all = checkUploadModer($mod);
     $tok = getEditorFileOwner($mod);
     $lim = $all ? $rul['moderfiles'] : (is_user() ? $rul['userfiles'] : $rul['guestfiles']);
     $row = [];
     $used = 0;
     foreach ($area->getFileList('') as $one) {
-        if ($one['kind'] === 'dir' || in_array($one['name'], ['index.html', '.htaccess'], true)) continue;
+        if ($one['kind'] === 'dir' || isset(FileManager::getGuardFiles()[$one['name']])) continue;
         $used += $one['size'];
         if (!$all && ($tok === null || FileManager::getFileOwner($one['name']) !== $tok)) continue;
-        $row[] = getEditorFileData($one, $all);
+        $row[] = getEditorFileData($one, $all, $mod);
     }
     usort($row, static fn(array $one, array $two): int => $two['time'] <=> $one['time']);
     if ($lim > 0) $row = array_slice($row, 0, $lim);
@@ -4857,26 +4897,103 @@ function setEditorFileRun(string $op): void {
     getEditorJson(['ok' => $done > 0, 'done' => $done, 'total' => count($mark), 'error' => ($done > 0) ? '' : ($note ?: _ERROR)]);
 }
 
-# Hand one stored file to the client as a download and end the request there, which is the single download path of the project and the one place its headers are decided
-# The type is always the opaque one and never guessed from the extension: an active type answered from the origin of the site is executed instead of being saved
-# The name is reduced to its own last segment and encoded, so a name assembled out of a request carries no separator of its own and can append no header line
-function getFileStream(string $path, string $name): void {
-    $name = rawurlencode(basename($name));
-    if ($name === '' || !is_file($path) || !is_readable($path)) {
+# Hand one stored file to the client and end the request there, which is the single file answer of the project and the one place its headers are decided
+# The type comes from server metadata only, and a type outside the closed inline registry is sent as the opaque one and saved, so no active type runs on the site origin
+# The name is reduced to its own last segment and encoded, so a name assembled out of a request carries no separator and can append no header line
+# A cached answer is private and revalidated on every use through its entity tag and date; the file itself is never copied into the cache directory
+# A GET honours one byte range, a malformed or unsatisfiable one gets 416 and several are ignored for the whole file; a HEAD gets the headers of the whole file
+# $start runs once, after the conditions are decided and before the first header leaves, for a whole body or a range from byte zero alone - never for HEAD, 304 or 416
+# The body is read in bounded blocks from the one open handle and the loop stops when the client goes away, so the size of the file never reaches the memory of PHP
+function getFileStream(string $path, string $name, string $mime = 'application/octet-stream', bool $inline = false, bool $cached = false, ?callable $start = null): void {
+    $safe = ['image/gif', 'image/jpeg', 'image/png', 'image/webp', 'image/avif', 'audio/mpeg', 'audio/wav', 'audio/x-wav', 'audio/vnd.wave', 'audio/flac', 'audio/x-flac',
+        'audio/ogg', 'audio/mp4', 'audio/x-m4a', 'audio/webm', 'video/mp4', 'video/webm', 'video/ogg'];
+    $name = rawurlencode(basename(str_replace('\\', '/', $name)));
+    $hand = ($name !== '' && is_file($path) && is_readable($path)) ? fopen($path, 'rb') : false;
+    $stat = $hand ? fstat($hand) : false;
+    if ($stat === false) {
+        if ($hand) fclose($hand);
         http_response_code(404);
         exit;
     }
+    $size = $stat['size'];
+    $mtime = $stat['mtime'];
+    $type = in_array($mime, $safe, true) ? $mime : 'application/octet-stream';
+    $show = $inline && $type !== 'application/octet-stream';
+    $etag = '"'.substr(sha1((realpath($path) ?: $path).'|'.$size.'|'.$mtime), 0, 32).'"';
+    $head = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'HEAD';
     while (ob_get_level() > 0) ob_end_clean();
-    Cache::setHeaders(false, 0, 'application/octet-stream');
-    header('Content-Disposition: attachment; filename="'.$name.'"; filename*=UTF-8\'\''.$name);
-    header('Content-Length: '.filesize($path));
-    readfile($path);
+    ini_set('zlib.output_compression', '0');
+    if ($cached) {
+        Cache::setPrivateHeaders($type, $mtime, $etag);
+        if (Cache::checkNotModified($mtime, $etag)) {
+            fclose($hand);
+            exit;
+        }
+    } else {
+        Cache::setHeaders(false, 0, $type);
+        header('Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0, no-transform');
+    }
+    $from = 0;
+    $last = $size - 1;
+    $want = $head ? '' : trim((string)($_SERVER['HTTP_RANGE'] ?? ''));
+    $cond = trim((string)($_SERVER['HTTP_IF_RANGE'] ?? ''));
+    if ($want !== '' && $cond !== '' && $cond !== $etag && $cond !== gmdate('D, d M Y H:i:s', $mtime).' GMT') $want = '';
+    if ($want !== '' && preg_match('#^bytes\s*=#i', $want)) {
+        $sets = array_map('trim', explode(',', preg_replace('#^bytes\s*=#i', '', $want)));
+        $bad = false;
+        foreach ($sets as $one) if (!preg_match('#^(?:\d+-\d*|-\d+)$#D', $one)) $bad = true;
+        if (!$bad && count($sets) === 1) {
+            [$lo, $hi] = explode('-', $sets[0]);
+            if ($lo === '') {
+                $from = max(0, $size - intval($hi));
+                $bad = intval($hi) === 0 || $size === 0;
+            } else {
+                $from = intval($lo);
+                if ($hi !== '') $last = min($last, intval($hi));
+                $bad = $from >= $size || ($hi !== '' && intval($hi) < $from);
+            }
+        }
+        if ($bad) {
+            fclose($hand);
+            header('Content-Range: bytes */'.$size);
+            http_response_code(416);
+            exit;
+        }
+        if (count($sets) > 1) {
+            $from = 0;
+            $last = $size - 1;
+        } else {
+            http_response_code(206);
+            header('Content-Range: bytes '.$from.'-'.$last.'/'.$size);
+        }
+    }
+    header('Accept-Ranges: bytes');
+    header('Content-Disposition: '.($show ? 'inline' : 'attachment').'; filename="'.$name.'"; filename*=UTF-8\'\''.$name);
+    header('Content-Length: '.max(0, $last - $from + 1));
+    if ($head) {
+        fclose($hand);
+        exit;
+    }
+    if ($start !== null && $from === 0) $start();
+    set_time_limit(0);
+    if ($from > 0) fseek($hand, $from);
+    $left = $last - $from + 1;
+    while ($left > 0 && !feof($hand) && !connection_aborted()) {
+        $part = fread($hand, min(65536, $left));
+        if ($part === false || $part === '') break;
+        echo $part;
+        flush();
+        $left -= strlen($part);
+    }
+    fclose($hand);
     exit;
 }
 
 # Format letter
+# A registered Node type links every letter to its list filter, because the letters of its titles would cost a query of their own; the index of the shop stays the letters it has
 function letter(string $mod): string {
- global $db, $tpl;
+ global $db, $tpl, $conf;
+    $node = isset($conf['node']['types'][$mod]);
     if ($mod == 'shop') {
         $result = $db->getSqlQuery('SELECT title FROM '.PREFIX_DB."_products WHERE time <= NOW() AND status != '0'");
     } else {
@@ -4888,20 +5005,21 @@ function letter(string $mod): string {
     } else {
         $alpha = [];
     }
+    $href = static fn(string $char): string => $node ? getSeoUrl(['name' => $mod, 'let' => rawurlencode($char)]) : 'index.php?name='.$mod.'&op=liste&let='.urlencode($char);
     $rows = [];
     $digits = '';
     foreach (range(0, 9) as $num) {
         $label = $tpl->getHtmlFrag('span', ['text' => (string)$num, 'is_alpha_letter' => true]);
-        $digits .= in_array((string)$num, $alpha)
-            ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod.'&op=liste&let='.$num, 'title' => (string)$num, 'label_html' => $label])
+        $digits .= ($node || in_array((string)$num, $alpha))
+            ? $tpl->getHtmlFrag('link', ['href' => $href((string)$num), 'title' => (string)$num, 'label_html' => $label])
             : $label;
     }
     $rows[] = $digits;
     $locale = '';
     foreach (preg_split('//u', _ALPHABET, -1, PREG_SPLIT_NO_EMPTY) as $char) {
         $label = $tpl->getHtmlFrag('span', ['text' => $char, 'is_alpha_letter' => true]);
-        $locale .= in_array($char, $alpha)
-            ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod.'&op=liste&let='.urlencode($char), 'title' => $char, 'label_html' => $label])
+        $locale .= ($node || in_array($char, $alpha))
+            ? $tpl->getHtmlFrag('link', ['href' => $href($char), 'title' => $char, 'label_html' => $label])
             : $label;
     }
     $rows[] = $locale;
@@ -4909,8 +5027,8 @@ function letter(string $mod): string {
         $latin = '';
         foreach (range('A', 'Z') as $eng) {
             $label = $tpl->getHtmlFrag('span', ['text' => $eng, 'is_alpha_letter' => true]);
-            $latin .= in_array($eng, $alpha)
-                ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod.'&op=liste&let='.$eng, 'title' => $eng, 'label_html' => $label])
+            $latin .= ($node || in_array($eng, $alpha))
+                ? $tpl->getHtmlFrag('link', ['href' => $href($eng), 'title' => $eng, 'label_html' => $label])
                 : $label;
         }
         $rows[] = $latin;
@@ -4981,80 +5099,40 @@ function rss_select(): string {
     return $cont;
 }
 
-# Read RSS
-function rss_read(mixed $url, mixed $id): string {
-    global $conf, $tpl;
-    if ($url) {
-        $url = trim(html_entity_decode(str_replace(['&#038;', '&amp;'], '&', $url), ENT_QUOTES, 'UTF-8'));
-        $url = (!preg_match('#^https?://#i', $url)) ? 'http://'.$url : $url;
-        $context = stream_context_create([
-            'http' => [
-                'timeout' => 10,
-                'follow_location' => 1,
-                'user_agent' => 'SLAED RSS Reader',
-            ],
-        ]);
-        set_error_handler(static function (): bool { return true; });
-        $content = file_get_contents($url, false, $context);
-        restore_error_handler();
-        if ($content) {
-            if (preg_match('#encoding=["\']([^"\']+)#i', $content, $val) && !empty($val[1])) {
-                $encoding = strtolower($val[1]);
-                if ($encoding != 'utf-8') {
-                    $converted = iconv($val[1], 'utf-8//IGNORE', $content);
-                    if ($converted !== false) $content = $converted;
-                }
-            }
-            $title = parse_url($url, PHP_URL_HOST);
-            if (!$title) $title = $url;
-            preg_match_all('#<item>(.*)</item>#Uism', $content, $items, PREG_PATTERN_ORDER);
-            if (!empty($items[1])) {
-                $number = ($conf['rss']['max'] > count($items[1])) ? count($items[1]) : $conf['rss']['max'];
-                $cont = '';
-                for ($i = 0; $i < $number; $i++) {
-                    preg_match('#<title>(.*)</title>#Uism', $items[1][$i], $rss_title);
-                    preg_match('#<pubDate>(.*)</pubDate>#Uism', $items[1][$i], $rss_date);
-                    preg_match('#<guid>(.*)</guid>(.*)#Uism', $items[1][$i], $rss_guid);
-                    preg_match('#<description>(.*)</description>#Uism', $items[1][$i], $rss_desc);
-                    $temp = html_entity_decode($conf['rss']['temp'], ENT_QUOTES, 'UTF-8');
-                    $rss_title = $rss_title[1] ?? '';
-                    $rss_date = $rss_date[1] ?? '';
-                    $rss_guid = $rss_guid[1] ?? '';
-                    $rss_desc = $rss_desc[1] ?? '';
-                    $rss_date = ($rss_date && strtotime($rss_date) !== false) ? date(_DATESTRING, strtotime($rss_date)) : '';
-                    $temp = str_replace('[title]', $rss_title, $temp);
-                    $temp = str_replace('[date]', $rss_date, $temp);
-                    $temp = str_replace('[guid]', $rss_guid, $temp);
-                    $temp = str_replace('[description]', filterText(html_entity_decode(str_replace(']]>', '', $rss_desc))), $temp);
-                    $cont .= $temp;
-                }
-                if (!$id) {
-                    $sourceLink = $tpl->getHtmlFrag('link', ['href' => $url, 'title' => _RSS_FROM.': '.$title, 'label' => $title, 'is_blank' => true]);
-                    $cont = $tpl->getHtmlFrag('title', ['is_level_two' => true, 'title_html' => _RSS_FROM.': '.$sourceLink]).$cont;
-                }
-            } else {
-                $cont = ($id) ? '' : $tpl->getHtmlFrag('alert', ['text' => _RSS_PROBLEM, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
-            }
-        } else {
-            $cont = ($id) ? '' : $tpl->getHtmlFrag('alert', ['text' => _RSS_PROBLEM, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
-        }
-        return $cont;
-    }
-    return '';
+# Fetch one RSS or Atom source through Feed for a block: the canonical Markdown on success, null when the fetch failed or the document does not fit the TEXT column of _blocks
+# The address arrives entity-encoded from the url filter of getVar() or from _blocks.url, so it is decoded first; Feed loads here, never on a request without a feed
+function getRssBody(string $url): ?string {
+    global $conf;
+    require_once BASE_DIR.'/core/classes/feed.php';
+    $res = (new Feed($conf['rss'] ?? []))->getFeedContent(getDecodedText($url));
+    return ($res['ok'] && strlen($res['body']) <= 65535) ? $res['body'] : null;
 }
 
-# Load RSS
-function rss_load(mixed $bid): void {
-    global $db, $tpl;
-    $bid = intval($bid);
-    list($title, $content, $url, $refresh, $otime) = $db->getSqlRow($db->getSqlQuery('SELECT title, content, url, refresh, time FROM '.PREFIX_DB.'_blocks WHERE id = :bid', ['bid' => $bid]));
-    $past = time() - $refresh;
-    if ($otime < $past) {
-        $btime = time();
-        $content = rss_read($url, 1);
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET content = :content, time = :time WHERE id = :bid', ['content' => $content, 'time' => $btime, 'bid' => $bid]);
+# Render one RSS block: a stale block fetches its source and stores the Markdown, a failed fetch keeps the stored body, and both move the time so the next try waits a full refresh
+# The stored text came from a remote source, so it is rendered in safe mode whatever mode the other blocks of the site are rendered in
+function getRssBlock(int $bid): void {
+    global $db, $tpl, $prs;
+    $sql = 'SELECT title, content, url, refresh, time FROM '.PREFIX_DB.'_blocks WHERE id = :bid';
+    [$title, $content, $url, $refresh, $otime] = $db->getSqlRow($db->getSqlQuery($sql, ['bid' => $bid]));
+    if ($otime < time() - $refresh) {
+        $content = getRssBody($url) ?? $content;
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET content = :content, time = :time WHERE id = :bid', ['content' => $content, 'time' => time(), 'bid' => $bid]);
     }
-    echo $tpl->getHtmlFrag('block-all', ['title' => $title, 'content' => $content]);
+    echo $tpl->getHtmlFrag('block-all', ['title' => $title, 'content' => $prs->filterContent($content, true, '', 2)]);
+}
+
+# Render the feed page of one address for the account and rss modules: the source heading and the entries, or the warning when the fetch failed or the feed holds no entry
+# The address is the visitor's choice, so the rendering goes through filterDoc() and is never stored in the parser cache
+function getRssView(string $url): string {
+    global $conf, $tpl, $prs;
+    if ($url === '') return '';
+    require_once BASE_DIR.'/core/classes/feed.php';
+    $url = getDecodedText($url);
+    $res = (new Feed($conf['rss'] ?? []))->getFeedContent($url);
+    if (!$res['ok'] || $res['body'] === '') return $tpl->getHtmlFrag('alert', ['text' => _RSS_PROBLEM, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
+    $host = parse_url($url, PHP_URL_HOST) ?: $url;
+    $link = $tpl->getHtmlFrag('link', ['href' => $url, 'title' => _RSS_FROM.': '.$host, 'label' => $host, 'is_blank' => true]);
+    return $tpl->getHtmlFrag('title', ['is_level_two' => true, 'title_html' => _RSS_FROM.': '.$link]).$prs->filterDoc($res['body'], true, '', 1);
 }
 
 # Build the project copyright and license line shown in page footers
@@ -5218,9 +5296,22 @@ function is_user_id(string $name): int {
     return intval($uid);
 }
 
+# Return the mail address of one existing account, or an empty string for a guest, a removed account or one without an address
+# A notice goes to the address the account itself stores, never to one the request names; the panel sends such notices too, so it lives beside is_user_id()
+function getUserMail(int $uid): string {
+    global $db;
+    if ($uid < 1) return '';
+    $res = $db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_users WHERE id = :uid', ['uid' => $uid]);
+    $mail = $res ? $res->fetchColumn() : false;
+    return is_string($mail) ? trim($mail) : '';
+}
+
 # Check modul admin
+# The single administrative entry of Node opens to the manager of Node and to the moderator of any one type; what each may do there is decided by the Node context
+# A registered type is administered through its right node-<name> alone: the stored key of a removed module of the same name, which upgraded administrators may still carry,
+# never makes its holder a moderator of the type, so every moderator question about a type name reads the one key
 function is_admin_modul(string $modul): int {
- global $db, $admin;
+ global $db, $admin, $conf;
     $aid = intval(substr($admin[0], 0, 11));
     $modul = addslashes(trim(substr($modul, 0, 25)));
     if ($modul == '') return 0;
@@ -5236,6 +5327,8 @@ function is_admin_modul(string $modul): int {
         }
         $amodules[$aid] = $names ? array_fill_keys($names, 1) : [];
     }
+    if ($modul === 'node') return ($amodules[$aid] && preg_grep('/^node(?:-[a-z][a-z0-9]{0,19})?$/D', array_keys($amodules[$aid]))) ? 1 : 0;
+    if (isset($conf['node']['types'][$modul])) $modul = 'node-'.$modul;
     return isset($amodules[$aid][$modul]) ? 1 : 0;
 }
 
@@ -5746,9 +5839,73 @@ function render_blocks(string $side, string $bfile, string $blocktitle, string $
             break;
         }
     } else {
-        rss_load($bid);
+        getRssBlock($bid);
     }
     return '';
+}
+
+# Build the snapshot every Node read and write of the request is decided against, once: the site user with the effective groups, the separate administrator,
+# the types that administrator moderates from the node-<name> keys of the stored rights, the key node as the right to manage, the address and the language of the categories
+# Nothing is taken from the query or the body: the background flag stays false here, because only the fixed adapters of the scheduler build a background context
+function getNodeContext(): NodeContext {
+    global $db, $conf, $user, $admin, $locale;
+    static $ctx = null;
+    if ($ctx !== null) return $ctx;
+    $uid = is_user() ? intval(substr($user[0], 0, 11)) : 0;
+    $groups = [];
+    if ($uid > 0) {
+        $sql = 'SELECT DISTINCT g.id FROM '.PREFIX_DB.'_users AS u INNER JOIN '.PREFIX_DB.'_groups AS g'
+            .' ON ((g.extra = 1 AND u.grp = g.id) OR (g.extra != 1 AND u.points >= g.points)) WHERE u.id = :uid ORDER BY g.id';
+        $res = $db->getSqlQuery($sql, ['uid' => $uid]);
+        if ($res === false) throw new NodeException('The groups of the user could not be read', NodeException::STORAGE, $db->laste);
+        foreach ($res->fetchAll(PDO::FETCH_COLUMN) as $gid) $groups[] = intval($gid);
+    }
+    $aid = isAdmin() ? intval(substr($admin[0], 0, 11)) : 0;
+    $super = $aid > 0 && isAdmin(true);
+    $manage = $super;
+    $mods = [];
+    if ($aid > 0 && !$super) {
+        $res = $db->getSqlQuery('SELECT modules FROM '.PREFIX_DB.'_admins WHERE id = :id', ['id' => $aid]);
+        if ($res === false) throw new NodeException('The rights of the administrator could not be read', NodeException::STORAGE, $db->laste);
+        foreach (getAdminModuleNames((string)$res->fetchColumn()) as $key) {
+            if ($key === 'node') $manage = true;
+            elseif (preg_match('/^node-([a-z][a-z0-9]{0,19})$/D', $key, $hit)) $mods[] = $hit[1];
+        }
+        $mods = array_values(array_unique($mods));
+        sort($mods);
+    }
+    $ctx = new NodeContext($uid, $groups, $aid, $mods, $manage, $super, getIp(), empty($conf['multilingual']) ? '' : (string)$locale);
+    return $ctx;
+}
+
+# Return the registered Node types the request may receive, as name => type, read once per request through one reader of the shared context
+# A public visitor gets the active types, the Node manager and the moderators also the disabled ones they are entitled to; a type whose stored configuration is broken stays out
+# Only a name the loaded registry carries costs a query: a site without registered types, including one whose update has not created the Node tables yet, reads nothing
+function getNodeTypeMap(): array {
+    global $db, $conf, $fld;
+    static $map = null;
+    if ($map !== null) return $map;
+    $map = [];
+    if (empty($conf['node']['types'])) return $map;
+    try {
+        foreach ((new NodeQuery($db, getNodeContext(), $fld))->getNodeTypeList() as $type) $map[$type->name] = $type;
+    } catch (NodeException $err) {
+        Logger::addSite('error', 'Node: the registered types cannot be read', ['code' => $err->getCode()]);
+    }
+    return $map;
+}
+
+# Deliver the due future publications of Node for the scheduler: a trusted background context without any identity, the shared writer and points, and the limit of the job
+# Only this fixed adapter builds such a context, and a refusal of the writer becomes the failed status the scheduler records instead of an exception it would have to catch
+function addNodePublishTask(): array {
+    global $db, $conf, $fld, $pnt;
+    $lim = intval($conf['scheduler']['jobs']['nodepublish']['settings']['limit'] ?? 50);
+    try {
+        $ctx = new NodeContext(0, [], 0, [], false, false, '', '', true);
+        return (new NodeService($db, $ctx, $fld, $pnt))->updateNodePublishList(max(1, min(500, $lim)));
+    } catch (NodeException $err) {
+        return ['status' => 'failed', 'message' => 'Node publication failed with code '.$err->getCode()];
+    }
 }
 
 # Build the rating subsystem of the request once: the rules behind the mark of the 6.3 data update, the trusted actor of the two sessions and the closed map of the fixed targets

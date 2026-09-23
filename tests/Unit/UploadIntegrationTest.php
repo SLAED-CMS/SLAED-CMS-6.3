@@ -258,11 +258,11 @@ final class UploadIntegrationTest extends TestCase
         $body = $this->getBody('core/system.php', 'getUploadTakenFile');
         $this->assertStringContainsString('getUploadFileArea($rule)->getFileData($take)', $body, 'The path is read past the place context, so a name reaching outside the directory would answer');
         $this->assertStringContainsString("\$one['kind'] === 'dir'", $body, 'A directory answers as a file, so a pick could name the store itself');
-        $this->assertStringContainsString("'index.html', '.htaccess'", $body, 'The two names that are never content are offered as content');
+        $this->assertStringContainsString("isset(FileManager::getGuardFiles()[\$one['name']])", $body, 'The two names that are never content are offered as content');
         $this->assertStringContainsString('FileManager::getFileOwner(', $body, 'A stored file is taken on the word of the client, which is the one thing a path from a form may never be');
         $this->assertStringContainsString('getEditorFileOwner($mod)', $body, 'The resolver writes an owner of its own, so its answer and the listing disagree about whose file it is');
-        $this->assertStringContainsString('!is_moder($mod)', $body, 'The ownership test excuses nobody, or excuses more than the module moderator the deletion route already excuses');
-        $this->assertLessThan(strpos($body, 'is_moder('), strpos($body, "'gone'"), 'The role is consulted before the file is known to exist, so the moderator would be excused the existence test as well');
+        $this->assertStringContainsString('!checkUploadModer($mod)', $body, 'The ownership test excuses nobody, or excuses more than the place moderator the deletion route already excuses');
+        $this->assertLessThan(strpos($body, 'checkUploadModer('), strpos($body, "'gone'"), 'The role is consulted before the file is known to exist, so the moderator would be excused the existence test as well');
         foreach (['modules/account/index.php' => 'savehome'] as $path => $name) {
             $this->assertStringContainsString('getUploadTakenFile(', $this->getBody($path, $name), $path.' resolves a stored pick on its own again');
         }
