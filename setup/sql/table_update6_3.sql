@@ -722,6 +722,7 @@ CALL renidx('{prefix}_blocks', 'blanguage', 'blang');
 CALL addidx('{prefix}_blocks', 'title', '`title`', 0);
 CALL addidx('{prefix}_blocks', 'status_position', '`status`, `bpos`', 0);
 UPDATE `{prefix}_blocks` SET bfile = REPLACE(bfile, 'block-', '') WHERE bfile LIKE 'block-%';
+CALL addcol('{prefix}_blocks', 'param', 'VARCHAR(255) NOT NULL DEFAULT \'\'');
 
 # =============================================================================
 # Batch D — _categories

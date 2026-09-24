@@ -289,7 +289,7 @@ function getSchedulerPlannedTime(array $job, array $state = []): int {
 function getSchedulerJob(string $name, ?array $job = null): array {
     global $conf;
     static $map = ['dbbackup' => 'backup', 'filescan' => 'filescan', 'maildrain' => 'maildrain', 'newsletter' => 'newsletter', 'sitemap' => 'sitemap',
-        'cachegc' => 'cachegc', 'monitor' => 'monitor', 'nodepublish' => 'nodepublish'];
+        'cachegc' => 'cachegc', 'monitor' => 'monitor', 'nodepublish' => 'nodepublish', 'nodesync' => 'nodesync'];
     $read = $job === null;
     if ($read) $job = $conf['scheduler']['jobs'][$name] ?? [];
     if (!is_array($job)) $job = [];
@@ -610,6 +610,7 @@ function addSchedulerSystemJob(string $name): array {
         'cachegc' => addCacheGcTask(),
         'monitor' => addMonitorSample(),
         'nodepublish' => addNodePublishTask(),
+        'nodesync' => addNodeSyncTask(),
         default => ['status' => 'failed', 'message' => 'Unknown system job: '.$name],
     };
 }
@@ -679,13 +680,14 @@ function getBlocks(string $side, string $fly = ''): void {
     if (!isset($barr)) {
         $barr = [];
         Parser::$freeoff = true;
-        $result = $db->getSqlQuery('SELECT id, bkey, title, content, url, bfile, view, expire, action, bpos, which FROM '.PREFIX_DB."_blocks WHERE status = '1' ".$querylang.' ORDER BY weight ASC', $qlang_params);
-        while(list($bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $which) = $db->getSqlRow($result)) {
+        $sql = 'SELECT id, bkey, title, content, url, bfile, view, expire, action, bpos, which, param FROM '.PREFIX_DB."_blocks WHERE status = '1' ".$querylang;
+        $result = $db->getSqlQuery($sql.' ORDER BY weight ASC', $qlang_params);
+        while(list($bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $which, $param) = $db->getSqlRow($result)) {
             $bid = intval($bid);
             $content = ($url == '') ? $prs->filterContent($content, false, 'all', 2) : '';
             $view = intval($view);
             $where_mas = explode(',', $which);
-            $barr[] = [$bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $where_mas];
+            $barr[] = [$bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $where_mas, (string)$param];
         }
         Parser::$freeoff = false;
     }
@@ -701,7 +703,7 @@ function getBlocks(string $side, string $fly = ''): void {
         $ci = count($barr);
         for ($i = 0; $i < $ci; $i++) {
             if (($b_id != 0 && $barr[$i][0] == $b_id) || ($bfile != '' && $barr[$i][5] == $bfile)) {
-                list($bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $where_mas) = $barr[$i];
+                list($bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $where_mas, $param) = $barr[$i];
                 $b_id = $bid;
                 $flag = 1;
                 break;
@@ -738,13 +740,13 @@ function getBlocks(string $side, string $fly = ''): void {
             }
             if ($flag_where == 1) {
                 if ($view == 0) {
-                    render_blocks($side, $bfile, $title, $content, $bid, $url); return;
+                    render_blocks($side, $bfile, $title, $content, $bid, $url, $param); return;
                 } elseif ($view == 1 && is_user() || is_moder()) {
-                    render_blocks($side, $bfile, $title, $content, $bid, $url); return;
+                    render_blocks($side, $bfile, $title, $content, $bid, $url, $param); return;
                 } elseif ($view == 2 && is_moder()) {
-                    render_blocks($side, $bfile, $title, $content, $bid, $url); return;
+                    render_blocks($side, $bfile, $title, $content, $bid, $url, $param); return;
                 } elseif ($view == 3 && !is_user() || is_moder()) {
-                    render_blocks($side, $bfile, $title, $content, $bid, $url); return;
+                    render_blocks($side, $bfile, $title, $content, $bid, $url, $param); return;
                 }
             }
         }
@@ -779,7 +781,7 @@ function getBlocks(string $side, string $fly = ''): void {
             }
             if (in_array('otricanie', $where_mas)) $flag_where = ($flag_where) ? 0 : 1;
             if ($flag_where == 1) {
-                list($bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $where_mas) = $barr[$i];
+                list($bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $where_mas, $param) = $barr[$i];
                 $b_id = $bid;
                 if ($expire && $expire < time()) {
                     if ($action == 'd') {
@@ -799,13 +801,13 @@ function getBlocks(string $side, string $fly = ''): void {
                     break;
                     default:
                     if ($view == 0) {
-                        render_blocks($side, $bfile, $title, $content, $bid, $url);
+                        render_blocks($side, $bfile, $title, $content, $bid, $url, $param);
                     } elseif ($view == 1 && is_user() || is_moder()) {
-                        render_blocks($side, $bfile, $title, $content, $bid, $url);
+                        render_blocks($side, $bfile, $title, $content, $bid, $url, $param);
                     } elseif ($view == 2 && is_moder()) {
-                        render_blocks($side, $bfile, $title, $content, $bid, $url);
+                        render_blocks($side, $bfile, $title, $content, $bid, $url, $param);
                     } elseif ($view == 3 && !is_user() || is_moder()) {
-                        render_blocks($side, $bfile, $title, $content, $bid, $url);
+                        render_blocks($side, $bfile, $title, $content, $bid, $url, $param);
                     }
                     break;
                 }
@@ -2990,182 +2992,194 @@ function doCss(): string {
     return $cont;
 }
 
-# Create a sitemap
+# Create a sitemap: the XML goes straight into its files as it is produced, a new file follows every 50000 URLs, and more than one file is joined by an index
+# The modules of sitemap.mod are read as before; a Node type takes part through its own sitemap integration, its materials in cursor batches of 500 read as a guest,
+# so neither a closed category nor the whole set of materials is ever held; the HTML map shows a Node type with its categories and leaves its materials to the XML
 function addSitemapTask(bool $force = false): array {
- global $db, $conf, $tpl;
-    if ($force || defined('ADMIN_FILE') || !empty($conf['sitemap']['auto'])) {
-        $sess_f = BASE_DIR.'/sitemap.xml';
-        $sess_b = (file_exists($sess_f) && filesize($sess_f) != 0) ? filemtime($sess_f) : 0;
-        $past = time() - intval($conf['sitemap']['auto_t'] ?? 0);
-        if ($force || defined('ADMIN_FILE') || $sess_b < $past) {
-            $date = date('Y-m-d');
-            $info = $htm = $cd = [];
-            $modules_raw = (string)($conf['sitemap']['mod'] ?? '');
-            $mod = array_values(array_filter(array_map('trim', explode(',', $modules_raw)), static fn(string $one): bool => $one !== '' && $one !== '0'));
-            if (!$mod) return ['status' => 'disabled', 'message' => 'Sitemap has no modules selected, the existing map was left untouched'];
-            for ($i = 0; $i < count($mod); $i++) {
-                if ($mod[$i] == 'account' && is_active($mod[$i], '0')) {
-                    $result = $db->getSqlQuery('SELECT id, name, lastvis FROM '.PREFIX_DB.'_users');
-                    while (list($id, $title, $time) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, '', $title, $time, $mod[$i]];
-                } elseif ($mod[$i] == 'forum' && is_active($mod[$i], '0')) {
-                    $result = $db->getSqlQuery('SELECT id, cid, title, time FROM '.PREFIX_DB."_forum WHERE pid = '0' AND time <= NOW() AND status > '1'");
-                    while (list($id, $cat, $title, $time) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
-                } elseif ($mod[$i] == 'shop' && is_active($mod[$i], '0')) {
-                    $result = $db->getSqlQuery('SELECT id, cid, time, title FROM '.PREFIX_DB."_products WHERE time <= NOW() AND status != '0'");
-                    while (list($id, $cat, $time, $title) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
-                } elseif ($mod[$i] == 'voting' && is_active($mod[$i], '0')) {
-                    $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_voting WHERE modul = '' AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')");
-                    while (list($id, $title, $time) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, '', $title, $time, $mod[$i]];
-                } elseif (is_active($mod[$i], '0')) {
-                    $info[$mod[$i]][] = ['', '', '', '', $mod[$i]];
-                }
-            }
-            $map_h = $map_m = $map_c = $map_p = '';
-            if (count($info) > 0) {
-                foreach ($info as $key => $val) {
-                    if ($conf['sitemap']['gen_m']) {
-                        $map_m .= '<url><loc>'.getPublicUrl(['name' => $key]).'</loc>';
-                        $map_m .= $conf['sitemap']['dat_m'] ? '<lastmod>'.$date.'</lastmod>' : '';
-                        $map_m .= $conf['sitemap']['fr_m'] ? '<changefreq>'.$conf['sitemap']['fr_m'].'</changefreq>' : '';
-                        $map_m .= $conf['sitemap']['pr_m'] ? '<priority>'.$conf['sitemap']['pr_m'].'</priority>' : '';
-                        $map_m .= '</url>'."\n";
-                    }
-                    foreach ($info[$key] as $key2 => $val2) {
-                        if ($conf['sitemap']['gen_p'] && $info[$key][$key2][0]) {
-                            $map_p .= '<url><loc>'.getPublicUrl([
-                                'name' => $info[$key][$key2][4],
-                                'op' => 'view',
-                                'id' => $info[$key][$key2][0],
-                            ]).'</loc>';
-                            $map_p .= $conf['sitemap']['dat_p'] ? '<lastmod>'.format_time($info[$key][$key2][3], 'Y-m-d').'</lastmod>' : '';
-                            $map_p .= $conf['sitemap']['fr_p'] ? '<changefreq>'.$conf['sitemap']['fr_p'].'</changefreq>' : '';
-                            $map_p .= $conf['sitemap']['pr_p'] ? '<priority>'.$conf['sitemap']['pr_p'].'</priority>' : '';
-                            $map_p .= '</url>'."\n";
-                        }
-                        $htm[$key][$info[$key][$key2][1]][] = [$info[$key][$key2][0],$info[$key][$key2][2]];
-                    }
-                    $result = $db->getSqlQuery('SELECT id, modul, title, parent FROM '.PREFIX_DB.'_categories WHERE modul = :mod', ['mod' => $key]);
-                    while (list($cid, $cmodul, $title, $parentid) = $db->getSqlRow($result)) {
-                        $cd[$cid] = [$cid, $parentid, $title, $cmodul];
-                        if ($conf['sitemap']['gen_c']) {
-                            $map_c .= '<url><loc>'.getPublicUrl(['name' => $cmodul, 'cat' => $cid]).'</loc>';
-                            $map_c .= $conf['sitemap']['dat_c'] ? '<lastmod>'.$date.'</lastmod>' : '';
-                            $map_c .= $conf['sitemap']['fr_c'] ? '<changefreq>'.$conf['sitemap']['fr_c'].'</changefreq>' : '';
-                            $map_c .= $conf['sitemap']['pr_c'] ? '<priority>'.$conf['sitemap']['pr_c'].'</priority>' : '';
-                            $map_c .= '</url>'."\n";
-                        }
-                    }
-                }
-            }
-            if ($conf['sitemap']['txt']) {
-                $bufferItems = '';
-                foreach ($htm as $key => $val) {
-                    $moduleLink = $tpl->getHtmlFrag('link', [
-                        'href' => getSeoUrl(['name' => $key]),
-                        'title' => getModuleName($key),
-                        'label' => getModuleName($key),
-                    ]);
-                    $moduleChildren = '';
-                    if (count($htm[$key]) > 0) {
-                        $categoryItems = '';
-                        $publicLists = '';
-                        foreach ($htm[$key] as $key2 => $val2) {
-                            $categoryLink = isset($cd[$key2][2]) ? $tpl->getHtmlFrag('link', [
-                                'href' => getSeoUrl(['name' => $key, 'cat' => $key2]),
-                                'title' => $cd[$key2][2],
-                                'label' => $cd[$key2][2],
-                            ]) : '';
-                            $viewItems = '';
-                            if (count($htm[$key][$key2]) > 0) {
-                                foreach ($htm[$key][$key2] as $key3 => $val3) {
-                                    if ($htm[$key][$key2][$key3][0]) {
-                                        $viewLink = $tpl->getHtmlFrag('link', [
-                                            'href' => getSeoUrl(['name' => $key, 'op' => 'view', 'id' => $htm[$key][$key2][$key3][0]]),
-                                            'title' => $htm[$key][$key2][$key3][1],
-                                            'label' => $htm[$key][$key2][$key3][1],
-                                        ]);
-                                        $viewItems .= $tpl->getHtmlFrag('list-item', ['content_html' => $viewLink]);
-                                    }
-                                }
-                            }
-                            $viewList = $viewItems ? $tpl->getHtmlFrag('list', ['items_html' => $viewItems, 'is_sub_two' => true]) : '';
-                            if ($categoryLink) {
-                                $categoryItems .= $tpl->getHtmlFrag('list-item', ['content_html' => $categoryLink, 'children_html' => $viewList]);
-                            } else {
-                                $publicLists .= $viewList;
-                            }
-                        }
-                        $moduleChildren = $categoryItems
-                            ? $tpl->getHtmlFrag('list', ['items_html' => $categoryItems, 'is_sub' => true])
-                            : $publicLists;
-                    }
-                    $bufferItems .= $tpl->getHtmlFrag('list-item', ['content_html' => $moduleLink, 'children_html' => $moduleChildren]);
-                }
-                $buffer = $tpl->getHtmlFrag('list', ['items_html' => $bufferItems]);
-                $sdir = dirname(SITEMAP_DIR.'/sitemap.txt');
-                if (!is_dir($sdir) && !mkdir($sdir, 0777, true) && !is_dir($sdir)) {
-                    return [
-                        'status' => 'failed',
-                        'message' => 'Sitemap storage directory is unavailable',
-                    ];
-                }
-                file_put_contents(SITEMAP_DIR.'/sitemap.txt', $buffer);
-            }
-            if ($conf['sitemap']['gen_h']) {
-                $map_h = '<url><loc>'.getPublicUrl().'</loc>';
-                $map_h .= ($conf['sitemap']['dat_h']) ? '<lastmod>'.$date.'</lastmod>' : '';
-                $map_h .= ($conf['sitemap']['fr_h']) ? '<changefreq>'.$conf['sitemap']['fr_h'].'</changefreq>' : '';
-                $map_h .= ($conf['sitemap']['pr_h']) ? '<priority>'.$conf['sitemap']['pr_h'].'</priority>' : '';
-                $map_h .= '</url>'."\n";
-            }
-            $map = $map_h.$map_m.$map_c.$map_p;
-            $array = explode("\n", $map);
-            # Maximum number of links
-            $max = 50000;
-            # Maximum size in bytes
-            $size = 10485760;
-            if (count($array) > $max) {
-                $i = 1;
-                $links = '';
-                foreach (array_chunk($array, $max, true) as $sitemap) {
-                    $urls = '';
-                    foreach ($sitemap as $val) $urls .= empty($val) ? '' : $val."\n";
-                    $cont = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
-                    $cont .= ($conf['sitemap']['xsl'] && file_exists(SITEMAP_DIR.'/sitemap.xsl')) ? '<?xml-stylesheet type="text/xsl" href="'.$conf['homeurl'].'/index.php?go=xsl"?>'."\n" : '';
-                    $cont .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n".$urls.'</urlset>';
-                    $file = BASE_DIR.'/sitemap-'.$i.'.xml';
-                    file_put_contents($file, $cont);
-                    $i++;
-                    if (strlen($cont) >= $size && checkCompress()['gz'] && file_exists($file)) {
-                        if (addCompress(dirname($file), $file, basename($file), 'gz', true)) {
-                            $file = $file.'.gz';
-                        }
-                    }
-                    $links .= '<sitemap><loc>'.$conf['homeurl'].'/'.basename($file).'</loc><lastmod>'.$date.'</lastmod></sitemap>'."\n";
-                }
-                $set = '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n".$links.'</sitemapindex>';
-            } else {
-                $set = '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n".$map.'</urlset>';
-            }
-            $cont = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
-            $cont .= ($conf['sitemap']['xsl'] && file_exists(SITEMAP_DIR.'/sitemap.xsl')) ? '<?xml-stylesheet type="text/xsl" href="'.$conf['homeurl'].'/index.php?go=xsl"?>'."\n".$set : $set;
-            if ($conf['rewrite']) {
-                $cont = str_replace($conf['homeurl'].'/', '', $cont);
-                $cont = preg_replace('#<loc>(.*?)</loc>#is', '<loc>'.$conf['homeurl'].'/\\1</loc>', $cont);
-            }
-            file_put_contents(BASE_DIR.'/sitemap.xml', $cont);
-            return [
-                'status' => 'success',
-                'message' => 'Sitemap generation completed',
-                'extra' => [
-                    'last_map_size' => file_exists(BASE_DIR.'/sitemap.xml') ? (int)filesize(BASE_DIR.'/sitemap.xml') : 0,
-                    'last_url_count' => count(array_filter($array, 'strlen')),
-                    'last_output' => 'sitemap.xml',
-                ],
-            ];
+    global $db, $conf, $tpl, $fld;
+    $sm = $conf['sitemap'];
+    $auto = !$force && !defined('ADMIN_FILE');
+    if ($auto && empty($sm['auto'])) return ['status' => 'idle', 'message' => 'Sitemap generation was skipped'];
+    $sfile = BASE_DIR.'/sitemap.xml';
+    $stime = (file_exists($sfile) && filesize($sfile) != 0) ? filemtime($sfile) : 0;
+    if ($auto && $stime >= time() - intval($sm['auto_t'] ?? 0)) return ['status' => 'idle', 'message' => 'Sitemap generation was skipped'];
+    $date = date('Y-m-d');
+    $info = $htm = $cd = [];
+    $mod = array_values(array_filter(array_map('trim', explode(',', (string)($sm['mod'] ?? ''))), static fn(string $one): bool => $one !== '' && $one !== '0'));
+    $types = [];
+    foreach (getNodeTypeMap() as $type) if ($type->active && $type->settings['integrations']['sitemap']) $types[$type->name] = $type;
+    if (!$mod && !$types) return ['status' => 'disabled', 'message' => 'Sitemap has no modules selected, the existing map was left untouched'];
+    for ($i = 0; $i < count($mod); $i++) {
+        if ($mod[$i] == 'account' && is_active($mod[$i], '0')) {
+            $result = $db->getSqlQuery('SELECT id, name, lastvis FROM '.PREFIX_DB.'_users');
+            while (list($id, $title, $time) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, '', $title, $time, $mod[$i]];
+        } elseif ($mod[$i] == 'forum' && is_active($mod[$i], '0')) {
+            $result = $db->getSqlQuery('SELECT id, cid, title, time FROM '.PREFIX_DB."_forum WHERE pid = '0' AND time <= NOW() AND status > '1'");
+            while (list($id, $cat, $title, $time) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
+        } elseif ($mod[$i] == 'shop' && is_active($mod[$i], '0')) {
+            $result = $db->getSqlQuery('SELECT id, cid, time, title FROM '.PREFIX_DB."_products WHERE time <= NOW() AND status != '0'");
+            while (list($id, $cat, $time, $title) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
+        } elseif ($mod[$i] == 'voting' && is_active($mod[$i], '0')) {
+            $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_voting WHERE modul = '' AND time <= NOW()"
+                ." AND (enddate >= NOW() AND status = '0' OR status = '1')");
+            while (list($id, $title, $time) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, '', $title, $time, $mod[$i]];
+        } elseif (is_active($mod[$i], '0')) {
+            $info[$mod[$i]][] = ['', '', '', '', $mod[$i]];
         }
     }
-    return ['status' => 'idle', 'message' => 'Sitemap generation was skipped'];
+    $ncats = [];
+    foreach ($types as $name => $type) {
+        $ncats[$name] = [];
+        if (!$type->settings['features']['categories']) continue;
+        $result = $db->getSqlQuery('SELECT id, title, pread FROM '.PREFIX_DB.'_categories WHERE modul = :mod ORDER BY ordern', ['mod' => $name]);
+        while ([$cid, $ctitle, $pread] = $db->getSqlRow($result)) {
+            [$lvl, $gids] = array_pad(explode('|', (string)$pread, 2), 2, '');
+            $open = ctype_digit($lvl) && intval($lvl) === 0 && !array_filter(array_map('intval', explode(',', $gids)), static fn($v) => $v > 0);
+            if ($open) $ncats[$name][intval($cid)] = (string)$ctitle;
+        }
+    }
+    $home = (string)$conf['homeurl'];
+    $fix = static fn(string $xml): string => $conf['rewrite']
+        ? (string)preg_replace('#<loc>(.*?)</loc>#is', '<loc>'.$home.'/\\1</loc>', str_replace($home.'/', '', $xml)) : $xml;
+    $head = '<?xml version="1.0" encoding="UTF-8"?>'."\n"
+        .(($sm['xsl'] && file_exists(SITEMAP_DIR.'/sitemap.xsl')) ? '<?xml-stylesheet type="text/xsl" href="'.$home.'/index.php?go=xsl"?>'."\n" : '');
+    $opt = static fn(string $tag, mixed $val): string => (!empty($val) && $val !== '0') ? '<'.$tag.'>'.$val.'</'.$tag.'>' : '';
+    $line = static fn(string $loc, string $last, string $key): string => '<url><loc>'.htmlspecialchars($loc, ENT_XML1 | ENT_QUOTES, 'UTF-8').'</loc>'
+        .($last !== '' && !empty($sm['dat_'.$key]) ? '<lastmod>'.$last.'</lastmod>' : '').$opt('changefreq', $sm['fr_'.$key] ?? '').$opt('priority', $sm['pr_'.$key] ?? '')
+        .'</url>'."\n";
+    $files = [];
+    $fh = null;
+    $inset = 0;
+    $total = 0;
+    $put = static function (string $url) use (&$files, &$fh, &$inset, &$total, $head, $fix): void {
+        if ($fh !== null && $inset >= 50000) {
+            fwrite($fh, '</urlset>');
+            fclose($fh);
+            $fh = null;
+        }
+        if ($fh === null) {
+            $files[] = BASE_DIR.'/sitemap-'.(count($files) + 1).'.xml';
+            $fh = fopen(end($files), 'wb');
+            if ($fh === false) throw new RuntimeException('a sitemap file cannot be opened');
+            fwrite($fh, $fix($head.'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n"));
+            $inset = 0;
+        }
+        fwrite($fh, $fix($url));
+        $inset++;
+        $total++;
+    };
+    try {
+        if ($sm['gen_h']) $put($line(getPublicUrl(), $date, 'h'));
+        if ($sm['gen_m']) foreach (array_merge(array_keys($info), array_keys($types)) as $key) $put($line(getPublicUrl(['name' => $key]), $date, 'm'));
+        foreach (array_keys($info) as $key) {
+            $result = $db->getSqlQuery('SELECT id, modul, title, parent FROM '.PREFIX_DB.'_categories WHERE modul = :mod', ['mod' => $key]);
+            while (list($cid, $cmodul, $title, $parent) = $db->getSqlRow($result)) {
+                $cd[$cid] = [$cid, $parent, $title, $cmodul];
+                if ($sm['gen_c']) $put($line(getPublicUrl(['name' => $cmodul, 'cat' => $cid]), $date, 'c'));
+            }
+        }
+        if ($sm['gen_c']) foreach ($ncats as $key => $cats) foreach (array_keys($cats) as $cid) $put($line(getPublicUrl(['name' => $key, 'cat' => $cid]), $date, 'c'));
+        foreach ($info as $key => $val) {
+            foreach ($val as $one) {
+                if ($sm['gen_p'] && $one[0]) $put($line(getPublicUrl(['name' => $one[4], 'op' => 'view', 'id' => $one[0]]), format_time($one[3], 'Y-m-d'), 'p'));
+                $htm[$key][$one[1]][] = [$one[0], $one[2]];
+            }
+        }
+        if ($sm['gen_p'] && $types) {
+            $query = new NodeQuery($db, new NodeContext(0, [], 0, [], false, false, '', ''), $fld);
+            $after = 0;
+            do {
+                $rows = $query->getNodeSitemap($after, 500);
+                foreach ($rows as $row) {
+                    $put($line(getPublicUrl(['name' => $row['name'], 'op' => 'view', 'id' => $row['id']]), substr($row['updated'], 0, 10), 'p'));
+                    $after = $row['id'];
+                }
+            } while (count($rows) === 500);
+        }
+        if ($fh !== null) {
+            fwrite($fh, '</urlset>');
+            fclose($fh);
+            $fh = null;
+        }
+    } catch (Throwable $err) {
+        if ($fh !== null) fclose($fh);
+        foreach ($files as $file) if (is_file($file)) unlink($file);
+        Logger::addSite('error', 'Sitemap: the generation failed', ['error' => $err->getMessage()]);
+        return ['status' => 'failed', 'message' => 'Sitemap generation failed'];
+    }
+    if ($sm['txt']) {
+        $items = '';
+        foreach ($htm as $key => $val) {
+            $mlink = $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $key]), 'title' => getModuleName($key), 'label' => getModuleName($key)]);
+            $citems = '';
+            $plists = '';
+            foreach ($val as $ckey => $list) {
+                $clink = isset($cd[$ckey][2]) ? $tpl->getHtmlFrag('link', [
+                    'href' => getSeoUrl(['name' => $key, 'cat' => $ckey]),
+                    'title' => $cd[$ckey][2],
+                    'label' => $cd[$ckey][2],
+                ]) : '';
+                $vitems = '';
+                foreach ($list as $item) {
+                    if (!$item[0]) continue;
+                    $vlink = $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $key, 'op' => 'view', 'id' => $item[0]]), 'title' => $item[1], 'label' => $item[1]]);
+                    $vitems .= $tpl->getHtmlFrag('list-item', ['content_html' => $vlink]);
+                }
+                $vlist = $vitems ? $tpl->getHtmlFrag('list', ['items_html' => $vitems, 'is_sub_two' => true]) : '';
+                if ($clink) {
+                    $citems .= $tpl->getHtmlFrag('list-item', ['content_html' => $clink, 'children_html' => $vlist]);
+                } else {
+                    $plists .= $vlist;
+                }
+            }
+            $mkids = $citems ? $tpl->getHtmlFrag('list', ['items_html' => $citems, 'is_sub' => true]) : $plists;
+            $items .= $tpl->getHtmlFrag('list-item', ['content_html' => $mlink, 'children_html' => $mkids]);
+        }
+        foreach ($ncats as $key => $cats) {
+            $mlink = $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $key]), 'title' => getModuleName($key), 'label' => getModuleName($key)]);
+            $citems = '';
+            foreach ($cats as $cid => $ctitle) {
+                $ctitle = getConst($ctitle);
+                $clink = $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $key, 'cat' => $cid]), 'title' => $ctitle, 'label' => $ctitle]);
+                $citems .= $tpl->getHtmlFrag('list-item', ['content_html' => $clink]);
+            }
+            $mkids = $citems ? $tpl->getHtmlFrag('list', ['items_html' => $citems, 'is_sub' => true]) : '';
+            $items .= $tpl->getHtmlFrag('list-item', ['content_html' => $mlink, 'children_html' => $mkids]);
+        }
+        $html = $tpl->getHtmlFrag('list', ['items_html' => $items]);
+        $sdir = dirname(SITEMAP_DIR.'/sitemap.txt');
+        if (!is_dir($sdir) && !mkdir($sdir, 0777, true) && !is_dir($sdir)) {
+            foreach ($files as $file) unlink($file);
+            return ['status' => 'failed', 'message' => 'Sitemap storage directory is unavailable'];
+        }
+        file_put_contents(SITEMAP_DIR.'/sitemap.txt', $html);
+    }
+    $keep = [];
+    if (count($files) > 1) {
+        $links = '';
+        foreach ($files as $file) {
+            if (filesize($file) >= 10485760 && checkCompress()['gz'] && addCompress(dirname($file), $file, basename($file), 'gz', true)) $file .= '.gz';
+            $keep[] = basename($file);
+            $links .= '<sitemap><loc>'.$home.'/'.basename($file).'</loc><lastmod>'.$date.'</lastmod></sitemap>'."\n";
+        }
+        file_put_contents(BASE_DIR.'/sitemap.xml', $fix($head.'<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n".$links.'</sitemapindex>'));
+    } elseif ($files) {
+        rename($files[0], BASE_DIR.'/sitemap.xml');
+    } else {
+        file_put_contents(BASE_DIR.'/sitemap.xml', $fix($head.'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n".'</urlset>'));
+    }
+    foreach (glob(BASE_DIR.'/sitemap-*.xml*') ?: [] as $old) {
+        if (preg_match('/^sitemap-[1-9][0-9]*\.xml(?:\.gz)?$/D', basename($old)) && !in_array(basename($old), $keep, true)) unlink($old);
+    }
+    return [
+        'status' => 'success',
+        'message' => 'Sitemap generation completed',
+        'extra' => [
+            'last_map_size' => file_exists(BASE_DIR.'/sitemap.xml') ? (int)filesize(BASE_DIR.'/sitemap.xml') : 0,
+            'last_url_count' => $total,
+            'last_output' => 'sitemap.xml',
+        ],
+    ];
 }
 
 # Navigation tabs (compact, synchronized & sequential IDs)
@@ -3818,9 +3832,11 @@ function getTimedHtml(string $html): string {
 
 # Notify subscribed admins by email on new content or comment submission
 # The stored module list is only read here; normalising it is a write and belongs to the admin screen that owns those records, which already writes the normalised form
+# A registered Node type is moderated through its right node-<name>, so its name is read as that right, the way is_admin_modul() reads it
 function addAdminMail(bool $enab, string $mod, string $username = '', string $title = '', bool $iscmt = false, string $text = ''): void {
     global $db, $conf, $locale, $mailer;
     $mod = filterVar($mod);
+    if (isset($conf['node']['types'][$mod])) $mod = 'node-'.$mod;
     if ($enab && $mod) {
         $kind = $iscmt ? 'comment' : 'content';
         $subject = $iscmt ? $conf['sitename'].' - '.$title.' - '._COMMENT : $conf['sitename'].' - '.$title;
@@ -5306,6 +5322,18 @@ function getUserMail(int $uid): string {
     return is_string($mail) ? trim($mail) : '';
 }
 
+# Return the administrators who hold one right key, main administrators included, as id => name ordered by name, for a screen that assigns work to one of them
+# The key is compared against the stored rights list and never against a pattern, so a right such as node-help names exactly the holders of that one right
+function getAdminNames(string $key): array {
+    global $db;
+    $res = $db->getSqlQuery('SELECT id, name, super, modules FROM '.PREFIX_DB.'_admins ORDER BY name');
+    $out = [];
+    foreach ($res ? $res->fetchAll(PDO::FETCH_ASSOC) : [] as $row) {
+        if (!empty($row['super']) || in_array($key, getAdminModuleNames((string)$row['modules']), true)) $out[intval($row['id'])] = (string)$row['name'];
+    }
+    return $out;
+}
+
 # Check modul admin
 # The single administrative entry of Node opens to the manager of Node and to the moderator of any one type; what each may do there is decided by the Node context
 # A registered type is administered through its right node-<name> alone: the stored key of a removed module of the same name, which upgraded administrators may still carry,
@@ -5795,9 +5823,9 @@ function checkemail(string $mail): array {
     return $stop ?? [];
 }
 
-# Format add block
-# Format block
-function render_blocks(string $side, string $bfile, string $blocktitle, string $content, mixed $bid, string $url): string {
+# Render one block: an RSS block from its feed, a file block by including its file with the parameters of its instance in $param, any other from its stored content
+# A file block that sets its content to null shows nothing at all, which is how an instance with invalid parameters stays off instead of showing something else
+function render_blocks(string $side, string $bfile, string $blocktitle, string $content, mixed $bid, string $url, string $param = ''): string {
     global $showbanners, $foot, $tpl;
     if ($url == '') {
         $blocktitle = getConst($blocktitle);
@@ -5810,6 +5838,7 @@ function render_blocks(string $side, string $bfile, string $blocktitle, string $
             } else {
                 $content = $tpl->getHtmlFrag('block-content', ['is_center' => true, 'content' => (string)_BLOCKPROBLEM]);
             }
+            if ($content === null) return '';
         }
         if (!isset($content) || empty($content)) $content = $tpl->getHtmlFrag('block-content', ['is_center' => true, 'content' => (string)_BLOCKPROBLEM2]);
         switch($side) {
@@ -5895,6 +5924,50 @@ function getNodeTypeMap(): array {
     return $map;
 }
 
+# The registered extension of a type through the closed factory with the shared request context, or null for a standard type
+function getNodeHandler(NodeType $type): ?NodeExtension {
+    global $db;
+    if ($type->ext === '') return null;
+    require_once BASE_DIR.'/core/classes/node/ext/load.php';
+    return getNodeExtension($type->ext, $db, getNodeContext());
+}
+
+# The titles of the Node targets the context may read, as id => title for a map of global id => type name, read in batches of the sync limit through the light targets
+# A name the registry does not carry, a missing or closed material and a failed read leave their ids out, so a list shows only what its viewer may open
+function getNodeTitleMap(array $refs): array {
+    global $db, $conf, $fld;
+    $out = [];
+    $refs = array_filter($refs, fn($v) => is_string($v) && isset($conf['node']['types'][$v]));
+    if (!$refs) return $out;
+    $size = max(1, min(500, intval($conf['node']['limits']['syncbatch'] ?? 500)));
+    try {
+        $query = new NodeQuery($db, getNodeContext(), $fld);
+        foreach (array_chunk($refs, $size, true) as $part) foreach ($query->getNodeTargetList($part) as $id => $tgt) $out[$id] = $tgt->title;
+    } catch (NodeException $err) {
+        Logger::addSite('error', 'Node: the titles of targets cannot be read', ['code' => $err->getCode()]);
+    }
+    return $out;
+}
+
+# The first active Node type without an extension that a theme or a showcase shows in one display mode, or null; the mode names the kind of content, never a type name
+function getNodeModeType(string $mode): ?NodeType {
+    foreach (getNodeTypeMap() as $type) if ($type->active && $type->ext === '' && $type->settings['view']['mode'] === $mode) return $type;
+    return null;
+}
+
+# Read the parameters of one instance of the file block node.php from the canonical JSON of _blocks.param: exactly type, mode and limit in this order
+# The type is empty for a mixed feed or a registered type with the blocks integration, the mode last or home, the limit 1 to 50; anything else, including a stale type, is null
+# The mode home of a named type also needs the home feature of that type, because a feed of marked materials of a type that cannot mark any is a stale choice
+function getNodeBlockParam(string $param): ?array {
+    $data = json_decode($param, true);
+    if (!is_array($data) || array_keys($data) !== ['type', 'mode', 'limit'] || !is_string($data['type']) || !is_int($data['limit'])) return null;
+    if (json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !== $param || !in_array($data['mode'], ['last', 'home'], true)) return null;
+    if ($data['limit'] < 1 || $data['limit'] > 50) return null;
+    if ($data['type'] === '') return $data;
+    $set = (getNodeTypeMap()[$data['type']] ?? null)?->settings;
+    return ($set !== null && $set['integrations']['blocks'] && ($data['mode'] === 'last' || $set['features']['home'])) ? $data : null;
+}
+
 # Deliver the due future publications of Node for the scheduler: a trusted background context without any identity, the shared writer and points, and the limit of the job
 # Only this fixed adapter builds such a context, and a refusal of the writer becomes the failed status the scheduler records instead of an exception it would have to catch
 function addNodePublishTask(): array {
@@ -5908,11 +5981,28 @@ function addNodePublishTask(): array {
     }
 }
 
+# Check the due external sources of Node for the scheduler: a trusted background context without any identity, the extension sync from the closed factory, and the limit
+# of the job bounded to the network sources one pass may fetch; a refusal of the extension becomes the failed status the scheduler records
+function addNodeSyncTask(): array {
+    global $db, $conf;
+    $lim = intval($conf['scheduler']['jobs']['nodesync']['settings']['limit'] ?? 10);
+    try {
+        require_once BASE_DIR.'/core/classes/node/ext/load.php';
+        $ext = getNodeExtension('sync', $db, new NodeContext(0, [], 0, [], false, false, '', '', true));
+        return ($ext instanceof NodeSync) ? $ext->updateNodeSyncList(max(1, min(50, $lim))) : ['status' => 'failed', 'message' => 'Node sync is not registered'];
+    } catch (NodeException $err) {
+        return ['status' => 'failed', 'message' => 'Node sync failed with code '.$err->getCode()];
+    }
+}
+
 # Build the rating subsystem of the request once: the rules behind the mark of the 6.3 data update, the trusted actor of the two sessions and the closed map of the fixed targets
 # The read adapter answers only a target the actor may reach; under the lock its first statement is the locking read of the owner row, and a failed statement throws
 # The main administrator reaches every existing target and a forum moderator every topic; the write adapter stores the checked aggregate and refuses what the column cannot hold
+# A scope node.<name> goes through Node alone: the reader of the request context, under the lock the writer that locks the type and then the material before it reads,
+# the rating feature of the type and the extension, which may refuse the vote and follows a stored one inside the same transaction; Point takes no part
+# The context and the types of Node are read here, before any transaction, because a plain read inside a vote would open its snapshot before the locks
 function getRatingService(): Rating {
-    global $db, $conf, $user, $admin;
+    global $db, $conf, $user, $admin, $fld;
     static $rate = null;
     if ($rate !== null) return $rate;
     $maps = [
@@ -5922,7 +6012,19 @@ function getRatingService(): Rating {
     ];
     $actor = ['uid' => is_user() ? intval(substr($user[0], 0, 11)) : 0, 'ip' => getIp(), 'aid' => isAdmin() ? intval(substr($admin[0], 0, 11)) : 0, 'super' => isAdmin(true)];
     $moder = is_moder('forum') === 1;
-    $read = static function (string $scope, int $id, array $actor, bool $lock) use ($db, $maps, $moder): ?array {
+    if (!empty($conf['node']['types'])) getNodeTypeMap();
+    $node = static function (string $scope, int $id, bool $lock) use ($db, $fld): ?array {
+        $type = getNodeTypeMap()[substr($scope, 5)] ?? null;
+        if ($type === null || !$type->active) return null;
+        $ctx = getNodeContext();
+        $tgt = $lock ? (new NodeService($db, $ctx, $fld))->getLockedTarget($id, $type) : (new NodeQuery($db, $ctx, $fld))->getNodeTarget($type->name, $id);
+        if ($tgt === null) return null;
+        $ext = getNodeHandler($type);
+        $open = $type->settings['features']['rating'] && ($ext === null || $ext->checkNodeAction($type, $tgt, 'rate'));
+        return ['type' => $type, 'target' => $tgt, 'ext' => $ext, 'row' => ['owner' => $tgt->uid, 'score' => $tgt->score, 'ratings' => $tgt->ratings, 'enabled' => $open]];
+    };
+    $read = static function (string $scope, int $id, array $actor, bool $lock) use ($db, $maps, $moder, $node): ?array {
+        if (str_starts_with($scope, 'node.')) return $node($scope, $id, $lock)['row'] ?? null;
         if (!isset($maps[$scope])) return null;
         [$tab, $cnt, $sum, $own, $base, $shut] = $maps[$scope];
         $open = $actor['super'] || ($scope === 'forum' && $moder);
@@ -5939,7 +6041,14 @@ function getRatingService(): Rating {
         }
         return ['owner' => intval($row['owner']), 'score' => intval($row['score']), 'ratings' => intval($row['ratings']), 'enabled' => true];
     };
-    $write = static function (string $scope, int $id, int $score, int $num) use ($db, $maps): bool {
+    $write = static function (string $scope, int $id, int $score, int $num) use ($db, $fld, $maps, $node): bool {
+        if (str_starts_with($scope, 'node.')) {
+            $seen = $node($scope, $id, false);
+            if ($seen === null || !$seen['row']['enabled']) return false;
+            (new NodeService($db, getNodeContext(), $fld))->updateNodeRating($id, $seen['type'], $score, $num);
+            $seen['ext']?->updateNodeAction($seen['type'], $seen['target'], 'rate');
+            return true;
+        }
         if (!isset($maps[$scope]) || $score > 4294967295 || $num > 4294967295) return false;
         [$tab, $cnt, $sum] = $maps[$scope];
         return $db->getSqlQuery('UPDATE '.PREFIX_DB.$tab.' SET '.$cnt.' = :num, '.$sum.' = :score WHERE id = :id', ['num' => $num, 'score' => $score, 'id' => $id]) !== false;

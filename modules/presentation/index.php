@@ -123,8 +123,10 @@ function getPresentationVoices(): array {
 # Every text is a constant, every number has a source named in the plan; the template receives words, urls, attribute values and flags and owns every tag and class
 # Two cockpit figures are demonstration and say so here: the cache hit ratio and the online floor are seeded from the visits of the day, since the runtime keeps no
 # hit counter and a stand has one visitor; the traces of the control window are staged operations carrying the real counts of this install
+# The content figures come from the first active type of a display mode through the shared reader: article for the news, docs for the documentation, files for the archive
+# A mode no active type shows leaves its card, its console row and its figure out, and a failed read counts as nothing
 function getPresentationData(): array {
-    global $conf, $db, $theme;
+    global $conf, $db, $theme, $fld;
     $cnt = getSessionCounts();
     $today = getStatsToday();
     # A stand carries days of statistics where a site carries years, so a window short of its days is padded in front with
@@ -161,6 +163,23 @@ function getPresentationData(): array {
     $failed = is_int($failed) ? $failed : 0;
     $langs = count(glob(BASE_DIR.'/lang/*.php') ?: []);
     [$tid, $ttitle, $ttime] = $db->getSqlRow(getForumTopics('id, title, ltime', '', 1));
+    $read = static function (string $mode) use ($db, $fld): array {
+        $out = ['type' => getNodeModeType($mode), 'num' => 0, 'cats' => 0, 'last' => null];
+        if ($out['type'] === null) return $out;
+        $out['cats'] = count(getCategoryMap($out['type']->name));
+        try {
+            $query = (new NodeQuery($db, getNodeContext(), $fld))->setNodeType($out['type'])->setNodePage(1, 1);
+            if (in_array('published', $out['type']->settings['list']['orders'], true)) $query->setNodeOrder('published', 'desc');
+            $out['num'] = $query->getNodeCount();
+            $out['last'] = $out['num'] ? ($query->getNodeList()[0] ?? null) : null;
+        } catch (NodeException) {
+            return ['num' => 0, 'last' => null] + $out;
+        }
+        return $out;
+    };
+    $news = $read('article');
+    $docs = $read('docs');
+    $files = $read('files');
     $slots = ['b' => _PRES_BL_BANNER, 'l' => _PRES_BL_LEFT, 'c' => _PRES_BL_TOP, 'd' => _PRES_BL_BOTTOM, 'r' => _PRES_BL_RIGHT, 'f' => _PRES_BL_FOOTER];
     # The wire of a block node runs from its card to the slot it fills, in the 760 x 340 viewBox of the stage: four rows
     # of nodes down each side, the page mock in the middle, a slot entered from the side the node stands on
@@ -316,8 +335,12 @@ function getPresentationData(): array {
     $when = static fn(int $i): string => date('H:i', time() - 60 * (3 - $i));
     $ops = [
         [getIconName('system'), _PRES_CO_SYSTEM, [['kernel.boot', 'ok'], ['config.load', 'ok'], ['module.resolve', $gen.' ms'], ['response.send', '200']]],
+        ...($news['type'] ? [[getIconName('news'), _NEWS, [['news.index', 'ok'], ['news.count', (string)$news['num']], ['categories.load', (string)$cats],
+            ['cache.store', 'ok']]]] : []),
         [getIconName('groups'), _USERS, [['session.verify', 'ok'], ['group.rights', 'admin'], ['users.online', (string)$live], ['login.attempt', 'ok']]],
         [getIconName('modules'), _PRES_NAV_MODULES, [['modules.scan', (string)$mtot], ['module.enable', (string)($mods[0]['note'] ?? 'account')], ['hooks.bind', (string)$mon], ['registry.save', 'ok']]],
+        ...($files['type'] ? [[getIconName('files'), _PRES_CO_FILES, [['files.index', (string)$files['num']], ['upload.check', 'clean'], ['download.count', '+1'],
+            ['meta.write', 'ok']]]] : []),
         [getIconName('search'), 'SEO', [['canonical.resolve', 'ok'], ['meta.compose', 'ok'], ['sitemap.queue', 'ready'], ['robots.check', 'ok']]],
         [getIconName('privacy'), _SECURITY, [['request.filter', 'allow'], ['injection.scan', 'block'], ['log.append', (string)$events], ['session.guard', 'ok']]],
         ['layout-text-window-reverse', _PRES_CO_TPL, [['template.load', $theme], ['blocks.render', (string)$bcount], ['partials.merge', 'ok'], ['render.total', $gen.' ms']]],
@@ -372,6 +395,7 @@ function getPresentationData(): array {
         ],
         'facts' => [
             $stat((isset($ver[1]) ? $ver[1].' · ' : '')._PRES_FACT_VER, $ver[0]),
+            ...($files['type'] ? [$stat(_PRES_FACT_FILES, $num($files['num']))] : []),
             $stat(sprintf(_PRES_FACT_SINCE, '2005'), (string)$years, $yunit),
             $stat(_PRES_FACT_MIT, 'MIT'),
             $stat(_PRES_FACT_GEN, $gsec, _SEC),
@@ -421,7 +445,8 @@ function getPresentationData(): array {
                 _PRES_NAV_MODULES.' '.$mon.' / '.$mtot, _LANGUAGE.' '.$langs, _PRES_CACHE.' '.$state, _VERSION.' '.$ver[0],
             ]],
             ['title' => _PRES_MD_CONTENT, 'state' => _PRES_MD_LIVE, 'tags' => [
-                _CATEGORIES.' '.$num($cats),
+                ...($news['type'] ? [_NEWS.' '.$num($news['num'])] : []), ...($docs['type'] ? [_PAGES.' '.$num($docs['num'])] : []),
+                ...($files['type'] ? [_FILES.' '.$num($files['num'])] : []), _CATEGORIES.' '.$num($cats),
             ]],
             ['title' => _PRES_MD_CONTROL, 'state' => _PRES_MD_SECURED, 'tags' => [
                 _USERS.' '.$num($users), _ONLINE.' '.$cnt['all'], _BOTS.' '.$bots, _PRES_GD_EVENTS.' '.$events,
@@ -653,11 +678,27 @@ function getPresentationData(): array {
     $pulse = [
         'head' => $head(12, getIconName('rss'), _PRES_H_PULSE, _PRES_L_PULSE),
         'cards' => [
+            ...($news['type'] ? [[
+                'icon' => getIconName('news'), 'title' => _PRES_PU_NEWS, 'over' => _PRES_PU_NEWS_S,
+                'when' => $news['last'] ? format_time((string)$news['last']->pubdate, _DATESTRING) : '', 'heading' => $news['last']->title ?? _PRES_PU_NONE,
+                'text' => _PRES_PU_NEWS_P, 'link' => _PRES_PU_NEWS_A, 'tone' => 'primary', 'has_date' => (bool)$news['last'],
+                'href' => getSeoUrl(['name' => $news['type']->name] + ($news['last'] ? ['op' => 'view', 'id' => $news['last']->id, 'title' => $news['last']->title] : [])),
+            ]] : []),
             [
                 'icon' => getIconName('forum'), 'title' => _PRES_PU_FORUM, 'over' => _PRES_PU_FORUM_S, 'when' => $ttime ? format_time($ttime, _DATESTRING) : '',
                 'heading' => $ttitle ?: _PRES_PU_NONE, 'text' => _PRES_PU_FORUM_P, 'link' => _PRES_PU_FORUM_A, 'tone' => 'accent', 'has_date' => (bool)$ttime,
                 'href' => $tid ? 'index.php?name=forum&op=view&id='.$tid : 'index.php?name=forum',
             ],
+            ...($docs['type'] ? [[
+                'icon' => getIconName('pages'), 'title' => _PRES_PU_PAGES, 'over' => _PRES_PU_PAGES_S, 'when' => _PRES_PU_PAGES_T,
+                'heading' => sprintf(_PRES_PU_PAGES_N, $docs['num'], $docs['cats']), 'text' => _PRES_PU_PAGES_P, 'link' => _PRES_PU_PAGES_A,
+                'tone' => 'success', 'href' => getSeoUrl(['name' => $docs['type']->name]), 'has_date' => false,
+            ]] : []),
+            ...($files['type'] ? [[
+                'icon' => getIconName('files'), 'title' => _PRES_PU_FILES, 'over' => _PRES_PU_FILES_S, 'when' => _PRES_PU_FILES_T,
+                'heading' => sprintf(_PRES_PU_FILES_N, $files['num'], $files['cats']), 'text' => _PRES_PU_FILES_P, 'link' => _PRES_PU_FILES_A,
+                'tone' => 'warning', 'href' => getSeoUrl(['name' => $files['type']->name]), 'has_date' => false,
+            ]] : []),
         ],
         'monitor' => [
             'over' => _PRES_PU_MON_S, 'title' => _PRES_PU_MON, 'text' => _PRES_PU_MON_P, 'has_monitor' => $hasmon, 'off' => _PRES_PU_MON_OFF,

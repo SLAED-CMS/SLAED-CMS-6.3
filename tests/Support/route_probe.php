@@ -4,10 +4,14 @@
 # License: MIT
 # Website: slaed.net
 
-# CLI probe for stage S13 of docs/node: the public and administrative routes of Node answered by the real index.php and admin.php over real HTTP
-# It builds one disposable MariaDB database from the shipped table.sql, a scratch copy of the configuration that registers three types, a scratch upload root with the
+# CLI probe for stages S13 and S14 of docs/node: the public and administrative routes of Node answered by the real index.php and admin.php over real HTTP
+# It builds one disposable MariaDB database from the shipped table.sql, a scratch copy of the configuration that registers four types, a scratch upload root with the
 # guards of the release, and serves the tree with the built-in server and tests/Support/route_web.php as router; every exchange is a real request with its own cookies
 # The report answers what each exchange returned and what the database, the cache and the files hold afterwards; nothing touches the site database or directories
+# The second argument support runs the comments of Node and the private requests of the support type instead of the routes of S13; the child modes comments and ext
+# boot the core on the same scratch configuration and database as one visitor and ask the comment subsystem and the class NodeSupport directly
+# The argument sync runs the external materials of stage S15 with two types of the extension sync; its child mode syncext asks NodeSync with a scripted transport
+# The argument integ runs the integrations of stage S16 - rating, favorites, poll, search, RSS, blocks and their settings - and its child integext the sitemap
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
     exit;
@@ -15,12 +19,16 @@ if (PHP_SAPI !== 'cli') {
 error_reporting(E_ALL);
 ini_set('display_errors', '0');
 $rwork = str_replace('\\', '/', (string)($argv[1] ?? sys_get_temp_dir().'/slaed_node_route'));
-if (($argv[2] ?? '') === 'view') {
+if (in_array($argv[2] ?? '', ['view', 'comments', 'ext', 'syncext', 'integext'], true)) {
     $probework = $rwork.'/child';
+    if ($argv[2] === 'syncext') define('COUNTER_DIR', $rwork.'/counter');
     foreach (['CONFIG_DIR' => 'config', 'BACKUP_DIR' => 'backup', 'CACHE_DIR' => 'cache', 'UPLOADS_DIR' => 'uploads'] as $rkey => $rdir) define($rkey, $rwork.'/'.$rdir);
     require_once __DIR__.'/probe_boot.php';
+    if (($argv[2] ?? '') === 'comments') setRouteChild((string)($argv[3] ?? ''));
     require_once BASE_DIR.'/core/system.php';
-    echo json_encode(getRouteViewData());
+    $rchild = ['view' => 'getRouteViewData', 'comments' => 'getRouteCommentData', 'ext' => 'getRouteExtData', 'syncext' => 'getRouteSyncData',
+        'integext' => 'getRouteIntegData'][$argv[2]];
+    echo json_encode($rchild());
     exit;
 }
 if (!defined('BASE_DIR')) define('BASE_DIR', str_replace('\\', '/', dirname(__DIR__, 2)));
@@ -118,12 +126,18 @@ function addRouteConfig(string $work, string $base, int $port): void {
         'features' => getRouteFeatures(['categories', 'comments', 'submit', 'moderation', 'related']),
         'assets' => ['cover' => getRouteRole('Cover', 'image', ['image'], 1, false, false, 0), 'files' => getRouteRole('Files', 'download', [], 3, true, true, 1)],
     ];
+    $help = ['version' => 1, 'list' => ['limit' => 20, 'show' => ['category', 'date']], 'view' => ['mode' => 'support'],
+        'features' => getRouteFeatures(['categories', 'comments', 'submit']), 'workflow' => ['notify' => ['pending' => false, 'result' => false]], 'ext' => ['mail' => true]];
     $data = require BASE_DIR.'/config/node.php';
-    $data['node']['types'] = ['docs' => ['version' => 1, 'features' => getRouteFeatures([])], 'news' => $news, 'off' => ['version' => 1, 'features' => getRouteFeatures([])]];
+    $data['node']['types'] = ['docs' => ['version' => 1, 'features' => getRouteFeatures([])], 'help' => $help, 'news' => $news, 'off' => ['version' => 1,
+        'features' => getRouteFeatures([])]];
     setRouteFile($work.'/config/node.php', $data);
+    $data = require BASE_DIR.'/config/comments.php';
+    $data['comments'] = array_replace($data['comments'], ['send' => '0', 'anonpost' => '1', 'edit' => '600']);
+    setRouteFile($work.'/config/comments.php', $data);
     $data = require BASE_DIR.'/config/uploads.php';
     $rate = require BASE_DIR.'/config/ratings.php';
-    foreach (['news', 'docs', 'off'] as $name) {
+    foreach (['news', 'docs', 'off', 'help'] as $name) {
         $data['uploads'][$name] = $data['uploads']['all'];
         $rate['ratings']['node.'.$name] = ['active' => '1', 'period' => '2592000', 'detail' => '1', 'guests' => '1'];
     }
@@ -131,23 +145,26 @@ function addRouteConfig(string $work, string $base, int $port): void {
     setRouteFile($work.'/config/ratings.php', $rate);
 }
 
-# The rows of the disposable database: a group, three accounts, four administrators, two categories of news, the three types, their materials and resources
+# The rows of the disposable database: a group, four accounts, five administrators, two categories of news and one of help, the four types, their materials and resources
+# helper is a site account and the subscribed administrator of help at once; root and moder are subscribed as well, so a notice that reaches a wrong reader shows up
 function addRouteRows(PDO $pdo): void {
     $pre = RPREF.'_';
     $pdo->exec('INSERT INTO '.$pre.'groups (id, name, intro, points, extra) VALUES (1, \'club\', \'\', 0, 1)');
     $pdo->exec('INSERT INTO '.$pre.'users (id, name, email, password, block, warnings, field, grp, points, ip) VALUES'
         .' (2, \'anna\', \'anna@probe.test\', \'hash-anna\', \'\', \'\', \'\', 1, 0, \'127.0.0.1\'),'
         .' (3, \'boris\', \'boris@probe.test\', \'hash-boris\', \'\', \'\', \'\', 0, 0, \'127.0.0.1\'),'
-        .' (4, \'clara\', \'clara@probe.test\', \'hash-clara\', \'\', \'\', \'\', 0, 0, \'127.0.0.1\')');
-    $pdo->exec('INSERT INTO '.$pre.'admins (id, name, email, password, super, modules, ip) VALUES'
-        .' (1, \'root\', \'root@probe.test\', \'hash-root\', 1, \'\', \'127.0.0.1\'),'
-        .' (2, \'moder\', \'moder@probe.test\', \'hash-moder\', 0, \'node-news\', \'127.0.0.1\'),'
-        .' (3, \'boss\', \'boss@probe.test\', \'hash-boss\', 0, \'node\', \'127.0.0.1\'),'
-        .' (4, \'docsman\', \'docsman@probe.test\', \'hash-docsman\', 0, \'node-docs\', \'127.0.0.1\')');
+        .' (4, \'clara\', \'clara@probe.test\', \'hash-clara\', \'\', \'\', \'\', 0, 0, \'127.0.0.1\'),'
+        .' (5, \'helper\', \'helper@probe.test\', \'hash-helper\', \'\', \'\', \'\', 0, 0, \'127.0.0.1\')');
+    $pdo->exec('INSERT INTO '.$pre.'admins (id, name, email, password, super, smail, modules, ip) VALUES'
+        .' (1, \'root\', \'root@probe.test\', \'hash-root\', 1, 1, \'\', \'127.0.0.1\'),'
+        .' (2, \'moder\', \'moder@probe.test\', \'hash-moder\', 0, 1, \'node-news\', \'127.0.0.1\'),'
+        .' (3, \'boss\', \'boss@probe.test\', \'hash-boss\', 0, 0, \'node\', \'127.0.0.1\'),'
+        .' (4, \'docsman\', \'docsman@probe.test\', \'hash-docsman\', 0, 0, \'node-docs\', \'127.0.0.1\'),'
+        .' (5, \'helper\', \'helper@probe.test\', \'hash-helper\', 0, 1, \'node-help,comments\', \'127.0.0.1\')');
     $pdo->exec('INSERT INTO '.$pre.'categories (id, modul, title, intro, pread, ppost, lang) VALUES (1, \'news\', \'Open\', \'\', \'0|0\', \'1|0\', \'\'),'
-        .' (2, \'news\', \'Members\', \'\', \'1|0\', \'1|0\', \'\')');
+        .' (2, \'news\', \'Members\', \'\', \'1|0\', \'1|0\', \'\'), (3, \'help\', \'Desk\', \'\', \'1|0\', \'1|0\', \'\')');
     $pdo->exec('INSERT INTO '.$pre.'node_types (id, name, title, intro, ext, active, sort, version) VALUES (1, \'news\', \'News\', \'\', \'\', 1, 10, 1),'
-        .' (2, \'docs\', \'Docs\', \'\', \'\', 1, 20, 1), (3, \'off\', \'Off\', \'\', \'\', 0, 30, 1)');
+        .' (2, \'docs\', \'Docs\', \'\', \'\', 1, 20, 1), (3, \'off\', \'Off\', \'\', \'\', 0, 30, 1), (4, \'help\', \'Help\', \'\', \'support\', 1, 40, 1)');
     $rows = [
         101 => [1, 1, 2, 'Alpha', 2, '2026-01-01 10:00:00', 'Body with [attach=att-aaaaaaaaaa.png align=left title=att]'],
         102 => [1, 0, 2, 'Beta', 2, '2026-01-02 10:00:00', 'Body of beta'],
@@ -171,7 +188,7 @@ function addRouteFiles(string $work): void {
     $guard = (string)file_get_contents(BASE_DIR.'/uploads/index.html');
     $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==');
     file_put_contents($work.'/uploads/index.html', $guard);
-    foreach (['news', 'docs', 'off'] as $name) {
+    foreach (['news', 'docs', 'off', 'help'] as $name) {
         mkdir($work.'/uploads/'.$name.'/thumb', 0777, true);
         file_put_contents($work.'/uploads/'.$name.'/index.html', $guard);
         file_put_contents($work.'/uploads/'.$name.'/.htaccess', 'deny from all');
@@ -553,6 +570,475 @@ function getRouteViewData(): array {
     return $out;
 }
 
+# Stand in for one visitor of a child process before the core boots: the account cookie and the administrator session of the seeded accounts
+function setRouteChild(string $who): void {
+    $glob = require CONFIG_DIR.'/global.php';
+    $users = ['anna' => '2:anna:hash-anna', 'boris' => '3:boris:hash-boris', 'helper' => '5:helper:hash-helper'];
+    $admins = ['root' => '1:root:hash-root', 'docsman' => '4:docsman:hash-docsman', 'helper' => '5:helper:hash-helper'];
+    if (isset($users[$who])) $_COOKIE[$glob['user_c'].'-account'] = base64_encode($users[$who]);
+    if (session_status() === PHP_SESSION_NONE) session_start();
+    if (isset($admins[$who])) $_SESSION[$glob['admin_c']] = base64_encode($admins[$who]);
+}
+
+# The comment reads of one visitor in a child process: the moderation list and its module selector, and the profile feed of anna
+function getRouteCommentData(): array {
+    global $com;
+    $ids = fn(array $rows): array => array_map(fn($v) => $v['modul'].':'.$v['cid'], $rows);
+    return [
+        'admin' => array_values(array_unique($ids($com->getAdminList(CommentStatus::Published, '', 2, '', 1)['rows']))),
+        'mods' => $com->getModuleList(),
+        'feed' => array_values(array_unique($ids($com->getUserList(2, 25)))),
+    ];
+}
+
+# One call of the class NodeSupport answered as its result or the code and message of its refusal
+function getRouteCall(Closure $work): array {
+    try {
+        return ['ok' => true, 'value' => $work()];
+    } catch (NodeException $err) {
+        return ['ok' => false, 'code' => $err->getCode(), 'msg' => $err->getMessage()];
+    }
+}
+
+# The class NodeSupport asked directly with explicit contexts: the configuration it accepts, the maps it checks, the scope of each reader, the closed actions,
+# the refusals of its commands, and a write of the core that its hooks take back as a whole
+function getRouteExtData(): array {
+    global $db, $conf, $fld, $pnt;
+    $root = new NodeContext(0, [], 1, [], true, true, '127.0.0.1', '');
+    $anna = new NodeContext(2, [1], 0, [], false, false, '127.0.0.1', '');
+    $guest = new NodeContext(0, [], 0, [], false, false, '127.0.0.1', '');
+    $task = new NodeContext(0, [], 0, [], false, false, '', '', true);
+    $help = (new NodeQuery($db, $root, $fld))->getNodeType('help');
+    $set = $help->settings;
+    $ext = new NodeSupport($db, $root);
+    $tryconf = fn(array $cfg, array $over = []): array => getRouteCall(fn() => $ext->filterNodeConfig($cfg, array_replace_recursive($set, $over), []));
+    $out = ['config' => [
+        'good' => $tryconf(['mail' => false]),
+        'empty' => $tryconf([]),
+        'number' => $tryconf(['mail' => 1]),
+        'extra' => $tryconf(['mail' => true, 'copy' => true]),
+        'rating' => $tryconf(['mail' => true], ['features' => ['rating' => true]]),
+        'moderation' => $tryconf(['mail' => true], ['features' => ['moderation' => true]]),
+        'search' => $tryconf(['mail' => true], ['integrations' => ['search' => true]]),
+        'guests' => $tryconf(['mail' => true], ['workflow' => ['access' => 'all']]),
+        'mode' => $tryconf(['mail' => true], ['view' => ['mode' => 'default']]),
+    ]];
+    $keep = $conf['node']['support'];
+    $maps = ['swap' => ['state' => ['staff' => 0, 'author' => 1, 'closed' => 5]], 'order' => ['prio' => ['low' => 3, 'normal' => 1, 'high' => 2, 'urgent' => 0]],
+        'lost' => ['state' => ['staff' => 0, 'author' => 1]], 'text' => ['prio' => ['low' => '0', 'normal' => 1, 'high' => 2, 'urgent' => 3]]];
+    foreach ($maps as $key => $over) {
+        $conf['node']['support'] = array_replace($keep, $over);
+        $out['maps'][$key] = getRouteCall(fn() => $ext->filterNodeConfig(['mail' => true], $set, []));
+    }
+    $conf['node']['support'] = $keep;
+    $out['scope'] = [(new NodeSupport($db, $root))->getNodeScope($help), (new NodeSupport($db, $anna))->getNodeScope($help), (new NodeSupport($db, $guest))->getNodeScope($help)];
+    $tgt = (new NodeQuery($db, $root, $fld))->getNodeTarget('help', (int)$db->getSqlQuery('SELECT MIN(id) FROM '.PREFIX_DB.'_nodes WHERE tid = 4')->fetchColumn());
+    foreach (['comment', 'rate', 'favorite', 'asset', 'report', 'vote', 'Comment'] as $one) $out['actions'][$one] = getRouteCall(fn() => $ext->checkNodeAction($help, $tgt, $one));
+    $out['data'] = getRouteCall(fn() => $ext->filterNodeData($help, ['x' => 1]));
+    $out['notrans'] = getRouteCall(fn() => $ext->updateNodeAction($help, $tgt, 'comment'));
+    $out['taskcard'] = getRouteCall(fn() => (new NodeSupport($db, $task))->updateNodeSupport($tgt->id, 0, 0, 1, 1));
+    $out['ownerlist'] = getRouteCall(fn() => (new NodeSupport($db, $anna))->getNodeSupportList($help, 1, 10));
+    $out['badlist'] = [getRouteCall(fn() => $ext->getNodeSupportList($help, 1, 1000)), getRouteCall(fn() => $ext->getNodeSupportList($help, 1, 10, 7)),
+        getRouteCall(fn() => $ext->getNodeSupportList($help, 0, 10))];
+    $count = fn(): int => (int)$db->getSqlQuery('SELECT COUNT(*) FROM '.PREFIX_DB.'_nodes')->fetchColumn();
+    $was = $count();
+    $input = new NodeInput(3, [], '', 'Nobody owns it', 'intro', 'body', [], 0, false, CommentMode::Open, false, null, null, [], [], []);
+    $out['noowner'] = [getRouteCall(fn() => (new NodeService($db, $root, $fld, $pnt, $ext))->addNode($help, $input, NodeStatus::Published)), $count() - $was];
+    $one = (new NodeQuery($db, $root, $fld))->setNodeExtension($ext)->getNode($tgt->id, $help);
+    $move = new NodeInput($one->cid, [], '', $one->title, $one->intro, (string)$one->body, [], 0, false, CommentMode::Moderated, false, $one->pubdate, null, [], [], []);
+    $out['comon'] = [getRouteCall(fn() => (new NodeService($db, $root, $fld, $pnt, $ext))->updateNode($one->id, $move, $one->version)),
+        (int)$db->getSqlQuery('SELECT comon FROM '.PREFIX_DB.'_nodes WHERE id = :id', ['id' => $one->id])->fetchColumn()];
+    return $out;
+}
+
+# The comments of Node and the private requests of support over real HTTP: the guest refusal, the requests of two owners, their notices, the replies of the owner and of
+# the staff with the waiting side and the counter, the privacy of every reader, the close and reopen of the owner, the working card and the queue of the operators
+function getRouteSupport(PDO $pdo): array {
+    $pre = RPREF.'_';
+    $code = fn(string $who, string $path, string $method = 'GET'): int => getRouteReply($who, $method, $path)['code'];
+    $mails = fn(): array => $pdo->query('SELECT email, title, body FROM '.$pre.'mail ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
+    $card = fn(int $id): array => array_map('intval', $pdo->query('SELECT aid, state, prio, version FROM '.$pre.'node_support WHERE nid = '.$id)->fetch(PDO::FETCH_ASSOC) ?: []);
+    $when = fn(int $id): string => (string)$pdo->query('SELECT activity FROM '.$pre.'node_support WHERE nid = '.$id)->fetchColumn();
+    $rows = fn(int $id): array => array_map('intval', $pdo->query('SELECT status FROM '.$pre.'comment WHERE modul = \'help\' AND cid = '.$id.' ORDER BY id')
+        ->fetchAll(PDO::FETCH_COLUMN));
+    $since = function (int $was) use ($mails): array {
+        $list = array_slice($mails(), $was);
+        $to = array_column($list, 'email');
+        sort($to);
+        return ['to' => $to, 'text' => implode(' ', array_column($list, 'body'))];
+    };
+    $open = function (string $who, string $title) use ($pdo, $pre): array {
+        $tok = getRouteToken(getRouteReply($who, 'GET', 'index.php?name=help&op=add')['body'], 'name="action"');
+        $made = getRouteReply($who, 'POST', 'index.php?name=help&op=add', ['title' => $title, 'intro' => $title.' private intro', 'body' => $title.' private body', 'cid' => '3',
+            'action' => 'submit', 'token' => $tok]);
+        return [$made['code'], (int)$pdo->query('SELECT id FROM '.$pre.'nodes WHERE title = '.$pdo->quote($title))->fetchColumn()];
+    };
+    $ctok = fn(string $html): string => preg_match('#id="formcsave".*?name="token"\s+value="([a-f0-9]{64})"#s', $html, $hit) ? $hit[1] : '';
+    $reply = function (string $who, int $id, string $text) use ($ctok) {
+        $page = getRouteReply($who, 'GET', 'index.php?name=help&op=view&id='.$id);
+        $tok = $ctok($page['body']) ?: getRouteToken($page['body'], 'op=support');
+        return getRouteReply($who, 'POST', 'index.php?go=1&op=addComment&id='.$id.'&mod=help&com=1', ['text' => $text, 'name' => '', 'token' => $tok]);
+    };
+    $out = ['guest' => [$code('', 'index.php?name=help'), $code('', 'index.php?name=help&op=add'), $code('', 'index.php?name=help&op=view&id=1')]];
+    $was = count($mails());
+    [$made, $aid] = $open('anna', 'Anna request');
+    $new = $since($was);
+    $out['open'] = [$made, (int)getRouteCol($pdo, $aid, 'status'), (int)getRouteCol($pdo, $aid, 'comon'), $card($aid), $new['to'], str_contains($new['text'], 'Anna request'),
+        str_contains($new['text'], 'private'), str_contains($new['text'], 'op=view&amp;id='.$aid)];
+    [, $bid] = $open('boris', 'Boris request');
+    $list = fn(string $who): string => getRouteReply($who, 'GET', 'index.php?name=help')['body'];
+    $out['lists'] = [
+        'anna' => [str_contains($list('anna'), 'Anna request'), str_contains($list('anna'), 'Boris request')],
+        'boris' => [str_contains($list('boris'), 'Anna request'), str_contains($list('boris'), 'Boris request')],
+        'helper' => [str_contains($list('helper'), 'Anna request'), str_contains($list('helper'), 'Boris request')],
+        'robots' => str_contains($list('anna'), 'content="noindex, nofollow"'),
+        'chip' => str_contains($list('anna'), 'bi-life-preserver'),
+    ];
+    $page = getRouteReply('anna', 'GET', 'index.php?name=help&op=view&id='.$aid);
+    $out['view'] = [$page['code'], str_contains($page['body'], 'name="state" value="2"'), str_contains($page['body'], 'id="formcsave"'), str_contains($page['body'],
+        'content="noindex, nofollow"'),
+        $code('boris', 'index.php?name=help&op=view&id='.$aid), $code('moder', 'index.php?name=help&op=view&id='.$aid), $code('helper', 'index.php?name=help&op=view&id='.$aid),
+        str_contains(getRouteReply('helper', 'GET', 'index.php?name=help&op=view&id='.$aid)['body'], 'name="state" value="2"')];
+    $was = count($mails());
+    $one = $reply('anna', $aid, 'Anna reply one');
+    $new = $since($was);
+    $cid = (int)$pdo->query('SELECT MAX(id) FROM '.$pre.'comment WHERE modul = \'help\'')->fetchColumn();
+    $pts = $pdo->query('SELECT action, scope, source FROM '.$pre.'points WHERE uid = 2 AND action = \'comment\' ORDER BY id')->fetchAll(PDO::FETCH_NUM);
+    $out['owner'] = [$one['code'], $rows($aid), (int)getRouteCol($pdo, $aid, 'comnum'), $card($aid), $new['to'], str_contains($new['text'], 'Anna reply one'), $pts];
+    $was = count($mails());
+    $two = $reply('helper', $aid, 'Helper reply one');
+    $new = $since($was);
+    $out['staff'] = [$two['code'], $rows($aid), (int)getRouteCol($pdo, $aid, 'comnum'), $card($aid), $new['to'], str_contains($new['text'], 'Helper reply one')];
+    $btok = $ctok(getRouteReply('boris', 'GET', 'index.php?name=help&op=view&id='.$bid)['body']);
+    $steal = getRouteReply('boris', 'POST', 'index.php?go=1&op=addComment&id='.$aid.'&mod=help&com=1', ['text' => 'Boris intrudes', 'name' => '', 'token' => $btok]);
+    $out['foreign'] = [$steal['code'], $rows($aid), (int)getRouteCol($pdo, $aid, 'comnum')];
+    $atok = $ctok(getRouteReply('anna', 'GET', 'index.php?name=help&op=view&id='.$aid)['body']);
+    $frag = fn(string $who, string $tok, string $op): string => getRouteReply($who, 'GET', 'index.php?go=1&op='.$op.'&id='.(($op === 'getCommentPage') ? $aid.'&mod=help&com=1'
+        : $cid.'&skip=0').'&token='.$tok)['body'];
+    $out['fragments'] = [str_contains($frag('anna', $atok, 'getCommentPage'), 'Anna reply one'), str_contains($frag('boris', $btok, 'getCommentPage'), 'Anna reply one'),
+        str_contains($frag('boris', $btok, 'getCommentBranch'), 'reply'), str_contains($frag('boris', $btok, 'getCommentPage'), 'Helper reply one')];
+    $prof = fn(string $who): string => getRouteReply($who, 'GET', 'index.php?name=account&op=view&uname=anna')['body'];
+    $out['profile'] = [str_contains($prof('boris'), 'Anna reply one'), str_contains($prof('anna'), 'Anna reply one'), str_contains($prof('helper'), 'Anna reply one')];
+    $page = getRouteReply('anna', 'GET', 'index.php?name=help&op=view&id='.$aid);
+    $tok = getRouteToken($page['body'], 'op=support');
+    $ver = getRouteField($page['body'], 'version');
+    $before = $when($aid);
+    sleep(1);
+    $was = count($mails());
+    $shut = getRouteReply('anna', 'POST', 'index.php?name=help&op=support&id='.$aid, ['token' => $tok, 'version' => $ver, 'state' => '2']);
+    $out['close'] = [$shut['code'], $card($aid), $when($aid) !== $before, count($mails()) - $was];
+    $out['closed'] = [
+        getRouteReply('anna', 'POST', 'index.php?name=help&op=support&id='.$aid, ['token' => $tok, 'version' => $ver, 'state' => '2'])['code'],
+        getRouteReply('anna', 'GET', 'index.php?name=help&op=support&id='.$aid)['code'],
+        getRouteReply('anna', 'POST', 'index.php?name=help&op=support&id='.$aid, ['version' => (string)$card($aid)['version'], 'state' => '0'])['code'],
+        getRouteReply('boris', 'POST', 'index.php?name=help&op=support&id='.$aid, ['token' => $btok, 'version' => (string)$card($aid)['version'], 'state' => '0'])['code'],
+        getRouteReply('anna', 'POST', 'index.php?name=news&op=support&id=101', ['token' => $tok, 'version' => '1', 'state' => '0'])['code'],
+    ];
+    $late = $reply('anna', $aid, 'Anna after close');
+    $shown = getRouteReply('anna', 'GET', 'index.php?name=help&op=view&id='.$aid)['body'];
+    $out['locked'] = [$late['code'], $rows($aid), str_contains($shown, 'id="formcsave"'), str_contains($shown, 'Anna reply one'), str_contains($shown, 'name="state" value="0"')];
+    $out['author'] = getRouteReply('anna', 'POST', 'index.php?name=help&op=support&id='.$aid, ['token' => $tok, 'version' => (string)$card($aid)['version'],
+        'state' => '1'])['code'];
+    $again = getRouteReply('anna', 'POST', 'index.php?name=help&op=support&id='.$aid, ['token' => $tok, 'version' => (string)$card($aid)['version'], 'state' => '0']);
+    $out['reopen'] = [$again['code'], $card($aid)];
+    $htok = $ctok(getRouteReply('helper', 'GET', 'index.php?name=help&op=view&id='.$aid)['body']);
+    $staff = getRouteReply('helper', 'POST', 'index.php?name=help&op=support&id='.$aid, ['token' => $htok, 'version' => (string)$card($aid)['version'], 'state' => '1']);
+    $out['staffswitch'] = [$staff['code'], $card($aid)];
+    $desk = getRouteReply('helper', 'GET', 'admin.php?name=node&op=support&id='.$aid);
+    $out['card'] = [$desk['code'], str_contains($desk['body'], 'name="aid"'), str_contains($desk['body'], 'Anna reply one'),
+        str_contains($desk['body'], 'Anna request private body'), $code('moder', 'admin.php?name=node&op=support&id='.$aid),
+        $code('docsman', 'admin.php?name=node&op=support&id='.$aid), $code('helper', 'admin.php?name=node&op=support&id=101')];
+    $tok = getRouteToken($desk['body'], 'support');
+    $ver = getRouteField($desk['body'], 'version');
+    $before = $when($aid);
+    $was = count($mails());
+    $post = ['name' => 'node', 'op' => 'support', 'id' => (string)$aid, 'token' => $tok, 'version' => $ver, 'state' => '0', 'prio' => '3', 'aid' => '5'];
+    $set = getRouteReply('helper', 'POST', 'admin.php', $post);
+    $out['assign'] = [$set['code'], $card($aid), $when($aid) === $before, count($mails()) - $was];
+    $out['refuse'] = [getRouteReply('helper', 'POST', 'admin.php', array_replace($post, ['version' => (string)$card($aid)['version'], 'aid' => '2']))['code'], $card($aid),
+        getRouteReply('helper', 'POST', 'admin.php', $post)['code'], getRouteReply('helper', 'POST', 'admin.php', array_replace($post, ['token' => '']))['code'], $card($aid)];
+    $queue = fn(string $query): string => getRouteReply('helper', 'GET', 'admin.php?name=node&type=help'.$query)['body'];
+    $full = $queue('');
+    $out['queue'] = [
+        'both' => [str_contains($full, 'Anna request'), str_contains($full, 'Boris request'), strpos($full, 'Anna request') < strpos($full, 'Boris request')],
+        'closed' => str_contains($queue('&state=2'), 'Anna request'),
+        'mine' => [str_contains($queue('&state=all&aid=5'), 'Anna request'), str_contains($queue('&state=all&aid=5'), 'Boris request')],
+        'free' => [str_contains($queue('&state=all&aid=0'), 'Anna request'), str_contains($queue('&state=all&aid=0'), 'Boris request')],
+        'bad' => getRouteReply('helper', 'GET', 'admin.php?name=node&type=help&state=abc')['code'],
+        'moder' => $code('moder', 'admin.php?name=node&type=help'),
+        'single' => $code('helper', 'admin.php?name=node'),
+    ];
+    $was = count($mails());
+    $reply('anna', $aid, 'Anna reply two');
+    $out['assigned'] = [$since($was)['to'], $card($aid)];
+    $admin = getRouteReply('root', 'GET', 'admin.php?name=comments');
+    $htok = $ctok(getRouteReply('helper', 'GET', 'index.php?name=help&op=view&id='.$aid)['body']);
+    $hide = getRouteReply('helper', 'POST', 'index.php?go=1&op=updateCommentStatus&id='.$cid.'&typ=0&numb=1', ['token' => $htok]);
+    $out['hide'] = [$hide['code'], (int)getRouteCol($pdo, $aid, 'comnum'), $card($aid)['state']];
+    $show = getRouteReply('helper', 'POST', 'index.php?go=1&op=updateCommentStatus&id='.$cid.'&typ=1&numb=1', ['token' => $htok]);
+    $out['show'] = [$show['code'], (int)getRouteCol($pdo, $aid, 'comnum'), $card($aid)['state']];
+    $gone = getRouteReply('helper', 'POST', 'index.php?go=1&op=deleteComment&id='.$cid, ['token' => $htok]);
+    $pts = $pdo->query('SELECT COUNT(*) FROM '.$pre.'points WHERE uid = 2 AND action = \'comment\' AND rid > 0')->fetchColumn();
+    $out['delete'] = [$gone['code'], (int)getRouteCol($pdo, $aid, 'comnum'), (int)$pts];
+    $out['adminlist'] = [$admin['code'], str_contains($admin['body'], 'Anna reply')];
+    $out['children'] = [];
+    foreach (['docsman', 'helper', 'boris', 'anna'] as $who) {
+        $raw = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg(__FILE__).' '.escapeshellarg($GLOBALS['rwork']).' comments '.$who.' 2>&1');
+        $out['children'][$who] = json_decode($raw, true) ?? $raw;
+    }
+    $out['ext'] = json_decode((string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg(__FILE__).' '.escapeshellarg($GLOBALS['rwork']).' ext 2>&1'), true);
+    $out['ids'] = [$aid, $bid, $cid];
+    return $out;
+}
+
+# The two types of the extension sync for its own run: content, active, and feeds, disabled, with their upload guards, rating rules and the scheduler switched on
+function addRouteSyncTypes(PDO $pdo, string $work): void {
+    $pdo->exec('INSERT INTO '.RPREF.'_node_types (id, name, title, intro, ext, active, sort, version) VALUES (5, \'content\', \'Content\', \'\', \'sync\', 1, 50, 1),'
+        .' (6, \'feeds\', \'Feeds\', \'\', \'sync\', 0, 60, 1)');
+    $data = require $work.'/config/node.php';
+    foreach (['content', 'feeds'] as $name) $data['node']['types'][$name] = ['version' => 1, 'features' => getRouteFeatures([])];
+    setRouteFile($work.'/config/node.php', $data);
+    $data = require $work.'/config/uploads.php';
+    $rate = require $work.'/config/ratings.php';
+    $guard = (string)file_get_contents(BASE_DIR.'/uploads/index.html');
+    foreach (['content', 'feeds'] as $name) {
+        $data['uploads'][$name] = $data['uploads']['all'];
+        $rate['ratings']['node.'.$name] = ['active' => '1', 'period' => '2592000', 'detail' => '1', 'guests' => '1'];
+        mkdir($work.'/uploads/'.$name.'/thumb', 0777, true);
+        file_put_contents($work.'/uploads/'.$name.'/index.html', $guard);
+        file_put_contents($work.'/uploads/'.$name.'/.htaccess', 'deny from all');
+    }
+    setRouteFile($work.'/config/uploads.php', $data);
+    setRouteFile($work.'/config/ratings.php', $rate);
+    $data = require $work.'/config/scheduler.php';
+    $data['scheduler']['active'] = '1';
+    setRouteFile($work.'/config/scheduler.php', $data);
+}
+
+# One source row of the probe as whole numbers and texts; the due time is measured from the last check (gap) and from the last change of the material (lag),
+# both written by the clock of the site, because the session of the probe may run in another time zone than the connection of the site
+function getRouteSource(PDO $pdo, int $nid): array {
+    $sql = 'SELECT s.url, s.refresh, s.etag, s.modified, s.fails, s.error, s.checked IS NOT NULL AS seen, s.synced IS NOT NULL AS done, s.due IS NULL AS never,'
+        .' TIMESTAMPDIFF(SECOND, s.checked, s.due) AS gap, TIMESTAMPDIFF(SECOND, n.updated, s.due) AS lag FROM '.RPREF.'_node_sync AS s'
+        .' INNER JOIN '.RPREF.'_nodes AS n ON n.id = s.nid WHERE s.nid = '.$nid;
+    $row = $pdo->query($sql)->fetch(PDO::FETCH_ASSOC);
+    if (!$row) return [];
+    foreach (['refresh', 'fails', 'seen', 'done', 'never'] as $key) $row[$key] = (int)$row[$key];
+    foreach (['gap', 'lag'] as $key) $row[$key] = ($row[$key] === null) ? null : (int)$row[$key];
+    return $row;
+}
+
+# The external materials over real HTTP: the administrative form takes a source instead of a body, a new period keeps the validators and a new address drops them,
+# the manual check refuses what it must and keeps the text on a failure, the public page never shows the source, the scheduler carries and runs nodesync with its limit;
+# the child mode syncext then drives NodeSync with a scripted transport, and the page cache has to drop the old text of a material once the child changed it
+function getRouteSync(PDO $pdo, string $work): array {
+    $pre = RPREF.'_';
+    $code = fn(string $who, string $path, string $method = 'GET'): int => getRouteReply($who, $method, $path)['code'];
+    $count = fn(): int => (int)$pdo->query('SELECT COUNT(*) FROM '.$pre.'nodes WHERE tid = 5')->fetchColumn();
+    $idof = fn(string $title): int => (int)$pdo->query('SELECT id FROM '.$pre.'nodes WHERE title = '.$pdo->quote($title))->fetchColumn();
+    $form = getRouteReply('root', 'GET', 'admin.php?name=node&op=add&type=content');
+    $tok = getRouteToken($form['body'], 'add');
+    $out = ['form' => [$form['code'], str_contains($form['body'], 'name="source"'), str_contains($form['body'], 'name="refresh"'), str_contains($form['body'], 'name="body"')]];
+    $base = ['name' => 'node', 'op' => 'add', 'type' => 'content', 'token' => $tok, 'status' => '2', 'intro' => 'Own intro', 'body' => 'Injected body'];
+    $made = getRouteReply('root', 'POST', 'admin.php', $base + ['title' => 'Feed one', 'source' => ' https://Example.COM:443/feed.xml#top ', 'refresh' => '600']);
+    $aid = $idof('Feed one');
+    $out['add'] = [$made['code'], (string)getRouteCol($pdo, $aid, 'body'), (string)getRouteCol($pdo, $aid, 'intro'), (int)getRouteCol($pdo, $aid, 'status'),
+        getRouteSource($pdo, $aid)];
+    $was = $count();
+    $late = getRouteReply('root', 'POST', 'admin.php', $base + ['title' => 'Bad period', 'source' => 'https://example.com/a.xml', 'refresh' => '299']);
+    $label = preg_match('#<label[^>]*for="f-refresh"[^>]*>\s*([^<]+?)\s*<#', $form['body'], $hit) ? html_entity_decode($hit[1]) : '';
+    $out['named'] = [$label !== '', str_contains(html_entity_decode($late['body']), '('.$label.')')];
+    $out['bad'] = [
+        $late['code'],
+        getRouteReply('root', 'POST', 'admin.php', $base + ['title' => 'Bad scheme', 'source' => 'ftp://example.com/a.xml', 'refresh' => '600'])['code'],
+        getRouteReply('root', 'POST', 'admin.php', $base + ['title' => 'Bad user', 'source' => 'https://me:pw@example.com/a.xml', 'refresh' => '600'])['code'],
+        getRouteReply('root', 'POST', 'admin.php', $base + ['title' => 'No source', 'refresh' => '600'])['code'],
+        getRouteReply('moder', 'POST', 'admin.php', $base + ['title' => 'Foreign', 'source' => 'https://example.com/a.xml', 'refresh' => '600'])['code'],
+        $count() - $was,
+    ];
+    getRouteReply('root', 'POST', 'admin.php', $base + ['title' => 'Feed two', 'source' => 'http://127.0.0.1/two.xml', 'refresh' => '300']);
+    getRouteReply('root', 'POST', 'admin.php', $base + ['title' => 'Feed manual', 'source' => 'https://example.com/manual.xml', 'refresh' => '0']);
+    $bid = $idof('Feed two');
+    $mid = $idof('Feed manual');
+    $out['manual'] = getRouteSource($pdo, $mid);
+    $pdo->exec('UPDATE '.$pre.'node_sync SET etag = \'"v1"\', modified = \'Mon, 01 Jan 2024 00:00:00 GMT\', checked = NOW() - INTERVAL 100 SECOND,'
+        .' synced = NOW() - INTERVAL 100 SECOND WHERE nid = '.$aid);
+    $page = getRouteReply('root', 'GET', 'admin.php?name=node&op=edit&id='.$aid.'&type=content');
+    $flat = (string)preg_replace('/\s+/', ' ', $page['body']);
+    $out['edit'] = [$page['code'], str_contains($flat, 'name="op" value="sync"'), str_contains($flat, 'value="https://example.com/feed.xml"'), str_contains($flat, 'name="body"')];
+    $tok = getRouteToken($page['body'], 'edit');
+    $post = ['name' => 'node', 'op' => 'edit', 'id' => (string)$aid, 'type' => 'content', 'token' => $tok, 'action' => 'save', 'title' => 'Feed one', 'intro' => 'Own intro',
+        'body' => 'Hacked body', 'source' => 'https://example.com/feed.xml'];
+    $one = getRouteReply('root', 'POST', 'admin.php', $post + ['version' => getRouteField($page['body'], 'version'), 'refresh' => '1200']);
+    $out['period'] = [$one['code'], (string)getRouteCol($pdo, $aid, 'body'), getRouteSource($pdo, $aid)];
+    $page = getRouteReply('root', 'GET', 'admin.php?name=node&op=edit&id='.$aid.'&type=content');
+    $two = getRouteReply('root', 'POST', 'admin.php', array_replace($post, ['version' => getRouteField($page['body'], 'version'), 'refresh' => '1200',
+        'source' => 'https://example.org/other.xml']));
+    $out['address'] = [$two['code'], getRouteSource($pdo, $aid)];
+    $page = getRouteReply('root', 'GET', 'admin.php?name=node&op=edit&id='.$aid.'&type=content');
+    $stok = getRouteToken($page['body'], 'sync');
+    $pdo->exec('UPDATE '.$pre.'node_sync SET url = \'https://127.0.0.1/feed.xml\' WHERE nid = '.$aid);
+    $pdo->exec('UPDATE '.$pre.'nodes SET body = \'Kept body\' WHERE id = '.$aid);
+    $sync = ['name' => 'node', 'op' => 'sync', 'id' => (string)$aid, 'type' => 'content', 'token' => $stok];
+    $ver = (int)getRouteCol($pdo, $aid, 'version');
+    $mtok = getRouteToken(getRouteReply('moder', 'GET', 'admin.php?name=node&status=2')['body'], 'status');
+    $btok = getRouteToken(getRouteReply('boss', 'GET', 'admin.php?name=node&op=types')['body'], 'typestatus');
+    $out['refuse'] = [$code('root', 'admin.php?name=node&op=sync&id='.$aid.'&type=content'),
+        getRouteReply('root', 'POST', 'admin.php', array_replace($sync, ['token' => '']))['code'],
+        getRouteReply('root', 'POST', 'admin.php', array_replace($sync, ['id' => '101', 'type' => 'news']))['code'],
+        getRouteReply('moder', 'POST', 'admin.php', array_replace($sync, ['token' => $mtok]))['code'],
+        getRouteReply('boss', 'POST', 'admin.php', array_replace($sync, ['token' => $btok]))['code'], $mtok !== '' && $btok !== '', getRouteSource($pdo, $aid)['fails']];
+    $fail = getRouteReply('root', 'POST', 'admin.php', $sync + ['task' => '1', 'super' => '1']);
+    $first = getRouteSource($pdo, $aid);
+    $again = getRouteReply('root', 'POST', 'admin.php', $sync);
+    $out['fail'] = [$fail['code'], str_contains($fail['body'], '(address)'), (string)getRouteCol($pdo, $aid, 'body'), (int)getRouteCol($pdo, $aid, 'version') - $ver, $first,
+        $again['code'], getRouteSource($pdo, $aid)];
+    $view = getRouteReply('', 'GET', 'index.php?name=content&op=view&id='.$aid);
+    $out['public'] = [$view['code'], str_contains($view['body'], 'Kept body'), str_contains($view['body'], '127.0.0.1/feed')];
+    $pdo->exec('INSERT INTO '.$pre.'nodes (id, tid, cid, uid, aname, ip, title, intro, body, field, status, published) VALUES'
+        .' (501, 5, 0, 0, \'\', \'127.0.0.1\', \'Trashed feed\', \'\', \'\', \'\', 4, NOW()), (601, 6, 0, 0, \'\', \'127.0.0.1\', \'Off feed\', \'\', \'\', \'\', 2, NOW())');
+    $pdo->exec('INSERT INTO '.$pre.'node_sync (nid, url, refresh, due) VALUES (501, \'http://127.0.0.1/trash.xml\', 300, NOW() - INTERVAL 1 HOUR),'
+        .' (601, \'http://127.0.0.1/off.xml\', 300, NOW() - INTERVAL 1 HOUR)');
+    $list = getRouteReply('root', 'GET', 'admin.php?name=scheduler');
+    $job = getRouteReply('root', 'GET', 'admin.php?name=scheduler&op=add&job=nodesync');
+    $pub = getRouteReply('root', 'GET', 'admin.php?name=scheduler&op=add&job=nodepublish');
+    $jtok = getRouteToken($job['body'], 'save');
+    $save = ['name' => 'scheduler', 'op' => 'save', 'job' => 'nodesync', 'type' => 'system', 'token' => $jtok, 'title' => 'Node sync', 'schedule' => '*/5 * * * *',
+        'priority' => '7', 'lock_timeout' => '180', 'active' => '1', 'manual' => '1'];
+    $high = getRouteReply('root', 'POST', 'admin.php', $save + ['limit' => '51']);
+    $cfg = require $work.'/config/scheduler.php';
+    $keep = $cfg['scheduler']['jobs']['nodesync']['settings']['limit'] ?? '';
+    $good = getRouteReply('root', 'POST', 'admin.php', $save + ['limit' => '20']);
+    $cfg = require $work.'/config/scheduler.php';
+    $out['scheduler'] = [$list['code'], str_contains($list['body'], 'Node sync'), str_contains($job['body'], 'name="limit"'), str_contains($job['body'], 'max="50"'),
+        str_contains($pub['body'], 'max="500"'), $high['code'], $keep, $good['code'], $cfg['scheduler']['jobs']['nodesync']['settings']['limit'] ?? '',
+        $cfg['scheduler']['jobs']['nodesync']['system'] ?? ''];
+    $rtok = getRouteToken($list['body'], 'run');
+    $run = getRouteReply('root', 'POST', 'admin.php', ['name' => 'scheduler', 'op' => 'run', 'job' => 'nodesync', 'token' => $rtok]);
+    $file = $work.'/logs/scheduler/nodesync.json';
+    $state = is_file($file) ? (json_decode((string)file_get_contents($file), true) ?: []) : [];
+    $out['run'] = [$run['code'], getRouteSource($pdo, $bid), getRouteSource($pdo, $aid)['fails'], getRouteSource($pdo, 501)['fails'], getRouteSource($pdo, 601)['fails'],
+        getRouteSource($pdo, $mid)['fails'], $state['last_status'] ?? '', $state['last_message'] ?? ''];
+    $pdo->exec('UPDATE '.$pre.'node_sync SET url = \'https://example.com/feed.xml\', etag = \'\', modified = \'\', fails = 0, error = \'\' WHERE nid = '.$aid);
+    $cached = getRouteReply('', 'GET', 'index.php?name=content');
+    $pdo->exec('UPDATE '.$pre.'nodes SET intro = '.$pdo->quote('Quiet intro').' WHERE id = '.$aid);
+    $hit = getRouteReply('', 'GET', 'index.php?name=content');
+    $out['ext'] = json_decode((string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg(__FILE__).' '.escapeshellarg($work).' syncext 2>&1'), true);
+    $fresh = getRouteReply('', 'GET', 'index.php?name=content');
+    $out['cache'] = [str_contains($cached['body'], 'Own intro'), str_contains($hit['body'], 'Own intro'), str_contains($fresh['body'], 'Quiet intro'),
+        str_contains(getRouteReply('', 'GET', 'index.php?name=content&op=view&id='.$aid)['body'], 'Hello feed')];
+    $out['ids'] = [$aid, $bid, $mid];
+    return $out;
+}
+
+# NodeSync asked directly in a child process with explicit contexts and a scripted transport of Feed: the input it accepts, what each reader gets, the results
+# of a fetch - new text, 304, the same text, an error, a concurrent change of either side, a text the column cannot hold - and the queue of the background context
+function getRouteSyncData(): array {
+    global $db, $conf, $fld, $pnt;
+    require_once BASE_DIR.'/core/classes/node/ext/load.php';
+    $root = new NodeContext(0, [], 1, [], true, true, '127.0.0.1', '');
+    $moder = new NodeContext(0, [], 2, ['news'], false, false, '127.0.0.1', '');
+    $anna = new NodeContext(2, [1], 0, [], false, false, '127.0.0.1', '');
+    $task = new NodeContext(0, [], 0, [], false, false, '', '', true);
+    $col = fn(int $id, string $name): string => (string)$db->getSqlQuery('SELECT '.$name.' FROM '.PREFIX_DB.'_nodes WHERE id = :id', ['id' => $id])->fetchColumn();
+    $src = fn(int $id): array => $db->getSqlQuery('SELECT url, etag, modified, fails, error, checked IS NOT NULL AS seen, synced IS NOT NULL AS done,'
+        .' TIMESTAMPDIFF(SECOND, checked, due) AS gap FROM '.PREFIX_DB.'_node_sync WHERE nid = :id', ['id' => $id])->fetch(PDO::FETCH_ASSOC) ?: [];
+    $aid = (int)$db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_nodes WHERE title = \'Feed one\'')->fetchColumn();
+    $bid = (int)$db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_nodes WHERE title = \'Feed two\'')->fetchColumn();
+    $mid = (int)$db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_nodes WHERE title = \'Feed manual\'')->fetchColumn();
+    $type = (new NodeQuery($db, $root, $fld))->getNodeType('content');
+    $gets = [];
+    $replies = [];
+    $send = function (string $op, array $req) use (&$gets, &$replies): array {
+        if ($op === 'resolve') return ['addresses' => ['93.184.216.34']];
+        $gets[] = $req;
+        $one = array_shift($replies) ?? ['code' => 500, 'headers' => [], 'body' => ''];
+        return ($one instanceof Closure) ? $one($req) : $one;
+    };
+    $rss = fn(string $title, array $head = []): array => ['code' => 200, 'headers' => $head + ['Content-Type' => ['application/rss+xml']], 'body' => '<?xml version="1.0"?>'
+        .'<rss version="2.0"><channel><title>C</title><item><title>'.$title.'</title><link>https://example.com/1</link></item></channel></rss>'];
+    $ext = new NodeSync($db, $root, new Feed($conf['rss'], $send));
+    $out = ['config' => [getRouteCall(fn() => $ext->filterNodeConfig([], $type->settings, [])), getRouteCall(fn() => $ext->filterNodeConfig(['x' => 1], $type->settings, []))]];
+    $data = fn(array $in): array => getRouteCall(fn() => $ext->filterNodeData($type, $in));
+    $out['input'] = [
+        'good' => $data(['refresh' => 0, 'url' => ' https://EXAMPLE.com:443/a|b?q=1#top ']),
+        'intl' => $data(['url' => 'https://example.com/feed', 'refresh' => 31536000]),
+        'low' => $data(['url' => 'https://example.com/feed', 'refresh' => 299]),
+        'high' => $data(['url' => 'https://example.com/feed', 'refresh' => 31536001]),
+        'text' => $data(['url' => 'https://example.com/feed', 'refresh' => '600']),
+        'lost' => $data(['url' => 'https://example.com/feed']),
+        'extra' => $data(['url' => 'https://example.com/feed', 'refresh' => 600, 'headers' => []]),
+        'port' => $data(['url' => 'https://example.com:8443/feed', 'refresh' => 600]),
+        'long' => $data(['url' => 'https://example.com/'.str_repeat('a', 2100), 'refresh' => 600]),
+        'anna' => getRouteCall(fn() => (new NodeSync($db, $anna, new Feed($conf['rss'], $send)))->filterNodeData($type, ['url' => 'https://example.com/f', 'refresh' => 600])),
+    ];
+    $out['scope'] = [$ext->getNodeScope($type), getRouteCall(fn() => $ext->checkNodeAction($type, (new NodeQuery($db, $root, $fld))->getNodeTarget('content', $aid), 'comment')),
+        getRouteCall(fn() => $ext->checkNodeAction($type, (new NodeQuery($db, $root, $fld))->getNodeTarget('content', $aid), 'vote'))];
+    $node = (new NodeQuery($db, $root, $fld))->setNodeExtension($ext)->getNode($aid, $type);
+    $out['data'] = [array_keys($ext->getNodeData($type, [$node], 'admin')[$aid] ?? []), $ext->getNodeData($type, [$node], 'view'),
+        (new NodeSync($db, $moder, new Feed($conf['rss'], $send)))->getNodeData($type, [$node], 'admin')];
+    $epoch = fn(): int => is_file(COUNTER_DIR.'/cache.log') ? (int)file_get_contents(COUNTER_DIR.'/cache.log') : 0;
+    $ver = (int)$col($aid, 'version');
+    $was = $epoch();
+    $replies = [$rss('Hello feed', ['ETag' => ['"e1"'], 'Last-Modified' => ['Tue, 02 Jan 2024 00:00:00 GMT']])];
+    $res = $ext->updateNodeSync($aid);
+    $out['new'] = [$res, str_contains($col($aid, 'body'), '## Hello feed'), (int)$col($aid, 'version') - $ver, $epoch() - $was, $src($aid),
+        isset($gets[0]['headers']['If-None-Match'])];
+    $body = $col($aid, 'body');
+    $ver = (int)$col($aid, 'version');
+    $replies = [['code' => 304, 'headers' => [], 'body' => '']];
+    $gets = [];
+    $was = $epoch();
+    $out['same'] = [$ext->updateNodeSync($aid), $gets[0]['headers']['If-None-Match'] ?? '', $gets[0]['headers']['If-Modified-Since'] ?? '', $col($aid, 'body') === $body,
+        (int)$col($aid, 'version') - $ver, $epoch() - $was, $src($aid)['etag']];
+    $replies = [$rss('Hello feed', ['ETag' => ['"e2"']])];
+    $out['equal'] = [$ext->updateNodeSync($aid), (int)$col($aid, 'version') - $ver, $src($aid)['etag']];
+    $replies = [['code' => 500, 'headers' => [], 'body' => 'oops'], ['code' => 200, 'headers' => ['Content-Type' => ['application/rss+xml']], 'body' => '<rss><broken']];
+    $one = $ext->updateNodeSync($aid);
+    $first = $src($aid);
+    $two = $ext->updateNodeSync($aid);
+    $out['error'] = [$one, $first, $two, $src($aid), $col($aid, 'body') === $body, (int)$col($aid, 'version') - $ver];
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_node_sync SET fails = 0, error = \'\' WHERE nid = :id', ['id' => $aid]);
+    $replies = [function (array $req) use ($db, $aid, $rss): array {
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_nodes SET version = version + 1 WHERE id = :id', ['id' => $aid]);
+        return $rss('Stale text');
+    }, function (array $req) use ($db, $aid, $rss): array {
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_node_sync SET url = \'https://example.net/moved.xml\' WHERE nid = :id', ['id' => $aid]);
+        return ['code' => 500, 'headers' => [], 'body' => ''];
+    }];
+    $was = $epoch();
+    $out['race'] = [$ext->updateNodeSync($aid), str_contains($col($aid, 'body'), 'Stale text'), $ext->updateNodeSync($aid), $src($aid), $epoch() - $was];
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_node_sync SET url = \'https://example.com/feed.xml\' WHERE nid = :id', ['id' => $aid]);
+    $snap = ['nid' => $aid, 'url' => 'https://example.com/feed.xml', 'etag' => '', 'modified' => '', 'body' => $col($aid, 'body'), 'version' => (int)$col($aid, 'version'),
+        'status' => 2, 'name' => 'content', 'ext' => 'sync'];
+    $huge = ['ok' => true, 'changed' => true, 'code' => 200, 'body' => str_repeat('a', 16777216), 'etag' => '', 'modified' => '', 'error' => ''];
+    $call = (new ReflectionMethod(NodeSync::class, 'setSourceResult'))->invoke($ext, $snap, $huge);
+    $out['huge'] = [$call, $col($aid, 'body') === $body];
+    $out['refused'] = [getRouteCall(fn() => (new NodeSync($db, $task, new Feed($conf['rss'], $send)))->updateNodeSync($aid)),
+        getRouteCall(fn() => (new NodeSync($db, $anna, new Feed($conf['rss'], $send)))->updateNodeSync($aid)), getRouteCall(fn() => $ext->updateNodeSync(101)),
+        getRouteCall(fn() => $ext->updateNodeSync(999999)), getRouteCall(fn() => $ext->updateNodeSyncList(10))];
+    $queue = new NodeSync($db, $task, new Feed($conf['rss'], $send));
+    $out['limits'] = [getRouteCall(fn() => $queue->updateNodeSyncList(0)), getRouteCall(fn() => $queue->updateNodeSyncList(51))];
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_node_sync SET due = NOW() - INTERVAL 2 HOUR WHERE nid IN (:a, :b, :c, :d)', ['a' => $bid, 'b' => 501, 'c' => 601, 'd' => $aid]);
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_node_sync SET due = NOW() - INTERVAL 3 HOUR, url = \'https://example.com/two.xml\' WHERE nid = :b', ['b' => $bid]);
+    $gets = [];
+    $replies = [$rss('Two text'), $rss('Hello feed')];
+    $list = $queue->updateNodeSyncList(50);
+    $out['queue'] = [$list, array_column($gets, 'url'), str_contains($col($bid, 'body'), 'Two text'), $src($mid)['seen'], $src(501)['seen'], $src(601)['seen']];
+    $svc = new NodeService($db, $root, $fld, $pnt, $ext);
+    $count = fn(): int => (int)$db->getSqlQuery('SELECT COUNT(*) FROM '.PREFIX_DB.'_node_sync')->fetchColumn();
+    $was = $count();
+    $input = new NodeInput(0, [], '', 'With body', '', 'Own body', [], 0, false, CommentMode::Disabled, false, null, null, [], [],
+        ['url' => 'https://example.com/w', 'refresh' => 600]);
+    $out['hooks'] = [getRouteCall(fn() => $svc->addNode($type, $input, NodeStatus::Published)), $count() - $was];
+    $one = (new NodeQuery($db, $root, $fld))->setNodeExtension($ext)->getNode($aid, $type);
+    $move = new NodeInput(0, [], '', $one->title, $one->intro, 'Changed body', [], 0, false, CommentMode::Disabled, false, $one->pubdate, null, [], [],
+        ['url' => 'https://example.com/other.xml', 'refresh' => 600]);
+    $out['hooks'][] = getRouteCall(fn() => $svc->updateNode($aid, $move, $one->version));
+    $out['hooks'][] = [$src($aid)['url'], $col($aid, 'body') === $one->body];
+    return $out;
+}
+
 # A type an unfinished configuration operation holds is closed with 503 before any query, and opens again once the marker is gone
 function getRouteHold(string $work): array {
     if (!is_dir($work.'/backup/config')) mkdir($work.'/backup/config', 0777, true);
@@ -561,6 +1047,161 @@ function getRouteHold(string $work): array {
     unlink($work.'/backup/config/marker.json');
     return [$one['code'], $one['head']['retry-after'] ?? '', str_contains((string)($one['head']['cache-control'] ?? ''), 'no-store'), getRouteReply('', 'GET',
         'index.php?name=news')['code']];
+}
+
+# The integrations of stage S16 on two types: news rates, keeps favorites, links a poll, marks home materials and feeds search, RSS, sitemap and blocks;
+# docs feeds search, sitemap and blocks without RSS, rating or favorites; a poll, a home mark and three instances of the file block node.php are seeded
+function addRouteIntegTypes(PDO $pdo, string $work): void {
+    $pre = RPREF.'_';
+    $data = require $work.'/config/node.php';
+    $data['node']['types']['news']['features'] = getRouteFeatures(['categories', 'comments', 'submit', 'moderation', 'related', 'rating', 'favorites', 'poll', 'home']);
+    $data['node']['types']['news']['integrations'] = ['search' => true, 'rss' => true, 'sitemap' => true, 'blocks' => true, 'seo' => 'news'];
+    $data['node']['types']['docs']['integrations'] = ['search' => true, 'rss' => false, 'sitemap' => true, 'blocks' => true, 'seo' => 'article'];
+    setRouteFile($work.'/config/node.php', $data);
+    $pdo->exec('INSERT INTO '.$pre.'voting (id, modul, title, body, answer, time, enddate, lang, typ, status) VALUES'
+        .' (7, \'\', \'Probe poll\', \'Yes|No\', \'0|0\', NOW() - INTERVAL 1 DAY, NOW() + INTERVAL 30 DAY, \'\', 1, 1)');
+    $pdo->exec('UPDATE '.$pre.'nodes SET poll = 7 WHERE id = 102');
+    $pdo->exec('UPDATE '.$pre.'nodes SET home = 1 WHERE id IN (101, 105)');
+    $st = $pdo->prepare('INSERT INTO '.$pre.'blocks (id, bkey, title, content, url, bpos, weight, status, refresh, time, lang, bfile, view, expire, action, which, param)'
+        .' VALUES (?, \'\', ?, \'\', \'\', \'c\', ?, 1, 0, \'\', \'\', \'node.php\', 0, \'0\', \'d\', \'rss\', ?)');
+    $st->execute([50, 'Node home block', 1, '{"type":"news","mode":"home","limit":5}']);
+    $st->execute([51, 'Node mixed block', 2, '{"type":"","mode":"last","limit":5}']);
+    $st->execute([52, 'Node broken block', 3, '{"type":"off","mode":"last","limit":2}']);
+}
+
+# The aggregate of one material and the stored votes and actors of its rating target
+function getRouteRate(PDO $pdo, int $id): array {
+    $pre = RPREF.'_';
+    $cnt = fn(string $tab): int => (int)$pdo->query('SELECT COUNT(*) FROM '.$pre.$tab.' WHERE scope = \'node.news\' AND mid = '.$id)->fetchColumn();
+    return [(int)getRouteCol($pdo, $id, 'score'), (int)getRouteCol($pdo, $id, 'ratings'), $cnt('rating_votes'), $cnt('rating_actors')];
+}
+
+# The live token a page hands its rating widget, and the address of the favorite switch it offers
+function getRoutePageBits(string $html): array {
+    $tok = preg_match('#"token": "([A-Za-z0-9]+)"#', $html, $hit) ? $hit[1] : '';
+    $fav = preg_match('#hx-get="(index\.php\?go=1&amp;op=addFavorite[^"]+)"#', $html, $hit) ? html_entity_decode($hit[1]) : '';
+    return [$tok, $fav];
+}
+
+# The shared rating, the favorites, the poll, search, RSS, the blocks and the settings of the integrations over real HTTP, the sitemap in a child
+function getRouteInteg(PDO $pdo, string $work): array {
+    $pre = RPREF.'_';
+    $out = [];
+    $vote = fn(string $who, string $mod, int $id, string $req, string $tok): int => getRouteReply($who, 'POST', 'index.php?go=1&op=getRatingView',
+        ['mod' => $mod, 'id' => (string)$id, 'rate' => '4', 'request' => $req, 'typ' => 'stars', 'token' => $tok])['code'];
+    $page = getRouteReply('', 'GET', 'index.php?name=news&op=view&id=102');
+    [$tok] = getRoutePageBits($page['body']);
+    $out['widgets'] = [$page['code'], str_contains($page['body'], 'data-sl-rate'), str_contains($page['body'], 'Probe poll'), str_contains($page['body'], 'addFavorite'),
+        $tok !== ''];
+    $docs = getRouteReply('', 'GET', 'index.php?name=docs&op=view&id=201')['body'];
+    $out['docsview'] = [str_contains($docs, 'data-sl-rate'), str_contains($docs, 'Probe poll')];
+    $out['vote'] = [$vote('', 'node.news', 102, str_repeat('a', 32), $tok), getRouteRate($pdo, 102), $vote('', 'node.news', 102, str_repeat('a', 32), $tok),
+        getRouteRate($pdo, 102), $vote('', 'node.news', 102, str_repeat('b', 32), $tok), getRouteRate($pdo, 102), (int)getRouteCol($pdo, 102, 'version')];
+    $out['refuse'] = [$vote('', 'node.news', 103, str_repeat('c', 32), $tok), $vote('', 'node.news', 104, str_repeat('c', 32), $tok),
+        $vote('', 'node.off', 301, str_repeat('c', 32), $tok), $vote('', 'node.docs', 201, str_repeat('c', 32), $tok), $vote('', 'node.nope', 102, str_repeat('c', 32), $tok),
+        $vote('', 'node.news', 102, str_repeat('d', 32), 'bad'), getRouteReply('', 'GET', 'index.php?go=1&op=getRatingView')['code']];
+    [$atok] = getRoutePageBits(getRouteReply('anna', 'GET', 'index.php?name=news&op=view&id=101')['body']);
+    $out['own'] = [$vote('anna', 'node.news', 101, str_repeat('e', 32), $atok), getRouteRate($pdo, 101), $vote('anna', 'node.news', 103, str_repeat('e', 32), $atok),
+        getRouteRate($pdo, 103)];
+    $pdo->exec('CREATE TRIGGER '.$pre.'probe_rate BEFORE UPDATE ON '.$pre.'nodes FOR EACH ROW BEGIN IF NEW.id = 105 AND NEW.score <> OLD.score THEN'
+        .' SIGNAL SQLSTATE \'45000\' SET MESSAGE_TEXT = \'probe refuses the aggregate\'; END IF; END');
+    $out['rollback'] = [$vote('', 'node.news', 105, str_repeat('f', 32), $tok), getRouteRate($pdo, 105)];
+    $pdo->exec('DROP TRIGGER '.$pre.'probe_rate');
+    $out['after'] = [$vote('', 'node.news', 105, str_repeat('f', 32), $tok), getRouteRate($pdo, 105)];
+    $favs = fn(int $uid, int $fid): int => (int)$pdo->query('SELECT COUNT(*) FROM '.$pre.'favorites WHERE uid = '.$uid.' AND fid = '.$fid)->fetchColumn();
+    [, $afav] = getRoutePageBits(getRouteReply('anna', 'GET', 'index.php?name=news&op=view&id=102')['body']);
+    $one = getRouteReply('anna', 'GET', $afav);
+    $docfav = str_replace(['id=102', 'mod=news'], ['id=201', 'mod=docs'], $afav);
+    getRouteReply('anna', 'GET', $docfav);
+    getRouteReply('anna', 'GET', str_replace('id=102', 'id=105', $afav));
+    [, $bfav] = getRoutePageBits(getRouteReply('boris', 'GET', 'index.php?name=news&op=view&id=102')['body']);
+    getRouteReply('boris', 'GET', str_replace('id=102', 'id=104', $bfav));
+    $out['fav'] = [$afav !== '', $one['code'], str_contains($one['body'], 'sl-fav-on'), $favs(2, 102), $favs(2, 201), $favs(2, 105), $favs(3, 104)];
+    $list = fn(): string => getRouteReply('anna', 'GET', 'index.php?name=account&op=favorites')['body'];
+    $shown = str_contains($list(), 'Beta');
+    $pdo->exec('UPDATE '.$pre.'nodes SET status = 0 WHERE id = 102');
+    $hidden = str_contains($list(), 'Beta');
+    $pdo->exec('UPDATE '.$pre.'nodes SET status = 2 WHERE id = 102');
+    $out['favlist'] = [$shown, $hidden, str_contains(getRouteReply('root', 'GET', 'admin.php?name=favorites')['body'], 'Beta')];
+    $page = getRouteReply('root', 'GET', 'admin.php?name=node');
+    $gone = getRouteReply('root', 'POST', 'admin.php', ['name' => 'node', 'op' => 'delete', 'id' => '105', 'type' => 'news', 'version' => '1',
+        'token' => getRouteToken($page['body'], 'delete')]);
+    $out['delete'] = [$gone['code'], getRouteCol($pdo, 105, 'id'), $favs(2, 105)];
+    $was = (int)getRouteCol($pdo, 102, 'version');
+    $page = getRouteReply('root', 'GET', 'admin.php?name=voting');
+    $drop = getRouteReply('root', 'POST', 'admin.php', ['name' => 'voting', 'op' => 'delete', 'id' => '7', 'token' => getRouteToken($page['body'], 'delete')]);
+    $out['poll'] = [$drop['code'], (int)getRouteCol($pdo, 102, 'poll'), (int)getRouteCol($pdo, 102, 'version') - $was,
+        (int)$pdo->query('SELECT COUNT(*) FROM '.$pre.'voting WHERE id = 7')->fetchColumn(),
+        str_contains(getRouteReply('', 'GET', 'index.php?name=news&op=view&id=102')['body'], 'Probe poll')];
+    $find = fn(string $who, string $query): string => getRouteReply($who, 'GET', 'index.php?name=search&'.$query)['body'];
+    $all = $find('', 'word=intro+of');
+    $form = $find('', '');
+    $out['search'] = [str_contains($all, 'Beta'), str_contains($all, 'Doc one'), str_contains($all, 'Off one'), str_contains($all, 'Members'), str_contains($all, 'Pending one'),
+        str_contains($find('anna', 'word=intro+of'), 'Members'), str_contains($find('', 'mod=docs&word=intro+of'), 'Beta'), str_contains($find('', 'word=_ne'), 'Doc one'),
+        str_contains($form, 'value="news"'), str_contains($form, 'value="docs"'), str_contains($form, 'value="off"'), str_contains($form, 'value="help"')];
+    $rss = getRouteReply('', 'GET', 'index.php?go=rss&name=news');
+    $none = getRouteReply('', 'GET', 'index.php?go=rss&name=docs')['body'];
+    $pick = getRouteReply('', 'GET', 'index.php?name=rss')['body'];
+    $out['rss'] = [$rss['code'], str_contains($rss['body'], '<title>Beta</title>'), str_contains($rss['body'], 'Members'), str_contains($rss['body'], 'Pending one'),
+        str_contains($rss['body'], 'op=view&amp;id=102'), str_contains($none, '<item>'), str_contains($pick, 'value="news"'), str_contains($pick, 'value="docs"')];
+    $blk = getRouteReply('', 'GET', 'index.php?name=rss')['body'];
+    $root = getRouteReply('root', 'GET', 'index.php?name=rss')['body'];
+    $cut = fn(string $html, string $title): string => (string)strstr((string)strstr($html, $title), '</ol>', true);
+    $out['blocks'] = [str_contains($blk, 'Node home block'), str_contains($cut($blk, 'Node home block'), 'Alpha'), str_contains($cut($blk, 'Node home block'), 'Beta'),
+        str_contains($cut($blk, 'Node mixed block'), 'Doc one'), str_contains($cut($blk, 'Node mixed block'), 'Beta'), str_contains($blk, 'Node broken block'),
+        str_contains($root, 'Node broken block')];
+    $edit = getRouteReply('root', 'GET', 'admin.php?name=blocks&op=edit&id=51');
+    $post = ['name' => 'blocks', 'op' => 'editsave', 'token' => getRouteToken($edit['body'], 'editsave'), 'bid' => '51', 'bkey' => '', 'title' => 'Node mixed block',
+        'bfile' => 'node.php', 'bpos' => 'c', 'oldposition' => 'c', 'weight' => '2', 'status' => '1', 'view' => '0', 'newexpire' => '1', 'expire' => '0', 'action' => 'd',
+        'blockwhere[]' => 'rss'];
+    $param = fn(): string => (string)$pdo->query('SELECT param FROM '.$pre.'blocks WHERE id = 51')->fetchColumn();
+    $bad = getRouteReply('root', 'POST', 'admin.php', $post + ['ntype' => 'off', 'nmode' => 'last', 'nlimit' => '3']);
+    $kept = $param();
+    $good = getRouteReply('root', 'POST', 'admin.php', $post + ['ntype' => 'docs', 'nmode' => 'last', 'nlimit' => '3']);
+    $out['editor'] = [$edit['code'], str_contains($edit['body'], 'name="ntype"'), str_contains($edit['body'], 'name="nlimit"'), $bad['code'], $kept, $good['code'], $param()];
+    $conf = getRouteReply('root', 'GET', 'admin.php?name=search&op=config');
+    $save = getRouteReply('root', 'POST', 'admin.php?name=search&op=save', ['token' => getRouteToken($conf['body'], 'ver[docs]'), 'asearch' => '1', 'search[]' => 'forum',
+        'ntype[]' => 'news', 'ver[news]' => '1', 'ver[docs]' => '1', 'slet' => '3', 'slimit' => '500', 'snum' => '1', 'snump' => '5', 'anum' => '50', 'anump' => '10']);
+    $node = require $work.'/config/node.php';
+    $out['toggle'] = [(bool)preg_match('#name="ntype\[\]"\s+value="news"#', $conf['body']), $save['code'], $node['node']['types']['docs']['integrations']['search'] ?? null,
+        (int)$pdo->query('SELECT version FROM '.$pre.'node_types WHERE name = \'docs\'')->fetchColumn(), str_contains($find('', 'word=intro+of'), 'Doc one')];
+    [$one, $two] = [$find('', 'word=intro+of&num=1'), $find('', 'word=intro+of&num=2')];
+    $out['paged'] = [str_contains($one, 'Beta'), str_contains($one, 'Alpha'), str_contains($two, 'Alpha'), str_contains($two, 'Beta'), str_contains($one, 'num=2')];
+    $st = $pdo->prepare('INSERT INTO '.$pre.'nodes (tid, cid, uid, aname, ip, title, intro, body, field, status, published)'
+        .' VALUES (2, 0, 3, \'\', \'127.0.0.1\', ?, \'\', \'\', \'\', 2, \'2026-01-06 10:00:00\')');
+    for ($i = 1; $i <= 600; $i++) $st->execute(['Bulk '.$i]);
+    $out['sitemap'] = json_decode((string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg(__FILE__).' '.escapeshellarg($work).' integext 2>&1'), true);
+    return $out;
+}
+
+# The sitemap of the child: the generator runs against the files of the tree, so the map and the HTML map of the stand are kept byte for byte and put back afterwards
+function getRouteIntegData(): array {
+    $keep = [];
+    foreach ([BASE_DIR.'/sitemap.xml', SITEMAP_DIR.'/sitemap.txt'] as $file) $keep[$file] = is_file($file) ? [file_get_contents($file), filemtime($file)] : null;
+    try {
+        $res = addSitemapTask(true);
+        $xml = (string)file_get_contents(BASE_DIR.'/sitemap.xml');
+        $txt = (string)file_get_contents(SITEMAP_DIR.'/sitemap.txt');
+        preg_match_all('#<loc>([^<]+)</loc>#', $xml, $all);
+        $locs = array_map('html_entity_decode', $all[1]);
+        $has = fn(string $tail): bool => in_array($GLOBALS['conf']['homeurl'].'/index.php?'.$tail, $locs, true);
+        return ['status' => $res['status'], 'count' => $res['extra']['last_url_count'] ?? 0, 'valid' => simplexml_load_string($xml) !== false,
+            'raw' => str_contains($xml, '&op='), 'list' => [$has('name=news'), $has('name=docs'), $has('name=off')], 'cats' => [$has('name=news&cat=1'), $has('name=news&cat=2')],
+            'items' => [$has('name=news&op=view&id=101'), $has('name=news&op=view&id=102'), $has('name=news&op=view&id=103'), $has('name=news&op=view&id=104'),
+                $has('name=docs&op=view&id=201'), $has('name=off&op=view&id=301')],
+            'bulk' => count(array_filter($locs, fn($v) => str_contains($v, 'name=docs&op=view'))),
+            'txt' => [(bool)preg_match('#>\s*Open\s*<#', $txt), str_contains($txt, 'Members'),
+                str_contains($txt, 'Alpha')], 'parts' => count(glob(BASE_DIR.'/sitemap-*.xml*') ?: [])];
+    } finally {
+        foreach ($keep as $file => $old) {
+            if ($old === null) {
+                if (is_file($file)) unlink($file);
+                continue;
+            }
+            file_put_contents($file, $old[0]);
+            touch($file, $old[1]);
+        }
+    }
 }
 
 $report = ['error' => '', 'clean' => false, 'runs' => []];
@@ -574,22 +1215,32 @@ try {
     $rport = getRoutePort();
     addRouteConfig($rwork, $rbase, $rport);
     addRouteFiles($rwork);
+    if (($argv[2] ?? '') === 'sync') addRouteSyncTypes($rpdo, $rwork);
+    if (($argv[2] ?? '') === 'integ') addRouteIntegTypes($rpdo, $rwork);
     $rproc = addRouteServer($rwork, $rport);
     if (($argv[2] ?? '') === 'serve') {
         fwrite(STDERR, 'serving on '.$rport.' with '.$rbase."\n");
         while (!is_file($rwork.'/stop')) sleep(1);
         throw new RuntimeException('stopped');
     }
-    $report['runs']['lists'] = getRouteLists($rpdo);
-    $report['runs']['view'] = getRouteViewRuns($rpdo);
-    $report['runs']['data'] = json_decode((string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg(__FILE__).' '.escapeshellarg($rwork).' view 2>&1'), true);
-    $report['runs']['attach'] = getRouteAttach();
-    $report['runs']['assets'] = getRouteAssets($rpdo);
-    $report['runs']['reports'] = getRouteReports($rpdo);
-    $report['runs']['form'] = getRouteForm($rpdo);
-    $report['runs']['admin'] = getRouteAdmin($rpdo);
-    $report['runs']['types'] = getRouteTypes($rpdo, $rwork);
-    $report['runs']['hold'] = getRouteHold($rwork);
+    if (($argv[2] ?? '') === 'support') {
+        $report['runs']['support'] = getRouteSupport($rpdo);
+    } elseif (($argv[2] ?? '') === 'sync') {
+        $report['runs']['sync'] = getRouteSync($rpdo, $rwork);
+    } elseif (($argv[2] ?? '') === 'integ') {
+        $report['runs']['integ'] = getRouteInteg($rpdo, $rwork);
+    } else {
+        $report['runs']['lists'] = getRouteLists($rpdo);
+        $report['runs']['view'] = getRouteViewRuns($rpdo);
+        $report['runs']['data'] = json_decode((string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg(__FILE__).' '.escapeshellarg($rwork).' view 2>&1'), true);
+        $report['runs']['attach'] = getRouteAttach();
+        $report['runs']['assets'] = getRouteAssets($rpdo);
+        $report['runs']['reports'] = getRouteReports($rpdo);
+        $report['runs']['form'] = getRouteForm($rpdo);
+        $report['runs']['admin'] = getRouteAdmin($rpdo);
+        $report['runs']['types'] = getRouteTypes($rpdo, $rwork);
+        $report['runs']['hold'] = getRouteHold($rwork);
+    }
     $report['logs'] = [];
     foreach (['error_php.log', 'error_sql.log'] as $rone) {
         $rfile = $rwork.'/logs/'.$rone;

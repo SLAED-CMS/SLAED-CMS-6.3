@@ -56,6 +56,7 @@ CREATE TABLE `{prefix}_blocks` (
   `expire` VARCHAR(14) NOT NULL DEFAULT '0',
   `action` CHAR(1) NOT NULL DEFAULT '',
   `which` TEXT NOT NULL,
+  `param` VARCHAR(255) NOT NULL DEFAULT '',
   PRIMARY KEY (`id`),
   KEY `title` (`title`),
   KEY `status_position` (`status`, `bpos`),

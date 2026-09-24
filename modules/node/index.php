@@ -13,17 +13,10 @@ if (!defined('MODULE_FILE') && !defined('ADMIN_FILE')) {
 # The routes of this file take their type from the loaded registry and their rights from the Node context; they run no SQL of their own and build no HTML beyond the templates
 # The helpers above the routing are shared with the administration of Node, which includes this file for them and leaves the public routing below untouched
 
-# The closed public operations of a type and the methods each one answers; an extension adds its own operation only together with its class
-function getNodeOps(): array {
-    return ['' => ['GET', 'HEAD'], 'view' => ['GET', 'HEAD'], 'add' => ['GET', 'HEAD', 'POST'], 'asset' => ['GET', 'HEAD'], 'attach' => ['GET', 'HEAD'], 'report' => ['POST']];
-}
-
-# The registered extension of a type through the closed factory, or null for a standard type
-function getNodeHandler(NodeType $type): ?NodeExtension {
-    global $db;
-    if ($type->ext === '') return null;
-    require_once BASE_DIR.'/core/classes/node/ext/load.php';
-    return getNodeExtension($type->ext, $db, getNodeContext());
+# The closed public operations of a type and the methods each one answers; the extension support adds its one operation, no other extension adds any
+function getNodeOps(string $ext = ''): array {
+    $ops = ['' => ['GET', 'HEAD'], 'view' => ['GET', 'HEAD'], 'add' => ['GET', 'HEAD', 'POST'], 'asset' => ['GET', 'HEAD'], 'attach' => ['GET', 'HEAD'], 'report' => ['POST']];
+    return ($ext === 'support') ? $ops + ['support' => ['POST']] : $ops;
 }
 
 # A reader of the request context, bound to the extension of the type when one type is read
@@ -54,15 +47,20 @@ function getNodeLabel(string $text): string {
     return ($text !== '' && $text[0] === '_' && defined($text)) ? (string)constant($text) : $text;
 }
 
-# The safe text of a refusal by its code; the message of the exception never reaches the page
+# The safe text of a refusal by its code; the message of the exception never reaches the page, only the label of a refused source field of an external material,
+# which only the administrative form sends, so the two administrative labels are read there alone
 function getNodeFault(NodeException $err): string {
-    return match ($err->getCode()) {
+    $text = match ($err->getCode()) {
         NodeException::NOTFOUND => _NODE_GONE,
         NodeException::DENIED => _ACCESSDENIED,
         NodeException::INVALID => _NODE_INVALID,
         NodeException::CONFLICT => _NODE_BUSY,
         default => _NODE_FAILED,
     };
+    if ($err->getCode() === NodeException::INVALID && preg_match('/: ext\.(url|refresh)$/D', $err->getMessage(), $hit)) {
+        $text .= ' ('.(($hit[1] === 'url') ? _NODE_SOURCE : _NODE_PERIOD).')';
+    }
+    return $text;
 }
 
 # The HTTP status of a refusal by its code
@@ -159,8 +157,16 @@ function getNodeAssetRows(?Node $node): array {
 
 # Read the posted content of a material into the input the service takes and into the values the form shows again; the state travels separately
 # A visitor who does not moderate the type sends no poll, home, pin or date, and the comment mode of a public submission is the open one where the type has comments
+# A type with the extension sync takes the address and the period of its source instead of a body: the body stays the one its source last brought
 function getNodeFormPost(NodeType $type, bool $moder, ?Node $old): array {
     $feat = $type->settings['features'];
+    $sync = $type->ext === 'sync';
+    $ext = [];
+    $src = [];
+    if ($sync) {
+        $src = ['url' => trim((string)getVar('post', 'source', 'raw', '')), 'refresh' => trim((string)getVar('post', 'refresh', 'raw', ''))];
+        $ext = ['url' => $src['url'], 'refresh' => preg_match('/^(?:0|[1-9][0-9]{0,8})$/D', $src['refresh']) ? (int)$src['refresh'] : -1];
+    }
     $cats = array_values(array_unique(array_filter(array_map('intval', (array)getVar('post', 'cids[]', '', [])), fn($v) => $v > 0)));
     $rels = [];
     if ($feat['related']) {
@@ -183,7 +189,7 @@ function getNodeFormPost(NodeType $type, bool $moder, ?Node $old): array {
         'aname' => (getNodeContext()->uid > 0 || $old !== null) ? ($old?->aname ?? '') : trim((string)getVar('post', 'aname', 'raw', '')),
         'title' => trim((string)getVar('post', 'title', 'raw', '')),
         'intro' => (string)getVar('post', 'intro', 'raw', ''),
-        'body' => (string)getVar('post', 'body', 'raw', ''),
+        'body' => $sync ? (string)($old?->body ?? '') : (string)getVar('post', 'body', 'raw', ''),
         'fields' => (array)getVar('post', 'field[]', '', []),
         'poll' => ($moder && $feat['poll']) ? (int)getVar('post', 'poll', 'num', 0) : ($old?->poll ?? 0),
         'home' => $moder && $feat['home'] && getVar('post', 'home', 'num', 0) === 1,
@@ -193,14 +199,15 @@ function getNodeFormPost(NodeType $type, bool $moder, ?Node $old): array {
         'expires' => is_string($end) ? $end : null,
         'rels' => $rels,
         'assets' => $show,
+        'ext' => $src,
     ];
     $input = new NodeInput($vals['cid'], $vals['cids'], $vals['aname'], $vals['title'], $vals['intro'], $vals['body'], $vals['fields'], $vals['poll'], $vals['home'],
-        $vals['comon'], $vals['pinned'], $vals['pubdate'], $vals['expires'], $rels, $assets, []);
+        $vals['comon'], $vals['pinned'], $vals['pubdate'], $vals['expires'], $rels, $assets, $ext);
     return [$input, $vals, $errs];
 }
 
-# The values a form shows for a stored material, or the empty values of a new one
-function getNodeFormVals(?Node $node): array {
+# The values a form shows for a stored material, or the empty values of a new one; the source of an external material comes from its extension
+function getNodeFormVals(?Node $node, array $ext = []): array {
     $rels = $node?->rels ?? [];
     $near = array_values(array_filter($rels, fn($v) => $v->type === 'related'));
     $up = array_values(array_filter($rels, fn($v) => $v->type === 'parent'));
@@ -221,6 +228,7 @@ function getNodeFormVals(?Node $node): array {
         'rels' => array_merge(array_map(fn($v) => ['rid' => $v->rid, 'type' => 'related', 'sort' => $v->sort], $near),
             array_map(fn($v) => ['rid' => $v->rid, 'type' => 'parent', 'sort' => 0], $up)),
         'assets' => getNodeAssetRows($node),
+        'ext' => $ext,
     ];
 }
 
@@ -297,7 +305,15 @@ function getNodeFormRows(NodeType $type, array $vals, array $errs, bool $moder, 
             'is_name_array' => true, 'options_html' => getNodeCatOptions($type, $vals['cids'], false)])];
     }
     $rows[] = ['label' => _NODE_INTRO, 'field' => getNodeEditor($type, 'intro', $vals['intro'], _NODE_INTRO), 'full' => true];
-    $rows[] = ['label' => _TEXT, 'field' => getNodeEditor($type, 'body', $vals['body'], _TEXT), 'full' => true];
+    if ($type->ext !== 'sync') {
+        $rows[] = ['label' => _TEXT, 'field' => getNodeEditor($type, 'body', $vals['body'], _TEXT), 'full' => true];
+    } elseif ($admin) {
+        $rows[] = ['label' => _NODE_SOURCE, 'for' => 'f-source', 'field' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'source', 'input_id' => 'f-source',
+            'value_attr' => (string)($vals['ext']['url'] ?? ''), 'maxlength_num' => 2048, 'placeholder_text' => 'https://example.com/feed.xml', 'is_required' => true])];
+        $rows[] = ['label' => _NODE_PERIOD, 'for' => 'f-refresh', 'hint' => _NODE_PERHINT, 'hint_id' => 'f-refresh-hint', 'field' => $tpl->getHtmlFrag('input', [
+            'describedby' => 'f-refresh-hint', 'itype' => 'number', 'name_attr' => 'refresh', 'input_id' => 'f-refresh', 'value_attr' => (string)($vals['ext']['refresh'] ?? 3600),
+            'is_required' => true, 'input_attr' => 'min="0" max="31536000"'])];
+    }
     foreach ($fld->getFieldForm($tpl, $type->fields, $vals['fields'], $errs) as $one) {
         $rows[] = ['label' => $one['label_text'], 'for' => $one['label_for'], 'hint' => trim($one['hint_text'].' '.$one['error_text']), 'hint_id' => $one['hint_id'],
             'field' => $one['field_html']];
@@ -322,6 +338,44 @@ function getNodeFormRows(NodeType $type, array $vals, array $errs, bool $moder, 
 function getNodeViewData(NodeType $type, Node|NodeTarget $node, string $mode): array {
     global $prs, $fld;
     return (new NodeView($prs, $fld))->getNodeView($type, $node, $mode);
+}
+
+# The labels of the states and the priorities of a request of support, keyed by the numbers the two maps of config/node.php store
+function getNodeSupportLabels(): array {
+    global $conf;
+    $slab = ['staff' => _NODE_WSTAFF, 'author' => _NODE_WUSER, 'closed' => _NODE_WCLOSE];
+    $plab = ['low' => _NODE_PLOW, 'normal' => _NODE_PNORM, 'high' => _NODE_PHIGH, 'urgent' => _NODE_PURGE];
+    $out = ['state' => [], 'prio' => []];
+    foreach ((array)($conf['node']['support']['state'] ?? []) as $key => $val) $out['state'][$val] = $slab[$key] ?? (string)$key;
+    foreach ((array)($conf['node']['support']['prio'] ?? []) as $key => $val) $out['prio'][$val] = $plab[$key] ?? (string)$key;
+    return $out;
+}
+
+# The data the extension of a type prepared for one material, with the labels and the owner switch its templates show for a request of support
+# The request of support shows its state and priority by the names of the two maps of config/node.php; only its owner gets the switch that closes or reopens it
+function getNodeExtVars(NodeType $type, Node|NodeTarget $node, array $data): array {
+    global $conf, $afile;
+    if ($type->ext !== 'support' || $data === []) return $data;
+    $maps = $conf['node']['support'];
+    $labs = getNodeSupportLabels();
+    $skey = (string)array_search($data['state'], $maps['state'], true);
+    $shut = $skey === 'closed';
+    $owner = getNodeContext()->uid > 0 && getNodeContext()->uid === $node->uid;
+    return $data + [
+        'state_label' => $labs['state'][$data['state']] ?? '',
+        'prio_label' => $labs['prio'][$data['prio']] ?? '',
+        'is_closed' => $shut,
+        'is_staff' => $skey === 'staff',
+        'is_author' => $skey === 'author',
+        'state_title' => _NODE_STATE,
+        'prio_title' => _NODE_PRIO,
+        'is_owner' => $owner,
+        'action' => $owner ? getSeoUrl(['name' => $type->name, 'op' => 'support', 'id' => $node->id]) : '',
+        'token' => $owner ? getSiteToken() : '',
+        'next' => $shut ? $maps['state']['staff'] : $maps['state']['closed'],
+        'switch_label' => $shut ? _NODE_REOPEN : _NODE_CLOSE,
+        'card_href' => checkNodeModer($type) ? $afile.'.php?name=node&op=support&id='.$node->id : '',
+    ];
 }
 
 # The labels and switches the standard templates of a material read beside the prepared data
@@ -374,8 +428,9 @@ function getNodeAssetView(NodeType $type, array $view): string {
     return $out;
 }
 
-# Render one prepared material through the view part of its display mode with the related cards, the poll and the editing link of its moderator
-function getNodeViewHtml(NodeType $type, array $view, string $rels, string $edit): string {
+# Render one prepared material through the view part of its display mode with the related cards, the editing link of its moderator and the data of its extension
+# The live parts of a stored material - its poll, its rating and its favorite switch - are rendered by their own subsystems and handed in; a preview has none of them
+function getNodeViewHtml(NodeType $type, array $view, string $rels, string $edit, array $ext = [], array $live = []): string {
     global $tpl, $fld, $prs;
     $rows = '';
     foreach ($view['fields'] as $one) $rows .= $tpl->getHtmlFrag('field-value', ['label' => $one['label_text'], 'value_html' => $one['value_html'],
@@ -385,9 +440,12 @@ function getNodeViewHtml(NodeType $type, array $view, string $rels, string $edit
         'assets_html' => getNodeAssetView($type, $view),
         'rels_html' => $rels,
         'rels_label' => _NODE_RELATED,
-        'poll_html' => '',
+        'poll_html' => $live['poll'] ?? '',
+        'rating_html' => $live['rating'] ?? '',
+        'fav_html' => $live['fav'] ?? '',
         'edit_href' => $edit,
         'edit_label' => _EDIT,
+        'ext' => $ext,
     ]);
 }
 
@@ -428,6 +486,8 @@ function setNodeList(): void {
     setHead(function () use ($cat, $num, $let, $sort, $dir, $home, &$page): array {
         global $conf, $tpl;
         $type = getNodeRoute();
+        $priv = $type->ext === 'support';
+        if ($priv && getNodeContext()->uid < 1 && !checkNodeModer($type)) setNodeDeny(403);
         $set = $type->settings['list'];
         if ($let !== '' && !$set['alpha']) setNodeDeny(400);
         if ($sort !== '' && !in_array($sort, $set['orders'], true)) setNodeDeny(400);
@@ -447,10 +507,13 @@ function setNodeList(): void {
         if ($num > $pages) setNodeDeny(404);
         $list = $count ? $query->getNodeList() : [];
         if (checkPageCache()) Cache::setPageUntil($query->getNodeDeadline());
+        $hand = $list ? getNodeHandler($type) : null;
+        $extm = $hand ? $hand->getNodeData($type, $list, 'list') : [];
         $items = '';
         foreach ($list as $node) {
             $view = getNodeViewData($type, $node, 'list');
-            $items .= $tpl->getHtmlFrag(getNodeTplName('fragments', 'card', $type), $view + getNodeViewVars($type) + ['cover' => getNodeCover($type, $view)]);
+            $items .= $tpl->getHtmlFrag(getNodeTplName('fragments', 'card', $type), $view + getNodeViewVars($type) + ['cover' => getNodeCover($type, $view),
+                'ext' => getNodeExtVars($type, $node, $extm[$node->id] ?? [])]);
         }
         $link = static fn(int $i): array => ['href' => getSeoUrl($base + (($sort !== '' || $dir !== '') ? ['order' => $key, 'dir' => $way] : []) + ($i > 1 ? ['num' => $i] : []))];
         $title = getModuleName($type->name);
@@ -466,7 +529,7 @@ function setNodeList(): void {
         ]);
         $plain = $sort === '' && $dir === '' && $let === '';
         return ['title' => ($ctitle !== '') ? $ctitle : $title, 'ctitle' => ($ctitle !== '') ? $title : '', 'cid' => $cat, 'kind' => 'collection',
-            'robots' => $plain ? '' : 'noindex, follow', 'desc' => ($home || $cat) ? null : getNodeLabel($type->intro)];
+            'robots' => $priv ? 'noindex, nofollow' : ($plain ? '' : 'noindex, follow'), 'desc' => ($home || $cat) ? null : getNodeLabel($type->intro)];
     });
     echo $page;
     setFoot();
@@ -519,11 +582,16 @@ function getNodeNavi(NodeType $type, string $key, string $way, int $cat): string
 }
 
 # One material of the type by its global id: a missing, closed or foreign material is not found; a successful view is counted after the answer, never for HEAD
+# The discussion follows the material where the type has comments and the material takes them; the mode the comment subsystem resolves decides whether its form is offered
+# The linked poll, the shared rating of the scope node.<name> and the favorite switch appear only where the type has the feature, each rendered by its own subsystem
+# A request of support is refused to a guest before anything is read and is never indexed
 function setNodeView(): void {
-    global $conf, $afile, $tpl;
+    global $conf, $afile, $tpl, $com;
     $id = getNodeNumber('id', 404);
     if (!$id) setNodeDeny(404);
     $type = getNodeRoute();
+    $priv = $type->ext === 'support';
+    if ($priv && getNodeContext()->uid < 1 && !checkNodeModer($type)) setNodeDeny(403);
     $query = getNodeReader($type);
     $node = $query->getNode($id, $type);
     if ($node === null) setNodeDeny(404);
@@ -536,8 +604,19 @@ function setNodeView(): void {
     }
     $moder = checkNodeModer($type);
     $cover = getNodeCover($type, $view);
+    $hand = getNodeHandler($type);
+    $ext = getNodeExtVars($type, $node, $hand ? ($hand->getNodeData($type, [$node], 'view')[$node->id] ?? []) : []);
+    $talk = $type->settings['features']['comments'] && $node->comon !== CommentMode::Disabled;
+    $feat = $type->settings['features'];
+    $poll = ($feat['poll'] && $node->poll) ? getVotingView($node->poll, $type->name) : '';
+    $live = [
+        'poll' => ($poll !== '') ? $tpl->getHtmlFrag('block-content', ['id' => 'rep'.$type->name, 'is_section' => true, 'content' => $poll, 'has_hr' => true]) : '',
+        'rating' => $feat['rating'] ? getRatingAsync(1, $node->id, 'node.'.$type->name, $node->ratings, $node->score) : '',
+        'fav' => $feat['favorites'] ? getFavoriteButton($node->id, $type->name) : '',
+    ];
     setHead([
         'title' => $node->title,
+        'robots' => $priv ? 'noindex, nofollow' : '',
         'ctitle' => $view['ctitle'],
         'cid' => $node->cid,
         'kind' => $type->settings['integrations']['seo'],
@@ -547,7 +626,8 @@ function setNodeView(): void {
         'mtime' => $node->updated,
         'img' => ($cover !== '') ? rtrim((string)$conf['homeurl'], '/').'/'.$cover : '',
     ]);
-    echo getNodeViewHtml($type, $view, $rels, $moder ? $afile.'.php?name=node&op=edit&id='.$node->id.'&type='.$type->name : '');
+    echo getNodeViewHtml($type, $view, $rels, $moder ? $afile.'.php?name=node&op=edit&id='.$node->id.'&type='.$type->name : '', $ext, $live)
+        .($talk ? setComShow($node->id, $com->getTargetMode($type->name, $node->id)->value) : '');
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
         addDeferredTask(static function () use ($id, $type): void {
             try {
@@ -698,8 +778,33 @@ function setNodeReport(): void {
     setRedirect(getSeoUrl(['name' => $type->name]), true, 302, _NODE_REPORTED);
 }
 
+# The owner closes or reopens one request of support: CSRF, the expected version of its card and the wanted state; the assignment and the priority are the stored ones,
+# read from the card of the request and never from the request body, and the answer returns to the request
+# The route belongs to the owner alone and to the two states open and closed, even when the owner also moderates the type; the working card is the route of the staff
+function setNodeSupport(): void {
+    global $conf;
+    $id = getNodeNumber('id', 404);
+    if (!$id) setNodeDeny(404);
+    if (!checkSiteToken((string)getVar('post', 'token', 'raw', ''))) setNodeDeny(403);
+    $type = getNodeRoute();
+    $hand = getNodeHandler($type);
+    if (!$hand instanceof NodeSupport) setNodeDeny(404);
+    $raw = (string)getVar('post', 'state', 'raw', '');
+    if (!ctype_digit($raw)) setNodeDeny(422);
+    $tgt = getNodeReader($type)->getNodeTarget($type->name, $id) ?? setNodeDeny(404);
+    $maps = $conf['node']['support']['state'] ?? [];
+    if ($tgt->uid < 1 || $tgt->uid !== getNodeContext()->uid || !in_array((int)$raw, [$maps['staff'] ?? -1, $maps['closed'] ?? -1], true)) setNodeDeny(403);
+    $card = $hand->getNodeData($type, [$tgt], 'view')[$id] ?? setNodeDeny(404);
+    try {
+        $hand->updateNodeSupport($id, $card['aid'], (int)$raw, $card['prio'], (int)getVar('post', 'version', 'num', 0));
+    } catch (NodeException $err) {
+        setNodeDeny(getNodeStatus($err));
+    }
+    setRedirect(getSeoUrl(['name' => $type->name, 'op' => 'view', 'id' => $id]), false, 302, _NODE_SSAVED);
+}
+
 if (!defined('ADMIN_FILE')) {
-    $nops = getNodeOps();
+    $nops = getNodeOps(((string)$op === 'support') ? getNodeRoute()->ext : '');
     $nway = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
     $op = (string)$op;
     if (!isset($nops[$op])) setNodeDeny(404);
@@ -713,5 +818,6 @@ if (!defined('ADMIN_FILE')) {
         case 'asset': setNodeAsset(); break;
         case 'attach': setNodeAttach(); break;
         case 'report': setNodeReport(); break;
+        case 'support': setNodeSupport(); break;
     }
 }

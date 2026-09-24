@@ -285,14 +285,40 @@ function save(): void {
 }
 
 function delete(int $id = 0): void {
-    global $db, $afile, $com;
+    global $db, $afile, $com, $conf, $fld;
     $iswarn = !checkSiteToken();
     if (!$id) $id = getVar('req', 'id', 'num', 0);
-    if (!$iswarn && $id) {
+    $fail = false;
+    if (!$iswarn && $id && empty($conf['node']['types'])) {
         $com->deleteTarget('voting', [$id]);
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_voting WHERE id = :id', ['id' => $id]);
+    } elseif (!$iswarn && $id) {
+        $lock = 'node.poll.'.$id;
+        $held = $db->getSqlQuery('SELECT GET_LOCK(:name, 5)', ['name' => $lock]);
+        $fail = !$held || intval($held->fetchColumn()) !== 1;
+        $guard = $fail ? false : Cache::getWriteGuard();
+        $step = 'before';
+        try {
+            $serv = new NodeService($db, getNodeContext(), $fld);
+            if ($guard === false || !$db->setSqlBegin()) throw new NodeException('The deletion of a poll cannot start', NodeException::STORAGE);
+            $step = 'open';
+            $serv->deleteNodePoll($id);
+            $gone = $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_voting WHERE id = :id', ['id' => $id]);
+            if ($gone === false) throw new NodeException('The poll row was not deleted', NodeException::STORAGE);
+            $step = 'unknown';
+            if (!$db->setSqlCommit()) throw new NodeException('The commit of a poll deletion is uncertain', NodeException::STORAGE);
+            $step = 'done';
+        } catch (Throwable $err) {
+            if ($step === 'open' && !$db->setSqlRollback()) $step = 'unknown';
+            $fail = true;
+            Logger::addSite('error', 'Voting: a poll could not be deleted', ['id' => $id, 'error' => $err->getMessage()]);
+        }
+        $bump = $step === 'done' && Cache::addEpoch(true);
+        if ($guard !== false && ($bump || $step === 'before' || $step === 'open')) Cache::deleteWriteGuard($guard);
+        if ($held) $db->getSqlQuery('SELECT RELEASE_LOCK(:name)', ['name' => $lock]);
+        if ($step === 'done') $com->deleteTarget('voting', [$id]);
     }
-    setRedirect($afile.'.php?name=voting', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
+    setRedirect($afile.'.php?name=voting', false, 302, $iswarn ? _TOKENMISS : ($fail ? _ERROR : _SUCCSAVE), $iswarn || $fail);
 }
 
 function config(): void {

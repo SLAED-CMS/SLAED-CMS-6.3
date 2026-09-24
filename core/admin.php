@@ -743,6 +743,12 @@ function getAdminFavoriteList(int $obj = 0): string {
             } elseif ($key == 'shop') {
                 $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title, u.name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_products AS n ON (f.fid = n.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while (list($id, $fid, $modul, $title, $uname) = $db->getSqlRow($result)) $ffmassiv[] = [$id, $fid, $modul, $title, $uname];
+            } elseif (isset($conf['node']['types'][$key])) {
+                $sql = 'SELECT f.id, f.fid, f.modul, u.name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.id IN ('.$in.')';
+                $res = $db->getSqlQuery($sql.' ORDER BY f.id DESC', $pm);
+                $rows = $res ? ($db->getSqlRows($res) ?: []) : [];
+                $titles = getNodeTitleMap(array_fill_keys(array_map(fn($v) => intval($v[1]), $rows), $key));
+                foreach ($rows as $row) $ffmassiv[] = [$row[0], $row[1], $row[2], $titles[intval($row[1])] ?? '', $row[3]];
             }
         }
         if ($ffmassiv) {
@@ -1080,17 +1086,19 @@ function checkSqlTable(string $name): bool {
     return (int)($row['num'] ?? 0) > 0;
 }
 
-# Save one part of a registered Node type from a shared screen: fields, uploads or rating replaced in the stored type, sent to the service with the version the form was built from
+# Save one part of a registered Node type from a shared screen: fields, uploads, rating or the integrations of its settings replaced in the stored type,
+# sent to the service with the version the form was built from
 # Answers an empty string on success, otherwise a safe text chosen by the cause of the refusal; the text of the exception never reaches the page
 function updateNodeTypePart(string $name, string $part, array $value, int $version): string {
     global $db, $fld, $pnt;
     $type = getNodeTypeMap()[$name] ?? null;
     $label = htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-    if ($type === null || !in_array($part, ['fields', 'uploads', 'rating'], true)) return sprintf(_NODE_BAD, $label);
-    $data = ['fields' => $type->fields, 'uploads' => $type->uploads, 'rating' => $type->rating];
-    $data[$part] = $value;
+    if ($type === null || !in_array($part, ['fields', 'uploads', 'rating', 'integrations'], true)) return sprintf(_NODE_BAD, $label);
+    $data = ['fields' => $type->fields, 'uploads' => $type->uploads, 'rating' => $type->rating, 'settings' => $type->settings];
+    if ($part === 'integrations') $data['settings']['integrations'] = $value;
+    else $data[$part] = $value;
     try {
-        $input = new NodeTypeInput($type->title, $type->intro, $type->ext, $type->sort, $type->settings, $data['fields'], $data['uploads'], $data['rating']);
+        $input = new NodeTypeInput($type->title, $type->intro, $type->ext, $type->sort, $data['settings'], $data['fields'], $data['uploads'], $data['rating']);
         (new NodeService($db, getNodeContext(), $fld, $pnt))->updateNodeType($name, $input, $version);
     } catch (NodeException $err) {
         return match ($err->getCode()) {

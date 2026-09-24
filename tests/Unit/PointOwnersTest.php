@@ -18,7 +18,7 @@ final class PointOwnersTest extends TestCase
 {
     private const OWNERS = [
         'core/classes/comment.php' => [
-            "addEvent('comment', \$mod, 'comment:'.\$id,", "getEventId('comment', \$mod, 'comment:'.\$id,", "addEvent('comment', \$mod, 'reverse:'.\$rid,",
+            "addEvent('comment', \$scope, 'comment:'.\$id,", "getEventId('comment', \$scope, 'comment:'.\$id,", "addEvent('comment', \$scope, 'reverse:'.\$rid,",
         ],
         'core/system.php' => ["addEvent('poll', 'voting', 'poll:'.\$id,"],
         'core/user.php' => ["addEvent('message', 'privat', 'privat:'.\$new['id'],", "addEvent('favorite', 'favorites', \$mod.':'.\$id,"],

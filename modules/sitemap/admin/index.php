@@ -165,8 +165,27 @@ function config(): void {
             ['value' => '0', 'label' => _NO],
         ],
     ]);
+    $typehtml = '';
+    $hidden = [
+        ['nameattr' => 'name', 'valueattr' => 'sitemap'],
+        ['nameattr' => 'op', 'valueattr' => 'configsave'],
+        ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+    ];
+    foreach (getNodeTypeMap() as $name => $type) {
+        $typehtml .= $tpl->getHtmlFrag('checkbox', [
+            'is_right' => true,
+            'name_attr' => 'ntype[]',
+            'value_attr' => $name,
+            'is_checked' => $type->settings['integrations']['sitemap'],
+            'label_text' => getModuleName($name),
+            'code_text' => $name,
+        ]);
+        $hidden[] = ['nameattr' => 'ver['.$name.']', 'valueattr' => (string)$type->version];
+    }
+    $mods = array_values(array_diff(scandir('modules'), ['.', '..', 'node']));
     $rows = [
-        ['label_html' => _MODULES, 'field_html' => getTplModuleSelect('mod', $conf['sitemap']['mod'] ?? '', 1), 'is_full' => true],
+        ['label_html' => _MODULES, 'field_html' => getTplModuleSelect('mod', $conf['sitemap']['mod'] ?? '', 1, $mods), 'is_full' => true],
+        ...($typehtml !== '' ? [['label_html' => _NODE, 'field_html' => $typehtml, 'is_full' => true]] : []),
         ['label_for' => 'f-auto-t', 'label_html' => _MAP_AUTO_T, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'auto_t', 'input_id' => 'f-auto-t', 'value_attr' => (string)intval(($conf['sitemap']['auto_t'] ?? 0) / 3600), 'is_config' => true])],
         ['label_html' => _MAP_AUTO, 'label_id' => $labid = getFieldIds('', 'auto')['label'], 'field_html' => $yesno('auto', $conf['sitemap']['auto'] ?? 0, $labid)],
         ['label_html' => _MAP_FR_H, 'field_html' => getSitemapFreqSelect('fr_h', (string)($conf['sitemap']['fr_h'] ?? '0'))],
@@ -190,11 +209,7 @@ function config(): void {
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
-        'hidden' => [
-            ['nameattr' => 'name', 'valueattr' => 'sitemap'],
-            ['nameattr' => 'op', 'valueattr' => 'configsave'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
-        ],
+        'hidden' => $hidden,
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
     ])]);
@@ -203,12 +218,21 @@ function config(): void {
 }
 
 function configsave(): void {
-    global $afile;
+    global $afile, $conf;
     $iswarn = !checkSiteToken();
+    $text = $iswarn ? _TOKENMISS : _SUCCSAVE;
     if (!$iswarn) {
-        $mod = getVar('post', 'mod[]', 'var');
+        $mod = array_values(array_filter((array)getVar('post', 'mod[]', 'var', []), fn($v) => $v !== '0' && !isset($conf['node']['types'][$v])));
+        $picks = getVar('post', 'ntype[]', 'var', []);
+        $vers = getVar('post', 'ver[]', '', []);
+        foreach (getNodeTypeMap() as $name => $type) {
+            $want = in_array($name, is_array($picks) ? $picks : [], true);
+            if (!is_array($vers) || !isset($vers[$name]) || $want === $type->settings['integrations']['sitemap']) continue;
+            $fail = updateNodeTypePart($name, 'integrations', array_replace($type->settings['integrations'], ['sitemap' => $want]), intval($vers[$name]));
+            if ($fail !== '') [$iswarn, $text] = [true, $fail];
+        }
         $cont = [
-            'mod' => empty($mod[0]) ? '0' : implode(',', $mod),
+            'mod' => $mod ? implode(',', $mod) : '0',
             'auto_t' => getVar('post', 'auto_t', 'num', 1) * 3600,
             'auto' => getVar('post', 'auto', 'num', 0),
             'fr_h' => getVar('post', 'fr_h', 'var', '0'),
@@ -232,7 +256,7 @@ function configsave(): void {
         ];
         setConfigFile('sitemap.php', $cont);
     }
-    setRedirect($afile.'.php?name=sitemap&op=config', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
+    setRedirect($afile.'.php?name=sitemap&op=config', false, 302, $text, $iswarn);
 }
 
 function info(): void {

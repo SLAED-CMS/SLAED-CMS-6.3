@@ -150,6 +150,16 @@
 {% if show_layout %}
   <!-- ROW 3: Overview Strip -->
   <div class="sl-monitor-overview-strip">
+    {% if has_news %}<div class="sl-overview-item">
+      <div class="sl-overview-label">Website</div>
+      <div class="sl-overview-val">{{ cntnews }} <div class="sl-overview-icon-arr"><i class="bi bi-chevron-right"></i></div>
+      </div>
+    </div>{% endif %}
+    {% if has_file %}<div class="sl-overview-item">
+      <div class="sl-overview-label">Files</div>
+      <div class="sl-overview-val">{{ cntfile }} <div class="sl-overview-icon-arr"><i class="bi bi-chevron-right"></i></div>
+      </div>
+    </div>{% endif %}
     <div class="sl-overview-item">
       <div class="sl-overview-label">Database</div>
       <div class="sl-overview-val">{{ dbtabs }} <div class="sl-overview-icon-arr"><i class="bi bi-chevron-right"></i></div>

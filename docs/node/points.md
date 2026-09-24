@@ -228,7 +228,7 @@ scope: 1..50 ASCII, грамматика ^[a-z][a-z0-9.:-]{0,49}$. source: 1..64
 |---|---|---|---|---|---|
 | 1 — просмотр страниц | setHead() в core/system.php | — | — | — | Удаляется без замены (NOD-227): у страницы нет объекта и устойчивого source. view остаётся засчитанным просмотром объекта, первый владелец — Node на S11 |
 | 2, 15, 41 — оценки | getRatingView() | — | — | — | Удаляется по NOD-191, без замены |
-| 3, 40, 43 — комментарий | Comment, core/classes/comment.php | comment | account, shop, voting | comment:<id комментария> | Первое видимое состояние; физическое удаление — компенсация по rid. Позиционный слот в Comment::MODULES удаляется |
+| 3, 40, 43 — комментарий | Comment, core/classes/comment.php | comment | account, shop, voting; node.<name> для материала Node (S14) | comment:<id комментария>, mid — ID материала | Первое видимое состояние; физическое удаление — компенсация по rid. Позиционный слот в Comment::MODULES удаляется |
 | 4 — переход auto_links | modules/auto_links/index.php | visit | auto-links | link:<id ссылки> | После учёта outs; один раз за жизнь ссылки, не отменяется |
 | 5 — обратная связь | modules/contact/index.php | message | contact | req:<32 hex> | После успешной отправки; не отменяется |
 | 13 — тема форума | modules/forum/index.php | publish | forum.topic | topic:<id темы> | Создание видимой темы; удаление темы — компенсация |

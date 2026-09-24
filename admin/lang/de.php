@@ -722,6 +722,7 @@ define('_SCHEDULER_CRONFMT','Cron-Format: Minute Stunde Tag Monat Wochentag. Bei
 define('_SCHEDULER_WARN_DB','Automatisches Datenbank-Backup ist deaktiviert, daher wird der Scheduler-Job nicht ausgeführt.');
 define('_SCHEDULER_WARNLOG','Datei-Scan-Protokollierung ist deaktiviert, daher wird der Scheduler-Job nicht ausgeführt.');
 define('_SCHEDULER_WARN_GO','Zu den Sicherheitseinstellungen');
+define('_SCHEDULER_LIMIT','Einträge pro Lauf');
 define('_MONITOR_TIME_AGO','vor %d sek.');
 define('_MONITOR_TIME_NOW','Jetzt');
 

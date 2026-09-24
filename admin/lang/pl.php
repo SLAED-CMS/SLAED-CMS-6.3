@@ -722,6 +722,7 @@ define('_SCHEDULER_CRONFMT','Format cron: minuta godzina dzien miesiac dzien_tyg
 define('_SCHEDULER_WARN_DB','Automatyczna kopia zapasowa bazy danych jest wyłączona, więc zadanie schedulera nie zostanie uruchomione.');
 define('_SCHEDULER_WARNLOG','Rejestrowanie skanowania plików jest wyłączone, więc zadanie schedulera nie zostanie uruchomione.');
 define('_SCHEDULER_WARN_GO','Przejdź do ustawień bezpieczeństwa');
+define('_SCHEDULER_LIMIT','Elementow na uruchomienie');
 define('_MONITOR_TIME_AGO','%d sek.');
 define('_MONITOR_TIME_NOW','Teraz');
 

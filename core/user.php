@@ -222,18 +222,19 @@ function getCommentBranch(): void {
 # Render the comment list and submission form for an item
 # The list, the status zone and the form are three regions a fragment response addresses on its own, so an add never replaces the region it was submitted from
 # The editor field is named rather than numbered, because a view page already carries the target id and every comment id as element ids and a numeric one collides with them
+# A disabled mode keeps the discussion readable without a form, which is how a target that takes no new comment any more, such as a closed request, is shown
 function setComShow(int $id = 0, int $acomm = 0): string {
     global $conf, $user, $tpl, $com;
     $full = getVar('get', 'all', 'num', 0);
     $page = getVar('get', 'com', 'num', 0) ?: $com->getRootPage($full ?: getVar('get', 'at', 'num', 0));
+    $mode = CommentMode::tryFrom($acomm) ?? CommentMode::Disabled;
     $cont = $tpl->getHtmlFrag('title', ['title' => _COMMENTS, 'is_level_two' => true]);
     $cont .= $tpl->getHtmlFrag('block-content', ['id' => 'repcsave', 'content' => getCommentList($id, $conf['name'], $page, $full)]);
     $cont .= $tpl->getHtmlFrag('block-content', ['id' => 'repcstat', 'content' => '']);
-    if (!is_user() && $conf['comments']['anonpost'] == 0) {
+    if ($mode !== CommentMode::Disabled && !is_user() && $conf['comments']['anonpost'] == 0) {
         $cont .= $tpl->getHtmlFrag('alert', ['text' => _NOANONCOMMENTS, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
-    } else {
+    } elseif ($mode !== CommentMode::Disabled) {
         $userinfo = getUserInfo();
-        $mode = CommentMode::tryFrom($acomm) ?? CommentMode::Disabled;
         $note = ($mode === CommentMode::Moderated || $userinfo['access'] || (!is_user() && $conf['comments']['anonpost'] == 1));
         if ($note) $cont .= $tpl->getHtmlFrag('alert', ['text' => _POSTNOTE, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
         if (is_user()) {
@@ -486,6 +487,7 @@ function getUserBlock(): string {
 
 # Validate and save a new comment together with the notification of the admins subscribed to its module; answers the one comment that was stored instead of the whole list
 # The handler owns the transaction the comment and its queue row share: a comment that never commits leaves no mail behind, and a job is written once per stored comment
+# A reply to a request of support is announced by the extension of its type alone, which knows the sides of the request and never copies the private text
 # The queue row is a stored job and nothing more, so no message is delivered inside the request and no delivery outcome can reach this path or take the comment with it
 function addComment(): void {
     global $conf, $tpl, $com, $db;
@@ -500,7 +502,7 @@ function addComment(): void {
     $live = !empty($_SERVER['HTTP_HX_REQUEST']);
     $own = $db->setSqlBegin();
     $new = $com->addComment($mod, $id, $body, $name, $key, $pid);
-    if ($new['error'] === '' && $new['new']) {
+    if ($new['error'] === '' && $new['new'] && (getNodeTypeMap()[$mod] ?? null)?->ext !== 'support') {
         $link = $conf['homeurl'].'/index.php?name='.$mod.'&op=view&id='.$id.'&at='.$new['id'].'#'.$new['id'];
         $clink = $tpl->getHtmlFrag('link', ['href' => $link, 'title' => '', 'label_html' => $link]);
         addAdminMail($conf['comments']['addmail'], $mod, $new['name'], getModuleName($mod), 1, $clink);
@@ -1289,17 +1291,41 @@ function getFavoriteButton(?int $fid, string $mod): string {
 }
 
 # Add an item to the user's favorites list and echo the updated toggle button
+# A material of a registered Node type is added inside one transaction: the type and the material locked first, the favorites feature of the type and its extension,
+# the row, the reaction of the extension and the award; a material the user may not read, a switched-off feature or a refusal of the extension adds nothing
 function addFavorite() {
-    global $db, $conf, $user, $pnt;
+    global $db, $conf, $user, $pnt, $fld;
     $id = getVar('get', 'id',  'num',  0);
     $mod = filterVar(getVar('get', 'mod', 'text', ''));
     $uid = (is_user()) ? intval($user[0]) : 0;
-    if ($conf['favorites']['favact'] && $uid && $id && $mod) {
-        [$fav] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid AND fid = :fid AND modul = :modul', ['uid' => $uid, 'fid' => $id, 'modul' => $mod]));
-        if ($fav) {
-            echo getFavoriteButton($id, $mod);
-        } else {
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_favorites VALUES (NULL, :uid, :fid, :modul, NOW())', ['uid' => $uid, 'fid' => $id, 'modul' => $mod]);
+    $isnode = $mod !== '' && isset($conf['node']['types'][$mod]);
+    $type = $isnode ? (getNodeTypeMap()[$mod] ?? null) : null;
+    $pars = ['uid' => $uid, 'fid' => $id, 'modul' => $mod];
+    $sql = 'SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid AND fid = :fid AND modul = :modul';
+    if ($conf['favorites']['favact'] && $uid && $id && $type !== null) {
+        try {
+            $ext = getNodeHandler($type);
+            $serv = new NodeService($db, getNodeContext(), $fld);
+            if (!$db->setSqlBegin()) throw new NodeException('The transaction of a favorite cannot be started', NodeException::STORAGE);
+            $tgt = $serv->getLockedTarget($id, $type);
+            $open = $tgt !== null && $type->settings['features']['favorites'] && ($ext === null || $ext->checkNodeAction($type, $tgt, 'favorite'));
+            $seen = $open ? $db->getSqlQuery($sql, $pars) : null;
+            if ($seen === false) throw new RuntimeException('the favorites of the user could not be read');
+            if ($open && !$db->getSqlRow($seen)[0]) {
+                $done = $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_favorites VALUES (NULL, :uid, :fid, :modul, NOW())', $pars);
+                if ($done === false) throw new RuntimeException('the favorite was not stored');
+                $ext?->updateNodeAction($type, $tgt, 'favorite');
+                $pnt->addEvent('favorite', 'favorites', $mod.':'.$id, $uid, ['mid' => $id]);
+            }
+            if (!$db->setSqlCommit()) throw new RuntimeException('the commit of a favorite is uncertain');
+        } catch (Throwable $err) {
+            if ($db->checkSqlActive()) $db->setSqlRollback();
+            Logger::addSite('error', 'Node: a favorite could not be added', ['type' => $mod, 'nid' => $id, 'error' => $err->getMessage()]);
+        }
+    } elseif ($conf['favorites']['favact'] && $uid && $id && $mod && !$isnode) {
+        [$fav] = $db->getSqlRow($db->getSqlQuery($sql, $pars));
+        if (!$fav) {
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_favorites VALUES (NULL, :uid, :fid, :modul, NOW())', $pars);
             $pnt->addEvent('favorite', 'favorites', $mod.':'.$id, $uid, ['mid' => $id]);
         }
     }
@@ -1307,6 +1333,7 @@ function addFavorite() {
 }
 
 # Render the favorites of the logged-in user as shelves, one per module, under a lamp row and a search tile; the whole list is read in one pass because a shelf and the lamps need every row of the member. mod narrows the shelves to one module, q to the titles that carry the words, and part=shelves answers the htmx call of the search field and the chips with the shelves alone plus the out-of-band tally and chips
+# A fixed module is read from its table, a Node type through its light targets, which leaves out a material its viewer may no longer read
 function getFavoriteList(int $obj = 0): string {
     global $db, $conf, $user, $tpl;
     $uid = intval($user[0]);
@@ -1322,7 +1349,7 @@ function getFavoriteList(int $obj = 0): string {
     $result = $db->getSqlQuery('SELECT id, fid, modul, time FROM '.PREFIX_DB.'_favorites WHERE uid = :uid ORDER BY id DESC', ['uid' => $uid]);
     while ([$id, $fid, $modul, $time] = $db->getSqlRow($result)) {
         $num++;
-        if (!isset($tables[$modul]) || intval($fid) < 1) continue;
+        if ((!isset($tables[$modul]) && !isset($conf['node']['types'][$modul])) || intval($fid) < 1) continue;
         $fmap[$modul][intval($fid)][] = intval($id);
         $times[intval($id)] = (string)$time;
     }
@@ -1330,17 +1357,21 @@ function getFavoriteList(int $obj = 0): string {
     $shelves = [];
     $last = [];
     foreach ($fmap as $modul => $fids) {
-        $pp = [];
-        $pm = [];
-        foreach (array_keys($fids) as $idx => $val) {
-            $pp[] = ':f'.$idx;
-            $pm['f'.$idx] = $val;
+        $titles = [];
+        if (isset($tables[$modul])) {
+            $pp = [];
+            $pm = [];
+            foreach (array_keys($fids) as $idx => $val) {
+                $pp[] = ':f'.$idx;
+                $pm['f'.$idx] = $val;
+            }
+            $result = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_'.$tables[$modul].' WHERE id IN ('.implode(', ', $pp).')', $pm);
+            while ($row = $db->getSqlRow($result)) $titles[intval($row[0])] = (string)$row[1];
+        } else {
+            $titles = getNodeTitleMap(array_fill_keys(array_keys($fids), $modul));
         }
         $rows = [];
-        $result = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_'.$tables[$modul].' WHERE id IN ('.implode(', ', $pp).')', $pm);
-        while ($row = $db->getSqlRow($result)) {
-            $fid = intval($row[0]);
-            $title = (string)$row[1];
+        foreach ($titles as $fid => $title) {
             foreach ($fids[$fid] ?? [] as $id) {
                 $rows[$id] = [
                     'title' => $title,
@@ -1432,8 +1463,9 @@ function deleteFavorite(): string {
 
 # Output the RSS 2.0 feed for the specified module and optional category
 # Every address is escaped before it enters the document: the ampersand of a query string is a character reference in XML, and a reader that parses strictly rejects the whole feed
+# A registered Node type with the rss integration is read through the shared reader and prepared by the shared view preparer, at most one list page of the type
 function getRssChannel() {
-    global $db, $conf, $prs;
+    global $db, $conf, $prs, $fld;
     header_remove('X-Content-Type-Options');
     header('Content-Type: application/rss+xml; charset='._CHARSET);
 
@@ -1446,7 +1478,20 @@ function getRssChannel() {
     $id   = getVar('post', 'id',  'num', 0) ?: getVar('get', 'id',  'num', 0);
     $self = htmlspecialchars($conf['homeurl'].'/index.php?go=rss&name='.$name.(($cat) ? '&cat='.$cat : '').(($id) ? '&id='.$id : '').'&num='.$num);
 
-    if ($name == 'shop') {
+    $type = getNodeTypeMap()[$name] ?? null;
+    $nodes = [];
+    if ($type !== null && $type->active && $type->settings['integrations']['rss']) {
+        $size = min($num, $type->settings['list']['limit'], intval($conf['node']['limits']['maxlist'] ?? 0));
+        try {
+            $query = (new NodeQuery($db, getNodeContext(), $fld))->setNodeType($type)->setNodeExtension(getNodeHandler($type))->setNodePage(1, max(1, $size));
+            if ($cat && $type->settings['features']['categories']) $query->setNodeCategory($cat);
+            if (in_array('published', $type->settings['list']['orders'], true)) $query->setNodeOrder('published', 'desc');
+            $nodes = $query->getNodeList();
+        } catch (NodeException $err) {
+            Logger::addSite('error', 'RSS: a Node type cannot be read', ['type' => $name, 'code' => $err->getCode()]);
+        }
+        $result = '';
+    } elseif ($name == 'shop') {
         $params = [];
         $where = $cat ? 'WHERE s.cid = :cat AND s.time <= NOW() AND s.status = 1' : 'WHERE s.time <= NOW() AND s.status = 1';
         if ($cat) $params['cat'] = $cat;
@@ -1467,6 +1512,19 @@ function getRssChannel() {
     .'<copyright>Copyright (c) SLAED CMS '.$conf['version']."</copyright>\n"
     .'<language>'.htmlspecialchars(substr(_LOCALE, 0, 2))."</language>\n"
     .'<lastBuildDate>'.date('D, j M Y H:i:s O')."</lastBuildDate>\n\n";
+    foreach ($nodes as $node) {
+        $view = (new NodeView($prs, $fld))->getNodeView($type, $node, 'card');
+        $rurl = htmlspecialchars($conf['homeurl'].'/'.$view['href']);
+        $content .= "<item>\n"
+        .'<title>'.htmlspecialchars($node->title)."</title>\n"
+        .'<pubDate>'.htmlspecialchars(date('D, j M Y H:i:s O', strtotime((string)$node->pubdate)))."</pubDate>\n"
+        .'<guid>'.$rurl."</guid>\n"
+        .'<link>'.$rurl."</link>\n"
+        .'<description>'.htmlspecialchars($view['intro_html'])."</description>\n"
+        .($type->settings['features']['comments'] ? '<comments>'.$rurl."#comm</comments>\n" : '')
+        .(($view['ctitle'] !== '') ? '<category>'.htmlspecialchars($view['ctitle'])."</category>\n" : '')
+        ."</item>\n\n";
+    }
     if ($name && $name == 'shop' && $result) {
         while ([$rid, $rtitle, $rtime, $rhometext, $rctitle] = $db->getSqlRow($result)) {
             $rurl = htmlspecialchars($conf['homeurl'].'/index.php?name='.$name.'&op=view&id='.$rid);

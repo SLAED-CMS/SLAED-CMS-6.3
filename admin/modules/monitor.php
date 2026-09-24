@@ -546,8 +546,18 @@ function getMonitorPartial(array $snapshot, bool $showstat, bool $showtraf, bool
 }
 
 # Collects monitor counts and database size statistics needed for dashboard summary
+# The website and files tiles count the published materials of the first active type of the display modes article and files through the shared reader, or stay out
 function getMonitorDbStats(object $db, array $conf): array {
+    global $fld;
     $userson = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_session'));
+    $count = static function (string $mode) use ($db, $fld): ?int {
+        $type = getNodeModeType($mode);
+        try {
+            return ($type !== null) ? (new NodeQuery($db, getNodeContext(), $fld))->setNodeType($type)->getNodeCount() : null;
+        } catch (NodeException) {
+            return null;
+        }
+    };
     $dbsize = 0;
     $dbtabs = 0;
     $dbname = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($conf['db']['name'] ?? ''));
@@ -565,6 +575,8 @@ function getMonitorDbStats(object $db, array $conf): array {
         'userson' => $userson,
         'dbsize' => $dbsize,
         'dbtabs' => $dbtabs,
+        'cntnews' => $count('article'),
+        'cntfile' => $count('files'),
     ];
 }
 
@@ -745,6 +757,10 @@ function getMonitorTemplateVars(?array $snapshot, array $ctx, array $conf, objec
             'status_oob' => '',
             'traffic_oob' => '',
             'dbtabs' => $ctx['dbtabs'],
+            'has_news' => $ctx['cntnews'] !== null,
+            'cntnews' => (string)$ctx['cntnews'],
+            'has_file' => $ctx['cntfile'] !== null,
+            'cntfile' => (string)$ctx['cntfile'],
             'userson' => $ctx['userson'],
             'servsoftname' => $ctx['servname'],
             'servver' => $ctx['servver'],

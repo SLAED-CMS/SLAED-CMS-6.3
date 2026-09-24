@@ -1201,7 +1201,7 @@ final class NodeService {
     }
 
     # Delete a material physically at the expected version with its categories, relations, resource rows and job; the files it pointed at stay
-    # The publication award of the author is compensated once through Point, and the extension removes its rows inside the same transaction
+    # The publication award of the author is compensated once through Point, and the extension removes its rows inside the same transaction, as do the favorites of it
     public function deleteNode(int $id, int $version): void {
         [$head, $type] = $this->getNodeHead($id);
         $point = $this->getPoint();
@@ -1220,6 +1220,7 @@ final class NodeService {
                 throw new NodeException('The points of a node action are lost', NodeException::STORAGE, $err);
             }
             if ($this->ext !== null) $this->ext->deleteNodeData($this->getStoredNode($id, $type, true) ?? throw $this->getMissing('The material does not exist'));
+            $this->getQueryRes('DELETE FROM '.PREFIX_DB.'_favorites WHERE modul = :modul AND fid = :fid', ['modul' => $type->name, 'fid' => $id]);
             $this->getQueryRes('DELETE FROM '.PREFIX_DB.'_nodes WHERE id = :id AND version = :ver', ['id' => $id, 'ver' => $version]);
             return true;
         });
@@ -1236,13 +1237,32 @@ final class NodeService {
         $this->addNodePoint('view', $type, 'node:'.$id, $this->ctx->uid);
     }
 
-    # Write trusted aggregates of a global owner into one material inside the open transaction of that owner: the type row, then the material row, then the columns
-    private function setNodeCount(int $id, NodeType $type, array $vals): void {
+    # Lock the type row and then the material row inside the open transaction of a global owner, both as locking reads, so no snapshot is taken before the wait
+    private function setTargetLock(int $id, NodeType $type): void {
         if (!$this->db->checkSqlActive()) throw $this->getInvalid('transaction');
         $sql = 'SELECT id FROM '.PREFIX_DB.'_node_types WHERE id = :id FOR UPDATE';
         if ($this->getQueryRes($sql, ['id' => $type->id])->fetchColumn() === false) throw $this->getMissing('The node type does not exist');
         $sql = 'SELECT id FROM '.PREFIX_DB.'_nodes WHERE id = :id AND tid = :tid FOR UPDATE';
         if ($this->getQueryRes($sql, ['id' => $id, 'tid' => $type->id])->fetchColumn() === false) throw $this->getMissing('The material does not exist');
+    }
+
+    # Lock one material for a global owner inside its open transaction and read its light target only then, with the very predicate of the reader
+    # A material that is missing, closed or of another type answers null; the rating subsystem calls this as the first statement of a vote
+    public function getLockedTarget(int $id, NodeType $type): ?NodeTarget {
+        if ($id < 1 || $id > self::MAXINT) throw $this->getInvalid('id');
+        try {
+            $this->setTargetLock($id, $type);
+        } catch (NodeException $err) {
+            if ($err->getCode() === NodeException::NOTFOUND) return null;
+            throw $err;
+        }
+        $tgt = $this->query->getNodeTarget($type->name, $id);
+        return ($tgt !== null && $tgt->type->id === $type->id) ? $tgt : null;
+    }
+
+    # Write trusted aggregates of a global owner into one material inside the open transaction of that owner: the type row, then the material row, then the columns
+    private function setNodeCount(int $id, NodeType $type, array $vals): void {
+        $this->setTargetLock($id, $type);
         $set = implode(', ', array_map(fn($v) => $v.' = :'.$v, array_keys($vals)));
         $this->getQueryRes('UPDATE '.PREFIX_DB.'_nodes SET '.$set.' WHERE id = :id', $vals + ['id' => $id]);
     }
@@ -1257,6 +1277,18 @@ final class NodeService {
     public function updateNodeRating(int $id, NodeType $type, int $score, int $ratings): void {
         if ($ratings < 0 || $score < $ratings || $score > 5 * $ratings || $score > self::MAXINT) throw $this->getInvalid('rating');
         $this->setNodeCount($id, $type, ['score' => $score, 'ratings' => $ratings]);
+    }
+
+    # Clear the link of every material to one shared poll that is being deleted, inside the open transaction of the poll owner, who already holds the named lock of the poll
+    # Which types a poll reaches is only known from the materials, and a plain read of them would open a snapshot before the wait, so every type row is locked first
+    # by ascending id, then the materials of the poll by ascending id; the owner raises the cache generation after its commit
+    public function deleteNodePoll(int $id): void {
+        if ($this->ctx->aid < 1 || $this->ctx->task) throw $this->getDenied('Only an administrator deletes a poll');
+        if ($id < 1 || $id > self::MAXINT) throw $this->getInvalid('poll');
+        if (!$this->db->checkSqlActive()) throw $this->getInvalid('transaction');
+        $this->getQueryRes('SELECT id FROM '.PREFIX_DB.'_node_types ORDER BY id FOR UPDATE');
+        $ids = $this->getQueryRes('SELECT id FROM '.PREFIX_DB.'_nodes WHERE poll = :poll ORDER BY id FOR UPDATE', ['poll' => $id])->fetchAll(PDO::FETCH_COLUMN);
+        if ($ids) $this->getQueryRes('UPDATE '.PREFIX_DB.'_nodes SET poll = 0, version = version + 1, updated = NOW() WHERE poll = :poll', ['poll' => $id]);
     }
 
     # Run one counted action on an accessible resource: the extension of the type may forbid it first and follows it inside the same transaction when the statement changed the row

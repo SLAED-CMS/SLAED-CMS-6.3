@@ -6,6 +6,8 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
+# The largest limit of each system job whose settings carry one; the adapter of the job bounds the value the same way
+const SCHED_LIMITS = ['nodepublish' => 500, 'nodesync' => 50];
 
 function scheduler(): void {
     global $afile, $conf, $tpl;
@@ -194,6 +196,21 @@ function add(string $name = ''): void {
             'is_config' => true,
         ]),
     ];
+    if (isset(SCHED_LIMITS[$key], $job['settings']['limit'])) {
+        $rows[] = [
+            'label_for' => 'f-limit',
+            'label_html' => _SCHEDULER_LIMIT,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number',
+                'name_attr' => 'limit',
+                'input_id' => 'f-limit',
+                'value_attr' => (string)$job['settings']['limit'],
+                'is_required' => true,
+                'is_config' => true,
+                'input_attr' => 'min="1" max="'.SCHED_LIMITS[$key].'"',
+            ]),
+        ];
+    }
     $rows[] = [
         'label_for' => 'f-priority',
         'label_html' => _SCHEDULER_PRIO, 'hint_html' => _SCHEDULER_PRIOTIP, 'hint_id' => $hntid = getFieldIds('f-priority')['hint'],
@@ -264,6 +281,15 @@ function save(): void {
             setRedirect($afile.'.php?name=scheduler&op=add&job='.$name);
             return;
         }
+        $sett = $issys ? ((isset($curr['settings']) && is_array($curr['settings'])) ? $curr['settings'] : []) : ['url' => $url];
+        if ($issys && isset(SCHED_LIMITS[$name], $sett['limit'])) {
+            $lim = (int)getVar('post', 'limit', 'num', 0);
+            if ($lim < 1 || $lim > SCHED_LIMITS[$name]) {
+                setRedirect($afile.'.php?name=scheduler&op=add&job='.$name);
+                return;
+            }
+            $sett['limit'] = (string)$lim;
+        }
         $priority = (int)getVar('post', 'priority', 'num', 100);
         foreach ($jobs as $jkey => $jval) {
             if ($jkey !== $name && (int)($jval['priority'] ?? 100) === $priority) {
@@ -280,7 +306,7 @@ function save(): void {
             'priority' => $priority,
             'lock_timeout' => getVar('post', 'lock_timeout', 'num', 1800),
             'manual' => getVar('post', 'manual', 'num', 1),
-            'settings' => $issys ? ((isset($curr['settings']) && is_array($curr['settings'])) ? $curr['settings'] : []) : ['url' => $url],
+            'settings' => $sett,
         ];
         $data = $schedcfg;
         $data['jobs'][$name] = $item;

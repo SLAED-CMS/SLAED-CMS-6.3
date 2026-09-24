@@ -8,7 +8,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('search')) die('Illegal file acces
 
 function getSearchmodsOpts(string $cmod = ''): string {
     global $conf, $tpl;
-    $mods = explode(',', (string)$conf['search']['mods']);
+    $mods = array_merge(explode(',', (string)$conf['search']['mods']), array_keys(array_filter(getNodeTypeMap(), fn($v) => $v->settings['integrations']['search'])));
     $opts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $cmod === '']);
     foreach ($mods as $mod) {
         $mod = trim($mod);
@@ -171,6 +171,7 @@ function getSearchwhere(): array {
     $find = trim(getVar('req', 'find', 'text', ''));
     $fmod = getVar('req', 'fmod', 'var', '');
     $mods = array_map('trim', explode(',', (string)$conf['search']['mods']));
+    $mods = array_merge($mods, array_keys(array_filter(getNodeTypeMap(), fn($v) => $v->settings['integrations']['search'])));
     if ($fmod !== '' && !in_array($fmod, $mods, true)) $fmod = '';
     $cond = [];
     $pars = [];
@@ -428,9 +429,23 @@ function config(): void {
             'code_text' => $file,
         ]);
     }
+    $typehtml = '';
+    $hidden = [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]];
+    foreach (getNodeTypeMap() as $name => $type) {
+        $typehtml .= $tpl->getHtmlFrag('checkbox', [
+            'is_right' => true,
+            'name_attr' => 'ntype[]',
+            'value_attr' => $name,
+            'is_checked' => $type->settings['integrations']['search'],
+            'label_text' => getModuleName($name),
+            'code_text' => $name,
+        ]);
+        $hidden[] = ['nameattr' => 'ver['.$name.']', 'valueattr' => (string)$type->version];
+    }
     $cfgrows = [
         ['label_html' => _ASEARCH, 'label_id' => $labid = getFieldIds('', 'asearch')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'asearch', 'value' => (string)$conf['search']['asearch'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _SMODULE, 'hint_html' => _CTRLINFO, 'hint_id' => 'f-search-hint', 'field_html' => $modshtml, 'is_full' => true],
+        ...($typehtml !== '' ? [['label_html' => _NODE, 'field_html' => $typehtml, 'is_full' => true]] : []),
         ['label_for' => 'f-slet', 'label_html' => _SEARCHLETMIN, 'hint_html' => _SEARCHLETINFO, 'hint_id' => $hntid = getFieldIds('f-slet')['hint'], 'field_html' => $tpl->getHtmlFrag('input', ['describedby' => $hntid, 'itype' => 'number', 'name_attr' => 'slet', 'input_id' => 'f-slet', 'value_attr' => (string)$conf['search']['slet']])],
         ['label_for' => 'f-slimit', 'label_html' => _SEARCHLIMIT, 'hint_html' => _SEARCHLIMITINFO, 'hint_id' => $hntid = getFieldIds('f-slimit')['hint'], 'field_html' => $tpl->getHtmlFrag('input', ['describedby' => $hntid, 'itype' => 'number', 'name_attr' => 'slimit', 'input_id' => 'f-slimit', 'value_attr' => (string)$conf['search']['slimit']])],
         ['label_for' => 'f-snum', 'label_html' => _SEARCHNUM, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'snum', 'input_id' => 'f-snum', 'value_attr' => (string)$conf['search']['snum']])],
@@ -440,7 +455,7 @@ function config(): void {
     ];
     $html = $tpl->getHtmlPart('box', ['title' => _PREFERENCES, 'content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=search&op=save',
-        'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]],
+        'hidden' => $hidden,
         'rows' => $cfgrows,
         'submit_label' => _SAVECHANGES,
     ])]);
@@ -476,8 +491,17 @@ function config(): void {
 function save(): void {
     global $afile;
     $iswarn = !checkSiteToken(getVar('post', 'token', 'raw', ''), 'search');
+    $text = $iswarn ? _TOKENMISS : _SUCCSAVE;
     if (!$iswarn) {
         $mods = getVar('post', 'search[]', 'var', []);
+        $picks = getVar('post', 'ntype[]', 'var', []);
+        $vers = getVar('post', 'ver[]', '', []);
+        foreach (getNodeTypeMap() as $name => $type) {
+            $want = in_array($name, is_array($picks) ? $picks : [], true);
+            if (!is_array($vers) || !isset($vers[$name]) || $want === $type->settings['integrations']['search']) continue;
+            $fail = updateNodeTypePart($name, 'integrations', array_replace($type->settings['integrations'], ['search' => $want]), intval($vers[$name]));
+            if ($fail !== '') [$iswarn, $text] = [true, $fail];
+        }
         setConfigFile('search.php', [
             'asearch' => getVar('post', 'asearch', 'num'),
             'mods' => $mods ? implode(',', $mods) : '0',
@@ -489,7 +513,7 @@ function save(): void {
             'anump' => getVar('post', 'anump', 'num', 10),
         ]);
     }
-    setRedirect($afile.'.php?name=search&op=config', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
+    setRedirect($afile.'.php?name=search&op=config', false, 302, $text, $iswarn);
 }
 
 function reindex(): void {

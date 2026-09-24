@@ -22,11 +22,10 @@ function info(): void {
     $rsslink = $conf['homeurl'].'/index.php?go=rss'.$rssmod.$rsscat.$rssnum;
     
     $modsOptions = '';
-    $mods = ['shop' => _SHOP];
+    $mods = is_active('shop') ? ['shop' => _SHOP] : [];
+    foreach (getNodeTypeMap() as $key => $type) if ($type->active && $type->settings['integrations']['rss']) $mods[$key] = getModuleName($key);
     foreach ($mods as $key => $val) {
-        if (is_active($key)) {
-            $modsOptions .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$key, 'label_text' => (string)$val, 'is_selected' => $key == $mod]);
-        }
+        $modsOptions .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$key, 'label_text' => (string)$val, 'is_selected' => $key == $mod]);
     }
     $numOptions = '';
     $lim = 1;

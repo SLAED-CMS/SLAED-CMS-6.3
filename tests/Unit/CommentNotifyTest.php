@@ -140,12 +140,13 @@ final class CommentNotifyTest extends TestCase
     }
 
     # The handler owns one transaction and both writes happen inside it, the notification only for a comment this request stored
+    # A reply to a request of support is announced by its extension alone, so the general notice leaves that one type of target out
     #[Test]
     public function theHandlerOwnsTheTransactionSpanningBothWrites(): void
     {
         $code = $this->getSource('core/user.php', 'addComment');
         $this->assertStringContainsString('$own = $db->setSqlBegin();', $code);
-        $this->assertStringContainsString('if ($new[\'error\'] === \'\' && $new[\'new\']) {', $code);
+        $this->assertStringContainsString('if ($new[\'error\'] === \'\' && $new[\'new\'] && (getNodeTypeMap()[$mod] ?? null)?->ext !== \'support\') {', $code);
         $this->assertStringContainsString('addAdminMail($conf[\'comments\'][\'addmail\']', $code);
         $this->assertStringContainsString('if ($own) $db->setSqlRollback();', $code);
         $begin = strpos($code, 'setSqlBegin');

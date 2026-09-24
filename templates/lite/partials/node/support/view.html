@@ -1,28 +1,24 @@
 <article{% if id %} id="node-{{ id }}"{% endif %} class="sl-post sl-fullview">
-  <h1 class="sl-title">{% if fav_html %}{{{ fav_html }}} {% endif %}{{ title }}</h1>
+  <h1 class="sl-title">{{ title }}</h1>
   <div class="sl-meta">
     <ul class="sl-pull-right">
-      {% if is_views %}<li><span title="{{ views_label }}" class="sl-chip sl-views"><i class="bi bi-eye" aria-hidden="true"></i> {{ views }}</span></li>{% endif %}
+      {% if ext.card_href %}<li class="sl-meta-actions"><a href="{{ ext.card_href }}" title="{{ ext.state_title }}" class="sl-but-mini"><i class="bi bi-kanban" aria-hidden="true"></i></a></li>{% endif %}
       {% if edit_href %}<li class="sl-meta-actions"><a href="{{ edit_href }}" title="{{ edit_label }}" class="sl-but-mini"><i class="bi bi-pencil" aria-hidden="true"></i></a></li>{% endif %}
     </ul>
     <ul>
+      {% if ext.state_label %}<li><span title="{{ ext.state_title }}" class="sl-chip {% if ext.is_closed %}sl-chip-neutral{% elseif ext.is_author %}sl-chip-warn{% else %}sl-chip-info{% endif %}"><i class="bi bi-life-preserver" aria-hidden="true"></i> {{ ext.state_label }}</span></li>{% endif %}
+      {% if ext.prio_label %}<li><span title="{{ ext.prio_title }}" class="sl-chip sl-chip-neutral"><i class="bi bi-flag" aria-hidden="true"></i> {{ ext.prio_label }}</span></li>{% endif %}
       {% if is_date and date %}<li><time datetime="{{ date_iso }}" title="{{ date_label }}" class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> {{ date }}</time></li>{% endif %}
       {% if is_category and chref %}<li><a href="{{ chref }}" title="{{ ctitle }}" class="sl-chip sl-cat"><i class="bi bi-folder" aria-hidden="true"></i> {{ ctitle }}</a></li>{% endif %}
       {% if is_author and author %}<li>{% if ahref %}<a href="{{ ahref }}" title="{{ author }}" class="sl-author"><i class="bi bi-person" aria-hidden="true"></i> {{ author }}</a>{% else %}<span title="{{ author_label }}">{{ author }}</span>{% endif %}</li>{% endif %}
     </ul>
   </div>
   <div class="sl-entry-content">
-    {{{ poll_html }}}
     {{{ intro_html }}}
     {% if body_html %}{{{ body_html }}}{% endif %}
     {% if fields_html %}<div class="sl-section">{{{ fields_html }}}</div>{% endif %}
   </div>
-  {{{ assets_html }}}
-  {% if rating_html %}<div class="sl-meta-foot">
-    <div class="sl-rate-box sl-pull-right">{{{ rating_html }}}</div>
+  {% if ext.is_owner %}<div class="sl-meta-foot">
+    <form method="post" action="{{ ext.action }}" class="sl-inline-form"><input type="hidden" name="token" value="{{ ext.token }}"><input type="hidden" name="version" value="{{ ext.version }}"><input type="hidden" name="state" value="{{ ext.next }}"><button type="submit" class="sl-but"><i class="bi bi-{% if ext.is_closed %}arrow-counterclockwise{% else %}check2-circle{% endif %}" aria-hidden="true"></i> {{ ext.switch_label }}</button></form>
   </div>{% endif %}
-  {% if rels_html %}<section>
-  <h2 class="sl-related-title">{{ rels_label }}</h2>
-  <div class="sl-section">{{{ rels_html }}}</div>
-  </section>{% endif %}
 </article>

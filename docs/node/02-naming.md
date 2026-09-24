@@ -26,6 +26,7 @@
 | Общий обработчик RSS и Atom | `Feed` |
 | Файл общего обработчика лент | `core/classes/feed.php` |
 | Получение содержимого ленты | `Feed::getFeedContent()` |
+| Нормализация адреса ленты | `Feed::getFeedUrl()` |
 | Максимальный размер ответа ленты | `rss.bytes` |
 | Тайм-аут получения ленты | `rss.timeout` |
 | Максимум перенаправлений ленты | `rss.redirects` |
@@ -379,14 +380,17 @@
 |---|---|
 | Point | getEventId — поиск исходного начисления для компенсации, отдельно от Rating |
 | Rating | getRating, addRating, deleteRating, getRatingList; точные сигнатуры в 05 |
-| Общая сборка core/system.php | getNodeContext, getRatingService, getNodeTypeMap (перенесена из core/admin.php на S13: её читают и публичные getModuleName(), blocks/modules.php, getTplModuleSelect()), getUserMail — адрес существующего аккаунта для письма Node или пустая строка (решение пользователя 2026-09-23, S13); checkUploadModer — право модератора места загрузки: для типа Node только ключ node-<name>, для остальных модулей — ключ модуля; заменяет is_moder() в шести upload helpers (решение пользователя 2026-09-23, S11) |
-| Общие экраны core/admin.php | updateNodeTypePart — сохранение одной части типа (fields, uploads, rating) через NodeService с версией формы (решение пользователя 2026-09-23, S10) |
+| Общая сборка core/system.php | getNodeContext, getRatingService, getNodeTypeMap (перенесена из core/admin.php на S13: её читают и публичные getModuleName(), blocks/modules.php, getTplModuleSelect()), getUserMail — адрес существующего аккаунта для письма Node или пустая строка (решение пользователя 2026-09-23, S13); checkUploadModer — право модератора места загрузки: для типа Node только ключ node-<name>, для остальных модулей — ключ модуля; заменяет is_moder() в шести upload helpers (решение пользователя 2026-09-23, S11); getAdminNames — администраторы с ключом права и главные администраторы как id => имя для назначения работы (решение пользователя 2026-09-24, S14); getNodeHandler — фабрика расширения типа с общим контекстом (перенесена из modules/node/index.php на S16), getNodeTitleMap — заголовки читаемых целей Node для списков избранного, getNodeModeType — первый активный тип без расширения по view.mode, getNodeBlockParam — разбор и проверка `_blocks.param` блока node.php (решение пользователя 2026-09-24, S16) |
+| Общие экраны core/admin.php | updateNodeTypePart — сохранение одной части типа (fields, uploads, rating, integrations) через NodeService с версией формы (решение пользователя 2026-09-23, S10; часть integrations — экраны sitemap и поиска, S16) |
 | Константы admin/lang | `_NODE_STALE`, `_NODE_BAD`, `_NODE_PROOF`, `_NODE_MANAGE` — отказ по версии, отказ типа, вердикт Node-proof на экране restore, подпись права `node` (S10); модульные константы S13 эти имена не повторяют |
 | Конфигурация core/system.php | getConfigCode, setConfigSource, getConfigJournal, setConfigRestore; getConfig получает fresh; контракт — 06-types.md → «Заметки реализации S03» |
 | NodeQuery | setNodeTypes, setNodeSearch, setNodeHome, getNodeTree, getNodeSitemap, getNodeDeadline, getNodeTypeExport, filterNodeSettings — единый валидатор настроек типа для чтения и записи (решение пользователя 2026-09-23, S09) |
-| NodeService | updateNodeViews, updateNodeComments, updateNodeRating, addNodeTypeImport; getNodePreview — полная проверка и нормализация создания без записи для preview; updateNodeCategory, deleteNodeCategory — изменение и удаление категории типа Node под общим порядком блокировок (решения пользователя 2026-09-23, S11) |
+| NodeService | updateNodeViews, updateNodeComments, updateNodeRating, addNodeTypeImport; getLockedTarget — блокировка типа и материала в транзакции владельца и чтение цели после неё (решение пользователя 2026-09-24, S16); deleteNodePoll (S16); getNodePreview — полная проверка и нормализация создания без записи для preview; updateNodeCategory, deleteNodeCategory — изменение и удаление категории типа Node под общим порядком блокировок (решения пользователя 2026-09-23, S11) |
 | Template | checkTemplateFile — наличие файла представления для fallback режима Node |
 | Фрагмент темы | fragments/repeat.html — повторяемые строки формы, канон обеих тем (решение пользователя 2026-09-23, S13) |
+| Шаблоны режима support (lite) | partials/node/support/view.html и fragments/node/support/card.html — полный вид обращения с состоянием, приоритетом и переключателем владельца и карточка списка с состоянием; остальные файлы режима берутся из базового комплекта (S14) |
+| Константы modules/node/lang и admin/lang | `_NODE_WSTAFF`, `_NODE_WUSER`, `_NODE_WCLOSE`, `_NODE_PLOW`, `_NODE_PNORM`, `_NODE_PHIGH`, `_NODE_PURGE`, `_NODE_STATE`, `_NODE_PRIO`, `_NODE_CLOSE`, `_NODE_REOPEN`, `_NODE_SSAVED`, `_NODE_MNEW`, `_NODE_MUSER`, `_NODE_MSTAFF`; админские `_NODE_ASSIGN`, `_NODE_CARD`, `_NODE_LAST`, `_NODE_NOBODY`, `_NODE_QUEUE` (S14) |
+| Файловый блок и колонка | blocks/node.php — единственный блок Node; `_blocks.param` VARCHAR(255) — канонический JSON `type`, `mode`, `limit` экземпляра (NOD-229, S16); render_blocks() получает последний параметр `$param` |
 | FileManager | getPathLock и deletePathLock становятся повторно входимыми, новых имён нет |
 | Cache | getWriteGuard, deleteWriteGuard, checkWriteGuard — отсутствие незавершённых маркеров после попытки восстановления и читаемость поколения; addEpoch получает force и результат bool |
 

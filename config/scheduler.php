@@ -100,6 +100,19 @@ return [
                     'limit' => '50',
                 ],
             ],
+            'nodesync' => [
+                'title' => 'Node sync',
+                'type' => 'system',
+                'active' => '1',
+                'system' => 'nodesync',
+                'schedule' => '*/5 * * * *',
+                'priority' => '7',
+                'lock_timeout' => '180',
+                'manual' => '1',
+                'settings' => [
+                    'limit' => '10',
+                ],
+            ],
             'sitemap' => [
                 'title' => 'Sitemap',
                 'type' => 'system',

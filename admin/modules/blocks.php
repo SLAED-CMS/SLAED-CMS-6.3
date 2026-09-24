@@ -88,7 +88,7 @@ function add(): void {
     $files = scandir(BASE_DIR.'/blocks');
     foreach ($files as $file) {
         if (preg_match('/^(.+)\.php$/', $file, $matches)) {
-            if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_blocks WHERE bfile = :file', ['file' => $file])) == 0) {
+            if ($file === 'node.php' || $db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_blocks WHERE bfile = :file', ['file' => $file])) == 0) {
                 $bfopts .= $tpl->getHtmlFrag('select-option', [
                     'value_attr' => $file,
                     'label_text' => $matches[0],
@@ -374,8 +374,12 @@ function addsave(): void {
             $which = (in_array('home', $bwhere)) ? 'home' : $which;
             if ($which == '') $which = implode(',', $bwhere);
         }
-        $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_blocks VALUES (NULL, :bkey, :title, :content, :url, :bpos, :weight, :active, :refresh, :btime, :lang, :bfile, :view, :expire, :action, :which)', [
-            'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bpos' => $bpos, 'weight' => $weight, 'active' => $active, 'refresh' => $refresh, 'btime' => $btime, 'lang' => $lang, 'bfile' => $bfile, 'view' => $view, 'expire' => $expire, 'action' => $action, 'which' => $which
+        $param = ($bfile === 'node.php') ? json_encode(['type' => '', 'mode' => 'last', 'limit' => 10]) : '';
+        $sql = 'INSERT INTO '.PREFIX_DB.'_blocks VALUES (NULL, :bkey, :title, :content, :url, :bpos, :weight, :active, :refresh, :btime, :lang, :bfile, :view, :expire,'
+            .' :action, :which, :param)';
+        $db->getSqlQuery($sql, [
+            'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bpos' => $bpos, 'weight' => $weight, 'active' => $active, 'refresh' => $refresh,
+            'btime' => $btime, 'lang' => $lang, 'bfile' => $bfile, 'view' => $view, 'expire' => $expire, 'action' => $action, 'which' => $which, 'param' => $param,
         ]);
         setRedirect($afile.'.php?name=blocks', false, 302, _SUCCSAVE);
     }
@@ -482,7 +486,9 @@ function edit(): void {
     setHead();
     $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _DOCS], 'tab' => 3]);
     $bid = getVar('get', 'id', 'num');
-    [$bkey, $title, $content, $url, $bpos, $weight, $active, $refresh, $lang, $bfile, $view, $expire, $action, $which] = $db->getSqlRow($db->getSqlQuery('SELECT bkey, title, content, url, bpos, weight, status, refresh, lang, bfile, view, expire, action, which FROM '.PREFIX_DB.'_blocks WHERE id = :bid', ['bid' => $bid]));
+    $sql = 'SELECT bkey, title, content, url, bpos, weight, status, refresh, lang, bfile, view, expire, action, which, param FROM '.PREFIX_DB.'_blocks WHERE id = :bid';
+    $row = $db->getSqlRow($db->getSqlQuery($sql, ['bid' => $bid]));
+    [$bkey, $title, $content, $url, $bpos, $weight, $active, $refresh, $lang, $bfile, $view, $expire, $action, $which, $param] = $row;
     if ($url != '') {
         $type = '('._BLOCKRSS.')';
     } elseif ($bfile != '') {
@@ -525,6 +531,23 @@ function edit(): void {
                 'options_html' => $bfopts,
             ]),
         ];
+        if ($bfile === 'node.php') {
+            $set = getNodeBlockParam((string)$param);
+            if ($set === null) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _BLOCKPROBLEM]);
+            $set ??= ['type' => '', 'mode' => 'last', 'limit' => 10];
+            $topts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $set['type'] === '']);
+            foreach (getNodeTypeMap() as $name => $type) {
+                if (!$type->settings['integrations']['blocks']) continue;
+                $topts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $name, 'label_text' => getModuleName($name), 'is_selected' => $set['type'] === $name]);
+            }
+            $rows[] = ['label_for' => 'f-ntype', 'label_html' => _TYPE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'ntype', 'selectid' => 'f-ntype',
+                'options_html' => $topts])];
+            $rows[] = ['label_for' => 'f-nmode', 'label_html' => _SHOW, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'nmode', 'selectid' => 'f-nmode',
+                'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => 'last', 'label_text' => _NEW, 'is_selected' => $set['mode'] === 'last'])
+                    .$tpl->getHtmlFrag('select-option', ['value_attr' => 'home', 'label_text' => _HOME, 'is_selected' => $set['mode'] === 'home'])])];
+            $rows[] = ['label_for' => 'f-nlimit', 'label_html' => _C_13, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nlimit',
+                'input_id' => 'f-nlimit', 'value_attr' => (string)$set['limit'], 'is_required' => true])];
+        }
     } elseif ($url != '') {
         $rows[] = [
             'label_for' => 'f-url',
@@ -721,6 +744,14 @@ function editsave(): void {
     if ($warn) {
         setRedirect($afile.'.php?name=blocks&op=edit&id='.$bid, false, 302, _TOKENMISS, true);
     }
+    $param = '';
+    if ($bfile === 'node.php') {
+        $set = ['type' => (string)getVar('post', 'ntype', 'raw', ''), 'mode' => (string)getVar('post', 'nmode', 'raw', 'last')];
+        $set['limit'] = intval(getVar('post', 'nlimit', 'num', 10));
+        $param = (string)json_encode($set, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if (getNodeBlockParam($param) === null) setRedirect($afile.'.php?name=blocks&op=edit&id='.$bid, false, 302, _BLOCKPROBLEM, true);
+    }
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET param = :param WHERE id = :bid', ['param' => $param, 'bid' => $bid]);
     if (isset($bwhere)) {
         $which = '';
         if (in_array('all', $bwhere)) $which = 'all';

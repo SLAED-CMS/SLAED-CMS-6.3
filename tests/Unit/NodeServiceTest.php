@@ -91,7 +91,9 @@ final class NodeServiceTest extends TestCase
             'deleteNode' => ['int id', 'int version', 'void'],
             'deleteNodeAssetReport' => ['int id', 'NodeType type', 'bool useful', 'void'],
             'deleteNodeCategory' => ['int id', 'void'],
+            'deleteNodePoll' => ['int id', 'void'],
             'deleteNodeType' => ['string name', 'int version', 'void'],
+            'getLockedTarget' => ['int id', 'NodeType type', '?NodeTarget'],
             'getNodeFile' => ['NodeType type', 'int id', 'string key', 'bool thumb', 'string'],
             'getNodePreview' => ['NodeType type', 'NodeInput input', 'NodeStatus status', 'Node'],
             'updateNode' => ['int id', 'NodeInput input', 'int version', 'Node'],
@@ -251,7 +253,7 @@ final class NodeServiceTest extends TestCase
         $this->assertSame(['nodes' => 0, 'node_assets' => 0, 'node_categories' => 0], $run['rows']);
         $this->assertTrue($run['file'], 'The delete removed the file a resource pointed at');
         $this->assertSame([], $run['child'], 'The parent link of a child survived the delete of its parent');
-        $this->assertSame(5, $run['sqlnode'], 'The Node statements of a physical delete');
+        $this->assertSame(6, $run['sqlnode'], 'The Node statements of a physical delete, the favorites of the material included');
     }
 
     # Full sets: the limits of categories and relations by the sync batch and of resources by maxassets, the roles, the shapes and the kinds

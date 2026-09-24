@@ -504,9 +504,15 @@ function profil(): void {
             if (preg_match('/^[a-z_]+$/', (string)$fmod)) $fmap[$fmod][] = (int)$fid;
         }
         foreach ($fmap as $fmod => $fids) {
-            $ftable = ($fmod === 'shop') ? 'products' : $fmod;
-            $fres = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_'.$ftable.' WHERE id IN ('.implode(', ', $fids).')');
-            while ([$fid, $ftitle] = $db->getSqlRow($fres)) {
+            $ftitles = [];
+            if (isset($conf['node']['types'][$fmod])) {
+                $ftitles = getNodeTitleMap(array_fill_keys($fids, $fmod));
+            } else {
+                $ftable = ($fmod === 'shop') ? 'products' : $fmod;
+                $fres = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_'.$ftable.' WHERE id IN ('.implode(', ', $fids).')');
+                while ([$fid, $ftitle] = $db->getSqlRow($fres)) $ftitles[$fid] = $ftitle;
+            }
+            foreach ($ftitles as $fid => $ftitle) {
                 $favs[] = [
                     'icon' => getIconName($fmod),
                     'chip_icon' => $conf['modules'][$fmod]['icon'] ?? 'folder',

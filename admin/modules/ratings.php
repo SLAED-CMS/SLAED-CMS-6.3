@@ -113,8 +113,10 @@ function save(): void {
 
 function votes(): void {
     global $afile, $tpl;
+    $names = ['account' => getModuleName('account'), 'forum' => getModuleName('forum'), 'shop' => getModuleName('shop')];
+    foreach (array_keys(getNodeTypeMap()) as $name) $names['node.'.$name] = getModuleName($name);
     $scope = getVar('get', 'scope', 'raw', '');
-    $scope = (is_string($scope) && in_array($scope, ['account', 'forum', 'shop'], true)) ? $scope : '';
+    $scope = (is_string($scope) && isset($names[$scope])) ? $scope : '';
     $mid = $scope !== '' ? getVar('get', 'mid', 'num', 0) : 0;
     $after = getVar('get', 'after', 'num', 0);
     $vote = getVar('get', 'vote', 'num', 0);
@@ -136,7 +138,7 @@ function votes(): void {
         ])]);
     }
     $opts = [['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $scope === '']];
-    foreach (['account', 'forum', 'shop'] as $name) $opts[] = ['value_attr' => $name, 'label_text' => getModuleName($name), 'is_selected' => $name === $scope];
+    foreach ($names as $name => $label) $opts[] = ['value_attr' => $name, 'label_text' => $label, 'is_selected' => $name === $scope];
     $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'method' => 'get',

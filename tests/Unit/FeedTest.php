@@ -76,7 +76,11 @@ final class FeedTest extends TestCase
         $this->assertTrue($ref->isFinal(), 'Feed must be final');
         $pub = array_map(fn(ReflectionMethod $m): string => $m->getName(), $ref->getMethods(ReflectionMethod::IS_PUBLIC));
         sort($pub);
-        $this->assertSame(['__construct', 'getFeedContent'], $pub);
+        $this->assertSame(['__construct', 'getFeedContent', 'getFeedUrl'], $pub);
+        $this->assertTrue($ref->getMethod('getFeedUrl')->isStatic(), 'The address normalizer NodeSync shares must be static');
+        $this->assertSame(['url' => 'https://example.com/a%7Cb?x=1', 'host' => 'example.com'], Feed::getFeedUrl(' https://EXAMPLE.com:443/a|b?x=1#top '));
+        $this->assertSame(Feed::getFeedUrl('https://example.com/a%20b?x=1'), Feed::getFeedUrl(Feed::getFeedUrl('https://example.com/a%20b?x=1')['url']));
+        $this->assertSame([], Feed::getFeedUrl('https://user:pw@example.com/feed'));
         $ctor = $ref->getConstructor();
         $this->assertSame('array $conf, ?Closure $send = null', implode(', ', array_map(
             fn($p): string => ($p->allowsNull() && $p->getType()->getName() !== 'array' ? '?' : '').$p->getType()->getName().' $'.$p->getName().($p->isOptional() ? ' = null' : ''),

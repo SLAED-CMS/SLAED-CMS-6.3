@@ -51,7 +51,7 @@ final class Feed {
         $modified = $this->checkFeedStamp($modified) ? $modified : '';
         $next = $url;
         for ($hop = 0; $hop <= $lim['redirects']; $hop++) {
-            $norm = $this->getFeedUrl($next);
+            $norm = self::getFeedUrl($next);
             if ($norm === []) return $this->getFeedFail('url');
             try {
                 $addr = $this->getFeedAddress($norm['host']);
@@ -131,7 +131,8 @@ final class Feed {
 
     # Normalize the address of one hop before any lookup: http or https, no credentials, the default port only and a host by the DNS grammar or an address literal
     # The fragment is never sent, and a byte a request line cannot carry is percent-encoded rather than handed to the transport
-    private function getFeedUrl(string $url): array {
+    # Public and static because NodeSync stores exactly this canonical form before any request; the answer is the address and its host, or [] when the address is refused
+    public static function getFeedUrl(string $url): array {
         $url = trim($url);
         if ($url === '' || strlen($url) > self::URLMAX || preg_match('/[\x00-\x20\x7f]/', $url)) return [];
         $data = parse_url($url);
@@ -139,16 +140,16 @@ final class Feed {
         $sch = strtolower($data['scheme'] ?? '');
         if ($sch !== 'http' && $sch !== 'https') return [];
         if (isset($data['port']) && $data['port'] !== ($sch === 'https' ? 443 : 80)) return [];
-        $host = $this->getFeedHost($data['host'] ?? '');
+        $host = self::getFeedHost($data['host'] ?? '');
         if ($host === '') return [];
         $auth = str_contains($host, ':') ? '['.$host.']' : $host;
         $tail = ($data['path'] ?? '') ?: '/';
         if (isset($data['query'])) $tail .= '?'.$data['query'];
-        return ['url' => $sch.'://'.$auth.$this->getFeedCode($tail, false), 'host' => $host];
+        return ['url' => $sch.'://'.$auth.self::getFeedCode($tail, false), 'host' => $host];
     }
 
     # Normalize one host: an address literal in canonical text, or a lower-case DNS name of two labels or more, converted from Unicode where intl is present; else ''
-    private function getFeedHost(string $host): string {
+    private static function getFeedHost(string $host): string {
         if (str_starts_with($host, '[') && str_ends_with($host, ']')) {
             $host = substr($host, 1, -1);
             return filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) !== false ? inet_ntop(inet_pton($host)) : '';
@@ -162,7 +163,7 @@ final class Feed {
 
     # Percent-encode every byte an address may not carry as it stands, and a percent sign that starts no escape; a Markdown link also encodes the characters Parser reads
     # Those are the parentheses and brackets that would close the link or open a tag, the asterisk of a smilie, the backslash of a literal and the backtick of a code span
-    private function getFeedCode(string $val, bool $md): string {
+    private static function getFeedCode(string $val, bool $md): string {
         $pat = $md ? '/[^A-Za-z0-9\-._~:\/?#@!$&\'+,;=%]|%(?![0-9A-Fa-f]{2})/' : '/[^A-Za-z0-9\-._~:\/?#@!$&\'()*+,;=%\[\]]|%(?![0-9A-Fa-f]{2})/';
         return preg_replace_callback($pat, fn(array $m): string => rawurlencode($m[0]), $val) ?? '';
     }
@@ -438,13 +439,13 @@ final class Feed {
         if (!is_array($data) || isset($data['user']) || isset($data['pass'])) return '';
         $sch = strtolower($data['scheme'] ?? '');
         if ($sch !== 'http' && $sch !== 'https') return '';
-        $host = $this->getFeedHost($data['host'] ?? '');
+        $host = self::getFeedHost($data['host'] ?? '');
         if ($host === '' || ($md && str_contains($host, ':'))) return '';
         $auth = str_contains($host, ':') ? '['.$host.']' : $host;
         $tail = ($data['path'] ?? '') ?: '/';
         if (isset($data['query'])) $tail .= '?'.$data['query'];
         if (isset($data['fragment'])) $tail .= '#'.$data['fragment'];
-        $out = $sch.'://'.$auth.(isset($data['port']) ? ':'.$data['port'] : '').$this->getFeedCode($tail, $md);
+        $out = $sch.'://'.$auth.(isset($data['port']) ? ':'.$data['port'] : '').self::getFeedCode($tail, $md);
         return (strlen($out) > self::URLMAX) ? '' : $out;
     }
 

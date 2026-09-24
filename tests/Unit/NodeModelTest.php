@@ -9,6 +9,8 @@ use Error;
 use NodeContext;
 use NodeException;
 use NodeExtension;
+use NodeSupport;
+use NodeSync;
 use NodeStatus;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -286,14 +288,16 @@ final class NodeModelTest extends TestCase
         $this->assertStringNotContainsString('NodeLoader', $code);
     }
 
-    # The extension factory keeps a closed map of existing files: an empty key is a standard type, every other key is refused while the map is empty
+    # The extension factory keeps a closed map of existing files: an empty key is a standard type, support and sync make their classes, every key outside the map is refused
     #[Test]
     public function theExtensionFactoryIsClosed(): void
     {
         $db = (new ReflectionClass(Database::class))->newInstanceWithoutConstructor();
         $ctx = self::getContext();
         $this->assertNull(getNodeExtension('', $db, $ctx));
-        foreach (['support', 'sync', 'Support', '../ext/load', 'load', 'node', '0', ' '] as $key) {
+        $this->assertInstanceOf(NodeSupport::class, getNodeExtension('support', $db, $ctx));
+        $this->assertInstanceOf(NodeSync::class, getNodeExtension('sync', $db, $ctx));
+        foreach (['Sync', 'sync.php', 'NodeSync', 'Support', 'support.php', 'NodeSupport', '../ext/load', 'load', 'node', '0', ' '] as $key) {
             try {
                 getNodeExtension($key, $db, $ctx);
                 $this->fail('The key '.$key.' was accepted');

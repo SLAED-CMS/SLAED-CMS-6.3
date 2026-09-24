@@ -1028,6 +1028,21 @@ function save(): void {
                 ];
                 $sdone = true;
             }
+            # Node checks the external sources of the type sync through a system job of its own that an upgraded site has not carried yet
+            if (is_array($sched) && !isset($sched['jobs']['nodesync'])) {
+                $sched['jobs']['nodesync'] = [
+                    'title' => 'Node sync',
+                    'type' => 'system',
+                    'active' => '1',
+                    'system' => 'nodesync',
+                    'schedule' => '*/5 * * * *',
+                    'priority' => '7',
+                    'lock_timeout' => '180',
+                    'manual' => '1',
+                    'settings' => ['limit' => '10'],
+                ];
+                $sdone = true;
+            }
             # A site upgraded while the nightly counter sweep still existed carries the job in its own config, and the sweep now happens on every write
             if (is_array($sched) && isset($sched['jobs']['commentsync'])) {
                 unset($sched['jobs']['commentsync']);

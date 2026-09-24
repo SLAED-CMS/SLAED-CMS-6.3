@@ -9,14 +9,16 @@ if (!defined('MODULE_FILE')) {
     exit;
 }
 
+# The searchable sections: the modules of search.mods, then every active Node type whose own configuration switches the search integration on
 function getSearchMods(): array {
     global $conf;
     $mods = [];
     foreach (explode(',', is_array($conf['search']) ? (string)($conf['search']['mods'] ?? '') : '') as $mod) {
         $mod = trim($mod);
-        if ($mod === '' || !is_active($mod)) continue;
+        if ($mod === '' || !is_active($mod) || isset($conf['node']['types'][$mod])) continue;
         $mods[] = $mod;
     }
+    foreach (getNodeTypeMap() as $type) if ($type->active && $type->settings['integrations']['search']) $mods[] = $type->name;
     return $mods;
 }
 
@@ -168,11 +170,53 @@ function getSearchShop(array $state): array {
     return $rows;
 }
 
+# The Node types of the request are searched through one reader, a mixed selection when all sections are searched; the count of the reader gives the total up to
+# search.slimit, and only the rows up to the end of the requested page are read, in pages as large as the smallest list page of the selected types allows
+# The literal word goes to the reader, which escapes it for LIKE; skip is the number of rows of the fixed modules that stand before the rows of Node
+function getSearchNode(array $state, array $types, int $skip): array {
+    global $db, $conf, $fld, $afile;
+    $rows = [];
+    $size = intval($conf['node']['limits']['maxlist'] ?? 0);
+    foreach ($types as $type) $size = min($size, $type->settings['list']['limit']);
+    if (!$types || $size < 1) return [$rows, 0];
+    try {
+        $query = (new NodeQuery($db, getNodeContext(), $fld))->setNodeSearch(mb_substr($state['word'], 0, 255, 'UTF-8'));
+        if (count($types) === 1) $query->setNodeType($types[0])->setNodeExtension(getNodeHandler($types[0]));
+        else $query->setNodeTypes($types);
+        $total = min($query->getNodeCount(), $state['lim']);
+        $need = min($total, max(1, (int)$state['num']) * max(1, (int)$state['snum']) - $skip);
+        $tmap = array_column(array_map(fn($v) => ['id' => $v->id, 'type' => $v], $types), 'type', 'id');
+        for ($num = 1; count($rows) < $need; $num++) {
+            $list = $query->setNodePage($num, $size)->getNodeList();
+            foreach ($list as $node) {
+                $type = $tmap[$node->tid];
+                $url = getSearchUrl(['name' => $type->name, 'op' => 'view', 'id' => $node->id, 'title' => $node->title], $state['word']);
+                $rows[] = getSearchItem($type->name, $url, $afile.'.php?name=node&op=edit&id='.$node->id.'&type='.$type->name, [
+                    'title' => $node->title, 'time' => (string)$node->pubdate, 'cid' => $node->cid, 'content' => $node->intro,
+                    'comments' => $type->settings['features']['comments'] ? $node->comnum : null, 'reads' => $node->views,
+                ]);
+            }
+            if (count($list) < $size) break;
+        }
+    } catch (NodeException $err) {
+        Logger::addSite('error', 'Search: the Node types cannot be searched', ['code' => $err->getCode()]);
+        return [[], 0];
+    }
+    return [array_slice($rows, 0, max(0, $need)), $total];
+}
+
+# The rows of every searched section and their total: the fixed modules read whole within search.slimit each, the Node types after them only up to the requested page
 function getSearchRows(array $state): array {
     $rows = [];
     $list = getSearchMap();
+    $types = [];
     foreach ($state['mods'] as $mod) {
         if ($state['mod'] !== '' && $state['mod'] !== $mod) continue;
+        $type = getNodeTypeMap()[$mod] ?? null;
+        if ($type !== null) {
+            $types[] = $type;
+            continue;
+        }
         $cfg = $list[$mod] ?? null;
         if (!$cfg) continue;
         $rows = array_merge($rows, match ($cfg['kind']) {
@@ -181,7 +225,8 @@ function getSearchRows(array $state): array {
             'shop' => getSearchShop($state),
         });
     }
-    return $rows;
+    [$more, $total] = getSearchNode($state, $types, count($rows));
+    return [array_merge($rows, $more), count($rows) + $total];
 }
 
 function getSearchSnippet(string $html, string $word, string $mod, int $len = 180): string {
@@ -238,10 +283,9 @@ function getSearchLine(array $row, array $state, int $numb): string {
     return $tpl->getHtmlFrag('block-content', ['id' => (string)$numb, 'is_search_line' => true, 'content' => $body]);
 }
 
-function getSearchList(array $rows, array $state): string {
+function getSearchList(array $rows, int $anum, array $state): string {
     global $conf, $tpl;
     $cont = '';
-    $anum = count($rows);
     $snum = max(1, (int)$state['snum']);
     $pnum = max(1, (int)ceil($anum / $snum));
     $page = min(max(1, (int)$state['num']), $pnum);
@@ -269,7 +313,8 @@ function search(): void {
     $cont .= getSearchForm($state);
     if (!$state['stop'] && $state['word'] !== '') {
         addSearchStat($state);
-        $cont .= getSearchList(getSearchRows($state), $state);
+        [$rows, $anum] = getSearchRows($state);
+        $cont .= getSearchList($rows, $anum, $state);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => $state['stop'] !== '', 'text' => $state['stop'] ?: _SEARCHINFO]);
     }

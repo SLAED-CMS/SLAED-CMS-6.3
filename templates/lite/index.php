@@ -37,24 +37,22 @@ function setTemplateForum(): string {
 # The mode is a name of this theme, so the core knows no type here; a type with an extension or a failed read leaves the marquee empty
 function getTemplateFaq(): string {
     global $db, $fld, $tpl;
-    foreach (getNodeTypeMap() as $type) {
-        if (!$type->active || $type->ext !== '' || $type->settings['view']['mode'] !== 'faq') continue;
-        try {
-            $query = (new NodeQuery($db, getNodeContext(), $fld))->setNodeType($type)->setNodePage(1, 1);
-            if (in_array('published', $type->settings['list']['orders'], true)) $query->setNodeOrder('published', 'desc');
-            $node = $query->getNodeList()[0] ?? null;
-        } catch (NodeException) {
-            return '';
-        }
-        if ($node === null) return '';
-        return $tpl->getHtmlFrag('link', [
-            'href' => getSeoUrl(['name' => $type->name, 'op' => 'view', 'id' => $node->id, 'title' => $node->title]),
-            'title' => $node->title,
-            'icon_name' => 'stars',
-            'label' => $node->title,
-        ]);
+    $type = getNodeModeType('faq');
+    if ($type === null) return '';
+    try {
+        $query = (new NodeQuery($db, getNodeContext(), $fld))->setNodeType($type)->setNodePage(1, 1);
+        if (in_array('published', $type->settings['list']['orders'], true)) $query->setNodeOrder('published', 'desc');
+        $node = $query->getNodeList()[0] ?? null;
+    } catch (NodeException) {
+        return '';
     }
-    return '';
+    if ($node === null) return '';
+    return $tpl->getHtmlFrag('link', [
+        'href' => getSeoUrl(['name' => $type->name, 'op' => 'view', 'id' => $node->id, 'title' => $node->title]),
+        'title' => $node->title,
+        'icon_name' => 'stars',
+        'label' => $node->title,
+    ]);
 }
 
 # Provide head-time variables for the lite theme layout

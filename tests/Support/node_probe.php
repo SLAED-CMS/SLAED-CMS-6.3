@@ -586,13 +586,13 @@ final class ProbeOther implements NodeExtension {
 PHPCODE;
 
 # Put a copy of the reader into scratch next to a copy of the extension factory whose closed map names the probe extension, and load the reader from there
-# The reader is copied byte for byte and the factory differs in its map line alone, so the probe reads with the shipped code and a test implementation
+# The reader is copied byte for byte and the factory gains one key in its map line, so the probe reads with the shipped code and a test implementation
 function addProbeReader(string $dir): array {
     $real = BASE_DIR.'/core/classes/node';
     if (!is_dir($dir.'/ext')) mkdir($dir.'/ext', 0777, true);
     copy($real.'/query.php', $dir.'/query.php');
     $code = (string)file_get_contents($real.'/ext/load.php');
-    $map = str_replace('$map = [];', '$map = [\'probe\' => [\'probe.php\', \'ProbeExtension\']];', $code);
+    $map = str_replace('$map = [', '$map = [\'probe\' => [\'probe.php\', \'ProbeExtension\'], ', $code);
     file_put_contents($dir.'/ext/load.php', $map);
     file_put_contents($dir.'/ext/probe.php', PROBEEXT);
     spl_autoload_register(static function (string $name) use ($dir): void {
@@ -772,7 +772,7 @@ function getProbeSettings(): array {
         'linklocal' => [$set(['assets', 'link'], ['extensions' => ['pdf']] + $role), ''],
         'extstd' => [$set(['ext'], ['own' => true]), ''],
         'extconf' => [getProbeSet($strip($types['probe']), ['ext', 'own'], 'yes'), 'probe'],
-        'extunknown' => [$news, 'support'],
+        'extunknown' => [$news, 'ghost'],
     ];
     foreach ($cases as $name => [$data, $ext]) $out['bad'][$name] = getProbeCall(fn() => $query->filterNodeSettings($ext, $data, []));
     $out['bad']['reserved'] = getProbeCall(fn() => $query->filterNodeSettings('', $news, ['version' => $fields['release']]));
@@ -1678,13 +1678,13 @@ PHPCODE;
 const PROBEPNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 
 # Put copies of the reader and the writer into scratch next to a factory whose closed map names the recording extension, and load both from there
-# Both files are copied byte for byte, so the run writes with the shipped code; the factory differs in its map line alone
+# Both files are copied byte for byte, so the run writes with the shipped code; the factory gains one key in its map line
 function addProbeWriter(string $dir): array {
     $real = BASE_DIR.'/core/classes/node';
     if (!is_dir($dir.'/ext')) mkdir($dir.'/ext', 0777, true);
     foreach (['query.php', 'service.php'] as $file) copy($real.'/'.$file, $dir.'/'.$file);
     $code = (string)file_get_contents($real.'/ext/load.php');
-    file_put_contents($dir.'/ext/load.php', str_replace('$map = [];', '$map = [\'hook\' => [\'hook.php\', \'ProbeHook\']];', $code));
+    file_put_contents($dir.'/ext/load.php', str_replace('$map = [', '$map = [\'hook\' => [\'hook.php\', \'ProbeHook\'], ', $code));
     file_put_contents($dir.'/ext/hook.php', PROBEHOOK);
     spl_autoload_register(static function (string $name) use ($dir): void {
         if ($name === 'NodeQuery') require_once $dir.'/query.php';

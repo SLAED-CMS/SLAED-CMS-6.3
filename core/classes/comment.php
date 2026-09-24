@@ -43,8 +43,13 @@ class Comment {
     private Point $pnt;
     private array $conf;
     private array $site;
+    private array $kinds;
+    private ?NodeQuery $reader = null;
+    private ?NodeService $writer = null;
+    private array $seen = [];
 
     # Build the subsystem from the services the request already carries; the settings the write normalization needs are snapshotted so no method reaches for a global
+    # The names of the registered Node types are snapshotted as well: a comment module key that names one of them is a Node target, resolved through NodeQuery on first use
     public function __construct(Database $db, Parser $prs, Point $pnt, array $conf) {
         $this->db = $db;
         $this->prs = $prs;
@@ -57,6 +62,84 @@ class Comment {
             'to' => (string)($conf['censor_r'] ?? ''),
             'prof' => intval($conf['users']['prof'] ?? 0),
         ];
+        $this->kinds = array_map('strval', array_keys(is_array($conf['node']['types'] ?? null) ? $conf['node']['types'] : []));
+    }
+
+    # Whether a comment module key names a registered Node type rather than one of the fixed modules; a type name can never shadow a fixed module
+    private function checkNodeKind(string $mod): bool {
+        return !isset(self::MODULES[$mod]) && in_array($mod, $this->kinds, true);
+    }
+
+    # The reader Node targets are resolved with, built on first use from the database of this class and the shared request context
+    private function getNodeReader(): NodeQuery {
+        return $this->reader ??= new NodeQuery($this->db, getNodeContext(), new Field());
+    }
+
+    # The writer the comment counter of a Node material goes through, built on first use without points, because the comment award is the business of this class
+    private function getNodeWriter(): NodeService {
+        return $this->writer ??= new NodeService($this->db, getNodeContext(), new Field());
+    }
+
+    # The light target of one Node material the context may read, remembered for the request, or null for anything missing, closed, unpublished or of another type
+    private function getNodeTarget(string $mod, int $id): ?NodeTarget {
+        if ($id < 1 || !$this->checkNodeKind($mod)) return null;
+        $key = $mod.':'.$id;
+        if (!array_key_exists($key, $this->seen)) {
+            try {
+                $this->seen[$key] = $this->getNodeReader()->getNodeTarget($mod, $id);
+            } catch (NodeException) {
+                $this->seen[$key] = null;
+            }
+        }
+        return $this->seen[$key];
+    }
+
+    # The registered extension of a Node type from the closed factory with the shared request context, or null for a standard type
+    private function getNodeHandler(NodeType $type): ?NodeExtension {
+        if ($type->ext === '') return null;
+        require_once BASE_DIR.'/core/classes/node/ext/load.php';
+        return getNodeExtension($type->ext, $this->db, getNodeContext());
+    }
+
+    # Whether the discussion of a target may be read at all: a fixed module decides on its own page, a Node material only when the context may read it
+    # This is what keeps a fragment request for the discussion of a private request of support from answering anyone but its owner and the moderators of its type
+    private function checkTargetView(string $mod, int $id): bool {
+        return !$this->checkNodeKind($mod) || $this->getNodeTarget($mod, $id) !== null;
+    }
+
+    # Count the visible comments of one Node material, with a locking read when asked, so a count taken under the lock of the material sees every committed comment
+    private function getLiveCount(string $mod, int $cid, bool $lock): int {
+        $sql = 'SELECT COUNT(*) FROM '.PREFIX_DB.'_comment WHERE modul = :mod AND cid = :cid AND status = :stat AND deleted IS NULL'.($lock ? ' LOCK IN SHARE MODE' : '');
+        $res = $this->db->getSqlQuery($sql, ['mod' => $mod, 'cid' => $cid, 'stat' => CommentStatus::Published->value]);
+        if ($res === false) throw new NodeException('The comments of a material cannot be counted', NodeException::STORAGE, $this->db->laste);
+        return intval($res->fetchColumn());
+    }
+
+    # Lock the Node material of a comment write before its comment row: the shared writer locks the type and then the material and writes the count it can see,
+    # so every writer of one discussion queues here and none of them holds a comment row another one waits for; a type or material that is gone answers null and locks nothing
+    private function setNodeLock(string $mod, int $cid): ?NodeType {
+        if (!$this->checkNodeKind($mod)) return null;
+        $type = $this->getNodeReader()->getNodeType($mod);
+        if ($type === null) return null;
+        try {
+            $this->getNodeWriter()->updateNodeComments($cid, $type, $this->getLiveCount($mod, $cid, false));
+        } catch (NodeException $err) {
+            if ($err->getCode() === NodeException::NOTFOUND) return null;
+            throw $err;
+        }
+        return $type;
+    }
+
+    # Write the live count of visible comments of a material this transaction has locked, read with a locking read so the comments other writers committed count as well
+    private function setNodeCount(NodeType $type, string $mod, int $cid): void {
+        $this->getNodeWriter()->updateNodeComments($cid, $type, $this->getLiveCount($mod, $cid, true));
+    }
+
+    # Let the extension of a Node type follow the first visible comment of a material inside the open transaction; a material that is no longer readable is left alone
+    private function updateNodeAction(NodeType $type, string $mod, int $cid): void {
+        $ext = $this->getNodeHandler($type);
+        $tgt = ($ext !== null) ? $this->getNodeTarget($mod, $cid) : null;
+        if ($tgt !== null) $ext->updateNodeAction($type, $tgt, 'comment');
     }
 
     # Report the target rows whose stored comment counter disagrees with the comments actually published under them
@@ -106,7 +189,9 @@ class Comment {
     # The scope is resolved once and every query runs against it, so the count, the roots and their replies can never answer to different permissions
     # Replies follow their root in the order they were written, so the rows come back ready to render top to bottom
     # One root may be named through full, and then its branch is answered whole rather than capped, which is what a reader without HTMX follows the reply control to
+    # A Node material the context may not read answers an empty discussion, the same answer a target without comments gives
     public function getList(string $mod, int $id, int $page, int $full = 0): array {
+        if (!$this->checkTargetView($mod, $id)) return $this->getPager(0, $page, intval($this->conf['num'] ?? 15)) + ['rows' => []];
         [$cte, $pars] = $this->getKeepCte($mod, $id);
         $out = $this->getPager($this->getTotal('keep WHERE pid = 0', $pars, $cte.' '), $page, intval($this->conf['num'] ?? 15));
         $out['rows'] = [];
@@ -129,7 +214,7 @@ class Comment {
         $out = ['rows' => [], 'total' => 0, 'skip' => max(0, $skip), 'left' => 0];
         if ($id < 1 || $limit < 1) return $out;
         $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT modul, cid FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]));
-        if (!$row) return $out;
+        if (!$row || !$this->checkTargetView((string)$row['modul'], intval($row['cid']))) return $out;
         [$cte, $pars] = $this->getKeepCte((string)$row['modul'], intval($row['cid']));
         $pars['b0'] = $id;
         $full = $cte.', '.$this->getTreeCte([':b0']);
@@ -174,12 +259,31 @@ class Comment {
     }
 
     # Return the published comments of one account, newest first, for the activity feed of a profile
+    # A comment on a Node material appears only when the viewer may read that material, checked for a whole slice with one batch read of the targets;
+    # the slices follow the id downward until the limit is filled, at most ten of them, so private replies of support never shorten the feed of a busy writer to nothing
     public function getUserList(int $uid, int $limit): array {
         if ($uid < 1 || $limit < 1) return [];
-        $sql = 'SELECT '.self::FIELDS.' FROM '.PREFIX_DB.'_comment WHERE uid = :uid AND status = :stat AND deleted IS NULL ORDER BY id DESC LIMIT 0, '.intval($limit);
+        $size = min(intval($limit), 500);
         $out = [];
-        foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql, ['uid' => $uid, 'stat' => CommentStatus::Published->value])) ?: [] as $row) {
-            $out[] = $this->getRowData($row);
+        $last = 0;
+        for ($i = 0; $i < 10 && count($out) < $limit; $i++) {
+            $pars = ['uid' => $uid, 'stat' => CommentStatus::Published->value] + ($last ? ['last' => $last] : []);
+            $sql = 'SELECT '.self::FIELDS.' FROM '.PREFIX_DB.'_comment WHERE uid = :uid AND status = :stat AND deleted IS NULL'.($last ? ' AND id < :last' : '')
+                .' ORDER BY id DESC LIMIT 0, '.$size;
+            $rows = array_map(fn($v) => $this->getRowData($v), $this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: []);
+            $refs = [];
+            foreach ($rows as $row) if ($this->checkNodeKind($row['modul']) && $row['cid'] > 0) $refs[$row['cid']] = $row['modul'];
+            try {
+                $open = $refs ? $this->getNodeReader()->getNodeTargetList($refs) : [];
+            } catch (NodeException) {
+                $open = [];
+            }
+            foreach ($rows as $row) {
+                $last = $row['id'];
+                if ($this->checkNodeKind($row['modul']) && !isset($open[$row['cid']])) continue;
+                if (count($out) < $limit) $out[] = $row;
+            }
+            if (count($rows) < $size) break;
         }
         return $out;
     }
@@ -198,7 +302,19 @@ class Comment {
 
     # Resolve a comment target through the fixed module map and answer its moderation mode; Disabled when the module is unknown, the row is gone, hidden or closed
     # Visibility is the module's own view predicate, so an unpublished, hidden or out-of-category target refuses a write exactly as its own page refuses a read
+    # A Node material answers the mode it stores when the context may read it, its type has comments and its extension does not forbid a new comment
     public function getTargetMode(string $mod, int $id): CommentMode {
+        if ($this->checkNodeKind($mod)) {
+            $tgt = $this->getNodeTarget($mod, $id);
+            if ($tgt === null || !$tgt->type->settings['features']['comments']) return CommentMode::Disabled;
+            try {
+                $ext = $this->getNodeHandler($tgt->type);
+                if ($ext !== null && !$ext->checkNodeAction($tgt->type, $tgt, 'comment')) return CommentMode::Disabled;
+            } catch (NodeException) {
+                return CommentMode::Disabled;
+            }
+            return $tgt->comon;
+        }
         if (!$id || !isset(self::MODULES[$mod])) return CommentMode::Disabled;
         $tab = PREFIX_DB.self::MODULES[$mod];
         if ($mod === 'account') {
@@ -237,12 +353,13 @@ class Comment {
         return ($seen > 0 && $size > 0) ? (int)ceil($seen / $size) : 1;
     }
 
-    # Return the module names the stored comments actually use, for the module selector of the moderation list
+    # Return the module names the stored comments actually use, for the module selector of the moderation list; a Node type the administrator does not moderate stays out
     public function getModuleList(): array {
         $out = [];
         $sql = 'SELECT DISTINCT modul FROM '.PREFIX_DB.'_comment WHERE deleted IS NULL ORDER BY modul ASC';
         foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql)) ?: [] as $row) {
-            if ($row['modul'] !== '') $out[] = (string)$row['modul'];
+            $one = (string)$row['modul'];
+            if ($one !== '' && !($this->checkNodeKind($one) && !is_moder($one))) $out[] = $one;
         }
         return $out;
     }
@@ -275,6 +392,12 @@ class Comment {
         }
         $own = !$this->db->checkSqlActive();
         if ($own && !$this->db->setSqlBegin()) return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
+        try {
+            $kind = ($stat === CommentStatus::Published) ? $this->setNodeLock($mod, $id) : null;
+        } catch (NodeException) {
+            if ($own) $this->db->setSqlRollback();
+            return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
+        }
         $sql = 'INSERT INTO '.PREFIX_DB.'_comment (pid, cid, modul, time, uid, name, ip, body, status, reqkey)'
             .' VALUES (:pid, :cid, :modul, NOW(), :uid, :name, :ip, :body, :status, :reqkey)';
         $done = $this->db->getSqlQuery($sql, [
@@ -284,10 +407,24 @@ class Comment {
         if (!$done) {
             $fail = intval($this->db->getSqlError()['code']) === 1062;
             if ($own) $this->db->setSqlRollback();
+            try {
+                if (!$own && $kind !== null) $this->setNodeCount($kind, $mod, $id);
+            } catch (NodeException) {
+                return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
+            }
             return $fail ? $this->getKeyResult($key, $name, $mod, $id, $pid, $uid, $body) : ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
         }
         $new = intval($this->db->getSqlLastId());
         if ($stat === CommentStatus::Published) $this->updateTargetPoints($mod, false, $uid, $new, $id);
+        try {
+            if ($kind !== null) {
+                $this->setNodeCount($kind, $mod, $id);
+                $this->updateNodeAction($kind, $mod, $id);
+            }
+        } catch (NodeException) {
+            if ($own) $this->db->setSqlRollback();
+            return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
+        }
         if ($own && !$this->db->setSqlCommit()) {
             $this->db->setSqlRollback();
             return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
@@ -337,11 +474,20 @@ class Comment {
     # Publish or hide one comment as a moderator of the module the stored row names, move the counter of its target with it and award a first publication
     # The state is changed by a conditional update rather than by a read followed by a write, so two parallel requests cannot both count the same transition
     # The wanted state is bound twice under two names because a native prepared statement rejects one named placeholder used in two positions
+    # A comment of a Node material locks the material before its own row and writes the live counter of the material inside the same transaction,
+    # and its first publication is followed by the extension of the type; the extension cannot tell a first publication from a repeated one after a hide
     public function setStatus(int $id, bool $open): bool {
         $own = !$this->db->checkSqlActive();
         if ($id < 1 || ($own && !$this->db->setSqlBegin())) return false;
+        $head = $this->db->getSqlRow($this->db->getSqlQuery('SELECT cid, modul FROM '.PREFIX_DB.'_comment WHERE id = :id AND deleted IS NULL', ['id' => $id]));
+        $kind = null;
+        try {
+            if ($head && is_moder((string)$head['modul'])) $kind = $this->setNodeLock((string)$head['modul'], intval($head['cid']));
+        } catch (NodeException) {
+            $head = [];
+        }
         $sql = 'SELECT cid, uid, status, modul FROM '.PREFIX_DB.'_comment WHERE id = :id AND deleted IS NULL FOR UPDATE';
-        $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['id' => $id]));
+        $row = $head ? $this->db->getSqlRow($this->db->getSqlQuery($sql, ['id' => $id])) : [];
         $mod = (string)($row['modul'] ?? '');
         $cid = $row ? intval($row['cid']) : 0;
         if (!$cid || $mod === '' || !is_moder($mod)) {
@@ -359,6 +505,13 @@ class Comment {
         }
         $moved = intval($this->db->getSqlAffected()) > 0;
         if ($moved && $open) $this->updateTargetPoints($mod, false, intval($row['uid']), $id, $cid);
+        try {
+            if ($kind !== null) $this->setNodeCount($kind, $mod, $cid);
+            if ($kind !== null && $moved && $open) $this->updateNodeAction($kind, $mod, $cid);
+        } catch (NodeException) {
+            if ($own) $this->db->setSqlRollback();
+            return false;
+        }
         if ($own && !$this->db->setSqlCommit()) {
             $this->db->setSqlRollback();
             return false;
@@ -372,11 +525,19 @@ class Comment {
 
     # Remove one comment as a moderator of the module the stored row names, take the counter of its target back when the removed row was published and compensate its award
     # The row is marked rather than erased and the mark is set by a conditional update, so a repeated delete answers the same result without moving a counter twice
+    # A comment of a Node material locks the material before its own row and writes the live counter of the material inside the same transaction
     public function deleteComment(int $id): bool {
         $own = !$this->db->checkSqlActive();
         if ($id < 1 || ($own && !$this->db->setSqlBegin())) return false;
+        $head = $this->db->getSqlRow($this->db->getSqlQuery('SELECT cid, modul FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]));
+        $kind = null;
+        try {
+            if ($head && is_moder((string)$head['modul'])) $kind = $this->setNodeLock((string)$head['modul'], intval($head['cid']));
+        } catch (NodeException) {
+            $head = [];
+        }
         $sql = 'SELECT cid, uid, status, modul FROM '.PREFIX_DB.'_comment WHERE id = :id FOR UPDATE';
-        $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['id' => $id]));
+        $row = $head ? $this->db->getSqlRow($this->db->getSqlQuery($sql, ['id' => $id])) : [];
         $mod = (string)($row['modul'] ?? '');
         $cid = $row ? intval($row['cid']) : 0;
         if (!$cid || $mod === '' || !is_moder($mod)) {
@@ -391,6 +552,12 @@ class Comment {
         $hid = intval($this->db->getSqlAffected()) > 0;
         $gone = $hid && intval($row['status']) === CommentStatus::Published->value;
         if ($hid) $this->updateTargetPoints($mod, true, intval($row['uid']), $id, $cid);
+        try {
+            if ($kind !== null) $this->setNodeCount($kind, $mod, $cid);
+        } catch (NodeException) {
+            if ($own) $this->db->setSqlRollback();
+            return false;
+        }
         if ($own && !$this->db->setSqlCommit()) {
             $this->db->setSqlRollback();
             return false;
@@ -462,11 +629,13 @@ class Comment {
 
     # Award the author of a comment the first time it is visible, or compensate that award once when the comment is removed; hiding a comment moves no points
     # The event is keyed by the comment id, so a second publication is an empty repeat, and both halves join the transaction of the write and roll back with it
+    # A fixed module files the event under its key, a Node material under node.<name>, the scope every other Node award of the type uses
     private function updateTargetPoints(string $mod, bool $del, int $uid, int $id, int $cid): void {
-        if ($uid < 1 || !isset(self::MODULES[$mod])) return;
-        if (!$del) $this->pnt->addEvent('comment', $mod, 'comment:'.$id, $uid, ['mid' => $cid]);
-        $rid = $del ? $this->pnt->getEventId('comment', $mod, 'comment:'.$id, $uid) : 0;
-        if ($rid) $this->pnt->addEvent('comment', $mod, 'reverse:'.$rid, $uid, ['rid' => $rid, 'mid' => $cid]);
+        $scope = isset(self::MODULES[$mod]) ? $mod : ($this->checkNodeKind($mod) ? 'node.'.$mod : '');
+        if ($uid < 1 || $scope === '') return;
+        if (!$del) $this->pnt->addEvent('comment', $scope, 'comment:'.$id, $uid, ['mid' => $cid]);
+        $rid = $del ? $this->pnt->getEventId('comment', $scope, 'comment:'.$id, $uid) : 0;
+        if ($rid) $this->pnt->addEvent('comment', $scope, 'reverse:'.$rid, $uid, ['rid' => $rid, 'mid' => $cid]);
     }
 
     # Queue the counter of one target to be rewritten once the request is over
@@ -569,9 +738,19 @@ class Comment {
 
     # Build the moderation scope against the comment and account join, so the count query carries exactly the predicate the result query carries
     # The author search needs two placeholders for one term because a native prepared statement rejects a named placeholder used twice
+    # The comments of a Node type stay out for an administrator who does not moderate that type, so a private reply of support reaches the moderators of its type alone
     private function getAdminScope(CommentStatus $stat, string $mod, int $find, string $term): array {
         $where = 'WHERE s.status = :stat AND s.deleted IS NULL';
         $pars = ['stat' => $stat->value];
+        $deny = array_values(array_filter($this->kinds, fn($v) => !isset(self::MODULES[$v]) && !is_moder($v)));
+        if ($deny) {
+            $keys = [];
+            foreach ($deny as $key => $val) {
+                $keys[] = ':x'.$key;
+                $pars['x'.$key] = $val;
+            }
+            $where .= ' AND s.modul NOT IN ('.implode(', ', $keys).')';
+        }
         if ($mod !== '') {
             $where .= ' AND s.modul = :mod';
             $pars['mod'] = $mod;

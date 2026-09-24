@@ -6,7 +6,8 @@
 
 # The web server of tests/Support/route_probe.php, run as the router of the built-in server `php -S` with the scratch root in SLAED_ROUTE_ROOT
 # It serves the real index.php and admin.php of the tree with every writable directory and the configuration redirected into scratch, so a route answers exactly as
-# on a site whose database is the disposable one of the probe; the visitor comes from the header X-Probe-Who and is one of the accounts the probe seeded
+# on a site whose database is the disposable one of the probe; the visitor comes from the header X-Probe-Who and is one of the accounts the probe seeded,
+# helper being both a site account and the administrator of the support type, the way an operator answers requests on the site
 # /uploads/<dir>/<file> behaves like a web server carrying the shared nginx rule of docs/node/09: 403 for a directory holding the .htaccess guard, the file otherwise
 # The directory is served by the stand as well, so anything but the built-in server gets a plain 404 before a single line of it runs
 if (PHP_SAPI !== 'cli-server') {
@@ -38,8 +39,9 @@ $rdirs = ['CONFIG_DIR' => 'config', 'BACKUP_DIR' => 'backup', 'CACHE_DIR' => 'ca
 foreach ($rdirs as $rkey => $rdir) define($rkey, $rroot.'/'.$rdir);
 $rglob = require CONFIG_DIR.'/global.php';
 $rwho = (string)($_SERVER['HTTP_X_PROBE_WHO'] ?? '');
-$rusers = ['anna' => '2:anna:hash-anna', 'boris' => '3:boris:hash-boris', 'clara' => '4:clara:hash-clara'];
-$radmins = ['root' => '1:root:hash-root', 'moder' => '2:moder:hash-moder', 'boss' => '3:boss:hash-boss', 'docsman' => '4:docsman:hash-docsman'];
+$rusers = ['anna' => '2:anna:hash-anna', 'boris' => '3:boris:hash-boris', 'clara' => '4:clara:hash-clara', 'helper' => '5:helper:hash-helper'];
+$radmins = ['root' => '1:root:hash-root', 'moder' => '2:moder:hash-moder', 'boss' => '3:boss:hash-boss', 'docsman' => '4:docsman:hash-docsman',
+    'helper' => '5:helper:hash-helper'];
 if (isset($rusers[$rwho])) $_COOKIE[$rglob['user_c'].'-account'] = base64_encode($rusers[$rwho]);
 session_start();
 if (isset($radmins[$rwho])) $_SESSION[$rglob['admin_c']] = base64_encode($radmins[$rwho]);
