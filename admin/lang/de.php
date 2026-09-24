@@ -129,6 +129,7 @@ define('_NODE_STALE','Der Node-Typ %s wurde inzwischen anderweitig gespeichert, 
 define('_NODE_BAD','Der Node-Typ %s hat die Änderung abgelehnt, es wurde nichts geschrieben.');
 define('_NODE_PROOF','Die Datenbank entscheidet über den anzuwendenden Stand anhand der Version des Node-Typs %s.');
 define('_NODE_MANAGE','Node: Typen und ihre Einstellungen');
+define('_NODE_SETUP','Die Installation hat diese Node-Bereiche nicht abgeschlossen: %s - ein Bereich wurde nicht angelegt, nicht eingeschaltet oder blieb ohne Startbeitrag. Der Grund steht im Website-Protokoll.');
 define('_CONFINES','Geben Sie den Wert «0» für die Aufhebung aller Beschränkungen.');
 define('_CONST','Sprach Konstante');
 define('_CREATEBLOCK','Block erstellen');

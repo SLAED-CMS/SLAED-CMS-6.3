@@ -1,0 +1,133 @@
+{
+    "format": "slaed.node",
+    "version": 1,
+    "type": {
+        "name": "files",
+        "title": "_FILES",
+        "intro": "",
+        "ext": "",
+        "sort": 80,
+        "settings": {
+            "list": {
+                "orders": [
+                    "published",
+                    "updated",
+                    "title",
+                    "views",
+                    "rating"
+                ],
+                "order": "published",
+                "dir": "desc",
+                "limit": 25,
+                "alpha": true,
+                "show": [
+                    "category",
+                    "author",
+                    "date",
+                    "views"
+                ]
+            },
+            "view": {
+                "mode": "files"
+            },
+            "form": [],
+            "workflow": {
+                "access": "user",
+                "groups": [],
+                "publish": [],
+                "notify": {
+                    "pending": true,
+                    "result": true
+                }
+            },
+            "admin": [],
+            "features": {
+                "categories": true,
+                "comments": true,
+                "rating": true,
+                "favorites": true,
+                "poll": false,
+                "home": true,
+                "pinned": true,
+                "submit": true,
+                "moderation": true,
+                "schedule": true,
+                "related": true,
+                "tree": false
+            },
+            "assets": {
+                "cover": {
+                    "title": "_NODE_COVER",
+                    "intro": "",
+                    "kinds": [
+                        "image"
+                    ],
+                    "extensions": [],
+                    "maxbytes": null,
+                    "min": 0,
+                    "max": 1,
+                    "canlink": false,
+                    "report": false,
+                    "mode": "image",
+                    "active": true,
+                    "sort": 10
+                },
+                "download": {
+                    "title": "_DOWNLOAD",
+                    "intro": "",
+                    "kinds": [
+                        "file",
+                        "image",
+                        "audio",
+                        "video"
+                    ],
+                    "extensions": [],
+                    "maxbytes": null,
+                    "min": 1,
+                    "max": 10,
+                    "canlink": true,
+                    "report": true,
+                    "mode": "download",
+                    "active": true,
+                    "sort": 20
+                }
+            },
+            "integrations": {
+                "search": true,
+                "rss": true,
+                "sitemap": true,
+                "blocks": true,
+                "seo": "article"
+            },
+            "ext": []
+        },
+        "fields": {
+            "release": {
+                "title": "_VERSION",
+                "intro": "",
+                "type": "text",
+                "default": "",
+                "options": {
+                    "max": 100
+                },
+                "req": false,
+                "multi": false,
+                "active": true,
+                "sort": 10
+            },
+            "site": {
+                "title": "_URL",
+                "intro": "",
+                "type": "url",
+                "default": "",
+                "options": [],
+                "req": false,
+                "multi": false,
+                "active": true,
+                "sort": 20
+            }
+        },
+        "uploads": [],
+        "rating": []
+    }
+}

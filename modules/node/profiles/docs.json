@@ -1,0 +1,69 @@
+{
+    "format": "slaed.node",
+    "version": 1,
+    "type": {
+        "name": "docs",
+        "title": "_DOCS",
+        "intro": "",
+        "ext": "",
+        "sort": 100,
+        "settings": {
+            "list": {
+                "orders": [
+                    "title",
+                    "updated",
+                    "views"
+                ],
+                "order": "title",
+                "dir": "asc",
+                "limit": 50,
+                "alpha": true,
+                "show": [
+                    "category",
+                    "date",
+                    "views"
+                ]
+            },
+            "view": {
+                "mode": "docs"
+            },
+            "form": [],
+            "workflow": {
+                "access": "user",
+                "groups": [],
+                "publish": [],
+                "notify": {
+                    "pending": true,
+                    "result": true
+                }
+            },
+            "admin": [],
+            "features": {
+                "categories": true,
+                "comments": false,
+                "rating": false,
+                "favorites": true,
+                "poll": false,
+                "home": false,
+                "pinned": false,
+                "submit": false,
+                "moderation": false,
+                "schedule": false,
+                "related": true,
+                "tree": true
+            },
+            "assets": [],
+            "integrations": {
+                "search": true,
+                "rss": false,
+                "sitemap": true,
+                "blocks": true,
+                "seo": "article"
+            },
+            "ext": []
+        },
+        "fields": [],
+        "uploads": [],
+        "rating": []
+    }
+}

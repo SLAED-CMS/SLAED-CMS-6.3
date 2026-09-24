@@ -32,6 +32,7 @@ define('_NODE_FIELDS','Zusatzfelder');
 define('_NODE_FLOW','Öffentliche Einreichung');
 define('_NODE_FMOD','Prüfung vor der Veröffentlichung');
 define('_NODE_FORMAT','Formatversion');
+define('_NODE_PROFILE','Profil');
 define('_NODE_FPIN','Anheften');
 define('_NODE_FSCHED','Geplante Veröffentlichung und Ablauf');
 define('_NODE_FSUBMIT','Öffentliche Einreichung');

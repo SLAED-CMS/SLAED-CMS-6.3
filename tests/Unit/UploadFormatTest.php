@@ -117,6 +117,7 @@ final class UploadFormatTest extends TestCase
     }
 
     # The full canonical set reaches only the global list and the operator-only all record; every visitor-facing list gained webp and avif and nothing else
+    # A registered Node type starts from a copy of the all record by design and is left out, its rule belongs to the type
     #[Test]
     public function theVisitorAllowlistsWereNotWidened(): void
     {
@@ -124,8 +125,9 @@ final class UploadFormatTest extends TestCase
         $full = implode(',', ['avif,gif,jpeg,jpg,png,webp', 'flac,m4a,mp3,oga,ogg,opus,wav', 'mp4,webm', 'pdf', '7z,gz,rar,tar,zip']);
         $this->assertSame($full, $upl['typ'], 'The global format list is not the canonical set in family order');
         $this->assertSame($full, explode('|', $upl['all'])[0], 'The all record does not carry the canonical set');
+        $types = array_keys($this->getConfig('node')['node']['types'] ?? []);
         foreach ($upl as $mod => $val) {
-            if (!is_string($val) || !str_contains($val, '|') || $mod === 'all') continue;
+            if (!is_string($val) || !str_contains($val, '|') || $mod === 'all' || in_array($mod, $types, true)) continue;
             $this->assertSame(self::VISITOR, explode('|', $val)[0], 'Module record '.$mod.' does not carry exactly the visitor allowlist');
         }
         $this->assertArrayNotHasKey('album', $upl, 'The album record has no module and must be gone');

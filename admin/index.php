@@ -126,6 +126,40 @@ function getAdminPanel(): void {
     setFoot();
 }
 
+# Finish a clean installation for its first main administrator: every shipped profile of Node becomes an active type through the one import path, news gets the starter material
+# Only the mark node => new that the installer leaves in config/update.php opens this and the mark leaves afterwards, so an upgraded site gets no type here (NOD-200, NOD-230)
+# A profile the installation could not finish - not created, not switched on or, for news, without its starter material - is named in the answer and logged with the step
+# and its reason; the other profiles are created all the same, and a mark that cannot be removed is logged, because no later request reaches this again
+function addNodeProfiles(int $aid): string {
+    global $db, $conf, $fld, $pnt;
+    if (($conf['update']['node'] ?? '') !== 'new') return '';
+    $srv = new NodeService($db, new NodeContext(0, [], $aid, [], true, true, getIp(), ''), $fld, $pnt);
+    $fail = [];
+    foreach (glob(BASE_DIR.'/modules/node/profiles/*.json') ?: [] as $file) {
+        $name = basename($file, '.json');
+        $step = 'import';
+        try {
+            $type = $srv->addNodeTypeImport((string)file_get_contents($file));
+            $step = 'status';
+            $type = $srv->updateNodeTypeStatus($type->name, true, $type->version);
+            if ($type->name !== 'news') continue;
+            $step = 'starter';
+            $intro = 'Сайт установлен и готов к работе. Разделы новостей, страниц, вопросов и ответов, файлов, ссылок, медиа, документации и другие'
+                .' созданы из штатных профилей Node и уже включены.';
+            $body = 'Разделы настраиваются в панели администратора на вкладке «Типы» модуля Node: список, возможности, ресурсы и интеграции каждого'
+                .' раздела. Там же новый раздел создаётся из профиля, клонируется, экспортируется и импортируется. Эту новость можно изменить или удалить.';
+            $input = new NodeInput(0, [], 'SLAED', 'Добро пожаловать в SLAED CMS', $intro, $body, [], 0, true, CommentMode::Open, false, null, null, [], [], []);
+            $srv->addNode($type, $input, NodeStatus::Published);
+        } catch (NodeException $err) {
+            $fail[] = $name;
+            $info = ['name' => $name, 'step' => $step, 'code' => $err->getCode(), 'path' => $err->getMessage()];
+            Logger::addSite('error', 'Node: the installation could not finish a profile', $info);
+        }
+    }
+    if (!setConfigFile('update.php', array_diff_key($conf['update'], ['node' => '']))) Logger::addSite('error', 'Node: the installation mark could not be removed');
+    return $fail ? sprintf(_NODE_SETUP, implode(', ', $fail)) : '';
+}
+
 # Create the first administrator from the setup form, and only while the table is still empty; every later account is added from the admins module
 function addAdminAccount(): void {
     global $db, $afile, $conf, $stop, $prv;
@@ -150,6 +184,7 @@ function addAdminAccount(): void {
                 'INSERT INTO '.PREFIX_DB.'_admins VALUES (NULL, :name, \'Admin\', :url, :email, :pass, \'1\', :editor, \'1\', \'\', :lang, :ip, now(), now())',
                 ['name' => $aname, 'url' => $aurl, 'email' => $aemail, 'pass' => $apwd, 'editor' => $aeditor, 'lang' => $alang, 'ip' => $aip]
             );
+            $aid = intval($db->getSqlLastId());
             if ($auser_new == 1) {
                 $urow = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $aname]));
                 $uid = ($urow) ? intval($urow['id']) : 0;
@@ -165,7 +200,8 @@ function addAdminAccount(): void {
                     ['name' => $aname, 'email' => $aemail, 'website' => $aurl, 'avatar' => '', 'pass' => $apwd, 'lang' => $alang, 'ip' => $aip]
                 );
             }
-            setRedirect($afile.'.php');
+            $fail = ($aid > 0) ? addNodeProfiles($aid) : '';
+            setRedirect($afile.'.php', false, 302, $fail, $fail !== '');
         } else {
             getAdminLoginForm();
         }

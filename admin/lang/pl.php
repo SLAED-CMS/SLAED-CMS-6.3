@@ -129,6 +129,7 @@ define('_NODE_STALE','Typ Node %s został w międzyczasie zmieniony przez inny z
 define('_NODE_BAD','Typ Node %s odrzucił zmianę, nic nie zapisano.');
 define('_NODE_PROOF','O migawce do zastosowania decyduje baza danych na podstawie wersji typu Node %s.');
 define('_NODE_MANAGE','Node: typy i ich ustawienia');
+define('_NODE_SETUP','Instalacja nie ukończyła tych sekcji Node: %s - sekcja nie została utworzona, nie została włączona lub pozostała bez materiału startowego. Przyczyna jest zapisana w dzienniku witryny.');
 define('_CONFINES','Należy podać wartość «0» do wycofania wszystkich ograniczeń.');
 define('_CONST','Stała język');
 define('_CREATEBLOCK','Nowy blok');

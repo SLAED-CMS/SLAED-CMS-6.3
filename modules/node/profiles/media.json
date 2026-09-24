@@ -1,0 +1,299 @@
+{
+    "format": "slaed.node",
+    "version": 1,
+    "type": {
+        "name": "media",
+        "title": "_MEDIA",
+        "intro": "",
+        "ext": "",
+        "sort": 90,
+        "settings": {
+            "list": {
+                "orders": [
+                    "published",
+                    "updated",
+                    "title",
+                    "views",
+                    "rating"
+                ],
+                "order": "published",
+                "dir": "desc",
+                "limit": 25,
+                "alpha": true,
+                "show": [
+                    "category",
+                    "author",
+                    "date",
+                    "views"
+                ]
+            },
+            "view": {
+                "mode": "media"
+            },
+            "form": [],
+            "workflow": {
+                "access": "user",
+                "groups": [],
+                "publish": [],
+                "notify": {
+                    "pending": true,
+                    "result": true
+                }
+            },
+            "admin": [],
+            "features": {
+                "categories": true,
+                "comments": true,
+                "rating": true,
+                "favorites": true,
+                "poll": false,
+                "home": true,
+                "pinned": true,
+                "submit": true,
+                "moderation": true,
+                "schedule": true,
+                "related": true,
+                "tree": false
+            },
+            "assets": {
+                "poster": {
+                    "title": "_NODE_POSTER",
+                    "intro": "",
+                    "kinds": [
+                        "image"
+                    ],
+                    "extensions": [],
+                    "maxbytes": null,
+                    "min": 0,
+                    "max": 1,
+                    "canlink": false,
+                    "report": false,
+                    "mode": "none",
+                    "active": true,
+                    "sort": 10
+                },
+                "source": {
+                    "title": "_NODE_PLAY",
+                    "intro": "",
+                    "kinds": [
+                        "audio",
+                        "video"
+                    ],
+                    "extensions": [],
+                    "maxbytes": null,
+                    "min": 1,
+                    "max": 10,
+                    "canlink": true,
+                    "report": false,
+                    "mode": "player",
+                    "active": true,
+                    "sort": 20
+                },
+                "gallery": {
+                    "title": "_ALBUM",
+                    "intro": "",
+                    "kinds": [
+                        "image"
+                    ],
+                    "extensions": [],
+                    "maxbytes": null,
+                    "min": 0,
+                    "max": 30,
+                    "canlink": false,
+                    "report": false,
+                    "mode": "gallery",
+                    "active": true,
+                    "sort": 30
+                },
+                "download": {
+                    "title": "_DOWNLOAD",
+                    "intro": "",
+                    "kinds": [
+                        "file",
+                        "image",
+                        "audio",
+                        "video"
+                    ],
+                    "extensions": [],
+                    "maxbytes": null,
+                    "min": 0,
+                    "max": 10,
+                    "canlink": true,
+                    "report": true,
+                    "mode": "download",
+                    "active": true,
+                    "sort": 40
+                }
+            },
+            "integrations": {
+                "search": true,
+                "rss": true,
+                "sitemap": true,
+                "blocks": true,
+                "seo": "article"
+            },
+            "ext": []
+        },
+        "fields": {
+            "subtitle": {
+                "title": "_NODE_SUBTITLE",
+                "intro": "",
+                "type": "text",
+                "default": "",
+                "options": {
+                    "max": 100
+                },
+                "req": false,
+                "multi": false,
+                "active": true,
+                "sort": 10
+            },
+            "year": {
+                "title": "_NODE_YEAR",
+                "intro": "",
+                "type": "int",
+                "default": null,
+                "options": {
+                    "min": 1,
+                    "max": 9999
+                },
+                "req": false,
+                "multi": false,
+                "active": true,
+                "sort": 20
+            },
+            "director": {
+                "title": "_NODE_DIRECTOR",
+                "intro": "",
+                "type": "text",
+                "default": "",
+                "options": {
+                    "max": 100
+                },
+                "req": false,
+                "multi": false,
+                "active": true,
+                "sort": 30
+            },
+            "cast": {
+                "title": "_NODE_CAST",
+                "intro": "",
+                "type": "text",
+                "default": "",
+                "options": {
+                    "max": 255
+                },
+                "req": false,
+                "multi": false,
+                "active": true,
+                "sort": 40
+            },
+            "creator": {
+                "title": "_NODE_CREATOR",
+                "intro": "",
+                "type": "text",
+                "default": "",
+                "options": {
+                    "max": 100
+                },
+                "req": false,
+                "multi": false,
+                "active": true,
+                "sort": 50
+            },
+            "runtime": {
+                "title": "_NODE_RUNTIME",
+                "intro": "",
+                "type": "text",
+                "default": "",
+                "options": {
+                    "max": 100
+                },
+                "req": false,
+                "multi": false,
+                "active": true,
+                "sort": 60
+            },
+            "language": {
+                "title": "_LANGUAGE",
+                "intro": "",
+                "type": "text",
+                "default": "",
+                "options": {
+                    "max": 100
+                },
+                "req": false,
+                "multi": false,
+                "active": true,
+                "sort": 70
+            },
+            "notes": {
+                "title": "_NOTE",
+                "intro": "",
+                "type": "textarea",
+                "default": "",
+                "options": {
+                    "max": 262144
+                },
+                "req": false,
+                "multi": false,
+                "active": true,
+                "sort": 80
+            },
+            "format": {
+                "title": "_NODE_MFORMAT",
+                "intro": "",
+                "type": "text",
+                "default": "",
+                "options": {
+                    "max": 100
+                },
+                "req": false,
+                "multi": false,
+                "active": true,
+                "sort": 90
+            },
+            "quality": {
+                "title": "_NODE_QUALITY",
+                "intro": "",
+                "type": "text",
+                "default": "",
+                "options": {
+                    "max": 100
+                },
+                "req": false,
+                "multi": false,
+                "active": true,
+                "sort": 100
+            },
+            "filesize": {
+                "title": "_SIZE",
+                "intro": "",
+                "type": "text",
+                "default": "",
+                "options": {
+                    "max": 100
+                },
+                "req": false,
+                "multi": false,
+                "active": true,
+                "sort": 110
+            },
+            "release": {
+                "title": "_NODE_RELEASE",
+                "intro": "",
+                "type": "text",
+                "default": "",
+                "options": {
+                    "max": 100
+                },
+                "req": false,
+                "multi": false,
+                "active": true,
+                "sort": 120
+            }
+        },
+        "uploads": [],
+        "rating": []
+    }
+}

@@ -1104,6 +1104,16 @@ function getProbeBudget(): array {
     }
     $query = getProbeQuery('guest');
     [, $out['targets']] = getProbeCost(fn() => $query->getNodeTargetList([101 => 'news', 301 => 'files', 201 => 'docs', 1001 => 'plain']));
+    $bare = [];
+    foreach (['news', 'files'] as $name) {
+        $query = getProbeQuery('root');
+        [$bare, $out['admin-'.$name]] = getProbeCost(function () use ($query, $name) {
+            $query->setNodeType($query->getNodeType($name))->setNodeStatus(NodeStatus::Published)->setNodeSets(false)->setNodePage(1, 10);
+            return $query->getNodeCount() ? $query->getNodeList() : [];
+        });
+    }
+    $out['bare'] = [count(array_filter($bare, fn($v) => $v->fields !== null || $v->cids !== null || $v->rels !== null || $v->assets !== null)),
+        $bare[0]->cids ?? null, $bare[0]->rels ?? null, $bare[0]->assets ?? null];
     return $out;
 }
 
@@ -1155,12 +1165,23 @@ function deleteProbeTree(string $dir): void {
     rmdir($dir);
 }
 
-# Put the service run on clean scratch: the configuration of the stand with the shipped Node file, and an upload root with the guard of the release
+# Put the service run on clean scratch: the configuration of the stand with the empty Node registry of the release - the types the stand registers leave all four
+# shared areas - and an upload root with the guard of the release
 # Three prepared directories: files holds guards alone, pages keeps an old file inside thumb, and Faq differs from a type name only in case
 function addProbeScratch(string $work): void {
     foreach (['svc', 'svcbackup', 'svccache', 'svcuploads', 'logs'] as $dir) deleteProbeTree($work.'/'.$dir);
     foreach (['svc', 'logs', 'svcuploads/files/thumb', 'svcuploads/pages/thumb', 'svcuploads/Faq'] as $dir) mkdir($work.'/'.$dir, 0777, true);
     foreach (glob(BASE_DIR.'/config/*.php') ?: [] as $file) if (basename($file) !== 'local.php') copy($file, $work.'/svc/'.basename($file));
+    $node = require BASE_DIR.'/config/node.php';
+    $names = array_keys($node['node']['types'] ?? []);
+    if ($names) {
+        $node['node']['types'] = [];
+        $data = ['node' => $node, 'fields' => require BASE_DIR.'/config/fields.php', 'uploads' => require BASE_DIR.'/config/uploads.php',
+            'ratings' => require BASE_DIR.'/config/ratings.php'];
+        foreach ($names as $name) unset($data['fields']['fields']['node'][$name], $data['uploads']['uploads'][$name], $data['ratings']['ratings']['node.'.$name]);
+        if (($data['fields']['fields']['node'] ?? null) === []) unset($data['fields']['fields']['node']);
+        foreach ($data as $file => $one) setProbeFile($work.'/svc/'.$file.'.php', $one);
+    }
     $guard = (string)file_get_contents(BASE_DIR.'/uploads/index.html');
     foreach (['svcuploads', 'svcuploads/files', 'svcuploads/files/thumb', 'svcuploads/pages'] as $dir) file_put_contents($work.'/'.$dir.'/index.html', $guard);
     file_put_contents($work.'/svcuploads/pages/thumb/old.txt', 'kept');

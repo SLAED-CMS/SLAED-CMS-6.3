@@ -151,7 +151,8 @@ final class UpdateRatingsTest extends TestCase
     {
         $code = (string)file_get_contents(dirname(__DIR__, 2).'/setup/index.php');
         $this->assertMatchesRegularExpression('/setUpdatePoints\(\$db, \$xprefix\);\s+\$bodytext \.= setUpdateRatings\(\$db, \$xprefix\);/', $code);
-        $this->assertStringContainsString("['points' => '6.3.0', 'ratings' => '6.3.0', 'fields' => '6.3.0']", $code, 'A fresh installation does not leave the ratings mark');
+        $mark = "['points' => '6.3.0', 'ratings' => '6.3.0', 'fields' => '6.3.0', 'node' => 'new']";
+        $this->assertStringContainsString($mark, $code, 'A fresh installation does not leave the ratings mark');
         $this->assertStringEndsWith('start the update again: ALTER TABLE `probe_products` ENGINE=InnoDB;', $this->getRun('flight')['engine']);
         $sql = (string)file_get_contents(dirname(__DIR__, 2).'/setup/sql/table_update6_3.sql');
         foreach (['rating_targets', 'rating_actors', 'rating_votes'] as $name) $this->assertStringContainsString('CREATE TABLE IF NOT EXISTS `{prefix}_'.$name.'`', $sql);

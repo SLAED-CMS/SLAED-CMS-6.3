@@ -28,7 +28,7 @@ if (is_user()) {
     $points = intval($userinfo['points'] ?? 0);
     $grp = intval($userinfo['grp'] ?? 0);
     if ($conf['points']['active'] || $grp) {
-        $result = $db->getSqlQuery('SELECT id, name, points, extra, rank, color FROM '.PREFIX_DB.'_groups ORDER BY points ASC');
+        $result = $db->getSqlQuery('SELECT id, name, points, extra, `rank`, color FROM '.PREFIX_DB.'_groups ORDER BY points ASC');
         while ([$gid, $name, $gpts, $extra, $grimg, $color] = $db->getSqlRow($result)) {
             if ($extra == 1) {
                 if ($grp && $gid == $grp) {

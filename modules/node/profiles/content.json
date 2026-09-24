@@ -1,0 +1,72 @@
+{
+    "format": "slaed.node",
+    "version": 1,
+    "type": {
+        "name": "content",
+        "title": "_CONTENT",
+        "intro": "",
+        "ext": "sync",
+        "sort": 60,
+        "settings": {
+            "list": {
+                "orders": [
+                    "published",
+                    "updated",
+                    "title",
+                    "views",
+                    "rating"
+                ],
+                "order": "published",
+                "dir": "desc",
+                "limit": 10,
+                "alpha": false,
+                "show": [
+                    "category",
+                    "author",
+                    "date",
+                    "views"
+                ]
+            },
+            "view": {
+                "mode": "article"
+            },
+            "form": [],
+            "workflow": {
+                "access": "user",
+                "groups": [],
+                "publish": [],
+                "notify": {
+                    "pending": true,
+                    "result": true
+                }
+            },
+            "admin": [],
+            "features": {
+                "categories": true,
+                "comments": true,
+                "rating": true,
+                "favorites": true,
+                "poll": false,
+                "home": false,
+                "pinned": true,
+                "submit": false,
+                "moderation": false,
+                "schedule": true,
+                "related": true,
+                "tree": false
+            },
+            "assets": [],
+            "integrations": {
+                "search": true,
+                "rss": true,
+                "sitemap": true,
+                "blocks": true,
+                "seo": "article"
+            },
+            "ext": []
+        },
+        "fields": [],
+        "uploads": [],
+        "rating": []
+    }
+}

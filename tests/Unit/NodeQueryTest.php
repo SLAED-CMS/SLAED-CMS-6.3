@@ -81,6 +81,7 @@ final class NodeQueryTest extends TestCase
             'setNodePage' => ['int page', 'int limit', 'self'],
             'setNodePublished' => ['?string from', '?string until', 'self'],
             'setNodeSearch' => ['string text', 'self'],
+            'setNodeSets' => ['bool load', 'self'],
             'setNodeStatus' => ['NodeStatus status', 'self'],
             'setNodeType' => ['NodeType type', 'self'],
             'setNodeTypes' => ['array types', 'self'],
@@ -518,12 +519,14 @@ final class NodeQueryTest extends TestCase
 
     # The budgets of 11-security-performance.md from a fresh reader including the type: three without categories, the batches of the type on top, never more than seven
     # Building the HTML cache of a list adds the one deadline statement and reuses the category prefetch: four for a plain type, never more than eight
+    # The administrative list switches the sets off and costs type, count and page alone, and its models hold null for every set it did not load
     #[Test]
     public function statementBudgetsHold(): void
     {
         $run = $this->getRuns()['budget'];
         $want = ['plain-3' => 3, 'plain-10' => 3, 'news-3' => 7, 'news-10' => 7, 'docs-3' => 6, 'docs-10' => 6, 'files-3' => 7, 'files-10' => 7,
-            'build-plain' => 4, 'build-news' => 8, 'build-docs' => 7, 'build-files' => 8, 'targets' => 2];
+            'build-plain' => 4, 'build-news' => 8, 'build-docs' => 7, 'build-files' => 8, 'targets' => 2, 'admin-news' => 3, 'admin-files' => 3,
+            'bare' => [0, null, null, null]];
         $this->assertSame($want, $run);
     }
 

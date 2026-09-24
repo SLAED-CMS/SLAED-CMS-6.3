@@ -129,6 +129,7 @@ define('_NODE_STALE','Le type Node %s a été modifié entre-temps par un autre 
 define('_NODE_BAD','Le type Node %s a refusé la modification, rien n\'a été écrit.');
 define('_NODE_PROOF','La base de données décide de l\'instantané à appliquer, d\'après la version du type Node %s.');
 define('_NODE_MANAGE','Node : types et leurs réglages');
+define('_NODE_SETUP','L\'installation n\'a pas terminé ces sections Node : %s - une section n\'a pas été créée, pas activée ou est restée sans son contenu de départ. La raison est inscrite dans le journal du site.');
 define('_CONFINES','Spécifiez une valeur de «0» pour le retrait de toutes les restrictions.');
 define('_CONST','Constante de Langue');
 define('_CREATEBLOCK','Créer un bloc');

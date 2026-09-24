@@ -122,6 +122,7 @@ final class NodeQuery {
     private ?string $until = null;
     private string $search = '';
     private bool $home = false;
+    private bool $sets = true;
 
     # Keep the database, the request context and the shared field system the reads are decided with
     public function __construct(Database $db, NodeContext $context, Field $field) {
@@ -767,7 +768,7 @@ final class NodeQuery {
         $tmap = [];
         foreach ($this->list as $type) $tmap[$type->id] = $type;
         $want = ['cids' => [], 'rels' => [], 'assets' => []];
-        foreach ($rows as $row) {
+        foreach ($this->sets ? $rows : [] as $row) {
             $type = $tmap[intval($row['tid'])];
             $id = intval($row['id']);
             if ($type->settings['features']['categories']) $want['cids'][] = $id;
@@ -781,7 +782,7 @@ final class NodeQuery {
         foreach ($rows as $row) {
             $id = intval($row['id']);
             $type = $tmap[intval($row['tid'])];
-            $node = $this->getNodeModel($row, $type, false, $this->checkFieldUse($type), $cids[$id] ?? null, $rels[$id] ?? null, $assets[$id] ?? null);
+            $node = $this->getNodeModel($row, $type, false, $this->sets && $this->checkFieldUse($type), $cids[$id] ?? null, $rels[$id] ?? null, $assets[$id] ?? null);
             if ($node) $out[] = $node;
         }
         return $out;
@@ -831,6 +832,13 @@ final class NodeQuery {
         if ($page < 1 || $limit < 1 || $page > intdiv(4294967295, $limit) + 1) throw $this->getInvalid('page');
         $this->page = $page;
         $this->limit = $limit;
+        return $this;
+    }
+
+    # Choose whether the lists of the reader carry the extra fields and the categories, relations and resources of their page; a table that shows none of them
+    # switches them off and keeps the three statements of type, count and page, and the models then hold null for every set that was not loaded
+    public function setNodeSets(bool $load): self {
+        $this->sets = $load;
         return $this;
     }
 
@@ -886,7 +894,7 @@ final class NodeQuery {
     # The select of one list branch: the main columns, the fields where the type uses them, the author and category names and the order helpers
     private function getListSelect(array $part): string {
         $type = $part['type'];
-        return 'SELECT '.self::COLS.', '.($this->checkFieldUse($type) ? 'n.field' : '\'\'').' AS field, u.name AS uname, c.title AS ctitle, '
+        return 'SELECT '.self::COLS.', '.(($this->sets && $this->checkFieldUse($type)) ? 'n.field' : '\'\'').' AS field, u.name AS uname, c.title AS ctitle, '
             .($type->settings['features']['pinned'] ? 'n.pinned' : '0').' AS pin, (n.ratings = 0) AS rnone, n.score / NULLIF(n.ratings, 0) AS ravg'
             .' FROM '.PREFIX_DB.'_nodes AS n LEFT JOIN '.PREFIX_DB.'_users AS u ON u.id = n.uid AND n.uid > 0'
             .' LEFT JOIN '.PREFIX_DB.'_categories AS c ON c.id = n.cid AND n.cid > 0'.$part['join'].' WHERE '.$part['where'];

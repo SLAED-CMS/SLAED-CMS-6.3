@@ -1,0 +1,72 @@
+{
+    "format": "slaed.node",
+    "version": 1,
+    "type": {
+        "name": "jokes",
+        "title": "_JOKES",
+        "intro": "",
+        "ext": "",
+        "sort": 50,
+        "settings": {
+            "list": {
+                "orders": [
+                    "published",
+                    "updated",
+                    "title",
+                    "views",
+                    "rating"
+                ],
+                "order": "published",
+                "dir": "desc",
+                "limit": 10,
+                "alpha": false,
+                "show": [
+                    "category",
+                    "author",
+                    "date",
+                    "views"
+                ]
+            },
+            "view": {
+                "mode": "default"
+            },
+            "form": [],
+            "workflow": {
+                "access": "user",
+                "groups": [],
+                "publish": [],
+                "notify": {
+                    "pending": true,
+                    "result": true
+                }
+            },
+            "admin": [],
+            "features": {
+                "categories": true,
+                "comments": true,
+                "rating": true,
+                "favorites": true,
+                "poll": false,
+                "home": true,
+                "pinned": true,
+                "submit": true,
+                "moderation": true,
+                "schedule": true,
+                "related": true,
+                "tree": false
+            },
+            "assets": [],
+            "integrations": {
+                "search": true,
+                "rss": true,
+                "sitemap": true,
+                "blocks": true,
+                "seo": "article"
+            },
+            "ext": []
+        },
+        "fields": [],
+        "uploads": [],
+        "rating": []
+    }
+}

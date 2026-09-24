@@ -283,7 +283,7 @@ function config(): void {
     $title = _CONFIG;
     checkWritableConfig(CONFIG_DIR.'/db.php');
     checkWritableConfig(CONFIG_DIR.'/global.php');
-    $conf = array_merge($conf, require CONFIG_DIR.'/db.php');
+    $conf['db'] = (is_file(CONFIG_DIR.'/db.php') ? (require CONFIG_DIR.'/db.php')['db'] : []) + array_fill_keys(['host', 'uname', 'pass', 'name', 'prefix'], '');
     $xhost = ($conf['db']['host']) ? $conf['db']['host'] : 'localhost';
     $xuname = ($conf['db']['uname']) ? $conf['db']['uname'] : '';
     $xpass = ($conf['db']['pass']) ? $conf['db']['pass'] : '';
@@ -771,7 +771,7 @@ function save(): void {
     setConfigFile('security.php', $conf['security'], $cont);
     $conf = array_merge($conf, require CONFIG_DIR.'/security.php');
     
-    $conf = array_merge($conf, require CONFIG_DIR.'/db.php');
+    $conf['db'] = is_file(CONFIG_DIR.'/db.php') ? (require CONFIG_DIR.'/db.php')['db'] : [];
     $cont = ['host' => $xhost, 'uname' => $xuname, 'pass' => $xpass, 'name' => $xname, 'engine' => $xengine, 'charset' => $xcharset, 'collate' => $xcollate, 'prefix' => $xprefix, 'sync' => $xsync];
     setConfigFile('db.php', $conf['db'], $cont);
 
@@ -783,7 +783,7 @@ function save(): void {
         $title = _SAVE_NEW;
         $bodytext .= getSqlFile('setup/sql/table.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
         $bodytext .= getSqlFile('setup/sql/insert.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
-        setConfigFile('update.php', ['points' => '6.3.0', 'ratings' => '6.3.0', 'fields' => '6.3.0']);
+        setConfigFile('update.php', ['points' => '6.3.0', 'ratings' => '6.3.0', 'fields' => '6.3.0', 'node' => 'new']);
     } elseif ($setup == 'update4_1') {
         $title = _SAVE_UPDATE;
         $bodytext .= getSqlFile('setup/sql/table_update4_1.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
@@ -886,45 +886,18 @@ function save(): void {
         setConfigFile('global.php', array_diff_key($conf, ['security' => '', 'db' => '']), ['close' => '1']);
         $conf['close'] = '1';
         $bodytext .= getInfo('the site is closed for the data update (close = 1), open it in the settings after the result is checked', true);
-        $cont = [];
-        $apath = BASE_DIR.'/admin/modules';
-        if (is_dir($apath) && ($handle = opendir($apath))) {
-            while (false !== ($file = readdir($handle))) {
-                if (preg_match('/^([a-z_]+)\.php$/i', $file, $matches)) {
-                    $module = $matches[1];
-                    $cont[$module] = [
-                        'lang' => '_'.strtoupper($module),
-                        'img' => strtolower($module).'.png',
-                        'active' => 1,
-                        'view' => 0,
-                        'menu' => 1,
-                        'group' => 0,
-                        'side' => 0,
-                        'top' => 0,
-                        'type' => 0,
-                    ];
-                }
-            }
-            closedir($handle);
+        $mods = [];
+        foreach (scandir(BASE_DIR.'/admin/modules') ?: [] as $file) if (preg_match('/^([a-z_]+)\.php$/i', $file, $matches)) $mods[$matches[1]] = 0;
+        foreach (scandir(BASE_DIR.'/modules') ?: [] as $file) {
+            if (!str_contains($file, '.') && (file_exists(BASE_DIR.'/modules/'.$file.'/index.php') || file_exists(BASE_DIR.'/modules/'.$file.'/admin/index.php'))) $mods[$file] = 1;
         }
-        $mpath = BASE_DIR.'/modules';
-        if (is_dir($mpath) && ($handle = opendir($mpath))) {
-            while (false !== ($file = readdir($handle))) {
-                if (!preg_match('/\./', $file) && (file_exists($mpath.'/'.$file.'/index.php') || file_exists($mpath.'/'.$file.'/admin/index.php'))) {
-                    $cont[$file] = [
-                        'lang' => '_'.strtoupper($file),
-                        'img' => strtolower($file).'.png',
-                        'active' => 0,
-                        'view' => 0,
-                        'menu' => 1,
-                        'group' => 0,
-                        'side' => 0,
-                        'top' => 0,
-                        'type' => 1,
-                    ];
-                }
-            }
-            closedir($handle);
+        $cont = [];
+        foreach ($mods as $module => $type) {
+            $cont[$module] = ['lang' => '_'.strtoupper($module), 'icon' => 'puzzle', 'active' => $type ? 0 : 1, 'view' => 0, 'menu' => 1, 'group' => 0, 'side' => 0,
+                'top' => 0, 'type' => $type];
+        }
+        if (isset($cont['node'])) {
+            $cont['node'] = ['lang' => '_NODE', 'icon' => 'collection', 'active' => 1, 'view' => 0, 'menu' => 0, 'group' => 0, 'side' => 2, 'top' => 0, 'type' => 1];
         }
         $hasmod = false;
         $tbl = $xprefix.'_modules';
@@ -936,19 +909,7 @@ function save(): void {
             while ($row = $db->getSqlRow($result)) {
                 $title = $row['title'];
                 $map[(string)$row['mid']] = $title;
-                if (!isset($cont[$title])) {
-                    $cont[$title] = [
-                        'lang' => '_'.strtoupper($title),
-                        'img' => strtolower($title).'.png',
-                        'active' => 0,
-                        'view' => 0,
-                        'menu' => 1,
-                        'group' => 0,
-                        'side' => 0,
-                        'top' => 0,
-                        'type' => 1,
-                    ];
-                }
+                if (!isset($cont[$title])) continue;
                 $cont[$title]['active'] = $row['active'];
                 $cont[$title]['view'] = $row['view'];
                 $cont[$title]['menu'] = $row['inmenu'];
@@ -981,12 +942,19 @@ function save(): void {
             }
         }
         $exfile = CONFIG_DIR.'/modules.php';
-        if (file_exists($exfile)) {
-            $exdata = require $exfile;
-            $existing = $exdata['modules'] ?? [];
-            $cont = array_merge($cont, $existing);
-        }
+        $existing = file_exists($exfile) ? ((require $exfile)['modules'] ?? []) : [];
+        $gone = array_keys(array_diff_key($existing, $mods));
+        $cont = array_intersect_key(array_merge($cont, $existing), $mods);
         setConfigFile('modules.php', $cont);
+        if ($gone) $bodytext .= getInfo('config/modules.php records of removed modules dropped: '.implode(', ', $gone), true);
+        $ufile = CONFIG_DIR.'/uploads.php';
+        $udata = is_file($ufile) ? ((require $ufile)['uploads'] ?? []) : [];
+        $ntypes = is_file(CONFIG_DIR.'/node.php') ? ((require CONFIG_DIR.'/node.php')['node']['types'] ?? []) : [];
+        $ugone = array_diff_key(array_intersect_key($udata, array_flip(['news', 'pages', 'faq', 'help', 'jokes', 'content', 'links', 'files', 'media'])), $ntypes);
+        if ($ugone) {
+            setConfigFile('uploads.php', array_diff_key($udata, $ugone));
+            $bodytext .= getInfo('config/uploads.php rules of removed modules dropped: '.implode(', ', array_keys($ugone)), true);
+        }
         $nlist = [];
         $ntable = $xprefix.'_newsletter';
         $ncols = $db->getSqlQuery('SHOW COLUMNS FROM `'.$ntable.'` LIKE :col', ['col' => 'mails']);

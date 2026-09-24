@@ -32,6 +32,7 @@ define('_NODE_FIELDS','Extra fields');
 define('_NODE_FLOW','Public submission');
 define('_NODE_FMOD','Review before publication');
 define('_NODE_FORMAT','Format version');
+define('_NODE_PROFILE','Profile');
 define('_NODE_FPIN','Pinning');
 define('_NODE_FSCHED','Scheduled publication and expiry');
 define('_NODE_FSUBMIT','Public submission');

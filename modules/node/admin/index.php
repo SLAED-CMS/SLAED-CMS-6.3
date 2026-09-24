@@ -329,7 +329,7 @@ function show(): void {
     $query = getNodeReader((count($pick) === 1) ? $pick[0] : null);
     if (count($pick) === 1) $query->setNodeType($pick[0]);
     else $query->setNodeTypes($pick);
-    $query->setNodeStatus($state)->setNodePage($num, $lim);
+    $query->setNodeStatus($state)->setNodeSets(false)->setNodePage($num, $lim);
     $count = $query->getNodeCount();
     $pages = max(1, (int)ceil($count / $lim));
     $rows = '';
@@ -659,9 +659,10 @@ function getNodeTypeVals(?NodeType $type, ?array $prof): array {
     ];
 }
 
-# Read the posted type form into the effective settings and the input the service takes; fields, uploads and rating stay those of the stored type or the defaults
+# Read the posted type form into the effective settings and the input the service takes; fields, uploads and rating stay those of the stored type or the defaults,
+# and the extension settings those of the stored type or of the shipped profile the new type starts from
 # A public workflow for guests without moderation is taken only with its explicit confirmation, because every visitor would then publish directly
-function getNodeTypePost(?NodeType $old): array {
+function getNodeTypePost(?NodeType $old, ?array $prof): array {
     $num = fn(string $key, int $def): int => (($v = getVar('post', $key, 'raw', '')) !== '' && is_string($v) && preg_match('/^-?[0-9]{1,18}$/D', trim($v))) ? (int)trim($v) : $def;
     $flag = fn(string $key): bool => (string)getVar('post', $key, 'raw', '') === '1';
     $pick = fn(string $key, array $allow): array => array_values(array_intersect($allow, (array)getVar('post', $key.'[]', '', [])));
@@ -707,7 +708,7 @@ function getNodeTypePost(?NodeType $old): array {
         'assets' => $roles,
         'integrations' => ['search' => $flag('integ_search'), 'rss' => $flag('integ_rss'), 'sitemap' => $flag('integ_sitemap'), 'blocks' => $flag('integ_blocks'),
             'seo' => (string)getVar('post', 'seo', 'var', 'website')],
-        'ext' => $old?->settings['ext'] ?? [],
+        'ext' => $old?->settings['ext'] ?? (array)($prof['type']['settings']['ext'] ?? []),
     ];
     $vals = ['name' => trim((string)getVar('post', 'tname', 'raw', '')), 'title' => trim((string)getVar('post', 'title', 'raw', '')), 'intro' => trim((string)getVar('post',
         'intro', 'raw', '')),
@@ -841,7 +842,7 @@ function type(): void {
     $clash = false;
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         if (!checkAdminPost('node')) setNodeAdminFault(403, _TOKENMISS, 'type');
-        [$input, $vals, $bad] = getNodeTypePost($old);
+        [$input, $vals, $bad] = getNodeTypePost($old, $prof);
         if ($old !== null) $vals['name'] = $old->name;
         $sent = (int)getVar('post', 'version', 'num', 0);
         $act = (string)getVar('post', 'action', 'var', 'save');
@@ -890,6 +891,17 @@ function type(): void {
     $opts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'keep', 'label_text' => _NODE_KEEP, 'is_selected' => true])
         .$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SAVECHANGES]);
     $act = $clash ? $tpl->getHtmlFrag('select', ['name_attr' => 'action', 'options_html' => $opts, 'is_inline_gap' => true]) : '';
+    $rows = getNodeTypeRows($vals, $old === null);
+    if ($old === null) {
+        $picks = [];
+        foreach (glob(BASE_DIR.'/modules/node/profiles/*.json') ?: [] as $file) {
+            $one = basename($file, '.json');
+            $label = getConst((string)(getNodeProfile($one)['type']['title'] ?? ''));
+            $picks[] = $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=node&op=type&profile='.$one, 'title' => $label, 'label' => $one,
+                'is_label_strong' => $one === $pname]);
+        }
+        if ($picks) array_unshift($rows, ['label_html' => _NODE_PROFILE, 'field_html' => implode(' ', $picks)]);
+    }
     $open = $clash ? $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=node&op=type&type='.$old->name, 'title' => _NODE_CURRENT, 'label' => _NODE_CURRENT,
         'is_line_break' => true]) : '';
     echo getNodeAdminTabs($old !== null ? 'types' : 'type')
@@ -898,7 +910,7 @@ function type(): void {
         .$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php',
             'hidden' => $hidden,
-            'rows' => getNodeTypeRows($vals, $old === null),
+            'rows' => $rows,
             'actions_html' => $act.$tpl->getHtmlFrag('button', ['submit_label' => $clash ? _OK : _SAVECHANGES, 'button_type' => 'submit']),
         ])]);
     setFoot();

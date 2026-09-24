@@ -73,11 +73,14 @@ final class RatingOwnersTest extends TestCase
         }
     }
 
-    # The shipped rules are exactly four string keys per fixed scope, the readers ask for the keys, and the subsystem opens only behind the mark
+    # The shipped rules are exactly four string keys per fixed scope, the readers ask for the keys, and the subsystem opens only behind the mark;
+    # the rule node.<name> of a registered Node type belongs to that type and is held by NodeConfigTest
     #[Test]
     public function theRulesAreFourKeysBehindTheMark(): void
     {
         $rules = (require $this->getRoot().'/config/ratings.php')['ratings'];
+        $types = array_keys((require $this->getRoot().'/config/node.php')['node']['types'] ?? []);
+        $rules = array_diff_key($rules, array_flip(array_map(fn($v) => 'node.'.$v, $types)));
         $this->assertSame(['account', 'forum', 'shop'], array_keys($rules));
         foreach ($rules as $name => $rule) {
             $this->assertSame(['active', 'period', 'detail', 'guests'], array_keys($rule), $name);

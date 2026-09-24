@@ -37,7 +37,7 @@ tar -czf slaed_backup_$(date +%Y%m%d).tar.gz /path/to/slaed/
 Confirmed current baseline:
 
 - **PHP:** 8.4+
-- **Database:** PDO MySQL-compatible server (MySQL 8.0+ or MariaDB 10+)
+- **Database:** PDO MySQL-compatible server: MariaDB 10.2.1+ or MySQL 8.0.16+, InnoDB tables
 
 ### Review Writable Directories
 
@@ -102,6 +102,39 @@ For upgrades, review the available `table_update*.sql` files and apply the corre
 > [!IMPORTANT]
 > `TODO:` Confirm the exact upgrade order for each supported source version before documenting a mandatory sequence.
 
+### From 6.2 to 6.3: Run the Installer Update
+
+A 6.2 site is updated by the installer, not by importing SQL by hand: open `setup.php`, keep the connection
+data of the site and choose **SLAED CMS 6.2 Pro > 6.3 Phoenix**. `config/db.php` is not part of the release;
+the installer creates it when a site has none.
+
+The update runs in this order and reports every step on its result page:
+
+1. **Preflight.** The server must be MariaDB 10.2.1+ or MySQL 8.0.16+, and the tables that take part in
+   transactions (`users`, `comment`, `forum`, `order`, `clients`, `favorites`, `user_oauth`, `points`,
+   `products`, `rating_targets`, `rating_actors`, `rating_votes`) must be InnoDB. Otherwise the update stops
+   and prints the `ALTER TABLE … ENGINE=InnoDB` statements to run; nothing is converted automatically.
+2. **The site is closed** (`close = 1`). It stays closed after the update; open it in the settings once the
+   result is checked.
+3. **Configuration.** `config/modules.php` is reconciled the way the modules screen does it: records of
+   modules that are no longer in the tree are dropped, `node` gets the record of a clean installation.
+   `config/uploads.php` loses the upload rules of the nine removed modules, `config/scheduler.php` gains
+   the `nodepublish` and `nodesync` jobs, `config/rss.php` gets its three transport limits.
+4. **`table_update6_3.sql`**, then the data units **points**, **ratings** and **fields**. Each unit keeps a
+   manifest and snapshots under `storage/backup/update/<unit>/` and writes its mark to `config/update.php`;
+   a subsystem without its mark stays closed for writing.
+5. RSS blocks are emptied so the next refresh stores Markdown; pending newsletter recipients move into the
+   mail queue.
+
+The **fields** unit checks every stored value of account, forum and order fields before it writes anything.
+When it cannot map a value without guessing, it writes nothing and names the table, the row id and the
+reason, for example `sport_order 261 (value 10 holds data and has no definition)`. Correct that row in the
+database and run the update again: finished units are skipped, the fields unit starts over, and a repeated
+run changes nothing.
+
+The update creates no Node types and imports no content of the removed modules: their tables, categories
+and `uploads/<name>` directories stay as they are. See [Node Replaces Nine Content Modules](#node-replaces-nine-content-modules).
+
 ### 4. Review Configuration
 
 Check the active files in `config/` and verify:
@@ -148,6 +181,45 @@ Check at minimum:
 ## Breaking and Important Changes
 
 The current codebase confirms these project-level changes in 6.3:
+
+### Node Replaces Nine Content Modules
+
+The modules `news`, `pages`, `faq`, `help`, `jokes`, `content`, `links`, `files` and `media` are gone, with
+their blocks, configuration files and tables in `setup/sql/table.sql`. Their content is served by Node
+(`modules/node`, `core/classes/node/`): one module that runs any number of content types side by side.
+
+- A type keeps the public list address of the module it replaces, `index.php?name=<type>`; a material opens
+  at `index.php?name=<type>&op=view&id=<id>` with one global id across all types.
+- A clean installation creates ten active types from `modules/node/profiles/*.json` — the nine replacements
+  and `docs` — when the first administrator is created, and one welcome news item.
+- An updated site gets no types. Create them in the admin panel under **Node → Types → New type**, from a
+  shipped profile or from scratch. A type name is refused while categories of the old module or user files
+  in `uploads/<name>` exist; archive, move or delete them yourself first — the update never does.
+- The old tables (`{prefix}_news` and the others) are neither read, imported nor dropped. Their
+  `config/<name>.php` files are no longer read and may be deleted.
+- Custom code that read these tables or called helpers of the removed modules must move to `NodeQuery`
+  (reads) and `NodeService` (writes).
+
+### Web Server Rule for Node Upload Directories
+
+Node serves every file of a type through a controlled route, and a type is switched on only when the web
+server refuses direct access to `uploads/<type>/` (answer `403` or `404`). Apache and LiteSpeed follow the
+`.htaccess` guard Node writes into the directory. nginx ignores `.htaccess` and needs one shared rule:
+
+```nginx
+location ~ ^/uploads/([^/]+)/ {
+    if (-f $document_root/uploads/$1/.htaccess) { return 403; }
+}
+```
+
+### Points, Ratings and Extra Fields
+
+- Points run on the journal `{prefix}_points`; `{prefix}_users.points` stays the balance and is kept as the
+  starting balance by the update.
+- Ratings live in `{prefix}_rating_targets`, `{prefix}_rating_actors` and `{prefix}_rating_votes`; a vote is a
+  POST request. The rules of every target are in `config/ratings.php`.
+- Extra fields of accounts, forum posts and orders are named definitions in `config/fields.php` with JSON
+  values, handled by the `Field` class; the positional `||` strings of 6.2 are no longer read.
 
 ### OAuth2/OIDC Login Added
 

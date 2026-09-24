@@ -32,6 +32,7 @@ define('_NODE_FIELDS','Champs supplémentaires');
 define('_NODE_FLOW','Soumission publique');
 define('_NODE_FMOD','Vérification avant publication');
 define('_NODE_FORMAT','Version du format');
+define('_NODE_PROFILE','Profil');
 define('_NODE_FPIN','Épinglage');
 define('_NODE_FSCHED','Publication programmée et expiration');
 define('_NODE_FSUBMIT','Soumission publique');

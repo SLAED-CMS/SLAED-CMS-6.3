@@ -11,6 +11,10 @@ $routes = [
     '/index.php?name=rss' => ['types' => ['WebPage'], 'index' => true],
     '/index.php?name=changelog' => ['types' => ['CollectionPage'], 'index' => true],
     '/index.php?name=search' => ['types' => ['WebPage'], 'index' => false],
+    '/index.php?name=docs' => ['types' => ['CollectionPage'], 'index' => true],
+    '/index.php?name=jokes' => ['types' => ['CollectionPage'], 'index' => true],
+    '/index.php?name=content' => ['types' => ['CollectionPage'], 'index' => true],
+    '/index.php?name=media' => ['types' => ['CollectionPage'], 'index' => true],
 ];
 $extra = array_slice($argv, 2);
 foreach ($extra as $path) $routes[$path] = ['types' => [], 'index' => true];
@@ -42,7 +46,7 @@ function getSeoAuditPage(string $url): array {
 }
 
 $details = [
-    'shop' => 'WebPage', 'forum' => 'WebPage', 'voting' => 'WebPage',
+    'shop' => 'WebPage', 'forum' => 'WebPage', 'voting' => 'WebPage', 'docs' => 'Article', 'jokes' => 'Article', 'media' => 'Article',
 ];
 foreach ($details as $mod => $type) {
     $page = getSeoAuditPage($base.'/index.php?name='.$mod);

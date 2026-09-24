@@ -125,7 +125,7 @@ function stats(): void {
     global $db, $conf, $tpl;
     setHead(['title' => _TU_STATS, 'kind' => 'collection']);
     $cont = getModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => $conf['points']['active'] ? getSeoUrl(['name' => $conf['name'], 'op' => 'rules']) : '', 'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _TU_STATS, 'liste_href' => '', 'add_href' => '']);
-    $result = $db->getSqlQuery('SELECT id, name, intro, points, extra, rank, color FROM '.PREFIX_DB.'_groups ORDER BY points');
+    $result = $db->getSqlQuery('SELECT id, name, intro, points, extra, `rank`, color FROM '.PREFIX_DB.'_groups ORDER BY points');
     if ($result) {
         $rows = [];
         while ($row = $db->getSqlRow($result)) {

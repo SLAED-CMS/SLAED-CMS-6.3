@@ -1,0 +1,68 @@
+{
+    "format": "slaed.node",
+    "version": 1,
+    "type": {
+        "name": "help",
+        "title": "_HELP",
+        "intro": "",
+        "ext": "support",
+        "sort": 40,
+        "settings": {
+            "list": {
+                "orders": [
+                    "published"
+                ],
+                "order": "published",
+                "dir": "desc",
+                "limit": 20,
+                "alpha": false,
+                "show": [
+                    "category",
+                    "date"
+                ]
+            },
+            "view": {
+                "mode": "support"
+            },
+            "form": [],
+            "workflow": {
+                "access": "user",
+                "groups": [],
+                "publish": [],
+                "notify": {
+                    "pending": false,
+                    "result": false
+                }
+            },
+            "admin": [],
+            "features": {
+                "categories": true,
+                "comments": true,
+                "rating": false,
+                "favorites": false,
+                "poll": false,
+                "home": false,
+                "pinned": false,
+                "submit": true,
+                "moderation": false,
+                "schedule": false,
+                "related": false,
+                "tree": false
+            },
+            "assets": [],
+            "integrations": {
+                "search": false,
+                "rss": false,
+                "sitemap": false,
+                "blocks": false,
+                "seo": "website"
+            },
+            "ext": {
+                "mail": true
+            }
+        },
+        "fields": [],
+        "uploads": [],
+        "rating": []
+    }
+}

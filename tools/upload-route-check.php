@@ -306,6 +306,44 @@ function checkReadRows(string $ajar, string $ujar, string $gjar): void {
     $done = getTreeDelta(ROOTDIR.'/uploads/presentation', $was) === [] && str_contains($res['body'], 'configuration');
     checkMatrixRow('write to an unconfigured module is refused', $done);
     checkOpsGateRows($ujar, $png);
+    checkNodeRows($ajar, $gjar);
+}
+
+# The attachment place of a registered Node type: the web server refuses its directory and the editor window offers only the controlled preview route of the type,
+# so a file enters a text as the [attach] tag alone; the first active type of the stand carries the rows, and a stand without one leaves them not run
+function checkNodeRows(string $ajar, string $gjar): void {
+    echo "Node attachment place rows\n";
+    $row = getDbRows('SELECT name FROM {p}_node_types WHERE active = 1 ORDER BY sort, id LIMIT 1');
+    if (!$row) {
+        setSkipRow('the attachment place of a Node type', 'the stand has no active Node type');
+        return;
+    }
+    $type = (string)$row[0]['name'];
+    $base = ROOTDIR.'/uploads/'.$type;
+    $png = addTestFixture('node.png', 'png', 80, 60);
+    $was = getDirTree($base);
+    $send = ['token' => getScopeToken($ajar, 'upload')];
+    $res = json_decode(getHttpReply($ajar, '/index.php?go=4&op=editorUpload&place='.$type.'.attach', $send, ['file' => $png])['body'], true);
+    $new = getTreeDelta($base, $was);
+    checkMatrixRow('a moderator publishes into the place of the type '.$type, (bool)($res['ok'] ?? false) && $new !== [], implode(', ', $new));
+    $list = json_decode(getHttpReply($ajar, '/index.php?go=4&op=editorFiles&place='.$type.'.attach&token='.getScopeToken($ajar, 'ajax'))['body'], true);
+    $rows = is_array($list['files'] ?? null) ? $list['files'] : [];
+    $pre = 'index.php?name='.$type.'&op=attach&key=';
+    $good = $rows !== [];
+    foreach ($rows as $one) {
+        $good = $good && str_starts_with((string)$one['url'], $pre) && str_ends_with((string)$one['url'], '&preview=1') && ($one['bytag'] ?? false) === true
+            && !str_contains((string)$one['thumb'], 'uploads/');
+    }
+    checkMatrixRow('the listing offers only the controlled preview route', $good, count($rows).' files');
+    $name = '';
+    foreach ($new as $one) if (!str_contains($one, '/thumb/')) $name = basename($one);
+    $path = '/'.$pre.rawurlencode($name).'&preview=1';
+    $mine = getHttpReply($ajar, $path)['code'];
+    checkMatrixRow('the moderator reads the file through the preview route', $mine === 200, (string)$mine);
+    $guest = getHttpReply($gjar, $path)['code'];
+    checkMatrixRow('a guest does not read a file no material binds', $guest !== 200, (string)$guest);
+    $raw = getHttpReply($gjar, '/uploads/'.$type.'/'.rawurlencode($name))['code'];
+    checkMatrixRow('the web server refuses the directory of the type', $raw === 403, (string)$raw);
 }
 
 # A field place permits the listing route alone, and the routes its window never offers are refused by the server rather than by an interface that draws no button

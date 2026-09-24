@@ -1,0 +1,105 @@
+{
+    "format": "slaed.node",
+    "version": 1,
+    "type": {
+        "name": "news",
+        "title": "_NEWS",
+        "intro": "",
+        "ext": "",
+        "sort": 10,
+        "settings": {
+            "list": {
+                "orders": [
+                    "published",
+                    "updated",
+                    "title",
+                    "views",
+                    "rating"
+                ],
+                "order": "published",
+                "dir": "desc",
+                "limit": 10,
+                "alpha": false,
+                "show": [
+                    "category",
+                    "author",
+                    "date",
+                    "views"
+                ]
+            },
+            "view": {
+                "mode": "article"
+            },
+            "form": [],
+            "workflow": {
+                "access": "user",
+                "groups": [],
+                "publish": [],
+                "notify": {
+                    "pending": true,
+                    "result": true
+                }
+            },
+            "admin": [],
+            "features": {
+                "categories": true,
+                "comments": true,
+                "rating": true,
+                "favorites": true,
+                "poll": true,
+                "home": true,
+                "pinned": true,
+                "submit": true,
+                "moderation": true,
+                "schedule": true,
+                "related": true,
+                "tree": false
+            },
+            "assets": {
+                "cover": {
+                    "title": "_NODE_COVER",
+                    "intro": "",
+                    "kinds": [
+                        "image"
+                    ],
+                    "extensions": [],
+                    "maxbytes": null,
+                    "min": 0,
+                    "max": 1,
+                    "canlink": false,
+                    "report": false,
+                    "mode": "image",
+                    "active": true,
+                    "sort": 10
+                },
+                "gallery": {
+                    "title": "_ALBUM",
+                    "intro": "",
+                    "kinds": [
+                        "image"
+                    ],
+                    "extensions": [],
+                    "maxbytes": null,
+                    "min": 0,
+                    "max": 20,
+                    "canlink": false,
+                    "report": false,
+                    "mode": "gallery",
+                    "active": true,
+                    "sort": 20
+                }
+            },
+            "integrations": {
+                "search": true,
+                "rss": true,
+                "sitemap": true,
+                "blocks": true,
+                "seo": "news"
+            },
+            "ext": []
+        },
+        "fields": [],
+        "uploads": [],
+        "rating": []
+    }
+}

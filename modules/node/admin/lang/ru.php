@@ -32,6 +32,7 @@ define('_NODE_FIELDS','Дополнительные поля');
 define('_NODE_FLOW','Публичная отправка');
 define('_NODE_FMOD','Проверка перед публикацией');
 define('_NODE_FORMAT','Версия формата');
+define('_NODE_PROFILE','Профиль');
 define('_NODE_FPIN','Закрепление');
 define('_NODE_FSCHED','Отложенная публикация и срок');
 define('_NODE_FSUBMIT','Публичная отправка');

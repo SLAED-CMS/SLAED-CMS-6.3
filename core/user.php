@@ -235,7 +235,7 @@ function setComShow(int $id = 0, int $acomm = 0): string {
         $cont .= $tpl->getHtmlFrag('alert', ['text' => _NOANONCOMMENTS, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
     } elseif ($mode !== CommentMode::Disabled) {
         $userinfo = getUserInfo();
-        $note = ($mode === CommentMode::Moderated || $userinfo['access'] || (!is_user() && $conf['comments']['anonpost'] == 1));
+        $note = ($mode === CommentMode::Moderated || !empty($userinfo['access']) || (!is_user() && $conf['comments']['anonpost'] == 1));
         if ($note) $cont .= $tpl->getHtmlFrag('alert', ['text' => _POSTNOTE, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
         if (is_user()) {
             $name_field = filterText(substr($user[1], 0, 25)).$tpl->getHtmlFrag('hidden', ['name_attr' => 'name', 'value_attr' => '', 'input_attr' => '']);
@@ -444,7 +444,7 @@ function getUserLevelData(int $point, string $gcolor = '', string $grank = ''): 
     $level = 0;
     $nextlab = '';
     if ($conf['points']['active'] && $point) {
-        $result = $db->getSqlQuery('SELECT name, rank, points, color FROM '.PREFIX_DB."_groups WHERE extra != '1' ORDER BY points ASC");
+        $result = $db->getSqlQuery('SELECT name, `rank`, points, color FROM '.PREFIX_DB."_groups WHERE extra != '1' ORDER BY points ASC");
         while ([$guname, $gurank, $gupts, $gucol] = $db->getSqlRow($result)) {
             if ((int)$gupts > $point) {
                 if (!$next) $next = (int)$gupts;

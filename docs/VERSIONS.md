@@ -1,5 +1,39 @@
 # Versions
 
+## 2026-09-24
+
+### Node replaces nine content modules, and the 6.3 update carries a real 6.2 site over
+
+`news`, `pages`, `faq`, `help`, `jokes`, `content`, `links`, `files` and `media` left the tree; one module,
+Node, serves typed content in their place. A type is a row of `_node_types` plus its settings in
+`config/node.php`, its extra fields in `fields.node`, its upload rule and its rating rule; `NodeQuery`
+reads with the category rights of the visitor, `NodeService` writes in one transaction with a version
+check, and two extensions carry the special cases: `support` for private requests of `help`, `sync` for
+the external sources of `content`. Files of a type are served only through its controlled route, so a
+type is switched on only when the web server refuses its upload directory. Ten shipped profiles in
+`modules/node/profiles/` — the nine replacements and the new hierarchical `docs` — become active types
+when the first administrator of a clean installation is created. Points, ratings and extra fields became
+the shared classes `Point`, `Rating` and `Field`, and `Feed` fetches RSS and Atom for blocks and `sync`.
+
+The `update6_3` branch of the installer closes the site, checks server version and table engines, runs
+`table_update6_3.sql` and the resumable units points, ratings and fields with manifests under
+`storage/backup/update/`, and leaves the marks in `config/update.php`. It now also reconciles
+`config/modules.php` the way the modules screen does — the records of the removed modules go, `node`
+gets the record of a clean installation — and drops the upload rules of the removed modules, which used
+to refuse a Node type of the same name. It creates no types and touches no table of the removed modules.
+Run on a dump of the stand taken before the data units, the fields preflight stopped on one order row it
+could not map, wrote nothing, and finished after that row was corrected; the upgraded schema matches a
+clean installation table for table.
+
+The installer no longer needs `config/db.php` to exist, since the file is not shipped. MySQL 8.0 runs the
+release: the columns `_users.rank` and `_groups.rank` are quoted wherever a query names them bare, because
+`rank` is reserved there. The administrative material list of Node reads without the category,
+relation and resource sets it never showed (`NodeQuery::setNodeSets(false)`), three statements a page.
+
+`php tools/node-profile.php` builds a disposable database of 100000 materials in ten types with 200
+categories, relations and resources, measures every route budget against `docs/node/11`, the p50 and p95
+time and the plans of the main statements, and fails on a budget overrun or a full scan.
+
 ## 2026-09-11
 
 ### The presentation module renders the etalon home page from live figures, and the start page listens to its module
