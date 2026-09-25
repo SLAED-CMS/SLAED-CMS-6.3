@@ -1906,8 +1906,7 @@
             if (!elt || !xhr || !elt.getAttribute || !elt.getAttribute('data-sl-rate-key')) return;
             if (xhr.status > 0 && xhr.status < 500) elt.removeAttribute('data-sl-rate-key');
             if (xhr.status < 400) return;
-            var box = document.createElement('div');
-            box.innerHTML = xhr.responseText || '';
+            var box = new DOMParser().parseFromString(xhr.responseText || '', 'text/html').body;
             var line = box.querySelector('.sl-alert-text') || box;
             setToast((line.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 200) || String(xhr.status), true);
         });

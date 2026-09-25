@@ -25,7 +25,7 @@ interface NodeExtension
     public function filterNodeData(NodeType $type, array $data, ?Node $node = null): array;
     public function getNodeScope(NodeType $type): array;
     public function checkNodeAction(NodeType $type, Node|NodeTarget $node, string $action): bool;
-    public function updateNodeAction(NodeType $type, NodeTarget $node, string $action): void;
+    public function updateNodeAction(NodeType $type, NodeTarget $node, string $action, int $uid): void;
     public function addNodeData(Node $node, array $data): void;
     public function updateNodeData(Node $before, Node $after, ?array $data): void;
     public function deleteNodeData(Node $node): void;
@@ -45,7 +45,7 @@ function getNodeExtension(string $key, Database $db, NodeContext $context): ?Nod
 - `filterNodeData()` проверяет и канонизирует данные формы до транзакции.
 - `getNodeScope()` возвращает ровно `join`, `where`, `params` для доверенного серверного ограничения основной SQL-выборки с псевдонимом `n`. Значения передаются только параметрами, а фильтр применяется до подсчёта и пагинации.
 - `checkNodeAction()` принимает только `comment`, `rate`, `favorite`, `asset`, `report` после успешного разрешения цели. Расширение может вернуть запрет, но не может включить выключенную возможность или расширить основные права.
-- `updateNodeAction()` принимает то же закрытое имя после успешного фактического действия и внутри его транзакции изменяет только данные расширения. Он не является обработчиком самого действия и не выполняет необратимую работу.
+- `updateNodeAction()` принимает то же закрытое имя после успешного фактического действия и внутри его транзакции изменяет только данные расширения; `uid` — автор действия (автор комментария, а не одобривший его модератор). Он не является обработчиком самого действия и не выполняет необратимую работу.
 - `addNodeData()`, `updateNodeData()` и `deleteNodeData()` изменяют только принадлежащие расширению данные внутри транзакции `NodeService`. Для смены состояния `updateNodeData()` получает `data = null`.
 - `getNodeData()` принимает массив уже доступных `Node` или `NodeTarget` и возвращает карту по ID одной пакетной выборкой. Текущий элемент передаётся шаблону отдельно как `ext`, без изменения точного контракта `NodeView`.
 - `checkNodeAction()` является только дополнительной проверкой закрытого системного действия, а `updateNodeAction()` — ограниченной транзакционной реакцией после результата. Специальная административная команда и фоновая задача не маскируются общим строковым методом; их точные методы и маршруты утверждаются вместе с конкретным расширением.
@@ -68,7 +68,7 @@ function getNodeExtension(string $key, Database $db, NodeContext $context): ?Nod
 
 Владелец видит только собственные обращения, модератор типа — разрешённую ему очередь с сохранением прав категории. Расширение не создаёт собственных пользователей, сообщений, категорий, файлов, уведомлений и ACL. Обычная справочная база реализуется стандартным типом `docs` и к `NodeSupport` отношения не имеет.
 
-После первого видимого комментария `updateNodeAction(..., 'comment')` атомарно переводит ответ автора в ожидание поддержки, ответ администратора — в ожидание автора, обновляет `activity` и увеличивает `_node_support.version`. Остальные действия не изменяют строку поддержки.
+После первой публикации комментария (`_comment.shown`) `updateNodeAction(..., 'comment', $uid)` по автору ответа атомарно переводит ответ владельца в ожидание поддержки, ответ администратора — в ожидание автора, обновляет `activity` и увеличивает `_node_support.version`. Остальные действия не изменяют строку поддержки.
 
 Единственная специальная команда класса объединяет редактирование рабочей карточки:
 

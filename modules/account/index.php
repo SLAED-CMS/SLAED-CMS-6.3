@@ -208,7 +208,10 @@ function activate(): void {
             $uip = getIp();
             $uagent = getAgent();
             $rank = '';
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (id, name, `rank`, email, avatar, regdate, password, lang, ip, agent, block, warnings, field) VALUES (NULL, :uname, :rank, :email, :avatar, :regdate, :pwd, :lang, :ip, :agent, :block, :warnings, :field)', ['uname' => $nick, 'rank' => $rank, 'email' => $mail, 'avatar' => '', 'regdate' => $reg, 'pwd' => str_starts_with($pass, '$2') ? $pass : getPassHash($pass), 'lang' => $locale, 'ip' => $uip, 'agent' => $uagent, 'block' => '', 'warnings' => '', 'field' => '']);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (id, name, `rank`, email, avatar, regdate, password, lang, ip, agent, block, warnings, field) VALUES (NULL, :uname,'
+                .' :rank, :email, :avatar, :regdate, :pwd, :lang, :ip, :agent, :block, :warnings, :field)', ['uname' => $nick, 'rank' => $rank, 'email' => $mail, 'avatar' => '',
+                'regdate' => $reg, 'pwd' => str_starts_with($pass, '$2') ? $pass : getPassHash($pass), 'lang' => $locale, 'ip' => $uip, 'agent' => $uagent, 'block' => '',
+                'warnings' => '', 'field' => '']);
             $nuid = intval($db->getSqlLastId());
             if ($nuid) $pnt->addEvent('register', 'account', 'user:'.$nuid, $nuid);
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users_temp WHERE name = :uname AND code = :cnum', ['uname' => $nick, 'cnum' => $check]);
@@ -327,9 +330,13 @@ function view(): void {
             $hub = [];
             $parts = [];
             $params = [];
-            foreach (getProfileModules() as $mod => $inf) {
-                if ($mod != 'comm' && !is_active($mod)) continue;
-                if ($mod != 'comm') {
+            $sums = [];
+            foreach (getProfileModules($uid) as $mod => $inf) {
+                if ($mod != 'comm' && !isset($inf['type']) && !is_active($mod)) continue;
+                if (isset($inf['type'])) {
+                    $stat = $inf['stat'];
+                    $sums[$mod] = [$stat['num'], $inf['type']->settings['features']['rating'] ? $stat['ratings'] : 0, $stat['score'], $stat['favs']];
+                } elseif ($mod != 'comm') {
                     $ron = ($conf['ratings'][$mod]['active'] ?? '') === '1';
                     $rsel = ($ron && $inf['rate']) ? 'SUM('.$inf['rate'][0].') AS rc, SUM('.$inf['rate'][1].') AS rt' : '0 AS rc, 0 AS rt';
                     $ftab = PREFIX_DB.'_'.$inf['table'];
@@ -360,15 +367,16 @@ function view(): void {
             $sumf = 0;
             if ($parts) {
                 $result = $db->getSqlQuery(implode(' UNION ALL ', $parts), $params);
-                while ([$key, $num, $rc, $rt, $fav] = $db->getSqlRow($result)) {
-                    $hub[$key]['count'] = (string)$num;
-                    $hub[$key]['rating'] = ($rc > 0) ? number_format($rt / $rc, 2) : '';
-                    $hub[$key]['favs'] = (string)$fav;
-                    $sumn += (int)$num;
-                    $sumc += (int)$rc;
-                    $sumt += (int)$rt;
-                    $sumf += (int)$fav;
-                }
+                while ([$key, $num, $rc, $rt, $fav] = $db->getSqlRow($result)) $sums[$key] = [$num, $rc, $rt, $fav];
+            }
+            foreach ($sums as $key => [$num, $rc, $rt, $fav]) {
+                $hub[$key]['count'] = (string)$num;
+                $hub[$key]['rating'] = ($rc > 0) ? number_format($rt / $rc, 2) : '';
+                $hub[$key]['favs'] = (string)$fav;
+                $sumn += (int)$num;
+                $sumc += (int)$rc;
+                $sumt += (int)$rt;
+                $sumf += (int)$fav;
             }
             $hub = array_values($hub);
             $acts = $adm ? getActionMenu([
@@ -1292,7 +1300,11 @@ function savehome(): void {
             $birth = getVar('req', 'user_birthday', 'date');
             $gender = getVar('post', 'gender', 'num');
             $field = $flds['json'];
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET email = :email, website = :website, viewmail = :viewmail, occ = :occ, origin = :origin, interest = :interest, sig = :sig, storynum = COALESCE(NULLIF(:storynum, 0), storynum), blockon = :blockon, block = :block, theme = :theme, newslet = :newslet, fsmail = :fsmail, psmail = :psmail, birthday = :birthday, gender = :gender, field = :field WHERE id = :id', ['email' => $mail, 'website' => $site, 'viewmail' => $view, 'occ' => $occ, 'origin' => $from, 'interest' => $inter, 'sig' => $sig, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme, 'newslet' => $news, 'fsmail' => $fsmail, 'psmail' => $psmail, 'birthday' => $birth, 'gender' => $gender, 'field' => $field, 'id' => $uid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET email = :email, website = :website, viewmail = :viewmail, occ = :occ, origin = :origin, interest = :interest,'
+                .' sig = :sig, storynum = COALESCE(NULLIF(:storynum, 0), storynum), blockon = :blockon, block = :block, theme = :theme, newslet = :newslet, fsmail = :fsmail,'
+                .' psmail = :psmail, birthday = :birthday, gender = :gender, field = :field WHERE id = :id', ['email' => $mail, 'website' => $site, 'viewmail' => $view,
+                'occ' => $occ, 'origin' => $from, 'interest' => $inter, 'sig' => $sig, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme,
+                'newslet' => $news, 'fsmail' => $fsmail, 'psmail' => $psmail, 'birthday' => $birth, 'gender' => $gender, 'field' => $field, 'id' => $uid]);
             $avat = getVar('post', 'avatar', 'text');
             $take = getVar('post', 'filepath', 'raw', '');
             $take = is_string($take) ? mb_substr(trim($take), 0, 512) : '';

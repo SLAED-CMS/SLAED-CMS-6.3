@@ -4,33 +4,33 @@
       <ul class="sl-d-pane">
         <li class="sl-d-info sl-d-version sl-font">Aктуальная версия</li>
         <li class="sl-d-num sl-font">6.2</li>
-        <li class="sl-d-btns"><a class="sl-but" href="index.php?name=files&amp;op=view&amp;id=1529" title="Скачать бесплатно актуальную версию системы">Скачать систему</a></li>
+        <li class="sl-d-btns"><a class="sl-but" href="index.php?name=files" title="Скачать бесплатно актуальную версию системы">Скачать систему</a></li>
       </ul>
     </div>
   </section>
   <footer id="footbox">
     <div class="sl-wrp sl-grid-1-4">
       <section class="sl-grid" aria-label="SLAED CMS">
-        <a href="index.php?name=content&amp;op=view&amp;id=1" class="sl-upper-wordmark" title="{{ sitename }} - {% if slogan %}{{ slogan }}{% else %}Все великое просто{% endif %}">
+        <div class="sl-upper-wordmark" title="{{ sitename }} - {% if slogan %}{{ slogan }}{% else %}Все великое просто{% endif %}">
           <img class="sl-upper-wordmark-img" src="templates/{{ theme }}/images/logos/slaed-logo-wordmark-outline-blue.svg" alt="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}" title="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}" width="355" height="110">
           <span class="sl-upper-tagline sl-font">Все великое просто</span>
-        </a>
+        </div>
         {{{ foot_html }}}
-        <a class="sl-thd sl-madein sl-madein-brand" href="index.php?name=content&amp;op=view&amp;id=7" title="Официальный патент на бренд SLAED в Германии">
+        <div class="sl-thd sl-madein sl-madein-brand" title="Официальный патент на бренд SLAED в Германии">
           <img src="templates/{{ theme }}/images/flags/de.svg" alt="Официальная регистрация бренда SLAED в Германии" width="60" height="40">
           <span class="sl-madein-label sl-font">Made<br>in<br>Germany</span>
-        </a>
+        </div>
       </section>
       {% if forumblock %}{{{ forumblock }}}{% endif %}
       <section class="sl-grid" aria-label="Технологии">
         <div class="sl-font sl-f-title">Технологии</div>
         <div class="sl-partners">
-          <a href="index.php?name=content&amp;op=view&amp;id=20" title="SLAED CMS написана на языке PHP"><img src="templates/{{ theme }}/images/tmp/php.png" alt="PHP" width="74" height="74"></a>
-          <a href="index.php?name=content&amp;op=view&amp;id=21" title="SLAED CMS на СУБД MySQL"><img src="templates/{{ theme }}/images/tmp/mysql.png" alt="MySQL" width="74" height="74"></a>
-          <a href="index.php?name=content&amp;op=view&amp;id=18" title="Полная поддержка HTML5 в SLAED CMS"><img src="templates/{{ theme }}/images/tmp/html5.png" alt="HTML 5" width="74" height="74"></a>
-          <a href="index.php?name=content&amp;op=view&amp;id=19" title="Полная поддержка CSS3 в SLAED CMS"><img src="templates/{{ theme }}/images/tmp/css3.png" alt="CSS 3" width="74" height="74"></a>
-          <a href="index.php?name=content&amp;op=view&amp;id=22" title="SLAED CMS использует JavaScript Framework jQuery"><img src="templates/{{ theme }}/images/tmp/jquery.png" alt="jQuery" width="74" height="74"></a>
-          <a href="index.php?name=content&amp;op=view&amp;id=23" title="SLAED CMS использует JavaScript библиотеку jQuery UI"><img src="templates/{{ theme }}/images/tmp/jqueryui.png" alt="jQuery UI" width="74" height="74"></a>
+          <span title="SLAED CMS написана на языке PHP"><img src="templates/{{ theme }}/images/tmp/php.png" alt="PHP" width="74" height="74"></span>
+          <span title="SLAED CMS на СУБД MySQL"><img src="templates/{{ theme }}/images/tmp/mysql.png" alt="MySQL" width="74" height="74"></span>
+          <span title="Полная поддержка HTML5 в SLAED CMS"><img src="templates/{{ theme }}/images/tmp/html5.png" alt="HTML 5" width="74" height="74"></span>
+          <span title="Полная поддержка CSS3 в SLAED CMS"><img src="templates/{{ theme }}/images/tmp/css3.png" alt="CSS 3" width="74" height="74"></span>
+          <span title="SLAED CMS использует JavaScript Framework jQuery"><img src="templates/{{ theme }}/images/tmp/jquery.png" alt="jQuery" width="74" height="74"></span>
+          <span title="SLAED CMS использует JavaScript библиотеку jQuery UI"><img src="templates/{{ theme }}/images/tmp/jqueryui.png" alt="jQuery UI" width="74" height="74"></span>
         </div>
       </section>
       <section class="sl-grid" aria-label="Контакты">
@@ -49,7 +49,6 @@
       <nav class="sl-fmenu" aria-label="Нижнее меню">
         <ul>
           <li><a href="/" title="{{ home }}"><i class="bi bi-house-door" aria-hidden="true"></i>{{ home }}</a></li>
-          <li><a href="index.php?name=content&amp;op=view&amp;id=11" title="Платные услуги проекта"><i class="bi bi-briefcase" aria-hidden="true"></i>Услуги</a></li>
           <li><a href="index.php?name=news" title="Новости"><i class="bi bi-newspaper" aria-hidden="true"></i>Новости</a></li>
           <li><a href="index.php?name=files" title="Каталог файлов"><i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i>Файлы</a></li>
           <li><a href="index.php?name=faq" title="Вопросы и ответы"><i class="bi bi-question-circle" aria-hidden="true"></i>Вопросы и ответы</a></li>
@@ -57,7 +56,6 @@
           <li><a href="index.php?name=presentation" title="Презентационная страница системы"><i class="bi bi-easel" aria-hidden="true"></i>Портфолио</a></li>
           <li><a href="index.php?name=sitemap" title="Карта сайта"><i class="bi bi-diagram-3" aria-hidden="true"></i>Карта сайта</a></li>
         </ul>
-        <a class="sl-pull-right" href="index.php?name=content&amp;op=view&amp;id=1" title="Размещение рекламы на проекте"><i class="bi bi-megaphone" aria-hidden="true"></i>По вопросам рекламы</a>
       </nav>
     </div>
   </footer>

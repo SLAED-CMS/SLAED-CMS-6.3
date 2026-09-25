@@ -7,7 +7,7 @@
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
 # Extra fields of every area of the system: one closed registry of types, one check of definitions, one normalization of values and one preparation of the form and of the view
-# The class has no constructor and no state, reads neither the configuration nor the database and writes nothing; definitions and values are always handed in by the caller
+# The class has no constructor, reads neither the configuration nor the database and writes nothing; definitions and values are always handed in by the caller
 # A definition set is accepted as a whole or refused with the path of its first error, and a value is never repaired silently: it is canonical, absent, or an error code
 final class Field {
 
@@ -171,8 +171,27 @@ final class Field {
     private function checkFieldText(mixed $text, int $max, bool $empty): bool {
         if (!is_string($text) || !mb_check_encoding($text, 'UTF-8') || mb_strlen($text, 'UTF-8') > $max) return false;
         if ($text === '') return $empty;
-        if ($text[0] === '_') return defined($text);
+        if ($text[0] === '_') return defined($text) && $this->checkSiteWord($text);
         return $text === trim($text) && $text === strip_tags($text) && !preg_match('/[\x00-\x1F\x7F<>]/', $text);
+    }
+
+    # A caption constant has to live in the site dictionary: a site page loads lang/<language>.php alone, so there defined() is the answer, while the panel and the installer
+    # load dictionaries of their own on top, and a constant of those would pass a save and then empty the whole set on the site; the loaded site file is read once per request
+    private function checkSiteWord(string $name): bool {
+        static $words = null;
+        if (!defined('ADMIN_FILE') && !defined('SETUP_FILE')) return true;
+        if ($words === null) {
+            $words = [];
+            $root = strtolower(str_replace('\\', '/', BASE_DIR).'/lang/');
+            foreach (get_included_files() as $file) {
+                $path = strtolower(str_replace('\\', '/', $file));
+                if (!str_starts_with($path, $root) || str_contains(substr($path, strlen($root)), '/')) continue;
+                preg_match_all("#^define\('(_[A-Z0-9_]+)'#m", (string)file_get_contents($file), $hit);
+                $words = array_flip($hit[1]);
+                break;
+            }
+        }
+        return isset($words[$name]);
     }
 
     # Check one definition and answer it canonical: the nine keys in fixed order, native types only, options of the type, and a default that is itself a valid value

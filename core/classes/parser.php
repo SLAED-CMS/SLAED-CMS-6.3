@@ -26,6 +26,7 @@ class Parser {
     private string $salt = '';
     private int $scnt = 0;
     private bool $safe = true;
+    private bool $trust = false;
     private string $mod = '';
     private int $nid = 0;
     private int $hoff = 0;
@@ -38,11 +39,13 @@ class Parser {
     # also breaks on a single line ending, and anything else is plain Markdown, where a lone line ending joins the lines around it
     # breaks is what a conversation channel asks for: a reader of a comment or a message typed the line endings they meant, and every one of them renders the same way whoever wrote it
     # A positive nid names the stored Node material the text belongs to: its attachments then point at the controlled attach route of the type instead of the closed directory
-    public function filterDoc(string $src, bool $safe = true, string $mod = '', int $hoff = 0, string $fmt = '', int $nid = 0): string {
+    # Trust makes a safe rendering honour the trusted tags: only what [usehtml] and [usephp] enclose becomes markup or runs, everything around them stays escaped
+    public function filterDoc(string $src, bool $safe = true, string $mod = '', int $hoff = 0, string $fmt = '', int $nid = 0, bool $trust = false): string {
         $hoff = max(0, min(5, $hoff));
         $fmt = in_array($fmt, ['plain', 'breaks'], true) ? $fmt : '';
         $nid = max(0, $nid);
-        $key = md5($src.(int)$safe.$mod.$hoff.$fmt.'|'.$nid);
+        $trust = $safe && $trust;
+        $key = md5($src.(int)$safe.(int)$trust.$mod.$hoff.$fmt.'|'.$nid);
         if (isset(self::$pcache[$key])) {
             $this->vary = self::$pcache[$key][1];
             return self::$pcache[$key][0];
@@ -53,6 +56,7 @@ class Parser {
         $this->salt  = bin2hex(random_bytes(8));
         $this->scnt  = 0;
         $this->safe  = $safe;
+        $this->trust = $trust;
         $this->mod   = $mod;
         $this->nid   = $nid;
         $this->hoff  = $hoff;
@@ -88,15 +92,16 @@ class Parser {
     # Standard rendering pipeline: filterDoc() plus replace rules and img repair; call filterDoc() directly when replacement rules must not apply (changelog, search)
     # Stored is the finished rendering of a source of at least CACHEMIN bytes whose parse does not vary; a [block=] or [usephp] source is rendered anew on every serve
     # The stored rendering lives here and not in a caller, because the key is built from what this class itself reads and only this class knows whether a parse may be reused at all
-    public function filterContent(string $src, bool $safe, string $mod, int $hoff = 0, string $fmt = '', int $nid = 0): string {
+    public function filterContent(string $src, bool $safe, string $mod, int $hoff = 0, string $fmt = '', int $nid = 0, bool $trust = false): string {
         $nid = max(0, $nid);
-        $file = $this->getCachePath($src, $safe, $mod, $hoff, $fmt, $nid);
+        $trust = $safe && $trust;
+        $file = $this->getCachePath($src, $safe, $mod, $hoff, $fmt, $nid, $trust);
         if ($file !== '' && Cache::isFresh($file, self::CACHETTL)) {
             $out = Cache::getBody($file);
             if ($out !== '') return $out;
         }
         $out = $this->normalizeHtmlImages(
-            $this->replaceText($this->filterDoc($src, $safe, $mod, $hoff, $fmt, $nid), $mod)
+            $this->replaceText($this->filterDoc($src, $safe, $mod, $hoff, $fmt, $nid, $trust), $mod)
         );
         if ($file !== '' && $out !== '' && !$this->vary) Cache::setBody($file, $out);
         return $out;
@@ -126,12 +131,12 @@ class Parser {
     }
 
     # The cache path of one rendering, or an empty string when nothing may be stored; the key carries every input the output depends on, the class version included
-    private function getCachePath(string $src, bool $safe, string $mod, int $hoff, string $fmt, int $nid): string {
+    private function getCachePath(string $src, bool $safe, string $mod, int $hoff, string $fmt, int $nid, bool $trust): string {
         static $ver = '';
         if (strlen($src) < self::CACHEMIN || !$this->checkCacheReady()) return '';
         if ($ver === '') $ver = (string)filemtime(__FILE__);
         return Cache::getPath('data', Cache::getHash([
-            'parser', $ver, $this->getConfigHash($mod), sha1($src), (int)$safe, $mod, $hoff, $fmt, $nid, getTheme(), _LOCALE,
+            'parser', $ver, $this->getConfigHash($mod), sha1($src), (int)$safe, (int)$trust, $mod, $hoff, $fmt, $nid, getTheme(), _LOCALE,
         ]), 'html');
     }
 
@@ -182,6 +187,7 @@ class Parser {
         $src = str_replace(["\r\n", "\r"], "\n", $src);
         $pat = '/'.self::ATTACH.'(?:'.self::ATTSIZE.'(?:'.self::ATTREL.')?)?\]/siu';
         $out = [];
+        $this->trust = false;
         foreach ([['plain', true], ['', false], ['', true]] as [$fmt, $safe]) {
             $this->salt = bin2hex(random_bytes(8));
             $this->stash = [];
@@ -467,7 +473,8 @@ class Parser {
     }
 
     # Process BB block tags: bracket-free *NN smilies first, then behind the [ guard: [hr], [li], [usehtml], [usephp], [tabs], [code], [php], [quote]/[hide]/alignment, [attach=]
-    # Both trusted tags only act in trusted rendering mode; the right to author them belongs to the super administrator alone and is settled by filterTrustedTags() at every write
+    # Both trusted tags act in trusted rendering and in a safe rendering that trusts its tags; the right to author them belongs to the super administrator alone and is settled
+    # by filterTrustedTags() at every write
     private function filterBbBlocks(string $src): string {
         if (preg_match('/(?<!\*)\*(0[1-9]|1[0-8])(?!\d)/', $src)) {
             $src = preg_replace_callback(
@@ -490,7 +497,7 @@ class Parser {
         $src = preg_replace_callback(
             '/\[usehtml\](.*?)\[\/usehtml\]/si',
             function(array $m): string {
-                if ($this->safe) return $m[0];
+                if ($this->safe && !$this->trust) return $m[0];
                 $html = htmlspecialchars_decode(replace_break($m[1]), ENT_QUOTES);
                 return $this->addStash($html);
             },
@@ -500,7 +507,7 @@ class Parser {
         $src = preg_replace_callback(
             '/\[usephp\](.*?)\[\/usephp\]/si',
             function(array $m): string {
-                if ($this->safe) return $m[0];
+                if ($this->safe && !$this->trust) return $m[0];
                 $rep = str_replace(['&#036;', '&#092;'], ['$', '\\'], $m[1]);
                 ob_start();
                 try {
@@ -594,19 +601,13 @@ class Parser {
     }
 
     # Resolve [attach=file align=X title=Y ...] to image or file link HTML with per-request file probe memoization and atomic thumb regeneration
+    # One pass reads all three forms of the grammar, so a text mixing them renders every attachment getAttachList() names
     # An attachment is resolved against the upload directory, so like an image it renders what the filesystem holds right now and the result is never stored
     # A text of a stored Node material links the controlled attach route of its type instead of the closed directory, with thumb=1 only for a thumb that exists
     private function filterAttach(string $src): string {
         global $conf;
         $mod = $this->mod !== '' ? $this->mod : 'all';
-        if (stripos($src, 'rel=') !== false && stripos($src, 'width=') !== false) {
-            $re = '/'.self::ATTACH.self::ATTSIZE.self::ATTREL.'\]/siu';
-        } elseif (stripos($src, 'width=') !== false) {
-            $re = '/'.self::ATTACH.self::ATTSIZE.'\]/siu';
-        } else {
-            $re = '/'.self::ATTACH.'\]/siu';
-        }
-        if (!preg_match_all($re, $src, $mm, PREG_SET_ORDER)) return $src;
+        if (!preg_match_all('/'.self::ATTACH.'(?:'.self::ATTSIZE.'(?:'.self::ATTREL.')?)?\]/siu', $src, $mm, PREG_SET_ORDER)) return $src;
         $this->vary = true;
         static $fex = [];
         static $isz = [];
@@ -682,7 +683,7 @@ class Parser {
 
         if ($this->safe) {
             $src = preg_replace_callback(
-                '/(?:^(?:    |\t).+\n?)+/m',
+                $this->trust ? '/\[(use(?:html|php))\](?s:.*?)\[\/\1\](*SKIP)(*F)|(?:^(?:    |\t).+\n?)+/mi' : '/(?:^(?:    |\t).+\n?)+/m',
                 fn(array $m): string => $this->addStash(
                     $this->getPartHtml('code-highlight', ['code_html' => $this->filterEsc(preg_replace('/^(?:    |\t)/m', '', rtrim($m[0])))])
                 )."\n",

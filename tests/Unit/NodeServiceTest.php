@@ -72,7 +72,7 @@ final class NodeServiceTest extends TestCase
     }
 
     # The writer carries exactly the approved public operations: the four of a type and the import, the four of a material, the preview, the counters,
-    # the three of a resource, the file of an attachment, the delivery of publications and the two of a category, with the nullable points and extension of 05-core-api.md
+    # the three of a resource, the file of an attachment, the delivery of publications and the three of a category, with the nullable points and extension of 05-core-api.md
     #[Test]
     public function theWriterHasTheApprovedOperationsAndNothingElse(): void
     {
@@ -86,16 +86,20 @@ final class NodeServiceTest extends TestCase
         $want = [
             '__construct' => ['Database db', 'NodeContext context', 'Field field', '?Point point = NULL', '?NodeExtension ext = NULL', ''],
             'addNode' => ['NodeType type', 'NodeInput input', 'NodeStatus status', 'Node'],
+            'addNodeCategory' => ['array row', 'int'],
             'addNodeType' => ['string name', 'NodeTypeInput input', 'NodeType'],
             'addNodeTypeImport' => ['string json', "string name = ''", 'NodeType'],
-            'deleteNode' => ['int id', 'int version', 'void'],
+            'deleteNode' => ['int id', 'int version', 'Comment com', 'void'],
             'deleteNodeAssetReport' => ['int id', 'NodeType type', 'bool useful', 'void'],
             'deleteNodeCategory' => ['int id', 'void'],
             'deleteNodePoll' => ['int id', 'void'],
+            'deleteNodeRemains' => ['string name', 'void'],
             'deleteNodeType' => ['string name', 'int version', 'void'],
-            'getLockedTarget' => ['int id', 'NodeType type', '?NodeTarget'],
+            'getLockedTarget' => ['int id', 'NodeType type', 'bool any = false', '?NodeTarget'],
             'getNodeFile' => ['NodeType type', 'int id', 'string key', 'bool thumb', 'string'],
             'getNodePreview' => ['NodeType type', 'NodeInput input', 'NodeStatus status', 'Node'],
+            'getNodeRemains' => ['array'],
+            'setTargetLock' => ['int id', 'NodeType type', 'void'],
             'updateNode' => ['int id', 'NodeInput input', 'int version', 'Node'],
             'updateNodeAssetHits' => ['int id', 'NodeType type', 'void'],
             'updateNodeAssetReport' => ['int id', 'NodeType type', 'void'],
@@ -253,7 +257,7 @@ final class NodeServiceTest extends TestCase
         $this->assertSame(['nodes' => 0, 'node_assets' => 0, 'node_categories' => 0], $run['rows']);
         $this->assertTrue($run['file'], 'The delete removed the file a resource pointed at');
         $this->assertSame([], $run['child'], 'The parent link of a child survived the delete of its parent');
-        $this->assertSame(6, $run['sqlnode'], 'The Node statements of a physical delete, the favorites of the material included');
+        $this->assertSame(7, $run['sqlnode'], 'The statements of a physical delete, the favorites and the locking read of the comments of the material included');
     }
 
     # Full sets: the limits of categories and relations by the sync batch and of resources by maxassets, the roles, the shapes and the kinds
@@ -567,10 +571,40 @@ final class NodeServiceTest extends TestCase
         $code = (string)file_get_contents(self::getRoot().'/admin/modules/categories.php');
         $this->assertSame(2, substr_count($code, '->updateNodeCategory($id, '), 'The save and the switch of a Node category');
         $this->assertSame(1, substr_count($code, '->deleteNodeCategory($id)'), 'The delete of a Node category');
-        $this->assertSame(3, substr_count($code, 'getNodeTypeMap()'), 'The screen decides a Node category by something else than the type map');
+        $this->assertSame(1, substr_count($code, '->addNodeCategory($row)'), 'The create of a Node category');
+        $this->assertSame(4, substr_count($code, 'getNodeTypeMap()'), 'The screen decides a Node category by something else than the type map');
         $this->assertStringNotContainsString('_nodes', $code, 'The category screen touches a Node table itself');
         $mods = self::getBody('core/helpers.php', 'getCategoryModules');
         $this->assertStringContainsString("array_filter(getNodeTypeMap(), fn(\$v) => \$v->settings['features']['categories'])", $mods, 'The category modules miss the Node types');
         $this->assertStringContainsString("array_merge(['forum', 'shop'], array_keys(\$types))", $mods);
+    }
+
+    # S19.3: the comments of a deleted material leave inside its transaction with every award compensated, and a failed comment step keeps the material;
+    # one link cannot come twice in one input, the publication of an expired material and a closed points configuration are handled, a moderator reads any state
+    #[Test]
+    public function theIntegrityFixesHold(): void
+    {
+        $run = $this->getRuns()['integrity'];
+        $this->assertRefused($run['broken'], 5, 'The comments of the material cannot be removed', 'a delete without its comments');
+        $this->assertSame([true, 3, 1], $run['kept'], 'A failed comment step did not keep the material, its comments and its award');
+        $this->assertSame(['ok' => true, 'value' => null], $run['done']);
+        $this->assertSame([false, 0, 1], $run['gone'], 'The comments of the material stayed or another owner lost its rows');
+        $this->assertSame([2 => -5, 4 => -5], $run['balance'], 'The comment awards were not taken back');
+        foreach ($run['reverse'] as $uid => $rows) {
+            $this->assertCount(1, $rows, 'The award of '.$uid.' has no single compensation');
+            $this->assertSame([$uid, -5], [$rows[0]['uid'], $rows[0]['points']]);
+        }
+        $this->assertRefused($run['twice'][0], 3, 'Invalid node input: assets.link.mode', 'a link role for two links');
+        $this->assertRefused($run['twice'][1], 3, 'Invalid node input: assets.link.max', 'one link twice in one input');
+        $this->assertRefused($run['expired'][0], 3, 'Invalid node input: expires', 'publish');
+        $this->assertRefused($run['expired'][1], 3, 'Invalid node input: expires', 'pending');
+        $this->assertSame(['ok' => true, 'value' => 'Deleted'], $run['expired'][2], 'An expired material cannot go to the trash');
+        $this->assertSame(1, $run['closed']['run']['processed'], 'A closed points configuration did not deliver the job');
+        $this->assertSame([null, 0], [$run['closed']['job'], $run['closed']['points']]);
+        $this->assertSame(['ok' => true, 'value' => null], $run['target']['public'], 'The public read sees a draft');
+        $this->assertTrue($run['target']['any']['ok'] && $run['target']['any']['value'] > 0, 'The moderator does not read the draft');
+        $this->assertSame(['ok' => true, 'value' => null], $run['target']['anna'], 'A reader without the right reads the draft');
+        $this->assertTrue($run['target']['off'][0]['value'] > 0, 'The moderator does not read the draft of a disabled type');
+        $this->assertSame(['ok' => true, 'value' => null], $run['target']['off'][1]);
     }
 }

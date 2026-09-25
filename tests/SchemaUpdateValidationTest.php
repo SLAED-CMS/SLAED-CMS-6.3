@@ -109,6 +109,7 @@ class SchemaUpdateValidationTest extends TestCase
         return $out;
     }
 
+    # A named constraint carries the prefix too but is no table, so its name is stripped before the table references are checked
     public function testUpdateSqlTablesExistInSchema(): void
     {
         $updateFile = self::$basePath.'/setup/sql/table_update6_3.sql';
@@ -126,7 +127,6 @@ class SchemaUpdateValidationTest extends TestCase
         # A table the upgrade only drops must be absent from the fresh schema, so its name is read out of the reference before the check runs
         preg_match_all('/DROP\s+TABLE\s+IF\s+EXISTS\s+`\{prefix\}_([a-z0-9_]+)`/i', $content, $drops);
         $content = preg_replace('/DROP\s+TABLE\s+IF\s+EXISTS\s+`\{prefix\}_[a-z0-9_]+`/i', 'DROP TABLE', $content);
-        # A named constraint carries the prefix as well and is no table: its name is taken out so only real table references are checked
         $content = preg_replace('/CONSTRAINT\s+`\{prefix\}_[a-z0-9_]+`/i', 'CONSTRAINT', $content);
         preg_match_all('/\{prefix\}_([a-z0-9_]+)/i', $content, $matches, PREG_OFFSET_CAPTURE);
 

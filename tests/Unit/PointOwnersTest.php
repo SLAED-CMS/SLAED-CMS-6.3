@@ -23,7 +23,7 @@ final class PointOwnersTest extends TestCase
         'core/system.php' => ["addEvent('poll', 'voting', 'poll:'.\$id,"],
         'core/user.php' => ["addEvent('message', 'privat', 'privat:'.\$new['id'],", "addEvent('favorite', 'favorites', \$mod.':'.\$id,"],
         'modules/account/admin/index.php' => [
-            "addEvent('adjust', 'account', 'adjust:'.bin2hex(random_bytes(16)),",
+            "addEvent('adjust', 'account', 'adjust:'.\$pkey,",
             "addEvent('adjust', 'account', 'reset:'.\$_SESSION[\$skey]['id'].':'.\$uid.':'.\$part,",
         ],
         'modules/account/index.php' => ["addEvent('register', 'account', 'user:'.\$nuid,", "addEvent('login', 'account', 'day:'.gmdate('Ymd'),"],
@@ -124,6 +124,49 @@ final class PointOwnersTest extends TestCase
         }
     }
 
+    # Cut one function or method out of a file of the tree, from its signature to the closing brace of its own indentation
+    private function getBody(string $path, string $name): string
+    {
+        $code = (string)file_get_contents($this->getRoot().'/'.$path);
+        $from = strpos($code, 'function '.$name.'(');
+        $this->assertNotFalse($from, $name.'() is gone from '.$path);
+        $top = ($code[$from - 1] ?? "\n") === "\n";
+        $end = strpos($code, $top ? "\n}\n" : "\n    }\n", $from);
+        return substr($code, $from, ($end === false ? strlen($code) : $end) - $from);
+    }
+
+    # Assert that the marks appear in one body in the order given, each of them once at least
+    private function checkOrder(string $body, array $marks, string $note): void
+    {
+        $last = -1;
+        foreach ($marks as $mark) {
+            $at = strpos($body, $mark);
+            $this->assertNotFalse($at, $note.': '.$mark.' is gone');
+            $this->assertGreaterThan($last, $at, $note.': '.$mark.' comes too early');
+            $last = $at;
+        }
+    }
+
+    # The lock order of docs/node/11: the rows of an extension and of a discussion come before the accounts of Point
+    # An operation that moves several accounts locks all of them by ascending id before its first event, so two operations never take them crosswise
+    #[Test]
+    public function theAccountsAreLockedAfterTheRowsAndBeforeTheFirstEvent(): void
+    {
+        $node = 'core/classes/node/service.php';
+        $this->checkOrder($this->getBody($node, 'addNode'), ['->addNodeData(', '$this->setPublishJob('], 'addNode');
+        $this->checkOrder($this->getBody($node, 'updateNode'), ["->updateNodeData(\$before, \$after, \$data['ext'])", '$this->setPublishJob('], 'updateNode');
+        $this->checkOrder($this->getBody($node, 'updateNodeStatus'), ['->updateNodeData($before, $after, null)', '$this->setPublishJob('], 'updateNodeStatus');
+        $this->checkOrder($this->getBody($node, 'deleteNode'), ['->deleteNodeData(', '$com->deleteTarget($type->name, [$id], [$uid])', '$point->getEventId('], 'deleteNode');
+        $com = 'core/classes/comment.php';
+        $this->checkOrder($this->getBody($com, 'deleteTarget'), ['FOR UPDATE',
+            "\$this->pnt->setUserLocks(array_merge(array_column(\$rows, 'uid'), \$uids))", '$this->updateTargetPoints('], 'deleteTarget');
+        $this->checkOrder($this->getBody($com, 'addComment'), ['$this->setNodeCount(', '$this->updateNodeAction(', '$this->updateTargetPoints('], 'addComment');
+        $this->checkOrder($this->getBody($com, 'setStatus'), ['$this->setNodeCount(', '$this->updateNodeAction(', '$this->updateTargetPoints('], 'setStatus');
+        $this->checkOrder($this->getBody($com, 'deleteComment'), ['$this->setNodeCount(', '$this->updateTargetPoints('], 'deleteComment');
+        $shop = $this->getBody('modules/shop/admin/index.php', 'clientsave');
+        $this->checkOrder($shop, ['$pnt->setUserLocks([(int)$ouid, (int)$uid])', "\$pnt->getEventId('order', 'shop'", "\$pnt->addEvent('order', 'shop', 'client:'"], 'clientsave');
+    }
+
     # The two screens that print the labels build the constant name from the action, which is why no search by name finds a reader
     #[Test]
     public function theLabelsAreReadByActionName(): void
@@ -131,5 +174,16 @@ final class PointOwnersTest extends TestCase
         foreach (['admin/modules/groups.php', 'modules/users/index.php'] as $path) {
             $this->assertStringContainsString("constant('_POINTS_'.strtoupper(\$name))", (string)file_get_contents($this->getRoot().'/'.$path), $path);
         }
+    }
+
+    # The journal screen costs the same on a journal of any length: the count stops at 100 pages of 50 rows and no page deeper is read (points.md, S19.6)
+    #[Test]
+    public function theJournalCountStopsAtOneHundredPages(): void
+    {
+        $body = $this->getBody('admin/modules/groups.php', 'getPointsJournal');
+        $this->assertStringContainsString("\$num = min(100, max(1, getVar('get', 'num', 'num', 1)));", $body);
+        $this->assertStringContainsString("'SELECT COUNT(*) FROM (SELECT 1 FROM '.PREFIX_DB.'_points AS p'.\$cond.' LIMIT 5000) AS q'", $body);
+        $this->assertStringNotContainsString("'SELECT COUNT(*) FROM '.PREFIX_DB.'_points", $body, 'No count over the whole journal remains');
+        $this->assertStringContainsString("'offset' => (\$num - 1) * 50, 'limit' => 50", $body);
     }
 }

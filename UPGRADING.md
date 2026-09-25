@@ -2,7 +2,7 @@
 
 > **Migration Guide for SLAED CMS**
 
-This document describes the upgrade process using currently confirmed files and repository structure. Where the exact upgrade path cannot be verified from the current codebase alone, it is marked as `TODO:`.
+This document describes the upgrade process of the installer and the repository structure it relies on.
 
 ## Table of Contents
 
@@ -18,7 +18,8 @@ This document describes the upgrade process using currently confirmed files and 
 ## Before You Upgrade
 
 > [!CAUTION]
-> Always create a database and file backup before upgrading.
+> Always create a database and file backup before upgrading. The update deletes its own snapshots and the old
+> configuration sources once it finishes without an error, so your backup is the only copy of the 6.2 state.
 
 ### Database Backup
 
@@ -37,7 +38,7 @@ tar -czf slaed_backup_$(date +%Y%m%d).tar.gz /path/to/slaed/
 Confirmed current baseline:
 
 - **PHP:** 8.4+
-- **Database:** PDO MySQL-compatible server: MariaDB 10.2.1+ or MySQL 8.0.16+, InnoDB tables
+- **Database:** PDO MySQL-compatible server: MariaDB 10.5.2+ or MySQL 8.0.16+, InnoDB tables
 
 ### Review Writable Directories
 
@@ -65,10 +66,8 @@ The repository currently contains these SQL files under `setup/sql/`:
 - `table_update6_3.sql`
 
 > [!NOTE]
-> The repository confirms these files exist. It does not, by itself, fully define every safe version-to-version upgrade path.
-
-> [!IMPORTANT]
-> `TODO:` Confirm the exact supported source-version matrix for production upgrades and whether intermediate SQL steps are required for specific source versions.
+> These files are run by the installer only. They carry the placeholders `{prefix}`, `{engine}`, `{charset}` and
+> `{collate}`, which `setup.php` fills in, so none of them can be imported with the `mysql` client by hand.
 
 ---
 
@@ -82,49 +81,62 @@ git clone https://github.com/SLAED-CMS/SLAED-CMS-6.3.git slaed-new
 
 ### 2. Preserve Site-Specific Data
 
-Review and carry over environment-specific data as needed:
+Copy the release over the site. Keep what belongs to the site:
 
-- `config/`
+- `config/` - the release ships its own `config/<name>.php`; the settings of a 6.2 site live in
+  `config/config_<name>.php` and in `config/db.php`, which the release does not overwrite
 - `uploads/`
 - any locally maintained templates or theme customizations
 - any site-specific generated files that are not part of the repository
 
-### 3. Import the Required SQL
+A 6.2 site that renamed `admin.php` still holds the 6.2 code under that name. Delete that file; the installer
+renames the new `admin.php` to the name you enter in its form.
 
-Use the base schema for fresh installations:
+### 3. Run the Installer
 
-```bash
-mysql -u root -p your_database < setup/sql/table.sql
-```
-
-For upgrades, review the available `table_update*.sql` files and apply the correct path for your current version.
-
-> [!IMPORTANT]
-> `TODO:` Confirm the exact upgrade order for each supported source version before documenting a mandatory sequence.
+The database is created and updated by `setup.php` only. A fresh installation chooses
+**New installation**; an existing site chooses the update of its version, see below. The installer fills the
+placeholders of the SQL files, runs them and reports every statement.
 
 ### From 6.2 to 6.3: Run the Installer Update
 
-A 6.2 site is updated by the installer, not by importing SQL by hand: open `setup.php`, keep the connection
+A 6.2 site is updated by the installer, not by importing SQL by hand. An installed site keeps `setup.php` locked:
+upload an empty file `config/setup.unlock` first, then open `setup.php`, keep the connection
 data of the site and choose **SLAED CMS 6.2 Pro > 6.3 Phoenix**. `config/db.php` is not part of the release;
 the installer creates it when a site has none.
 
 The update runs in this order and reports every step on its result page:
 
-1. **Preflight.** The server must be MariaDB 10.2.1+ or MySQL 8.0.16+, and the tables that take part in
-   transactions (`users`, `comment`, `forum`, `order`, `clients`, `favorites`, `user_oauth`, `points`,
-   `products`, `rating_targets`, `rating_actors`, `rating_votes`) must be InnoDB. Otherwise the update stops
-   and prints the `ALTER TABLE … ENGINE=InnoDB` statements to run; nothing is converted automatically.
-2. **The site is closed** (`close = 1`). It stays closed after the update; open it in the settings once the
-   result is checked.
-3. **Configuration.** `config/modules.php` is reconciled the way the modules screen does it: records of
+1. **Preflight**, before any file is written. The server must be MariaDB 10.5.2+ or MySQL 8.0.16+, and the
+   tables that take part in transactions (`users`, `comment`, `forum`, `order`, `clients`, `favorites`,
+   `user_oauth`, `points`, `products`, `rating_targets`, `rating_actors`, `rating_votes`, `categories`,
+   `voting`) must be InnoDB. Otherwise the update stops and prints the `ALTER TABLE … ENGINE=InnoDB`
+   statements to run; nothing is converted automatically and no file of the site changes.
+2. **The site is closed** (`close = 1`). Every configuration file the installer writes removes
+   `config/local.php`, so the next request already sees the closed site. It stays closed after the update;
+   open it in the settings once the result is checked.
+3. **6.2 settings.** Every `config/config_<name>.php` is read and its values go over the new
+   `config/<name>.php` (`config_stat.php` into `statistic.php`, `config_seo.php` over `global.php`). The version
+   and the asset lists come from the release, a language name becomes its code, a start module, a theme or a
+   site logo that no longer exists in the tree falls back to the release value. Upload rules lose their retired
+   `adminlist` field, address bans turn their octet mask into CIDR. The sources of the removed modules and of `templ`, `header`,
+   `chmod`, `core`, `rewrite` and `rules` have no successor and are not carried. Every old source moves to
+   `storage/backup/update/config/`, because the runtime reads every file in `config/`. `config/db.php` of 6.2
+   is read as it is and rewritten in the 6.3 format.
+4. **Configuration.** `config/modules.php` is reconciled the way the modules screen does it: records of
    modules that are no longer in the tree are dropped, `node` gets the record of a clean installation.
    `config/uploads.php` loses the upload rules of the nine removed modules, `config/scheduler.php` gains
-   the `nodepublish` and `nodesync` jobs, `config/rss.php` gets its three transport limits.
-4. **`table_update6_3.sql`**, then the data units **points**, **ratings** and **fields**. Each unit keeps a
-   manifest and snapshots under `storage/backup/update/<unit>/` and writes its mark to `config/update.php`;
-   a subsystem without its mark stays closed for writing.
-5. RSS blocks are emptied so the next refresh stores Markdown; pending newsletter recipients move into the
-   mail queue.
+   the `nodepublish` and `nodesync` jobs, `config/newsletter.php` gets the keys it lacks, `config/rss.php`
+   gets its three transport limits. Pending newsletter recipients are kept in `storage/backup/update/newsletter/`.
+5. **`table_update6_3.sql`**. Any failed statement stops the update here: no data unit runs and no mark is
+   written. Correct the cause and run the update again.
+6. The data units **points**, **ratings** and **fields**. Each unit keeps a manifest and snapshots under
+   `storage/backup/update/<unit>/` and writes its mark to `config/update.php`; a subsystem without its mark
+   stays closed for writing.
+7. RSS blocks are emptied so the next refresh stores Markdown; the kept newsletter recipients move into the
+   mail queue, each address once per campaign, however often the update runs.
+8. When the whole run reports no error, the snapshots are deleted: they hold guest addresses, balances and
+   field values. Only the `manifest.json` files stay, and a repeated run skips every finished unit by them.
 
 The **fields** unit checks every stored value of account, forum and order fields before it writes anything.
 When it cannot map a value without guessing, it writes nothing and names the table, the row id and the
@@ -149,12 +161,11 @@ Check the active files in `config/` and verify:
 
 ```bash
 rm -rf storage/cache/*
-rm -f config/local.php
 ```
 
 `config/local.php` is the merged configuration cache. It is accepted on its version marker alone
-and is never compared against the source files it was built from, so a stale one keeps serving the
-previous release's configuration until an admin save rebuilds it. Delete it on every upgrade.
+and is never compared against the source files it was built from. The installer removes it with every
+configuration file it writes; a hand edit of a file in `config/` needs `rm -f config/local.php`.
 
 Additional runtime-generated locations present in the repository:
 
@@ -209,6 +220,15 @@ server refuses direct access to `uploads/<type>/` (answer `403` or `404`). Apach
 ```nginx
 location ~ ^/uploads/([^/]+)/ {
     if (-f $document_root/uploads/$1/.htaccess) { return 403; }
+}
+```
+
+`storage/` holds logs, backups and the manifests of the update and must never be served. Apache and
+LiteSpeed follow its `.htaccess`; nginx needs:
+
+```nginx
+location ^~ /storage/ {
+    deny all;
 }
 ```
 

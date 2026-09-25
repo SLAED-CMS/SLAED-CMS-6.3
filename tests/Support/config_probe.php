@@ -21,6 +21,29 @@ if (!is_dir($probework.'/config')) {
     }
 }
 define('CONFIG_DIR', $probework.'/config');
+# The marker scenarios read the journal root through a stream that answers the status of marker.json and fails its read, the one race a real disk never repeats on cue
+if (in_array($pmode, ['markergone', 'markerlocked'], true)) {
+    final class ProbeMarkStream {
+        public static bool $gone = false;
+        public static int $opens = 0;
+        public static int $stats = 0;
+        public $context;
+
+        # The status of the marker: present until its read was tried, and absent after it when the scenario removes it between the status and the read
+        public function url_stat(string $path, int $flags): array|false {
+            self::$stats++;
+            return (self::$gone && self::$opens > 0) ? false : ['mode' => 0100644, 'size' => 32];
+        }
+
+        # The read of the marker always fails, the way a file removed or locked after its status was taken does
+        public function stream_open(string $path, string $mode, int $options, ?string &$opened): bool {
+            self::$opens++;
+            return false;
+        }
+    }
+    stream_wrapper_register('probemark', ProbeMarkStream::class);
+    define('BACKUP_DIR', 'probemark://backup');
+}
 define('BACKUP_DIR', $probework.'/backup');
 define('CACHE_DIR', $probework.'/cache');
 require_once BASE_DIR.'/core/system.php';
@@ -222,6 +245,76 @@ function setProbeReset(): void {
     getConfig();
 }
 
+# A stand-in for the database the restore of a journal with a proof asks: its locking read answers the version the scenario names from an in-memory statement
+# The transaction it opens runs the hook of the scenario first, which is where a snapshot goes between the check of its hash and its read, a race no real run repeats
+class ProbeDb extends Database {
+    public ?Closure $hook = null;
+    public int $ver = 0;
+
+    # No connection is opened: the restore asks for nothing this class does not answer itself
+    public function __construct() {
+    }
+
+    # Run the hook of the scenario and report the transaction as opened
+    function setSqlBegin(): bool {
+        if ($this->hook !== null) ($this->hook)();
+        return true;
+    }
+
+    # Answer the locking read of the type row with the id of the proof and the version of the scenario
+    function getSqlQuery(string $query = '', array $params = []): PDOStatement|false {
+        return (new PDO('sqlite::memory:'))->query('SELECT 7 AS id, '.$this->ver.' AS version');
+    }
+
+    # There is nothing to take back
+    function setSqlRollback(): bool {
+        return true;
+    }
+}
+
+# Faults inside the pipeline: a source that throws leaves neither the busy flag nor the shared lock behind, and a snapshot that cannot be read is never written as an empty source
+function getProbeFaults(): array {
+    setProbeReset();
+    $good = (string)file_get_contents(CONFIG_DIR.'/ratings.php');
+    $bad = "<?php\nthrow new RuntimeException('probe');\n";
+    file_put_contents(CONFIG_DIR.'/ratings.php', $bad);
+    $out = ['write' => false, 'build' => false];
+    try {
+        setConfigFile(getProbeWriter('fields', ['thrown' => '1']));
+    } catch (RuntimeException) {
+        $out['write'] = true;
+    }
+    unlink(CONFIG_DIR.'/local.php');
+    try {
+        getConfig();
+    } catch (RuntimeException) {
+        $out['build'] = true;
+    }
+    file_put_contents(CONFIG_DIR.'/ratings.php', $good);
+    $out['free'] = [getProbeChild('try', [CONFIG_DIR])['free'] ?? null, setConfigFile('whois.php', ['after' => '1']), getProbeTrace()['marker']];
+    setProbeReset();
+    $proof = ['name' => 'probe', 'id' => 7, 'old' => 1, 'new' => 2, 'kind' => 'update'];
+    setConfigFile(static function (array $base, Closure $save) use ($proof): string {
+        $base['fields']['proved'] = 'x';
+        $save($base, $proof);
+        return 'uncertain';
+    });
+    $jour = getConfigJournal();
+    $snap = BACKUP_DIR.'/config/'.$jour['op'].'/old/fields.php';
+    $keep = $GLOBALS['db'] ?? null;
+    $pdb = new ProbeDb();
+    $pdb->ver = 1;
+    $pdb->hook = static function () use ($snap): void {
+        unlink($snap);
+    };
+    $GLOBALS['db'] = $pdb;
+    $done = setConfigRestore();
+    $GLOBALS['db'] = $keep;
+    $out['snapshot'] = [$jour['why'], $done, is_file(CONFIG_DIR.'/fields.php'), isset(getProbeSource('fields.php')['fields']['proved']), getProbeTrace()['marker']];
+    setProbeReset();
+    return $out;
+}
+
 # One crash case: a dead writer, an optional tamper of what it left, then what the journal says, what a save answers, what getConfig() serves and what the restore does
 function getProbeCase(string $tamper): array {
     setProbeReset();
@@ -313,9 +406,14 @@ function getProbeRace(): array {
     ];
 }
 
+# The canonical key the file layer derives from one directory, asked of the layer itself, so the probe never keeps a second copy of the rule
+function getProbeLockKey(string $dir): string {
+    return (string)(new ReflectionMethod('FileManager', 'getLockKey'))->invoke(null, $dir);
+}
+
 # Child: try the lock file of one key without waiting and say whether it could be taken
 function getProbeTry(string $dir): array {
-    $file = LOGS_DIR.'/uploads/'.substr(sha1(rtrim(str_replace('\\', '/', $dir), '/')), 0, 16).'.lock';
+    $file = LOGS_DIR.'/uploads/'.substr(sha1(getProbeLockKey($dir)), 0, 16).'.lock';
     $fh = fopen($file, 'cb');
     $free = ($fh !== false) && flock($fh, LOCK_EX | LOCK_NB);
     if ($free) flock($fh, LOCK_UN);
@@ -341,6 +439,12 @@ function getProbeLock(): array {
     $two = FileManager::getPathLock($dir.'/');
     $sub = FileManager::getPathLock($dir.'/sub');
     $out = ['held' => $one !== false, 'same' => $one === $two, 'sub' => $sub !== false && $sub !== $one];
+    $win = DIRECTORY_SEPARATOR === '\\';
+    $back = FileManager::getPathLock($win ? str_replace('/', '\\', $dir) : $dir.'//');
+    $case = FileManager::getPathLock($win ? strtoupper($dir) : $dir);
+    $out['spell'] = [$back === $one, $case === $one];
+    FileManager::deletePathLock($case);
+    FileManager::deletePathLock($back);
     FileManager::deletePathLock($sub);
     $out['both'] = getProbeChild('try', [$dir])['free'] ?? null;
     FileManager::deletePathLock($two);
@@ -357,6 +461,17 @@ function getProbeLock(): array {
     $out['again'] = $again !== false;
     FileManager::deletePathLock($again);
     return $out;
+}
+
+# The types a reader holds while the marker of the journal answers its status and then cannot be read: gone means it was removed in between, locked that it stays
+# The counters start again here, because the boot of the core has already read the journal through the same stream
+function getProbeMarker(bool $gone): array {
+    require_once BASE_DIR.'/core/classes/node/load.php';
+    ProbeMarkStream::$gone = $gone;
+    ProbeMarkStream::$opens = 0;
+    ProbeMarkStream::$stats = 0;
+    $query = (new ReflectionClass('NodeQuery'))->newInstanceWithoutConstructor();
+    return ['held' => (new ReflectionMethod('NodeQuery', 'getHeldTypes'))->invoke($query), 'stats' => ProbeMarkStream::$stats, 'opens' => ProbeMarkStream::$opens];
 }
 
 # Remove the scratch tree of this probe
@@ -379,6 +494,9 @@ try {
         'crash' => getProbeCrash(),
         'race' => getProbeRace(),
         'lock' => getProbeLock(),
+        'faults' => getProbeFaults(),
+        'markergone' => getProbeMarker(true),
+        'markerlocked' => getProbeMarker(false),
         'run' => getProbeRun((string)($pargs[0] ?? ''), (int)($pargs[1] ?? 0)),
         'try' => getProbeTry((string)($pargs[0] ?? '')),
         'wait' => getProbeWait((string)($pargs[0] ?? '')),

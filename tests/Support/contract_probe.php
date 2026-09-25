@@ -21,6 +21,8 @@ if (in_array($argv[1] ?? '', ['commentstage', 'commentthread'], true)) {
     }
     $apdo = null;
 }
+# The feed page stores what it fetched in the data cache, which for this probe lives in scratch and never in the cache of the stand
+if (($argv[1] ?? '') === 'rssview') define('CACHE_DIR', $probework.'/cache');
 require_once BASE_DIR.'/core/system.php';
 
 # Build one signed stats cookie value from raw fields using the real purpose-scoped secret
@@ -31,7 +33,8 @@ function getProbeCookie(array $part): string {
 
 # Prepare one cacheable-route request context and report the real contract decision and identity
 # A registered Node type is added to the loaded configuration of this process alone, because the lists of those types are the routes the page cache knows
-function getProbeRoute(string $uri, array $get, string $host, string $mod = 'presentation', string $act = ''): array {
+# A start page is a request without a name that index.php has already given the type it drew from the home list
+function getProbeRoute(string $uri, array $get, string $host, string $mod = 'presentation', string $act = '', int $start = 0): array {
     global $name, $op, $home, $theme, $conf;
     putenv('HTTP_HOST='.$host);
     $_SERVER['REQUEST_URI'] = $uri;
@@ -39,7 +42,7 @@ function getProbeRoute(string $uri, array $get, string $host, string $mod = 'pre
     if ($mod !== 'presentation') $conf['node']['types'][$mod] = ['version' => 1];
     $name = $mod;
     $op = $act;
-    $home = 0;
+    $home = $start;
     $theme = $theme ?? getTheme();
     $vars = getCacheRouteVars();
     return ['vars' => $vars, 'cache' => checkPageCache(), 'hash' => ($vars !== null) ? getPageHash() : ''];
@@ -449,7 +452,8 @@ function getProbeCommentThread(): array {
     foreach ($com->getBranch(intval($root['id']), 50)['rows'] as $one) $seen[intval($one['id'])] = intval($one['depth']);
     $out['nested'] = [$seen[intval($kid['id'])] ?? -1, $seen[intval($sub['id'])] ?? -1];
     $free();
-    $other = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_products WHERE id != :id AND time <= NOW() AND status != \'0\' ORDER BY id DESC LIMIT 1', ['id' => $tid]));
+    $other = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_products WHERE id != :id AND time <= NOW() AND status != \'0\''
+        .' ORDER BY id DESC LIMIT 1', ['id' => $tid]));
     $out['refuse'] = ['wrong' => '', 'zero' => '', 'foreign' => ''];
     $out['refuse']['wrong'] = $com->addComment('shop', $tid, 'thread probe crafted', 'Probe', '', 999999999)['error'];
     $free();
@@ -474,7 +478,8 @@ function getProbeCommentThread(): array {
     $page = $com->getList('shop', $tid, 1);
     $out['page'] = [
         'total' => $page['total'],
-        'roots' => intval($db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE modul = \'shop\' AND cid = :cid AND pid = 0 AND status = 1 AND deleted IS NULL', ['cid' => $tid]))['num']),
+        'roots' => intval($db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE modul = \'shop\' AND cid = :cid AND pid = 0'
+            .' AND status = 1 AND deleted IS NULL', ['cid' => $tid]))['num']),
         'rows' => count($page['rows']),
         'order' => array_slice(array_column($page['rows'], 'id'), 0, 4),
         'depths' => array_slice(array_column($page['rows'], 'depth'), 0, 4),
@@ -681,10 +686,34 @@ function getProbeFeedLegacy(int $uid): string {
     return $tpl->getHtmlPart('account-profile-feed', ['head' => ['icon' => getIconName('activity'), 'title' => _LASTACTIVITY, 'live_title' => _LASTACTIVITY], 'tabs_html' => getNaviTabs(0, 'profeed', $tabs, $texts)]);
 }
 
+# Show the feed page of one address from a stored outcome, then again after that outcome aged past its 900 seconds, and once for an address outside the form of Feed
+# The host lies under .invalid, so a fetch that reaches the resolver fails: the entry can only come from the store, and the refusal that follows is stored in its place
+function getProbeRssView(): array {
+    global $conf;
+    require_once BASE_DIR.'/core/classes/feed.php';
+    $url = 'https://Feed.Example.invalid/News/RSS.xml';
+    $file = Cache::getPath('data', Cache::getHash(['rssview', Feed::getFeedUrl($url)['url'], $conf['rss']['max'] ?? '']), 'json');
+    $dir = dirname($file);
+    Cache::setBody($file, (string)json_encode(['body' => "## Stored entry\n"]));
+    $out = ['stored' => str_contains(getRssView(htmlspecialchars($url)), 'Stored entry')];
+    touch($file, time() - 901);
+    $page = getRssView(htmlspecialchars($url));
+    $out['aged'] = str_contains($page, 'Stored entry');
+    $out['refusal'] = str_contains($page, _RSS_PROBLEM);
+    $out['kept'] = json_decode((string)file_get_contents($file), true);
+    $out['fresh'] = filemtime($file) >= time() - 60;
+    $count = count(glob($dir.'/*') ?: []);
+    $out['badpage'] = str_contains(getRssView('ftp://feed.example.com/rss'), _RSS_PROBLEM);
+    $out['badfiles'] = count(glob($dir.'/*') ?: []) - $count;
+    return $out;
+}
+
 # Report whether the migrated profile feed renders the same markup as the UNION it replaces, and whether the hub writes the three fields the comment branch of its own UNION wrote
+# The comparison runs without Node types: their tabs came after the move of the comments and the legacy copy has no equal of them, NodeQueryTest holds their numbers
 function getProbeCommentFeed(): array {
     global $db, $com;
     $GLOBALS['conf']['name'] = 'account';
+    $GLOBALS['conf']['node']['types'] = [];
     $out = ['feed' => [], 'hub' => []];
     $sql = 'SELECT uid, COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE uid > 0 GROUP BY uid ORDER BY num DESC LIMIT 6';
     $uids = array_map(static fn(array $one): int => intval($one['uid']), $db->getSqlRows($db->getSqlQuery($sql)) ?: []);
@@ -799,7 +828,9 @@ function getProbeFieldPost(): array {
     $out['nomark'] = getFieldsPost('probea', $old);
     $rows = '';
     $vals = ['note' => '[usephp]echo 6*7, "-proof";[/usephp]'];
-    foreach ($fld->getFieldView($prs, ['note' => $rule], $vals, 'forum') as $row) $rows .= $tpl->getHtmlFrag('field-value', ['label' => $row['label_text'], 'value_text' => $row['value_text']]);
+    foreach ($fld->getFieldView($prs, ['note' => $rule], $vals, 'forum') as $row) {
+        $rows .= $tpl->getHtmlFrag('field-value', ['label' => $row['label_text'], 'value_text' => $row['value_text']]);
+    }
     $out['view'] = [str_contains($rows, '[usephp]'), str_contains($rows, '42-proof')];
     return $out;
 }
@@ -859,6 +890,12 @@ if ($mode === 'core') {
     $out = getProbeRoute('/index.php', [], $chost);
 } elseif ($mode === 'routenode') {
     $out = getProbeRoute('/index.php?name=news&cat=3&num=2', ['name' => 'news', 'cat' => '3', 'num' => '2'], $chost, 'news');
+} elseif ($mode === 'routehomenews') {
+    $out = getProbeRoute('/index.php', [], $chost, 'news', '', 1);
+} elseif ($mode === 'routehomedocs') {
+    $out = getProbeRoute('/index.php', [], $chost, 'docs', '', 1);
+} elseif ($mode === 'routenewsplain') {
+    $out = getProbeRoute('/index.php?name=news', ['name' => 'news'], $chost, 'news');
 } elseif ($mode === 'routenodeop') {
     $out = getProbeRoute('/index.php?name=news&op=view&id=5', ['name' => 'news', 'op' => 'view', 'id' => '5'], $chost, 'news', 'view');
 } elseif ($mode === 'routenodelet') {
@@ -886,9 +923,9 @@ if ($mode === 'core') {
     $out['var'] = [filterVar('hello-world_123'), filterVar('hello world'), filterVar('test<script>'), filterVar('test\'injection')];
     $out['vararr'] = [filterVar(['one', 'two-three']), filterVar(['ok', 'bad value'])];
     $out['text'] = [filterText('<b>bold</b>'), filterText('say "hi"'), filterText('<b>tag</b>', 2), filterText('[usehtml]raw[/usehtml][usephp]echo 1;[/usephp]normal text'), filterText('  hello  ')];
-    $out['url'] = [filterWebUrl('example.com'), filterWebUrl('https://example.com'), filterWebUrl(''), filterWebUrl('http://')];
+    $out['url'] = [filterWebUrl('example.com'), filterWebUrl('https://example.com'), filterWebUrl(''), filterWebUrl('http://'),
+        filterWebUrl('HTTPS://Feeds.Example.COM/News/RSS.xml?Id=A'), filterWebUrl('Example.COM/Path')];
     $out['html'] = [filterHtml('cost $5'), filterHtml('back\\slash'), filterHtml('say "hi" and \'bye\''), filterHtml('')];
-    $out['fields'] = [filterFields(['a' => ' one ', 'b' => 'two']), filterFields([]), filterFields('plain')];
 } elseif ($mode === 'getvar') {
     $_POST = [
         'flat' => ['red', '', 'blue'],
@@ -935,6 +972,8 @@ if ($mode === 'core') {
     $out = getProbeCommentFormat();
 } elseif ($mode === 'commentfeed') {
     $out = getProbeCommentFeed();
+} elseif ($mode === 'rssview') {
+    $out = getProbeRssView();
 } elseif ($mode === 'fieldpost') {
     $out = getProbeFieldPost();
 } elseif ($mode === 'geoip') {

@@ -68,7 +68,7 @@ function getSearchaudit(): array {
     $list = [];
     foreach ($conf['modules'] as $mod => $cfg) {
         $mod = (string)$mod;
-        if ($mod === 'search' || !is_active($mod) || !file_exists(BASE_DIR.'/modules/'.$mod.'/index.php')) continue;
+        if (in_array($mod, ['search', 'node'], true) || !is_active($mod) || !file_exists(BASE_DIR.'/modules/'.$mod.'/index.php')) continue;
         $row = [
             'mod' => $mod,
             'name' => getModuleName($mod),

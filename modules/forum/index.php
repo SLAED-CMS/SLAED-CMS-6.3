@@ -846,7 +846,8 @@ function send(): void {
                         'INSERT INTO '.PREFIX_DB.'_forum (id, pid, cid, uid, name, title, time, body, field, ip, luid, lname, ltime, status) VALUES (NULL, :pid, :catid, :postid, :postname, :subject, :time, :body, :field, :ip, :luid, :lname, :ltime, :status)',
                         ['pid' => $pid, 'catid' => $catid, 'postid' => $postid, 'postname' => $postname, 'subject' => $subject, 'time' => $time, 'body' => $hometext, 'field' => $field, 'ip' => $ip, 'luid' => $postid, 'lname' => $postname, 'ltime' => $time, 'status' => $status]
                     );
-                    [$lpid, $ltime] = $db->getSqlRow($db->getSqlQuery('SELECT id, time FROM '.PREFIX_DB.'_forum WHERE cid = :catid AND uid = :postid ORDER BY id DESC LIMIT 1', ['catid' => $catid, 'postid' => $postid]));
+                    $lpid = intval($db->getSqlLastId());
+                    [$ltime] = $db->getSqlRow($db->getSqlQuery('SELECT time FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $lpid])) ?: [''];
                     if ($pid) {
                         $lname = (isset($uname) && $uname) ? $uname : $postname;
                         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET luid = :postid, lname = :lname, lpost = :lpost, ltime = :time WHERE id = :pid', ['postid' => $postid, 'lname' => $lname, 'lpost' => $lpid, 'time' => $time, 'pid' => $pid]);

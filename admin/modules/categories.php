@@ -379,8 +379,18 @@ function edit(): void {
     setFoot();
 }
 
+# The seven access rules of the category form as stored rule strings: a posted list of level|group values, or the default of the rule when none is valid
+function getCategoryRights(): array {
+    $out = [];
+    foreach (['pview' => '0|0', 'pread' => '0|0', 'ppost' => '0|0', 'preply' => '0|0', 'pedit' => '3|0', 'pdelete' => '3|0', 'pmod' => '3|0'] as $key => $def) {
+        $list = array_values(array_filter(getVar('post', $key.'[]', '', []), fn($v) => is_string($v) && preg_match('/^[0-9]+\|[0-9]+$/D', $v)));
+        $out[$key] = $list ? scatacess($list) : $def;
+    }
+    return $out;
+}
+
 function addsave(): void {
-    global $db, $afile;
+    global $db, $afile, $fld;
     $warn = !checkAdminPost('categories');
     $modul = getVar('post', 'modul', 'var');
     $title = getVar('post', 'title', 'title');
@@ -391,28 +401,27 @@ function addsave(): void {
     $imgcat = strtolower($imgcat);
     if (!preg_match('/^[a-z0-9-]+$/', $imgcat)) $imgcat = '';
     $status = getVar('post', 'status', 'num');
-    [$ordern] = $db->getSqlRow($db->getSqlQuery('SELECT ordern FROM '.PREFIX_DB.'_categories WHERE modul = :modul ORDER BY ordern DESC', ['modul' => $modul]));
-    $ordern++;
-    $pview_raw = getVar('post', 'pview[]', 'var', []);
-    $pread_raw = getVar('post', 'pread[]', 'var', []);
-    $ppost_raw = getVar('post', 'ppost[]', 'var', []);
-    $preply_raw = getVar('post', 'preply[]', 'var', []);
-    $pedit_raw = getVar('post', 'pedit[]', 'var', []);
-    $pdelete_raw = getVar('post', 'pdelete[]', 'var', []);
-    $pmod_raw = getVar('post', 'pmod[]', 'var', []);
-    $pview = (is_array($pview_raw) && $pview_raw) ? scatacess($pview_raw) : '0|0';
-    $pread = (is_array($pread_raw) && $pread_raw) ? scatacess($pread_raw) : '0|0';
-    $ppost = (is_array($ppost_raw) && $ppost_raw) ? scatacess($ppost_raw) : '0|0';
-    $preply = (is_array($preply_raw) && $preply_raw) ? scatacess($preply_raw) : '0|0';
-    $pedit = (is_array($pedit_raw) && $pedit_raw) ? scatacess($pedit_raw) : '3|0';
-    $pdelete = (is_array($pdelete_raw) && $pdelete_raw) ? scatacess($pdelete_raw) : '3|0';
-    $pmod = (is_array($pmod_raw) && $pmod_raw) ? scatacess($pmod_raw) : '3|0';
-    if (!$warn) {
-        $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_categories (id, modul, title, intro, img, lang, parent, status, ordern, pview, pread, ppost, preply, pedit, pdelete, pmod) VALUES (NULL, :modul, :title, :intro, :img, :lang, :parent, :status, :ordern, :pview, :pread, :ppost, :preply, :pedit, :pdelete, :pmod)', [
-            'modul' => $modul, 'title' => $title, 'intro' => $description, 'img' => $imgcat, 'lang' => $lang, 'parent' => $cid, 'status' => $status, 'ordern' => $ordern, 'pview' => $pview, 'pread' => $pread, 'ppost' => $ppost, 'preply' => $preply, 'pedit' => $pedit, 'pdelete' => $pdelete, 'pmod' => $pmod
-        ]);
+    $row = ['modul' => $modul, 'title' => $title, 'intro' => $description, 'img' => $imgcat, 'lang' => $lang, 'parent' => $cid, 'status' => $status] + getCategoryRights();
+    $text = $warn ? _TOKENMISS : _SUCCSAVE;
+    if (!$warn && isset(getNodeTypeMap()[$modul])) {
+        $label = htmlspecialchars($modul, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        try {
+            (new NodeService($db, getNodeContext(), $fld))->addNodeCategory($row);
+        } catch (NodeException $err) {
+            $warn = true;
+            $text = match ($err->getCode()) {
+                NodeException::CONFLICT => sprintf(_NODE_STALE, $label),
+                NodeException::STORAGE => _ERROR_UP,
+                default => sprintf(_NODE_BAD, $label),
+            };
+        }
+    } elseif (!$warn) {
+        [$ordern] = $db->getSqlRow($db->getSqlQuery('SELECT ordern FROM '.PREFIX_DB.'_categories WHERE modul = :modul ORDER BY ordern DESC', ['modul' => $modul]));
+        $keys = array_keys($row);
+        $sql = 'INSERT INTO '.PREFIX_DB.'_categories ('.implode(', ', $keys).', ordern) VALUES (:'.implode(', :', $keys).', :ordern)';
+        $db->getSqlQuery($sql, $row + ['ordern' => intval($ordern) + 1]);
     }
-    setRedirect($afile.'.php?name=categories&modul='.$modul, false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($afile.'.php?name=categories&modul='.$modul, false, 302, $text, $warn);
 }
 
 function save(): void {
@@ -428,22 +437,7 @@ function save(): void {
     $imgcat = strtolower($imgcat);
     if (!preg_match('/^[a-z0-9-]+$/', $imgcat)) $imgcat = '';
     $status = getVar('post', 'status', 'num');
-    $pview_raw = getVar('post', 'pview[]', 'var', []);
-    $pread_raw = getVar('post', 'pread[]', 'var', []);
-    $ppost_raw = getVar('post', 'ppost[]', 'var', []);
-    $preply_raw = getVar('post', 'preply[]', 'var', []);
-    $pedit_raw = getVar('post', 'pedit[]', 'var', []);
-    $pdelete_raw = getVar('post', 'pdelete[]', 'var', []);
-    $pmod_raw = getVar('post', 'pmod[]', 'var', []);
-    $pview = (is_array($pview_raw) && $pview_raw) ? scatacess($pview_raw) : '0|0';
-    $pread = (is_array($pread_raw) && $pread_raw) ? scatacess($pread_raw) : '0|0';
-    $ppost = (is_array($ppost_raw) && $ppost_raw) ? scatacess($ppost_raw) : '0|0';
-    $preply = (is_array($preply_raw) && $preply_raw) ? scatacess($preply_raw) : '0|0';
-    $pedit = (is_array($pedit_raw) && $pedit_raw) ? scatacess($pedit_raw) : '3|0';
-    $pdelete = (is_array($pdelete_raw) && $pdelete_raw) ? scatacess($pdelete_raw) : '3|0';
-    $pmod = (is_array($pmod_raw) && $pmod_raw) ? scatacess($pmod_raw) : '3|0';
-    $row = ['modul' => $modul, 'title' => $title, 'intro' => $description, 'img' => $imgcat, 'lang' => $lang, 'parent' => $parent, 'status' => $status, 'pview' => $pview,
-        'pread' => $pread, 'ppost' => $ppost, 'preply' => $preply, 'pedit' => $pedit, 'pdelete' => $pdelete, 'pmod' => $pmod];
+    $row = ['modul' => $modul, 'title' => $title, 'intro' => $description, 'img' => $imgcat, 'lang' => $lang, 'parent' => $parent, 'status' => $status] + getCategoryRights();
     $was = (string)$db->getSqlQuery('SELECT modul FROM '.PREFIX_DB.'_categories WHERE id = :id', ['id' => $id])->fetchColumn();
     $types = getNodeTypeMap();
     $text = $warn ? _TOKENMISS : _SUCCSAVE;

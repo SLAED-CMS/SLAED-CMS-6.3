@@ -130,6 +130,9 @@ define('_NODE_BAD','Le type Node %s a refusé la modification, rien n\'a été �
 define('_NODE_PROOF','La base de données décide de l\'instantané à appliquer, d\'après la version du type Node %s.');
 define('_NODE_MANAGE','Node : types et leurs réglages');
 define('_NODE_SETUP','L\'installation n\'a pas terminé ces sections Node : %s - une section n\'a pas été créée, pas activée ou est restée sans son contenu de départ. La raison est inscrite dans le journal du site.');
+define('_NODE_START_TITLE','Bienvenue dans SLAED CMS');
+define('_NODE_START_INTRO','Le site est installé et prêt à fonctionner. Les sections des actualités, pages, questions et réponses, fichiers, liens, médias, documentation et autres ont été créées à partir des profils standard de Node et sont déjà activées.');
+define('_NODE_START_BODY','Les sections se configurent dans le panneau d\'administration, onglet « Types » du module Node : la liste, les fonctions, les ressources et les intégrations de chaque section. C\'est là aussi qu\'une nouvelle section est créée à partir d\'un profil, clonée, exportée et importée. Cette actualité peut être modifiée ou supprimée.');
 define('_CONFINES','Spécifiez une valeur de «0» pour le retrait de toutes les restrictions.');
 define('_CONST','Constante de Langue');
 define('_CREATEBLOCK','Créer un bloc');

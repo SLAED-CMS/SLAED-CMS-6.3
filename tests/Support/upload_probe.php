@@ -9,8 +9,12 @@
 # Nothing under the site upload tree is read or written - the root, the lock directory, the source files and the logs of every run live below the scratch root the caller passed
 $probework = (string)($argv[2] ?? '');
 require_once __DIR__.'/probe_boot.php';
+# The queue scenarios publish below a disposable upload root that stands for the site one, so the root of an upload area is a directory of this scratch as well
+if (in_array((string)($argv[1] ?? ''), ['queue', 'area', 'hold'], true)) define('UPLOADS_DIR', str_replace('\\', '/', $probework).'/root');
 require_once BASE_DIR.'/core/system.php';
 require_once BASE_DIR.'/core/classes/upload.php';
+# The scratch of one scenario survives its run, so a parent starts from an empty lock directory: a lock file left by an earlier run is nothing this run opened
+if (!in_array((string)($argv[1] ?? ''), ['hold', 'child'], true)) array_map('unlink', glob(LOGS_DIR.'/uploads/*.lock') ?: []);
 
 # The disposable upload root and the directory the source files of one run are built in; the lock directory belongs to FileManager and follows the redirected LOGS_DIR
 $GLOBALS['pwork'] = $probework;
@@ -841,25 +845,33 @@ function getProbeLockList(): array {
     return $out;
 }
 
-# One child of the queue scenario: it publishes into the destination whose lock the parent holds, and reports when it entered the publication and when it finally got through
-function getProbeHold(): array {
+# One child of the queue scenarios: it publishes into the destination whose lock or whose area root the parent holds, and reports when it entered and when it got through
+function getProbeHold(string $dir): array {
     $file = addProbeFile('png');
     if ($file === []) return ['ok' => false, 'from' => 0.0, 'done' => 0.0, 'error' => 'nofixture'];
     touch($GLOBALS['pwork'].'/hold.flag');
     $from = microtime(true);
-    $res = getProbeUpload()->addUploadedFile($file, getProbeRule(), 'files', 'files', 0);
+    $res = getProbeUpload()->addUploadedFile($file, getProbeRule(), $dir, 'files', 0);
     return ['ok' => (bool)$res['ok'], 'from' => $from, 'done' => microtime(true), 'error' => $res['error']];
+}
+
+# The canonical key the file layer derives from one directory, asked of the layer itself, so the probe never keeps a second copy of the rule
+function getProbeLockKey(string $dir): string {
+    return (string)(new ReflectionMethod('FileManager', 'getLockKey'))->invoke(null, $dir);
 }
 
 # One queue for the whole project: the file layer holds the lock of a destination, and an upload of another process into the same directory waits instead of publishing beside it
 # The upload service takes its lock through FileManager as well, so the two open one lock file; a protocol of its own would leave a second name and serialize nothing
-function getProbeQueue(): array {
+# With a subdirectory the parent holds the root of the upload area files and the child publishes below it, which is the upload that runs during the deletion of a type
+function getProbeQueue(string $sub = ''): array {
     addProbeRoot();
+    if ($sub !== '') mkdir($GLOBALS['proot'].'/files/'.$sub, 0777, true);
     $canon = str_replace('\\', '/', (string)realpath($GLOBALS['proot'].'/files'));
+    $dest = 'files'.(($sub !== '') ? '/'.$sub : '');
     $flag = $GLOBALS['pwork'].'/hold.flag';
     if (is_file($flag)) unlink($flag);
     $lock = FileManager::getPathLock($canon);
-    $cmd = escapeshellarg(PHP_BINARY).' '.escapeshellarg(__FILE__).' hold '.escapeshellarg($GLOBALS['pwork']);
+    $cmd = escapeshellarg(PHP_BINARY).' '.escapeshellarg(__FILE__).' hold '.escapeshellarg($GLOBALS['pwork']).' '.escapeshellarg($dest);
     $proc = proc_open($cmd, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipe);
     for ($i = 0; $i < 100; $i++) {
         clearstatcache(true, $flag);
@@ -867,7 +879,7 @@ function getProbeQueue(): array {
         usleep(50000);
     }
     usleep(300000);
-    $during = getProbeList('files');
+    $during = getProbeList($dest);
     $free = microtime(true);
     FileManager::deletePathLock($lock);
     $child = [];
@@ -876,8 +888,11 @@ function getProbeQueue(): array {
         foreach ($pipe as $hand) fclose($hand);
         proc_close($proc);
     }
-    $out = ['held' => $lock !== false, 'child' => is_array($child) ? $child : [], 'during' => $during, 'after' => getProbeList('files')];
-    return $out + ['free' => $free, 'dir' => LOGS_DIR.'/uploads', 'want' => substr(sha1($canon), 0, 16).'.lock', 'locks' => getProbeLockList()];
+    $out = ['held' => $lock !== false, 'child' => is_array($child) ? $child : [], 'during' => $during, 'after' => getProbeList($dest)];
+    $want = [substr(sha1(getProbeLockKey($canon)), 0, 16).'.lock'];
+    if ($sub !== '') $want[] = substr(sha1(getProbeLockKey($GLOBALS['proot'].'/'.$dest)), 0, 16).'.lock';
+    sort($want);
+    return $out + ['free' => $free, 'dir' => LOGS_DIR.'/uploads', 'want' => $want, 'locks' => getProbeLockList()];
 }
 
 # Assemble the multi-file shape a browser sends for one file input that accepts several files
@@ -1226,7 +1241,7 @@ function getProbeService(): array {
         'fields' => array_map(static fn(ReflectionProperty $one): string => $one->getName(), $ref->getProperties()),
         'held' => $held,
         'wantroot' => rtrim(str_replace('\\', '/', UPLOADS_DIR), '/'),
-        'wantlock' => [substr(sha1($GLOBALS['pwork']), 0, 16).'.lock'],
+        'wantlock' => [substr(sha1(getProbeLockKey($GLOBALS['pwork'])), 0, 16).'.lock'],
         'types' => Upload::getSupportedTypes(),
     ];
 }
@@ -1240,8 +1255,9 @@ try {
         'service' => getProbeService(),
         'child' => getProbeChild((int)($argv[3] ?? 0)),
         'race' => getProbeRace(),
-        'hold' => getProbeHold(),
+        'hold' => getProbeHold((string)($argv[3] ?? 'files')),
         'queue' => getProbeQueue(),
+        'area' => getProbeQueue('sub'),
         'types' => getProbeTypes(),
         'nomagic' => getProbeNomagic(),
         'magic' => getProbeMagic(),

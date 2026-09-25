@@ -478,6 +478,31 @@ function getProbeLock(): array {
     return $out;
 }
 
+# The accounts of one operation are locked together inside the transaction of its owner before any event; outside a transaction the call is refused without a statement
+function getProbeUsers(): array {
+    setProbeSeed();
+    $pdb = $GLOBALS['pdb'];
+    $pnt = getProbePoint();
+    $num = $pdb->qnum;
+    $out = ['alone' => $pnt->setUserLocks([3, 2]), 'none' => $pnt->setUserLocks([0, -1]), 'cost' => $pdb->qnum - $num];
+    $side = getProbeSide();
+    $pdb->setSqlBegin();
+    $out['held'] = $pnt->setUserLocks([3, 2, 3, 0]);
+    $out['locked'] = [];
+    foreach (array_keys(PROBEUSER) as $uid) {
+        try {
+            $side->query('SELECT id FROM '.PREFIX_DB.'_users WHERE id = '.$uid.' FOR UPDATE NOWAIT')->fetchAll();
+            $out['locked'][] = false;
+        } catch (Throwable) {
+            $out['locked'][] = true;
+        }
+    }
+    $pdb->setSqlRollback();
+    $side->query('SELECT id FROM '.PREFIX_DB.'_users WHERE id IN (2, 3) FOR UPDATE NOWAIT')->fetchAll();
+    $out['freed'] = true;
+    return $out;
+}
+
 # Run one call that is expected to throw and answer the class of what it threw, or the value it returned instead
 function getProbeThrow(callable $call): mixed {
     try {
@@ -698,6 +723,7 @@ try {
         'join' => getProbeJoin(),
         'fail' => getProbeFail(),
         'lock' => getProbeLock(),
+        'users' => getProbeUsers(),
         'lost' => getProbeLost(),
         'stale' => getProbeStale(),
         'race' => getProbeRace(),

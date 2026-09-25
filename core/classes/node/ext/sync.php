@@ -85,7 +85,7 @@ final class NodeSync implements NodeExtension {
     private function getSourceRow(int $nid): ?array {
         $sql = 'SELECT url, refresh, checked, fails FROM '.PREFIX_DB.'_node_sync WHERE nid = :nid FOR UPDATE';
         $row = $this->getQueryRes($sql, ['nid' => $nid])->fetch(PDO::FETCH_ASSOC);
-        return is_array($row) ? ['url' => (string)$row['url'], 'refresh' => intval($row['refresh']), 'checked' => $row['checked'], 'fails' => intval($row['fails'])] : null;
+        return is_array($row) ? ['url' => $row['url'], 'refresh' => intval($row['refresh']), 'checked' => $row['checked'], 'fails' => intval($row['fails'])] : null;
     }
 
     # Insert the source row of a material with no result yet: a source with a period is due at once, a manual one never
@@ -133,7 +133,7 @@ final class NodeSync implements NodeExtension {
     }
 
     # The extension keeps no data an action changes
-    public function updateNodeAction(NodeType $type, NodeTarget $node, string $action): void {
+    public function updateNodeAction(NodeType $type, NodeTarget $node, string $action, int $uid): void {
         if (!in_array($action, self::ACTIONS, true)) throw $this->getInvalid('action');
     }
 
@@ -191,8 +191,8 @@ final class NodeSync implements NodeExtension {
         $sql = 'SELECT nid, url, refresh, due, checked, synced, fails, error FROM '.PREFIX_DB.'_node_sync WHERE nid IN ('.$this->getInList($ids, 'i', $pars).')';
         $out = [];
         foreach ($this->getQueryRes($sql, $pars)->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $out[intval($row['nid'])] = ['url' => (string)$row['url'], 'refresh' => intval($row['refresh']), 'due' => $row['due'], 'checked' => $row['checked'],
-                'synced' => $row['synced'], 'fails' => intval($row['fails']), 'error' => (string)$row['error']];
+            $out[intval($row['nid'])] = ['url' => $row['url'], 'refresh' => intval($row['refresh']), 'due' => $row['due'], 'checked' => $row['checked'],
+                'synced' => $row['synced'], 'fails' => intval($row['fails']), 'error' => $row['error']];
         }
         return $out;
     }
@@ -273,9 +273,9 @@ final class NodeSync implements NodeExtension {
             .' INNER JOIN '.PREFIX_DB.'_nodes AS n ON n.id = s.nid INNER JOIN '.PREFIX_DB.'_node_types AS t ON t.id = n.tid WHERE '.$where.$tail;
         $out = [];
         foreach ($this->getQueryRes($sql, $pars)->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $out[] = ['nid' => intval($row['nid']), 'url' => (string)$row['url'], 'etag' => (string)$row['etag'], 'modified' => (string)$row['modified'],
-                'body' => (string)$row['body'], 'version' => intval($row['version']), 'status' => intval($row['status']), 'name' => (string)$row['name'],
-                'ext' => (string)$row['ext']];
+            $out[] = ['nid' => intval($row['nid']), 'url' => $row['url'], 'etag' => $row['etag'], 'modified' => $row['modified'],
+                'body' => $row['body'], 'version' => intval($row['version']), 'status' => intval($row['status']), 'name' => $row['name'],
+                'ext' => $row['ext']];
         }
         return $out;
     }

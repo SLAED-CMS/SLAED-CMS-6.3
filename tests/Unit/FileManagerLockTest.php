@@ -55,11 +55,14 @@ final class FileManagerLockTest extends TestCase
     }
 
     # The key of a lock is the canonical directory, because the upload service draws a free name below it and the file it is about to write does not exist yet
+    # Canonical means resolved and, on Windows, in one letter case, so a junction or a second spelling of one directory cannot open a second lock file
     #[Test]
     public function theKeyOfALockIsTheDirectoryItGuards(): void
     {
         $file = $this->getFile('core/classes/filemanager.php');
-        $this->assertStringContainsString("\$key = rtrim(str_replace('\\\\', '/', \$dir), '/');", $file, 'The lock key is no longer the canonical directory path');
+        $this->assertStringContainsString('$key = self::getLockKey($dir);', $file, 'The lock key is no longer the canonical directory path');
+        $this->assertStringContainsString('$real = realpath($path);', $file, 'The lock key no longer resolves the directory it names');
+        $this->assertStringContainsString("return (DIRECTORY_SEPARATOR === '\\\\') ? strtolower(\$key) : \$key;", $file, 'A Windows key keeps the letter case of the request');
         $this->assertStringContainsString("substr(sha1(\$key), 0, 16).'.lock'", $file, 'The lock file is no longer named by its key');
         $note = 'The upload service locks something other than its destination directory';
         $this->assertStringContainsString('FileManager::getPathLock($canon)', $this->getFile('core/classes/upload.php'), $note);
@@ -103,6 +106,7 @@ final class FileManagerLockTest extends TestCase
         $this->assertTrue($data['held'], 'The file layer could not take the lock at all');
         $this->assertTrue($data['same'], 'A second entry of one key opened a second handle');
         $this->assertTrue($data['sub'], 'A directory below the key shares its lock, so root and subdirectory are no longer two keys');
+        $this->assertSame([true, true], $data['spell'], 'A second spelling or another letter case of one directory opened a second lock');
         $this->assertFalse($data['both'], 'Another process took the key while this request held it twice');
         $this->assertFalse($data['inner'], 'The inner release freed the lock its outer owner still holds');
         $this->assertSame([true, true, true], $data['queue'], 'A second process did not wait for the last release');
@@ -124,6 +128,23 @@ final class FileManagerLockTest extends TestCase
         $this->assertCount(1, $data['after'], 'The child published a different number of files than one');
         $this->assertLessThan($data['free'], $child['from'], 'The child entered its publication only after the lock was released, so nothing was serialized');
         $this->assertGreaterThan($data['free'], $child['done'], 'The child got through while the lock was still held');
-        $this->assertSame([$data['want']], $data['locks'], 'The two writers opened something other than the one lock file of that directory');
+        $this->assertSame($data['want'], $data['locks'], 'The two writers opened something other than the one lock file of that directory');
+    }
+
+    # The root of an upload area is locked before any of its subdirectories, so an upload of another process into a subdirectory waits while an owner holds the area
+    # That owner is the deletion of a type: nothing is published below the area until it is released
+    #[Test]
+    public function anUploadIntoASubdirectoryWaitsForTheRootOfItsArea(): void
+    {
+        $data = $this->getProbe('area');
+        $child = $data['child'];
+        if (($child['error'] ?? '') === 'nofixture') $this->markTestSkipped('This build cannot encode the PNG fixture the child publishes');
+        $this->assertTrue($data['held'], 'The file layer could not take the root of the area');
+        $this->assertTrue($child['ok'], 'The child publication failed with '.var_export($child['error'] ?? null, true));
+        $this->assertSame([], $data['during'], 'An upload published into a subdirectory while the root of its area was held');
+        $this->assertCount(1, $data['after'], 'The child published a different number of files than one');
+        $this->assertLessThan($data['free'], $child['from'], 'The child entered its publication only after the root was released, so nothing was serialized');
+        $this->assertGreaterThan($data['free'], $child['done'], 'The child got through while the root of its area was still held');
+        $this->assertSame($data['want'], $data['locks'], 'The upload locked something other than the root of the area and its own directory');
     }
 }

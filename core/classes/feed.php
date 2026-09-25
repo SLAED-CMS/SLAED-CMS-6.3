@@ -42,6 +42,8 @@ final class Feed {
 
     # Fetch one feed and answer the seven keys of the contract; a 304 on the validators of the requested address is ok without a body, every refusal is ok = false with a short code
     # The validators belong to the address they came from: they are sent on the first hop only and returned only when no redirect intervened
+    # The time bound covers every step: a lookup starts only while time is left, and one that used up the bound is a timeout whatever it answered
+    # Too many redirects report the code of the last one that arrived
     public function getFeedContent(string $url, string $etag = '', string $modified = ''): array {
         $lim = $this->getFeedLimits();
         if ($lim === []) return $this->getFeedFail('config');
@@ -50,23 +52,25 @@ final class Feed {
         $etag = $this->checkFeedEtag($etag) ? $etag : '';
         $modified = $this->checkFeedStamp($modified) ? $modified : '';
         $next = $url;
+        $code = 0;
         for ($hop = 0; $hop <= $lim['redirects']; $hop++) {
             $norm = self::getFeedUrl($next);
-            if ($norm === []) return $this->getFeedFail('url');
+            if ($norm === []) return $this->getFeedFail('url', $code);
+            if (hrtime(true) >= $stop) return $this->getFeedFail('timeout', $code);
             try {
                 $addr = $this->getFeedAddress($norm['host']);
-                if ($addr === '') return $this->getFeedFail('address');
                 $left = ($stop - hrtime(true)) / 1000000000;
-                if ($left <= 0) return $this->getFeedFail('timeout');
+                if ($left <= 0) return $this->getFeedFail('timeout', $code);
+                if ($addr === '') return $this->getFeedFail('address', $code);
                 $head = ['User-Agent' => 'SLAED Feed', 'Accept' => 'application/rss+xml, application/atom+xml, application/xml;q=0.9, text/xml;q=0.9'];
                 if ($hop === 0 && $etag !== '') $head['If-None-Match'] = $etag;
                 if ($hop === 0 && $modified !== '') $head['If-Modified-Since'] = $modified;
                 $res = $this->getFeedReply('get', ['url' => $norm['url'], 'headers' => $head, 'timeout' => $left, 'bytes' => $lim['bytes'], 'ip' => $addr]);
             } catch (RuntimeException) {
-                return $this->getFeedFail('transport');
+                return $this->getFeedFail('transport', $code);
             }
-            if (hrtime(true) > $stop) return $this->getFeedFail('timeout');
-            if (!$this->checkFeedReply($res)) return $this->getFeedFail('transport');
+            if (hrtime(true) > $stop) return $this->getFeedFail('timeout', $code);
+            if (!$this->checkFeedReply($res)) return $this->getFeedFail('transport', $code);
             $code = $res['code'];
             if (strlen($res['body']) > $lim['bytes']) return $this->getFeedFail('bytes', $code);
             $head = array_change_key_case($res['headers'], CASE_LOWER);
@@ -90,7 +94,7 @@ final class Feed {
             $mod = ($hop === 0) ? $this->getFeedValue($head, 'last-modified') : '';
             return ['ok' => true, 'changed' => true, 'code' => 200, 'body' => $body, 'etag' => $tag, 'modified' => $mod, 'error' => ''];
         }
-        return $this->getFeedFail('redirect');
+        return $this->getFeedFail('redirect', $code);
     }
 
     # The one refusal shape: nothing changed, no body, no validators, the final HTTP code when a response arrived and a short code carrying nothing of the response or address
@@ -242,21 +246,20 @@ final class Feed {
         return ['code' => $code, 'headers' => $head, 'body' => $body];
     }
 
-    # Ask the system resolver for the A and AAAA records of one name, falling back to the IPv4 lookup of the host database; a failed lookup answers an empty list
+    # Ask the system resolver for the A and AAAA records of one name, and the IPv4 lookup of the host database only when the records gave no address; a failed lookup answers []
+    # Neither lookup takes a time limit, so the resolver of the system bounds its own wait; the caller measures it against the time bound of the fetch
     private function getHostList(string $host): array {
         set_error_handler(static fn(): bool => true);
         try {
-            $rows = dns_get_record($host, DNS_A | DNS_AAAA);
-            $four = gethostbynamel($host);
+            $out = [];
+            foreach (dns_get_record($host, DNS_A | DNS_AAAA) ?: [] as $row) {
+                $addr = $row['ip'] ?? $row['ipv6'] ?? '';
+                if (is_string($addr) && $addr !== '') $out[] = $addr;
+            }
+            return $out ?: (gethostbynamel($host) ?: []);
         } finally {
             restore_error_handler();
         }
-        $out = [];
-        foreach (is_array($rows) ? $rows : [] as $row) {
-            $addr = $row['ip'] ?? $row['ipv6'] ?? '';
-            if (is_string($addr) && $addr !== '') $out[] = $addr;
-        }
-        return ($out === [] && is_array($four)) ? $four : $out;
     }
 
     # Hold a transport answer to the exact shape of the contract: an integer code, headers as lists of strings under string names and a string body, and nothing else

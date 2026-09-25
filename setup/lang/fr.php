@@ -20,6 +20,7 @@ define('_PHPSETUP','La version de PHP installée sur Votre serveur ne répond pa
 define('_SAVE_NEW','Installation et configuration');
 define('_SAVE_UPDATE','La mise à jour et de configuration');
 define('_SERRORPERM','n\'a pas les autorisations appropriées pour l\'enregistrement sur le serveur.<br>, Téléchargez les attributs souhaités');
+define('_SETUPLOCK','Le site est déjà installé, l\'installateur est donc verrouillé. Pour lancer une mise à jour, déposez un fichier vide config/setup.unlock et rouvrez setup.php ; une exécution réussie supprime le fichier.');
 define('_SETUP_NEW','Nouvelle installation du système');
 define('_SETUP_SLAED','Installation de la CMS SLAED');
 define('_SUPDATE','Mise à jour du système');

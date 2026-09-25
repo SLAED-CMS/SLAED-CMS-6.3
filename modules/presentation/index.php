@@ -338,7 +338,8 @@ function getPresentationData(): array {
         ...($news['type'] ? [[getIconName('news'), _NEWS, [['news.index', 'ok'], ['news.count', (string)$news['num']], ['categories.load', (string)$cats],
             ['cache.store', 'ok']]]] : []),
         [getIconName('groups'), _USERS, [['session.verify', 'ok'], ['group.rights', 'admin'], ['users.online', (string)$live], ['login.attempt', 'ok']]],
-        [getIconName('modules'), _PRES_NAV_MODULES, [['modules.scan', (string)$mtot], ['module.enable', (string)($mods[0]['note'] ?? 'account')], ['hooks.bind', (string)$mon], ['registry.save', 'ok']]],
+        [getIconName('modules'), _PRES_NAV_MODULES, [['modules.scan', (string)$mtot], ['module.enable', (string)($mods[0]['note'] ?? 'account')], ['hooks.bind', (string)$mon],
+            ['registry.save', 'ok']]],
         ...($files['type'] ? [[getIconName('files'), _PRES_CO_FILES, [['files.index', (string)$files['num']], ['upload.check', 'clean'], ['download.count', '+1'],
             ['meta.write', 'ok']]]] : []),
         [getIconName('search'), 'SEO', [['canonical.resolve', 'ok'], ['meta.compose', 'ok'], ['sitemap.queue', 'ready'], ['robots.check', 'ok']]],
@@ -539,7 +540,7 @@ function getPresentationData(): array {
     ];
     $cases = [
         $case('SELECT', 'SELECT id, title FROM '.PREFIX_DB.'_products WHERE cid = :cid LIMIT ?', [':cid = 2', '? = 10'], true, false, 'rowCount() = 10 · FETCH_BOTH', '0.00083'),
-        $case('SELECT', 'SELECT COUNT(*) AS total FROM '.PREFIX_DB.'_comments WHERE status = ?', ['? = 1'], true, false, 'rowCount() = 1 · FETCH_BOTH', '0.00061'),
+        $case('SELECT', 'SELECT COUNT(*) AS total FROM '.PREFIX_DB.'_forum WHERE status = ?', ['? = 1'], true, false, 'rowCount() = 1 · FETCH_BOTH', '0.00061'),
         $case('UPDATE', 'UPDATE '.PREFIX_DB.'_products SET counter = counter + 1 WHERE id = :id', [':id = 125'], true, true, 'rowCount() = 1', '0.00074'),
         $case('SHOW', 'SHOW TABLE STATUS', [], false, false, 'rowCount() = 34 · PDOStatement', '0.00112'),
     ];

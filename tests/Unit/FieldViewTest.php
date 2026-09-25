@@ -22,11 +22,15 @@ require_once dirname(__DIR__, 2).'/core/classes/parser.php';
  */
 final class FieldViewTest extends TestCase
 {
-    # The definitions every test of this class shares: a required text with a hint, a multiple select with a disabled option, a switch, a textarea, an address, a mail and a hidden field
+    # The definitions every test here shares: a required text with a hint, a multiple select with a disabled option, a switch, a textarea, an address, a mail and a hidden field
     private static function getSet(): array
     {
         $rule = ['title' => 'T', 'intro' => '', 'type' => 'text', 'default' => '', 'options' => [], 'req' => false, 'multi' => false, 'active' => true, 'sort' => 10];
-        $items = ['pdf' => ['title' => 'PDF', 'active' => true, 'sort' => 20], 'doc' => ['title' => 'DOC', 'active' => true, 'sort' => 10], 'old' => ['title' => 'Old', 'active' => false, 'sort' => 30]];
+        $items = [
+            'pdf' => ['title' => 'PDF', 'active' => true, 'sort' => 20],
+            'doc' => ['title' => 'DOC', 'active' => true, 'sort' => 10],
+            'old' => ['title' => 'Old', 'active' => false, 'sort' => 30],
+        ];
         return [
             'name' => ['title' => 'Name', 'intro' => 'Your "name" & more', 'req' => true, 'sort' => 1] + $rule,
             'kind' => ['title' => 'Kind', 'type' => 'select', 'multi' => true, 'default' => [], 'options' => ['items' => $items], 'sort' => 2] + $rule,
@@ -58,7 +62,7 @@ final class FieldViewTest extends TestCase
     private static function getParser(): Parser
     {
         return new class () extends Parser {
-            public function filterContent(string $src, bool $safe, string $mod, int $hoff = 0, string $fmt = '', int $nid = 0): string
+            public function filterContent(string $src, bool $safe, string $mod, int $hoff = 0, string $fmt = '', int $nid = 0, bool $trust = false): string
             {
                 return '<p data-safe="'.(int)$safe.'" data-mod="'.$mod.'">'.htmlspecialchars($src).'</p>';
             }
@@ -76,16 +80,29 @@ final class FieldViewTest extends TestCase
     #[Test]
     public function theFormIsBuiltFromTheSharedFragments(): void
     {
-        $rows = (new Field())->getFieldForm(self::getTemplate(), self::getSet(), ['name' => 'Ann', 'kind' => ['pdf'], 'flag' => true, 'when' => '2026-03-01 09:05:00'], ['site' => 'format', 'mail' => 'nonsense']);
+        $rows = (new Field())->getFieldForm(
+            self::getTemplate(),
+            self::getSet(),
+            ['name' => 'Ann', 'kind' => ['pdf'], 'flag' => true, 'when' => '2026-03-01 09:05:00'],
+            ['site' => 'format', 'mail' => 'nonsense']
+        );
         $this->assertSame(['name', 'kind', 'flag', 'note', 'site', 'mail', 'when'], array_keys($rows), 'A hidden field got a row or the order is not canonical');
         $keys = ['name', 'type', 'label_for', 'label_text', 'hint_id', 'hint_text', 'error_text', 'is_required', 'field_html'];
         foreach ($rows as $row) $this->assertSame($keys, array_keys($row));
-        $this->assertSame(['f-field-name', 'Name', 'f-field-name-hint', 'Your "name" & more', '', true], array_slice(array_values($rows['name']), 2, 6), 'The hint is plain text and is never escaped by the class');
+        $this->assertSame(
+            ['f-field-name', 'Name', 'f-field-name-hint', 'Your "name" & more', '', true],
+            array_slice(array_values($rows['name']), 2, 6),
+            'The hint is plain text and is never escaped by the class'
+        );
         $this->assertStringContainsString('"name_attr":"field[name]"', $rows['name']['field_html']);
         $this->assertStringContainsString('"describedby":"f-field-name-hint"', $rows['name']['field_html']);
         $this->assertStringContainsString('"value_attr":"Ann"', $rows['name']['field_html']);
         $this->assertStringContainsString('"maxlength_num":4096', $rows['name']['field_html']);
-        $this->assertSame(['Wrong format.', 'f-field-site-hint', ''], [$rows['site']['error_text'], $rows['site']['hint_id'], $rows['mail']['error_text']], 'A known code gets its message and an unknown one none');
+        $this->assertSame(
+            ['Wrong format.', 'f-field-site-hint', ''],
+            [$rows['site']['error_text'], $rows['site']['hint_id'], $rows['mail']['error_text']],
+            'A known code gets its message and an unknown one none'
+        );
         $kind = $rows['kind']['field_html'];
         $this->assertStringStartsWith('[select:', $kind);
         $this->assertStringContainsString('"is_multiple":true', $kind);
@@ -97,7 +114,11 @@ final class FieldViewTest extends TestCase
         $this->assertStringStartsWith('[hidden:{"name_attr":"field[flag]","value_attr":"0"}][checkbox:', $flag, 'An unchecked switch would post nothing');
         $this->assertStringContainsString('"is_checked":true', $flag);
         $this->assertStringStartsWith('[textarea:', $rows['note']['field_html']);
-        $this->assertStringContainsString('"itype":"datetime-local","value_attr":"2026-03-01T09:05:00"', $rows['when']['field_html'], 'A stored moment is shown in the form its input expects');
+        $this->assertStringContainsString(
+            '"itype":"datetime-local","value_attr":"2026-03-01T09:05:00"',
+            $rows['when']['field_html'],
+            'A stored moment is shown in the form its input expects'
+        );
         $this->assertStringContainsString('"itype":"url"', $rows['site']['field_html']);
         $this->assertStringContainsString('"itype":"email"', $rows['mail']['field_html']);
     }
@@ -107,10 +128,16 @@ final class FieldViewTest extends TestCase
     public function aSingleSelectAndADecimalGetTheirControls(): void
     {
         $set = self::getSet();
-        $set = ['kind' => ['multi' => false, 'default' => '', 'req' => true] + $set['kind'], 'price' => ['title' => 'Price', 'type' => 'decimal', 'options' => ['scale' => 3]] + $set['name']];
+        $set = [
+            'kind' => ['multi' => false, 'default' => '', 'req' => true] + $set['kind'],
+            'price' => ['title' => 'Price', 'type' => 'decimal', 'options' => ['scale' => 3]] + $set['name'],
+        ];
         $rows = (new Field())->getFieldForm(self::getTemplate(), $set, []);
         $this->assertSame(3, substr_count($rows['kind']['field_html'], 'select-option'));
-        $this->assertMatchesRegularExpression('/^\[select:\{.*"options_html":"\[select-option:\{\\\\"value_attr\\\\":\\\\"\\\\",\\\\"label_text\\\\":\\\\"No\\\\",\\\\"is_selected\\\\":true/', $rows['kind']['field_html']);
+        $this->assertMatchesRegularExpression(
+            '/^\[select:\{.*"options_html":"\[select-option:\{\\\\"value_attr\\\\":\\\\"\\\\",\\\\"label_text\\\\":\\\\"No\\\\",\\\\"is_selected\\\\":true/',
+            $rows['kind']['field_html']
+        );
         $this->assertStringContainsString('"select_attr":"required"', $rows['kind']['field_html']);
         $this->assertStringContainsString('"itype":"number"', $rows['price']['field_html']);
         $this->assertStringContainsString('step=\"0.001\"', $rows['price']['field_html']);
@@ -120,7 +147,10 @@ final class FieldViewTest extends TestCase
     #[Test]
     public function theViewIsTheContractArray(): void
     {
-        $vals = ['name' => '0', 'kind' => ['old', 'zip', 'doc'], 'flag' => false, 'note' => "<b>x</b>\nline", 'site' => 'https://Example.com/A?b=C', 'mail' => 'a@b.de', 'when' => '', 'gone' => 'kept', 'ghost' => 'x'];
+        $vals = [
+            'name' => '0', 'kind' => ['old', 'zip', 'doc'], 'flag' => false, 'note' => "<b>x</b>\nline", 'site' => 'https://Example.com/A?b=C',
+            'mail' => 'a@b.de', 'when' => '', 'gone' => 'kept', 'ghost' => 'x',
+        ];
         $view = (new Field())->getFieldView(self::getParser(), self::getSet(), $vals, 'forum');
         $this->assertSame(['name', 'kind', 'flag', 'note', 'site', 'mail'], array_keys($view));
         foreach ($view as $name => $row) {
@@ -132,7 +162,11 @@ final class FieldViewTest extends TestCase
         $this->assertSame(['doc', 'old'], $view['kind']['value'], 'A stored disabled option stays, a removed one goes, the order is that of the definition');
         $this->assertSame([['value' => 'doc', 'label_text' => 'DOC'], ['value' => 'old', 'label_text' => 'Old']], $view['kind']['items']);
         $this->assertSame('DOC, Old', $view['kind']['value_text']);
-        $this->assertSame('<p data-safe="1" data-mod="forum">&lt;b&gt;x&lt;/b&gt;'."\n".'line</p>', $view['note']['value_html'], 'Only a textarea gets parser output, and the parser runs in its safe mode');
+        $this->assertSame(
+            '<p data-safe="1" data-mod="forum">&lt;b&gt;x&lt;/b&gt;'."\n".'line</p>',
+            $view['note']['value_html'],
+            'Only a textarea gets parser output, and the parser runs in its safe mode'
+        );
         $this->assertSame(['https://Example.com/A?b=C', 'mailto:a@b.de'], [$view['site']['value_href'], $view['mail']['value_href']]);
         $this->assertSame([], $view['site']['items']);
     }
@@ -179,7 +213,11 @@ final class FieldViewTest extends TestCase
                 $owner = (bool)preg_match('#^(?:core/helpers\.php|admin/modules/fields\.php|modules/(?:account|forum|order)/)#', $path);
                 if ($owner) $this->assertStringNotContainsString("explode('||'", $code, $path.' still splits positional definitions');
                 $this->assertStringNotContainsString("'field[]'", str_replace("getVar('post', 'field[]', '', [])", '', $code), $path.' still names a positional control');
-                $this->assertSame(0, preg_match('/getVar\([^)]*,\s*\'field\'\s*[,)]/', str_replace("getVar('post', 'field', 'raw'", '', $code)), $path.' still reads the positional input filter');
+                $this->assertSame(
+                    0,
+                    preg_match('/getVar\([^)]*,\s*\'field\'\s*[,)]/', str_replace("getVar('post', 'field', 'raw'", '', $code)),
+                    $path.' still reads the positional input filter'
+                );
                 if (!in_array($path, ['core/helpers.php', 'admin/modules/fields.php'], true)) {
                     $this->assertStringNotContainsString("\$conf['fields']", $code, $path.' reads the definitions past getFieldRules()');
                 }
@@ -187,8 +225,15 @@ final class FieldViewTest extends TestCase
         }
         $help = (string)file_get_contents($root.'/core/helpers.php');
         $this->assertSame(1, preg_match_all('/new Field\(/', (string)file_get_contents($root.'/core/system.php')), 'The shared instance is built in more than one place');
-        $this->assertSame(2, substr_count($help, "(\$conf['update']['fields'] ?? '') === '6.3.0'") + substr_count($help, "(\$conf['update']['fields'] ?? '') !== '6.3.0'"), 'A helper reads or writes fields past the mark of the data update');
-        foreach (['modules/order/index.php' => 1, 'modules/order/admin/index.php' => 2, 'modules/forum/index.php' => 1, 'modules/account/index.php' => 1, 'modules/account/admin/index.php' => 1] as $path => $num) {
+        $this->assertSame(
+            2,
+            substr_count($help, "(\$conf['update']['fields'] ?? '') === '6.3.0'") + substr_count($help, "(\$conf['update']['fields'] ?? '') !== '6.3.0'"),
+            'A helper reads or writes fields past the mark of the data update'
+        );
+        foreach ([
+            'modules/order/index.php' => 1, 'modules/order/admin/index.php' => 2, 'modules/forum/index.php' => 1,
+            'modules/account/index.php' => 1, 'modules/account/admin/index.php' => 1,
+        ] as $path => $num) {
             $this->assertSame($num, substr_count((string)file_get_contents($root.'/'.$path), 'getFieldsPost('), $path.' does not write its fields through getFieldsPost()');
         }
         $this->assertStringNotContainsString('filterFields(trim(', (string)file_get_contents($root.'/core/security.php'), 'getVar() still carries the positional input filter');

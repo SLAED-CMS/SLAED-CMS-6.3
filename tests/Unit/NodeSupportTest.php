@@ -115,7 +115,11 @@ final class NodeSupportTest extends TestCase
         $this->assertSame([303, [1, 1], false, true, true], $run['locked'], 'A closed request took a reply, offered the form or hid its discussion');
         $this->assertSame(403, $run['author'], 'The owner moved his request to the waiting side of the staff reply');
         $this->assertSame([303, ['aid' => 0, 'state' => 0, 'prio' => 1, 'version' => 5]], $run['reopen']);
-        $this->assertSame([403, ['aid' => 0, 'state' => 0, 'prio' => 1, 'version' => 5]], $run['staffswitch'], 'A moderator changed a foreign request through the route of its owner');
+        $this->assertSame(
+            [403, ['aid' => 0, 'state' => 0, 'prio' => 1, 'version' => 5]],
+            $run['staffswitch'],
+            'A moderator changed a foreign request through the route of its owner'
+        );
     }
 
     # The working card of the operator assigns, prioritises and keeps the activity, refuses an administrator without the right, a stale version and a missing token
@@ -138,14 +142,24 @@ final class NodeSupportTest extends TestCase
             'single' => 200], $this->getRuns()['queue']);
     }
 
-    # A moderator of the type hides, shows and deletes a reply with the live counter; showing it again is a reply of the staff, and deleting it takes its award back
+    # A moderator of the type hides, shows and deletes a reply with the live counter; showing it again is no new reply and leaves the queue, and deleting it takes its award back
     #[Test]
     public function moderationKeepsTheCounterOfTheMaterial(): void
     {
         $run = $this->getRuns();
         $this->assertSame([200, 2, 0], $run['hide'], 'Hiding a reply does not lower the counter or moved the queue');
-        $this->assertSame([200, 3, 1], $run['show'], 'Showing a reply does not raise the counter or is not answered as a reply of the staff');
+        $this->assertSame([200, 3, 0], $run['show'], 'Showing a reply again does not raise the counter or is answered as a new reply');
         $this->assertSame([200, 2, 1], $run['delete'], 'Deleting a reply does not lower the counter or keeps its award');
+    }
+
+    # A pending reply of the owner approved by an operator is still the reply of the owner: it waits for the staff and tells the other operators, never the owner himself;
+    # hiding and approving it again is no new reply, so neither a second notice nor a move of the queue follows
+    #[Test]
+    public function anApprovedReplyKeepsItsAuthorAndCountsOnce(): void
+    {
+        $run = $this->getRuns();
+        $this->assertSame([200, 0, 0, 1, ['root@probe.test'], 1], $run['approve'], 'The approved reply of the owner was answered as a reply of the staff');
+        $this->assertSame([200, 200, 0, true], $run['reapprove'], 'Approving a reply again sent a notice or moved the queue');
     }
 
     # The class accepts exactly its one switch on a private standard section, refuses every broken map, scopes each reader and knows only the closed actions
@@ -196,7 +210,11 @@ final class NodeSupportTest extends TestCase
             'public function getNodeSupportList(NodeType $type, int $page, int $limit, ?int $state = null, ?int $aid = null, ?int $prio = null): array'] as $one) {
             $this->assertStringContainsString($one, $code);
         }
-        $this->assertSame(12, preg_match_all('/^    public function /m', $code), 'The class has other public methods than its constructor, the nine of the contract and its two commands');
+        $this->assertSame(
+            12,
+            preg_match_all('/^    public function /m', $code),
+            'The class has other public methods than its constructor, the nine of the contract and its two commands'
+        );
         $conf = (require $root.'/config/node.php')['node']['support'];
         $this->assertSame(['state' => ['staff' => 0, 'author' => 1, 'closed' => 2], 'prio' => ['low' => 0, 'normal' => 1, 'high' => 2, 'urgent' => 3]], $conf);
         $node = (string)file_get_contents($root.'/modules/node/index.php');

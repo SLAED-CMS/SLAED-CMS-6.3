@@ -69,10 +69,11 @@ final class FileManagerOpsTest extends TestCase
         rmdir($dir);
     }
 
-    # Return the path of the lock file one directory serializes on, drawn exactly the way the file layer draws it
+    # Return the path of the lock file one directory serializes on, named by the canonical key the file layer itself derives
     private static function getLockFile(string $dir): string
     {
-        return rtrim(str_replace('\\', '/', LOGS_DIR), '/').'/uploads/'.substr(sha1(rtrim(str_replace('\\', '/', $dir), '/')), 0, 16).'.lock';
+        $key = (string)(new \ReflectionMethod(FileManager::class, 'getLockKey'))->invoke(null, $dir);
+        return rtrim(str_replace('\\', '/', LOGS_DIR), '/').'/uploads/'.substr(sha1($key), 0, 16).'.lock';
     }
 
     # Return one context over the disposable tree; the mode decides what the context is allowed to do at all
@@ -260,7 +261,7 @@ final class FileManagerOpsTest extends TestCase
         $pair = $this->getMethod($code, 'updatePathEntry');
         $this->assertStringContainsString('self::getPathLocks([dirname(', $pair, 'An operation over two paths does not take two locks');
         $body = $this->getMethod($code, 'getPathLocks');
-        $sort = strpos($body, 'sort($keys)');
+        $sort = strpos($body, 'usort($keys, ');
         $take = strpos($body, 'self::getPathLock($key)');
         $this->assertNotFalse($sort, 'The keys of an operation are taken in the order they were named in, so two opposite moves wait for each other forever');
         $this->assertLessThan($take, $sort, 'The first key is taken before the keys are sorted');

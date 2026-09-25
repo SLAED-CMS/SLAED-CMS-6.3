@@ -30,7 +30,11 @@ final class FieldTest extends TestCase
     # One valid select definition over three options, the last one disabled
     private static function getSelect(array $over = []): array
     {
-        $items = ['pdf' => ['title' => 'PDF', 'active' => true, 'sort' => 20], 'doc' => ['title' => 'DOC', 'active' => true, 'sort' => 10], 'old' => ['title' => 'Old', 'active' => false, 'sort' => 30]];
+        $items = [
+            'pdf' => ['title' => 'PDF', 'active' => true, 'sort' => 20],
+            'doc' => ['title' => 'DOC', 'active' => true, 'sort' => 10],
+            'old' => ['title' => 'Old', 'active' => false, 'sort' => 30],
+        ];
         return self::getRule($over + ['type' => 'select', 'options' => ['items' => $items]]);
     }
 
@@ -106,7 +110,10 @@ final class FieldTest extends TestCase
     public function theNewCaptionsExistInEveryLocale(): void
     {
         foreach (['de', 'en', 'fr', 'pl', 'ru', 'uk'] as $lang) {
-            foreach (['admin/lang' => ['_FIELDS_BOOL', '_FIELDS_INT', '_FIELDS_DECIMAL'], 'lang' => ['_FIELDS_REQ', '_FIELDS_TYPE', '_FIELDS_FORMAT', '_FIELDS_CHOICE', '_FIELDS_MIN', '_FIELDS_MAX']] as $dir => $names) {
+            foreach ([
+                'admin/lang' => ['_FIELDS_BOOL', '_FIELDS_INT', '_FIELDS_DECIMAL'],
+                'lang' => ['_FIELDS_REQ', '_FIELDS_TYPE', '_FIELDS_FORMAT', '_FIELDS_CHOICE', '_FIELDS_MIN', '_FIELDS_MAX'],
+            ] as $dir => $names) {
                 $code = (string)file_get_contents(dirname(__DIR__, 2).'/'.$dir.'/'.$lang.'.php');
                 foreach ($names as $name) $this->assertSame(1, preg_match_all('/define\(\''.$name.'\'/', $code), $dir.'/'.$lang.'.php: '.$name);
             }
@@ -334,7 +341,11 @@ final class FieldTest extends TestCase
     public function requiredUnknownAndInactive(): void
     {
         $fld = new Field();
-        $set = ['must' => self::getRule(['req' => true, 'options' => ['max' => 3]]), 'off' => self::getRule(['active' => false]), 'flag' => self::getRule(['type' => 'bool', 'default' => null, 'req' => true])];
+        $set = [
+            'must' => self::getRule(['req' => true, 'options' => ['max' => 3]]),
+            'off' => self::getRule(['active' => false]),
+            'flag' => self::getRule(['type' => 'bool', 'default' => null, 'req' => true]),
+        ];
         $this->assertSame(['flag' => 'required', 'must' => 'required'], $fld->checkFieldValues($set, []));
         $this->assertSame([], $fld->checkFieldValues($set, [], false));
         $this->assertSame(['must' => 'max'], $fld->checkFieldValues($set, ['must' => 'four', 'flag' => '0'], false));

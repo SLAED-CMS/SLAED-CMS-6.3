@@ -46,6 +46,7 @@ if ($set === null) {
         }
     }
     $items = '';
-    foreach ($list as $node) $items .= $tpl->getHtmlFrag('node/block', (new NodeView($prs, $fld))->getNodeView($types[$node->tid], $node, 'card'));
+    $prep = new NodeView($prs, $fld);
+    foreach ($list as $node) $items .= $tpl->getHtmlFrag(getNodeTplName('fragments', 'block', $types[$node->tid]), $prep->getNodeView($types[$node->tid], $node, 'card'));
     $content = ($items !== '') ? $tpl->getHtmlFrag('list', ['items_html' => $items]) : '';
 }

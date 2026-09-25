@@ -96,7 +96,8 @@ final class NodeModelTest extends TestCase
                 '?string mime', '?int size', '?int width', '?int height', '?int duration', 'int hits', '?string reported', 'int ruid', 'int sort',
                 'string created', 'string updated']],
             'NodeTarget' => ['NodeTarget', ['NodeType type', 'int id', 'int uid', 'string title', 'CommentMode comon', 'int comnum', 'int score', 'int ratings']],
-            'NodeContext' => ['NodeContext', ['int uid', 'array groups', 'int aid', 'array mods', 'bool manage', 'bool super', 'string ip', 'string lang', 'bool task = false']],
+            'NodeContext' => ['NodeContext', ['int uid', 'array groups', 'int aid', 'array mods', 'bool manage', 'bool super', 'string ip', 'string lang', 'bool task = false',
+                'bool polls = false']],
         ];
     }
 
@@ -202,7 +203,7 @@ final class NodeModelTest extends TestCase
             'filterNodeData' => 'array(NodeType type, array data, ?Node node = NULL)',
             'getNodeScope' => 'array(NodeType type)',
             'checkNodeAction' => 'bool(NodeType type, Node|NodeTarget node, string action)',
-            'updateNodeAction' => 'void(NodeType type, NodeTarget node, string action)',
+            'updateNodeAction' => 'void(NodeType type, NodeTarget node, string action, int uid)',
             'addNodeData' => 'void(Node node, array data)',
             'updateNodeData' => 'void(Node before, Node after, ?array data)',
             'deleteNodeData' => 'void(Node node)',
@@ -223,6 +224,7 @@ final class NodeModelTest extends TestCase
         $this->assertSame([3, [2], 5, ['news', 'docs'], true], [$adm->uid, $adm->groups, $adm->aid, $adm->mods, $adm->manage]);
         $this->assertTrue(self::getContext(['aid' => 1, 'super' => true])->super);
         $this->assertTrue(self::getContext(['task' => true])->task);
+        $this->assertSame([false, true], [self::getContext(['aid' => 1])->polls, self::getContext(['aid' => 1, 'polls' => true])->polls]);
     }
 
     # Snapshots that contradict themselves: a right without an administrator, a background flag with an identity, repeated or foreign list entries
@@ -232,6 +234,7 @@ final class NodeModelTest extends TestCase
             'manage without aid' => [['manage' => true]],
             'super without aid' => [['super' => true]],
             'mods without aid' => [['mods' => ['news']]],
+            'polls without aid' => [['polls' => true]],
             'negative uid' => [['uid' => -1]],
             'negative aid' => [['aid' => -1]],
             'repeated group' => [['groups' => [2, 2]]],
@@ -249,6 +252,7 @@ final class NodeModelTest extends TestCase
             'task with manage' => [['task' => true, 'aid' => 1, 'manage' => true]],
             'task with super' => [['task' => true, 'aid' => 1, 'super' => true]],
             'task with mods' => [['task' => true, 'aid' => 1, 'mods' => ['news']]],
+            'task with polls' => [['task' => true, 'aid' => 1, 'polls' => true]],
         ];
     }
 
@@ -387,9 +391,10 @@ final class NodeModelTest extends TestCase
     {
         $want = [
             'node_types' => ['active' => 'active,sort,id', 'unique PRIMARY' => 'id', 'unique name' => 'name'],
-            'nodes' => ['admin' => 'tid,status,updated,id', 'author' => 'uid,status,published,id', 'cat' => 'tid,cid,status,pinned,published,id',
+            'nodes' => ['author' => 'uid,status,published,id', 'cat' => 'tid,cid,status,pinned,published,id', 'expires' => 'tid,status,expires',
                 'home' => 'tid,home,status,pinned,published,id', 'ip' => 'ip,created,id', 'poll' => 'poll', 'pub' => 'tid,status,pinned,published,id',
-                'queue' => 'status,created,id', 'title' => 'tid,status,title,id', 'unique PRIMARY' => 'id', 'views' => 'tid,status,pinned,views,published,id'],
+                'queue' => 'status,created,id', 'title' => 'tid,status,pinned,title,id', 'unique PRIMARY' => 'id', 'updated' => 'tid,status,pinned,updated,id',
+                'views' => 'tid,status,pinned,views,published,id'],
             'node_assets' => ['node' => 'nid,role,sort,id', 'report' => 'reported,id', 'src' => 'src(191)', 'unique PRIMARY' => 'id'],
             'node_categories' => ['cat' => 'cid,nid', 'unique PRIMARY' => 'id', 'unique node' => 'nid,cid'],
             'node_publish' => ['queue' => 'due,nid', 'unique PRIMARY' => 'nid'],

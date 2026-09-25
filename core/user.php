@@ -340,7 +340,7 @@ function setMessageShow(): string {
 # Only the inner strip names its unread badge: that is the one an out-of-band swap reaches, and the cabinet home page draws its own tiles from the same items
 function getUserNavItems(bool $home = false): array {
     global $db, $conf, $prv;
-    $uid = intval((getUserInfo() ?? [])['id'] ?? 0);
+    $uid = intval(getUserInfo()['id'] ?? 0);
     if ($conf['name'] !== 'account') getLang('account');
     $items = [];
     if ($home) $items[] = ['label' => _HOME, 'title' => _RETURNACCOUNT, 'href' => 'index.php?name=account', 'icon' => getIconName('cabinet')];
@@ -362,6 +362,12 @@ function getUserNavItems(bool $home = false): array {
         if (($conf['shop']['part'] ?? 0) === 1) {
             $items[] = ['label' => _PARTNER, 'title' => _PARTNERINFO, 'href' => 'index.php?name=shop&op=partners', 'icon' => getIconName('partners')];
         }
+    }
+    foreach (getNodeTypeMap() as $type) {
+        if (!$type->active || $type->ext !== 'support') continue;
+        $label = getModuleName($type->name);
+        $items[] = ['label' => $label, 'title' => ($type->intro !== '') ? getConst($type->intro) : $label, 'href' => 'index.php?name='.$type->name,
+            'icon' => getIconName($type->name)];
     }
     if ($conf['favorites']['favact']) {
         [$fnum] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid', ['uid' => $uid]));
@@ -412,14 +418,12 @@ function isModGroup(string $name): int {
     return 0;
 }
 
-# Fetch the full database record for the currently logged-in user
-function getUserInfo() {
+# Fetch the full database record for the currently logged-in user, or an empty array for a guest and for an account that no longer exists
+function getUserInfo(): array {
     global $db, $user;
     $uid = (isset($user[0])) ? intval($user[0]) : 0;
-    if (is_user() && $uid) {
-        $info = $db->getSqlRow($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_users WHERE id = :uid', ['uid' => $uid]));
-        return $info;
-    }
+    if (!is_user() || !$uid) return [];
+    return $db->getSqlRow($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_users WHERE id = :uid', ['uid' => $uid])) ?: [];
 }
 
 # Resolve the avatar URL for a user record; system avatars (user/guest/deleted) and presets come from the active theme, uploaded files from the avatar upload directory
@@ -1205,23 +1209,44 @@ function updatePrivatBox(): void {
 
 # Per-module map for profile contribution views: label constant, icon name, table, where clause and rating column pair (count, total); fav marks the favorites modul key
 # The comment entry carries no table, where or rate: its rows are read through the comment subsystem, and a table name left here would be a second way into a table with one owner
-function getProfileModules(): array {
-    return [
+# Every active Node type but the private support requests follows with its type and, for an author, the numbers of getNodeAuthorStat() read once per request and author
+function getProfileModules(int $uid = 0): array {
+    global $db, $fld;
+    static $memo = [];
+    $out = [
         'comm' => ['title' => _COMMENTS, 'icon' => getIconName('comm'), 'fav' => ''],
         'forum' => ['title' => _FORUM, 'icon' => getIconName('forum'), 'table' => 'forum', 'where' => "uid = :uid AND pid = '0' AND time <= NOW() AND status > '1'", 'rate' => ['ratings', 'score'], 'fav' => 'forum'],
     ];
+    $types = array_values(array_filter(getNodeTypeMap(), fn($v) => $v->active && $v->ext !== 'support'));
+    if ($uid > 0 && $types && !isset($memo[$uid])) {
+        $memo[$uid] = [];
+        try {
+            $query = (new NodeQuery($db, getNodeContext(), $fld))->setNodeAuthor($uid)->setNodeStatus(NodeStatus::Published);
+            if (count($types) === 1) $query->setNodeType($types[0])->setNodeExtension(getNodeHandler($types[0]));
+            else $query->setNodeTypes($types);
+            $memo[$uid] = $query->getNodeAuthorStat();
+        } catch (NodeException $err) {
+            Logger::addSite('error', 'Profile: the Node materials of an author cannot be counted', ['code' => $err->getCode()]);
+        }
+    }
+    foreach ($types as $type) {
+        $out[$type->name] ??= ['title' => getModuleName($type->name), 'icon' => getIconName($type->name), 'type' => $type, 'fav' => $type->name,
+            'stat' => $memo[$uid][$type->id] ?? ['num' => 0, 'score' => 0, 'ratings' => 0, 'favs' => 0]];
+    }
+    return $out;
 }
 
 # Build the "last activity" feed with per-module tabs for a public profile as one UNION ALL round-trip; shared by the profile view page and the own-profile page
 function getProfileLastView(int $uid): string {
-    global $db, $conf, $tpl, $prs, $com;
+    global $db, $conf, $tpl, $prs, $com, $fld;
     if ($uid < 1 || ($conf['users']['prof'] == 1 && !is_user() && !isAdmin())) return '';
     $limit = intval(getUserNews(25));
+    $mods = getProfileModules($uid);
     $parts = [];
     $params = [];
     $lists = ['comm' => []];
-    foreach (getProfileModules() as $mod => $inf) {
-        if ($mod == 'comm' || !is_active($mod)) continue;
+    foreach ($mods as $mod => $inf) {
+        if ($mod == 'comm' || isset($inf['type']) || !is_active($mod)) continue;
         $ron = ($conf['ratings'][$mod]['active'] ?? '') === '1';
         $rsel = ($ron && $inf['rate']) ? $inf['rate'][0].' AS rc, '.$inf['rate'][1].' AS rt' : '0 AS rc, 0 AS rt';
         $from = PREFIX_DB.'_'.$inf['table'].' WHERE '.str_replace(':uid', ':u'.$mod, $inf['where']);
@@ -1242,22 +1267,39 @@ function getProfileLastView(int $uid): string {
     if ($parts) {
         $result = $db->getSqlQuery(implode(' UNION ALL ', $parts), $params);
         while ([$key, $id, $cid, $cmod, $label, $time, $cnt, $tot] = $db->getSqlRow($result)) {
-            if ($key == 'forum') {
-                $href = getSeoUrl(['name' => $key, 'op' => 'view', 'id' => $id, 'title' => $label]);
-            } else {
-                $href = getSeoUrl(['name' => $key, 'op' => 'view', 'id' => $id, 'title' => $label]).'#'.$id;
-            }
             $lists[$key][] = [
                 'datehtml' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => format_time($time, _TIMESTRING), 'text' => format_time($time)]),
-                'href' => $href,
+                'href' => getSeoUrl(['name' => $key, 'op' => 'view', 'id' => $id, 'title' => $label]),
                 'label' => $label,
                 'rating' => ($cnt > 0) ? number_format($tot / $cnt, 2) : '',
             ];
         }
     }
+    foreach ($mods as $mod => $inf) {
+        if (!isset($inf['type'])) continue;
+        $lists[$mod] = [];
+        $type = $inf['type'];
+        if ($inf['stat']['num'] < 1) continue;
+        try {
+            $query = (new NodeQuery($db, getNodeContext(), $fld))->setNodeType($type)->setNodeExtension(getNodeHandler($type))->setNodeAuthor($uid)
+                ->setNodeStatus(NodeStatus::Published)->setNodeSets(false)->setNodePage(1, min($limit, $type->settings['list']['limit']));
+            if (in_array('published', $type->settings['list']['orders'], true)) $query->setNodeOrder('published', 'desc');
+            foreach ($query->getNodeList() as $node) {
+                $when = (string)$node->pubdate;
+                $lists[$mod][] = [
+                    'datehtml' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($when)), 'title' => format_time($when, _TIMESTRING), 'text' => format_time($when)]),
+                    'href' => getSeoUrl(['name' => $mod, 'op' => 'view', 'id' => $node->id, 'title' => $node->title]),
+                    'label' => $node->title,
+                    'rating' => $type->settings['features']['rating'] ? (Rating::getAverage($node->score, $node->ratings, 2) ?? '') : '',
+                ];
+            }
+        } catch (NodeException $err) {
+            Logger::addSite('error', 'Profile: the Node materials of an author cannot be read', ['type' => $mod, 'code' => $err->getCode()]);
+        }
+    }
     $tabs = [];
     $texts = [];
-    foreach (getProfileModules() as $mod => $inf) {
+    foreach ($mods as $mod => $inf) {
         if (!isset($lists[$mod])) continue;
         $tabs[] = $inf['title'];
         $texts[] = $tpl->getHtmlPart('account-profile-feed-list', ['entries' => $lists[$mod], 'icon_name' => $inf['icon'], 'empty_text' => _NO_INFO]);
@@ -1302,7 +1344,9 @@ function addFavorite() {
     $type = $isnode ? (getNodeTypeMap()[$mod] ?? null) : null;
     $pars = ['uid' => $uid, 'fid' => $id, 'modul' => $mod];
     $sql = 'SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid AND fid = :fid AND modul = :modul';
-    if ($conf['favorites']['favact'] && $uid && $id && $type !== null) {
+    $room = $uid && $id && intval($db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid', ['uid' => $uid]))[0] ?? 0)
+        < intval($conf['favorites']['favorites']);
+    if ($conf['favorites']['favact'] && $room && $type !== null) {
         try {
             $ext = getNodeHandler($type);
             $serv = new NodeService($db, getNodeContext(), $fld);
@@ -1314,7 +1358,7 @@ function addFavorite() {
             if ($open && !$db->getSqlRow($seen)[0]) {
                 $done = $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_favorites VALUES (NULL, :uid, :fid, :modul, NOW())', $pars);
                 if ($done === false) throw new RuntimeException('the favorite was not stored');
-                $ext?->updateNodeAction($type, $tgt, 'favorite');
+                $ext?->updateNodeAction($type, $tgt, 'favorite', $uid);
                 $pnt->addEvent('favorite', 'favorites', $mod.':'.$id, $uid, ['mid' => $id]);
             }
             if (!$db->setSqlCommit()) throw new RuntimeException('the commit of a favorite is uncertain');
@@ -1322,9 +1366,12 @@ function addFavorite() {
             if ($db->checkSqlActive()) $db->setSqlRollback();
             Logger::addSite('error', 'Node: a favorite could not be added', ['type' => $mod, 'nid' => $id, 'error' => $err->getMessage()]);
         }
-    } elseif ($conf['favorites']['favact'] && $uid && $id && $mod && !$isnode) {
+    } elseif ($conf['favorites']['favact'] && $room && in_array($mod, ['forum', 'shop'], true)) {
+        $live = ($mod === 'forum') ? 'SELECT COUNT(id) FROM '.PREFIX_DB.'_forum WHERE id = :fid AND pid = 0 AND time <= NOW() AND status != \'0\''
+            : 'SELECT COUNT(id) FROM '.PREFIX_DB.'_products WHERE id = :fid AND status != \'0\' AND time <= NOW()';
+        [$have] = $db->getSqlRow($db->getSqlQuery($live, ['fid' => $id]));
         [$fav] = $db->getSqlRow($db->getSqlQuery($sql, $pars));
-        if (!$fav) {
+        if ($have && !$fav) {
             $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_favorites VALUES (NULL, :uid, :fid, :modul, NOW())', $pars);
             $pnt->addEvent('favorite', 'favorites', $mod.':'.$id, $uid, ['mid' => $id]);
         }
@@ -1491,7 +1538,7 @@ function getRssChannel() {
             Logger::addSite('error', 'RSS: a Node type cannot be read', ['type' => $name, 'code' => $err->getCode()]);
         }
         $result = '';
-    } elseif ($name == 'shop') {
+    } elseif ($name == 'shop' && is_active('shop')) {
         $params = [];
         $where = $cat ? 'WHERE s.cid = :cat AND s.time <= NOW() AND s.status = 1' : 'WHERE s.time <= NOW() AND s.status = 1';
         if ($cat) $params['cat'] = $cat;
@@ -1523,6 +1570,7 @@ function getRssChannel() {
         .'<description>'.htmlspecialchars($view['intro_html'])."</description>\n"
         .($type->settings['features']['comments'] ? '<comments>'.$rurl."#comm</comments>\n" : '')
         .(($view['ctitle'] !== '') ? '<category>'.htmlspecialchars($view['ctitle'])."</category>\n" : '')
+        .(in_array('author', $type->settings['list']['show'], true) ? '<dc:creator>'.htmlspecialchars($view['author'] ?: _ANONYM)."</dc:creator>\n" : '')
         ."</item>\n\n";
     }
     if ($name && $name == 'shop' && $result) {

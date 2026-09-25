@@ -74,10 +74,11 @@ final class FileManagerEditTest extends TestCase
         rmdir($dir);
     }
 
-    # Return the path of the lock file one directory serializes on, drawn exactly the way the file layer draws it
+    # Return the path of the lock file one directory serializes on, named by the canonical key the file layer itself derives
     private static function getLockFile(string $dir): string
     {
-        return rtrim(str_replace('\\', '/', LOGS_DIR), '/').'/uploads/'.substr(sha1(rtrim(str_replace('\\', '/', $dir), '/')), 0, 16).'.lock';
+        $key = (string)(new \ReflectionMethod(FileManager::class, 'getLockKey'))->invoke(null, $dir);
+        return rtrim(str_replace('\\', '/', LOGS_DIR), '/').'/uploads/'.substr(sha1($key), 0, 16).'.lock';
     }
 
     # Restore one fixture file to the body the class started with, so the order of the tests never decides their outcome

@@ -29,7 +29,10 @@ function getVotingModuleSelect(string $modul = ''): string {
         'label_text' => _NO,
         'is_selected' => $modul === '',
     ]);
-    foreach (['shop'] as $val) {
+    $mods = ['shop'];
+    foreach (getNodeTypeMap() as $key => $type) if ($type->settings['features']['poll']) $mods[] = $key;
+    if ($modul !== '' && !in_array($modul, $mods, true)) $mods[] = $modul;
+    foreach ($mods as $val) {
         $opts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => $val,
             'label_text' => getModuleName($val),
@@ -290,8 +293,12 @@ function delete(int $id = 0): void {
     if (!$id) $id = getVar('req', 'id', 'num', 0);
     $fail = false;
     if (!$iswarn && $id && empty($conf['node']['types'])) {
-        $com->deleteTarget('voting', [$id]);
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_voting WHERE id = :id', ['id' => $id]);
+        $guard = Cache::getWriteGuard();
+        $open = $guard !== false && $db->setSqlBegin();
+        $done = $open && $com->deleteTarget('voting', [$id]) && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_voting WHERE id = :id', ['id' => $id]) !== false && $db->setSqlCommit();
+        $back = $open && !$done && $db->setSqlRollback();
+        if ($guard !== false && (!$open || $back || ($done && Cache::addEpoch(true)))) Cache::deleteWriteGuard($guard);
+        $fail = !$done;
     } elseif (!$iswarn && $id) {
         $lock = 'node.poll.'.$id;
         $held = $db->getSqlQuery('SELECT GET_LOCK(:name, 5)', ['name' => $lock]);
@@ -303,6 +310,7 @@ function delete(int $id = 0): void {
             if ($guard === false || !$db->setSqlBegin()) throw new NodeException('The deletion of a poll cannot start', NodeException::STORAGE);
             $step = 'open';
             $serv->deleteNodePoll($id);
+            if (!$com->deleteTarget('voting', [$id])) throw new NodeException('The comments of the poll were not deleted', NodeException::STORAGE);
             $gone = $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_voting WHERE id = :id', ['id' => $id]);
             if ($gone === false) throw new NodeException('The poll row was not deleted', NodeException::STORAGE);
             $step = 'unknown';
@@ -316,7 +324,6 @@ function delete(int $id = 0): void {
         $bump = $step === 'done' && Cache::addEpoch(true);
         if ($guard !== false && ($bump || $step === 'before' || $step === 'open')) Cache::deleteWriteGuard($guard);
         if ($held) $db->getSqlQuery('SELECT RELEASE_LOCK(:name)', ['name' => $lock]);
-        if ($step === 'done') $com->deleteTarget('voting', [$id]);
     }
     setRedirect($afile.'.php?name=voting', false, 302, $iswarn ? _TOKENMISS : ($fail ? _ERROR : _SUCCSAVE), $iswarn || $fail);
 }

@@ -173,7 +173,8 @@ function add(): void {
     global $db, $afile, $conf, $stop, $tpl;
     $id = getVar('req', 'id', 'num');
     if ($id > 0) {
-        $result = $db->getSqlQuery('SELECT id, name, `rank`, email, website, avatar, regdate, occ, origin, interest, sig, viewmail, password, storynum, blockon, block, theme, newslet, lang, points, warnings, access, grp, birthday, gender, field FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $id]);
+        $result = $db->getSqlQuery('SELECT id, name, `rank`, email, website, avatar, regdate, occ, origin, interest, sig, viewmail, password, storynum, blockon, block, theme,'
+            .' newslet, lang, points, warnings, access, grp, birthday, gender, field FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $id]);
         [$uid, $uname, $rank, $email, $site, $avatar, $reg, $occ, $from, $inter, $sig, $view, $pass, $story, $blockon, $block, $theme, $news, $lang, $point, $warn, $access, $group, $birth, $gender, $field] = $db->getSqlRow($result);
         $warn = ($warn) ? explode('|', $warn) : [];
     } else {
@@ -456,6 +457,8 @@ function add(): void {
         ['nameattr' => 'op', 'valueattr' => 'addsave'],
         ['nameattr' => 'token', 'valueattr' => getSiteToken()],
     ];
+    $pkey = (string)getVar('post', 'pkey', 'raw', '');
+    if ($uid) $hidden[] = ['nameattr' => 'pkey', 'valueattr' => preg_match('/^[0-9a-f]{32}$/D', $pkey) ? $pkey : bin2hex(random_bytes(16))];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => $hidden,
@@ -493,7 +496,8 @@ function addsave(): void {
         $news = getVar('post', 'news', 'num');
         $lang = getVar('post', 'lang');
         $pdiff = trim((string)getVar('post', 'pdiff', 'raw', ''));
-        $pnote = trim(strip_tags((string)getVar('post', 'pnote', 'raw', '')));
+        $pnote = trim((string)getVar('post', 'pnote', 'raw', ''));
+        $pkey = (string)getVar('post', 'pkey', 'raw', '');
         $warnvals = getVar('post', 'warn[]', 'num');
         $warnings = is_array($warnvals) ? filterText(implode('|', str_replace('|', '', $warnvals))) : 0;
         $access = getVar('post', 'access', 'num');
@@ -520,7 +524,8 @@ function addsave(): void {
         if (!analyze_name($uname)) $stop[] = _ERRORINVNICK;
         checkemail($email);
         if ($pass != $pass2) $stop[] = _ERROR_PASS;
-        if ($pdiff !== '' && (!$uid || !preg_match('/^-?[1-9][0-9]{0,6}$/D', $pdiff) || abs(intval($pdiff)) > 1000000 || $pnote === '')) $stop[] = _POINTS_BADDIFF;
+        $pbad = !$uid || !preg_match('/^-?[1-9][0-9]{0,6}$/D', $pdiff) || abs(intval($pdiff)) > 1000000 || $pnote === '' || !$pnt->checkNote($pnote);
+        if ($pdiff !== '' && ($pbad || !preg_match('/^[0-9a-f]{32}$/D', $pkey))) $stop[] = _POINTS_BADDIFF;
         if ($room = checkEditorTextRoom($sig, 'users.sig')) $stop[] = $room;
         if ($room = checkEditorTextRoom($block, 'users.block')) $stop[] = $room;
         if (!$stop) {
@@ -528,22 +533,40 @@ function addsave(): void {
             if ($uid) {
                 if ($pass && $pass == $pass2) {
                     $saltpass = getPassHash($pass);
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET name = :name, `rank` = :rank, email = :email, website = :website, avatar = :avatar, regdate = :regdate, occ = :occ, origin = :from, interest = :interests, sig = :sig, viewmail = :viewemail, password = :password, storynum = COALESCE(NULLIF(:storynum, 0), storynum), blockon = :blockon, block = :block, theme = :theme, newslet = :newsletter, lang = :lang, warnings = :warnings, access = :access, grp = :group, birthday = :birthday, gender = :gender, field = :field WHERE id = :id', [
-                        'name' => $uname, 'rank' => $rank, 'email' => $email, 'website' => $site, 'avatar' => $avatar, 'regdate' => $reg, 'occ' => $occ, 'from' => $from, 'interests' => $inter, 'sig' => $sig, 'viewemail' => $view, 'password' => $saltpass, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme, 'newsletter' => $news, 'lang' => $lang, 'warnings' => $warnings, 'access' => $access, 'group' => $group, 'birthday' => $birth, 'gender' => $gender, 'field' => $field, 'id' => $uid
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET name = :name, `rank` = :rank, email = :email, website = :website, avatar = :avatar, regdate = :regdate,'
+                        .' occ = :occ, origin = :from, interest = :interests, sig = :sig, viewmail = :viewemail, password = :password, storynum = COALESCE(NULLIF(:storynum, 0),'
+                        .' storynum), blockon = :blockon, block = :block, theme = :theme, newslet = :newsletter, lang = :lang, warnings = :warnings, access = :access,'
+                        .' grp = :group, birthday = :birthday, gender = :gender, field = :field WHERE id = :id', [
+                        'name' => $uname, 'rank' => $rank, 'email' => $email, 'website' => $site, 'avatar' => $avatar, 'regdate' => $reg, 'occ' => $occ, 'from' => $from,
+                        'interests' => $inter, 'sig' => $sig, 'viewemail' => $view, 'password' => $saltpass, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block,
+                        'theme' => $theme, 'newsletter' => $news, 'lang' => $lang, 'warnings' => $warnings, 'access' => $access, 'group' => $group, 'birthday' => $birth,
+                        'gender' => $gender, 'field' => $field, 'id' => $uid
                     ]);
                 } else {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET name = :name, `rank` = :rank, email = :email, website = :website, avatar = :avatar, regdate = :regdate, occ = :occ, origin = :from, interest = :interests, sig = :sig, viewmail = :viewemail, storynum = COALESCE(NULLIF(:storynum, 0), storynum), blockon = :blockon, block = :block, theme = :theme, newslet = :newsletter, lang = :lang, warnings = :warnings, access = :access, grp = :group, birthday = :birthday, gender = :gender, field = :field WHERE id = :id', [
-                        'name' => $uname, 'rank' => $rank, 'email' => $email, 'website' => $site, 'avatar' => $avatar, 'regdate' => $reg, 'occ' => $occ, 'from' => $from, 'interests' => $inter, 'sig' => $sig, 'viewemail' => $view, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme, 'newsletter' => $news, 'lang' => $lang, 'warnings' => $warnings, 'access' => $access, 'group' => $group, 'birthday' => $birth, 'gender' => $gender, 'field' => $field, 'id' => $uid
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET name = :name, `rank` = :rank, email = :email, website = :website, avatar = :avatar, regdate = :regdate,'
+                        .' occ = :occ, origin = :from, interest = :interests, sig = :sig, viewmail = :viewemail, storynum = COALESCE(NULLIF(:storynum, 0), storynum),'
+                        .' blockon = :blockon, block = :block, theme = :theme, newslet = :newsletter, lang = :lang, warnings = :warnings, access = :access, grp = :group,'
+                        .' birthday = :birthday, gender = :gender, field = :field WHERE id = :id', [
+                        'name' => $uname, 'rank' => $rank, 'email' => $email, 'website' => $site, 'avatar' => $avatar, 'regdate' => $reg, 'occ' => $occ, 'from' => $from,
+                        'interests' => $inter, 'sig' => $sig, 'viewemail' => $view, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme,
+                        'newsletter' => $news, 'lang' => $lang, 'warnings' => $warnings, 'access' => $access, 'group' => $group, 'birthday' => $birth, 'gender' => $gender,
+                        'field' => $field, 'id' => $uid
                     ]);
                 }
             } else {
                 $saltpass = getPassHash($pass);
-                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (name, `rank`, email, website, avatar, regdate, occ, origin, interest, sig, viewmail, password, storynum, blockon, block, theme, newslet, lang, warnings, access, grp, birthday, gender, field) VALUES (:name, :rank, :email, :website, :avatar, :regdate, :occ, :from, :interests, :sig, :viewemail, :password, COALESCE(NULLIF(:storynum, 0), DEFAULT(storynum)), :blockon, :block, :theme, :newsletter, :lang, :warnings, :access, :group, :birthday, :gender, :field)', [
-                    'name' => $uname, 'rank' => $rank, 'email' => $email, 'website' => $site, 'avatar' => $avatar, 'regdate' => $reg, 'occ' => $occ, 'from' => $from, 'interests' => $inter, 'sig' => $sig, 'viewemail' => $view, 'password' => $saltpass, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme, 'newsletter' => $news, 'lang' => $lang, 'warnings' => $warnings, 'access' => $access, 'group' => $group, 'birthday' => $birth, 'gender' => $gender, 'field' => $field
+                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (name, `rank`, email, website, avatar, regdate, occ, origin, interest, sig, viewmail, password, storynum,'
+                    .' blockon, block, theme, newslet, lang, warnings, access, grp, birthday, gender, field) VALUES (:name, :rank, :email, :website, :avatar, :regdate, :occ,'
+                    .' :from, :interests, :sig, :viewemail, :password, COALESCE(NULLIF(:storynum, 0), DEFAULT(storynum)), :blockon, :block, :theme, :newsletter, :lang,'
+                    .' :warnings, :access, :group, :birthday, :gender, :field)', [
+                    'name' => $uname, 'rank' => $rank, 'email' => $email, 'website' => $site, 'avatar' => $avatar, 'regdate' => $reg, 'occ' => $occ, 'from' => $from,
+                    'interests' => $inter, 'sig' => $sig, 'viewemail' => $view, 'password' => $saltpass, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block,
+                    'theme' => $theme, 'newsletter' => $news, 'lang' => $lang, 'warnings' => $warnings, 'access' => $access, 'group' => $group, 'birthday' => $birth,
+                    'gender' => $gender, 'field' => $field
                 ]);
             }
             $data = ['aid' => intval(substr($admin[0], 0, 11)), 'note' => $pnote, 'points' => intval($pdiff)];
-            if ($pdiff !== '' && !$pnt->addEvent('adjust', 'account', 'adjust:'.bin2hex(random_bytes(16)), (int)$uid, $data)) {
+            if ($pdiff !== '' && !$pnt->addEvent('adjust', 'account', 'adjust:'.$pkey, (int)$uid, $data)) {
                 setRedirect($afile.'.php?name=account&op=add&id='.$uid, false, 302, _POINTS_BADSAVE, true);
             }
             if ($mail) {
@@ -982,14 +1005,17 @@ function delete(): void {
     if (!$iswarn) {
         $id = getVar('get', 'id', 'num');
         if ($id) {
-            $done = $db->setSqlBegin()
+            $guard = Cache::getWriteGuard();
+            $open = $guard !== false && $db->setSqlBegin();
+            $done = $open
                 && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $id]) !== false
                 && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE uid = :id', ['id' => $id]) !== false
                 && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_user_oauth WHERE uid = :id', ['id' => $id]) !== false
                 && $com->deleteUser($id)
                 && $prv->deleteUser($id)
                 && $db->setSqlCommit();
-            if (!$done) $db->setSqlRollback();
+            $back = $open && !$done && $db->setSqlRollback();
+            if ($guard !== false && (!$open || $back || ($done && Cache::addEpoch(true)))) Cache::deleteWriteGuard($guard);
         }
     }
     setRedirect($afile.'.php?name=account', false, 302, $iswarn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), $iswarn || !$done);

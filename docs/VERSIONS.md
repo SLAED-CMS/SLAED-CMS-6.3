@@ -355,8 +355,9 @@ Read this before running `setup/sql/table_update6_3.sql` on an installation with
 large comment table. **Take a dump of `{prefix}_comment` first and rehearse the
 restore.**
 
-- The upgrade adds four columns to `{prefix}_comment` (`pid`, `edited`, `deleted`,
-  `reqkey`), places `pid` directly behind `id`, makes `time` required, stores `ip`
+- The upgrade adds five columns to `{prefix}_comment` (`pid`, `shown`, `edited`,
+  `deleted`, `reqkey`), places `pid` directly behind `id` and `shown` behind
+  `status`, fills `shown` from `time` for every published comment, makes `time` required, stores `ip`
   under a binary ascii collation, creates the index set the real list, count and
   thread predicates are read through, and drops the keys those supersede (`cid`,
   `modul_status`). No column named `format`, `iphash` or `path` is created, no

@@ -168,14 +168,17 @@ final class NodeProfileTest extends TestCase
         $this->assertStringNotContainsString('NodeService', $code);
     }
 
-    # The clean installation: the form of the installer opens without config/db.php and saving writes it, the installer leaves the mark,
-    # the first administrator gets ten active types with every shared area and directory, the starter news, the mark gone, and a second request creates nothing
+    # The clean installation: the form of the installer opens without config/db.php and saving writes it, the installer leaves the mark and drops the types
+    # an earlier installation left in the configuration of the tree with their four areas, the first administrator gets ten active types with every shared area
+    # and directory, the starter news, the mark gone, and a second request creates nothing
     #[Test]
     public function aCleanInstallationCreatesTheTenTypes(): void
     {
         $run = $this->getRuns()['setup'];
         $this->assertSame([200, 'new', true], $run['setup']);
         $this->assertSame([true, 200, true, true], $run['dbfile'], 'The release carries no config/db.php: the form opens without it and the installer writes it');
+        $this->assertSame([true, false, false, true, true], $run['lock'], 'The installed site keeps setup.php shut: no form, no secret, no write, no renamed panel');
+        $this->assertTrue($run['unlock'], 'The owner key opens the installer again');
         $this->assertSame(0, $run['before']);
         $this->assertSame(303, $run['admin'][0]);
         $want = [];
@@ -186,6 +189,7 @@ final class NodeProfileTest extends TestCase
         $this->assertSame(array_fill_keys(self::NAMES, 2), $run['node']);
         $order = array_column($want, 0);
         $this->assertSame(['uploads' => $order, 'ratings' => $order, 'fields' => ['files', 'media']], $run['areas']);
+        $this->assertSame([true, false, false, false, false], $run['ghost'], 'Types of an earlier installation survived the clean installation');
         $this->assertSame($order, $run['dirs']);
         $this->assertFalse($run['mark']);
         $this->assertSame([['name' => 'news', 'cid' => 0, 'uid' => 0, 'aname' => 'SLAED', 'title' => 'Добро пожаловать в SLAED CMS', 'status' => 2, 'home' => 1,
@@ -208,8 +212,14 @@ final class NodeProfileTest extends TestCase
         $this->assertCount(1, $run['starter']);
         $logs = self::$fail['logs'];
         $this->assertSame([[], []], [$logs['error_php'], $logs['error_sql']]);
-        $this->assertCount(1, $logs['error_site']);
-        $one = json_decode($logs['error_site'][0], true);
+        $site = array_map(fn($v) => json_decode($v, true), $logs['error_site']);
+        $jour = array_filter($site, fn($v) => $v['msg'] === 'Node: a type operation was published');
+        $kinds = array_count_values(array_column($jour, 'kind'));
+        ksort($kinds);
+        $this->assertSame(['add' => 9, 'status' => 9], $kinds, 'Every created type is journaled by its import and its activation');
+        $site = array_values(array_diff_key($site, $jour));
+        $this->assertCount(1, $site);
+        $one = $site[0];
         $this->assertSame(['Node: the installation could not finish a profile', 'jokes', 'import', 'Invalid node input: directory'],
             [$one['msg'], $one['name'], $one['step'], $one['path']]);
     }
@@ -296,7 +306,8 @@ final class NodeProfileTest extends TestCase
         $this->assertSame(array_map(fn($v) => $home.$v, $want), $run['canon']);
     }
 
-    # The installation writes no PHP or SQL error; the site log holds only the refusals the checks provoke and the failed checks of the local feed address
+    # The installation writes no PHP or SQL error; the site log holds only the refusals the checks provoke, the failed checks of the local feed address
+    # and the journal of the published type changes of the run, twenty of them the import and the activation of the ten profiles
     #[Test]
     public function theInstallationLogsOnlyWhatTheChecksProvoke(): void
     {
@@ -305,10 +316,14 @@ final class NodeProfileTest extends TestCase
         $seen = [];
         foreach ($logs['error_site'] as $line) {
             $one = json_decode($line, true);
-            $key = ($one['msg'] === 'Node: a feed source failed') ? 'feed' : (string)($one['http_code'] ?? $one['msg']);
+            $key = match ($one['msg']) {
+                'Node: a feed source failed' => 'feed',
+                'Node: a type operation was published' => 'journal',
+                default => (string)($one['http_code'] ?? $one['msg']),
+            };
             $seen[$key] = ($seen[$key] ?? 0) + 1;
         }
         ksort($seen);
-        $this->assertSame(['403' => 2, '404' => 11, 'feed' => 3], $seen);
+        $this->assertSame(['403' => 2, '404' => 11, 'feed' => 3, 'journal' => 22], $seen);
     }
 }

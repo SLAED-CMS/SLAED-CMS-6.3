@@ -28,7 +28,8 @@ final class FeedTest extends TestCase
     private array $gets = [];
     private array $asks = [];
 
-    # A feed over a scripted transport: replies answer the get calls in order, the zone answers resolve by host - a list of lists answers successive lookups
+    # A feed over a scripted transport: replies answer the get calls in order, the zone answers resolve by host - a list of lists answers successive lookups,
+    # a closure answers a lookup that takes its own time
     private function getFeed(array $replies, array $zone = [], array $conf = []): Feed
     {
         $this->gets = [];
@@ -37,6 +38,7 @@ final class FeedTest extends TestCase
             if ($op === 'resolve') {
                 $this->asks[] = $req['host'];
                 $one = $zone[$req['host']] ?? [self::PUBLIC];
+                if ($one instanceof Closure) $one = $one();
                 if ($one instanceof RuntimeException) throw $one;
                 if (isset($one[0]) && is_array($one[0])) $one = $one[min(count($this->asks) - 1, count($one) - 1)];
                 return ['addresses' => $one];
@@ -214,8 +216,11 @@ final class FeedTest extends TestCase
         $this->assertSame(['example.com', 'example.com', 'example.com', 'other.example'], $this->asks, 'Every hop resolves its host again');
         $this->assertSame("## R\n\n[other\\.example](https://other.example/p)\n", $res['body'], 'Relative links resolve against the final address');
         $res = $this->getFeed([self::getMove('/1'), self::getMove('/2'), self::getMove('/3'), self::getMove('/4'), self::getOk($xml)])->getFeedContent('https://example.com/f');
-        $this->assertSame(['ok' => false, 'code' => 0, 'error' => 'redirect'], ['ok' => $res['ok'], 'code' => $res['code'], 'error' => $res['error']]);
+        $this->assertSame(['ok' => false, 'code' => 302, 'error' => 'redirect'], ['ok' => $res['ok'], 'code' => $res['code'], 'error' => $res['error']],
+            'Too many redirects report the code of the last one that arrived');
         $this->assertCount(4, $this->gets);
+        $res = $this->getFeed([self::getMove('/1', 301), self::getMove('/2', 308)], [], ['redirects' => '1'])->getFeedContent('https://example.com/f');
+        $this->assertSame(['redirect', 308], [$res['error'], $res['code']]);
         $res = $this->getFeed([self::getMove('/1')], [], ['redirects' => '0'])->getFeedContent('https://example.com/f');
         $this->assertSame('redirect', $res['error']);
         $res = $this->getFeed([['code' => 302, 'headers' => ['Location' => ['/a', '/b']], 'body' => '']])->getFeedContent('https://example.com/f');
@@ -228,7 +233,7 @@ final class FeedTest extends TestCase
     public function aPrivateTargetIsRefusedAtEveryHop(): void
     {
         $res = $this->getFeed([self::getMove('http://169.254.169.254/latest/meta-data/')])->getFeedContent('https://example.com/f');
-        $this->assertSame('address', $res['error']);
+        $this->assertSame(['address', 302], [$res['error'], $res['code']], 'A refusal after a redirect keeps the code of the answer that arrived');
         $this->assertCount(1, $this->gets);
         $res = $this->getFeed([self::getMove('https://inside.example/f')], ['inside.example' => ['10.0.0.5']])->getFeedContent('https://example.com/f');
         $this->assertSame('address', $res['error']);
@@ -274,6 +279,45 @@ final class FeedTest extends TestCase
         };
         $res = $this->getFeed([$slow], [], ['timeout' => '1'])->getFeedContent('https://example.com/f');
         $this->assertSame('timeout', $res['error'], 'The bound covers the whole operation, not one request');
+    }
+
+    #[Test]
+    public function theNameLookupCountsAgainstTheTimeBound(): void
+    {
+        $late = function (): array {
+            usleep(1100000);
+            return ['10.0.0.5'];
+        };
+        $res = $this->getFeed([self::getOk(self::getRss(''))], ['slow.example' => $late], ['timeout' => '1'])->getFeedContent('https://slow.example/f');
+        $this->assertSame(['timeout', 0], [$res['error'], $res['code']], 'A lookup that used up the bound is a timeout whatever it answered');
+        $this->assertSame([], $this->gets);
+        $res = $this->getFeed([self::getMove('https://slow.example/g', 301)], ['slow.example' => $late], ['timeout' => '1'])->getFeedContent('https://example.com/f');
+        $this->assertSame(['timeout', 301], [$res['error'], $res['code']], 'The lookup of a later hop spends the same bound');
+        $this->assertCount(1, $this->gets);
+    }
+
+    #[Test]
+    public function theFeedPageKeepsTheOutcomeOfAnAddressForFifteenMinutes(): void
+    {
+        $script = dirname(__DIR__).'/Support/contract_probe.php';
+        $raw = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' rssview 2>&1');
+        $data = json_decode($raw, true);
+        $this->assertIsArray($data, 'Probe rssview did not return JSON: '.$raw);
+        $this->assertTrue($data['stored'], 'A stored outcome of the address is shown without a fetch');
+        $this->assertFalse($data['aged'], 'An outcome older than 900 seconds is fetched again');
+        $this->assertTrue($data['refusal']);
+        $this->assertSame(['body' => ''], $data['kept'], 'The refusal of the new fetch is stored in place of the aged outcome');
+        $this->assertTrue($data['fresh']);
+        $this->assertTrue($data['badpage']);
+        $this->assertSame(0, $data['badfiles'], 'An address outside the form of Feed is neither fetched nor stored');
+    }
+
+    #[Test]
+    public function theCaseOfThePathReachesTheTransport(): void
+    {
+        $this->getFeed([self::getOk(self::getRss(''))])->getFeedContent('https://Feeds.Example.COM/News/RSS.xml?Id=A');
+        $this->assertSame('https://feeds.example.com/News/RSS.xml?Id=A', $this->gets[0]['url'], 'Only the host loses its case; the path and query are another address');
+        $this->assertSame(['feeds.example.com'], $this->asks);
     }
 
     public static function badLimits(): array
@@ -379,6 +423,8 @@ final class FeedTest extends TestCase
         foreach ($shapes as $bad) {
             $this->assertSame('transport', $this->getFeed([$bad])->getFeedContent('https://example.com/f')['error']);
         }
+        $res = $this->getFeed([self::getMove('/next', 307), $shapes[0]])->getFeedContent('https://example.com/f');
+        $this->assertSame(['transport', 307], [$res['error'], $res['code']], 'A malformed answer after a redirect keeps the code that arrived');
     }
 
     # The source of one project file
@@ -410,7 +456,7 @@ final class FeedTest extends TestCase
         $core = self::getCode('core/system.php');
         $this->assertStringContainsString('$content = getRssBody($url) ?? $content;', $core, 'A failed refresh keeps the stored body');
         $this->assertStringContainsString("\$prs->filterContent(\$content, true, '', 2)", $core, 'A stored feed is rendered in safe mode');
-        $this->assertStringContainsString("\$prs->filterDoc(\$res['body'], true, '', 1)", $core, 'A feed a visitor chose is rendered safe and never cached');
+        $this->assertStringContainsString("\$prs->filterDoc(\$body, true, '', 1)", $core, 'A feed a visitor chose is rendered safe and never enters the parser cache');
         $pre = "\$content = (\$url == '') ? \$prs->filterContent(\$content, false, 'all', 2) : '';";
         $this->assertStringContainsString($pre, $core, 'A feed block is never rendered in trusted mode');
         $this->assertStringNotContainsString('core/classes/feed.php', substr($core, 0, (int)strpos($core, 'function ')), 'Feed is loaded by its consumers only');

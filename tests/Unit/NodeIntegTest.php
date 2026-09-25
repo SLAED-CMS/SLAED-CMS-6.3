@@ -64,6 +64,11 @@ final class NodeIntegTest extends TestCase
     {
         $run = $this->getRun();
         $this->assertSame([200, [4, 1, 1, 1], 200, [4, 1, 1, 1], 429, [4, 1, 1, 1], 1], $run['vote']);
+        $this->assertSame([200, ''], array_slice($run['average'], 0, 2), 'The vote did not answer the refreshed block');
+        $this->assertStringEndsWith(': 5', $run['average'][2], 'The refreshed block does not show the average the rating class answers');
+        $js = (string)file_get_contents(dirname(__DIR__, 2).'/plugins/system/slaed.js');
+        $this->assertStringContainsString("new DOMParser().parseFromString(xhr.responseText || '', 'text/html').body", $js, 'A refused vote is not read in an inert document');
+        $this->assertStringNotContainsString('box.innerHTML = xhr.responseText', $js, 'A refused vote is parsed by a live element where an image handler runs');
     }
 
     # A closed, pending or disabled material and an unknown type are unavailable, a type without the rating feature refuses, and so do a wrong token and GET

@@ -108,23 +108,26 @@ final class Rating {
 
     # The average of an aggregate as a decimal string with up to six fraction digits, rounded half up and without trailing zeros, or null while nobody voted
     # It is derived by long division on integers, so no float takes part; the whole sum and the whole count stay the only source of truth
-    private function getAverage(int $score, int $num): ?string {
+    # Public because every display of an average uses this one rule: a vote and the Node view answer six digits, the shared rating block asks for two
+    public static function getAverage(int $score, int $num, int $digits = 6): ?string {
         if ($num < 1) return null;
+        $digits = max(1, min(6, $digits));
+        $scale = 10 ** $digits;
         $rest = $score % $num;
-        $micro = intdiv($score, $num) * 1000000;
-        for ($i = 0, $unit = 100000; $i < 6; $i++, $unit = intdiv($unit, 10)) {
+        $micro = intdiv($score, $num) * $scale;
+        for ($unit = intdiv($scale, 10); $unit > 0; $unit = intdiv($unit, 10)) {
             $rest *= 10;
             $micro += intdiv($rest, $num) * $unit;
             $rest %= $num;
         }
         if ($rest * 2 >= $num) $micro++;
-        return rtrim(rtrim(intdiv($micro, 1000000).'.'.str_pad($micro % 1000000, 6, '0', STR_PAD_LEFT), '0'), '.');
+        return rtrim(rtrim(intdiv($micro, $scale).'.'.str_pad($micro % $scale, $digits, '0', STR_PAD_LEFT), '0'), '.');
     }
 
     # Build the closed result of getRating, addRating and deleteRating; the counters are filled only from a target the actor may see, so a refused target reveals nothing
     private function getResult(string $code, ?array $target = null, array $more = []): array {
         $out = ['ok' => $code === 'ok', 'code' => $code, 'vote' => 0, 'score' => 0, 'ratings' => 0, 'average' => null, 'wait' => 0, 'duplicate' => false, 'canvote' => false];
-        if ($target) $out = array_replace($out, array_intersect_key($target, $out), ['average' => $this->getAverage($target['score'], $target['ratings'])]);
+        if ($target) $out = array_replace($out, array_intersect_key($target, $out), ['average' => self::getAverage($target['score'], $target['ratings'])]);
         return array_replace($out, $more);
     }
 

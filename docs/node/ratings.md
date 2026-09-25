@@ -30,7 +30,10 @@ public function getRating(string $scope, int $id): array
 public function addRating(string $scope, int $id, int $value, string $request): array
 public function deleteRating(int $vote, string $reason): array
 public function getRatingList(string $scope = '', int $id = 0, int $after = 0, int $limit = 50): array
+public static function getAverage(int $score, int $num, int $digits = 6): ?string
 ```
+
+`getAverage()` — единственный расчёт среднего: результат голоса и ключ `rating` NodeView отдают шесть знаков, общий блок `getRatingAsync()` показывает два (`$digits = 2`, 1..6, то же целочисленное округление половины вверх, без конечных нулей; S19.5).
 
 `$conf` — только валидированные правила ratings. Доверенный actor содержит ровно `uid:int`, `ip:string`, `aid:int`, `super:bool`; его создаёт серверный адаптер из текущей сессии. super требует положительного aid. IP нужен только гостю и нормализуется штатной функцией; 0.0.0.0 и отсутствие достоверного адреса не идентифицируют гостя. Клиентские uid/ip/aid/super не читаются как actor.
 
@@ -213,3 +216,7 @@ CREATE TABLE `{prefix}_rating_votes` (
 - Ключи правил вне грамматики (девять удалённых модулей) отбрасываются со счётчиком; правило `node.<name>` в форме четырёх ключей сохраняется; явный `guests = 0` не перезаписывается.
 - Установщик после записи конфигурационного файла вызывает `opcache_invalidate()`: блок Rating читает config/update.php сразу после блока Point в том же запросе и без этого мог получить прежнее содержимое и потерять отметку points.
 - Тесты: tests/Unit/UpdateRatingsTest.php запускает tests/Support/update_probe.php вторым аргументом `ratings` — общая с блоком Point одноразовая схема и scratch-сайт, 1205 целей в трёх партиях.
+
+## Заметки реализации S19.3
+
+- Аннулирование цели `node.<name>` главным администратором работает на отключённом материале, при выключенном `features.rating` и в неактивном типе: адаптер чтения для главного администратора читает цель в любом состоянии с `enabled = false`, адаптер записи требует только существования цели. `unavailable` остаётся только физическому отсутствию. Проверка — tests/Unit/NodeIntegrityTest.php (режим `intact` пробы route_probe.php, реальный HTTP).

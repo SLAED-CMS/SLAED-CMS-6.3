@@ -147,6 +147,7 @@ POST, request, CSRF, ошибки и аннулирование: [ratings.md](ra
 | `admin.php?name=node&op=type&profile=news` | `GET` | форма создания, заполненная штатным профилем |
 | `admin.php?name=node&op=typestatus&type=news` | `POST` | включение и отключение типа |
 | `admin.php?name=node&op=typedelete&type=news` | `POST` | удаление пустого типа |
+| `admin.php?name=node&op=remains&modul=news` | `POST` | удаление комментариев и избранного удалённого раздела (список — на экране типов), S19.3 |
 | `admin.php?name=node&op=clone&type=news` | `GET`, `POST` | форма нового имени и клонирование типа |
 | `admin.php?name=node&op=export&type=news` | `GET` | выгрузка `node-<name>.json` |
 | `admin.php?name=node&op=import` | `GET`, `POST` | форма и импорт определения типа |

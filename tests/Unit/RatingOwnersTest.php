@@ -63,7 +63,9 @@ final class RatingOwnersTest extends TestCase
     public function theVoteReadsNothingFromTheAddress(): void
     {
         $body = $this->getBody('getRatingView');
-        foreach (["getVar('get'", "getVar('req'", '$_GET', '$_REQUEST', '$_COOKIE', 'setcookie', 'pnt'] as $name) $this->assertStringNotContainsString($name, $body, 'getRatingView() still uses '.$name);
+        foreach (["getVar('get'", "getVar('req'", '$_GET', '$_REQUEST', '$_COOKIE', 'setcookie', 'pnt'] as $name) {
+            $this->assertStringNotContainsString($name, $body, 'getRatingView() still uses '.$name);
+        }
         $this->assertLessThan(strpos($body, 'checkSiteToken('), strpos($body, "header('Allow: POST')"), 'The method is not refused before the token');
         $this->assertStringContainsString("'getRatingView'], true))", $this->getCode('index.php'), 'The dispatcher asks for a token before the handler can refuse the method');
         foreach (['rating-bar', 'rating-like'] as $name) {

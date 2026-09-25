@@ -77,6 +77,20 @@ final class CommentThreadTest extends TestCase
         }
     }
 
+    # shown records the first publication in both channels: behind status in a fresh install, added and placed there by the upgrade,
+    # and filled from time for the published rows only after time is proven to hold no NULL
+    #[Test]
+    public function theFirstPublicationIsDeclaredInBothChannels(): void
+    {
+        $code = $this->getFile('setup/sql/table.sql');
+        $this->assertStringContainsString("`status` BOOLEAN NOT NULL DEFAULT 0,\n  `shown` DATETIME DEFAULT NULL,", $code, 'The fresh schema does not keep shown behind status');
+        $code = $this->getFile('setup/sql/table_update6_3.sql');
+        $this->assertStringContainsString("CALL poscol('{prefix}_comment', 'shown', 'DATETIME DEFAULT NULL', 'status');", $code, 'The upgrade does not place shown behind status');
+        $fill = strpos($code, 'UPDATE `{prefix}_comment` SET `shown` = `time` WHERE `status` = 1 AND `shown` IS NULL;');
+        $this->assertNotFalse($fill, 'The upgrade does not fill shown of the published comments');
+        $this->assertGreaterThan((int)strpos($code, "CALL stopnull('{prefix}_comment', 'time'"), $fill, 'shown is filled before time is proven to hold no NULL');
+    }
+
     # pid is the only stored parent relation, so the table has to answer for it: no reply points at a row that is gone or belongs to another target, and none points at itself
     #[Test]
     public function everyStoredCommentCarriesItsPath(): void
@@ -208,7 +222,7 @@ final class CommentThreadTest extends TestCase
         $this->assertStringContainsString('addDeferredTask(', $queue, 'The recompute runs inside the write instead of after the response');
         foreach (['addComment', 'setStatus', 'deleteComment'] as $name) {
             $one = $this->getSource('core/classes/comment.php', $name, '    ');
-            $begin = strpos($one, 'setSqlCommit()');
+            $begin = strpos($one, '$this->setWriteDone(');
             $count = strpos($one, '$this->addTargetCount(');
             $this->assertNotFalse($begin, 'No commit in "'.$name.'"');
             $this->assertNotFalse($count, 'No recompute in "'.$name.'"');

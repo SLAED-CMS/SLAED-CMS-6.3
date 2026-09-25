@@ -16,14 +16,20 @@ final class StatsContractTest extends TestCase
 {
     private string $dir = '';
 
+    private string $zone = '';
+
+    # The expected dates follow the time zone of the site the probe runs in, not the zone of the CLI, so a day boundary between the two cannot split them
     protected function setUp(): void
     {
         $this->dir = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_stats_'.bin2hex(random_bytes(6));
         mkdir($this->dir, 0777, true);
+        $this->zone = date_default_timezone_get();
+        date_default_timezone_set((require dirname(__DIR__, 2).'/config/global.php')['gtime']);
     }
 
     protected function tearDown(): void
     {
+        date_default_timezone_set($this->zone);
         $this->deleteTree($this->dir);
     }
 

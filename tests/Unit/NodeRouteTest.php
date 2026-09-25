@@ -92,6 +92,20 @@ final class NodeRouteTest extends TestCase
         $this->assertSame(1, $run['head'], 'HEAD counted a view');
         $this->assertSame([404, 200, 404, 200, 404, 404, 404, 404], $run['rights'],
             'A closed category, a pending material, the moderator of another type, a foreign type or a malformed id answers the wrong status');
+        $this->assertStringEndsWith('/index.php?name=news&op=asset&id=1', $run['cover'][0], 'The local cover is not an absolute address of its counting route');
+        $this->assertSame('https://cdn.example.com/p.png', $run['cover'][1], 'An external cover is not its own address in og:image');
+    }
+
+    # One template resolver for the module and the file block: a block takes the file of the display mode of its type, and the poster of the player is the role poster
+    #[Test]
+    public function theBlockAndThePlayerFollowTheType(): void
+    {
+        $this->assertStringContainsString('function getNodeTplName(', self::getBody('core/system.php', 'getNodeTplName'), 'The resolver is not shared by the core');
+        $this->assertSame('', self::getBody('modules/node/index.php', 'getNodeTplName'), 'The module keeps its own resolver');
+        $block = (string)file_get_contents(self::getRoot().'/blocks/node.php');
+        $this->assertStringContainsString("getNodeTplName('fragments', 'block', \$types[\$node->tid])", $block, 'The block ignores the display mode of its type');
+        $this->assertStringNotContainsString("getHtmlFrag('node/block'", $block);
+        $this->assertStringContainsString("\$poster = (string)(\$view['assets']['poster'][0]['href'] ?? '');", self::getBody('modules/node/index.php', 'getNodeAssetView'));
     }
 
     # The editor attachment answers its own name of an accessible material alone, through the controlled private answer, and nothing crafted
@@ -131,6 +145,7 @@ final class NodeRouteTest extends TestCase
         $this->assertSame(405, $run['get']);
         $this->assertSame(403, $run['token']);
         $this->assertSame([303, 1, 3], $run['sent'], 'The report is not stored with its registered reporter');
+        $this->assertStringEndsWith('index.php?name=news&op=view&id=101', $run['back'], 'The report does not return to the material of the resource');
         $this->assertSame([429, true], $run['again']);
         $this->assertSame(404, $run['image'], 'A role without reports takes a report');
     }
@@ -195,16 +210,17 @@ final class NodeRouteTest extends TestCase
         $this->assertSame([422, 1], $run['twice']);
         $this->assertSame([200, 'application/json; charset=UTF-8', 'attachment; filename="node-temp.json"', 'slaed.node'], $run['export']);
         $this->assertSame([303, 1], $run['clone']);
-        $this->assertSame([422, 100, 422, 100, 303, 150], $run['limits'], 'A limit a stored type exceeds was saved, or a limit every type keeps was refused');
+        $this->assertSame([422, 100, 422, 100, 303, 150, 500, 409, 100], $run['limits'], 'A limit a stored type exceeds was saved, a limit every type keeps was refused,'
+            .' or a failed store and a pending journal did not answer 500 and 409');
         $this->assertSame([303, 0, 403, 1], $run['delete'], 'The type was not deleted, or a moderator deleted one');
         $this->assertSame([303, 404, 200], $run['off']);
     }
 
-    # A type an unfinished configuration operation holds answers 503 without a stored copy, and the list opens again once the marker is gone
+    # A type an unfinished configuration operation holds answers 503 without a stored copy, before its op and method are checked, and opens again once the marker is gone
     #[Test]
     public function aHeldTypeIsClosed(): void
     {
-        $this->assertSame([503, '60', true, 200], $this->getRuns()['hold']);
+        $this->assertSame([503, '60', true, 200, [503, 503]], $this->getRuns()['hold'], 'A held type answered before its marker was checked');
     }
 
     # The view preparer answers the exact keys of every mode, the same keys for a target, resources without their source and refuses every foreign pair
@@ -223,7 +239,8 @@ final class NodeRouteTest extends TestCase
         $this->assertSame(['title' => 'Beta', 'intro' => '', 'body' => '', 'views' => null, 'fields' => [], 'assets' => []], $run['light']);
         $this->assertSame('', $run['list'], 'A list card carries the body');
         $this->assertSame(['4.333333', null], $run['average']);
-        $this->assertSame([false], $run['trusted'], 'Markup of an untrusted text reached the page');
+        $this->assertSame([false, false, true, false, true], $run['trusted'],
+            'Markup of an untrusted text or around a trusted tag reached the page, the tag lost its content, or a script reached the plain intro');
     }
 
     # The class files of the stage: the preparer with its one public method, the map line, the template check, the shipped templates and the module tree

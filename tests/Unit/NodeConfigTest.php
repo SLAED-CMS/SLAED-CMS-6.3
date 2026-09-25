@@ -342,6 +342,40 @@ final class NodeConfigTest extends TestCase
         $this->assertSame(['done' => false, 'why' => 'proof', 'marker' => true], $this->getRuns()['crash']['before']['blocked'], 'A row of neither side was decided');
     }
 
+    # A committed type operation whose journal cannot record the committed phase is finished by the proof in the database, never sent back to the old sources
+    #[Test]
+    public function aLostJournalAfterTheCommitKeepsTheNewSide(): void
+    {
+        $run = $this->getRuns()['crash']['journal'];
+        $this->assertSame(['ok' => true, 'value' => $run['db']], $run['child'], 'The operation did not finish');
+        $this->assertSame(1, $run['row'], 'The commit of the operation is missing');
+        $this->assertSame($run['db'], $run['conf'], 'The sources went back to the old side while the database kept the new one');
+        $this->assertFalse($run['marker'], 'The marker is left');
+        $this->assertSame(0, $run['ops'], 'The working snapshot of the operation is left');
+    }
+
+    # A name whose comments or favorites an earlier owner left behind is refused until the manager deletes them; a live module or type is never listed or deleted,
+    # a key is told apart by its exact bytes, and after the cleanup the name registers
+    #[Test]
+    public function remainsOfAGoneOwnerHoldTheNameUntilDeleted(): void
+    {
+        $run = $this->getRuns()['remains'];
+        $live = $run['live'];
+        $this->assertNotSame('', $live, 'The run has no registered type');
+        $this->assertRefused($run['refused'], 3, 'Invalid node input: remains', 'oldsec');
+        $this->assertSame(['ok' => true, 'value' => ['OldSec' => ['comments' => 1, 'favorites' => 0], 'gonefav' => ['comments' => 0, 'favorites' => 1],
+            'oldsec' => ['comments' => 2, 'favorites' => 1]]], $run['list'], 'The remains are not exactly the gone owners');
+        foreach ($run['denied'] as $call) $this->assertRefused($call, 2, 'The context does not manage node types', 'moder');
+        foreach ($run['kept'] as $mod => $call) $this->assertRefused($call, 3, 'Invalid node input: name', $mod);
+        $this->assertSame(['ok' => true, 'value' => null], $run['one']);
+        $this->assertRefused($run['case'], 3, 'Invalid node input: remains', 'OldSec still holds the name');
+        $this->assertSame(['ok' => true, 'value' => null], $run['two']);
+        $this->assertSame(['oldsec' => 0, 'OldSec' => 0, 'shop' => 1, 'forum' => 1, $live => 1, 'gonefav' => 1], $run['rows'], 'The cleanup touched a live owner');
+        $this->assertSame(['ok' => true, 'value' => 1], $run['added'], 'The cleaned name does not register');
+        $this->assertSame(['ok' => true, 'value' => ['gonefav']], $run['after']);
+        $this->assertSame(['ok' => true, 'value' => null], $run['dropped']);
+    }
+
     # Two processes create one new name at once: the shared lock lets exactly one through
     #[Test]
     public function twoCreatesOfOneNameGiveOneType(): void
@@ -353,15 +387,21 @@ final class NodeConfigTest extends TestCase
         $this->assertSame(1, $run['trace']['row']['version']);
     }
 
-    # The only lines the run leaves in the log are the types held while an operation was unfinished
+    # Besides the journal of published type changes, the only lines the run leaves in the log are the types held while an operation was unfinished;
+    # the journal names every kind of change with the administrator of the context, and a status that did not change leaves no line
     #[Test]
     public function heldTypesAreLogged(): void
     {
         $seen = [];
+        $jour = [];
         foreach ($this->getRuns()['log'] as $line) {
             $one = json_decode($line, true);
-            $seen[] = $one['msg'].' '.($one['name'] ?? '');
+            if ($one['msg'] === 'Node: a type operation was published') $jour[$one['kind']][] = [$one['level'], $one['aid'], $one['new'] === 0 || $one['new'] === $one['old'] + 1];
+            else $seen[] = $one['msg'].' '.($one['name'] ?? '');
         }
         $this->assertSame(['Node: a type is invalid or held by an unfinished configuration operation news'], array_values(array_unique($seen)));
+        ksort($jour);
+        $this->assertSame(['add', 'delete', 'status', 'update'], array_keys($jour));
+        foreach ($jour as $kind => $rows) $this->assertSame([['info', 3, true]], array_values(array_unique($rows, SORT_REGULAR)), $kind);
     }
 }

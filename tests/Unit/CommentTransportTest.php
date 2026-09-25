@@ -248,6 +248,7 @@ final class CommentTransportTest extends TestCase
     }
 
     # The page cache is invalidated by the class after a successful write, not by the route that happened to be called
+    # Every write opens under the write guard of the page cache and ends with the forced generation after its commit, both kept in one place of the class
     #[Test]
     public function theClassInvalidatesTheCacheAndTheRouteNoLongerDoes(): void
     {
@@ -255,9 +256,13 @@ final class CommentTransportTest extends TestCase
         $this->assertStringContainsString("in_array(\$op, ['updatePost', 'updateVotingResult'], true)) Cache::addEpoch()", $code);
         $this->assertDoesNotMatchRegularExpression("#in_array\(\\\$op, \[[^]]*Comment[^]]*\], true\)\) Cache::addEpoch\(\)#", $code);
         $class = $this->getFile('core/classes/comment.php');
-        $this->assertSame(7, substr_count($class, 'Cache::addEpoch();'), 'The seven writes of the class do not all invalidate');
+        $this->assertSame(0, substr_count($class, 'Cache::addEpoch();'), 'A write of the class bumps without force, which an early bump of the admin entry swallows');
+        $this->assertSame(1, substr_count($class, 'Cache::addEpoch(true)'), 'The forced generation after a commit is not kept in one place');
+        $this->assertSame(1, substr_count($class, 'Cache::getWriteGuard()'), 'The write guard is not taken in one place');
         foreach (['addComment', 'updateComment', 'setStatus', 'deleteComment', 'deleteTarget', 'deleteUser', 'updateCountDrift'] as $name) {
-            $this->assertStringContainsString('Cache::addEpoch();', $this->getSource('core/classes/comment.php', $name, '    '), $name.'() stores without invalidating');
+            $one = $this->getSource('core/classes/comment.php', $name, '    ');
+            $this->assertStringContainsString('$this->setWriteBegin()', $one, $name.'() writes without the guard of the page cache');
+            $this->assertStringContainsString('$this->setWriteDone($guard', $one, $name.'() stores without invalidating');
         }
     }
 }

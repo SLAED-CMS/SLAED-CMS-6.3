@@ -150,7 +150,7 @@ final class NodeService {
     }
 
     # Refuse a new name outside the grammar, a reserved name, a module name other than the nine replacements, a name a shared area already carries,
-    # a name the upload root holds in another case, and a name whose categories are still there from an earlier owner
+    # a name the upload root holds in another case, and a name whose categories, comments or favorites are still there from an earlier owner
     private function checkNewName(string $name, array $base): void {
         global $conf;
         if (!preg_match(self::NAME, $name) || in_array($name, self::RESERVED, true)) throw $this->getInvalid('name');
@@ -162,6 +162,43 @@ final class NodeService {
         if ($list === false) throw $this->getStorage('The upload root cannot be listed');
         foreach ($list as $one) if ($one !== $name && strtolower($one) === $name) throw $this->getInvalid('name');
         if ($this->getRowCount('SELECT COUNT(*) FROM '.PREFIX_DB.'_categories WHERE modul = :name', ['name' => $name])) throw $this->getInvalid('categories');
+        foreach (['_comment', '_favorites'] as $tab) {
+            if ($this->getRowCount('SELECT COUNT(*) FROM '.PREFIX_DB.$tab.' WHERE modul = :name', ['name' => $name])) throw $this->getInvalid('remains');
+        }
+    }
+
+    # The remains of owners that are gone: every module key of the comments and the favorites a type could be registered under that is neither a registered type
+    # nor a live module other than the nine replacements, with its rows in each table; keys are told apart by their exact bytes, because the column compares without case
+    # The registered types are read from their table, which a type operation changes under its lock before the configuration follows
+    public function getNodeRemains(): array {
+        global $conf;
+        $this->checkManage();
+        $types = array_map('strtolower', $this->getQueryRes('SELECT name FROM '.PREFIX_DB.'_node_types')->fetchAll(PDO::FETCH_COLUMN));
+        $out = [];
+        foreach (['comments' => '_comment', 'favorites' => '_favorites'] as $key => $tab) {
+            foreach ($this->getQueryRes('SELECT CAST(modul AS BINARY) AS bkey, COUNT(*) AS num FROM '.PREFIX_DB.$tab.' GROUP BY bkey')->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $name = $row['bkey'];
+                $low = strtolower($name);
+                if (!preg_match(self::NAME, $low) || in_array($low, $types, true)) continue;
+                if ((isset($conf['modules'][$low]) || is_dir(BASE_DIR.'/modules/'.$low)) && !in_array($low, self::SWAPS, true)) continue;
+                $out[$name] ??= ['comments' => 0, 'favorites' => 0];
+                $out[$name][$key] = intval($row['num']);
+            }
+        }
+        ksort($out);
+        return $out;
+    }
+
+    # Remove the remains of one gone owner, its comments and favorites by the exact bytes of its key, in one write under the lock of the name a new type would take
+    # Only a key getNodeRemains() lists goes, so the rows of a live module or a registered type never do; their awards stay, they are part of the carried balance
+    public function deleteNodeRemains(string $name): void {
+        if (!isset($this->getNodeRemains()[$name])) throw $this->getInvalid('name');
+        $this->setNodeWrite(null, [], null, function () use ($name): bool {
+            if ($this->getTypeRow(strtolower($name)) !== null) throw $this->getInvalid('name');
+            $sql = ' WHERE modul = :name AND CAST(modul AS BINARY) = CAST(:bin AS BINARY)';
+            foreach (['_comment', '_favorites'] as $tab) $this->getQueryRes('DELETE FROM '.PREFIX_DB.$tab.$sql, ['name' => $name, 'bin' => $name]);
+            return true;
+        });
     }
 
     # The guard files of an upload directory by name with their exact bytes, as the file layer knows them; a release without the index of the upload root is broken
@@ -335,7 +372,7 @@ final class NodeService {
         unset($sect['version']);
         if (!is_array($defs)) throw $this->getInvalid('fields');
         if (!is_array($rate)) throw $this->getInvalid('rating');
-        return new NodeTypeInput((string)$row['title'], (string)$row['intro'], (string)$row['ext'], intval($row['sort']), $sect, $defs,
+        return new NodeTypeInput($row['title'], $row['intro'], $row['ext'], intval($row['sort']), $sect, $defs,
             $this->getUploadPieces($base['uploads'][$name] ?? null), $rate);
     }
 
@@ -373,10 +410,11 @@ final class NodeService {
 
     # Run one type operation as the closure of the shared configuration writer in the order of the lock protocol, then finish the cache invalidation
     # The work gets the fresh areas and the locked row and answers the package and the proof; a refusal rolls back, an unknown commit or a failed bump keeps the guard
+    # A published change leaves its proof and its administrator in the site journal, since the configuration journal of the writer is removed once it is finished
     private function setTypeWrite(string $name, Closure $work): void {
         $this->checkManage();
         if (!preg_match(self::NAME, $name)) throw $this->getInvalid('name');
-        $state = ['fail' => null, 'guard' => false, 'lock' => false, 'res' => ''];
+        $state = ['fail' => null, 'guard' => false, 'lock' => false, 'res' => '', 'proof' => []];
         $done = setConfigFile(function (array $base, Closure $save) use ($name, $work, &$state): string {
             try {
                 $this->checkBaseNode($base);
@@ -385,8 +423,8 @@ final class NodeService {
                 $state['guard'] = Cache::getWriteGuard();
                 if ($state['guard'] === false) throw $this->getStorage('The cache guard cannot be taken');
                 if (!$this->db->setSqlBegin()) throw $this->getStorage('The transaction cannot be started');
-                [$pack, $proof] = $work($base, $this->getTypeRow($name));
-                if (!$save($pack, $proof)) throw $this->getStorage('The configuration package cannot be saved');
+                [$pack, $state['proof']] = $work($base, $this->getTypeRow($name));
+                if (!$save($pack, $state['proof'])) throw $this->getStorage('The configuration package cannot be saved');
             } catch (Throwable $err) {
                 $this->db->setSqlRollback();
                 $state['fail'] = ($err instanceof NodeException) ? $err : new NodeException('A node type operation failed', NodeException::STORAGE, $err);
@@ -402,6 +440,7 @@ final class NodeService {
         if ($done && !$bump) Logger::addSite('error', 'Node: the cache generation could not be raised after a type operation', ['name' => $name]);
         if ($state['guard'] !== false && ($bump || $state['res'] === 'aborted')) Cache::deleteWriteGuard($state['guard']);
         if ($state['lock'] !== false) FileManager::deletePathLock($state['lock']);
+        if ($done && $state['proof']) Logger::addSite('info', 'Node: a type operation was published', $state['proof'] + ['aid' => $this->ctx->aid]);
         if (!$done) throw $state['fail'] ?? new NodeException('The configuration of a node type cannot be written', NodeException::STORAGE);
     }
 
@@ -435,7 +474,7 @@ final class NodeService {
         $this->setTypeWrite($name, function (array $base, ?array $row) use ($name, $input, $version): array {
             $this->checkTypeRow($row, $version, $base, $name);
             $id = intval($row['id']);
-            if ($input->ext !== (string)$row['ext']) {
+            if ($input->ext !== $row['ext']) {
                 if ($row['active']) throw $this->getInvalid('ext');
                 if ($this->getRowCount('SELECT COUNT(*) FROM '.PREFIX_DB.'_nodes WHERE tid = :id', ['id' => $id])) throw $this->getInvalid('ext');
             }
@@ -868,7 +907,7 @@ final class NodeService {
         $row = $this->getQueryRes($sql, ['id' => $type->id])->fetch(PDO::FETCH_ASSOC);
         if (!$row || (!$row['active'] && !$this->checkModer($type))) throw $this->getMissing('The node type does not exist');
         if (intval($row['version']) !== $type->version) throw new NodeException('The node type changed during the write', NodeException::CONFLICT);
-        return (string)$row['now'];
+        return $row['now'];
     }
 
     # Walk the current parent chain upward from a new parent with locking reads: reaching the material itself is a cycle, a node seen twice a damaged tree
@@ -1028,10 +1067,10 @@ final class NodeService {
     # Build one resource from its row, the unknown metadata as null
     private function getAssetModel(array $row): NodeAsset {
         $num = fn($v) => ($v === null) ? null : intval($v);
-        return new NodeAsset(intval($row['id']), intval($row['nid']), (string)$row['kind'], (string)$row['role'], (string)$row['src'], (string)$row['name'], (string)$row['title'],
-            (string)$row['intro'], ($row['mime'] === null) ? null : (string)$row['mime'], $num($row['size']), $num($row['width']), $num($row['height']), $num($row['duration']),
-            intval($row['hits']), ($row['reported'] === null) ? null : (string)$row['reported'], intval($row['ruid']), intval($row['sort']), (string)$row['created'],
-            (string)$row['updated']);
+        return new NodeAsset(intval($row['id']), intval($row['nid']), $row['kind'], $row['role'], $row['src'], $row['name'], $row['title'],
+            $row['intro'], $row['mime'], $num($row['size']), $num($row['width']), $num($row['height']), $num($row['duration']),
+            intval($row['hits']), $row['reported'], intval($row['ruid']), intval($row['sort']), $row['created'],
+            $row['updated']);
     }
 
     # Build one material from a stored row and its sets; a state or comment mode outside the enums is a storage failure the writer does not paper over
@@ -1040,14 +1079,14 @@ final class NodeService {
         $state = NodeStatus::tryFrom(intval($row['status']));
         $mode = CommentMode::tryFrom(intval($row['comon']));
         if ($state === null || $mode === null) throw $this->getStorage('A material carries an unknown state or comment mode');
-        $vals = json_decode((string)$row['field'], true);
+        $vals = json_decode($row['field'], true);
         if (!is_array($vals) || ($vals && array_is_list($vals))) $vals = [];
-        $ip = $this->checkModer($type) ? (string)$row['ip'] : null;
-        return new Node(intval($row['id']), intval($row['tid']), intval($row['cid']), intval($row['uid']), (string)$row['aname'], $ip, (string)$row['title'],
-            (string)$row['intro'], (string)$row['body'], $vals, intval($row['poll']), (bool)$row['home'], $mode, (bool)$row['pinned'], intval($row['comnum']),
-            intval($row['views']), intval($row['score']), intval($row['ratings']), $state, intval($row['version']), (string)$row['created'], (string)$row['updated'],
-            ($row['published'] === null) ? null : (string)$row['published'], ($row['expires'] === null) ? null : (string)$row['expires'], $sets['cids'] ?? null,
-            $sets['rels'] ?? null, $sets['assets'] ?? null, isset($row['uname']) ? (string)$row['uname'] : null, isset($row['ctitle']) ? (string)$row['ctitle'] : null);
+        $ip = $this->checkModer($type) ? $row['ip'] : null;
+        return new Node(intval($row['id']), intval($row['tid']), intval($row['cid']), intval($row['uid']), $row['aname'], $ip, $row['title'],
+            $row['intro'], $row['body'], $vals, intval($row['poll']), $row['home'], $mode, $row['pinned'], intval($row['comnum']),
+            intval($row['views']), intval($row['score']), intval($row['ratings']), $state, intval($row['version']), $row['created'], $row['updated'],
+            $row['published'], $row['expires'], $sets['cids'] ?? null,
+            $sets['rels'] ?? null, $sets['assets'] ?? null, $row['uname'] ?? null, $row['ctitle'] ?? null);
     }
 
     # Read one stored material of the type the way the writer sees it, without the read rules of a visitor, with its three sets when asked; null when it does not exist
@@ -1074,7 +1113,7 @@ final class NodeService {
         if ($this->ctx->task || (!$this->ctx->super && !$this->ctx->mods)) throw $this->getDenied('The context moderates no material');
         $sql = 'SELECT n.tid, n.status, n.version, t.name FROM '.PREFIX_DB.'_nodes AS n INNER JOIN '.PREFIX_DB.'_node_types AS t ON t.id = n.tid WHERE n.id = :id';
         $row = ($id > 0) ? $this->getQueryRes($sql, ['id' => $id])->fetch(PDO::FETCH_ASSOC) : false;
-        $type = $row ? $this->query->getNodeType((string)$row['name']) : null;
+        $type = $row ? $this->query->getNodeType($row['name']) : null;
         if ($type === null || $type->id !== intval($row['tid'])) throw $this->getMissing('The material does not exist');
         if (!$this->checkModer($type)) throw $this->getDenied('The context does not moderate the type');
         $this->checkExtType($type);
@@ -1128,9 +1167,9 @@ final class NodeService {
                 'exp' => $data['expires']]);
             $id = intval($this->db->getSqlLastId());
             $this->setNodeSets($id, $data, null, $now);
-            $this->setPublishJob($type, $id, $this->ctx->uid, $status, $data['pub'], null, false, $now);
             $node = $this->getStoredNode($id, $type, true) ?? throw $this->getStorage('The created material cannot be read back');
             $this->ext?->addNodeData($node, $data['ext']);
+            $this->setPublishJob($type, $id, $this->ctx->uid, $status, $data['pub'], null, false, $now);
             return $node;
         });
     }
@@ -1160,11 +1199,11 @@ final class NodeService {
                 'field' => $data['field'], 'poll' => $data['poll'], 'home' => $data['home'] ? 1 : 0, 'comon' => $data['comon']->value, 'pinned' => $data['pinned'] ? 1 : 0,
                 'pub' => $data['pub'], 'exp' => $data['expires'], 'now' => $now, 'id' => $id, 'ver' => $version]);
             $this->setNodeSets($id, $data, $before, $now);
+            $after = $this->getStoredNode($id, $type, true) ?? throw $this->getStorage('The changed material cannot be read back');
+            $this->ext?->updateNodeData($before, $after, $data['ext']);
             $job = $this->getQueryRes('SELECT published FROM '.PREFIX_DB.'_node_publish WHERE nid = :id FOR UPDATE', ['id' => $id])->fetchColumn();
             $live = $before->status === NodeStatus::Published;
             $this->setPublishJob($type, $id, $before->uid, $before->status, $data['pub'], ($job === false) ? null : (string)$job, $live, $now);
-            $after = $this->getStoredNode($id, $type, true) ?? throw $this->getStorage('The changed material cannot be read back');
-            $this->ext?->updateNodeData($before, $after, $data['ext']);
             return $after;
         });
     }
@@ -1190,36 +1229,40 @@ final class NodeService {
             if ($before->status === $status || !$before->status->checkStatusMove($status)) throw $this->getInvalid('status');
             if (in_array($status, [NodeStatus::Pending, NodeStatus::Published], true)) $this->checkNodeReady($type, $before);
             $pub = $before->pubdate ?? (($status === NodeStatus::Published) ? $now : null);
+            $gone = $before->expires !== null && strcmp($before->expires, $pub ?? $now) <= 0;
+            if ($gone && in_array($status, [NodeStatus::Pending, NodeStatus::Published], true)) throw $this->getInvalid('expires');
             $sql = 'UPDATE '.PREFIX_DB.'_nodes SET status = :status, published = :pub, version = version + 1, updated = :now WHERE id = :id AND version = :ver';
             $this->getQueryRes($sql, ['status' => $status->value, 'pub' => $pub, 'now' => $now, 'id' => $id, 'ver' => $version]);
-            $job = ($row['jpub'] === null) ? null : (string)$row['jpub'];
-            $this->setPublishJob($type, $id, $before->uid, $status, $pub, $job, $before->status === NodeStatus::Published, $now);
             $after = $this->getNodeModel(array_replace($row, ['status' => $status->value, 'published' => $pub, 'version' => $version + 1, 'updated' => $now]), $type, null);
             $this->ext?->updateNodeData($before, $after, null);
+            $job = $row['jpub'];
+            $this->setPublishJob($type, $id, $before->uid, $status, $pub, $job, $before->status === NodeStatus::Published, $now);
             return $after;
         });
     }
 
     # Delete a material physically at the expected version with its categories, relations, resource rows and job; the files it pointed at stay
-    # The publication award of the author is compensated once through Point, and the extension removes its rows inside the same transaction, as do the favorites of it
-    public function deleteNode(int $id, int $version): void {
+    # The extension removes its rows first, then the comment subsystem locks the comment rows and the accounts of author and commenters by ascending id before any event
+    # Each comment award is compensated there and the publication award of the author after it; the favorites go in the same transaction, so a failed step keeps the material
+    public function deleteNode(int $id, int $version, Comment $com): void {
         [$head, $type] = $this->getNodeHead($id);
         $point = $this->getPoint();
         if (intval($head['version']) !== $version) throw new NodeException('The expected material version is stale', NodeException::CONFLICT);
-        $this->setNodeWrite($type, [], null, function () use ($type, $id, $version, $point): bool {
+        $this->setNodeWrite($type, [], null, function () use ($type, $id, $version, $point, $com): bool {
             $this->getTypeLock($type);
             $sql = 'SELECT uid, version FROM '.PREFIX_DB.'_nodes WHERE id = :id AND tid = :tid FOR UPDATE';
             $row = $this->getQueryRes($sql, ['id' => $id, 'tid' => $type->id])->fetch(PDO::FETCH_ASSOC);
             if (!$row) throw $this->getMissing('The material does not exist');
             if (intval($row['version']) !== $version) throw new NodeException('The expected material version is stale', NodeException::CONFLICT);
             $uid = intval($row['uid']);
+            if ($this->ext !== null) $this->ext->deleteNodeData($this->getStoredNode($id, $type, true) ?? throw $this->getMissing('The material does not exist'));
+            if (!$com->deleteTarget($type->name, [$id], [$uid])) throw $this->getStorage('The comments of the material cannot be removed');
             try {
                 $rid = ($uid > 0) ? $point->getEventId('publish', 'node.'.$type->name, 'node:'.$id, $uid) : 0;
                 if ($rid > 0) $point->addEvent('publish', 'node.'.$type->name, 'reverse:'.$rid, $uid, ['rid' => $rid]);
             } catch (RuntimeException $err) {
                 throw new NodeException('The points of a node action are lost', NodeException::STORAGE, $err);
             }
-            if ($this->ext !== null) $this->ext->deleteNodeData($this->getStoredNode($id, $type, true) ?? throw $this->getMissing('The material does not exist'));
             $this->getQueryRes('DELETE FROM '.PREFIX_DB.'_favorites WHERE modul = :modul AND fid = :fid', ['modul' => $type->name, 'fid' => $id]);
             $this->getQueryRes('DELETE FROM '.PREFIX_DB.'_nodes WHERE id = :id AND version = :ver', ['id' => $id, 'ver' => $version]);
             return true;
@@ -1238,7 +1281,8 @@ final class NodeService {
     }
 
     # Lock the type row and then the material row inside the open transaction of a global owner, both as locking reads, so no snapshot is taken before the wait
-    private function setTargetLock(int $id, NodeType $type): void {
+    # The comment subsystem calls it before its comment row, so every writer of one discussion queues on the material and none holds a snapshot older than its wait
+    public function setTargetLock(int $id, NodeType $type): void {
         if (!$this->db->checkSqlActive()) throw $this->getInvalid('transaction');
         $sql = 'SELECT id FROM '.PREFIX_DB.'_node_types WHERE id = :id FOR UPDATE';
         if ($this->getQueryRes($sql, ['id' => $type->id])->fetchColumn() === false) throw $this->getMissing('The node type does not exist');
@@ -1248,7 +1292,8 @@ final class NodeService {
 
     # Lock one material for a global owner inside its open transaction and read its light target only then, with the very predicate of the reader
     # A material that is missing, closed or of another type answers null; the rating subsystem calls this as the first statement of a vote
-    public function getLockedTarget(int $id, NodeType $type): ?NodeTarget {
+    # With any, a moderator of the type reads the material in every state, as NodeQuery::getNodeTarget() does with it
+    public function getLockedTarget(int $id, NodeType $type, bool $any = false): ?NodeTarget {
         if ($id < 1 || $id > self::MAXINT) throw $this->getInvalid('id');
         try {
             $this->setTargetLock($id, $type);
@@ -1256,7 +1301,7 @@ final class NodeService {
             if ($err->getCode() === NodeException::NOTFOUND) return null;
             throw $err;
         }
-        $tgt = $this->query->getNodeTarget($type->name, $id);
+        $tgt = $this->query->getNodeTarget($type->name, $id, $any);
         return ($tgt !== null && $tgt->type->id === $type->id) ? $tgt : null;
     }
 
@@ -1283,7 +1328,7 @@ final class NodeService {
     # Which types a poll reaches is only known from the materials, and a plain read of them would open a snapshot before the wait, so every type row is locked first
     # by ascending id, then the materials of the poll by ascending id; the owner raises the cache generation after its commit
     public function deleteNodePoll(int $id): void {
-        if ($this->ctx->aid < 1 || $this->ctx->task) throw $this->getDenied('Only an administrator deletes a poll');
+        if (!$this->ctx->polls) throw $this->getDenied('Only an administrator with the right of polls deletes a poll');
         if ($id < 1 || $id > self::MAXINT) throw $this->getInvalid('poll');
         if (!$this->db->checkSqlActive()) throw $this->getInvalid('transaction');
         $this->getQueryRes('SELECT id FROM '.PREFIX_DB.'_node_types ORDER BY id FOR UPDATE');
@@ -1294,12 +1339,12 @@ final class NodeService {
     # Run one counted action on an accessible resource: the extension of the type may forbid it first and follows it inside the same transaction when the statement changed the row
     private function setAssetAction(NodeType $type, NodeAsset $asset, string $act, string $sql, array $pars): bool {
         if ($this->ext === null) return $this->getQueryRes($sql, $pars)->rowCount() > 0;
-        $tgt = $this->query->getNodeTarget($type->name, $asset->nid);
+        $tgt = $this->query->getNodeTarget($type->name, $asset->nid, true);
         if ($tgt === null || !$this->ext->checkNodeAction($type, $tgt, $act)) throw $this->getDenied('The extension forbids the action');
         if (!$this->db->setSqlBegin()) throw $this->getStorage('The transaction cannot be started');
         try {
             $done = $this->getQueryRes($sql, $pars)->rowCount() > 0;
-            if ($done) $this->ext->updateNodeAction($type, $tgt, $act);
+            if ($done) $this->ext->updateNodeAction($type, $tgt, $act, $this->ctx->uid);
             if (!$this->db->setSqlCommit()) throw $this->getStorage('The commit of a node action is uncertain');
         } catch (Throwable $err) {
             $this->db->setSqlRollback();
@@ -1388,6 +1433,7 @@ final class NodeService {
 
     # Deliver one due job in its own transaction: the type, the material and the job are locked and read again; a job that is stale, cancelled or not due rewards nobody,
     # an author without an account is passed over, a recoverable refusal of the points moves the job one minute on, and a lost transaction leaves it untouched
+    # A points configuration that is closed or invalid refuses every award for good, so the job is delivered without it and the site log says so
     private function setPublishDue(int $id, int $tid, string $name): string {
         if (!$this->db->setSqlBegin()) return 'failed';
         try {
@@ -1407,7 +1453,9 @@ final class NodeService {
             } else {
                 $uid = intval($row['uid']);
                 $user = $uid > 0 && $this->getRowCount('SELECT COUNT(*) FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $uid]) > 0;
-                $done = !$user || $this->getPoint()->addEvent('publish', 'node.'.$name, 'node:'.$id, $uid);
+                $shut = $user && !$this->getPoint()->valid;
+                if ($shut) Logger::addSite('warning', 'Node: a publication was delivered without its award, the points configuration is closed or invalid', ['nid' => $id]);
+                $done = !$user || $shut || $this->getPoint()->addEvent('publish', 'node.'.$name, 'node:'.$id, $uid);
                 $this->getQueryRes($done ? $del : 'UPDATE '.PREFIX_DB.'_node_publish SET due = NOW() + INTERVAL 60 SECOND WHERE nid = :id', ['id' => $id]);
                 $out = $done ? 'processed' : 'failed';
             }
@@ -1429,7 +1477,7 @@ final class NodeService {
         $sql = 'SELECT p.nid, n.tid, t.name FROM '.PREFIX_DB.'_node_publish AS p INNER JOIN '.PREFIX_DB.'_nodes AS n ON n.id = p.nid'
             .' INNER JOIN '.PREFIX_DB.'_node_types AS t ON t.id = n.tid WHERE p.due <= NOW() AND t.active = 1 ORDER BY p.due, p.nid LIMIT '.$limit;
         $sum = ['processed' => 0, 'failed' => 0, 'skipped' => 0];
-        foreach ($this->getQueryRes($sql)->fetchAll(PDO::FETCH_ASSOC) as $row) $sum[$this->setPublishDue(intval($row['nid']), intval($row['tid']), (string)$row['name'])]++;
+        foreach ($this->getQueryRes($sql)->fetchAll(PDO::FETCH_ASSOC) as $row) $sum[$this->setPublishDue(intval($row['nid']), intval($row['tid']), $row['name'])]++;
         $text = sprintf('Node publication: %d processed, %d failed, %d skipped', $sum['processed'], $sum['failed'], $sum['skipped']);
         return ['status' => $sum['failed'] ? 'failed' : 'success', 'message' => $text, 'extra' => $sum];
     }
@@ -1438,7 +1486,7 @@ final class NodeService {
     private function getCatModul(int $id): string {
         $row = ($id > 0) ? $this->getQueryRes('SELECT modul FROM '.PREFIX_DB.'_categories WHERE id = :id', ['id' => $id])->fetchColumn() : false;
         if ($row === false) throw $this->getMissing('The category does not exist');
-        return (string)$row;
+        return $row;
     }
 
     # The Node types a category write touches by the modules the category had and gets, each one administered by the context: the main administrator,
@@ -1464,12 +1512,40 @@ final class NodeService {
         if (count($this->getQueryRes($sql, $pars)->fetchAll(PDO::FETCH_COLUMN)) !== count($types)) throw $this->getMissing('The node type does not exist');
     }
 
-    # Change one category of a Node type with the full checked row of the category form, under the lock of every type it leaves or enters and of the category itself
-    # A category that still carries materials as main or extra category never leaves its type; its language and rights decide what pages show, so the page cache follows the guard
-    public function updateNodeCategory(int $id, array $row): void {
+    # Refuse a category row that is not the full row of the category form: exactly the stored columns, scalar values only and a module name
+    private function checkCatRow(array $row): void {
         if (!$this->checkKeys($row, self::CATKEYS)) throw $this->getInvalid('category');
         foreach ($row as $key => $val) if (!is_string($val) && !is_int($val)) throw $this->getInvalid('category.'.$key);
         if (!is_string($row['modul']) || $row['modul'] === '') throw $this->getInvalid('category.modul');
+    }
+
+    # Refuse a parent that is not the root, not a category of the same module or the category itself; the parent row is read with a lock so it cannot move meanwhile
+    private function checkCatParent(int $id, mixed $parent, string $modul): void {
+        $pid = is_int($parent) ? $parent : (ctype_digit((string)$parent) ? intval($parent) : -1);
+        if ($pid === 0) return;
+        if ($pid < 0 || $pid === $id) throw $this->getInvalid('category.parent');
+        $own = $this->getQueryRes('SELECT modul FROM '.PREFIX_DB.'_categories WHERE id = :id FOR UPDATE', ['id' => $pid])->fetchColumn();
+        if ($own === false || (string)$own !== $modul) throw $this->getInvalid('category.parent');
+    }
+
+    # Create one category of a Node type with the full checked row of the category form, under the lock of its type, at the end of the order of its module
+    public function addNodeCategory(array $row): int {
+        $this->checkCatRow($row);
+        $types = $this->getCatTypes([$row['modul']]);
+        return $this->setNodeWrite(null, [], null, function () use ($row, $types): int {
+            $this->setCatTypeLock($types);
+            $this->checkCatParent(0, $row['parent'], $row['modul']);
+            $num = $this->getRowCount('SELECT COALESCE(MAX(ordern), 0) FROM '.PREFIX_DB.'_categories WHERE modul = :modul', ['modul' => $row['modul']]);
+            $sql = 'INSERT INTO '.PREFIX_DB.'_categories ('.implode(', ', self::CATKEYS).', ordern) VALUES (:'.implode(', :', self::CATKEYS).', :ordern)';
+            $this->getQueryRes($sql, $row + ['ordern' => $num + 1]);
+            return intval($this->db->getSqlLastId());
+        });
+    }
+
+    # Change one category of a Node type with the full checked row of the category form, under the lock of every type it leaves or enters and of the category itself
+    # A category that still carries materials as main or extra category never leaves its type; its language and rights decide what pages show, so the page cache follows the guard
+    public function updateNodeCategory(int $id, array $row): void {
+        $this->checkCatRow($row);
         $was = $this->getCatModul($id);
         $types = $this->getCatTypes([$was, $row['modul']]);
         $this->setNodeWrite(null, [], null, function () use ($id, $row, $was, $types): bool {
@@ -1477,6 +1553,7 @@ final class NodeService {
             $now = $this->getQueryRes('SELECT modul FROM '.PREFIX_DB.'_categories WHERE id = :id FOR UPDATE', ['id' => $id])->fetchColumn();
             if ($now === false) throw $this->getMissing('The category does not exist');
             if ((string)$now !== $was) throw new NodeException('The category changed during the write', NodeException::CONFLICT);
+            $this->checkCatParent($id, $row['parent'], $row['modul']);
             if ($row['modul'] !== $was) {
                 $sql = 'SELECT (EXISTS (SELECT 1 FROM '.PREFIX_DB.'_nodes WHERE cid = :na) OR EXISTS (SELECT 1 FROM '.PREFIX_DB.'_node_categories WHERE cid = :nb)) AS used';
                 if ($this->getRowCount($sql, ['na' => $id, 'nb' => $id])) throw $this->getInvalid('category.used');

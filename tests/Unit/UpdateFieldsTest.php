@@ -73,7 +73,13 @@ final class UpdateFieldsTest extends TestCase
         $this->assertSame(['field1', 'field3'], array_keys($rules['forum']));
         $this->assertSame(['field1', 'field3'], array_keys($rules['order']));
         foreach ($rules as $set) {
-            foreach ($set as $rule) $this->assertSame([true, true, true], [is_bool($rule['req']), is_bool($rule['active']), is_int($rule['sort'])], 'The published definitions lost their native types');
+            foreach ($set as $rule) {
+                $this->assertSame(
+                    [true, true, true],
+                    [is_bool($rule['req']), is_bool($rule['active']), is_int($rule['sort'])],
+                    'The published definitions lost their native types'
+                );
+            }
         }
     }
 
@@ -116,7 +122,12 @@ final class UpdateFieldsTest extends TestCase
     public function theStopsHold(): void
     {
         $stop = $this->getRun('stop');
-        foreach (['mark' => 'the mark is set and no manifest exists', 'named' => 'already in the 6.3 format', 'forged' => 'order.json does not match its manifest', 'foreign' => 'neither its source nor its target'] as $name => $text) {
+        foreach ([
+            'mark' => 'the mark is set and no manifest exists',
+            'named' => 'already in the 6.3 format',
+            'forged' => 'order.json does not match its manifest',
+            'foreign' => 'neither its source nor its target',
+        ] as $name => $text) {
             $this->assertFalse($stop[$name]['done'], $name);
             $this->assertStringContainsString($text, $stop[$name]['text'], $name);
         }
@@ -127,14 +138,15 @@ final class UpdateFieldsTest extends TestCase
         $this->assertIsString($stop['foreign']['rules']['account'], 'The definitions were published over a refused batch');
     }
 
-    # The preflight names every row it will not guess in one report - an unknown option, a localized date, data without a definition, two fitting layouts, a line break - and writes nothing
+    # The preflight names every row it will not guess in one report - unknown option, localized date, data without definition, two fitting layouts, line break - and writes nothing
     #[Test]
     public function thePreflightNamesEveryBrokenRowAndWritesNothing(): void
     {
         $run = $this->getRun('stop')['rows'];
         $this->assertFalse($run['done']);
         $want = [
-            'probe_users 2 (value 1 is no option of field1)', 'probe_users 3 (field4 is refused by the shared check: format)', 'probe_users 4 (value 7 holds data and has no definition)',
+            'probe_users 2 (value 1 is no option of field1)', 'probe_users 3 (field4 is refused by the shared check: format)',
+            'probe_users 4 (value 7 holds data and has no definition)',
             'probe_forum 5 (value 2 holds data and has no definition)', 'probe_order 1 (the full and the short layout both fit and differ)',
             'probe_order 2 (field1 is refused by the shared check: format)',
         ];
@@ -165,13 +177,18 @@ final class UpdateFieldsTest extends TestCase
         $root = dirname(__DIR__, 2);
         $fresh = (string)file_get_contents($root.'/setup/sql/table.sql');
         foreach (['users' => 'field', 'forum' => 'field', 'order' => 'info'] as $tab => $col) {
-            $this->assertSame(1, preg_match('/CREATE TABLE `\{prefix\}_'.$tab.'` \((?:(?!CREATE TABLE).)*?`'.$col.'` MEDIUMTEXT NOT NULL,/s', $fresh), $tab.'.'.$col.' is not MEDIUMTEXT in table.sql');
+            $this->assertSame(
+                1,
+                preg_match('/CREATE TABLE `\{prefix\}_'.$tab.'` \((?:(?!CREATE TABLE).)*?`'.$col.'` MEDIUMTEXT NOT NULL,/s', $fresh),
+                $tab.'.'.$col.' is not MEDIUMTEXT in table.sql'
+            );
         }
         $sql = (string)file_get_contents($root.'/setup/sql/table_update6_3.sql');
         $sql = (string)preg_replace('/CREATE TABLE IF NOT EXISTS `\{prefix\}_node[a-z_]*` \(.*?\n\)\s*ENGINE[^;]*;/s', '', $sql);
         $this->assertSame(0, preg_match('/`(?:field|info)`\s+TEXT NOT NULL/', $sql), 'The update narrows a column of extra field values back to TEXT');
         $this->assertSame(4, preg_match_all('/`(?:field|info)`\s+MEDIUMTEXT NOT NULL/', $sql), 'The update does not widen forum.field, order.info and users.field');
         $code = (string)file_get_contents($root.'/setup/index.php');
-        $this->assertSame(1, preg_match('/setUpdatePoints\(\$db, \$xprefix\);\s+\$bodytext \.= setUpdateRatings\(\$db, \$xprefix\);\s+\$bodytext \.= setUpdateFields\(\$db, \$xprefix\);/', $code), 'The order of the units changed');
+        $this->assertSame(1, preg_match('/setUpdatePoints\(\$db, \$xprefix\);\s+\$bodytext \.= setUpdateRatings\(\$db, \$xprefix\);'
+            .'\s+\$bodytext \.= setUpdateFields\(\$db, \$xprefix\);/', $code), 'The order of the units changed');
     }
 }

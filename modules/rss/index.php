@@ -12,7 +12,11 @@ if (!defined('MODULE_FILE')) {
 function info(): void {
     global $db, $conf, $tpl;
     $url = getVar('post', 'url', 'url');
-    $mod = getVar('post', 'mod', 'text', 'shop');
+    $mods = [];
+    foreach (getNodeTypeMap() as $key => $type) if ($type->active && $type->settings['integrations']['rss']) $mods[$key] = getModuleName($key);
+    if (is_active('shop')) $mods['shop'] = _SHOP;
+    $mod = getVar('post', 'mod', 'text', '');
+    if (!isset($mods[$mod])) $mod = (string)array_key_first($mods);
     $cat = getVar('post', 'cat', 'num');
     $num = getVar('post', 'num', 'num');
     
@@ -22,8 +26,6 @@ function info(): void {
     $rsslink = $conf['homeurl'].'/index.php?go=rss'.$rssmod.$rsscat.$rssnum;
     
     $modsOptions = '';
-    $mods = is_active('shop') ? ['shop' => _SHOP] : [];
-    foreach (getNodeTypeMap() as $key => $type) if ($type->active && $type->settings['integrations']['rss']) $mods[$key] = getModuleName($key);
     foreach ($mods as $key => $val) {
         $modsOptions .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$key, 'label_text' => (string)$val, 'is_selected' => $key == $mod]);
     }

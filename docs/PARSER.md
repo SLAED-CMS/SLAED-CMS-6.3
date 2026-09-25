@@ -23,10 +23,10 @@ Two shapes are worth knowing because they look unusual. An inline element used i
 
 The `Parser` should be instantiated and used dynamically where needed, or invoked via the global context if already bootstrapped. The primary public APIs are:
 
-### `Parser::filterContent(string $src, bool $safe, string $mod, int $hoff = 0, string $fmt = ''): string`
+### `Parser::filterContent(string $src, bool $safe, string $mod, int $hoff = 0, string $fmt = '', int $nid = 0, bool $trust = false): string`
 The standard rendering pipeline for all modules. It processes Markdown, BBCode, applies safe HTML escaping (if `$safe` is `true`), and **applies module-specific word-replacement rules** (such as automatic censoring or dynamic acronym expansions from `$conf['replace']`).
 
-### `Parser::filterDoc(string $src, bool $safe = true, string $mod = '', int $hoff = 0, string $fmt = ''): string`
+### `Parser::filterDoc(string $src, bool $safe = true, string $mod = '', int $hoff = 0, string $fmt = '', int $nid = 0, bool $trust = false): string`
 The core parser operation. Processes all markup but **skips** the global search-and-replace rules. Use this for static documents, changelogs, search rendering, or anywhere where automatic keyword replacement could corrupt the output.
 
 ## Source Format (`$fmt`)
@@ -42,6 +42,8 @@ No stored content passes this argument, and no table carries a format column: `p
 The `$safe` boolean parameter is crucial:
 * **`true` (User Content):** The parser strictly escapes all HTML tags injected in the raw source using `htmlspecialchars(..., ENT_QUOTES | ENT_HTML5)`. Indented code blocks are allowed. Unsafe URL protocols are blocked. Raw `[usehtml]` and `[usephp]` BB tags are stripped or ignored. The parser's **own** output is not escaped: the inline BB pairs (`[b]`, `[i]`, `[u]`, `[s]`, `[color]`, `[family]`, `[size]`) render like `[url]` and `[img]` always did, so legacy content stays readable. What the author wrote as a tag stays text; what the parser produced stays markup.
 * **`false` (Admin Content):** The parser inherently trusts the source. It preserves manually injected HTML tags. It processes `[usehtml]` blocks literally and executes PHP code inside `[usephp]` blocks via `eval()`.
+
+`$trust` narrows trust to the tags. With `$safe = true` and `$trust = true` the source is rendered safe exactly as above, except that the content of `[usehtml]` becomes raw markup and the content of `[usephp]` runs; an indented line inside those tags is not read as a code block. Raw HTML, `[block=id]` and unsafe URLs around the tags stay escaped. With `$safe = false` the argument changes nothing. A Node text renders this way: a tag the super administrator added to a text somebody else wrote trusts only what it encloses, never the foreign markup around it.
 
 ## Trusted author capability
 

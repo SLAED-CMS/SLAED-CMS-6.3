@@ -75,6 +75,9 @@ define('_NODE_POLLHINT','Номер опитування або порожньо
 define('_NODE_PUBLISH','Публікують без перевірки');
 define('_NODE_QUEUE','Черга підтримки');
 define('_NODE_REJECT','Відхилити');
+define('_NODE_REMAINS','Записи видалених розділів');
+define('_NODE_REMGONE','Записи видалено.');
+define('_NODE_REMHINT','Коментарі та обране розділів, яких більше немає. Тип із таким іменем не можна створити, доки ці записи не видалено.');
 define('_NODE_REMOVED','Матеріал видалено.');
 define('_NODE_REPORTS','Скарги на ресурси');
 define('_NODE_RMODE','Відображення');

@@ -20,6 +20,7 @@ define('_PHPSETUP','Wersja PHP zainstalowany na Twoim serwerze nie spełnia mini
 define('_SAVE_NEW','Instalacja i konfiguracja');
 define('_SAVE_UPDATE','Aktualizacja i konfiguracja');
 define('_SERRORPERM','nie ma odpowiednich uprawnień do zapisu na serwerze.<br>Zaznacz właściwe atrybuty');
+define('_SETUPLOCK','Strona jest już zainstalowana, dlatego instalator jest zablokowany. Aby uruchomić aktualizację, prześlij pusty plik config/setup.unlock i ponownie otwórz setup.php; udane uruchomienie usuwa ten plik.');
 define('_SETUP_NEW','Nowa instalacja systemu');
 define('_SETUP_SLAED','Instalacja SLAED CMS');
 define('_SUPDATE','Aktualizacja systemu');

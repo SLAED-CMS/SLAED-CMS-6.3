@@ -51,13 +51,13 @@ return [
                 'settings' => [
                 ],
             ],
-        'maildrain' => [
+            'maildrain' => [
                 'title' => 'Mail delivery',
                 'type' => 'system',
                 'active' => '1',
                 'system' => 'maildrain',
                 'schedule' => '*/5 * * * *',
-                'priority' => '2',
+                'priority' => '8',
                 'lock_timeout' => '900',
                 'manual' => '1',
                 'settings' => [

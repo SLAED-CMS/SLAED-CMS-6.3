@@ -250,7 +250,9 @@ function getProbeCache(): array {
     $out['close'] = [Cache::deleteWriteGuard($guard), count(getProbeMarks()), Cache::deleteWriteGuard($guard), Cache::checkWriteGuard()];
     $good = (string)file_get_contents(COUNTER_DIR.'/cache.log');
     file_put_contents(COUNTER_DIR.'/cache.log', 'x');
-    $out['garbled'] = [Cache::checkWriteGuard(), Cache::getEpoch()];
+    $out['garbled'] = [Cache::checkWriteGuard(), Cache::getEpoch(), Cache::addEpoch(true), (string)file_get_contents(COUNTER_DIR.'/cache.log')];
+    file_put_contents(COUNTER_DIR.'/cache.log', '0009');
+    $out['padded'] = [Cache::addEpoch(true), (string)file_get_contents(COUNTER_DIR.'/cache.log')];
     file_put_contents(COUNTER_DIR.'/cache.log', $good);
     $out['healed'] = [Cache::checkWriteGuard(), (string)Cache::getEpoch() === $good];
     $out['died'] = [getProbeChild('hold'), count(getProbeMarks())];

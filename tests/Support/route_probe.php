@@ -12,6 +12,9 @@
 # boot the core on the same scratch configuration and database as one visitor and ask the comment subsystem and the class NodeSupport directly
 # The argument sync runs the external materials of stage S15 with two types of the extension sync; its child mode syncext asks NodeSync with a scripted transport
 # The argument integ runs the integrations of stage S16 - rating, favorites, poll, search, RSS, blocks and their settings - and its child integext the sitemap
+# The argument guard runs the closed routes of stage S19.1 on the same integrations, and its child guardext asks the service for the right of polls
+# The argument intact runs the integrity fixes of stage S19.3 on the same integrations: point corrections, the block save and vote annulments
+# The argument cache runs the comment writer of stage S19.4 against the page cache, and its child cachecom approves a comment as the administrative entry does
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
     exit;
@@ -19,15 +22,16 @@ if (PHP_SAPI !== 'cli') {
 error_reporting(E_ALL);
 ini_set('display_errors', '0');
 $rwork = str_replace('\\', '/', (string)($argv[1] ?? sys_get_temp_dir().'/slaed_node_route'));
-if (in_array($argv[2] ?? '', ['view', 'comments', 'ext', 'syncext', 'integext'], true)) {
+if (in_array($argv[2] ?? '', ['view', 'comments', 'ext', 'syncext', 'integext', 'guardext', 'cachecom'], true)) {
     $probework = $rwork.'/child';
-    if ($argv[2] === 'syncext') define('COUNTER_DIR', $rwork.'/counter');
+    if (in_array($argv[2], ['syncext', 'cachecom'], true)) define('COUNTER_DIR', $rwork.'/counter');
     foreach (['CONFIG_DIR' => 'config', 'BACKUP_DIR' => 'backup', 'CACHE_DIR' => 'cache', 'UPLOADS_DIR' => 'uploads'] as $rkey => $rdir) define($rkey, $rwork.'/'.$rdir);
     require_once __DIR__.'/probe_boot.php';
     if (($argv[2] ?? '') === 'comments') setRouteChild((string)($argv[3] ?? ''));
+    if (($argv[2] ?? '') === 'cachecom') setRouteChild('root');
     require_once BASE_DIR.'/core/system.php';
     $rchild = ['view' => 'getRouteViewData', 'comments' => 'getRouteCommentData', 'ext' => 'getRouteExtData', 'syncext' => 'getRouteSyncData',
-        'integext' => 'getRouteIntegData'][$argv[2]];
+        'integext' => 'getRouteIntegData', 'guardext' => 'getRouteGuardData', 'cachecom' => 'getRouteComData'][$argv[2]];
     echo json_encode($rchild());
     exit;
 }
@@ -331,6 +335,11 @@ function getRouteViewRuns(PDO $pdo): array {
     getRouteReply('', 'HEAD', 'index.php?name=news&op=view&id=101');
     usleep(500000);
     $out['head'] = (int)getRouteCol($pdo, 101, 'views');
+    $ogimg = fn(string $html): string => preg_match('#property="og:image"\s+content="([^"]*)"#', $html, $hit) ? html_entity_decode($hit[1]) : '';
+    $pdo->exec('INSERT INTO '.RPREF.'_node_assets (id, nid, kind, role, src, name, intro, hits, sort)'
+        .' VALUES (40, 102, \'image\', \'cover\', \'https://cdn.example.com/p.png\', \'\', \'\', 0, 0)');
+    $out['cover'] = [$ogimg($one['body']), $ogimg(getRouteReply('', 'GET', 'index.php?name=news&op=view&id=102')['body'])];
+    $pdo->exec('DELETE FROM '.RPREF.'_node_assets WHERE id = 40');
     $out['rights'] = [$code('', 'index.php?name=news&op=view&id=103'), $code('anna', 'index.php?name=news&op=view&id=103'), $code('', 'index.php?name=news&op=view&id=104'),
         $code('moder', 'index.php?name=news&op=view&id=104'), $code('docsman', 'index.php?name=news&op=view&id=104'), $code('', 'index.php?name=news&op=view&id=201'),
         $code('', 'index.php?name=news&op=view&id=0'), $code('', 'index.php?name=news&op=view&id=abc')];
@@ -386,6 +395,7 @@ function getRouteReports(PDO $pdo): array {
     $one = getRouteReply('boris', 'POST', 'index.php?name=news&op=report&id=2', ['token' => $tok, 'refer' => '1']);
     $row = $pdo->query('SELECT reported IS NOT NULL AS open, ruid FROM '.RPREF.'_node_assets WHERE id = 2')->fetch(PDO::FETCH_ASSOC);
     $out['sent'] = [$one['code'], (int)$row['open'], (int)$row['ruid']];
+    $out['back'] = $one['head']['location'] ?? '';
     $two = getRouteReply('boris', 'POST', 'index.php?name=news&op=report&id=2', ['token' => $tok, 'refer' => '1']);
     $out['again'] = [$two['code'], ($two['head']['retry-after'] ?? '') !== ''];
     $out['image'] = getRouteReply('clara', 'POST', 'index.php?name=news&op=report&id=1', ['token' => getRouteToken(getRouteReply('clara', 'GET',
@@ -484,6 +494,8 @@ function getRouteAdmin(PDO $pdo): array {
 }
 
 # The type screens of the manager: create, export, import under a new name, the limits and the deletion; switching a type off closes its public list
+# A limit save that cannot write its source answers 500, and one refused by an unfinished operation of the journal answers 409; neither changes the stored limits
+# The source is made unwritable by a directory in the place of its temporary file, and the one warning that failure is expected to leave is taken out of the PHP log
 function getRouteTypes(PDO $pdo, string $work): array {
     $has = fn(string $name): int => (int)$pdo->query('SELECT COUNT(*) FROM '.RPREF.'_node_types WHERE name = '.$pdo->quote($name))->fetchColumn();
     $form = getRouteReply('boss', 'GET', 'admin.php?name=node&op=type');
@@ -512,6 +524,17 @@ function getRouteTypes(PDO $pdo, string $work): array {
     $out['limits'][] = getRouteReply('boss', 'POST', 'admin.php', $wide)['code'];
     $cfg = require $work.'/config/node.php';
     $out['limits'][] = $cfg['node']['limits']['maxlist'];
+    mkdir($work.'/config/node.php.tmp');
+    $out['limits'][] = getRouteReply('boss', 'POST', 'admin.php', array_replace($wide, ['maxassets' => '90']))['code'];
+    rmdir($work.'/config/node.php.tmp');
+    $plog = $work.'/logs/error_php.log';
+    if (is_file($plog)) file_put_contents($plog, implode('', array_filter(file($plog) ?: [], fn($v) => !str_contains($v, 'config/node.php.tmp'))));
+    if (!is_dir($work.'/backup/config')) mkdir($work.'/backup/config', 0777, true);
+    file_put_contents($work.'/backup/config/marker.json', '{}');
+    $out['limits'][] = getRouteReply('boss', 'POST', 'admin.php', array_replace($wide, ['maxassets' => '90']))['code'];
+    unlink($work.'/backup/config/marker.json');
+    $cfg = require $work.'/config/node.php';
+    $out['limits'][] = $cfg['node']['limits']['maxassets'];
     $page = getRouteReply('boss', 'GET', 'admin.php?name=node&op=types');
     $del = ['name' => 'node', 'op' => 'typedelete', 'type' => 'copy', 'version' => '1', 'token' => getRouteToken($page['body'], 'typedelete')];
     $out['delete'] = [getRouteReply('boss', 'POST', 'admin.php', $del)['code'], $has('copy'), getRouteReply('moder', 'POST', 'admin.php', array_replace($del,
@@ -563,10 +586,11 @@ function getRouteViewData(): array {
     $rate = new Node(9, $news->id, 0, 0, '', null, 'T', 'I', null, null, 0, false, CommentMode::Disabled, false, 0, 0, 13, 3, NodeStatus::Published, 1, '', '', null, null, null,
         null, null, null, null);
     $out['average'] = [$view->getNodeView($news, $rate, 'card')['rating'], $full['rating']];
-    $out['trusted'] = [
-        str_contains($view->getNodeView($news, new Node(8, $news->id, 0, 0, '', null, 'T', '<b>x</b>', null, null, 0, false, CommentMode::Disabled, false, 0, 0, 0, 0,
-            NodeStatus::Published, 1, '', '', null, null, null, null, null, null, null), 'card')['intro_html'], '<b>'),
-    ];
+    $text = fn(string $intro): array => $view->getNodeView($news, new Node(8, $news->id, 0, 0, '', null, 'T', $intro, null, null, 0, false, CommentMode::Disabled, false, 0, 0, 0,
+        0, NodeStatus::Published, 1, '', '', null, null, null, null, null, null, null), 'card');
+    $mixed = $text('<b>x</b> [usehtml]<i>y</i><script>z()</script>[/usehtml] Plain');
+    $out['trusted'] = [str_contains($text('<b>x</b>')['intro_html'], '<b>'), str_contains($mixed['intro_html'], '<b>x'), str_contains($mixed['intro_html'], '<i>y</i>'),
+        str_contains($mixed['intro'], 'z()'), str_contains($mixed['intro'], 'Plain')];
     return $out;
 }
 
@@ -635,7 +659,7 @@ function getRouteExtData(): array {
     $tgt = (new NodeQuery($db, $root, $fld))->getNodeTarget('help', (int)$db->getSqlQuery('SELECT MIN(id) FROM '.PREFIX_DB.'_nodes WHERE tid = 4')->fetchColumn());
     foreach (['comment', 'rate', 'favorite', 'asset', 'report', 'vote', 'Comment'] as $one) $out['actions'][$one] = getRouteCall(fn() => $ext->checkNodeAction($help, $tgt, $one));
     $out['data'] = getRouteCall(fn() => $ext->filterNodeData($help, ['x' => 1]));
-    $out['notrans'] = getRouteCall(fn() => $ext->updateNodeAction($help, $tgt, 'comment'));
+    $out['notrans'] = getRouteCall(fn() => $ext->updateNodeAction($help, $tgt, 'comment', $tgt->uid));
     $out['taskcard'] = getRouteCall(fn() => (new NodeSupport($db, $task))->updateNodeSupport($tgt->id, 0, 0, 1, 1));
     $out['ownerlist'] = getRouteCall(fn() => (new NodeSupport($db, $anna))->getNodeSupportList($help, 1, 10));
     $out['badlist'] = [getRouteCall(fn() => $ext->getNodeSupportList($help, 1, 1000)), getRouteCall(fn() => $ext->getNodeSupportList($help, 1, 10, 7)),
@@ -777,6 +801,19 @@ function getRouteSupport(PDO $pdo): array {
     $out['hide'] = [$hide['code'], (int)getRouteCol($pdo, $aid, 'comnum'), $card($aid)['state']];
     $show = getRouteReply('helper', 'POST', 'index.php?go=1&op=updateCommentStatus&id='.$cid.'&typ=1&numb=1', ['token' => $htok]);
     $out['show'] = [$show['code'], (int)getRouteCol($pdo, $aid, 'comnum'), $card($aid)['state']];
+    $pdo->exec('INSERT INTO '.$pre.'comment (cid, modul, time, uid, name, ip, body, status) VALUES ('.$bid.', \'help\', NOW(), 3, \'boris\', \'127.0.0.1\', \'Boris pending\', 0)');
+    $pid = (int)$pdo->lastInsertId();
+    $turn = fn(int $typ): int => getRouteReply('helper', 'POST', 'index.php?go=1&op=updateCommentStatus&id='.$pid.'&typ='.$typ.'&numb=1', ['token' => $htok])['code'];
+    $first = $card($bid);
+    $was = count($mails());
+    $okay = $turn(1);
+    $new = $since($was);
+    $out['approve'] = [$okay, $first['state'], $card($bid)['state'], $card($bid)['version'] - $first['version'], $new['to'],
+        (int)$pdo->query('SELECT shown IS NOT NULL FROM '.$pre.'comment WHERE id = '.$pid)->fetchColumn()];
+    $mid = $card($bid);
+    $was = count($mails());
+    $out['reapprove'] = [$turn(0), $turn(1), count($mails()) - $was, $card($bid) === $mid];
+    $pdo->exec('DELETE FROM '.$pre.'comment WHERE id = '.$pid);
     $gone = getRouteReply('helper', 'POST', 'index.php?go=1&op=deleteComment&id='.$cid, ['token' => $htok]);
     $pts = $pdo->query('SELECT COUNT(*) FROM '.$pre.'points WHERE uid = 2 AND action = \'comment\' AND rid > 0')->fetchColumn();
     $out['delete'] = [$gone['code'], (int)getRouteCol($pdo, $aid, 'comnum'), (int)$pts];
@@ -1039,14 +1076,15 @@ function getRouteSyncData(): array {
     return $out;
 }
 
-# A type an unfinished configuration operation holds is closed with 503 before any query, and opens again once the marker is gone
+# A type an unfinished configuration operation holds is closed with 503 before any query, an unknown op or method included, and opens again once the marker is gone
 function getRouteHold(string $work): array {
     if (!is_dir($work.'/backup/config')) mkdir($work.'/backup/config', 0777, true);
     file_put_contents($work.'/backup/config/marker.json', json_encode(['op' => 'probe-op', 'types' => ['news'], 'files' => []]));
     $one = getRouteReply('', 'GET', 'index.php?name=news');
+    $early = [getRouteReply('', 'GET', 'index.php?name=news&op=bogus')['code'], getRouteReply('', 'POST', 'index.php?name=news')['code']];
     unlink($work.'/backup/config/marker.json');
     return [$one['code'], $one['head']['retry-after'] ?? '', str_contains((string)($one['head']['cache-control'] ?? ''), 'no-store'), getRouteReply('', 'GET',
-        'index.php?name=news')['code']];
+        'index.php?name=news')['code'], $early];
 }
 
 # The integrations of stage S16 on two types: news rates, keeps favorites, links a poll, marks home materials and feeds search, RSS, sitemap and blocks;
@@ -1108,6 +1146,10 @@ function getRouteInteg(PDO $pdo, string $work): array {
     $out['rollback'] = [$vote('', 'node.news', 105, str_repeat('f', 32), $tok), getRouteRate($pdo, 105)];
     $pdo->exec('DROP TRIGGER '.$pre.'probe_rate');
     $out['after'] = [$vote('', 'node.news', 105, str_repeat('f', 32), $tok), getRouteRate($pdo, 105)];
+    $live = getRouteReply('', 'POST', 'index.php?go=1&op=getRatingView', ['mod' => 'node.news', 'id' => '101', 'rate' => '5', 'request' => str_repeat('9', 32), 'typ' => 'stars',
+        'token' => $tok]);
+    $out['average'] = [$live['code'], preg_match('#class="sl-urating"[^>]*#', $live['body']) ? '' : 'none',
+        preg_match('#<div title="([^"]*)" class="sl-urating"#', $live['body'], $hit) ? $hit[1] : ''];
     $favs = fn(int $uid, int $fid): int => (int)$pdo->query('SELECT COUNT(*) FROM '.$pre.'favorites WHERE uid = '.$uid.' AND fid = '.$fid)->fetchColumn();
     [, $afav] = getRoutePageBits(getRouteReply('anna', 'GET', 'index.php?name=news&op=view&id=102')['body']);
     $one = getRouteReply('anna', 'GET', $afav);
@@ -1204,6 +1246,300 @@ function getRouteIntegData(): array {
     }
 }
 
+# The seed of stage S19.1 on top of the integrations: the marks of the data update, a select field of accounts, a favorite worth points and a limit of two,
+# a hostile Node title and a script in an intro, three products, a client, a partner and an order of anna, and docsman allowed the poll screen
+function addRouteGuardRows(PDO $pdo, string $work): void {
+    $pre = RPREF.'_';
+    setRouteFile($work.'/config/update.php', ['update' => ['fields' => '6.3.0', 'points' => '6.3.0', 'ratings' => '6.3.0']]);
+    $item = fn(string $title, int $sort): array => ['title' => $title, 'active' => true, 'sort' => $sort];
+    $data = require $work.'/config/fields.php';
+    $data['fields']['account'] = ['city' => ['title' => 'City', 'intro' => '', 'type' => 'select', 'default' => '',
+        'options' => ['items' => ['north' => $item('North', 10), 'south' => $item('South', 20)]], 'req' => false, 'multi' => false, 'active' => true, 'sort' => 10]];
+    setRouteFile($work.'/config/fields.php', $data);
+    $data = require $work.'/config/points.php';
+    $data['points']['active'] = '1';
+    $data['points']['actions']['favorite'] = ['points' => '5', 'period' => '0', 'limit' => '0'];
+    $data['points']['actions']['order'] = ['points' => '10', 'period' => '0', 'limit' => '0'];
+    setRouteFile($work.'/config/points.php', $data);
+    $data = require $work.'/config/favorites.php';
+    $data['favorites'] = array_replace($data['favorites'], ['favact' => '1', 'favorites' => '2']);
+    setRouteFile($work.'/config/favorites.php', $data);
+    $pdo->exec('UPDATE '.$pre.'nodes SET title = \'<img src=x onerror=alert(1)>Beta\' WHERE id = 102');
+    $pdo->exec('UPDATE '.$pre.'nodes SET intro = \'<script>alert(2)</script>Gamma\' WHERE id = 105');
+    $pdo->exec('INSERT INTO '.$pre.'products (id, cid, time, title, intro, body, assoc, status) VALUES'
+        .' (7, 0, NOW() - INTERVAL 1 DAY, \'Lamp\', \'\', \'\', \'\', 1), (8, 0, NOW() - INTERVAL 1 DAY, \'Desk\', \'\', \'\', \'\', 1),'
+        .' (9, 0, NOW() - INTERVAL 1 DAY, \'Hidden\', \'\', \'\', \'\', 0)');
+    $pdo->exec('INSERT INTO '.$pre.'clients (id, uid, prod, name, email, status) VALUES (1, 2, 7, \'Client\', \'client@probe.test\', 2)');
+    $pdo->exec('INSERT INTO '.$pre.'partners (id, uid, name, email, status) VALUES (1, 3, \'Partner\', \'partner@probe.test\', 1)');
+    $pdo->exec('INSERT INTO '.$pre.'order (id, uid, email, info, note, time, status) VALUES (1, 2, \'anna@probe.test\', \'\', \'\', NOW(), 0)');
+    $pdo->exec('UPDATE '.$pre.'admins SET modules = \'node-docs,voting\' WHERE id = 4');
+}
+
+# Every control of the first form of a page that posts the given op as the browser sends it, in document order: inputs, checked boxes and the selected option
+function getRouteInputs(string $html, string $op): array {
+    preg_match_all('#<form\b.*?</form>#s', $html, $all);
+    foreach ($all[0] as $form) {
+        if (!preg_match('#name="op"\s+value="'.preg_quote($op, '#').'"#', $form)) continue;
+        $out = [];
+        preg_match_all('#<input\b([^>]*)>|<select\b([^>]*)>(.*?)</select>#s', $form, $tags, PREG_SET_ORDER);
+        foreach ($tags as $tag) {
+            $attr = ($tag[1] ?? '') !== '' ? $tag[1] : ($tag[2] ?? '');
+            $name = preg_match('#name="([^"]*)"#', $attr, $hit) ? html_entity_decode($hit[1], ENT_QUOTES) : '';
+            if ($name === '') continue;
+            if (isset($tag[3])) {
+                $pick = preg_match('#<option\b[^>]*value="([^"]*)"[^>]*\bselected\b#', $tag[3], $hit) || preg_match('#<option\b[^>]*value="([^"]*)"#', $tag[3], $hit);
+                if ($pick) $out[] = [$name, html_entity_decode($hit[1], ENT_QUOTES)];
+                continue;
+            }
+            if (preg_match('#type="(?:checkbox|radio)"#', $attr) && !preg_match('#\schecked\b#', $attr)) continue;
+            $out[] = [$name, preg_match('#value="([^"]*)"#', $attr, $hit) ? html_entity_decode($hit[1], ENT_QUOTES) : ''];
+        }
+        return $out;
+    }
+    return [];
+}
+
+# The pairs of a form as the nested array PHP makes of their body, with named controls replaced and the pairs from the first one carrying the cut prefix dropped
+function getRoutePairs(array $pairs, array $set = [], string $cut = ''): array {
+    $raw = [];
+    foreach ($pairs as [$name, $val]) {
+        if ($cut !== '' && str_starts_with($name, $cut)) break;
+        $raw[] = rawurlencode($name).'='.rawurlencode(array_key_exists($name, $set) ? $set[$name] : $val);
+    }
+    parse_str(implode('&', $raw), $out);
+    return $out;
+}
+
+# The fingerprint of the configuration files a fields save writes
+function getRouteConf(string $work): array {
+    return array_map(fn($v) => sha1_file($work.'/config/'.$v.'.php'), ['fields', 'node']);
+}
+
+# The guards of stage S19.1 over real HTTP: search output, the fields screen, the type of a Node deletion, favorites, Node categories and the shop and order actions
+function getRouteGuard(PDO $pdo, string $work): array {
+    $pre = RPREF.'_';
+    $out = [];
+    $count = fn(string $sql): int => (int)$pdo->query($sql)->fetchColumn();
+    $find = getRouteReply('', 'GET', 'index.php?name=search&word=Beta')['body'];
+    $gamma = getRouteReply('', 'GET', 'index.php?name=search&word=Gamma')['body'];
+    $out['search'] = [str_contains($find, '&lt;img src=x onerror=alert(1)&gt;'), str_contains($find, '<img src=x'), str_contains($gamma, '&lt;script&gt;alert(2)'),
+        str_contains($gamma, '<script>alert(2)')];
+    $page = getRouteReply('root', 'GET', 'admin.php?name=fields')['body'];
+    $pairs = getRouteInputs($page, 'save');
+    $tok = getRouteToken($page, 'save');
+    $post = fn(array $set = [], string $cut = ''): array => getRouteReply('root', 'POST', 'admin.php', getRoutePairs($pairs, $set, $cut));
+    $was = getRouteConf($work);
+    $get = getRouteReply('root', 'GET', 'admin.php?name=fields&op=save&token='.$tok);
+    $out['fields']['get'] = [$tok !== '', $get['code'], getRouteConf($work) === $was];
+    $cut = $post(['def[account][0][title]' => 'Town'], 'def[node.');
+    $out['fields']['cut'] = [$cut['code'], (bool)preg_match('#node\.[a-z0-9]+: form#', $cut['body']), getRouteConf($work) === $was];
+    $name = $post(['def[account][0][name]' => 'town']);
+    $out['fields']['name'] = [str_contains($name['body'], 'account: city.name'), getRouteConf($work) === $was];
+    $key = $post(['def[account][0][items][0][key]' => '', 'def[account][0][items][0][title]' => '']);
+    $out['fields']['key'] = [str_contains($key['body'], 'account: city.options.items.north'), getRouteConf($work) === $was];
+    $word = $post(['def[account][0][title]' => '_FIELDS_BAD']);
+    $out['fields']['word'] = [str_contains($word['body'], 'account: city.title'), getRouteConf($work) === $was];
+    $site = $post(['def[account][0][title]' => '_ACCOUNT']);
+    $conf = require $work.'/config/fields.php';
+    $out['fields']['site'] = [$site['code'], $conf['fields']['account']['city']['title'] ?? ''];
+    $page = getRouteReply('root', 'GET', 'admin.php?name=fields')['body'];
+    $pairs = getRouteInputs($page, 'save');
+    $slot = '';
+    foreach ($pairs as [$one]) if (preg_match('#^(def\[node\.docs\]\[\d+\])\[name\]$#', $one, $hit)) $slot = $hit[1];
+    $size = $post([$slot.'[name]' => 'size', $slot.'[title]' => 'Size', $slot.'[type]' => 'int', $slot.'[default]' => '9223372036854775807']);
+    $conf = require $work.'/config/fields.php';
+    $journal = [];
+    foreach (is_file($work.'/logs/error_site.log') ? file($work.'/logs/error_site.log', FILE_IGNORE_NEW_LINES) : [] as $line) {
+        $one = json_decode($line, true);
+        if (($one['msg'] ?? '') === 'Node: a type operation was published') $journal[] = [$one['level'], $one['kind'], $one['name'], $one['old'], $one['new'], $one['aid']];
+    }
+    $out['fields']['int'] = [$slot !== '', $size['code'], $conf['fields']['node']['docs']['size']['default'] ?? null, $journal];
+    $page = getRouteReply('root', 'GET', 'admin.php?name=node')['body'];
+    $drop = getRouteReply('root', 'POST', 'admin.php', ['name' => 'node', 'op' => 'delete', 'id' => '201', 'type' => 'news', 'version' => '1',
+        'token' => getRouteToken($page, 'delete')]);
+    $out['delete'] = [$drop['code'], $count('SELECT COUNT(*) FROM '.$pre.'nodes WHERE id = 201')];
+    [, $fav] = getRoutePageBits(getRouteReply('anna', 'GET', 'index.php?name=news&op=view&id=102')['body']);
+    $try = fn(string $mod, int $id): int => getRouteReply('anna', 'GET', str_replace(['id=102', 'mod=news'], ['id='.$id, 'mod='.$mod], $fav))['code'];
+    $favs = fn(string $mod): int => $count('SELECT COUNT(*) FROM '.$pre.'favorites WHERE uid = 2 AND modul = \''.$mod.'\'');
+    $out['fav'] = [$fav !== '', $try('bogus', 5), $favs('bogus'), $try('forum', 999), $favs('forum'), $try('shop', 9), $try('shop', 7), $try('news', 102), $try('shop', 8),
+        $favs('shop'), $favs('news'), $count('SELECT COUNT(*) FROM '.$pre.'points WHERE uid = 2 AND action = \'favorite\''),
+        $pdo->query('SELECT source FROM '.$pre.'points WHERE uid = 2 AND action = \'favorite\' ORDER BY source')->fetchAll(PDO::FETCH_COLUMN)];
+    $cats = fn(): int => $count('SELECT COUNT(*) FROM '.$pre.'categories');
+    $add = fn(string $who, array $row): int => getRouteReply($who, 'POST', 'admin.php', $row + ['name' => 'categories', 'op' => 'addsave', 'title' => 'Probe cat',
+        'description' => '', 'imgcat' => '', 'lang' => '', 'status' => '1', 'token' => getRouteToken(getRouteReply($who, 'GET', 'admin.php?name=categories&op=add')['body'],
+        'addsave')])['code'];
+    $num = $cats();
+    $out['cats']['parent'] = [$add('root', ['modul' => 'news', 'cid' => '3']), $cats() - $num];
+    $add('root', ['modul' => 'news', 'cid' => '1', 'pview' => ['2|1'], 'pedit' => ['2|1', '2|0'], 'pmod' => ['1|0']]);
+    $made = $pdo->query('SELECT parent, pview, pread, pedit, pmod FROM '.$pre.'categories ORDER BY id DESC LIMIT 1')->fetch(PDO::FETCH_NUM);
+    $out['cats']['rights'] = [$cats() - $num, $made];
+    $edit = getRouteReply('root', 'GET', 'admin.php?name=categories&op=edit&cid=1')['body'];
+    getRouteReply('root', 'POST', 'admin.php', ['name' => 'categories', 'op' => 'save', 'id' => '1', 'modul' => 'news', 'title' => 'Open', 'description' => '',
+        'imgcat' => '', 'lang' => '', 'parent' => '0', 'status' => '1', 'ppost' => ['2|1'], 'pread' => ['0|0'], 'token' => getRouteToken($edit, 'save')]);
+    $out['cats']['save'] = $pdo->query('SELECT ppost, pread FROM '.$pre.'categories WHERE id = 1')->fetch(PDO::FETCH_NUM);
+    $shop = getRouteReply('root', 'GET', 'admin.php?name=shop&op=partners&status=1')['body'];
+    $stok = getRouteToken($shop, 'partnerset');
+    $rows = fn(): array => [$count('SELECT status FROM '.$pre.'clients WHERE id = 1'), $count('SELECT COUNT(*) FROM '.$pre.'clients'),
+        $count('SELECT status FROM '.$pre.'partners WHERE id = 1'), $count('SELECT COUNT(*) FROM '.$pre.'partners'),
+        $count('SELECT status FROM '.$pre.'products WHERE id = 7'), $count('SELECT COUNT(*) FROM '.$pre.'products')];
+    $before = $rows();
+    $codes = [];
+    foreach (['clientset&id=1', 'clientdel&id=1', 'partnerset&id=1', 'partnerdel&id=1', 'productops&typ=a0&id=7', 'productops&typ=d&id=7'] as $op) {
+        $codes[] = getRouteReply('root', 'GET', 'admin.php?name=shop&op='.$op.'&token='.$stok)['code'];
+    }
+    $out['shop']['get'] = [$stok !== '', $codes, $rows() === $before];
+    getRouteReply('root', 'POST', 'admin.php', ['name' => 'shop', 'op' => 'clientset', 'id' => '1', 'token' => $stok]);
+    getRouteReply('root', 'POST', 'admin.php', ['name' => 'shop', 'op' => 'productops', 'typ' => 'a0', 'id' => '7', 'token' => $stok]);
+    $out['shop']['post'] = [$before, $rows()];
+    $order = getRouteReply('root', 'GET', 'admin.php?name=order')['body'];
+    $otok = getRouteToken($order, 'activate');
+    $state = fn(): array => [$count('SELECT COUNT(*) FROM '.$pre.'order WHERE id = 1'), $count('SELECT status FROM '.$pre.'order WHERE id = 1'),
+        $count('SELECT COUNT(*) FROM '.$pre.'points WHERE uid = 2 AND action = \'order\'')];
+    getRouteReply('root', 'GET', 'admin.php?name=order&op=activate&id=1&act=1&token='.$otok);
+    getRouteReply('root', 'GET', 'admin.php?name=order&op=delete&id=1&token='.$otok);
+    $out['order']['get'] = [$otok !== '', $state()];
+    getRouteReply('root', 'POST', 'admin.php', ['name' => 'order', 'op' => 'activate', 'id' => '1', 'act' => '2', 'token' => $otok]);
+    $out['order']['two'] = $state();
+    getRouteReply('root', 'POST', 'admin.php', ['name' => 'order', 'op' => 'activate', 'id' => '1', 'act' => '1', 'token' => $otok]);
+    $out['order']['one'] = $state();
+    $vote = getRouteReply('docsman', 'GET', 'admin.php?name=voting')['body'];
+    $gone = getRouteReply('docsman', 'POST', 'admin.php', ['name' => 'voting', 'op' => 'delete', 'id' => '7', 'token' => getRouteToken($vote, 'delete')]);
+    $out['poll'] = [$gone['code'], (int)getRouteCol($pdo, 102, 'poll'), $count('SELECT COUNT(*) FROM '.$pre.'voting WHERE id = 7')];
+    $out['child'] = json_decode((string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg(__FILE__).' '.escapeshellarg($work).' guardext 2>&1'), true);
+    return $out;
+}
+
+# The integrity of stage S19.3 over real HTTP: a manual point correction applies once per form and is checked before the profile is written,
+# a block save that fails in its last statement takes its parameter back, and the main administrator annuls votes of a disabled material, a type without rating and
+# a disabled type
+function getRouteIntact(PDO $pdo, string $work): array {
+    $pre = RPREF.'_';
+    $out = [];
+    $data = require $work.'/config/update.php';
+    setRouteFile($work.'/config/update.php', ['update' => array_replace($data['update'] ?? [], ['points' => '6.3.0'])]);
+    $data = require $work.'/config/points.php';
+    $data['points']['active'] = '1';
+    setRouteFile($work.'/config/points.php', $data);
+    $data = require $work.'/config/fields.php';
+    $data['fields']['account'] = [];
+    setRouteFile($work.'/config/fields.php', $data);
+    if (is_file($work.'/config/local.php')) unlink($work.'/config/local.php');
+    $count = fn(string $sql): mixed => $pdo->query($sql)->fetchColumn();
+    $say = fn(array $res): string => preg_match('#<div class="sl-alert-body">(.*?)</div>#s', $res['body'], $hit) ? trim(strip_tags($hit[1])) : '';
+    $page = getRouteReply('root', 'GET', 'admin.php?name=account&op=add&id=2')['body'];
+    $pairs = getRouteInputs($page, 'addsave');
+    $keys = array_column($pairs, 1, 0);
+    $save = fn(array $set): array => getRouteReply('root', 'POST', 'admin.php', getRoutePairs($pairs, $set));
+    $bal = fn(): array => [(int)$count('SELECT points FROM '.$pre.'users WHERE id = 2'), (int)$count('SELECT COUNT(*) FROM '.$pre.'points WHERE uid = 2 AND action = \'adjust\'')];
+    $was = $bal();
+    $one = $save(['pdiff' => '5', 'pnote' => 'Probe gift']);
+    $two = $save(['pdiff' => '5', 'pnote' => 'Probe gift']);
+    $out['adjust'] = ['key' => (bool)preg_match('/^[0-9a-f]{32}$/D', $keys['pkey'] ?? ''), 'codes' => [$one['code'], $two['code']], 'was' => $was, 'now' => $bal(),
+        'say' => [$say($one), $say($two)]];
+    $occ = (string)$count('SELECT occ FROM '.$pre.'users WHERE id = 2');
+    $long = $save(['pdiff' => '3', 'pnote' => str_repeat('n', 256), 'occ' => 'Changed long']);
+    $tags = $save(['pdiff' => '3', 'pnote' => '<b>bold</b>', 'occ' => 'Changed tags']);
+    $out['note'] = ['codes' => [$long['code'], $tags['code']], 'occ' => (string)$count('SELECT occ FROM '.$pre.'users WHERE id = 2') === $occ, 'points' => $bal(),
+        'kept' => str_contains($long['body'], 'value="'.($keys['pkey'] ?? '-').'"'), 'say' => [$say($long), $say($tags)]];
+    $page = getRouteReply('root', 'GET', 'admin.php?name=blocks&op=edit&id=50')['body'];
+    $form = getRouteInputs($page, 'editsave');
+    $param = fn(): string => (string)$count('SELECT param FROM '.$pre.'blocks WHERE id = 50');
+    $before = $param();
+    $pdo->exec('CREATE TRIGGER '.$pre.'probe_block BEFORE UPDATE ON '.$pre.'blocks FOR EACH ROW BEGIN IF NEW.title = \'Boom\' THEN'
+        .' SIGNAL SQLSTATE \'45000\' SET MESSAGE_TEXT = \'probe refuses the block\'; END IF; END');
+    $boom = getRouteReply('root', 'POST', 'admin.php', getRoutePairs($form, ['title' => 'Boom', 'nlimit' => '3']));
+    $pdo->exec('DROP TRIGGER '.$pre.'probe_block');
+    $out['block']['boom'] = [$form !== [], $boom['code'], $param() === $before, (string)$count('SELECT title FROM '.$pre.'blocks WHERE id = 50')];
+    $fine = getRouteReply('root', 'POST', 'admin.php', getRoutePairs($form, ['title' => 'Fine', 'nlimit' => '3']));
+    $out['block']['fine'] = [$fine['code'], json_decode($param(), true)['limit'] ?? null, (string)$count('SELECT title FROM '.$pre.'blocks WHERE id = 50')];
+    $votes = [];
+    foreach ([['', 102], ['boris', 102], ['', 101]] as $i => [$who, $mid]) {
+        [$tok] = getRoutePageBits(getRouteReply($who, 'GET', 'index.php?name=news&op=view&id='.$mid)['body']);
+        $votes[] = getRouteReply($who, 'POST', 'index.php?go=1&op=getRatingView', ['mod' => 'node.news', 'id' => (string)$mid, 'rate' => '4',
+            'request' => str_repeat((string)($i + 1), 32), 'typ' => 'stars', 'token' => $tok])['code'];
+    }
+    $ids = $pdo->query('SELECT id FROM '.$pre.'rating_votes WHERE scope = \'node.news\' AND mid IN (101, 102) ORDER BY id')->fetchAll(PDO::FETCH_COLUMN);
+    $out['votes'] = [$votes, count($ids), getRouteRate($pdo, 102), getRouteRate($pdo, 101)];
+    $annul = function (int $vote, int $mid) use ($pdo, $pre): array {
+        $page = getRouteReply('root', 'GET', 'admin.php?name=ratings&op=votes&vote='.$vote)['body'];
+        $res = getRouteReply('root', 'POST', 'admin.php', ['name' => 'ratings', 'op' => 'annul', 'vote' => (string)$vote, 'reason' => 'probe',
+            'token' => getRouteToken($page, 'annul')]);
+        return [$res['code'], (int)$pdo->query('SELECT annulled FROM '.$pre.'rating_votes WHERE id = '.$vote)->fetchColumn() > 0, getRouteRate($pdo, $mid)];
+    };
+    $pdo->exec('UPDATE '.$pre.'nodes SET status = 0 WHERE id = 102');
+    $out['annul']['material'] = $annul((int)($ids[0] ?? 0), 102);
+    $pdo->exec('UPDATE '.$pre.'nodes SET status = 2 WHERE id = 102');
+    $keep = (string)file_get_contents($work.'/config/node.php');
+    $data = require $work.'/config/node.php';
+    $data['node']['types']['news']['features']['rating'] = false;
+    setRouteFile($work.'/config/node.php', $data);
+    if (is_file($work.'/config/local.php')) unlink($work.'/config/local.php');
+    $out['annul']['rating'] = $annul((int)($ids[1] ?? 0), 102);
+    file_put_contents($work.'/config/node.php', $keep);
+    if (is_file($work.'/config/local.php')) unlink($work.'/config/local.php');
+    $pdo->exec('UPDATE '.$pre.'node_types SET active = 0 WHERE name = \'news\'');
+    $out['annul']['type'] = $annul((int)($ids[2] ?? 0), 101);
+    $pdo->exec('UPDATE '.$pre.'node_types SET active = 1 WHERE name = \'news\'');
+    $out['annul']['again'] = $annul((int)($ids[0] ?? 0), 102);
+    return $out;
+}
+
+# The child of the cache run: the main administrator approves the pending comment of Gamma inside the administrative entry, where every write statement bumps early
+function getRouteComData(): array {
+    global $com;
+    define('ADMIN_FILE', true);
+    return ['done' => $com->setStatus(901, true)];
+}
+
+# The comment writer against the page cache over real HTTP: a child approves a comment of a Node material while the probe keeps its count waiting on a second comment,
+# and a guest asks the list once the early bump of the entry has come; the page of that moment must not be stored, and the generation has to move after the commit
+function getRouteCacheCom(PDO $pdo, string $work): array {
+    global $rbase;
+    $pre = RPREF.'_';
+    $pdo->exec('INSERT INTO '.$pre.'comment (id, pid, cid, modul, time, uid, name, ip, body, status) VALUES'
+        .' (901, 0, 105, \'news\', NOW(), 2, \'anna\', \'127.0.0.1\', \'first\', 0), (902, 0, 105, \'news\', NOW(), 3, \'boris\', \'127.0.0.1\', \'second\', 1)');
+    $pdo->exec('UPDATE '.$pre.'nodes SET comnum = 1 WHERE id = 105');
+    $gen = fn(): int => is_file($work.'/counter/cache.log') ? (int)file_get_contents($work.'/counter/cache.log') : 0;
+    $pages = fn(): int => count(glob($work.'/cache/pages/html/*.html') ?: []);
+    $guards = fn(): int => count(glob($work.'/cache/guards/*.lock') ?: []);
+    foreach (glob($work.'/cache/pages/html/*') ?: [] as $one) unlink($one);
+    $hold = getRoutePdo($rbase);
+    $hold->beginTransaction();
+    $hold->exec('UPDATE '.$pre.'comment SET time = time + INTERVAL 1 SECOND WHERE id = 902');
+    $proc = proc_open([PHP_BINARY, __FILE__, $work, 'cachecom'], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipe);
+    $was = $gen();
+    for ($i = 0; $i < 200 && $gen() === $was; $i++) usleep(50000);
+    usleep(300000);
+    $during = ['early' => $gen() - $was, 'guards' => $guards(), 'gen' => $gen()];
+    $page = getRouteReply('', 'GET', 'index.php?name=news');
+    $during += ['code' => $page['code'], 'pages' => $pages()];
+    $hold->rollBack();
+    $child = json_decode((string)stream_get_contents($pipe[1]), true);
+    foreach ($pipe as $one) fclose($one);
+    proc_close($proc);
+    $after = ['gen' => $gen() - $during['gen'], 'guards' => $guards(), 'comnum' => (int)getRouteCol($pdo, 105, 'comnum'),
+        'status' => (int)$pdo->query('SELECT status FROM '.$pre.'comment WHERE id = 901')->fetchColumn()];
+    return ['child' => $child, 'during' => $during, 'after' => $after];
+}
+
+# The service side in a child that boots the core, where only a main administrator reaches the category screen: a moderator of docs creates a category of docs
+# and is refused one of news without a row, and an administrator context without the right of polls is refused a poll before any statement
+function getRouteGuardData(): array {
+    global $db, $fld;
+    $ctx = fn(array $mods): NodeContext => new NodeContext(0, [], 4, $mods, false, false, '127.0.0.1', '');
+    $row = ['title' => 'Child cat', 'intro' => '', 'img' => '', 'lang' => '', 'parent' => 0, 'status' => 1, 'pview' => '0|0', 'pread' => '0|0', 'ppost' => '0|0',
+        'preply' => '0|0', 'pedit' => '3|0', 'pdelete' => '3|0', 'pmod' => '3|0'];
+    $cats = fn(): int => (int)$db->getSqlQuery('SELECT COUNT(*) FROM '.PREFIX_DB.'_categories')->fetchColumn();
+    $num = $cats();
+    $out = ['other' => getRouteCall(fn() => (new NodeService($db, $ctx(['docs']), $fld))->addNodeCategory(['modul' => 'news'] + $row))];
+    $out['own'] = getRouteCall(fn() => (new NodeService($db, $ctx(['docs']), $fld))->addNodeCategory(['modul' => 'docs'] + $row) > 0);
+    $out['rows'] = $cats() - $num;
+    $db->setSqlBegin();
+    $out['poll'] = getRouteCall(fn() => (new NodeService($db, $ctx(['docs']), $fld))->deleteNodePoll(7));
+    $db->setSqlRollback();
+    return $out;
+}
+
 $report = ['error' => '', 'clean' => false, 'runs' => []];
 $rbase = '';
 $rproc = null;
@@ -1216,7 +1552,8 @@ try {
     addRouteConfig($rwork, $rbase, $rport);
     addRouteFiles($rwork);
     if (($argv[2] ?? '') === 'sync') addRouteSyncTypes($rpdo, $rwork);
-    if (($argv[2] ?? '') === 'integ') addRouteIntegTypes($rpdo, $rwork);
+    if (in_array($argv[2] ?? '', ['integ', 'guard', 'intact'], true)) addRouteIntegTypes($rpdo, $rwork);
+    if (($argv[2] ?? '') === 'guard') addRouteGuardRows($rpdo, $rwork);
     $rproc = addRouteServer($rwork, $rport);
     if (($argv[2] ?? '') === 'serve') {
         fwrite(STDERR, 'serving on '.$rport.' with '.$rbase."\n");
@@ -1229,6 +1566,12 @@ try {
         $report['runs']['sync'] = getRouteSync($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'integ') {
         $report['runs']['integ'] = getRouteInteg($rpdo, $rwork);
+    } elseif (($argv[2] ?? '') === 'guard') {
+        $report['runs']['guard'] = getRouteGuard($rpdo, $rwork);
+    } elseif (($argv[2] ?? '') === 'intact') {
+        $report['runs']['intact'] = getRouteIntact($rpdo, $rwork);
+    } elseif (($argv[2] ?? '') === 'cache') {
+        $report['runs']['cache'] = getRouteCacheCom($rpdo, $rwork);
     } else {
         $report['runs']['lists'] = getRouteLists($rpdo);
         $report['runs']['view'] = getRouteViewRuns($rpdo);

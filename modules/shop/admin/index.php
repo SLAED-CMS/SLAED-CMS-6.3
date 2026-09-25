@@ -82,22 +82,18 @@ function clients(): void {
     if ($csearch) {
         $sqlstatus = 'status != \'2\'';
         $field = 'name=shop&op=clients&';
-        $refer = '';
         $subtab = 1;
     } elseif (getVar('get', 'status', 'num') == 1) {
         $sqlstatus = 'status = \'1\'';
         $field = 'name=shop&op=clients&status=1&';
-        $refer = '&refer=1';
         $subtab = 1;
     } elseif (getVar('get', 'status', 'num') == 2) {
         $sqlstatus = 'status = \'0\'';
         $field = 'name=shop&op=clients&status=2&';
-        $refer = '&refer=1';
         $subtab = 2;
     } else {
         $sqlstatus = 'status = \'2\'';
         $field = 'name=shop&op=clients&';
-        $refer = '&refer=1';
         $subtab = 0;
     }
     $tabs = '';
@@ -154,22 +150,13 @@ function clients(): void {
                 ['label' => _NOTE, 'has_value_text' => true, 'value_text' => (string)$cinfo, 'is_last' => true],
             ];
             $items = [
-                [
-                    'href' => $afile.'.php?name=shop&op=clientset&id='.$cid.$refer.'&token='.getSiteToken(),
-                    'icon_name' => 'power',
-                    'title' => $cactive ? _DEACTIVATE : _ACTIVATE,
-                ],
+                getTplPostAction(['name' => 'shop', 'op' => 'clientset', 'id' => $cid], 'power', $cactive ? _DEACTIVATE : _ACTIVATE),
                 [
                     'href' => $afile.'.php?name=shop&op=clientadd&cid='.$cid,
                     'icon_name' => 'pencil',
                     'title' => _FULLEDIT,
                 ],
-                [
-                    'href' => $afile.'.php?name=shop&op=clientdel&id='.$cid.$refer.'&token='.getSiteToken(),
-                    'icon_name' => 'trash',
-                    'title' => _ONDELETE,
-                    'confirm_text' => _DELETE.' "'.$name.'"?',
-                ],
+                getTplPostAction(['name' => 'shop', 'op' => 'clientdel', 'id' => $cid], 'trash', _ONDELETE, _DELETE.' "'.$name.'"?'),
             ];
             $trows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
@@ -204,8 +191,8 @@ function clients(): void {
 
 function clientset(): void {
     global $db, $afile, $pnt, $admin;
-    $iswarn = !checkSiteToken();
-    $id = getVar('get', 'id', 'num');
+    $iswarn = !checkAdminPost('shop');
+    $id = getVar('post', 'id', 'num');
     $note = $iswarn ? _TOKENMISS : _SUCCSAVE;
     if (!$iswarn && $id) {
         $done = $db->setSqlBegin();
@@ -403,6 +390,7 @@ function clientsave(): void {
             }
             $left = $was == 1 && ($cactive != 1 || $ouid != $uid);
             $came = $cactive == 1 && ($was != 1 || $ouid != $uid);
+            if ($left || $came) $pnt->setUserLocks([(int)$ouid, (int)$uid]);
             $rid = ($left && $ouid) ? $pnt->getEventId('order', 'shop', 'client:'.$cid, (int)$ouid) : 0;
             if ($rid) $pnt->addEvent('order', 'shop', 'reverse:'.$rid, (int)$ouid, ['rid' => $rid] + $data);
             if ($came && $uid) $pnt->addEvent('order', 'shop', 'client:'.$cid, (int)$uid, $data);
@@ -422,8 +410,8 @@ function clientsave(): void {
 
 function clientdel(int $id = 0): void {
     global $db, $afile, $pnt, $admin;
-    $iswarn = !checkSiteToken();
-    $id = ($id) ? $id : getVar('req', 'id', 'num', 0);
+    $iswarn = !checkAdminPost('shop');
+    $id = ($id) ? $id : getVar('post', 'id', 'num', 0);
     $note = $iswarn ? _TOKENMISS : _SUCCSAVE;
     if (!$iswarn && $id) {
         $done = $db->setSqlBegin();
@@ -456,12 +444,10 @@ function products(): void {
     if (getVar('get', 'status', 'num') == 1) {
         $sqlstatus = 'status=0';
         $field = 'name=shop&op=products&status=1&';
-        $refer = '&refer=1';
         $subtab = 1;
     } else {
         $sqlstatus = 'status=1';
         $field = 'name=shop&op=products&';
-        $refer = '&refer=1';
         $subtab = 0;
     }
     $tabs = '';
@@ -502,9 +488,9 @@ function products(): void {
             if ($pvote) {
                 $items[] = ['href' => $afile.'.php?name=voting&op=add&id='.$pvote, 'icon_name' => 'bar-chart', 'title' => _EDITVOTE];
             }
-            $items[] = ['href' => $afile.'.php?name=shop&op=productops&typ=a'.$typ.'&id='.$pid.$refer.'&token='.getSiteToken(), 'icon_name' => 'power', 'title' => $pactive ? _DEACTIVATE : _ACTIVATE];
+            $items[] = getTplPostAction(['name' => 'shop', 'op' => 'productops', 'typ' => 'a'.$typ, 'id' => $pid], 'power', $pactive ? _DEACTIVATE : _ACTIVATE);
             $items[] = ['href' => $afile.'.php?name=shop&op=productadd&id='.$pid, 'icon_name' => 'pencil', 'title' => _FULLEDIT];
-            $items[] = ['href' => $afile.'.php?name=shop&op=productops&typ=d&id='.$pid.$refer.'&token='.getSiteToken(), 'icon_name' => 'trash', 'title' => _ONDELETE, 'confirm_text' => _DELETE.' "'.$ptitle.'"?'];
+            $items[] = getTplPostAction(['name' => 'shop', 'op' => 'productops', 'typ' => 'd', 'id' => $pid], 'trash', _ONDELETE, _DELETE.' "'.$ptitle.'"?');
             $prows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['is_col_check' => true, 'content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'id[]', 'value_attr' => (string)$pid])],
@@ -717,23 +703,17 @@ function productsave(): void {
     }
 }
 
-function productops(int|array $id = 0, string $vtyp = ''): void {
+function productops(int $pid = 0, string $vtyp = ''): void {
     global $db, $afile, $com;
-    $iswarn = !checkSiteToken();
-    $id = getVar('req', 'id[]', '', []);
-    $arg = $id;
-    if (!is_array($arg) || $arg === []) {
-        $id = getVar('req', 'id', 'num', 0);
-        $single = $id;
-        $arg = ($single > 0) ? [$single] : [];
-    }
-    if (!is_array($id)) $id = ($id > 0) ? [$id] : [];
-    $ids = array_unique(array_filter(array_map('intval', array_merge($arg, $id)), static fn($v): bool => $v > 0));
+    $iswarn = !checkAdminPost('shop');
+    $list = $pid ? [$pid] : getVar('post', 'id[]', '', []);
+    if (!$list) $list = [getVar('post', 'id', 'num', 0)];
+    $ids = array_unique(array_filter(array_map('intval', array_filter($list, 'is_scalar')), static fn($v): bool => $v > 0));
     $typ = getVar('post', 'typ', 'text');
-    if (!$typ) $typ = getVar('get', 'typ', 'text');
     $vtyp = ($typ) ? filterVar($typ) : $vtyp;
-    $typ = (is_numeric($vtyp[0])) ? intval($vtyp) : intval(substr($vtyp, 1));
-    if (!$iswarn && $ids) {
+    $typ = ($vtyp === '') ? 0 : (is_numeric($vtyp[0]) ? intval($vtyp) : intval(substr($vtyp, 1)));
+    $fail = false;
+    if (!$iswarn && $ids && $vtyp !== '') {
         $keys = [];
         $pars = [];
         foreach (array_values($ids) as $pos => $val) {
@@ -753,14 +733,20 @@ function productops(int|array $id = 0, string $vtyp = ''): void {
         } elseif ($vtyp[0] == 'c') {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET acomm = :typ WHERE id IN ('.$in.')', ['typ' => $typ] + $pars);
         } elseif ($vtyp[0] == 'd') {
-            $com->deleteTarget('shop', $ids);
-            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid IN ('.$in.') AND modul = \'shop\'', $pars);
-            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_products WHERE id IN ('.$in.')', $pars);
+            $guard = Cache::getWriteGuard();
+            $open = $guard !== false && $db->setSqlBegin();
+            $done = $open && $com->deleteTarget('shop', $ids)
+                && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid IN ('.$in.') AND modul = \'shop\'', $pars) !== false
+                && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_products WHERE id IN ('.$in.')', $pars) !== false;
+            $kept = $done && $db->setSqlCommit();
+            $back = $open && !$kept && $db->setSqlRollback();
+            if ($guard !== false && (!$open || $back || ($kept && Cache::addEpoch(true)))) Cache::deleteWriteGuard($guard);
+            $fail = !$kept;
         } elseif (is_numeric($vtyp[0])) {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET cid = :typ WHERE id IN ('.$in.')', ['typ' => $typ] + $pars);
         }
     }
-    setRedirect($afile.'.php?name=shop&op=products', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
+    setRedirect($afile.'.php?name=shop&op=products', false, 302, $iswarn ? _TOKENMISS : ($fail ? _ERROR : _SUCCSAVE), $iswarn || $fail);
 }
 
 function partners(): void {
@@ -780,17 +766,14 @@ function partners(): void {
     if (getVar('get', 'status', 'num') == 1) {
         $sqlstatus = 'status=1';
         $field = 'name=shop&op=partners&status=1&';
-        $refer = '&refer=1';
         $subtab = 1;
     } elseif (getVar('get', 'status', 'num') == 2) {
         $sqlstatus = 'status=0';
         $field = 'name=shop&op=partners&status=1&';
-        $refer = '&refer=1';
         $subtab = 2;
     } else {
         $sqlstatus = 'status=2';
         $field = 'name=shop&op=partners&';
-        $refer = '&refer=1';
         $subtab = 0;
     }
     $tabs = '';
@@ -830,10 +813,10 @@ function partners(): void {
                 $nick = _ANONYM;
             }
             $items = [
-                ['href' => $afile.'.php?name=shop&op=partnerset&id='.$paid.$refer.'&token='.getSiteToken(), 'icon_name' => 'power', 'title' => $paactive ? _DEACTIVATE : _ACTIVATE],
+                getTplPostAction(['name' => 'shop', 'op' => 'partnerset', 'id' => $paid], 'power', $paactive ? _DEACTIVATE : _ACTIVATE),
                 ['href' => $afile.'.php?name=shop&op=partnerinfo&paid='.$paid, 'icon_name' => 'eye', 'title' => _MVIEW],
                 ['href' => $afile.'.php?name=shop&op=partneradd&paid='.$paid, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
-                ['href' => $afile.'.php?name=shop&op=partnerdel&id='.$paid.$refer.'&token='.getSiteToken(), 'icon_name' => 'trash', 'title' => _ONDELETE, 'confirm_text' => _DELETE.' "'.$name.'"?'],
+                getTplPostAction(['name' => 'shop', 'op' => 'partnerdel', 'id' => $paid], 'trash', _ONDELETE, _DELETE.' "'.$name.'"?'),
             ];
             $parows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
@@ -864,8 +847,8 @@ function partners(): void {
 
 function partnerset(): void {
     global $db, $afile;
-    $iswarn = !checkSiteToken();
-    $id = getVar('get', 'id', 'num');
+    $iswarn = !checkAdminPost('shop');
+    $id = getVar('post', 'id', 'num');
     if (!$iswarn && $id) {
         [$active] = $db->getSqlRow($db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_partners WHERE id = :id', ['id' => $id]));
         $active = ($active == 1) ? 0 : 1;
@@ -1000,8 +983,8 @@ function partnersave(): void {
 
 function partnerdel(int $id = 0): void {
     global $db, $afile;
-    $iswarn = !checkSiteToken();
-    $id = ($id) ? $id : getVar('req', 'id', 'num', 0);
+    $iswarn = !checkAdminPost('shop');
+    $id = ($id) ? $id : getVar('post', 'id', 'num', 0);
     if (!$iswarn && $id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_partners WHERE id = :id', ['id' => $id]);
     setRedirect($afile.'.php?name=shop&op=partners', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }

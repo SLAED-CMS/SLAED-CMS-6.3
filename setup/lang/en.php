@@ -20,6 +20,7 @@ define('_PHPSETUP','Version PHP established on your server mismatches minimal re
 define('_SAVE_NEW','Installation and configuration');
 define('_SAVE_UPDATE','Updating and configuration');
 define('_SERRORPERM','has no necessary sanctions for record on a server.<br>Establish the necessary attributes');
+define('_SETUPLOCK','The site is already installed, so the installer is locked. To run an update, upload an empty file config/setup.unlock and open setup.php again; a successful run removes the file.');
 define('_SETUP_NEW','New installation of system');
 define('_SETUP_SLAED','Installation SLAED CMS');
 define('_SUPDATE','Updating of system');

@@ -40,6 +40,7 @@ const PROBEROWS = [
 if (!defined('FUNC_FILE')) define('FUNC_FILE', true);
 require_once PROBEROOT.'/core/classes/pdo.php';
 require_once PROBEROOT.'/core/classes/field.php';
+require_once PROBEROOT.'/core/classes/filemanager.php';
 foreach (['_TABLE' => 'Table', '_OK' => 'probe-ok', '_ERROR' => 'probe-error'] as $name => $text) define($name, $text);
 
 # A database facade that can name another server version, which is the one fact of the preflight a real server cannot be asked to change
@@ -214,9 +215,13 @@ function getProbeStop(): array {
     $out['mark'] = getProbeRun();
     setProbeSite('0');
     getProbeRun();
+    setProbeStage('applying');
     unlink(CONFIG_DIR.'/update.php');
     file_put_contents(BASE_DIR.'/storage/backup/update/points/balances.json', '{"2":999999}');
     $out['forged'] = getProbeRun();
+    setProbeStage('verified');
+    unlink(BASE_DIR.'/storage/backup/update/points/balances.json');
+    $out['pruned'] = getProbeRun();
     setProbeSite('0');
     $point = (require PROBEROOT.'/config/points.php')['points'];
     unset($point['actions']['login']);
@@ -229,7 +234,7 @@ function getProbeStop(): array {
 function getProbeFlight(): array {
     $pdb = $GLOBALS['pdb'];
     $out = ['real' => checkUpdateBase($pdb, PROBEPREF)];
-    foreach (['10.2.0-MariaDB', '10.2.1-MariaDB', '11.7.2-MariaDB-log', '8.0.15', '8.0.16', '5.7.44-log'] as $ver) {
+    foreach (['10.4.34-MariaDB', '10.5.1-MariaDB', '10.5.2-MariaDB', '11.7.2-MariaDB-log', '8.0.15', '8.0.16', '5.7.44-log'] as $ver) {
         $pdb->fake = $ver;
         $out['server'][$ver] = checkUpdateBase($pdb, PROBEPREF);
     }
@@ -238,10 +243,15 @@ function getProbeFlight(): array {
     getProbeSide()->exec('CREATE TABLE `other_forum` (`id` INT) ENGINE=MyISAM');
     $out['engine'] = checkUpdateBase($pdb, PROBEPREF);
     getProbeSide()->exec('DROP TABLE `'.PROBEPREF.'_favorites`, `other_forum`');
+    foreach (['categories', 'voting'] as $name) {
+        getProbeSide()->exec('CREATE TABLE `'.PROBEPREF.'_'.$name.'` (`id` INT) ENGINE=MyISAM');
+        $out['node'][$name] = checkUpdateBase($pdb, PROBEPREF);
+        getProbeSide()->exec('DROP TABLE `'.PROBEPREF.'_'.$name.'`');
+    }
     return $out;
 }
 
-# Put the scratch site and the disposable schema back to a 6.2 installation with ratings: the old rules, the points mark of the unit that ran before, the aggregates and the old rows
+# Put the scratch site and the disposable schema back to a 6.2 installation with ratings: the old rules, the points mark of the prior unit, the aggregates and the old rows
 # The twelve hundred extra accounts make the unit write its targets in more than one batch; every third of them carries an aggregate
 function setRateSite(array $rules = PROBEOLD, array $mark = ['points' => '6.3.0'], array $rows = PROBEROWS): void {
     deleteProbeTree(BASE_DIR);
@@ -262,7 +272,7 @@ function setRateSite(array $rules = PROBEOLD, array $mark = ['points' => '6.3.0'
     foreach ($rows as $row) $add->execute($row);
 }
 
-# Everything the ratings unit leaves behind, read fresh from disk and from the schema: its answer, the manifest, the snapshots, the three new tables, the owners, the old table, the rules and the mark
+# Everything the ratings unit leaves behind, read fresh from disk and schema: answer, manifest, snapshots, the three new tables, the owners, the old table, the rules and the mark
 function getRateState(string $html): array {
     $dir = BASE_DIR.'/storage/backup/update/ratings';
     $info = is_file($dir.'/manifest.json') ? json_decode((string)file_get_contents($dir.'/manifest.json'), true) : null;
@@ -307,7 +317,7 @@ function setRateStage(string $state): void {
     if (is_file(CONFIG_DIR.'/update.php')) unlink(CONFIG_DIR.'/update.php');
 }
 
-# The clean path and its repeats: a vote that arrived after the site opened is never taken for a starting balance, a lost mark is written again, and rules already converted keep a closed guest switch
+# The clean path and its repeats: a vote made after the site opened is never a starting balance, a lost mark is rewritten, and converted rules keep a closed guest switch
 function getRateClean(): array {
     setRateSite();
     $out = ['first' => getRateRun()];
@@ -315,7 +325,8 @@ function getRateClean(): array {
     $names = ['manifest.json', 'targets.json', 'terms.json', 'rules.json'];
     $kept = array_map(fn($v) => file_get_contents($dir.'/'.$v), $names);
     getProbeSide()->exec('UPDATE `'.PROBEPREF.'_users` SET votes = 11, tvotes = 42 WHERE id = 2');
-    getProbeSide()->exec('INSERT INTO `'.PROBEPREF.'_rating_votes` (scope, mid, actor, uid, value, request, created) VALUES (\'account\', 2, \'u:3\', 3, 5, \''.str_repeat('a', 32).'\', 1700000500)');
+    getProbeSide()->exec('INSERT INTO `'.PROBEPREF.'_rating_votes` (scope, mid, actor, uid, value, request, created)'
+        .' VALUES (\'account\', 2, \'u:3\', 3, 5, \''.str_repeat('a', 32).'\', 1700000500)');
     $out['again'] = getRateRun();
     unlink(CONFIG_DIR.'/update.php');
     $out['nomark'] = getRateRun();
@@ -346,7 +357,7 @@ function getRateResume(): array {
     return $out;
 }
 
-# The stops: target rows or a mark without a manifest, a forged snapshot, a stored row and an owner that left the snapshot, and the broken sources the preflight has to name together
+# The stops: target rows or a mark without a manifest, a forged snapshot, a stored row and an owner that left the snapshot, and the broken sources the preflight names together
 function getRateStop(): array {
     $out = [];
     setRateSite();
@@ -356,7 +367,7 @@ function getRateStop(): array {
     $out['mark'] = getRateRun();
     setRateSite();
     getRateRun();
-    setRateStage('verified');
+    setRateStage('applying');
     file_put_contents(BASE_DIR.'/storage/backup/update/ratings/targets.json', '[["account",2,50,10]]');
     $out['forged'] = getRateRun();
     setRateSite();
@@ -369,7 +380,10 @@ function getRateStop(): array {
     setRateStage('applying');
     getProbeSide()->exec('UPDATE `'.PROBEPREF.'_users` SET tvotes = 38 WHERE id = 2');
     $out['owner'] = getRateRun();
-    $rows = [[20, 2, 'account', 'abc', 9, '5.5.5.5'], [21, 2, 'account', '9999999999', 9, '6.6.6.6'], [22, 2, 'account', '1700000000', 0, '0.0.0.0'], [23, 2, 'account', '1700000000', 0, 'x']];
+    $rows = [
+        [20, 2, 'account', 'abc', 9, '5.5.5.5'], [21, 2, 'account', '9999999999', 9, '6.6.6.6'],
+        [22, 2, 'account', '1700000000', 0, '0.0.0.0'], [23, 2, 'account', '1700000000', 0, 'x'],
+    ];
     setRateSite(['account' => '100|1|0', 'forum' => '0|2|1'], ['points' => '6.3.0'], array_merge(PROBEROWS, $rows));
     getProbeSide()->exec('UPDATE `'.PROBEPREF.'_users` SET votes = 0, tvotes = 4 WHERE id = 3');
     getProbeSide()->exec('UPDATE `'.PROBEPREF.'_products` SET votes = 2, tvotes = 11 WHERE id = 8');
@@ -395,8 +409,12 @@ const PROBEDEFS = [
     'order' => 'Wallet|0|1|1||0|0|1|1||First|0|1|2',
 ];
 
-# The value rows of that site: every type filled, placeholders next to an empty text and a text zero, an empty row, the full and the short layout of the forum, and a gap in an order
-const PROBEVALS = ['users' => [2 => 'B|Änn "Q"||2001-02-03|2020-05-06 07:08|one', 3 => '0|||0|0|0', 4 => ''], 'forum' => [5 => 'X||R', 7 => 'Y|L', 9 => '0|0|0'], 'order' => [1 => 'Z1||Bob']];
+# The value rows of that site: every type filled, placeholders beside an empty text and a text zero, an empty row, the full and short forum layout, and a gap in an order
+const PROBEVALS = [
+    'users' => [2 => 'B|Änn "Q"||2001-02-03|2020-05-06 07:08|one', 3 => '0|||0|0|0', 4 => ''],
+    'forum' => [5 => 'X||R', 7 => 'Y|L', 9 => '0|0|0'],
+    'order' => [1 => 'Z1||Bob'],
+];
 
 # Put the scratch site and the disposable schema back to a 6.2 installation with extra fields: positional definitions, the marks of the two units before, and positional value rows
 # The twelve hundred extra accounts make the unit write its rows in three batches; $bulk = false leaves them without a value
@@ -419,7 +437,7 @@ function setFieldSite(array $defs = PROBEDEFS, array $mark = ['points' => '6.3.0
     foreach ($rows['order'] as $id => $text) $add->execute([$id, $text]);
 }
 
-# Everything the fields unit leaves behind, read fresh from disk and from the schema: its answer, the manifest, the snapshots, the three columns, the published definitions and the mark
+# Everything the fields unit leaves behind, read fresh from disk and schema: its answer, the manifest, the snapshots, the three columns, the published definitions and the mark
 function getFieldState(string $html): array {
     $dir = BASE_DIR.'/storage/backup/update/fields';
     $info = is_file($dir.'/manifest.json') ? json_decode((string)file_get_contents($dir.'/manifest.json'), true) : null;
@@ -505,12 +523,13 @@ function getFieldStop(): array {
     $out['named'] = getFieldRun();
     setFieldSite();
     getFieldRun();
+    $file = BASE_DIR.'/storage/backup/update/fields/manifest.json';
+    file_put_contents($file, json_encode(['state' => 'applying'] + json_decode((string)file_get_contents($file), true)));
     unlink(CONFIG_DIR.'/update.php');
     file_put_contents(BASE_DIR.'/storage/backup/update/fields/order.json', '[[1,"Z1||Bob","{\"field1\":\"forged\"}"]]');
     $out['forged'] = getFieldRun();
     setFieldSite();
     getFieldRun();
-    $file = BASE_DIR.'/storage/backup/update/fields/manifest.json';
     $info = ['state' => 'applying', 'cursor' => ['account' => 0, 'forum' => 0, 'order' => 0], 'target' => []] + json_decode((string)file_get_contents($file), true);
     file_put_contents($file, json_encode($info));
     unlink(CONFIG_DIR.'/update.php');
@@ -526,15 +545,175 @@ function getFieldStop(): array {
     return $out;
 }
 
+# The sources of a 6.2 site as the configuration step meets them next to the release: each keeps its values in a variable of its own, written as one array or key by key,
+# seo carries SEO keys the global of 6.2 also had, header is code that prints, core is code without settings, and db, news and templ have no successor
+const CONFOLD = [
+    'global' => "\$conf = array (\n  'sitename' => 'Old site',\n  'version' => '6.2.0 Pro',\n  'close' => '0',\n  'language' => 'russian',\n  'module' => 'news,forum',\n"
+        ."  'amod' => 'news',\n  'css_f' => 'plugins/jquery/ui/',\n  'sep' => '/',\n  'oldkey' => 'kept',\n"
+        ."  'theme' => 'default',\n  'site_logo' => 'mark.svg',\n);",
+    'seo' => "\$confse = array();\n\$confse['sep'] = \"-\";\n\$confse['tsep'] = \"_\";",
+    'users' => "\$confu = array();\n\$confu['point'] = \"1\";\n\$confu['points'] = \"1,2,3\";\n\$confu['anum'] = \"77\";",
+    'stat' => "\$confst = array();\n\$confst['stat'] = \"0\";",
+    'uploads' => "\$confup = array();\n\$confup['forum'] = \"gif,png|104857600|1048576|500|500|10|250|10|200|100|1|0\";\n\$confup['typ'] = \"gif,png\";",
+    'security' => "\$confs = array('blocker_ip' => '10.1.2.3|3|abc|1784035343|Hack||10.9.9.9|4|0|1784035344|Spam||::1|4|0|1|Odd||', 'blocker_user' => 'bob|1784035343|Spam||');",
+    'lang' => "\$confla = array('lang' => 'german', 'key' => 'k1');",
+    'fields' => "\$conffi = array();\n\$conffi['account'] = \"Kind|A,B|3|1\";",
+    'header' => "echo '<script>probe</script>';",
+    'core' => '',
+    'db' => "\$confdb = array('name' => 'x');",
+    'news' => "\$confn = array('x' => '1');",
+    'templ' => "\$conftp = array('gif' => '<img>');",
+];
+
+# The shipped sources the configuration step writes over, as the release tracks them
+const CONFSHIP = ['global', 'security', 'users', 'fields', 'lang', 'statistic', 'uploads'];
+
+# Put the scratch site back to a 6.2 site copied under the release: the tracked sources of the release, the 6.2 sources beside them, a 6.2 db.php,
+# one public module, one panel module and one logo of the shipped theme in the tree, while the theme default of 6.2 is gone
+function setConfSite(): void {
+    deleteProbeTree(BASE_DIR);
+    mkdir(CONFIG_DIR, 0777, true);
+    mkdir(BASE_DIR.'/modules/forum', 0777, true);
+    mkdir(BASE_DIR.'/admin/modules', 0777, true);
+    touch(BASE_DIR.'/admin/modules/config.php');
+    mkdir(BASE_DIR.'/templates/lite/images/logos', 0777, true);
+    touch(BASE_DIR.'/templates/lite/images/logos/mark.svg');
+    foreach (CONFSHIP as $name) file_put_contents(CONFIG_DIR.'/'.$name.'.php', getConfShip($name));
+    $head = "<?php\nif (!defined('FUNC_FILE')) die('Illegal file access');\n\n";
+    foreach (CONFOLD as $name => $body) file_put_contents(CONFIG_DIR.'/config_'.$name.'.php', $head.$body."\n\n?>\n");
+    file_put_contents(CONFIG_DIR.'/db.php', $head."\$confdb = array (\n  'host' => 'h',\n  'name' => 'olddb',\n  'prefix' => 'sport',\n  'mode' => '1',\n);\n?>");
+}
+
+# One source of the release as the current commit tracks it, never the working copy the stand writes into
+function getConfShip(string $name): string {
+    return (string)shell_exec('git -C '.escapeshellarg(PROBEROOT).' show '.escapeshellarg('HEAD:config/'.$name.'.php').' 2>'.(PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null'));
+}
+
+# One source of the scratch site read fresh, the global area as it is and every other one by its name
+function getConfRead(string $name): mixed {
+    $data = (include CONFIG_DIR.'/'.$name.'.php');
+    return ($name === 'global') ? $data : ($data[$name] ?? null);
+}
+
+# Everything the configuration step leaves behind: its answer, the six sources, what is left of the 6.2 files in config/, what the backup holds and the hashes of config/
+function getConfState(string $html): array {
+    clearstatcache();
+    $hash = [];
+    foreach (glob(CONFIG_DIR.'/*.php') ?: [] as $file) $hash[basename($file)] = hash_file('sha256', $file);
+    $back = BASE_DIR.'/storage/backup/update/config';
+    $ship = [];
+    foreach (CONFSHIP as $name) $ship[$name] = eval('?>'.getConfShip($name));
+    return [
+        'done' => str_contains($html, _OK) && !str_contains($html, _ERROR),
+        'text' => trim(strip_tags($html)),
+        'leak' => str_contains($html, 'probe</script>'),
+        'global' => getConfRead('global'),
+        'users' => getConfRead('users'),
+        'lang' => getConfRead('lang'),
+        'statistic' => getConfRead('statistic'),
+        'fields' => getConfRead('fields'),
+        'uploads' => getConfRead('uploads'),
+        'bans' => array_intersect_key((array)getConfRead('security'), ['blocker_ip' => 0, 'blocker_user' => 0]),
+        'ship' => ['version' => $ship['global']['version'], 'css_f' => $ship['global']['css_f'], 'amod' => $ship['global']['amod'], 'theme' => $ship['global']['theme'],
+            'users' => array_keys($ship['users']['users']), 'statistic' => $ship['statistic']['statistic']],
+        'old' => array_map('basename', glob(CONFIG_DIR.'/config_*.php') ?: []),
+        'back' => array_map('basename', glob($back.'/*') ?: []),
+        'hash' => $hash,
+    ];
+}
+
+# The 6.2 configuration of a site goes over the release once: the first run, a repeat with nothing left to carry, a run that meets one source again after a break,
+# and the connection settings of the 6.2 db.php the installer reads for its lock and its form
+function getConfClean(): array {
+    setConfSite();
+    $out = ['base' => getSetupBase()];
+    $out['first'] = getConfState(setUpdateConfig());
+    $out['again'] = getConfState(setUpdateConfig());
+    copy(BASE_DIR.'/storage/backup/update/config/config_global.php', CONFIG_DIR.'/config_global.php');
+    copy(BASE_DIR.'/storage/backup/update/config/config_seo.php', CONFIG_DIR.'/config_seo.php');
+    $out['broken'] = getConfState(setUpdateConfig());
+    return $out;
+}
+
+# Put the disposable schema back to a 6.2 newsletter: the 6.3 tables with the mails column 6.2 still has, three campaigns, and the mail queue empty
+# The first campaign repeats an address and carries one that is none, the third has nobody pending
+function setMailSite(): void {
+    deleteProbeTree(BASE_DIR);
+    mkdir(CONFIG_DIR, 0777, true);
+    $side = getProbeSide();
+    foreach (['newsletter', 'mail'] as $name) {
+        $side->exec('DROP TABLE IF EXISTS `'.PROBEPREF.'_'.$name.'`');
+        $side->exec(getProbeTable($name));
+    }
+    $side->exec('ALTER TABLE `'.PROBEPREF.'_newsletter` ADD `mails` TEXT');
+    $side->exec('INSERT INTO `'.PROBEPREF.'_newsletter` (id, title, body, mails) VALUES (1, \'First\', \'\', \'a@probe.test, b@probe.test,a@probe.test,none\'),'
+        .' (2, \'Second\', \'\', \'c@probe.test\'), (3, \'Third\', \'\', \'\')');
+}
+
+# The schema file of the update drops the mails column; the probe does it in its place
+function setMailDrop(): void {
+    getProbeSide()->exec('ALTER TABLE `'.PROBEPREF.'_newsletter` DROP COLUMN `mails`');
+}
+
+# Everything the newsletter step leaves behind: its answer, the manifest, whether the snapshot is there, the queued rows and the state of the three campaigns
+function getMailState(string $html): array {
+    $dir = BASE_DIR.'/storage/backup/update/newsletter';
+    clearstatcache();
+    $info = is_file($dir.'/manifest.json') ? json_decode((string)file_get_contents($dir.'/manifest.json'), true) : null;
+    $side = getProbeSide();
+    $rows = $side->query('SELECT ref, email, sender, title, kind FROM `'.PROBEPREF.'_mail` ORDER BY ref, email')->fetchAll(PDO::FETCH_NUM);
+    return [
+        'done' => !str_contains($html, _ERROR),
+        'text' => trim(strip_tags($html)),
+        'state' => $info['state'] ?? null,
+        'count' => $info['count'] ?? null,
+        'snap' => is_file($dir.'/recipients.json'),
+        'rows' => array_map(fn($v) => [intval($v[0]), $v[1], $v[2], $v[3], $v[4]], $rows),
+        'camps' => array_map(fn($v) => array_map('intval', $v), $side->query('SELECT id, status, expect, total FROM `'.PROBEPREF.'_newsletter` ORDER BY id')
+            ->fetchAll(PDO::FETCH_NUM)),
+    ];
+}
+
+# One pass of the newsletter step, before the schema file or after it
+function getMailRun(bool $move): array {
+    return getMailState(setUpdateMails($GLOBALS['pdb'], PROBEPREF, 'admin@probe.test', $move));
+}
+
+# The recipients survive the schema file: the snapshot before it, a break after it and the queue written once, a repeat that writes nothing,
+# a break in the middle of the queue that neither loses nor doubles an address, a forged snapshot that stops the step, and a site with nothing pending
+function getMailClean(): array {
+    setMailSite();
+    $out = ['kept' => getMailRun(false)];
+    setMailDrop();
+    $out['again'] = getMailRun(false);
+    $out['moved'] = getMailRun(true);
+    $out['repeat'] = getMailRun(true);
+    $file = BASE_DIR.'/storage/backup/update/newsletter/manifest.json';
+    $info = json_decode((string)file_get_contents($file), true);
+    file_put_contents($file, json_encode(['state' => 'prepared'] + $info));
+    getProbeSide()->exec('DELETE FROM `'.PROBEPREF.'_mail` WHERE email != \'a@probe.test\'');
+    $out['half'] = getMailRun(true);
+    file_put_contents($file, json_encode(['state' => 'prepared'] + $info));
+    file_put_contents(BASE_DIR.'/storage/backup/update/newsletter/recipients.json', '[[1,"First",["x@probe.test"]]]');
+    $out['forged'] = getMailRun(true);
+    setMailSite();
+    setMailDrop();
+    $out['none'] = [getMailRun(false), getMailRun(true)];
+    return $out;
+}
+
 $report = ['error' => '', 'clean' => false, 'runs' => []];
 
 try {
-    $units = ['setConfigFile', 'getInfo', 'checkUpdateBase', 'setUpdateBackup', 'setUpdatePoints', 'setUpdateRatings', 'getUpdateRules', 'getUpdateValue', 'setUpdateFields'];
+    $units = ['setConfigFile', 'getSetupConfig', 'getSetupBase', 'getInfo', 'checkUpdateBase', 'setUpdateBackup', 'setUpdatePoints', 'setUpdateRatings', 'getUpdateRules',
+        'getUpdateValue', 'setUpdateFields', 'setUpdateConfig', 'setUpdateMails'];
     foreach ($units as $name) addProbeCode($name);
     addProbeSchema();
     $report['runs'] = match ($argv[2] ?? 'points') {
         'ratings' => ['clean' => getRateClean(), 'resume' => getRateResume(), 'stop' => getRateStop(), 'flight' => getRateFlight()],
         'fields' => ['clean' => getFieldClean(), 'resume' => getFieldResume(), 'stop' => getFieldStop()],
+        'config' => ['clean' => getConfClean()],
+        'mails' => ['clean' => getMailClean()],
         default => ['clean' => getProbeClean(), 'resume' => getProbeResume(), 'stop' => getProbeStop(), 'flight' => getProbeFlight()],
     };
 } catch (Throwable $err) {

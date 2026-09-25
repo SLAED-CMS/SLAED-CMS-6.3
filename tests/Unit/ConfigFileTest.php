@@ -62,7 +62,11 @@ final class ConfigFileTest extends TestCase
         $this->assertStringContainsString('function setConfigRestore(string $force = \'\'): bool {', $code);
         $this->assertSame(1, substr_count($code, 'function (array $arr, int $dep = 0)'), 'The exporter of a configuration file exists more than once again');
         $this->assertStringNotContainsString("unlink(CONFIG_DIR.'/local.php')", $code, 'The working snapshot is removed before its replacement is published');
-        $this->assertStringContainsString('FileManager::getPathLock(CONFIG_DIR)', $this->getBody('core/system.php', 'setConfigFile'), 'The writer takes something other than the shared lock');
+        $this->assertStringContainsString(
+            'FileManager::getPathLock(CONFIG_DIR)',
+            $this->getBody('core/system.php', 'setConfigFile'),
+            'The writer takes something other than the shared lock'
+        );
         $this->assertStringContainsString('FileManager::getPathLock(CONFIG_DIR)', $this->getBody('core/system.php', 'getConfig'), 'The rebuild runs outside the shared lock');
     }
 
@@ -220,7 +224,11 @@ final class ConfigFileTest extends TestCase
     public function theRestoreEntryIsGuarded(): void
     {
         $code = $this->getFile('admin/modules/config.php');
-        $this->assertStringContainsString("if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');", $code, 'The module is open to more than the main administrator');
+        $this->assertStringContainsString(
+            "if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');",
+            $code,
+            'The module is open to more than the main administrator'
+        );
         $this->assertStringContainsString("case 'restore': restore(); break;", $code, 'The restore entry is not routed');
         $body = $this->getBody('admin/modules/config.php', 'restore');
         $this->assertStringContainsString("checkAdminPost('config')", $body, 'The restore runs without the scoped POST token');
@@ -231,5 +239,33 @@ final class ConfigFileTest extends TestCase
         foreach (['de', 'en', 'fr', 'pl', 'ru', 'uk'] as $loc) {
             $this->assertSame(8, substr_count($this->getFile('admin/lang/'.$loc.'.php'), "define('_CONFIG_"), 'The locale '.$loc.' misses a constant of the restore screen');
         }
+    }
+
+    # A source that throws while the writer or the rebuild reads it reaches the caller, and neither the busy flag nor the shared lock outlives it: the next save goes through
+    #[Test]
+    public function aThrowingSourceLeavesNoLockBehind(): void
+    {
+        $data = $this->getProbe('faults');
+        $this->assertTrue($data['write'], 'A throwing source did not reach the caller of the writer');
+        $this->assertTrue($data['build'], 'A throwing source did not reach the caller of the rebuild');
+        $this->assertSame([true, true, false], $data['free'], 'The shared lock or the busy flag outlived the exception');
+    }
+
+    # A marker removed between its status and its read belongs to an operation that has just finished, so a reader holds no type for it
+    # Only a marker that stays and cannot be read holds every type, which is the answer the reader gave to both cases before
+    #[Test]
+    public function aMarkerGoneBeforeItsReadHoldsNoType(): void
+    {
+        $gone = $this->getProbe('markergone');
+        $this->assertSame([], $gone['held'], 'A marker removed during the read held every type');
+        $this->assertGreaterThan(0, $gone['opens'], 'The reader never tried to read the marker, so the race was not reached');
+        $this->assertSame(['*'], $this->getProbe('markerlocked')['held'], 'A marker that cannot be read no longer holds every type');
+    }
+
+    # A snapshot that cannot be read at the moment of the restore is never written as an empty source, which would delete the live file; the marker stays for another try
+    #[Test]
+    public function anUnreadableSnapshotKeepsTheLiveSource(): void
+    {
+        $this->assertSame(['proof', false, true, true, true], $this->getProbe('faults')['snapshot'], 'The restore wrote a snapshot it could not read');
     }
 }

@@ -75,11 +75,13 @@ final class InputFilterTest extends TestCase
         $this->assertSame('hello', $text[4]);
     }
 
-    # filterUrl() forces a scheme, keeps an existing https one and returns an empty string for a bare protocol
+    # filterWebUrl() forces a scheme, keeps an existing https one and returns an empty string for a bare protocol; only scheme and host lose their case,
+    # because a feed or site path with capitals is another address on most servers
     #[Test]
     public function urlFilterNormalizesScheme(): void
     {
-        $this->assertSame(['http://example.com', 'https://example.com', '', ''], $this->getProbe()['url']);
+        $this->assertSame(['http://example.com', 'https://example.com', '', '', 'https://feeds.example.com/News/RSS.xml?Id=A', 'http://example.com/Path'],
+            $this->getProbe()['url']);
     }
 
     # filterHtml() encodes the dollar sign and quotes; a lone backslash is consumed by stripslashes before the encoding runs
@@ -92,12 +94,5 @@ final class InputFilterTest extends TestCase
         $this->assertStringContainsString('&quot;', $html[2]);
         $this->assertStringContainsString('&#039;', $html[2]);
         $this->assertSame('', $html[3]);
-    }
-
-    # filterFields() joins an array with the pipe separator and stays a string for empty and scalar input
-    #[Test]
-    public function fieldsFilterJoinsArraysAndSurvivesScalars(): void
-    {
-        $this->assertSame(['one |two', '', 'plain'], $this->getProbe()['fields']);
     }
 }

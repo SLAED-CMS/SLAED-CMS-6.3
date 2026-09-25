@@ -9,7 +9,9 @@
 # configuration and creates the ten shipped types through NodeService; then batch SQL fills 100000 materials, 200 categories, two extra categories and two
 # relations per material and up to three resources per material where the type has roles, and every route budget of docs/node/11 is warmed and repeated
 # The report gives the statements per scenario against the budget, the one against the largest page, p50 and p95 of the wall time, the average statement time
-# and the plans of the main statements; a scenario over its budget, a full scan of the material table or a failure ends the tool with exit code 1
+# and the plans of the main statements with the rows each one really read; a scenario over its budget, a full scan of a Node table, a list page reading more rows
+# than its page end asks for, a deadline reading more than the timed and pinned rows of its type, a category list off the two category indexes or a failure
+# ends the tool with exit code 1
 # Options: --rows=<count of materials, 1000..1000000, default 100000> --runs=<repeats, default 30> --out=<report file> --keep (leave database and scratch)
 # Nothing touches the site database, config/, storage/ or uploads/ of the site: the directories of the core point into scratch before it boots
 if (PHP_SAPI !== 'cli') {
@@ -327,7 +329,9 @@ function getProfileRun(Closure $fn, int $runs): array {
     $db->keep = false;
     $plans = [];
     foreach ($db->trace as $one) {
-        if (($plan = getProfilePlan($pbase, $one)) !== []) $plans[] = ['sql' => substr((string)preg_replace('/\s+/', ' ', $one['sql']), 0, 160), 'plan' => $plan];
+        if (($plan = getProfilePlan($pbase, $one)) === []) continue;
+        $plans[] = ['sql' => substr((string)preg_replace('/\s+/', ' ', $one['sql']), 0, 160), 'kind' => getProfileKind($one['sql']),
+            'parts' => substr_count($one['sql'], ' UNION ALL ') + 1, 'reads' => getProfileReads($pbase, $one), 'plan' => $plan];
     }
     sort($walls);
     $pick = fn(float $part): float => round($walls[min(count($walls) - 1, (int)ceil($part * count($walls)) - 1)], 2);
@@ -346,6 +350,40 @@ function getProfilePlan(PDO $pdo, array $one): array {
     return $out;
 }
 
+# The rows one recorded read statement really reads: the handler read counters of the session around one more run of it with its own parameters
+function getProfileReads(PDO $pdo, array $one): int {
+    $pdo->exec('FLUSH STATUS');
+    $stm = $pdo->prepare($one['sql']);
+    $stm->execute($one['pars']);
+    $stm->fetchAll();
+    $num = 0;
+    foreach ($pdo->query('SHOW SESSION STATUS LIKE \'Handler_read%\'')->fetchAll(PDO::FETCH_NUM) as [, $val]) $num += (int)$val;
+    return $num;
+}
+
+# What a read statement of a list does, told by what it reads and never by the shape of the statement: the page, the count or the time bound of the list, else other
+function getProfileKind(string $sql): string {
+    if (str_contains($sql, ' AS pin, ') && str_contains($sql, ' LIMIT ')) return 'page';
+    if (str_contains($sql, 'UNIX_TIMESTAMP(MIN(')) return 'deadline';
+    return preg_match('/^SELECT (SUM\(q\.num\)|COUNT\(\*\)) AS num FROM /', $sql) ? 'count' : 'other';
+}
+
+# The reads a list statement may reach: every part of a page reads its rows up to the page end and hands them to the union, the rows of the page itself
+# pass the page table, their full row and the two joined names, the pinned part sorts all pinned rows of the type and the extra category part all links of the category;
+# a count reads the rows of the category, a time bound the pinned and timed rows of the type, and each bound carries a fixed allowance for the lookups of the plan
+function getProfileBound(PDO $pdo, array $plan, array $shape): ?int {
+    $pre = PPREF.'_';
+    $num = fn(string $sql): int => (int)$pdo->query($sql)->fetchColumn();
+    $links = $shape['cid'] ? $num('SELECT COUNT(*) FROM '.$pre.'node_categories WHERE cid = '.$shape['cid']) : 0;
+    $pins = $num('SELECT COUNT(*) FROM '.$pre.'nodes WHERE tid = '.$shape['tid'].' AND status = 2 AND pinned <> 0');
+    return match ($plan['kind']) {
+        'page' => 2 * $shape['end'] * $plan['parts'] + 4 * $shape['size'] + 2 * $pins + 3 * $links + 50,
+        'count' => $shape['cid'] ? 3 * ($num('SELECT COUNT(*) FROM '.$pre.'nodes WHERE cid = '.$shape['cid']) + $links) + 50 : null,
+        'deadline' => 3 * $num('SELECT COUNT(*) FROM '.$pre.'nodes WHERE tid = '.$shape['tid'].' AND status = 2 AND (pinned <> 0 OR published > NOW() OR expires > NOW())') + 50,
+        default => null,
+    };
+}
+
 # Every scenario of the budgets on the filled database, a type with its extension where it has one; ids are picked from the stored rows, never assumed
 function getProfileScenes(PDO $pdo, array $types, int $runs): array {
     $pre = PPREF.'_';
@@ -358,29 +396,36 @@ function getProfileScenes(PDO $pdo, array $types, int $runs): array {
     $asset = $pick('SELECT a.id FROM '.$pre.'node_assets AS a INNER JOIN '.$pre.'nodes AS n ON n.id = a.nid WHERE n.tid = '.$files->id.' AND n.status = 2'
         .' AND a.role = \'download\' ORDER BY a.id LIMIT 1');
     $cat = $pick('SELECT cid FROM '.$pre.'nodes WHERE id = '.$item);
-    $read = function (NodeType $type, int $size, int $page = 1, int $cid = 0, string $let = '', bool $dead = false): Closure {
-        return function () use ($type, $size, $page, $cid, $let, $dead): void {
+    $read = function (NodeType $type, int $size, int $page = 1, int $cid = 0, string $let = '', bool $dead = false, array $ord = []) use ($runs): array {
+        $fn = function () use ($type, $size, $page, $cid, $let, $dead, $ord): void {
             $query = getProfileQuery(false, $type);
             $query->setNodeType($query->getNodeType($type->name))->setNodePage($page, $size);
             if ($cid) $query->setNodeCategory($cid);
             if ($let !== '') $query->setNodeLetter($let);
+            if ($ord) $query->setNodeOrder(...$ord);
             if ($query->getNodeCount()) $query->getNodeList();
             if ($dead) $query->getNodeDeadline();
         };
+        return ['budget' => $dead ? 'build' : 'list', 'shape' => ['tid' => $type->id, 'end' => $page * $size, 'size' => $size, 'cid' => $cid]] + getProfileRun($fn, $runs);
     };
     $out = [];
     foreach ($types as $name => $type) {
         if ($type->ext === 'support') continue;
-        $out['list '.$name] = ['budget' => 'list'] + getProfileRun($read($type, $type->settings['list']['limit']), $runs);
+        $out['list '.$name] = $read($type, $type->settings['list']['limit']);
     }
-    $out['list media one'] = ['budget' => 'list'] + getProfileRun($read($types['media'], 1), $runs);
-    $out['list media max'] = ['budget' => 'list'] + getProfileRun($read($types['media'], 100), $runs);
-    $out['list news category'] = ['budget' => 'list'] + getProfileRun($read($news, 10, 1, $cat), $runs);
-    $out['list news last page'] = ['budget' => 'list'] + getProfileRun($read($news, 10, intdiv($pick('SELECT COUNT(*) FROM '.$pre.'nodes WHERE tid = '.$news->id
-        .' AND status = 2') + 9, 10)), $runs);
-    $out['list docs letter'] = ['budget' => 'list'] + getProfileRun($read($types['docs'], 50, 1, 0, 'b'), $runs);
-    $out['build news'] = ['budget' => 'build'] + getProfileRun($read($news, 10, 1, 0, '', true), $runs);
-    $out['build media max'] = ['budget' => 'build'] + getProfileRun($read($types['media'], 100, 1, 0, '', true), $runs);
+    $out['list media one'] = $read($types['media'], 1);
+    $out['list media max'] = $read($types['media'], 100);
+    $out['list news category'] = $read($news, 10, 1, $cat);
+    $out['list news category page 5'] = $read($news, 10, 5, $cat);
+    $out['list news last page'] = $read($news, 10, intdiv($pick('SELECT COUNT(*) FROM '.$pre.'nodes WHERE tid = '.$news->id.' AND status = 2') + 9, 10));
+    $out['list news title'] = $read($news, 10, 1, 0, '', false, ['title', 'asc']);
+    $out['list news title desc'] = $read($news, 10, 1, 0, '', false, ['title', 'desc']);
+    $out['list news updated'] = $read($news, 10, 1, 0, '', false, ['updated', 'desc']);
+    $out['list news published asc'] = $read($news, 10, 1, 0, '', false, ['published', 'asc']);
+    $out['list docs letter'] = $read($types['docs'], 50, 1, 0, 'b');
+    $out['build news'] = $read($news, 10, 1, 0, '', true);
+    $out['build news category'] = $read($news, 10, 1, $cat, '', true);
+    $out['build media max'] = $read($types['media'], 100, 1, 0, '', true);
     $out['view docs'] = ['budget' => 'view'] + getProfileRun(function () use ($types, $plain): void {
         $query = getProfileQuery(false);
         $type = $query->getNodeType('docs');
@@ -431,7 +476,7 @@ function getProfileScenes(PDO $pdo, array $types, int $runs): array {
         ->fetchAll(PDO::FETCH_COLUMN);
     foreach ($gone as $id) getProfileWriter(true, $news)->updateNodeStatus((int)$id, NodeStatus::Deleted, $ver((int)$id));
     $out['delete news'] = ['budget' => 'delete'] + getProfileRun(function (int $i) use ($news, $gone, $ver): void {
-        getProfileWriter(true, $news)->deleteNode((int)$gone[$i], $ver((int)$gone[$i]));
+        getProfileWriter(true, $news)->deleteNode((int)$gone[$i], $ver((int)$gone[$i]), $GLOBALS['com']);
     }, $runs);
     return $out;
 }
@@ -456,8 +501,20 @@ if ($preport['error'] === '') {
             $pwrite = in_array($pone['budget'], ['status', 'delete'], true);
             $pnum = $pwrite ? getProfileNodeSql($pone['trace']) : $pone['sql'];
             $plans = $pone['plans'];
-            foreach ($plans as $pplan) foreach ($pplan['plan'] as $pstep) {
-                if ($pstep[1] === 'ALL' && str_starts_with($pstep[0], PPREF.'_node') && $pstep[3] > 1000) $preport['fail'][] = $pkey.': full scan of '.$pstep[0];
+            foreach ($plans as $pi => $pplan) {
+                foreach ($pplan['plan'] as $pstep) {
+                    $pnode = str_starts_with($pstep[0], PPREF.'_node') || in_array($pstep[0], ['n', 'nc'], true);
+                    if ($pstep[1] === 'ALL' && $pnode && $pstep[3] > 1000) $preport['fail'][] = $pkey.': full scan of '.$pstep[0];
+                }
+                if (!isset($pone['shape'])) continue;
+                $plans[$pi]['bound'] = getProfileBound($pbase, $pplan, $pone['shape']);
+                if ($plans[$pi]['bound'] !== null && $pplan['reads'] > $plans[$pi]['bound']) {
+                    $preport['fail'][] = $pkey.': the '.$pplan['kind'].' read '.$pplan['reads'].' rows over its bound '.$plans[$pi]['bound'];
+                }
+                $pkeys = array_map(fn($v) => $v[0].':'.$v[2], $pplan['plan']);
+                if ($pone['shape']['cid'] && in_array($pplan['kind'], ['page', 'count'], true) && array_diff(['n:cat', 'nc:cat'], $pkeys)) {
+                    $preport['fail'][] = $pkey.': the '.$pplan['kind'].' of a category does not read both category indexes';
+                }
             }
             if ($pnum > PBUDGET[$pone['budget']]) $preport['fail'][] = $pkey.': '.$pnum.' statements over the budget '.PBUDGET[$pone['budget']];
             $preport['scenes'][$pkey] = ['node' => $pnum, 'budget' => PBUDGET[$pone['budget']], 'all' => $pone['sql'], 'least' => $pone['least'], 'p50' => $pone['p50'],

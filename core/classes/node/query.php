@@ -101,6 +101,12 @@ final class NodeQuery {
         'dead' => ['state' => 'pub', 'time' => false, 'cats' => 'lang', 'filter' => true],
     ];
 
+    # The two disjoint parts an ordered read splits every branch into: with pinned constant in each, an index holding pinned after type and state gives the rows in the sort order
+    private const PINS = ['n.pinned <> 0', 'n.pinned = 0'];
+
+    # The parts of the time bound of a list: future publications of pinned and unpinned rows through the pub index, and future expiries through the expires index
+    private const DEADS = ['n.pinned <> 0 AND n.published > NOW()', 'n.pinned = 0 AND n.published > NOW()', 'n.expires > NOW()'];
+
     private Database $db;
     private NodeContext $ctx;
     private Field $fld;
@@ -372,11 +378,16 @@ final class NodeQuery {
 
     # The types an unfinished configuration operation has touched, read from its marker once per instance; an unreadable marker holds every type
     # The file status is asked afresh, because the marker is written and removed by other processes than a long-running reader
+    # A marker that goes between the status and the read belongs to an operation that has just finished, so it holds nothing; only one that stays and cannot be read holds all
     private function getHeldTypes(): array {
         if ($this->held === null) {
             $file = BACKUP_DIR.'/config/marker.json';
             clearstatcache(true, $file);
-            $mark = is_file($file) ? json_decode((string)file_get_contents($file), true) : ['types' => []];
+            set_error_handler(static fn(): bool => true);
+            $text = is_file($file) ? file_get_contents($file) : null;
+            restore_error_handler();
+            clearstatcache(true, $file);
+            $mark = ($text === null || ($text === false && !is_file($file))) ? ['types' => []] : json_decode((string)$text, true);
             $this->held = is_array($mark['types'] ?? null) ? array_values(array_filter($mark['types'], 'is_string')) : ['*'];
         }
         return $this->held;
@@ -385,7 +396,7 @@ final class NodeQuery {
     # Assemble one type from its row and a configuration, answer null for a type that fails and false for a section the configuration does not carry at the version of the row
     # A type an unfinished configuration operation holds serves nobody until the operation is restored, because its database row and its sources may belong to different sides
     private function getTypeModel(array $row, array $cfg): NodeType|false|null {
-        $name = (string)$row['name'];
+        $name = $row['name'];
         $sect = $cfg['node']['types'][$name] ?? null;
         $held = $this->getHeldTypes();
         if (!preg_match(self::NAME, $name) || in_array($name, $held, true) || $held === ['*']) {
@@ -405,13 +416,13 @@ final class NodeQuery {
         try {
             if (!is_array($defs)) throw $this->getInvalid('fields');
             $fields = $this->fld->filterFieldList($defs);
-            $set = $this->filterTypeSettings($cfg['node'], (string)$row['ext'], $sect, $fields);
+            $set = $this->filterTypeSettings($cfg['node'], $row['ext'], $sect, $fields);
         } catch (NodeException|InvalidArgumentException $err) {
             $this->addNodeLog('the stored configuration of a type is invalid', ['name' => $name, 'path' => $err->getMessage()]);
             return null;
         }
-        return new NodeType(intval($row['id']), $name, (string)$row['title'], (string)$row['intro'], (string)$row['ext'], (bool)$row['active'], intval($row['sort']),
-            intval($row['version']), (string)$row['created'], (string)$row['updated'], $set, $fields, $uploads, $rate);
+        return new NodeType(intval($row['id']), $name, $row['title'], $row['intro'], $row['ext'], $row['active'], intval($row['sort']),
+            intval($row['version']), $row['created'], $row['updated'], $set, $fields, $uploads, $rate);
     }
 
     # Read the rows of the named types, or of every type when no name is given, ordered as the administration lists them
@@ -429,12 +440,12 @@ final class NodeQuery {
         foreach ($rows as $row) {
             $one = $this->getTypeModel($row, $conf);
             if ($one === false) $stale[] = $row;
-            else $this->types[(string)$row['name']] = $one ?? false;
+            else $this->types[$row['name']] = $one ?? false;
         }
         $again = [];
         $fresh = $stale ? getConfig() : [];
         foreach ($stale as $row) {
-            $name = (string)$row['name'];
+            $name = $row['name'];
             $one = $this->getTypeModel($row, $fresh);
             if ($one === false && is_array($fresh['node']['types'][$name] ?? null)) $again[] = $name;
             elseif ($one === false) $this->addNodeLog('a type has no configuration', ['name' => $name]);
@@ -443,7 +454,7 @@ final class NodeQuery {
         foreach ($again ? $this->getTypeRows($again) : [] as $row) {
             $one = $this->getTypeModel($row, $fresh);
             if ($one === false) $this->addNodeLog('the version of a type differs between the database and the configuration', ['name' => $row['name']]);
-            $this->types[(string)$row['name']] = $one ?: false;
+            $this->types[$row['name']] = $one ?: false;
         }
         foreach (array_merge($names, $again) as $name) $this->types[$name] ??= false;
     }
@@ -508,7 +519,7 @@ final class NodeQuery {
         if (!isset($this->cats[$type->id])) {
             $map = [];
             foreach ($this->getQueryRows('SELECT id, pread, lang FROM '.PREFIX_DB.'_categories WHERE modul = :modul', ['modul' => $type->name]) as $row) {
-                $map[intval($row['id'])] = ['read' => $this->checkCatRead((string)$row['pread']), 'lang' => (string)$row['lang']];
+                $map[intval($row['id'])] = ['read' => $this->checkCatRead($row['pread']), 'lang' => $row['lang']];
             }
             $this->cats[$type->id] = $map;
         }
@@ -524,10 +535,11 @@ final class NodeQuery {
     }
 
     # Whether the joined main category of one read row grants the context: a moderator passes, a material without category is open, the rest needs a readable category of the type
+    # The module of the category is compared without case, as every statement over the category table compares it
     private function checkRowCat(array $row, NodeType $type): bool {
         if ($this->checkModer($type) || intval($row['cid']) === 0) return true;
-        if (!$type->settings['features']['categories'] || $row['cread'] === null || $row['cmod'] !== $type->name) return false;
-        return $this->checkCatRead((string)$row['cread']);
+        if (!$type->settings['features']['categories'] || $row['cread'] === null || strtolower($row['cmod']) !== $type->name) return false;
+        return $this->checkCatRead($row['cread']);
     }
 
     # The extension a single type is read through: none for a standard type, and for a type with an extension the assigned instance of exactly the registered class
@@ -567,13 +579,21 @@ final class NodeQuery {
     }
 
     # Add the list filters of the instance to the conditions of one type branch; a filter the settings of the type do not allow is refused
-    private function addFilterSql(NodeType $type, string $key, array &$where, array &$pars): void {
+    # The category cut main reads the main category, extra the materials linked to it whose main category is another one, and no cut reads both with one predicate
+    private function addFilterSql(NodeType $type, string $key, string $cat, array &$where, array &$pars): void {
         $set = $type->settings;
         if ($this->cid > 0) {
             if (!$set['features']['categories']) throw $this->getInvalid('category');
             $good = in_array($this->cid, $this->getCatAllow($type, true), true);
-            $where[] = $good ? '(n.cid = :'.$key.'q OR EXISTS (SELECT 1 FROM '.PREFIX_DB.'_node_categories AS nc WHERE nc.nid = n.id AND nc.cid = :'.$key.'r))' : '1 = 0';
-            if ($good) $pars += [$key.'q' => $this->cid, $key.'r' => $this->cid];
+            $main = 'n.cid = :'.$key.'q';
+            $more = 'n.id IN (SELECT nc.nid FROM '.PREFIX_DB.'_node_categories AS nc WHERE nc.cid = :'.$key.'r)';
+            $where[] = !$good ? '1 = 0' : match ($cat) {
+                'main' => $main,
+                'extra' => 'n.cid <> :'.$key.'q AND '.$more,
+                default => '('.$main.' OR '.$more.')',
+            };
+            if ($good) $pars[$key.'q'] = $this->cid;
+            if ($good && $cat !== 'main') $pars[$key.'r'] = $this->cid;
         }
         if ($this->letter !== '') {
             if (!$set['list']['alpha']) throw $this->getInvalid('letter');
@@ -604,7 +624,8 @@ final class NodeQuery {
     }
 
     # Compile the conditions one type contributes to a read, with value names unique to the branch key: type, state and dates, category rights, filters and extension scope
-    private function getBranchSql(NodeType $type, string $key, ?NodeExtension $ext, string $read): array {
+    # A part of a split read adds its category cut and one trusted condition of this class
+    private function getBranchSql(NodeType $type, string $key, ?NodeExtension $ext, string $read, string $cat = '', string $cond = ''): array {
         $rule = self::READS[$read];
         $moder = $this->checkModer($type);
         $where = ['n.tid = :'.$key.'t'];
@@ -631,9 +652,10 @@ final class NodeQuery {
                 $where[] = $ids ? '(n.cid = 0 OR n.cid IN ('.$this->getInList($ids, $key.'c', $pars).'))' : 'n.cid = 0';
             }
         }
-        if ($rule['filter']) $this->addFilterSql($type, $key, $where, $pars);
-        [$join, $cond, $more] = $this->getScopeSql($type, $ext, $key);
-        if ($cond !== '') $where[] = '('.$cond.')';
+        if ($rule['filter']) $this->addFilterSql($type, $key, $cat, $where, $pars);
+        if ($cond !== '') $where[] = $cond;
+        [$join, $scope, $more] = $this->getScopeSql($type, $ext, $key);
+        if ($scope !== '') $where[] = '('.$scope.')';
         return ['type' => $type, 'join' => $join, 'where' => implode(' AND ', $where), 'pars' => $pars + $more];
     }
 
@@ -645,10 +667,15 @@ final class NodeQuery {
         return array_map(fn($v) => [$v, $v->ext === '' ? null : $this->getFactoryExt($v->ext)], $this->list);
     }
 
-    # Compile every branch of the current selection for one kind of read
-    private function getListParts(string $read): array {
+    # Compile every branch of the current selection for one kind of read; a type branch splits into disjoint parts, each one range of an index:
+    # the main and the extra category when a readable category is chosen, and each given condition, such as pinned and unpinned rows of an ordered read
+    private function getListParts(string $read, array $conds = ['']): array {
         $out = [];
-        foreach ($this->getTypeSet() as $i => [$type, $ext]) $out[] = $this->getBranchSql($type, 'b'.$i, $ext, $read);
+        foreach ($this->getTypeSet() as $i => [$type, $ext]) {
+            $cut = $this->cid > 0 && self::READS[$read]['filter'] && $type->settings['features']['categories'] && in_array($this->cid, $this->getCatAllow($type, true), true);
+            $j = 0;
+            foreach ($cut ? ['main', 'extra'] : [''] as $cat) foreach ($conds as $cond) $out[] = $this->getBranchSql($type, 'b'.$i.'v'.$j++, $ext, $read, $cat, $cond);
+        }
         return $out;
     }
 
@@ -713,21 +740,21 @@ final class NodeQuery {
             $this->addNodeLog('a material carries an unknown state or comment mode', ['nid' => $id]);
             return null;
         }
-        return new Node($id, intval($row['tid']), intval($row['cid']), intval($row['uid']), (string)$row['aname'], $this->checkModer($type) ? (string)$row['ip'] : null,
-            (string)$row['title'], (string)$row['intro'], $body ? (string)$row['body'] : null, $fields ? $this->getFieldValues((string)$row['field'], $id) : null,
-            intval($row['poll']), (bool)$row['home'], $mode, (bool)$row['pinned'], intval($row['comnum']), intval($row['views']), intval($row['score']), intval($row['ratings']),
-            $state, intval($row['version']), (string)$row['created'], (string)$row['updated'], $row['published'] === null ? null : (string)$row['published'],
-            $row['expires'] === null ? null : (string)$row['expires'], $cids, $rels, $assets, $row['uname'] === null ? null : (string)$row['uname'],
-            $row['ctitle'] === null ? null : (string)$row['ctitle']);
+        return new Node($id, intval($row['tid']), intval($row['cid']), intval($row['uid']), $row['aname'], $this->checkModer($type) ? $row['ip'] : null,
+            $row['title'], $row['intro'], $body ? $row['body'] : null, $fields ? $this->getFieldValues($row['field'], $id) : null,
+            intval($row['poll']), $row['home'], $mode, $row['pinned'], intval($row['comnum']), intval($row['views']), intval($row['score']), intval($row['ratings']),
+            $state, intval($row['version']), $row['created'], $row['updated'], $row['published'],
+            $row['expires'], $cids, $rels, $assets, $row['uname'],
+            $row['ctitle']);
     }
 
     # Build one resource from its row, the unknown metadata as null
     private function getAssetModel(array $row): NodeAsset {
         $num = fn($v) => $v === null ? null : intval($v);
-        return new NodeAsset(intval($row['id']), intval($row['nid']), (string)$row['kind'], (string)$row['role'], (string)$row['src'], (string)$row['name'], (string)$row['title'],
-            (string)$row['intro'], $row['mime'] === null ? null : (string)$row['mime'], $num($row['size']), $num($row['width']), $num($row['height']), $num($row['duration']),
-            intval($row['hits']), $row['reported'] === null ? null : (string)$row['reported'], intval($row['ruid']), intval($row['sort']), (string)$row['created'],
-            (string)$row['updated']);
+        return new NodeAsset(intval($row['id']), intval($row['nid']), $row['kind'], $row['role'], $row['src'], $row['name'], $row['title'],
+            $row['intro'], $row['mime'], $num($row['size']), $num($row['width']), $num($row['height']), $num($row['duration']),
+            intval($row['hits']), $row['reported'], intval($row['ruid']), intval($row['sort']), $row['created'],
+            $row['updated']);
     }
 
     # The extra categories of a set of materials with one statement, every asked id present with a list that may be empty
@@ -747,7 +774,7 @@ final class NodeQuery {
         $out = array_fill_keys($ids, []);
         $sql = 'SELECT id, nid, rid, type, sort, created FROM '.PREFIX_DB.'_node_relations WHERE nid IN ('.$this->getInList($ids, 'i', $pars).') ORDER BY nid, type, sort, rid';
         foreach ($this->getQueryRows($sql, $pars) as $row) {
-            $rel = new NodeRelation(intval($row['id']), intval($row['nid']), intval($row['rid']), (string)$row['type'], intval($row['sort']), (string)$row['created']);
+            $rel = new NodeRelation(intval($row['id']), intval($row['nid']), intval($row['rid']), $row['type'], intval($row['sort']), $row['created']);
             $out[$rel->nid][] = $rel;
         }
         return $out;
@@ -891,29 +918,27 @@ final class NodeQuery {
         return $this;
     }
 
-    # The select of one list branch: the main columns, the fields where the type uses them, the author and category names and the order helpers
+    # The select of one list part: the id and the sort keys with the order helpers, no text column, so the union of the parts stays a small table in memory
     private function getListSelect(array $part): string {
-        $type = $part['type'];
-        return 'SELECT '.self::COLS.', '.(($this->sets && $this->checkFieldUse($type)) ? 'n.field' : '\'\'').' AS field, u.name AS uname, c.title AS ctitle, '
-            .($type->settings['features']['pinned'] ? 'n.pinned' : '0').' AS pin, (n.ratings = 0) AS rnone, n.score / NULLIF(n.ratings, 0) AS ravg'
-            .' FROM '.PREFIX_DB.'_nodes AS n LEFT JOIN '.PREFIX_DB.'_users AS u ON u.id = n.uid AND n.uid > 0'
-            .' LEFT JOIN '.PREFIX_DB.'_categories AS c ON c.id = n.cid AND n.cid > 0'.$part['join'].' WHERE '.$part['where'];
+        return 'SELECT n.id, '.($part['type']->settings['features']['pinned'] ? 'n.pinned' : '0').' AS pin, n.published, n.updated, n.title, n.views, n.ratings,'
+            .' (n.ratings = 0) AS rnone, n.score / NULLIF(n.ratings, 0) AS ravg FROM '.PREFIX_DB.'_nodes AS n'.$part['join'].' WHERE '.$part['where'];
     }
 
-    # Read one page of the selection; a mixed selection unions the branches, each cut to the page end, and orders and pages the union once more
+    # Read one page of the selection: the disjoint parts of every branch, each ordered through its index and cut to the page end, are unioned, ordered and paged once more,
+    # and only the ids of that page read their full row, the fields where a selected type uses them and the names of author and category
     public function getNodeList(): array {
-        $parts = $this->getListParts('list');
+        $parts = $this->getListParts('list', self::PINS);
         $size = $this->getPageSize();
         $skip = ($this->page - 1) * $size;
         $ord = $this->getOrderSql('');
+        $field = $this->sets && array_filter($this->list, fn($v) => $this->checkFieldUse($v));
         $pars = [];
         foreach ($parts as $part) $pars += $part['pars'];
-        if (count($parts) === 1) {
-            $sql = $this->getListSelect($parts[0]).' ORDER BY '.$ord.' LIMIT '.$skip.', '.$size;
-        } else {
-            $sql = 'SELECT q.* FROM ('.implode(' UNION ALL ', array_map(fn($v) => '('.$this->getListSelect($v).' ORDER BY '.$ord.' LIMIT '.($skip + $size).')', $parts))
-                .') AS q ORDER BY '.$this->getOrderSql('q.').' LIMIT '.$skip.', '.$size;
-        }
+        $page = 'SELECT q.* FROM ('.implode(' UNION ALL ', array_map(fn($v) => '('.$this->getListSelect($v).' ORDER BY '.$ord.' LIMIT '.($skip + $size).')', $parts))
+            .') AS q ORDER BY '.$this->getOrderSql('q.').' LIMIT '.$skip.', '.$size;
+        $sql = 'SELECT '.self::COLS.', '.($field ? 'n.field' : '\'\'').' AS field, u.name AS uname, c.title AS ctitle FROM ('.$page.') AS p'
+            .' INNER JOIN '.PREFIX_DB.'_nodes AS n ON n.id = p.id LEFT JOIN '.PREFIX_DB.'_users AS u ON u.id = n.uid AND n.uid > 0'
+            .' LEFT JOIN '.PREFIX_DB.'_categories AS c ON c.id = n.cid AND n.cid > 0 ORDER BY '.$this->getOrderSql('p.');
         return $this->getListNodes($this->getQueryRows($sql, $pars));
     }
 
@@ -930,10 +955,46 @@ final class NodeQuery {
         return intval($this->getQueryRows($query, $pars)[0]['num'] ?? 0);
     }
 
+    # Count the selection of the author filter per type with the sums of score and ratings and the favorites held on its materials, as type id => the four numbers
+    # The rules and filters of the list apply, so a profile counts exactly what its lists read; favorites count only where the type offers them
+    public function getNodeAuthorStat(): array {
+        if ($this->author < 1) throw $this->getInvalid('author');
+        $pars = [];
+        $sql = [];
+        foreach ($this->getListParts('list') as $i => $part) {
+            $type = $part['type'];
+            $fav = '0';
+            if ($type->settings['features']['favorites']) {
+                $fav = 'COALESCE(SUM((SELECT COUNT(*) FROM '.PREFIX_DB.'_favorites AS f WHERE f.modul = :fm'.$i.' AND f.fid = n.id)), 0)';
+                $pars['fm'.$i] = $type->name;
+            }
+            $sql[] = 'SELECT '.$type->id.' AS tid, COUNT(*) AS num, COALESCE(SUM(n.score), 0) AS score, COALESCE(SUM(n.ratings), 0) AS ratings, '.$fav.' AS favs'
+                .' FROM '.PREFIX_DB.'_nodes AS n'.$part['join'].' WHERE '.$part['where'];
+            $pars += $part['pars'];
+        }
+        $query = 'SELECT q.tid, SUM(q.num) AS num, SUM(q.score) AS score, SUM(q.ratings) AS ratings, SUM(q.favs) AS favs FROM ('.implode(' UNION ALL ', $sql).') AS q'
+            .' GROUP BY q.tid';
+        $out = [];
+        foreach ($this->getQueryRows($query, $pars) as $row) {
+            $out[intval($row['tid'])] = ['num' => intval($row['num']), 'score' => intval($row['score']), 'ratings' => intval($row['ratings']), 'favs' => intval($row['favs'])];
+        }
+        return $out;
+    }
+
+    # Count the materials of every main category of one type in any state, as category id => count, for the Node manager and a moderator of the type
+    # A main category with materials is what makes deleteNodeCategory() refuse, so the category screen offers the deletion by the same rule
+    public function getNodeCategoryCount(NodeType $type): array {
+        if (!$this->ctx->manage && !$this->checkModer($type)) throw new NodeException('The context does not administer the type', NodeException::DENIED);
+        $out = [];
+        $sql = 'SELECT cid, COUNT(*) AS num FROM '.PREFIX_DB.'_nodes WHERE tid = :tid AND cid > 0 GROUP BY cid';
+        foreach ($this->getQueryRows($sql, ['tid' => $type->id]) as $row) $out[intval($row['cid'])] = intval($row['num']);
+        return $out;
+    }
+
     # The next moment the published selection changes on its own: the nearest future publication or expiry among the materials the list would show once their time comes
-    # One aggregate statement answers a Unix time or null; the rights, filters and scope stay, only the time condition is lifted
+    # One aggregate statement answers a Unix time or null; the rights, filters and scope stay, the time condition of the list gives way to the future parts of DEADS
     public function getNodeDeadline(): ?int {
-        $parts = $this->getListParts('dead');
+        $parts = $this->getListParts('dead', self::DEADS);
         $pars = [];
         $sql = [];
         foreach ($parts as $part) {
@@ -989,7 +1050,8 @@ final class NodeQuery {
 
     # Read the light targets of a map of global id => type name in at most two statements: the types still unknown to the instance, then one union of every type branch
     # The answer keeps the order of the input and leaves out every target that is missing, closed, not published, of a disabled type or of another type than expected
-    public function getNodeTargetList(array $refs): array {
+    # With any, a type the context moderates is read as a single item is, in every state and switched off as well; public readers never pass it
+    public function getNodeTargetList(array $refs, bool $any = false): array {
         global $conf;
         $lims = $this->getNodeLimits($conf['node'] ?? null);
         if (count($refs) > min(500, $lims['syncbatch'] ?? 500)) throw $this->getInvalid('refs');
@@ -1002,8 +1064,9 @@ final class NodeQuery {
         $tmap = [];
         foreach (array_values(array_unique($refs)) as $i => $name) {
             $type = $this->types[$name] ?? false;
-            if (!$type || !$type->active) continue;
-            $part = $this->getBranchSql($type, 'b'.$i, $type->ext === '' ? null : $this->getFactoryExt($type->ext), 'target');
+            $all = $type && $any && $this->checkModer($type);
+            if (!$type || (!$type->active && !$all)) continue;
+            $part = $this->getBranchSql($type, 'b'.$i, $type->ext === '' ? null : $this->getFactoryExt($type->ext), $all ? 'item' : 'target');
             $ids = $this->getInList(array_keys($refs, $name, true), 'b'.$i.'i', $pars);
             $sql[] = 'SELECT n.id, n.tid, n.cid, n.uid, n.title, n.comon, n.comnum, n.score, n.ratings, c.pread AS cread, c.modul AS cmod FROM '.PREFIX_DB.'_nodes AS n'
                 .' LEFT JOIN '.PREFIX_DB.'_categories AS c ON c.id = n.cid AND n.cid > 0'.$part['join'].' WHERE n.id IN ('.$ids.') AND '.$part['where'];
@@ -1016,7 +1079,7 @@ final class NodeQuery {
             $type = $tmap[intval($row['tid'])];
             $mode = CommentMode::tryFrom(intval($row['comon']));
             if ($mode === null || !$this->checkRowCat($row, $type)) continue;
-            $found[intval($row['id'])] = new NodeTarget($type, intval($row['id']), intval($row['uid']), (string)$row['title'], $mode, intval($row['comnum']),
+            $found[intval($row['id'])] = new NodeTarget($type, intval($row['id']), intval($row['uid']), $row['title'], $mode, intval($row['comnum']),
                 intval($row['score']), intval($row['ratings']));
         }
         $out = [];
@@ -1025,8 +1088,8 @@ final class NodeQuery {
     }
 
     # Read the light target of one global id of the expected type with the very check of the batch read
-    public function getNodeTarget(string $type, int $id): ?NodeTarget {
-        return $this->getNodeTargetList([$id => $type])[$id] ?? null;
+    public function getNodeTarget(string $type, int $id, bool $any = false): ?NodeTarget {
+        return $this->getNodeTargetList([$id => $type], $any)[$id] ?? null;
     }
 
     # Read one batch of the tree of the selected type after a cursor: id, title, the parent only when the context may read it, and the sort of the parent link
@@ -1042,7 +1105,7 @@ final class NodeQuery {
             .' WHERE '.$part['where'].' AND n.id > :after ORDER BY n.id LIMIT '.$limit;
         $out = [];
         foreach ($this->getQueryRows($sql, $part['pars'] + $up['pars'] + ['after' => $after]) as $row) {
-            $out[] = ['id' => intval($row['id']), 'title' => (string)$row['title'], 'parent' => ($row['rok'] && $row['parent'] !== null) ? intval($row['parent']) : null,
+            $out[] = ['id' => intval($row['id']), 'title' => $row['title'], 'parent' => ($row['rok'] && $row['parent'] !== null) ? intval($row['parent']) : null,
                 'sort' => intval($row['rsort'] ?? 0)];
         }
         return $out;
@@ -1067,8 +1130,8 @@ final class NodeQuery {
         $query = count($sql) === 1 ? $sql[0] : 'SELECT q.* FROM ('.implode(' UNION ALL ', array_map(fn($v) => '('.$v.')', $sql)).') AS q ORDER BY q.id LIMIT '.$limit;
         $out = [];
         foreach ($this->getQueryRows($query, $pars) as $row) {
-            $out[] = ['id' => intval($row['id']), 'name' => $tmap[intval($row['tid'])], 'title' => (string)$row['title'], 'cid' => intval($row['cid']),
-                'ctitle' => $row['ctitle'] === null ? null : (string)$row['ctitle'], 'published' => (string)$row['published'], 'updated' => (string)$row['updated']];
+            $out[] = ['id' => intval($row['id']), 'name' => $tmap[intval($row['tid'])], 'title' => $row['title'], 'cid' => intval($row['cid']),
+                'ctitle' => $row['ctitle'], 'published' => $row['published'], 'updated' => $row['updated']];
         }
         return $out;
     }

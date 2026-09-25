@@ -24,7 +24,8 @@ interface NodeExtension {
     public function checkNodeAction(NodeType $type, Node|NodeTarget $node, string $action): bool;
 
     # Follow an action that has really happened, changing only rows of the extension inside the transaction of the action owner
-    public function updateNodeAction(NodeType $type, NodeTarget $node, string $action): void;
+    # The uid names whose action it is - the author of a comment, the voter, the user of a favorite or of a resource - never the moderator who published it
+    public function updateNodeAction(NodeType $type, NodeTarget $node, string $action, int $uid): void;
 
     # Create the rows of the extension after the main row and the standard sets, before the shared commit
     public function addNodeData(Node $node, array $data): void;

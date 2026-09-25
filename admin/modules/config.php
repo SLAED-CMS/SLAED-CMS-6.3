@@ -1056,7 +1056,7 @@ function restore(): void {
         $text = _TOKENMISS;
         if (!$warn) {
             $warn = !setConfigRestore();
-            $why = $warn ? (string)(getConfigJournal()['why'] ?? '') : '';
+            $why = $warn ? (getConfigJournal()['why'] ?? '') : '';
             $text = $warn ? (($why !== '') ? sprintf(_CONFIG_BLOCKED, $why) : _ERROR_UP) : _CONFIG_RESTORED;
         }
         setRedirect($afile.'.php?name=config&op=restore', false, 302, $text, $warn);

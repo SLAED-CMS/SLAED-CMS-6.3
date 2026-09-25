@@ -42,14 +42,9 @@ function order(): void {
                     ['is_col_date' => true, 'content_html' => format_time($date, _TIMESTRING)],
                     ['is_col_status' => true, 'content_html' => ad_status('', $status)],
                     ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => [
-                        ['href' => $afile.'.php?name=order&op=activate&id='.$id.'&act='.$act.'&token='.getSiteToken(), 'icon_name' => 'power', 'title' => $status ? _DEACTIVATE : _ACTIVATE],
+                        getTplPostAction(['name' => 'order', 'op' => 'activate', 'id' => $id, 'act' => $act], 'power', $status ? _DEACTIVATE : _ACTIVATE),
                         ['href' => $afile.'.php?name=order&op=add&id='.$id, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
-                        [
-                            'href' => $afile.'.php?name=order&op=delete&id='.$id.'&token='.getSiteToken(),
-                            'icon_name' => 'trash',
-                            'title' => _ONDELETE,
-                            'confirm_text' => _DELETE.' "'._ID.': '.$id.'"?',
-                        ],
+                        getTplPostAction(['name' => 'order', 'op' => 'delete', 'id' => $id], 'trash', _ONDELETE, _DELETE.' "'._ID.': '.$id.'"?'),
                     ]])],
                 ],
             ])]);
@@ -133,11 +128,13 @@ function save(): void {
         if ($room = checkEditorTextRoom($note, 'order.note')) $stop[] = $room;
         if (!$stop && $posttype === 'save') {
             if ($mid) {
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_order SET email = :email, info = :info, note = :note, time = :time WHERE id = :mid', ['email' => $email, 'info' => $flds['json'], 'note' => $note, 'time' => $date, 'mid' => $mid]);
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_order SET email = :email, info = :info, note = :note, time = :time WHERE id = :mid', ['email' => $email,
+                    'info' => $flds['json'], 'note' => $note, 'time' => $date, 'mid' => $mid]);
             } else {
                 $ip = getip();
                 $agent = getagent();
-                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_order (email, info, note, ip, agent, time, status) VALUES (:email, :info, :note, :ip, :agent, :time, \'1\')', ['email' => $email, 'info' => $flds['json'], 'note' => $note, 'ip' => $ip, 'agent' => $agent, 'time' => $date]);
+                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_order (email, info, note, ip, agent, time, status) VALUES (:email, :info, :note, :ip, :agent, :time, \'1\')',
+                    ['email' => $email, 'info' => $flds['json'], 'note' => $note, 'ip' => $ip, 'agent' => $agent, 'time' => $date]);
             }
         }
     }
@@ -158,8 +155,8 @@ function save(): void {
 
 function delete(int $did = 0): void {
     global $db, $afile, $pnt, $admin;
-    $id = $did ?: getVar('req', 'id', 'num', 0);
-    $iswarn = !$did && !checkSiteToken();
+    $id = $did ?: getVar('post', 'id', 'num', 0);
+    $iswarn = !$did && !checkAdminPost('order');
     $note = $iswarn ? _TOKENMISS : _SUCCDELETE;
     if (!$iswarn && $id) {
         $done = $db->setSqlBegin();
@@ -178,9 +175,11 @@ function delete(int $did = 0): void {
 
 function activate(): void {
     global $db, $afile, $conf, $prs, $mailer, $pnt, $admin;
-    $act = getVar('get', 'act', 'num', 0);
-    $id = getVar('get', 'id', 'num', 0);
-    $iswarn = !checkSiteToken();
+    $act = getVar('post', 'act', 'raw', '');
+    $id = getVar('post', 'id', 'num', 0);
+    $good = checkAdminPost('order');
+    $iswarn = !$good || !in_array($act, ['0', '1'], true);
+    $act = intval($act);
     $done = !$iswarn && $id && $db->setSqlBegin();
     if ($done) {
         [$uid, $was] = $db->getSqlRow($db->getSqlQuery('SELECT uid, status FROM '.PREFIX_DB.'_order WHERE id = :id FOR UPDATE', ['id' => $id]));
@@ -202,9 +201,9 @@ function activate(): void {
         }
     }
     $succ = $act ? _OR_8 : _SUCCSTATUS;
-    $url = $act ? $afile.'.php?name=order&send=1' : $afile.'.php?name=order';
+    $url = (!$iswarn && $act) ? $afile.'.php?name=order&send=1' : $afile.'.php?name=order';
     if (!$iswarn && $id && !$done) setRedirect($afile.'.php?name=order', false, 302, _ERROR, true);
-    setRedirect($url, false, 302, $iswarn ? _TOKENMISS : $succ, $iswarn);
+    setRedirect($url, false, 302, $iswarn ? ($good ? _ERROR : _TOKENMISS) : $succ, $iswarn);
 }
 
 function config(): void {

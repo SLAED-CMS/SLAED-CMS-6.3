@@ -184,7 +184,8 @@ class Cache {
 
     # Bump the page-cache generation counter through an exclusive lock to invalidate every cached page, and answer whether the new generation is proven to be on disk
     # One bump per request is enough for ordinary writers, so a repeat answers true without work; the owner of a write guard forces the final bump that follows its commit
-    # A growing number never gets shorter, so it is written over the old one in place and the file is never empty between two states; only a malformed counter is truncated first
+    # A growing number never gets shorter, so it is written over the old one in place and the file is never empty between two states; only leading zeros are truncated first
+    # A counter that is no plain number is refused and left as it is: rebuilding it from what intval() makes of it could move the generation back onto one already served
     public static function addEpoch(bool $force = false): bool {
         if (self::$bumped && !$force) return true;
         $dir = COUNTER_DIR;
@@ -193,11 +194,11 @@ class Cache {
         if ($hand === false) return false;
         $done = false;
         if (flock($hand, LOCK_EX)) {
-            $raw = (string)stream_get_contents($hand);
-            $text = (string)(intval($raw) + 1);
-            if (strlen($text) < strlen($raw)) ftruncate($hand, 0);
-            rewind($hand);
-            $done = fwrite($hand, $text) === strlen($text) && fflush($hand) && rewind($hand) && stream_get_contents($hand) === $text;
+            $raw = stream_get_contents($hand);
+            $good = $raw === '' || (is_string($raw) && preg_match('/^[0-9]{1,18}$/D', $raw));
+            $text = $good ? (string)(intval($raw) + 1) : '';
+            if ($good && strlen($text) < strlen($raw)) ftruncate($hand, 0);
+            $done = $good && rewind($hand) && fwrite($hand, $text) === strlen($text) && fflush($hand) && rewind($hand) && stream_get_contents($hand) === $text;
             flock($hand, LOCK_UN);
         }
         fclose($hand);

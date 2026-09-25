@@ -194,7 +194,8 @@ final class CommentTargetTest extends TestCase
         $this->assertStringContainsString('$com->getUserCount($uid)', $hub);
         $this->assertStringNotContainsString('PREFIX_DB.\'_comment', $hub);
         # Both files still build a table name from the module map, so the comment entry has to stay out of the branch that does it
-        $this->assertStringContainsString('if ($mod == \'comm\' || !is_active($mod)) continue;', $feed, 'The feed lets the comment entry reach the UNION again');
-        $this->assertStringContainsString('if ($mod != \'comm\') {', $hub, 'The hub lets the comment entry reach the UNION again');
+        $guard = 'if ($mod == \'comm\' || isset($inf[\'type\']) || !is_active($mod)) continue;';
+        $this->assertStringContainsString($guard, $feed, 'The feed lets the comment entry reach the UNION again');
+        $this->assertStringContainsString('} elseif ($mod != \'comm\') {', $hub, 'The hub lets the comment entry reach the UNION again');
     }
 }

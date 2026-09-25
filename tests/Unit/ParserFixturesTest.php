@@ -151,7 +151,6 @@ namespace Tests\Unit {
 
                 'unclosed backtick' => ['незакрытый `backtick', true, '', '<p>незакрытый `backtick</p>'],
 
-                # Stage S07 of docs/node: a backslash before ASCII punctuation is a literal in every mode and format, and the character returns HTML-escaped after the parse
                 'literal emphasis'        => ['\*not em\*',        true,  '', '<p>*not em*</p>'],
                 'literal backslash pair'  => ['a\\\\b',            true,  '', '<p>a\\b</p>'],
                 'literal bb pair'         => ['\[b]x\[/b]',        true,  '', '<p>[b]x[/b]</p>'],
@@ -544,6 +543,39 @@ namespace Tests\Unit {
                 if (is_dir($dir.'/thumb')) rmdir($dir.'/thumb');
                 if (is_dir($dir)) rmdir($dir);
             }
+        }
+
+        # A safe rendering that trusts its tags makes markup of what [usehtml] encloses and runs what [usephp] encloses, while foreign markup, a free block and an
+        # unsafe link around them stay text; an indented line inside a tag is no code block, and without safe mode the argument changes nothing
+        #[Test]
+        public function checkTrustedTagsTrustOnlyTheirContent(): void
+        {
+            $html = self::$p->filterDoc('<b>foreign</b> [url=javascript:alert(1)]u[/url] [block=1] [usehtml]<i>own</i>[/usehtml]', true, '', 0, '', 0, true);
+            $this->assertStringContainsString('<i>own</i>', $html, 'The content of a trusted tag was not trusted');
+            $this->assertStringContainsString('&lt;b&gt;foreign', $html, 'Markup around a trusted tag was trusted');
+            $this->assertStringNotContainsString('<b>foreign', $html);
+            $this->assertStringNotContainsString('javascript:', $html, 'An unsafe link around a trusted tag survived');
+            $this->assertStringContainsString('[block=1]', $html, 'A free block around a trusted tag was rendered');
+            $run = self::$p->filterDoc('[usephp]echo 6*7;[/usephp] <script>x()</script>', true, '', 0, '', 0, true);
+            $this->assertStringContainsString('42', $run, 'The content of [usephp] did not run');
+            $this->assertStringNotContainsString('<script>', $run, 'A script around [usephp] was trusted');
+            $flag = new \ReflectionProperty(\Parser::class, 'vary');
+            $this->assertTrue($flag->getValue(self::$p), 'Executed php of a trusting safe rendering may be stored');
+            $deep = self::$p->filterDoc("[usehtml]\n    <div>x</div>\n[/usehtml]\n\n    code", true, '', 0, '', 0, true);
+            $this->assertStringContainsString('<div>x</div>', $deep, 'An indented line inside a trusted tag became code');
+            $this->assertStringContainsString('<code', $deep, 'An indented line outside the tags stopped being code');
+            $this->assertSame('<p>[usehtml]a[/usehtml]</p>', self::$p->filterDoc('[usehtml]a[/usehtml]', true), 'A safe rendering without trust honoured a tag');
+            $this->assertSame(self::$p->filterDoc('<b>x</b> [usehtml]y[/usehtml]', false), self::$p->filterDoc('<b>x</b> [usehtml]y[/usehtml]', false, '', 0, '', 0, true));
+        }
+
+        # A text mixing the three forms of the attachment grammar renders every attachment, the same set getAttachList() names
+        #[Test]
+        public function checkMixedAttachFormsRenderEveryOne(): void
+        {
+            $src = '[attach=a.pdf align=left title=A] [attach=b.pdf align=left title=B width=10 height=20] [attach=c.pdf align=left title=C width=1 height=2 rel=g]';
+            $html = self::$p->filterDoc($src, true, '');
+            foreach (['a.pdf', 'b.pdf', 'c.pdf'] as $name) $this->assertStringContainsString('uploads/all/'.$name, $html, 'A mixed form was not rendered: '.$name);
+            $this->assertSame(['a.pdf', 'b.pdf', 'c.pdf'], self::$p->getAttachList($src));
         }
 
         #[Test]

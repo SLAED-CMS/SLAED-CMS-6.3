@@ -309,37 +309,66 @@ class FileManager {
     # Takes the exclusive lock of one directory and answers the open handle, or false when it cannot be taken; every writer of the project serializes on this one protocol
     # The key is the directory and not the file, because the upload service draws a free name below it and the file it is about to write does not exist yet to be locked
     # Two writers holding two protocols of their own would not wait for each other at all, which is why the pair is public here instead of private in whoever writes first
-    # The lock is owned by the request: a key this request already holds answers the same handle and only counts the entry, because a second flock on a new handle would wait for this very process
+    # The lock is owned by the request: a key it already holds answers the same handle and counts the entry, since a second flock on a new handle would wait for this process
+    # A directory below the root of one upload area is locked after that root, so a write into a subdirectory waits for an owner that holds the whole area, as a type deletion does
     public static function getPathLock(string $dir): mixed {
-        $key = rtrim(str_replace('\\', '/', $dir), '/');
+        $key = self::getLockKey($dir);
+        $base = defined('UPLOADS_DIR') ? self::getLockKey(UPLOADS_DIR) : '';
+        $rest = ($base !== '' && str_starts_with($key, $base.'/')) ? substr($key, strlen($base) + 1) : '';
+        $top = str_contains($rest, '/') ? self::getPathLock($base.'/'.strstr($rest, '/', true)) : null;
+        if ($top === false) return false;
         if (isset(self::$held[$key])) {
             self::$held[$key]['count']++;
             return self::$held[$key]['lock'];
         }
         $locks = self::getLockDir();
-        if ($locks === '' || (!is_dir($locks) && !mkdir($locks, 0750, true) && !is_dir($locks))) return false;
-        $lock = fopen($locks.'/'.substr(sha1($key), 0, 16).'.lock', 'cb');
-        if ($lock === false) return false;
-        if (!flock($lock, LOCK_EX)) {
+        $lock = ($locks === '' || (!is_dir($locks) && !mkdir($locks, 0750, true) && !is_dir($locks))) ? false : fopen($locks.'/'.substr(sha1($key), 0, 16).'.lock', 'cb');
+        if ($lock !== false && !flock($lock, LOCK_EX)) {
             fclose($lock);
+            $lock = false;
+        }
+        if ($lock === false) {
+            if ($top !== null) self::deletePathLock($top);
             return false;
         }
-        self::$held[$key] = ['lock' => $lock, 'count' => 1];
+        self::$held[$key] = ['lock' => $lock, 'count' => 1, 'root' => $top];
         return $lock;
     }
 
     # Releases one lock taken by getPathLock(); the lock file itself is never deleted, because deleting it would break the lock for a process that still holds it
     # One entry of a held key only counts down, and the flock goes with the last one, so an inner operation never frees the directory its outer owner still works in
+    # The root of the upload area a subdirectory lock took with it is released after it, one entry for every entry of the subdirectory
     public static function deletePathLock(mixed $lock): void {
         if (!is_resource($lock)) return;
+        $top = null;
+        $last = true;
         foreach (self::$held as $key => $one) {
             if ($one['lock'] !== $lock) continue;
-            if (--self::$held[$key]['count'] > 0) return;
-            unset(self::$held[$key]);
+            $top = $one['root'];
+            $last = --self::$held[$key]['count'] < 1;
+            if ($last) unset(self::$held[$key]);
             break;
         }
-        flock($lock, LOCK_UN);
-        fclose($lock);
+        if ($last) {
+            flock($lock, LOCK_UN);
+            fclose($lock);
+        }
+        if ($top !== null) self::deletePathLock($top);
+    }
+
+    # Returns the canonical key of one directory: the resolved path of its deepest existing part with the rest appended, forward slashes and no trailing one
+    # A junction, a second spelling or another letter case of one directory must reach the same key, so Windows keys are lower case like the filesystem that ignores it
+    private static function getLockKey(string $dir): string {
+        $path = rtrim(str_replace('\\', '/', $dir), '/');
+        $tail = '';
+        $real = realpath($path);
+        while ($real === false && ($cut = strrpos($path, '/')) > 0) {
+            $tail = substr($path, $cut).$tail;
+            $path = substr($path, 0, $cut);
+            $real = str_contains($path, '/') ? realpath($path) : false;
+        }
+        $key = (($real !== false) ? rtrim(str_replace('\\', '/', $real), '/') : $path).$tail;
+        return (DIRECTORY_SEPARATOR === '\\') ? strtolower($key) : $key;
     }
 
     # Returns the one directory the lock files of the project live in, outside every tree they guard, so a lock is never listed, downloaded or removed with what it serializes
@@ -349,10 +378,11 @@ class FileManager {
     }
 
     # Takes the exclusive lock of every directory one operation touches, sorted, because two writers taking the same two keys in opposite order wait for each other forever
+    # The keys are compared segment by segment, so the root of an upload area, which every subdirectory lock takes first, never sorts after a key of another area
     # A key that cannot be taken releases what this call already holds and answers the empty list, so a caller never works believing it holds a lock it never got
     private static function getPathLocks(array $dirs): array {
-        $keys = array_unique(array_map(static fn(string $dir): string => rtrim(str_replace('\\', '/', $dir), '/'), $dirs));
-        sort($keys);
+        $keys = array_unique(array_map(static fn(string $dir): string => self::getLockKey($dir), $dirs));
+        usort($keys, static fn(string $a, string $b): int => strcmp(str_replace('/', "\0", $a), str_replace('/', "\0", $b)));
         $out = [];
         foreach ($keys as $key) {
             $lock = self::getPathLock($key);

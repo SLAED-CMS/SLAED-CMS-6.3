@@ -909,10 +909,11 @@ function filterVar(string|array $var): string|array {
     return preg_match('#[^a-zA-Z0-9_\-]#', $var) ? '' : $var;
 }
 
-# Normalize a submitted web address: lowercase, force an http(s) prefix, run through the text filter; a bare protocol returns '' — not to be confused with the parser link policy in Parser::filterUrl()
+# Normalize a submitted web address: force an http(s) prefix, lowercase scheme and host only, run the text filter; a bare protocol returns ''
+# Path and query keep their case, because on most servers they name another resource; the parser link policy is Parser::filterUrl(), not this
 function filterWebUrl(string $url): string {
-    $url = strtolower($url);
     $url = preg_match('#https?://#i', $url) ? $url : 'http://'.$url;
+    $url = preg_replace_callback('#^https?://[^/?\#]*#i', fn($v) => strtolower($v[0]), $url) ?? '';
     return ($url === 'http://') ? '' : filterText($url);
 }
 
@@ -938,9 +939,8 @@ function filterTrustedTags(string $text, bool $trust = false): string {
 }
 
 # Strip tags, HTML-encode, apply censor; $type=2 skips strip_tags (HTML allowed), $type=1 skips censor
-function filterText(string|array $message, int $type = 0): string {
+function filterText(string $message, int $type = 0): string {
     global $conf;
-    if (is_array($message)) $message = filterFields($message);
     $message = filterTrustedTags($message, isAdmin(true));
     if ($type === 2) {
         $message = htmlspecialchars(trim($message), ENT_QUOTES);
@@ -1010,12 +1010,6 @@ function filterHtml(string $text, mixed $id = ''): string {
         return $out;
     }
     return '';
-}
-
-# Filter and join an array of custom fields into a pipe-separated string
-function filterFields(mixed $field): string {
-    if (is_array($field)) return isArray($field) ? stripslashes(filterText(implode('|', $field), 2)) : '';
-    return is_string($field) && $field !== '' ? stripslashes(filterText($field, 2)) : '';
 }
 
 # Format a duration in seconds as human-readable hours/minutes/seconds

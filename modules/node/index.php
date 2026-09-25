@@ -32,16 +32,6 @@ function getNodeWriter(?NodeType $type = null): NodeService {
     return new NodeService($db, getNodeContext(), $fld, $pnt, ($type !== null) ? getNodeHandler($type) : null);
 }
 
-# The template of one view part of the type: the file of its display mode when the theme carries one, otherwise the base file of Node, answered once per request
-function getNodeTplName(string $kind, string $name, NodeType $type): string {
-    global $tpl;
-    static $memo = [];
-    $mode = $type->settings['view']['mode'];
-    $key = $kind.'|'.$mode.'|'.$name;
-    if (!isset($memo[$key])) $memo[$key] = ($mode !== 'default' && $tpl->checkTemplateFile($kind, 'node/'.$mode.'/'.$name)) ? 'node/'.$mode.'/'.$name : 'node/'.$name;
-    return $memo[$key];
-}
-
 # A plain label of the type configuration: a language constant is resolved, plain text stays as it is
 function getNodeLabel(string $text): string {
     return ($text !== '' && $text[0] === '_' && defined($text)) ? (string)constant($text) : $text;
@@ -402,14 +392,12 @@ function getNodeCover(NodeType $type, array $view): string {
     return '';
 }
 
-# Render the resources of a prepared material, one fragment of the display mode of each role; a role shown by no mode of its own stays out, the poster goes to the player
+# Render the resources of a prepared material, one fragment of the display mode of each role; a role shown by no mode of its own stays out,
+# and the first image of the standard role poster goes to the player
 function getNodeAssetView(NodeType $type, array $view): string {
     global $tpl;
     $out = '';
-    $poster = '';
-    foreach ($type->settings['assets'] as $role => $def) {
-        if ($def['mode'] === 'none' && $def['kinds'] === ['image']) $poster = $poster ?: (string)($view['assets'][$role][0]['href'] ?? '');
-    }
+    $poster = (string)($view['assets']['poster'][0]['href'] ?? '');
     foreach ($type->settings['assets'] as $role => $def) {
         $items = $view['assets'][$role] ?? [];
         if (!$items || $def['mode'] === 'none') continue;
@@ -624,7 +612,7 @@ function setNodeView(): void {
         'author' => $view['author'],
         'time' => (string)$node->pubdate,
         'mtime' => $node->updated,
-        'img' => ($cover !== '') ? rtrim((string)$conf['homeurl'], '/').'/'.$cover : '',
+        'img' => ($cover === '' || preg_match('#^https?://#i', $cover)) ? $cover : rtrim((string)$conf['homeurl'], '/').'/'.$cover,
     ]);
     echo getNodeViewHtml($type, $view, $rels, $moder ? $afile.'.php?name=node&op=edit&id='.$node->id.'&type='.$type->name : '', $ext, $live)
         .($talk ? setComShow($node->id, $com->getTargetMode($type->name, $node->id)->value) : '');
@@ -756,7 +744,8 @@ function setNodeAttach(): void {
     exit;
 }
 
-# A report that a resource does not work: CSRF, one report a minute for a visitor, and the writer stores the first report once; the answer returns to the page the report came from
+# A report that a resource does not work: CSRF, one report a minute for a visitor, and the writer stores the first report once; the answer returns to the material the resource
+# belongs to, the page the report came from, and to the list of the type only when the material can no longer be read
 function setNodeReport(): void {
     global $conf;
     $id = getNodeNumber('id', 404);
@@ -775,7 +764,12 @@ function setNodeReport(): void {
         setNodeDeny(in_array($err->getCode(), [NodeException::NOTFOUND, NodeException::INVALID], true) ? 404 : getNodeStatus($err));
     }
     $_SESSION[$key] = time();
-    setRedirect(getSeoUrl(['name' => $type->name]), true, 302, _NODE_REPORTED);
+    try {
+        $nid = getNodeReader($type)->getNodeAsset($id, $type)?->nid ?? 0;
+    } catch (NodeException) {
+        $nid = 0;
+    }
+    setRedirect(getSeoUrl(['name' => $type->name] + ($nid ? ['op' => 'view', 'id' => $nid] : [])), true, 302, _NODE_REPORTED);
 }
 
 # The owner closes or reopens one request of support: CSRF, the expected version of its card and the wanted state; the assignment and the priority are the stored ones,
@@ -804,13 +798,13 @@ function setNodeSupport(): void {
 }
 
 if (!defined('ADMIN_FILE')) {
+    $njour = getConfigJournal();
+    if ($njour && ($njour['why'] === 'journal' || in_array($conf['name'], $njour['types'], true))) setNodeDeny(503);
     $nops = getNodeOps(((string)$op === 'support') ? getNodeRoute()->ext : '');
     $nway = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
     $op = (string)$op;
     if (!isset($nops[$op])) setNodeDeny(404);
     if (!in_array($nway, $nops[$op], true)) setNodeDeny(405, $nops[$op]);
-    $njour = getConfigJournal();
-    if ($njour && ($njour['why'] === 'journal' || in_array($conf['name'], $njour['types'], true))) setNodeDeny(503);
     switch ($op) {
         default: setNodeList(); break;
         case 'view': setNodeView(); break;

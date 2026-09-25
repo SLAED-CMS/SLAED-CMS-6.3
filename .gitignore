@@ -26,6 +26,9 @@
 # Marks of finished 6.3 data updates: written by setup on the site itself, a shipped mark would open a subsystem that was never updated
 /config/update.php
 
+# The owner key that opens the installer on an installed site; a shipped key would leave every installation open
+/config/setup.unlock
+
 # Backups
 *.bak
 *.backup

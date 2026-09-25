@@ -61,13 +61,15 @@ final class NodeQueryTest extends TestCase
             'filterNodeSettings' => ['string ext', 'array settings', 'array fields', 'array'],
             'getNode' => ['int id', 'NodeType type', '?Node'],
             'getNodeAsset' => ['int id', 'NodeType type', '?NodeAsset'],
+            'getNodeAuthorStat' => ['array'],
+            'getNodeCategoryCount' => ['NodeType type', 'array'],
             'getNodeContent' => ['int id', 'NodeType type', '?Node'],
             'getNodeCount' => ['int'],
             'getNodeDeadline' => ['?int'],
             'getNodeList' => ['array'],
             'getNodeSitemap' => ['int after = 0', 'int limit = 500', 'array'],
-            'getNodeTarget' => ['string type', 'int id', '?NodeTarget'],
-            'getNodeTargetList' => ['array refs', 'array'],
+            'getNodeTarget' => ['string type', 'int id', 'bool any = false', '?NodeTarget'],
+            'getNodeTargetList' => ['array refs', 'bool any = false', 'array'],
             'getNodeTree' => ['int after = 0', 'int limit = 500', 'array'],
             'getNodeType' => ['string name', '?NodeType'],
             'getNodeTypeExport' => ['string name', 'string'],
@@ -284,6 +286,8 @@ final class NodeQueryTest extends TestCase
         }
         $this->assertRefused($run['plain'], 'category', 'a category of a type without categories');
         $this->assertRefused($run['zero'], 'category', 'category 0');
+        $this->assertSame([116, 115, 102], $run['double']['ids'], 'A link repeating the main category doubled its material');
+        $this->assertSame(3, $run['double']['count']);
     }
 
     # The language of the categories narrows lists and their deadline, never a direct read, a target or a sitemap row
@@ -382,6 +386,12 @@ final class NodeQueryTest extends TestCase
         $this->assertSame([114, 121, 120, 119, 118, 117, 116, 115, 113, 112, 105, 104, 103, 102, 101], $ids('news'));
         $this->assertSame([114, 101, 102, 103, 104, 105, 112, 113, 115, 116, 117, 118, 119, 120, 121], $ids('news-published-asc'));
         $this->assertSame([114, 120, 118, 121, 104, 112, 119, 116, 115, 117, 103, 101, 102, 113, 105], $ids('news-title-asc'));
+        $this->assertSame([114, 105, 113, 102, 101, 103, 117, 115, 116, 119, 112, 104, 121, 118, 120], $ids('news-title-desc'), 'Pinned first in both directions');
+        $rows = $run['news-updated-desc'];
+        $want = $rows;
+        usort($want, fn($a, $b) => [$b['pinned'], $b['updated'], $b['id']] <=> [$a['pinned'], $a['updated'], $a['id']]);
+        $this->assertSame(array_column($want, 'id'), array_column($rows, 'id'));
+        $this->assertCount(15, $rows);
         $this->assertSame([114, 102, 101, 120, 121, 119, 118, 117, 116, 115, 113, 112, 105, 104, 103], $ids('news-views-desc'));
         $this->assertSame([114, 102, 101, 121, 120, 119, 118, 117, 116, 115, 113, 112, 105, 104, 103], $ids('news-rating-desc'));
         $this->assertSame([114, 101, 102, 121, 120, 119, 118, 117, 116, 115, 113, 112, 105, 104, 103], $ids('news-rating-asc'));
@@ -515,6 +525,32 @@ final class NodeQueryTest extends TestCase
         $this->assertNull($run['plain']);
         $this->assertSame(1, $run['plainsql']);
         $this->assertNull($run['category'], 'A time of another category leaked into the deadline');
+        $this->assertSame($run['pinwant'], $run['pinned'], 'The expiry of a pinned material bounds the list');
+        $this->assertSame($run['extrawant'], $run['extra'], 'A pinned future material of the extra category bounds the category list');
+    }
+
+    # The author numbers per type are exactly what the list of the same selection reads, for a guest and the main administrator, in one statement
+    # Favorites count only on their own type and material; without an author the call is refused. The category counts of a type follow the rule of the category writer
+    #[Test]
+    public function authorNumbersAndCategoryCountsFollowTheirRules(): void
+    {
+        $run = $this->getRuns()['author'];
+        foreach (['guest', 'root'] as $who) {
+            $this->assertSame($run[$who]['want'], $run[$who]['mixed'], $who.': the mixed numbers differ from the lists');
+            $this->assertSame($run[$who]['want'], $run[$who]['single'], $who.': the single numbers differ from the lists');
+            $this->assertSame(1, $run[$who]['cost'], $who);
+        }
+        $this->assertSame(['num' => 4, 'score' => 8, 'ratings' => 2, 'favs' => 2], $run['guest']['want'][1]);
+        $this->assertSame(3, $run['root']['want'][1]['favs'], 'A favorite of a material the main administrator reads was not counted');
+        $this->assertSame(1, $run['guest']['want'][2]['favs']);
+        $this->assertSame(1, $run['guest']['want'][3]['favs']);
+        $this->assertRefused($run['noauthor'], 'author', 'no author');
+        $this->assertNotSame([], $run['catwant']);
+        foreach (['root', 'boss', 'moder'] as $who) $this->assertSame($run['catwant'], $run['cat-'.$who]['value'], $who);
+        foreach (['anna', 'guest', 'moder-files'] as $who) {
+            $this->assertFalse($run['cat-'.$who]['ok'], $who);
+            $this->assertSame(2, $run['cat-'.$who]['code'], $who);
+        }
     }
 
     # The budgets of 11-security-performance.md from a fresh reader including the type: three without categories, the batches of the type on top, never more than seven

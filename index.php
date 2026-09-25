@@ -54,7 +54,6 @@ if (empty($go)) {
         if (!$name) $home = 1;
         $name = $nname;
         $conf['name'] = $name;
-        $conf['style'] = 'sl_mod_'.$name;
         $mconf = $conf['modules']['node'] ?? [];
         $blocks = (string)($mconf['side'] ?? '');
         $blocks_c = (string)($mconf['top'] ?? '');
@@ -64,7 +63,6 @@ if (empty($go)) {
     }
     if ($name) {
         $conf['name'] = $name;
-        $conf['style'] = 'sl_mod_'.strtolower($name);
         $module = 1;
         $mconf = $conf['modules'][$name] ?? [];
         $active = $mconf['active'] ?? 0;

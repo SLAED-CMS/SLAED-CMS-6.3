@@ -95,6 +95,8 @@ function getSearchItem(string $mod, string $url, string $edithref, array $data):
         'time' => (string)($data['time'] ?? ''),
         'cid' => (int)($data['cid'] ?? 0),
         'content' => (string)($data['content'] ?? ''),
+        'safe' => (bool)($data['safe'] ?? false),
+        'trust' => (bool)($data['trust'] ?? false),
         'nick' => $data['nick'] ?? null,
         'user' => $data['user'] ?? null,
         'post' => (bool)($data['post'] ?? false),
@@ -192,7 +194,8 @@ function getSearchNode(array $state, array $types, int $skip): array {
                 $type = $tmap[$node->tid];
                 $url = getSearchUrl(['name' => $type->name, 'op' => 'view', 'id' => $node->id, 'title' => $node->title], $state['word']);
                 $rows[] = getSearchItem($type->name, $url, $afile.'.php?name=node&op=edit&id='.$node->id.'&type='.$type->name, [
-                    'title' => $node->title, 'time' => (string)$node->pubdate, 'cid' => $node->cid, 'content' => $node->intro,
+                    'title' => htmlspecialchars($node->title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'time' => (string)$node->pubdate, 'cid' => $node->cid,
+                    'content' => $node->intro, 'safe' => true, 'trust' => true,
                     'comments' => $type->settings['features']['comments'] ? $node->comnum : null, 'reads' => $node->views,
                 ]);
             }
@@ -229,10 +232,10 @@ function getSearchRows(array $state): array {
     return [array_merge($rows, $more), count($rows) + $total];
 }
 
-function getSearchSnippet(string $html, string $word, string $mod, int $len = 180): string {
+function getSearchSnippet(string $html, string $word, string $mod, bool $safe, bool $trust = false, int $len = 180): string {
     global $prs;
     if ($html === '') return '';
-    $text = html_entity_decode(strip_tags($prs->filterContent($html, false, $mod)), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $text = html_entity_decode(strip_tags($prs->filterContent($html, $safe, $mod, 0, '', 0, $trust)), ENT_QUOTES | ENT_HTML5, 'UTF-8');
     $text = trim((string)preg_replace('/\s+/u', ' ', $text));
     if ($text === '') return '';
     $needle = mb_strtolower(trim($word), 'UTF-8');
@@ -274,7 +277,7 @@ function getSearchLine(array $row, array $state, int $numb): string {
         ]);
     }
     $aside .= $tpl->getHtmlFrag('link', ['href' => '#'.$numb, 'title' => (string)$numb, 'label' => (string)$numb, 'is_num_anchor' => true]);
-    $snippet = getSearchSnippet($row['content'], $word, $row['mod']);
+    $snippet = getSearchSnippet($row['content'], $word, $row['mod'], $row['safe'], $row['trust']);
     $body = $tpl->getHtmlFrag('block-content', ['is_pull_right' => true, 'content' => $aside])
         .$tpl->getHtmlFrag('category-nav', ['label' => _CATEGORIES, 'crumbs' => getTplCategoryTrail($row['mod'], $row['cid'], $sep, getModuleName($row['mod']))])
         .$tpl->getHtmlFrag('title', ['title_html' => $link, 'is_level_two' => true])
@@ -297,7 +300,8 @@ function getSearchList(array $rows, int $anum, array $state): string {
         $numb++;
     }
     if (!$anum) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NOMATCHES]);
-    $cont .= ($anum > $snum) ? getPageNumbers($conf['name'], $anum, $pnum, $snum, 'mod='.$state['mod'].'&word='.urlencode($state['word']).'&', $state['snump'], $page) : $tpl->getHtmlPart('navi-lower', [
+    $pref = 'mod='.$state['mod'].'&word='.urlencode($state['word']).'&';
+    $cont .= ($anum > $snum) ? getPageNumbers($conf['name'], $anum, $pnum, $snum, $pref, $state['snump'], $page) : $tpl->getHtmlPart('navi-lower', [
         'back_button' => ['button_type' => 'button', 'title' => _BACK, 'label' => _BACK, 'is_back' => true, 'is_navi_lower' => true],
         'home_link' => ['href' => 'index.php?name='.$conf['name'], 'title' => _PAGEHOME, 'label' => _PAGEHOME, 'is_navi_lower' => true],
         'top_link' => ['href' => '#top', 'title' => _PAGETOP, 'label' => _PAGETOP, 'is_navi_lower' => true],

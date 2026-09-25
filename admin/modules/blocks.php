@@ -751,99 +751,77 @@ function editsave(): void {
         $param = (string)json_encode($set, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         if (getNodeBlockParam($param) === null) setRedirect($afile.'.php?name=blocks&op=edit&id='.$bid, false, 302, _BLOCKPROBLEM, true);
     }
-    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET param = :param WHERE id = :bid', ['param' => $param, 'bid' => $bid]);
-    if (isset($bwhere)) {
-        $which = '';
-        if (in_array('all', $bwhere)) $which = 'all';
-        if (in_array('home', $bwhere)) $which = 'home';
-        if ($which == '') {
-            $which = implode(',', $bwhere);
-        } else {
-            if (in_array('otricanie', $bwhere)) $which .= ',otricanie';
-            if (in_array('flyfix', $bwhere)) $which .= ',flyfix';
-        }
-        if (in_array('infly', $bwhere)) {
-            if (in_array('flyfix', $bwhere)) {
-                $which = 'infly,'.str_replace('infly,', '', $which);
-            } else {
-                $which = 'infly,';
-            }
-        }
-        if (in_array('ihome', $bwhere) && $which != 'home') {
-            $which = 'ihome,'.str_replace(',ihome', '', $which);
-        }
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET which = :which WHERE id = :bid', ['which' => $which, 'bid' => $bid]);
+    $which = '';
+    if (in_array('all', $bwhere)) $which = 'all';
+    if (in_array('home', $bwhere)) $which = 'home';
+    if ($which == '') {
+        $which = implode(',', $bwhere);
     } else {
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET which = \'\' WHERE id = :bid', ['bid' => $bid]);
+        if (in_array('otricanie', $bwhere)) $which .= ',otricanie';
+        if (in_array('flyfix', $bwhere)) $which .= ',flyfix';
     }
+    if (in_array('infly', $bwhere)) {
+        if (in_array('flyfix', $bwhere)) {
+            $which = 'infly,'.str_replace('infly,', '', $which);
+        } else {
+            $which = 'infly,';
+        }
+    }
+    if (in_array('ihome', $bwhere) && $which != 'home') {
+        $which = 'ihome,'.str_replace(',ihome', '', $which);
+    }
+    $fresh = false;
     if ($url) {
         $bkey = '';
         $content = getRssBody($url);
-        if ($content === null) [$content] = $db->getSqlRow($db->getSqlQuery('SELECT content FROM '.PREFIX_DB.'_blocks WHERE id = :bid', ['bid' => $bid]));
-        if ($oldpos != $bpos) {
-            $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_blocks WHERE weight >= :weight AND bpos = :bpos', ['weight' => $weight, 'bpos' => $bpos]);
-            $fweight = $weight;
-            $oweight = $weight;
-            while ([$nbid] = $db->getSqlRow($result)) {
-                $weight++;
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :weight WHERE id = :bid', ['weight' => $weight, 'bid' => $nbid]);
-            }
-            $result2 = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_blocks WHERE weight > :oweight AND bpos = :oldposition', ['oweight' => $oweight, 'oldposition' => $oldpos]);
-            while ([$obid] = $db->getSqlRow($result2)) {
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :oweight WHERE id = :bid', ['oweight' => $oweight, 'bid' => $obid]);
-                $oweight++;
-            }
-            [$lastw] = $db->getSqlRow($db->getSqlQuery('SELECT weight FROM '.PREFIX_DB.'_blocks WHERE bpos = :bpos ORDER BY weight DESC LIMIT 0,1', ['bpos' => $bpos]));
-            if ($lastw <= $fweight) {
-                $lastw++;
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET title = :title, content = :content, bpos = :bpos, weight = :weight, status = :active, refresh = :refresh, lang = :lang, bfile = :bfile, view = :view WHERE id = :bid', [
-                    'title' => $title, 'content' => $content, 'bpos' => $bpos, 'weight' => $lastw, 'active' => $active, 'refresh' => $refresh, 'lang' => $lang, 'bfile' => $bfile, 'view' => $view, 'bid' => $bid
-                ]);
-            } else {
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET title = :title, content = :content, bpos = :bpos, weight = :weight, status = :active, refresh = :refresh, lang = :lang, bfile = :bfile, view = :view WHERE id = :bid', [
-                    'title' => $title, 'content' => $content, 'bpos' => $bpos, 'weight' => $fweight, 'active' => $active, 'refresh' => $refresh, 'lang' => $lang, 'bfile' => $bfile, 'view' => $view, 'bid' => $bid
-                ]);
-            }
-        } else {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET bkey = :bkey, title = :title, content = :content, url = :url, bpos = :bpos, weight = :weight, status = :active, refresh = :refresh, lang = :lang, bfile = :bfile, view = :view WHERE id = :bid', [
-                'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bpos' => $bpos, 'weight' => $weight, 'active' => $active, 'refresh' => $refresh, 'lang' => $lang, 'bfile' => $bfile, 'view' => $view, 'bid' => $bid
-            ]);
-        }
-        setRedirect($afile.'.php?name=blocks', false, 302, _SUCCSAVE);
-    } else {
-        if ($oldpos != $bpos) {
-            $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_blocks WHERE weight >= :weight AND bpos = :bpos', ['weight' => $weight, 'bpos' => $bpos]);
-            $fweight = $weight;
-            $oweight = $weight;
-            while ([$nbid] = $db->getSqlRow($result)) {
-                $weight++;
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :weight WHERE id = :bid', ['weight' => $weight, 'bid' => $nbid]);
-            }
-            $result2 = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_blocks WHERE weight > :oweight AND bpos = :oldposition', ['oweight' => $oweight, 'oldposition' => $oldpos]);
-            while ([$obid] = $db->getSqlRow($result2)) {
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :oweight WHERE id = :bid', ['oweight' => $oweight, 'bid' => $obid]);
-                $oweight++;
-            }
-            [$lastw] = $db->getSqlRow($db->getSqlQuery('SELECT weight FROM '.PREFIX_DB.'_blocks WHERE bpos = :bpos ORDER BY weight DESC LIMIT 0,1', ['bpos' => $bpos]));
-            if ($lastw <= $fweight) {
-                $lastw++;
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET title = :title, content = :content, bpos = :bpos, weight = :weight, status = :active, refresh = :refresh, lang = :lang, bfile = :bfile, view = :view WHERE id = :bid', [
-                    'title' => $title, 'content' => $content, 'bpos' => $bpos, 'weight' => $lastw, 'active' => $active, 'refresh' => $refresh, 'lang' => $lang, 'bfile' => $bfile, 'view' => $view, 'bid' => $bid
-                ]);
-            } else {
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET title = :title, content = :content, bpos = :bpos, weight = :weight, status = :active, refresh = :refresh, lang = :lang, bfile = :bfile, view = :view WHERE id = :bid', [
-                    'title' => $title, 'content' => $content, 'bpos' => $bpos, 'weight' => $fweight, 'active' => $active, 'refresh' => $refresh, 'lang' => $lang, 'bfile' => $bfile, 'view' => $view, 'bid' => $bid
-                ]);
-            }
-        } else {
-            if ($expire == '') $expire = 0;
-            if ($newexp == 1 && $expire != 0) $expire = time() + ($expire * 86400);
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET bkey = :bkey, title = :title, content = :content, url = :url, bpos = :bpos, weight = :weight, status = :active, refresh = :refresh, lang = :lang, bfile = :bfile, view = :view, expire = :expire, action = :action WHERE id = :bid', [
-                'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bpos' => $bpos, 'weight' => $weight, 'active' => $active, 'refresh' => $refresh, 'lang' => $lang, 'bfile' => $bfile, 'view' => $view, 'expire' => $expire, 'action' => $action, 'bid' => $bid
-            ]);
-        }
-        setRedirect($afile.'.php?name=blocks', false, 302, _SUCCSAVE);
+        $fresh = $content !== null;
+        if (!$fresh) [$content] = $db->getSqlRow($db->getSqlQuery('SELECT content FROM '.PREFIX_DB.'_blocks WHERE id = :bid', ['bid' => $bid]));
+    } elseif ($oldpos == $bpos) {
+        if ($expire == '') $expire = 0;
+        if ($newexp == 1 && $expire != 0) $expire = time() + ($expire * 86400);
     }
+    $fail = !$db->setSqlBegin();
+    $put = function (string $sql, array $pars) use ($db, &$fail): PDOStatement|false {
+        $res = $fail ? false : $db->getSqlQuery($sql, $pars);
+        if ($res === false) $fail = true;
+        return $res;
+    };
+    $put('UPDATE '.PREFIX_DB.'_blocks SET param = :param, which = :which WHERE id = :bid', ['param' => $param, 'which' => $which, 'bid' => $bid]);
+    $pars = ['bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bpos' => $bpos, 'active' => $active, 'refresh' => $refresh, 'lang' => $lang,
+        'bfile' => $bfile, 'view' => $view, 'bid' => $bid];
+    $sql = 'UPDATE '.PREFIX_DB.'_blocks SET bkey = :bkey, title = :title, content = :content, url = :url, bpos = :bpos, weight = :weight, status = :active, refresh = :refresh,'
+        .' lang = :lang, bfile = :bfile, view = :view';
+    if ($fresh) {
+        $sql .= ', time = :time';
+        $pars['time'] = time();
+    }
+    if ($oldpos != $bpos) {
+        $result = $put('SELECT id FROM '.PREFIX_DB.'_blocks WHERE weight >= :weight AND bpos = :bpos', ['weight' => $weight, 'bpos' => $bpos]);
+        $fweight = $weight;
+        $oweight = $weight;
+        while ($result && [$nbid] = $db->getSqlRow($result)) {
+            $weight++;
+            $put('UPDATE '.PREFIX_DB.'_blocks SET weight = :weight WHERE id = :bid', ['weight' => $weight, 'bid' => $nbid]);
+        }
+        $result = $put('SELECT id FROM '.PREFIX_DB.'_blocks WHERE weight > :oweight AND bpos = :oldposition', ['oweight' => $oweight, 'oldposition' => $oldpos]);
+        while ($result && [$obid] = $db->getSqlRow($result)) {
+            $put('UPDATE '.PREFIX_DB.'_blocks SET weight = :oweight WHERE id = :bid', ['oweight' => $oweight, 'bid' => $obid]);
+            $oweight++;
+        }
+        $result = $put('SELECT weight FROM '.PREFIX_DB.'_blocks WHERE bpos = :bpos ORDER BY weight DESC LIMIT 0,1', ['bpos' => $bpos]);
+        [$lastw] = ($result ? $db->getSqlRow($result) : false) ?: [0];
+        $put($sql.' WHERE id = :bid', ['weight' => ($lastw <= $fweight) ? $lastw + 1 : $fweight] + $pars);
+    } elseif ($url) {
+        $put($sql.' WHERE id = :bid', ['weight' => $weight] + $pars);
+    } else {
+        $put($sql.', expire = :expire, action = :action WHERE id = :bid', ['weight' => $weight, 'expire' => $expire, 'action' => $action] + $pars);
+    }
+    if (!$fail && !$db->setSqlCommit()) $fail = true;
+    if ($fail) {
+        $db->setSqlRollback();
+        setRedirect($afile.'.php?name=blocks&op=edit&id='.$bid, false, 302, _ERROR, true);
+    }
+    setRedirect($afile.'.php?name=blocks', false, 302, _SUCCSAVE);
 }
 
 function change(): void {

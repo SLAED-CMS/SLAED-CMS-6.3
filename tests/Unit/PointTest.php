@@ -70,7 +70,11 @@ final class PointTest extends TestCase
         $this->assertTrue($ref->isFinal(), 'The class is not final');
         $open = array_map(static fn(\ReflectionMethod $one): string => $one->getName(), $ref->getMethods(\ReflectionMethod::IS_PUBLIC));
         sort($open);
-        $this->assertSame(['__construct', 'addEvent', 'getEventId'], $open, 'The public API is not exactly the constructor, addEvent and getEventId');
+        $want = ['__construct', 'addEvent', 'checkNote', 'getEventId', 'setUserLocks'];
+        $this->assertSame($want, $open, 'The public API is not exactly the constructor, addEvent, checkNote, getEventId and setUserLocks');
+        $prop = array_map(static fn(\ReflectionProperty $one): string => $one->getName(), $ref->getProperties(\ReflectionProperty::IS_PUBLIC));
+        $this->assertSame(['valid'], $prop, 'The only public property is not the read-only valid');
+        $this->assertTrue($ref->getProperty('valid')->isPrivateSet(), 'Point::$valid can be written from outside');
         $this->assertSame('bool', (string)$ref->getMethod('addEvent')->getReturnType());
         $this->assertSame('int|false', (string)$ref->getMethod('getEventId')->getReturnType());
     }
@@ -236,6 +240,17 @@ final class PointTest extends TestCase
         $this->assertSame([false, false, [], 0], $run['own'], 'A failure without an owner left a transaction open or a row behind');
         $this->assertSame([true, [10], 10], $run['healed'], 'The refused event could not be awarded afterwards');
         $this->assertTrue($run['log'], 'The failure was not logged with the source of its event');
+    }
+
+    # The accounts one operation moves are locked together by ascending id inside the transaction of its owner; outside a transaction nothing runs at all
+    #[Test]
+    public function theAccountsOfOneOperationAreLockedTogether(): void
+    {
+        $run = $this->getRun('users');
+        $this->assertSame([false, true, 0], [$run['alone'], $run['none'], $run['cost']], 'A lock of accounts outside a transaction ran, or an empty set was refused');
+        $this->assertTrue($run['held'], 'The accounts of the operation could not be locked');
+        $this->assertSame([true, true], $run['locked'], 'An account of the set stayed free inside the transaction of the owner');
+        $this->assertTrue($run['freed']);
     }
 
     # The account row is the first lock: while another session holds it nothing is written and the origin row is never reached, and the unit works again once it is free

@@ -50,9 +50,11 @@ final class Point {
     private const TWIN = 1062;
 
     private Database $db;
-    private bool $valid;
     private bool $active;
     private array $rules;
+
+    # Whether the configuration passed its check; an owner reads it to tell a subsystem closed on purpose or broken apart from a failed write
+    public private(set) bool $valid;
 
     # Build the subsystem over the connection of the request and the points scope of the configuration, which is checked whole and exactly once
     # A scope that fails the check switches the class off and is reported to the site log; no partly usable rule is ever applied
@@ -89,8 +91,8 @@ final class Point {
         return $out;
     }
 
-    # Report whether a note is plain text: valid UTF-8 within the column, without markup and without control characters
-    private function checkNote(string $note): bool {
+    # Report whether a note is plain text: valid UTF-8 within the column, without markup and without control characters; a form checks its note here before it writes
+    public function checkNote(string $note): bool {
         return mb_check_encoding($note, 'UTF-8') && mb_strlen($note) <= self::MAXNOTE && $note === strip_tags($note) && !preg_match('/[\x00-\x1F\x7F]/', $note);
     }
 
@@ -243,6 +245,23 @@ final class Point {
             return false;
         }
         return $this->setEventEnd($own, $this->addEventRow($event, $rule), $event);
+    }
+
+    # Lock the account rows of every recipient one operation will move, by ascending id inside the open transaction of its owner, before the first event of that operation
+    # An event locks its own recipient first; an owner reaching several recipients calls this beforehand, so two operations over the same accounts never lock them crosswise
+    # A set of one account costs no statement, because the event of that account takes the same lock as its first step
+    public function setUserLocks(array $uids): bool {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $uids), static fn($v) => $v > 0 && $v <= self::MAXID)));
+        if (count($ids) < 2) return true;
+        if (!$this->db->checkSqlActive()) return false;
+        sort($ids);
+        $keys = [];
+        $pars = [];
+        foreach ($ids as $i => $id) {
+            $keys[] = ':u'.$i;
+            $pars['u'.$i] = $id;
+        }
+        return $this->db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_users WHERE id IN ('.implode(', ', $keys).') ORDER BY id FOR UPDATE', $pars) !== false;
     }
 
     # Answer the id of the positive origin award behind a trusted event key, 0 when there is confirmed none, or false for a wrong key, a missing transaction or a failed read

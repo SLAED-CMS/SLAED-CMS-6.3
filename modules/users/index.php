@@ -12,7 +12,8 @@ if (!defined('MODULE_FILE')) {
 function users(): void {
     global $db, $conf, $tpl;
     setHead(['title' => _TOPUSERS, 'kind' => 'collection']);
-    $cont = getModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => $conf['points']['active'] ? getSeoUrl(['name' => $conf['name'], 'op' => 'rules']) : '', 'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _TU_STATS, 'liste_href' => '', 'add_href' => '']);
+    $cont = getModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => $conf['points']['active'] ? getSeoUrl(['name' => $conf['name'], 'op' => 'rules']) : '',
+        'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _TU_STATS, 'liste_href' => '', 'add_href' => '']);
     $lim = 50;
     $num = getVar('get', 'num', 'num', '1');
     $offset = (int)(($num - 1) * $lim);
@@ -84,7 +85,8 @@ function rules(): void {
     global $conf, $tpl;
     if (!$conf['points']['active']) setRedirect('index.php?name='.$conf['name']);
     setHead(['title' => _TU_RULES, 'kind' => 'collection']);
-    $cont = getModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => $conf['points']['active'] ? getSeoUrl(['name' => $conf['name'], 'op' => 'rules']) : '', 'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _TU_STATS, 'liste_href' => '', 'add_href' => '']);
+    $cont = getModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => $conf['points']['active'] ? getSeoUrl(['name' => $conf['name'], 'op' => 'rules']) : '',
+        'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _TU_STATS, 'liste_href' => '', 'add_href' => '']);
     $rows = [];
     foreach ($conf['points']['actions'] as $name => $rule) {
         if ($name === 'adjust') continue;
@@ -124,7 +126,8 @@ function rules(): void {
 function stats(): void {
     global $db, $conf, $tpl;
     setHead(['title' => _TU_STATS, 'kind' => 'collection']);
-    $cont = getModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => $conf['points']['active'] ? getSeoUrl(['name' => $conf['name'], 'op' => 'rules']) : '', 'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _TU_STATS, 'liste_href' => '', 'add_href' => '']);
+    $cont = getModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => $conf['points']['active'] ? getSeoUrl(['name' => $conf['name'], 'op' => 'rules']) : '',
+        'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _TU_STATS, 'liste_href' => '', 'add_href' => '']);
     $result = $db->getSqlQuery('SELECT id, name, intro, points, extra, `rank`, color FROM '.PREFIX_DB.'_groups ORDER BY points');
     if ($result) {
         $rows = [];

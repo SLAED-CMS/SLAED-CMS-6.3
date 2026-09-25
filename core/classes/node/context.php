@@ -7,7 +7,8 @@
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
 # The request snapshot every Node read and write is decided against: the site user with the effective groups, the separate administrator identity,
-# the types that administrator moderates, the right to manage Node, the main administrator flag, the address, the language and the trusted background flag
+# the types that administrator moderates, the right to manage Node, the main administrator flag, the address, the language, the trusted background flag
+# and the right to delete shared polls
 # The one shared assembly at the request boundary builds it; the object reads no session, cookie, global or database, and it refuses a snapshot that contradicts itself
 final readonly class NodeContext {
 
@@ -24,14 +25,15 @@ final readonly class NodeContext {
         public bool $super,
         public string $ip,
         public string $lang,
-        public bool $task = false
+        public bool $task = false,
+        public bool $polls = false
     ) {
         if ($uid < 0 || $aid < 0) throw new NodeException('A context identity is negative', NodeException::INVALID);
-        if (!array_is_list($groups) || count(array_unique($groups)) !== count($groups)) throw new NodeException('Context groups are not a list of unique ids', NodeException::INVALID);
+        if (!array_is_list($groups) || count(array_unique($groups)) !== count($groups)) throw new NodeException('Context groups are no unique id list', NodeException::INVALID);
         foreach ($groups as $one) if (!is_int($one) || $one < 1) throw new NodeException('A context group is no positive id', NodeException::INVALID);
         if (!array_is_list($mods) || count(array_unique($mods)) !== count($mods)) throw new NodeException('Context types are not a list of unique names', NodeException::INVALID);
         foreach ($mods as $one) if (!is_string($one) || !preg_match(self::NAME, $one)) throw new NodeException('A context type is no public type name', NodeException::INVALID);
-        if (($manage || $super || $mods !== []) && $aid < 1) throw new NodeException('An administrative right without an administrator', NodeException::INVALID);
-        if ($task && ($uid || $aid || $groups || $mods || $manage || $super)) throw new NodeException('A background context carries an identity', NodeException::INVALID);
+        if (($manage || $super || $polls || $mods !== []) && $aid < 1) throw new NodeException('An administrative right without an administrator', NodeException::INVALID);
+        if ($task && ($uid || $aid || $groups || $mods || $manage || $super || $polls)) throw new NodeException('A background context carries an identity', NodeException::INVALID);
     }
 }

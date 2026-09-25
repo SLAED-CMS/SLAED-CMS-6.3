@@ -212,9 +212,13 @@ function save(): void {
             $points = ($grextra == '1') ? '0' : $points;
             $rank = str_replace('templates/'.$conf['theme'].'/images/ranks/', '', $rank);
             if ($gid) {
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_groups SET name = :name, intro = :intro, points = :points, extra = :extra, `rank` = :rank, color = :color WHERE id = :id', ['name' => $grname, 'intro' => $description, 'points' => $points, 'extra' => $grextra, 'rank' => $rank, 'color' => $color, 'id' => $gid]);
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_groups SET name = :name, intro = :intro, points = :points, extra = :extra, `rank` = :rank, color = :color WHERE id = :id', [
+                    'name' => $grname, 'intro' => $description, 'points' => $points, 'extra' => $grextra, 'rank' => $rank, 'color' => $color, 'id' => $gid
+                ]);
             } else {
-                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_groups (name, intro, points, extra, `rank`, color) VALUES (:name, :intro, :points, :extra, :rank, :color)', ['name' => $grname, 'intro' => $description, 'points' => $points, 'extra' => $grextra, 'rank' => $rank, 'color' => $color]);
+                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_groups (name, intro, points, extra, `rank`, color) VALUES (:name, :intro, :points, :extra, :rank, :color)', [
+                    'name' => $grname, 'intro' => $description, 'points' => $points, 'extra' => $grextra, 'rank' => $rank, 'color' => $color
+                ]);
             }
         }
         setRedirect($afile.'.php?name=groups', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
@@ -282,7 +286,7 @@ function getPointsJournal(): string {
     $uid = getVar('get', 'uid', 'num', 0);
     $act = getVar('get', 'act', 'word', '');
     $day = getVar('get', 'day', 'text', '');
-    $num = max(1, getVar('get', 'num', 'num', 1));
+    $num = min(100, max(1, getVar('get', 'num', 'num', 1)));
     $names = array_keys($conf['points']['actions']);
     $act = in_array($act, $names, true) ? $act : '';
     $day = (preg_match('/^\d{4}-\d{2}-\d{2}$/D', $day) && strtotime($day) !== false) ? $day : '';
@@ -292,7 +296,7 @@ function getPointsJournal(): string {
     if ($act !== '') [$where[], $pars['act']] = ['p.action = :act', $act];
     if ($day !== '') [$where[], $pars['from'], $pars['to']] = ['p.created >= :from AND p.created < :to', $day.' 00:00:00', date('Y-m-d', strtotime($day.' +1 day')).' 00:00:00'];
     $cond = $where ? ' WHERE '.implode(' AND ', $where) : '';
-    [$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) FROM '.PREFIX_DB.'_points AS p'.$cond, $pars));
+    [$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) FROM (SELECT 1 FROM '.PREFIX_DB.'_points AS p'.$cond.' LIMIT 5000) AS q', $pars));
     $sql = 'SELECT p.id, p.uid, u.name, p.aid, p.action, p.scope, p.mid, p.source, p.points, p.rid, p.note, p.created FROM '.PREFIX_DB.'_points AS p'
         .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = p.uid)'.$cond.' ORDER BY p.created DESC, p.id DESC LIMIT :offset, :limit';
     $result = $db->getSqlQuery($sql, $pars + ['offset' => ($num - 1) * 50, 'limit' => 50]);

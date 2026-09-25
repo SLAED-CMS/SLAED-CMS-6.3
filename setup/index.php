@@ -7,12 +7,15 @@
 if (!defined('SETUP_FILE')) die('Illegal File Access');
 define('FUNC_FILE', true);
 define('CONFIG_DIR', BASE_DIR.'/config');
+define('LOGS_DIR', BASE_DIR.'/storage/logs');
 
 $conf = require CONFIG_DIR.'/global.php';
 $conf = array_merge($conf, require CONFIG_DIR.'/security.php');
 
 # The SQL splitter of the administration panel; it defines functions only, so the installer can borrow it before the rest of the system exists
 require_once BASE_DIR.'/core/admin.php';
+# The shared configuration lock the runtime rebuilds config/local.php under; the class is self-contained and only needs LOGS_DIR
+require_once BASE_DIR.'/core/classes/filemanager.php';
 
 if ($conf['security']['error'] == 2) {
     ini_set('display_errors', 1);
@@ -38,6 +41,9 @@ if (version_compare(PHP_VERSION, '8.4.0', '<')) setExit(_PHPSETUP);
 foreach (['mbstring', 'pdo', 'json'] as $ext) {
     if (!extension_loaded($ext)) setExit(_EXTSETUP.': '.$ext);
 }
+# An installed site keeps the installer shut: no form, no secret, no write and no database until the owner uploads config/setup.unlock, which a clean run removes
+$dbconf = getSetupBase();
+if (($dbconf['name'] ?? '') !== '' && !is_file(CONFIG_DIR.'/setup.unlock')) setExit(_SETUPLOCK);
 $copy = '<a href="https://slaed.net" target="_blank" title="SLAED CMS">SLAED CMS</a> © 2005-'.date('Y').' Eduard Laas. Released under MIT License.';
 
 # Saving configurations to a file; every scalar is stored as a string unless $raw keeps the native types the definitions of the extra fields are made of
@@ -75,8 +81,33 @@ function setConfigFile(string $fp, array $arr, array $act = [], bool $raw = fals
     .'# License: MIT'."\n"
     .'# Website: slaed.net'."\n\n"
     .'return '.$exp($data).';'."\n";
+    $lock = FileManager::getPathLock(CONFIG_DIR);
     file_put_contents($fp, $cnt, LOCK_EX);
     if (function_exists('opcache_invalidate')) opcache_invalidate($fp, true);
+    if (is_file(CONFIG_DIR.'/local.php')) unlink(CONFIG_DIR.'/local.php');
+    FileManager::deletePathLock($lock);
+}
+
+# Include one configuration source in a scope of its own with its output swallowed and answer its values: the array a 6.3 source returns,
+# the first array a 6.2 source assigns to a variable of its own, or an empty array for a missing file and for a source of code without settings
+function getSetupConfig(string $file): array {
+    if (!is_file($file)) return [];
+    ob_start();
+    $data = (static function (string $path): array {
+        $back = include $path;
+        if (is_array($back)) return $back;
+        unset($path, $back);
+        foreach (get_defined_vars() as $val) if (is_array($val)) return $val;
+        return [];
+    })($file);
+    ob_end_clean();
+    return $data;
+}
+
+# The connection settings of the site from config/db.php, written by 6.3 as the db area or by 6.2 as the variable $confdb, empty while the file does not exist
+function getSetupBase(): array {
+    $data = getSetupConfig(CONFIG_DIR.'/db.php');
+    return is_array($data['db'] ?? null) ? $data['db'] : $data;
 }
 
 function getProtocol(): string {
@@ -283,7 +314,7 @@ function config(): void {
     $title = _CONFIG;
     checkWritableConfig(CONFIG_DIR.'/db.php');
     checkWritableConfig(CONFIG_DIR.'/global.php');
-    $conf['db'] = (is_file(CONFIG_DIR.'/db.php') ? (require CONFIG_DIR.'/db.php')['db'] : []) + array_fill_keys(['host', 'uname', 'pass', 'name', 'prefix'], '');
+    $conf['db'] = getSetupBase() + array_fill_keys(['host', 'uname', 'pass', 'name', 'prefix'], '');
     $xhost = ($conf['db']['host']) ? $conf['db']['host'] : 'localhost';
     $xuname = ($conf['db']['uname']) ? $conf['db']['uname'] : '';
     $xpass = ($conf['db']['pass']) ? $conf['db']['pass'] : '';
@@ -317,13 +348,15 @@ function config(): void {
 }
 
 # Check what the 6.3 data update needs before anything is changed and answer the refusal, or an empty string when the update may start
-# The server has to enforce CHECK constraints and every table of a points or ratings transaction has to be InnoDB; nothing is converted, and the branch closes the site itself
+# The server has to enforce CHECK constraints and to know RENAME COLUMN and RENAME INDEX of the schema file, which MariaDB has from 10.5.2 on
+# Every table of a points, ratings, fields or Node transaction has to be InnoDB; nothing is converted, and the branch closes the site itself
 function checkUpdateBase(Database $db, string $prefix): string {
     [$ver] = $db->getSqlRow($db->getSqlQuery('SELECT VERSION()'));
-    $min = (stripos((string)$ver, 'mariadb') !== false) ? '10.2.1' : '8.0.16';
+    $min = (stripos((string)$ver, 'mariadb') !== false) ? '10.5.2' : '8.0.16';
     if (version_compare(preg_replace('/[^0-9.].*$/', '', (string)$ver), $min, '<')) return 'The database server '.$ver.' is older than '.$min.'.';
     $list = [];
-    $tabs = ['users', 'comment', 'forum', 'order', 'clients', 'favorites', 'user_oauth', 'points', 'products', 'rating_targets', 'rating_actors', 'rating_votes'];
+    $tabs = ['users', 'comment', 'forum', 'order', 'clients', 'favorites', 'user_oauth', 'points', 'products', 'rating_targets', 'rating_actors', 'rating_votes', 'categories',
+        'voting'];
     foreach ($tabs as $key => $name) $list['t'.$key] = $prefix.'_'.$name;
     $sql = 'SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN (:'.implode(', :', array_keys($list)).')'
         .' AND engine IS NOT NULL AND engine != \'InnoDB\'';
@@ -361,12 +394,13 @@ function setUpdatePoints(Database $db, string $prefix): string {
         $info = ['version' => '6.3.0', 'state' => 'prepared', 'cursor' => 0, 'count' => count($list), 'source' => ['balances.json' => hash('sha256', $text)], 'target' => []];
         if (!setUpdateBackup($file, (string)json_encode($info))) return getInfo('points: the manifest could not be written', false);
     }
-    if (hash_file('sha256', $dir.'/balances.json') !== ($info['source']['balances.json'] ?? '')) return getInfo('points: the snapshot does not match its manifest', false);
     if ($info['state'] !== 'verified') {
+        $same = is_file($dir.'/balances.json') && hash_file('sha256', $dir.'/balances.json') === ($info['source']['balances.json'] ?? '');
+        if (!$same) return getInfo('points: the snapshot does not match its manifest', false);
         $info['state'] = 'applying';
         if (!setUpdateBackup($file, (string)json_encode($info))) return getInfo('points: the manifest could not be written', false);
-        $users = (require CONFIG_DIR.'/users.php')['users'] ?? [];
-        $point = (require CONFIG_DIR.'/points.php')['points'] ?? [];
+        $users = getSetupConfig(CONFIG_DIR.'/users.php')['users'] ?? [];
+        $point = getSetupConfig(CONFIG_DIR.'/points.php')['points'] ?? [];
         $flag = isset($users['point']) ? ($users['point'] ? '1' : '0') : ($point['active'] ?? '');
         $moved = $flag !== ($point['active'] ?? '');
         $stale = isset($users['point']) || isset($users['points']);
@@ -480,11 +514,11 @@ function setUpdateRatings(Database $db, string $prefix): string {
         }
         if (!setUpdateBackup($file, (string)json_encode($info))) return getInfo('ratings: the manifest could not be written', false);
     }
-    foreach (['targets.json', 'terms.json', 'rules.json'] as $name) {
-        $same = is_file($dir.'/'.$name) && hash_file('sha256', $dir.'/'.$name) === ($info['source'][$name] ?? '');
-        if (!$same) return getInfo('ratings: the snapshot '.$name.' does not match its manifest', false);
-    }
     if ($info['state'] !== 'verified') {
+        foreach (['targets.json', 'terms.json', 'rules.json'] as $name) {
+            $same = is_file($dir.'/'.$name) && hash_file('sha256', $dir.'/'.$name) === ($info['source'][$name] ?? '');
+            if (!$same) return getInfo('ratings: the snapshot '.$name.' does not match its manifest', false);
+        }
         $info['state'] = 'applying';
         if (!setUpdateBackup($file, (string)json_encode($info))) return getInfo('ratings: the manifest could not be written', false);
         $sets = ['targets' => ['targets.json', 'rating_targets', ['scope', 'mid', 'base', 'votes'], 2]];
@@ -688,11 +722,11 @@ function setUpdateFields(Database $db, string $prefix): string {
         }
         if (!setUpdateBackup($file, (string)json_encode($info))) return getInfo('fields: the manifest could not be written', false);
     }
-    foreach (array_keys($info['source']) as $name) {
-        $same = is_file($dir.'/'.$name) && hash_file('sha256', $dir.'/'.$name) === $info['source'][$name];
-        if (!$same) return getInfo('fields: the snapshot '.$name.' does not match its manifest', false);
-    }
     if ($info['state'] !== 'verified') {
+        foreach (array_keys($info['source']) as $name) {
+            $same = is_file($dir.'/'.$name) && hash_file('sha256', $dir.'/'.$name) === $info['source'][$name];
+            if (!$same) return getInfo('fields: the snapshot '.$name.' does not match its manifest', false);
+        }
         $info['state'] = 'applying';
         if (!setUpdateBackup($file, (string)json_encode($info))) return getInfo('fields: the manifest could not be written', false);
         $real = [];
@@ -741,6 +775,161 @@ function setUpdateFields(Database $db, string $prefix): string {
     return getInfo($text.intval($stat['order']).' orders; the subsystem is open', true);
 }
 
+# The configuration step of the 6.3 update for a 6.2 site, whose settings live in config/config_<name>.php as a variable of their own: the values of the site go over
+# the shipped source of the same name, stat into statistic and seo over global, and a key the release does not ship stays for the data units and the next save of a form
+# The version, the asset lists and the closed site belong to the release and the update, a language name becomes its code, and a start module, a theme or a site logo
+# that is not in the tree falls back to the shipped value
+# Two positional formats changed after 6.2: an upload rule loses its retired eighth field adminlist and gains the guest file limit at the user one, as the runtime
+# reads a short rule, and an address ban turns ip and octet count into one CIDR
+# Every source ends in storage/backup/update/config once its target is written and read back, the ones without a successor as well, so the runtime never includes one again
+function setUpdateConfig(): string {
+    $list = glob(CONFIG_DIR.'/config_*.php') ?: [];
+    if (!$list) return '';
+    $dir = BASE_DIR.'/storage/backup/update/config';
+    if (!is_dir($dir) && !mkdir($dir, 0750, true)) return getInfo('config: '.$dir.' could not be created', false);
+    $maps = ['stat' => 'statistic', 'seo' => 'global'];
+    $skip = ['news', 'pages', 'faq', 'help', 'jokes', 'content', 'links', 'files', 'media', 'templ', 'header', 'chmod', 'core', 'rewrite', 'rules', 'db'];
+    $langs = ['english' => 'en', 'french' => 'fr', 'german' => 'de', 'polish' => 'pl', 'russian' => 'ru', 'ukrainian' => 'uk'];
+    $mods = array_map('basename', glob(BASE_DIR.'/modules/*', GLOB_ONLYDIR) ?: []);
+    $amods = array_merge($mods, array_map(fn($v) => basename($v, '.php'), glob(BASE_DIR.'/admin/modules/*.php') ?: []));
+    $plan = [];
+    $left = [];
+    foreach ($list as $file) {
+        $name = substr(basename($file, '.php'), 7);
+        $into = $maps[$name] ?? $name;
+        if (in_array($name, $skip, true) || !is_file(CONFIG_DIR.'/'.$into.'.php')) $left[$name] = $file;
+        else $plan[$into][$name] = $file;
+    }
+    $done = [];
+    $bad = [];
+    $note = [];
+    foreach ($plan as $into => $files) {
+        $base = getSetupConfig(CONFIG_DIR.'/'.$into.'.php');
+        $base = ($into === 'global') ? $base : ($base[$into] ?? []);
+        $site = [];
+        foreach ($files as $file) $site = array_replace_recursive($site, getSetupConfig($file));
+        if (!$site) {
+            $left += $files;
+            continue;
+        }
+        if ($into === 'global') {
+            $site['close'] = '1';
+            if (isset($site['language'])) $site['language'] = $langs[$site['language']] ?? $site['language'];
+            foreach (['module' => $mods, 'amod' => $amods] as $key => $have) {
+                $keep = implode(',', array_intersect(array_map('trim', explode(',', (string)($site[$key] ?? ''))), $have));
+                if ($keep === '') unset($site[$key]);
+                else $site[$key] = $keep;
+            }
+            unset($site['version'], $site['css_f'], $site['script_f']);
+            if (isset($site['theme']) && !is_dir(BASE_DIR.'/templates/'.basename((string)$site['theme']))) unset($site['theme']);
+            $look = BASE_DIR.'/templates/'.basename((string)($site['theme'] ?? $base['theme'] ?? '')).'/images/logos/';
+            if (isset($site['site_logo']) && !is_file($look.basename((string)$site['site_logo']))) unset($site['site_logo']);
+        }
+        if ($into === 'lang' && isset($site['lang'])) $site['lang'] = $langs[$site['lang']] ?? $site['lang'];
+        foreach ($into === 'uploads' ? $site : [] as $key => $val) {
+            $part = is_string($val) ? explode('|', $val) : [];
+            if (count($part) !== 12) continue;
+            unset($part[7]);
+            $part = array_values($part);
+            $site[$key] = implode('|', $part).'|'.$part[8];
+        }
+        if ($into === 'security' && isset($site['blocker_ip'])) {
+            $list = [];
+            foreach (explode('||', (string)$site['blocker_ip']) as $item) {
+                $part = explode('|', $item, 5);
+                $mask = intval($part[1] ?? 0);
+                if ($item === '') continue;
+                if (count($part) !== 5 || !filter_var($part[0], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) || $mask < 1 || $mask > 4) {
+                    $note[] = 'the ban entry '.$part[0].' is not a 6.2 address ban and was dropped';
+                    continue;
+                }
+                $net = implode('.', array_pad(array_slice(explode('.', $part[0]), 0, $mask), 4, '0')).'/'.($mask * 8);
+                $list[] = $net.'|'.$part[2].'|'.$part[3].'|'.$part[4].'||';
+            }
+            $site['blocker_ip'] = implode('', $list);
+        }
+        $data = ($into === 'fields') ? $site : array_replace_recursive($base, $site);
+        setConfigFile($into.'.php', $data, [], true);
+        $read = getSetupConfig(CONFIG_DIR.'/'.$into.'.php');
+        if ((($into === 'global') ? $read : ($read[$into] ?? null)) != $data) {
+            $bad[] = $into;
+            continue;
+        }
+        foreach ($files as $file) if (!rename($file, $dir.'/'.basename($file))) $bad[] = basename($file);
+        $done[] = $into;
+    }
+    foreach ($left as $file) if (!rename($file, $dir.'/'.basename($file))) $bad[] = basename($file);
+    $text = 'config: 6.2 settings carried into '.($done ? implode(', ', $done) : 'no file').'; not carried: '.($left ? implode(', ', array_keys($left)) : 'none')
+        .($note ? '; '.implode('; ', $note) : '').'; the old sources are in storage/backup/update/config';
+    $out = getInfo($text, true);
+    if ($bad) $out .= getInfo('config: '.implode(', ', $bad).' could not be written or moved, the old sources stay in config/ and the update stops before the schema', false);
+    return $out;
+}
+
+# The newsletter step of the 6.3 update: before the schema file drops the mails column the pending recipients of every campaign are kept in storage/backup/update/newsletter,
+# after it they move into the mail queue; an address already queued for its campaign is not written twice, so a break and a repeat neither lose nor double a recipient
+# The unit resumes from its manifest like the data units: without the column and without a manifest there is nothing pending, verified is skipped
+function setUpdateMails(Database $db, string $prefix, string $from, bool $move): string {
+    $dir = BASE_DIR.'/storage/backup/update/newsletter';
+    $file = $dir.'/manifest.json';
+    $tab = '`'.$prefix.'_newsletter`';
+    $info = is_file($file) ? json_decode((string)file_get_contents($file), true) : null;
+    if (!$move) {
+        if (is_array($info)) return '';
+        $sql = 'SELECT column_name FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = :tab AND column_name = \'mails\'';
+        $res = $db->getSqlQuery($sql, ['tab' => $prefix.'_newsletter']);
+        if (!$res) return getInfo('newsletter: '.$prefix.'_newsletter could not be read, the update stops before the schema', false);
+        if (!$db->getSqlRowCount($res)) return '';
+        $list = [];
+        $res = $db->getSqlQuery('SELECT id, title, mails FROM '.$tab.' WHERE mails IS NOT NULL AND mails != \'\' ORDER BY id ASC');
+        while ($res && ([$nid, $name, $text] = $db->getSqlRow($res))) {
+            $mails = array_filter(array_map('trim', explode(',', (string)$text)), fn($v) => filter_var($v, FILTER_VALIDATE_EMAIL) !== false);
+            $list[] = [intval($nid), (string)$name, array_values(array_unique($mails))];
+        }
+        if (!$res) return getInfo('newsletter: the pending recipients could not be read, the update stops before the schema', false);
+        if (!is_dir($dir) && !mkdir($dir, 0750, true)) return getInfo('newsletter: '.$dir.' could not be created, the update stops before the schema', false);
+        $text = (string)json_encode($list, JSON_UNESCAPED_UNICODE);
+        $info = ['version' => '6.3.0', 'state' => 'prepared', 'count' => ['campaigns' => count($list), 'recipients' => array_sum(array_map(fn($v) => count($v[2]), $list))]];
+        $info['source'] = ['recipients.json' => hash('sha256', $text)];
+        if (!setUpdateBackup($dir.'/recipients.json', $text) || !setUpdateBackup($file, (string)json_encode($info))) {
+            return getInfo('newsletter: the snapshot of the recipients could not be written, the update stops before the schema', false);
+        }
+        return getInfo('newsletter: '.$info['count']['recipients'].' pending recipients of '.$info['count']['campaigns'].' campaigns kept before the schema change', true);
+    }
+    if (!is_array($info)) return '';
+    if ($info['state'] !== 'verified') {
+        $same = is_file($dir.'/recipients.json') && hash_file('sha256', $dir.'/recipients.json') === ($info['source']['recipients.json'] ?? '');
+        if (!$same) return getInfo('newsletter: the snapshot of the recipients does not match its manifest', false);
+        $find = 'SELECT id FROM `'.$prefix.'_mail` WHERE kind = \'newsletter\' AND ref = :ref AND email = :mail LIMIT 1';
+        $sql = 'INSERT INTO `'.$prefix.'_mail` (kind, sender, email, title, body, ref, prio, time, ntime)'
+            .' VALUES (\'newsletter\', :from, :mail, :title, \'\', :ref, 3, NOW(), NOW())';
+        $mark = 'UPDATE '.$tab.' SET status = 5, audit = \'list\', expect = :num, total = :sum WHERE id = :id';
+        $info['sent'] = 0;
+        foreach (json_decode((string)file_get_contents($dir.'/recipients.json'), true) as [$nid, $name, $mails]) {
+            $good = $db->setSqlBegin();
+            foreach ($good ? $mails : [] as $mail) {
+                $res = $db->getSqlQuery($find, ['ref' => $nid, 'mail' => $mail]);
+                $good = $res !== false;
+                if (!$good) break;
+                if ($db->getSqlRow($res)) continue;
+                $good = $db->getSqlQuery($sql, ['from' => $from, 'mail' => $mail, 'title' => mb_substr($name, 0, 255), 'ref' => $nid]) !== false;
+                if (!$good) break;
+                $info['sent']++;
+            }
+            $good = $good && $db->getSqlQuery($mark, ['num' => count($mails), 'sum' => count($mails), 'id' => $nid]) !== false;
+            if (!$good || !$db->setSqlCommit()) {
+                $db->setSqlRollback();
+                return getInfo('newsletter: the recipients of campaign '.$nid.' could not be queued, run the update again', false);
+            }
+        }
+        $info['state'] = 'verified';
+        if (!setUpdateBackup($file, (string)json_encode($info))) return getInfo('newsletter: the manifest could not be written', false);
+    }
+    return getInfo($prefix.'_newsletter pending recipients moved into the mail queue (rows written: '.intval($info['sent'] ?? 0).')', true);
+}
+
+# Run the installer form for a clean installation or an upgrade; an upgrade gives the scheduler of the site the system jobs nodepublish and nodesync it has not carried yet
+# and moves maildrain off a priority another job holds, because the scheduler form saves no job whose priority is taken
 function save(): void {
     global $title, $clang, $conf, $url;
     $setup = (isset($_POST['setup'])) ? $_POST['setup'] : '';
@@ -755,6 +944,17 @@ function save(): void {
     $xsync = (isset($_POST['xsync'])) ? $_POST['xsync'] : '1';
     $xafile = (isset($_POST['xafile'])) ? $_POST['xafile'] : 'admin';
 
+    require_once BASE_DIR.'/core/classes/pdo.php';
+    $db = new Database($xhost, $xuname, $xpass, $xname, $xcharset);
+    $bodytext = '';
+    if ($setup == 'update6_3') {
+        $stop = checkUpdateBase($db, $xprefix);
+        if ($stop !== '') setExit($stop);
+        setConfigFile('global.php', array_diff_key($conf, ['security' => '', 'db' => '']), ['close' => '1']);
+        $bodytext .= getInfo('the site is closed for the data update (close = 1), open it in the settings after the result is checked', true);
+        $bodytext .= setUpdateConfig();
+        $conf = array_merge(require CONFIG_DIR.'/global.php', require CONFIG_DIR.'/security.php');
+    }
     $cont = ['language' => $clang, 'homeurl' => $url];
     setConfigFile('global.php', array_diff_key($conf, ['security' => '', 'db' => '']), $cont);
     $conf = array_merge($conf, require CONFIG_DIR.'/global.php');
@@ -771,16 +971,22 @@ function save(): void {
     setConfigFile('security.php', $conf['security'], $cont);
     $conf = array_merge($conf, require CONFIG_DIR.'/security.php');
     
-    $conf['db'] = is_file(CONFIG_DIR.'/db.php') ? (require CONFIG_DIR.'/db.php')['db'] : [];
+    $conf['db'] = getSetupBase();
     $cont = ['host' => $xhost, 'uname' => $xuname, 'pass' => $xpass, 'name' => $xname, 'engine' => $xengine, 'charset' => $xcharset, 'collate' => $xcollate, 'prefix' => $xprefix, 'sync' => $xsync];
     setConfigFile('db.php', $conf['db'], $cont);
 
-    require_once BASE_DIR.'/core/classes/pdo.php';
-    $db = new Database($xhost, $xuname, $xpass, $xname, $xcharset);
-    
-    $bodytext = '';
     if ($setup == 'new') {
         $title = _SAVE_NEW;
+        $ntypes = array_keys(getSetupConfig(CONFIG_DIR.'/node.php')['node']['types'] ?? []);
+        if ($ntypes) {
+            $pack = [];
+            foreach (['node', 'fields', 'uploads', 'ratings'] as $name) $pack[$name] = getSetupConfig(CONFIG_DIR.'/'.$name.'.php')[$name] ?? [];
+            $pack['node']['types'] = [];
+            foreach ($ntypes as $name) unset($pack['fields']['node'][$name], $pack['uploads'][$name], $pack['ratings']['node.'.$name]);
+            if (($pack['fields']['node'] ?? null) === []) unset($pack['fields']['node']);
+            foreach ($pack as $name => $data) setConfigFile($name.'.php', $data, [], true);
+            $bodytext .= getInfo('config/node.php types of an earlier installation removed with their fields, upload and rating rules: '.implode(', ', $ntypes), true);
+        }
         $bodytext .= getSqlFile('setup/sql/table.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
         $bodytext .= getSqlFile('setup/sql/insert.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
         setConfigFile('update.php', ['points' => '6.3.0', 'ratings' => '6.3.0', 'fields' => '6.3.0', 'node' => 'new']);
@@ -881,11 +1087,7 @@ function save(): void {
         $title = _SAVE_UPDATE;
         $bodytext .= getSqlFile('setup/sql/table_update6_2.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
     } elseif ($setup == 'update6_3') {
-        $stop = checkUpdateBase($db, $xprefix);
-        if ($stop !== '') setExit($stop);
-        setConfigFile('global.php', array_diff_key($conf, ['security' => '', 'db' => '']), ['close' => '1']);
-        $conf['close'] = '1';
-        $bodytext .= getInfo('the site is closed for the data update (close = 1), open it in the settings after the result is checked', true);
+        $title = _SAVE_UPDATE;
         $mods = [];
         foreach (scandir(BASE_DIR.'/admin/modules') ?: [] as $file) if (preg_match('/^([a-z_]+)\.php$/i', $file, $matches)) $mods[$matches[1]] = 0;
         foreach (scandir(BASE_DIR.'/modules') ?: [] as $file) {
@@ -901,7 +1103,7 @@ function save(): void {
         }
         $hasmod = false;
         $tbl = $xprefix.'_modules';
-        $tblres = $db->getSqlQuery('SHOW TABLES LIKE :tbl', ['tbl' => $tbl]);
+        $tblres = $db->getSqlQuery('SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = :tbl', ['tbl' => $tbl]);
         if ($tblres && $db->getSqlRowCount($tblres) > 0) $hasmod = true;
         if ($hasmod) {
             $map = [];
@@ -955,13 +1157,6 @@ function save(): void {
             setConfigFile('uploads.php', array_diff_key($udata, $ugone));
             $bodytext .= getInfo('config/uploads.php rules of removed modules dropped: '.implode(', ', array_keys($ugone)), true);
         }
-        $nlist = [];
-        $ntable = $xprefix.'_newsletter';
-        $ncols = $db->getSqlQuery('SHOW COLUMNS FROM `'.$ntable.'` LIKE :col', ['col' => 'mails']);
-        if ($ncols && $db->getSqlRowCount($ncols) > 0) {
-            $result = $db->getSqlQuery('SELECT id, title, mails FROM `'.$ntable.'` WHERE mails IS NOT NULL AND mails != \'\'');
-            while ($row = $db->getSqlRow($result)) $nlist[(int)$row['id']] = ['title' => (string)$row['title'], 'mails' => (string)$row['mails']];
-        }
         $sfile = CONFIG_DIR.'/scheduler.php';
         if (file_exists($sfile)) {
             $sdata = require $sfile;
@@ -974,14 +1169,13 @@ function save(): void {
                     'active' => '1',
                     'system' => 'maildrain',
                     'schedule' => '*/5 * * * *',
-                    'priority' => '2',
+                    'priority' => '8',
                     'lock_timeout' => '900',
                     'manual' => '1',
                     'settings' => [],
                 ];
                 $sdone = true;
             }
-            # Node delivers the reward of a future publication when its date comes, through a system job of its own that an upgraded site has not carried yet
             if (is_array($sched) && !isset($sched['jobs']['nodepublish'])) {
                 $sched['jobs']['nodepublish'] = [
                     'title' => 'Node publication',
@@ -996,7 +1190,6 @@ function save(): void {
                 ];
                 $sdone = true;
             }
-            # Node checks the external sources of the type sync through a system job of its own that an upgraded site has not carried yet
             if (is_array($sched) && !isset($sched['jobs']['nodesync'])) {
                 $sched['jobs']['nodesync'] = [
                     'title' => 'Node sync',
@@ -1038,40 +1231,66 @@ function save(): void {
                     $sdone = true;
                 }
             }
+            if (is_array($sched) && isset($sched['jobs']['maildrain']) && is_array($sched['jobs']['maildrain'])) {
+                $held = [];
+                foreach ($sched['jobs'] as $jkey => $jval) if ($jkey !== 'maildrain' && is_array($jval)) $held[] = (int)($jval['priority'] ?? 100);
+                if (in_array((int)($sched['jobs']['maildrain']['priority'] ?? 100), $held, true)) {
+                    $prio = 1;
+                    while (in_array($prio, $held, true)) $prio++;
+                    $sched['jobs']['maildrain']['priority'] = (string)$prio;
+                    $sdone = true;
+                }
+            }
             if ($sdone) setConfigFile('scheduler.php', $sched);
         }
-        setConfigFile('newsletter.php', ['abort' => '10', 'bouncemax' => '2', 'breakwin' => '100', 'canary' => '100', 'canarymin' => '500']);
-        $title = _SAVE_UPDATE;
-        $bodytext .= getSqlFile('setup/sql/table_update6_3.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
-        $bodytext .= setUpdatePoints($db, $xprefix);
-        $bodytext .= setUpdateRatings($db, $xprefix);
-        $bodytext .= setUpdateFields($db, $xprefix);
-        $rfile = CONFIG_DIR.'/rss.php';
-        $rdata = is_file($rfile) ? ((require $rfile)['rss'] ?? []) : [];
-        if (is_array($rdata) && $rdata !== [] && (isset($rdata['temp']) || !isset($rdata['bytes'], $rdata['redirects'], $rdata['timeout']))) {
-            unset($rdata['temp']);
-            setConfigFile('rss.php', $rdata + ['bytes' => '2097152', 'redirects' => '3', 'timeout' => '10']);
-        }
-        $rnum = $db->getSqlQuery('UPDATE `'.$xprefix.'_blocks` SET content = \'\', time = \'0\' WHERE url != \'\'');
-        $bodytext .= getInfo($xprefix.'_blocks RSS bodies cleared for Markdown (rows: '.($rnum ? $db->getSqlRowCount($rnum) : 0).')', $rnum !== false);
-        $nsent = 0;
-        foreach ($nlist as $nid => $one) {
-            $mails = array_values(array_unique(array_filter(array_map('trim', explode(',', $one['mails'])), 'strlen')));
-            foreach ($mails as $mail) {
-                if (!filter_var($mail, FILTER_VALIDATE_EMAIL)) continue;
-                $sql = 'INSERT INTO `'.$xprefix.'_mail` (kind, sender, email, title, body, ref, prio, time, ntime)'
-                    .' VALUES (\'newsletter\', :from, :mail, :title, \'\', :ref, 3, NOW(), NOW())';
-                $db->getSqlQuery($sql, ['from' => (string)$conf['adminmail'], 'mail' => $mail, 'title' => substr($one['title'], 0, 255), 'ref' => $nid]);
-                $nsent++;
+        $ndata = getSetupConfig(CONFIG_DIR.'/newsletter.php')['newsletter'] ?? [];
+        $nset = $ndata + ['abort' => '10', 'bouncemax' => '2', 'breakwin' => '100', 'canary' => '100', 'canarymin' => '500'];
+        if ($nset !== $ndata) setConfigFile('newsletter.php', $nset);
+        $bodytext .= setUpdateMails($db, $xprefix, (string)$conf['adminmail'], false);
+        if (str_contains($bodytext, 'sl_red')) {
+            $bodytext .= getInfo('the update stopped before the schema file: the database is unchanged, correct the refusal above and run the update again', false);
+        } else {
+            $ddl = getSqlFile('setup/sql/table_update6_3.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
+            $bodytext .= $ddl;
+            if ($ddl === '' || str_contains($ddl, 'sl_red')) {
+                $text = 'the update stopped at the schema file: no data unit ran and no mark was written, correct the failed statement and run the update again';
+                $bodytext .= getInfo($text, false);
+            } else {
+                $bodytext .= setUpdatePoints($db, $xprefix);
+                $bodytext .= setUpdateRatings($db, $xprefix);
+                $bodytext .= setUpdateFields($db, $xprefix);
+                $rdata = getSetupConfig(CONFIG_DIR.'/rss.php')['rss'] ?? [];
+                if ($rdata !== [] && (isset($rdata['temp']) || !isset($rdata['bytes'], $rdata['redirects'], $rdata['timeout']))) {
+                    unset($rdata['temp']);
+                    setConfigFile('rss.php', $rdata + ['bytes' => '2097152', 'redirects' => '3', 'timeout' => '10']);
+                }
+                $rnum = $db->getSqlQuery('UPDATE `'.$xprefix.'_blocks` SET content = \'\', time = \'0\' WHERE url != \'\'');
+                $bodytext .= getInfo($xprefix.'_blocks RSS bodies cleared for Markdown (rows: '.($rnum ? $db->getSqlRowCount($rnum) : 0).')', $rnum !== false);
+                $bodytext .= setUpdateMails($db, $xprefix, (string)$conf['adminmail'], true);
+                [$acount] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) FROM `'.$xprefix.'_users` WHERE `avatar` LIKE \'default/%\''));
+                $bodytext .= getInfo($xprefix.'_users avatar migration (legacy rows left: '.(int)$acount.')', (int)$acount === 0);
+                $pars = [];
+                foreach (['news', 'pages', 'faq', 'help', 'jokes', 'content', 'links', 'files', 'media'] as $i => $one) $pars['t'.$i] = $xprefix.'_'.$one;
+                $sql = 'SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN (:'.implode(', :', array_keys($pars)).')';
+                $res = $db->getSqlQuery($sql, $pars);
+                $good = $res !== false;
+                $top = 0;
+                foreach (($good ? $db->getSqlRows($res) : false) ?: [] as $row) {
+                    $got = $db->getSqlQuery('SELECT COALESCE(MAX(id), 0) FROM `'.$row[0].'`');
+                    $good = $good && $got !== false;
+                    $top = max($top, $got ? intval($db->getSqlRow($got)[0] ?? 0) : 0);
+                }
+                $good = $good && ($top === 0 || $db->getSqlQuery('ALTER TABLE `'.$xprefix.'_nodes` AUTO_INCREMENT = '.($top + 1)) !== false);
+                $bodytext .= getInfo($xprefix.'_nodes new ids start above the highest id of the removed sections ('.$top.')', $good);
             }
-            $sql = 'UPDATE `'.$ntable.'` SET status = 5, audit = \'list\', expect = :num, total = :num WHERE id = :id';
-            $db->getSqlQuery($sql, ['num' => count($mails), 'id' => $nid]);
         }
-        $bodytext .= getInfo($ntable.' pending recipients moved into the mail queue (rows written: '.$nsent.')', true);
-        [$acount] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) FROM `'.$xprefix.'_users` WHERE `avatar` LIKE \'default/%\''));
-        $bodytext .= getInfo($xprefix.'_users avatar migration (legacy rows left: '.(int)$acount.')', (int)$acount === 0);
+        if (!str_contains($bodytext, 'sl_red')) {
+            $gone = 0;
+            foreach (glob(BASE_DIR.'/storage/backup/update/*/*') ?: [] as $file) if (basename($file) !== 'manifest.json' && unlink($file)) $gone++;
+            $bodytext .= getInfo('the snapshots of the update are deleted ('.$gone.' files), the manifests stay in storage/backup/update', true);
+        }
     }
-    if (is_file(CONFIG_DIR.'/local.php')) unlink(CONFIG_DIR.'/local.php');
+    if (!str_contains($bodytext, 'sl_red') && is_file(CONFIG_DIR.'/setup.unlock')) unlink(CONFIG_DIR.'/setup.unlock');
     setHead();
     echo '<table class="sl_table">'.$bodytext.'</table>'
     .'<div class="sl_center"><form action="'.$conf['security']['afile'].'.php" method="post">'._GOBACK.' <input type="submit" value="'._ADMIN_SE.'" class="sl_but_blue"></form></div>';

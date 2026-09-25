@@ -1123,9 +1123,9 @@
         setPanel(id, false);
     }
 
+    // A file of a closed directory has no address a reader could open, so it enters the text as the tag the stored material resolves
     function addInsertRows(id, way, rows, align, title) {
         rows.forEach(function(row) {
-            // A file of a closed directory has no address a reader could open, so it enters the text as the tag the stored material resolves
             if (way === 'image' && row.image && !row.bytag) addImage(id, row.url, title || row.file, align);
             else addAttach(id, row.file, title || row.file, align);
         });

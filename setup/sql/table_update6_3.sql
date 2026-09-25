@@ -1605,7 +1605,7 @@ CALL addidx('{prefix}_mail', 'locked',                 '`locked`',              
 # Batch Y — _comment, the reply tree, the soft delete and the write keys
 # =============================================================================
 #
-# Four columns are added, two superseded indexes are dropped and KEY time is kept,
+# Five columns are added, two superseded indexes are dropped and KEY time is kept,
 # because the unfiltered moderation list orders by time alone.
 #
 # pid is the only stored parent relation. Every existing comment stays a root:
@@ -1619,6 +1619,12 @@ CALL addidx('{prefix}_mail', 'locked',                 '`locked`',              
 # shared empty string, because a unique index counts every NULL as distinct. No
 # key is minted here for an existing row - a comment written before this release
 # was never replayed and needs no key.
+#
+# shown is the moment of the first publication and is never cleared, so hiding and
+# publishing again is not a new reply to whoever follows the discussion. A comment
+# that is published when the upgrade runs takes its own time, copied once time is
+# proven to hold no NULL; a hidden one was never proven public and stays NULL until
+# a moderator publishes it.
 #
 # ip carries an address and nothing else, so it is compared and sorted byte by
 # byte; (ip, time, id) answers the best-effort flood interval on its own and
@@ -1634,6 +1640,8 @@ CALL delcol('{prefix}_comment', 'iphash');
 CALL delcol('{prefix}_comment', 'path');
 
 CALL addcol('{prefix}_comment', 'pid',     'INT UNSIGNED NOT NULL DEFAULT 0');
+CALL addcol('{prefix}_comment', 'shown',   'DATETIME DEFAULT NULL');
+CALL poscol('{prefix}_comment', 'shown', 'DATETIME DEFAULT NULL', 'status');
 CALL addcol('{prefix}_comment', 'edited',  'DATETIME DEFAULT NULL');
 CALL addcol('{prefix}_comment', 'deleted', 'DATETIME DEFAULT NULL');
 
@@ -1642,6 +1650,7 @@ CALL addcol('{prefix}_comment', 'reqkey',  'BINARY(16) DEFAULT NULL');
 
 CALL stopnull('{prefix}_comment', 'time', 'comment.time holds NULL rows: repair them before this upgrade');
 CALL modcol('{prefix}_comment', 'time', 'DATETIME NOT NULL');
+UPDATE `{prefix}_comment` SET `shown` = `time` WHERE `status` = 1 AND `shown` IS NULL;
 CALL setcoll('{prefix}_comment', 'ip', 'VARCHAR(45) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT \'\'', 'ascii_bin');
 CALL poscol('{prefix}_comment', 'pid', 'INT UNSIGNED NOT NULL DEFAULT 0', 'id');
 
@@ -1752,9 +1761,10 @@ CREATE TABLE IF NOT EXISTS `{prefix}_nodes` (
   KEY `pub` (`tid`, `status`, `pinned`, `published`, `id`),
   KEY `cat` (`tid`, `cid`, `status`, `pinned`, `published`, `id`),
   KEY `home` (`tid`, `home`, `status`, `pinned`, `published`, `id`),
-  KEY `admin` (`tid`, `status`, `updated`, `id`),
+  KEY `updated` (`tid`, `status`, `pinned`, `updated`, `id`),
   KEY `views` (`tid`, `status`, `pinned`, `views`, `published`, `id`),
-  KEY `title` (`tid`, `status`, `title`, `id`),
+  KEY `title` (`tid`, `status`, `pinned`, `title`, `id`),
+  KEY `expires` (`tid`, `status`, `expires`),
   KEY `queue` (`status`, `created`, `id`),
   KEY `author` (`uid`, `status`, `published`, `id`),
   KEY `ip` (`ip`, `created`, `id`),

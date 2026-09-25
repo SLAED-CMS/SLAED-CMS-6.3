@@ -20,6 +20,7 @@ define('_PHPSETUP','Die eingerichtete PHP Version auf Ihren Server entspricht de
 define('_SAVE_NEW','Installation und Konfiguration');
 define('_SAVE_UPDATE','Aktualisierung und Konfiguration');
 define('_SERRORPERM','hat kein Erlaubnis für die Aufzeichnung auf dem Server.<br>Geben Sie die nötigen Attribute');
+define('_SETUPLOCK','Die Website ist bereits installiert, daher ist das Installationsprogramm gesperrt. Um ein Update auszuführen, laden Sie eine leere Datei config/setup.unlock hoch und öffnen Sie setup.php erneut; ein erfolgreicher Lauf entfernt die Datei.');
 define('_SETUP_NEW','Neuinstallation des Systems');
 define('_SETUP_SLAED','Installation SLAED CMS');
 define('_SUPDATE','Systemupdate');

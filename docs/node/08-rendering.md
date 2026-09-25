@@ -92,7 +92,7 @@ fragments/node/faq/block.html  -> fragments/node/block.html
 fragments/node/faq/search.html -> fragments/node/search.html
 ```
 
-Та же схема применяется к `image`, `gallery`, `download`, `player` и `link`. Режим может переопределить только отличающиеся файлы, а остальные получит из базового комплекта. Произвольного пути из запроса, fallback между темам и fallback к старым шаблонам нет. Отсутствие базового файла является ошибкой темы. Template сам fallback не выполняет: у него есть только getHtmlPage(), getHtmlPart() и getHtmlFrag(), а отсутствующий файл — ошибка. S13 добавляет `Template::checkTemplateFile(string $kind, string $name): bool` — проверку наличия файла текущей темы без вывода; выбор делает контроллер модуля (`getNodeTplName()` в modules/node/index.php): он спрашивает файл режима, при отказе берёт базовый и запоминает ответ на запрос. NodeView шаблон не вызывает и имён файлов не знает.
+Та же схема применяется к `image`, `gallery`, `download`, `player` и `link`. Режим может переопределить только отличающиеся файлы, а остальные получит из базового комплекта. Произвольного пути из запроса, fallback между темам и fallback к старым шаблонам нет. Отсутствие базового файла является ошибкой темы. Template сам fallback не выполняет: у него есть только getHtmlPage(), getHtmlPart() и getHtmlFrag(), а отсутствующий файл — ошибка. S13 добавляет `Template::checkTemplateFile(string $kind, string $name): bool` — проверку наличия файла текущей темы без вывода; выбор делает `getNodeTplName()` в core/system.php — общая для контроллера модуля и файлового блока blocks/node.php: она спрашивает файл режима, при отказе берёт базовый и запоминает ответ на запрос. NodeView шаблон не вызывает и имён файлов не знает.
 
 ## Граница переопределения
 
@@ -118,6 +118,7 @@ fragments/node/faq/search.html -> fragments/node/search.html
 `NodeView::getNodeView()` возвращает одинаковый набор коротких ключей `id`, `type`, `mode`, `href`, `title`, `intro`, `intro_html`, `body_html`, `author`, `ahref`, `ctitle`, `chref`, `date`, `date_iso`, `mtime_iso`, `views`, `comnum`, `rating`, `ratings`, `fields`, `assets`.
 
 - Обычные строки выводятся экранируемым синтаксисом шаблона; без экранирования разрешены только значения с суффиксом `_html`, созданные `Parser`, `Field` или шаблонным помощником.
+- `intro_html` и `body_html` рендерятся безопасно с доверием к тегам: сырым HTML или исполняемым кодом становится только содержимое `[usehtml]`/`[usephp]`, которые при записи сохраняет один главный администратор; `intro` не содержит текста `<script>` и `<style>`.
 - URL не экранируются в PHP и передаются через `href`, `ahref`, `chref` и ресурсный `href` или `rhref`.
 - Пустое значение остаётся типизированным: строка `''`, массив `[]`, nullable-число или `null`; произвольные дополнительные ключи режим не добавляет.
 - Ресурсы сгруппированы в `assets` по роли и не раскрывают физический путь, исходный `src`, состояние жалобы или её автора.

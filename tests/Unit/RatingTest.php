@@ -51,6 +51,7 @@ final class RatingTest extends TestCase
     }
 
     # The class stands alone: no points, no node, no request, no template, no configuration writer and no clock of PHP are reachable from it
+    # The core loads Point on every request, so only the source scan and an untouched balance prove this class leaves points alone
     #[Test]
     public function theClassImportsNothingItDoesNotOwn(): void
     {
@@ -62,11 +63,17 @@ final class RatingTest extends TestCase
         $this->assertTrue($ref->isFinal(), 'The class is not final');
         $open = array_map(static fn(\ReflectionMethod $one): string => $one->getName(), $ref->getMethods(\ReflectionMethod::IS_PUBLIC));
         sort($open);
-        $this->assertSame(['__construct', 'addRating', 'deleteRating', 'getRating', 'getRatingList'], $open, 'The public API is not exactly the one of ratings.md');
+        $this->assertSame(['__construct', 'addRating', 'deleteRating', 'getAverage', 'getRating', 'getRatingList'], $open, 'The public API is not exactly the one of ratings.md');
+        $this->assertTrue($ref->getMethod('getAverage')->isStatic(), 'The shared average needs an instance');
+        $avg = $ref->getMethod('getAverage');
+        $this->assertSame([null, '3', '3.666667', '0.333333', '0.666667'], [$avg->invoke(null, 5, 0), $avg->invoke(null, 6, 2), $avg->invoke(null, 11, 3),
+            $avg->invoke(null, 1, 3), $avg->invoke(null, 2, 3)]);
+        $this->assertSame(['4.33', '0.67', '4', '4.5', '0.01', '0.33'], [$avg->invoke(null, 13, 3, 2), $avg->invoke(null, 2, 3, 2), $avg->invoke(null, 8, 2, 2),
+            $avg->invoke(null, 9, 2, 2), $avg->invoke(null, 1, 200, 2), $avg->invoke(null, 1, 3, 2)], 'Two digits do not round half up on integers');
+        $this->assertSame(['0.7', '3.666667'], [$avg->invoke(null, 2, 3, 0), $avg->invoke(null, 11, 3, 9)], 'The digits are not clamped to 1..6');
         $pars = array_map(static fn(\ReflectionParameter $one): string => $one->getType().' '.$one->getName(), $ref->getConstructor()->getParameters());
         $this->assertSame(['Database db', 'array conf', 'array actor', 'Closure read', 'Closure write'], $pars);
         foreach (['addRating', 'deleteRating', 'getRating', 'getRatingList'] as $name) $this->assertSame('array', (string)$ref->getMethod($name)->getReturnType());
-        # The core loads Point for every request since it was connected, so its presence says nothing about this class; the source scan above and an untouched balance do
         $this->assertSame(0, $this->getProbe()['point'][1], 'A run of the class moved a balance');
         $this->assertTrue($this->getProbe()['clean'], 'The probe left its schema on the server');
     }
@@ -99,12 +106,14 @@ final class RatingTest extends TestCase
         $this->assertSame([true, 0, false, true], $run['close']);
     }
 
-    # A generation that cannot be read switches the cache off instead of answering zero, and a marker whose writer died is recovered by one bump and then removed
+    # A generation that cannot be read switches the cache off instead of answering zero, and a forced bump refuses to rebuild it from what intval() makes of it
+    # A marker whose writer died is recovered by one bump and then removed
     #[Test]
     public function aDeadWriterIsRecoveredByABump(): void
     {
         $run = $this->getRun('cache');
-        $this->assertSame([false, 0], $run['garbled']);
+        $this->assertSame([false, 0, false, 'x'], $run['garbled'], 'A malformed generation was rewritten, which can move it back onto one already served');
+        $this->assertSame([true, '10'], $run['padded'], 'A counter with leading zeros was overwritten in place and kept a tail of the old number');
         $this->assertSame([true, true], $run['healed']);
         $this->assertSame([[true], 1], $run['died'], 'The dead writer left no marker behind');
         $this->assertSame([true, 0, 1], $run['recover'], 'The recovery did not bump once and remove the marker');

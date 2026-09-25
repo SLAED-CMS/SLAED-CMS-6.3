@@ -22,7 +22,7 @@ function getFieldAreas(): array {
 
 # Turn one posted block into a definition with native types; a text that is no whole number or no switch stays a string, so the shared check refuses it by its path
 function getFieldInput(array $post): array {
-    $num = fn(string $val): int|string => preg_match('/^-?(?:0|[1-9][0-9]{0,17})$/D', $val) ? intval($val) : $val;
+    $num = fn(string $val): int|string => (preg_match('/^-?(?:0|[1-9][0-9]{0,18})$/D', $val) && is_int($int = filter_var($val, FILTER_VALIDATE_INT))) ? $int : $val;
     $text = fn(string $key): string => is_string($post[$key] ?? null) ? trim($post[$key]) : '';
     $type = $text('type');
     $multi = !empty($post['multi']);
@@ -100,8 +100,10 @@ function getFieldBlock(string $area, int $pos, string $name, array $def, bool $k
     $head = [['content' => _FIELDS_KEY, 'nosort' => 1], ['content' => _TITLE, 'nosort' => 1], ['content' => _POSITION, 'nosort' => 1], ['content' => _ACTIVATE2, 'nosort' => 1]];
     $pick = $tpl->getHtmlFrag('select', ['name_attr' => $base.'[type]', 'selectid' => $fid.'type', 'options_html' => $types, 'is_config' => true]);
     $grid = $tpl->getHtmlFrag('table', ['is_fixed' => true, 'head' => $head, 'rows_html' => $irows, 'is_wrapless' => true]);
+    $lead = $line('name', _FIELDS_KEY, $name, ['is_readonly' => $kept, 'maxlength_num' => 32]);
+    if ($kept) $lead['field_html'] .= $tpl->getHtmlFrag('hidden', ['name_attr' => $base.'[orig]', 'value_attr' => $name]);
     $rows = [
-        $line('name', _FIELDS_KEY, $name, ['is_readonly' => $kept, 'maxlength_num' => 32]),
+        $lead,
         $line('title', _TITLE, $show($def['title'] ?? ''), ['maxlength_num' => 255]),
         $line('intro', _DESCRIPTION, $show($def['intro'] ?? '')),
         ['label_for' => $fid.'type', 'label_html' => _TYPE, 'field_html' => $pick],
@@ -151,7 +153,7 @@ function fields(array $sent = [], string $fail = ''): void {
             $blok .= getFieldBlock($area, $pos, $def['name'] ?? '', $def, $kept, false);
             $pos++;
         }
-        $blok .= getFieldBlock($area, $pos, '', [], false, $pos > 0);
+        $blok .= getFieldBlock($area, $pos, '', [], false, $pos > 0).$tpl->getHtmlFrag('hidden', ['name_attr' => 'done['.$area.']', 'value_attr' => '1']);
         $panels[] = $tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'fields-panel-'.$k, 'active' => $ctab === $k, 'content_html' => $blok]);
         $k++;
     }
@@ -169,7 +171,7 @@ function fields(array $sent = [], string $fail = ''): void {
         ['nameattr' => 'name', 'valueattr' => 'fields'],
         ['nameattr' => 'op', 'valueattr' => 'save'],
         ['nameattr' => 'tab', 'valueattr' => (string)$ctab],
-        ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ['nameattr' => 'token', 'valueattr' => getSiteToken('fields')],
     ];
     foreach (getNodeTypeMap() as $name => $type) $hidden[] = ['nameattr' => 'ver['.$name.']', 'valueattr' => (string)$type->version];
     $fieldv = $tpl->getHtmlPart('form', [
@@ -185,26 +187,43 @@ function fields(array $sent = [], string $fail = ''): void {
 function save(): void {
     global $afile, $conf, $fld;
     $ctab = getVar('post', 'tab', 'num', 0);
-    $good = checkSiteToken();
+    $good = checkAdminPost('fields');
     if (!$good || ($conf['update']['fields'] ?? '') !== '6.3.0') setRedirect($afile.'.php?name=fields&tab='.$ctab, false, 302, $good ? _FIELDS_NOMARK : _TOKENMISS, true);
     $post = getVar('post', 'def[]', '', []);
+    $ends = getVar('post', 'done[]', '', []);
     $vers = getVar('post', 'ver[]', '', []);
     $cont = [];
     $sent = [];
     $fail = '';
     foreach (getFieldAreas() as $area => $info) {
         $defs = [];
+        $seen = [];
+        if (($ends[$area] ?? '') !== '1' && $fail === '') $fail = $area.': form';
         foreach (is_array($post[$area] ?? null) ? $post[$area] : [] as $one) {
             if (!is_array($one)) continue;
             $name = is_string($one['name'] ?? null) ? trim($one['name']) : '';
-            $kept = isset($info['defs'][$name]);
+            $orig = is_string($one['orig'] ?? null) ? $one['orig'] : '';
+            $kept = isset($info['defs'][$orig]);
             $def = getFieldInput($one);
-            if ($kept) $def['type'] = $info['defs'][$name]['type'];
+            if ($kept) {
+                $def['type'] = $info['defs'][$orig]['type'];
+                $seen[$orig] = true;
+                $keys = array_map('strval', array_keys($def['options']['items'] ?? []));
+                $lost = array_diff(array_map('strval', array_keys($info['defs'][$orig]['options']['items'] ?? [])), $keys);
+                if ($name !== $orig && $fail === '') $fail = $area.': '.$orig.'.name';
+                if ($lost && $fail === '') $fail = $area.': '.$orig.'.options.items.'.reset($lost);
+                $name = $orig;
+            } elseif ($orig !== '' && $fail === '') {
+                $fail = $area.': '.$orig;
+            }
             if ($name === '' && $def['title'] === '') continue;
             $sent[$area][] = ['name' => $name, 'kept' => $kept ? '1' : ''] + $def;
             if (!empty($one['drop']) && $kept) continue;
             if (isset($defs[$name]) && $fail === '') $fail = $area.': '.$name;
             $defs[$name] = $def;
+        }
+        foreach (array_keys(array_diff_key($info['defs'], $seen)) as $gone) {
+            if ($fail === '') $fail = $area.': '.$gone;
         }
         try {
             $cont[$area] = $fld->filterFieldList($defs);

@@ -54,6 +54,35 @@ final class PageCacheContractTest extends TestCase
         return self::$probes[$mode] = $data;
     }
 
+    # Run the comment writer of stage S19.4 through tests/Support/route_probe.php: a disposable database, a real HTTP stand and a child that writes as the admin entry
+    private function getCommentRun(): array
+    {
+        if (isset(self::$probes['comment'])) return self::$probes['comment'];
+        $script = dirname(__DIR__).'/Support/route_probe.php';
+        $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_page_comment';
+        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' cache 2>&1');
+        $data = json_decode($out, true);
+        $this->assertIsArray($data, 'The route probe did not return JSON: '.substr($out, 0, 600));
+        $this->assertSame('', $data['error'], 'The route probe failed');
+        $this->assertTrue($data['clean'], 'The route probe left a disposable database on the server');
+        $this->assertSame(['error_php.log' => [], 'error_sql.log' => []], $data['logs'], 'The run wrote PHP or SQL errors');
+        return self::$probes['comment'] = $data['runs']['cache'];
+    }
+
+    # A moderator approving a comment of a Node material holds the write guard from before its transaction until the generation moved after its commit
+    # The administrative entry bumps early on its first write statement, so without the guard a list rendered from the old count was stored under the new generation for good
+    #[Test]
+    public function anApprovedCommentPublishesNoPageOfTheOldCount(): void
+    {
+        $run = $this->getCommentRun();
+        $this->assertSame(['done' => true], $run['child'], 'The approval failed');
+        $this->assertSame(1, $run['during']['early'], 'The approval never reached the early bump of the administrative entry');
+        $this->assertSame(1, $run['during']['guards'], 'The approval wrote without a guard of the page cache');
+        $this->assertSame(200, $run['during']['code']);
+        $this->assertSame(0, $run['during']['pages'], 'A list rendered during the approval was stored in the page cache');
+        $this->assertSame(['gen' => 1, 'guards' => 0, 'comnum' => 2, 'status' => 1], $run['after'], 'The generation did not move after the commit, or the guard stayed');
+    }
+
     # A URL without any query part is valid and yields an empty parameter map
     #[Test]
     public function pathWithoutQueryIsValidAndEmpty(): void
@@ -197,6 +226,20 @@ final class PageCacheContractTest extends TestCase
         $this->assertIsArray($node['vars'], 'The clean list address of a Node type broke the parameter contract');
         $this->assertFalse($this->getProbe('routenodeop')['cache'], 'A material of a Node type is cached');
         $this->assertFalse($this->getProbe('routenodelet')['cache'], 'A letter filter of a Node type is cached');
+    }
+
+    # The start page draws one type of the home list per request, so its identity carries the type it drew and every home type is stored apart
+    # None of them shares an entry with the plain list of the same type, whose layout is not the one of the start page
+    #[Test]
+    public function eachHomeTypeHasItsOwnIdentity(): void
+    {
+        $news = $this->getProbe('routehomenews');
+        $docs = $this->getProbe('routehomedocs');
+        $plain = $this->getProbe('routenewsplain');
+        $this->assertTrue($news['cache'], 'The start page of a Node type is not cached');
+        $this->assertSame('news', $news['vars']['home'] ?? null, 'The identity of the start page does not carry the type it drew');
+        $this->assertNotSame($news['hash'], $docs['hash'], 'Two home types share one entry, so the first one drawn is served for both');
+        $this->assertNotSame($news['hash'], $plain['hash'], 'The start page shares its entry with the plain list of the same type');
     }
 
     # A sidecar written next to one body validates that exact body and reports its dynamic flag

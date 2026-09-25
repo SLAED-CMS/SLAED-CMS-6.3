@@ -87,33 +87,44 @@ final class UpdatePointsTest extends TestCase
         }
     }
 
-    # A snapshot that no longer matches its manifest and a points scope of another shape both stop the unit without a mark
+    # A snapshot that no longer matches its manifest before the unit is verified and a points scope of another shape both stop the unit without a mark,
+    # while a verified unit whose snapshot the clean finish deleted only writes its lost mark
     #[Test]
     public function aBrokenSourceLeavesNoMark(): void
     {
         $run = $this->getRun('stop');
         $this->assertSame([false, null], [$run['forged']['done'], $run['forged']['mark']]);
         $this->assertStringContainsString('does not match its manifest', $run['forged']['text']);
+        $this->assertSame([true, 'verified', null, ['points' => '6.3.0']], [$run['pruned']['done'], $run['pruned']['state'], $run['pruned']['snap'], $run['pruned']['mark']]);
         $this->assertSame([false, null, 'applying', true], [$run['scope']['done'], $run['scope']['mark'], $run['scope']['state'], $run['scope']['stale']]);
         $this->assertStringContainsString('not a valid points scope', $run['scope']['text']);
     }
 
-    # The preflight refuses a server older than the first one that enforces CHECK and a table of the points transactions on another engine, and the branch closes the site itself
+    # The preflight refuses a server that lacks CHECK or the RENAME COLUMN and RENAME INDEX of the schema file, and a table of a points, ratings or Node transaction
+    # on another engine; it runs before the installer writes a single file or renames the panel, and the branch closes the site right after it
     #[Test]
     public function thePreflightRefusesBeforeAnythingChanges(): void
     {
         $run = $this->getRun('flight');
         $this->assertSame('', $run['real'], 'The stand server was refused');
         $code = (string)file_get_contents(dirname(__DIR__, 2).'/setup/index.php');
+        $save = strpos($code, 'function save(): void {');
         $from = strpos($code, '$stop = checkUpdateBase($db, $xprefix);');
+        $this->assertNotFalse($save, 'The installer lost its save handler');
         $this->assertNotFalse($from, 'The update branch lost its preflight');
+        $head = substr($code, $save, $from - $save);
+        $this->assertSame([0, 0], [substr_count($head, 'setConfigFile('), substr_count($head, 'rename(')], 'A file is written before the preflight');
         $next = substr($code, $from, strpos($code, 'getSqlFile(', $from) - $from);
         $shut = "setConfigFile('global.php', array_diff_key(\$conf, ['security' => '', 'db' => '']), ['close' => '1']);";
         $this->assertStringContainsString($shut, $next, 'The branch does not close the site between the preflight and the DDL');
+        $this->assertLessThan(strpos($next, 'setUpdateConfig()'), strpos($next, $shut), 'The 6.2 settings are carried before the site is closed');
         $pass = array_keys(array_filter($run['server'], fn($v) => $v === ''));
-        $this->assertSame(['10.2.1-MariaDB', '11.7.2-MariaDB-log', '8.0.16'], $pass, 'The version bound moved');
-        $this->assertStringContainsString('older than 10.2.1', $run['server']['10.2.0-MariaDB']);
+        $this->assertSame(['10.5.2-MariaDB', '11.7.2-MariaDB-log', '8.0.16'], $pass, 'The version bound moved');
+        foreach (['10.4.34-MariaDB', '10.5.1-MariaDB'] as $ver) $this->assertStringContainsString('older than 10.5.2', $run['server'][$ver]);
         $this->assertStringContainsString('older than 8.0.16', $run['server']['8.0.15']);
         $this->assertStringEndsWith('start the update again: ALTER TABLE `probe_favorites` ENGINE=InnoDB;', $run['engine'], 'The engine check names a wrong set of tables');
+        foreach (['categories', 'voting'] as $name) {
+            $this->assertStringEndsWith('ALTER TABLE `probe_'.$name.'` ENGINE=InnoDB;', $run['node'][$name], 'The engine check misses a table of the Node transactions');
+        }
     }
 }

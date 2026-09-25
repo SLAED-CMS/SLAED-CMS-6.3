@@ -3360,13 +3360,9 @@ ol.sl-sublist-two li::before {
   margin-right: calc(var(--sl-space-3) * -1);
 }
 
-.sl-partners a {
+.sl-partners span {
   border: 1px solid var(--sl-border-inverse);
   margin: 0 var(--sl-space-3) var(--sl-space-3) 0;
-}
-
-.sl-partners a:hover {
-  border-color: var(--sl-border-inverse);
 }
 
 /* Contacts: footer address list with icons */

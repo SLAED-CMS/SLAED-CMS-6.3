@@ -96,14 +96,14 @@ final class NodeSupport implements NodeExtension {
     private function getTicketRow(int $nid, bool $lock): ?array {
         $sql = 'SELECT aid, state, prio, version, activity FROM '.PREFIX_DB.'_node_support WHERE nid = :nid'.($lock ? ' FOR UPDATE' : '');
         $row = $this->getQueryRes($sql, ['nid' => $nid])->fetch(PDO::FETCH_ASSOC);
-        return is_array($row) ? array_map('intval', array_diff_key($row, ['activity' => 0])) + ['activity' => (string)$row['activity']] : null;
+        return is_array($row) ? array_map('intval', array_diff_key($row, ['activity' => 0])) + ['activity' => $row['activity']] : null;
     }
 
     # Whether an administrator exists and may work on the requests of the type: the main administrator or the holder of node-<name>
     private function checkAdminRight(int $aid, NodeType $type): bool {
         $row = $this->getQueryRes('SELECT super, modules FROM '.PREFIX_DB.'_admins WHERE id = :id', ['id' => $aid])->fetch(PDO::FETCH_ASSOC);
         if (!is_array($row)) return false;
-        return !empty($row['super']) || in_array('node-'.$type->name, getAdminModuleNames((string)$row['modules']), true);
+        return !empty($row['super']) || in_array('node-'.$type->name, getAdminModuleNames($row['modules']), true);
     }
 
     # The addresses of the subscribed administrators who may work on the type, in the language of the request where the site is multilingual;
@@ -119,8 +119,8 @@ final class NodeSupport implements NodeExtension {
         $rows = $this->getQueryRes('SELECT id, email, super, modules FROM '.PREFIX_DB.'_admins WHERE '.$where.' ORDER BY id', $pars)->fetchAll(PDO::FETCH_ASSOC);
         $out = [];
         foreach ($rows as $row) {
-            $good = !empty($row['super']) || in_array('node-'.$type->name, getAdminModuleNames((string)$row['modules']), true);
-            if ($good && intval($row['id']) !== $this->ctx->aid) $out[intval($row['id'])] = (string)$row['email'];
+            $good = !empty($row['super']) || in_array('node-'.$type->name, getAdminModuleNames($row['modules']), true);
+            if ($good && intval($row['id']) !== $this->ctx->aid) $out[intval($row['id'])] = $row['email'];
         }
         return ($aid > 0 && isset($out[$aid])) ? [$out[$aid]] : array_values(array_unique($out));
     }
@@ -189,16 +189,17 @@ final class NodeSupport implements NodeExtension {
         return $row !== null && $row['state'] !== $this->getMaps()['state']['closed'];
     }
 
-    # Follow the first visible reply inside the transaction of the comment owner: a reply of the owner waits for the staff, any other waits for the owner,
-    # the activity and the version move, and the notice of the other side is queued; a closed request stays as it is
-    public function updateNodeAction(NodeType $type, NodeTarget $node, string $action): void {
+    # Follow the first publication of a reply inside the transaction of the comment owner: a reply the owner wrote waits for the staff, any other waits for the owner,
+    # the activity and the version move, and the notice of the other side is queued; the side is the author of the reply, not the moderator who approved it,
+    # so the owner is never told about a reply of his own; a closed request stays as it is
+    public function updateNodeAction(NodeType $type, NodeTarget $node, string $action, int $uid): void {
         if (!in_array($action, self::ACTIONS, true)) throw $this->getInvalid('action');
         if ($action !== 'comment') return;
         if (!$this->db->checkSqlActive()) throw $this->getInvalid('transaction');
         $maps = $this->getMaps();
         $row = $this->getTicketRow($node->id, true) ?? throw $this->getStorage('A request has no queue row');
         if ($row['state'] === $maps['state']['closed']) return;
-        $own = $this->ctx->uid > 0 && $this->ctx->uid === $node->uid;
+        $own = $uid > 0 && $uid === $node->uid;
         $sql = 'UPDATE '.PREFIX_DB.'_node_support SET state = :state, activity = NOW(), version = version + 1 WHERE nid = :nid';
         $this->getQueryRes($sql, ['state' => $maps['state'][$own ? 'staff' : 'author'], 'nid' => $node->id]);
         $this->addSupportMail($type, $node->id, $node->uid, $node->title, $own ? 'owner' : 'staff', $row['aid']);
@@ -240,7 +241,7 @@ final class NodeSupport implements NodeExtension {
         $moder = $this->checkModer($type);
         $out = [];
         foreach ($this->getQueryRes($sql, $pars)->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $out[intval($row['nid'])] = ['state' => intval($row['state']), 'version' => intval($row['version']), 'activity' => (string)$row['activity'],
+            $out[intval($row['nid'])] = ['state' => intval($row['state']), 'version' => intval($row['version']), 'activity' => $row['activity'],
                 'aid' => intval($row['aid']), 'aname' => $moder ? (string)($row['aname'] ?? '') : '', 'prio' => intval($row['prio'])];
         }
         return $out;
@@ -314,9 +315,9 @@ final class NodeSupport implements NodeExtension {
             .' WHERE '.$where.' ORDER BY s.prio DESC, s.activity ASC, s.id ASC LIMIT '.(($page - 1) * $limit).', '.$limit;
         foreach ($this->getQueryRes($sql, $pars)->fetchAll(PDO::FETCH_ASSOC) as $row) {
             $nid = intval($row['id']);
-            $out['nodes'][] = new NodeTarget($type, $nid, intval($row['uid']), (string)$row['title'], CommentMode::tryFrom(intval($row['comon'])) ?? CommentMode::Disabled,
+            $out['nodes'][] = new NodeTarget($type, $nid, intval($row['uid']), $row['title'], CommentMode::tryFrom(intval($row['comon'])) ?? CommentMode::Disabled,
                 intval($row['comnum']), intval($row['score']), intval($row['ratings']));
-            $out['ext'][$nid] = ['state' => intval($row['state']), 'version' => intval($row['version']), 'activity' => (string)$row['activity'], 'aid' => intval($row['aid']),
+            $out['ext'][$nid] = ['state' => intval($row['state']), 'version' => intval($row['version']), 'activity' => $row['activity'], 'aid' => intval($row['aid']),
                 'aname' => (string)($row['aname'] ?? ''), 'prio' => intval($row['prio']), 'uname' => (string)($row['uname'] ?? '')];
         }
         return $out;

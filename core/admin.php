@@ -335,20 +335,21 @@ function getAdminLayoutVars(): array {
     ];
 }
 
-# Render one sidebar pending-count row: active-content link plus a live COUNT chip; title and label are constant names resolved here for the active module
+# Render one sidebar pending-count row: active-content link plus a live COUNT chip; title and label are constant names resolved here for the active module, or ready texts
 # A caller whose table is owned by a subsystem class hands the number over in $num and leaves the table empty, so the row can be built without this helper reaching that table
 function getAdminCountRow(string $href, string $titlec, string $labelc, string $icon, string $table = '', string $where = '', ?int $num = null): string {
     global $db, $afile, $tpl;
     if ($num === null) $num = getTableCount($table, $where);
     return $tpl->getHtmlFrag('block-sidebar-count-row', [
-        'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?'.$href, 'title' => constant($titlec), 'label' => constant($labelc), 'icon_name' => $icon]),
+        'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?'.$href, 'title' => getConst($titlec), 'label' => getConst($labelc), 'icon_name' => $icon]),
         'value_html' => $tpl->getHtmlFrag('inline-badge', ['chip_tone' => (int)$num >= 1 ? 'warn' : 'success', 'label' => (string)$num]),
     ]);
 }
 
 # Build the admin sidebar info blocks: pending-content counters and waiting content; the editor moved to the settings window and is offered there alone
+# Every Node type the administrator moderates adds its materials waiting for moderation, a type with support requests the requests waiting for the staff
 function getAdminInfo(): string {
-    global $com, $panel, $tpl;
+    global $db, $conf, $fld, $com, $panel, $tpl;
     if (isAdmin()) {
         $ablocks = '';
         if ($panel) {
@@ -364,6 +365,24 @@ function getAdminInfo(): string {
             foreach ($groups as $mod => $defs) {
                 if (!is_active($mod) || !is_admin_modul($mod)) continue;
                 foreach ($defs as $d) $newRows[] = getAdminCountRow(...$d);
+            }
+            $ctx = getNodeContext();
+            foreach (getNodeTypeMap() as $name => $type) {
+                if (!$ctx->super && !in_array($name, $ctx->mods, true)) continue;
+                try {
+                    $hand = getNodeHandler($type);
+                    if ($type->ext === 'support') {
+                        $num = $hand->getNodeSupportList($type, 1, 1, (int)($conf['node']['support']['state']['staff'] ?? 0))['count'];
+                        $href = 'name=node&type='.$name;
+                    } else {
+                        $num = (new NodeQuery($db, $ctx, $fld))->setNodeType($type)->setNodeExtension($hand)->setNodeStatus(NodeStatus::Pending)->getNodeCount();
+                        $href = 'name=node&type='.$name.'&status='.NodeStatus::Pending->value;
+                    }
+                } catch (NodeException $err) {
+                    Logger::addSite('error', 'Admin: the waiting Node materials cannot be counted', ['type' => $name, 'code' => $err->getCode()]);
+                    continue;
+                }
+                $newRows[] = getAdminCountRow($href, getModuleName($name), getModuleName($name), getIconName($name), '', '', $num);
             }
             $ablocks = $tpl->getHtmlPart('block-sidebar', ['title' => _NEW, 'icon_name' => 'stars', 'content_html' => $tpl->getHtmlFrag('block-content', ['is_sidebar_count_list' => true, 'content' => implode('', $newRows)]), 'id' => '3', 'close' => _OPCL]);
             $waitingRows = [getAdminCountRow('name=comments&status=1', '_COMMENTS', '_COMMENTS', 'chat-dots', '', '', $com->getStatusCount(CommentStatus::Pending))];
@@ -382,8 +401,9 @@ function getDbVersion() {
 }
 
 # Render the admin category list grouped by module as an indented tree with drag ordering, collapsible groups and dial actions
+# The materials of a Node type come from its reader; a count the administrator may not read offers no deletion, which the writer would refuse anyway
 function getAdminCategoryList(string $modul = '', int $obj = 0): string {
-    global $db, $afile, $tpl;
+    global $db, $fld, $afile, $tpl;
     $modul = filterVar($modul);
     $where = ($modul) ? 'WHERE modul = :modul' : '';
     $params = ($modul) ? ['modul' => $modul] : [];
@@ -406,9 +426,17 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
         $kids = [];
         foreach ($list as $cat) $kids[$cat['parent']] = ($kids[$cat['parent']] ?? 0) + 1;
         $nums = [];
+        $held = false;
+        $type = getNodeTypeMap()[$cmod] ?? null;
         if (isset($tabs[$cmod])) {
             $count = $db->getSqlQuery('SELECT cid, COUNT(id) FROM '.PREFIX_DB.$tabs[$cmod].' GROUP BY cid');
             while ([$ncid, $cnt] = $db->getSqlRow($count)) $nums[(int)$ncid] = (int)$cnt;
+        } elseif ($type !== null) {
+            try {
+                $nums = (new NodeQuery($db, getNodeContext(), $fld))->getNodeCategoryCount($type);
+            } catch (NodeException $err) {
+                $held = true;
+            }
         }
         $tree = [];
         $seen = [];
@@ -449,7 +477,7 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
                     'title' => _FULLEDIT,
                 ],
             ];
-            if (!$pnum && !$subs) {
+            if (!$pnum && !$subs && !$held) {
                 $dial[] = getTplPostAction(['op' => 'delete'] + $keep, 'trash', _ONDELETE, _DELETE.' "'.$cat['title'].'"?');
             }
             $rows[] = $tpl->getHtmlFrag('table-row', ['attr' => 'data-sl-drag-id="'.$cid.'" data-sl-drag-group="'.$cmod.'-'.$cat['parent'].'" data-sl-drag-scope="'.$cmod.'" data-sl-drag-parent="'.$cat['parent'].'"', 'cells_html' => $tpl->getHtmlFrag('table-cells', [
@@ -559,8 +587,8 @@ function catacess(string $name, string $class, string $selected, int $limit, str
     ]);
 }
 
-function scatacess($auth) {
-    $gids = explode('|', $auth);
+# Fold the posted level|group values of one category access select into its stored rule: groups collect every selected group, any other level keeps its first value
+function scatacess(array $auth): string {
     foreach ($auth as $val) {
         $gids = explode('|', $val);
         if ($gids[0] == 2) {

@@ -89,7 +89,7 @@ function save(): void {
     $sent = getVar('post', 'scopes', 'raw', '');
     if (!$warn && $sent !== implode(',', $scopes)) {
         $warn = true;
-        $seen = explode(',', (string)$sent);
+        $seen = explode(',', $sent);
         $text = sprintf(_NODE_STALE, htmlspecialchars(implode(', ', array_merge(array_diff($scopes, $seen), array_diff($seen, $scopes))), ENT_QUOTES, 'UTF-8'));
     }
     if (!$warn) {

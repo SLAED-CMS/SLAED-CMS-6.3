@@ -260,7 +260,7 @@ function setNodeSupportQueue(NodeType $type): void {
     foreach ($data['nodes'] as $one) {
         $card = $data['ext'][$one->id];
         $dial = [['href' => $afile.'.php?name=node&op=support&id='.$one->id, 'icon_name' => 'kanban', 'title' => _NODE_CARD],
-            ['href' => 'index.php?name='.$type->name.'&op=view&id='.$one->id, 'icon_name' => 'eye', 'title' => _MVIEW]];
+            ['href' => getSeoUrl(['name' => $type->name, 'op' => 'view', 'id' => $one->id, 'title' => $one->title]), 'icon_name' => 'eye', 'title' => _MVIEW]];
         $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
             ['is_col_id' => true, 'content_html' => (string)$one->id],
             ['is_col_title' => true, 'is_truncate' => true, 'title_text' => $one->title, 'has_content_text' => true, 'content_text' => $one->title],
@@ -337,7 +337,7 @@ function show(): void {
     foreach ($types as $one) $tmap[$one->id] = $one;
     foreach ($count ? $query->getNodeList() : [] as $node) {
         $type = $tmap[$node->tid];
-        $dial = [['href' => 'index.php?name='.$type->name.'&op=view&id='.$node->id, 'icon_name' => 'eye', 'title' => _MVIEW],
+        $dial = [['href' => getSeoUrl(['name' => $type->name, 'op' => 'view', 'id' => $node->id, 'title' => $node->title]), 'icon_name' => 'eye', 'title' => _MVIEW],
             ['href' => $afile.'.php?name=node&op=edit&id='.$node->id.'&type='.$type->name, 'icon_name' => 'pencil', 'title' => _FULLEDIT]];
         foreach (NodeStatus::cases() as $to) {
             if (!$node->status->checkStatusMove($to)) continue;
@@ -540,12 +540,12 @@ function delete(): void {
     $id = (int)getVar('post', 'id', 'num', 0);
     $types = array_filter(getNodeTypeMap(), fn($v) => checkNodeModer($v));
     $type = $types[(string)getVar('post', 'type', 'var', '')] ?? setNodeAdminFault(404, _NODE_GONE);
+    getNodeReader($type)->getNodeContent($id, $type) ?? setNodeAdminFault(404, _NODE_GONE);
     try {
-        getNodeWriter($type)->deleteNode($id, (int)getVar('post', 'version', 'num', 0));
+        getNodeWriter($type)->deleteNode($id, (int)getVar('post', 'version', 'num', 0), $com);
     } catch (NodeException $err) {
         setNodeActFault($err, $type, $id);
     }
-    if (!$com->deleteTarget($type->name, [$id])) Logger::addSite('error', 'Node: the comments of a deleted material could not be removed', ['nid' => $id]);
     setRedirect($afile.'.php?name=node&type='.$type->name, true, 302, _NODE_REMOVED);
 }
 
@@ -577,6 +577,7 @@ function getNodeTypeFault(NodeException $err, string $name): string {
     if ($err->getCode() === NodeException::INVALID) {
         $path = preg_match('/^Invalid node input: (.+)$/D', $err->getMessage(), $hit) ? $hit[1] : '';
         if ($path === 'directory') return sprintf(_NODE_TGUARD, $label);
+        if ($path === 'remains') return sprintf(_NODE_BAD, $label).' '._NODE_REMHINT;
         return sprintf(_NODE_BAD, $label).(($path !== '') ? ' ('.$path.')' : '');
     }
     if ($err->getCode() === NodeException::STORAGE && getConfigJournal()) return _CONFIG_PENDING;
@@ -593,7 +594,7 @@ function types(): void {
     foreach (getNodeTypeMap() as $name => $type) {
         $base = ['name' => 'node', 'type' => $name, 'version' => $type->version];
         $dial = [['href' => $afile.'.php?name=node&op=type&type='.$name, 'icon_name' => 'pencil', 'title' => _FULLEDIT]];
-        if ($type->active) $dial[] = ['href' => 'index.php?name='.$name, 'icon_name' => 'arrow-up-right-circle', 'title' => _VIEWSITE];
+        if ($type->active) $dial[] = ['href' => getSeoUrl(['name' => $name]), 'icon_name' => 'arrow-up-right-circle', 'title' => _VIEWSITE];
         if ($type->settings['features']['categories']) $dial[] = ['href' => $afile.'.php?name=categories&modul='.$name, 'icon_name' => 'folder2', 'title' => _CATEGORIES];
         $dial[] = ['href' => $afile.'.php?name=fields', 'icon_name' => 'plus-square-dotted', 'title' => _NODE_FIELDS];
         $dial[] = ['href' => $afile.'.php?name=node&op=clone&type='.$name, 'icon_name' => 'files', 'title' => _NODE_CLONE];
@@ -618,8 +619,44 @@ function types(): void {
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true]];
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'is_fixed' => true, 'head' => $head, 'rows_html' => $rows])]);
     }
+    try {
+        $gone = getNodeWriter()->getNodeRemains();
+    } catch (NodeException $err) {
+        setNodeAdminFault(getNodeStatus($err), getNodeTypeFault($err, ''), 'types');
+    }
+    $rows = '';
+    foreach ($gone as $name => $num) {
+        $dial = [getTplPostAction(['name' => 'node', 'op' => 'remains', 'modul' => $name], 'x-octagon', _DELETE, _DELETE.' "'.$name.'"?')];
+        $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
+            ['is_col_title' => true, 'has_content_text' => true, 'content_text' => $name],
+            ['has_content_text' => true, 'content_text' => (string)$num['comments']],
+            ['has_content_text' => true, 'content_text' => (string)$num['favorites']],
+            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $dial])],
+        ]])]);
+    }
+    if ($rows !== '') {
+        $head = [['content' => _NODE_NAME, 'is_col_title' => true], ['content' => _COMMENTS], ['content' => _FAVORITES],
+            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true]];
+        $cont .= $tpl->getHtmlPart('box', ['title' => _NODE_REMAINS, 'content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NODE_REMHINT])
+            .$tpl->getHtmlFrag('table', ['is_wrapless' => true, 'is_fixed' => true, 'head' => $head, 'rows_html' => $rows])]);
+    }
     echo $cont;
     setFoot();
+}
+
+# Delete the comments and favorites a removed section left under one module key, so a type may be registered under that name again
+function remains(): void {
+    global $afile;
+    checkNodeMethod(['POST']);
+    checkNodeTypes('types');
+    if (!checkAdminPost('node')) setNodeAdminFault(403, _TOKENMISS, 'types');
+    $name = (string)getVar('post', 'modul', 'var', '');
+    try {
+        getNodeWriter()->deleteNodeRemains($name);
+    } catch (NodeException $err) {
+        setNodeAdminFault(getNodeStatus($err), getNodeTypeFault($err, $name), 'types');
+    }
+    setRedirect($afile.'.php?name=node&op=types', false, 302, _NODE_REMGONE);
 }
 
 # The export of a shipped profile of modules/node/profiles by its name, decoded, or null when no such profile ships
@@ -1054,6 +1091,7 @@ function config(): void {
         }
         $lims = $new;
         $held = '';
+        $code = 422;
         if (in_array(0, $new, true)) {
             $note = _NODE_INVALID;
         } else {
@@ -1084,9 +1122,11 @@ function config(): void {
                 return $save($base) ? 'committed' : 'aborted';
             });
             if ($done && $held === '') setRedirect($afile.'.php?name=node&op=config', false, 302, _NODE_SAVED);
-            $note = ($held !== '') ? sprintf(_NODE_LIMITNO, $held) : (getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP);
+            $jour = ($held === '') ? getConfigJournal() : [];
+            $note = ($held !== '') ? sprintf(_NODE_LIMITNO, $held) : ($jour ? _CONFIG_PENDING : _ERROR_UP);
+            $code = ($held !== '') ? 422 : ($jour ? 409 : 500);
         }
-        http_response_code(422);
+        http_response_code($code);
     }
     setHead();
     $rows = [['label_html' => _NODE_FORMAT, 'field_html' => htmlspecialchars((string)($conf['node']['version'] ?? ''), ENT_QUOTES, 'UTF-8')]];
@@ -1128,7 +1168,7 @@ function support(): void {
     $view = getNodeViewData($type, $node, 'view');
     setHead();
     $who = ($view['author'] !== '') ? $view['author'] : _ANONYM;
-    $text = $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$type->name.'&op=view&id='.$node->id, 'title' => _MVIEW, 'label' => $node->title, 'is_line_break' => true])
+    $text = $tpl->getHtmlFrag('link', ['href' => $view['href'], 'title' => _MVIEW, 'label' => $node->title, 'is_line_break' => true])
         .$tpl->getHtmlFrag('span', ['text' => ' '.$who.' - '.$view['date'], 'is_line_break' => true]).$view['intro_html'].$view['body_html'];
     $talk = '';
     foreach ($com->getList($type->name, $node->id, 1)['rows'] as $one) {
@@ -1177,6 +1217,7 @@ switch ($op) {
     case 'type': type(); break;
     case 'typestatus': typestatus(); break;
     case 'typedelete': typedelete(); break;
+    case 'remains': remains(); break;
     case 'clone': typeclone(); break;
     case 'export': export(); break;
     case 'import': import(); break;

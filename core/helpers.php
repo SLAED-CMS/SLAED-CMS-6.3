@@ -131,36 +131,6 @@ function getTplViewFieldRows(array $data = []): string {
     return $rows;
 }
 
-# Render one shared refresh-time select with fixed interval choices
-function getTplRefreshTimeSelect(array $data = []): string {
-    global $tpl;
-    $valu = $data['valu'] ?? '3600';
-    $name = $data['name'] ?? 'refresh';
-    $valu = ($valu === '' || $valu === '0' || $valu === 0) ? '3600' : (string)$valu;
-    $opts = '';
-    $times = [
-        '900' => '15 '._MIN.'.',
-        '1800' => '30 '._MIN.'.',
-        '3600' => '1 '._HOUR.'.',
-        '18000' => '5 '._HOUR.'.',
-        '36000' => '10 '._HOUR.'.',
-        '86400' => '24 '._HOUR.'.',
-    ];
-    foreach ($times as $value => $label) {
-        $opts .= $tpl->getHtmlFrag('select-option', [
-            'value_attr' => (string)$value,
-            'label_text' => (string)$label,
-            'is_selected' => $valu === $value,
-        ]);
-    }
-    return $tpl->getHtmlFrag('select', [
-        'name_attr' => $name,
-        'selectid' => (string)($data['input_id'] ?? ''),
-        'describedby' => (string)($data['describedby'] ?? ''),
-        'options_html' => $opts,
-    ]);
-}
-
 # Render one full preview block from prepared source texts and dynamic fields
 function getTplPreviewContent(array $data = []): string {
     global $tpl, $prs;
@@ -1094,6 +1064,7 @@ function getRatingStars(int $width): array {
 
 # Render the shared rating block for stars or like-style controls; type 2 answers a stored vote with the inner block alone, which replaces the content of the live one
 # The block is live only behind the mark of the 6.3 data update and an active rule; the vote itself travels in the body of a POST and the page carries no voting address
+# The average shown is Rating::getAverage() with two digits, the same integer half-up rule a vote answers with six, so the page and the refreshed block never disagree
 function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $scor, string $obj = '', string $stl = ''): string {
     global $conf, $tpl;
     if (intval($rat)) {
@@ -1104,7 +1075,7 @@ function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $sc
         $votes = 1;
     }
     $width = (int)max(0, min(100, round(($scor / $votes) * 20)));
-    $result = number_format($scor / $votes, 2);
+    $result = Rating::getAverage(intval($scor), intval($votes), 2) ?? '0';
     if (intval($votes) && intval($scor)) {
         $title = _RATING.': '.$result.'/'.$votes.' '._AVERAGESCORE.': '.$result;
         $scored = true;
@@ -1231,13 +1202,12 @@ function getTplLanguageOptions(string $lang = '', string $typ = ''): string {
     return $cont;
 }
 
-# Render a multi-select for modules
+# Render a multi-select for modules: the directory node is the code of every registered type and has no route of its own, the active types stand beside the modules
 function getTplModuleSelect(string $name, string $mod, string $no = '', array $allow = [], string $sid = '', string $desc = ''): string {
     global $tpl;
     $cont = '';
     if ($no !== '') $cont .= $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => empty($mod)]);
     $mods = explode(',', $mod);
-    # The directory node is the code of every registered type and has no route of its own; the active types stand beside the modules under their public names
     $list = array_merge(array_diff(scandir('modules'), ['node']), array_keys(array_filter(getNodeTypeMap(), fn($v) => $v->active)));
     foreach ($list as $file) {
         if (str_contains($file, '.')) continue;

@@ -107,22 +107,21 @@ class Comment {
         return !$this->checkNodeKind($mod) || $this->getNodeTarget($mod, $id) !== null;
     }
 
-    # Count the visible comments of one Node material, with a locking read when asked, so a count taken under the lock of the material sees every committed comment
-    private function getLiveCount(string $mod, int $cid, bool $lock): int {
-        $sql = 'SELECT COUNT(*) FROM '.PREFIX_DB.'_comment WHERE modul = :mod AND cid = :cid AND status = :stat AND deleted IS NULL'.($lock ? ' LOCK IN SHARE MODE' : '');
+    # Count the visible comments of one Node material with a locking read, so a count taken under the lock of the material sees every committed comment
+    private function getLiveCount(string $mod, int $cid): int {
+        $sql = 'SELECT COUNT(*) FROM '.PREFIX_DB.'_comment WHERE modul = :mod AND cid = :cid AND status = :stat AND deleted IS NULL LOCK IN SHARE MODE';
         $res = $this->db->getSqlQuery($sql, ['mod' => $mod, 'cid' => $cid, 'stat' => CommentStatus::Published->value]);
         if ($res === false) throw new NodeException('The comments of a material cannot be counted', NodeException::STORAGE, $this->db->laste);
         return intval($res->fetchColumn());
     }
 
-    # Lock the Node material of a comment write before its comment row: the shared writer locks the type and then the material and writes the count it can see,
-    # so every writer of one discussion queues here and none of them holds a comment row another one waits for; a type or material that is gone answers null and locks nothing
-    private function setNodeLock(string $mod, int $cid): ?NodeType {
-        if (!$this->checkNodeKind($mod)) return null;
-        $type = $this->getNodeReader()->getNodeType($mod);
+    # Lock the Node material of a comment write before its comment row: the shared writer locks the type and then the material with locking reads alone
+    # Every writer of one discussion queues here, none of them holds a comment row another one waits for, and no snapshot of the write is older than the wait
+    # The type is resolved before the transaction of this class opens; a type or material that is gone answers null and locks nothing
+    private function setNodeLock(?NodeType $type, int $cid): ?NodeType {
         if ($type === null) return null;
         try {
-            $this->getNodeWriter()->updateNodeComments($cid, $type, $this->getLiveCount($mod, $cid, false));
+            $this->getNodeWriter()->setTargetLock($cid, $type);
         } catch (NodeException $err) {
             if ($err->getCode() === NodeException::NOTFOUND) return null;
             throw $err;
@@ -132,14 +131,46 @@ class Comment {
 
     # Write the live count of visible comments of a material this transaction has locked, read with a locking read so the comments other writers committed count as well
     private function setNodeCount(NodeType $type, string $mod, int $cid): void {
-        $this->getNodeWriter()->updateNodeComments($cid, $type, $this->getLiveCount($mod, $cid, true));
+        $this->getNodeWriter()->updateNodeComments($cid, $type, $this->getLiveCount($mod, $cid));
     }
 
-    # Let the extension of a Node type follow the first visible comment of a material inside the open transaction; a material that is no longer readable is left alone
-    private function updateNodeAction(NodeType $type, string $mod, int $cid): void {
+    # Let the extension of a Node type follow the first publication of one comment inside the open transaction, told whose reply it is: the author of the comment,
+    # never the moderator who published it; a material that is no longer readable is left alone
+    private function updateNodeAction(NodeType $type, string $mod, int $cid, int $uid): void {
         $ext = $this->getNodeHandler($type);
         $tgt = ($ext !== null) ? $this->getNodeTarget($mod, $cid) : null;
-        if ($tgt !== null) $ext->updateNodeAction($type, $tgt, 'comment');
+        if ($tgt !== null) $ext->updateNodeAction($type, $tgt, 'comment', $uid);
+    }
+
+    # Open one comment write: inside a transaction of an owner it joins and answers null, and the guard and the final generation stay with that owner
+    # Otherwise it takes the write guard of the page cache before its own BEGIN and answers the guard, or false when either cannot be had and no statement may run
+    private function setWriteBegin(): mixed {
+        if ($this->db->checkSqlActive()) return null;
+        $guard = Cache::getWriteGuard();
+        if ($guard === false) return false;
+        if ($this->db->setSqlBegin()) return $guard;
+        Cache::deleteWriteGuard($guard);
+        return false;
+    }
+
+    # Take back one comment write: a joined write leaves the rollback to its owner, an own one rolls back and frees its guard once the rollback is proven
+    private function setWriteUndo(mixed $guard): void {
+        if ($guard === null) return;
+        if ($this->db->setSqlRollback() || !$this->db->checkSqlActive()) Cache::deleteWriteGuard($guard);
+    }
+
+    # Finish one comment write: a joined write succeeds for its owner to commit, an own one commits, forces the generation when it changed anything and frees its guard
+    # A commit that fails leaves its outcome unknown and keeps the guard; a bump that fails after a commit keeps it too and is logged, and the write still answers as stored
+    private function setWriteDone(mixed $guard, bool $moved = true): bool {
+        if ($guard === null) return true;
+        if (!$this->db->setSqlCommit()) {
+            $this->db->setSqlRollback();
+            Logger::addSite('error', 'Comment: the outcome of a commit is unknown and the write guard is kept', []);
+            return false;
+        }
+        $done = (!$moved || Cache::addEpoch(true)) && Cache::deleteWriteGuard($guard);
+        if (!$done) Logger::addSite('error', 'Comment: the write is stored but the page cache was not invalidated, the write guard is kept', []);
+        return true;
     }
 
     # Report the target rows whose stored comment counter disagrees with the comments actually published under them
@@ -175,14 +206,16 @@ class Comment {
     }
 
     # Write the live comment count back into the target rows a drift report named, and answer how many rows were actually corrected
+    # The repair is one write under the guard of the page cache, so a page rendered from the drifted counters cannot be stored under the generation that follows it
     public function updateCountDrift(array $rows): int {
+        $guard = $this->setWriteBegin();
+        if ($guard === false) return 0;
         $done = 0;
         foreach ($rows as $one) {
             if (!$this->setTargetCount(intval($one['cid'] ?? 0), (string)($one['modul'] ?? ''))) continue;
             if (intval($this->db->getSqlAffected()) > 0) $done++;
         }
-        if ($done > 0) Cache::addEpoch();
-        return $done;
+        return $this->setWriteDone($guard, $done > 0) ? $done : 0;
     }
 
     # Return one page of the discussion of a target: the page counts and paginates root comments, and every root on it arrives with its whole branch
@@ -390,47 +423,40 @@ class Comment {
             $uid = 0;
             $stat = (!is_moder($mod) && ($mode === CommentMode::Moderated || $this->conf['anonpost'] == 1)) ? CommentStatus::Pending : CommentStatus::Published;
         }
-        $own = !$this->db->checkSqlActive();
-        if ($own && !$this->db->setSqlBegin()) return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
+        $kind = ($stat === CommentStatus::Published && $this->checkNodeKind($mod)) ? $this->getNodeReader()->getNodeType($mod) : null;
+        $fail = ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
+        $guard = $this->setWriteBegin();
+        if ($guard === false) return $fail;
         try {
-            $kind = ($stat === CommentStatus::Published) ? $this->setNodeLock($mod, $id) : null;
+            $kind = $this->setNodeLock($kind, $id);
         } catch (NodeException) {
-            if ($own) $this->db->setSqlRollback();
-            return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
+            $this->setWriteUndo($guard);
+            return $fail;
         }
-        $sql = 'INSERT INTO '.PREFIX_DB.'_comment (pid, cid, modul, time, uid, name, ip, body, status, reqkey)'
-            .' VALUES (:pid, :cid, :modul, NOW(), :uid, :name, :ip, :body, :status, :reqkey)';
+        $sql = 'INSERT INTO '.PREFIX_DB.'_comment (pid, cid, modul, time, uid, name, ip, body, status, shown, reqkey)'
+            .' VALUES (:pid, :cid, :modul, NOW(), :uid, :name, :ip, :body, :status, '.(($stat === CommentStatus::Published) ? 'NOW()' : 'NULL').', :reqkey)';
         $done = $this->db->getSqlQuery($sql, [
             'pid' => max(0, $pid), 'cid' => $id, 'modul' => $mod, 'uid' => $uid, 'name' => $name, 'ip' => $ip,
             'body' => $body, 'status' => $stat->value, 'reqkey' => $key,
         ]);
         if (!$done) {
-            $fail = intval($this->db->getSqlError()['code']) === 1062;
-            if ($own) $this->db->setSqlRollback();
-            try {
-                if (!$own && $kind !== null) $this->setNodeCount($kind, $mod, $id);
-            } catch (NodeException) {
-                return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
-            }
-            return $fail ? $this->getKeyResult($key, $name, $mod, $id, $pid, $uid, $body) : ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
+            $twin = intval($this->db->getSqlError()['code']) === 1062;
+            $this->setWriteUndo($guard);
+            return $twin ? $this->getKeyResult($key, $name, $mod, $id, $pid, $uid, $body) : $fail;
         }
         $new = intval($this->db->getSqlLastId());
-        if ($stat === CommentStatus::Published) $this->updateTargetPoints($mod, false, $uid, $new, $id);
         try {
             if ($kind !== null) {
                 $this->setNodeCount($kind, $mod, $id);
-                $this->updateNodeAction($kind, $mod, $id);
+                $this->updateNodeAction($kind, $mod, $id, $uid);
             }
         } catch (NodeException) {
-            if ($own) $this->db->setSqlRollback();
-            return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
+            $this->setWriteUndo($guard);
+            return $fail;
         }
-        if ($own && !$this->db->setSqlCommit()) {
-            $this->db->setSqlRollback();
-            return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
-        }
+        if ($stat === CommentStatus::Published) $this->updateTargetPoints($mod, false, $uid, $new, $id);
+        if (!$this->setWriteDone($guard)) return $fail;
         if ($stat === CommentStatus::Published) $this->addTargetCount($id, $mod);
-        Cache::addEpoch();
         return ['id' => $new, 'name' => $name, 'new' => true, 'error' => ''];
     }
 
@@ -455,17 +481,14 @@ class Comment {
             $out['error'] = [$room];
             return $out;
         }
-        $own = !$this->db->checkSqlActive();
-        if ($own && !$this->db->setSqlBegin()) return $out;
+        $guard = $this->setWriteBegin();
+        if ($guard === false) return $out;
         $done = $this->db->getSqlQuery(
             'UPDATE '.PREFIX_DB.'_comment SET body = :body, edited = NOW() WHERE id = :id AND deleted IS NULL',
             ['body' => $text, 'id' => $id]
         );
-        if (!$done || ($own && !$this->db->setSqlCommit())) {
-            if ($own) $this->db->setSqlRollback();
-            return $out;
-        }
-        Cache::addEpoch();
+        if (!$done) $this->setWriteUndo($guard);
+        if (!$done || !$this->setWriteDone($guard)) return $out;
         $out['body'] = $text;
         $out['saved'] = true;
         return $out;
@@ -475,51 +498,42 @@ class Comment {
     # The state is changed by a conditional update rather than by a read followed by a write, so two parallel requests cannot both count the same transition
     # The wanted state is bound twice under two names because a native prepared statement rejects one named placeholder used in two positions
     # A comment of a Node material locks the material before its own row and writes the live counter of the material inside the same transaction,
-    # and its first publication is followed by the extension of the type; the extension cannot tell a first publication from a repeated one after a hide
+    # and only its first publication, which shown records once and never clears, is followed by the extension of the type: publishing again after a hide is no new reply
     public function setStatus(int $id, bool $open): bool {
-        $own = !$this->db->checkSqlActive();
-        if ($id < 1 || ($own && !$this->db->setSqlBegin())) return false;
-        $head = $this->db->getSqlRow($this->db->getSqlQuery('SELECT cid, modul FROM '.PREFIX_DB.'_comment WHERE id = :id AND deleted IS NULL', ['id' => $id]));
-        $kind = null;
+        $head = ($id > 0) ? $this->db->getSqlRow($this->db->getSqlQuery('SELECT cid, modul FROM '.PREFIX_DB.'_comment WHERE id = :id AND deleted IS NULL', ['id' => $id])) : [];
+        if (!$head || !is_moder((string)$head['modul'])) return false;
+        $kind = $this->checkNodeKind((string)$head['modul']) ? $this->getNodeReader()->getNodeType((string)$head['modul']) : null;
+        $guard = $this->setWriteBegin();
+        if ($guard === false) return false;
         try {
-            if ($head && is_moder((string)$head['modul'])) $kind = $this->setNodeLock((string)$head['modul'], intval($head['cid']));
+            $kind = $this->setNodeLock($kind, intval($head['cid']));
         } catch (NodeException) {
-            $head = [];
+            $this->setWriteUndo($guard);
+            return false;
         }
-        $sql = 'SELECT cid, uid, status, modul FROM '.PREFIX_DB.'_comment WHERE id = :id AND deleted IS NULL FOR UPDATE';
-        $row = $head ? $this->db->getSqlRow($this->db->getSqlQuery($sql, ['id' => $id])) : [];
+        $sql = 'SELECT cid, uid, status, shown, modul FROM '.PREFIX_DB.'_comment WHERE id = :id AND deleted IS NULL FOR UPDATE';
+        $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['id' => $id]));
         $mod = (string)($row['modul'] ?? '');
         $cid = $row ? intval($row['cid']) : 0;
-        if (!$cid || $mod === '' || !is_moder($mod)) {
-            if ($own) $this->db->setSqlRollback();
-            return false;
-        }
         $stat = $open ? CommentStatus::Published : CommentStatus::Pending;
-        $done = $this->db->getSqlQuery(
-            'UPDATE '.PREFIX_DB.'_comment SET status = :next WHERE id = :id AND status != :curr AND deleted IS NULL',
+        $done = $cid && $mod !== '' && is_moder($mod) && $this->db->getSqlQuery(
+            'UPDATE '.PREFIX_DB.'_comment SET status = :next'.($open ? ', shown = COALESCE(shown, NOW())' : '').' WHERE id = :id AND status != :curr AND deleted IS NULL',
             ['next' => $stat->value, 'curr' => $stat->value, 'id' => $id]
-        );
-        if ($done === false) {
-            if ($own) $this->db->setSqlRollback();
-            return false;
-        }
-        $moved = intval($this->db->getSqlAffected()) > 0;
-        if ($moved && $open) $this->updateTargetPoints($mod, false, intval($row['uid']), $id, $cid);
+        ) !== false;
+        $moved = $done && intval($this->db->getSqlAffected()) > 0;
         try {
-            if ($kind !== null) $this->setNodeCount($kind, $mod, $cid);
-            if ($kind !== null && $moved && $open) $this->updateNodeAction($kind, $mod, $cid);
+            if ($done && $kind !== null) $this->setNodeCount($kind, $mod, $cid);
+            if ($kind !== null && $moved && $open && $row['shown'] === null) $this->updateNodeAction($kind, $mod, $cid, intval($row['uid']));
         } catch (NodeException) {
-            if ($own) $this->db->setSqlRollback();
+            $done = false;
+        }
+        if (!$done) {
+            $this->setWriteUndo($guard);
             return false;
         }
-        if ($own && !$this->db->setSqlCommit()) {
-            $this->db->setSqlRollback();
-            return false;
-        }
-        if ($moved) {
-            $this->addTargetCount($cid, $mod);
-            Cache::addEpoch();
-        }
+        if ($moved && $open) $this->updateTargetPoints($mod, false, intval($row['uid']), $id, $cid);
+        if (!$this->setWriteDone($guard, $moved)) return false;
+        if ($moved) $this->addTargetCount($cid, $mod);
         return true;
     }
 
@@ -527,49 +541,44 @@ class Comment {
     # The row is marked rather than erased and the mark is set by a conditional update, so a repeated delete answers the same result without moving a counter twice
     # A comment of a Node material locks the material before its own row and writes the live counter of the material inside the same transaction
     public function deleteComment(int $id): bool {
-        $own = !$this->db->checkSqlActive();
-        if ($id < 1 || ($own && !$this->db->setSqlBegin())) return false;
-        $head = $this->db->getSqlRow($this->db->getSqlQuery('SELECT cid, modul FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]));
-        $kind = null;
+        $head = ($id > 0) ? $this->db->getSqlRow($this->db->getSqlQuery('SELECT cid, modul FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id])) : [];
+        if (!$head || !is_moder((string)$head['modul'])) return false;
+        $kind = $this->checkNodeKind((string)$head['modul']) ? $this->getNodeReader()->getNodeType((string)$head['modul']) : null;
+        $guard = $this->setWriteBegin();
+        if ($guard === false) return false;
         try {
-            if ($head && is_moder((string)$head['modul'])) $kind = $this->setNodeLock((string)$head['modul'], intval($head['cid']));
+            $kind = $this->setNodeLock($kind, intval($head['cid']));
         } catch (NodeException) {
-            $head = [];
+            $this->setWriteUndo($guard);
+            return false;
         }
-        $sql = 'SELECT cid, uid, status, modul FROM '.PREFIX_DB.'_comment WHERE id = :id FOR UPDATE';
-        $row = $head ? $this->db->getSqlRow($this->db->getSqlQuery($sql, ['id' => $id])) : [];
+        $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT cid, uid, status, modul FROM '.PREFIX_DB.'_comment WHERE id = :id FOR UPDATE', ['id' => $id]));
         $mod = (string)($row['modul'] ?? '');
         $cid = $row ? intval($row['cid']) : 0;
-        if (!$cid || $mod === '' || !is_moder($mod)) {
-            if ($own) $this->db->setSqlRollback();
-            return false;
-        }
-        $done = $this->db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET deleted = NOW() WHERE id = :id AND deleted IS NULL', ['id' => $id]);
-        if ($done === false) {
-            if ($own) $this->db->setSqlRollback();
-            return false;
-        }
-        $hid = intval($this->db->getSqlAffected()) > 0;
-        $gone = $hid && intval($row['status']) === CommentStatus::Published->value;
-        if ($hid) $this->updateTargetPoints($mod, true, intval($row['uid']), $id, $cid);
+        $sql = 'UPDATE '.PREFIX_DB.'_comment SET deleted = NOW() WHERE id = :id AND deleted IS NULL';
+        $done = $cid && $mod !== '' && is_moder($mod) && $this->db->getSqlQuery($sql, ['id' => $id]) !== false;
+        $hid = $done && intval($this->db->getSqlAffected()) > 0;
         try {
-            if ($kind !== null) $this->setNodeCount($kind, $mod, $cid);
+            if ($done && $kind !== null) $this->setNodeCount($kind, $mod, $cid);
         } catch (NodeException) {
-            if ($own) $this->db->setSqlRollback();
+            $done = false;
+        }
+        if (!$done) {
+            $this->setWriteUndo($guard);
             return false;
         }
-        if ($own && !$this->db->setSqlCommit()) {
-            $this->db->setSqlRollback();
-            return false;
-        }
-        if ($gone) $this->addTargetCount($cid, $mod);
-        if ($hid) Cache::addEpoch();
+        if ($hid) $this->updateTargetPoints($mod, true, intval($row['uid']), $id, $cid);
+        if (!$this->setWriteDone($guard, $hid)) return false;
+        if ($hid && intval($row['status']) === CommentStatus::Published->value) $this->addTargetCount($cid, $mod);
         return true;
     }
 
-    # Remove the comments of target rows the module admin has just deleted, because a target that is gone leaves nothing to reference and no counter to move
+    # Remove the comments of target rows the owner deletes, inside the transaction of that owner or one of its own when none is open, and compensate the award of every author
+    # The rows are locked by ascending id before they go, and any failed statement answers false, so the owner rolls the target and its comments back together
+    # The accounts of all authors and the extra accounts the owner moves after it are locked by ascending id before the first compensation, so no two removals cross
+    # The guard and the cache generation belong here only to a transaction of its own; an owner holds its guard and raises the generation after its own commit
     # The id list is bound one placeholder per value, so a caller can hand over a bulk selection without any of it reaching the statement as text
-    public function deleteTarget(string $mod, array $ids): bool {
+    public function deleteTarget(string $mod, array $ids, array $uids = []): bool {
         $ids = array_values(array_unique(array_filter(array_map('intval', $ids), static fn($v) => $v > 0)));
         if ($mod === '' || !$ids) return false;
         $keys = [];
@@ -578,21 +587,36 @@ class Comment {
             $keys[] = ':c'.$key;
             $pars['c'.$key] = $val;
         }
-        $done = $this->db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE cid IN ('.implode(', ', $keys).') AND modul = :mod', $pars);
-        if ($done === false) return false;
-        if (intval($this->db->getSqlAffected()) > 0) Cache::addEpoch();
-        return true;
+        $guard = $this->setWriteBegin();
+        if ($guard === false) return false;
+        $from = ' FROM '.PREFIX_DB.'_comment WHERE cid IN ('.implode(', ', $keys).') AND modul = :mod';
+        try {
+            $res = $this->db->getSqlQuery('SELECT id, cid, uid'.$from.' ORDER BY id FOR UPDATE', $pars);
+            $rows = ($res === false) ? false : $this->db->getSqlRows($res);
+            if ($rows === false) throw new RuntimeException('the comments of the targets could not be read');
+            if (!$this->pnt->setUserLocks(array_merge(array_column($rows, 'uid'), $uids))) throw new RuntimeException('the accounts of the authors could not be locked');
+            foreach ($rows as $row) $this->updateTargetPoints($mod, true, intval($row['uid']), intval($row['id']), intval($row['cid']));
+            if ($rows && $this->db->getSqlQuery('DELETE'.$from, $pars) === false) throw new RuntimeException('the comments of the targets could not be deleted');
+        } catch (Throwable) {
+            $this->setWriteUndo($guard);
+            return false;
+        }
+        return $this->setWriteDone($guard, $rows !== []);
     }
 
     # Anonymise the comments of an account that is being removed: the rows stay, so discussions stay readable and every reply keeps the parent it was written under
     # Removing the rows instead would shrink the target counters of eight modules and break every branch below them, which is why the reference goes and the comment does not
     # Counters and points are deliberately left alone: the comments are still published, and there is no account left to recalculate a point score for
+    # The account removal owns the transaction this runs in and with it the guard and the final generation; called alone it runs as a write of its own
     public function deleteUser(int $uid): bool {
         if ($uid < 1) return false;
-        $done = $this->db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET uid = 0, name = \'\' WHERE uid = :uid', ['uid' => $uid]);
-        if ($done === false) return false;
-        if (intval($this->db->getSqlAffected()) > 0) Cache::addEpoch();
-        return true;
+        $guard = $this->setWriteBegin();
+        if ($guard === false) return false;
+        if ($this->db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET uid = 0, name = \'\' WHERE uid = :uid', ['uid' => $uid]) === false) {
+            $this->setWriteUndo($guard);
+            return false;
+        }
+        return $this->setWriteDone($guard, intval($this->db->getSqlAffected()) > 0);
     }
 
     # Store the body a moderator typed in the moderation form, exactly as it arrived, because that form is not the author edit path and applies neither its rules nor its window
