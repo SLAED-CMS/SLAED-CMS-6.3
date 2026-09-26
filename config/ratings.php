@@ -18,6 +18,30 @@ return [
             'detail' => '0',
             'guests' => '1',
         ],
+        'node.content' => [
+            'active' => '1',
+            'period' => '2592000',
+            'detail' => '1',
+            'guests' => '1',
+        ],
+        'node.docs' => [
+            'active' => '1',
+            'period' => '2592000',
+            'detail' => '1',
+            'guests' => '1',
+        ],
+        'node.jokes' => [
+            'active' => '1',
+            'period' => '2592000',
+            'detail' => '1',
+            'guests' => '1',
+        ],
+        'node.media' => [
+            'active' => '1',
+            'period' => '2592000',
+            'detail' => '1',
+            'guests' => '1',
+        ],
         'shop' => [
             'active' => '1',
             'period' => '2592000',
