@@ -58,7 +58,7 @@ final class Field {
             if (!is_string($name) || !preg_match(self::NAME, $name)) throw new InvalidArgumentException($name);
             $out[$name] = $this->filterFieldRule($name, $def);
         }
-        uksort($out, fn($a, $b) => [$out[$a]['sort'], $a] <=> [$out[$b]['sort'], $b]);
+        uksort($out, fn(string $a, string $b): int => [$out[$a]['sort'], $a] <=> [$out[$b]['sort'], $b]);
         return $out;
     }
 
@@ -75,7 +75,7 @@ final class Field {
             elseif ($val !== null) $data[$name] = $val;
         }
         if ($errs || strlen($this->getFieldJson($data)) <= self::MAXJSON) return $errs;
-        $size = array_map(fn($v) => strlen($this->getFieldJson([$v])), $data);
+        $size = array_map(fn(mixed $v): int => strlen($this->getFieldJson([$v])), $data);
         return [array_search(max($size), $size, true) => 'max'];
     }
 
@@ -292,7 +292,7 @@ final class Field {
             if (!is_int($item['sort'])) throw new InvalidArgumentException($step.'.sort');
             $out[$key] = ['title' => $item['title'], 'active' => $item['active'], 'sort' => $item['sort']];
         }
-        uksort($out, fn($a, $b) => [$out[$a]['sort'], $a] <=> [$out[$b]['sort'], $b]);
+        uksort($out, fn(string $a, string $b): int => [$out[$a]['sort'], $a] <=> [$out[$b]['sort'], $b]);
         return $out;
     }
 
@@ -356,7 +356,7 @@ final class Field {
             $pick[$key] = true;
         }
         if (!$rule['multi']) return ['', $pick ? $raw : null];
-        $vals = array_values(array_filter(array_keys($items), fn($v) => isset($pick[$v])));
+        $vals = array_values(array_filter(array_keys($items), fn(int|string $v): bool => isset($pick[$v])));
         if (count($vals) < ($rule['options']['min'] ?? 0)) return ['min', null];
         return (count($vals) > min($rule['options']['max'] ?? self::MAXPICK, self::MAXPICK)) ? ['max', null] : ['', $vals];
     }

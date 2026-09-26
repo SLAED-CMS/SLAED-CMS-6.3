@@ -1,0 +1,23 @@
+<article{% if id %} id="node-{{ id }}"{% endif %} class="sl-post sl-card sl-node-file">
+  <h2 class="sl-title"><i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i> {% if href %}<a href="{{ href }}" title="{{ title }}">{{ title }}</a>{% else %}{{ title }}{% endif %}</h2>
+  <div class="sl-meta">
+    <ul class="sl-pull-right">
+      {% if is_views %}<li><span title="{{ views_label }}" class="sl-chip sl-card-reads"><i class="bi bi-eye" aria-hidden="true"></i> {{ views }}</span></li>{% endif %}
+    </ul>
+    <ul>
+      {% if is_date and date %}<li><time datetime="{{ date_iso }}" title="{{ date_label }}" class="sl-chip sl-chip-info sl-card-date"><i class="bi bi-calendar3" aria-hidden="true"></i> {{ date }}</time></li>{% endif %}
+      {% if is_category and chref %}<li><a href="{{ chref }}" title="{{ ctitle }}" class="sl-chip sl-card-category"><i class="bi bi-folder" aria-hidden="true"></i> {{ ctitle }}</a></li>{% endif %}
+      {% if is_author and author %}<li>{% if ahref %}<a href="{{ ahref }}" title="{{ author }}" class="sl-author"><i class="bi bi-person" aria-hidden="true"></i> {{ author }}</a>{% else %}<span title="{{ author_label }}">{{ author }}</span>{% endif %}</li>{% endif %}
+    </ul>
+  </div>
+  <div class="sl-entry-content">
+    {% if cover %}<a href="{{ href }}" title="{{ title }}" class="sl-card-image"><img src="{{ cover }}" alt="{{ title }}" loading="lazy"></a>{% endif %}
+    {{{ intro_html }}}
+  </div>
+  <div class="sl-meta-foot">
+    {% if download.href %}<a href="{{ download.href }}" title="{{ download_label }}" class="sl-but"><i class="bi bi-download" aria-hidden="true"></i> {{ download_label }}</a>{% endif %}
+    {% if download.stext %}<span class="sl-chip">{{ download.stext }}</span>{% endif %}
+    {% if download.hits %}<span title="{{ hits_label }}" class="sl-chip sl-card-reads"><i class="bi bi-download" aria-hidden="true"></i> {{ download.hits }}</span>{% endif %}
+    {% if href and read_label %}<a href="{{ href }}" title="{{ title }}" class="sl-but">{{ read_label }}</a>{% endif %}
+  </div>
+</article>

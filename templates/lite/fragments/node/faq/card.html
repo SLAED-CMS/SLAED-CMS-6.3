@@ -1,0 +1,7 @@
+<details{% if id %} id="node-{{ id }}"{% endif %} class="sl-node-faq">
+  <summary><i class="bi bi-chevron-right" aria-hidden="true"></i><h2 class="sl-title">{{ title }}</h2></summary>
+  <div class="sl-node-faq-body">
+    {{{ intro_html }}}
+    {% if href and read_label %}<p><a href="{{ href }}" title="{{ title }}">{{ read_label }} <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>{% endif %}
+  </div>
+</details>

@@ -58,6 +58,16 @@ final class NodeIntegTest extends TestCase
         $this->assertSame([false, false], $run['docsview'], 'A type without rating or poll shows them');
     }
 
+    # A related card is a light target without a view count, so it shows no empty chip of views; a type without the extension that chooses the support view
+    # keeps its rating, poll, favorite switch and related cards, and shows no state of a request it does not have
+    #[Test]
+    public function theSupportViewKeepsTheFeaturesOfItsType(): void
+    {
+        $run = $this->getRun()['render'];
+        $this->assertSame([[true, true, false], [true, true, false]], [$run[0], $run[1]], 'A related card is missing or shows an empty chip of views');
+        $this->assertSame([true, true, true, false], array_slice($run, 2), 'The support view of a type without the extension lost a live part or shows a request state');
+    }
+
     # A vote of node.<name> goes through Node: one delivery is stored once, a repeat answers the stored vote, the interval holds, and the version stays
     #[Test]
     public function aVoteIsStoredOnceWithoutAnewVersion(): void
@@ -154,6 +164,7 @@ final class NodeIntegTest extends TestCase
         $this->assertSame([true, false], $map['cats'], 'A closed category reached the map');
         $this->assertSame([true, true, false, false, true, false], $map['items'], 'A closed, pending or disabled material reached the map');
         $this->assertSame(601, $map['bulk'], 'The cursor lost or repeated materials across batches');
+        $this->assertSame(['success', 5], $map['batch'], 'The sitemap did not read about six hundred materials in batches of limits.syncbatch');
         $this->assertSame([true, false, false], $map['txt'], 'The HTML map misses the open category or lists materials of Node');
     }
 

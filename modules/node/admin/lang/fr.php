@@ -88,6 +88,7 @@ define('_NODE_SAVED','Les modifications ont été enregistrées.');
 define('_NODE_SDEL','Dans la corbeille');
 define('_NODE_SDRAFT','Brouillon');
 define('_NODE_SECLIST','Liste');
+define('_NODE_SEND','Secondes entre deux envois publics d\'une même IP, 0 — sans limite');
 define('_NODE_SEO','Genre de page pour les moteurs de recherche');
 define('_NODE_SHOW','Afficher dans la liste');
 define('_NODE_SOFF','Désactivée');

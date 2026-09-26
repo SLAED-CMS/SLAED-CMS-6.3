@@ -88,6 +88,7 @@ define('_NODE_SAVED','The changes have been saved.');
 define('_NODE_SDEL','In the trash');
 define('_NODE_SDRAFT','Draft');
 define('_NODE_SECLIST','List');
+define('_NODE_SEND','Seconds between public submissions from one IP, 0 — no limit');
 define('_NODE_SEO','Page kind for search engines');
 define('_NODE_SHOW','Show in the list');
 define('_NODE_SOFF','Disabled');

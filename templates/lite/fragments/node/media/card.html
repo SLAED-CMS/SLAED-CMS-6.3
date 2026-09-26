@@ -1,0 +1,5 @@
+<article{% if id %} id="node-{{ id }}"{% endif %} class="sl-node-tile">
+  <a href="{{ href }}" title="{{ title }}" class="sl-node-tile-cover">{% if cover %}<img src="{{ cover }}" alt="{{ title }}" loading="lazy">{% endif %}<i class="bi bi-play-fill" aria-hidden="true"></i></a>
+  <h2 class="sl-title"><a href="{{ href }}" title="{{ title }}">{{ title }}</a></h2>
+  {% if fields.year %}<span title="{{ fields.year.label_text }}" class="sl-chip sl-chip-info"><i class="bi bi-film" aria-hidden="true"></i> {{ fields.year.value_text }}</span>{% elseif is_date and date %}<time datetime="{{ date_iso }}" title="{{ date_label }}" class="sl-chip sl-chip-info sl-card-date"><i class="bi bi-calendar3" aria-hidden="true"></i> {{ date }}</time>{% endif %}
+</article>

@@ -1,6 +1,6 @@
 # Реализация по отдельным окнам
 
-Исполнитель: Claude Fable 5.1. Одно окно — один этап S00–S18, включая вставной S03A, затем подэтапы S19.1–S19.8 исправлений по аудиту реализации. Окно запускается одной командой «Работай по плану docs/node/PROGRESS.md»; текущий этап и протокол окна определяет [PROGRESS.md](PROGRESS.md). Порядок: **S00 — правка плана по аудиту готовности, затем Point как класс, затем Rating как класс**; девять старых модулей удаляются этапом S03A до первого подключения (NOD-224). S00–S18 выполнены; S19 — исправления по аудиту реализации.
+Исполнитель: Claude Fable 5.1. Одно окно — один этап S00–S18, включая вставной S03A, затем подэтапы S19.1–S19.8 исправлений по аудиту реализации и S20.1–S20.8 по второму аудиту. Окно запускается одной командой «Работай по плану docs/node/PROGRESS.md»; текущий этап и протокол окна определяет [PROGRESS.md](PROGRESS.md). Порядок: **S00 — правка плана по аудиту готовности, затем Point как класс, затем Rating как класс**; девять старых модулей удаляются этапом S03A до первого подключения (NOD-224). S00–S19.8 выполнены (1334a08d); S20.1–S20.8 — исправления по второму аудиту реализации — выполнены 2026-09-25…26, план выполнен.
 
 ## Вход в каждое новое окно
 
@@ -304,6 +304,112 @@
   - Прежние находки вне Node — сверить с кодом, живые вынести пользователю отдельной задачей: (а) формы добавления auto_links не сохраняют ссылку — поле `name` затеняет параметр модуля; (б) admin.php?name=shop&op=clients — SQL `SELECT COUNT(id) FROM sport`; (в) касса читает cookie `shop`, корзина пишется в `<user_c>-shop`; (г) новая тема форума около часа даёт 404 (`time <= NOW()`), адаптер Rating форума повторяет условие; (д) холодный старт с пустым storage/cache/templates и двумя запросами — `include(): Failed opening`, errno=13; (е) риг снимков теряет один из четырёх входов; (ж) front и presentation нельзя сравнивать разнесённой парой; (з) обязательное демо-поле аккаунта не даёт сохранить профиль; (и) заказы в админке по `time DESC` при отставании часов БД; (ц) отладочный вывод сессии на стенде — настройка стенда. Закрыты прежде: (с), (т), (у), (э).
 - Файлы: по списку находок.
 - Готово: php -l, phpstan, php-cs-fixer check, полный phpunit без провалов, ui:gates; среди строк, добавленных планом (`git diff d41badf4 70224f65`), нет строк длиннее 180 и комментариев в теле функций.
+
+### S20 — Исправления по второму аудиту реализации
+
+Аудит 2026-09-25 проверил S00–S19.8 (HEAD 1334a08d) в шести срезах — безопасность, целостность данных, установщик и схема, рендер и маршруты, соответствие плану, правила кода — против 01–13, points.md, ratings.md и .rules/*; каждую находку сверили с кодом, неподтверждённые сняты. Строки указаны по 1334a08d; окно ищет место по имени функции и перед правкой убеждается, что находка жива, — неподтверждённая записывается в передачу, а не исправляется. «Развилка» и «Документ» — как в S19. Открытые записи блока передачи PROGRESS.md (прежние находки S19.1–S19.7 и вне Node) в S20 не входят. Решение пользователя 2026-09-25: обещанное планом, но не реализованное (дерево документов, действие `moderate`, режимы представления), — реализовать; развилки внутри этих подэтапов задаются до первой строки кода. Одно окно — один подэтап S20.1–S20.8. Проверки на момент аудита: `php -l` всех PHP в git — без ошибок, phpstan без ошибок, php-cs-fixer 0, ui:gates 234 теста, полный phpunit 1501 тест, 22529 утверждений, 7 пропусков, без провалов.
+
+### S20.1 — Безопасность публичной формы Node
+
+- Зависит: S19.8.
+- Читать: .rules/global.md — Security baseline; 05 — ресурсы материала и загрузка (заметки S11, S12); 07 — коды ответа, SEO и canonical; 11 — Безопасность.
+- Находки:
+  - modules/node/index.php:104–137 `getNodeAssetPost()`: `$_FILES['afile<idx>']` сохраняется `addUploadedFile()` без `checkEditorUploadAccess($type->name, $rule)` (core/system.php:4734) — в Node проверки нет вовсе. `userupload`/`guestupload` правила `<type>.attach` не действуют; `maxfiles` (core/classes/upload.php:141, только в `addUploadedFiles()`) не соблюдается; роль с `active = 0` или режима `link` принимает файл (фильтр только `$def === null`, 115–116); файл пишется и для `action=preview`, и до отказа писателя `assets.<role>.max` — остаётся в квоте. Право — до цикла; неактивные и link-роли пропускаются; число строк с файлом ограничено `max` роли и `maxfiles`.
+  - Развилка: публичная форма `op=add` (`setNodeForm()`, 633–686) без капчи и без ограничения частоты. Прежний modules/news проверял `getPageCaptcha('comment')`/`checkCaptcha('comment')` (7166b365^:modules/news/index.php:457, 485); в docs/node решения об отказе нет. При `access = all` бот создаёт pending-материалы и письма `notify.pending` (658–659). Ключ капчи (свой `node` или `comment`) и предел частоты решает пользователь.
+  - modules/node/index.php:487–488: категория сверяется только с `getCategoryMap()` без прав чтения; `NodeQuery::addFilterSql()` (query.php:590) даёт `1 = 0` — закрытая категория (группы `pread`, другой язык) отвечает 200 с заголовком категории в `<title>`, индексируемо и с canonical. Просмотр материала такой категории — 404, sitemap её пропускает (core/system.php:3048–3050). Недоступная категория — 404.
+  - modules/search/index.php:197 `getSearchNode()`: заголовок Node экранируется в PHP, фрагмент `link` экранирует `title` снова — подсказка `Q&amp;A`. Экранировать только для `label_html` (257).
+- Файлы: modules/node/index.php; core/classes/node/query.php, если право категории выносится в чтение; modules/search/index.php; partials формы lite и lang шести локалей при капче.
+- Готово: HTTP — гость с `afile0` при `guestupload = 0` отказан, в uploads/<type>/ нового файла нет; строка сверх `max` роли и сверх `maxfiles` файла не сохраняет; неактивная роль игнорируется; форма без капчи или с неверной — отказ без строки `_nodes` и без письма; закрытая категория — 404, открытая — 200; поиск по заголовку с `&` — одно экранирование. NodeRouteTest; журналы ошибок после записей.
+
+### S20.2 — Установщик и обновление 6.3
+
+- Зависит: S20.1.
+- Читать: 12 — «Штатное обновление данных 6.3», реестр модулей (около 191), заметки S19.2; 05 — заметки S19.1 (запирание установщика); UPGRADING.md.
+- Находки:
+  - setup/index.php:1147–1149 ветка `update6_3`: `active`, `view`, `inmenu`, `mod_group`, `blocks`, `blocks_c` из `_modules` сайта 6.2 (1110–1121) перекрываются `array_merge($cont, $existing)` поставочным config/modules.php (файл в git) — выключенный или закрытый группой модуль после обновления снова активен и публичен; 12:191 — «сохраняет запись сайта». Запись `_modules` сайта побеждает поставочную; сайт без `_modules` — как сейчас.
+  - setup/index.php:978–992 ветка `new` (выбрана по умолчанию, 328): без проверки пустой базы снимает типы Node из config/node.php, fields, uploads и ratings без снимка, затем `table.sql` падает на существующих таблицах, а 992 всё равно пишет отметки update.php — последующий `update6_3` отказывает блокам без manifest (385, 456, 679). Отказ `new` при таблицах префикса — до первой записи; отметки — только при успехе DDL, как в `update6_3` после S19.2.
+  - Развилка: окно `config/setup.unlock`. Отказ preflight (952, `setExit`) оставляет файл-ключ; форма `config()` (340) выводит пароль БД в `value`; `xafile` (945) без фильтра уходит в `rename()` (964). Варианты: не выводить пароль (пустое поле — прежний), снимать ключ при любом завершении, фильтровать `xafile`.
+  - setup/index.php:943: префикс таблиц без проверки конкатенируется в SQL (1004, 1105, 1267, 1283) и в `PREFIX_DB`; `site-1` устанавливается (table.sql в обратных кавычках), рантайм падает 1064. Проверка по грамматике имени до первой записи.
+  - setup/index.php:361–366 `checkUpdateBase()`: префикс, не совпадающий ни с одной таблицей, проходит preflight — ветка закрывает сайт, переносит config_*.php, DDL создаёт таблицы чужого префикса. Preflight требует таблиц `_users` и `_admins` префикса.
+  - core/classes/pdo.php:29 `Logger::addSite()`: установщик не подключает core/classes/logger.php — неверные учётные данные дают fatal `Class "Logger" not found` вместо сообщения.
+  - Проверка версии сервера только для `update6_3` (950); чистая установка на MySQL ниже 8.0.16 молча теряет CHECK (`chk_node_*`, `chk_points_uid`, `chk_rating_votes_value`; table.sql:5).
+  - Вне Node, пользователю отдельной задачей: ветки `update4_1`…`update6_2` (1002–1086) без проверки версии источника, `update5_0` перехеширует пароли.
+- Файлы: setup/index.php; setup/lang/*.php при новых сообщениях; UPGRADING.md; docs/node/12; tests/Support/install_probe.php, update_probe.php; SchemaUpdateValidationTest.
+- Готово: update_probe — сайт 6.2 с выключенным модулем и `mod_group` сохраняет их после `update6_3`; `new` на базе с таблицами префикса отказан, config/*.php байт в байт, update.php без отметок; ошибка DDL `new` — без отметок; неверный префикс и префикс без таблиц — отказ до записи; неверный пароль БД — сообщение без fatal; форма не содержит пароля; журналы ошибок.
+
+### S20.3 — Целостность комментариев, баллов и категорий
+
+- Зависит: S20.2.
+- Читать: points.md — Жизненный цикл, карта владельцев (около 247); 05 — удаление (около 1189), заметки S19.3 и S19.4; 11 — «Единый порядок блокировок».
+- Находки:
+  - core/classes/comment.php:121–129 `setNodeLock()`: NOTFOUND под блокировкой отвечает `null`, `addComment()` (431 → INSERT 436) сохраняет комментарий удалённого материала и начисляет `comment` (457); режим (корзина, `comon = Disabled`) под блокировкой не перечитывается; pending-комментарий не блокирует материал (`$kind = null`, 426), одобрение `setStatus()` (509, 534) повторяет то же. Rating и избранное перечитывают цель после блокировки (`getLockedTarget()`). NOTFOUND — отказ, режим проверяется под блокировкой.
+  - core/classes/node/service.php:1261–1262 `deleteNode()` и comment.php:661–662 `updateTargetPoints()`: `false` из `getEventId()` принимается за «награды не было», `false` обратного `addEvent()` отбрасывается — удаление коммитится без сторно (05:1189; points.md:34 — false есть ошибка, а не отсутствие). Любой `false` откатывает владельца; отказ по конфигурации (закрытая область, `valid = false`) отличить от ошибки чтения — сверить с заметками S19.3.
+  - comment.php:457, 534, 570: `updateTargetPoints()` вне `try` — `RuntimeException` Point уходит с открытой транзакцией и удержанным guard в 500 без локального отката и записи журнала.
+  - core/classes/node/ext/sync.php:250–258 `setSourceResult()`: результат `setSqlRollback()` не проверяется, guard снимается; `NodeService::setNodeWrite()` (service.php:891) в том же случае держит `unknown`.
+  - admin/modules/categories.php:406, 442, 472, 498 (создание, сохранение, смена состояния, удаление): Node или прежняя категория решается по `getNodeTypeMap()`, который пропускает тип с повреждённой или несовпадающей конфигурацией (query.php:443, 452, 486) и пуст при сбое чтения (core/system.php:5923–5925) — категория такого типа идёт сырым DELETE/UPDATE без `category.used` и блокировки типа. Решать по реестру `_node_types`.
+  - service.php:1557–1562 `updateNodeCategory()`: перенос категории в другой модуль проверяет только её материалы; прямые подкатегории остаются со старым `modul` и чужим `parent`. Отказ переноса категории с подкатегориями — как с материалами.
+- Файлы: core/classes/comment.php; core/classes/node/service.php; core/classes/node/ext/sync.php; admin/modules/categories.php; tests — NodeIntegrityTest, тесты Comment, tests/Support/node_probe.php.
+- Готово: тесты — комментарий к материалу, удалённому между проверкой и блокировкой, отказан без строки и без баллов; одобрение pending-комментария удалённого материала — отказ; отказ Point при удалении откатывает удаление (строка `_nodes` на месте); исключение Point в `addComment()` — откат и запись журнала; сбой отката sync держит guard; категория типа с повреждённой конфигурацией не удаляется сырым путём; перенос категории с подкатегориями отказан. `sport_points` сверены SQL.
+
+### S20.4 — Дерево документов
+
+- Зависит: S20.3.
+- Читать: 10 (около 15); 03 — связи (около 335–345); 05 — `getNodeTree` (около 599), заметки S09; 06 — `features.tree`, профиль docs; 08 целиком; 11 — бюджеты запросов; .rules/theme.md.
+- Находки:
+  - `NodeQuery::getNodeTree()` (query.php:1096) не вызывается вне тестов (tests/Support/node_probe.php:1044); `setNodeView()` (modules/node/index.php:587–592) выводит только связи `related`, `parent` читает лишь форма (167–168, 317). Профиль docs включает `tree: true`, но оглавления, родителя, предыдущего и следующего документа нет — 10:15, 03:340, 05:599.
+  - Развилка до кода: где выводится оглавление (вид материала, список типа или оба), глубина, порядок соседей (по `sort` внутри родителя или обход дерева), сборка оглавления больше 500 документов партиями `getNodeTree`, новые ключи шаблона и фрагменты. Новые функции, шаблоны и классы — с согласия пользователя (.rules/global.md).
+- Файлы: modules/node/index.php; core/classes/node/query.php, если соседи — отдельный запрос; core/classes/node/view.php; templates/lite/partials/node/**, fragments/node/**; theme.css lite; lang шести локалей; docs/node/05, 08, 10.
+- Готово: HTTP — документ docs с родителем и детьми показывает оглавление, путь к родителю и соседей; недоступный родитель не раскрывается (05:599); тип без `features.tree` — без блока; число SQL в бюджете 11 (NodeRouteTest, tools/node-profile.php); ui:before/ui:after; ui:gates.
+
+### S20.5 — Действие `moderate` и мелкий рендер
+
+- Зависит: S20.4.
+- Читать: points.md — таблица действий (около 53), карта владельцев (около 247–252); 08 — контракт NodeView; 06 — настройки типа (около 207); 09 — Поиск, sitemap (около 21, 85).
+- Находки:
+  - `moderate` (core/classes/point.php:19, config/points.php:24) без владельца: `addEvent('moderate')` нет нигде, а points.md:252 отдаёт его Node (S11, S12, S14), экран правил предлагает награду. Развилка: какие завершённые действия модератора награждаются (одобрение материала, решение по жалобе `deleteNodeAssetReport()`, ответ поддержки, одобрение комментария), источник события и компенсация.
+  - templates/lite/partials/node/support/view.html (24 строки) не выводит `poll_html`, `rating_html`, `fav_html`, `assets_html`, `rels_html`, которые передаёт `getNodeViewHtml()` (modules/node/index.php:421–437) — включённые у help функции не видны.
+  - Связанные карточки (modules/node/index.php:591) строятся из `NodeTarget` с `views = null` (core/classes/node/view.php:149) при `is_views = true` — пустой чип просмотров (templates/lite/fragments/node/card.html:5) у всех профилей с `related`.
+  - templates/lite/fragments/node/search.html не рендерится (modules/search строит строки сам), режимы `block` и `search` в `NodeView::LIGHT` (view.php:16) без вызывающих — поиск через `getNodeTplName()` по 08 или удаление из 08 и кода.
+  - Документ: query.php:329 принимает в секциях `form` и `admin` только `[]`, 06:207 — «управляют своими участками»; записать правило или определить содержание.
+  - Документ и код: партии sitemap (core/system.php:3108) и дерева (query.php:1096, 1116) — константа 500 при настраиваемом `limits.syncbatch`; 09:85 обещает `syncbatch`, 09:21 и 13:258 — 500. Согласовать.
+- Файлы: core/classes/node/service.php; core/classes/comment.php; core/classes/node/ext/support.php; core/classes/node/view.php; modules/node/index.php; modules/search/index.php; core/system.php; templates/lite/partials/node/support/view.html, fragments/node/**; docs/node/06, 08, 09, points.md.
+- Готово: тест Point — `moderate` начисляется выбранным действием один раз и компенсируется по правилу; HTTP — тип без расширения с `view.mode = support` и включённым рейтингом показывает виджет (help рейтинг включить не может: расширение support его запрещает, решение пользователя 2026-09-26); связанные карточки без пустого чипа; ui:before/ui:after при правке фрагментов; ui:gates; NodeRouteTest.
+
+### S20.6 — Режимы представления
+
+- Зависит: S20.5.
+- Читать: 08 — «Выбор представления типом» (около 79–93); 06 — `view.mode` (около 207) и профили; 13 — браузерный сценарий 1 (около 333); .rules/theme.md.
+- Находки:
+  - Режимы `article`, `docs`, `faq`, `files`, `media` без собственных файлов: в templates/lite/partials/node/ — только list.html, view.html и support/view.html, в fragments/node/ — только support/; `getNodeTplName()` (core/system.php:5962) всегда берёт базовый. 08:81, 06:207 и 13:333 («разные представления») обещают отличия.
+  - Развилка до кода: состав отличий каждого режима (список и вид), показ вариантов пользователю до переноса; новые partials и классы `sl-*` — с согласия пользователя; тема admin не затрагивается.
+- Файлы: templates/lite/partials/node/<mode>/**, fragments/node/<mode>/**; templates/lite/assets/css/theme.css; при новых ключах — core/classes/node/view.php, modules/node/index.php; docs/node/08.
+- Готово: ui:before до правки; HTTP — news, docs, faq, files, media показывают свои режимы на 375 и 1280 px без ошибок консоли и горизонтальной прокрутки; `php tools/ui-audit.php --theme=lite` без роста счётчиков; ui:after; ui:gates.
+
+### S20.7 — Правила кода и консолидация
+
+- Зависит: S20.6.
+- Читать: .rules/global.md — Naming, PHP and code style, Core workflow (новые функции и консолидация).
+- Находки:
+  - `list()` вместо `[...]`: core/system.php `addSitemapTask()` 3031, 3034, 3037, 3041, 3092 (функция переписана планом); `getBlocks()` 686, 707, 785.
+  - `render_blocks()` (core/system.php:5828): сигнатура менялась планом (`$param`), имя без глагола и с `_`, `mixed $bid`; переменные `$qlang_params` (685), `$where_mas` (691, 707, 785), `$querylang` (684), `$blocktitle` (5828). Переименование с переносом вызовов по всему дереву и темам.
+  - Лишние приведения: `(int)getVar(..., 'num', ...)` при `filterNum(): int` (core/security.php:921) — modules/node/index.php:167, 173, 177, 184, 793; modules/node/admin/index.php:239, 305, 402, 428, 439, 495, 521, 528, 540, 545, 561, 884, 965, 979, 1152, 1159. `(string)$conf['homeurl']` и `mtemp` — modules/node/admin/index.php:99, 101; modules/node/index.php:615; ext/support.php:135, 150; core/system.php:3057. `(string)_BLOCKPROBLEM` — blocks/node.php:20; `(string)$own` — service.php:1528; строки PDO NOT NULL — service.php:526, 947, 1103, 1555, 1577, ext/sync.php:224 (сверить столбцы).
+  - Развилка (консолидация, новые и объединённые функции — с согласия пользователя): `getNodeLabel()` (modules/node/index.php:36), `getConst()` (core/system.php:4025) и `Field::getFieldText()` (field.php:164); `NodeQuery::checkLabelText()` (query.php:195) и `Field::checkFieldText()` (field.php:171); письмо `setNodeResultMail()` (modules/node/admin/index.php:93–104) и `NodeSupport::addSupportMail()` (support.php:131–152), абсолютный адрес ещё в modules/node/index.php:615; фабрики `getNodeReader()`/`getNodeWriter()` (modules/node/index.php:22–33) при примерно двадцати встроенных `new NodeQuery(...)`/`new NodeService(...)` (core/system.php:5922, 5946, 6065; core/user.php:1224, 1284, 1352, 1533; core/admin.php:436, 1130; blocks/node.php:33; search, presentation, voting, monitor, categories) — перенос в core/system.php рядом с `getNodeContext()`; ответ 405 с `Allow` двумя путями — `checkNodeMethod()` (modules/node/admin/index.php:50) и modules/node/index.php:804–808.
+  - Развилка: 69 стрелочных функций кода плана без типа возврата и 81 параметр без типа (например query.php:486–487, service.php:1143–1144, modules/node/admin/index.php:774–861); правило «type hints and return types» замыкания не исключает. Типизировать все или записать исключение в .rules — решает пользователь.
+- Файлы: по списку находок.
+- Готово: php -l, phpstan, php-cs-fixer check, полный phpunit, ui:gates; поиск `list(` и `(int)getVar(` по файлам плана пуст; вызовы переименованных функций найдены по всему дереву, включая темы.
+
+### S20.8 — Документы плана
+
+- Зависит: S20.7.
+- Читать: README.md; 04; 05 — блоки кода NodeContext и NodeQuery; 06 — обложка; 13 — список тестов.
+- Находки (все — «Документ», код не трогается):
+  - README.md:3 и строка статуса в начале 01–11 и 13 («реализация и её проверки выполняются…»); 13:390 («требования к будущей реализации»).
+  - 13:272–289 «Создаются только утверждённые файлы» без tests/Unit/NodeGuardTest.php, NodeIntegTest.php, NodeIntegrityTest.php и тестов S20.
+  - 05:293–306 блок NodeContext без `bool $polls = false` (context.php:29; 05:1175); 05:418–419 `getNodeTarget()`/`getNodeTargetList()` без `bool $any = false` (query.php:1054, 1091; 05:1195).
+  - 06:391, 703 — метка обложки `'_COVER'`, в профилях и lang — `_NODE_COVER`.
+  - 04:97–110 — дерево модуля без modules/node/profiles/ (06:569, S17).
+- Файлы: docs/node/README.md, 01–11, 13, 04, 05, 06.
+- Готово: контроль документации (UTF-8, один корневой заголовок, относительные ссылки живы); каждый пункт сверен с кодом HEAD окна.
 
 ## Общая приёмка
 

@@ -16,6 +16,8 @@ $conf = array_merge($conf, require CONFIG_DIR.'/security.php');
 require_once BASE_DIR.'/core/admin.php';
 # The shared configuration lock the runtime rebuilds config/local.php under; the class is self-contained and only needs LOGS_DIR
 require_once BASE_DIR.'/core/classes/filemanager.php';
+# The logger the database facade reports a refused connection to; the class is self-contained and only needs LOGS_DIR
+require_once BASE_DIR.'/core/classes/logger.php';
 
 if ($conf['security']['error'] == 2) {
     ini_set('display_errors', 1);
@@ -317,7 +319,7 @@ function config(): void {
     $conf['db'] = getSetupBase() + array_fill_keys(['host', 'uname', 'pass', 'name', 'prefix'], '');
     $xhost = ($conf['db']['host']) ? $conf['db']['host'] : 'localhost';
     $xuname = ($conf['db']['uname']) ? $conf['db']['uname'] : '';
-    $xpass = ($conf['db']['pass']) ? $conf['db']['pass'] : '';
+    $hint = ($conf['db']['name'] !== '') ? '<div class="sl_small">'._CONF_3_INFO.'</div>' : '';
     $xname = ($conf['db']['name']) ? $conf['db']['name'] : '';
     $xprefix = ($conf['db']['prefix']) ? $conf['db']['prefix'] : getRandomString('10');
     $xafile = ($conf['security']['afile']) ? $conf['security']['afile'] : strtolower(getRandomString('10'));
@@ -337,7 +339,7 @@ function config(): void {
     .'<tr><td colspan="2"><hr></td></tr>'
     .'<tr><td>'._CONF_1.':</td><td><input type="text" name="xhost" value="'.$xhost.'" class="sl_cinput" placeholder="'._CONF_1.'" required></td></tr>'
     .'<tr><td>'._CONF_2.':</td><td><input type="text" name="xuname" value="'.$xuname.'" class="sl_cinput" placeholder="'._CONF_2.'" required></td></tr>'
-    .'<tr><td>'._CONF_3.':</td><td><input type="password" name="xpass" value="'.$xpass.'" class="sl_cinput" placeholder="'._CONF_3.'"></td></tr>'
+    .'<tr><td>'._CONF_3.':'.$hint.'</td><td><input type="password" name="xpass" value="" class="sl_cinput" placeholder="'._CONF_3.'" autocomplete="new-password"></td></tr>'
     .'<tr><td>'._CONF_4.':</td><td><input type="text" name="xname" value="'.$xname.'" class="sl_cinput" placeholder="'._CONF_4.'" required></td></tr>'
     .'<tr><td colspan="2"><hr></td></tr>'
     .'<tr><td>'._CONF_9.':</td><td><input type="text" name="xprefix" value="'.$xprefix.'" class="sl_cinput" placeholder="'._CONF_9.'" required></td></tr>'
@@ -347,13 +349,21 @@ function config(): void {
     setFoot();
 }
 
-# Check what the 6.3 data update needs before anything is changed and answer the refusal, or an empty string when the update may start
+# Check what the 6.3 data update or a clean installation needs before anything is changed and answer the refusal, or an empty string when the run may start
 # The server has to enforce CHECK constraints and to know RENAME COLUMN and RENAME INDEX of the schema file, which MariaDB has from 10.5.2 on
+# A clean installation needs a database without a table of its prefix; the update needs the users and admins tables of the prefix it names
 # Every table of a points, ratings, fields or Node transaction has to be InnoDB; nothing is converted, and the branch closes the site itself
-function checkUpdateBase(Database $db, string $prefix): string {
+function checkUpdateBase(Database $db, string $prefix, bool $fresh = false): string {
     [$ver] = $db->getSqlRow($db->getSqlQuery('SELECT VERSION()'));
     $min = (stripos((string)$ver, 'mariadb') !== false) ? '10.5.2' : '8.0.16';
     if (version_compare(preg_replace('/[^0-9.].*$/', '', (string)$ver), $min, '<')) return 'The database server '.$ver.' is older than '.$min.'.';
+    $sql = 'SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND ';
+    if ($fresh) {
+        [$num] = $db->getSqlRow($db->getSqlQuery($sql.'table_name LIKE :pre', ['pre' => str_replace('_', '\_', $prefix).'\_%']));
+        return ($num > 0) ? 'The database already holds tables of the prefix '.$prefix.'_, a new installation needs an empty database or another prefix.' : '';
+    }
+    [$num] = $db->getSqlRow($db->getSqlQuery($sql.'table_name IN (:users, :admins)', ['users' => $prefix.'_users', 'admins' => $prefix.'_admins']));
+    if ($num < 2) return 'The tables '.$prefix.'_users and '.$prefix.'_admins are not both in the database, check the table prefix of the site.';
     $list = [];
     $tabs = ['users', 'comment', 'forum', 'order', 'clients', 'favorites', 'user_oauth', 'points', 'products', 'rating_targets', 'rating_actors', 'rating_votes', 'categories',
         'voting'];
@@ -526,7 +536,7 @@ function setUpdateRatings(Database $db, string $prefix): string {
         foreach ($sets as $kind => [$snap, $tab, $cols, $knum]) {
             $list = json_decode((string)file_get_contents($dir.'/'.$snap), true);
             $keys = array_slice($cols, 0, $knum);
-            $cond = implode(' AND ', array_map(fn($v) => $v.' = :'.$v, $keys));
+            $cond = implode(' AND ', array_map(fn(string $v): string => $v.' = :'.$v, $keys));
             $more = $kind === 'targets' ? ['created' => intval($info['moment'])] : [];
             $into = array_merge($cols, array_keys($more));
             $sql = 'INSERT INTO `'.$prefix.'_'.$tab.'` ('.implode(', ', $into).') VALUES (:'.implode(', :', $into).')';
@@ -791,7 +801,7 @@ function setUpdateConfig(): string {
     $skip = ['news', 'pages', 'faq', 'help', 'jokes', 'content', 'links', 'files', 'media', 'templ', 'header', 'chmod', 'core', 'rewrite', 'rules', 'db'];
     $langs = ['english' => 'en', 'french' => 'fr', 'german' => 'de', 'polish' => 'pl', 'russian' => 'ru', 'ukrainian' => 'uk'];
     $mods = array_map('basename', glob(BASE_DIR.'/modules/*', GLOB_ONLYDIR) ?: []);
-    $amods = array_merge($mods, array_map(fn($v) => basename($v, '.php'), glob(BASE_DIR.'/admin/modules/*.php') ?: []));
+    $amods = array_merge($mods, array_map(fn(string $v): string => basename($v, '.php'), glob(BASE_DIR.'/admin/modules/*.php') ?: []));
     $plan = [];
     $left = [];
     foreach ($list as $file) {
@@ -866,6 +876,61 @@ function setUpdateConfig(): string {
     return $out;
 }
 
+# The module registry of the 6.3 update, reconciled with the tree as the modules screen does it: a module of the tree keeps the record of config/modules.php or gets the
+# default, node gets the record of a clean installation and a record without a module is dropped; the _modules table of a 6.2 site wins over both for its six switches
+# The panel rights of the administrators name the modules instead of the numbers of that table, and the answer names the dropped records
+function setUpdateModules(Database $db, string $prefix): string {
+    $mods = [];
+    foreach (scandir(BASE_DIR.'/admin/modules') ?: [] as $file) if (preg_match('/^([a-z_]+)\.php$/i', $file, $matches)) $mods[$matches[1]] = 0;
+    foreach (scandir(BASE_DIR.'/modules') ?: [] as $file) {
+        if (!str_contains($file, '.') && (file_exists(BASE_DIR.'/modules/'.$file.'/index.php') || file_exists(BASE_DIR.'/modules/'.$file.'/admin/index.php'))) $mods[$file] = 1;
+    }
+    $cont = [];
+    foreach ($mods as $module => $type) {
+        $cont[$module] = ['lang' => '_'.strtoupper($module), 'icon' => 'puzzle', 'active' => $type ? 0 : 1, 'view' => 0, 'menu' => 1, 'group' => 0, 'side' => 0,
+            'top' => 0, 'type' => $type];
+    }
+    if (isset($cont['node'])) {
+        $cont['node'] = ['lang' => '_NODE', 'icon' => 'collection', 'active' => 1, 'view' => 0, 'menu' => 0, 'group' => 0, 'side' => 2, 'top' => 0, 'type' => 1];
+    }
+    $exfile = CONFIG_DIR.'/modules.php';
+    $existing = file_exists($exfile) ? ((require $exfile)['modules'] ?? []) : [];
+    $cont = array_merge($cont, $existing);
+    $tblres = $db->getSqlQuery('SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = :tbl', ['tbl' => $prefix.'_modules']);
+    if ($tblres && $db->getSqlRowCount($tblres) > 0) {
+        $map = [];
+        $result = $db->getSqlQuery('SELECT mid, title, active, view, inmenu, mod_group, blocks, blocks_c FROM `'.$prefix.'_modules`');
+        while ($result && ($row = $db->getSqlRow($result))) {
+            $name = $row['title'];
+            $map[(string)$row['mid']] = $name;
+            if (!isset($mods[$name])) continue;
+            $site = ['active' => $row['active'], 'view' => $row['view'], 'menu' => $row['inmenu'], 'group' => $row['mod_group'], 'side' => $row['blocks'],
+                'top' => $row['blocks_c']];
+            $cont[$name] = array_replace($cont[$name], $site);
+        }
+        if (!empty($map)) {
+            $result = $db->getSqlQuery('SELECT id, modules FROM `'.$prefix.'_admins`');
+            while ($result && ($row = $db->getSqlRow($result))) {
+                $modules = $row['modules'] ?? '';
+                $list = array_filter(array_map('trim', explode(',', $modules)), 'strlen');
+                $names = [];
+                foreach ($list as $val) {
+                    if (ctype_digit($val) && isset($map[$val])) {
+                        $names[] = $map[$val];
+                    } elseif (!ctype_digit($val)) {
+                        $names[] = $val;
+                    }
+                }
+                $newmod = implode(',', array_values(array_unique($names)));
+                if ($newmod !== $modules) $db->getSqlQuery('UPDATE `'.$prefix.'_admins` SET modules = :modules WHERE id = :id', ['modules' => $newmod, 'id' => $row['id']]);
+            }
+        }
+    }
+    $gone = array_keys(array_diff_key($existing, $mods));
+    setConfigFile('modules.php', array_intersect_key($cont, $mods));
+    return $gone ? getInfo('config/modules.php records of removed modules dropped: '.implode(', ', $gone), true) : '';
+}
+
 # The newsletter step of the 6.3 update: before the schema file drops the mails column the pending recipients of every campaign are kept in storage/backup/update/newsletter,
 # after it they move into the mail queue; an address already queued for its campaign is not written twice, so a break and a repeat neither lose nor double a recipient
 # The unit resumes from its manifest like the data units: without the column and without a manifest there is nothing pending, verified is skipped
@@ -883,13 +948,14 @@ function setUpdateMails(Database $db, string $prefix, string $from, bool $move):
         $list = [];
         $res = $db->getSqlQuery('SELECT id, title, mails FROM '.$tab.' WHERE mails IS NOT NULL AND mails != \'\' ORDER BY id ASC');
         while ($res && ([$nid, $name, $text] = $db->getSqlRow($res))) {
-            $mails = array_filter(array_map('trim', explode(',', (string)$text)), fn($v) => filter_var($v, FILTER_VALIDATE_EMAIL) !== false);
+            $mails = array_filter(array_map('trim', explode(',', (string)$text)), fn(string $v): bool => filter_var($v, FILTER_VALIDATE_EMAIL) !== false);
             $list[] = [intval($nid), (string)$name, array_values(array_unique($mails))];
         }
         if (!$res) return getInfo('newsletter: the pending recipients could not be read, the update stops before the schema', false);
         if (!is_dir($dir) && !mkdir($dir, 0750, true)) return getInfo('newsletter: '.$dir.' could not be created, the update stops before the schema', false);
         $text = (string)json_encode($list, JSON_UNESCAPED_UNICODE);
-        $info = ['version' => '6.3.0', 'state' => 'prepared', 'count' => ['campaigns' => count($list), 'recipients' => array_sum(array_map(fn($v) => count($v[2]), $list))]];
+        $info = ['version' => '6.3.0', 'state' => 'prepared',
+            'count' => ['campaigns' => count($list), 'recipients' => array_sum(array_map(fn(array $v): int => count($v[2]), $list))]];
         $info['source'] = ['recipients.json' => hash('sha256', $text)];
         if (!setUpdateBackup($dir.'/recipients.json', $text) || !setUpdateBackup($file, (string)json_encode($info))) {
             return getInfo('newsletter: the snapshot of the recipients could not be written, the update stops before the schema', false);
@@ -943,10 +1009,17 @@ function save(): void {
     $xprefix = (isset($_POST['xprefix'])) ? $_POST['xprefix'] : 'slaed';
     $xsync = (isset($_POST['xsync'])) ? $_POST['xsync'] : '1';
     $xafile = (isset($_POST['xafile'])) ? $_POST['xafile'] : 'admin';
+    if ($xpass === '') $xpass = getSetupBase()['pass'] ?? '';
+    if (!preg_match('/^[A-Za-z0-9_]{1,32}$/D', $xprefix)) setExit(_SETUPPREFIX);
+    if (filterVar($xafile) === '') setExit(_SETUPAFILE);
 
     require_once BASE_DIR.'/core/classes/pdo.php';
     $db = new Database($xhost, $xuname, $xpass, $xname, $xcharset);
     $bodytext = '';
+    if ($setup == 'new') {
+        $stop = checkUpdateBase($db, $xprefix, true);
+        if ($stop !== '') setExit($stop);
+    }
     if ($setup == 'update6_3') {
         $stop = checkUpdateBase($db, $xprefix);
         if ($stop !== '') setExit($stop);
@@ -987,9 +1060,14 @@ function save(): void {
             foreach ($pack as $name => $data) setConfigFile($name.'.php', $data, [], true);
             $bodytext .= getInfo('config/node.php types of an earlier installation removed with their fields, upload and rating rules: '.implode(', ', $ntypes), true);
         }
-        $bodytext .= getSqlFile('setup/sql/table.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
-        $bodytext .= getSqlFile('setup/sql/insert.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
-        setConfigFile('update.php', ['points' => '6.3.0', 'ratings' => '6.3.0', 'fields' => '6.3.0', 'node' => 'new']);
+        $ddl = getSqlFile('setup/sql/table.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
+        $ddl .= ($ddl !== '' && !str_contains($ddl, 'sl_red')) ? getSqlFile('setup/sql/insert.sql', $xprefix, $xengine, $xcharset, $xcollate, $db) : '';
+        $bodytext .= $ddl;
+        if ($ddl !== '' && !str_contains($ddl, 'sl_red')) {
+            setConfigFile('update.php', ['points' => '6.3.0', 'ratings' => '6.3.0', 'fields' => '6.3.0', 'node' => 'new']);
+        } else {
+            $bodytext .= getInfo('the installation stopped at a failed statement: no mark was written, drop the tables of the prefix and install again', false);
+        }
     } elseif ($setup == 'update4_1') {
         $title = _SAVE_UPDATE;
         $bodytext .= getSqlFile('setup/sql/table_update4_1.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
@@ -1088,67 +1166,7 @@ function save(): void {
         $bodytext .= getSqlFile('setup/sql/table_update6_2.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
     } elseif ($setup == 'update6_3') {
         $title = _SAVE_UPDATE;
-        $mods = [];
-        foreach (scandir(BASE_DIR.'/admin/modules') ?: [] as $file) if (preg_match('/^([a-z_]+)\.php$/i', $file, $matches)) $mods[$matches[1]] = 0;
-        foreach (scandir(BASE_DIR.'/modules') ?: [] as $file) {
-            if (!str_contains($file, '.') && (file_exists(BASE_DIR.'/modules/'.$file.'/index.php') || file_exists(BASE_DIR.'/modules/'.$file.'/admin/index.php'))) $mods[$file] = 1;
-        }
-        $cont = [];
-        foreach ($mods as $module => $type) {
-            $cont[$module] = ['lang' => '_'.strtoupper($module), 'icon' => 'puzzle', 'active' => $type ? 0 : 1, 'view' => 0, 'menu' => 1, 'group' => 0, 'side' => 0,
-                'top' => 0, 'type' => $type];
-        }
-        if (isset($cont['node'])) {
-            $cont['node'] = ['lang' => '_NODE', 'icon' => 'collection', 'active' => 1, 'view' => 0, 'menu' => 0, 'group' => 0, 'side' => 2, 'top' => 0, 'type' => 1];
-        }
-        $hasmod = false;
-        $tbl = $xprefix.'_modules';
-        $tblres = $db->getSqlQuery('SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = :tbl', ['tbl' => $tbl]);
-        if ($tblres && $db->getSqlRowCount($tblres) > 0) $hasmod = true;
-        if ($hasmod) {
-            $map = [];
-            $result = $db->getSqlQuery('SELECT mid, title, active, view, inmenu, mod_group, blocks, blocks_c FROM '.$tbl);
-            while ($row = $db->getSqlRow($result)) {
-                $title = $row['title'];
-                $map[(string)$row['mid']] = $title;
-                if (!isset($cont[$title])) continue;
-                $cont[$title]['active'] = $row['active'];
-                $cont[$title]['view'] = $row['view'];
-                $cont[$title]['menu'] = $row['inmenu'];
-                $cont[$title]['group'] = $row['mod_group'];
-                $cont[$title]['side'] = $row['blocks'];
-                $cont[$title]['top'] = $row['blocks_c'];
-            }
-            if (!empty($map)) {
-                $result = $db->getSqlQuery('SELECT id, modules FROM '.$xprefix.'_admins');
-                while ($row = $db->getSqlRow($result)) {
-                    $modules = $row['modules'] ?? '';
-                    $list = array_filter(array_map('trim', explode(',', $modules)), 'strlen');
-                    $names = [];
-                    foreach ($list as $val) {
-                        if (ctype_digit($val) && isset($map[$val])) {
-                            $names[] = $map[$val];
-                        } elseif (!ctype_digit($val)) {
-                            $names[] = $val;
-                        }
-                    }
-                    $names = array_values(array_unique($names));
-                    $newmod = implode(',', $names);
-                    if ($newmod !== $modules) {
-                        $db->getSqlQuery('UPDATE '.$xprefix.'_admins SET modules = :modules WHERE id = :id', [
-                            'modules' => $newmod,
-                            'id' => $row['id'],
-                        ]);
-                    }
-                }
-            }
-        }
-        $exfile = CONFIG_DIR.'/modules.php';
-        $existing = file_exists($exfile) ? ((require $exfile)['modules'] ?? []) : [];
-        $gone = array_keys(array_diff_key($existing, $mods));
-        $cont = array_intersect_key(array_merge($cont, $existing), $mods);
-        setConfigFile('modules.php', $cont);
-        if ($gone) $bodytext .= getInfo('config/modules.php records of removed modules dropped: '.implode(', ', $gone), true);
+        $bodytext .= setUpdateModules($db, $xprefix);
         $ufile = CONFIG_DIR.'/uploads.php';
         $udata = is_file($ufile) ? ((require $ufile)['uploads'] ?? []) : [];
         $ntypes = is_file(CONFIG_DIR.'/node.php') ? ((require CONFIG_DIR.'/node.php')['node']['types'] ?? []) : [];

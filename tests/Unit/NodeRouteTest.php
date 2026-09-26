@@ -42,6 +42,60 @@ final class NodeRouteTest extends TestCase
         return self::$probe['runs'];
     }
 
+    # Run the probe of stage S20.1 once and memoize it: the public form on the integration types with the write window, the upload rule and the captcha of comments
+    private function getSecure(): array
+    {
+        static $run = [];
+        if ($run === []) {
+            $script = dirname(__DIR__).'/Support/route_probe.php';
+            $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_node_secure';
+            $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' secure 2>&1');
+            $data = json_decode($out, true);
+            $this->assertIsArray($data, 'The probe did not return JSON: '.substr($out, 0, 600));
+            $this->assertSame('', $data['error'], 'The probe failed');
+            $this->assertTrue($data['clean'], 'The probe left a disposable database on the server');
+            $this->assertSame(['error_php.log' => [], 'error_sql.log' => []], $data['logs'], 'The routes wrote PHP or SQL errors');
+            $run = $data['runs']['secure'];
+        }
+        return $run;
+    }
+
+    # Run the probe of stage S20.4 once and memoize it: the document tree of docs over real requests and the statements its child counts
+    private function getTree(): array
+    {
+        static $run = [];
+        if ($run === []) {
+            $script = dirname(__DIR__).'/Support/route_probe.php';
+            $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_node_tree';
+            $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' tree 2>&1');
+            $data = json_decode($out, true);
+            $this->assertIsArray($data, 'The probe did not return JSON: '.substr($out, 0, 600));
+            $this->assertSame('', $data['error'], 'The probe failed');
+            $this->assertTrue($data['clean'], 'The probe left a disposable database on the server');
+            $this->assertSame(['error_php.log' => [], 'error_sql.log' => []], $data['logs'], 'The routes wrote PHP or SQL errors');
+            $run = $data['runs']['tree'];
+        }
+        return $run;
+    }
+
+    # Run the probe of stage S20.6 once and memoize it: the lists and views of five types, each on its display mode
+    private function getModes(): array
+    {
+        static $run = [];
+        if ($run === []) {
+            $script = dirname(__DIR__).'/Support/route_probe.php';
+            $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_node_modes';
+            $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' modes 2>&1');
+            $data = json_decode($out, true);
+            $this->assertIsArray($data, 'The probe did not return JSON: '.substr($out, 0, 600));
+            $this->assertSame('', $data['error'], 'The probe failed');
+            $this->assertTrue($data['clean'], 'The probe left a disposable database on the server');
+            $this->assertSame(['error_php.log' => [], 'error_sql.log' => []], $data['logs'], 'The routes wrote PHP or SQL errors');
+            $run = $data['runs']['modes'];
+        }
+        return $run;
+    }
+
     # The body of one function of a file
     private static function getBody(string $file, string $name): string
     {
@@ -64,7 +118,7 @@ final class NodeRouteTest extends TestCase
         $this->assertSame([400, 400, 400, 400, 404, 404, 404], $run['bad'], 'cat, let, order and dir are checked, a foreign category and unknown operations are not found');
         $this->assertSame([301, 'index.php?name=news'], $run['clean'], 'The explicit default sort is not sent back to the clean address');
         $this->assertSame([200, true, 200], $run['sort'], 'Another sort is not answered noindex');
-        $this->assertSame([false, true], $run['cat'], 'The read right of a category is not applied');
+        $this->assertSame([404, false, 200, true, 200], $run['cat'], 'A category the guest may not read is not missing, or the readable ones do not answer');
         $this->assertSame([404, 200, 404], $run['off'], 'The disabled type answers a guest or a forged context, or not its main administrator');
         $this->assertSame([200, true], $run['home'], 'The start page is not the list of its type');
     }
@@ -212,6 +266,7 @@ final class NodeRouteTest extends TestCase
         $this->assertSame([303, 1], $run['clone']);
         $this->assertSame([422, 100, 422, 100, 303, 150, 500, 409, 100], $run['limits'], 'A limit a stored type exceeds was saved, a limit every type keeps was refused,'
             .' or a failed store and a pending journal did not answer 500 and 409');
+        $this->assertSame([422, 422, 0, 0], $run['send'], 'A negative or missing write window was saved, or the window zero was refused');
         $this->assertSame([303, 0, 403, 1], $run['delete'], 'The type was not deleted, or a moderator deleted one');
         $this->assertSame([303, 404, 200], $run['off']);
     }
@@ -228,8 +283,8 @@ final class NodeRouteTest extends TestCase
     public function theViewPreparerKeepsItsContract(): void
     {
         $run = $this->getRuns()['data'];
-        $this->assertSame(array_fill_keys(['list', 'view', 'card', 'tcard', 'tblock', 'tsearch'], true), $run['keys']);
-        $this->assertSame([3, 3, 3, 3, 3], $run['refused']);
+        $this->assertSame(array_fill_keys(['list', 'view', 'card', 'tcard'], true), $run['keys']);
+        $this->assertSame([3, 3, 3, 3, 3, 3, 3], $run['refused'], 'A light target was prepared for a mode other than card');
         $this->assertSame('index.php?name=news&op=view&id=101', $run['full']['href']);
         $this->assertSame(['Alpha', 'intro of 101', true, 'index.php?name=news&cat=1', 'Open', 'anna', 'index.php?name=account&op=view&uname=anna'],
             [$run['full']['title'], $run['full']['intro'], $run['full']['body'], $run['full']['chref'], $run['full']['ctitle'], $run['full']['author'], $run['full']['ahref']]);
@@ -258,8 +313,8 @@ final class NodeRouteTest extends TestCase
         $this->assertTrue(method_exists('Template', 'checkTemplateFile') || str_contains((string)file_get_contents($root.'/core/classes/template.php'),
             'public function checkTemplateFile(string $kind, string $name): bool'));
         foreach (['partials/node/list.html', 'partials/node/view.html'] as $one) $this->assertFileExists($root.'/templates/lite/'.$one);
-        foreach (['card', 'block', 'search', 'image', 'gallery', 'download', 'player',
-            'link'] as $one) $this->assertFileExists($root.'/templates/lite/fragments/node/'.$one.'.html');
+        foreach (['card', 'block', 'image', 'gallery', 'download', 'player', 'link', 'tree'] as $one) $this->assertFileExists($root.'/templates/lite/fragments/node/'.$one.'.html');
+        $this->assertFileDoesNotExist($root.'/templates/lite/fragments/node/search.html', 'The search module renders the rows of Node itself');
         $this->assertFileEquals($root.'/templates/lite/fragments/repeat.html', $root.'/templates/admin/fragments/repeat.html', 'The repeatable rows differ between the themes');
         foreach (['index.php', 'lang', 'admin/index.php', 'admin/lang', 'admin/info/ru.md'] as $one) $this->assertFileExists($root.'/modules/node/'.$one);
         foreach (['controllers', 'repositories', 'src', 'sql'] as $one) $this->assertDirectoryDoesNotExist($root.'/modules/node/'.$one);
@@ -285,6 +340,111 @@ final class NodeRouteTest extends TestCase
             $this->assertDoesNotMatchRegularExpression("/'(?:news|docs|files|faq|pages|jokes|links|media|help|content)'\\s*=>\\s*'node/",
                 (string)file_get_contents(self::getRoot().'/'.$file));
         }
+    }
+
+    # A file of the public form is stored only under the upload right of the type, for an active role that is no link, within the max of its role and maxfiles of the rule
+    #[Test]
+    public function theFormStoresAFileOnlyWithinItsRightAndLimits(): void
+    {
+        $run = $this->getSecure()['upload'];
+        $this->assertSame([422, 0], $run['guest'], 'A guest stored a file although the rule of the type has no guest upload');
+        $this->assertSame([200, 1], $run['user'], 'A member with the upload right could not store a cover');
+        $this->assertSame([422, 1], $run['role'], 'A second file of a role with max 1 was stored');
+        $this->assertSame([422, 2], $run['request'], 'A third file of a request under maxfiles 2 was stored');
+        $this->assertSame([422, 0], $run['inactive'], 'An inactive role took a file');
+        $this->assertSame([422, 0], $run['link'], 'A link role took a file');
+    }
+
+    # A visitor who does not moderate the type waits limits.send after the last material of the address; a moderator of the type does not
+    #[Test]
+    public function thePublicWriteWaitsForTheWindowOfTheAddress(): void
+    {
+        $this->assertSame([303, 429, 303, 2], $this->getSecure()['window'], 'The second submit inside the window was stored, or the window held the moderator');
+    }
+
+    # A guest passes the captcha of comments on every post: none or a forged one stores no material and sends no mail, a solved one submits; a member sees none
+    #[Test]
+    public function aGuestSubmitsOnlyThroughTheCaptcha(): void
+    {
+        $this->assertSame([true, false, 422, 422, 0, 0, 303, 1, true], $this->getSecure()['captcha'],
+            'The captcha is missing for a guest or shown to a member, a post without a solved captcha stored a material or a mail, or a solved one was refused');
+    }
+
+    # The title of a material reaches the search result escaped once, in the link and in its tooltip
+    #[Test]
+    public function theSearchEscapesANodeTitleOnce(): void
+    {
+        $this->assertSame([true, false], $this->getSecure()['search'], 'The tooltip of a Node title in search is escaped twice');
+    }
+
+    # A document of a type with the tree shows its trail, its level with its own children and the neighbours of the reading order; a parent the reader
+    # may not see stays hidden and its child stands among the roots, a document outside the tree of the reader and a type without the tree show no block
+    #[Test]
+    public function theDocumentShowsItsBranchOfTheTree(): void
+    {
+        $run = $this->getTree();
+        $roots = ['Doc one', 'Guide', 'Orphan'];
+        $flat = ['more' => 0, 'first' => ''];
+        $this->assertSame([200, ['path' => [], 'items' => $roots, 'kids' => [], 'cur' => ['Doc one'], 'prev' => [], 'next' => ['Guide']] + $flat], $run['nav'][201]);
+        $this->assertSame([200, ['path' => ['Guide', 'Config'], 'items' => ['Config', 'Install & run'], 'kids' => ['Advanced'], 'cur' => ['Config'], 'prev' => ['Guide'],
+            'next' => ['Advanced']] + $flat], $run['nav'][204], 'The branch of Config lacks its trail, its level, its child or its neighbours');
+        $this->assertSame([200, ['path' => ['Guide', 'Config', 'Advanced'], 'items' => ['Advanced'], 'kids' => [], 'cur' => ['Advanced'], 'prev' => ['Config'],
+            'next' => ['Install & run']] + $flat], $run['nav'][205], 'The reading order does not climb back to the next sibling of the parent');
+        $this->assertSame([200, ['path' => [], 'items' => $roots, 'kids' => [], 'cur' => ['Orphan'], 'prev' => ['Install & run'], 'next' => []] + $flat], $run['nav'][207],
+            'The child of a hidden parent does not stand among the roots');
+        $this->assertSame([false, 404], $run['hidden'], 'The pending parent is linked or readable for a guest');
+        $this->assertSame([200, []], $run['moder'], 'A document outside the tree of the reader shows a branch');
+        $this->assertSame([200, false], $run['plain'], 'A type without the tree shows the block');
+        $this->assertSame([true, false], $run['escape'], 'A title in the tree is not escaped exactly once');
+    }
+
+    # The tree is read in batches of getNodeTree(): one statement up to 500 documents and one more for each started 500, never one per row; the view keeps its budget
+    #[Test]
+    public function theTreeKeepsTheBudgetOfTheView(): void
+    {
+        [$one, $two] = $this->getTree()['sql'];
+        $this->assertSame([1, ['Config', 'Install & run'], 'Advanced'], [$one['tree'], $one['items'], $one['next']], 'Seven documents took more than one batch');
+        $this->assertSame([2, ['Config', 'Install & run'], 'Advanced'], [$two['tree'], $two['items'], $two['next']], 'Six hundred and seven documents did not take two batches');
+        $this->assertLessThanOrEqual(6 + 1, $one['view'] + $one['tree'], 'The view with related cards and one batch of the tree is over the budget of docs/node/11');
+        $this->assertLessThanOrEqual(6 + 2, $two['view'] + $two['tree'], 'The view with related cards and two batches of the tree is over the budget of docs/node/11');
+    }
+
+    # A wide level shows at most ten siblings on each side of the current document with its real numbers, a wide parent its first twenty children, each cut edge flagged
+    #[Test]
+    public function aWideLevelShowsAWindowAroundTheDocument(): void
+    {
+        $run = $this->getTree()['wide'];
+        $this->assertSame(['path' => 0, 'items' => 13, 'kids' => 0, 'cur' => 1, 'prev' => 1, 'next' => 1, 'more' => 1, 'first' => ''], $run['edge'],
+            'The root Orphan near the start of 578 roots does not show itself, two before and ten after with one cut edge');
+        $this->assertSame([21, 2, 'Zulu 300'], [$run['middle']['items'], $run['middle']['more'], $run['cur']], 'A document in the middle is not the centre of 21 entries');
+        $this->assertMatchesRegularExpression('/^counter-reset: li [1-9][0-9]*$/', $run['middle']['first'], 'The window does not keep the real numbers of its entries');
+        $this->assertSame(['path' => 3, 'items' => 1, 'kids' => 20, 'cur' => 1, 'prev' => 1, 'next' => 1, 'more' => 1, 'first' => ''], $run['kids'],
+            'Advanced with 25 children does not show the first twenty and flag the rest');
+    }
+
+    # Every type shows its display mode: article is the base set, docs a contents row, faq an accordion, files a card with its download, media tiles with a poster
+    #[Test]
+    public function everyTypeShowsItsDisplayMode(): void
+    {
+        $run = $this->getModes();
+        $this->assertSame(['news' => [200, false, 2], 'docs' => [200, true, 0], 'faq' => [200, true, 0], 'files' => [200, true, 0], 'media' => [200, true, 0]], $run['list'],
+            'A list does not answer or does not carry the classes of its mode');
+        $this->assertSame([200, false], $run['news'], 'The article mode left the base set');
+        $this->assertSame([1, ['article'], ['Doc one'], 0], [$run['docs']['count'], $run['docs']['tags'], $run['docs']['titles'], $run['docs']['buttons']],
+            'The contents row of docs carries a button or misses its title');
+        $this->assertSame([false, false, true], $run['docsview'], 'The docs view shows its views or author, or lost its date');
+        $this->assertSame([2, ['details'], ['Why no mail arrives?', 'How to reset a password?']], [$run['faq']['count'], $run['faq']['tags'], $run['faq']['titles']],
+            'The faq list is no accordion of its questions');
+        $this->assertSame([true, false, false], $run['faqview'], 'The faq view does not ask its question or shows its views or author');
+        $this->assertSame([['index.php?name=files&op=asset&id=12'], ['index.php?name=files&op=asset&id=11'], 3], [$run['files']['links'], $run['files']['images'],
+            $run['files']['buttons']], 'The file card does not offer the download of the one material that has it beside both reading buttons');
+        $this->assertContains('1.95 KB', $run['files']['chips'], 'The file card hides the size of its download');
+        $this->assertContains('318', $run['files']['chips'], 'The file card hides the count of its downloads');
+        $this->assertSame(['bi-download', 'sl-entry-content'], $run['filesview'], 'The files view does not put its resources above the text');
+        $this->assertSame([['Gallery only', 'Overview video'], ['index.php?name=media&op=asset&id=16', 'index.php?name=media&op=asset&id=13'], 1],
+            [$run['media']['titles'], $run['media']['images'], $run['grid']], 'The media tiles are not one grid, or the cover does not prefer the poster over the gallery');
+        $this->assertContains('2026', $run['media']['chips'], 'The media tile hides the year of its field');
+        $this->assertSame([['<video', 'sl-entry-content'], 1, ['Gallery only']], $run['mediaview'], 'The media view does not play above its text or loses the grid of its related');
     }
 
     # Every Node constant of the module exists in all six locales of its own scope, the two scopes do not repeat a name, and the module label lives in the panel language

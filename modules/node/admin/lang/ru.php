@@ -88,6 +88,7 @@ define('_NODE_SAVED','Изменения сохранены.');
 define('_NODE_SDEL','В корзине');
 define('_NODE_SDRAFT','Черновик');
 define('_NODE_SECLIST','Список');
+define('_NODE_SEND','Секунд между публичными отправками с одного IP, 0 — без предела');
 define('_NODE_SEO','Вид страницы для поисковиков');
 define('_NODE_SHOW','Показывать в списке');
 define('_NODE_SOFF','Отключён');

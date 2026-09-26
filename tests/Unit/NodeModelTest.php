@@ -175,14 +175,14 @@ final class NodeModelTest extends TestCase
         }
     }
 
-    # The only error of the API: a final runtime exception with five stable codes read through getCode, keeping the storage cause as previous
+    # The only error of the API: a final runtime exception with six stable codes read through getCode, keeping the storage cause as previous
     #[Test]
-    public function theErrorHasFiveStableCodes(): void
+    public function theErrorHasSixStableCodes(): void
     {
         $ref = new ReflectionClass(NodeException::class);
         $this->assertTrue($ref->isFinal());
         $this->assertSame(RuntimeException::class, $ref->getParentClass()->getName());
-        $this->assertSame(['NOTFOUND' => 1, 'DENIED' => 2, 'INVALID' => 3, 'CONFLICT' => 4, 'STORAGE' => 5], $ref->getConstants());
+        $this->assertSame(['NOTFOUND' => 1, 'DENIED' => 2, 'INVALID' => 3, 'CONFLICT' => 4, 'STORAGE' => 5, 'LIMITED' => 6], $ref->getConstants());
         $own = array_values(array_filter($ref->getMethods(), fn($m) => $m->getDeclaringClass()->getName() === NodeException::class));
         $this->assertSame([], $own, 'NodeException declares methods');
         $cause = new \PDOException('lost');
@@ -393,8 +393,8 @@ final class NodeModelTest extends TestCase
             'node_types' => ['active' => 'active,sort,id', 'unique PRIMARY' => 'id', 'unique name' => 'name'],
             'nodes' => ['author' => 'uid,status,published,id', 'cat' => 'tid,cid,status,pinned,published,id', 'expires' => 'tid,status,expires',
                 'home' => 'tid,home,status,pinned,published,id', 'ip' => 'ip,created,id', 'poll' => 'poll', 'pub' => 'tid,status,pinned,published,id',
-                'queue' => 'status,created,id', 'title' => 'tid,status,pinned,title,id', 'unique PRIMARY' => 'id', 'updated' => 'tid,status,pinned,updated,id',
-                'views' => 'tid,status,pinned,views,published,id'],
+                'queue' => 'status,created,id', 'title' => 'tid,status,pinned,title,id', 'tree' => 'tid,status,id', 'unique PRIMARY' => 'id',
+                'updated' => 'tid,status,pinned,updated,id', 'views' => 'tid,status,pinned,views,published,id'],
             'node_assets' => ['node' => 'nid,role,sort,id', 'report' => 'reported,id', 'src' => 'src(191)', 'unique PRIMARY' => 'id'],
             'node_categories' => ['cat' => 'cid,nid', 'unique PRIMARY' => 'id', 'unique node' => 'nid,cid'],
             'node_publish' => ['queue' => 'due,nid', 'unique PRIMARY' => 'nid'],

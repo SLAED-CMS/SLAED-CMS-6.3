@@ -58,6 +58,7 @@ final class NodeQueryTest extends TestCase
     {
         $want = [
             '__construct' => ['Database db', 'NodeContext context', 'Field field', ''],
+            'checkNodeCategory' => ['NodeType type', 'int cid', 'bool'],
             'filterNodeSettings' => ['string ext', 'array settings', 'array fields', 'array'],
             'getNode' => ['int id', 'NodeType type', '?Node'],
             'getNodeAsset' => ['int id', 'NodeType type', '?NodeAsset'],

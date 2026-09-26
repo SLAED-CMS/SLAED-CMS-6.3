@@ -439,6 +439,24 @@ function getProfileScenes(PDO $pdo, array $types, int $runs): array {
         foreach ($node->rels ?? [] as $rel) if ($rel->type === 'related') $refs[$rel->rid] = 'news';
         if ($refs) $query->getNodeTargetList($refs);
     }, $runs);
+    $docs = $types['docs'];
+    $deep = $pick('SELECT n.id FROM '.$pre.'nodes AS n WHERE n.tid = '.$docs->id.' AND n.status = 2 AND EXISTS (SELECT 1 FROM '.$pre.'node_relations AS r'
+        .' WHERE r.nid = n.id AND r.type = \'parent\') ORDER BY n.id LIMIT 1');
+    $batch = intdiv($pick('SELECT COUNT(*) FROM '.$pre.'nodes WHERE tid = '.$docs->id.' AND status = 2'), 500) + 1 + (int)$docs->settings['features']['categories'];
+    $out['view docs tree'] = ['budget' => 'viewrel', 'extra' => $batch] + getProfileRun(function () use ($deep): void {
+        $query = getProfileQuery(false);
+        $type = $query->getNodeType('docs');
+        $node = $query->getNode($deep, $type);
+        $refs = [];
+        foreach ($node->rels ?? [] as $rel) if ($rel->type === 'related') $refs[$rel->rid] = 'docs';
+        if ($refs) $query->getNodeTargetList($refs);
+        $query->setNodeType($type);
+        $after = 0;
+        do {
+            $part = $query->getNodeTree($after);
+            $after = $part ? $part[count($part) - 1]['id'] : 0;
+        } while (count($part) === 500);
+    }, $runs);
     $out['attach news'] = ['budget' => 'attach'] + getProfileRun(function () use ($item): void {
         $query = getProfileQuery(false);
         $query->getNodeContent($item, $query->getNodeType('news'));
@@ -483,7 +501,7 @@ function getProfileScenes(PDO $pdo, array $types, int $runs): array {
 
 # The statements of a write scenario that belong to Node: only those that name a Node table count against its budget, Point and the shared integrations are measured apart
 function getProfileNodeSql(array $trace): int {
-    return count(array_filter($trace, fn($v) => str_contains($v['sql'], PPREF.'_node')));
+    return count(array_filter($trace, fn(array $v): bool => str_contains($v['sql'], PPREF.'_node')));
 }
 
 if ($preport['error'] === '') {
@@ -493,7 +511,7 @@ if ($preport['error'] === '') {
         $pnt = new Point($db, $conf['points'] ?? []);
         $ptime = microtime(true);
         $ptypes = addProfileTypes();
-        $preport['types'] = array_map(fn($v) => [$v->id, $v->ext, (int)$v->active, $v->settings['list']['limit']], $ptypes);
+        $preport['types'] = array_map(fn(NodeType $v): array => [$v->id, $v->ext, (int)$v->active, $v->settings['list']['limit']], $ptypes);
         $preport['fill'] = addProfileRows($pbase, $ptypes, $prows);
         $preport['fill']['seconds'] = round(microtime(true) - $ptime, 1);
         $pscenes = getProfileScenes($pbase, $ptypes, $pruns);
@@ -511,13 +529,14 @@ if ($preport['error'] === '') {
                 if ($plans[$pi]['bound'] !== null && $pplan['reads'] > $plans[$pi]['bound']) {
                     $preport['fail'][] = $pkey.': the '.$pplan['kind'].' read '.$pplan['reads'].' rows over its bound '.$plans[$pi]['bound'];
                 }
-                $pkeys = array_map(fn($v) => $v[0].':'.$v[2], $pplan['plan']);
+                $pkeys = array_map(fn(array $v): string => $v[0].':'.$v[2], $pplan['plan']);
                 if ($pone['shape']['cid'] && in_array($pplan['kind'], ['page', 'count'], true) && array_diff(['n:cat', 'nc:cat'], $pkeys)) {
                     $preport['fail'][] = $pkey.': the '.$pplan['kind'].' of a category does not read both category indexes';
                 }
             }
-            if ($pnum > PBUDGET[$pone['budget']]) $preport['fail'][] = $pkey.': '.$pnum.' statements over the budget '.PBUDGET[$pone['budget']];
-            $preport['scenes'][$pkey] = ['node' => $pnum, 'budget' => PBUDGET[$pone['budget']], 'all' => $pone['sql'], 'least' => $pone['least'], 'p50' => $pone['p50'],
+            $pcap = PBUDGET[$pone['budget']] + ($pone['extra'] ?? 0);
+            if ($pnum > $pcap) $preport['fail'][] = $pkey.': '.$pnum.' statements over the budget '.$pcap;
+            $preport['scenes'][$pkey] = ['node' => $pnum, 'budget' => $pcap, 'all' => $pone['sql'], 'least' => $pone['least'], 'p50' => $pone['p50'],
                 'p95' => $pone['p95'], 'avg' => $pone['avg'], 'plans' => $plans];
         }
         $pone = $preport['scenes']['list media one']['all'] ?? -1;

@@ -19,7 +19,7 @@ class Database {
     public ?string $qid = null;
     public ?PDOException $laste = null;
 
-    # Opens connection to the SQL server (PDO)
+    # Opens connection to the SQL server (PDO); a refused connection is logged, and the installer, which prints its page raw, always names the reason escaped
     public function __construct(string $server, string $user, string $pass, string $dbname, string $charset = 'utf8mb4') {
         $dsn = 'mysql:host='.$server.';dbname='.$dbname.';charset='.$charset;
         try {
@@ -29,6 +29,7 @@ class Database {
             global $conf;
             $detail = _SQLERRORCON.' - '._ERROR.': '.$e->getCode().' - '.$e->getMessage();
             Logger::addSite('error', $detail, ['http_code' => 500]);
+            if (defined('SETUP_FILE')) setExit(htmlspecialchars($detail, ENT_QUOTES));
             if ((int)($conf['security']['error'] ?? 0) > 0) setExit($detail);
             setError(500);
         }

@@ -17,7 +17,7 @@ $set = getNodeBlockParam($param);
 $content = null;
 if ($set === null) {
     Logger::addSite('warning', 'Block node.php: the parameters of an instance are invalid and the block is off', ['bid' => intval($bid)]);
-    if (is_moder()) $content = $tpl->getHtmlFrag('block-content', ['is_center' => true, 'content' => (string)_BLOCKPROBLEM]);
+    if (is_moder()) $content = $tpl->getHtmlFrag('block-content', ['is_center' => true, 'content' => _BLOCKPROBLEM]);
 } else {
     $types = [];
     $size = min($set['limit'], intval($conf['node']['limits']['maxlist'] ?? 0));
@@ -30,7 +30,7 @@ if ($set === null) {
     $list = [];
     if ($types && $size > 0) {
         try {
-            $query = (new NodeQuery($db, getNodeContext(), $fld))->setNodePage(1, $size);
+            $query = getNodeReader()->setNodePage(1, $size);
             if (count($types) === 1) {
                 $one = reset($types);
                 $query->setNodeType($one)->setNodeExtension(getNodeHandler($one));

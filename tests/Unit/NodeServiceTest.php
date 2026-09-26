@@ -72,7 +72,7 @@ final class NodeServiceTest extends TestCase
     }
 
     # The writer carries exactly the approved public operations: the four of a type and the import, the four of a material, the preview, the counters,
-    # the three of a resource, the file of an attachment, the delivery of publications and the three of a category, with the nullable points and extension of 05-core-api.md
+    # the three of a resource, the file of an attachment, the delivery of publications, three category writes and the registry, with the nullable points and extension of 05
     #[Test]
     public function theWriterHasTheApprovedOperationsAndNothingElse(): void
     {
@@ -89,6 +89,7 @@ final class NodeServiceTest extends TestCase
             'addNodeCategory' => ['array row', 'int'],
             'addNodeType' => ['string name', 'NodeTypeInput input', 'NodeType'],
             'addNodeTypeImport' => ['string json', "string name = ''", 'NodeType'],
+            'checkTypeRegistry' => ['array names', 'bool'],
             'deleteNode' => ['int id', 'int version', 'Comment com', 'void'],
             'deleteNodeAssetReport' => ['int id', 'NodeType type', 'bool useful', 'void'],
             'deleteNodeCategory' => ['int id', 'void'],
@@ -213,7 +214,7 @@ final class NodeServiceTest extends TestCase
     }
 
     # States: exactly the pairs of the closed matrix pass with one new version, the repeat writes nothing, readiness binds pending and published,
-    # and a move costs at most six Node statements, seven with a job of _node_publish
+    # and a move costs at most six Node statements, seven with a job of _node_publish; approving a foreign pending material rewards its moderator with moderate once
     #[Test]
     public function theStateMachineFollowsTheMatrix(): void
     {
@@ -238,6 +239,9 @@ final class NodeServiceTest extends TestCase
         $this->assertTrue($run['published'], 'A publication without a date does not take the clock of the database');
         $this->assertTrue($run['job'], 'A publication with a future date gets no job');
         $this->assertSame('Disabled', $run['restore'], 'A restore does not end disabled');
+        $this->assertSame([['uid' => 3, 'aid' => 2, 'scope' => 'node.news', 'points' => 1, 'rid' => null]], $run['moderate']['sub'],
+            'The approval of a foreign material did not reward its moderator exactly once, or a second approval rewarded again');
+        $this->assertSame([[], []], [$run['moderate']['own'], $run['moderate']['draft']], 'An own material or a publication without review rewarded the moderator');
         $this->assertSame(0, $run['guards']);
     }
 
@@ -415,7 +419,7 @@ final class NodeServiceTest extends TestCase
     }
 
     # Resources: a download and a visit are counted and rewarded by the mode of their role, a report keeps its first author,
-    # and only the main administrator or a moderator of the type decides it, rewarding a useful report of a registered author once
+    # and only the main administrator or a moderator of the type decides it, rewarding a useful report of a registered author once and the moderator with moderate
     #[Test]
     public function resourceCountersAndReportsFollowTheirMode(): void
     {
@@ -438,6 +442,9 @@ final class NodeServiceTest extends TestCase
         $this->assertCount(1, $run['rewards'], 'The decisions rewarded more or less than the one useful registered report');
         $this->assertSame(2, $run['rewards'][0]['uid']);
         $this->assertMatchesRegularExpression('/^report:\d+:[0-9a-f]{16}$/D', $run['rewards'][0]['source']);
+        $this->assertSame(['ok' => true, 'value' => null], $run['selfdecide']);
+        $row = fn(string $scope): array => ['source' => true, 'uid' => 3, 'aid' => 2, 'scope' => $scope, 'points' => 1];
+        $this->assertSame([$row('node.files'), $row('node.links')], $run['moderate'], 'A decided report did not reward its moderator once, or his own report rewarded him');
     }
 
     # Categories: a used category never leaves its type and is never deleted, its language changes through the guard, an extra link leaves with a new version,
@@ -459,6 +466,12 @@ final class NodeServiceTest extends TestCase
         $this->assertSame(['version' => 2, 'cids' => []], $run['extnode'], 'The extra link left without a new version of its material');
         $this->assertSame(['ok' => true, 'value' => null], $run['free']);
         $this->assertSame('forum', $run['moved']);
+        $this->assertInvalid($run['kids'][0], 'category.used', 'a category with subcategories');
+        $this->assertSame(['news', 'news'], array_slice($run['kids'], 1), 'A category left its module without its subcategories');
+        $this->assertSame([true, false, false], $run['registry'], 'The registry does not answer by the registered names');
+        $this->assertTrue($run['broken'][0], 'A type with a broken configuration left the registry');
+        $this->assertRefused($run['broken'][1], 5, 'The node type cannot be read', 'a category of a broken type');
+        $this->assertSame('links', $run['broken'][2], 'The category of a broken type was deleted');
         $this->assertSame([0, 16], [$run['guards'], $run['used']]);
     }
 
@@ -572,10 +585,11 @@ final class NodeServiceTest extends TestCase
         $this->assertSame(2, substr_count($code, '->updateNodeCategory($id, '), 'The save and the switch of a Node category');
         $this->assertSame(1, substr_count($code, '->deleteNodeCategory($id)'), 'The delete of a Node category');
         $this->assertSame(1, substr_count($code, '->addNodeCategory($row)'), 'The create of a Node category');
-        $this->assertSame(4, substr_count($code, 'getNodeTypeMap()'), 'The screen decides a Node category by something else than the type map');
+        $this->assertSame(5, substr_count($code, '->checkTypeRegistry(['), 'The screen decides a Node category by something else than the registry');
+        $this->assertStringNotContainsString('getNodeTypeMap()', $code, 'The screen decides a Node category by the type map, which skips a broken type');
         $this->assertStringNotContainsString('_nodes', $code, 'The category screen touches a Node table itself');
         $mods = self::getBody('core/helpers.php', 'getCategoryModules');
-        $this->assertStringContainsString("array_filter(getNodeTypeMap(), fn(\$v) => \$v->settings['features']['categories'])", $mods, 'The category modules miss the Node types');
+        $this->assertStringContainsString("array_filter(getNodeTypeMap(), fn(NodeType \$v): bool => \$v->settings['features']['categories'])", $mods, 'The category modules miss the Node types');
         $this->assertStringContainsString("array_merge(['forum', 'shop'], array_keys(\$types))", $mods);
     }
 
@@ -606,5 +620,24 @@ final class NodeServiceTest extends TestCase
         $this->assertSame(['ok' => true, 'value' => null], $run['target']['anna'], 'A reader without the right reads the draft');
         $this->assertTrue($run['target']['off'][0]['value'] > 0, 'The moderator does not read the draft of a disabled type');
         $this->assertSame(['ok' => true, 'value' => null], $run['target']['off'][1]);
+    }
+
+    # S20.3: a compensation Point refuses rolls the delete back with its comments and journal, a closed points configuration deletes without it and logs;
+    # a comment of a material gone or closed between the check and the lock is refused without a row or points, a lost points unit rolls the comment back
+    # and is logged, and the publication of a pending comment of a material that is gone is refused while one of a live material is rewarded
+    #[Test]
+    public function theCommentAndPointFixesHold(): void
+    {
+        $run = $this->getRuns()['award'];
+        $this->assertRefused($run['refused'], 5, 'The award of the material cannot be compensated', 'a delete whose compensation Point refuses');
+        $this->assertSame([true, 1, 0, 0], $run['kept'], 'A refused compensation did not keep the material, its comment and the journal');
+        $this->assertSame(['ok' => true, 'value' => null], $run['closed']);
+        $this->assertSame([false, 0, 1, 1, 1], $run['gone'], 'A closed points configuration did not delete, compensated the publication or logged nothing');
+        $user = $run['user'];
+        foreach (['gone', 'closed'] as $key) $this->assertSame(['Open', false, 0, 0], $user[$key], 'A comment of a material '.$key.' before the lock was stored');
+        $this->assertSame(['Open', true, 1, 1], $user['fine'], 'A comment of an open material was not stored and rewarded');
+        $this->assertSame([false, 0, 0, false, 0, 1], $user['lost'], 'A lost points unit kept the comment, its transaction or its guard, or logged nothing');
+        $this->assertSame([false, 0, 0], $run['root']['orphan'], 'A pending comment of a material that is gone was published');
+        $this->assertSame([true, 1, 1], $run['root']['live'], 'A pending comment of a live material was not published and rewarded');
     }
 }

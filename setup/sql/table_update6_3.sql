@@ -1765,6 +1765,7 @@ CREATE TABLE IF NOT EXISTS `{prefix}_nodes` (
   KEY `views` (`tid`, `status`, `pinned`, `views`, `published`, `id`),
   KEY `title` (`tid`, `status`, `pinned`, `title`, `id`),
   KEY `expires` (`tid`, `status`, `expires`),
+  KEY `tree` (`tid`, `status`, `id`),
   KEY `queue` (`status`, `created`, `id`),
   KEY `author` (`uid`, `status`, `published`, `id`),
   KEY `ip` (`ip`, `created`, `id`),

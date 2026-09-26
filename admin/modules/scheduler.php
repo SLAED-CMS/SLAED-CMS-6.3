@@ -283,7 +283,7 @@ function save(): void {
         }
         $sett = $issys ? ((isset($curr['settings']) && is_array($curr['settings'])) ? $curr['settings'] : []) : ['url' => $url];
         if ($issys && isset(SCHED_LIMITS[$name], $sett['limit'])) {
-            $lim = (int)getVar('post', 'limit', 'num', 0);
+            $lim = getVar('post', 'limit', 'num', 0);
             if ($lim < 1 || $lim > SCHED_LIMITS[$name]) {
                 setRedirect($afile.'.php?name=scheduler&op=add&job='.$name);
                 return;

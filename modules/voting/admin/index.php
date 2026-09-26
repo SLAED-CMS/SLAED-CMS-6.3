@@ -288,7 +288,7 @@ function save(): void {
 }
 
 function delete(int $id = 0): void {
-    global $db, $afile, $com, $conf, $fld;
+    global $db, $afile, $com, $conf;
     $iswarn = !checkSiteToken();
     if (!$id) $id = getVar('req', 'id', 'num', 0);
     $fail = false;
@@ -306,7 +306,7 @@ function delete(int $id = 0): void {
         $guard = $fail ? false : Cache::getWriteGuard();
         $step = 'before';
         try {
-            $serv = new NodeService($db, getNodeContext(), $fld);
+            $serv = getNodeWriter();
             if ($guard === false || !$db->setSqlBegin()) throw new NodeException('The deletion of a poll cannot start', NodeException::STORAGE);
             $step = 'open';
             $serv->deleteNodePoll($id);

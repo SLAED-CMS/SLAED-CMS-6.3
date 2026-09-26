@@ -349,7 +349,7 @@ function getAdminCountRow(string $href, string $titlec, string $labelc, string $
 # Build the admin sidebar info blocks: pending-content counters and waiting content; the editor moved to the settings window and is offered there alone
 # Every Node type the administrator moderates adds its materials waiting for moderation, a type with support requests the requests waiting for the staff
 function getAdminInfo(): string {
-    global $db, $conf, $fld, $com, $panel, $tpl;
+    global $conf, $com, $panel, $tpl;
     if (isAdmin()) {
         $ablocks = '';
         if ($panel) {
@@ -375,7 +375,7 @@ function getAdminInfo(): string {
                         $num = $hand->getNodeSupportList($type, 1, 1, (int)($conf['node']['support']['state']['staff'] ?? 0))['count'];
                         $href = 'name=node&type='.$name;
                     } else {
-                        $num = (new NodeQuery($db, $ctx, $fld))->setNodeType($type)->setNodeExtension($hand)->setNodeStatus(NodeStatus::Pending)->getNodeCount();
+                        $num = getNodeReader()->setNodeType($type)->setNodeExtension($hand)->setNodeStatus(NodeStatus::Pending)->getNodeCount();
                         $href = 'name=node&type='.$name.'&status='.NodeStatus::Pending->value;
                     }
                 } catch (NodeException $err) {
@@ -403,7 +403,7 @@ function getDbVersion() {
 # Render the admin category list grouped by module as an indented tree with drag ordering, collapsible groups and dial actions
 # The materials of a Node type come from its reader; a count the administrator may not read offers no deletion, which the writer would refuse anyway
 function getAdminCategoryList(string $modul = '', int $obj = 0): string {
-    global $db, $fld, $afile, $tpl;
+    global $db, $afile, $tpl;
     $modul = filterVar($modul);
     $where = ($modul) ? 'WHERE modul = :modul' : '';
     $params = ($modul) ? ['modul' => $modul] : [];
@@ -433,7 +433,7 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
             while ([$ncid, $cnt] = $db->getSqlRow($count)) $nums[(int)$ncid] = (int)$cnt;
         } elseif ($type !== null) {
             try {
-                $nums = (new NodeQuery($db, getNodeContext(), $fld))->getNodeCategoryCount($type);
+                $nums = getNodeReader()->getNodeCategoryCount($type);
             } catch (NodeException $err) {
                 $held = true;
             }
@@ -775,7 +775,7 @@ function getAdminFavoriteList(int $obj = 0): string {
                 $sql = 'SELECT f.id, f.fid, f.modul, u.name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.id IN ('.$in.')';
                 $res = $db->getSqlQuery($sql.' ORDER BY f.id DESC', $pm);
                 $rows = $res ? ($db->getSqlRows($res) ?: []) : [];
-                $titles = getNodeTitleMap(array_fill_keys(array_map(fn($v) => intval($v[1]), $rows), $key));
+                $titles = getNodeTitleMap(array_fill_keys(array_map(fn(array $v): int => intval($v[1]), $rows), $key));
                 foreach ($rows as $row) $ffmassiv[] = [$row[0], $row[1], $row[2], $titles[intval($row[1])] ?? '', $row[3]];
             }
         }
@@ -1118,7 +1118,6 @@ function checkSqlTable(string $name): bool {
 # sent to the service with the version the form was built from
 # Answers an empty string on success, otherwise a safe text chosen by the cause of the refusal; the text of the exception never reaches the page
 function updateNodeTypePart(string $name, string $part, array $value, int $version): string {
-    global $db, $fld, $pnt;
     $type = getNodeTypeMap()[$name] ?? null;
     $label = htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     if ($type === null || !in_array($part, ['fields', 'uploads', 'rating', 'integrations'], true)) return sprintf(_NODE_BAD, $label);
@@ -1127,7 +1126,7 @@ function updateNodeTypePart(string $name, string $part, array $value, int $versi
     else $data[$part] = $value;
     try {
         $input = new NodeTypeInput($type->title, $type->intro, $type->ext, $type->sort, $data['settings'], $data['fields'], $data['uploads'], $data['rating']);
-        (new NodeService($db, getNodeContext(), $fld, $pnt))->updateNodeType($name, $input, $version);
+        getNodeWriter()->updateNodeType($name, $input, $version);
     } catch (NodeException $err) {
         return match ($err->getCode()) {
             NodeException::CONFLICT => sprintf(_NODE_STALE, $label),

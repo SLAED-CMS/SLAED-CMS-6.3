@@ -1208,7 +1208,7 @@ function getTplModuleSelect(string $name, string $mod, string $no = '', array $a
     $cont = '';
     if ($no !== '') $cont .= $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => empty($mod)]);
     $mods = explode(',', $mod);
-    $list = array_merge(array_diff(scandir('modules'), ['node']), array_keys(array_filter(getNodeTypeMap(), fn($v) => $v->active)));
+    $list = array_merge(array_diff(scandir('modules'), ['node']), array_keys(array_filter(getNodeTypeMap(), fn(NodeType $v): bool => $v->active)));
     foreach ($list as $file) {
         if (str_contains($file, '.')) continue;
         if ($allow && !in_array($file, $allow, true)) continue;
@@ -1227,7 +1227,7 @@ function getTplModuleSelect(string $name, string $mod, string $no = '', array $a
 # Return the names of modules that support categories: the two physical ones and every registered Node type with the category feature, as the administrative screens read them
 # The types are never listed by name here, so a new type appears on the category screen as soon as it is registered and a site without the Node tables lists the two alone
 function getCategoryModules(): array {
-    $types = array_filter(getNodeTypeMap(), fn($v) => $v->settings['features']['categories']);
+    $types = array_filter(getNodeTypeMap(), fn(NodeType $v): bool => $v->settings['features']['categories']);
     return array_merge(['forum', 'shop'], array_keys($types));
 }
 

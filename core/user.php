@@ -1211,17 +1211,16 @@ function updatePrivatBox(): void {
 # The comment entry carries no table, where or rate: its rows are read through the comment subsystem, and a table name left here would be a second way into a table with one owner
 # Every active Node type but the private support requests follows with its type and, for an author, the numbers of getNodeAuthorStat() read once per request and author
 function getProfileModules(int $uid = 0): array {
-    global $db, $fld;
     static $memo = [];
     $out = [
         'comm' => ['title' => _COMMENTS, 'icon' => getIconName('comm'), 'fav' => ''],
         'forum' => ['title' => _FORUM, 'icon' => getIconName('forum'), 'table' => 'forum', 'where' => "uid = :uid AND pid = '0' AND time <= NOW() AND status > '1'", 'rate' => ['ratings', 'score'], 'fav' => 'forum'],
     ];
-    $types = array_values(array_filter(getNodeTypeMap(), fn($v) => $v->active && $v->ext !== 'support'));
+    $types = array_values(array_filter(getNodeTypeMap(), fn(NodeType $v): bool => $v->active && $v->ext !== 'support'));
     if ($uid > 0 && $types && !isset($memo[$uid])) {
         $memo[$uid] = [];
         try {
-            $query = (new NodeQuery($db, getNodeContext(), $fld))->setNodeAuthor($uid)->setNodeStatus(NodeStatus::Published);
+            $query = getNodeReader()->setNodeAuthor($uid)->setNodeStatus(NodeStatus::Published);
             if (count($types) === 1) $query->setNodeType($types[0])->setNodeExtension(getNodeHandler($types[0]));
             else $query->setNodeTypes($types);
             $memo[$uid] = $query->getNodeAuthorStat();
@@ -1238,7 +1237,7 @@ function getProfileModules(int $uid = 0): array {
 
 # Build the "last activity" feed with per-module tabs for a public profile as one UNION ALL round-trip; shared by the profile view page and the own-profile page
 function getProfileLastView(int $uid): string {
-    global $db, $conf, $tpl, $prs, $com, $fld;
+    global $db, $conf, $tpl, $prs, $com;
     if ($uid < 1 || ($conf['users']['prof'] == 1 && !is_user() && !isAdmin())) return '';
     $limit = intval(getUserNews(25));
     $mods = getProfileModules($uid);
@@ -1281,7 +1280,7 @@ function getProfileLastView(int $uid): string {
         $type = $inf['type'];
         if ($inf['stat']['num'] < 1) continue;
         try {
-            $query = (new NodeQuery($db, getNodeContext(), $fld))->setNodeType($type)->setNodeExtension(getNodeHandler($type))->setNodeAuthor($uid)
+            $query = getNodeReader($type)->setNodeType($type)->setNodeAuthor($uid)
                 ->setNodeStatus(NodeStatus::Published)->setNodeSets(false)->setNodePage(1, min($limit, $type->settings['list']['limit']));
             if (in_array('published', $type->settings['list']['orders'], true)) $query->setNodeOrder('published', 'desc');
             foreach ($query->getNodeList() as $node) {
@@ -1336,7 +1335,7 @@ function getFavoriteButton(?int $fid, string $mod): string {
 # A material of a registered Node type is added inside one transaction: the type and the material locked first, the favorites feature of the type and its extension,
 # the row, the reaction of the extension and the award; a material the user may not read, a switched-off feature or a refusal of the extension adds nothing
 function addFavorite() {
-    global $db, $conf, $user, $pnt, $fld;
+    global $db, $conf, $user, $pnt;
     $id = getVar('get', 'id',  'num',  0);
     $mod = filterVar(getVar('get', 'mod', 'text', ''));
     $uid = (is_user()) ? intval($user[0]) : 0;
@@ -1349,7 +1348,7 @@ function addFavorite() {
     if ($conf['favorites']['favact'] && $room && $type !== null) {
         try {
             $ext = getNodeHandler($type);
-            $serv = new NodeService($db, getNodeContext(), $fld);
+            $serv = getNodeWriter();
             if (!$db->setSqlBegin()) throw new NodeException('The transaction of a favorite cannot be started', NodeException::STORAGE);
             $tgt = $serv->getLockedTarget($id, $type);
             $open = $tgt !== null && $type->settings['features']['favorites'] && ($ext === null || $ext->checkNodeAction($type, $tgt, 'favorite'));
@@ -1530,7 +1529,7 @@ function getRssChannel() {
     if ($type !== null && $type->active && $type->settings['integrations']['rss']) {
         $size = min($num, $type->settings['list']['limit'], intval($conf['node']['limits']['maxlist'] ?? 0));
         try {
-            $query = (new NodeQuery($db, getNodeContext(), $fld))->setNodeType($type)->setNodeExtension(getNodeHandler($type))->setNodePage(1, max(1, $size));
+            $query = getNodeReader($type)->setNodeType($type)->setNodePage(1, max(1, $size));
             if ($cat && $type->settings['features']['categories']) $query->setNodeCategory($cat);
             if (in_array('published', $type->settings['list']['orders'], true)) $query->setNodeOrder('published', 'desc');
             $nodes = $query->getNodeList();

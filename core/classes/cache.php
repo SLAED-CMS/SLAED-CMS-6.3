@@ -350,7 +350,7 @@ class Cache {
     public static function checkNotModified(int $mtime, string $etag = ''): bool {
         $none = trim((string)($_SERVER['HTTP_IF_NONE_MATCH'] ?? ''));
         if ($etag !== '' && $none !== '') {
-            $tags = array_map(fn($v) => preg_replace('#^W/#', '', trim($v)), explode(',', $none));
+            $tags = array_map(fn(string $v): ?string => preg_replace('#^W/#', '', trim($v)), explode(',', $none));
             if ($none !== '*' && !in_array(preg_replace('#^W/#', '', $etag), $tags, true)) return false;
             http_response_code(304);
             return true;

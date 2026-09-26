@@ -24,6 +24,9 @@ final class NodeQuery {
     # A canonical database date and time
     private const DATE = '/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/D';
 
+    # The batch of the document tree: an internal read of Node, not a hand-over to a shared subsystem, so limits.syncbatch does not size it
+    public const TREEPART = 500;
+
     # The sections a stored type may carry, in the order of the effective settings
     private const SECTIONS = ['list', 'view', 'form', 'workflow', 'admin', 'features', 'assets', 'integrations', 'ext'];
 
@@ -203,9 +206,9 @@ final class NodeQuery {
     private function getNodeLimits(mixed $node): array {
         if (!is_array($node) || ($node['version'] ?? null) !== '1' || !is_array($node['limits'] ?? null)) return [];
         $out = [];
-        foreach (['maxassets', 'maxlist', 'syncbatch'] as $key) {
+        foreach (['maxassets', 'maxlist', 'syncbatch', 'send'] as $key) {
             $val = $node['limits'][$key] ?? null;
-            if (!is_int($val) || $val < 1) return [];
+            if (!is_int($val) || $val < ($key === 'send' ? 0 : 1)) return [];
             $out[$key] = $val;
         }
         return $out;
@@ -304,7 +307,7 @@ final class NodeQuery {
             if ($link && (!$one['canlink'] || $one['max'] !== 1 || $exts !== [] || $one['maxbytes'] !== null || ++$links > 1)) throw $this->getInvalid($path.'.mode');
             $out[$role] = $one;
         }
-        uksort($out, fn($a, $b) => [$out[$a]['sort'], $a] <=> [$out[$b]['sort'], $b]);
+        uksort($out, fn(string $a, string $b): int => [$out[$a]['sort'], $a] <=> [$out[$b]['sort'], $b]);
         return $out;
     }
 
@@ -483,8 +486,8 @@ final class NodeQuery {
             $this->setTypeRows($this->getTypeRows([]), []);
             $this->whole = true;
         }
-        $out = array_values(array_filter($this->types, fn($v) => $v && $this->checkTypeView($v)));
-        usort($out, fn($a, $b) => [$a->sort, $a->id] <=> [$b->sort, $b->id]);
+        $out = array_values(array_filter($this->types, fn(NodeType|false $v): bool => $v && $this->checkTypeView($v)));
+        usort($out, fn(NodeType $a, NodeType $b): int => [$a->sort, $a->id] <=> [$b->sort, $b->id]);
         return $out;
     }
 
@@ -504,7 +507,7 @@ final class NodeQuery {
     private function checkCatRead(string $pread): bool {
         [$lvl, $ids] = array_pad(explode('|', $pread, 2), 2, '');
         if ($pread === '' || !ctype_digit($lvl)) return false;
-        $gids = array_values(array_filter(array_map('intval', explode(',', $ids)), fn($v) => $v > 0));
+        $gids = array_values(array_filter(array_map('intval', explode(',', $ids)), fn(int $v): bool => $v > 0));
         if ($gids) return (bool)array_intersect($gids, $this->ctx->groups);
         return intval($lvl) <= ($this->ctx->uid > 0 ? 1 : 0);
     }
@@ -664,7 +667,7 @@ final class NodeQuery {
         if (!$this->list) throw $this->getInvalid('type');
         if (count($this->list) === 1) return [[$this->list[0], $this->getOwnExt($this->list[0])]];
         if ($this->ext !== null) throw $this->getInvalid('extension');
-        return array_map(fn($v) => [$v, $v->ext === '' ? null : $this->getFactoryExt($v->ext)], $this->list);
+        return array_map(fn(NodeType $v): array => [$v, $v->ext === '' ? null : $this->getFactoryExt($v->ext)], $this->list);
     }
 
     # Compile every branch of the current selection for one kind of read; a type branch splits into disjoint parts, each one range of an index:
@@ -695,7 +698,7 @@ final class NodeQuery {
             default => [[$key, $dir], ['id', $dir]],
         };
         if ($pin) array_unshift($cols, ['pin', 'DESC']);
-        return implode(', ', array_map(fn($v) => $pre.$v[0].' '.$v[1], $cols));
+        return implode(', ', array_map(fn(array $v): string => $pre.$v[0].' '.$v[1], $cols));
     }
 
     # The page size of the current selection: the requested size within the system limit and the page size of every selected type, or that smallest size by default
@@ -750,7 +753,7 @@ final class NodeQuery {
 
     # Build one resource from its row, the unknown metadata as null
     private function getAssetModel(array $row): NodeAsset {
-        $num = fn($v) => $v === null ? null : intval($v);
+        $num = fn(mixed $v): ?int => $v === null ? null : intval($v);
         return new NodeAsset(intval($row['id']), intval($row['nid']), $row['kind'], $row['role'], $row['src'], $row['name'], $row['title'],
             $row['intro'], $row['mime'], $num($row['size']), $num($row['width']), $num($row['height']), $num($row['duration']),
             intval($row['hits']), $row['reported'], intval($row['ruid']), intval($row['sort']), $row['created'],
@@ -931,10 +934,10 @@ final class NodeQuery {
         $size = $this->getPageSize();
         $skip = ($this->page - 1) * $size;
         $ord = $this->getOrderSql('');
-        $field = $this->sets && array_filter($this->list, fn($v) => $this->checkFieldUse($v));
+        $field = $this->sets && array_filter($this->list, fn(NodeType $v): bool => $this->checkFieldUse($v));
         $pars = [];
         foreach ($parts as $part) $pars += $part['pars'];
-        $page = 'SELECT q.* FROM ('.implode(' UNION ALL ', array_map(fn($v) => '('.$this->getListSelect($v).' ORDER BY '.$ord.' LIMIT '.($skip + $size).')', $parts))
+        $page = 'SELECT q.* FROM ('.implode(' UNION ALL ', array_map(fn(array $v): string => '('.$this->getListSelect($v).' ORDER BY '.$ord.' LIMIT '.($skip + $size).')', $parts))
             .') AS q ORDER BY '.$this->getOrderSql('q.').' LIMIT '.$skip.', '.$size;
         $sql = 'SELECT '.self::COLS.', '.($field ? 'n.field' : '\'\'').' AS field, u.name AS uname, c.title AS ctitle FROM ('.$page.') AS p'
             .' INNER JOIN '.PREFIX_DB.'_nodes AS n ON n.id = p.id LEFT JOIN '.PREFIX_DB.'_users AS u ON u.id = n.uid AND n.uid > 0'
@@ -981,6 +984,12 @@ final class NodeQuery {
         return $out;
     }
 
+    # Whether the context may read one category of the type in its language, by the same right the category filter of a list applies; a moderator reads every category of it
+    # A list of a category outside this answer would be empty by that filter, so the public list answers it as missing rather than as an empty page of a hidden title
+    public function checkNodeCategory(NodeType $type, int $cid): bool {
+        return $cid > 0 && $type->settings['features']['categories'] && in_array($cid, $this->getCatAllow($type, true), true);
+    }
+
     # Count the materials of every main category of one type in any state, as category id => count, for the Node manager and a moderator of the type
     # A main category with materials is what makes deleteNodeCategory() refuse, so the category screen offers the deletion by the same rule
     public function getNodeCategoryCount(NodeType $type): array {
@@ -1005,7 +1014,7 @@ final class NodeQuery {
         }
         $query = count($sql) === 1 ? $sql[0] : 'SELECT MIN(q.pa) AS pa, MIN(q.pb) AS pb FROM ('.implode(' UNION ALL ', $sql).') AS q';
         $row = $this->getQueryRows($query, $pars)[0] ?? [];
-        $when = array_map('intval', array_filter([$row['pa'] ?? null, $row['pb'] ?? null], fn($v) => $v !== null));
+        $when = array_map('intval', array_filter([$row['pa'] ?? null, $row['pb'] ?? null], fn(mixed $v): bool => $v !== null));
         return $when ? min($when) : null;
     }
 
@@ -1040,7 +1049,7 @@ final class NodeQuery {
     public function getNodeAsset(int $id, NodeType $type): ?NodeAsset {
         if ($id < 1 || (!$type->active && !$this->checkModer($type))) return null;
         $part = $this->getBranchSql($type, 'm', $this->getOwnExt($type), 'item');
-        $sql = 'SELECT '.implode(', ', array_map(fn($v) => 'a.'.$v, self::ASSETS)).', n.cid, c.pread AS cread, c.modul AS cmod FROM '.PREFIX_DB.'_node_assets AS a'
+        $sql = 'SELECT '.implode(', ', array_map(fn(string $v): string => 'a.'.$v, self::ASSETS)).', n.cid, c.pread AS cread, c.modul AS cmod FROM '.PREFIX_DB.'_node_assets AS a'
             .' INNER JOIN '.PREFIX_DB.'_nodes AS n ON n.id = a.nid LEFT JOIN '.PREFIX_DB.'_categories AS c ON c.id = n.cid AND n.cid > 0'.$part['join']
             .' WHERE a.id = :ma AND '.$part['where'];
         $row = $this->getQueryRows($sql, $part['pars'] + ['ma' => $id])[0] ?? null;
@@ -1057,7 +1066,7 @@ final class NodeQuery {
         if (count($refs) > min(500, $lims['syncbatch'] ?? 500)) throw $this->getInvalid('refs');
         foreach ($refs as $id => $name) if (!is_int($id) || $id < 1 || !is_string($name) || !preg_match(self::NAME, $name)) throw $this->getInvalid('refs');
         if (!$refs) return [];
-        $need = array_values(array_unique(array_filter($refs, fn($v) => !array_key_exists($v, $this->types))));
+        $need = array_values(array_unique(array_filter($refs, fn(string $v): bool => !array_key_exists($v, $this->types))));
         if ($need && !$this->whole) $this->setTypeRows($this->getTypeRows($need), $need);
         $sql = [];
         $pars = [];
@@ -1093,8 +1102,8 @@ final class NodeQuery {
     }
 
     # Read one batch of the tree of the selected type after a cursor: id, title, the parent only when the context may read it, and the sort of the parent link
-    public function getNodeTree(int $after = 0, int $limit = 500): array {
-        if ($after < 0 || $limit < 1 || $limit > 500 || count($this->list) !== 1 || !$this->list[0]->settings['features']['tree']) throw $this->getInvalid('tree');
+    public function getNodeTree(int $after = 0, int $limit = self::TREEPART): array {
+        if ($after < 0 || $limit < 1 || $limit > self::TREEPART || count($this->list) !== 1 || !$this->list[0]->settings['features']['tree']) throw $this->getInvalid('tree');
         $type = $this->list[0];
         $ext = $this->getOwnExt($type);
         $part = $this->getBranchSql($type, 'b', $ext, 'list');
@@ -1127,7 +1136,8 @@ final class NodeQuery {
             $tmap[$type->id] = $type->name;
         }
         if (!$sql) return [];
-        $query = count($sql) === 1 ? $sql[0] : 'SELECT q.* FROM ('.implode(' UNION ALL ', array_map(fn($v) => '('.$v.')', $sql)).') AS q ORDER BY q.id LIMIT '.$limit;
+        $query = count($sql) === 1 ? $sql[0]
+            : 'SELECT q.* FROM ('.implode(' UNION ALL ', array_map(fn(string $v): string => '('.$v.')', $sql)).') AS q ORDER BY q.id LIMIT '.$limit;
         $out = [];
         foreach ($this->getQueryRows($query, $pars) as $row) {
             $out[] = ['id' => intval($row['id']), 'name' => $tmap[intval($row['tid'])], 'title' => $row['title'], 'cid' => intval($row['cid']),

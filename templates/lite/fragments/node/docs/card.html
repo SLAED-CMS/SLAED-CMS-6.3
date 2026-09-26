@@ -1,0 +1,5 @@
+<article{% if id %} id="node-{{ id }}"{% endif %} class="sl-node-toc">
+  <h2 class="sl-title">{% if href %}<a href="{{ href }}" title="{{ title }}">{{ title }}</a>{% else %}{{ title }}{% endif %}</h2>
+  {% if is_category and chref %}<a href="{{ chref }}" title="{{ ctitle }}" class="sl-chip sl-card-category"><i class="bi bi-folder" aria-hidden="true"></i> {{ ctitle }}</a>{% endif %}
+  {% if intro %}<p class="sl-node-toc-intro">{{ intro }}</p>{% endif %}
+</article>

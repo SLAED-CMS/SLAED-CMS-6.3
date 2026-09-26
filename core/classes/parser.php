@@ -199,7 +199,7 @@ class Parser {
             if (preg_match_all($pat, $txt, $mm)) $out = array_merge($out, $mm[1]);
         }
         $out = array_values(array_unique($out));
-        usort($out, fn($a, $b) => stripos($src, '[attach='.$a) <=> stripos($src, '[attach='.$b));
+        usort($out, fn(string $a, string $b): int => stripos($src, '[attach='.$a) <=> stripos($src, '[attach='.$b));
         return $out;
     }
 

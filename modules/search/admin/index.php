@@ -8,7 +8,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('search')) die('Illegal file acces
 
 function getSearchmodsOpts(string $cmod = ''): string {
     global $conf, $tpl;
-    $mods = array_merge(explode(',', (string)$conf['search']['mods']), array_keys(array_filter(getNodeTypeMap(), fn($v) => $v->settings['integrations']['search'])));
+    $mods = array_merge(explode(',', (string)$conf['search']['mods']), array_keys(array_filter(getNodeTypeMap(), fn(NodeType $v): bool => $v->settings['integrations']['search'])));
     $opts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $cmod === '']);
     foreach ($mods as $mod) {
         $mod = trim($mod);
@@ -171,7 +171,7 @@ function getSearchwhere(): array {
     $find = trim(getVar('req', 'find', 'text', ''));
     $fmod = getVar('req', 'fmod', 'var', '');
     $mods = array_map('trim', explode(',', (string)$conf['search']['mods']));
-    $mods = array_merge($mods, array_keys(array_filter(getNodeTypeMap(), fn($v) => $v->settings['integrations']['search'])));
+    $mods = array_merge($mods, array_keys(array_filter(getNodeTypeMap(), fn(NodeType $v): bool => $v->settings['integrations']['search'])));
     if ($fmod !== '' && !in_array($fmod, $mods, true)) $fmod = '';
     $cond = [];
     $pars = [];

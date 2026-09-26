@@ -78,7 +78,7 @@ function getNodeMoveLabel(NodeStatus $to): array {
 # One material of the types this administrator moderates by its global id, with its type; a named type is checked, without one the moderated types are asked in turn
 function getNodeAdminItem(int $id, string $name): array {
     if ($id < 1) setNodeAdminFault(404, _NODE_GONE);
-    $types = array_filter(getNodeTypeMap(), fn($v) => checkNodeModer($v));
+    $types = array_filter(getNodeTypeMap(), fn(NodeType $v): bool => checkNodeModer($v));
     if ($name !== '') $types = isset($types[$name]) ? [$name => $types[$name]] : [];
     foreach ($types as $type) {
         $query = getNodeReader($type);
@@ -91,17 +91,13 @@ function getNodeAdminItem(int $id, string $name): array {
 
 # Send the registered author of a moderated material the result of the decision once it is stored: published with its address, or not accepted
 function setNodeResultMail(NodeType $type, Node $node, NodeStatus $was): void {
-    global $conf, $mailer;
     $done = in_array($node->status, [NodeStatus::Published, NodeStatus::Draft, NodeStatus::Deleted], true);
     if ($was !== NodeStatus::Pending || !$done || !$type->settings['workflow']['notify']['result'] || $node->uid < 1) return;
     $mail = getUserMail($node->uid);
     if ($mail === '') return;
-    $url = rtrim((string)$conf['homeurl'], '/').'/'.getSeoUrl(['name' => $type->name, 'op' => 'view', 'id' => $node->id]);
+    $url = getPublicUrl(['name' => $type->name, 'op' => 'view', 'id' => $node->id]);
     $text = ($node->status === NodeStatus::Published) ? sprintf(_NODE_MAILPUB, $node->title, $url) : sprintf(_NODE_MAILNO, $node->title);
-    $body = str_replace('[text]', htmlspecialchars($text, ENT_QUOTES, 'UTF-8'), (string)$conf['mtemp']);
-    if (!$mailer->addQueue(['kind' => 'node', 'email' => $mail, 'title' => $conf['sitename'].' - '.$node->title, 'body' => $body, 'sender' => $conf['adminmail'], 'prio' => 3])) {
-        Logger::addSite('error', 'Node: the result notice could not be queued', ['nid' => $node->id]);
-    }
+    if (!addNodeMail([$mail], $node->title, $text)) Logger::addSite('error', 'Node: the result notice could not be queued', ['nid' => $node->id]);
 }
 
 # The sections of a stored material that differ from the values a refused form carried, named by their labels; the stored source of an external material is given beside it
@@ -124,9 +120,10 @@ function getNodeDiff(NodeType $type, Node $now, array $vals, array $ext = []): a
         (string)($ext['refresh'] ?? '')]) $out[] = _NODE_SOURCE;
     $fields = $vals['fields'];
     foreach ($type->fields as $key => $def) {
-        if ($def['active'] && (string)json_encode($fields[$key] ?? null) !== (string)json_encode($was['fields'][$key] ?? null)) $out[] = getNodeLabel($def['title']);
+        if ($def['active'] && (string)json_encode($fields[$key] ?? null) !== (string)json_encode($was['fields'][$key] ?? null)) $out[] = getConst($def['title']);
     }
-    $keep = fn(array $list): array => array_map(fn($v) => [$v['role'], $v['src'], $v['title']], array_values(array_filter($list, fn($v) => $v['src'] !== '')));
+    $keep = fn(array $list): array => array_map(fn(array $v): array => [$v['role'], $v['src'], $v['title']],
+        array_values(array_filter($list, fn(array $v): bool => $v['src'] !== '')));
     if ($keep($vals['assets']) !== $keep($was['assets'])) $out[] = _NODE_ASSETS;
     return $out;
 }
@@ -236,7 +233,7 @@ function setNodeSupportQueue(NodeType $type): void {
     $state = getNodeSupportFilter('state', (int)($conf['node']['support']['state']['staff'] ?? 0));
     $aid = getNodeSupportFilter('aid', null);
     $prio = getNodeSupportFilter('prio', null);
-    $num = max(1, (int)getVar('get', 'num', 'num', 1));
+    $num = max(1, getVar('get', 'num', 'num', 1));
     $lim = $type->settings['list']['limit'];
     try {
         $data = $hand->getNodeSupportList($type, $num, $lim, $state, $aid, $prio);
@@ -292,7 +289,7 @@ function setNodeSupportQueue(NodeType $type): void {
 function show(): void {
     global $afile, $tpl;
     checkNodeMethod(['GET', 'HEAD']);
-    $types = array_filter(getNodeTypeMap(), fn($v) => checkNodeModer($v));
+    $types = array_filter(getNodeTypeMap(), fn(NodeType $v): bool => checkNodeModer($v));
     $name = (string)getVar('get', 'type', 'var', '');
     if ($name !== '' && !isset($types[$name])) setNodeAdminFault(404, _NODE_GONE);
     if ($name !== '' && $types[$name]->ext === 'support') {
@@ -302,7 +299,7 @@ function show(): void {
     $raw = (string)getVar('get', 'status', 'raw', '');
     $state = ($raw === '') ? NodeStatus::Published : (ctype_digit($raw) ? NodeStatus::tryFrom((int)$raw) : null);
     if ($state === null) setNodeAdminFault(400, _NODE_INVALID);
-    $num = max(1, (int)getVar('get', 'num', 'num', 1));
+    $num = max(1, getVar('get', 'num', 'num', 1));
     setHead();
     $cont = getNodeAdminTabs('');
     $topts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $name === '']);
@@ -325,7 +322,7 @@ function show(): void {
         return;
     }
     $pick = ($name !== '') ? [$types[$name]] : array_values($types);
-    $lim = min(array_map(fn($v) => $v->settings['list']['limit'], $pick));
+    $lim = min(array_map(fn(NodeType $v): int => $v->settings['list']['limit'], $pick));
     $query = getNodeReader((count($pick) === 1) ? $pick[0] : null);
     if (count($pick) === 1) $query->setNodeType($pick[0]);
     else $query->setNodeTypes($pick);
@@ -376,7 +373,7 @@ function show(): void {
 function add(): void {
     global $afile, $tpl;
     checkNodeMethod(['GET', 'HEAD', 'POST']);
-    $types = array_filter(getNodeTypeMap(), fn($v) => checkNodeModer($v));
+    $types = array_filter(getNodeTypeMap(), fn(NodeType $v): bool => checkNodeModer($v));
     $name = (string)getVar('req', 'type', 'var', '');
     if ($name === '') {
         setHead();
@@ -399,7 +396,7 @@ function add(): void {
     $note = '';
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         if (!checkAdminPost('node')) setNodeAdminFault(403, _TOKENMISS, 'add');
-        $state = NodeStatus::tryFrom((int)getVar('post', 'status', 'num', 0)) ?? NodeStatus::Draft;
+        $state = NodeStatus::tryFrom(getVar('post', 'status', 'num', 0)) ?? NodeStatus::Draft;
         [$input, $vals, $bad] = getNodeFormPost($type, true, null);
         if ($bad) {
             $note = implode(' ', $bad);
@@ -425,7 +422,7 @@ function add(): void {
 function edit(): void {
     global $afile, $tpl;
     checkNodeMethod(['GET', 'HEAD', 'POST']);
-    [$type, $node] = getNodeAdminItem((int)getVar('req', 'id', 'num', 0), (string)getVar('req', 'type', 'var', ''));
+    [$type, $node] = getNodeAdminItem(getVar('req', 'id', 'num', 0), (string)getVar('req', 'type', 'var', ''));
     $card = ($type->ext === 'sync') ? (getNodeHandler($type)->getNodeData($type, [$node], 'admin')[$node->id] ?? []) : [];
     $ext = $card ? ['url' => $card['url'], 'refresh' => $card['refresh']] : [];
     $vals = getNodeFormVals($node, $ext);
@@ -436,7 +433,7 @@ function edit(): void {
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         if (!checkAdminPost('node')) setNodeAdminFault(403, _TOKENMISS);
         $act = (string)getVar('post', 'action', 'var', 'save');
-        $sent = (int)getVar('post', 'version', 'num', 0);
+        $sent = getVar('post', 'version', 'num', 0);
         [$input, $vals, $bad] = getNodeFormPost($type, true, $node);
         if ($act === 'keep') {
             $ver = $node->version;
@@ -492,7 +489,7 @@ function sync(): void {
     global $afile;
     checkNodeMethod(['POST']);
     if (!checkAdminPost('node')) setNodeAdminFault(403, _TOKENMISS);
-    [$type, $node] = getNodeAdminItem((int)getVar('post', 'id', 'num', 0), (string)getVar('post', 'type', 'var', ''));
+    [$type, $node] = getNodeAdminItem(getVar('post', 'id', 'num', 0), (string)getVar('post', 'type', 'var', ''));
     $hand = getNodeHandler($type);
     if (!$hand instanceof NodeSync) setNodeAdminFault(404, _NODE_GONE);
     $self = $afile.'.php?name=node&op=edit&id='.$node->id.'&type='.$type->name;
@@ -518,14 +515,14 @@ function status(): void {
     global $afile;
     checkNodeMethod(['POST']);
     if (!checkAdminPost('node')) setNodeAdminFault(403, _TOKENMISS);
-    $id = (int)getVar('post', 'id', 'num', 0);
-    $types = array_filter(getNodeTypeMap(), fn($v) => checkNodeModer($v));
+    $id = getVar('post', 'id', 'num', 0);
+    $types = array_filter(getNodeTypeMap(), fn(NodeType $v): bool => checkNodeModer($v));
     $type = $types[(string)getVar('post', 'type', 'var', '')] ?? setNodeAdminFault(404, _NODE_GONE);
     $raw = (string)getVar('post', 'status', 'raw', '');
     $to = ctype_digit($raw) ? (NodeStatus::tryFrom((int)$raw) ?? setNodeAdminFault(422, _NODE_INVALID)) : setNodeAdminFault(422, _NODE_INVALID);
     $was = getNodeReader($type)->getNodeContent($id, $type) ?? setNodeAdminFault(404, _NODE_GONE);
     try {
-        $node = getNodeWriter($type)->updateNodeStatus($id, $to, (int)getVar('post', 'version', 'num', 0));
+        $node = getNodeWriter($type)->updateNodeStatus($id, $to, getVar('post', 'version', 'num', 0));
     } catch (NodeException $err) {
         setNodeActFault($err, $type, $id);
     }
@@ -537,12 +534,12 @@ function delete(): void {
     global $afile, $com;
     checkNodeMethod(['POST']);
     if (!checkAdminPost('node')) setNodeAdminFault(403, _TOKENMISS);
-    $id = (int)getVar('post', 'id', 'num', 0);
-    $types = array_filter(getNodeTypeMap(), fn($v) => checkNodeModer($v));
+    $id = getVar('post', 'id', 'num', 0);
+    $types = array_filter(getNodeTypeMap(), fn(NodeType $v): bool => checkNodeModer($v));
     $type = $types[(string)getVar('post', 'type', 'var', '')] ?? setNodeAdminFault(404, _NODE_GONE);
     getNodeReader($type)->getNodeContent($id, $type) ?? setNodeAdminFault(404, _NODE_GONE);
     try {
-        getNodeWriter($type)->deleteNode($id, (int)getVar('post', 'version', 'num', 0), $com);
+        getNodeWriter($type)->deleteNode($id, getVar('post', 'version', 'num', 0), $com);
     } catch (NodeException $err) {
         setNodeActFault($err, $type, $id);
     }
@@ -553,12 +550,12 @@ function report(): void {
     global $afile;
     checkNodeMethod(['POST']);
     if (!checkAdminPost('node')) setNodeAdminFault(403, _TOKENMISS);
-    $types = array_filter(getNodeTypeMap(), fn($v) => checkNodeModer($v));
+    $types = array_filter(getNodeTypeMap(), fn(NodeType $v): bool => checkNodeModer($v));
     $type = $types[(string)getVar('post', 'type', 'var', '')] ?? setNodeAdminFault(404, _NODE_GONE);
     $useful = (string)getVar('post', 'useful', 'raw', '');
     if (!in_array($useful, ['0', '1'], true)) setNodeAdminFault(422, _NODE_INVALID);
     try {
-        getNodeWriter($type)->deleteNodeAssetReport((int)getVar('post', 'id', 'num', 0), $type, $useful === '1');
+        getNodeWriter($type)->deleteNodeAssetReport(getVar('post', 'id', 'num', 0), $type, $useful === '1');
     } catch (NodeException $err) {
         setNodeAdminFault(getNodeStatus($err), getNodeFault($err));
     }
@@ -771,8 +768,8 @@ function getNodeTypeRows(array $vals, bool $new): array {
     $esc = fn(string $text): string => htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
     $box = fn(string $name, bool $on, string $label): string => $tpl->getHtmlFrag('checkbox', ['name_attr' => $name, 'value_attr' => '1', 'is_checked' => $on,
         'label_text' => $label]);
-    $opts = fn(array $list, string|array $cur): string => implode('', array_map(fn($k, $v) => $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$k, 'label_text' => $v,
-        'is_selected' => is_array($cur) ? in_array((string)$k, $cur, true) : (string)$k === (string)$cur]), array_keys($list), $list));
+    $opts = fn(array $list, string|array $cur): string => implode('', array_map(fn(int|string $k, string $v): string => $tpl->getHtmlFrag('select-option', [
+        'value_attr' => (string)$k, 'label_text' => $v, 'is_selected' => is_array($cur) ? in_array((string)$k, $cur, true) : (string)$k === (string)$cur]), array_keys($list), $list));
     $head = fn(string $label): array => ['label_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => $label]), 'field_html' => '', 'is_full' => true];
     $rows = [];
     $rows[] = ['label_for' => 'f-tname', 'label_html' => _NODE_NAME, 'hint_html' => $esc(_NODE_NAMEHINT), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text',
@@ -789,8 +786,8 @@ function getNodeTypeRows(array $vals, bool $new): array {
         'value_attr' => (string)$vals['sort']])];
     $rows[] = $head(_NODE_SECLIST);
     $orders = ['published' => _NEW, 'updated' => _NODE_UPDATED, 'title' => _TITLE, 'views' => _POP, 'rating' => _BEST];
-    $rows[] = ['label_html' => _NODE_ORDERS, 'field_html' => implode(' ', array_map(fn($k, $v) => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'orders[]', 'value_attr' => $k,
-        'is_checked' => in_array($k, $set['list']['orders'], true), 'label_text' => $v]), array_keys($orders), $orders))];
+    $rows[] = ['label_html' => _NODE_ORDERS, 'field_html' => implode(' ', array_map(fn(string $k, string $v): string => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'orders[]',
+        'value_attr' => $k, 'is_checked' => in_array($k, $set['list']['orders'], true), 'label_text' => $v]), array_keys($orders), $orders))];
     $rows[] = ['label_html' => _NODE_ORDER, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'order', 'options_html' => $opts($orders, $set['list']['order']),
         'is_inline_gap' => true])
         .$tpl->getHtmlFrag('select', ['name_attr' => 'dir', 'options_html' => $opts(['desc' => _DESC, 'asc' => _ASC], $set['list']['dir'])])];
@@ -799,8 +796,8 @@ function getNodeTypeRows(array $vals, bool $new): array {
         'value_attr' => (string)$set['list']['limit']])];
     $rows[] = ['label_html' => _NODE_ALPHA, 'field_html' => $box('alpha', $set['list']['alpha'], _YES)];
     $show = ['category' => _CATEGORY, 'author' => _POSTEDBY, 'date' => _DATE, 'views' => _READS];
-    $rows[] = ['label_html' => _NODE_SHOW, 'field_html' => implode(' ', array_map(fn($k, $v) => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'show[]', 'value_attr' => $k,
-        'is_checked' => in_array($k, $set['list']['show'], true), 'label_text' => $v]), array_keys($show), $show))];
+    $rows[] = ['label_html' => _NODE_SHOW, 'field_html' => implode(' ', array_map(fn(string $k, string $v): string => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'show[]',
+        'value_attr' => $k, 'is_checked' => in_array($k, $set['list']['show'], true), 'label_text' => $v]), array_keys($show), $show))];
     $rows[] = ['label_for' => 'f-mode', 'label_html' => _NODE_MODE, 'hint_html' => $esc(_NODE_MODEHINT), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text',
         'name_attr' => 'mode',
         'input_id' => 'f-mode', 'value_attr' => $set['view']['mode'], 'maxlength_num' => 20])];
@@ -808,8 +805,8 @@ function getNodeTypeRows(array $vals, bool $new): array {
     $feats = ['categories' => _CATEGORIES, 'comments' => _COMMENTS, 'rating' => _RATING, 'favorites' => _FAVORITES, 'poll' => _VOTING, 'home' => _NODE_FHOME,
         'pinned' => _NODE_FPIN,
         'submit' => _NODE_FSUBMIT, 'moderation' => _NODE_FMOD, 'schedule' => _NODE_FSCHED, 'related' => _NODE_RELATED, 'tree' => _NODE_FTREE];
-    $rows[] = ['label_html' => _NODE_FEATURES, 'field_html' => getTplLines(array_map(fn($k, $v) => $box('feat_'.$k, $set['features'][$k], $v), array_keys($feats), $feats), false,
-        true)];
+    $rows[] = ['label_html' => _NODE_FEATURES, 'field_html' => getTplLines(array_map(fn(string $k, string $v): string => $box('feat_'.$k, $set['features'][$k], $v),
+        array_keys($feats), $feats), false, true)];
     $rows[] = $head(_NODE_FLOW);
     $flow = $set['workflow'];
     $cur = ($flow['access'] === 'all') ? '0|0' : (($flow['access'] === 'user') ? '1|0' : '2|'.implode(',', $flow['groups']));
@@ -827,7 +824,7 @@ function getNodeTypeRows(array $vals, bool $new): array {
         $def = $def ?? NodeQuery::ROLEDEF;
         $name = str_starts_with((string)$key, '#') ? '' : (string)$key;
         $pre = 'role['.$idx.']';
-        $kinds = implode(' ', array_map(fn($k) => $tpl->getHtmlFrag('checkbox', ['name_attr' => $pre.'[kinds][]', 'value_attr' => $k, 'is_checked' => in_array($k,
+        $kinds = implode(' ', array_map(fn(string $k): string => $tpl->getHtmlFrag('checkbox', ['name_attr' => $pre.'[kinds][]', 'value_attr' => $k, 'is_checked' => in_array($k,
             (array)$def['kinds'], true),
             'label_text' => $k]), NodeQuery::KINDS));
         $modes = array_combine(array_keys(NodeQuery::RMODES), array_keys(NodeQuery::RMODES));
@@ -858,7 +855,8 @@ function getNodeTypeRows(array $vals, bool $new): array {
     $rows[] = ['label_html' => _NODE_ROLES, 'field_html' => $tpl->getHtmlFrag('repeat', ['rows' => $group, 'add_label' => _ADD]), 'is_full' => true];
     $rows[] = $head(_NODE_INTEG);
     $integ = ['search' => _SEARCH, 'rss' => _RSS, 'sitemap' => _SITEMAP, 'blocks' => _BLOCKS];
-    $rows[] = ['label_html' => _NODE_INTEG, 'field_html' => implode(' ', array_map(fn($k, $v) => $box('integ_'.$k, $set['integrations'][$k], $v), array_keys($integ), $integ))];
+    $rows[] = ['label_html' => _NODE_INTEG, 'field_html' => implode(' ', array_map(fn(string $k, string $v): string => $box('integ_'.$k, $set['integrations'][$k], $v),
+        array_keys($integ), $integ))];
     $rows[] = ['label_html' => _NODE_SEO, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'seo', 'options_html' => $opts(['website' => 'website',
         'article' => 'article',
         'news' => 'news'], $set['integrations']['seo'])])];
@@ -881,7 +879,7 @@ function type(): void {
         if (!checkAdminPost('node')) setNodeAdminFault(403, _TOKENMISS, 'type');
         [$input, $vals, $bad] = getNodeTypePost($old, $prof);
         if ($old !== null) $vals['name'] = $old->name;
-        $sent = (int)getVar('post', 'version', 'num', 0);
+        $sent = getVar('post', 'version', 'num', 0);
         $act = (string)getVar('post', 'action', 'var', 'save');
         if ($act === 'keep' && $old !== null) {
             $ver = $old->version;
@@ -962,7 +960,7 @@ function typestatus(): void {
     $on = (string)getVar('post', 'active', 'raw', '');
     if (!in_array($on, ['0', '1'], true)) setNodeAdminFault(422, _NODE_INVALID, 'types');
     try {
-        getNodeWriter()->updateNodeTypeStatus($name, $on === '1', (int)getVar('post', 'version', 'num', 0));
+        getNodeWriter()->updateNodeTypeStatus($name, $on === '1', getVar('post', 'version', 'num', 0));
     } catch (NodeException $err) {
         setNodeAdminFault(getNodeStatus($err), getNodeTypeFault($err, $name), 'types');
     }
@@ -976,7 +974,7 @@ function typedelete(): void {
     if (!checkAdminPost('node')) setNodeAdminFault(403, _TOKENMISS, 'types');
     $name = (string)getVar('post', 'type', 'var', '');
     try {
-        getNodeWriter()->deleteNodeType($name, (int)getVar('post', 'version', 'num', 0));
+        getNodeWriter()->deleteNodeType($name, getVar('post', 'version', 'num', 0));
     } catch (NodeException $err) {
         setNodeAdminFault(getNodeStatus($err), getNodeTypeFault($err, $name), 'types');
     }
@@ -1079,7 +1077,7 @@ function config(): void {
     global $afile, $conf, $tpl;
     checkNodeMethod(['GET', 'HEAD', 'POST']);
     checkNodeTypes('config');
-    $keys = ['maxassets' => _NODE_MAXASSETS, 'maxlist' => _NODE_MAXLIST, 'syncbatch' => _NODE_SYNCBATCH];
+    $keys = ['maxassets' => _NODE_MAXASSETS, 'maxlist' => _NODE_MAXLIST, 'syncbatch' => _NODE_SYNCBATCH, 'send' => _NODE_SEND];
     $lims = $conf['node']['limits'] ?? [];
     $note = '';
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
@@ -1087,12 +1085,12 @@ function config(): void {
         $new = [];
         foreach (array_keys($keys) as $key) {
             $raw = trim((string)getVar('post', $key, 'raw', ''));
-            $new[$key] = preg_match('/^[1-9][0-9]{0,8}$/D', $raw) ? (int)$raw : 0;
+            $new[$key] = preg_match(($key === 'send') ? '/^(?:0|[1-9][0-9]{0,8})$/D' : '/^[1-9][0-9]{0,8}$/D', $raw) ? (int)$raw : -1;
         }
         $lims = $new;
         $held = '';
         $code = 422;
-        if (in_array(0, $new, true)) {
+        if (in_array(-1, $new, true)) {
             $note = _NODE_INVALID;
         } else {
             $types = getNodeTypeMap();
@@ -1149,14 +1147,14 @@ function config(): void {
 function support(): void {
     global $afile, $tpl, $prs, $com;
     checkNodeMethod(['GET', 'HEAD', 'POST']);
-    [$type, $node] = getNodeAdminItem((int)getVar('req', 'id', 'num', 0), '');
+    [$type, $node] = getNodeAdminItem(getVar('req', 'id', 'num', 0), '');
     $hand = getNodeHandler($type);
     if (!$hand instanceof NodeSupport) setNodeAdminFault(404, _NODE_GONE);
     $self = $afile.'.php?name=node&op=support&id='.$node->id;
     $card = $hand->getNodeData($type, [$node], 'admin')[$node->id] ?? setNodeAdminFault(404, _NODE_GONE);
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         if (!checkAdminPost('node')) setNodeAdminFault(403, _TOKENMISS, '', $self);
-        $num = fn(string $key): int => (int)getVar('post', $key, 'num', 0);
+        $num = fn(string $key): int => getVar('post', $key, 'num', 0);
         try {
             $hand->updateNodeSupport($node->id, $num('aid'), $num('state'), $num('prio'), $num('version'));
         } catch (NodeException $err) {

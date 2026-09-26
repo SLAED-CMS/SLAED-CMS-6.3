@@ -198,6 +198,22 @@ final class NodeProfileTest extends TestCase
         $this->assertSame([false, false], $run['notice']);
     }
 
+    # The unlocked installer over real HTTP: its form carries no password and an empty one connects with the stored password; a clean installation over
+    # the tables of its prefix, a prefix and a panel name outside their grammar, an update whose prefix has no tables and a wrong password are refused
+    # with their reason and no fatal error, config/ and the key untouched; a clean installation whose data file fails writes no mark and keeps the key
+    #[Test]
+    public function theUnlockedInstallerRefusesBeforeItWrites(): void
+    {
+        $run = $this->getRuns()['setup']['refuse'];
+        $this->assertSame([true, false], $run['form'], 'The form of the installer shows the stored password');
+        $this->assertSame([true, true], $run['keep'], 'An empty password field did not keep the stored password, or the refused run wrote a file');
+        $this->assertSame([true, false], $run['wrong'], 'A wrong password ends in a fatal error instead of the reason');
+        $this->assertSame([true, true, true, true], [$run['fresh'], $run['prefix'], $run['afile'], $run['none']]);
+        $this->assertSame([true, true], $run['same'], 'A refused run changed config/ or took the key');
+        $this->assertSame([true, false, true, true], $run['ddl'], 'A failed clean installation wrote its marks or took the key');
+        $this->assertSame(['error_php' => 0, 'error_sql' => 0, 'error_site' => 2], $run['logs'], 'Only the two refused connections are logged');
+    }
+
     # A profile the installation cannot finish - here a user file in uploads/jokes, which NOD-200 refuses to take over - is named in the notice of the next page and
     # in the site log with its step, the other nine types and the starter news are created all the same, and the mark is gone
     #[Test]

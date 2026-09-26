@@ -1,5 +1,5 @@
 <article{% if id %} id="node-{{ id }}"{% endif %} class="sl-post sl-fullview">
-  <h1 class="sl-title">{{ title }}</h1>
+  <h1 class="sl-title">{% if fav_html %}{{{ fav_html }}} {% endif %}{{ title }}</h1>
   <div class="sl-meta">
     <ul class="sl-pull-right">
       {% if ext.card_href %}<li class="sl-meta-actions"><a href="{{ ext.card_href }}" title="{{ ext.state_title }}" class="sl-but-mini"><i class="bi bi-kanban" aria-hidden="true"></i></a></li>{% endif %}
@@ -14,11 +14,21 @@
     </ul>
   </div>
   <div class="sl-entry-content">
+    {{{ poll_html }}}
     {{{ intro_html }}}
     {% if body_html %}{{{ body_html }}}{% endif %}
     {% if fields_html %}<div class="sl-section">{{{ fields_html }}}</div>{% endif %}
   </div>
+  {{{ assets_html }}}
+  {% if rating_html %}<div class="sl-meta-foot">
+    <div class="sl-rate-box sl-pull-right">{{{ rating_html }}}</div>
+  </div>{% endif %}
   {% if ext.is_owner %}<div class="sl-meta-foot">
     <form method="post" action="{{ ext.action }}" class="sl-inline-form"><input type="hidden" name="token" value="{{ ext.token }}"><input type="hidden" name="version" value="{{ ext.version }}"><input type="hidden" name="state" value="{{ ext.next }}"><button type="submit" class="sl-but"><i class="bi bi-{% if ext.is_closed %}arrow-counterclockwise{% else %}check2-circle{% endif %}" aria-hidden="true"></i> {{ ext.switch_label }}</button></form>
   </div>{% endif %}
+  {{{ tree_html }}}
+  {% if rels_html %}<section>
+  <h2 class="sl-related-title">{{ rels_label }}</h2>
+  <div class="sl-section">{{{ rels_html }}}</div>
+  </section>{% endif %}
 </article>

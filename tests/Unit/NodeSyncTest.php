@@ -147,6 +147,8 @@ final class NodeSyncTest extends TestCase
         $this->assertSame(['skipped', false, 'skipped', 'https://example.net/moved.xml', 0, 0], [$stale['status'], $wrote, $moved['status'], $src['url'],
             (int)$src['fails'], $epoch], 'A result fetched before a concurrent change was written or dropped the page cache');
         $this->assertSame([['id' => $ext['new'][0]['id'], 'status' => 'failed', 'error' => 'body'], true], $ext['huge'], 'A text beyond nodes.body was stored');
+        $this->assertSame([['id' => $ext['new'][0]['id'], 'status' => 'failed', 'error' => 'storage'], true, 1], $ext['undo'],
+            'A rollback whose outcome is unknown stored the text or freed the cache guard');
     }
 
     # The manual check is the moderator's and the queue the background context's alone; the queue takes 1..50 and checks the due sources in due order

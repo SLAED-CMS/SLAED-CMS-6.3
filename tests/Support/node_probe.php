@@ -17,7 +17,7 @@ $probework = (string)($argv[1] ?? '');
 $pmode = (string)($argv[2] ?? '');
 $pargs = array_slice($argv, 3);
 require_once __DIR__.'/probe_boot.php';
-$pmat = in_array($pmode, ['material', 'mtree', 'mcrash', 'mlink', 'mpub', 'mpubcrash', 'msched', 'mupload'], true);
+$pmat = in_array($pmode, ['material', 'mtree', 'mcrash', 'mlink', 'mpub', 'mpubcrash', 'msched', 'mupload', 'mcomm'], true);
 $pshare = $pmat || in_array($pmode, ['service', 'crash', 'restore', 'race'], true);
 if ($pmode !== '') {
     $pconf = $probework.'/'.($pmode === 'context' ? 'ctx-'.($pargs[1] ?? '') : ($pshare ? 'svc' : 'config'));
@@ -28,7 +28,7 @@ if ($pmode !== '') {
     define('CACHE_DIR', $probework.($pshare ? '/svccache' : '/cache'));
     if ($pshare) define('UPLOADS_DIR', $probework.'/svcuploads');
     if ($pmode === 'context') setProbeVisitor($pargs[1] ?? '');
-    if ($pmode === 'mupload') setProbeVisitor($pargs[0] ?? '');
+    if ($pmode === 'mupload' || $pmode === 'mcomm') setProbeVisitor($pargs[0] ?? '');
 }
 require_once BASE_DIR.'/core/system.php';
 if ($pshare) {
@@ -49,6 +49,15 @@ final class ProbeCrashDb extends Database {
         }
         if ($this->when === 'after') parent::setSqlCommit();
         exit(0);
+    }
+}
+
+# The database of a comment write whose points unit cannot open its savepoint, which leaves the outer transaction unknown and makes Point throw
+final class ProbeSaveDb extends Database {
+
+    # Refuse every savepoint and run every other statement
+    public function getSqlQuery(string $query = '', array $params = []): PDOStatement|false {
+        return str_starts_with($query, 'SAVEPOINT') ? false : parent::getSqlQuery($query, $params);
     }
 }
 
@@ -382,7 +391,7 @@ function getProbeNodeConf(int $stale): array {
     $plain = ['features' => getProbeFeatures([])];
     return ['node' => [
         'version' => '1',
-        'limits' => ['maxassets' => 100, 'maxlist' => 100, 'syncbatch' => 500],
+        'limits' => ['maxassets' => 100, 'maxlist' => 100, 'syncbatch' => 500, 'send' => 0],
         'support' => ['state' => ['staff' => 0, 'author' => 1, 'closed' => 2], 'prio' => ['low' => 0, 'normal' => 1, 'high' => 2, 'urgent' => 3]],
         'defaults' => [
             'list' => ['orders' => ['published'], 'order' => 'published', 'dir' => 'desc', 'limit' => 10, 'alpha' => false, 'show' => ['category', 'author', 'date', 'views']],
@@ -1244,7 +1253,7 @@ function deleteProbeTree(string $dir): void {
 }
 
 # Put the service run on clean scratch: the configuration of the stand with the empty Node registry of the release - the types the stand registers leave all four
-# shared areas - and an upload root with the guard of the release
+# shared areas - the write window off, since every material of the run comes from one address, and an upload root with the guard of the release
 # Three prepared directories: files holds guards alone, pages keeps an old file inside thumb, and Faq differs from a type name only in case
 function addProbeScratch(string $work): void {
     foreach (['svc', 'svcbackup', 'svccache', 'svcuploads', 'logs'] as $dir) deleteProbeTree($work.'/'.$dir);
@@ -1260,6 +1269,8 @@ function addProbeScratch(string $work): void {
         if (($data['fields']['fields']['node'] ?? null) === []) unset($data['fields']['fields']['node']);
         foreach ($data as $file => $one) setProbeFile($work.'/svc/'.$file.'.php', $one);
     }
+    $node['node']['limits']['send'] = 0;
+    setProbeFile($work.'/svc/node.php', $node);
     $guard = (string)file_get_contents(BASE_DIR.'/uploads/index.html');
     foreach (['svcuploads', 'svcuploads/files', 'svcuploads/files/thumb', 'svcuploads/pages'] as $dir) file_put_contents($work.'/'.$dir.'/index.html', $guard);
     file_put_contents($work.'/svcuploads/pages/thumb/old.txt', 'kept');
@@ -1832,13 +1843,13 @@ function setProbeZone(Database $pdb): Database {
     return $pdb;
 }
 
-# The points of the run: the shipped rules with every Node action worth one point and no period, or with a publication worth nothing
-function getProbeMatPoint(bool $zero = false): Point {
+# The points of the run: the shipped rules with every Node action and moderate worth one point and no period, or with a publication worth nothing, on the given connection
+function getProbeMatPoint(bool $zero = false, ?Database $pdb = null): Point {
     global $conf;
     $cfg = $conf['points'];
-    foreach (['publish', 'view', 'download', 'visit', 'report'] as $act) $cfg['actions'][$act] = ['points' => '1', 'period' => '0', 'limit' => '0'];
+    foreach (['publish', 'view', 'download', 'visit', 'report', 'moderate'] as $act) $cfg['actions'][$act] = ['points' => '1', 'period' => '0', 'limit' => '0'];
     if ($zero) $cfg['actions']['publish']['points'] = '0';
-    return new Point($GLOBALS['pdb'], $cfg);
+    return new Point($pdb ?? $GLOBALS['pdb'], $cfg);
 }
 
 # Fill the disposable database of the material run: groups, accounts, administrators and two polls
@@ -2149,6 +2160,17 @@ function getProbeMatStatus(): array {
     $out['job'] = getProbeJob($late->id) !== null;
     $gone = getProbeReach($news, NodeStatus::Deleted);
     $out['restore'] = $root->updateNodeStatus($gone->id, NodeStatus::Disabled, $gone->version)->status->name;
+    $mixed = getProbeWriter('mixed');
+    $sub = getProbeWriter('anna')->addNode($news, getProbeIn(['cid' => 10]), NodeStatus::Pending);
+    $step = $mixed->updateNodeStatus($sub->id, NodeStatus::Published, $sub->version);
+    foreach ([NodeStatus::Disabled, NodeStatus::Pending, NodeStatus::Published] as $to) $step = $mixed->updateNodeStatus($sub->id, $to, $step->version);
+    $own = $mixed->addNode($news, getProbeIn(['cid' => 10]), NodeStatus::Pending);
+    $mixed->updateNodeStatus($own->id, NodeStatus::Published, $own->version);
+    $draft = getProbeReach($news, NodeStatus::Draft);
+    $mixed->updateNodeStatus($draft->id, NodeStatus::Published, $draft->version);
+    $sql = 'SELECT uid, aid, scope, points, rid FROM '.PREFIX_DB.'_points WHERE action = :act AND source = :src ORDER BY id';
+    $pts = fn(int $id): array => $GLOBALS['pdb']->getSqlQuery($sql, ['act' => 'moderate', 'src' => 'approve:'.$id])->fetchAll(PDO::FETCH_ASSOC);
+    $out['moderate'] = ['sub' => $pts($sub->id), 'own' => $pts($own->id), 'draft' => $pts($draft->id)];
     $out['guards'] = getProbeMatCount()['guards'];
     return $out;
 }
@@ -2519,6 +2541,11 @@ function getProbeMatAssetOps(): array {
     $out['cleared'] = ['download' => getProbeAssetRow($map['download']), 'link' => getProbeAssetRow($lid)];
     $sql = 'SELECT uid, points, source FROM '.PREFIX_DB.'_points WHERE action = \'report\'';
     $out['rewards'] = $GLOBALS['pdb']->getSqlQuery($sql)->fetchAll(PDO::FETCH_ASSOC);
+    getProbeWriter('boris')->updateNodeAssetReport($map['download'], $files);
+    $out['selfdecide'] = getProbeCall(fn() => getProbeWriter('mixed')->deleteNodeAssetReport($map['download'], $files, false));
+    $sql = 'SELECT uid, aid, scope, points, source FROM '.PREFIX_DB.'_points WHERE action = \'moderate\' AND source LIKE \'report:%\' ORDER BY id';
+    $out['moderate'] = array_map(fn($v) => ['source' => (bool)preg_match('/^report:'.$map['download'].':[0-9a-f]{16}$|^report:'.$lid.':[0-9a-f]{16}$/', $v['source'])]
+        + array_diff_key($v, ['source' => 1]), $GLOBALS['pdb']->getSqlQuery($sql)->fetchAll(PDO::FETCH_ASSOC));
     return $out;
 }
 
@@ -2554,6 +2581,15 @@ function getProbeMatCategories(): array {
     $out['extnode'] = ['version' => $row['version'], 'cids' => $row['cids']];
     $out['free'] = getProbeCall(fn() => getProbeWriter('moder')->updateNodeCategory(19, ['modul' => 'forum'] + getProbeCatRow(19)));
     $out['moved'] = getProbeCatRow(19)['modul'] ?? null;
+    $GLOBALS['pdb']->getSqlQuery('INSERT INTO '.PREFIX_DB.'_categories (id, modul, title, intro, parent, pread, ppost, lang) VALUES (21, \'news\', \'Parent\', \'\', 0,'
+        .' \'0|0\', \'0|0\', \'\'), (22, \'news\', \'Kid\', \'\', 21, \'0|0\', \'0|0\', \'\'), (23, \'links\', \'Broken\', \'\', 0, \'0|0\', \'0|0\', \'\')');
+    $out['kids'] = [getProbeCall(fn() => $srv->updateNodeCategory(21, ['modul' => 'forum'] + getProbeCatRow(21))), getProbeCatRow(21)['modul'] ?? null,
+        getProbeCatRow(22)['modul'] ?? null];
+    $out['registry'] = [$srv->checkTypeRegistry(['links']), $srv->checkTypeRegistry(['forum', '']), $srv->checkTypeRegistry([])];
+    $GLOBALS['pdb']->getSqlQuery('UPDATE '.PREFIX_DB.'_node_types SET version = version + 1 WHERE name = \'links\'');
+    $bent = getProbeWriter('boss');
+    $out['broken'] = [$bent->checkTypeRegistry(['links']), getProbeCall(fn() => $bent->deleteNodeCategory(23)), getProbeCatRow(23)['modul'] ?? null];
+    $GLOBALS['pdb']->getSqlQuery('UPDATE '.PREFIX_DB.'_node_types SET version = version - 1 WHERE name = \'links\'');
     $out['guards'] = getProbeMatCount()['guards'];
     $out['used'] = $use->cid;
     return $out;
@@ -2672,6 +2708,7 @@ function getProbeMaterialRuns(): array {
     $out['trust'] = getProbeMatTrust();
     $out['keep'] = getProbeMatKeep();
     $out['integrity'] = getProbeMatIntegrity();
+    $out['award'] = getProbeMatAward();
     $out['log'] = getProbeLog();
     return $out;
 }
@@ -2731,6 +2768,81 @@ function getProbeMatIntegrity(): array {
     return $out;
 }
 
+# The lines of the scratch logs that carry one text
+function getProbeLines(string $text): int {
+    $num = 0;
+    foreach (glob(LOGS_DIR.'/*') ?: [] as $file) foreach (file($file) ?: [] as $line) if (str_contains($line, $text)) $num++;
+    return $num;
+}
+
+# Integrity of S20.3: a delete whose compensation Point refuses keeps the material with its comments and the journal, a closed points configuration deletes
+# without it and logs; the comment writes run in child processes of a registered user and of the main administrator
+function getProbeMatAward(): array {
+    global $conf;
+    $news = getProbeMatType('news');
+    $pre = PREFIX_DB.'_';
+    $pdb = $GLOBALS['pdb'];
+    $sum = fn(): int => intval(getProbeValue('SELECT COUNT(*) FROM '.$pre.'points'));
+    $one = getProbeWriter('boris')->addNode($news, getProbeIn(['cid' => 10]), NodeStatus::Published);
+    $pdb->getSqlQuery('INSERT INTO '.$pre.'comment (cid, modul, time, uid, name, body, status) VALUES (:cid, \'news\', NOW(), 2, \'n\', \'x\', 1)', ['cid' => $one->id]);
+    $cid = intval($pdb->getSqlLastId());
+    $GLOBALS['mpnt']->addEvent('comment', 'node.news', 'comment:'.$cid, 2, ['mid' => $one->id]);
+    $side = getProbeMatPoint(false, setProbeZone(new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], (string)end($GLOBALS['pnames']))));
+    $was = $sum();
+    $rows = fn(): int => intval(getProbeValue('SELECT COUNT(*) FROM '.$pre.'comment WHERE modul = \'news\' AND cid = :cid', ['cid' => $one->id]));
+    $out = ['refused' => getProbeCall(fn() => getProbeWriter('moder', $side)->deleteNode($one->id, 1, getProbeCom()))];
+    $out['kept'] = [getProbeStored($one->id, 'news') !== null, $rows(), $sum() - $was, getProbeMatCount()['guards']];
+    $out['closed'] = getProbeCall(fn() => getProbeWriter('moder', new Point($pdb, []))->deleteNode($one->id, 1, getProbeCom()));
+    $out['gone'] = [getProbeStored($one->id, 'news') !== null, $rows(), $sum() - $was, count(getProbePoints('publish', 'node:'.$one->id)),
+        getProbeLines('Node: a material delete compensates no award')];
+    $out['user'] = getProbeChild('mcomm', ['boris']);
+    $out['root'] = getProbeChild('mcomm', ['root']);
+    return $out;
+}
+
+# The comment writes of one visitor in a child process: a registered user comments on a material gone or closed between the check and the lock, on an open one,
+# and through a points unit that loses its savepoint; the main administrator publishes a pending comment of a material that is gone and one of a live material
+function getProbeMatComm(string $who): array {
+    global $conf;
+    $news = getProbeMatType('news');
+    $pre = PREFIX_DB.'_';
+    $pdb = $GLOBALS['pdb'];
+    $cfg = array_replace($conf, ['node' => ['types' => array_fill_keys(['docs', 'files', 'hook', 'links', 'news'], [])], 'comments' => ['send' => '0'] + $conf['comments']]);
+    $com = fn(?Database $sdb = null): Comment => new Comment($sdb ?? $pdb, $GLOBALS['prs'], $sdb ? getProbeMatPoint(false, $sdb) : $GLOBALS['mpnt'], $cfg);
+    $open = fn(): int => getProbeWriter('root')->addNode($news, getProbeIn(['cid' => 10, 'comon' => CommentMode::Open]), NodeStatus::Published)->id;
+    $rows = fn(int $id): int => intval(getProbeValue('SELECT COUNT(*) FROM '.$pre.'comment WHERE modul = \'news\' AND cid = :cid', ['cid' => $id]));
+    $sum = fn(): int => intval(getProbeValue('SELECT COUNT(*) FROM '.$pre.'points'));
+    $out = [];
+    if ($who === 'root') {
+        foreach (['orphan' => true, 'live' => false] as $key => $drop) {
+            $id = $open();
+            if ($drop) getProbeWriter('moder')->deleteNode($id, 1, getProbeCom());
+            $pdb->getSqlQuery('INSERT INTO '.$pre.'comment (cid, modul, time, uid, name, body, status) VALUES (:cid, \'news\', NOW(), 3, \'boris\', \'x\', 0)', ['cid' => $id]);
+            $cid = intval($pdb->getSqlLastId());
+            $was = $sum();
+            $done = $com()->setStatus($cid, true);
+            $out[$key] = [$done, intval(getProbeValue('SELECT status FROM '.$pre.'comment WHERE id = :id', ['id' => $cid])), $sum() - $was];
+        }
+        return $out;
+    }
+    foreach (['gone', 'closed', 'fine'] as $key) {
+        $id = $open();
+        $early = $com();
+        $mode = $early->getTargetMode('news', $id)->name;
+        if ($key === 'gone') getProbeWriter('moder')->deleteNode($id, 1, getProbeCom());
+        if ($key === 'closed') $pdb->getSqlQuery('UPDATE '.$pre.'nodes SET comon = 0 WHERE id = :id', ['id' => $id]);
+        $was = $sum();
+        $res = $early->addComment('news', $id, 'probe body', '');
+        $out[$key] = [$mode, $res['id'] > 0, $rows($id), $sum() - $was];
+    }
+    $sdb = setProbeZone(new ProbeSaveDb($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $conf['db']['name']));
+    $id = $open();
+    $was = $sum();
+    $res = $com($sdb)->addComment('news', $id, 'probe body', '');
+    $out['lost'] = [$res['id'] > 0, $rows($id), $sum() - $was, $sdb->checkSqlActive(), getProbeMatCount()['guards'], getProbeLines('Comment: a new comment was rolled back')];
+    return $out;
+}
+
 # The children of the material run: each one boots on the scratch sources and the disposable database the parent prepared and answers one call as JSON
 if ($pmat) {
     $GLOBALS['mcopy'] = addProbeWriter($probework.'/mclass');
@@ -2747,6 +2859,7 @@ if ($pmat) {
                 (string)($pargs[0] ?? ''))]]), NodeStatus::Draft)->id),
             'mpub', 'mpubcrash' => getProbeCall(fn() => getProbeWriter('task')->updateNodePublishList()),
             'msched' => addSchedulerRun('nodepublish', 'manual'),
+            'mcomm' => getProbeMatComm((string)($pargs[0] ?? '')),
             'mupload' => ['moder' => checkUploadModer('news'), 'forum' => checkUploadModer('forum'), 'shop' => checkUploadModer('shop'), 'none' => checkUploadModer(''),
                 'owner' => getEditorFileOwner('news'), 'flag' => getUploadFileArea(getUploadPlaceRule('news.attach'))->getCapabilities()['delete']],
         };

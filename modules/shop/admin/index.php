@@ -708,7 +708,7 @@ function productops(int $pid = 0, string $vtyp = ''): void {
     $iswarn = !checkAdminPost('shop');
     $list = $pid ? [$pid] : getVar('post', 'id[]', '', []);
     if (!$list) $list = [getVar('post', 'id', 'num', 0)];
-    $ids = array_unique(array_filter(array_map('intval', array_filter($list, 'is_scalar')), static fn($v): bool => $v > 0));
+    $ids = array_unique(array_filter(array_map('intval', array_filter($list, 'is_scalar')), static fn(int $v): bool => $v > 0));
     $typ = getVar('post', 'typ', 'text');
     $vtyp = ($typ) ? filterVar($typ) : $vtyp;
     $typ = ($vtyp === '') ? 0 : (is_numeric($vtyp[0]) ? intval($vtyp) : intval(substr($vtyp, 1)));

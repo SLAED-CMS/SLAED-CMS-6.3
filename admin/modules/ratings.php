@@ -76,7 +76,7 @@ function save(): void {
     $text = _TOKENMISS;
     $content = [];
     $types = getNodeTypeMap();
-    $scopes = array_merge(['account', 'forum', 'shop'], array_map(fn($v) => 'node.'.$v, array_keys($types)));
+    $scopes = array_merge(['account', 'forum', 'shop'], array_map(fn(string $v): string => 'node.'.$v, array_keys($types)));
     if (!$warn) {
         foreach ($scopes as $i => $val) {
             $days = trim((string)getVar('post', 'time['.$i.']', 'raw', ''));
@@ -93,7 +93,7 @@ function save(): void {
         $text = sprintf(_NODE_STALE, htmlspecialchars(implode(', ', array_merge(array_diff($scopes, $seen), array_diff($seen, $scopes))), ENT_QUOTES, 'UTF-8'));
     }
     if (!$warn) {
-        $own = array_filter($content, fn($v) => !str_starts_with($v, 'node.'), ARRAY_FILTER_USE_KEY);
+        $own = array_filter($content, fn(string $v): bool => !str_starts_with($v, 'node.'), ARRAY_FILTER_USE_KEY);
         $warn = !setConfigFile(static function (array $base, Closure $save) use ($own): string {
             $base['ratings'] = array_replace($base['ratings'], $own);
             ksort($base['ratings']);

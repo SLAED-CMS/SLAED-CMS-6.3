@@ -98,6 +98,13 @@ The database is created and updated by `setup.php` only. A fresh installation ch
 **New installation**; an existing site chooses the update of its version, see below. The installer fills the
 placeholders of the SQL files, runs them and reports every statement.
 
+The form never shows the stored database password: leave the field empty to keep the password of `config/db.php`,
+or type a new one. The table prefix may hold Latin letters, digits and `_` (up to 32 characters), the
+administration panel filename Latin letters, digits, `_` and `-`; any other value is refused before a file is
+written. A new installation needs MariaDB 10.5.2+ or MySQL 8.0.16+, as the update does, and a database without a
+table of its prefix; it is refused otherwise, and it writes `config/update.php` only when both SQL files ran
+without a failed statement. A refused run keeps `config/setup.unlock`, so it can be repeated at once.
+
 ### From 6.2 to 6.3: Run the Installer Update
 
 A 6.2 site is updated by the installer, not by importing SQL by hand. An installed site keeps `setup.php` locked:
@@ -107,7 +114,8 @@ the installer creates it when a site has none.
 
 The update runs in this order and reports every step on its result page:
 
-1. **Preflight**, before any file is written. The server must be MariaDB 10.5.2+ or MySQL 8.0.16+, and the
+1. **Preflight**, before any file is written. The server must be MariaDB 10.5.2+ or MySQL 8.0.16+, the
+   `users` and `admins` tables of the entered prefix must exist, and the
    tables that take part in transactions (`users`, `comment`, `forum`, `order`, `clients`, `favorites`,
    `user_oauth`, `points`, `products`, `rating_targets`, `rating_actors`, `rating_votes`, `categories`,
    `voting`) must be InnoDB. Otherwise the update stops and prints the `ALTER TABLE … ENGINE=InnoDB`
@@ -125,6 +133,8 @@ The update runs in this order and reports every step on its result page:
    is read as it is and rewritten in the 6.3 format.
 4. **Configuration.** `config/modules.php` is reconciled the way the modules screen does it: records of
    modules that are no longer in the tree are dropped, `node` gets the record of a clean installation.
+   A site that still has the 6.2 table `modules` keeps what it stored there: a module switched off, shown to a
+   group or placed in blocks stays so, whatever the shipped `config/modules.php` says.
    `config/uploads.php` loses the upload rules of the nine removed modules, `config/scheduler.php` gains
    the `nodepublish` and `nodesync` jobs, `config/newsletter.php` gets the keys it lacks, `config/rss.php`
    gets its three transport limits. Pending newsletter recipients are kept in `storage/backup/update/newsletter/`.

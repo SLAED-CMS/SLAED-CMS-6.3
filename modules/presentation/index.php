@@ -126,7 +126,7 @@ function getPresentationVoices(): array {
 # The content figures come from the first active type of a display mode through the shared reader: article for the news, docs for the documentation, files for the archive
 # A mode no active type shows leaves its card, its console row and its figure out, and a failed read counts as nothing
 function getPresentationData(): array {
-    global $conf, $db, $theme, $fld;
+    global $conf, $db, $theme;
     $cnt = getSessionCounts();
     $today = getStatsToday();
     # A stand carries days of statistics where a site carries years, so a window short of its days is padded in front with
@@ -163,12 +163,12 @@ function getPresentationData(): array {
     $failed = is_int($failed) ? $failed : 0;
     $langs = count(glob(BASE_DIR.'/lang/*.php') ?: []);
     [$tid, $ttitle, $ttime] = $db->getSqlRow(getForumTopics('id, title, ltime', '', 1));
-    $read = static function (string $mode) use ($db, $fld): array {
+    $read = static function (string $mode): array {
         $out = ['type' => getNodeModeType($mode), 'num' => 0, 'cats' => 0, 'last' => null];
         if ($out['type'] === null) return $out;
         $out['cats'] = count(getCategoryMap($out['type']->name));
         try {
-            $query = (new NodeQuery($db, getNodeContext(), $fld))->setNodeType($out['type'])->setNodePage(1, 1);
+            $query = getNodeReader()->setNodeType($out['type'])->setNodePage(1, 1);
             if (in_array('published', $out['type']->settings['list']['orders'], true)) $query->setNodeOrder('published', 'desc');
             $out['num'] = $query->getNodeCount();
             $out['last'] = $out['num'] ? ($query->getNodeList()[0] ?? null) : null;

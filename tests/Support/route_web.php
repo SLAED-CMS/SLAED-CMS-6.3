@@ -9,6 +9,7 @@
 # on a site whose database is the disposable one of the probe; the visitor comes from the header X-Probe-Who and is one of the accounts the probe seeded,
 # helper being both a site account and the administrator of the support type, the way an operator answers requests on the site
 # /uploads/<dir>/<file> behaves like a web server carrying the shared nginx rule of docs/node/09: 403 for a directory holding the .htaccess guard, the file otherwise
+# A stylesheet, script, font or picture under templates/ or plugins/ is left to the built-in server, so a browser on the probe sees the page as the site does
 # The directory is served by the stand as well, so anything but the built-in server gets a plain 404 before a single line of it runs
 if (PHP_SAPI !== 'cli-server') {
     http_response_code(404);
@@ -29,6 +30,7 @@ if (preg_match('#^/uploads/([a-z0-9]+)/([A-Za-z0-9_.-]+)$#D', $rpath, $rhit)) {
     else http_response_code(404);
     exit;
 }
+if (preg_match('#^/(templates|plugins)/[A-Za-z0-9_/-]+(\.[A-Za-z0-9_-]+)*\.(css|js|woff2?|png|webp|svg|jpg|gif|ico)$#D', $rpath)) return false;
 if (!in_array($rpath, ['/', '/index.php', '/admin.php'], true)) {
     http_response_code(404);
     exit;

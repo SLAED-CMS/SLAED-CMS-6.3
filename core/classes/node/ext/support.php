@@ -129,10 +129,9 @@ final class NodeSupport implements NodeExtension {
     # The notice names the site, the title and the side and links the request; the private text never enters the queue, and a refused queue row is logged by Mail
     # A failed read of the recipients is logged and costs the notice alone: the request or the reply it follows is stored all the same
     private function addSupportMail(NodeType $type, int $id, int $uid, string $title, string $event, int $aid): void {
-        global $conf, $mailer;
         if (empty($type->settings['ext']['mail'])) return;
         getLang('node');
-        $url = rtrim((string)$conf['homeurl'], '/').'/'.getSeoUrl(['name' => $type->name, 'op' => 'view', 'id' => $id]);
+        $url = getPublicUrl(['name' => $type->name, 'op' => 'view', 'id' => $id]);
         try {
             $name = (string)$this->getQueryRes('SELECT name FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $uid])->fetchColumn();
             $list = ($event === 'staff') ? [] : $this->getMailList($type, ($event === 'owner') ? $aid : 0);
@@ -147,10 +146,7 @@ final class NodeSupport implements NodeExtension {
         } else {
             $text = sprintf(($event === 'new') ? _NODE_MNEW : _NODE_MUSER, $name, $title, $url);
         }
-        $body = str_replace('[text]', htmlspecialchars($text, ENT_QUOTES, 'UTF-8'), (string)$conf['mtemp']);
-        foreach ($list as $one) {
-            $mailer->addQueue(['kind' => 'node', 'email' => $one, 'title' => $conf['sitename'].' - '.$title, 'body' => $body, 'sender' => $conf['adminmail'], 'prio' => 3]);
-        }
+        addNodeMail($list, $title, $text);
     }
 
     # Accept exactly the one switch of the extension and a standard section that makes the type private: registered authors, categories, open comments and direct publication,
@@ -163,7 +159,7 @@ final class NodeSupport implements NodeExtension {
         foreach ($need as $key => $val) if (($settings['features'][$key] ?? null) !== $val) throw $this->getInvalid('features.'.$key);
         foreach (['search', 'rss', 'sitemap', 'blocks'] as $key) if (($settings['integrations'][$key] ?? null) !== false) throw $this->getInvalid('integrations.'.$key);
         if (!in_array($settings['workflow']['access'] ?? null, ['user', 'group'], true)) throw $this->getInvalid('workflow.access');
-        if (array_filter($settings['assets'] ?? [], fn($v) => !empty($v['active']))) throw $this->getInvalid('assets');
+        if (array_filter($settings['assets'] ?? [], fn(array $v): bool => !empty($v['active']))) throw $this->getInvalid('assets');
         if (($settings['view']['mode'] ?? null) !== 'support') throw $this->getInvalid('view.mode');
         return ['mail' => $config['mail']];
     }

@@ -913,7 +913,7 @@ function filterVar(string|array $var): string|array {
 # Path and query keep their case, because on most servers they name another resource; the parser link policy is Parser::filterUrl(), not this
 function filterWebUrl(string $url): string {
     $url = preg_match('#https?://#i', $url) ? $url : 'http://'.$url;
-    $url = preg_replace_callback('#^https?://[^/?\#]*#i', fn($v) => strtolower($v[0]), $url) ?? '';
+    $url = preg_replace_callback('#^https?://[^/?\#]*#i', fn(array $v): string => strtolower($v[0]), $url) ?? '';
     return ($url === 'http://') ? '' : filterText($url);
 }
 

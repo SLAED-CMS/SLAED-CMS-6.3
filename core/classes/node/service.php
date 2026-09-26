@@ -308,7 +308,8 @@ final class NodeService {
     # The stored form of effective settings: the differences from the defaults, each role with only the keys that differ from the role defaults besides its three required ones
     private function getStoredSettings(array $set, array $defs): array {
         foreach ($set['assets'] as $role => $one) {
-            $set['assets'][$role] = array_filter($one, fn($v, $k) => in_array($k, ['title', 'mode', 'max'], true) || $v !== NodeQuery::ROLEDEF[$k], ARRAY_FILTER_USE_BOTH);
+            $set['assets'][$role] = array_filter($one, fn(mixed $v, string $k): bool => in_array($k, ['title', 'mode', 'max'], true) || $v !== NodeQuery::ROLEDEF[$k],
+                ARRAY_FILTER_USE_BOTH);
         }
         return $this->getMapDiff($set, $defs);
     }
@@ -523,7 +524,7 @@ final class NodeService {
             $key = 'node-'.$name;
             $rows = $this->getQueryRes('SELECT id, modules FROM '.PREFIX_DB.'_admins WHERE modules LIKE :key', ['key' => '%'.$key.'%'])->fetchAll(PDO::FETCH_ASSOC);
             foreach ($rows as $one) {
-                $mods = getAdminModuleNames((string)$one['modules']);
+                $mods = getAdminModuleNames($one['modules']);
                 if (!in_array($key, $mods, true)) continue;
                 $keep = implode(',', array_values(array_diff($mods, [$key])));
                 $this->getQueryRes('UPDATE '.PREFIX_DB.'_admins SET modules = :mods WHERE id = :id', ['mods' => $keep, 'id' => intval($one['id'])]);
@@ -564,10 +565,13 @@ final class NodeService {
     }
 
     # Register one reward of an action for a registered recipient; a refusal Point already logged never blocks the action, a lost transaction does
-    private function addNodePoint(string $action, NodeType $type, string $source, int $uid): void {
+    # The award moderate of a finished moderator action goes to the site account of the same request and carries the administrator; the moderator's own item earns nothing
+    private function addNodePoint(string $action, NodeType $type, string $source, int $uid, int $self = 0): void {
+        $moder = $action === 'moderate';
+        if ($moder) $uid = ($this->ctx->uid !== $self) ? $this->ctx->uid : 0;
         if ($uid < 1) return;
         try {
-            $this->getPoint()->addEvent($action, 'node.'.$type->name, $source, $uid);
+            $this->getPoint()->addEvent($action, 'node.'.$type->name, $source, $uid, $moder ? ['aid' => $this->ctx->aid] : []);
         } catch (RuntimeException $err) {
             throw new NodeException('The points of a node action are lost', NodeException::STORAGE, $err);
         }
@@ -586,6 +590,19 @@ final class NodeService {
         }
         require_once __DIR__.'/ext/load.php';
         if ($this->ext === null || get_class($this->ext) !== get_class(getNodeExtension($type->ext, $this->db, $this->ctx))) throw $this->getInvalid('extension');
+    }
+
+    # Refuse a new material of a context that does not moderate the type while the last material of the same address is younger than limits.send seconds
+    # The window spans every type and is read under the index (ip, created, id) with the clock of the database that stamped created; zero turns it off
+    # It is best effort by design, as the window of comments: two parallel submits of one address may both pass, and a preview never asks it
+    private function checkNodeWait(NodeType $type): void {
+        global $conf;
+        $wait = $conf['node']['limits']['send'] ?? null;
+        if (!is_int($wait) || $wait < 0) throw $this->getStorage('The limits of the Node configuration are broken');
+        if ($wait === 0 || $this->ctx->ip === '' || $this->checkModer($type)) return;
+        $sql = 'SELECT 1 FROM '.PREFIX_DB.'_nodes WHERE ip = :ip AND created > NOW() - INTERVAL :wait SECOND LIMIT 1';
+        if ($this->getQueryRes($sql, ['ip' => $this->ctx->ip, 'wait' => $wait])->fetchColumn() === false) return;
+        throw new NodeException('The write window of the address has not passed', NodeException::LIMITED);
     }
 
     # The two system limits of the loaded Node configuration a material write is bound by
@@ -616,7 +633,7 @@ final class NodeService {
     private function checkCatGrant(string $perm): bool {
         [$lvl, $ids] = array_pad(explode('|', $perm, 2), 2, '');
         if ($perm === '' || !ctype_digit($lvl)) return false;
-        $gids = array_values(array_filter(array_map('intval', explode(',', $ids)), fn($v) => $v > 0));
+        $gids = array_values(array_filter(array_map('intval', explode(',', $ids)), fn(int $v): bool => $v > 0));
         if ($gids) return (bool)array_intersect($gids, $this->ctx->groups);
         return intval($lvl) <= ($this->ctx->uid > 0 ? 1 : 0);
     }
@@ -706,7 +723,7 @@ final class NodeService {
             $seen[$key] = true;
             $out[] = ['rid' => $one['rid'], 'type' => $one['type'], 'sort' => $one['sort']];
         }
-        usort($out, fn($a, $b) => [$a['type'], $a['sort'], $a['rid']] <=> [$b['type'], $b['sort'], $b['rid']]);
+        usort($out, fn(array $a, array $b): int => [$a['type'], $a['sort'], $a['rid']] <=> [$b['type'], $b['sort'], $b['rid']]);
         return $out;
     }
 
@@ -784,7 +801,7 @@ final class NodeService {
         }
         if ($type->ext === '' && $in->ext !== []) throw $this->getInvalid('ext');
         $vals = $in->fields;
-        array_walk_recursive($vals, fn(&$v) => $v = is_string($v) ? filterTrustedTags($v, $this->ctx->super) : $v);
+        array_walk_recursive($vals, fn(mixed &$v): mixed => $v = is_string($v) ? filterTrustedTags($v, $this->ctx->super) : $v);
         $fields = $this->getFieldData($type, $vals, $status, $old);
         $json = $fields ? json_encode($fields, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR) : '{}';
         if (strlen($json) > self::JSONMAX) throw $this->getInvalid('fields');
@@ -826,7 +843,7 @@ final class NodeService {
         $list = fn(string $one, string $two): array => array_values(array_unique(array_merge($prs->getAttachList($one), $prs->getAttachList($two))));
         $names = $list($data['intro'], $data['body']);
         $fresh = array_values(array_diff($names, $old ? $list($old->intro, (string)$old->body) : []));
-        $local = array_filter($data['assets'], fn($v) => $v['new'] && !$v['link']);
+        $local = array_filter($data['assets'], fn(array $v): bool => $v['new'] && !$v['link']);
         if (!$names && !$local) return;
         $rule = $type->uploads;
         if (!$rule) throw $this->getInvalid('uploads');
@@ -944,7 +961,7 @@ final class NodeService {
             $map = array_column($this->getQueryRes($sql, $pars)->fetchAll(PDO::FETCH_ASSOC), null, 'id');
             foreach ($cats as $cid) {
                 if (($map[$cid]['modul'] ?? null) !== $type->name) throw $this->getInvalid('cid');
-                if (!$moder && !$this->checkCatGrant((string)$map[$cid]['ppost'])) throw $this->getDenied('The context may not post into the category');
+                if (!$moder && !$this->checkCatGrant($map[$cid]['ppost'])) throw $this->getDenied('The context may not post into the category');
             }
         }
         $rids = array_column($data['rels'], 'rid');
@@ -971,7 +988,7 @@ final class NodeService {
             $sql = 'SELECT COUNT(*) FROM '.PREFIX_DB.'_voting WHERE id = :id AND status = 1';
             if (!$this->getRowCount($sql, ['id' => $data['poll']])) throw $this->getInvalid('poll');
         }
-        $roles = array_keys(array_filter($type->settings['assets'], fn($v) => $v['mode'] === 'link'));
+        $roles = array_keys(array_filter($type->settings['assets'], fn(array $v): bool => $v['mode'] === 'link'));
         foreach ($data['assets'] as $i => $one) {
             if (!in_array($one['role'], $roles, true)) continue;
             $pars = ['tid' => $type->id, 'src' => $one['src'], 'bin' => $one['src'], 'self' => $self];
@@ -1017,7 +1034,8 @@ final class NodeService {
         }
         if ($have) {
             $del = [];
-            $this->getQueryRes('DELETE FROM '.PREFIX_DB.'_node_relations WHERE id IN ('.$this->getInList(array_map(fn($v) => $v->id, $have), 'd', $del).')', $del);
+            $in = $this->getInList(array_map(fn(NodeRelation $v): int => $v->id, $have), 'd', $del);
+            $this->getQueryRes('DELETE FROM '.PREFIX_DB.'_node_relations WHERE id IN ('.$in.')', $del);
         }
         if ($rows) $this->getQueryRes('INSERT INTO '.PREFIX_DB.'_node_relations (nid, rid, type, sort, created) VALUES '.implode(', ', $rows), $pars);
         $had = [];
@@ -1066,7 +1084,7 @@ final class NodeService {
 
     # Build one resource from its row, the unknown metadata as null
     private function getAssetModel(array $row): NodeAsset {
-        $num = fn($v) => ($v === null) ? null : intval($v);
+        $num = fn(mixed $v): ?int => ($v === null) ? null : intval($v);
         return new NodeAsset(intval($row['id']), intval($row['nid']), $row['kind'], $row['role'], $row['src'], $row['name'], $row['title'],
             $row['intro'], $row['mime'], $num($row['size']), $num($row['width']), $num($row['height']), $num($row['duration']),
             intval($row['hits']), $row['reported'], intval($row['ruid']), intval($row['sort']), $row['created'],
@@ -1100,10 +1118,10 @@ final class NodeService {
         $rels = [];
         $sql = 'SELECT id, nid, rid, type, sort, created FROM '.PREFIX_DB.'_node_relations WHERE nid = :id ORDER BY type, sort, rid';
         foreach ($this->getQueryRes($sql, ['id' => $id])->fetchAll(PDO::FETCH_ASSOC) as $one) {
-            $rels[] = new NodeRelation(intval($one['id']), intval($one['nid']), intval($one['rid']), (string)$one['type'], intval($one['sort']), (string)$one['created']);
+            $rels[] = new NodeRelation(intval($one['id']), intval($one['nid']), intval($one['rid']), $one['type'], intval($one['sort']), $one['created']);
         }
         $sql = 'SELECT '.self::ASSETS.' FROM '.PREFIX_DB.'_node_assets WHERE nid = :id ORDER BY role, sort, id';
-        $assets = array_map(fn($v) => $this->getAssetModel($v), $this->getQueryRes($sql, ['id' => $id])->fetchAll(PDO::FETCH_ASSOC));
+        $assets = array_map(fn(array $v): NodeAsset => $this->getAssetModel($v), $this->getQueryRes($sql, ['id' => $id])->fetchAll(PDO::FETCH_ASSOC));
         return $this->getNodeModel($row, $type, ['cids' => $cids, 'rels' => $rels, 'assets' => $assets]);
     }
 
@@ -1125,7 +1143,7 @@ final class NodeService {
         foreach ($type->fields as $name => $def) {
             if ($def['active'] && $def['req'] && in_array($node->fields[$name] ?? null, [null, '', []], true)) throw $this->getInvalid('fields.'.$name.'.required');
         }
-        $need = array_filter($type->settings['assets'], fn($v) => $v['active'] && $v['min'] > 0);
+        $need = array_filter($type->settings['assets'], fn(array $v): bool => $v['active'] && $v['min'] > 0);
         if (!$need) return;
         $sql = 'SELECT role, COUNT(*) AS num FROM '.PREFIX_DB.'_node_assets WHERE nid = :id GROUP BY role';
         $have = array_column($this->getQueryRes($sql, ['id' => $node->id])->fetchAll(PDO::FETCH_ASSOC), 'num', 'role');
@@ -1140,17 +1158,19 @@ final class NodeService {
         $this->checkNodeFiles($type, $data, null);
         $now = (string)$this->getQueryRes('SELECT NOW()')->fetchColumn();
         $this->checkNodeRefs($type, $data, $status, $now, null, 0, false);
-        $rels = array_map(fn($v) => new NodeRelation(0, 0, $v['rid'], $v['type'], $v['sort'], ''), $data['rels']);
-        $assets = array_map(fn($v) => new NodeAsset(0, 0, $v['kind'], $v['role'], $v['src'], $v['name'], $v['title'], $v['intro'], $v['meta'][0], $v['meta'][1], $v['meta'][2],
-            $v['meta'][3], $v['meta'][4], 0, null, 0, $v['sort'], '', ''), $data['assets']);
+        $rels = array_map(fn(array $v): NodeRelation => new NodeRelation(0, 0, $v['rid'], $v['type'], $v['sort'], ''), $data['rels']);
+        $assets = array_map(fn(array $v): NodeAsset => new NodeAsset(0, 0, $v['kind'], $v['role'], $v['src'], $v['name'], $v['title'], $v['intro'], $v['meta'][0], $v['meta'][1],
+            $v['meta'][2], $v['meta'][3], $v['meta'][4], 0, null, 0, $v['sort'], '', ''), $data['assets']);
         return new Node(0, $type->id, $data['cid'], $this->ctx->uid, $data['aname'], null, $data['title'], $data['intro'], $data['body'], $data['fields'], $data['poll'],
             $data['home'], $data['comon'], $data['pinned'], 0, 0, 0, 0, $status, 0, '', '', $data['pub'], $data['expires'], $data['cids'], $rels, $assets, null, null);
     }
 
     # Create a material of the type in draft, pending or published at version 1 with its categories, fields, relations and resources in one transaction
     # A visitor who does not moderate the type submits through its workflow; a publication whose date has come is rewarded at once and a future one gets its job
+    # Such a visitor submits again only when limits.send seconds have passed since the last material of the same address
     public function addNode(NodeType $type, NodeInput $input, NodeStatus $status): Node {
         $this->checkNewNode($type, $status);
+        $this->checkNodeWait($type);
         $this->getPoint();
         $data = $this->getInputData($type, $input, $status, null);
         $files = function () use ($type, &$data): void {
@@ -1211,6 +1231,7 @@ final class NodeService {
     # Move a material to another state of the closed matrix at the expected version; asking for the current state succeeds without a write and keeps the version
     # Pending and published need the required fields and the minimum resources, a publication whose date has come is rewarded and the job follows the new state
     # The answer is the stored row after the move without its three sets, which the move does not touch
+    # A move from pending to published approves the material and rewards its moderator with moderate once, unless the material is his own
     public function updateNodeStatus(int $id, NodeStatus $status, int $version): Node {
         [$head, $type] = $this->getNodeHead($id);
         $this->getPoint();
@@ -1237,6 +1258,7 @@ final class NodeService {
             $this->ext?->updateNodeData($before, $after, null);
             $job = $row['jpub'];
             $this->setPublishJob($type, $id, $before->uid, $status, $pub, $job, $before->status === NodeStatus::Published, $now);
+            if ($before->status === NodeStatus::Pending && $status === NodeStatus::Published) $this->addNodePoint('moderate', $type, 'approve:'.$id, 0, $before->uid);
             return $after;
         });
     }
@@ -1244,6 +1266,7 @@ final class NodeService {
     # Delete a material physically at the expected version with its categories, relations, resource rows and job; the files it pointed at stay
     # The extension removes its rows first, then the comment subsystem locks the comment rows and the accounts of author and commenters by ascending id before any event
     # Each comment award is compensated there and the publication award of the author after it; the favorites go in the same transaction, so a failed step keeps the material
+    # A compensation whose origin cannot be read or whose event is refused is such a failed step; only a closed or invalid points configuration deletes without it and logs
     public function deleteNode(int $id, int $version, Comment $com): void {
         [$head, $type] = $this->getNodeHead($id);
         $point = $this->getPoint();
@@ -1257,12 +1280,14 @@ final class NodeService {
             $uid = intval($row['uid']);
             if ($this->ext !== null) $this->ext->deleteNodeData($this->getStoredNode($id, $type, true) ?? throw $this->getMissing('The material does not exist'));
             if (!$com->deleteTarget($type->name, [$id], [$uid])) throw $this->getStorage('The comments of the material cannot be removed');
+            if ($uid > 0 && !$point->valid) Logger::addSite('warning', 'Node: a material delete compensates no award, the points configuration is closed', ['nid' => $id]);
             try {
-                $rid = ($uid > 0) ? $point->getEventId('publish', 'node.'.$type->name, 'node:'.$id, $uid) : 0;
-                if ($rid > 0) $point->addEvent('publish', 'node.'.$type->name, 'reverse:'.$rid, $uid, ['rid' => $rid]);
+                $rid = ($uid > 0 && $point->valid) ? $point->getEventId('publish', 'node.'.$type->name, 'node:'.$id, $uid) : 0;
+                $back = $rid === 0 || ($rid !== false && $point->addEvent('publish', 'node.'.$type->name, 'reverse:'.$rid, $uid, ['rid' => $rid]));
             } catch (RuntimeException $err) {
                 throw new NodeException('The points of a node action are lost', NodeException::STORAGE, $err);
             }
+            if (!$back) throw $this->getStorage('The award of the material cannot be compensated');
             $this->getQueryRes('DELETE FROM '.PREFIX_DB.'_favorites WHERE modul = :modul AND fid = :fid', ['modul' => $type->name, 'fid' => $id]);
             $this->getQueryRes('DELETE FROM '.PREFIX_DB.'_nodes WHERE id = :id AND version = :ver', ['id' => $id, 'ver' => $version]);
             return true;
@@ -1308,7 +1333,7 @@ final class NodeService {
     # Write trusted aggregates of a global owner into one material inside the open transaction of that owner: the type row, then the material row, then the columns
     private function setNodeCount(int $id, NodeType $type, array $vals): void {
         $this->setTargetLock($id, $type);
-        $set = implode(', ', array_map(fn($v) => $v.' = :'.$v, array_keys($vals)));
+        $set = implode(', ', array_map(fn(string $v): string => $v.' = :'.$v, array_keys($vals)));
         $this->getQueryRes('UPDATE '.PREFIX_DB.'_nodes SET '.$set.' WHERE id = :id', $vals + ['id' => $id]);
     }
 
@@ -1412,16 +1437,19 @@ final class NodeService {
 
     # Decide an open report of a resource of the type as a moderator of it: the row is locked and read again, a report already decided makes the call an empty success,
     # a useful report of a registered author rewards him with a source of its own, and the report is cleared in the same transaction
+    # Deciding an open report, useful or not, rewards the moderator with moderate unless the report is his own
     public function deleteNodeAssetReport(int $id, NodeType $type, bool $useful): void {
         if (!$this->checkModer($type)) throw $this->getDenied('The context does not moderate the type');
-        if ($useful) $this->getPoint();
+        $this->getPoint();
         $sql = 'SELECT n.tid FROM '.PREFIX_DB.'_node_assets AS a INNER JOIN '.PREFIX_DB.'_nodes AS n ON n.id = a.nid WHERE a.id = :id';
         if ($id < 1 || intval($this->getQueryRes($sql, ['id' => $id])->fetchColumn()) !== $type->id) throw $this->getMissing('The resource does not exist');
         if (!$this->db->setSqlBegin()) throw $this->getStorage('The transaction cannot be started');
         try {
             $row = $this->getQueryRes('SELECT reported, ruid FROM '.PREFIX_DB.'_node_assets WHERE id = :id FOR UPDATE', ['id' => $id])->fetch(PDO::FETCH_ASSOC);
             if ($row && $row['reported'] !== null) {
-                if ($useful) $this->addNodePoint('report', $type, 'report:'.$id.':'.bin2hex(random_bytes(8)), intval($row['ruid']));
+                $key = $id.':'.bin2hex(random_bytes(8));
+                if ($useful) $this->addNodePoint('report', $type, 'report:'.$key, intval($row['ruid']));
+                $this->addNodePoint('moderate', $type, 'report:'.$key, 0, intval($row['ruid']));
                 $this->getQueryRes('UPDATE '.PREFIX_DB.'_node_assets SET reported = NULL, ruid = 0 WHERE id = :id', ['id' => $id]);
             }
             if (!$this->db->setSqlCommit()) throw $this->getStorage('The commit of a report decision is uncertain');
@@ -1489,15 +1517,25 @@ final class NodeService {
         return $row;
     }
 
+    # Whether any of the names is a registered Node type by the registry alone, whatever the configuration of the type says; a failed read is a storage failure
+    # The category screen chooses the Node path by it, so a category of a type whose configuration is broken never falls back to the raw statements of an old module
+    public function checkTypeRegistry(array $names): bool {
+        $list = array_values(array_unique(array_filter($names, fn(mixed $v): bool => is_string($v) && $v !== '')));
+        if (!$list) return false;
+        $pars = [];
+        return $this->getRowCount('SELECT COUNT(*) FROM '.PREFIX_DB.'_node_types WHERE name IN ('.$this->getInList($list, 'r', $pars).')', $pars) > 0;
+    }
+
     # The Node types a category write touches by the modules the category had and gets, each one administered by the context: the main administrator,
     # the manager of Node or a moderator of that type; a write that touches no Node type does not belong here
+    # A registered name the reader does not answer, a broken or mismatched configuration, refuses the write instead of passing for an old module
     private function getCatTypes(array $names): array {
         if ($this->ctx->aid < 1) throw $this->getDenied('The context administers no category');
         $out = [];
         foreach (array_unique($names) as $name) {
-            $type = $this->query->getNodeType($name);
-            if ($type === null) continue;
-            if (!$this->ctx->manage && !$this->checkModer($type)) throw $this->getDenied('The context does not administer the type');
+            if (!$this->checkTypeRegistry([$name])) continue;
+            if (!$this->ctx->manage && !$this->ctx->super && !in_array($name, $this->ctx->mods, true)) throw $this->getDenied('The context does not administer the type');
+            $type = $this->query->getNodeType($name) ?? throw $this->getStorage('The node type cannot be read');
             $out[$type->id] = $type;
         }
         if (!$out) throw $this->getInvalid('category');
@@ -1525,7 +1563,7 @@ final class NodeService {
         if ($pid === 0) return;
         if ($pid < 0 || $pid === $id) throw $this->getInvalid('category.parent');
         $own = $this->getQueryRes('SELECT modul FROM '.PREFIX_DB.'_categories WHERE id = :id FOR UPDATE', ['id' => $pid])->fetchColumn();
-        if ($own === false || (string)$own !== $modul) throw $this->getInvalid('category.parent');
+        if ($own === false || $own !== $modul) throw $this->getInvalid('category.parent');
     }
 
     # Create one category of a Node type with the full checked row of the category form, under the lock of its type, at the end of the order of its module
@@ -1543,7 +1581,7 @@ final class NodeService {
     }
 
     # Change one category of a Node type with the full checked row of the category form, under the lock of every type it leaves or enters and of the category itself
-    # A category that still carries materials as main or extra category never leaves its type; its language and rights decide what pages show, so the page cache follows the guard
+    # A category that still carries materials as main or extra category, or subcategories, never leaves its module; its language and rights decide what pages show
     public function updateNodeCategory(int $id, array $row): void {
         $this->checkCatRow($row);
         $was = $this->getCatModul($id);
@@ -1552,13 +1590,14 @@ final class NodeService {
             $this->setCatTypeLock($types);
             $now = $this->getQueryRes('SELECT modul FROM '.PREFIX_DB.'_categories WHERE id = :id FOR UPDATE', ['id' => $id])->fetchColumn();
             if ($now === false) throw $this->getMissing('The category does not exist');
-            if ((string)$now !== $was) throw new NodeException('The category changed during the write', NodeException::CONFLICT);
+            if ($now !== $was) throw new NodeException('The category changed during the write', NodeException::CONFLICT);
             $this->checkCatParent($id, $row['parent'], $row['modul']);
             if ($row['modul'] !== $was) {
-                $sql = 'SELECT (EXISTS (SELECT 1 FROM '.PREFIX_DB.'_nodes WHERE cid = :na) OR EXISTS (SELECT 1 FROM '.PREFIX_DB.'_node_categories WHERE cid = :nb)) AS used';
-                if ($this->getRowCount($sql, ['na' => $id, 'nb' => $id])) throw $this->getInvalid('category.used');
+                $sql = 'SELECT (EXISTS (SELECT 1 FROM '.PREFIX_DB.'_nodes WHERE cid = :na) OR EXISTS (SELECT 1 FROM '.PREFIX_DB.'_node_categories WHERE cid = :nb)'
+                    .' OR EXISTS (SELECT 1 FROM '.PREFIX_DB.'_categories WHERE parent = :nc)) AS used';
+                if ($this->getRowCount($sql, ['na' => $id, 'nb' => $id, 'nc' => $id])) throw $this->getInvalid('category.used');
             }
-            $set = implode(', ', array_map(fn($v) => $v.' = :'.$v, self::CATKEYS));
+            $set = implode(', ', array_map(fn(string $v): string => $v.' = :'.$v, self::CATKEYS));
             $this->getQueryRes('UPDATE '.PREFIX_DB.'_categories SET '.$set.' WHERE id = :id', $row + ['id' => $id]);
             return true;
         });
@@ -1574,7 +1613,7 @@ final class NodeService {
             $sql = 'SELECT id, modul FROM '.PREFIX_DB.'_categories WHERE id = :id OR parent = :pid ORDER BY id FOR UPDATE';
             $map = array_column($this->getQueryRes($sql, ['id' => $id, 'pid' => $id])->fetchAll(PDO::FETCH_ASSOC), 'modul', 'id');
             if (!isset($map[$id])) throw $this->getMissing('The category does not exist');
-            if ((string)$map[$id] !== $was) throw new NodeException('The category changed during the write', NodeException::CONFLICT);
+            if ($map[$id] !== $was) throw new NodeException('The category changed during the write', NodeException::CONFLICT);
             $pars = [];
             $in = $this->getInList(array_keys($map), 'c', $pars);
             if ($this->getRowCount('SELECT COUNT(*) FROM '.PREFIX_DB.'_nodes WHERE cid IN ('.$in.')', $pars)) throw $this->getInvalid('category.used');

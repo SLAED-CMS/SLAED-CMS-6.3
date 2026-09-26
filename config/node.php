@@ -11,6 +11,7 @@ return [
             'maxassets' => 100,
             'maxlist' => 100,
             'syncbatch' => 500,
+            'send' => 60,
         ],
         'support' => [
             'state' => [

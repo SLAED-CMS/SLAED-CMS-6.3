@@ -222,7 +222,7 @@ function configsave(): void {
     $iswarn = !checkSiteToken();
     $text = $iswarn ? _TOKENMISS : _SUCCSAVE;
     if (!$iswarn) {
-        $mod = array_values(array_filter((array)getVar('post', 'mod[]', 'var', []), fn($v) => $v !== '0' && !isset($conf['node']['types'][$v])));
+        $mod = array_values(array_filter((array)getVar('post', 'mod[]', 'var', []), fn(string $v): bool => $v !== '0' && !isset($conf['node']['types'][$v])));
         $picks = getVar('post', 'ntype[]', 'var', []);
         $vers = getVar('post', 'ver[]', '', []);
         foreach (getNodeTypeMap() as $name => $type) {

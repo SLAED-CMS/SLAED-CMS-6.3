@@ -383,14 +383,14 @@ function edit(): void {
 function getCategoryRights(): array {
     $out = [];
     foreach (['pview' => '0|0', 'pread' => '0|0', 'ppost' => '0|0', 'preply' => '0|0', 'pedit' => '3|0', 'pdelete' => '3|0', 'pmod' => '3|0'] as $key => $def) {
-        $list = array_values(array_filter(getVar('post', $key.'[]', '', []), fn($v) => is_string($v) && preg_match('/^[0-9]+\|[0-9]+$/D', $v)));
+        $list = array_values(array_filter(getVar('post', $key.'[]', '', []), fn(mixed $v): bool => is_string($v) && preg_match('/^[0-9]+\|[0-9]+$/D', $v)));
         $out[$key] = $list ? scatacess($list) : $def;
     }
     return $out;
 }
 
 function addsave(): void {
-    global $db, $afile, $fld;
+    global $db, $afile;
     $warn = !checkAdminPost('categories');
     $modul = getVar('post', 'modul', 'var');
     $title = getVar('post', 'title', 'title');
@@ -403,10 +403,13 @@ function addsave(): void {
     $status = getVar('post', 'status', 'num');
     $row = ['modul' => $modul, 'title' => $title, 'intro' => $description, 'img' => $imgcat, 'lang' => $lang, 'parent' => $cid, 'status' => $status] + getCategoryRights();
     $text = $warn ? _TOKENMISS : _SUCCSAVE;
-    if (!$warn && isset(getNodeTypeMap()[$modul])) {
+    $node = true;
+    if (!$warn) {
         $label = htmlspecialchars($modul, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         try {
-            (new NodeService($db, getNodeContext(), $fld))->addNodeCategory($row);
+            $srv = getNodeWriter();
+            $node = $srv->checkTypeRegistry([$modul]);
+            if ($node) $srv->addNodeCategory($row);
         } catch (NodeException $err) {
             $warn = true;
             $text = match ($err->getCode()) {
@@ -415,7 +418,8 @@ function addsave(): void {
                 default => sprintf(_NODE_BAD, $label),
             };
         }
-    } elseif (!$warn) {
+    }
+    if (!$node) {
         [$ordern] = $db->getSqlRow($db->getSqlQuery('SELECT ordern FROM '.PREFIX_DB.'_categories WHERE modul = :modul ORDER BY ordern DESC', ['modul' => $modul]));
         $keys = array_keys($row);
         $sql = 'INSERT INTO '.PREFIX_DB.'_categories ('.implode(', ', $keys).', ordern) VALUES (:'.implode(', :', $keys).', :ordern)';
@@ -425,7 +429,7 @@ function addsave(): void {
 }
 
 function save(): void {
-    global $db, $afile, $fld;
+    global $db, $afile;
     $warn = !checkAdminPost('categories');
     $id = getVar('post', 'id', 'num');
     $modul = getVar('post', 'modul', 'var');
@@ -439,12 +443,16 @@ function save(): void {
     $status = getVar('post', 'status', 'num');
     $row = ['modul' => $modul, 'title' => $title, 'intro' => $description, 'img' => $imgcat, 'lang' => $lang, 'parent' => $parent, 'status' => $status] + getCategoryRights();
     $was = (string)$db->getSqlQuery('SELECT modul FROM '.PREFIX_DB.'_categories WHERE id = :id', ['id' => $id])->fetchColumn();
-    $types = getNodeTypeMap();
     $text = $warn ? _TOKENMISS : _SUCCSAVE;
-    if (!$warn && (isset($types[$was]) || isset($types[$modul]))) {
-        $label = htmlspecialchars(isset($types[$was]) ? $was : $modul, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    $node = true;
+    if (!$warn) {
+        $label = htmlspecialchars($modul, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         try {
-            (new NodeService($db, getNodeContext(), $fld))->updateNodeCategory($id, $row);
+            $srv = getNodeWriter();
+            $old = $srv->checkTypeRegistry([$was]);
+            if ($old) $label = htmlspecialchars($was, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $node = $old || $srv->checkTypeRegistry([$modul]);
+            if ($node) $srv->updateNodeCategory($id, $row);
         } catch (NodeException $err) {
             $warn = true;
             $text = match ($err->getCode()) {
@@ -453,15 +461,16 @@ function save(): void {
                 default => sprintf(_NODE_BAD, $label),
             };
         }
-    } elseif (!$warn) {
-        $set = implode(', ', array_map(fn($v) => $v.' = :'.$v, array_keys($row)));
+    }
+    if (!$node) {
+        $set = implode(', ', array_map(fn(string $v): string => $v.' = :'.$v, array_keys($row)));
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET '.$set.' WHERE id = :id', $row + ['id' => $id]);
     }
     setRedirect($afile.'.php?name=categories&modul='.$modul, false, 302, $text, $warn);
 }
 
 function change(): void {
-    global $db, $afile, $fld;
+    global $db, $afile;
     $id = getVar('post', 'id', 'num');
     $act = getVar('post', 'act', 'num', 0);
     $modul = getVar('post', 'modul', 'var', '');
@@ -469,11 +478,13 @@ function change(): void {
     $text = $warn ? _TOKENMISS : _SUCCSTATUS;
     $sql = 'SELECT modul, title, intro, img, lang, parent, status, pview, pread, ppost, preply, pedit, pdelete, pmod FROM '.PREFIX_DB.'_categories WHERE id = :id';
     $row = (!$warn && $id) ? $db->getSqlQuery($sql, ['id' => $id])->fetch(PDO::FETCH_ASSOC) : false;
-    $types = getNodeTypeMap();
-    if ($row && isset($types[$row['modul']])) {
+    $node = true;
+    if ($row) {
         $label = htmlspecialchars((string)$row['modul'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         try {
-            (new NodeService($db, getNodeContext(), $fld))->updateNodeCategory($id, ['status' => $act ? 0 : 1] + $row);
+            $srv = getNodeWriter();
+            $node = $srv->checkTypeRegistry([$row['modul']]);
+            if ($node) $srv->updateNodeCategory($id, ['status' => $act ? 0 : 1] + $row);
         } catch (NodeException $err) {
             $warn = true;
             $text = match ($err->getCode()) {
@@ -482,22 +493,26 @@ function change(): void {
                 default => sprintf(_NODE_BAD, $label),
             };
         }
-    } elseif ($row) {
+    }
+    if (!$node) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET status = :status WHERE id = :id', ['status' => $act ? 0 : 1, 'id' => $id]);
     }
     setRedirect($afile.'.php?name=categories'.($modul ? '&modul='.$modul : ''), false, 302, $text, $warn);
 }
 
 function delete(): void {
-    global $db, $afile, $fld;
+    global $db, $afile;
     $id = getVar('post', 'id', 'num');
     $modul = getVar('post', 'modul', 'var', 'forum');
     $warn = !checkAdminPost('categories');
     $text = $warn ? _TOKENMISS : _SUCCDELETE;
     $was = (!$warn && $id) ? (string)$db->getSqlQuery('SELECT modul FROM '.PREFIX_DB.'_categories WHERE id = :id', ['id' => $id])->fetchColumn() : '';
-    if (isset(getNodeTypeMap()[$was])) {
+    $node = true;
+    if (!$warn && $id) {
         try {
-            (new NodeService($db, getNodeContext(), $fld))->deleteNodeCategory($id);
+            $srv = getNodeWriter();
+            $node = $srv->checkTypeRegistry([$was]);
+            if ($node) $srv->deleteNodeCategory($id);
         } catch (NodeException $err) {
             $warn = true;
             $text = match ($err->getCode()) {
@@ -506,7 +521,8 @@ function delete(): void {
                 default => _INFOCATDEL,
             };
         }
-    } elseif (!$warn && $id) {
+    }
+    if (!$node) {
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_categories WHERE id = :id', ['id' => $id]);
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_categories WHERE parent = :id', ['id' => $id]);
     }

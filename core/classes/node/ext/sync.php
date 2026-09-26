@@ -200,6 +200,7 @@ final class NodeSync implements NodeExtension {
     # Store the result of one fetch in its own transaction when the source and the version of the material are still the ones the fetch started from
     # A new text passes the bound of nodes.body and changes only the body, the update time and the version of the material with the source row; an answer 304 or the same text
     # changes only the source row; a failure keeps the text and the validators, counts the failure and waits longer; a concurrent change of either side writes nothing
+    # The cache guard of a new text goes only after a proven rollback or a raised generation: a commit or a rollback whose outcome is unknown keeps it
     private function setSourceResult(array $snap, array $res): array {
         $nid = $snap['nid'];
         $new = $res['ok'] && $res['changed'] && $res['body'] !== $snap['body'];
@@ -221,7 +222,7 @@ final class NodeSync implements NodeExtension {
             $row = is_array($head) ? $this->getSourceRow($nid) : null;
             $live = is_array($head) && intval($head['version']) === $snap['version'] && intval($head['status']) !== NodeStatus::Deleted->value;
             if ($row !== null && $live && $row['url'] === $snap['url']) {
-                $now = (string)$head['now'];
+                $now = $head['now'];
                 $due = ($row['refresh'] > 0) ? 'DATE_ADD(:dnow, INTERVAL :wait SECOND)' : 'NULL';
                 $pars = ['now' => $now, 'nid' => $nid] + (($row['refresh'] > 0) ? ['dnow' => $now, 'wait' => $row['refresh']] : []);
                 if ($err !== '') {
@@ -248,7 +249,7 @@ final class NodeSync implements NodeExtension {
             if (!$this->db->setSqlCommit()) throw $this->getStorage('The commit of a sync result is uncertain');
             $step = 'done';
         } catch (Throwable $fail) {
-            if ($step === 'open') $this->db->setSqlRollback();
+            if ($step === 'open' && !$this->db->setSqlRollback()) $step = 'unknown';
             Logger::addSite('error', 'Node: the result of a feed source could not be stored', ['nid' => $nid, 'error' => get_class($fail)]);
             $out = ['id' => $nid, 'status' => 'failed', 'error' => 'storage'];
         }

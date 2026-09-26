@@ -235,7 +235,7 @@ function save(): void {
         fields(['' => []] + $sent, sprintf(_FIELDS_BAD, htmlspecialchars($fail, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')));
         return;
     }
-    $own = array_filter($cont, fn($v) => !str_starts_with($v, 'node.'), ARRAY_FILTER_USE_KEY);
+    $own = array_filter($cont, fn(string $v): bool => !str_starts_with($v, 'node.'), ARRAY_FILTER_USE_KEY);
     $warn = !setConfigFile(static function (array $base, Closure $save) use ($own): string {
         $base['fields'] = array_replace($base['fields'], $own);
         ksort($base['fields']);

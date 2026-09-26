@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Stage S19.3 of docs/node: the integrity fixes that only a real request reaches. The behaviour is driven by tests/Support/route_probe.php with the
+ * Stages S19.3 and S20.3 of docs/node: the integrity fixes that only a real request reaches. The behaviour is driven by tests/Support/route_probe.php with the
  * argument intact: the disposable database and scratch configuration of the S16 integrations with the points of the data update switched on, real HTTP
  * requests of the main administrator, a user and a guest, and the rows each request leaves checked by SQL. The class side of the stage - comments of a
  * deleted material, remains of gone owners, the journal after a commit - is held by NodeServiceTest and NodeConfigTest.
@@ -76,5 +76,13 @@ final class NodeIntegrityTest extends TestCase
         $this->assertSame([303, true, [0, 0, 2, 2]], $run['annul']['rating'], 'The vote of a type without rating was not annulled');
         $this->assertSame([303, true, [0, 0, 1, 1]], $run['annul']['type'], 'The vote of a disabled type was not annulled');
         $this->assertSame([303, true, [0, 0, 2, 2]], $run['annul']['again'], 'A repeated annulment moved the aggregate');
+    }
+
+    # S20.3: the category screen decides by the registry of types, so a category of a type whose configuration no longer reads is refused rather than
+    # deleted by the raw statements of an old module; once the type reads again the same request deletes it through the writer
+    #[Test]
+    public function aCategoryOfABrokenTypeIsNotDeletedRaw(): void
+    {
+        $this->assertSame([true, 303, 1, [303, 0]], $this->getRun()['broken'], 'The category of a broken type went the raw way or a healthy one stayed');
     }
 }

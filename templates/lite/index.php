@@ -36,11 +36,11 @@ function setTemplateForum(): string {
 # The marquee of the header: the latest published material of the first active type this theme shows in its faq mode, read through the shared Node reader
 # The mode is a name of this theme, so the core knows no type here; a type with an extension or a failed read leaves the marquee empty
 function getTemplateFaq(): string {
-    global $db, $fld, $tpl;
+    global $tpl;
     $type = getNodeModeType('faq');
     if ($type === null) return '';
     try {
-        $query = (new NodeQuery($db, getNodeContext(), $fld))->setNodeType($type)->setNodePage(1, 1);
+        $query = getNodeReader()->setNodeType($type)->setNodePage(1, 1);
         if (in_array('published', $type->settings['list']['orders'], true)) $query->setNodeOrder('published', 'desc');
         $node = $query->getNodeList()[0] ?? null;
     } catch (NodeException) {

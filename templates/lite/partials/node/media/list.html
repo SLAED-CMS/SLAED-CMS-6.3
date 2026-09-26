@@ -1,0 +1,10 @@
+{{{ navi_html }}}
+{% if intro %}<p>{{ intro }}</p>{% endif %}
+{% if cats_html %}{{{ cats_html }}}{% endif %}
+{% if letters_html %}<div>{{{ letters_html }}}</div>{% endif %}
+{% if items_html %}
+<div class="sl-node-tiles">{{{ items_html }}}</div>
+{{{ pager_html }}}
+{% else %}
+{% include 'fragments/alert.html' with empty_alert %}
+{% endif %}

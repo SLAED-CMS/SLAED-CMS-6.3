@@ -251,7 +251,7 @@ final class Point {
     # An event locks its own recipient first; an owner reaching several recipients calls this beforehand, so two operations over the same accounts never lock them crosswise
     # A set of one account costs no statement, because the event of that account takes the same lock as its first step
     public function setUserLocks(array $uids): bool {
-        $ids = array_values(array_unique(array_filter(array_map('intval', $uids), static fn($v) => $v > 0 && $v <= self::MAXID)));
+        $ids = array_values(array_unique(array_filter(array_map('intval', $uids), static fn(int $v): bool => $v > 0 && $v <= self::MAXID)));
         if (count($ids) < 2) return true;
         if (!$this->db->checkSqlActive()) return false;
         sort($ids);

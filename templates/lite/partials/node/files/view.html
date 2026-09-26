@@ -1,0 +1,29 @@
+<article{% if id %} id="node-{{ id }}"{% endif %} class="sl-post sl-fullview">
+  <h1 class="sl-title">{% if fav_html %}{{{ fav_html }}} {% endif %}{{ title }}</h1>
+  <div class="sl-meta">
+    <ul class="sl-pull-right">
+      {% if is_views %}<li><span title="{{ views_label }}" class="sl-chip sl-views"><i class="bi bi-eye" aria-hidden="true"></i> {{ views }}</span></li>{% endif %}
+      {% if edit_href %}<li class="sl-meta-actions"><a href="{{ edit_href }}" title="{{ edit_label }}" class="sl-but-mini"><i class="bi bi-pencil" aria-hidden="true"></i></a></li>{% endif %}
+    </ul>
+    <ul>
+      {% if is_date and date %}<li><time datetime="{{ date_iso }}" title="{{ date_label }}" class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> {{ date }}</time></li>{% endif %}
+      {% if is_category and chref %}<li><a href="{{ chref }}" title="{{ ctitle }}" class="sl-chip sl-cat"><i class="bi bi-folder" aria-hidden="true"></i> {{ ctitle }}</a></li>{% endif %}
+      {% if is_author and author %}<li>{% if ahref %}<a href="{{ ahref }}" title="{{ author }}" class="sl-author"><i class="bi bi-person" aria-hidden="true"></i> {{ author }}</a>{% else %}<span title="{{ author_label }}">{{ author }}</span>{% endif %}</li>{% endif %}
+    </ul>
+  </div>
+  {{{ assets_html }}}
+  <div class="sl-entry-content">
+    {{{ poll_html }}}
+    {{{ intro_html }}}
+    {% if body_html %}{{{ body_html }}}{% endif %}
+    {% if fields_html %}<div class="sl-section">{{{ fields_html }}}</div>{% endif %}
+  </div>
+  {% if rating_html %}<div class="sl-meta-foot">
+    <div class="sl-rate-box sl-pull-right">{{{ rating_html }}}</div>
+  </div>{% endif %}
+  {{{ tree_html }}}
+  {% if rels_html %}<section>
+  <h2 class="sl-related-title">{{ rels_label }}</h2>
+  <div class="sl-section">{{{ rels_html }}}</div>
+  </section>{% endif %}
+</article>

@@ -11,9 +11,9 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 # A text is always rendered safe with its trusted tags honoured: only what [usehtml] and [usephp] enclose is trusted; writes strip those tags from all but the main administrator
 final class NodeView {
 
-    # The modes a full material may be prepared for, and the modes a light target may be prepared for
+    # The modes a full material may be prepared for, and the one mode of a light target: the card of a related material
     private const FULL = ['list', 'view', 'card'];
-    private const LIGHT = ['card', 'block', 'search'];
+    private const LIGHT = ['card'];
 
     # The modes of a role whose external source is shown where it lives; a download or a link keeps the counting route even for an external address
     private const OUTSIDE = ['image', 'gallery', 'player', 'none'];
@@ -70,7 +70,7 @@ final class NodeView {
     # The resources of a material grouped by role in the order of the roles of the type; an inactive or unknown role stays out, the source, the report and its author never leave
     private function getAssetView(NodeType $type, array $list): array {
         $roles = $type->settings['assets'];
-        $out = array_fill_keys(array_keys(array_filter($roles, fn($v) => $v['active'])), []);
+        $out = array_fill_keys(array_keys(array_filter($roles, fn(array $v): bool => $v['active'])), []);
         foreach ($list as $one) {
             $def = $roles[$one->role] ?? null;
             if ($def === null || !$def['active']) continue;

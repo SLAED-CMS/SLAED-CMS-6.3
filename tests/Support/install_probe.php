@@ -243,6 +243,7 @@ function getInstallSetup(PDO $pdo, string $base): array {
         $dbc['pass'] !== '' && str_contains($page['body'].$done['body'], $dbc['pass']), $hash() === $was, is_file($isite.'/admin.php')];
     touch($isite.'/config/setup.unlock');
     $out['unlock'] = str_contains(getInstallReply([], 'GET', 'setup.php?op=config', [], [$cook])['body'], 'name="xhost"');
+    $out['refuse'] = getInstallRefuse($pdo, $form);
     unlink($isite.'/config/setup.unlock');
     $out['before'] = (int)$pdo->query('SELECT COUNT(*) FROM '.IPREF.'_node_types')->fetchColumn();
     if ($ifail) {
@@ -275,6 +276,57 @@ function getInstallSetup(PDO $pdo, string $base): array {
     $again = getInstallReply([], 'POST', 'admin.php', ['op' => 'add_admin', 'aname' => 'Other', 'aemail' => 'x@probe.test', 'apwd' => IPASS, 'apwd2' => IPASS], [$cook]);
     $out['again'] = [$again['code'], (int)$pdo->query('SELECT COUNT(*) FROM '.IPREF.'_admins')->fetchColumn(),
         (int)$pdo->query('SELECT COUNT(*) FROM '.IPREF.'_node_types')->fetchColumn()];
+    return $out;
+}
+
+# The unlocked installer refuses before it writes: the form shows no password, an empty password keeps the stored one, a clean installation over the tables
+# of its prefix, a prefix and a panel name outside their grammar, an update whose prefix has no tables and a wrong password leave config/ and the key as they were;
+# a clean installation whose data file fails under a free prefix writes no mark; the log lines the refusals provoke are counted and taken out of the logs again
+function getInstallRefuse(PDO $pdo, array $form): array {
+    global $isite, $iguard;
+    $logs = [];
+    $read = fn(string $one): string => is_file($isite.'/storage/logs/'.$one.'.log') ? (string)file_get_contents($isite.'/storage/logs/'.$one.'.log') : '';
+    foreach (['error_php', 'error_sql', 'error_site'] as $one) $logs[$one] = $read($one);
+    $send = fn(array $post): string => getInstallReply([], 'POST', 'setup.php', $post + $form, ['Host: 127.0.0.1:'.$iguard])['body'];
+    $dbfile = $isite.'/config/db.php';
+    $dbtext = (string)file_get_contents($dbfile);
+    $data = getInstallConf('db');
+    $data['db']['pass'] = 'keep-probe';
+    file_put_contents($dbfile, "<?php\nreturn ".var_export($data, true).";\n");
+    $page = getInstallReply([], 'GET', 'setup.php?op=config')['body'];
+    $out = ['form' => [str_contains($page, 'name="xpass" value=""'), str_contains($page, 'keep-probe')]];
+    $was = getInstallFiles();
+    $out['keep'] = [str_contains($send(['xpass' => '']), 'Problem establishing a connection to the database'), getInstallFiles() === $was];
+    file_put_contents($dbfile, $dbtext);
+    $was = getInstallFiles();
+    $body = $send(['xpass' => 'wrong-probe']);
+    $out['wrong'] = [str_contains($body, 'Problem establishing a connection to the database'), str_contains($body, 'Fatal error')];
+    $out['fresh'] = str_contains($send([]), 'The database already holds tables of the prefix '.IPREF.'_');
+    $out['prefix'] = str_contains($send(['xprefix' => 'site-1']), 'The table prefix may hold only');
+    $out['afile'] = str_contains($send(['xafile' => '../moved']), 'The administration panel filename may hold only');
+    $out['none'] = str_contains($send(['setup' => 'update6_3', 'xprefix' => 'none']), 'The tables none_users and none_admins are not both in the database');
+    $out['same'] = [getInstallFiles() === $was, is_file($isite.'/config/setup.unlock')];
+    $saved = [];
+    foreach (glob($isite.'/config/*.php') ?: [] as $file) $saved[$file] = (string)file_get_contents($file);
+    $sql = $isite.'/setup/sql/insert.sql';
+    $text = (string)file_get_contents($sql);
+    file_put_contents($sql, $text."\nINSERT INTO `{prefix}_missing` (`id`) VALUES (1);\n");
+    unlink($isite.'/config/update.php');
+    $body = $send(['xprefix' => 'bad']);
+    $bad = $pdo->query("SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name LIKE 'bad\\_%'")->fetchAll(PDO::FETCH_COLUMN);
+    $out['ddl'] = [str_contains($body, 'no mark was written'), is_file($isite.'/config/update.php'), is_file($isite.'/config/setup.unlock'), count($bad) > 0];
+    file_put_contents($sql, $text);
+    foreach (glob($isite.'/config/*.php') ?: [] as $file) if (!isset($saved[$file])) unlink($file);
+    foreach ($saved as $file => $src) file_put_contents($file, $src);
+    $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
+    foreach ($bad as $name) $pdo->exec('DROP TABLE `'.$name.'`');
+    $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
+    foreach ($logs as $one => $prior) {
+        $file = $isite.'/storage/logs/'.$one.'.log';
+        $now = $read($one);
+        $out['logs'][$one] = count(array_filter(explode("\n", substr($now, strlen($prior))), 'strlen'));
+        file_put_contents($file, $prior);
+    }
     return $out;
 }
 
@@ -759,6 +811,7 @@ try {
         $iwho = getInstallWho($ipdo);
         $ireport['runs']['exports'] = getInstallExports($iwho);
         $ireport['runs']['types'] = getInstallTypes($ipdo, $iwho);
+        $ipdo->exec('UPDATE '.IPREF.'_nodes SET created = created - INTERVAL 1 DAY');
         $ireport['runs']['support'] = getInstallSupport($ipdo, $iwho);
         $ireport['runs']['sync'] = getInstallSync($ipdo, $iwho, (int)($ireport['runs']['types']['content']['id'] ?? 0));
         $ireport['runs']['builder'] = getInstallBuilder($ipdo, $iwho);

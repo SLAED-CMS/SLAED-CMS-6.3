@@ -88,6 +88,7 @@ define('_NODE_SAVED','Зміни збережено.');
 define('_NODE_SDEL','У кошику');
 define('_NODE_SDRAFT','Чернетка');
 define('_NODE_SECLIST','Список');
+define('_NODE_SEND','Секунд між публічними надсиланнями з однієї IP, 0 — без обмеження');
 define('_NODE_SEO','Вид сторінки для пошукових систем');
 define('_NODE_SHOW','Показувати у списку');
 define('_NODE_SOFF','Вимкнено');

@@ -667,87 +667,86 @@ function addSchedulerRun(?string $name = null, string $type = 'manual'): array {
 
 # Format block
 function getBlocks(string $side, string $fly = ''): void {
-    global $db, $conf, $locale, $name, $home, $pos, $b_id, $bfile, $prs;
+    global $db, $conf, $locale, $name, $home, $pos, $bfile, $prs;
     static $barr;
     if ($conf['multilingual'] == 1) {
-        $querylang = "AND (lang = :loc OR lang = '')";
-        $qlang_params = ['loc' => $locale];
+        $qlang = "AND (lang = :loc OR lang = '')";
+        $qargs = ['loc' => $locale];
     } else {
-        $querylang = '';
-        $qlang_params = [];
+        $qlang = '';
+        $qargs = [];
     }
     $pos = strtolower($side[0]);
     $side = $pos;
     if (!isset($barr)) {
         $barr = [];
         Parser::$freeoff = true;
-        $sql = 'SELECT id, bkey, title, content, url, bfile, view, expire, action, bpos, which, param FROM '.PREFIX_DB."_blocks WHERE status = '1' ".$querylang;
-        $result = $db->getSqlQuery($sql.' ORDER BY weight ASC', $qlang_params);
-        while(list($bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $which, $param) = $db->getSqlRow($result)) {
+        $sql = 'SELECT id, bkey, title, content, url, bfile, view, expire, action, bpos, which, param FROM '.PREFIX_DB."_blocks WHERE status = '1' ".$qlang;
+        $result = $db->getSqlQuery($sql.' ORDER BY weight ASC', $qargs);
+        while ([$bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $which, $param] = $db->getSqlRow($result)) {
             $bid = intval($bid);
             $content = ($url == '') ? $prs->filterContent($content, false, 'all', 2) : '';
             $view = intval($view);
-            $where_mas = explode(',', $which);
-            $barr[] = [$bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $where_mas, (string)$param];
+            $where = explode(',', $which);
+            $barr[] = [$bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $where, (string)$param];
         }
         Parser::$freeoff = false;
     }
     if ($fly != '') {
-        $b_id = 0;
+        $fid = 0;
         $flag = 0;
         $bfile = '';
         if (false === strpos($fly, '-')) {
-            $b_id = intval($fly);
+            $fid = intval($fly);
         } else {
             $bfile = trim($fly);
         }
         $ci = count($barr);
         for ($i = 0; $i < $ci; $i++) {
-            if (($b_id != 0 && $barr[$i][0] == $b_id) || ($bfile != '' && $barr[$i][5] == $bfile)) {
-                list($bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $where_mas, $param) = $barr[$i];
-                $b_id = $bid;
+            if (($fid != 0 && $barr[$i][0] == $fid) || ($bfile != '' && $barr[$i][5] == $bfile)) {
+                [$bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $where, $param] = $barr[$i];
                 $flag = 1;
                 break;
             }
         }
         if ($flag == 1) {
-            if (in_array('flyfix', $where_mas)) {
-                switch ($where_mas[0]) {
+            if (in_array('flyfix', $where)) {
+                switch ($where[0]) {
                     case 'all':
-                    $flag_where = 1;
+                    $show = 1;
                     break;
                     case '':
-                    $flag_where = 1;
+                    $show = 1;
                     break;
                     case 'infly':
-                    $flag_where = 0;
+                    $show = 0;
                     break;
                     case 'home':
-                    $flag_where = ($home == 1) ? 1 : 0;
+                    $show = ($home == 1) ? 1 : 0;
                     break;
                     case 'ihome':
-                    if ($home == 1) $flag_where = 1;
+                    if ($home == 1) $show = 1;
                     default:
                     if (empty($home)) {
-                        foreach ($where_mas as $val) {
-                            if ($val == $name) $flag_where = 1;
+                        foreach ($where as $val) {
+                            if ($val == $name) $show = 1;
                         }
                     }
                     break;
                 }
-                if (in_array('otricanie', $where_mas)) $flag_where = ($flag_where) ? 0 : 1;
+                if (in_array('otricanie', $where)) $show = ($show) ? 0 : 1;
             } else {
-                $flag_where = 1;
+                $show = 1;
             }
-            if ($flag_where == 1) {
+            if ($show == 1) {
                 if ($view == 0) {
-                    render_blocks($side, $bfile, $title, $content, $bid, $url, $param); return;
+                    setBlockView($side, $bfile, $title, $content, $bid, $url, $param); return;
                 } elseif ($view == 1 && is_user() || is_moder()) {
-                    render_blocks($side, $bfile, $title, $content, $bid, $url, $param); return;
+                    setBlockView($side, $bfile, $title, $content, $bid, $url, $param); return;
                 } elseif ($view == 2 && is_moder()) {
-                    render_blocks($side, $bfile, $title, $content, $bid, $url, $param); return;
+                    setBlockView($side, $bfile, $title, $content, $bid, $url, $param); return;
                 } elseif ($view == 3 && !is_user() || is_moder()) {
-                    render_blocks($side, $bfile, $title, $content, $bid, $url, $param); return;
+                    setBlockView($side, $bfile, $title, $content, $bid, $url, $param); return;
                 }
             }
         }
@@ -755,35 +754,34 @@ function getBlocks(string $side, string $fly = ''): void {
         $ci = count($barr);
         for ($i = 0; $i < $ci; $i++) {
             if ($barr[$i][9] != $side) continue;
-            $flag_where = 0;
-            $where_mas = $barr[$i][10];
-            switch ($where_mas[0]) {
+            $show = 0;
+            $where = $barr[$i][10];
+            switch ($where[0]) {
                 case 'all':
-                $flag_where = 1;
+                $show = 1;
                 break;
                 case '':
-                $flag_where = 1;
+                $show = 1;
                 break;
                 case 'infly':
-                $flag_where = 0;
+                $show = 0;
                 break;
                 case 'home':
-                $flag_where = ($home == 1) ? 1 : 0;
+                $show = ($home == 1) ? 1 : 0;
                 break;
                 case 'ihome':
-                if ($home == 1) $flag_where = 1;
+                if ($home == 1) $show = 1;
                 default:
                 if (empty($home)) {
-                    foreach ($where_mas as $val) {
-                        if ($val == $name) $flag_where = 1;
+                    foreach ($where as $val) {
+                        if ($val == $name) $show = 1;
                     }
                 }
                 break;
             }
-            if (in_array('otricanie', $where_mas)) $flag_where = ($flag_where) ? 0 : 1;
-            if ($flag_where == 1) {
-                list($bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $where_mas, $param) = $barr[$i];
-                $b_id = $bid;
+            if (in_array('otricanie', $where)) $show = ($show) ? 0 : 1;
+            if ($show == 1) {
+                [$bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $where, $param] = $barr[$i];
                 if ($expire && $expire < time()) {
                     if ($action == 'd') {
                         $db->getSqlQuery('UPDATE '.PREFIX_DB."_blocks SET status = '0', expire = '0' WHERE id = :bid", ['bid' => $bid]);
@@ -802,13 +800,13 @@ function getBlocks(string $side, string $fly = ''): void {
                     break;
                     default:
                     if ($view == 0) {
-                        render_blocks($side, $bfile, $title, $content, $bid, $url, $param);
+                        setBlockView($side, $bfile, $title, $content, $bid, $url, $param);
                     } elseif ($view == 1 && is_user() || is_moder()) {
-                        render_blocks($side, $bfile, $title, $content, $bid, $url, $param);
+                        setBlockView($side, $bfile, $title, $content, $bid, $url, $param);
                     } elseif ($view == 2 && is_moder()) {
-                        render_blocks($side, $bfile, $title, $content, $bid, $url, $param);
+                        setBlockView($side, $bfile, $title, $content, $bid, $url, $param);
                     } elseif ($view == 3 && !is_user() || is_moder()) {
-                        render_blocks($side, $bfile, $title, $content, $bid, $url, $param);
+                        setBlockView($side, $bfile, $title, $content, $bid, $url, $param);
                     }
                     break;
                 }
@@ -3009,7 +3007,7 @@ function doCss(): string {
 }
 
 # Create a sitemap: the XML goes straight into its files as it is produced, a new file follows every 50000 URLs, and more than one file is joined by an index
-# The modules of sitemap.mod are read as before; a Node type takes part through its own sitemap integration, its materials in cursor batches of 500 read as a guest,
+# The modules of sitemap.mod are read as before; a Node type takes part through its own sitemap integration, its materials in cursor batches of limits.syncbatch read as a guest,
 # so neither a closed category nor the whole set of materials is ever held; the HTML map shows a Node type with its categories and leaves its materials to the XML
 function addSitemapTask(bool $force = false): array {
     global $db, $conf, $tpl, $fld;
@@ -3028,17 +3026,17 @@ function addSitemapTask(bool $force = false): array {
     for ($i = 0; $i < count($mod); $i++) {
         if ($mod[$i] == 'account' && is_active($mod[$i], '0')) {
             $result = $db->getSqlQuery('SELECT id, name, lastvis FROM '.PREFIX_DB.'_users');
-            while (list($id, $title, $time) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, '', $title, $time, $mod[$i]];
+            while ([$id, $title, $time] = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, '', $title, $time, $mod[$i]];
         } elseif ($mod[$i] == 'forum' && is_active($mod[$i], '0')) {
             $result = $db->getSqlQuery('SELECT id, cid, title, time FROM '.PREFIX_DB."_forum WHERE pid = '0' AND time <= NOW() AND status > '1'");
-            while (list($id, $cat, $title, $time) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
+            while ([$id, $cat, $title, $time] = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
         } elseif ($mod[$i] == 'shop' && is_active($mod[$i], '0')) {
             $result = $db->getSqlQuery('SELECT id, cid, time, title FROM '.PREFIX_DB."_products WHERE time <= NOW() AND status != '0'");
-            while (list($id, $cat, $time, $title) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
+            while ([$id, $cat, $time, $title] = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
         } elseif ($mod[$i] == 'voting' && is_active($mod[$i], '0')) {
             $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_voting WHERE modul = '' AND time <= NOW()"
                 ." AND (enddate >= NOW() AND status = '0' OR status = '1')");
-            while (list($id, $title, $time) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, '', $title, $time, $mod[$i]];
+            while ([$id, $title, $time] = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, '', $title, $time, $mod[$i]];
         } elseif (is_active($mod[$i], '0')) {
             $info[$mod[$i]][] = ['', '', '', '', $mod[$i]];
         }
@@ -3050,11 +3048,11 @@ function addSitemapTask(bool $force = false): array {
         $result = $db->getSqlQuery('SELECT id, title, pread FROM '.PREFIX_DB.'_categories WHERE modul = :mod ORDER BY ordern', ['mod' => $name]);
         while ([$cid, $ctitle, $pread] = $db->getSqlRow($result)) {
             [$lvl, $gids] = array_pad(explode('|', (string)$pread, 2), 2, '');
-            $open = ctype_digit($lvl) && intval($lvl) === 0 && !array_filter(array_map('intval', explode(',', $gids)), static fn($v) => $v > 0);
+            $open = ctype_digit($lvl) && intval($lvl) === 0 && !array_filter(array_map('intval', explode(',', $gids)), static fn(int $v): bool => $v > 0);
             if ($open) $ncats[$name][intval($cid)] = (string)$ctitle;
         }
     }
-    $home = (string)$conf['homeurl'];
+    $home = $conf['homeurl'];
     $fix = static fn(string $xml): string => $conf['rewrite']
         ? (string)preg_replace('#<loc>(.*?)</loc>#is', '<loc>'.$home.'/\\1</loc>', str_replace($home.'/', '', $xml)) : $xml;
     $head = '<?xml version="1.0" encoding="UTF-8"?>'."\n"
@@ -3089,7 +3087,7 @@ function addSitemapTask(bool $force = false): array {
         if ($sm['gen_m']) foreach (array_merge(array_keys($info), array_keys($types)) as $key) $put($line(getPublicUrl(['name' => $key]), $date, 'm'));
         foreach (array_keys($info) as $key) {
             $result = $db->getSqlQuery('SELECT id, modul, title, parent FROM '.PREFIX_DB.'_categories WHERE modul = :mod', ['mod' => $key]);
-            while (list($cid, $cmodul, $title, $parent) = $db->getSqlRow($result)) {
+            while ([$cid, $cmodul, $title, $parent] = $db->getSqlRow($result)) {
                 $cd[$cid] = [$cid, $parent, $title, $cmodul];
                 if ($sm['gen_c']) $put($line(getPublicUrl(['name' => $cmodul, 'cat' => $cid]), $date, 'c'));
             }
@@ -3104,13 +3102,14 @@ function addSitemapTask(bool $force = false): array {
         if ($sm['gen_p'] && $types) {
             $query = new NodeQuery($db, new NodeContext(0, [], 0, [], false, false, '', ''), $fld);
             $after = 0;
+            $size = max(1, min(500, intval($conf['node']['limits']['syncbatch'] ?? 500)));
             do {
-                $rows = $query->getNodeSitemap($after, 500);
+                $rows = $query->getNodeSitemap($after, $size);
                 foreach ($rows as $row) {
                     $put($line(getPublicUrl(['name' => $row['name'], 'op' => 'view', 'id' => $row['id']]), substr($row['updated'], 0, 10), 'p'));
                     $after = $row['id'];
                 }
-            } while (count($rows) === 500);
+            } while (count($rows) === $size);
         }
         if ($fh !== null) {
             fwrite($fh, '</urlset>');
@@ -4021,9 +4020,9 @@ function updateNewsletter(): array {
     ];
 }
 
-# Resolve a PHP constant by name; return the name itself if undefined
+# Resolve a label: a defined name with a leading underscore is a language constant and answers its text, any other text is returned as it is
 function getConst(string $con): string {
-    return defined($con) ? constant($con) : $con;
+    return ($con !== '' && $con[0] === '_' && defined($con)) ? constant($con) : $con;
 }
 
 # Resolve a module key to its localised name constant; a registered Node type answers its own title, a language constant or plain text, read from the shared type map
@@ -5825,10 +5824,10 @@ function checkemail(string $mail): array {
 
 # Render one block: an RSS block from its feed, a file block by including its file with the parameters of its instance in $param, any other from its stored content
 # A file block that sets its content to null shows nothing at all, which is how an instance with invalid parameters stays off instead of showing something else
-function render_blocks(string $side, string $bfile, string $blocktitle, string $content, mixed $bid, string $url, string $param = ''): string {
+function setBlockView(string $side, string $bfile, string $btitle, string $content, int $bid, string $url, string $param = ''): string {
     global $showbanners, $foot, $tpl;
     if ($url == '') {
-        $blocktitle = getConst($blocktitle);
+        $btitle = getConst($btitle);
         $bicon = '';
         $bhref = '';
         if ($bfile != '') {
@@ -5836,11 +5835,11 @@ function render_blocks(string $side, string $bfile, string $blocktitle, string $
             if (file_exists($path)) {
                 include($path);
             } else {
-                $content = $tpl->getHtmlFrag('block-content', ['is_center' => true, 'content' => (string)_BLOCKPROBLEM]);
+                $content = $tpl->getHtmlFrag('block-content', ['is_center' => true, 'content' => _BLOCKPROBLEM]);
             }
             if ($content === null) return '';
         }
-        if (!isset($content) || empty($content)) $content = $tpl->getHtmlFrag('block-content', ['is_center' => true, 'content' => (string)_BLOCKPROBLEM2]);
+        if (!isset($content) || empty($content)) $content = $tpl->getHtmlFrag('block-content', ['is_center' => true, 'content' => _BLOCKPROBLEM2]);
         switch($side) {
             case 'b':
             $showbanners = $content;
@@ -5855,11 +5854,11 @@ function render_blocks(string $side, string $bfile, string $blocktitle, string $
             return $content;
             break;
             case 'o':
-            return $tpl->getHtmlFrag('block-all', ['title' => $blocktitle, 'content' => $content, 'icon_name' => $bicon, 'href' => $bhref]);
+            return $tpl->getHtmlFrag('block-all', ['title' => $btitle, 'content' => $content, 'icon_name' => $bicon, 'href' => $bhref]);
             break;
             default:
             echo $tpl->getHtmlFrag('block-all', [
-                'title' => $blocktitle,
+                'title' => $btitle,
                 'content' => $content,
                 'icon_name' => $bicon,
                 'href' => $bhref,
@@ -5913,13 +5912,13 @@ function getNodeContext(): NodeContext {
 # A public visitor gets the active types, the Node manager and the moderators also the disabled ones they are entitled to; a type whose stored configuration is broken stays out
 # Only a name the loaded registry carries costs a query: a site without registered types, including one whose update has not created the Node tables yet, reads nothing
 function getNodeTypeMap(): array {
-    global $db, $conf, $fld;
+    global $conf;
     static $map = null;
     if ($map !== null) return $map;
     $map = [];
     if (empty($conf['node']['types'])) return $map;
     try {
-        foreach ((new NodeQuery($db, getNodeContext(), $fld))->getNodeTypeList() as $type) $map[$type->name] = $type;
+        foreach (getNodeReader()->getNodeTypeList() as $type) $map[$type->name] = $type;
     } catch (NodeException $err) {
         Logger::addSite('error', 'Node: the registered types cannot be read', ['code' => $err->getCode()]);
     }
@@ -5934,16 +5933,40 @@ function getNodeHandler(NodeType $type): ?NodeExtension {
     return getNodeExtension($type->ext, $db, getNodeContext());
 }
 
+# A reader of the request context, bound to the extension of the type when one type is read
+function getNodeReader(?NodeType $type = null): NodeQuery {
+    global $db, $fld;
+    $query = new NodeQuery($db, getNodeContext(), $fld);
+    return ($type !== null) ? $query->setNodeExtension(getNodeHandler($type)) : $query;
+}
+
+# The writer of the request context with the shared points, bound to the extension of the type a material write serves
+function getNodeWriter(?NodeType $type = null): NodeService {
+    global $db, $fld, $pnt;
+    return new NodeService($db, getNodeContext(), $fld, $pnt, ($type !== null) ? getNodeHandler($type) : null);
+}
+
+# Queue one Node notice to every address of the list: the text enters the mail template escaped, the subject names the site and the title, the sender is the site mail
+# The answer is false as soon as one row was refused, while the other addresses are still queued; Mail logs every refused row itself
+function addNodeMail(array $list, string $title, string $text): bool {
+    global $conf, $mailer;
+    $body = str_replace('[text]', htmlspecialchars($text, ENT_QUOTES, 'UTF-8'), $conf['mtemp']);
+    $row = ['kind' => 'node', 'title' => $conf['sitename'].' - '.$title, 'body' => $body, 'sender' => $conf['adminmail'], 'prio' => 3];
+    $done = true;
+    foreach ($list as $one) $done = $mailer->addQueue(['email' => $one] + $row) && $done;
+    return $done;
+}
+
 # The titles of the Node targets the context may read, as id => title for a map of global id => type name, read in batches of the sync limit through the light targets
 # A name the registry does not carry, a missing or closed material and a failed read leave their ids out, so a list shows only what its viewer may open
 function getNodeTitleMap(array $refs): array {
-    global $db, $conf, $fld;
+    global $conf;
     $out = [];
-    $refs = array_filter($refs, fn($v) => is_string($v) && isset($conf['node']['types'][$v]));
+    $refs = array_filter($refs, fn(mixed $v): bool => is_string($v) && isset($conf['node']['types'][$v]));
     if (!$refs) return $out;
     $size = max(1, min(500, intval($conf['node']['limits']['syncbatch'] ?? 500)));
     try {
-        $query = new NodeQuery($db, getNodeContext(), $fld);
+        $query = getNodeReader();
         foreach (array_chunk($refs, $size, true) as $part) foreach ($query->getNodeTargetList($part) as $id => $tgt) $out[$id] = $tgt->title;
     } catch (NodeException $err) {
         Logger::addSite('error', 'Node: the titles of targets cannot be read', ['code' => $err->getCode()]);
@@ -6015,7 +6038,7 @@ function addNodeSyncTask(): array {
 # the rating feature of the type and the extension, which may refuse the vote and follows a stored one inside the same transaction; Point takes no part
 # The context and the types of Node are read here, before any transaction, because a plain read inside a vote would open its snapshot before the locks
 function getRatingService(): Rating {
-    global $db, $conf, $user, $admin, $fld;
+    global $db, $conf, $user, $admin;
     static $rate = null;
     if ($rate !== null) return $rate;
     $maps = [
@@ -6026,12 +6049,11 @@ function getRatingService(): Rating {
     $actor = ['uid' => is_user() ? intval(substr($user[0], 0, 11)) : 0, 'ip' => getIp(), 'aid' => isAdmin() ? intval(substr($admin[0], 0, 11)) : 0, 'super' => isAdmin(true)];
     $moder = is_moder('forum') === 1;
     if (!empty($conf['node']['types'])) getNodeTypeMap();
-    $node = static function (string $scope, int $id, bool $lock) use ($db, $fld, $actor): ?array {
+    $node = static function (string $scope, int $id, bool $lock) use ($actor): ?array {
         $type = getNodeTypeMap()[substr($scope, 5)] ?? null;
         if ($type === null || (!$type->active && !$actor['super'])) return null;
-        $ctx = getNodeContext();
-        $get = fn(bool $any): ?NodeTarget => $lock ? (new NodeService($db, $ctx, $fld))->getLockedTarget($id, $type, $any)
-            : (new NodeQuery($db, $ctx, $fld))->getNodeTarget($type->name, $id, $any);
+        $get = fn(bool $any): ?NodeTarget => $lock ? getNodeWriter()->getLockedTarget($id, $type, $any)
+            : getNodeReader()->getNodeTarget($type->name, $id, $any);
         $tgt = $type->active ? $get(false) : null;
         $open = $tgt !== null;
         if (!$open && $actor['super']) $tgt = $get(true);
@@ -6058,11 +6080,11 @@ function getRatingService(): Rating {
         }
         return ['owner' => intval($row['owner']), 'score' => intval($row['score']), 'ratings' => intval($row['ratings']), 'enabled' => true];
     };
-    $write = static function (string $scope, int $id, int $score, int $num) use ($db, $fld, $maps, $node, $actor): bool {
+    $write = static function (string $scope, int $id, int $score, int $num) use ($db, $maps, $node, $actor): bool {
         if (str_starts_with($scope, 'node.')) {
             $seen = $node($scope, $id, false);
             if ($seen === null) return false;
-            (new NodeService($db, getNodeContext(), $fld))->updateNodeRating($id, $seen['type'], $score, $num);
+            getNodeWriter()->updateNodeRating($id, $seen['type'], $score, $num);
             if ($num > $seen['row']['ratings']) $seen['ext']?->updateNodeAction($seen['type'], $seen['target'], 'rate', $actor['uid']);
             return true;
         }

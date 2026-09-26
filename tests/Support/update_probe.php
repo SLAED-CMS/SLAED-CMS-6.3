@@ -94,7 +94,7 @@ function addProbeSchema(): void {
     $root = getProbeSide(true);
     $root->exec('CREATE DATABASE `'.$GLOBALS['pname'].'` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
     $root->exec('USE `'.$GLOBALS['pname'].'`');
-    foreach (['users', 'points', 'forum', 'order', 'products', 'rating', 'rating_targets', 'rating_actors', 'rating_votes'] as $name) $root->exec(getProbeTable($name));
+    foreach (['users', 'admins', 'points', 'forum', 'order', 'products', 'rating', 'rating_targets', 'rating_actors', 'rating_votes'] as $name) $root->exec(getProbeTable($name));
     foreach (PROBEBAL as $id => $sum) {
         $root->exec('INSERT INTO `'.PROBEPREF.'_users` (`id`, `name`, `email`, `password`, `block`, `warnings`, `field`, `points`)'
             .' VALUES ('.$id.', \'user'.$id.'\', \'user'.$id.'@probe.test\', \'x\', \'\', \'\', \'\', '.$sum.')');
@@ -702,11 +702,68 @@ function getMailClean(): array {
     return $out;
 }
 
+# Put the scratch site back to a 6.2 site copied under the release for the module registry: one panel module, three public ones with node among them,
+# the shipped config/modules.php with a record of a module that left the tree, and, when $table is set, the _modules table of 6.2 with an administrator whose rights are numbers
+function setModSite(bool $table): void {
+    deleteProbeTree(BASE_DIR);
+    mkdir(CONFIG_DIR, 0777, true);
+    mkdir(BASE_DIR.'/admin/modules', 0777, true);
+    touch(BASE_DIR.'/admin/modules/config.php');
+    foreach (['forum', 'shop', 'node', 'extra'] as $name) {
+        mkdir(BASE_DIR.'/modules/'.$name, 0777, true);
+        touch(BASE_DIR.'/modules/'.$name.'/index.php');
+    }
+    file_put_contents(CONFIG_DIR.'/modules.php', getConfShip('modules'));
+    $mods = (require CONFIG_DIR.'/modules.php')['modules'];
+    $mods['news'] = $mods['forum'];
+    unset($mods['extra']);
+    setConfigFile('modules.php', $mods);
+    getProbeSide()->exec('DROP TABLE IF EXISTS `'.PROBEPREF.'_modules`');
+    getProbeSide()->exec('DELETE FROM `'.PROBEPREF.'_admins`');
+    if (!$table) return;
+    getProbeSide()->exec('CREATE TABLE `'.PROBEPREF.'_modules` (`mid` INT NOT NULL PRIMARY KEY, `title` VARCHAR(255) NOT NULL, `active` TINYINT NOT NULL, `view` TINYINT NOT NULL,'
+        .' `inmenu` TINYINT NOT NULL, `mod_group` INT NOT NULL, `blocks` TINYINT NOT NULL, `blocks_c` TINYINT NOT NULL) ENGINE=InnoDB');
+    getProbeSide()->exec('INSERT INTO `'.PROBEPREF."_modules` VALUES (1, 'forum', 0, 1, 0, 3, 1, 1), (2, 'shop', 1, 2, 1, 0, 2, 0), (3, 'news', 1, 0, 1, 0, 0, 0)");
+    getProbeSide()->exec('INSERT INTO `'.PROBEPREF."_admins` (`id`, `name`, `email`, `modules`) VALUES (1, 'probe', 'probe@probe.test', '1,3,shop,9')");
+}
+
+# What the registry step leaves behind: its answer, the records of config/modules.php read fresh, and the rights of the administrator
+function getModState(string $html): array {
+    clearstatcache();
+    $mods = (include CONFIG_DIR.'/modules.php')['modules'] ?? [];
+    $keys = ['active', 'view', 'menu', 'group', 'side', 'top'];
+    $out = ['text' => $html, 'names' => array_keys($mods), 'ship' => (include PROBEROOT.'/config/modules.php')['modules']];
+    foreach ($mods as $name => $row) $out['mods'][$name] = array_map('intval', array_intersect_key($row, array_flip($keys))) + ['lang' => $row['lang'], 'icon' => $row['icon']];
+    $out['rights'] = (string)getProbeSide()->query('SELECT modules FROM `'.PROBEPREF.'_admins` WHERE id = 1')->fetchColumn();
+    return $out;
+}
+
+# The module registry of a 6.2 site with its _modules table, a repeat, and a site without the table; then the preflight of a clean installation,
+# which needs a server as new as the update does and no table of its prefix, and the preflight of the update, which needs the users and admins tables of its prefix
+function getSetupClean(): array {
+    $pdb = $GLOBALS['pdb'];
+    setModSite(true);
+    $out = ['site' => getModState(setUpdateModules($pdb, PROBEPREF))];
+    $out['again'] = getModState(setUpdateModules($pdb, PROBEPREF));
+    setModSite(false);
+    $out['plain'] = getModState(setUpdateModules($pdb, PROBEPREF));
+    $out['fresh'] = ['taken' => checkUpdateBase($pdb, PROBEPREF, true), 'free' => checkUpdateBase($pdb, 'free', true), 'near' => checkUpdateBase($pdb, 'prob', true),
+        'wild' => checkUpdateBase($pdb, 'prob_', true)];
+    $pdb->fake = '10.5.1-MariaDB';
+    $out['fresh']['old'] = checkUpdateBase($pdb, 'free', true);
+    $pdb->fake = '';
+    $out['update'] = ['real' => checkUpdateBase($pdb, PROBEPREF), 'none' => checkUpdateBase($pdb, 'free')];
+    getProbeSide()->exec('RENAME TABLE `'.PROBEPREF.'_admins` TO `'.PROBEPREF.'_admins_off`');
+    $out['update']['half'] = checkUpdateBase($pdb, PROBEPREF);
+    getProbeSide()->exec('RENAME TABLE `'.PROBEPREF.'_admins_off` TO `'.PROBEPREF.'_admins`');
+    return $out;
+}
+
 $report = ['error' => '', 'clean' => false, 'runs' => []];
 
 try {
     $units = ['setConfigFile', 'getSetupConfig', 'getSetupBase', 'getInfo', 'checkUpdateBase', 'setUpdateBackup', 'setUpdatePoints', 'setUpdateRatings', 'getUpdateRules',
-        'getUpdateValue', 'setUpdateFields', 'setUpdateConfig', 'setUpdateMails'];
+        'getUpdateValue', 'setUpdateFields', 'setUpdateConfig', 'setUpdateMails', 'setUpdateModules'];
     foreach ($units as $name) addProbeCode($name);
     addProbeSchema();
     $report['runs'] = match ($argv[2] ?? 'points') {
@@ -714,6 +771,7 @@ try {
         'fields' => ['clean' => getFieldClean(), 'resume' => getFieldResume(), 'stop' => getFieldStop()],
         'config' => ['clean' => getConfClean()],
         'mails' => ['clean' => getMailClean()],
+        'setup' => ['clean' => getSetupClean()],
         default => ['clean' => getProbeClean(), 'resume' => getProbeResume(), 'stop' => getProbeStop(), 'flight' => getProbeFlight()],
     };
 } catch (Throwable $err) {

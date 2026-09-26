@@ -1,6 +1,6 @@
 # Именование Node
 
-Статус: проектирование завершено; реализация и её проверки выполняются по 13-testing.md и 14-roadmap.md.
+Статус: действующий контракт реализованного Node; этапы S00–S20.8 и их проверки записаны в [PROGRESS.md](PROGRESS.md).
 
 ## Цель
 
@@ -56,7 +56,6 @@
 | Полный материал | `partials/node/view.html` |
 | Карточка материала | `fragments/node/card.html` |
 | Блок материала | `fragments/node/block.html` |
-| Материал в поиске | `fragments/node/search.html` |
 | Одиночное изображение | `fragments/node/image.html` |
 | Галерея | `fragments/node/gallery.html` |
 | Скачиваемый ресурс | `fragments/node/download.html` |
@@ -334,6 +333,11 @@
 | запись, транзакции и конфликты | `tests/Unit/NodeServiceTest.php` |
 | публичные и административные маршруты | `tests/Unit/NodeRouteTest.php` |
 | настройки, поля и загрузка без Composer | `tests/Unit/NodeConfigTest.php` |
+| расширения support и sync | `tests/Unit/NodeSupportTest.php`, `tests/Unit/NodeSyncTest.php` |
+| общие интеграции, защита ввода и вывода, целостность через HTTP | `tests/Unit/NodeIntegTest.php`, `tests/Unit/NodeGuardTest.php`, `tests/Unit/NodeIntegrityTest.php` |
+| установка десяти профилей и обновление сайта 6.2 | `tests/Unit/NodeProfileTest.php`, `tests/Support/install_probe.php` |
+| ветка `update6_3` установщика | `tests/Unit/UpdateConfigTest.php`, `tests/Unit/UpdateMailsTest.php`, `tests/Unit/UpdateSetupTest.php`, `tests/Support/update_probe.php` |
+| HTTP-проба за `php -S` | `tests/Support/route_probe.php`, `tests/Support/route_web.php` |
 | RSS/Atom и безопасность внешних источников | `tests/Unit/FeedTest.php` |
 | общая запись конфигурации, журнал и восстановление | `tests/Unit/ConfigFileTest.php` |
 | изолированный процесс и scratch-копия конфигурации | `tests/Support/config_probe.php` |
@@ -385,12 +389,12 @@
 | Константы admin/lang | `_NODE_STALE`, `_NODE_BAD`, `_NODE_PROOF`, `_NODE_MANAGE` — отказ по версии, отказ типа, вердикт Node-proof на экране restore, подпись права `node` (S10); модульные константы S13 эти имена не повторяют |
 | Конфигурация core/system.php | getConfigCode, setConfigSource, getConfigJournal, setConfigRestore; getConfig получает fresh; контракт — 06-types.md → «Заметки реализации S03» |
 | NodeQuery | setNodeTypes, setNodeSearch, setNodeHome, getNodeTree, getNodeSitemap, getNodeDeadline, getNodeTypeExport, filterNodeSettings — единый валидатор настроек типа для чтения и записи (решение пользователя 2026-09-23, S09) |
-| NodeService | updateNodeViews, updateNodeComments, updateNodeRating, addNodeTypeImport; getLockedTarget — блокировка типа и материала в транзакции владельца и чтение цели после неё (решение пользователя 2026-09-24, S16); deleteNodePoll (S16); getNodePreview — полная проверка и нормализация создания без записи для preview; updateNodeCategory, deleteNodeCategory — изменение и удаление категории типа Node под общим порядком блокировок (решения пользователя 2026-09-23, S11) |
+| NodeService | updateNodeViews, updateNodeComments, updateNodeRating, addNodeTypeImport; getLockedTarget — блокировка типа и материала в транзакции владельца и чтение цели после неё (решение пользователя 2026-09-24, S16); deleteNodePoll (S16); getNodePreview — полная проверка и нормализация создания без записи для preview; updateNodeCategory, deleteNodeCategory — изменение и удаление категории типа Node под общим порядком блокировок (решения пользователя 2026-09-23, S11); checkTypeRegistry — есть ли имя в реестре `_node_types` независимо от конфигурации типа, выбор пути экрана категорий (решение пользователя 2026-09-25, S20.3) |
 | Template | checkTemplateFile — наличие файла представления для fallback режима Node |
 | Фрагмент темы | fragments/repeat.html — повторяемые строки формы, канон обеих тем (решение пользователя 2026-09-23, S13) |
 | Шаблоны режима support (lite) | partials/node/support/view.html и fragments/node/support/card.html — полный вид обращения с состоянием, приоритетом и переключателем владельца и карточка списка с состоянием; остальные файлы режима берутся из базового комплекта (S14) |
 | Константы modules/node/lang и admin/lang | `_NODE_WSTAFF`, `_NODE_WUSER`, `_NODE_WCLOSE`, `_NODE_PLOW`, `_NODE_PNORM`, `_NODE_PHIGH`, `_NODE_PURGE`, `_NODE_STATE`, `_NODE_PRIO`, `_NODE_CLOSE`, `_NODE_REOPEN`, `_NODE_SSAVED`, `_NODE_MNEW`, `_NODE_MUSER`, `_NODE_MSTAFF`; админские `_NODE_ASSIGN`, `_NODE_CARD`, `_NODE_LAST`, `_NODE_NOBODY`, `_NODE_QUEUE` (S14) |
-| Файловый блок и колонка | blocks/node.php — единственный блок Node; `_blocks.param` VARCHAR(255) — канонический JSON `type`, `mode`, `limit` экземпляра (NOD-229, S16); render_blocks() получает последний параметр `$param` |
+| Файловый блок и колонка | blocks/node.php — единственный блок Node; `_blocks.param` VARCHAR(255) — канонический JSON `type`, `mode`, `limit` экземпляра (NOD-229, S16); setBlockView() получает последний параметр `$param` |
 | FileManager | getPathLock и deletePathLock становятся повторно входимыми, новых имён нет |
 | Cache | getWriteGuard, deleteWriteGuard, checkWriteGuard — отсутствие незавершённых маркеров после попытки восстановления и читаемость поколения; addEpoch получает force и результат bool |
 

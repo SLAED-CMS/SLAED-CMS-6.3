@@ -548,12 +548,11 @@ function getMonitorPartial(array $snapshot, bool $showstat, bool $showtraf, bool
 # Collects monitor counts and database size statistics needed for dashboard summary
 # The website and files tiles count the published materials of the first active type of the display modes article and files through the shared reader, or stay out
 function getMonitorDbStats(object $db, array $conf): array {
-    global $fld;
     $userson = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_session'));
-    $count = static function (string $mode) use ($db, $fld): ?int {
+    $count = static function (string $mode): ?int {
         $type = getNodeModeType($mode);
         try {
-            return ($type !== null) ? (new NodeQuery($db, getNodeContext(), $fld))->setNodeType($type)->getNodeCount() : null;
+            return ($type !== null) ? getNodeReader()->setNodeType($type)->getNodeCount() : null;
         } catch (NodeException) {
             return null;
         }

@@ -176,18 +176,18 @@ function getSearchShop(array $state): array {
 # search.slimit, and only the rows up to the end of the requested page are read, in pages as large as the smallest list page of the selected types allows
 # The literal word goes to the reader, which escapes it for LIKE; skip is the number of rows of the fixed modules that stand before the rows of Node
 function getSearchNode(array $state, array $types, int $skip): array {
-    global $db, $conf, $fld, $afile;
+    global $conf, $afile;
     $rows = [];
     $size = intval($conf['node']['limits']['maxlist'] ?? 0);
     foreach ($types as $type) $size = min($size, $type->settings['list']['limit']);
     if (!$types || $size < 1) return [$rows, 0];
     try {
-        $query = (new NodeQuery($db, getNodeContext(), $fld))->setNodeSearch(mb_substr($state['word'], 0, 255, 'UTF-8'));
+        $query = getNodeReader()->setNodeSearch(mb_substr($state['word'], 0, 255, 'UTF-8'));
         if (count($types) === 1) $query->setNodeType($types[0])->setNodeExtension(getNodeHandler($types[0]));
         else $query->setNodeTypes($types);
         $total = min($query->getNodeCount(), $state['lim']);
         $need = min($total, max(1, (int)$state['num']) * max(1, (int)$state['snum']) - $skip);
-        $tmap = array_column(array_map(fn($v) => ['id' => $v->id, 'type' => $v], $types), 'type', 'id');
+        $tmap = array_column(array_map(fn(NodeType $v): array => ['id' => $v->id, 'type' => $v], $types), 'type', 'id');
         for ($num = 1; count($rows) < $need; $num++) {
             $list = $query->setNodePage($num, $size)->getNodeList();
             foreach ($list as $node) {
@@ -254,7 +254,7 @@ function getSearchLine(array $row, array $state, int $numb): string {
     $sep = $conf[$row['mod']]['defis'] ?? '';
     $link = $tpl->getHtmlFrag('link', [
         'href' => $row['url'],
-        'title' => $row['title'],
+        'title' => html_entity_decode($row['title'], ENT_QUOTES | ENT_HTML5, 'UTF-8'),
         'label_html' => filterTextHighlight($row['title'], $word),
         'suffix_html' => getTplNewGraphic($row['time']),
     ]);

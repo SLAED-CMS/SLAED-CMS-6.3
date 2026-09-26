@@ -481,9 +481,10 @@ return [
         '.sl-block-content > li > a, .sl-cell-ellipsis > a:last-child',
         # the buttons under a notice beside the chips of a message filter: two wrapping rows in two components
         '.sl-alert-actions, .sl-pmf-chips',
-        # the foot of a reply box beside a group of radios and the door of a file row: a toolbar, a form control and a row of a form that
-        # all wrap their children on one line, and joining them would file three components under a selector list naming none of them
-        '.sl-file-door, .sl-pmf-reply-foot, .sl-radio-group',
+        # the foot of a reply box beside a group of radios, the door of a file row and the foot of a Node file card: two toolbars, a form
+        # control and a row of a form that all wrap their children on one line, and joining them would file four components under a
+        # selector list naming none of them
+        '.sl-file-door, .sl-node-file .sl-meta-foot, .sl-pmf-reply-foot, .sl-radio-group',
         # two pictures that fill the box they are given: a preview and the thumbnail of a related entry.
         # Merging would file two components under one selector list that names neither of them
         '.sl-image-preview-thumb, .sl-related-img-inner',

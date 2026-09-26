@@ -1,0 +1,16 @@
+<nav class="sl-node-tree" aria-label="{{ toc_label }}">
+  <h2 class="sl-related-title">{{ toc_label }}</h2>
+  {% if trail %}<p class="sl-category-nav">{% for item in trail %}<a href="{{ item.href }}" title="{{ item.title }}" class="sl-crumb">{{ item.title }}</a><span class="sl-crumb-sep" aria-hidden="true">/</span>{% endfor %}<span class="sl-crumb sl-crumb-cur">{{ title }}</span></p>{% endif %}
+  {% if is_before %}<p class="sl-node-tree-more" aria-hidden="true">&hellip;</p>{% endif %}
+  <ol class="sl-list"{% if first %} style="counter-reset: li {{ first }}"{% endif %}>
+    {% for item in items %}<li>{% if item.is_current %}<span aria-current="page" class="sl-node-tree-cur">{{ item.title }}</span>{% else %}<a href="{{ item.href }}" title="{{ item.title }}">{{ item.title }}</a>{% endif %}
+      {% if item.kids %}<ol class="sl-sublist">{% for kid in item.kids %}<li><a href="{{ kid.href }}" title="{{ kid.title }}">{{ kid.title }}</a></li>{% endfor %}</ol>{% endif %}
+      {% if item.is_more %}<p class="sl-node-tree-more" aria-hidden="true">&hellip;</p>{% endif %}
+    </li>{% endfor %}
+  </ol>
+  {% if is_after %}<p class="sl-node-tree-more" aria-hidden="true">&hellip;</p>{% endif %}
+  {% if prev_href or next_href %}<p class="sl-node-tree-pager">
+    {% if prev_href %}<a href="{{ prev_href }}" title="{{ prev_label }}" rel="prev" class="sl-but"><i class="bi bi-chevron-left" aria-hidden="true"></i> {{ prev_title }}</a>{% endif %}
+    {% if next_href %}<a href="{{ next_href }}" title="{{ next_label }}" rel="next" class="sl-but">{{ next_title }} <i class="bi bi-chevron-right" aria-hidden="true"></i></a>{% endif %}
+  </p>{% endif %}
+</nav>

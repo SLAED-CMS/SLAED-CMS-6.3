@@ -182,7 +182,7 @@ final class Feed {
         foreach ($list as $addr) {
             if (!is_string($addr) || filter_var($addr, FILTER_VALIDATE_IP) === false || !Upload::checkPublicAddress($addr)) return '';
         }
-        $four = array_values(array_filter($list, fn($v) => !str_contains($v, ':')));
+        $four = array_values(array_filter($list, fn(string $v): bool => !str_contains($v, ':')));
         $pick = ($four !== []) ? $four : $list;
         sort($pick);
         return $pick[0];

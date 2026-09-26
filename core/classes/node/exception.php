@@ -24,4 +24,7 @@ final class NodeException extends RuntimeException {
 
     # The storage operation did not complete
     public const STORAGE = 5;
+
+    # The public write window limits.send of the same address has not passed yet
+    public const LIMITED = 6;
 }

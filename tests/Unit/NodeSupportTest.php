@@ -162,6 +162,16 @@ final class NodeSupportTest extends TestCase
         $this->assertSame([200, 200, 0, true], $run['reapprove'], 'Approving a reply again sent a notice or moved the queue');
     }
 
+    # moderate goes to the site account of the operator: once per request for his replies, once for the first approval of a foreign comment,
+    # never for a second reply, a hide and show of a published reply or an approval again, and it is not taken back when the comment is deleted
+    #[Test]
+    public function theOperatorEarnsModerateOncePerFinishedAction(): void
+    {
+        [$rows, $hid, $pid, $aid, $bid] = $this->getRuns()['moderate'];
+        $this->assertSame([[5, 5, 'node.help', 'reply:'.$aid, $hid, true], [5, 5, 'node.help', 'comment:'.$pid, $bid, true]], $rows,
+            'The reply of the staff or the approval of a comment did not reward the operator exactly once');
+    }
+
     # The class accepts exactly its one switch on a private standard section, refuses every broken map, scopes each reader and knows only the closed actions
     #[Test]
     public function theExtensionChecksItsConfigurationAndScope(): void
