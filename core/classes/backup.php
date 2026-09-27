@@ -6,8 +6,7 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
-# Creates one verified, restorable dump of the selected base tables
-# Views, triggers, events and routines are never serialized, so the artifact restores the declared scope and nothing else (docs/BACKUP-2026.md)
+# Creates one verified, restorable dump of the selected base tables (docs/BACKUP-2026.md)
 class Backup {
     private const CHUNK = 1048576;
     private const BUFFER = 262144;
@@ -373,6 +372,7 @@ class Backup {
     }
 
     # Classifies the object classes this class does not serialize and applies D1 to them
+    # Views, triggers, events and routines are never serialized, so the artifact restores the declared scope and nothing else
     # Views are counted through information_schema.TABLES, not information_schema.VIEWS
     # The latter additionally needs SHOW VIEW on MySQL, and without it an empty list would read as proof that no view exists
     private function checkScopeObjects(array $tabs): void {

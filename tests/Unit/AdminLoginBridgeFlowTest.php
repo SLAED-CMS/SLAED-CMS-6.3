@@ -82,8 +82,16 @@ namespace Tests\Unit {
             $html = $tpl->getHtmlPart('auth-form', [
                 'route' => 'admin',
                 'rows' => [
-                    ['has_colon' => true, 'label' => 'Nickname', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'name', 'placeholder_text' => 'Nickname', 'is_required' => true])],
-                    ['has_colon' => true, 'label' => 'Password', 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'pwd', 'placeholder_text' => 'Password', 'is_required' => true])],
+                    [
+                        'has_colon' => true,
+                        'label' => 'Nickname',
+                        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'name', 'placeholder_text' => 'Nickname', 'is_required' => true]),
+                    ],
+                    [
+                        'has_colon' => true,
+                        'label' => 'Password',
+                        'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'pwd', 'placeholder_text' => 'Password', 'is_required' => true]),
+                    ],
                     ['field_html' => $captcha],
                 ],
                 'hidden' => ['name_attr' => 'op', 'value_attr' => 'check_admin'],
@@ -106,10 +114,17 @@ namespace Tests\Unit {
             $html = $tpl->getHtmlPart('auth-form', [
                 'route' => 'admin',
                 'rows' => [
-                    ['has_colon' => true, 'label' => 'Nickname', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'aname', 'value_attr' => 'AdminUser'])],
+                    [
+                        'has_colon' => true,
+                        'label' => 'Nickname',
+                        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'aname', 'value_attr' => 'AdminUser']),
+                    ],
                     ['has_colon' => true, 'label' => 'Homepage', 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'aurl', 'value_attr' => 'http://admin.example.test'])],
                     ['has_colon' => true, 'label' => 'Email', 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'aemail', 'value_attr' => 'admin@example.test'])],
-                    ['label' => 'Create user data', 'field_html' => $tpl->getHtmlFrag('radio', ['name_attr' => 'auser_new', 'value_attr' => '1', 'label_text' => 'Yes', 'is_checked' => true])],
+                    [
+                        'label' => 'Create user data',
+                        'field_html' => $tpl->getHtmlFrag('radio', ['name_attr' => 'auser_new', 'value_attr' => '1', 'label_text' => 'Yes', 'is_checked' => true]),
+                    ],
                 ],
                 'hidden' => ['name_attr' => 'op', 'value_attr' => 'add_admin'],
                 'submit' => ['button_type' => 'submit', 'submit_label' => 'Send'],

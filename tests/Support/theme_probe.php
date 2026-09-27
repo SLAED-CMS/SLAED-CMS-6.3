@@ -5,12 +5,12 @@
 # Website: slaed.net
 
 # CLI probe for the theme-creation gate described in docs/TEMPLATES.md: the runtime file list a theme package has to satisfy
-# boots the real core like index.php, so checkThemeAssets() reads the shipped editor manifests rather than a list a fixture invented
-# The caller hands the theme names to ask about; the scratch copy itself is built and removed through tests/Support/theme_scratch.php,
-# which is the one lifecycle both halves of the theme-creation gate share - the static half in ThemeCreationTest and the HTTP half of
-# the screenshot runner, which has no PHP of its own and reaches the lifecycle through the `make`, `pick` and `gone` jobs below
-# `assets` writes nothing. `make` and `gone` touch only a templates/scratch-* directory this file named, and `pick` moves one users row
-# back and forth and answers with the value it replaced, so the caller can put it back in its own finally
+# It boots the real core like index.php, so checkThemeAssets() reads the shipped editor manifests rather than a list a fixture invented
+# The caller hands the theme names to ask about; the scratch copy itself is built and removed through tests/Support/theme_scratch.php
+# That is the one lifecycle both halves of the theme-creation gate share: the static half in ThemeCreationTest and the HTTP half of the screenshot runner
+# The screenshot runner has no PHP of its own and reaches the lifecycle through the `make`, `pick` and `gone` jobs below
+# The job `assets` writes nothing, and `make` and `gone` touch only a templates/scratch-* directory this file named
+# The job `pick` moves one users row back and forth and answers with the value it replaced, so the caller can put it back in its own finally
 $probework = (string)($argv[2] ?? '');
 require_once __DIR__.'/probe_boot.php';
 require_once BASE_DIR.'/core/system.php';
@@ -24,8 +24,7 @@ function getProbeThemes(array $list): array {
 }
 
 # Point one account at one theme and answer with the theme it was pointed at before, which is what lets the caller put it back
-# getTheme() reads the column of the signed-in visitor before it falls back to the site default, so this is the one lever that
-# selects a theme for an HTTP request without editing the configuration of a running stand
+# The function getTheme() reads the column of the signed-in visitor before the site default, the one lever that selects a theme without editing the configuration
 function setUserThemeName(string $user, string $theme): array {
     global $db;
     $row = $db->getSqlRow($db->getSqlQuery('SELECT id, theme FROM '.PREFIX_DB.'_users WHERE name = :name', [':name' => $user]));

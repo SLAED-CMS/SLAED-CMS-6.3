@@ -5,7 +5,7 @@
 # Website: slaed.net
 
 # CLI probe for batch 6 of docs/EDITOR-UPLOADS-2026.md: the room a field has and the write guard that holds a text to it
-# boots the real core like index.php, so the room table, Parser::EMBEDMAX and the shipped locale files answer the way a request would rather than the way a fixture would
+# It boots the real core like index.php, so the room table, Parser::EMBEDMAX and the shipped locale files answer the way a request would rather than the way a fixture would
 # The caller hands the store names it read off the call sites in a file, because scanning the tree belongs to the test and a Windows shell strips the quotes out of an argument
 # Nothing under the site tree is read or written: every scenario is one call into checkEditorTextRoom(), which measures a string and never stores one
 $probework = (string)($argv[2] ?? '');

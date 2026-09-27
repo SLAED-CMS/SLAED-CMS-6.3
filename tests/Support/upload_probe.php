@@ -5,7 +5,7 @@
 # Website: slaed.net
 
 # CLI probe for the Upload class of batches 3 and 4 in docs/UPLOAD-2026.md
-# boots the real core like index.php, one scenario per process, and drives the class against a disposable upload root it fills itself
+# It boots the real core like index.php, one scenario per process, and drives the class against a disposable upload root it fills itself
 # Nothing under the site upload tree is read or written - the root, the lock directory, the source files and the logs of every run live below the scratch root the caller passed
 $probework = (string)($argv[2] ?? '');
 require_once __DIR__.'/probe_boot.php';
@@ -303,7 +303,7 @@ function addProbeFile(string $ext, string $name = '', int $wid = 40, int $hei = 
 }
 
 # A real PNG whose IHDR is complete and whose pixel data is gone: the cut sits at byte 33, the first byte after the header chunk, so it holds for any image size
-# libmagic still reports image/png and getimagesize() still answers the full size, so only a real decode refuses it; a shorter cut is caught by the header read and proves nothing
+# The libmagic library still reports image/png and getimagesize() the full size, so only a real decode refuses it; a shorter cut is caught by the header read
 function addProbeBroken(): array {
     $file = addProbeFile('png');
     if ($file === []) return [];
@@ -989,6 +989,7 @@ function getProbeRemoteUrl(): array {
 }
 
 # Address policy: every resolved address is validated before a connection, and one non-public address anywhere in the answer refuses the host
+# The scenarios share one log for the whole process, so what the address policy recorded is read back once at the end
 function getProbeRemoteDns(): array {
     addProbeRoot();
     $body = getProbeSource('png');
@@ -1035,7 +1036,6 @@ function getProbeRemoteDns(): array {
         addProbeRoot();
         $out[$key] = getProbeShape(addProbeFetch(['dns' => $one[0], 'reply' => $reply], $one[1]));
     }
-    # The scenarios above share one log for the whole process, so what the address policy recorded is read back once at the end
     $out['policy'] = ['log' => getProbeLog()];
     return $out;
 }
@@ -1137,7 +1137,7 @@ function getProbeRuleKeys(): array {
 
 # The resolver and the serializer against the shipped configuration: no double can answer this, because the whole point is that the real records survive the round trip
 # A rule one field short normalises on the first write instead of round tripping: the key order is completed, no stored value changes, and every later write reproduces the string
-# config/uploads.php also holds the scalars typ, dir, width and height, which are not module records and are excluded by the pipe that every record carries
+# The file config/uploads.php also holds the scalars typ, dir, width and height, which are not module records and are excluded by the pipe that every record carries
 function getProbeResolver(): array {
     global $conf;
     $out = ['records' => [], 'keys' => getProbeRuleKeys()];

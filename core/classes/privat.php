@@ -13,11 +13,7 @@ enum PrivatBox: string {
     case Outbox = 'outbox';
 }
 
-# Private message subsystem: every read and write of the private message table, with the mailbox rules, the limits and the counters in one place
-# Nothing outside this class reaches the table any more, and no caller restates a mailbox predicate: the four state columns are read here or nowhere
-# The recipient owns viewed, saved and delin, the sender owns delout, so what one participant does to their copy never rewrites what the other one sees
-# Every write wraps its own transaction; when a transaction is already open it joins it and leaves begin, commit and rollback to whoever owns it
-# The class answers data and never markup, holds no template or mail dependency, and leaves points and notifications to the adapter that called it
+# Private message subsystem: the only code that reaches the message table, with mailbox rules, limits and counters, answering data and never markup
 final class Privat {
 
     # The columns every read of one message row answers with, so a consumer never has to know which of them a given query needed
@@ -63,6 +59,7 @@ final class Privat {
     private array $site;
 
     # Build the subsystem from the connection the request already carries and snapshot its own settings, so no method reaches for a global
+    # It holds no template or mail dependency and leaves points and notifications to the adapter that called it
     # The site settings the write normalization reads are snapshotted beside them, because a stored message is source and only these three still change its text
     public function __construct(Database $db, array $conf) {
         $this->db = $db;
@@ -77,6 +74,7 @@ final class Privat {
 
     # The predicate of one mailbox, as the predicate table of the plan states it, optionally through a table alias
     # This is the only place the four state columns are turned into a filter, which is what keeps a list, its count and its quota from ever disagreeing
+    # No caller outside this class restates a mailbox predicate: the four state columns are read here or nowhere
     private function getBoxWhere(PrivatBox $box, string $pre = ''): string {
         if ($box === PrivatBox::Outbox) return $pre.'uidout = :uid AND '.$pre.'delout = 0';
         if ($box === PrivatBox::Saved) return $pre.'uidin = :uid AND '.$pre.'delin = 0 AND '.$pre.'saved = 1';
@@ -90,6 +88,7 @@ final class Privat {
     }
 
     # The predicate one participant reaches their own copy of a single message through, which is what every mutation authorizes itself with
+    # The recipient owns viewed, saved and delin, the sender owns delout, so what one participant does to their copy never rewrites what the other one sees
     private function getSideWhere(PrivatBox $box, string $pre = ''): string {
         if ($box === PrivatBox::Outbox) return $pre.'uidout = :uid AND '.$pre.'delout = 0';
         return $pre.'uidin = :uid AND '.$pre.'delin = 0';
@@ -110,8 +109,8 @@ final class Privat {
     }
 
     # The selection one list answers: the mailbox predicate with the toolbar conditions above it, the values each of them binds, and whether the counterpart has to be joined for it
-    # Search takes one placeholder per column and declares its own escape character, because a native prepared statement refuses a repeated name and no SQL mode may decide what an underscore means
-    # The period binds a number of days rather than a moment, so the boundary is drawn by the same server that wrote the row and an installation whose database runs another time zone still cuts where it should
+    # Search takes one placeholder per column and its own escape character: a native prepared statement refuses a repeated name, and no SQL mode may decide what an underscore means
+    # The period binds a number of days, not a moment, so the server that wrote the row draws the boundary and a database in another time zone still cuts where it should
     # Only the search reaches outside the message table, which is why it is also the only condition that reports a join back to the count
     private function getPickWhere(PrivatBox $box, array $pick): array {
         $where = $this->getBoxWhere($box, 'p.');
@@ -250,6 +249,7 @@ final class Privat {
     }
 
     # Roll back a write that cannot be completed and answer the false every mutating method reports a refusal with
+    # Every write wraps its own transaction; within an already open one it joins it and leaves begin, commit and rollback to whoever owns it
     private function getFailed(bool $own): bool {
         if ($own) $this->db->setSqlRollback();
         return false;
@@ -328,7 +328,7 @@ final class Privat {
     # Report whether the inbox of the recipient has no room left, which is the only mailbox an arriving message can land in
     # A stored row carries no saved flag of its own, so it is always received into the inbox and the saved folder cannot refuse it
     # That folder has its own quota and setMessageSaved() is where it is enforced, over what a batch really adds, at the moment the reader moves a message into it
-    # A setting of zero is the absence of a bound and never a bound of zero: it is what the outbox answers, what the ring draws as unmeasured, and what both alerts already read it as
+    # A setting of zero is the absence of a bound, never a bound of zero: the outbox answers it, the ring draws it as unmeasured, and both alerts read it so
     private function checkQuota(int $uid): bool {
         $max = $this->getBoxLimit(PrivatBox::Inbox);
         return $max > 0 && $this->getMessageCount($uid, PrivatBox::Inbox) >= $max;
@@ -377,7 +377,7 @@ final class Privat {
 
     # Return one page of one mailbox under one selection, with the counterpart of every message resolved in the same round trip
     # The body is read as the prefix the server cuts and never as the column itself, so a page of a mailbox costs no MEDIUMTEXT per row
-    # The rows, the count they are paged against and the pager all come out of one predicate set inside one answer, which is what makes rows = min(limit, total - offset) hold for it
+    # The rows, the count they are paged against and the pager come out of one predicate set in one answer, which makes rows = min(limit, total - offset) hold
     public function getMessageList(int $uid, PrivatBox $box, int $page = 1, array $pick = []): array {
         [$where, $pars, $join] = $this->getPickWhere($box, $pick);
         $pars['uid'] = $uid;
@@ -433,7 +433,7 @@ final class Privat {
 
     # Return one message as one of its two participants reads it, or nothing at all when that side has deleted its copy
     # The counterpart is answered with the row, so the profile a detail view renders is the other account and never the reader's own
-    # The snippet travels with it because the list row of that same message is redrawn from this answer after it changed, and no consumer outside this class ever cuts a body of its own
+    # The snippet travels with it because the list row of that message is redrawn from this answer after a change, and no consumer outside this class cuts a body
     public function getMessageView(int $uid, int $id, PrivatBox $box): array {
         if ($uid < 1 || $id < 1) return [];
         $mate = ($box === PrivatBox::Outbox) ? 'uidin' : 'uidout';
@@ -469,7 +469,7 @@ final class Privat {
     # Only a send that owns its transaction is retried: a caller that opened one owns everything a rollback would take with it
     # A transaction still open after the failure is never attempted again either, because a second attempt would join it and leave the message to a commit that never comes
     # Both fields are normalized once, before the first attempt: a second attempt writes the bytes the first one meant to write and rewrites nothing
-    # The room of the column is measured on the normalized body and nowhere else, because the rewrite of a link is what decides the last bytes, and no_room is the one code that carries a ready note with it
+    # The room of the column is measured on the normalized body only, as the link rewrite decides the last bytes; no_room is the one code carrying a ready note
     public function addMessage(int $uid, string $name, string $title, string $body, string $ip): array {
         $title = $this->filterMessageText($title, false);
         $body = $this->filterMessageText($body, true);
@@ -482,7 +482,7 @@ final class Privat {
     }
 
     # One attempt at storing a private message, which is the whole protocol from its transaction to its commit
-    # Title and body are stored as the source their author wrote, so a reader renders what was written instead of what a writer had escaped; one contract reads every body and no column names a syntax
+    # Title and body are stored as the source their author wrote, so a reader renders what was written, not what was escaped; one contract reads every body
     # The send interval and both quotas are read behind the lock of both accounts, so what was true when the form was rendered decides nothing here
     # The name is resolved before the transaction opens on purpose: the first plain read of a transaction fixes the snapshot every later plain read answers from
     # With the lock as the first statement, the interval and the quotas behind it see the send that has just committed, so two of them cannot take one last place

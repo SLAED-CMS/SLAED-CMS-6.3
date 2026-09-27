@@ -228,18 +228,40 @@ function add(): void {
                 'placeholder_text' => _TITLE,
                 'is_required' => true,
             ])],
-            ['label_for' => 'f-audit', 'label_html' => _NLWHERE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'audit', 'selectid' => 'f-audit', 'options' => getCampOptions($pick)])],
+            [
+                'label_for' => 'f-audit',
+                'label_html' => _NLWHERE,
+                'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'audit', 'selectid' => 'f-audit', 'options' => getCampOptions($pick)]),
+            ],
             [
                 'label_for' => 'f-days',
-                'label_html' => _NLDAYS, 'hint_html' => _NLDAYSI, 'hint_id' => $hntid = getFieldIds('f-days')['hint'],
-                'field_html' => $tpl->getHtmlFrag('input', ['describedby' => $hntid, 'itype' => 'number', 'name_attr' => 'days', 'input_id' => 'f-days', 'value_attr' => (string)$days, 'is_config' => true]),
+                'label_html' => _NLDAYS,
+                'hint_html' => _NLDAYSI,
+                'hint_id' => $hntid = getFieldIds('f-days')['hint'],
+                'field_html' => $tpl->getHtmlFrag('input', [
+                    'describedby' => $hntid,
+                    'itype' => 'number',
+                    'name_attr' => 'days',
+                    'input_id' => 'f-days',
+                    'value_attr' => (string)$days,
+                    'is_config' => true,
+                ]),
                 'attr' => 'data-sl-show-when="audit" data-sl-show-value="active-"',
             ],
             [
                 'label_html' => _TEXT,
                 'label_id' => $labid = getFieldIds('', 'body')['label'],
-                'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _TEXT,
-                    'id' => '1', 'name' => 'body', 'value' => $body, 'mod' => 'all', 'store' => 'newsletter.body', 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1',
+                'field_html' => getTplTextarea([
+                    'labelledby' => $labid,
+                    'label' => _TEXT,
+                    'id' => '1',
+                    'name' => 'body',
+                    'value' => $body,
+                    'mod' => 'all',
+                    'store' => 'newsletter.body',
+                    'rows' => '10',
+                    'placeholder' => _TEXT,
+                    'required' => '1',
                 ]),
                 'is_full' => true,
                 'field_unwrapped' => true,
@@ -399,7 +421,7 @@ function queue(): void {
     global $afile, $mailer, $tpl;
     setHead();
     $kind = getVar('get', 'kind', 'var');
-    $stat = trim((string)getVar('get', 'status', 'raw', ''));
+    $stat = trim(getVar('get', 'status', 'raw', ''));
     if (!in_array($stat, ['0', '1', '2'], true)) $stat = '';
     $page = getVar('get', 'num', 'num', 1);
     $back = 'kind='.rawurlencode($kind).'&status='.$stat.'&num='.$page;
@@ -503,8 +525,16 @@ function config(): void {
     foreach ([['canary', _NLCANARY, _NLCANARYI, '100'], ['canarymin', _NLCANMIN, _NLCANMINI, '500'], ['breakwin', _NLBREAK, _NLBREAKI, '100'],
         ['abort', _NLABORT, _NLABORTI, '10'], ['bouncemax', _NLBOUNCE, _NLBOUNCEI, '2']] as $item) {
         $rows[] = [
-            'label_html' => $item[1], 'hint_html' => $item[2], 'hint_id' => $hntid = getFieldIds('', $item[0])['hint'],
-            'field_html' => $tpl->getHtmlFrag('input', ['describedby' => $hntid, 'itype' => 'number', 'name_attr' => $item[0], 'value_attr' => (string)($rule[$item[0]] ?? $item[3]), 'is_config' => true]),
+            'label_html' => $item[1],
+            'hint_html' => $item[2],
+            'hint_id' => $hntid = getFieldIds('', $item[0])['hint'],
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'describedby' => $hntid,
+                'itype' => 'number',
+                'name_attr' => $item[0],
+                'value_attr' => (string)($rule[$item[0]] ?? $item[3]),
+                'is_config' => true,
+            ]),
         ];
     }
     $form = $tpl->getHtmlPart('form', [

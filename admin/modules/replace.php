@@ -96,7 +96,7 @@ function replace(): void {
             ['nameattr' => 'name', 'valueattr' => 'replace'],
             ['nameattr' => 'op', 'valueattr' => 'save'],
             ['nameattr' => 'tab', 'valueattr' => (string)$ctab],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('replace')],
         ],
         'content_html' => $tpl->getHtmlPart('tabs', [
             'content_html' => implode('', $panels),
@@ -109,7 +109,7 @@ function replace(): void {
 
 function save(): void {
     global $afile;
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('replace');
     $ctab = getVar('post', 'tab', 'num', 0);
     $cont = [];
     $mods = ['content', 'news'];

@@ -5,17 +5,13 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Contract tests for the real getVar() helper: every scenario runs against the booted core through
- * tests/Support/contract_probe.php in an isolated CLI process, so the assertions cover production
- * code instead of a replica. The scalar branch reads filter_input(), which has no request payload
- * in CLI, therefore only array and nested-array keys are exercised here.
- */
+# Contract tests for the real getVar() helper, covering production code in an isolated CLI process instead of a replica
 final class InputVarContractTest extends TestCase
 {
     private static array $probe = [];
 
-    # Run the getVar probe once and memoize its report for every scenario in this class
+    # Run the getVar probe of tests/Support/contract_probe.php once and memoize its report for every scenario in this class
+    # The scalar branch reads filter_input(), which has no request payload in CLI, so only array and nested-array keys are exercised here
     private function getProbe(): array
     {
         if (self::$probe !== []) return self::$probe;

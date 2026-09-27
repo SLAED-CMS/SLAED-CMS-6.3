@@ -6,9 +6,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 
-/**
- * Example unit test to verify PHPUnit is working
- */
+# Example unit test to verify PHPUnit is working
 class ExampleTest extends TestCase
 {
     #[Test]

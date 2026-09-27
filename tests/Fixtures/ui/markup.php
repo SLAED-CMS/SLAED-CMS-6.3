@@ -4,8 +4,8 @@
 # License: MIT
 # Website: slaed.net
 
-# A fixture for the markup scan: one class attribute folded out of two tokens, one inline style,
-# and three strings that only look like markup - a regular expression, a feed element, and a sentence
+# A fixture for the markup scan: one class attribute folded out of two tokens and one inline style
+# Three strings here only look like markup - a regular expression, a feed element and a sentence
 
 function getFixtureRow(string $name): string {
     $html = '<di'.'v class="sl-row">'.$name.'</div>';

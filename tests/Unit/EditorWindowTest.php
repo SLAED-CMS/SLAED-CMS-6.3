@@ -5,13 +5,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Stage 7 of docs/FILE-MANAGER-CONCEPT-2026.md: the window of the editor rebuilt on the file layer.
- * The listing route answers descriptors and capabilities instead of a row it assembled itself, the
- * two changing routes belong to a module moderator alone, and the rail states what a visitor may do
- * rather than hiding what he may not. Nothing here writes to the site; every claim is read off the
- * shipped source, the two themes and the six locales.
- */
+# The editor window rebuilt on the file layer, every claim read off the shipped source, the two themes and the six locales without writing to the site
 final class EditorWindowTest extends TestCase
 {
     private const LOCALES = ['de', 'en', 'fr', 'pl', 'ru', 'uk'];
@@ -41,6 +35,7 @@ final class EditorWindowTest extends TestCase
 
     # The listing route hands out the descriptor of the file layer, so nothing about a stored file is worked out a second time beside it
     # The row carries the capability set of its own object, because the fan of that object is drawn from it and never from a role the window derives again
+    # What narrows the list is the owner alone: a name the upload service did not draw is still a file of the module, and an archive packed in the window carries one
     #[Test]
     public function theListingAnswersTheDescriptorOfTheFileLayer(): void
     {
@@ -55,8 +50,11 @@ final class EditorWindowTest extends TestCase
         $this->assertStringNotContainsString('realpath', $row, 'The row of the window carries the absolute server path, which no editor context may ever receive');
         $area = $this->getBody('core/system.php', 'getUploadFileArea');
         $this->assertStringContainsString("new FileManager('editor'", $area, 'The window is handed a context that is not the editor one and holds the rights of another screen');
-        # What narrows the list is the owner and nothing else: a name the upload service did not draw is still a file of the module, and an archive packed in the window carries one
-        $this->assertStringNotContainsString("\$one['managed']", $body, 'The listing drops what the naming does not know, so an archive packed here would vanish from the catalogue');
+        $this->assertStringNotContainsString(
+            "\$one['managed']",
+            $body,
+            'The listing drops what the naming does not know, so an archive packed here would vanish from the catalogue'
+        );
         $this->assertStringContainsString(
             "isset(FileManager::getGuardFiles()[\$one['name']])",
             $body,
@@ -116,7 +114,11 @@ final class EditorWindowTest extends TestCase
         }
         foreach (['can_upload', 'can_embed', 'can_list'] as $flag) {
             $this->assertStringContainsString('{% if not '.$flag.' %} disabled{% endif %}', $lite, 'The section of '.$flag.' disappears instead of being closed and explained');
-            $this->assertStringContainsString('{% if not '.$flag.' %}<i class="bi bi-lock-fill', $lite, 'A section closed by '.$flag.' carries no lock, so the boundary of the rights is invisible');
+            $this->assertStringContainsString(
+                '{% if not '.$flag.' %}<i class="bi bi-lock-fill',
+                $lite,
+                'A section closed by '.$flag.' carries no lock, so the boundary of the rights is invisible'
+            );
         }
         foreach (['up_why', 'embed_why', 'files_why'] as $why) {
             $this->assertStringContainsString('{{ '.$why.' }}', $lite, 'A closed section never prints '.$why.', so it says nothing about why it is closed');
@@ -131,33 +133,40 @@ final class EditorWindowTest extends TestCase
             $view,
             'The moderator of the place is decided by something other than checkUploadModer()'
         );
-        $this->assertStringContainsString("\$upl = \$mod !== '' && checkEditorUploadAccess(\$mod, \$rule);", $view, 'The upload right is decided beside the one gate that answers it for every other place');
+        $this->assertStringContainsString(
+            "\$upl = \$mod !== '' && checkEditorUploadAccess(\$mod, \$rule);",
+            $view,
+            'The upload right is decided beside the one gate that answers it for every other place'
+        );
     }
 
     # The window keeps its styles under its own root, because the administrative theme owns the same component names for the browser of the catalogue
+    # The window is dressed by the theme and not by the skin: a page carrying no editor receives no skin at all, and the same window opens there
+    # The skeleton is a shared component of the theme, so it stands in both of them under one name rather than being redefined beside one
+    # Lite owns no file browser, so every file manager rule standing at its top level would be the window losing its own root
+    # Two boxes carry file manager parts under that root: the window itself and the insertion options dialog, whose caption, radio row and field are its parts
+    # The insertion options dialog is invisible on every walked page, so nothing but this test would report it losing its shape
     #[Test]
     public function theWindowKeepsItsStylesUnderItsOwnRoot(): void
     {
         $lite = $this->getFile('templates/lite/assets/editors/toastui/skin.css');
         $this->assertSame($lite, $this->getFile('templates/admin/assets/editors/toastui/skin.css'), 'The two themes no longer carry the same window skin');
-        # The window is dressed by the theme and not by the skin: a page carrying no editor receives no skin at all, and the same window opens there
         $rules = (string)preg_replace('#/\*.*?\*/#s', '', $lite);
         $this->assertStringNotContainsString('.sl-fm-', $rules, 'The skin still dresses the file manager, which leaves the window bare on every page without an editor');
-        # The skeleton is a shared component of the theme, so it stands in both of them under one name rather than being redefined beside one
         foreach (['lite', 'admin'] as $theme) {
             $css = $this->getFile('templates/'.$theme.'/assets/css/theme.css');
             foreach (['sl-fm-rail', 'sl-fm-pane', 'sl-fm-tile', 'sl-fm-queue', 'sl-fm-props'] as $part) {
-                $this->assertStringContainsString('.sl-fm-win .'.$part, $css, 'The window of theme '.$theme.' carries no rule for '.$part.', so one part of the mock-up has no shape at all');
+                $this->assertStringContainsString(
+                    '.sl-fm-win .'.$part,
+                    $css,
+                    'The window of theme '.$theme.' carries no rule for '.$part.', so one part of the mock-up has no shape at all'
+                );
             }
             $this->assertStringContainsString('.sl-skel {', $css, 'The skeleton of a list is missing from the '.$theme.' theme, so one of the two would have to invent it');
             $this->assertStringContainsString('prefers-reduced-motion', $css, 'The skeleton of the '.$theme.' theme pulses even where motion is asked to stop');
         }
-        # Lite owns no file browser, so every file manager rule standing at its top level would be the window losing its own root
         $loose = preg_match_all('#(?m)^\.sl-fm-(?!win)#', $this->getFile('templates/lite/assets/css/theme.css'));
         $this->assertSame(0, $loose, 'The window declares a file manager class at the top level, where it meets the same name of the administrative browser');
-        # Every box carrying a file manager part has to stand under that root, and two do: the window itself and the small
-        # dialog of insertion options, whose caption, radio row and text field are the window's own parts. The second is
-        # invisible on every walked page, so nothing but this line would report it losing its shape
         foreach (['lite', 'admin'] as $theme) {
             $insert = $this->getFile('templates/'.$theme.'/fragments/window-body-insert.html');
             foreach (['sl-fm-label', 'sl-fm-as', 'sl-fm-field'] as $part) {
@@ -165,7 +174,11 @@ final class EditorWindowTest extends TestCase
             }
         }
         $drv = $this->getFile('plugins/editors/toastui/driver.php');
-        $this->assertStringContainsString("'win_class' => 'sl-fm-win", $drv, 'The window of the insertion options carries no file manager root, so its caption, its radio row and its field are drawn bare');
+        $this->assertStringContainsString(
+            "'win_class' => 'sl-fm-win",
+            $drv,
+            'The window of the insertion options carries no file manager root, so its caption, its radio row and its field are drawn bare'
+        );
     }
 
     # The runtime of the window left the editor plugin, and the cut has to be a cut: an alias would keep the coupling alive and break it one batch later instead
@@ -175,8 +188,15 @@ final class EditorWindowTest extends TestCase
     public function theRuntimeOfTheWindowLeftThePluginWithItsTemplates(): void
     {
         $js = $this->getFile('plugins/system/filemanager.js');
-        $this->assertFileDoesNotExist(dirname(__DIR__, 2).'/plugins/editors/toastui/assets/editor-upload.js', 'The runtime is still delivered from the editor plugin, so a page carrying no editor gets a window with no behaviour');
-        $this->assertStringContainsString('win.SlaedFileManager = api;', $js, 'The runtime publishes itself under no namespace of its own, so nothing outside the editor can reach it');
+        $this->assertFileDoesNotExist(
+            dirname(__DIR__, 2).'/plugins/editors/toastui/assets/editor-upload.js',
+            'The runtime is still delivered from the editor plugin, so a page carrying no editor gets a window with no behaviour'
+        );
+        $this->assertStringContainsString(
+            'win.SlaedFileManager = api;',
+            $js,
+            'The runtime publishes itself under no namespace of its own, so nothing outside the editor can reach it'
+        );
         $this->assertStringNotContainsString('SlaedToastUi', $js, 'The runtime still names the namespace of the editor plugin, which is the coupling this move was made to cut');
         foreach (['api.getEditor', 'api.insertText'] as $name) {
             $this->assertStringNotContainsString($name, $js, 'The runtime still borrows '.$name.' from the editor plugin, so it draws nothing on a page that plugin never loaded');
@@ -186,7 +206,11 @@ final class EditorWindowTest extends TestCase
         $tags = $this->getFile('plugins/editors/toastui/assets/editor-tags.js');
         $reach = preg_match_all('#^.*SlaedFileManager.*$#m', $tags);
         $this->assertSame(1, $reach, 'The editor reaches the runtime from more than the one explicit call, so an alias hides the coupling again');
-        $this->assertStringContainsString('if (win.SlaedFileManager) win.SlaedFileManager.addUpload(id, ed, opt || {});', $tags, 'The editor still asks its own namespace for the upload, which is false now and loses the file button with no error');
+        $this->assertStringContainsString(
+            'if (win.SlaedFileManager) win.SlaedFileManager.addUpload(id, ed, opt || {});',
+            $tags,
+            'The editor still asks its own namespace for the upload, which is false now and loses the file button with no error'
+        );
         $drv = $this->getFile('plugins/editors/toastui/driver.php');
         $this->assertStringNotContainsString('editor-upload.js', $drv, 'The driver still delivers the runtime, so the move is only half done');
         foreach (['editor-tags.js', 'editor-emoji.js'] as $own) {
@@ -195,9 +219,17 @@ final class EditorWindowTest extends TestCase
         $win = $this->getBody('core/helpers.php', 'getFileManagerWindow');
         $this->assertStringContainsString('static $done = false;', $win, 'The window delivers its runtime again for every editor of a page instead of once');
         $this->assertStringContainsString("'src' => 'plugins/system/filemanager.js'", $win, 'The window carries no runtime, so it opens beside a form and answers nothing');
-        $this->assertStringContainsString("getHtmlPart('file-manager-templates'", $win, 'The window carries no draw templates, so it opens and then draws no tile, no row and no message');
+        $this->assertStringContainsString(
+            "getHtmlPart('file-manager-templates'",
+            $win,
+            'The window carries no draw templates, so it opens and then draws no tile, no row and no message'
+        );
         foreach (['fm-act', 'fm-busy', 'fm-dial', 'fm-job', 'fm-pick', 'fm-prop', 'fm-row', 'fm-tile', 'fm-why', 'msg-info', 'msg-warn'] as $name) {
-            $this->assertStringContainsString('data-tpl="'.$name.'"', $this->getFile('templates/lite/partials/file-manager-templates.html'), 'The template '.$name.' stayed with the editor, so the runtime finds null where it expects a node');
+            $this->assertStringContainsString(
+                'data-tpl="'.$name.'"',
+                $this->getFile('templates/lite/partials/file-manager-templates.html'),
+                'The template '.$name.' stayed with the editor, so the runtime finds null where it expects a node'
+            );
         }
         foreach (['lite', 'admin'] as $theme) {
             $part = $this->getFile('templates/'.$theme.'/partials/file-manager-templates.html');
@@ -206,7 +238,11 @@ final class EditorWindowTest extends TestCase
             $this->assertSame(4, substr_count($emoji, '<template'), 'The editor partial of theme '.$theme.' holds something besides the four emoji templates it keeps');
             $this->assertStringNotContainsString('data-tpl="fm-', $emoji, 'A file manager template of theme '.$theme.' stayed behind, so one node is looked for in two places');
         }
-        $this->assertSame($this->getFile('templates/lite/partials/file-manager-templates.html'), $this->getFile('templates/admin/partials/file-manager-templates.html'), 'The two themes no longer carry the same draw templates');
+        $this->assertSame(
+            $this->getFile('templates/lite/partials/file-manager-templates.html'),
+            $this->getFile('templates/admin/partials/file-manager-templates.html'),
+            'The two themes no longer carry the same draw templates'
+        );
     }
 
     # The fan of an object is built from the capabilities of that object, and the width of its plate is written down rather than counted off a child index
@@ -279,31 +315,59 @@ final class EditorWindowTest extends TestCase
     # A form row asks for a file through the same window, so the door beside the button is what the runtime is registered on and the three outcomes each get a carrier of their own
     # The chip states what the form is carrying and nothing else, which is why its cross clears all three at once and no carrier can survive the answer of another
     # A place refusing an address is handed no address field at all, so nothing can be posted into a store that keeps a file name and could never resolve an external one
+    # The words of the window belong to the window and not to one editor, or a page carrying no editor opens a window speaking nothing
     #[Test]
     public function theFormRowOpensTheSameWindowThroughOneDoor(): void
     {
         foreach (['lite', 'admin'] as $theme) {
             $frag = $this->getFile('templates/'.$theme.'/fragments/file-field.html');
             foreach (['file', 'path', 'url', 'chip', 'name'] as $part) {
-                $this->assertStringContainsString('data-sl-field="'.$part.'"', $frag, 'The door of theme '.$theme.' carries no '.$part.', so one of the three outcomes reaches the handler through nothing');
+                $this->assertStringContainsString(
+                    'data-sl-field="'.$part.'"',
+                    $frag,
+                    'The door of theme '.$theme.' carries no '.$part.', so one of the three outcomes reaches the handler through nothing'
+                );
             }
             foreach (['open', 'clear'] as $act) {
-                $this->assertStringContainsString('data-sl-act="'.$act.'"', $frag, 'The door of theme '.$theme.' carries no '.$act.', so the runtime finds nothing to bind by delegation');
+                $this->assertStringContainsString(
+                    'data-sl-act="'.$act.'"',
+                    $frag,
+                    'The door of theme '.$theme.' carries no '.$act.', so the runtime finds nothing to bind by delegation'
+                );
             }
-            $this->assertStringContainsString('{% if url_name %}', $frag, 'The door of theme '.$theme.' prints an address field whatever the place says, so a store of file names can be posted a link');
-            $this->assertStringContainsString('.sl-file-door', $this->getFile('templates/'.$theme.'/assets/css/theme.css'), 'The door of theme '.$theme.' has no shape, so the button, the chip and the limits stack');
+            $this->assertStringContainsString(
+                '{% if url_name %}',
+                $frag,
+                'The door of theme '.$theme.' prints an address field whatever the place says, so a store of file names can be posted a link'
+            );
+            $this->assertStringContainsString(
+                '.sl-file-door',
+                $this->getFile('templates/'.$theme.'/assets/css/theme.css'),
+                'The door of theme '.$theme.' has no shape, so the button, the chip and the limits stack'
+            );
         }
-        $this->assertSame($this->getFile('templates/lite/fragments/file-field.html'), $this->getFile('templates/admin/fragments/file-field.html'), 'The two themes no longer carry the same door');
+        $this->assertSame(
+            $this->getFile('templates/lite/fragments/file-field.html'),
+            $this->getFile('templates/admin/fragments/file-field.html'),
+            'The two themes no longer carry the same door'
+        );
         $fld = $this->getBody('core/helpers.php', 'getFileManagerField');
         $this->assertStringContainsString("'is_field' => true", $fld, 'The door opens the editor window, which draws a queue for an upload the form is the one carrying');
-        $this->assertStringContainsString('SlaedFileManager.addField(', $fld, 'The door registers through the editor entry, which would install bindings for an editor that is not there');
+        $this->assertStringContainsString(
+            'SlaedFileManager.addField(',
+            $fld,
+            'The door registers through the editor entry, which would install bindings for an editor that is not there'
+        );
         $this->assertStringContainsString("'url_name' => \$link ?", $fld, 'The address field is printed without asking the place, so canlink decides nothing');
         $this->assertStringContainsString('getFieldIds(', $fld, 'The row of the door mints its ids beside the one helper that owns them');
-        # The words of the window belong to the window and not to one editor, or a page carrying no editor opens a window speaking nothing
         $txt = $this->getBody('core/helpers.php', 'getFileManagerText');
         $drv = $this->getFile('plugins/editors/toastui/driver.php');
         $this->assertSame(1, substr_count($drv, 'getFileManagerText('), 'The driver reads the shared words more than once per widget, or has stopped reading them at all');
-        $this->assertStringContainsString("'labels' => \$txt['labels'] + [", $drv, 'The driver builds the words of the window again, so the door and the editor drift apart at the first edit');
+        $this->assertStringContainsString(
+            "'labels' => \$txt['labels'] + [",
+            $drv,
+            'The driver builds the words of the window again, so the door and the editor drift apart at the first edit'
+        );
         $this->assertStringContainsString("'panes' => \$txt['panes'] + [", $drv, 'The driver names the sections of the window again beside the one place that does');
         foreach (['badtype', 'big', 'toobig', 'quota', 'mynote'] as $key) {
             $this->assertStringContainsString("'".$key."' => ", $txt, 'The shared words carry no '.$key.', so the runtime falls back to English for it');

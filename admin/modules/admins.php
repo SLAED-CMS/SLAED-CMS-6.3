@@ -248,8 +248,10 @@ function add(): void {
         [
             'label_for' => 'f-pwd',
             'label_html' => _PASSWORD,
-            'hint_html' => $aid ? _ADMINPASSKEEP : '', 'hint_id' => $hntid = $aid ? getFieldIds('f-pwd')['hint'] : '',
-            'field_html' => $tpl->getHtmlFrag('input', ['describedby' => $hntid,
+            'hint_html' => $aid ? _ADMINPASSKEEP : '',
+            'hint_id' => $hntid = $aid ? getFieldIds('f-pwd')['hint'] : '',
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'describedby' => $hntid,
                 'itype' => 'password',
                 'name_attr' => 'pwd',
                 'input_id' => 'f-pwd',
@@ -273,7 +275,12 @@ function add(): void {
         [
             'label_html' => _SMAIL,
             'label_id' => $labid = getFieldIds('', 'smail')['label'],
-            'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'smail', 'value' => (string)(int)$smail, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+            'field_html' => getTplRadioGroup([
+                'labelledby' => $labid,
+                'name' => 'smail',
+                'value' => (string)(int)$smail,
+                'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
+            ]),
         ],
         [
             'label_for' => 'f-super',
@@ -298,8 +305,11 @@ function add(): void {
         ],
         [
             'label_for' => 'f-mailtext',
-            'label_html' => _MAIL_TEXT, 'hint_html' => _MAIL_PASS_INFO, 'hint_id' => $hntid = getFieldIds('f-mailtext')['hint'],
-            'field_html' => $tpl->getHtmlFrag('textarea', ['describedby' => $hntid,
+            'label_html' => _MAIL_TEXT,
+            'hint_html' => _MAIL_PASS_INFO,
+            'hint_id' => $hntid = getFieldIds('f-mailtext')['hint'],
+            'field_html' => $tpl->getHtmlFrag('textarea', [
+                'describedby' => $hntid,
                 'name_attr' => 'mailtext',
                 'input_id' => 'f-mailtext',
                 'rows_num' => 10,
@@ -391,20 +401,57 @@ function save(): void {
             if ($chg) {
                 $pass = getPassHash($pwd);
                 $db->getSqlQuery(
-                    'UPDATE '.PREFIX_DB.'_admins SET name = :name, title = :title, url = :url, email = :email, password = :pass, super = :super, editor = :edit, smail = :smail, modules = :mods, lang = :lang WHERE id = :id',
-                    ['name' => $name, 'title' => $title, 'url' => $url, 'email' => $email, 'pass' => $pass, 'super' => $super, 'edit' => $edit, 'smail' => $smail, 'mods' => $mods, 'lang' => $lang, 'id' => $aid]
+                    'UPDATE '.PREFIX_DB.'_admins SET name = :name, title = :title, url = :url, email = :email, password = :pass, super = :super, editor = :edit,'
+                    .' smail = :smail, modules = :mods, lang = :lang WHERE id = :id',
+                    [
+                        'name' => $name,
+                        'title' => $title,
+                        'url' => $url,
+                        'email' => $email,
+                        'pass' => $pass,
+                        'super' => $super,
+                        'edit' => $edit,
+                        'smail' => $smail,
+                        'mods' => $mods,
+                        'lang' => $lang,
+                        'id' => $aid,
+                    ]
                 );
             } else {
                 $db->getSqlQuery(
-                    'UPDATE '.PREFIX_DB.'_admins SET name = :name, title = :title, url = :url, email = :email, super = :super, editor = :edit, smail = :smail, modules = :mods, lang = :lang WHERE id = :id',
-                    ['name' => $name, 'title' => $title, 'url' => $url, 'email' => $email, 'super' => $super, 'edit' => $edit, 'smail' => $smail, 'mods' => $mods, 'lang' => $lang, 'id' => $aid]
+                    'UPDATE '.PREFIX_DB.'_admins SET name = :name, title = :title, url = :url, email = :email, super = :super, editor = :edit, smail = :smail,'
+                    .' modules = :mods, lang = :lang WHERE id = :id',
+                    [
+                        'name' => $name,
+                        'title' => $title,
+                        'url' => $url,
+                        'email' => $email,
+                        'super' => $super,
+                        'edit' => $edit,
+                        'smail' => $smail,
+                        'mods' => $mods,
+                        'lang' => $lang,
+                        'id' => $aid,
+                    ]
                 );
             }
         } else {
             $pass = getPassHash($pwd);
             $db->getSqlQuery(
-                'INSERT INTO '.PREFIX_DB.'_admins (name, title, url, email, password, super, editor, smail, modules, lang, regdate) VALUES (:name, :title, :url, :email, :pass, :super, :edit, :smail, :mods, :lang, now())',
-                ['name' => $name, 'title' => $title, 'url' => $url, 'email' => $email, 'pass' => $pass, 'super' => $super, 'edit' => $edit, 'smail' => $smail, 'mods' => $mods, 'lang' => $lang]
+                'INSERT INTO '.PREFIX_DB.'_admins (name, title, url, email, password, super, editor, smail, modules, lang, regdate)'
+                .' VALUES (:name, :title, :url, :email, :pass, :super, :edit, :smail, :mods, :lang, now())',
+                [
+                    'name' => $name,
+                    'title' => $title,
+                    'url' => $url,
+                    'email' => $email,
+                    'pass' => $pass,
+                    'super' => $super,
+                    'edit' => $edit,
+                    'smail' => $smail,
+                    'mods' => $mods,
+                    'lang' => $lang,
+                ]
             );
         }
         if ($aid && !$chg) $mail = 0;

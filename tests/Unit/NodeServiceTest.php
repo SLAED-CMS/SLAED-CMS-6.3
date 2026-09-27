@@ -9,14 +9,7 @@ use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionMethod;
 
-/**
- * NodeService writes materials. Create, preview, change, the moves of the state matrix and the
- * physical delete with their categories, fields, relations and resources; the tree and the external link under the lock of
- * the type; counters, reports and the delivery of future publications with Point; the categories of a type and the
- * moderator right node-<name> of the upload helpers. Every behaviour is driven by tests/Support/node_probe.php in its
- * material mode: scratch sources, cache and upload root, one disposable MariaDB database with the shipped schema, copies of
- * the reader and the writer whose closed factory knows a recording extension, and child processes for the races and crashes.
- */
+# NodeService writes materials: create, preview, change, state moves and the physical delete with categories, fields, relations and resources
 final class NodeServiceTest extends TestCase
 {
     private static array $probe = [];
@@ -37,6 +30,9 @@ final class NodeServiceTest extends TestCase
         return substr($code, $from, $end === false ? null : $end - $from + 3);
     }
 
+    # Also covered: the tree and the external link under the type lock, counters, reports, publication delivery with Point, categories and the right node-<name>
+    # Every behaviour is driven by tests/Support/node_probe.php in its material mode: scratch sources, cache and upload root, one disposable MariaDB database
+    # Copies of the reader and the writer carry a closed factory that knows a recording extension, and child processes play the races and crashes
     # Run the probe once in its material mode and memoize the runs; a probe that cannot create its database is a failure, not a skip
     private function getRuns(): array
     {
@@ -71,8 +67,9 @@ final class NodeServiceTest extends TestCase
         $this->assertRefused($call, 3, 'Invalid node input: '.$path, $name);
     }
 
-    # The writer carries exactly the approved public operations: the four of a type and the import, the four of a material, the preview, the counters,
-    # the three of a resource, the file of an attachment, the delivery of publications, three category writes and the registry, with the nullable points and extension of 05
+    # The writer carries exactly the approved public operations: the four of a type and the import, the four of a material, the preview, the counters
+    # It also carries the three of a resource, the file of an attachment, publication delivery, three category writes and the registry
+    # The constructor takes the nullable points and extension of 05
     #[Test]
     public function theWriterHasTheApprovedOperationsAndNothingElse(): void
     {
@@ -216,8 +213,8 @@ final class NodeServiceTest extends TestCase
         $this->assertSame('Second', $run['title']);
     }
 
-    # States: exactly the pairs of the closed matrix pass with one new version, the repeat writes nothing, readiness binds pending and published,
-    # and a move costs at most six Node statements, seven with a job of _node_publish; approving a foreign pending material rewards its moderator with moderate once
+    # States: exactly the pairs of the closed matrix pass with one new version, the repeat writes nothing, readiness binds pending and published
+    # A move costs at most six Node statements, seven with a job of _node_publish; approving a foreign pending material rewards its moderator with moderate once
     #[Test]
     public function theStateMachineFollowsTheMatrix(): void
     {
@@ -248,8 +245,8 @@ final class NodeServiceTest extends TestCase
         $this->assertSame(0, $run['guards']);
     }
 
-    # Delete: the stale and the foreign are refused; the physical delete takes every row of the material, compensates the publication once,
-    # leaves the file and a child as a root, and costs five Node statements besides Point
+    # Delete: the stale and the foreign are refused; the physical delete takes every row of the material, compensates the publication once
+    # The delete leaves the file and a child as a root, and costs five Node statements besides Point
     #[Test]
     public function aPhysicalDeleteTakesEveryRowAndCompensatesThePublication(): void
     {
@@ -279,8 +276,8 @@ final class NodeServiceTest extends TestCase
         $this->assertSame(['ok' => true, 'value' => [15]], $run['main'], 'The main category stays in the extra set');
     }
 
-    # Files: a new attachment and a new local source belong to the visitor, a moderator binds any file, metadata is read once,
-    # and an external link is unique inside its type by the whole address, also against a concurrent writer
+    # Files: a new attachment and a new local source belong to the visitor, a moderator binds any file, metadata is read once
+    # An external link is unique inside its type by the whole address, also against a concurrent writer
     #[Test]
     public function newFileBindingsBelongToTheVisitorAndLinksAreUnique(): void
     {
@@ -308,8 +305,8 @@ final class NodeServiceTest extends TestCase
         $this->assertInvalid($bad[0], 'assets.0.src');
     }
 
-    # Tree: a cycle through a descendant is refused, two concurrent moves that close a cycle let exactly one through, and a move that dies before its commit
-    # leaves no edge and no held lock behind
+    # Tree: a cycle through a descendant is refused, two concurrent moves that close a cycle let exactly one through
+    # A move that dies before its commit leaves no edge and no held lock behind
     #[Test]
     public function theTreeIsChangedUnderTheLockOfTheType(): void
     {
@@ -328,8 +325,8 @@ final class NodeServiceTest extends TestCase
         $this->assertTrue($run['cleared'], 'The guard of the crashed writer was not recovered');
     }
 
-    # Publication: a future date gets its job and no points, the job is delivered exactly once by the background context after its date,
-    # and every move, cancel, absorbed reward, missing author, inactive type, recoverable failure, parallel run and crash follows docs/NODE.md (Material states)
+    # Publication: a future date gets its job and no points, the job is delivered exactly once by the background context after its date
+    # Every move, cancel, absorbed reward, missing author, inactive type, recoverable failure, parallel run and crash follows docs/NODE.md (Material states)
     #[Test]
     public function aFuturePublicationIsDeliveredOnceByTheScheduler(): void
     {
@@ -383,7 +380,7 @@ final class NodeServiceTest extends TestCase
     }
 
     # The job is registered in all four places of the scheduler and returns its statuses: the map and the dispatch of core/system.php, the shipped configuration
-    # and the addition of the update branch in setup/index.php; the adapter builds the one trusted background context
+    # The update branch in setup/index.php adds the job too, and the adapter builds the one trusted background context
     #[Test]
     public function theJobIsRegisteredInTheFourPlacesOfTheScheduler(): void
     {
@@ -402,8 +399,8 @@ final class NodeServiceTest extends TestCase
         $this->assertStringContainsString("'schedule' => '* * * * *',\n                    'priority' => '6',\n                    'lock_timeout' => '180',", $setup);
     }
 
-    # Counters: a view counts a readable publication only and is rewarded once, and comments and ratings are written only inside the transaction of their owner,
-    # checked and without a new version, date or cache generation
+    # Counters: a view counts a readable publication only and is rewarded once, and comments and ratings are written only inside the transaction of their owner
+    # Such writes are checked and go without a new version, date or cache generation
     #[Test]
     public function theCountersMoveWithoutAVersion(): void
     {
@@ -421,8 +418,8 @@ final class NodeServiceTest extends TestCase
         $this->assertSame(['views' => 2, 'comnum' => 3, 'score' => 7, 'ratings' => 2, 'version' => 1, 'same' => true], $run['after']);
     }
 
-    # Resources: a download and a visit are counted and rewarded by the mode of their role, a report keeps its first author,
-    # and only the main administrator or a moderator of the type decides it, rewarding a useful report of a registered author once and the moderator with moderate
+    # Resources: a download and a visit are counted and rewarded by the mode of their role, a report keeps its first author
+    # Only the main administrator or a moderator of the type decides it, rewarding a useful report of a registered author once and the moderator with moderate
     #[Test]
     public function resourceCountersAndReportsFollowTheirMode(): void
     {
@@ -450,8 +447,8 @@ final class NodeServiceTest extends TestCase
         $this->assertSame([$row('node.files'), $row('node.links')], $run['moderate'], 'A decided report did not reward its moderator once, or his own report rewarded him');
     }
 
-    # Categories: a used category never leaves its type and is never deleted, its language changes through the guard, an extra link leaves with a new version,
-    # and only the main administrator, the manager of Node or a moderator of the type writes it
+    # Categories: a used category never leaves its type and is never deleted, its language changes through the guard, an extra link leaves with a new version
+    # Only the main administrator, the manager of Node or a moderator of the type writes it
     #[Test]
     public function theCategoriesOfATypeAreChangedUnderItsLock(): void
     {
@@ -495,8 +492,8 @@ final class NodeServiceTest extends TestCase
         $this->assertTrue($run['epoch'], 'A preview raised the cache generation');
     }
 
-    # The extension of a type: exactly the registered instance writes it, its data is checked before and written inside the transaction of every write,
-    # and its failure takes the main write back with it
+    # The extension of a type: exactly the registered instance writes it, its data is checked before and written inside the transaction of every write
+    # Its failure takes the main write back with it
     #[Test]
     public function theExtensionJoinsEveryWriteInsideItsTransaction(): void
     {
@@ -511,8 +508,8 @@ final class NodeServiceTest extends TestCase
         $this->assertTrue($run['same'], 'A failed extension left the main write behind');
     }
 
-    # The upload helpers: the moderator right of a place is node-<name> for a Node type and the module key for any other module, through one helper asked in all six places;
-    # a booted moderator of the type passes, a site user owns by his id, and an administrator who still carries the key of a removed module of the same name inherits nothing
+    # The upload helpers: the moderator right of a place is node-<name> for a Node type and the module key for any other module, through one helper asked in all six places
+    # A booted moderator of the type passes, a site user owns by his id, and an administrator who still carries the key of a removed module of the same name inherits nothing
     #[Test]
     public function theUploadHelpersKnowTheModeratorOfANodeType(): void
     {
@@ -535,8 +532,8 @@ final class NodeServiceTest extends TestCase
         $this->assertStringContainsString("'nodes.intro' => 'text'", $room);
     }
 
-    # Trusted tags: the right to author [usephp] and [usehtml] belongs to the main administrator alone, so every other author loses them at the write,
-    # also rebuilt from a nested pair, in the texts, the preview, the captions of resources and the values of fields
+    # Trusted tags: the right to author [usephp] and [usehtml] belongs to the main administrator alone, so every other author loses them at the write
+    # They are lost also when rebuilt from a nested pair, in the texts, the preview, the captions of resources and the values of fields
     #[Test]
     public function theTrustedTagsLeaveEveryTextButThatOfTheMainAdministrator(): void
     {
@@ -560,8 +557,9 @@ final class NodeServiceTest extends TestCase
         $this->assertSame(['ok' => true, 'value' => 0], $run['clear']);
     }
 
-    # The file of an attachment: a stored material grants the names of its own intro and body to a reader, in two statements with the type; a thumb only after
-    # its original and only when it exists; a preview grants the files of the visitor and every file to a moderator without SQL; each refusal is the same ''
+    # The file of an attachment: a stored material grants the names of its own intro and body to a reader, in two statements with the type
+    # A thumb is granted only after its original and only when it exists
+    # A preview grants the files of the visitor and every file to a moderator without SQL; each refusal is the same ''
     #[Test]
     public function anAttachmentFileIsGrantedByItsMaterialOrItsOwner(): void
     {
@@ -597,8 +595,8 @@ final class NodeServiceTest extends TestCase
         $this->assertStringContainsString("array_merge(['forum', 'shop'], array_keys(\$types))", $mods);
     }
 
-    # The comments of a deleted material leave inside its transaction with every award compensated, and a failed comment step keeps the material;
-    # one link cannot come twice in one input, the publication of an expired material and a closed points configuration are handled, a moderator reads any state
+    # The comments of a deleted material leave inside its transaction with every award compensated, and a failed comment step keeps the material
+    # One link cannot come twice in one input, the publication of an expired material and a closed points configuration are handled, a moderator reads any state
     #[Test]
     public function theIntegrityFixesHold(): void
     {
@@ -626,9 +624,10 @@ final class NodeServiceTest extends TestCase
         $this->assertSame(['ok' => true, 'value' => null], $run['target']['off'][1]);
     }
 
-    # A compensation Point refuses rolls the delete back with its comments and journal, a closed points configuration deletes without it and logs;
-    # a comment of a material gone or closed between the check and the lock is refused without a row or points, a lost points unit rolls the comment back
-    # and is logged, and the publication of a pending comment of a material that is gone is refused while one of a live material is rewarded
+    # A compensation Point refuses rolls the delete back with its comments and journal, a closed points configuration deletes without it and logs
+    # A comment of a material gone or closed between the check and the lock is refused without a row or points
+    # A lost points unit rolls the comment back and is logged
+    # Publishing a pending comment of a material that is gone is refused, while one of a live material is rewarded
     #[Test]
     public function theCommentAndPointFixesHold(): void
     {
@@ -645,8 +644,9 @@ final class NodeServiceTest extends TestCase
         $this->assertSame([true, 1, 1], $run['root']['live'], 'A pending comment of a live material was not published and rewarded');
     }
 
-    # A parent below the category itself or on a stored loop is refused and a valid move passes; a deletion takes the whole subtree or, with a main
-    # category anywhere in it, nothing, and leaves no subcategory without its parent; a category of the forum with topics never becomes a category of a type
+    # A parent below the category itself or on a stored loop is refused and a valid move passes
+    # A deletion takes the whole subtree or, with a main category anywhere in it, nothing, and leaves no subcategory without its parent
+    # A category of the forum with topics never becomes a category of a type
     #[Test]
     public function theCategoryTreeStaysATree(): void
     {
@@ -701,6 +701,16 @@ final class NodeServiceTest extends TestCase
         $this->assertSame([['ok' => true, 'value' => 25], ['ok' => true, 'value' => 25]], [$run['hidden']['boris'], $run['hidden']['mixed']]);
     }
 
+    # A category of another language is neither offered to a visitor nor taken from one; a shared context, the same language and a moderator of the type keep it
+    #[Test]
+    public function aVisitorPostsOnlyIntoCategoriesOfTheLanguage(): void
+    {
+        $run = $this->getRuns()['model']['tongue'];
+        $this->assertSame(['ok' => false, 'code' => 2, 'class' => 'NodeException', 'msg' => 'The context may not post into the category'], $run['other']);
+        $this->assertSame([['ok' => true, 'value' => 26], ['ok' => true, 'value' => 26], ['ok' => true, 'value' => 26]], [$run['same'], $run['none'], $run['moder']]);
+        $this->assertSame([false, true, true, true], $run['form'], 'The form offers a category of another language, or hides one the writer takes');
+    }
+
     # An own report earns its moderator nothing, a file replaced by a link starts without metadata and hits, and the profile counts what its feed shows
     #[Test]
     public function reportsResourcesAndProfilesFollowTheModel(): void
@@ -711,6 +721,14 @@ final class NodeServiceTest extends TestCase
         $this->assertSame(['ok' => true, 'value' => 2], $run['swap']);
         $this->assertSame(['src' => 'https://example.com/moved.zip', 'mime' => null, 'size' => null, 'hits' => 0], $run['link'], 'The link kept the metadata of the file');
         $this->assertSame([true, 2, 2], $run['profile'], 'The profile count differs from its feed or counts a hidden material');
+        $this->assertSame([2, 2], $run['lowbatch'], 'A sync batch below the targets of one feed slice drops Node comments from the profile');
+        $this->assertSame([1, 500, 500], $run['batch'], 'The target batch does not follow limits.syncbatch within 500');
+        $root = dirname(__DIR__, 2);
+        $own = '/min\(500, [^)]*syncbatch|array_(chunk|slice)\([^;]*\b500\b[^;]*getNodeTargetList/';
+        foreach (['core/classes/comment.php', 'core/classes/node/service.php', 'modules/node/index.php', 'core/system.php'] as $file) {
+            $code = (string)file_get_contents($root.'/'.$file);
+            $this->assertDoesNotMatchRegularExpression($own, $code, $file.' sizes a target batch on its own');
+        }
     }
 
     # A delete of a material with an extension locks the comments before its first plain read, so a comment edited meanwhile is no 1020

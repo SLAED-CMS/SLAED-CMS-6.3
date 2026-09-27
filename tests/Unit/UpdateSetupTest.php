@@ -7,17 +7,16 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * The module registry of the 6.3 update keeps the switches a 6.2 site stored in its _modules table over the shipped
- * config/modules.php on the first run and leaves the switches of the owner alone after it, the update takes the types of config/node.php out of their four
- * areas unless its type table registers them, and the preflight of setup/index.php refuses a clean installation over the tables of its prefix or on an old
- * server and an update whose prefix has no users and admins tables or whose admins and newsletter tables are not InnoDB. tests/Support/update_probe.php
- * lifts the shipped functions out of the installer by name and drives them on a scratch site and a disposable schema, so the stand is never touched.
- */
+# The 6.3 update: the module registry, the removal of unregistered Node types and the preflight of setup/index.php
 final class UpdateSetupTest extends TestCase
 {
     private static array $probe = [];
 
+    # The registry keeps the switches of the 6.2 _modules table over config/modules.php on the first run and leaves the switches of the owner alone after it
+    # The types of config/node.php leave their four areas unless the type table registers them
+    # The preflight refuses a clean installation over the tables of its prefix or on an old server, and an update without users and admins tables
+    # It also refuses an update whose admins and newsletter tables are not InnoDB
+    # The probe tests/Support/update_probe.php lifts the shipped functions out of the installer by name onto a scratch site and a disposable schema, never the stand
     # Run the probe once in its setup mode and memoize the report for every test in this class
     private function getRun(): array
     {
@@ -34,9 +33,9 @@ final class UpdateSetupTest extends TestCase
         return self::$probe;
     }
 
-    # A module switched off, shown to a group and placed in blocks by the 6.2 site keeps that after the update, although the shipped record says otherwise;
-    # a module without a row keeps the shipped record, a module without a record gets the default, node gets the record of a clean installation,
-    # the record of a module that left the tree is dropped and named, the numbered rights become names, and a repeat changes nothing
+    # A module switched off, shown to a group and placed in blocks by the 6.2 site keeps that after the update, although the shipped record says otherwise
+    # A module without a row keeps the shipped record, a module without a record gets the default, and node gets the record of a clean installation
+    # The record of a module that left the tree is dropped and named, the numbered rights become names, and a repeat changes nothing
     #[Test]
     public function theSiteRegistryWinsOverTheRelease(): void
     {
@@ -69,8 +68,8 @@ final class UpdateSetupTest extends TestCase
         $this->assertSame('', $run['rights']);
     }
 
-    # A clean installation needs a server as new as the update does and no table of its prefix; a prefix that only starts like a taken one, or holds the
-    # underscore LIKE would take for any character, is free; the update needs both the users and the admins table of its prefix
+    # A clean installation needs a server as new as the update does and no table of its prefix; the update needs both the users and the admins table of its prefix
+    # A prefix that only starts like a taken one, or holds the underscore LIKE would take for any character, is free
     #[Test]
     public function thePreflightRefusesAWrongBase(): void
     {
@@ -86,8 +85,8 @@ final class UpdateSetupTest extends TestCase
         $this->assertSame($want, $run['update']['engine']);
     }
 
-    # A repeat after the mark modules reads the _modules table of 6.2 no more: forum, which the owner switched on between the runs, stays on, the rights stay names,
-    # and the answer says the switches were carried by the first run
+    # A repeat after the mark modules reads the _modules table of 6.2 no more: forum, which the owner switched on between the runs, stays on, the rights stay names
+    # The answer says the switches were carried by the first run
     #[Test]
     public function aRepeatKeepsTheSwitchesOfTheOwner(): void
     {
@@ -98,8 +97,8 @@ final class UpdateSetupTest extends TestCase
         $this->assertStringContainsString('switches of the 6.2 table probe_modules were carried by the first run', $run['owned']['text']);
     }
 
-    # The update takes every type of config/node.php its type table does not register out of node.types, fields.node, uploads and ratings and names them,
-    # keeps a registered one with its areas and every other area, and a repeat has nothing left to take
+    # The update takes every type of config/node.php its type table does not register out of node.types, fields.node, uploads and ratings and names them
+    # A registered type keeps its areas, every other area stays, and a repeat has nothing left to take
     #[Test]
     public function theUpdateDropsUnregisteredTypes(): void
     {
@@ -110,8 +109,9 @@ final class UpdateSetupTest extends TestCase
         $this->assertSame([], $run['again']);
     }
 
-    # A registry step that cannot read the admins table answers a red row naming it and leaves config/modules.php alone, so the update stops before the schema
-    # and the next run still counts as the first; a type step that cannot write uploads.php answers false and keeps node.php, so a repeat finds the types again
+    # A registry step that cannot read the admins table answers a red row naming it and leaves config/modules.php alone
+    # The update then stops before the schema, and the next run still counts as the first
+    # A type step that cannot write uploads.php answers false and keeps node.php, so a repeat finds the types again
     #[Test]
     public function aRegistryOrTypeFaultStopsTheUpdate(): void
     {
@@ -122,8 +122,8 @@ final class UpdateSetupTest extends TestCase
         $this->assertSame([false, ['content', 'docs', 'news'], ['content', 'news']], $run['types']['locked']);
     }
 
-    # A read-only config/ratings.php is a red row: the manifest stays at applying and no mark is written; once the file is writable again the repeat
-    # publishes the rules, seals the manifest and writes the mark
+    # A read-only config/ratings.php is a red row: the manifest stays at applying and no mark is written
+    # Once the file is writable again the repeat publishes the rules, seals the manifest and writes the mark
     #[Test]
     public function aReadOnlyRulesFileHoldsTheMark(): void
     {
@@ -137,9 +137,11 @@ final class UpdateSetupTest extends TestCase
         $this->assertNotSame($run['first']['rules'], $run['again']['rules'], 'The repeat did not publish the rules');
     }
 
-    # The installer never prints the stored password into its form, asks an installed site for the code of its key before the form and before any write,
-    # checks the prefix, the panel name, the writable configuration and a pending configuration journal before it connects, never changes permissions,
-    # writes the mark modules only while no row failed, and a clean installation writes its marks only after both SQL files ran without a failed statement
+    # The installer never prints the stored password into its form and asks an installed site for the code of its key before the form and before any write
+    # It checks every code through the one counting check under the lock of the key and offers a random panel name instead of admin
+    # It runs the schema file without the zero date modes of MySQL 8 and gives the session its mode back
+    # It checks the prefix, the panel name, the writable configuration and a pending configuration journal before it connects, and never changes permissions
+    # It writes the mark modules only while no row failed, and a clean installation writes its marks only after both SQL files ran without a failed statement
     #[Test]
     public function theInstallerChecksBeforeItWrites(): void
     {
@@ -149,11 +151,21 @@ final class UpdateSetupTest extends TestCase
         $form = substr($code, $from, strpos($code, "\n}\n", $from) - $from);
         $this->assertStringContainsString('name="xpass" value=""', $form);
         $this->assertStringNotContainsString("['pass']", $form, 'The form reads the stored password');
-        $gate = strpos($form, "if (\$scode !== '' && !password_verify(\$xcode, \$scode)) {");
+        $pick = "\$xafile = (\$spanel !== 'admin') ? \$spanel : strtolower(getRandomString('10'));";
+        $this->assertStringContainsString($pick, $form, 'The form offers the guessable name admin');
+        $sql = (string)file_get_contents(dirname(__DIR__, 2).'/setup/sql/table_update6_3.sql');
+        $mode = "SET SESSION sql_mode = TRIM(BOTH ',' FROM REPLACE(REPLACE(REPLACE(REPLACE(@@SESSION.sql_mode, 'NO_ZERO_IN_DATE', ''), 'NO_ZERO_DATE', '')";
+        $text = 'The schema file does not leave the zero date modes of MySQL 8 before its first ALTER';
+        $this->assertLessThan(strpos($sql, 'CREATE PROCEDURE rencol'), strpos($sql, $mode), $text);
+        $this->assertStringEndsWith("SET SESSION sql_mode = @SLAED_MODE;\n", $sql, 'The schema file does not give the session its mode back');
+        $gate = strpos($form, "if (\$scode !== '' && (\$xcode === '' || !checkSetupCode(\$xcode))) {");
+        $this->assertNotFalse($gate, 'The form lost the check of the code');
         $this->assertLessThan(strpos($form, 'name="xhost"'), $gate, 'The form shows the connection data before the code');
         $save = strpos($code, 'function save(): void {');
         $conn = strpos($code, 'new Database(', $save);
         $head = substr($code, $save, $conn - $save);
+        $this->assertSame(1, substr_count($code, 'password_verify('), 'A code is checked outside the counting check');
+        $this->assertStringContainsString("if (\$scode !== '' && !checkSetupCode(\$xcode)) setExit(_SETUPCODE);", $head);
         $want = ['setExit(_SETUPCODE)', 'setExit(_SETUPTYPE)', 'setExit(_SETUPPREFIX)', 'setExit(_SETUPAFILE)', 'checkWritableConfig($name)', 'setExit(_SETUPJOUR)'];
         foreach ($want as $one) $this->assertStringContainsString($one, $head);
         $this->assertStringContainsString("if (\$first && !str_contains(\$bodytext, 'sl_red') && !setConfigFile('update.php', ['modules' => '6.3.0']", $code);

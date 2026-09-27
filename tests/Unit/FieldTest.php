@@ -14,11 +14,7 @@ use ReflectionNamedType;
 
 require_once dirname(__DIR__, 2).'/core/classes/field.php';
 
-/**
- * The shared Field class. The closed registry of ten types, the atomic check of definitions with
- * the path of the first error, one normalization behind the check and the filter, the six machine codes, the hard
- * ceilings no option raises, and the shape of the class itself - six public methods, no constructor, no state.
- */
+# The shared Field class: a closed registry of ten types, an atomic definition check, one normalization, six machine codes and hard ceilings
 final class FieldTest extends TestCase
 {
     # One valid definition; the overrides replace whole keys

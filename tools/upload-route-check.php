@@ -48,10 +48,10 @@ function getScopeToken(string $jar, string $scope): string {
 
 # Read the master secret the way getSecret() reads it, which is off the merged configuration and not off the shipped file
 # The panel keeps the generated secret in the merge alone, so the shipped file answers an empty string and every token derived from it matches nothing on the stand
-# It is re-read on every call rather than held for the process, because this walk drops the merge between rows and getSecret() mints a new master whenever the
-# server rebuilds onto an empty one; a value taken once at the start would outlive that and every later token would fail the check while looking well formed
-# What is held is the last non-empty answer, and that is the load-bearing half: between the drop and the next request the merge simply does not exist, the
-# shipped file answers the empty string it ships with, and a token derived from an empty secret matches nothing - which reads exactly like a broken guard
+# It is re-read on every call, because this walk drops the merge between rows and getSecret() mints a new master whenever the server rebuilds onto an empty one
+# A value taken once at the start would outlive that rebuild, and every later token would fail the check while looking well formed
+# What is held is the last non-empty answer, and that is the load-bearing half: between the drop and the next request the merge simply does not exist
+# In that gap the shipped file answers the empty string it ships with, and a token derived from an empty secret matches nothing - which reads exactly like a broken guard
 function getSiteSecret(): string {
     static $key = '';
     $now = '';
@@ -68,15 +68,13 @@ function getSiteSecret(): string {
 }
 
 # Take the shipped security file under guard for the length of the walk and give it back byte for byte, however the walk ends
-# Dropping the merge is what makes this necessary: the compiled configuration is the only place the master secret lives on a checkout, so a rebuild onto the
-# shipped file - which ships the secret empty - has getSecret() mint a new master and persist it into that tracked file. Measured on this stand: one request
-# after the drop replaced a80474b7 with be7578f7, and every token derived from the old master went stale with it
-# The restore is a shutdown handler rather than a line at the end of the walk, because an interrupted run is precisely the run that would otherwise leave a
-# generated secret sitting in a tracked file, where nothing in the gates would ever notice it
-# Cleaning up after the mint is not enough on its own: a token is derived before the request that carries it, and it is that request which rebuilds and mints, so
-# the answer comes back refused however carefully the walk re-reads afterwards. The shipped secret is therefore seeded with the live one for the length of the
-# walk, which leaves the rebuild nothing to mint and the master stable throughout. Without a merge to read the live secret from there is nothing to seed with,
-# and the walk then runs as it would have anyway
+# Dropping the merge makes this necessary: on a checkout the master secret lives only in the compiled configuration, and the shipped file ships it empty
+# A rebuild onto the shipped file therefore has getSecret() mint a new master and persist it into that tracked file
+# Measured on this stand: one request after the drop replaced a80474b7 with be7578f7, and every token derived from the old master went stale with it
+# The restore is a shutdown handler rather than a line at the end, because an interrupted run would otherwise leave a generated secret in a tracked file no gate notices
+# Cleaning up after the mint is not enough: a token is derived before the request that carries it, and that request rebuilds and mints, so the answer comes back refused
+# The shipped secret is therefore seeded with the live one for the length of the walk, which leaves the rebuild nothing to mint and the master stable throughout
+# Without a merge to read the live secret from there is nothing to seed with, and the walk then runs as it would have anyway
 function setConfigGuard(): void {
     $path = ROOTDIR.'/config/security.php';
     $befo = (string)file_get_contents($path);
@@ -92,9 +90,9 @@ function setConfigGuard(): void {
 }
 
 # Drop the compiled configuration so the next request rebuilds it from the files this walk has just rewritten, and answer whether it is really gone
-# The deletion is verified and never assumed: getConfig() answers the merge on a fast path that compares it against nothing, so a file that survived the unlink -
-# a lock held by the server on this platform is enough - leaves every later row reading the configuration this walk believed it had replaced. That is a red that
-# blames the code for the walk, and the same mechanism can as easily hand back a green, so a caller that cannot drop the merge must stop rather than carry on
+# The deletion is verified and never assumed: getConfig() answers the merge on a fast path that compares it against nothing, so a surviving file stays in force
+# A lock held by the server on this platform is enough to survive the unlink, and every later row then reads the configuration this walk believed it had replaced
+# Such a red blames the code for the walk, and the same mechanism can as easily hand back a green, so a caller that cannot drop the merge must stop rather than carry on
 function deleteConfigMerge(): bool {
     $path = ROOTDIR.'/config/local.php';
     if (is_file($path)) @unlink($path);
@@ -222,6 +220,16 @@ function getDbRows(string $sql, array $arg = []): array {
     return str_starts_with(strtoupper(ltrim($sql)), 'SELECT') ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
 }
 
+# Install a trigger that fails one write of the named table on purpose, so the compensation branch of an adapter can be reached
+# A run that dies before the scenario drops it removes it on the way out, since a trigger left on the stand would refuse every such write of the site
+function setFailTrigger(string $table, string $when): void {
+    $cfg = require ROOTDIR.'/config/db.php';
+    getDbRows('DROP TRIGGER IF EXISTS slaed_route_guard');
+    $body = "BEGIN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'route check'; END";
+    getDbRows('CREATE TRIGGER slaed_route_guard BEFORE '.$when.' ON '.$cfg['db']['prefix'].'_'.$table.' FOR EACH ROW '.$body);
+    register_shutdown_function(static fn(): array => getDbRows('DROP TRIGGER IF EXISTS slaed_route_guard'));
+}
+
 # Record one matrix expectation and its outcome
 function checkMatrixRow(string $name, bool $done, string $note = ''): void {
     if (!$done) $GLOBALS['fails']++;
@@ -271,6 +279,7 @@ function setFormBody(array $pair): string {
 }
 
 # The read rows of the matrix: listings, unknown operations and every refusal that must not touch the tree
+# A guest reaches the listing only where the record enables guest upload; where it does not, the access check answers first
 function checkReadRows(string $ajar, string $ujar, string $gjar): void {
     echo "Editor read and refusal rows\n";
     $base = ROOTDIR.'/uploads/shop';
@@ -283,7 +292,6 @@ function checkReadRows(string $ajar, string $ujar, string $gjar): void {
         $good = is_array($out['files'] ?? null);
         checkMatrixRow('editor listing answers '.$who, $good, $good ? count($out['files']).' files' : 'no file list');
     }
-    # A guest reaches the listing only where the record enables guest upload; where it does not, the access check answers first
     $url = '/index.php?go=4&op=editorFiles&place=shop.attach&token='.getScopeToken($gjar, 'ajax');
     $out = json_decode(getHttpReply($gjar, $url)['body'], true);
     $open = is_array($out['files'] ?? null);
@@ -309,8 +317,8 @@ function checkReadRows(string $ajar, string $ujar, string $gjar): void {
     checkNodeRows($ajar, $gjar);
 }
 
-# The attachment place of a registered Node type: the web server refuses its directory and the editor window offers only the controlled preview route of the type,
-# so a file enters a text as the [attach] tag alone; the first active type of the stand carries the rows, and a stand without one leaves them not run
+# The attachment place of a registered Node type: the web server refuses its directory and the editor window offers only the controlled preview route of the type
+# A file therefore enters a text as the [attach] tag alone; the first active type of the stand carries the rows, and a stand without one leaves them not run
 function checkNodeRows(string $ajar, string $gjar): void {
     echo "Node attachment place rows\n";
     $row = getDbRows('SELECT name FROM {p}_node_types WHERE active = 1 ORDER BY sort, id LIMIT 1');
@@ -349,6 +357,8 @@ function checkNodeRows(string $ajar, string $gjar): void {
 # A field place permits the listing route alone, and the routes its window never offers are refused by the server rather than by an interface that draws no button
 # Every row carries a deliberately wrong body token, so the gate is told apart from the token check that would otherwise answer the same request with the same shape
 # A refusal phrase is never compared against a literal, because the stand answers in its own locale: the field place is held against the attachment place of the same operation
+# The deletion rows leave the body token out rather than make it wrong: index.php reads the token as 'req', so a wrong body token outranks the good one in the address
+# That request would die on the dispatcher gate with an HTML alert before any route runs, while an absent body token still fails the route's own check, which the row needs
 function checkOpsGateRows(string $ujar, string $png): void {
     $was = getDirTree(ROOTDIR.'/uploads/avatars');
     $send = ['token' => 'bogus'];
@@ -357,8 +367,6 @@ function checkOpsGateRows(string $ujar, string $png): void {
     $done = getTreeDelta(ROOTDIR.'/uploads/avatars', $was) === [] && $deny !== $miss && str_contains($deny, '"ok":false');
     checkMatrixRow('a field place is refused the upload route before its token', $done, substr($deny, 0, 90));
     $good = getScopeToken($ujar, 'ajax');
-    # The body token is left out rather than made wrong: index.php reads the token as 'req', so a wrong one in the body outranks the good one in the address and the
-    # request dies on the dispatcher gate with an HTML alert, before any route runs. An absent body token still fails the route's own check, which is all this row needs
     $send = ['file' => 'nosuchfile.png'];
     $deny = getHttpReply($ujar, '/index.php?go=4&op=editorDelete&place=users.avatar&token='.$good, $send)['body'];
     $miss = getHttpReply($ujar, '/index.php?go=4&op=editorDelete&place=shop.attach&token='.$good, $send)['body'];
@@ -678,6 +686,10 @@ function checkEditorGuestRows(string $gjar): void {
 }
 
 # Remove every file and row the walk created, and report anything that survived
+# One request goes out before the file goes back, so the merge is rebuilt while the seeded secret is still readable; the walk leaves the compiled configuration deleted
+# Without it the next visitor to the stand mints the master and writes it into the tracked file minutes after a clean report; measured, that is how it came back here
+# The row asserts the restore and never the absence of a change: the walk seeds the shipped secret on purpose, and the server mints its own on rebuilding onto an empty file
+# Neither is a failure of the code under walk; what must never pass is a walk that ends with a secret left in a tracked file
 function deleteWalkTraces(): void {
     echo "Cleanup\n";
     $left = [];
@@ -687,12 +699,7 @@ function deleteWalkTraces(): void {
     }
     checkMatrixRow('every published file was removed', $left === [], implode(', ', $left));
     if ((string)$GLOBALS['guard'] === '') return;
-    # One request before the file goes back, so the merge is rebuilt while the seeded secret is still readable. The walk leaves the compiled configuration deleted
-    # behind it, and a merge that is missing when the shipped secret is empty again means the next visitor to the stand - not this walk - mints the master and
-    # writes it back into the tracked file, minutes after the run reported a clean tree. Measured: that is exactly how it came back between two runs here
     getHttpReply(WORKDIR.'/jar-warm.txt', '/index.php');
-    # The row asserts the restore and never the absence of a change: the walk seeds the shipped secret on purpose, and the server mints one of its own whenever
-    # it rebuilds onto an empty file. Neither is a failure of the code under walk. What must never pass is a walk that ends with a secret left in a tracked file
     $path = ROOTDIR.'/config/security.php';
     clearstatcache(true, $path);
     $drift = (string)file_get_contents($path) !== (string)$GLOBALS['guard'];

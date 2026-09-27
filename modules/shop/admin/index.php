@@ -116,9 +116,16 @@ function clients(): void {
             'is_subtabs' => true,
         ]),
     ]);
-    $result = $db->getSqlQuery('SELECT c.id, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.status, u.name, p.title FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = c.uid) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.prod) WHERE c.'.$sqlstatus.$searchWhere.' ORDER BY '.$searchOrder.' LIMIT '.$offset.', '.$conf['shop']['anum'], $searchParams);
-    [$numstories] = $db->getSqlRow($db->getSqlQuery('SELECT Count(c.id) FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = c.uid) WHERE c.'.$sqlstatus.$searchWhere, $searchParams));
-    $numpages = ($conf['shop']['anum'] > 0) ? (int)ceil($numstories / $conf['shop']['anum']) : 1;
+    $result = $db->getSqlQuery(
+        'SELECT c.id, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.status, u.name, p.title FROM '.PREFIX_DB.'_clients AS c'
+            .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = c.uid) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.prod) WHERE c.'.$sqlstatus.$searchWhere
+            .' ORDER BY '.$searchOrder.' LIMIT '.$offset.', '.$conf['shop']['anum'],
+        $searchParams
+    );
+    [$numstories] = $db->getSqlRow($db->getSqlQuery(
+        'SELECT Count(c.id) FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = c.uid) WHERE c.'.$sqlstatus.$searchWhere,
+        $searchParams
+    ));
     if ($db->getSqlRowCount($result) > 0) {
         $head = [
             ['content' => _ID, 'is_col_id' => true],
@@ -162,7 +169,13 @@ function clients(): void {
                 'cells' => [
                     ['is_col_id' => true, 'content_html' => (string)$cid],
                     ['content_html' => $nick],
-                    ['is_truncate' => true, 'title_text' => (string)$ptitle, 'prefix_html' => $tpl->getHtmlFrag('popover', ['items' => $tips]), 'has_content_text' => true, 'content_text' => (string)$ptitle],
+                    [
+                        'is_truncate' => true,
+                        'title_text' => (string)$ptitle,
+                        'prefix_html' => $tpl->getHtmlFrag('popover', ['items' => $tips]),
+                        'has_content_text' => true,
+                        'content_text' => (string)$ptitle,
+                    ],
                     ['is_truncate' => true, 'title_text' => domain($cwebsite), 'content_html' => filterTextHighlight(domain($cwebsite), $csearch)],
                     ['is_col_date' => true, 'content_html' => $cenddate],
                     ['is_col_status' => true, 'content_html' => ad_status('', $cactive)],
@@ -175,8 +188,7 @@ function clients(): void {
         $head[3]['is_truncate'] = true;
         $html = $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'is_fixed' => true, 'head' => $head, 'rows_html' => $trows]);
         $html .= getTplPager([
-            'count' => (int)$numstories,
-            'pages' => $numpages,
+            'count' => $numstories,
             'limit' => (int)$conf['shop']['anum'],
             'maxpg' => (int)$conf['shop']['anump'],
             'url' => $field,
@@ -203,8 +215,8 @@ function clientset(): void {
             $data = ['mid' => $id, 'aid' => intval(substr($admin[0], 0, 11))];
             if ($uid && $active) $pnt->addEvent('order', 'shop', 'client:'.$id, (int)$uid, $data);
             $rid = ($uid && $was == 1) ? $pnt->getEventId('order', 'shop', 'client:'.$id, (int)$uid) : 0;
-            if ($rid) $pnt->addEvent('order', 'shop', 'reverse:'.$rid, (int)$uid, ['rid' => $rid] + $data);
-            $done = $db->setSqlCommit();
+            $done = $rid !== false && (!$rid || $pnt->addEvent('order', 'shop', 'reverse:'.$rid, (int)$uid, ['rid' => $rid] + $data));
+            $done = $done && $db->setSqlCommit();
         }
         if (!$done) $db->setSqlRollback();
         if (!$done) [$iswarn, $note] = [true, _ERROR];
@@ -216,7 +228,11 @@ function clientadd(): void {
     global $db, $afile, $conf, $stop, $tpl;
     if (getVar('req', 'cid', 'num', 0)) {
         $cid = getVar('req', 'cid', 'num');
-        $result = $db->getSqlQuery('SELECT c.id, c.uid, c.prod, c.part, c.proz, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.status, u.id, u.name FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = c.part) WHERE c.id = :cid', ['cid' => $cid]);
+        $result = $db->getSqlQuery(
+            'SELECT c.id, c.uid, c.prod, c.part, c.proz, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.status, u.id, u.name'
+                .' FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = c.part) WHERE c.id = :cid',
+            ['cid' => $cid]
+        );
         [$cid, $uid, $product, $partner, $proz, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, , $nick] = $db->getSqlRow($result);
         $cregdate = date('Y-m-d H:i:s', $cregdate);
         $cenddate = ($cenddate) ? date('Y-m-d H:i:s', $cenddate) : date('Y-m-d H:i:s');
@@ -307,16 +323,75 @@ function clientadd(): void {
             'is_selected' => $product == $pid,
         ]);
     }
-    $rows[] = ['label_for' => 'f-cname', 'label_html' => _CLIENTNAME, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'cname', 'input_id' => 'f-cname', 'value_attr' => $cname, 'is_required' => true, 'maxlength_num' => 255])];
-    $rows[] = ['label_for' => 'f-caddr', 'label_html' => _CLIENTADRES, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'caddr', 'input_id' => 'f-caddr', 'value_attr' => $caddr, 'is_required' => true, 'maxlength_num' => 255])];
-    $rows[] = ['label_for' => 'f-cphone', 'label_html' => _CLIENTPHONE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'cphone', 'input_id' => 'f-cphone', 'value_attr' => $cphone, 'is_required' => true, 'maxlength_num' => 255])];
-    $rows[] = ['label_for' => 'f-cemail', 'label_html' => _EMAIL, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'cemail', 'input_id' => 'f-cemail', 'value_attr' => $cemail, 'maxlength_num' => 255])];
-    $rows[] = ['label_for' => 'f-cwebsite', 'label_html' => _SITE, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'cwebsite', 'input_id' => 'f-cwebsite', 'value_attr' => $cwebsite, 'maxlength_num' => 255])];
+    $rows[] = [
+        'label_for' => 'f-cname',
+        'label_html' => _CLIENTNAME,
+        'field_html' => $tpl->getHtmlFrag('input', [
+            'itype' => 'text',
+            'name_attr' => 'cname',
+            'input_id' => 'f-cname',
+            'value_attr' => $cname,
+            'is_required' => true,
+            'maxlength_num' => 255,
+        ]),
+    ];
+    $rows[] = [
+        'label_for' => 'f-caddr',
+        'label_html' => _CLIENTADRES,
+        'field_html' => $tpl->getHtmlFrag('input', [
+            'itype' => 'text',
+            'name_attr' => 'caddr',
+            'input_id' => 'f-caddr',
+            'value_attr' => $caddr,
+            'is_required' => true,
+            'maxlength_num' => 255,
+        ]),
+    ];
+    $rows[] = [
+        'label_for' => 'f-cphone',
+        'label_html' => _CLIENTPHONE,
+        'field_html' => $tpl->getHtmlFrag('input', [
+            'itype' => 'text',
+            'name_attr' => 'cphone',
+            'input_id' => 'f-cphone',
+            'value_attr' => $cphone,
+            'is_required' => true,
+            'maxlength_num' => 255,
+        ]),
+    ];
+    $rows[] = [
+        'label_for' => 'f-cemail',
+        'label_html' => _EMAIL,
+        'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'cemail', 'input_id' => 'f-cemail', 'value_attr' => $cemail, 'maxlength_num' => 255]),
+    ];
+    $rows[] = [
+        'label_for' => 'f-cwebsite',
+        'label_html' => _SITE,
+        'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'cwebsite', 'input_id' => 'f-cwebsite', 'value_attr' => $cwebsite, 'maxlength_num' => 255]),
+    ];
     $rows[] = ['label_html' => _CLIENTSTR, 'field_html' => getTplAddDateTime(['name' => 'cregdate', 'time' => $cregdate, 'with' => true, 'max' => 16])];
     $rows[] = ['label_html' => _CLIENTEND, 'field_html' => getTplAddDateTime(['name' => 'cenddate', 'time' => $cenddate, 'with' => true, 'max' => 16])];
-    $rows[] = ['label_for' => 'f-product', 'label_html' => _PRODUCT, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'product', 'selectid' => 'f-product', 'options_html' => $prodopts])];
-    $rows[] = ['label_html' => _ACTIVATE2, 'label_id' => $labid = getFieldIds('', 'cactive')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'cactive', 'value' => $cactive, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
-    $rows[] = ['label_for' => 'f-cinfo', 'label_html' => _NOTE, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'cinfo', 'input_id' => 'f-cinfo', 'value_text' => $cinfo, 'rows_num' => 5]), 'is_full' => true];
+    $rows[] = [
+        'label_for' => 'f-product',
+        'label_html' => _PRODUCT,
+        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'product', 'selectid' => 'f-product', 'options_html' => $prodopts]),
+    ];
+    $rows[] = [
+        'label_html' => _ACTIVATE2,
+        'label_id' => $labid = getFieldIds('', 'cactive')['label'],
+        'field_html' => getTplRadioGroup([
+            'labelledby' => $labid,
+            'name' => 'cactive',
+            'value' => $cactive,
+            'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
+        ]),
+    ];
+    $rows[] = [
+        'label_for' => 'f-cinfo',
+        'label_html' => _NOTE,
+        'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'cinfo', 'input_id' => 'f-cinfo', 'value_text' => $cinfo, 'rows_num' => 5]),
+        'is_full' => true,
+    ];
     $posttypeopts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SAVECHANGES])
         .($cid ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
@@ -324,7 +399,7 @@ function clientadd(): void {
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'shop'],
             ['nameattr' => 'op', 'valueattr' => 'clientsave'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('shop')],
             ['nameattr' => 'cid', 'valueattr' => (string)$cid],
             ['nameattr' => 'partner', 'valueattr' => (string)$partner],
             ['nameattr' => 'cppi', 'valueattr' => (string)$cppi],
@@ -339,7 +414,7 @@ function clientadd(): void {
 
 function clientsave(): void {
     global $db, $afile, $conf, $stop, $pnt, $admin;
-    $iswarn = !checkSiteToken();
+    $iswarn = !checkAdminPost('shop');
     $partner = getVar('post', 'partner', 'num');
     $uid = getVar('post', 'uid', 'num');
     $product = getVar('post', 'product', 'num');
@@ -364,43 +439,72 @@ function clientsave(): void {
         setRedirect($afile.'.php?name=shop&op=clients', false, 302, _TOKENMISS, true);
     } elseif (!$stop && $posttype == 'save') {
         $data = ['mid' => $cid, 'aid' => intval(substr($admin[0], 0, 11))];
+        $done = true;
         if ($cid) {
-            $own = $db->setSqlBegin();
-            [$ouid, $was] = $db->getSqlRow($db->getSqlQuery('SELECT uid, status FROM '.PREFIX_DB.'_clients WHERE id = :cid FOR UPDATE', ['cid' => $cid]));
-            if ($partner && $cppi) {
-                [$pprice] = $db->getSqlRow($db->getSqlQuery('SELECT price FROM '.PREFIX_DB.'_products WHERE id = :product', ['product' => $product]));
-                $num = $db->getSqlRowCount($db->getSqlQuery('SELECT part FROM '.PREFIX_DB.'_clients WHERE part = :partner AND status != 2', ['partner' => $partner]));
-                if ($num >= $conf['shop']['clients2']) {
-                    $conf['shop']['proz2'] = ($conf['shop']['proz2']) ? $conf['shop']['proz2'] : 1;
-                    $price = $pprice / 100 * $conf['shop']['proz2'];
-                    $proz = $conf['shop']['proz2'];
-                } elseif ($num >= $conf['shop']['clients1']) {
-                    $conf['shop']['proz1'] = ($conf['shop']['proz1']) ? $conf['shop']['proz1'] : 1;
-                    $price = $pprice / 100 * $conf['shop']['proz1'];
-                    $proz = $conf['shop']['proz1'];
-                } elseif ($num >= $conf['shop']['clients']) {
-                    $conf['shop']['proz'] = ($conf['shop']['proz']) ? $conf['shop']['proz'] : 1;
-                    $price = $pprice / 100 * $conf['shop']['proz'];
-                    $proz = $conf['shop']['proz'];
+            $done = $db->setSqlBegin();
+            if ($done) {
+                [$ouid, $was] = $db->getSqlRow($db->getSqlQuery('SELECT uid, status FROM '.PREFIX_DB.'_clients WHERE id = :cid FOR UPDATE', ['cid' => $cid]));
+                if ($partner && $cppi) {
+                    [$pprice] = $db->getSqlRow($db->getSqlQuery('SELECT price FROM '.PREFIX_DB.'_products WHERE id = :product', ['product' => $product]));
+                    $num = $db->getSqlRowCount($db->getSqlQuery('SELECT part FROM '.PREFIX_DB.'_clients WHERE part = :partner AND status != 2', ['partner' => $partner]));
+                    if ($num >= $conf['shop']['clients2']) {
+                        $conf['shop']['proz2'] = ($conf['shop']['proz2']) ? $conf['shop']['proz2'] : 1;
+                        $price = $pprice / 100 * $conf['shop']['proz2'];
+                        $proz = $conf['shop']['proz2'];
+                    } elseif ($num >= $conf['shop']['clients1']) {
+                        $conf['shop']['proz1'] = ($conf['shop']['proz1']) ? $conf['shop']['proz1'] : 1;
+                        $price = $pprice / 100 * $conf['shop']['proz1'];
+                        $proz = $conf['shop']['proz1'];
+                    } elseif ($num >= $conf['shop']['clients']) {
+                        $conf['shop']['proz'] = ($conf['shop']['proz']) ? $conf['shop']['proz'] : 1;
+                        $price = $pprice / 100 * $conf['shop']['proz'];
+                        $proz = $conf['shop']['proz'];
+                    }
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_partners SET rest = rest+:endprice WHERE uid = :partner', ['endprice' => $price, 'partner' => $partner]);
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_clients SET '
+                        .'uid = :uid, prod = :product, part = :partner, proz = :cpartner_proz, name = :cname, addr = :caddr, phone = :cphone, '
+                        .'email = :cemail, website = :cwebsite, regdate = :cregdate, enddate = :cenddate, info = :cinfo, status = :cactive WHERE id = :cid', [
+                        'uid' => $uid, 'product' => $product, 'partner' => $partner, 'cpartner_proz' => $proz, 'cname' => $cname, 'caddr' => $caddr, 'cphone' => $cphone,
+                        'cemail' => $cemail, 'cwebsite' => $cwebsite, 'cregdate' => $cregdate, 'cenddate' => $cenddate, 'cinfo' => $cinfo, 'cactive' => $cactive, 'cid' => $cid,
+                    ]);
+                } else {
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_clients SET '
+                        .'uid = :uid, prod = :product, name = :cname, addr = :caddr, phone = :cphone, '
+                        .'email = :cemail, website = :cwebsite, regdate = :cregdate, enddate = :cenddate, info = :cinfo, status = :cactive WHERE id = :cid', [
+                        'uid' => $uid, 'product' => $product, 'cname' => $cname, 'caddr' => $caddr, 'cphone' => $cphone, 'cemail' => $cemail, 'cwebsite' => $cwebsite,
+                        'cregdate' => $cregdate, 'cenddate' => $cenddate, 'cinfo' => $cinfo, 'cactive' => $cactive, 'cid' => $cid,
+                    ]);
                 }
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_partners SET rest = rest+:endprice WHERE uid = :partner', ['endprice' => $price, 'partner' => $partner]);
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_clients SET uid = :uid, prod = :product, part = :partner, proz = :cpartner_proz, name = :cname, addr = :caddr, phone = :cphone, email = :cemail, website = :cwebsite, regdate = :cregdate, enddate = :cenddate, info = :cinfo, status = :cactive WHERE id = :cid', ['uid' => $uid, 'product' => $product, 'partner' => $partner, 'cpartner_proz' => $proz, 'cname' => $cname, 'caddr' => $caddr, 'cphone' => $cphone, 'cemail' => $cemail, 'cwebsite' => $cwebsite, 'cregdate' => $cregdate, 'cenddate' => $cenddate, 'cinfo' => $cinfo, 'cactive' => $cactive, 'cid' => $cid]);
-            } else {
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_clients SET uid = :uid, prod = :product, name = :cname, addr = :caddr, phone = :cphone, email = :cemail, website = :cwebsite, regdate = :cregdate, enddate = :cenddate, info = :cinfo, status = :cactive WHERE id = :cid', ['uid' => $uid, 'product' => $product, 'cname' => $cname, 'caddr' => $caddr, 'cphone' => $cphone, 'cemail' => $cemail, 'cwebsite' => $cwebsite, 'cregdate' => $cregdate, 'cenddate' => $cenddate, 'cinfo' => $cinfo, 'cactive' => $cactive, 'cid' => $cid]);
+                $left = $was == 1 && ($cactive != 1 || $ouid != $uid);
+                $came = $cactive == 1 && ($was != 1 || $ouid != $uid);
+                if ($left || $came) $pnt->setUserLocks([(int)$ouid, (int)$uid]);
+                $rid = ($left && $ouid) ? $pnt->getEventId('order', 'shop', 'client:'.$cid, (int)$ouid) : 0;
+                $done = $rid !== false && (!$rid || $pnt->addEvent('order', 'shop', 'reverse:'.$rid, (int)$ouid, ['rid' => $rid] + $data));
+                if ($done && $came && $uid) $pnt->addEvent('order', 'shop', 'client:'.$cid, (int)$uid, $data);
+                $done = $done && $db->setSqlCommit();
             }
-            $left = $was == 1 && ($cactive != 1 || $ouid != $uid);
-            $came = $cactive == 1 && ($was != 1 || $ouid != $uid);
-            if ($left || $came) $pnt->setUserLocks([(int)$ouid, (int)$uid]);
-            $rid = ($left && $ouid) ? $pnt->getEventId('order', 'shop', 'client:'.$cid, (int)$ouid) : 0;
-            if ($rid) $pnt->addEvent('order', 'shop', 'reverse:'.$rid, (int)$ouid, ['rid' => $rid] + $data);
-            if ($came && $uid) $pnt->addEvent('order', 'shop', 'client:'.$cid, (int)$uid, $data);
-            if ($own && !$db->setSqlCommit()) $db->setSqlRollback();
+            if (!$done) $db->setSqlRollback();
         } else {
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_clients VALUES(NULL, :uid, :product, \'0\', \'0\', :cname, :caddr, :cphone, :cemail, :cwebsite, :cregdate, :cenddate, :cinfo, :cactive)', ['uid' => $uid, 'product' => $product, 'cname' => $cname, 'caddr' => $caddr, 'cphone' => $cphone, 'cemail' => $cemail, 'cwebsite' => $cwebsite, 'cregdate' => $cregdate, 'cenddate' => $cenddate, 'cinfo' => $cinfo, 'cactive' => $cactive]);
+            $db->getSqlQuery(
+                'INSERT INTO '.PREFIX_DB.'_clients VALUES(NULL, :uid, :product, \'0\', \'0\', :cname, :caddr, :cphone, :cemail, :cwebsite, :cregdate, :cenddate, :cinfo, :cactive)',
+                [
+                    'uid' => $uid,
+                    'product' => $product,
+                    'cname' => $cname,
+                    'caddr' => $caddr,
+                    'cphone' => $cphone,
+                    'cemail' => $cemail,
+                    'cwebsite' => $cwebsite,
+                    'cregdate' => $cregdate,
+                    'cenddate' => $cenddate,
+                    'cinfo' => $cinfo,
+                    'cactive' => $cactive,
+                ]
+            );
             $data['mid'] = intval($db->getSqlLastId());
             if ($cactive == 1 && $uid && $data['mid']) $pnt->addEvent('order', 'shop', 'client:'.$data['mid'], (int)$uid, $data);
         }
-        setRedirect($afile.'.php?name=shop&op=clients');
+        setRedirect($afile.'.php?name=shop&op=clients', false, 302, $done ? '' : _ERROR, !$done);
     } elseif ($posttype == 'delete') {
         clientdel($cid);
     } else {
@@ -419,8 +523,9 @@ function clientdel(int $id = 0): void {
             [$uid, $was] = $db->getSqlRow($db->getSqlQuery('SELECT uid, status FROM '.PREFIX_DB.'_clients WHERE id = :id FOR UPDATE', ['id' => $id]));
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_clients WHERE id = :id', ['id' => $id]);
             $rid = ($uid && $was == 1) ? $pnt->getEventId('order', 'shop', 'client:'.$id, (int)$uid) : 0;
-            if ($rid) $pnt->addEvent('order', 'shop', 'reverse:'.$rid, (int)$uid, ['rid' => $rid, 'mid' => $id, 'aid' => intval(substr($admin[0], 0, 11))]);
-            $done = $db->setSqlCommit();
+            $data = ['rid' => $rid, 'mid' => $id, 'aid' => intval(substr($admin[0], 0, 11))];
+            $done = $rid !== false && (!$rid || $pnt->addEvent('order', 'shop', 'reverse:'.$rid, (int)$uid, $data));
+            $done = $done && $db->setSqlCommit();
         }
         if (!$done) $db->setSqlRollback();
         if (!$done) [$iswarn, $note] = [true, _ERROR];
@@ -466,7 +571,8 @@ function products(): void {
         'subtitle_html' => buildShopSearchBox(),
     ]);
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('tabs', ['tabs_html' => $tabs, 'is_subtabs' => true])]);
-    $result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.price, p.vote, p.status, c.title FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) WHERE '.$sqlstatus.' ORDER BY p.fix DESC, p.time DESC LIMIT '.$offset.', '.$conf['shop']['anum']);
+    $result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.price, p.vote, p.status, c.title FROM '.PREFIX_DB.'_products AS p'
+        .' LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) WHERE p.'.$sqlstatus.' ORDER BY p.fix DESC, p.time DESC LIMIT '.$offset.', '.$conf['shop']['anum']);
     if ($db->getSqlRowCount($result) > 0) {
         $phead = [
             ['content' => '', 'is_col_check' => true],
@@ -513,8 +619,8 @@ function products(): void {
             'f0' => _LNFIX,
             'h1' => _LHOME,
             'h0' => _LNHOME,
-            'c1' => _APOSTMOD,
-            'c0' => _APOSTNOMOD,
+            'm1' => _APOSTMOD,
+            'm2' => _APOSTNOMOD,
             't1' => _LADATE,
             'd1' => _DELETE,
         ] as $val => $lab) {
@@ -534,12 +640,21 @@ function products(): void {
                 ['nameattr' => 'name', 'valueattr' => 'shop'],
                 ['nameattr' => 'op', 'valueattr' => 'productops'],
                 ['nameattr' => 'refer', 'valueattr' => '1'],
-                ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+                ['nameattr' => 'token', 'valueattr' => getSiteToken('shop')],
             ],
             'content_html' => $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'is_fixed' => true, 'head' => $phead, 'rows_html' => $prows]),
-            'actions_html' => $tpl->getHtmlFrag('inline-badge', ['label' => _CHECKOP]).' '.$tpl->getHtmlFrag('select', ['name_attr' => 'typ', 'options_html' => $actionopts, 'is_inline_gap' => true]).$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
+            'actions_html' => $tpl->getHtmlFrag('inline-badge', ['label' => _CHECKOP]).' '
+                .$tpl->getHtmlFrag('select', ['name_attr' => 'typ', 'options_html' => $actionopts, 'is_inline_gap' => true])
+                .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
         ]);
-        $html .= getTplPager(['limit' => $conf['shop']['anum'], 'maxpg' => $conf['shop']['anump'], 'url' => $field, 'table' => '_products', 'field' => 'id', 'where' => $sqlstatus]);
+        $html .= getTplPager([
+            'limit' => $conf['shop']['anum'],
+            'maxpg' => $conf['shop']['anump'],
+            'url' => $field,
+            'table' => '_products',
+            'field' => 'id',
+            'where' => $sqlstatus,
+        ]);
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $html]);
     } else {
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO])]);
@@ -552,7 +667,10 @@ function productadd(): void {
     global $db, $afile, $conf, $stop, $tpl, $prs;
     if (getVar('req', 'id', 'num', 0)) {
         $id = getVar('req', 'id', 'num');
-        $result = $db->getSqlQuery('SELECT id, cid, time, title, intro, body, price, vote, assoc, ihome, acomm, counter, fix, status FROM '.PREFIX_DB.'_products WHERE id = :id', ['id' => $id]);
+        $result = $db->getSqlQuery(
+            'SELECT id, cid, time, title, intro, body, price, vote, assoc, ihome, acomm, counter, fix, status FROM '.PREFIX_DB.'_products WHERE id = :id',
+            ['id' => $id]
+        );
         [$pid, $pcid, $ptime, $ptitle, $ptext, $pbodytext, $pprice, $vote, $passoc, $ihome, $acomm, $pcount, $fix, $pactive] = $db->getSqlRow($result);
         $associated = explode(',', $passoc);
     } else {
@@ -613,8 +731,24 @@ function productadd(): void {
         ]);
     }
     $rows = [
-        ['label_for' => 'f-ptitle', 'label_html' => _TITLE.' / '._PRODUCT, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'ptitle', 'input_id' => 'f-ptitle', 'value_attr' => $ptitle, 'maxlength_num' => 100, 'placeholder_text' => _TITLE, 'is_required' => true])],
-        ['label_for' => 'f-pcid', 'label_html' => _CATEGORY, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'pcid', 'selectid' => 'f-pcid', 'options_html' => $catopts])],
+        [
+            'label_for' => 'f-ptitle',
+            'label_html' => _TITLE.' / '._PRODUCT,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'text',
+                'name_attr' => 'ptitle',
+                'input_id' => 'f-ptitle',
+                'value_attr' => $ptitle,
+                'maxlength_num' => 100,
+                'placeholder_text' => _TITLE,
+                'is_required' => true,
+            ]),
+        ],
+        [
+            'label_for' => 'f-pcid',
+            'label_html' => _CATEGORY,
+            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'pcid', 'selectid' => 'f-pcid', 'options_html' => $catopts]),
+        ],
     ];
     $result2 = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = :modul ORDER BY parent, title', ['modul' => 'shop']);
     if ($db->getSqlRowCount($result2) > 0) {
@@ -624,7 +758,12 @@ function productadd(): void {
             if ($associated) foreach ((array)$associated as $val) if ($val == $id) $isch = true;
             $assoc .= $tpl->getHtmlFrag('label', [
                 'is_associated_option' => true,
-                'prefix_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'associated[]', 'describedby' => 'f-associated-hint', 'value_attr' => (string)$id, 'is_checked' => $isch]),
+                'prefix_html' => $tpl->getHtmlFrag('checkbox', [
+                    'name_attr' => 'associated[]',
+                    'describedby' => 'f-associated-hint',
+                    'value_attr' => (string)$id,
+                    'is_checked' => $isch,
+                ]),
                 'has_content_text' => true,
                 'content_text' => (string)$title,
             ]);
@@ -637,16 +776,59 @@ function productadd(): void {
     $rows[] = ['label_html' => _ENDTEXT, 'label_id' => $labid = getFieldIds('', 'pbodytext')['label'], 'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _ENDTEXT,
         'id' => '2', 'name' => 'pbodytext', 'value' => $pbodytext, 'mod' => 'shop', 'store' => 'products.body', 'rows' => '15', 'placeholder' => _ENDTEXT, 'required' => '0',
     ]), 'is_full' => true, 'field_unwrapped' => true];
-    $rows[] = ['label_for' => 'f-pprice', 'label_html' => _PREIS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'pprice', 'input_id' => 'f-pprice', 'value_attr' => $pprice, 'maxlength_num' => 10, 'placeholder_text' => _PREIS, 'is_required' => true])];
+    $rows[] = [
+        'label_for' => 'f-pprice',
+        'label_html' => _PREIS,
+        'field_html' => $tpl->getHtmlFrag('input', [
+            'itype' => 'text',
+            'name_attr' => 'pprice',
+            'input_id' => 'f-pprice',
+            'value_attr' => $pprice,
+            'maxlength_num' => 10,
+            'placeholder_text' => _PREIS,
+            'is_required' => true,
+        ]),
+    ];
     $commopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _DEACTIVATE, 'is_selected' => $acomm == 0])
         .$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _APOSTMOD, 'is_selected' => $acomm == 1])
         .$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _APOSTNOMOD, 'is_selected' => $acomm == 2]);
     $rows[] = ['label_html' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'ptime', 'time' => $ptime, 'with' => true, 'max' => 16])];
     $rows[] = ['label_html' => _VOTING, 'field_html' => add_voting('shop', 'vote', $vote)];
-    $rows[] = ['label_for' => 'f-acomm', 'label_html' => _COMMENTS, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'acomm', 'selectid' => 'f-acomm', 'options_html' => $commopts])];
-    $rows[] = ['label_html' => _PUBHOME, 'label_id' => $labid = getFieldIds('', 'ihome')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'ihome', 'value' => $ihome, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
-    $rows[] = ['label_html' => _FIXED.'?', 'label_id' => $labid = getFieldIds('', 'fix')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'fix', 'value' => $fix, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
-    $rows[] = ['label_html' => _ACTIVATEP, 'label_id' => $labid = getFieldIds('', 'pactive')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'pactive', 'value' => $pactive, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
+    $rows[] = [
+        'label_for' => 'f-acomm',
+        'label_html' => _COMMENTS,
+        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'acomm', 'selectid' => 'f-acomm', 'options_html' => $commopts]),
+    ];
+    $rows[] = [
+        'label_html' => _PUBHOME,
+        'label_id' => $labid = getFieldIds('', 'ihome')['label'],
+        'field_html' => getTplRadioGroup([
+            'labelledby' => $labid,
+            'name' => 'ihome',
+            'value' => $ihome,
+            'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
+        ]),
+    ];
+    $rows[] = [
+        'label_html' => _FIXED.'?',
+        'label_id' => $labid = getFieldIds('', 'fix')['label'],
+        'field_html' => getTplRadioGroup([
+            'labelledby' => $labid,
+            'name' => 'fix',
+            'value' => $fix,
+            'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
+        ]),
+    ];
+    $rows[] = [
+        'label_html' => _ACTIVATEP,
+        'label_id' => $labid = getFieldIds('', 'pactive')['label'],
+        'field_html' => getTplRadioGroup([
+            'labelledby' => $labid,
+            'name' => 'pactive',
+            'value' => $pactive,
+            'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
+        ]),
+    ];
     $posttypeopts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW])
         .$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SAVECHANGES])
         .($pid ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
@@ -655,7 +837,7 @@ function productadd(): void {
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'shop'],
             ['nameattr' => 'op', 'valueattr' => 'productsave'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('shop')],
             ['nameattr' => 'pid', 'valueattr' => (string)$pid],
         ],
         'rows' => $rows,
@@ -668,7 +850,7 @@ function productadd(): void {
 
 function productsave(): void {
     global $db, $afile, $stop;
-    $iswarn = !checkSiteToken();
+    $iswarn = !checkAdminPost('shop');
     $pid = getVar('post', 'pid', 'num');
     $pcid = getVar('post', 'pcid', 'num');
     $ptitle = getVar('post', 'ptitle', 'title');
@@ -691,9 +873,45 @@ function productsave(): void {
         setRedirect($afile.'.php?name=shop&op=products', false, 302, _TOKENMISS, true);
     } elseif (!$stop && $posttype == 'save') {
         if ($pid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET cid = :pcid, time = :ptime, title = :ptitle, intro = :ptext, body = :pbodytext, price = :pprice, vote = :vote, assoc = :assoc, ihome = :ihome, acomm = :acomm, fix = :fix, status = :pactive WHERE id = :pid', ['pcid' => $pcid, 'ptime' => $ptime, 'ptitle' => $ptitle, 'ptext' => $ptext, 'pbodytext' => $pbodytext, 'pprice' => $pprice, 'vote' => $vote, 'assoc' => $associated, 'ihome' => $ihome, 'acomm' => $acomm, 'fix' => $fix, 'pactive' => $pactive, 'pid' => $pid]);
+            $db->getSqlQuery(
+                'UPDATE '.PREFIX_DB.'_products'
+                    .' SET cid = :pcid, time = :ptime, title = :ptitle, intro = :ptext, body = :pbodytext, price = :pprice, vote = :vote, assoc = :assoc, ihome = :ihome,'
+                    .' acomm = :acomm, fix = :fix, status = :pactive WHERE id = :pid',
+                [
+                    'pcid' => $pcid,
+                    'ptime' => $ptime,
+                    'ptitle' => $ptitle,
+                    'ptext' => $ptext,
+                    'pbodytext' => $pbodytext,
+                    'pprice' => $pprice,
+                    'vote' => $vote,
+                    'assoc' => $associated,
+                    'ihome' => $ihome,
+                    'acomm' => $acomm,
+                    'fix' => $fix,
+                    'pactive' => $pactive,
+                    'pid' => $pid,
+                ]
+            );
         } else {
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_products VALUES (NULL, :pcid, :ptime, :ptitle, :ptext, :pbodytext, :pprice, :vote, :assoc, :ihome, :acomm, \'0\', \'0\', \'0\', \'0\', :fix, :pactive)', ['pcid' => $pcid, 'ptime' => $ptime, 'ptitle' => $ptitle, 'ptext' => $ptext, 'pbodytext' => $pbodytext, 'pprice' => $pprice, 'vote' => $vote, 'assoc' => $associated, 'ihome' => $ihome, 'acomm' => $acomm, 'fix' => $fix, 'pactive' => $pactive]);
+            $db->getSqlQuery(
+                'INSERT INTO '.PREFIX_DB.'_products'
+                    .' VALUES (NULL, :pcid, :ptime, :ptitle, :ptext, :pbodytext, :pprice, :vote, :assoc, :ihome, :acomm, \'0\', \'0\', \'0\', \'0\', :fix, :pactive)',
+                [
+                    'pcid' => $pcid,
+                    'ptime' => $ptime,
+                    'ptitle' => $ptitle,
+                    'ptext' => $ptext,
+                    'pbodytext' => $pbodytext,
+                    'pprice' => $pprice,
+                    'vote' => $vote,
+                    'assoc' => $associated,
+                    'ihome' => $ihome,
+                    'acomm' => $acomm,
+                    'fix' => $fix,
+                    'pactive' => $pactive,
+                ]
+            );
         }
         setRedirect($afile.'.php?name=shop&op=products');
     } elseif ($posttype == 'delete') {
@@ -730,7 +948,7 @@ function productops(int $pid = 0, string $vtyp = ''): void {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET ihome = :typ WHERE id IN ('.$in.')', ['typ' => $typ] + $pars);
         } elseif ($vtyp[0] == 't') {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET time = now() WHERE id IN ('.$in.')', $pars);
-        } elseif ($vtyp[0] == 'c') {
+        } elseif ($vtyp[0] == 'm' && CommentMode::tryFrom($typ)) {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET acomm = :typ WHERE id IN ('.$in.')', ['typ' => $typ] + $pars);
         } elseif ($vtyp[0] == 'd') {
             $guard = Cache::getWriteGuard();
@@ -742,7 +960,7 @@ function productops(int $pid = 0, string $vtyp = ''): void {
             $back = $open && !$kept && $db->setSqlRollback();
             if ($guard !== false && (!$open || $back || ($kept && Cache::addEpoch(true)))) Cache::deleteWriteGuard($guard);
             $fail = !$kept;
-        } elseif (is_numeric($vtyp[0])) {
+        } elseif ($vtyp[0] == 'c' && $typ > 0) {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET cid = :typ WHERE id IN ('.$in.')', ['typ' => $typ] + $pars);
         }
     }
@@ -792,7 +1010,10 @@ function partners(): void {
         'subtitle_html' => buildShopSearchBox(),
     ]);
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('tabs', ['tabs_html' => $tabs, 'is_subtabs' => true])]);
-    $result = $db->getSqlQuery('SELECT p.id, p.name, p.addr, p.phone, p.email, p.website, p.regdate, p.rest, p.bek, p.status, u.name FROM '.PREFIX_DB.'_partners AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = p.uid) WHERE '.$sqlstatus.' LIMIT '.$offset.', '.$conf['shop']['anum']);
+    $result = $db->getSqlQuery(
+        'SELECT p.id, p.name, p.addr, p.phone, p.email, p.website, p.regdate, p.rest, p.bek, p.status, u.name FROM '.PREFIX_DB.'_partners AS p'
+            .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = p.uid) WHERE '.$sqlstatus.' LIMIT '.$offset.', '.$conf['shop']['anum']
+    );
     if ($db->getSqlRowCount($result) > 0) {
         $pahead = [
             ['content' => _ID, 'is_col_id' => true],
@@ -836,7 +1057,14 @@ function partners(): void {
             ])]);
         }
         $html = $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'is_fixed' => true, 'head' => $pahead, 'rows_html' => $parows]);
-        $html .= getTplPager(['limit' => $conf['shop']['anum'], 'maxpg' => $conf['shop']['anump'], 'url' => $field, 'table' => '_partners', 'field' => 'id', 'where' => $sqlstatus]);
+        $html .= getTplPager([
+            'limit' => $conf['shop']['anum'],
+            'maxpg' => $conf['shop']['anump'],
+            'url' => $field,
+            'table' => '_partners',
+            'field' => 'id',
+            'where' => $sqlstatus,
+        ]);
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $html]);
     } else {
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO])]);
@@ -861,7 +1089,11 @@ function partneradd(): void {
     global $db, $afile, $stop, $tpl;
     if (getVar('req', 'paid', 'num', 0)) {
         $paid = getVar('req', 'paid', 'num');
-        $result = $db->getSqlQuery('SELECT p.id, p.uid, p.name, p.addr, p.phone, p.email, p.website, p.webmoney, p.paypal, p.regdate, p.rest, p.bek, p.status, u.name FROM '.PREFIX_DB.'_partners AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = p.uid) WHERE p.id = :paid', ['paid' => $paid]);
+        $result = $db->getSqlQuery(
+            'SELECT p.id, p.uid, p.name, p.addr, p.phone, p.email, p.website, p.webmoney, p.paypal, p.regdate, p.rest, p.bek, p.status, u.name FROM '.PREFIX_DB.'_partners AS p'
+                .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = p.uid) WHERE p.id = :paid',
+            ['paid' => $paid]
+        );
         [$paid, $uid, $paname, $paaddr, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive, $nick] = $db->getSqlRow($result);
         $paregdate = ($paregdate) ? date('Y-m-d H:i:s', $paregdate) : date('Y-m-d H:i:s');
     } else {
@@ -913,19 +1145,64 @@ function partneradd(): void {
         ? $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'uid', 'value_attr' => (string)$uid, 'placeholder_text' => _USER_ID, 'is_required' => true])
         : $tpl->getHtmlFrag('hidden', ['nameattr' => 'uid', 'valueattr' => (string)$uid]).$uid;
     $rows[] = ['label_html' => _USER_ID, 'field_html' => $uidfield];
-    $rows[] = ['label_for' => 'f-paname', 'label_html' => _CLIENTNAME, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'paname', 'input_id' => 'f-paname', 'value_attr' => $paname, 'is_required' => true])];
-    $rows[] = ['label_for' => 'f-paaddr', 'label_html' => _CLIENTADRES, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'paaddr', 'input_id' => 'f-paaddr', 'value_attr' => $paaddr, 'is_required' => true])];
-    $rows[] = ['label_for' => 'f-paphone', 'label_html' => _CLIENTPHONE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'paphone', 'input_id' => 'f-paphone', 'value_attr' => $paphone, 'is_required' => true])];
-    $rows[] = ['label_for' => 'f-paemail', 'label_html' => _EMAIL, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'paemail', 'input_id' => 'f-paemail', 'value_attr' => $paemail])];
-    $rows[] = ['label_for' => 'f-pawebsite', 'label_html' => _SITE, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'pawebsite', 'input_id' => 'f-pawebsite', 'value_attr' => $pawebsite])];
-    $rows[] = ['label_for' => 'f-pawebmoney', 'label_html' => _WEBMONEY, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'pawebmoney', 'input_id' => 'f-pawebmoney', 'value_attr' => $pawebmoney])];
-    $rows[] = ['label_for' => 'f-papaypal', 'label_html' => _PAYPAL, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'papaypal', 'input_id' => 'f-papaypal', 'value_attr' => $papaypal])];
+    $rows[] = [
+        'label_for' => 'f-paname',
+        'label_html' => _CLIENTNAME,
+        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'paname', 'input_id' => 'f-paname', 'value_attr' => $paname, 'is_required' => true]),
+    ];
+    $rows[] = [
+        'label_for' => 'f-paaddr',
+        'label_html' => _CLIENTADRES,
+        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'paaddr', 'input_id' => 'f-paaddr', 'value_attr' => $paaddr, 'is_required' => true]),
+    ];
+    $rows[] = [
+        'label_for' => 'f-paphone',
+        'label_html' => _CLIENTPHONE,
+        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'paphone', 'input_id' => 'f-paphone', 'value_attr' => $paphone, 'is_required' => true]),
+    ];
+    $rows[] = [
+        'label_for' => 'f-paemail',
+        'label_html' => _EMAIL,
+        'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'paemail', 'input_id' => 'f-paemail', 'value_attr' => $paemail]),
+    ];
+    $rows[] = [
+        'label_for' => 'f-pawebsite',
+        'label_html' => _SITE,
+        'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'pawebsite', 'input_id' => 'f-pawebsite', 'value_attr' => $pawebsite]),
+    ];
+    $rows[] = [
+        'label_for' => 'f-pawebmoney',
+        'label_html' => _WEBMONEY,
+        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'pawebmoney', 'input_id' => 'f-pawebmoney', 'value_attr' => $pawebmoney]),
+    ];
+    $rows[] = [
+        'label_for' => 'f-papaypal',
+        'label_html' => _PAYPAL,
+        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'papaypal', 'input_id' => 'f-papaypal', 'value_attr' => $papaypal]),
+    ];
     $rows[] = ['label_html' => _REG, 'field_html' => getTplAddDateTime(['name' => 'paregdate', 'time' => $paregdate, 'with' => true, 'max' => 16])];
     if ($paactive != 2) {
-        $rows[] = ['label_for' => 'f-parest', 'label_html' => _PARTNERREST, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'parest', 'input_id' => 'f-parest', 'value_attr' => $parest])];
-        $rows[] = ['label_for' => 'f-pabek', 'label_html' => _PARTNERBEK, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'pabek', 'input_id' => 'f-pabek', 'value_attr' => $pabek])];
+        $rows[] = [
+            'label_for' => 'f-parest',
+            'label_html' => _PARTNERREST,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'parest', 'input_id' => 'f-parest', 'value_attr' => $parest]),
+        ];
+        $rows[] = [
+            'label_for' => 'f-pabek',
+            'label_html' => _PARTNERBEK,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'pabek', 'input_id' => 'f-pabek', 'value_attr' => $pabek]),
+        ];
     }
-    $rows[] = ['label_html' => _ACTIVATE2, 'label_id' => $labid = getFieldIds('', 'paactive')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'paactive', 'value' => $paactive, 'options' => [['value' => '2', 'label' => _NEW], ['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
+    $rows[] = [
+        'label_html' => _ACTIVATE2,
+        'label_id' => $labid = getFieldIds('', 'paactive')['label'],
+        'field_html' => getTplRadioGroup([
+            'labelledby' => $labid,
+            'name' => 'paactive',
+            'value' => $paactive,
+            'options' => [['value' => '2', 'label' => _NEW], ['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
+        ]),
+    ];
     $posttypeopts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SAVECHANGES])
         .($paid ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
@@ -933,7 +1210,7 @@ function partneradd(): void {
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'shop'],
             ['nameattr' => 'op', 'valueattr' => 'partnersave'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('shop')],
             ['nameattr' => 'paid', 'valueattr' => (string)$paid],
         ],
         'rows' => $rows,
@@ -946,7 +1223,7 @@ function partneradd(): void {
 
 function partnersave(): void {
     global $db, $afile, $stop;
-    $iswarn = !checkSiteToken();
+    $iswarn = !checkAdminPost('shop');
     $uid = getVar('post', 'uid', 'num');
     $paname = getVar('post', 'paname', 'text');
     $paaddr = getVar('post', 'paaddr', 'text');
@@ -969,9 +1246,45 @@ function partnersave(): void {
         setRedirect($afile.'.php?name=shop&op=partners', false, 302, _TOKENMISS, true);
     } elseif (!$stop && $posttype == 'save') {
         if ($paid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_partners SET uid = :uid, name = :paname, addr = :paaddr, phone = :paphone, email = :paemail, website = :pawebsite, webmoney = :pawebmoney, paypal = :papaypal, regdate = :paregdate, rest = :parest, bek = :pabek, status = :paactive WHERE id = :paid', ['uid' => $uid, 'paname' => $paname, 'paaddr' => $paaddr, 'paphone' => $paphone, 'paemail' => $paemail, 'pawebsite' => $pawebsite, 'pawebmoney' => $pawebmoney, 'papaypal' => $papaypal, 'paregdate' => $paregdate, 'parest' => $parest, 'pabek' => $pabek, 'paactive' => $paactive, 'paid' => $paid]);
+            $db->getSqlQuery(
+                'UPDATE '.PREFIX_DB.'_partners'
+                    .' SET uid = :uid, name = :paname, addr = :paaddr, phone = :paphone, email = :paemail, website = :pawebsite, webmoney = :pawebmoney, paypal = :papaypal,'
+                    .' regdate = :paregdate, rest = :parest, bek = :pabek, status = :paactive WHERE id = :paid',
+                [
+                    'uid' => $uid,
+                    'paname' => $paname,
+                    'paaddr' => $paaddr,
+                    'paphone' => $paphone,
+                    'paemail' => $paemail,
+                    'pawebsite' => $pawebsite,
+                    'pawebmoney' => $pawebmoney,
+                    'papaypal' => $papaypal,
+                    'paregdate' => $paregdate,
+                    'parest' => $parest,
+                    'pabek' => $pabek,
+                    'paactive' => $paactive,
+                    'paid' => $paid,
+                ]
+            );
         } else {
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_partners VALUES(NULL, :uid, :paname, :paaddr, :paphone, :paemail, :pawebsite, :pawebmoney, :papaypal, :paregdate, :parest, :pabek, :paactive)', ['uid' => $uid, 'paname' => $paname, 'paaddr' => $paaddr, 'paphone' => $paphone, 'paemail' => $paemail, 'pawebsite' => $pawebsite, 'pawebmoney' => $pawebmoney, 'papaypal' => $papaypal, 'paregdate' => $paregdate, 'parest' => $parest, 'pabek' => $pabek, 'paactive' => $paactive]);
+            $db->getSqlQuery(
+                'INSERT INTO '.PREFIX_DB.'_partners'
+                    .' VALUES(NULL, :uid, :paname, :paaddr, :paphone, :paemail, :pawebsite, :pawebmoney, :papaypal, :paregdate, :parest, :pabek, :paactive)',
+                [
+                    'uid' => $uid,
+                    'paname' => $paname,
+                    'paaddr' => $paaddr,
+                    'paphone' => $paphone,
+                    'paemail' => $paemail,
+                    'pawebsite' => $pawebsite,
+                    'pawebmoney' => $pawebmoney,
+                    'papaypal' => $papaypal,
+                    'paregdate' => $paregdate,
+                    'parest' => $parest,
+                    'pabek' => $pabek,
+                    'paactive' => $paactive,
+                ]
+            );
         }
         setRedirect($afile.'.php?name=shop&op=partners');
     } elseif ($posttype == 'delete') {
@@ -998,9 +1311,17 @@ function partnerinfo(): void {
     $_ops  = ['name=shop&op=clients', 'name=shop&op=products', 'name=shop&op=partners', 'name=shop&op=export', 'name=shop&op=config', 'name=shop&op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs(['ops' => $_ops, 'tabs' => $_lang, 'tab' => 2, 'subtitle_html' => buildShopSearchBox()]);
-    $result = $db->getSqlQuery('SELECT id, uid, name, addr, phone, email, website, webmoney, paypal, regdate, rest, bek, status FROM '.PREFIX_DB.'_partners WHERE id = :paid', ['paid' => $paid]);
+    $result = $db->getSqlQuery(
+        'SELECT id, uid, name, addr, phone, email, website, webmoney, paypal, regdate, rest, bek, status FROM '.PREFIX_DB.'_partners WHERE id = :paid',
+        ['paid' => $paid]
+    );
     [$paid, $uid, $paname, $paaddr, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive] = $db->getSqlRow($result);
-    $result = $db->getSqlQuery('SELECT c.id, c.uid, c.prod, c.part, c.proz, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.status, u.id, u.name, p.id, p.title, p.price FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id=c.uid) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id=c.prod) WHERE c.part = :uid AND c.status != 2 ORDER BY c.id ASC', ['uid' => $uid]);
+    $result = $db->getSqlQuery(
+        'SELECT c.id, c.uid, c.prod, c.part, c.proz, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.status, u.id, u.name, p.id, p.title, p.price'
+            .' FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id=c.uid) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id=c.prod) WHERE c.part = :uid'
+            .' AND c.status != 2 ORDER BY c.id ASC',
+        ['uid' => $uid]
+    );
     if ($db->getSqlRowCount($result) > 0) {
         $pihead = [
             ['content' => _ID, 'is_col_id' => true],
@@ -1015,7 +1336,27 @@ function partnerinfo(): void {
         $partsum = 0;
         $partsumges = 0;
         $a = 0;
-        while([$cid, $uid, $product, $partner, $proz, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $uid, $nick, $pid, $ptitle, $pprice] = $db->getSqlRow($result)) {
+        while([
+            $cid,
+            $uid,
+            $product,
+            $partner,
+            $proz,
+            $cname,
+            $caddr,
+            $cphone,
+            $cemail,
+            $cwebsite,
+            $cregdate,
+            $cenddate,
+            $cinfo,
+            $cactive,
+            $uid,
+            $nick,
+            $pid,
+            $ptitle,
+            $pprice
+        ] = $db->getSqlRow($result)) {
             $partsum = $pprice / 100 * $proz;
             $partsumges += $partsum;
             $pirows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
@@ -1056,37 +1397,61 @@ function export(): void {
     global $db, $afile, $tpl;
     $id = getVar('post', 'id', 'num');
     $bd = getVar('post', 'bd', 'text');
-    $iswarn = !checkSiteToken();
+    $iswarn = !checkAdminPost('shop');
+    $files = array_values(preg_grep('#\.csv$#iD', scandir(UPLOADS_DIR.'/shop/temp') ?: []));
     if (!$iswarn && $id == 1 && $bd) {
         $list = [];
         if ($bd == 'products') {
-            $result = $db->getSqlQuery('SELECT id, cid, time, title, intro, body, price, vote, assoc, comments, counter, votes, tvotes, fix, status FROM '.PREFIX_DB.'_products ORDER BY id');
-            while([$pid, $pcid, $ptime, $ptitle, $ptext, $pbodytext, $pprice, $pvote, $passoc, $pcomments, $pcount, $pvotes, $ptotalvotes, $pfix, $pactive] = $db->getSqlRow($result)) {
-                $list[] = $pid.'||'.$pcid.'||'.$ptime.'||'.$ptitle.'||'.$ptext.'||'.$pbodytext.'||'.$pprice.'||'.$pvote.'||'.$passoc.'||'.$pcomments.'||'.$pcount.'||'.$pvotes.'||'.$ptotalvotes.'||'.$pfix.'||'.$pactive;
+            $result = $db->getSqlQuery(
+                'SELECT id, cid, time, title, intro, body, price, vote, assoc, comments, counter, votes, tvotes, fix, status FROM '.PREFIX_DB.'_products ORDER BY id'
+            );
+            while([
+                $pid,
+                $pcid,
+                $ptime,
+                $ptitle,
+                $ptext,
+                $pbodytext,
+                $pprice,
+                $pvote,
+                $passoc,
+                $pcomments,
+                $pcount,
+                $pvotes,
+                $ptotalvotes,
+                $pfix,
+                $pactive
+            ] = $db->getSqlRow($result)) {
+                $list[] = $pid.'||'.$pcid.'||'.$ptime.'||'.$ptitle.'||'.$ptext.'||'.$pbodytext.'||'.$pprice.'||'.$pvote.'||'.$passoc.'||'.$pcomments.'||'.$pcount.'||'.$pvotes.'||'
+                    .$ptotalvotes.'||'.$pfix.'||'.$pactive;
             }
         } elseif ($bd == 'clients') {
-            $result = $db->getSqlQuery('SELECT id, uid, prod, part, proz, name, addr, phone, email, website, regdate, enddate, info, status FROM '.PREFIX_DB.'_clients ORDER BY id');
+            $result = $db->getSqlQuery(
+                'SELECT id, uid, prod, part, proz, name, addr, phone, email, website, regdate, enddate, info, status FROM '.PREFIX_DB.'_clients ORDER BY id'
+            );
             while([$cid, $uid, $product, $partner, $proz, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive] = $db->getSqlRow($result)) {
-                $list[] = $cid.'||'.$uid.'||'.$product.'||'.$partner.'||'.$proz.'||'.$cname.'||'.$caddr.'||'.$cphone.'||'.$cemail.'||'.$cwebsite.'||'.$cregdate.'||'.$cenddate.'||'.$cinfo.'||'.$cactive;
+                $list[] = $cid.'||'.$uid.'||'.$product.'||'.$partner.'||'.$proz.'||'.$cname.'||'.$caddr.'||'.$cphone.'||'.$cemail.'||'.$cwebsite.'||'.$cregdate.'||'.$cenddate.'||'
+                    .$cinfo.'||'.$cactive;
             }
         } elseif ($bd == 'partners') {
             $result = $db->getSqlQuery('SELECT id, uid, name, addr, phone, email, website, webmoney, paypal, regdate, rest, bek, status FROM '.PREFIX_DB.'_partners ORDER BY id');
             while([$paid, $uid, $paname, $paaddr, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive] = $db->getSqlRow($result)) {
-                $list[] = $paid.'||'.$uid.'||'.$paname.'||'.$paaddr.'||'.$paphone.'||'.$paemail.'||'.$pawebsite.'||'.$pawebmoney.'||'.$papaypal.'||'.$paregdate.'||'.$parest.'||'.$pabek.'||'.$paactive;
+                $list[] = $paid.'||'.$uid.'||'.$paname.'||'.$paaddr.'||'.$paphone.'||'.$paemail.'||'.$pawebsite.'||'.$pawebmoney.'||'.$papaypal.'||'.$paregdate.'||'.$parest.'||'
+                    .$pabek.'||'.$paactive;
             }
         }
         if ($list) {
             $date = date('d.m.Y');
             $fp = fopen(UPLOADS_DIR.'/shop/temp/'.$date.'_'.$bd.'.csv', 'wb');
             foreach ($list as $val) fputcsv($fp, explode('||', $val));
-
             fclose($fp);
             getFileStream(UPLOADS_DIR.'/shop/temp/'.$date.'_'.$bd.'.csv', $date.'_'.$bd.'.csv');
         } else {
             setRedirect($afile.'.php?name=shop&op=export');
         }
     } elseif (!$iswarn && $id == 2 && $bd) {
-        $handle = fopen(UPLOADS_DIR.'/shop/temp/'.$bd,'rb');
+        $handle = in_array($bd, $files, true) && is_file(UPLOADS_DIR.'/shop/temp/'.$bd) ? fopen(UPLOADS_DIR.'/shop/temp/'.$bd, 'rb') : false;
+        if (!$handle) setRedirect($afile.'.php?name=shop&op=export');
         $q = static fn(mixed $val): string => $db->getSqlValue($val);
         $idb = '';
         while (($data = fgetcsv($handle, 1000, ','))) {
@@ -1103,15 +1468,11 @@ function export(): void {
                     'assoc = '.$q($data[8] ?? ''),
                     'ihome = 0',
                     'acomm = 0',
-                    'comments = '.$q($data[9] ?? ''),
                     'counter = '.$q($data[10] ?? ''),
-                    'votes = '.$q($data[11] ?? ''),
-                    'tvotes = '.$q($data[12] ?? ''),
                     'fix = '.$q($data[13] ?? ''),
                     'status = '.$q($data[14] ?? ''),
                 ];
                 $vals = [
-                    $q($data[0] ?? ''),
                     $q($data[1] ?? ''),
                     $q($data[2] ?? ''),
                     $q($data[3] ?? ''),
@@ -1122,10 +1483,10 @@ function export(): void {
                     $q($data[8] ?? ''),
                     '0',
                     '0',
-                    $q($data[9] ?? ''),
+                    '0',
                     $q($data[10] ?? ''),
-                    $q($data[11] ?? ''),
-                    $q($data[12] ?? ''),
+                    '0',
+                    '0',
                     $q($data[13] ?? ''),
                     $q($data[14] ?? ''),
                 ];
@@ -1147,7 +1508,6 @@ function export(): void {
                     'status = '.$q($data[13] ?? ''),
                 ];
                 $vals = [
-                    $q($data[0] ?? ''),
                     $q($data[1] ?? ''),
                     $q($data[2] ?? ''),
                     $q($data[3] ?? ''),
@@ -1179,7 +1539,6 @@ function export(): void {
                     'status = '.$q($data[12] ?? ''),
                 ];
                 $vals = [
-                    $q($data[0] ?? ''),
                     $q($data[1] ?? ''),
                     $q($data[2] ?? ''),
                     $q($data[3] ?? ''),
@@ -1234,7 +1593,7 @@ function export(): void {
                     ['nameattr' => 'name', 'valueattr' => 'shop'],
                     ['nameattr' => 'op', 'valueattr' => 'export'],
                     ['nameattr' => 'id', 'valueattr' => '1'],
-                    ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+                    ['nameattr' => 'token', 'valueattr' => getSiteToken('shop')],
                 ],
                 'rows' => [[
                     'label_for' => 'f-bd',
@@ -1247,16 +1606,11 @@ function export(): void {
             $export = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
         $ocont = '';
-        $entries = scandir(UPLOADS_DIR.'/shop/temp');
-        if ($entries !== false) {
-            foreach ($entries as $entry) {
-                if (preg_match('/(\\.csv)$/is', $entry) && $entry != '.' && $entry != '..') {
-                    $in = ['#(.*?)products\\.csv#', '#(.*?)clients\\.csv#', '#(.*?)partners\\.csv#'];
-                    $out = [_PRODUCTS, _CLIENTS, _PARTNERS];
-                    $name = preg_replace($in, $out, $entry);
-                    $ocont .= $tpl->getHtmlFrag('select-option', ['value_attr' => $entry, 'label_text' => $name.' - '.$entry]);
-                }
-            }
+        foreach ($files as $entry) {
+            $in = ['#(.*?)products\\.csv#', '#(.*?)clients\\.csv#', '#(.*?)partners\\.csv#'];
+            $out = [_PRODUCTS, _CLIENTS, _PARTNERS];
+            $name = preg_replace($in, $out, $entry);
+            $ocont .= $tpl->getHtmlFrag('select-option', ['value_attr' => $entry, 'label_text' => $name.' - '.$entry]);
         }
         $import = '';
         if ($ocont) {
@@ -1266,7 +1620,7 @@ function export(): void {
                     ['nameattr' => 'name', 'valueattr' => 'shop'],
                     ['nameattr' => 'op', 'valueattr' => 'export'],
                     ['nameattr' => 'id', 'valueattr' => '2'],
-                    ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+                    ['nameattr' => 'token', 'valueattr' => getSiteToken('shop')],
                 ],
                 'rows' => [[
                     'label_for' => 'f-bd',
@@ -1317,24 +1671,101 @@ function config(): void {
         ],
     ]);
     $rows = [
-        ['label_for' => 'f-defis', 'label_html' => _CDEFIS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'defis', 'input_id' => 'f-defis', 'value_attr' => urldecode($conf['shop']['defis'] ?? '')])],
-        ['label_for' => 'f-clients', 'label_html' => _C_0, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'clients', 'input_id' => 'f-clients', 'value_attr' => (string)$conf['shop']['clients']])],
+        ['label_for' => 'f-defis', 'label_html' => _CDEFIS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'defis', 'input_id' => 'f-defis',
+            'value_attr' => getDecodedText(urldecode($conf['shop']['defis'] ?? '')),
+        ])],
+        [
+            'label_for' => 'f-clients',
+            'label_html' => _C_0,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number',
+                'name_attr' => 'clients',
+                'input_id' => 'f-clients',
+                'value_attr' => (string)$conf['shop']['clients'],
+            ]),
+        ],
         ['label_html' => _C_2, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'clients1', 'value_attr' => (string)$conf['shop']['clients1']])],
         ['label_html' => _C_4, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'clients2', 'value_attr' => (string)$conf['shop']['clients2']])],
-        ['label_for' => 'f-proz', 'label_html' => _C_1, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'proz', 'input_id' => 'f-proz', 'value_attr' => (string)$conf['shop']['proz']])],
+        [
+            'label_for' => 'f-proz',
+            'label_html' => _C_1,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'proz', 'input_id' => 'f-proz', 'value_attr' => (string)$conf['shop']['proz']]),
+        ],
         ['label_html' => _C_3, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'proz1', 'value_attr' => (string)$conf['shop']['proz1']])],
         ['label_html' => _C_5, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'proz2', 'value_attr' => (string)$conf['shop']['proz2']])],
-        ['label_for' => 'f-valute', 'label_html' => _C_6, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'valute', 'input_id' => 'f-valute', 'value_attr' => (string)$conf['shop']['valute']])],
-        ['label_for' => 'f-mail', 'label_html' => _C_7, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mail', 'input_id' => 'f-mail', 'value_attr' => (string)$conf['shop']['mail']])],
-        ['label_for' => 'f-shop', 'label_html' => _C_8, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'shop', 'input_id' => 'f-shop', 'value_attr' => (string)intval($conf['shop']['shop_t'] / 86400)])],
-        ['label_for' => 'f-partdays', 'label_html' => _C_9, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'partdays', 'input_id' => 'f-partdays', 'value_attr' => (string)intval($conf['shop']['part_t'] / 86400)])],
-        ['label_for' => 'f-bascol', 'label_html' => _BASCOL, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'bascol', 'input_id' => 'f-bascol', 'value_attr' => (string)$conf['shop']['bascol']])],
-        ['label_for' => 'f-assocnum', 'label_html' => _C_11, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'assocnum', 'input_id' => 'f-assocnum', 'value_attr' => (string)$conf['shop']['assocnum']])],
-        ['label_for' => 'f-listnum', 'label_html' => _C_13, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'listnum', 'input_id' => 'f-listnum', 'value_attr' => (string)$conf['shop']['listnum']])],
-        ['label_for' => 'f-num', 'label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'input_id' => 'f-num', 'value_attr' => (string)$conf['shop']['num']])],
-        ['label_for' => 'f-anum', 'label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => (string)$conf['shop']['anum']])],
-        ['label_for' => 'f-nump', 'label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'input_id' => 'f-nump', 'value_attr' => (string)$conf['shop']['nump']])],
-        ['label_for' => 'f-anump', 'label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => (string)$conf['shop']['anump']])],
+        ['label_for' => 'f-valute', 'label_html' => _C_6, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'valute', 'input_id' => 'f-valute',
+            'value_attr' => getDecodedText($conf['shop']['valute']),
+        ])],
+        [
+            'label_for' => 'f-mail',
+            'label_html' => _C_7,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mail', 'input_id' => 'f-mail', 'value_attr' => (string)$conf['shop']['mail']]),
+        ],
+        [
+            'label_for' => 'f-shop',
+            'label_html' => _C_8,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number',
+                'name_attr' => 'shop',
+                'input_id' => 'f-shop',
+                'value_attr' => (string)intval($conf['shop']['shop_t'] / 86400),
+            ]),
+        ],
+        [
+            'label_for' => 'f-partdays',
+            'label_html' => _C_9,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number',
+                'name_attr' => 'partdays',
+                'input_id' => 'f-partdays',
+                'value_attr' => (string)intval($conf['shop']['part_t'] / 86400),
+            ]),
+        ],
+        [
+            'label_for' => 'f-bascol',
+            'label_html' => _BASCOL,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'bascol', 'input_id' => 'f-bascol', 'value_attr' => (string)$conf['shop']['bascol']]),
+        ],
+        [
+            'label_for' => 'f-assocnum',
+            'label_html' => _C_11,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number',
+                'name_attr' => 'assocnum',
+                'input_id' => 'f-assocnum',
+                'value_attr' => (string)$conf['shop']['assocnum'],
+            ]),
+        ],
+        [
+            'label_for' => 'f-listnum',
+            'label_html' => _C_13,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number',
+                'name_attr' => 'listnum',
+                'input_id' => 'f-listnum',
+                'value_attr' => (string)$conf['shop']['listnum'],
+            ]),
+        ],
+        [
+            'label_for' => 'f-num',
+            'label_html' => _C_33,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'input_id' => 'f-num', 'value_attr' => (string)$conf['shop']['num']]),
+        ],
+        [
+            'label_for' => 'f-anum',
+            'label_html' => _C_34,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => (string)$conf['shop']['anum']]),
+        ],
+        [
+            'label_for' => 'f-nump',
+            'label_html' => _C_35,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'input_id' => 'f-nump', 'value_attr' => (string)$conf['shop']['nump']]),
+        ],
+        [
+            'label_for' => 'f-anump',
+            'label_html' => _C_36,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => (string)$conf['shop']['anump']]),
+        ],
         ['label_html' => _HOMCAT, 'label_id' => $labid = getFieldIds('', 'homcat')['label'], 'field_html' => $yesno('homcat', $conf['shop']['homcat'], $labid)],
         ['label_html' => _VIEWCAT, 'label_id' => $labid = getFieldIds('', 'viewcat')['label'], 'field_html' => $yesno('viewcat', $conf['shop']['viewcat'], $labid)],
         ['label_html' => _C_32, 'label_id' => $labid = getFieldIds('', 'catdesc')['label'], 'field_html' => $yesno('catdesc', $conf['shop']['catdesc'], $labid)],
@@ -1347,19 +1778,43 @@ function config(): void {
         ['label_html' => _C_23, 'label_id' => $labid = getFieldIds('', 'assoc')['label'], 'field_html' => $yesno('assoc', $conf['shop']['assoc'], $labid)],
         ['label_html' => _C_24, 'label_id' => $labid = getFieldIds('', 'mailsend')['label'], 'field_html' => $yesno('mailsend', $conf['shop']['mailsend'], $labid)],
         ['label_html' => _C_25, 'label_id' => $labid = getFieldIds('', 'part')['label'], 'field_html' => $yesno('part', $conf['shop']['part'], $labid)],
-        ['label_for' => 'f-partlink-view', 'label_html' => _C_26, 'hint_html' => _PART_ID, 'hint_id' => $hntid = getFieldIds('f-partlink-view')['hint'], 'field_html' => $tpl->getHtmlFrag('input', ['describedby' => $hntid, 'itype' => 'text', 'name_attr' => 'partlink_view', 'input_id' => 'f-partlink-view', 'value_attr' => (string)$conf['shop']['partlink'], 'input_attr' => ' readonly']), 'is_full' => true],
-        ['label_for' => 'f-sende', 'label_html' => _C_27, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'sende', 'input_id' => 'f-sende', 'value_text' => (string)$conf['shop']['sende'], 'rows_num' => 5]), 'is_full' => true],
-        ['label_for' => 'f-userinfo', 'label_html' => _C_28, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'userinfo', 'input_id' => 'f-userinfo', 'value_text' => (string)$conf['shop']['userinfo'], 'rows_num' => 5]), 'is_full' => true],
-        ['label_for' => 'f-partinfo', 'label_html' => _C_29, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'partinfo', 'input_id' => 'f-partinfo', 'value_text' => (string)$conf['shop']['partinfo'], 'rows_num' => 5]), 'is_full' => true],
-        ['label_for' => 'f-partinfo2', 'label_html' => _C_30, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'partinfo2', 'input_id' => 'f-partinfo2', 'value_text' => (string)$conf['shop']['partinfo2'], 'rows_num' => 5]), 'is_full' => true],
-        ['label_for' => 'f-shopinfo', 'label_html' => _C_31, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'shopinfo', 'input_id' => 'f-shopinfo', 'value_text' => (string)$conf['shop']['shopinfo'], 'rows_num' => 5]), 'is_full' => true],
+        [
+            'label_for' => 'f-partlink-view',
+            'label_html' => _C_26,
+            'hint_html' => _PART_ID,
+            'hint_id' => $hntid = getFieldIds('f-partlink-view')['hint'],
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'describedby' => $hntid,
+                'itype' => 'text',
+                'name_attr' => 'partlink_view',
+                'input_id' => 'f-partlink-view',
+                'value_attr' => (string)$conf['shop']['partlink'],
+                'input_attr' => ' readonly',
+            ]),
+            'is_full' => true,
+        ],
+        ['label_html' => _C_27, 'label_id' => $labid = getFieldIds('', 'sende')['label'], 'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _C_27,
+            'id' => '1', 'name' => 'sende', 'value' => ($conf['shop']['sende'] ?? ''), 'mod' => 'shop', 'store' => 'config', 'rows' => 5, 'placeholder' => _C_27,
+        ]), 'is_full' => true],
+        ['label_html' => _C_28, 'label_id' => $labid = getFieldIds('', 'userinfo')['label'], 'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _C_28,
+            'id' => '2', 'name' => 'userinfo', 'value' => ($conf['shop']['userinfo'] ?? ''), 'mod' => 'shop', 'store' => 'config', 'rows' => 5, 'placeholder' => _C_28,
+        ]), 'is_full' => true],
+        ['label_html' => _C_29, 'label_id' => $labid = getFieldIds('', 'partinfo')['label'], 'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _C_29,
+            'id' => '3', 'name' => 'partinfo', 'value' => ($conf['shop']['partinfo'] ?? ''), 'mod' => 'shop', 'store' => 'config', 'rows' => 5, 'placeholder' => _C_29,
+        ]), 'is_full' => true],
+        ['label_html' => _C_30, 'label_id' => $labid = getFieldIds('', 'partinfo2')['label'], 'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _C_30,
+            'id' => '4', 'name' => 'partinfo2', 'value' => ($conf['shop']['partinfo2'] ?? ''), 'mod' => 'shop', 'store' => 'config', 'rows' => 5, 'placeholder' => _C_30,
+        ]), 'is_full' => true],
+        ['label_html' => _C_31, 'label_id' => $labid = getFieldIds('', 'shopinfo')['label'], 'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _C_31,
+            'id' => '5', 'name' => 'shopinfo', 'value' => ($conf['shop']['shopinfo'] ?? ''), 'mod' => 'shop', 'store' => 'config', 'rows' => 5, 'placeholder' => _C_31,
+        ]), 'is_full' => true],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'shop'],
             ['nameattr' => 'op', 'valueattr' => 'save'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('shop')],
         ],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
@@ -1370,7 +1825,8 @@ function config(): void {
 
 function save(): void {
     global $afile, $conf;
-    $iswarn = !checkSiteToken();
+    $iswarn = !checkAdminPost('shop');
+    $room = '';
     if (!$iswarn) {
         $defis = getVar('post', 'defis', 'text', urldecode($conf['shop']['defis'] ?? '%3E'));
         $xdefis = ($defis) ? urlencode($defis) : '%3E';
@@ -1418,9 +1874,12 @@ function save(): void {
             'partinfo2' => getVar('post', 'partinfo2', 'text', $conf['shop']['partinfo2'] ?? ''),
             'shopinfo' => getVar('post', 'shopinfo', 'text', $conf['shop']['shopinfo'] ?? ''),
         ];
-        setConfigFile('shop.php', $cont);
+        foreach (['sende', 'userinfo', 'partinfo', 'partinfo2', 'shopinfo'] as $key) {
+            if ($room === '') $room = checkEditorTextRoom($cont[$key], 'config');
+        }
+        if ($room === '') setConfigFile('shop.php', $cont);
     }
-    setRedirect($afile.'.php?name=shop&op=config', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
+    setRedirect($afile.'.php?name=shop&op=config', false, 302, $iswarn ? _TOKENMISS : ($room ?: _SUCCSAVE), $iswarn || $room !== '');
 }
 
 function info(): void {

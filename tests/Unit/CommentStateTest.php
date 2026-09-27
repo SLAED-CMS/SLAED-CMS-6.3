@@ -5,19 +5,13 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Stage 2 of docs/COMMENTS-REDESIGN-2026.md: one rule set for add and edit, a state change expressed as a conditional
- * update, a soft delete that never counts twice, an idempotency key on the add and a stored format that decides how a
- * body renders. The behaviour half runs through tests/Support/contract_probe.php, which signs in as the administrator
- * of this installation before the core boots — isAdmin() memoizes its verdict on the first call — and drives the class
- * against the live rows inside a transaction it always rolls back. That closes the moderator gap batches 1 to 3 left
- * open for status and delete. The format half needs no database and calls the parser directly.
- */
+# One rule set for add and edit, conditional state changes, an idempotent soft delete and add, and a stored format that decides the rendering
 final class CommentStateTest extends TestCase
 {
     private static array $probe = [];
 
-    # Run one probe scenario per process and memoize its report for every test in this class
+    # Run one scenario of tests/Support/contract_probe.php per process and memoize its report for every test in this class
+    # The probe signs in as the administrator before the core boots, since isAdmin() memoizes its first verdict, and always rolls its transaction back
     private function getProbe(string $mode): array
     {
         if (isset(self::$probe[$mode])) return self::$probe[$mode];
@@ -74,7 +68,7 @@ final class CommentStateTest extends TestCase
         $this->assertSame([], $data['rules']['freed'], 'The window never reopens once the last comment of that address is old enough');
     }
 
-    # A stored comment carries what the final contract keeps and nothing the request could have named: the key it was written under as raw bytes, and no mark of an edit or a removal
+    # A stored comment carries what the final contract keeps and nothing the request could name: its key as raw bytes, and no mark of an edit or a removal
     #[Test]
     public function theStoredRowCarriesTheColumnsOfThisStage(): void
     {
@@ -185,6 +179,7 @@ final class CommentStateTest extends TestCase
         $this->assertSame($data['sort'][0], $data['sort'][1], 'Two reads of one list with equal timestamps answered different orders');
     }
 
+    # The format half needs no database and calls the parser directly
     # The stored format decides how a body renders: plain recognizes no Markdown construct, markdown does, and an empty column renders as markdown
     #[Test]
     public function theStoredFormatDecidesTheRendering(): void

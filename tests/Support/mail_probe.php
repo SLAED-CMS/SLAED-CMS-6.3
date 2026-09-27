@@ -12,7 +12,7 @@ require_once BASE_DIR.'/core/system.php';
 
 # Every scenario runs against a disposable schema, because claiming a batch takes whatever is pending in the queue
 # On the live database that would mark mail the site is waiting to send, so the tables the mail path reads are copied here and dropped again at the end
-# users and groups are copied with their rows, since a campaign selects its audience from them and the expected counts come from real data
+# The tables users and groups are copied with their rows, since a campaign selects its audience from them and the expected counts come from real data
 $GLOBALS['mailschema'] = 'slaed_mailp_'.bin2hex(random_bytes(4));
 $site = (string)$conf['db']['name'];
 $seed = new PDO('mysql:host='.$conf['db']['host'].';charset=utf8mb4', $conf['db']['uname'], $conf['db']['pass'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);

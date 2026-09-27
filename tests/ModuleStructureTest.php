@@ -1,11 +1,8 @@
 <?php
-/**
- * Тест структуры модулей
- * Проверяет наличие обязательных файлов и корректность структуры
- */
 
 use PHPUnit\Framework\TestCase;
 
+# Checks the module structure: required files, language files, syntax, direct access guard, admin part and unique functions
 class ModuleStructureTest extends TestCase
 {
     private static string $basePath;
@@ -20,9 +17,7 @@ class ModuleStructureTest extends TestCase
         self::scanModules();
     }
 
-    /**
-     * Сканирует модули
-     */
+    # Collects the module directories of modules/
     private static function scanModules(): void
     {
         if (!is_dir(self::$modulesPath)) return;
@@ -37,9 +32,7 @@ class ModuleStructureTest extends TestCase
         }
     }
 
-    /**
-     * Проверяет наличие index.php в каждом модуле
-     */
+    # Checks that every module has an index.php
     public function testModulesHaveIndexFile(): void
     {
         $errors = [];
@@ -56,27 +49,21 @@ class ModuleStructureTest extends TestCase
         );
     }
 
-    /**
-     * Проверяет наличие директории lang в модулях
-     */
+    # Reports modules without a lang/ directory; a warning, not an error, since some modules need no language files
     public function testModulesHaveLanguageDirectory(): void
     {
         $warnings = [];
 
         foreach (self::$modules as $name => $path) {
-            // Некоторые модули могут не требовать языковых файлов
             if (!is_dir($path.'/lang')) {
                 $warnings[] = "modules/$name - отсутствует директория lang/";
             }
         }
 
-        // Это предупреждение, не ошибка
         $this->assertTrue(true, count($warnings).' модулей без директории lang/');
     }
 
-    /**
-     * Проверяет наличие всех языковых файлов
-     */
+    # Checks that a module with at least one language file has all of them and lists at most 30 missing files
     public function testModulesHaveAllLanguages(): void
     {
         $errors = [];
@@ -92,7 +79,6 @@ class ModuleStructureTest extends TestCase
                 }
             }
 
-            // Если есть хотя бы один язык, проверяем наличие всех
             if (!empty($presentLangs)) {
                 $missing = array_diff(self::$languages, $presentLangs);
                 foreach ($missing as $lang) {
@@ -101,7 +87,6 @@ class ModuleStructureTest extends TestCase
             }
         }
 
-        // Ограничиваем вывод
         if (count($errors) > 30) {
             $total = count($errors);
             $errors = array_slice($errors, 0, 30);
@@ -114,9 +99,7 @@ class ModuleStructureTest extends TestCase
         );
     }
 
-    /**
-     * Проверяет синтаксис index.php модулей
-     */
+    # Checks the syntax of every module index.php with php -l
     public function testModuleIndexSyntax(): void
     {
         $errors = [];
@@ -143,9 +126,7 @@ class ModuleStructureTest extends TestCase
         );
     }
 
-    /**
-     * Проверяет защиту от прямого доступа
-     */
+    # Checks that every module index.php guards against direct access with a MODULE_FILE check
     public function testModulesHaveDirectAccessProtection(): void
     {
         $errors = [];
@@ -156,7 +137,6 @@ class ModuleStructureTest extends TestCase
 
             $content = file_get_contents($indexFile);
 
-            // Проверяем наличие защиты от прямого доступа
             if (!preg_match('/defined\s*\(\s*[\'"]MODULE_FILE[\'"]\s*\)/', $content)) {
                 $errors[] = "modules/$name/index.php - отсутствует проверка MODULE_FILE";
             }
@@ -168,9 +148,7 @@ class ModuleStructureTest extends TestCase
         );
     }
 
-    /**
-     * Проверяет структуру admin директории
-     */
+    # Checks that every module admin directory has an index.php
     public function testModulesAdminStructure(): void
     {
         $errors = [];
@@ -179,12 +157,10 @@ class ModuleStructureTest extends TestCase
             $adminPath = $path.'/admin';
             if (!is_dir($adminPath)) continue;
 
-            // Проверяем наличие index.php в admin
             if (!file_exists($adminPath.'/index.php')) {
                 $errors[] = "modules/$name/admin - отсутствует index.php";
             }
 
-            
         }
 
         $this->assertEmpty(
@@ -193,25 +169,19 @@ class ModuleStructureTest extends TestCase
         );
     }
 
-    /**
-     * Проверяет что модули найдены
-     */
+    # Checks that modules were found and that there are more than ten of them
     public function testModulesFound(): void
     {
         $this->assertNotEmpty(self::$modules, 'Модули не найдены');
         $this->assertGreaterThan(10, count(self::$modules), 'Найдено слишком мало модулей');
     }
 
-    /**
-     * Проверяет уникальность функций в модулях
-     * Примечание: Функции add, view, send и т.д. повторяются намеренно в разных модулях
-     */
+    # Checks that functions in module index.php files are unique, except the module name and standard names like add, view, send
     public function testModuleFunctionNamesUnique(): void
     {
         $functions = [];
         $duplicates = [];
 
-        // Стандартные функции которые могут повторяться
         $allowedDuplicates = ['add', 'view', 'send', 'liste', 'navigate', 'edit', 'save', 'delete', 'search', 'broken', 'loading'];
 
         foreach (self::$modules as $name => $path) {
@@ -220,11 +190,9 @@ class ModuleStructureTest extends TestCase
 
             $content = file_get_contents($indexFile);
 
-            // Находим определения функций
             preg_match_all('/function\s+([a-zA-Z_]\w*)\s*\(/', $content, $matches);
 
             foreach ($matches[1] as $funcName) {
-                // Пропускаем стандартные имена модулей и разрешённые дубликаты
                 if ($funcName === $name || in_array($funcName, $allowedDuplicates)) continue;
 
                 if (isset($functions[$funcName])) {

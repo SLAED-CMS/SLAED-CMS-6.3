@@ -236,9 +236,33 @@ function edit(): void {
         }
     }
     $rows = [
-        ['label_for' => 'f-lang', 'label_html' => _LANGUAGE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'lang', 'input_id' => 'f-lang', 'value_attr' => $lang, 'maxlength_num' => 50, 'placeholder_text' => _LANGUAGE, 'is_config' => true])],
-        ['label_html' => _ICON, 'field_html' => $tpl->getHtmlPart('icon-picker', ['name_attr' => 'icon', 'value_attr' => $icon, 'placeholder_text' => _ICON, 'button_label' => _ICONPICK])],
-        ['label_html' => _STATUS, 'label_id' => $labid = getFieldIds('', 'active')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'active', 'value' => (string)(int)$active, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+        [
+            'label_for' => 'f-lang',
+            'label_html' => _LANGUAGE,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'text',
+                'name_attr' => 'lang',
+                'input_id' => 'f-lang',
+                'value_attr' => $lang,
+                'maxlength_num' => 50,
+                'placeholder_text' => _LANGUAGE,
+                'is_config' => true,
+            ]),
+        ],
+        [
+            'label_html' => _ICON,
+            'field_html' => $tpl->getHtmlPart('icon-picker', ['name_attr' => 'icon', 'value_attr' => $icon, 'placeholder_text' => _ICON, 'button_label' => _ICONPICK]),
+        ],
+        [
+            'label_html' => _STATUS,
+            'label_id' => $labid = getFieldIds('', 'active')['label'],
+            'field_html' => getTplRadioGroup([
+                'labelledby' => $labid,
+                'name' => 'active',
+                'value' => (string)(int)$active,
+                'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
+            ]),
+        ],
         ['label_for' => 'f-view', 'label_html' => _VIEWPRIV, 'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'view',
             'selectid' => 'f-view',
@@ -248,7 +272,11 @@ function edit(): void {
                 $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _MVUSERS, 'is_selected' => (int)$view === 1]).
                 $tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _MVADMIN, 'is_selected' => (int)$view === 2]),
         ])],
-        ['label_for' => 'f-group', 'label_html' => _UGROUP, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'group', 'selectid' => 'f-group', 'options_html' => $grpopts, 'is_config' => true])],
+        [
+            'label_for' => 'f-group',
+            'label_html' => _UGROUP,
+            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'group', 'selectid' => 'f-group', 'options_html' => $grpopts, 'is_config' => true]),
+        ],
         ['label_for' => 'f-side', 'label_html' => _BLOCKS_MOD, 'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'side',
             'selectid' => 'f-side',
@@ -269,7 +297,16 @@ function edit(): void {
                 $tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _BLOCKS_MODC2, 'is_selected' => (int)$top === 2]).
                 $tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _BLOCKS_MODC3, 'is_selected' => (int)$top === 3]),
         ])],
-        ['label_html' => _SHOWINMENU, 'label_id' => $labid = getFieldIds('', 'menu')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'menu', 'value' => (string)(int)$menu, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+        [
+            'label_html' => _SHOWINMENU,
+            'label_id' => $labid = getFieldIds('', 'menu')['label'],
+            'field_html' => getTplRadioGroup([
+                'labelledby' => $labid,
+                'name' => 'menu',
+                'value' => (string)(int)$menu,
+                'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
+            ]),
+        ],
     ];
     $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',

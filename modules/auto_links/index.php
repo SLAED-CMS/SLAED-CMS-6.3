@@ -36,7 +36,10 @@ function autolink(): void {
     $result = $db->getSqlQuery($sql);
     setHead(['title' => $ntitle, 'kind' => 'collection']);
     $cont = '';
-    if (!$home) $cont .= getModuleNavi(['title' => $ntitle, 'best_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'new']), 'btitle' => _NEW, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'pop']), 'add_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'add'])] + AUTO_LINKS_NAVI);
+    if (!$home) $cont .= getModuleNavi([
+        'title' => $ntitle, 'best_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'new']), 'btitle' => _NEW, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'pop']),
+        'add_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'add']),
+    ] + AUTO_LINKS_NAVI);
     if ($db->getSqlRowCount($result) > 0) {
         $ismoder = is_moder($conf['name']);
         $token   = getSiteToken();
@@ -129,7 +132,10 @@ function add(): void {
     $name = getVar('post', 'name', 'title');
     $desc = getVar('post', 'desc', 'text');
     setHead(['title' => _ADD]);
-    $cont = getModuleNavi(['title' => _ADD, 'best_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'new']), 'btitle' => _NEW, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'pop']), 'add_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'add'])] + AUTO_LINKS_NAVI);
+    $cont = getModuleNavi([
+        'title' => _ADD, 'best_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'new']), 'btitle' => _NEW, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'pop']),
+        'add_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'add']),
+    ] + AUTO_LINKS_NAVI);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
     if ($desc) $cont .= getTplPreviewContent(['title' => $name, 'texta' => $desc, 'textb' => '', 'mod' => $conf['name']]);
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _A_LINKS_I]);
@@ -137,12 +143,16 @@ function add(): void {
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label_for' => 'f-mail',
         'label' => _A_LINKS_E,
-        'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'mail', 'input_id' => 'f-mail', 'value_attr' => $email, 'maxlength_num' => 100, 'placeholder_text' => _A_LINKS_E, 'is_required' => true]),
+        'field_html' => $tpl->getHtmlFrag('input', [
+            'name_attr' => 'mail', 'input_id' => 'f-mail', 'value_attr' => $email, 'maxlength_num' => 100, 'placeholder_text' => _A_LINKS_E, 'is_required' => true,
+        ]),
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label_for' => 'f-name',
         'label' => _SITENAME,
-        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'name', 'input_id' => 'f-name', 'value_attr' => $name, 'maxlength_num' => 100, 'placeholder_text' => _SITENAME, 'is_required' => true]),
+        'field_html' => $tpl->getHtmlFrag('input', [
+            'itype' => 'text', 'name_attr' => 'name', 'input_id' => 'f-name', 'value_attr' => $name, 'maxlength_num' => 100, 'placeholder_text' => _SITENAME, 'is_required' => true,
+        ]),
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label' => _A_LINKS_TEXT,
@@ -161,13 +171,18 @@ function add(): void {
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label_for' => 'f-site',
         'label' => _A_LINKS_L,
-        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'site', 'input_id' => 'f-site', 'value_attr' => $site, 'maxlength_num' => 100, 'placeholder_text' => _A_LINKS_L]),
+        'field_html' => $tpl->getHtmlFrag('input', [
+            'itype' => 'text', 'name_attr' => 'site', 'input_id' => 'f-site', 'value_attr' => $site, 'maxlength_num' => 100, 'placeholder_text' => _A_LINKS_L,
+        ]),
     ]);
     $cont .= $tpl->getHtmlPart('form-add', [
         'name'      => $conf['name'],
         'fields'    => $fields,
         'captcha'   => getPageCaptcha('comment'),
-        'submit'    => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
+        'submit'    => $tpl->getHtmlFrag('form-submit', [
+            'button_type' => 'submit', 'op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false,
+            'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK,
+        ]),
     ]);
     echo $cont;
     setFoot();
@@ -190,7 +205,10 @@ function send(): void {
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT url FROM '.PREFIX_DB.'_auto_links WHERE url = :url', ['url' => $site])) > 0) $stop[] = _LINKEXIST;
     if (!$stop && getVar('post', 'posttype', 'var') == 'save') {
         setHead(['title' => _ADD]);
-        $cont = getModuleNavi(['title' => _ADD, 'best_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'new']), 'btitle' => _NEW, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'pop']), 'add_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'add'])] + AUTO_LINKS_NAVI);
+        $cont = getModuleNavi([
+            'title' => _ADD, 'best_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'new']), 'btitle' => _NEW,
+            'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'pop']), 'add_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'add']),
+        ] + AUTO_LINKS_NAVI);
         $db->getSqlQuery(
             'INSERT INTO '.PREFIX_DB.'_auto_links (title, intro, url, email, hits, outs, added) VALUES (:title, :intro, :url, :email, 0, 0, NOW())',
             ['title' => $name, 'intro' => $desc, 'url' => $site, 'email' => $email]
@@ -214,7 +232,10 @@ function send(): void {
                 [$imgwidth, $imgheight] = getimagesize($banner);
                 $embedTitle = htmlspecialchars($conf['sitename'].' - '.$conf['slogan'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
                 $embedSrc = htmlspecialchars($conf['homeurl'].'/'.$banner, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-                $code  = '&lt;a href=&quot;'.$embedHome.'&quot; target=&quot;_blank&quot; title=&quot;'.$embedTitle.'&quot;&gt;&lt;img src=&quot;'.$embedSrc.'&quot; alt=&quot;'.$embedTitle.'&quot; class=&quot;sl-embed-img&quot; width=&quot;'.$imgwidth.'&quot; height=&quot;'.$imgheight.'&quot;&gt;&lt;/a&gt;';
+                $code = '&lt;a href=&quot;'.$embedHome.'&quot; target=&quot;_blank&quot; title=&quot;'.$embedTitle
+                    .'&quot;&gt;&lt;img src=&quot;'.$embedSrc
+                    .'&quot; alt=&quot;'.$embedTitle.'&quot; class=&quot;sl-embed-img&quot; width=&quot;'.$imgwidth
+                    .'&quot; height=&quot;'.$imgheight.'&quot;&gt;&lt;/a&gt;';
                 $rows[] = [
                     'cells' => [
                     ['text' => _A_LINKS_IMG],

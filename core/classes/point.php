@@ -7,10 +7,6 @@
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
 # User points subsystem: the one writer of the points journal and of the fast balance every profile reads, for every owner of a rewarded event
-# The owner of an event names an approved action, a scope, a server-made unique source and the recipient; the amount of an ordinary action comes from the configuration alone
-# A non-zero event locks the account row, then writes the journal row and the balance in one unit, so the starting balance plus the journal always adds up to the aggregate
-# Inside a transaction of its owner the unit is a savepoint: a refusal it can prove rolled back answers false, and anything it cannot prove throws and stops the owner
-# The class holds no HTTP, template, rating or node dependency, and reads the clock of the database only, because the journal is stamped by that server
 final class Point {
 
     # The closed vocabulary of rewarded actions; the configuration has to carry exactly these and the journal stores nothing else
@@ -50,15 +46,18 @@ final class Point {
     private const TWIN = 1062;
 
     private Database $db;
-    private bool $active;
     private array $rules;
 
     # Whether the configuration passed its check; an owner reads it to tell a subsystem closed on purpose or broken apart from a failed write
     public private(set) bool $valid;
 
+    # Whether rewards are given: a checked configuration that is switched on; the interface of points follows it, never the stored switch alone
+    public private(set) bool $active;
+
     # Build the subsystem over the connection of the request and the points scope of the configuration, which is checked whole and exactly once
     # A scope that fails the check switches the class off and is reported to the site log; no partly usable rule is ever applied
     # An exactly empty scope is a subsystem closed on purpose, which is how the core builds it before the data update left its mark: switched off the same way, without a log line
+    # The class holds no HTTP, template, rating or node dependency, and reads the clock of the database only, because the journal is stamped by that server
     public function __construct(Database $db, array $conf) {
         $this->db = $db;
         $this->rules = $this->filterConfig($conf);
@@ -187,6 +186,7 @@ final class Point {
 
     # Run one event under the account lock and answer true for a stored or an empty success, false for a refusal, and null for a statement that failed
     # A key the journal already carries and a reached limit are both a success that writes nothing; a negative correction takes no more than the balance holds
+    # A non-zero event locks the account row, then writes the journal row and the balance in one unit, so the starting balance plus the journal adds up to the aggregate
     private function addEventRow(array $event, array $rule): ?bool {
         $bal = $this->getUserLock($event['uid']);
         if (!is_int($bal)) return $bal === false ? null : false;
@@ -207,6 +207,7 @@ final class Point {
     }
 
     # Open the unit: a transaction of its own, or a savepoint inside the transaction of the owner, whose failure leaves that transaction unknown and therefore throws
+    # Inside a transaction of its owner a refusal the unit can prove rolled back answers false, and anything it cannot prove throws and stops the owner
     private function setEventBegin(bool $own): bool {
         if ($own) return $this->db->setSqlBegin();
         if ($this->db->getSqlQuery('SAVEPOINT '.self::SAVE) === false) throw new RuntimeException('Point: the savepoint was refused and the outer transaction is unknown');
@@ -233,6 +234,7 @@ final class Point {
 
     # Register one event of an approved action for its recipient and answer whether it succeeded; a repeat, a reached limit and a zero or disabled reward all succeed empty
     # An ordinary reward that is zero or switched off costs no statement at all, while a compensation and a correction work on the existing balance whatever the settings say
+    # The owner names an approved action, a scope, a server-made unique source and the recipient; the amount of an ordinary action comes from the configuration alone
     public function addEvent(string $action, string $scope, string $source, int $uid, array $data = []): bool {
         if (!$this->valid) return false;
         $event = $this->filterEvent($action, $scope, $source, $uid, $data);

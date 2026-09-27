@@ -125,12 +125,30 @@ function getPresentationVoices(): array {
 # The traces of the control window are staged operations carrying the real counts of this install
 # The content figures come from the first active type of a display mode through the shared reader: article for the news, docs for the documentation, files for the archive
 # A mode no active type shows leaves its card, its console row and its figure out, and a failed read counts as nothing
+# A stand carries days of statistics where a site carries years, so a short window is padded in front with days around the mean of the real ones
+# The padding is dated back from the first real day, and every headline still counts the real rows
+# The wire of a block node runs from its card to the slot it fills, in the 760 x 340 viewBox of the stage
+# Four rows of nodes run down each side, the page mock sits in the middle, a slot is entered from the side the node stands on
+# The eight modules of the map put the ones a reader knows a CMS by first, whatever their place in the config, the rest follow in config order
+# The build presets over the map are a demo that lights the set of a build on the nodes, cut to the modules the map carries
+# The chips of a commit are read off its subject, the kind before the colon then the areas it names, and its focus text is the first paragraph of its body
+# The hours of a stand cluster around one visit, so the day is blended half and half with a typical diurnal profile carrying the day's own total
+# The blended burst stays visible, the sum stays the counted one, and the curve reads like a site
+# The monitor row reads what costs nothing on a public page: CPU and RAM histories of the admin sampler, the disk snapshot, the web server from the request
+# The core count and the uptime spawn a shell on Windows, so they show only when the sampler has stored them
+# The two bands under the visits are the share the page cache answered and the rest that reached the database
+# Neither band is counted per hour, so both are read off the visits through the hit ratio, which drifts a little from point to point
+# The requests the guard scene plays, in order, are a staged mix of the traffic classes over the routes of this install
+# Each request is bound for the window of the house it belongs to (a pane by number, or the door), the bad ones for quarantine
+# No request keeps a history of its generation time, so the forty points of the response spark breathe around the time of this one
+# The PDO cases are the four shapes a query takes in this install, played by the plugin over the real prefix
+# The runtime strip carries eight staged events, the first five on screen, stamped a few seconds apart back from now, and the plugin turns it
+# The scenarios the pipeline flow plays in turn are a hit, a miss and a bypass with the cache on, and one live render with it off
+# Each scenario names mode, badge, route, two core lines, two gate words, the module parser word, four side grid states with tones and the node numbers the packet visits
 function getPresentationData(): array {
     global $conf, $db, $theme;
     $cnt = getSessionCounts();
     $today = getStatsToday();
-    # A stand carries days of statistics where a site carries years, so a short window is padded in front with days around the mean of the real ones
-    # The padding is dated back from the first real day, and every headline still counts the real rows
     $fill = static function (array $rows, int $days): array {
         $have = count($rows);
         if ($have < 1 || $have >= $days) return $rows;
@@ -181,8 +199,6 @@ function getPresentationData(): array {
     $docs = $read('docs');
     $files = $read('files');
     $slots = ['b' => _PRES_BL_BANNER, 'l' => _PRES_BL_LEFT, 'c' => _PRES_BL_TOP, 'd' => _PRES_BL_BOTTOM, 'r' => _PRES_BL_RIGHT, 'f' => _PRES_BL_FOOTER];
-    # The wire of a block node runs from its card to the slot it fills, in the 760 x 340 viewBox of the stage
-    # Four rows of nodes run down each side, the page mock sits in the middle, a slot is entered from the side the node stands on
     $ends = ['b' => [340, 118], 'l' => [296, 170], 'c' => [340, 134], 'd' => [340, 205], 'r' => [464, 170], 'f' => [340, 222]];
     $nodes = [];
     $filled = [];
@@ -198,8 +214,6 @@ function getPresentationData(): array {
         ];
     }
     $cur = array_find($nodes, static fn(array $node): bool => $node['is_on'])['pos'] ?? _PRES_BL_CONTENT;
-    # The eight modules of the map: the ones a reader knows a CMS by come first, whatever their place in the config
-    # The rest follow in config order when the install lacks one of them
     $rank = array_flip(['account', 'search', 'forum', 'contact', 'voting', 'shop']);
     $keys = array_keys($conf['modules']);
     usort($keys, static fn(string $a, string $b): int => ($rank[$a] ?? count($rank)) <=> ($rank[$b] ?? count($rank)));
@@ -216,7 +230,6 @@ function getPresentationData(): array {
     }
     $lit = [];
     foreach (['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'] as $i => $word) $lit[$word] = !empty($mods[$i]['is_on']);
-    # The build presets over the map: a demo that lights the set of a build on the nodes, cut to the modules the map carries
     $shown = array_column($mods, 'note');
     $build = static fn(string $label, array $set): array => ['label' => $label, 'mods' => implode(',', array_values(array_intersect($set, $shown)))];
     $presets = [
@@ -230,8 +243,6 @@ function getPresentationData(): array {
         require_once BASE_DIR.'/modules/changelog/common.php';
         $log = chlogLoadCommits($conf, [], '');
         $base = ($log['source'] === 'github') ? 'https://github.com/'.$chlog['ghowner'].'/'.$chlog['ghrepo'].'/commit/' : '';
-        # The chips of a commit are read off its subject: the kind before the colon, then the areas it names
-        # The focus text is the first paragraph of its body
         $areas = ['presentation', 'theme', 'plugin', 'module', 'admin', 'template', 'cache', 'test', 'hero', 'contract', 'page', 'block', 'window', 'editor',
             'upload', 'oauth', 'profile', 'settings', 'rail', 'section', 'partial', 'fragment', 'palette', 'token', 'rig', 'viewer', 'plan', 'devtools'];
         foreach (array_slice($log['commits'], 0, 5) as $i => $row) {
@@ -282,8 +293,6 @@ function getPresentationData(): array {
     $npart = $share($fresh, $back + $fresh);
     $deep = $today['depth'];
     $dpart = $share((float)($deep['8+'] ?? 0), (float)array_sum($deep));
-    # The hours of a stand cluster around one visit, so the day is blended half and half with a typical diurnal profile carrying the day's own total
-    # The burst stays visible, the sum stays the counted one, and the curve reads like a site
     $profile = [2, 1, 1, 1, 1, 2, 3, 5, 7, 8, 9, 9, 8, 8, 8, 8, 9, 10, 10, 9, 8, 6, 4, 3];
     $daily = [];
     foreach ($today['hours'] as $h => $hits) $daily[] = (int)round($hits / 2 + $today['visits'] * $profile[$h] / (2 * array_sum($profile)));
@@ -292,8 +301,6 @@ function getPresentationData(): array {
     foreach ($daily as $hits) $hours[] = ['part' => $share($hits, $peak)];
     $prev = $week[count($week) - 2]['visits'] ?? 0;
     $diff = ($prev > 0) ? (int)round(($today['visits'] - $prev) * 100 / $prev) : 0;
-    # The monitor row reads what costs nothing on a public page: CPU and RAM histories of the admin sampler, the disk snapshot, the web server from the request
-    # The core count and the uptime spawn a shell on Windows, so they show only when the sampler has stored them
     $hcpu = $store['sys_hist_cpu'] ?? [];
     $hram = $store['sys_hist_ram'] ?? [];
     $cpu = (int)round((float)(end($hcpu) ?: 0));
@@ -310,8 +317,6 @@ function getPresentationData(): array {
     $state = $cache ? _PRES_STK_ACTIVE : _PRES_STK_OFF;
     $hit = $cache ? min(98, 84 + $today['visits'] % 13) : 0;
     $live = max($cnt['all'], 48 + $today['visits'] % 37);
-    # The two bands under the visits: the share the page cache answered and the rest that reached the database
-    # Neither is counted per hour, so both are read off the visits through the hit ratio, which drifts a little from point to point
     $split = static function (array $visits, int $hit, int $shift): array {
         $rows = ['visits' => [], 'cache' => [], 'db' => []];
         foreach (array_values($visits) as $i => $hits) {
@@ -365,7 +370,9 @@ function getPresentationData(): array {
     foreach ($names as $id => $pair) $rail[] = ['id' => $id, 'label' => $pair[0], 'sub' => $pair[1], 'num' => sprintf('%02d', ++$i), 'is_current' => $i === 1];
     $sites = getPresentationSites();
     $brand = getPresentationBrand();
-    foreach (array_keys($brand) as $i) $brand[$i] += ['is_first' => $i === 0, 'is_hidden' => $i > 4, 'open' => _PRES_GL_OPEN, 'down' => _DOWNLOAD, 'pos' => sprintf(_PRES_GL_OF, $i + 1, count($brand))];
+    foreach (array_keys($brand) as $i) $brand[$i] += [
+        'is_first' => $i === 0, 'is_hidden' => $i > 4, 'open' => _PRES_GL_OPEN, 'down' => _DOWNLOAD, 'pos' => sprintf(_PRES_GL_OF, $i + 1, count($brand)),
+    ];
     foreach (array_keys($sites) as $i) $sites[$i] += ['rating' => _RATING, 'pos' => sprintf(_PRES_GL_OF, $i + 1, count($sites))];
     $voices = getPresentationVoices();
     foreach (array_keys($voices) as $i) $voices[$i]['since_label'] = _PRES_VO_SINCE;
@@ -426,11 +433,13 @@ function getPresentationData(): array {
         'views' => [
             ['key' => 'area', 'label' => _PRES_RH_AREA, 'icon' => 'graph-up', 'is_on' => true], ['key' => 'bar', 'label' => _PRES_RH_BARS, 'icon' => 'bar-chart', 'is_on' => false],
         ],
-        'legend' => [_PRES_RH_HITS, _PRES_CACHE, _PRES_DB], 'vring' => ['is_round' => true, 'inner' => $gpart, 'deep' => $qpart] + $ring((string)$hit, '%', _PRES_CACHE, $hit, '', false, '', 'info'),
+        'legend' => [_PRES_RH_HITS, _PRES_CACHE, _PRES_DB],
+        'vring' => ['is_round' => true, 'inner' => $gpart, 'deep' => $qpart] + $ring((string)$hit, '%', _PRES_CACHE, $hit, '', false, '', 'info'),
         'vitals' => [
             'over' => _PRES_RH_VITALS, 'title' => _PRES_RH_FAST, 'text' => _PRES_RH_FAST_T,
             'rows' => [
-                ['label' => _PRES_RH_RESP, 'value' => $gen.' ms', 'icon' => '', 'tone' => ''], ['label' => _PRES_QUERIES, 'value' => (string)$load['qnum'], 'icon' => '', 'tone' => ''],
+                ['label' => _PRES_RH_RESP, 'value' => $gen.' ms', 'icon' => '', 'tone' => ''],
+                ['label' => _PRES_QUERIES, 'value' => (string)$load['qnum'], 'icon' => '', 'tone' => ''],
                 ['label' => _PRES_RH_GUARD, 'value' => _PRES_GD_STATE, 'icon' => 'shield-check', 'tone' => 'success'],
             ],
             'note' => _PRES_RH_NOTE,
@@ -484,8 +493,6 @@ function getPresentationData(): array {
         ],
         'badge' => _PRES_GD_MODE, 'net' => _PRES_GD_NET, 'allow' => _PRES_GD_ALLOWBUS, 'deny' => _PRES_GD_DENY, 'track' => _PRES_GD_TRACK, 'scan' => _PRES_GD_SCAN,
         'quarantine' => _PRES_GD_QUARANT, 'caught' => (string)$events, 'entry' => _PRES_GD_ENTRY, 'pass' => _PRES_GD_ALLOW, 'block' => _PRES_GD_BLOCK,
-        # The requests the scene plays, in order: a staged mix of the traffic classes over the routes of this install
-        # Each is bound for the window of the house it belongs to (a pane by number, or the door), the bad ones for quarantine
         'travellers' => array_map(static fn(array $t): array => [
             'tone' => $t[0], 'icon' => $t[1], 'label' => $t[2], 'text' => $t[3], 'zone' => $t[4], 'is_bad' => $t[5],
             'result' => $t[5] ? _PRES_GD_BLOCK.' → '._PRES_GD_QUARANT : $t[6], 'verdict' => $t[5] ? 'danger' : ($t[6] === _PRES_GD_CLASSIFY ? 'info' : 'success'),
@@ -529,8 +536,6 @@ function getPresentationData(): array {
         ],
         'note' => _PRES_GD_NOTE,
     ];
-    # The response spark: no request keeps a history of its generation time, so forty points breathe around the time of this one
-    # The PDO cases: the four shapes a query takes in this install, played by the plugin over the real prefix
     $spark = [];
     foreach (range(0, 39) as $i) $spark[] = (int)round($gen * (0.78 + sin($i * 0.55) * 0.14 + cos($i * 1.3 + 1) * 0.08));
     $case = static fn(string $verb, string $query, array $params, bool $prepared, bool $write, string $result, string $elapsed): array => [
@@ -590,7 +595,6 @@ function getPresentationData(): array {
             'note' => _PRES_DT_NOTE, 'profile' => _PRES_DT_PROFILE, 'errhead' => _PRES_DT_ERRHEAD, 'captured' => _PRES_DT_CAPTURED, 'phperr' => _PRES_DT_PHPERR,
             'demo' => _PRES_DT_DEMO, 'masked' => _PRES_DT_MASKED, 'route' => $conf['name'],
         ],
-        # Eight staged events, the first five on screen, stamped a few seconds apart back from now; the plugin turns the strip
         'events' => array_map(static fn(int $i, array $e): array => ['time' => date('H:i:s', time() - $i * 4), 'name' => $e[0], 'verdict' => $e[1], 'tone' => $e[2]], range(0, 7), [
             ['request.filter', _PRES_EV_ALLOWED, 'success'], ['session.verify', _PRES_EV_VERIFIED, 'success'], ['query.analyze', _PRES_EV_REVIEW, 'warning'],
             ['cache.refresh', _PRES_EV_COMPLETE, 'success'], ['template.render', _PRES_EV_COMPLETE, 'success'], ['injection.scan', _PRES_GD_BLOCK, 'danger'],
@@ -628,9 +632,20 @@ function getPresentationData(): array {
             $ring((string)$dpart, '%', _PRES_ST_DEPTH, $dpart, 'sm', true),
         ],
     ];
-    # The scenarios the flow plays in turn: with the cache on a hit, a miss and a bypass, with it off one live render
-    # Each names mode, badge, route, two core lines, two gate words, the module parser word, four side grid states with tones and the node numbers the packet visits
-    $flow = static fn(string $mode, string $badge, string $btone, string $route, string $sub, string $state, string $gatea, string $gateb, string $modb, array $states, array $tones, string $seq): array => [
+    $flow = static fn(
+        string $mode,
+        string $badge,
+        string $btone,
+        string $route,
+        string $sub,
+        string $state,
+        string $gatea,
+        string $gateb,
+        string $modb,
+        array $states,
+        array $tones,
+        string $seq
+    ): array => [
         'mode' => $mode, 'badge' => $badge, 'btone' => $btone, 'route' => $route, 'sub' => $sub, 'state' => $state, 'gatea' => $gatea, 'gateb' => $gateb,
         'modb' => $modb, 'states' => implode('|', $states), 'tones' => implode('|', $tones), 'seq' => $seq,
     ];

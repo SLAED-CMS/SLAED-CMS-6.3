@@ -5,18 +5,13 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Stage 1, batch 1 of docs/COMMENTS-REDESIGN-2026.md: the read methods of the Comment class have to answer
- * exactly what the queries they replace answer, or the byte parity the stage promises is lost at the batch
- * that migrates the call sites instead of here. Every scenario runs through tests/Support/contract_probe.php,
- * which boots the real core in an isolated CLI process and puts the legacy statement and the class method
- * side by side against the live rows of this installation.
- */
+# The read methods of the Comment class answer exactly what the legacy queries they replace answer, byte for byte
 final class CommentReadTest extends TestCase
 {
     private static array $probe = [];
 
     # Run the read probe once and memoize its report for every scenario in this class
+    # The probe tests/Support/contract_probe.php boots the real core in an isolated CLI process and sets the legacy statement beside the class method over live rows
     private function getProbe(): array
     {
         if (self::$probe !== []) return self::$probe;

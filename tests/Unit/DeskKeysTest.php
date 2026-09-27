@@ -5,13 +5,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Stage 8 of docs/FILE-MANAGER-CONCEPT-2026.md: the desk conveniences of both file screens.
- * A modifier and a key mark what the pointer marks, the arrows walk the list the pointer walks,
- * the fan of an object serves as its context menu, a dragged file lands in the directory it was
- * let go over, and the focus goes where §33 sends it. Nothing here writes to the site; every
- * claim is read off the shipped source, the two themes and the two skins.
- */
+# The desk conveniences of both file screens, read off the shipped source, the two themes and the two skins without writing to the site
 final class DeskKeysTest extends TestCase
 {
     private const THEMES = ['admin', 'lite'];
@@ -41,6 +35,7 @@ final class DeskKeysTest extends TestCase
 
     # The context menu is the fan the object already carries: a second list of actions would be a second place to keep the rights of that object in step with
     # It lives in the shared component file, so every fan of the project answers the right button and the two file screens get it without a line of their own
+    # A box around several fans is the list and not one of its objects: the empty ground between tiles must keep the menu of the browser
     #[Test]
     public function theContextMenuIsTheFanOfTheObjectAndLivesWithTheComponent(): void
     {
@@ -50,7 +45,6 @@ final class DeskKeysTest extends TestCase
         $part = $this->getPart('plugins/system/slaed.js', 'function getDialOwn(', 600);
         $note = 'The menu is not found through the fan of the object, so every screen would have to name its own rows';
         $this->assertStringContainsString("querySelectorAll('.sl-dial')", $part, $note);
-        # A box around several fans is the list and not one of its objects: the empty ground between tiles must keep the menu of the browser
         $note = 'A box holding several fans is taken for an object, so the empty ground of a list opens the menu of some object standing in it';
         $this->assertStringContainsString('if (list.length > 1) return null;', $part, $note);
         $point = $this->getPart('plugins/system/slaed.js', 'function setDialPoint(', 900);
@@ -64,7 +58,7 @@ final class DeskKeysTest extends TestCase
         }
     }
 
-    # A component missing in one theme is added to the other under the same name (§32), and the window of the file manager overrules both anchors of its own fan
+    # A component missing in one theme is added to the other under the same name, and the window of the file manager overrules both anchors of its own fan
     #[Test]
     public function bothThemesCarryTheMenuState(): void
     {
@@ -85,6 +79,7 @@ final class DeskKeysTest extends TestCase
     }
 
     # A modifier means the mark and not the address: the press is taken before the object gets it, because the address of a row carries a request of its own
+    # A mark is not the current object: moving the current one here would show the properties of one object beside the name of another
     #[Test]
     public function aModifierMarksInsteadOfOpening(): void
     {
@@ -95,7 +90,6 @@ final class DeskKeysTest extends TestCase
         $this->assertStringContainsString('setFileSpan(fmfrom, at)', $part, $note);
         $note = 'The press is taken in the bubbling phase, where the request of the address has already left';
         $this->assertStringContainsString('}, true);', $part, $note);
-        # A mark is not the current object (§9.1): moving the current one here would show the properties of one object beside the name of another
         $note = 'A marking press moves the current object without asking for its properties, so the panel names another object than the list does';
         $this->assertStringNotContainsString('setFilePick(', $part, $note);
         $edit = $this->getPart(self::EDITJS, 'var el = (ev.shiftKey || ev.ctrlKey || ev.metaKey)', 700);
@@ -122,6 +116,7 @@ final class DeskKeysTest extends TestCase
         $this->assertStringContainsString('setPicks(id);', $edit, $note);
     }
 
+    # A modifier and a key mark what the pointer marks, and the arrows walk the list the pointer walks
     # The keys walk what the eye sees and nothing else: a fan item, a page of the pager and the field of an operation stand in the same body and keep the keys they came with
     #[Test]
     public function theArrowsWalkOnlyTheObjectsOfTheViewThatIsOn(): void
@@ -144,7 +139,7 @@ final class DeskKeysTest extends TestCase
         $this->assertStringContainsString("matches('input, textarea, select, button, a')", $lib, $note);
     }
 
-    # The window opens on its content and gives the focus back to what opened it, and the key that closes a window lets an open fan win first (§33)
+    # The window opens on its content and gives the focus back to what opened it, and the key that closes a window lets an open fan win first
     # The rule is kept once, in the window canon of the shared component, because every window of the project now answers the same mechanism
     #[Test]
     public function theFocusAndTheEscapeFollowTheKeyboardRule(): void
@@ -179,6 +174,7 @@ final class DeskKeysTest extends TestCase
     }
 
     # A file dropped anywhere over the browser belongs to the directory the browser shows, and it goes up the one way an upload goes: the form of the module and its queue
+    # The refused file of a queue carries the mark of the failed list and stands above the body: unscoped, the state of the list hides the reason of the file
     #[Test]
     public function aDroppedFileGoesUpTheOneWayAnUploadGoes(): void
     {
@@ -201,9 +197,8 @@ final class DeskKeysTest extends TestCase
         $note = 'The catalogue takes a drop from a visitor the settings deny the upload to';
         $this->assertStringContainsString('canupload', $lib, $note);
         $turn = $this->getPart(self::EDITJS, "if (!zone.classList.contains('js-slaed-upload-drop'))", 200);
-        $note = 'A file dropped onto the catalogue goes up with its queue out of sight (§31)';
+        $note = 'A file dropped onto the catalogue goes up with its queue out of sight';
         $this->assertStringContainsString("setPane(id, 'up')", $turn, $note);
-        # The refused file of a queue carries the mark of the failed list and stands above the body: unscoped, the state of the list hides the reason of the file
         $wait = $this->getPart(self::ADMINJS, 'function setFileWait(mode)', 500);
         $note = 'The state of the list is looked for in the whole page, so a refused file of the queue is taken for it';
         foreach (['#slfmbody .sl-skel', '#slfmbody [data-sl-fm-fail]', '#slfmbody [data-sl-fm-real]'] as $one) {
@@ -211,7 +206,7 @@ final class DeskKeysTest extends TestCase
         }
     }
 
-    # An object dragged onto a directory is moved there, and the move opens the same form the panel of marks opens, because a moved file leaves its published address behind (§8)
+    # An object dragged onto a directory is moved there, and the move opens the same form the panel of marks opens, because a moved file leaves its published address behind
     #[Test]
     public function aDraggedObjectIsMovedThroughTheFormOfTheOperation(): void
     {
@@ -233,7 +228,7 @@ final class DeskKeysTest extends TestCase
         $this->assertStringContainsString("arg.required = val !== '';", $js, $note);
     }
 
-    # What may be dragged is what the descriptor of that object allows, so no drawing of the list works a permission out beside the file layer (§14)
+    # What may be dragged is what the descriptor of that object allows, so no drawing of the list works a permission out beside the file layer
     #[Test]
     public function whatMayBeDraggedComesFromTheDescriptor(): void
     {

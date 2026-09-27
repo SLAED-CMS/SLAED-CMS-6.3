@@ -2785,6 +2785,11 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   grid-template-columns: 3fr 1fr;
 }
 
+/* Only the modes download and link offer the report form, so the report row of a Node role follows the option its mode select holds, live as the select changes */
+.sl-div-grid:has(> .sl-role-mode option:checked:not([value="download"], [value="link"])) > .sl-role-report {
+  display: none;
+}
+
 .sl-div-item-full .sl-radio-group {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -3305,6 +3310,13 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   align-items: center;
   gap: var(--sl-space-2);
   flex: 0 0 auto;
+}
+
+.sl-pager-info {
+  margin-left: auto;
+  font-size: var(--sl-font-small);
+  color: var(--sl-text-muted);
+  white-space: nowrap;
 }
 
 .sl-pager-prev,

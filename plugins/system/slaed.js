@@ -846,8 +846,8 @@
             return;
         }
 
-        var div = document.createElement('div');
-        div.innerHTML = txt;
+        var hold = document.createElement('template');
+        hold.innerHTML = txt;
         var nodes = [];
 
         (function checkScan(node) {
@@ -858,12 +858,12 @@
             for (var i = 0; i < node.childNodes.length; i++) {
                 checkScan(node.childNodes[i]);
             }
-        })(div);
+        })(hold.content);
 
         var index = 0;
         function setProcessNext() {
             if (index >= nodes.length) {
-                setInputValueByClass(output, div.innerHTML);
+                setInputValueByClass(output, hold.innerHTML);
                 return;
             }
             var original = nodes[index].nodeValue.trim();

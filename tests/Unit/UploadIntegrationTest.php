@@ -5,14 +5,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Batch 10 of docs/UPLOAD-2026.md: the half no double can answer. Two of its scenarios run
- * tests/Support/upload_probe.php against the real core in an isolated CLI process, so the resolver
- * and the service accessor are exercised against the configuration the site actually ships rather
- * than against a fixture. The rest reads the adapters themselves and holds them to the ordering
- * rule of Adapter write ordering and compensation - authorization, token and business validation
- * before the class, checked writes and compensation after it. Nothing here writes to the site.
- */
+# Batch 10 of docs/UPLOAD-2026.md: the half no double can answer, the resolver, the service accessor and the adapters; nothing here writes to the site
 final class UploadIntegrationTest extends TestCase
 {
     private const ADAPTERS = [
@@ -24,6 +17,8 @@ final class UploadIntegrationTest extends TestCase
     private static array $probe = [];
     private static array $files = [];
 
+    # Two scenarios run tests/Support/upload_probe.php against the real core in an isolated CLI process, on the configuration the site ships rather than a fixture
+    # The rest reads the adapters and holds them to Adapter write ordering and compensation: authorization, token and business checks first, checked writes after
     # Run one probe scenario in a fresh process and memoize its report for every test in this class
     private function getProbe(string $mode): array
     {
@@ -248,19 +243,32 @@ final class UploadIntegrationTest extends TestCase
         }
     }
 
-    # A path handed in by a form is resolved in one place for both handlers, because the two questions it answers - does the file exist in this place, does it belong to whoever is posting -
-    # were written twice in words that differed, and the copy that drifts is the one that stops asking. The wording of the refusal stays with each caller; the refusal itself does not
+    # A path handed in by a form is resolved in one place for both handlers: does the file exist in this place, does it belong to whoever is posting
+    # Those two questions were written twice in words that differed, and the copy that drifts is the one that stops asking
+    # The wording of the refusal stays with each caller; the refusal itself does not
     #[Test]
     public function theTakenPathIsResolvedInOnePlace(): void
     {
         $code = $this->getFile('core/system.php');
         $this->assertSame(1, substr_count($code, 'function getUploadTakenFile('), 'The stored pick of a form is resolved somewhere other than the one resolver');
         $body = $this->getBody('core/system.php', 'getUploadTakenFile');
-        $this->assertStringContainsString('getUploadFileArea($rule)->getFileData($take)', $body, 'The path is read past the place context, so a name reaching outside the directory would answer');
+        $this->assertStringContainsString(
+            'getUploadFileArea($rule)->getFileData($take)',
+            $body,
+            'The path is read past the place context, so a name reaching outside the directory would answer'
+        );
         $this->assertStringContainsString("\$one['kind'] === 'dir'", $body, 'A directory answers as a file, so a pick could name the store itself');
         $this->assertStringContainsString("isset(FileManager::getGuardFiles()[\$one['name']])", $body, 'The two names that are never content are offered as content');
-        $this->assertStringContainsString('FileManager::getFileOwner(', $body, 'A stored file is taken on the word of the client, which is the one thing a path from a form may never be');
-        $this->assertStringContainsString('getEditorFileOwner($mod)', $body, 'The resolver writes an owner of its own, so its answer and the listing disagree about whose file it is');
+        $this->assertStringContainsString(
+            'FileManager::getFileOwner(',
+            $body,
+            'A stored file is taken on the word of the client, which is the one thing a path from a form may never be'
+        );
+        $this->assertStringContainsString(
+            'getEditorFileOwner($mod)',
+            $body,
+            'The resolver writes an owner of its own, so its answer and the listing disagree about whose file it is'
+        );
         $this->assertStringContainsString(
             '!checkUploadModer($mod)',
             $body,
@@ -297,7 +305,7 @@ final class UploadIntegrationTest extends TestCase
     }
 
     # Every adapter reaches the class through the accessor; a direct construction would put the root and the lock directory in a second place
-    # core/system.php is where the accessor itself lives, so it is held to exactly one construction rather than to none, and that one has to sit inside getUploadService()
+    # The file core/system.php is where the accessor itself lives, so it is held to exactly one construction rather than to none, and that one has to sit inside getUploadService()
     #[Test]
     public function noAdapterBuildsTheClassItself(): void
     {
@@ -310,6 +318,7 @@ final class UploadIntegrationTest extends TestCase
     }
 
     # The publish call sits behind the guard of its own flow, so an invalid token or a failed business check can never reach the class
+    # The editor routes read their rule through one guard, so the token check is asserted where it now stands and not where every route used to repeat it
     #[Test]
     public function everyAdapterGuardsThePublishCall(): void
     {
@@ -326,7 +335,6 @@ final class UploadIntegrationTest extends TestCase
             $this->assertNotFalse($call, $name.'() no longer publishes through the service');
             $this->assertLessThan($call, $gate, $name.'() reaches the upload service before it checks its token');
         }
-        # The editor routes read their rule through one guard, so the token check is asserted where it now stands and not where every route used to repeat it
         $rule = $this->getBody('core/system.php', 'getEditorRouteRule');
         $this->assertStringContainsString('checkSiteToken(', $rule, 'The shared guard of the editor routes carries no token check at all');
         $this->assertStringContainsString('checkEditorUploadAccess(', $rule, 'The shared guard of the editor routes decides nothing about access');

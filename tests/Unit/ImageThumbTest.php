@@ -5,19 +5,12 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Batch 2 of docs/UPLOAD-2026.md: the image pipeline behind uploads.
- * tests/Support/image_probe.php boots the real core with its writable directories in scratch, writes
- * every fixture with GD itself and calls getImageThumb() directly, because the admin panel cannot reach
- * the helper until batch 8 migrates local upload. The removed WBMP branch is asserted at source level,
- * which is stated in the test that does so; the runtime image lists moved to UploadFormatTest with batch 9,
- * where they are compared against the canonical set instead of against the intermediate state of batch 2.
- */
+# The image pipeline behind uploads, driven through getImageThumb() directly with every fixture written by GD itself
 final class ImageThumbTest extends TestCase
 {
     private static array $probe = [];
 
-    # Run one probe scenario in a fresh process and memoize its report
+    # Run one scenario of tests/Support/image_probe.php, which boots the real core with its writable directories in scratch, and memoize its report
     private function getProbe(string $mode): array
     {
         if (isset(self::$probe[$mode])) return self::$probe[$mode];
@@ -30,7 +23,7 @@ final class ImageThumbTest extends TestCase
         return self::$probe[$mode] = $data;
     }
 
-    # Read one source file of the project
+    # Read one source file of the project; the runtime image lists are compared against the canonical set in UploadFormatTest instead
     private function getFile(string $name): string
     {
         return (string)file_get_contents(dirname(__DIR__, 2).'/'.$name);

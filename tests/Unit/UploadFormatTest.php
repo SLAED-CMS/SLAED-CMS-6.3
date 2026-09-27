@@ -5,13 +5,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Batch 9 of docs/UPLOAD-2026.md: the 2026 format set as it is actually shipped.
- * The configuration files are read as they lie in the repository, the type policy is read from the class through
- * reflection, and the render half runs through tests/Support/format_probe.php, which boots the real core and drives
- * Parser::filterAttach() over the shipped config/filetype.php. Nothing here restates the policy from memory: the
- * canonical set below is the one table of Format policy for 2026 browsers, and everything else is compared against it.
- */
+# Batch 9 of docs/UPLOAD-2026.md: the 2026 format set as it is actually shipped, compared against the one canonical table of Format policy for 2026 browsers
 final class UploadFormatTest extends TestCase
 {
     private const IMAGES = ['avif', 'gif', 'jpeg', 'jpg', 'png', 'webp'];
@@ -22,6 +16,8 @@ final class UploadFormatTest extends TestCase
     private const GONE = ['bmp', 'gzip', 'm4b', 'm4p', 'm4r', 'm4v', 'ogv', 'ogx', 'spx', 'swf', 'wave', '7zip'];
     private const VISITOR = 'gif,jpg,jpeg,png,webp,avif,zip,rar';
 
+    # The configuration files are read as they lie in the repository and the type policy from the class through reflection; nothing restates it from memory
+    # The render half runs through tests/Support/format_probe.php, which boots the real core and drives Parser::filterAttach() over the shipped config/filetype.php
     # Every extension of the canonical set, sorted, which is what a configured list may draw from
     private function getCanonical(): array
     {
@@ -170,7 +166,11 @@ final class UploadFormatTest extends TestCase
         $this->assertStringContainsString('Parser::EMBEDIMG', $drv, 'The editor window no longer reads the one embeddable type list and restates it in its own words');
         $this->assertSame(0, preg_match("#'embedimg' => \[#", $drv), 'The editor window restates the image set in a list of its own again');
         $pars = $this->getFile('core/classes/parser.php');
-        $this->assertStringContainsString('if (!in_array(strtolower($dm[1]), self::EMBEDIMG, true)) return null;', $pars, 'The data-URI allowlist no longer reads the one embeddable type list');
+        $this->assertStringContainsString(
+            'if (!in_array(strtolower($dm[1]), self::EMBEDIMG, true)) return null;',
+            $pars,
+            'The data-URI allowlist no longer reads the one embeddable type list'
+        );
         $this->assertSame(0, preg_match('#data:image/\(\?:#', $pars), 'The data-URI allowlist restates the image set in its own pattern again');
         $pol = $this->getPolicy();
         $imgs = $pol['IMAGES'];

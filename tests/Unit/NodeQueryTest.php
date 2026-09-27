@@ -10,13 +10,7 @@ use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionMethod;
 
-/**
- * NodeQuery reads types, materials, targets, resources, trees and sitemap rows against the request
- * context, and getNodeContext() builds that context from the trusted state of the request. Every behaviour is driven by
- * tests/Support/node_probe.php in its query mode: a disposable MariaDB database filled with the shipped schema, a scratch
- * configuration that carries the probe types, the shipped reader copied byte for byte next to a factory whose closed map
- * names a test extension, and one child process per visitor for the context.
- */
+# NodeQuery reads types, materials, targets, resources, trees and sitemap rows against the context getNodeContext() builds from the trusted request state
 final class NodeQueryTest extends TestCase
 {
     private static array $probe = [];
@@ -27,6 +21,9 @@ final class NodeQueryTest extends TestCase
         return dirname(__DIR__, 2).'/core/classes/node/query.php';
     }
 
+    # Every behaviour is driven by tests/Support/node_probe.php in its query mode on a disposable MariaDB database filled with the shipped schema
+    # A scratch configuration carries the probe types, and the shipped reader is copied byte for byte next to a factory whose closed map names a test extension
+    # One child process per visitor builds the context
     # Run the probe once in its query mode and memoize the runs; a probe that cannot create its database is a failure, not a skip
     private function getRuns(): array
     {
@@ -72,6 +69,7 @@ final class NodeQueryTest extends TestCase
             'getNodeSitemap' => ['int after = 0', 'int limit = 500', 'array'],
             'getNodeTarget' => ['string type', 'int id', 'bool any = false', '?NodeTarget'],
             'getNodeTargetList' => ['array refs', 'bool any = false', 'array'],
+            'getTargetSize' => ['int'],
             'getNodeTree' => ['int after = 0', 'int limit = 500', 'array'],
             'getNodeType' => ['string name', '?NodeType'],
             'getNodeTypeExport' => ['string name', 'string'],
@@ -192,8 +190,8 @@ final class NodeQueryTest extends TestCase
         }
     }
 
-    # A version that differs makes the shared configuration be read once more; the fresh one resolves the type with the row already read,
-    # a difference that lasts reads the row exactly once more and fails the type, and the global stays untouched
+    # A version that differs makes the shared configuration be read once more; the fresh one resolves the type with the row already read
+    # A difference that lasts reads the row exactly once more and fails the type, and the global stays untouched
     #[Test]
     public function aChangedVersionIsReadOnceMoreAndALastingOneFails(): void
     {
@@ -213,7 +211,8 @@ final class NodeQueryTest extends TestCase
             'unknown section' => ['section', 'colour'], 'page size 0' => ['listlimit', 'list.limit'], 'page size over maxlist' => ['listmax', 'list.limit'],
             'default sort not allowed' => ['order', 'list.order'], 'repeated sort' => ['orders', 'list.orders'], 'sort outside the registry' => ['sortkey', 'list.orders'],
             'direction' => ['dir', 'list.dir'], 'letter switch as string' => ['alpha', 'list.alpha'], 'unknown metadata' => ['show', 'list.show'],
-            'unknown list key' => ['listkey', 'list'], 'view path' => ['view', 'view'], 'form key' => ['form', 'form'], 'missing feature' => ['features', 'features'],
+            'unknown list key' => ['listkey', 'list'], 'view path' => ['view', 'view.mode'], 'view mode outside the list' => ['viewmode', 'view.mode'],
+            'support view without the extension' => ['viewsupport', 'view.mode'], 'form key' => ['form', 'form'], 'missing feature' => ['features', 'features'],
             'feature as string' => ['feature', 'features.comments'], 'unknown integration' => ['integr', 'integrations'], 'page kind' => ['seo', 'integrations.seo'],
             'submit access' => ['access', 'workflow.access'], 'group access without groups' => ['groups', 'workflow.groups'],
             'publish outside groups' => ['publish', 'workflow.publish'], 'notice as string' => ['notify', 'workflow.notify'],
@@ -293,9 +292,9 @@ final class NodeQueryTest extends TestCase
         $this->assertSame(3, $run['double']['count']);
     }
 
-    # The language of the categories narrows lists and their deadline, never a direct read, a target or a sitemap row
+    # The language of the categories narrows lists, their deadline and the sitemap rows, never a direct read or a target
     #[Test]
-    public function theLanguageNarrowsListsOnly(): void
+    public function theLanguageNarrowsListsAndTheSitemap(): void
     {
         $run = $this->getRuns()['language'];
         $this->assertSame([114, 121, 120, 119, 116, 113, 102, 101], $run['ru']['ids']);
@@ -306,10 +305,10 @@ final class NodeQueryTest extends TestCase
         foreach (['ru', 'en'] as $lang) {
             $this->assertSame([true, true], $run[$lang.'item'], $lang);
             $this->assertSame([112, 113], $run[$lang.'target'], $lang);
-            $this->assertContains(112, $run[$lang.'site'], $lang);
-            $this->assertContains(113, $run[$lang.'site'], $lang);
             $this->assertNotNull($run[$lang.'deadline'], $lang);
         }
+        $this->assertSame([false, true], [in_array(112, $run['rusite'], true), in_array(113, $run['rusite'], true)], 'The sitemap of ru carries a row of another language');
+        $this->assertSame([true, false], [in_array(112, $run['ensite'], true), in_array(113, $run['ensite'], true)], 'The sitemap of en carries a row of another language');
         $this->assertNotContains(112, $run['moder']['ids'], 'The language did not narrow the list of a moderator');
         $this->assertContains(105, $run['moder']['ids'], 'The moderator lost the right of the categories');
     }
@@ -598,6 +597,17 @@ final class NodeQueryTest extends TestCase
         $this->assertNotSame('', $run['guest']['lang']);
     }
 
+    # A stored type older than a rule that closed features.submit of sync or the report of a role outside download and link stays readable with both switched off
+    # A malformed switch still fails its type, and a write of the stored form is refused by the one validator with the path of the first error
+    #[Test]
+    public function aSwitchClosedByALaterRuleIsReadOff(): void
+    {
+        $run = $this->getRuns()['late'];
+        $this->assertSame([false, false], $run['late'], 'The stored type was lost or kept a switch its rule closes');
+        $this->assertFalse($run['bad'], 'A malformed switch was normalised instead of failing the type');
+        $this->assertRefused($run['write'], 'assets.shot.report', 'write');
+    }
+
     # A broken stored type, a type without configuration, a lasting version difference and unreadable field values are reported with the name or id behind them
     #[Test]
     public function storedProblemsAreLogged(): void
@@ -610,10 +620,13 @@ final class NodeQueryTest extends TestCase
         $seen = array_values(array_unique($seen));
         sort($seen);
         $this->assertSame([
+            'Node: a type carries a switch a later rule closed, it is read switched off late assets.shot.report',
+            'Node: a type carries a switch a later rule closed, it is read switched off late features.submit',
             'Node: a type has no configuration ghost',
             'Node: the field values of a material are no JSON object 303',
             'Node: the rating rule of a type is missing or invalid, its rating is blocked bare',
             'Node: the stored configuration of a type is invalid bad Invalid node input: list.limit',
+            'Node: the stored configuration of a type is invalid latebad Invalid node input: features.submit',
             'Node: the upload rule of a type is missing or invalid, its uploads are blocked bare',
             'Node: the version of a type differs between the database and the configuration drift',
         ], $seen);

@@ -238,8 +238,16 @@ function add(string $name = ''): void {
         ]),
     ];
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
-    $rows[] = ['label_html' => _ACTIVATE2, 'label_id' => $labid = getFieldIds('', 'active')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'active', 'value' => (string)(int)$job['active'], 'options' => $yesno])];
-    $rows[] = ['label_html' => _SCHEDULER_MANUAL, 'label_id' => $labid = getFieldIds('', 'manual')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'manual', 'value' => (string)(int)$job['manual'], 'options' => $yesno])];
+    $rows[] = [
+        'label_html' => _ACTIVATE2,
+        'label_id' => $labid = getFieldIds('', 'active')['label'],
+        'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'active', 'value' => (string)(int)$job['active'], 'options' => $yesno]),
+    ];
+    $rows[] = [
+        'label_html' => _SCHEDULER_MANUAL,
+        'label_id' => $labid = getFieldIds('', 'manual')['label'],
+        'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'manual', 'value' => (string)(int)$job['manual'], 'options' => $yesno]),
+    ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [

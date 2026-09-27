@@ -5,18 +5,11 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * The SQL splitter shared by the Inquiry tab of the database module and the module installer. Both run
- * scripts written by hand against a live installation, so what they hand to the driver has to be what the
- * file said, byte for byte, and what the report shows has to be the statement rather than the comment in
- * front of it.
- * The three functions are pure and are lifted out of core/admin.php by name: the file guards itself with
- * ADMIN_FILE and the rest of it needs a request, so it cannot be required from CLI, and copying the bodies
- * into the test would let the shipped code drift away from what is asserted here.
- */
-final class DatabaseBatchTest extends TestCase
+# The SQL splitter shared by the Inquiry tab and the module installer hands the driver what the file said, byte for byte, and reports the statement
+class DatabaseBatchTest extends TestCase
 {
-    # Load the pure helpers of the admin module into this process once, straight from the shipped source
+    # Load the three pure helpers of core/admin.php into this process once by name, since copied bodies would let the shipped code drift from the assertions
+    # The file guards itself with ADMIN_FILE and the rest of it needs a request, so it cannot be required from CLI
     public static function setUpBeforeClass(): void
     {
         if (function_exists('getSqlbatch')) return;
@@ -143,7 +136,7 @@ final class DatabaseBatchTest extends TestCase
     }
 
     # All three callers split with the same code: the Inquiry tab, the module installer and the system installer
-    # core/admin.php defines functions only, so setup/index.php borrows it before the rest of the system exists and its guard admits the installer by name
+    # The file core/admin.php defines functions only, so setup/index.php borrows it before the rest of the system exists and its guard admits the installer by name
     # A splitter of its own is what this guards against: the one the installer used to carry cut on line endings and would have cut a literal spanning two lines in half
     #[Test]
     public function theInstallerSplitsWithTheSharedCode(): void

@@ -40,8 +40,8 @@ http://localhost/slaed-cms/
 ```
 
 > [!WARNING]
-> The installer locks itself once `config/db.php` names a database. To run an update later, upload an empty
-> `config/setup.unlock` first; a successful run removes it again.
+> The installer locks itself once `config/db.php` names a database. To run an update later, upload
+> `config/setup.unlock` holding a code of at least 8 characters first; a successful run removes it again.
 
 ---
 
@@ -68,7 +68,7 @@ http://localhost/slaed-cms/
 4. Import the base schema from `setup/sql/table.sql`.
 5. Review the files in `config/` and adjust local settings as needed.
 6. Open `http://yoursite.com/setup.php` and complete the setup flow.
-7. The installer is now locked; an update needs an empty `config/setup.unlock` (see `UPGRADING.md`).
+7. The installer is now locked; an update needs `config/setup.unlock` with a code of your own (see `UPGRADING.md`).
 
 Current SQL files present in `setup/sql/`:
 

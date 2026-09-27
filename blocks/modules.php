@@ -42,7 +42,16 @@ foreach (getNodeTypeMap() as $tname => $ntype) {
     if ($ntype->active) $mods_1 .= $link;
     else $mods_3 .= $link;
 }
-$mods_2 = ($mods_2) ? $tpl->getHtmlFrag('block-content', ['is_block_module_section' => true, 'content' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'is_line_break' => true, 'text' => _INVISIBLEMODULES])._ACTIVEBUTNOTSEE]).$mods_2 : '';
-$mods_3 = ($mods_3) ? $tpl->getHtmlFrag('block-content', ['is_block_module_section' => true, 'content' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'is_line_break' => true, 'text' => _NOACTIVEMODULES])._FORADMINTESTS]).$mods_3 : '';
-$mods_4 = ($mods_4) ? $tpl->getHtmlFrag('block-content', ['is_block_module_section' => true, 'content' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'is_line_break' => true, 'text' => _ADMINS])._FORADMINTESTS]).$mods_4 : '';
+$mods_2 = ($mods_2) ? $tpl->getHtmlFrag('block-content', [
+    'is_block_module_section' => true,
+    'content' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'is_line_break' => true, 'text' => _INVISIBLEMODULES])._ACTIVEBUTNOTSEE,
+]).$mods_2 : '';
+$mods_3 = ($mods_3) ? $tpl->getHtmlFrag('block-content', [
+    'is_block_module_section' => true,
+    'content' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'is_line_break' => true, 'text' => _NOACTIVEMODULES])._FORADMINTESTS,
+]).$mods_3 : '';
+$mods_4 = ($mods_4) ? $tpl->getHtmlFrag('block-content', [
+    'is_block_module_section' => true,
+    'content' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'is_line_break' => true, 'text' => _ADMINS])._FORADMINTESTS,
+]).$mods_4 : '';
 $content = $tpl->getHtmlFrag('block-content', ['is_block_modules' => true, 'content' => $mods_1.$mods_2.$mods_3.$mods_4]);

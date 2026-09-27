@@ -966,11 +966,12 @@ final class NodeService {
         sort($cats);
         if ($cats) {
             $pars = [];
-            $sql = 'SELECT id, modul, pview, ppost FROM '.PREFIX_DB.'_categories WHERE id IN ('.$this->getInList($cats, 'c', $pars).') ORDER BY id'.$tail;
+            $sql = 'SELECT id, modul, pview, ppost, lang FROM '.PREFIX_DB.'_categories WHERE id IN ('.$this->getInList($cats, 'c', $pars).') ORDER BY id'.$tail;
             $map = array_column($this->getQueryRes($sql, $pars)->fetchAll(PDO::FETCH_ASSOC), null, 'id');
             foreach ($cats as $cid) {
                 if (($map[$cid]['modul'] ?? null) !== $type->name) throw $this->getInvalid('cid');
-                $grant = $this->checkCatGrant($map[$cid]['pview']) && $this->checkCatGrant($map[$cid]['ppost']);
+                $lang = $this->ctx->lang === '' || $map[$cid]['lang'] === '' || $map[$cid]['lang'] === $this->ctx->lang;
+                $grant = $lang && $this->checkCatGrant($map[$cid]['pview']) && $this->checkCatGrant($map[$cid]['ppost']);
                 if (!$moder && !$grant) throw $this->getDenied('The context may not post into the category');
             }
         }
@@ -985,7 +986,7 @@ final class NodeService {
             $map = array_column($this->getQueryRes($sql, $pars)->fetchAll(PDO::FETCH_ASSOC), null, 'id');
         }
         $open = [];
-        if (!$moder) foreach (array_chunk($rids, 500) as $part) $open += $this->query->getNodeTargetList(array_fill_keys($part, $type->name));
+        if (!$moder) foreach (array_chunk($rids, $this->query->getTargetSize()) as $part) $open += $this->query->getNodeTargetList(array_fill_keys($part, $type->name));
         foreach ($rids as $rid) {
             $row = $map[$rid] ?? null;
             if ($row === null || intval($row['tid']) !== $type->id || (!$moder && !isset($open[$rid]))) throw $this->getInvalid('rels');

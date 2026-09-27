@@ -6,9 +6,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Basic filesystem structure checks for SLAED CMS.
- */
+# Basic filesystem structure checks for SLAED CMS
 final class StructureTest extends TestCase
 {
     #[Test]

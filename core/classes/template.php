@@ -127,6 +127,8 @@ class Template {
     }
 
     # Compile the template when needed and return rendered HTML; file validation and freshness run once per file per request
+    # The compiled file is written to a temporary file beside it and renamed over it, so a parallel include never meets a half-written or locked file
+    # A stale file is compiled under compile.lock of the theme and checked again once the lock is held, so a burst compiles once and never renames over a file in use
     protected function getHtml(string $type, string $name, array $data = []): string {
         $file = $this->getFile($type, $name);
         if ($file !== '' && isset($this->fresh[$file])) return $this->getView($this->fresh[$file], $data, false, $type, $name);
@@ -138,17 +140,23 @@ class Template {
         if ($cache === '') return '';
         $mdir = dirname($cache);
         if (!is_dir($mdir) && !mkdir($mdir, 0777, true) && !is_dir($mdir)) return '';
-        if (!is_file($cache) || filemtime($file) > filemtime($cache) || (self::$mtime ??= (filemtime(__FILE__) ?: 0)) > filemtime($cache)) {
-            $code = $this->getCode($type, $name);
-            if ($code === '') return '';
-            $code = $this->filterCode($code);
-            if (file_put_contents($cache, $code, LOCK_EX) === false) return '';
+        $stale = static fn(): bool => !is_file($cache) || filemtime($file) > filemtime($cache) || (self::$mtime ??= (filemtime(__FILE__) ?: 0)) > filemtime($cache);
+        if ($stale()) {
+            $lock = fopen($mdir.'/compile.lock', 'c');
+            if ($lock !== false) flock($lock, LOCK_EX);
+            clearstatcache(true, $cache);
+            $code = $stale() ? $this->getCode($type, $name) : null;
+            $temp = $cache.'.'.bin2hex(random_bytes(6)).'.tmp';
+            $done = $code === null || ($code !== '' && file_put_contents($temp, $this->filterCode($code)) !== false && (rename($temp, $cache) || is_file($cache)));
+            if (is_file($temp)) unlink($temp);
+            if ($lock !== false) fclose($lock);
+            if (!$done) return '';
         }
         $this->fresh[$file] = $cache;
         return $this->getView($cache, $data, false, $type, $name);
     }
 
-    # Render compiled PHP from a cache file or inline source through one shared path
+    # Render compiled PHP from a cache file or inline source through one shared path; inline source is stored by its hash through a temporary file, a rename and compile.lock
     protected function getView(string $file, array $data = [], bool $iscode = false, string $sourceType = '', string $sourceName = ''): string {
         $data = $this->setData($data);
         $path = $file;
@@ -156,7 +164,15 @@ class Template {
             if ($file === '') return '';
             if (!is_dir($this->cache) && !mkdir($this->cache, 0777, true) && !is_dir($this->cache)) return '';
             $path = $this->cache.'/inline-'.sha1($this->theme.'|'.$file).'.php';
-            if (!is_file($path) && file_put_contents($path, $file, LOCK_EX) === false) return '';
+            if (!is_file($path)) {
+                $lock = fopen($this->cache.'/compile.lock', 'c');
+                if ($lock !== false) flock($lock, LOCK_EX);
+                clearstatcache(true, $path);
+                $temp = $path.'.'.bin2hex(random_bytes(6)).'.tmp';
+                if (!is_file($path) && file_put_contents($temp, $file) !== false) rename($temp, $path);
+                if (is_file($temp)) unlink($temp);
+                if ($lock !== false) fclose($lock);
+            }
         }
         if (!isset($this->rpath[$path])) $this->rpath[$path] = is_file($path) ? realpath($path) : false;
         $real = $this->rpath[$path];

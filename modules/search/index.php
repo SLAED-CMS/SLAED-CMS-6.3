@@ -123,7 +123,11 @@ function getSearchAuto(array $state): array {
     global $db, $afile;
     $rows = [];
     $pars = ['worda' => '%'.$state['word'].'%', 'wordb' => '%'.$state['word'].'%', 'wordc' => '%'.$state['word'].'%', 'lim' => $state['lim']];
-    $result = $db->getSqlQuery('SELECT id, title, intro, added, hits FROM '.PREFIX_DB.'_auto_links WHERE hits != \'0\' AND (title LIKE :worda OR intro LIKE :wordb OR url LIKE :wordc) ORDER BY added DESC LIMIT :lim', $pars);
+    $result = $db->getSqlQuery(
+        'SELECT id, title, intro, added, hits FROM '.PREFIX_DB.'_auto_links'
+        .' WHERE hits != \'0\' AND (title LIKE :worda OR intro LIKE :wordb OR url LIKE :wordc) ORDER BY added DESC LIMIT :lim',
+        $pars
+    );
     while ([$mid, $titl, $cont, $time, $hits] = $db->getSqlRow($result)) {
         $url = getSearchUrl(['name' => 'auto_links', 'op' => 'view', 'id' => $mid, 'title' => $titl], '');
         $rows[] = getSearchItem('auto_links', $url, $afile.'.php?name=auto_links&op=add&id='.$mid, [
@@ -145,7 +149,12 @@ function getSearchForum(array $state): array {
         $pars = ['rid' => $rid, 'worda' => '%'.$state['word'].'%', 'wordb' => '%'.$state['word'].'%'];
     }
     $pars['lim'] = $state['lim'];
-    $result = $db->getSqlQuery('SELECT f.id, f.pid, f.name, f.title, f.time, f.cid, f.body, f.comments, f.counter, u.name FROM '.PREFIX_DB.'_forum AS f LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE '.$cond.' f.pid = \'0\' AND f.time <= NOW() AND f.status != \'0\' AND (f.title LIKE :worda OR f.body LIKE :wordb) ORDER BY f.time DESC LIMIT :lim', $pars);
+    $result = $db->getSqlQuery(
+        'SELECT f.id, f.pid, f.name, f.title, f.time, f.cid, f.body, f.comments, f.counter, u.name'
+        .' FROM '.PREFIX_DB.'_forum AS f LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id)'
+        .' WHERE '.$cond.' f.pid = \'0\' AND f.time <= NOW() AND f.status != \'0\' AND (f.title LIKE :worda OR f.body LIKE :wordb) ORDER BY f.time DESC LIMIT :lim',
+        $pars
+    );
     while ([$mid, $pid, $user, $titl, $time, $cid, $cont, $comm, $reads, $nick] = $db->getSqlRow($result)) {
         $tid = !$pid ? $mid : $pid;
         $url = getSearchUrl(['name' => 'forum', 'op' => 'view', 'id' => $tid, 'title' => $titl], $state['word']);
@@ -162,7 +171,11 @@ function getSearchShop(array $state): array {
     global $db, $afile;
     $rows = [];
     $pars = ['worda' => '%'.$state['word'].'%', 'wordb' => '%'.$state['word'].'%', 'wordc' => '%'.$state['word'].'%', 'lim' => $state['lim']];
-    $result = $db->getSqlQuery('SELECT p.id, p.time, p.title, p.cid, p.intro, p.comments, p.counter FROM '.PREFIX_DB.'_products AS p WHERE p.time <= NOW() AND p.status = \'1\' AND (p.title LIKE :worda OR p.intro LIKE :wordb OR p.body LIKE :wordc) ORDER BY p.time DESC LIMIT :lim', $pars);
+    $result = $db->getSqlQuery(
+        'SELECT p.id, p.time, p.title, p.cid, p.intro, p.comments, p.counter FROM '.PREFIX_DB.'_products AS p'
+        .' WHERE p.time <= NOW() AND p.status = \'1\' AND (p.title LIKE :worda OR p.intro LIKE :wordb OR p.body LIKE :wordc) ORDER BY p.time DESC LIMIT :lim',
+        $pars
+    );
     while ([$mid, $time, $titl, $cid, $cont, $comm, $reads] = $db->getSqlRow($result)) {
         $url = getSearchUrl(['name' => 'shop', 'op' => 'view', 'id' => $mid, 'title' => $titl], $state['word']);
         $rows[] = getSearchItem('shop', $url, $afile.'.php?name=shop&op=productadd&id='.$mid, [
@@ -235,7 +248,8 @@ function getSearchRows(array $state): array {
 function getSearchSnippet(string $html, string $word, string $mod, bool $safe, bool $trust = false, int $len = 180): string {
     global $prs;
     if ($html === '') return '';
-    $text = html_entity_decode(strip_tags($prs->filterContent($html, $safe, $mod, 0, '', 0, $trust)), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $body = (string)preg_replace('#<(script|style)\b[^>]*>.*?</\1\s*>#is', ' ', $prs->filterContent($html, $safe, $mod, 0, '', 0, $trust));
+    $text = html_entity_decode(strip_tags($body), ENT_QUOTES | ENT_HTML5, 'UTF-8');
     $text = trim((string)preg_replace('/\s+/u', ' ', $text));
     if ($text === '') return '';
     $needle = mb_strtolower(trim($word), 'UTF-8');

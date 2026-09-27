@@ -5,20 +5,13 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Stage 2b of docs/FILE-MANAGER-CONCEPT-2026.md: the destination lock and the managed name format left the upload
- * service and belong to FileManager now. Half of the stage is provable off the sources, because its whole point is
- * that neither the protocol nor the pattern survives anywhere else. The serialization itself runs through
- * tests/Support/upload_probe.php: the parent takes the lock of one destination through the file layer while a child
- * process publishes into that same destination through Upload, so the two writers are shown to stand in one queue
- * behind one lock file. Nothing below the site is read or written; every scenario lives in its own scratch tree.
- */
+# The destination lock and the managed name format left the upload service and belong to FileManager alone
 final class FileManagerLockTest extends TestCase
 {
     private static array $probe = [];
     private static array $files = [];
 
-    # Run one probe scenario in a fresh process and memoize its report for every test in this class
+    # Run one probe scenario in a fresh process and its own scratch tree, reading or writing nothing below the site, and memoize its report
     private function getProbe(string $mode, string $file = 'upload_probe.php'): array
     {
         if (isset(self::$probe[$mode])) return self::$probe[$mode];
@@ -31,7 +24,7 @@ final class FileManagerLockTest extends TestCase
         return self::$probe[$mode] = $data;
     }
 
-    # Read one repository file once per run
+    # Read one repository file once per run, since half of the change is proven by neither the protocol nor the pattern surviving anywhere else
     private function getFile(string $path): string
     {
         if (isset(self::$files[$path])) return self::$files[$path];
@@ -115,6 +108,7 @@ final class FileManagerLockTest extends TestCase
     }
 
     # Two writers of one directory stand in one queue: while the file layer holds the lock, an upload of another process publishes nothing and gets through only once it is released
+    # Through tests/Support/upload_probe.php the parent locks one destination via the file layer while a child process publishes into it through Upload
     #[Test]
     public function twoWritersOfOneDirectoryStandInOneQueue(): void
     {

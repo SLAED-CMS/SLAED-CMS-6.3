@@ -7,16 +7,13 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * The configuration step of the 6.3 update in setup/index.php carries the settings of a 6.2 site,
- * which live in config/config_<name>.php as a variable of their own, over the sources the release ships, and moves every old source
- * out of config/ because the runtime includes each file there. tests/Support/update_probe.php lifts the shipped functions out of the
- * installer by name and drives them on a scratch site, so the configuration of the stand is never touched.
- */
+# The configuration step of the 6.3 update in setup/index.php carries the settings of a 6.2 site over the sources the release ships
 final class UpdateConfigTest extends TestCase
 {
     private static array $probe = [];
 
+    # A 6.2 site keeps each setting in config/config_<name>.php as a variable of its own; every old source leaves config/, because the runtime includes each file there
+    # The probe tests/Support/update_probe.php lifts the shipped functions out of the installer by name and drives them on a scratch site, never the stand configuration
     # Run the probe once in its configuration mode and memoize the report for every test in this class
     private function getRun(): array
     {
@@ -33,8 +30,8 @@ final class UpdateConfigTest extends TestCase
         return self::$probe;
     }
 
-    # The values of the site go over the shipped source, the release keeps its version and asset list, the site stays closed, a language name becomes its code,
-    # a start module or a theme that left the tree falls back to the shipped value, a logo the theme holds stays, and seo wins over the global of 6.2
+    # The values of the site go over the shipped source, the release keeps its version and asset list, the site stays closed, a language name becomes its code
+    # A start module or a theme that left the tree falls back to the shipped value, a logo the theme holds stays, and seo wins over the global of 6.2
     #[Test]
     public function theSiteValuesGoOverTheRelease(): void
     {
@@ -73,8 +70,8 @@ final class UpdateConfigTest extends TestCase
         $this->assertStringContainsString('carried into fields, global, lang, security, statistic, uploads, users; not carried: core, db, header, news, templ', $run['text']);
     }
 
-    # The two positional formats that changed after 6.2: an upload rule loses its retired eighth field and gets the guest limit at the user one,
-    # an address ban turns ip and octet count into CIDR and one that is no 6.2 address ban is dropped and named, a rule without twelve fields and member bans stay
+    # The two positional formats that changed after 6.2: an upload rule loses its retired eighth field and gets the guest limit at the user one
+    # An address ban turns ip and octet count into CIDR and one that is no 6.2 address ban is dropped and named, a rule without twelve fields and member bans stay
     #[Test]
     public function theChangedFormatsAreRewritten(): void
     {

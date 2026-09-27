@@ -17,8 +17,8 @@ function getNodeOps(string $ext = ''): array {
     return ($ext === 'support') ? $ops + ['support' => ['POST']] : $ops;
 }
 
-# The safe text of a refusal by its code; the message of the exception never reaches the page, only the label of a refused external source field
-# Only the administrative form sends such a field, so the two administrative labels are read there alone
+# The safe text of a refusal by its code; the message of the exception never reaches the page, only the label of a refused external source field or resource
+# Only the administrative form sends a source field, so the two administrative labels are read there alone; a refused resource is named by its place in the form
 function getNodeFault(NodeException $err): string {
     global $conf;
     $text = match ($err->getCode()) {
@@ -29,8 +29,8 @@ function getNodeFault(NodeException $err): string {
         NodeException::LIMITED => sprintf(_CERROR5, $conf['node']['limits']['send']),
         default => _NODE_FAILED,
     };
-    if ($err->getCode() === NodeException::INVALID && preg_match('/: ext\.(url|refresh)$/D', $err->getMessage(), $hit)) {
-        $text .= ' ('.(($hit[1] === 'url') ? _NODE_SOURCE : _NODE_PERIOD).')';
+    if ($err->getCode() === NodeException::INVALID && preg_match('/: (?:ext\.(url|refresh)|assets\.([0-9]+)\.src)$/D', $err->getMessage(), $hit)) {
+        $text .= ' ('.(($hit[1] === '') ? _NODE_ASSETS.' '.(intval($hit[2]) + 1) : (($hit[1] === 'url') ? _NODE_SOURCE : _NODE_PERIOD)).')';
     }
     return $text;
 }
@@ -256,7 +256,8 @@ function getNodeEditor(NodeType $type, string $key, string $value, string $label
 }
 
 # The rows of the resource section: one repeatable group per active role, each row with the shared file field of the upload place of the type
-function getNodeAssetHtml(NodeType $type, array $list): string {
+# The link input is offered only to a writer the service takes an external address from: a moderator of the type, or a material that goes to pre-moderation
+function getNodeAssetHtml(NodeType $type, array $list, bool $link): string {
     global $tpl;
     $out = '';
     $idx = 0;
@@ -267,11 +268,11 @@ function getNodeAssetHtml(NodeType $type, array $list): string {
         foreach ($rows as $one) {
             if ($one['role'] !== $role) continue;
             $fid = 'f-asset-'.$idx;
-            $link = str_starts_with($one['src'], 'http://') || str_starts_with($one['src'], 'https://');
+            $ext = str_starts_with($one['src'], 'http://') || str_starts_with($one['src'], 'https://');
             $cell = $tpl->getHtmlFrag('hidden', ['name_attr' => 'asset['.$idx.'][role]', 'value_attr' => $role, 'input_attr' => ''])
                 .$tpl->getHtmlFrag('hidden', ['name_attr' => 'asset['.$idx.'][id]', 'value_attr' => $one['id'] ?? '', 'input_attr' => ''])
                 .getFileManagerField(['id' => $fid, 'place' => $type->name.'.attach', 'name' => 'afile'.$idx, 'path' => 'apath'.$idx, 'url' => 'aurl'.$idx,
-                    'path_value' => $link ? '' : $one['src'], 'url_value' => $link ? $one['src'] : ''])
+                    'path_value' => $ext ? '' : $one['src'], 'url_value' => $ext ? $one['src'] : '', 'is_nolink' => !$link])
                 .$tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'asset['.$idx.'][title]', 'value_attr' => $one['title'], 'maxlength_num' => 100,
                     'placeholder_text' => _TITLE]);
             $group[] = ['is_empty' => $one['src'] === '', 'content_html' => $cell];
@@ -328,7 +329,7 @@ function getNodeFormRows(NodeType $type, array $vals, array $errs, bool $moder, 
             'input_id' => 'f-relparent', 'value_attr' => $up])];
     }
     if ($type->settings['assets'] && array_filter($type->settings['assets'], fn(array $v): bool => $v['active'])) {
-        $rows[] = ['label' => _NODE_ASSETS, 'field' => getNodeAssetHtml($type, $vals['assets']), 'full' => true];
+        $rows[] = ['label' => _NODE_ASSETS, 'field' => getNodeAssetHtml($type, $vals['assets'], $moder || getNodeFlowState($type) === NodeStatus::Pending), 'full' => true];
     }
     return $rows;
 }
@@ -476,7 +477,7 @@ function getNodeRoute(): NodeType {
 }
 
 # The list of a type with its category, letter, sort and page: a stored page is answered before any query of Node, and only the default sort of the three parameters is cached
-# Explicitly sent default sort parameters are sent back to the clean address, and a sort or letter the type does not allow is a bad request
+# Explicitly sent default sort parameters are sent back to the clean address, and a sort or letter the type does not allow is a bad request; published is allowed to every type
 # A page past the end is not found before any redirect and before the reader sets its page
 # The canonical address names only the category and the page; the start page keeps the site description and names the type once a category or a page is asked
 # A refusal of the reader answers by its code, while a storage failure goes to the shared handler
@@ -499,7 +500,7 @@ function setNodeList(): void {
             if ($priv && getNodeContext()->uid < 1 && !checkNodeModer($type)) setNodeDeny(403);
             $set = $type->settings['list'];
             if ($let !== '' && !$set['alpha']) setNodeDeny(400);
-            if ($sort !== '' && !in_array($sort, $set['orders'], true)) setNodeDeny(400);
+            if ($sort !== '' && $sort !== 'published' && !in_array($sort, $set['orders'], true)) setNodeDeny(400);
             if ($cat && !$type->settings['features']['categories']) setNodeDeny(404);
             $key = $sort ?: $set['order'];
             $way = $dir ?: (($key === $set['order']) ? $set['dir'] : (($key === 'title') ? 'asc' : 'desc'));
@@ -678,7 +679,9 @@ function setNodeView(): void {
         $refs = [];
         foreach ($node->rels ?? [] as $rel) if ($rel->type === 'related') $refs[$rel->rid] = $type->name;
         $rels = '';
-        foreach ($refs ? $query->getNodeTargetList(array_slice($refs, 0, 500, true)) : [] as $tgt) {
+        $tgts = [];
+        foreach (array_chunk($refs, $query->getTargetSize(), true) as $part) $tgts += $query->getNodeTargetList($part);
+        foreach ($tgts as $tgt) {
             $card = ['is_views' => false, 'cover' => ''] + getNodeViewData($type, $tgt, 'card') + getNodeViewVars($type);
             $rels .= $tpl->getHtmlFrag(getNodeTplName('fragments', 'card', $type), $card);
         }

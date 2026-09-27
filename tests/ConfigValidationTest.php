@@ -1,11 +1,8 @@
 <?php
-/**
- * Configuration validation tests.
- * Checks presence and basic correctness of config files.
- */
 
 use PHPUnit\Framework\TestCase;
 
+# Checks the presence and basic correctness of the configuration files
 class ConfigValidationTest extends TestCase
 {
     private static string $base_path;
@@ -19,9 +16,7 @@ class ConfigValidationTest extends TestCase
         self::scanconfig_files();
     }
 
-    /**
-     * Scan configuration files.
-     */
+    # Collects the PHP files of the config directory
     private static function scanconfig_files(): void
     {
         if (!is_dir(self::$config_path)) return;
@@ -34,9 +29,7 @@ class ConfigValidationTest extends TestCase
         }
     }
 
-    /**
-     * Check required config files exist.
-     */
+    # Checks that the required configuration files exist
     public function testRequiredconfig_filesExist(): void
     {
         $required = [
@@ -58,9 +51,7 @@ class ConfigValidationTest extends TestCase
         );
     }
 
-    /**
-     * Check syntax of config files.
-     */
+    # Checks the syntax of every configuration file with php -l
     public function testconfig_filesSyntax(): void
     {
         $errors = [];
@@ -84,9 +75,7 @@ class ConfigValidationTest extends TestCase
         );
     }
 
-    /**
-     * Check db.php structure.
-     */
+    # Checks that db.php declares the required connection parameters
     public function testDbConfigStructure(): void
     {
         $db_file = self::$config_path.'/db.php';
@@ -111,9 +100,7 @@ class ConfigValidationTest extends TestCase
         );
     }
 
-    /**
-     * Check for default passwords in config.
-     */
+    # Reports default passwords in the configuration; an informational check for development environments
     public function testNodefault_passwords(): void
     {
         $warnings = [];
@@ -131,13 +118,10 @@ class ConfigValidationTest extends TestCase
             }
         }
 
-        // Informational check for development environments.
         $this->assertTrue(true, count($warnings).' files with potentially unsafe passwords');
     }
 
-    /**
-     * Check config file encoding.
-     */
+    # Checks that configuration files are valid UTF-8 and carry no BOM
     public function testconfig_filesEncoding(): void
     {
         $errors = [];
@@ -161,9 +145,7 @@ class ConfigValidationTest extends TestCase
         );
     }
 
-    /**
-     * Check array style in key config files.
-     */
+    # Checks that the key configuration files use the return [] style
     public function testconfig_filesDefineArrays(): void
     {
         $errors = [];
@@ -192,21 +174,16 @@ class ConfigValidationTest extends TestCase
         );
     }
 
-    /**
-     * Check config files are detected.
-     */
+    # Checks that configuration files are found and that there are more than five of them
     public function testconfig_filesFound(): void
     {
         $this->assertNotEmpty(self::$config_files, 'Configuration files not found');
         $this->assertGreaterThan(5, count(self::$config_files), 'Too few configuration files found');
     }
 
-    /**
-     * Check permissions for config files.
-     */
+    # Checks that db configuration files are not world-readable; only relevant on Unix-like systems
     public function testconfig_filesNotworld_readable(): void
     {
-        // Only relevant on Unix-like systems.
         if (DIRECTORY_SEPARATOR === '\\') {
             $this->markTestSkipped('Permission check is not applicable on Windows');
             return;

@@ -7,15 +7,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ZipArchive;
 
-/**
- * Stage 6 of docs/FILE-MANAGER-CONCEPT-2026.md: the catalogue of the administration - the upload context, the marked
- * set and the archive it is packed into. Every filesystem scenario runs against a disposable tree below the system
- * temp directory that is rebuilt before each test, so nothing below the site is ever touched. The route side - one
- * POST route per operation, the scoped token before the upload service, the marked set read out of the body and the
- * journal entry of §24 - is proven off the sources, because a handler cannot be called without an administrative
- * session. Stage 9 closes here as well: the catalogue is the only list of the upload tree left, and one download
- * path serves the whole project.
- */
+# The administration catalogue: the upload context, the marked set and its archive, the only list of the upload tree and one download path
 final class FileManagerCatalogTest extends TestCase
 {
     private const DIRS = ['all', 'files', 'files/thumb', 'news'];
@@ -78,7 +70,7 @@ final class FileManagerCatalogTest extends TestCase
         return rtrim(str_replace('\\', '/', LOGS_DIR), '/').'/uploads/'.substr(sha1($key), 0, 16).'.lock';
     }
 
-    # Return one context over the disposable upload tree
+    # Return one context over the disposable upload tree below the system temp directory, so nothing below the site is ever touched
     private function getManager(string $mode = 'uploads'): FileManager
     {
         return new FileManager($mode, self::$root);
@@ -94,6 +86,7 @@ final class FileManagerCatalogTest extends TestCase
     }
 
     # Return the body of one function of a repository file, so a claim is made about the handler and not about the file around it
+    # The route side is proven off the sources this way, because a handler cannot be called without an administrative session
     private function getBody(string $path, string $name): string
     {
         $code = $this->getFile($path);
@@ -104,7 +97,7 @@ final class FileManagerCatalogTest extends TestCase
         return substr($code, $from, $stop - $from);
     }
 
-    # The catalogue answers exactly what §14 promises the administration over its own uploads, and the source editor is not part of it
+    # The catalogue answers exactly what the administration is granted over its own uploads, and the source editor is not part of it
     #[Test]
     public function theCatalogueAnswersTheCapabilitiesOfItsOwnArea(): void
     {
@@ -164,7 +157,7 @@ final class FileManagerCatalogTest extends TestCase
     public function theCatalogueDescriptorCarriesTheServerPath(): void
     {
         $one = $this->getManager()->getFileData('files/plain.txt');
-        $this->assertArrayHasKey('realpath', $one, 'The administrative descriptor lost the absolute path §7 grants it');
+        $this->assertArrayHasKey('realpath', $one, 'The administrative descriptor lost the absolute path an administrator is granted');
         $this->assertSame(self::$root.'/files/plain.txt', $one['realpath'], 'The absolute path of the descriptor names another object');
         $this->assertArrayNotHasKey('realpath', (new FileManager('editor', self::$root))->getFileData('files/plain.txt'), 'The editor context receives an absolute path');
         $this->assertArrayNotHasKey('critical', $one, 'The catalogue marks a file of the upload tree as one whose loss stops the site');
@@ -270,7 +263,7 @@ final class FileManagerCatalogTest extends TestCase
         $this->assertStringContainsString("getAdminFileMode('system')", $this->getBody('admin/modules/uploads.php', 'sysfiles'), 'The system screen does not name its own area');
     }
 
-    # No address of the module changes a file any more: every operation of §17 has one POST route of its own, and the upload route that ran beside the file manager is gone
+    # No address of the module changes a file any more: every file operation has one POST route of its own, and the upload route that ran beside the file manager is gone
     #[Test]
     public function noAddressOfTheModuleChangesAFile(): void
     {
@@ -331,16 +324,44 @@ final class FileManagerCatalogTest extends TestCase
         $this->assertMatchesRegularExpression('#\.sl-fm-scroll thead th \{\s*position: sticky;#', $css, 'The column titles do not stay while the rows pass under them');
         $this->assertMatchesRegularExpression('#\.sl-fm-tree,\s*\.sl-fm-side \{\s*position: sticky;#', $css, 'The tree and the properties scroll away with the list');
         $this->assertMatchesRegularExpression('#\.sl-fm-shell \.sl-bulk-bar \{\s*position: sticky;#', $css, 'The panel of the marked set is left at the bottom of the list');
-        $this->assertMatchesRegularExpression('#\.sl-fm-scroll thead th \{[^}]*z-index: var\(--sl-z-sticky\);#', $css, 'A row passing under the titles pushes its own fan through them');
-        $this->assertMatchesRegularExpression('#\.sl-fm-tile-cap \{[^}]*calc\(var\(--sl-size-chip\) \+ var\(--sl-space-3\) \* 2\)#', $css, 'The caption of a tile runs under the fan that stands over it');
+        $this->assertMatchesRegularExpression(
+            '#\.sl-fm-scroll thead th \{[^}]*z-index: var\(--sl-z-sticky\);#',
+            $css,
+            'A row passing under the titles pushes its own fan through them'
+        );
+        $this->assertMatchesRegularExpression(
+            '#\.sl-fm-tile-cap \{[^}]*calc\(var\(--sl-size-chip\) \+ var\(--sl-space-3\) \* 2\)#',
+            $css,
+            'The caption of a tile runs under the fan that stands over it'
+        );
         $tile = $this->getFile('templates/admin/fragments/file-browser-tile.html');
         $this->assertStringContainsString('<label class="sl-fm-pick">', $tile, 'The mark of a tile has no plate of its own and is lost on a coloured thumbnail');
         $this->assertStringContainsString('{{ size_text }} · {{ day_text }}', $tile, 'The caption of a tile does not name the size and the day the mockup shows');
-        $this->assertStringNotContainsString('sl-fm-tile-mark', $this->getFile('templates/admin/assets/css/theme.css'), 'The plate of a mark carries a second name beside the one the editor window gives it');
-        $this->assertDoesNotMatchRegularExpression('#\.sl-fm-cell > \.sl-dial \{[^}]*flex-wrap#', $css, 'A fan of a tile is folded into a block instead of the one row it has everywhere else');
-        $this->assertMatchesRegularExpression('#\.sl-fm-node \.sl-tree-pad \{[^}]*width: var\(--sl-space-1\);#', $css, 'The step of one level in the tree is not the narrow one the browser sets for itself');
-        $this->assertMatchesRegularExpression('#^\.sl-tree-pad \{\s*display: inline-block;\s*width: var\(--sl-tree-width\);#m', $css, 'The shared pad of the admin tree lost its own width to the file browser');
-        $this->assertMatchesRegularExpression('#\.sl-fm-node \{[^}]*box-sizing: border-box;[^}]*width: 100%;#', $css, 'A node counts its padding outside its width and pushes the tree wider than its column');
+        $this->assertStringNotContainsString(
+            'sl-fm-tile-mark',
+            $this->getFile('templates/admin/assets/css/theme.css'),
+            'The plate of a mark carries a second name beside the one the editor window gives it'
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '#\.sl-fm-cell > \.sl-dial \{[^}]*flex-wrap#',
+            $css,
+            'A fan of a tile is folded into a block instead of the one row it has everywhere else'
+        );
+        $this->assertMatchesRegularExpression(
+            '#\.sl-fm-node \.sl-tree-pad \{[^}]*width: var\(--sl-space-1\);#',
+            $css,
+            'The step of one level in the tree is not the narrow one the browser sets for itself'
+        );
+        $this->assertMatchesRegularExpression(
+            '#^\.sl-tree-pad \{\s*display: inline-block;\s*width: var\(--sl-tree-width\);#m',
+            $css,
+            'The shared pad of the admin tree lost its own width to the file browser'
+        );
+        $this->assertMatchesRegularExpression(
+            '#\.sl-fm-node \{[^}]*box-sizing: border-box;[^}]*width: 100%;#',
+            $css,
+            'A node counts its padding outside its width and pushes the tree wider than its column'
+        );
         foreach (['de', 'en', 'fr', 'pl', 'ru', 'uk'] as $loc) {
             $lang = $this->getFile('admin/lang/'.$loc.'.php');
             $this->assertStringNotContainsString('_UPLOADS_CUT', $lang, 'The caption of a trimmed directory outlived the trimming in '.$loc);
@@ -355,7 +376,7 @@ final class FileManagerCatalogTest extends TestCase
         return substr($code, $from, (int)strpos($code, "\n", $from) - $from);
     }
 
-    # One download path serves the whole project: the type is the opaque one, the name reaches the header encoded and the request ends where the file ends (§17)
+    # One download path serves the whole project: the type is the opaque one, the name reaches the header encoded and the request ends where the file ends
     #[Test]
     public function oneDownloadPathServesTheProject(): void
     {
@@ -433,13 +454,13 @@ final class FileManagerCatalogTest extends TestCase
         }
     }
 
-    # The list answers four states and not one: it is there, it is on its way, it is empty for a reason, and it never arrived (§31)
+    # The list answers four states and not one: it is there, it is on its way, it is empty for a reason, and it never arrived
     #[Test]
     public function theListNamesTheStateItIsIn(): void
     {
         $part = $this->getFile('templates/admin/partials/file-browser-list.html');
         foreach (['sl-skel', 'data-sl-fm-fail', 'data-sl-fm-real', 'sl-fm-empty'] as $mark) {
-            $this->assertStringContainsString($mark, $part, 'The list of the browser carries no '.$mark.', so one state of §31 has nowhere to be shown');
+            $this->assertStringContainsString($mark, $part, 'The list of the browser carries no '.$mark.', so one state of the list has nowhere to be shown');
         }
         $code = $this->getFile('templates/admin/assets/js/admin-ui.js');
         foreach (['htmx:beforeRequest', 'htmx:responseError', 'htmx:sendError'] as $hook) {

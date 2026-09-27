@@ -1,11 +1,8 @@
 <?php
-/**
- * Тест валидации блоков
- * Проверяет корректность файлов блоков
- */
 
 use PHPUnit\Framework\TestCase;
 
+# Validates block files: syntax, naming, dangerous calls, encoding, output format, presence and size
 class BlockValidationTest extends TestCase
 {
     private static string $basePath;
@@ -19,9 +16,7 @@ class BlockValidationTest extends TestCase
         self::scanBlockFiles();
     }
 
-    /**
-     * Сканирует файлы блоков
-     */
+    # Collects the PHP files of the blocks directory
     private static function scanBlockFiles(): void
     {
         if (!is_dir(self::$blocksPath)) return;
@@ -34,9 +29,7 @@ class BlockValidationTest extends TestCase
         }
     }
 
-    /**
-     * Проверяет синтаксис файлов блоков
-     */
+    # Checks the syntax of every block file with php -l
     public function testBlockFilesSyntax(): void
     {
         $errors = [];
@@ -60,9 +53,7 @@ class BlockValidationTest extends TestCase
         );
     }
 
-    /**
-     * Проверяет именование файлов блоков
-     */
+    # Checks that block files are named snake_case.php, since the runtime loads the bfile value directly from blocks/
     public function testBlockFilesNaming(): void
     {
         $errors = [];
@@ -70,7 +61,6 @@ class BlockValidationTest extends TestCase
         foreach (self::$blockFiles as $file) {
             $fileName = basename($file);
 
-            // Runtime loads the bfile value directly from blocks/.
             if (!preg_match('/^[a-z][a-z0-9_]*\.php$/', $fileName)) {
                 $errors[] = "blocks/$fileName - некорректное именование (должно быть snake_case.php)";
             }
@@ -82,9 +72,7 @@ class BlockValidationTest extends TestCase
         );
     }
 
-    /**
-     * Проверяет что блоки не содержат опасных функций
-     */
+    # Checks that blocks contain neither eval() nor shell functions (shell_exec, exec, system, passthru)
     public function testBlocksNoEval(): void
     {
         $errors = [];
@@ -93,12 +81,10 @@ class BlockValidationTest extends TestCase
             $content = file_get_contents($file);
             $fileName = basename($file);
 
-            // Проверяем на eval
             if (preg_match('/\beval\s*\(/', $content)) {
                 $errors[] = "blocks/$fileName - содержит eval()";
             }
 
-            // Проверяем на shell функции
             if (preg_match('/\b(shell_exec|exec|system|passthru)\s*\(/', $content)) {
                 $errors[] = "blocks/$fileName - содержит shell команды";
             }
@@ -110,9 +96,7 @@ class BlockValidationTest extends TestCase
         );
     }
 
-    /**
-     * Проверяет кодировку файлов блоков
-     */
+    # Checks that block files are valid UTF-8 and carry no BOM
     public function testBlockFilesEncoding(): void
     {
         $errors = [];
@@ -121,12 +105,10 @@ class BlockValidationTest extends TestCase
             $content = file_get_contents($file);
             $fileName = basename($file);
 
-            // Проверяем на невалидный UTF-8
             if (!mb_check_encoding($content, 'UTF-8')) {
                 $errors[] = "blocks/$fileName - некорректная кодировка";
             }
 
-            // Проверяем на BOM
             if (substr($content, 0, 3) === "\xEF\xBB\xBF") {
                 $errors[] = "blocks/$fileName - содержит BOM";
             }
@@ -138,9 +120,7 @@ class BlockValidationTest extends TestCase
         );
     }
 
-    /**
-     * Проверяет что блоки выводят контент через $content
-     */
+    # Reports blocks that output neither through $content nor echo/return; informational, some blocks use another format
     public function testBlocksOutputFormat(): void
     {
         $warnings = [];
@@ -149,51 +129,40 @@ class BlockValidationTest extends TestCase
             $content = file_get_contents($file);
             $fileName = basename($file);
 
-            // Проверяем что блок использует $content для вывода
             if (!preg_match('/\$content\s*[.=]/', $content)) {
-                // Некоторые блоки могут использовать другой формат
                 if (!preg_match('/echo\s/', $content) && !preg_match('/return\s/', $content)) {
                     $warnings[] = "blocks/$fileName - не обнаружен вывод через \$content";
                 }
             }
         }
 
-        // Это информационное сообщение
         $this->assertTrue(true, count($warnings).' блоков с нестандартным форматом вывода');
     }
 
-    /**
-     * Проверяет что файлы блоков найдены
-     */
+    # Checks that block files were found and that there are more than five of them
     public function testBlockFilesFound(): void
     {
         $this->assertNotEmpty(self::$blockFiles, 'Файлы блоков не найдены');
         $this->assertGreaterThan(5, count(self::$blockFiles), 'Найдено слишком мало блоков');
     }
 
-    /**
-     * Проверяет соответствие блоков в БД и файловой системе
-     */
+    # Lists the block files for comparison with the database; informational, since the database may hold dynamic blocks
     public function testBlockFilesMatchDatabase(): void
     {
-        // Получаем список блоков из файлов
         $fileBlocks = [];
         foreach (self::$blockFiles as $file) {
             $fileName = basename($file, '.php');
             $fileBlocks[] = $fileName;
         }
 
-        // Эта проверка информационная - БД может содержать динамические блоки
         $this->assertNotEmpty($fileBlocks, 'Не найдены файлы блоков');
     }
 
-    /**
-     * Проверяет размер файлов блоков
-     */
+    # Reports block files larger than 50 KB; a warning, not an error
     public function testBlockFilesSize(): void
     {
         $warnings = [];
-        $maxSize = 50 * 1024; // 50KB
+        $maxSize = 50 * 1024;
 
         foreach (self::$blockFiles as $file) {
             $size = filesize($file);
@@ -208,7 +177,6 @@ class BlockValidationTest extends TestCase
             }
         }
 
-        // Это предупреждение, не ошибка
         $this->assertTrue(true, count($warnings).' блоков с большим размером файла');
     }
 }

@@ -5,15 +5,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Regression tests for the 2026 page-cache performance contracts running against production code:
- * Cache::getQueryVars() is called directly, while the dynamic-region marker contract, the v2 stats
- * cookie, and the cacheable-route decision are exercised through tests/Support/contract_probe.php,
- * which boots the real core in an isolated CLI process (requires the local OSPanel stack, like the
- * browser checks). The num=1 identity collapse runs at the HTTP layer and is covered by the live
- * checks recorded in docs/PERFORMANCE-REMEDIATION-2026.md because filter_input() cannot be driven
- * from CLI.
- */
+# Regression tests of the 2026 page-cache performance contracts against production code; Cache::getQueryVars() is called directly
 final class PageCacheContractTest extends TestCase
 {
     private const ROUTE_ALLOW = ['name' => '#^shop$#', 'op' => '#^$#', 'cat' => '#^[1-9][0-9]{0,8}$#', 'num' => '#^[1-9][0-9]{0,8}$#'];
@@ -43,6 +35,8 @@ final class PageCacheContractTest extends TestCase
         return $file;
     }
 
+    # The marker contract, the v2 stats cookie and the cacheable route run in tests/Support/contract_probe.php, which boots the real core on the local OSPanel stack
+    # The num=1 identity collapse runs at the HTTP layer, where filter_input() works, so the live checks of docs/PERFORMANCE-REMEDIATION-2026.md cover it
     # Run one probe scenario in a fresh PHP process and decode its JSON report, memoized per scenario
     private function getProbe(string $mode): array
     {
@@ -71,6 +65,7 @@ final class PageCacheContractTest extends TestCase
 
     # A moderator approving a comment of a Node material holds the write guard from before its transaction until the generation moved after its commit
     # The administrative entry bumps early on its first write statement, so without the guard a list rendered from the old count was stored under the new generation for good
+    # After the commit the generation moves twice: the forced bump of the writer and the forced bump the entry registered for the end of the request
     #[Test]
     public function anApprovedCommentPublishesNoPageOfTheOldCount(): void
     {
@@ -80,7 +75,42 @@ final class PageCacheContractTest extends TestCase
         $this->assertSame(1, $run['during']['guards'], 'The approval wrote without a guard of the page cache');
         $this->assertSame(200, $run['during']['code']);
         $this->assertSame(0, $run['during']['pages'], 'A list rendered during the approval was stored in the page cache');
-        $this->assertSame(['gen' => 1, 'guards' => 0, 'comnum' => 2, 'status' => 1], $run['after'], 'The generation did not move after the commit, or the guard stayed');
+        $this->assertSame(['gen' => 2, 'guards' => 0, 'comnum' => 2, 'status' => 1], $run['after'], 'The generation did not move after the commit, or the guard stayed');
+    }
+
+    # A request that loses the race to create a cache directory takes it as created without a warning; a wrapper replays the race: missing, then File exists
+    #[Test]
+    public function aLostDirectoryRaceIsNoWarning(): void
+    {
+        $race = new class {
+            public static int $seen = 0;
+            public mixed $context;
+
+            public function url_stat(string $path, int $flags): array|false
+            {
+                return self::$seen++ === 0 ? false : ['mode' => 0040777];
+            }
+
+            public function mkdir(string $path, int $mode, int $options): bool
+            {
+                trigger_error('mkdir(): File exists', E_USER_WARNING);
+                return false;
+            }
+        };
+        stream_wrapper_register('slaedrace', get_class($race));
+        $warns = [];
+        set_error_handler(function (int $code, string $text) use (&$warns): bool {
+            $warns[] = $text;
+            return true;
+        });
+        try {
+            $made = (new \ReflectionMethod(\Cache::class, 'setDirPath'))->invoke(null, 'slaedrace://cache/pages');
+        } finally {
+            restore_error_handler();
+            stream_wrapper_unregister('slaedrace');
+        }
+        $this->assertTrue($made, 'A directory created by the parallel request counts as missing');
+        $this->assertSame([], $warns, 'The lost race still raises a warning');
     }
 
     # A URL without any query part is valid and yields an empty parameter map
@@ -210,8 +240,8 @@ final class PageCacheContractTest extends TestCase
         $this->assertSame(1, $data['v1_depth']);
     }
 
-    # The real getCacheRouteVars() accepts a clean request and produces a stable identity; only the list of a registered Node type is cached,
-    # with the parameters name, cat and num alone, while a module outside the registry, a material and a letter filter are rendered live
+    # The real getCacheRouteVars() accepts a clean request and produces a stable identity; only the list of a registered Node type is cached
+    # The cached list carries the parameters name, cat and num alone, while a module outside the registry, a material and a letter filter are rendered live
     #[Test]
     public function cleanRouteProducesStableIdentity(): void
     {

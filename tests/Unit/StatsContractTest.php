@@ -5,19 +5,15 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Regression tests for the 2026 exact-statistics contracts running against production code:
- * every scenario drives the real updateStatsTrack() through tests/Support/contract_probe.php in
- * isolated CLI processes with COUNTER_DIR and LOGS_DIR redirected to a scratch directory, so
- * parallel hits, day and month rollover, archive conflicts, damaged day logs, and injected lock
- * failures are asserted on the real counter files instead of mocks.
- */
+# Regression tests of the 2026 exact-statistics contracts: every scenario drives the real updateStatsTrack() on real counter files instead of mocks
 final class StatsContractTest extends TestCase
 {
     private string $dir = '';
 
     private string $zone = '';
 
+    # The scenarios run tests/Support/contract_probe.php in isolated CLI processes with COUNTER_DIR and LOGS_DIR redirected to a scratch directory
+    # Parallel hits, day and month rollover, archive conflicts, damaged day logs and injected lock failures are asserted on the real counter files
     # The expected dates follow the time zone of the site the probe runs in, not the zone of the CLI, so a day boundary between the two cannot split them
     protected function setUp(): void
     {

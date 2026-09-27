@@ -74,7 +74,7 @@ class Parser {
         return $out;
     }
 
-    # Replace trusted [block=id] tags with rendered free (infly) block output; frontend only, skipped for unsafe content, block-content filtering, nested rendering and standalone test runs
+    # Replace trusted [block=id] tags with rendered free (infly) block output; frontend only, skipped for unsafe content, block-content filtering, nesting and test runs
     private function filterFreeBlocks(string $src): string {
         static $depth = 0;
         if ($this->safe || self::$freeoff || $depth > 0 || defined('ADMIN_FILE') || !str_contains($src, '[block=') || !function_exists('getBlocks')) return $src;
@@ -280,7 +280,7 @@ class Parser {
         return $memo[$key] ??= $this->getPartHtml('parser-inline', $data);
     }
 
-    # The two halves of one inline element, split where the template rendered its content, so the theme keeps a whole element while the parser wraps text it has not finished reading
+    # The two halves of one inline element, split where the template rendered its content, so the theme keeps a whole element while the parser wraps unread text
     private function getPartPair(array $data): array {
         $data['content_html'] = "\x01";
         $part = explode("\x01", $this->getPartTag($data), 2);
@@ -304,8 +304,8 @@ class Parser {
         return $memo[$key] = $this->checkImageSource($src);
     }
 
-    # Convert a local/absolute image source into a stable public path; data URIs survive only as whitelisted base64 raster images and are length-capped before any regex or decode allocates a copy
-    # The whitelist is EMBEDIMG and is matched as a subtype rather than spelled into the pattern, so the editor, the upload adapter and this render bound read one list and cannot disagree
+    # Convert a local/absolute image source into a stable public path; data URIs survive only as whitelisted base64 raster images, length-capped before any regex or decode
+    # The whitelist is EMBEDIMG, matched as a subtype rather than spelled into the pattern, so the editor, the upload adapter and this render read one list
     private function checkImageSource(string $src): ?string {
         global $conf;
         $raw = trim($this->filterDec($src));
@@ -590,7 +590,11 @@ class Parser {
         while (preg_match('/\[(left|right|center|justify)\](.*?)\[\/\1\]/si', $src)) {
             $src = preg_replace_callback(
                 '/\[(left|right|center|justify)\](.*?)\[\/\1\]/si',
-                fn(array $m): string => $this->addStash($this->getPartHtml('parser-block', ['is_align' => true, 'align' => strtolower($m[1]), 'content_html' => $this->filterNest($m[2])])),
+                fn(array $m): string => $this->addStash($this->getPartHtml('parser-block', [
+                    'is_align' => true,
+                    'align' => strtolower($m[1]),
+                    'content_html' => $this->filterNest($m[2]),
+                ])),
                 $src
             ) ?? $src;
         }
@@ -776,13 +780,23 @@ class Parser {
                 if (preg_match('/^=+\s*$/', $lines[$i + 1])) {
                     $lvl  = min(6, 1 + $this->hoff);
                     $id   = $this->getHeadingId($trim, $lvl);
-                    $out .= $this->addStash($this->getPartHtml('parser-block', ['is_head' => true, 'level' => $lvl, 'id' => $id, 'content_html' => $this->filterInline($trim)]))."\n";
+                    $out .= $this->addStash($this->getPartHtml('parser-block', [
+                        'is_head' => true,
+                        'level' => $lvl,
+                        'id' => $id,
+                        'content_html' => $this->filterInline($trim),
+                    ]))."\n";
                     $i += 2; continue;
                 }
                 if (preg_match('/^-+\s*$/', $lines[$i + 1]) && !preg_match('/^[*+\-]\s/', $trim)) {
                     $lvl  = min(6, 2 + $this->hoff);
                     $id   = $this->getHeadingId($trim, $lvl);
-                    $out .= $this->addStash($this->getPartHtml('parser-block', ['is_head' => true, 'level' => $lvl, 'id' => $id, 'content_html' => $this->filterInline($trim)]))."\n";
+                    $out .= $this->addStash($this->getPartHtml('parser-block', [
+                        'is_head' => true,
+                        'level' => $lvl,
+                        'id' => $id,
+                        'content_html' => $this->filterInline($trim),
+                    ]))."\n";
                     $i += 2; continue;
                 }
             }

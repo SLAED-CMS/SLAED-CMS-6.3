@@ -5,16 +5,12 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Safety net for the input filters in core/security.php. The scenarios run against the booted core
- * through tests/Support/contract_probe.php, so the assertions describe the shipped functions rather
- * than a replica: the earlier revision of this file copied the algorithms and drifted away from them.
- */
+# Safety net for the input filters in core/security.php, asserted on the shipped functions rather than on a replica that drifted away from them
 final class InputFilterTest extends TestCase
 {
     private static array $probe = [];
 
-    # Run the filter probe once and memoize its report for every scenario in this class
+    # Run the filter probe of tests/Support/contract_probe.php against the booted core once and memoize its report for every scenario in this class
     private function getProbe(): array
     {
         if (self::$probe !== []) return self::$probe;
@@ -75,8 +71,8 @@ final class InputFilterTest extends TestCase
         $this->assertSame('hello', $text[4]);
     }
 
-    # filterWebUrl() forces a scheme, keeps an existing https one and returns an empty string for a bare protocol; only scheme and host lose their case,
-    # because a feed or site path with capitals is another address on most servers
+    # filterWebUrl() forces a scheme, keeps an existing https one and blanks a bare protocol
+    # Only scheme and host lose their case, because a feed or site path with capitals is another address on most servers
     #[Test]
     public function urlFilterNormalizesScheme(): void
     {

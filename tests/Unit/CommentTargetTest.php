@@ -5,21 +5,14 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Stage 1, batch 5 of docs/COMMENTS-REDESIGN-2026.md: the activity feed, the profile hub counter and the
- * module delete handlers stop reaching the comment table themselves. The behaviour half runs through
- * tests/Support/contract_probe.php, which drives deleteTarget() against the live rows inside a transaction it
- * always rolls back; the contract half reads the migrated call sites and asserts that none of them still
- * carries a comment statement of its own. The id list and the module name are driven with hostile values
- * because a target delete is the one path that used to interpolate its ids straight into IN (...).
- */
+# The activity feed, the profile hub counter and the module delete handlers stop reaching the comment table themselves
 final class CommentTargetTest extends TestCase
 {
     private static array $probe = [];
     private static array $feed = [];
     private static array $src = [];
 
-    # Run the target probe once and memoize its report for every scenario in this class
+    # Run the target probe of tests/Support/contract_probe.php once, driving deleteTarget() against live rows in a transaction it always rolls back
     private function getProbe(): array
     {
         if (self::$probe !== []) return self::$probe;
@@ -105,6 +98,7 @@ final class CommentTargetTest extends TestCase
     }
 
     # The id list and the module name reach the statement as bound values, so neither can carry SQL of its own
+    # They are driven with hostile values, because a target delete is the one path that used to interpolate its ids straight into IN (...)
     #[Test]
     public function craftedArgumentsCannotWidenTheDelete(): void
     {
@@ -154,7 +148,7 @@ final class CommentTargetTest extends TestCase
         }
     }
 
-    # The module delete handlers hold no comment statement any more and route the target through the class
+    # The module delete handlers hold no comment statement of their own any more, read off the migrated call sites, and route the target through the class
     #[Test]
     public function moduleDeleteHandlersHoldNoCommentSql(): void
     {
@@ -184,6 +178,7 @@ final class CommentTargetTest extends TestCase
     }
 
     # The profile feed and the profile hub read their comments through the class rather than through the module map
+    # Both files still build a table name from the module map, so the comment entry has to stay out of the branch that does it
     #[Test]
     public function profileReadsGoThroughTheClass(): void
     {
@@ -193,7 +188,6 @@ final class CommentTargetTest extends TestCase
         $hub = $this->getFile('modules/account/index.php');
         $this->assertStringContainsString('$com->getUserCount($uid)', $hub);
         $this->assertStringNotContainsString('PREFIX_DB.\'_comment', $hub);
-        # Both files still build a table name from the module map, so the comment entry has to stay out of the branch that does it
         $guard = 'if ($mod == \'comm\' || isset($inf[\'type\']) || !is_active($mod)) continue;';
         $this->assertStringContainsString($guard, $feed, 'The feed lets the comment entry reach the UNION again');
         $this->assertStringContainsString('} elseif ($mod != \'comm\') {', $hub, 'The hub lets the comment entry reach the UNION again');

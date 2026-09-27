@@ -15,12 +15,8 @@ use RuntimeException;
 
 require_once dirname(__DIR__, 2).'/core/classes/feed.php';
 
-/**
- * The shared Feed class. RSS 2.0, RSS 1.0 and Atom become the canonical Markdown byte for byte;
- * the transport is scripted through the two operations of the contract, so DNS and HTTP - redirects, a private target,
- * a rebound name, the byte and time bounds, conditional requests - are reproduced without any network.
- */
-final class FeedTest extends TestCase
+# The shared Feed class turns RSS 2.0, RSS 1.0 and Atom into the canonical Markdown byte for byte over a transport that needs no network
+class FeedTest extends TestCase
 {
     private const CONF = ['bytes' => '2097152', 'timeout' => '10', 'redirects' => '3', 'max' => '50'];
     private const PUBLIC = '93.184.216.34';
@@ -28,8 +24,8 @@ final class FeedTest extends TestCase
     private array $gets = [];
     private array $asks = [];
 
-    # A feed over a scripted transport: replies answer the get calls in order, the zone answers resolve by host - a list of lists answers successive lookups,
-    # a closure answers a lookup that takes its own time
+    # A feed over a scripted transport of the two contract operations, so redirects, private targets, rebound names, bounds and conditional requests need no network
+    # Replies answer the get calls in order and zone answers resolve by host, a list of lists for successive lookups and a closure for a lookup that takes its time
     private function getFeed(array $replies, array $zone = [], array $conf = []): Feed
     {
         $this->gets = [];
@@ -441,7 +437,7 @@ final class FeedTest extends TestCase
         foreach (['index.php', 'admin', 'core', 'modules', 'blocks', 'plugins', 'setup', 'templates'] as $part) {
             $list = is_file($root.'/'.$part) ? [$root.'/'.$part] : [];
             if (is_dir($root.'/'.$part)) {
-                foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root.'/'.$part, \FilesystemIterator::SKIP_DOTS)) as $file) {
+                foreach (getTreeFiles($root.'/'.$part) as $file) {
                     if (str_ends_with($file->getFilename(), '.php')) $list[] = $file->getPathname();
                 }
             }

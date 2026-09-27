@@ -1,10 +1,8 @@
 <?php
-/**
- * Checks that setup.php is removed in production.
- */
 
 use PHPUnit\Framework\TestCase;
 
+# Checks that setup.php is removed in production
 class SetupFileWarningTest extends TestCase
 {
     public function testSetupFileNotPresentInProduction(): void

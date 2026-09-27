@@ -90,14 +90,28 @@ function getStatistic(): void {
             $off = 134;
             imagefilledrectangle($image, $off+$conf['statistic']['bet']*$i+1, 250-$w+1, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi'], 249, $yellow);
             imagerectangle($image, $off+$conf['statistic']['bet']*$i, 250-$w, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi'], 249, $black);
-            imagerectangle($image, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+1, 250-$w+3, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+2, 249, $gray);
+            imagerectangle(
+                $image,
+                $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+1,
+                250-$w+3,
+                $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+2,
+                249,
+                $gray
+            );
             $w = ($max1 > 0) ? round((230 / $max1) * $day[1]) : 0;
             if ($w < 5) $w = 1;
             $off = 120;
 
             imagefilledrectangle($image, $off+$conf['statistic']['bet']*$i+1, 250-$w+1, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+3, 249, $wblue);
             imagerectangle($image, $off+$conf['statistic']['bet']*$i,250-$w, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+3, 249, $black);
-            imagerectangle($image, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+4, 250-$w+4, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+5, 249, $black);
+            imagerectangle(
+                $image,
+                $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+4,
+                250-$w+4,
+                $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+5,
+                249,
+                $black
+            );
             $zzz = $day[1] - ($day[4] + $day[5]);
             $w = ($max1 > 0) ? round((230 / $max1) * $zzz) : 0;
             if ($w < 4) $w = $w + 31;
@@ -288,7 +302,7 @@ function getAdminIconWindow(): string {
     ]);
 }
 
-# Render the standard admin top menu.
+# Render the standard admin top menu
 function getAdminTopMenu(): string {
     global $admin, $afile, $tpl;
     $items = !isAdmin(true) ? [
@@ -320,7 +334,7 @@ function getAdminTopMenu(): string {
     return $html;
 }
 
-# Return standard variables used by admin layouts.
+# Return standard variables used by admin layouts
 function getAdminLayoutVars(): array {
     global $db, $afile;
     if (!isAdmin()) {
@@ -397,7 +411,7 @@ function getAdminInfo(): string {
 # Return the database server version string reported by the SQL engine
 function getDbVersion() {
     global $db;
-    list($dbv) = $db->getSqlRow($db->getSqlQuery('SELECT VERSION()'));
+    [$dbv] = $db->getSqlRow($db->getSqlQuery('SELECT VERSION()'));
     return $dbv;
 }
 
@@ -481,17 +495,21 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
             if (!$pnum && !$subs && !$held) {
                 $dial[] = getTplPostAction(['op' => 'delete'] + $keep, 'trash', _ONDELETE, _DELETE.' "'.$cat['title'].'"?');
             }
-            $rows[] = $tpl->getHtmlFrag('table-row', ['attr' => 'data-sl-drag-id="'.$cid.'" data-sl-drag-group="'.$cmod.'-'.$cat['parent'].'" data-sl-drag-scope="'.$cmod.'" data-sl-drag-parent="'.$cat['parent'].'"', 'cells_html' => $tpl->getHtmlFrag('table-cells', [
-                'cells' => [
-                    ['content_html' => (string)$cid],
-                    ['content_html' => $name],
-                    ['content_html' => (string)$pnum],
-                    ['content_html' => $img],
-                    ['content_html' => $tpl->getHtmlFrag('span', ['is_drag_handle' => true]).' '.$num],
-                    ['content_html' => ad_status('', $cat['status']), 'is_col_status' => true],
-                    ['content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => $dial]), 'is_col_actions' => true],
-                ],
-            ])]);
+            $rows[] = $tpl->getHtmlFrag('table-row', [
+                'attr' => 'data-sl-drag-id="'.$cid.'" data-sl-drag-group="'.$cmod.'-'.$cat['parent'].'"'
+                    .' data-sl-drag-scope="'.$cmod.'" data-sl-drag-parent="'.$cat['parent'].'"',
+                'cells_html' => $tpl->getHtmlFrag('table-cells', [
+                    'cells' => [
+                        ['content_html' => (string)$cid],
+                        ['content_html' => $name],
+                        ['content_html' => (string)$pnum],
+                        ['content_html' => $img],
+                        ['content_html' => $tpl->getHtmlFrag('span', ['is_drag_handle' => true]).' '.$num],
+                        ['content_html' => ad_status('', $cat['status']), 'is_col_status' => true],
+                        ['content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => $dial]), 'is_col_actions' => true],
+                    ],
+                ]),
+            ]);
         }
     }
     $cont = $tpl->getHtmlFrag('table', [
@@ -556,7 +574,7 @@ function catacess(string $name, string $class, string $selected, int $limit, str
         $params = [];
     }
     $result = $db->getSqlQuery('SELECT id, name, extra FROM '.PREFIX_DB.'_groups '.$where.' ORDER BY extra, points', $params);
-    while (list($id, $gname, $extra) = $db->getSqlRow($result)) {
+    while ([$id, $gname, $extra] = $db->getSqlRow($result)) {
         $sel = '';
         if ($gids[0] == 2) {
             $massiv = explode(',', $gids[1]);
@@ -652,36 +670,45 @@ function getAdminBlockList(): string {
             $who = _MVANON;
         }
         if ($isfly) {
-            $order = $tpl->getHtmlFrag('inline-badge', ['chip_tone' => 'accent', 'is_infly' => !$isfix, 'is_flyfix' => $isfix, 'label' => _INFLY, 'title_text' => $isfix ? _FLY_FIX : _INFLY]);
+            $order = $tpl->getHtmlFrag('inline-badge', [
+                'chip_tone' => 'accent',
+                'is_infly' => !$isfix,
+                'is_flyfix' => $isfix,
+                'label' => _INFLY,
+                'title_text' => $isfix ? _FLY_FIX : _INFLY,
+            ]);
         } else {
             $order = $tpl->getHtmlFrag('span', ['is_drag_handle' => true]).' '.$weight;
         }
-        $row = $tpl->getHtmlFrag('table-row', ['attr' => $isfly ? '' : 'data-sl-drag-id="'.$bid.'" data-sl-drag-group="'.$bpos.'" data-sl-drag-scope="'.$bpos.'"', 'cells_html' => $tpl->getHtmlFrag('table-cells', [
-            'cells' => [
-                ['content_html' => (string) $bid],
-                ['content_html' => $tpl->getHtmlFrag('popover', [
-                    'items' => $tips,
-                    'label_text' => getConst($title),
-                    'title_text' => $title,
-                ])],
-                ['content_html' => $type],
-                ['content_html' => $who],
-                ['content_html' => $order],
-                ['content_html' => ad_status('', $active), 'is_col_status' => true],
-                ['content_html' => $tpl->getHtmlFrag('dial', [
-                    'dial_title' => _EDITOR,
-                    'dial' => [
-                        getTplPostAction(['name' => 'blocks', 'op' => 'change', 'id' => $bid, 'act' => $active], 'power', $active ? _DEACTIVATE : _ACTIVATE),
-                        [
-                            'href' => $afile.'.php?name=blocks&op=edit&id='.$bid,
-                            'icon_name' => 'pencil',
-                            'title' => _FULLEDIT,
+        $row = $tpl->getHtmlFrag('table-row', [
+            'attr' => $isfly ? '' : 'data-sl-drag-id="'.$bid.'" data-sl-drag-group="'.$bpos.'" data-sl-drag-scope="'.$bpos.'"',
+            'cells_html' => $tpl->getHtmlFrag('table-cells', [
+                'cells' => [
+                    ['content_html' => (string) $bid],
+                    ['content_html' => $tpl->getHtmlFrag('popover', [
+                        'items' => $tips,
+                        'label_text' => getConst($title),
+                        'title_text' => $title,
+                    ])],
+                    ['content_html' => $type],
+                    ['content_html' => $who],
+                    ['content_html' => $order],
+                    ['content_html' => ad_status('', $active), 'is_col_status' => true],
+                    ['content_html' => $tpl->getHtmlFrag('dial', [
+                        'dial_title' => _EDITOR,
+                        'dial' => [
+                            getTplPostAction(['name' => 'blocks', 'op' => 'change', 'id' => $bid, 'act' => $active], 'power', $active ? _DEACTIVATE : _ACTIVATE),
+                            [
+                                'href' => $afile.'.php?name=blocks&op=edit&id='.$bid,
+                                'icon_name' => 'pencil',
+                                'title' => _FULLEDIT,
+                            ],
+                            getTplPostAction(['name' => 'blocks', 'op' => 'delete', 'id' => $bid], 'trash', _ONDELETE, _DELETE.' "'.$title.'"?'),
                         ],
-                        getTplPostAction(['name' => 'blocks', 'op' => 'delete', 'id' => $bid], 'trash', _ONDELETE, _DELETE.' "'.$title.'"?'),
-                    ],
-                ]), 'is_col_actions' => true],
-            ],
-        ])]);
+                    ]), 'is_col_actions' => true],
+                ],
+            ]),
+        ]);
         if ($isfly) {
             $free[] = $row;
         } elseif ($bpos !== $group) {
@@ -744,15 +771,17 @@ function updateAdminBlockOrder(): void {
 # Favorites list view
 function getAdminFavoriteList(int $obj = 0): string {
     global $db, $conf, $tpl;
-    $newlistnum = intval($conf['favorites']['anum']);
+    $perpage = intval($conf['favorites']['anum']);
     $cid = getVar('get', 'num', 'num', getVar('get', 'cid', 'num', 1));
-    $offset = ($cid - 1) * $newlistnum;
+    $offset = ($cid - 1) * $perpage;
     $offset = intval($offset);
-    [$fav_num] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites'));
-    $result = $db->getSqlQuery('SELECT id, modul FROM '.PREFIX_DB.'_favorites ORDER BY id DESC LIMIT '.intval($offset).', '.intval($newlistnum));
-    while ([$id, $modul] = $db->getSqlRow($result)) $fmassiv[$modul][] = $id;
-    if (is_array($fmassiv)) {
-        foreach ($fmassiv as $key => $val) {
+    [$total] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites'));
+    $result = $db->getSqlQuery('SELECT id, modul FROM '.PREFIX_DB.'_favorites ORDER BY id DESC LIMIT '.intval($offset).', '.intval($perpage));
+    $groups = [];
+    $items = [];
+    while ([$id, $modul] = $db->getSqlRow($result)) $groups[$modul][] = $id;
+    if ($groups) {
+        foreach ($groups as $key => $val) {
             $ids = array_values(array_filter(array_map('intval', $val), static fn($v) => $v > 0));
             if (!$ids) continue;
             $pp = [];
@@ -767,22 +796,22 @@ function getAdminFavoriteList(int $obj = 0): string {
             if ($key == 'forum') {
                 $sql = 'SELECT f.id, f.fid, f.modul, n.title, u.name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_forum AS n ON (f.fid = n.id)';
                 $result = $db->getSqlQuery($sql.' LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while ([$id, $fid, $modul, $title, $uname] = $db->getSqlRow($result)) $ffmassiv[] = [$id, $fid, $modul, $title, $uname];
+                while ([$id, $fid, $modul, $title, $uname] = $db->getSqlRow($result)) $items[] = [$id, $fid, $modul, $title, $uname];
             } elseif ($key == 'shop') {
                 $sql = 'SELECT f.id, f.fid, f.modul, n.title, u.name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_products AS n ON (f.fid = n.id)';
                 $result = $db->getSqlQuery($sql.' LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while ([$id, $fid, $modul, $title, $uname] = $db->getSqlRow($result)) $ffmassiv[] = [$id, $fid, $modul, $title, $uname];
+                while ([$id, $fid, $modul, $title, $uname] = $db->getSqlRow($result)) $items[] = [$id, $fid, $modul, $title, $uname];
             } elseif (isset($conf['node']['types'][$key])) {
                 $sql = 'SELECT f.id, f.fid, f.modul, u.name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.id IN ('.$in.')';
                 $res = $db->getSqlQuery($sql.' ORDER BY f.id DESC', $pm);
                 $rows = $res ? ($db->getSqlRows($res) ?: []) : [];
                 $titles = getNodeTitleMap(array_fill_keys(array_map(fn(array $v): int => intval($v[1]), $rows), $key));
-                foreach ($rows as $row) $ffmassiv[] = [$row[0], $row[1], $row[2], $titles[intval($row[1])] ?? '', $row[3]];
+                foreach ($rows as $row) $items[] = [$row[0], $row[1], $row[2], $titles[intval($row[1])] ?? '', $row[3]];
             }
         }
-        if ($ffmassiv) {
+        if ($items) {
             $rows = [];
-            foreach ($ffmassiv as $key => $val) {
+            foreach ($items as $key => $val) {
                 $id = $val[0];
                 $fid = $val[1];
                 $modul = $val[2];
@@ -824,9 +853,8 @@ function getAdminFavoriteList(int $obj = 0): string {
                 'is_wrapless' => true,
             ]);
             $cont .= getTplPager([
-                'table' => '_favorites',
-                'field' => 'id',
-                'limit' => $newlistnum,
+                'count' => intval($total),
+                'limit' => $perpage,
                 'maxpg' => intval($conf['favorites']['anump']),
                 'url' => 'name=favorites&',
                 'n' => 'num',
@@ -845,7 +873,7 @@ function getAdminFavoriteList(int $obj = 0): string {
 }
 
 # Private messages list view
-# The rows come from the private-message subsystem, which owns that table alone, so this list restates no mailbox predicate and filters no state: an administrator sees the deleted copies too
+# The rows come from the private-message subsystem, which owns that table, so this list restates no mailbox predicate and filters no state: deleted copies show too
 # The state of one row is the one the four columns add up to, and the page is read from the request itself so a list rebuilt by a POST action stays on the page it was asked from
 # An administrator reads a message through the renderer its recipient does: the body is source rendered safe in the format its own row names, the title escaped by its template
 function getAdminPrivateList(int $obj = 0): string {
@@ -869,7 +897,8 @@ function getAdminPrivateList(int $obj = 0): string {
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string)$one['id']],
-                    ['content_html' => $tpl->getHtmlFrag('popover', ['content_html' => $info]).$tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => $title, 'title_text' => $title])],
+                    ['content_html' => $tpl->getHtmlFrag('popover', ['content_html' => $info])
+                        .$tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => $title, 'title_text' => $title])],
                     ['content_html' => ($one['nameout'] !== '') ? user_info($one['nameout']) : (string)_ANONYM],
                     ['content_html' => ($one['namein'] !== '') ? user_info($one['namein']) : (string)_ANONYM],
                     ['content_html' => format_time($one['time'], _TIMESTRING)],
@@ -927,7 +956,7 @@ function add_voting(string $modul, string $selectName, int $selectedId): string 
     $opts   = $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => false]);
     $result = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_voting WHERE '.$where.' ORDER BY id DESC', $params);
     if ($db->getSqlRowCount($result) > 0) {
-        while (list($id, $title) = $db->getSqlRow($result)) {
+        while ([$id, $title] = $db->getSqlRow($result)) {
             $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$id, 'label_text' => $title, 'is_selected' => $selectedId == $id]);
         }
     }
@@ -1287,7 +1316,12 @@ function getAdminFileActs(array $one): string {
     $dir = str_contains($path, '/') ? substr($path, 0, (int)strrpos($path, '/')) : '';
     $ask = _DELETE.' "'.$name.'"?'.(empty($one['critical']) ? '' : ' '._UPLOADS_CRITDEL);
     $dial = [];
-    if (!empty($able['edit'])) $dial[] = ['href' => $afile.'.php?name=uploads&op=fmedit&file='.rawurlencode($path), 'run' => 'fmedit', 'icon_name' => 'pencil-square', 'title' => _EDIT];
+    if (!empty($able['edit'])) $dial[] = [
+        'href' => $afile.'.php?name=uploads&op=fmedit&file='.rawurlencode($path),
+        'run' => 'fmedit',
+        'icon_name' => 'pencil-square',
+        'title' => _EDIT,
+    ];
     if (!empty($able['preview']) && $one['kind'] === 'image') $dial[] = ['href' => '#', 'run' => 'preview', 'icon_name' => 'zoom-in', 'title' => _UPLOADS_PREVIEW];
     if (!empty($able['download'])) $dial[] = ['href' => getAdminFileLink('getAdminFileDownload', ['file' => $path]), 'icon_name' => 'download', 'title' => _DOWNLOAD];
     if (!empty($able['rename'])) $dial[] = ['href' => '#', 'act' => 'fmrename', 'file' => $path, 'arg' => $name, 'icon_name' => 'input-cursor-text', 'title' => _UPLOADS_TORENAME];
@@ -1302,6 +1336,9 @@ function getAdminFileActs(array $one): string {
 # Render the properties of one object from its descriptor: the absolute path is shown because an administrator is full-handed, and a critical path says so next to its own name
 # An object that does not exist or that the path policy closes answers the empty panel, so a closed path is refused here exactly as it is refused on every other route
 # A source file also states how many lines it holds and which version it carries, and both come from reading it once, which is why no listing ever asks for them
+# Windows answers no account for a file at all, so the owner row is written only where the host has one to give
+# The panel offers the fan of the object and nothing beside it: the fan already answers for every capability the descriptor grants, so a second row of links would repeat it
+# The picture of the panel opens the gallery the list opens, so it carries the same four addresses a row carries
 function getAdminFileProps(string $path): string {
     global $afile, $tpl;
     $man = getAdminFileManager();
@@ -1320,14 +1357,11 @@ function getAdminFileProps(string $path): string {
     $rows[] = ['label' => ($one['url'] === '') ? _UPLOADS_PATH : _UPLOADS_ADDR, 'value' => ($one['path'] === '') ? '/' : ($one['url'] ?: $one['path'])];
     $rows[] = ['label' => _UPLOADS_FULL, 'value' => $one['realpath'] ?? ''];
     if ($one['perms'] !== '') $rows[] = ['label' => _UPLOADS_PERMS, 'value' => $one['perms']];
-    // Windows answers no account for a file at all, so the row is written only where the host has one to give
     if ($one['owner'] !== '') $rows[] = ['label' => _UPLOADS_USER, 'value' => $one['owner']];
     if ($body !== []) $rows[] = ['label' => _UPLOADS_VERSION, 'value' => substr($body['version'], 0, 6)];
     if ($one['managed']) $rows[] = ['label' => _UPLOADS_OWNER, 'value' => FileManager::getFileOwner($one['name']) ?? _UPLOADS_OWNSITE];
     $warn = empty($one['critical']) ? '' : _UPLOADS_CRIT;
     if ($warn === '' && $one['managed'] && !empty($one['capabilities']['rename'])) $warn = _UPLOADS_LINKWARN;
-    // The panel offers the fan of the object and nothing beside it: the fan already answers for every capability the
-    // descriptor grants, and a second row of links over the same three or four of them is the same answer written twice
     return $tpl->getHtmlFrag('file-browser-props', [
         'dial_html' => getAdminFileActs($one),
         'cap_text' => _UPLOADS_PROPS,
@@ -1335,7 +1369,6 @@ function getAdminFileProps(string $path): string {
         'icon' => $icon,
         'tone' => $tone,
         'image_url' => getAdminFileShot($one),
-        // The picture of the panel opens the gallery the list opens, so it carries the same four addresses a row carries
         'pick_value' => $one['path'],
         'info_url' => getAdminFileLink('getAdminFileData', ['file' => $one['path']]),
         'down_url' => empty($one['capabilities']['download']) ? '' : getAdminFileLink('getAdminFileDownload', ['file' => $one['path']]),
@@ -1345,7 +1378,7 @@ function getAdminFileProps(string $path): string {
     ]);
 }
 
-# Render the source editor of one system file in the place of the list, with the tree beside it: the way back, the name, the version of the open file and the code widget
+# Render the source editor of one system file as a window over the file screen: the way back, the name, the version of the open file and the code widget
 # The version travels in the form and is compared under the lock of the directory on the way back, so the field is what tells a stale save from a fresh one and is never dropped
 # A critical path asks again through the shared confirm protocol before the write, because an error in one of those files stops the site and a stray click must not reach it
 function getAdminFileEditor(array $edit): string {
@@ -1404,10 +1437,12 @@ function getAdminFileEditor(array $edit): string {
 
 # Render the system file browser of one directory: the tree along the open path, the list, the properties, the capability row and the counter of the current directory
 # The same body answers the first page and every navigation of it; the toolbar is drawn once and the crumbs travel back out of band, because they live inside it
-# An open source file takes the place of the list: the tree, the properties and the capability row stay, because the screen has not changed, only its work area has
+# An open source file opens in a window over the screen, which keeps its own directory drawn underneath, so the reader never loses where the file came from
 # One object is drawn twice, as a row and as a tile, so its fan is built twice as well: two forms of one identifier would make the tile submit the form standing in the row
 # The directory is answered whole and scrolled with the page rather than paged, and the administration is given all of it: no ceiling, no page and nothing left out of the answer
-# The settings that count files belong to the editor and to the visitor, and none of them reaches this screen: what an administrator may not see is decided by the policy, not by a number
+# The settings that count files belong to the editor and the visitor and never reach this screen: what an administrator may not see is decided by the policy, not a number
+# A row prints size and date for a human and carries both as raw figures for the sort, because formatted sizes compare as text and a formatted date compares by its day
+# The gallery offers what the fan of the row offers, because it presses that fan: every gallery key is a fan key, and one the context withholds is absent from both
 function getAdminFileShell(bool $full = false, array $edit = []): string {
     global $afile, $tpl;
     $ctx = getAdminFileMode();
@@ -1425,8 +1460,6 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
     $sum = 0;
     foreach ($all as $row) $sum += $row['size'];
     $rule = getAdminUploadRule($dir);
-    // An open source file no longer takes the place of the list: the editor is a window over the screen, so the screen
-    // it stands on keeps its own directory drawn underneath and the reader never loses where the file came from
     $show = $all;
     $mark = !empty($able['delete']) || !empty($able['compress']) || !empty($able['move']);
     $rows = '';
@@ -1452,8 +1485,6 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
             'shot_text' => _UPLOADS_PREVIEW,
             'kind_text' => $isdir ? _DIR : strtoupper($row['extension']),
             'size_text' => $isdir ? '—' : filterSize($row['size']),
-            // The printed size and date are read by a human and the two figures beside them by the sort, because
-            // "1.2 MB" and "900 Bytes" compare as text in the wrong order and a formatted date compares by its day
             'size_num' => (string)($isdir ? -1 : (int)$row['size']),
             'date_num' => (string)(int)$row['mtime'],
             'date_text' => date(_TIMESTRING, $row['mtime']),
@@ -1471,8 +1502,6 @@ function getAdminFileShell(bool $full = false, array $edit = []): string {
         $walk = ($walk === '') ? $part : $walk.'/'.$part;
         $crumbs[] = ['name' => $part, 'url' => ($walk === $dir) ? '' : getAdminFileLink('getAdminFileList', ['dir' => $walk])];
     }
-    // The gallery offers what the fan of the row offers, because it presses that fan: every key here is a key the fan
-    // carries, and one the context withholds is absent from both
     $acts = [['icon' => getIconName('download'), 'name' => _DOWNLOAD, 'tone' => 'neutral', 'is_load' => true]];
     if (!empty($able['edit'])) $acts[] = ['key' => 'fmedit', 'icon' => getIconName('fmedit'), 'name' => _EDIT, 'tone' => 'info'];
     if (!empty($able['rename'])) $acts[] = ['key' => 'fmrename', 'icon' => getIconName('fmrename'), 'name' => _UPLOADS_TORENAME, 'tone' => 'neutral'];

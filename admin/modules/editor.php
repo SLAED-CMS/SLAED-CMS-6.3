@@ -62,7 +62,19 @@ function isHtmxReq(): bool {
     return strtolower($_SERVER['HTTP_HX_REQUEST'] ?? '') === 'true';
 }
 
-function getEditbox(string $file, string $info, string $warn, string $mtype, string $edit, int $tab, bool $trim = false, string $extra = '', string $fallback = '', string $note = '', string $type = 'info'): string {
+function getEditbox(
+    string $file,
+    string $info,
+    string $warn,
+    string $mtype,
+    string $edit,
+    int $tab,
+    bool $trim = false,
+    string $extra = '',
+    string $fallback = '',
+    string $note = '',
+    string $type = 'info'
+): string {
     global $afile, $tpl;
     $ops = ['name=editor', 'name=editor&op=editheader', 'name=editor&op=htaccess', 'name=editor&op=robots', 'name=editor&op=info'];
     $tabs = [_EFUNCN, _EHEADN, _EHTN, _ERON, _DOCS];
@@ -75,7 +87,9 @@ function getEditbox(string $file, string $info, string $warn, string $mtype, str
     if ($warn) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $warn]);
     $html = ($note !== '') ? $tpl->getHtmlFrag('alert', ['is_warn' => $type === 'warn', 'text' => $note]) : '';
     $cont .= $tpl->getHtmlPart('div', ['id' => 'repeditornote', 'is_collapsible' => true, 'content_html' => $html]);
-    $attr = 'hx-post="'.$afile.'.php" hx-target="#repeditornote" hx-swap="innerHTML" hx-push-url="false" hx-on:htmx:config-request="var code=document.getElementById(\'code\');var view=(window.CM6&&CM6.editors)?CM6.editors[\'code\']:null;if(code&&view&&view.state&&view.state.doc){code.value=view.state.doc.toString();}"';
+    $attr = 'hx-post="'.$afile.'.php" hx-target="#repeditornote" hx-swap="innerHTML" hx-push-url="false"'
+        .' hx-on:htmx:config-request="var code=document.getElementById(\'code\');var view=(window.CM6&&CM6.editors)?CM6.editors[\'code\']:null;'
+        .'if(code&&view&&view.state&&view.state.doc){code.value=view.state.doc.toString();}"';
     return $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'form_attr' => $attr,
@@ -84,7 +98,7 @@ function getEditbox(string $file, string $info, string $warn, string $mtype, str
             ['nameattr' => 'op', 'valueattr' => 'save'],
             ['nameattr' => 'editor', 'valueattr' => $edit],
             ['nameattr' => 'file', 'valueattr' => $file],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('editor')],
         ],
         'rows' => [[
             'is_full' => true,
@@ -105,7 +119,19 @@ function getEditorView(string $edit, string $note = '', string $type = 'info'): 
     return match ($edit) {
         'editheader' => getEditbox(CONFIG_DIR.'/header.php', _EHEAD.': '.CONFIG_DIR.'/header.php '._EINFO2, _EINFOPHP, 'text/x-php', 'editheader', 1, true, '', '', $note, $type),
         'htaccess' => getEditbox(BASE_DIR.'/.htaccess', _EHT.': '.BASE_DIR.'/.htaccess '._EINFO4, '', 'text/x-php', 'htaccess', 2, false, '', '', $note, $type),
-        'robots' => getEditbox(BASE_DIR.'/robots.txt', _EROB.': '.BASE_DIR.'/robots.txt '._EINFO5, '', 'text/plain', 'robots', 3, false, getRobotsButton(getRobotsTemplate()), getRobotsTemplate(), $note, $type),
+        'robots' => getEditbox(
+            BASE_DIR.'/robots.txt',
+            _EROB.': '.BASE_DIR.'/robots.txt '._EINFO5,
+            '',
+            'text/plain',
+            'robots',
+            3,
+            false,
+            getRobotsButton(getRobotsTemplate()),
+            getRobotsTemplate(),
+            $note,
+            $type
+        ),
         default => getEditbox(CONFIG_DIR.'/system.php', _EFUNC.': '.CONFIG_DIR.'/system.php '._EINFO, _EINFOPHP, 'text/x-php', 'editor', 0, true, '', '', $note, $type),
     };
 }
@@ -141,7 +167,7 @@ function save(): void {
     global $afile, $tpl;
     $edit = getVar('post', 'editor', 'var');
     $file = getVar('post', 'file');
-    if (!checkSiteToken()) {
+    if (!checkAdminPost('editor')) {
         if (isHtmxReq()) {
             echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _TOKENMISS]);
             return;

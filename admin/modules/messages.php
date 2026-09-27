@@ -33,20 +33,30 @@ function messages(): void {
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['is_col_id' => true, 'content_html' => (string)$mid],
-                    ['is_truncate' => true, 'title_text' => $title, 'content_html' => $tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => $title, 'title_text' => $title])],
+                    [
+                        'is_truncate' => true,
+                        'title_text' => $title,
+                        'content_html' => $tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => $title, 'title_text' => $title]),
+                    ],
                     ['content_html' => $exp],
                     ['content_html' => $mview],
                     ['content_html' => getLangName($lang)],
                     ['is_col_status' => true, 'content_html' => ad_status('', $active)],
                     ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', [
                         'dial_title' => _FUNCTIONS,
-                        'dial' => [getTplPostAction(['name' => 'messages', 'op' => 'status', 'id' => $mid, 'act' => $active ? '0' : '1'],
-                            'power', $active ? _DEACTIVATE : _ACTIVATE),
+                        'dial' => [
+                            getTplPostAction(
+                                ['name' => 'messages', 'op' => 'status', 'id' => $mid, 'act' => $active ? '0' : '1'],
+                                'power',
+                                $active ? _DEACTIVATE : _ACTIVATE
+                            ),
                             [
-                            'href' => $afile.'.php?name=messages&op=add&id='.$mid,
-                            'icon_name' => 'pencil',
-                            'title' => _FULLEDIT,
-                        ], getTplPostAction(['name' => 'messages', 'op' => 'delete', 'id' => $mid], 'trash', _ONDELETE, _DELETE.' "'.$title.'"?')],
+                                'href' => $afile.'.php?name=messages&op=add&id='.$mid,
+                                'icon_name' => 'pencil',
+                                'title' => _FULLEDIT,
+                            ],
+                            getTplPostAction(['name' => 'messages', 'op' => 'delete', 'id' => $mid], 'trash', _ONDELETE, _DELETE.' "'.$title.'"?'),
+                        ],
                     ])],
                 ],
             ])]);
@@ -75,7 +85,14 @@ function add(): void {
     global $db, $conf, $afile, $stop, $tpl;
     $mid = getVar('req', 'id', 'num');
     if ($mid) {
-        [$title, $body, $expire, $active, $view, $lang] = $db->getSqlRow($db->getSqlQuery('SELECT title, body, expire, status, view, lang FROM '.PREFIX_DB.'_message WHERE id = :mid', ['mid' => $mid]));
+        [
+            $title,
+            $body,
+            $expire,
+            $active,
+            $view,
+            $lang,
+        ] = $db->getSqlRow($db->getSqlQuery('SELECT title, body, expire, status, view, lang FROM '.PREFIX_DB.'_message WHERE id = :mid', ['mid' => $mid]));
     } else {
         $mid = getVar('post', 'mid', 'num');
         $title = getVar('post', 'title', 'title');
@@ -101,21 +118,59 @@ function add(): void {
         $oldexpire = $expire;
         $expire = intval($expire - time());
         $exp_day = $expire / 86400;
-        $expire_text = $tpl->getHtmlFrag('hidden', ['nameattr' => 'expire', 'valueattr' => (string)$oldexpire])._PURCHASED.': '.getDuration($expire).' ('.round($exp_day, 3).' '._DAYS.')';
+        $expire_text = $tpl->getHtmlFrag('hidden', [
+            'nameattr' => 'expire',
+            'valueattr' => (string)$oldexpire,
+        ])._PURCHASED.': '.getDuration($expire).' ('.round($exp_day, 3).' '._DAYS.')';
     } else {
         $newexpire = 1;
-        $expire_text = $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'expire', 'input_id' => 'f-expire', 'describedby' => 'f-expire-hint', 'value_attr' => '0', 'placeholder_text' => _EXPIRATION, 'is_required' => true]);
+        $expire_text = $tpl->getHtmlFrag('input', [
+            'itype' => 'number',
+            'name_attr' => 'expire',
+            'input_id' => 'f-expire',
+            'describedby' => 'f-expire-hint',
+            'value_attr' => '0',
+            'placeholder_text' => _EXPIRATION,
+            'is_required' => true,
+        ]);
     }
     $rows = [
-        ['label_for' => 'f-title', 'label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'input_id' => 'f-title', 'value_attr' => (string)$title, 'maxlength_num' => 100, 'placeholder_text' => _TITLE, 'is_required' => true])],
-        ['label_html' => _TEXT, 'label_id' => $labid = getFieldIds('', 'body')['label'], 'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _TEXT,
-            'id' => '1', 'name' => 'body', 'value' => (string)$body, 'mod' => 'all', 'store' => 'message.body', 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1',
+        [
+            'label_for' => 'f-title',
+            'label_html' => _TITLE,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'text',
+                'name_attr' => 'title',
+                'input_id' => 'f-title',
+                'value_attr' => (string)$title,
+                'maxlength_num' => 100,
+                'placeholder_text' => _TITLE,
+                'is_required' => true,
+            ]),
+        ],
+        ['label_html' => _TEXT, 'label_id' => $labid = getFieldIds('', 'body')['label'], 'field_html' => getTplTextarea([
+            'labelledby' => $labid,
+            'label' => _TEXT,
+            'id' => '1',
+            'name' => 'body',
+            'value' => (string)$body,
+            'mod' => 'all',
+            'store' => 'message.body',
+            'rows' => '10',
+            'placeholder' => _TEXT,
+            'required' => '1',
         ]), 'is_full' => true],
     ];
     if ($langsel) {
         $rows[] = ['label_html' => _LANGUAGE, 'field_html' => $langsel];
     }
-    $rows[] = ['label_for' => $newexpire ? 'f-expire' : '', 'label_html' => _EXPIRATION, 'hint_html' => _CONFINES, 'hint_id' => $newexpire ? getFieldIds('f-expire')['hint'] : '', 'field_html' => $expire_text];
+    $rows[] = [
+        'label_for' => $newexpire ? 'f-expire' : '',
+        'label_html' => _EXPIRATION,
+        'hint_html' => _CONFINES,
+        'hint_id' => $newexpire ? getFieldIds('f-expire')['hint'] : '',
+        'field_html' => $expire_text,
+    ];
     $rows[] = ['label_for' => 'f-view', 'label_html' => _VIEWPRIV, 'field_html' => $tpl->getHtmlFrag('select', [
         'name_attr' => 'view',
         'selectid' => 'f-view',
@@ -169,9 +224,24 @@ function save(): void {
     if ($room = checkEditorTextRoom($body, 'message.body')) $stop[] = $room;
     if (!$warn && !$stop && $posttype == 'save') {
         if ($mid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET title = :title, body = :body, expire = :expire, status = :active, view = :view, lang = :lang WHERE id = :mid', ['title' => $title, 'body' => $body, 'expire' => $expire, 'active' => $active, 'view' => $view, 'lang' => $lang, 'mid' => $mid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET title = :title, body = :body, expire = :expire, status = :active, view = :view, lang = :lang WHERE id = :mid', [
+                'title' => $title,
+                'body' => $body,
+                'expire' => $expire,
+                'active' => $active,
+                'view' => $view,
+                'lang' => $lang,
+                'mid' => $mid,
+            ]);
         } else {
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_message (id, title, body, expire, status, view, lang) VALUES (NULL, :title, :body, :expire, :active, :view, :lang)', ['title' => $title, 'body' => $body, 'expire' => $expire, 'active' => $active, 'view' => $view, 'lang' => $lang]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_message (id, title, body, expire, status, view, lang) VALUES (NULL, :title, :body, :expire, :active, :view, :lang)', [
+                'title' => $title,
+                'body' => $body,
+                'expire' => $expire,
+                'active' => $active,
+                'view' => $view,
+                'lang' => $lang,
+            ]);
         }
         setRedirect($afile.'.php?name=messages', false, 302, _SUCCSAVE);
     } elseif ($warn) {

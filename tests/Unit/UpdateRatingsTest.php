@@ -7,12 +7,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * The ratings unit of the 6.3 data update in setup/index.php, whose contract is the carry-over
- * of the accumulated ratings in docs/RATINGS.md. tests/Support/update_probe.php lifts the shipped functions out
- * of the installer by name and drives them in an isolated CLI process against a disposable schema and a scratch site,
- * so the manifest, the snapshots, the mark, the rules and the aggregates of the stand are never touched.
- */
+# The ratings unit of the 6.3 data update in setup/index.php, whose contract is the carry-over of the accumulated ratings in docs/RATINGS.md
 final class UpdateRatingsTest extends TestCase
 {
     private const TARGETS = [['account', 2, 37, 10], ['account', 3, 0, 0], ['account', 4, 5, 1], ['forum', 5, 6, 2], ['shop', 8, 15, 3]];
@@ -32,6 +27,8 @@ final class UpdateRatingsTest extends TestCase
 
     private static array $probe = [];
 
+    # The probe tests/Support/update_probe.php lifts the shipped functions out of the installer by name into an isolated CLI process on a disposable schema and scratch site
+    # The manifest, the snapshots, the mark, the rules and the aggregates of the stand are never touched
     # Run the probe once and memoize its report for every test in this class
     private function getRun(string $name): array
     {

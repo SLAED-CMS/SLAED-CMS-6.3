@@ -1,15 +1,8 @@
 <?php
-/**
- * Informational usage audit for language constants.
- * Scans only language sources:
- * - lang/*.php
- * - admin/lang/*.php
- * - modules/<module>/lang/*.php
- * - modules/<module>/admin/lang/*.php
- */
 
 use PHPUnit\Framework\TestCase;
 
+# Informational usage audit of the language constants defined in lang/, admin/lang/, modules/*/lang/ and modules/*/admin/lang/
 final class LanguageConstantsUsageTest extends TestCase
 {
     private static string $basePath;
@@ -30,6 +23,7 @@ final class LanguageConstantsUsageTest extends TestCase
         );
     }
 
+    # Prints the usage summary to STDERR; informational only, it does not fail CI by design
     public function testLanguageConstantsUsageSummary(): void
     {
         $msg = sprintf(
@@ -43,18 +37,16 @@ final class LanguageConstantsUsageTest extends TestCase
 
         fwrite(STDERR, $msg);
 
-        // Informational only: does not fail CI by design.
         $this->assertTrue(true, $msg);
     }
 
+    # Maps each defined constant to its file:line list, then counts T_STRING usages (not the define() declarations) and template tokens
     private static function collectStats(): array
     {
-        $defs = []; // CONST => [file:line, ...]
+        $defs = [];
         $phpFiles = [];
         $tplFiles = [];
-        $iterator = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator(self::$basePath, RecursiveDirectoryIterator::SKIP_DOTS)
-        );
+        $iterator = getTreeFiles(self::$basePath);
 
         $skipDirs = ['vendor', 'tests', '.git', '.reports'];
 
@@ -167,7 +159,6 @@ final class LanguageConstantsUsageTest extends TestCase
         $rows = [];
         foreach ($defs as $name => $locs) {
             $total = $use[$name] ?? 0;
-            // T_STRING scan counts constant usages, but not define('_CONST', ...) declarations.
             $usage = $total;
 
             $rows[] = [

@@ -55,7 +55,9 @@ function info(): void {
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label_for' => 'f-rsscode',
         'label' => _CODE,
-        'field_html' => $tpl->getHtmlFrag('textarea', ['cols_num' => 45, 'rows_num' => 3, 'input_id' => 'f-rsscode', 'value_text' => $rsslink, 'input_attr' => 'OnClick="this.select()"']),
+        'field_html' => $tpl->getHtmlFrag('textarea', [
+            'cols_num' => 45, 'rows_num' => 3, 'input_id' => 'f-rsscode', 'value_text' => $rsslink, 'input_attr' => 'OnClick="this.select()"',
+        ]),
     ]);
     $cont .= $tpl->getHtmlPart('form-add', [
         'action' => 'index.php?name='.$conf['name'],
@@ -88,7 +90,9 @@ function info(): void {
             'fields' => $tpl->getHtmlFrag('form-field-row', [
                 'label_for' => 'f-url',
                 'label' => _ORTYPEURL,
-                'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'url', 'input_id' => 'f-url', 'value_attr' => $link, 'maxlength_num' => 200, 'placeholder_text' => _ORTYPEURL]),
+                'field_html' => $tpl->getHtmlFrag('input', [
+                    'name_attr' => 'url', 'input_id' => 'f-url', 'value_attr' => $link, 'maxlength_num' => 200, 'placeholder_text' => _ORTYPEURL,
+                ]),
             ]),
             'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'label' => _OK]),
         ]);

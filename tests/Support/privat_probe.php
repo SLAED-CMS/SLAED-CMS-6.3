@@ -5,13 +5,12 @@
 # Website: slaed.net
 
 # CLI probe for the private-message schema migration of docs/PRIVAT-2026.md
-# Every scenario builds one documented pre-migration shape in a disposable schema, runs one update channel against it,
-# and reports whether the table converged on the fresh schema, whether the mailboxes still hold what they held, and
-# whether a second run of the same channel changes anything at all
-# States a to d are the four shapes the state-column conversion has to converge from: two still carrying the legacy status
-# column, one already converted and one carrying the renamed column with the definition a bare rename leaves behind
-# The statements are read out of the shipped files through getSqlbatch(), the splitter the Inquiry tab and the installer
-# already run these files with, so what the probe executes is what an installation executes
+# Every scenario builds one documented pre-migration shape in a disposable schema and runs one update channel against it
+# It reports whether the table converged on the fresh schema, whether the mailboxes still hold what they held, and whether a second run changes anything
+# States a to d are the four shapes the state-column conversion has to converge from: two still carrying the legacy status column, one already converted
+# The fourth state carries the renamed column with the definition a bare rename leaves behind
+# The statements are read out of the shipped files through getSqlbatch(), the splitter the Inquiry tab and the installer already run these files with
+# So what the probe executes is what an installation executes
 # Nothing touches the site database: the probe creates its own schema, works only in it, and drops it again
 error_reporting(0);
 ini_set('display_errors', '0');

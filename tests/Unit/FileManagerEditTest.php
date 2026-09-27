@@ -6,14 +6,7 @@ use FileManager;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Stage 4 of docs/FILE-MANAGER-CONCEPT-2026.md: the source editor of the system area, the first write of the whole
- * plan. Every scenario runs against a disposable tree below the system temp directory that carries one file of each
- * language the resolver of §11 names, an empty one, a binary one and the closed paths of the policy table, so nothing
- * below the site is ever written. The route side of the stage - POST only, scoped token, super administrator, the 409
- * of a version conflict and the journal entry of §24 - is proven off the sources, because a handler cannot be called
- * without an administrative session and what is asserted there is the shape of the route and not the reply of one run.
- */
+# The source editor of the system area, the first write of the file layer, run against a disposable tree so nothing below the site is written
 final class FileManagerEditTest extends TestCase
 {
     private const BODIES = [
@@ -96,6 +89,7 @@ final class FileManagerEditTest extends TestCase
     }
 
     # Read one repository file once per run
+    # The route side is proven off the sources, since a handler needs an administrative session and the shape of the route matters, not the reply of one run
     private function getFile(string $path): string
     {
         if (isset(self::$files[$path])) return self::$files[$path];
@@ -313,10 +307,10 @@ final class FileManagerEditTest extends TestCase
     }
 
     # An open editor guards the work it holds: every way out asks first, the question comes from a language constant and a save is not treated as a way out
+    # The editor is the one window frame filled by core/admin.php, so the marks the guard reads are written there
     #[Test]
     public function theOpenEditorGuardsUnsavedWork(): void
     {
-        // The editor is the one window frame filled by core/admin.php, so the marks the guard reads are written there
         $part = $this->getFile('core/admin.php');
         $this->assertStringContainsString('data-sl-fm-ask=', $part, 'The editor carries no question for the guard, so the guard has nothing to ask with');
         $note = 'The editor does not name its widget, so the guard cannot find the document';

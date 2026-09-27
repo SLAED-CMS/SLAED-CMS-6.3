@@ -14,12 +14,7 @@ require_once dirname(__DIR__, 2).'/core/classes/field.php';
 require_once dirname(__DIR__, 2).'/core/classes/template.php';
 require_once dirname(__DIR__, 2).'/core/classes/parser.php';
 
-/**
- * The two prepared outputs of the shared Field class and the wiring of its three owners. The
- * form is built from the shared fragments without reading POST, the view is the exact contract array of
- * docs/NODE.md (Field), and account, forum and order reach their values through the shared helpers alone - no
- * positional format, no second reader and no writer that skips the mark of the 6.3 data update.
- */
+# The form and the view the shared Field class prepares, and the wiring of its three owners account, forum and order
 final class FieldViewTest extends TestCase
 {
     # The definitions every test here shares: a required text with a hint, a multiple select with a disabled option, a switch, a textarea, an address, a mail and a hidden field
@@ -76,6 +71,7 @@ final class FieldViewTest extends TestCase
         }
     }
 
+    # The form is built from the shared fragments and never reads POST
     # The form has one row per active field in canonical order, keyed by name, with the control of its type, the hint tied to the control and the message of a refused value
     #[Test]
     public function theFormIsBuiltFromTheSharedFragments(): void
@@ -143,6 +139,7 @@ final class FieldViewTest extends TestCase
         $this->assertStringContainsString('step=\"0.001\"', $rows['price']['field_html']);
     }
 
+    # The view is the exact contract array of docs/NODE.md (Field)
     # The view is the contract array: exact keys, canonical order, false and zero shown, empty and hidden left out, a stored disabled option kept, a removed one dropped
     #[Test]
     public function theViewIsTheContractArray(): void
@@ -180,8 +177,8 @@ final class FieldViewTest extends TestCase
         $this->assertSame(['name'], array_keys($view));
     }
 
-    # The write helper strips the trusted tags however they are spelled, keeps the value of a switched off field against a forged post and drops a stored name without a definition;
-    # a refused value, a refused set and a missing mark each leave the stored text as it was, and the forum no longer hands rendered rows to a trusted parse
+    # The write helper strips the trusted tags however they are spelled, keeps a switched off field against a forged post and drops a stored name without a definition
+    # A refused value, a refused set and a missing mark each leave the stored text as it was, and the forum no longer hands rendered rows to a trusted parse
     #[Test]
     public function theWriteHelperStoresNoCapabilityAndLosesNoValue(): void
     {
@@ -199,6 +196,7 @@ final class FieldViewTest extends TestCase
         $forum = (string)file_get_contents(dirname(__DIR__, 2).'/modules/forum/index.php');
         $this->assertSame(0, preg_match('/filterContent\([^;]*\$fields/', $forum), 'The forum hands the rendered field rows to the parser again');
     }
+    # No writer of an owner skips the mark of the 6.3 data update
     # The three owners reach their fields through the shared helpers alone: no positional split, no positional input name, no second reader of the definitions
     #[Test]
     public function theOwnersUseTheSharedHelpersAlone(): void

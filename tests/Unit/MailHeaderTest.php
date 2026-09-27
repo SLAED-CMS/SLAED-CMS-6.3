@@ -6,13 +6,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 
-/**
- * Stage 1, batch 1 of docs/MAIL-2026.md: the message-composition half of core/classes/mail.php.
- * These are pure functions over one message, so they are exercised directly rather than through a
- * transport: identity resolution against the plan's From/Reply-To table, RFC 2047 subject encoding
- * and folding, RFC 2045 base64 wrapping, CRLF line endings and the address sanitiser that has to
- * abort a send before a CR or LF can reach a header or an SMTP envelope.
- */
+# The message composition of core/classes/mail.php, pure functions exercised directly rather than through a transport
 final class MailHeaderTest extends TestCase
 {
     public static function setUpBeforeClass(): void
@@ -22,6 +16,7 @@ final class MailHeaderTest extends TestCase
     }
 
     # Build a Mail service over a given mail config section, with no database and a known site name
+    # Covered: identity resolution by the From/Reply-To table, RFC 2047 subjects, RFC 2045 base64, CRLF endings and the sanitiser that stops CR or LF in a header
     private function getMail(array $conf = []): \Mail
     {
         return new \Mail(null, ['sitename' => 'SLAED CMS', 'mail' => $conf]);

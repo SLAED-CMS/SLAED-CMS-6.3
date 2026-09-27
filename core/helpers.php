@@ -156,11 +156,11 @@ function getTplPreviewContent(array $data = []): string {
 # Single source of truth for rendering a pager: prev/next nav, numbered links and dots, wrapped in the 'pager' fragment
 # $target(int $page): array yields the link target: ['href' => ...] for URL navigation, or ['query' => ..., 'target_id' => ..., 'push_url' => ...] for HTMX navigation
 # Renders via $tpl->getHtmlFrag(), so each theme keeps its own pager fragments (admin and lite stay independent)
+# The window holds maxpg numbers and slides with the current page; the first and the last page stand outside it as anchors with the dots between
 function getTplPagerView(int $num, int $pages, int $maxpg, callable $target, array $meta = []): string {
     global $tpl;
     if ($pages <= 1) return '';
     $num  = max(1, min($num, $pages));
-    # The window holds maxpg numbers and slides with the current page, so the setting names what the reader sees; the first and the last page stand outside it as anchors with the dots between
     $maxpg = max(1, $maxpg);
     $from = max(1, $num - intdiv($maxpg, 2));
     $to = min($pages, $from + $maxpg - 1);
@@ -189,7 +189,7 @@ function getTplPagerView(int $num, int $pages, int $maxpg, callable $target, arr
     ], $meta));
 }
 
-# Build a pager from a table COUNT query, reading the current page from the request.
+# Build a pager from a table COUNT query, or from the count the caller already holds, reading the current page from the request
 function getTplPager(array $data = []): string {
     global $db, $afile;
     $limit = (int)($data['limit'] ?? 10);
@@ -205,8 +205,12 @@ function getTplPager(array $data = []): string {
     $pushurl = !empty($data['push_url']);
     $wparams = (array)($data['where_params'] ?? []);
     $urlx = (array)($data['url_extra'] ?? []);
-    [$cnt] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT('.$field.') FROM '.PREFIX_DB.$table.($where ? ' WHERE '.$where : ''), $wparams));
-    $cnt = (int)$cnt;
+    if (isset($data['count'])) {
+        $cnt = intval($data['count']);
+    } else {
+        [$cnt] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT('.$field.') FROM '.PREFIX_DB.$table.($where ? ' WHERE '.$where : ''), $wparams));
+        $cnt = intval($cnt);
+    }
     if ($cnt <= $limit) return '';
     $pages = (int)ceil($cnt / $limit);
     $num = max(1, min(getVar('get', $n, 'num', 1), $pages));
@@ -277,6 +281,7 @@ function getTplAdminTabs(array $data = []): string {
 }
 
 # Render one full admin info page from a module info file with optional in-place editor
+# Info docs are Markdown rendered in trusted mode, so they are stored raw with LF line endings: filterHtml would mangle Markdown and HTML forms submit CRLF
 function setTplAdminInfoPage(array $data = []): void {
     global $afile, $locale, $conf, $tpl, $prs;
     $name = filterWord(getVar('get', 'name', 'text', ''));
@@ -320,12 +325,9 @@ function setTplAdminInfoPage(array $data = []): void {
                 'is_warn' => true,
                 'text' => _TOKENMISS,
             ]);
-            $text = (string)getVar('post', 'text', 'raw', $text);
+            $text = getVar('post', 'text', 'raw', $text);
         } else {
-            // Info docs are Markdown source rendered in trusted mode (filterContent safe=false);
-            // store raw with LF line endings — filterHtml would mangle Markdown (nl2br,
-            // htmlspecialchars, $/quote escaping), and HTML forms submit CRLF.
-            $content = trim(str_replace(["\r\n", "\r"], "\n", (string)getVar('post', 'text', 'raw', '')));
+            $content = trim(str_replace(["\r\n", "\r"], "\n", getVar('post', 'text', 'raw', '')));
             $room = checkEditorTextRoom($content, 'config');
             if ($room !== '') {
                 $text = $content;
@@ -411,7 +413,13 @@ function getTplRadioGroup(array $data = []): string {
             'value_attr' => $valu,
         ]);
     }
-    return $tpl->getHtmlFrag('block-content', ['switch' => $swit, 'is_radio_group' => true, 'labelledby' => (string)($data['labelledby'] ?? ''), 'describedby' => (string)($data['describedby'] ?? ''), 'content' => $items]);
+    return $tpl->getHtmlFrag('block-content', [
+        'switch' => $swit,
+        'is_radio_group' => true,
+        'labelledby' => (string)($data['labelledby'] ?? ''),
+        'describedby' => (string)($data['describedby'] ?? ''),
+        'content' => $items,
+    ]);
 }
 
 # Render one shared user autocomplete input with datalist-backed lookup
@@ -479,8 +487,8 @@ function getFieldsInRows(array $data = []): array {
 # Map one declared storage to the room it has, so the editor that renders a field and the write path that stores it read the same number and can never disagree about it
 # The table carries the column type and not a byte count: a type is compared line for line against setup/sql/table.sql by a test, while a map of numbers can only be checked by eye
 # The config store is a field written into a PHP file rather than a column; no ERROR 1406 waits for it, but it loads on every request reading that config, so it takes TEXT room
-# A store the table does not carry is answered with the narrowest field there is, because a permissive default would make every one of the call sites have to be right the first time
-# Whether a field may embed is derived and never stored: the room has to hold a whole data URI of Parser::EMBEDMAX, which TEXT cannot, so a summary field refuses one at any size and not only a large one
+# A store the table does not carry is answered with the narrowest field there is, because a permissive default would make every call site have to be right the first time
+# Whether a field may embed is derived, never stored: the room has to hold a whole data URI of Parser::EMBEDMAX, which TEXT cannot, so a summary field refuses one at any size
 function getEditorRoomData(string $store): array {
     $room = [
         'comment.body' => 'mediumtext', 'forum.body' => 'mediumtext', 'message.body' => 'mediumtext', 'money.note' => 'mediumtext',
@@ -495,10 +503,10 @@ function getEditorRoomData(string $store): array {
     return ['kind' => $kind, 'bytes' => $size, 'embed' => $size >= intdiv(Parser::EMBEDMAX + 2, 3) * 4 + 32];
 }
 
-# Refuse a text the field cannot hold before the query runs, because a database that is handed one answers ERROR 1406 and the author loses the whole post instead of being told what was wrong
-# Length is measured with strlen() and never with mb_strlen(), because bytes are what a column bounds: in utf8mb4 a Cyrillic letter costs two of them and a character count fires at twice the real limit
-# Embedded weight is measured beside the length because a column alone cannot express the summary rule: a 60 KB data URI fits TEXT, satisfies the parser and is then drawn onto every row of a list page
-# The type is the other half of the contract: a data URI the parser refuses to draw is stored anyway, counted against the column and then silently missing, which is the same defect arriving through the type
+# Refuse a text the field cannot hold before the query runs: a database handed one answers ERROR 1406 and the author loses the whole post instead of being told why
+# Length is measured with strlen(), never mb_strlen(), because a column bounds bytes: in utf8mb4 a Cyrillic letter costs two, so a character count fires at twice the limit
+# Embedded weight is measured beside the length because a column cannot express the summary rule: a 60 KB data URI fits TEXT and is then drawn onto every row of a list
+# The type is the other half of the contract: a data URI the parser refuses to draw would be stored anyway, counted against the column and then silently missing
 # It answers a ready message rather than a flag, so a form adds it to the refusals it already collects and a writer with no author to tell can put it in the log instead
 function checkEditorTextRoom(string $text, string $store): string {
     $room = getEditorRoomData($store);
@@ -515,7 +523,7 @@ function checkEditorTextRoom(string $text, string $store): string {
 }
 
 # Render a rich-text editor textarea with upload config and locale for the given module
-# The call site declares where the text is stored, because neither the form field name nor the upload directory identifies a column and several editors write into a config file instead
+# The call site declares where the text is stored: neither the form field name nor the upload directory identifies a column, and several editors write into a config file
 function getTplTextarea(array $data = []): string {
     $id = (string)($data['id'] ?? '1');
     $name = (string)($data['name'] ?? '');
@@ -594,7 +602,9 @@ function getTplAjaxTextarea(array $data = []): string {
             'button_type'  => 'submit',
             'submit_label' => _SAVE,
             'is_legacy_green' => true,
-            'button_attr'  => 'hx-post="'.$query.'" hx-include="#'.$formId.'" hx-target="#rep'.$obj.'" hx-swap="innerHTML" hx-push-url="false"'.$head.' hx-on:click="if (!document.getElementById(\''.$formId.'\').querySelector(\'[name=&quot;text&quot;]\').value.trim()) { alert(\''.$cerror.'\'); event.preventDefault(); }"',
+            'button_attr'  => 'hx-post="'.$query.'" hx-include="#'.$formId.'" hx-target="#rep'.$obj.'" hx-swap="innerHTML" hx-push-url="false"'.$head
+                .' hx-on:click="if (!document.getElementById(\''.$formId.'\').querySelector(\'[name=&quot;text&quot;]\').value.trim())'
+                .' { alert(\''.$cerror.'\'); event.preventDefault(); }"',
         ])
         .$tpl->getHtmlFrag('button', [
             'button_type'  => 'submit',
@@ -721,9 +731,10 @@ function getUploadPlaceView(array $rule): array {
 # The place rule answers what the sections may do, so a caller names the place and never a right, and the window can offer nothing the routes of that place refuse
 # Field mode is the window of a form: it picks and the form uploads, so the queue, its progress and the insert-as switch are absent and the pick is drawn as a chip
 # A place refusing an address carries no link tab at all, because canlink says the store keeps a file name against which an external address could never be resolved
+# The is_nolink option takes the tab away as well, for a caller whose writer refuses an address from this visitor although the place keeps one
 # Outside the editor the window is modal, so data-sl-window is written for the editor alone, where the text under it stays reachable while a file is being chosen
 # Packing and deletion follow the routes the place permits as well as the role, because a window offering a button the server refuses states a right that does not exist
-# The runtime and the draw templates it needs travel with the window rather than with an editor, once per request, so a page carrying no editor still gets a window that behaves and draws
+# The runtime and its draw templates travel with the window rather than with an editor, once per request, so a page with no editor still gets a working window
 function getFileManagerWindow(array $opt): string {
     global $tpl;
     static $done = false;
@@ -755,7 +766,7 @@ function getFileManagerWindow(array $opt): string {
         'is_field' => $fld,
         'can_upload' => $upl,
         'can_list' => $upl,
-        'can_link' => !empty($rul['canlink']),
+        'can_link' => !empty($rul['canlink']) && empty($opt['is_nolink']),
         'can_embed' => !$fld && !empty($opt['can_embed']),
         'can_zip' => $mdr && in_array('editorArchive', $ops, true),
         'can_delete' => $mdr && in_array('editorDelete', $ops, true),
@@ -823,6 +834,7 @@ function getFileManagerWindow(array $opt): string {
 # Outside the editor the window only picks and the form uploads, so the file rides an ordinary multipart submit and the runtime is handed a box instead of an editor to insert into
 # The three outcomes are exclusive and each has its own carrier, because the handler reads them in a fixed defensive order and a leftover of one would answer for another
 # A place refusing an address carries no address field at all, so nothing can be posted into a store that keeps a file name and could never resolve an external one
+# The is_nolink option drops the field and the link tab of its window the same way, for a visitor the writer of the caller refuses an address from
 # The row keeps the id it was given and the window mints its own from it, because the runtime finds every node of one instance by those ids and two rows of a page must not collide
 function getFileManagerField(array $opt): string {
     global $tpl;
@@ -833,7 +845,7 @@ function getFileManagerField(array $opt): string {
     $ops = $see['ops'];
     $upl = $see['able'];
     $mdr = $see['moder'];
-    $link = !empty($rul['canlink']);
+    $link = !empty($rul['canlink']) && empty($opt['is_nolink']);
     $ids = getFieldIds((string)($opt['id'] ?? ''), 'file');
     $eid = $ids['input'];
     $exts = $see['exts'];
@@ -882,6 +894,7 @@ function getFileManagerField(array $opt): string {
     $win = getFileManagerWindow([
         'place' => $plc,
         'is_field' => true,
+        'is_nolink' => !$link,
         'panel' => $eid.'-fm',
         'title' => $eid.'-fm-title',
         'msg' => $eid.'-fm-msg',
@@ -892,7 +905,8 @@ function getFileManagerField(array $opt): string {
         'editor' => $eid,
     ]);
     $js = '(function(){var box=document.getElementById('.json_encode($eid.'-box').');';
-    $js .= 'if(box&&window.SlaedFileManager){window.SlaedFileManager.addField('.json_encode($eid).',box,'.json_encode($run, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES).');}})();';
+    $js .= 'if(box&&window.SlaedFileManager){window.SlaedFileManager.addField('.json_encode($eid).',box,'
+        .json_encode($run, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES).');}})();';
     return $box.$win.$tpl->getHtmlFrag('head-script-inline', ['js' => $js]);
 }
 
@@ -1034,11 +1048,11 @@ function getTplTitleTip(mixed $data): string {
 # Build the hover info tip shown before a user name (comments, forum posts, private messages)
 # Without a bound account the tip states the status instead of empty profile fields, where $deleted marks an orphaned post whose uid points to a removed user
 function getUserTip(string $gname, string|int $points, string $regdate, int $gender, string $from, string $warnings, bool $anon = false, bool $deleted = false): string {
-    global $conf;
+    global $pnt;
     if ($anon) return getTplTitleTip([['label' => _STATUS, 'value' => (string)($deleted ? _USERDEL : _ANONYM)]]);
     $items = [];
     if ($gname !== '') $items[] = ['label' => _GROUP, 'value' => htmlspecialchars($gname, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')];
-    if ($conf['points']['active'] && $points) $items[] = ['label' => _POINTS, 'value' => htmlspecialchars((string)$points, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')];
+    if ($pnt->active && $points) $items[] = ['label' => _POINTS, 'value' => htmlspecialchars((string)$points, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')];
     $items[] = ['label' => _REG, 'value' => ($regdate !== '') ? format_time($regdate) : (string)_NO_INFO];
     if ($gender) $items[] = ['label' => _GENDER, 'value' => getGenderText($gender)];
     if ($from !== '') $items[] = ['label' => _FROM, 'value' => htmlspecialchars($from, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')];
@@ -1061,10 +1075,10 @@ function getRatingStars(int $width): array {
 }
 
 # Render the shared rating block for stars or like-style controls; type 2 answers a stored vote with the inner block alone, which replaces the content of the live one
-# The block is live only behind the mark of the 6.3 data update and an active rule; the vote itself travels in the body of a POST and the page carries no voting address
+# The block is live only behind the mark of the 6.3 data update and an active rule as Rating checked it, so a broken rule shows no widget; the vote travels in a POST body
 # The average shown is Rating::getAverage() with two digits, the same integer half-up rule a vote answers with six, so the page and the refreshed block never disagree
 function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $scor, string $obj = '', string $stl = ''): string {
-    global $conf, $tpl;
+    global $tpl;
     if (intval($rat)) {
         $votnum = $rat;
         $votes = $rat;
@@ -1081,10 +1095,10 @@ function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $sc
         $title = _RATING.': 0/0 '._AVERAGESCORE.': 0';
         $scored = false;
     }
-    $rule = (($conf['update']['ratings'] ?? '') === '6.3.0') ? ($conf['ratings'][strtolower((string)$mod)] ?? []) : [];
-    $on = ($rule['active'] ?? '') === '1';
+    $rule = getRatingService()->getRule(strtolower((string)$mod));
+    $on = !empty($rule['active']);
     if ($typ != 2 && !(($on && $id && $mod) || ($rat && $scor))) return '';
-    $live = $typ != 2 && $on && ($typ || ($rule['detail'] ?? '') !== '1');
+    $live = $typ != 2 && $on && ($typ || !$rule['detail']);
     $part = $stl == '1'
         ? ['rate1_title' => _RATE1, 'rate5_title' => _RATE5]
         : ['width' => (string)$width, 'stars' => getRatingStars($width), 'votes' => (string)$votnum, 'votes_title' => _VOTES];
@@ -1137,7 +1151,13 @@ function getTplCategorySelect(string $mod = '', int $id = 0, string $name = '', 
                 'is_selected' => $id == $key,
             ]);
         }
-        return !$raw ? $tpl->getHtmlFrag('select', ['name_attr' => $name, 'input_id' => 'f-'.$name, 'select_class' => $clas, 'title' => _CATEGORIES, 'options_html' => $opts]) : $opts;
+        return !$raw ? $tpl->getHtmlFrag('select', [
+            'name_attr' => $name,
+            'input_id' => 'f-'.$name,
+            'select_class' => $clas,
+            'title' => _CATEGORIES,
+            'options_html' => $opts,
+        ]) : $opts;
     }
     if ($empty) return $tpl->getHtmlFrag('select', ['name_attr' => $name, 'input_id' => 'f-'.$name, 'select_class' => $clas, 'title' => _CATEGORIES, 'options_html' => $empty]);
     return '';
@@ -1220,7 +1240,15 @@ function getTplModuleSelect(string $name, string $mod, string $no = '', array $a
         }
         $cont .= $tpl->getHtmlFrag('select-option', ['value_attr' => $file, 'label_text' => getModuleName($file), 'is_selected' => $isel]);
     }
-    return $tpl->getHtmlFrag('select', ['name_attr' => $name, 'selectid' => $sid, 'describedby' => $desc, 'is_config' => true, 'options_html' => $cont, 'is_multiple' => true, 'is_name_array' => true]);
+    return $tpl->getHtmlFrag('select', [
+        'name_attr' => $name,
+        'selectid' => $sid,
+        'describedby' => $desc,
+        'is_config' => true,
+        'options_html' => $cont,
+        'is_multiple' => true,
+        'is_name_array' => true,
+    ]);
 }
 
 # Return the names of modules that support categories: the two physical ones and every registered Node type with the category feature, as the administrative screens read them

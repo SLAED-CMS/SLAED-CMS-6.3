@@ -7,13 +7,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * The comments of a Node material and the private requests of the extension support. The behaviour is driven by
- * tests/Support/route_probe.php with the argument support: the disposable database and scratch configuration of the base route probe with a fourth
- * type help that carries the extension, real HTTP requests of the owners anna and boris, of helper who is a site account and the operator of
- * help at once, and of administrators without that right, then two child modes that boot the core and ask the comment subsystem and the class
- * NodeSupport directly. The static half reads the files of the stage.
- */
+# The comments of a Node material and the private requests of the extension support; the static half reads the files of the stage
 final class NodeSupportTest extends TestCase
 {
     private static array $probe = [];
@@ -24,6 +18,9 @@ final class NodeSupportTest extends TestCase
         return str_replace('\\', '/', dirname(__DIR__, 2));
     }
 
+    # The probe tests/Support/route_probe.php in its support mode runs the base disposable database and configuration with a fourth type help that carries the extension
+    # Real HTTP requests come from the owners anna and boris, from helper who is a site account and the operator of help at once, and from administrators without that right
+    # Two child modes boot the core and ask the comment subsystem and the class NodeSupport directly
     # Run the probe once in its support mode and memoize the runs; a probe that cannot create its database or start its server is a failure, not a skip
     private function getRuns(): array
     {
@@ -133,8 +130,8 @@ final class NodeSupportTest extends TestCase
         $this->assertSame([422, $card, 409, 403, $card], $run['refuse']);
     }
 
-    # The queue lists the waiting requests by priority and filters them by state and assignment; a bad filter and a foreign moderator are refused,
-    # and the list of all types of a moderator whose one type carries the extension reads it through that extension
+    # The queue lists the waiting requests by priority and filters them by state and assignment; a bad filter and a foreign moderator are refused
+    # The list of all types of a moderator whose one type carries the extension reads it through that extension
     #[Test]
     public function theQueueOrdersAndFiltersTheRequests(): void
     {
@@ -152,8 +149,8 @@ final class NodeSupportTest extends TestCase
         $this->assertSame([200, 2, 1], $run['delete'], 'Deleting a reply does not lower the counter or keeps its award');
     }
 
-    # A pending reply of the owner approved by an operator is still the reply of the owner: it waits for the staff and tells the other operators, never the owner himself;
-    # hiding and approving it again is no new reply, so neither a second notice nor a move of the queue follows
+    # A pending reply of the owner approved by an operator is still the reply of the owner: it waits for the staff and tells the other operators, never the owner himself
+    # Hiding and approving it again is no new reply, so neither a second notice nor a move of the queue follows
     #[Test]
     public function anApprovedReplyKeepsItsAuthorAndCountsOnce(): void
     {
@@ -162,8 +159,8 @@ final class NodeSupportTest extends TestCase
         $this->assertSame([200, 200, 0, true], $run['reapprove'], 'Approving a reply again sent a notice or moved the queue');
     }
 
-    # moderate goes to the site account of the operator: once per request for his replies, once for the first approval of a foreign comment,
-    # never for a second reply, a hide and show of a published reply or an approval again, and it is not taken back when the comment is deleted
+    # The award moderate goes to the site account of the operator: once per request for his replies, once for the first approval of a foreign comment
+    # It never goes for a second reply, a hide and show of a published reply or an approval again, and it is not taken back when the comment is deleted
     #[Test]
     public function theOperatorEarnsModerateOncePerFinishedAction(): void
     {
@@ -204,8 +201,8 @@ final class NodeSupportTest extends TestCase
         $this->assertSame([['ok' => false, 'code' => 3, 'msg' => 'Invalid support input: comon'], 2], $ext['comon'], 'A request lost its open comments');
     }
 
-    # The stage keeps its files and contracts: the closed factory names the class, the maps stay in config/node.php, the class holds no second list of values,
-    # the module adds the one operation, the comment owner locks the material before its row, and the controllers run no SQL of their own
+    # The stage keeps its files and contracts: the closed factory names the class, the maps stay in config/node.php, the class holds no second list of values
+    # The module adds the one operation, the comment owner locks the material before its row, and the controllers run no SQL of their own
     #[Test]
     public function theStageFilesKeepTheirContract(): void
     {

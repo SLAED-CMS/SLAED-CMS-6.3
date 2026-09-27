@@ -14,13 +14,7 @@ use RuntimeException;
 require_once BASE_DIR.'/core/classes/pdo.php';
 require_once BASE_DIR.'/core/classes/backup.php';
 
-/**
- * Batch 2 of docs/BACKUP-2026.md: everything the Backup class decides before it touches a database or
- * a real filesystem. The collaborator is a plain mock, so no connection is opened; the compressor
- * capability map is injected through the constructor seam, and the only files written are the scratch
- * artifacts the result contract has to measure. Snapshot behaviour, unbuffered cursors, fsync and
- * link() need real semantics and belong to batch 3, so nothing here asserts on them.
- */
+# Everything the Backup class decides before it touches a database or a real filesystem, against a plain mock with no connection opened
 final class BackupContractTest extends TestCase
 {
     private const SHIPPED = ['include' => '*', 'exclude' => 'ipb_*', 'schemaonly' => 'MRG_MyISAM,MERGE,HEAP,MEMORY', 'compress' => 'auto', 'keep' => '0',
@@ -35,7 +29,8 @@ final class BackupContractTest extends TestCase
         $this->temps = [];
     }
 
-    # Build the class under test with a stubbed database, an injected capability map and a scratch backup root
+    # Build the class under test with a stubbed database, a compressor capability map injected through the constructor seam and a scratch backup root
+    # Snapshot behaviour, unbuffered cursors, fsync and link() need real semantics, so they are asserted in BackupIntegrationTest and never here
     private function getBackup(array $sett = [], ?array $caps = null, string $name = 'slaed'): Backup
     {
         $db = $this->createStub(Database::class);
@@ -77,7 +72,7 @@ final class BackupContractTest extends TestCase
         return $this->getCall($back, 'checkGrantAccess', [$this->getCall($back, 'getGrantMatrix', [$lines]), $schema]);
     }
 
-    # Reserve one scratch file path and register it for cleanup
+    # Reserve one scratch file path and register it for cleanup, the only files written here being the artifacts the result contract has to measure
     private function getScratch(string $ext): string
     {
         $file = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_backup_'.bin2hex(random_bytes(6)).'.'.$ext;

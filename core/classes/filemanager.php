@@ -7,9 +7,6 @@
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
 # Reads one filesystem area below one server-chosen root: path canonicalization, the path policy, the descriptor and the capabilities (docs/FILE-MANAGER-CONCEPT-2026.md)
-# The client never names a physical root and never names an absolute path; it passes a path relative to the context it already received, and everything else is decided here
-# Of the whole file system only the body of one source file is written here, and only through setFileBody(): every other method reads, so a wrong answer costs a refusal
-# The dependency runs one way, Upload -> FileManager, so nothing in this file knows the upload service exists
 class FileManager {
     public const MODES = ['uploads', 'editor', 'system'];
     # Every capability name a context answers, so both screens read one shape instead of guessing which keys their mode carries
@@ -44,6 +41,7 @@ class FileManager {
     # Builds one context over the root the server chose; an unknown mode or an unresolvable root leaves it closed, which is what makes a miswired route refuse instead of browse
     # An empty root is refused before it is resolved, because realpath() answers the working directory for one and would open the whole site below a place that is not configured
     # The flags carry the decisions the route already made with the module rule and checkUploadModer(), because the upload rule stays the only place a permission is computed
+    # The client never names a physical root or an absolute path; it passes a path relative to the context it already received, and everything else is decided here
     public function __construct(string $mode, string $root, array $flags = []) {
         $path = ($root !== '' && in_array($mode, self::MODES, true)) ? realpath($root) : false;
         if ($path === false) return;
@@ -161,6 +159,7 @@ class FileManager {
     # Comparing the version beside the lock protects against nothing: two writers read one version, both believe it current, both write, and the earlier edit is gone
     # A form submits its lines separated the way the browser spells them, so the new body takes the separator of the file on disk and a save never rewrites every line
     # The answer names its own failure, and a refused write leaves the file untouched: nothing is written before both versions are known to agree under the lock
+    # Of the whole file system only the body of one source file is written here, and only through this method: every other method reads, so a wrong answer costs a refusal
     public function setFileBody(string $path, string $text, string $ver): array {
         $pair = $this->getPathPair($path);
         $shut = ['ok' => false, 'error' => 'closed', 'version' => ''];
@@ -295,6 +294,7 @@ class FileManager {
     }
 
     # Answers whether one name follows the managed format the upload service publishes under, which tells a file this project stored apart from one that arrived otherwise
+    # The dependency runs one way, Upload -> FileManager, so nothing in this file knows the upload service exists
     public static function checkFileName(string $file): bool {
         return preg_match(self::NAMEPAT, basename(str_replace('\\', '/', $file))) === 1;
     }

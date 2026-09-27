@@ -61,8 +61,7 @@ final class ProbeSaveDb extends Database {
     }
 }
 
-# The database of a write that pauses once at the first statement carrying the match, so a parallel writer acts meanwhile: by default right after
-# a report decision locked its resource row, early right before the statement runs
+# The database of a write that pauses once at the first statement carrying the match, so a parallel writer acts meanwhile
 final class ProbeHoldDb extends Database {
 
     public ?Closure $hold = null;
@@ -70,6 +69,7 @@ final class ProbeHoldDb extends Database {
     public bool $early = false;
 
     # Run the statement and call the hold once around the first statement that carries the match, before it when early and after it otherwise
+    # By default the hold comes right after a report decision locked its resource row, and early means right before the statement runs
     public function getSqlQuery(string $query = '', array $params = []): PDOStatement|false {
         $hold = ($this->hold !== null && str_contains($query, $this->match)) ? $this->hold : null;
         if ($hold !== null) $this->hold = null;
@@ -433,6 +433,8 @@ function getProbeNodeConf(int $stale): array {
             'drift' => ['version' => 1] + $plain,
             'plain' => ['version' => 1] + $plain,
             'bare' => ['version' => 1] + $plain,
+            'late' => ['version' => 1, 'features' => getProbeFeatures(['submit']), 'assets' => ['shot' => ['title' => 'Shot', 'mode' => 'image', 'max' => 1, 'report' => true]]],
+            'latebad' => ['version' => 1, 'features' => ['submit' => 'yes'] + getProbeFeatures([])],
         ],
     ]];
 }
@@ -457,7 +459,7 @@ function addProbeConfig(string $dir, string $mode, array $args): void {
     setProbeFile($dir.'/fields.php', $data);
     $data = require BASE_DIR.'/config/uploads.php';
     $rules = require BASE_DIR.'/config/ratings.php';
-    foreach (['news', 'docs', 'files', 'off', 'bad', 'probe', 'stale', 'drift', 'plain'] as $name) {
+    foreach (['news', 'docs', 'files', 'off', 'bad', 'probe', 'stale', 'drift', 'plain', 'late', 'latebad'] as $name) {
         $data['uploads'][$name] = $data['uploads']['all'];
         $rules['ratings']['node.'.$name] = ['active' => '1', 'period' => '2592000', 'detail' => '1', 'guests' => '1'];
     }
@@ -620,10 +622,12 @@ PHPCODE;
 
 # Put a copy of the reader into scratch next to a copy of the extension factory whose closed map names the probe extension, and load the reader from there
 # The reader is copied byte for byte and the factory gains one key in its map line, so the probe reads with the shipped code and a test implementation
+# The shipped sync extension is copied beside the factory as well, because the copy loads the file of a key from its own directory
 function addProbeReader(string $dir): array {
     $real = BASE_DIR.'/core/classes/node';
     if (!is_dir($dir.'/ext')) mkdir($dir.'/ext', 0777, true);
     copy($real.'/query.php', $dir.'/query.php');
+    copy($real.'/ext/sync.php', $dir.'/ext/sync.php');
     $code = (string)file_get_contents($real.'/ext/load.php');
     $map = str_replace('$map = [', '$map = [\'probe\' => [\'probe.php\', \'ProbeExtension\'], ', $code);
     file_put_contents($dir.'/ext/load.php', $map);
@@ -673,7 +677,7 @@ function getProbeCost(Closure $fn): array {
 
 # The ids of a list of materials or targets
 function getProbeIds(array $list): array {
-    return array_values(array_map(fn($v) => $v->id, $list));
+    return array_values(array_map(fn(Node|NodeTarget $v): int => $v->id, $list));
 }
 
 # Every page of the selection of a reader, ten materials a page, with the count the reader gives for the same selection
@@ -694,7 +698,7 @@ function getProbeNode(?Node $node): ?array {
     $out['comon'] = $node->comon->name;
     $out['status'] = $node->status->name;
     foreach (['rels', 'assets'] as $key) {
-        if ($node->$key !== null) $out[$key] = array_map(fn($v) => ['class' => get_class($v)] + get_object_vars($v), $node->$key);
+        if ($node->$key !== null) $out[$key] = array_map(fn(NodeRelation|NodeAsset $v): array => ['class' => get_class($v)] + get_object_vars($v), $node->$key);
     }
     return $out;
 }
@@ -719,10 +723,10 @@ function getProbeTypes(): array {
     $query = getProbeQuery('guest');
     $out = ['guest' => []];
     foreach (['news', 'docs', 'files', 'off', 'bad', 'ghost', 'probe', 'plain', 'bare', 'Bad-Name', 'nosuch'] as $name) {
-        [$type, $num] = getProbeCost(fn() => $query->getNodeType($name));
+        [$type, $num] = getProbeCost(fn(): ?NodeType => $query->getNodeType($name));
         $out['guest'][$name] = ['found' => $type !== null, 'sql' => $num];
     }
-    [$again, $num] = getProbeCost(fn() => $query->getNodeType('news'));
+    [$again, $num] = getProbeCost(fn(): ?NodeType => $query->getNodeType('news'));
     $out['same'] = $again === $query->getNodeType('news');
     $out['againsql'] = $num;
     $out['news'] = getProbeType($again);
@@ -732,9 +736,15 @@ function getProbeTypes(): array {
     $out['lists'] = [];
     foreach (['guest', 'moder', 'boss', 'root'] as $who) {
         $query = getProbeQuery($who);
-        [$list, $num] = getProbeCost(fn() => $query->getNodeTypeList());
-        [$off, $after] = getProbeCost(fn() => [$query->getNodeType('off'), $query->getNodeType('nosuch'), $query->getNodeType('news')]);
-        $out['lists'][$who] = ['names' => array_map(fn($v) => $v->name, $list), 'sql' => $num, 'off' => $off[0] !== null, 'after' => $after, 'same' => $off[2] === $list[0]];
+        [$list, $num] = getProbeCost(fn(): array => $query->getNodeTypeList());
+        [$off, $after] = getProbeCost(fn(): array => [$query->getNodeType('off'), $query->getNodeType('nosuch'), $query->getNodeType('news')]);
+        $out['lists'][$who] = [
+            'names' => array_map(fn(NodeType $v): string => $v->name, $list),
+            'sql' => $num,
+            'off' => $off[0] !== null,
+            'after' => $after,
+            'same' => $off[2] === $list[0],
+        ];
     }
     $out['log'] = getProbeLog();
     $out['conf'] = $hash === sha1(serialize($GLOBALS['conf']));
@@ -750,8 +760,8 @@ function getProbeStale(PDO $pdo): array {
     setProbeFile(CONFIG_DIR.'/node.php', getProbeNodeConf(2));
     if (is_file(CONFIG_DIR.'/local.php')) unlink(CONFIG_DIR.'/local.php');
     $query = getProbeQuery('guest');
-    [$stale, $one] = getProbeCost(fn() => $query->getNodeType('stale'));
-    [$drift, $two] = getProbeCost(fn() => $query->getNodeType('drift'));
+    [$stale, $one] = getProbeCost(fn(): ?NodeType => $query->getNodeType('stale'));
+    [$drift, $two] = getProbeCost(fn(): ?NodeType => $query->getNodeType('drift'));
     $out = ['stale' => $stale?->version, 'stalesql' => $one, 'drift' => $drift !== null, 'driftsql' => $two, 'conf' => $hash === sha1(serialize($GLOBALS['conf'])),
         'global' => $GLOBALS['conf']['node']['types']['stale']['version'], 'log' => getProbeLog()];
     $pdo->exec('DELETE FROM '.$pre.'node_types WHERE id IN (8, 9)');
@@ -768,7 +778,7 @@ function getProbeSettings(): array {
     $role = getProbeRole('_LINK', 'link', ['file'], 1, 1, true, true, 30);
     $out = ['good' => [], 'bad' => []];
     foreach (['news' => ['', []], 'docs' => ['', []], 'files' => ['', $fields], 'plain' => ['', []], 'probe' => ['probe', []]] as $name => [$ext, $defs]) {
-        $out['good'][$name] = getProbeCall(fn() => $query->filterNodeSettings($ext, $strip($types[$name]), $defs));
+        $out['good'][$name] = getProbeCall(fn(): array => $query->filterNodeSettings($ext, $strip($types[$name]), $defs));
     }
     $set = fn(array $path, mixed $val): array => getProbeSet($news, $path, $val);
     $cases = [
@@ -783,6 +793,8 @@ function getProbeSettings(): array {
         'show' => [$set(['list', 'show'], ['colour']), ''],
         'listkey' => [$set(['list', 'page'], 1), ''],
         'view' => [$set(['view', 'mode'], '../x'), ''],
+        'viewmode' => [$set(['view', 'mode'], 'gallery'), ''],
+        'viewsupport' => [$set(['view', 'mode'], 'support'), ''],
         'form' => [$set(['form'], ['x' => 1]), ''],
         'features' => [['features' => array_diff_key($news['features'], ['tree' => true])] + $news, ''],
         'feature' => [$set(['features', 'comments'], '1'), ''],
@@ -808,8 +820,8 @@ function getProbeSettings(): array {
         'extconf' => [getProbeSet($strip($types['probe']), ['ext', 'own'], 'yes'), 'probe'],
         'extunknown' => [$news, 'ghost'],
     ];
-    foreach ($cases as $name => [$data, $ext]) $out['bad'][$name] = getProbeCall(fn() => $query->filterNodeSettings($ext, $data, []));
-    $out['bad']['reserved'] = getProbeCall(fn() => $query->filterNodeSettings('', $news, ['version' => $fields['release']]));
+    foreach ($cases as $name => [$data, $ext]) $out['bad'][$name] = getProbeCall(fn(): array => $query->filterNodeSettings($ext, $data, []));
+    $out['bad']['reserved'] = getProbeCall(fn(): array => $query->filterNodeSettings('', $news, ['version' => $fields['release']]));
     $out['bad']['nonode'] = getProbeCall(function () use ($query, $news) {
         $keep = $GLOBALS['conf']['node'];
         unset($GLOBALS['conf']['node']);
@@ -819,7 +831,7 @@ function getProbeSettings(): array {
             $GLOBALS['conf']['node'] = $keep;
         }
     });
-    $out['link'] = getProbeCall(fn() => $query->filterNodeSettings('', $set(['assets', 'link'], $role), []));
+    $out['link'] = getProbeCall(fn(): array => $query->filterNodeSettings('', $set(['assets', 'link'], $role), []));
     return $out;
 }
 
@@ -839,8 +851,8 @@ function getProbeRights(): array {
         sort($all['ids']);
         $query = getProbeQuery($who);
         $query->setNodeType($query->getNodeType('news'));
-        [, $first] = getProbeCost(fn() => $query->getNodeCount());
-        [, $second] = getProbeCost(fn() => $query->getNodeCount());
+        [, $first] = getProbeCost(fn(): int => $query->getNodeCount());
+        [, $second] = getProbeCost(fn(): int => $query->getNodeCount());
         $out[$who] = $all + ['first' => $first, 'second' => $second];
     }
     return $out;
@@ -859,12 +871,12 @@ function getProbeCategory(PDO $pdo): array {
     $out['double'] = getProbeAll($query->setNodeType($query->getNodeType('news'))->setNodeCategory(1));
     $pdo->exec('DELETE FROM '.PREFIX_DB.'_node_categories WHERE nid = 102 AND cid = 1');
     $query = getProbeQuery('guest');
-    $out['plain'] = getProbeCall(fn() => $query->setNodeType($query->getNodeType('plain'))->setNodeCategory(1)->getNodeList());
-    $out['zero'] = getProbeCall(fn() => $query->setNodeCategory(0));
+    $out['plain'] = getProbeCall(fn(): array => $query->setNodeType($query->getNodeType('plain'))->setNodeCategory(1)->getNodeList());
+    $out['zero'] = getProbeCall(fn(): NodeQuery => $query->setNodeCategory(0));
     return $out;
 }
 
-# The language of the categories narrows the lists alone: direct reads, targets and sitemap rows of another language stay reachable
+# The language of the categories narrows the lists and the sitemap: direct reads and targets of another language stay reachable
 function getProbeLanguage(): array {
     $out = [];
     foreach (['ru', 'en'] as $lang) {
@@ -888,8 +900,8 @@ function getProbeItems(): array {
     foreach (['guest', 'clara', 'moder', 'root'] as $who) {
         $query = getProbeQuery($who);
         $news = $query->getNodeType('news');
-        $out['found'][$who] = array_values(array_filter(range(101, 121), fn($v) => $query->getNode($v, $news) !== null));
-        $out['content'][$who] = array_values(array_filter(range(101, 121), fn($v) => $query->getNodeContent($v, $news) !== null));
+        $out['found'][$who] = array_values(array_filter(range(101, 121), fn(int $v): bool => $query->getNode($v, $news) !== null));
+        $out['content'][$who] = array_values(array_filter(range(101, 121), fn(int $v): bool => $query->getNodeContent($v, $news) !== null));
     }
     $query = getProbeQuery('guest');
     $news = $query->getNodeType('news');
@@ -901,7 +913,7 @@ function getProbeItems(): array {
     $out['files301'] = getProbeNode($query->getNode(301, $files));
     $out['files303'] = getProbeNode($query->getNode(303, $files))['fields'] ?? 'missing';
     $out['foreign'] = [$query->getNode(201, $news) !== null, $query->getNode(101, $files) !== null, $query->getNode(999, $news) !== null];
-    [$zero, $num] = getProbeCost(fn() => $query->getNode(0, $news));
+    [$zero, $num] = getProbeCost(fn(): ?Node => $query->getNode(0, $news));
     $out['zero'] = [$zero !== null, $num];
     $query = getProbeQuery('moder');
     $out['moder101'] = getProbeNode($query->getNode(101, $query->getNodeType('news')));
@@ -909,9 +921,9 @@ function getProbeItems(): array {
     $off = $root->getNodeType('off');
     $out['off'] = [getProbeQuery('guest')->getNode(401, $off) !== null, $root->getNode(401, $off) !== null, getProbeQuery('boss')->getNode(401, $off) !== null];
     $query = getProbeQuery('guest');
-    [, $out['fullsql']] = getProbeCost(fn() => $query->getNode(101, $query->getNodeType('news')));
+    [, $out['fullsql']] = getProbeCost(fn(): ?Node => $query->getNode(101, $query->getNodeType('news')));
     $query = getProbeQuery('guest');
-    [, $out['contentsql']] = getProbeCost(fn() => $query->getNodeContent(101, $query->getNodeType('news')));
+    [, $out['contentsql']] = getProbeCost(fn(): ?Node => $query->getNodeContent(101, $query->getNodeType('news')));
     return $out;
 }
 
@@ -925,7 +937,7 @@ function getProbeAssets(): array {
         $out[$who.'-'.$id.'-'.$name] = $asset === null ? null : ['class' => get_class($asset)] + get_object_vars($asset);
     }
     $query = getProbeQuery('guest');
-    [, $out['sql']] = getProbeCost(fn() => $query->getNodeAsset(1, $query->getNodeType('files')));
+    [, $out['sql']] = getProbeCost(fn(): ?NodeAsset => $query->getNodeAsset(1, $query->getNodeType('files')));
     return $out;
 }
 
@@ -945,19 +957,19 @@ function getProbeOrder(): array {
     }
     $query = getProbeQuery('guest');
     $out['docs'] = array_map($row, $query->setNodeType($query->getNodeType('docs'))->getNodeList());
-    $out['docsrating'] = getProbeCall(fn() => $query->setNodeOrder('rating')->getNodeList());
-    $out['newkey'] = getProbeCall(fn() => getProbeQuery('guest')->setNodeOrder('new'));
-    $out['updir'] = getProbeCall(fn() => getProbeQuery('guest')->setNodeOrder('title', 'up'));
+    $out['docsrating'] = getProbeCall(fn(): array => $query->setNodeOrder('rating')->getNodeList());
+    $out['newkey'] = getProbeCall(fn(): NodeQuery => getProbeQuery('guest')->setNodeOrder('new'));
+    $out['updir'] = getProbeCall(fn(): NodeQuery => getProbeQuery('guest')->setNodeOrder('title', 'up'));
     $query = getProbeQuery('guest');
     $plain = $query->getNodeType('plain');
     $out['plain2'] = getProbeIds($query->setNodeType($plain)->setNodePage(2, 10)->getNodeList());
     $out['plaindefault'] = getProbeIds(getProbeQuery('guest')->setNodeType($plain)->getNodeList());
     $out['plain4'] = getProbeIds($query->setNodePage(4, 10)->getNodeList());
     $out['plaincount'] = $query->getNodeCount();
-    $out['plainsize'] = getProbeCall(fn() => getProbeQuery('guest')->setNodeType($plain)->setNodePage(1, 11)->getNodeList());
-    $out['page0'] = getProbeCall(fn() => getProbeQuery('guest')->setNodePage(0, 10));
-    $out['size0'] = getProbeCall(fn() => getProbeQuery('guest')->setNodePage(1, 0));
-    $out['notype'] = getProbeCall(fn() => getProbeQuery('guest')->getNodeList());
+    $out['plainsize'] = getProbeCall(fn(): array => getProbeQuery('guest')->setNodeType($plain)->setNodePage(1, 11)->getNodeList());
+    $out['page0'] = getProbeCall(fn(): NodeQuery => getProbeQuery('guest')->setNodePage(0, 10));
+    $out['size0'] = getProbeCall(fn(): NodeQuery => getProbeQuery('guest')->setNodePage(1, 0));
+    $out['notype'] = getProbeCall(fn(): array => getProbeQuery('guest')->getNodeList());
     return $out;
 }
 
@@ -971,27 +983,31 @@ function getProbeFilters(): array {
             return getProbeAll($query);
         });
     };
-    foreach (['a', 'A', '9', 'ä'] as $one) $run('guest', 'letter-'.$one, fn($q) => $q->setNodeType($q->getNodeType('docs'))->setNodeLetter($one));
-    $run('guest', 'letter-news', fn($q) => $q->setNodeType($q->getNodeType('news'))->setNodeLetter('a'));
-    foreach (['%', 'ab', ' '] as $one) $out['letterbad-'.$one] = getProbeCall(fn() => getProbeQuery('guest')->setNodeLetter($one));
+    foreach (['a', 'A', '9', 'ä'] as $one) $run('guest', 'letter-'.$one, fn(NodeQuery $q): NodeQuery => $q->setNodeType($q->getNodeType('docs'))->setNodeLetter($one));
+    $run('guest', 'letter-news', fn(NodeQuery $q): NodeQuery => $q->setNodeType($q->getNodeType('news'))->setNodeLetter('a'));
+    foreach (['%', 'ab', ' '] as $one) $out['letterbad-'.$one] = getProbeCall(fn(): NodeQuery => getProbeQuery('guest')->setNodeLetter($one));
     foreach (['100%', '_sale', '%', 'Open', 'OPEN', '50%_off', 'nothing here'] as $one) {
-        $run('guest', 'search-'.$one, fn($q) => $q->setNodeType($q->getNodeType('news'))->setNodeSearch($one));
+        $run('guest', 'search-'.$one, fn(NodeQuery $q): NodeQuery => $q->setNodeType($q->getNodeType('news'))->setNodeSearch($one));
     }
-    $out['searchlong'] = getProbeCall(fn() => getProbeQuery('guest')->setNodeSearch(str_repeat('я', 256)));
-    $out['searchmax'] = getProbeCall(fn() => getProbeQuery('guest')->setNodeSearch(str_repeat('я', 255)) instanceof NodeQuery);
-    $run('guest', 'author-3', fn($q) => $q->setNodeType($q->getNodeType('news'))->setNodeAuthor(3));
-    $out['author0'] = getProbeCall(fn() => getProbeQuery('guest')->setNodeAuthor(0));
+    $out['searchlong'] = getProbeCall(fn(): NodeQuery => getProbeQuery('guest')->setNodeSearch(str_repeat('я', 256)));
+    $out['searchmax'] = getProbeCall(fn(): bool => getProbeQuery('guest')->setNodeSearch(str_repeat('я', 255)) instanceof NodeQuery);
+    $run('guest', 'author-3', fn(NodeQuery $q): NodeQuery => $q->setNodeType($q->getNodeType('news'))->setNodeAuthor(3));
+    $out['author0'] = getProbeCall(fn(): NodeQuery => getProbeQuery('guest')->setNodeAuthor(0));
     foreach (['guest', 'moder'] as $who) {
-        foreach (NodeStatus::cases() as $state) $run($who, 'status-'.$who.'-'.$state->name, fn($q) => $q->setNodeType($q->getNodeType('news'))->setNodeStatus($state));
+        foreach (NodeStatus::cases() as $state) $run(
+            $who,
+            'status-'.$who.'-'.$state->name,
+            fn(NodeQuery $q): NodeQuery => $q->setNodeType($q->getNodeType('news'))->setNodeStatus($state)
+        );
     }
     $ranges = [['2026-01-02 10:00:00', '2026-01-04 10:00:00'], ['2026-01-19 10:00:00', null], [null, '2026-01-02 10:00:00']];
-    foreach ($ranges as $i => [$from, $until]) $run('root', 'range-'.$i, fn($q) => $q->setNodeType($q->getNodeType('news'))->setNodePublished($from, $until));
+    foreach ($ranges as $i => [$from, $until]) $run('root', 'range-'.$i, fn(NodeQuery $q): NodeQuery => $q->setNodeType($q->getNodeType('news'))->setNodePublished($from, $until));
     $bad = [[null, null], ['2026-02-30 10:00:00', null], ['2026-01-04 10:00:00', '2026-01-04 10:00:00'], ['2026-01-05 10:00:00', '2026-01-04 10:00:00'], ['2026-01-04', null],
         [null, '2026-01-04 24:00:00']];
-    foreach ($bad as $i => [$from, $until]) $out['rangebad-'.$i] = getProbeCall(fn() => getProbeQuery('root')->setNodePublished($from, $until));
-    $run('guest', 'home', fn($q) => $q->setNodeType($q->getNodeType('news'))->setNodeHome());
-    $run('guest', 'homeoff', fn($q) => $q->setNodeType($q->getNodeType('news'))->setNodeHome()->setNodeHome(false));
-    $run('guest', 'home-docs', fn($q) => $q->setNodeType($q->getNodeType('docs'))->setNodeHome());
+    foreach ($bad as $i => [$from, $until]) $out['rangebad-'.$i] = getProbeCall(fn(): NodeQuery => getProbeQuery('root')->setNodePublished($from, $until));
+    $run('guest', 'home', fn(NodeQuery $q): NodeQuery => $q->setNodeType($q->getNodeType('news'))->setNodeHome());
+    $run('guest', 'homeoff', fn(NodeQuery $q): NodeQuery => $q->setNodeType($q->getNodeType('news'))->setNodeHome()->setNodeHome(false));
+    $run('guest', 'home-docs', fn(NodeQuery $q): NodeQuery => $q->setNodeType($q->getNodeType('docs'))->setNodeHome());
     return $out;
 }
 
@@ -1003,31 +1019,34 @@ function getProbeMixed(): array {
     $files = $query->getNodeType('files');
     $mixed = $query->setNodeTypes([$news, $files]);
     $out['mixed'] = getProbeAll($mixed);
-    $out['mixedrows'] = array_map(fn($v) => [$v->id, $v->pinned, $v->pubdate], getProbeQuery('guest')->setNodeTypes([$news, $files])->setNodePage(1, 10)->getNodeList());
+    $out['mixedrows'] = array_map(
+        fn(Node $v): array => [$v->id, $v->pinned, $v->pubdate],
+        getProbeQuery('guest')->setNodeTypes([$news, $files])->setNodePage(1, 10)->getNodeList()
+    );
     $out['mixedtitle'] = getProbeIds(getProbeQuery('guest')->setNodeTypes([$news, $files])->setNodeOrder('title', 'asc')->setNodePage(1, 10)->getNodeList());
-    $out['mixeddocs'] = getProbeCall(fn() => getProbeQuery('guest')->setNodeTypes([$news, $query->getNodeType('docs')])->setNodeOrder('rating')->getNodeList());
-    $out['empty'] = getProbeCall(fn() => getProbeQuery('guest')->setNodeTypes([]));
-    $out['twice'] = getProbeCall(fn() => getProbeQuery('guest')->setNodeTypes([$news, $news]));
-    $out['string'] = getProbeCall(fn() => getProbeQuery('guest')->setNodeTypes([$news, 'files']));
+    $out['mixeddocs'] = getProbeCall(fn(): array => getProbeQuery('guest')->setNodeTypes([$news, $query->getNodeType('docs')])->setNodeOrder('rating')->getNodeList());
+    $out['empty'] = getProbeCall(fn(): NodeQuery => getProbeQuery('guest')->setNodeTypes([]));
+    $out['twice'] = getProbeCall(fn(): NodeQuery => getProbeQuery('guest')->setNodeTypes([$news, $news]));
+    $out['string'] = getProbeCall(fn(): NodeQuery => getProbeQuery('guest')->setNodeTypes([$news, 'files']));
     $off = getProbeQuery('root')->getNodeType('off');
-    $out['offguest'] = getProbeCall(fn() => getProbeQuery('guest')->setNodeTypes([$news, $off]));
-    $out['offtype'] = getProbeCall(fn() => getProbeQuery('guest')->setNodeType($off));
-    $out['offroot'] = getProbeCall(fn() => getProbeIds(getProbeQuery('root')->setNodeType($off)->getNodeList()));
+    $out['offguest'] = getProbeCall(fn(): NodeQuery => getProbeQuery('guest')->setNodeTypes([$news, $off]));
+    $out['offtype'] = getProbeCall(fn(): NodeQuery => getProbeQuery('guest')->setNodeType($off));
+    $out['offroot'] = getProbeCall(fn(): array => getProbeIds(getProbeQuery('root')->setNodeType($off)->getNodeList()));
     $probe = $query->getNodeType('probe');
     $ext = new ProbeExtension($GLOBALS['pdb'], getProbeContext('anna'));
     foreach (['anna', 'boris', 'guest'] as $who) {
         $own = new ProbeExtension($GLOBALS['pdb'], getProbeContext($who));
-        $out['probe-'.$who] = getProbeCall(fn() => getProbeAll(getProbeQuery($who)->setNodeType($probe)->setNodeExtension($own)));
+        $out['probe-'.$who] = getProbeCall(fn(): array => getProbeAll(getProbeQuery($who)->setNodeType($probe)->setNodeExtension($own)));
     }
-    $out['probenone'] = getProbeCall(fn() => getProbeQuery('anna')->setNodeType($probe)->getNodeList());
+    $out['probenone'] = getProbeCall(fn(): array => getProbeQuery('anna')->setNodeType($probe)->getNodeList());
     $other = new ProbeOther($GLOBALS['pdb'], getProbeContext('anna'));
-    $out['probeother'] = getProbeCall(fn() => getProbeQuery('anna')->setNodeType($probe)->setNodeExtension($other)->getNodeList());
-    $out['newsext'] = getProbeCall(fn() => getProbeQuery('anna')->setNodeType($news)->setNodeExtension($ext)->getNodeList());
-    $out['probemix'] = getProbeCall(fn() => getProbeAll(getProbeQuery('anna')->setNodeTypes([$news, $probe])));
-    $out['probemixext'] = getProbeCall(fn() => getProbeQuery('anna')->setNodeTypes([$news, $probe])->setNodeExtension($ext)->getNodeList());
+    $out['probeother'] = getProbeCall(fn(): array => getProbeQuery('anna')->setNodeType($probe)->setNodeExtension($other)->getNodeList());
+    $out['newsext'] = getProbeCall(fn(): array => getProbeQuery('anna')->setNodeType($news)->setNodeExtension($ext)->getNodeList());
+    $out['probemix'] = getProbeCall(fn(): array => getProbeAll(getProbeQuery('anna')->setNodeTypes([$news, $probe])));
+    $out['probemixext'] = getProbeCall(fn(): array => getProbeQuery('anna')->setNodeTypes([$news, $probe])->setNodeExtension($ext)->getNodeList());
     $out['probeitem'] = [getProbeQuery('anna')->setNodeExtension($ext)->getNode(701, $probe) !== null,
         getProbeQuery('boris')->setNodeExtension(new ProbeExtension($GLOBALS['pdb'], getProbeContext('boris')))->getNode(701, $probe) !== null];
-    $out['probeitemnone'] = getProbeCall(fn() => getProbeQuery('anna')->getNode(701, $probe));
+    $out['probeitemnone'] = getProbeCall(fn(): ?Node => getProbeQuery('anna')->getNode(701, $probe));
     $out['probetarget'] = array_keys(getProbeQuery('anna')->getNodeTargetList([701 => 'probe', 702 => 'probe', 101 => 'news']));
     return $out;
 }
@@ -1038,8 +1057,8 @@ function getProbeTargets(): array {
     $refs = [120 => 'news', 301 => 'files', 108 => 'news', 201 => 'news', 103 => 'news', 101 => 'news', 999 => 'news', 401 => 'off', 202 => 'docs', 105 => 'news', 106 => 'news'];
     foreach (['guest', 'clara', 'moder', 'root'] as $who) {
         $query = getProbeQuery($who);
-        [$list, $num] = getProbeCost(fn() => $query->getNodeTargetList($refs));
-        [, $again] = getProbeCost(fn() => $query->getNodeTargetList($refs));
+        [$list, $num] = getProbeCost(fn(): array => $query->getNodeTargetList($refs));
+        [, $again] = getProbeCost(fn(): array => $query->getNodeTargetList($refs));
         $out[$who] = ['ids' => array_keys($list), 'sql' => $num, 'again' => $again];
     }
     $query = getProbeQuery('guest');
@@ -1052,16 +1071,18 @@ function getProbeTargets(): array {
         return count($list) === 2 && $list[0]->type === $list[1]->type;
     })();
     $out['wrongtype'] = $query->getNodeTarget('docs', 101) !== null;
-    [$empty, $num] = getProbeCost(fn() => getProbeQuery('guest')->getNodeTargetList([]));
+    [$empty, $num] = getProbeCost(fn(): array => getProbeQuery('guest')->getNodeTargetList([]));
     $out['empty'] = [$empty, $num];
     $big = array_fill_keys(range(1001, 1500), 'plain');
     $query = getProbeQuery('guest');
-    [$list, $num] = getProbeCost(fn() => $query->getNodeTargetList($big));
+    [$list, $num] = getProbeCost(fn(): array => $query->getNodeTargetList($big));
     $out['big'] = ['count' => count($list), 'sql' => $num];
     foreach (['zero' => [0 => 'news'], 'negative' => [-1 => 'news'], 'key' => ['x' => 'news'], 'upper' => [1 => 'News'], 'value' => [1 => 5],
         'many' => array_fill_keys(range(1, 501), 'plain'),
         'single' => null] as $name => $bad) {
-        $out['bad-'.$name] = getProbeCall(fn() => $bad === null ? getProbeQuery('guest')->getNodeTarget('news', 0) : getProbeQuery('guest')->getNodeTargetList($bad));
+        $out['bad-'.$name] = getProbeCall(fn(): NodeTarget|array|null => $bad === null
+            ? getProbeQuery('guest')->getNodeTarget('news', 0)
+            : getProbeQuery('guest')->getNodeTargetList($bad));
     }
     return $out;
 }
@@ -1073,13 +1094,13 @@ function getProbeTree(): array {
     $out = ['all' => $query->setNodeType($docs)->getNodeTree()];
     $out['batch'] = $query->getNodeTree(202, 2);
     $out['root'] = getProbeQuery('root')->setNodeType($docs)->getNodeTree();
-    $out['limit'] = getProbeCall(fn() => $query->getNodeTree(0, 501));
-    $out['after'] = getProbeCall(fn() => $query->getNodeTree(-1, 10));
-    $out['notree'] = getProbeCall(fn() => getProbeQuery('guest')->setNodeType($query->getNodeType('news'))->getNodeTree());
-    $out['notype'] = getProbeCall(fn() => getProbeQuery('guest')->getNodeTree());
+    $out['limit'] = getProbeCall(fn(): array => $query->getNodeTree(0, 501));
+    $out['after'] = getProbeCall(fn(): array => $query->getNodeTree(-1, 10));
+    $out['notree'] = getProbeCall(fn(): array => getProbeQuery('guest')->setNodeType($query->getNodeType('news'))->getNodeTree());
+    $out['notype'] = getProbeCall(fn(): array => getProbeQuery('guest')->getNodeTree());
     $query = getProbeQuery('guest');
     $query->setNodeType($docs);
-    [, $out['sql']] = getProbeCost(fn() => $query->getNodeTree());
+    [, $out['sql']] = getProbeCost(fn(): array => $query->getNodeTree());
     return $out;
 }
 
@@ -1094,13 +1115,13 @@ function getProbeSitemap(): array {
         $out['walk'] = array_merge($out['walk'], array_column($rows, 'id'));
         $after = end($rows)['id'];
     }
-    $out['limit'] = getProbeCall(fn() => $query->getNodeSitemap(0, 501));
-    $out['after'] = getProbeCall(fn() => $query->getNodeSitemap(-1, 10));
+    $out['limit'] = getProbeCall(fn(): array => $query->getNodeSitemap(0, 501));
+    $out['after'] = getProbeCall(fn(): array => $query->getNodeSitemap(-1, 10));
     return $out;
 }
 
 # The author numbers of a selection per type equal what its list reads, favorites count only for their own type and material, a mixed and a single selection agree
-# and one statement answers; the category counts of a type are read for its administrators alone
+# One statement answers them, and the category counts of a type are read for its administrators alone
 function getProbeAuthor(PDO $pdo): array {
     $favs = [[3, 101, 'news'], [4, 101, 'news'], [3, 104, 'news'], [3, 201, 'docs'], [3, 301, 'files'], [5, 101, 'forum'], [5, 201, 'news']];
     $st = $pdo->prepare('INSERT INTO '.PREFIX_DB.'_favorites (uid, fid, modul) VALUES (?, ?, ?)');
@@ -1108,7 +1129,7 @@ function getProbeAuthor(PDO $pdo): array {
     $out = [];
     foreach (['guest', 'root'] as $who) {
         $query = getProbeQuery($who);
-        $types = array_map(fn($v) => $query->getNodeType($v), ['news', 'docs', 'files']);
+        $types = array_map(fn(string $v): ?NodeType => $query->getNodeType($v), ['news', 'docs', 'files']);
         $want = [];
         $single = [];
         foreach ($types as $type) {
@@ -1127,20 +1148,20 @@ function getProbeAuthor(PDO $pdo): array {
                 }
                 if (count($list) < $size) break;
             }
-            $fav = count(array_filter($favs, fn($v) => $v[2] === $type->name && in_array($v[1], $ids, true)));
+            $fav = count(array_filter($favs, fn(array $v): bool => $v[2] === $type->name && in_array($v[1], $ids, true)));
             $want[$type->id] = ['num' => $num, 'score' => $score, 'ratings' => $rates, 'favs' => $fav];
             $single += getProbeQuery($who)->setNodeType($type)->setNodeAuthor(2)->setNodeStatus(NodeStatus::Published)->getNodeAuthorStat();
         }
         $mixed = getProbeQuery($who)->setNodeTypes($types)->setNodeAuthor(2)->setNodeStatus(NodeStatus::Published);
         $mixed->getNodeAuthorStat();
-        [$stat, $cost] = getProbeCost(fn() => $mixed->getNodeAuthorStat());
+        [$stat, $cost] = getProbeCost(fn(): array => $mixed->getNodeAuthorStat());
         ksort($want);
         ksort($single);
         ksort($stat);
         $out[$who] = ['want' => $want, 'mixed' => $stat, 'single' => $single, 'cost' => $cost];
     }
     $news = getProbeQuery('root')->getNodeType('news');
-    $out['noauthor'] = getProbeCall(fn() => getProbeQuery('guest')->setNodeType($news)->getNodeAuthorStat());
+    $out['noauthor'] = getProbeCall(fn(): array => getProbeQuery('guest')->setNodeType($news)->getNodeAuthorStat());
     $sql = 'SELECT cid, COUNT(*) FROM '.PREFIX_DB.'_nodes WHERE tid = 1 AND cid > 0 GROUP BY cid ORDER BY cid';
     $out['catwant'] = array_map('intval', $pdo->query($sql)->fetchAll(PDO::FETCH_KEY_PAIR));
     foreach (['root', 'boss', 'moder', 'anna', 'guest'] as $who) {
@@ -1151,7 +1172,7 @@ function getProbeAuthor(PDO $pdo): array {
         });
     }
     $files = getProbeQuery('root')->getNodeType('files');
-    $out['cat-moder-files'] = getProbeCall(fn() => getProbeQuery('moder')->getNodeCategoryCount($files));
+    $out['cat-moder-files'] = getProbeCall(fn(): array => getProbeQuery('moder')->getNodeCategoryCount($files));
     return $out;
 }
 
@@ -1165,12 +1186,12 @@ function getProbeDeadline(PDO $pdo): array {
         $query = getProbeQuery($who);
         $news = $query->getNodeType('news');
         $query->setNodeType($news);
-        [$out[$who], $out[$who.'sql']] = getProbeCost(fn() => $query->getNodeDeadline());
-        [, $out[$who.'again']] = getProbeCost(fn() => $query->getNodeDeadline());
+        [$out[$who], $out[$who.'sql']] = getProbeCost(fn(): ?int => $query->getNodeDeadline());
+        [, $out[$who.'again']] = getProbeCost(fn(): ?int => $query->getNodeDeadline());
     }
     $query = getProbeQuery('guest');
     $query->setNodeType($query->getNodeType('plain'));
-    [$out['plain'], $out['plainsql']] = getProbeCost(fn() => $query->getNodeDeadline());
+    [$out['plain'], $out['plainsql']] = getProbeCost(fn(): ?int => $query->getNodeDeadline());
     $query = getProbeQuery('guest');
     $out['category'] = $query->setNodeType($query->getNodeType('news'))->setNodeCategory(1)->getNodeDeadline();
     $query = getProbeQuery('guest');
@@ -1209,7 +1230,7 @@ function getProbeBudget(): array {
         });
     }
     $query = getProbeQuery('guest');
-    [, $out['targets']] = getProbeCost(fn() => $query->getNodeTargetList([101 => 'news', 301 => 'files', 201 => 'docs', 1001 => 'plain']));
+    [, $out['targets']] = getProbeCost(fn(): array => $query->getNodeTargetList([101 => 'news', 301 => 'files', 201 => 'docs', 1001 => 'plain']));
     $bare = [];
     foreach (['news', 'files'] as $name) {
         $query = getProbeQuery('root');
@@ -1218,8 +1239,23 @@ function getProbeBudget(): array {
             return $query->getNodeCount() ? $query->getNodeList() : [];
         });
     }
-    $out['bare'] = [count(array_filter($bare, fn($v) => $v->fields !== null || $v->cids !== null || $v->rels !== null || $v->assets !== null)),
+    $out['bare'] = [count(array_filter($bare, fn(Node $v): bool => $v->fields !== null || $v->cids !== null || $v->rels !== null || $v->assets !== null)),
         $bare[0]->cids ?? null, $bare[0]->rels ?? null, $bare[0]->assets ?? null];
+    return $out;
+}
+
+# A switch a later rule closed is read switched off with a log line, a malformed switch still fails its type, and the one validator of a write refuses the stored form
+function getProbeLate(PDO $pdo): array {
+    $pre = PREFIX_DB.'_';
+    $pdo->exec('INSERT INTO '.$pre.'node_types (id, name, title, intro, ext, active, sort, version) VALUES'
+        .' (12, \'late\', \'Late\', \'\', \'sync\', 1, 120, 1), (13, \'latebad\', \'Latebad\', \'\', \'\', 1, 130, 1)');
+    $query = getProbeQuery('guest');
+    $late = $query->getNodeType('late');
+    $sect = $GLOBALS['conf']['node']['types']['late'];
+    unset($sect['version']);
+    $out = ['late' => $late ? [$late->settings['features']['submit'], $late->settings['assets']['shot']['report']] : null, 'bad' => $query->getNodeType('latebad') !== null,
+        'write' => getProbeCall(fn(): array => $query->filterNodeSettings('sync', $sect, []))];
+    $pdo->exec('DELETE FROM '.$pre.'node_types WHERE id IN (12, 13)');
     return $out;
 }
 
@@ -1236,6 +1272,7 @@ function getProbeQueryRuns(): array {
     $GLOBALS['pdb'] = new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $name);
     $out['types'] = getProbeTypes();
     $out['stale'] = getProbeStale($pdo);
+    $out['late'] = getProbeLate($pdo);
     $out['settings'] = getProbeSettings();
     $out['rights'] = getProbeRights();
     $out['category'] = getProbeCategory($pdo);
@@ -1272,8 +1309,8 @@ function deleteProbeTree(string $dir): void {
     rmdir($dir);
 }
 
-# Put the service run on clean scratch: the configuration of the stand with the empty Node registry of the release - the types the stand registers leave all four
-# shared areas - the write window off, since every material of the run comes from one address, and an upload root with the guard of the release
+# Put the service run on clean scratch: the configuration of the stand with the empty Node registry of the release, so the stand types leave all four shared areas
+# The write window is off, since every material of the run comes from one address, and the upload root carries the guard of the release
 # Three prepared directories: files holds guards alone, pages keeps an old file inside thumb, and Faq differs from a type name only in case
 function addProbeScratch(string $work): void {
     foreach (['svc', 'svcbackup', 'svccache', 'svcuploads', 'logs'] as $dir) deleteProbeTree($work.'/'.$dir);
@@ -1404,12 +1441,12 @@ function getProbeSvcRights(): array {
     foreach (['guest', 'anna', 'moder'] as $who) {
         $srv = getProbeService($who);
         $out[$who] = [
-            'add' => getProbeCall(fn() => $srv->addNodeType('denied', getProbeInput())),
-            'update' => getProbeCall(fn() => $srv->updateNodeType('news', getProbeInput(), 1)),
-            'status' => getProbeCall(fn() => $srv->updateNodeTypeStatus('news', true, 1)),
-            'delete' => getProbeCall(fn() => $srv->deleteNodeType('news', 1)),
-            'import' => getProbeCall(fn() => $srv->addNodeTypeImport('{}')),
-            'export' => getProbeCall(fn() => getProbeQuery($who)->getNodeTypeExport('news')),
+            'add' => getProbeCall(fn(): NodeType => $srv->addNodeType('denied', getProbeInput())),
+            'update' => getProbeCall(fn(): NodeType => $srv->updateNodeType('news', getProbeInput(), 1)),
+            'status' => getProbeCall(fn(): NodeType => $srv->updateNodeTypeStatus('news', true, 1)),
+            'delete' => getProbeCall(fn(): null => $srv->deleteNodeType('news', 1)),
+            'import' => getProbeCall(fn(): NodeType => $srv->addNodeTypeImport('{}')),
+            'export' => getProbeCall(fn(): string => getProbeQuery($who)->getNodeTypeExport('news')),
         ];
     }
     $out['same'] = $before === getProbeState();
@@ -1423,12 +1460,12 @@ function getProbeSvcNames(): array {
         'pages'];
     $before = getProbeState();
     $out = ['bad' => [], 'good' => [], 'gone' => [], 'trace' => []];
-    foreach ($bad as $name) $out['bad'][$name] = getProbeCall(fn() => $srv->addNodeType($name, getProbeInput()));
+    foreach ($bad as $name) $out['bad'][$name] = getProbeCall(fn(): NodeType => $srv->addNodeType($name, getProbeInput()));
     $out['same'] = $before === getProbeState();
     $out['pages'] = getProbeWalk(UPLOADS_DIR.'/pages');
     foreach (['x', 'a'.str_repeat('b', 19)] as $name) {
-        $out['good'][$name] = getProbeCall(fn() => $srv->addNodeType($name, getProbeInput())->version);
-        $out['gone'][$name] = getProbeCall(fn() => $srv->deleteNodeType($name, 1));
+        $out['good'][$name] = getProbeCall(fn(): int => $srv->addNodeType($name, getProbeInput())->version);
+        $out['gone'][$name] = getProbeCall(fn(): null => $srv->deleteNodeType($name, 1));
         $out['trace'][$name] = getProbeTrace($name);
     }
     return $out;
@@ -1439,15 +1476,15 @@ function getProbeSvcAdd(): array {
     $srv = getProbeService('boss');
     $pro = getProbeProfiles();
     $epoch = Cache::getEpoch();
-    $out = ['news' => getProbeCall(fn() => getProbeType($srv->addNodeType('news', getProbeInput(['title' => 'News', 'settings' => $pro['news']]))))];
+    $out = ['news' => getProbeCall(fn(): ?array => getProbeType($srv->addNodeType('news', getProbeInput(['title' => 'News', 'settings' => $pro['news']]))))];
     $out['epoch'] = Cache::getEpoch() > $epoch;
     $out['trace'] = getProbeTrace('news');
     $out['state'] = getProbeState();
-    $out['files'] = getProbeCall(fn() => getProbeType($srv->addNodeType('files', getProbeInput(['title' => '_DOWNLOAD', 'sort' => 30, 'settings' => $pro['files'],
+    $out['files'] = getProbeCall(fn(): ?array => getProbeType($srv->addNodeType('files', getProbeInput(['title' => '_DOWNLOAD', 'sort' => 30, 'settings' => $pro['files'],
         'fields' => getProbeFields()]))));
     $out['filestrace'] = getProbeTrace('files');
-    $out['docs'] = getProbeCall(fn() => getProbeType($srv->addNodeType('docs', getProbeInput(['title' => 'Docs', 'sort' => 20, 'settings' => $pro['docs']]))));
-    $out['again'] = getProbeCall(fn() => $srv->addNodeType('news', getProbeInput()));
+    $out['docs'] = getProbeCall(fn(): ?array => getProbeType($srv->addNodeType('docs', getProbeInput(['title' => 'Docs', 'sort' => 20, 'settings' => $pro['docs']]))));
+    $out['again'] = getProbeCall(fn(): NodeType => $srv->addNodeType('news', getProbeInput()));
     $out['read'] = getProbeType(getProbeQuery('boss')->getNodeType('news'));
     $out['public'] = getProbeQuery('guest')->getNodeType('news') === null;
     $out['merged'] = getProbeQuery('boss')->filterNodeSettings('', array_diff_key($out['trace']['node'], ['version' => 0]), []) === ($out['read']['settings'] ?? null);
@@ -1461,17 +1498,17 @@ function getProbeSvcUpdate(): array {
     $up = $type->uploads;
     $before = getProbeState();
     $out = [
-        'stale' => getProbeCall(fn() => $srv->updateNodeType('news', getProbeKeep($type, ['title' => 'Stale']), 2)),
-        'older' => getProbeCall(fn() => $srv->updateNodeType('news', getProbeKeep($type, ['title' => 'Stale']), 0)),
-        'missing' => getProbeCall(fn() => $srv->updateNodeType('nosuch', getProbeKeep($type), 1)),
-        'noup' => getProbeCall(fn() => $srv->updateNodeType('news', getProbeKeep($type, ['uploads' => []]), 1)),
-        'norate' => getProbeCall(fn() => $srv->updateNodeType('news', getProbeKeep($type, ['rating' => []]), 1)),
-        'badext' => getProbeCall(fn() => $srv->updateNodeType('news', getProbeKeep($type, ['uploads' => ['extensions' => 'jpg,exe'] + $up]), 1)),
-        'badflag' => getProbeCall(fn() => $srv->updateNodeType('news', getProbeKeep($type, ['uploads' => ['userupload' => 2] + $up]), 1)),
-        'badnum' => getProbeCall(fn() => $srv->updateNodeType('news', getProbeKeep($type, ['uploads' => ['maxbytes' => '10'] + $up]), 1)),
-        'badrate' => getProbeCall(fn() => $srv->updateNodeType('news', getProbeKeep($type, ['rating' => ['period' => '1.5'] + $type->rating]), 1)),
-        'badkey' => getProbeCall(fn() => $srv->updateNodeType('news', getProbeKeep($type, ['rating' => ['extra' => '1'] + $type->rating]), 1)),
-        'unknown' => getProbeCall(fn() => $srv->updateNodeType('news', getProbeKeep($type, ['ext' => 'zzz']), 1)),
+        'stale' => getProbeCall(fn(): NodeType => $srv->updateNodeType('news', getProbeKeep($type, ['title' => 'Stale']), 2)),
+        'older' => getProbeCall(fn(): NodeType => $srv->updateNodeType('news', getProbeKeep($type, ['title' => 'Stale']), 0)),
+        'missing' => getProbeCall(fn(): NodeType => $srv->updateNodeType('nosuch', getProbeKeep($type), 1)),
+        'noup' => getProbeCall(fn(): NodeType => $srv->updateNodeType('news', getProbeKeep($type, ['uploads' => []]), 1)),
+        'norate' => getProbeCall(fn(): NodeType => $srv->updateNodeType('news', getProbeKeep($type, ['rating' => []]), 1)),
+        'badext' => getProbeCall(fn(): NodeType => $srv->updateNodeType('news', getProbeKeep($type, ['uploads' => ['extensions' => 'jpg,exe'] + $up]), 1)),
+        'badflag' => getProbeCall(fn(): NodeType => $srv->updateNodeType('news', getProbeKeep($type, ['uploads' => ['userupload' => 2] + $up]), 1)),
+        'badnum' => getProbeCall(fn(): NodeType => $srv->updateNodeType('news', getProbeKeep($type, ['uploads' => ['maxbytes' => '10'] + $up]), 1)),
+        'badrate' => getProbeCall(fn(): NodeType => $srv->updateNodeType('news', getProbeKeep($type, ['rating' => ['period' => '1.5'] + $type->rating]), 1)),
+        'badkey' => getProbeCall(fn(): NodeType => $srv->updateNodeType('news', getProbeKeep($type, ['rating' => ['extra' => '1'] + $type->rating]), 1)),
+        'unknown' => getProbeCall(fn(): NodeType => $srv->updateNodeType('news', getProbeKeep($type, ['ext' => 'zzz']), 1)),
     ];
     $out['same'] = $before === getProbeState();
     $set = $type->settings;
@@ -1479,9 +1516,9 @@ function getProbeSvcUpdate(): array {
     $rate = ['active' => '1', 'period' => '86400', 'detail' => '0', 'guests' => '0'];
     $over = ['title' => 'News two', 'intro' => 'Plain intro', 'sort' => 5, 'settings' => $set, 'fields' => getProbeFields(), 'uploads' => ['maxfiles' => 3] + $up,
         'rating' => $rate];
-    $out['done'] = getProbeCall(fn() => getProbeType($srv->updateNodeType('news', getProbeKeep($type, $over), 1)));
+    $out['done'] = getProbeCall(fn(): ?array => getProbeType($srv->updateNodeType('news', getProbeKeep($type, $over), 1)));
     $out['trace'] = getProbeTrace('news');
-    $out['repeat'] = getProbeCall(fn() => $srv->updateNodeType('news', getProbeKeep($type, ['title' => 'Late']), 1));
+    $out['repeat'] = getProbeCall(fn(): NodeType => $srv->updateNodeType('news', getProbeKeep($type, ['title' => 'Late']), 1));
     return $out;
 }
 
@@ -1499,7 +1536,7 @@ function getProbeSvcAssets(PDO $pdo): array {
     $pdo->exec('INSERT INTO '.$pre.'node_assets (id, nid, kind, role, src, name, title, intro) VALUES (1, 701, \'image\', \'cover\', \'a.jpg\', \'a.jpg\', \'\', \'\'),'
         .' (2, 701, \'file\', \'download\', \'manual.pdf\', \'manual.pdf\', \'\', \'\')');
     $set = fn(array $roles): array => ['features' => $plain, 'assets' => $roles];
-    $keep = fn(array $roles, int $ver) => getProbeCall(fn() => $srv->updateNodeType('lnk',
+    $keep = fn(array $roles, int $ver): array => getProbeCall(fn(): int => $srv->updateNodeType('lnk',
         getProbeKeep(getProbeQuery('boss')->getNodeType('lnk'), ['settings' => $set($roles)]), $ver)->version);
     $out = ['drop' => $keep(['cover' => $cover], 1), 'local' => $keep(['cover' => $cover, 'download' => $link], 1)];
     $pdo->exec('UPDATE '.$pre.'node_assets SET src = \'https://a.test/x\' WHERE id = 2');
@@ -1510,7 +1547,7 @@ function getProbeSvcAssets(PDO $pdo): array {
     $out['empty'] = $keep(['cover' => $cover, 'download' => $link, 'more' => $down], 2);
     $pdo->exec('DELETE FROM '.$pre.'nodes WHERE id IN (701, 702)');
     $out['free'] = $keep(['cover' => $cover], 3);
-    $out['gone'] = getProbeCall(fn() => $srv->deleteNodeType('lnk', 4));
+    $out['gone'] = getProbeCall(fn(): null => $srv->deleteNodeType('lnk', 4));
     return $out;
 }
 
@@ -1518,32 +1555,32 @@ function getProbeSvcAssets(PDO $pdo): array {
 function getProbeSvcStatus(PDO $pdo): array {
     $srv = getProbeService('boss');
     $pre = PREFIX_DB.'_';
-    $out = ['on' => getProbeCall(fn() => getProbeType($srv->updateNodeTypeStatus('news', true, 2)))];
-    $out['again'] = getProbeCall(fn() => getProbeType($srv->updateNodeTypeStatus('news', true, 3)));
+    $out = ['on' => getProbeCall(fn(): ?array => getProbeType($srv->updateNodeTypeStatus('news', true, 2)))];
+    $out['again'] = getProbeCall(fn(): ?array => getProbeType($srv->updateNodeTypeStatus('news', true, 3)));
     $out['public'] = getProbeType(getProbeQuery('guest')->getNodeType('news'));
     $news = getProbeQuery('boss')->getNodeType('news');
-    $out['extactive'] = getProbeCall(fn() => $srv->updateNodeType('news', getProbeKeep($news, ['ext' => 'zzz']), 3));
-    $out['off'] = getProbeCall(fn() => getProbeType($srv->updateNodeTypeStatus('news', false, 3)));
+    $out['extactive'] = getProbeCall(fn(): NodeType => $srv->updateNodeType('news', getProbeKeep($news, ['ext' => 'zzz']), 3));
+    $out['off'] = getProbeCall(fn(): ?array => getProbeType($srv->updateNodeTypeStatus('news', false, 3)));
     $docs = getProbeQuery('boss')->getNodeType('docs');
     $pdo->exec('INSERT INTO '.$pre.'nodes (id, tid, title, intro, body, field, status) VALUES (800, '.$docs->id.', \'Draft\', \'\', \'\', \'\', 0)');
-    $out['extnode'] = getProbeCall(fn() => $srv->updateNodeType('docs', getProbeKeep($docs, ['ext' => 'zzz']), 1));
+    $out['extnode'] = getProbeCall(fn(): NodeType => $srv->updateNodeType('docs', getProbeKeep($docs, ['ext' => 'zzz']), 1));
     $pdo->exec('DELETE FROM '.$pre.'nodes WHERE id = 800');
     $srv->addNodeType('nodir', getProbeInput());
     deleteProbeTree(UPLOADS_DIR.'/nodir');
-    $out['nodir'] = getProbeCall(fn() => $srv->updateNodeTypeStatus('nodir', true, 1));
+    $out['nodir'] = getProbeCall(fn(): NodeType => $srv->updateNodeTypeStatus('nodir', true, 1));
     $srv->addNodeType('brok', getProbeInput());
     $data = require CONFIG_DIR.'/uploads.php';
     $data['uploads']['brok'] = 'gif|1|2';
     setProbeFile(CONFIG_DIR.'/uploads.php', $data);
-    $out['brokup'] = getProbeCall(fn() => $srv->updateNodeTypeStatus('brok', true, 1));
+    $out['brokup'] = getProbeCall(fn(): NodeType => $srv->updateNodeTypeStatus('brok', true, 1));
     $data = require CONFIG_DIR.'/ratings.php';
     $data['ratings']['node.brok'] = ['active' => 'yes'];
     setProbeFile(CONFIG_DIR.'/ratings.php', $data);
     $data = require CONFIG_DIR.'/uploads.php';
     $data['uploads']['brok'] = $data['uploads']['all'];
     setProbeFile(CONFIG_DIR.'/uploads.php', $data);
-    $out['brokrate'] = getProbeCall(fn() => $srv->updateNodeTypeStatus('brok', true, 1));
-    $out['cleanup'] = [getProbeCall(fn() => $srv->deleteNodeType('brok', 1)), getProbeCall(fn() => $srv->deleteNodeType('nodir', 1))];
+    $out['brokrate'] = getProbeCall(fn(): NodeType => $srv->updateNodeTypeStatus('brok', true, 1));
+    $out['cleanup'] = [getProbeCall(fn(): null => $srv->deleteNodeType('brok', 1)), getProbeCall(fn(): null => $srv->deleteNodeType('nodir', 1))];
     $out['rows'] = getProbeState()['rows'];
     return $out;
 }
@@ -1553,25 +1590,25 @@ function getProbeSvcGate(): array {
     $srv = getProbeService('boss');
     $dir = UPLOADS_DIR.'/gate';
     $open = $GLOBALS['probework'].'/open';
-    $out = ['add' => getProbeCall(fn() => $srv->addNodeType('gate', getProbeInput())->version)];
+    $out = ['add' => getProbeCall(fn(): int => $srv->addNodeType('gate', getProbeInput())->version)];
     $out['made'] = [is_file($dir.'/index.html'), is_file($dir.'/.htaccess') ? file_get_contents($dir.'/.htaccess') : null];
     unlink($dir.'/.htaccess');
     touch($open);
-    $out['open'] = getProbeCall(fn() => $srv->updateNodeTypeStatus('gate', true, 1));
+    $out['open'] = getProbeCall(fn(): NodeType => $srv->updateNodeTypeStatus('gate', true, 1));
     unlink($open);
     $out['written'] = is_file($dir.'/.htaccess') ? file_get_contents($dir.'/.htaccess') : null;
     file_put_contents($dir.'/.htaccess', 'allow from all');
-    $out['tampered'] = getProbeCall(fn() => $srv->updateNodeTypeStatus('gate', true, 1));
+    $out['tampered'] = getProbeCall(fn(): NodeType => $srv->updateNodeTypeStatus('gate', true, 1));
     unlink($dir.'/.htaccess');
-    $out['index'] = file_put_contents($dir.'/index.html', 'changed') > 0 ? getProbeCall(fn() => $srv->updateNodeTypeStatus('gate', true, 1)) : null;
+    $out['index'] = file_put_contents($dir.'/index.html', 'changed') > 0 ? getProbeCall(fn(): NodeType => $srv->updateNodeTypeStatus('gate', true, 1)) : null;
     file_put_contents($dir.'/index.html', (string)file_get_contents(UPLOADS_DIR.'/index.html'));
-    $out['on'] = getProbeCall(fn() => $srv->updateNodeTypeStatus('gate', true, 1)->version);
+    $out['on'] = getProbeCall(fn(): int => $srv->updateNodeTypeStatus('gate', true, 1)->version);
     touch($open);
-    $out['again'] = getProbeCall(fn() => $srv->updateNodeTypeStatus('gate', true, 2)->version);
+    $out['again'] = getProbeCall(fn(): int => $srv->updateNodeTypeStatus('gate', true, 2)->version);
     unlink($open);
     $out['trace'] = getProbeTrace('gate')['guard'];
-    $out['off'] = getProbeCall(fn() => $srv->updateNodeTypeStatus('gate', false, 2)->version);
-    $out['delete'] = getProbeCall(fn() => $srv->deleteNodeType('gate', 3));
+    $out['off'] = getProbeCall(fn(): int => $srv->updateNodeTypeStatus('gate', false, 2)->version);
+    $out['delete'] = getProbeCall(fn(): null => $srv->deleteNodeType('gate', 3));
     $out['kept'] = getProbeWalk($dir);
     return $out;
 }
@@ -1601,10 +1638,10 @@ function getProbeSvcInput(): array {
     ];
     $before = getProbeState();
     $out = [];
-    foreach ($cases as $key => $over) $out[$key] = getProbeCall(fn() => $srv->addNodeType('inp', getProbeInput($over)));
+    foreach ($cases as $key => $over) $out[$key] = getProbeCall(fn(): NodeType => $srv->addNodeType('inp', getProbeInput($over)));
     $out['same'] = $before === getProbeState();
     $flow = ['features' => $plain, 'workflow' => ['access' => 'group', 'groups' => [1, 2], 'publish' => [2]]];
-    $out['groupok'] = getProbeCall(fn() => getProbeType($srv->addNodeType('grp', getProbeInput(['settings' => $flow]))));
+    $out['groupok'] = getProbeCall(fn(): ?array => getProbeType($srv->addNodeType('grp', getProbeInput(['settings' => $flow]))));
     $out['grptrace'] = getProbeTrace('grp');
     return $out;
 }
@@ -1615,11 +1652,11 @@ function getProbeSvcPort(): array {
     $json = getProbeQuery('boss')->getNodeTypeExport('files');
     $data = json_decode($json, true);
     $out = ['keys' => array_keys($data), 'type' => array_keys($data['type']), 'format' => $data['format'], 'version' => $data['version'], 'data' => $data['type']];
-    $out['missing'] = getProbeCall(fn() => getProbeQuery('boss')->getNodeTypeExport('nosuch'));
-    $out['clone'] = getProbeCall(fn() => getProbeType($srv->addNodeTypeImport($json, 'clone')));
+    $out['missing'] = getProbeCall(fn(): string => getProbeQuery('boss')->getNodeTypeExport('nosuch'));
+    $out['clone'] = getProbeCall(fn(): ?array => getProbeType($srv->addNodeTypeImport($json, 'clone')));
     $again = getProbeQuery('boss')->getNodeTypeExport('clone');
     $out['same'] = str_replace('"name": "clone"', '"name": "files"', $again) === $json;
-    $out['file'] = getProbeCall(fn() => getProbeType($srv->addNodeTypeImport(str_replace('"name": "files"', '"name": "copy"', $json))));
+    $out['file'] = getProbeCall(fn(): ?array => getProbeType($srv->addNodeTypeImport(str_replace('"name": "files"', '"name": "copy"', $json))));
     $bent = function (Closure $fn) use ($data): string {
         $one = $data;
         $fn($one);
@@ -1644,7 +1681,7 @@ function getProbeSvcPort(): array {
         'ext' => $bent(function (array &$v): void { $v['type']['ext'] = 'zzz'; }),
     ];
     $before = getProbeState();
-    foreach ($bad as $key => $text) $out['bad'][$key] = getProbeCall(fn() => $srv->addNodeTypeImport($text, $key === 'taken' ? '' : 'imp'));
+    foreach ($bad as $key => $text) $out['bad'][$key] = getProbeCall(fn(): NodeType => $srv->addNodeTypeImport($text, $key === 'taken' ? '' : 'imp'));
     $out['unchanged'] = $before === getProbeState();
     return $out;
 }
@@ -1655,25 +1692,25 @@ function getProbeSvcDelete(PDO $pdo): array {
     $pre = PREFIX_DB.'_';
     $type = getProbeQuery('boss')->getNodeType('files');
     $ver = $type->version;
-    $out = ['stale' => getProbeCall(fn() => $srv->deleteNodeType('files', $ver + 1))];
+    $out = ['stale' => getProbeCall(fn(): null => $srv->deleteNodeType('files', $ver + 1))];
     $pdo->exec('INSERT INTO '.$pre.'nodes (id, tid, title, intro, body, field, status) VALUES (900, '.$type->id.', \'Trash\', \'\', \'\', \'\', 4)');
-    $out['node'] = getProbeCall(fn() => $srv->deleteNodeType('files', $ver));
+    $out['node'] = getProbeCall(fn(): null => $srv->deleteNodeType('files', $ver));
     $pdo->exec('DELETE FROM '.$pre.'nodes WHERE id = 900');
     $pdo->exec('INSERT INTO '.$pre.'categories (id, modul, title, intro, pread, lang) VALUES (50, \'files\', \'Cat\', \'\', \'0|0\', \'\')');
-    $out['category'] = getProbeCall(fn() => $srv->deleteNodeType('files', $ver));
+    $out['category'] = getProbeCall(fn(): null => $srv->deleteNodeType('files', $ver));
     $pdo->exec('DELETE FROM '.$pre.'categories WHERE id = 50');
     foreach (['thumb/user.jpg', '.hidden'] as $file) {
         file_put_contents(UPLOADS_DIR.'/files/'.$file, 'x');
-        $out['file'][$file] = getProbeCall(fn() => $srv->deleteNodeType('files', $ver));
+        $out['file'][$file] = getProbeCall(fn(): null => $srv->deleteNodeType('files', $ver));
         unlink(UPLOADS_DIR.'/files/'.$file);
     }
     $out['kept'] = getProbeTrace('files');
-    $out['done'] = getProbeCall(fn() => $srv->deleteNodeType('files', $ver));
+    $out['done'] = getProbeCall(fn(): null => $srv->deleteNodeType('files', $ver));
     $out['trace'] = getProbeTrace('files');
     $out['walk'] = getProbeWalk(UPLOADS_DIR.'/files');
     $out['admins'] = $pdo->query('SELECT id, modules FROM '.$pre.'admins ORDER BY id')->fetchAll(PDO::FETCH_KEY_PAIR);
-    $out['reuse'] = getProbeCall(fn() => $srv->addNodeType('files', getProbeInput())->version);
-    $out['again'] = getProbeCall(fn() => $srv->deleteNodeType('files', 1));
+    $out['reuse'] = getProbeCall(fn(): int => $srv->addNodeType('files', getProbeInput())->version);
+    $out['again'] = getProbeCall(fn(): null => $srv->deleteNodeType('files', 1));
     return $out;
 }
 
@@ -1700,7 +1737,7 @@ function getProbeSvcCrash(PDO $pdo): array {
         $one['source'] = sha1_file(CONFIG_DIR.'/node.php') !== $old;
         $one['held'] = getProbeQuery('boss')->getNodeType('news') === null;
         $one['other'] = getProbeQuery('boss')->getNodeType('docs') !== null;
-        $one['write'] = getProbeCall(fn() => getProbeService('boss')->updateNodeTypeStatus('docs', true, getProbeVersion('docs')));
+        $one['write'] = getProbeCall(fn(): NodeType => getProbeService('boss')->updateNodeTypeStatus('docs', true, getProbeVersion('docs')));
         if ($when === 'before') {
             $pdo->exec('UPDATE '.$pre.'node_types SET version = version + 5 WHERE name = \'news\'');
             $one['blocked'] = getProbeChild('restore');
@@ -1733,18 +1770,22 @@ function getProbeSvcRemains(PDO $pdo): array {
     $srv = getProbeService('boss');
     $count = fn(string $mod): int => (int)$pdo->query('SELECT (SELECT COUNT(*) FROM '.$pre.'comment WHERE CAST(modul AS BINARY) = CAST('.$pdo->quote($mod)
         .' AS BINARY)) + (SELECT COUNT(*) FROM '.$pre.'favorites WHERE CAST(modul AS BINARY) = CAST('.$pdo->quote($mod).' AS BINARY))')->fetchColumn();
-    $out = ['live' => $live, 'refused' => getProbeCall(fn() => $srv->addNodeType('oldsec', getProbeInput())), 'list' => getProbeCall(fn() => $srv->getNodeRemains())];
-    $out['denied'] = [getProbeCall(fn() => getProbeService('moder')->getNodeRemains()), getProbeCall(fn() => getProbeService('moder')->deleteNodeRemains('oldsec'))];
+    $out = [
+        'live' => $live,
+        'refused' => getProbeCall(fn(): NodeType => $srv->addNodeType('oldsec', getProbeInput())),
+        'list' => getProbeCall(fn(): array => $srv->getNodeRemains()),
+    ];
+    $out['denied'] = [getProbeCall(fn(): array => getProbeService('moder')->getNodeRemains()), getProbeCall(fn(): null => getProbeService('moder')->deleteNodeRemains('oldsec'))];
     $out['kept'] = [];
-    foreach (['shop', 'forum', $live, 'nothing'] as $mod) $out['kept'][$mod] = getProbeCall(fn() => $srv->deleteNodeRemains($mod));
-    $out['one'] = getProbeCall(fn() => $srv->deleteNodeRemains('oldsec'));
-    $out['case'] = getProbeCall(fn() => $srv->addNodeType('oldsec', getProbeInput()));
-    $out['two'] = getProbeCall(fn() => $srv->deleteNodeRemains('OldSec'));
+    foreach (['shop', 'forum', $live, 'nothing'] as $mod) $out['kept'][$mod] = getProbeCall(fn(): null => $srv->deleteNodeRemains($mod));
+    $out['one'] = getProbeCall(fn(): null => $srv->deleteNodeRemains('oldsec'));
+    $out['case'] = getProbeCall(fn(): NodeType => $srv->addNodeType('oldsec', getProbeInput()));
+    $out['two'] = getProbeCall(fn(): null => $srv->deleteNodeRemains('OldSec'));
     $out['rows'] = [];
     foreach (['oldsec', 'OldSec', 'shop', 'forum', $live, 'gonefav'] as $mod) $out['rows'][$mod] = $count($mod);
-    $out['added'] = getProbeCall(fn() => $srv->addNodeType('oldsec', getProbeInput())->version);
-    $out['after'] = getProbeCall(fn() => array_keys($srv->getNodeRemains()));
-    $out['dropped'] = getProbeCall(fn() => $srv->deleteNodeType('oldsec', 1));
+    $out['added'] = getProbeCall(fn(): int => $srv->addNodeType('oldsec', getProbeInput())->version);
+    $out['after'] = getProbeCall(fn(): array => array_keys($srv->getNodeRemains()));
+    $out['dropped'] = getProbeCall(fn(): null => $srv->deleteNodeType('oldsec', 1));
     return $out;
 }
 
@@ -1927,7 +1968,7 @@ function addProbeMatTypes(): array {
         'hook' => getProbeInput(['title' => 'Hook', 'ext' => 'hook', 'settings' => ['features' => getProbeFeatures(['related'])]]),
     ];
     $out = [];
-    foreach ($defs as $name => $input) $out[$name] = getProbeCall(fn() => $srv->updateNodeTypeStatus($name, true, $srv->addNodeType($name, $input)->version)->version);
+    foreach ($defs as $name => $input) $out[$name] = getProbeCall(fn(): int => $srv->updateNodeTypeStatus($name, true, $srv->addNodeType($name, $input)->version)->version);
     $png = base64_decode(PROBEPNG);
     $pdf = "%PDF-1.4\n%%EOF\n";
     $put = [
@@ -1987,9 +2028,17 @@ function getProbeIn(array $over = []): NodeInput {
 
 # The input of the same material again: its stored values with the given ones replaced
 function getProbeKeepIn(Node $node, array $over = []): NodeInput {
-    $rels = array_map(fn($v) => ['rid' => $v->rid, 'type' => $v->type, 'sort' => $v->sort], $node->rels ?? []);
-    $assets = array_map(fn($v) => ['id' => $v->id, 'kind' => $v->kind, 'role' => $v->role, 'src' => $v->src, 'name' => $v->name, 'title' => $v->title, 'intro' => $v->intro,
-        'sort' => $v->sort], $node->assets ?? []);
+    $rels = array_map(fn(NodeRelation $v): array => ['rid' => $v->rid, 'type' => $v->type, 'sort' => $v->sort], $node->rels ?? []);
+    $assets = array_map(fn(NodeAsset $v): array => [
+        'id' => $v->id,
+        'kind' => $v->kind,
+        'role' => $v->role,
+        'src' => $v->src,
+        'name' => $v->name,
+        'title' => $v->title,
+        'intro' => $v->intro,
+        'sort' => $v->sort,
+    ], $node->assets ?? []);
     return getProbeIn(array_replace(['cid' => $node->cid, 'cids' => $node->cids ?? [], 'aname' => $node->aname, 'title' => $node->title, 'intro' => $node->intro,
         'body' => (string)$node->body, 'fields' => $node->fields ?? [], 'poll' => $node->poll, 'home' => $node->home, 'comon' => $node->comon, 'pinned' => $node->pinned,
         'pubdate' => $node->pubdate, 'expires' => $node->expires, 'rels' => $rels, 'assets' => $assets], $over));
@@ -2043,7 +2092,7 @@ function setProbeCome(int $id, int $sec = -60): void {
 function getProbeMatCreate(): array {
     [$news, $docs, $files] = [getProbeMatType('news'), getProbeMatType('docs'), getProbeMatType('files')];
     $before = getProbeMatCount();
-    $add = fn(string $who, NodeType $type, array $over, NodeStatus $st) => getProbeCall(fn() => getProbeWriter($who)->addNode($type, getProbeIn($over), $st)->id);
+    $add = fn(string $who, NodeType $type, array $over, NodeStatus $st): array => getProbeCall(fn(): int => getProbeWriter($who)->addNode($type, getProbeIn($over), $st)->id);
     $out = ['bad' => [
         'disabled' => $add('root', $news, [], NodeStatus::Disabled),
         'deleted' => $add('root', $news, [], NodeStatus::Deleted),
@@ -2064,7 +2113,7 @@ function getProbeMatCreate(): array {
         'closed' => $add('anna', $news, ['cid' => 11], NodeStatus::Pending),
         'missing' => $add('root', $news, ['cids' => [99]], NodeStatus::Draft),
         'twice' => $add('root', $news, ['cids' => [15, 15]], NodeStatus::Draft),
-        'task' => getProbeCall(fn() => getProbeWriter('task')->addNode($news, getProbeIn(), NodeStatus::Pending)),
+        'task' => getProbeCall(fn(): Node => getProbeWriter('task')->addNode($news, getProbeIn(), NodeStatus::Pending)),
         'blank' => $add('root', $news, ['title' => '  '], NodeStatus::Draft),
         'control' => $add('root', $news, ['title' => "a\x01b"], NodeStatus::Draft),
         'long' => $add('root', $news, ['title' => str_repeat('я', 101)], NodeStatus::Draft),
@@ -2075,22 +2124,25 @@ function getProbeMatCreate(): array {
         'required' => $add('root', $files, [], NodeStatus::Pending),
         'intro' => $add('root', $news, ['intro' => str_repeat('a', 65536)], NodeStatus::Draft),
         'field' => $add('root', $files, ['fields' => ['release' => str_repeat('x', 101)]], NodeStatus::Draft),
-        'nopoint' => getProbeCall(fn() => getProbeWriter('root', null, null, true)->addNode($news, getProbeIn(), NodeStatus::Draft)),
+        'nopoint' => getProbeCall(fn(): Node => getProbeWriter('root', null, null, true)->addNode($news, getProbeIn(), NodeStatus::Draft)),
     ]];
     $out['same'] = $before === getProbeMatCount();
     $epoch = Cache::getEpoch();
-    $out['draft'] = getProbeCall(fn() => getProbeNode(getProbeWriter('root')->addNode($news, getProbeIn(['aname' => 'Editor', 'cid' => 10, 'cids' => [16, 10, 15], 'poll' => 1]),
-        NodeStatus::Draft)));
+    $out['draft'] = getProbeCall(fn(): ?array => getProbeNode(getProbeWriter('root')->addNode(
+        $news,
+        getProbeIn(['aname' => 'Editor', 'cid' => 10, 'cids' => [16, 10, 15], 'poll' => 1]),
+        NodeStatus::Draft
+    )));
     $out['epoch'] = Cache::getEpoch() > $epoch;
-    $out['pending'] = getProbeCall(fn() => getProbeNode(getProbeWriter('anna')->addNode($news, getProbeIn(['cid' => 12]), NodeStatus::Pending)));
-    $out['direct'] = getProbeCall(fn() => getProbeNode(getProbeWriter('boris')->addNode($news, getProbeIn(['cid' => 10]), NodeStatus::Published)));
+    $out['pending'] = getProbeCall(fn(): ?array => getProbeNode(getProbeWriter('anna')->addNode($news, getProbeIn(['cid' => 12]), NodeStatus::Pending)));
+    $out['direct'] = getProbeCall(fn(): ?array => getProbeNode(getProbeWriter('boris')->addNode($news, getProbeIn(['cid' => 10]), NodeStatus::Published)));
     $out['clock'] = getProbeClock();
     $out['award'] = getProbePoints('publish', 'node:'.($out['direct']['value']['id'] ?? 0));
-    $out['filedraft'] = getProbeCall(fn() => getProbeNode(getProbeWriter('root')->addNode($files, getProbeIn(), NodeStatus::Draft)));
+    $out['filedraft'] = getProbeCall(fn(): ?array => getProbeNode(getProbeWriter('root')->addNode($files, getProbeIn(), NodeStatus::Draft)));
     $link = [getProbeAsset(null, 'file', 'download', 'https://example.com/g.zip')];
-    $out['guestfile'] = getProbeCall(fn() => getProbeNode(getProbeWriter('guest')->addNode($files, getProbeIn(['fields' => ['release' => '1.0', 'gone' => 'x'],
+    $out['guestfile'] = getProbeCall(fn(): ?array => getProbeNode(getProbeWriter('guest')->addNode($files, getProbeIn(['fields' => ['release' => '1.0', 'gone' => 'x'],
         'assets' => $link]), NodeStatus::Pending)));
-    $out['nomin'] = getProbeCall(fn() => getProbeWriter('guest')->addNode($files, getProbeIn(['fields' => ['release' => '1.0']]), NodeStatus::Pending));
+    $out['nomin'] = getProbeCall(fn(): Node => getProbeWriter('guest')->addNode($files, getProbeIn(['fields' => ['release' => '1.0']]), NodeStatus::Pending));
     $out['guards'] = getProbeMatCount()['guards'];
     return $out;
 }
@@ -2103,31 +2155,39 @@ function getProbeMatUpdate(): array {
     $two = $root->addNode($news, getProbeIn(['cid' => 10]), NodeStatus::Draft);
     $before = getProbeMatCount();
     $out = ['bad' => [
-        'stale' => getProbeCall(fn() => $root->updateNode($one->id, getProbeKeepIn($one, ['title' => 'Stale']), 2)),
-        'anna' => getProbeCall(fn() => getProbeWriter('anna')->updateNode($one->id, getProbeKeepIn($one), 1)),
-        'boss' => getProbeCall(fn() => getProbeWriter('boss')->updateNode($one->id, getProbeKeepIn($one), 1)),
-        'missing' => getProbeCall(fn() => $root->updateNode(999999, getProbeKeepIn($one), 1)),
-        'self' => getProbeCall(fn() => $root->updateNode($one->id, getProbeKeepIn($one, ['rels' => [['rid' => $one->id, 'type' => 'related', 'sort' => 0]]]), 1)),
-        'foreign' => getProbeCall(fn() => $root->updateNode($two->id, getProbeKeepIn($two, ['assets' => [getProbeAsset($one->assets[0]->id, 'image', 'cover', 'x.png')]]), 1)),
+        'stale' => getProbeCall(fn(): Node => $root->updateNode($one->id, getProbeKeepIn($one, ['title' => 'Stale']), 2)),
+        'anna' => getProbeCall(fn(): Node => getProbeWriter('anna')->updateNode($one->id, getProbeKeepIn($one), 1)),
+        'boss' => getProbeCall(fn(): Node => getProbeWriter('boss')->updateNode($one->id, getProbeKeepIn($one), 1)),
+        'missing' => getProbeCall(fn(): Node => $root->updateNode(999999, getProbeKeepIn($one), 1)),
+        'self' => getProbeCall(fn(): Node => $root->updateNode($one->id, getProbeKeepIn($one, ['rels' => [['rid' => $one->id, 'type' => 'related', 'sort' => 0]]]), 1)),
+        'foreign' => getProbeCall(fn(): Node => $root->updateNode(
+            $two->id,
+            getProbeKeepIn($two, ['assets' => [getProbeAsset($one->assets[0]->id, 'image', 'cover', 'x.png')]]),
+            1
+        )),
     ]];
     $out['same'] = $before === getProbeMatCount() && getProbeStored($one->id, 'news')['version'] === 1;
     $set = ['cids' => [16], 'rels' => [['rid' => $two->id, 'type' => 'related', 'sort' => 5]], 'assets' => [getProbeAsset($one->assets[0]->id, 'image', 'cover',
         'photo-abcdefghij-2.png', 3), getProbeAsset(null, 'image', 'gallery', 'photo-bcdefghijk-3.png', 1)]];
-    $out['full'] = getProbeCall(fn() => getProbeNode($root->updateNode($one->id, getProbeKeepIn($one, $set + ['title' => 'Changed']), 1)));
-    $out['cleared'] = getProbeCall(fn() => getProbeNode($root->updateNode($one->id, getProbeIn(['cid' => 10]), 2)));
+    $out['full'] = getProbeCall(fn(): ?array => getProbeNode($root->updateNode($one->id, getProbeKeepIn($one, $set + ['title' => 'Changed']), 1)));
+    $out['cleared'] = getProbeCall(fn(): ?array => getProbeNode($root->updateNode($one->id, getProbeIn(['cid' => 10]), 2)));
     $sub = getProbeWriter('anna')->addNode($news, getProbeIn(['cid' => 10]), NodeStatus::Pending);
     $held = getProbeMatCount();
-    $out['author'] = getProbeCall(fn() => getProbeWriter('anna')->updateNode($sub->id, getProbeKeepIn($sub, ['title' => 'Mine']), 1));
-    $out['authormod'] = getProbeCall(fn() => getProbeWriter('annamod')->updateNode($sub->id, getProbeKeepIn($sub, ['title' => 'Mine']), 1));
+    $out['author'] = getProbeCall(fn(): Node => getProbeWriter('anna')->updateNode($sub->id, getProbeKeepIn($sub, ['title' => 'Mine']), 1));
+    $out['authormod'] = getProbeCall(fn(): Node => getProbeWriter('annamod')->updateNode($sub->id, getProbeKeepIn($sub, ['title' => 'Mine']), 1));
     $out['authorsame'] = $held === getProbeMatCount() && getProbeStored($sub->id, 'news')['version'] === 1;
-    $out['keep'] = getProbeCall(fn() => getProbeNode(getProbeWriter('far')->updateNode($sub->id, getProbeKeepIn($sub, ['title' => 'Edited']), 1)));
+    $out['keep'] = getProbeCall(fn(): ?array => getProbeNode(getProbeWriter('far')->updateNode($sub->id, getProbeKeepIn($sub, ['title' => 'Edited']), 1)));
     $fil = $root->addNode($files, getProbeIn(['fields' => ['release' => '1.0']]), NodeStatus::Draft);
     $GLOBALS['pdb']->getSqlQuery('UPDATE '.PREFIX_DB.'_nodes SET field = :field WHERE id = :id', ['field' => '{"gone":"x","old":"keep","release":"1.0"}', 'id' => $fil->id]);
-    $out['fields'] = getProbeCall(fn() => getProbeWriter('mixed')->updateNode($fil->id, getProbeIn(['fields' => ['release' => '2.0', 'old' => 'hack', 'site' => '']]), 1)->fields);
+    $out['fields'] = getProbeCall(fn(): ?array => getProbeWriter('mixed')->updateNode(
+        $fil->id,
+        getProbeIn(['fields' => ['release' => '2.0', 'old' => 'hack', 'site' => '']]),
+        1
+    )->fields);
     $ver = getProbeStored($two->id, 'news')['version'];
-    $out['first'] = getProbeCall(fn() => $root->updateNode($two->id, getProbeIn(['cid' => 10, 'title' => 'First']), $ver)->version);
-    $out['second'] = getProbeCall(fn() => $root->updateNode($two->id, getProbeIn(['cid' => 10, 'title' => 'Second']), $ver));
-    $out['again'] = getProbeCall(fn() => $root->updateNode($two->id, getProbeIn(['cid' => 10, 'title' => 'Second']), $ver + 1)->version);
+    $out['first'] = getProbeCall(fn(): int => $root->updateNode($two->id, getProbeIn(['cid' => 10, 'title' => 'First']), $ver)->version);
+    $out['second'] = getProbeCall(fn(): Node => $root->updateNode($two->id, getProbeIn(['cid' => 10, 'title' => 'Second']), $ver));
+    $out['again'] = getProbeCall(fn(): int => $root->updateNode($two->id, getProbeIn(['cid' => 10, 'title' => 'Second']), $ver + 1)->version);
     $out['title'] = getProbeStored($two->id, 'news')['title'];
     return $out;
 }
@@ -2160,7 +2220,7 @@ function getProbeMatStatus(): array {
     foreach (NodeStatus::cases() as $from) {
         foreach (NodeStatus::cases() as $to) {
             $node = getProbeReach($news, $from);
-            $res = getProbeCall(fn() => $root->updateNodeStatus($node->id, $to, $node->version));
+            $res = getProbeCall(fn(): Node => $root->updateNodeStatus($node->id, $to, $node->version));
             $out['pairs'][$from->name.'-'.$to->name] = $res['ok'] ? $res['value']->version - $node->version : $res['code'];
         }
     }
@@ -2168,15 +2228,15 @@ function getProbeMatStatus(): array {
     $num = $GLOBALS['pdb']->qnum;
     $out['repeat'] = $root->updateNodeStatus($node->id, NodeStatus::Pending, $node->version)->version - $node->version;
     $out['repeatsql'] = $GLOBALS['pdb']->qnum - $num;
-    $out['stale'] = getProbeCall(fn() => $root->updateNodeStatus($node->id, NodeStatus::Published, $node->version + 1));
-    $out['anna'] = getProbeCall(fn() => getProbeWriter('anna')->updateNodeStatus($node->id, NodeStatus::Published, $node->version));
+    $out['stale'] = getProbeCall(fn(): Node => $root->updateNodeStatus($node->id, NodeStatus::Published, $node->version + 1));
+    $out['anna'] = getProbeCall(fn(): Node => getProbeWriter('anna')->updateNodeStatus($node->id, NodeStatus::Published, $node->version));
     $bare = $root->addNode($files, getProbeIn(), NodeStatus::Draft);
-    $out['required'] = getProbeCall(fn() => $root->updateNodeStatus($bare->id, NodeStatus::Pending, 1));
+    $out['required'] = getProbeCall(fn(): Node => $root->updateNodeStatus($bare->id, NodeStatus::Pending, 1));
     $rel = $root->addNode($files, getProbeIn(['fields' => ['release' => '1']]), NodeStatus::Draft);
-    $out['minimum'] = getProbeCall(fn() => $root->updateNodeStatus($rel->id, NodeStatus::Published, 1));
+    $out['minimum'] = getProbeCall(fn(): Node => $root->updateNodeStatus($rel->id, NodeStatus::Published, 1));
     $full = $root->addNode($files, getProbeIn(['fields' => ['release' => '1'], 'assets' => [getProbeAsset(null, 'file', 'download', 'https://example.com/file.zip')]]),
         NodeStatus::Draft);
-    $out['ready'] = getProbeCall(fn() => $root->updateNodeStatus($full->id, NodeStatus::Published, 1)->status->name);
+    $out['ready'] = getProbeCall(fn(): string => $root->updateNodeStatus($full->id, NodeStatus::Published, 1)->status->name);
     $plain = $root->addNode($news, getProbeIn(), NodeStatus::Draft);
     $num = $GLOBALS['pdb']->qnum;
     $done = getProbeWriter('root')->updateNodeStatus($plain->id, NodeStatus::Published, 1);
@@ -2210,13 +2270,13 @@ function getProbeMatDelete(): array {
     $pub = getProbeWriter('boris')->addNode($news, getProbeIn(['cid' => 10, 'cids' => [15]]), NodeStatus::Published);
     getProbeWriter('moder')->updateNode($pub->id, getProbeKeepIn($pub, ['assets' => [getProbeAsset(null, 'image', 'cover', 'photo-bcdefghijk-3.png')]]), 1);
     $out = ['bad' => [
-        'stale' => getProbeCall(fn() => getProbeWriter('moder')->deleteNode($pub->id, 1, getProbeCom())),
-        'anna' => getProbeCall(fn() => getProbeWriter('anna')->deleteNode($pub->id, 2, getProbeCom())),
-        'nopoint' => getProbeCall(fn() => getProbeWriter('moder', null, null, true)->deleteNode($pub->id, 2, getProbeCom())),
+        'stale' => getProbeCall(fn(): null => getProbeWriter('moder')->deleteNode($pub->id, 1, getProbeCom())),
+        'anna' => getProbeCall(fn(): null => getProbeWriter('anna')->deleteNode($pub->id, 2, getProbeCom())),
+        'nopoint' => getProbeCall(fn(): null => getProbeWriter('moder', null, null, true)->deleteNode($pub->id, 2, getProbeCom())),
     ]];
     $bal = intval(getProbeValue('SELECT points FROM '.PREFIX_DB.'_users WHERE id = 3'));
     $num = $GLOBALS['pdb']->qnum;
-    $out['done'] = getProbeCall(fn() => getProbeWriter('moder')->deleteNode($pub->id, 2, getProbeCom()));
+    $out['done'] = getProbeCall(fn(): null => getProbeWriter('moder')->deleteNode($pub->id, 2, getProbeCom()));
     $out['sql'] = $GLOBALS['pdb']->qnum - $num;
     $out['balance'] = intval(getProbeValue('SELECT points FROM '.PREFIX_DB.'_users WHERE id = 3')) - $bal;
     $out['origin'] = getProbePoints('publish', 'node:'.$pub->id);
@@ -2244,11 +2304,11 @@ function getProbeMatSets(): array {
     [$news, $docs] = [getProbeMatType('news'), getProbeMatType('docs')];
     $root = getProbeWriter('root');
     $one = $root->addNode($news, getProbeIn(['cid' => 10]), NodeStatus::Draft);
-    $add = fn(NodeType $type, array $over) => getProbeCall(fn() => $root->addNode($type, getProbeIn($over), NodeStatus::Draft));
+    $add = fn(NodeType $type, array $over): array => getProbeCall(fn(): Node => $root->addNode($type, getProbeIn($over), NodeStatus::Draft));
     $cover = getProbeAsset(null, 'image', 'cover', 'photo-abcdefghij-2.png');
     return [
         'cids' => $add($news, ['cids' => range(1000, 1500)]),
-        'rels' => $add($news, ['rels' => array_map(fn($v) => ['rid' => $v, 'type' => 'related', 'sort' => 0], range(1000, 1500))]),
+        'rels' => $add($news, ['rels' => array_map(fn(int $v): array => ['rid' => $v, 'type' => 'related', 'sort' => 0], range(1000, 1500))]),
         'assets' => $add($news, ['assets' => array_fill(0, 101, $cover)]),
         'max' => $add($news, ['assets' => [$cover, $cover]]),
         'keys' => $add($news, ['assets' => [$cover + ['mime' => 'image/png']]]),
@@ -2261,7 +2321,7 @@ function getProbeMatSets(): array {
         'reltwice' => $add($news, ['rels' => [['rid' => $one->id, 'type' => 'related', 'sort' => 0], ['rid' => $one->id, 'type' => 'related', 'sort' => 1]]]),
         'relother' => $add($docs, ['rels' => [['rid' => $one->id, 'type' => 'related', 'sort' => 0]]]),
         'parents' => $add($docs, ['rels' => [['rid' => 1, 'type' => 'parent', 'sort' => 0], ['rid' => 2, 'type' => 'parent', 'sort' => 0]]]),
-        'main' => getProbeCall(fn() => $root->addNode($news, getProbeIn(['cid' => 10, 'cids' => [10, 15]]), NodeStatus::Draft)->cids),
+        'main' => getProbeCall(fn(): ?array => $root->addNode($news, getProbeIn(['cid' => 10, 'cids' => [10, 15]]), NodeStatus::Draft)->cids),
     ];
 }
 
@@ -2286,8 +2346,8 @@ function getProbeRaceRun(string $mode, array $args): array {
 # Files: new attachments and local sources belong to the visitor, a moderator binds any file, a link is unique inside its type by the whole address
 function getProbeMatFiles(): array {
     [$news, $files, $links] = [getProbeMatType('news'), getProbeMatType('files'), getProbeMatType('links')];
-    $tag = fn(string $name) => 'Text [attach='.$name.' align=left title=Photo] end';
-    $sub = fn(string $who, array $over) => getProbeCall(fn() => getProbeWriter($who)->addNode($news, getProbeIn(['cid' => 10] + $over), NodeStatus::Pending)->id);
+    $tag = fn(string $name): string => 'Text [attach='.$name.' align=left title=Photo] end';
+    $sub = fn(string $who, array $over): array => getProbeCall(fn(): int => getProbeWriter($who)->addNode($news, getProbeIn(['cid' => 10] + $over), NodeStatus::Pending)->id);
     $dld = [getProbeAsset(null, 'file', 'download', 'https://example.com/g.zip')];
     $out = [
         'own' => $sub('anna', ['body' => $tag('photo-abcdefghij-2.png')]),
@@ -2296,20 +2356,20 @@ function getProbeMatFiles(): array {
         'text' => $sub('anna', ['body' => $tag('notes-cdefghijkl-2.txt')]),
         'absent' => $sub('anna', ['body' => $tag('gone-abcdefghij-2.png')]),
         'moder' => $sub('root', ['body' => $tag('photo-bcdefghijk-3.png').$tag('legacy.png')]),
-        'guest' => getProbeCall(fn() => getProbeWriter('guest')->addNode($files, getProbeIn(['fields' => ['release' => '1'], 'assets' => $dld,
+        'guest' => getProbeCall(fn(): int => getProbeWriter('guest')->addNode($files, getProbeIn(['fields' => ['release' => '1'], 'assets' => $dld,
             'body' => $tag('mine-abcdefghij-2.png')]), NodeStatus::Pending)->id),
-        'cover' => getProbeCall(fn() => getProbeNode(getProbeWriter('anna')->addNode($news, getProbeIn(['cid' => 10, 'assets' => [getProbeAsset(null, 'image', 'cover',
+        'cover' => getProbeCall(fn(): ?array => getProbeNode(getProbeWriter('anna')->addNode($news, getProbeIn(['cid' => 10, 'assets' => [getProbeAsset(null, 'image', 'cover',
             'photo-abcdefghij-2.png')]]), NodeStatus::Pending))['assets'] ?? null),
         'coverforeign' => $sub('anna', ['assets' => [getProbeAsset(null, 'image', 'cover', 'photo-bcdefghijk-3.png')]]),
         'pdfimage' => $sub('anna', ['assets' => [getProbeAsset(null, 'image', 'cover', 'doc-abcdefghij-2.pdf')]]),
         'thumb' => $sub('root', ['assets' => [getProbeAsset(null, 'image', 'cover', 'thumb/thumb-abcdefghij-2.png')]]),
         'escape' => $sub('root', ['assets' => [getProbeAsset(null, 'image', 'cover', '../news/photo-abcdefghij-2.png')]]),
         'nolink' => $sub('root', ['assets' => [getProbeAsset(null, 'image', 'cover', 'https://example.com/a.png')]]),
-        'pdffile' => getProbeCall(fn() => getProbeNode(getProbeWriter('root')->addNode($files, getProbeIn(['fields' => ['release' => '1'], 'assets' => [getProbeAsset(null,
+        'pdffile' => getProbeCall(fn(): ?array => getProbeNode(getProbeWriter('root')->addNode($files, getProbeIn(['fields' => ['release' => '1'], 'assets' => [getProbeAsset(null,
             'file', 'download', 'manual-abcdefghij-2.pdf')]]), NodeStatus::Draft))['assets'][0] ?? null),
     ];
     $long = 'https://example.com/'.str_repeat('p', 200);
-    $lnk = fn(string $src) => getProbeCall(fn() => getProbeWriter('mixed')->addNode($links, getProbeIn(['assets' => [getProbeAsset(null, 'file', 'link', $src)]]),
+    $lnk = fn(string $src): array => getProbeCall(fn(): int => getProbeWriter('mixed')->addNode($links, getProbeIn(['assets' => [getProbeAsset(null, 'file', 'link', $src)]]),
         NodeStatus::Draft)->id);
     $out['link'] = [
         'first' => $lnk('https://example.com/a'),
@@ -2317,14 +2377,14 @@ function getProbeMatFiles(): array {
         'case' => $lnk('https://example.com/A'),
         'longa' => $lnk($long.'a'),
         'longb' => $lnk($long.'b'),
-        'other' => getProbeCall(fn() => getProbeWriter('mixed')->addNode($files, getProbeIn(['fields' => ['release' => '1'], 'assets' => [getProbeAsset(null, 'file',
+        'other' => getProbeCall(fn(): int => getProbeWriter('mixed')->addNode($files, getProbeIn(['fields' => ['release' => '1'], 'assets' => [getProbeAsset(null, 'file',
             'download', 'https://example.com/a')]]), NodeStatus::Draft)->id),
         'local' => $lnk('photo-abcdefghij-2.png'),
         'script' => $lnk('javascript:alert(1)'),
         'creds' => $lnk('https://user:pw@example.com/x'),
     ];
     $first = getProbeMatNode($out['link']['first']['value'] ?? 0, 'links');
-    $out['link']['keep'] = getProbeCall(fn() => getProbeWriter('mixed')->updateNode($first->id, getProbeKeepIn($first, ['title' => 'Kept']), 1)->version);
+    $out['link']['keep'] = getProbeCall(fn(): int => getProbeWriter('mixed')->updateNode($first->id, getProbeKeepIn($first, ['title' => 'Kept']), 1)->version);
     $out['race'] = getProbeRaceRun('mlink', [['https://example.com/race'], ['https://example.com/race']]);
     return $out;
 }
@@ -2335,7 +2395,7 @@ function getProbeMatAttach(): array {
     [$news, $files] = [getProbeMatType('news'), getProbeMatType('files')];
     $root = UPLOADS_DIR.'/news';
     copy($root.'/photo-abcdefghij-2.png', $root.'/thumb/photo-abcdefghij-2.png');
-    $tag = fn(string $name) => 'Text [attach='.$name.' align=left title=Photo] end';
+    $tag = fn(string $name): string => 'Text [attach='.$name.' align=left title=Photo] end';
     $pub = getProbeWriter('root')->addNode($news, getProbeIn(['cid' => 10, 'body' => $tag('photo-abcdefghij-2.png'), 'intro' => $tag('photo-bcdefghijk-3.png')]),
         NodeStatus::Published)->id;
     $wait = getProbeWriter('root')->addNode($news, getProbeIn(['cid' => 10, 'body' => $tag('photo-abcdefghij-2.png')]), NodeStatus::Pending)->id;
@@ -2375,8 +2435,8 @@ function getProbeMatAttach(): array {
         'text' => $file('anna', $news, 0, 'notes-cdefghijkl-2.txt'),
     ];
     $query = getProbeQuery('guest');
-    [, $out['sql']] = getProbeCost(fn() => getProbeWriter('guest')->getNodeFile($query->getNodeType('news'), $pub, 'photo-abcdefghij-2.png', false));
-    [, $out['previewsql']] = getProbeCost(fn() => getProbeWriter('anna')->getNodeFile($news, 0, 'photo-abcdefghij-2.png', false));
+    [, $out['sql']] = getProbeCost(fn(): string => getProbeWriter('guest')->getNodeFile($query->getNodeType('news'), $pub, 'photo-abcdefghij-2.png', false));
+    [, $out['previewsql']] = getProbeCost(fn(): string => getProbeWriter('anna')->getNodeFile($news, 0, 'photo-abcdefghij-2.png', false));
     return $out;
 }
 
@@ -2399,12 +2459,11 @@ function getProbeParent(int $id): int {
 # Move one document under a new parent as the moderator, the way the tree children do it
 function getProbeTreeMove(int $id, int $up): array {
     $node = getProbeMatNode($id, 'docs');
-    return getProbeCall(fn() => getProbeWriter('moder')->updateNode($id, getProbeKeepIn($node, ['rels' => [['rid' => $up, 'type' => 'parent', 'sort' => 0]]]),
+    return getProbeCall(fn(): int => getProbeWriter('moder')->updateNode($id, getProbeKeepIn($node, ['rels' => [['rid' => $up, 'type' => 'parent', 'sort' => 0]]]),
         $node->version)->version);
 }
 
-# Tree: a cycle through a descendant is refused, two concurrent moves that close a cycle together let exactly one through,
-# and a move that dies before its commit leaves nothing behind for the next one
+# Tree: a cycle through a descendant is refused, two concurrent moves that close a cycle together let exactly one through, and a move dying before commit leaves nothing
 function getProbeMatTree(): array {
     $ids = getProbeTreeSet();
     $out = ['cycle' => getProbeTreeMove($ids['b'], $ids['a']), 'move' => getProbeTreeMove($ids['a'], $ids['c'])];
@@ -2426,15 +2485,15 @@ function getProbeMatPublish(): array {
     $news = getProbeMatType('news');
     $pre = PREFIX_DB.'_';
     $srv = getProbeWriter('mixed');
-    $run = fn(?Point $pnt = null) => getProbeWriter('task', $pnt)->updateNodePublishList();
-    $pts = fn(int $id) => count(getProbePoints('publish', 'node:'.$id));
-    $late = fn() => $srv->addNode($news, getProbeIn(['cid' => 10, 'pubdate' => getProbeClock(3600)]), NodeStatus::Published);
+    $run = fn(?Point $pnt = null): array => getProbeWriter('task', $pnt)->updateNodePublishList();
+    $pts = fn(int $id): int => count(getProbePoints('publish', 'node:'.$id));
+    $late = fn(): Node => $srv->addNode($news, getProbeIn(['cid' => 10, 'pubdate' => getProbeClock(3600)]), NodeStatus::Published);
     $out = [];
     $one = $late();
     $out['future'] = ['job' => getProbeJob($one->id), 'points' => $pts($one->id), 'pub' => $one->pubdate];
     $out['early'] = $run();
     $out['wait'] = getProbeJob($one->id) !== null;
-    $out['views'] = getProbeCall(fn() => getProbeWriter('anna')->updateNodeViews($one->id, $news));
+    $out['views'] = getProbeCall(fn(): null => getProbeWriter('anna')->updateNodeViews($one->id, $news));
     setProbeCome($one->id);
     $out['due'] = $run();
     $out['once'] = ['job' => getProbeJob($one->id), 'points' => $pts($one->id)];
@@ -2494,8 +2553,8 @@ function getProbeMatPublish(): array {
         $mid = ['job' => getProbeJob($item->id) !== null, 'points' => $pts($item->id)];
         $out['crash'][$when] = ['child' => $crash, 'mid' => $mid, 'next' => $run()['extra'], 'points' => $pts($item->id), 'job' => getProbeJob($item->id)];
     }
-    $out['denied'] = getProbeCall(fn() => getProbeWriter('root')->updateNodePublishList());
-    $out['limit'] = getProbeCall(fn() => getProbeWriter('task')->updateNodePublishList(501));
+    $out['denied'] = getProbeCall(fn(): array => getProbeWriter('root')->updateNodePublishList());
+    $out['limit'] = getProbeCall(fn(): array => getProbeWriter('task')->updateNodePublishList(501));
     $out['sched'] = getProbeChild('msched');
     return $out;
 }
@@ -2507,20 +2566,20 @@ function getProbeMatCounters(): array {
     $draft = getProbeWriter('root')->addNode($news, getProbeIn(['cid' => 10]), NodeStatus::Draft);
     $epoch = Cache::getEpoch();
     $srv = getProbeWriter('anna');
-    $out = ['view' => [getProbeCall(fn() => $srv->updateNodeViews($pub->id, $news)), getProbeCall(fn() => $srv->updateNodeViews($pub->id, $news))]];
-    $out['draft'] = getProbeCall(fn() => $srv->updateNodeViews($draft->id, $news));
+    $out = ['view' => [getProbeCall(fn(): null => $srv->updateNodeViews($pub->id, $news)), getProbeCall(fn(): null => $srv->updateNodeViews($pub->id, $news))]];
+    $out['draft'] = getProbeCall(fn(): null => $srv->updateNodeViews($draft->id, $news));
     $out['points'] = getProbePoints('view', 'node:'.$pub->id);
     $out['epoch'] = Cache::getEpoch() === $epoch;
     $db = $GLOBALS['pdb'];
-    $out['notx'] = getProbeCall(fn() => $srv->updateNodeComments($pub->id, $news, 3));
+    $out['notx'] = getProbeCall(fn(): null => $srv->updateNodeComments($pub->id, $news, 3));
     $db->setSqlBegin();
-    $out['comments'] = getProbeCall(fn() => $srv->updateNodeComments($pub->id, $news, 3));
-    $out['negative'] = getProbeCall(fn() => $srv->updateNodeComments($pub->id, $news, -1));
-    $out['rating'] = getProbeCall(fn() => $srv->updateNodeRating($pub->id, $news, 7, 2));
-    $out['over'] = getProbeCall(fn() => $srv->updateNodeRating($pub->id, $news, 11, 2));
-    $out['under'] = getProbeCall(fn() => $srv->updateNodeRating($pub->id, $news, 1, 2));
-    $out['none'] = getProbeCall(fn() => $srv->updateNodeRating($pub->id, $news, 1, 0));
-    $out['other'] = getProbeCall(fn() => $srv->updateNodeComments($pub->id, getProbeMatType('docs'), 1));
+    $out['comments'] = getProbeCall(fn(): null => $srv->updateNodeComments($pub->id, $news, 3));
+    $out['negative'] = getProbeCall(fn(): null => $srv->updateNodeComments($pub->id, $news, -1));
+    $out['rating'] = getProbeCall(fn(): null => $srv->updateNodeRating($pub->id, $news, 7, 2));
+    $out['over'] = getProbeCall(fn(): null => $srv->updateNodeRating($pub->id, $news, 11, 2));
+    $out['under'] = getProbeCall(fn(): null => $srv->updateNodeRating($pub->id, $news, 1, 2));
+    $out['none'] = getProbeCall(fn(): null => $srv->updateNodeRating($pub->id, $news, 1, 0));
+    $out['other'] = getProbeCall(fn(): null => $srv->updateNodeComments($pub->id, getProbeMatType('docs'), 1));
     $db->setSqlCommit();
     $row = getProbeStored($pub->id, 'news');
     $out['after'] = ['views' => $row['views'], 'comnum' => $row['comnum'], 'score' => $row['score'], 'ratings' => $row['ratings'], 'version' => $row['version'],
@@ -2546,34 +2605,37 @@ function getProbeMatAssetOps(): array {
     $before = getProbeAssetRow($map['download']);
     $epoch = Cache::getEpoch();
     $srv = getProbeWriter('anna');
-    $out = ['hits' => [getProbeCall(fn() => $srv->updateNodeAssetHits($map['download'], $files)), getProbeCall(fn() => $srv->updateNodeAssetHits($map['download'], $files))]];
+    $out = ['hits' => [
+        getProbeCall(fn(): null => $srv->updateNodeAssetHits($map['download'], $files)),
+        getProbeCall(fn(): null => $srv->updateNodeAssetHits($map['download'], $files)),
+    ]];
     $out['download'] = getProbePoints('download', 'asset:'.$map['download']);
-    $out['visit'] = [getProbeCall(fn() => $srv->updateNodeAssetHits($lid, $links)), getProbePoints('visit', 'asset:'.$lid)];
-    $out['cover'] = getProbeCall(fn() => $srv->updateNodeAssetHits($map['cover'], $files));
-    $out['wrongtype'] = getProbeCall(fn() => $srv->updateNodeAssetHits($map['download'], $news));
-    $out['report'] = [getProbeCall(fn() => $srv->updateNodeAssetReport($map['download'], $files)), getProbeCall(fn() => getProbeWriter('boris')->updateNodeAssetReport(
+    $out['visit'] = [getProbeCall(fn(): null => $srv->updateNodeAssetHits($lid, $links)), getProbePoints('visit', 'asset:'.$lid)];
+    $out['cover'] = getProbeCall(fn(): null => $srv->updateNodeAssetHits($map['cover'], $files));
+    $out['wrongtype'] = getProbeCall(fn(): null => $srv->updateNodeAssetHits($map['download'], $news));
+    $out['report'] = [getProbeCall(fn(): null => $srv->updateNodeAssetReport($map['download'], $files)), getProbeCall(fn(): null => getProbeWriter('boris')->updateNodeAssetReport(
         $map['download'], $files))];
-    $out['noreport'] = getProbeCall(fn() => $srv->updateNodeAssetReport($map['cover'], $files));
-    $out['guest'] = getProbeCall(fn() => getProbeWriter('guest')->updateNodeAssetReport($lid, $links));
+    $out['noreport'] = getProbeCall(fn(): null => $srv->updateNodeAssetReport($map['cover'], $files));
+    $out['guest'] = getProbeCall(fn(): null => getProbeWriter('guest')->updateNodeAssetReport($lid, $links));
     $out['rows'] = ['download' => getProbeAssetRow($map['download']), 'link' => getProbeAssetRow($lid)];
     $out['sameupd'] = $out['rows']['download']['updated'] === $before['updated'];
     $out['epoch'] = Cache::getEpoch() === $epoch;
     $out['version'] = getProbeStored($node->id, 'files')['version'];
     $out['decide'] = [
-        'anna' => getProbeCall(fn() => $srv->deleteNodeAssetReport($map['download'], $files, true)),
-        'boss' => getProbeCall(fn() => getProbeWriter('boss')->deleteNodeAssetReport($map['download'], $files, true)),
-        'moder' => getProbeCall(fn() => getProbeWriter('moder')->deleteNodeAssetReport($map['download'], $files, true)),
-        'useful' => getProbeCall(fn() => getProbeWriter('mixed')->deleteNodeAssetReport($map['download'], $files, true)),
-        'again' => getProbeCall(fn() => getProbeWriter('mixed')->deleteNodeAssetReport($map['download'], $files, true)),
-        'guest' => getProbeCall(fn() => getProbeWriter('mixed')->deleteNodeAssetReport($lid, $links, true)),
+        'anna' => getProbeCall(fn(): null => $srv->deleteNodeAssetReport($map['download'], $files, true)),
+        'boss' => getProbeCall(fn(): null => getProbeWriter('boss')->deleteNodeAssetReport($map['download'], $files, true)),
+        'moder' => getProbeCall(fn(): null => getProbeWriter('moder')->deleteNodeAssetReport($map['download'], $files, true)),
+        'useful' => getProbeCall(fn(): null => getProbeWriter('mixed')->deleteNodeAssetReport($map['download'], $files, true)),
+        'again' => getProbeCall(fn(): null => getProbeWriter('mixed')->deleteNodeAssetReport($map['download'], $files, true)),
+        'guest' => getProbeCall(fn(): null => getProbeWriter('mixed')->deleteNodeAssetReport($lid, $links, true)),
     ];
     $out['cleared'] = ['download' => getProbeAssetRow($map['download']), 'link' => getProbeAssetRow($lid)];
     $sql = 'SELECT uid, points, source FROM '.PREFIX_DB.'_points WHERE action = \'report\'';
     $out['rewards'] = $GLOBALS['pdb']->getSqlQuery($sql)->fetchAll(PDO::FETCH_ASSOC);
     getProbeWriter('boris')->updateNodeAssetReport($map['download'], $files);
-    $out['selfdecide'] = getProbeCall(fn() => getProbeWriter('mixed')->deleteNodeAssetReport($map['download'], $files, false));
+    $out['selfdecide'] = getProbeCall(fn(): null => getProbeWriter('mixed')->deleteNodeAssetReport($map['download'], $files, false));
     $sql = 'SELECT uid, aid, scope, points, source FROM '.PREFIX_DB.'_points WHERE action = \'moderate\' AND source LIKE \'report:%\' ORDER BY id';
-    $out['moderate'] = array_map(fn($v) => ['source' => (bool)preg_match('/^report:'.$map['download'].':[0-9a-f]{16}$|^report:'.$lid.':[0-9a-f]{16}$/', $v['source'])]
+    $out['moderate'] = array_map(fn(array $v): array => ['source' => (bool)preg_match('/^report:'.$map['download'].':[0-9a-f]{16}$|^report:'.$lid.':[0-9a-f]{16}$/', $v['source'])]
         + array_diff_key($v, ['source' => 1]), $GLOBALS['pdb']->getSqlQuery($sql)->fetchAll(PDO::FETCH_ASSOC));
     return $out;
 }
@@ -2592,32 +2654,32 @@ function getProbeMatCategories(): array {
     $srv = getProbeWriter('boss');
     $epoch = Cache::getEpoch();
     $out = [
-        'move' => getProbeCall(fn() => $srv->updateNodeCategory(16, ['modul' => 'forum'] + getProbeCatRow(16))),
-        'moveextra' => getProbeCall(fn() => $srv->updateNodeCategory(17, ['modul' => 'forum'] + getProbeCatRow(17))),
-        'lang' => getProbeCall(fn() => $srv->updateNodeCategory(16, ['lang' => 'german'] + getProbeCatRow(16))),
-        'keys' => getProbeCall(fn() => $srv->updateNodeCategory(16, ['extra' => 1] + getProbeCatRow(16))),
-        'anna' => getProbeCall(fn() => getProbeWriter('anna')->updateNodeCategory(16, getProbeCatRow(16))),
-        'moder' => getProbeCall(fn() => getProbeWriter('moder')->updateNodeCategory(14, getProbeCatRow(14))),
-        'forum' => getProbeCall(fn() => $srv->updateNodeCategory(20, getProbeCatRow(20))),
-        'deleteused' => getProbeCall(fn() => $srv->deleteNodeCategory(16)),
-        'deletemissing' => getProbeCall(fn() => $srv->deleteNodeCategory(9999)),
+        'move' => getProbeCall(fn(): null => $srv->updateNodeCategory(16, ['modul' => 'forum'] + getProbeCatRow(16))),
+        'moveextra' => getProbeCall(fn(): null => $srv->updateNodeCategory(17, ['modul' => 'forum'] + getProbeCatRow(17))),
+        'lang' => getProbeCall(fn(): null => $srv->updateNodeCategory(16, ['lang' => 'german'] + getProbeCatRow(16))),
+        'keys' => getProbeCall(fn(): null => $srv->updateNodeCategory(16, ['extra' => 1] + getProbeCatRow(16))),
+        'anna' => getProbeCall(fn(): null => getProbeWriter('anna')->updateNodeCategory(16, getProbeCatRow(16))),
+        'moder' => getProbeCall(fn(): null => getProbeWriter('moder')->updateNodeCategory(14, getProbeCatRow(14))),
+        'forum' => getProbeCall(fn(): null => $srv->updateNodeCategory(20, getProbeCatRow(20))),
+        'deleteused' => getProbeCall(fn(): null => $srv->deleteNodeCategory(16)),
+        'deletemissing' => getProbeCall(fn(): null => $srv->deleteNodeCategory(9999)),
     ];
     $out['epoch'] = Cache::getEpoch() > $epoch;
     $out['stored'] = [getProbeCatRow(16)['modul'] ?? null, getProbeCatRow(16)['lang'] ?? null];
-    $out['delete'] = getProbeCall(fn() => $srv->deleteNodeCategory(17));
+    $out['delete'] = getProbeCall(fn(): null => $srv->deleteNodeCategory(17));
     $out['gone'] = [getProbeCatRow(17), getProbeCatRow(18)];
     $row = getProbeStored($ext->id, 'news');
     $out['extnode'] = ['version' => $row['version'], 'cids' => $row['cids']];
-    $out['free'] = getProbeCall(fn() => getProbeWriter('moder')->updateNodeCategory(19, ['modul' => 'forum'] + getProbeCatRow(19)));
+    $out['free'] = getProbeCall(fn(): null => getProbeWriter('moder')->updateNodeCategory(19, ['modul' => 'forum'] + getProbeCatRow(19)));
     $out['moved'] = getProbeCatRow(19)['modul'] ?? null;
     $GLOBALS['pdb']->getSqlQuery('INSERT INTO '.PREFIX_DB.'_categories (id, modul, title, intro, parent, pread, ppost, lang) VALUES (21, \'news\', \'Parent\', \'\', 0,'
         .' \'0|0\', \'0|0\', \'\'), (22, \'news\', \'Kid\', \'\', 21, \'0|0\', \'0|0\', \'\'), (23, \'links\', \'Broken\', \'\', 0, \'0|0\', \'0|0\', \'\')');
-    $out['kids'] = [getProbeCall(fn() => $srv->updateNodeCategory(21, ['modul' => 'forum'] + getProbeCatRow(21))), getProbeCatRow(21)['modul'] ?? null,
+    $out['kids'] = [getProbeCall(fn(): null => $srv->updateNodeCategory(21, ['modul' => 'forum'] + getProbeCatRow(21))), getProbeCatRow(21)['modul'] ?? null,
         getProbeCatRow(22)['modul'] ?? null];
     $out['registry'] = [$srv->checkTypeRegistry(['links']), $srv->checkTypeRegistry(['forum', '']), $srv->checkTypeRegistry([])];
     $GLOBALS['pdb']->getSqlQuery('UPDATE '.PREFIX_DB.'_node_types SET version = version + 1 WHERE name = \'links\'');
     $bent = getProbeWriter('boss');
-    $out['broken'] = [$bent->checkTypeRegistry(['links']), getProbeCall(fn() => $bent->deleteNodeCategory(23)), getProbeCatRow(23)['modul'] ?? null];
+    $out['broken'] = [$bent->checkTypeRegistry(['links']), getProbeCall(fn(): null => $bent->deleteNodeCategory(23)), getProbeCatRow(23)['modul'] ?? null];
     $GLOBALS['pdb']->getSqlQuery('UPDATE '.PREFIX_DB.'_node_types SET version = version - 1 WHERE name = \'links\'');
     $out['guards'] = getProbeMatCount()['guards'];
     $out['used'] = $use->cid;
@@ -2632,14 +2694,14 @@ function getProbeMatPreview(): array {
     $srv = getProbeWriter('anna');
     $body = 'x [attach=photo-abcdefghij-2.png align=left title=P]';
     $out = [
-        'ok' => getProbeCall(fn() => getProbeNode($srv->getNodePreview($news, getProbeIn(['cid' => 10, 'cids' => [15], 'body' => $body, 'assets' => [getProbeAsset(null,
+        'ok' => getProbeCall(fn(): ?array => getProbeNode($srv->getNodePreview($news, getProbeIn(['cid' => 10, 'cids' => [15], 'body' => $body, 'assets' => [getProbeAsset(null,
             'image', 'cover', 'photo-abcdefghij-2.png')]]), NodeStatus::Pending))),
-        'foreign' => getProbeCall(fn() => $srv->getNodePreview($news, getProbeIn(['cid' => 10, 'body' => str_replace('abcdefghij-2', 'bcdefghijk-3', $body)]),
+        'foreign' => getProbeCall(fn(): Node => $srv->getNodePreview($news, getProbeIn(['cid' => 10, 'body' => str_replace('abcdefghij-2', 'bcdefghijk-3', $body)]),
             NodeStatus::Pending)),
-        'direct' => getProbeCall(fn() => $srv->getNodePreview($news, getProbeIn(['cid' => 10]), NodeStatus::Published)),
-        'closed' => getProbeCall(fn() => $srv->getNodePreview($news, getProbeIn(['cid' => 11]), NodeStatus::Pending)),
-        'task' => getProbeCall(fn() => getProbeWriter('task')->getNodePreview($news, getProbeIn(), NodeStatus::Pending)),
-        'nopoint' => getProbeCall(fn() => getProbeWriter('anna', null, null, true)->getNodePreview($news, getProbeIn(['cid' => 10]), NodeStatus::Pending)->id),
+        'direct' => getProbeCall(fn(): Node => $srv->getNodePreview($news, getProbeIn(['cid' => 10]), NodeStatus::Published)),
+        'closed' => getProbeCall(fn(): Node => $srv->getNodePreview($news, getProbeIn(['cid' => 11]), NodeStatus::Pending)),
+        'task' => getProbeCall(fn(): Node => getProbeWriter('task')->getNodePreview($news, getProbeIn(), NodeStatus::Pending)),
+        'nopoint' => getProbeCall(fn(): int => getProbeWriter('anna', null, null, true)->getNodePreview($news, getProbeIn(['cid' => 10]), NodeStatus::Pending)->id),
     ];
     $out['same'] = $before === getProbeMatCount();
     $out['epoch'] = Cache::getEpoch() === $epoch;
@@ -2654,9 +2716,9 @@ function getProbeMatHook(): array {
     $ext = getNodeExtension('hook', $GLOBALS['pdb'], getProbeMatContext('mixed'));
     $srv = getProbeWriter('mixed', null, $ext);
     ProbeHook::$log = [];
-    $out = ['none' => getProbeCall(fn() => getProbeWriter('mixed')->addNode($hook, getProbeIn(), NodeStatus::Draft)),
-        'extra' => getProbeCall(fn() => $srv->addNode($news, getProbeIn(['cid' => 10]), NodeStatus::Draft)),
-        'baddata' => getProbeCall(fn() => $srv->addNode($hook, getProbeIn(['ext' => ['bad' => 1]]), NodeStatus::Draft))];
+    $out = ['none' => getProbeCall(fn(): Node => getProbeWriter('mixed')->addNode($hook, getProbeIn(), NodeStatus::Draft)),
+        'extra' => getProbeCall(fn(): Node => $srv->addNode($news, getProbeIn(['cid' => 10]), NodeStatus::Draft)),
+        'baddata' => getProbeCall(fn(): Node => $srv->addNode($hook, getProbeIn(['ext' => ['bad' => 1]]), NodeStatus::Draft))];
     $node = $srv->addNode($hook, getProbeIn(['ext' => ['note' => 'a']]), NodeStatus::Draft);
     $node = $srv->updateNode($node->id, getProbeKeepIn($node, ['ext' => ['note' => 'b']]), 1);
     $node = $srv->updateNodeStatus($node->id, NodeStatus::Published, $node->version);
@@ -2664,7 +2726,7 @@ function getProbeMatHook(): array {
     $out['log'] = ProbeHook::$log;
     $before = getProbeMatCount();
     ProbeHook::$fail = 'add';
-    $out['fail'] = getProbeCall(fn() => $srv->addNode($hook, getProbeIn(['ext' => ['note' => 'c']]), NodeStatus::Draft));
+    $out['fail'] = getProbeCall(fn(): Node => $srv->addNode($hook, getProbeIn(['ext' => ['note' => 'c']]), NodeStatus::Draft));
     ProbeHook::$fail = '';
     $out['same'] = $before === getProbeMatCount();
     return $out;
@@ -2693,11 +2755,11 @@ function getProbeMatKeep(): array {
     $node = getProbeWriter('root')->addNode($news, getProbeIn(['cid' => 10, 'poll' => 1]), NodeStatus::Draft);
     $set = $news->settings;
     $set['features']['poll'] = false;
-    $out = ['type' => getProbeCall(fn() => getProbeService('boss')->updateNodeType('news', getProbeKeep($news, ['settings' => $set]), $news->version)->version)];
+    $out = ['type' => getProbeCall(fn(): int => getProbeService('boss')->updateNodeType('news', getProbeKeep($news, ['settings' => $set]), $news->version)->version)];
     $node = getProbeMatNode($node->id, 'news');
-    $out['same'] = getProbeCall(fn() => getProbeWriter('root')->updateNode($node->id, getProbeKeepIn($node, ['title' => 'Kept poll']), 1)->poll);
-    $out['other'] = getProbeCall(fn() => getProbeWriter('root')->updateNode($node->id, getProbeKeepIn($node, ['poll' => 2]), 2));
-    $out['clear'] = getProbeCall(fn() => getProbeWriter('root')->updateNode($node->id, getProbeKeepIn($node, ['poll' => 0]), 2)->poll);
+    $out['same'] = getProbeCall(fn(): int => getProbeWriter('root')->updateNode($node->id, getProbeKeepIn($node, ['title' => 'Kept poll']), 1)->poll);
+    $out['other'] = getProbeCall(fn(): Node => getProbeWriter('root')->updateNode($node->id, getProbeKeepIn($node, ['poll' => 2]), 2));
+    $out['clear'] = getProbeCall(fn(): int => getProbeWriter('root')->updateNode($node->id, getProbeKeepIn($node, ['poll' => 0]), 2)->poll);
     return $out;
 }
 
@@ -2746,8 +2808,8 @@ function getProbeMaterialRuns(): array {
     return $out;
 }
 
-# Integrity: the comments of a deleted material go with it and their awards are compensated inside its transaction, a failed comment step keeps the
-# material, one link twice cannot reach the writer, an expired material is not published, a closed points configuration delivers the job, and a moderator reads any state
+# Integrity: the comments of a deleted material go with it and their awards are compensated inside its transaction, and a failed comment step keeps the material
+# One link twice cannot reach the writer, an expired material is not published, a closed points configuration delivers the job, and a moderator reads any state
 function getProbeMatIntegrity(): array {
     [$news, $links, $hook] = [getProbeMatType('news'), getProbeMatType('links'), getProbeMatType('hook')];
     $pre = PREFIX_DB.'_';
@@ -2765,10 +2827,10 @@ function getProbeMatIntegrity(): array {
     $was = [2 => $bal(2), 4 => $bal(4)];
     $cnt = fn(string $mod): int => intval(getProbeValue('SELECT COUNT(*) FROM '.$pre.'comment WHERE cid = :cid AND modul = :mod', ['cid' => $pub->id, 'mod' => $mod]));
     $pdb->getSqlQuery('RENAME TABLE '.$pre.'comment TO '.$pre.'comment_off');
-    $out = ['broken' => getProbeCall(fn() => getProbeWriter('moder')->deleteNode($pub->id, 1, getProbeCom()))];
+    $out = ['broken' => getProbeCall(fn(): null => getProbeWriter('moder')->deleteNode($pub->id, 1, getProbeCom()))];
     $pdb->getSqlQuery('RENAME TABLE '.$pre.'comment_off TO '.$pre.'comment');
     $out['kept'] = [getProbeStored($pub->id, 'news') !== null, $cnt('news'), count(getProbePoints('publish', 'node:'.$pub->id))];
-    $out['done'] = getProbeCall(fn() => getProbeWriter('moder')->deleteNode($pub->id, 1, getProbeCom()));
+    $out['done'] = getProbeCall(fn(): null => getProbeWriter('moder')->deleteNode($pub->id, 1, getProbeCom()));
     $out['gone'] = [getProbeStored($pub->id, 'news') !== null, $cnt('news'), $cnt('shop')];
     $out['balance'] = [2 => $bal(2) - $was[2], 4 => $bal(4) - $was[4]];
     $out['reverse'] = [];
@@ -2778,14 +2840,14 @@ function getProbeMatIntegrity(): array {
     }
     $role = ['link' => getProbeRole('Link', 'link', ['file'], 0, 2, true, true, 10)];
     $set = ['features' => getProbeFeatures(['submit']), 'assets' => $role];
-    $out['twice'] = [getProbeCall(fn() => getProbeService('boss')->addNodeType('pairs', getProbeInput(['settings' => $set]))),
-        getProbeCall(fn() => getProbeWriter('mixed')->addNode($links, getProbeIn(['assets' => [getProbeAsset(null, 'file', 'link', 'https://example.com/twice'),
+    $out['twice'] = [getProbeCall(fn(): NodeType => getProbeService('boss')->addNodeType('pairs', getProbeInput(['settings' => $set]))),
+        getProbeCall(fn(): Node => getProbeWriter('mixed')->addNode($links, getProbeIn(['assets' => [getProbeAsset(null, 'file', 'link', 'https://example.com/twice'),
         getProbeAsset(null, 'file', 'link', 'https://example.com/twice', 1)]]), NodeStatus::Draft))];
     $draft = getProbeWriter('mixed')->addNode($news, getProbeIn(['cid' => 10]), NodeStatus::Draft);
     $pdb->getSqlQuery('UPDATE '.$pre.'nodes SET expires = :exp WHERE id = :id', ['exp' => getProbeClock(-60), 'id' => $draft->id]);
-    $out['expired'] = [getProbeCall(fn() => getProbeWriter('mixed')->updateNodeStatus($draft->id, NodeStatus::Published, 1)),
-        getProbeCall(fn() => getProbeWriter('mixed')->updateNodeStatus($draft->id, NodeStatus::Pending, 1)),
-        getProbeCall(fn() => getProbeWriter('mixed')->updateNodeStatus($draft->id, NodeStatus::Deleted, 1)->status->name)];
+    $out['expired'] = [getProbeCall(fn(): Node => getProbeWriter('mixed')->updateNodeStatus($draft->id, NodeStatus::Published, 1)),
+        getProbeCall(fn(): Node => getProbeWriter('mixed')->updateNodeStatus($draft->id, NodeStatus::Pending, 1)),
+        getProbeCall(fn(): string => getProbeWriter('mixed')->updateNodeStatus($draft->id, NodeStatus::Deleted, 1)->status->name)];
     $late = getProbeWriter('mixed')->addNode($news, getProbeIn(['cid' => 10, 'pubdate' => getProbeClock(3600)]), NodeStatus::Published);
     setProbeCome($late->id);
     $run = getProbeWriter('task', new Point($pdb, []))->updateNodePublishList();
@@ -2793,7 +2855,9 @@ function getProbeMatIntegrity(): array {
     require_once $GLOBALS['probework'].'/mclass/ext/load.php';
     $ext = getNodeExtension('hook', $pdb, getProbeMatContext('mixed'));
     $hid = getProbeWriter('mixed', null, $ext)->addNode($hook, getProbeIn([]), NodeStatus::Draft);
-    $read = fn(string $who, bool $any) => getProbeCall(fn() => (new NodeQuery($pdb, getProbeMatContext($who), $GLOBALS['fld']))->getNodeTarget('hook', $hid->id, $any)?->id);
+    $read = fn(string $who, bool $any): array => getProbeCall(
+        fn(): ?int => (new NodeQuery($pdb, getProbeMatContext($who), $GLOBALS['fld']))->getNodeTarget('hook', $hid->id, $any)?->id
+    );
     $out['target'] = ['public' => $read('mixed', false), 'any' => $read('mixed', true), 'anna' => $read('anna', true)];
     $pdb->getSqlQuery('UPDATE '.$pre.'node_types SET active = 0 WHERE name = \'hook\'');
     $out['target']['off'] = [$read('mixed', true), $read('anna', true)];
@@ -2808,8 +2872,8 @@ function getProbeLines(string $text): int {
     return $num;
 }
 
-# Integrity of the delete: a delete whose compensation Point refuses keeps the material with its comments and the journal, a closed points configuration deletes
-# without it and logs; the comment writes run in child processes of a registered user and of the main administrator
+# Integrity of the delete: a delete whose compensation Point refuses keeps the material with its comments and the journal, a closed points setup deletes and logs
+# The comment writes run in child processes of a registered user and of the main administrator
 function getProbeMatAward(): array {
     global $conf;
     $news = getProbeMatType('news');
@@ -2823,9 +2887,9 @@ function getProbeMatAward(): array {
     $side = getProbeMatPoint(false, setProbeZone(new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], (string)end($GLOBALS['pnames']))));
     $was = $sum();
     $rows = fn(): int => intval(getProbeValue('SELECT COUNT(*) FROM '.$pre.'comment WHERE modul = \'news\' AND cid = :cid', ['cid' => $one->id]));
-    $out = ['refused' => getProbeCall(fn() => getProbeWriter('moder', $side)->deleteNode($one->id, 1, getProbeCom()))];
+    $out = ['refused' => getProbeCall(fn(): null => getProbeWriter('moder', $side)->deleteNode($one->id, 1, getProbeCom()))];
     $out['kept'] = [getProbeStored($one->id, 'news') !== null, $rows(), $sum() - $was, getProbeMatCount()['guards']];
-    $out['closed'] = getProbeCall(fn() => getProbeWriter('moder', new Point($pdb, []))->deleteNode($one->id, 1, getProbeCom()));
+    $out['closed'] = getProbeCall(fn(): null => getProbeWriter('moder', new Point($pdb, []))->deleteNode($one->id, 1, getProbeCom()));
     $out['gone'] = [getProbeStored($one->id, 'news') !== null, $rows(), $sum() - $was, count(getProbePoints('publish', 'node:'.$one->id)),
         getProbeLines('Node: a material delete compensates no award')];
     $out['user'] = getProbeChild('mcomm', ['boris']);
@@ -2833,8 +2897,8 @@ function getProbeMatAward(): array {
     return $out;
 }
 
-# The comment writes of one visitor in a child process: a registered user comments on a material gone or closed between the check and the lock, on an open one,
-# and through a points unit that loses its savepoint; the main administrator publishes a pending comment of a material that is gone and one of a live material
+# The comment writes of one visitor in a child process: a registered user comments on a material gone or closed between the check and the lock, and on an open one
+# A comment also goes through a points unit that loses its savepoint; the main administrator publishes a pending comment of a gone material and one of a live material
 function getProbeMatComm(string $who): array {
     global $conf;
     $news = getProbeMatType('news');
@@ -2876,8 +2940,8 @@ function getProbeMatComm(string $who): array {
     return $out;
 }
 
-# Categories: a parent below the category itself or on a stored loop is refused, a deletion takes the whole subtree or nothing and leaves no
-# subcategory without its parent, and a category of the forum that still holds topics never becomes a category of a type
+# Categories: a parent below the category itself or on a stored loop is refused, a deletion takes the whole subtree or nothing and leaves no orphaned subcategory
+# A category of the forum that still holds topics never becomes a category of a type
 function getProbeMatBranch(): array {
     $news = getProbeMatType('news');
     $pre = PREFIX_DB.'_';
@@ -2886,30 +2950,30 @@ function getProbeMatBranch(): array {
     $pdb->getSqlQuery('INSERT INTO '.$pre.'categories (id, modul, title, intro, parent, pread, ppost, lang) VALUES '.implode(', ', [$line(30, 'Top', 0), $line(31, 'Mid', 30),
         $line(32, 'Low', 31), $line(33, 'Deep', 32), $line(34, 'Ring one', 35), $line(35, 'Ring two', 34)]));
     $srv = getProbeWriter('boss');
-    $set = fn(int $id, int $up): array => getProbeCall(fn() => $srv->updateNodeCategory($id, ['parent' => $up] + getProbeCatRow($id)));
+    $set = fn(int $id, int $up): array => getProbeCall(fn(): null => $srv->updateNodeCategory($id, ['parent' => $up] + getProbeCatRow($id)));
     $up = fn(int $id): ?int => ($one = getProbeCatRow($id)) ? intval($one['parent']) : null;
     $out = ['loop' => [$set(30, 32), $set(30, 33), $set(31, 31), $set(33, 34), $set(33, 30)]];
-    $out['add'] = getProbeCall(fn() => $srv->addNodeCategory(['parent' => 34] + getProbeCatRow(30)));
+    $out['add'] = getProbeCall(fn(): int => $srv->addNodeCategory(['parent' => 34] + getProbeCatRow(30)));
     $out['parents'] = [$up(30), $up(31), $up(32), $up(33)];
     $main = getProbeWriter('root')->addNode($news, getProbeIn(['cid' => 32]), NodeStatus::Draft);
     $extra = getProbeWriter('root')->addNode($news, getProbeIn(['cid' => 10, 'cids' => [32]]), NodeStatus::Draft);
-    $out['used'] = [getProbeCall(fn() => $srv->deleteNodeCategory(30)), $up(30), $up(31), $up(32), $up(33)];
+    $out['used'] = [getProbeCall(fn(): null => $srv->deleteNodeCategory(30)), $up(30), $up(31), $up(32), $up(33)];
     $pdb->getSqlQuery('UPDATE '.$pre.'nodes SET cid = 10 WHERE id = :id', ['id' => $main->id]);
-    $out['tree'] = [getProbeCall(fn() => $srv->deleteNodeCategory(30)), $up(30), $up(31), $up(32), $up(33)];
+    $out['tree'] = [getProbeCall(fn(): null => $srv->deleteNodeCategory(30)), $up(30), $up(31), $up(32), $up(33)];
     $row = getProbeStored($extra->id, 'news');
     $out['extra'] = ['version' => $row['version'], 'cids' => $row['cids']];
     $sql = 'SELECT COUNT(*) FROM '.$pre.'categories AS c LEFT JOIN '.$pre.'categories AS p ON p.id = c.parent WHERE c.parent > 0 AND p.id IS NULL';
     $out['orphans'] = intval(getProbeValue($sql));
     $pdb->getSqlQuery('INSERT INTO '.$pre.'forum (pid, cid, uid, name, title, time, body, field, status) VALUES (0, 20, 2, \'anna\', \'Topic\', NOW(), \'x\', \'\', 1)');
-    $move = fn(): array => getProbeCall(fn() => $srv->updateNodeCategory(20, ['modul' => 'news'] + getProbeCatRow(20)));
+    $move = fn(): array => getProbeCall(fn(): null => $srv->updateNodeCategory(20, ['modul' => 'news'] + getProbeCatRow(20)));
     $out['forum'] = [$move(), getProbeCatRow(20)['modul'] ?? null];
     $pdb->getSqlQuery('DELETE FROM '.$pre.'forum WHERE cid = 20');
     $out['forum'] = array_merge($out['forum'], [$move(), getProbeCatRow(20)['modul'] ?? null]);
     return $out;
 }
 
-# Locks: a moderator decides the report of a resource while a child deletes its material; the decision holds the resource, the child reaches its own
-# locks meanwhile and waits at the resource before any account, so neither side ends in a deadlock and the decision, its award and the deletion all land
+# Locks: a moderator decides the report of a resource while a child deletes its material; the decision holds the resource, the child reaches its own locks meanwhile
+# The child waits at the resource before any account, so neither side ends in a deadlock and the decision, its award and the deletion all land
 function getProbeMatCross(): array {
     global $conf;
     $links = getProbeMatType('links');
@@ -2925,7 +2989,7 @@ function getProbeMatCross(): array {
         sleep(2);
     };
     $srv = new NodeService($hdb, getProbeMatContext('mixed'), $GLOBALS['fld'], getProbeMatPoint(false, $hdb));
-    $out = ['decide' => getProbeCall(fn() => $srv->deleteNodeAssetReport($aid, $links, true))];
+    $out = ['decide' => getProbeCall(fn(): null => $srv->deleteNodeAssetReport($aid, $links, true))];
     $text = $proc ? stream_get_contents($pipes[1]).stream_get_contents($pipes[2]) : '';
     if ($proc) proc_close($proc);
     $out['delete'] = json_decode(trim($text), true) ?? ['text' => $text];
@@ -2935,8 +2999,8 @@ function getProbeMatCross(): array {
     return $out;
 }
 
-# Model: a feature stays on while the type holds its data, a new external address of a visitor goes to moderation, a hidden category takes no post,
-# an own report earns no report award, a file replaced by a link starts without metadata and hits, and the count of a profile follows the rule of its feed
+# Model: a feature stays on while the type holds its data, a new external address of a visitor goes to moderation, a hidden category takes no post
+# An own report earns no report award, a file replaced by a link starts without metadata and hits, and the count of a profile follows the rule of its feed
 function getProbeMatModel(): array {
     [$news, $docs, $files] = [getProbeMatType('news'), getProbeMatType('docs'), getProbeMatType('files')];
     $pre = PREFIX_DB.'_';
@@ -2946,7 +3010,7 @@ function getProbeMatModel(): array {
         $type = getProbeMatType($name);
         $set = $type->settings;
         $set['features'][$key] = false;
-        return getProbeCall(fn() => getProbeService('boss')->updateNodeType($name, getProbeKeep($type, ['settings' => $set]), $type->version)->version);
+        return getProbeCall(fn(): int => getProbeService('boss')->updateNodeType($name, getProbeKeep($type, ['settings' => $set]), $type->version)->version);
     };
     $top = $root->addNode($docs, getProbeIn(), NodeStatus::Draft);
     $kid = $root->addNode($docs, getProbeIn(['rels' => [['rid' => $top->id, 'type' => 'parent', 'sort' => 0]]]), NodeStatus::Draft);
@@ -2957,26 +3021,38 @@ function getProbeMatModel(): array {
     $out['kept'] = [getProbeMatType('news')->version === $vers[0], getProbeMatType('docs')->version === $vers[1], getProbeStored($kid->id, 'docs')['rels'][0]['rid'] ?? 0,
         getProbeStored($two->id, 'news')['rels'][0]['rid'] ?? 0, getProbeStored($two->id, 'news')['cid']];
     $link = [getProbeAsset(null, 'file', 'download', 'https://example.com/model.zip')];
-    $fin = fn(NodeStatus $st): array => getProbeCall(fn() => getProbeWriter('boris')->addNode($files, getProbeIn(['fields' => ['release' => '1'], 'assets' => $link]), $st)
+    $fin = fn(NodeStatus $st): array => getProbeCall(fn(): string => getProbeWriter('boris')->addNode($files, getProbeIn(['fields' => ['release' => '1'], 'assets' => $link]), $st)
         ->status->name);
-    $out['external'] = ['direct' => $fin(NodeStatus::Published), 'pending' => $fin(NodeStatus::Pending), 'root' => getProbeCall(fn() => $root->addNode($files,
+    $out['external'] = ['direct' => $fin(NodeStatus::Published), 'pending' => $fin(NodeStatus::Pending), 'root' => getProbeCall(fn(): string => $root->addNode($files,
         getProbeIn(['fields' => ['release' => '1'], 'assets' => $link]), NodeStatus::Published)->status->name)];
-    $hide = fn(string $who): array => getProbeCall(fn() => getProbeWriter($who)->addNode($news, getProbeIn(['cid' => 25]), NodeStatus::Pending)->cid);
-    $out['hidden'] = ['anna' => $hide('anna'), 'boris' => $hide('boris'), 'mixed' => $hide('mixed'), 'preview' => getProbeCall(fn() => getProbeWriter('anna')->getNodePreview($news,
-        getProbeIn(['cid' => 25]), NodeStatus::Pending)->cid)];
+    $hide = fn(string $who): array => getProbeCall(fn(): int => getProbeWriter($who)->addNode($news, getProbeIn(['cid' => 25]), NodeStatus::Pending)->cid);
+    $out['hidden'] = [
+        'anna' => $hide('anna'),
+        'boris' => $hide('boris'),
+        'mixed' => $hide('mixed'),
+        'preview' => getProbeCall(fn(): int => getProbeWriter('anna')->getNodePreview($news, getProbeIn(['cid' => 25]), NodeStatus::Pending)->cid),
+    ];
+    $pdb->getSqlQuery('INSERT INTO '.$pre.'categories (id, modul, title, intro, parent, pview, pread, ppost, lang) VALUES (26, \'news\', \'Foreign\', \'\', 0, \'0|0\', \'0|0\','
+        .' \'0|0\', \'xx\')');
+    $tongue = fn(string $lng, array $mods): array => getProbeCall(fn(): int => (new NodeService($pdb, new NodeContext(3, [2], $mods ? 2 : 0, $mods, false, false, '127.0.0.1',
+        $lng), $GLOBALS['fld'], $GLOBALS['mpnt']))->addNode($news, getProbeIn(['cid' => 26]), NodeStatus::Pending)->cid);
+    $offer = fn(string $lng, array $mods): bool => in_array(26, (new NodeQuery($pdb, new NodeContext(3, [2], $mods ? 2 : 0, $mods, false, false, '127.0.0.1', $lng),
+        $GLOBALS['fld']))->getNodePostCats($news), true);
+    $out['tongue'] = ['other' => $tongue('en', []), 'same' => $tongue('xx', []), 'none' => $tongue('', []), 'moder' => $tongue('en', ['news']),
+        'form' => [$offer('en', []), $offer('xx', []), $offer('', []), $offer('en', ['news'])]];
     $node = $root->addNode($files, getProbeIn(['fields' => ['release' => '1'], 'assets' => [getProbeAsset(null, 'file', 'download', 'manual-abcdefghij-2.pdf')]]),
         NodeStatus::Published);
     $aid = $node->assets[0]->id;
     getProbeWriter('anna')->updateNodeAssetHits($aid, $files);
     getProbeWriter('boris')->updateNodeAssetReport($aid, $files);
-    $out['own'] = getProbeCall(fn() => getProbeWriter('mixed')->deleteNodeAssetReport($aid, $files, true));
+    $out['own'] = getProbeCall(fn(): null => getProbeWriter('mixed')->deleteNodeAssetReport($aid, $files, true));
     $sql = 'SELECT action, uid FROM '.$pre.'points WHERE source LIKE :src ORDER BY id';
     $out['ownpoints'] = $pdb->getSqlQuery($sql, ['src' => 'report:'.$aid.':%'])->fetchAll(PDO::FETCH_ASSOC);
     $asset = fn(): array => $pdb->getSqlQuery('SELECT src, mime, size, hits FROM '.$pre.'node_assets WHERE id = :id', ['id' => $aid])->fetch(PDO::FETCH_ASSOC) ?: [];
     $out['file'] = $asset();
     $node = getProbeMatNode($node->id, 'files');
     $keep = getProbeKeepIn($node, ['assets' => [['src' => 'https://example.com/moved.zip'] + getProbeAsset($aid, 'file', 'download', '')]]);
-    $out['swap'] = getProbeCall(fn() => $root->updateNode($node->id, $keep, $node->version)->version);
+    $out['swap'] = getProbeCall(fn(): int => $root->updateNode($node->id, $keep, $node->version)->version);
     $out['link'] = $asset();
     $open = $root->addNode($news, getProbeIn(['cid' => 10]), NodeStatus::Published);
     $com = getProbeCom();
@@ -2985,12 +3061,22 @@ function getProbeMatModel(): array {
         .' (:shut, \'news\', NOW(), 2, \'anna\', \'x\', 1), (1, \'voting\', NOW(), 2, \'anna\', \'x\', 1)';
     $pdb->getSqlQuery($sql, ['open' => $open->id, 'shut' => $one->id]);
     $out['profile'] = [$was[0] === $was[1], $com->getUserCount(2) - $was[0], count($com->getUserList(2, 500)) - $was[1]];
+    $sync = $GLOBALS['conf']['node']['limits']['syncbatch'];
+    $GLOBALS['conf']['node']['limits']['syncbatch'] = 1;
+    $low = getProbeCom();
+    $out['lowbatch'] = [$low->getUserCount(2) - $was[0], count($low->getUserList(2, 500)) - $was[1]];
+    $out['batch'] = [];
+    foreach ([1, 700, '9'] as $one) {
+        $GLOBALS['conf']['node']['limits']['syncbatch'] = $one;
+        $out['batch'][] = getProbeQuery('guest')->getTargetSize();
+    }
+    $GLOBALS['conf']['node']['limits']['syncbatch'] = $sync;
     $out['free'] = $off('files', 'related');
     return $out;
 }
 
-# Snapshots: a delete of a material with an extension locks the comments before its first plain read, so a comment another connection edits right
-# before that lock is taken over and not refused as changed since the last read under innodb_snapshot_isolation
+# Snapshots: a delete of a material with an extension locks the comments before its first plain read
+# So a comment another connection edits right before that lock is taken over and not refused as changed since the last read under innodb_snapshot_isolation
 function getProbeMatSnap(): array {
     global $conf;
     require_once $GLOBALS['probework'].'/mclass/ext/load.php';
@@ -3005,11 +3091,11 @@ function getProbeMatSnap(): array {
     $out = ['snapshot' => $hdb->getSqlQuery('SET SESSION innodb_snapshot_isolation = 1') !== false];
     $hdb->match = '_comment WHERE cid IN';
     $hdb->early = true;
-    $hdb->hold = fn() => $pdb->getSqlQuery('UPDATE '.$pre.'comment SET body = \'edited\' WHERE id = :id', ['id' => $cid]);
+    $hdb->hold = fn(): PDOStatement|false => $pdb->getSqlQuery('UPDATE '.$pre.'comment SET body = \'edited\' WHERE id = :id', ['id' => $cid]);
     $pnt = getProbeMatPoint(false, $hdb);
     $com = new Comment($hdb, $GLOBALS['prs'], $pnt, array_replace($conf, ['node' => ['types' => array_fill_keys(['docs', 'files', 'hook', 'links', 'news'], [])]]));
     ProbeHook::$log = [];
-    $out['delete'] = getProbeCall(fn() => (new NodeService($hdb, $ctx, $GLOBALS['fld'], $pnt, getNodeExtension('hook', $hdb, $ctx)))->deleteNode($node->id, 1, $com));
+    $out['delete'] = getProbeCall(fn(): null => (new NodeService($hdb, $ctx, $GLOBALS['fld'], $pnt, getNodeExtension('hook', $hdb, $ctx)))->deleteNode($node->id, 1, $com));
     $out['after'] = [intval(getProbeValue('SELECT COUNT(*) FROM '.$pre.'nodes WHERE id = :id', ['id' => $node->id])),
         intval(getProbeValue('SELECT COUNT(*) FROM '.$pre.'comment WHERE id = :id', ['id' => $cid])),
         ProbeHook::$log, $hdb->hold === null];
@@ -3028,12 +3114,12 @@ if ($pmat) {
         $GLOBALS['mpnt'] = getProbeMatPoint();
         $answer = match ($pmode) {
             'mtree', 'mcrash' => getProbeTreeMove(intval($pargs[0] ?? 0), intval($pargs[1] ?? 0)),
-            'mlink' => getProbeCall(fn() => getProbeWriter('mixed')->addNode(getProbeMatType('links'), getProbeIn(['assets' => [getProbeAsset(null, 'file', 'link',
+            'mlink' => getProbeCall(fn(): int => getProbeWriter('mixed')->addNode(getProbeMatType('links'), getProbeIn(['assets' => [getProbeAsset(null, 'file', 'link',
                 (string)($pargs[0] ?? ''))]]), NodeStatus::Draft)->id),
-            'mpub', 'mpubcrash' => getProbeCall(fn() => getProbeWriter('task')->updateNodePublishList()),
+            'mpub', 'mpubcrash' => getProbeCall(fn(): array => getProbeWriter('task')->updateNodePublishList()),
             'msched' => addSchedulerRun('nodepublish', 'manual'),
             'mcomm' => getProbeMatComm((string)($pargs[0] ?? '')),
-            'mdelete' => getProbeCall(fn() => getProbeWriter('mixed')->deleteNode(intval($pargs[0] ?? 0), intval($pargs[1] ?? 0), getProbeCom())),
+            'mdelete' => getProbeCall(fn(): null => getProbeWriter('mixed')->deleteNode(intval($pargs[0] ?? 0), intval($pargs[1] ?? 0), getProbeCom())),
             'mupload' => ['moder' => checkUploadModer('news'), 'forum' => checkUploadModer('forum'), 'shop' => checkUploadModer('shop'), 'none' => checkUploadModer(''),
                 'owner' => getEditorFileOwner('news'), 'flag' => getUploadFileArea(getUploadPlaceRule('news.attach'))->getCapabilities()['delete']],
         };
@@ -3055,7 +3141,7 @@ if ($pmode === 'crash') {
     if ($cdb->when === 'journal') set_error_handler(static fn(int $no, string $text): bool => str_contains($text, 'journal.json.tmp'));
     $type = (new NodeQuery($cdb, getProbeContext('boss'), $fld))->getNodeType('news');
     $cin = new NodeTypeInput('Crash '.$cdb->when, $type->intro, $type->ext, $type->sort, $type->settings, $type->fields, $type->uploads, $type->rating);
-    echo json_encode(getProbeCall(fn() => (new NodeService($cdb, getProbeContext('boss'), $fld, $pnt))->updateNodeType('news', $cin, $type->version)->version));
+    echo json_encode(getProbeCall(fn(): int => (new NodeService($cdb, getProbeContext('boss'), $fld, $pnt))->updateNodeType('news', $cin, $type->version)->version));
     exit;
 }
 
@@ -3068,7 +3154,7 @@ if ($pmode === 'restore') {
 
 if ($pmode === 'race') {
     $GLOBALS['pdb'] = $db;
-    echo json_encode(getProbeCall(fn() => getProbeService('boss')->addNodeType('race', getProbeInput())->version));
+    echo json_encode(getProbeCall(fn(): int => getProbeService('boss')->addNodeType('race', getProbeInput())->version));
     exit;
 }
 

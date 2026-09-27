@@ -39,6 +39,9 @@ $op = (isset($_REQUEST['op'])) ? filterVar($_REQUEST['op']) : '';
 require_once BASE_DIR.'/lang/'.$clang.'.php';
 require_once BASE_DIR.'/setup/lang/'.$clang.'.php';
 
+# The failed codes in a row after which the key config/setup.unlock is removed, so a guessed code needs a new key from the owner every few attempts
+const SETUPFAIL = 5;
+
 if (version_compare(PHP_VERSION, '8.4.0', '<')) setExit(_PHPSETUP);
 foreach (['mbstring', 'pdo', 'json'] as $ext) {
     if (!extension_loaded($ext)) setExit(_EXTSETUP.': '.$ext);
@@ -46,14 +49,24 @@ foreach (['mbstring', 'pdo', 'json'] as $ext) {
 # An installed site keeps the installer shut: no form, no secret, no write and no database until the owner uploads config/setup.unlock with a code of eight characters or more
 # Every form of the installer asks for that code before it shows the connection data or writes, and a clean run removes it
 # The first request that meets the code in plain text replaces it by its password hash, so a server that hands config/ out as files hands out no usable code
+# The hash may carry the count of failed codes on a second line; a key that already counts the last failure is removed and the installer stays locked
 $dbconf = getSetupBase();
 $skey = CONFIG_DIR.'/setup.unlock';
 $scode = (($dbconf['name'] ?? '') !== '' && is_file($skey)) ? trim((string)file_get_contents($skey)) : '';
 if (($dbconf['name'] ?? '') !== '' && strlen($scode) < 8) setExit(_SETUPLOCK);
-if ($scode !== '' && password_get_info($scode)['algo'] === null) {
+$sline = explode("\n", $scode, 2);
+if (password_get_info($sline[0])['algo'] !== null) {
+    $scode = $sline[0];
+    if (intval($sline[1] ?? 0) >= SETUPFAIL) {
+        unlink($skey);
+        setExit(_SETUPKEYGONE);
+    }
+} elseif ($scode !== '') {
     $scode = password_hash($scode, PASSWORD_DEFAULT);
     if (!is_writable($skey) || file_put_contents($skey, $scode, LOCK_EX) !== strlen($scode)) setExit(_FILE.' config/setup.unlock '._SERRORPERM);
 }
+# The panel file the site runs now: a 6.2 site keeps its name in config/config_security.php until the update carries it over, a 6.3 site in config/security.php
+$spanel = filterVar((string)(getSetupConfig(CONFIG_DIR.'/config_security.php')['afile'] ?? $conf['security']['afile'] ?? '')) ?: 'admin';
 $copy = '<a href="https://slaed.net" target="_blank" title="SLAED CMS">SLAED CMS</a> © 2005-'.date('Y').' Eduard Laas. Released under MIT License.';
 
 # Saving configurations to a file; every scalar is stored as a string unless $raw keeps the native types the definitions of the extra fields are made of
@@ -127,7 +140,10 @@ function getProtocol(): string {
         $proto = 'https';
     } elseif (isset($_SERVER['HTTPS']) && (($_SERVER['HTTPS'] == 'on') || ($_SERVER['HTTPS'] == '1'))) {
         $proto = 'https';
-    } elseif (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https' || !empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] == 'on') {
+    } elseif (
+        !empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https'
+        || !empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] == 'on'
+    ) {
         $proto = 'https';
     } elseif (strtolower(substr($_SERVER['SERVER_PROTOCOL'], 0, 5)) == 'https') {
         $proto = 'https';
@@ -152,6 +168,7 @@ function getCrypt(string $pass): string {
     return $crypt;
 }
 
+# Run one SQL file of the installer with its placeholders filled and answer a report row per table statement and per failed one; a DELETE names its removed rows
 function getSqlFile(string $file, string $prefix, string $engine, string $charset, string $collate, $db): string {
     $file = BASE_DIR.'/'.$file;
     if (!file_exists($file)) return '';
@@ -166,7 +183,8 @@ function getSqlFile(string $file, string $prefix, string $engine, string $charse
         $result = $db->getSqlQuery($query);
         $info = getSqlinfo($query);
 
-        if ($info['table'] !== '') $output .= getInfo($info['table'], $result);
+        $gone = ($result && $info['type'] === 'DELETE') ? ' (rows removed: '.intval($db->getSqlRowCount($result)).')' : '';
+        if ($info['table'] !== '') $output .= getInfo($info['table'].$gone, $result);
         elseif (!$result) $output .= getInfo($info['type'], $result);
     }
 
@@ -276,6 +294,29 @@ function checkWritableConfig(string $file): void {
     if (!is_writable(is_file(CONFIG_DIR.'/'.$file) ? CONFIG_DIR.'/'.$file : CONFIG_DIR)) setExit(_FILE.' config/'.$file.' '._SERRORPERM);
 }
 
+# Check a posted code against the hash of config/setup.unlock under an exclusive lock of that file and keep the count of failures in a row on its second line
+# A match clears the count; the failure that reaches SETUPFAIL removes the key and stops, so the installer stays locked until the owner uploads a new one
+function checkSetupCode(string $code): bool {
+    global $skey;
+    if (!is_file($skey)) setExit(_SETUPLOCK);
+    $file = is_writable($skey) ? fopen($skey, 'r+') : false;
+    if (!$file) setExit(_FILE.' config/setup.unlock '._SERRORPERM);
+    flock($file, LOCK_EX);
+    $line = explode("\n", trim((string)stream_get_contents($file)), 2);
+    $good = password_verify($code, $line[0]);
+    $fail = $good ? 0 : intval($line[1] ?? 0) + 1;
+    $text = $line[0].($fail ? "\n".$fail : '');
+    $done = ftruncate($file, 0) && rewind($file) && fwrite($file, $text) === strlen($text) && fflush($file);
+    flock($file, LOCK_UN);
+    fclose($file);
+    if ($fail >= SETUPFAIL) {
+        unlink($skey);
+        setExit(_SETUPKEYGONE);
+    }
+    if (!$done) setExit(_FILE.' config/setup.unlock '._SERRORPERM);
+    return $good;
+}
+
 function language(): void {
     global $title, $clang;
     $title = _LANG;
@@ -289,12 +330,14 @@ function language(): void {
     foreach ($langlist as $val) {
         $altlang = getLang($val);
         if (($ix - 1) % $col == 0) $cont .= '<tr>';
-        $cont .= '<td style="width: '.$tdwidth.'%;" class="sl_center"><a href="setup.php?op=lang&amp;id='.$val.'" title="'.$altlang.'"><img src="setup/templates/images/'.$val.'.png" alt="'.$altlang.'"><br><b>'.$altlang.'</b></a></td>';
+        $cont .= '<td style="width: '.$tdwidth.'%;" class="sl_center"><a href="setup.php?op=lang&amp;id='.$val.'" title="'.$altlang.'">'
+        .'<img src="setup/templates/images/'.$val.'.png" alt="'.$altlang.'"><br><b>'.$altlang.'</b></a></td>';
         if ($ix % $col == 0) $cont .= '</tr>'."\n";
         $ix++;
     }
     if ($clang) {
-        $cont .= '<tr><td colspan="'.$col.'" class="sl_center"><form action="setup.php" method="post"><input type="hidden" name="op" value="config"><input type="submit" value="'._NEXT_SE.'" class="sl_but_blue"></form></td></tr>';
+        $cont .= '<tr><td colspan="'.$col.'" class="sl_center"><form action="setup.php" method="post"><input type="hidden" name="op" value="config">'
+        .'<input type="submit" value="'._NEXT_SE.'" class="sl_but_blue"></form></td></tr>';
     }
     $cont .= '</table>';
     echo $cont;
@@ -313,10 +356,10 @@ function lang(): void {
 }
 
 function config(): void {
-    global $title, $conf, $scode;
+    global $title, $conf, $scode, $spanel;
     $title = _CONFIG;
     $xcode = is_string($_POST['xcode'] ?? null) ? $_POST['xcode'] : '';
-    if ($scode !== '' && !password_verify($xcode, $scode)) {
+    if ($scode !== '' && ($xcode === '' || !checkSetupCode($xcode))) {
         setHead();
         echo '<form action="setup.php" method="post">'
         .'<table class="sl_table">'
@@ -334,7 +377,7 @@ function config(): void {
     $hint = ($conf['db']['name'] !== '') ? '<div class="sl_small">'._CONF_3_INFO.'</div>' : '';
     $xname = ($conf['db']['name']) ? $conf['db']['name'] : '';
     $xprefix = ($conf['db']['prefix']) ? $conf['db']['prefix'] : getRandomString('10');
-    $xafile = ($conf['security']['afile']) ? $conf['security']['afile'] : strtolower(getRandomString('10'));
+    $xafile = ($spanel !== 'admin') ? $spanel : strtolower(getRandomString('10'));
     $info = sprintf(_CONF_10_INFO, strtolower(getRandomString('10')));
     setHead();
     echo '<form action="setup.php" method="post">'
@@ -355,7 +398,8 @@ function config(): void {
     .'<tr><td>'._CONF_4.':</td><td><input type="text" name="xname" value="'.$xname.'" class="sl_cinput" placeholder="'._CONF_4.'" required></td></tr>'
     .'<tr><td colspan="2"><hr></td></tr>'
     .'<tr><td>'._CONF_9.':</td><td><input type="text" name="xprefix" value="'.$xprefix.'" class="sl_cinput" placeholder="'._CONF_9.'" required></td></tr>'
-    .'<tr><td>'._CONF_10.':<div class="sl_small">'.$info.'</div></td><td><input type="text" name="xafile" value="'.$xafile.'" class="sl_cinput" placeholder="'._CONF_10.'" required></td></tr>'
+    .'<tr><td>'._CONF_10.':<div class="sl_small">'.$info.'</div></td>'
+    .'<td><input type="text" name="xafile" value="'.$xafile.'" class="sl_cinput" placeholder="'._CONF_10.'" required></td></tr>'
     .'<tr><td colspan="2" class="sl_center">'._GOBACK.' <input type="hidden" name="xcode" value="'.htmlspecialchars($xcode, ENT_QUOTES).'">'
     .'<input type="hidden" name="op" value="save"><input type="submit" value="'._NEXT_SE.'" class="sl_but_blue"></td></tr>'
     .'</table></form>';
@@ -365,7 +409,7 @@ function config(): void {
 # Check what the 6.3 data update or a clean installation needs before anything is changed and answer the refusal, or an empty string when the run may start
 # The server has to enforce CHECK constraints and to know RENAME COLUMN and RENAME INDEX of the schema file, which MariaDB has from 10.5.2 on
 # A clean installation needs a database without a table of its prefix; the update needs the users and admins tables of the prefix it names
-# Every table of a points, ratings, fields, Node or newsletter transaction has to be InnoDB; nothing is converted, and the branch closes the site itself
+# Every table of a points, ratings, fields, Node, private message or newsletter transaction has to be InnoDB; nothing is converted, and the branch closes the site itself
 function checkUpdateBase(Database $db, string $prefix, bool $fresh = false): string {
     [$ver] = $db->getSqlRow($db->getSqlQuery('SELECT VERSION()'));
     $min = (stripos((string)$ver, 'mariadb') !== false) ? '10.5.2' : '8.0.16';
@@ -379,7 +423,7 @@ function checkUpdateBase(Database $db, string $prefix, bool $fresh = false): str
     if ($num < 2) return sprintf(_SETUPTABLES, $prefix);
     $list = [];
     $tabs = ['users', 'admins', 'comment', 'forum', 'order', 'clients', 'favorites', 'user_oauth', 'points', 'products', 'rating_targets', 'rating_actors', 'rating_votes',
-        'categories', 'voting', 'newsletter'];
+        'categories', 'voting', 'newsletter', 'privat'];
     foreach ($tabs as $key => $name) $list['t'.$key] = $prefix.'_'.$name;
     $sql = 'SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN (:'.implode(', :', array_keys($list)).')'
         .' AND engine IS NOT NULL AND engine != \'InnoDB\'';
@@ -603,6 +647,7 @@ function setUpdateRatings(Database $db, string $prefix): string {
 # Read the positional 6.2 definitions of one area and answer [named definitions, slot map by position, number of positions]; every refusal goes to $bad and nothing is guessed
 # The four slots are caption, content, type and duty: caption 0 switches a position off, content is the default of a text, the comma list of a select or the default of a date
 # Keys are field1, field2 and so on by the original position without closing gaps, options are option1, option2 in their original order, and only an exact 1 makes a field required
+# Slots and option captions are trimmed; a switched off position with a known type stays in the slot map as off, with the inactive definition it becomes once a row holds data there
 function getUpdateRules(string $area, mixed $text, Field $fld, array &$bad): array {
     if (!is_string($text)) {
         $bad[] = 'config/fields.php '.$area.' (not a 6.2 definition string)';
@@ -613,25 +658,28 @@ function getUpdateRules(string $area, mixed $text, Field $fld, array &$bad): arr
     $rules = [];
     $slots = [];
     foreach ($list as $pos => $item) {
-        $part = explode('|', $item);
-        if ($item === '' || $part[0] === '0') continue;
+        $part = array_map('trim', explode('|', $item));
         $type = $types[$part[2] ?? ''] ?? '';
+        $on = $item !== '' && $part[0] !== '0';
+        if (!$on && (count($part) !== 4 || $type === '')) continue;
         if (count($part) !== 4 || $type === '') {
             $bad[] = 'config/fields.php '.$area.' position '.($pos + 1).' (four slots and a type from 1 to 5 are expected)';
             continue;
         }
-        $rule = ['title' => $part[0], 'intro' => '', 'type' => $type, 'default' => '', 'options' => [], 'req' => $part[3] === '1', 'multi' => false];
-        $rule += ['active' => true, 'sort' => ($pos + 1) * 10];
+        $name = 'field'.($pos + 1);
+        $rule = ['title' => $on ? $part[0] : $name, 'intro' => '', 'type' => $type, 'default' => '', 'options' => [], 'req' => $on && $part[3] === '1', 'multi' => false];
+        $rule += ['active' => $on, 'sort' => ($pos + 1) * 10];
         $items = [];
         foreach ($type === 'select' ? explode(',', $part[1]) : [] as $label) {
-            if ($label === '') continue;
+            $label = trim($label);
+            if ($label === '' || (!$on && ($label === '0' || isset($items[$label])))) continue;
             if (isset($items[$label])) $bad[] = 'config/fields.php '.$area.' position '.($pos + 1).' (an option caption repeats)';
             $items[$label] = 'option'.(count($items) + 1);
-            $rule['options']['items'][$items[$label]] = ['title' => (string)$label, 'active' => true, 'sort' => count($items) * 10];
+            $rule['options']['items'][$items[$label]] = ['title' => $label, 'active' => true, 'sort' => count($items) * 10];
         }
-        if ($type !== 'select' && $part[1] !== '' && $part[1] !== '0') $rule['default'] = ($type === 'datetime') ? str_replace(' ', 'T', $part[1]) : $part[1];
-        $rules['field'.($pos + 1)] = $rule;
-        $slots[$pos] = ['name' => 'field'.($pos + 1), 'type' => $type, 'items' => $items];
+        if ($on && $type !== 'select' && $part[1] !== '' && $part[1] !== '0') $rule['default'] = ($type === 'datetime') ? str_replace(' ', 'T', $part[1]) : $part[1];
+        if ($on) $rules[$name] = $rule;
+        $slots[$pos] = ['name' => $name, 'type' => $type, 'items' => $items, 'on' => $on, 'rule' => $rule];
     }
     try {
         $rules = $fld->filterFieldList($rules);
@@ -641,46 +689,79 @@ function getUpdateRules(string $area, mixed $text, Field $fld, array &$bad): arr
     return [$rules, $slots, count($list)];
 }
 
-# Turn one positional 6.2 value row into the canonical JSON of its area and answer ['json' => text], or ['why' => reason] without any of the stored data in it
-# The old view indexed every position while a posted form could leave the switched off ones out, so both layouts are tried and only one confirmed result is accepted
-# An empty part is absence; 0 is a value of a text and the placeholder of an empty choice in a select without such an option, in a date and in a position without a definition
-function getUpdateValue(array $rules, array $slots, int $size, string $text, Field $fld): array {
+# Turn one positional 6.2 value row into the canonical JSON of its area and answer ['json' => text, 'plan' => layout, 'grow' => needs], or ['why' => reason] without stored data
+# The old view indexed every position while a posted form could leave the switched off ones out, so both layouts are tried and one confirmed result is accepted
+# A layout that fits the definitions as they are wins; only when none does, one that fits once they grow: a caption without an option, data at a switched off position
+# The needs are field name => [caption => true] and the JSON of a growing row is provisional; $plan runs only that layout again once every need of the area is granted
+# An empty part is absence; 0 is a value of a text and the placeholder of an empty choice in a select without such an option, in a date and in a switched off position
+function getUpdateValue(array $rules, array $slots, int $size, string $text, Field $fld, string $plan = ''): array {
     $part = explode('|', $text);
-    $found = [];
+    $plans = ['full' => range(0, max($size, count($part)) - 1), 'short' => array_keys(array_filter($slots, fn(array $v): bool => $v['on']))];
+    if ($plan !== '') $plans = array_intersect_key($plans, [$plan => true]);
+    $found = ['fit' => [], 'grow' => []];
     $why = '';
-    foreach (['full' => range(0, max($size, count($part)) - 1), 'short' => array_keys($slots)] as $plan => $order) {
+    foreach ($plans as $name => $order) {
         $vals = [];
+        $grow = [];
+        $test = $rules;
         $fail = '';
         foreach ($part as $num => $val) {
             $slot = isset($order[$num]) ? ($slots[$order[$num]] ?? null) : null;
             $spot = 'value '.($num + 1);
+            $data = $val !== '' && $val !== '0';
             if ($slot === null) {
-                if ($val !== '' && $val !== '0') $fail = $spot.' holds data and has no definition';
+                if ($data) $fail = $spot.' holds data and has no definition';
+            } elseif (!$slot['on'] && !$data) {
+                continue;
             } elseif ($slot['type'] === 'select') {
-                if (isset($slot['items'][$val])) $vals[$slot['name']] = $slot['items'][$val];
-                elseif ($val !== '' && $val !== '0') $fail = $spot.' is no option of '.$slot['name'];
+                $cap = trim($val);
+                if (isset($slot['items'][$cap])) $vals[$slot['name']] = $slot['items'][$cap];
+                elseif ($data && $cap !== '') $grow[$slot['name']][$cap] = true;
             } elseif ($slot['type'] === 'date' || $slot['type'] === 'datetime') {
-                if ($val !== '' && $val !== '0') $vals[$slot['name']] = ($slot['type'] === 'datetime') ? str_replace(' ', 'T', $val) : $val;
+                if ($data) $vals[$slot['name']] = ($slot['type'] === 'datetime') ? str_replace(' ', 'T', $val) : $val;
             } elseif ($val !== '') {
                 $vals[$slot['name']] = $val;
             }
+            if ($slot !== null && $data && !isset($rules[$slot['name']])) $grow[$slot['name']] ??= [];
             if ($fail !== '') break;
         }
-        $errs = ($fail === '') ? $fld->checkFieldValues($rules, $vals, false) : [];
-        foreach ($errs as $name => $code) $fail = $name.' is refused by the shared check: '.$code;
+        foreach ($fail === '' ? $grow : [] as $key => $caps) {
+            $slot = $slots[intval(substr($key, 5)) - 1];
+            $test[$key] ??= $slot['rule'];
+            foreach (array_keys($caps) as $cap) {
+                $next = count($test[$key]['options']['items'] ?? []) + 1;
+                $pick = 'option'.$next;
+                $test[$key]['options']['items'][$pick] = ['title' => (string)$cap, 'active' => true, 'sort' => $next * 10];
+                $vals[$key] = $pick;
+            }
+        }
+        foreach ($test as $key => $rule) {
+            $test[$key]['active'] = true;
+            foreach (array_keys($rule['options']['items'] ?? []) as $pick) $test[$key]['options']['items'][$pick]['active'] = true;
+        }
+        $out = [];
+        try {
+            $errs = ($fail === '') ? $fld->checkFieldValues($test, $vals, false) : [];
+            foreach ($errs as $key => $code) $fail = $key.' is refused by the shared check: '.$code;
+            $out = ($fail === '') ? $fld->filterFieldValues($test, $vals) : [];
+        } catch (InvalidArgumentException $err) {
+            $fail = 'the grown definition '.$err->getMessage().' is refused by the shared check';
+        }
         if ($fail === '') {
-            $data = $fld->filterFieldValues($rules, $vals);
-            $found[$data ? (string)json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : ''] = true;
-        } elseif ($plan === 'full') {
+            $json = $out ? (string)json_encode($out, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : '';
+            $found[$grow ? 'grow' : 'fit'][$json.'|'.json_encode($grow)] ??= ['json' => $json, 'plan' => $name, 'grow' => array_map('array_keys', $grow)];
+        } elseif ($name === 'full' || $plan !== '') {
             $why = $fail;
         }
     }
-    if (count($found) === 1) return ['json' => array_key_first($found)];
-    return ['why' => $found ? 'the full and the short layout both fit and differ' : $why];
+    $list = $found['fit'] ?: $found['grow'];
+    if (count($list) === 1) return reset($list);
+    return ['why' => $list ? 'the full and the short layout both fit and differ' : $why];
 }
 
 # The fields unit of the 6.3 data update: name the positional definitions of account, forum and order and turn every stored value row into one canonical JSON object
 # Nothing is written before the whole preflight passed: a definition or a row that cannot be mapped without guessing stops the unit with the table, the id and the reason
+# A caption without an option and data at a switched off position grow the definitions by a disabled option or an inactive field in row order, and the report counts them
 # The unit resumes from its manifest: verified is skipped, applying and prepared continue by cursor, and a stored row has to equal its source or its target
 # Definitions that are already named while positional rows exist and no manifest does stop it, because the old definitions are the only key to those rows
 function setUpdateFields(Database $db, string $prefix): string {
@@ -707,6 +788,7 @@ function setUpdateFields(Database $db, string $prefix): string {
         $rules = [];
         $snaps = [];
         $read = [];
+        $grown = ['options' => 0, 'fields' => 0];
         $done = $db->setSqlBegin();
         foreach (array_keys($maps) as $area) $read[$area] = $done ? $stored($area) : false;
         if ($done) $db->setSqlCommit();
@@ -720,10 +802,30 @@ function setUpdateFields(Database $db, string $prefix): string {
                 return getInfo($text.' - put the 6.2 config/fields.php back and start the update again', false);
             }
             $memo = [];
+            $keep = [];
             $snaps[$area] = [];
             foreach (count($bad) > $base ? [] : $rows as [$mid, $text]) {
                 $memo[$text] ??= getUpdateValue($rules[$area], $slots, $size, $text, $fld);
                 if (isset($memo[$text]['why'])) $bad[] = $prefix.'_'.$tab.' '.$mid.' ('.$memo[$text]['why'].')';
+                else $keep[] = [$mid, $text];
+            }
+            foreach ($keep as [$mid, $text]) {
+                foreach ($memo[$text]['grow'] as $name => $caps) {
+                    $pos = intval(substr($name, 5)) - 1;
+                    if (!isset($rules[$area][$name])) $grown['fields']++;
+                    $rules[$area][$name] ??= $slots[$pos]['rule'];
+                    foreach ($caps as $cap) {
+                        if (isset($slots[$pos]['items'][$cap])) continue;
+                        $next = count($slots[$pos]['items']) + 1;
+                        $slots[$pos]['items'][$cap] = 'option'.$next;
+                        $rules[$area][$name]['options']['items']['option'.$next] = ['title' => (string)$cap, 'active' => false, 'sort' => $next * 10];
+                        $grown['options']++;
+                    }
+                }
+            }
+            foreach ($keep as [$mid, $text]) {
+                if ($memo[$text]['grow'] ?? []) $memo[$text] = getUpdateValue($rules[$area], $slots, $size, $text, $fld, $memo[$text]['plan']);
+                if (isset($memo[$text]['why']) || $memo[$text]['grow']) $bad[] = $prefix.'_'.$tab.' '.$mid.' ('.($memo[$text]['why'] ?? 'the grown definitions do not fit it').')';
                 else $snaps[$area][] = [$mid, $text, $memo[$text]['json']];
             }
         }
@@ -740,6 +842,7 @@ function setUpdateFields(Database $db, string $prefix): string {
         foreach ($snaps as $area => $list) $text[$area.'.json'] = json_encode($list, $flag);
         $info = ['version' => '6.3.0', 'state' => 'prepared', 'cursor' => array_fill_keys(array_keys($maps), 0), 'source' => [], 'target' => []];
         $info['count'] = array_map('count', $snaps);
+        $info['grown'] = $grown;
         foreach ($text as $name => $body) {
             if (!is_string($body) || !setUpdateBackup($dir.'/'.$name, $body)) return getInfo('fields: the snapshot '.$name.' could not be written', false);
             $info['source'][$name] = hash('sha256', $body);
@@ -796,7 +899,8 @@ function setUpdateFields(Database $db, string $prefix): string {
     if (!setConfigFile('update.php', ['fields' => '6.3.0'] + $mark)) return getInfo('fields: config/update.php could not be written, the subsystem stays closed', false);
     $stat = $info['count'];
     $text = 'fields: named definitions published, value rows carried over: '.intval($stat['account']).' accounts, '.intval($stat['forum']).' forum posts, ';
-    return getInfo($text.intval($stat['order']).' orders; the subsystem is open', true);
+    $text .= intval($stat['order']).' orders; kept as switched off: '.intval($info['grown']['options'] ?? 0).' options, '.intval($info['grown']['fields'] ?? 0).' fields';
+    return getInfo($text.'; the subsystem is open', true);
 }
 
 # The configuration step of the 6.3 update for a 6.2 site, whose settings live in config/config_<name>.php as a variable of their own
@@ -1032,10 +1136,14 @@ function setUpdateMails(Database $db, string $prefix, string $from, bool $move):
 
 # Run the installer form for a clean installation or an upgrade; an upgrade gives the scheduler of the site the system jobs nodepublish and nodesync it has not carried yet
 # An upgrade also moves maildrain off a priority another job holds, because the scheduler form saves no job whose priority is taken
+# It drops commentsync, the nightly counter sweep a site upgraded while it existed still carries, because the sweep now happens on every write
+# The dbbackup job gains only the missing keys of its scope, compression and retention settings, so a configured value is never overwritten
+# The shipped admin.php takes the chosen panel name and replaces a 6.2 loader of that name, and the panel file of the site under another name is removed
+# Before the schema file a negative point balance of 6.2 becomes 0, since the schema makes the column unsigned, and the report counts those accounts
 function save(): void {
-    global $title, $clang, $conf, $url, $scode;
+    global $title, $clang, $conf, $url, $scode, $spanel;
     $xcode = is_string($_POST['xcode'] ?? null) ? $_POST['xcode'] : '';
-    if ($scode !== '' && !password_verify($xcode, $scode)) setExit(_SETUPCODE);
+    if ($scode !== '' && !checkSetupCode($xcode)) setExit(_SETUPCODE);
     $setup = (isset($_POST['setup'])) ? $_POST['setup'] : '';
     $xhost = (isset($_POST['xhost'])) ? $_POST['xhost'] : '';
     $xuname = (isset($_POST['xuname'])) ? $_POST['xuname'] : '';
@@ -1049,10 +1157,12 @@ function save(): void {
     $xafile = (isset($_POST['xafile'])) ? $_POST['xafile'] : 'admin';
     if ($xpass === '') $xpass = getSetupBase()['pass'] ?? '';
     $steps = ['new', 'update4_1', 'update4_2', 'update4_3', 'update5_0', 'update5_1', 'update6_0', 'update6_2', 'update6_3'];
-    $tafile = ($conf['security']['afile']) ? $conf['security']['afile'] : 'admin';
+    $lower = strtolower($xafile);
     if (!in_array($setup, $steps, true)) setExit(_SETUPTYPE);
     if (!preg_match('/^[A-Za-z0-9_]{1,32}$/D', $xprefix)) setExit(_SETUPPREFIX);
-    if (filterVar($xafile) === '' || (is_file($xafile.'.php') && !in_array(strtolower($xafile), ['admin', strtolower($tafile)], true))) setExit(_SETUPAFILE);
+    if (filterVar($xafile) === '' || in_array($lower, ['index', 'setup'], true) || (is_file($xafile.'.php') && !in_array($lower, ['admin', strtolower($spanel)], true))) {
+        setExit(_SETUPAFILE);
+    }
     foreach (['db.php', 'global.php', 'security.php'] as $name) checkWritableConfig($name);
     if (is_file(BASE_DIR.'/storage/backup/config/marker.json')) setExit(_SETUPJOUR);
     require_once BASE_DIR.'/core/classes/pdo.php';
@@ -1073,14 +1183,24 @@ function save(): void {
     $cont = ($setup == 'update6_3') ? [] : ['language' => $clang, 'homeurl' => $url];
     if (!setConfigFile('global.php', array_diff_key($conf, ['security' => '', 'db' => '']), $cont)) setExit(_FILE.' config/global.php '._SERRORPERM);
     $conf = array_merge($conf, require CONFIG_DIR.'/global.php');
-    $tafile = ($conf['security']['afile']) ? $conf['security']['afile'] : 'admin';
-    $from = file_exists('admin.php') ? 'admin' : $tafile;
-    if (!file_exists($xafile.'.php') && (!file_exists($from.'.php') || !rename($from.'.php', $xafile.'.php'))) $xafile = $from;
+    $from = file_exists('admin.php') ? 'admin' : $spanel;
+    if ($xafile !== $from && (!file_exists($from.'.php') || !rename($from.'.php', $xafile.'.php'))) $xafile = $from;
+    if (!in_array(strtolower($spanel), ['admin', 'index', 'setup', strtolower($xafile)], true) && is_file($spanel.'.php')) unlink($spanel.'.php');
     $cont = ['afile' => $xafile];
     if (!setConfigFile('security.php', $conf['security'], $cont)) setExit(_FILE.' config/security.php '._SERRORPERM);
     $conf = array_merge($conf, require CONFIG_DIR.'/security.php');
     $conf['db'] = getSetupBase();
-    $cont = ['host' => $xhost, 'uname' => $xuname, 'pass' => $xpass, 'name' => $xname, 'engine' => $xengine, 'charset' => $xcharset, 'collate' => $xcollate, 'prefix' => $xprefix, 'sync' => $xsync];
+    $cont = [
+        'host' => $xhost,
+        'uname' => $xuname,
+        'pass' => $xpass,
+        'name' => $xname,
+        'engine' => $xengine,
+        'charset' => $xcharset,
+        'collate' => $xcollate,
+        'prefix' => $xprefix,
+        'sync' => $xsync,
+    ];
     if (!setConfigFile('db.php', $conf['db'], $cont)) setExit(_FILE.' config/db.php '._SERRORPERM);
     if ($setup == 'new') {
         $title = _SAVE_NEW;
@@ -1125,7 +1245,11 @@ function save(): void {
     } elseif ($setup == 'update5_1') {
         $title = _SAVE_UPDATE;
         $bodytext .= getSqlFile('setup/sql/table_update5_1.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
-        $result = $db->getSqlQuery('SELECT poll_id, poll_date, poll_title, poll_questions, poll_answer_1, poll_answer_2, poll_answer_3, poll_answer_4, poll_answer_5, poll_answer_6, poll_answer_7, poll_answer_8, poll_answer_9, poll_answer_10, poll_answer_11, poll_answer_12, pool_comments, planguage, acomm FROM '.$xprefix.'_voting_temp');
+        $result = $db->getSqlQuery(
+            'SELECT poll_id, poll_date, poll_title, poll_questions, poll_answer_1, poll_answer_2, poll_answer_3, poll_answer_4, poll_answer_5, poll_answer_6,'
+            .' poll_answer_7, poll_answer_8, poll_answer_9, poll_answer_10, poll_answer_11, poll_answer_12, pool_comments, planguage, acomm'
+            .' FROM '.$xprefix.'_voting_temp'
+        );
         while ($row = $db->getSqlRow($result)) {
             $pid = $row['poll_id'];
             $pdate = $row['poll_date'];
@@ -1141,7 +1265,8 @@ function save(): void {
             }
             $quest = substr($pquest, 0, -1);
             $answ = implode('|', $pansw);
-            $db->getSqlQuery('INSERT INTO '.$xprefix.'_voting (id, modul, title, body, answer, time, enddate, multi, comments, language, acomm, ip, typ, status) VALUES (:id, \'\', :title, :body, :answer, :date, \'2020-05-23 20:58:00\', 0, :comments, :language, :acomm, :ip, 1, 1)', [
+            $db->getSqlQuery('INSERT INTO '.$xprefix.'_voting (id, modul, title, body, answer, time, enddate, multi, comments, language, acomm, ip, typ, status)'
+            .' VALUES (:id, \'\', :title, :body, :answer, :date, \'2020-05-23 20:58:00\', 0, :comments, :language, :acomm, :ip, 1, 1)', [
                 'id' => $pid,
                 'title' => $ptitle,
                 'body' => $quest,
@@ -1267,7 +1392,6 @@ function save(): void {
                 ];
                 $sdone = true;
             }
-            # A site upgraded while the nightly counter sweep still existed carries the job in its own config, and the sweep now happens on every write
             if (is_array($sched) && isset($sched['jobs']['commentsync'])) {
                 unset($sched['jobs']['commentsync']);
                 $sdone = true;
@@ -1277,7 +1401,6 @@ function save(): void {
                 $sched['jobs']['newsletter']['schedule'] = '*/5 * * * *';
                 $sdone = true;
             }
-            # The database backup job gained explicit scope, compression, and retention settings; only missing keys are filled so a configured value is never overwritten
             if (is_array($sched) && isset($sched['jobs']['dbbackup']) && is_array($sched['jobs']['dbbackup'])) {
                 $bset = [
                     'include' => '*',
@@ -1312,6 +1435,12 @@ function save(): void {
         $nset = $ndata + ['abort' => '10', 'bouncemax' => '2', 'breakwin' => '100', 'canary' => '100', 'canarymin' => '500'];
         if ($nset !== $ndata && !setConfigFile('newsletter.php', $nset)) $bodytext .= getInfo('config/newsletter.php'.$text, false);
         $bodytext .= setUpdateMails($db, $xprefix, (string)$conf['adminmail'], false);
+        $sql = 'SELECT column_name FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = :tbl AND column_name IN (\'points\', \'user_points\')';
+        $res = $db->getSqlQuery($sql, ['tbl' => $xprefix.'_users']);
+        $pcol = $res ? (string)($db->getSqlRow($res)[0] ?? '') : '';
+        $res = ($res && $pcol !== '') ? $db->getSqlQuery('UPDATE `'.$xprefix.'_users` SET `'.$pcol.'` = 0 WHERE `'.$pcol.'` < 0') : $res;
+        $text = $xprefix.'_users negative point balances set to 0 before the schema makes the column unsigned (accounts: ';
+        $bodytext .= getInfo($text.(($res && $pcol !== '') ? intval($db->getSqlRowCount($res)) : 0).')', $res !== false);
         if (str_contains($bodytext, 'sl_red')) {
             $text = 'the update stopped before the schema file: neither the schema file nor a data unit ran, correct the refusal above and run the update again';
             $bodytext .= getInfo($text, false);
@@ -1370,7 +1499,8 @@ function save(): void {
     if (!str_contains($bodytext, 'sl_red') && is_file(CONFIG_DIR.'/setup.unlock')) unlink(CONFIG_DIR.'/setup.unlock');
     setHead();
     echo '<table class="sl_table">'.$bodytext.'</table>'
-    .'<div class="sl_center"><form action="'.$conf['security']['afile'].'.php" method="post">'._GOBACK.' <input type="submit" value="'._ADMIN_SE.'" class="sl_but_blue"></form></div>';
+    .'<div class="sl_center"><form action="'.$conf['security']['afile'].'.php" method="post">'._GOBACK
+    .' <input type="submit" value="'._ADMIN_SE.'" class="sl_but_blue"></form></div>';
     setFoot();
 }
 

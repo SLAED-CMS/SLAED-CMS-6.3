@@ -27,6 +27,14 @@ if (empty($go) && $op === 'newlang') {
     setRedirect('index.php', true);
 }
 
+# A registered Node type reaches the one fixed entry point of Node by its name or as the start page; the registry is the loaded configuration, so no query runs here
+# A Node type takes the layout and block positions of the module node and keeps the public name of its type; the reserved name node has no public route at all
+# The block positions a module allows go into globals that setFoot() reads to skip the sides the module switched off
+# The start page listens to the same block positions as the named route, so admin.php?name=modules governs both
+# Ajax handlers in the public list guard themselves: their reads answer nothing to a visitor who may not see them, so a token would only add one to an address
+# The rating vote checks its method before its token and answers both refusals with a status of their own
+# The ajax writes that answer only a POST refuse any other method before the token, so a followed link reads as the wrong method it is and not as a lost token
+# The scheduler releases the session lock so long-running jobs do not block parallel requests of the same visitor
 if (empty($go)) {
     Cache::setHeaders(false);
     if ($conf['alang']) {
@@ -46,8 +54,6 @@ if (empty($go)) {
         $hmodul = explode(',', $conf['module']);
         $hname = $hmodul[mt_rand(0, count($hmodul) - 1)];
     }
-    # A registered Node type reaches the one fixed entry point of Node by its name or as the start page; the registry is the loaded configuration, so no query runs here
-    # The layout and the block positions are the ones of the module node, the name stays the public name of the type, and the reserved name node has no public route at all
     $nname = $name ?: $hname;
     if ($nname === 'node' || isset($conf['node']['types'][$nname])) {
         if ($nname === 'node' || $file !== 'index') setError(404);
@@ -67,7 +73,6 @@ if (empty($go)) {
         $mconf = $conf['modules'][$name] ?? [];
         $active = $mconf['active'] ?? 0;
         $view = $mconf['view'] ?? 0;
-        # The block positions the module allows; setFoot() reads these globals and skips the sides the module switched off
         $blocks = (string)($mconf['side'] ?? '');
         $blocks_c = (string)($mconf['top'] ?? '');
         $path = BASE_DIR.'/modules/'.$name.'/'.$file.'.php';
@@ -119,7 +124,6 @@ if (empty($go)) {
         } else {
             $name = $hname;
             $conf['name'] = $name;
-            # The start page listens to the same block positions as the named route, so admin.php?name=modules governs both
             $mconf = $conf['modules'][$name] ?? [];
             $blocks = (string)($mconf['side'] ?? '');
             $blocks_c = (string)($mconf['top'] ?? '');
@@ -137,10 +141,15 @@ if (empty($go)) {
         }
     }
 } elseif (is_numeric($go)) {
-    # Handlers that guard themselves: the reads answer nothing to a visitor who may not see them, so a token would only add one to an address
-    # The rating vote checks its method before its token and answers both refusals with a status of their own
     $public = ($go == 1 && in_array($op, ['getUserSessionInfo', 'getUserSessionRows', 'getPrivateMessageView', 'getRatingView', 'getFavoriteList'], true))
         || (($go == 1 || $go == 5) && $op === 'getUserSessionAdminInfo');
+    if ($go == 1 && in_array($op, ['addComment', 'updateCommentStatus', 'deleteComment', 'addPrivateMessage',
+        'setPrivateMessageRead', 'updatePrivatBox', 'addFavorite', 'deleteFavorite'], true) && ($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        Cache::setHeaders(false);
+        header('Allow: POST');
+        http_response_code(405);
+        die($tpl->getHtmlFrag('alert', ['text' => _ERROR, 'is_warn' => true]));
+    }
     if ($go != 3 && !$public) {
         $fdsize = intval($_FILES['file']['size'] ?? 0);
         $tok = getVar('req', 'token', 'raw', '')
@@ -149,10 +158,6 @@ if (empty($go)) {
     }
     if ($go == 1) {
         Cache::setHeaders(false);
-        if (in_array($op, ['addComment', 'updateCommentStatus', 'deleteComment', 'addPrivateMessage',
-            'setPrivateMessageRead', 'updatePrivatBox', 'addFavorite', 'deleteFavorite'], true) && ($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-            die($tpl->getHtmlFrag('alert', ['text' => _ERROR, 'is_warn' => true]));
-        }
         switch($op) {
             case 'getRatingView': getRatingView(); break;
             case 'getUserSessionAdminInfo': getUserSessionAdminInfo(); break;
@@ -201,7 +206,6 @@ if (empty($go)) {
                 echo json_encode(['status' => 'denied', 'message' => 'Access denied'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
                 exit;
             }
-            # Release the session lock so long-running jobs do not block parallel requests of the same visitor
             session_write_close();
             echo json_encode(addSchedulerRun($name ?: null, $type), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             exit;

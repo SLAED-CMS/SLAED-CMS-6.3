@@ -5,15 +5,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * The Rating class is the one writer of the vote history and of the aggregate of every rated
- * target, docs/RATINGS.md is its contract, and the write-guard protocol of the page cache it depends on is the one of
- * docs/NODE.md (HTML page cache). tests/Support/rating_probe.php boots the real core in an isolated CLI process
- * and drives the class through trusted test adapters against a disposable schema built from the shipped DDL, so the
- * three tables of setup/sql/table.sql are executed by the same run. The cache directory, the generation counter and
- * the logs live in scratch, every persistent result is read by a connection of its own, and concurrency is made of
- * real processes. The site database is only read, by the renders of the page-cache scenario.
- */
+# The Rating class is the one writer of the vote history and of the aggregate of every rated target, and docs/RATINGS.md is its contract
 final class RatingTest extends TestCase
 {
     private const NONE = [
@@ -23,6 +15,10 @@ final class RatingTest extends TestCase
 
     private static array $probe = [];
 
+    # The probe tests/Support/rating_probe.php boots the real core in an isolated CLI process and drives the class through trusted test adapters
+    # Its disposable schema is built from the shipped DDL, so the same run executes the three tables of setup/sql/table.sql
+    # The cache directory, the generation counter and the logs live in scratch, every persistent result is read by a connection of its own
+    # Concurrency is made of real processes, and the site database is only read, by the renders of the page-cache scenario
     # Run the probe once and memoize its report for every test in this class
     private function getProbe(): array
     {
@@ -32,7 +28,7 @@ final class RatingTest extends TestCase
         $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'The probe did not return JSON: '.substr($out, 0, 600));
-        if (!empty($data['error'])) $this->markTestSkipped('Probe: '.$data['error']);
+        $this->assertSame('', $data['error'], 'The probe failed');
         $this->assertNotEmpty($data['runs'], 'The probe ran no scenario');
         return self::$probe = $data;
     }
@@ -63,7 +59,8 @@ final class RatingTest extends TestCase
         $this->assertTrue($ref->isFinal(), 'The class is not final');
         $open = array_map(static fn(\ReflectionMethod $one): string => $one->getName(), $ref->getMethods(\ReflectionMethod::IS_PUBLIC));
         sort($open);
-        $this->assertSame(['__construct', 'addRating', 'deleteRating', 'getAverage', 'getRating', 'getRatingList'], $open, 'The public API is not exactly the one of docs/RATINGS.md');
+        $want = ['__construct', 'addRating', 'deleteRating', 'getAverage', 'getRating', 'getRatingList', 'getRule'];
+        $this->assertSame($want, $open, 'The public API is not exactly the one of docs/RATINGS.md');
         $this->assertTrue($ref->getMethod('getAverage')->isStatic(), 'The shared average needs an instance');
         $avg = $ref->getMethod('getAverage');
         $this->assertSame([null, '3', '3.666667', '0.333333', '0.666667'], [$avg->invoke(null, 5, 0), $avg->invoke(null, 6, 2), $avg->invoke(null, 11, 3),
@@ -91,6 +88,7 @@ final class RatingTest extends TestCase
         $this->assertSame('PDOException', $this->getRun('fail')['value'], 'The server stored a vote outside the scale');
     }
 
+    # The write-guard protocol of the page cache the class depends on is the one of docs/NODE.md (HTML page cache)
     # The forced bump and the marker: one bump per request unless forced, a marker locked while its owner lives, a sweep that spares the journal, a registered handle alone closes
     #[Test]
     public function theWriteGuardIsAJournalNoSweepTouches(): void
@@ -143,19 +141,22 @@ final class RatingTest extends TestCase
         $this->assertStringContainsString('getPageHash() === getPageHash(true) && Cache::checkWriteGuard() && Cache::setBody(', $code);
     }
 
-    # Every rule is taken whole or not at all, in the stored string form only, and a broken or missing rule blocks its own scope and no other
+    # Every rule is taken whole or not at all, in the stored string form only, and a broken or missing rule blocks its own scope and no other and answers blocked
     #[Test]
     public function aRuleIsAcceptedWholeOrNotAtAll(): void
     {
         $run = $this->getRun('config');
         $good = ['shipped', 'off', 'nodetail', 'noguests', 'zero', 'top'];
-        foreach ($run['valid'] as $name => $code) $this->assertSame(in_array($name, $good, true) ? 'ok' : 'unavailable', $code, 'rule '.$name);
+        foreach ($run['valid'] as $name => $code) $this->assertSame(in_array($name, $good, true) ? 'ok' : 'blocked', $code, 'rule '.$name);
         $this->assertCount(26, $run['valid']);
-        $this->assertSame(['ok', 'unavailable'], $run['alone'], 'A broken forum rule did not block the forum alone');
-        $this->assertSame(['ok', 'unavailable'], $run['less'], 'A missing account rule did not block the account alone');
+        $this->assertSame(['ok', 'blocked'], $run['alone'], 'A broken forum rule did not block the forum alone');
+        $this->assertSame(['ok', 'blocked'], $run['less'], 'A missing account rule did not block the account alone');
         $this->assertSame(['ok', 'ok'], $run['name'], 'A key outside the grammar damaged the valid scopes');
         $this->assertSame('unavailable', $run['ghost'], 'A Node scope without a rule was rated');
         $this->assertSame([true, true, true], $run['log']);
+        $rule = ['active' => true, 'period' => 2592000, 'detail' => true, 'guests' => true];
+        $this->assertSame([$rule, [], 'blocked', [], 'unavailable'], $run['rule'],
+            'The checked rule of a scope, the empty answer of a blocked one, its vote, or the silent closed scope before the data update is wrong');
     }
 
     # active switches the vote off and keeps the aggregate readable, detail is a place of display and never an access rule

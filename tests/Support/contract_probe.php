@@ -4,7 +4,8 @@
 # License: MIT
 # Website: slaed.net
 
-# CLI probe for the page-cache, statistics, and GeoIP contract tests: boots the real core like index.php, one scenario per process, with LOGS_DIR and COUNTER_DIR redirected to scratch
+# CLI probe for the page-cache, statistics, and GeoIP contract tests
+# It boots the real core like index.php, one scenario per process, with LOGS_DIR and COUNTER_DIR redirected to scratch
 $probework = (string)($argv[2] ?? '');
 require_once __DIR__.'/probe_boot.php';
 # The moderator half of the comment class needs a signed-in administrator, and isAdmin() memoizes its verdict on the first call the boot itself makes
@@ -106,7 +107,10 @@ function getProbeCommentRead(): array {
     $pars = ['cid' => $cid, 'mod' => $mod, 'status' => 0];
     $cnt = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(cid) AS num FROM '.PREFIX_DB.'_comment WHERE cid = :cid AND modul = :mod AND status != :status', $pars));
     $tot = intval($cnt['num']);
-    $out['count'] = [$tot, intval($db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE cid = :cid AND modul = :mod AND status = 1 AND deleted IS NULL', ['cid' => $cid, 'mod' => $mod]))['num'])];
+    $out['count'] = [$tot, intval($db->getSqlRow($db->getSqlQuery(
+        'SELECT COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE cid = :cid AND modul = :mod AND status = 1 AND deleted IS NULL',
+        ['cid' => $cid, 'mod' => $mod]
+    ))['num'])];
     $pgs = (int)ceil($tot / $lnum);
     $out['list'] = [];
     foreach (array_unique([1, $pgs]) as $page) {
@@ -279,6 +283,8 @@ function getProbeCommentWrite(bool $guest): array {
 
 # Report what stage 2 promises about a comment write: one rule set, a stable sort, a conditional state change, a soft delete and a stored format
 # The run signs in as the administrator whose stored address this process reports, because the moderator half of the class cannot be reached otherwise from a CLI probe
+# The flood window is measured against the stored time with the clock of PHP, so the marker is written from the clock of PHP too
+# A stand whose database clock differs from its PHP clock would otherwise never let the window fire, and the rule would go untested rather than proven
 function getProbeCommentStage2(): array {
     global $db, $com, $conf, $user;
     $out = ['admin' => isAdmin(true), 'moder' => (bool)is_moder('shop'), 'clean' => false];
@@ -331,8 +337,6 @@ function getProbeCommentStage2(): array {
         'deleted' => $row['deleted'] ?? null,
         'edited' => $row['edited'] ?? null,
     ];
-    # The window is measured against the stored time with the clock of PHP, so the marker is written from the clock of PHP too
-    # A stand whose database clock differs from its PHP clock would otherwise never let the window fire, and the rule would go untested rather than proven
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = :now WHERE id = :id', ['now' => date('Y-m-d H:i:s'), 'id' => $cid]);
     $out['rules']['flood'] = [$com->checkRules('shop', 'body', 'Probe', $addr, true), $com->checkRules('shop', 'body', 'Probe', $addr, false)];
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE ip = :ip', ['ip' => $addr]);
@@ -413,6 +417,7 @@ function getProbeCommentFormat(): array {
 
 # Report what the thread promises: a reply carries its parent, a crafted parent is refused, the page counts roots, and a removed parent with a live reply stays as a tombstone
 # Every write runs inside one transaction that is rolled back at the end, so the tree is measured against the live table without a row of it surviving the run
+# The drift sweep is measured against drift this probe creates rather than against what the installation carries, so it proves the mechanism, not one stand
 function getProbeCommentThread(): array {
     global $db, $com, $conf;
     $out = ['admin' => isAdmin(true), 'moder' => (bool)is_moder('shop'), 'clean' => false];
@@ -492,12 +497,39 @@ function getProbeCommentThread(): array {
         'skip' => count($com->getBranch(intval($root['id']), 3, 3)['rows']),
         'past' => count($com->getBranch(intval($root['id']), 3, 9999)['rows']),
     ];
+    $hide = array_map('intval', array_column($db->getSqlRows($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_comment WHERE modul = \'shop\' AND cid = :cid'
+        .' AND id < :root AND deleted IS NULL', ['cid' => $tid, 'root' => intval($root['id'])])) ?: [], 'id'));
+    foreach ($hide as $one) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET deleted = NOW() WHERE id = :id', ['id' => $one]);
+    $free();
+    $late = $com->addComment('shop', $tid, 'thread probe late root', 'Probe');
+    foreach ([1, 2] as $one) {
+        $free();
+        $com->addComment('shop', $tid, 'thread probe late reply '.$one, 'Probe', '', intval($late['id']));
+    }
     $cap = $com->getList('shop', $tid, 1);
     $wide = [];
+    $crowd = [];
+    $left = 0;
     foreach ($cap['rows'] as $one) {
         if (!$one['depth']) $wide[] = [$one['kids'], $one['shown']];
+        if ($one['id'] === intval($late['id'])) $crowd = [$one['kids'], $one['shown']];
+        if ($one['id'] === intval($root['id'])) $left = $one['kids'] - $one['shown'];
     }
-    $out['cap'] = ['reps' => max(1, intval($conf['comments']['reps'] ?? 5)), 'roots' => $wide];
+    $out['cap'] = ['reps' => max(1, intval($conf['comments']['reps'] ?? 5)), 'roots' => $wide, 'crowd' => $crowd,
+        'full' => [$left, count($com->getList('shop', $tid, 1, intval($root['id']))['rows']) - count($cap['rows'])]];
+    $walk = [];
+    for ($page = 1, $pages = 1; $page <= $pages; $page++) {
+        $part = $com->getList('shop', $tid, $page);
+        $pages = $part['pages'];
+        foreach ($part['rows'] as $one) {
+            if ($one['depth']) continue;
+            $walk[] = $one['id'];
+            foreach ($com->getBranch($one['id'], max(1, $one['kids']))['rows'] as $item) $walk[] = $item['id'];
+        }
+    }
+    $out['thread'] = ['walk' => $walk, 'read' => array_column($com->getThread('shop', $tid), 'id'), 'none' => $com->getThread('shop', 0)];
+    foreach ($hide as $one) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET deleted = NULL WHERE id = :id', ['id' => $one]);
+    $free();
     $com->deleteComment(intval($kid['id']));
     $tomb = $com->getList('shop', $tid, 1);
     $ids = array_column($tomb['rows'], 'id');
@@ -526,8 +558,6 @@ function getProbeCommentThread(): array {
         $out['user']['anon'] = ($count('uid = 0 AND name = \'\'') - $seen[2]);
         $out['user']['zero'] = $com->deleteUser(0);
     }
-    # The sweep is measured against drift this probe creates rather than against whatever the installation happens
-    # to carry, so the case proves the mechanism instead of the history of one stand
     $out['drift'] = ['seeded' => 0, 'found' => 0, 'fixed' => 0, 'left' => 0, 'bad' => 0, 'clean' => false];
     $pick = $db->getSqlRows($db->getSqlQuery(
         'SELECT cid FROM '.PREFIX_DB.'_comment WHERE modul = \'shop\' AND status = 1 AND deleted IS NULL GROUP BY cid ORDER BY COUNT(*) DESC LIMIT 2'
@@ -683,7 +713,10 @@ function getProbeFeedLegacy(int $uid): string {
         $tabs[] = $inf['title'];
         $texts[] = $tpl->getHtmlPart('account-profile-feed-list', ['entries' => $lists[$mod], 'icon_name' => $inf['icon'], 'empty_text' => _NO_INFO]);
     }
-    return $tpl->getHtmlPart('account-profile-feed', ['head' => ['icon' => getIconName('activity'), 'title' => _LASTACTIVITY, 'live_title' => _LASTACTIVITY], 'tabs_html' => getNaviTabs(0, 'profeed', $tabs, $texts)]);
+    return $tpl->getHtmlPart('account-profile-feed', [
+        'head' => ['icon' => getIconName('activity'), 'title' => _LASTACTIVITY, 'live_title' => _LASTACTIVITY],
+        'tabs_html' => getNaviTabs(0, 'profeed', $tabs, $texts),
+    ]);
 }
 
 # Show the feed page of one address from a stored outcome, then again after that outcome aged past its 900 seconds, and once for an address outside the form of Feed
@@ -810,8 +843,8 @@ function getProbeCommentTarget(): array {
     return $out;
 }
 
-# The write helper of the extra fields over a posted form: trusted tags leave every text, a switched off field keeps its stored value, a stored name without a definition goes,
-# a refused value and a refused set and a missing mark each hand the stored text back untouched, and the rendered rows of a stored tag never reach eval through a trusted parse
+# The write helper of the extra fields over a posted form: trusted tags leave every text, a switched off field keeps its value, a name without a definition goes
+# A refused value, a refused set and a missing mark each hand the stored text back untouched, and the rendered rows of a stored tag never reach eval via a trusted parse
 function getProbeFieldPost(): array {
     global $conf, $fld, $prs, $tpl;
     $rule = ['title' => 'Probe', 'intro' => '', 'type' => 'text', 'default' => '', 'options' => [], 'req' => false, 'multi' => false, 'active' => true, 'sort' => 10];
@@ -919,10 +952,23 @@ if ($mode === 'core') {
     $out['log'] = is_file(LOGS_DIR.'/error_file.log') ? (string)file_get_contents(LOGS_DIR.'/error_file.log') : '';
 } elseif ($mode === 'filters') {
     $out['num'] = [filterNum('123'), filterNum('abc123def'), filterNum('abc'), filterNum(''), filterNum('-5'), filterNum('999999999')];
-    $out['word'] = [filterWord('hello123'), filterWord('a%b&c/d'), filterWord('test<script>alert</script>'), filterWord('Привет'), filterWord('say "hi" \'now\''), filterWord('hello world')];
+    $out['word'] = [
+        filterWord('hello123'),
+        filterWord('a%b&c/d'),
+        filterWord('test<script>alert</script>'),
+        filterWord('Привет'),
+        filterWord('say "hi" \'now\''),
+        filterWord('hello world'),
+    ];
     $out['var'] = [filterVar('hello-world_123'), filterVar('hello world'), filterVar('test<script>'), filterVar('test\'injection')];
     $out['vararr'] = [filterVar(['one', 'two-three']), filterVar(['ok', 'bad value'])];
-    $out['text'] = [filterText('<b>bold</b>'), filterText('say "hi"'), filterText('<b>tag</b>', 2), filterText('[usehtml]raw[/usehtml][usephp]echo 1;[/usephp]normal text'), filterText('  hello  ')];
+    $out['text'] = [
+        filterText('<b>bold</b>'),
+        filterText('say "hi"'),
+        filterText('<b>tag</b>', 2),
+        filterText('[usehtml]raw[/usehtml][usephp]echo 1;[/usephp]normal text'),
+        filterText('  hello  '),
+    ];
     $out['url'] = [filterWebUrl('example.com'), filterWebUrl('https://example.com'), filterWebUrl(''), filterWebUrl('http://'),
         filterWebUrl('HTTPS://Feeds.Example.COM/News/RSS.xml?Id=A'), filterWebUrl('Example.COM/Path')];
     $out['html'] = [filterHtml('cost $5'), filterHtml('back\\slash'), filterHtml('say "hi" and \'bye\''), filterHtml('')];

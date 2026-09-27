@@ -78,7 +78,7 @@ function getTemplateEditorBlock(string $templ, string $filelink, string $mode, s
         'hidden' => [
             ['nameattr' => 'templ', 'valueattr' => $templ],
             ['nameattr' => 'filelink', 'valueattr' => $filelink],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('template')],
         ],
         'rows' => [[
             'label_html' => '',
@@ -177,10 +177,10 @@ function style(): void {
 function save(): void {
     global $afile, $conf;
     $templ = getVar('post', 'templ', 'var', $conf['theme']);
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('template');
     if (!$warn) {
         $filelink = getVar('post', 'filelink', 'text', '');
-        $text = (string)getVar('post', 'template', 'raw', '');
+        $text = getVar('post', 'template', 'raw', '');
         $path = getTemplateFilePath($templ, $filelink, false);
         if ($path !== '' && $text !== '') {
             $handle = fopen($path, 'wb');
@@ -197,10 +197,10 @@ function save(): void {
 function stylesave(): void {
     global $afile, $conf;
     $templ = getVar('post', 'templ', 'var', $conf['theme']);
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('template');
     if (!$warn) {
         $filelink = getVar('post', 'filelink', 'text', '');
-        $text = (string)getVar('post', 'template', 'raw', '');
+        $text = getVar('post', 'template', 'raw', '');
         $path = getTemplateFilePath($templ, $filelink, true);
         if ($path !== '' && $text !== '') {
             $handle = fopen($path, 'wb');

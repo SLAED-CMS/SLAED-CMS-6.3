@@ -56,7 +56,7 @@ define('_NODE_MAXBYTES','Size limit, bytes');
 define('_NODE_MAXLIST','Materials per page, at most');
 define('_NODE_MIN','Minimum');
 define('_NODE_MODE','Display mode');
-define('_NODE_MODEHINT','Short name of a template set of the theme; default is the base set');
+define('_NODE_MODEHINT','Template set of the theme; default is the base set, support belongs to the support extension');
 define('_NODE_MOVED','The state has been changed.');
 define('_NODE_NAME','Name (address of the section)');
 define('_NODE_NAMEHINT','Lowercase Latin letters and digits, up to 20 characters; it cannot change after creation');

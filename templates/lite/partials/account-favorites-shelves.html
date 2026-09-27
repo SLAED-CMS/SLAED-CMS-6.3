@@ -4,7 +4,7 @@
     {% include 'fragments/panel-head.html' with shelf %}
     <div id="{{ shelf.fold }}" data-sl-toggle="{{ shelf.fold }}">
       {% for row in shelf.rows %}
-      <div class="sl-cab-row"><i class="bi bi-{{ shelf.icon }}" aria-hidden="true"></i><b><a href="{{ row.href }}" title="{{ row.title }}">{{{ row.label_html }}}</a></b><span class="sl-profile-hub-total"><a class="sl-but-mini" href="{{ row.href }}" title="{{ show_label }}"><i class="bi bi-eye" aria-hidden="true"></i></a><a class="sl-but-mini" href="{{ row.del_href }}" title="{{ del_label }}" hx-post="{{ row.del_href }}" hx-headers='{"X-CSRF-TOKEN": "{{ token }}"}' hx-include="#favseek, #favmod" hx-target="#repfavorliste" hx-swap="innerHTML" hx-push-url="false"><i class="bi bi-trash" aria-hidden="true"></i></a></span></div>
+      <div class="sl-cab-row"><i class="bi bi-{{ shelf.icon }}" aria-hidden="true"></i><b><a href="{{ row.href }}" title="{{ row.title }}">{{{ row.label_html }}}</a></b><span class="sl-profile-hub-total"><a class="sl-but-mini" href="{{ row.href }}" title="{{ show_label }}"><i class="bi bi-eye" aria-hidden="true"></i></a><button type="button" class="sl-but-mini" title="{{ del_label }}" hx-post="{{ row.del_href }}" hx-headers='{"X-CSRF-TOKEN": "{{ token }}"}' hx-include="#favseek, #favmod" hx-target="#repfavorliste" hx-swap="innerHTML" hx-push-url="false"><i class="bi bi-trash" aria-hidden="true"></i></button></span></div>
       {% endfor %}
     </div>
   </div>

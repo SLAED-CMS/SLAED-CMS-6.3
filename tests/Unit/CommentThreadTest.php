@@ -5,20 +5,13 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Stage 5 of docs/COMMENTS-REDESIGN-2026.md: a comment may answer another one, the answer is stored as a
- * parent id and a sortable path, the page counts and paginates root comments while every root arrives with
- * its branch, and a removed comment that still carries a live reply stays as a tombstone so the branch below
- * it does not break. The behaviour half runs through tests/Support/contract_probe.php, which signs in as an
- * administrator before the core boots and drives the class against the live table inside a transaction it
- * rolls back; the contract half reads the schema, the upgrade and the class.
- */
+# Threaded comments: a reply stores its parent, pages count roots with their branches, and a removed parent with live replies stays a tombstone
 final class CommentThreadTest extends TestCase
 {
     private static array $probe = [];
     private static array $src = [];
 
-    # Run the thread probe once and memoize its report for every scenario in this class
+    # Run the thread probe of tests/Support/contract_probe.php once, signed in as an administrator, inside a transaction it rolls back
     private function getProbe(): array
     {
         if (self::$probe !== []) return self::$probe;
@@ -77,8 +70,7 @@ final class CommentThreadTest extends TestCase
         }
     }
 
-    # shown records the first publication in both channels: behind status in a fresh install, added and placed there by the upgrade,
-    # and filled from time for the published rows only after time is proven to hold no NULL
+    # The shown column records the first publication in both channels, behind status, and the upgrade fills it from time once time is proven to hold no NULL
     #[Test]
     public function theFirstPublicationIsDeclaredInBothChannels(): void
     {
@@ -184,10 +176,28 @@ final class CommentThreadTest extends TestCase
             if ($kids > $reps) $deep++;
         }
         $this->assertGreaterThan(0, $deep, 'No root on the page held more replies than the cap, so the cap was not exercised');
+        $this->assertSame([2, 2], $data['cap']['crowd'], 'The long branch of an earlier root took the replies of a later root off the page');
+        $this->assertGreaterThan(0, $data['cap']['full'][0], 'The probe root was not capped, so the whole branch was not exercised');
+        $this->assertSame($data['cap']['full'][0], $data['cap']['full'][1], 'A root named in full did not answer its whole branch');
         $code = $this->getSource('core/classes/comment.php', 'getTreeRows', '    ');
         $this->assertStringContainsString("intval(\$this->conf['reps'] ?? 5)", $code);
-        $this->assertStringContainsString('LIMIT 0, ', $code, 'The reply query is not capped at all');
+        $this->assertStringContainsString('$seen[$base] <= $reps', $code, 'The replies are not capped before their rows are read');
+        $this->assertSame(1, substr_count($code, ' sub AS s'), 'The recursive term is read more than once, and MariaDB walks it once per reference');
+        $this->assertStringNotContainsString('UNION', $code, 'A union repeats the recursive term per member, and MariaDB walks it once per reference');
         $this->assertStringNotContainsString('ROW_NUMBER', $code, 'The cap uses a window function this distribution cannot rely on');
+    }
+
+    # The whole thread of a target reads in one pass exactly what the pages and their branches read one by one, and the support card reads it that way
+    #[Test]
+    public function theWholeThreadReadsLikeItsPages(): void
+    {
+        $data = $this->getProbe();
+        $this->assertGreaterThan(20, count($data['thread']['walk']), 'The probe thread is too small to prove anything');
+        $this->assertSame($data['thread']['walk'], $data['thread']['read'], 'The whole thread differs from its pages and branches');
+        $this->assertSame([], $data['thread']['none'], 'A target without comments answered rows');
+        $code = $this->getSource('modules/node/admin/index.php', 'support');
+        $this->assertStringContainsString('$com->getThread($type->name, $node->id)', $code, 'The support card does not read the thread in one pass');
+        $this->assertStringNotContainsString('getBranch(', $code, 'The support card still reads a branch per root');
     }
 
     # The counter every module reads is swept against the comments that are really published, and only the drifted rows are written
@@ -220,6 +230,13 @@ final class CommentThreadTest extends TestCase
         $this->assertSame(3, substr_count($code, '$this->addTargetCount('), 'The three write paths do not all recompute their target');
         $queue = $this->getSource('core/classes/comment.php', 'addTargetCount', '    ');
         $this->assertStringContainsString('addDeferredTask(', $queue, 'The recompute runs inside the write instead of after the response');
+        $this->assertStringContainsString('$this->updateCountDrift([', $queue, 'The deferred recompute writes outside the guard and the generation');
+        foreach (['deleteTarget' => 'catch (Throwable $err)', 'getUserCount' => 'catch (NodeException $err)', 'getUserList' => 'catch (NodeException $err)'] as $name => $catch) {
+            $one = $this->getSource('core/classes/comment.php', $name, '    ');
+            $tail = substr($one, (int)strpos($one, $catch));
+            $this->assertStringContainsString($catch, $one, $name.'() swallows its failure without the reason');
+            $this->assertStringContainsString('Logger::addSite(', $tail, $name.'() answers a failure without a log line');
+        }
         foreach (['addComment', 'setStatus', 'deleteComment'] as $name) {
             $one = $this->getSource('core/classes/comment.php', $name, '    ');
             $begin = strpos($one, '$this->setWriteDone(');
@@ -279,7 +296,11 @@ final class CommentThreadTest extends TestCase
         $this->assertSame(3, substr_count($mass, 'setForumLast('), 'Hiding and moving a topic do not both repair what advertised it');
         foreach (['delete' => $del, 'move' => $mass] as $name => $code) {
             $this->assertStringNotContainsString('lpost = :lid WHERE id IN (', $code, 'Path "'.$name.'" still writes one branch answer into every ancestor');
-            $this->assertStringNotContainsString("|| (pid = '0' && status > '1')) ORDER BY id DESC", $code, 'Path "'.$name.'" keeps its own copy of the last-message query, which answers a reply as itself');
+            $this->assertStringNotContainsString(
+                "|| (pid = '0' && status > '1')) ORDER BY id DESC",
+                $code,
+                'Path "'.$name.'" keeps its own copy of the last-message query, which answers a reply as itself'
+            );
         }
     }
 

@@ -7,18 +7,10 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Tests for password hashing after migration to password_hash(PASSWORD_BCRYPT).
- *
- * md5_salt() has been removed. The legacy md5 algorithm is inlined in
- * checkPassHash() for transparent upgrade on first login with an old hash.
- */
+# Password hashing after the migration to password_hash(PASSWORD_BCRYPT); md5_salt() is gone
 final class PasswordHashTest extends TestCase
 {
-    // -------------------------------------------------------------------------
-    // Bcrypt (current)
-    // -------------------------------------------------------------------------
-
+    # Bcrypt is the current algorithm: a hash carries the $2y$ prefix, 60 characters and verifies only its own password
     #[Test]
     public function bcryptHashFormatValidation(): void
     {
@@ -51,10 +43,7 @@ final class PasswordHashTest extends TestCase
         $this->assertTrue(password_verify('same', $hash2));
     }
 
-    // -------------------------------------------------------------------------
-    // Legacy md5 detection (inlined in checkPassHash)
-    // -------------------------------------------------------------------------
-
+    # The legacy md5 algorithm is inlined in checkPassHash() for a transparent upgrade on the first login with an old hash, which is detected by its format
     #[Test]
     public function legacyMd5HashIsDetectedByFormat(): void
     {

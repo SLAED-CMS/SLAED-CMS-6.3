@@ -5,18 +5,14 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Step 2 of docs/PRIVAT-2026.md: the Privat class owns every read and write of the private message table, and every
- * one of its reads is one row of the predicate table of that plan. tests/Support/privat_class_probe.php boots the
- * real core in an isolated CLI process and drives the class against a disposable schema carrying the two shipped
- * tables it talks to. The fixture mailbox is written state by state without the class, so what each predicate has to
- * answer is known before it is asked: unread, read, saved, saved-but-unread, deleted by the recipient and deleted by
- * the sender, in both directions. The site database is never touched.
- */
+# Step 2 of docs/PRIVAT-2026.md: the Privat class owns every read and write of the private message table, each read one row of the predicate table
 final class PrivatClassTest extends TestCase
 {
     private static array $probe = [];
 
+    # The probe tests/Support/privat_class_probe.php boots the real core in an isolated CLI process against a disposable schema of the two shipped tables
+    # The fixture mailbox is written state by state without the class, so what each predicate has to answer is known before it is asked
+    # The states are unread, read, saved, saved-but-unread, deleted by the recipient and deleted by the sender, in both directions; the site database is never touched
     # Run the probe once and memoize its report for every test in this class
     private function getProbe(): array
     {
@@ -86,7 +82,8 @@ final class PrivatClassTest extends TestCase
         $this->assertSame([0, 4, '0.0'], $run['fill'][4], 'A fill was answered without an account');
     }
 
-    # A shelf badge counts the unread of its own mailbox, and the two shelves add up to the cabinet badge, because a saved message leaves the inbox and takes its unread mark with it
+    # A shelf badge counts the unread of its own mailbox, and the two shelves add up to the cabinet badge
+    # A saved message leaves the inbox and takes its unread mark with it
     #[Test]
     public function everyShelfCountsTheUnreadOfItsOwnBox(): void
     {

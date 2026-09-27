@@ -10,15 +10,16 @@ if (!defined('MODULE_FILE')) {
 }
 
 function users(): void {
-    global $db, $conf, $tpl;
+    global $db, $conf, $tpl, $pnt;
     setHead(['title' => _TOPUSERS, 'kind' => 'collection']);
-    $cont = getModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => $conf['points']['active'] ? getSeoUrl(['name' => $conf['name'], 'op' => 'rules']) : '',
+    $cont = getModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => $pnt->active ? getSeoUrl(['name' => $conf['name'], 'op' => 'rules']) : '',
         'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _TU_STATS, 'liste_href' => '', 'add_href' => '']);
     $lim = 50;
     $num = getVar('get', 'num', 'num', '1');
     $offset = (int)(($num - 1) * $lim);
     $count = ($num) ? $offset + 1 : 1;
-        $result = $db->getSqlQuery('SELECT id, name, website, regdate, origin, lastvis, points, ip, gender, votes, tvotes FROM '.PREFIX_DB.'_users ORDER BY points DESC LIMIT '.$offset.', '.$lim);
+        $result = $db->getSqlQuery('SELECT id, name, website, regdate, origin, lastvis, points, ip, gender, votes, tvotes'
+            .' FROM '.PREFIX_DB.'_users ORDER BY points DESC LIMIT '.$offset.', '.$lim);
         if ($db->getSqlRowCount($result) > 0) {
             $con = explode('|', (string)($conf['rating']['account'] ?? '0|0|0'));
             $rate = !empty($con[1]);
@@ -27,14 +28,14 @@ function users(): void {
         $rows = [];
         while ($row = $db->getSqlRow($result)) {
             [$id, $name, $site, $reg, $from, $last, $point, $ip, $gender, $votes, $total] = $row;
-	            $tipItems = [
-	                ['label' => _REG, 'value' => format_time($reg, _TIMESTRING), 'is_last' => false],
-	                ['label' => _LAST_VISIT, 'value' => format_time($last, _TIMESTRING), 'is_last' => !$site],
-	            ];
-	            if ($site) $tipItems[] = ['label' => _SITE, 'value' => $site, 'is_last' => true];
-	                $info = (is_moder($conf['name'])) ? Geoip::getIpHtml($ip) : format_time($reg);
-	                $rating = $rate ? $tpl->getHtmlFrag('rating-box', ['content' => getRatingAsync(1, $id, 'account', $votes, $total, '', 1)]) : cutstr((string)$from, 30);
-	            $rows[] = [
+            $tipItems = [
+                ['label' => _REG, 'value' => format_time($reg, _TIMESTRING), 'is_last' => false],
+                ['label' => _LAST_VISIT, 'value' => format_time($last, _TIMESTRING), 'is_last' => !$site],
+            ];
+            if ($site) $tipItems[] = ['label' => _SITE, 'value' => $site, 'is_last' => true];
+            $info = (is_moder($conf['name'])) ? Geoip::getIpHtml($ip) : format_time($reg);
+            $rating = $rate ? $tpl->getHtmlFrag('rating-box', ['content' => getRatingAsync(1, $id, 'account', $votes, $total, '', 1)]) : cutstr((string)$from, 30);
+            $rows[] = [
                 'id' => (string)$count,
                 'cells' => [
                     ['text' => (string)$count, 'href' => '#'.$count, 'title' => (string)$count, 'is_num' => true],
@@ -42,7 +43,7 @@ function users(): void {
                     ['content_html' => $info],
                     ['content_html' => getGenderText($gender)],
                     ['content_html' => $rating],
-                    ...($conf['points']['active'] ? [['text' => (string)$point]] : []),
+                    ...($pnt->active ? [['text' => (string)$point]] : []),
                 ],
             ];
             $count++;
@@ -58,7 +59,7 @@ function users(): void {
                     ['text' => $head],
                     ['text' => _GENDER],
                     ['text' => $sort],
-                    ...($conf['points']['active'] ? [['text' => _POINTS]] : []),
+                    ...($pnt->active ? [['text' => _POINTS]] : []),
                 ],
             ],
             'table_close' => [],
@@ -82,10 +83,10 @@ function users(): void {
 }
 
 function rules(): void {
-    global $conf, $tpl;
-    if (!$conf['points']['active']) setRedirect('index.php?name='.$conf['name']);
+    global $conf, $tpl, $pnt;
+    if (!$pnt->active) setRedirect('index.php?name='.$conf['name']);
     setHead(['title' => _TU_RULES, 'kind' => 'collection']);
-    $cont = getModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => $conf['points']['active'] ? getSeoUrl(['name' => $conf['name'], 'op' => 'rules']) : '',
+    $cont = getModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => $pnt->active ? getSeoUrl(['name' => $conf['name'], 'op' => 'rules']) : '',
         'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _TU_STATS, 'liste_href' => '', 'add_href' => '']);
     $rows = [];
     foreach ($conf['points']['actions'] as $name => $rule) {
@@ -124,9 +125,9 @@ function rules(): void {
 }
 
 function stats(): void {
-    global $db, $conf, $tpl;
+    global $db, $conf, $tpl, $pnt;
     setHead(['title' => _TU_STATS, 'kind' => 'collection']);
-    $cont = getModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => $conf['points']['active'] ? getSeoUrl(['name' => $conf['name'], 'op' => 'rules']) : '',
+    $cont = getModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => $pnt->active ? getSeoUrl(['name' => $conf['name'], 'op' => 'rules']) : '',
         'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _TU_STATS, 'liste_href' => '', 'add_href' => '']);
     $result = $db->getSqlQuery('SELECT id, name, intro, points, extra, `rank`, color FROM '.PREFIX_DB.'_groups ORDER BY points');
     if ($result) {

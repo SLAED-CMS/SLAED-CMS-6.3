@@ -100,7 +100,15 @@ if (guard) {
     process.exit(1);
   }
   if (guard === 'before') {
-    rmSync(guardDir, { recursive: true, force: true });
+    // `--only` recaptures the named pages into a pair that keeps every other page: wiping the directory left the pages it
+    // did not name without a "before", so a full `--after` reported them missing. The names are built the way setOneShot() builds them
+    if (only && existsSync(guardDir)) {
+      const tails = conf.viewports.flatMap((view) => conf.modes.map((mode) => '-' + view.name + (mode === 'auto' ? '' : '-' + mode) + '.png'));
+      const heads = conf.pages.filter((item) => only.has(item.name)).flatMap((item) => [item.name, ...(item.steps || []).filter((step) => step.shot).map((step) => item.name + '-' + step.shot)]);
+      for (const head of heads) for (const tail of tails) rmSync(join(guardDir, head + tail), { force: true });
+    } else {
+      rmSync(guardDir, { recursive: true, force: true });
+    }
     console.log('before: capturing the tree you are about to change into ' + guardDir);
   } else {
     const shot = existsSync(guardDir) ? readdirSync(guardDir).filter((f) => f.endsWith('.png')).length : 0;
@@ -496,7 +504,8 @@ function addReportOnce(line) {
 
 // The contexts of one mode: a session per auth kind the manifest needs and one open context, each carrying the seeded
 // state and the mode cookie. A context is what holds a cookie, so two modes cannot share one and every walk signs in
-// for itself - seconds, against the minutes the walk costs
+// for itself - seconds, against the minutes the walk costs. A login that did not take is tried once more on a fresh page
+// with the cookies of the first attempt cleared, so a mode no longer loses every session page to a single failed submit
 async function getModeContexts(mode) {
   const sess = new Map();
   for (const kind of need) {
@@ -505,15 +514,18 @@ async function getModeContexts(mode) {
       continue;
     }
     const ctx = await browser.newContext({ ignoreHTTPSErrors: true, reducedMotion: 'reduce' });
-    const page = await ctx.newPage();
-    try {
-      await setSession(page, kind);
-      sess.set(kind, ctx);
-    } catch (err) {
-      addReportOnce('  ' + kind + ' login failed: ' + err.message);
-      await ctx.close();
+    for (let i = 1; i <= 2 && !sess.has(kind); i++) {
+      if (i === 2) await ctx.clearCookies();
+      const page = await ctx.newPage();
+      try {
+        await setSession(page, kind);
+        sess.set(kind, ctx);
+      } catch (err) {
+        if (i === 2) addReportOnce('  ' + kind + ' login failed: ' + err.message);
+      }
+      await page.close();
     }
-    await page.close();
+    if (!sess.has(kind)) await ctx.close();
   }
   // A development stand serves its own certificate, and the manifest names https because the session cookie needs it
   const open = await browser.newContext({ ignoreHTTPSErrors: true, reducedMotion: 'reduce' });
@@ -526,8 +538,7 @@ async function getModeContexts(mode) {
 
 // One mode walks every page of the manifest through contexts of its own; the modes walk side by side, which halves
 // the wall clock of a pair whose cost is the walk and not the comparison
-async function setModeWalk(mode) {
-  const { sess, open } = await getModeContexts(mode);
+async function setModeWalk(mode, { sess, open }) {
   for (const item of conf.pages) {
     if (only && !only.has(item.name)) continue;
     const ctx = item.auth ? sess.get(item.auth) : open;
@@ -543,7 +554,12 @@ async function setModeWalk(mode) {
   for (const ctx of [...sess.values(), open]) await ctx.close();
 }
 
-await Promise.all((job === 'contrast' ? conf.contrastmodes || conf.modes : conf.modes).map((mode) => setModeWalk(mode)));
+// The modes sign in one after another and only then walk side by side: both modes used to submit the login forms of
+// one account at the same moment, and a mode whose login failed walked without its session pages
+const walks = job === 'contrast' ? conf.contrastmodes || conf.modes : conf.modes;
+const held = [];
+for (const mode of walks) held.push(await getModeContexts(mode));
+await Promise.all(walks.map((mode, i) => setModeWalk(mode, held[i])));
 
 await browser.close();
 deleteSeededState(seed);

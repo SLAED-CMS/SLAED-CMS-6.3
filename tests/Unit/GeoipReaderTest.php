@@ -5,17 +5,12 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Regression tests for the 2026 GeoIP reader contract: the lookups run against the real corpus
- * through tests/Support/contract_probe.php in an isolated CLI process, so both the resolved
- * countries and the peak memory of the streaming reader are measured on production code. The
- * scenario is skipped when an installation ships without the optional country corpus.
- */
+# The GeoIP reader contract: resolved countries and the peak memory of the streaming reader are measured on production code against the real corpus
 final class GeoipReaderTest extends TestCase
 {
     private static array $probe = [];
 
-    # Run the GeoIP probe once and memoize its report for every scenario in this class
+    # Run tests/Support/contract_probe.php once in an isolated CLI process and memoize its report, skipping when the optional country corpus is not shipped
     private function getProbe(): array
     {
         if (self::$probe !== []) return self::$probe;

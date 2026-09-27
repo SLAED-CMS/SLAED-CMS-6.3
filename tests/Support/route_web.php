@@ -5,9 +5,9 @@
 # Website: slaed.net
 
 # The web server of tests/Support/route_probe.php, run as the router of the built-in server `php -S` with the scratch root in SLAED_ROUTE_ROOT
-# It serves the real index.php and admin.php of the tree with every writable directory and the configuration redirected into scratch, so a route answers exactly as
-# on a site whose database is the disposable one of the probe; the visitor comes from the header X-Probe-Who and is one of the accounts the probe seeded,
-# helper being both a site account and the administrator of the support type, the way an operator answers requests on the site
+# It serves the real index.php and admin.php with every writable directory and the configuration redirected into scratch, over the probe's disposable database
+# The visitor comes from the header X-Probe-Who and is one of the accounts the probe seeded
+# The account helper is both a site account and the administrator of the support type, the way an operator answers requests on the site
 # /uploads/<dir>/<file> follows the nginx rule of UPGRADING.md (Web Server Rule for Node Upload Directories): 403 for a directory with the .htaccess guard, the file otherwise
 # A stylesheet, script, font or picture under templates/ or plugins/ is left to the built-in server, so a browser on the probe sees the page as the site does
 # The directory is served by the stand as well, so anything but the built-in server gets a plain 404 before a single line of it runs

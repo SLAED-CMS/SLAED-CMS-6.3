@@ -245,8 +245,7 @@ function setProbeReset(): void {
     getConfig();
 }
 
-# A stand-in for the database the restore of a journal with a proof asks: its locking read answers the version the scenario names from an in-memory statement
-# The transaction it opens runs the hook of the scenario first, which is where a snapshot goes between the check of its hash and its read, a race no real run repeats
+# A stand-in for the database the restore of a journal with a proof asks, answering its locking read and its transaction from memory
 class ProbeDb extends Database {
     public ?Closure $hook = null;
     public int $ver = 0;
@@ -256,12 +255,13 @@ class ProbeDb extends Database {
     }
 
     # Run the hook of the scenario and report the transaction as opened
+    # The hook is where a snapshot goes between the check of its hash and its read, a race no real run repeats
     function setSqlBegin(): bool {
         if ($this->hook !== null) ($this->hook)();
         return true;
     }
 
-    # Answer the locking read of the type row with the id of the proof and the version of the scenario
+    # Answer the locking read of the type row with the id of the proof and the version of the scenario from an in-memory statement
     function getSqlQuery(string $query = '', array $params = []): PDOStatement|false {
         return (new PDO('sqlite::memory:'))->query('SELECT 7 AS id, '.$this->ver.' AS version');
     }

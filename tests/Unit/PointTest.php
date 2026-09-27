@@ -5,13 +5,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * The Point class is the one writer of the points journal and of the fast balance, and
- * docs/POINTS.md is its contract. tests/Support/point_probe.php boots the real core in an isolated CLI process
- * and drives the class against a disposable schema carrying the shipped account table and the shipped journal, so
- * the DDL of setup/sql/table.sql is executed by the same run. Every persistent result is read by a connection of
- * its own. The site database is never touched.
- */
+# The Point class is the one writer of the points journal and of the fast balance, and docs/POINTS.md is its contract
 final class PointTest extends TestCase
 {
     private const ACTIONS = [
@@ -24,6 +18,8 @@ final class PointTest extends TestCase
 
     private static array $probe = [];
 
+    # The probe tests/Support/point_probe.php boots the real core in an isolated CLI process against a disposable schema of the shipped account table and journal
+    # The same run executes the DDL of setup/sql/table.sql, every persistent result is read by a connection of its own, and the site database is never touched
     # Run the probe once and memoize its report for every test in this class
     private function getProbe(): array
     {
@@ -33,7 +29,7 @@ final class PointTest extends TestCase
         $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' 2>&1');
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'The probe did not return JSON: '.$out);
-        if (!empty($data['error'])) $this->markTestSkipped('Probe: '.$data['error']);
+        $this->assertSame('', $data['error'], 'The probe failed');
         $this->assertNotEmpty($data['runs'], 'The probe ran no scenario');
         return self::$probe = $data;
     }
@@ -73,8 +69,10 @@ final class PointTest extends TestCase
         $want = ['__construct', 'addEvent', 'checkNote', 'getEventId', 'setUserLocks'];
         $this->assertSame($want, $open, 'The public API is not exactly the constructor, addEvent, checkNote, getEventId and setUserLocks');
         $prop = array_map(static fn(\ReflectionProperty $one): string => $one->getName(), $ref->getProperties(\ReflectionProperty::IS_PUBLIC));
-        $this->assertSame(['valid'], $prop, 'The only public property is not the read-only valid');
+        sort($prop);
+        $this->assertSame(['active', 'valid'], $prop, 'The public properties are not exactly the read-only active and valid');
         $this->assertTrue($ref->getProperty('valid')->isPrivateSet(), 'Point::$valid can be written from outside');
+        $this->assertTrue($ref->getProperty('active')->isPrivateSet(), 'Point::$active can be written from outside');
         $this->assertSame('bool', (string)$ref->getMethod('addEvent')->getReturnType());
         $this->assertSame('int|false', (string)$ref->getMethod('getEventId')->getReturnType());
     }

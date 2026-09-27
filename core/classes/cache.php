@@ -75,10 +75,22 @@ class Cache {
         return ($body !== false) ? $body : '';
     }
 
+    # Create a missing directory of the cache and answer whether it exists; losing the race to a parallel request is the expected success, not a warning
+    # Only a directory that is still missing afterwards is a failure, and that one is written to the log, since the silenced warning no longer tells it
+    private static function setDirPath(string $dir): bool {
+        if (is_dir($dir)) return true;
+        set_error_handler(static fn(): bool => true);
+        $made = mkdir($dir, 0777, true);
+        restore_error_handler();
+        if ($made || is_dir($dir)) return true;
+        Logger::addFile('error', 'Cache directory cannot be created', ['path' => $dir]);
+        return false;
+    }
+
     # Write a cache file atomically through a temp file, exclusive lock, and rename; a short write is a failure and never reaches the target path
     public static function setBody(string $file, string $body): bool {
         $dir = dirname($file);
-        if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) return false;
+        if (!self::setDirPath($dir)) return false;
         $tmp = tempnam($dir, basename($file).'.');
         if ($tmp === false) return false;
         if (file_put_contents($tmp, $body, LOCK_EX) !== strlen($body)) {
@@ -189,7 +201,7 @@ class Cache {
     public static function addEpoch(bool $force = false): bool {
         if (self::$bumped && !$force) return true;
         $dir = COUNTER_DIR;
-        if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) return false;
+        if (!self::setDirPath($dir)) return false;
         $hand = fopen($dir.'/cache.log', 'c+');
         if ($hand === false) return false;
         $done = false;
@@ -217,7 +229,7 @@ class Cache {
     # It is what keeps a marker from being taken for abandoned between the creation of its file and the grab of its own lock
     private static function getGuardGate(): mixed {
         $dir = CACHE_DIR.'/guards';
-        if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) return false;
+        if (!self::setDirPath($dir)) return false;
         $gate = fopen(CACHE_DIR.'/guards.lock', 'c');
         if ($gate === false) return false;
         if (flock($gate, LOCK_EX)) return $gate;
@@ -289,7 +301,7 @@ class Cache {
     public static function getRebuildLock(string $hash): bool {
         if (!preg_match('/^[a-f0-9]{40}$|^[a-f0-9]{64}$/', $hash)) return true;
         $dir = CACHE_DIR.'/pages/locks';
-        if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) return true;
+        if (!self::setDirPath($dir)) return true;
         $path = $dir.'/'.$hash;
         $hand = fopen($path, 'c');
         if ($hand === false) return true;

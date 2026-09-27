@@ -1,5 +1,5 @@
 <?php
-// Stubs to reduce false positives from bundled legacy libraries.
+# Stubs to reduce false positives from bundled legacy libraries
 
 class PclZip {
     public function __construct(string $filename = '') {}

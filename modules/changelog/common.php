@@ -1,5 +1,5 @@
 <?php
-# Shared Changelog data engine for public and admin modules.
+# Shared Changelog data engine for public and admin modules
 
 const CHLOG_GH_API_TIMEOUT = 10;
 const CHLOG_GH_API_CONNECT_TIMEOUT = 5;

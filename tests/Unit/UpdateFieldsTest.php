@@ -7,12 +7,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * The fields unit of the 6.3 data update in setup/index.php, whose contract is the one-off
- * conversion of Field in docs/NODE.md (Fields unit). tests/Support/update_probe.php lifts the shipped functions out of
- * the installer by name and drives them in an isolated CLI process against a disposable schema and a scratch site, so
- * the manifest, the snapshots, the mark, the definitions and the value rows of the stand are never touched.
- */
+# The fields unit of the 6.3 data update in setup/index.php, whose contract is the one-off conversion of Field in docs/NODE.md (Fields unit)
 final class UpdateFieldsTest extends TestCase
 {
     private const USERS = [
@@ -29,6 +24,8 @@ final class UpdateFieldsTest extends TestCase
 
     private static array $probe = [];
 
+    # The probe tests/Support/update_probe.php lifts the shipped functions out of the installer by name into an isolated CLI process on a disposable schema and scratch site
+    # The manifest, the snapshots, the mark, the definitions and the value rows of the stand are never touched
     # Run the probe once and memoize its report for every test in this class
     private function getRun(string $name): array
     {
@@ -138,24 +135,50 @@ final class UpdateFieldsTest extends TestCase
         $this->assertIsString($stop['foreign']['rules']['account'], 'The definitions were published over a refused batch');
     }
 
-    # The preflight names every row it will not guess in one report - unknown option, localized date, data without definition, two fitting layouts, line break - and writes nothing
+    # The preflight names every row it will not guess in one report - localized date, data beyond every position, two fitting layouts, line break - and writes nothing
+    # An unknown caption and data at a switched off position are no refusal, they grow the definitions
     #[Test]
     public function thePreflightNamesEveryBrokenRowAndWritesNothing(): void
     {
         $run = $this->getRun('stop')['rows'];
         $this->assertFalse($run['done']);
         $want = [
-            'probe_users 2 (value 1 is no option of field1)', 'probe_users 3 (field4 is refused by the shared check: format)',
-            'probe_users 4 (value 7 holds data and has no definition)',
-            'probe_forum 5 (value 2 holds data and has no definition)', 'probe_order 1 (the full and the short layout both fit and differ)',
-            'probe_order 2 (field1 is refused by the shared check: format)',
+            'probe_users 3 (field4 is refused by the shared check: format)', 'probe_users 4 (value 7 holds data and has no definition)',
+            'probe_order 1 (the full and the short layout both fit and differ)', 'probe_order 2 (field1 is refused by the shared check: format)',
         ];
         foreach ($want as $text) $this->assertStringContainsString($text, $run['text']);
-        $this->assertStringContainsString('nothing was written (6)', $run['text'], 'The report counts more or fewer rows than are broken');
+        $this->assertStringNotContainsString('probe_users 2 ', $run['text'], 'An unknown caption was refused instead of becoming a disabled option');
+        $this->assertStringNotContainsString('probe_forum 5 ', $run['text'], 'Data at a switched off position was refused instead of becoming an inactive field');
+        $this->assertStringContainsString('nothing was written (4)', $run['text'], 'The report counts more or fewer rows than are broken');
         $this->assertStringNotContainsString('extra', $run['text'], 'The report carries stored data');
         $this->assertSame([null, false, 'D|x', 'Y'], [$run['state'], $run['dir'], $run['users'][2], $run['forum'][7]], 'The preflight wrote something');
         $this->assertIsString($run['rules']['account'], 'The preflight published definitions');
         $this->assertArrayNotHasKey('fields', $run['mark']);
+    }
+
+    # Rows that need more than the definitions hold are carried: captions are trimmed, an unknown caption becomes one disabled option of its field in the order of the rows
+    # Data at a switched off position becomes an inactive field of that position's type, a layout that fits as it is still wins, and the report counts what was added
+    #[Test]
+    public function theUnitGrowsWhatTheRowsNeed(): void
+    {
+        $run = $this->getRun('clean')['grow'];
+        $this->assertTrue($run['done'], $run['text']);
+        $this->assertStringContainsString('kept as switched off: 1 options, 2 fields', $run['text']);
+        $this->assertSame(
+            [2 => '{"field1":"option3","field2":"hidden","field3":"n"}', 3 => '{"field1":"option2"}', 4 => '{"field1":"option3","field3":"m"}'],
+            $run['users'],
+            'A growing row was not carried, one caption became two options, or a 0 at a switched off position became a value'
+        );
+        $this->assertSame([5 => '{"field1":"option1","field2":"L","field3":"option2"}', 7 => '{"field1":"option2","field3":"option1"}'], $run['forum']);
+        $acc = $run['rules']['account'];
+        $this->assertSame(['field1', 'field2', 'field3'], array_keys($acc));
+        $this->assertSame(['Version', 'field2', 'Note'], array_column($acc, 'title'), 'A caption was not trimmed or the inactive field has no name of its own');
+        $this->assertSame([true, false, true], array_column($acc, 'active'));
+        $this->assertSame(['text', false], [$acc['field2']['type'], $acc['field2']['req']]);
+        $items = $acc['field1']['options']['items'];
+        $this->assertSame(['option1' => 'A', 'option2' => 'B', 'option3' => 'C'], array_map(fn($v) => $v['title'], $items));
+        $this->assertSame([true, true, false], array_column($items, 'active'), 'The grown option is offered by the form');
+        $this->assertSame([false, 'text'], [$run['rules']['forum']['field2']['active'], $run['rules']['forum']['field2']['type']]);
     }
 
     # Broken definitions are named by area and position: a repeated option caption, an unknown type, a fifth slot and a default that is no canonical date

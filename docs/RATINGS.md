@@ -57,7 +57,7 @@ that is physically gone answers `unavailable` and changes nothing.
 
 | Rule | Behaviour |
 |---|---|
-| Rule of the scope | Missing or invalid rule: the scope is blocked (`unavailable`) and the reason is logged once per build. |
+| Rule of the scope | Missing or invalid rule: the scope is blocked (`blocked`) and the reason is logged once per build. An exactly empty rule set blocks nothing and logs nothing: a scope without a rule is `unavailable`. |
 | `active = '0'` | The aggregate stays readable; every vote is `denied`. |
 | `guests = '0'` | A guest vote is `denied`. |
 | Own target | An account never votes on its own profile, its own forum topic or its own Node material. A guest is nobody's owner; `uid = 0` of a target never proves guest authorship. Products have no owner. |
@@ -165,8 +165,8 @@ invalid. A missing fixed scope, a key outside the grammar and an invalid rule ea
 logged, and never fall back to a default. Explicit refusals (`'0'`) are kept.
 
 The rules take effect only behind the mark `update.ratings = '6.3.0'` in `config/update.php`. Without it
-`getRatingService()` passes an empty rule set, so every scope is blocked, `getRatingAsync()` draws no live widget
-and the settings screen shows a warning instead of the form. A clean installation writes the mark directly.
+`getRatingService()` passes an empty rule set, so no scope has a rule and a vote is `unavailable`, nothing is logged,
+`getRatingAsync()` draws no live widget and the settings screen shows a warning instead of the form. A clean installation writes the mark directly.
 
 Writers of the area:
 
@@ -183,6 +183,7 @@ Writers of the area:
 
 ```php
 public function __construct(Database $db, array $conf, array $actor, Closure $read, Closure $write)
+public function getRule(string $scope): array
 public function getRating(string $scope, int $id): array
 public function addRating(string $scope, int $id, int $value, string $request): array
 public function deleteRating(int $vote, string $reason): array
@@ -194,6 +195,7 @@ public static function getAverage(int $score, int $num, int $digits = 6): ?strin
 
 | Method | Who | Behaviour |
 |---|---|---|
+| `getRule()` | anyone | The checked rule of one scope - `active`, `period`, `detail`, `guests` as bool, int, bool, bool - or `[]` for a scope without a usable rule. |
 | `getRating()` | anyone | Reads without writing. A reachable target answers `ok` with its aggregate even when voting is off, closed to guests, own or waiting; `canvote` says whether a new vote would be taken, `wait` speaks of the interval only. Needs a valid rule. |
 | `addRating()` | anyone | Places one vote under the rules above. `value` 1..5, `request` `/^[a-f0-9]{32}$/`. |
 | `deleteRating()` | `super` only | Annuls one vote. `reason`: valid UTF-8, not blank, at most 255 characters, no markup, no control characters. Needs no rule, no active rating, no open interval. A vote already annulled answers `ok` with `duplicate = true` and changes nothing, reason included; an unknown vote id is `unavailable`. `canvote` and `wait` describe the calling administrator as a voter. |
@@ -205,7 +207,7 @@ The result of `getRating()`, `addRating()` and `deleteRating()` has exactly thes
 | Key | Type | Meaning |
 |---|---|---|
 | `ok` | bool | `code === 'ok'` |
-| `code` | string | `ok`, `invalid`, `denied`, `unavailable`, `interval`, `conflict`, `storage` |
+| `code` | string | `ok`, `invalid`, `denied`, `unavailable`, `blocked`, `interval`, `conflict`, `storage` |
 | `vote` | int | id of the created, repeated or annulled vote; `0` for `getRating()` and when none |
 | `score`, `ratings` | int | the aggregate; `0` when the target is hidden |
 | `average` | ?string | `getAverage(score, ratings)` with six digits; `null` without votes |
@@ -267,7 +269,8 @@ average shown is `Rating::getAverage()` with two digits.
 
 The block is live only when the mark is set, the rule has `active = '1'`, `$typ` is not `2`, and either `$typ` is
 `1` or the rule has `detail != '1'`. Without an active rule and without votes it renders nothing; with votes it
-renders the static aggregate. The widget reads the stored rule strings directly; the service validates them.
+renders the static aggregate. The widget and the rating sums of the profile read the rule through
+`getRatingService()->getRule()`, so a rule the class blocks draws no live widget.
 
 ## HTTP endpoint
 
@@ -290,7 +293,8 @@ renders the static aggregate. The widget reads the stored rule strings directly;
 | token missing or wrong | 403 | alert `_TOKENMISS` |
 | a field fails its pattern, `invalid` | 422 | alert `_RATINGS_FORM` |
 | `denied` | 403 | alert `_RATINGS_DENY` |
-| `unavailable` (also a blocked scope) | 404 | alert `_RATINGS_GONE` |
+| `unavailable` | 404 | alert `_RATINGS_GONE` |
+| `blocked` | 503 | alert `_RATINGS_OFF` |
 | `conflict` | 409 | alert `_RATINGS_TWICE` |
 | `interval` | 429, `Retry-After: <seconds>` | alert `_RATINGS_WAIT` with the days left, rounded up |
 | `storage` | 500 | alert `_RATINGS_FAIL` |
@@ -320,7 +324,10 @@ the write-guard protocol of `Cache` (`core/classes/cache.php`).
 `Cache::getEpoch()` reads it under `LOCK_SH`; a missing file is generation 0. `Cache::addEpoch(bool $force = false)`
 bumps it under `LOCK_EX`, writing over the old value in place so a reader never sees an empty file, and answers
 whether the new value is proven on disk. Without `$force` one bump per request is enough; the owner of a guard
-always forces the bump that follows its commit. A counter that is not a plain number is never rebuilt: it switches
+always forces the bump that follows its commit. Any write statement of the panel goes through
+`Database::getSqlQuery()`, whose first one bumps at once and registers a forced bump for the end of the request, so
+a page cached between an unguarded write and its commit does not outlive the request. Writes on `_session`, the
+online tracking every request of the panel runs, move no generation. A counter that is not a plain number is never rebuilt: it switches
 the page cache off until an operator fixes it, so the generation never moves back onto one already served. The
 counter lives outside `storage/cache`, so clearing the cache cannot reset it.
 
@@ -404,7 +411,8 @@ single values are unknown.
 `_rating_actors.last`: `u:<uid>` for a positive `uid`, otherwise `g:<address>` normalized with
 `inet_ntop(inet_pton())` (the same result as `getIpNorm()`; `core/security.php` cannot be loaded by the
 installer). Accounts and guests are never merged by address. A voter without a surviving row has no term, so the
-first allowed vote is accepted under the current rules.
+first allowed vote is accepted under the current rules; the schema file of the update keeps only the earliest row of
+one address and target, so a later account of that address is such a voter.
 
 **Rules.** A rule stored as the 6.2 string `period|active|detail` becomes the four-key form with `guests = '1'`; a
 rule already in the four-key form, including an explicit `guests = '0'` and a `node.<name>` rule, is kept. Keys
@@ -440,7 +448,7 @@ configuration step of the update before this unit reads it.
 | File | Covers |
 |---|---|
 | `tests/Unit/RatingTest.php` with `tests/Support/rating_probe.php` | The class in an isolated CLI process of the real core, on a disposable schema from `setup/sql/table.sql`, test adapters, scratch cache, counter and logs. API and independence from Point, Node and the PHP clock; the tables; the guard protocol and dead-writer recovery; a real `setHead()`/`setFoot()` fill; rules, actor, scale, balance, identity, interval, delivery key, own vote, annulment, journal; each statement failing once, deadlock, unknown commit; concurrent processes. |
-| `tests/Unit/RatingOwnersTest.php` | The wiring: `_rating` statements speak of polls only; the vote reads only the POST body and checks the method before the token; `getRatingView` among the self-guarding handlers; the shipped four-key rules and the mark; no mass reset in the account admin; the six site and nine admin texts in all six locales. |
+| `tests/Unit/RatingOwnersTest.php` | The wiring: `_rating` statements speak of polls only; the vote reads only the POST body and checks the method before the token; `getRatingView` among the self-guarding handlers; the shipped four-key rules and the mark; no mass reset in the account admin; the seven site and nine admin texts in all six locales. |
 | `tests/Unit/UpdateRatingsTest.php` with `tests/Support/update_probe.php` (`ratings`) | The carry-over: clean path, resume from `prepared`/`applying`, stop on rows or a mark without a manifest, forged snapshot or moved aggregate, the preflight report, kept four-key rules, a lost mark written again, the order after the points unit and the engine check. |
 | `tests/Unit/NodeIntegTest.php`, `tests/Unit/NodeIntegrityTest.php` (`route_probe.php`) | `node.<name>` over real HTTP: live widget only with the feature, unavailable closed/pending/disabled materials, refused wrong token and `GET`; annulment on a disabled material, a type with rating off and a disabled type. |
 | `tests/Unit/PointOwnersTest.php` | A rating never awards points. |

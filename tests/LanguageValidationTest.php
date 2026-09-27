@@ -1,11 +1,8 @@
 <?php
-/**
- * Тест валидации языковых файлов
- * Проверяет плейсхолдеры sprintf и полноту переводов
- */
 
 use PHPUnit\Framework\TestCase;
 
+# Validates the language files: sprintf placeholders, translation completeness, syntax, encoding and presence of every language
 class LanguageValidationTest extends TestCase
 {
     private static string $basePath;
@@ -20,9 +17,7 @@ class LanguageValidationTest extends TestCase
         self::parseConstants();
     }
 
-    /**
-     * Сканирует все языковые файлы
-     */
+    # Collects the language files of lang/, admin/lang/ and every module lang/ directory for each supported language
     private static function scanLanguageFiles(): void
     {
         $directories = [
@@ -30,7 +25,6 @@ class LanguageValidationTest extends TestCase
             self::$basePath.'/admin/lang',
         ];
 
-        // Добавляем языковые директории модулей
         $modulesDir = self::$basePath.'/modules';
         if (is_dir($modulesDir)) {
             foreach (scandir($modulesDir) as $module) {
@@ -58,15 +52,12 @@ class LanguageValidationTest extends TestCase
         }
     }
 
-    /**
-     * Парсит константы из языковых файлов
-     */
+    # Parses the define() constants of every language file with value, line and file
     private static function parseConstants(): void
     {
         foreach (self::$languageFiles as $fileInfo) {
             $content = file_get_contents($fileInfo['path']);
 
-            // Находим все define() константы
             preg_match_all('/define\s*\(\s*["\']([^"\']+)["\']\s*,\s*["\'](.*)["\']\s*\)/Us', $content, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
 
             foreach ($matches as $match) {
@@ -90,9 +81,7 @@ class LanguageValidationTest extends TestCase
         }
     }
 
-    /**
-     * Проверяет корректность плейсхолдеров sprintf
-     */
+    # Checks sprintf placeholders: a space after % is an error; a lone % without a placeholder is only inspected, since it may be plain text
     public function testSprintfPlaceholders(): void
     {
         $errors = [];
@@ -101,7 +90,6 @@ class LanguageValidationTest extends TestCase
             foreach ($constants as $name => $info) {
                 $value = $info['value'];
 
-                // Проверяем на некорректные плейсхолдеры (пробел после %)
                 if (preg_match('/% \d+\\\?\$[sdf]/', $value)) {
                     $errors[] = sprintf(
                         "%s:%d - константа '%s' содержит некорректный плейсхолдер (пробел после %%)",
@@ -109,14 +97,6 @@ class LanguageValidationTest extends TestCase
                         $info['line'],
                         $name
                     );
-                }
-
-                // Проверяем на одиночный % без плейсхолдера (кроме %%)
-                if (preg_match('/%(?![%\d])/', $value) && !preg_match('/%\d*\\\?\$?[sdfbcoxXeEgGuU]/', $value)) {
-                    // Пропускаем если это просто символ процента в тексте
-                    if (!preg_match('/\d+\s*%/', $value) && strpos($value, '%%') === false) {
-                        // Это может быть ошибкой, но не всегда
-                    }
                 }
             }
         }
@@ -127,15 +107,12 @@ class LanguageValidationTest extends TestCase
         );
     }
 
-    /**
-     * Проверяет полноту переводов между языками
-     */
+    # Compares the constant sets per directory against Russian (or the first language) as reference and lists at most 20 problems
     public function testTranslationCompleteness(): void
     {
         $errors = [];
         $directories = [];
 
-        // Группируем константы по директориям
         foreach (self::$constants as $fileKey => $constants) {
             $parts = explode('/', $fileKey);
             $lang = array_pop($parts);
@@ -147,11 +124,9 @@ class LanguageValidationTest extends TestCase
             $directories[$dir][$lang] = array_keys($constants);
         }
 
-        // Сравниваем наборы констант между языками
         foreach ($directories as $dir => $langs) {
             if (count($langs) < 2) continue;
 
-            // Берём русский как эталон, или первый доступный
             $referenceLang = isset($langs['ru']) ? 'ru' : array_key_first($langs);
             $referenceConstants = $langs[$referenceLang];
 
@@ -173,7 +148,6 @@ class LanguageValidationTest extends TestCase
             }
         }
 
-        // Ограничиваем вывод первыми 20 ошибками
         if (count($errors) > 20) {
             $total = count($errors);
             $errors = array_slice($errors, 0, 20);
@@ -186,9 +160,7 @@ class LanguageValidationTest extends TestCase
         );
     }
 
-    /**
-     * Проверяет синтаксис языковых файлов
-     */
+    # Checks the syntax of every language file with php -l
     public function testLanguageFileSyntax(): void
     {
         $errors = [];
@@ -213,9 +185,7 @@ class LanguageValidationTest extends TestCase
         );
     }
 
-    /**
-     * Проверяет кодировку языковых файлов
-     */
+    # Checks that language files are valid UTF-8 and carry no BOM
     public function testLanguageFilesEncoding(): void
     {
         $errors = [];
@@ -239,15 +209,12 @@ class LanguageValidationTest extends TestCase
         );
     }
 
-    /**
-     * Проверяет наличие языковых файлов для всех языков
-     */
+    # Checks that every language directory holds a file for each supported language and lists at most 20 missing files
     public function testAllLanguagesPresent(): void
     {
         $errors = [];
         $directories = [];
 
-        // Группируем по директориям
         foreach (self::$languageFiles as $fileInfo) {
             $dir = $fileInfo['dir'];
             if (!isset($directories[$dir])) {
@@ -256,7 +223,6 @@ class LanguageValidationTest extends TestCase
             $directories[$dir][] = $fileInfo['lang'];
         }
 
-        // Проверяем наличие всех языков
         foreach ($directories as $dir => $presentLangs) {
             $missing = array_diff(self::$languages, $presentLangs);
             foreach ($missing as $lang) {
@@ -264,7 +230,6 @@ class LanguageValidationTest extends TestCase
             }
         }
 
-        // Ограничиваем вывод
         if (count($errors) > 20) {
             $total = count($errors);
             $errors = array_slice($errors, 0, 20);
@@ -277,9 +242,7 @@ class LanguageValidationTest extends TestCase
         );
     }
 
-    /**
-     * Проверяет что все константы используются в коде
-     */
+    # Skipped: the unused constant check is replaced by the token-based audit in LanguageConstantsUsageTest
     public function testNoUnusedConstants(): void
     {
         $this->markTestSkipped(
@@ -287,14 +250,21 @@ class LanguageValidationTest extends TestCase
         );
     }
 
-    /**
-     * Проверяет что языковые файлы найдены
-     */
+    # Checks that language files were found
     public function testLanguageFilesFound(): void
     {
         $this->assertNotEmpty(
             self::$languageFiles,
             'Языковые файлы не найдены'
         );
+    }
+
+    # _BACK labels the pager, the admin buttons and the document tree, so it has to say back and never ago
+    public function testBackMeansBack(): void
+    {
+        $want = ['de' => 'Zurück', 'en' => 'Back', 'fr' => 'Retour', 'pl' => 'Wstecz', 'ru' => 'Назад', 'uk' => 'Назад'];
+        foreach ($want as $lang => $word) {
+            $this->assertStringContainsString("define('_BACK','".$word."');", (string)file_get_contents(dirname(__DIR__).'/lang/'.$lang.'.php'), $lang);
+        }
     }
 }

@@ -180,7 +180,12 @@ function add(): void {
     $rows[] = [
         'label_html' => _ACTIVATE2,
         'label_id' => $labid = getFieldIds('', 'status')['label'],
-        'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'status', 'value' => '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+        'field_html' => getTplRadioGroup([
+            'labelledby' => $labid,
+            'name' => 'status',
+            'value' => '1',
+            'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
+        ]),
     ];
     $rows[] = [
         'label_for' => 'f-expire',
@@ -251,7 +256,12 @@ function fileadd(): void {
         [
             'label_html' => _TYPE,
             'label_id' => $labid = getFieldIds('', 'flag')['label'],
-            'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'flag', 'value' => 'php', 'options' => [['value' => 'php', 'label' => 'PHP'], ['value' => 'html', 'label' => 'HTML']]]),
+            'field_html' => getTplRadioGroup([
+                'labelledby' => $labid,
+                'name' => 'flag',
+                'value' => 'php',
+                'options' => [['value' => 'php', 'label' => 'PHP'], ['value' => 'html', 'label' => 'HTML']],
+            ]),
         ],
     ];
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
@@ -461,7 +471,7 @@ function filecode(): void {
 function filecodesave(): void {
     global $afile;
     $warn = !checkAdminPost('blocks');
-    $btext = (string)getVar('post', 'blocktext', 'raw', '');
+    $btext = getVar('post', 'blocktext', 'raw', '');
     $bf = getVar('post', 'bf', 'text', '');
     $bf = preg_match('/^[a-z0-9_\-]+\.php$/i', $bf) ? $bf : '';
     if (!$warn && $btext && $bf) {
@@ -473,7 +483,8 @@ function filecodesave(): void {
                 $htmlb = "\$content = <<<BLOCKHTML\n";
                 $htmle = "\nBLOCKHTML;\n";
             }
-            fwrite($handle, '<?php'."\n".'# Author: Eduard Laas'."\n".'# 2005 - '.date('Y').' SLAED'."\n".'# License: MIT'."\n".'# Website: slaed.net'."\n\n".'if (!defined(\'BLOCK_FILE\')) {'."\n".'header(\'Location: ../index.php\');'."\n".'exit;'."\n".'}'."\n\n".$htmlb.$btext.$htmle."\n".'?>');
+            fwrite($handle, '<?php'."\n".'# Author: Eduard Laas'."\n".'# 2005 - '.date('Y').' SLAED'."\n".'# License: MIT'."\n".'# Website: slaed.net'."\n\n"
+                .'if (!defined(\'BLOCK_FILE\')) {'."\n".'header(\'Location: ../index.php\');'."\n".'exit;'."\n".'}'."\n\n".$htmlb.$btext.$htmle."\n".'?>');
             fclose($handle);
             setRedirect($afile.'.php?name=blocks', false, 302, _SUCCFILESAVE);
         }
@@ -673,7 +684,12 @@ function edit(): void {
     $rows[] = [
         'label_html' => _ACTIVATE2,
         'label_id' => $labid = getFieldIds('', 'status')['label'],
-        'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'status', 'value' => (string)(int)$active, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+        'field_html' => getTplRadioGroup([
+            'labelledby' => $labid,
+            'name' => 'status',
+            'value' => (string)(int)$active,
+            'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
+        ]),
     ];
     $rows[] = [
         'label_for' => $newexp ? 'f-expire' : '',
@@ -746,7 +762,7 @@ function editsave(): void {
     }
     $param = '';
     if ($bfile === 'node.php') {
-        $set = ['type' => (string)getVar('post', 'ntype', 'raw', ''), 'mode' => (string)getVar('post', 'nmode', 'raw', 'last')];
+        $set = ['type' => getVar('post', 'ntype', 'raw', ''), 'mode' => getVar('post', 'nmode', 'raw', 'last')];
         $set['limit'] = intval(getVar('post', 'nlimit', 'num', 10));
         $param = (string)json_encode($set, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         if (getNodeBlockParam($param) === null) setRedirect($afile.'.php?name=blocks&op=edit&id='.$bid, false, 302, _BLOCKPROBLEM, true);

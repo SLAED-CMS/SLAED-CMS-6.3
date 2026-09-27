@@ -5,15 +5,8 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Batch 6 of docs/EDITOR-UPLOADS-2026.md, the half a running stand is not needed for. The room table
- * is held against the shipped schema in both directions, every call site is held to a storage the
- * table carries, and the write guard is driven through tests/Support/editor_probe.php against the
- * real core so the bytes it measures are the bytes a request would produce. The client half is read
- * off the two files that own it: the cap and the type list reach the editor from PHP, and all three
- * routes into the embed path pass the same guard. Nothing here writes to the site.
- */
-final class EditorRoomTest extends TestCase
+# The editor room contract that needs no running stand: the room table against the schema both ways, every call site, the write guard and the client
+class EditorRoomTest extends TestCase
 {
     private const BODIES = [
         'comment.body', 'forum.body', 'message.body', 'money.note', 'newsletter.body', 'nodes.body', 'order.note', 'privat.body',
@@ -37,6 +30,7 @@ final class EditorRoomTest extends TestCase
     }
 
     # Run the room probe in a fresh process and memoize its report, handing it the store names this run scanned out of the tree
+    # The probe drives the write guard against the real core, so the bytes it measures are the bytes a request would produce and nothing is written to the site
     # The list travels as a file and not as an argument, because a Windows shell strips the quotes out of an argument and would hand the probe a broken document
     private function getProbe(): array
     {
@@ -89,7 +83,7 @@ final class EditorRoomTest extends TestCase
     {
         $base = dirname(__DIR__, 2);
         $out = [];
-        $walk = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($base, \FilesystemIterator::SKIP_DOTS));
+        $walk = getTreeFiles($base);
         foreach ($walk as $item) {
             $path = str_replace('\\', '/', (string)$item);
             $rel = substr($path, strlen($base) + 1);

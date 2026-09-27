@@ -12,20 +12,7 @@ namespace Tests\Unit {
     use PHPUnit\Framework\TestCase;
     use RuntimeException;
 
-    /**
-     * The theme contract of docs/TEMPLATES.md, expressed as a test: a new theme is made by copying an
-     * etalon and editing one block. It copies an etalon under a name nothing else uses, repaints
-     * only the API block of its base.css, and then asks the whole contract of the copy - every audit
-     * count at zero, every contrast the etalon held still held, the runtime file list satisfied, and
-     * every template of the package compiling through Template with no undefined token.
-     *
-     * This is the static half. Rendering a real page needs HTTP, and that half is
-     * `node tools/ui-shots.mjs --newtheme`, which walks tools/ui-shots.json once more against a
-     * scratch theme of its own. Both halves build and remove that theme through one lifecycle,
-     * tests/Support/theme_scratch.php, because a lifecycle spelled twice drifts into two.
-     * A manual look proves nothing about the day after the freeze, and after the freeze the names
-     * can no longer be corrected.
-     */
+    # The theme contract of docs/TEMPLATES.md as a test: a new theme is a copy of an etalon with one block edited, and the copy must pass the whole contract
     final class ThemeCreationTest extends TestCase
     {
         private const ETALON = 'lite';
@@ -34,6 +21,11 @@ namespace Tests\Unit {
         private static string $name = '';
         private static string $path = '';
 
+        # The etalon is copied under a name nothing else uses, and only the API block of its base.css is repainted
+        # The contract asks every audit count at zero, every etalon contrast held, the runtime file list met and every template compiling with no undefined token
+        # This is the static half; the rendering half is node tools/ui-shots.mjs --newtheme, which walks tools/ui-shots.json against a scratch theme of its own
+        # Both halves build and remove that theme through one lifecycle, tests/Support/theme_scratch.php, because a lifecycle spelled twice drifts into two
+        # A manual look proves nothing about the day after the freeze, and after the freeze the names can no longer be corrected
         public static function setUpBeforeClass(): void
         {
             self::$root = dirname(__DIR__, 2);
@@ -42,9 +34,9 @@ namespace Tests\Unit {
             self::$path = $made['path'];
         }
 
+        # Remove only ever the directory the lifecycle built, which is the guard deleteScratchTheme() applies to the path it is handed
         public static function tearDownAfterClass(): void
         {
-            # Only ever the directory the lifecycle built, which is the guard deleteScratchTheme() applies to the path it is handed
             if (self::$path !== '') deleteScratchTheme(self::$path);
         }
 
@@ -90,10 +82,9 @@ namespace Tests\Unit {
             $this->assertCount(0, $model['clash'], 'the copy declares one name twice, where the second silently wins');
         }
 
-        # Every pair the walk recorded for the etalon, re-measured after the same repaint the API block took. The registry
-        # stores the colour it resolved rather than the name that gave it, so a repainted theme cannot be looked up in it -
-        # but the repaint is a function of a colour, so putting each recorded colour through it answers the same question
-        # the walk would: does this palette still clear AA on the pages and states that really carry these two colours
+        # Every pair the walk recorded for the etalon, re-measured after the same repaint the API block took
+        # The registry stores the colour it resolved rather than the name that gave it, so a repainted theme cannot be looked up in it
+        # The repaint is a function of a colour, so each recorded colour put through it tells whether the palette clears AA where these two colours really meet
         #[Test]
         public function theRepaintHoldsEveryContrastTheEtalonHeld(): void
         {
@@ -152,9 +143,8 @@ namespace Tests\Unit {
             return $said;
         }
 
-        # The skeleton is the union of two lists that are not the same list, so it is checked against both of them rather
-        # than against itself: an entry nobody demands is one nobody dares delete, and a demand nobody listed is one a
-        # new theme discovers at runtime
+        # The skeleton is the union of two lists that are not the same list, so it is checked against both of them rather than against itself
+        # An entry nobody demands is one nobody dares delete, and a demand nobody listed is one a new theme discovers at runtime
         #[Test]
         public function theSkeletonNamesExactlyWhatTheGatesDemand(): void
         {

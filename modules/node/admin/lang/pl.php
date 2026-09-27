@@ -56,7 +56,7 @@ define('_NODE_MAXBYTES','Limit rozmiaru, bajty');
 define('_NODE_MAXLIST','Materiałów na stronie, najwyżej');
 define('_NODE_MIN','Minimum');
 define('_NODE_MODE','Tryb wyświetlania');
-define('_NODE_MODEHINT','Krótka nazwa zestawu szablonów motywu; default to zestaw podstawowy');
+define('_NODE_MODEHINT','Zestaw szablonów motywu; default to zestaw podstawowy, support należy do rozszerzenia support');
 define('_NODE_MOVED','Stan został zmieniony.');
 define('_NODE_NAME','Nazwa (adres sekcji)');
 define('_NODE_NAMEHINT','Małe litery łacińskie i cyfry, do 20 znaków; po utworzeniu się nie zmienia');

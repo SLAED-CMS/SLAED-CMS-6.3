@@ -12,7 +12,7 @@ function getCommentsSearch(): string {
     $modul = getVar('req', 'modul', 'var');
     $search = getVar('req', 'search', 'num', 2);
     $search = ($search >= 1 && $search <= 5) ? $search : 2;
-    $chng = (string)getVar('req', 'chng');
+    $chng = getVar('req', 'chng');
     $modopts = $tpl->getHtmlFrag('select-option', [
         'value_attr' => '',
         'label_text' => _ALL,
@@ -71,7 +71,7 @@ function comments(): void {
     $modul = getVar('get', 'modul', 'var');
     $search = getVar('get', 'search', 'num', 2);
     $search = ($search >= 1 && $search <= 5) ? $search : 2;
-    $chng = trim((string)getVar('get', 'chng'));
+    $chng = trim(getVar('get', 'chng'));
     $subtitle = getCommentsSearch();
     $baseq = 'name=comments';
     if ($modul !== '') $baseq .= '&modul='.rawurlencode($modul);
@@ -215,7 +215,7 @@ function edit(): void {
     $modul = getVar('get', 'modul', 'var');
     $search = getVar('get', 'search', 'num', 2);
     $search = ($search >= 1 && $search <= 5) ? $search : 2;
-    $chng = (string)getVar('get', 'chng', 'raw', '');
+    $chng = getVar('get', 'chng', 'raw', '');
     setHead();
     $baseq = 'name=comments';
     if ($modul !== '') $baseq .= '&modul='.rawurlencode($modul);
@@ -284,12 +284,12 @@ function editsave(): void {
     global $afile, $com;
     $warn = !checkAdminPost('comments');
     $id = getVar('post', 'id', 'num');
-    $text = trim((string)getVar('post', 'comment', 'raw', ''));
+    $text = trim(getVar('post', 'comment', 'raw', ''));
     $status = getVar('post', 'status', 'num', 0);
     $modul = getVar('post', 'modul', 'var');
     $search = getVar('post', 'search', 'num', 2);
     $search = ($search >= 1 && $search <= 5) ? $search : 2;
-    $chng = (string)getVar('post', 'chng', 'raw', '');
+    $chng = getVar('post', 'chng', 'raw', '');
     $room = $warn ? '' : $com->updateBody($id, $text);
     $back = 'name=comments';
     if ($status) $back .= '&status=1';
@@ -306,7 +306,7 @@ function actions(): void {
     $modul = getVar('post', 'modul', 'var');
     $search = getVar('post', 'search', 'num', 2);
     $search = ($search >= 1 && $search <= 5) ? $search : 2;
-    $chng = (string)getVar('post', 'chng', 'raw', '');
+    $chng = getVar('post', 'chng', 'raw', '');
     $typ = getVar('post', 'typ', 'text', '');
     $id = getVar('post', 'id[]', 'num');
     if (!$warn && is_array($id) && $typ !== '') {
@@ -331,18 +331,92 @@ function actions(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=comments', 'name=comments&status=1', 'name=comments&op=config', 'name=comments&op=info'], 'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _DOCS], 'tab' => 2]);
+    $cont = getTplAdminTabs([
+        'ops' => ['name=comments', 'name=comments&status=1', 'name=comments&op=config', 'name=comments&op=info'],
+        'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _DOCS],
+        'tab' => 2,
+    ]);
     $cont .= checkPerms(CONFIG_DIR.'/comments.php');
     $rows = [
-        ['label_for' => 'f-num', 'label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'input_id' => 'f-num', 'value_attr' => (string)$conf['comments']['num']])],
-        ['label_for' => 'f-reps', 'label_html' => _COMMENTS_REPS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'reps', 'input_id' => 'f-reps', 'value_attr' => (string)($conf['comments']['reps'] ?? 5)])],
-        ['label_for' => 'f-anum', 'label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => (string)$conf['comments']['anum']])],
-        ['label_for' => 'f-nump', 'label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'input_id' => 'f-nump', 'value_attr' => (string)$conf['comments']['nump']])],
-        ['label_for' => 'f-anump', 'label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => (string)$conf['comments']['anump']])],
-        ['label_for' => 'f-letter', 'label_html' => _COMLETTER, 'hint_html' => _CONFINES, 'hint_id' => $hntid = getFieldIds('f-letter')['hint'], 'field_html' => $tpl->getHtmlFrag('input', ['describedby' => $hntid, 'itype' => 'number', 'name_attr' => 'letter', 'input_id' => 'f-letter', 'value_attr' => (string)$conf['comments']['letter']])],
-        ['label_for' => 'f-edit', 'label_html' => _CEDITT, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'edit', 'input_id' => 'f-edit', 'value_attr' => (string)intval($conf['comments']['edit'] / 60)])],
-        ['label_for' => 'f-send', 'label_html' => _CSEND, 'hint_html' => _CONFINES, 'hint_id' => $hntid = getFieldIds('f-send')['hint'], 'field_html' => $tpl->getHtmlFrag('input', ['describedby' => $hntid, 'itype' => 'number', 'name_attr' => 'send', 'input_id' => 'f-send', 'value_attr' => (string)$conf['comments']['send']])],
-        ['label_for' => 'f-sort', 'label_html' => _SORT, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'sort', 'selectid' => 'f-sort', 'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _ASC, 'is_selected' => (string)($conf['comments']['sort'] ?? '1') === '1']).$tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _DESC, 'is_selected' => (string)($conf['comments']['sort'] ?? '1') === '0'])])],
+        [
+            'label_for' => 'f-num',
+            'label_html' => _C_33,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'input_id' => 'f-num', 'value_attr' => (string)$conf['comments']['num']]),
+        ],
+        [
+            'label_for' => 'f-reps',
+            'label_html' => _COMMENTS_REPS,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number',
+                'name_attr' => 'reps',
+                'input_id' => 'f-reps',
+                'value_attr' => (string)($conf['comments']['reps'] ?? 5),
+            ]),
+        ],
+        [
+            'label_for' => 'f-anum',
+            'label_html' => _C_34,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => (string)$conf['comments']['anum']]),
+        ],
+        [
+            'label_for' => 'f-nump',
+            'label_html' => _C_35,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'input_id' => 'f-nump', 'value_attr' => (string)$conf['comments']['nump']]),
+        ],
+        [
+            'label_for' => 'f-anump',
+            'label_html' => _C_36,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => (string)$conf['comments']['anump']]),
+        ],
+        [
+            'label_for' => 'f-letter',
+            'label_html' => _COMLETTER,
+            'hint_html' => _CONFINES,
+            'hint_id' => $hntid = getFieldIds('f-letter')['hint'],
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'describedby' => $hntid,
+                'itype' => 'number',
+                'name_attr' => 'letter',
+                'input_id' => 'f-letter',
+                'value_attr' => (string)$conf['comments']['letter'],
+            ]),
+        ],
+        [
+            'label_for' => 'f-edit',
+            'label_html' => _CEDITT,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number',
+                'name_attr' => 'edit',
+                'input_id' => 'f-edit',
+                'value_attr' => (string)intval($conf['comments']['edit'] / 60),
+            ]),
+        ],
+        [
+            'label_for' => 'f-send',
+            'label_html' => _CSEND,
+            'hint_html' => _CONFINES,
+            'hint_id' => $hntid = getFieldIds('f-send')['hint'],
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'describedby' => $hntid,
+                'itype' => 'number',
+                'name_attr' => 'send',
+                'input_id' => 'f-send',
+                'value_attr' => (string)$conf['comments']['send'],
+            ]),
+        ],
+        [
+            'label_for' => 'f-sort',
+            'label_html' => _SORT,
+            'field_html' => $tpl->getHtmlFrag('select', [
+                'name_attr' => 'sort',
+                'selectid' => 'f-sort',
+                'options_html' => $tpl->getHtmlFrag('select-option', [
+                    'value_attr' => '1',
+                    'label_text' => _ASC,
+                    'is_selected' => (string)($conf['comments']['sort'] ?? '1') === '1',
+                ]).$tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _DESC, 'is_selected' => (string)($conf['comments']['sort'] ?? '1') === '0']),
+            ]),
+        ],
         ['label_for' => 'f-anonpost', 'label_html' => _ALLOWANONPOST, 'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'anonpost',
             'selectid' => 'f-anonpost',
@@ -361,12 +435,83 @@ function config(): void {
                 'is_selected' => (string)($conf['comments']['anonpost'] ?? '0') === '2',
             ]),
         ])],
-        ['label_for' => 'f-link', 'label_html' => _NOLINKP, 'hint_html' => _NOAUM, 'hint_id' => $hntid = getFieldIds('f-link')['hint'], 'field_html' => $tpl->getHtmlFrag('select', ['describedby' => $hntid, 'name_attr' => 'link', 'selectid' => 'f-link', 'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => (string)($conf['comments']['link'] ?? '0') === '0']).$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _ANONIMP, 'is_selected' => (string)($conf['comments']['link'] ?? '0') === '1']).$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _ALLUSER, 'is_selected' => (string)($conf['comments']['link'] ?? '0') === '2'])])],
-        ['label_for' => 'f-alink', 'label_html' => _NOALINKP, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'alink', 'selectid' => 'f-alink', 'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => (string)($conf['comments']['alink'] ?? '0') === '0']).$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _ANONIMP, 'is_selected' => (string)($conf['comments']['alink'] ?? '0') === '1']).$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _ALLUSER, 'is_selected' => (string)($conf['comments']['alink'] ?? '0') === '2'])])],
-        ['label_html' => _ADDAMAIL, 'label_id' => $labid = getFieldIds('', 'addmail')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'addmail', 'value' => (string)(int)$conf['comments']['addmail'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => _VPRIVAT, 'label_id' => $labid = getFieldIds('', 'privat')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'privat', 'value' => (string)(int)$conf['comments']['privat'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => _VPROFIL, 'label_id' => $labid = getFieldIds('', 'profil')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'profil', 'value' => (string)(int)$conf['comments']['profil'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => _VWEB, 'label_id' => $labid = getFieldIds('', 'web')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'web', 'value' => (string)(int)$conf['comments']['web'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+        [
+            'label_for' => 'f-link',
+            'label_html' => _NOLINKP,
+            'hint_html' => _NOAUM,
+            'hint_id' => $hntid = getFieldIds('f-link')['hint'],
+            'field_html' => $tpl->getHtmlFrag('select', [
+                'describedby' => $hntid,
+                'name_attr' => 'link',
+                'selectid' => 'f-link',
+                'options_html' => $tpl->getHtmlFrag('select-option', [
+                    'value_attr' => '0',
+                    'label_text' => _NO,
+                    'is_selected' => (string)($conf['comments']['link'] ?? '0') === '0',
+                ]).$tpl->getHtmlFrag('select-option', [
+                    'value_attr' => '1',
+                    'label_text' => _ANONIMP,
+                    'is_selected' => (string)($conf['comments']['link'] ?? '0') === '1',
+                ]).$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _ALLUSER, 'is_selected' => (string)($conf['comments']['link'] ?? '0') === '2']),
+            ]),
+        ],
+        [
+            'label_for' => 'f-alink',
+            'label_html' => _NOALINKP,
+            'field_html' => $tpl->getHtmlFrag('select', [
+                'name_attr' => 'alink',
+                'selectid' => 'f-alink',
+                'options_html' => $tpl->getHtmlFrag('select-option', [
+                    'value_attr' => '0',
+                    'label_text' => _NO,
+                    'is_selected' => (string)($conf['comments']['alink'] ?? '0') === '0',
+                ]).$tpl->getHtmlFrag('select-option', [
+                    'value_attr' => '1',
+                    'label_text' => _ANONIMP,
+                    'is_selected' => (string)($conf['comments']['alink'] ?? '0') === '1',
+                ]).$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _ALLUSER, 'is_selected' => (string)($conf['comments']['alink'] ?? '0') === '2']),
+            ]),
+        ],
+        [
+            'label_html' => _ADDAMAIL,
+            'label_id' => $labid = getFieldIds('', 'addmail')['label'],
+            'field_html' => getTplRadioGroup([
+                'labelledby' => $labid,
+                'name' => 'addmail',
+                'value' => (string)(int)$conf['comments']['addmail'],
+                'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
+            ]),
+        ],
+        [
+            'label_html' => _VPRIVAT,
+            'label_id' => $labid = getFieldIds('', 'privat')['label'],
+            'field_html' => getTplRadioGroup([
+                'labelledby' => $labid,
+                'name' => 'privat',
+                'value' => (string)(int)$conf['comments']['privat'],
+                'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
+            ]),
+        ],
+        [
+            'label_html' => _VPROFIL,
+            'label_id' => $labid = getFieldIds('', 'profil')['label'],
+            'field_html' => getTplRadioGroup([
+                'labelledby' => $labid,
+                'name' => 'profil',
+                'value' => (string)(int)$conf['comments']['profil'],
+                'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
+            ]),
+        ],
+        [
+            'label_html' => _VWEB,
+            'label_id' => $labid = getFieldIds('', 'web')['label'],
+            'field_html' => getTplRadioGroup([
+                'labelledby' => $labid,
+                'name' => 'web',
+                'value' => (string)(int)$conf['comments']['web'],
+                'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
+            ]),
+        ],
     ];
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=comments&op=save',
@@ -415,7 +560,7 @@ function approve(): void {
     $modul = getVar('post', 'modul', 'var');
     $search = getVar('post', 'search', 'num', 2);
     $search = ($search >= 1 && $search <= 5) ? $search : 2;
-    $chng = (string)getVar('post', 'chng', 'raw', '');
+    $chng = getVar('post', 'chng', 'raw', '');
     $id = getVar('post', 'id[]', 'num');
     if (!$warn && is_array($id)) {
         foreach ($id as $val) {
@@ -437,7 +582,7 @@ function delete(): void {
     $modul = getVar('post', 'modul', 'var');
     $search = getVar('post', 'search', 'num', 2);
     $search = ($search >= 1 && $search <= 5) ? $search : 2;
-    $chng = (string)getVar('post', 'chng', 'raw', '');
+    $chng = getVar('post', 'chng', 'raw', '');
     $id = getVar('post', 'id[]', 'num');
     if (!$warn && is_array($id)) {
         foreach ($id as $val) {

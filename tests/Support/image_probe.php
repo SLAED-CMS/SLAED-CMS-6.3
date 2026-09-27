@@ -5,7 +5,7 @@
 # Website: slaed.net
 
 # CLI probe for the image pipeline tests of batch 2 in docs/UPLOAD-2026.md
-# boots the real core like index.php, one scenario per process, and drives getImageThumb() against fixtures GD writes itself
+# It boots the real core like index.php, one scenario per process, and drives getImageThumb() against fixtures GD writes itself
 # Nothing under the site upload tree is read or written - every fixture and every thumbnail lives below the scratch root the caller passed
 $probework = (string)($argv[2] ?? '');
 require_once __DIR__.'/probe_boot.php';

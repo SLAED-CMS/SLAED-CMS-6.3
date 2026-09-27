@@ -5,14 +5,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Stage 1, batch 5 of docs/MAIL-2026.md: the shipped config/mail.php. The file is what a fresh
- * install carries and what an upgrade adds, so its key set and its defaults are a contract rather
- * than a convenience — a divergence between the two is how the plan's dual paths reappear. The keys
- * are also asserted to be sorted, because the admin save rewrites the file through setConfigFile(),
- * which ksort()s it, and a shipped file in another order would differ from a saved one on key order
- * alone.
- */
+# The shipped config/mail.php is what a fresh install carries and an upgrade adds, so its key set and defaults are a contract, not a convenience
 final class MailConfigTest extends TestCase
 {
     private const DEFAULTS = [
@@ -71,7 +64,7 @@ final class MailConfigTest extends TestCase
         }
     }
 
-    # Keys are stored in the order setConfigFile() writes them, so saving the tab never reorders the file it shipped as
+    # Keys are stored in the order setConfigFile() writes them after its ksort(), so saving the tab never reorders the file it shipped as
     #[Test]
     public function theKeyOrderMatchesWhatASaveWouldWrite(): void
     {

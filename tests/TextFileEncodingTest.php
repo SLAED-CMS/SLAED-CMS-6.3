@@ -1,10 +1,8 @@
 <?php
-/**
- * Enforces UTF-8 (no BOM) and catches mojibake in project-owned text files.
- */
 
 use PHPUnit\Framework\TestCase;
 
+# Enforces UTF-8 without BOM and catches mojibake in project-owned text files
 class TextFileEncodingTest extends TestCase
 {
     private static string $basePath;
@@ -52,9 +50,7 @@ class TextFileEncodingTest extends TestCase
             $path = self::$basePath.DIRECTORY_SEPARATOR.$dir;
             if (!is_dir($path)) continue;
 
-            $iterator = new RecursiveIteratorIterator(
-                new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS)
-            );
+            $iterator = getTreeFiles($path);
 
             foreach ($iterator as $file) {
                 if (!$file->isFile()) continue;

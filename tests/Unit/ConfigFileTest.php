@@ -7,20 +7,14 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * The configuration protocol of docs/NODE.md (Configuration protocol). setConfigFile() keeps its string form
- * for independent sources and gains the Closure form for the shared node, fields, uploads and ratings; both run one
- * pipeline under the shared lock with a journal, a marker and an atomic publication of local.php. The behaviour runs
- * through tests/Support/config_probe.php against a scratch copy of the configuration, so nothing below config/ or
- * storage/ of the site is written; a writer that dies is a real child process and two writers are two processes.
- * The administrative entry and the three panel writers are proven off their sources.
- */
-final class ConfigFileTest extends TestCase
+# The configuration protocol of docs/NODE.md: setConfigFile() in string and Closure form runs one locked pipeline with a journal, a marker and atomic publication
+class ConfigFileTest extends TestCase
 {
     private static array $probe = [];
     private static array $files = [];
 
-    # Run one probe scenario in a fresh process and memoize its report for every test in this class
+    # Run one scenario of tests/Support/config_probe.php in a fresh process and memoize its report for every test in this class
+    # The probe works on a scratch copy of the configuration, so nothing below config/ or storage/ of the site is written
     private function getProbe(string $mode): array
     {
         if (isset(self::$probe[$mode])) return self::$probe[$mode];
@@ -34,7 +28,7 @@ final class ConfigFileTest extends TestCase
         return self::$probe[$mode] = $data['data'];
     }
 
-    # Read one repository file once per run
+    # Read one repository file once per run, which proves the administrative entry and the three panel writers off their sources
     private function getFile(string $path): string
     {
         if (isset(self::$files[$path])) return self::$files[$path];
@@ -70,6 +64,7 @@ final class ConfigFileTest extends TestCase
         $this->assertStringContainsString('FileManager::getPathLock(CONFIG_DIR)', $this->getBody('core/system.php', 'getConfig'), 'The rebuild runs outside the shared lock');
     }
 
+    # The string form serves independent sources and the Closure form the shared node, fields, uploads and ratings
     # The string form stores what it always stored: sorted keys, every scalar a string, LF only, and the snapshot published in the same call
     #[Test]
     public function theStringFormKeepsItsStoredShape(): void
@@ -132,6 +127,7 @@ final class ConfigFileTest extends TestCase
         $this->assertSame([false, false], $data['abort'], 'An aborted operation with a proof left the new source in place');
     }
 
+    # A writer that dies is a real child process of the probe, and two writers are two processes
     # A writer that died after moving the sources leaves a marker: the old snapshot keeps being served, every save is refused, and the restore returns the old sources
     #[Test]
     public function aDeadWriterIsRestoredToTheOldSnapshot(): void

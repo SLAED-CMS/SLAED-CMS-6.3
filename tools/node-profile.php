@@ -5,13 +5,13 @@
 # Website: slaed.net
 
 # The large profile of Node from docs/NODE.md (Large profile): run by hand, never by PHPUnit or the commit hook
-# It creates its own disposable database on the server of config/db.php, installs the shipped schema, boots the real core on a scratch copy of the release
-# configuration and creates the ten shipped types through NodeService; then batch SQL fills 100000 materials, 200 categories, two extra categories and two
-# relations per material and up to three resources per material where the type has roles, and every route budget of docs/NODE.md (Statement budgets) is warmed and repeated
-# The report gives the statements per scenario against the budget, the one against the largest page, p50 and p95 of the wall time, the average statement time
-# and the plans of the main statements with the rows each one really read; a scenario over its budget, a full scan of a Node table, a list page reading more rows
-# than its page end asks for, a deadline reading more than the timed and pinned rows of its type, a category list off the two category indexes or a failure
-# ends the tool with exit code 1
+# It creates its own disposable database on the server of config/db.php, installs the shipped schema and boots the real core on a scratch copy of the release configuration
+# It creates the ten shipped types through NodeService, then batch SQL fills 100000 materials, 200 categories, two extra categories and two relations per material
+# Up to three resources per material are added where the type has roles, and every route budget of docs/NODE.md (Statement budgets) is warmed and repeated
+# The report gives the statements per scenario against the budget, the one against the largest page, p50 and p95 of the wall time and the average statement time
+# The report also gives the plans of the main statements with the rows each one really read
+# Exit code 1 follows a scenario over its budget, a full scan of a Node table, a list page reading more rows than its page end asks for, or a failure
+# Exit code 1 also follows a deadline reading more than the timed and pinned rows of its type and a category list off the two category indexes
 # Options: --rows=<count of materials, 1000..1000000, default 100000> --runs=<repeats, default 30> --out=<report file> --keep (leave database and scratch)
 # Nothing touches the site database, config/, storage/ or uploads/ of the site: the directories of the core point into scratch before it boots
 if (PHP_SAPI !== 'cli') {
@@ -85,8 +85,8 @@ function setProfileFile(string $file, array $data): void {
     file_put_contents($file, "<?php\nreturn ".var_export($data, true).";\n");
 }
 
-# The scratch configuration: every source of the release as committed, the disposable database, the three update marks of a clean installation,
-# and the address of the guard server as the home of the site, so switching a type on meets a server that refuses its directory
+# The scratch configuration: every source of the release as committed, the disposable database and the three update marks of a clean installation
+# The home of the site is the address of the guard server, so switching a type on meets a server that refuses its directory
 function setProfileConfig(string $dir, int $port): void {
     global $pcred, $pname;
     mkdir($dir, 0777, true);
@@ -217,8 +217,8 @@ function getProfileWriter(bool $admin, ?NodeType $type = null): NodeService {
     return new NodeService($db, getProfileContext($admin), $fld, $pnt, $ext);
 }
 
-# The ten shipped profiles as types: each is imported through the writer of the main administrator and switched on, as the clean installation does it;
-# media, the type with the most fields and roles, then gets the system page limit of 100 through the same writer, so the largest page can be measured
+# The ten shipped profiles as types: each is imported through the writer of the main administrator and switched on, as the clean installation does it
+# Media, the type with the most fields and roles, then gets the system page limit of 100 through the same writer, so the largest page can be measured
 function addProfileTypes(): array {
     $out = [];
     foreach (glob(BASE_DIR.'/modules/node/profiles/*.json') ?: [] as $file) {
@@ -306,7 +306,7 @@ function addProfileRows(PDO $pdo, array $types, int $rows): array {
 }
 
 # Warm one scenario, then repeat it: the statements of each run through the shared database, the wall time and the statement time, with the trace of the last run
-# and the plans of its read statements, taken at once while the data is still the one the run saw
+# The plans of the read statements of the last run are taken at once, while the data is still the one the run saw
 function getProfileRun(Closure $fn, int $runs): array {
     global $db, $pbase;
     for ($i = 0; $i < 3; $i++) $fn($i);
@@ -368,9 +368,10 @@ function getProfileKind(string $sql): string {
     return preg_match('/^SELECT (SUM\(q\.num\)|COUNT\(\*\)) AS num FROM /', $sql) ? 'count' : 'other';
 }
 
-# The reads a list statement may reach: every part of a page reads its rows up to the page end and hands them to the union, the rows of the page itself
-# pass the page table, their full row and the two joined names, the pinned part sorts all pinned rows of the type and the extra category part all links of the category;
-# a count reads the rows of the category, a time bound the pinned and timed rows of the type, and each bound carries a fixed allowance for the lookups of the plan
+# The reads a list statement may reach: every part of a page reads its rows up to the page end and hands them to the union
+# The rows of the page itself pass the page table, their full row and the two joined names; the pinned part sorts all pinned rows of the type
+# The extra category part reads all links of the category, a count the rows of the category, and a time bound the pinned and timed rows of the type
+# Each bound carries a fixed allowance for the lookups of the plan
 function getProfileBound(PDO $pdo, array $plan, array $shape): ?int {
     $pre = PPREF.'_';
     $num = fn(string $sql): int => (int)$pdo->query($sql)->fetchColumn();

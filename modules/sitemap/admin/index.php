@@ -9,7 +9,10 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('sitemap')) die('Illegal file acce
 function getSitemapFreqSelect(string $name, string $value): string {
     global $tpl;
     $opts = '';
-    foreach (['0' => _NO, 'always' => _ALWAYS, 'hourly' => _HOURLY, 'daily' => _DAILY, 'weekly' => _WEEKLY, 'monthly' => _MONTHLY, 'yearly' => _YEARLY, 'never' => _NEVER] as $key => $label) {
+    foreach ([
+        '0' => _NO, 'always' => _ALWAYS, 'hourly' => _HOURLY, 'daily' => _DAILY, 'weekly' => _WEEKLY,
+        'monthly' => _MONTHLY, 'yearly' => _YEARLY, 'never' => _NEVER,
+    ] as $key => $label) {
         $opts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => (string)$key,
             'label_text' => $label,
@@ -80,7 +83,7 @@ function sitemap(): void {
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'sitemap'],
             ['nameattr' => 'op', 'valueattr' => 'add'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('sitemap')],
         ],
         'content_html' => Editor::getCode([
             'id' => 'code',
@@ -95,7 +98,7 @@ function sitemap(): void {
 
 function add(): void {
     global $afile;
-    $iswarn = !checkSiteToken();
+    $iswarn = !checkAdminPost('sitemap');
     if (!$iswarn) addSchedulerRun('sitemap', 'manual');
     setRedirect($afile.'.php?name=sitemap', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
@@ -117,7 +120,7 @@ function xsledit(): void {
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'sitemap'],
             ['nameattr' => 'op', 'valueattr' => 'xslsave'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('sitemap')],
         ],
         'content_html' => Editor::getCode([
             'id' => 'code',
@@ -133,7 +136,7 @@ function xsledit(): void {
 
 function xslsave(): void {
     global $afile;
-    $iswarn = !checkSiteToken();
+    $iswarn = !checkAdminPost('sitemap');
     $file = SITEMAP_DIR.'/sitemap.xsl';
     $template = getVar('post', 'template', 'raw', '');
     if (!$iswarn && $template !== '') {
@@ -169,7 +172,7 @@ function config(): void {
     $hidden = [
         ['nameattr' => 'name', 'valueattr' => 'sitemap'],
         ['nameattr' => 'op', 'valueattr' => 'configsave'],
-        ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ['nameattr' => 'token', 'valueattr' => getSiteToken('sitemap')],
     ];
     foreach (getNodeTypeMap() as $name => $type) {
         $typehtml .= $tpl->getHtmlFrag('checkbox', [
@@ -186,7 +189,13 @@ function config(): void {
     $rows = [
         ['label_html' => _MODULES, 'field_html' => getTplModuleSelect('mod', $conf['sitemap']['mod'] ?? '', 1, $mods), 'is_full' => true],
         ...($typehtml !== '' ? [['label_html' => _NODE, 'field_html' => $typehtml, 'is_full' => true]] : []),
-        ['label_for' => 'f-auto-t', 'label_html' => _MAP_AUTO_T, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'auto_t', 'input_id' => 'f-auto-t', 'value_attr' => (string)intval(($conf['sitemap']['auto_t'] ?? 0) / 3600), 'is_config' => true])],
+        [
+            'label_for' => 'f-auto-t', 'label_html' => _MAP_AUTO_T,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number', 'name_attr' => 'auto_t', 'input_id' => 'f-auto-t', 'value_attr' => (string)intval(($conf['sitemap']['auto_t'] ?? 0) / 3600),
+                'is_config' => true,
+            ]),
+        ],
         ['label_html' => _MAP_AUTO, 'label_id' => $labid = getFieldIds('', 'auto')['label'], 'field_html' => $yesno('auto', $conf['sitemap']['auto'] ?? 0, $labid)],
         ['label_html' => _MAP_FR_H, 'field_html' => getSitemapFreqSelect('fr_h', (string)($conf['sitemap']['fr_h'] ?? '0'))],
         ['label_html' => _MAP_FR_M, 'field_html' => getSitemapFreqSelect('fr_m', (string)($conf['sitemap']['fr_m'] ?? '0'))],
@@ -219,7 +228,7 @@ function config(): void {
 
 function configsave(): void {
     global $afile, $conf;
-    $iswarn = !checkSiteToken();
+    $iswarn = !checkAdminPost('sitemap');
     $text = $iswarn ? _TOKENMISS : _SUCCSAVE;
     if (!$iswarn) {
         $mod = array_values(array_filter((array)getVar('post', 'mod[]', 'var', []), fn(string $v): bool => $v !== '0' && !isset($conf['node']['types'][$v])));

@@ -11,12 +11,15 @@ if (!defined('MODULE_FILE')) {
 
 function voting(): void {
     global $db, $afile, $locale, $conf, $tpl;
-    $onum = ($conf['multilingual'] == 1) ? "(lang = '".$locale."' OR lang = '') AND modul = '' AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')" : "modul = '' AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
+    $onum = ($conf['multilingual'] == 1)
+        ? "(lang = '".$locale."' OR lang = '') AND modul = '' AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')"
+        : "modul = '' AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
     $num = getVar('get', 'num', 'num', '1');
     $offset = (int)(($num - 1) * $conf['voting']['num']);
     setHead(['title' => _VOTING, 'kind' => 'collection']);
     $cont = $tpl->getHtmlFrag('title', ['title' => _VOTING, 'is_level_one' => true]);
-    $result = $db->getSqlQuery('SELECT id, title, answer, time, enddate, comments, acomm, typ FROM '.PREFIX_DB.'_voting WHERE '.$onum.' ORDER BY id DESC LIMIT '.$offset.', '.$conf['voting']['num']);
+    $result = $db->getSqlQuery('SELECT id, title, answer, time, enddate, comments, acomm, typ'
+        .' FROM '.PREFIX_DB.'_voting WHERE '.$onum.' ORDER BY id DESC LIMIT '.$offset.', '.$conf['voting']['num']);
     if ($db->getSqlRowCount($result) > 0) {
         $rows = '';
         $ismoder = is_moder($conf['name']);
@@ -56,7 +59,7 @@ function voting(): void {
             ];
             if ($ismoder) {
                 $edit = $afile.'.php?name=voting&op=add&id='.$id;
-                $del = $afile.'.php?name=voting&op=delete&id='.$id.'&refer=1&token='.getSiteToken();
+                $del = $afile.'.php?name=voting&op=delete&id='.$id.'&refer=1';
                 $row += getTplEditMenu($edit, $del, $stitle);
             }
             $rows .= $tpl->getHtmlPart('voting-home', $row);
@@ -93,7 +96,8 @@ function voting(): void {
 function view(): void {
     global $db, $conf, $tpl;
     $id = getVar('get', 'id', 'num');
-    $result = $db->getSqlQuery('SELECT title, time, acomm FROM '.PREFIX_DB.'_voting WHERE id = :id AND modul = \'\' AND time <= NOW() AND (enddate >= NOW() AND status = \'0\' OR status = \'1\')', ['id' => $id]);
+    $result = $db->getSqlQuery('SELECT title, time, acomm FROM '.PREFIX_DB.'_voting'
+        .' WHERE id = :id AND modul = \'\' AND time <= NOW() AND (enddate >= NOW() AND status = \'0\' OR status = \'1\')', ['id' => $id]);
     if ($db->getSqlRowCount($result) > 0) {
         [$title, $date, $acomm] = $db->getSqlRow($result);
         setHead([

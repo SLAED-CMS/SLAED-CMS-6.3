@@ -56,7 +56,7 @@ define('_NODE_MAXBYTES','Limite de taille, octets');
 define('_NODE_MAXLIST','Publications par page, au plus');
 define('_NODE_MIN','Minimum');
 define('_NODE_MODE','Mode d\'affichage');
-define('_NODE_MODEHINT','Nom court d\'un jeu de modèles du thème ; default est le jeu de base');
+define('_NODE_MODEHINT','Jeu de modèles du thème ; default est le jeu de base, support appartient à l\'extension support');
 define('_NODE_MOVED','L\'état a été modifié.');
 define('_NODE_NAME','Nom (adresse de la section)');
 define('_NODE_NAMEHINT','Lettres latines minuscules et chiffres, jusqu\'à 20 caractères ; ne change plus après la création');

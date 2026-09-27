@@ -1,16 +1,10 @@
 <?php
-/**
- * Informational theme-local CSS usage audit
- *
- * CSS definitions are collected independently for every installed theme
- * Usage sources include theme HTML and hooks, PHP emitters, and shared JS state hooks
- * The unused report is conservative and must never be treated as deletion evidence
- */
 
 namespace Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 
+# Informational theme-local CSS usage audit whose unused report is conservative and must never be treated as deletion evidence
 final class AdminCssClassUsageTest extends TestCase
 {
     private static string $base;
@@ -62,18 +56,20 @@ final class AdminCssClassUsageTest extends TestCase
         $this->assertTrue(true);
     }
 
+    # The themes of the tree, without a scratch copy that a gate of another process may be building or removing
     private static function getThemes(): array
     {
         $themes = [];
         foreach (scandir(self::$base.'/templates') ?: [] as $theme) {
             $path = self::$base.'/templates/'.$theme.'/assets/css';
-            if ($theme === '.' || $theme === '..' || !is_file($path.'/base.css') || !is_file($path.'/theme.css')) continue;
+            if ($theme === '.' || $theme === '..' || isTreeSkipped(self::$base.'/templates/'.$theme) || !is_file($path.'/base.css') || !is_file($path.'/theme.css')) continue;
             $themes[] = $theme;
         }
         sort($themes);
         return $themes;
     }
 
+    # Collect the CSS definitions and their usage independently for every installed theme
     private static function getStats(string $theme): array
     {
         $css = self::getCssClasses($theme);
@@ -110,6 +106,7 @@ final class AdminCssClassUsageTest extends TestCase
         return $classes;
     }
 
+    # Usage sources include theme HTML and hooks, PHP emitters, and shared JS state hooks
     private static function getClassUsage(string $theme): array
     {
         $exact = [];

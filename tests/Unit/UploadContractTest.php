@@ -5,20 +5,15 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Batches 3 and 4 of docs/UPLOAD-2026.md: the local and the remote half of the Upload class.
- * tests/Support/upload_probe.php boots the real core with its writable directories in scratch and drives
- * the class against a disposable upload root, one scenario per process. Everything that needs an HTTP
- * upload, a controlled clock or a refusing filesystem goes through the protected seams of the test-only
- * subclass declared in that probe; the type map is verified against the libmagic build of this machine.
- * The remote scenarios answer the DNS and cURL seams from a scripted zone and a scripted reply chain,
- * so every rejected address range and every redirect is reachable without a single socket being opened.
- */
+# Batches 3 and 4 of docs/UPLOAD-2026.md: the local and the remote half of the Upload class
 final class UploadContractTest extends TestCase
 {
     private static array $probe = [];
     private const CANON = ['7z', 'avif', 'flac', 'gif', 'gz', 'jpeg', 'jpg', 'm4a', 'mp3', 'mp4', 'oga', 'ogg', 'opus', 'pdf', 'png', 'rar', 'tar', 'wav', 'webm', 'webp', 'zip'];
 
+    # The probe tests/Support/upload_probe.php boots the real core with writable directories in scratch, one scenario per process on a disposable upload root
+    # An HTTP upload, a controlled clock or a refusing filesystem go through the protected seams of the probe subclass; the type map meets the local libmagic build
+    # The remote scenarios answer the DNS and cURL seams from a scripted zone and reply chain, so every rejected range and redirect is reached without a socket
     # Run one probe scenario in a fresh process and memoize its report
     private function getProbe(string $mode): array
     {
@@ -324,6 +319,10 @@ final class UploadContractTest extends TestCase
     }
 
     # Every resolved address is validated before a connection, one non-public address anywhere in the answer refuses the host, and the alias chain is bounded
+    # A host the policy refused answers its own code, so an operator reading the log can tell a private target apart from a prefix this build does not know yet
+    # Refused are every IPv6 range the IANA registry marks as not globally reachable, each one a prefix an earlier revision of the block list let through
+    # Reserved space is refused by absence from the delegated prefixes: site-local, outside 2000::/3, the returned 6bone block and a gap between two registry entries
+    # A lookup that found nothing is not a refusal and keeps the generic code: an unknown host, an alias loop and a chain over the limit
     #[Test]
     public function onlyPubliclyRoutableAddressesAreConnectedTo(): void
     {
@@ -336,14 +335,10 @@ final class UploadContractTest extends TestCase
         $note = 'A host that is already an address must carry no resolve entry: libcurl fails the whole transfer over an IPv6 literal in one';
         $this->assertSame('', $data['literal']['bind'], $note);
         $this->assertSame('', $data['sixlit']['bind'], $note);
-        # A host the policy refused answers its own code, so an operator reading the log can tell a private target apart from a prefix this build does not know yet
         $keys = ['private', 'loop', 'link', 'cgnat', 'zero', 'cast', 'docnet', 'mixed', 'ula', 'sixloop', 'mapped', 'aliasbad'];
         $keys = array_merge($keys, ['literalbad', 'sixliteral']);
-        # Every IPv6 range the IANA registry marks as not globally reachable, each one a prefix an earlier revision of the block list let through
         $keys = array_merge($keys, ['sixbench', 'sixdoc', 'sixsid', 'sixorchid', 'sixdummy', 'sixdiscard']);
-        # Reserved space refused by absence from the delegated prefixes: site-local, outside 2000::/3, the returned 6bone block and a gap between two registry entries
         $keys = array_merge($keys, ['sixsite', 'sixfree', 'sixbone', 'sixgap']);
-        # A lookup that found nothing is not a refusal and keeps the generic code: an unknown host, an alias loop and a chain over the limit
         $miss = ['gone', 'aliasloop', 'aliasdeep'];
         foreach ([...$keys, ...$miss] as $key) {
             $this->checkFailShape($data[$key], in_array($key, $miss, true) ? 'remote' : 'address', 'The '.$key.' host');

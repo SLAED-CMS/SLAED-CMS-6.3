@@ -7,36 +7,44 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * The 6.3 update of setup/index.php carries a real 6.2 site over (docs/NODE.md, The 6.3 update). tests/Fixtures/update62 is that site: the CREATE TABLE
- * statements of all 33 tables a real 6.2 site dumped, a small invented seed and the configuration files 6.2 wrote. tests/Support/install_probe.php in its
- * update mode loads it into a disposable MariaDB database, serves a copy of the release around it and asks the installer over real HTTP: refused without
- * the key, refused by the preflight, stopped by a broken schema file, then a first run, a repeat after the owner changed switches and a third run; the result
- * is compared with a clean installation of the same schema, two guests vote in one poll, the panel and Node are walked, and a last run follows a deleted material.
- */
+# The 6.3 update of setup/index.php carries a real 6.2 site over (docs/NODE.md, The 6.3 update)
 final class UpdateSiteTest extends TestCase
 {
     private static array $probe = [];
 
-    # Run the update probe once on the 6.2 fixture and memoize the update report; a probe that fails is a failure, not a skip
-    private function getRun(): array
+    # The fixture tests/Fixtures/update62 holds the CREATE TABLE statements of all 33 tables a real 6.2 site dumped, a small invented seed and the 6.2 configuration files
+    # The probe tests/Support/install_probe.php in its update mode loads it into a disposable MariaDB database and serves a copy of the release around it
+    # Over real HTTP the installer is refused without the key and by the preflight, stopped by a broken schema file, then runs first, after changed switches and a third time
+    # The result is compared with a clean installation, two guests vote in one poll, the panel and Node are walked, and a last run follows a deleted material
+    # The fixture tests/Fixtures/update62early is an earlier 6.2 site with narrower and signed columns the same update brings to the same clean schema
+    # Run the update probe once per 6.2 fixture and memoize its update report; both use the configuration of update62, a probe that fails is a failure, not a skip
+    private function getRun(string $name = 'update62'): array
     {
-        if (self::$probe === []) {
+        if (!isset(self::$probe[$name])) {
             $script = dirname(__DIR__).'/Support/install_probe.php';
-            $site = dirname(__DIR__).'/Fixtures/update62';
-            $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_update_site';
-            $args = [$work, 'update', $site.'/site.sql', $site.'/config', 'old'];
+            $site = dirname(__DIR__).'/Fixtures/';
+            $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_update_site_'.$name;
+            $args = [$work, 'update', $site.$name.'/site.sql', $site.'update62/config', 'old'];
             $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.implode(' ', array_map('escapeshellarg', $args)).' 2>&1');
             $data = json_decode($out, true);
             $this->assertIsArray($data, 'The probe did not return JSON: '.$out);
             $this->assertSame('', $data['error'], 'The probe failed');
             $this->assertTrue($data['clean'], 'The probe left a disposable database on the server');
-            self::$probe = $data['runs']['update'] + ['logs' => $data['runs']['logs']];
+            self::$probe[$name] = $data['runs']['update'] + ['logs' => $data['runs']['logs']];
         }
-        return self::$probe;
+        return self::$probe[$name];
+    }
+
+    # The first schema run of a fixture fails on the statement the probe broke and on nothing else, so no statement of the file depends on a later one
+    private function checkBrokenRun(array $run): void
+    {
+        $fail = array_values(array_filter($run['broken']['failed'], fn(string $v): bool => !str_starts_with($v, 'the update stopped')));
+        $this->assertSame(['old_probe_missing'], $fail, 'The first schema run failed on more than the broken statement');
     }
 
     # The fixture loads, the installer refuses without the key and on a MyISAM table without touching a file, and a broken schema file stops before any unit
+    # Four wrong codes are counted in the key, the right code clears the count, and the fifth wrong code in a row removes the key
+    # A registry stop before the mark modules leaves config/modules.php alone, and the next run, over a broken schema file, reads the 6.2 table as the first and writes the mark
     #[Test]
     public function theUpdateRefusesBeforeItWritesAnything(): void
     {
@@ -46,10 +54,14 @@ final class UpdateSiteTest extends TestCase
         $this->assertSame([true, true], $run['lock']);
         $this->assertSame([true, true, true], $run['refuse']);
         $this->assertSame([200, true, '0'], $run['guest']);
-        $this->assertContains('old_probe_missing', $run['broken']['failed']);
+        $this->assertSame(['4', 1, false, true], $run['key'], 'The key does not count wrong codes, keeps a count after the right one, or survives the fifth');
+        $this->assertStringContainsString('module registry: old_modules could not be read', $run['nomods'][0]);
+        $this->assertSame([[], true, 0], array_slice($run['nomods'], 1), 'A registry that could not be read left the mark modules or wrote the file');
+        $this->checkBrokenRun($run);
         $this->assertSame(['modules' => '6.3.0'], $run['broken']['marks']);
         $this->assertSame(['points' => 'missing', 'ratings' => 'missing', 'fields' => 'missing'], $run['broken']['manifest']);
         $this->assertSame(503, $run['broken']['guest']);
+        $this->assertSame(1, $run['broken']['dupes'], 'The schema file did not remove the later poll vote of one address');
     }
 
     # The schema file runs on the tables of a real 6.2 site without a failed statement on the first run, every unit finishes, and the repeats change nothing
@@ -66,6 +78,7 @@ final class UpdateSiteTest extends TestCase
             $this->assertSame([3, 35], $run[$name]['users'], $name);
             $this->assertSame(['targets' => 3, 'votes' => 0], $run[$name]['rating'], $name);
             $this->assertSame(['old' => 300, 'next' => 301], $run[$name]['ids'], $name);
+            $this->assertSame(0, $run[$name]['dupes'], $name.': a repeat removed a vote');
         }
         $this->assertSame(['account', 'forum', 'shop'], array_keys($run['first']['ratings']));
         $this->assertTrue($run['third']['same']);
@@ -100,14 +113,15 @@ final class UpdateSiteTest extends TestCase
         $this->assertSame($last['before'], $last['after']);
     }
 
-    # The panel stays myadm.php, the language and the address of the 6.2 site survive an installer asked in German on another host,
-    # the blocks of removed modules are switched off with their names while a block of the owner stays, and the switches of the owner survive the repeat
+    # The panel stays myadm.php, now the shipped loader in place of the one of 6.2
+    # The language and the address of the 6.2 site survive an installer asked in German on another host
+    # The blocks of removed modules are switched off with their names while a block of the owner stays, and the switches of the owner survive the repeat
     #[Test]
     public function theSiteKeepsWhatItOwns(): void
     {
         $run = $this->getRun();
         foreach (['first', 'second', 'third'] as $name) {
-            $this->assertSame([false, true, 'myadm'], $run[$name]['panel'], $name);
+            $this->assertSame([false, true, 'myadm', true], $run[$name]['panel'], $name);
             $this->assertSame(['ru', $run['guard']], $run[$name]['site'], $name);
         }
         $this->assertSame([200, 200, 200, 404], $run['panel']);
@@ -141,5 +155,25 @@ final class UpdateSiteTest extends TestCase
             $row = json_decode($line, true);
             $this->assertTrue(($row['level'] ?? '') === 'info' || [$row['http_code'] ?? 0, $row['url'] ?? ''] === [404, '/admin.php'], $line);
         }
+    }
+
+    # The earlier schema reaches the clean one: its negative balance becomes 0 and is counted once, before the schema file of the first run that stops
+    # An account without an address, a comment without an author and a long module name pass strict mode, every unit finishes and the repeats change nothing
+    #[Test]
+    public function anEarlierSiteReachesTheCleanSchema(): void
+    {
+        $run = $this->getRun('update62early');
+        $this->assertSame([[0, ''], [4, 30]], [$run['dump'], $run['before']]);
+        $this->assertSame([[], true, 1], array_slice($run['nomods'], 1), 'The negative balance was not set to 0 and counted before the schema file');
+        $this->checkBrokenRun($run);
+        $marks = ['fields' => '6.3.0', 'modules' => '6.3.0', 'points' => '6.3.0', 'ratings' => '6.3.0'];
+        foreach (['first', 'second', 'third'] as $name) {
+            $this->assertSame([], $run[$name]['failed'], $name);
+            $this->assertSame($marks, $run[$name]['marks'], $name);
+            $this->assertSame(['points' => 'verified', 'ratings' => 'verified', 'fields' => 'verified'], $run[$name]['manifest'], $name);
+            $this->assertSame([[4, 35], 0], [$run[$name]['users'], $run[$name]['negative']], $name);
+        }
+        $this->assertSame([], $run['schema'], 'The update leaves a column, an index, a key or a check of the earlier schema apart from a clean installation');
+        $this->assertSame([[], []], [$run['logs']['error_php'], $run['logs']['error_sql']]);
     }
 }

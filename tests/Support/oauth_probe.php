@@ -4,13 +4,12 @@
 # License: MIT
 # Website: slaed.net
 
-# CLI probe for the one page of the screenshot manifest a request cannot ask for. index.php?name=account&op=oauth_finish
-# renders the two OAuth cards only for a browser carrying a pending flow, and a pending flow is the far end of a round trip
-# to a provider: without one the handler sends the visitor back to the account page, so the route captures the wrong screen
-# and proves nothing about the box the row fold is measured in
-# `make` writes that one row and answers with the token, the cookie name the browser has to carry and whether it is secure;
-# `gone` removes the row again. Nothing else on the stand is touched, and a row left behind by a run that died expires by
-# itself: the stamp is pushed forward by the seconds the caller asks for and the handler drops anything past its own ttl
+# CLI probe for the one page of the screenshot manifest a request cannot ask for: index.php?name=account&op=oauth_finish
+# That page renders the two OAuth cards only for a browser carrying a pending flow, and a pending flow is the far end of a round trip to a provider
+# Without one the handler sends the visitor back to the account page, so the route captures the wrong screen and proves nothing about the row fold box
+# `make` writes that one row and answers with the token, the cookie name the browser has to carry and whether it is secure; `gone` removes the row again
+# Nothing else on the stand is touched, and a row left behind by a run that died expires by itself
+# The stamp is pushed forward by the seconds the caller asks for, and the handler drops anything past its own ttl
 $probework = (string)($argv[2] ?? '');
 require_once __DIR__.'/probe_boot.php';
 require_once BASE_DIR.'/core/system.php';

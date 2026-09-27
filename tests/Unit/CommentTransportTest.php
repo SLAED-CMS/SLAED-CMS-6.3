@@ -5,20 +5,13 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Stage 4 of docs/COMMENTS-REDESIGN-2026.md: a comment action answers the one comment it touched instead of
- * repainting the list, every mutation is a POST, no token rides in a URL any more, and the form is only ever
- * cleared by a comment that was actually stored. The response shape is decided by HTMX response headers, so
- * the swap can depend on where the reader is without any of it being baked into cacheable markup.
- * These cases read the transport contract out of the request handlers, the rendered form and the shared
- * script; the stored-row half of the same stage is measured against live rows by CommentStateTest, and the
- * real HTTP round with a signed-in moderator belongs to the browser checks in docs/TESTS.md.
- */
+# A comment action answers the one comment it touched, every mutation is a POST, no token rides in a URL, and only a stored comment clears the form
 final class CommentTransportTest extends TestCase
 {
     private static array $src = [];
 
     # Return the source of one function, from its signature to its closing brace at the given indentation
+    # These cases read the transport out of the handlers, the form and the shared script; stored rows are in CommentStateTest, the HTTP round in docs/TESTS.md
     private function getSource(string $file, string $name, string $pad = ''): string
     {
         $key = $file.'::'.$name;
@@ -42,8 +35,9 @@ final class CommentTransportTest extends TestCase
     public function mutationsAreRefusedOutsidePost(): void
     {
         $code = $this->getFile('index.php');
-        $beg = strpos($code, 'if ($go == 1) {');
-        $this->assertNotFalse($beg, 'The ajax router block was not found');
+        $beg = strpos($code, 'if ($go == 1 && in_array($op, [');
+        $this->assertNotFalse($beg, 'The method guard of the ajax router was not found');
+        $this->assertLessThan(strpos($code, 'checkSiteToken($tok)'), $beg, 'The method is not refused before the token');
         $head = substr($code, $beg, 600);
         $this->assertStringContainsString("'addComment', 'updateCommentStatus', 'deleteComment'", $head);
         $this->assertStringContainsString("!== 'POST'", $head);
@@ -86,6 +80,7 @@ final class CommentTransportTest extends TestCase
     }
 
     # The add answers one comment fragment and never the whole list again
+    # The response shape is decided by HTMX response headers, so the swap depends on where the reader is without being baked into cacheable markup
     #[Test]
     public function theAddAnswersOneCommentRatherThanTheList(): void
     {
@@ -259,7 +254,7 @@ final class CommentTransportTest extends TestCase
         $this->assertSame(0, substr_count($class, 'Cache::addEpoch();'), 'A write of the class bumps without force, which an early bump of the admin entry swallows');
         $this->assertSame(1, substr_count($class, 'Cache::addEpoch(true)'), 'The forced generation after a commit is not kept in one place');
         $this->assertSame(1, substr_count($class, 'Cache::getWriteGuard()'), 'The write guard is not taken in one place');
-        foreach (['addComment', 'updateComment', 'setStatus', 'deleteComment', 'deleteTarget', 'deleteUser', 'updateCountDrift'] as $name) {
+        foreach (['addComment', 'updateComment', 'updateBody', 'setStatus', 'deleteComment', 'deleteTarget', 'deleteUser', 'updateCountDrift'] as $name) {
             $one = $this->getSource('core/classes/comment.php', $name, '    ');
             $this->assertStringContainsString('$this->setWriteBegin()', $one, $name.'() writes without the guard of the page cache');
             $this->assertStringContainsString('$this->setWriteDone($guard', $one, $name.'() stores without invalidating');

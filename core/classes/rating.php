@@ -7,9 +7,6 @@
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
 # Rating subsystem: the one writer of the vote history, of the last participation of every actor and, through its trusted adapter, of the aggregate every rated target shows
-# A vote is a value from 1 to 5 of one server-made actor, an account or a guest address; nobody changes or removes a vote, only the main administrator annuls one with a reason
-# The class owns its transaction and the write guard of the page cache around it, takes its locks in one fixed order, and reads the clock of the database only
-# The target is reached through two trusted callbacks given once by the bootstrap, so no scope ever becomes a table or a path and the class knows neither nodes nor points
 final class Rating {
 
     # The closed grammar of a scope, which is also the key of its rule: the three fixed subsystems and one public name of a registered Node type
@@ -30,6 +27,7 @@ final class Rating {
 
     private Database $db;
     private array $rules;
+    private array $blocked = [];
     private array $actor;
     private string $akey;
     private Closure $read;
@@ -37,6 +35,8 @@ final class Rating {
 
     # Build the subsystem over the connection of the request, the ratings scope of the configuration, the trusted actor of the session and the two trusted target callbacks
     # Every rule is checked and converted exactly once; a wrong or missing rule blocks the rating of its own scope and is reported, and a wrong actor blocks every operation
+    # An exactly empty scope is a rating closed on purpose, which is how the core builds it before the data update left its mark: nothing is blocked and nothing is logged
+    # The callbacks are given once by the bootstrap, so no scope ever becomes a table or a path and the class knows neither nodes nor points
     public function __construct(Database $db, array $conf, array $actor, Closure $read, Closure $write) {
         $this->db = $db;
         $this->rules = $this->filterConfig($conf);
@@ -66,14 +66,24 @@ final class Rating {
     }
 
     # Check the whole ratings scope and answer the usable rules by scope; a rule that fails, a key outside the grammar and a missing fixed scope are each reported once here
+    # A scope of the grammar whose rule fails and a missing fixed scope are remembered as blocked, so a vote there answers blocked and never a missing target
     private function filterConfig(array $conf): array {
         $out = [];
+        if ($conf === []) return $out;
         foreach ($conf as $name => $rule) {
-            $good = is_string($name) && preg_match(self::SCOPE, $name) ? $this->filterRule($rule) : [];
-            if ($good) $out[$name] = $good;
-            else $this->addRatingLog('the rule of a scope is invalid and its rating is blocked', ['scope' => $name]);
+            $scope = is_string($name) && preg_match(self::SCOPE, $name);
+            $good = $scope ? $this->filterRule($rule) : [];
+            if ($good) {
+                $out[$name] = $good;
+                continue;
+            }
+            if ($scope) $this->blocked[$name] = true;
+            $this->addRatingLog('the rule of a scope is invalid and its rating is blocked', ['scope' => $name]);
         }
-        foreach (array_diff(self::FIXED, array_keys($conf)) as $name) $this->addRatingLog('the rule of a scope is missing and its rating is blocked', ['scope' => $name]);
+        foreach (array_diff(self::FIXED, array_keys($conf)) as $name) {
+            $this->blocked[$name] = true;
+            $this->addRatingLog('the rule of a scope is missing and its rating is blocked', ['scope' => $name]);
+        }
         return $out;
     }
 
@@ -264,6 +274,7 @@ final class Rating {
 
     # Run one writing unit inside the transaction of the subsystem and the write guard of the page cache: guard, BEGIN, the unit, COMMIT, the forced bump, and then the guard goes
     # A unit that wrote nothing, failed or threw is rolled back, and the guard goes with a rollback that is proven, which includes a transaction the server already dropped
+    # The subsystem owns this transaction and guard, takes its locks in one fixed order and reads the clock of the database only
     # An unknown commit answers storage and keeps the guard; a bump that fails after a proven commit is reported and keeps the guard too, while the stored vote answers as stored
     private function setUnitRun(Closure $unit, array $ctx): array {
         if ($this->db->checkSqlActive()) {
@@ -295,13 +306,19 @@ final class Rating {
         return $out;
     }
 
+    # Answer the checked rule of one scope - active, period, detail and guests - or an empty array for a scope without a usable rule, which shows no live widget
+    public function getRule(string $scope): array {
+        return $this->rules[$scope] ?? [];
+    }
+
     # Read the state of one target for the actor without writing anything: the aggregate of every reachable target, the rest of its interval and whether a new vote would be taken
     # A target whose rating is switched off, closed to guests, owned by the actor or still waiting answers ok with canvote false; only an unreachable target hides its counters
     public function getRating(string $scope, int $id): array {
         if (!$this->actor) return $this->getResult('denied');
         if (!$this->checkTargetKey($scope, $id)) return $this->getResult('invalid');
         $rule = $this->rules[$scope] ?? null;
-        $target = $rule ? $this->getTarget($scope, $id, false) : null;
+        if (!$rule) return $this->getResult(isset($this->blocked[$scope]) ? 'blocked' : 'unavailable');
+        $target = $this->getTarget($scope, $id, false);
         if (!$target) return $this->getResult($target === null ? 'unavailable' : 'storage');
         $seen = $this->akey !== '' ? $this->getActorLast($scope, $id, $this->akey, false) : ['last' => null, 'now' => 0];
         if ($seen === false) return $this->getResult('storage');
@@ -311,11 +328,12 @@ final class Rating {
 
     # Place one vote of the actor on one target; the request is the key of one delivery, so a network repeat answers the stored vote and never a second one
     # Everything that can be refused without the database is refused first: the form, a blocked scope, a rating that is switched off, a guest who may not vote or has no address
+    # A vote is a value from 1 to 5 of one server-made actor, an account or a guest address; nobody changes or removes a vote, only the main administrator annuls one
     public function addRating(string $scope, int $id, int $value, string $request): array {
         if (!$this->actor) return $this->getResult('denied');
         if (!$this->checkTargetKey($scope, $id) || $value < 1 || $value > 5 || !preg_match(self::REQUEST, $request)) return $this->getResult('invalid');
         $rule = $this->rules[$scope] ?? null;
-        if (!$rule) return $this->getResult('unavailable');
+        if (!$rule) return $this->getResult(isset($this->blocked[$scope]) ? 'blocked' : 'unavailable');
         if (!$rule['active'] || $this->akey === '' || (!$this->actor['uid'] && !$rule['guests'])) return $this->getResult('denied');
         return $this->setUnitRun(fn(): array => $this->addVoteRow($scope, $id, $value, $request, $rule), ['scope' => $scope, 'mid' => $id, 'actor' => $this->akey]);
     }

@@ -95,7 +95,9 @@ function getStatExtPanel(string $file): string {
             foreach ($tmp as $h => $val) $hrs[$h] += (int)$val;
         }
     }
-    if (!$has) return $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('statistic-extended', ['empty_text' => 'Extended statistics not available for this archive.'])]);
+    if (!$has) {
+        return $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('statistic-extended', ['empty_text' => 'Extended statistics not available for this archive.'])]);
+    }
     $pct = static function(int $num, int $den): int {
         return $den > 0 ? (int)round($num / $den * 100) : 0;
     };
@@ -342,16 +344,45 @@ function config(): void {
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/statistic.php');
     $rows = [
-        ['label_for' => 'f-bet', 'label_html' => _STATBET, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'bet', 'input_id' => 'f-bet', 'value_attr' => (string)$conf['statistic']['bet'], 'is_config' => true])],
-        ['label_for' => 'f-shi', 'label_html' => _STATSHI, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'shi', 'input_id' => 'f-shi', 'value_attr' => (string)$conf['statistic']['shi'], 'is_config' => true])],
-        ['label_html' => _STATACT, 'label_id' => $labid = getFieldIds('', 'stat')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'stat', 'value' => (string)(int)$conf['statistic']['stat'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+        [
+            'label_for' => 'f-bet',
+            'label_html' => _STATBET,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number',
+                'name_attr' => 'bet',
+                'input_id' => 'f-bet',
+                'value_attr' => (string)$conf['statistic']['bet'],
+                'is_config' => true,
+            ]),
+        ],
+        [
+            'label_for' => 'f-shi',
+            'label_html' => _STATSHI,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number',
+                'name_attr' => 'shi',
+                'input_id' => 'f-shi',
+                'value_attr' => (string)$conf['statistic']['shi'],
+                'is_config' => true,
+            ]),
+        ],
+        [
+            'label_html' => _STATACT,
+            'label_id' => $labid = getFieldIds('', 'stat')['label'],
+            'field_html' => getTplRadioGroup([
+                'labelledby' => $labid,
+                'name' => 'stat',
+                'value' => (string)(int)$conf['statistic']['stat'],
+                'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
+            ]),
+        ],
     ];
     $confv = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'statistic'],
             ['nameattr' => 'op', 'valueattr' => 'save'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('statistic')],
         ],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
@@ -362,7 +393,7 @@ function config(): void {
 
 function save(): void {
     global $afile;
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('statistic');
     if (!$warn) {
         $cont = [
             'bet' => getVar('post', 'bet', 'num', 42),

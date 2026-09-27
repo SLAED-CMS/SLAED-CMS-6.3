@@ -54,7 +54,9 @@ function changelog(): void {
         'reset_url' => $afile.'.php?name=changelog',
         'hidden' => ['name_attr' => 'name', 'value_attr' => 'changelog'],
         'search_field' => ['itype' => 'text', 'input_id' => 'search', 'name_attr' => 'word', 'value_attr' => chlogEsc($filters['search']), 'placeholder_text' => _CHLOG_SEARCH_PH],
-        'author_field' => ['itype' => 'text', 'input_id' => 'author', 'name_attr' => 'author', 'value_attr' => chlogEsc($filters['author']), 'placeholder_text' => _CHLOG_AUTHOR_PH],
+        'author_field' => [
+            'itype' => 'text', 'input_id' => 'author', 'name_attr' => 'author', 'value_attr' => chlogEsc($filters['author']), 'placeholder_text' => _CHLOG_AUTHOR_PH,
+        ],
         'file_field' => ['itype' => 'text', 'input_id' => 'file', 'name_attr' => 'file', 'value_attr' => chlogEsc($filters['file']), 'placeholder_text' => _CHLOG_FILE_PH],
         'datefrom_field' => ['itype' => 'date', 'input_id' => 'datefrom', 'name_attr' => 'datefrom', 'value_attr' => chlogEsc($filters['since'])],
         'dateto_field' => ['itype' => 'date', 'input_id' => 'dateto', 'name_attr' => 'dateto', 'value_attr' => chlogEsc($filters['until'])],
@@ -112,37 +114,72 @@ function config(): void {
         [
             'label_for' => 'f-source',
             'label_html' => _CHLOG_SOURCE, 'hint_html' => _CHLOG_SOURCE_TITLE, 'hint_id' => $hntid = getFieldIds('f-source')['hint'],
-            'field_html' => $tpl->getHtmlFrag('select', ['describedby' => $hntid, 'name_attr' => 'source', 'selectid' => 'f-source', 'options_html' => $sourceopts, 'is_config' => true]),
+            'field_html' => $tpl->getHtmlFrag('select', [
+                'describedby' => $hntid, 'name_attr' => 'source', 'selectid' => 'f-source', 'options_html' => $sourceopts, 'is_config' => true,
+            ]),
         ],
         [
             'label_for' => 'f-ghowner',
             'label_html' => _CHLOG_GH_OWNER,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'ghowner', 'input_id' => 'f-ghowner', 'value_attr' => chlogEsc($conf['changelog']['ghowner'] ?? ''), 'is_config' => true]),
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'text', 'name_attr' => 'ghowner', 'input_id' => 'f-ghowner', 'value_attr' => chlogEsc($conf['changelog']['ghowner'] ?? ''), 'is_config' => true,
+            ]),
             'is_hidden' => $source !== 'github',
         ],
         [
             'label_for' => 'f-ghrepo',
             'label_html' => _CHLOG_GH_REPO,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'ghrepo', 'input_id' => 'f-ghrepo', 'value_attr' => chlogEsc($conf['changelog']['ghrepo'] ?? ''), 'is_config' => true]),
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'text', 'name_attr' => 'ghrepo', 'input_id' => 'f-ghrepo', 'value_attr' => chlogEsc($conf['changelog']['ghrepo'] ?? ''), 'is_config' => true,
+            ]),
             'is_hidden' => $source !== 'github',
         ],
         [
             'label_for' => 'f-ghtoken',
             'label_html' => _CHLOG_GH_TOKEN,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'ghtoken', 'input_id' => 'f-ghtoken', 'value_attr' => chlogEsc($conf['changelog']['ghtoken'] ?? ''), 'is_config' => true]),
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'password', 'name_attr' => 'ghtoken', 'input_id' => 'f-ghtoken', 'value_attr' => chlogEsc($conf['changelog']['ghtoken'] ?? ''), 'is_config' => true,
+            ]),
             'is_hidden' => $source !== 'github',
         ],
         [
             'label_for' => 'f-limit',
             'label_html' => _CHLOG_LIMIT, 'hint_html' => _CHLOG_STATS_TITLE, 'hint_id' => $hntid = getFieldIds('f-limit')['hint'],
-            'field_html' => $tpl->getHtmlFrag('input', ['describedby' => $hntid, 'itype' => 'number', 'name_attr' => 'limit', 'input_id' => 'f-limit', 'value_attr' => (string)($conf['changelog']['limit'] ?? 50), 'is_config' => true, 'input_attr' => ' min="10" max="'.CHLOG_MAX_LIMIT.'"']),
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'describedby' => $hntid, 'itype' => 'number', 'name_attr' => 'limit', 'input_id' => 'f-limit', 'value_attr' => (string)($conf['changelog']['limit'] ?? 50),
+                'is_config' => true, 'input_attr' => ' min="10" max="'.CHLOG_MAX_LIMIT.'"',
+            ]),
         ],
-        ['label_for' => 'f-perpage', 'label_html' => _CHLOG_PER_PAGE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'perpage', 'input_id' => 'f-perpage', 'value_attr' => (string)($conf['changelog']['perpage'] ?? 10), 'is_config' => true, 'input_attr' => ' min="5" max="50"'])],
-        ['label_for' => 'f-cachettl', 'label_html' => _CHLOG_CACHE_TTL, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'cachettl', 'input_id' => 'f-cachettl', 'value_attr' => (string)($conf['changelog']['cachettl'] ?? 900), 'is_config' => true, 'input_attr' => ' min="0" max="3600"'])],
-        ['label_html' => _CHLOG_GROUP_DATE, 'label_id' => $labid = getFieldIds('', 'grpdate')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'grpdate', 'value' => (string)($conf['changelog']['grpdate'] ?? 0), 'options' => $yesno])],
-        ['label_html' => _CHLOG_SHOW_FILES, 'label_id' => $labid = getFieldIds('', 'showfile')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'showfile', 'value' => (string)($conf['changelog']['showfile'] ?? 0), 'options' => $yesno])],
-        ['label_html' => _CHLOG_SHOW_STATS, 'label_id' => $labid = getFieldIds('', 'showstat')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'showstat', 'value' => (string)($conf['changelog']['showstat'] ?? 0), 'options' => $yesno])],
-        ['label_html' => _CHLOG_EXPORT, 'label_id' => $labid = getFieldIds('', 'exporten')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'exporten', 'value' => (string)($conf['changelog']['exporten'] ?? 0), 'options' => $yesno])],
+        [
+            'label_for' => 'f-perpage', 'label_html' => _CHLOG_PER_PAGE,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number', 'name_attr' => 'perpage', 'input_id' => 'f-perpage', 'value_attr' => (string)($conf['changelog']['perpage'] ?? 10), 'is_config' => true,
+                'input_attr' => ' min="5" max="50"',
+            ]),
+        ],
+        [
+            'label_for' => 'f-cachettl', 'label_html' => _CHLOG_CACHE_TTL,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number', 'name_attr' => 'cachettl', 'input_id' => 'f-cachettl', 'value_attr' => (string)($conf['changelog']['cachettl'] ?? 900), 'is_config' => true,
+                'input_attr' => ' min="0" max="3600"',
+            ]),
+        ],
+        [
+            'label_html' => _CHLOG_GROUP_DATE, 'label_id' => $labid = getFieldIds('', 'grpdate')['label'],
+            'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'grpdate', 'value' => (string)($conf['changelog']['grpdate'] ?? 0), 'options' => $yesno]),
+        ],
+        [
+            'label_html' => _CHLOG_SHOW_FILES, 'label_id' => $labid = getFieldIds('', 'showfile')['label'],
+            'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'showfile', 'value' => (string)($conf['changelog']['showfile'] ?? 0), 'options' => $yesno]),
+        ],
+        [
+            'label_html' => _CHLOG_SHOW_STATS, 'label_id' => $labid = getFieldIds('', 'showstat')['label'],
+            'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'showstat', 'value' => (string)($conf['changelog']['showstat'] ?? 0), 'options' => $yesno]),
+        ],
+        [
+            'label_html' => _CHLOG_EXPORT, 'label_id' => $labid = getFieldIds('', 'exporten')['label'],
+            'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'exporten', 'value' => (string)($conf['changelog']['exporten'] ?? 0), 'options' => $yesno]),
+        ],
     ];
     $cont .= checkPerms(CONFIG_DIR.'/changelog.php');
     $body = $tpl->getHtmlPart('form', [
@@ -160,7 +197,7 @@ function config(): void {
 
 function configsave(): void {
     global $afile;
-    $iswarn = !checkSiteToken(getVar('post', 'token', 'raw', ''), 'changelog');
+    $iswarn = !checkAdminPost('changelog');
     if (!$iswarn) {
         $confdata = [
             'source' => chlogSource(getVar('post', 'source', 'var', 'local')),

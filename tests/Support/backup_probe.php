@@ -5,7 +5,7 @@
 # Website: slaed.net
 
 # CLI probe for the Backup integration tests
-# boots the real core like index.php, one scenario per process, and drives the class against a disposable database it creates and drops again
+# It boots the real core like index.php, one scenario per process, and drives the class against a disposable database it creates and drops again
 # Nothing touches the site database or storage/backup - every scenario works in its own schema and in a scratch backup root, and the report says whether both were left clean
 $probework = (string)($argv[2] ?? '');
 require_once __DIR__.'/probe_boot.php';
@@ -383,7 +383,7 @@ function getProbeVendor(): string {
 }
 
 # Apply the produced artifact to an empty database and compare what came back
-# ordered checksums for keyed tables and a hash multiset for the unordered one, so duplicate rows are verified rather than collapsed
+# It compares ordered checksums for keyed tables and a hash multiset for the unordered one, so duplicate rows are verified rather than collapsed
 function getProbeRestore(): array {
     global $conf;
     $res = getProbeBackup(['compress' => 'none'])->addDatabaseBackup();

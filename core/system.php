@@ -34,7 +34,9 @@ if (!defined('UPLOADS_DIR')) define('UPLOADS_DIR', BASE_DIR.'/uploads');
 # Bump it for a change of the builder as well: the key covers the sources and the settings, not the code that joins them, so a stored bundle would outlive the rule that produced it
 define('ASSETS_VER', 3);
 
-# Load the runtime config from cache, rebuilding it from source if needed; the rebuild also stores derived data (asset manifests per theme, parsed SEO graph/schema, logo sizes) under $conf['derived'], so theme asset or logo changes need a config rebuild (admin save or deleting config/local.php) to take effect
+# Load the runtime config from cache, rebuilding it from source if needed
+# The rebuild also stores derived data (asset manifests per theme, parsed SEO graph/schema, logo sizes) under $conf['derived']
+# Theme asset or logo changes therefore need a config rebuild (admin save or deleting config/local.php) to take effect
 # A hit on local.php costs no lock and reads no journal; the rebuild runs under the shared configuration lock and looks at local.php again, as the awaited writer has published it
 # An unfinished operation forbids a rebuild from half replaced sources: the snapshot is assembled in memory with the touched files read from the journal, and nothing is published
 # A journal that cannot be read or a snapshot that fails its hash names no side, so the sources on disk are read as they are; the marker keeps the touched Node types at 503
@@ -122,7 +124,6 @@ require_once BASE_DIR.'/core/classes/logger.php';
 
 # Load the generated runtime config cache
 $conf = getConfig();
-if (defined('ADMIN_FILE')) $conf['theme'] = 'admin';
 
 # Outgoing mail service; the class loads here and is instantiated inside core/security.php, where the database connection is created
 require_once BASE_DIR.'/core/classes/mail.php';
@@ -168,7 +169,7 @@ if (defined('MODULE_FILE')) {
     require_once BASE_DIR.'/core/admin.php';
 }
 
-# Call an optional theme hook and return only array payloads.
+# Call an optional theme hook and return only array payloads
 function getThemeHookVars(string $hook): array {
     if (!function_exists($hook)) return [];
     $vars = $hook();
@@ -284,7 +285,8 @@ function getSchedulerPlannedTime(array $job, array $state = []): int {
     return 0;
 }
 
-# Reads a job by key from config when $job is null, otherwise normalizes the given array; enforces canonical type/system for built-in jobs and drops legacy keys so stale configs self-heal
+# Reads a job by key from config when $job is null, otherwise normalizes the given array
+# Enforces canonical type/system for built-in jobs and drops legacy keys so stale configs self-heal
 function getSchedulerJob(string $name, ?array $job = null): array {
     global $conf;
     static $map = ['dbbackup' => 'backup', 'filescan' => 'filescan', 'maildrain' => 'maildrain', 'newsletter' => 'newsletter', 'sitemap' => 'sitemap',
@@ -341,9 +343,7 @@ function setSchedulerState(string $name, array $state): bool {
     $file = LOGS_DIR.'/scheduler/'.$name.'.json';
     $json = json_encode($state, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if (!is_string($json)) return false;
-    $dir = dirname($file);
-    if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) return false;
-    return file_put_contents($file, $json, LOCK_EX) !== false;
+    return Cache::setBody($file, $json);
 }
 
 # Returns the path of the operating system lock file of one job; the file is created once and never deleted, because deleting it would break the lock for a process still holding it
@@ -458,10 +458,7 @@ function setSchedulerDone(string $name, string $stat, string $mess = '', array $
 # Writes a scheduler heartbeat marker for cron, pseudo-cron, or manual triggers
 function addSchedulerHeartbeat(string $type): void {
     $json = json_encode(['trigger' => $type, 'time' => time()], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    $file = LOGS_DIR.'/scheduler/heartbeat.json';
-    $dir = dirname($file);
-    if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) return;
-    if (is_string($json)) file_put_contents($file, $json, LOCK_EX);
+    if (is_string($json)) Cache::setBody(LOGS_DIR.'/scheduler/heartbeat.json', $json);
 }
 
 # Returns whether a recent cron heartbeat exists within the configured timeout
@@ -504,10 +501,8 @@ function addSchedulerTrigger(): array {
     if ($last > 0 && (time() - $last) < $cool) return [];
     $job = getSchedulerNextJob();
     if (!$job) return [];
-    $dir = dirname($file);
-    if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) return [];
     $json = json_encode(['time' => time(), 'job' => (string)($job['name'] ?? '')], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    if (is_string($json)) file_put_contents($file, $json, LOCK_EX);
+    if (!is_string($json) || !Cache::setBody($file, $json)) return [];
     return ['url' => 'index.php?go=3&op=scheduler', 'token' => checkPageCache() ? getDynamicMark('token', 'scheduler') : rawurlencode(getSiteToken('scheduler'))];
 }
 
@@ -889,7 +884,10 @@ function updateSessionTrack(int $ctime, string $request, string $name): array {
         }
         if ($uname !== '') {
             if ($uid) {
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET ip = :ip, lastvis = NOW(), agent = :agent WHERE id = :uid AND lastvis < NOW() - INTERVAL 60 SECOND', ['ip' => $ip, 'agent' => $uagent, 'uid' => $uid]);
+                $db->getSqlQuery(
+                    'UPDATE '.PREFIX_DB.'_users SET ip = :ip, lastvis = NOW(), agent = :agent WHERE id = :uid AND lastvis < NOW() - INTERVAL 60 SECOND',
+                    ['ip' => $ip, 'agent' => $uagent, 'uid' => $uid]
+                );
             }
             $sql = 'INSERT INTO '.PREFIX_DB.'_session (uname, time, ip, guest, modul, url) VALUES (:uname, :time, :ip, :guest, :modul, :url)'
                 .' ON DUPLICATE KEY UPDATE time = VALUES(time), ip = VALUES(ip), guest = VALUES(guest), modul = VALUES(modul), url = VALUES(url)';
@@ -1522,7 +1520,8 @@ function getSeoSchema(string $kind, array $seo, bool $ishome = false): array {
     return $data;
 }
 
-# Return the shared category map for one module or all modules as id => raw title, parent, ordern; epoch-keyed persistent data cache plus request-static, callers apply getConst and escaping at their own boundary
+# Return the shared category map for one module or all modules as id => raw title, parent, ordern
+# The map lives in an epoch-keyed persistent data cache plus a request-static copy; callers apply getConst and escaping at their own boundary
 function getCategoryMap(string $mod = ''): array {
     global $db;
     static $maps = [];
@@ -1660,6 +1659,8 @@ function getCacheRouteVars(): ?array {
 # The routes of the map are the lists of the registered Node types, taken from the loaded registry without a query; the list is the empty op alone
 # The last word belongs to the write-guard journal: while a content write is unfinished, or the generation cannot be read, no page is read from the cache or stored into it
 # That answer is taken once per request, so every block of one page agrees on it; the fill asks the journal again, because a writer may have started during the render
+# A visitor who picked a colour mode carries it in the document attribute and in the toggle's own icon, while the cache key is the route alone
+# A stored copy would hand the next visitor someone else's mode, so only the default `auto` build is cacheable
 function checkPageCache(): bool {
     global $conf, $home, $name, $op;
     static $free = null;
@@ -1668,8 +1669,6 @@ function checkPageCache(): bool {
     if (empty($conf['cache'])) return false;
     if ($conf['cache'] == 2 && !$home) return false;
     if (is_user() || isAdmin()) return false;
-    # A visitor who picked a colour mode carries it in the document attribute and in the toggle's own icon, while the cache key is the route alone
-    # A stored copy would hand the next visitor someone else's mode, so only the default `auto` build is cacheable
     if (getThemeMode() !== 'auto') return false;
     if (!empty($_SESSION[$conf['user_c'].'-flash'])) return false;
     if (($op ?? '') !== '' || !isset($conf['node']['types'][$name ?? ''])) return false;
@@ -1693,7 +1692,7 @@ function getPageHash(bool $live = false): string {
 }
 
 # Sweep stale page-cache files older than the retention window as a scheduler job and report the removed count
-# Asset bundles are swept too: a bundle in use has its file rewritten on every rebuild, so only the one no other page points at can reach the retention window, which is a full day of page TTLs
+# Asset bundles are swept too: a bundle in use is rewritten on every rebuild, so only one no page points at reaches the retention window, a full day of page TTLs
 function addCacheGcTask(): array {
     global $conf;
     $ttl = max((int)$conf['cache_t'] * 24, 86400);
@@ -1703,7 +1702,8 @@ function addCacheGcTask(): array {
 }
 
 # Scheduler job sampling the server once a minute for the presentation module: the two history writers of monitor.json run first, then the snapshot keys join their rows
-# This is the only writer outside the admin monitor; while no sample exists the module falls back to the figures a public page can afford - the histories, its own disk snapshot and the request's server - and leaves the core count and the uptime out
+# This is the only writer outside the admin monitor
+# While no sample exists the module falls back to what a public page can afford (the histories, its own disk snapshot, the request's server) and leaves out cores and uptime
 function addMonitorSample(): array {
     global $db;
     [$cpu] = getCpuLoad();
@@ -1735,9 +1735,9 @@ function getRssFeeds(): array {
 # The page facts may come as a closure that runs only when the page is really built: a route whose facts cost queries answers a stored copy without running one of them
 # The alternate feed link names the feed of the current module, else the feed of the start module, and is left out when neither has one
 # The category of the breadcrumb and of the theme header is the one the page names; without it the category of the query counts only when the visitor may read it
-# That read is judged by the reader of a Node type or by the read right of any other module, so a closed category never shows its title
+# That read is judged by the reader of a Node type or by the read right and, on a multilingual site, the language of any other module, so a closed category never shows its title
 function setHead(array|Closure $seo = []): void {
-    global $db, $home, $conf, $user, $name, $theme, $op, $tpl, $adminpage, $adminvars, $sitepage, $sitevars;
+    global $db, $home, $conf, $user, $name, $theme, $op, $tpl, $adminpage, $adminvars, $sitepage, $sitevars, $locale;
     $name = $name ?? '';
     $ctime = time();
     $request = $_SERVER['REQUEST_URI'] ?? getenv('REQUEST_URI') ?: '';
@@ -1795,7 +1795,9 @@ function setHead(array|Closure $seo = []): void {
     if (!isset($seo['cid']) && $hcid > 0 && !defined('ADMIN_FILE')) {
         $ntype = getNodeTypeMap()[$name] ?? null;
         try {
-            $res = $ntype ? null : $db->getSqlQuery('SELECT pread FROM '.PREFIX_DB.'_categories WHERE id = :id AND modul = :mod', ['id' => $hcid, 'mod' => $name]);
+            $lang = $conf['multilingual'] ? " AND (lang = :lang OR lang = '')" : '';
+            $pars = ['id' => $hcid, 'mod' => $name] + ($conf['multilingual'] ? ['lang' => $locale] : []);
+            $res = $ntype ? null : $db->getSqlQuery('SELECT pread FROM '.PREFIX_DB.'_categories WHERE id = :id AND modul = :mod'.$lang, $pars);
             $pread = $res ? $res->fetchColumn() : false;
             $open = $ntype ? getNodeReader($ntype)->checkNodeCategory($ntype, $hcid) : (is_string($pread) && is_acess($pread));
         } catch (NodeException) {
@@ -1893,11 +1895,21 @@ function setHead(array|Closure $seo = []): void {
             foreach ($fieldc as $val) {
                 if ($val != '') {
                     $out = explode('|', $val);
-                    if ($out[0] != '0' && $out[1] != '0' && $out[2] == '1') $strlink .= $tpl->getHtmlFrag('head-link', ['rel' => 'alternate', 'href' => $out[1], 'type' => 'application/rss+xml', 'title' => $out[0]])."\n";
+                    if ($out[0] != '0' && $out[1] != '0' && $out[2] == '1') $strlink .= $tpl->getHtmlFrag('head-link', [
+                        'rel' => 'alternate',
+                        'href' => $out[1],
+                        'type' => 'application/rss+xml',
+                        'title' => $out[0],
+                    ])."\n";
                 }
             }
         }
-        $strlink .= $tpl->getHtmlFrag('head-link', ['rel' => 'search', 'href' => $conf['homeurl'].'/index.php?go=search', 'type' => 'application/opensearchdescription+xml', 'title' => $conf['sitename'].' - '._SEARCH])."\n";
+        $strlink .= $tpl->getHtmlFrag('head-link', [
+            'rel' => 'search',
+            'href' => $conf['homeurl'].'/index.php?go=search',
+            'type' => 'application/opensearchdescription+xml',
+            'title' => $conf['sitename'].' - '._SEARCH,
+        ])."\n";
         if (!empty($conf['aschema'])) {
             $sdata = [
                 'title' => $home ? $site : $headline, 'desc' => $desc, 'url' => $purl, 'img' => $simg, 'author' => $author,
@@ -1987,7 +1999,16 @@ function setHead(array|Closure $seo = []): void {
         $userinfo = getUserInfo();
         $avatar = getUserAvatarUrl($userinfo);
         $items = [
-            $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account', 'title' => _ACCOUNT, 'img_src' => $avatar, 'img_alt' => _ACCOUNT, 'label' => $uname, 'is_login_profile' => true, 'is_login_avatar' => true, 'is_bold_label' => true]),
+            $tpl->getHtmlFrag('link', [
+                'href' => 'index.php?name=account',
+                'title' => _ACCOUNT,
+                'img_src' => $avatar,
+                'img_alt' => _ACCOUNT,
+                'label' => $uname,
+                'is_login_profile' => true,
+                'is_login_avatar' => true,
+                'is_bold_label' => true,
+            ]),
             $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&op=logout&refer=1', 'title' => _LOGOUT, 'label' => _LOGOUT]),
         ];
         $html = '';
@@ -2007,7 +2028,14 @@ function setHead(array|Closure $seo = []): void {
             'lost'     => _PASSFOR,
             'register' => _REG,
             'name_field' => ['itype' => 'text', 'name_attr' => 'user_name', 'value_attr' => '', 'maxlength_num' => 25, 'placeholder_text' => _NICKNAME, 'is_required' => true],
-            'password_field' => ['itype' => 'password', 'name_attr' => 'user_password', 'value_attr' => '', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD, 'is_required' => true],
+            'password_field' => [
+                'itype' => 'password',
+                'name_attr' => 'user_password',
+                'value_attr' => '',
+                'maxlength_num' => 25,
+                'placeholder_text' => _PASSWORD,
+                'is_required' => true,
+            ],
             'submit_button' => ['button_type' => 'submit', 'label' => _LOGIN, 'title' => _LOGIN],
             'lost_link' => ['href' => 'index.php?name=account&op=passlost', 'title' => _PASSFOR, 'label' => _PASSFOR],
             'register_link' => ['href' => 'index.php?name=account&op=newuser', 'title' => _REG, 'label' => _REG, 'is_account_button' => true],
@@ -2292,6 +2320,7 @@ function checkCompress(): array {
 }
 
 # Compress a file, folder or string (zip, gz, bz2)
+# A zip takes a directory, a file or string content; gz and bz2 take a single file only; the source is deleted afterwards when requested
 function addCompress(string $dir, string $src, string $name, string $mode = 'auto', bool $del = false, bool $bak = false): bool {
     if (!is_dir($dir) || !is_writable($dir)) {
         addErrorFile(_ERR_DIR.': '.$dir);
@@ -2327,7 +2356,6 @@ function addCompress(string $dir, string $src, string $name, string $mode = 'aut
     $exts = match($algo) {'zip' => '.zip', 'gz' => '.gz', 'bz2' => '.bz2' };
     $nbase = preg_replace('/\.(zip|gz|bz2)$/i', '', $name);
     $file = rtrim($dir, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$nbase.$exts;
-
     if ($algo === 'zip') {
         $zip = new ZipArchive();
         $res = $zip->open($file, ZipArchive::CREATE | ZipArchive::OVERWRITE);
@@ -2335,36 +2363,28 @@ function addCompress(string $dir, string $src, string $name, string $mode = 'aut
             addErrorFile(_ERR_ZOPEN.': '.$file);
             return false;
         }
-
-        // Handle directory
         if (is_dir($src)) {
             $rit = new RecursiveIteratorIterator(
                 new RecursiveDirectoryIterator($src, RecursiveDirectoryIterator::SKIP_DOTS),
                 RecursiveIteratorIterator::LEAVES_ONLY
             );
             $base = strlen(rtrim($src, DIRECTORY_SEPARATOR)) + 1;
-
             foreach ($rit as $info) {
                 $path = $info->getRealPath();
                 $local = substr($path, $base);
-
                 if (!$zip->addFile($path, $local)) {
                     $zip->close();
                     addErrorFile(_ERR_ZADD.': '.$path);
                     return false;
                 }
             }
-        }
-        // Handle file
-        elseif (is_file($src)) {
+        } elseif (is_file($src)) {
             if (!$zip->addFile($src, basename($src))) {
                 $zip->close();
                 addErrorFile(_ERR_ZADD.': '.$src);
                 return false;
             }
-        }
-        // Handle string content
-        else {
+        } else {
             $iname = $nbase.'.txt';
             if (!$zip->addFromString($iname, $src)) {
                 $zip->close();
@@ -2372,10 +2392,7 @@ function addCompress(string $dir, string $src, string $name, string $mode = 'aut
                 return false;
             }
         }
-
         $zip->close();
-
-        // Delete source if requested
         if ($del) {
             if (is_file($src)) {
                 if (!unlink($src)) addErrorFile(_ERR_DELETE.': '.$src);
@@ -2386,22 +2403,17 @@ function addCompress(string $dir, string $src, string $name, string $mode = 'aut
                 }
             }
         }
-
         return true;
     }
-    
-    // GZ and BZ2 only support single files
     if (!is_file($src)) {
         addErrorFile(_ERR_FILE.': '.$src);
         return false;
     }
-
     $srcf = fopen($src, 'rb');
     if (!$srcf) {
         addErrorFile(_ERR_OPEN.': '.$src);
         return false;
     }
-
     if ($algo === 'gz') {
         $zipf = gzopen($file, 'wb');
         if (!$zipf) {
@@ -2409,7 +2421,6 @@ function addCompress(string $dir, string $src, string $name, string $mode = 'aut
             addErrorFile(_ERR_GZIP.': '.$file);
             return false;
         }
-
         while (!feof($srcf)) {
             $chunk = fread($srcf, 65536);
             if ($chunk === false) {
@@ -2425,18 +2436,15 @@ function addCompress(string $dir, string $src, string $name, string $mode = 'aut
                 return false;
             }
         }
-
         gzclose($zipf);
         fclose($srcf);
-    }
-    elseif ($algo === 'bz2') {
+    } elseif ($algo === 'bz2') {
         $zipf = bzopen($file, 'w');
         if (!$zipf) {
             fclose($srcf);
             addErrorFile(_ERR_BZIP.': '.$file);
             return false;
         }
-
         while (!feof($srcf)) {
             $chunk = fread($srcf, 65536);
             if ($chunk === false) {
@@ -2452,21 +2460,16 @@ function addCompress(string $dir, string $src, string $name, string $mode = 'aut
                 return false;
             }
         }
-
         bzclose($zipf);
         fclose($srcf);
-    }
-    else {
+    } else {
         fclose($srcf);
         addErrorFile(_ERR_TYPE.': '.$algo);
         return false;
     }
-
-    // Delete source if requested
     if ($del) {
         if (!unlink($src)) addErrorFile(_ERR_DELETE.': '.$src);
     }
-
     return true;
 }
 
@@ -2497,7 +2500,7 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
     }
     $massiv = [];
     $result = $db->getSqlQuery('SELECT id, title, intro, img, parent, pview, pread, ordern FROM '.PREFIX_DB.'_categories '.$where.' ORDER BY ordern, title', $params);
-    while (list($cid, $title, $intro, $img, $parentid, $pview, $pread, $ordern) = $db->getSqlRow($result)) {
+    while ([$cid, $title, $intro, $img, $parentid, $pview, $pread, $ordern] = $db->getSqlRow($result)) {
         $massiv[] = [$cid, $title, $intro, $img, $parentid, $pview, $pread, $ordern];
     }
     if (!$massiv) return '';
@@ -2543,7 +2546,16 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
         }
     }
     if (!$cont) return '';
-    return $tpl->getHtmlPart('categories', ['categories' => _CATEGORIES, 'content' => $cont, 'total' => _ALLIN, 'pages' => $total, 'in' => $in, 'cat' => count($massiv), 'category' => _ALLINC, 'mod' => $mod]);
+    return $tpl->getHtmlPart('categories', [
+        'categories' => _CATEGORIES,
+        'content' => $cont,
+        'total' => _ALLIN,
+        'pages' => $total,
+        'in' => $in,
+        'cat' => count($massiv),
+        'category' => _ALLINC,
+        'mod' => $mod,
+    ]);
 }
 
 # Per-category published-material counts for a module (grouped by cid) plus the summed total and the unit label
@@ -2925,7 +2937,10 @@ function doScript(): string {
         $sfile = '';
         $route = '';
         if ($conf['cache_script']) {
-            $fp = $drv['jsfp'] ?? sha1(serialize(array_map(static fn($file) => is_file($file) ? filemtime($file).':'.filesize($file) : '0:0', array_combine($array, $array) ?: [])));
+            $fp = $drv['jsfp'] ?? sha1(serialize(array_map(
+                static fn($file) => is_file($file) ? filemtime($file).':'.filesize($file) : '0:0',
+                array_combine($array, $array) ?: []
+            )));
             $hash = Cache::getHash(['assets-v'.ASSETS_VER, $theme, 'js', $fp, $conf['script_h'], $conf['script_a']]);
             $sfile = Cache::getPath('assets', $hash, 'js');
             $route = 'index.php?go=asset&file='.$hash.'&type=js';
@@ -2982,7 +2997,10 @@ function doCss(): string {
         $cfile = '';
         $route = '';
         if ($bundle) {
-            $fp = $drv['cssfp'] ?? sha1(serialize(array_map(static fn($file) => is_file($file) ? filemtime($file).':'.filesize($file) : '0:0', array_combine($array, $array) ?: [])));
+            $fp = $drv['cssfp'] ?? sha1(serialize(array_map(
+                static fn($file) => is_file($file) ? filemtime($file).':'.filesize($file) : '0:0',
+                array_combine($array, $array) ?: []
+            )));
             $hash = Cache::getHash(['assets-v'.ASSETS_VER, $theme, 'css', $fp, $conf['css_c'], $conf['css_h'], $conf['css_e']]);
             $cfile = Cache::getPath('assets', $hash, 'css');
             $route = 'index.php?go=asset&file='.$hash.'&type=css';
@@ -3033,7 +3051,7 @@ function doCss(): string {
 }
 
 # Create a sitemap: the XML goes straight into its files as it is produced, a new file follows every 50000 URLs, and more than one file is joined by an index
-# The modules of sitemap.mod are read as before; a Node type takes part through its own sitemap integration, its materials in cursor batches of limits.syncbatch read as a guest
+# The modules of sitemap.mod are read as before; a Node type takes part through its own sitemap integration, its materials in cursor batches read as a guest of the site language
 # Neither a closed category nor the whole set of materials is ever held; the HTML map shows a Node type with its categories and leaves its materials to the XML
 function addSitemapTask(bool $force = false): array {
     global $db, $conf, $tpl, $fld;
@@ -3128,9 +3146,9 @@ function addSitemapTask(bool $force = false): array {
             }
         }
         if ($sm['gen_p'] && $types) {
-            $query = new NodeQuery($db, new NodeContext(0, [], 0, [], false, false, '', ''), $fld);
+            $query = new NodeQuery($db, new NodeContext(0, [], 0, [], false, false, '', $conf['multilingual'] ? (string)$conf['language'] : ''), $fld);
             $after = 0;
-            $size = max(1, min(500, intval($conf['node']['limits']['syncbatch'] ?? 500)));
+            $size = $query->getTargetSize();
             do {
                 $rows = $query->getNodeSitemap($after, $size);
                 foreach ($rows as $row) {
@@ -3307,17 +3325,13 @@ function getImageBox(string $file): array {
     return (is_array($info) && $info[0] > 0 && $info[1] > 0) ? [(int)$info[0], (int)$info[1]] : [0, 0];
 }
 
-# Compress CSS
+# Compress CSS: strip block comments (except those opening with a dash), turn tabs and newlines into spaces, collapse runs of spaces and drop spaces around punctuation
 # A file that is already minified is left alone: it carries no comments and no indentation to win back, and running a regex over it only spends time on the build
 # There is no counterpart for scripts on purpose: a regex cannot tell code from the inside of a string, so stripping spaces around braces and operators breaks valid JavaScript
 function getCompressCss(string $css): string {
-    # Remove multiline comment
     $css = preg_replace('#\/\*(?!-)[\x00-\xff]*?\*\/#', '', $css);
-    # Remove tabs, spaces, newlines
     $css = str_replace(["\n", "\r", "\t"], ' ', $css);
-    # Remove extra spaces
     $css = preg_replace('#\s+#', ' ', $css);
-    # Remove spaces that can be removed
     $css = preg_replace('#\s?([\{\}\:\;\,])\s?#', '\\1', $css);
     return $css;
 }
@@ -3394,7 +3408,10 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
         }
     }
 
-    $result = $db->getSqlQuery('SELECT modul, title, body, answer, enddate, multi, comments, acomm, typ FROM '.PREFIX_DB.'_voting WHERE id = :id AND '.$qwhere, array_merge(['id' => $id], $qpars));
+    $result = $db->getSqlQuery(
+        'SELECT modul, title, body, answer, enddate, multi, comments, acomm, typ FROM '.PREFIX_DB.'_voting WHERE id = :id AND '.$qwhere,
+        array_merge(['id' => $id], $qpars)
+    );
     if ($db->getSqlRowCount($result) < 1) {
         return $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
     }
@@ -3405,7 +3422,11 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
     $uid = is_user() ? intval(substr($user[0], 0, 11)) : 0;
 
     $db->getSqlQuery('DELETE FROM '.PREFIX_DB."_rating WHERE time < :past AND modul = 'voting'", ['past' => time() - intval($conf['voting']['voting_t'])]);
-    [$num] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB."_rating WHERE (mid = :id AND modul = 'voting' AND ip = :ip) OR (mid = :id2 AND modul = 'voting' AND uid = :uid AND uid != '0')", ['id' => $id, 'ip' => getIp(), 'id2' => $id, 'uid' => $uid]));
+    [$num] = $db->getSqlRow($db->getSqlQuery(
+        'SELECT COUNT(id) FROM '.PREFIX_DB."_rating WHERE (mid = :id AND modul = 'voting' AND ip = :ip)"
+        ." OR (mid = :id2 AND modul = 'voting' AND uid = :uid AND uid != '0')",
+        ['id' => $id, 'ip' => getIp(), 'id2' => $id, 'uid' => $uid]
+    ));
     $rate = $force || $cook == $id || $num > 0 || strtotime($end) <= time();
     if (!$force && !$typ && $rate) {
         return $tpl->getHtmlFrag('alert', ['text' => _VCLINFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
@@ -3424,7 +3445,16 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
         $perc = ($vote > 0) ? number_format(100 * $cnt / $vote, 2) : '0.00';
 
         if ($rate) {
-            $items .= $tpl->getHtmlFrag('voting-view', ['text' => $text, 'text_safe' => filterText($text), 'n' => $ord, 'pn' => $pn, 'percent' => $perc, 'votes_label' => _VOTES, 'votes' => $cnt, 'is_lead' => ($idx === $top)]);
+            $items .= $tpl->getHtmlFrag('voting-view', [
+                'text' => $text,
+                'text_safe' => filterText($text),
+                'n' => $ord,
+                'pn' => $pn,
+                'percent' => $perc,
+                'votes_label' => _VOTES,
+                'votes' => $cnt,
+                'is_lead' => ($idx === $top),
+            ]);
             continue;
         }
 
@@ -3437,7 +3467,7 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
     [$vnum] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_voting WHERE '.$qwhere, $qpars));
     $admin = '';
     if (!$force && is_moder('voting')) {
-        $admin = $tpl->getHtmlFrag('dial', getTplEditMenu($afile.'.php?name=voting&op=add&id='.$id, $afile.'.php?name=voting&op=delete&id='.$id.'&refer=1&token='.getSiteToken(), $title));
+        $admin = $tpl->getHtmlFrag('dial', getTplEditMenu($afile.'.php?name=voting&op=add&id='.$id, $afile.'.php?name=voting&op=delete&id='.$id.'&refer=1', $title));
     }
 
     $post = (!$force && !$rate) ? $tpl->getHtmlFrag('link', [
@@ -3449,12 +3479,24 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
         'label' => _VOTE,
         'is_button_blue' => true,
     ]) : '';
-    $polls = (!$force && $vnum > 1) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting', 'title' => _POLLS, 'label' => _POLLS, 'icon_name' => 'card-checklist', 'chip_tone' => 'accent']) : '';
+    $polls = (!$force && $vnum > 1) ? $tpl->getHtmlFrag('link', [
+        'href' => 'index.php?name=voting',
+        'title' => _POLLS,
+        'label' => _POLLS,
+        'icon_name' => 'card-checklist',
+        'chip_tone' => 'accent',
+    ]) : '';
     $votes = $force ? '' : $tpl->getHtmlFrag('span', ['is_votes' => true, 'text' => _VOTES.': '.$vote]);
     if (!$force && !$modul && $votid != 'voting') {
         $votes = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting&op=view&id='.$id, 'title' => _VOTES, 'label' => _VOTES.': '.$vote, 'is_votes' => true]);
     }
-    $com = (!$force && !$modul && $acomm) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting&op=view&id='.$id.'#comm', 'title' => _COMMENTS, 'label' => _COMMENTS.': '.$comm, 'is_comments' => true, 'chip_tone' => 'info']) : '';
+    $com = (!$force && !$modul && $acomm) ? $tpl->getHtmlFrag('link', [
+        'href' => 'index.php?name=voting&op=view&id='.$id.'#comm',
+        'title' => _COMMENTS,
+        'label' => _COMMENTS.': '.$comm,
+        'is_comments' => true,
+        'chip_tone' => 'info',
+    ]) : '';
 
     return $tpl->getHtmlPart('voting-widget', [
         'has_form'   => !$rate,
@@ -3621,7 +3663,7 @@ function getDebugErrors(): string {
     return $tpl->getHtmlFrag('list', ['is_unordered' => true, 'items_html' => $html]);
 }
 
-# Variable analyzer; self-guarded so direct calls follow the configured debug visibility
+# Variable analyzer; self-guarded so direct calls follow the configured debug visibility, and every printed value is escaped whatever the source
 function getVariables(): string {
     global $db, $conf, $tpl;
     if (!checkDebugView()) return '';
@@ -3636,20 +3678,19 @@ function getVariables(): string {
         }
     }
     $vars = [
-        2 => ['POST', 'success', $_POST, true],
-        3 => ['GET', 'info', $_GET, true],
-        4 => ['COOKIE', 'warn', $_COOKIE, false],
-        5 => ['FILES', 'accent', $_FILES, false],
-        6 => ['SESSION', 'accent', $_SESSION, false],
-        7 => ['SERVER', 'danger', $_SERVER, false],
+        2 => ['POST', 'success', $_POST],
+        3 => ['GET', 'info', $_GET],
+        4 => ['COOKIE', 'warn', $_COOKIE],
+        5 => ['FILES', 'accent', $_FILES],
+        6 => ['SESSION', 'accent', $_SESSION],
+        7 => ['SERVER', 'danger', $_SERVER],
     ];
     foreach ($vars as $key => $var) {
         if (!$cvar[$key] || !$var[2]) continue;
-        $text = print_r($var[2], true);
         $rows[] = [
             'legend' => _AVARIABLES.': '.$var[0],
             'tone' => $var[1],
-            'content' => ($var[3]) ? htmlspecialchars($text) : $text,
+            'content' => htmlspecialchars(print_r($var[2], true)),
         ];
     }
     if ($cvar[8]) $rows[] = ['legend' => _AQUERY_DB, 'tone' => 'success', 'content' => $db->getSqlTraceHtml()];
@@ -3682,7 +3723,10 @@ function getProtocol(): string {
         $proto = 'https';
     } elseif (isset($_SERVER['HTTPS']) && (($_SERVER['HTTPS'] == 'on') || ($_SERVER['HTTPS'] == '1'))) {
         $proto = 'https';
-    } elseif (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https' || !empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] == 'on') {
+    } elseif (
+        !empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https'
+        || !empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] == 'on'
+    ) {
         $proto = 'https';
     } elseif (strtolower(substr($_SERVER['SERVER_PROTOCOL'], 0, 5)) == 'https') {
         $proto = 'https';
@@ -3695,7 +3739,7 @@ function getProtocol(): string {
 # Get the image from the text; inline data URIs are never returned because meta image tags must point to a real fetchable resource
 # An attachment is resolved against the upload directory of its own module, and the module is named explicitly by a caller that renders the content of another one
 # Without that name the request module would decide the path, which is right for a module rendering itself and wrong for a page that lists the newest rows of several
-# The name becomes a path segment, so it passes the same filter the request boundary applies to it; anything else answers an empty name, and the path it builds simply resolves to no file
+# The name becomes a path segment, so it passes the same filter the request boundary applies; anything else answers an empty name, whose path resolves to no file
 function getImgText(string $text, string $type = '', bool $check = true, string $mod = ''): string|false {
  global $conf;
     $mod = filterVar(($mod !== '') ? $mod : (string)($conf['name'] ?? ''));
@@ -3760,15 +3804,16 @@ function filterSlug(string $text, string $sep = '-'): string {
 }
 
 # Format theme
-# The panel forces its own theme at bootstrap and a member's site theme may not take it back: the panel is built from partials no site theme carries, the login form among them
+# The panel answers its own theme and a member's site theme may not take it back: the panel is built from partials no site theme carries, the login form among them
 # Otherwise a member who once saved a theme preference and then opened the panel was served a page whose form could not render at all
+# `$conf['theme']` stays the theme of the site in the panel too, because its screens pick the logos, ranks and banners of the site from it
 # `index.php` declares the same constant for its admin endpoints, but long after the answer here is cached, and that branch builds its Template by name anyway
 # The constant is therefore read only where it is set before the bootstrap
 function getTheme(): string {
     static $cached = null;
     if ($cached !== null) return $cached;
     global $user, $conf;
-    $default = $conf['theme'] ?? 'default';
+    $default = defined('ADMIN_FILE') ? 'admin' : ($conf['theme'] ?? 'default');
     if (is_user() && !defined('ADMIN_FILE')) {
         $utheme = $user[5] ?? '';
         if ($utheme !== '' && checkThemeAssets($utheme)) return $cached = $utheme;
@@ -3893,7 +3938,15 @@ function addAdminMail(bool $enab, string $mod, string $username = '', string $ti
             } else {
                 foreach (getAdminModuleNames($modules) as $val) {
                     if ($val !== '' && $val === $mod) {
-                        $mailer->addQueue(['kind' => $kind, 'email' => $email, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 1, 'client' => true]);
+                        $mailer->addQueue([
+                            'kind' => $kind,
+                            'email' => $email,
+                            'title' => $subject,
+                            'body' => $message,
+                            'sender' => $conf['adminmail'],
+                            'prio' => 1,
+                            'client' => true,
+                        ]);
                         break;
                     }
                 }
@@ -4061,7 +4114,41 @@ function getModuleName(string $con): string {
         $type = getNodeTypeMap()[$con] ?? null;
         return ($type !== null) ? getConst($type->title) : $con;
     }
-    $map = ['account' => _ACCOUNT, 'album' => _ALBUM, 'all' => _ALL, 'auto_links' => _A_LINKS, 'changelog' => _CHANGELOG, 'clients' => _CLIENTS, 'contact' => _FEEDBACK, 'content' => _CONTENT, 'faq' => _FAQ, 'files' => _FILES, 'forum' => _FORUM, 'gallery' => _ALBUM, 'help' => _HELP, 'info' => _INFO, 'jokes' => _JOKES, 'links' => _LINKS, 'media' => _MEDIA, 'members' => _USERS, 'money' => _MONEY, 'news' => _NEWS, 'order' => _ORDER, 'pages' => _PAGES, 'presentation' => _PRESENTATION, 'radio' => _RADIO, 'recommend' => _RECOMMEND, 'rss' => _RSS, 'rss_info' => _RSS, 'search' => _SEARCH, 'shop' => _SHOP, 'sitemap' => _SITEMAP, 'users' => _TOPUSERS, 'voting' => _VOTING, 'whois' => _WHOIS];
+    $map = [
+        'account' => _ACCOUNT,
+        'album' => _ALBUM,
+        'all' => _ALL,
+        'auto_links' => _A_LINKS,
+        'changelog' => _CHANGELOG,
+        'clients' => _CLIENTS,
+        'contact' => _FEEDBACK,
+        'content' => _CONTENT,
+        'faq' => _FAQ,
+        'files' => _FILES,
+        'forum' => _FORUM,
+        'gallery' => _ALBUM,
+        'help' => _HELP,
+        'info' => _INFO,
+        'jokes' => _JOKES,
+        'links' => _LINKS,
+        'media' => _MEDIA,
+        'members' => _USERS,
+        'money' => _MONEY,
+        'news' => _NEWS,
+        'order' => _ORDER,
+        'pages' => _PAGES,
+        'presentation' => _PRESENTATION,
+        'radio' => _RADIO,
+        'recommend' => _RECOMMEND,
+        'rss' => _RSS,
+        'rss_info' => _RSS,
+        'search' => _SEARCH,
+        'shop' => _SHOP,
+        'sitemap' => _SITEMAP,
+        'users' => _TOPUSERS,
+        'voting' => _VOTING,
+        'whois' => _WHOIS,
+    ];
     return $map[$con] ?? $con;
 }
 
@@ -4105,8 +4192,8 @@ function getPassHash(string $pass): string {
     return password_hash($pass, PASSWORD_BCRYPT);
 }
 
-# Verify a user password; supports current bcrypt and legacy md5 hashes transparently.
-# Legacy branch will be removed once all stored hashes have been upgraded via transparent rehashing.
+# Verify a user password; supports current bcrypt and legacy md5 hashes transparently
+# Legacy branch will be removed once all stored hashes have been upgraded via transparent rehashing
 function checkPassHash(string $pass, string $hash): bool {
     if (password_verify($pass, $hash)) return true;
     if (strlen($hash) === 32 && ctype_xdigit($hash)) return md5(md5(PASS_SALT).md5($pass)) === $hash;
@@ -4163,7 +4250,9 @@ function replace_break(string $text): string {
 # Counts the live sessions in one query as members, bots and all rows; the raw bot figure is returned and the caller decides whether bots are shown
 function getSessionCounts(): array {
     global $db;
-    [$mem, $bots, $all] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(CASE WHEN guest = 2 THEN 1 END), COUNT(CASE WHEN guest = 1 THEN 1 END), COUNT(*) FROM '.PREFIX_DB.'_session'));
+    [$mem, $bots, $all] = $db->getSqlRow($db->getSqlQuery(
+        'SELECT COUNT(CASE WHEN guest = 2 THEN 1 END), COUNT(CASE WHEN guest = 1 THEN 1 END), COUNT(*) FROM '.PREFIX_DB.'_session'
+    ));
     return ['users' => (int)$mem, 'bots' => (int)$bots, 'all' => (int)$all];
 }
 
@@ -4251,7 +4340,7 @@ function getUserSessionAdminInfo(string $id = ''): string {
         $who_online = ['0' => '', '1' => '', '2' => '', '3' => ''];
         $content_who = '';
         $result = $db->getSqlQuery('SELECT uname, time, ip, guest, modul, url FROM '.PREFIX_DB.'_session ORDER BY uname');
-        while (list($uname, $time, $host, $guest, $module, $url) = $db->getSqlRow($result)) {
+        while ([$uname, $time, $host, $guest, $module, $url] = $db->getSqlRow($result)) {
             $time = time() - $time;
             $namestrip = cutstr($uname, 15);
             $lstrip = cutstr($module, 15);
@@ -4269,7 +4358,12 @@ function getUserSessionAdminInfo(string $id = ''): string {
             } elseif ($guest == 2) {
                 $title_who = $tpl->getHtmlFrag('session-row', [
                     'geo_html'    => Geoip::getFlagHtml($host),
-                    'name_link'   => ['href' => 'index.php?name=account&op=view&uname='.urlencode($uname), 'title' => getDuration($time).' - '._IP.': '.$host, 'label' => $namestrip, 'is_blank' => true],
+                    'name_link'   => [
+                        'href' => 'index.php?name=account&op=view&uname='.urlencode($uname),
+                        'title' => getDuration($time).' - '._IP.': '.$host,
+                        'label' => $namestrip,
+                        'is_blank' => true,
+                    ],
                     'module_link' => ['href' => $alink, 'title' => $alink, 'label' => ($lstrip !== '' ? $lstrip : $alstrip), 'is_blank' => true],
                     'is_module_right' => true,
                 ]);
@@ -4339,7 +4433,7 @@ function adminblock(): string {
         $content = '';
         $block = '';
         if (isAdmin(true)) {
-            list($title, $content) = $db->getSqlRow($db->getSqlQuery('SELECT title, content FROM '.PREFIX_DB."_blocks WHERE bkey = 'admin'"));
+            [$title, $content] = $db->getSqlRow($db->getSqlQuery('SELECT title, content FROM '.PREFIX_DB."_blocks WHERE bkey = 'admin'"));
             $block = (string)$content;
         }
         $cont = $tpl->getHtmlFrag('admin-block-links', [
@@ -4349,7 +4443,14 @@ function adminblock(): string {
         ]);
         $a_title = ($title) ? $title : _ADMINS;
         return $tpl->getHtmlPart('block-sidebar', ['title' => $a_title, 'icon_name' => 'person-gear', 'content_html' => $cont, 'id' => '7', 'close' => $cltit])
-            .$tpl->getHtmlPart('block-sidebar', ['title' => _WHO, 'icon_name' => 'eye', 'content_html' => getUserSessionAdminInfo(1), 'content_id' => 'repsainfo', 'id' => '8', 'close' => $cltit]);
+            .$tpl->getHtmlPart('block-sidebar', [
+                'title' => _WHO,
+                'icon_name' => 'eye',
+                'content_html' => getUserSessionAdminInfo(1),
+                'content_id' => 'repsainfo',
+                'id' => '8',
+                'close' => $cltit,
+            ]);
     }
     return '';
 }
@@ -4423,6 +4524,7 @@ function getForumLast(array $cats): int {
 # Repair the last message the forum categories advertise, after a removal took one out of a branch
 # Two sets are repaired: whoever pointed at the removed topic, wherever it sat, and the chain above the category it was removed from
 # Matching on the stored value rather than walking from the category the request named is what keeps a parent from being decided by one child
+# The walk up is bounded by the number of categories and the subtree keeps a seen set, so a parent cycle already stored ends instead of hanging every forum write
 function setForumLast(int $cat, int $gone = 0): void {
     global $db;
     $rows = $db->getSqlRows($db->getSqlQuery('SELECT id, parent, lpost FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\'')) ?: [];
@@ -4437,15 +4539,16 @@ function setForumLast(int $cat, int $gone = 0): void {
         $kids[intval($one['parent'])][] = $id;
         if ($gone > 0 && $had[$id] === $gone) $hit[$id] = $id;
     }
-    $walk = $cat;
-    while ($walk > 0 && isset($up[$walk])) {
-        $hit[$walk] = $walk;
-        $walk = $up[$walk];
-    }
+    for ($walk = $cat, $i = 0; $walk > 0 && isset($up[$walk]) && $i <= count($up); $walk = $up[$walk], $i++) $hit[$walk] = $walk;
     foreach ($hit as $id) {
         $sub = [$id];
+        $seen = [$id => true];
         for ($num = 0; $num < count($sub); $num++) {
-            foreach ($kids[$sub[$num]] ?? [] as $one) $sub[] = $one;
+            foreach ($kids[$sub[$num]] ?? [] as $one) {
+                if (isset($seen[$one])) continue;
+                $seen[$one] = true;
+                $sub[] = $one;
+            }
         }
         $want = getForumLast($sub);
         if ($want === $had[$id]) continue;
@@ -4477,11 +4580,19 @@ function getForumTopics(string $cols, string $bclos, int $limit): mixed {
     return $db->getSqlQuery('SELECT '.$cols.' FROM '.PREFIX_DB.'_forum WHERE '.$where." pid = '0' ".$vis.' ORDER BY ltime DESC LIMIT 0, '.$limit);
 }
 
+# Read the product ids of the cart cookie as a comma list, empty when the cookie is missing or holds anything but positive ids
+# The value is base64, which getCookies() would strip of its + / = characters, so the prefixed cookie is read directly
+function getCartCookie(): string {
+    global $conf;
+    $raw = $_COOKIE[$conf['user_c'].'-shop'] ?? '';
+    $ids = is_string($raw) ? base64_decode($raw, true) : false;
+    return (is_string($ids) && preg_match('#^[1-9][0-9]*(,[1-9][0-9]*)*$#', $ids)) ? $ids : '';
+}
+
 # Show cart
 function getCartSummary(string $info = ''): string {
- global $db, $conf, $tpl;
-    $shop = base64_decode((string)($_COOKIE[$conf['user_c'].'-shop'] ?? $_COOKIE['shop'] ?? ''));
-    $info = (empty($info)) ? $shop : base64_decode($info);
+    global $db, $conf, $tpl;
+    $info = ($info === '') ? getCartCookie() : base64_decode($info);
     $cookies = (preg_match('#[^0-9,]#', $info)) ? '' : $info;
     if ($cookies) {
         $massiv = explode(',', $cookies);
@@ -4498,7 +4609,7 @@ function getCartSummary(string $info = ''): string {
         $result = $db->getSqlQuery('SELECT id, time, title, price FROM '.PREFIX_DB.'_products WHERE id IN ('.implode(', ', $pp).')', $pm);
         $rows = '';
         $ptotal = 0;
-        while (list($id, $time, $title, $price) = $db->getSqlRow($result)) {
+        while ([$id, $time, $title, $price] = $db->getSqlRow($result)) {
             $i = 0;
             foreach ($massiv as $val) {
                 if ($val == $id) $i++;
@@ -4529,8 +4640,18 @@ function getCartSummary(string $info = ''): string {
         $footer = $tpl->getHtmlFrag('table-row', [
             'is_cart_foot' => true,
             'cells' => [
-                ['colspan' => 2, 'content_html' => $tpl->getHtmlFrag('link', ['href' => 'index.php?name=shop&op=kasse', 'title' => _SCACH, 'label' => _SCACH, 'is_cart_checkout' => true])],
-                ['colspan' => 3, 'content_html' => $tpl->getHtmlFrag('span', ['title' => _PARTNERGES, 'text' => _PARTNERGES.': '.$ptotal.' '.$conf['shop']['valute'], 'is_cart_total' => true])],
+                [
+                    'colspan' => 2,
+                    'content_html' => $tpl->getHtmlFrag('link', ['href' => 'index.php?name=shop&op=kasse', 'title' => _SCACH, 'label' => _SCACH, 'is_cart_checkout' => true]),
+                ],
+                [
+                    'colspan' => 3,
+                    'content_html' => $tpl->getHtmlFrag('span', [
+                        'title' => _PARTNERGES,
+                        'text' => _PARTNERGES.': '.$ptotal.' '.$conf['shop']['valute'],
+                        'is_cart_total' => true,
+                    ]),
+                ],
             ],
         ]);
         return $tpl->getHtmlFrag('table', [
@@ -4553,8 +4674,7 @@ function getCartSummary(string $info = ''): string {
 function addCartItem(): void {
     global $conf;
     $id = getVar('get', 'id', 'num', 0);
-    $carts = base64_decode((string)($_COOKIE[$conf['user_c'].'-shop'] ?? $_COOKIE['shop'] ?? ''));
-    $cookies = (preg_match('#[^0-9,]#', $carts)) ? '' : $carts;
+    $cookies = getCartCookie();
     $info = '';
     if ($id) {
         $info = ($cookies) ? base64_encode($cookies.','.$id) : base64_encode($id);
@@ -4567,8 +4687,7 @@ function addCartItem(): void {
 function deleteCartItem(): void {
     global $conf;
     $id = getVar('get', 'id', 'num', 0);
-    $carts = base64_decode((string)($_COOKIE[$conf['user_c'].'-shop'] ?? $_COOKIE['shop'] ?? ''));
-    $cookies = (preg_match('#[^0-9,]#', $carts)) ? '' : $carts;
+    $cookies = getCartCookie();
     $info = '';
     if ($id && $cookies) {
         $massiv = explode(',', $cookies);
@@ -4582,7 +4701,7 @@ function deleteCartItem(): void {
         }
         if ($info === '') {
             setCookiesDelete('shop');
-            unset($_COOKIE[$conf['user_c'].'-shop'], $_COOKIE['shop']);
+            unset($_COOKIE[$conf['user_c'].'-shop']);
         } else {
             $info = base64_encode($info);
             setCookies('shop', time() + $conf['shop']['shop_t'], $info);
@@ -4686,7 +4805,7 @@ function getUploadPlaceRule(string $place): array {
 }
 
 # Split the pipe-separated upload configuration of one directory into named rule keys; all twelve are returned even when ok is false, so a caller needing one limit can read it
-# The order is the stored one and the stored strings carry exactly these twelve fields; a rule written short by hand keeps its guest limit at the user one, because zero there means no limit at all
+# The order is the stored one with exactly these twelve fields; a rule written short by hand keeps its guest limit at the user one, because zero there means no limit
 function getUploadRuleData(string $mod): array {
     global $conf;
     $con = isset($conf['uploads'][$mod]) ? explode('|', (string)$conf['uploads'][$mod]) : [];
@@ -4790,7 +4909,7 @@ function getUploadFileArea(array $rule): FileManager {
 
 # Resolve one storage path handed in by the client and answer the stored row only when it exists in that place and belongs to whoever is asking
 # The path arrives from the browser and is never taken on trust: it is read through the place context, so a name reaching outside the directory answers nothing at all
-# Both form handlers outside the editor asked these two questions in their own words, and a guard written twice is a guard that drifts, so the refusal lives here and the wording stays theirs
+# Both form handlers outside the editor asked these two questions in their own words; a guard written twice drifts, so the refusal lives here and the wording stays theirs
 # A module moderator is excused the ownership test alone, which is the same excuse getUploadFileArea() grants for deletion and packing, and never the existence test above it
 function getUploadTakenFile(array $rule, string $take): array {
     $one = getUploadFileArea($rule)->getFileData($take);
@@ -4814,10 +4933,10 @@ function getEditorRouteRule(string $src = 'post'): array {
     return $rul;
 }
 
-# Return one stored editor file row for JSON output: the descriptor of the file layer plus the two strings the window prints, so the client never formats a size or a date of its own
+# Return one stored editor file row for JSON output: the descriptor of the file layer plus the two strings the window prints, so the client never formats a size or a date
 # Which actions a row offers is the capability set of its own descriptor and never a role the window derives again, which is what keeps the interface from computing a permission
 # The absolute server path is absent because the file layer gives an editor context none, and the thumbnail falls back to the file itself so a listing always has one to draw
-# The mode and the account of the stored object travel only to a module moderator, because they answer for the server and not for the text: the author who inserts a picture has no use for either
+# The mode and the account of the stored object travel only to a module moderator: they answer for the server, not the text, and an author inserting a picture needs neither
 # The directory of a registered Node type is closed to direct access, so its rows carry the controlled preview route of the type instead of a file address
 # The bytag flag tells the window that such a file enters a text only as the [attach] tag, which the stored material turns into its own controlled address
 function getEditorFileData(array $one, bool $moder = false, string $mod = ''): array {
@@ -5281,7 +5400,87 @@ function from_bot(): int|string {
 
 # Check referer from Search Engines
 function engines_word(string $refer): string {
-    $engines = ['images.google.' => ['q', 'prev'], 'bing.com' => 'q', '.alot.' => 'q', 'a993.com' => 'q1', 'abcsok.' => 'q', 'alltheweb.' => 'q', 'altavista.' => 'q', 'aol.' => ['q', 'query', 'encquery'], 'aolsvc.' => 'query', 'avantfind.com' => 'keywords', 'bonvote.com' => 'search', 'bonweb.com' => 'search', 'comcast.net' => 'q', 'conduit.' => 'q', 'eniro.se' => 'search_word', 'excite.' => 'search', 'google.' => ['q', 'as_q'], 'gogo.ru' => 'q', 'yandex.' => ['text', 'query'], 'ya.ru' => 'text', 'hotbot.' => 'query', 'icerocket.com' => 'q', 'icq.com' => 'q', 'isheyka.com' => 'q', 'midco.net' => 'q', 'live.com' => 'q', 'msn.' => 'q', 'yahoo.' => ['p', 'k'], 'search.' => 'q', 'kvasir.no' => 'q', 'myway.com' => 'searchfor', 'netscape.' => ['q', 'query'], 'oceanfree.net' => 'as_q', 'qip.ru' => 'query', 'sweetim.com' => 'q', 'tut.by' => 'query', 'ukr.net' => 'search_query', 'search.oboz.ua' => 'k', 'search.www.infoseek.co.jp' => 'qt', '.setooz.com' => 'query', 'toile.com' => 'q', 'vinden.nl' => 'q', '.i.ua' => 'q', '.mail.ru' => ['q', 'tag'], '.onru.ru' => 'q', 'aport.ru' => 'r', 'find.ru' => 'text', 'gde.ru' => ['keywords', 'query', 't', 'search_query', 'id'], 'go.km.ru' => 'sq', 'meta.ua' => 'q', 'metabot.ru' => 'st', 'nerus.ru' => 'query', 'nigma.ru' => ['s', 'pq'], 'nova.rambler.ru' => 'query', 'poisk.ru' => 'text', 'protonet.ru' => 'q', 'rambler.ru' => 'query', 'tyndex.ru' => 'pnam', 'webalta.ru' => 'q', 'exactseek.com' => ['q', 'query'], 'lycos.' => 'query', 'ask.' => 'q', 'cnn.' => 'query', 'looksmart.' => 'qt', 'about.' => 'terms', 'mamma.' => 'query', 'gigablast.' => 'q', 'voila.' => 'rdata', 'virgilio.' => 'qs', 'baidu.' => 'wd', 'alice.' => 'qs', 'najdi.' => 'q', 'club-internet.' => 'q', 'mama.' => 'query', 'seznam.' => 'q', 'netsprint.' => 'q', 'szukacz.' => 'q', 'yam.' => 'k', 'pchome.' => 'q'];
+    $engines = [
+        'images.google.' => ['q', 'prev'],
+        'bing.com' => 'q',
+        '.alot.' => 'q',
+        'a993.com' => 'q1',
+        'abcsok.' => 'q',
+        'alltheweb.' => 'q',
+        'altavista.' => 'q',
+        'aol.' => ['q', 'query', 'encquery'],
+        'aolsvc.' => 'query',
+        'avantfind.com' => 'keywords',
+        'bonvote.com' => 'search',
+        'bonweb.com' => 'search',
+        'comcast.net' => 'q',
+        'conduit.' => 'q',
+        'eniro.se' => 'search_word',
+        'excite.' => 'search',
+        'google.' => ['q', 'as_q'],
+        'gogo.ru' => 'q',
+        'yandex.' => ['text', 'query'],
+        'ya.ru' => 'text',
+        'hotbot.' => 'query',
+        'icerocket.com' => 'q',
+        'icq.com' => 'q',
+        'isheyka.com' => 'q',
+        'midco.net' => 'q',
+        'live.com' => 'q',
+        'msn.' => 'q',
+        'yahoo.' => ['p', 'k'],
+        'search.' => 'q',
+        'kvasir.no' => 'q',
+        'myway.com' => 'searchfor',
+        'netscape.' => ['q', 'query'],
+        'oceanfree.net' => 'as_q',
+        'qip.ru' => 'query',
+        'sweetim.com' => 'q',
+        'tut.by' => 'query',
+        'ukr.net' => 'search_query',
+        'search.oboz.ua' => 'k',
+        'search.www.infoseek.co.jp' => 'qt',
+        '.setooz.com' => 'query',
+        'toile.com' => 'q',
+        'vinden.nl' => 'q',
+        '.i.ua' => 'q',
+        '.mail.ru' => ['q', 'tag'],
+        '.onru.ru' => 'q',
+        'aport.ru' => 'r',
+        'find.ru' => 'text',
+        'gde.ru' => ['keywords', 'query', 't', 'search_query', 'id'],
+        'go.km.ru' => 'sq',
+        'meta.ua' => 'q',
+        'metabot.ru' => 'st',
+        'nerus.ru' => 'query',
+        'nigma.ru' => ['s', 'pq'],
+        'nova.rambler.ru' => 'query',
+        'poisk.ru' => 'text',
+        'protonet.ru' => 'q',
+        'rambler.ru' => 'query',
+        'tyndex.ru' => 'pnam',
+        'webalta.ru' => 'q',
+        'exactseek.com' => ['q', 'query'],
+        'lycos.' => 'query',
+        'ask.' => 'q',
+        'cnn.' => 'query',
+        'looksmart.' => 'qt',
+        'about.' => 'terms',
+        'mamma.' => 'query',
+        'gigablast.' => 'q',
+        'voila.' => 'rdata',
+        'virgilio.' => 'qs',
+        'baidu.' => 'wd',
+        'alice.' => 'qs',
+        'najdi.' => 'q',
+        'club-internet.' => 'q',
+        'mama.' => 'query',
+        'seznam.' => 'q',
+        'netsprint.' => 'q',
+        'szukacz.' => 'q',
+        'yam.' => 'k',
+        'pchome.' => 'q',
+    ];
 
     $refer= str_replace(['&#038;', '&amp;'], '&', $refer);
     $tmp = parse_url(urldecode(trim($refer)));
@@ -5322,13 +5521,16 @@ function is_user(string $usr = ''): int {
         $ip = getIp();
         if ($uid != '' && $pwd != '') {
             if ($conf['users']['check'] == '0') {
-                list($pass) = $db->getSqlRow($db->getSqlQuery('SELECT password FROM '.PREFIX_DB.'_users WHERE id = :uid AND name = :name', ['uid' => $uid, 'name' => $una]));
+                [$pass] = $db->getSqlRow($db->getSqlQuery('SELECT password FROM '.PREFIX_DB.'_users WHERE id = :uid AND name = :name', ['uid' => $uid, 'name' => $una]));
                 if ($pass != '' && hash_equals($pass, $pwd)) {
                     $usertrue = 1;
                     return 1;
                 }
             } else {
-                list($pass, $userip) = $db->getSqlRow($db->getSqlQuery('SELECT password, ip FROM '.PREFIX_DB.'_users WHERE id = :uid AND name = :name', ['uid' => $uid, 'name' => $una]));
+                [$pass, $userip] = $db->getSqlRow($db->getSqlQuery(
+                    'SELECT password, ip FROM '.PREFIX_DB.'_users WHERE id = :uid AND name = :name',
+                    ['uid' => $uid, 'name' => $una]
+                ));
                 if ($pass != '' && hash_equals($pass, $pwd) && $userip != '' && $userip == $ip) {
                     $usertrue = 1;
                     return 1;
@@ -5349,7 +5551,7 @@ function is_user(string $usr = ''): int {
 function is_user_id(string $name): int {
  global $db;
     $name = filterText(substr($name, 0, 25));
-    list($uid) = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $name]));
+    [$uid] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $name]));
     return intval($uid);
 }
 
@@ -5390,9 +5592,9 @@ function is_admin_modul(string $modul): int {
         [$modules] = $db->getSqlRow($db->getSqlQuery('SELECT modules FROM '.PREFIX_DB.'_admins WHERE id = :id', ['id' => $aid]));
         $modules = $modules ?? '';
         $names = getAdminModuleNames($modules);
-        $new_modules = implode(',', $names);
-        if ($new_modules !== $modules) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_admins SET modules = :modules WHERE id = :id', ['modules' => $new_modules, 'id' => $aid]);
+        $clean = implode(',', $names);
+        if ($clean !== $modules) {
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_admins SET modules = :modules WHERE id = :id', ['modules' => $clean, 'id' => $aid]);
         }
         $amodules[$aid] = $names ? array_fill_keys($names, 1) : [];
     }
@@ -5422,7 +5624,7 @@ function getUserList(): void {
     if ($let) {
         $sql = 'SELECT name FROM '.PREFIX_DB.'_users WHERE name LIKE :name ORDER BY name ASC LIMIT '.($rich ? 10 : 50);
         $result = $db->getSqlQuery($sql, ['name' => $let.'%']);
-        while (list($uname) = $db->getSqlRow($result)) $name[] = $uname;
+        while ([$uname] = $db->getSqlRow($result)) $name[] = $uname;
     }
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode($rich ? ['items' => $name, 'card' => getUserCardData($let) ?: null] : $name, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -5524,7 +5726,7 @@ function diff_dump(array $dump, array $old, array $skip = []): array|false {
     $log = [];
     $skip = array_map(static fn($path): string => trim(str_replace('\\', '/', (string)$path), '/'), $skip);
     foreach ($old as $string) {
-        list($location, $md5) = explode('||', trim($string));
+        [$location, $md5] = explode('||', trim($string));
         $relative = ltrim(str_replace('\\', '/', $location), './');
         $ignore = false;
         foreach ($skip as $path) {
@@ -5577,7 +5779,7 @@ function addFilescanTask(): array {
     $state['running'] = 1;
     $state['started_at'] = $now;
     if (!isset($state['last_run'])) $state['last_run'] = 0;
-    file_put_contents($sess_f, json_encode($state, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX);
+    Cache::setBody($sess_f, json_encode($state, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
     $safe = ini_get('safe_mode') == '1' ? 1 : 0;
     if (!$safe && function_exists('set_time_limit')) set_time_limit(600);
 
@@ -5613,7 +5815,7 @@ function addFilescanTask(): array {
     $state['last_count'] = count($dump);
     $state['last_size'] = file_exists($dumpp) ? (int)filesize($dumpp) : 0;
     $state['last_changes'] = is_array($log) ? count($log) : 0;
-    file_put_contents($sess_f, json_encode($state, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX);
+    Cache::setBody($sess_f, json_encode($state, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
     if ($conf['security']['mail_d']) {
         $mail = '';
         foreach (($log ?: [_NO]) as $line) {
@@ -5661,7 +5863,10 @@ function addLoginReport(int $id, int $typ, string $login, string $pass): void {
             if (filesize($path) > $conf['security']['log_size']) {
                 addCompress(LOGS_DIR, $path, 'log_'.$id.'_'.date('Y-m-d_H-i').'.log', 'auto', true);
             }
-            fwrite($fhandle, _INPUT.': '.$typ."\n"._IP.': '.$ip.$login.$lpass.$ladmin.$luser."\n"._URL.': '.$url."\n"._BROWSER.': '.$agent."\n"._DATE.': '.date(_TIMESTRING)."\n---\n");
+            fwrite(
+                $fhandle,
+                _INPUT.': '.$typ."\n"._IP.': '.$ip.$login.$lpass.$ladmin.$luser."\n"._URL.': '.$url."\n"._BROWSER.': '.$agent."\n"._DATE.': '.date(_TIMESTRING)."\n---\n"
+            );
             fclose($fhandle);
         }
     }
@@ -5686,8 +5891,10 @@ function is_acess(string $ids): bool {
                     $pp[] = ':'.$ph;
                     $pm[$ph] = $gid;
                 }
-                $sql = 'SELECT COUNT(u.id) FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON ((g.extra = 1 AND u.grp = g.id) OR (g.extra != 1 AND u.points >= g.points)) WHERE u.id = :uid AND g.id IN ('.implode(', ', $pp).')';
-                list($uid) = $db->getSqlRow($db->getSqlQuery($sql, $pm));
+                $sql = 'SELECT COUNT(u.id) FROM '.PREFIX_DB.'_users AS u'
+                    .' LEFT JOIN '.PREFIX_DB.'_groups AS g ON ((g.extra = 1 AND u.grp = g.id) OR (g.extra != 1 AND u.points >= g.points))'
+                    .' WHERE u.id = :uid AND g.id IN ('.implode(', ', $pp).')';
+                [$uid] = $db->getSqlRow($db->getSqlQuery($sql, $pm));
             } else {
                 $uid = 0;
             }
@@ -5717,7 +5924,7 @@ function catids(string $mod = '', int $id = 0): string {
     }
     $result = $db->getSqlQuery('SELECT id, parent FROM '.PREFIX_DB.'_categories '.$where, $params);
     if ($db->getSqlRowCount($result) > 0) {
-        while (list($cid, $parentid) = $db->getSqlRow($result)) $massiv[$cid] = [$parentid];
+        while ([$cid, $parentid] = $db->getSqlRow($result)) $massiv[$cid] = [$parentid];
         foreach ($massiv as $key => $val) {
             $cont[$key] = $key;
             $flag = $val[0];
@@ -5743,7 +5950,7 @@ function catmids(string $modul, string $field): string {
         $params = ['modul' => $modul];
     }
     $result = $db->getSqlQuery('SELECT id, pread FROM '.PREFIX_DB.'_categories '.$where.' ORDER BY id', $params);
-    while (list($cid, $pread) = $db->getSqlRow($result)) if (is_acess($pread)) $catid[] = $cid;
+    while ([$cid, $pread] = $db->getSqlRow($result)) if (is_acess($pread)) $catid[] = $cid;
     return isset($catid) ? 'AND '.$field.' IN ('.implode(', ', $catid).')' : '';
 }
 
@@ -5990,10 +6197,9 @@ function getNodeTitleMap(array $refs): array {
     $out = [];
     $refs = array_filter($refs, fn(mixed $v): bool => is_string($v) && isset($conf['node']['types'][$v]));
     if (!$refs) return $out;
-    $size = max(1, min(500, intval($conf['node']['limits']['syncbatch'] ?? 500)));
     try {
         $query = getNodeReader();
-        foreach (array_chunk($refs, $size, true) as $part) foreach ($query->getNodeTargetList($part) as $id => $tgt) $out[$id] = $tgt->title;
+        foreach (array_chunk($refs, $query->getTargetSize(), true) as $part) foreach ($query->getNodeTargetList($part) as $id => $tgt) $out[$id] = $tgt->title;
     } catch (NodeException $err) {
         Logger::addSite('error', 'Node: the titles of targets cannot be read', ['code' => $err->getCode()]);
     }
@@ -6140,7 +6346,7 @@ function getRatingView(): void {
     }
     $tok = getVar('post', 'token', 'raw', '');
     $codes = ['invalid' => [422, _RATINGS_FORM], 'denied' => [403, _RATINGS_DENY], 'unavailable' => [404, _RATINGS_GONE], 'conflict' => [409, _RATINGS_TWICE]];
-    $codes['storage'] = [500, _RATINGS_FAIL];
+    $codes += ['storage' => [500, _RATINGS_FAIL], 'blocked' => [503, _RATINGS_OFF]];
     $res = [];
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
         header('Allow: POST');
@@ -6241,16 +6447,23 @@ function updateVotingResult(): void {
             $cookies = (isset($_COOKIE[$cmod])) ? intval($_COOKIE[$cmod]) : '';
             $uid = (is_user()) ? intval(substr($user[0], 0, 11)) : 0;
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB."_rating WHERE time < :past AND modul = 'voting'", ['past' => $past]);
-            list($num) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB."_rating WHERE (mid = :id AND modul = 'voting' AND ip = :ip) OR (mid = :id2 AND modul = 'voting' AND uid = :uid AND uid != '0')", ['id' => $id, 'ip' => $ip, 'id2' => $id, 'uid' => $uid]));
+            [$num] = $db->getSqlRow($db->getSqlQuery(
+                'SELECT COUNT(id) FROM '.PREFIX_DB."_rating WHERE (mid = :id AND modul = 'voting' AND ip = :ip)"
+                ." OR (mid = :id2 AND modul = 'voting' AND uid = :uid AND uid != '0')",
+                ['id' => $id, 'ip' => $ip, 'id2' => $id, 'uid' => $uid]
+            ));
             if ($cookies == $id || $num > 0) {
                 $meta = $tpl->getHtmlFrag('meta-refresh', ['secs' => '3', 'url' => 'index.php?name=voting&op=view&id='.$id]);
                 $cont = $tpl->getHtmlFrag('alert', ['text' => _SEROR2, 'meta' => $meta, 'type' => 'warn', 'is_warn' => true]);
             } else {
                 setcookie(substr('voting', 0, 2).'-'.$id, $id, time() + intval($conf['voting']['voting_t']));
                 $new = time();
-                $inserted = $db->getSqlQuery('INSERT INTO '.PREFIX_DB."_rating (mid, modul, time, uid, ip) VALUES (:mid, 'voting', :time, :uid, :ip)", ['mid' => $id, 'time' => $new, 'uid' => $uid, 'ip' => $ip]);
+                $inserted = $db->getSqlQuery(
+                    'INSERT INTO '.PREFIX_DB."_rating (mid, modul, time, uid, ip) VALUES (:mid, 'voting', :time, :uid, :ip)",
+                    ['mid' => $id, 'time' => $new, 'uid' => $uid, 'ip' => $ip]
+                );
                 if ($inserted) {
-                    list($answer) = $db->getSqlRow($db->getSqlQuery('SELECT answer FROM '.PREFIX_DB.'_voting WHERE id = :id', ['id' => $id]));
+                    [$answer] = $db->getSqlRow($db->getSqlQuery('SELECT answer FROM '.PREFIX_DB.'_voting WHERE id = :id', ['id' => $id]));
                     $answer = explode('|', $answer);
                     for ($q = 0; $q < count($answer); $q++) {
                         if ($answer[$q] != '') {

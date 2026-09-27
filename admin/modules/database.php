@@ -92,7 +92,8 @@ function getSqlsum(array $items, string $mode, string $name): string {
     return $tpl->getHtmlFrag('alert', ['messages' => $lines]);
 }
 
-
+# List every table of the site database with engine, collation, rows, size and free space; the optimize and repair tabs run that action on each table instead of the actions menu
+# InnoDB free space is shown dimmed because optimizing does not reclaim it, and after an optimize run the totals of the info box are counted again from a fresh table status
 function database(): void {
     global $db, $conf, $afile, $tpl;
     $type = getVar('get', 'type', 'var');
@@ -112,14 +113,11 @@ function database(): void {
     while ($info = $db->getSqlRow($result)) {
         $tables[] = $info;
     }
-
     $total = 0;
     $sumfree = 0;
     $allrows = 0;
     $item = 0;
-
     $dbrows = [];
-
     foreach ($tables as $info) {
         $name = $info['Name'];
         $tabeng = $info['Engine'];
@@ -129,27 +127,19 @@ function database(): void {
         $res = $db->getSqlQuery('SELECT COUNT(*) AS cnt FROM `'.$dbname.'`.`'.$name.'`');
         if ($res && $row = $db->getSqlRow($res)) $rows = (int) $row['cnt'];
         $allrows += $rows;
-
-        // --- Table and free space size ---
         $tabsize = (int) $info['Data_length'] + (int) $info['Index_length'];
         $tabfree = (int) ($info['Data_free'] ?: 0);
-
         $total += $tabsize;
         $sumfree += $tabfree;
-
-        // Free space display
         $freetag = $tabeng === 'InnoDB'
             ? $tpl->getHtmlFrag('inline-badge', ['is_dimmed' => true, 'label' => filterSize($tabfree)])
             : $tpl->getHtmlFrag('inline-badge', ['is_danger' => (bool)$tabfree, 'is_success' => !$tabfree, 'label' => filterSize($tabfree)]);
-
-        // --- Status / actions depending on mode ---
         if (!preg_match('#^[a-zA-Z0-9_]+$#', (string)$name)) {
             continue;
         }
         if ($type === 'optimize') {
             $db->getSqlQuery('ANALYZE TABLE `'.$dbname.'`.`'.$name.'`');
             $oresult = $db->getSqlQuery('OPTIMIZE TABLE `'.$dbname.'`.`'.$name.'`');
-
             if (!$oresult) {
                 $stattag = $tpl->getHtmlFrag('inline-badge', ['is_danger' => true, 'label' => _ERROR]);
             } elseif ($tabeng === 'InnoDB') {
@@ -159,7 +149,6 @@ function database(): void {
             } else {
                 $stattag = $tpl->getHtmlFrag('inline-badge', ['is_success' => true, 'label' => _OPTIMIZED]);
             }
-
         } elseif ($type === 'repair') {
             if ($tabeng === 'InnoDB') {
                 $stattag = $tpl->getHtmlFrag('inline-badge', ['is_dimmed' => true, 'label' => _NO]);
@@ -167,9 +156,7 @@ function database(): void {
                 $rresult = $db->getSqlQuery('REPAIR TABLE `'.$dbname.'`.`'.$name.'`');
                 $stattag = $tpl->getHtmlFrag('inline-badge', ['is_success' => (bool)$rresult, 'is_danger' => !$rresult, 'label' => $rresult ? _OK : _ERROR]);
             }
-
         } else {
-            // Default view with actions
             $stattag = $tpl->getHtmlFrag('dial', [
                 'dial_title' => _EDITOR,
                 'dial' => [
@@ -178,9 +165,7 @@ function database(): void {
                 ],
             ]);
         }
-
         $item++;
-
         $dbrows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
                 ['is_col_id' => true, 'content_html' => (string)$item],
@@ -195,7 +180,6 @@ function database(): void {
             ],
         ])]);
     }
-
     $dbrows[] = $tpl->getHtmlFrag('table-row', [
         'is_no_sort' => true,
         'cells_html' => $tpl->getHtmlFrag('table-cells', [
@@ -228,43 +212,32 @@ function database(): void {
         'rows_html' => implode('', $dbrows),
         'is_wrapless' => true,
     ]);
-
-    // After OPTIMIZE: Totals to recalculate info box
     if ($type === 'optimize') {
         $result = $db->getSqlQuery('SHOW TABLE STATUS FROM `'.$dbname.'`');
         $total = 0;
         $sumfree = 0;
-
         while ($info = $db->getSqlRow($result)) {
             $tabsize = (int) $info['Data_length'] + (int) $info['Index_length'];
             $tabfree = (int) ($info['Data_free'] ?: 0);
-
             $total += $tabsize;
             $sumfree += $tabfree;
         }
     }
-
     setHead();
-
-    // Navigation + Info-Boxen
     if (empty($type)) {
         $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _OPTTEXT]);
         $cont .= $tpl->getHtmlFrag('alert', ['text' => _REPTEXT]);
-
     } elseif ($type === 'optimize') {
         $db->getSqlQuery('FLUSH TABLES');
         $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 1]);
-
         $cont .= $tpl->getHtmlFrag('alert', ['messages' => [
             _OPTIMIZE.': '.$conf['db']['name'],
             _TOTALSPACE.': '.filterSize($total),
             _TOTALFREE.': '.filterSize($sumfree),
         ]]);
-
     } elseif ($type === 'repair') {
         $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 2]);
-
         $cont .= $tpl->getHtmlFrag('alert', ['messages' => [
             _REPAIR.': '.$conf['db']['name'],
             _TOTALSPACE.': '.filterSize($total),
@@ -273,9 +246,7 @@ function database(): void {
     } else {
         $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs]);
     }
-
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $content]);
-
     setFoot();
 }
 

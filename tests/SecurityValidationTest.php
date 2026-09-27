@@ -1,11 +1,8 @@
 <?php
-/**
- * Тест безопасности кода
- * Проверяет использование безопасных методов работы с данными
- */
 
 use PHPUnit\Framework\TestCase;
 
+# Checks the code for unsafe handling of user data, dangerous calls and deprecated legacy APIs
 class SecurityValidationTest extends TestCase
 {
     private static string $basePath;
@@ -17,21 +14,16 @@ class SecurityValidationTest extends TestCase
         self::scanPhpFiles();
     }
 
-    /**
-     * Сканирует PHP файлы проекта
-     */
+    # Collects the PHP files of the project outside vendor, tests, setup and plugins
     private static function scanPhpFiles(): void
     {
-        $iterator = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator(self::$basePath, RecursiveDirectoryIterator::SKIP_DOTS)
-        );
+        $iterator = getTreeFiles(self::$basePath);
 
         foreach ($iterator as $file) {
             if ($file->getExtension() !== 'php') continue;
 
             $path = $file->getPathname();
 
-            // Пропускаем vendor, tests, setup
             if (preg_match('#[/\\\\](vendor|tests|setup|plugins)[/\\\\]#', $path)) {
                 continue;
             }
@@ -40,9 +32,7 @@ class SecurityValidationTest extends TestCase
         }
     }
 
-    /**
-     * Проверяет прямое использование $_GET/$_POST в SQL запросах
-     */
+    # Checks that no sql_query() call uses $_GET, $_POST or $_REQUEST directly
     public function testNoDirectSuperglobalsInSql(): void
     {
         $errors = [];
@@ -52,7 +42,6 @@ class SecurityValidationTest extends TestCase
             $lines = explode("\n", $content);
 
             foreach ($lines as $lineNum => $line) {
-                // Ищем SQL запросы с прямым использованием суперглобальных переменных
                 if (preg_match('/sql_query\s*\([^)]*\$_(GET|POST|REQUEST)\s*\[/', $line)) {
                     $errors[] = sprintf(
                         '%s:%d - прямое использование $_%s в SQL запросе',
@@ -70,9 +59,7 @@ class SecurityValidationTest extends TestCase
         );
     }
 
-    /**
-     * Проверяет использование нефильтрованных данных в include/require
-     */
+    # Checks that include/require never takes unfiltered $_GET, $_POST or $_REQUEST data
     public function testNoUserInputInIncludes(): void
     {
         $errors = [];
@@ -82,7 +69,6 @@ class SecurityValidationTest extends TestCase
             $lines = explode("\n", $content);
 
             foreach ($lines as $lineNum => $line) {
-                // Ищем include/require с прямым использованием $_GET/$_POST
                 if (preg_match('/(include|require)(_once)?\s*\(?[^;]*\$_(GET|POST|REQUEST)\s*\[/', $line)) {
                     $errors[] = sprintf(
                         '%s:%d - пользовательские данные в include/require',
@@ -99,9 +85,7 @@ class SecurityValidationTest extends TestCase
         );
     }
 
-    /**
-     * Проверяет использование eval() с пользовательскими данными
-     */
+    # Checks that eval() is never called with a variable
     public function testNoEvalWithUserInput(): void
     {
         $errors = [];
@@ -111,7 +95,6 @@ class SecurityValidationTest extends TestCase
             $lines = explode("\n", $content);
 
             foreach ($lines as $lineNum => $line) {
-                // Ищем eval с переменными
                 if (preg_match('/\beval\s*\(\s*\$/', $line)) {
                     $errors[] = sprintf(
                         '%s:%d - использование eval() с переменной',
@@ -128,9 +111,7 @@ class SecurityValidationTest extends TestCase
         );
     }
 
-    /**
-     * Проверяет использование shell_exec/exec/system с пользовательскими данными
-     */
+    # Checks that shell_exec, exec, system, passthru and popen never take $_GET, $_POST or $_REQUEST data
     public function testNoShellExecWithUserInput(): void
     {
         $errors = [];
@@ -140,7 +121,6 @@ class SecurityValidationTest extends TestCase
             $lines = explode("\n", $content);
 
             foreach ($lines as $lineNum => $line) {
-                // Ищем shell функции с суперглобальными переменными
                 if (preg_match('/(shell_exec|exec|system|passthru|popen)\s*\([^)]*\$_(GET|POST|REQUEST)\s*\[/', $line)) {
                     $errors[] = sprintf(
                         '%s:%d - пользовательские данные в shell команде',
@@ -157,9 +137,7 @@ class SecurityValidationTest extends TestCase
         );
     }
 
-    /**
-     * Проверяет использование htmlspecialchars/htmlentities для вывода
-     */
+    # Reports echo of $_GET, $_POST or $_REQUEST data without escaping; informational, it does not fail the test
     public function testEchoWithoutEscaping(): void
     {
         $warnings = [];
@@ -170,9 +148,7 @@ class SecurityValidationTest extends TestCase
             $lines = explode("\n", $content);
 
             foreach ($lines as $lineNum => $line) {
-                // Ищем echo с прямым выводом $_GET/$_POST
                 if (preg_match('/echo\s+[^;]*\$_(GET|POST|REQUEST)\s*\[/', $line)) {
-                    // Проверяем есть ли экранирование
                     if (!preg_match('/htmlspecialchars|htmlentities|text_filter|var_filter/', $line)) {
                         $warnings[] = sprintf(
                             '%s:%d - вывод пользовательских данных без экранирования',
@@ -186,13 +162,10 @@ class SecurityValidationTest extends TestCase
             }
         }
 
-        // Это информационное - не фейлим тест
         $this->assertTrue(true, 'Информация: '.count($warnings).' мест требуют ручной проверки на XSS');
     }
 
-    /**
-     * Проверяет использование prepared statements в SQL
-     */
+    # Reports sql_query() calls without a parameter array whose query string holds variables, at most 20; informational, it does not fail
     public function testSqlQueriesUseParameters(): void
     {
         $warnings = [];
@@ -201,14 +174,12 @@ class SecurityValidationTest extends TestCase
         foreach (self::$phpFiles as $file) {
             $content = file_get_contents($file);
 
-            // Ищем sql_query без второго параметра (массива) но с переменными в строке
             preg_match_all('/sql_query\s*\(\s*(["\'][^"\']*\$[^"\']*["\']|["\'].*?["\']\..*?)\s*\)(?!\s*,)/s', $content, $matches, PREG_OFFSET_CAPTURE);
 
             foreach ($matches[0] as $match) {
                 $query = $match[0];
                 $offset = $match[1];
 
-                // Проверяем что есть переменные в запросе
                 if (preg_match('/\$\w+/', $query)) {
                     $line = substr_count(substr($content, 0, $offset), "\n") + 1;
 
@@ -223,20 +194,16 @@ class SecurityValidationTest extends TestCase
             }
         }
 
-        // Ограничиваем вывод
         if (count($warnings) > $maxWarnings) {
             $total = count($warnings);
             $warnings = array_slice($warnings, 0, $maxWarnings);
             $warnings[] = '... и ещё '.($total - $maxWarnings).' подобных случаев';
         }
 
-        // Это информационное - не фейлим тест
         $this->assertTrue(true, 'Информация: '.count($warnings).' SQL запросов требуют ручной проверки');
     }
 
-    /**
-     * Проверяет что include/require не используются внутри функций
-     */
+    # Reports include/require inside functions to STDERR; informational only, in legacy SLAED these are common and need staged migration
     public function testNoIncludesInsideFunctions(): void
     {
         $warnings = [];
@@ -311,26 +278,17 @@ class SecurityValidationTest extends TestCase
             "Include/require inside functions audit: найдено {$total} случаев\n".implode("\n", $warnings)."\n"
         );
 
-        // Informational only: in legacy SLAED these patterns are common and require staged migration.
         $this->assertTrue(true, "Информация: {$total} include/require внутри функций требуют поэтапной миграции");
     }
 
-    /**
-     * Проверяет что PHP файлы найдены
-     */
+    # Checks that PHP files were found and that there are more than 50 of them
     public function testPhpFilesFound(): void
     {
         $this->assertNotEmpty(self::$phpFiles, 'PHP файлы не найдены');
         $this->assertGreaterThan(50, count(self::$phpFiles), 'Найдено слишком мало PHP файлов');
     }
 
-    /**
-     * Проверяет отсутствие устаревших API-вызовов и legacy-переменных.
-     *
-     * Учитывает только реальный PHP-код:
-     * - не считает комментарии и строки;
-     * - не считает объявления функций как вызовы.
-     */
+    # Checks for deprecated API calls, callbacks and legacy variables in real PHP code, ignoring comments, strings and function declarations
     public function testNoDeprecatedLegacyApis(): void
     {
         $deprecatedCalls = [
@@ -434,12 +392,7 @@ class SecurityValidationTest extends TestCase
         );
     }
 
-    /**
-     * Возвращает следующий/предыдущий значимый токен.
-     * $direction: 1 (вперёд), -1 (назад)
-     *
-     * @return array|string|null
-     */
+    # Returns the next (direction 1) or previous (direction -1) significant token skipping whitespace and comments: an array, a string or null
     private function nextSignificantToken(array $tokens, int $index, int $direction)
     {
         $i = $index + $direction;

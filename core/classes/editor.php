@@ -55,7 +55,7 @@ class Editor {
     # Settle the accessible name of one editor once, so four drivers cannot answer it four ways and none of them has to guess
     # A caption of its own row is pointed at, because a reference follows the caption when it changes; a row with no caption at all is named by its own text instead
     # An empty target is a worse answer than no attribute, since the name computes to the empty string with the attribute visibly in place, so the text can never be empty here
-    # The text is kept beside the reference and not instead of it: TinyMCE puts its editable in a second document, where an IDREF resolves to nothing, and only a copy of the text crosses that boundary
+    # The text is kept beside the reference, not instead of it: TinyMCE puts its editable in a second document where an IDREF resolves to nothing, so only a text copy crosses
     private static function getNameData(array $data): array {
         $data['labelledby'] = (string)($data['labelledby'] ?? '');
         $data['label'] = (string)($data['label'] ?? '');

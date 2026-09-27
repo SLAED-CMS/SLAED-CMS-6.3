@@ -38,7 +38,8 @@ function getCpuLoad(int $tcache = 2): array {
     };
     if (stristr(PHP_OS, 'WIN')) {
         $out = [];
-        $cmd = 'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "(Get-CimInstance Win32_Processor -ErrorAction SilentlyContinue | Measure-Object -Property LoadPercentage -Average).Average"';
+        $cmd = 'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command'
+            .' "(Get-CimInstance Win32_Processor -ErrorAction SilentlyContinue | Measure-Object -Property LoadPercentage -Average).Average"';
         if (function_exists('exec')) exec($cmd, $out);
         if (!empty($out)) {
             $val = str_replace(',', '.', trim($out[0]));
@@ -169,7 +170,11 @@ function getMemoryInfoWindows(): array {
     $free = 0;
     $total = 0;
     $ps = [];
-    if (function_exists('exec')) exec('powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "(Get-CimInstance Win32_OperatingSystem | Select-Object TotalVisibleMemorySize,FreePhysicalMemory | Format-List)"', $ps);
+    if (function_exists('exec')) exec(
+        'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command'
+        .' "(Get-CimInstance Win32_OperatingSystem | Select-Object TotalVisibleMemorySize,FreePhysicalMemory | Format-List)"',
+        $ps
+    );
     foreach ($ps as $line) {
         if (str_contains($line, 'TotalVisibleMemorySize')) {
             $parts = explode(':', $line, 2);
@@ -254,7 +259,11 @@ function getCpuCores(): int {
     $cores = 0;
     if (str_starts_with(strtoupper(PHP_OS), 'WIN')) {
         $out = [];
-        if (function_exists('exec')) exec('powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "(Get-CimInstance Win32_Processor | Measure-Object -Property NumberOfLogicalProcessors -Sum).Sum"', $out);
+        if (function_exists('exec')) exec(
+            'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command'
+            .' "(Get-CimInstance Win32_Processor | Measure-Object -Property NumberOfLogicalProcessors -Sum).Sum"',
+            $out
+        );
         if (!empty($out)) {
             $val = trim((string)$out[0]);
             if (is_numeric($val)) $cores = (int)$val;
@@ -399,7 +408,7 @@ function setMetricStore(array $data): void {
     $dir = dirname($file);
     if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) return;
     if (!is_writable($dir)) return;
-    file_put_contents($file, json_encode($data, JSON_UNESCAPED_UNICODE), LOCK_EX);
+    Cache::setBody($file, json_encode($data, JSON_UNESCAPED_UNICODE));
 }
 
 # Appends a rounded metric value to history and trims array length to the configured maximum
@@ -517,7 +526,11 @@ function getUptimeInfo(): string {
         }
     } elseif (function_exists('exec')) {
         $out = [];
-        exec("powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"(Get-CimInstance Win32_OperatingSystem).LastBootUpTime.ToString('yyyy-MM-dd HH:mm:ss')\"", $out);
+        exec(
+            'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command'
+            ." \"(Get-CimInstance Win32_OperatingSystem).LastBootUpTime.ToString('yyyy-MM-dd HH:mm:ss')\"",
+            $out
+        );
         $boot = trim((string)($out[0] ?? ''));
         $bootts = $boot !== '' ? strtotime($boot) : false;
         if ($bootts !== false) {

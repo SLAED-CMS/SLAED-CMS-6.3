@@ -693,6 +693,7 @@ function getNodeTypeVals(?NodeType $type, ?array $prof): array {
 }
 
 # Read the posted type form into the effective settings and the input the service takes; fields, uploads and rating stay those of the stored type or the defaults
+# The report switch of a role counts only in the modes download and link, the two that offer the report form, because the form hides it in any other
 # The extension settings stay those of the stored type or of the shipped profile the new type starts from
 # A public workflow for guests without moderation is taken only with its explicit confirmation, because every visitor would then publish directly
 function getNodeTypePost(?NodeType $old, ?array $prof): array {
@@ -723,7 +724,7 @@ function getNodeTypePost(?NodeType $old, ?array $prof): array {
             'min' => (int)($row['min'] ?? 0),
             'max' => (int)($row['max'] ?? 1),
             'canlink' => ($row['canlink'] ?? '') === '1',
-            'report' => ($row['report'] ?? '') === '1',
+            'report' => ($row['report'] ?? '') === '1' && in_array($row['mode'] ?? '', ['download', 'link'], true),
             'mode' => (string)($row['mode'] ?? ''),
             'active' => ($row['active'] ?? '') === '1',
             'sort' => (int)($row['sort'] ?? 0),
@@ -798,9 +799,8 @@ function getNodeTypeRows(array $vals, bool $new): array {
     $show = ['category' => _CATEGORY, 'author' => _POSTEDBY, 'date' => _DATE, 'views' => _READS];
     $rows[] = ['label_html' => _NODE_SHOW, 'field_html' => implode(' ', array_map(fn(string $k, string $v): string => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'show[]',
         'value_attr' => $k, 'is_checked' => in_array($k, $set['list']['show'], true), 'label_text' => $v]), array_keys($show), $show))];
-    $rows[] = ['label_for' => 'f-mode', 'label_html' => _NODE_MODE, 'hint_html' => $esc(_NODE_MODEHINT), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text',
-        'name_attr' => 'mode',
-        'input_id' => 'f-mode', 'value_attr' => $set['view']['mode'], 'maxlength_num' => 20])];
+    $rows[] = ['label_for' => 'f-mode', 'label_html' => _NODE_MODE, 'hint_html' => $esc(_NODE_MODEHINT), 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'mode',
+        'selectid' => 'f-mode', 'options_html' => $opts(array_combine(NodeQuery::MODES, NodeQuery::MODES), $set['view']['mode'])])];
     $rows[] = $head(_NODE_FEATURES);
     $feats = ['categories' => _CATEGORIES, 'comments' => _COMMENTS, 'rating' => _RATING, 'favorites' => _FAVORITES, 'poll' => _VOTING, 'home' => _NODE_FHOME,
         'pinned' => _NODE_FPIN,
@@ -835,8 +835,9 @@ function getNodeTypeRows(array $vals, bool $new): array {
                 'maxlength_num' => 255])],
             ['label_html' => _DESCRIPTION, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => $pre.'[intro]', 'value_attr' => $def['intro'],
                 'maxlength_num' => 1000])],
-            ['label_html' => _NODE_RMODE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => $pre.'[mode]', 'options_html' => $opts($modes,
+            ['label_html' => _NODE_RMODE, 'is_role_mode' => true, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => $pre.'[mode]', 'options_html' => $opts($modes,
                 (string)($def['mode'] ?? 'download'))])],
+            ['label_html' => _NODE_CANREP, 'is_role_report' => true, 'field_html' => $box($pre.'[report]', $def['report'], _YES)],
             ['label_html' => _NODE_KINDS, 'field_html' => $kinds],
             ['label_html' => _NODE_EXTS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => $pre.'[extensions]', 'value_attr' => implode(',',
                 (array)$def['extensions'])])],
@@ -846,8 +847,7 @@ function getNodeTypeRows(array $vals, bool $new): array {
                 'value_attr' => $def['min'],
                 'is_inline_gap' => true]).$tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => $pre.'[max]', 'value_attr' => $def['max'] ?? 1])],
             ['label_html' => _SORT, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => $pre.'[sort]', 'value_attr' => $def['sort']])],
-            ['label_html' => _NODE_ROLEOPTS, 'field_html' => $box($pre.'[canlink]', $def['canlink'], _NODE_CANLINK).' '.$box($pre.'[report]', $def['report'], _NODE_CANREP)
-                .' '.$box($pre.'[active]', $def['active'], _NODE_ACTIVE)],
+            ['label_html' => _NODE_ROLEOPTS, 'field_html' => $box($pre.'[canlink]', $def['canlink'], _NODE_CANLINK).' '.$box($pre.'[active]', $def['active'], _NODE_ACTIVE)],
         ]]);
         $group[] = ['is_empty' => $name === '', 'content_html' => $cell];
         $idx++;
@@ -1042,17 +1042,25 @@ function import(): void {
         if (!checkAdminPost('node')) setNodeAdminFault(403, _TOKENMISS, 'import');
         $new = trim(getVar('post', 'tname', 'raw', ''));
         $file = $_FILES['file'] ?? null;
-        $json = '';
-        $isjson = is_array($file) && strtolower(pathinfo((string)($file['name'] ?? ''), PATHINFO_EXTENSION)) === 'json';
-        if ($isjson && (int)($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK && is_uploaded_file((string)$file['tmp_name']) && (int)$file['size'] <= 1048576) {
-            $json = (string)file_get_contents((string)$file['tmp_name']);
-        }
-        try {
-            getNodeWriter()->addNodeTypeImport($json, $new);
-            setRedirect($afile.'.php?name=node&op=types', false, 302, _NODE_TCREATED);
-        } catch (NodeException $err) {
-            $note = getNodeTypeFault($err, $new);
-            http_response_code(getNodeStatus($err));
+        $code = is_array($file) ? (int)($file['error'] ?? UPLOAD_ERR_NO_FILE) : UPLOAD_ERR_NO_FILE;
+        $note = match (true) {
+            in_array($code, [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true) || ($code === UPLOAD_ERR_OK && (int)$file['size'] > 1048576) => _ERROR_BIG,
+            $code !== UPLOAD_ERR_OK || !is_uploaded_file((string)$file['tmp_name']) => _ERROR_DOWN,
+            strtolower(pathinfo((string)($file['name'] ?? ''), PATHINFO_EXTENSION)) !== 'json' => _ERROR_FILE,
+            default => '',
+        };
+        $json = ($note === '') ? file_get_contents((string)$file['tmp_name']) : false;
+        if ($note === '' && $json === false) $note = _ERROR_DOWN;
+        if ($note !== '') {
+            http_response_code(422);
+        } else {
+            try {
+                getNodeWriter()->addNodeTypeImport($json, $new);
+                setRedirect($afile.'.php?name=node&op=types', false, 302, _NODE_TCREATED);
+            } catch (NodeException $err) {
+                $note = getNodeTypeFault($err, $new);
+                http_response_code(getNodeStatus($err));
+            }
         }
     }
     setHead();
@@ -1169,23 +1177,8 @@ function support(): void {
     $who = ($view['author'] !== '') ? $view['author'] : _ANONYM;
     $text = $tpl->getHtmlFrag('link', ['href' => $view['href'], 'title' => _MVIEW, 'label' => $node->title, 'is_line_break' => true])
         .$tpl->getHtmlFrag('span', ['text' => ' '.$who.' - '.$view['date'], 'is_line_break' => true]).$view['intro_html'].$view['body_html'];
-    $msgs = [];
-    $page = 1;
-    do {
-        $part = $com->getList($type->name, $node->id, $page);
-        $cut = false;
-        foreach ($part['rows'] as $one) {
-            if ($one['depth'] === 0) {
-                $msgs[] = $one;
-                $cut = $one['kids'] > $one['shown'];
-                if ($cut) array_push($msgs, ...$com->getBranch($one['id'], $one['kids'])['rows']);
-            } elseif (!$cut) {
-                $msgs[] = $one;
-            }
-        }
-    } while ($page++ < $part['pages']);
     $talk = '';
-    foreach ($msgs as $one) {
+    foreach ($com->getThread($type->name, $node->id) as $one) {
         $name = (string)($one['user']['name'] ?? '') ?: ($one['name'] ?: _ANONYM);
         $talk .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
             ['is_col_author' => true, 'has_content_text' => true, 'content_text' => $name],

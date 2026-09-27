@@ -9,9 +9,7 @@ use ReflectionMethod;
 
 require_once BASE_DIR.'/core/classes/pdo.php';
 
-/**
- * A statement double, because Database returns PDOStatement|false and PDOStatement cannot be built.
- */
+# A statement double, because Database returns PDOStatement|false and PDOStatement cannot be built
 final class MailCampStatement extends PDOStatement
 {
     public function __construct()
@@ -19,11 +17,7 @@ final class MailCampStatement extends PDOStatement
     }
 }
 
-/**
- * A recording database: the statements the campaign half issues are captured with their parameters
- * and the rows a read returns are handed in by the test, so the contract is asserted on the SQL that
- * would run rather than on a database that has to exist.
- */
+# A recording database that captures every statement with its parameters and hands out the rows the test supplies, so the SQL that would run is asserted
 final class MailCampDatabase extends \Database
 {
     public array $sql = [];
@@ -68,13 +62,7 @@ final class MailCampDatabase extends \Database
     }
 }
 
-/**
- * Stage 3 of docs/MAIL-2026.md, the half that needs no engine: the failure taxonomy, the address
- * normaliser the suppression registry is keyed by, the verification ladder and its refusal to fail
- * closed, and the statements the campaign state machine issues. What only a real database can answer
- * — an expansion that resumes, a sample that parks its campaign, a release that frees the rest — is
- * driven against the live one by tests/Support/mail_probe.php and asserted in MailDrainTest.
- */
+# The mail campaign half that needs no engine: failure taxonomy, address normaliser, verification ladder and the statements of the campaign state machine
 final class MailCampaignTest extends TestCase
 {
     public static function setUpBeforeClass(): void
@@ -88,6 +76,7 @@ final class MailCampaignTest extends TestCase
     }
 
     # Build a Mail service over a recording database, a mail section and a campaign policy section
+    # A resuming expansion, a sample that parks its campaign and a release that frees the rest need a real database and are asserted in MailDrainTest
     private function getMail(MailCampDatabase $db, array $conf = [], array $rule = []): \Mail
     {
         return new \Mail($db, ['sitename' => 'SLAED CMS', 'mail' => $conf, 'newsletter' => $rule]);

@@ -6,10 +6,10 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
-# Output buffering on — must precede all bootstrap operations.
+# Output buffering on — must precede all bootstrap operations
 if (ob_get_level() === 0) ob_start();
 
-# Security: block /index.php/... PATH_INFO abuse to avoid routing bypass and unexpected module execution via malformed URLs.
+# Security: block /index.php/... PATH_INFO abuse to avoid routing bypass and unexpected module execution via malformed URLs
 $uri = $_SERVER['REQUEST_URI'] ?? '';
 if (!empty($_SERVER['PATH_INFO']) || strpos($uri, '/index.php/') !== false) {
     $_GET['error'] = 404;
@@ -316,7 +316,9 @@ if (!isAdmin(true)) {
             $string = '#'.PREFIX_DB.'_admins|'.PREFIX_DB.'_users#i';
             $decode = base64_decode($val);
             $slash = preg_replace('#\/\*.*?\*\/#', '', $val);
-            if ($conf['security']['ref_post'] && isset($_FILES['file']['size'])) if (!intval($_FILES['file']['size']) && !stristr(getenv('HTTP_REFERER'), getHost())) addWarnReport('POST from referer - '.$name.' = '.$val);
+            if ($conf['security']['ref_post'] && isset($_FILES['file']['size'])) {
+                if (!intval($_FILES['file']['size']) && !stristr(getenv('HTTP_REFERER'), getHost())) addWarnReport('POST from referer - '.$name.' = '.$val);
+            }
             if ($conf['security']['url_post']) if (preg_match($links, $val)) addWarnReport('URL in POST - '.$name.' = '.$val);
             if (!checkHtmlEditor() && preg_match($script, urldecode($val))) addWarnReport('HTML in POST - '.$name.' = '.$val);
             if (preg_match($string, $val)) addHackReport('XSS in POST - '.$name.' = '.$val);
@@ -421,7 +423,10 @@ function isAdmin(bool $super = false): bool {
     $pwd = $admin[2];
     $ip = getIp();
     if ($id && $name && $pwd && $ip) {
-        [$aname, $apwd, $aip, $asuper] = $db->getSqlRow($db->getSqlQuery('SELECT name, password, ip, super FROM '.PREFIX_DB.'_admins WHERE id = :id', ['id' => $id])) ?? ['', '', '', '0'];
+        [$aname, $apwd, $aip, $asuper] = $db->getSqlRow($db->getSqlQuery(
+            'SELECT name, password, ip, super FROM '.PREFIX_DB.'_admins WHERE id = :id',
+            ['id' => $id]
+        )) ?? ['', '', '', '0'];
         if ($aname !== '' && $aname === $name && $apwd !== '' && hash_equals($apwd, $pwd) && $aip !== '' && $aip === $ip) {
             $cache[0] = true;
             $cache[1] = ((int)$asuper === 1);
@@ -647,8 +652,8 @@ function getHost(): string {
     return getenv('HTTP_HOST') ?: getenv('SERVER_NAME') ?: '';
 }
 
-# Return a purpose-scoped key derived from the site master secret.
-# The master is a 256-bit CSPRNG value, generated and persisted on first use (lazy bootstrap).
+# Return a purpose-scoped key derived from the site master secret
+# The master is a 256-bit CSPRNG value, generated and persisted on first use (lazy bootstrap)
 function getSecret(string $purpose): string {
     global $conf;
     $master = (string)($conf['security']['secret'] ?? '');
@@ -662,8 +667,8 @@ function getSecret(string $purpose): string {
     return hash_hmac('sha256', $purpose, $master);
 }
 
-# Returns a session-bound HMAC-SHA256 CSRF token scoped to the given context.
-# Token is valid for the lifetime of the PHP session; invalidated when the master secret changes.
+# Returns a session-bound HMAC-SHA256 CSRF token scoped to the given context
+# Token is valid for the lifetime of the PHP session; invalidated when the master secret changes
 function getSiteToken(string $scope = 'ajax'): string {
     if (!defined('ADMIN_FILE') && function_exists('checkPageCache') && checkPageCache()) checkCachePoison(true);
     $sid  = session_id();
@@ -703,7 +708,7 @@ function getRequestToken(): string {
     return $tok;
 }
 
-# Validates CSRF token for a scope using timing-safe comparison.
+# Validates CSRF token for a scope using timing-safe comparison
 # Smart behavior:
 # - if `$tok` is empty, auto-read token from request (header/param)
 # - accepts exact scope token
@@ -927,8 +932,8 @@ function filterWord(string $var): string {
     return preg_replace('#[^\pL0-9\s%&/|.:;&_+\-=]#siu', '', $var) ?? '';
 }
 
-# Drop the trusted tags [usehtml] and [usephp] from an authored text unless the writer holds the capability; the tag is the capability itself, so what an author may not store no render mode can hand back
-# $trust says the writer holds it and belongs to the super administrator alone; it defaults to off so a channel that must never carry the tags, such as comments and private messages, simply omits it
+# Drop the trusted tags [usehtml] and [usephp] from an authored text unless the writer holds the capability; the tag is the capability, so no render mode hands it back
+# $trust says the writer holds it and belongs to the super administrator alone; it defaults to off, so a channel that must never carry the tags (comments, messages) omits it
 # The replace repeats because a single pass over a nested token like [use[usehtml]html] would rebuild the very tag it removed
 function filterTrustedTags(string $text, bool $trust = false): string {
     if ($text === '' || $trust) return $text;
@@ -976,7 +981,11 @@ function getEd2kLink(array $m): string {
 function filterClickable(string $text): string {
     $ret = $text;
     if (!preg_match("#\[php\](.*)\[/php\]|\[code\](.*)\[/code\]#si", $text)) {
-        $ret = preg_replace_callback("#([\n ])(?<=[^\w\"'])(ed2k://\|file\|([^\\/\|:<>\*\?\"]+?)\|(\d+?)\|([a-f0-9]{32})\|(.*?)/?)(?![\"'])(?=([,\.]*?[\s<\[])|[,\.]*?$)#i", 'getEd2kLink', ' '.$text);
+        $ret = preg_replace_callback(
+            "#([\n ])(?<=[^\w\"'])(ed2k://\|file\|([^\\/\|:<>\*\?\"]+?)\|(\d+?)\|([a-f0-9]{32})\|(.*?)/?)(?![\"'])(?=([,\.]*?[\s<\[])|[,\.]*?$)#i",
+            'getEd2kLink',
+            ' '.$text
+        );
         $ret = preg_replace("#([\n ])(?<=[^\w\"'])(ed2k://\|server\|([\d\.]+?)\|(\d+?)\|/?)#i", 'ed2k Server: [url=\\2]\\3[/url] - Port: \\4', $ret);
         $ret = preg_replace("#([\n ])(?<=[^\w\"'])(ed2k://\|friend\|([^\\/\|:<>\*\?\"]+?)\|([\d\.]+?)\|(\d+?)\|/?)#i", 'Friend: [url=\\2]\\3[/url]', $ret);
         $ret = preg_replace("#([\n ])([\w]+?://[\w\#$%&~/.\-;:=,?@\[\]+]*)#is", '\\1[url=\\2]\\2[/url]', $ret);
@@ -1063,7 +1072,8 @@ function addHackReport(string $msg): void {
             $lines[] = ['label' => _DATE, 'value' => $dtime];
             $mmsg = $tpl->getHtmlPart('message-block', ['title' => $subject, 'intro_text' => _HACK.': '.$msg, 'lines' => $lines]);
         } else {
-            $mmsg = $conf['sitename'].' - '._SECURITY."\n"._HACK.': '.$msg."\n"._IP.': '.$ip."\n"._USER.': '.$luser."\n"._URL.': '.$url.$ref."\n"._BROWSER.': '.$agent."\n"._DATE.': '.$dtime;
+            $mmsg = $conf['sitename'].' - '._SECURITY."\n"._HACK.': '.$msg."\n"._IP.': '.$ip."\n"._USER.': '.$luser
+                ."\n"._URL.': '.$url.$ref."\n"._BROWSER.': '.$agent."\n"._DATE.': '.$dtime;
         }
         $mailer->addQueue(['kind' => 'security', 'email' => $conf['adminmail'], 'title' => $subject, 'body' => $mmsg, 'sender' => $conf['adminmail'], 'prio' => 1]);
     }
@@ -1097,7 +1107,8 @@ function addWarnReport(string $msg): void {
             $lines[] = ['label' => _DATE, 'value' => $dtime];
             $mmsg = $tpl->getHtmlPart('message-block', ['title' => $subject, 'intro_text' => _WARN.': '.$msg, 'lines' => $lines]);
         } else {
-            $mmsg = $conf['sitename'].' - '._SECURITY."\n"._WARN.': '.$msg."\n"._IP.': '.$ip."\n"._USER.': '.$luser."\n"._URL.': '.$url.$ref."\n"._BROWSER.': '.$agent."\n"._DATE.': '.$dtime;
+            $mmsg = $conf['sitename'].' - '._SECURITY."\n"._WARN.': '.$msg."\n"._IP.': '.$ip."\n"._USER.': '.$luser
+                ."\n"._URL.': '.$url.$ref."\n"._BROWSER.': '.$agent."\n"._DATE.': '.$dtime;
         }
         $mailer->addQueue(['kind' => 'security', 'email' => $conf['adminmail'], 'title' => $subject, 'body' => $mmsg, 'sender' => $conf['adminmail'], 'prio' => 1]);
     }

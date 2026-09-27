@@ -7,22 +7,14 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
-/**
- * Unit tests for the Oauth client (core/classes/oauth.php).
- *
- * Covers the pure, DB-free surface: redirect normalization, base64url,
- * claim mapping and sanitization, Microsoft issuer validation and the full
- * id_token (JWT) validation pipeline against a locally generated RSA key.
- * The JWT cases use a synthetic 'unittest' provider so only jwks_unittest.json
- * is written, never the real google/microsoft caches. Signature-dependent
- * cases self-skip when the runtime cannot generate a key.
- */
+# The DB-free surface of the Oauth client core/classes/oauth.php: redirects, base64url, claims, the Microsoft issuer and the full id_token validation
 final class OauthTest extends TestCase
 {
     private static mixed $key = null;
     private static string $kid = 'unit-kid';
     private static string $jwksFile = '';
 
+    # The JWT cases use a synthetic unittest provider and a locally generated RSA key, so only jwks_unittest.json is written, never the real provider caches
     public static function setUpBeforeClass(): void
     {
         require_once BASE_DIR.'/core/classes/oauth.php';
@@ -87,6 +79,7 @@ final class OauthTest extends TestCase
         ];
     }
 
+    # Signature-dependent cases self-skip when the runtime cannot generate a key
     private function requireKey(): void
     {
         if (self::$key === null) $this->markTestSkipped('OpenSSL key generation unavailable in this runtime');
@@ -170,16 +163,14 @@ final class OauthTest extends TestCase
         $this->assertSame('g-sub-1', $pay['sub']);
     }
 
-    /**
-     * @return array<string, array{0: array<string, mixed>, 1: string, 2: array<string, mixed>|null}>
-     */
+    # The times exp, nbf and iat are offsets from the moment the test runs, because a provider is read when the suite loads and a long run turns its future into the past
+    # Each case is the claim overrides, the expected error code and a header override or null
     public static function badTokenProvider(): array
     {
-        $now = time();
         return [
-            'expired' => [['exp' => $now - 120], 'jwt_expired', null],
-            'nbf future' => [['nbf' => $now + 300], 'jwt_not_yet', null],
-            'iat future' => [['iat' => $now + 300], 'jwt_bad_iat', null],
+            'expired' => [['exp' => -120], 'jwt_expired', null],
+            'nbf future' => [['nbf' => 300], 'jwt_not_yet', null],
+            'iat future' => [['iat' => 300], 'jwt_bad_iat', null],
             'bad iss' => [['iss' => 'https://evil.example'], 'jwt_bad_iss', null],
             'bad aud' => [['aud' => 'other'], 'jwt_bad_aud', null],
             'bad azp' => [['azp' => 'other'], 'jwt_bad_azp', null],
@@ -192,6 +183,8 @@ final class OauthTest extends TestCase
     public function jwtRejectsInvalidTokens(array $override, string $code, ?array $head): void
     {
         $this->requireKey();
+        $now = time();
+        foreach (array_intersect_key($override, array_flip(['exp', 'nbf', 'iat'])) as $key => $val) $override[$key] = $now + $val;
         try {
             \Oauth::getJwtPayload($this->token($override + $this->base(), $head), 'unittest', 'nonce-abc');
             $this->fail('Expected RuntimeException '.$code);

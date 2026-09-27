@@ -7,13 +7,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Every owner of a points rule speaks to the Point class with the action, the
- * scope and the source the owner map of docs/POINTS.md gives it, the positional helpers and settings are gone
- * together with their callers, a rating never awards, and the label of every action exists in all six locales.
- * The labels are read through constant('_POINTS_'.strtoupper($name)), so this file is the one place a search by
- * name finds them: a dictionary cleanup that misses it takes a label of a live screen for an unused one.
- */
+# Every owner of a points rule speaks to the Point class with the action, the scope and the source the owner map of docs/POINTS.md gives it
 final class PointOwnersTest extends TestCase
 {
     private const OWNERS = [
@@ -64,7 +58,7 @@ final class PointOwnersTest extends TestCase
     {
         $out = [];
         foreach (['admin', 'blocks', 'core', 'lang', 'modules', 'plugins', 'setup', 'templates'] as $dir) {
-            $walk = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($this->getRoot().'/'.$dir, \FilesystemIterator::SKIP_DOTS));
+            $walk = getTreeFiles($this->getRoot().'/'.$dir);
             foreach ($walk as $file) {
                 if ($file->getExtension() !== 'php') continue;
                 $out[str_replace('\\', '/', substr($file->getPathname(), strlen($this->getRoot()) + 1))] = (string)file_get_contents($file->getPathname());
@@ -168,6 +162,7 @@ final class PointOwnersTest extends TestCase
     }
 
     # The two screens that print the labels build the constant name from the action, which is why no search by name finds a reader
+    # The labels are read through constant('_POINTS_'.strtoupper($name)), so a dictionary cleanup that misses this file takes a live label for an unused one
     #[Test]
     public function theLabelsAreReadByActionName(): void
     {
@@ -185,5 +180,20 @@ final class PointOwnersTest extends TestCase
         $this->assertStringContainsString("'SELECT COUNT(*) FROM (SELECT 1 FROM '.PREFIX_DB.'_points AS p'.\$cond.' LIMIT 5000) AS q'", $body);
         $this->assertStringNotContainsString("'SELECT COUNT(*) FROM '.PREFIX_DB.'_points", $body, 'No count over the whole journal remains');
         $this->assertStringContainsString("'offset' => (\$num - 1) * 50, 'limit' => 50", $body);
+    }
+
+    # The interface of points follows the open class, never the stored switch alone: before the data update left its mark the class stays closed and so does the interface
+    #[Test]
+    public function theInterfaceFollowsTheOpenClass(): void
+    {
+        $code = (string)file_get_contents($this->getRoot().'/core/classes/point.php');
+        $this->assertStringContainsString('public private(set) bool $active;', $code, 'The class does not tell its owners whether it rewards');
+        foreach ($this->getTree() as $path => $code) {
+            if ($path === 'admin/modules/groups.php') continue;
+            $this->assertStringNotContainsString("\$conf['points']['active']", $code, $path.' shows points by the stored switch');
+        }
+        foreach (['core/helpers.php', 'core/user.php', 'modules/account/index.php', 'modules/users/index.php', 'blocks/user_info.php'] as $path) {
+            $this->assertStringContainsString('$pnt->active', (string)file_get_contents($this->getRoot().'/'.$path), $path);
+        }
     }
 }

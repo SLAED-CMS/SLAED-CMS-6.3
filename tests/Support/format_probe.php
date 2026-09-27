@@ -5,7 +5,7 @@
 # Website: slaed.net
 
 # CLI probe for the render half of batch 9 in docs/UPLOAD-2026.md
-# boots the real core like index.php so Parser::filterAttach() reads the shipped config/filetype.php and the shipped upload rules
+# It boots the real core like index.php so Parser::filterAttach() reads the shipped config/filetype.php and the shipped upload rules
 # The image family is the only one that needs a real file, because filterAttach() renders a placeholder instead of the template when the source is missing
 # The fixture module lives below UPLOADS_DIR because filterAttach() resolves attachments there by construction, and the whole directory is removed again before the probe answers
 $probework = (string)($argv[2] ?? '');

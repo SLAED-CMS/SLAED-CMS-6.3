@@ -40,7 +40,7 @@ namespace Tests\Unit {
     {
         private static \Parser $p;
 
-        # Every element the parser emits is rendered by the theme, so the fixtures are meaningless without an engine: the expected bytes are what a theme produces, not what PHP concatenates
+        # Every element the parser emits is rendered by the theme, so the expected bytes of the fixtures are what a theme produces, not what PHP concatenates
         public static function setUpBeforeClass(): void
         {
             if (!class_exists('Template', false)) {
@@ -55,6 +55,11 @@ namespace Tests\Unit {
             unset($GLOBALS['tpl']);
         }
 
+        # Stage 2 of docs/COMMENTS-REDESIGN-2026.md renders comments at safe = true, so the inline BB pairs the parser reads for old content survive the safe escape
+        # Script-bearing schemes must die in trusted mode too: comments render at safe=false, so an allowlist that only applies to safe mode leaves stored XSS reachable
+        # Code wins over the bracket layer, which is what lets a document write a tag as an example instead of executing it
+        # A conversation channel breaks on the line ending its author typed; plain Markdown joins those lines and plain format recognizes no Markdown at all
+        # The super administrator capability is a write-boundary rule, so the parser still runs the tag it was handed; safe mode leaves it as the typed literal text
         public static function deterministicCases(): array
         {
             return [
@@ -74,7 +79,6 @@ namespace Tests\Unit {
                 'italic md'       => ['*italic*',   true, '', '<p><em>italic</em></p>'],
                 'del mark'        => ['~~del~~ ==mark==', true, '', '<p><del>del</del> <mark>mark</mark></p>'],
                 'link md'         => ['[link](https://example.com)', true, '', '<p><a href="https://example.com">link</a></p>'],
-                # Stage 2 of docs/COMMENTS-REDESIGN-2026.md renders comments at safe = true, so the inline BB pairs the parser reads for old content survive the safe escape
                 'bold md + bb bold' => ['**bold** и [b]bb-bold[/b]', true, '', '<p><strong>bold</strong> и <strong>bb-bold</strong></p>'],
                 'bb pairs safe'     => ['[i]i[/i] [u]u[/u] [s]s[/s]', true, '', '<p><em>i</em> <u>u</u> <del>s</del></p>'],
                 'bb color safe'     => ['[color=red]r[/color]', true, '', '<p><span style="color:red">r</span></p>'],
@@ -99,7 +103,9 @@ namespace Tests\Unit {
 
                 'table align' => [
                     "| L | C | R |\n|:--|:--:|--:|\n| a | b | c |", true, '',
-                    "<table>\n<thead>\n<tr><th style=\"text-align:left\">L</th><th style=\"text-align:center\">C</th><th style=\"text-align:right\">R</th></tr>\n</thead>\n<tbody>\n<tr><td style=\"text-align:left\">a</td><td style=\"text-align:center\">b</td><td style=\"text-align:right\">c</td></tr>\n</tbody>\n</table>",
+                    "<table>\n<thead>\n<tr><th style=\"text-align:left\">L</th><th style=\"text-align:center\">C</th>"
+                    ."<th style=\"text-align:right\">R</th></tr>\n</thead>\n<tbody>\n"
+                    ."<tr><td style=\"text-align:left\">a</td><td style=\"text-align:center\">b</td><td style=\"text-align:right\">c</td></tr>\n</tbody>\n</table>",
                 ],
 
                 'url bb safe javascript' => ['[url]javascript:x[/url]',       true, '', '<p><a href="#">javascript:x</a></p>'],
@@ -114,7 +120,6 @@ namespace Tests\Unit {
                 'url bb safe local'      => ['[url]/local/path[/url]',         true, '', '<p><a href="/local/path">/local/path</a></p>'],
                 'url bb safe relative'   => ['[url]../uploads/file.pdf[/url]', true, '', '<p><a href="../uploads/file.pdf">../uploads/file.pdf</a></p>'],
 
-                # Script-bearing schemes must die in trusted mode too: comments render at safe=false, so an allowlist that only applies to safe mode leaves stored XSS reachable
                 'url bb unsafe javascript'        => ['[url]javascript:x[/url]',      false, '', '<p><a href="#">javascript:x</a></p>'],
                 'url md unsafe javascript'        => ['[l](javascript:x)',            false, '', '<p><a href="#">l</a></p>'],
                 'url bb unsafe vbscript'          => ['[url]vbscript:x[/url]',        false, '', '<p><a href="#">vbscript:x</a></p>'],
@@ -132,20 +137,17 @@ namespace Tests\Unit {
                 'unsafe div block'  => ["<div class=\"x\">\ntext\n</div>",    false, '', "<div class=\"x\">\ntext\n</div>"],
                 'usehtml tag'       => ['[usehtml]<b>html</b>[/usehtml]',     false, '', '<b>html</b>'],
 
-                # Code wins over the bracket layer, which is what lets a document write a tag as an example instead of executing it
                 'code span keeps bb pair'   => ['`[quote]x[/quote]`',   true,  '', '<code>[quote]x[/quote]</code>'],
                 'code span keeps lone tag'  => ['`[hr]` and `[li]`',    true,  '', '<p><code>[hr]</code> and <code>[li]</code></p>'],
                 'code span keeps smilie'    => ['`*01`',                true,  '', '<code>*01</code>'],
                 'code span keeps trusted'   => ['`[usehtml]x[/usehtml]`', false, '', '<code>[usehtml]x[/usehtml]</code>'],
                 'bare tag still runs'       => ['[hr]',                 true,  '', '<hr>'],
 
-                # A conversation channel breaks on the line ending its author typed; plain Markdown joins those lines and plain format recognizes no Markdown at all
                 'markdown joins soft lines' => ["one\ntwo",             true,  '', '<p>one'."\n".'two</p>'],
                 'breaks keep soft lines'    => ["one\ntwo",             true,  '', '<p>one<br>'."\n".'two</p>', 'breaks'],
                 'breaks still read markdown'=> ["**bold**\nnext",       true,  '', '<p><strong>bold</strong><br>'."\n".'next</p>', 'breaks'],
                 'breaks keep the hard one'  => ["one\\\ntwo",           true,  '', '<p>one<br>'."\n".'two</p>', 'breaks'],
 
-                # The super administrator capability is a write-boundary rule, so the parser still runs the tag it was handed; safe mode leaves it as the literal text an author typed
                 'usephp trusted'    => ['[usephp]echo 6*7;[/usephp]',         false, '', '42'],
                 'usephp safe'       => ['[usephp]echo 6*7;[/usephp]',         true,  '', '<p>[usephp]echo 6*7;[/usephp]</p>'],
 
@@ -178,7 +180,7 @@ namespace Tests\Unit {
             $this->assertSame($expected, self::$p->filterDoc($src, $safe, $mod, 0, $fmt));
         }
 
-        # A rendering may only be stored when it answers for nobody in particular; a hidden block is the case that would leak, because a stored copy would show a visitor what only a member may read
+        # A rendering may only be stored when it answers for nobody in particular; a hidden block would leak, as a stored copy shows a visitor what only members read
         public static function varyCases(): array
         {
             return [
@@ -509,8 +511,8 @@ namespace Tests\Unit {
             $this->assertSame([], self::$p->getAttachList('no tag at all'));
         }
 
-        # A stored Node material (nid above zero) links the controlled attach route of its type with an encoded key, escaped once for the attribute, and never the closed directory;
-        # the thumb gets thumb=1 for the copy that exists, the old call keeps the direct address, and the memory of a request keeps both renderings apart
+        # A stored Node material (nid above zero) links the controlled attach route of its type with an encoded key, escaped once for the attribute, and never the closed directory
+        # The thumb gets thumb=1 for the copy that exists, the old call keeps the direct address, and the memory of a request keeps both renderings apart
         #[Test]
         public function checkAttachOfAStoredMaterialUsesTheControlledRoute(): void
         {
@@ -545,8 +547,8 @@ namespace Tests\Unit {
             }
         }
 
-        # A safe rendering that trusts its tags makes markup of what [usehtml] encloses and runs what [usephp] encloses, while foreign markup, a free block and an
-        # unsafe link around them stay text; an indented line inside a tag is no code block, and without safe mode the argument changes nothing
+        # A safe rendering that trusts its tags makes markup of what [usehtml] encloses and runs what [usephp] encloses
+        # Foreign markup, a free block and an unsafe link around them stay text; an indented line inside a tag is no code block, and without safe mode the argument changes nothing
         #[Test]
         public function checkTrustedTagsTrustOnlyTheirContent(): void
         {

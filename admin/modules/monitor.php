@@ -204,10 +204,16 @@ function getCpuDetailsRaw(): array {
     if (str_starts_with(strtoupper(PHP_OS), 'WIN')) {
         if (function_exists('exec')) {
             $out = [];
-            exec('powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "(Get-CimInstance Win32_Processor | Measure-Object -Property NumberOfCores -Sum).Sum"', $out);
+            exec(
+                'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "(Get-CimInstance Win32_Processor | Measure-Object -Property NumberOfCores -Sum).Sum"',
+                $out
+            );
             if (!empty($out) && is_numeric(trim((string)$out[0]))) $physical = (int)trim((string)$out[0]);
             $out = [];
-            exec('powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "(Get-CimInstance Win32_Processor | Select-Object -First 1 -ExpandProperty MaxClockSpeed)"', $out);
+            exec(
+                'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "(Get-CimInstance Win32_Processor | Select-Object -First 1 -ExpandProperty MaxClockSpeed)"',
+                $out
+            );
             if (!empty($out) && is_numeric(trim((string)$out[0]))) {
                 $mhz = (int)trim((string)$out[0]);
                 if ($mhz > 0) $freq = round($mhz / 1000, 2).' GHz';

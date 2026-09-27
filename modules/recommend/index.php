@@ -28,22 +28,30 @@ function recommend(): void {
     $fields = $tpl->getHtmlFrag('form-field-row', [
         'label_for' => 'f-'.$unkey,
         'label' => _YOURNAME,
-        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => $unkey, 'input_id' => 'f-'.$unkey, 'value_attr' => $sname, 'placeholder_text' => _YOURNAME, 'is_required' => true]),
+        'field_html' => $tpl->getHtmlFrag('input', [
+            'itype' => 'text', 'name_attr' => $unkey, 'input_id' => 'f-'.$unkey, 'value_attr' => $sname, 'placeholder_text' => _YOURNAME, 'is_required' => true,
+        ]),
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label_for' => 'f-semail',
         'label' => _YOUREMAIL,
-        'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'semail', 'input_id' => 'f-semail', 'value_attr' => $semail, 'placeholder_text' => _YOUREMAIL, 'is_required' => true]),
+        'field_html' => $tpl->getHtmlFrag('input', [
+            'name_attr' => 'semail', 'input_id' => 'f-semail', 'value_attr' => $semail, 'placeholder_text' => _YOUREMAIL, 'is_required' => true,
+        ]),
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label_for' => 'f-fname',
         'label' => _FFRIENDNAME,
-        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'fname', 'input_id' => 'f-fname', 'value_attr' => $fname, 'placeholder_text' => _FFRIENDNAME, 'is_required' => true]),
+        'field_html' => $tpl->getHtmlFrag('input', [
+            'itype' => 'text', 'name_attr' => 'fname', 'input_id' => 'f-fname', 'value_attr' => $fname, 'placeholder_text' => _FFRIENDNAME, 'is_required' => true,
+        ]),
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label_for' => 'f-femail',
         'label' => _FFRIENDEMAIL,
-        'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'femail', 'input_id' => 'f-femail', 'value_attr' => $femail, 'placeholder_text' => _FFRIENDEMAIL, 'is_required' => true]),
+        'field_html' => $tpl->getHtmlFrag('input', [
+            'name_attr' => 'femail', 'input_id' => 'f-femail', 'value_attr' => $femail, 'placeholder_text' => _FFRIENDEMAIL, 'is_required' => true,
+        ]),
     ]);
     $cont .= $tpl->getHtmlPart('form-add', [
         'action' => 'index.php?name='.$conf['name'],
@@ -86,7 +94,8 @@ function send(): void {
         if (is_user()) $pnt->addEvent('recommend', 'recommend', 'req:'.bin2hex(random_bytes(16)), intval($user[0]));
         setHead(['title' => _RECOMMTITLE]);
         $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 10]);
-        echo $tpl->getHtmlFrag('title', ['title' => _RECOMMTITLE, 'is_level_one' => true]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'messages' => [_FREFERENCE.' '.$fname.'.', _THANKSREC], 'meta' => $meta]);
+        echo $tpl->getHtmlFrag('title', ['title' => _RECOMMTITLE, 'is_level_one' => true])
+            .$tpl->getHtmlFrag('alert', ['is_warn' => false, 'messages' => [_FREFERENCE.' '.$fname.'.', _THANKSREC], 'meta' => $meta]);
         setFoot();
     } else {
         recommend();

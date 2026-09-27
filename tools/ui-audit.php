@@ -4,14 +4,16 @@
 # License: MIT
 # Website: slaed.net
 
-# The theme audit. It measures what `.rules/theme.md` demands and `tools/ui-contract.php` declares,
-# and it is the authority over every number written about the themes, including in docs/TEMPLATES.md.
+# The theme audit measures what `.rules/theme.md` demands and `tools/ui-contract.php` declares
+# It is the authority over every number written about the themes, including in docs/TEMPLATES.md
 # Usage: php tools/ui-audit.php --theme=admin [--count|--bare|--dist=padding|--dup|--names|--ramp|--cross|--markup]
-#        php tools/ui-audit.php --file=templates/admin/assets/css/theme.css --migrating
-#        php tools/ui-audit.php --store   rewrites tools/ui-audit-baseline.json from the current tree
+# Usage: php tools/ui-audit.php --file=templates/admin/assets/css/theme.css --migrating
+# Usage: php tools/ui-audit.php --store rewrites tools/ui-audit-baseline.json from the current tree
 
 const UI_ROOT = __DIR__.'/..';
 const UI_BASE = __DIR__.'/ui-audit-baseline.json';
+
+require_once __DIR__.'/../tests/Support/tree_walk.php';
 
 # Colour keywords a value may spell instead of a hex triple; the ones a theme actually paints with
 const UI_COLORS = [
@@ -26,8 +28,8 @@ const UI_COLORS = [
 # Functions whose whole call is one colour decision
 const UI_CFUNC = ['rgb', 'rgba', 'hsl', 'hsla', 'hwb', 'lab', 'lch', 'oklab', 'oklch', 'color'];
 
-# Functions that take colours and give one back. Their arguments are walked, because a mix of two tokens is tokenised
-# and a mix of two literals is not - the whole call cannot answer for both. The ratio is a decision of its own
+# Functions that take colours and give one back; their arguments are walked, because a mix of two tokens is tokenised and a mix of two literals is not
+# The whole call cannot answer for both, and the ratio is a decision of its own
 const UI_MFUNC = ['color-mix', 'light-dark'];
 
 # Functions whose arguments are walked, because the decisions sit inside them
@@ -36,8 +38,8 @@ const UI_WFUNC = [
     'repeating-conic-gradient', 'calc', 'min', 'max', 'clamp', 'minmax', 'fit-content', 'env',
 ];
 
-# HTML element names the markup scan recognises. An XML element of a feed or a sitemap is not one of them,
-# because batch 9 asks what a theme cannot restyle, and a theme never styles a feed
+# HTML element names the markup scan recognises
+# An XML element of a feed or a sitemap is not one of them, because batch 9 asks what a theme cannot restyle, and a theme never styles a feed
 const UI_TAGS = [
     'a', 'abbr', 'address', 'article', 'aside', 'audio', 'b', 'blockquote', 'body', 'br', 'button',
     'canvas', 'caption', 'cite', 'code', 'col', 'colgroup', 'datalist', 'dd', 'del', 'details',
@@ -232,6 +234,8 @@ function getArgParts(string $args): array {
 }
 
 # Split one value into the atoms a decision is judged on, descending into the functions that hold them
+# The middle of a clamp() is the rate the value travels between its two bounds, and both bounds are decisions of their own
+# No ladder in the contract carries that rate: every step is px, seconds or unitless, while a rate is measured against the window, so it is marked as arithmetic like `fr`
 function getValueParts(string $val, bool &$hasvar = false): array {
     $out = [];
     $len = strlen($val);
@@ -274,9 +278,6 @@ function getValueParts(string $val, bool &$hasvar = false): array {
                 $out[] = ['raw' => $name.'('.$args.')', 'kind' => 'ease'];
                 continue;
             }
-            # The middle of a clamp() is the rate the value travels between its two bounds, and both bounds are
-            # decisions of their own. No ladder in the contract carries it: every step is px, seconds or unitless,
-            # while a rate is measured against the window. Marked so it is read as arithmetic, like `fr`
             if ($name === 'clamp') {
                 $arg = getArgParts($args);
                 if (count($arg) === 3) {
@@ -341,6 +342,8 @@ function getPropFamily(string $prop): string {
 }
 
 # Decide whether one atom of one declaration is a visual decision that a token must own
+# How much of a colour a mix carries is a decision whatever property reads the result
+# A percentage gap is measured against the container width, not the page rhythm; every spacing step is a pixel figure, so no step or rename could give it an address
 function isDecisionPart(string $prop, array $part, string $val): bool {
     $cont = getContract();
     $fam = getPropFamily($prop);
@@ -352,10 +355,7 @@ function isDecisionPart(string $prop, array $part, string $val): bool {
     }
     if ($raw === 'transparent' || $raw === 'currentcolor') return false;
     if ($kind === 'angle' || $kind === 'fraction' || $kind === 'rate') return false;
-    # How much of a colour a mix carries is a decision whatever property reads the result
     if ($kind === 'mix') return true;
-    # A percentage gap is measured against the width of the container, not against the rhythm of the page. Every
-    # step of the spacing ladder is a pixel figure, so no step can express one and no rename would give it an address
     if ($fam === 'space') return $kind === 'length' && $raw !== '0' && !str_ends_with($raw, '%');
     if ($fam === 'radius') return $kind === 'length' && $raw !== '50%';
     if ($fam === 'border') {
@@ -412,6 +412,8 @@ function getThemeModel(string $name): array {
 }
 
 # Build one model from CSS already in hand, which is what lets the tool be tested on fixtures with known answers
+# A descriptor block such as @font-face is not a rule: it holds descriptors where var() is invalid, so a figure inside one is not a decision a theme can move
+# The @media and @keyframes blocks never reach the descriptor check
 function getTextModel(array $list, string $api = ''): array {
     $cont = getContract();
     $out = ['name' => 'fixture', 'conf' => [], 'api' => [], 'rules' => [], 'files' => [], 'marker' => false, 'scoped' => [], 'clash' => []];
@@ -436,8 +438,6 @@ function getTextModel(array $list, string $api = ''): array {
                 }
                 continue;
             }
-            # A descriptor block is not a rule. @font-face and its kin hold descriptors, where var() is invalid,
-            # so a figure inside one is not a decision a theme can move. @media and @keyframes never reach here
             if (str_starts_with($rule['sel'], '@')) continue;
             foreach ($rule['decls'] as $decl) {
                 if (!str_starts_with($decl['prop'], '--')) continue;
@@ -575,6 +575,8 @@ function getDistList(array $model, string $prop): array {
 }
 
 # Rule bodies repeated verbatim inside one @media context; a body repeated across contexts is not a duplicate
+# One declaration reaching one token is need, not repetition, like `display: flex` under 122 containers: a list of everything hidden names nothing and scatters each component
+# CSS has no selector list that crosses a file, so a body met in two files cannot be merged at all
 function checkDupBlocks(array $model): array {
     $seen = [];
     foreach ($model['rules'] as $rule) {
@@ -591,14 +593,10 @@ function checkDupBlocks(array $model): array {
         $sels = array_map(fn($v) => $v['sel'], $list);
         sort($sels);
         if (in_array(implode(', ', $sels), $cont['duplicates'], true)) continue;
-        # One declaration reaching one token is need and not repetition, the same way `display: flex` under 122 flex
-        # containers is: a selector list of everything that happens to be hidden names nothing, and it scatters each
-        # component's definition to buy one line
         if (!str_contains($list[0]['body'], ';')) {
             $out['need']++;
             continue;
         }
-        # CSS has no selector list that crosses a file, so a body met in two files cannot be merged at all
         if (count(array_unique(array_map(fn($v) => $v['file'], $list))) > 1) {
             $out['split']++;
             continue;
@@ -661,9 +659,9 @@ function isKnownName(string $name): bool {
     return false;
 }
 
-# Convert one colour value to red, green and blue, or null when it is not a plain colour.
-# A colour carrying both modes is read in the half $mode names, because every check downstream - the ramp, the
-# distinguishability of a categorical set - measures one mode at a time and a two-mode value would silently skip it
+# Convert one colour value to red, green and blue, or null when it is not a plain colour
+# A colour carrying both modes is read in the half $mode names, because every check downstream measures one mode at a time and a two-mode value would silently skip it
+# Those downstream checks are the ramp and the distinguishability of a categorical set
 function getRgbValues(string $val, string $mode = 'light'): ?array {
     $val = trim(strtolower($val));
     if (preg_match('/^light-dark\(\s*(.+?)\s*,\s*(.+?)\s*\)$/is', $val, $part)) return getRgbValues($mode === 'dark' ? $part[2] : $part[1], $mode);
@@ -698,9 +696,9 @@ function getHslValues(array $rgb): array {
     return [$hue * 60, $sat * 100, $lum * 100];
 }
 
-# Name the colour family one hue belongs to, after saturation has already separated the neutrals.
-# Chroma decides beside the ratio: HSL saturation is chroma divided by what the lightness still allows,
-# so a near-white with three points of chroma reads 100 and would be filed as a colour it is not
+# Name the colour family one hue belongs to, after saturation has already separated the neutrals
+# Chroma decides beside the ratio: HSL saturation is chroma divided by what the lightness still allows, so a near-white with three points of chroma reads 100
+# Without chroma such a near-white would be filed as a colour it is not
 function getFamilyName(float $hue, float $sat, float $chr, array $conf): string {
     if ($sat < $conf['saturation'] || $chr < $conf['chroma']) return 'gray';
     return match (true) {
@@ -773,11 +771,10 @@ function checkTokenUse(array $model): array {
     return $out;
 }
 
-# Names a theme reads and declares nowhere. `dead` is the other half of this: a token declared and never
-# read is loud, while a name read and never declared is silent - CSS answers an unknown var() by dropping
-# the whole declaration, with no error, no warning and no pixel that says why. A read carrying a fallback
-# is not counted: the author said what happens when the name is absent. A name registered under `data` is
-# not counted either, because something outside CSS writes it, which is exactly what that list records
+# Names a theme reads and declares nowhere; `dead` is the other half, where a token declared and never read is loud, while a name read and never declared is silent
+# CSS answers an unknown var() by dropping the whole declaration, with no error, no warning and no pixel that says why
+# A read carrying a fallback is not counted: the author said what happens when the name is absent
+# A name registered under `data` is not counted either, because something outside CSS writes it, which is exactly what that list records
 function checkUnmetNames(array $model): array {
     $cont = getContract();
     $known = $model['api'];
@@ -805,9 +802,9 @@ function getResolvedValue(string $val, array $api): string {
     return $val;
 }
 
-# Whether one value is a shadow: an offset list, where a colour and a length may each arrive through a token.
-# Reading the colour off a literal alone would file a shadow built from the theme's own scrim or ring as something
-# else, and the same name would then hold two kinds across two themes for no reason a reader could see
+# Whether one value is a shadow: an offset list, where a colour and a length may each arrive through a token
+# Reading the colour off a literal alone would file a shadow built from the theme's own scrim or ring as something else
+# The same name would then hold two kinds across two themes for no reason a reader could see
 function isShadowValue(string $val): bool {
     if (str_contains(strtolower($val), 'gradient(')) return false;
     foreach (getArgParts($val) as $layer) {
@@ -820,14 +817,13 @@ function isShadowValue(string $val): bool {
 }
 
 # Name the kind of one token value, which is how one name holding two kinds across themes is caught
+# A colour carrying both modes and a colour mixed from two others are still colours, else a token gaining its dark half reads as another kind than in a theme without it
 function getValueKind(string $val): string {
     $val = filterValue($val);
     if ($val === '') return 'empty';
     if (str_contains($val, 'gradient(')) return 'gradient';
     if (getRgbValues($val) !== null) return 'color';
     if (preg_match('/^#|^(rgb|hsl)a?\(/i', $val)) return 'color';
-    # A colour carrying both modes and a colour mixed from two others are still colours; without this a token
-    # that gains its dark half reads as a different kind from the same name in a theme that has not gained it yet
     if (preg_match('/^(light-dark|color-mix)\(/i', $val)) return 'color';
     if (isShadowValue($val)) return 'shadow';
     if (getPartKind($val) === 'length') return 'length';
@@ -854,8 +850,8 @@ function checkNameKinds(): array {
     return $out;
 }
 
-# Classes a theme paints against what the repository names. A class assembled from a prefix and a suffix
-# is named nowhere in one piece, so a prefix match is reported apart instead of counted as dead
+# Classes a theme paints against what the repository names
+# A class assembled from a prefix and a suffix is named nowhere in one piece, so a prefix match is reported apart instead of counted as dead
 function checkClassUse(array $model): array {
     $seen = [];
     foreach ($model['rules'] as $rule) {
@@ -882,33 +878,35 @@ function checkClassUse(array $model): array {
     return $out;
 }
 
-# One class is used when the text carries its whole name. The boundary is the name alphabet itself, not a list of
-# delimiters: a class emitted straight after a template tag - `{% endif %}sl-collapsible` - is a use like any other
+# One class is used when the text carries its whole name
+# The boundary is the name alphabet itself, not a list of delimiters: a class emitted straight after a template tag - `{% endif %}sl-collapsible` - is a use like any other
 function isClassUsed(string $name, string $text): bool {
     return preg_match('/(?<![a-z0-9-])'.preg_quote($name, '/').'(?![a-z0-9-])/i', $text) === 1;
 }
 
 # Every repository file of the given extensions under the given directories, vendor and storage excluded
+# The walk is the one every source gate shares, so a scratch theme another process is building or removing is never entered
 function getRepoFiles(array $exts, array $dirs): array {
     $out = [];
+    $base = str_replace('\\', '/', (string)realpath(UI_ROOT));
     foreach ($dirs as $dir) {
-        $full = UI_ROOT.'/'.$dir;
+        $full = $base.'/'.$dir;
         if (!is_dir($full)) continue;
-        $walk = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($full, FilesystemIterator::SKIP_DOTS));
-        foreach ($walk as $item) {
+        foreach (getTreeFiles($full) as $item) {
             $path = str_replace('\\', '/', $item->getPathname());
             if (preg_match('#/(vendor|node_modules|storage|\.git)/#', $path)) continue;
             if (!in_array(strtolower($item->getExtension()), $exts, true)) continue;
-            $out[] = substr($path, strlen(str_replace('\\', '/', UI_ROOT)) + 1);
+            $out[] = substr($path, strlen($base) + 1);
         }
     }
     sort($out);
     return $out;
 }
 
-# The names a frozen API block used to declare and no longer does. A frozen API may still gain a role - a theme that needs
-# one is not made wrong by an addition - but it may never lose or rename one, because after distribution the copies read
-# names this repository can no longer reach. An empty answer for an unfrozen theme is the same answer as no history at all
+# The names a frozen API block used to declare and no longer does
+# A frozen API may still gain a role - a theme that needs one is not made wrong by an addition - but it may never lose or rename one
+# After distribution the copies read names this repository can no longer reach
+# An empty answer for an unfrozen theme is the same answer as no history at all
 function getLostNames(string $theme, array $now, array $base): array {
     if (!(getContract()['frozen'] ?? false)) return [];
     $was = $base['api'][$theme] ?? null;
@@ -1048,9 +1046,9 @@ function getFoldedStrings(string $text): array {
     return $out;
 }
 
-# Name what one string literal hardcodes: a class attribute, an inline style or an HTML tag.
-# A regular expression that matches markup does not emit it, and an XML element is not something a theme styles,
-# so the tag test names HTML elements instead of accepting anything shaped like a tag
+# Name what one string literal hardcodes: a class attribute, an inline style or an HTML tag
+# A regular expression that matches markup does not emit it, and an XML element is not something a theme styles
+# The tag test therefore names HTML elements instead of accepting anything shaped like a tag
 function getMarkupKind(string $text): string {
     if (preg_match('/^([#~\/%@!+])(.*)\1[imsuxADSUXJn]*$/s', $text) && preg_match('/[\[\](){}\\\\|^$*+?]/', $text)) return '';
     if (preg_match('/\bclass\s*=\s*["\']/i', $text)) return 'class';
@@ -1344,7 +1342,11 @@ foreach ($want as $name) {
     setSection('alias chains:', $data['use']['alias']);
     $unsat = array_map(fn($v) => $v['name'].' is a '.$v['kind'].', read by '.$v['prop'].' at '.$v['file'].':'.$v['line'], $data['use']['unsat']);
     setSection('tokens that cannot satisfy their property:', $unsat);
-    $unmet = array_map(fn($v, $k) => $k.' is read '.count($v).' time'.(count($v) === 1 ? '' : 's').' in '.implode(', ', array_unique(array_map('basename', $v))).' and declared nowhere', $data['unmet'], array_keys($data['unmet']));
+    $unmet = array_map(
+        fn($v, $k) => $k.' is read '.count($v).' time'.(count($v) === 1 ? '' : 's').' in '.implode(', ', array_unique(array_map('basename', $v))).' and declared nowhere',
+        $data['unmet'],
+        array_keys($data['unmet'])
+    );
     setSection('names read but declared nowhere, where the browser drops the declaration without a word:', $unmet);
     setSection('classes never referenced:', $data['classes']['unused']);
     setSection('classes assembled from a prefix, to be looked at by hand before removal:', $data['classes']['composed']);

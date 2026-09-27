@@ -5,18 +5,14 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Batch 4 of docs/BACKUP-2026.md: the lock protocol and the request boundary of the scheduler.
- * tests/Support/scheduler_probe.php boots the real core with LOGS_DIR in scratch, declares its own
- * jobs in memory so no site configuration is written, and starts a real second process wherever the
- * protocol needs a contended lock - an operating system lock cannot be contested inside one process.
- * The route scenario drives the live site over HTTP; the admin handlers are asserted at source level,
- * which is stated in each test that does so rather than presented as a request test.
- */
+# Batch 4 of docs/BACKUP-2026.md: the lock protocol and the request boundary of the scheduler
 final class SchedulerLockTest extends TestCase
 {
     private static array $probe = [];
 
+    # The probe tests/Support/scheduler_probe.php boots the real core with LOGS_DIR in scratch and declares its own jobs in memory, so no site configuration is written
+    # It starts a real second process wherever the protocol needs a contended lock, since an operating system lock cannot be contested inside one process
+    # The route scenario drives the live site over HTTP
     # Run one probe scenario in a fresh process and memoize its report
     private function getProbe(string $mode): array
     {
@@ -31,6 +27,7 @@ final class SchedulerLockTest extends TestCase
     }
 
     # Read one admin handler as source, which is how the POST contract of the four admin entry points is asserted
+    # Each test that asserts a handler at source level states so rather than presenting itself as a request test
     private function getSource(string $name): string
     {
         $code = (string)file_get_contents(dirname(__DIR__, 2).'/admin/modules/scheduler.php');
@@ -328,5 +325,23 @@ final class SchedulerLockTest extends TestCase
         $this->assertStringNotContainsString('op=run&job=', $list, 'The run action is still a link');
         $this->assertStringNotContainsString('op=unlock&job=', $list, 'The unlock action is still a link');
         $this->assertStringNotContainsString('op=delete&job=', $list, 'The delete action is still a link');
+    }
+
+    # A state file is replaced by a temporary file and a rename, never rewritten in place under a lock a parallel Windows read fails on; asserted at source level
+    #[Test]
+    public function theStateFilesAreReplacedNotLocked(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $funcs = ['core/system.php' => ['setSchedulerState', 'addSchedulerHeartbeat', 'addSchedulerTrigger', 'addFilescanTask'], 'core/monitor.php' => ['setMetricStore']];
+        foreach ($funcs as $file => $names) {
+            $code = (string)file_get_contents($root.'/'.$file);
+            foreach ($names as $name) {
+                $from = strpos($code, 'function '.$name.'(');
+                $this->assertNotFalse($from, $name.'() is gone');
+                $body = substr($code, $from, (int)strpos($code, "\n}\n", $from) - $from);
+                $this->assertStringContainsString('Cache::setBody(', $body, $name.'() no longer replaces its state file');
+                $this->assertStringNotContainsString('LOCK_EX', $body, $name.'() still writes its state file in place under a lock');
+            }
+        }
     }
 }

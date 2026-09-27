@@ -19,14 +19,16 @@ function order(): void {
     }
     setHead(['title' => _ORDER]);
     $cont = $tpl->getHtmlFrag('title', ['title' => _ORDER, 'is_level_one' => true]);
-    $cont .= $prs->filterContent($conf['order']['text'], false, 'all');
+    $cont .= $prs->filterContent($conf['order']['text'], false, 'all', 0, 'breaks');
     if ($conf['order']['an']) {
         $note = getVar('post', 'note', 'text');
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
         $rows = $tpl->getHtmlFrag('form-field-row', [
             'label_for' => 'f-mail',
             'label' => _OR_2,
-            'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'maxlength="255" placeholder="'._OR_2.'" required', 'name_attr' => 'mail', 'input_id' => 'f-mail', 'value_attr' => $mail]),
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'input_attr' => 'maxlength="255" placeholder="'._OR_2.'" required', 'name_attr' => 'mail', 'input_id' => 'f-mail', 'value_attr' => $mail,
+            ]),
         ]);
         $rows .= getTplFieldsIn(['mod' => $conf['name'], 'new' => true]);
         $rows .= $tpl->getHtmlFrag('form-field-row', [
@@ -47,7 +49,10 @@ function order(): void {
             'captcha' => getPageCaptcha('comment'),
             'extrafields' => $rows,
             'name' => $conf['name'],
-            'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OR_4]),
+            'submit' => $tpl->getHtmlFrag('form-submit', [
+                'button_type' => 'submit', 'op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false,
+                'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OR_4,
+            ]),
         ]);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _MO_11]);
@@ -94,13 +99,14 @@ function send(): void {
                 $subject = $conf['sitename'].' - '._ORDER;
                 $msg = $tpl->getHtmlPart('message-block', [
                     'title' => $subject,
-                    'content_html' => $prs->filterContent($conf['order']['sendinfo'], false, 'all'),
+                    'content_html' => $prs->filterContent($conf['order']['sendinfo'], false, 'all', 0, 'breaks'),
                 ]);
                 $mailer->addQueue(['kind' => 'order', 'email' => $mail, 'title' => $subject, 'body' => $msg, 'sender' => $amail, 'prio' => 3]);
             }
             setHead(['title' => _ORDER]);
             $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 30]);
-            echo $tpl->getHtmlFrag('title', ['title' => _ORDER, 'is_level_one' => true]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $prs->filterContent($conf['order']['info'], false, 'all'), 'meta' => $meta]);
+            echo $tpl->getHtmlFrag('title', ['title' => _ORDER, 'is_level_one' => true])
+                .$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $prs->filterContent($conf['order']['info'], false, 'all', 0, 'breaks'), 'meta' => $meta]);
             setFoot();
         } else {
             order();

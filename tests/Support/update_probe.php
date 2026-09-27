@@ -27,8 +27,8 @@ const PROBEBAL = [2 => 10, 3 => 0, 4 => 4294967295];
 # The rules of a 6.2 site: period, switch and place of three remaining scopes, a zero period among them, and one scope of a module that left the release
 const PROBEOLD = ['account' => '2592000|1|0', 'forum' => '0|0|1', 'shop' => '86400|1|1', 'news' => '2592000|1|0'];
 
-# The rows of the old shared table as id, target, module, time, account and address: two addresses of one account, a guest, two spellings of one IPv6 address,
-# a poll, two other events, a missing product, a forum reply that is no target, and an account without an address
+# The rows of the old shared table as id, target, module, time, account and address: two addresses of one account, a guest, two spellings of one IPv6 address
+# The rest are a poll, two other events, a missing product, a forum reply that is no target, and an account without an address
 const PROBEROWS = [
     [1, 2, 'account', '1000000000', 9, '1.1.1.1'], [2, 2, 'account', '1700000000', 9, '2.2.2.2'], [3, 2, 'account', '1700000100', 0, '3.3.3.3'],
     [4, 5, 'forum', '1700000200', 0, '2001:DB8:0:0:0:0:0:1'], [5, 5, 'forum', '1700000205', 0, '2001:db8::1'], [6, 35, 'voting', '1700000300', 9, '4.4.4.4'],
@@ -231,7 +231,7 @@ function getProbeStop(): array {
     return $out;
 }
 
-# The preflight: the stand server, the oldest accepted and the newest refused version of both servers, and a table of the points transactions on another engine
+# The preflight: the stand server, the oldest accepted and the newest refused version of both servers, and a points, Node or private message table on another engine
 function getProbeFlight(): array {
     $pdb = $GLOBALS['pdb'];
     $out = ['real' => checkUpdateBase($pdb, PROBEPREF)];
@@ -244,7 +244,7 @@ function getProbeFlight(): array {
     getProbeSide()->exec('CREATE TABLE `other_forum` (`id` INT) ENGINE=MyISAM');
     $out['engine'] = checkUpdateBase($pdb, PROBEPREF);
     getProbeSide()->exec('DROP TABLE `'.PROBEPREF.'_favorites`, `other_forum`');
-    foreach (['categories', 'voting'] as $name) {
+    foreach (['categories', 'voting', 'privat'] as $name) {
         getProbeSide()->exec('CREATE TABLE `'.PROBEPREF.'_'.$name.'` (`id` INT) ENGINE=MyISAM');
         $out['node'][$name] = checkUpdateBase($pdb, PROBEPREF);
         getProbeSide()->exec('DROP TABLE `'.PROBEPREF.'_'.$name.'`');
@@ -473,6 +473,7 @@ function getFieldRun(): array {
 
 # The clean path and its repeats: a value saved after the site opened is left alone, a lost mark is written again, and nothing of the backup changes
 # A site whose definitions are already named and whose columns are empty has nothing to carry over and gets its mark
+# A site whose rows need more than its definitions hold grows them: padded captions trimmed, an unknown caption a disabled option, a switched off position an inactive field
 function getFieldClean(): array {
     setFieldSite();
     $out = ['first' => getFieldRun()];
@@ -488,6 +489,10 @@ function getFieldClean(): array {
     setFieldSite(PROBEDEFS, ['points' => '6.3.0'], ['users' => [2 => '', 3 => '', 4 => ''], 'forum' => [], 'order' => []], false);
     setConfigFile('fields.php', $named, [], true);
     $out['named'] = getFieldRun();
+    $defs = ['account' => 'Version | A , B |3|1||0|0|1|1||Note|0|1|2', 'forum' => PROBEDEFS['forum'], 'order' => PROBEDEFS['order']];
+    $rows = ['users' => [2 => 'C|hidden|n', 3 => ' B ', 4 => 'C|0|m'], 'forum' => [5 => 'X|L|R', 7 => 'Y|L'], 'order' => []];
+    setFieldSite($defs, ['points' => '6.3.0', 'ratings' => '6.3.0'], $rows, false);
+    $out['grow'] = getFieldRun();
     return $out;
 }
 
@@ -511,8 +516,8 @@ function getFieldResume(): array {
     return $out;
 }
 
-# The stops: a mark without a manifest, named definitions over positional rows, a forged snapshot, a stored row that is neither source nor target,
-# and every broken row and every broken definition the preflight has to name together without writing anything
+# The stops: a mark without a manifest, named definitions over positional rows, a forged snapshot, a stored row that is neither source nor target
+# Every broken row and every broken definition is one the preflight has to name together without writing anything
 function getFieldStop(): array {
     $out = [];
     setFieldSite(PROBEDEFS, ['points' => '6.3.0', 'ratings' => '6.3.0', 'fields' => '6.3.0']);
@@ -546,8 +551,8 @@ function getFieldStop(): array {
     return $out;
 }
 
-# The sources of a 6.2 site as the configuration step meets them next to the release: each keeps its values in a variable of its own, written as one array or key by key,
-# seo carries SEO keys the global of 6.2 also had, header is code that prints, core is code without settings, and db, news and templ have no successor
+# The sources of a 6.2 site as the configuration step meets them next to the release: each keeps its values in its own variable, as one array or key by key
+# The source seo carries SEO keys the global of 6.2 also had, header is code that prints, core is code without settings, and db, news and templ have no successor
 const CONFOLD = [
     'global' => "\$conf = array (\n  'sitename' => 'Old site',\n  'version' => '6.2.0 Pro',\n  'close' => '0',\n  'language' => 'russian',\n  'module' => 'news,forum',\n"
         ."  'amod' => 'news',\n  'css_f' => 'plugins/jquery/ui/',\n  'sep' => '/',\n  'oldkey' => 'kept',\n"
@@ -569,8 +574,8 @@ const CONFOLD = [
 # The shipped sources the configuration step writes over, as the release tracks them
 const CONFSHIP = ['global', 'security', 'users', 'fields', 'lang', 'statistic', 'uploads'];
 
-# Put the scratch site back to a 6.2 site copied under the release: the tracked sources of the release, the 6.2 sources beside them, a 6.2 db.php,
-# one public module, one panel module and one logo of the shipped theme in the tree, while the theme default of 6.2 is gone
+# Put the scratch site back to a 6.2 site copied under the release: the tracked sources of the release, the 6.2 sources beside them and a 6.2 db.php
+# The tree holds one public module, one panel module and one logo of the shipped theme, while the theme default of 6.2 is gone
 function setConfSite(): void {
     deleteProbeTree(BASE_DIR);
     mkdir(CONFIG_DIR, 0777, true);
@@ -623,8 +628,8 @@ function getConfState(string $html): array {
     ];
 }
 
-# The 6.2 configuration of a site goes over the release once: the first run, a repeat with nothing left to carry, a run that meets one source again after a break,
-# and the connection settings of the 6.2 db.php the installer reads for its lock and its form
+# The 6.2 configuration of a site goes over the release once: the first run, a repeat with nothing left to carry, a run that meets one source again after a break
+# It also reports the connection settings of the 6.2 db.php the installer reads for its lock and its form
 function getConfClean(): array {
     setConfSite();
     $out = ['base' => getSetupBase()];
@@ -680,8 +685,8 @@ function getMailRun(bool $move): array {
     return getMailState(setUpdateMails($GLOBALS['pdb'], PROBEPREF, 'admin@probe.test', $move));
 }
 
-# The recipients survive the schema file: the snapshot before it, a break after it and the queue written once, a repeat that writes nothing,
-# a break in the middle of the queue that neither loses nor doubles an address, a forged snapshot that stops the step, and a site with nothing pending
+# The recipients survive the schema file: the snapshot before it, a break after it and the queue written once, a repeat that writes nothing
+# A break in the middle of the queue neither loses nor doubles an address, a forged snapshot stops the step, and a site with nothing pending is covered too
 function getMailClean(): array {
     setMailSite();
     $out = ['kept' => getMailRun(false)];
@@ -703,8 +708,8 @@ function getMailClean(): array {
     return $out;
 }
 
-# Put the scratch site back to a 6.2 site copied under the release for the module registry: one panel module, three public ones with node among them,
-# the shipped config/modules.php with a record of a module that left the tree, and, when $table is set, the _modules table of 6.2 with an administrator whose rights are numbers
+# Put the scratch site back to a 6.2 site copied under the release for the module registry: one panel module, three public ones with node among them
+# The shipped config/modules.php keeps a record of a module that left the tree, and $table adds the _modules table of 6.2 with an administrator whose rights are numbers
 function setModSite(bool $table): void {
     deleteProbeTree(BASE_DIR);
     mkdir(CONFIG_DIR, 0777, true);
@@ -739,11 +744,12 @@ function getModState(string $html): array {
     return $out;
 }
 
-# The module registry of a 6.2 site with its _modules table, a repeat, a repeat after the mark whose owner switched forum on in between, and a site without the table;
-# the types of config/node.php the update takes out while it keeps the registered ones; then the preflight of a clean installation,
-# which needs a server as new as the update does and no table of its prefix, and the preflight of the update, which needs the users and admins tables of its prefix
-# and refuses an admins or newsletter table outside InnoDB; last the faults of the update: an admins table the registry cannot read, an uploads.php the type step
-# cannot write, and a read-only ratings.php that keeps the ratings unit from its manifest seal and its mark until the permissions are fixed
+# The module registry of a 6.2 site with its _modules table, a repeat, a repeat after the mark whose owner switched forum on in between, and a site without the table
+# The types of config/node.php the update takes out are checked while it keeps the registered ones
+# The preflight of a clean installation needs a server as new as the update does and no table of its prefix
+# The preflight of the update needs the users and admins tables of its prefix and refuses an admins or newsletter table outside InnoDB
+# The faults of the update come last: an admins table the registry cannot read and an uploads.php the type step cannot write
+# A read-only ratings.php keeps the ratings unit from its manifest seal and its mark until the permissions are fixed
 function getSetupClean(): array {
     $pdb = $GLOBALS['pdb'];
     setModSite(true);

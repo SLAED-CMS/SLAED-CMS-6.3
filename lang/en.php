@@ -497,6 +497,7 @@ define('_RATINGS_GONE','The rated item was not found.');
 define('_RATINGS_TWICE','This request was already accepted with another value.');
 define('_RATINGS_WAIT','You have already rated this. Days until the next rating: %d');
 define('_RATINGS_FAIL','The rating was not saved, please try again.');
+define('_RATINGS_OFF','Rating is temporarily unavailable here: the rule of this section is broken.');
 define('_READMORE','Read More');
 define('_READS','Reads');
 define('_RECHN','Account');

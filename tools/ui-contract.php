@@ -4,16 +4,14 @@
 # License: MIT
 # Website: slaed.net
 
-# The machine-readable theme contract. `.rules/theme.md` is the prose; this file is the authority.
-# Every axis, ladder step, allowlist entry, categorical set, declared component and contrast pair
-# a tool reads lives here, because `.rules/`, `.agents/` and `.claude/` are not tracked by git.
+# The machine-readable theme contract: `.rules/theme.md` is the prose, this file is the authority
+# Every axis, ladder step, allowlist entry, categorical set, component and contrast pair a tool reads lives here, because `.rules/` and `.claude/` are untracked
 
 return [
-    # The API is frozen: batch 8 settled the last of canon, so from here a theme package may gain a role but may never lose
-    # or rename one. What holds it is the roster under `api` in tools/ui-audit-baseline.json, which the tool compares every
-    # run and which --store refuses to write while a name has gone missing - a freeze nothing checks is a sentence in a file.
-    # One exception was decided by hand on 2026-09-10: the seventeen names of the home slider and the site carousel left with
-    # the main module, and were struck from the roster before the baseline was stored again
+    # The API is frozen: batch 8 settled the last of canon, so from here a theme package may gain a role but may never lose or rename one
+    # The freeze is held by the roster under `api` in tools/ui-audit-baseline.json, which the tool compares every run and --store refuses to write while a name is missing
+    # A freeze nothing checks is only a sentence in a file
+    # One exception was decided by hand on 2026-09-10: the seventeen names of the home slider and the site carousel left with the main module and were struck from the roster
     'frozen' => true,
     'marker' => '/* --- end tokens --- */',
     'prefix' => '--sl-',
@@ -29,9 +27,8 @@ return [
         'lite' => [
             'root' => 'templates/lite',
             'api' => 'templates/lite/assets/css/base.css',
-            # presentation.css dresses the one page of the presentation module. The runtime bundles every file of the
-            # directory by name, so it lands between base and theme without a config entry; the audit walks a list, so it
-            # is named here or it is bundled and never checked
+            # The file presentation.css dresses the one page of the presentation module and lands between base and theme, because the runtime bundles the directory by name
+            # The audit walks a list instead, so the file is named here or it is bundled and never checked
             'css' => [
                 'templates/lite/assets/css/base.css', 'templates/lite/assets/css/presentation.css',
                 'templates/lite/assets/css/theme.css', 'templates/lite/assets/editors/toastui/skin.css',
@@ -44,31 +41,30 @@ return [
     'axes' => [
         'color' => [
             'prefix' => '',
-            # `tint` is a translucent wash of the brand colour over whatever is behind it - a selection, a drop target,
-            # a pointed row. It is not `primary-subtle`, which is opaque and hides what it covers, and it inverts by itself
+            # The role `tint` is a translucent wash of the brand colour over whatever is behind it - a selection, a drop target, a pointed row
+            # It is not `primary-subtle`, which is opaque and hides what it covers, and it inverts by itself
             'roles' => ['bg', 'surface', 'border', 'text', 'primary', 'success', 'warning', 'danger', 'accent', 'info', 'on-solid', 'scrim', 'tint'],
             'steps' => ['subtle', 'muted', '', 'strong', 'inverse', 'sunken', 'raised'],
         ],
-        # Steps 9 to 11 are the second rhythm a page carries: the gap between its sections, which sits above every
-        # component gap. Only a frontend theme reaches that far, so admin declares none of the three
+        # Steps 9 to 11 are the second rhythm a page carries: the gap between its sections, which sits above every component gap
+        # Only a frontend theme reaches that far, so admin declares none of the three
         'space' => ['prefix' => 'space', 'roles' => ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']],
         'radius' => ['prefix' => 'radius', 'roles' => ['1', '2', '3', 'pill', 'circle']],
-        # `hero` is the step above every heading: the largest type a page carries - a slider headline, a dashboard number -
-        # and it exists because folding those onto `display` would size a hero like an h1 and lose the rank
+        # The step `hero` sits above every heading as the largest type a page carries - a slider headline, a dashboard number
+        # It exists because folding those onto `display` would size a hero like an h1 and lose the rank
         'font' => ['prefix' => 'font', 'roles' => ['hero', 'display', 'h1', 'h2', 'h3', 'h4', 'body', 'small', 'micro']],
         'face' => ['prefix' => 'face', 'roles' => ['body', 'display', 'mono', 'quote']],
         'line' => ['prefix' => 'line', 'roles' => ['tight', 'normal', 'loose']],
         'weight' => ['prefix' => 'weight', 'roles' => ['normal', 'medium', 'semibold', 'bold']],
         'track' => ['prefix' => 'track', 'roles' => ['tight', 'normal', 'wide']],
         'shadow' => ['prefix' => 'shadow', 'roles' => ['xs', 'raised', 'float', 'overlay', 'inset', 'focus', 'color']],
-        # `caption` is the shade a caption lies on when it stands on a picture: clear at the top, the surface at the foot,
-        # so the picture darkens towards the words rather than under a box. One role, because the site strip and the
-        # brand archive carry the same caption and the stops are one decision
+        # The role `caption` is the shade under a caption on a picture: clear at the top, the surface at the foot, so the picture darkens towards the words, not under a box
+        # It is one role, because the site strip and the brand archive carry the same caption and the stops are one decision
         'grad' => ['prefix' => 'grad', 'roles' => ['line', 'gloss', 'stripe', 'caption', 'progress-1', 'progress-2', 'progress-3', 'progress-4', 'progress-5']],
         'time' => ['prefix' => 'time', 'roles' => ['fast', 'base', 'slow']],
         'ease' => ['prefix' => 'ease', 'roles' => ['out', 'in-out']],
-        # `raised` is the layer measurement asked for: a component whose decorative floor opens a local stack needs
-        # a name for what sits on that floor, and every other role is a layer that leaves the flow
+        # The layer `raised` is the one measurement asked for: a component whose decorative floor opens a local stack needs a name for what sits on that floor
+        # Every other role is a layer that leaves the flow
         'z' => ['prefix' => 'z', 'roles' => ['base', 'raised', 'dropdown', 'sticky', 'overlay', 'modal', 'popover', 'toast']],
         'size' => ['prefix' => 'size', 'roles' => ['control', 'chip', 'tile', 'avatar', 'icon-xs', 'icon-sm', 'icon-md', 'icon-lg', 'icon-xl']],
         'fade' => ['prefix' => 'fade', 'roles' => ['subtle', 'muted', 'disabled']],
@@ -86,11 +82,10 @@ return [
                 '--sl-space-7', '--sl-space-8', '--sl-space-9', '--sl-space-10', '--sl-space-11',
             ],
         ],
-        # The hero step reads 38 and not 48 on purpose: it is the version number of the dashboard and the slider headline,
-        # and at 48 the number crowded the pane it shares with its label. Step count and role names are unchanged, which is
-        # what the ladder law asks of a theme that needs a different value.
-        # The micro step reads 11 and not 10 since the presentation page: most of its labels are monospace micro text, and
-        # a monospace face at 10 reads smaller than it is. One step for both themes, decided by the owner on 2026-09-10
+        # The hero step reads 38 and not 48 on purpose: it sizes the dashboard version number and the slider headline, and at 48 the number crowded the pane of its label
+        # Step count and role names are unchanged, which is what the ladder law asks of a theme that needs a different value
+        # The micro step reads 11 and not 10 since the presentation page: most of its labels are monospace micro text, and a monospace face at 10 reads smaller than it is
+        # One step serves both themes, decided by the owner on 2026-09-10
         'font-size' => [
             'steps' => [11, 12, 14, 16, 18, 20, 24, 32, 38],
             'unit' => 'px',
@@ -142,15 +137,15 @@ return [
             'stroke-dashoffset' => 'traces one path, measured against that path',
             'will-change' => 'names a property, holds no value',
             'clip-path' => 'a geometric mask',
-            # The figure aligns a glyph against its own baseline. It is measured against the font, not against the page, and a
-            # theme that repaints the palette never moves it; a ladder step here would fight the typeface instead of the design
+            # The figure aligns a glyph against its own baseline, measured against the font and not the page, and a theme that repaints the palette never moves it
+            # A ladder step here would fight the typeface instead of the design
             'vertical-align' => 'an optical offset measured against the font, not a rhythm step',
-            # A size hint for content-visibility: it estimates the box of what the browser has not rendered yet and paints nothing.
+            # A size hint for content-visibility: it estimates the box of what the browser has not rendered yet and paints nothing
             # Wrong, it costs a scroll jump; repainted by a theme, it changes no pixel
             'contain-intrinsic-size' => 'a rendering hint for skipped content, never a painted value',
-            # One formula rests every picture of the presentation page - the principles, the brand archive and the site
-            # strip - and lifts under the pointer. Its four factors are neither a colour nor a size a theme repaints: they
-            # are how much of the picture's own colour shows through, and a ladder step would make a photograph a decision
+            # One formula rests every picture of the presentation page - the principles, the brand archive and the site strip - and lifts under the pointer
+            # Its four factors are neither a colour nor a size a theme repaints: they are how much of the picture's own colour shows through
+            # A ladder step here would make a photograph a decision
             'filter' => 'a treatment of a picture measured against the picture itself, not a colour or a size of the theme',
         ],
         'values' => [
@@ -168,12 +163,12 @@ return [
             'transparent' => 'the absence of a colour is not a colour decision',
             'currentcolor' => 'defers to the colour already decided',
             '0.01ms' => 'motion off, not a duration',
-            # A constant rate is the definition of a continuous animation: a spinner or a marquee that eases stutters at every
-            # cycle boundary, because the curve restarts where it ended. It is the absence of a curve, not one curve among many
+            # A constant rate defines a continuous animation: a spinner or a marquee that eases stutters at every cycle boundary, because the curve restarts where it ended
+            # It is the absence of a curve, not one curve among many
             'linear' => 'a constant rate, which is what a looping animation needs instead of a curve',
             '-9999px' => 'text pushed off the canvas so an icon can stand where it was: a hiding technique, not a typographic decision',
-            # The opening quotation mark drawn behind an owner voice (.sl-pres-voice::before) is a glyph used as ornament: its size is
-            # the optics of one sign against one card, not a step of the type ladder, which no text on the page reads at
+            # The opening quotation mark behind an owner voice (.sl-pres-voice::before) is a glyph used as ornament, sized by the optics of one sign against one card
+            # That size is not a step of the type ladder, and no text on the page reads at it
             '80px' => 'the ornament glyph of a quotation, sized as a sign and not as type',
         ],
         'shapes' => [
@@ -187,21 +182,21 @@ return [
     'categorical' => [
         'chart' => ['members' => ['up', 'down', 'cpu', 'ram'], 'mindiff' => 60],
         'season' => ['members' => ['winter', 'spring', 'summer', 'autumn', 'newyear'], 'mindiff' => 40],
-        # The five tones of the level meter: a poll paints its options with them by option number, so no option
-        # is more than another and no ladder applies. The gradient of each tone lives on the grad axis
+        # The five tones of the level meter: a poll paints its options with them by option number, so no option is more than another and no ladder applies
+        # The gradient of each tone lives on the grad axis
         'progress' => ['members' => ['1', '2', '3', '4', '5'], 'mindiff' => 60],
     ],
 
     # Component tokens: the prop is closed, the component is open but declared here
-    # `min-*` and `max-*` are the same decision as the size beside them: a component that names its height and not the
-    # floor it may not fall below leaves half its geometry outside the API. `mix` is how much of a tone a tint carries,
-    # which cannot be hoisted into a root token when the tone itself is scoped. `ease` is the curve half of `dur`
+    # The props `min-*` and `max-*` are the same decision as the size beside them: naming a height and not its floor leaves half the geometry outside the API
+    # The prop `mix` is how much of a tone a tint carries, which cannot be hoisted into a root token when the tone itself is scoped
+    # The prop `ease` is the curve half of `dur`
     'props' => [
         'bg', 'border', 'text', 'radius', 'height', 'width', 'min-width', 'max-width', 'min-height', 'max-height',
         'pad-x', 'pad-y', 'gap', 'shadow', 'ring', 'dur', 'ease', 'mix',
     ],
-    # The eleven `col-*` entries are the column widths of a fixed admin list table: the track list of `table-layout: fixed`,
-    # which CSS spells as one width per cell instead of one `grid-template-columns`, and each is a figure an author retunes
+    # The eleven `col-*` entries are the column widths of a fixed admin list table: the track list of `table-layout: fixed`
+    # CSS spells that track list as one width per cell instead of one `grid-template-columns`, and each is a figure an author retunes
     'components' => [
         'alert', 'arrow', 'aside', 'ava', 'avatar', 'badge', 'band', 'bar', 'beam', 'brand', 'btn', 'btn-mini', 'bullet', 'cab-act', 'cab-msg', 'cab-ring',
         'calc', 'card', 'changelog', 'changelog-body', 'changelog-date',
@@ -242,7 +237,8 @@ return [
         '--sl-d-meter' => 'profile completeness percentage, templates/lite/partials/account-settings.html and plugins/system/slaed.js',
         '--sl-d-at' => 'settings rail mark index, templates/lite/partials/account-settings.html',
         '--sl-d-of' => 'settings rail mark count less one, templates/lite/partials/account-settings.html',
-        '--sl-d-part' => 'share of a measured figure as a percentage, templates/lite/fragments/presentation-stat.html, partials/presentation-stats.html and partials/presentation-runtime.html',
+        '--sl-d-part' => 'share of a measured figure as a percentage, templates/lite/fragments/presentation-stat.html, partials/presentation-stats.html'
+            .' and partials/presentation-runtime.html',
         '--sl-d-gate-y' => 'height the request guard gate patrols at inside its scene, plugins/presentation/presentation.js',
         '--sl-d-pointer-x' => 'pointer viewport horizontal position, plugins/presentation/presentation.js',
         '--sl-d-pointer-y' => 'pointer viewport vertical position, plugins/presentation/presentation.js',
@@ -286,12 +282,12 @@ return [
         'error.html',
     ],
 
-    # Colour ramp, derived by `--ramp` from the real distribution and never invented.
+    # Colour ramp, derived by `--ramp` from the real distribution and never invented
     # Each step carries a role, which is what lets the ramp reverse for dark while the roles hold
     'ramp' => [
         'saturation' => 30,
-        # HSL saturation is chroma divided by what the lightness still allows, so a near-white carrying
-        # three points of chroma reads 100 and would be filed as a colour it is not. Chroma decides beside the ratio
+        # HSL saturation is chroma divided by what the lightness still allows, so a near-white carrying three points of chroma reads 100 and would be filed as a colour
+        # Chroma therefore decides beside the ratio
         'chroma' => 12,
         'roles' => [
             '50' => 'background',
@@ -305,9 +301,9 @@ return [
             '800' => 'text',
             '900' => 'text',
         ],
-        # Lightness per step as `--ramp` found it in each theme today, rank-mapped onto the ten roles.
-        # A family with gaps has fewer colours than steps and gains them as the semantic tokens land;
-        # a family whose steps sit at one lightness is where two values serve one role and collapse
+        # Lightness per step as `--ramp` found it in each theme today, rank-mapped onto the ten roles
+        # A family with gaps has fewer colours than steps and gains them as the semantic tokens land
+        # A family whose steps sit at one lightness is where two values serve one role and collapse
         'families' => [
             'admin' => [
                 'blue' => ['50' => 61.6, '100' => 56.5, '200' => 49.3, '300' => 42.0, '400' => 42.0, '500' => 42.0, '600' => 42.0, '700' => 39.0, '800' => 26.9, '900' => 26.3],
@@ -338,80 +334,73 @@ return [
         'pairs' => [],
     ],
 
-    # `unmet` is the other half of `dead`: a name a theme reads and declares nowhere, which CSS answers by
-    # dropping the declaration with no error and no warning. A read carrying a fallback is met by that fallback,
-    # and a name in `data` is met by whatever writes it from outside CSS.
-    # Counts the ratchet holds: none of these may grow against the stored baseline.
-    # `tokens` and `single` are recorded but not ratcheted, because extracting an axis into the API block
-    # raises both on purpose, and a component token that one component reads is correct at one use
+    # The count `unmet` is the other half of `dead`: a name a theme reads and declares nowhere, which CSS answers by dropping the declaration with no error or warning
+    # A read carrying a fallback is met by that fallback, and a name in `data` is met by whatever writes it from outside CSS
+    # Counts the ratchet holds: none of these may grow against the stored baseline
+    # The counts `tokens` and `single` are recorded but not ratcheted, because extracting an axis into the API block raises both on purpose
+    # A component token that one component reads is correct at one use
     'ratchet' => ['count', 'bare', 'dup', 'names', 'dead', 'alias', 'unsat', 'unmet', 'scoped', 'classes', 'important', 'contrast', 'clash'],
 
-    # Rule bodies repeated under selectors that do not belong together, each with the reason it is not merged.
+    # Rule bodies repeated under selectors that do not belong together, each with the reason it is not merged
     # The key is the group's selectors sorted and joined by ', ', which is what checkDupBlocks() compares
     'duplicates' => [
-        # A utility that puts a gap after any inline element, beside the input of one form field: merging would
-        # move the field's definition into the utility block, where nobody editing the field would look
+        # A utility that puts a gap after any inline element, beside the input of one form field
+        # Merging would move the field's definition into the utility block, where nobody editing the field would look
         '.sl-div-field label input, .sl-inline-gap',
-        # The head of the monitor and the count badge of a sidebar block: two components that share three
-        # declarations by coincidence and nothing else
+        # The head of the monitor and the count badge of a sidebar block: two components that share three declarations by coincidence and nothing else
         '.sl-monitor-head-left, .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-block-sidebar-count-label',
-        # The tab strip of the icon picker and the filter row of the file manager window: two rows of one gap, met by two
-        # components that share nothing else. They were in two files until the window became the theme's
+        # The tab strip of the icon picker and the filter row of the file manager window: two rows of one gap, met by two components that share nothing else
+        # They were in two files until the window became the theme's
         '.sl-fm-win .sl-fm-filters, .sl-icon-modal-tabs',
         # The name cell of the file manager and a field row of the language editor
         '.sl-fm-name, .sl-lang-edit-row .sl-div-field',
-        # The paragraph reset of base.css and the list item of the markdown block: one is the element default
-        # every page inherits, the other a rule scoped to rendered markdown, and they meet at one step by chance
+        # The paragraph reset of base.css and the list item of the markdown block: one is the element default every page inherits, the other a rule scoped to markdown
+        # They meet at one step by chance
         '.sl-markdown li, p',
-        # Two site blocks and two cells of the profile hub that lite hides on a narrow screen, beside the rail parts
-        # the editor window hides at the same width. They met when the skin took the shared breakpoint ladder and the
-        # hub's own 760 moved onto 768; one set is page furniture, the other a dialog the page never sees
+        # Two site blocks and two cells of the profile hub that lite hides on a narrow screen, beside the rail parts the editor window hides at the same width
+        # They met when the skin took the shared breakpoint ladder and the hub's own 760 moved onto 768; one set is page furniture, the other a dialog the page never sees
         '#block-idea, #block-feedback, .sl-profile-hub-row > span:nth-of-type(1), .sl-profile-hub-row-head, '
             .'.sl-fm-win .sl-fm-rail-cap, .sl-fm-win .sl-fm-rail-sep, .sl-fm-win .sl-fm-rail-foot, '
             .'.sl-fm-win .sl-fm-rail-item small, .sl-fm-win .sl-fm-rows-head span:nth-child(4), '
             .'.sl-fm-win .sl-fm-row span:nth-child(4), .sl-fm-win .sl-fm-rows-head span:nth-child(5), '
             .'.sl-fm-win .sl-fm-row span:nth-child(5)',
-        # Three hover states and one static note that all fade to the same step. The note is not a hover, so merging
-        # would put a resting style inside a list of pointer states and hide it from whoever edits either one
-        '.sl-block-sidebar h3:hover, .sl-but:hover, .sl-but-blue:hover, .sl-but-red:hover, .sl-but-green:hover, .sl-but-foot:hover, .sl-but-back:hover, .sl-dashboard-panel-head:hover, .sl-session-note',
-        # A body that is one declaration reaching one ladder step is need and not repetition, the same way `display: flex`
-        # under 122 flex containers is. These three met when lite's type sizes landed on the ladder: an element default
-        # beside three small labels, three unrelated places reaching the smallest step, and four glyphs at one icon step.
+        # Three hover states and one static note that all fade to the same step
+        # The note is not a hover, so merging would put a resting style inside a list of pointer states and hide it from whoever edits either one
+        '.sl-block-sidebar h3:hover, .sl-but:hover, .sl-but-blue:hover, .sl-but-red:hover, .sl-but-green:hover, .sl-but-foot:hover, .sl-but-back:hover, '
+            .'.sl-dashboard-panel-head:hover, .sl-session-note',
+        # A body that is one declaration reaching one ladder step is need and not repetition, the same way `display: flex` under 122 flex containers is
+        # These three met when lite's type sizes landed on the ladder: an element default beside three small labels, three places at the smallest step, four glyphs at one icon step
         # Merging any of them would file an element reset or one component's glyph inside a list that names nothing
         '.sl-chip.sl-topic-post .bi, .sl-chip.sl-topic-edit .bi, .sl-fm-win .sl-fm-drop small, .sl-fm-win .sl-fm-view .sl-pager-info, small',
         '.sl-block-pm a > .bi:last-child, .sl-cab-nav .sl-cab-act b, .sl-pmf-mate small',
         '.bi-stars, .sl-cab-nav .sl-cab-act .sl-cat-ico .bi, .sl-msg-search .sl-home-link .bi, .sl-pmf-slot-more i',
-        # The same shape in lite: the hover of a forum row and one resting note, which met when 0.9 and 0.75 folded onto
-        # one step. The note is not a hover, and the two share nothing else
+        # The same shape in lite: the hover of a forum row and one resting note, which met when 0.9 and 0.75 folded onto one step
+        # The note is not a hover, and the two share nothing else
         '.sl-forum-last:hover, .sl-session-note',
-        # The element default every page inherits, a utility that bolds any inline run, and one component label. They met
-        # when `bold` and `700` became one name; merging would move the element reset into a utility block
+        # The element default every page inherits, a utility that bolds any inline run, and one component label
+        # They met when `bold` and `700` became one name; merging would move the element reset into a utility block
         '.sl-label, .sl-text-bold, strong, b',
-        # The hovered compact button and the page the pager is standing on: both are painted in the brand colour and both
-        # take the text that reads on it, which is one role and not one component. Merging would file the pager's current
-        # page inside a button's hover block, where nobody editing either would look for it
+        # The hovered compact button and the current pager page both paint the brand colour and take the text that reads on it, which is one role and not one component
+        # Merging would file the pager's current page inside a button's hover block, where nobody editing either would look for it
         '.sl-but-mini:hover, .sl-but-mini:focus-visible, .sl-pager-pages .sl-pnum-cur',
-        # A chip that carries a checked radio and a filter button that is pressed: two controls of the upload panel that both
-        # say "on" in the same tint. Merging would put the chip's definition inside the filter's block, where nobody looking
-        # at either one would find it, and the two drift apart the moment one of them stops being a tint
+        # A chip that carries a checked radio and a filter button that is pressed: two controls of the upload panel that both say "on" in the same tint
+        # Merging would hide the chip's definition inside the filter's block, and the two drift apart the moment one of them stops being a tint
         '.sl-fm-win .sl-fm-as label:has(input:checked), .sl-fm-win .sl-fm-filter[aria-pressed="true"]',
-        # A status tone has one colour and many marks, and the moment every mark stopped reading a tint step and took the
-        # base tone of its family, the marks of one status met each other. A hidden-text frame, a hot topic, a moderated
-        # topic and a category tone are four components, not one: a selector list holding them would name nothing, and each
-        # would lose the block a reader opens to find it. Two of the three also reach across a file the list cannot cross
+        # A status tone has one colour and many marks, and once every mark took the base tone of its family instead of a tint step, the marks of one status met
+        # A hidden-text frame, a hot topic, a moderated topic and a category tone are four components: a list holding them names nothing and hides each from its reader
+        # Two of the three also reach across a file the list cannot cross
         '.sl-fieldset-form-legend-success, .sl-text-success, .sl-profile-proof:nth-child(2) i, '
             .'.sl-radio-group.sl-radio-switch:has(input[value="1"]:checked) .sl-radio:has(input:checked), '
             .'.sl-session-line[data-sl-audience="users"] > .bi, .sl-fm-win .sl-fm-job.sl-is-done > .bi, .sl-topic-moderated .bi',
         '.sl-fieldset-form-legend-danger, .sl-text-danger, .sl-hide::before, .sl-hide::after, .sl-profile-proof.sl-is-warn i, '
             .'.sl-profile-wide.sl-is-warn h3 i, .sl-fm-win .sl-fm-empty.sl-is-fail .bi, .sl-fm-win .sl-fm-job.sl-is-fail > .bi',
         '.sl-profile-row-private > i, .sl-session-line[data-sl-audience="bots"] > .bi, .sl-topic-hot .bi, .sl-topic-admin .bi',
-        # A category tone and the tone a kept message wears are one colour under two names on purpose: the first is a
-        # category of the catalogue, the second a state of a message, and they are free to part without touching each other
+        # A category tone and the tone a kept message wears are one colour under two names on purpose: a category of the catalogue and a state of a message
+        # They are free to part without touching each other
         '.sl-cat-tone-2, .sl-pmf-slot-keep',
-        # Five groups the colour fold closed over: the changelog island, the two service tones of the social icons and the
-        # colour a heading link carried all reached a role that other places already read, and a page ground meeting an editor
-        # ground is a coincidence of one role and not one component. Four of the five cross a file boundary that no selector
-        # list can cross at all, and the fifth would file a changelog row inside a code table
+        # Five groups the colour fold closed over: the changelog island, two service tones of the social icons and a heading link colour reached roles read elsewhere
+        # A page ground meeting an editor ground is a coincidence of one role and not one component
+        # Four of the five cross a file boundary that no selector list can cross at all, and the fifth would file a changelog row inside a code table
         '.sl-changelog-commit:hover, .sl-code-row-odd, .toastui-editor-contents pre, .toastui-editor-context-menu .menu-item:hover, '
             .'.toastui-editor-popup-add-heading ul li:hover',
         '.sl-changelog-commit-alt, .toastui-editor-popup-add-table .toastui-editor-table-cell.header, a.sl-profile-hub-row:hover',
@@ -422,152 +411,129 @@ return [
             .'.sl-profile-feed .sl-tabs-link:hover, .sl-profile-hub-row b, .sl-table-head th a, .toastui-editor-contents h1, '
             .'.toastui-editor-contents h2, .toastui-editor-contents h3, .toastui-editor-contents h4, .toastui-editor-contents h5, '
             .'.toastui-editor-contents h6',
-        # Three chips meeting three freshness and liveness marks, which is what one wash of one's own colour costs: once every
-        # tinted pill in the theme reads the same ground, a tone class and a state chip carrying the same tone say the same two
-        # things. They are not one component - a chip is a label the page prints, a freshness mark is a reading of the clock -
-        # and merging either pair would file one component's tone inside the other's block
+        # Three chips meeting three freshness and liveness marks is the cost of one wash of one's own colour: once every tinted pill reads the same ground, they say the same
+        # They are not one component - a chip is a label the page prints, a freshness mark is a reading of the clock
+        # Merging either pair would file one component's tone inside the other's block
         '.sl-chip-info, a.sl-chip-info, .sl-fresh-week',
         '.sl-chip-success, a.sl-chip-success, .sl-live-chip.sl-is-paused .sl-live-act',
         '.sl-chip-warn, a.sl-chip-warn, .sl-fresh-days',
-        # The faint text of a rail item nobody may click, beside the syntax marks of the markdown source. One is a state of a
-        # control, the other is how a language is written down; they share a tone and nothing else
+        # The faint text of a rail item nobody may click, beside the syntax marks of the markdown source
+        # One is a state of a control, the other is how a language is written down; they share a tone and nothing else
         '.sl-fm-win .sl-fm-rail-item[disabled] b, .sl-fm-win .sl-fm-rail-item[disabled] .bi, '
             .'.toastui-editor-md-delimiter, .toastui-editor-md-thematic-break, .toastui-editor-md-link, '
             .'.toastui-editor-md-table, .toastui-editor-md-block-quote',
-        # The same meeting in lite, where the faint tone is already shared by a footer menu, the glyphs of a read forum row
-        # and a nested list. None of them is the markdown source, and a selector list holding all four would name nothing
+        # The same meeting in lite, where the faint tone is already shared by a footer menu, the glyphs of a read forum row and a nested list
+        # None of them is the markdown source, and a selector list holding all four would name nothing
         '.sl-forum-old .bi, .sl-topic-old .bi, .sl-topic-popular-old .bi, .sl-topic-closed .bi, '
             .'.sl-forum-closed .bi, .sl-list-item > li ul, .sl-list-item > li ul a, '
             .'.sl-fm-win .sl-fm-rail-item[disabled] b, .sl-fm-win .sl-fm-rail-item[disabled] .bi, '
             .'.toastui-editor-md-delimiter, .toastui-editor-md-thematic-break, .toastui-editor-md-link, '
             .'.toastui-editor-md-table, .toastui-editor-md-block-quote',
-        # the item of a tab strip beside the definition list inside a hint: two components that both open as a block with no margin and
-        # share nothing else
+        # The item of a tab strip beside the definition list inside a hint: two components that both open as a block with no margin and share nothing else
         '.sl-tabs-item, .sl-tip dl',
-        # the link list of an admin block beside the count list of a sidebar block: two lists of a sidebar that happen to take the same
-        # track and gap
+        # The link list of an admin block beside the count list of a sidebar block: two lists of a sidebar that happen to take the same track and gap
         '.sl-admin-block-links, .sl-block-sidebar-count-list',
-        # the same pair one level down, on the link each list holds
+        # The same pair one level down, on the link each list holds
         '.sl-admin-block-link a, .sl-block-sidebar-count-label a',
-        # the control of a live chip beside the thumbnail of a file row: two buttons stripped of their browser chrome, which is need and not
-        # one component
+        # The control of a live chip beside the thumbnail of a file row: two buttons stripped of their browser chrome, which is need and not one component
         '.sl-live-act, button.sl-fm-thumb',
-        # the wordmark of the login card beside the flag of a session line: two boxes that centre one child, in two screens that never meet
+        # The wordmark of the login card beside the flag of a session line: two boxes that centre one child, in two screens that never meet
         '.sl-admin-login-card .sl-admin-brand, .sl-session-icon .sl-geo-flag',
-        # the primary action of the file manager beside a pressed filter of its bar: one is a rank, the other a state, and they part the
-        # moment either stops being solid
+        # The primary action of the file manager beside a pressed filter of its bar: one is a rank, the other a state, and they part the moment either stops being solid
         '.sl-but-mini.sl-fm-main, .sl-fm-bar .sl-but-mini[aria-pressed="true"]',
-        # the open node of the file tree beside the picture kind of a thumbnail: a place the window is standing in and a kind of file, which
-        # is a coincidence of one tint
+        # The open node of the file tree beside the picture kind of a thumbnail: a place the window is standing in and a kind of file, a coincidence of one tint
         '.sl-fm-node[aria-current="true"], .sl-fm-thumb-img',
-        # a selected tile beside a drop target under a dragged file: two states of the same panel that mean different things and are free to
-        # part
+        # A selected tile beside a drop target under a dragged file: two states of the same panel that mean different things and are free to part
         '.sl-fm-cell[aria-selected="true"] .sl-fm-tile, .sl-fm-drop.sl-drag-over',
-        # the caption of the drop zone beside the caption of an empty list: two states of the panel, one inviting and one reporting
+        # The caption of the drop zone beside the caption of an empty list: two states of the panel, one inviting and one reporting
         '.sl-fm-win .sl-fm-drop b, .sl-fm-win .sl-fm-empty b',
-        # the note beside a queued file and the term of a property list: two faint labels in two panels of the window
+        # The note beside a queued file and the term of a property list: two faint labels in two panels of the window
         '.sl-fm-win .sl-fm-job-name small, .sl-fm-win .sl-fm-props dt, .sl-shot-side .sl-fm-props dt',
-        # the caption over the queue beside the room the module has left: two readings of the same panel, and the second is a measurement
-        # rather than a heading
+        # The caption over the queue beside the room the module has left: two readings of the same panel, and the second is a measurement rather than a heading
         '.sl-fm-win .sl-fm-queue-cap, .sl-fm-win .sl-fm-quota',
-        # the tab standing open in a profile feed beside a letter of the alphabet index under the pointer: a state and a rank, both painted
-        # in the brand fill
+        # The tab standing open in a profile feed beside a letter of the alphabet index under the pointer: a state and a rank, both painted in the brand fill
         '.sl-profile-feed .sl-tabs-link.sl-is-active, a .sl-letter:hover',
-        # the action row of a meta line and a provider button: two inline rows that carry one icon beside one label at the row gap; the
-        # byline of an entry left the group when it took the chip gap
+        # The action row of a meta line and a provider button: two inline rows that carry one icon beside one label at the row gap
+        # The byline of an entry left the group when it took the chip gap
         '.sl-meta-actions, .sl-oauth-but',
-        # a link in a sidebar block beside a link in a table cell: two places one title is cut off with an ellipsis, and they live in two
-        # layouts
+        # A link in a sidebar block beside a link in a table cell: two places one title is cut off with an ellipsis, and they live in two layouts
         '.sl-block-content > li > a, .sl-cell-ellipsis > a:last-child',
-        # the buttons under a notice beside the chips of a message filter: two wrapping rows in two components
+        # The buttons under a notice beside the chips of a message filter: two wrapping rows in two components
         '.sl-alert-actions, .sl-pmf-chips',
-        # the foot of a reply box beside a group of radios, the door of a file row and the foot of a Node file card: two toolbars, a form
-        # control and a row of a form that all wrap their children on one line, and joining them would file four components under a
-        # selector list naming none of them
+        # The foot of a reply box, a group of radios, the door of a file row and the foot of a Node file card all wrap their children on one line
+        # They are two toolbars, a form control and a form row, and joining them would file four components under a selector list naming none of them
         '.sl-file-door, .sl-node-file .sl-meta-foot, .sl-pmf-reply-foot, .sl-radio-group',
-        # two pictures that fill the box they are given: a preview and the thumbnail of a related entry.
+        # Two pictures that fill the box they are given: a preview and the thumbnail of a related entry
         # Merging would file two components under one selector list that names neither of them
         '.sl-image-preview-thumb, .sl-related-img-inner',
-        # the two footer lines: two element defaults of the footer at the small step in the muted tone
+        # The two footer lines: two element defaults of the footer at the small step in the muted tone
         '.sl-generates, .sl-license',
-        # the two parts of a speed dial beside the control of a live chip: three buttons stripped of their browser chrome, which is need
+        # The two parts of a speed dial beside the control of a live chip: three buttons stripped of their browser chrome, which is need
         '.sl-dial-toggle, .sl-dial-item, .sl-live-act',
-        # a quotation in running text beside the two cells of a session line: both have to break an unbreakable run, and nothing else joins
-        # a quote to a session
+        # A quotation in running text beside the two cells of a session line: both have to break an unbreakable run, and nothing else joins a quote to a session
         '#content blockquote, .sl-session-name, .sl-session-module',
-        # the number column of a cart beside the number column of a file list: two fixed tracks of two tables, each retuned by whoever owns
-        # that table
+        # The number column of a cart beside the number column of a file list: two fixed tracks of two tables, each retuned by whoever owns that table
         'td.sl-cart-col-num, th.sl-fl-col-num, td.sl-fl-col-num',
-        # the title cell of a cart row beside the heading of a file row: one is inline emphasis, the other a heading, and they are the same
-        # size by chance
+        # The title cell of a cart row beside the heading of a file row: one is inline emphasis, the other a heading, and they are the same size by chance
         '.sl-cart-col-content strong, .sl-fl-col-content h4, .sl-fl-col-content h3',
-        # the body of a preview panel beside the info block of a profile: two grids that close their gaps
+        # The body of a preview panel beside the info block of a profile: two grids that close their gaps
         '.sl-preview-body, .sl-profile-info',
-        # the subject of a commit beside the count of a result set: a title and a figure, in one screen but not in one component
+        # The subject of a commit beside the count of a result set: a title and a figure, in one screen but not in one component
         '.sl-changelog-commit-header strong, .sl-changelog-results-info strong',
-        # the name under a user avatar beside the points beside it: a name and a number, which read at one size today and need not tomorrow
+        # The name under a user avatar beside the points beside it: a name and a number, which read at one size today and need not tomorrow
         '.sl-block-user-ava p > a, .sl-block-user-ava p > b, .sl-user-points b',
-        # the timestamp of a message slot, the note in a profile hub row and the unit beside a points figure: three smallest-step labels in
-        # three components
+        # The timestamp of a message slot, the note in a profile hub row and the unit beside a points figure: three smallest-step labels in three components
         '.sl-pmf-slot-top time, .sl-profile-hub-row span, .sl-user-points small',
-        # the comment a reply link points at beside the focused mode switch: one is a place the page jumped to, the other a control under
-        # the keyboard, and both are drawn with the theme's one ring
+        # The comment a reply link points at beside the focused mode switch: a place the page jumped to and a control under the keyboard, both drawn with the one ring
         '.sl-com-reply-at .sl-com-cont, .sl-mode-but:focus-visible',
-        # the round action's own gloss beside the same gloss restated for the search button. The second is there because the search button
-        # sets its own background-image at rest, and dropping it would leave that rest value in place under the pointer
+        # The round action's own gloss beside the same gloss restated for the search button
+        # The second is there because the search button sets its own background-image at rest, and dropping it would leave that rest value under the pointer
         '.sl-circle-action:hover, .sl-circle-action:focus-visible, .sl-search-form button.sl-circle-action:hover, '
             .'.sl-search-form button.sl-circle-action:focus-visible',
-        # the work area of the cabinet beside the main column of a profile: two page regions that take one rhythm step of padding
+        # The work area of the cabinet beside the main column of a profile: two page regions that take one rhythm step of padding
         '.sl-cab-main, .sl-profile-split-main',
-        # the label of a cabinet action beside the figure of a profile score and the caption of a field of the file manager window:
-        # a name, a number and a caption, which is three components reaching one tone at one step
+        # The label of a cabinet action, the figure of a profile score and the caption of a file manager field: three components reaching one tone at one step
         '.sl-cab-act b, .sl-fm-win .sl-fm-label, .sl-profile-score > b',
-        # the title of a cabinet row beside the correspondent of a message slot: two titles cut off at the same step
+        # The title of a cabinet row beside the correspondent of a message slot: two titles cut off at the same step
         '.sl-cab-row b, .sl-pmf-slot-top b',
-        # the rail of the cabinet beside the rail of a profile, both turning their side border into a bottom one when the two columns stack.
+        # The rail of the cabinet beside the rail of a profile, both turning their side border into a bottom one when the two columns stack
         # Two page regions that stack the same way at one breakpoint
         '.sl-cab-rail, .sl-profile-split-rail',
 
-        # The seven below met when the file manager window left the editor skin for the theme. Nothing about them changed:
-        # each was already a body shared with the window, and a body met in two files is one no selector list can join at
-        # all. Now that the window is dressed by the theme they stand in one file, and each has to say why it is still not
-        # one component
-        # five columns that grow into the room their neighbours leave and may shrink below their own text: the body of a
-        # notice, the field of the cabinet RSS form, the right half of a comment, the words of a rail item and the right
-        # half of a footprint row. The pair is the whole way flexbox is told a column may shrink, which is need
+        # The seven below met when the file manager window left the editor skin for the theme; nothing about them changed
+        # Each was already a body shared with the window, and a body met in two files is one no selector list can join at all
+        # Now that the window is dressed by the theme they stand in one file, and each has to say why it is still not one component
+        # Five columns grow into the room their neighbours leave and may shrink below their own text: a notice body, the cabinet RSS field and a comment's right half
+        # The words of a rail item and the right half of a footprint row are the other two; the pair is the whole way flexbox is told a column may shrink, which is need
         '.sl-alert-body, .sl-cab-rss-form .sl-form-control, .sl-com-right, .sl-fm-win .sl-fm-rail-item > span, .sl-fp-right',
-        # the same growing column in the administrative theme, where a search field, the bottom pager, the three controls of
-        # the language editor and the name field of the file browser reach it too
+        # The same growing column in the administrative theme, reached by a search field, the bottom pager, three language editor controls and the file browser name field
         '.sl-alert-body, .sl-fm-ops input[type="text"], .sl-fm-win .sl-fm-rail-item > span, '
             .'.sl-lang-edit-row .sl-div-field input[type="text"], .sl-lang-edit-row .sl-div-field .sl-select-config, '
             .'.sl-lang-edit-row .sl-div-field .sl-select, .sl-list-bottom-pager, .sl-modal-bar [data-sl-icon-search]',
-        # a filter field, the row list of the window, a panel of the profile facts and the frame every modal opens as: four
-        # boxes that stack their children. The dialog is the canon of the window, and filing it inside one component's block
-        # would hide it from whoever edits either
+        # A filter field, the row list of the window, a panel of the profile facts and the frame every modal opens as: four boxes that stack their children
+        # The dialog is the canon of the window, and filing it inside one component's block would hide it from whoever edits either
         '.sl-changelog-filter-field, .sl-fm-win .sl-fm-rows, .sl-profile-facts .sl-profile-panel, dialog.sl-modal[open]',
-        # the same three in the administrative theme, which carries no profile facts
+        # The same three in the administrative theme, which carries no profile facts
         '.sl-changelog-filter-field, .sl-fm-win .sl-fm-rows, dialog.sl-modal[open]',
-        # the row of insertion ways beside the tag list of a profile: two rows that wrap at one gap, in two screens that
-        # never meet
+        # The row of insertion ways beside the tag list of a profile: two rows that wrap at one gap, in two screens that never meet
         '.sl-fm-win .sl-fm-as, .sl-profile-tags',
-        # the typing surface of the editor beside the two columns of the window: both take the height their frame leaves and
-        # are allowed to shrink inside it. One is the vendor's, the other the window's own split
+        # The typing surface of the editor beside the two columns of the window: both take the height their frame leaves and may shrink inside it
+        # One is the vendor's, the other the window's own split
         '.sl-div-form .sl-div-item:has(.toastui-editor-defaultUI) .toastui-editor-main, .sl-fm-win .sl-fm-split',
-        # the name of a file in the browser, the name of a node in its tree and the name of a queued file in the window:
-        # three names cut off at one line. The browser and the window are two screens, and the ellipsis is need
+        # The name of a file in the browser, of a node in its tree and of a queued file in the window: three names cut off at one line
+        # The browser and the window are two screens, and the ellipsis is need
         '.sl-fm-name > a, .sl-fm-node > span:last-child, .sl-fm-win .sl-fm-job-name span',
-        # the track of the gallery range under its two vendor names: one drawing, but a selector list carrying a pseudo-element one
-        # engine does not know is dropped whole by that engine, so the two spellings cannot share a rule
+        # The track of the gallery range under its two vendor names is one drawing, but an engine drops a whole selector list carrying a pseudo-element it does not know
+        # The two spellings therefore cannot share a rule
         '.sl-pres-gallery-controls > input::-moz-range-track, .sl-pres-gallery-controls > input::-webkit-slider-runnable-track',
     ],
 
-    # A shared selector whose two themes hold a different set of properties, each with the reason the difference is not a
-    # bug. A selector holding the same properties with different values needs no entry: that is one canon carrying many
-    # skins, which is what the theme packages are for. The key is the `@media context` and the selector joined by two
-    # spaces, which is what `--cross` prints
+    # A shared selector whose two themes hold a different set of properties, each with the reason the difference is not a bug
+    # A selector holding the same properties with different values needs no entry: that is one canon carrying many skins, which is what the theme packages are for
+    # The key is the `@media context` and the selector joined by two spaces, which is what `--cross` prints
     'divergent' => [
-        # The shorthand and the three longhands are not two spellings of one intent: every longhand a shorthand leaves out
-        # is reset to its initial value, so `list-style: disc outside` fixes the type where the longhands leave it alone
+        # The shorthand and the three longhands are not two spellings of one intent: every longhand a shorthand leaves out is reset to its initial value
+        # So `list-style: disc outside` fixes the type where the longhands leave it alone
         'ul' =>
             'admin leaves list-style-type to the browser so a nested list changes its mark - disc, then circle, then square - '
             .'and lite fixes it at a disc. The shorthand cannot express the first: writing it flattened 82 nested marks in admin',
@@ -635,6 +601,9 @@ return [
             .'between the list and the page',
         '.sl-pager-main' =>
             'the same band: the site pager wraps onto a second line on a narrow screen and reads at heading size, the panel one never wraps',
+        '.sl-pager-info' =>
+            'the site prints the page and the total as a centred line above its band; the panel closes its pager row with them, pushed to the right '
+            .'edge on one line',
         '.sl-but-mini' =>
             'the site\'s mini button is a real button element and resets the appearance the browser gives one; in admin the same chip is a link',
         '.sl-but-mini.sl-is-muted' =>
@@ -689,9 +658,8 @@ return [
             .'one. The two mechanisms again',
     ],
 
-    # The skeleton of a theme package: what a directory has to hold before the runtime and the tests accept it as a theme.
-    # It is the union of two lists that are not the same list, and each entry names the gate that demands it, because a
-    # skeleton nobody can trace back to a gate grows entries nobody dares delete
+    # The skeleton of a theme package: what a directory has to hold before the runtime and the tests accept it as a theme
+    # It is the union of two lists that are not the same list, and each entry names its gate, because a skeleton nobody can trace to a gate grows entries nobody dares delete
     'skeleton' => [
         # Demanded of every theme by checkThemeAssets() in core/system.php, which the runtime calls before it selects one
         'any' => [
@@ -719,14 +687,14 @@ return [
         ],
     ],
 
-    # The directories a shared template name is canon in. layouts and pages are outside it because the page shells of a
-    # panel and a site differ by nature, so --cross reports them and demands nothing
+    # The directories a shared template name is canon in
+    # Layouts and pages are outside it because the page shells of a panel and a site differ by nature, so --cross reports them and demands nothing
     'canon' => ['fragments', 'partials'],
 
-    # A template name both themes carry whose two files differ, each with the reason canon does not want one file. The
-    # question a shared name asks is not "do the two files match" but "is this one contract with two spellings, or two
-    # contracts under one name". Unifying without reconciling the key sets first silently drops data or changes what is
-    # escaped, so every entry here is the answer to a call-site audit and not an excuse for one
+    # A template name both themes carry whose two files differ, each with the reason canon does not want one file
+    # A shared name does not ask "do the two files match" but "is this one contract with two spellings, or two contracts under one name"
+    # Unifying without reconciling the key sets first silently drops data or changes what is escaped
+    # Every entry here is therefore the answer to a call-site audit and not an excuse for one
     'templates' => [
         'fragments/admin-block-links.html' =>
             'one producer hands both themes the same two links and the editable block under them. The panel draws them as two rows of its sidebar block and rules '
@@ -832,8 +800,8 @@ return [
 
     # PHP the markup scan skips, each with the reason it is not a leftover
     'markup' => [
-        # The scan reached zero, so it gets a gate under it: --markup exits non-zero on the next hardcoded class, inline
-        # style or HTML tag instead of printing a figure nobody reads. A count with no limit beside it is a report, not a check
+        # The scan reached zero, so it gets a gate under it: --markup exits non-zero on the next hardcoded class, inline style or HTML tag instead of printing a figure
+        # A count with no limit beside it is a report, not a check
         'limit' => 0,
         'exclude' => [
             '/lang/' => 'a language file defines translated sentences, one file per locale; markup inside a sentence is part of that text and moves '

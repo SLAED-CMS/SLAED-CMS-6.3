@@ -55,11 +55,7 @@ function money(): void {
                 'is_last' => true,
             ];
             $items = [
-                [
-                    'href' => $afile.'.php?name=money&op=activate&id='.$id.'&act='.$act.'&token='.getSiteToken(),
-                    'icon_name' => 'power',
-                    'title' => $status ? _DEACTIVATE : _ACTIVATE,
-                ],
+                getTplPostAction(['name' => 'money', 'op' => 'activate', 'id' => $id, 'act' => $act], 'power', $status ? _DEACTIVATE : _ACTIVATE),
                 [
                     'href' => $afile.'.php?name=money&op=invoice&id='.$id.'&rnum='.$rnum,
                     'icon_name' => 'receipt',
@@ -70,12 +66,7 @@ function money(): void {
                     'icon_name' => 'pencil',
                     'title' => _FULLEDIT,
                 ],
-                [
-                    'href' => $afile.'.php?name=money&op=delete&id='.$id.'&token='.getSiteToken(),
-                    'icon_name' => 'trash',
-                    'title' => _ONDELETE,
-                    'confirm_text' => _DELETE.' "'._ID.': '.$id.'"?',
-                ],
+                getTplPostAction(['name' => 'money', 'op' => 'delete', 'id' => $id], 'trash', _ONDELETE, _DELETE.' "'._ID.': '.$id.'"?'),
             ];
             $rows .= $tpl->getHtmlFrag('table-row', [
                 'cells_html' => $tpl->getHtmlFrag('table-cells', [
@@ -232,7 +223,7 @@ function add(): void {
         'action_url' => $afile.'.php?name=money&op=save',
         'hidden' => [
             ['nameattr' => 'mid', 'valueattr' => (string)$mid],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('money')],
         ],
         'rows' => $rows,
         'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'is_inline_gap' => true])
@@ -253,18 +244,25 @@ function save(): void {
     $note = getVar('post', 'note', 'text', '');
     $time = getVar('req', 'time', 'time');
     $posttype = getVar('post', 'posttype', 'text', '');
-    $iswarn = !checkSiteToken();
+    $iswarn = !checkAdminPost('money');
     checkemail($email);
     if ($room = checkEditorTextRoom($list, 'money.intro')) $stop[] = $room;
     if ($room = checkEditorTextRoom($note, 'money.note')) $stop[] = $room;
     if (!$iswarn) {
         if (!$stop && $posttype === 'save') {
             if ($mid) {
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_money SET sum = :sum, email = :email, intro = :intro, note = :note, time = :time WHERE id = :mid', ['sum' => $sum, 'email' => $email, 'intro' => $list, 'note' => $note, 'time' => $time, 'mid' => $mid]);
+                $db->getSqlQuery(
+                    'UPDATE '.PREFIX_DB.'_money SET sum = :sum, email = :email, intro = :intro, note = :note, time = :time WHERE id = :mid',
+                    ['sum' => $sum, 'email' => $email, 'intro' => $list, 'note' => $note, 'time' => $time, 'mid' => $mid]
+                );
             } else {
                 $ip = getip();
                 $agent = getagent();
-                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_money (`sum`, `email`, `intro`, `note`, `ip`, `agent`, `time`, `status`) VALUES (:sum, :email, :intro, :note, :ip, :agent, :time, \'1\')', ['sum' => $sum, 'email' => $email, 'intro' => $list, 'note' => $note, 'ip' => $ip, 'agent' => $agent, 'time' => $time]);
+                $db->getSqlQuery(
+                    'INSERT INTO '.PREFIX_DB.'_money (`sum`, `email`, `intro`, `note`, `ip`, `agent`, `time`, `status`)'
+                    .' VALUES (:sum, :email, :intro, :note, :ip, :agent, :time, \'1\')',
+                    ['sum' => $sum, 'email' => $email, 'intro' => $list, 'note' => $note, 'ip' => $ip, 'agent' => $agent, 'time' => $time]
+                );
             }
         }
     }
@@ -272,7 +270,7 @@ function save(): void {
         add();
         return;
     }
-    if ($posttype === 'delete') {
+    if (!$iswarn && $posttype === 'delete') {
         delete($mid);
         return;
     }
@@ -285,8 +283,8 @@ function save(): void {
 
 function delete(int $did = 0): void {
     global $db, $afile;
-    $id = $did ?: getVar('req', 'id', 'num', 0);
-    $iswarn = !$did && !checkSiteToken();
+    $id = $did ?: getVar('post', 'id', 'num', 0);
+    $iswarn = !$did && !checkAdminPost('money');
     if (!$iswarn && $id) {
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $id]);
     }
@@ -317,7 +315,9 @@ function billing(string $title, string $autor, string $infos, string $num, strin
 function invoice(): void {
     global $db, $conf, $prs;
     $id = getVar('get', 'id', 'num', 0);
-    [$sum, $email, $intro, $note, $ip, $agent, $time] = $db->getSqlRow($db->getSqlQuery('SELECT sum, email, intro, note, ip, agent, time FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $id]));
+    [$sum, $email, $intro, $note, $ip, $agent, $time] = $db->getSqlRow(
+        $db->getSqlQuery('SELECT sum, email, intro, note, ip, agent, time FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $id])
+    );
     $defis = urldecode($conf['defis'] ?? '%3E');
     $title = _RECHN.' '.$defis.' '._MONEY.' '.$defis.' '.($conf['sitename'] ?? '');
     $form = explode(',', $conf['money']['form'] ?? '');
@@ -335,21 +335,22 @@ function invoice(): void {
     $proz = (float)($conf['money']['proz'] ?? 0);
     $menge = ($sum / 100) * $kurs * (100 - $proz);
     $kurs = ($menge > 0) ? round($sum / $menge, 2) : 0;
-    billing($title, $prs->filterContent($conf['money']['autor'] ?? '', false, 'money'), $prs->filterContent($infos, false, 'money'), $rnum, format_time($time), (string)round($menge, 2), $kurs.' EUR', $sum.' EUR');
+    billing($title, $prs->filterContent($conf['money']['autor'] ?? '', false, 'money', 0, 'breaks'), $prs->filterContent($infos, false, 'money'),
+        $rnum, format_time($time), (string)round($menge, 2), $kurs.' EUR', $sum.' EUR');
 }
 
 function activate(): void {
     global $db, $afile, $conf, $prs, $mailer;
-    $act = getVar('get', 'act', 'num', 0);
-    $id = getVar('get', 'id', 'num', 0);
-    $iswarn = !checkSiteToken();
+    $act = getVar('post', 'act', 'num', 0);
+    $id = getVar('post', 'id', 'num', 0);
+    $iswarn = !checkAdminPost('money');
     if (!$iswarn) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_money SET status = :act WHERE id = :id', ['act' => $act, 'id' => $id]);
         if ($act) {
             [$email] = $db->getSqlRow($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $id]));
             $amail = ($conf['money']['mail'] ?? '') ? $conf['money']['mail'] : ($conf['adminmail'] ?? '');
             $subject = ($conf['sitename'] ?? '').' - '._MONEY;
-            $msg = getTplLines([($conf['sitename'] ?? '').' - '._MONEY, $prs->filterContent($conf['money']['sendinfo'] ?? '', false, 'all')], true, true);
+            $msg = getTplLines([($conf['sitename'] ?? '').' - '._MONEY, $prs->filterContent($conf['money']['sendinfo'] ?? '', false, 'all', 0, 'breaks')], true, true);
             $mailer->addQueue(['kind' => 'money', 'email' => $email, 'title' => $subject, 'body' => $msg, 'sender' => $amail, 'prio' => 3]);
         }
     }
@@ -367,17 +368,64 @@ function config(): void {
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/money.php');
     $rows = [
-        ['label_for' => 'f-proz', 'label_html' => _MA_3, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'proz', 'input_id' => 'f-proz', 'value_attr' => (string)($conf['money']['proz'] ?? '0')])],
-        ['label_for' => 'f-kurs', 'label_html' => _MA_4.': EUR > USD', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'kurs', 'input_id' => 'f-kurs', 'value_attr' => (string)($conf['money']['kurs'] ?? '')])],
-        ['label_html' => _MA_4.': EUR > RUB', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'kurs2', 'value_attr' => (string)($conf['money']['kurs2'] ?? '')])],
-        ['label_for' => 'f-bal', 'label_html' => _MA_5, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'bal', 'input_id' => 'f-bal', 'value_attr' => (string)($conf['money']['bal'] ?? '')])],
-        ['label_for' => 'f-mail', 'label_html' => _MA_6, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mail', 'input_id' => 'f-mail', 'value_attr' => (string)($conf['money']['mail'] ?? '')])],
-        ['label_for' => 'f-form', 'label_html' => _MA_7, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'form', 'input_id' => 'f-form', 'value_text' => (string)($conf['money']['form'] ?? ''), 'rows_num' => 3]), 'is_full' => true],
-        ['label_for' => 'f-anum', 'label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => (string)($conf['money']['anum'] ?? 25)])],
-        ['label_for' => 'f-anump', 'label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => (string)($conf['money']['anump'] ?? 10)])],
-        ['label_html' => _MA_8, 'label_id' => $labid = getFieldIds('', 'an')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'an', 'value' => (string)($conf['money']['an'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => _MA_9, 'label_id' => $labid = getFieldIds('', 'pr')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'pr', 'value' => (string)($conf['money']['pr'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => _MA_10, 'label_id' => $labid = getFieldIds('', 'ad')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'ad', 'value' => (string)($conf['money']['ad'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+        [
+            'label_for' => 'f-proz', 'label_html' => _MA_3,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'proz', 'input_id' => 'f-proz', 'value_attr' => (string)($conf['money']['proz'] ?? '0')]),
+        ],
+        [
+            'label_for' => 'f-kurs', 'label_html' => _MA_4.': EUR > USD',
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'kurs', 'input_id' => 'f-kurs', 'value_attr' => (string)($conf['money']['kurs'] ?? '')]),
+        ],
+        [
+            'label_html' => _MA_4.': EUR > RUB',
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'kurs2', 'value_attr' => (string)($conf['money']['kurs2'] ?? '')]),
+        ],
+        [
+            'label_for' => 'f-bal', 'label_html' => _MA_5,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'bal', 'input_id' => 'f-bal', 'value_attr' => (string)($conf['money']['bal'] ?? '')]),
+        ],
+        [
+            'label_for' => 'f-mail', 'label_html' => _MA_6,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mail', 'input_id' => 'f-mail', 'value_attr' => (string)($conf['money']['mail'] ?? '')]),
+        ],
+        [
+            'label_for' => 'f-form', 'label_html' => _MA_7,
+            'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'form', 'input_id' => 'f-form', 'value_text' => (string)($conf['money']['form'] ?? ''), 'rows_num' => 3]),
+            'is_full' => true,
+        ],
+        [
+            'label_for' => 'f-anum', 'label_html' => _C_34,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => (string)($conf['money']['anum'] ?? 25),
+            ]),
+        ],
+        [
+            'label_for' => 'f-anump', 'label_html' => _C_36,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => (string)($conf['money']['anump'] ?? 10),
+            ]),
+        ],
+        [
+            'label_html' => _MA_8, 'label_id' => $labid = getFieldIds('', 'an')['label'],
+            'field_html' => getTplRadioGroup([
+                'labelledby' => $labid, 'name' => 'an', 'value' => (string)($conf['money']['an'] ?? 0),
+                'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
+            ]),
+        ],
+        [
+            'label_html' => _MA_9, 'label_id' => $labid = getFieldIds('', 'pr')['label'],
+            'field_html' => getTplRadioGroup([
+                'labelledby' => $labid, 'name' => 'pr', 'value' => (string)($conf['money']['pr'] ?? 0),
+                'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
+            ]),
+        ],
+        [
+            'label_html' => _MA_10, 'label_id' => $labid = getFieldIds('', 'ad')['label'],
+            'field_html' => getTplRadioGroup([
+                'labelledby' => $labid, 'name' => 'ad', 'value' => (string)($conf['money']['ad'] ?? 0),
+                'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
+            ]),
+        ],
         ['label_html' => _MA_11, 'label_id' => $labid = getFieldIds('', 'text')['label'], 'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _MA_11,
             'id' => '1', 'name' => 'text', 'value' => (string)($conf['money']['text'] ?? ''), 'mod' => 'all', 'store' => 'config', 'rows' => 5, 'placeholder' => _MA_11,
             'required' => '1',
@@ -397,7 +445,7 @@ function config(): void {
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=money&op=configsave',
-        'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
+        'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('money')]],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
     ])]);
@@ -407,7 +455,7 @@ function config(): void {
 
 function configsave(): void {
     global $afile;
-    $iswarn = !checkSiteToken();
+    $iswarn = !checkAdminPost('money');
     $room = '';
     if (!$iswarn) {
         $xkurs = str_replace(',', '.', getVar('post', 'kurs', 'text', '0'));

@@ -6,14 +6,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 
-/**
- * Stage 1, batch 2 of docs/MAIL-2026.md: the enqueue contract and the PHP Mail transport of
- * core/classes/mail.php. Nothing here reaches mail() itself — the covered behaviour is what has to
- * happen before a transport is entered (an address that fails validation aborts the send instead of
- * being cleaned) and what the transport builds around it (the masked log address and the client
- * block that only the originating request can supply). Since stage 2 the transports are reached the
- * way the drain reaches them, through the private send path, because addQueue() only stores a row.
- */
+# The enqueue contract and the PHP Mail transport of core/classes/mail.php, up to the point where mail() itself would be entered
 final class MailTransportTest extends TestCase
 {
     public static function setUpBeforeClass(): void

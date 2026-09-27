@@ -7,15 +7,7 @@ use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 use ReflectionProperty;
 
-/**
- * Stage 1, batch 4 of docs/MAIL-2026.md: the SMTP transport of core/classes/mail.php. The dialogue is
- * driven over a socket pair standing in for the relay, so the eight named hazards are exercised against
- * real socket semantics rather than a mock: multi-line replies, an unexpected code, dot-stuffing, CRLF
- * line endings, the mechanism actually advertised, the timeout, and the socket being closed on every
- * failure path. No test reaches a real relay, and no credential is allowed into a failure message.
- * Since stage 2 a message enters the transport the way the drain sends it, through the private send
- * path, because addQueue() stores a row and delivers nothing.
- */
+# The SMTP transport of core/classes/mail.php, driven over a socket pair standing in for the relay so its hazards meet real socket semantics
 final class MailSmtpTest extends TestCase
 {
     public static function setUpBeforeClass(): void
@@ -42,6 +34,7 @@ final class MailSmtpTest extends TestCase
         return (new ReflectionProperty(\Mail::class, $name))->getValue($mailer);
     }
 
+    # No test reaches a real relay, and no credential is allowed into a failure message
     # Stand a socket pair in for the relay: the class writes into one end, the test preloads its answers into the other and reads back what was sent
     # Both ends carry a short timeout so a missing answer fails the test in seconds instead of holding the suite
     private function getRelay(\Mail $mailer, string $answ): mixed

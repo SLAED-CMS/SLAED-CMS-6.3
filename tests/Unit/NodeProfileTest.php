@@ -7,13 +7,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * The ten shipped profiles of modules/node/profiles. The files are exports of the slaed.node format with the settings
- * of docs/NODE.md (Types) in canonical form and empty upload and rating rules, which a create fills with the rules of the site. A clean installation
- * turns every profile into an active type through the one import path when its first administrator is created, and writes the starter news;
- * an update creates no type. The installation is driven by tests/Support/install_probe.php over real HTTP on a copy of the release with
- * a disposable MariaDB database: the installer, the panel, the public pages, private support and the external source of content.
- */
+# The ten shipped profiles of modules/node/profiles: slaed.node exports a clean installation imports as active types, while an update creates no type
 final class NodeProfileTest extends TestCase
 {
     private const NAMES = ['content', 'docs', 'faq', 'files', 'help', 'jokes', 'links', 'media', 'news', 'pages'];
@@ -34,6 +28,8 @@ final class NodeProfileTest extends TestCase
         return json_decode((string)file_get_contents(self::getRoot().'/modules/node/profiles/'.$name.'.json'), true, 64, JSON_THROW_ON_ERROR);
     }
 
+    # The installation is driven by tests/Support/install_probe.php over real HTTP on a copy of the release with a disposable MariaDB database
+    # The probe covers the installer, the panel, the public pages, private support and the external source of content
     # Run the installation probe in one mode and answer its report; a probe that cannot create its database is a failure, not a skip
     private function getProbe(string $mode): array
     {
@@ -61,6 +57,7 @@ final class NodeProfileTest extends TestCase
     }
 
     # The ten files ship in the canonical export form: the exact envelope and keys, the name of the file, the canonical JSON of the export and empty rules
+    # The settings follow docs/NODE.md (Types), and a create fills the empty upload and rating rules with the rules of the site
     #[Test]
     public function theTenProfilesShipInTheExportFormat(): void
     {
@@ -134,8 +131,8 @@ final class NodeProfileTest extends TestCase
         foreach (array_diff(self::NAMES, ['files', 'media']) as $name) $this->assertSame([], self::getProfile($name)['type']['fields'], $name);
     }
 
-    # Every label constant of the profiles - type titles, role titles and field titles - is defined in the site language of all six locales,
-    # because the panel checks it while it creates a type and the site shows it
+    # Every label constant of the profiles - type titles, role titles and field titles - is defined in the site language of all six locales
+    # The panel checks every such label while it creates a type, and the site shows it
     #[Test]
     public function everyLabelOfTheProfilesIsDefinedInSixLanguages(): void
     {
@@ -168,10 +165,10 @@ final class NodeProfileTest extends TestCase
         $this->assertStringNotContainsString('NodeService', $code);
     }
 
-    # The clean installation: the form of the installer opens without config/db.php and saving writes it, the installer leaves the mark and drops the types
-    # the shipped configuration and an earlier installation left in the tree with their four areas and names every one of them,
-    # the first administrator gets ten active types with every shared area
-    # and directory, the starter news, the mark gone, and a second request creates nothing
+    # The clean installation: the form of the installer opens without config/db.php and saving writes it, then the installer leaves the mark
+    # The installer drops the types the shipped configuration and an earlier installation left in the tree, with their four areas, and names every one of them
+    # Every profile becomes an active type through the one import path when the first administrator is created
+    # The first administrator gets ten active types with every shared area and directory and the starter news, the mark is gone, and a second request creates nothing
     #[Test]
     public function aCleanInstallationCreatesTheTenTypes(): void
     {
@@ -201,11 +198,11 @@ final class NodeProfileTest extends TestCase
         $this->assertSame([false, false], $run['notice']);
     }
 
-    # The unlocked installer over real HTTP: its form carries no password and an empty one connects with the stored password; a clean installation over
-    # the tables of its prefix, a prefix and a panel name outside their grammar, a panel named index or setup, a branch the installer does not offer,
-    # an update whose prefix has no tables, a wrong password, a missing or wrong code of the key, a pending configuration journal and a config/security.php
-    # PHP cannot write are refused with their reason and no fatal error, config/ and the key untouched and the permissions of db.php and global.php kept;
-    # a clean installation whose data file fails writes no mark and keeps the key
+    # The unlocked installer over real HTTP: its form carries no password, and an empty one connects with the stored password
+    # Refused with their reason and no fatal error: a clean installation over the tables of its prefix, a prefix or panel name outside their grammar, a panel named index or setup
+    # Refused the same way: a branch the installer does not offer, an update whose prefix has no tables, a wrong password, a missing or wrong code of the key
+    # Refused the same way: a pending configuration journal and a config/security.php PHP cannot write; config/, the key and the permissions of db.php and global.php stay
+    # A clean installation whose data file fails writes no mark and keeps the key
     #[Test]
     public function theUnlockedInstallerRefusesBeforeItWrites(): void
     {
@@ -225,8 +222,8 @@ final class NodeProfileTest extends TestCase
         $this->assertSame(['error_php' => 0, 'error_sql' => 0, 'error_site' => 2], $run['logs'], 'Only the two refused connections are logged');
     }
 
-    # A profile the installation cannot finish - here a user file in uploads/jokes, which the installation refuses to take over - is named in the notice of the next page and
-    # in the site log with its step, the other nine types and the starter news are created all the same, and the mark is gone
+    # A profile the installation cannot finish - here a user file in uploads/jokes it refuses to take over - is named in the next page notice and the site log with its step
+    # The other nine types and the starter news are created all the same, and the mark is gone
     #[Test]
     public function aFailedProfileIsNamedAndTheOthersAreCreated(): void
     {
@@ -317,8 +314,8 @@ final class NodeProfileTest extends TestCase
         $this->assertSame([200, 303, '', 0, null, ['cover', 'download'], ['release', 'site']], $run['soft']);
     }
 
-    # The showcase of news for the guest: a category of the panel with eleven materials, two pages and a refused third, the category list with one page of cards,
-    # and a canonical address for the list, its second page, the category and a material
+    # The showcase of news for the guest: a category of the panel with eleven materials, two pages and a refused third, the category list with one page of cards
+    # The list, its second page, the category and a material each carry a canonical address
     #[Test]
     public function theGuestPagesThroughCategoriesAndPages(): void
     {
@@ -333,8 +330,8 @@ final class NodeProfileTest extends TestCase
         $this->assertSame(array_map(fn($v) => $home.$v, $want), $run['canon']);
     }
 
-    # The installation writes no PHP or SQL error; the site log holds only the refusals the checks provoke, the failed checks of the local feed address
-    # and the journal of the published type changes of the run, twenty of them the import and the activation of the ten profiles
+    # The installation writes no PHP or SQL error; the site log holds only the refusals the checks provoke and the failed checks of the local feed address
+    # The site log also holds the journal of the published type changes of the run, twenty of them the import and the activation of the ten profiles
     #[Test]
     public function theInstallationLogsOnlyWhatTheChecksProvoke(): void
     {

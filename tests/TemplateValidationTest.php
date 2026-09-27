@@ -1,11 +1,8 @@
 <?php
-/**
- * Тест валидации шаблонов
- * Проверяет плейсхолдеры и структуру шаблонов
- */
 
 use PHPUnit\Framework\TestCase;
 
+# Validates the templates: placeholders, conditionals, HTML structure, required files, theme independence, references, styles and encoding
 class TemplateValidationTest extends TestCase
 {
     private static string $basePath;
@@ -37,7 +34,7 @@ class TemplateValidationTest extends TestCase
     {
         $themes = [];
         foreach (scandir(self::$templatesPath) ?: [] as $theme) {
-            if ($theme === '.' || $theme === '..' || $theme === 'admin') continue;
+            if ($theme === '.' || $theme === '..' || $theme === 'admin' || isTreeSkipped(self::$templatesPath.'/'.$theme)) continue;
             if (is_dir(self::$templatesPath.'/'.$theme)) $themes[] = $theme;
         }
         sort($themes);
@@ -53,9 +50,7 @@ class TemplateValidationTest extends TestCase
         return [];
     }
 
-    /**
-     * Загружает известные плейсхолдеры из template.php
-     */
+    # Loads the placeholders known from core/classes/template.php and adds the standard ones
     private static function loadKnownPlaceholders(): void
     {
         $templateFile = self::$basePath.'/core/classes/template.php';
@@ -66,7 +61,6 @@ class TemplateValidationTest extends TestCase
         preg_match_all('/\{\s*%\s*(\w+)\s*%\s*\}/', $content, $matches);
         self::$knownPlaceholders = array_unique($matches[1]);
 
-        // Стандартные плейсхолдеры
         $standard = [
             'theme', 'lang', 'sitename', 'logo', 'homeurl', 'slogan',
             'home', 'account', 'news', 'admin', 'search', 'login',
@@ -77,16 +71,12 @@ class TemplateValidationTest extends TestCase
         self::$knownPlaceholders = array_unique(array_merge(self::$knownPlaceholders, $standard));
     }
 
-    /**
-     * Сканирует шаблоны
-     */
+    # Collects the html, htm, tpl and php files under templates/
     private static function scanTemplates(): void
     {
         if (!is_dir(self::$templatesPath)) return;
 
-        $iterator = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator(self::$templatesPath, RecursiveDirectoryIterator::SKIP_DOTS)
-        );
+        $iterator = getTreeFiles(self::$templatesPath);
 
         foreach ($iterator as $file) {
             $ext = $file->getExtension();
@@ -96,9 +86,7 @@ class TemplateValidationTest extends TestCase
         }
     }
 
-    /**
-     * Проверяет синтаксис условных конструкций в шаблонах
-     */
+    # Checks that every template has as many if as endif tags
     public function testTemplateConditionalSyntax(): void
     {
         $errors = [];
@@ -107,7 +95,6 @@ class TemplateValidationTest extends TestCase
             $content = file_get_contents($file);
             $relativePath = str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $file);
 
-            // Считаем открывающие и закрывающие теги
             preg_match_all('/\{%\s*if\s+[^%]+%\}/', $content, $ifMatches);
             preg_match_all('/\{%\s*endif\s*%\}/', $content, $endifMatches);
 
@@ -130,28 +117,22 @@ class TemplateValidationTest extends TestCase
         );
     }
 
-    /**
-     * Проверяет корректность HTML в шаблонах
-     */
+    # Checks critical HTML tags for balance in non-PHP templates without paired open/close files, template tokens stripped; lists at most 20
     public function testTemplateHtmlStructure(): void
     {
         $errors = [];
 
         foreach (self::$templates as $file) {
-            // Пропускаем PHP файлы
             if (pathinfo($file, PATHINFO_EXTENSION) === 'php') continue;
 
-            // Пропускаем open/close шаблоны (они парные)
             $fileName = basename($file);
             if (preg_match('/(^|-)(open|close)\.html$/', $fileName)) continue;
 
             $content = file_get_contents($file);
             $relativePath = str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $file);
 
-            // Убираем template-токены перед подсчётом HTML-тегов
             $content = preg_replace('/\{%[^%]*%\}/', '', $content);
 
-            // Проверяем незакрытые теги (базовая проверка)
             $openTags = [];
             $selfClosing = ['br', 'hr', 'img', 'input', 'meta', 'link', 'area', 'base', 'col', 'embed', 'param', 'source', 'track', 'wbr'];
 
@@ -173,7 +154,6 @@ class TemplateValidationTest extends TestCase
                 }
             }
 
-            // Проверяем только критичные теги
             $criticalTags = ['div', 'table', 'tr', 'td', 'form', 'ul', 'ol', 'li'];
             foreach ($criticalTags as $tag) {
                 if (isset($openTags[$tag]) && $openTags[$tag] !== 0) {
@@ -187,7 +167,6 @@ class TemplateValidationTest extends TestCase
             }
         }
 
-        // Ограничиваем вывод
         if (count($errors) > 20) {
             $total = count($errors);
             $errors = array_slice($errors, 0, 20);
@@ -200,23 +179,19 @@ class TemplateValidationTest extends TestCase
         );
     }
 
-    /**
-     * Проверяет наличие обязательных шаблонов
-     */
+    # Checks that every frontend theme (all except admin) carries the required templates
     public function testRequiredTemplatesExist(): void
     {
         $errors = [];
 
-        // Получаем список тем
         $themes = [];
         foreach (scandir(self::$templatesPath) as $item) {
-            if ($item === '.' || $item === '..') continue;
+            if ($item === '.' || $item === '..' || isTreeSkipped(self::$templatesPath.'/'.$item)) continue;
             if (is_dir(self::$templatesPath.'/'.$item)) {
                 $themes[] = $item;
             }
         }
 
-        // Обязательные шаблоны для каждой frontend-темы
         $required = [
             'fragments/title.html',
             'partials/content-list.html',
@@ -226,7 +201,6 @@ class TemplateValidationTest extends TestCase
         ];
 
         foreach ($themes as $theme) {
-            // Пропускаем admin тему
             if ($theme === 'admin') continue;
 
             $themePath = self::$templatesPath.'/'.$theme;
@@ -285,9 +259,7 @@ class TemplateValidationTest extends TestCase
             if (!is_dir($path)) {
                 continue;
             }
-            $iterator = new RecursiveIteratorIterator(
-                new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS)
-            );
+            $iterator = getTreeFiles($path);
             foreach ($iterator as $file) {
                 if (!in_array($file->getExtension(), ['php', 'html'], true)) {
                     continue;
@@ -355,7 +327,7 @@ class TemplateValidationTest extends TestCase
         $themes = array_merge(['admin'], self::getFrontendThemes());
         foreach ($themes as $theme) {
             $root = self::$templatesPath.'/'.$theme;
-            $iter = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root, RecursiveDirectoryIterator::SKIP_DOTS));
+            $iter = getTreeFiles($root);
             foreach ($iter as $file) {
                 if (!in_array($file->getExtension(), ['html', 'css', 'js', 'php'], true)) continue;
                 $text = file_get_contents($file->getPathname());
@@ -384,6 +356,7 @@ class TemplateValidationTest extends TestCase
         $this->assertEmpty($errors, "Runtime HTML содержит hardcoded theme directory:\n".implode("\n", $errors));
     }
 
+    # A <style> block is never allowed, an inline style="" only for a dynamic {{ }} value like a progress width or avatar URL; static styling lives in CSS
     public function testHtmlTemplatesDoNotContainInlineStyles(): void
     {
         $errors = [];
@@ -391,9 +364,7 @@ class TemplateValidationTest extends TestCase
 
         $moduleTemplatePath = self::$basePath.'/modules';
         if (is_dir($moduleTemplatePath)) {
-            $iterator = new RecursiveIteratorIterator(
-                new RecursiveDirectoryIterator($moduleTemplatePath, RecursiveDirectoryIterator::SKIP_DOTS)
-            );
+            $iterator = getTreeFiles($moduleTemplatePath);
             foreach ($iterator as $file) {
                 $path = str_replace('\\', '/', $file->getPathname());
                 if ($file->getExtension() === 'html' && str_contains($path, '/templates/')) {
@@ -408,12 +379,9 @@ class TemplateValidationTest extends TestCase
             }
             $content = file_get_contents($file);
             $relative = str_replace('\\', '/', str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $file));
-            // Block-level <style> tags are never allowed inside templates
             if (preg_match('/<style\b|<\/style>/i', $content)) {
                 $errors[] = $relative.' (<style> block)';
             }
-            // Inline style="" is allowed only when it injects a dynamic template value ({{ ... }}),
-            // e.g. progress widths or avatar URLs; static inline styling must live in CSS
             if (preg_match_all('/style\s*=\s*(["\'])(.*?)\1/is', $content, $matches)) {
                 foreach ($matches[2] as $value) {
                     if (!str_contains($value, '{{')) {
@@ -431,9 +399,7 @@ class TemplateValidationTest extends TestCase
         );
     }
 
-    /**
-     * Проверяет кодировку шаблонов
-     */
+    # Checks that templates are valid UTF-8 and carry no BOM
     public function testTemplateEncoding(): void
     {
         $errors = [];
@@ -442,12 +408,10 @@ class TemplateValidationTest extends TestCase
             $content = file_get_contents($file);
             $relativePath = str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $file);
 
-            // Проверяем на невалидный UTF-8
             if (!mb_check_encoding($content, 'UTF-8')) {
                 $errors[] = "$relativePath - некорректная кодировка (не UTF-8)";
             }
 
-            // Проверяем на BOM
             if (substr($content, 0, 3) === "\xEF\xBB\xBF") {
                 $errors[] = "$relativePath - содержит BOM";
             }
@@ -459,12 +423,22 @@ class TemplateValidationTest extends TestCase
         );
     }
 
-    /**
-     * Проверяет что шаблоны найдены
-     */
+    # Checks that templates were found and that there are more than ten of them
     public function testTemplatesFound(): void
     {
         $this->assertNotEmpty(self::$templates, 'Шаблоны не найдены');
         $this->assertGreaterThan(10, count(self::$templates), 'Найдено слишком мало шаблонов');
+    }
+
+    # A compiled template written in place under LOCK_EX made a parallel include fail with errno=13 on Windows; both writers go through a temporary file and a rename
+    # Both writers compile under compile.lock with a second freshness check, because Windows also refuses a rename over a file another request includes
+    public function testCompiledTemplatesAreRenamedIntoPlace(): void
+    {
+        $code = (string)file_get_contents(self::$basePath.'/core/classes/template.php');
+        $this->assertDoesNotMatchRegularExpression('/file_put_contents\([^;]*LOCK_EX/', $code, 'A compiled template is still written in place under a lock');
+        $this->assertSame(2, substr_count($code, "bin2hex(random_bytes(6)).'.tmp'"), 'A writer of compiled code skips the temporary file');
+        $this->assertSame(2, substr_count($code, 'rename($temp, '), 'A temporary file is not renamed into place');
+        $this->assertSame(2, substr_count($code, "/compile.lock', 'c')"), 'A writer compiles without the lock of the theme');
+        $this->assertSame(2, substr_count($code, 'clearstatcache(true, '), 'A writer does not check again once it holds the lock');
     }
 }

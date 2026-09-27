@@ -20,8 +20,11 @@ function money(): void {
     }
     setHead(['title' => _MONEY]);
     $cont = $tpl->getHtmlFrag('title', ['title' => _MONEY, 'is_level_one' => true]);
-    $cont .= ($conf['money']['an']) ? $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _MO_5.': '.$conf['money']['bal'].' EUR']) : $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _MO_11]);
-    $cont .= $prs->filterContent(str_replace(['[proz]', '[kurs]', '[kurs2]'], [$conf['money']['proz'], $conf['money']['kurs'], $conf['money']['kurs2']], $conf['money']['text']), false, 'all');
+    $cont .= ($conf['money']['an'])
+        ? $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _MO_5.': '.$conf['money']['bal'].' EUR'])
+        : $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _MO_11]);
+    $rate = [$conf['money']['proz'], $conf['money']['kurs'], $conf['money']['kurs2']];
+    $cont .= $prs->filterContent(str_replace(['[proz]', '[kurs]', '[kurs2]'], $rate, $conf['money']['text']), false, 'all', 0, 'breaks');
     $cont .= $tpl->getHtmlPart('money-calc-scripts', ['kurs' => $conf['money']['kurs'], 'kurs2' => $conf['money']['kurs2'], 'proz' => $conf['money']['proz']]);
     $cont .= $tpl->getHtmlFrag('title', ['is_level_two' => true, 'title' => _MO_1]);
     foreach ([
@@ -68,7 +71,9 @@ function money(): void {
         $rows .= $tpl->getHtmlFrag('form-field-row', [
             'label_for' => 'f-email',
             'label' => _MO_8,
-            'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'placeholder="'._MO_8.'" required', 'name_attr' => 'email', 'input_id' => 'f-email', 'value_attr' => $email]),
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'input_attr' => 'placeholder="'._MO_8.'" required', 'name_attr' => 'email', 'input_id' => 'f-email', 'value_attr' => $email,
+            ]),
         ]);
         $form = explode(',', $conf['money']['form']);
         $i = 0;
@@ -77,7 +82,10 @@ function money(): void {
                 $rows .= $tpl->getHtmlFrag('form-field-row', [
                     'label_for' => 'f-intro-'.$i,
                     'label' => $val,
-                    'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'maxlength="255" placeholder="'.$val.'" required', 'itype' => 'text', 'name_attr' => 'intro[]', 'input_id' => 'f-intro-'.$i, 'value_attr' => filterHtml($intro[$i] ?? '', 1)]),
+                    'field_html' => $tpl->getHtmlFrag('input', [
+                        'input_attr' => 'maxlength="255" placeholder="'.$val.'" required', 'itype' => 'text', 'name_attr' => 'intro[]', 'input_id' => 'f-intro-'.$i,
+                        'value_attr' => filterHtml($intro[$i] ?? '', 1),
+                    ]),
                 ]);
                 $i++;
             }
@@ -100,7 +108,10 @@ function money(): void {
             'captcha' => getPageCaptcha('comment'),
             'extrafields' => $rows,
             'name' => $conf['name'],
-            'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _MO_10]),
+            'submit' => $tpl->getHtmlFrag('form-submit', [
+                'button_type' => 'submit', 'op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false,
+                'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _MO_10,
+            ]),
         ]);
     }
     echo $cont;
@@ -137,7 +148,8 @@ function send(): void {
         if (!$stop) {
             $status = ($conf['money']['pr']) ? '0' : '1';
             $db->getSqlQuery(
-                'INSERT INTO '.PREFIX_DB.'_money (`sum`, `email`, `intro`, `note`, `ip`, `agent`, `time`, `status`) VALUES (:sum, :email, :intro, :note, :ip, :agent, NOW(), :status)',
+                'INSERT INTO '.PREFIX_DB.'_money (`sum`, `email`, `intro`, `note`, `ip`, `agent`, `time`, `status`)'
+                .' VALUES (:sum, :email, :intro, :note, :ip, :agent, NOW(), :status)',
                 ['sum' => $sum, 'email' => $email, 'intro' => $introText, 'note' => $note, 'ip' => getIp(), 'agent' => getAgent(), 'status' => $status]
             );
             if ($conf['money']['ad']) {
@@ -173,13 +185,14 @@ function send(): void {
                 $subject = $conf['sitename'].' - '._MONEY;
                 $msg = $tpl->getHtmlPart('message-block', [
                     'title' => $subject,
-                    'content_html' => $prs->filterContent($conf['money']['sendinfo'], false, 'all'),
+                    'content_html' => $prs->filterContent($conf['money']['sendinfo'], false, 'all', 0, 'breaks'),
                 ]);
                 $mailer->addQueue(['kind' => 'money', 'email' => $email, 'title' => $subject, 'body' => $msg, 'sender' => $amail, 'prio' => 3]);
             }
             setHead(['title' => _MONEY]);
             $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 30]);
-            echo $tpl->getHtmlFrag('title', ['title' => _MONEY, 'is_level_one' => true]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $prs->filterContent($conf['money']['info'], false, 'all'), 'meta' => $meta]);
+            echo $tpl->getHtmlFrag('title', ['title' => _MONEY, 'is_level_one' => true])
+                .$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $prs->filterContent($conf['money']['info'], false, 'all', 0, 'breaks'), 'meta' => $meta]);
             setFoot();
         } else {
             money();

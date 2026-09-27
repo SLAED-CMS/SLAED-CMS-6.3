@@ -9,14 +9,17 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('auto_links')) die('Illegal file a
 
 function auto_links(): void {
     global $db, $afile, $conf, $tpl;
-    $ops = ['name=auto_links', 'name=auto_links&op=add', 'name=auto_links&op=hitreset&token='.getSiteToken(), 'name=auto_links&op=zerodel&token='.getSiteToken(), 'name=auto_links&op=config', 'name=auto_links&op=info'];
+    $ops = ['name=auto_links', 'name=auto_links&op=add', 'name=auto_links&op=config', 'name=auto_links&op=info'];
     $num = getVar('get', 'num', 'num', 1);
     $offset = ($num - 1) * $conf['auto_links']['anum'];
     setHead();
     $cont = getTplAdminTabs([
         'ops' => $ops,
-        'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS],
     ]);
+    $acts = getTplPostButton(['name' => 'auto_links', 'op' => 'hitreset'], 'eraser', _NULLHITS);
+    $acts .= ' '.getTplPostButton(['name' => 'auto_links', 'op' => 'zerodel'], 'trash', _NOINDEL);
+    $cont .= $tpl->getHtmlFrag('alert', ['text' => $acts]);
     if (!$conf['referers']['refer']) {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _A_NOTE]);
     }
@@ -40,12 +43,7 @@ function auto_links(): void {
                 'icon_name' => 'pencil',
                 'title' => _FULLEDIT,
             ];
-            $items[] = [
-                'href' => $afile.'.php?name=auto_links&op=delete&id='.$id.'&token='.getSiteToken(),
-                'icon_name' => 'trash',
-                'title' => _DELETE,
-                'confirm_text' => _DELETE.' "'.$name.'"?',
-            ];
+            $items[] = getTplPostAction(['name' => 'auto_links', 'op' => 'delete', 'id' => $id], 'trash', _DELETE, _DELETE.' "'.$name.'"?');
             $rows .= $tpl->getHtmlFrag('table-row', [
                 'cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
@@ -168,11 +166,11 @@ function stats(): void {
             ' '.
             $tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
     ])]) : '';
-    $ops = ['name=auto_links', 'name=auto_links&op=add', 'name=auto_links&op=hitreset&token='.getSiteToken(), 'name=auto_links&op=zerodel&token='.getSiteToken(), 'name=auto_links&op=config', 'name=auto_links&op=info'];
+    $ops = ['name=auto_links', 'name=auto_links&op=add', 'name=auto_links&op=config', 'name=auto_links&op=info'];
     setHead();
     $cont = getTplAdminTabs([
         'ops' => $ops,
-        'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS],
         'subtitle_html' => $subtitle,
     ]);
     if (!$conf['referers']['refer']) {
@@ -222,7 +220,17 @@ function stats(): void {
             ],
             'rows_html' => $rows,
         ]);
-        $body .= getPageNumbers('', $countall, $pages, (int)$conf['auto_links']['anum'], 'name=auto_links&op=stats&id='.$id.'&sort='.$sort.'&order='.$order.'&', (int)$conf['auto_links']['anump'], $page, '', 'num');
+        $body .= getPageNumbers(
+            '',
+            $countall,
+            $pages,
+            (int)$conf['auto_links']['anum'],
+            'name=auto_links&op=stats&id='.$id.'&sort='.$sort.'&order='.$order.'&',
+            (int)$conf['auto_links']['anump'],
+            $page,
+            '',
+            'num'
+        );
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {
         $cont .= $tpl->getHtmlPart('box', [
@@ -242,36 +250,53 @@ function add(): void {
         [$id, $name, $desc, $site, $email, $hits, $outs] = $db->getSqlRow($result);
     } else {
         $id = getVar('post', 'id', 'num');
-        $name = getVar('post', 'name', 'title', '');
+        $name = getVar('post', 'title', 'title', '');
         $email = getVar('post', 'mail', 'var', '');
         $desc = getVar('post', 'desc', 'text', '');
         $site = getVar('post', 'site', 'url', 'https://');
         $hits = getVar('post', 'hits', 'num', 0);
         $outs = getVar('post', 'outs', 'num', 0);
     }
-    $ops = ['name=auto_links', 'name=auto_links&op=add', 'name=auto_links&op=hitreset&token='.getSiteToken(), 'name=auto_links&op=zerodel&token='.getSiteToken(), 'name=auto_links&op=config', 'name=auto_links&op=info'];
+    $ops = ['name=auto_links', 'name=auto_links&op=add', 'name=auto_links&op=config', 'name=auto_links&op=info'];
     setHead();
     $cont = getTplAdminTabs([
         'ops' => $ops,
-        'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS],
         'tab' => 1,
     ]);
     if ($stop) {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
     }
     $rows = [
-        ['label_for' => 'f-name', 'label_html' => _SITENAME, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'name', 'input_id' => 'f-name', 'value_attr' => $name, 'maxlength_num' => 255])],
-        ['label_for' => 'f-site', 'label_html' => _A_LINKS_L, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'site', 'input_id' => 'f-site', 'value_attr' => $site, 'maxlength_num' => 255])],
-        ['label_for' => 'f-mail', 'label_html' => _A_LINKS_E, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mail', 'input_id' => 'f-mail', 'value_attr' => $email, 'maxlength_num' => 255])],
-        ['label_for' => 'f-hits', 'label_html' => _HITS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'hits', 'input_id' => 'f-hits', 'value_attr' => (string)$hits])],
-        ['label_for' => 'f-outs', 'label_html' => _OUTS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'outs', 'input_id' => 'f-outs', 'value_attr' => (string)$outs])],
-        ['label_for' => 'f-desc', 'label_html' => _A_LINKS_TEXT, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'desc', 'input_id' => 'f-desc', 'value_text' => $desc, 'rows_num' => 5])],
+        ['label_for' => 'f-title', 'label_html' => _SITENAME, 'field_html' => $tpl->getHtmlFrag('input', [
+            'itype' => 'text', 'name_attr' => 'title', 'input_id' => 'f-title', 'value_attr' => $name, 'maxlength_num' => 255,
+        ])],
+        [
+            'label_for' => 'f-site', 'label_html' => _A_LINKS_L,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'site', 'input_id' => 'f-site', 'value_attr' => $site, 'maxlength_num' => 255]),
+        ],
+        [
+            'label_for' => 'f-mail', 'label_html' => _A_LINKS_E,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mail', 'input_id' => 'f-mail', 'value_attr' => $email, 'maxlength_num' => 255]),
+        ],
+        [
+            'label_for' => 'f-hits', 'label_html' => _HITS,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'hits', 'input_id' => 'f-hits', 'value_attr' => (string)$hits]),
+        ],
+        [
+            'label_for' => 'f-outs', 'label_html' => _OUTS,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'outs', 'input_id' => 'f-outs', 'value_attr' => (string)$outs]),
+        ],
+        [
+            'label_for' => 'f-desc', 'label_html' => _A_LINKS_TEXT,
+            'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'desc', 'input_id' => 'f-desc', 'value_text' => $desc, 'rows_num' => 5]),
+        ],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=auto_links&op=save',
         'hidden' => [
             ['nameattr' => 'id', 'valueattr' => (string)$id],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('auto_links')],
         ],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
@@ -283,13 +308,13 @@ function add(): void {
 function save(): void {
     global $db, $afile, $stop;
     $id = getVar('post', 'id', 'num');
-    $name = getVar('post', 'name', 'title', '');
+    $name = getVar('post', 'title', 'title', '');
     $desc = getVar('post', 'desc', 'text', '');
     $site = getVar('post', 'site', 'url', 'https://');
     $email = getVar('post', 'mail', 'var', '');
     $hits = getVar('post', 'hits', 'num', 0);
     $outs = getVar('post', 'outs', 'num', 0);
-    $iswarn = !checkSiteToken();
+    $iswarn = !checkAdminPost('auto_links');
     $stop = [];
     if (!$iswarn) {
         if (!$name) $stop[] = _CERROR10;
@@ -319,8 +344,8 @@ function save(): void {
 
 function delete(int $id = 0): void {
     global $db, $afile;
-    if (!$id) $id = getVar('req', 'id', 'num');
-    $iswarn = !checkSiteToken();
+    if (!$id) $id = getVar('post', 'id', 'num');
+    $iswarn = !checkAdminPost('auto_links');
     if (!$iswarn && $id) {
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_auto_links WHERE id = :id', ['id' => $id]);
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_referer WHERE lid = :id', ['id' => $id]);
@@ -330,7 +355,7 @@ function delete(int $id = 0): void {
 
 function hitreset(): void {
     global $db, $afile;
-    $iswarn = !checkSiteToken();
+    $iswarn = !checkAdminPost('auto_links');
     if (!$iswarn) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_auto_links SET hits = 0, outs = 0');
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_referer WHERE lid != 0');
@@ -340,7 +365,7 @@ function hitreset(): void {
 
 function zerodel(): void {
     global $db, $afile;
-    $iswarn = !checkSiteToken();
+    $iswarn = !checkAdminPost('auto_links');
     if (!$iswarn) {
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_auto_links WHERE hits = 0');
     }
@@ -349,10 +374,10 @@ function zerodel(): void {
 
 function config(): void {
     global $afile, $conf, $tpl;
-    $ops = ['name=auto_links', 'name=auto_links&op=add', 'name=auto_links&op=hitreset&token='.getSiteToken(), 'name=auto_links&op=zerodel&token='.getSiteToken(), 'name=auto_links&op=config', 'name=auto_links&op=info'];
+    $ops = ['name=auto_links', 'name=auto_links&op=add', 'name=auto_links&op=config', 'name=auto_links&op=info'];
     $path = 'templates/'.$conf['theme'].'/images/banners/';
     $pickopts = '';
-    foreach (scandir($path) as $entry) {
+    foreach (is_dir(BASE_DIR.'/'.$path) ? scandir(BASE_DIR.'/'.$path) : [] as $entry) {
         if (preg_match('/(\.gif|\.png|\.jpg|\.jpeg)$/is', $entry)) {
             $pickopts .= $tpl->getHtmlFrag('select-option', [
                 'value_attr' => $entry,
@@ -363,21 +388,62 @@ function config(): void {
     }
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows = [
-        ['label_for' => 'f-img', 'label_html' => _A_1, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'img', 'selectid' => 'f-img', 'options_html' => $pickopts, 'is_config' => true, 'select_attr' => 'id="img_replace"'])],
-        ['label_html' => _A_2, 'field_html' => $tpl->getHtmlFrag('image-preview', ['src_attr' => $path.$conf['auto_links']['img'], 'image_id' => 'picture', 'alt_text' => _SITELOGO])],
-        ['label_for' => 'f-num', 'label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'input_id' => 'f-num', 'value_attr' => (string)$conf['auto_links']['num'], 'is_config' => true])],
-        ['label_for' => 'f-anum', 'label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => (string)$conf['auto_links']['anum'], 'is_config' => true])],
-        ['label_for' => 'f-nump', 'label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'input_id' => 'f-nump', 'value_attr' => (string)$conf['auto_links']['nump'], 'is_config' => true])],
-        ['label_for' => 'f-anump', 'label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => (string)$conf['auto_links']['anump'], 'is_config' => true])],
-        ['label_for' => 'f-strip', 'label_html' => _A_4, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'strip', 'input_id' => 'f-strip', 'value_attr' => (string)$conf['auto_links']['strip'], 'is_config' => true])],
-        ['label_for' => 'f-limit', 'label_html' => _A_5, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'limit', 'input_id' => 'f-limit', 'value_attr' => (string)$conf['auto_links']['limit'], 'is_config' => true])],
-        ['label_html' => _ADDAMAIL, 'label_id' => $labid = getFieldIds('', 'addmail')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'addmail', 'value' => (string)$conf['auto_links']['addmail'], 'options' => $yesno])],
+        [
+            'label_for' => 'f-img', 'label_html' => _A_1,
+            'field_html' => $tpl->getHtmlFrag('select', [
+                'name_attr' => 'img', 'selectid' => 'f-img', 'options_html' => $pickopts, 'is_config' => true, 'select_attr' => 'id="img_replace"',
+            ]),
+        ],
+        [
+            'label_html' => _A_2,
+            'field_html' => $tpl->getHtmlFrag('image-preview', ['src_attr' => $path.$conf['auto_links']['img'], 'image_id' => 'picture', 'alt_text' => _SITELOGO]),
+        ],
+        [
+            'label_for' => 'f-num', 'label_html' => _C_33,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number', 'name_attr' => 'num', 'input_id' => 'f-num', 'value_attr' => (string)$conf['auto_links']['num'], 'is_config' => true,
+            ]),
+        ],
+        [
+            'label_for' => 'f-anum', 'label_html' => _C_34,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => (string)$conf['auto_links']['anum'], 'is_config' => true,
+            ]),
+        ],
+        [
+            'label_for' => 'f-nump', 'label_html' => _C_35,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number', 'name_attr' => 'nump', 'input_id' => 'f-nump', 'value_attr' => (string)$conf['auto_links']['nump'], 'is_config' => true,
+            ]),
+        ],
+        [
+            'label_for' => 'f-anump', 'label_html' => _C_36,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => (string)$conf['auto_links']['anump'], 'is_config' => true,
+            ]),
+        ],
+        [
+            'label_for' => 'f-strip', 'label_html' => _A_4,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number', 'name_attr' => 'strip', 'input_id' => 'f-strip', 'value_attr' => (string)$conf['auto_links']['strip'], 'is_config' => true,
+            ]),
+        ],
+        [
+            'label_for' => 'f-limit', 'label_html' => _A_5,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number', 'name_attr' => 'limit', 'input_id' => 'f-limit', 'value_attr' => (string)$conf['auto_links']['limit'], 'is_config' => true,
+            ]),
+        ],
+        [
+            'label_html' => _ADDAMAIL, 'label_id' => $labid = getFieldIds('', 'addmail')['label'],
+            'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'addmail', 'value' => (string)$conf['auto_links']['addmail'], 'options' => $yesno]),
+        ],
     ];
     setHead();
     $cont = getTplAdminTabs([
         'ops' => $ops,
-        'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _DOCS],
-        'tab' => 4,
+        'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS],
+        'tab' => 2,
     ]);
     if (!$conf['referers']['refer']) {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _A_NOTE]);
@@ -386,7 +452,7 @@ function config(): void {
     $body = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=auto_links&op=configsave',
         'hidden' => [
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('auto_links')],
         ],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
@@ -397,11 +463,13 @@ function config(): void {
 }
 
 function configsave(): void {
-    global $afile;
-    $iswarn = !checkSiteToken();
+    global $afile, $conf;
+    $iswarn = !checkAdminPost('auto_links');
     if (!$iswarn) {
+        $img = getVar('post', 'img', 'raw', '');
+        $good = is_string($img) && preg_match('/^[A-Za-z0-9_-]+\.(gif|png|jpg|jpeg)$/iD', $img) && is_file(BASE_DIR.'/templates/'.$conf['theme'].'/images/banners/'.$img);
         $cont = [
-            'img' => getVar('post', 'img', 'var', ''),
+            'img' => $good ? $img : $conf['auto_links']['img'],
             'num' => getVar('post', 'num', 'num', 10),
             'anum' => getVar('post', 'anum', 'num', 10),
             'nump' => getVar('post', 'nump', 'num', 10),
@@ -417,8 +485,8 @@ function configsave(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=auto_links', 'name=auto_links&op=add', 'name=auto_links&op=hitreset&token='.getSiteToken(), 'name=auto_links&op=zerodel&token='.getSiteToken(), 'name=auto_links&op=config', 'name=auto_links&op=info'],
-        'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _DOCS],
+        'ops' => ['name=auto_links', 'name=auto_links&op=add', 'name=auto_links&op=config', 'name=auto_links&op=info'],
+        'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS],
     ]);
 }
 

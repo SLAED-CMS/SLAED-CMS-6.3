@@ -91,7 +91,8 @@ aggregate.
 - Points do not expire, are not transferred between accounts and are not spent.
 - Deleting an account leaves its journal rows: `_points` has no foreign key to users or administrators.
 - The visibility of points in the interface (`blocks/user_info.php`, profile, user lists, `getUserTip()`,
-  `getUserLevelData()`, the rules page `modules/users` op `rules`) follows the single flag `points.active`.
+  `getUserLevelData()`, the rules page `modules/users` op `rules`) follows `Point::$active`: `points.active = '1'`
+  of a configuration that passed its check behind the mark `update.points`, so a closed class shows no points.
 
 ### Limits
 
@@ -228,6 +229,7 @@ directly; an updated site gets it from the 6.3 points unit. `tools/node-profile.
 ```php
 final class Point {
     public private(set) bool $valid;
+    public private(set) bool $active;
     public function __construct(Database $db, array $conf)
     public function addEvent(string $action, string $scope, string $source, int $uid, array $data = []): bool
     public function getEventId(string $action, string $scope, string $source, int $uid): int|false
@@ -240,6 +242,7 @@ final class Point {
 |---|---|
 | `__construct()` | Takes only the checked `points` scope, never the whole configuration. |
 | `$valid` | `true` when the scope passed validation. False means closed (empty scope) or broken; an owner reads it to tell a closed subsystem from a failed write. |
+| `$active` | `true` when the scope passed validation and `points.active` is `'1'`; the interface of points shows balances only then. |
 | `addEvent()` | `true`: stored, or an empty success (repeat, reached limit, zero amount, `active = '0'` for an ordinary award, an `adjust` that applied nothing). `false`: error or refusal. Throws `RuntimeException` when the outcome cannot be proven (see Transactions). |
 | `getEventId()` | Positive id of the origin row (`rid IS NULL`, `points > 0`) of the key; `0` when there is confirmed none or the account does not exist; `false` for an invalid class, `adjust`, a bad key, a `reverse:` source, no open transaction, or a failed read. Throws when the owner's transaction is lost. |
 | `setUserLocks()` | Locks the `_users` rows of several recipients by ascending id with one `SELECT ... ORDER BY id FOR UPDATE`. Ids that are 0, negative, above 4294967295 or duplicated are dropped. Fewer than two ids: `true` without SQL. Two or more outside a transaction: `false` without SQL. Otherwise `true` or `false` by the statement. |
@@ -370,8 +373,8 @@ Rules behind the map:
   published, hidden, then removed comment keeps nothing. A refused compensation rolls the removal back. With
   `$valid === false` the removal goes on without compensation and logs a warning. `Comment::deleteUser()` leaves
   points alone.
-- Forum: moving to the recycle category moves no points; only the final delete compensates, inside a transaction
-  that `delete()` opens itself (`getEventId()` requires one). A post moved to the recycle bin loses its `pid` and
+- Forum: moving to the recycle category moves no points; only the final delete compensates. `delete()` opens one
+  transaction for the whole removal, counters of the categories included (`getEventId()` requires one). A post moved to the recycle bin loses its `pid` and
   becomes a topic row, so the final delete of a row without `pid` looks for `topic:<id>` first and then
   `post:<id>`; topic and post ids share one sequence, so both sources never exist for one id. Deleting a topic
   compensates only the topic author's `publish`; the `comment` awards of posts inside it stay. A new post takes its
@@ -385,9 +388,9 @@ Rules behind the map:
 - Re-publication awards for the first time only if no award was recorded before; an existing award, even
   compensated, makes it an empty repeat. Switching points on never awards the existing archive.
 - Owners without a transaction of their own open one: order `activate()`/`delete()`, shop `clientset()`,
-  `clientsave()`, `clientdel()`, forum `delete()`. In these procedural owners the answer of the compensation is not
-  checked: a false `getEventId()` or refused compensation (already logged by `Point`) does not stop the deletion or
-  status change. `Comment` and `NodeService` do stop.
+  `clientsave()`, `clientdel()`, forum `delete()`. Like `Comment` and `NodeService` they check the compensation: a
+  false `getEventId()` or a refused compensation (already logged by `Point`) rolls the deletion or status change
+  back and answers `_ERROR`. The award of these owners stays unchecked, as every award.
 - Removed without replacement: page views in `setHead()` (no object and no stable source) and rating rewards in
   `getRatingView()`. `setHead()` and `getRatingView()` never reach `$pnt`.
 
@@ -416,10 +419,12 @@ Tab `_POINTS` of the groups screen, ops `points` and `pointssave`.
 
 - `add()` shows the balance read-only and, for an existing account, the fields `pdiff` (signed difference, text,
   max length 8) and `pnote` (reason, max length 255) plus a hidden `pkey` of 32 hex characters. A form shown again
-  after a refusal keeps its `pkey`, so a second submit of the same form is an empty success.
+  after a refusal keeps its `pkey`, except after `_POINTS_TWICE`, which hands it a fresh one.
 - `addsave()` reads `pdiff`, `pnote` and `pkey` as `raw` and trims them. `pdiff` must match `^-?[1-9][0-9]{0,6}$`
   with `abs() <= 1000000`, the note must be non-empty and pass `Point::checkNote()`, and `pkey` must be 32 hex;
   otherwise the whole form is refused with `_POINTS_BADDIFF`. `getVar(..., 'num')` is never used for `pdiff`.
+  A `pkey` the journal already carries for the account as `adjust:<pkey>` refuses the whole form with
+  `_POINTS_TWICE`: the same form sent again, even with another amount, never answers an empty success.
   After the profile update the correction is `addEvent('adjust', 'account', 'adjust:'.$pkey, $uid, ['aid' => ...,
   'note' => ..., 'points' => ...])` in its own `Point` transaction; a false answer redirects to the form with
   `_POINTS_BADSAVE`.

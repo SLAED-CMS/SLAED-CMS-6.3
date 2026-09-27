@@ -1,11 +1,8 @@
 <?php
-/**
- * Тест проверки INSERT запросов на соответствие структуре таблиц
- * Выявляет отсутствующие NOT NULL поля без DEFAULT значений
- */
 
 use PHPUnit\Framework\TestCase;
 
+# Checks INSERT queries against the table schema and finds missing NOT NULL columns that have no DEFAULT
 class InsertValidationTest extends TestCase
 {
     private static string $basePath;
@@ -19,9 +16,7 @@ class InsertValidationTest extends TestCase
         self::scanInsertQueries();
     }
 
-    /**
-     * Парсит table.sql и извлекает обязательные поля (NOT NULL без DEFAULT)
-     */
+    # Parses table.sql and collects the required columns of each table (NOT NULL without DEFAULT)
     private static function parseTableSchema(): void
     {
         $sqlFile = self::$basePath.'/setup/sql/table.sql';
@@ -63,14 +58,10 @@ class InsertValidationTest extends TestCase
         }
     }
 
-    /**
-     * Сканирует PHP файлы и находит INSERT запросы
-     */
+    # Scans the PHP files and collects their INSERT queries with file, line, table and column list
     private static function scanInsertQueries(): void
     {
-        $iterator = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator(self::$basePath, RecursiveDirectoryIterator::SKIP_DOTS)
-        );
+        $iterator = getTreeFiles(self::$basePath);
 
         foreach ($iterator as $file) {
             if ($file->getExtension() !== 'php') {
@@ -112,9 +103,7 @@ class InsertValidationTest extends TestCase
         }
     }
 
-    /**
-     * Проверяет все INSERT запросы на наличие обязательных полей
-     */
+    # Checks that every INSERT query supplies all required columns of its table
     public function testAllInsertQueriesHaveRequiredFields(): void
     {
         $errors = [];
@@ -147,9 +136,7 @@ class InsertValidationTest extends TestCase
         );
     }
 
-    /**
-     * Проверяет, что table.sql существует и содержит таблицы
-     */
+    # Checks that table.sql exists and declares tables
     public function testTableSchemaExists(): void
     {
         $sqlFile = self::$basePath.'/setup/sql/table.sql';
@@ -157,9 +144,7 @@ class InsertValidationTest extends TestCase
         $this->assertNotEmpty(self::$tableSchema, 'Схема таблиц пуста');
     }
 
-    /**
-     * Проверяет, что найдены INSERT запросы для анализа
-     */
+    # Checks that the scan found INSERT queries to analyse
     public function testInsertQueriesFound(): void
     {
         $this->assertNotEmpty(self::$inserts, 'INSERT запросы не найдены');

@@ -7,11 +7,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * The newsletter step of the 6.3 update in setup/index.php keeps the pending recipients before the schema file
- * drops the mails column and queues them after it, once per campaign and address. tests/Support/update_probe.php lifts the shipped functions
- * out of the installer by name and drives them against a disposable schema, so the database of the stand is never touched.
- */
+# The newsletter step of the 6.3 update keeps the pending recipients before the schema drops the mails column and queues them once per campaign and address
 final class UpdateMailsTest extends TestCase
 {
     private const ROWS = [
@@ -24,6 +20,7 @@ final class UpdateMailsTest extends TestCase
 
     private static array $probe = [];
 
+    # The probe tests/Support/update_probe.php lifts the shipped functions of setup/index.php by name and drives them against a disposable schema, never the stand database
     # Run the probe once in its newsletter mode and memoize the report for every test in this class
     private function getRun(): array
     {

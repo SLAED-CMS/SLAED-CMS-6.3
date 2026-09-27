@@ -7,12 +7,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * The external materials of the extension sync. The behaviour is driven by tests/Support/route_probe.php with the
- * argument sync: the disposable database and scratch configuration of the base route probe with two types of the extension, content active and
- * feeds disabled, real HTTP requests of the administrators to the form, the manual check and the scheduler, then the child mode syncext that
- * boots the core and asks NodeSync with a scripted transport of Feed, so no request reaches the network. The static half reads the files.
- */
+# The external materials of the extension sync, driven by tests/Support/route_probe.php with the argument sync; the static half reads the files
 final class NodeSyncTest extends TestCase
 {
     private static array $probe = [];
@@ -23,6 +18,9 @@ final class NodeSyncTest extends TestCase
         return str_replace('\\', '/', dirname(__DIR__, 2));
     }
 
+    # The probe runs the base disposable database and configuration with two types of the extension, content active and feeds disabled
+    # Real HTTP requests of the administrators reach the form, the manual check and the scheduler
+    # The child mode syncext boots the core and asks NodeSync with a scripted transport of Feed, so no request reaches the network
     # Run the probe once in its sync mode and memoize the run; a probe that cannot create its database or start its server is a failure, not a skip
     private function getRun(): array
     {
@@ -41,8 +39,8 @@ final class NodeSyncTest extends TestCase
         return self::$probe;
     }
 
-    # The administrative form of an external material takes the address and the period of its source instead of a body; a posted body is dropped,
-    # the address is stored in the canonical form Feed requests, a source with a period is due at once and a manual one never
+    # The administrative form of an external material takes the address and the period of its source instead of a body; a posted body is dropped
+    # The address is stored in the canonical form Feed requests, a source with a period is due at once and a manual one never
     #[Test]
     public function theFormStoresOneSourceInsteadOfABody(): void
     {
@@ -58,8 +56,8 @@ final class NodeSyncTest extends TestCase
         $this->assertSame([422, 422, 422, 422, 404, 0], $run['bad'], 'A period out of range, a foreign scheme, credentials, a missing source or a foreign moderator was accepted');
     }
 
-    # A new period alone keeps the validators and the history and moves the next check from the last one; a new address forgets both and is due at once;
-    # the body a form sends is never stored
+    # A new period alone keeps the validators and the history and moves the next check from the last one; a new address forgets both and is due at once
+    # The body a form sends is never stored
     #[Test]
     public function anEditKeepsOrClearsTheValidatorsByWhatChanged(): void
     {
@@ -179,8 +177,8 @@ final class NodeSyncTest extends TestCase
         $this->assertSame([true, true, true, true], $run['cache'], 'The list was not cached, or the new text did not invalidate it, or the page misses the text');
     }
 
-    # The stage keeps its files and contracts: the closed factory hands Feed to sync alone, the class never calls the writer of Node, Feed shares one normalizer,
-    # and the system job nodesync is registered in all four places with the same settings
+    # The stage keeps its files and contracts: the closed factory hands Feed to sync alone, the class never calls the writer of Node, Feed shares one normalizer
+    # The system job nodesync is registered in all four places with the same settings
     #[Test]
     public function theStageFilesKeepTheirContract(): void
     {

@@ -5,18 +5,14 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * The private-message table trades one status column for four independent states, in every update channel at once.
- * tests/Support/privat_probe.php builds each documented pre-migration shape in a disposable schema, runs the shipped
- * statements of one channel against it through the same splitter an installation runs them with, and reports what
- * the table and the mailboxes look like afterwards. States A and B still carry the legacy status column, C is
- * already converted and D carries the renamed column with the BOOLEAN definition a bare rename leaves behind. The
- * site database is never touched.
- */
+# The private-message table trades one status column for four independent states, in every update channel at once
 final class PrivatMigrationTest extends TestCase
 {
     private static array $probe = [];
 
+    # The probe tests/Support/privat_probe.php builds each documented pre-migration shape in a disposable schema and never touches the site database
+    # It runs the statements of one channel through the splitter an installation uses and reports what the table and the mailboxes look like afterwards
+    # States A and B still carry the legacy status column, C is already converted and D carries the renamed column with the BOOLEAN definition of a bare rename
     # Run the probe once and memoize its report for every test in this class
     private function getProbe(): array
     {

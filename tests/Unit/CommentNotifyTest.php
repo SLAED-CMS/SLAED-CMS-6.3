@@ -5,21 +5,14 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Stage 3 of docs/COMMENTS-REDESIGN-2026.md: the notification of a new comment is a queue row written inside the
- * transaction that stores the comment, one per stored comment, and nothing is delivered while the visitor waits.
- * The behaviour half runs through tests/Support/contract_probe.php, which drives the two writes of the request
- * handler in its order inside a transaction it always rolls back, so a job written without a comment and a comment
- * written without its job are both visible as a number. The handler itself cannot be called from CLI — getVar()
- * reads a scalar through filter_input() — so its wiring is read from the source instead, the way the stage 0 guard
- * already reads the write path.
- */
+# The notification of a new comment is one queue row written inside the transaction that stores it, and nothing is delivered while the visitor waits
 final class CommentNotifyTest extends TestCase
 {
     private static array $probe = [];
     private static array $src = [];
 
-    # Run the notification probe once and memoize its report for every scenario in this class
+    # Run tests/Support/contract_probe.php once and memoize its report for every scenario in this class
+    # The probe drives both writes of the handler in its order inside a transaction it always rolls back, so a job or a comment written alone shows as a number
     private function getProbe(): array
     {
         if (self::$probe !== []) return self::$probe;
@@ -140,6 +133,7 @@ final class CommentNotifyTest extends TestCase
     }
 
     # The handler owns one transaction and both writes happen inside it, the notification only for a comment this request stored
+    # The handler cannot be called from CLI, since getVar() reads a scalar through filter_input(), so its wiring is read from the source instead
     # A reply to a request of support is announced by its extension alone, so the general notice leaves that one type of target out
     #[Test]
     public function theHandlerOwnsTheTransactionSpanningBothWrites(): void

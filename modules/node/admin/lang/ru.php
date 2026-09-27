@@ -56,7 +56,7 @@ define('_NODE_MAXBYTES','Предел размера, байт');
 define('_NODE_MAXLIST','Материалов на странице, не больше');
 define('_NODE_MIN','Минимум');
 define('_NODE_MODE','Режим отображения');
-define('_NODE_MODEHINT','Короткое имя набора шаблонов темы; default — базовый набор');
+define('_NODE_MODEHINT','Набор шаблонов темы; default — базовый набор, support — только для расширения support');
 define('_NODE_MOVED','Состояние изменено.');
 define('_NODE_NAME','Имя (адрес раздела)');
 define('_NODE_NAMEHINT','Строчные латинские буквы и цифры, до 20 символов; после создания не меняется');

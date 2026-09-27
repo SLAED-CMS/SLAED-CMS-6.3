@@ -10,10 +10,6 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 if (!class_exists('FileManager')) require_once __DIR__.'/filemanager.php';
 
 # Publishes uploaded files below one upload root: extension, type, image and quota validation, collision-free naming and lock-guarded atomic publication (docs/UPLOAD-2026.md)
-# Every result is the same eight-key shape; a failure carries only its machine-readable code and leaves neither a final file nor a partial behind
-# The type is read from the content by two readers: the magic database where the build has one and a structural validator per format where it has none
-# The clock, the transfer, the random name segment and the two filesystem primitives sit behind protected seams, so the tests reach every branch without an HTTP request
-# Production code never subclasses this class and always reaches it through getUploadService()
 class Upload {
     private const TRIES = 5;
     private const PARTAGE = 3600;
@@ -93,6 +89,7 @@ class Upload {
     private array $notes = [];
 
     # Builds the service over the upload root, which comes from getUploadService(), so no adapter repeats it; where the destination locks live is decided by FileManager alone
+    # Production code never subclasses this class and always reaches it through getUploadService()
     public function __construct(string $root) {
         $this->root = rtrim(str_replace('\\', '/', $root), '/');
     }
@@ -109,6 +106,7 @@ class Upload {
 
     # Publishes one submitted file; everything that can fail without touching the destination is checked before the transfer, so a rejected upload never reaches the upload tree
     # The source path stays as the SAPI reported it: PHP matches it literally, so a separator normalized to / makes move_uploaded_file() refuse it on Windows
+    # Every result is the same eight-key shape; a failure carries only its machine-readable code and leaves neither a final file nor a partial behind
     public function addUploadedFile(array $file, array $rule, string $dir, string $base, ?string $owner = null): array {
         $code = $this->checkUploadInput($file, $rule);
         if ($code !== '') return $this->getFailResult($code);
@@ -187,6 +185,7 @@ class Upload {
         return $done;
     }
 
+    # The clock, the transfer, the random name segment and the two filesystem primitives sit behind protected seams, so the tests reach every branch without an HTTP request
     # Returns the wall clock the one-hour partial sweep measures against; seam, because a sweep test cannot wait an hour
     protected function getTime(): int {
         return time();

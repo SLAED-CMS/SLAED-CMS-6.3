@@ -21,16 +21,39 @@ function account(): void {
         $fields = $tpl->getHtmlFrag('form-field-row', [
             'label_for' => 'f-user-name',
             'label' => _NICKNAME,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'user_name', 'input_id' => 'f-user-name', 'maxlength_num' => 25, 'placeholder_text' => _NICKNAME, 'is_required' => true]),
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'text',
+                'name_attr' => 'user_name',
+                'input_id' => 'f-user-name',
+                'maxlength_num' => 25,
+                'placeholder_text' => _NICKNAME,
+                'is_required' => true,
+            ]),
         ]).$tpl->getHtmlFrag('form-field-row', [
             'label_for' => 'f-user-password',
             'label' => _PASSWORD,
-            'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'user_password', 'input_id' => 'f-user-password', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD, 'is_required' => true]),
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'name_attr' => 'user_password',
+                'input_id' => 'f-user-password',
+                'maxlength_num' => 25,
+                'placeholder_text' => _PASSWORD,
+                'is_required' => true,
+            ]),
         ]);
         $after = $tpl->getHtmlFrag('block-content', [
             'is_form_submit' => true,
-            'content' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']), 'title' => _PASSWORDLOST, 'label' => _PASSWORDLOST, 'is_footer_button' => true])
-                .$tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'newuser']), 'title' => _REGNEWUSER, 'label' => _REGNEWUSER, 'is_footer_button' => true]),
+            'content' => $tpl->getHtmlFrag('link', [
+                'href' => getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']),
+                'title' => _PASSWORDLOST,
+                'label' => _PASSWORDLOST,
+                'is_footer_button' => true,
+            ])
+                .$tpl->getHtmlFrag('link', [
+                    'href' => getSeoUrl(['name' => $conf['name'], 'op' => 'newuser']),
+                    'title' => _REGNEWUSER,
+                    'label' => _REGNEWUSER,
+                    'is_footer_button' => true,
+                ]),
         ]);
         $after .= Oauth::getButtons();
         $cont .= $tpl->getHtmlPart('form-add', [
@@ -86,15 +109,35 @@ function newuser(): void {
             $fields = $tpl->getHtmlFrag('form-field-row', [
                 'label_for' => 'f-'.$unkey,
                 'label' => _NICKNAME,
-                'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => $unkey, 'input_id' => 'f-'.$unkey, 'value_attr' => $nick, 'maxlength_num' => 25, 'placeholder_text' => _NICKNAME, 'is_required' => true]),
+                'field_html' => $tpl->getHtmlFrag('input', [
+                    'itype' => 'text',
+                    'name_attr' => $unkey,
+                    'input_id' => 'f-'.$unkey,
+                    'value_attr' => $nick,
+                    'maxlength_num' => 25,
+                    'placeholder_text' => _NICKNAME,
+                    'is_required' => true,
+                ]),
             ]).$tpl->getHtmlFrag('form-field-row', [
                 'label_for' => 'f-mail',
                 'label' => _EMAIL,
-                'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'mail', 'input_id' => 'f-mail', 'value_attr' => $mail, 'maxlength_num' => 255, 'placeholder_text' => _EMAIL, 'is_required' => true]),
+                'field_html' => $tpl->getHtmlFrag('input', [
+                    'name_attr' => 'mail',
+                    'input_id' => 'f-mail',
+                    'value_attr' => $mail,
+                    'maxlength_num' => 255,
+                    'placeholder_text' => _EMAIL,
+                    'is_required' => true,
+                ]),
             ]).$tpl->getHtmlFrag('form-field-row', [
                 'label_for' => 'f-user-password',
                 'label_html' => getTplTitleTip(_BLANKFORAUTO)._PASSWORD,
-                'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'user_password', 'input_id' => 'f-user-password', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD]),
+                'field_html' => $tpl->getHtmlFrag('input', [
+                    'name_attr' => 'user_password',
+                    'input_id' => 'f-user-password',
+                    'maxlength_num' => 25,
+                    'placeholder_text' => _PASSWORD,
+                ]),
             ]).$tpl->getHtmlFrag('form-field-row', [
                 'label_html' => getTplTitleTip(_BLANKFORAUTO)._RETYPEPASSWORD,
                 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'user_password2', 'maxlength_num' => 25, 'placeholder_text' => _RETYPEPASSWORD]),
@@ -112,7 +155,12 @@ function newuser(): void {
             $after = $tpl->getHtmlFrag('block-content', [
                 'is_form_submit' => true,
                 'content' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name']]), 'title' => _USERLOGIN, 'label' => _USERLOGIN, 'is_footer_button' => true])
-                    .$tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']), 'title' => _PASSWORDLOST, 'label' => _PASSWORDLOST, 'is_footer_button' => true]),
+                    .$tpl->getHtmlFrag('link', [
+                        'href' => getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']),
+                        'title' => _PASSWORDLOST,
+                        'label' => _PASSWORDLOST,
+                        'is_footer_button' => true,
+                    ]),
             ]);
             $after .= Oauth::getButtons();
             $cont .= $tpl->getHtmlPart('form-add', [
@@ -184,7 +232,8 @@ function finnewuser(): void {
                 $message = str_replace('[text]', getTplLines([sprintf(_PASSFSEND, $mail, $conf['sitename'], $link, $nick, $pass), _IFYOUDIDNOTASK], true, true), $conf['mtemp']);
                 $mailer->addQueue(['kind' => 'account', 'email' => $mail, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 3]);
                 $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php', 'secs' => 30]);
-                $cont = $tpl->getHtmlFrag('title', ['title' => _ACCOUNTCREATED, 'is_level_one' => true]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => getTplLines([_YOUAREREGISTERED, _FINISHUSERCONF, _THANKSUSER], true, true), 'meta' => $meta]);
+                $cont = $tpl->getHtmlFrag('title', ['title' => _ACCOUNTCREATED, 'is_level_one' => true])
+                    .$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => getTplLines([_YOUAREREGISTERED, _FINISHUSERCONF, _THANKSUSER], true, true), 'meta' => $meta]);
             }
             echo $cont;
             setFoot();
@@ -200,7 +249,10 @@ function activate(): void {
     $num = getVar('get', 'num', 'text', '');
     $past = time() - 86400;
     $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users_temp WHERE time < :past', ['past' => $past]);
-    $result = $db->getSqlQuery('SELECT name, email, password, regdate, code FROM '.PREFIX_DB.'_users_temp WHERE name = :uname AND code = :cnum', ['uname' => $user, 'cnum' => $num]);
+    $result = $db->getSqlQuery(
+        'SELECT name, email, password, regdate, code FROM '.PREFIX_DB.'_users_temp WHERE name = :uname AND code = :cnum',
+        ['uname' => $user, 'cnum' => $num]
+    );
     setHead(['title' => _ACTIVATIONSUB]);
     if ($db->getSqlRowCount($result) === 1) {
         [$nick, $mail, $pass, $reg, $check] = $db->getSqlRow($result);
@@ -217,20 +269,23 @@ function activate(): void {
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users_temp WHERE name = :uname AND code = :cnum', ['uname' => $nick, 'cnum' => $check]);
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = 0', ['uname' => $uip]);
             $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 15]);
-            echo $tpl->getHtmlFrag('title', ['title' => _ACTIVATIONYES, 'is_level_one' => true]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ACTMSG, 'meta' => $meta]);
+            echo $tpl->getHtmlFrag('title', ['title' => _ACTIVATIONYES, 'is_level_one' => true])
+                .$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ACTMSG, 'meta' => $meta]);
         } else {
             $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 15]);
-            echo $tpl->getHtmlFrag('title', ['title' => _ACTIVATIONERROR, 'is_level_one' => true]).$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ACTERROR1, 'meta' => $meta]);
+            echo $tpl->getHtmlFrag('title', ['title' => _ACTIVATIONERROR, 'is_level_one' => true])
+                .$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ACTERROR1, 'meta' => $meta]);
         }
     } else {
         $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 15]);
-        echo $tpl->getHtmlFrag('title', ['title' => _ACTIVATIONERROR, 'is_level_one' => true]).$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ACTERROR2, 'meta' => $meta]);
+        echo $tpl->getHtmlFrag('title', ['title' => _ACTIVATIONERROR, 'is_level_one' => true])
+            .$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ACTERROR2, 'meta' => $meta]);
     }
     setFoot();
 }
 
 function view(): void {
-    global $db, $conf, $afile, $tpl, $prs, $com;
+    global $db, $conf, $afile, $tpl, $prs, $com, $pnt;
     if ($conf['users']['prof'] != 1 || ($conf['users']['prof'] == 1 && is_user()) || isAdmin()) {
         $uname = htmlspecialchars(substr(urldecode(getVar('get', 'uname', 'text')), 0, 25));
         $params = [];
@@ -241,9 +296,42 @@ function view(): void {
             $where = 'u.id = :uid';
             $params['uid'] = getVar('get', 'id', 'num');
         }
-        $result = $db->getSqlQuery('SELECT u.id, u.name, u.rank, u.email, u.website, u.avatar, u.regdate, u.occ, u.origin, u.interest, u.sig, u.viewmail, u.lastvis, u.lang, u.points, u.ip, u.warnings, u.birthday, u.gender, u.votes, u.tvotes, u.field, u.agent, g.name, g.rank, g.color, (SELECT COUNT(s.id) FROM '.PREFIX_DB.'_session AS s WHERE s.uname = u.name) FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON (g.id = u.grp) WHERE '.$where, $params);
+        $result = $db->getSqlQuery(
+            'SELECT u.id, u.name, u.rank, u.email, u.website, u.avatar, u.regdate, u.occ, u.origin, u.interest, u.sig, u.viewmail, u.lastvis, u.lang, u.points, u.ip, u.warnings,'
+                .' u.birthday, u.gender, u.votes, u.tvotes, u.field, u.agent, g.name, g.rank, g.color, (SELECT COUNT(s.id) FROM '.PREFIX_DB.'_session AS s WHERE s.uname = u.name)'
+                .' FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON (g.id = u.grp) WHERE '.$where,
+            $params
+        );
         if ($db->getSqlRowCount($result) > 0) {
-            [$uid, $nick, $rank, $mail, $site, $avatar, $reg, $occ, $from, $inter, $sig, $view, $last, $lang, $point, $ip, $warn, $birth, $gender, $votes, $total, $field, $agent, $gname, $grank, $gcolor, $ison] = $db->getSqlRow($result);
+            [
+                $uid,
+                $nick,
+                $rank,
+                $mail,
+                $site,
+                $avatar,
+                $reg,
+                $occ,
+                $from,
+                $inter,
+                $sig,
+                $view,
+                $last,
+                $lang,
+                $point,
+                $ip,
+                $warn,
+                $birth,
+                $gender,
+                $votes,
+                $total,
+                $field,
+                $agent,
+                $gname,
+                $grank,
+                $gcolor,
+                $ison
+            ] = $db->getSqlRow($result);
             $userIpRaw = $ip;
             $seotitle  = $nick;
             $seoctitle = _PERSONALINFO;
@@ -259,7 +347,14 @@ function view(): void {
                 'author' => $seoauthor,
             ]);
             $adm = isAdmin();
-            $mkrow = fn(string $icon, string $label, string $value, string $html = '', bool $priv = false): array => ['icon' => $icon, 'label' => $label, 'value' => $value, 'value_html' => $html, 'is_hidden' => ($value === _HIDE), 'is_private' => $priv];
+            $mkrow = fn(string $icon, string $label, string $value, string $html = '', bool $priv = false): array => [
+                'icon' => $icon,
+                'label' => $label,
+                'value' => $value,
+                'value_html' => $html,
+                'is_hidden' => ($value === _HIDE),
+                'is_private' => $priv,
+            ];
             if ($adm) {
                 $idv = (string)$uid;
                 $regdate = format_time($reg, _TIMESTRING);
@@ -280,7 +375,7 @@ function view(): void {
             $avatar = getUserAvatarUrl(['avatar' => $avatar]);
             $sign = ($sig) ? $prs->filterContent($sig, false, $conf['name']) : '';
             $lang = getLangName($lang ?: $conf['language']);
-            $points = ($conf['points']['active'] && $point) ? number_format((int)$point, 0, '', "\u{202F}") : _NO_INFO;
+            $points = ($pnt->active && $point) ? number_format((int)$point, 0, '', "\u{202F}") : _NO_INFO;
             $wnum = count(array_filter(explode('|', (string)$warn)));
             $warnhtml = ($wnum) ? warnings($warn) : '';
             if ($birth) {
@@ -337,7 +432,7 @@ function view(): void {
                     $stat = $inf['stat'];
                     $sums[$mod] = [$stat['num'], $inf['type']->settings['features']['rating'] ? $stat['ratings'] : 0, $stat['score'], $stat['favs']];
                 } elseif ($mod != 'comm') {
-                    $ron = ($conf['ratings'][$mod]['active'] ?? '') === '1';
+                    $ron = !empty(getRatingService()->getRule($mod)['active']);
                     $rsel = ($ron && $inf['rate']) ? 'SUM('.$inf['rate'][0].') AS rc, SUM('.$inf['rate'][1].') AS rt' : '0 AS rc, 0 AS rt';
                     $ftab = PREFIX_DB.'_'.$inf['table'];
                     $fsel = '0';
@@ -380,19 +475,14 @@ function view(): void {
             }
             $hub = array_values($hub);
             $acts = $adm ? getActionMenu([
-                ['href' => $afile.'.php?op=users_add&id='.$uid, 'title' => _FULLEDIT, 'icon_name' => 'pencil'],
+                ['href' => $afile.'.php?name=account&op=add&id='.$uid, 'title' => _FULLEDIT, 'icon_name' => 'pencil'],
                 [
-                    'href' => $afile.'.php?op=security_block&new_ip='.$userIpRaw,
+                    'href' => $afile.'.php?name=security&op=banlist&new_ip='.$userIpRaw,
                     'title' => _BANIPSENDER,
                     'icon_name' => 'shield-x',
                     'confirm_text' => _BANIPSENDER.' "'.$userIpRaw.'"?',
                 ],
-                [
-                    'href' => $afile.'.php?op=users_del&id='.$uid,
-                    'title' => _ONDELETE,
-                    'icon_name' => 'trash',
-                    'confirm_text' => _DELETE.' "'.$nick.'"?',
-                ],
+                getTplPostAction(['name' => 'account', 'op' => 'delete', 'id' => $uid], 'trash', _ONDELETE, _DELETE.' "'.$nick.'"?'),
             ]) : '';
             $pmhref = (($conf['privat']['act'] ?? 0) && !empty($nick)) ? getSeoUrl(['name' => $conf['name'], 'op' => 'privat', 'uname' => urlencode($nick)]) : '';
             $uacts = [];
@@ -427,7 +517,7 @@ function view(): void {
                 'pm_label' => _MESSAGE,
                 'rating_label' => _RATING,
                 'rating_html' => $rating,
-                'has_level' => !empty($conf['points']['active']) && !empty($point),
+                'has_level' => $pnt->active && !empty($point),
                 'level' => $level,
                 'level_group' => ($rgroup) ? end($rgroup) : '',
                 'level_next' => $nextlab,
@@ -481,7 +571,7 @@ function view(): void {
 }
 
 function profil(): void {
-    global $db, $conf, $tpl, $prv;
+    global $db, $conf, $tpl, $prv, $pnt;
     if (!is_user()) {
         account();
         return;
@@ -533,11 +623,15 @@ function profil(): void {
     }
     $seen = ($inf['lastvis'] ?? '') ? format_time($inf['lastvis'], _TIMESTRING) : '';
     echo $tpl->getHtmlPart('account-home', [
-        'home_head' => ['icon' => getIconName('home'), 'title' => _THISISYOURPAGE, 'chips' => ($seen !== '') ? [['tone' => 'neutral', 'icon' => getIconName('visit'), 'title' => _LAST_VISIT, 'text' => $seen]] : []],
+        'home_head' => [
+            'icon' => getIconName('home'),
+            'title' => _THISISYOURPAGE,
+            'chips' => ($seen !== '') ? [['tone' => 'neutral', 'icon' => getIconName('visit'), 'title' => _LAST_VISIT, 'text' => $seen]] : [],
+        ],
         'name' => (string)$inf['name'],
         'avatar' => getUserAvatarUrl(['avatar' => (string)($inf['avatar'] ?? '')]),
         'ring' => $lvl['ring'],
-        'has_level' => !empty($conf['points']['active']) && !empty($inf['points']),
+        'has_level' => $pnt->active && !empty($inf['points']),
         'level' => $lvl['level'],
         'level_full' => $lvl['level'] >= 100,
         'level_group' => ($lvl['groups']) ? end($lvl['groups']) : '',
@@ -546,7 +640,7 @@ function profil(): void {
         'online_label' => _ONLINE,
         'group_name' => (string)($grow['name'] ?? ''),
         'group_label' => _SPEC_GROUP,
-        'has_points' => !empty($conf['points']['active']),
+        'has_points' => $pnt->active,
         'points_text' => number_format((int)($inf['points'] ?? 0), 0, '', "\u{202F}"),
         'points_label' => _POINTS,
         'rating' => ((int)($inf['votes'] ?? 0) > 0) ? number_format($inf['tvotes'] / $inf['votes'], 2) : '',
@@ -588,7 +682,7 @@ function privat(): void {
         $tok = getSiteToken();
         $id = getVar('get', 'id', 'num', 0);
         $typ = getVar('get', 'typ', 'num', 0);
-        $name = filterText(mb_substr(urldecode((string)getVar('get', 'uname', 'raw', '')), 0, 25));
+        $name = filterText(mb_substr(urldecode(getVar('get', 'uname', 'raw', '')), 0, 25));
         $open = '';
         if ($id) {
             $view = $prv->getMessageView($uid, $id, PrivatBox::Inbox);
@@ -723,13 +817,28 @@ function passlost(): void {
         $fields = $tpl->getHtmlFrag('form-field-row', [
             'label_for' => 'f-email',
             'label' => _EMAIL,
-            'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'email', 'input_id' => 'f-email', 'value_attr' => $email, 'maxlength_num' => 255, 'placeholder_text' => _EMAIL, 'is_required' => true]),
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'name_attr' => 'email',
+                'input_id' => 'f-email',
+                'value_attr' => $email,
+                'maxlength_num' => 255,
+                'placeholder_text' => _EMAIL,
+                'is_required' => true,
+            ]),
         ]);
         if (!empty($email)) {
             $fields .= $tpl->getHtmlFrag('form-field-row', [
                 'label_for' => 'f-code',
                 'label' => _CONFIRMATIONCODE,
-                'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'code', 'input_id' => 'f-code', 'value_attr' => $code ?: '', 'maxlength_num' => 10, 'placeholder_text' => _CONFIRMATIONCODE, 'is_required' => true]),
+                'field_html' => $tpl->getHtmlFrag('input', [
+                    'itype' => 'text',
+                    'name_attr' => 'code',
+                    'input_id' => 'f-code',
+                    'value_attr' => $code ?: '',
+                    'maxlength_num' => 10,
+                    'placeholder_text' => _CONFIRMATIONCODE,
+                    'is_required' => true,
+                ]),
             ]);
         }
         $after = $tpl->getHtmlFrag('block-content', [
@@ -771,7 +880,11 @@ function passmail(): void {
             $newpass = getRandomString($conf['users']['minpass']);
             $chash = getPassHash($newpass);
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET password = :password WHERE email = :email', ['password' => $chash, 'email' => $email]);
-            $link = $tpl->getHtmlFrag('link', ['href' => $conf['homeurl'].'/index.php?name='.$conf['name'], 'title' => $conf['homeurl'].'/index.php?name='.$conf['name'], 'label_html' => $conf['homeurl'].'/index.php?name='.$conf['name']]);
+            $link = $tpl->getHtmlFrag('link', [
+                'href' => $conf['homeurl'].'/index.php?name='.$conf['name'],
+                'title' => $conf['homeurl'].'/index.php?name='.$conf['name'],
+                'label_html' => $conf['homeurl'].'/index.php?name='.$conf['name'],
+            ]);
             $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$nick;
             $message = str_replace('[text]', sprintf(_PASSSEND, $nick, $conf['sitename'], $nick, $newpass, $link), $conf['mtemp']);
             $mailer->addQueue(['kind' => 'account', 'email' => $mail, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 3]);
@@ -779,10 +892,15 @@ function passmail(): void {
                 'title' => _PASSWORDLOST,
             ]);
             $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 10]);
-            echo $tpl->getHtmlFrag('title', ['title' => _PASSWORDLOST, 'is_level_one' => true]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _USERPASSWORD.' '.$nick.' '._MAILED, 'meta' => $meta]);
+            echo $tpl->getHtmlFrag('title', ['title' => _PASSWORDLOST, 'is_level_one' => true])
+                .$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _USERPASSWORD.' '.$nick.' '._MAILED, 'meta' => $meta]);
             setFoot();
         } else {
-            $link = $tpl->getHtmlFrag('link', ['href' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&op=passlost&code='.$subpass.'&email='.$email, 'title' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&op=passlost&code='.$subpass.'&email='.$email, 'label_html' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&op=passlost&code='.$subpass.'&email='.$email]);
+            $link = $tpl->getHtmlFrag('link', [
+                'href' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&op=passlost&code='.$subpass.'&email='.$email,
+                'title' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&op=passlost&code='.$subpass.'&email='.$email,
+                'label_html' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&op=passlost&code='.$subpass.'&email='.$email,
+            ]);
             $subject = $conf['sitename'].' - '._CODEFOR.' '.$nick;
             $message = str_replace('[text]', getTplLines([sprintf(_PASSCSEND, $nick, $conf['sitename'], $subpass, $link), _IFYOUDIDNOTASK], true, true), $conf['mtemp']);
             $mailer->addQueue(['kind' => 'account', 'email' => $mail, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 3]);
@@ -883,7 +1001,7 @@ function getProfileFillRate(array $info): array {
 }
 
 # The state of the account before anything on the page changes it: what protects it, who sees the address, how many notices are on and how far the profile is filled
-# A state names the category tone it paints with where one passes contrast as text - success and the strong primary - and the warning state carries no category, because that tone needs a step of its own
+# A state names the category tone it paints with where that tone passes contrast as text (success, strong primary); warning carries none, its tone needs its own step
 function getAccountLamps(array $info, array $lnks, array $fill): array {
     global $conf;
     $haspw = !str_starts_with((string)($info['password'] ?? ''), '!');
@@ -1256,6 +1374,8 @@ function edithome(): void {
     }
 }
 
+# The account cookie carries what the member chose and never what the site defaults to
+# An empty cookie slot means no preference, which every reader already resolves for itself, while a name written in means a decision
 function savehome(): void {
     global $db, $user, $conf, $stop;
     if (!is_user()) {
@@ -1333,8 +1453,6 @@ function savehome(): void {
                     Logger::addFile('error', 'Avatar upload could not be removed after a failed profile write', ['path' => $path]);
                 }
             }
-            # The cookie carries what the member chose and never what the site defaults to
-            # An empty slot means no preference, which every reader already resolves for itself, while a name written in means a decision
             setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $name, $pass, $story, $blockon, $theme]);
             if ($stop) {
                 edithome();
@@ -1354,7 +1472,7 @@ function setavatar(): void {
         header('HTTP/1.1 403 Forbidden');
         exit;
     }
-    $newa = getAvatarPreset((string)getVar('post', 'avatar', 'text'));
+    $newa = getAvatarPreset(getVar('post', 'avatar', 'text'));
     if ($newa === '' || !$db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET avatar = :avatar WHERE id = :id', ['avatar' => filterText($newa), 'id' => (int)$user[0]])) {
         header('HTTP/1.1 422 Unprocessable Content');
         exit;
@@ -1384,7 +1502,11 @@ function savepass(): void {
                         edithome();
                         return;
                     }
-                    $link = $tpl->getHtmlFrag('link', ['href' => $conf['homeurl'].'/index.php?name='.$conf['name'], 'title' => $conf['homeurl'].'/index.php?name='.$conf['name'], 'label_html' => $conf['homeurl'].'/index.php?name='.$conf['name']]);
+                    $link = $tpl->getHtmlFrag('link', [
+                        'href' => $conf['homeurl'].'/index.php?name='.$conf['name'],
+                        'title' => $conf['homeurl'].'/index.php?name='.$conf['name'],
+                        'label_html' => $conf['homeurl'].'/index.php?name='.$conf['name'],
+                    ]);
                     $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$nick;
                     $message = str_replace('[text]', sprintf(_PASSESEND, $nick, $conf['sitename'], $nick, $link), $conf['mtemp']);
                     $mailer->addQueue(['kind' => 'account', 'email' => $mail, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 3]);
@@ -1485,7 +1607,7 @@ function oauthback(): void {
         Oauth::setLog('oauth_bad_config', $prov);
         oautherror();
     }
-    $code = trim((string)getVar('get', 'code', 'raw', ''));
+    $code = trim(getVar('get', 'code', 'raw', ''));
     if ($code === '') {
         Oauth::setLog('oauth_provider_error', $prov, 0, 'code missing');
         oautherror();

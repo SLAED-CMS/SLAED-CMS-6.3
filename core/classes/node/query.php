@@ -32,6 +32,9 @@ final class NodeQuery {
     private const ORDERS = ['published', 'updated', 'title', 'views', 'rating'];
     private const SHOW = ['category', 'author', 'date', 'views'];
 
+    # The closed display modes of the view section; a theme overrides the templates of a mode it carries, and support belongs to the type of that extension alone
+    public const MODES = ['default', 'article', 'docs', 'faq', 'files', 'media', 'support'];
+
     # The closed switches of the features section
     private const FEATURES = ['categories', 'comments', 'rating', 'favorites', 'poll', 'home', 'pinned', 'submit', 'moderation', 'schedule', 'related', 'tree'];
 
@@ -93,7 +96,7 @@ final class NodeQuery {
     private const READS = [
         'item' => ['state' => 'any', 'time' => true, 'cats' => '', 'filter' => false],
         'target' => ['state' => 'pub', 'time' => true, 'cats' => '', 'filter' => false],
-        'site' => ['state' => 'pub', 'time' => true, 'cats' => 'all', 'filter' => false],
+        'site' => ['state' => 'pub', 'time' => true, 'cats' => 'lang', 'filter' => false],
         'parent' => ['state' => 'pub', 'time' => true, 'cats' => 'lang', 'filter' => false],
         'list' => ['state' => 'list', 'time' => true, 'cats' => 'lang', 'filter' => true],
         'dead' => ['state' => 'pub', 'time' => false, 'cats' => 'lang', 'filter' => true],
@@ -231,9 +234,10 @@ final class NodeQuery {
         return ['orders' => $rule['orders'], 'order' => $rule['order'], 'dir' => $rule['dir'], 'limit' => $rule['limit'], 'alpha' => $rule['alpha'], 'show' => $rule['show']];
     }
 
-    # Check the view section: one safe short name of the display set, never a path
-    private function filterViewRule(mixed $rule): array {
-        if (!is_array($rule) || !$this->checkExactKeys($rule, ['mode']) || !is_string($rule['mode']) || !preg_match(self::NAME, $rule['mode'])) throw $this->getInvalid('view');
+    # Check the view section: one display mode of the closed list, never a path, and the support mode only for a type of the support extension
+    private function filterViewRule(mixed $rule, string $ext): array {
+        if (!is_array($rule) || !$this->checkExactKeys($rule, ['mode'])) throw $this->getInvalid('view');
+        if (!in_array($rule['mode'], self::MODES, true) || ($rule['mode'] === 'support') !== ($ext === 'support')) throw $this->getInvalid('view.mode');
         return ['mode' => $rule['mode']];
     }
 
@@ -329,7 +333,7 @@ final class NodeQuery {
         foreach (['form', 'admin'] as $key) if (($full[$key] ?? []) !== []) throw $this->getInvalid($key);
         $out = [
             'list' => $this->filterListRule($full['list'] ?? null, $lims),
-            'view' => $this->filterViewRule($full['view'] ?? null),
+            'view' => $this->filterViewRule($full['view'] ?? null, $ext),
             'form' => [],
             'workflow' => $this->filterFlowRule($full['workflow'] ?? null),
             'admin' => [],
@@ -347,8 +351,26 @@ final class NodeQuery {
         return $out;
     }
 
+    # Check the stored settings of one type on read: a refusal only of a switch a later rule closed, features.submit or the report of a role, reads that switch off with a log line
+    # Both switches only narrow what the type grants, so a type stored before the rule stays on the site; a malformed value or any other refusal still fails the type
+    private function getStoredSettings(mixed $node, string $ext, array $sect, array $fields, string $name): array {
+        while (true) {
+            try {
+                return $this->filterTypeSettings($node, $ext, $sect, $fields);
+            } catch (NodeException $err) {
+                if (!preg_match('/^Invalid [a-z]+ input: (features\.submit|assets\.([a-z][a-z0-9_]{0,49})\.report)$/D', $err->getMessage(), $hit)) throw $err;
+                $full = $this->getMergedArray($node['defaults'], $sect);
+                $role = $hit[2] ?? '';
+                if ((($role === '') ? ($full['features']['submit'] ?? null) : ($full['assets'][$role]['report'] ?? null)) !== true) throw $err;
+                if ($role === '') $sect['features']['submit'] = false;
+                else $sect['assets'][$role]['report'] = false;
+                $this->addNodeLog('a type carries a switch a later rule closed, it is read switched off', ['name' => $name, 'path' => $hit[1]]);
+            }
+        }
+    }
+
     # Check the stored settings of one type, its differences from the defaults without the version, and answer the canonical effective settings
-    # The same check guards the reading of a stored type and every write of one; the extension settings go through the filter of the registered extension
+    # Every write of a type is checked here and refused on any error; a stored type is read through getStoredSettings(), the extension settings through the extension
     public function filterNodeSettings(string $ext, array $settings, array $fields): array {
         global $conf;
         return $this->filterTypeSettings($conf['node'] ?? null, $ext, $settings, $fields);
@@ -416,7 +438,7 @@ final class NodeQuery {
         try {
             if (!is_array($defs)) throw $this->getInvalid('fields');
             $fields = $this->fld->filterFieldList($defs);
-            $set = $this->filterTypeSettings($cfg['node'], $row['ext'], $sect, $fields);
+            $set = $this->getStoredSettings($cfg['node'], $row['ext'], $sect, $fields, $name);
         } catch (NodeException|InvalidArgumentException $err) {
             $this->addNodeLog('the stored configuration of a type is invalid', ['name' => $name, 'path' => $err->getMessage()]);
             return null;
@@ -501,7 +523,7 @@ final class NodeQuery {
     }
 
     # Whether a read, view or post right of a category grants the context: empty never, a group list by intersection with the groups, else the level 0 of a guest or 1 of a user
-    private function checkCatRead(string $perm): bool {
+    private function checkCatRight(string $perm): bool {
         [$lvl, $ids] = array_pad(explode('|', $perm, 2), 2, '');
         if ($perm === '' || !ctype_digit($lvl)) return false;
         $gids = array_values(array_filter(array_map('intval', explode(',', $ids)), fn(int $v): bool => $v > 0));
@@ -519,8 +541,8 @@ final class NodeQuery {
         if (!isset($this->cats[$type->id])) {
             $map = [];
             foreach ($this->getQueryRows('SELECT id, pread, pview, ppost, lang FROM '.PREFIX_DB.'_categories WHERE modul = :modul', ['modul' => $type->name]) as $row) {
-                $map[intval($row['id'])] = ['read' => $this->checkCatRead($row['pread']), 'view' => $this->checkCatRead($row['pview']),
-                    'post' => $this->checkCatRead($row['ppost']), 'lang' => $row['lang']];
+                $map[intval($row['id'])] = ['read' => $this->checkCatRight($row['pread']), 'view' => $this->checkCatRight($row['pview']),
+                    'post' => $this->checkCatRight($row['ppost']), 'lang' => $row['lang']];
             }
             $this->cats[$type->id] = $map;
         }
@@ -540,7 +562,7 @@ final class NodeQuery {
     private function checkRowCat(array $row, NodeType $type): bool {
         if ($this->checkModer($type) || intval($row['cid']) === 0) return true;
         if (!$type->settings['features']['categories'] || $row['cread'] === null || strtolower($row['cmod']) !== $type->name) return false;
-        return $this->checkCatRead($row['cread']);
+        return $this->checkCatRight($row['cread']);
     }
 
     # The extension a single type is read through: none for a standard type, and for a type with an extension the assigned instance of exactly the registered class
@@ -983,12 +1005,12 @@ final class NodeQuery {
         return $out;
     }
 
-    # The categories of a type the form offers the context: those whose view right shows them and whose post right admits the writer, every one to a moderator of the type
-    # The writer checks the post right again on save; the view right keeps the title of a hidden category out of the form, as the list answers such a category as missing
+    # The categories of a type the form offers the context: those of its language whose view right shows them and whose post right admits the writer, all to a moderator of the type
+    # The writer checks the rights and the language again on save; a hidden category stays out of the form, as the list answers it as missing, and so does one of another language
     public function getNodePostCats(NodeType $type): array {
         $moder = $this->checkModer($type);
         $out = [];
-        foreach ($this->getCatMap($type) as $cid => $cat) if ($moder || ($cat['view'] && $cat['post'])) $out[] = $cid;
+        foreach ($this->getCatMap($type) as $cid => $cat) if ($moder || ($cat['view'] && $cat['post'] && $this->checkCatLang($cat['lang'], true))) $out[] = $cid;
         return $out;
     }
 
@@ -1069,9 +1091,7 @@ final class NodeQuery {
     # The answer keeps the order of the input and leaves out every target that is missing, closed, not published, of a disabled type or of another type than expected
     # With any, a type the context moderates is read as a single item is, in every state and switched off as well; public readers never pass it
     public function getNodeTargetList(array $refs, bool $any = false): array {
-        global $conf;
-        $lims = $this->getNodeLimits($conf['node'] ?? null);
-        if (count($refs) > min(500, $lims['syncbatch'] ?? 500)) throw $this->getInvalid('refs');
+        if (count($refs) > $this->getTargetSize()) throw $this->getInvalid('refs');
         foreach ($refs as $id => $name) if (!is_int($id) || $id < 1 || !is_string($name) || !preg_match(self::NAME, $name)) throw $this->getInvalid('refs');
         if (!$refs) return [];
         $need = array_values(array_unique(array_filter($refs, fn(string $v): bool => !array_key_exists($v, $this->types))));
@@ -1102,6 +1122,13 @@ final class NodeQuery {
         $out = [];
         foreach (array_keys($refs) as $id) if (isset($found[$id])) $out[$id] = $found[$id];
         return $out;
+    }
+
+    # The largest map the batch read of targets accepts: limits.syncbatch of the configuration and never above 500, the size every caller slices its ids by
+    # A missing or broken configuration answers 500, the very bound the batch read then checks, so a caller and the reader can never disagree about one batch
+    public function getTargetSize(): int {
+        global $conf;
+        return min(500, $this->getNodeLimits($conf['node'] ?? null)['syncbatch'] ?? 500);
     }
 
     # Read the light target of one global id of the expected type with the very check of the batch read

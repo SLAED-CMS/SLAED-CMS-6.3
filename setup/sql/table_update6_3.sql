@@ -9,7 +9,7 @@
 # Purpose:
 # - migrate a live SLAED 6.2 database to the normalized schema used by 6.3
 # - survive partial/manual refactors without crashing on already-renamed objects
-# - skip missing tables silently
+# - the procedures skip a missing table silently; a plain statement (ALTER ... MODIFY, UPDATE, DELETE) needs its table and fails as a red line
 #
 # Usage:
 # - executed by setup/index.php during the public 6.2 -> 6.3 update path
@@ -20,6 +20,11 @@
 # - this script covers column/index migration first
 # - then it performs minimal table-level reconciliation required by current code
 # - legacy source tables are not dropped automatically
+
+# MySQL 8 refuses by default every ALTER of a 6.2 table whose datetime columns default to a zero date (NO_ZERO_DATE, NO_ZERO_IN_DATE)
+# The file runs without both, as MariaDB does by default, and gives the session its own mode back at the end
+SET @SLAED_MODE = @@SESSION.sql_mode;
+SET SESSION sql_mode = TRIM(BOTH ',' FROM REPLACE(REPLACE(REPLACE(REPLACE(@@SESSION.sql_mode, 'NO_ZERO_IN_DATE', ''), 'NO_ZERO_DATE', ''), ',,', ','), ',,', ','));
 
 DROP PROCEDURE IF EXISTS rencol;
 DROP PROCEDURE IF EXISTS addcol;
@@ -734,7 +739,6 @@ CALL rencol('{prefix}_categories', 'lpost_id', 'lpost');
 CALL renidx('{prefix}_categories', 'parentid', 'parent');
 CALL addidx('{prefix}_categories', 'modul', '`modul`', 0);
 CALL addidx('{prefix}_categories', 'parent', '`parent`', 0);
-CALL addidx('{prefix}_categories', 'modul_lang_status', '`modul`, `lang`, `status`', 0);
 CALL addidx('{prefix}_categories', 'ordern', '`ordern`', 0);
 
 # =============================================================================
@@ -887,21 +891,21 @@ CALL addidx('{prefix}_partners', 'email', '`email`(191)', 0);
 #
 # The single status column becomes four independent states: viewed and saved belong to the recipient,
 # delin and delout to the two mailbox sides, so what one participant deletes or saves no longer rewrites
-# what the other one sees.
+# what the other one sees
 # The order is load-bearing. The backfill has to read status before the rename consumes it, which is what
 # runifcol() executes it under: once the rename has happened the column is gone and the step can never run
 # a second time. rencol() keeps the BOOLEAN the old column was declared as, so modcol() forces viewed onto
-# the definition the fresh schema gives it and leaves the table alone when it already carries it.
+# the definition the fresh schema gives it and leaves the table alone when it already carries it
 # The composites are added last and time keeps its place in front of them, which is the order
-# setup/sql/table.sql declares, so an upgraded table and a fresh one are the same table.
+# setup/sql/table.sql declares, so an upgraded table and a fresh one are the same table
 # No index on status is created here any more: this file used to add one and now drops it, on a column
-# that does not survive the batch.
+# that does not survive the batch
 # out_new and flood answer the two reads out_box cannot: the outgoing unread counter of the sidebar block,
 # which filters a column out_box does not carry, and the send interval, which filters no state at all and
-# orders by time - measured on real data, the first was a full table scan and the second a filesort.
+# orders by time - measured on real data, the first was a full table scan and the second a filesort
 #
 # A body is stored as the source its author wrote and is rendered through one contract, so no column names
-# a storage format: plain and the editors are input interfaces, and rendering never branches on them.
+# a storage format: plain and the editors are input interfaces, and rendering never branches on them
 
 CALL rencol('{prefix}_privat', 'date', 'time');
 CALL rencol('{prefix}_privat', 'ip_sender', 'ip');
@@ -944,7 +948,14 @@ CALL addidx('{prefix}_products', 'ihome', '`ihome`', 0);
 
 # 6.2 kept one row per account and target in UNIQUE mid_modul_uid, which let a single guest vote per poll;
 # 6.3 keeps one row per address and target, as the guards of 6.2 already did in code
+# Two accounts of one address that voted for one target collide on that key: the earliest vote stays, and the installer names the count of removed rows
 CALL rencol('{prefix}_rating', 'host', 'ip');
+DELETE FROM `{prefix}_rating` WHERE `id` IN (
+  SELECT `id` FROM (
+    SELECT r.`id` FROM `{prefix}_rating` r
+    JOIN `{prefix}_rating` k ON k.`mid` = r.`mid` AND k.`modul` = r.`modul` AND k.`ip` = r.`ip` AND k.`id` < r.`id`
+  ) AS d
+);
 CALL renidx('{prefix}_rating', 'mid_modul_host', 'mid_modul_ip');
 CALL delidx('{prefix}_rating', 'mid_modul_uid');
 CALL addidx('{prefix}_rating', 'mid', '`mid`', 0);
@@ -1182,6 +1193,14 @@ ALTER TABLE `{prefix}_whois`
 # _users: normalize legacy zero-dates before changing column defaults
 UPDATE `{prefix}_users` SET `regdate` = '1970-01-01 00:00:01' WHERE `regdate` = '0000-00-00 00:00:00';
 UPDATE `{prefix}_users` SET `lastvis` = '1970-01-01 00:00:01' WHERE `lastvis` = '0000-00-00 00:00:00';
+# A 6.2 site may hold NULL where the statement below demands NOT NULL, which strict mode refuses: every NULL takes the default of its column
+UPDATE `{prefix}_users` SET
+  `password` = COALESCE(`password`, ''), `ip` = COALESCE(`ip`, ''), `regdate` = COALESCE(`regdate`, '1970-01-01 00:00:01'),
+  `lastvis` = COALESCE(`lastvis`, '1970-01-01 00:00:01'), `newslet` = COALESCE(`newslet`, 1), `fsmail` = COALESCE(`fsmail`, 1),
+  `psmail` = COALESCE(`psmail`, 1), `points` = COALESCE(`points`, 0), `votes` = COALESCE(`votes`, 0), `tvotes` = COALESCE(`tvotes`, 0),
+  `storynum` = COALESCE(`storynum`, 10), `grp` = COALESCE(`grp`, 0), `rank` = COALESCE(`rank`, '')
+WHERE `password` IS NULL OR `ip` IS NULL OR `regdate` IS NULL OR `lastvis` IS NULL OR `newslet` IS NULL OR `fsmail` IS NULL OR `psmail` IS NULL
+  OR `points` IS NULL OR `votes` IS NULL OR `tvotes` IS NULL OR `storynum` IS NULL OR `grp` IS NULL OR `rank` IS NULL;
 
 # _users: widen critical columns and fix types / defaults
 # network is deliberately absent here: the OAuth block at the end of this file archives it and drops it,
@@ -1225,6 +1244,8 @@ CALL renidx('{prefix}_blocks',     'blang',    'lang');
 CALL renidx('{prefix}_voting',     'language', 'lang');
 CALL addidx('{prefix}_blocks',     'lang', '`lang`', 0);
 CALL addidx('{prefix}_voting',     'lang', '`lang`', 0);
+# The index of the categories needs lang, which 6.2 still calls language until the rename above
+CALL addidx('{prefix}_categories', 'modul_lang_status', '`modul`, `lang`, `status`', 0);
 
 # =============================================================================
 # Batch Q: field naming unification — step 3 (comment counters)
@@ -1318,7 +1339,7 @@ CALL addidx('{prefix}_money', 'time',   '`time`',       0);
 # rework; it is not a flag. A legacy installation still carries the boolean it was: a NULL would refuse
 # the NOT NULL under strict mode, so it becomes 0 before the column is widened, which the TINYINT of 6.2
 # accepts where it refuses a word; after the widening the 0 or 1 of the old shape, which names no plugin
-# and which getEditorKey() resolves back to plain anyway, is written as plain.
+# and which getEditorKey() resolves back to plain anyway, is written as plain
 UPDATE `{prefix}_admins` SET `editor` = 0 WHERE `editor` IS NULL;
 
 ALTER TABLE `{prefix}_admins`
@@ -1375,7 +1396,17 @@ ALTER TABLE `{prefix}_categories`
   MODIFY `lang` VARCHAR(30) NOT NULL DEFAULT '',
   MODIFY `parent` INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `status` BOOLEAN NOT NULL DEFAULT 0,
-  MODIFY `ordern` INT UNSIGNED NOT NULL DEFAULT 0;
+  MODIFY `ordern` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `topics` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `posts` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `lpost` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `pview` VARCHAR(100) NOT NULL DEFAULT '',
+  MODIFY `pread` VARCHAR(100) NOT NULL DEFAULT '',
+  MODIFY `ppost` VARCHAR(100) NOT NULL DEFAULT '',
+  MODIFY `preply` VARCHAR(100) NOT NULL DEFAULT '',
+  MODIFY `pedit` VARCHAR(100) NOT NULL DEFAULT '',
+  MODIFY `pdelete` VARCHAR(100) NOT NULL DEFAULT '',
+  MODIFY `pmod` VARCHAR(100) NOT NULL DEFAULT '';
 
 ALTER TABLE `{prefix}_clients`
   MODIFY `id`   INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -1384,7 +1415,13 @@ ALTER TABLE `{prefix}_clients`
   MODIFY `phone` VARCHAR(255) NOT NULL DEFAULT '',
   MODIFY `email` VARCHAR(255) NOT NULL,
   MODIFY `website` VARCHAR(255) NOT NULL DEFAULT '',
-  MODIFY `info` VARCHAR(255) NOT NULL DEFAULT '';
+  MODIFY `info` VARCHAR(255) NOT NULL DEFAULT '',
+  MODIFY `uid` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `prod` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `part` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `proz` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `regdate` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `enddate` INT UNSIGNED NOT NULL DEFAULT 0;
 
 UPDATE `{prefix}_clients_down` SET `body` = '' WHERE `body` IS NULL;
 UPDATE `{prefix}_clients_down` SET `url`  = '' WHERE `url`  IS NULL;
@@ -1402,6 +1439,9 @@ ALTER TABLE `{prefix}_clients_down`
   MODIFY `pid`    INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `status` BOOLEAN NOT NULL DEFAULT 0;
 
+# An older 6.2 schema lets a comment author be NULL, which the unsigned NOT NULL below refuses under strict mode
+UPDATE `{prefix}_comment` SET `uid` = 0 WHERE `uid` IS NULL;
+
 # Every column widened to MEDIUMTEXT in this section is written through the rich editor, and the
 # editor can embed an image into the text instead of storing a file: EMBEDMAX caps a data URI at
 # 65536 bytes of binary, which is 87384 characters of base64 before the prefix and the markdown,
@@ -1409,22 +1449,40 @@ ALTER TABLE `{prefix}_clients_down`
 # summary columns (`intro`, and `users.block`) stay TEXT on purpose: a list query draws twenty of
 # them onto one page, and an image referenced by address or uploaded to the server still fits
 # there. auto_links.intro and users.sig widen only to TEXT and for a reason of their own: a
-# VARCHAR(255) behind a rich editor holds about 127 Cyrillic characters, which is one sentence.
+# VARCHAR(255) behind a rich editor holds about 127 Cyrillic characters, which is one sentence
 ALTER TABLE `{prefix}_comment`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `modul` VARCHAR(60) NOT NULL,
-  MODIFY `body` MEDIUMTEXT NOT NULL;
+  MODIFY `body` MEDIUMTEXT NOT NULL,
+  MODIFY `cid` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `uid` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `status` BOOLEAN NOT NULL DEFAULT 0;
 
 ALTER TABLE `{prefix}_favorites`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  MODIFY `modul` VARCHAR(50) NOT NULL;
+  MODIFY `modul` VARCHAR(50) NOT NULL,
+  MODIFY `uid` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `fid` INT UNSIGNED NOT NULL DEFAULT 0;
 
 ALTER TABLE `{prefix}_forum`
   MODIFY `id`   INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `name` VARCHAR(25) NOT NULL,
   MODIFY `title` VARCHAR(100) NOT NULL,
   MODIFY `body` MEDIUMTEXT,
-  MODIFY `field` MEDIUMTEXT NOT NULL;
+  MODIFY `field` MEDIUMTEXT NOT NULL,
+  MODIFY `pid` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `cid` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `uid` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `comments` INT UNSIGNED DEFAULT 0,
+  MODIFY `counter` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `score` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `ratings` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `ip` VARCHAR(45) NOT NULL DEFAULT '',
+  MODIFY `luid` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `lpost` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `euid` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `eip` VARCHAR(45) NOT NULL DEFAULT '',
+  MODIFY `status` BOOLEAN NOT NULL DEFAULT 0;
 
 ALTER TABLE `{prefix}_groups`
   MODIFY `id`     INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -1464,7 +1522,8 @@ ALTER TABLE `{prefix}_money`
 ALTER TABLE `{prefix}_newsletter`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `title` VARCHAR(50) NOT NULL,
-  MODIFY `body` MEDIUMTEXT;
+  MODIFY `body` MEDIUMTEXT,
+  MODIFY `send` INT UNSIGNED NOT NULL DEFAULT 0;
 
 UPDATE `{prefix}_order` SET `ip`    = '' WHERE `ip`    IS NULL;
 UPDATE `{prefix}_order` SET `agent` = '' WHERE `agent` IS NULL;
@@ -1482,24 +1541,45 @@ ALTER TABLE `{prefix}_order`
 ALTER TABLE `{prefix}_partners`
   MODIFY `id`   INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `name` VARCHAR(255) NOT NULL,
-  MODIFY `email` VARCHAR(255) NOT NULL;
+  MODIFY `email` VARCHAR(255) NOT NULL,
+  MODIFY `uid` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `regdate` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `rest` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `bek` INT UNSIGNED NOT NULL DEFAULT 0;
 
 # The message table is reconciled column by column: a bare MODIFY rebuilds the table even when nothing changes, and an installation already on 6.3 must not be rewritten
 CALL modcol('{prefix}_privat', 'id',    'INT UNSIGNED NOT NULL AUTO_INCREMENT');
 CALL modcol('{prefix}_privat', 'title', 'VARCHAR(100) NOT NULL');
 CALL modcol('{prefix}_privat', 'body',  'MEDIUMTEXT NOT NULL');
+CALL modcol('{prefix}_privat', 'uidin', 'INT UNSIGNED NOT NULL DEFAULT 0');
+CALL modcol('{prefix}_privat', 'uidout', 'INT UNSIGNED NOT NULL DEFAULT 0');
+CALL modcol('{prefix}_privat', 'ip',    'VARCHAR(45) NOT NULL DEFAULT \'\'');
 
 ALTER TABLE `{prefix}_products`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `title` VARCHAR(100) NOT NULL,
   MODIFY `intro` TEXT NOT NULL,
   MODIFY `body` MEDIUMTEXT NOT NULL,
-  MODIFY `assoc` TEXT NOT NULL;
+  MODIFY `assoc` TEXT NOT NULL,
+  MODIFY `cid` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `price` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `vote` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `ihome` BOOLEAN NOT NULL DEFAULT 0,
+  MODIFY `acomm` BOOLEAN NOT NULL DEFAULT 0,
+  MODIFY `comments` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `counter` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `votes` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `tvotes` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `fix` BOOLEAN NOT NULL DEFAULT 0,
+  MODIFY `status` BOOLEAN DEFAULT 0;
 
 ALTER TABLE `{prefix}_rating`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `modul` VARCHAR(50) NOT NULL,
-  MODIFY `time` VARCHAR(14) NOT NULL;
+  MODIFY `time` VARCHAR(14) NOT NULL,
+  MODIFY `mid` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `uid` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `ip` VARCHAR(45) NOT NULL DEFAULT '';
 
 UPDATE `{prefix}_referer` SET `referer` = '' WHERE `referer` IS NULL;
 UPDATE `{prefix}_referer` SET `url`     = '' WHERE `url`     IS NULL;
@@ -1507,16 +1587,35 @@ UPDATE `{prefix}_referer` SET `url`     = '' WHERE `url`     IS NULL;
 ALTER TABLE `{prefix}_referer`
   MODIFY `id`      INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `referer` VARCHAR(2048) NOT NULL DEFAULT '',
-  MODIFY `url`     VARCHAR(2048) NOT NULL DEFAULT '';
+  MODIFY `url`     VARCHAR(2048) NOT NULL DEFAULT '',
+  MODIFY `uid` INT UNSIGNED NOT NULL,
+  MODIFY `name` VARCHAR(40) NOT NULL,
+  MODIFY `ip` VARCHAR(45) NOT NULL DEFAULT '',
+  MODIFY `time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  MODIFY `lid` INT UNSIGNED NOT NULL DEFAULT 0;
 
 UPDATE `{prefix}_session` SET `url` = '' WHERE `url` IS NULL;
 
+# An older 6.2 schema keys the whole word, the release keys its first 191 characters; the key is rebuilt, which the small search log allows on every run
+CALL delidx('{prefix}_search', 'word');
+CALL addidx('{prefix}_search', 'word', '`word`(191)', 0);
+
 ALTER TABLE `{prefix}_search`
-  MODIFY `id`  INT UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id`  INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  MODIFY `score` INT UNSIGNED NOT NULL DEFAULT 0;
+
+# An older 6.2 schema holds the module of an online visitor in 100 characters, the release in 25; a longer name of a transient row is cut
+UPDATE `{prefix}_session` SET `modul` = LEFT(`modul`, 25) WHERE CHAR_LENGTH(`modul`) > 25;
 
 ALTER TABLE `{prefix}_session`
   MODIFY `id`  INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  MODIFY `url` VARCHAR(2048) NOT NULL DEFAULT '';
+  MODIFY `url` VARCHAR(2048) NOT NULL DEFAULT '',
+  MODIFY `uname` VARCHAR(40) NOT NULL,
+  MODIFY `time` BIGINT UNSIGNED NOT NULL,
+  MODIFY `ip` VARCHAR(45) NOT NULL DEFAULT '',
+  MODIFY `guest` BOOLEAN NOT NULL DEFAULT 0,
+  MODIFY `modul` VARCHAR(25) NOT NULL DEFAULT '';
 
 # NULL-safety before widening _users columns (may be NULL in legacy schema)
 UPDATE `{prefix}_users` SET `email`    = '' WHERE `email`    IS NULL;
@@ -1564,7 +1663,14 @@ ALTER TABLE `{prefix}_users_temp`
 ALTER TABLE `{prefix}_voting`
   MODIFY `id`   INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `body` TEXT NOT NULL,
-  MODIFY `answer` TEXT NOT NULL;
+  MODIFY `answer` TEXT NOT NULL,
+  MODIFY `multi` BOOLEAN NOT NULL DEFAULT 0,
+  MODIFY `comments` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `lang` VARCHAR(30) NOT NULL DEFAULT '',
+  MODIFY `acomm` BOOLEAN NOT NULL DEFAULT 0,
+  MODIFY `ip` VARCHAR(45) NOT NULL DEFAULT '',
+  MODIFY `typ` BOOLEAN NOT NULL DEFAULT 0,
+  MODIFY `status` BOOLEAN NOT NULL DEFAULT 0;
 
 # =============================================================================
 # Batch X — _mail, the outgoing mail queue
@@ -1573,7 +1679,7 @@ ALTER TABLE `{prefix}_voting`
 # The table is new in 6.3 and has no legacy source, so the create carries the
 # primary key alone and every secondary index is added through addidx. An
 # installation whose upgrade stopped midway therefore gains only the indexes it
-# is still missing instead of failing on the ones it already has.
+# is still missing instead of failing on the ones it already has
 
 CREATE TABLE IF NOT EXISTS `{prefix}_mail` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -1609,34 +1715,34 @@ CALL addidx('{prefix}_mail', 'locked',                 '`locked`',              
 # =============================================================================
 #
 # Five columns are added, two superseded indexes are dropped and KEY time is kept,
-# because the unfiltered moderation list orders by time alone.
+# because the unfiltered moderation list orders by time alone
 #
 # pid is the only stored parent relation. Every existing comment stays a root:
 # pid is 0 and nothing is ever re-parented from the old "[b]name[/b]," reply
 # convention - that text is a naming habit and not a structure, and guessing at
 # it would invent threads nobody wrote. Replies, branch paging and tombstones are
-# read with recursive CTEs over pid, so no materialised path is stored.
+# read with recursive CTEs over pid, so no materialised path is stored
 #
 # reqkey is the idempotency key of a write and is stored as raw bytes, never as
 # hex text: BINARY(16) under one unique index, and absence is NULL rather than a
 # shared empty string, because a unique index counts every NULL as distinct. No
 # key is minted here for an existing row - a comment written before this release
-# was never replayed and needs no key.
+# was never replayed and needs no key
 #
 # shown is the moment of the first publication and is never cleared, so hiding and
 # publishing again is not a new reply to whoever follows the discussion. A comment
 # that is published when the upgrade runs takes its own time, copied once time is
 # proven to hold no NULL; a hidden one was never proven public and stays NULL until
-# a moderator publishes it.
+# a moderator publishes it
 #
 # ip carries an address and nothing else, so it is compared and sorted byte by
 # byte; (ip, time, id) answers the best-effort flood interval on its own and
-# replaces the hash column and its rate table alike.
+# replaces the hash column and its rate table alike
 #
 # The two stops are deliberate. A reqkey left as hex text means this table was
 # already carried through a transitional release, and converting it belongs to
 # the dev tooling, not to an upgrade run. A NULL time means a row nothing can
-# order; both are reported instead of guessed at.
+# order; both are reported instead of guessed at
 
 CALL delcol('{prefix}_comment', 'format');
 CALL delcol('{prefix}_comment', 'iphash');
@@ -1677,16 +1783,16 @@ DROP TABLE IF EXISTS `{prefix}_comment_rate`;
 #
 # The suppression registry is new in 6.3 and keyed by the normalised address, so
 # its unique index is part of the create rather than an addidx: a table that
-# exists without it could already hold two spellings of one mailbox.
+# exists without it could already hold two spellings of one mailbox
 #
 # The email column carries a binary collation on purpose. The normaliser
 # lowercases the domain and leaves the local part as it came, and a
-# case-insensitive column would fold exactly the distinction it keeps.
+# case-insensitive column would fold exactly the distinction it keeps
 #
 # _newsletter gains the campaign state machine. The mails column is dropped last
 # and only here: setup/index.php reads whatever is still pending out of it before
 # this file runs and writes those addresses into the queue afterwards, so the
-# drop can never take a mailing with it.
+# drop can never take a mailing with it
 
 CREATE TABLE IF NOT EXISTS `{prefix}_maildead` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -1915,8 +2021,8 @@ DROP PROCEDURE IF EXISTS finalize_user_names;
 # =============================================================================
 # Avatars moved into the themes (templates/<theme>/images/avatars/)
 # Old stored values `default/NN.<ext>` map to theme presets `presets/NN.svg`;
-# legacy defaults without a matching preset are cleared to the user.svg fallback.
-# Both statements are idempotent: a re-run affects zero rows.
+# legacy defaults without a matching preset are cleared to the user.svg fallback
+# Both statements are idempotent: a re-run affects zero rows
 # =============================================================================
 
 UPDATE `{prefix}_users` SET `avatar` = CONCAT('presets/', SUBSTRING(`avatar`, 9, 2), '.svg') WHERE `avatar` REGEXP '^default/[0-9]{2}[.](gif|png|jpg|jpeg|svg)$' AND SUBSTRING(`avatar`, 9, 2) BETWEEN '01' AND '56';
@@ -1998,3 +2104,5 @@ DELIMITER ;
 CALL movenet('{prefix}_users', '{prefix}_user_oauth');
 
 DROP PROCEDURE IF EXISTS movenet;
+
+SET SESSION sql_mode = @SLAED_MODE;

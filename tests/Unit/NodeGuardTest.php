@@ -7,16 +7,14 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * The input and output guards of Node. The behaviour is driven by tests/Support/route_probe.php with
- * the argument guard: the disposable database and scratch configuration of the integrations plus a select field of accounts, a favorite worth points,
- * a hostile title and intro, a shop and an order, real HTTP requests of the main administrator, a poll administrator and a user, and the child mode guardext
- * that asks the service directly where no screen reaches it. The installer lock is proven by NodeProfileTest on a real installation.
- */
+# The input and output guards of Node, driven by tests/Support/route_probe.php with the argument guard; the installer lock is proven by NodeProfileTest
 final class NodeGuardTest extends TestCase
 {
     private static array $probe = [];
 
+    # The probe runs the disposable database and scratch configuration of the integrations with a select field of accounts and a favorite worth points
+    # It adds a hostile title and intro, a shop and an order, and real HTTP requests of the main administrator, a poll administrator and a user
+    # The child mode guardext asks the service directly where no screen reaches it
     # Run the probe once in its guard mode and memoize the run; every admin write of it has to leave the PHP and SQL logs empty
     private function getRun(): array
     {
@@ -36,10 +34,32 @@ final class NodeGuardTest extends TestCase
     }
 
     # Search prints the title of a Node material as text and renders an intro without trusted tags in the safe mode, so neither markup reaches the page
+    # A trusted [usehtml] block of the intro gives the snippet its text but never the content of its script and style blocks
     #[Test]
     public function searchPrintsNodeTextAsText(): void
     {
-        $this->assertSame([true, false, true, false], $this->getRun()['search']);
+        $this->assertSame([true, false, true, false, true, false], $this->getRun()['search']);
+    }
+
+    # The forum list only reads; the counters of a drifted forum are repaired by the posted synchronization and not by a view of the list
+    #[Test]
+    public function theForumListReadsAndTheButtonRepairs(): void
+    {
+        $this->assertSame([12, 303, 0], $this->getRun()['forum'], 'A view of the forum list rewrote the counters, or the posted synchronization did not');
+    }
+
+    # The settings of auto_links offer the banners of the site theme, not of the panel, and a save keeps the stored banner when the posted one is not on offer
+    #[Test]
+    public function theAutoLinksSettingsKeepABannerOnOffer(): void
+    {
+        $this->assertSame([true, true, 'hits.gif'], $this->getRun()['banner'], 'The banner list is empty or a banner that was not offered was stored');
+    }
+
+    # On a multilingual site the header of a module outside Node names a category of the site language and never one of another language
+    #[Test]
+    public function theHeadCategoryFollowsTheLanguage(): void
+    {
+        $this->assertSame([true, false], $this->getRun()['lang'], 'The breadcrumb of a shop category ignores the language of the site');
     }
 
     # The fields screen writes only from a POST whose token is in the body and whose every area arrived whole; nothing of a refused form reaches a file

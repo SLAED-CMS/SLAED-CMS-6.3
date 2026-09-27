@@ -15,4 +15,4 @@ define('_FO_9','Show the date of the last edit for messages?');
 define('_SYNCH','Synchronization');
 define('_SYNCHOK','Forum totals agree with its topics and messages.');
 define('_SYNCHFIX','Repaired. Forums: %d, topics: %d.');
-define('_SYNCHINF','Synchronization is necessary to carry out after the delete, move, or the message Board. When switching to the tab, the system is counting the number of topics/posts in all the forums, determining last message.');
+define('_SYNCHINF','The Synchronization button on the home tab recounts the topics and posts of every forum and finds the last messages. Run it after topics or posts were deleted or moved.');

@@ -25,12 +25,7 @@ require_once dirname(__DIR__, 2).'/core/classes/comment.php';
 require_once dirname(__DIR__, 2).'/core/classes/node/load.php';
 require_once dirname(__DIR__, 2).'/core/classes/node/ext/load.php';
 
-/**
- * The Node schema, the read-only models and the loading without Composer. The models keep the exact
- * constructors of docs/NODE.md (Models) and nothing else, the state enum owns the move matrix of docs/NODE.md (Material states), the context refuses
- * a snapshot that contradicts itself, and the closed class and extension maps load only files that exist. The schema half runs
- * in tests/Support/node_probe.php: a fresh install and an update of the shipped SQL files on disposable MariaDB databases.
- */
+# The Node schema, the read-only models with their state enum and self-checking context, and the loading without Composer through closed maps of existing files
 final class NodeModelTest extends TestCase
 {
     private static array $probe = [];
@@ -64,6 +59,7 @@ final class NodeModelTest extends TestCase
         return new NodeContext(...$arg);
     }
 
+    # The schema half runs in tests/Support/node_probe.php: a fresh install and an update of the shipped SQL files on disposable MariaDB databases
     # Run the probe once and memoize its report; a probe that cannot create its databases is a failure, not a skip
     private function getProbe(): array
     {

@@ -53,7 +53,12 @@ function groups(): void {
                 'cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
                     ['is_col_id' => true, 'content_html' => (string)$grid],
                     ['content_html' => $tpl->getHtmlFrag('span', ['img_src' => 'templates/'.$conf['theme'].'/images/ranks/'.$rank, 'img_alt' => _RANK])],
-                    ['is_truncate' => true, 'title_text' => $grname, 'prefix_html' => $tpl->getHtmlFrag('popover', ['content_html' => _DESCRIPTION.': '.$description]), 'content_html' => $tpl->getHtmlFrag('inline-badge', ['label' => $grname, 'color_attr' => $color])],
+                    [
+                        'is_truncate' => true,
+                        'title_text' => $grname,
+                        'prefix_html' => $tpl->getHtmlFrag('popover', ['content_html' => _DESCRIPTION.': '.$description]),
+                        'content_html' => $tpl->getHtmlFrag('inline-badge', ['label' => $grname, 'color_attr' => $color]),
+                    ],
                     ['is_col_count' => true, 'content_html' => (string)$points],
                     ['is_col_count' => true, 'content_html' => (string)$users_num],
                     ['is_col_status' => true, 'content_html' => $extra],
@@ -353,7 +358,7 @@ function pointssave(): void {
         foreach (array_keys($cont['actions']) as $name) {
             if ($name === 'adjust') continue;
             foreach ($tops as $key => $top) {
-                $val = trim((string)getVar('post', 'rule['.$name.']['.$key.']', 'raw', ''));
+                $val = trim(getVar('post', 'rule['.$name.']['.$key.']', 'raw', ''));
                 if (!preg_match('/^(?:0|[1-9][0-9]{0,8})$/D', $val) || intval($val) > $top) $warn = true;
                 $cont['actions'][$name][$key] = $val;
             }

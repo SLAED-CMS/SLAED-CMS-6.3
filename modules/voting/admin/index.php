@@ -111,13 +111,7 @@ function voting(): void {
             $type = ($typ == '1') ? _VOPEN : _VCLOSE;
             $items = array_merge($view, [
                 ['href' => $afile.'.php?name=voting&op=add&id='.$id, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
-                # Submitted rather than followed, so the removal cannot happen on a prefetch and its token stays out of the address
-                ['href' => $afile.'.php', 'form_id' => 'vdel'.$id, 'icon_name' => 'trash', 'title' => _ONDELETE, 'confirm_text' => _DELETE.' "'.$title.'"?',
-                    'hidden' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'name', 'value_attr' => 'voting', 'input_attr' => ''])
-                        .$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'delete', 'input_attr' => ''])
-                        .$tpl->getHtmlFrag('hidden', ['name_attr' => 'id', 'value_attr' => (string)$id, 'input_attr' => ''])
-                        .$tpl->getHtmlFrag('hidden', ['name_attr' => 'refer', 'value_attr' => '1', 'input_attr' => ''])
-                        .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken(), 'input_attr' => ''])],
+                getTplPostAction(['name' => 'voting', 'op' => 'delete', 'id' => $id, 'refer' => 1], 'trash', _ONDELETE, _DELETE.' "'.$title.'"?'),
             ]);
             $cells = [
                 ['is_col_id' => true, 'content_html' => (string)$id],
@@ -177,16 +171,29 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
     if ($id) $cont .= $tpl->getHtmlPart('box', ['content_html' => getVotingView($id, 'voting', true)]);
     $rows = [
-        ['label_for' => 'f-title', 'label_html' => _TITLE.' / '._POLLTITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'input_id' => 'f-title', 'value_attr' => $title, 'is_required' => true, 'maxlength_num' => 255])],
+        [
+            'label_for' => 'f-title', 'label_html' => _TITLE.' / '._POLLTITLE,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'text', 'name_attr' => 'title', 'input_id' => 'f-title', 'value_attr' => $title, 'is_required' => true, 'maxlength_num' => 255,
+            ]),
+        ],
         ['label_html' => _MODUL, 'field_html' => getVotingModuleSelect($modul)],
         ['label_html' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'date', 'time' => $date, 'with' => true, 'max' => 16])],
         ['label_html' => _ENDDATE, 'field_html' => getTplAddDateTime(['name' => 'enddate', 'time' => $enddate, 'with' => true, 'max' => 16])],
     ];
     if ($conf['multilingual'] == 1) {
-        $rows[] = ['label_for' => 'f-lang', 'label_html' => _LANGUAGE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options_html' => getTplLanguageOptions($lang)])];
+        $rows[] = [
+            'label_for' => 'f-lang', 'label_html' => _LANGUAGE,
+            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'selectid' => 'f-lang', 'options_html' => getTplLanguageOptions($lang)]),
+        ];
     }
     $rows[] = ['label_html' => _COMMENTS, 'field_html' => getVotingCommentSelect((int)$acomm)];
-    $rows[] = ['label_html' => _MULTI, 'label_id' => $labid = getFieldIds('', 'multi')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'multi', 'value' => $multi, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
+    $rows[] = [
+        'label_html' => _MULTI, 'label_id' => $labid = getFieldIds('', 'multi')['label'],
+        'field_html' => getTplRadioGroup([
+            'labelledby' => $labid, 'name' => 'multi', 'value' => $multi, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
+        ]),
+    ];
     $rows[] = ['label_html' => _TYPE, 'field_html' => getVotingTypeSelect($typ)];
     $rows[] = ['label_html' => _AFTEREXPIRATION, 'field_html' => getVotingStatusSelect($status)];
     $answ = '';
@@ -231,7 +238,7 @@ function add(): void {
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'voting'],
             ['nameattr' => 'op', 'valueattr' => 'save'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('voting')],
             ['nameattr' => 'id', 'valueattr' => (string)$id],
         ],
         'rows' => $rows,
@@ -244,7 +251,7 @@ function add(): void {
 
 function save(): void {
     global $db, $afile, $stop;
-    $iswarn = !checkSiteToken();
+    $iswarn = !checkAdminPost('voting');
     $id = getVar('post', 'id', 'num', 0);
     $modul = filterVar(getVar('post', 'modul', 'text', ''));
     $title = getVar('post', 'title', 'text', '');
@@ -274,10 +281,24 @@ function save(): void {
         setRedirect($afile.'.php?name=voting', false, 302, _TOKENMISS, true);
     } elseif (!$stop && $posttype == 'save') {
         if ($id) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_voting SET modul = :modul, title = :title, body = :quest, answer = :answ, time = :time, enddate = :enddate, multi = :multi, lang = :lang, acomm = :acomm, typ = :typ, status = :status WHERE id = :id', ['modul' => $modul, 'title' => $title, 'quest' => $quest, 'answ' => $answ, 'time' => $date, 'enddate' => $enddate, 'multi' => $multi, 'lang' => $lang, 'acomm' => $acomm, 'typ' => $typ, 'status' => $status, 'id' => $id]);
+            $db->getSqlQuery(
+                'UPDATE '.PREFIX_DB.'_voting SET modul = :modul, title = :title, body = :quest, answer = :answ, time = :time,'
+                .' enddate = :enddate, multi = :multi, lang = :lang, acomm = :acomm, typ = :typ, status = :status WHERE id = :id',
+                [
+                    'modul' => $modul, 'title' => $title, 'quest' => $quest, 'answ' => $answ, 'time' => $date, 'enddate' => $enddate,
+                    'multi' => $multi, 'lang' => $lang, 'acomm' => $acomm, 'typ' => $typ, 'status' => $status, 'id' => $id,
+                ]
+            );
         } else {
             $ip = getIp();
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_voting (id, modul, title, body, answer, time, enddate, multi, lang, acomm, ip, typ, status) VALUES (NULL, :modul, :title, :quest, :answ, :time, :enddate, :multi, :lang, :acomm, :ip, :typ, :status)', ['modul' => $modul, 'title' => $title, 'quest' => $quest, 'answ' => $answ, 'time' => $date, 'enddate' => $enddate, 'multi' => $multi, 'lang' => $lang, 'acomm' => $acomm, 'ip' => $ip, 'typ' => $typ, 'status' => $status]);
+            $db->getSqlQuery(
+                'INSERT INTO '.PREFIX_DB.'_voting (id, modul, title, body, answer, time, enddate, multi, lang, acomm, ip, typ, status)'
+                .' VALUES (NULL, :modul, :title, :quest, :answ, :time, :enddate, :multi, :lang, :acomm, :ip, :typ, :status)',
+                [
+                    'modul' => $modul, 'title' => $title, 'quest' => $quest, 'answ' => $answ, 'time' => $date, 'enddate' => $enddate,
+                    'multi' => $multi, 'lang' => $lang, 'acomm' => $acomm, 'ip' => $ip, 'typ' => $typ, 'status' => $status,
+                ]
+            );
         }
         setRedirect($afile.'.php?name=voting', false, 302, _SUCCSAVE, false);
     } elseif ($posttype == 'delete') {
@@ -289,8 +310,8 @@ function save(): void {
 
 function delete(int $id = 0): void {
     global $db, $afile, $com, $conf;
-    $iswarn = !checkSiteToken();
-    if (!$id) $id = getVar('req', 'id', 'num', 0);
+    $iswarn = !checkAdminPost('voting');
+    if (!$id) $id = getVar('post', 'id', 'num', 0);
     $fail = false;
     if (!$iswarn && $id && empty($conf['node']['types'])) {
         $guard = Cache::getWriteGuard();
@@ -339,12 +360,42 @@ function config(): void {
     $cont .= checkPerms(CONFIG_DIR.'/voting.php');
     $bval = (string)($conf['voting']['block'] ?? '0');
     $rows = [
-        ['label_for' => 'f-time', 'label_html' => _VOTING_TIME, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'time', 'input_id' => 'f-time', 'value_attr' => (string)intval($conf['voting']['voting_t'] / 86400), 'is_config' => true])],
-        ['label_for' => 'f-num', 'label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'input_id' => 'f-num', 'value_attr' => (string)$conf['voting']['num'], 'is_config' => true])],
-        ['label_for' => 'f-anum', 'label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => (string)$conf['voting']['anum'], 'is_config' => true])],
-        ['label_for' => 'f-nump', 'label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'input_id' => 'f-nump', 'value_attr' => (string)$conf['voting']['nump'], 'is_config' => true])],
-        ['label_for' => 'f-anump', 'label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => (string)$conf['voting']['anump'], 'is_config' => true])],
-        ['label_for' => 'f-answ', 'label_html' => _VANSW, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'answ', 'input_id' => 'f-answ', 'value_attr' => (string)$conf['voting']['answ'], 'is_config' => true])],
+        [
+            'label_for' => 'f-time', 'label_html' => _VOTING_TIME,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number', 'name_attr' => 'time', 'input_id' => 'f-time', 'value_attr' => (string)intval($conf['voting']['voting_t'] / 86400), 'is_config' => true,
+            ]),
+        ],
+        [
+            'label_for' => 'f-num', 'label_html' => _C_33,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number', 'name_attr' => 'num', 'input_id' => 'f-num', 'value_attr' => (string)$conf['voting']['num'], 'is_config' => true,
+            ]),
+        ],
+        [
+            'label_for' => 'f-anum', 'label_html' => _C_34,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => (string)$conf['voting']['anum'], 'is_config' => true,
+            ]),
+        ],
+        [
+            'label_for' => 'f-nump', 'label_html' => _C_35,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number', 'name_attr' => 'nump', 'input_id' => 'f-nump', 'value_attr' => (string)$conf['voting']['nump'], 'is_config' => true,
+            ]),
+        ],
+        [
+            'label_for' => 'f-anump', 'label_html' => _C_36,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => (string)$conf['voting']['anump'], 'is_config' => true,
+            ]),
+        ],
+        [
+            'label_for' => 'f-answ', 'label_html' => _VANSW,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number', 'name_attr' => 'answ', 'input_id' => 'f-answ', 'value_attr' => (string)$conf['voting']['answ'], 'is_config' => true,
+            ]),
+        ],
         ['label_html' => _VBLOCK, 'field_html' => getVotingBlockSelect($bval)],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
@@ -352,7 +403,7 @@ function config(): void {
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'voting'],
             ['nameattr' => 'op', 'valueattr' => 'configsave'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('voting')],
         ],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
@@ -363,7 +414,7 @@ function config(): void {
 
 function configsave(): void {
     global $afile;
-    $iswarn = !checkSiteToken();
+    $iswarn = !checkAdminPost('voting');
     if (!$iswarn) {
         $cont = [
             'voting_t' => getVar('post', 'time', 'num', 1) * 86400,

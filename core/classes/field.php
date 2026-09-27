@@ -6,9 +6,7 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
-# Extra fields of every area of the system: one closed registry of types, one check of definitions, one normalization of values and one preparation of the form and of the view
-# The class has no constructor, reads neither the configuration nor the database and writes nothing; definitions and values are always handed in by the caller
-# A definition set is accepted as a whole or refused with the path of its first error, and a value is never repaired silently: it is canonical, absent, or an error code
+# Extra fields of every area: a closed type registry and stateless checks, normalization, form and view of definitions and values the caller hands in
 final class Field {
 
     # The grammar shared by the name of a field and the key of a select option: a stored key never starts with a digit, so PHP cannot turn it into an integer
@@ -45,12 +43,14 @@ final class Field {
     ];
 
     # Answer the closed registry of field types; a new type is added here in code together with its tests and never through the administration form
+    # The class has no constructor, reads neither the configuration nor the database and writes nothing; definitions and values are always handed in by the caller
     public function getFieldTypeList(): array {
         return self::TYPES;
     }
 
     # Check a whole set of definitions and answer it canonical, ordered by sort and then by name, or throw InvalidArgumentException with the path of the first error
     # Nothing is completed, cut or repaired: a missing key, an unknown key and a value of the wrong native type are each an error of the definition
+    # A definition set is accepted as a whole or refused with the path of its first error
     public function filterFieldList(array $fields): array {
         if (count($fields) > self::MAXSET) throw new InvalidArgumentException('fields');
         $out = [];
@@ -81,6 +81,7 @@ final class Field {
 
     # Answer the canonical typed values of the active fields for storing: unknown names are dropped and absent values are left out
     # The caller checks first; a value that still fails here is thrown as InvalidArgumentException and never stored repaired
+    # A value is never repaired silently: it is canonical, absent, or an error code
     public function filterFieldValues(array $fields, array $values): array {
         $out = [];
         foreach ($this->filterFieldList($fields) as $name => $rule) {

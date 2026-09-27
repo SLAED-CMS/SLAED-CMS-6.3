@@ -10,9 +10,6 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 if (!class_exists('Upload')) require_once __DIR__.'/upload.php';
 
 # Fetches one RSS or Atom document and writes the canonical Markdown of docs/NODE.md (Canonical Markdown): headings, UTC dates, checked links and plain-text descriptions
-# Every hop resolves its host again, refuses a non-public address and is pinned to the checked one; size, total time and redirects are bounded by config/rss.php
-# Received text is data and never markup: each ASCII punctuation mark it carries is escaped, so Parser shows it literally and no BB, Markdown or HTML command survives
-# The transport is one closure with the two operations resolve and get; null selects the cURL implementation below, and a test hands in its own so no test reaches the network
 final class Feed {
     private const ATOM = 'http://www.w3.org/2005/Atom';
     private const RSSONE = 'http://purl.org/rss/1.0/';
@@ -35,6 +32,7 @@ final class Feed {
     private ?Closure $send;
 
     # Keep the loaded rss scope and the optional trusted transport; nothing here reads the request or the configuration for a callback, so only code can hand a transport in
+    # The transport is one closure with the two operations resolve and get; null selects the cURL implementation, and a test hands in its own so no test reaches the network
     public function __construct(array $conf, ?Closure $send = null) {
         $this->conf = $conf;
         $this->send = $send;
@@ -42,6 +40,7 @@ final class Feed {
 
     # Fetch one feed and answer the seven keys of the contract; a 304 on the validators of the requested address is ok without a body, every refusal is ok = false with a short code
     # The validators belong to the address they came from: they are sent on the first hop only and returned only when no redirect intervened
+    # Every hop resolves its host again, refuses a non-public address and is pinned to the checked one; size, total time and redirects are bounded by config/rss.php
     # The time bound covers every step: a lookup starts only while time is left, and one that used up the bound is a timeout whatever it answered
     # Too many redirects report the code of the last one that arrived
     public function getFeedContent(string $url, string $etag = '', string $modified = ''): array {
@@ -465,6 +464,7 @@ final class Feed {
     }
 
     # Escape one received text for the canonical document: line endings become LF, control characters other than LF and TAB go, and every ASCII punctuation mark gets a backslash
+    # Received text is data and never markup: the escaping makes Parser show it literally, so no BB, Markdown or HTML command survives
     private function getFeedText(string $text): string {
         $text = str_replace(["\r\n", "\r"], "\n", $text);
         $text = preg_replace('/(?![\n\t])\p{Cc}/u', '', $text) ?? '';

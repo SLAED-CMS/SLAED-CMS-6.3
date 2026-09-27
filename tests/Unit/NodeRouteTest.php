@@ -9,12 +9,7 @@ use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionMethod;
 
-/**
- * The public and administrative routes of Node and the view preparer. The behaviour is driven by
- * tests/Support/route_probe.php: one disposable MariaDB database from the shipped table.sql, a scratch configuration that registers
- * three types, a scratch upload root with the guards of the release, and the real index.php and admin.php answering real HTTP
- * requests of the built-in server with tests/Support/route_web.php as router. The static half reads the files of the stage.
- */
+# The public and administrative routes of Node and the view preparer, driven by tests/Support/route_probe.php; the static half reads the files of the stage
 final class NodeRouteTest extends TestCase
 {
     private static array $probe = [];
@@ -25,6 +20,8 @@ final class NodeRouteTest extends TestCase
         return str_replace('\\', '/', dirname(__DIR__, 2));
     }
 
+    # The probe builds one disposable MariaDB database from the shipped table.sql, a scratch configuration of three types and a scratch upload root with the release guards
+    # The real index.php and admin.php answer real HTTP requests of the built-in server with tests/Support/route_web.php as router
     # Run the probe once and memoize the runs; a probe that cannot create its database or start its server is a failure, not a skip
     private function getRuns(): array
     {
@@ -42,8 +39,9 @@ final class NodeRouteTest extends TestCase
         return self::$probe['runs'];
     }
 
-    # Run one mode of the probe once and memoize it: secure - the public form, tree - the document tree, modes - the display modes,
-    # seo - the canonical addresses, the head and the feeds; each mode builds its own disposable database and server
+    # Run one mode of the probe once and memoize it: secure - the public form, tree - the document tree, modes - the display modes
+    # The mode seo covers the canonical addresses, the head and the feeds
+    # Each mode builds its own disposable database and server
     private function getMode(string $mode): array
     {
         static $runs = [];
@@ -82,6 +80,7 @@ final class NodeRouteTest extends TestCase
         $this->assertSame(404, $run['node'], 'The technical name node has a public route');
         $this->assertSame([400, 400, 400, 400, 404, 404, 404], $run['bad'], 'cat, let, order and dir are checked, a foreign category and unknown operations are not found');
         $this->assertSame([301, 'index.php?name=news'], $run['clean'], 'The explicit default sort is not sent back to the clean address');
+        $this->assertSame([200, 400], $run['published'], 'The sort published the reader accepts for every type is refused by the route, or a sort outside the list passes');
         $this->assertSame([200, true, 200], $run['sort'], 'Another sort is not answered noindex');
         $this->assertSame([404, false, 200, true, 200], $run['cat'], 'A category the guest may not read is not missing, or the readable ones do not answer');
         $this->assertSame([404, 200, 404], $run['off'], 'The disabled type answers a guest or a forged context, or not its main administrator');
@@ -141,8 +140,8 @@ final class NodeRouteTest extends TestCase
         $this->assertFalse($run['climb'], 'A key climbing out of the directory served a file');
     }
 
-    # The resources: an image is shown without counting, a download is counted before a whole body or a range from zero only, an external visit before its redirect;
-    # an external address of an image role is no redirect
+    # The resources: an image is shown without counting, a download is counted before a whole body or a range from zero only, an external visit before its redirect
+    # An external address of an image role is no redirect
     #[Test]
     public function theResourcesCountOnlyAnAllowedStart(): void
     {
@@ -179,6 +178,8 @@ final class NodeRouteTest extends TestCase
         $this->assertSame(403, $run['guest']);
         $this->assertSame(404, $run['docs'], 'A type without public submission has a form');
         $this->assertSame([200, true, true, true], $run['form']);
+        $this->assertSame([true, false, true], $run['link'], 'The link input of a resource is offered to a writer whose material is published directly,'
+            .' which the service refuses, or missing where it goes to moderation');
         $this->assertSame([200, true, 0], $run['preview'], 'The preview wrote a material or does not show it');
         $this->assertSame([403, 0], $run['notoken']);
         $this->assertSame(400, $run['badact']);
@@ -229,6 +230,9 @@ final class NodeRouteTest extends TestCase
         $run = $this->getRuns()['types'];
         $this->assertSame([303, 1, 0, true], $run['create']);
         $this->assertSame([422, 1], $run['twice']);
+        $this->assertSame([303, false, true, true, true], $run['roles'], 'The report switch of a role outside download and link was stored, or the form offers no'
+            .' report row or no closed list of display modes');
+        $this->assertSame([422, 0, 422, 0], $run['mode'], 'A display mode outside the list or the support mode of a standard type was stored');
         $this->assertSame([200, 'application/json; charset=UTF-8', 'attachment; filename="node-temp.json"', 'slaed.node'], $run['export']);
         $this->assertSame([303, 1], $run['clone']);
         $this->assertSame([422, 100, 422, 100, 303, 150, 500, 409, 100], $run['limits'], 'A limit a stored type exceeds was saved, a limit every type keeps was refused,'
@@ -380,8 +384,19 @@ final class NodeRouteTest extends TestCase
         $this->assertSame([422, 0, 303, 1], array_slice($run, 1), 'A file of another extension was imported, or the .json file was refused');
     }
 
-    # A document of a type with the tree shows its trail, its level with its own children and the neighbours of the reading order; a parent the reader
-    # may not see stays hidden and its child stands among the roots, a document outside the tree of the reader and a type without the tree show no block
+    # A refused import names its reason: a wrong extension, a file over 1 MiB and a definition the writer refuses each answer 422 with a text of their own
+    #[Test]
+    public function theImportNamesWhyAFileIsRefused(): void
+    {
+        [$ext, $big, $bad, $made] = $this->getMode('secure')['importtext'];
+        $this->assertSame([422, 422, 422, 0], [$ext[0], $big[0], $bad[0], $made], 'A refused file was imported or answered another status');
+        $texts = [$ext[1], $big[1], $bad[1]];
+        $this->assertNotContains('', $texts, 'A refused import shows no alert');
+        $this->assertSame($texts, array_values(array_unique($texts)), 'Two reasons of a refused import answer the same text');
+    }
+
+    # A document of a type with the tree shows its trail, its level with its own children and the neighbours of the reading order
+    # A parent the reader may not see stays hidden and its child stands among the roots, a document outside the tree of the reader and a type without the tree show no block
     #[Test]
     public function theDocumentShowsItsBranchOfTheTree(): void
     {
@@ -549,8 +564,8 @@ final class NodeRouteTest extends TestCase
         $this->assertSame([404, 404, 404], $this->getMode('head')['bound'], 'A page or a material past the reader bound answered other than not found');
     }
 
-    # The notice of a submission shows once and keeps the page out of the cache, the list after it is cached, the notice of a report shows once;
-    # the header marquee bounds the stored copy
+    # The notice of a submission shows once and keeps the page out of the cache, the list after it is cached, the notice of a report shows once
+    # The header marquee bounds the stored copy
     #[Test]
     public function theNoticeShowsOnceAndTheMarqueeBoundsTheCache(): void
     {

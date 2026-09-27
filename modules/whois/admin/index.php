@@ -30,7 +30,11 @@ function whois(): void {
             'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS],
         ]);
     }
-    $result = $db->getSqlQuery('SELECT w.id, w.name, w.ip, w.time, w.domain, w.host, w.dc, w.body, w.sdomain, w.shost, w.sdc, u.name FROM '.PREFIX_DB.'_whois AS w LEFT JOIN '.PREFIX_DB.'_users AS u ON (w.uid = u.id) WHERE status = :status ORDER BY w.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
+    $result = $db->getSqlQuery(
+        'SELECT w.id, w.name, w.ip, w.time, w.domain, w.host, w.dc, w.body, w.sdomain, w.shost, w.sdc, u.name'
+        .' FROM '.PREFIX_DB.'_whois AS w LEFT JOIN '.PREFIX_DB.'_users AS u ON (w.uid = u.id) WHERE status = :status ORDER BY w.time DESC LIMIT '.$offset.', '.$anum,
+        ['status' => $status]
+    );
     if ($db->getSqlRowCount($result) > 0) {
         $head = [
             ['content' => _ID, 'is_col_id' => true],
@@ -50,11 +54,11 @@ function whois(): void {
             $dc = $dc ? domain($dc) : _NO_INFO;
             $domain = domain($domain);
             $items = [
-                ['href' => $afile.'.php?name=whois&op=toggle&id='.$id.'&fid=1&refer=1&token='.getSiteToken(), 'icon_name' => 'globe', 'title' => _SITE],
-                ['href' => $afile.'.php?name=whois&op=toggle&id='.$id.'&fid=2&refer=1&token='.getSiteToken(), 'icon_name' => 'hdd-network', 'title' => _HOST],
-                ['href' => $afile.'.php?name=whois&op=toggle&id='.$id.'&fid=3&refer=1&token='.getSiteToken(), 'icon_name' => 'building', 'title' => _DC],
+                getTplPostAction(['name' => 'whois', 'op' => 'toggle', 'id' => $id, 'fid' => 1, 'refer' => 1], 'globe', _SITE),
+                getTplPostAction(['name' => 'whois', 'op' => 'toggle', 'id' => $id, 'fid' => 2, 'refer' => 1], 'hdd-network', _HOST),
+                getTplPostAction(['name' => 'whois', 'op' => 'toggle', 'id' => $id, 'fid' => 3, 'refer' => 1], 'building', _DC),
                 ['href' => $afile.'.php?name=whois&op=add&id='.$id, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
-                ['href' => $afile.'.php?name=whois&op=delete&id='.$id.'&refer=1&token='.getSiteToken(), 'icon_name' => 'trash', 'title' => _ONDELETE, 'confirm_text' => _DELETE.' "'.$domain.'"?'],
+                getTplPostAction(['name' => 'whois', 'op' => 'delete', 'id' => $id, 'refer' => 1], 'trash', _ONDELETE, _DELETE.' "'.$domain.'"?'),
             ];
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
                 ['is_col_id' => true, 'content_html' => (string)$id],
@@ -81,9 +85,9 @@ function whois(): void {
 
 function toggle(): void {
     global $db, $afile;
-    $iswarn = !checkSiteToken();
-    $id = getVar('get', 'id', 'num');
-    $fid = getVar('get', 'fid', 'num');
+    $iswarn = !checkAdminPost('whois');
+    $id = getVar('post', 'id', 'num');
+    $fid = getVar('post', 'fid', 'num');
     $field = match ($fid) {
         1 => 'sdomain',
         2 => 'shost',
@@ -105,7 +109,10 @@ function add(): void {
     $id = getVar('req', 'id', 'num');
     if ($id) {
         $wid = $id;
-        $result = $db->getSqlQuery('SELECT w.id, w.name, w.domain, w.host, w.dc, w.body, u.name FROM '.PREFIX_DB.'_whois AS w LEFT JOIN '.PREFIX_DB.'_users AS u ON (w.uid = u.id) WHERE w.id = :id', ['id' => $id]);
+        $result = $db->getSqlQuery(
+            'SELECT w.id, w.name, w.domain, w.host, w.dc, w.body, u.name FROM '.PREFIX_DB.'_whois AS w LEFT JOIN '.PREFIX_DB.'_users AS u ON (w.uid = u.id) WHERE w.id = :id',
+            ['id' => $id]
+        );
         [$id, $uname, $domain, $host, $dc, $hometext, $userName] = $db->getSqlRow($result);
         $postname = $userName ?: ($uname ?: _ANONYM);
     } else {
@@ -124,10 +131,22 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
     $rows = [
         ['label_html' => _POSTEDBY, 'field_html' => getTplUserSearchInput(['name' => 'postname', 'input_id' => 'postname', 'list_id' => 'postname_list', 'value' => $postname])],
-        ['label_for' => 'f-domain', 'label_html' => _SITE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'domain', 'input_id' => 'f-domain', 'value_attr' => $domain, 'is_required' => true])],
-        ['label_for' => 'f-host', 'label_html' => _HOST, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'host', 'input_id' => 'f-host', 'value_attr' => $host])],
-        ['label_for' => 'f-dc', 'label_html' => _DC, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'dc', 'input_id' => 'f-dc', 'value_attr' => $dc])],
-        ['label_for' => 'f-hometext', 'label_html' => _COMMENT, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'hometext', 'input_id' => 'f-hometext', 'value_text' => $hometext, 'rows_num' => 5]), 'is_full' => true],
+        [
+            'label_for' => 'f-domain', 'label_html' => _SITE,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'domain', 'input_id' => 'f-domain', 'value_attr' => $domain, 'is_required' => true]),
+        ],
+        [
+            'label_for' => 'f-host', 'label_html' => _HOST,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'host', 'input_id' => 'f-host', 'value_attr' => $host]),
+        ],
+        [
+            'label_for' => 'f-dc', 'label_html' => _DC,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'dc', 'input_id' => 'f-dc', 'value_attr' => $dc]),
+        ],
+        [
+            'label_for' => 'f-hometext', 'label_html' => _COMMENT,
+            'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'hometext', 'input_id' => 'f-hometext', 'value_text' => $hometext, 'rows_num' => 5]), 'is_full' => true,
+        ],
     ];
     $actions = $tpl->getHtmlFrag('button', ['label' => _SAVECHANGES, 'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'save\'; this.form.submit();"']);
     if ($wid) {
@@ -139,7 +158,7 @@ function add(): void {
             ['nameattr' => 'name', 'valueattr' => 'whois'],
             ['nameattr' => 'op', 'valueattr' => 'save'],
             ['nameattr' => 'wid', 'valueattr' => (string)$wid],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('whois')],
             ['nameattr' => 'posttype', 'valueattr' => 'save'],
         ],
         'rows' => $rows,
@@ -151,7 +170,7 @@ function add(): void {
 
 function save(): void {
     global $db, $afile, $stop;
-    $iswarn = !checkSiteToken();
+    $iswarn = !checkAdminPost('whois');
     $wid = getVar('post', 'wid', 'num');
     $postname = getVar('post', 'postname', 'name', '');
     $domain = getVar('post', 'domain', 'url', '');
@@ -169,10 +188,17 @@ function save(): void {
         $uid = $postid ? $postid : '';
         $name = $postid ? '' : filterText(substr($postname, 0, 25));
         if ($wid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB."_whois SET uid = :uid, name = :name, domain = :domain, host = :host, dc = :dc, body = :body, status = '1' WHERE id = :id", ['uid' => $uid, 'name' => $name, 'domain' => $domain, 'host' => $host, 'dc' => $dc, 'body' => $hometext, 'id' => $wid]);
+            $db->getSqlQuery(
+                'UPDATE '.PREFIX_DB."_whois SET uid = :uid, name = :name, domain = :domain, host = :host, dc = :dc, body = :body, status = '1' WHERE id = :id",
+                ['uid' => $uid, 'name' => $name, 'domain' => $domain, 'host' => $host, 'dc' => $dc, 'body' => $hometext, 'id' => $wid]
+            );
         } else {
             $ip = getIp();
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB."_whois (id, uid, name, ip, time, domain, host, dc, body, sdomain, shost, sdc, status) VALUES (NULL, :uid, :name, :ip, now(), :domain, :host, :dc, :body, '0', '0', '0', '1')", ['uid' => $uid, 'name' => $name, 'ip' => $ip, 'domain' => $domain, 'host' => $host, 'dc' => $dc, 'body' => $hometext]);
+            $db->getSqlQuery(
+                'INSERT INTO '.PREFIX_DB.'_whois (id, uid, name, ip, time, domain, host, dc, body, sdomain, shost, sdc, status)'
+                ." VALUES (NULL, :uid, :name, :ip, now(), :domain, :host, :dc, :body, '0', '0', '0', '1')",
+                ['uid' => $uid, 'name' => $name, 'ip' => $ip, 'domain' => $domain, 'host' => $host, 'dc' => $dc, 'body' => $hometext]
+            );
         }
         setRedirect($afile.'.php?name=whois', false, 302, _SUCCSAVE, false);
     } elseif ($posttype == 'delete') {
@@ -184,8 +210,8 @@ function save(): void {
 
 function delete(int $id = 0): void {
     global $db, $afile;
-    $iswarn = !checkSiteToken();
-    if (!$id) $id = getVar('req', 'id', 'num');
+    $iswarn = !checkAdminPost('whois');
+    if (!$id) $id = getVar('post', 'id', 'num');
     if (!$iswarn && $id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_whois WHERE id = :id', ['id' => $id]);
     setRedirect($afile.'.php?name=whois', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
@@ -200,18 +226,45 @@ function config(): void {
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/whois.php');
     $rows = [
-        ['label_for' => 'f-anum', 'label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => (string)($conf['whois']['anum'] ?? 10), 'is_config' => true])],
-        ['label_for' => 'f-anump', 'label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => (string)($conf['whois']['anump'] ?? 10), 'is_config' => true])],
-        ['label_html' => _ADDAMAIL, 'label_id' => $labid = getFieldIds('', 'addmail')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'addmail', 'value' => $conf['whois']['addmail'] ?? 0, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => _WHOISADD, 'label_id' => $labid = getFieldIds('', 'add')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'add', 'value' => $conf['whois']['add'] ?? 0, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => _WHOISADDG, 'label_id' => $labid = getFieldIds('', 'addquest')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'addquest', 'value' => $conf['whois']['addquest'] ?? 0, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+        [
+            'label_for' => 'f-anum', 'label_html' => _C_34,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => (string)($conf['whois']['anum'] ?? 10), 'is_config' => true,
+            ]),
+        ],
+        [
+            'label_for' => 'f-anump', 'label_html' => _C_36,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => (string)($conf['whois']['anump'] ?? 10), 'is_config' => true,
+            ]),
+        ],
+        [
+            'label_html' => _ADDAMAIL, 'label_id' => $labid = getFieldIds('', 'addmail')['label'],
+            'field_html' => getTplRadioGroup([
+                'labelledby' => $labid, 'name' => 'addmail', 'value' => $conf['whois']['addmail'] ?? 0,
+                'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
+            ]),
+        ],
+        [
+            'label_html' => _WHOISADD, 'label_id' => $labid = getFieldIds('', 'add')['label'],
+            'field_html' => getTplRadioGroup([
+                'labelledby' => $labid, 'name' => 'add', 'value' => $conf['whois']['add'] ?? 0, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
+            ]),
+        ],
+        [
+            'label_html' => _WHOISADDG, 'label_id' => $labid = getFieldIds('', 'addquest')['label'],
+            'field_html' => getTplRadioGroup([
+                'labelledby' => $labid, 'name' => 'addquest', 'value' => $conf['whois']['addquest'] ?? 0,
+                'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
+            ]),
+        ],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'whois'],
             ['nameattr' => 'op', 'valueattr' => 'configsave'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('whois')],
         ],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
@@ -222,7 +275,7 @@ function config(): void {
 
 function configsave(): void {
     global $afile;
-    $iswarn = !checkSiteToken();
+    $iswarn = !checkAdminPost('whois');
     if (!$iswarn) {
         $cont = [
             'anum' => getVar('post', 'anum', 'num', 10),

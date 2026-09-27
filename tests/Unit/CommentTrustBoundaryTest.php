@@ -5,22 +5,13 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Stage 0 of docs/COMMENTS-REDESIGN-2026.md: the moderation mode and the target module of a comment
- * must come from the server, never from the request. The behaviour half runs through
- * tests/Support/contract_probe.php, which boots the real core in an isolated CLI process and calls
- * Comment::getTargetMode() against live rows; the contract half reads the write path and asserts that it no longer
- * takes cid or mod from the client. Stage 1, batch 3 moved that path into the Comment class, batch 4 added
- * the moderation delete to it and batch 6 absorbed the resolver and the counter, so the contract half reads
- * the class and its request handlers together. filter_input() cannot be driven from CLI, so
- * a full addComment() round trip belongs to the browser checks in docs/TESTS.md.
- */
+# The moderation mode and the target module of a comment come from the server, never from the request
 final class CommentTrustBoundaryTest extends TestCase
 {
     private static array $probe = [];
     private static array $src = [];
 
-    # Run the comment probe once and memoize its report for every scenario in this class
+    # Run tests/Support/contract_probe.php once in an isolated CLI process, calling Comment::getTargetMode() against live rows, and memoize its report
     private function getProbe(): array
     {
         if (self::$probe !== []) return self::$probe;
@@ -79,7 +70,8 @@ final class CommentTrustBoundaryTest extends TestCase
     }
 
     # The stored write path decides the status from the resolved mode, and the request handler feeds it nothing but the module key, the target id and the idempotency key
-    # Stage 2 replaced the bare acomm comparisons with the CommentMode enum, so the shape this reads changed while what it guards did not
+    # The contract reads the Comment class and its request handlers together, and the CommentMode enum replaced the bare acomm comparisons it once read
+    # The function filter_input() cannot be driven from CLI, so a full addComment() round trip belongs to the browser checks in docs/TESTS.md
     #[Test]
     public function addCommentTakesModeFromServer(): void
     {

@@ -46,7 +46,16 @@ function getCommentView(array $val, int $numb, string $token): string {
     $rimg = (!empty($usr['grank'])) ? getThemeImagePath('ranks/'.$usr['grank']) : '';
     $rlink = ($rimg && file_exists($rimg)) ? $tpl->getHtmlFrag('image', ['src' => $rimg, 'alt' => $trank, 'title' => $trank]) : '';
     $rate = $auid ? getRatingAsync(0, $auid, 'account', $usr['votes'] ?? 0, $usr['tvotes'] ?? 0, $cmid, 1) : '';
-    $utip = getUserTip($agnam, $usr['points'] ?? 0, (string)($usr['regdate'] ?? ''), (int)($usr['gender'] ?? 0), (string)($usr['origin'] ?? ''), (string)($usr['warnings'] ?? ''), empty($anam), $gone);
+    $utip = getUserTip(
+        $agnam,
+        $usr['points'] ?? 0,
+        (string)($usr['regdate'] ?? ''),
+        (int)($usr['gender'] ?? 0),
+        (string)($usr['origin'] ?? ''),
+        (string)($usr['warnings'] ?? ''),
+        empty($anam),
+        $gone
+    );
     $unam = (!empty($anam)) ? user_info($anam, false) : htmlspecialchars($avname, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     $sig = (!empty($usr['sig'])) ? $tpl->getHtmlFrag('block-content', ['is_signature' => true, 'content' => $usr['sig']]) : '';
     $aweb = (string)($usr['website'] ?? '');
@@ -80,7 +89,11 @@ function getCommentView(array $val, int $numb, string $token): string {
     }
     $text = $tpl->getHtmlFrag('block-content', ['id' => 'repcom'.$cmid, 'content' => $prs->filterContent($val['body'], true, $cmod, 2, 'breaks')]);
     $sent = (string)($val['edited'] ?? '');
-    $mark = ($sent !== '') ? $tpl->getHtmlFrag('inline-badge', ['title_text' => (string)_COMMENTS_EDITED, 'label' => format_time($sent, _TIMESTRING), 'is_comment_edit' => true]) : '';
+    $mark = ($sent !== '') ? $tpl->getHtmlFrag('inline-badge', [
+        'title_text' => (string)_COMMENTS_EDITED,
+        'label' => format_time($sent, _TIMESTRING),
+        'is_comment_edit' => true,
+    ]) : '';
     return $tpl->getHtmlFrag('comment', [
         'id' => $cmid,
         'depth' => $deep,
@@ -273,7 +286,8 @@ function setComShow(int $id = 0, int $acomm = 0): string {
             'hx_include' => '#formcsave',
             'hx_target' => '#repcrows',
             'hx_swap' => 'afterbegin',
-            'hx_on_click' => 'if (!document.getElementById(\'formcsave\').querySelector(\'[name=&quot;text&quot;]\').value.trim()) { alert(\''._CERROR1.'\'); event.preventDefault(); }',
+            'hx_on_click' => 'if (!document.getElementById(\'formcsave\').querySelector(\'[name=&quot;text&quot;]\').value.trim())'
+                .' { alert(\''._CERROR1.'\'); event.preventDefault(); }',
         ]);
         $cont .= $tpl->getHtmlPart('form-add', [
             'action' => $post,
@@ -439,7 +453,7 @@ function getUserAvatarUrl(array $userinfo = [], bool $deleted = false): string {
 
 # Resolve point-level data for a user: reached point groups, ring color, progress percent and next-group hint; group color/rank override the point-group ones
 function getUserLevelData(int $point, string $gcolor = '', string $grank = ''): array {
-    global $db, $conf;
+    global $db, $pnt;
     $rgroup = [];
     $uranks = '';
     $ucolor = '';
@@ -447,7 +461,7 @@ function getUserLevelData(int $point, string $gcolor = '', string $grank = ''): 
     $next = 0;
     $level = 0;
     $nextlab = '';
-    if ($conf['points']['active'] && $point) {
+    if ($pnt->active && $point) {
         $result = $db->getSqlQuery('SELECT name, `rank`, points, color FROM '.PREFIX_DB."_groups WHERE extra != '1' ORDER BY points ASC");
         while ([$guname, $gurank, $gupts, $gucol] = $db->getSqlRow($result)) {
             if ((int)$gupts > $point) {
@@ -499,7 +513,7 @@ function addComment(): void {
     $mod  = filterVar(getVar('req', 'mod',  'text', ''));
     $name = filterText(substr(getVar('post', 'name', 'raw', ''), 0, 25));
     $body = trim(getVar('post', 'text', 'raw', ''));
-    $key = (string)getVar('req', 'reqkey', 'var', '');
+    $key = getVar('req', 'reqkey', 'var', '');
     $page = getVar('req', 'com', 'num', 1);
     $pid = getVar('req', 'pid', 'num', 0);
     $back = 'index.php?name='.$mod.'&op=view&id='.$id;
@@ -543,7 +557,12 @@ function addComment(): void {
     }
     if ($at < 0) {
         $seen = $back.'&at='.$row['id'].'#'.$row['id'];
-        $note((string)_COMMENTS_ADDED, $tpl->getHtmlFrag('link', ['href' => $seen, 'title' => (string)_COMMENT, 'label' => (string)_COMMENT.': '.$row['id'], 'is_card_id' => true]));
+        $note((string)_COMMENTS_ADDED, $tpl->getHtmlFrag('link', [
+            'href' => $seen,
+            'title' => (string)_COMMENT,
+            'label' => (string)_COMMENT.': '.$row['id'],
+            'is_card_id' => true,
+        ]));
         return;
     }
     $size = $data['limit'];
@@ -566,6 +585,8 @@ function addComment(): void {
 
 # Validate and update an existing forum post in-place
 # The word limit is checked against the longest word in characters, so a multibyte alphabet keeps the full allowance
+# The authority is the moderator flag of the category the message belongs to, not a module name taken from the request
+# The refusal is echoed rather than returned: the route calls this for its output and discards whatever it hands back
 function updatePost() {
     global $db, $user, $conf, $tpl, $prs;
     $conf['forum'] = $conf['forum'] ?? [];
@@ -580,7 +601,6 @@ function updatePost() {
         $ismod = is_acess($pmod);
         [$pid, $uid, $hometext, $fstatus] = $db->getSqlRow($db->getSqlQuery('SELECT pid, uid, body, status FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
         if ($pid) {
-            # The authority is the moderator flag of the category this message belongs to, not a module name taken from the request
             if ($ismod) {
                 [$fstatus] = $db->getSqlRow($db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_forum WHERE id = :pid', ['pid' => $pid]));
             } else {
@@ -617,7 +637,6 @@ function updatePost() {
                     );
                     echo $prs->filterContent($htext, false, $mod, 2);
                 } else {
-                    # Echoed rather than returned: the route calls this for its output and discards whatever it hands back
                     echo $tpl->getHtmlFrag('alert', ['messages' => $stop, 'type' => 'warn', 'is_warn' => true]);
                 }
             }
@@ -761,15 +780,15 @@ function getPrivatBadges(): string {
     return $out;
 }
 
-# The selection a request carries, read under fixed names and reduced to a fixed set of values, because a sort and a filter are conditions and never fragments of SQL from an address
+# The selection a request carries, read under fixed names and reduced to a fixed set of values: a sort and a filter are conditions, never SQL fragments from an address
 # The term keeps the per cent and the underscore a reader typed: the subsystem escapes both against the escape character it declares in the statement rather than dropping them here
 # The ready query string travels beside the values, because the pager, every row action and the bulk route all have to carry the same selection back with them
 function getPrivatPick(): array {
-    $stat = (string)getVar('req', 'stat', 'var', '');
-    $perd = (string)getVar('req', 'perd', 'var', '');
-    $sort = (string)getVar('req', 'sort', 'var', '');
+    $stat = getVar('req', 'stat', 'var', '');
+    $perd = getVar('req', 'perd', 'var', '');
+    $sort = getVar('req', 'sort', 'var', '');
     $out = [
-        'find' => trim((string)getVar('req', 'query', 'word', '')),
+        'find' => trim(getVar('req', 'query', 'word', '')),
         'stat' => in_array($stat, ['unread', 'read'], true) ? $stat : '',
         'perd' => in_array($perd, ['new', 'old'], true) ? $perd : '',
         'sort' => in_array($sort, ['old', 'unread', 'name'], true) ? $sort : '',
@@ -785,7 +804,7 @@ function getPrivatPick(): array {
 # The mailbox decides the state flag and the action set, so a row never has to be told twice which box it stands in, and only a received one can carry the unread mark
 # Today and yesterday are read as a time and an older day as a date, because the day header standing above the row already carries the day itself
 # The subject is a link to the deep route as well as the swap, so the row still opens its message where the swap cannot run
-# Every action of a row names its own id and its own act in the address and sends no body at all: the row stands inside the selection form, whose values would otherwise override both
+# Every row action names its own id and act in the address and sends no body: the row stands inside the selection form, whose values would otherwise override both
 function getPrivatRowData(array $row, int $typ, string $tok, int $pick = 0, string $state = ''): array {
     global $tpl;
     $when = strtotime($row['time']);
@@ -839,7 +858,7 @@ function getPrivatRowData(array $row, int $typ, string $tok, int $pick = 0, stri
     ];
 }
 
-# The range a mailbox column shows is written by the column and read by whoever prints the filter bar - the page on its build, the htmx wrapper out of band - so the one list query answers both
+# The range a mailbox column shows is written by the column and read by whoever prints the filter bar (the page or the htmx wrapper), so one list query answers both
 function getPrivatShown(?string $set = null): string {
     static $last = '';
     if ($set !== null) $last = $set;
@@ -871,7 +890,8 @@ function getCabinetNotes(string|array $stop, string $info, int $typ, bool $oob =
     return $tpl->getHtmlFrag('cabinet-notes', ['notes_html' => $note, 'is_oob' => $oob]);
 }
 
-# The column an htmx call asked for, followed by the notice slot out of band: a mailbox always carries it, because its quota may have changed under the action, and a message or the compose state only when it has something to say
+# The column an htmx call asked for, followed by the notice slot out of band: a mailbox always carries it, because its quota may have changed under the action
+# A message or the compose state carries the notice slot only when it has something to say
 function getPrivateMessageView(string|array $stop = '', string $info = '', int $typ = -1, array $view = []): string {
     global $tpl;
     if ($typ < 0) $typ = getVar('req', 'typ', 'num', 0);
@@ -884,11 +904,11 @@ function getPrivateMessageView(string|array $stop = '', string $info = '', int $
 
 # Render one column of the private message layout: a mailbox as the left one for typ 1 to 3, one message or the compose state as the right one, the empty pane for nothing at all
 # Every mailbox read runs through the private-message subsystem, so no state column is restated here and a list, its counter and its quota can never disagree
-# This function only reads: opening a message is what marks it read and that is a POST route of its own, which hands the row it has already loaded down instead of having it read twice
+# This function only reads: opening a message marks it read on a POST route of its own, which hands down the row it already loaded instead of reading it twice
 # A stored message is source from stage 2 on: the body is rendered safe in the format its own row names, and the title is plain text the template escapes where it prints it
-# The right column carries what the reply form has to hold in a hidden textarea of its own, because that form stands below the swapped region and is filled through the editor API and never by writing its field
-# The bulk action and its button stand in the footer of the column while the selection lives in the scrolling form above it, so both are bound back to that form by name instead of by nesting
-# Only a caller that names no column at all is answered from the request: zero means the empty pane, and a page that asks for it while the address carries a mailbox must not be handed that mailbox instead
+# The right column carries the reply text in a hidden textarea of its own: the reply form stands below the swapped region and is filled through the editor API only
+# The bulk action and its button stand in the column footer while the selection lives in the scrolling form above, so both are bound to that form by name, not nesting
+# Only a caller that names no column is answered from the request: zero means the empty pane, and a page asking for it must not get the mailbox of the address instead
 # The compose state names what bounds a send before the writer runs into it: the interval out of the settings, and the two lengths the stored columns allow
 function getPrivateMessagePane(string|array $stop, string $info, int $typ, array $view): string {
     global $db, $user, $conf, $tpl, $prs, $prv;
@@ -964,7 +984,7 @@ function getPrivateMessagePane(string|array $stop, string $info, int $typ, array
     }
     if ($typ == 4) {
         if (!$view) {
-            $post = filterText(mb_substr(urldecode((string)getVar('req', 'uname', 'raw', '')), 0, 25));
+            $post = filterText(mb_substr(urldecode(getVar('req', 'uname', 'raw', '')), 0, 25));
             $back = '';
             $head = '';
             $from = getVar('req', 'id', 'num', 0);
@@ -1082,7 +1102,7 @@ function getPrivateMessagePane(string|array $stop, string $info, int $typ, array
 # Both fields travel to the subsystem as the author submitted them: from stage 2 on a message stores source, and the writer that used to escape it on the way in is gone
 function addPrivateMessage(): void {
     global $user, $conf, $tpl, $mailer, $db, $prv, $pnt;
-    $name = filterText(mb_substr((string)getVar('post', 'name', 'raw', ''), 0, 25));
+    $name = filterText(mb_substr(getVar('post', 'name', 'raw', ''), 0, 25));
     $uid = (is_user()) ? intval($user[0]) : 0;
     if (!$conf['privat']['act'] || !$uid) {
         echo getPrivateMessageView((string)_ERROR, '', 4);
@@ -1091,8 +1111,8 @@ function addPrivateMessage(): void {
     $new = $prv->addMessage(
         $uid,
         $name,
-        (string)getVar('post', 'title', 'raw', ''),
-        (string)getVar('post', 'text', 'raw', ''),
+        getVar('post', 'title', 'raw', ''),
+        getVar('post', 'text', 'raw', ''),
         getIp()
     );
     if ($new['error'] !== 'ok') {
@@ -1176,7 +1196,7 @@ function updatePrivatBox(): void {
     $uid = (is_user()) ? intval($user[0]) : 0;
     $typ = getVar('req', 'typ', 'num', 1);
     $typ = ($typ >= 1 && $typ <= 3) ? $typ : 1;
-    $act = (string)getVar('req', 'act', 'var', '');
+    $act = getVar('req', 'act', 'var', '');
     $ids = getVar('req', 'id[]', 'num', []);
     $box = match ($typ) {2 => PrivatBox::Outbox, 3 => PrivatBox::Saved, default => PrivatBox::Inbox};
     $keep = match ($typ) {
@@ -1213,7 +1233,14 @@ function getProfileModules(int $uid = 0): array {
     static $memo = [];
     $out = [
         'comm' => ['title' => _COMMENTS, 'icon' => getIconName('comm'), 'fav' => ''],
-        'forum' => ['title' => _FORUM, 'icon' => getIconName('forum'), 'table' => 'forum', 'where' => "uid = :uid AND pid = '0' AND time <= NOW() AND status > '1'", 'rate' => ['ratings', 'score'], 'fav' => 'forum'],
+        'forum' => [
+            'title' => _FORUM,
+            'icon' => getIconName('forum'),
+            'table' => 'forum',
+            'where' => "uid = :uid AND pid = '0' AND time <= NOW() AND status > '1'",
+            'rate' => ['ratings', 'score'],
+            'fav' => 'forum',
+        ],
     ];
     $types = array_values(array_filter(getNodeTypeMap(), fn(NodeType $v): bool => $v->active && $v->ext !== 'support'));
     if ($uid > 0 && $types && !isset($memo[$uid])) {
@@ -1245,7 +1272,7 @@ function getProfileLastView(int $uid): string {
     $lists = ['comm' => []];
     foreach ($mods as $mod => $inf) {
         if ($mod == 'comm' || isset($inf['type']) || !is_active($mod)) continue;
-        $ron = ($conf['ratings'][$mod]['active'] ?? '') === '1';
+        $ron = !empty(getRatingService()->getRule($mod)['active']);
         $rsel = ($ron && $inf['rate']) ? $inf['rate'][0].' AS rc, '.$inf['rate'][1].' AS rt' : '0 AS rc, 0 AS rt';
         $from = PREFIX_DB.'_'.$inf['table'].' WHERE '.str_replace(':uid', ':u'.$mod, $inf['where']);
         $parts[] = "(SELECT '".$mod."' AS mkey, id, 0 AS ref, '' AS sub, title, time, ".$rsel.' FROM '.$from.' ORDER BY id DESC LIMIT 0,'.$limit.')';
@@ -1327,7 +1354,11 @@ function getFavoriteButton(?int $fid, string $mod): string {
     }
     $repid = 'rep'.$fid.$mod;
     if (!empty($cache['items'][$mod.'-'.$fid])) return $tpl->getHtmlFrag('favorite', ['rep_id' => $repid, 'is_on' => true]);
-    if ($cache['num'] >= $conf['favorites']['favorites']) return $tpl->getHtmlFrag('favorite', ['rep_id' => $repid, 'is_limit' => true, 'title' => sprintf(_FAVOR_EXIT, $conf['favorites']['favorites'])]);
+    if ($cache['num'] >= $conf['favorites']['favorites']) return $tpl->getHtmlFrag('favorite', [
+        'rep_id' => $repid,
+        'is_limit' => true,
+        'title' => sprintf(_FAVOR_EXIT, $conf['favorites']['favorites']),
+    ]);
     return $tpl->getHtmlFrag('favorite', ['rep_id' => $repid, 'href' => 'index.php?go=1&op=addFavorite&id='.$fid.'&mod='.$mod, 'token' => getPageToken()]);
 }
 
@@ -1335,6 +1366,7 @@ function getFavoriteButton(?int $fid, string $mod): string {
 # A Node material is added in one transaction: type and material locks, the favorites feature and the extension, the row, the extension reaction and the award
 # A material the user may not read, a switched-off feature or a refusal of the extension adds nothing
 # The account row is locked after the material and before the first plain read, so the recount sees every parallel request and two never pass the limit together
+# A forum topic or a product takes the same account lock and recount in a transaction of its own, since its limit is the same shared count
 function addFavorite(): void {
     global $db, $conf, $user, $pnt;
     $id = getVar('get', 'id', 'num', 0);
@@ -1343,7 +1375,6 @@ function addFavorite(): void {
     $isnode = $mod !== '' && isset($conf['node']['types'][$mod]);
     $type = $isnode ? (getNodeTypeMap()[$mod] ?? null) : null;
     $pars = ['uid' => $uid, 'fid' => $id, 'modul' => $mod];
-    $sql = 'SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid AND fid = :fid AND modul = :modul';
     $room = $uid && $id && intval($db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid', ['uid' => $uid]))[0] ?? 0)
         < intval($conf['favorites']['favorites']);
     if ($conf['favorites']['favact'] && $room && $type !== null) {
@@ -1376,17 +1407,33 @@ function addFavorite(): void {
     } elseif ($conf['favorites']['favact'] && $room && in_array($mod, ['forum', 'shop'], true)) {
         $live = ($mod === 'forum') ? 'SELECT COUNT(id) FROM '.PREFIX_DB.'_forum WHERE id = :fid AND pid = 0 AND time <= NOW() AND status != \'0\''
             : 'SELECT COUNT(id) FROM '.PREFIX_DB.'_products WHERE id = :fid AND status != \'0\' AND time <= NOW()';
-        [$have] = $db->getSqlRow($db->getSqlQuery($live, ['fid' => $id]));
-        [$fav] = $db->getSqlRow($db->getSqlQuery($sql, $pars));
-        if ($have && !$fav) {
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_favorites VALUES (NULL, :uid, :fid, :modul, NOW())', $pars);
-            $pnt->addEvent('favorite', 'favorites', $mod.':'.$id, $uid, ['mid' => $id]);
+        try {
+            if (!$db->setSqlBegin()) throw new RuntimeException('the transaction of a favorite cannot be started');
+            $lock = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_users WHERE id = :uid FOR UPDATE', ['uid' => $uid]);
+            $seen = $lock ? $db->getSqlQuery('SELECT COUNT(id), COALESCE(SUM(fid = :fid AND modul = :modul), 0) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid', $pars) : false;
+            if ($seen === false) throw new RuntimeException('the favorites of the user could not be read');
+            [$all, $fav] = $db->getSqlRow($seen);
+            [$have] = $db->getSqlRow($db->getSqlQuery($live, ['fid' => $id]));
+            if ($have && !$fav && $all < intval($conf['favorites']['favorites'])) {
+                $done = $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_favorites VALUES (NULL, :uid, :fid, :modul, NOW())', $pars);
+                if ($done === false) throw new RuntimeException('the favorite was not stored');
+                $pnt->addEvent('favorite', 'favorites', $mod.':'.$id, $uid, ['mid' => $id]);
+            }
+            if (!$db->setSqlCommit()) throw new RuntimeException('the commit of a favorite is uncertain');
+        } catch (Throwable $err) {
+            if ($db->checkSqlActive()) $db->setSqlRollback();
+            Logger::addSite('error', 'Favorites: a favorite could not be added', ['modul' => $mod, 'fid' => $id, 'error' => $err->getMessage()]);
         }
     }
     echo getFavoriteButton($id, $mod);
 }
 
-# Render the favorites of the logged-in user as shelves, one per module, under a lamp row and a search tile; the whole list is read in one pass because a shelf and the lamps need every row of the member. mod narrows the shelves to one module, q to the titles that carry the words, and part=shelves answers the htmx call of the search field and the chips with the shelves alone plus the out-of-band tally and chips
+# Render the favorites of the logged-in user as shelves, one per module, under a lamp row and a search tile
+# The whole list is read in one pass because a shelf and the lamps need every row of the member
+# The mod parameter narrows the shelves to one module and q to the titles that carry the words
+# The part=shelves call of the search field and the chips answers the shelves alone plus the out-of-band tally and chips
+# The chips list every module the member has; the view keeps the shelves the module and the words leave standing
+# A bookmark stored before the time column existed has no date: the lamp then names its module where the date would stand
 # A fixed module is read from its table, a Node type through its light targets, which leaves out a material its viewer may no longer read
 # It only reads the list of the member, so its address carries no token, and a guest gets nothing
 function getFavoriteList(int $obj = 0): string {
@@ -1395,7 +1442,7 @@ function getFavoriteList(int $obj = 0): string {
     $uid = intval($user[0]);
     $max = intval($conf['favorites']['favorites']);
     $mod = filterVar(getVar('req', 'mod', 'text', ''));
-    $seek = mb_substr(trim((string)getVar('req', 'q', 'word', '')), 0, 60, 'utf-8');
+    $seek = mb_substr(trim(getVar('req', 'q', 'word', '')), 0, 60, 'utf-8');
     $part = getVar('get', 'part', 'text', '') === 'shelves';
     $tables = ['forum' => 'forum', 'shop' => 'products'];
 
@@ -1456,9 +1503,7 @@ function getFavoriteList(int $obj = 0): string {
     if (!isset($shelves[$mod])) $mod = '';
     $total = array_sum(array_column($shelves, 'count'));
     $lead = array_key_first($shelves);
-
-    # The chips list every module the member has; the view keeps the shelves the module and the words leave standing
-    $base = 'index.php?go=1&op=getFavoriteList&part=shelves';
+    $base ='index.php?go=1&op=getFavoriteList&part=shelves';
     $link = 'index.php?name=account&op=favorites'.(($seek !== '') ? '&q='.rawurlencode($seek) : '');
     $chips = [];
     $view = [];
@@ -1476,14 +1521,18 @@ function getFavoriteList(int $obj = 0): string {
     }
     $chips[] = ['label' => _ALL, 'icon' => getIconName('all'), 'href' => $link, 'hx_url' => $base.'&mod=', 'is_now' => $mod === ''];
     $tally = sprintf(_NUMOF, array_sum(array_column($view, 'count')), $total);
-
-    # A bookmark stored before the time column existed has no date: the lamp then names its module where the date would stand
-    $quota = ($num >= $max) ? ['tone' => 'warn', 'cat' => 0] : ['tone' => 'info', 'cat' => 4];
+    $quota =($num >= $max) ? ['tone' => 'warn', 'cat' => 0] : ['tone' => 'info', 'cat' => 4];
     $lamps = [
         $quota + ['label' => _FAVORITES, 'value' => sprintf(_NUMOF, $num, $max), 'note' => sprintf(_FAVOR_FREE, max($max - $num, 0), $max)],
         ['tone' => 'ok', 'cat' => 1, 'label' => _FAVOR_MODS, 'value' => (string)count($shelves), 'note' => implode(', ', array_column($shelves, 'title'))],
         ['tone' => 'info', 'cat' => 4, 'label' => _FAVOR_TOP, 'value' => $shelves[$lead]['title'], 'note' => sprintf(_NUMOF, $shelves[$lead]['count'], $total)],
-        ['tone' => 'ok', 'cat' => 1, 'label' => _FAVOR_LAST, 'value' => ($last['time'] !== '') ? format_time($last['time']) : getModuleName($last['mod']), 'note' => $last['title']],
+        [
+            'tone' => 'ok',
+            'cat' => 1,
+            'label' => _FAVOR_LAST,
+            'value' => ($last['time'] !== '') ? format_time($last['time']) : getModuleName($last['mod']),
+            'note' => $last['title'],
+        ],
     ];
     $cont = $tpl->getHtmlPart($part ? 'account-favorites-part' : 'account-favorites', [
         'is_oob' => $part,
@@ -1495,7 +1544,11 @@ function getFavoriteList(int $obj = 0): string {
         'seek_url' => $base,
         'token' => getSiteToken(),
         'tally' => $tally,
-        'seek_head' => ['icon' => getIconName('search'), 'title' => _FAVOR_SEEK, 'chips' => [['tone' => 'info', 'id' => 'favtally', 'title' => _FAVORITES, 'text' => $tally, 'is_live' => true]]],
+        'seek_head' => [
+            'icon' => getIconName('search'),
+            'title' => _FAVOR_SEEK,
+            'chips' => [['tone' => 'info', 'id' => 'favtally', 'title' => _FAVORITES, 'text' => $tally, 'is_live' => true]],
+        ],
         'seek_label' => _FAVOR_SEEK,
         'seek_note' => _FAVOR_SEEKNOTE,
         'none_text' => _FAVOR_NONE,
@@ -1556,7 +1609,11 @@ function getRssChannel(): string {
         $params = [];
         $where = $cat ? 'WHERE s.cid = :cat AND s.time <= NOW() AND s.status = 1' : 'WHERE s.time <= NOW() AND s.status = 1';
         if ($cat) $params['cat'] = $cat;
-        $result = $db->getSqlQuery('SELECT s.id, s.title, s.time, s.intro, c.title FROM '.PREFIX_DB.'_products AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) '.$where.' ORDER BY s.time DESC LIMIT '.intval($num), $params);
+        $result = $db->getSqlQuery(
+            'SELECT s.id, s.title, s.time, s.intro, c.title FROM '.PREFIX_DB.'_products AS s'
+            .' LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) '.$where.' ORDER BY s.time DESC LIMIT '.intval($num),
+            $params
+        );
     }
     $content = '<?xml version="1.0" encoding="'._CHARSET."\"?>\n"
     ."<rss version=\"2.0\" xmlns:atom=\"http://www.w3.org/2005/Atom\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n"
@@ -1602,7 +1659,7 @@ function getRssChannel(): string {
 }
 
 # Output the OpenSearch description XML for browser search integration
-# Every address is escaped before it enters the document: an ampersand of a query string is a character reference in XML, and a browser that parses this strictly drops the whole file
+# Every address is escaped before it enters the document: an ampersand of a query string is a character reference in XML, and a strict parser drops the whole file
 function getOpenSearch() {
     global $conf;
     header('Content-Type: application/opensearchdescription+xml');

@@ -11,10 +11,8 @@ if (!defined('MODULE_FILE')) {
 
 function forumIcon(string $href, string $title, string $state, string $label = ''): string {
     global $tpl;
-
     $badge = ['title_text' => $label ?: $title, 'label' => ''];
     $badge[$state] = true;
-
     return $tpl->getHtmlFrag('link', [
         'href' => $href,
         'title' => $title,
@@ -43,10 +41,83 @@ function forum(): void {
     } else {
         $where = 'WHERE c.modul = :mod';
     }
-    $query = $db->getSqlQuery('SELECT c.id, c.title, c.intro, c.img, c.parent, c.status, c.ordern, c.topics, c.posts, c.lpost, c.pview, c.pread, c.ppost, c.preply, c.pedit, c.pdelete, c.pmod, f.title, f.luid, f.lname, f.lpost, f.ltime FROM '.PREFIX_DB.'_categories AS c LEFT JOIN '.PREFIX_DB.'_forum AS f ON (c.lpost = f.id) '.$where.' ORDER BY c.ordern', $pars);
-    while ([$cid, $title, $intro, $img, $parent, $status, $order, $topics, $posts, $lastid, $authv, $authr, $authp, $authy, $authe, $authd, $authm, $ftitle, $fuid, $fname, $flid, $fltime] = $db->getSqlRow($query)) {
-        $rows[] = [$cid, $title, $intro, $img, $parent, $status, $order, $topics, $posts, $lastid, $authv, $authr, $authp, $authy, $authe, $authd, $authm, $ftitle, $fuid, $fname, $flid, $fltime];
-        unset($cid, $title, $intro, $img, $parent, $status, $order, $topics, $posts, $lastid, $authv, $authr, $authp, $authy, $authe, $authd, $authm, $ftitle, $fuid, $fname, $flid, $fltime);
+    $query = $db->getSqlQuery(
+        'SELECT c.id, c.title, c.intro, c.img, c.parent, c.status, c.ordern, c.topics, c.posts, c.lpost, c.pview, c.pread, c.ppost, c.preply, c.pedit, c.pdelete, c.pmod, f.title,'
+            .' f.luid, f.lname, f.lpost, f.ltime FROM '.PREFIX_DB.'_categories AS c LEFT JOIN '.PREFIX_DB.'_forum AS f ON (c.lpost = f.id) '.$where.' ORDER BY c.ordern',
+        $pars
+    );
+    while ([
+        $cid,
+        $title,
+        $intro,
+        $img,
+        $parent,
+        $status,
+        $order,
+        $topics,
+        $posts,
+        $lastid,
+        $authv,
+        $authr,
+        $authp,
+        $authy,
+        $authe,
+        $authd,
+        $authm,
+        $ftitle,
+        $fuid,
+        $fname,
+        $flid,
+        $fltime
+    ] = $db->getSqlRow($query)) {
+        $rows[] = [
+            $cid,
+            $title,
+            $intro,
+            $img,
+            $parent,
+            $status,
+            $order,
+            $topics,
+            $posts,
+            $lastid,
+            $authv,
+            $authr,
+            $authp,
+            $authy,
+            $authe,
+            $authd,
+            $authm,
+            $ftitle,
+            $fuid,
+            $fname,
+            $flid,
+            $fltime,
+        ];
+        unset(
+            $cid,
+            $title,
+            $intro,
+            $img,
+            $parent,
+            $status,
+            $order,
+            $topics,
+            $posts,
+            $lastid,
+            $authv,
+            $authr,
+            $authp,
+            $authy,
+            $authe,
+            $authd,
+            $authm,
+            $ftitle,
+            $fuid,
+            $fname,
+            $flid,
+            $fltime
+        );
     }
     if ($rows) {
         $isview = is_acess($rows[0][10]);
@@ -69,15 +140,26 @@ function forum(): void {
                         $h1 = $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'], 'title' => _FORUM, 'label' => _FORUM]);
                         $h2 = $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod.'&cat='.$rows[0][0], 'title' => $rows[0][1], 'label' => $rows[0][1]]);
                         $heading = $h1.' '.urldecode($conf['forum']['defis']).' '.$h2;
-                        $cont = $tpl->getHtmlFrag('forum-category-table', ['open' => true, 'heading' => $heading, 'col_forum' => _FORUM, 'col_topics' => _NEWTOPICS, 'col_messages' => cutstr(_MESSAGES, 5, 1), 'col_last' => _LASTMESSAGE]);
+                        $cont = $tpl->getHtmlFrag('forum-category-table', [
+                            'open' => true,
+                            'heading' => $heading,
+                            'col_forum' => _FORUM,
+                            'col_topics' => _NEWTOPICS,
+                            'col_messages' => cutstr(_MESSAGES, 5, 1),
+                            'col_last' => _LASTMESSAGE,
+                        ]);
                     } else {
                         $cont = '';
                     }
                     $ttit = ($val[2]) ? $val[2] : $val[1];
-                    $tlink = ($val[5] || is_moder($conf['name'])) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod.'&cat='.$val[0], 'title' => $ttit, 'label' => $val[1]]) : $val[1];
+                    $tlink = ($val[5] || is_moder($conf['name']))
+                        ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod.'&cat='.$val[0], 'title' => $ttit, 'label' => $val[1]])
+                        : $val[1];
                     $cat_url = 'index.php?name='.$mod.'&cat='.$val[0];
                     if (!$val[5]) {
-                        $timg = (is_moder($conf['name'])) ? forumIcon($cat_url, _FCLOSED, 'is_forum_closed') : $tpl->getHtmlFrag('inline-badge', ['title_text' => _FCLOSED, 'label' => '', 'is_forum_closed' => true]);
+                        $timg = (is_moder($conf['name']))
+                            ? forumIcon($cat_url, _FCLOSED, 'is_forum_closed')
+                            : $tpl->getHtmlFrag('inline-badge', ['title_text' => _FCLOSED, 'label' => '', 'is_forum_closed' => true]);
                     } elseif ($val[21] > $ulast) {
                         $timg = forumIcon($cat_url, _ISNEWPOST, 'is_forum_new');
                     } else {
@@ -91,23 +173,46 @@ function forum(): void {
                         $post = ($val[18]) ? user_info($val[19]) : $val[19];
                         $post = _POSTER.': '.$post;
                         $lid = ($val[20]) ? $val[20] : $val[9];
-                        $lpost = ($val[5]) ? forumIcon($topic_href.'&last=1#'.$lid, _LASTMESSAGE, 'is_forum_last') : $tpl->getHtmlFrag('inline-badge', ['title_text' => _LASTMESSAGE, 'label' => '', 'is_forum_last' => true]);
+                        $lpost = ($val[5])
+                            ? forumIcon($topic_href.'&last=1#'.$lid, _LASTMESSAGE, 'is_forum_last')
+                            : $tpl->getHtmlFrag('inline-badge', ['title_text' => _LASTMESSAGE, 'label' => '', 'is_forum_last' => true]);
                     } else {
                         $data = _NO_INFO;
                         $topic = $post = $lpost = '';
                     }
-                    $cont .= $tpl->getHtmlFrag('forum-category-row', ['icon' => $timg, 'link' => getCategoryIcon($val[3]).' '.$tlink, 'desc' => $val[2], 'topics' => $val[7], 'posts' => $val[8], 'date' => $data, 'last_topic' => $topic, 'last_post' => $post, 'last_link' => $lpost]);
+                    $cont .= $tpl->getHtmlFrag('forum-category-row', [
+                        'icon' => $timg,
+                        'link' => getCategoryIcon($val[3]).' '.$tlink,
+                        'desc' => $val[2],
+                        'topics' => $val[7],
+                        'posts' => $val[8],
+                        'date' => $data,
+                        'last_topic' => $topic,
+                        'last_post' => $post,
+                        'last_link' => $lpost,
+                    ]);
                     echo $cont;
                 } else {
                     $heading = $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod.'&cat='.$val[0], 'title' => $val[1], 'label' => $val[1]]);
-                    $cont = $tpl->getHtmlFrag('forum-category-table', ['open' => true, 'heading' => $heading, 'col_forum' => _FORUM, 'col_topics' => _NEWTOPICS, 'col_messages' => cutstr(_MESSAGES, 5, 1), 'col_last' => _LASTMESSAGE]);
+                    $cont = $tpl->getHtmlFrag('forum-category-table', [
+                        'open' => true,
+                        'heading' => $heading,
+                        'col_forum' => _FORUM,
+                        'col_topics' => _NEWTOPICS,
+                        'col_messages' => cutstr(_MESSAGES, 5, 1),
+                        'col_last' => _LASTMESSAGE,
+                    ]);
                     foreach ($rows as $valb) {
                         if ($val[0] == $valb[4] && is_acess($valb[10])) {
                             $ttit = ($valb[2]) ? $valb[2] : $valb[1];
-                            $tlink = ($valb[5] || is_moder($conf['name'])) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod.'&cat='.$valb[0], 'title' => $ttit, 'label' => $valb[1]]) : $valb[1];
+                            $tlink = ($valb[5] || is_moder($conf['name']))
+                                ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod.'&cat='.$valb[0], 'title' => $ttit, 'label' => $valb[1]])
+                                : $valb[1];
                             $cat_url = 'index.php?name='.$mod.'&cat='.$valb[0];
                             if (!$valb[5]) {
-                                $timg = (is_moder($conf['name'])) ? forumIcon($cat_url, _FCLOSED, 'is_forum_closed') : $tpl->getHtmlFrag('inline-badge', ['title_text' => _FCLOSED, 'label' => '', 'is_forum_closed' => true]);
+                                $timg = (is_moder($conf['name']))
+                                    ? forumIcon($cat_url, _FCLOSED, 'is_forum_closed')
+                                    : $tpl->getHtmlFrag('inline-badge', ['title_text' => _FCLOSED, 'label' => '', 'is_forum_closed' => true]);
                             } elseif ($valb[21] > $ulast) {
                                 $timg = forumIcon($cat_url, _ISNEWPOST, 'is_forum_new');
                             } else {
@@ -116,17 +221,31 @@ function forum(): void {
                             if ($valb[9]) {
                                 $data = _DATE.': '.format_time($valb[21], _TIMESTRING);
                                 $topic_href = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $valb[9], 'title' => $valb[17]]);
-                                $topic_link = ($valb[5]) ? $tpl->getHtmlFrag('link', ['href' => $topic_href, 'title' => $valb[17], 'label' => cutstr($valb[17], 14)]) : cutstr($valb[17], 14);
+                                $topic_link = ($valb[5])
+                                    ? $tpl->getHtmlFrag('link', ['href' => $topic_href, 'title' => $valb[17], 'label' => cutstr($valb[17], 14)])
+                                    : cutstr($valb[17], 14);
                                 $topic = _TOPIC.': '.$topic_link;
                                 $post = ($valb[18]) ? user_info($valb[19]) : $valb[19];
                                 $post = _POSTER.': '.$post;
                                 $lid = ($valb[20]) ? $valb[20] : $valb[9];
-                                $lpost = ($valb[5]) ? forumIcon($topic_href.'&last=1#'.$lid, _LASTMESSAGE, 'is_forum_last') : $tpl->getHtmlFrag('inline-badge', ['title_text' => _LASTMESSAGE, 'label' => '', 'is_forum_last' => true]);
+                                $lpost = ($valb[5])
+                                    ? forumIcon($topic_href.'&last=1#'.$lid, _LASTMESSAGE, 'is_forum_last')
+                                    : $tpl->getHtmlFrag('inline-badge', ['title_text' => _LASTMESSAGE, 'label' => '', 'is_forum_last' => true]);
                             } else {
                                 $data = _NO_INFO;
                                 $topic = $post = $lpost = '';
                             }
-                            $cont .= $tpl->getHtmlFrag('forum-category-row', ['icon' => $timg, 'link' => getCategoryIcon($valb[3]).' '.$tlink, 'desc' => $valb[2], 'topics' => $valb[7], 'posts' => $valb[8], 'date' => $data, 'last_topic' => $topic, 'last_post' => $post, 'last_link' => $lpost]);
+                            $cont .= $tpl->getHtmlFrag('forum-category-row', [
+                                'icon' => $timg,
+                                'link' => getCategoryIcon($valb[3]).' '.$tlink,
+                                'desc' => $valb[2],
+                                'topics' => $valb[7],
+                                'posts' => $valb[8],
+                                'date' => $data,
+                                'last_topic' => $topic,
+                                'last_post' => $post,
+                                'last_link' => $lpost,
+                            ]);
                         }
                     }
                     $cont .= $tpl->getHtmlFrag('forum-category-table', []);
@@ -151,9 +270,19 @@ function forum(): void {
                     $ordern = (is_moder($conf['name'])) ? "WHERE s.pid = '0'" : "WHERE s.pid = '0' AND s.time <= NOW() AND s.status != '0'";
                     $num = getVar('req', 'num', 'num') ?: 1;
                     $offset = (int)(($num - 1) * $listnum);
-                    $query = $db->getSqlQuery('SELECT s.id, s.cid, s.name, s.title, s.time, s.body, s.comments, s.counter, s.score, s.ratings, s.ip, s.luid, s.lname, s.lpost, s.ltime, s.status, c.id, c.title, c.intro, c.img, u.name FROM '.PREFIX_DB.'_forum AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.id) '.$ordern.' '.$lang.' ORDER BY s.status DESC, s.ltime DESC LIMIT '.$offset.', '.$listnum, $lpars);
+                    $query = $db->getSqlQuery(
+                        'SELECT s.id, s.cid, s.name, s.title, s.time, s.body, s.comments, s.counter, s.score, s.ratings, s.ip, s.luid, s.lname, s.lpost, s.ltime, s.status, c.id,'
+                            .' c.title, c.intro, c.img, u.name FROM '.PREFIX_DB.'_forum AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id)'
+                            .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.id) '.$ordern.' '.$lang.' ORDER BY s.status DESC, s.ltime DESC LIMIT '.$offset.', '.$listnum,
+                        $lpars
+                    );
                     $newbt = ($istopic)
-                        ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&op=add&cat='.$rows[0][0], 'title' => _NEWTOPIC, 'is_account_button' => true, 'label' => _OPEN])
+                        ? $tpl->getHtmlFrag('link', [
+                            'href' => 'index.php?name='.$conf['name'].'&op=add&cat='.$rows[0][0],
+                            'title' => _NEWTOPIC,
+                            'is_account_button' => true,
+                            'label' => _OPEN,
+                        ])
                         : $tpl->getHtmlFrag('inline-badge', ['title_text' => sprintf(_ACINFOT, _NOTCAN), 'is_account_button' => true, 'is_dimmed' => true, 'label' => _OPEN]);
                     $cat_link = $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod.'&cat='.$rows[0][0], 'title' => $rows[0][1], 'label' => $rows[0][1]]);
                     $cont = $tpl->getHtmlFrag('forum-topic-view', ['open' => true, 'button' => $newbt, 'title_html' => $cat_link]);
@@ -173,8 +302,38 @@ function forum(): void {
                             'is_topic_hot' => _THOT,
                             'is_topic_announcement' => _TANNOUN,
                         ];
-                        $topicList = $tpl->getHtmlFrag('forum-category-table', ['open' => true, 'is_topic_list' => true, 'col_topics' => _NEWTOPICS, 'col_posts' => _POSTS, 'col_poster' => _POSTER, 'col_views' => cutstr(_TVIEWS, 5, 1), 'col_last' => _LASTMESSAGE]);
-                        while ([$id, $cid, $uname, $title, $time, $hometext, $comments, $counter, $score, $ratings, $ipsend, $luid, $lname, $lid, $ltime, $status, $cat, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($query)) {
+                        $topicList = $tpl->getHtmlFrag('forum-category-table', [
+                            'open' => true,
+                            'is_topic_list' => true,
+                            'col_topics' => _NEWTOPICS,
+                            'col_posts' => _POSTS,
+                            'col_poster' => _POSTER,
+                            'col_views' => cutstr(_TVIEWS, 5, 1),
+                            'col_last' => _LASTMESSAGE,
+                        ]);
+                        while ([
+                            $id,
+                            $cid,
+                            $uname,
+                            $title,
+                            $time,
+                            $hometext,
+                            $comments,
+                            $counter,
+                            $score,
+                            $ratings,
+                            $ipsend,
+                            $luid,
+                            $lname,
+                            $lid,
+                            $ltime,
+                            $status,
+                            $cat,
+                            $ctitle,
+                            $cdesc,
+                            $cimg,
+                            $nick
+                        ] = $db->getSqlRow($query)) {
                             $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
                             $title = getDecodedText($title);
                             $state = getForumTopicState((int)$status, $time, $ltime, (int)$comments, $pop, $ulast, $canmod);
@@ -183,7 +342,9 @@ function forum(): void {
                             $slabel = $slabels[$state] ?? '';
                             $badge = $state ? $tpl->getHtmlFrag('inline-badge', ['title_text' => $slabel, 'label' => '', $state => true]) : '';
                             $tlink = $canlink ? $tpl->getHtmlFrag('link', ['href' => $thref, 'title' => $title, 'label_html' => $badge, 'label' => $title]) : $badge.' '.$title;
-                            $lpost = $canlink ? forumIcon($thref.'&last=1#'.$lid, _LASTMESSAGE, 'is_forum_last') : $tpl->getHtmlFrag('inline-badge', ['title_text' => _LASTMESSAGE, 'label' => '', 'is_forum_last' => true]);
+                            $lpost = $canlink
+                                ? forumIcon($thref.'&last=1#'.$lid, _LASTMESSAGE, 'is_forum_last')
+                                : $tpl->getHtmlFrag('inline-badge', ['title_text' => _LASTMESSAGE, 'label' => '', 'is_forum_last' => true]);
                             $ldata = _DATE.': '.format_time($ltime, _TIMESTRING);
                             $post = ($nick) ? user_info($nick) : $uname.' ('._ANONYM.')';
                             $lposter = ($luid) ? _POSTER.': '.user_info($lname) : _POSTER.': '.$lname;
@@ -201,7 +362,18 @@ function forum(): void {
                             } else {
                                 $checkb = '';
                             }
-                            $topicList .= ($view) ? $tpl->getHtmlFrag('forum-category-row', ['is_topic_list' => true, 'link' => $tlink, 'replies' => $comments, 'posts' => $post, 'views' => $counter, 'last_date' => $ldata, 'last_poster' => $lposter, 'last_link' => $lpost.$checkb]) : '';
+                            $topicList .= ($view)
+                                ? $tpl->getHtmlFrag('forum-category-row', [
+                                    'is_topic_list' => true,
+                                    'link' => $tlink,
+                                    'replies' => $comments,
+                                    'posts' => $post,
+                                    'views' => $counter,
+                                    'last_date' => $ldata,
+                                    'last_poster' => $lposter,
+                                    'last_link' => $lpost.$checkb,
+                                ])
+                                : '';
                         }
                         $topicList .= $tpl->getHtmlFrag('forum-category-table', []);
                         if ($ismod) {
@@ -209,7 +381,10 @@ function forum(): void {
                                 .$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'move', 'input_attr' => ''])
                                 .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$catid, 'input_attr' => ''])
                                 .$tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'label' => _OK])]);
-                            $cont .= $tpl->getHtmlPart('form-wrap', ['action' => 'index.php?name='.$conf['name'], 'content_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getPageToken(), 'input_attr' => '']).$topicList]);
+                            $cont .= $tpl->getHtmlPart('form-wrap', [
+                                'action' => 'index.php?name='.$conf['name'],
+                                'content_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getPageToken(), 'input_attr' => '']).$topicList,
+                            ]);
                         } else {
                             $cont .= $topicList;
                         }
@@ -283,6 +458,8 @@ function forum(): void {
     setFoot();
 }
 
+# The quick-reply token travels in a header rather than in the address, which keeps it out of history, logs and referrers
+# A removal is a write, so it is submitted rather than followed: a link would delete on a prefetch and carry its token through history and logs
 function view(): void {
     global $db, $user, $conf, $tpl, $prs;
     $rows = [];
@@ -310,17 +487,123 @@ function view(): void {
         }
         $word = getVar('req', 'word', 'word');
         $orderw = (is_moder($conf['name'])) ? 'WHERE (s.id = :id1 OR s.pid = :id2)' : "WHERE (s.id = :id1 OR s.pid = :id2) AND s.time <= NOW() AND s.status != '0'";
-        $query = $db->getSqlQuery('SELECT s.id, s.pid, s.cid, s.uid, s.name, s.title, s.time, s.body, s.field, s.comments, s.counter, s.score, s.ratings, s.ip, s.euid, s.eip, s.etime, s.status, c.title, c.pread, c.ppost, c.preply, c.pedit, c.pdelete, c.pmod FROM '.PREFIX_DB.'_forum AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) '.$orderw.' ORDER BY s.time '.$sort.' LIMIT '.$offset.', '.$fornum, $opars);
+        $query = $db->getSqlQuery(
+            'SELECT s.id, s.pid, s.cid, s.uid, s.name, s.title, s.time, s.body, s.field, s.comments, s.counter, s.score, s.ratings, s.ip, s.euid, s.eip, s.etime, s.status,'
+                .' c.title, c.pread, c.ppost, c.preply, c.pedit, c.pdelete, c.pmod FROM '.PREFIX_DB.'_forum AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) '.$orderw
+                .' ORDER BY s.time '.$sort.' LIMIT '.$offset.', '.$fornum,
+            $opars
+        );
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET counter=counter+1 WHERE id = :id', ['id' => $topic]);
-        while ([$id, $pid, $cid, $uid, $name, $title, $time, $hometext, $field, $comments, $counter, $score, $ratings, $ipsend, $euid, $eip, $etime, $status, $ctitle, $authr, $authp, $authy, $authe, $authd, $authm] = $db->getSqlRow($query)) {
-            $rows[] = [$id, $pid, $cid, $uid, $name, $title, $time, $hometext, $field, $comments, $counter, $score, $ratings, $ipsend, $euid, $eip, $etime, $status, $ctitle, $authr, $authp, $authy, $authe, $authd, $authm];
+        while ([
+            $id,
+            $pid,
+            $cid,
+            $uid,
+            $name,
+            $title,
+            $time,
+            $hometext,
+            $field,
+            $comments,
+            $counter,
+            $score,
+            $ratings,
+            $ipsend,
+            $euid,
+            $eip,
+            $etime,
+            $status,
+            $ctitle,
+            $authr,
+            $authp,
+            $authy,
+            $authe,
+            $authd,
+            $authm
+        ] = $db->getSqlRow($query)) {
+            $rows[] = [
+                $id,
+                $pid,
+                $cid,
+                $uid,
+                $name,
+                $title,
+                $time,
+                $hometext,
+                $field,
+                $comments,
+                $counter,
+                $score,
+                $ratings,
+                $ipsend,
+                $euid,
+                $eip,
+                $etime,
+                $status,
+                $ctitle,
+                $authr,
+                $authp,
+                $authy,
+                $authe,
+                $authd,
+                $authm,
+            ];
             if ($uid) $where[] = $uid;
-            unset($id, $pid, $cid, $uid, $name, $title, $time, $hometext, $field, $comments, $counter, $score, $ratings, $ipsend, $euid, $eip, $etime, $status, $ctitle, $authr, $authp, $authy, $authe, $authd, $authm);
+            unset(
+                $id,
+                $pid,
+                $cid,
+                $uid,
+                $name,
+                $title,
+                $time,
+                $hometext,
+                $field,
+                $comments,
+                $counter,
+                $score,
+                $ratings,
+                $ipsend,
+                $euid,
+                $eip,
+                $etime,
+                $status,
+                $ctitle,
+                $authr,
+                $authp,
+                $authy,
+                $authe,
+                $authd,
+                $authm
+            );
         }
         if (!$rows) setError(404);
         if ($where) {
-            $query = $db->getSqlQuery('SELECT u.id, u.name, u.rank, u.email, u.website, u.avatar, u.regdate, u.origin, u.sig, u.viewmail, u.points, u.warnings, u.gender, u.votes, u.tvotes, g.name, g.rank, g.color FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON ((g.extra=1 AND u.grp=g.id) OR (g.extra!=1 AND u.points>=g.points)) WHERE u.id IN ('.implode(', ', $where).') ORDER BY g.extra ASC, g.points ASC');
-            while ([$uid, $nick, $rank, $mail, $site, $avatar, $reg, $from, $sig, $view, $point, $warn, $gender, $votes, $total, $gname, $grank, $gcolor] = $db->getSqlRow($query)) {
+            $query = $db->getSqlQuery(
+                'SELECT u.id, u.name, u.rank, u.email, u.website, u.avatar, u.regdate, u.origin, u.sig, u.viewmail, u.points, u.warnings, u.gender, u.votes, u.tvotes, g.name,'
+                    .' g.rank, g.color FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON ((g.extra=1 AND u.grp=g.id) OR (g.extra!=1 AND u.points>=g.points))'
+                    .' WHERE u.id IN ('.implode(', ', $where).') ORDER BY g.extra ASC, g.points ASC'
+            );
+            while ([
+                $uid,
+                $nick,
+                $rank,
+                $mail,
+                $site,
+                $avatar,
+                $reg,
+                $from,
+                $sig,
+                $view,
+                $point,
+                $warn,
+                $gender,
+                $votes,
+                $total,
+                $gname,
+                $grank,
+                $gcolor
+            ] = $db->getSqlRow($query)) {
                 $users[] = [$uid, $nick, $rank, $mail, $site, $avatar, $reg, $from, $sig, $view, $point, $warn, $gender, $votes, $total, $gname, $grank, $gcolor];
                 unset($uid, $nick, $rank, $mail, $site, $avatar, $reg, $from, $sig, $view, $point, $warn, $gender, $votes, $total, $gname, $grank, $gcolor);
             }
@@ -361,10 +644,20 @@ function view(): void {
         ]);
         if ($ismod || ($isread && $tstatus > 1)) {
             $atopic = (is_moder($conf['name']) || $istopic)
-                ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&op=add&cat='.$rows[0][2], 'title' => _NEWTOPIC, 'is_account_button' => true, 'label' => _OPEN])
+                ? $tpl->getHtmlFrag('link', [
+                    'href' => 'index.php?name='.$conf['name'].'&op=add&cat='.$rows[0][2],
+                    'title' => _NEWTOPIC,
+                    'is_account_button' => true,
+                    'label' => _OPEN,
+                ])
                 : $tpl->getHtmlFrag('inline-badge', ['title_text' => sprintf(_ACINFOT, _NOTCAN), 'is_account_button' => true, 'is_dimmed' => true, 'label' => _OPEN]);
             $areply = (is_moder($conf['name']) || ($isreply && $tstatus))
-                ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&op=add&cat='.$rows[0][2].'&pid='.$topic, 'title' => _TOPICREPLY, 'is_account_button' => true, 'label' => _REPLY])
+                ? $tpl->getHtmlFrag('link', [
+                    'href' => 'index.php?name='.$conf['name'].'&op=add&cat='.$rows[0][2].'&pid='.$topic,
+                    'title' => _TOPICREPLY,
+                    'is_account_button' => true,
+                    'label' => _REPLY,
+                ])
                 : $tpl->getHtmlFrag('inline-badge', ['title_text' => sprintf(_ACINFOP, _NOTCAN), 'is_account_button' => true, 'is_dimmed' => true, 'label' => _REPLY]);
             $pnum = getPageNumbers($conf['name'], $numfor, $numpages, $fornum, 'op=view&id='.$topic.'&', $conf['forum']['pnum'], $num);
             $favor = getFavoriteButton($topic, $conf['name']);
@@ -416,9 +709,20 @@ function view(): void {
                 $amess = $tpl->getHtmlFrag('link', ['href' => '#'.$fid, 'title' => _MESSAGE.': '.$pos, 'label' => (string)$pos, 'is_card_id' => true]);
                 $rank = (!empty($rank)) ? $rank : '';
                 $trank = (!empty($gname)) ? _GROUP.': '.$gname : _RANK;
-                $rlink = (!empty($grank) && file_exists(getThemeImagePath('ranks/'.$grank))) ? $tpl->getHtmlFrag('image', ['src' => getThemeImagePath('ranks/'.$grank), 'alt' => $trank, 'title' => $trank]) : '';
+                $rlink = (!empty($grank) && file_exists(getThemeImagePath('ranks/'.$grank)))
+                    ? $tpl->getHtmlFrag('image', ['src' => getThemeImagePath('ranks/'.$grank), 'alt' => $trank, 'title' => $trank])
+                    : '';
                 $rate = (!empty($uid)) ? getRatingAsync(0, $uid, 'account', $votes, $total, $fid, 1) : '';
-                $utip = getUserTip((string)($gname ?? ''), $point ?? 0, (string)($reg ?? ''), (int)($gender ?? 0), (string)($from ?? ''), (string)($warn ?? ''), empty($nick), (int)$val[3] > 0 && empty($val[4]));
+                $utip = getUserTip(
+                    (string)($gname ?? ''),
+                    $point ?? 0,
+                    (string)($reg ?? ''),
+                    (int)($gender ?? 0),
+                    (string)($from ?? ''),
+                    (string)($warn ?? ''),
+                    empty($nick),
+                    (int)$val[3] > 0 && empty($val[4])
+                );
                 $uname_html = (!empty($nick)) ? user_info($nick, false) : htmlspecialchars($avname, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
                 $fields = getTplViewFieldRows(['field' => $val[8], 'mod' => $conf['name']]);
                 $sig = (!empty($sig)) ? $tpl->getHtmlFrag('block-content', ['is_signature' => true, 'content' => $sig]) : '';
@@ -450,14 +754,12 @@ function view(): void {
                         'icon_name' => 'pencil-square',
                         'is_htmx' => true,
                         'hx_target' => '#repfor'.$fid,
-                        # the token travels in a header rather than in the address, which keeps it out of history, logs and referrers
                         'hx_headers' => getPageToken(),
                     ];
                     $eitems[] = ['href' => 'index.php?name='.$conf['name'].'&op=add&cat='.$fcat.'&id='.$fid.'&pid='.$topic, 'title' => _FULLEDIT, 'icon_name' => 'pencil'];
                 }
                 if ($ismod || ($isdelete && $val[3] == (int)$user[0])) {
                     $eitems[] = [
-                        # A removal is a write, so it is submitted rather than followed: a link would delete on a prefetch and carry its token through history and logs
                         'href' => 'index.php?name='.$conf['name'],
                         'form_id' => 'fdel'.$fid,
                         'hidden' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'delete', 'input_attr' => ''])
@@ -502,8 +804,26 @@ function view(): void {
             $cont .= $tpl->getHtmlFrag('forum-topic-view', ['atopic' => $atopic, 'areply' => $areply, 'pager' => $pnum]);
             if ($ismod) {
                 $selmm = tmoder(1)
-                    .$tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'move', 'extra' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$rows[0][2], 'input_attr' => '']).$tpl->getHtmlFrag('hidden', ['name_attr' => 'id[]', 'value_attr' => (string)$topic, 'input_attr' => '']), 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]);
-                $cont .= $tpl->getHtmlPart('form-wrap', ['action' => 'index.php?name='.$conf['name'], 'content_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getPageToken(), 'input_attr' => '']).$tpl->getHtmlPart('fieldset-panel', ['legend' => _OPMOD, 'is_moder_mass' => true, 'content' => $selmm])]);
+                    .$tpl->getHtmlFrag('form-submit', [
+                        'button_type' => 'submit',
+                        'op' => 'move',
+                        'extra' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$rows[0][2], 'input_attr' => ''])
+                            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'id[]', 'value_attr' => (string)$topic, 'input_attr' => '']),
+                        'name' => '',
+                        'val' => '',
+                        'select' => false,
+                        'show_preview' => false,
+                        'show_delete' => false,
+                        'label_preview' => _PREVIEW,
+                        'label_save' => _SEND,
+                        'label_delete' => _DELETE,
+                        'label' => _OK,
+                    ]);
+                $cont .= $tpl->getHtmlPart('form-wrap', [
+                    'action' => 'index.php?name='.$conf['name'],
+                    'content_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getPageToken(), 'input_attr' => ''])
+                        .$tpl->getHtmlPart('fieldset-panel', ['legend' => _OPMOD, 'is_moder_mass' => true, 'content' => $selmm]),
+                ]);
             }
             if (is_moder($conf['name']) || ($isreply && $tstatus)) $cont .= quickreply($topic, $rows[0][2], $rows[0][5]);
         }
@@ -522,7 +842,13 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
         $rows = (!is_user()) ? $tpl->getHtmlFrag('form-field-row', [
             'label_for' => 'f-postname',
             'label' => _YOURNAME,
-            'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'placeholder="'._YOURNAME.'" required', 'itype' => 'text', 'name_attr' => 'postname', 'input_id' => 'f-postname', 'value_attr' => _ANONYM]),
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'input_attr' => 'placeholder="'._YOURNAME.'" required',
+                'itype' => 'text',
+                'name_attr' => 'postname',
+                'input_id' => 'f-postname',
+                'value_attr' => _ANONYM,
+            ]),
         ]) : '';
         $rows .= $tpl->getHtmlFrag('form-field-row', [
             'label' => _TEXT,
@@ -544,7 +870,23 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$catid, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getPageToken(), 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'posttype', 'value_attr' => 'save', 'input_attr' => '']);
-        $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => '', 'field_html' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'send', 'extra' => $hide, 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _SEND])]);
+        $rows .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => '',
+            'field_html' => $tpl->getHtmlFrag('form-submit', [
+                'button_type' => 'submit',
+                'op' => 'send',
+                'extra' => $hide,
+                'name' => '',
+                'val' => '',
+                'select' => false,
+                'show_preview' => false,
+                'show_delete' => false,
+                'label_preview' => _PREVIEW,
+                'label_save' => _SEND,
+                'label_delete' => _DELETE,
+                'label' => _SEND,
+            ]),
+        ]);
         $cont = $tpl->getHtmlPart('form-add', [
             'action' => 'index.php?name='.$conf['name'],
             'method' => 'post',
@@ -557,9 +899,11 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
     return '';
 }
 
+# Mass moderation moves, hides and deletes topics, so it is a write and answers to the same token rule as the rest
+# A hidden topic stops being visible activity, so whoever advertised it has to be asked again
+# A moved topic only updates the totals: both branches are asked what they really hold once the topic has changed hands
 function move(): void {
     global $db, $conf;
-    # Mass moderation moves, hides and deletes topics, so it is a write and answers to the same rule as the rest
     if (!checkSiteToken()) {
         setRedirect('index.php?name='.$conf['name']);
         return;
@@ -577,16 +921,17 @@ function move(): void {
                 if ((int)$val) {
                     if ($tmove[0] == 's') {
                         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET status = :tmove WHERE id = :val', ['tmove' => $move, 'val' => $val]);
-                        # A hidden topic stops being visible activity, so whoever advertised it has to be asked again
                         setForumLast((int)$catid, (int)$val);
                     } elseif ($tmove[0] == 'd') {
                         delete($catid, $val);
                     } elseif (is_numeric($tmove[0])) {
                         $rcatids = catids($conf['name'], $move);
-                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET cid = :tmove WHERE id = :id_val OR pid = :pid_val', ['tmove' => $move, 'id_val' => $val, 'pid_val' => $val]);
+                        $db->getSqlQuery(
+                            'UPDATE '.PREFIX_DB.'_forum SET cid = :tmove WHERE id = :id_val OR pid = :pid_val',
+                            ['tmove' => $move, 'id_val' => $val, 'pid_val' => $val]
+                        );
                         [$rnpost] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_forum WHERE pid = :val', ['val' => $val]));
                         $wrnpost = ($rnpost) ? ', posts=posts+'.$rnpost : '';
-                        # Only the totals here as well: both branches are asked what they really hold once the topic has changed hands
                         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics=topics+1'.$wrnpost.' WHERE id IN ('.$rcatids.')');
                         $catids = catids($conf['name'], $catid);
                         [$npost] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_forum WHERE pid = :val', ['val' => $val]));
@@ -607,12 +952,14 @@ function add(): void {
     global $db, $user, $conf, $stop, $tpl;
     $cat = getVar('req', 'cat', 'num');
     $catid = $cat;
-    [$ctitle, $authp, $authy, $authe, $authm] = $db->getSqlRow($db->getSqlQuery('SELECT title, ppost, preply, pedit, pmod FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
+    [$ctitle, $authp, $authy, $authe, $authm] = $db->getSqlRow($db->getSqlQuery(
+        'SELECT title, ppost, preply, pedit, pmod FROM '.PREFIX_DB.'_categories WHERE id = :catid',
+        ['catid' => $catid]
+    ));
     $istopic = is_acess($authp);
     $isreply = is_acess($authy);
     $isedit = is_acess($authe);
     $ismod = is_acess($authm);
-
     $form = false;
     $id = getVar('req', 'id', 'num');
     $pid = getVar('req', 'pid', 'num');
@@ -624,13 +971,14 @@ function add(): void {
     $status = 3;
     $time = '';
     $subh = 0;
-
     $where = (is_moder($conf['name'])) ? 'WHERE id = :pid' : 'WHERE id = :pid AND status != \'0\'';
     [$fstatus] = $db->getSqlRow($db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_forum '.$where, ['pid' => $pid]));
-
     if ($conf['forum']['add'] && $id) {
         $fid = $id;
-        [$qpid, $uid, $subject, $time, $hometext, $field, $status] = $db->getSqlRow($db->getSqlQuery('SELECT pid, uid, title, time, body, field, status FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
+        [$qpid, $uid, $subject, $time, $hometext, $field, $status] = $db->getSqlRow($db->getSqlQuery(
+            'SELECT pid, uid, title, time, body, field, status FROM '.PREFIX_DB.'_forum WHERE id = :id',
+            ['id' => $id]
+        ));
         if ($ismod || ($isedit && $uid == (int)$user[0] && $fstatus > 2)) {
             $subh = ($qpid) ? 1 : 0;
             $info = _EDITS.': '.$subject;
@@ -643,22 +991,17 @@ function add(): void {
         $txtold = $hometext;
         $hometext = getVar('post', 'hometext', 'text');
         $hometext = $hometext ?: $txtold;
-
     } elseif ($conf['forum']['add'] && ($istopic || $isreply)) {
         $fid = getVar('post', 'fid', 'num');
-
         $qid = getVar('req', 'qid', 'num');
         $subh = (!empty($pid) || !empty($qpid)) ? 1 : 0;
-
         if ($pid) {
             $id = ($qid) ? $qid : $pid;
             [$ftitle, $ftext, $status] = $db->getSqlRow($db->getSqlQuery('SELECT title, body, status FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
             $form = (is_moder($conf['name'])) ? true : (($fstatus > 2) ? true : false);
-
         } else {
             $form = true;
         }
-
         $subject = getVar('post', 'subject', 'title');
         $subject = $ftitle ?: $subject;
         $hometext = getVar('post', 'hometext', 'text');
@@ -667,7 +1010,6 @@ function add(): void {
         $time = getVar('req', 'time', 'time');
         $info = (!empty($ftext)) ? _PUBLICIN.': '.$ftitle : _PUBLICIN.': '.$ctitle;
         $head = _FORUM.' '.$ctitle.' '.$info;
-
     }
     if ($form) {
         setHead(['title' => $head, 'kind' => 'utility', 'robots' => 'noindex, follow']);
@@ -680,12 +1022,24 @@ function add(): void {
         $rows = (!is_user()) ? $tpl->getHtmlFrag('form-field-row', [
             'label_for' => 'f-postname',
             'label' => _YOURNAME,
-            'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'placeholder="'._YOURNAME.'" required', 'itype' => 'text', 'name_attr' => 'postname', 'input_id' => 'f-postname', 'value_attr' => _ANONYM]),
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'input_attr' => 'placeholder="'._YOURNAME.'" required',
+                'itype' => 'text',
+                'name_attr' => 'postname',
+                'input_id' => 'f-postname',
+                'value_attr' => _ANONYM,
+            ]),
         ]) : '';
         $rows .= ($subh) ? $tpl->getHtmlFrag('hidden', ['name_attr' => 'subject', 'value_attr' => $subject, 'input_attr' => '']) : $tpl->getHtmlFrag('form-field-row', [
             'label_for' => 'f-subject',
             'label' => _TITLE,
-            'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'maxlength="100" placeholder="'._TITLE.'" required', 'itype' => 'text', 'name_attr' => 'subject', 'input_id' => 'f-subject', 'value_attr' => $subject]),
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'input_attr' => 'maxlength="100" placeholder="'._TITLE.'" required',
+                'itype' => 'text',
+                'name_attr' => 'subject',
+                'input_id' => 'f-subject',
+                'value_attr' => $subject,
+            ]),
         ]);
         $rows .= $tpl->getHtmlFrag('form-field-row', [
             'label' => _TEXT,
@@ -702,13 +1056,33 @@ function add(): void {
             ]),
         ]);
         $rows .= getTplFieldsIn(['field' => $field, 'mod' => $conf['name'], 'new' => !$fid]);
-        $rows .= ($ismod) ? $tpl->getHtmlFrag('form-field-row', ['label' => _OPMOD, 'field_html' => pmoder($status, $subh)]).$tpl->getHtmlFrag('form-field-row', ['label' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])]) : '';
+        $rows .= ($ismod)
+            ? $tpl->getHtmlFrag('form-field-row', ['label' => _OPMOD, 'field_html' => pmoder($status, $subh)])
+                .$tpl->getHtmlFrag('form-field-row', ['label' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])])
+            : '';
         $hide = $tpl->getHtmlFrag('hidden', ['name_attr' => 'id', 'value_attr' => (string)$id, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'fid', 'value_attr' => (string)$fid, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'pid', 'value_attr' => (string)$pid, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$catid, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getPageToken(), 'input_attr' => '']);
-        $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => '', 'field_html' => $hide.$tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK])]);
+        $rows .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => '',
+            'field_html' => $hide
+                .$tpl->getHtmlFrag('form-submit', [
+                    'button_type' => 'submit',
+                    'op' => 'send',
+                    'extra' => '',
+                    'name' => '',
+                    'val' => '',
+                    'select' => true,
+                    'show_preview' => true,
+                    'show_delete' => false,
+                    'label_preview' => _PREVIEW,
+                    'label_save' => _SEND,
+                    'label_delete' => _DELETE,
+                    'label' => _OK,
+                ]),
+        ]);
         $cont .= $tpl->getHtmlPart('form-add', [
             'action' => 'index.php?name='.$conf['name'],
             'method' => 'post',
@@ -749,9 +1123,10 @@ function pmoder(int|string $status, int $subh): string {
     return $tpl->getHtmlFrag('select', ['name_attr' => 'status', 'options_html' => $opts, 'select_attr' => 'title="'._CHECKOP.'"']);
 }
 
+# Both forms that reach this handler carry the token of the page they were rendered on, and neither may write without it
+# The letter limit bounds the longest word of the post in characters; a limit of zero bounds no word at all
 function send(): void {
     global $db, $user, $conf, $stop, $tpl, $mailer, $pnt;
-    # Both forms that reach this handler carry the token of the page they were rendered on, and neither may write without it
     if (!checkSiteToken()) {
         setHead(['title' => _FORUM, 'kind' => 'utility', 'robots' => 'noindex, follow']);
         echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _TOKENMISS]);
@@ -761,27 +1136,26 @@ function send(): void {
     $cat = getVar('req', 'cat', 'num');
     $catid = $cat;
     if ($conf['forum']['add'] && $catid) {
-        [$ctitle, $authp, $authy, $authe, $authm] = $db->getSqlRow($db->getSqlQuery('SELECT title, ppost, preply, pedit, pmod FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
+        [$ctitle, $authp, $authy, $authe, $authm] = $db->getSqlRow($db->getSqlQuery(
+            'SELECT title, ppost, preply, pedit, pmod FROM '.PREFIX_DB.'_categories WHERE id = :catid',
+            ['catid' => $catid]
+        ));
         $istopic = is_acess($authp);
         $isreply = is_acess($authy);
         $isedit = is_acess($authe);
         $ismod = is_acess($authm);
-
         $fid = getVar('post', 'fid', 'num');
         $id = $fid;
         $pid = getVar('post', 'pid', 'num');
         $postname = filterText(substr(getVar('post', 'postname', 'text'), 0, 25));
         $subject = getVar('post', 'subject', 'text');
         $hometext = getVar('post', 'hometext', 'text');
-
-        # The longest word of the post in characters, which is what the letter limit bounds; a limit of zero bounds no word at all
         $size = 0;
         foreach (preg_split('/\s+/u', $hometext, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $word) {
             $size = max($size, mb_strlen($word));
         }
         $long = intval($conf['forum']['letter']);
         $status = getVar('post', 'status', 'num', 0);
-
         [$fold] = $id ? ($db->getSqlRow($db->getSqlQuery('SELECT field FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id])) ?: ['']) : [''];
         $flds = getFieldsPost($conf['name'], (string)$fold);
         $field = $flds['json'];
@@ -790,7 +1164,6 @@ function send(): void {
         $ip = getIp();
         $fpid = 0;
         $lpid = 0;
-
         $stop = [];
         if (!$subject) $stop[] = _CERROR;
         if (!$hometext) $stop[] = _CERROR1;
@@ -798,11 +1171,9 @@ function send(): void {
         if (!$postname && !is_user()) $stop[] = _CERROR3;
         if ($room = checkEditorTextRoom($hometext, 'forum.body')) $stop[] = $room;
         $stop = array_merge($stop, $flds['stop']);
-
         if (!$stop && getVar('post', 'posttype', 'var') == 'save') {
             $where = (is_moder($conf['name'])) ? 'WHERE id = :pid' : 'WHERE id = :pid AND status != \'0\'';
             [$fstatus] = $db->getSqlRow($db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_forum '.$where, ['pid' => $pid]));
-
             if ($id) {
                 [$fpid, $uid, $ftime, $fwas] = $db->getSqlRow($db->getSqlQuery('SELECT pid, uid, time, status FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
                 $ftop = !$fpid;
@@ -810,14 +1181,20 @@ function send(): void {
                 if ($ismod || ($isedit && $uid == (int)$user[0] && $fstatus > 2)) {
                     $ftime = ($ismod) ? $time : $ftime;
                     if ($ismod) {
-                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET title = :subject, time = :ftime, body = :body, field = :field, euid = :postid, eip = :ip, etime = NOW(), status = :status WHERE id = :id', ['subject' => $subject, 'ftime' => $ftime, 'body' => $hometext, 'field' => $field, 'postid' => $postid, 'ip' => $ip, 'status' => $status, 'id' => $id]);
+                        $db->getSqlQuery(
+                            'UPDATE '.PREFIX_DB.'_forum'
+                                .' SET title = :subject, time = :ftime, body = :body, field = :field, euid = :postid, eip = :ip, etime = NOW(), status = :status WHERE id = :id',
+                            ['subject' => $subject, 'ftime' => $ftime, 'body' => $hometext, 'field' => $field, 'postid' => $postid, 'ip' => $ip, 'status' => $status, 'id' => $id]
+                        );
                         $fsrc = ($ftop ? 'topic:' : 'post:').$id;
                         if ($uid && $status && !$fwas) $pnt->addEvent($ftop ? 'publish' : 'comment', 'forum.topic', $fsrc, (int)$uid, ['mid' => (int)$fpid]);
                     } else {
-                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET title = :subject, time = :ftime, body = :body, field = :field, euid = :postid, eip = :ip, etime = NOW() WHERE id = :id', ['subject' => $subject, 'ftime' => $ftime, 'body' => $hometext, 'field' => $field, 'postid' => $postid, 'ip' => $ip, 'id' => $id]);
+                        $db->getSqlQuery(
+                            'UPDATE '.PREFIX_DB.'_forum SET title = :subject, time = :ftime, body = :body, field = :field, euid = :postid, eip = :ip, etime = NOW() WHERE id = :id',
+                            ['subject' => $subject, 'ftime' => $ftime, 'body' => $hometext, 'field' => $field, 'postid' => $postid, 'ip' => $ip, 'id' => $id]
+                        );
                     }
                 }
-
             } else {
                 if ($ismod) {
                     $userinfo = getUserInfo();
@@ -832,25 +1209,40 @@ function send(): void {
                     $status = ($conf['forum']['anonpost'] == 1) ? (($pid) ? 1 : 3) : 0;
                 }
                 $insert = false;
-
                 if ($pid && $isreply) {
                     $insert = (is_moder($conf['name'])) ? true : (($fstatus > 2) ? true : false);
-
                 } elseif ($istopic) {
                     $insert = true;
                 }
-
                 if ($insert) {
                     $catids = catids($conf['name'], $catid);
                     $db->getSqlQuery(
-                        'INSERT INTO '.PREFIX_DB.'_forum (id, pid, cid, uid, name, title, time, body, field, ip, luid, lname, ltime, status) VALUES (NULL, :pid, :catid, :postid, :postname, :subject, :time, :body, :field, :ip, :luid, :lname, :ltime, :status)',
-                        ['pid' => $pid, 'catid' => $catid, 'postid' => $postid, 'postname' => $postname, 'subject' => $subject, 'time' => $time, 'body' => $hometext, 'field' => $field, 'ip' => $ip, 'luid' => $postid, 'lname' => $postname, 'ltime' => $time, 'status' => $status]
+                        'INSERT INTO '.PREFIX_DB.'_forum (id, pid, cid, uid, name, title, time, body, field, ip, luid, lname, ltime, status)'
+                            .' VALUES (NULL, :pid, :catid, :postid, :postname, :subject, :time, :body, :field, :ip, :luid, :lname, :ltime, :status)',
+                        [
+                            'pid' => $pid,
+                            'catid' => $catid,
+                            'postid' => $postid,
+                            'postname' => $postname,
+                            'subject' => $subject,
+                            'time' => $time,
+                            'body' => $hometext,
+                            'field' => $field,
+                            'ip' => $ip,
+                            'luid' => $postid,
+                            'lname' => $postname,
+                            'ltime' => $time,
+                            'status' => $status,
+                        ]
                     );
                     $lpid = intval($db->getSqlLastId());
                     [$ltime] = $db->getSqlRow($db->getSqlQuery('SELECT time FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $lpid])) ?: [''];
                     if ($pid) {
                         $lname = (isset($uname) && $uname) ? $uname : $postname;
-                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET luid = :postid, lname = :lname, lpost = :lpost, ltime = :time WHERE id = :pid', ['postid' => $postid, 'lname' => $lname, 'lpost' => $lpid, 'time' => $time, 'pid' => $pid]);
+                        $db->getSqlQuery(
+                            'UPDATE '.PREFIX_DB.'_forum SET luid = :postid, lname = :lname, lpost = :lpost, ltime = :time WHERE id = :pid',
+                            ['postid' => $postid, 'lname' => $lname, 'lpost' => $lpid, 'time' => $time, 'pid' => $pid]
+                        );
                         addForumCount($pid);
                         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET posts = posts+1, lpost = :pid WHERE id IN ('.$catids.')', ['pid' => $pid]);
                         if ($conf['forum']['addmail']) {
@@ -871,7 +1263,10 @@ function send(): void {
                         if (strtotime($ltime) > time()) {
                             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics+1, posts = posts+1 WHERE id IN ('.$catids.')');
                         } else {
-                            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics+1, posts = posts+1, lpost = :lpost WHERE id IN ('.$catids.')', ['lpost' => $lpid]);
+                            $db->getSqlQuery(
+                                'UPDATE '.PREFIX_DB.'_categories SET topics = topics+1, posts = posts+1, lpost = :lpost WHERE id IN ('.$catids.')',
+                                ['lpost' => $lpid]
+                            );
                         }
                         if ($postid && $status) $pnt->addEvent('publish', 'forum.topic', 'topic:'.$lpid, (int)$postid, ['mid' => (int)$lpid]);
                     }
@@ -888,10 +1283,13 @@ function send(): void {
     }
 }
 
+# A request that names its own target must carry the token; a call from move() was already checked by the handler that owns the request
+# Deleting a whole topic only updates the category totals: which topic each category advertises is settled by setForumLast() once the rows have really left
+# The branch is asked for its last message only once the rows have gone or moved, otherwise it would still answer with what was just removed
+# A removed topic also invalidates every category that pointed at it, which a walk from this one would never reach
 function delete(int|string|null $catid = null, int|string|null $id = null): void {
     global $db, $user, $conf, $pnt;
     $hasargs = ($catid !== null || $id !== null);
-    # A request that names its own target must carry the token; a call from move() was already checked by the handler that owns the request
     if (!$hasargs && !checkSiteToken()) {
         setRedirect('index.php?name='.$conf['name']);
         return;
@@ -903,11 +1301,12 @@ function delete(int|string|null $catid = null, int|string|null $id = null): void
         [$authd, $authm] = $db->getSqlRow($db->getSqlQuery('SELECT pdelete, pmod FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
         $isdelete = is_acess($authd);
         $ismod = is_acess($authm);
-
         [$pid, $uid] = $db->getSqlRow($db->getSqlQuery('SELECT pid, uid FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
-        if ($ismod || ($isdelete && $uid == (int)$user[0])) {
+        $may = $ismod || ($isdelete && $uid == (int)$user[0]);
+        $own = $may && $db->setSqlBegin();
+        if ($may && !$own) setFlash(_ERROR, true);
+        if ($own) {
             $recycle = (int)$conf['forum']['recycle'];
-
             if ($recycle && $recycle != $catid) {
                 $rcatids = catids($conf['name'], $recycle);
                 if ($pid) {
@@ -920,42 +1319,42 @@ function delete(int|string|null $catid = null, int|string|null $id = null): void
                     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics+1'.$wrnpost.', lpost = :id WHERE id IN ('.$rcatids.')', ['id' => $id]);
                 }
             }
-
             $catids = catids($conf['name'], $catid);
-
             if ($pid) {
                 [$lid] = $db->getSqlRow($db->getSqlQuery('SELECT lpost FROM '.PREFIX_DB.'_forum WHERE id = :pid', ['pid' => $pid]));
                 if ($lid == $id) {
-                    [$lid, $luid, $lname, $ltime] = $db->getSqlRow($db->getSqlQuery('SELECT id, uid, name, time FROM '.PREFIX_DB.'_forum WHERE pid = :pid1 OR id = :pid2 ORDER BY id DESC LIMIT 1', ['pid1' => $pid, 'pid2' => $pid]));
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET luid = :luid, lname = :lname, lpost = :lid, ltime = :ltime WHERE id = :pid', ['luid' => $luid, 'lname' => $lname, 'lid' => $lid, 'ltime' => $ltime, 'pid' => $pid]);
+                    [$lid, $luid, $lname, $ltime] = $db->getSqlRow($db->getSqlQuery(
+                        'SELECT id, uid, name, time FROM '.PREFIX_DB.'_forum WHERE pid = :pid1 OR id = :pid2 ORDER BY id DESC LIMIT 1',
+                        ['pid1' => $pid, 'pid2' => $pid]
+                    ));
+                    $db->getSqlQuery(
+                        'UPDATE '.PREFIX_DB.'_forum SET luid = :luid, lname = :lname, lpost = :lid, ltime = :ltime WHERE id = :pid',
+                        ['luid' => $luid, 'lname' => $lname, 'lid' => $lid, 'ltime' => $ltime, 'pid' => $pid]
+                    );
                 }
                 addForumCount($pid);
                 $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET posts = posts-1 WHERE id IN ('.$catids.')');
-
             } else {
-                # Only the totals here: which topic each category advertises is settled by setForumLast() once the rows have really left
                 [$npost] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_forum WHERE pid = :id', ['id' => $id]));
                 $wnpost = ($npost) ? ', posts=posts-'.$npost : '';
                 $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics-1'.$wnpost.' WHERE id IN ('.$catids.')');
             }
-
+            $kept = true;
             if (!$recycle || $recycle == $catid) {
-                $own = $db->setSqlBegin();
                 $act = $pid ? 'comment' : 'publish';
-                $rid = ($own && $uid) ? $pnt->getEventId($act, 'forum.topic', ($pid ? 'post:' : 'topic:').$id, (int)$uid) : 0;
-                if ($rid === 0 && !$pid && $own && $uid && ($rid = $pnt->getEventId('comment', 'forum.topic', 'post:'.$id, (int)$uid))) $act = 'comment';
-                if ($rid) $pnt->addEvent($act, 'forum.topic', 'reverse:'.$rid, (int)$uid, ['rid' => $rid, 'mid' => (int)($pid ?: $id)]);
+                $rid = $uid ? $pnt->getEventId($act, 'forum.topic', ($pid ? 'post:' : 'topic:').$id, (int)$uid) : 0;
+                if ($rid === 0 && !$pid && $uid && ($rid = $pnt->getEventId('comment', 'forum.topic', 'post:'.$id, (int)$uid))) $act = 'comment';
+                $kept = $rid !== false && (!$rid || $pnt->addEvent($act, 'forum.topic', 'reverse:'.$rid, (int)$uid, ['rid' => $rid, 'mid' => (int)($pid ?: $id)]));
                 [$fid] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_favorites WHERE fid = :id AND modul = 'forum'", ['id' => $id]));
                 if ($fid) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE id = :fid', ['fid' => $fid]);
                 $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_forum WHERE id = :id1 OR pid = :id2', ['id1' => $id, 'id2' => $id]);
-                if ($own && !$db->setSqlCommit()) $db->setSqlRollback();
             }
-
-            # Run once the rows have gone or moved, otherwise the branch would still answer with what was just removed
-            # A removed topic also invalidates every category that pointed at it, which a walk from this one would never reach
+            if (!$kept || !$db->setSqlCommit()) {
+                $db->setSqlRollback();
+                setFlash(_ERROR, true);
+            }
             setForumLast((int)$catid, $pid ? 0 : (int)$id);
         }
-
         $lid = ($pid) ? $pid.'&last=1#'.$lid : '';
         $link = ($lid) ? '&op=view&id='.$lid : '&cat='.$catid;
         if (!$hasargs) setRedirect('index.php?name='.$conf['name'].$link);

@@ -10,6 +10,8 @@ return (new Config())
     ->setRules([
         'array_syntax' => ['syntax' => 'short'],
         'concat_space' => ['spacing' => 'none'],
+        'indentation_type' => true,
+        'list_syntax' => ['syntax' => 'short'],
         'no_closing_tag' => true,
         'no_trailing_whitespace' => true,
         'no_trailing_whitespace_in_comment' => true,

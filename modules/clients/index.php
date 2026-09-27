@@ -80,6 +80,7 @@ function clients(): void {
     setFoot();
 }
 
+# Streams the client archive, building it on first request by hiding license fingerprints in template images and writing the license file before compressing
 function download(): void {
     global $db, $user, $stop, $info;
     $uid = (int)($user[0] ?? 0);
@@ -96,15 +97,23 @@ function download(): void {
             $ipath = UPLOADS_DIR.'/clients/images';
             $path = UPLOADS_DIR.'/clients/'.$url;
             $code = base64_encode($uid.'-'.getip().'-'.getagent());
-
-            # Шифруем файлы
-            $input = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S' ,'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '='];
-            $output = ['{', '©', '"', '§', '$', 'Ц', '&', '/', '(', '', '№', 'Ў', '<', '%', '‹', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'е', 'B', 'ш', 'D', 'E', 'я', 'G', 'д', 'I', 'J', 'K', 'L', '‡', 'Ш', 'O', 'Ж', 'Q', '·', 'В' ,'!', 'U', '†', '¶', 'X', 'Y', 'Z', 'ї'];
+            $input = [
+                'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G',
+                'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '=',
+            ];
+            $output = [
+                '{', '©', '"', '§', '$', 'Ц', '&', '/', '(', '', '№', 'Ў', '<', '%', '‹', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'е', 'B', 'ш', 'D', 'E', 'я', 'G',
+                'д', 'I', 'J', 'K', 'L', '‡', 'Ш', 'O', 'Ж', 'Q', '·', 'В', '!', 'U', '†', '¶', 'X', 'Y', 'Z', 'ї',
+            ];
             $sourse = str_replace($input, $output, $code);
-            if (file_exists($path.'/html/templates/admin/images/admin/admins.png')) hidden($path.'/html/templates/admin/images/admin/admins.png', $ipath.'/admins.png', $sourse.'IEND®B`‚');
+            if (file_exists($path.'/html/templates/admin/images/admin/admins.png')) {
+                hidden($path.'/html/templates/admin/images/admin/admins.png', $ipath.'/admins.png', $sourse.'IEND®B`‚');
+            }
             if (file_exists($path.'/html/templates/admin/images/admin/forum.png')) hidden($path.'/html/templates/admin/images/admin/forum.png', $ipath.'/forum.png', $code);
             if (file_exists($path.'/html/templates/admin/images/flags/de.svg')) hidden($path.'/html/templates/admin/images/flags/de.svg', $ipath.'/de.svg', $code);
-            if (file_exists($path.'/html/templates/admin/images/admin/menu.png')) hidden($path.'/html/templates/admin/images/admin/menu.png', $ipath.'/menu.png', $sourse.'IEND®B`‚'.$code);
+            if (file_exists($path.'/html/templates/admin/images/admin/menu.png')) {
+                hidden($path.'/html/templates/admin/images/admin/menu.png', $ipath.'/menu.png', $sourse.'IEND®B`‚'.$code);
+            }
 
             if (file_exists($path.'/html/config/license.txt')) generator($path.'/html/config');
             if (file_exists($path.'/setup/config/license.txt')) generator($path.'/setup/config');
@@ -135,8 +144,8 @@ function download(): void {
     }
 }
 
+# Reads the source file, appends the code to its content, rewrites the target and restores the source modification time on it
 function hidden(string $path, string $ipath, string $code): void {
-    # Читаем и перезаписываем файл
     $content = file_get_contents($ipath);
     if ($content === false) return;
     $code = $content.$code;
@@ -144,7 +153,6 @@ function hidden(string $path, string $ipath, string $code): void {
     if ($fp === false) return;
     fwrite($fp, $code);
     fclose($fp);
-    # Меняем время файла
     $atime = filemtime($ipath);
     if ($atime !== false) {
         touch($path, $atime, $atime);
@@ -171,7 +179,11 @@ function generator(string $path = ''): void {
         }
         $code .= md5($pass.'localhost'.$pass)."\n";
         $code .= md5($pass.'127.0.0.1'.$pass);
-        $dir = ($path) ? (preg_match('#^(?:[A-Za-z]:/|//|/)#', str_replace('\\', '/', $path)) ? str_replace('\\', '/', $path) : BASE_DIR.'/'.ltrim(str_replace('\\', '/', $path), '/')) : UPLOADS_DIR.'/clients/thumb/';
+        $dir = ($path)
+            ? (preg_match('#^(?:[A-Za-z]:/|//|/)#', str_replace('\\', '/', $path))
+                ? str_replace('\\', '/', $path)
+                : BASE_DIR.'/'.ltrim(str_replace('\\', '/', $path), '/'))
+            : UPLOADS_DIR.'/clients/thumb/';
         $nfile = ($path) ? 'license' : $uid;
         $fp = fopen($dir.'/'.$nfile.'.txt', 'wb');
         if ($fp === false) {

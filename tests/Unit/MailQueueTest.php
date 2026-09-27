@@ -9,11 +9,7 @@ use ReflectionMethod;
 
 require_once BASE_DIR.'/core/classes/pdo.php';
 
-/**
- * A statement double, because Database returns PDOStatement|false and PDOStatement itself cannot be
- * instantiated. Nothing is ever read from it — the class under test reads rows through the database
- * wrapper, which this double answers directly.
- */
+# A statement double that is never read, because PDOStatement cannot be built and the class under test reads rows through the database wrapper
 final class MailQueueStatement extends PDOStatement
 {
     public function __construct()
@@ -21,11 +17,7 @@ final class MailQueueStatement extends PDOStatement
     }
 }
 
-/**
- * A recording database: every statement the Mail class issues is captured with its parameters, and
- * the rows a read returns are handed in by the test. No connection is opened, so the queue contract
- * is asserted on the SQL that would run rather than on a database that has to exist.
- */
+# A recording database that captures every statement of the Mail class with its parameters and hands out test rows, with no connection ever opened
 final class MailQueueDatabase extends \Database
 {
     public array $sql = [];
@@ -72,14 +64,7 @@ final class MailQueueDatabase extends \Database
     }
 }
 
-/**
- * Stage 2 of docs/MAIL-2026.md: addQueue() stores instead of sending, and the drain claims, records
- * and prunes. What is asserted here is the contract that does not need a database — the statement
- * each step issues, the bounds every stored value is held to, and that no public method delivers.
- * The behaviour that only a real engine can answer — an atomic claim, a backoff that actually
- * expires, a prune that removes exactly the rows past the window — is driven against the live
- * database by tests/Support/mail_probe.php and asserted in MailDrainTest.
- */
+# The queue contract that needs no database: addQueue() stores instead of sending, the statement of every step, the bounds of stored values, no public delivery
 final class MailQueueTest extends TestCase
 {
     public static function setUpBeforeClass(): void
@@ -93,6 +78,7 @@ final class MailQueueTest extends TestCase
     }
 
     # Build a Mail service over a recording database and a given mail config section
+    # An atomic claim, a backoff that really expires and an exact prune need a real engine and are asserted in MailDrainTest through tests/Support/mail_probe.php
     private function getMail(MailQueueDatabase $db, array $conf = []): \Mail
     {
         return new \Mail($db, ['sitename' => 'SLAED CMS', 'mail' => $conf]);

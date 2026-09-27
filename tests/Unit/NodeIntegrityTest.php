@@ -7,16 +7,14 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * The integrity rules that only a real request reaches. The behaviour is driven by tests/Support/route_probe.php with the
- * argument intact: the disposable database and scratch configuration of the integrations with the points of the data update switched on, real HTTP
- * requests of the main administrator, a user and a guest, and the rows each request leaves checked by SQL. The class side of these rules - comments of a
- * deleted material, remains of gone owners, the journal after a commit - is held by NodeServiceTest and NodeConfigTest.
- */
+# The integrity rules of Node that only a real request reaches, driven by tests/Support/route_probe.php with the argument intact
 final class NodeIntegrityTest extends TestCase
 {
     private static array $probe = [];
 
+    # The probe runs the disposable database and scratch configuration of the integrations with the points of the data update switched on
+    # Real HTTP requests of the main administrator, a user and a guest are sent, and the rows each request leaves are checked by SQL
+    # The class side of these rules - comments of a deleted material, remains of gone owners, the journal after a commit - is held by NodeServiceTest and NodeConfigTest
     # Run the probe once in its intact mode and memoize the run; the only error the run may log is the refusal of the trigger that breaks one block save
     private function getRun(): array
     {
@@ -36,14 +34,17 @@ final class NodeIntegrityTest extends TestCase
         return self::$probe;
     }
 
-    # A manual correction of the balance is keyed by the form that carries it, so sending the same form twice applies it once
+    # A manual correction of the balance is keyed by the form that carries it: the same form sent again with another amount is refused with its own text and a fresh key
     #[Test]
     public function aPointCorrectionAppliesOncePerForm(): void
     {
         $run = $this->getRun()['adjust'];
         $this->assertTrue($run['key'], 'The account form carries no key of its correction');
-        $this->assertSame([303, 303], $run['codes'], 'A valid correction did not save');
+        $this->assertSame([303, 200], $run['codes'], 'A valid correction did not save, or its repeat was not refused');
         $this->assertSame([$run['was'][0] + 5, $run['was'][1] + 1], $run['now'], 'The repeated form applied the correction twice');
+        preg_match("#define\\('_POINTS_TWICE','([^']+)'\\)#", (string)file_get_contents(dirname(__DIR__, 2).'/admin/lang/ru.php'), $hit);
+        $this->assertStringContainsString($hit[1] ?? '?', $run['say'][1], 'The repeat answered an empty success instead of its own text');
+        $this->assertTrue($run['fresh'], 'The refused repeat kept the key of the stored correction');
     }
 
     # A note the points journal would refuse - too long or with markup - refuses the whole form before the profile is written, and the form keeps its key
@@ -78,8 +79,8 @@ final class NodeIntegrityTest extends TestCase
         $this->assertSame([303, true, [0, 0, 2, 2]], $run['annul']['again'], 'A repeated annulment moved the aggregate');
     }
 
-    # The category screen decides by the registry of types, so a category of a type whose configuration no longer reads is refused rather than
-    # deleted by the raw statements of an old module; once the type reads again the same request deletes it through the writer
+    # The category screen decides by the registry of types, so a category of a type whose configuration no longer reads is refused rather than deleted raw by an old module
+    # Once the type reads again the same request deletes it through the writer
     #[Test]
     public function aCategoryOfABrokenTypeIsNotDeletedRaw(): void
     {
@@ -93,8 +94,8 @@ final class NodeIntegrityTest extends TestCase
         $this->assertSame([true, 'held', 200, 2, 0], $this->getRun()['favrace'], 'Two parallel stars passed the limit of favorites together');
     }
 
-    # A loop stored in the categories of a type no longer spins the category screen or RSS, and the form of a material keeps its category from the loop;
-    # a branch under a lost parent stands at the top level with its subcategory indented below it
+    # A loop stored in the categories of a type no longer spins the category screen or RSS, and the form of a material keeps its category from the loop
+    # A branch under a lost parent stands at the top level with its subcategory indented below it
     #[Test]
     public function aStoredCategoryLoopKeepsThePagesAlive(): void
     {

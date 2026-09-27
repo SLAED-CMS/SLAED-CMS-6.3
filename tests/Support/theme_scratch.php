@@ -4,10 +4,10 @@
 # License: MIT
 # Website: slaed.net
 
-# The lifecycle of a scratch theme, which is the theme contract of docs/TEMPLATES.md carried out in code: copy an etalon whole,
-# repaint only the API block of its base.css, and remove the copy afterwards against a path this file built and never one it guessed
-# It lives here rather than inside a test because two gates ask the same question of the same copy - the static half in
-# ThemeCreationTest and the HTTP half the screenshot runner drives - and a lifecycle spelled twice drifts into two lifecycles
+# The lifecycle of a scratch theme, which is the theme contract of docs/TEMPLATES.md carried out in code: copy an etalon whole and repaint only its API block
+# The API block lives in its base.css, and the copy is removed afterwards against a path this file built and never one it guessed
+# It lives here rather than inside a test because two gates ask the same question of the same copy: ThemeCreationTest and the screenshot runner
+# A lifecycle spelled twice drifts into two lifecycles
 require_once dirname(__DIR__, 2).'/tools/ui-audit.php';
 
 # Copy one etalon under a name nothing else uses and repaint its palette, which is the whole of "creating a theme"
@@ -33,8 +33,8 @@ function setScratchTree(string $from, string $to): void {
 }
 
 # Remove a scratch theme, refusing any path that is not one of ours: the guard is the name this file writes, not the caller's word
-# The guard is asked once, of the root, and the walk below it carries none: a check that has to pass for every nested directory
-# refuses the first one and leaves the tree half removed, which is how a copy outlives the test that made it
+# The guard is asked once, of the root, and the walk below it carries none: a check that has to pass for every nested directory refuses the first one
+# That would leave the tree half removed, which is how a copy outlives the test that made it
 function deleteScratchTheme(string $path): bool {
     $safe = str_replace('\\', '/', $path);
     if (!preg_match('#/templates/scratch-([0-9a-f]{8})$#', $safe, $name) || !is_dir($path)) return false;
@@ -60,9 +60,9 @@ function deleteScratchTree(string $path): void {
 }
 
 # Repaint every colour of the API block by turning its hue half way round and then pulling it back to the relative luminance it had
-# Hue alone does not hold a contrast ratio: the three channels carry different weight, so the same HSL lightness in orange is brighter
-# than in blue and #111827 turned to #272011 gains half again as much luminance. Luminance is what a ratio is made of, so a repaint that
-# holds it holds every pair the etalon measured, in both halves of light-dark() and without a browser to ask
+# Hue alone does not hold a contrast ratio: the three channels carry different weight, so the same HSL lightness in orange is brighter than in blue
+# The colour #111827 turned to #272011 gains half again as much luminance
+# Luminance is what a ratio is made of, so a repaint that holds it holds every pair the etalon measured, in both halves of light-dark() without a browser
 function setScratchPalette(string $file): void {
     $text = str_replace("\r\n", "\n", (string)file_get_contents($file));
     $mark = strpos($text, getContract()['marker']);

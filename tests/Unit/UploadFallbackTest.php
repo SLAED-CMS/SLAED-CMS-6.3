@@ -5,14 +5,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * docs/UPLOAD-FILEINFO-PLAN-2026.md: the upload half of a PHP build without the Fileinfo extension.
- * tests/Support/upload_probe.php drives the class through a subclass whose type reader is gone while GD,
- * cURL, zlib and the archive extension of this machine stay available, so the structural fallback is the
- * only thing left to judge a file by. Every fixture is a real file of its format, built by the probe with
- * the blocks, sizes and checksums its container defines; a body that only carries the opening signature
- * of a format is one of the rejection cases here rather than a fixture.
- */
+# The plan docs/UPLOAD-FILEINFO-PLAN-2026.md: the upload half of a PHP build without the Fileinfo extension
 final class UploadFallbackTest extends TestCase
 {
     private static array $probe = [];
@@ -27,6 +20,9 @@ final class UploadFallbackTest extends TestCase
     # The only pairs whose bodies really are one and the same format, so a body of the one is a valid file of the other and may not be counted as a substitution
     private const ALIAS = ['jpg' => ['jpeg'], 'jpeg' => ['jpg'], 'ogg' => ['oga'], 'oga' => ['ogg'], 'opus' => ['ogg', 'oga']];
 
+    # The probe tests/Support/upload_probe.php drives the class through a subclass whose type reader is gone while GD, cURL, zlib and the archive extension stay
+    # The structural fallback is then the only thing left to judge a file by
+    # Every fixture is a real file of its format with the blocks, sizes and checksums its container defines; a bare opening signature is a rejection case
     # Run one probe scenario in a fresh process and memoize its report
     private function getProbe(string $mode): array
     {

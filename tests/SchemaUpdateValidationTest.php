@@ -1,13 +1,7 @@
 <?php
-/**
- * Validates that update SQL references only tables present in table.sql, and that every column the
- * update declares carries the definition the fresh schema gives it. A fresh install and an upgraded
- * one must end on the same table: where the two files disagree, one of the two installations is
- * wrong and nothing at runtime can tell which.
- */
-
 use PHPUnit\Framework\TestCase;
 
+# Checks that update SQL references only tables of table.sql and declares every column exactly as the fresh schema does
 class SchemaUpdateValidationTest extends TestCase
 {
     private static string $basePath;
@@ -45,26 +39,18 @@ class SchemaUpdateValidationTest extends TestCase
                 self::$columns[strtolower($block[1])][strtolower($column[1])] = self::normalizeType($column[2]);
             }
         }
-
-        // 'modules' table is deprecated and not part of schema anymore.
     }
 
-    /**
-     * Reduce one column definition to the form two files can be compared in: collapsed whitespace,
-     * one case, and BOOLEAN spelled as the TINYINT(1) the server stores it as either way.
-     */
+    # Reduces a column definition to a comparable form: collapsed whitespace, one case and BOOLEAN spelled as the TINYINT(1) the server stores
+    # It also drops an AFTER or FIRST placement clause: that says where the column goes, not what it is, and column order is asserted on its own
     private static function normalizeType(string $type): string
     {
         $type = strtoupper(trim(preg_replace('/\s+/', ' ', $type)));
-        # A placement clause says where the column goes, not what it is, and column order is asserted on its own
         $type = trim(preg_replace('/\s+(?:AFTER\s+`?[A-Z0-9_]+`?|FIRST)$/', '', $type));
         return preg_replace('/\bBOOLEAN\b/', 'TINYINT(1)', $type);
     }
 
-    /**
-     * The update channels this test reads, as relative path => absolute path. Every one of them
-     * declares columns of the same tables an installation also reaches through setup/sql/table.sql.
-     */
+    # Lists the update channels this test reads as relative path => absolute path; each declares columns of tables that table.sql also creates
     private static function getUpdateFiles(): array
     {
         $out = [];
@@ -77,12 +63,9 @@ class SchemaUpdateValidationTest extends TestCase
         return $out;
     }
 
-    /**
-     * Every column definition the update file declares, as [table, column, definition, line].
-     * Three shapes count: the MODIFY of an ALTER, and the definition handed to the addcol or the
-     * modcol procedure. modcol is the conditional MODIFY, so what it forces a column onto is a
-     * declaration of that column exactly like the other two.
-     */
+    # Collects every column definition of the update file as [table, column, definition, line]
+    # Three shapes count: the MODIFY of an ALTER and the definition handed to the addcol or the modcol procedure
+    # The modcol procedure is the conditional MODIFY, so what it forces a column onto is a declaration exactly like the other two
     private static function getUpdateColumns(string $content): array
     {
         $out = [];
@@ -110,6 +93,8 @@ class SchemaUpdateValidationTest extends TestCase
     }
 
     # A named constraint carries the prefix too but is no table, so its name is stripped before the table references are checked
+    # A table the upgrade only drops must be absent from the fresh schema, so its name is read out of the reference before the check runs
+    # The deprecated modules table is skipped, since it is no longer part of the schema
     public function testUpdateSqlTablesExistInSchema(): void
     {
         $updateFile = self::$basePath.'/setup/sql/table_update6_3.sql';
@@ -124,7 +109,6 @@ class SchemaUpdateValidationTest extends TestCase
         }
 
         $content = file_get_contents($updateFile);
-        # A table the upgrade only drops must be absent from the fresh schema, so its name is read out of the reference before the check runs
         preg_match_all('/DROP\s+TABLE\s+IF\s+EXISTS\s+`\{prefix\}_([a-z0-9_]+)`/i', $content, $drops);
         $content = preg_replace('/DROP\s+TABLE\s+IF\s+EXISTS\s+`\{prefix\}_[a-z0-9_]+`/i', 'DROP TABLE', $content);
         $content = preg_replace('/CONSTRAINT\s+`\{prefix\}_[a-z0-9_]+`/i', 'CONSTRAINT', $content);
@@ -163,6 +147,7 @@ class SchemaUpdateValidationTest extends TestCase
         );
     }
 
+    # A fresh install and an upgraded one must end on the same table: where the two files disagree, one of them is wrong and nothing at runtime can tell which
     public function testUpdateSqlColumnsMatchSchema(): void
     {
         $files = self::getUpdateFiles();

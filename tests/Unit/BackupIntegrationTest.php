@@ -5,19 +5,14 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Batch 3 of docs/BACKUP-2026.md: the half no double can answer. tests/Support/backup_probe.php boots
- * the real core in an isolated CLI process, creates a disposable schema with the shapes that matter -
- * a keyed table, one without a primary key holding duplicate rows, a stored generated column, a
- * composite key, binary and quoted values - and drives Backup against it through a scratch backup
- * root. Every scenario drops its schema again and reports whether it left staging behind. The site
- * database and storage/backup are never touched.
- */
+# The half of Backup no double can answer, run against a disposable live schema; the site database and storage/backup are never touched
 final class BackupIntegrationTest extends TestCase
 {
     private static array $probe = [];
 
-    # Run one probe scenario in a fresh process and memoize its report for every test in this class
+    # Run one scenario of tests/Support/backup_probe.php, which boots the real core in an isolated CLI process, and memoize its report for every test
+    # The probe schema holds a keyed table, a keyless table with duplicate rows, a stored generated column, a composite key, binary and quoted values
+    # The probe drives Backup through a scratch backup root, drops its schema again after every scenario and reports whether staging was left behind
     private function getProbe(string $mode): array
     {
         if (isset(self::$probe[$mode])) return self::$probe[$mode];

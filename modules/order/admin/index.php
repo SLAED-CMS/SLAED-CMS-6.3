@@ -92,18 +92,30 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => array_values((array)$stop)]);
     if ($field) $cont .= getTplPreviewContent(['title' => $email, 'field' => $field, 'textb' => _COMMENT.': '.$note, 'mod' => 'order']);
     $rows = [
-        ['label_for' => 'f-email', 'label_html' => _OR_9, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'email', 'input_id' => 'f-email', 'value_attr' => $email, 'is_required' => true])],
+        [
+            'label_for' => 'f-email', 'label_html' => _OR_9,
+            'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'email', 'input_id' => 'f-email', 'value_attr' => $email, 'is_required' => true]),
+        ],
         ['label_html' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'date', 'time' => $date, 'with' => true, 'max' => 16])],
-        ['label_for' => 'f-note', 'label_html' => _OR_10, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'note', 'input_id' => 'f-note', 'value_text' => $note, 'placeholder_text' => _OR_10]), 'is_full' => true],
+        [
+            'label_for' => 'f-note', 'label_html' => _OR_10,
+            'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'note', 'input_id' => 'f-note', 'value_text' => $note, 'placeholder_text' => _OR_10]), 'is_full' => true,
+        ],
     ];
     $rows = array_merge($rows, getTplAddFieldRows(['field' => $field, 'mod' => 'order', 'new' => !$mid]));
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=order&op=save',
         'hidden' => [
             ['nameattr' => 'mid', 'valueattr' => (string)$mid],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('order')],
         ],
-        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW]).$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SEND]).($mid ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : ''), 'is_inline_gap' => true])
+        'actions_html' => $tpl->getHtmlFrag('select', [
+            'name_attr' => 'posttype',
+            'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW])
+                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SEND])
+                .($mid ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : ''),
+            'is_inline_gap' => true,
+        ])
             .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
         'rows' => $rows,
     ])]);
@@ -118,7 +130,7 @@ function save(): void {
     $note = getVar('post', 'note', 'text', '');
     $date = getVar('req', 'date', 'time');
     $posttype = getVar('post', 'posttype', 'text', '');
-    $iswarn = !checkSiteToken();
+    $iswarn = !checkAdminPost('order');
     $stop = [];
     if (!$iswarn) {
         checkemail($email);
@@ -164,8 +176,9 @@ function delete(int $did = 0): void {
             [$uid, $was] = $db->getSqlRow($db->getSqlQuery('SELECT uid, status FROM '.PREFIX_DB.'_order WHERE id = :id FOR UPDATE', ['id' => $id]));
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_order WHERE id = :id', ['id' => $id]);
             $rid = ($uid && $was) ? $pnt->getEventId('order', 'order', 'order:'.$id, (int)$uid) : 0;
-            if ($rid) $pnt->addEvent('order', 'order', 'reverse:'.$rid, (int)$uid, ['rid' => $rid, 'mid' => $id, 'aid' => intval(substr($admin[0], 0, 11))]);
-            $done = $db->setSqlCommit();
+            $data = ['rid' => $rid, 'mid' => $id, 'aid' => intval(substr($admin[0], 0, 11))];
+            $done = $rid !== false && (!$rid || $pnt->addEvent('order', 'order', 'reverse:'.$rid, (int)$uid, $data));
+            $done = $done && $db->setSqlCommit();
         }
         if (!$done) $db->setSqlRollback();
         if (!$done) [$iswarn, $note] = [true, _ERROR];
@@ -187,8 +200,8 @@ function activate(): void {
         $data = ['mid' => $id, 'aid' => intval(substr($admin[0], 0, 11))];
         if ($uid && $act && !$was) $pnt->addEvent('order', 'order', 'order:'.$id, (int)$uid, $data);
         $rid = ($uid && !$act && $was) ? $pnt->getEventId('order', 'order', 'order:'.$id, (int)$uid) : 0;
-        if ($rid) $pnt->addEvent('order', 'order', 'reverse:'.$rid, (int)$uid, ['rid' => $rid] + $data);
-        $done = $db->setSqlCommit();
+        $done = $rid !== false && (!$rid || $pnt->addEvent('order', 'order', 'reverse:'.$rid, (int)$uid, ['rid' => $rid] + $data));
+        $done = $done && $db->setSqlCommit();
         if (!$done) $db->setSqlRollback();
     }
     if ($done) {
@@ -196,7 +209,7 @@ function activate(): void {
             [$email] = $db->getSqlRow($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_order WHERE id = :id', ['id' => $id]));
             $amail = ($conf['order']['mail'] ?? '') ? $conf['order']['mail'] : ($conf['adminmail'] ?? '');
             $subject = ($conf['sitename'] ?? '').' - '._ORDER;
-            $msg = getTplLines([($conf['sitename'] ?? '').' - '._ORDER, $prs->filterContent($conf['order']['sendinfo'] ?? '', false, 'all')], true, true);
+            $msg = getTplLines([($conf['sitename'] ?? '').' - '._ORDER, $prs->filterContent($conf['order']['sendinfo'] ?? '', false, 'all', 0, 'breaks')], true, true);
             $mailer->addQueue(['kind' => 'order', 'email' => $email, 'title' => $subject, 'body' => $msg, 'sender' => $amail, 'prio' => 3]);
         }
     }
@@ -215,12 +228,30 @@ function config(): void {
     $cont .= checkPerms(CONFIG_DIR.'/order.php');
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows = [
-        ['label_for' => 'f-mail', 'label_html' => _OR_1, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mail', 'input_id' => 'f-mail', 'value_attr' => $conf['order']['mail'] ?? ''])],
-        ['label_for' => 'f-anum', 'label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => $conf['order']['anum'] ?? 25])],
-        ['label_for' => 'f-anump', 'label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => $conf['order']['anump'] ?? 10])],
-        ['label_html' => _OR_2, 'label_id' => $labid = getFieldIds('', 'an')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'an', 'value' => (string)($conf['order']['an'] ?? 0), 'options' => $yesno])],
-        ['label_html' => _OR_3, 'label_id' => $labid = getFieldIds('', 'pr')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'pr', 'value' => (string)($conf['order']['pr'] ?? 0), 'options' => $yesno])],
-        ['label_html' => _OR_4, 'label_id' => $labid = getFieldIds('', 'ad')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'ad', 'value' => (string)($conf['order']['ad'] ?? 0), 'options' => $yesno])],
+        [
+            'label_for' => 'f-mail', 'label_html' => _OR_1,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mail', 'input_id' => 'f-mail', 'value_attr' => $conf['order']['mail'] ?? '']),
+        ],
+        [
+            'label_for' => 'f-anum', 'label_html' => _C_34,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'input_id' => 'f-anum', 'value_attr' => $conf['order']['anum'] ?? 25]),
+        ],
+        [
+            'label_for' => 'f-anump', 'label_html' => _C_36,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'input_id' => 'f-anump', 'value_attr' => $conf['order']['anump'] ?? 10]),
+        ],
+        [
+            'label_html' => _OR_2, 'label_id' => $labid = getFieldIds('', 'an')['label'],
+            'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'an', 'value' => (string)($conf['order']['an'] ?? 0), 'options' => $yesno]),
+        ],
+        [
+            'label_html' => _OR_3, 'label_id' => $labid = getFieldIds('', 'pr')['label'],
+            'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'pr', 'value' => (string)($conf['order']['pr'] ?? 0), 'options' => $yesno]),
+        ],
+        [
+            'label_html' => _OR_4, 'label_id' => $labid = getFieldIds('', 'ad')['label'],
+            'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'ad', 'value' => (string)($conf['order']['ad'] ?? 0), 'options' => $yesno]),
+        ],
         ['label_html' => _OR_5, 'label_id' => $labid = getFieldIds('', 'text')['label'], 'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _OR_5,
             'id' => '1', 'name' => 'text', 'value' => $conf['order']['text'] ?? '', 'mod' => 'all', 'store' => 'config', 'rows' => 5, 'placeholder' => _OR_5, 'required' => '1',
         ]), 'is_full' => true],
@@ -234,7 +265,7 @@ function config(): void {
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=order&op=configsave',
-        'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
+        'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('order')]],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
     ])]);
@@ -244,7 +275,7 @@ function config(): void {
 
 function configsave(): void {
     global $afile;
-    $iswarn = !checkSiteToken();
+    $iswarn = !checkAdminPost('order');
     $room = '';
     if (!$iswarn) {
         $cont = [

@@ -6,15 +6,11 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * The audit tool's own test. Every count the theme work is judged on comes out of tools/ui-audit.php,
- * so a wrong classifier is invisible: it writes a plausible number into the baseline and everything
- * downstream trusts it. Each classifier is therefore held against a fixture whose answer is known by
- * reading the fixture, not by running the tool - which is how the hue-first colour split and the
- * context-blind duplicate counter were caught while the plan was being drafted.
- */
+# The own test of tools/ui-audit.php: each classifier is held against a fixture whose answer is known by reading the fixture, not by running the tool
 final class UiAuditTest extends TestCase
 {
+    # Every count the theme work is judged on comes out of the tool, so a wrong classifier writes a plausible baseline number everything downstream trusts
+    # Fixtures read by hand caught the hue-first colour split and the context-blind duplicate counter while the plan was being drafted
     public static function setUpBeforeClass(): void
     {
         require_once dirname(__DIR__, 2).'/tools/ui-audit.php';
@@ -217,11 +213,9 @@ final class UiAuditTest extends TestCase
         $this->assertSame([], $model['scoped'], 'nothing below the marker declares a custom property here');
     }
 
-    /**
-     * One declaration per row with the answer read off the row, not off the tool. This table is what caught
-     * `z-index: 0` being swallowed by the neutral-value allowlist before the bare-number rule could see it:
-     * a stacking context is a decision, and the count was quietly four low in admin and eight in lite.
-     */
+    # One declaration per row with the answer read off the row, not off the tool
+    # This table caught `z-index: 0` being swallowed by the neutral-value allowlist before the bare-number rule could see it
+    # A stacking context is a decision, and the count was quietly four low in admin and eight in lite
     public static function getDeclCases(): array
     {
         return [
@@ -268,10 +262,7 @@ final class UiAuditTest extends TestCase
         $this->assertCount($want, checkThemeCount(getTextModel(['case.css' => $css]))['sites'], $css);
     }
 
-    /**
-     * The walker has to survive what real stylesheets contain, because a rule it loses is a rule
-     * nothing downstream ever measures and no count would look wrong.
-     */
+    # The walker has to survive what real stylesheets contain, because a rule it loses is one nothing downstream ever measures and no count would look wrong
     public static function getParserCases(): array
     {
         return [

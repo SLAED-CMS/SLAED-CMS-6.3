@@ -7,16 +7,8 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Batch 1 of docs/FORM-FIELDS-2026.md. getFieldIds() is the one owner of the three ids a form row
- * needs, and everything the batches above it wire - the caption a radio group points at, the name an
- * editor carries, the hint a control describes - is derived from what it answers. If it is wrong,
- * every IDREF downstream is wrong quietly: an aria-labelledby that resolves to nothing computes an
- * empty name with the attribute visibly in place. So it is held here on its own, before a call site
- * uses it: an id that already exists passes through untouched, the companions come from it, and only
- * a row with no control id of its own is handed a minted one.
- */
-final class FieldIdsTest extends TestCase
+# The getFieldIds() helper is the one owner of the three ids a form row needs, held on its own because every IDREF downstream derives from it
+class FieldIdsTest extends TestCase
 {
     public static function setUpBeforeClass(): void
     {
@@ -30,6 +22,7 @@ final class FieldIdsTest extends TestCase
         $this->assertSame(['input', 'label', 'hint'], array_keys($ids));
     }
 
+    # An id that already exists passes through untouched
     #[Test]
     public function testExistingIdPassesThroughUntouched(): void
     {
@@ -38,6 +31,8 @@ final class FieldIdsTest extends TestCase
         }
     }
 
+    # The caption of a radio group, the name of an editor and the hint of a control all derive from the id, so a wrong id breaks every IDREF quietly
+    # An aria-labelledby that resolves to nothing computes an empty name while the attribute stays visibly in place
     #[Test]
     public function testCompanionsAreDerivedFromTheId(): void
     {
@@ -52,6 +47,7 @@ final class FieldIdsTest extends TestCase
         $this->assertSame(getFieldIds('f-url'), getFieldIds('f-url'), 'A hand-written duplicate was silently made unique');
     }
 
+    # Only a row with no control id of its own is handed a minted one
     #[Test]
     public function testMintIsUsedOnlyWhenThereIsNoId(): void
     {

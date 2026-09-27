@@ -4,25 +4,17 @@
 # License: MIT
 # Website: slaed.net
 
-# Report and repair the comment counter of every comment target.
-# The `comments` column of the eight target tables is denormalised: the frontend, the cards and the
-# chips read it without ever touching the comment table, so nothing notices when the two drift apart.
-# The write path keeps it in step from 6.3 on, but rows written under the earlier request-supplied
-# module could move the counter of the wrong target, so an installation upgraded from before that
-# fix carries historical drift. This finds it and writes the live number back.
-#
-#   php tools/comment-recount.php report                  # read-only, prints every target that disagrees
-#   php tools/comment-recount.php fix                     # writes the live count back into those targets
-#
-# Options: --mod=shop  --limit=50
-#
-# The live number is the public one: published, not deleted. It is recomputed inside the UPDATE rather
-# than carried over from the report, so a comment written between the two cannot be lost.
-# The same work runs unattended as the `commentsync` scheduler job; this tool is the manual way in.
-#
-# There is no --db= here: this tool boots the core so the module map,
-# the visibility rules and the counter semantics have one home, and the core reads config/db.php. To
-# rehearse against a restored copy, point that file at the copy.
+# Report and repair the comment counter of every comment target
+# The `comments` column of the eight target tables is denormalised: the frontend, cards and chips read it without the comment table, so nobody notices drift
+# The write path keeps it in step from 6.3 on, but rows written under the earlier request-supplied module could move the counter of the wrong target
+# An installation upgraded from before that fix therefore carries historical drift; this tool finds it and writes the live number back
+# Usage: php tools/comment-recount.php report - read-only, prints every target that disagrees
+# Usage: php tools/comment-recount.php fix - writes the live count back into those targets
+# Options: --mod=shop --limit=50
+# The live number is the public one (published, not deleted), recomputed inside the UPDATE, so a comment written between report and fix cannot be lost
+# The same work runs unattended as the `commentsync` scheduler job; this tool is the manual way in
+# There is no --db= option: the core is booted so the module map, visibility rules and counter semantics have one home, and the core reads config/db.php
+# To rehearse against a restored copy, point config/db.php at the copy
 
 if (PHP_SAPI !== 'cli') die('CLI only');
 
@@ -48,8 +40,7 @@ if (!in_array($mode, ['report', 'fix'], true)) {
 $only = preg_replace('/[^a-z0-9_]/', '', strtolower(getOption($argv, 'mod', '')));
 $show = max(1, (int)getOption($argv, 'limit', '50'));
 
-# The core is booted rather than reimplemented, because the module-to-table map, the visibility rules
-# and the counter semantics all live in the Comment class and must not exist a second time here
+# The core is booted rather than reimplemented: the module-to-table map, visibility rules and counter semantics live in the Comment class and must not exist twice
 $_SERVER['REQUEST_METHOD'] = 'GET';
 $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
 ob_start();

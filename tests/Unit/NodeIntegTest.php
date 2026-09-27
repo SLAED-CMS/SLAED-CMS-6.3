@@ -7,12 +7,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * The integrations of Node. The behaviour is driven by tests/Support/route_probe.php with the argument integ: the
- * disposable database and scratch configuration of the base route probe, news with rating, favorites, poll, home and all four integrations, docs with search,
- * sitemap and blocks, real HTTP requests of guests, users and administrators, and the child mode integext that runs the sitemap generator and puts the
- * map of the stand back byte for byte. The static half reads the files.
- */
+# The integrations of Node, driven by tests/Support/route_probe.php with the argument integ; the static half reads the files
 final class NodeIntegTest extends TestCase
 {
     private static array $probe = [];
@@ -23,6 +18,9 @@ final class NodeIntegTest extends TestCase
         return str_replace('\\', '/', dirname(__DIR__, 2));
     }
 
+    # The probe runs the disposable database and scratch configuration of the base route probe with news carrying rating, favorites, poll, home and all four integrations
+    # Docs carry search, sitemap and blocks; real HTTP requests come from guests, users and administrators
+    # The child mode integext runs the sitemap generator and puts the map of the stand back byte for byte
     # Run the probe once in its integ mode and memoize the run; the one SQL error allowed is the refusal of the probe trigger that proves the rollback of a vote
     private function getRun(): array
     {
@@ -58,14 +56,15 @@ final class NodeIntegTest extends TestCase
         $this->assertSame([false, false], $run['docsview'], 'A type without rating or poll shows them');
     }
 
-    # A related card is a light target without a view count, so it shows no empty chip of views; a type without the extension that chooses the support view
-    # keeps its rating, poll, favorite switch and related cards, and shows no state of a request it does not have
+    # A related card is a light target without a view count, so it shows no empty chip of views; the view keeps its rating and poll
+    # The support view belongs to the type of the support extension alone, so a standard type that chooses it is refused on read and its material answers 404
     #[Test]
-    public function theSupportViewKeepsTheFeaturesOfItsType(): void
+    public function theSupportViewBelongsToItsExtension(): void
     {
         $run = $this->getRun()['render'];
-        $this->assertSame([[true, true, false], [true, true, false]], [$run[0], $run[1]], 'A related card is missing or shows an empty chip of views');
-        $this->assertSame([true, true, true, false], array_slice($run, 2), 'The support view of a type without the extension lost a live part or shows a request state');
+        $this->assertSame([true, true, false], $run[0], 'A related card is missing or shows an empty chip of views');
+        $this->assertSame([true, true], [$run[2], $run[3]], 'The view lost its rating or its poll');
+        $this->assertSame(404, $run[1], 'A standard type that chooses the support view was still read');
     }
 
     # A vote of node.<name> goes through Node: one delivery is stored once, a repeat answers the stored vote, the interval holds, and the version stays
@@ -99,14 +98,15 @@ final class NodeIntegTest extends TestCase
         $this->assertSame([200, [4, 1, 1, 1]], $run['after'], 'The target stayed blocked after the failure');
     }
 
-    # A favorite needs a readable material of a type with the feature and a POST of the switch; the lists show what their viewer may read, a deleted material leaves them
+    # A favorite needs a readable material with the feature and a POST of the switch, a visit answers 405; the lists show what their viewer may read, a deletion clears them
     #[Test]
     public function favoritesFollowTheRightsAndTheLifeOfTheMaterial(): void
     {
         $run = $this->getRun();
-        $this->assertSame([true, 200, true, 1, 0, 1, 0, 0], $run['fav'],
-            'A favorite was refused, one was stored for a type without the feature or an unreadable material, or a plain visit of the switch stored one');
-        $this->assertSame([true, false, true], $run['favlist'], 'The list shows a material its viewer may not read, or the lists miss a Node title');
+        $this->assertSame([true, 200, true, 1, 0, 1, 0, 0, 405, 'POST'], $run['fav'],
+            'A favorite was refused, one was stored for a type without the feature or an unreadable material, or a plain visit of the switch stored one or was no 405');
+        $this->assertSame([true, false, true, true, false], $run['favlist'],
+            'The list shows a material its viewer may not read, the lists miss a Node title, or a switch without htmx is a link to a POST-only address');
         $this->assertSame([303, null, 0], $run['delete'], 'The deletion of a material left its favorites');
     }
 

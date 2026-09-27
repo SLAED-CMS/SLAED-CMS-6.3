@@ -28,7 +28,10 @@ function rss(): void {
             .$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _RSSHOME, 'is_selected' => $uses === 1]);
         $block = $tpl->getHtmlPart('div', ['rows' => [
             ['label_html' => _NAME, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'field1[]', 'value_attr' => $name, 'placeholder_text' => _NAME])],
-            ['label_html' => _ADDRESS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'field2[]', 'value_attr' => $addr, 'placeholder_text' => _ADDRESS])],
+            [
+                'label_html' => _ADDRESS,
+                'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'field2[]', 'value_attr' => $addr, 'placeholder_text' => _ADDRESS]),
+            ],
             ['label_html' => _USES, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'field3[]', 'options_html' => $opts])],
         ]]);
         $rows[] = $tpl->getHtmlPart('toggle-form-block', [
@@ -43,16 +46,38 @@ function rss(): void {
     }
     $sourcehtml = implode('', $rows);
     $prefs = [
-        ['label_for' => 'f-min', 'label_html' => _RSSMIN, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'min', 'input_id' => 'f-min', 'value_attr' => (string)($conf['rss']['min'] ?? 10), 'is_required' => true])],
-        ['label_for' => 'f-max', 'label_html' => _RSSMAX, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'max', 'input_id' => 'f-max', 'value_attr' => (string)($conf['rss']['max'] ?? 100), 'is_required' => true])],
-        ['label_html' => _RSSACT, 'label_id' => $labid = getFieldIds('', 'act')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'act', 'value' => (string)($conf['rss']['act'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => _RSSUSE, 'label_id' => $labid = getFieldIds('', 'use')['label'], 'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'use', 'value' => (string)($conf['rss']['use'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+        [
+            'label_for' => 'f-min', 'label_html' => _RSSMIN,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number', 'name_attr' => 'min', 'input_id' => 'f-min', 'value_attr' => (string)($conf['rss']['min'] ?? 10), 'is_required' => true,
+            ]),
+        ],
+        [
+            'label_for' => 'f-max', 'label_html' => _RSSMAX,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number', 'name_attr' => 'max', 'input_id' => 'f-max', 'value_attr' => (string)($conf['rss']['max'] ?? 100), 'is_required' => true,
+            ]),
+        ],
+        [
+            'label_html' => _RSSACT, 'label_id' => $labid = getFieldIds('', 'act')['label'],
+            'field_html' => getTplRadioGroup([
+                'labelledby' => $labid, 'name' => 'act', 'value' => (string)($conf['rss']['act'] ?? 0),
+                'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
+            ]),
+        ],
+        [
+            'label_html' => _RSSUSE, 'label_id' => $labid = getFieldIds('', 'use')['label'],
+            'field_html' => getTplRadioGroup([
+                'labelledby' => $labid, 'name' => 'use', 'value' => (string)($conf['rss']['use'] ?? 0),
+                'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
+            ]),
+        ],
     ];
     $content = $tab === 1 ? $tpl->getHtmlPart('div', ['rows' => $prefs]) : $sourcehtml;
     $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=rss&op=save',
         'hidden' => [
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('rss')],
             ['nameattr' => 'tab', 'valueattr' => (string)$tab],
         ],
         'content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _RSSDESC]).$content,
@@ -67,7 +92,7 @@ function save(): void {
     global $afile, $conf;
     $tab = getVar('post', 'tab', 'num', 0);
     if ($tab < 0 || $tab > 1) $tab = 0;
-    $iswarn = !checkSiteToken();
+    $iswarn = !checkAdminPost('rss');
     if (!$iswarn) {
         $cont = $conf['rss'] ?? [];
         if ($tab === 1) {

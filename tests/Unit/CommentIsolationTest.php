@@ -5,14 +5,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Stage 1, batch 6 of docs/COMMENTS-REDESIGN-2026.md: the acceptance criterion of the whole stage, asserted
- * once for all six batches. The comment table has exactly one owner, the three global helpers that used to
- * share it are gone, and no consumer can reach it through a table name assembled from a variable — the shape
- * that hid two consumers from every literal sweep and made the fact list of the plan wrong twice.
- * The installer schema, the parity tool and the test support are excluded by name, because a parity tool that
- * went through the class under test would prove nothing and the installer creates the table in the first place.
- */
+# The comment table has exactly one owner, the global helpers that shared it are gone, and no table name built from a variable reaches it
 final class CommentIsolationTest extends TestCase
 {
     # The one file allowed to name the comment table, and the trees whose content is generated, vendored or deliberately outside the rule
@@ -31,14 +24,13 @@ final class CommentIsolationTest extends TestCase
     private static array $files = [];
 
     # List every production PHP file of the project once, keyed by its path relative to the repository root
+    # The installer schema, the parity tool and the test support stay out: a parity tool through the class proves nothing and the installer creates the table
     private function getFiles(): array
     {
         if (self::$files !== []) return self::$files;
         $root = str_replace('\\', '/', dirname(__DIR__, 2));
-        $dirs = new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS);
-        $walk = new \RecursiveIteratorIterator($dirs, \RecursiveIteratorIterator::SELF_FIRST);
         $out = [];
-        foreach ($walk as $item) {
+        foreach (getTreeFiles($root) as $item) {
             $path = str_replace('\\', '/', $item->getPathname());
             $name = substr($path, strlen($root) + 1);
             if ($item->isDir()) continue;
@@ -77,7 +69,7 @@ final class CommentIsolationTest extends TestCase
         $this->assertGreaterThanOrEqual(10, substr_count($code, 'PREFIX_DB.\'_comment'), 'The comment statements left the class they were moved into');
     }
 
-    # A table name built from a variable is the shape that hid two consumers, so the files that build one are a closed list and none of them can be handed the comment table
+    # A table name built from a variable hid two consumers from every literal sweep, so the files that build one are a closed list and none of them can be handed the comment table
     #[Test]
     public function assembledTableNamesCannotReachTheCommentTable(): void
     {

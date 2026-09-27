@@ -1,13 +1,8 @@
 <?php
-/**
- * Контракт вывода ошибок.
- * Гарантирует, что недавняя переработка вывода ошибок не деградирует:
- * - статический error.html (для 502/504, когда PHP недоступен) полностью автономен: CSS, иконки и логотип встроены;
- * - whitelist кодов в ?error=NNN (bootstrap core/security.php) целиком покрыт картой причин в setError().
- */
 
 use PHPUnit\Framework\TestCase;
 
+# Error output contract: the static error.html is self-contained and every ?error= whitelist code has a setError() reason
 class ErrorPageContractTest extends TestCase
 {
     private static string $basePath;
@@ -17,10 +12,7 @@ class ErrorPageContractTest extends TestCase
         self::$basePath = dirname(__DIR__);
     }
 
-    /**
-     * Статическая страница error.html должна существовать, не зависеть от PHP и быть брендированной:
-     * её отдаёт веб-сервер (nginx/Apache), когда приложение лежит (502/504).
-     */
+    # The static error.html must exist, be free of PHP and carry the brand: the web server serves it on 502/504 when PHP is down
     public function testStaticErrorPageIsStaticAndBranded(): void
     {
         $path = self::$basePath.'/error.html';
@@ -36,10 +28,7 @@ class ErrorPageContractTest extends TestCase
         $this->assertMatchesRegularExpression('/<meta\b[^>]*name=["\']robots["\'][^>]*noindex/i', $html, 'error.html не должна индексироваться');
     }
 
-    /**
-     * Страница не должна зависеть ни от одного внешнего файла (CSS, шрифт, favicon, логотип):
-     * любого из них может не быть на конкретном сервере, поэтому всё встроено в сам документ.
-     */
+    # The page depends on no external file (CSS, font, favicon, logo): any may be missing on a given server, so all is inlined
     public function testStaticErrorPageHasNoExternalDependencies(): void
     {
         $html = (string)file_get_contents(self::$basePath.'/error.html');
@@ -53,11 +42,7 @@ class ErrorPageContractTest extends TestCase
         $this->assertDoesNotMatchRegularExpression('#(href|src)=["\']\.?/?templates/#i', $html, 'error.html не должна ссылаться на файлы темы');
     }
 
-    /**
-     * Каждый код из whitelist обработчика ?error= (bootstrap в core/security.php)
-     * должен иметь человекочитаемую причину в карте статусов setError(); иначе
-     * вместо корректной фразы выводится дефолтное 'Error'.
-     */
+    # Every code in the ?error= whitelist of core/security.php needs a readable reason in the setError() map, else the default 'Error' shows
     public function testErrorParamWhitelistCoveredBySetError(): void
     {
         $security = (string)file_get_contents(self::$basePath.'/core/security.php');

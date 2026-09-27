@@ -19,9 +19,7 @@ enum CommentMode: int {
     case Open = 2;
 }
 
-# Comment subsystem: every read and write of the comment table with its permissions, pagination and target bookkeeping in one place
-# Nothing outside this class reaches the comment table any more; the resolver that authorizes a target and the counter that follows a write live here as well
-# Add, edit, status and delete wrap their own writes; when a transaction is already open they join it and leave begin, commit and rollback to whoever owns it
+# Comment subsystem: the only code that reaches the comment table, with its permissions, pagination, target resolver and the counter that follows a write
 class Comment {
 
     # The targets that render comments, each with the table its rows live in; the key is also the scope the points journal files a comment under
@@ -159,6 +157,7 @@ class Comment {
         $this->pnt->addEvent('moderate', $scope, $source, $ctx->uid, ['mid' => $mid, 'aid' => $ctx->aid]);
     }
 
+    # Add, edit, status and delete wrap their own writes through this pair; within an open transaction they join it and leave begin, commit and rollback to its owner
     # Open one comment write: inside a transaction of an owner it joins and answers null, and the guard and the final generation stay with that owner
     # Otherwise it takes the write guard of the page cache before its own BEGIN and answers the guard, or false when either cannot be had and no statement may run
     private function setWriteBegin(): mixed {
@@ -192,7 +191,7 @@ class Comment {
 
     # Report the target rows whose stored comment counter disagrees with the comments actually published under them
     # That counter is denormalised on purpose - eight modules read it without ever touching this table - so nothing notices when it drifts, and this is what notices
-    # The count is the public one and never the viewer's: it is bookkeeping about a column every visitor reads, so a moderator running the sweep must not count what only they can see
+    # The count is the public one, never the viewer's: it is bookkeeping about a column every visitor reads, so a moderator must not count what only they can see
     public function getCountDrift(string $mod = ''): array {
         $out = [];
         foreach (self::MODULES as $name => $one) {
@@ -253,8 +252,24 @@ class Comment {
         foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: [] as $row) {
             $tree[] = $this->getRowData($row);
         }
-        $out['rows'] = $this->getAuthorRows($this->getTreeRows($tree, $mod, $id, $full));
+        $out['rows'] = $this->getAuthorRows($this->getTreeRows($tree, $mod, $id, $full > 0 ? [$full] : []));
         return $out;
+    }
+
+    # Return the whole discussion of one target as it reads top to bottom: every root in the order of the list, each followed by its full branch
+    # One read of the tree replaces a walk over every page and every capped branch, which is what the support card of an administrator shows
+    # A Node material the context may not read answers an empty discussion, the same answer a target without comments gives
+    public function getThread(string $mod, int $id): array {
+        if (!$this->checkTargetView($mod, $id)) return [];
+        [$cte, $pars] = $this->getKeepCte($mod, $id);
+        $dir = empty($this->conf['sort']) ? 'DESC' : 'ASC';
+        $sql = $cte.' SELECT c.'.str_replace(', ', ', c.', self::FIELDS).' FROM '.PREFIX_DB.'_comment AS c JOIN keep AS k ON k.id = c.id'
+            .' WHERE k.pid = 0 ORDER BY c.time '.$dir.', c.id '.$dir;
+        $tree = [];
+        foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: [] as $row) {
+            $tree[] = $this->getRowData($row);
+        }
+        return $this->getAuthorRows($this->getTreeRows($tree, $mod, $id, array_column($tree, 'id')));
     }
 
     # Return the replies stored under one comment, oldest first, skipping what the caller already has and never more than it asked for
@@ -309,11 +324,11 @@ class Comment {
     }
 
     # Return the published comments of one account, newest first, for the activity feed of a profile
-    # A comment on a Node material appears only when the viewer may read that material, checked for a whole slice with one batch read of the targets
+    # A comment on a Node material appears only when the viewer may read that material, checked for a whole slice in batches of the target reader
     # The slices follow the id downward until the limit is filled, at most ten of them, so private replies of support never shorten the feed of a busy writer to nothing
     public function getUserList(int $uid, int $limit): array {
         if ($uid < 1 || $limit < 1) return [];
-        $size = min(intval($limit), 500);
+        $size = min($limit, 500);
         $out = [];
         $last = 0;
         for ($i = 0; $i < 10 && count($out) < $limit; $i++) {
@@ -323,9 +338,11 @@ class Comment {
             $rows = array_map(fn(array $v): array => $this->getRowData($v), $this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: []);
             $refs = [];
             foreach ($rows as $row) if ($this->checkNodeKind($row['modul']) && $row['cid'] > 0) $refs[$row['cid']] = $row['modul'];
+            $open = [];
             try {
-                $open = $refs ? $this->getNodeReader()->getNodeTargetList($refs) : [];
-            } catch (NodeException) {
+                foreach ($refs ? array_chunk($refs, $this->getNodeReader()->getTargetSize(), true) : [] as $part) $open += $this->getNodeReader()->getNodeTargetList($part);
+            } catch (NodeException $err) {
+                Logger::addSite('error', 'Comment: the profile feed skips Node comments, their targets could not be read', ['uid' => $uid, 'error' => $err->getMessage()]);
                 $open = [];
             }
             foreach ($rows as $row) {
@@ -341,7 +358,6 @@ class Comment {
     # Count the published comments of one account, the number the profile hub shows beside the counters of the other modules
     # A comment on a Node material counts by the rule of the feed: only when the viewer may read that material, checked per target in parts of one batch read of the reader
     public function getUserCount(int $uid): int {
-        global $conf;
         if ($uid < 1) return 0;
         $sql = 'SELECT modul, cid, COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE uid = :uid AND status = :stat AND deleted IS NULL GROUP BY modul, cid';
         $rows = $this->db->getSqlRows($this->db->getSqlQuery($sql, ['uid' => $uid, 'stat' => CommentStatus::Published->value])) ?: [];
@@ -351,10 +367,11 @@ class Comment {
             if (!$this->checkNodeKind($row['modul'])) $sum += intval($row['num']);
             elseif (intval($row['cid']) > 0) $refs[intval($row['cid'])] = [$row['modul'], intval($row['num'])];
         }
-        foreach (array_chunk($refs, max(1, min(500, $conf['node']['limits']['syncbatch'] ?? 500)), true) as $part) {
+        foreach ($refs ? array_chunk($refs, $this->getNodeReader()->getTargetSize(), true) : [] as $part) {
             try {
                 $open = $this->getNodeReader()->getNodeTargetList(array_map(fn(array $v): string => $v[0], $part));
-            } catch (NodeException) {
+            } catch (NodeException $err) {
+                Logger::addSite('error', 'Comment: the profile count skips Node comments, their targets could not be read', ['uid' => $uid, 'error' => $err->getMessage()]);
                 $open = [];
             }
             foreach ($part as $cid => $one) if (isset($open[$cid])) $sum += $one[1];
@@ -434,7 +451,7 @@ class Comment {
     # Store one new comment against a target the resolver accepts and answer its id, the stored name, whether this call stored it and the refusal that stopped it
     # Mode, author, address and moderation state come from the server context; the request supplies the module key, the target id, the body, the guest name and its key
     # The new flag is what a caller with side effects of its own asks: a replay answers the first comment without storing a second, so no notification may be written for it either
-    # A reply names its parent by id and nothing else: the parent decides the branch it joins, and a parent of another target, a removed one or one already at the depth limit is refused
+    # A reply names its parent by id only: the parent decides the branch it joins; a parent of another target, a removed one or one at the depth limit is refused
     # A comment of a Node material, pending or not, locks the material first and reads its mode again under that lock: a material gone or closed meanwhile refuses the write
     public function addComment(string $mod, int $id, string $body, string $name, string $key = '', int $pid = 0): array {
         global $user;
@@ -647,7 +664,8 @@ class Comment {
                 if (!$done) throw new RuntimeException('an award of the comments could not be compensated');
             }
             if ($rows && $this->db->getSqlQuery('DELETE'.$from, $pars) === false) throw new RuntimeException('the comments of the targets could not be deleted');
-        } catch (Throwable) {
+        } catch (Throwable $err) {
+            Logger::addSite('error', 'Comment: the comments of deleted targets were rolled back', ['mod' => $mod, 'error' => $err->getMessage()]);
             $this->setWriteUndo($guard);
             return false;
         }
@@ -673,13 +691,18 @@ class Comment {
     # The trusted tags are the one exception: the moderation form reads its field raw, and a comment must not carry them whoever typed it
     # The room the column has is the other one, and it refuses rather than saves, because a moderator editing a body is no reason for the database to answer ERROR 1406
     # It answers the refusal and not a flag, because a moderation form that reports success on a body it did not store is worse than one that reports nothing at all
+    # The update runs as a write of its own under the guard of the page cache, like the author edit: it moves no counter and locks only its own row, so no material lock
     public function updateBody(int $id, string $body): string {
         if ($id < 1) return (string)_ERROR;
         $body = filterTrustedTags($body);
         $room = checkEditorTextRoom($body, 'comment.body');
         if ($room !== '') return $room;
+        $guard = $this->setWriteBegin();
+        if ($guard === false) return (string)_ERROR;
         $sql = 'UPDATE '.PREFIX_DB.'_comment SET body = :body, edited = NOW() WHERE id = :id AND deleted IS NULL';
-        return $this->db->getSqlQuery($sql, ['body' => $body, 'id' => $id]) ? '' : (string)_ERROR;
+        $done = $this->db->getSqlQuery($sql, ['body' => $body, 'id' => $id]) !== false;
+        if (!$done) $this->setWriteUndo($guard);
+        return $done && $this->setWriteDone($guard) ? '' : (string)_ERROR;
     }
 
     # Apply the write rules of one comment and answer every refusal it collects, in the order the submit path applies them, so its caller can show the last one or the whole list
@@ -725,16 +748,17 @@ class Comment {
     # The count runs after the response rather than inside the write, because the subquery it needs is a locking read of the comment table
     # Two visitors commenting on one target at the same moment would otherwise wait on each other, and the loser of that wait would lose the comment
     # A deferred task rather than a call after the commit, because the class may run inside a transaction it did not open and whose commit it never sees
+    # The task goes through the repair of a drift, so the rewrite runs under the guard of the page cache and raises the generation when the counter moved
     private function addTargetCount(int $id, string $mod): void {
         if ($id < 1 || !isset(self::MODULES[$mod]) || $mod === 'account') return;
         addDeferredTask(function() use ($id, $mod): void {
-            $this->setTargetCount($id, $mod);
+            $this->updateCountDrift([['cid' => $id, 'modul' => $mod]]);
         });
     }
 
     # Build the id set one target renders as a recursive term every tree query joins against, so a count and the page it belongs to can never disagree about what is visible
     # A moderator of the module sees the pending comments as well, which is why the set depends on the viewer and not on the caller
-    # The walk goes upward from what is visible rather than downward from the roots: a removed comment is kept exactly when a visible reply still hangs under it, and it is the reply that finds it
+    # The walk goes upward from what is visible, not down from the roots: a removed comment is kept exactly when a visible reply still hangs under it and finds it
     # UNION rather than UNION ALL is what ends the walk, because a comment reached through two different replies is one row and not two
     # Every placeholder is bound under its own name because a native prepared statement rejects one named placeholder used in two positions
     private function getKeepCte(string $mod, int $id): array {
@@ -752,7 +776,7 @@ class Comment {
     }
 
     # Build the recursive term that walks one thread downward from the parents a caller names, restricted to the rendered set the keep term already resolved
-    # The sort key is built as the walk goes and is never stored: it is the ancestor chain padded per level, which is what orders a branch the way it was written instead of by id or time
+    # The sort key is built during the walk and never stored: the ancestor chain padded per level orders a branch the way it was written, not by id or time
     # The level is carried for the rendering indent and bounds the walk, so a parent link that somehow closed a loop stops at the depth limit instead of spinning
     # The seed casts the key to its full width on purpose: a recursive term takes the type of its seed row, and a key sized to the first level would be truncated at the second
     private function getTreeCte(array $keys): string {
@@ -768,9 +792,11 @@ class Comment {
 
     # Load the replies of the root comments of one page and put every branch behind the root it belongs to, in the order it was written
     # A root shows at most the configured number of replies and reports how many it has, so one long discussion cannot put an unbounded page in front of a reader
-    # Two round trips answer the whole page rather than one per root: the counts decide what is left to fetch, and the rows are capped before they are read
-    # The cap is a plain LIMIT rather than a window function, because no window function is used anywhere in this project and the distribution targets servers without them
-    private function getTreeRows(array $roots, string $mod, int $cid, int $full = 0): array {
+    # A root named in whole is answered with its full branch instead, which is what a reader without HTMX follows the reply control to and what a whole thread reads
+    # One light walk of id, root and level in branch order counts every root and picks the rows to show, so a long branch never takes the rows of another root
+    # Only the picked rows are read whole, by id; the recursive term is referenced once because MariaDB walks it again for every reference in one statement
+    # The cap is counted here rather than by a window function, because no window function is used anywhere in this project and the distribution targets servers without them
+    private function getTreeRows(array $roots, string $mod, int $cid, array $whole = []): array {
         if (!$roots) return [];
         $reps = max(1, intval($this->conf['reps'] ?? 5));
         [$cte, $pars] = $this->getKeepCte($mod, $cid);
@@ -779,22 +805,28 @@ class Comment {
             $keys[] = ':b'.$key;
             $pars['b'.$key] = $one['id'];
         }
-        $from = $cte.', '.$this->getTreeCte($keys);
+        $open = array_flip($whole);
         $seen = [];
-        foreach ($this->db->getSqlRows($this->db->getSqlQuery($from.' SELECT s.base, COUNT(*) AS num FROM sub AS s GROUP BY s.base', $pars)) ?: [] as $row) {
-            $seen[intval($row['base'])] = intval($row['num']);
+        $pick = [];
+        $res = $this->db->getSqlQuery($cte.', '.$this->getTreeCte($keys).' SELECT s.id, s.base, s.lvl FROM sub AS s ORDER BY s.sk ASC', $pars);
+        while ($res && ($row = $this->db->getSqlRow($res))) {
+            $base = intval($row['base']);
+            $seen[$base] = ($seen[$base] ?? 0) + 1;
+            if ($seen[$base] <= $reps || isset($open[$base])) $pick[intval($row['id'])] = [$base, intval($row['lvl'])];
+        }
+        $rows = [];
+        foreach (array_chunk(array_keys($pick), 500) as $part) {
+            $ids = [];
+            $args = [];
+            foreach ($part as $key => $val) {
+                $ids[] = ':i'.$key;
+                $args['i'.$key] = $val;
+            }
+            $sql = 'SELECT '.self::FIELDS.' FROM '.PREFIX_DB.'_comment WHERE id IN ('.implode(', ', $ids).')';
+            foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql, $args)) ?: [] as $row) $rows[intval($row['id'])] = $row;
         }
         $kids = [];
-        if ($seen) {
-            $sql = $from.' SELECT c.'.str_replace(', ', ', c.', self::FIELDS).', s.lvl, s.base FROM '.PREFIX_DB.'_comment AS c JOIN sub AS s ON s.id = c.id'
-                .' ORDER BY s.sk ASC LIMIT 0, '.(count($roots) * $reps);
-            foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: [] as $row) {
-                $base = intval($row['base']);
-                if (count($kids[$base] ?? []) >= $reps) continue;
-                $kids[$base][] = $this->getRowData($row);
-            }
-        }
-        if ($full > 0 && ($seen[$full] ?? 0) > $reps) $kids[$full] = $this->getBranch($full, $seen[$full])['rows'];
+        foreach ($pick as $id => [$base, $lvl]) if (isset($rows[$id])) $kids[$base][] = $this->getRowData(['lvl' => $lvl] + $rows[$id]);
         $out = [];
         foreach ($roots as $one) {
             $branch = $kids[$one['id']] ?? [];
@@ -915,7 +947,7 @@ class Comment {
     }
 
     # Answer a replayed submit with the comment the first one stored, but only when this submit really is that same submit
-    # Same author, same place in the same thread and the same text is what a replay is; anything else shares only the key and is refused, because answering it would hand one writer the comment of another
+    # A replay is the same author, place, thread and text; anything else only shares the key and is refused, as answering it would hand one writer another's comment
     # The answer is never new either way: this request stored nothing, so whatever the first one wrote beside the comment must not be written again
     private function getKeyResult(?string $key, string $name, string $mod, int $cid, int $pid, int $uid, string $body): array {
         if ($key === null) return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];

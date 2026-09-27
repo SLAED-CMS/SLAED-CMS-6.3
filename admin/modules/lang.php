@@ -74,7 +74,9 @@ function lang(): void {
         $view = $who_view[$mod[$i]] ?? _MVALL;
         $mod_path = BASE_DIR.'/modules/'.$mod[$i];
         $items = [];
-        if (is_dir($mod_path.'/admin/lang')) $items[] = ['href' => $afile.'.php?name=lang&op=fileedit&mod='.$mod[$i].'&typ=admin', 'icon_name' => 'person-gear', 'title' => _FULLEDIT.': '._ADMIN];
+        if (is_dir($mod_path.'/admin/lang')) {
+            $items[] = ['href' => $afile.'.php?name=lang&op=fileedit&mod='.$mod[$i].'&typ=admin', 'icon_name' => 'person-gear', 'title' => _FULLEDIT.': '._ADMIN];
+        }
         if (is_dir($mod_path.'/lang')) $items[] = ['href' => $afile.'.php?name=lang&op=fileedit&mod='.$mod[$i], 'icon_name' => 'puzzle', 'title' => _FULLEDIT.': '._MODUL];
         $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
@@ -165,7 +167,8 @@ function fileedit(): void {
                 $tloc = substr($lng_cn[$j], 0, 2);
                 $btn = $tpl->getHtmlFrag('button', [
                     'label' => _OK,
-                    'button_attr' => ' title="'.htmlspecialchars(_EAUTOTR, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'" onclick="TranslateLang(\'from_'.$i.'\', \'to_'.$i.'-'.$j.'\', \''.$floc.'-'.$tloc.'\', \''._ERRORTR.'\', \''.$conf['lang']['key'].'\');"',
+                    'button_attr' => ' title="'.htmlspecialchars(_EAUTOTR, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+                        .'" onclick="TranslateLang(\'from_'.$i.'\', \'to_'.$i.'-'.$j.'\', \''.$floc.'-'.$tloc.'\', \''._ERRORTR.'\', \''.$conf['lang']['key'].'\');"',
                 ]);
             }
             $rows[] = [
@@ -196,7 +199,7 @@ function fileedit(): void {
                 ['nameattr' => 'name', 'valueattr' => 'lang'],
                 ['nameattr' => 'op', 'valueattr' => 'save'],
                 ['nameattr' => 'refer', 'valueattr' => '1'],
-                ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+                ['nameattr' => 'token', 'valueattr' => getSiteToken('lang')],
             ]
         ),
         'content_html' => implode('', $groups).$pager,
@@ -208,7 +211,7 @@ function fileedit(): void {
 
 function save(): void {
     global $afile;
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('lang');
     $mod = getVar('post', 'mod', 'var', '');
     $typ = getVar('post', 'typ', 'var', '');
     $locs = getVar('post', 'lcn[]', 'var', []);
@@ -246,17 +249,47 @@ function config(): void {
     $cont .= checkPerms(CONFIG_DIR.'/lang.php');
     $s_lang = $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => getTplLanguageOptions($conf['lang']['lang'], 1), 'is_config' => true]);
     $rows = [
-        ['label_for' => 'f-key', 'label_html' => _LANGKEY, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'key', 'input_id' => 'f-key', 'value_attr' => (string)$conf['lang']['key'], 'is_config' => true])],
+        [
+            'label_for' => 'f-key',
+            'label_html' => _LANGKEY,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'text',
+                'name_attr' => 'key',
+                'input_id' => 'f-key',
+                'value_attr' => (string)$conf['lang']['key'],
+                'is_config' => true,
+            ]),
+        ],
         ['label_html' => _LANGTR, 'field_html' => $s_lang],
-        ['label_for' => 'f-count', 'label_html' => _LANGCOUNT, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'count', 'input_id' => 'f-count', 'value_attr' => (string)$conf['lang']['count'], 'is_config' => true])],
-        ['label_for' => 'f-per-page', 'label_html' => _PERPAGE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'per_page', 'input_id' => 'f-per-page', 'value_attr' => (string)($conf['lang']['per_page'] ?? 100), 'is_config' => true])],
+        [
+            'label_for' => 'f-count',
+            'label_html' => _LANGCOUNT,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number',
+                'name_attr' => 'count',
+                'input_id' => 'f-count',
+                'value_attr' => (string)$conf['lang']['count'],
+                'is_config' => true,
+            ]),
+        ],
+        [
+            'label_for' => 'f-per-page',
+            'label_html' => _PERPAGE,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'number',
+                'name_attr' => 'per_page',
+                'input_id' => 'f-per-page',
+                'value_attr' => (string)($conf['lang']['per_page'] ?? 100),
+                'is_config' => true,
+            ]),
+        ],
     ];
     $confv = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'lang'],
             ['nameattr' => 'op', 'valueattr' => 'configsave'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('lang')],
         ],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
@@ -267,7 +300,7 @@ function config(): void {
 
 function configsave(): void {
     global $afile, $conf;
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('lang');
     if (!$warn) {
         $cont = [
             'key' => getVar('post', 'key', 'text', ''),

@@ -7,14 +7,10 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * The shared rating is wired to the Rating class alone. The old shared table is left to the
- * polls, the vote reads nothing from the address, the rules are the four keys of docs/RATINGS.md behind the mark
- * of the 6.3 data update, the mass reset of votes is gone, and every text of the wiring exists in all six locales.
- */
+# The shared rating is wired to the Rating class alone, and every text of the wiring exists in all six locales
 final class RatingOwnersTest extends TestCase
 {
-    private const SITE = ['_RATINGS_FORM', '_RATINGS_DENY', '_RATINGS_GONE', '_RATINGS_TWICE', '_RATINGS_WAIT', '_RATINGS_FAIL'];
+    private const SITE = ['_RATINGS_FORM', '_RATINGS_DENY', '_RATINGS_GONE', '_RATINGS_TWICE', '_RATINGS_WAIT', '_RATINGS_FAIL', '_RATINGS_OFF'];
 
     private const ADMIN = [
         '_RATINGS_GUESTS', '_RATINGS_NOMARK', '_RATINGS_BADDAYS', '_RATINGS_VOTES', '_RATINGS_ANNUL', '_RATINGS_REASON', '_RATINGS_DONE', '_RATINGS_ACTOR', '_RATINGS_TARGET',
@@ -76,8 +72,8 @@ final class RatingOwnersTest extends TestCase
         }
     }
 
-    # The shipped rules are exactly four string keys per fixed scope, the readers ask for the keys, and the subsystem opens only behind the mark;
-    # the rule node.<name> of a registered Node type belongs to that type and is held by NodeConfigTest
+    # The shipped rules are exactly four string keys per fixed scope, the readers ask for the keys, and the subsystem opens only behind the mark
+    # The mark is the one of the 6.3 data update, and the rule node.<name> of a registered Node type belongs to that type and is held by NodeConfigTest
     #[Test]
     public function theRulesAreFourKeysBehindTheMark(): void
     {
@@ -94,7 +90,10 @@ final class RatingOwnersTest extends TestCase
         }
         $mark = "(\$conf['update']['ratings'] ?? '') === '6.3.0'";
         $this->assertStringContainsString($mark, $this->getBody('getRatingService'));
-        $this->assertStringContainsString($mark, $this->getCode('core/helpers.php'), 'The widget is live without the mark');
+        $help = $this->getCode('core/helpers.php');
+        $from = (int)strpos($help, 'function getRatingAsync(');
+        $body = substr($help, $from, strpos($help, "\n}\n", $from) - $from);
+        $this->assertStringContainsString('getRatingService()->getRule(', $body, 'The widget decides from the raw rule strings');
     }
 
     # The account form no longer zeroes the votes of every account around the class, and the only annulment is the one of the main administrator

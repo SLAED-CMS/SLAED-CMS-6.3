@@ -1,5 +1,5 @@
 <?php
-// PHPStan bootstrap for legacy globals and functions used via includes.
+# PHPStan bootstrap for legacy globals and functions used via includes
 
 if (!isset($conf)) {
     $conf = [];

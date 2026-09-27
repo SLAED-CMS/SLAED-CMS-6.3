@@ -4,17 +4,12 @@
 # License: MIT
 # Website: slaed.net
 
-# Capture and verify byte-level baselines of the rendered comment list.
-# Stage 1 of docs/COMMENTS-REDESIGN-2026.md requires the markup to survive the move
-# into the Comments class unchanged; without a baseline taken beforehand that claim
-# cannot be checked. Run it before the refactor, then again after.
-#
-#   php tools/comment-baseline.php capture
-#   php tools/comment-baseline.php verify
-#
+# Capture and verify byte-level baselines of the rendered comment list
+# Stage 1 of docs/COMMENTS-REDESIGN-2026.md requires the markup to survive the move into the Comments class unchanged, which only a baseline taken beforehand can check
+# Run it before the refactor, then again after
+# Usage: php tools/comment-baseline.php capture|verify
 # Options: --base=https://slaed.loc --out=storage/baseline/comments
-# Guest view only. Logged-in and moderator views carry session state and belong to
-# the browser path in .agents/skills/slaed/testing/browser-debugging.
+# Guest view only; logged-in and moderator views carry session state and belong to the browser path of the browser-debugging skill
 
 # Read one command line option, falling back to the given default
 function getOption(array $args, string $name, string $def): string {
@@ -72,9 +67,8 @@ function getRegion(string $html, string $name): string {
     return '';
 }
 
-# Replace request-scoped values so two captures of identical markup compare equal.
-# The X-CSRF-TOKEN header is emitted once per comment by getRatingAsync(), so without
-# this the list never compares equal to itself across two sessions.
+# Replace request-scoped values so two captures of identical markup compare equal
+# The X-CSRF-TOKEN header is emitted once per comment by getRatingAsync(), so without this the list never compares equal to itself across two sessions
 function filterVolatile(string $html): string {
     $html = preg_replace('#token=[0-9a-f]{16,}#i', 'token=TOKEN', $html);
     $html = preg_replace('#("X-CSRF-TOKEN":\s*")[0-9a-f]{16,}(")#i', '\1TOKEN\2', $html);

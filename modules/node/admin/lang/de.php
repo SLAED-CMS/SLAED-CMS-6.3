@@ -56,7 +56,7 @@ define('_NODE_MAXBYTES','Größengrenze, Bytes');
 define('_NODE_MAXLIST','Beiträge pro Seite, höchstens');
 define('_NODE_MIN','Minimum');
 define('_NODE_MODE','Darstellungsmodus');
-define('_NODE_MODEHINT','Kurzer Name eines Vorlagensatzes des Themes; default ist der Grundsatz');
+define('_NODE_MODEHINT','Vorlagensatz des Themes; default ist der Grundsatz, support gehört zur Erweiterung support');
 define('_NODE_MOVED','Der Status wurde geändert.');
 define('_NODE_NAME','Name (Adresse des Bereichs)');
 define('_NODE_NAMEHINT','Lateinische Kleinbuchstaben und Ziffern, bis 20 Zeichen; nach dem Anlegen unveränderlich');

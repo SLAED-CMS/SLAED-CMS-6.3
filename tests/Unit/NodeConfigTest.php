@@ -9,13 +9,7 @@ use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionMethod;
 
-/**
- * NodeService writes types. The four operations and the import run as the Closure of the shared
- * configuration writer on the four areas node, fields, uploads and ratings, with the type row locked in the same cycle and
- * the version proven on both sides. Every behaviour is driven by tests/Support/node_probe.php in its service mode: scratch
- * sources, backup, cache and upload root, one disposable MariaDB database with the shipped schema, and child processes for
- * a writer that dies at its commit, for the restore that follows the database, and for two creates racing for one name.
- */
+# NodeService writes types: four operations and the import run in the shared configuration writer, type row locked, version proven on both sides
 final class NodeConfigTest extends TestCase
 {
     private static array $probe = [];
@@ -26,6 +20,9 @@ final class NodeConfigTest extends TestCase
         return dirname(__DIR__, 2).'/core/classes/node/'.$name;
     }
 
+    # The areas written are node, fields, uploads and ratings; every behaviour is driven by tests/Support/node_probe.php in its service mode
+    # The probe uses scratch sources, backup, cache and upload root and one disposable MariaDB database with the shipped schema
+    # Child processes play a writer that dies at its commit, the restore that follows the database, and two creates racing for one name
     # Run the probe once in its service mode and memoize the runs; a probe that cannot create its database is a failure, not a skip
     private function getRuns(): array
     {
@@ -58,8 +55,8 @@ final class NodeConfigTest extends TestCase
         $this->assertRefused($call, 3, 'Invalid node input: '.$path, $name);
     }
 
-    # The type operations of the writer keep the approved signatures of docs/NODE.md (NodeService), and the class is loaded through the closed map;
-    # the whole public surface of the writer, materials included, is held by NodeServiceTest
+    # The type operations of the writer keep the approved signatures of docs/NODE.md (NodeService), and the class is loaded through the closed map
+    # The whole public surface of the writer, materials included, is held by NodeServiceTest
     #[Test]
     public function theWriterHasTheTypeOperations(): void
     {
@@ -354,8 +351,8 @@ final class NodeConfigTest extends TestCase
         $this->assertSame(0, $run['ops'], 'The working snapshot of the operation is left');
     }
 
-    # A name whose comments or favorites an earlier owner left behind is refused until the manager deletes them; a live module or type is never listed or deleted,
-    # a key is told apart by its exact bytes, and after the cleanup the name registers
+    # A name whose comments or favorites an earlier owner left behind is refused until the manager deletes them; a live module or type is never listed or deleted
+    # A key is told apart by its exact bytes, and after the cleanup the name registers
     #[Test]
     public function remainsOfAGoneOwnerHoldTheNameUntilDeleted(): void
     {
@@ -387,8 +384,8 @@ final class NodeConfigTest extends TestCase
         $this->assertSame(1, $run['trace']['row']['version']);
     }
 
-    # Besides the journal of published type changes, the only lines the run leaves in the log are the types held while an operation was unfinished;
-    # the journal names every kind of change with the administrator of the context, and a status that did not change leaves no line
+    # Besides the journal of published type changes, the only lines the run leaves in the log are the types held while an operation was unfinished
+    # The journal names every kind of change with the administrator of the context, and a status that did not change leaves no line
     #[Test]
     public function heldTypesAreLogged(): void
     {

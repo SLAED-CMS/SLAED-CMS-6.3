@@ -7,13 +7,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * The one file answer of the project, getFileStream(), and the private revalidation of Cache it
- * rides on. Every case is a real HTTP exchange with the built-in web server running tests/Support/web_probe.php, which
- * serves scratch fixtures through the shipped function: the compatible two-argument download, the closed inline registry,
- * the private cache with entity tag and date, HEAD, one byte range, If-Range, 416, the $start callback and the bounded
- * streaming of a large file that stops once the client goes away.
- */
+# The one file answer of the project, getFileStream(), and the private revalidation of Cache it rides on, each case a real HTTP exchange
 final class FileStreamTest extends TestCase
 {
     private static $proc = null;
@@ -21,6 +15,7 @@ final class FileStreamTest extends TestCase
     private static string $work = '';
 
     # Start the built-in server over a fresh scratch root with the fixtures; a server that does not come up is a failure, not a skip
+    # The server runs tests/Support/web_probe.php, which serves the scratch fixtures through the shipped function
     public static function setUpBeforeClass(): void
     {
         self::$work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_file_stream';

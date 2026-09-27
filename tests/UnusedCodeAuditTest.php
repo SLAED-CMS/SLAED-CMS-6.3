@@ -2,6 +2,7 @@
 
 use PHPUnit\Framework\TestCase;
 
+# Informational audit of unused core functions and unused local variable candidates; the summaries go to STDERR and never fail
 final class UnusedCodeAuditTest extends TestCase
 {
     private static string $base_path;
@@ -13,6 +14,7 @@ final class UnusedCodeAuditTest extends TestCase
         self::$stats = self::collectStats();
     }
 
+    # Prints the unused and low-used functions of core/*.php; informational only
     public function testUnusedFunctionsSummary(): void
     {
         $msg = sprintf(
@@ -26,10 +28,10 @@ final class UnusedCodeAuditTest extends TestCase
 
         fwrite(STDERR, $msg);
 
-        // Informational only.
         $this->assertTrue(true, $msg);
     }
 
+    # Prints the heuristic unused local variable candidates; informational only
     public function testUnusedLocalVariablesSummary(): void
     {
         $msg = sprintf(
@@ -41,7 +43,6 @@ final class UnusedCodeAuditTest extends TestCase
 
         fwrite(STDERR, $msg);
 
-        // Informational only.
         $this->assertTrue(true, $msg);
     }
 
@@ -53,10 +54,12 @@ final class UnusedCodeAuditTest extends TestCase
         ];
     }
 
+    # Maps each plain core function to its file:line list, tracking class scopes to exclude methods and skipping magic names
+    # Counts direct calls and callback strings; the direct scanner already skips declarations, so no definition count is subtracted
     private static function collectFunctionUsageStats(): array
     {
         $core_dir = self::$base_path.DIRECTORY_SEPARATOR.'core';
-        $defs = []; // name => list of file:line
+        $defs = [];
         $core_names = [];
 
         foreach (glob($core_dir.DIRECTORY_SEPARATOR.'*.php') as $file) {
@@ -84,7 +87,6 @@ final class UnusedCodeAuditTest extends TestCase
                     continue;
                 }
 
-                // Track class-like scopes so methods are excluded from this audit.
                 if (in_array($t[0], [T_CLASS, T_INTERFACE, T_TRAIT], true)) {
                     $pending_class_open = true;
                     continue;
@@ -96,22 +98,28 @@ final class UnusedCodeAuditTest extends TestCase
 
                 $prev_decl = self::prevSignificantToken($tokens, $i);
                 if (is_array($prev_decl) && in_array($prev_decl[0], [T_PRIVATE, T_PROTECTED, T_PUBLIC, T_STATIC, T_FINAL, T_ABSTRACT], true)) {
-                    continue; // class/trait/interface method
+                    continue;
                 }
 
                 if (!empty($class_depths)) {
-                    continue; // method inside class/anonymous class
+                    continue;
                 }
 
                 for ($j = $i + 1; $j < $n; $j++) {
                     $x = $tokens[$j];
-                    if (is_array($x) && in_array($x[0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT, T_AMPERSAND_FOLLOWED_BY_VAR_OR_VARARG, T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG], true)) {
+                    if (is_array($x) && in_array($x[0], [
+                        T_WHITESPACE,
+                        T_COMMENT,
+                        T_DOC_COMMENT,
+                        T_AMPERSAND_FOLLOWED_BY_VAR_OR_VARARG,
+                        T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG,
+                    ], true)) {
                         continue;
                     }
                     if (is_array($x) && $x[0] === T_STRING) {
                         $name = $x[1];
                         if (str_starts_with($name, '__')) {
-                            break; // skip magic methods from function-usage audit
+                            break;
                         }
                         $rel = str_replace(self::$base_path.DIRECTORY_SEPARATOR, '', $file);
                         $defs[$name][] = str_replace('\\', '/', $rel).':'.$x[2];
@@ -180,7 +188,6 @@ final class UnusedCodeAuditTest extends TestCase
 
         $rows = [];
         foreach ($defs as $name => $locations) {
-            // Direct scanner already excludes function declarations, so do not subtract def count here.
             $usage = ($direct[$name] ?? 0) + ($callback[$name] ?? 0);
             $rows[] = [
                 'name' => $name,
@@ -201,6 +208,8 @@ final class UnusedCodeAuditTest extends TestCase
         ];
     }
 
+    # Lists variables written but never read inside function and closure bodies, ignoring superglobals and signature parameters
+    # Each function keeps a $var => writes, reads, line map; known false positives are skipped
     private static function collectUnusedVariableCandidates(): array
     {
         $ignored_vars = array_flip([
@@ -238,7 +247,7 @@ final class UnusedCodeAuditTest extends TestCase
             $func_name = '';
             $next_func_name = false;
             $func_params = [];
-            $vars = []; // $var => ['writes'=>int, 'reads'=>int, 'line'=>int]
+            $vars = [];
 
             for ($i = 0; $i < $n; $i++) {
                 $tok = $tokens[$i];
@@ -306,8 +315,6 @@ final class UnusedCodeAuditTest extends TestCase
                     continue;
                 }
 
-                // Ignore variables in function signature (parameters/defaults)
-                // and analyse only function body scope.
                 if ($depth < $func_depth) {
                     continue;
                 }
@@ -345,15 +352,11 @@ final class UnusedCodeAuditTest extends TestCase
         ];
     }
 
-    /**
-     * @return array<int, string>
-     */
+    # Returns the PHP files of the project whose path contains none of the excluded directories
     private static function iterPhpFiles(array $excluded_top_dirs): array
     {
         $files = [];
-        $it = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator(self::$base_path, RecursiveDirectoryIterator::SKIP_DOTS)
-        );
+        $it = getTreeFiles(self::$base_path);
 
         foreach ($it as $f) {
             if (!$f->isFile() || $f->getExtension() !== 'php') {
@@ -374,9 +377,7 @@ final class UnusedCodeAuditTest extends TestCase
         return $files;
     }
 
-    /**
-     * @return array{0:int,1:string,2:int}|string|null
-     */
+    # Returns the previous significant token skipping whitespace and comments: a token array, a string or null
     private static function prevSignificantToken(array $tokens, int $index)
     {
         for ($i = $index - 1; $i >= 0; $i--) {
@@ -395,9 +396,7 @@ final class UnusedCodeAuditTest extends TestCase
         return null;
     }
 
-    /**
-     * @return array{0:int,1:string,2:int}|string|null
-     */
+    # Returns the next (direction 1) or previous (direction -1) significant token: a token array, a string or null
     private static function nextSignificantToken(array $tokens, int $index, int $direction = 1)
     {
         $i = $index + $direction;
@@ -464,9 +463,7 @@ final class UnusedCodeAuditTest extends TestCase
         return null;
     }
 
-    /**
-     * @return array<string, bool>
-     */
+    # Returns the parameter variables of the function signature as a name => true map
     private static function extractFunctionParamVars(array $tokens, int $function_index): array
     {
         $params = [];
@@ -513,9 +510,7 @@ final class UnusedCodeAuditTest extends TestCase
         return $params;
     }
 
-    /**
-     * @return array<string, bool>
-     */
+    # Returns the variables a closure captures with use () as a name => true map
     private static function extractClosureUseVars(array $tokens, int $function_index): array
     {
         $captured = [];

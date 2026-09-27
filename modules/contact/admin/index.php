@@ -27,21 +27,18 @@ function contact(): void {
             ]),
         ],
         [
-            'label_for' => 'f-info',
             'label_html' => _CONTACTINFO,
-            'field_html' => $tpl->getHtmlFrag('textarea', [
-                'name_attr' => 'info',
-                'input_id' => 'f-info',
-                'value_text' => $conf['contact']['info'],
-                'rows_num' => 10,
-            ]),
+            'label_id' => $labid = getFieldIds('', 'info')['label'],
+            'field_html' => getTplTextarea(['labelledby' => $labid, 'label' => _CONTACTINFO, 'id' => '1', 'name' => 'info', 'value' => ($conf['contact']['info'] ?? ''),
+                'mod' => 'contact', 'store' => 'config', 'rows' => 10, 'placeholder' => _CONTACTINFO]),
+            'is_full' => true,
         ],
     ];
     $cont .= checkPerms(CONFIG_DIR.'/contact.php');
     $body = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=contact&op=save',
         'hidden' => [
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('contact')],
         ],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
@@ -53,15 +50,17 @@ function contact(): void {
 
 function save(): void {
     global $afile;
-    $iswarn = !checkSiteToken();
+    $iswarn = !checkAdminPost('contact');
+    $room = '';
     if (!$iswarn) {
         $cont = [
             'info' => getVar('post', 'info', 'text', ''),
             'admins' => getVar('post', 'admins', 'num', 0),
         ];
-        setConfigFile('contact.php', $cont);
+        $room = checkEditorTextRoom($cont['info'], 'config');
+        if ($room === '') setConfigFile('contact.php', $cont);
     }
-    setRedirect($afile.'.php?name=contact', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
+    setRedirect($afile.'.php?name=contact', false, 302, $iswarn ? _TOKENMISS : ($room ?: _SUCCSAVE), $iswarn || $room !== '');
 }
 
 function info(): void {

@@ -261,7 +261,7 @@ function getProbeCache(): array {
     return $out;
 }
 
-# Whether one ratings scope lets the shop be read: a usable rule answers ok, a blocked one answers unavailable
+# Whether one ratings scope lets the shop be read: a usable rule answers ok, a blocked one answers blocked
 function getProbeCode(array $conf, string $scope = 'shop'): string {
     return getProbeRating(getProbeUser(2), [], null, $conf)->getRating($scope, 1)['code'];
 }
@@ -310,6 +310,10 @@ function getProbeConfig(): array {
     $out['less'] = [getProbeCode($less), getProbeCode($less, 'account')];
     $out['name'] = [getProbeCode($name), getProbeCode($name, 'node.probe')];
     $out['ghost'] = getProbeCode(getProbeConf(), 'node.ghost');
+    $broken = getProbeRating(getProbeUser(2), [], null, getProbeConf(['forum' => ['active' => '2']]));
+    $closed = getProbeRating(getProbeUser(2), [], null, []);
+    $out['rule'] = [$broken->getRule('shop'), $broken->getRule('forum'), $broken->addRating('forum', 1, 5, getProbeKey(3))['code'], $closed->getRule('shop'),
+        $closed->getRating('shop', 1)['code']];
     $off = getProbeRating(getProbeUser(2), ['shop' => ['active' => '0']]);
     $out['switch'] = [getProbeBrief($off->getRating('shop', 1)), getProbeBrief($off->addRating('shop', 1, 5, getProbeKey(1)))];
     $dim = getProbeRating(getProbeUser(2), ['shop' => ['detail' => '0']]);

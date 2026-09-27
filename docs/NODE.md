@@ -491,7 +491,7 @@ CASCADE`. There is no foreign key to `_categories`.
 - `_nodes.cid` is the only source of the main category, which decides language and main route. The table
   holds extra categories only: the service drops the main category and `0` from the input list.
 - The service checks that every category exists, belongs to the type (`_categories.modul = <name>`) and, for
-  a writer who does not moderate the type, grants view and post rights.
+  a writer who does not moderate the type, grants view and post rights and is shared or of the context language.
 - The main category and the full set of extra ones are saved in the material's transaction.
 - A category read is two disjoint branches joined by `UNION ALL`: `cid = X` through `_nodes.cat` in sort
   order, and `cid <> X` joined through `_node_categories.cat`. Neither branch can return a material twice,
@@ -915,13 +915,14 @@ public function getNodeTypeExport(string $name): string
 - `filterNodeSettings()` is the one settings validator, for stored types and before every type write: it merges the
   stored differences over `node.defaults` (maps by key, lists whole), checks the closed sections (`list`, `view`,
   `form`, `workflow`, `admin`, `features`, `assets`, `integrations`, `ext` via the extension) and refuses a field
-  named after a `_nodes` column. It returns the effective settings or throws `INVALID <path>`.
+  named after a `_nodes` column. It returns the effective settings or throws `INVALID <path>`. The read of a stored
+  type runs the same check and narrows two switches a later rule closed (see Effective settings).
 - `getNodeTypeExport()` needs `manage` or `super` (`NOTFOUND`, `INVALID export` for a broken upload or rating rule)
   and returns pretty-printed JSON `{"format": "slaed.node", "version": 1, "type": {…}}` with exactly the keys of
   `EXPORT`: `name`, `title`, `intro`, `ext`, `sort`, `settings`, `fields`, `uploads`, `rating`.
 
 Public constants shared with the writer: `TREEPART = 500`, `KINDS`, `RMODES` (kinds each role mode shows),
-`ROLEDEF` (role keys with defaults), `UPLOAD`, `FORMAT = 'slaed.node'`, `EXPORT`.
+`ROLEDEF` (role keys with defaults), `UPLOAD`, `FORMAT = 'slaed.node'`, `EXPORT`, `MODES` (display modes of `view.mode`).
 
 #### Read rights
 
@@ -930,7 +931,7 @@ Public constants shared with the writer: `TREEPART = 500`, `KINDS`, `RMODES` (ki
 | item | `getNode`, `getNodeContent`, `getNodeAsset`, targets with `any` | moderator any state and date; others published in window | PHP check of the joined row |
 | target | `getNodeTarget`, `getNodeTargetList` | published in window | PHP check of the joined row |
 | list | `getNodeList`, `getNodeCount`, `getNodeTree`, `getNodeAuthorStat` | per `setNodeStatus()` | SQL predicate with language |
-| site | `getNodeSitemap` | published in window | SQL predicate without language |
+| site | `getNodeSitemap` | published in window | SQL predicate with language |
 | dead | `getNodeDeadline` | published, future moments | SQL predicate with language |
 
 - "Published in window": `status = Published`, `published <= NOW()`, `expires` empty or later, database clock. A
@@ -940,8 +941,8 @@ Public constants shared with the writer: `TREEPART = 500`, `KINDS`, `RMODES` (ki
   nobody, a group list grants by intersection with `groups`, else level `0` grants everyone and `1` users only.
   `cid = 0` is open; a type without `features.categories` reads only `cid = 0`; a main category of another module
   or a deleted one closes the material to non-moderators.
-- The language filter (context language or `lang = ''`) applies to lists, tree, deadline and search, never to reads
-  by ID, targets, resources or the sitemap.
+- The language filter (context language or `lang = ''`) applies to lists, tree, deadline, search and the sitemap,
+  never to reads by ID, targets or resources.
 - Missing and closed answer the same `null`.
 
 #### Single reads and targets
@@ -953,6 +954,7 @@ public function getNodeContent(int $id, NodeType $type): ?Node
 public function getNodeAsset(int $id, NodeType $type): ?NodeAsset
 public function getNodeTarget(string $type, int $id, bool $any = false): ?NodeTarget
 public function getNodeTargetList(array $refs, bool $any = false): array
+public function getTargetSize(): int
 ```
 
 - The extension is assigned before the first single-type read (`null` for a standard type). Materials are found by
@@ -960,7 +962,7 @@ public function getNodeTargetList(array $refs, bool $any = false): array
 - `getNode()`: main statement with author and category, then extra categories, relations and resources, one
   statement each. `getNodeContent()`: the main statement alone, `body` loaded, the four sets `null` (the `[attach]`
   route). `getNodeAsset()`: resource, material, route type and main category in one statement, plus an active role.
-- `getNodeTargetList()` takes `global ID => type name`, at most `min(500, limits.syncbatch)`, and returns
+- `getNodeTargetList()` takes `global ID => type name`, at most `getTargetSize()` entries, and returns
   `array<int, NodeTarget>` in input order without missing, closed, unpublished, disabled-type or wrong-type
   entries. Bad IDs, names, key or value types or an oversized batch are `INVALID`; `[]` returns `[]`. It costs the
   type rows unknown to the instance plus one `UNION ALL` of one branch per type, and never loads text or sets.
@@ -1041,7 +1043,8 @@ public function getNodeDeadline(): ?int
   statement under the list rules.
 - `getNodeCategoryCount()`: `cid => count` in any state per main category; `DENIED` without `manage` or moderation.
 - `checkNodeCategory()`: the category is readable in the type by the list rule (a public list outside it is 404).
-  `getNodePostCats()`: categories the form offers (`pview` and `ppost` both grant; all for a moderator).
+  `getNodePostCats()`: categories the form offers (`pview` and `ppost` both grant and the category is shared or of
+  the context language; all for a moderator).
 - `getNodeDeadline()`: Unix time of the nearest future `published` or `expires` of the list, or `null`, one
   statement; routes pass it to `Cache::setPageUntil()` while building the HTML cache.
 
@@ -1319,7 +1322,7 @@ All in `core/system.php` unless noted.
 | `getNodeWriter(?NodeType $type = null): NodeService` | writer with `$fld` and the shared `$pnt`, bound to the type's extension |
 | `getNodeHandler(NodeType $type): ?NodeExtension` | the type's extension with the request context |
 | `getNodeTypeMap(): array` | `name => NodeType` the request may receive, once per request; no SQL without registered types |
-| `getNodeTitleMap(array $refs): array` | `id => title` of readable targets, batches of `min(500, syncbatch)` |
+| `getNodeTitleMap(array $refs): array` | `id => title` of readable targets, batches of `NodeQuery::getTargetSize()` |
 | `getNodeModeType(string $mode): ?NodeType` | first active type without extension with that `view.mode` |
 | `getNodeTplName(string $kind, string $name, NodeType $type): string` | `node/<mode>/<name>` when the theme has it, else `node/<name>` |
 | `getNodeBlockParam(string $param): ?array` | canonical JSON of `_blocks.param`: exactly `type`, `mode` (`last`/`home`), `limit` 1…50; a named type needs `integrations.blocks`, `home` its `features.home` |
@@ -1614,12 +1617,18 @@ the same effective settings.
 
 ### Effective settings
 
-`NodeQuery::filterNodeSettings(string $ext, array $settings, array $fields): array` is the single check for reading a
-stored type and for every write. It merges `$settings` into `defaults`, validates each section, runs the extension
+`NodeQuery::filterNodeSettings(string $ext, array $settings, array $fields): array` is the single check for every
+write, and the read of a stored type runs it too. It merges `$settings` into `defaults`, validates each section, runs the extension
 filter and returns the canonical settings in the order `list`, `view`, `form`, `workflow`, `admin`, `features`,
 `assets`, `integrations`, `ext`. A failure throws `NodeException::INVALID` with the message
 `Invalid node input: <path>` (for example `list.limit`, `assets.cover.mode`). A field named like a column of
 `_nodes` is refused as `fields.<name>`.
+
+A stored type may predate a rule that closed a switch: `features.submit` of a `sync` type, or `report` of a role
+outside the modes `download` and `link`. When the only refusal is such a switch standing at `true`, the read takes it
+as `false`, logs `Node: a type carries a switch a later rule closed, it is read switched off` with the name and the
+path, and checks again; both switches only narrow what the type grants. A malformed value of them, and every other
+refusal, still fails the type. A write is never narrowed: saving the type form stores the switches off.
 
 #### Settings: list
 
@@ -1639,7 +1648,7 @@ sort; there is no sort key for it.
 
 | Key | Type | Default | Rule |
 |---|---|---|---|
-| `mode` | string | `'default'` | `^[a-z][a-z0-9]{0,19}$`; names the display set of the theme, never a path |
+| `mode` | string | `'default'` | one of `NodeQuery::MODES`: `default`, `article`, `docs`, `faq`, `files`, `media`, `support`; a type of the extension `support` takes `support` and no other type does |
 
 `view` carries no rights. See Rendering for how the mode selects templates.
 
@@ -1709,7 +1718,7 @@ is stored in `_node_assets.role`. Roles are ordered by `sort`, then by name.
 | `min` | int | 0 | at least 0; checked before `Pending` and `Published`, not for `Draft` or `Disabled` |
 | `max` | int | required | 1 to `limits.maxassets`, not below `min`; checked on every save |
 | `canlink` | bool | false | allows an external `http`/`https` source |
-| `report` | bool | false | offers the broken-resource report; only for modes `download` and `link` |
+| `report` | bool | false | offers the broken-resource report; only for modes `download` and `link`; the type form shows the switch only while the mode select of the role holds one of them and drops it otherwise |
 | `mode` | string | required | a key of the closed mode registry below |
 | `active` | bool | true | an inactive role keeps its rows but takes no new resource and leaves the standard output |
 | `sort` | int | 0 | at least 0 |
@@ -2003,7 +2012,7 @@ with an `Allow` header. Comments, rating and favorites use their own global rout
 |---|---|
 | 301 | explicit `order`/`dir` equal to the type default: redirect to the clean list URL (keeps `cat`, `let`, `num > 1`) |
 | 302 / 303 | redirect after a write (`setRedirect()` sends 303 for POST); 302 for an external `download`/`link` source |
-| 400 | malformed `cat`/`num`; bad or disabled `let`; `order` unknown or not allowed; `dir` not `asc`/`desc`; form `action` not `preview`/`submit` |
+| 400 | malformed `cat`/`num`; bad or disabled `let`; `order` unknown, or other than `published` and outside `list.orders`; `dir` not `asc`/`desc`; form `action` not `preview`/`submit` |
 | 403 | guest non-moderator on a `support` list or material; form not open to the visitor; bad token on `add`, `report`, `support`; `support` by a non-owner or to another state; writer `DENIED` |
 | 404 | unknown type or op; `cat` without categories or unreadable; page past the end; missing or malformed `id`; material or resource missing, closed, foreign or unreadable; `add` without `submit`; `attach` outside its two query forms or not granted; report refused |
 | 405 | method not in the operation table, with `Allow` |
@@ -2124,7 +2133,7 @@ administrator whose `_admins.modules` holds `node` or any `node-<type>` (`is_adm
 | `remains` | POST | `modul` | manage | delete comments and favorites of a removed module key |
 | `clone` | GET, HEAD, POST | `type`; POST `tname` | manage | export and import under a new name |
 | `export` | GET, HEAD | `type` | manage | download `node-<name>.json` |
-| `import` | GET, HEAD, POST | POST `file` (`.json`, at most 1 MiB), `tname` | manage | import as a new disabled type |
+| `import` | GET, HEAD, POST | POST `file` (`.json`, at most 1 MiB), `tname` | manage | import as a new disabled type; a file over 1 MiB, a failed upload and another extension answer 422 with their own text before the writer runs |
 | `config` | GET, HEAD, POST | POST `maxassets`, `maxlist`, `syncbatch`, `send` | manage | edit `limits`; the other Node settings are shown only |
 | `info` | GET, HEAD | - | entry | module documentation |
 
@@ -2134,7 +2143,7 @@ a configuration operation is pending), 422 invalid input, 502 a failed source fe
 material edit shows the differing sections and a link to the current record; a stale state change or delete asks to
 open the record and confirm again. GET never changes data.
 
-The type form edits identity, `list`, `view.mode`, `features`, `workflow` (access through the category access widget:
+The type form edits identity, `list`, `view.mode` (a select of `NodeQuery::MODES`), `features`, `workflow` (access through the category access widget:
 `0|0` all, `1|0` users, `2|<ids>` groups), roles and `integrations`. Fields, upload and rating rules and extension
 settings stay those of the stored type, the profile, or the defaults of a new type. A new type starts from `defaults`
 with every feature off and no role; a profile replaces each section of that base shallowly with its own.
@@ -2309,7 +2318,7 @@ takes part only for an active type whose switch is on.
 | `getNodeReader(?NodeType $type = null): NodeQuery` | Reader of the request context, bound to the type's extension when given |
 | `getNodeWriter(?NodeType $type = null): NodeService` | Writer with the shared `Point`, bound to the type's extension when given |
 | `getNodeHandler(NodeType $type): ?NodeExtension` | Extension through the closed factory, `null` for a standard type |
-| `getNodeTitleMap(array $refs): array` | `id => title` of readable targets, chunked by `limits.syncbatch` |
+| `getNodeTitleMap(array $refs): array` | `id => title` of readable targets, chunked by `NodeQuery::getTargetSize()` |
 | `getNodeModeType(string $mode): ?NodeType` | First active type without extension whose `view.mode` is `$mode` |
 | `getNodeTplName(string $kind, string $name, NodeType $type): string` | `node/<mode>/<name>` when the theme has it, else `node/<name>` |
 | `addNodeMail(array $list, string $title, string $text): bool` | Queues one Node notice per address through `Mail` |
@@ -2318,8 +2327,10 @@ takes part only for an active type whose switch is on.
 
 `limits.syncbatch` (shipped `500`) bounds the material ids Node hands to a global subsystem per pass. Ids are
 cast to positive integers and de-duplicated, then split before the boundary (1200 ids: 500 + 500 + 200).
-`getNodeTargetList()` refuses more than `min(500, syncbatch)` refs; `getNodeTitleMap()`,
-`Comment::getUserCount()` and the sitemap walk chunk by the same value. Long walks use the cursor
+`NodeQuery::getTargetSize()` answers `min(500, syncbatch)`, and 500 for a missing or broken configuration;
+`getNodeTargetList()` refuses more refs than that. Every caller chunks by the same method: `getNodeTitleMap()`,
+`Comment::getUserList()`, `Comment::getUserCount()`, the related cards of a material, the relation check of a
+write and the sitemap walk, so lowering `syncbatch` below stored relations never refuses a read. Long walks use the cursor
 `id > <last id> ORDER BY id LIMIT n`, never `OFFSET`, and resume from the last confirmed cursor.
 
 The document tree is an internal read: `NodeQuery::getNodeTree()` uses batches of `NodeQuery::TREEPART = 500`
@@ -2343,7 +2354,8 @@ public list outside it is `404`, and `setHead()` uses it so a closed category ne
 - A discussion, `Comment::getTargetMode()` and the form need a readable target, the `comments` feature and no
   refusal by `checkNodeAction(..., 'comment')`; otherwise the mode is `Disabled` and the discussion empty.
 - Lists outside the target page (`getUserList()`, `getAdminList()`, the profile feed of `core/user.php`,
-  `getUserCount()`) drop comments whose target the viewer cannot read, with one batch read per slice.
+  `getUserCount()`) drop comments whose target the viewer cannot read, with batch reads of
+  `NodeQuery::getTargetSize()` per slice.
   `getModuleList()` hides a type the administrator does not moderate.
 - A write on a material locks it (`setTargetLock()`) before the comment row, re-reads the mode under the lock,
   writes the counter from a locking count, then calls the extension, then `Point`.
@@ -2415,7 +2427,8 @@ and joins several files with an index. For each active type with `integrations.s
 the open categories (`pread` level `0` without groups; on a multilingual site only `lang = ''` or the site
 language) and the materials read by `NodeQuery::getNodeSitemap(int $after = 0, int $limit = 500): array` - rows
 `id`, type name, `title`, `cid`, `ctitle`, `published`, `updated` of every sitemap type after a global id cursor,
-as a guest context, in batches of `max(1, min(500, limits.syncbatch))`. A failure removes the files of the run.
+as a guest context of the site language (none on a site with one language), in batches of
+`NodeQuery::getTargetSize()`. A failure removes the files of the run.
 The HTML map lists a type with its open categories and leaves materials to the XML.
 
 ### Blocks
@@ -2570,8 +2583,8 @@ public function getNodeSupportList(NodeType $type, int $page, int $limit, ?int $
   `aid = 0` for unassigned, `limit` up to `limits.maxlist`, order `s.prio DESC, s.activity ASC, s.id ASC`;
   returns `['nodes' => NodeTarget[], 'ext' => [id => card], 'count' => int]`.
 - Routes: public `POST op=support` (owner, CSRF, card version, state `staff` or `closed`; `aid`/`prio` come from
-  the stored card); administrative `GET|POST op=support` for the full card. The ordinary administrative list of
-  the type is the queue.
+  the stored card); administrative `GET|POST op=support` for the full card, whose discussion is read whole in one
+  pass by `Comment::getThread()`. The ordinary administrative list of the type is the queue.
 
 Mail (`ext.mail = true`, default of the `help` profile) goes through `addNodeMail()`: a new request to every
 subscribed administrator (`_admins.smail = '1'`, request language on a multilingual site) who is super or holds
@@ -2697,11 +2710,12 @@ text, never the exception message.
 - A form resource file is stored only when `checkEditorUploadAccess()` of `<type>.attach` allows it (moderator,
   `userupload`, `guestupload`), for active non-`link` roles, while the role has fewer than `max` sources and the
   request stored fewer than `maxfiles` (`0` = unlimited).
-- A non-moderator posts only into categories whose `pview` shows them and whose `ppost` admits him
-  (`NodeQuery::getNodePostCats()`) and relates only published readable targets. Editing is for the main
+- A non-moderator posts only into categories whose `pview` shows them, whose `ppost` admits him and whose language
+  is shared or that of the context (`NodeQuery::getNodePostCats()`) and relates only published readable targets. Editing is for the main
   administrator and type moderators, so a later-closed category or unreadable relation never blocks an edit.
 - A new external resource URL from a non-moderator is accepted only in a material going to moderation (else
-  `INVALID assets.<n>.src`). `op=asset` redirects externally only for roles in mode `download` or `link`; other
+  `INVALID assets.<n>.src`, which `getNodeFault()` names as resource `n + 1`). The form offers the link input of a
+  resource only to a moderator of the type or to a writer whose material goes to `Pending` (`getNodeFlowState()`). `op=asset` redirects externally only for roles in mode `download` or `link`; other
   modes show the address and their `op=asset` is `404`. The server never fetches an external resource URL.
 - A `support` list answers `403` to a guest who does not moderate the type.
 
@@ -2905,7 +2919,7 @@ files also have a static half that reads the sources.
 | `NodeGuardTest` | 10 | `route_probe.php guard` | output escaping, favorites with points, shop, poll right |
 | `NodeIntegrityTest` | 7 | `route_probe.php intact` | rows left by real requests, checked by SQL |
 | `NodeProfileTest` | 14 | `install_probe.php` | clean install creates the ten profiles; panel and public walk |
-| `UpdateSiteTest` | 8 | `install_probe.php update` | 6.2 -> 6.3 update of `tests/Fixtures/update62` over HTTP |
+| `UpdateSiteTest` | 9 | `install_probe.php update` | 6.2 -> 6.3 update of `tests/Fixtures/update62` and `update62early` over HTTP |
 | `Update{Config,Mails,Setup}Test` | 6, 4, 8 | `update_probe.php config`/`mails`/`setup` | settings carry-over, newsletter, registry, preflight |
 | `Update{Points,Ratings,Fields}Test` | 6, 8, 8 | `update_probe.php` (`points`)/`ratings`/`fields` | data update units |
 | `PointTest`, `RatingTest` | 20, 22 | `point_probe.php`, `rating_probe.php` | the classes; `RatingTest` also the cache guard |
@@ -3036,10 +3050,13 @@ A site counts as installed when `config/db.php` exists and names a database. On 
    `_SETUPLOCK` without a form, a write or a database connection.
 2. The first request that meets the content in plain text (`password_get_info()` reports no algorithm) replaces it
    by `password_hash($code, PASSWORD_DEFAULT)`. A key that cannot be rewritten exits with `_FILE … _SERRORPERM`.
-3. `config()` shows only the code field until `password_verify()` accepts the posted `xcode`; the code travels
+3. `config()` shows only the code field until `checkSetupCode()` accepts the posted `xcode`; the code travels
    to `save()` as a hidden field and is verified again before the first write and before any database
    connection (`_SETUPCODE`).
-4. The key is removed at the end of `save()` when the report holds no red line, for every branch. A refused or
+4. `checkSetupCode()` verifies under an exclusive lock of the key file and keeps the count of failures in a row on
+   its second line; a match clears it. The failure that reaches `SETUPFAIL` (5) removes the key and answers
+   `_SETUPKEYGONE`, and a key that already holds that count is removed by the next request before any form.
+5. The key is removed at the end of `save()` when the report holds no red line, for every branch. A refused or
    failed run keeps it, so the run can be repeated at once.
 
 A clean installation (no `config/db.php`) needs no key.
@@ -3052,7 +3069,7 @@ In this order, each an exit that writes nothing:
 |---|---|
 | `setup` is one of `new`, `update4_1` … `update6_2`, `update6_3` | `_SETUPTYPE` |
 | table prefix matches `[A-Za-z0-9_]{1,32}` | `_SETUPPREFIX` |
-| panel file name passes `filterVar()` (`[a-zA-Z0-9_-]`) and names no root file other than `admin` or the current panel | `_SETUPAFILE` |
+| panel file name passes `filterVar()` (`[a-zA-Z0-9_-]`), is not `index` or `setup`, and names no root file other than `admin` or the current panel | `_SETUPAFILE` |
 | `checkWritableConfig()` for `db.php`, `global.php`, `security.php` (for a missing one: `config/`) | `_FILE … _SERRORPERM` |
 | `storage/backup/config/marker.json` is absent (no unfinished runtime configuration operation) | `_SETUPJOUR` |
 
@@ -3073,10 +3090,10 @@ any file is written.
 - `update6_3`: `<prefix>_users` and `<prefix>_admins` must exist (`_SETUPTABLES`); every existing table of the
   transaction list (`users`, `admins`, `comment`, `forum`, `order`, `clients`, `favorites`, `user_oauth`,
   `points`, `products`, `rating_targets`, `rating_actors`, `rating_votes`, `categories`, `voting`,
-  `newsletter`) must be InnoDB, else `_SETUPINNODB` followed by one `ALTER TABLE … ENGINE=InnoDB;` per table.
+  `newsletter`, `privat`) must be InnoDB, else `_SETUPINNODB` followed by one `ALTER TABLE … ENGINE=InnoDB;` per table.
   Nothing is converted automatically. A table that does not exist yet is skipped.
 
-A table that takes part in a Point, Rating, Field, Node or newsletter transaction belongs in that list.
+A table that takes part in a Point, Rating, Field, Node, private message or newsletter transaction belongs in that list.
 
 ### Branch order
 
@@ -3089,8 +3106,10 @@ newsletter snapshot still runs and reports, then neither the schema file nor any
 3. `setUpdateConfig()` carries the 6.2 settings (see "6.2 configuration" below).
 4. `global.php` again (without taking `language` and `homeurl` from the installer cookie or the request host,
    which the other branches do), the panel file rename, `security.php` (`afile`), `db.php` in 6.3 format.
-   The rename source is the shipped `admin.php` when it exists, otherwise the current panel file (a repeat after
-   the rename).
+   The current panel is the `afile` of `config/config_security.php` while a 6.2 site still has it, otherwise the
+   one of `security.php`; the config form offers it, or a random name instead of `admin`. The rename source is the
+   shipped `admin.php` when it exists, otherwise the current panel file (a repeat after the rename); the rename
+   replaces a 6.2 loader under the chosen name, and a current panel file under another name is removed.
 5. `setUpdateModules($db, $prefix, $first)` reconciles `config/modules.php`.
 6. `deleteSetupTypes($keep)` removes every type of the shipped `config/node.php` that has no row in
    `<prefix>_node_types` (all of them on the first run, because the table does not exist yet).
@@ -3103,6 +3122,8 @@ newsletter snapshot still runs and reports, then neither the schema file nor any
 9. On the first run with no red line so far: the mark `modules`.
 10. `config/newsletter.php` gains missing keys (`abort`, `bouncemax`, `breakwin`, `canary`, `canarymin`).
 11. `setUpdateMails(..., false)` snapshots the pending newsletter recipients while the column `mails` exists.
+    A negative balance in `_users.points` (`user_points` on 6.2) becomes 0, since the schema makes the column
+    unsigned; the line counts the accounts.
 12. Any red line so far: stop before the schema.
 13. `getSqlFile('setup/sql/table_update6_3.sql', …)`. An empty answer or a red line stops here: no data unit
     runs, no data mark is written.
@@ -3194,7 +3215,8 @@ the positional `users.points` string of 6.2 is not carried.
   86400, `0` stays "no wait". Only `account`, `forum`, `shop` and `node.<name>` are kept.
 - Aggregates go to `rating_targets` (`base` = total, `created` = `moment`); the latest `_rating.time` per actor
   (`u:<uid>` or `g:<normalized address>`) and target goes to `rating_actors.last`. No vote row is created.
-- `_rating` is never modified; poll rows, other events and rows of missing targets are counted and left.
+- The unit never modifies `_rating`; poll rows, other events and rows of missing targets are counted and left.
+  The schema file before it has already removed the later rows of one address, target and module (see below).
 - `config/ratings.php` is published only after targets, terms, owner aggregates, an empty `rating_votes` and the
   poll row count match the manifest. The rating model is described in `docs/RATINGS.md`.
 
@@ -3205,20 +3227,29 @@ the positional `users.points` string of 6.2 is not carried.
 
 ```php
 function getUpdateRules(string $area, mixed $text, Field $fld, array &$bad): array
-function getUpdateValue(array $rules, array $slots, int $size, string $text, Field $fld): array
+function getUpdateValue(array $rules, array $slots, int $size, string $text, Field $fld, string $plan = ''): array
 ```
 
-- `getUpdateRules()` splits the definitions by `||`, each position by `|` into `caption|content|type|duty`. An
-  empty position or caption `0` is skipped; type `1`-`5` maps to `text`, `textarea`, `select`, `datetime`, `date`;
-  another slot count or type is refused. Keys are `fieldN` by original position with gaps kept, options
-  `optionN` in original order, both with `sort = N × 10`; a repeated option caption is refused. Content `0` means
-  no default; `req` only for exactly `1`. The set passes `Field::filterFieldList()`.
+- `getUpdateRules()` splits the definitions by `||`, each position by `|` into `caption|content|type|duty`, and
+  trims every slot and option caption. An empty position is skipped; type `1`-`5` maps to `text`, `textarea`,
+  `select`, `datetime`, `date`; another slot count or type of an active position is refused. Keys are `fieldN` by
+  original position with gaps kept, options `optionN` in original order, both with `sort = N × 10`; a repeated
+  option caption is refused. Content `0` means no default; `req` only for exactly `1`. The set passes
+  `Field::filterFieldList()`. A position with caption `0` and a known type stays in the slot map as switched off,
+  with the inactive definition it becomes (`title` = its key, no default, not required) once a row needs it.
 - `getUpdateValue()` splits a value row by `|` and tries two layouts: full (value i -> position i) and short
-  (values -> defined positions only). It answers `['json' => …]` when exactly one distinct result passes
-  `Field::checkFieldValues()`, otherwise `['why' => …]` without stored data in the text. Empty is absence;
+  (values -> active positions only). A layout that fits the definitions as they are wins; only when none does,
+  a layout that fits once they grow: a select caption no option carries, or data at a switched off position.
+  It answers `['json' => …, 'plan' => layout, 'grow' => field => [captions]]` when exactly one distinct result
+  passes `Field::checkFieldValues()`, otherwise `['why' => …]` without stored data in the text. Empty is absence;
   `0` is a value of `text`/`textarea` and the placeholder of an empty choice in `select` (without such an option),
-  `date`, `datetime` and in a position without a definition. A position without a definition may hold only empty
-  or `0`. Values are not decoded: 6.2 stored `htmlspecialchars` text, which is carried byte for byte.
+  `date`, `datetime` and in a switched off position. Data beyond every position is refused. Values are not decoded:
+  6.2 stored `htmlspecialchars` text, which is carried byte for byte.
+- The unit grants the needs of every row in id order: a caption becomes one disabled option (`active = false`,
+  next `optionN`) of its field, a switched off position its inactive field; then each growing row runs its layout
+  (`$plan`) again against the grown set. The form offers no disabled option and hides an inactive field, the page
+  shows a stored disabled option, and a stored value of an inactive field survives the form (`getFieldsPost()`).
+  The manifest keeps the counts in `grown`, and the report names them.
 - Definitions that are already named (arrays) with empty value columns are a valid no-op: the unit seals an
   empty manifest and sets the mark. Named definitions while positional rows exist and no manifest does stop the
   unit with the instruction to put the 6.2 `config/fields.php` back.
@@ -3284,6 +3315,16 @@ transaction; a failed statement leaves the earlier ones applied, so every statem
 a 6.2 schema, on a partly migrated one and on a finished one. The file neither creates nor alters the tables of
 the nine removed modules; on an updated site they stay in 6.2 format.
 
+It runs without `NO_ZERO_DATE` and `NO_ZERO_IN_DATE` for its session, which MySQL 8 sets by default and which refuse
+every `ALTER` of a 6.2 table whose datetime defaults to a zero date, and restores the mode of the session at its end.
+Before a statement makes a column `NOT NULL` or narrower, a NULL takes the default of its column and a longer value is
+cut where the row is transient (`_session.modul`). The final alignment covers the two 6.2 schemas the tests carry:
+`tests/Fixtures/update62` and the earlier `update62early` (signed integers, addresses of 15 characters, other defaults).
+
+Its one `DELETE` removes, before the unique key `mid_modul_ip`, every `_rating` row that has an earlier row of the
+same `mid`, `modul` and `ip`: 6.2 kept one row per account, so two accounts of one address could both have voted.
+`getSqlFile()` names the removed rows of a `DELETE` in its report line.
+
 Helper procedures are dropped and created at the top inside `DELIMITER $$` and dropped again in the cleanup
 section; `movenet` is created and dropped around the OAuth block at the end.
 
@@ -3341,15 +3382,22 @@ with a scratch site and a disposable schema. A failing probe is a test failure, 
 - `site.sql`: the `CREATE TABLE` statements of all 33 tables of a real 6.2 dump (prefix `old`, counters dropped)
   and a small invented seed of what the update has to meet: boolean and `NULL` `editor` with numeric rights,
   `_modules`, balances, old sections up to id 300, a `news` category, blocks of removed modules, a cached RSS
-  block, a guest poll vote, newsletter campaigns, a legacy `_whois` row.
+  block, two poll votes of one address, newsletter campaigns, a legacy `_whois` row.
 - `config/`: six 6.2 sources in variable form without secrets (`global` with language `russian`, `security`
   with `afile`, `ratings`, `users`, `voting`, `news`).
 
-`UpdateSiteTest` loads it into a disposable MariaDB database, serves a copy of the release and drives the
-installer over HTTP: refusals without the key and on a MyISAM table, a broken schema file (only the mark
-`modules`, no manifest), then three runs, each without a failed statement, with all four marks, all manifests
+`tests/Fixtures/update62early/site.sql` is an earlier 6.2 schema of the same 33 tables (signed integers, addresses
+of 15 characters, nullable columns, zero dates as defaults), the same seed loaded in the relaxed mode of 6.2, and a
+negative balance, an account without an address, a comment without an author and an online row with a long module
+name; it uses the configuration of `update62`.
+
+`UpdateSiteTest` loads each into a disposable MariaDB database, serves a copy of the release and drives the
+installer over HTTP: refusals without the key and on a MyISAM table, four wrong codes counted in the key, the right
+one clearing the count and five more removing the key, a 6.2 loader under the panel name, an unreadable `_modules`
+(a red line before the mark, `config/modules.php` untouched), a broken schema file that may fail on that statement
+only (the mark `modules`, no manifest, the later poll vote of one address removed), then three runs, each without a failed statement, with all four marks, all manifests
 `verified` and `_nodes` continuing at 301. After them the schema equals a clean installation in
 `information_schema` (columns, indexes, foreign keys, checks, engine, collation). It also checks two guest votes in
-one poll, the kept panel name `myadm`, language and address of 6.2, the switched-off blocks, type creation in the
+one poll, the kept panel name `myadm` now holding the shipped loader, language and address of 6.2, the switched-off blocks, type creation in the
 panel, the `_nodes` counter after a deleted material, and empty PHP and SQL logs. A change to the branch or the
 schema file is done only when this test passes.

@@ -5,14 +5,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Stages 2a and 2b of docs/FILE-MANAGER-CONCEPT-2026.md: the reading half of FileManager and the managed name
- * format that moved into it from the upload service. The class is driven against a disposable tree below the
- * system temp directory that carries one object of every shape the plan names - a normal
- * file, a directory, a UTF-8 name, a hidden file, an empty file, an unreadable file, an unwritable directory, both
- * symlink directions and the closed paths of the policy table. Nothing below the site is written; the two tests that
- * need a real document root read the repository and never change it.
- */
+# The reading half of FileManager and the managed name format it took over from the upload service, driven against a disposable tree
 final class FileManagerPathTest extends TestCase
 {
     private const CLOSED = ['.git/config', '.env', 'storage/sessions/sess_probe', 'files/.upload-aaaa.part'];
@@ -23,6 +16,7 @@ final class FileManagerPathTest extends TestCase
     private static array $links = [];
 
     # Build the disposable tree once for the whole class, and record which of the platform-dependent fixtures could be created at all
+    # The tree holds a plain file, a directory, a UTF-8 name, a hidden, an empty and an unreadable file, an unwritable directory, both link directions and closed paths
     public static function setUpBeforeClass(): void
     {
         if (!class_exists('FileManager', false)) require_once dirname(__DIR__, 2).'/core/classes/filemanager.php';
@@ -239,7 +233,24 @@ final class FileManagerPathTest extends TestCase
     #[Test]
     public function theDescriptorIsOneShapeAndTheEditorNeverSeesTheServerPath(): void
     {
-        $keys = ['name', 'path', 'kind', 'extension', 'size', 'mtime', 'url', 'thumbnail', 'width', 'height', 'perms', 'owner', 'managed', 'editable', 'previewable', 'capabilities'];
+        $keys = [
+            'name',
+            'path',
+            'kind',
+            'extension',
+            'size',
+            'mtime',
+            'url',
+            'thumbnail',
+            'width',
+            'height',
+            'perms',
+            'owner',
+            'managed',
+            'editable',
+            'previewable',
+            'capabilities',
+        ];
         $edit = $this->getManager('editor', ['list' => true])->getFileData('files/note.md');
         $this->assertSame($keys, array_keys($edit), 'The editor descriptor is not the model of the plan');
         $this->assertStringNotContainsString(self::$root, json_encode($edit), 'The editor descriptor carries the server path of the file');
@@ -428,6 +439,7 @@ final class FileManagerPathTest extends TestCase
     }
 
     # The address of one object is its path below the document root, and the system context answers none at all because its files are served by a route
+    # This test needs a real document root, so it reads the repository and never changes it
     #[Test]
     public function theAddressOfAnObjectIsRelativeToTheDocumentRoot(): void
     {
@@ -474,7 +486,7 @@ final class FileManagerPathTest extends TestCase
     }
 
     # A context over an empty root stays closed, which is what an unconfigured upload place hands the constructor
-    # realpath('') answers the working directory rather than false, so without the guard the whole site would open below a place that names no directory of its own
+    # The guard exists since realpath('') answers the working directory rather than false, which would open the whole site below a place naming no directory
     # The refusal is asked of every reader, because a root that resolved to the site would let one of them answer for a path no route ever offered
     #[Test]
     public function theEmptyRootBuildsAClosedContext(): void

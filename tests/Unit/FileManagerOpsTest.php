@@ -7,13 +7,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ZipArchive;
 
-/**
- * Stage 5 of docs/FILE-MANAGER-CONCEPT-2026.md: the operations of the system area - create, rename, copy, move, delete
- * and pack. Every scenario runs against a disposable tree below the system temp directory that is rebuilt before each
- * test, so nothing below the site is ever touched and the order of the tests never decides their outcome. The route
- * side of the stage - one POST route per operation, the scoped token, the super administrator and the journal entry of
- * §24 - is proven off the sources, because a handler cannot be called without an administrative session.
- */
+# The operations of the system area - create, rename, copy, move, delete and pack - over a disposable tree rebuilt before each test
 final class FileManagerOpsTest extends TestCase
 {
     private const DIRS = ['templates', 'templates/lite', 'files', 'files/keep', 'files/full', 'storage/logs', 'storage/sessions'];
@@ -82,7 +76,7 @@ final class FileManagerOpsTest extends TestCase
         return new FileManager($mode, self::$root);
     }
 
-    # Read one repository file once per run
+    # Read one repository file once per run, which proves the route side, because a handler cannot be called without an administrative session
     private function getFile(string $path): string
     {
         if (isset(self::$files[$path])) return self::$files[$path];

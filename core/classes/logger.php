@@ -99,7 +99,26 @@ class Logger {
 
     # Get reserved log keys
     protected static function getKeys(): array {
-        return ['ts', 'level', 'chan', 'type', 'msg', 'fingerprint', 'req_id', 'ip', 'method', 'url', 'referer', 'ua', 'query', 'post', 'cookie_keys', 'session_keys', 'mem_mb', 'mem_peak_mb'];
+        return [
+            'ts',
+            'level',
+            'chan',
+            'type',
+            'msg',
+            'fingerprint',
+            'req_id',
+            'ip',
+            'method',
+            'url',
+            'referer',
+            'ua',
+            'query',
+            'post',
+            'cookie_keys',
+            'session_keys',
+            'mem_mb',
+            'mem_peak_mb',
+        ];
     }
 
     # Get bounded request context

@@ -5,19 +5,13 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Stage 1, batch 3 of docs/COMMENTS-REDESIGN-2026.md: the frontend write path moved into the Comment class, and the
- * stage promises that every comment target still stores the same row, updates its target counter where one exists and
- * awards its own points slot. Both author kinds run through tests/Support/contract_probe.php, which boots the real
- * core in an isolated CLI process and drives the class against the live rows of this installation inside a
- * transaction it always rolls back. filter_input() cannot be driven from CLI, so the request half of the submit —
- * the token, the HTMX response and the moderator paths of edit and status — belongs to the browser checks.
- */
+# Every comment target stores the same row through the Comment class, updates its target counter where one exists and awards its own points
 final class CommentWriteTest extends TestCase
 {
     private static array $probe = [];
 
-    # Run one write probe per author kind and memoize its report for every scenario in this class
+    # Run one write probe per author kind, driving the class against live rows in a transaction it always rolls back, and memoize its report
+    # The function filter_input() cannot be driven from CLI, so the token, the HTMX response and the moderator paths of edit and status belong to the browser checks
     private function getProbe(string $mode): array
     {
         if (isset(self::$probe[$mode])) return self::$probe[$mode];
@@ -105,7 +99,7 @@ final class CommentWriteTest extends TestCase
         }
     }
 
-    # A second submit from one address inside the send window is refused; the marker is written from the clock the rule measures with, so a stand whose database clock drifts still observes it
+    # A second submit from one address inside the send window is refused, the marker written from the clock the rule measures with, so a drifting database clock still holds
     #[Test]
     public function secondSubmitInsideTheWindowIsRefused(): void
     {

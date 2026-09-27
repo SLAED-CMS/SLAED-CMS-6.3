@@ -7,18 +7,15 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * The points unit of the 6.3 data update in setup/index.php, whose contract is the section
- * about the points unit of the 6.3 data update in docs/NODE.md (Points unit). tests/Support/update_probe.php lifts the shipped
- * functions out of the installer by name and drives them in an isolated CLI process against a disposable schema and
- * a scratch site, so the manifest, the snapshot, the mark and the configuration of the stand are never touched.
- */
+# The points unit of the 6.3 data update in setup/index.php, whose contract is docs/NODE.md (Points unit)
 final class UpdatePointsTest extends TestCase
 {
     private const SNAP = ['2' => 10, '3' => 0, '4' => 4294967295];
 
     private static array $probe = [];
 
+    # The probe tests/Support/update_probe.php lifts the shipped functions out of the installer by name into an isolated CLI process on a disposable schema and scratch site
+    # The manifest, the snapshot, the mark and the configuration of the stand are never touched
     # Run the probe once and memoize its report for every test in this class
     private function getRun(string $name): array
     {
@@ -87,8 +84,8 @@ final class UpdatePointsTest extends TestCase
         }
     }
 
-    # A snapshot that no longer matches its manifest before the unit is verified and a points scope of another shape both stop the unit without a mark,
-    # while a verified unit whose snapshot the clean finish deleted only writes its lost mark
+    # A snapshot that no longer matches its manifest before the unit is verified and a points scope of another shape both stop the unit without a mark
+    # A verified unit whose snapshot the clean finish deleted only writes its lost mark
     #[Test]
     public function aBrokenSourceLeavesNoMark(): void
     {
@@ -100,8 +97,9 @@ final class UpdatePointsTest extends TestCase
         $this->assertStringContainsString('not a valid points scope', $run['scope']['text']);
     }
 
-    # The preflight refuses a server that lacks CHECK or the RENAME COLUMN and RENAME INDEX of the schema file, and a table of a points, ratings or Node transaction
-    # on another engine; it runs before the installer writes a single file or renames the panel, and the branch closes the site right after it
+    # The preflight refuses a server that lacks CHECK or the RENAME COLUMN and RENAME INDEX of the schema file
+    # It also refuses a table of a points, ratings or Node transaction on another engine
+    # It runs before the installer writes a single file or renames the panel, and the branch closes the site right after it
     #[Test]
     public function thePreflightRefusesBeforeAnythingChanges(): void
     {
@@ -124,7 +122,8 @@ final class UpdatePointsTest extends TestCase
         $this->assertStringContainsString('older than 8.0.16', $run['server']['8.0.15']);
         $this->assertStringEndsWith('start the update again: ALTER TABLE `probe_favorites` ENGINE=InnoDB;', $run['engine'], 'The engine check names a wrong set of tables');
         foreach (['categories', 'voting'] as $name) {
-            $this->assertStringEndsWith('ALTER TABLE `probe_'.$name.'` ENGINE=InnoDB;', $run['node'][$name], 'The engine check misses a table of the Node transactions');
+            $text = 'The engine check misses a table of the Node or private message transactions';
+            $this->assertStringEndsWith('ALTER TABLE `probe_'.$name.'` ENGINE=InnoDB;', $run['node'][$name], $text);
         }
     }
 }

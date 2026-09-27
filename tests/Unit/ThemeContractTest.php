@@ -5,17 +5,14 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * The theme ratchet. There are no git hooks and no CI here, and .claude/ is not tracked, so the edit
- * hook is per-machine and this test is the whole enforcement that survives a clone: it runs the audit
- * over both themes and fails when any ratcheted count grew against tools/ui-audit-baseline.json.
- * It catches what an edit hook cannot - a manual edit, a merge, and a file the hook never saw.
- */
+# The theme ratchet: the audit over both themes fails when any ratcheted count grew against tools/ui-audit-baseline.json
 final class ThemeContractTest extends TestCase
 {
     private static array $cont = [];
     private static array $base = [];
 
+    # With no CI and an untracked per-machine edit hook, this test is the enforcement that survives a clone
+    # It catches what an edit hook cannot - a manual edit, a merge, and a file the hook never saw
     public static function setUpBeforeClass(): void
     {
         require_once dirname(__DIR__, 2).'/tools/ui-audit.php';
@@ -32,13 +29,16 @@ final class ThemeContractTest extends TestCase
         }
     }
 
-    # getContract() folds the generated pair registry in only when the file is there, so a missing or empty one does not fail the
-    # contrast check - it silently leaves nothing to check and every count downstream reads zero and passes. A gate whose input can
-    # vanish without a word is the failure this plan keeps finding, so the registry is asserted the same way the ratchet is
+    # The function getContract() folds the generated pair registry in only when the file is there, so a missing or empty one does not fail the contrast check
+    # It silently leaves nothing to check and every count downstream reads zero and passes
+    # A gate whose input can vanish without a word is the failure this plan keeps finding, so the registry is asserted the same way the ratchet is
     #[Test]
     public function testTheContrastRegistryIsCommittedAndCarriesPairs(): void
     {
-        $this->assertFileExists(dirname(__DIR__, 2).'/tools/ui-contrast.json', 'the contrast gate has no pairs without it and would read zero while checking nothing; regenerate with node tools/ui-shots.mjs --contrast');
+        $this->assertFileExists(
+            dirname(__DIR__, 2).'/tools/ui-contrast.json',
+            'the contrast gate has no pairs without it and would read zero while checking nothing; regenerate with node tools/ui-shots.mjs --contrast'
+        );
         $pairs = self::$cont['contrast']['pairs'] ?? [];
         $this->assertNotEmpty($pairs, 'the contrast registry holds no pairs; regenerate it with node tools/ui-shots.mjs --contrast');
         foreach (array_keys(self::$cont['themes']) as $name) {
@@ -60,9 +60,9 @@ final class ThemeContractTest extends TestCase
         }
     }
 
-    # The freeze, asked of the tree the way the ratchet asks of the counts. An API that gains a role wrongs no copy;
-    # one that loses or renames one leaves every theme copied from it reading a name this repository cannot reach,
-    # and no count can see that - the token total falls by one and reads like a tidy-up
+    # The freeze, asked of the tree the way the ratchet asks of the counts. An API that gains a role wrongs no copy
+    # One that loses or renames a role leaves every theme copied from it reading a name this repository cannot reach
+    # No count can see that - the token total falls by one and reads like a tidy-up
     #[Test]
     public function testAFrozenApiHasNotLostAName(): void
     {

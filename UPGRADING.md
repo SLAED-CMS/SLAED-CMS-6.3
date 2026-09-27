@@ -94,9 +94,11 @@ Copy the release over the site. Keep what belongs to the site:
 - any locally maintained templates or theme customizations
 - any site-specific generated files that are not part of the repository
 
-A 6.2 site that renamed `admin.php` still holds the 6.2 code under that name. Delete that file and enter its
-name in the installer form; the installer renames the new `admin.php` to that name, so the panel keeps its
-address. A name that belongs to another file of the site root, such as `index` or `setup`, is refused.
+A 6.2 site that renamed `admin.php` still holds the 6.2 code under that name. The installer form offers that
+name; the installer puts the new `admin.php` in place of the 6.2 file, so the panel keeps its address. Entering
+another name moves the new `admin.php` there and removes the 6.2 file. A site on the default name `admin` is
+offered a random name instead. A name that belongs to another file of the site root, such as `index` or `setup`,
+is refused.
 
 ### 3. Run the Installer
 
@@ -125,8 +127,9 @@ upload the file `config/setup.unlock` holding a code of your own of at least 8 c
 and choose **SLAED CMS 6.2 Pro > 6.3 Phoenix**. The first request replaces the code in the file by its password hash,
 so a server that hands `config/` out as plain files, as nginx does without rules of its own, reveals no usable code;
 keep the code, or upload a new key with a new code. Every run checks the code again before it writes anything, so a
-visitor who finds the key in place can neither see the connection data nor start a branch. `config/db.php` is not
-part of the release; the installer creates it when a site has none.
+visitor who finds the key in place can neither see the connection data nor start a branch. Five wrong codes in a row
+remove the key and lock the installer again: upload a new key. `config/db.php` is not part of the release; the
+installer creates it when a site has none.
 
 The update runs in this order and reports every step on its result page:
 
@@ -134,7 +137,7 @@ The update runs in this order and reports every step on its result page:
    `users` and `admins` tables of the entered prefix must exist, and the
    tables that take part in transactions (`users`, `admins`, `comment`, `forum`, `order`, `clients`, `favorites`,
    `user_oauth`, `points`, `products`, `rating_targets`, `rating_actors`, `rating_votes`, `categories`,
-   `voting`, `newsletter`) must be InnoDB. Otherwise the update stops and prints the `ALTER TABLE … ENGINE=InnoDB`
+   `voting`, `newsletter`, `privat`) must be InnoDB. Otherwise the update stops and prints the `ALTER TABLE … ENGINE=InnoDB`
    statements to run; nothing is converted automatically and no file of the site changes.
 2. **The site is closed** (`close = 1`). Every configuration file the installer writes removes
    `config/local.php`, so the next request already sees the closed site. It stays closed after the update;
@@ -172,10 +175,11 @@ The update runs in this order and reports every step on its result page:
    field values. Only the `manifest.json` files stay, and a repeated run skips every finished unit by them.
 
 The **fields** unit checks every stored value of account, forum and order fields before it writes anything.
-When it cannot map a value without guessing, it writes nothing and names the table, the row id and the
-reason, for example `sport_order 261 (value 10 holds data and has no definition)`. Correct that row in the
-database and run the update again: finished units are skipped, the fields unit starts over, and a repeated
-run changes nothing.
+A select value that no option of the definitions carries becomes a disabled option of its field, and data at a
+switched off position becomes an inactive field of that position; the result page counts both. When it cannot
+map a value without guessing, it writes nothing and names the table, the row id and the reason, for example
+`sport_order 261 (value 10 holds data and has no definition)`. Correct that row in the database and run the
+update again: finished units are skipped, the fields unit starts over, and a repeated run changes nothing.
 
 The update creates no Node types and imports no content of the removed modules: their tables, categories
 and `uploads/<name>` directories stay as they are. See [Node Replaces Nine Content Modules](#node-replaces-nine-content-modules).
@@ -190,11 +194,16 @@ What the update changes in the data, beyond the steps above:
   allow guests; an interval of 0 means no waiting. The unit writes nothing when it finds broken data and names
   it: a rating total outside one to five times its vote count (accounts, forum topics, products), a
   `{prefix}_rating` row without an account, a valid address or with a future time, a broken rule, or a missing
-  rule for `account`, `forum` or `shop`. Correct it and run the update again.
-- **Points.** `{prefix}_users.points` stays the balance, rating rewards of 6.2 included; the points switch of
-  6.2 becomes the switch of `config/points.php`, whose reward rules start from the release.
+  rule for `account`, `forum` or `shop`. Correct it and run the update again. Poll and rating votes of 6.2 are
+  kept once per address and target: of two accounts that voted from one address, the earliest vote stays, and the
+  result page names the removed rows.
+- **Points.** `{prefix}_users.points` stays the balance, rating rewards of 6.2 included; a negative balance becomes
+  0, because 6.3 keeps balances unsigned, and the result page counts those accounts. The points switch of 6.2
+  becomes the switch of `config/points.php`, whose reward rules start from the release.
 - **Extra fields.** Values are carried byte for byte; a `0` stored for an empty select or date becomes empty; a
-  field is required only when 6.2 stored exactly `1`; the report lists at most 50 rows plus the total. If
+  field is required only when 6.2 stored exactly `1`; spaces around captions are dropped. A disabled option is
+  shown on the page but no longer offered by the form, and an inactive field keeps its values hidden until it is
+  switched on and named in the fields settings. The report lists at most 50 rows plus the total. If
   `config/fields.php` is already in the 6.3 format while the tables still hold 6.2 rows, put the 6.2 file back
   and run again.
 - **Upload rules and bans.** A carried upload rule gets a guest file limit equal to the user limit; a ban entry
@@ -205,6 +214,10 @@ What the update changes in the data, beyond the steps above:
 - **Accounts and comments.** Duplicate user names are renamed to `<name>_<id>`. The schema file stops with a
   message when `{prefix}_privat.time` or `{prefix}_comment.time` holds `NULL` or `{prefix}_comment.reqkey` is
   still hex text; repair those rows and run again.
+- **Older 6.2 schemas.** Columns a 6.2 site still carries in an earlier shape (addresses of 15 characters, signed
+  counters, empty values stored as `NULL`) are brought to the release; a `NULL` takes the default of its column. On
+  MySQL 8 the schema file runs without `NO_ZERO_DATE` and `NO_ZERO_IN_DATE` for its own session, because 6.2 tables
+  default dates to zero.
 - **Custom SQL on MySQL 8.** `rank` is reserved from MySQL 8.0.2: quote `{prefix}_users.rank` and
   `{prefix}_groups.rank` in backticks in custom queries.
 - **Rollback.** Restoring only some files is no rollback: code, schema, configuration and data are restored
