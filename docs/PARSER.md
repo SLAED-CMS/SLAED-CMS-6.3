@@ -77,6 +77,16 @@ The `Parser` supports a hybrid composition of Markdown and SLAED BBCode.
 - **Local Attachments:** `[attach=file.png align=X width=Y]` - Resolves to local uploaded files, generates thumbs automatically via GD if needed.
 - **Admin/Macros:** `*NN` (Smilies), `[hr]`, `[li]`, `[usehtml]`, `[usephp]` (the last two are super administrator only).
 
+### Backslash literals
+
+In every mode a backslash turns the ASCII punctuation character after it into a literal: `filterLiteral()` replaces
+each pair with a token before any BB, Markdown or HTML pass, left to right, and the token returns HTML-escaped after
+the whole parse. Raw regions keep every backslash as typed: `[code]`, `[php]`, `[usephp]`, `[usehtml]`, an HTML tag,
+a `script` or `style` element and Markdown code. When the regular expression engine gives up on the raw regions,
+every pair becomes a literal, so a failed match hides markup instead of exposing it. `getAttachList()` reads the
+source through the same rule, so an escaped bracket names no attachment. Feed relies on this rule: it prefixes every
+punctuation character of received text with a backslash, so a feed body renders as plain text (docs/NODE.md, Feed).
+
 ## Authoring Guidelines
 
 - **Content rendering:** Use `$parser->filterContent()` for Markdown/BBCode display. `filterText()` is a security text helper in `core/security.php`, not the content rendering pipeline.

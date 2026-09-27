@@ -31,7 +31,7 @@ release: the columns `_users.rank` and `_groups.rank` are quoted wherever a quer
 relation and resource sets it never showed (`NodeQuery::setNodeSets(false)`), three statements a page.
 
 `php tools/node-profile.php` builds a disposable database of 100000 materials in ten types with 200
-categories, relations and resources, measures every route budget against `docs/node/11`, the p50 and p95
+categories, relations and resources, measures every route budget against `docs/NODE.md` (Performance), the p50 and p95
 time and the plans of the main statements, and fails on a budget overrun or a full scan.
 
 ## 2026-09-11
