@@ -2,7 +2,7 @@
 # 2005 - 2026 SLAED
 # License: MIT
 # Website: slaed.net
-# Compatible: MySQL 8.0.16+ & MariaDB 10.2.1+
+# Compatible: MySQL 8.0.16+ & MariaDB 10.5.2+
 
 CREATE TABLE `{prefix}_admins` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,

@@ -78,7 +78,7 @@ return [
             'active' => '1',
             'view' => '1',
             'menu' => '1',
-            'group' => '6',
+            'group' => '0',
             'side' => '2',
             'top' => '0',
             'type' => '1',

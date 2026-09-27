@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Stage S03 of docs/node: the configuration protocol of docs/node/06-types.md. setConfigFile() keeps its string form
+ * The configuration protocol of docs/NODE.md (Configuration protocol). setConfigFile() keeps its string form
  * for independent sources and gains the Closure form for the shared node, fields, uploads and ratings; both run one
  * pipeline under the shared lock with a journal, a marker and an atomic publication of local.php. The behaviour runs
  * through tests/Support/config_probe.php against a scratch copy of the configuration, so nothing below config/ or
@@ -52,7 +52,7 @@ final class ConfigFileTest extends TestCase
         return substr($code, $from, (int)strpos($code, "\n}\n", $from) - $from);
     }
 
-    # The contract of docs/node/06-types.md is the signature: a string or a Closure first, a bool back, and no array form
+    # The contract of docs/NODE.md (Configuration protocol) is the signature: a string or a Closure first, a bool back, and no array form
     #[Test]
     public function theWriterHasTheContractSignature(): void
     {

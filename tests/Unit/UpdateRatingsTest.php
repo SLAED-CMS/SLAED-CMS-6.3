@@ -8,8 +8,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Stage S05 of docs/node: the ratings unit of the 6.3 data update in setup/index.php, whose contract is the carry-over
- * of the accumulated ratings in docs/node/ratings.md. tests/Support/update_probe.php lifts the shipped functions out
+ * The ratings unit of the 6.3 data update in setup/index.php, whose contract is the carry-over
+ * of the accumulated ratings in docs/RATINGS.md. tests/Support/update_probe.php lifts the shipped functions out
  * of the installer by name and drives them in an isolated CLI process against a disposable schema and a scratch site,
  * so the manifest, the snapshots, the mark, the rules and the aggregates of the stand are never touched.
  */
@@ -41,7 +41,7 @@ final class UpdateRatingsTest extends TestCase
             $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' ratings 2>&1');
             $data = json_decode($out, true);
             $this->assertIsArray($data, 'The probe did not return JSON: '.$out);
-            if (!empty($data['error'])) $this->markTestSkipped('Probe: '.$data['error']);
+            $this->assertSame('', $data['error'], 'The probe failed');
             $this->assertTrue($data['clean'], 'The probe left its schema on the server');
             self::$probe = $data;
         }

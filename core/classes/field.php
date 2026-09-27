@@ -175,8 +175,9 @@ final class Field {
         return $text === trim($text) && $text === strip_tags($text) && !preg_match('/[\x00-\x1F\x7F<>]/', $text);
     }
 
-    # A caption constant has to live in the site dictionary: a site page loads lang/<language>.php alone, so there defined() is the answer, while the panel and the installer
-    # load dictionaries of their own on top, and a constant of those would pass a save and then empty the whole set on the site; the loaded site file is read once per request
+    # A caption constant has to live in the site dictionary: a site page loads lang/<language>.php alone, so there defined() is the answer
+    # The panel and the installer load dictionaries of their own on top, and a constant of those would pass a save and then empty the whole set on the site
+    # The loaded site file is read once per request
     private function checkSiteWord(string $name): bool {
         static $words = null;
         if (!defined('ADMIN_FILE') && !defined('SETUP_FILE')) return true;

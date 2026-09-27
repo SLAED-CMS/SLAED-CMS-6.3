@@ -172,8 +172,8 @@ function getSearchShop(array $state): array {
     return $rows;
 }
 
-# The Node types of the request are searched through one reader, a mixed selection when all sections are searched; the count of the reader gives the total up to
-# search.slimit, and only the rows up to the end of the requested page are read, in pages as large as the smallest list page of the selected types allows
+# The Node types of the request are searched through one reader, a mixed selection when all sections are searched; the reader count gives the total up to search.slimit
+# Only the rows up to the end of the requested page are read, in pages as large as the smallest list page of the selected types allows
 # The literal word goes to the reader, which escapes it for LIKE; skip is the number of rows of the fixed modules that stand before the rows of Node
 function getSearchNode(array $state, array $types, int $skip): array {
     global $conf, $afile;

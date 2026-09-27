@@ -153,11 +153,9 @@ function getTplPreviewContent(array $data = []): string {
 }
 
 # Universal pager — works in both admin and front-end contexts
-# Single source of truth for rendering a pager: prev/next nav, numbered links and dots,
-# wrapped in the 'pager' fragment. $target(int $page): array yields the link target for a
-# page — ['href' => ...] for URL navigation, or ['query' => ..., 'target_id' => ...,
-# 'push_url' => ...] for HTMX navigation. Renders via $tpl->getHtmlFrag(), so each theme
-# keeps its own pager fragments (admin and lite stay independent).
+# Single source of truth for rendering a pager: prev/next nav, numbered links and dots, wrapped in the 'pager' fragment
+# $target(int $page): array yields the link target: ['href' => ...] for URL navigation, or ['query' => ..., 'target_id' => ..., 'push_url' => ...] for HTMX navigation
+# Renders via $tpl->getHtmlFrag(), so each theme keeps its own pager fragments (admin and lite stay independent)
 function getTplPagerView(int $num, int $pages, int $maxpg, callable $target, array $meta = []): string {
     global $tpl;
     if ($pages <= 1) return '';
@@ -480,7 +478,7 @@ function getFieldsInRows(array $data = []): array {
 
 # Map one declared storage to the room it has, so the editor that renders a field and the write path that stores it read the same number and can never disagree about it
 # The table carries the column type and not a byte count: a type is compared line for line against setup/sql/table.sql by a test, while a map of numbers can only be checked by eye
-# config names a field written into a PHP file rather than a column; no ERROR 1406 waits for it, but it is loaded on every request that reads that config, so it takes the room of TEXT
+# The config store is a field written into a PHP file rather than a column; no ERROR 1406 waits for it, but it loads on every request reading that config, so it takes TEXT room
 # A store the table does not carry is answered with the narrowest field there is, because a permissive default would make every one of the call sites have to be right the first time
 # Whether a field may embed is derived and never stored: the room has to hold a whole data URI of Parser::EMBEDMAX, which TEXT cannot, so a summary field refuses one at any size and not only a large one
 function getEditorRoomData(string $store): array {
@@ -898,8 +896,8 @@ function getFileManagerField(array $opt): string {
     return $box.$win.$tpl->getHtmlFrag('head-script-inline', ['js' => $js]);
 }
 
-# Build the gallery window from the one window frame: the owner tells whose gallery it is, and the walk, the property
-# panel and the row of actions are what that owner offers; nothing else about the window is decided here twice
+# Build the gallery window from the one window frame: the owner tells whose gallery it is, and the walk, the property panel and the row of actions are what that owner offers
+# Nothing else about the window is decided here twice
 function getWindowShot(array $data = []): string {
     global $tpl;
     $own = (string)($data['own'] ?? 'view');
@@ -924,8 +922,8 @@ function getWindowShot(array $data = []): string {
     ]);
 }
 
-# Build the windows a page carries whatever it shows: the question every screen asks, and on the site the share sheet,
-# the QR code and the image viewer. Each is the one window frame filled differently, and the layout prints the set
+# Build the windows a page carries whatever it shows: the question every screen asks, and on the site the share sheet, the QR code and the image viewer
+# Each is the one window frame filled differently, and the layout prints the set
 function getWindowSet(bool $admin = false): string {
     global $tpl;
     $out = $tpl->getHtmlFrag('window', [
@@ -1106,6 +1104,7 @@ function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $sc
 }
 
 # Render the shared category select from database categories
+# The indent walk up a branch stops at a parent it cannot see and after as many steps as there are categories, so a loop stored in the tree never keeps the request spinning
 function getTplCategorySelect(string $mod = '', int $id = 0, string $name = '', string $clas = '', string $empty = '', string $raw = ''): string {
     global $db, $conf, $tpl;
     $mod = filterVar($mod);
@@ -1128,7 +1127,7 @@ function getTplCategorySelect(string $mod = '', int $id = 0, string $name = '', 
         foreach ($mass as $key => $val) {
             $cont[$key] = $val[0];
             $flag = $val[1];
-            while ($flag != 0) {
+            for ($i = 0; $flag != 0 && isset($mass[$flag]) && $i < count($mass); $i++) {
                 $cont[$key] = $pref.$cont[$key];
                 $flag = intval($mass[$flag][1]);
             }

@@ -4,7 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
-# CLI probe for the configuration protocol of docs/node/06-types.md and the request-owned directory lock of the file layer
+# CLI probe for the configuration protocol of docs/NODE.md (Configuration protocol) and the request-owned directory lock of the file layer
 # It boots the real core the way index.php does, with the configuration, the journal, the cache and the logs redirected into scratch
 # The scratch configuration is a copy of the sources of the stand without local.php, so no scenario ever writes below config/ or storage/ of the site
 # The shipped node.php is left out as well: the scenarios of a missing Node area and of a file born with its first area need a site without it

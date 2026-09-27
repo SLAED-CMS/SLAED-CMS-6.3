@@ -9,7 +9,7 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 # The address policy lives in Upload alone, so this reader loads that class instead of carrying a second copy of the networks
 if (!class_exists('Upload')) require_once __DIR__.'/upload.php';
 
-# Fetches one RSS or Atom document and writes the canonical Markdown of docs/node/05-core-api.md: headings, UTC dates, checked links and plain-text descriptions
+# Fetches one RSS or Atom document and writes the canonical Markdown of docs/NODE.md (Canonical Markdown): headings, UTC dates, checked links and plain-text descriptions
 # Every hop resolves its host again, refuses a non-public address and is pinned to the checked one; size, total time and redirects are bounded by config/rss.php
 # Received text is data and never markup: each ASCII punctuation mark it carries is escaped, so Parser shows it literally and no BB, Markdown or HTML command survives
 # The transport is one closure with the two operations resolve and get; null selects the cURL implementation below, and a test hands in its own so no test reaches the network

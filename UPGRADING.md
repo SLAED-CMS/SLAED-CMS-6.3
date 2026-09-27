@@ -48,6 +48,11 @@ Typical writable paths:
 - `storage/`
 - `uploads/`
 
+The installer never changes file permissions. It refuses to start while `config/db.php`, `config/global.php` or
+`config/security.php` is not writable by PHP (for one of them that does not exist yet: `config/` itself). Any other
+configuration file that cannot be written during a run is reported as a failed step: no mark is set for it, and the
+run can be repeated once the permissions are fixed.
+
 ---
 
 ## Upgrade Files Present in the Repository
@@ -89,8 +94,9 @@ Copy the release over the site. Keep what belongs to the site:
 - any locally maintained templates or theme customizations
 - any site-specific generated files that are not part of the repository
 
-A 6.2 site that renamed `admin.php` still holds the 6.2 code under that name. Delete that file; the installer
-renames the new `admin.php` to the name you enter in its form.
+A 6.2 site that renamed `admin.php` still holds the 6.2 code under that name. Delete that file and enter its
+name in the installer form; the installer renames the new `admin.php` to that name, so the panel keeps its
+address. A name that belongs to another file of the site root, such as `index` or `setup`, is refused.
 
 ### 3. Run the Installer
 
@@ -100,25 +106,35 @@ placeholders of the SQL files, runs them and reports every statement.
 
 The form never shows the stored database password: leave the field empty to keep the password of `config/db.php`,
 or type a new one. The table prefix may hold Latin letters, digits and `_` (up to 32 characters), the
-administration panel filename Latin letters, digits, `_` and `-`; any other value is refused before a file is
-written. A new installation needs MariaDB 10.5.2+ or MySQL 8.0.16+, as the update does, and a database without a
-table of its prefix; it is refused otherwise, and it writes `config/update.php` only when both SQL files ran
-without a failed statement. A refused run keeps `config/setup.unlock`, so it can be repeated at once.
+administration panel filename Latin letters, digits, `_` and `-`; any other value, and an installer choice the
+form does not offer, is refused before a file is written. A new installation needs MariaDB 10.5.2+ or MySQL
+8.0.16+, as the update does, and a database without a table of its prefix; it is refused otherwise, and it writes
+`config/update.php` only when both SQL files ran without a failed statement. A refused run keeps
+`config/setup.unlock`, so it can be repeated at once. A new installation that stopped at a failed statement has
+already written `config/db.php`, so the installer is locked again: drop the tables of the prefix, put your code
+into `config/setup.unlock` and install again.
+
+The installer refuses every branch while `storage/backup/config/marker.json` exists: an unfinished configuration
+operation of the site has to be finished on the restore screen of the configuration in the panel first.
 
 ### From 6.2 to 6.3: Run the Installer Update
 
 A 6.2 site is updated by the installer, not by importing SQL by hand. An installed site keeps `setup.php` locked:
-upload an empty file `config/setup.unlock` first, then open `setup.php`, keep the connection
-data of the site and choose **SLAED CMS 6.2 Pro > 6.3 Phoenix**. `config/db.php` is not part of the release;
-the installer creates it when a site has none.
+upload the file `config/setup.unlock` holding a code of your own of at least 8 characters first, then open
+`setup.php` and enter that code. Only then does the installer show its form: keep the connection data of the site
+and choose **SLAED CMS 6.2 Pro > 6.3 Phoenix**. The first request replaces the code in the file by its password hash,
+so a server that hands `config/` out as plain files, as nginx does without rules of its own, reveals no usable code;
+keep the code, or upload a new key with a new code. Every run checks the code again before it writes anything, so a
+visitor who finds the key in place can neither see the connection data nor start a branch. `config/db.php` is not
+part of the release; the installer creates it when a site has none.
 
 The update runs in this order and reports every step on its result page:
 
 1. **Preflight**, before any file is written. The server must be MariaDB 10.5.2+ or MySQL 8.0.16+, the
    `users` and `admins` tables of the entered prefix must exist, and the
-   tables that take part in transactions (`users`, `comment`, `forum`, `order`, `clients`, `favorites`,
+   tables that take part in transactions (`users`, `admins`, `comment`, `forum`, `order`, `clients`, `favorites`,
    `user_oauth`, `points`, `products`, `rating_targets`, `rating_actors`, `rating_votes`, `categories`,
-   `voting`) must be InnoDB. Otherwise the update stops and prints the `ALTER TABLE … ENGINE=InnoDB`
+   `voting`, `newsletter`) must be InnoDB. Otherwise the update stops and prints the `ALTER TABLE … ENGINE=InnoDB`
    statements to run; nothing is converted automatically and no file of the site changes.
 2. **The site is closed** (`close = 1`). Every configuration file the installer writes removes
    `config/local.php`, so the next request already sees the closed site. It stays closed after the update;
@@ -130,11 +146,16 @@ The update runs in this order and reports every step on its result page:
    `adminlist` field, address bans turn their octet mask into CIDR. The sources of the removed modules and of `templ`, `header`,
    `chmod`, `core`, `rewrite` and `rules` have no successor and are not carried. Every old source moves to
    `storage/backup/update/config/`, because the runtime reads every file in `config/`. `config/db.php` of 6.2
-   is read as it is and rewritten in the 6.3 format.
+   is read as it is and rewritten in the 6.3 format. The language and the site address of 6.2 stay; the
+   installer does not take them from its own language choice or from the address it was opened at.
 4. **Configuration.** `config/modules.php` is reconciled the way the modules screen does it: records of
    modules that are no longer in the tree are dropped, `node` gets the record of a clean installation.
    A site that still has the 6.2 table `modules` keeps what it stored there: a module switched off, shown to a
-   group or placed in blocks stays so, whatever the shipped `config/modules.php` says.
+   group or placed in blocks stays so, whatever the shipped `config/modules.php` says. Only the first run reads
+   that table and switches the `newsletter` job on; it leaves the mark `modules` in `config/update.php`, and a
+   repeated run keeps the switches and the job as the owner set them in between.
+   The Node types the shipped `config/node.php` carries are removed with their field, upload and rating rules,
+   unless the database already registers a type of that name, and the result page names them.
    `config/uploads.php` loses the upload rules of the nine removed modules, `config/scheduler.php` gains
    the `nodepublish` and `nodesync` jobs, `config/newsletter.php` gets the keys it lacks, `config/rss.php`
    gets its three transport limits. Pending newsletter recipients are kept in `storage/backup/update/newsletter/`.
@@ -143,8 +164,10 @@ The update runs in this order and reports every step on its result page:
 6. The data units **points**, **ratings** and **fields**. Each unit keeps a manifest and snapshots under
    `storage/backup/update/<unit>/` and writes its mark to `config/update.php`; a subsystem without its mark
    stays closed for writing.
-7. RSS blocks are emptied so the next refresh stores Markdown; the kept newsletter recipients move into the
-   mail queue, each address once per campaign, however often the update runs.
+7. RSS blocks are emptied so the next refresh stores Markdown; the blocks of the removed modules (`news`,
+   `pages`, `faq`, `files`, `jokes`, `jokes_random`, `links`, `center`, `center_media`, `center_plus`) are
+   switched off and named on the result page; the kept newsletter recipients move into the mail queue, each
+   address once per campaign, however often the update runs.
 8. When the whole run reports no error, the snapshots are deleted: they hold guest addresses, balances and
    field values. Only the `manifest.json` files stay, and a repeated run skips every finished unit by them.
 
@@ -156,6 +179,36 @@ run changes nothing.
 
 The update creates no Node types and imports no content of the removed modules: their tables, categories
 and `uploads/<name>` directories stay as they are. See [Node Replaces Nine Content Modules](#node-replaces-nine-content-modules).
+
+What the update changes in the data, beyond the steps above:
+
+- **Old material addresses answer 404.** The id counter of `{prefix}_nodes` starts above the highest id of the
+  nine old tables, so `index.php?name=<type>&op=view&id=N` of 6.2 answers 404 instead of showing a different
+  material. There is no map of old ids.
+- **Ratings.** Totals stay as starting totals and the last vote time of each visitor stays as the waiting
+  period; no individual vote is recreated, and `{prefix}_rating` stays because polls use it. Carried rating rules
+  allow guests; an interval of 0 means no waiting. The unit writes nothing when it finds broken data and names
+  it: a rating total outside one to five times its vote count (accounts, forum topics, products), a
+  `{prefix}_rating` row without an account, a valid address or with a future time, a broken rule, or a missing
+  rule for `account`, `forum` or `shop`. Correct it and run the update again.
+- **Points.** `{prefix}_users.points` stays the balance, rating rewards of 6.2 included; the points switch of
+  6.2 becomes the switch of `config/points.php`, whose reward rules start from the release.
+- **Extra fields.** Values are carried byte for byte; a `0` stored for an empty select or date becomes empty; a
+  field is required only when 6.2 stored exactly `1`; the report lists at most 50 rows plus the total. If
+  `config/fields.php` is already in the 6.3 format while the tables still hold 6.2 rows, put the 6.2 file back
+  and run again.
+- **Upload rules and bans.** A carried upload rule gets a guest file limit equal to the user limit; a ban entry
+  that is not an IPv4 ban of 6.2 is dropped and named.
+- **Administrator rights.** The first run rewrites numeric module rights of administrators as module names.
+- **Scheduler.** `maildrain` is added (priority 8, or the lowest free one when 8 is taken), `commentsync` is
+  removed, missing `dbbackup` settings are filled.
+- **Accounts and comments.** Duplicate user names are renamed to `<name>_<id>`. The schema file stops with a
+  message when `{prefix}_privat.time` or `{prefix}_comment.time` holds `NULL` or `{prefix}_comment.reqkey` is
+  still hex text; repair those rows and run again.
+- **Custom SQL on MySQL 8.** `rank` is reserved from MySQL 8.0.2: quote `{prefix}_users.rank` and
+  `{prefix}_groups.rank` in backticks in custom queries.
+- **Rollback.** Restoring only some files is no rollback: code, schema, configuration and data are restored
+  together, and after the site is reopened a restore loses what was written after it.
 
 ### 4. Review Configuration
 
@@ -214,7 +267,8 @@ their blocks, configuration files and tables in `setup/sql/table.sql`. Their con
 - A clean installation creates ten active types from `modules/node/profiles/*.json` — the nine replacements
   and `docs` — when the first administrator is created, and one welcome news item.
 - An updated site gets no types. Create them in the admin panel under **Node → Types → New type**, from a
-  shipped profile or from scratch. A type name is refused while categories of the old module or user files
+  shipped profile or from scratch, then place the Node block `blocks/node.php` in **Blocks** where the switched-off
+  blocks of the removed modules stood. A type name is refused while categories of the old module or user files
   in `uploads/<name>` exist; archive, move or delete them yourself first — the update never does.
 - The old tables (`{prefix}_news` and the others) are neither read, imported nor dropped. Their
   `config/<name>.php` files are no longer read and may be deleted.

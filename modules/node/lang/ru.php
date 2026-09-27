@@ -24,7 +24,6 @@ define('_NODE_PERIOD','Период проверки, секунд');
 define('_NODE_PHIGH','Высокий');
 define('_NODE_PLOW','Низкий');
 define('_NODE_PNORM','Обычный');
-define('_NODE_PRIO','Приоритет');
 define('_NODE_PURGE','Срочный');
 define('_NODE_RELATED','Связанные материалы');
 define('_NODE_RELHINT','Номера материалов через запятую');

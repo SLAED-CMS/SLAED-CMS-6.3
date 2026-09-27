@@ -7,8 +7,6 @@
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
 # The one preparer of the Node views: a read material or a light target becomes the exact data array of one closed display mode, never HTML, never a query, never a template call
-# Text goes through the shared parser with the controlled attachment route of the stored material, field values through the shared field system, addresses through getSeoUrl()
-# A text is always rendered safe with its trusted tags honoured: only what [usehtml] and [usephp] enclose is trusted; writes strip those tags from all but the main administrator
 final class NodeView {
 
     # The modes a full material may be prepared for, and the one mode of a light target: the card of a related material
@@ -58,8 +56,8 @@ final class NodeView {
         return ($time === false) ? '' : date('c', $time);
     }
 
-    # The address of one resource: the counting route of a saved one, the source of an external one a role shows where it lives,
-    # and for an unsaved preview the protected preview of its own upload; a nested local path has no preview address
+    # The address of one resource: the counting route of a saved one, the source of an external one a role shows where it lives
+    # An unsaved preview gets the protected preview of its own upload; a nested local path has no preview address
     private function getAssetHref(NodeType $type, NodeAsset $one, string $mode, bool $link): string {
         if ($link && in_array($mode, self::OUTSIDE, true)) return $one->src;
         if ($one->id > 0) return getSeoUrl(['name' => $type->name, 'op' => 'asset', 'id' => $one->id]);
@@ -97,12 +95,12 @@ final class NodeView {
         return array_filter($out);
     }
 
-    # The array of a full material: texts, author, category, dates, counters, the field values and the resources the read loaded
+    # The array of a full material: texts, author, category, dates, counters, the field values and the resources the read loaded; a category title may be a language constant
     private function getFullView(NodeType $type, Node $node, string $mode): array {
         $hoff = ($mode === 'view') ? 1 : 2;
         $intro = $this->getTextHtml($node->intro, $type->name, $node->id, $hoff);
         $user = ($node->uid > 0) ? (string)$node->uname : '';
-        $cat = ($node->cid > 0 && $node->ctitle !== null) ? html_entity_decode($node->ctitle, ENT_QUOTES | ENT_HTML5, 'UTF-8') : '';
+        $cat = ($node->cid > 0 && $node->ctitle !== null) ? html_entity_decode(getConst($node->ctitle), ENT_QUOTES | ENT_HTML5, 'UTF-8') : '';
         return [
             'id' => $node->id,
             'type' => $type->name,

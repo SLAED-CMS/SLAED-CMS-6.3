@@ -186,7 +186,7 @@ function liste(): void {
 	if (!$rows) setError(404);
 	$cont .= $tpl->getHtmlPart('content-list', [
 		'rows'        => $rows,
-		'before_html' => ($conf['shop']['letter'] && $rows) ? letter($conf['name']) : '',
+		'before_html' => ($conf['shop']['letter'] && $rows) ? getLetterNavi($conf['name']) : '',
 		'table_open'  => [
 			'open'       => true,
 			'sortable'   => true,

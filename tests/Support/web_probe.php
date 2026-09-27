@@ -5,7 +5,7 @@
 # Website: slaed.net
 
 # The web server of the probes, run as the router of the built-in server `php -S` with the scratch root in SLAED_WEB_ROOT; it answers a closed set of paths and nothing else
-# /uploads/<dir>/<file> behaves like a web server carrying the shared nginx rule of docs/node/09: 403 for a directory holding the .htaccess guard, the file otherwise
+# /uploads/<dir>/<file> follows the nginx rule of UPGRADING.md (Web Server Rule for Node Upload Directories): 403 for a directory with the .htaccess guard, the file otherwise
 # The file open in that root switches the rule off, which is a server whose owner never added it; the upload root itself comes from SLAED_WEB_UPLOADS
 # /stream answers one fixture of <root>/files through the shipped getFileStream(), lifted out of core/system.php, and records what the callback and the shutdown saw
 # The directory is served by the stand as well, so anything but the built-in server gets a plain 404 before a single line of it runs

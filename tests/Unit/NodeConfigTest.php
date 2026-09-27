@@ -10,7 +10,7 @@ use ReflectionClass;
 use ReflectionMethod;
 
 /**
- * Stage S10 of docs/node: NodeService writes types. The four operations and the import run as the Closure of the shared
+ * NodeService writes types. The four operations and the import run as the Closure of the shared
  * configuration writer on the four areas node, fields, uploads and ratings, with the type row locked in the same cycle and
  * the version proven on both sides. Every behaviour is driven by tests/Support/node_probe.php in its service mode: scratch
  * sources, backup, cache and upload root, one disposable MariaDB database with the shipped schema, and child processes for
@@ -58,7 +58,7 @@ final class NodeConfigTest extends TestCase
         $this->assertRefused($call, 3, 'Invalid node input: '.$path, $name);
     }
 
-    # The type operations of the writer keep the approved signatures of 05-core-api.md, and the class is loaded through the closed map;
+    # The type operations of the writer keep the approved signatures of docs/NODE.md (NodeService), and the class is loaded through the closed map;
     # the whole public surface of the writer, materials included, is held by NodeServiceTest
     #[Test]
     public function theWriterHasTheTypeOperations(): void
@@ -298,7 +298,7 @@ final class NodeConfigTest extends TestCase
         $this->assertSame(['ok' => true, 'value' => null], $run['again']);
     }
 
-    # NOD-206: a type goes public only when the web server itself refuses its directory - the probe server carries the shared nginx rule of docs/node/09
+    # A type goes public only when the web server refuses its directory - the probe server carries the nginx rule of UPGRADING.md (Web Server Rule for Node Upload Directories)
     # A new directory gets both guards, a missing one is written back, a served guard page or a guard with other bytes keeps the type off, and a type already on stays on
     #[Test]
     public function aTypeGoesPublicOnlyBehindARefusingWebServer(): void

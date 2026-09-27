@@ -716,7 +716,7 @@ class Mail {
     # Deliver by piping the message into the configured Sendmail binary through proc_open(), which reports an exit status where popen() would hide it
     # The command is an argument array and never a string, so no shell is involved: mail.sendmail holds a path and every argument is supplied here
     # The binary is started with -t so it takes its recipient from the To header, -i so a lone dot cannot end the message, and -f for the envelope sender
-    # proc_open() is probed rather than assumed because shared hosting lists it in disable_functions, and the path must be an existing executable file
+    # The proc_open() function is probed rather than assumed because shared hosting lists it in disable_functions, and the path must be an existing executable file
     # Both output pipes are drained before the exit status is read, because a binary writing to stdout would otherwise block on a full pipe while we wait for it to finish
     # A short write is a failure of its own: a binary that died before reading the message can still exit zero, and an unchecked fwrite() would report that as an accepted delivery
     # The write uses the same warning handler as PHP mail(), because a closed pipe raises one and an unhandled warning would leak into the response body

@@ -7,9 +7,6 @@
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
 # The external material of a type with the extension key sync: one RSS or Atom source per material in _node_sync, whose canonical Markdown becomes the body of _nodes
-# The source is fetched by the shared Feed outside every transaction, by the explicit administrative check or by the queue of the system job, never by a page view;
-# the result is written afterwards only when the source and the version of the material are still the ones the fetch started from
-# The hooks keep the source row inside the transaction of NodeService and never reach the network; the body belongs to the source and is never taken from a form
 final class NodeSync implements NodeExtension {
 
     # The closed actions of the extension contract
@@ -102,8 +99,10 @@ final class NodeSync implements NodeExtension {
     }
 
     # The extension has no settings of its own: the transport belongs to config/rss.php and the period of a source to its row
+    # A type of it takes no public submission, because only a moderator of the type sets the source a material is made of
     public function filterNodeConfig(array $config, array $settings, array $fields): array {
         if ($config !== []) throw $this->getInvalid('ext');
+        if (($settings['features']['submit'] ?? null) !== false) throw $this->getInvalid('features.submit');
         return [];
     }
 
@@ -144,8 +143,8 @@ final class NodeSync implements NodeExtension {
         $this->addSourceRow($node->id, $data);
     }
 
-    # Follow a changed material: its body is never changed by a form; a new address forgets the validators and the history of results and is due at once,
-    # a new period alone keeps them and moves the next check from the last one; a change of state leaves the row alone
+    # Follow a changed material, whose body is never changed by a form: a new address forgets the validators and the history of results and is due at once
+    # A new period alone keeps them and moves the next check from the last one; a change of state leaves the row alone
     public function updateNodeData(Node $before, Node $after, ?array $data): void {
         if ($data === null) return;
         $this->checkSourceData($data);
@@ -179,8 +178,8 @@ final class NodeSync implements NodeExtension {
         $this->getQueryRes('DELETE FROM '.PREFIX_DB.'_node_sync WHERE nid = :nid', ['nid' => $node->id]);
     }
 
-    # Read the source rows of one page of materials with one statement for the administrative view of a moderator of the type; a public view gets nothing,
-    # because the address of the source and the technical error are not part of the material
+    # Read the source rows of one page of materials with one statement for the administrative view of a moderator of the type
+    # A public view gets nothing, because the address of the source and the technical error are not part of the material
     public function getNodeData(NodeType $type, array $nodes, string $mode): array {
         if ($mode !== 'admin' || !$this->checkModer($type->name)) return [];
         $ids = [];
@@ -198,8 +197,9 @@ final class NodeSync implements NodeExtension {
     }
 
     # Store the result of one fetch in its own transaction when the source and the version of the material are still the ones the fetch started from
-    # A new text passes the bound of nodes.body and changes only the body, the update time and the version of the material with the source row; an answer 304 or the same text
-    # changes only the source row; a failure keeps the text and the validators, counts the failure and waits longer; a concurrent change of either side writes nothing
+    # A new text passes the bound of nodes.body and changes only the body, the update time and the version of the material with the source row
+    # An answer 304 or the same text changes only the source row; a failure keeps the text and the validators, counts the failure and waits longer
+    # A concurrent change of either side writes nothing
     # The cache guard of a new text goes only after a proven rollback or a raised generation: a commit or a rollback whose outcome is unknown keeps it
     private function setSourceResult(array $snap, array $res): array {
         $nid = $snap['nid'];
@@ -261,8 +261,8 @@ final class NodeSync implements NodeExtension {
         return $out;
     }
 
-    # Check one source now: the snapshot of the material and its source is read without a lock, the feed is fetched with the stored validators outside any transaction,
-    # and the result is stored by setSourceResult(); a material in the trash is skipped
+    # Check one source now: the snapshot of the material and its source is read without a lock, the feed is fetched with the stored validators outside any transaction
+    # The result is stored by setSourceResult(); a material in the trash is skipped
     private function setSourceCheck(array $snap): array {
         if ($snap['status'] === NodeStatus::Deleted->value) return ['id' => $snap['nid'], 'status' => 'skipped', 'error' => ''];
         return $this->setSourceResult($snap, $this->feed->getFeedContent($snap['url'], $snap['etag'], $snap['modified']));
@@ -281,8 +281,8 @@ final class NodeSync implements NodeExtension {
         return $out;
     }
 
-    # Check the source of one material now, whatever its due time, for a moderator of its type; the answer names the material, the outcome
-    # updated, unchanged, failed or skipped, and the short safe error of a failure; a background context uses the queue instead
+    # Check the source of one material now, whatever its due time, for a moderator of its type; a background context uses the queue instead
+    # The answer names the material, the outcome updated, unchanged, failed or skipped, and the short safe error of a failure
     public function updateNodeSync(int $id): array {
         if ($this->ctx->task) throw new NodeException('A background context checks the queue only', NodeException::DENIED);
         $snap = ($id > 0) ? ($this->getSourceSnaps('s.nid = :id', ['id' => $id])[0] ?? null) : null;

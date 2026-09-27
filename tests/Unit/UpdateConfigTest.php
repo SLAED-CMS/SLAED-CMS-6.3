@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Stage S19.2 of docs/node: the configuration step of the 6.3 update in setup/index.php carries the settings of a 6.2 site,
+ * The configuration step of the 6.3 update in setup/index.php carries the settings of a 6.2 site,
  * which live in config/config_<name>.php as a variable of their own, over the sources the release ships, and moves every old source
  * out of config/ because the runtime includes each file there. tests/Support/update_probe.php lifts the shipped functions out of the
  * installer by name and drives them on a scratch site, so the configuration of the stand is never touched.
@@ -26,7 +26,7 @@ final class UpdateConfigTest extends TestCase
             $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' config 2>&1');
             $data = json_decode($out, true);
             $this->assertIsArray($data, 'The probe did not return JSON: '.$out);
-            if (!empty($data['error'])) $this->markTestSkipped('Probe: '.$data['error']);
+            $this->assertSame('', $data['error'], 'The probe failed');
             $this->assertTrue($data['clean'], 'The probe left its schema on the server');
             self::$probe = $data['runs']['clean'];
         }

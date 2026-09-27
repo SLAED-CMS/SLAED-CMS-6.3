@@ -464,7 +464,7 @@ class FileManager {
 
     # Canonicalizes one client path inside the root and answers its relative and absolute form, or two empty strings when it is not a plain relative path below the root
     # The root itself is the empty relative path; a drive letter, a stream wrapper and an alternate data stream all carry a colon, and a traversal survives no separator spelling
-    # realpath() resolves the last symlink too, so the prefix test below is what refuses a link that leaves the root while its own name looks harmless
+    # The realpath() call resolves the last symlink too, so the prefix test below is what refuses a link that leaves the root while its own name looks harmless
     # The relative path is read back off the resolved one and never off the request, so a link below the root and a second spelling of a name reach the policy as what they are
     private function getPathPair(string $path): array {
         $fail = ['rel' => '', 'full' => ''];
@@ -526,8 +526,8 @@ class FileManager {
         return $out;
     }
 
-    # Returns the account one object belongs to, which only a POSIX host can answer at all: Windows reports every file as
-    # owned by the same synthetic id, so the field stays empty there and the interface drops the row instead of printing a zero
+    # Returns the account one object belongs to, which only a POSIX host can answer at all
+    # Windows reports every file as owned by the same synthetic id, so the field stays empty there and the interface drops the row instead of printing a zero
     private function getFileUser(string $full): string {
         if (DIRECTORY_SEPARATOR !== '/') return '';
         $uid = fileowner($full);

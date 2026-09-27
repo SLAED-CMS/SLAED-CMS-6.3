@@ -8,8 +8,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Stage S16 of docs/node: the remaining integrations of Node. The behaviour is driven by tests/Support/route_probe.php with the argument integ: the
- * disposable database and scratch configuration of the S13 probe, news with rating, favorites, poll, home and all four integrations, docs with search,
+ * The integrations of Node. The behaviour is driven by tests/Support/route_probe.php with the argument integ: the
+ * disposable database and scratch configuration of the base route probe, news with rating, favorites, poll, home and all four integrations, docs with search,
  * sitemap and blocks, real HTTP requests of guests, users and administrators, and the child mode integext that runs the sitemap generator and puts the
  * map of the stand back byte for byte. The static half reads the files.
  */
@@ -99,12 +99,13 @@ final class NodeIntegTest extends TestCase
         $this->assertSame([200, [4, 1, 1, 1]], $run['after'], 'The target stayed blocked after the failure');
     }
 
-    # A favorite needs a readable material of a type with the feature; the lists show only what their viewer may read, and the deletion of a material removes it
+    # A favorite needs a readable material of a type with the feature and a POST of the switch; the lists show what their viewer may read, a deleted material leaves them
     #[Test]
     public function favoritesFollowTheRightsAndTheLifeOfTheMaterial(): void
     {
         $run = $this->getRun();
-        $this->assertSame([true, 200, true, 1, 0, 1, 0], $run['fav'], 'A favorite was refused, or one was stored for a type without the feature or an unreadable material');
+        $this->assertSame([true, 200, true, 1, 0, 1, 0, 0], $run['fav'],
+            'A favorite was refused, one was stored for a type without the feature or an unreadable material, or a plain visit of the switch stored one');
         $this->assertSame([true, false, true], $run['favlist'], 'The list shows a material its viewer may not read, or the lists miss a Node title');
         $this->assertSame([303, null, 0], $run['delete'], 'The deletion of a material left its favorites');
     }
@@ -166,6 +167,7 @@ final class NodeIntegTest extends TestCase
         $this->assertSame(601, $map['bulk'], 'The cursor lost or repeated materials across batches');
         $this->assertSame(['success', 5], $map['batch'], 'The sitemap did not read about six hundred materials in batches of limits.syncbatch');
         $this->assertSame([true, false, false], $map['txt'], 'The HTML map misses the open category or lists materials of Node');
+        $this->assertSame([false, true], $map['lang'], 'A multilingual map lists a category of another language or misses one of the site language');
     }
 
     # The shared code names no type: the adapters, the block and the generators read the registry and the settings of each type

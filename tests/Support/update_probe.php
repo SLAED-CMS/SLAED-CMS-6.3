@@ -4,7 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
-# CLI probe for the points, ratings and fields units of the 6.3 data update in setup/index.php, whose contracts are docs/node/12-migration.md and docs/node/ratings.md
+# CLI probe for the points, ratings and fields units of the 6.3 data update in setup/index.php, whose contracts are docs/NODE.md (The 6.3 update) and docs/RATINGS.md
 # The second argument names the unit, points when it is left out; all three share the schema, the lifted installer code and the scratch site
 # The installer cannot be required from CLI: it is a request handler that acts on load, so its functions are lifted out of the shipped source by name
 # BASE_DIR and CONFIG_DIR point into scratch, so the manifest, the snapshot, the mark and every configuration file the unit writes stay away from the site
@@ -41,7 +41,8 @@ if (!defined('FUNC_FILE')) define('FUNC_FILE', true);
 require_once PROBEROOT.'/core/classes/pdo.php';
 require_once PROBEROOT.'/core/classes/field.php';
 require_once PROBEROOT.'/core/classes/filemanager.php';
-foreach (['_TABLE' => 'Table', '_OK' => 'probe-ok', '_ERROR' => 'probe-error'] as $name => $text) define($name, $text);
+require_once PROBEROOT.'/setup/lang/en.php';
+foreach (['_OK' => 'probe-ok', '_ERROR' => 'probe-error'] as $name => $text) define($name, $text);
 
 # A database facade that can name another server version, which is the one fact of the preflight a real server cannot be asked to change
 final class ProbeBase extends Database {
@@ -738,13 +739,29 @@ function getModState(string $html): array {
     return $out;
 }
 
-# The module registry of a 6.2 site with its _modules table, a repeat, and a site without the table; then the preflight of a clean installation,
+# The module registry of a 6.2 site with its _modules table, a repeat, a repeat after the mark whose owner switched forum on in between, and a site without the table;
+# the types of config/node.php the update takes out while it keeps the registered ones; then the preflight of a clean installation,
 # which needs a server as new as the update does and no table of its prefix, and the preflight of the update, which needs the users and admins tables of its prefix
+# and refuses an admins or newsletter table outside InnoDB; last the faults of the update: an admins table the registry cannot read, an uploads.php the type step
+# cannot write, and a read-only ratings.php that keeps the ratings unit from its manifest seal and its mark until the permissions are fixed
 function getSetupClean(): array {
     $pdb = $GLOBALS['pdb'];
     setModSite(true);
     $out = ['site' => getModState(setUpdateModules($pdb, PROBEPREF))];
     $out['again'] = getModState(setUpdateModules($pdb, PROBEPREF));
+    $mods = (include CONFIG_DIR.'/modules.php')['modules'];
+    $mods['forum']['active'] = '1';
+    setConfigFile('modules.php', $mods);
+    $out['owned'] = getModState(setUpdateModules($pdb, PROBEPREF, false));
+    $pack = ['node' => ['types' => ['content' => ['version' => 2], 'docs' => ['version' => 2], 'news' => ['version' => 1]]],
+        'fields' => ['account' => [], 'node' => ['content' => ['f' => []], 'docs' => ['f' => []]]], 'uploads' => ['all' => 'x', 'content' => 'x', 'docs' => 'x', 'news' => 'x'],
+        'ratings' => ['account' => [], 'node.content' => [], 'node.docs' => [], 'node.news' => []]];
+    foreach ($pack as $name => $data) setConfigFile($name.'.php', $data, [], true);
+    $gone = deleteSetupTypes(['docs', 'other']);
+    $read = fn(string $name): array => array_keys(getSetupConfig(CONFIG_DIR.'/'.$name.'.php')[$name] ?? []);
+    $out['types'] = ['gone' => $gone, 'node' => array_keys(getSetupConfig(CONFIG_DIR.'/node.php')['node']['types'] ?? []), 'fields' => $read('fields'),
+        'node.fields' => array_keys(getSetupConfig(CONFIG_DIR.'/fields.php')['fields']['node'] ?? []), 'uploads' => $read('uploads'), 'ratings' => $read('ratings'),
+        'again' => deleteSetupTypes(['docs'])];
     setModSite(false);
     $out['plain'] = getModState(setUpdateModules($pdb, PROBEPREF));
     $out['fresh'] = ['taken' => checkUpdateBase($pdb, PROBEPREF, true), 'free' => checkUpdateBase($pdb, 'free', true), 'near' => checkUpdateBase($pdb, 'prob', true),
@@ -756,6 +773,27 @@ function getSetupClean(): array {
     getProbeSide()->exec('RENAME TABLE `'.PROBEPREF.'_admins` TO `'.PROBEPREF.'_admins_off`');
     $out['update']['half'] = checkUpdateBase($pdb, PROBEPREF);
     getProbeSide()->exec('RENAME TABLE `'.PROBEPREF.'_admins_off` TO `'.PROBEPREF.'_admins`');
+    getProbeSide()->exec('ALTER TABLE `'.PROBEPREF.'_admins` ENGINE=MyISAM');
+    getProbeSide()->exec('CREATE TABLE `'.PROBEPREF.'_newsletter` (`id` INT NOT NULL PRIMARY KEY) ENGINE=MyISAM');
+    $out['update']['engine'] = checkUpdateBase($pdb, PROBEPREF);
+    getProbeSide()->exec('DROP TABLE `'.PROBEPREF.'_newsletter`');
+    getProbeSide()->exec('ALTER TABLE `'.PROBEPREF.'_admins` ENGINE=InnoDB');
+    setModSite(true);
+    $was = sha1_file(CONFIG_DIR.'/modules.php');
+    getProbeSide()->exec('RENAME TABLE `'.PROBEPREF.'_admins` TO `'.PROBEPREF.'_admins_off`');
+    $text = setUpdateModules($pdb, PROBEPREF);
+    getProbeSide()->exec('RENAME TABLE `'.PROBEPREF.'_admins_off` TO `'.PROBEPREF.'_admins`');
+    $out['fault'] = ['text' => trim(strip_tags($text)), 'red' => str_contains($text, 'sl_red'), 'same' => sha1_file(CONFIG_DIR.'/modules.php') === $was];
+    foreach ($pack as $name => $data) setConfigFile($name.'.php', $data, [], true);
+    chmod(CONFIG_DIR.'/uploads.php', 0444);
+    $gone = deleteSetupTypes(['docs']);
+    chmod(CONFIG_DIR.'/uploads.php', 0644);
+    $out['types']['locked'] = [$gone, array_keys(getSetupConfig(CONFIG_DIR.'/node.php')['node']['types'] ?? []), deleteSetupTypes(['docs'])];
+    setRateSite();
+    chmod(CONFIG_DIR.'/ratings.php', 0444);
+    $out['locked'] = ['first' => getRateRun()];
+    chmod(CONFIG_DIR.'/ratings.php', 0644);
+    $out['locked']['again'] = getRateRun();
     return $out;
 }
 
@@ -763,7 +801,7 @@ $report = ['error' => '', 'clean' => false, 'runs' => []];
 
 try {
     $units = ['setConfigFile', 'getSetupConfig', 'getSetupBase', 'getInfo', 'checkUpdateBase', 'setUpdateBackup', 'setUpdatePoints', 'setUpdateRatings', 'getUpdateRules',
-        'getUpdateValue', 'setUpdateFields', 'setUpdateConfig', 'setUpdateMails', 'setUpdateModules'];
+        'getUpdateValue', 'setUpdateFields', 'setUpdateConfig', 'setUpdateMails', 'setUpdateModules', 'deleteSetupTypes'];
     foreach ($units as $name) addProbeCode($name);
     addProbeSchema();
     $report['runs'] = match ($argv[2] ?? 'points') {

@@ -24,7 +24,6 @@ define('_NODE_PERIOD','Intervalle de vérification, secondes');
 define('_NODE_PHIGH','Haute');
 define('_NODE_PLOW','Basse');
 define('_NODE_PNORM','Normale');
-define('_NODE_PRIO','Priorité');
 define('_NODE_PURGE','Urgente');
 define('_NODE_RELATED','Publications liées');
 define('_NODE_RELHINT','Numéros des publications, séparés par des virgules');

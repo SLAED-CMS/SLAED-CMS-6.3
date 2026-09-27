@@ -24,7 +24,6 @@ define('_NODE_PERIOD','Prüfintervall, Sekunden');
 define('_NODE_PHIGH','Hoch');
 define('_NODE_PLOW','Niedrig');
 define('_NODE_PNORM','Normal');
-define('_NODE_PRIO','Priorität');
 define('_NODE_PURGE','Dringend');
 define('_NODE_RELATED','Verwandte Beiträge');
 define('_NODE_RELHINT','Nummern der Beiträge, durch Kommas getrennt');

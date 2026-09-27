@@ -7,7 +7,6 @@
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
 # Life cycle state of one material, as the status column of the node table holds it; application code compares cases, never the stored numbers
-# The matrix of possible moves belongs here alone; what a given context may do on top of it is decided by the service and the workflow of the type
 enum NodeStatus: int {
     case Draft = 0;
     case Pending = 1;

@@ -273,8 +273,7 @@ function getAdminSettingsWindow(): string {
     ]);
 }
 
-# Render the icon picker window: one window for every screen that offers an icon field, so the four callers name the
-# screen they stand on and nothing about the window itself
+# Render the icon picker window: one window for every screen that offers an icon field, so the four callers name only the screen they stand on
 function getAdminIconWindow(): string {
     global $tpl;
     return $tpl->getHtmlFrag('window', [
@@ -361,10 +360,10 @@ function getAdminInfo(): string {
                 ],
                 'whois'   => [['name=whois&status=1', '_WHOIS', '_WHOIS', 'person-vcard', 'whois', "status = '0'"]],
             ];
-            $newRows = [];
+            $fresh = [];
             foreach ($groups as $mod => $defs) {
                 if (!is_active($mod) || !is_admin_modul($mod)) continue;
-                foreach ($defs as $d) $newRows[] = getAdminCountRow(...$d);
+                foreach ($defs as $def) $fresh[] = getAdminCountRow(...$def);
             }
             $ctx = getNodeContext();
             foreach (getNodeTypeMap() as $name => $type) {
@@ -382,11 +381,13 @@ function getAdminInfo(): string {
                     Logger::addSite('error', 'Admin: the waiting Node materials cannot be counted', ['type' => $name, 'code' => $err->getCode()]);
                     continue;
                 }
-                $newRows[] = getAdminCountRow($href, getModuleName($name), getModuleName($name), getIconName($name), '', '', $num);
+                $fresh[] = getAdminCountRow($href, getModuleName($name), getModuleName($name), getIconName($name), '', '', $num);
             }
-            $ablocks = $tpl->getHtmlPart('block-sidebar', ['title' => _NEW, 'icon_name' => 'stars', 'content_html' => $tpl->getHtmlFrag('block-content', ['is_sidebar_count_list' => true, 'content' => implode('', $newRows)]), 'id' => '3', 'close' => _OPCL]);
-            $waitingRows = [getAdminCountRow('name=comments&status=1', '_COMMENTS', '_COMMENTS', 'chat-dots', '', '', $com->getStatusCount(CommentStatus::Pending))];
-            $ablocks .= $tpl->getHtmlPart('block-sidebar', ['title' => _WAITINGCONT, 'icon_name' => 'hourglass-split', 'content_html' => $tpl->getHtmlFrag('block-content', ['is_sidebar_count_list' => true, 'content' => implode('', $waitingRows)]), 'id' => '4', 'close' => _OPCL]);
+            $ablocks = $tpl->getHtmlPart('block-sidebar', ['title' => _NEW, 'icon_name' => 'stars', 'content_html' => $tpl->getHtmlFrag('block-content', [
+                'is_sidebar_count_list' => true, 'content' => implode('', $fresh)]), 'id' => '3', 'close' => _OPCL]);
+            $wait = [getAdminCountRow('name=comments&status=1', '_COMMENTS', '_COMMENTS', 'chat-dots', '', '', $com->getStatusCount(CommentStatus::Pending))];
+            $ablocks .= $tpl->getHtmlPart('block-sidebar', ['title' => _WAITINGCONT, 'icon_name' => 'hourglass-split', 'content_html' => $tpl->getHtmlFrag('block-content', [
+                'is_sidebar_count_list' => true, 'content' => implode('', $wait)]), 'id' => '4', 'close' => _OPCL]);
         }
         return $ablocks;
     }
@@ -588,7 +589,7 @@ function catacess(string $name, string $class, string $selected, int $limit, str
 }
 
 # Fold the posted level|group values of one category access select into its stored rule: groups collect every selected group, any other level keeps its first value
-function scatacess(array $auth): string {
+function getCategoryAccess(array $auth): string {
     foreach ($auth as $val) {
         $gids = explode('|', $val);
         if ($gids[0] == 2) {
@@ -747,11 +748,9 @@ function getAdminFavoriteList(int $obj = 0): string {
     $cid = getVar('get', 'num', 'num', getVar('get', 'cid', 'num', 1));
     $offset = ($cid - 1) * $newlistnum;
     $offset = intval($offset);
-    list($fav_num) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites'));
-    
+    [$fav_num] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites'));
     $result = $db->getSqlQuery('SELECT id, modul FROM '.PREFIX_DB.'_favorites ORDER BY id DESC LIMIT '.intval($offset).', '.intval($newlistnum));
-    while (list($id, $modul) = $db->getSqlRow($result)) $fmassiv[$modul][] = $id;
-    
+    while ([$id, $modul] = $db->getSqlRow($result)) $fmassiv[$modul][] = $id;
     if (is_array($fmassiv)) {
         foreach ($fmassiv as $key => $val) {
             $ids = array_values(array_filter(array_map('intval', $val), static fn($v) => $v > 0));
@@ -766,11 +765,13 @@ function getAdminFavoriteList(int $obj = 0): string {
             $in = implode(', ', $pp);
             $numl = count($val);
             if ($key == 'forum') {
-                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title, u.name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_forum AS n ON (f.fid = n.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while (list($id, $fid, $modul, $title, $uname) = $db->getSqlRow($result)) $ffmassiv[] = [$id, $fid, $modul, $title, $uname];
+                $sql = 'SELECT f.id, f.fid, f.modul, n.title, u.name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_forum AS n ON (f.fid = n.id)';
+                $result = $db->getSqlQuery($sql.' LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
+                while ([$id, $fid, $modul, $title, $uname] = $db->getSqlRow($result)) $ffmassiv[] = [$id, $fid, $modul, $title, $uname];
             } elseif ($key == 'shop') {
-                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title, u.name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_products AS n ON (f.fid = n.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while (list($id, $fid, $modul, $title, $uname) = $db->getSqlRow($result)) $ffmassiv[] = [$id, $fid, $modul, $title, $uname];
+                $sql = 'SELECT f.id, f.fid, f.modul, n.title, u.name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_products AS n ON (f.fid = n.id)';
+                $result = $db->getSqlQuery($sql.' LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
+                while ([$id, $fid, $modul, $title, $uname] = $db->getSqlRow($result)) $ffmassiv[] = [$id, $fid, $modul, $title, $uname];
             } elseif (isset($conf['node']['types'][$key])) {
                 $sql = 'SELECT f.id, f.fid, f.modul, u.name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.id IN ('.$in.')';
                 $res = $db->getSqlQuery($sql.' ORDER BY f.id DESC', $pm);
@@ -1114,8 +1115,8 @@ function checkSqlTable(string $name): bool {
     return (int)($row['num'] ?? 0) > 0;
 }
 
-# Save one part of a registered Node type from a shared screen: fields, uploads, rating or the integrations of its settings replaced in the stored type,
-# sent to the service with the version the form was built from
+# Save one part of a registered Node type from a shared screen: fields, uploads, rating or the integrations of its settings replaced in the stored type
+# The changed type goes to the service with the version the form was built from
 # Answers an empty string on success, otherwise a safe text chosen by the cause of the refusal; the text of the exception never reaches the page
 function updateNodeTypePart(string $name, string $part, array $value, int $version): string {
     $type = getNodeTypeMap()[$name] ?? null;

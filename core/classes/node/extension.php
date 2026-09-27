@@ -7,8 +7,6 @@
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
 # The contract of the special behaviour of one type: nine methods, reached only through the closed factory of core/classes/node/ext/load.php
-# An extension adds checks, scope and its own rows to what the core does; it never replaces rights, transactions, the base write or the base reads,
-# and a write method runs inside the transaction of its owner, so it performs no network request and nothing that cannot be rolled back
 interface NodeExtension {
 
     # Check the settings of the extension against the effective standard section of the type and its checked fields, and return them canonical

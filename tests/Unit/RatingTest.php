@@ -6,9 +6,9 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Stage S02 of docs/node: the Rating class is the one writer of the vote history and of the aggregate of every rated
- * target, docs/node/ratings.md is its contract, and the write-guard protocol of the page cache it depends on is the one of
- * docs/node/11-security-performance.md. tests/Support/rating_probe.php boots the real core in an isolated CLI process
+ * The Rating class is the one writer of the vote history and of the aggregate of every rated
+ * target, docs/RATINGS.md is its contract, and the write-guard protocol of the page cache it depends on is the one of
+ * docs/NODE.md (HTML page cache). tests/Support/rating_probe.php boots the real core in an isolated CLI process
  * and drives the class through trusted test adapters against a disposable schema built from the shipped DDL, so the
  * three tables of setup/sql/table.sql are executed by the same run. The cache directory, the generation counter and
  * the logs live in scratch, every persistent result is read by a connection of its own, and concurrency is made of
@@ -63,7 +63,7 @@ final class RatingTest extends TestCase
         $this->assertTrue($ref->isFinal(), 'The class is not final');
         $open = array_map(static fn(\ReflectionMethod $one): string => $one->getName(), $ref->getMethods(\ReflectionMethod::IS_PUBLIC));
         sort($open);
-        $this->assertSame(['__construct', 'addRating', 'deleteRating', 'getAverage', 'getRating', 'getRatingList'], $open, 'The public API is not exactly the one of ratings.md');
+        $this->assertSame(['__construct', 'addRating', 'deleteRating', 'getAverage', 'getRating', 'getRatingList'], $open, 'The public API is not exactly the one of docs/RATINGS.md');
         $this->assertTrue($ref->getMethod('getAverage')->isStatic(), 'The shared average needs an instance');
         $avg = $ref->getMethod('getAverage');
         $this->assertSame([null, '3', '3.666667', '0.333333', '0.666667'], [$avg->invoke(null, 5, 0), $avg->invoke(null, 6, 2), $avg->invoke(null, 11, 3),

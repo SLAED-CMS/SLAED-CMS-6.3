@@ -8,8 +8,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Stage S05 of docs/node: the shared rating is wired to the Rating class alone. The old shared table is left to the
- * polls, the vote reads nothing from the address, the rules are the four keys of docs/node/ratings.md behind the mark
+ * The shared rating is wired to the Rating class alone. The old shared table is left to the
+ * polls, the vote reads nothing from the address, the rules are the four keys of docs/RATINGS.md behind the mark
  * of the 6.3 data update, the mass reset of votes is gone, and every text of the wiring exists in all six locales.
  */
 final class RatingOwnersTest extends TestCase
@@ -67,7 +67,8 @@ final class RatingOwnersTest extends TestCase
             $this->assertStringNotContainsString($name, $body, 'getRatingView() still uses '.$name);
         }
         $this->assertLessThan(strpos($body, 'checkSiteToken('), strpos($body, "header('Allow: POST')"), 'The method is not refused before the token');
-        $this->assertStringContainsString("'getRatingView'], true))", $this->getCode('index.php'), 'The dispatcher asks for a token before the handler can refuse the method');
+        $this->assertMatchesRegularExpression("/\\\$public = \(\\\$go == 1 && in_array\(\\\$op, \[[^\]]*'getRatingView'[^\]]*\], true\)\)/", $this->getCode('index.php'),
+            'The dispatcher asks for a token before the handler can refuse the method');
         foreach (['rating-bar', 'rating-like'] as $name) {
             $frag = $this->getCode('templates/lite/fragments/'.$name.'.html');
             $this->assertStringContainsString('hx-post="index.php?go=1&amp;op=getRatingView"', $frag, $name);

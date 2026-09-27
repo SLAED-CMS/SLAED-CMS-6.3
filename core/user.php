@@ -565,6 +565,7 @@ function addComment(): void {
 }
 
 # Validate and update an existing forum post in-place
+# The word limit is checked against the longest word in characters, so a multibyte alphabet keeps the full allowance
 function updatePost() {
     global $db, $user, $conf, $tpl, $prs;
     $conf['forum'] = $conf['forum'] ?? [];
@@ -598,8 +599,6 @@ function updatePost() {
             } else {
                 $postid = (is_user()) ? intval($user[0]) : 0;
                 $ip = getip();
-                # The longest word decides, measured in characters: the previous loop kept only the last one and counted bytes,
-                # which halved the allowance for every alphabet that does not fit in one byte
                 $long = 0;
                 foreach (preg_split('/\s+/u', $text, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $word) {
                     $long = max($long, mb_strlen($word));
@@ -1282,7 +1281,7 @@ function getProfileLastView(int $uid): string {
         try {
             $query = getNodeReader($type)->setNodeType($type)->setNodeAuthor($uid)
                 ->setNodeStatus(NodeStatus::Published)->setNodeSets(false)->setNodePage(1, min($limit, $type->settings['list']['limit']));
-            if (in_array('published', $type->settings['list']['orders'], true)) $query->setNodeOrder('published', 'desc');
+            $query->setNodeOrder('published', 'desc');
             foreach ($query->getNodeList() as $node) {
                 $when = (string)$node->pubdate;
                 $lists[$mod][] = [
@@ -1310,6 +1309,7 @@ function getProfileLastView(int $uid): string {
 }
 
 # Render the favorites star button for an item as a round mini toggle (add/on/limit-reached state) with a tooltip panel
+# The switch changes state, so it posts with the page token in its header and its address carries no token; a plain visit of the address is refused
 # The whole favorites set of the user is loaded once per request into a static cache, so list pages render many stars without per-item SQL
 function getFavoriteButton(?int $fid, string $mod): string {
     global $db, $conf, $user, $tpl;
@@ -1328,15 +1328,16 @@ function getFavoriteButton(?int $fid, string $mod): string {
     $repid = 'rep'.$fid.$mod;
     if (!empty($cache['items'][$mod.'-'.$fid])) return $tpl->getHtmlFrag('favorite', ['rep_id' => $repid, 'is_on' => true]);
     if ($cache['num'] >= $conf['favorites']['favorites']) return $tpl->getHtmlFrag('favorite', ['rep_id' => $repid, 'is_limit' => true, 'title' => sprintf(_FAVOR_EXIT, $conf['favorites']['favorites'])]);
-    return $tpl->getHtmlFrag('favorite', ['rep_id' => $repid, 'href' => 'index.php?go=1&op=addFavorite&id='.$fid.'&mod='.$mod.'&token='.getPageToken()]);
+    return $tpl->getHtmlFrag('favorite', ['rep_id' => $repid, 'href' => 'index.php?go=1&op=addFavorite&id='.$fid.'&mod='.$mod, 'token' => getPageToken()]);
 }
 
 # Add an item to the user's favorites list and echo the updated toggle button
-# A material of a registered Node type is added inside one transaction: the type and the material locked first, the favorites feature of the type and its extension,
-# the row, the reaction of the extension and the award; a material the user may not read, a switched-off feature or a refusal of the extension adds nothing
-function addFavorite() {
+# A Node material is added in one transaction: type and material locks, the favorites feature and the extension, the row, the extension reaction and the award
+# A material the user may not read, a switched-off feature or a refusal of the extension adds nothing
+# The account row is locked after the material and before the first plain read, so the recount sees every parallel request and two never pass the limit together
+function addFavorite(): void {
     global $db, $conf, $user, $pnt;
-    $id = getVar('get', 'id',  'num',  0);
+    $id = getVar('get', 'id', 'num', 0);
     $mod = filterVar(getVar('get', 'mod', 'text', ''));
     $uid = (is_user()) ? intval($user[0]) : 0;
     $isnode = $mod !== '' && isset($conf['node']['types'][$mod]);
@@ -1350,11 +1351,18 @@ function addFavorite() {
             $ext = getNodeHandler($type);
             $serv = getNodeWriter();
             if (!$db->setSqlBegin()) throw new NodeException('The transaction of a favorite cannot be started', NodeException::STORAGE);
+            try {
+                $serv->setTargetLock($id, $type);
+            } catch (NodeException $err) {
+                if ($err->getCode() !== NodeException::NOTFOUND) throw $err;
+            }
+            $lock = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_users WHERE id = :uid FOR UPDATE', ['uid' => $uid]);
+            $seen = $lock ? $db->getSqlQuery('SELECT COUNT(id), COALESCE(SUM(fid = :fid AND modul = :modul), 0) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid', $pars) : false;
+            if ($seen === false) throw new RuntimeException('the favorites of the user could not be read');
+            [$all, $have] = $db->getSqlRow($seen);
             $tgt = $serv->getLockedTarget($id, $type);
             $open = $tgt !== null && $type->settings['features']['favorites'] && ($ext === null || $ext->checkNodeAction($type, $tgt, 'favorite'));
-            $seen = $open ? $db->getSqlQuery($sql, $pars) : null;
-            if ($seen === false) throw new RuntimeException('the favorites of the user could not be read');
-            if ($open && !$db->getSqlRow($seen)[0]) {
+            if ($open && !$have && $all < intval($conf['favorites']['favorites'])) {
                 $done = $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_favorites VALUES (NULL, :uid, :fid, :modul, NOW())', $pars);
                 if ($done === false) throw new RuntimeException('the favorite was not stored');
                 $ext?->updateNodeAction($type, $tgt, 'favorite', $uid);
@@ -1380,12 +1388,14 @@ function addFavorite() {
 
 # Render the favorites of the logged-in user as shelves, one per module, under a lamp row and a search tile; the whole list is read in one pass because a shelf and the lamps need every row of the member. mod narrows the shelves to one module, q to the titles that carry the words, and part=shelves answers the htmx call of the search field and the chips with the shelves alone plus the out-of-band tally and chips
 # A fixed module is read from its table, a Node type through its light targets, which leaves out a material its viewer may no longer read
+# It only reads the list of the member, so its address carries no token, and a guest gets nothing
 function getFavoriteList(int $obj = 0): string {
     global $db, $conf, $user, $tpl;
+    if (!is_user()) return '';
     $uid = intval($user[0]);
     $max = intval($conf['favorites']['favorites']);
-    $mod = filterVar(getVar('get', 'mod', 'text', ''));
-    $seek = mb_substr(trim((string)getVar('get', 'q', 'word', '')), 0, 60, 'utf-8');
+    $mod = filterVar(getVar('req', 'mod', 'text', ''));
+    $seek = mb_substr(trim((string)getVar('req', 'q', 'word', '')), 0, 60, 'utf-8');
     $part = getVar('get', 'part', 'text', '') === 'shelves';
     $tables = ['forum' => 'forum', 'shop' => 'products'];
 
@@ -1423,7 +1433,7 @@ function getFavoriteList(int $obj = 0): string {
                     'title' => $title,
                     'label_html' => filterTextHighlight(htmlspecialchars(cutstr($title, 100), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), $seek),
                     'href' => 'index.php?name='.$modul.'&op=view&id='.$fid,
-                    'del_href' => 'index.php?go=1&op=deleteFavorite&id='.$id.'&token='.getSiteToken(),
+                    'del_href' => 'index.php?go=1&op=deleteFavorite&id='.$id,
                 ];
             }
         }
@@ -1448,7 +1458,7 @@ function getFavoriteList(int $obj = 0): string {
     $lead = array_key_first($shelves);
 
     # The chips list every module the member has; the view keeps the shelves the module and the words leave standing
-    $base = 'index.php?go=1&op=getFavoriteList&part=shelves&token='.getSiteToken();
+    $base = 'index.php?go=1&op=getFavoriteList&part=shelves';
     $link = 'index.php?name=account&op=favorites'.(($seek !== '') ? '&q='.rawurlencode($seek) : '');
     $chips = [];
     $view = [];
@@ -1483,6 +1493,7 @@ function getFavoriteList(int $obj = 0): string {
         'mod' => $mod,
         'seek' => $seek,
         'seek_url' => $base,
+        'token' => getSiteToken(),
         'tally' => $tally,
         'seek_head' => ['icon' => getIconName('search'), 'title' => _FAVOR_SEEK, 'chips' => [['tone' => 'info', 'id' => 'favtally', 'title' => _FAVORITES, 'text' => $tally, 'is_live' => true]]],
         'seek_label' => _FAVOR_SEEK,
@@ -1498,7 +1509,7 @@ function getFavoriteList(int $obj = 0): string {
     return '';
 }
 
-# Delete a favorite entry and return the refreshed favorites list
+# Delete a favorite entry and return the refreshed favorites list; the entry posts with the token in its header, as the star that added it
 function deleteFavorite(): string {
     global $db, $conf, $user;
     $uid = (is_user()) ? intval($user[0]) : 0;
@@ -1510,43 +1521,43 @@ function deleteFavorite(): string {
 # Output the RSS 2.0 feed for the specified module and optional category
 # Every address is escaped before it enters the document: the ampersand of a query string is a character reference in XML, and a reader that parses strictly rejects the whole feed
 # A registered Node type with the rss integration is read through the shared reader and prepared by the shared view preparer, at most one list page of the type
-function getRssChannel() {
+# A name without a feed is not found; no name takes the start module when it has a feed, else the first feed of the site
+# A reader resolves no address of a description against the site, so every relative link and image source of a description is made absolute
+function getRssChannel(): string {
     global $db, $conf, $prs, $fld;
+    $feeds = getRssFeeds();
+    $name = filterVar(getVar('post', 'name', 'text', '') ?: getVar('get', 'name', 'text', ''));
+    $hmod = trim(explode(',', $conf['module'])[0]);
+    if ($name === '') $name = isset($feeds[$hmod]) ? $hmod : (string)array_key_first($feeds);
+    if (!isset($feeds[$name])) setError(404);
     header_remove('X-Content-Type-Options');
     header('Content-Type: application/rss+xml; charset='._CHARSET);
-
-    $name = filterVar(getVar('post', 'name', 'text', '') ?: getVar('get', 'name', 'text', ''));
-    $hmod = explode(',', $conf['module']);
-    $name = ($name) ? $name : trim($hmod[0]);
-    $cat  = getVar('post', 'cat', 'num', 0) ?: getVar('get', 'cat', 'num', 0);
-    $num  = getVar('post', 'num', 'num', 0) ?: getVar('get', 'num', 'num', 0);
+    $base = rtrim($conf['homeurl'], '/').'/';
+    $full = static fn(string $html): string => preg_replace('#(\s(?:href|src)=")(?![a-z][a-z0-9+.-]*:|//|\#)/?#i', '${1}'.$base, $html) ?? $html;
+    $cat = getVar('post', 'cat', 'num', 0) ?: getVar('get', 'cat', 'num', 0);
+    $num = getVar('post', 'num', 'num', 0) ?: getVar('get', 'num', 'num', 0);
     $num = ($num) ? (($num <= $conf['rss']['max']) ? $num : $conf['rss']['max']) : $conf['rss']['min'];
-    $id   = getVar('post', 'id',  'num', 0) ?: getVar('get', 'id',  'num', 0);
+    $id = getVar('post', 'id', 'num', 0) ?: getVar('get', 'id', 'num', 0);
     $self = htmlspecialchars($conf['homeurl'].'/index.php?go=rss&name='.$name.(($cat) ? '&cat='.$cat : '').(($id) ? '&id='.$id : '').'&num='.$num);
-
     $type = getNodeTypeMap()[$name] ?? null;
     $nodes = [];
-    if ($type !== null && $type->active && $type->settings['integrations']['rss']) {
+    if ($type !== null) {
         $size = min($num, $type->settings['list']['limit'], intval($conf['node']['limits']['maxlist'] ?? 0));
         try {
             $query = getNodeReader($type)->setNodeType($type)->setNodePage(1, max(1, $size));
             if ($cat && $type->settings['features']['categories']) $query->setNodeCategory($cat);
-            if (in_array('published', $type->settings['list']['orders'], true)) $query->setNodeOrder('published', 'desc');
+            $query->setNodeOrder('published', 'desc');
             $nodes = $query->getNodeList();
         } catch (NodeException $err) {
             Logger::addSite('error', 'RSS: a Node type cannot be read', ['type' => $name, 'code' => $err->getCode()]);
         }
         $result = '';
-    } elseif ($name == 'shop' && is_active('shop')) {
+    } else {
         $params = [];
         $where = $cat ? 'WHERE s.cid = :cat AND s.time <= NOW() AND s.status = 1' : 'WHERE s.time <= NOW() AND s.status = 1';
         if ($cat) $params['cat'] = $cat;
         $result = $db->getSqlQuery('SELECT s.id, s.title, s.time, s.intro, c.title FROM '.PREFIX_DB.'_products AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) '.$where.' ORDER BY s.time DESC LIMIT '.intval($num), $params);
-    } else {
-        $result = '';
-        $name = '';
     }
-
     $content = '<?xml version="1.0" encoding="'._CHARSET."\"?>\n"
     ."<rss version=\"2.0\" xmlns:atom=\"http://www.w3.org/2005/Atom\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n"
     ."<channel>\n"
@@ -1566,21 +1577,21 @@ function getRssChannel() {
         .'<pubDate>'.htmlspecialchars(date('D, j M Y H:i:s O', strtotime((string)$node->pubdate)))."</pubDate>\n"
         .'<guid>'.$rurl."</guid>\n"
         .'<link>'.$rurl."</link>\n"
-        .'<description>'.htmlspecialchars($view['intro_html'])."</description>\n"
+        .'<description>'.htmlspecialchars($full($view['intro_html']))."</description>\n"
         .($type->settings['features']['comments'] ? '<comments>'.$rurl."#comm</comments>\n" : '')
         .(($view['ctitle'] !== '') ? '<category>'.htmlspecialchars($view['ctitle'])."</category>\n" : '')
         .(in_array('author', $type->settings['list']['show'], true) ? '<dc:creator>'.htmlspecialchars($view['author'] ?: _ANONYM)."</dc:creator>\n" : '')
         ."</item>\n\n";
     }
-    if ($name && $name == 'shop' && $result) {
-        while ([$rid, $rtitle, $rtime, $rhometext, $rctitle] = $db->getSqlRow($result)) {
+    if ($name === 'shop' && $result) {
+        while ([$rid, $rtitle, $rtime, $rintro, $rctitle] = $db->getSqlRow($result)) {
             $rurl = htmlspecialchars($conf['homeurl'].'/index.php?name='.$name.'&op=view&id='.$rid);
             $content .= "<item>\n"
             .'<title>'.htmlspecialchars($rtitle)."</title>\n"
             .'<pubDate>'.htmlspecialchars(date('D, j M Y H:i:s O', strtotime($rtime)))."</pubDate>\n"
             .'<guid>'.$rurl."</guid>\n"
             .'<link>'.$rurl."</link>\n"
-            .'<description>'.htmlspecialchars($prs->filterContent($rhometext, false, $name))."</description>\n"
+            .'<description>'.htmlspecialchars($full($prs->filterContent($rintro, false, $name)))."</description>\n"
             .'<comments>'.$rurl.'#'.$rid."</comments>\n";
             $content .= ($rctitle) ? '<category>'.htmlspecialchars($rctitle)."</category>\n" : '';
             $content .= "</item>\n\n";

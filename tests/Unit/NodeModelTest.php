@@ -26,8 +26,8 @@ require_once dirname(__DIR__, 2).'/core/classes/node/load.php';
 require_once dirname(__DIR__, 2).'/core/classes/node/ext/load.php';
 
 /**
- * Stage S08 of docs/node: the Node schema, the read-only models and the loading without Composer. The models keep the exact
- * constructors of 05-core-api.md and nothing else, the state enum owns the move matrix of 03-database.md, the context refuses
+ * The Node schema, the read-only models and the loading without Composer. The models keep the exact
+ * constructors of docs/NODE.md (Models) and nothing else, the state enum owns the move matrix of docs/NODE.md (Material states), the context refuses
  * a snapshot that contradicts itself, and the closed class and extension maps load only files that exist. The schema half runs
  * in tests/Support/node_probe.php: a fresh install and an update of the shipped SQL files on disposable MariaDB databases.
  */
@@ -78,7 +78,7 @@ final class NodeModelTest extends TestCase
         return self::$probe = $data;
     }
 
-    # The exact constructors of the data classes of 05-core-api.md
+    # The exact constructors of the data classes of docs/NODE.md (Models)
     public static function getModels(): array
     {
         return [
@@ -143,7 +143,7 @@ final class NodeModelTest extends TestCase
         $this->assertNull($node->ip, 'A hidden address is not null');
     }
 
-    # The five states carry the stored numbers of 03-database.md, and the enum has no public member besides the move check
+    # The five states carry the stored numbers of docs/NODE.md (Material states), and the enum has no public member besides the move check
     #[Test]
     public function theStatesCarryTheStoredNumbers(): void
     {
@@ -157,7 +157,7 @@ final class NodeModelTest extends TestCase
         $this->assertSame('bool', (string)$ref->getMethod('checkStatusMove')->getReturnType());
     }
 
-    # The full five by five matrix: exactly the moves of 03-database.md are allowed, the current state is no move, and the trash leads only to disabled
+    # The full five by five matrix: exactly the moves of docs/NODE.md (Material states) are allowed, the current state is no move, and the trash leads only to disabled
     #[Test]
     public function theMoveMatrixIsExactlyTheContract(): void
     {
@@ -191,7 +191,7 @@ final class NodeModelTest extends TestCase
         $this->assertSame($cause, $err->getPrevious());
     }
 
-    # The extension contract is one interface with exactly the nine methods and signatures of 05-core-api.md
+    # The extension contract is one interface with exactly the nine methods and signatures of docs/NODE.md (The contract)
     #[Test]
     public function theExtensionContractHasNineMethods(): void
     {
@@ -385,7 +385,7 @@ final class NodeModelTest extends TestCase
         $this->assertSame($want, array_filter($run['constraints'], fn($k) => str_contains($k, '_node'), ARRAY_FILTER_USE_KEY));
     }
 
-    # Every index of the installed tables is one of 03-database.md with its exact columns, and the foreign keys added none of their own
+    # Every index of the installed tables is one of docs/NODE.md (Database) with its exact columns, and the foreign keys added none of their own
     #[Test]
     public function theIndexesAreExactlyTheContract(): void
     {

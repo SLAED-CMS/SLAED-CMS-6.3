@@ -6,13 +6,7 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
-# The only writer of Node: the operations of a type and the import of its definition, the materials with their categories, relations and resources, the counters,
-# the categories of a type and the delivery of future publications; every write is decided against the context of the instance and nothing is taken from a global
-# A type operation is the closure of the shared configuration writer: the configuration lock, the root lock of the type directory, the cache guard, BEGIN, the locked type row,
-# the checks against the fresh areas, the SQL, the package of the four shared areas with its proof, COMMIT
-# A material write keeps the same order without the configuration: the root lock with the file checks, the poll locks, the cache guard, BEGIN, the type row, the categories
-# and the materials by ascending id, the resources and the points; the final cache generation follows the commit
-# The effective settings are checked by NodeQuery::filterNodeSettings() alone; this class adds what needs SQL, the language, the clock or the file tree
+# The only writer of Node: types, materials, categories, counters and publication jobs, each decided against the instance context and never taken from a global
 final class NodeService {
 
     # The grammar of a public type name and of an extension key
@@ -27,7 +21,7 @@ final class NodeService {
     # The nine standard replacements, which may be registered although a module of the same name once existed
     private const SWAPS = ['news', 'pages', 'faq', 'help', 'jokes', 'content', 'links', 'files', 'media'];
 
-    # The rating rule a new type gets when its input brings none, as ratings.md defines a new rule
+    # The rating rule a new type gets when its input brings none, as docs/RATINGS.md defines a new rule
     private const RATE = ['active' => '1', 'period' => '2592000', 'detail' => '1', 'guests' => '1'];
 
     # The largest whole limit of an upload rule the reader accepts, eighteen digits
@@ -52,6 +46,9 @@ final class NodeService {
 
     # The columns a category form writes, in the order of the category table
     private const CATKEYS = ['modul', 'title', 'intro', 'img', 'lang', 'parent', 'status', 'pview', 'pread', 'ppost', 'preply', 'pedit', 'pdelete', 'pmod'];
+
+    # The table of the items of each fixed module with categories, whose category may not become a category of a type while it still holds items
+    private const CATOWN = ['forum' => 'forum', 'shop' => 'products'];
 
     # The columns of a stored material the writer reads back
     private const COLS = 'n.id, n.tid, n.cid, n.uid, n.aname, n.ip, n.title, n.intro, n.body, n.field, n.poll, n.home, n.comon, n.pinned, n.comnum, n.views, n.score,'
@@ -149,8 +146,8 @@ final class NodeService {
         if (!$now || $now !== $was) throw new NodeException('The global node settings changed during the request', NodeException::CONFLICT);
     }
 
-    # Refuse a new name outside the grammar, a reserved name, a module name other than the nine replacements, a name a shared area already carries,
-    # a name the upload root holds in another case, and a name whose categories, comments or favorites are still there from an earlier owner
+    # Refuse a new name outside the grammar, a reserved name, a module name other than the nine replacements, or a name a shared area already carries
+    # Also refuse a name the upload root holds in another case and a name whose categories, comments or favorites remain from an earlier owner
     private function checkNewName(string $name, array $base): void {
         global $conf;
         if (!preg_match(self::NAME, $name) || in_array($name, self::RESERVED, true)) throw $this->getInvalid('name');
@@ -167,8 +164,8 @@ final class NodeService {
         }
     }
 
-    # The remains of owners that are gone: every module key of the comments and the favorites a type could be registered under that is neither a registered type
-    # nor a live module other than the nine replacements, with its rows in each table; keys are told apart by their exact bytes, because the column compares without case
+    # The remains of owners that are gone: every comment and favorite module key of a type that is neither a registered type nor a live module beyond the nine replacements
+    # Each key comes with its rows in each table; keys are told apart by their exact bytes, because the column compares without case
     # The registered types are read from their table, which a type operation changes under its lock before the configuration follows
     public function getNodeRemains(): array {
         global $conf;
@@ -246,13 +243,13 @@ final class NodeService {
     }
 
     # Confirm that the web server itself refuses the directory of a type before it goes public: the guards are completed, then the site asks for its own guard page
-    # Only a first answer of 403 or 404 confirms the refusal; a served page, a redirect or a failed request leave the type off, because NOD-206 has no direct mode at all
+    # Only a first answer of 403 or 404 confirms the refusal; a served page, a redirect or a failed request leave the type off, because file delivery has no direct mode at all
     private function checkTypeGuard(string $name): void {
         global $conf;
         $dir = UPLOADS_DIR.'/'.$name;
         if (is_link($dir) || !is_dir($dir)) throw $this->getInvalid('directory');
         $this->setTypeGuards($dir);
-        $base = rtrim((string)($conf['homeurl'] ?? ''), '/');
+        $base = rtrim($conf['homeurl'] ?? '', '/');
         $res = preg_match('#^https?://#i', $base) ? getSchedulerFetch($base.'/uploads/'.rawurlencode($name).'/index.html') : ['code' => 0];
         if (!in_array($res['code'], [403, 404], true)) throw $this->getInvalid('directory');
     }
@@ -349,9 +346,16 @@ final class NodeService {
         ];
     }
 
-    # Refuse roles that would strand stored resources of the type: a removed role that still has resources, and a link role over local files or repeated addresses
+    # Refuse settings that would strand stored data of the type: a feature switched off while the type still holds its categories, parent links or related links
+    # Also refuse a removed role that still has resources and a link role over local files or repeated addresses
     # The addresses are compared byte for byte, because the column sorts without case and the rule of the link mode is the exact result of the shared check
-    private function checkTypeAssets(int $id, array $roles): void {
+    private function checkTypeStore(int $id, string $name, array $set): void {
+        $feat = $set['features'];
+        $roles = $set['assets'];
+        $sql = 'SELECT COUNT(*) FROM '.PREFIX_DB.'_categories WHERE modul = :name';
+        if (!$feat['categories'] && $this->getRowCount($sql, ['name' => $name])) throw $this->getInvalid('features.categories');
+        $sql = 'SELECT COUNT(*) FROM '.PREFIX_DB.'_node_relations AS r INNER JOIN '.PREFIX_DB.'_nodes AS n ON n.id = r.nid WHERE n.tid = :id AND r.type = :kind';
+        foreach (self::RELS as $kind => $key) if (!$feat[$key] && $this->getRowCount($sql, ['id' => $id, 'kind' => $kind])) throw $this->getInvalid('features.'.$key);
         $from = ' FROM '.PREFIX_DB.'_node_assets AS a INNER JOIN '.PREFIX_DB.'_nodes AS n ON n.id = a.nid WHERE n.tid = :id';
         foreach ($this->getQueryRes('SELECT DISTINCT a.role'.$from, ['id' => $id])->fetchAll(PDO::FETCH_COLUMN) as $role) {
             if (!isset($roles[$role])) throw $this->getInvalid('assets.'.$role);
@@ -469,8 +473,8 @@ final class NodeService {
         return $this->getTypeResult($name);
     }
 
-    # Change the data of a type at the expected version: the extension key only while the type is disabled and has no material, every rule complete and checked again,
-    # and no role change that would strand the stored resources of its materials
+    # Change the data of a type at the expected version: the extension key only while the type is disabled and has no material, every rule complete and checked again
+    # No switched off feature or role change may strand the stored categories, links or resources of the type
     public function updateNodeType(string $name, NodeTypeInput $input, int $version): NodeType {
         $this->setTypeWrite($name, function (array $base, ?array $row) use ($name, $input, $version): array {
             $this->checkTypeRow($row, $version, $base, $name);
@@ -480,7 +484,7 @@ final class NodeService {
                 if ($this->getRowCount('SELECT COUNT(*) FROM '.PREFIX_DB.'_nodes WHERE tid = :id', ['id' => $id])) throw $this->getInvalid('ext');
             }
             $data = $this->getTypeData($input, $base, false, $version + 1);
-            $this->checkTypeAssets($id, $data['set']['assets']);
+            $this->checkTypeStore($id, $name, $data['set']);
             $sql = 'UPDATE '.PREFIX_DB.'_node_types SET title = :title, intro = :intro, ext = :ext, sort = :sort, version = version + 1, updated = NOW() WHERE id = :id';
             $this->getQueryRes($sql, ['title' => $input->title, 'intro' => $input->intro, 'ext' => $input->ext, 'sort' => $input->sort, 'id' => $id]);
             return [$this->getTypePack($base, $name, $data), ['kind' => 'update', 'name' => $name, 'id' => $id, 'old' => $version, 'new' => $version + 1]];
@@ -671,9 +675,9 @@ final class NodeService {
         return $type->active && $type->settings['features']['submit'] && $pass;
     }
 
-    # Refuse a create the context may not do: a background context always, a state other than draft, pending and published, and for anyone who does not moderate the type
-    # a disabled type, a type without public submission, a visitor the workflow does not admit, a draft, a pending material without moderation,
-    # and a direct publication without the right
+    # Refuse a create the context may not do: a background context always and a state other than draft, pending and published
+    # For anyone who does not moderate the type, also refuse a disabled type, a type without public submission, a visitor the workflow does not admit and a draft
+    # Such a context is also refused a pending material without moderation and a direct publication without the right
     private function checkNewNode(NodeType $type, NodeStatus $status): void {
         if (!in_array($status, [NodeStatus::Draft, NodeStatus::Pending, NodeStatus::Published], true)) throw $this->getInvalid('status');
         if ($this->ctx->task) throw $this->getDenied('A background context writes no material');
@@ -688,8 +692,8 @@ final class NodeService {
         if ($status === NodeStatus::Published && $feat['moderation'] && !$direct) throw $this->getDenied('The context may not publish directly');
     }
 
-    # The canonical field values of a material: defaults fill the empty active fields of a new material, required fields bind a pending or published one,
-    # the stored values of inactive fields survive a change, and names without a definition leave with it
+    # The canonical field values of a material: defaults fill the empty active fields of a new material, required fields bind a pending or published one
+    # The stored values of inactive fields survive a change, and names without a definition leave with it
     private function getFieldData(NodeType $type, array $vals, NodeStatus $status, ?Node $old): array {
         $defs = $type->fields;
         foreach ($old ? [] : $defs as $name => $def) {
@@ -727,12 +731,14 @@ final class NodeService {
         return $out;
     }
 
-    # Check the full set of resources against the roles of the type: the closed shape, own existing ids without repeats, a registered role, a kind its mode shows, a source
-    # of the allowed form, the texts within their columns, the limit of each role and of the material, and the minimum of every active role for a pending or published one
+    # Check the full set of resources against the roles of the type: the closed shape, own existing ids without repeats, a registered role, a kind its mode shows
+    # A source has the allowed form, texts fit their columns, each role and the material keep their limit, and a pending or published one meets every active role minimum
     # A resource the input keeps unchanged in kind, role and source keeps its metadata and is no new binding; every other local source is resolved under the root lock
+    # Every other external address starts without metadata; a new one comes only from a moderator of the type or goes to moderation with its material
     private function getAssetData(NodeType $type, array $list, NodeStatus $status, ?Node $old, int $max): array {
         if (!array_is_list($list) || count($list) > $max) throw $this->getInvalid('assets');
         $roles = $type->settings['assets'];
+        $moder = $this->checkModer($type);
         $had = [];
         foreach ($old?->assets ?? [] as $one) $had[$one->id] = $one;
         $out = [];
@@ -756,13 +762,14 @@ final class NodeService {
                 $allow = array_intersect(NodeQuery::RMODES[$def['mode']], $def['kinds'] ?: NodeQuery::KINDS);
                 if (!$def['active'] || !in_array($one['kind'], $allow, true)) throw $this->getInvalid($path.'.kind');
                 if (($form === 'link') ? !$def['canlink'] : $def['mode'] === 'link') throw $this->getInvalid($path.'.src');
+                if ($form === 'link' && !$moder && $status !== NodeStatus::Pending) throw $this->getInvalid($path.'.src');
             }
             if (!$this->checkText($one['name'], 255, true)) throw $this->getInvalid($path.'.name');
             if (!$this->checkText($one['title'], 100, true)) throw $this->getInvalid($path.'.title');
             $intro = filterTrustedTags($one['intro'], $this->ctx->super);
             if (strlen($intro) > 65535 || !mb_check_encoding($intro, 'UTF-8')) throw $this->getInvalid($path.'.intro');
             $count[$one['role']] = ($count[$one['role']] ?? 0) + 1;
-            $meta = $prev ? [$prev->mime, $prev->size, $prev->width, $prev->height, $prev->duration] : [null, null, null, null, null];
+            $meta = $same ? [$prev->mime, $prev->size, $prev->width, $prev->height, $prev->duration] : [null, null, null, null, null];
             $out[] = ['id' => $id, 'kind' => $one['kind'], 'role' => $one['role'], 'src' => $one['src'], 'name' => $one['name'], 'title' => $one['title'],
                 'intro' => $intro, 'sort' => $one['sort'], 'link' => $form === 'link', 'new' => !$same, 'meta' => $meta];
         }
@@ -775,9 +782,9 @@ final class NodeService {
 
     # Check the whole input of a material against its type before any lock and answer the canonical values the write stores
     # The trusted tags leave every text but that of the main administrator, who alone holds the right to author them, before anything else reads it
-    # A switch that is off allows only its empty value or a poll the material already carries, a visitor who does not moderate the type sets no poll, home, pin or date,
-    # the texts fit their columns, the fields, relations and resources are full sets of the closed shapes, and the extension canonicalizes its own data;
-    # rows, the clock and files follow under the locks
+    # A switch that is off allows only its empty value or a poll the material already carries; a visitor who does not moderate the type sets no poll, home, pin or date
+    # The texts fit their columns, the fields, relations and resources are full sets of the closed shapes, and the extension canonicalizes its own data
+    # Rows, the clock and files follow under the locks
     private function getInputData(NodeType $type, NodeInput $in, NodeStatus $status, ?Node $old): array {
         $feat = $type->settings['features'];
         $lims = $this->getLimits();
@@ -815,11 +822,11 @@ final class NodeService {
 
     # The owner token a file of the visitor carries: the account of the context and, for a guest alone, the token of the session; a moderator needs none
     private function getFileToken(NodeType $type, bool $moder): ?string {
-        return ($this->ctx->uid > 0) ? (string)$this->ctx->uid : ($moder ? null : getEditorFileOwner($type->name));
+        return ($this->ctx->uid > 0) ? $this->ctx->uid : ($moder ? null : getEditorFileOwner($type->name));
     }
 
-    # Read one file of the type area for a new binding: a plain existing file outside thumb, no guard file, an allowed extension within the size,
-    # and owned by the visitor unless the context moderates the type
+    # Read one file of the type area for a new binding: a plain existing file outside thumb, no guard file, an allowed extension within the size
+    # The file must be owned by the visitor unless the context moderates the type
     private function getFileRow(FileManager $area, string $path, array $exts, int $max, bool $moder, ?string $token, string $err): array {
         $row = $area->getFileData($path);
         if (!$row || $row['kind'] === 'dir' || isset(FileManager::getGuardFiles()[$row['name']]) || str_starts_with($row['path'], 'thumb/')) throw $this->getInvalid($err);
@@ -835,8 +842,9 @@ final class NodeService {
         return (is_string($mime) && strlen($mime) <= 100 && preg_match('#^[a-z0-9.+-]+/[a-z0-9.+-]+$#D', $mime)) ? $mime : null;
     }
 
-    # Resolve every new binding of a file of the type area: an attachment name the text gains and a new local source of a resource must exist in uploads/<type>,
-    # keep an allowed extension and size, and belong to the visitor unless the context moderates the type; a name the stored text already carried is checked for its form alone
+    # Resolve every new binding of a file of the type area: an attachment name the text gains and a new local source of a resource must exist in uploads/<type>
+    # Such a file keeps an allowed extension and size and belongs to the visitor unless the context moderates the type
+    # A name the stored text already carried is checked for its form alone
     # The owner is the account of the context and, for a guest alone, the token of the session; a local source takes its canonical path and the metadata read here once
     private function checkNodeFiles(NodeType $type, array &$data, ?Node $old): void {
         $prs = new Parser();
@@ -878,8 +886,7 @@ final class NodeService {
         return $name;
     }
 
-    # Run one write of Node rows in the order of the lock protocol: the root lock of the type directory with the file checks, the poll locks, the cache guard, BEGIN,
-    # the work, COMMIT
+    # Run one write of Node rows in lock protocol order: the root lock of the type directory with the file checks, the poll locks, the cache guard, BEGIN, the work, COMMIT
     # The final cache generation follows the commit and only then the guard goes; a refusal before BEGIN and a proven rollback free the guard, an unknown outcome keeps it
     private function setNodeWrite(?NodeType $root, array $polls, ?Closure $files, Closure $work): mixed {
         $lock = false;
@@ -917,8 +924,8 @@ final class NodeService {
         return $res;
     }
 
-    # Lock the row of the type first inside a write and answer the clock of the database; a type that is gone or, for anyone but its moderator, switched off is not found,
-    # and a type changed since the request read it is a conflict, because the input was checked against the settings of the older version
+    # Lock the row of the type first inside a write and answer the clock of the database; a type that is gone or, for anyone but its moderator, switched off is not found
+    # A type changed since the request read it is a conflict, because the input was checked against the settings of the older version
     private function getTypeLock(NodeType $type): string {
         $sql = 'SELECT active, version, NOW() AS now FROM '.PREFIX_DB.'_node_types WHERE id = :id FOR UPDATE';
         $row = $this->getQueryRes($sql, ['id' => $type->id])->fetch(PDO::FETCH_ASSOC);
@@ -942,9 +949,11 @@ final class NodeService {
         }
     }
 
-    # Check what the input refers to against current rows, with locking reads inside a write, and answer the locked row of the material itself on a change:
-    # the dates against the clock of the database, the categories of the type, the related materials of the type, the parent chain, the poll and the uniqueness of an external link
-    # A visitor who does not moderate the type posts only into categories whose post right admits him and relates only published materials
+    # Check what the input refers to against current rows, with locking reads inside a write, and answer the locked row of the material itself on a change
+    # Checked are the dates against the database clock, the categories and related materials of the type, the parent chain, the poll and the uniqueness of an external link
+    # A visitor who does not moderate the type posts only into categories whose view and post rights admit the visitor, as the form offers them
+    # Such a visitor relates only light targets read in reader batch parts: published, in their time window, in a readable main category and in the extension scope
+    # A hidden or scheduled target answers as missing
     private function checkNodeRefs(NodeType $type, array &$data, NodeStatus $status, string $now, ?Node $old, int $self, bool $lock): ?array {
         $tail = $lock ? ' FOR UPDATE' : '';
         $moder = $this->checkModer($type);
@@ -957,11 +966,12 @@ final class NodeService {
         sort($cats);
         if ($cats) {
             $pars = [];
-            $sql = 'SELECT id, modul, ppost FROM '.PREFIX_DB.'_categories WHERE id IN ('.$this->getInList($cats, 'c', $pars).') ORDER BY id'.$tail;
+            $sql = 'SELECT id, modul, pview, ppost FROM '.PREFIX_DB.'_categories WHERE id IN ('.$this->getInList($cats, 'c', $pars).') ORDER BY id'.$tail;
             $map = array_column($this->getQueryRes($sql, $pars)->fetchAll(PDO::FETCH_ASSOC), null, 'id');
             foreach ($cats as $cid) {
                 if (($map[$cid]['modul'] ?? null) !== $type->name) throw $this->getInvalid('cid');
-                if (!$moder && !$this->checkCatGrant($map[$cid]['ppost'])) throw $this->getDenied('The context may not post into the category');
+                $grant = $this->checkCatGrant($map[$cid]['pview']) && $this->checkCatGrant($map[$cid]['ppost']);
+                if (!$moder && !$grant) throw $this->getDenied('The context may not post into the category');
             }
         }
         $rids = array_column($data['rels'], 'rid');
@@ -974,10 +984,11 @@ final class NodeService {
             $sql = 'SELECT id, tid, status, version FROM '.PREFIX_DB.'_nodes WHERE id IN ('.$this->getInList($ids, 'n', $pars).') ORDER BY id'.$tail;
             $map = array_column($this->getQueryRes($sql, $pars)->fetchAll(PDO::FETCH_ASSOC), null, 'id');
         }
+        $open = [];
+        if (!$moder) foreach (array_chunk($rids, 500) as $part) $open += $this->query->getNodeTargetList(array_fill_keys($part, $type->name));
         foreach ($rids as $rid) {
             $row = $map[$rid] ?? null;
-            $shut = $row !== null && !$moder && NodeStatus::tryFrom(intval($row['status'])) !== NodeStatus::Published;
-            if ($row === null || intval($row['tid']) !== $type->id || $shut) throw $this->getInvalid('rels');
+            if ($row === null || intval($row['tid']) !== $type->id || (!$moder && !isset($open[$rid]))) throw $this->getInvalid('rels');
         }
         $up = 0;
         $was = 0;
@@ -1000,7 +1011,7 @@ final class NodeService {
     }
 
     # Replace the extra categories, the relations and the resources of a material by their full new sets: rows that left are deleted, changed rows updated, new rows inserted
-    # A resource whose kind, role or source changed is new content with fresh metadata and no open report; a physical file is never removed here
+    # A resource whose kind, role or source changed is new content with fresh metadata, no hits and no open report; a physical file is never removed here
     private function setNodeSets(int $id, array $data, ?Node $old, string $now): void {
         $was = $old?->cids ?? [];
         $gone = array_values(array_diff($was, $data['cids']));
@@ -1059,7 +1070,7 @@ final class NodeService {
             $prev = $had[$one['id']];
             if ($one['new']) {
                 $sql = 'UPDATE '.PREFIX_DB.'_node_assets SET kind = :kind, role = :role, src = :src, name = :name, title = :title, intro = :intro, mime = :mime, size = :size,'
-                    .' width = :width, height = :height, duration = :time, sort = :sort, updated = :now, reported = NULL, ruid = 0 WHERE id = :id';
+                    .' width = :width, height = :height, duration = :time, sort = :sort, updated = :now, hits = 0, reported = NULL, ruid = 0 WHERE id = :id';
                 $this->getQueryRes($sql, $pars + ['id' => $one['id']]);
             } elseif ([$prev->name, $prev->title, $prev->intro, $prev->sort] !== [$one['name'], $one['title'], $one['intro'], $one['sort']]) {
                 $sql = 'UPDATE '.PREFIX_DB.'_node_assets SET name = :name, title = :title, intro = :intro, sort = :sort, updated = :now WHERE id = :id';
@@ -1068,8 +1079,8 @@ final class NodeService {
         }
     }
 
-    # Keep the delivery of a future publication in line with the stored state: a published material with a future date has its job and any other state has none,
-    # and a publication whose date has come, at once or because a pending job was moved into the past, is rewarded inside this transaction
+    # Keep the delivery of a future publication in line with the stored state: a published material with a future date has its job and any other state has none
+    # A publication whose date has come, at once or because a pending job was moved into the past, is rewarded inside this transaction
     private function setPublishJob(NodeType $type, int $id, int $uid, NodeStatus $status, ?string $pub, ?string $job, bool $was, string $now): void {
         $live = $status === NodeStatus::Published;
         $wait = $live && $pub !== null && strcmp($pub, $now) > 0;
@@ -1264,6 +1275,8 @@ final class NodeService {
     }
 
     # Delete a material physically at the expected version with its categories, relations, resource rows and job; the files it pointed at stay
+    # The resource rows are locked right after the material and before any account of Point, the order a report decision takes them in, so the two never cross
+    # The material the extension gets is read before BEGIN and holds while the locked row keeps the expected version, so no plain read runs before the comment locks
     # The extension removes its rows first, then the comment subsystem locks the comment rows and the accounts of author and commenters by ascending id before any event
     # Each comment award is compensated there and the publication award of the author after it; the favorites go in the same transaction, so a failed step keeps the material
     # A compensation whose origin cannot be read or whose event is refused is such a failed step; only a closed or invalid points configuration deletes without it and logs
@@ -1271,14 +1284,16 @@ final class NodeService {
         [$head, $type] = $this->getNodeHead($id);
         $point = $this->getPoint();
         if (intval($head['version']) !== $version) throw new NodeException('The expected material version is stale', NodeException::CONFLICT);
-        $this->setNodeWrite($type, [], null, function () use ($type, $id, $version, $point, $com): bool {
+        $node = ($this->ext === null) ? null : ($this->getStoredNode($id, $type, true) ?? throw $this->getMissing('The material does not exist'));
+        $this->setNodeWrite($type, [], null, function () use ($type, $id, $version, $point, $com, $node): bool {
             $this->getTypeLock($type);
             $sql = 'SELECT uid, version FROM '.PREFIX_DB.'_nodes WHERE id = :id AND tid = :tid FOR UPDATE';
             $row = $this->getQueryRes($sql, ['id' => $id, 'tid' => $type->id])->fetch(PDO::FETCH_ASSOC);
             if (!$row) throw $this->getMissing('The material does not exist');
             if (intval($row['version']) !== $version) throw new NodeException('The expected material version is stale', NodeException::CONFLICT);
+            $this->getQueryRes('SELECT id FROM '.PREFIX_DB.'_node_assets WHERE nid = :id ORDER BY id FOR UPDATE', ['id' => $id]);
             $uid = intval($row['uid']);
-            if ($this->ext !== null) $this->ext->deleteNodeData($this->getStoredNode($id, $type, true) ?? throw $this->getMissing('The material does not exist'));
+            if ($node !== null) $this->ext->deleteNodeData($node);
             if (!$com->deleteTarget($type->name, [$id], [$uid])) throw $this->getStorage('The comments of the material cannot be removed');
             if ($uid > 0 && !$point->valid) Logger::addSite('warning', 'Node: a material delete compensates no award, the points configuration is closed', ['nid' => $id]);
             try {
@@ -1294,8 +1309,8 @@ final class NodeService {
         });
     }
 
-    # Count one successful public view of a material of the type: the public read right is checked again, the counter moves by one atomic statement without a new version,
-    # and a registered viewer is rewarded once per material
+    # Count one successful public view of a material of the type: the public read right is checked again, the counter moves by one atomic statement without a new version
+    # A registered viewer is rewarded once per material
     public function updateNodeViews(int $id, NodeType $type): void {
         if ($this->ctx->task) throw $this->getDenied('A background context counts no view');
         $this->getPoint();
@@ -1350,8 +1365,8 @@ final class NodeService {
     }
 
     # Clear the link of every material to one shared poll that is being deleted, inside the open transaction of the poll owner, who already holds the named lock of the poll
-    # Which types a poll reaches is only known from the materials, and a plain read of them would open a snapshot before the wait, so every type row is locked first
-    # by ascending id, then the materials of the poll by ascending id; the owner raises the cache generation after its commit
+    # Which types a poll reaches is only known from the materials, and a plain read of them would open a snapshot before the wait
+    # So every type row is locked first by ascending id, then the materials of the poll by ascending id; the owner raises the cache generation after its commit
     public function deleteNodePoll(int $id): void {
         if (!$this->ctx->polls) throw $this->getDenied('Only an administrator with the right of polls deletes a poll');
         if ($id < 1 || $id > self::MAXINT) throw $this->getInvalid('poll');
@@ -1381,7 +1396,7 @@ final class NodeService {
     # Resolve one editor attachment of the type to its canonical path for the controlled file answer; every refusal answers the same empty string
     # The name must be a whole managed name of the upload service with an extension the type still allows, and it lives in the root of the type or, as thumb, in thumb/
     # A stored material (id above zero) grants a name its own intro or body carries, read with the light text projection, so knowing the name of a file opens nothing
-    # The preview of NOD-199 (id zero) grants a file of the visitor alone - the account, the session token of a guest - unless the context moderates the type
+    # The preview of an unsaved material (id zero) grants a file of the visitor alone - the account, the session token of a guest - unless the context moderates the type
     # The original is checked before its thumb in both branches, and nothing here counts, writes or trusts an owner, address or name the request brought besides the key
     public function getNodeFile(NodeType $type, int $id, string $key, bool $thumb): string {
         $ext = strtolower(pathinfo($key, PATHINFO_EXTENSION));
@@ -1435,9 +1450,9 @@ final class NodeService {
         $this->setAssetAction($type, $asset, 'report', $sql, ['ruid' => $this->ctx->uid, 'id' => $id]);
     }
 
-    # Decide an open report of a resource of the type as a moderator of it: the row is locked and read again, a report already decided makes the call an empty success,
-    # a useful report of a registered author rewards him with a source of its own, and the report is cleared in the same transaction
-    # Deciding an open report, useful or not, rewards the moderator with moderate unless the report is his own
+    # Decide an open report of a resource of the type as a moderator of it: the row is locked and read again, a report already decided makes the call an empty success
+    # A useful report of a registered author other than the deciding moderator rewards him with a source of its own, and the report is cleared in the same transaction
+    # Deciding an open report, useful or not, rewards the moderator with moderate unless the report is his own; his own report earns him neither award
     public function deleteNodeAssetReport(int $id, NodeType $type, bool $useful): void {
         if (!$this->checkModer($type)) throw $this->getDenied('The context does not moderate the type');
         $this->getPoint();
@@ -1448,8 +1463,9 @@ final class NodeService {
             $row = $this->getQueryRes('SELECT reported, ruid FROM '.PREFIX_DB.'_node_assets WHERE id = :id FOR UPDATE', ['id' => $id])->fetch(PDO::FETCH_ASSOC);
             if ($row && $row['reported'] !== null) {
                 $key = $id.':'.bin2hex(random_bytes(8));
-                if ($useful) $this->addNodePoint('report', $type, 'report:'.$key, intval($row['ruid']));
-                $this->addNodePoint('moderate', $type, 'report:'.$key, 0, intval($row['ruid']));
+                $ruid = intval($row['ruid']);
+                if ($useful && $ruid !== $this->ctx->uid) $this->addNodePoint('report', $type, 'report:'.$key, $ruid);
+                $this->addNodePoint('moderate', $type, 'report:'.$key, 0, $ruid);
                 $this->getQueryRes('UPDATE '.PREFIX_DB.'_node_assets SET reported = NULL, ruid = 0 WHERE id = :id', ['id' => $id]);
             }
             if (!$this->db->setSqlCommit()) throw $this->getStorage('The commit of a report decision is uncertain');
@@ -1459,8 +1475,8 @@ final class NodeService {
         }
     }
 
-    # Deliver one due job in its own transaction: the type, the material and the job are locked and read again; a job that is stale, cancelled or not due rewards nobody,
-    # an author without an account is passed over, a recoverable refusal of the points moves the job one minute on, and a lost transaction leaves it untouched
+    # Deliver one due job in its own transaction: the type, the material and the job are locked and read again; a job that is stale, cancelled or not due rewards nobody
+    # An author without an account is passed over, a recoverable refusal of the points moves the job one minute on, and a lost transaction leaves it untouched
     # A points configuration that is closed or invalid refuses every award for good, so the job is delivered without it and the site log says so
     private function setPublishDue(int $id, int $tid, string $name): string {
         if (!$this->db->setSqlBegin()) return 'failed';
@@ -1526,8 +1542,8 @@ final class NodeService {
         return $this->getRowCount('SELECT COUNT(*) FROM '.PREFIX_DB.'_node_types WHERE name IN ('.$this->getInList($list, 'r', $pars).')', $pars) > 0;
     }
 
-    # The Node types a category write touches by the modules the category had and gets, each one administered by the context: the main administrator,
-    # the manager of Node or a moderator of that type; a write that touches no Node type does not belong here
+    # The Node types a category write touches by the modules the category had and gets, each administered by the main administrator, the Node manager or a type moderator
+    # A write that touches no Node type does not belong here
     # A registered name the reader does not answer, a broken or mismatched configuration, refuses the write instead of passing for an old module
     private function getCatTypes(array $names): array {
         if ($this->ctx->aid < 1) throw $this->getDenied('The context administers no category');
@@ -1557,13 +1573,18 @@ final class NodeService {
         if (!is_string($row['modul']) || $row['modul'] === '') throw $this->getInvalid('category.modul');
     }
 
-    # Refuse a parent that is not the root, not a category of the same module or the category itself; the parent row is read with a lock so it cannot move meanwhile
+    # Refuse a parent that is not the root or a category of the same module, and one whose chain up to the root reaches the category itself or runs in a loop
+    # The categories of the module are locked by ascending id before the walk, so a parallel write can neither move a link of the chain nor close a loop meanwhile
     private function checkCatParent(int $id, mixed $parent, string $modul): void {
         $pid = is_int($parent) ? $parent : (ctype_digit((string)$parent) ? intval($parent) : -1);
         if ($pid === 0) return;
         if ($pid < 0 || $pid === $id) throw $this->getInvalid('category.parent');
-        $own = $this->getQueryRes('SELECT modul FROM '.PREFIX_DB.'_categories WHERE id = :id FOR UPDATE', ['id' => $pid])->fetchColumn();
-        if ($own === false || $own !== $modul) throw $this->getInvalid('category.parent');
+        $sql = 'SELECT id, parent FROM '.PREFIX_DB.'_categories WHERE modul = :modul ORDER BY id FOR UPDATE';
+        $map = array_map('intval', array_column($this->getQueryRes($sql, ['modul' => $modul])->fetchAll(PDO::FETCH_ASSOC), 'parent', 'id'));
+        if (!isset($map[$pid])) throw $this->getInvalid('category.parent');
+        for ($cur = $pid, $i = 0; $cur !== 0 && isset($map[$cur]); $cur = $map[$cur], $i++) {
+            if ($cur === $id || $i >= count($map)) throw $this->getInvalid('category.parent');
+        }
     }
 
     # Create one category of a Node type with the full checked row of the category form, under the lock of its type, at the end of the order of its module
@@ -1581,7 +1602,8 @@ final class NodeService {
     }
 
     # Change one category of a Node type with the full checked row of the category form, under the lock of every type it leaves or enters and of the category itself
-    # A category that still carries materials as main or extra category, or subcategories, never leaves its module; its language and rights decide what pages show
+    # A category that still carries materials as main or extra category, items of its fixed module or subcategories never leaves its module
+    # Its language and rights decide what pages show; the items of a fixed module are counted without a lock, since that module writes them outside the Node order
     public function updateNodeCategory(int $id, array $row): void {
         $this->checkCatRow($row);
         $was = $this->getCatModul($id);
@@ -1593,9 +1615,11 @@ final class NodeService {
             if ($now !== $was) throw new NodeException('The category changed during the write', NodeException::CONFLICT);
             $this->checkCatParent($id, $row['parent'], $row['modul']);
             if ($row['modul'] !== $was) {
-                $sql = 'SELECT (EXISTS (SELECT 1 FROM '.PREFIX_DB.'_nodes WHERE cid = :na) OR EXISTS (SELECT 1 FROM '.PREFIX_DB.'_node_categories WHERE cid = :nb)'
+                $own = isset(self::CATOWN[$was]) ? 'EXISTS (SELECT 1 FROM '.PREFIX_DB.'_'.self::CATOWN[$was].' WHERE cid = :nd) OR ' : '';
+                $sql = 'SELECT ('.$own.'EXISTS (SELECT 1 FROM '.PREFIX_DB.'_nodes WHERE cid = :na) OR EXISTS (SELECT 1 FROM '.PREFIX_DB.'_node_categories WHERE cid = :nb)'
                     .' OR EXISTS (SELECT 1 FROM '.PREFIX_DB.'_categories WHERE parent = :nc)) AS used';
-                if ($this->getRowCount($sql, ['na' => $id, 'nb' => $id, 'nc' => $id])) throw $this->getInvalid('category.used');
+                $pars = ['na' => $id, 'nb' => $id, 'nc' => $id] + ($own !== '' ? ['nd' => $id] : []);
+                if ($this->getRowCount($sql, $pars)) throw $this->getInvalid('category.used');
             }
             $set = implode(', ', array_map(fn(string $v): string => $v.' = :'.$v, self::CATKEYS));
             $this->getQueryRes('UPDATE '.PREFIX_DB.'_categories SET '.$set.' WHERE id = :id', $row + ['id' => $id]);
@@ -1603,19 +1627,24 @@ final class NodeService {
         });
     }
 
-    # Delete one category of a Node type with its direct subcategories, as the category screen does, under the lock of the type, the categories and the materials:
-    # a main category of any material in any state blocks the whole deletion, and the extra links of the set leave with a new version of every material that had one
+    # Delete one category of a Node type with its whole subtree under the lock of the type, the categories of its module and the materials, so no subcategory outlives its parent
+    # A main category of any material in any state anywhere in the subtree blocks the whole deletion
+    # The extra links of the subtree leave with a new version of every material that had one
     public function deleteNodeCategory(int $id): void {
         $was = $this->getCatModul($id);
         $types = $this->getCatTypes([$was]);
         $this->setNodeWrite(null, [], null, function () use ($id, $was, $types): bool {
             $this->setCatTypeLock($types);
-            $sql = 'SELECT id, modul FROM '.PREFIX_DB.'_categories WHERE id = :id OR parent = :pid ORDER BY id FOR UPDATE';
-            $map = array_column($this->getQueryRes($sql, ['id' => $id, 'pid' => $id])->fetchAll(PDO::FETCH_ASSOC), 'modul', 'id');
-            if (!isset($map[$id])) throw $this->getMissing('The category does not exist');
-            if ($map[$id] !== $was) throw new NodeException('The category changed during the write', NodeException::CONFLICT);
+            $sql = 'SELECT id, modul, parent FROM '.PREFIX_DB.'_categories WHERE id = :id OR modul = :modul ORDER BY id FOR UPDATE';
+            $rows = array_column($this->getQueryRes($sql, ['id' => $id, 'modul' => $was])->fetchAll(PDO::FETCH_ASSOC), null, 'id');
+            if (!isset($rows[$id])) throw $this->getMissing('The category does not exist');
+            if ($rows[$id]['modul'] !== $was) throw new NodeException('The category changed during the write', NodeException::CONFLICT);
+            $tree = [$id];
+            for ($i = 0; $i < count($tree); $i++) {
+                foreach ($rows as $key => $one) if (intval($one['parent']) === $tree[$i] && !in_array($key, $tree, true)) $tree[] = $key;
+            }
             $pars = [];
-            $in = $this->getInList(array_keys($map), 'c', $pars);
+            $in = $this->getInList($tree, 'c', $pars);
             if ($this->getRowCount('SELECT COUNT(*) FROM '.PREFIX_DB.'_nodes WHERE cid IN ('.$in.')', $pars)) throw $this->getInvalid('category.used');
             $nids = $this->getQueryRes('SELECT DISTINCT nid FROM '.PREFIX_DB.'_node_categories WHERE cid IN ('.$in.') ORDER BY nid', $pars)->fetchAll(PDO::FETCH_COLUMN);
             if ($nids) {

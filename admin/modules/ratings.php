@@ -79,7 +79,7 @@ function save(): void {
     $scopes = array_merge(['account', 'forum', 'shop'], array_map(fn(string $v): string => 'node.'.$v, array_keys($types)));
     if (!$warn) {
         foreach ($scopes as $i => $val) {
-            $days = trim((string)getVar('post', 'time['.$i.']', 'raw', ''));
+            $days = trim(getVar('post', 'time['.$i.']', 'raw', ''));
             if (!preg_match('/^(?:0|[1-9][0-9]{0,15})$/D', $days) || intval($days) > intdiv(PHP_INT_MAX, 86400)) $warn = true;
             $content[$val] = ['active' => getVar('post', $i.'in', 'num', 0) ? '1' : '0', 'period' => (string)(intval($days) * 86400)];
             $content[$val] += ['detail' => getVar('post', $i.'view', 'num', 0) ? '1' : '0', 'guests' => getVar('post', $i.'guest', 'num', 0) ? '1' : '0'];
@@ -157,11 +157,11 @@ function votes(): void {
         $state = $row['annulled'] ? date('Y-m-d H:i', $row['annulled']).' #'.$row['aid'].': '.$row['reason'] : '';
         $href = $link.'&after='.$after.'&vote='.$row['id'];
         $cells = [
-            ['is_col_id' => true, 'content_html' => (string)$row['id']],
+            ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $row['id']],
             ['is_col_date' => true, 'has_content_text' => true, 'content_text' => date('Y-m-d H:i', $row['created'])],
             ['has_content_text' => true, 'content_text' => $row['scope'].' #'.$row['mid']],
             ['is_truncate' => true, 'has_content_text' => true, 'content_text' => $row['actor']],
-            ['is_col_count' => true, 'content_html' => (string)$row['value']],
+            ['is_col_count' => true, 'has_content_text' => true, 'content_text' => $row['value']],
             ['is_truncate' => true, 'has_content_text' => true, 'title_text' => $state, 'content_text' => $state],
             ['content_html' => $row['annulled'] ? '' : $tpl->getHtmlFrag('link', ['href' => $href, 'title' => _RATINGS_ANNUL, 'label' => _RATINGS_ANNUL])],
         ];
@@ -186,7 +186,7 @@ function annul(): void {
     $warn = !checkAdminPost('ratings');
     $text = _TOKENMISS;
     if (!$warn) {
-        $res = getRatingService()->deleteRating(getVar('post', 'vote', 'num', 0), trim((string)getVar('post', 'reason', 'raw', '')));
+        $res = getRatingService()->deleteRating(getVar('post', 'vote', 'num', 0), trim(getVar('post', 'reason', 'raw', '')));
         $texts = ['ok' => _RATINGS_DONE, 'invalid' => _RATINGS_FORM, 'unavailable' => _RATINGS_GONE, 'denied' => _RATINGS_DENY];
         [$warn, $text] = [!$res['ok'], $texts[$res['code']] ?? _RATINGS_FAIL];
     }

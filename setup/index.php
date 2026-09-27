@@ -43,13 +43,22 @@ if (version_compare(PHP_VERSION, '8.4.0', '<')) setExit(_PHPSETUP);
 foreach (['mbstring', 'pdo', 'json'] as $ext) {
     if (!extension_loaded($ext)) setExit(_EXTSETUP.': '.$ext);
 }
-# An installed site keeps the installer shut: no form, no secret, no write and no database until the owner uploads config/setup.unlock, which a clean run removes
+# An installed site keeps the installer shut: no form, no secret, no write and no database until the owner uploads config/setup.unlock with a code of eight characters or more
+# Every form of the installer asks for that code before it shows the connection data or writes, and a clean run removes it
+# The first request that meets the code in plain text replaces it by its password hash, so a server that hands config/ out as files hands out no usable code
 $dbconf = getSetupBase();
-if (($dbconf['name'] ?? '') !== '' && !is_file(CONFIG_DIR.'/setup.unlock')) setExit(_SETUPLOCK);
+$skey = CONFIG_DIR.'/setup.unlock';
+$scode = (($dbconf['name'] ?? '') !== '' && is_file($skey)) ? trim((string)file_get_contents($skey)) : '';
+if (($dbconf['name'] ?? '') !== '' && strlen($scode) < 8) setExit(_SETUPLOCK);
+if ($scode !== '' && password_get_info($scode)['algo'] === null) {
+    $scode = password_hash($scode, PASSWORD_DEFAULT);
+    if (!is_writable($skey) || file_put_contents($skey, $scode, LOCK_EX) !== strlen($scode)) setExit(_FILE.' config/setup.unlock '._SERRORPERM);
+}
 $copy = '<a href="https://slaed.net" target="_blank" title="SLAED CMS">SLAED CMS</a> © 2005-'.date('Y').' Eduard Laas. Released under MIT License.';
 
 # Saving configurations to a file; every scalar is stored as a string unless $raw keeps the native types the definitions of the extra fields are made of
-function setConfigFile(string $fp, array $arr, array $act = [], bool $raw = false): void {
+# The answer says whether the whole file was written: a file or a config/ that is not writable is left as it was and answers false, which every caller reports
+function setConfigFile(string $fp, array $arr, array $act = [], bool $raw = false): bool {
     $fp = BASE_DIR.'/config/'.$fp;
     if (!empty($act)) $arr = array_replace_recursive($arr, $act);
     ksort($arr);
@@ -84,14 +93,15 @@ function setConfigFile(string $fp, array $arr, array $act = [], bool $raw = fals
     .'# Website: slaed.net'."\n\n"
     .'return '.$exp($data).';'."\n";
     $lock = FileManager::getPathLock(CONFIG_DIR);
-    file_put_contents($fp, $cnt, LOCK_EX);
+    $done = is_writable(is_file($fp) ? $fp : CONFIG_DIR) && file_put_contents($fp, $cnt, LOCK_EX) === strlen($cnt);
     if (function_exists('opcache_invalidate')) opcache_invalidate($fp, true);
     if (is_file(CONFIG_DIR.'/local.php')) unlink(CONFIG_DIR.'/local.php');
     FileManager::deletePathLock($lock);
+    return $done;
 }
 
-# Include one configuration source in a scope of its own with its output swallowed and answer its values: the array a 6.3 source returns,
-# the first array a 6.2 source assigns to a variable of its own, or an empty array for a missing file and for a source of code without settings
+# Include one configuration source in a scope of its own with its output swallowed and answer its values
+# The answer is the array a 6.3 source returns, the first array a 6.2 source assigns to a variable, or an empty array for a missing file or a source without settings
 function getSetupConfig(string $file): array {
     if (!is_file($file)) return [];
     ob_start();
@@ -260,19 +270,10 @@ function filterVar(string $vl): string {
     return preg_match('#[^a-zA-Z0-9_\-]#', $vl) ? '' : $vl;
 }
 
+# Refuse the installer while a configuration file every branch writes, or config/ for one it creates, is not writable by PHP
+# The permissions are never changed, because a file opened to everyone hands the database password to every local account of a shared host
 function checkWritableConfig(string $file): void {
-    if (file_exists($file)) {
-        chmod($file, 0666);
-        $permsdir = decoct(fileperms($file));
-        $perms = substr($permsdir, -3);
-        if ($perms != '666') {
-            global $title;
-            $title = _FILE.' '.$file.' '._SERRORPERM.' CHMOD - 666';
-            setHead();
-            setFoot();
-            exit;
-        }
-    }
+    if (!is_writable(is_file(CONFIG_DIR.'/'.$file) ? CONFIG_DIR.'/'.$file : CONFIG_DIR)) setExit(_FILE.' config/'.$file.' '._SERRORPERM);
 }
 
 function language(): void {
@@ -312,10 +313,21 @@ function lang(): void {
 }
 
 function config(): void {
-    global $title, $conf;
+    global $title, $conf, $scode;
     $title = _CONFIG;
-    checkWritableConfig(CONFIG_DIR.'/db.php');
-    checkWritableConfig(CONFIG_DIR.'/global.php');
+    $xcode = is_string($_POST['xcode'] ?? null) ? $_POST['xcode'] : '';
+    if ($scode !== '' && !password_verify($xcode, $scode)) {
+        setHead();
+        echo '<form action="setup.php" method="post">'
+        .'<table class="sl_table">'
+        .(($xcode !== '') ? '<tr><td colspan="2" class="sl_center"><span class="sl_red">'._SETUPCODE.'</span></td></tr>' : '')
+        .'<tr><td>'._CONF_11.':</td><td><input type="password" name="xcode" value="" class="sl_cinput" placeholder="'._CONF_11.'" autocomplete="off" required></td></tr>'
+        .'<tr><td colspan="2" class="sl_center">'._GOBACK.' <input type="hidden" name="op" value="config"><input type="submit" value="'._NEXT_SE.'" class="sl_but_blue"></td></tr>'
+        .'</table></form>';
+        setFoot();
+        return;
+    }
+    foreach (['db.php', 'global.php', 'security.php'] as $name) checkWritableConfig($name);
     $conf['db'] = getSetupBase() + array_fill_keys(['host', 'uname', 'pass', 'name', 'prefix'], '');
     $xhost = ($conf['db']['host']) ? $conf['db']['host'] : 'localhost';
     $xuname = ($conf['db']['uname']) ? $conf['db']['uname'] : '';
@@ -344,7 +356,8 @@ function config(): void {
     .'<tr><td colspan="2"><hr></td></tr>'
     .'<tr><td>'._CONF_9.':</td><td><input type="text" name="xprefix" value="'.$xprefix.'" class="sl_cinput" placeholder="'._CONF_9.'" required></td></tr>'
     .'<tr><td>'._CONF_10.':<div class="sl_small">'.$info.'</div></td><td><input type="text" name="xafile" value="'.$xafile.'" class="sl_cinput" placeholder="'._CONF_10.'" required></td></tr>'
-    .'<tr><td colspan="2" class="sl_center">'._GOBACK.' <input type="hidden" name="op" value="save"><input type="submit" value="'._NEXT_SE.'" class="sl_but_blue"></td></tr>'
+    .'<tr><td colspan="2" class="sl_center">'._GOBACK.' <input type="hidden" name="xcode" value="'.htmlspecialchars($xcode, ENT_QUOTES).'">'
+    .'<input type="hidden" name="op" value="save"><input type="submit" value="'._NEXT_SE.'" class="sl_but_blue"></td></tr>'
     .'</table></form>';
     setFoot();
 }
@@ -352,28 +365,28 @@ function config(): void {
 # Check what the 6.3 data update or a clean installation needs before anything is changed and answer the refusal, or an empty string when the run may start
 # The server has to enforce CHECK constraints and to know RENAME COLUMN and RENAME INDEX of the schema file, which MariaDB has from 10.5.2 on
 # A clean installation needs a database without a table of its prefix; the update needs the users and admins tables of the prefix it names
-# Every table of a points, ratings, fields or Node transaction has to be InnoDB; nothing is converted, and the branch closes the site itself
+# Every table of a points, ratings, fields, Node or newsletter transaction has to be InnoDB; nothing is converted, and the branch closes the site itself
 function checkUpdateBase(Database $db, string $prefix, bool $fresh = false): string {
     [$ver] = $db->getSqlRow($db->getSqlQuery('SELECT VERSION()'));
     $min = (stripos((string)$ver, 'mariadb') !== false) ? '10.5.2' : '8.0.16';
-    if (version_compare(preg_replace('/[^0-9.].*$/', '', (string)$ver), $min, '<')) return 'The database server '.$ver.' is older than '.$min.'.';
+    if (version_compare(preg_replace('/[^0-9.].*$/', '', (string)$ver), $min, '<')) return sprintf(_SETUPVER, $ver, $min);
     $sql = 'SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND ';
     if ($fresh) {
         [$num] = $db->getSqlRow($db->getSqlQuery($sql.'table_name LIKE :pre', ['pre' => str_replace('_', '\_', $prefix).'\_%']));
-        return ($num > 0) ? 'The database already holds tables of the prefix '.$prefix.'_, a new installation needs an empty database or another prefix.' : '';
+        return ($num > 0) ? sprintf(_SETUPTAKEN, $prefix) : '';
     }
     [$num] = $db->getSqlRow($db->getSqlQuery($sql.'table_name IN (:users, :admins)', ['users' => $prefix.'_users', 'admins' => $prefix.'_admins']));
-    if ($num < 2) return 'The tables '.$prefix.'_users and '.$prefix.'_admins are not both in the database, check the table prefix of the site.';
+    if ($num < 2) return sprintf(_SETUPTABLES, $prefix);
     $list = [];
-    $tabs = ['users', 'comment', 'forum', 'order', 'clients', 'favorites', 'user_oauth', 'points', 'products', 'rating_targets', 'rating_actors', 'rating_votes', 'categories',
-        'voting'];
+    $tabs = ['users', 'admins', 'comment', 'forum', 'order', 'clients', 'favorites', 'user_oauth', 'points', 'products', 'rating_targets', 'rating_actors', 'rating_votes',
+        'categories', 'voting', 'newsletter'];
     foreach ($tabs as $key => $name) $list['t'.$key] = $prefix.'_'.$name;
     $sql = 'SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN (:'.implode(', :', array_keys($list)).')'
         .' AND engine IS NOT NULL AND engine != \'InnoDB\'';
     $res = $db->getSqlQuery($sql, $list);
     $fix = [];
     while ($res && ([$name] = $db->getSqlRow($res))) $fix[] = 'ALTER TABLE `'.$name.'` ENGINE=InnoDB;';
-    return $fix ? 'These tables are not InnoDB, convert them and start the update again: '.implode(' ', $fix) : '';
+    return $fix ? _SETUPINNODB.' '.implode(' ', $fix) : '';
 }
 
 # Write one file of the update backup through a temporary file and a rename, so a reader never meets a half-written snapshot or manifest
@@ -417,13 +430,13 @@ function setUpdatePoints(Database $db, string $prefix): string {
         $point['active'] = $flag;
         unset($users['point'], $users['points']);
         if (count($point['actions'] ?? []) !== 15 || !in_array($point['active'], ['0', '1'], true)) return getInfo('points: config/points.php is not a valid points scope', false);
-        if ($moved) setConfigFile('points.php', $point);
-        if ($stale) setConfigFile('users.php', $users);
+        if ($moved && !setConfigFile('points.php', $point)) return getInfo('points: config/points.php could not be written, run the update again', false);
+        if ($stale && !setConfigFile('users.php', $users)) return getInfo('points: config/users.php could not be written, run the update again', false);
         $info['target'] = ['points.php' => hash_file('sha256', CONFIG_DIR.'/points.php'), 'users.php' => hash_file('sha256', CONFIG_DIR.'/users.php')];
         $info['state'] = 'verified';
         if (!setUpdateBackup($file, (string)json_encode($info))) return getInfo('points: the manifest could not be written', false);
     }
-    setConfigFile('update.php', ['points' => '6.3.0'] + $mark);
+    if (!setConfigFile('update.php', ['points' => '6.3.0'] + $mark)) return getInfo('points: config/update.php could not be written, the subsystem stays closed', false);
     return getInfo('points: starting balances kept ('.intval($info['count']).' accounts), the subsystem is open', true);
 }
 
@@ -573,12 +586,13 @@ function setUpdateRatings(Database $db, string $prefix): string {
         $same = $same && $count('SELECT COUNT(*) FROM `'.$prefix.'_rating_votes`') === 0 && $count($polls) === intval($info['count']['voting']);
         if (!$same) return getInfo('ratings: the stored targets, terms, owner aggregates or poll rows do not match the manifest, the rules are not published', false);
         $rules = json_decode((string)file_get_contents($dir.'/rules.json'), true)['rules'] ?? [];
-        if (((require CONFIG_DIR.'/ratings.php')['ratings'] ?? null) !== $rules) setConfigFile('ratings.php', $rules);
+        $same = ((require CONFIG_DIR.'/ratings.php')['ratings'] ?? null) === $rules;
+        if (!$same && !setConfigFile('ratings.php', $rules)) return getInfo('ratings: config/ratings.php could not be written, the rules are not published', false);
         $info['target'] = $real + ['ratings.php' => hash_file('sha256', CONFIG_DIR.'/ratings.php')];
         $info['state'] = 'verified';
         if (!setUpdateBackup($file, (string)json_encode($info))) return getInfo('ratings: the manifest could not be written', false);
     }
-    setConfigFile('update.php', ['ratings' => '6.3.0'] + $mark);
+    if (!setConfigFile('update.php', ['ratings' => '6.3.0'] + $mark)) return getInfo('ratings: config/update.php could not be written, the subsystem stays closed', false);
     $stat = $info['count'];
     $text = 'ratings: starting aggregates kept ('.intval($stat['targets']).' targets, '.intval($stat['terms']).' terms), left alone in the old table: '
         .intval($stat['voting']).' poll rows, '
@@ -779,18 +793,18 @@ function setUpdateFields(Database $db, string $prefix): string {
         $info['state'] = 'verified';
         if (!setUpdateBackup($file, (string)json_encode($info))) return getInfo('fields: the manifest could not be written', false);
     }
-    setConfigFile('update.php', ['fields' => '6.3.0'] + $mark);
+    if (!setConfigFile('update.php', ['fields' => '6.3.0'] + $mark)) return getInfo('fields: config/update.php could not be written, the subsystem stays closed', false);
     $stat = $info['count'];
     $text = 'fields: named definitions published, value rows carried over: '.intval($stat['account']).' accounts, '.intval($stat['forum']).' forum posts, ';
     return getInfo($text.intval($stat['order']).' orders; the subsystem is open', true);
 }
 
-# The configuration step of the 6.3 update for a 6.2 site, whose settings live in config/config_<name>.php as a variable of their own: the values of the site go over
-# the shipped source of the same name, stat into statistic and seo over global, and a key the release does not ship stays for the data units and the next save of a form
-# The version, the asset lists and the closed site belong to the release and the update, a language name becomes its code, and a start module, a theme or a site logo
-# that is not in the tree falls back to the shipped value
-# Two positional formats changed after 6.2: an upload rule loses its retired eighth field adminlist and gains the guest file limit at the user one, as the runtime
-# reads a short rule, and an address ban turns ip and octet count into one CIDR
+# The configuration step of the 6.3 update for a 6.2 site, whose settings live in config/config_<name>.php as a variable of their own
+# The site values go over the shipped source of the same name, stat into statistic and seo over global; an unshipped key stays for the data units and the next form save
+# The version, the asset lists and the closed site belong to the release and the update, and a language name becomes its code
+# A start module, a theme or a site logo that is not in the tree falls back to the shipped value
+# Two positional formats changed after 6.2: an upload rule loses its retired eighth field adminlist and gains the guest file limit at the user one
+# The upload rule takes the short form the runtime reads, and an address ban turns ip and octet count into one CIDR
 # Every source ends in storage/backup/update/config once its target is written and read back, the ones without a successor as well, so the runtime never includes one again
 function setUpdateConfig(): string {
     $list = glob(CONFIG_DIR.'/config_*.php') ?: [];
@@ -876,10 +890,11 @@ function setUpdateConfig(): string {
     return $out;
 }
 
-# The module registry of the 6.3 update, reconciled with the tree as the modules screen does it: a module of the tree keeps the record of config/modules.php or gets the
-# default, node gets the record of a clean installation and a record without a module is dropped; the _modules table of a 6.2 site wins over both for its six switches
+# The module registry of the 6.3 update, reconciled with the tree as the modules screen does it; the _modules table of a 6.2 site wins for its six switches
+# A module of the tree keeps the record of config/modules.php or gets the default, node gets the record of a clean installation, a record without a module is dropped
 # The panel rights of the administrators name the modules instead of the numbers of that table, and the answer names the dropped records
-function setUpdateModules(Database $db, string $prefix): string {
+# Only the first run reads that table: a repeat after the mark modules keeps the switches the owner set in between, and the answer says so
+function setUpdateModules(Database $db, string $prefix, bool $first = true): string {
     $mods = [];
     foreach (scandir(BASE_DIR.'/admin/modules') ?: [] as $file) if (preg_match('/^([a-z_]+)\.php$/i', $file, $matches)) $mods[$matches[1]] = 0;
     foreach (scandir(BASE_DIR.'/modules') ?: [] as $file) {
@@ -896,10 +911,13 @@ function setUpdateModules(Database $db, string $prefix): string {
     $exfile = CONFIG_DIR.'/modules.php';
     $existing = file_exists($exfile) ? ((require $exfile)['modules'] ?? []) : [];
     $cont = array_merge($cont, $existing);
-    $tblres = $db->getSqlQuery('SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = :tbl', ['tbl' => $prefix.'_modules']);
+    $sql = 'SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = :tbl';
+    $tblres = $first ? $db->getSqlQuery($sql, ['tbl' => $prefix.'_modules']) : false;
+    $fail = ($first && !$tblres) ? ['information_schema'] : [];
     if ($tblres && $db->getSqlRowCount($tblres) > 0) {
         $map = [];
         $result = $db->getSqlQuery('SELECT mid, title, active, view, inmenu, mod_group, blocks, blocks_c FROM `'.$prefix.'_modules`');
+        if (!$result) $fail[] = $prefix.'_modules';
         while ($result && ($row = $db->getSqlRow($result))) {
             $name = $row['title'];
             $map[(string)$row['mid']] = $name;
@@ -910,6 +928,8 @@ function setUpdateModules(Database $db, string $prefix): string {
         }
         if (!empty($map)) {
             $result = $db->getSqlQuery('SELECT id, modules FROM `'.$prefix.'_admins`');
+            if (!$result) $fail[] = $prefix.'_admins';
+            $sql = 'UPDATE `'.$prefix.'_admins` SET modules = :modules WHERE id = :id';
             while ($result && ($row = $db->getSqlRow($result))) {
                 $modules = $row['modules'] ?? '';
                 $list = array_filter(array_map('trim', explode(',', $modules)), 'strlen');
@@ -922,17 +942,33 @@ function setUpdateModules(Database $db, string $prefix): string {
                     }
                 }
                 $newmod = implode(',', array_values(array_unique($names)));
-                if ($newmod !== $modules) $db->getSqlQuery('UPDATE `'.$prefix.'_admins` SET modules = :modules WHERE id = :id', ['modules' => $newmod, 'id' => $row['id']]);
+                if ($newmod !== $modules && !$db->getSqlQuery($sql, ['modules' => $newmod, 'id' => $row['id']])) $fail[] = $prefix.'_admins '.$row['id'];
             }
         }
     }
     $gone = array_keys(array_diff_key($existing, $mods));
-    setConfigFile('modules.php', array_intersect_key($cont, $mods));
-    return $gone ? getInfo('config/modules.php records of removed modules dropped: '.implode(', ', $gone), true) : '';
+    if (!$fail && !setConfigFile('modules.php', array_intersect_key($cont, $mods))) $fail[] = 'config/modules.php';
+    if ($fail) return getInfo('module registry: '.implode(', ', $fail).' could not be read or written, the update stops before the schema', false);
+    $out = $first ? '' : getInfo('config/modules.php switches of the 6.2 table '.$prefix.'_modules were carried by the first run, the current ones stay', true);
+    return $out.($gone ? getInfo('config/modules.php records of removed modules dropped: '.implode(', ', $gone), true) : '');
 }
 
-# The newsletter step of the 6.3 update: before the schema file drops the mails column the pending recipients of every campaign are kept in storage/backup/update/newsletter,
-# after it they move into the mail queue; an address already queued for its campaign is not written twice, so a break and a repeat neither lose nor double a recipient
+# Take the types of config/node.php out of the four areas of their package - node.types, fields.node, uploads and ratings node.<name> - as the panel removes a type
+# Publish the four files and answer the names taken out; a clean installation takes every type, the update keeps the names in $keep that its table registers
+# A file that cannot be written answers false; node.php goes last, so a repeat still finds the types it has to take out of the other three
+function deleteSetupTypes(array $keep = []): array|false {
+    $ntypes = array_values(array_diff(array_keys(getSetupConfig(CONFIG_DIR.'/node.php')['node']['types'] ?? []), $keep));
+    if (!$ntypes) return [];
+    $pack = [];
+    foreach (['fields', 'uploads', 'ratings', 'node'] as $name) $pack[$name] = getSetupConfig(CONFIG_DIR.'/'.$name.'.php')[$name] ?? [];
+    foreach ($ntypes as $name) unset($pack['node']['types'][$name], $pack['fields']['node'][$name], $pack['uploads'][$name], $pack['ratings']['node.'.$name]);
+    if (($pack['fields']['node'] ?? null) === []) unset($pack['fields']['node']);
+    foreach ($pack as $name => $data) if (!setConfigFile($name.'.php', $data, [], true)) return false;
+    return $ntypes;
+}
+
+# The newsletter step of the 6.3 update: before the schema file drops the mails column the pending recipients of every campaign are kept in storage/backup/update/newsletter
+# After the drop they move into the mail queue; an address already queued for its campaign is not written twice, so a break and a repeat neither lose nor double a recipient
 # The unit resumes from its manifest like the data units: without the column and without a manifest there is nothing pending, verified is skipped
 function setUpdateMails(Database $db, string $prefix, string $from, bool $move): string {
     $dir = BASE_DIR.'/storage/backup/update/newsletter';
@@ -995,9 +1031,11 @@ function setUpdateMails(Database $db, string $prefix, string $from, bool $move):
 }
 
 # Run the installer form for a clean installation or an upgrade; an upgrade gives the scheduler of the site the system jobs nodepublish and nodesync it has not carried yet
-# and moves maildrain off a priority another job holds, because the scheduler form saves no job whose priority is taken
+# An upgrade also moves maildrain off a priority another job holds, because the scheduler form saves no job whose priority is taken
 function save(): void {
-    global $title, $clang, $conf, $url;
+    global $title, $clang, $conf, $url, $scode;
+    $xcode = is_string($_POST['xcode'] ?? null) ? $_POST['xcode'] : '';
+    if ($scode !== '' && !password_verify($xcode, $scode)) setExit(_SETUPCODE);
     $setup = (isset($_POST['setup'])) ? $_POST['setup'] : '';
     $xhost = (isset($_POST['xhost'])) ? $_POST['xhost'] : '';
     $xuname = (isset($_POST['xuname'])) ? $_POST['xuname'] : '';
@@ -1010,9 +1048,13 @@ function save(): void {
     $xsync = (isset($_POST['xsync'])) ? $_POST['xsync'] : '1';
     $xafile = (isset($_POST['xafile'])) ? $_POST['xafile'] : 'admin';
     if ($xpass === '') $xpass = getSetupBase()['pass'] ?? '';
+    $steps = ['new', 'update4_1', 'update4_2', 'update4_3', 'update5_0', 'update5_1', 'update6_0', 'update6_2', 'update6_3'];
+    $tafile = ($conf['security']['afile']) ? $conf['security']['afile'] : 'admin';
+    if (!in_array($setup, $steps, true)) setExit(_SETUPTYPE);
     if (!preg_match('/^[A-Za-z0-9_]{1,32}$/D', $xprefix)) setExit(_SETUPPREFIX);
-    if (filterVar($xafile) === '') setExit(_SETUPAFILE);
-
+    if (filterVar($xafile) === '' || (is_file($xafile.'.php') && !in_array(strtolower($xafile), ['admin', strtolower($tafile)], true))) setExit(_SETUPAFILE);
+    foreach (['db.php', 'global.php', 'security.php'] as $name) checkWritableConfig($name);
+    if (is_file(BASE_DIR.'/storage/backup/config/marker.json')) setExit(_SETUPJOUR);
     require_once BASE_DIR.'/core/classes/pdo.php';
     $db = new Database($xhost, $xuname, $xpass, $xname, $xcharset);
     $bodytext = '';
@@ -1023,50 +1065,38 @@ function save(): void {
     if ($setup == 'update6_3') {
         $stop = checkUpdateBase($db, $xprefix);
         if ($stop !== '') setExit($stop);
-        setConfigFile('global.php', array_diff_key($conf, ['security' => '', 'db' => '']), ['close' => '1']);
+        if (!setConfigFile('global.php', array_diff_key($conf, ['security' => '', 'db' => '']), ['close' => '1'])) setExit(_FILE.' config/global.php '._SERRORPERM);
         $bodytext .= getInfo('the site is closed for the data update (close = 1), open it in the settings after the result is checked', true);
         $bodytext .= setUpdateConfig();
         $conf = array_merge(require CONFIG_DIR.'/global.php', require CONFIG_DIR.'/security.php');
     }
-    $cont = ['language' => $clang, 'homeurl' => $url];
-    setConfigFile('global.php', array_diff_key($conf, ['security' => '', 'db' => '']), $cont);
+    $cont = ($setup == 'update6_3') ? [] : ['language' => $clang, 'homeurl' => $url];
+    if (!setConfigFile('global.php', array_diff_key($conf, ['security' => '', 'db' => '']), $cont)) setExit(_FILE.' config/global.php '._SERRORPERM);
     $conf = array_merge($conf, require CONFIG_DIR.'/global.php');
-
     $tafile = ($conf['security']['afile']) ? $conf['security']['afile'] : 'admin';
-    if (file_exists($tafile.'.php') && !file_exists($xafile.'.php')) {
-        if (!@rename($tafile.'.php', $xafile.'.php')) {
-            $xafile = $tafile;
-        }
-    } else {
-        $xafile = file_exists($xafile.'.php') ? $xafile : $tafile;
-    }
+    $from = file_exists('admin.php') ? 'admin' : $tafile;
+    if (!file_exists($xafile.'.php') && (!file_exists($from.'.php') || !rename($from.'.php', $xafile.'.php'))) $xafile = $from;
     $cont = ['afile' => $xafile];
-    setConfigFile('security.php', $conf['security'], $cont);
+    if (!setConfigFile('security.php', $conf['security'], $cont)) setExit(_FILE.' config/security.php '._SERRORPERM);
     $conf = array_merge($conf, require CONFIG_DIR.'/security.php');
-    
     $conf['db'] = getSetupBase();
     $cont = ['host' => $xhost, 'uname' => $xuname, 'pass' => $xpass, 'name' => $xname, 'engine' => $xengine, 'charset' => $xcharset, 'collate' => $xcollate, 'prefix' => $xprefix, 'sync' => $xsync];
-    setConfigFile('db.php', $conf['db'], $cont);
-
+    if (!setConfigFile('db.php', $conf['db'], $cont)) setExit(_FILE.' config/db.php '._SERRORPERM);
     if ($setup == 'new') {
         $title = _SAVE_NEW;
-        $ntypes = array_keys(getSetupConfig(CONFIG_DIR.'/node.php')['node']['types'] ?? []);
-        if ($ntypes) {
-            $pack = [];
-            foreach (['node', 'fields', 'uploads', 'ratings'] as $name) $pack[$name] = getSetupConfig(CONFIG_DIR.'/'.$name.'.php')[$name] ?? [];
-            $pack['node']['types'] = [];
-            foreach ($ntypes as $name) unset($pack['fields']['node'][$name], $pack['uploads'][$name], $pack['ratings']['node.'.$name]);
-            if (($pack['fields']['node'] ?? null) === []) unset($pack['fields']['node']);
-            foreach ($pack as $name => $data) setConfigFile($name.'.php', $data, [], true);
-            $bodytext .= getInfo('config/node.php types of an earlier installation removed with their fields, upload and rating rules: '.implode(', ', $ntypes), true);
-        }
-        $ddl = getSqlFile('setup/sql/table.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
+        $ntypes = deleteSetupTypes();
+        if ($ntypes) $bodytext .= getInfo('config/node.php types of an earlier installation removed with their fields, upload and rating rules: '.implode(', ', $ntypes), true);
+        $text = 'config/node.php: earlier types could not be taken out and no table was created; make config/ writable, put your code into config/setup.unlock and install again';
+        if ($ntypes === false) $bodytext .= getInfo($text, false);
+        $ddl = ($ntypes !== false) ? getSqlFile('setup/sql/table.sql', $xprefix, $xengine, $xcharset, $xcollate, $db) : '';
         $ddl .= ($ddl !== '' && !str_contains($ddl, 'sl_red')) ? getSqlFile('setup/sql/insert.sql', $xprefix, $xengine, $xcharset, $xcollate, $db) : '';
         $bodytext .= $ddl;
         if ($ddl !== '' && !str_contains($ddl, 'sl_red')) {
-            setConfigFile('update.php', ['points' => '6.3.0', 'ratings' => '6.3.0', 'fields' => '6.3.0', 'node' => 'new']);
-        } else {
-            $bodytext .= getInfo('the installation stopped at a failed statement: no mark was written, drop the tables of the prefix and install again', false);
+            $text = 'config/update.php could not be written, points, ratings and fields stay closed: drop the tables, put your code into config/setup.unlock and install again';
+            if (!setConfigFile('update.php', ['points' => '6.3.0', 'ratings' => '6.3.0', 'fields' => '6.3.0', 'node' => 'new'])) $bodytext .= getInfo($text, false);
+        } elseif ($ntypes !== false) {
+            $text = 'the installation stopped at a failed statement: no mark was written; drop the tables of the prefix, put your code into config/setup.unlock and install again';
+            $bodytext .= getInfo($text, false);
         }
     } elseif ($setup == 'update4_1') {
         $title = _SAVE_UPDATE;
@@ -1080,13 +1110,13 @@ function save(): void {
     } elseif ($setup == 'update5_0') {
         $title = _SAVE_UPDATE;
         $result = $db->getSqlQuery('SELECT id, password FROM '.$xprefix.'_admins');
-        while (list($aid, $apwd) = $db->getSqlRow($result)) {
+        while ([$aid, $apwd] = $db->getSqlRow($result)) {
             $pwdhash = getCrypt($apwd);
             $db->getSqlQuery('UPDATE '.$xprefix.'_admins SET password = :password WHERE id = :id', ['password' => $pwdhash, 'id' => $aid]);
         }
         $bodytext .= getInfo($xprefix.'_admins', $result);
         $result = $db->getSqlQuery('SELECT id, password FROM '.$xprefix.'_users');
-        while (list($uid, $upwd) = $db->getSqlRow($result)) {
+        while ([$uid, $upwd] = $db->getSqlRow($result)) {
             $pwdhash = getCrypt($upwd);
             $db->getSqlQuery('UPDATE '.$xprefix.'_users SET password = :pwd WHERE id = :uid', ['pwd' => $pwdhash, 'uid' => $uid]);
         }
@@ -1095,7 +1125,6 @@ function save(): void {
     } elseif ($setup == 'update5_1') {
         $title = _SAVE_UPDATE;
         $bodytext .= getSqlFile('setup/sql/table_update5_1.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
-
         $result = $db->getSqlQuery('SELECT poll_id, poll_date, poll_title, poll_questions, poll_answer_1, poll_answer_2, poll_answer_3, poll_answer_4, poll_answer_5, poll_answer_6, poll_answer_7, poll_answer_8, poll_answer_9, poll_answer_10, poll_answer_11, poll_answer_12, pool_comments, planguage, acomm FROM '.$xprefix.'_voting_temp');
         while ($row = $db->getSqlRow($result)) {
             $pid = $row['poll_id'];
@@ -1126,9 +1155,8 @@ function save(): void {
             $db->getSqlQuery('DROP TABLE '.$xprefix.'_voting_temp');
         }
         $bodytext .= getInfo($xprefix.'_voting', $result);
-
         $result = $db->getSqlQuery('SELECT id, assoc FROM '.$xprefix.'_news');
-        while (list($id, $raw) = $db->getSqlRow($result)) {
+        while ([$id, $raw] = $db->getSqlRow($result)) {
             $raw = explode('-', $raw);
             if (is_array($raw)) {
                 $assoc = [];
@@ -1142,9 +1170,8 @@ function save(): void {
             $db->getSqlQuery('UPDATE '.$xprefix.'_news SET assoc = :assoc WHERE id = :id', ['assoc' => $assoc, 'id' => $id]);
         }
         $bodytext .= getInfo($xprefix.'_news', $result);
-
         $result = $db->getSqlQuery('SELECT id, assoc FROM '.$xprefix.'_products');
-        while (list($id, $raw) = $db->getSqlRow($result)) {
+        while ([$id, $raw] = $db->getSqlRow($result)) {
             $raw = explode('-', $raw);
             if (is_array($raw)) {
                 $assoc = [];
@@ -1166,13 +1193,31 @@ function save(): void {
         $bodytext .= getSqlFile('setup/sql/table_update6_2.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
     } elseif ($setup == 'update6_3') {
         $title = _SAVE_UPDATE;
-        $bodytext .= setUpdateModules($db, $xprefix);
+        $umark = getSetupConfig(CONFIG_DIR.'/update.php')['update'] ?? [];
+        $first = !isset($umark['modules']);
+        $bodytext .= setUpdateModules($db, $xprefix, $first);
+        $keep = [];
+        $sql = 'SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = :tbl';
+        $res = $db->getSqlQuery($sql, ['tbl' => $xprefix.'_node_types']);
+        $good = $res !== false;
+        if ($good && $db->getSqlRowCount($res) > 0) {
+            $res = $db->getSqlQuery('SELECT name FROM `'.$xprefix.'_node_types`');
+            $good = $res !== false;
+            while ($good && ([$tname] = $db->getSqlRow($res))) $keep[] = $tname;
+        }
+        $tgone = $good ? deleteSetupTypes($keep) : [];
+        $text = 'config/node.php types without a row in '.$xprefix.'_node_types removed with their fields, upload and rating rules: '.implode(', ', $tgone ?: []);
+        if (!$good) $text = 'config/node.php: '.$xprefix.'_node_types could not be read, the update stops before the schema';
+        if ($tgone === false) $text = 'config/node.php: the types without a row in '.$xprefix.'_node_types could not be taken out, the update stops before the schema';
+        $good = $good && $tgone !== false;
+        if (!$good || $tgone) $bodytext .= getInfo($text, $good);
         $ufile = CONFIG_DIR.'/uploads.php';
         $udata = is_file($ufile) ? ((require $ufile)['uploads'] ?? []) : [];
         $ntypes = is_file(CONFIG_DIR.'/node.php') ? ((require CONFIG_DIR.'/node.php')['node']['types'] ?? []) : [];
         $ugone = array_diff_key(array_intersect_key($udata, array_flip(['news', 'pages', 'faq', 'help', 'jokes', 'content', 'links', 'files', 'media'])), $ntypes);
-        if ($ugone) {
-            setConfigFile('uploads.php', array_diff_key($udata, $ugone));
+        if ($ugone && !setConfigFile('uploads.php', array_diff_key($udata, $ugone))) {
+            $bodytext .= getInfo('config/uploads.php could not be written, the update stops before the schema', false);
+        } elseif ($ugone) {
             $bodytext .= getInfo('config/uploads.php rules of removed modules dropped: '.implode(', ', array_keys($ugone)), true);
         }
         $sfile = CONFIG_DIR.'/scheduler.php';
@@ -1227,7 +1272,7 @@ function save(): void {
                 unset($sched['jobs']['commentsync']);
                 $sdone = true;
             }
-            if (is_array($sched) && isset($sched['jobs']['newsletter']) && is_array($sched['jobs']['newsletter'])) {
+            if ($first && is_array($sched) && isset($sched['jobs']['newsletter']) && is_array($sched['jobs']['newsletter'])) {
                 $sched['jobs']['newsletter']['active'] = '1';
                 $sched['jobs']['newsletter']['schedule'] = '*/5 * * * *';
                 $sdone = true;
@@ -1259,14 +1304,17 @@ function save(): void {
                     $sdone = true;
                 }
             }
-            if ($sdone) setConfigFile('scheduler.php', $sched);
+            if ($sdone && !setConfigFile('scheduler.php', $sched)) $bodytext .= getInfo('config/scheduler.php could not be written, the update stops before the schema', false);
         }
+        $text = ' could not be written, the update stops before the schema';
+        if ($first && !str_contains($bodytext, 'sl_red') && !setConfigFile('update.php', ['modules' => '6.3.0'] + $umark)) $bodytext .= getInfo('config/update.php'.$text, false);
         $ndata = getSetupConfig(CONFIG_DIR.'/newsletter.php')['newsletter'] ?? [];
         $nset = $ndata + ['abort' => '10', 'bouncemax' => '2', 'breakwin' => '100', 'canary' => '100', 'canarymin' => '500'];
-        if ($nset !== $ndata) setConfigFile('newsletter.php', $nset);
+        if ($nset !== $ndata && !setConfigFile('newsletter.php', $nset)) $bodytext .= getInfo('config/newsletter.php'.$text, false);
         $bodytext .= setUpdateMails($db, $xprefix, (string)$conf['adminmail'], false);
         if (str_contains($bodytext, 'sl_red')) {
-            $bodytext .= getInfo('the update stopped before the schema file: the database is unchanged, correct the refusal above and run the update again', false);
+            $text = 'the update stopped before the schema file: neither the schema file nor a data unit ran, correct the refusal above and run the update again';
+            $bodytext .= getInfo($text, false);
         } else {
             $ddl = getSqlFile('setup/sql/table_update6_3.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
             $bodytext .= $ddl;
@@ -1280,25 +1328,36 @@ function save(): void {
                 $rdata = getSetupConfig(CONFIG_DIR.'/rss.php')['rss'] ?? [];
                 if ($rdata !== [] && (isset($rdata['temp']) || !isset($rdata['bytes'], $rdata['redirects'], $rdata['timeout']))) {
                     unset($rdata['temp']);
-                    setConfigFile('rss.php', $rdata + ['bytes' => '2097152', 'redirects' => '3', 'timeout' => '10']);
+                    $rdata += ['bytes' => '2097152', 'redirects' => '3', 'timeout' => '10'];
+                    if (!setConfigFile('rss.php', $rdata)) $bodytext .= getInfo('config/rss.php could not be written', false);
                 }
                 $rnum = $db->getSqlQuery('UPDATE `'.$xprefix.'_blocks` SET content = \'\', time = \'0\' WHERE url != \'\'');
                 $bodytext .= getInfo($xprefix.'_blocks RSS bodies cleared for Markdown (rows: '.($rnum ? $db->getSqlRowCount($rnum) : 0).')', $rnum !== false);
+                $bpars = [];
+                foreach (['news', 'pages', 'faq', 'files', 'jokes', 'jokes_random', 'links', 'center', 'center_media', 'center_plus'] as $i => $one) $bpars['b'.$i] = $one.'.php';
+                $bsql = ' WHERE status = 1 AND bfile IN (:'.implode(', :', array_keys($bpars)).')';
+                $res = $db->getSqlQuery('SELECT DISTINCT bfile FROM `'.$xprefix.'_blocks`'.$bsql.' ORDER BY bfile', $bpars);
+                $boff = $res ? array_column($db->getSqlRows($res) ?: [], 0) : [];
+                $good = $res !== false && ($boff === [] || $db->getSqlQuery('UPDATE `'.$xprefix.'_blocks` SET status = 0'.$bsql, $bpars) !== false);
+                $bodytext .= getInfo($xprefix.'_blocks of removed modules switched off: '.($boff ? implode(', ', $boff) : 'none'), $good);
                 $bodytext .= setUpdateMails($db, $xprefix, (string)$conf['adminmail'], true);
                 [$acount] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) FROM `'.$xprefix.'_users` WHERE `avatar` LIKE \'default/%\''));
                 $bodytext .= getInfo($xprefix.'_users avatar migration (legacy rows left: '.(int)$acount.')', (int)$acount === 0);
                 $pars = [];
                 foreach (['news', 'pages', 'faq', 'help', 'jokes', 'content', 'links', 'files', 'media'] as $i => $one) $pars['t'.$i] = $xprefix.'_'.$one;
-                $sql = 'SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN (:'.implode(', :', array_keys($pars)).')';
+                $sql = 'SELECT TABLE_NAME, COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND EXTRA LIKE \'%auto_increment%\''
+                    .' AND TABLE_NAME IN (:'.implode(', :', array_keys($pars)).')';
                 $res = $db->getSqlQuery($sql, $pars);
                 $good = $res !== false;
                 $top = 0;
                 foreach (($good ? $db->getSqlRows($res) : false) ?: [] as $row) {
-                    $got = $db->getSqlQuery('SELECT COALESCE(MAX(id), 0) FROM `'.$row[0].'`');
+                    $got = $db->getSqlQuery('SELECT COALESCE(MAX(`'.$row[1].'`), 0) FROM `'.$row[0].'`');
                     $good = $good && $got !== false;
                     $top = max($top, $got ? intval($db->getSqlRow($got)[0] ?? 0) : 0);
                 }
-                $good = $good && ($top === 0 || $db->getSqlQuery('ALTER TABLE `'.$xprefix.'_nodes` AUTO_INCREMENT = '.($top + 1)) !== false);
+                $got = $good ? $db->getSqlQuery('SHOW CREATE TABLE `'.$xprefix.'_nodes`') : false;
+                $next = ($got && preg_match('/\bAUTO_INCREMENT=(\d+)/', $db->getSqlRow($got)[1] ?? '', $hit)) ? intval($hit[1]) : 1;
+                $good = $got !== false && ($top < $next || $db->getSqlQuery('ALTER TABLE `'.$xprefix.'_nodes` AUTO_INCREMENT = '.($top + 1)) !== false);
                 $bodytext .= getInfo($xprefix.'_nodes new ids start above the highest id of the removed sections ('.$top.')', $good);
             }
         }

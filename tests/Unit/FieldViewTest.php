@@ -15,9 +15,9 @@ require_once dirname(__DIR__, 2).'/core/classes/template.php';
 require_once dirname(__DIR__, 2).'/core/classes/parser.php';
 
 /**
- * Stage S06 of docs/node: the two prepared outputs of the shared Field class and the wiring of its three owners. The
+ * The two prepared outputs of the shared Field class and the wiring of its three owners. The
  * form is built from the shared fragments without reading POST, the view is the exact contract array of
- * docs/node/05-core-api.md, and account, forum and order reach their values through the shared helpers alone - no
+ * docs/NODE.md (Field), and account, forum and order reach their values through the shared helpers alone - no
  * positional format, no second reader and no writer that skips the mark of the 6.3 data update.
  */
 final class FieldViewTest extends TestCase

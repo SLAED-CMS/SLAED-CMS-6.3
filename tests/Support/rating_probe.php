@@ -4,7 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
-# CLI probe for the Rating class of docs/node/ratings.md and for the write-guard protocol of the page cache it depends on
+# CLI probe for the Rating class of docs/RATINGS.md and for the write-guard protocol of the page cache it depends on
 # It boots the real core the way index.php does, then drives the class through trusted test adapters against a disposable schema built from the shipped DDL
 # The cache directory, the generation counter and the logs are redirected into scratch, so no marker, no bump and no line ever reaches the stand
 # Every scenario reseeds its tables, every persistent result is read by a connection of its own, and concurrency is made of real processes

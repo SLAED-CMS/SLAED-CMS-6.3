@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Stage S19.2 of docs/node: the newsletter step of the 6.3 update in setup/index.php keeps the pending recipients before the schema file
+ * The newsletter step of the 6.3 update in setup/index.php keeps the pending recipients before the schema file
  * drops the mails column and queues them after it, once per campaign and address. tests/Support/update_probe.php lifts the shipped functions
  * out of the installer by name and drives them against a disposable schema, so the database of the stand is never touched.
  */
@@ -33,7 +33,7 @@ final class UpdateMailsTest extends TestCase
             $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' mails 2>&1');
             $data = json_decode($out, true);
             $this->assertIsArray($data, 'The probe did not return JSON: '.$out);
-            if (!empty($data['error'])) $this->markTestSkipped('Probe: '.$data['error']);
+            $this->assertSame('', $data['error'], 'The probe failed');
             $this->assertTrue($data['clean'], 'The probe left its schema on the server');
             self::$probe = $data['runs']['clean'];
         }

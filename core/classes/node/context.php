@@ -6,10 +6,7 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
-# The request snapshot every Node read and write is decided against: the site user with the effective groups, the separate administrator identity,
-# the types that administrator moderates, the right to manage Node, the main administrator flag, the address, the language, the trusted background flag
-# and the right to delete shared polls
-# The one shared assembly at the request boundary builds it; the object reads no session, cookie, global or database, and it refuses a snapshot that contradicts itself
+# The request snapshot every Node read and write is decided against: the site user with effective groups, the administrator identity and rights, address and language
 final readonly class NodeContext {
 
     # The grammar of a public type name, which is what an entry of the moderated types carries without its storage prefix

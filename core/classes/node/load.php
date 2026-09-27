@@ -7,8 +7,6 @@
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
 # The closed loading map of Node: an exact class name leads to a file known in advance, and nothing else leads anywhere
-# No path is ever built from a requested name, so an unknown or crafted name loads nothing; a class is loaded only when the request really needs it
-# The map lists existing files only: every later stage adds its line together with its class
 spl_autoload_register(static function (string $name): void {
     $map = [
         'Node' => 'entity.php',

@@ -4,20 +4,20 @@
 # License: MIT
 # Website: slaed.net
 
-# CLI probe for docs/node: the schema and the closed class map of stage S08, the reads of NodeQuery and the request context of stage S09, and the type writer of stage S10
+# CLI probe for the Node core: the schema and the closed class map, the reads of NodeQuery and the request context, and the type writer
 # It boots the real core the way index.php does, so what it reports about loading is what a request sees: the map registered and no Node class declared yet
 # The schema is read from the shipped SQL files and never written out here; the statements are split by the installer splitter lifted out of core/admin.php
 # Without a mode two disposable databases are created: one installed fresh, one installed without Node and brought up by the update, twice
 # The mode query boots on a scratch copy of the configuration that carries the probe types, fills one disposable database and reads it through NodeQuery
 # The mode context is a child of the mode query: it boots against that database as one visitor and answers the context getNodeContext() builds for the request
 # The mode service boots on scratch sources, backup, cache and upload root shared with its children crash, restore and race, and drives NodeService on one disposable database
-# The mode material boots the same way for stage S11 and writes materials through copies of the reader and the writer whose factory knows a recording extension
+# The mode material boots the same way for the material writer and writes materials through copies of the reader and the writer whose factory knows a recording extension
 # Nothing touches the site database, config/, storage/ or uploads/ of the stand
 $probework = (string)($argv[1] ?? '');
 $pmode = (string)($argv[2] ?? '');
 $pargs = array_slice($argv, 3);
 require_once __DIR__.'/probe_boot.php';
-$pmat = in_array($pmode, ['material', 'mtree', 'mcrash', 'mlink', 'mpub', 'mpubcrash', 'msched', 'mupload', 'mcomm'], true);
+$pmat = in_array($pmode, ['material', 'mtree', 'mcrash', 'mlink', 'mpub', 'mpubcrash', 'msched', 'mupload', 'mcomm', 'mdelete'], true);
 $pshare = $pmat || in_array($pmode, ['service', 'crash', 'restore', 'race'], true);
 if ($pmode !== '') {
     $pconf = $probework.'/'.($pmode === 'context' ? 'ctx-'.($pargs[1] ?? '') : ($pshare ? 'svc' : 'config'));
@@ -58,6 +58,25 @@ final class ProbeSaveDb extends Database {
     # Refuse every savepoint and run every other statement
     public function getSqlQuery(string $query = '', array $params = []): PDOStatement|false {
         return str_starts_with($query, 'SAVEPOINT') ? false : parent::getSqlQuery($query, $params);
+    }
+}
+
+# The database of a write that pauses once at the first statement carrying the match, so a parallel writer acts meanwhile: by default right after
+# a report decision locked its resource row, early right before the statement runs
+final class ProbeHoldDb extends Database {
+
+    public ?Closure $hold = null;
+    public string $match = '_node_assets WHERE id = :id FOR UPDATE';
+    public bool $early = false;
+
+    # Run the statement and call the hold once around the first statement that carries the match, before it when early and after it otherwise
+    public function getSqlQuery(string $query = '', array $params = []): PDOStatement|false {
+        $hold = ($this->hold !== null && str_contains($query, $this->match)) ? $this->hold : null;
+        if ($hold !== null) $this->hold = null;
+        if ($hold !== null && $this->early) $hold();
+        $res = parent::getSqlQuery($query, $params);
+        if ($hold !== null && !$this->early) $hold();
+        return $res;
     }
 }
 
@@ -341,7 +360,7 @@ function getProbeRole(string $title, string $mode, array $kinds, int $min, int $
         'mode' => $mode, 'active' => true, 'sort' => $sort];
 }
 
-# The stored sections of the three proof types of 06-types.md: news, docs and files as their profiles define them
+# The stored sections of the three proof types of docs/NODE.md (Shipped profiles): news, docs and files as their profiles define them
 function getProbeProfiles(): array {
     $all = ['published', 'updated', 'title', 'views', 'rating'];
     $show = ['category', 'author', 'date', 'views'];
@@ -385,7 +404,7 @@ function getProbeFields(): array {
     ];
 }
 
-# The Node configuration of the probe: the defaults of 06-types.md and every probe type, the type stale at the version given
+# The Node configuration of the probe: the defaults of docs/NODE.md (Effective settings) and every probe type, the type stale at the version given
 function getProbeNodeConf(int $stale): array {
     $pro = getProbeProfiles();
     $plain = ['features' => getProbeFeatures([])];
@@ -775,6 +794,7 @@ function getProbeSettings(): array {
         'notify' => [$set(['workflow', 'notify', 'pending'], 'yes'), ''],
         'assetmode' => [$set(['assets', 'cover', 'mode'], 'banner'), ''],
         'assetkinds' => [$set(['assets', 'cover', 'kinds'], ['audio']), ''],
+        'assetreport' => [$set(['assets', 'cover', 'report'], true), ''],
         'assetmax' => [$set(['assets', 'cover', 'max'], 101), ''],
         'assetmin' => [$set(['assets', 'cover', 'min'], 2), ''],
         'assetkey' => [$set(['assets', 'cover', 'colour'], 'red'), ''],
@@ -1168,7 +1188,7 @@ function getProbeDeadline(PDO $pdo): array {
     return $out;
 }
 
-# The statement budgets of 11-security-performance.md, each measured from a fresh reader including the type read, and the page size never changing the count
+# The statement budgets of docs/NODE.md (Statement budgets), each measured from a fresh reader including the type read, and the page size never changing the count
 function getProbeBudget(): array {
     $out = [];
     $list = function (string $name, int $size): int {
@@ -1276,7 +1296,7 @@ function addProbeScratch(string $work): void {
     file_put_contents($work.'/svcuploads/pages/thumb/old.txt', 'kept');
 }
 
-# Serve the scratch upload root the way a web server carrying the shared nginx rule of docs/node/09 does, and point the site at it, so switching a type on meets a real answer
+# Serve the scratch uploads under the nginx rule of UPGRADING.md (Web Server Rule for Node Upload Directories) and point the site at it, so switching a type on gets a real answer
 # The server is the built-in one with tests/Support/web_probe.php as router; it ends with the probe, and the flag file open of the scratch root switches its rule off
 function addProbeWeb(): void {
     global $conf;
@@ -1866,6 +1886,7 @@ function addProbeMatRows(PDO $pdo): void {
 }
 
 # The categories of the material run, which exist only once their types do, because a new type refuses a name that categories still carry
+# Every one is shown to everybody but Hidden, whose view right admits only the second group while its post right is open
 function addProbeMatCats(PDO $pdo): void {
     $pre = PREFIX_DB.'_';
     $pdo->exec('DELETE FROM '.$pre.'categories');
@@ -1876,6 +1897,9 @@ function addProbeMatCats(PDO $pdo): void {
         .' (16, \'news\', \'Spare\', \'\', 0, \'0|0\', \'0|0\', \'\'), (17, \'news\', \'Lone\', \'\', 0, \'0|0\', \'0|0\', \'\'),'
         .' (18, \'news\', \'Lone child\', \'\', 17, \'0|0\', \'0|0\', \'\'), (19, \'news\', \'Free\', \'\', 0, \'0|0\', \'0|0\', \'\'),'
         .' (20, \'forum\', \'Forum\', \'\', 0, \'0|0\', \'0|0\', \'\')');
+    $pdo->exec('UPDATE '.$pre.'categories SET pview = \'0|0\'');
+    $pdo->exec('INSERT INTO '.$pre.'categories (id, modul, title, intro, parent, pview, pread, ppost, lang) VALUES (25, \'news\', \'Hidden\', \'\', 0, \'0|2\', \'0|0\','
+        .' \'0|0\', \'\')');
 }
 
 # The field definitions of the files type in the material run: a required release, an address with a default and an inactive field
@@ -1926,6 +1950,7 @@ function getProbeMatContext(string $who): NodeContext {
     return match ($who) {
         'mixed' => new NodeContext(3, [2], 2, ['docs', 'files', 'hook', 'links', 'news'], false, false, '127.0.0.1', ''),
         'far' => new NodeContext(0, [], 2, ['docs', 'news'], false, false, '10.0.0.9', ''),
+        'annamod' => new NodeContext(2, [1], 4, ['files'], false, false, '127.0.0.1', ''),
         'task' => new NodeContext(0, [], 0, [], false, false, '', '', true),
         default => getProbeContext($who),
     };
@@ -2070,7 +2095,7 @@ function getProbeMatCreate(): array {
     return $out;
 }
 
-# Update: the stale, the foreign and the forged are refused without a trace; a moderator replaces every set, keeps the author and the address and the inactive field
+# Update: the stale, the foreign, the forged and a mere author are refused without a trace; a moderator replaces every set, keeps author, address and inactive field
 function getProbeMatUpdate(): array {
     [$news, $files] = [getProbeMatType('news'), getProbeMatType('files')];
     $root = getProbeWriter('root');
@@ -2091,6 +2116,10 @@ function getProbeMatUpdate(): array {
     $out['full'] = getProbeCall(fn() => getProbeNode($root->updateNode($one->id, getProbeKeepIn($one, $set + ['title' => 'Changed']), 1)));
     $out['cleared'] = getProbeCall(fn() => getProbeNode($root->updateNode($one->id, getProbeIn(['cid' => 10]), 2)));
     $sub = getProbeWriter('anna')->addNode($news, getProbeIn(['cid' => 10]), NodeStatus::Pending);
+    $held = getProbeMatCount();
+    $out['author'] = getProbeCall(fn() => getProbeWriter('anna')->updateNode($sub->id, getProbeKeepIn($sub, ['title' => 'Mine']), 1));
+    $out['authormod'] = getProbeCall(fn() => getProbeWriter('annamod')->updateNode($sub->id, getProbeKeepIn($sub, ['title' => 'Mine']), 1));
+    $out['authorsame'] = $held === getProbeMatCount() && getProbeStored($sub->id, 'news')['version'] === 1;
     $out['keep'] = getProbeCall(fn() => getProbeNode(getProbeWriter('far')->updateNode($sub->id, getProbeKeepIn($sub, ['title' => 'Edited']), 1)));
     $fil = $root->addNode($files, getProbeIn(['fields' => ['release' => '1.0']]), NodeStatus::Draft);
     $GLOBALS['pdb']->getSqlQuery('UPDATE '.PREFIX_DB.'_nodes SET field = :field WHERE id = :id', ['field' => '{"gone":"x","old":"keep","release":"1.0"}', 'id' => $fil->id]);
@@ -2709,11 +2738,15 @@ function getProbeMaterialRuns(): array {
     $out['keep'] = getProbeMatKeep();
     $out['integrity'] = getProbeMatIntegrity();
     $out['award'] = getProbeMatAward();
+    $out['branch'] = getProbeMatBranch();
+    $out['cross'] = getProbeMatCross();
+    $out['model'] = getProbeMatModel();
+    $out['snap'] = getProbeMatSnap();
     $out['log'] = getProbeLog();
     return $out;
 }
 
-# Integrity of S19.3: the comments of a deleted material go with it and their awards are compensated inside its transaction, a failed comment step keeps the
+# Integrity: the comments of a deleted material go with it and their awards are compensated inside its transaction, a failed comment step keeps the
 # material, one link twice cannot reach the writer, an expired material is not published, a closed points configuration delivers the job, and a moderator reads any state
 function getProbeMatIntegrity(): array {
     [$news, $links, $hook] = [getProbeMatType('news'), getProbeMatType('links'), getProbeMatType('hook')];
@@ -2775,7 +2808,7 @@ function getProbeLines(string $text): int {
     return $num;
 }
 
-# Integrity of S20.3: a delete whose compensation Point refuses keeps the material with its comments and the journal, a closed points configuration deletes
+# Integrity of the delete: a delete whose compensation Point refuses keeps the material with its comments and the journal, a closed points configuration deletes
 # without it and logs; the comment writes run in child processes of a registered user and of the main administrator
 function getProbeMatAward(): array {
     global $conf;
@@ -2843,6 +2876,146 @@ function getProbeMatComm(string $who): array {
     return $out;
 }
 
+# Categories: a parent below the category itself or on a stored loop is refused, a deletion takes the whole subtree or nothing and leaves no
+# subcategory without its parent, and a category of the forum that still holds topics never becomes a category of a type
+function getProbeMatBranch(): array {
+    $news = getProbeMatType('news');
+    $pre = PREFIX_DB.'_';
+    $pdb = $GLOBALS['pdb'];
+    $line = fn(int $id, string $title, int $up): string => '('.$id.', \'news\', \''.$title.'\', \'\', '.$up.', \'0|0\', \'0|0\', \'\')';
+    $pdb->getSqlQuery('INSERT INTO '.$pre.'categories (id, modul, title, intro, parent, pread, ppost, lang) VALUES '.implode(', ', [$line(30, 'Top', 0), $line(31, 'Mid', 30),
+        $line(32, 'Low', 31), $line(33, 'Deep', 32), $line(34, 'Ring one', 35), $line(35, 'Ring two', 34)]));
+    $srv = getProbeWriter('boss');
+    $set = fn(int $id, int $up): array => getProbeCall(fn() => $srv->updateNodeCategory($id, ['parent' => $up] + getProbeCatRow($id)));
+    $up = fn(int $id): ?int => ($one = getProbeCatRow($id)) ? intval($one['parent']) : null;
+    $out = ['loop' => [$set(30, 32), $set(30, 33), $set(31, 31), $set(33, 34), $set(33, 30)]];
+    $out['add'] = getProbeCall(fn() => $srv->addNodeCategory(['parent' => 34] + getProbeCatRow(30)));
+    $out['parents'] = [$up(30), $up(31), $up(32), $up(33)];
+    $main = getProbeWriter('root')->addNode($news, getProbeIn(['cid' => 32]), NodeStatus::Draft);
+    $extra = getProbeWriter('root')->addNode($news, getProbeIn(['cid' => 10, 'cids' => [32]]), NodeStatus::Draft);
+    $out['used'] = [getProbeCall(fn() => $srv->deleteNodeCategory(30)), $up(30), $up(31), $up(32), $up(33)];
+    $pdb->getSqlQuery('UPDATE '.$pre.'nodes SET cid = 10 WHERE id = :id', ['id' => $main->id]);
+    $out['tree'] = [getProbeCall(fn() => $srv->deleteNodeCategory(30)), $up(30), $up(31), $up(32), $up(33)];
+    $row = getProbeStored($extra->id, 'news');
+    $out['extra'] = ['version' => $row['version'], 'cids' => $row['cids']];
+    $sql = 'SELECT COUNT(*) FROM '.$pre.'categories AS c LEFT JOIN '.$pre.'categories AS p ON p.id = c.parent WHERE c.parent > 0 AND p.id IS NULL';
+    $out['orphans'] = intval(getProbeValue($sql));
+    $pdb->getSqlQuery('INSERT INTO '.$pre.'forum (pid, cid, uid, name, title, time, body, field, status) VALUES (0, 20, 2, \'anna\', \'Topic\', NOW(), \'x\', \'\', 1)');
+    $move = fn(): array => getProbeCall(fn() => $srv->updateNodeCategory(20, ['modul' => 'news'] + getProbeCatRow(20)));
+    $out['forum'] = [$move(), getProbeCatRow(20)['modul'] ?? null];
+    $pdb->getSqlQuery('DELETE FROM '.$pre.'forum WHERE cid = 20');
+    $out['forum'] = array_merge($out['forum'], [$move(), getProbeCatRow(20)['modul'] ?? null]);
+    return $out;
+}
+
+# Locks: a moderator decides the report of a resource while a child deletes its material; the decision holds the resource, the child reaches its own
+# locks meanwhile and waits at the resource before any account, so neither side ends in a deadlock and the decision, its award and the deletion all land
+function getProbeMatCross(): array {
+    global $conf;
+    $links = getProbeMatType('links');
+    $node = getProbeWriter('mixed')->addNode($links, getProbeIn(['assets' => [getProbeAsset(null, 'file', 'link', 'https://example.com/cross')]]), NodeStatus::Published);
+    $aid = $node->assets[0]->id;
+    getProbeWriter('anna')->updateNodeAssetReport($aid, $links);
+    $hdb = setProbeZone(new ProbeHoldDb($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], (string)end($GLOBALS['pnames'])));
+    $proc = null;
+    $pipes = [];
+    $hdb->hold = function () use (&$proc, &$pipes, $node): void {
+        $cmd = escapeshellarg(PHP_BINARY).' '.escapeshellarg(__FILE__).' '.escapeshellarg($GLOBALS['probework']).' mdelete '.$node->id.' '.$node->version;
+        $proc = proc_open($cmd, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+        sleep(2);
+    };
+    $srv = new NodeService($hdb, getProbeMatContext('mixed'), $GLOBALS['fld'], getProbeMatPoint(false, $hdb));
+    $out = ['decide' => getProbeCall(fn() => $srv->deleteNodeAssetReport($aid, $links, true))];
+    $text = $proc ? stream_get_contents($pipes[1]).stream_get_contents($pipes[2]) : '';
+    if ($proc) proc_close($proc);
+    $out['delete'] = json_decode(trim($text), true) ?? ['text' => $text];
+    $sql = 'SELECT COUNT(*) FROM '.PREFIX_DB.'_points WHERE action = \'report\' AND source LIKE :src';
+    $out['after'] = [getProbeStored($node->id, 'links') !== null, intval(getProbeValue('SELECT COUNT(*) FROM '.PREFIX_DB.'_node_assets WHERE id = :id', ['id' => $aid])),
+        intval(getProbeValue($sql, ['src' => 'report:'.$aid.':%']))];
+    return $out;
+}
+
+# Model: a feature stays on while the type holds its data, a new external address of a visitor goes to moderation, a hidden category takes no post,
+# an own report earns no report award, a file replaced by a link starts without metadata and hits, and the count of a profile follows the rule of its feed
+function getProbeMatModel(): array {
+    [$news, $docs, $files] = [getProbeMatType('news'), getProbeMatType('docs'), getProbeMatType('files')];
+    $pre = PREFIX_DB.'_';
+    $pdb = $GLOBALS['pdb'];
+    $root = getProbeWriter('root');
+    $off = function (string $name, string $key): array {
+        $type = getProbeMatType($name);
+        $set = $type->settings;
+        $set['features'][$key] = false;
+        return getProbeCall(fn() => getProbeService('boss')->updateNodeType($name, getProbeKeep($type, ['settings' => $set]), $type->version)->version);
+    };
+    $top = $root->addNode($docs, getProbeIn(), NodeStatus::Draft);
+    $kid = $root->addNode($docs, getProbeIn(['rels' => [['rid' => $top->id, 'type' => 'parent', 'sort' => 0]]]), NodeStatus::Draft);
+    $one = $root->addNode($news, getProbeIn(['cid' => 10]), NodeStatus::Draft);
+    $two = $root->addNode($news, getProbeIn(['cid' => 10, 'rels' => [['rid' => $one->id, 'type' => 'related', 'sort' => 0]]]), NodeStatus::Draft);
+    $vers = [getProbeMatType('news')->version, getProbeMatType('docs')->version];
+    $out = ['features' => ['categories' => $off('news', 'categories'), 'tree' => $off('docs', 'tree'), 'related' => $off('news', 'related')]];
+    $out['kept'] = [getProbeMatType('news')->version === $vers[0], getProbeMatType('docs')->version === $vers[1], getProbeStored($kid->id, 'docs')['rels'][0]['rid'] ?? 0,
+        getProbeStored($two->id, 'news')['rels'][0]['rid'] ?? 0, getProbeStored($two->id, 'news')['cid']];
+    $link = [getProbeAsset(null, 'file', 'download', 'https://example.com/model.zip')];
+    $fin = fn(NodeStatus $st): array => getProbeCall(fn() => getProbeWriter('boris')->addNode($files, getProbeIn(['fields' => ['release' => '1'], 'assets' => $link]), $st)
+        ->status->name);
+    $out['external'] = ['direct' => $fin(NodeStatus::Published), 'pending' => $fin(NodeStatus::Pending), 'root' => getProbeCall(fn() => $root->addNode($files,
+        getProbeIn(['fields' => ['release' => '1'], 'assets' => $link]), NodeStatus::Published)->status->name)];
+    $hide = fn(string $who): array => getProbeCall(fn() => getProbeWriter($who)->addNode($news, getProbeIn(['cid' => 25]), NodeStatus::Pending)->cid);
+    $out['hidden'] = ['anna' => $hide('anna'), 'boris' => $hide('boris'), 'mixed' => $hide('mixed'), 'preview' => getProbeCall(fn() => getProbeWriter('anna')->getNodePreview($news,
+        getProbeIn(['cid' => 25]), NodeStatus::Pending)->cid)];
+    $node = $root->addNode($files, getProbeIn(['fields' => ['release' => '1'], 'assets' => [getProbeAsset(null, 'file', 'download', 'manual-abcdefghij-2.pdf')]]),
+        NodeStatus::Published);
+    $aid = $node->assets[0]->id;
+    getProbeWriter('anna')->updateNodeAssetHits($aid, $files);
+    getProbeWriter('boris')->updateNodeAssetReport($aid, $files);
+    $out['own'] = getProbeCall(fn() => getProbeWriter('mixed')->deleteNodeAssetReport($aid, $files, true));
+    $sql = 'SELECT action, uid FROM '.$pre.'points WHERE source LIKE :src ORDER BY id';
+    $out['ownpoints'] = $pdb->getSqlQuery($sql, ['src' => 'report:'.$aid.':%'])->fetchAll(PDO::FETCH_ASSOC);
+    $asset = fn(): array => $pdb->getSqlQuery('SELECT src, mime, size, hits FROM '.$pre.'node_assets WHERE id = :id', ['id' => $aid])->fetch(PDO::FETCH_ASSOC) ?: [];
+    $out['file'] = $asset();
+    $node = getProbeMatNode($node->id, 'files');
+    $keep = getProbeKeepIn($node, ['assets' => [['src' => 'https://example.com/moved.zip'] + getProbeAsset($aid, 'file', 'download', '')]]);
+    $out['swap'] = getProbeCall(fn() => $root->updateNode($node->id, $keep, $node->version)->version);
+    $out['link'] = $asset();
+    $open = $root->addNode($news, getProbeIn(['cid' => 10]), NodeStatus::Published);
+    $com = getProbeCom();
+    $was = [$com->getUserCount(2), count($com->getUserList(2, 500))];
+    $sql = 'INSERT INTO '.$pre.'comment (cid, modul, time, uid, name, body, status) VALUES (:open, \'news\', NOW(), 2, \'anna\', \'x\', 1),'
+        .' (:shut, \'news\', NOW(), 2, \'anna\', \'x\', 1), (1, \'voting\', NOW(), 2, \'anna\', \'x\', 1)';
+    $pdb->getSqlQuery($sql, ['open' => $open->id, 'shut' => $one->id]);
+    $out['profile'] = [$was[0] === $was[1], $com->getUserCount(2) - $was[0], count($com->getUserList(2, 500)) - $was[1]];
+    $out['free'] = $off('files', 'related');
+    return $out;
+}
+
+# Snapshots: a delete of a material with an extension locks the comments before its first plain read, so a comment another connection edits right
+# before that lock is taken over and not refused as changed since the last read under innodb_snapshot_isolation
+function getProbeMatSnap(): array {
+    global $conf;
+    require_once $GLOBALS['probework'].'/mclass/ext/load.php';
+    $hook = getProbeMatType('hook');
+    $pre = PREFIX_DB.'_';
+    $pdb = $GLOBALS['pdb'];
+    $ctx = getProbeMatContext('mixed');
+    $node = getProbeWriter('mixed', null, getNodeExtension('hook', $pdb, $ctx))->addNode($hook, getProbeIn(), NodeStatus::Draft);
+    $pdb->getSqlQuery('INSERT INTO '.$pre.'comment (cid, modul, time, uid, name, body, status) VALUES (:cid, \'hook\', NOW(), 0, \'g\', \'x\', 1)', ['cid' => $node->id]);
+    $cid = intval($pdb->getSqlLastId());
+    $hdb = setProbeZone(new ProbeHoldDb($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], (string)end($GLOBALS['pnames'])));
+    $out = ['snapshot' => $hdb->getSqlQuery('SET SESSION innodb_snapshot_isolation = 1') !== false];
+    $hdb->match = '_comment WHERE cid IN';
+    $hdb->early = true;
+    $hdb->hold = fn() => $pdb->getSqlQuery('UPDATE '.$pre.'comment SET body = \'edited\' WHERE id = :id', ['id' => $cid]);
+    $pnt = getProbeMatPoint(false, $hdb);
+    $com = new Comment($hdb, $GLOBALS['prs'], $pnt, array_replace($conf, ['node' => ['types' => array_fill_keys(['docs', 'files', 'hook', 'links', 'news'], [])]]));
+    ProbeHook::$log = [];
+    $out['delete'] = getProbeCall(fn() => (new NodeService($hdb, $ctx, $GLOBALS['fld'], $pnt, getNodeExtension('hook', $hdb, $ctx)))->deleteNode($node->id, 1, $com));
+    $out['after'] = [intval(getProbeValue('SELECT COUNT(*) FROM '.$pre.'nodes WHERE id = :id', ['id' => $node->id])),
+        intval(getProbeValue('SELECT COUNT(*) FROM '.$pre.'comment WHERE id = :id', ['id' => $cid])),
+        ProbeHook::$log, $hdb->hold === null];
+    return $out;
+}
+
 # The children of the material run: each one boots on the scratch sources and the disposable database the parent prepared and answers one call as JSON
 if ($pmat) {
     $GLOBALS['mcopy'] = addProbeWriter($probework.'/mclass');
@@ -2860,6 +3033,7 @@ if ($pmat) {
             'mpub', 'mpubcrash' => getProbeCall(fn() => getProbeWriter('task')->updateNodePublishList()),
             'msched' => addSchedulerRun('nodepublish', 'manual'),
             'mcomm' => getProbeMatComm((string)($pargs[0] ?? '')),
+            'mdelete' => getProbeCall(fn() => getProbeWriter('mixed')->deleteNode(intval($pargs[0] ?? 0), intval($pargs[1] ?? 0), getProbeCom())),
             'mupload' => ['moder' => checkUploadModer('news'), 'forum' => checkUploadModer('forum'), 'shop' => checkUploadModer('shop'), 'none' => checkUploadModer(''),
                 'owner' => getEditorFileOwner('news'), 'flag' => getUploadFileArea(getUploadPlaceRule('news.attach'))->getCapabilities()['delete']],
         };

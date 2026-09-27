@@ -2,7 +2,7 @@
 # 2005 - 2026 SLAED
 # License: MIT
 # Website: slaed.net
-# Compatible: MySQL 8.0.16+ & MariaDB 10.5+
+# Compatible: MySQL 8.0.16+ & MariaDB 10.5.2+
 #
 # table_update6_3.sql — public update from SLAED 6.2 to SLAED 6.3 Phoenix
 #
@@ -942,8 +942,11 @@ CALL addidx('{prefix}_products', 'ihome', '`ihome`', 0);
 # Batch K — _rating
 # =============================================================================
 
+# 6.2 kept one row per account and target in UNIQUE mid_modul_uid, which let a single guest vote per poll;
+# 6.3 keeps one row per address and target, as the guards of 6.2 already did in code
 CALL rencol('{prefix}_rating', 'host', 'ip');
 CALL renidx('{prefix}_rating', 'mid_modul_host', 'mid_modul_ip');
+CALL delidx('{prefix}_rating', 'mid_modul_uid');
 CALL addidx('{prefix}_rating', 'mid', '`mid`', 0);
 CALL addidx('{prefix}_rating', 'modul', '`modul`', 0);
 CALL addidx('{prefix}_rating', 'uid', '`uid`', 0);
@@ -1148,8 +1151,9 @@ CALL addidx('{prefix}_users_temp', 'code', '`code`', 0);
 CALL fixgrppk('{prefix}_groups');
 CALL addidx('{prefix}_groups', 'name', '`name`(191)', 0);
 
-# _whois: rename legacy status columns before type normalization
-# Must run here (Batch N) because the MODIFY below references sdomain/shost/sdc
+# _whois: rename legacy text and status columns before type normalization
+# Must run here (Batch N) because the MODIFY below references body/sdomain/shost/sdc
+CALL rencol('{prefix}_whois', 'hometext',  'body');
 CALL rencol('{prefix}_whois', 'st_domain', 'sdomain');
 CALL rencol('{prefix}_whois', 'st_host',   'shost');
 CALL rencol('{prefix}_whois', 'st_dc',     'sdc');
@@ -1242,16 +1246,12 @@ CALL rencol('{prefix}_comment',  'comment',     'body');
 
 # =============================================================================
 # Batch T: content column renames — remaining tables
-#   _whois:      hometext    → body
 #   _categories: description → intro
 #   _groups:     description → intro
 #   _auto_links: description → intro
+#   _whois renames its columns in Batch N, before the MODIFY there
 # =============================================================================
 
-CALL rencol('{prefix}_whois',      'hometext',    'body');
-CALL rencol('{prefix}_whois',      'st_domain',   'sdomain');
-CALL rencol('{prefix}_whois',      'st_host',     'shost');
-CALL rencol('{prefix}_whois',      'st_dc',       'sdc');
 CALL rencol('{prefix}_categories', 'description', 'intro');
 CALL rencol('{prefix}_groups',     'description', 'intro');
 CALL rencol('{prefix}_auto_links', 'description', 'intro');
@@ -1315,10 +1315,11 @@ CALL addidx('{prefix}_money', 'time',   '`time`',       0);
 # =============================================================================
 
 # _admins.editor names the editor plugin an administrator writes with and has done since the editor
-# rework; it is not a flag. A legacy installation still carries the boolean it was, so the value is
-# normalized before the column is widened - a NULL would refuse the NOT NULL under strict mode, and
-# the 0 or 1 of the old shape names no plugin, which getEditorKey() resolves back to plain anyway.
-UPDATE `{prefix}_admins` SET `editor` = 'plain' WHERE `editor` IS NULL OR `editor` IN ('', '0', '1');
+# rework; it is not a flag. A legacy installation still carries the boolean it was: a NULL would refuse
+# the NOT NULL under strict mode, so it becomes 0 before the column is widened, which the TINYINT of 6.2
+# accepts where it refuses a word; after the widening the 0 or 1 of the old shape, which names no plugin
+# and which getEditorKey() resolves back to plain anyway, is written as plain.
+UPDATE `{prefix}_admins` SET `editor` = 0 WHERE `editor` IS NULL;
 
 ALTER TABLE `{prefix}_admins`
   MODIFY `id`       INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -1335,6 +1336,8 @@ ALTER TABLE `{prefix}_admins`
   MODIFY `ip`       VARCHAR(45) NOT NULL DEFAULT '',
   MODIFY `regdate`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   MODIFY `lastvis`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
+UPDATE `{prefix}_admins` SET `editor` = 'plain' WHERE `editor` IN ('', '0', '1');
 
 ALTER TABLE `{prefix}_auto_links`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,

@@ -4,7 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
-# CLI probe for stage S17 of docs/node: the clean installation of the release creates the ten shipped Node profiles, answered over real HTTP
+# CLI probe for the clean installation of the release: it creates the ten shipped Node profiles, answered over real HTTP
 # It copies the tracked tree without docs, tests and tools into scratch, creates one disposable MariaDB database, and serves the copy with two built-in servers:
 # the installer and the panel run on the first, the address the installer records points at the second, so the refusal of a type directory the panel asks for
 # while it activates a type is answered by a server that is free; every exchange is a real request to the real setup.php, admin.php and index.php of the copy
@@ -12,7 +12,8 @@
 # The second argument keep leaves the copy served on the first port after the checks until the file stop appears in the scratch root, for a browser to walk it;
 # the argument fail leaves a user file in uploads/jokes of the copy before the first administrator is created and checks only that installation;
 # the arguments update <dump> <revision> <prefix> [<snapshot>] upgrade a real 6.2 site instead: its dump, its configuration as the revision tracked it,
-# the field definitions and corrected sources from the snapshot directory of its own field update, and the checks of stage S18
+# the field definitions and corrected sources from the snapshot directory of its own field update, and the checks of the 6.3 update;
+# tests/Fixtures/update62 is such a site: the schema of a real 6.2 site with a small seed as the dump and its 6.2 configuration directory as the revision
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
     exit;
@@ -30,6 +31,9 @@ $isite = $iwork.'/site';
 define('IPREF', (($argv[2] ?? '') === 'update') ? (string)($argv[5] ?? '') : 'probe');
 const IPASS = 'Probe-secret-17';
 
+# The code of the owner the key config/setup.unlock carries while the probe opens the installed installer again
+const IKEY = 'probe-key-2026';
+
 # The ten shipped profiles in the order of their sort
 const IPROFS = ['news', 'pages', 'faq', 'help', 'jokes', 'content', 'links', 'files', 'media', 'docs'];
 
@@ -45,7 +49,8 @@ function deleteInstallTree(string $dir): void {
 }
 
 # Copy the release into scratch: every tracked or new file git does not ignore, without the documentation, the tests and the tools, and the empty storage
-# A tracked configuration source is taken as committed, because the stand writes its own types and settings into the working copies and a release ships none of them;
+# A tracked configuration source is taken as committed, because the stand writes its own types and settings into the working copies; the committed node, fields,
+# uploads and ratings carry the types of the stand, which a clean installation takes out and an update keeps only with a row in its type table;
 # config/db.php is ignored by git and so absent, as in a release, and the installer has to create it
 function addInstallTree(string $site): int {
     $list = explode("\0", (string)shell_exec('git -C '.escapeshellarg(BASE_DIR).' ls-files -co --exclude-standard -z'));
@@ -74,7 +79,7 @@ if (preg_match('#^/uploads/([a-z0-9_]+)/#', $ipath, $ihit) && is_file(__DIR__.'/
     http_response_code(403);
     exit;
 }
-if (!in_array($ipath, ['/', '/index.php', '/admin.php', '/setup.php'], true)) return false;
+if (!in_array($ipath, ['/', '/index.php', '/admin.php', '/myadm.php', '/setup.php'], true) || !is_file(__DIR__.(($ipath === '/') ? '/index.php' : $ipath))) return false;
 foreach (['HTTP_HOST', 'REQUEST_URI', 'HTTP_REFERER', 'HTTP_USER_AGENT', 'REMOTE_ADDR'] as $ikey) if (isset($_SERVER[$ikey])) putenv($ikey.'='.$_SERVER[$ikey]);
 $iglob = require __DIR__.'/config/global.php';
 if (isset($_SERVER['HTTP_X_PROBE_USER'])) $_COOKIE[$iglob['user_c'].'-account'] = $_SERVER['HTTP_X_PROBE_USER'];
@@ -212,17 +217,19 @@ function getInstallProfile(string $name): array {
 
 # The installer and the first administrator: the mark the installer leaves, the ten types, their four shared areas, their directories, the starter material,
 # the mark gone afterwards, the notice of the next page, and a second first-administrator request that creates nothing; fail leaves a user file in uploads/jokes first
+# The installed installer stays shut behind an empty key, and behind a key with a code it asks for the code before it shows the connection data;
+# the first request replaces the code in the key by its password hash
 function getInstallSetup(PDO $pdo, string $base): array {
     global $iguard, $isite, $ifail;
     $dbc = getInstallCred();
     $glob = getInstallConf('global');
     $form = ['op' => 'save', 'setup' => 'new', 'xhost' => $dbc['host'], 'xuname' => $dbc['uname'], 'xpass' => $dbc['pass'], 'xname' => $base, 'xprefix' => IPREF,
-        'xsync' => '1', 'xafile' => 'admin'];
-    $cook = 'Cookie: '.$glob['user_c'].'-lang=ru';
+        'xsync' => '1', 'xafile' => 'admin', 'xcode' => IKEY];
+    $cook ='Cookie: '.$glob['user_c'].'-lang=ru';
     $page = getInstallReply(['jar' => 'form'], 'GET', 'setup.php?op=config', [], [$cook]);
     $none = !is_file($isite.'/config/db.php');
-    $plant = ['node' => fn($v) => ['types' => ['news' => ['version' => 1], 'stale' => ['version' => 3]]] + $v,
-        'fields' => fn($v) => $v + ['node' => ['stale' => ['field1' => ['title' => 'Stale']]]],
+    $plant = ['node' => fn($v) => ['types' => ($v['types'] ?? []) + ['news' => ['version' => 1], 'stale' => ['version' => 3]]] + $v,
+        'fields' => fn($v) => ['node' => ($v['node'] ?? []) + ['stale' => ['field1' => ['title' => 'Stale']]]] + $v,
         'uploads' => fn($v) => ['news' => 'x', 'stale' => 'x'] + $v,
         'ratings' => fn($v) => ['node.news' => [], 'node.stale' => []] + $v];
     foreach ($plant as $name => $edit) {
@@ -230,10 +237,15 @@ function getInstallSetup(PDO $pdo, string $base): array {
         $data[$name] = $edit($data[$name]);
         file_put_contents($isite.'/config/'.$name.'.php', "<?php\nreturn ".var_export($data, true).";\n");
     }
+    $gone = array_keys(getInstallConf('node')['node']['types'] ?? []);
     $done = getInstallReply([], 'POST', 'setup.php', $form, ['Host: 127.0.0.1:'.$iguard, $cook]);
-    $ghost = str_contains($done['body'], 'types of an earlier installation removed with their fields, upload and rating rules: news, stale');
+    $area = [getInstallConf('node')['node']['types'] ?? [], getInstallConf('fields')['fields']['node'] ?? [], getInstallConf('uploads')['uploads'] ?? [],
+        getInstallConf('ratings')['ratings'] ?? []];
+    $left = array_filter($gone, fn($v) => isset($area[0][$v]) || isset($area[1][$v]) || isset($area[2][$v]) || isset($area[3]['node.'.$v]));
+    $said = 'types of an earlier installation removed with their fields, upload and rating rules: '.implode(', ', $gone);
+    $out['ghost'] = ['said' => str_contains($done['body'], $said), 'names' => $gone, 'left' => array_values($left)];
     $mark = getInstallConf('update')['update'] ?? [];
-    $out = ['setup' => [$done['code'], $mark['node'] ?? '', (getInstallConf('global')['homeurl'] ?? '') === 'http://127.0.0.1:'.$iguard]];
+    $out['setup'] = [$done['code'], $mark['node'] ?? '', (getInstallConf('global')['homeurl'] ?? '') === 'http://127.0.0.1:'.$iguard];
     $out['dbfile'] = [$none, $page['code'], str_contains($page['body'], 'name="xhost"'), (getInstallConf('db')['db']['prefix'] ?? '') === IPREF];
     $hash = fn(): array => array_map(fn($v) => sha1_file($isite.'/config/'.$v.'.php'), ['db', 'global', 'security']);
     $was = $hash();
@@ -241,8 +253,20 @@ function getInstallSetup(PDO $pdo, string $base): array {
     $done = getInstallReply([], 'POST', 'setup.php', ['xname' => 'other', 'xafile' => 'moved'] + $form, ['Host: 127.0.0.1:'.$iguard, $cook]);
     $out['lock'] = [str_contains($page['body'], 'config/setup.unlock'), str_contains($page['body'].$done['body'], 'name="xhost"'),
         $dbc['pass'] !== '' && str_contains($page['body'].$done['body'], $dbc['pass']), $hash() === $was, is_file($isite.'/admin.php')];
-    touch($isite.'/config/setup.unlock');
-    $out['unlock'] = str_contains(getInstallReply([], 'GET', 'setup.php?op=config', [], [$cook])['body'], 'name="xhost"');
+    file_put_contents($isite.'/config/setup.unlock', '');
+    $empty = getInstallReply([], 'GET', 'setup.php?op=config')['body'];
+    file_put_contents($isite.'/config/setup.unlock', IKEY."\n");
+    $ask = getInstallReply([], 'GET', 'setup.php?op=config')['body'];
+    $held = (string)file_get_contents($isite.'/config/setup.unlock');
+    $miss = getInstallReply([], 'POST', 'setup.php', ['op' => 'config', 'xcode' => 'wrong-key-17'])['body'];
+    $open = getInstallReply([], 'POST', 'setup.php', ['op' => 'config', 'xcode' => IKEY])['body'];
+    $out['unlock'] = [
+        str_contains($empty, 'config/setup.unlock') && !str_contains($empty, 'name="xcode"'),
+        str_contains($ask, 'name="xcode"') && !str_contains($ask, 'name="xhost"'),
+        str_contains($miss, 'does not match') && !str_contains($miss, 'name="xhost"'),
+        str_contains($open, 'name="xhost"') && str_contains($open, 'value="'.IKEY.'"'),
+        !str_contains($held, IKEY) && password_verify(IKEY, $held),
+    ];
     $out['refuse'] = getInstallRefuse($pdo, $form);
     unlink($isite.'/config/setup.unlock');
     $out['before'] = (int)$pdo->query('SELECT COUNT(*) FROM '.IPREF.'_node_types')->fetchColumn();
@@ -267,7 +291,7 @@ function getInstallSetup(PDO $pdo, string $base): array {
         'ratings' => array_values(array_filter(IPROFS, fn($v) => ($rate['node.'.$v] ?? null) === ['active' => '1', 'period' => '2592000', 'detail' => '1', 'guests' => '1'])),
         'fields' => array_keys(getInstallConf('fields')['fields']['node'] ?? []),
     ];
-    $out['ghost'] = [$ghost, isset($node['types']['stale']), isset(getInstallConf('fields')['fields']['node']['stale']), isset($up['stale']), isset($rate['node.stale'])];
+    $out['stale'] = [isset($node['types']['stale']), isset(getInstallConf('fields')['fields']['node']['stale']), isset($up['stale']), isset($rate['node.stale'])];
     $out['dirs'] = array_values(array_filter(IPROFS, fn($v) => is_file($isite.'/uploads/'.$v.'/.htaccess') && is_file($isite.'/uploads/'.$v.'/index.html')));
     $out['mark'] = array_key_exists('node', getInstallConf('update')['update'] ?? []);
     $row = $pdo->query('SELECT t.name, n.cid, n.uid, n.aname, n.title, n.status, n.home, n.comon FROM '.IPREF.'_nodes AS n INNER JOIN '.IPREF.'_node_types AS t ON t.id = n.tid')
@@ -280,7 +304,9 @@ function getInstallSetup(PDO $pdo, string $base): array {
 }
 
 # The unlocked installer refuses before it writes: the form shows no password, an empty password keeps the stored one, a clean installation over the tables
-# of its prefix, a prefix and a panel name outside their grammar, an update whose prefix has no tables and a wrong password leave config/ and the key as they were;
+# of its prefix, a prefix and a panel name outside their grammar, a panel name of another entry point, a branch the installer does not offer,
+# an update whose prefix has no tables, a wrong password, a missing or wrong code of the key even with another database host, a pending configuration journal
+# and a configuration file PHP cannot write leave config/ and the key as they were, and the permissions of db.php and global.php stay the ones the owner set;
 # a clean installation whose data file fails under a free prefix writes no mark; the log lines the refusals provoke are counted and taken out of the logs again
 function getInstallRefuse(PDO $pdo, array $form): array {
     global $isite, $iguard;
@@ -288,12 +314,15 @@ function getInstallRefuse(PDO $pdo, array $form): array {
     $read = fn(string $one): string => is_file($isite.'/storage/logs/'.$one.'.log') ? (string)file_get_contents($isite.'/storage/logs/'.$one.'.log') : '';
     foreach (['error_php', 'error_sql', 'error_site'] as $one) $logs[$one] = $read($one);
     $send = fn(array $post): string => getInstallReply([], 'POST', 'setup.php', $post + $form, ['Host: 127.0.0.1:'.$iguard])['body'];
+    $perm = fn(): array => array_map(fn($v) => fileperms($isite.'/config/'.$v.'.php') & 0777, ['db', 'global']);
+    chmod($isite.'/config/db.php', 0640);
+    $mode = $perm();
     $dbfile = $isite.'/config/db.php';
     $dbtext = (string)file_get_contents($dbfile);
     $data = getInstallConf('db');
     $data['db']['pass'] = 'keep-probe';
     file_put_contents($dbfile, "<?php\nreturn ".var_export($data, true).";\n");
-    $page = getInstallReply([], 'GET', 'setup.php?op=config')['body'];
+    $page = getInstallReply([], 'POST', 'setup.php', ['op' => 'config', 'xcode' => IKEY])['body'];
     $out = ['form' => [str_contains($page, 'name="xpass" value=""'), str_contains($page, 'keep-probe')]];
     $was = getInstallFiles();
     $out['keep'] = [str_contains($send(['xpass' => '']), 'Problem establishing a connection to the database'), getInstallFiles() === $was];
@@ -304,8 +333,20 @@ function getInstallRefuse(PDO $pdo, array $form): array {
     $out['fresh'] = str_contains($send([]), 'The database already holds tables of the prefix '.IPREF.'_');
     $out['prefix'] = str_contains($send(['xprefix' => 'site-1']), 'The table prefix may hold only');
     $out['afile'] = str_contains($send(['xafile' => '../moved']), 'The administration panel filename may hold only');
+    $out['entry'] = array_map(fn($v) => str_contains($send(['xafile' => $v]), 'may name no file of the site root other than admin.php'), ['index', 'setup']);
+    $out['step'] = str_contains($send(['setup' => 'update9_9']), 'Choose a new installation or one of the offered updates');
     $out['none'] = str_contains($send(['setup' => 'update6_3', 'xprefix' => 'none']), 'The tables none_users and none_admins are not both in the database');
-    $out['same'] = [getInstallFiles() === $was, is_file($isite.'/config/setup.unlock')];
+    $said = 'The code does not match the one in config/setup.unlock';
+    $out['code'] = [str_contains($send(['xcode' => '']), $said), str_contains($send(['xcode' => 'wrong-key-17', 'xprefix' => 'other', 'xhost' => '203.0.113.9']), $said)];
+    $jour = $isite.'/storage/backup/config';
+    if (!is_dir($jour)) mkdir($jour, 0777, true);
+    file_put_contents($jour.'/marker.json', '{"op":"probe"}');
+    $out['jour'] = str_contains($send(['xprefix' => 'other']), 'An unfinished configuration operation of the site waits in storage/backup/config');
+    unlink($jour.'/marker.json');
+    chmod($isite.'/config/security.php', 0444);
+    $out['write'] = str_contains($send(['xprefix' => 'other']), 'File config/security.php has no necessary sanctions');
+    chmod($isite.'/config/security.php', 0644);
+    $out['same'] =[getInstallFiles() === $was, is_file($isite.'/config/setup.unlock')];
     $saved = [];
     foreach (glob($isite.'/config/*.php') ?: [] as $file) $saved[$file] = (string)file_get_contents($file);
     $sql = $isite.'/setup/sql/insert.sql';
@@ -321,6 +362,7 @@ function getInstallRefuse(PDO $pdo, array $form): array {
     $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
     foreach ($bad as $name) $pdo->exec('DROP TABLE `'.$name.'`');
     $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
+    $out['perm'] = [$perm() === $mode, $mode];
     foreach ($logs as $one => $prior) {
         $file = $isite.'/storage/logs/'.$one.'.log';
         $now = $read($one);
@@ -610,20 +652,25 @@ function getInstallDiffs(array $fresh, array $done): array {
 }
 
 # What one run of the update left: the rows the installer reported as failed, the closed site, the marks, the reconciled registry, the converted configuration
-# sources, the manifests of the three units, the balances and the Node tables, and whether config/local.php is gone
+# sources, the manifests of the three units, the balances and the Node tables, and whether config/local.php is gone; the panel file, the language and address
+# of the site, the blocks of removed modules switched off, the Node types taken out of the configuration, and the switches of the owner
 function getInstallAfter(PDO $pdo, array $page): array {
     global $isite;
     preg_match_all('#<tr><td>[^<]*</td><td>([^<]*)(?:</td>)?<td><span class="sl_red">#', $page['body'], $bad);
     preg_match('#records of removed modules dropped: ([a-z_, ]+)#', $page['body'], $gone);
+    preg_match('#_blocks of removed modules switched off: ([a-z_., ]+)#', $page['body'], $boff);
+    preg_match('#_node_types removed with their fields, upload and rating rules: ([a-z_, ]+)#', $page['body'], $tgone);
+    $bfiles = "'news.php', 'pages.php', 'faq.php', 'files.php', 'jokes.php', 'jokes_random.php', 'links.php', 'center.php', 'center_media.php', 'center_plus.php'";
     $mods = getInstallConf('modules')['modules'] ?? [];
     $rss = getInstallConf('rss')['rss'] ?? [];
     $jobs = getInstallConf('scheduler')['scheduler']['jobs'] ?? [];
     $fields = getInstallConf('fields')['fields'] ?? [];
     $ship = eval('?>'.shell_exec('git -C '.escapeshellarg(BASE_DIR).' show HEAD:config/scheduler.php'));
     $olds = array_map(fn($v) => IPREF.'_'.$v, array_diff(IPROFS, ['docs']));
-    $sql = 'SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN (\''.implode('\', \'', $olds).'\')';
+    $sql = 'SELECT TABLE_NAME, COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND EXTRA LIKE \'%auto_increment%\''
+        .' AND TABLE_NAME IN (\''.implode('\', \'', $olds).'\')';
     $top = 0;
-    foreach ($pdo->query($sql)->fetchAll(PDO::FETCH_COLUMN) as $one) $top = max($top, (int)$pdo->query('SELECT COALESCE(MAX(id), 0) FROM `'.$one.'`')->fetchColumn());
+    foreach ($pdo->query($sql)->fetchAll(PDO::FETCH_NUM) as [$one, $key]) $top = max($top, (int)$pdo->query('SELECT COALESCE(MAX(`'.$key.'`), 0) FROM `'.$one.'`')->fetchColumn());
     $next = (int)($pdo->query('SHOW TABLE STATUS LIKE \''.IPREF.'_nodes\'')->fetch(PDO::FETCH_ASSOC)['Auto_increment'] ?? 0);
     $mani = [];
     foreach (['points', 'ratings', 'fields'] as $one) {
@@ -663,6 +710,13 @@ function getInstallAfter(PDO $pdo, array $page): array {
         'presentation' => isset($mods['presentation']),
         'maildrain' => ($jobs['maildrain'] ?? null) === ($ship['scheduler']['jobs']['maildrain'] ?? false),
         'ids' => ['old' => $top, 'next' => $next],
+        'panel' => [is_file($isite.'/admin.php'), is_file($isite.'/myadm.php'), getInstallConf('security')['security']['afile'] ?? null],
+        'site' => [getInstallConf('global')['language'] ?? null, getInstallConf('global')['homeurl'] ?? null],
+        'blocks' => [$boff[1] ?? '', (int)$pdo->query('SELECT COUNT(*) FROM '.IPREF.'_blocks WHERE status = 1 AND bfile IN ('.$bfiles.')')->fetchColumn(),
+            (int)$pdo->query('SELECT COUNT(*) FROM '.IPREF.'_blocks WHERE status = 1 AND title = \'Probe own\'')->fetchColumn()],
+        'types' => [$tgone[1] ?? '', array_keys(getInstallConf('node')['node']['types'] ?? []), array_keys($fields['node'] ?? []),
+            array_values(array_filter(array_keys(getInstallConf('ratings')['ratings'] ?? []), fn($v) => str_starts_with($v, 'node.')))],
+        'owner' => [$mods['forum']['active'] ?? null, $jobs['newsletter']['active'] ?? null, str_contains($page['body'], 'were carried by the first run')],
     ];
 }
 
@@ -709,19 +763,28 @@ function setInstallSources(PDO $pdo, string $snap): array {
 }
 
 # The standard update of a real 6.2 site: its dump in a disposable database under its own prefix, its configuration from the revision given, the release code around it
-# and, from the snapshot of its own field update, the definitions it never committed; the installer is asked over HTTP until the preflight refuses,
-# the sources the site corrected are put back, then asked to finish and asked once more for the repeat; the structure is compared with a clean installation
-# of the same schema, and the panel and the public side of Node are walked afterwards
+# and, from the snapshot of its own field update, the definitions it never committed; the 6.2 panel was myadm.php and is gone, the form names myadm again,
+# the address of the 6.2 site points at the second server while the installer is asked on the first, and the installer runs in another language than the site;
+# the installer is asked over HTTP until the preflight refuses, the sources the site corrected are put back only when the field unit refused them, the owner switches
+# forum and the newsletter job and three blocks appear, then it is asked to finish and asked once more for the repeat; the structure is compared with a clean installation,
+# two guests vote in one poll with the statement of core/system.php, the first super administrator signs in from the address of the probe as the session check demands,
+# and the panel, the content profile and the public side of Node are walked; last a material
+# is created and deleted and the update runs again, which must not bring the counter of _nodes back to the one of the deleted material
 function getInstallUpgrade(PDO $pdo, string $base, string $dump, string $rev, string $snap): array {
-    global $iguard, $isite;
-    $out = ['config' => setInstallOld($isite, $rev, $base), 'dump' => addInstallDump($base, $dump)];
+    global $iguard, $iport, $isite;
+    $out = ['config' => setInstallOld($isite, $rev, $base), 'dump' => addInstallDump($base, $dump), 'guard' => 'http://127.0.0.1:'.$iguard];
+    $sec =$isite.'/config/config_security.php';
+    if (is_file($sec)) file_put_contents($sec, (string)preg_replace("/'afile' => '[a-z0-9_-]*'/", "'afile' => 'myadm'", (string)file_get_contents($sec)));
+    $old = $isite.'/config/config_global.php';
+    if (is_file($old)) file_put_contents($old, (string)preg_replace("/'homeurl' => '[^']*'/", "'homeurl' => 'http://127.0.0.1:".$iguard."'", (string)file_get_contents($old)));
     if ($snap !== '') $out['fields'] = setInstallDefs($snap);
-    $out['before'] = array_map('intval', $pdo->query('SELECT COUNT(*), COALESCE(SUM(points), 0) FROM '.IPREF.'_users')->fetch(PDO::FETCH_NUM));
+    $col = $pdo->query('SHOW COLUMNS FROM '.IPREF.'_users LIKE \'user_points\'')->fetch() ? 'user_points' : 'points';
+    $out['before'] = array_map('intval', $pdo->query('SELECT COUNT(*), COALESCE(SUM('.$col.'), 0) FROM '.IPREF.'_users')->fetch(PDO::FETCH_NUM));
     $dbc = getInstallCred();
     $glob = getInstallConf('global');
     $form = ['op' => 'save', 'setup' => 'update6_3', 'xhost' => $dbc['host'], 'xuname' => $dbc['uname'], 'xpass' => $dbc['pass'], 'xname' => $base, 'xprefix' => IPREF,
-        'xsync' => '1', 'xafile' => 'admin'];
-    $head = ['Host: 127.0.0.1:'.$iguard, 'Cookie: '.$glob['user_c'].'-lang=ru'];
+        'xsync' => '1', 'xafile' => 'myadm', 'xcode' => IKEY];
+    $head = ['Host: 127.0.0.1:'.$iport, 'Cookie: '.$glob['user_c'].'-lang=de'];
     if (!$pdo->query('SHOW COLUMNS FROM '.IPREF.'_newsletter LIKE \'mails\'')->fetch()) $pdo->exec('ALTER TABLE '.IPREF.'_newsletter ADD `mails` TEXT');
     $pdo->exec('UPDATE '.IPREF.'_newsletter SET mails = \'one@probe.test, two@probe.test,one@probe.test\' ORDER BY id LIMIT 2');
     $news = getInstallConf('newsletter');
@@ -732,12 +795,14 @@ function getInstallUpgrade(PDO $pdo, string $base, string $dump, string $rev, st
         $page = getInstallReply([], 'POST', 'setup.php', $form, $head);
         $out['lock'] = [str_contains($page['body'], 'config/setup.unlock'), getInstallFiles() === $was];
     }
-    touch($isite.'/config/setup.unlock');
+    file_put_contents($isite.'/config/setup.unlock', IKEY);
     $was = getInstallFiles();
     $pdo->exec('ALTER TABLE '.IPREF.'_voting ENGINE=MyISAM');
     $page = getInstallReply([], 'POST', 'setup.php', $form, $head);
     $pdo->exec('ALTER TABLE '.IPREF.'_voting ENGINE=InnoDB');
-    $out['refuse'] = [str_contains($page['body'], 'ALTER TABLE `'.IPREF.'_voting` ENGINE=InnoDB;'), getInstallFiles() === $was];
+    $key = ['setup.unlock' => true];
+    $out['refuse'] = [str_contains($page['body'], 'ALTER TABLE `'.IPREF.'_voting` ENGINE=InnoDB;'), array_diff_key(getInstallFiles(), $key) === array_diff_key($was, $key),
+        is_file($isite.'/config/setup.unlock')];
     $out['guest'] = [getInstallReply([], 'GET', '/')['code'], is_file($isite.'/config/local.php'), (getInstallConf('global')['close'] ?? null)];
     $ddl = $isite.'/setup/sql/table_update6_3.sql';
     $keep = (string)file_get_contents($ddl);
@@ -747,13 +812,23 @@ function getInstallUpgrade(PDO $pdo, string $base, string $dump, string $rev, st
     file_put_contents($ddl, $keep);
     $time = microtime(true);
     $out['first'] = getInstallAfter($pdo, getInstallReply([], 'POST', 'setup.php', $form, $head)) + ['time' => round(microtime(true) - $time, 1)];
-    if ($snap !== '') $out['sources'] = setInstallSources($pdo, $snap);
-    touch($isite.'/config/setup.unlock');
+    if ($snap !== '' && !isset($out['first']['marks']['fields'])) $out['sources'] = setInstallSources($pdo, $snap);
+    $mods = getInstallConf('modules');
+    $mods['modules']['forum']['active'] = ($mods['modules']['forum']['active'] ?? '1') === '1' ? '0' : '1';
+    file_put_contents($isite.'/config/modules.php', "<?php\nreturn ".var_export($mods, true).";\n");
+    $jobs = getInstallConf('scheduler');
+    if (isset($jobs['scheduler']['jobs']['newsletter'])) $jobs['scheduler']['jobs']['newsletter']['active'] = '0';
+    file_put_contents($isite.'/config/scheduler.php', "<?php\nreturn ".var_export($jobs, true).";\n");
+    if (is_file($isite.'/config/local.php')) unlink($isite.'/config/local.php');
+    $out['owned'] = [$mods['modules']['forum']['active'], '0'];
+    $pdo->exec('INSERT INTO '.IPREF."_blocks (title, content, bfile, status, which) VALUES ('Probe news', '', 'news.php', 1, 'all'),"
+        ." ('Probe jokes', '', 'block-jokes.php', 1, 'all'), ('Probe own', '', 'modules.php', 1, 'all')");
+    file_put_contents($isite.'/config/setup.unlock', IKEY);
     $time = microtime(true);
     $out['second'] = getInstallAfter($pdo, getInstallReply([], 'POST', 'setup.php', $form, $head)) + ['time' => round(microtime(true) - $time, 1)];
     $mani = fn(): array => array_map('sha1_file', glob($isite.'/storage/backup/update/*/manifest.json') ?: []);
     $was = $mani();
-    touch($isite.'/config/setup.unlock');
+    file_put_contents($isite.'/config/setup.unlock', IKEY);
     $out['third'] = getInstallAfter($pdo, getInstallReply([], 'POST', 'setup.php', $form, $head));
     $out['third']['same'] = $mani() === $was;
     $out['unlock'] = is_file($isite.'/config/setup.unlock');
@@ -765,26 +840,52 @@ function getInstallUpgrade(PDO $pdo, string $base, string $dump, string $rev, st
     } finally {
         deleteInstallBase($fresh);
     }
+    $poll = (int)($pdo->query('SELECT MIN(id) FROM '.IPREF.'_voting')->fetchColumn() ?: 1);
+    $vote = $pdo->prepare('INSERT INTO '.IPREF."_rating (mid, modul, time, uid, ip) VALUES (:mid, 'voting', :time, :uid, :ip)");
+    $out['votes'] = [];
+    foreach (['203.0.113.10', '203.0.113.11'] as $one) {
+        try {
+            $out['votes'][] = $vote->execute(['mid' => $poll, 'time' => (string)time(), 'uid' => 0, 'ip' => $one]);
+        } catch (PDOException $err) {
+            $out['votes'][] = $err->getMessage();
+        }
+    }
+    $again = $form;
     $adm = $pdo->query('SELECT id, name, password FROM '.IPREF.'_admins WHERE super = 1 ORDER BY id LIMIT 1')->fetch(PDO::FETCH_ASSOC);
+    $pdo->exec('UPDATE '.IPREF.'_admins SET ip = \'127.0.0.1\' WHERE id = '.intval($adm['id']));
     $who = ['admin' => base64_encode($adm['id'].':'.$adm['name'].':'.$adm['password'])];
-    $out['panel'] = [getInstallReply($who, 'GET', 'admin.php')['code'], getInstallReply($who, 'GET', 'admin.php?name=node')['code'],
-        getInstallReply($who, 'GET', 'admin.php?name=modules')['code']];
-    foreach (['news', 'docs'] as $name) {
-        $form = getInstallReply($who, 'GET', 'admin.php?name=node&op=type&profile='.$name);
-        $done = getInstallReply($who, 'POST', 'admin.php', getInstallTypeForm(getInstallProfile($name), $name, getInstallToken($form['body'], 'type')));
+    $out['panel'] = [getInstallReply($who, 'GET', 'myadm.php')['code'], getInstallReply($who, 'GET', 'myadm.php?name=node')['code'],
+        getInstallReply($who, 'GET', 'myadm.php?name=modules')['code'], getInstallReply($who, 'GET', 'admin.php')['code']];
+    foreach (['news', 'docs', 'content'] as $name) {
+        $form = getInstallReply($who, 'GET', 'myadm.php?name=node&op=type&profile='.$name);
+        $done = getInstallReply($who, 'POST', 'myadm.php', getInstallTypeForm(getInstallProfile($name), $name, getInstallToken($form['body'], 'type')));
         $note = preg_match('#<div[^>]*sl-alert[^>]*>(.*?)</div>#s', $done['body'], $hit) ? trim(strip_tags($hit[1])) : '';
         $row = $pdo->query('SELECT active, version FROM '.IPREF.'_node_types WHERE name = \''.$name.'\'')->fetch(PDO::FETCH_NUM) ?: [];
         $out['type'][$name] = [$form['code'], $done['code'], $note, array_map('intval', $row)];
     }
     $made = $out['type']['docs'][3] ?? [];
     if (($made[0] ?? 1) === 0) {
-        $list = getInstallReply($who, 'GET', 'admin.php?name=node&op=types');
+        $list = getInstallReply($who, 'GET', 'myadm.php?name=node&op=types');
         $tok = getInstallToken($list['body'], 'typestatus');
-        $done = getInstallReply($who, 'POST', 'admin.php', ['name' => 'node', 'op' => 'typestatus', 'type' => 'docs', 'version' => (string)$made[1], 'active' => '1',
+        $done = getInstallReply($who, 'POST', 'myadm.php', ['name' => 'node', 'op' => 'typestatus', 'type' => 'docs', 'version' => (string)$made[1], 'active' => '1',
             'token' => $tok]);
-        $out['status'] = [$list['code'], $tok !== '', $done['code'], (int)$pdo->query('SELECT active FROM '.IPREF.'_node_types WHERE name = \'docs\'')->fetchColumn()];
+        $note = preg_match('#<div[^>]*sl-alert[^>]*>(.*?)</div>#s', $done['body'], $hit) ? trim(strip_tags($hit[1])) : '';
+        $out['status'] = [$list['code'], $tok !== '', $done['code'], (int)$pdo->query('SELECT active FROM '.IPREF.'_node_types WHERE name = \'docs\'')->fetchColumn(), $note];
     }
     $out['public'] = ['guest' => getInstallReply([], 'GET', 'index.php?name=docs')['code'], 'admin' => getInstallReply($who, 'GET', 'index.php?name=docs')['code']];
+    $next = function () use ($pdo): int {
+        $text = (string)($pdo->query('SHOW CREATE TABLE `'.IPREF.'_nodes`')->fetch(PDO::FETCH_NUM)[1] ?? '');
+        return preg_match('/\bAUTO_INCREMENT=(\d+)/', $text, $hit) ? (int)$hit[1] : 1;
+    };
+    $tid = (int)$pdo->query('SELECT id FROM '.IPREF.'_node_types WHERE name = \'docs\'')->fetchColumn();
+    if ($tid === 0) return $out;
+    $pdo->exec('INSERT INTO '.IPREF.'_nodes (tid, title, intro, body, field) VALUES ('.$tid.", 'Probe last', '', '', '{}')");
+    $last = (int)$pdo->lastInsertId();
+    $pdo->exec('DELETE FROM '.IPREF.'_nodes WHERE id = '.$last);
+    $was = $next();
+    file_put_contents($isite.'/config/setup.unlock', IKEY);
+    $page = getInstallAfter($pdo, getInstallReply([], 'POST', 'setup.php', $again, $head));
+    $out['last'] = ['id' => $last, 'old' => $page['ids']['old'], 'before' => $was, 'after' => $next(), 'failed' => $page['failed']];
     return $out;
 }
 

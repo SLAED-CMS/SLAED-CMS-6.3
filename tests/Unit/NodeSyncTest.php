@@ -8,8 +8,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Stage S15 of docs/node: the external materials of the extension sync. The behaviour is driven by tests/Support/route_probe.php with the
- * argument sync: the disposable database and scratch configuration of the S13 probe with two types of the extension, content active and
+ * The external materials of the extension sync. The behaviour is driven by tests/Support/route_probe.php with the
+ * argument sync: the disposable database and scratch configuration of the base route probe with two types of the extension, content active and
  * feeds disabled, real HTTP requests of the administrators to the form, the manual check and the scheduler, then the child mode syncext that
  * boots the core and asks NodeSync with a scripted transport of Feed, so no request reaches the network. The static half reads the files.
  */
@@ -102,7 +102,7 @@ final class NodeSyncTest extends TestCase
         $this->assertSame(['failed', 'Node sync: 1 checked, 0 updated, 0 unchanged, 1 failed, 0 skipped'], [$state, $text]);
     }
 
-    # The extension accepts exactly the address and the period from a moderator, has no settings, scope or action rules, and shows its row to a moderator in the admin view only
+    # The extension accepts exactly the address and the period from a moderator, has no settings, submission, scope or action rules, and shows its row to a moderator in admin
     #[Test]
     public function theExtensionChecksItsInputAndItsReaders(): void
     {
@@ -110,6 +110,7 @@ final class NodeSyncTest extends TestCase
         $bad = ['ok' => false, 'code' => 3];
         $this->assertSame(['ok' => true, 'value' => []], $ext['config'][0]);
         $this->assertSame($bad, array_slice($ext['config'][1], 0, 2));
+        $this->assertSame($bad + ['msg' => 'Invalid sync input: features.submit'], $ext['config'][2], 'A sync type took public submission');
         $this->assertSame(['ok' => true, 'value' => ['url' => 'https://example.com/a%7Cb?q=1', 'refresh' => 0]], $ext['input']['good']);
         $this->assertSame(['ok' => true, 'value' => ['url' => 'https://example.com/feed', 'refresh' => 31536000]], $ext['input']['intl']);
         foreach (['low', 'high', 'text', 'lost', 'extra', 'port', 'long'] as $key) $this->assertSame($bad, array_slice($ext['input'][$key], 0, 2), $key);

@@ -10,7 +10,7 @@ use ReflectionClass;
 use ReflectionMethod;
 
 /**
- * Stage S13 of docs/node: the public and administrative routes of Node and the view preparer. The behaviour is driven by
+ * The public and administrative routes of Node and the view preparer. The behaviour is driven by
  * tests/Support/route_probe.php: one disposable MariaDB database from the shipped table.sql, a scratch configuration that registers
  * three types, a scratch upload root with the guards of the release, and the real index.php and admin.php answering real HTTP
  * requests of the built-in server with tests/Support/route_web.php as router. The static half reads the files of the stage.
@@ -42,58 +42,23 @@ final class NodeRouteTest extends TestCase
         return self::$probe['runs'];
     }
 
-    # Run the probe of stage S20.1 once and memoize it: the public form on the integration types with the write window, the upload rule and the captcha of comments
-    private function getSecure(): array
+    # Run one mode of the probe once and memoize it: secure - the public form, tree - the document tree, modes - the display modes,
+    # seo - the canonical addresses, the head and the feeds; each mode builds its own disposable database and server
+    private function getMode(string $mode): array
     {
-        static $run = [];
-        if ($run === []) {
+        static $runs = [];
+        if (!isset($runs[$mode])) {
             $script = dirname(__DIR__).'/Support/route_probe.php';
-            $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_node_secure';
-            $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' secure 2>&1');
+            $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_node_'.$mode;
+            $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' '.$mode.' 2>&1');
             $data = json_decode($out, true);
             $this->assertIsArray($data, 'The probe did not return JSON: '.substr($out, 0, 600));
             $this->assertSame('', $data['error'], 'The probe failed');
             $this->assertTrue($data['clean'], 'The probe left a disposable database on the server');
             $this->assertSame(['error_php.log' => [], 'error_sql.log' => []], $data['logs'], 'The routes wrote PHP or SQL errors');
-            $run = $data['runs']['secure'];
+            $runs[$mode] = $data['runs'][$mode];
         }
-        return $run;
-    }
-
-    # Run the probe of stage S20.4 once and memoize it: the document tree of docs over real requests and the statements its child counts
-    private function getTree(): array
-    {
-        static $run = [];
-        if ($run === []) {
-            $script = dirname(__DIR__).'/Support/route_probe.php';
-            $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_node_tree';
-            $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' tree 2>&1');
-            $data = json_decode($out, true);
-            $this->assertIsArray($data, 'The probe did not return JSON: '.substr($out, 0, 600));
-            $this->assertSame('', $data['error'], 'The probe failed');
-            $this->assertTrue($data['clean'], 'The probe left a disposable database on the server');
-            $this->assertSame(['error_php.log' => [], 'error_sql.log' => []], $data['logs'], 'The routes wrote PHP or SQL errors');
-            $run = $data['runs']['tree'];
-        }
-        return $run;
-    }
-
-    # Run the probe of stage S20.6 once and memoize it: the lists and views of five types, each on its display mode
-    private function getModes(): array
-    {
-        static $run = [];
-        if ($run === []) {
-            $script = dirname(__DIR__).'/Support/route_probe.php';
-            $work = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_node_modes';
-            $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' modes 2>&1');
-            $data = json_decode($out, true);
-            $this->assertIsArray($data, 'The probe did not return JSON: '.substr($out, 0, 600));
-            $this->assertSame('', $data['error'], 'The probe failed');
-            $this->assertTrue($data['clean'], 'The probe left a disposable database on the server');
-            $this->assertSame(['error_php.log' => [], 'error_sql.log' => []], $data['logs'], 'The routes wrote PHP or SQL errors');
-            $run = $data['runs']['modes'];
-        }
-        return $run;
+        return $runs[$mode];
     }
 
     # The body of one function of a file
@@ -176,7 +141,8 @@ final class NodeRouteTest extends TestCase
         $this->assertFalse($run['climb'], 'A key climbing out of the directory served a file');
     }
 
-    # The resources: an image is shown without counting, a download is counted before a whole body or a range from zero only, an external visit before its redirect
+    # The resources: an image is shown without counting, a download is counted before a whole body or a range from zero only, an external visit before its redirect;
+    # an external address of an image role is no redirect
     #[Test]
     public function theResourcesCountOnlyAnAllowedStart(): void
     {
@@ -187,6 +153,7 @@ final class NodeRouteTest extends TestCase
         $this->assertSame([206, 206, 10, 2], $run['range'], 'A range from zero is not counted once, or a later range is counted');
         $this->assertSame([416, 2], $run['unmet']);
         $this->assertSame([302, 'https://example.com/tool', 1], $run['link']);
+        $this->assertSame([404, '', 0], $run['shown'], 'An external address of an image role became a redirect of the site');
         $this->assertSame([404, 404], $run['foreign']);
         $this->assertSame(403, $run['direct']);
     }
@@ -346,7 +313,7 @@ final class NodeRouteTest extends TestCase
     #[Test]
     public function theFormStoresAFileOnlyWithinItsRightAndLimits(): void
     {
-        $run = $this->getSecure()['upload'];
+        $run = $this->getMode('secure')['upload'];
         $this->assertSame([422, 0], $run['guest'], 'A guest stored a file although the rule of the type has no guest upload');
         $this->assertSame([200, 1], $run['user'], 'A member with the upload right could not store a cover');
         $this->assertSame([422, 1], $run['role'], 'A second file of a role with max 1 was stored');
@@ -359,14 +326,14 @@ final class NodeRouteTest extends TestCase
     #[Test]
     public function thePublicWriteWaitsForTheWindowOfTheAddress(): void
     {
-        $this->assertSame([303, 429, 303, 2], $this->getSecure()['window'], 'The second submit inside the window was stored, or the window held the moderator');
+        $this->assertSame([303, 429, 303, 2], $this->getMode('secure')['window'], 'The second submit inside the window was stored, or the window held the moderator');
     }
 
     # A guest passes the captcha of comments on every post: none or a forged one stores no material and sends no mail, a solved one submits; a member sees none
     #[Test]
     public function aGuestSubmitsOnlyThroughTheCaptcha(): void
     {
-        $this->assertSame([true, false, 422, 422, 0, 0, 303, 1, true], $this->getSecure()['captcha'],
+        $this->assertSame([true, false, 422, 422, 0, 0, 303, 1, true], $this->getMode('secure')['captcha'],
             'The captcha is missing for a guest or shown to a member, a post without a solved captcha stored a material or a mail, or a solved one was refused');
     }
 
@@ -374,7 +341,43 @@ final class NodeRouteTest extends TestCase
     #[Test]
     public function theSearchEscapesANodeTitleOnce(): void
     {
-        $this->assertSame([true, false], $this->getSecure()['search'], 'The tooltip of a Node title in search is escaped twice');
+        $this->assertSame([true, false], $this->getMode('secure')['search'], 'The tooltip of a Node title in search is escaped twice');
+    }
+
+    # The form offers a category only when its view right shows it and its post right admits the writer: a guest sees Lobby alone, a member Secret and Open as well
+    #[Test]
+    public function theFormOffersOnlyCategoriesTheWriterSeesAndPostsTo(): void
+    {
+        $this->assertSame([true, false, false, true, true], $this->getMode('secure')['cats'],
+            'The form offered a hidden category or one closed to the writer, or missed an open one');
+        $this->assertSame([403, 200], $this->getMode('secure')['hidden'], 'A guest posted into a category hidden from guests, or a member could not');
+    }
+
+    # A related or parent link to a material the writer may not read - a closed category or a scheduled one - answers exactly as a link to a missing material
+    #[Test]
+    public function aLinkToAnUnreadableMaterialAnswersAsAMissingOne(): void
+    {
+        $run = $this->getMode('secure')['refs'];
+        $this->assertSame([[422, 422], [422, 422], [422, 422], [200, 200]], $run['guest'],
+            'A hidden or scheduled material answered unlike a missing one, or an open one was refused');
+        $this->assertSame([200, 422], $run['user'], 'A member could not link a material of a members category, or linked a scheduled one');
+    }
+
+    # The pending notice to the moderators carries the raw title of a guest escaped in its HTML body
+    #[Test]
+    public function thePendingNoticeEscapesTheTitle(): void
+    {
+        $this->assertSame([303, true, true, false], $this->getMode('secure')['mail'],
+            'The pending material or its notice is missing, or the notice carries live markup of the title');
+    }
+
+    # A profile is imported only from a .json file: the same export under another extension is refused and creates no type
+    #[Test]
+    public function theImportTakesOnlyAJsonFile(): void
+    {
+        $run = $this->getMode('secure')['import'];
+        $this->assertTrue($run[0], 'The export of the probe type is no JSON');
+        $this->assertSame([422, 0, 303, 1], array_slice($run, 1), 'A file of another extension was imported, or the .json file was refused');
     }
 
     # A document of a type with the tree shows its trail, its level with its own children and the neighbours of the reading order; a parent the reader
@@ -382,7 +385,7 @@ final class NodeRouteTest extends TestCase
     #[Test]
     public function theDocumentShowsItsBranchOfTheTree(): void
     {
-        $run = $this->getTree();
+        $run = $this->getMode('tree');
         $roots = ['Doc one', 'Guide', 'Orphan'];
         $flat = ['more' => 0, 'first' => ''];
         $this->assertSame([200, ['path' => [], 'items' => $roots, 'kids' => [], 'cur' => ['Doc one'], 'prev' => [], 'next' => ['Guide']] + $flat], $run['nav'][201]);
@@ -402,18 +405,18 @@ final class NodeRouteTest extends TestCase
     #[Test]
     public function theTreeKeepsTheBudgetOfTheView(): void
     {
-        [$one, $two] = $this->getTree()['sql'];
+        [$one, $two] = $this->getMode('tree')['sql'];
         $this->assertSame([1, ['Config', 'Install & run'], 'Advanced'], [$one['tree'], $one['items'], $one['next']], 'Seven documents took more than one batch');
         $this->assertSame([2, ['Config', 'Install & run'], 'Advanced'], [$two['tree'], $two['items'], $two['next']], 'Six hundred and seven documents did not take two batches');
-        $this->assertLessThanOrEqual(6 + 1, $one['view'] + $one['tree'], 'The view with related cards and one batch of the tree is over the budget of docs/node/11');
-        $this->assertLessThanOrEqual(6 + 2, $two['view'] + $two['tree'], 'The view with related cards and two batches of the tree is over the budget of docs/node/11');
+        $this->assertLessThanOrEqual(6 + 1, $one['view'] + $one['tree'], 'The view with related cards and one batch of the tree is over the budget of docs/NODE.md');
+        $this->assertLessThanOrEqual(6 + 2, $two['view'] + $two['tree'], 'The view with related cards and two batches of the tree is over the budget of docs/NODE.md');
     }
 
     # A wide level shows at most ten siblings on each side of the current document with its real numbers, a wide parent its first twenty children, each cut edge flagged
     #[Test]
     public function aWideLevelShowsAWindowAroundTheDocument(): void
     {
-        $run = $this->getTree()['wide'];
+        $run = $this->getMode('tree')['wide'];
         $this->assertSame(['path' => 0, 'items' => 13, 'kids' => 0, 'cur' => 1, 'prev' => 1, 'next' => 1, 'more' => 1, 'first' => ''], $run['edge'],
             'The root Orphan near the start of 578 roots does not show itself, two before and ten after with one cut edge');
         $this->assertSame([21, 2, 'Zulu 300'], [$run['middle']['items'], $run['middle']['more'], $run['cur']], 'A document in the middle is not the centre of 21 entries');
@@ -426,7 +429,7 @@ final class NodeRouteTest extends TestCase
     #[Test]
     public function everyTypeShowsItsDisplayMode(): void
     {
-        $run = $this->getModes();
+        $run = $this->getMode('modes');
         $this->assertSame(['news' => [200, false, 2], 'docs' => [200, true, 0], 'faq' => [200, true, 0], 'files' => [200, true, 0], 'media' => [200, true, 0]], $run['list'],
             'A list does not answer or does not carry the classes of its mode');
         $this->assertSame([200, false], $run['news'], 'The article mode left the base set');
@@ -472,5 +475,116 @@ final class NodeRouteTest extends TestCase
         }
         preg_match_all("/define\\('(_NODE_[A-Z0-9_]+)'/", (string)file_get_contents($root.'/admin/lang/en.php'), $hit);
         $this->assertSame([], array_values(array_diff(array_unique($used), $names[$scopes[0]], $names[$scopes[1]], $hit[1])), 'A constant the module uses is defined nowhere');
+    }
+
+    # The canonical address of a view and a list names no foreign parameter of the query, the start page keeps the address of the site and its slogan
+    #[Test]
+    public function theCanonicalAddressLeavesForeignParametersOut(): void
+    {
+        $run = $this->getMode('seo');
+        $site = $run['site'];
+        $this->assertSame([$site.'/index.php?name=news&op=view&id=102', $site.'/index.php?name=news&op=view&id=102', $site.'/index.php?name=news&cat=1',
+            $site.'/index.php?name=news&num=2', $site.'/', $site.'/', true], $run['canon'], 'A canonical address carries a foreign parameter or a view is not indexed');
+        $this->assertSame(['Probe slogan of the site', true, ''], $run['desc'], 'The start page on a Node type lost the slogan as its description');
+    }
+
+    # A category named by a language constant shows its translation in the head of the view, the list and the feed
+    #[Test]
+    public function aConstantCategoryTitleIsTranslated(): void
+    {
+        $this->assertSame([false, true, false, false, true], $this->getMode('seo')['const'], 'A category title stays a language constant');
+    }
+
+    # The block and the feed of a type without the publication sort still run by date while its own list keeps the title order
+    #[Test]
+    public function feedsRunByDateWhateverTheListSorts(): void
+    {
+        $this->assertSame([true, true, ['Doc one', 'Zebra doc']], $this->getMode('seo')['order'], 'A feed follows the list sort of its type');
+    }
+
+    # A page past the end with an explicit default sort is not found at once, a page inside still goes to the clean address
+    #[Test]
+    public function aPagePastTheEndIsNotFoundBeforeAnyRedirect(): void
+    {
+        $this->assertSame([404, '', 301, 'index.php?name=news&num=2'], $this->getMode('seo')['bound'], 'The redirect of the default sort leads to a page that does not exist');
+    }
+
+    # A name without a feed is not found, no name takes the start feed, the alternate link names the feed of the page and a description links absolutely
+    #[Test]
+    public function aFeedExistsOnlyWhereATypeHasOne(): void
+    {
+        $run = $this->getMode('seo');
+        $this->assertSame([404, 404, 404, 200, true, $run['site'].'/index.php?go=rss&name=docs', $run['site'].'/index.php?go=rss&name=news', true, false], $run['rss'],
+            'A feed answers without rss, the alternate link names a wrong feed or a description links relatively');
+        $this->assertSame(['news', 'docs', 'shop'], $run['data']['feeds'], 'The list of feeds differs from the types with rss and the shop');
+    }
+
+    # The support card of the administration shows every root message beyond the first page and every reply beyond the cap of a branch
+    #[Test]
+    public function theSupportCardShowsTheWholeCorrespondence(): void
+    {
+        $this->assertSame([303, true, 200, 20, 6], $this->getMode('seo')['support'], 'The support card hides a part of the correspondence');
+    }
+
+    # The letters of a shop without a product on sale render without a link instead of failing
+    #[Test]
+    public function theLettersOfAnEmptyShopRender(): void
+    {
+        $this->assertSame([true, 0], $this->getMode('seo')['data']['letters'], 'The letters of an empty shop fail or link to nothing');
+    }
+
+    # A stale block instance stays off without a log line per render, and the hint of the related field is bound to its input
+    #[Test]
+    public function aStaleBlockIsQuietAndTheRelatedHintIsBound(): void
+    {
+        $run = $this->getMode('seo');
+        $this->assertSame([false, false, true], $run['stale'], 'A stale block shows to a guest or writes the site log on every render');
+        $this->assertSame([true, true, false], $run['hint'], 'The hint of the related field has no id or is not described by its input');
+    }
+
+    # A page past the bound of the reader and a material past it are not found, and the run writes no PHP error
+    #[Test]
+    public function aPagePastTheReaderBoundIsNotFound(): void
+    {
+        $this->assertSame([404, 404, 404], $this->getMode('head')['bound'], 'A page or a material past the reader bound answered other than not found');
+    }
+
+    # The notice of a submission shows once and keeps the page out of the cache, the list after it is cached, the notice of a report shows once;
+    # the header marquee bounds the stored copy
+    #[Test]
+    public function theNoticeShowsOnceAndTheMarqueeBoundsTheCache(): void
+    {
+        $run = $this->getMode('head');
+        $this->assertSame([303, 'index.php?name=news', true, 0, false, 1], $run['notice'], 'The notice did not show once, or the page with it was cached, or the next one not');
+        $this->assertSame([303, 'index.php?name=news&op=view&id=101', true, false], $run['report'], 'The notice of a report did not show exactly once');
+        [$free, $bound, $early] = $run['faq'];
+        $this->assertSame([1, 1, true], [$free, $bound, $early], 'The stored copy outlives the material of the header marquee');
+        $this->assertStringContainsString('Doc one', $run['faq'][3], 'The header marquee does not show the latest faq material');
+    }
+
+    # A closed category stays out of the banner and the breadcrumb, a member who reads it sees it, and a view shows its own category
+    #[Test]
+    public function aClosedCategoryStaysOutOfTheHeader(): void
+    {
+        $this->assertSame([false, false, true, false, true], $this->getMode('head')['banner'], 'The banner or the breadcrumb shows a category the visitor may not read');
+    }
+
+    # The start page names the type once a category or a page is asked, letters keep the category, and an empty Node block is left out
+    #[Test]
+    public function theStartPageLettersAndEmptyBlocksFollowTheList(): void
+    {
+        $run = $this->getMode('head');
+        $site = $run['site'];
+        $this->assertSame([$site.'/index.php?name=news&cat=1', $site.'/index.php?name=news&num=2', $site.'/'], $run['canon'],
+            'The canonical address of the start page names no type');
+        $this->assertSame([true, true], $run['letters'], 'A letter drops the category of the list');
+        $this->assertSame([false, false], $run['block'], 'An empty Node block shows its title or the problem notice');
+    }
+
+    # The favorites shelf reads without a token in its address, answers the member and nothing to a guest
+    #[Test]
+    public function theFavoritesShelfReadsWithoutAToken(): void
+    {
+        $this->assertSame([true, false, 200, true, ''], $this->getMode('head')['favorites'], 'The favorites shelf carries the token in its address or refuses the read');
     }
 }

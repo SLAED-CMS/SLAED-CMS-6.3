@@ -8,8 +8,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Stage S04 of docs/node: the points unit of the 6.3 data update in setup/index.php, whose contract is the section
- * about the regular 6.3 data update in docs/node/12-migration.md. tests/Support/update_probe.php lifts the shipped
+ * The points unit of the 6.3 data update in setup/index.php, whose contract is the section
+ * about the points unit of the 6.3 data update in docs/NODE.md (Points unit). tests/Support/update_probe.php lifts the shipped
  * functions out of the installer by name and drives them in an isolated CLI process against a disposable schema and
  * a scratch site, so the manifest, the snapshot, the mark and the configuration of the stand are never touched.
  */
@@ -28,7 +28,7 @@ final class UpdatePointsTest extends TestCase
             $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' 2>&1');
             $data = json_decode($out, true);
             $this->assertIsArray($data, 'The probe did not return JSON: '.$out);
-            if (!empty($data['error'])) $this->markTestSkipped('Probe: '.$data['error']);
+            $this->assertSame('', $data['error'], 'The probe failed');
             $this->assertTrue($data['clean'], 'The probe left its schema on the server');
             self::$probe = $data;
         }
@@ -115,7 +115,7 @@ final class UpdatePointsTest extends TestCase
         $head = substr($code, $save, $from - $save);
         $this->assertSame([0, 0], [substr_count($head, 'setConfigFile('), substr_count($head, 'rename(')], 'A file is written before the preflight');
         $next = substr($code, $from, strpos($code, 'getSqlFile(', $from) - $from);
-        $shut = "setConfigFile('global.php', array_diff_key(\$conf, ['security' => '', 'db' => '']), ['close' => '1']);";
+        $shut = "setConfigFile('global.php', array_diff_key(\$conf, ['security' => '', 'db' => '']), ['close' => '1'])";
         $this->assertStringContainsString($shut, $next, 'The branch does not close the site between the preflight and the DDL');
         $this->assertLessThan(strpos($next, 'setUpdateConfig()'), strpos($next, $shut), 'The 6.2 settings are carried before the site is closed');
         $pass = array_keys(array_filter($run['server'], fn($v) => $v === ''));

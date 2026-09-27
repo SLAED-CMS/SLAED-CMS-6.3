@@ -30,8 +30,7 @@ if (!defined('CAPTCHA_DIR')) define('CAPTCHA_DIR', BASE_DIR.'/storage/captcha');
 # Uploads directory for user content
 if (!defined('UPLOADS_DIR')) define('UPLOADS_DIR', BASE_DIR.'/uploads');
 
-# Asset bundle version; bump on every release that ships changed CSS/JS/fonts so
-# cached immutable bundles are invalidated even when deployment preserves mtimes
+# Asset bundle version; bump on every release that ships changed CSS/JS/fonts so cached immutable bundles are invalidated even when deployment preserves mtimes
 # Bump it for a change of the builder as well: the key covers the sources and the settings, not the code that joins them, so a stored bundle would outlive the rule that produced it
 define('ASSETS_VER', 3);
 
@@ -117,8 +116,7 @@ function getConfig(bool $fresh = false): array {
     }
 }
 
-# Editor bootstrap must load before security POST processing, because security helpers may
-# consult editor-aware functions during request analysis
+# Editor bootstrap must load before security POST processing, because security helpers may consult editor-aware functions during request analysis
 require_once BASE_DIR.'/core/classes/editor.php';
 require_once BASE_DIR.'/core/classes/logger.php';
 
@@ -1670,8 +1668,8 @@ function checkPageCache(): bool {
     if (empty($conf['cache'])) return false;
     if ($conf['cache'] == 2 && !$home) return false;
     if (is_user() || isAdmin()) return false;
-    # A visitor who picked a colour mode carries it in the document attribute and in the toggle's own icon, and the cache key is
-    # the route alone: a stored copy would hand the next visitor someone else's mode, so only the default `auto` build is cacheable
+    # A visitor who picked a colour mode carries it in the document attribute and in the toggle's own icon, while the cache key is the route alone
+    # A stored copy would hand the next visitor someone else's mode, so only the default `auto` build is cacheable
     if (getThemeMode() !== 'auto') return false;
     if (!empty($_SESSION[$conf['user_c'].'-flash'])) return false;
     if (($op ?? '') !== '' || !isset($conf['node']['types'][$name ?? ''])) return false;
@@ -1722,12 +1720,24 @@ function addMonitorSample(): array {
     return ['status' => 'success', 'message' => 'Monitor sample written: CPU '.$cpu.'%, RAM '.$mem['percent'].'%'];
 }
 
+# The RSS feeds of the site keyed by name with their labels: every active Node type with the rss integration, then the shop while it is active
+# The feed route, the alternate link of the head and the feed picker read this one list, so no link names a feed the route refuses
+function getRssFeeds(): array {
+    $out = [];
+    foreach (getNodeTypeMap() as $key => $type) if ($type->active && $type->settings['integrations']['rss']) $out[$key] = getModuleName($key);
+    if (is_active('shop')) $out['shop'] = _SHOP;
+    return $out;
+}
+
 # Format head
-# A stored page may be handed to the browser cache too: that needs an entry with no dynamic region and a cache_b in days, and such a response drops the generation-time
-# marker, because a copy the browser answers from its own store would keep showing the moment the first visitor was served
+# A stored page may be handed to the browser cache too: that needs an entry with no dynamic region and a cache_b in days
+# Such a response drops the generation-time marker, because a copy the browser answers from its own store would keep showing the moment the first visitor was served
 # The page facts may come as a closure that runs only when the page is really built: a route whose facts cost queries answers a stored copy without running one of them
+# The alternate feed link names the feed of the current module, else the feed of the start module, and is left out when neither has one
+# The category of the breadcrumb and of the theme header is the one the page names; without it the category of the query counts only when the visitor may read it
+# That read is judged by the reader of a Node type or by the read right of any other module, so a closed category never shows its title
 function setHead(array|Closure $seo = []): void {
-    global $home, $conf, $user, $name, $theme, $op, $tpl, $adminpage, $adminvars, $sitepage, $sitevars;
+    global $db, $home, $conf, $user, $name, $theme, $op, $tpl, $adminpage, $adminvars, $sitepage, $sitevars;
     $name = $name ?? '';
     $ctime = time();
     $request = $_SERVER['REQUEST_URI'] ?? getenv('REQUEST_URI') ?: '';
@@ -1781,6 +1791,18 @@ function setHead(array|Closure $seo = []): void {
         ob_start();
     }
     if ($seo instanceof Closure) $seo = $seo();
+    $hcid = (int)($seo['cid'] ?? getVar('get', 'cat', 'num', 0));
+    if (!isset($seo['cid']) && $hcid > 0 && !defined('ADMIN_FILE')) {
+        $ntype = getNodeTypeMap()[$name] ?? null;
+        try {
+            $res = $ntype ? null : $db->getSqlQuery('SELECT pread FROM '.PREFIX_DB.'_categories WHERE id = :id AND modul = :mod', ['id' => $hcid, 'mod' => $name]);
+            $pread = $res ? $res->fetchColumn() : false;
+            $open = $ntype ? getNodeReader($ntype)->checkNodeCategory($ntype, $hcid) : (is_string($pread) && is_acess($pread));
+        } catch (NodeException) {
+            $open = false;
+        }
+        if (!$open) $hcid = 0;
+    }
     $licens = getLicenseHtml();
     $strmeta = '<meta charset="'._CHARSET.'">'."\n";
     $strlink = $stscript = '';
@@ -1861,9 +1883,12 @@ function setHead(array|Closure $seo = []): void {
         }
         if ($seomap['iscanon']) $strlink .= $tpl->getHtmlFrag('head-link', ['rel' => 'canonical', 'href' => $seomap['canon'], 'type' => '', 'title' => ''])."\n";
         if ($conf['rss']['act']) {
-            $rmod = explode(',', $conf['module']);
-            $rurl = $conf['homeurl'].'/index.php?go=rss&name='.trim($rmod[0]);
-            $strlink .= $tpl->getHtmlFrag('head-link', ['rel' => 'alternate', 'href' => $rurl, 'type' => 'application/rss+xml', 'title' => $conf['sitename'].' - '._RSS])."\n";
+            $feeds = getRssFeeds();
+            $rmod = isset($feeds[$conf['name'] ?? '']) ? $conf['name'] : trim(explode(',', $conf['module'])[0]);
+            if (isset($feeds[$rmod])) {
+                $rurl = $conf['homeurl'].'/index.php?go=rss&name='.$rmod;
+                $strlink .= $tpl->getHtmlFrag('head-link', ['rel' => 'alternate', 'href' => $rurl, 'type' => 'application/rss+xml', 'title' => $conf['sitename'].' - '._RSS])."\n";
+            }
             $fieldc = explode('||', $conf['rss']['rss']);
             foreach ($fieldc as $val) {
                 if ($val != '') {
@@ -1880,8 +1905,7 @@ function setHead(array|Closure $seo = []): void {
             ];
             $items = [getSeoSchema($kind, $sdata, (bool)$home)];
             if ($home) $items[] = getSeoSchema('website', $sdata);
-            $bcid = (int)($seo['cid'] ?? getVar('get', 'cat', 'num'));
-            $bread = getSeoBreadcrumbSchema($name, $bcid, $headline, $purl);
+            $bread = getSeoBreadcrumbSchema($name, $hcid, $headline, $purl);
             if ($bread) $items[] = $bread;
             if (!empty($conf['schema'])) {
                 try {
@@ -2014,7 +2038,7 @@ function setHead(array|Closure $seo = []): void {
         'scripts' => $script,
         'content' => '',
         'head_html' => $login,
-        'head_cid' => (int)($seo['cid'] ?? 0),
+        'head_cid' => $hcid,
         'head_item' => (string)($seo['title'] ?? ''),
         'foot_html' => '',
         'blocks_left' => '',
@@ -2057,6 +2081,7 @@ function setHead(array|Closure $seo = []): void {
 # What is stored is what is served: the entry holds the same HTML the first visitor received, with the serve-time markers still in it, so no later visitor is given a different page
 # The response that is also handed to the browser cache drops the generation-time marker rather than filling it, because a frozen copy would report the timing of a foreign request
 # Nothing is stored when the generation moved during the render or a write guard is open: the page may rest on an older SQL snapshot, not the new generation
+# A one-time notice of the visitor opens the content of both surfaces and is cleared by it; the site decides the cache first, which a pending notice refuses
 function setFoot(): void {
     global $home, $name, $conf, $tpl, $adminpage, $adminvars, $sitepage, $sitevars, $blocks, $blocks_c, $foot;
     if (defined('ADMIN_FILE')) {
@@ -2078,6 +2103,7 @@ function setFoot(): void {
     $vars = is_array($sitevars ?? null) ? $sitevars : [];
     $body = (ob_get_level() > 0) ? (string)ob_get_clean() : '';
     $docache = checkPageCache();
+    $flash = getFlashHtml();
     $time = ($conf['db_t'] == '1') ? GEN_MARK : '';
     $license = !empty($vars['license']) ? (string)$vars['license'] : '';
     getBlocks('f');
@@ -2103,7 +2129,7 @@ function setFoot(): void {
     }
     $msg = ($home == 1) ? setMessageShow() : '';
     $vars = array_replace($vars, [
-        'content' => $msg.$center.$body,
+        'content' => $flash.$msg.$center.$body,
         'blocks_left' => $left,
         'blocks_right' => $right,
         'blocks_down' => $down,
@@ -2633,7 +2659,7 @@ function setConfigSource(string $file, string $code): bool {
 
 # Returns the unfinished configuration operation for the restore screen, getConfig() and setConfigRestore(), or an empty array when no marker exists
 # Every touched file answers the journal hashes, the hash it has now and which side that is; verdict names the snapshot a restore applies or stays empty with the reason in why
-# journal - the marker has no readable journal, backup - a snapshot does not match its hash, source - a file is neither side, proof - only the database decides the side
+# Reasons in why: journal - no readable journal in the marker, backup - a snapshot does not match its hash, source - a file is neither side, proof - only the database decides
 function getConfigJournal(): array {
     $root = BACKUP_DIR.'/config';
     if (!is_file($root.'/marker.json')) return [];
@@ -2881,8 +2907,8 @@ function getAssetFiles(array $entries, string $ext): array {
 }
 
 # Definition and processing of header scripts files
-# Concatenated sources are separated by a semicolon and a line break, never by a space: a file ending in a line comment without a break would swallow the next one,
-# and a statement left without its own semicolon would join the first line of the following file instead of ending where its author ended it
+# Concatenated sources are separated by a semicolon and a line break, never by a space: a file ending in a line comment without a break would swallow the next one
+# The semicolon also ends a statement left without its own where its author ended it, instead of joining it to the first line of the following file
 function doScript(): string {
     global $theme, $conf, $tpl;
     $async = ($conf['script_a']) ? 'async ' : '';
@@ -3007,8 +3033,8 @@ function doCss(): string {
 }
 
 # Create a sitemap: the XML goes straight into its files as it is produced, a new file follows every 50000 URLs, and more than one file is joined by an index
-# The modules of sitemap.mod are read as before; a Node type takes part through its own sitemap integration, its materials in cursor batches of limits.syncbatch read as a guest,
-# so neither a closed category nor the whole set of materials is ever held; the HTML map shows a Node type with its categories and leaves its materials to the XML
+# The modules of sitemap.mod are read as before; a Node type takes part through its own sitemap integration, its materials in cursor batches of limits.syncbatch read as a guest
+# Neither a closed category nor the whole set of materials is ever held; the HTML map shows a Node type with its categories and leaves its materials to the XML
 function addSitemapTask(bool $force = false): array {
     global $db, $conf, $tpl, $fld;
     $sm = $conf['sitemap'];
@@ -3045,7 +3071,9 @@ function addSitemapTask(bool $force = false): array {
     foreach ($types as $name => $type) {
         $ncats[$name] = [];
         if (!$type->settings['features']['categories']) continue;
-        $result = $db->getSqlQuery('SELECT id, title, pread FROM '.PREFIX_DB.'_categories WHERE modul = :mod ORDER BY ordern', ['mod' => $name]);
+        $lang = $conf['multilingual'] ? " AND (lang = :lang OR lang = '')" : '';
+        $pars = ['mod' => $name] + ($conf['multilingual'] ? ['lang' => $conf['language']] : []);
+        $result = $db->getSqlQuery('SELECT id, title, pread FROM '.PREFIX_DB.'_categories WHERE modul = :mod'.$lang.' ORDER BY ordern', $pars);
         while ([$cid, $ctitle, $pread] = $db->getSqlRow($result)) {
             [$lvl, $gids] = array_pad(explode('|', (string)$pread, 2), 2, '');
             $open = ctype_digit($lvl) && intval($lvl) === 0 && !array_filter(array_map('intval', explode(',', $gids)), static fn(int $v): bool => $v > 0);
@@ -3732,11 +3760,10 @@ function filterSlug(string $text, string $sep = '-'): string {
 }
 
 # Format theme
-# The panel forces its own theme at bootstrap and a member's site theme may not take it back: the panel is built from
-# partials no site theme carries - the login form among them - so a member who once saved a theme preference and then
-# opened the panel was served a page whose form could not render at all
-# `index.php` declares the same constant for its admin endpoints, but long after the answer here is cached, and that
-# branch builds its Template by name anyway; the constant is therefore read only where it is set before the bootstrap
+# The panel forces its own theme at bootstrap and a member's site theme may not take it back: the panel is built from partials no site theme carries, the login form among them
+# Otherwise a member who once saved a theme preference and then opened the panel was served a page whose form could not render at all
+# `index.php` declares the same constant for its admin endpoints, but long after the answer here is cached, and that branch builds its Template by name anyway
+# The constant is therefore read only where it is set before the bootstrap
 function getTheme(): string {
     static $cached = null;
     if ($cached !== null) return $cached;
@@ -3839,6 +3866,7 @@ function getTimedHtml(string $html): string {
 # Notify subscribed admins by email on new content or comment submission
 # The stored module list is only read here; normalising it is a write and belongs to the admin screen that owns those records, which already writes the normalised form
 # A registered Node type is moderated through its right node-<name>, so its name is read as that right, the way is_admin_modul() reads it
+# The title is plain text from every caller, a raw material title among them: it is escaped for the HTML body here and stays plain in the subject
 function addAdminMail(bool $enab, string $mod, string $username = '', string $title = '', bool $iscmt = false, string $text = ''): void {
     global $db, $conf, $locale, $mailer;
     $mod = filterVar($mod);
@@ -3847,9 +3875,10 @@ function addAdminMail(bool $enab, string $mod, string $username = '', string $ti
         $kind = $iscmt ? 'comment' : 'content';
         $subject = $iscmt ? $conf['sitename'].' - '.$title.' - '._COMMENT : $conf['sitename'].' - '.$title;
         $puname  = $username ? filterText(substr($username, 0, 25)) : _ANONYM;
+        $safe = htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $message = $iscmt
-            ? str_replace('[text]', sprintf(_ADDMAILC, $puname, $title, $text), $conf['mtemp'])
-            : str_replace('[text]', sprintf(_ADDMAIL, $puname, $title), $conf['mtemp']);
+            ? str_replace('[text]', sprintf(_ADDMAILC, $puname, $safe, $text), $conf['mtemp'])
+            : str_replace('[text]', sprintf(_ADDMAIL, $puname, $safe), $conf['mtemp']);
         $params = [];
         $where = " WHERE smail = '1'";
         if ($conf['multilingual']) {
@@ -4586,7 +4615,7 @@ function getEditorJson(array $dat): void {
 # The module is the one that owns the place and never the first segment of the name, so users.avatar answers account, whose moderator moderates it and whose page carries it
 # The listing caps are the shipped ones of every record in config/uploads.php, so the field place invents no number and no administrative setting is added to hold one
 # A guest owns no account, so users.avatar answers zero for both guest fields without reading a setting, and the route refuses a guest before it asks anything else
-# ops names which of the four editor routes the place permits: a field place uploads through its own form, so the other three left reachable would create the orphans that avoids
+# The ops key names which of the four editor routes the place permits: a field place uploads through its own form, so leaving the other three open would create orphan files
 # The directory comes in the three forms its readers need - dir site relative, store relative to the upload root as the service takes it, path absolute as the file layer opens it
 function getUploadPlaceRule(string $place): array {
     global $conf;
@@ -4789,8 +4818,8 @@ function getEditorRouteRule(string $src = 'post'): array {
 # Which actions a row offers is the capability set of its own descriptor and never a role the window derives again, which is what keeps the interface from computing a permission
 # The absolute server path is absent because the file layer gives an editor context none, and the thumbnail falls back to the file itself so a listing always has one to draw
 # The mode and the account of the stored object travel only to a module moderator, because they answer for the server and not for the text: the author who inserts a picture has no use for either
-# The directory of a registered Node type is closed to direct access, so its rows carry the controlled preview route of the type instead of a file address,
-# and bytag tells the window that such a file enters a text only as the [attach] tag, which the stored material turns into its own controlled address
+# The directory of a registered Node type is closed to direct access, so its rows carry the controlled preview route of the type instead of a file address
+# The bytag flag tells the window that such a file enters a text only as the [attach] tag, which the stored material turns into its own controlled address
 function getEditorFileData(array $one, bool $moder = false, string $mod = ''): array {
     global $conf;
     if ($moder) return getEditorFileData($one, false, $mod) + [
@@ -5011,23 +5040,20 @@ function getFileStream(string $path, string $name, string $mime = 'application/o
     exit;
 }
 
-# Format letter
-# A registered Node type links every letter to its list filter, because the letters of its titles would cost a query of their own; the index of the shop stays the letters it has
-function letter(string $mod): string {
- global $db, $tpl, $conf;
+# The letter navigation of a list: digits, the alphabet of the language and the Latin alphabet, each sign a link where the list has something under it
+# A registered Node type links every letter to its list filter, because the letters of its titles would cost a query of their own; each keeps its category, as its pager does
+# The index of the shop stays the letters it has, and a shop without a product on sale shows every sign unlinked
+function getLetterNavi(string $mod, int $cat = 0): string {
+    global $db, $tpl, $conf;
     $node = isset($conf['node']['types'][$mod]);
-    if ($mod == 'shop') {
-        $result = $db->getSqlQuery('SELECT title FROM '.PREFIX_DB."_products WHERE time <= NOW() AND status != '0'");
-    } else {
-        $result = '';
+    $alpha = [];
+    if ($mod === 'shop') {
+        $rows = $db->getSqlRows($db->getSqlQuery('SELECT title FROM '.PREFIX_DB."_products WHERE time <= NOW() AND status != '0'")) ?: [];
+        foreach ($rows as $row) $alpha[] = ucfirst(mb_substr(trim((string)$row['title']), 0, 1, 'utf-8'));
+        $alpha = array_unique($alpha);
     }
-    if ($result) {
-        while(list($title) = $db->getSqlRow($result)) $letdb[] = ucfirst(mb_substr(trim($title), 0, 1, 'utf-8'));
-        $alpha = array_unique($letdb);
-    } else {
-        $alpha = [];
-    }
-    $href = static fn(string $char): string => $node ? getSeoUrl(['name' => $mod, 'let' => rawurlencode($char)]) : 'index.php?name='.$mod.'&op=liste&let='.urlencode($char);
+    $href = static fn(string $char): string => $node ? getSeoUrl(['name' => $mod] + ($cat > 0 ? ['cat' => $cat] : []) + ['let' => rawurlencode($char)])
+        : 'index.php?name='.$mod.'&op=liste&let='.urlencode($char);
     $rows = [];
     $digits = '';
     foreach (range(0, 9) as $num) {
@@ -5351,17 +5377,17 @@ function getAdminNames(string $key): array {
 
 # Check modul admin
 # The single administrative entry of Node opens to the manager of Node and to the moderator of any one type; what each may do there is decided by the Node context
-# A registered type is administered through its right node-<name> alone: the stored key of a removed module of the same name, which upgraded administrators may still carry,
-# never makes its holder a moderator of the type, so every moderator question about a type name reads the one key
+# A registered type is administered through its right node-<name> alone, so every moderator question about a type name reads the one key
+# The stored key of a removed module of the same name, which upgraded administrators may still carry, never makes its holder a moderator of the type
 function is_admin_modul(string $modul): int {
- global $db, $admin, $conf;
+    global $db, $admin, $conf;
     $aid = intval(substr($admin[0], 0, 11));
     $modul = addslashes(trim(substr($modul, 0, 25)));
     if ($modul == '') return 0;
     if (isAdmin(true)) return 1;
     static $amodules = [];
     if (!isset($amodules[$aid])) {
-        list($modules) = $db->getSqlRow($db->getSqlQuery('SELECT modules FROM '.PREFIX_DB.'_admins WHERE id = :id', ['id' => $aid]));
+        [$modules] = $db->getSqlRow($db->getSqlQuery('SELECT modules FROM '.PREFIX_DB.'_admins WHERE id = :id', ['id' => $aid]));
         $modules = $modules ?? '';
         $names = getAdminModuleNames($modules);
         $new_modules = implode(',', $names);
@@ -5535,7 +5561,7 @@ function diff_dump(array $dump, array $old, array $skip = []): array|false {
 }
 
 # Executes a file scan task and returns scheduler metadata
-# storage and node_modules are excluded by default: the first is runtime the site rewrites by itself, the second a development dependency absent from a delivered site
+# Directories storage and node_modules are excluded by default: the first is runtime the site rewrites by itself, the second a development dependency absent from a delivered site
 # Both only produce noise an integrity report cannot act on
 function addFilescanTask(): array {
  global $conf, $tpl, $mailer;
@@ -5872,8 +5898,8 @@ function setBlockView(string $side, string $bfile, string $btitle, string $conte
     return '';
 }
 
-# Build the snapshot every Node read and write of the request is decided against, once: the site user with the effective groups, the separate administrator,
-# the types that administrator moderates from the node-<name> keys of the stored rights, the key node as the right to manage, the address and the language of the categories
+# Build the snapshot every Node read and write of the request is decided against, once: the site user with the effective groups and the separate administrator
+# It also holds the types that administrator moderates from the stored node-<name> keys, the key node as the right to manage, the address and the language of the categories
 # Nothing is taken from the query or the body: the background flag stays false here, because only the fixed adapters of the scheduler build a background context
 function getNodeContext(): NodeContext {
     global $db, $conf, $user, $admin, $locale;
@@ -6017,8 +6043,8 @@ function addNodePublishTask(): array {
     }
 }
 
-# Check the due external sources of Node for the scheduler: a trusted background context without any identity, the extension sync from the closed factory, and the limit
-# of the job bounded to the network sources one pass may fetch; a refusal of the extension becomes the failed status the scheduler records
+# Check the due external sources of Node for the scheduler: a trusted background context without any identity and the extension sync from the closed factory
+# The limit of the job is bounded to the network sources one pass may fetch; a refusal of the extension becomes the failed status the scheduler records
 function addNodeSyncTask(): array {
     global $db, $conf;
     $lim = intval($conf['scheduler']['jobs']['nodesync']['settings']['limit'] ?? 10);
@@ -6034,8 +6060,8 @@ function addNodeSyncTask(): array {
 # Build the rating subsystem of the request once: the rules behind the mark of the 6.3 data update, the trusted actor of the two sessions and the closed map of the fixed targets
 # The read adapter answers only a target the actor may reach; under the lock its first statement is the locking read of the owner row, and a failed statement throws
 # The main administrator reaches every existing target and a forum moderator every topic; the write adapter stores the checked aggregate and refuses what the column cannot hold
-# A scope node.<name> goes through Node alone: the reader of the request context, under the lock the writer that locks the type and then the material before it reads,
-# the rating feature of the type and the extension, which may refuse the vote and follows a stored one inside the same transaction; Point takes no part
+# A scope node.<name> goes through Node alone: the reader of the request context, under the lock the writer that locks the type and then the material before it reads
+# The rating feature of the type and the extension take part too; the extension may refuse the vote and follows a stored one inside the same transaction; Point takes no part
 # The context and the types of Node are read here, before any transaction, because a plain read inside a vote would open its snapshot before the locks
 function getRatingService(): Rating {
     global $db, $conf, $user, $admin;

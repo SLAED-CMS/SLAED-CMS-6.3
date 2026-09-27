@@ -1333,8 +1333,8 @@ function savehome(): void {
                     Logger::addFile('error', 'Avatar upload could not be removed after a failed profile write', ['path' => $path]);
                 }
             }
-            # The cookie carries what the member chose and never what the site defaults to: an empty slot means no
-            # preference, which every reader already resolves for itself, while a name written in means a decision
+            # The cookie carries what the member chose and never what the site defaults to
+            # An empty slot means no preference, which every reader already resolves for itself, while a name written in means a decision
             setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $name, $pass, $story, $blockon, $theme]);
             if ($stop) {
                 edithome();

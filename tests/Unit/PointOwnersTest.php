@@ -8,8 +8,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Stage S04 of docs/node: every remaining owner of a points rule speaks to the Point class with the action, the
- * scope and the source the owner map of docs/node/points.md gives it, the positional helpers and settings are gone
+ * Every owner of a points rule speaks to the Point class with the action, the
+ * scope and the source the owner map of docs/POINTS.md gives it, the positional helpers and settings are gone
  * together with their callers, a rating never awards, and the label of every action exists in all six locales.
  * The labels are read through constant('_POINTS_'.strtoupper($name)), so this file is the one place a search by
  * name finds them: a dictionary cleanup that misses it takes a label of a live screen for an unused one.
@@ -79,7 +79,7 @@ final class PointOwnersTest extends TestCase
     public function everyOwnerSpeaksTheMap(): void
     {
         $calls = array_filter($this->getTree(), fn($code) => preg_match('/pnt->(addEvent|getEventId)\(/', $code) === 1);
-        $this->assertSame(array_keys(self::OWNERS), array_keys($calls), 'The set of files that call Point is not the owner map of docs/node/points.md');
+        $this->assertSame(array_keys(self::OWNERS), array_keys($calls), 'The set of files that call Point is not the owner map of docs/POINTS.md');
         foreach (self::OWNERS as $path => $keys) {
             foreach ($keys as $key) $this->assertStringContainsString($key, $calls[$path], $path.' lost the event key '.$key);
         }
@@ -147,7 +147,7 @@ final class PointOwnersTest extends TestCase
         }
     }
 
-    # The lock order of docs/node/11: the rows of an extension and of a discussion come before the accounts of Point
+    # The lock order of docs/NODE.md (The single lock order): the rows of an extension and of a discussion come before the accounts of Point
     # An operation that moves several accounts locks all of them by ascending id before its first event, so two operations never take them crosswise
     #[Test]
     public function theAccountsAreLockedAfterTheRowsAndBeforeTheFirstEvent(): void
@@ -176,7 +176,7 @@ final class PointOwnersTest extends TestCase
         }
     }
 
-    # The journal screen costs the same on a journal of any length: the count stops at 100 pages of 50 rows and no page deeper is read (points.md, S19.6)
+    # The journal screen costs the same on a journal of any length: the count stops at 100 pages of 50 rows and no page deeper is read (docs/POINTS.md)
     #[Test]
     public function theJournalCountStopsAtOneHundredPages(): void
     {

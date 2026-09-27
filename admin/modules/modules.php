@@ -140,7 +140,7 @@ function modules(): void {
             : $lang;
         if ($group != 0) {
             $grp = $db->getSqlRow($db->getSqlQuery('SELECT name FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => $group]));
-            $group_name = $grp['name'];
+            $group_name = $grp['name'] ?? _NONE;
         } else {
             $group_name = _NONE;
         }

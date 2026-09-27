@@ -4,7 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
-# CLI probe for the Point class of docs/node/points.md
+# CLI probe for the Point class of docs/POINTS.md
 # It boots the real core the way index.php does, then drives the class against a disposable schema that carries the shipped account table and the shipped points journal
 # Every scenario reseeds the journal and the balances, so the order the scenarios run in cannot decide what any of them sees
 # Nothing touches the site database: the probe creates its own schema, works only in it, and drops it again

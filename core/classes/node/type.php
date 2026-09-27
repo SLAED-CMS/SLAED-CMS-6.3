@@ -6,9 +6,7 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
-# One registered type as a snapshot: the identity, state and version the type table holds, then the effective settings, the checked field definitions,
-# the stored upload rule and the four rating settings the configuration holds for the same immutable name
-# The reader assembles it once per request and name; the properties are read directly and nothing changes them afterwards
+# One registered type as a snapshot: identity, state and version from the type table, then the effective settings, field definitions, upload rule and four rating settings
 final readonly class NodeType {
 
     # Hold the database metadata first and the four configuration sections after it

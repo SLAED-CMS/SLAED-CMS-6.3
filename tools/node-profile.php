@@ -4,10 +4,10 @@
 # License: MIT
 # Website: slaed.net
 
-# The large profile of Node from docs/node/13-testing.md: run by hand, never by PHPUnit or the commit hook
+# The large profile of Node from docs/NODE.md (Large profile): run by hand, never by PHPUnit or the commit hook
 # It creates its own disposable database on the server of config/db.php, installs the shipped schema, boots the real core on a scratch copy of the release
 # configuration and creates the ten shipped types through NodeService; then batch SQL fills 100000 materials, 200 categories, two extra categories and two
-# relations per material and up to three resources per material where the type has roles, and every route budget of docs/node/11 is warmed and repeated
+# relations per material and up to three resources per material where the type has roles, and every route budget of docs/NODE.md (Statement budgets) is warmed and repeated
 # The report gives the statements per scenario against the budget, the one against the largest page, p50 and p95 of the wall time, the average statement time
 # and the plans of the main statements with the rows each one really read; a scenario over its budget, a full scan of a Node table, a list page reading more rows
 # than its page end asks for, a deadline reading more than the timed and pinned rows of its type, a category list off the two category indexes or a failure
@@ -35,7 +35,7 @@ const PPREF = 'prof';
 # The number of categories of every type, twenty per type make the two hundred of the profile
 const PCATS = 20;
 
-# The budgets of docs/node/11 as the largest statement count each scenario may reach; a list is held to its upper bound, because every shipped type has categories
+# Budgets of docs/NODE.md (Statement budgets) as the largest statement count each scenario may reach; a list is held to its upper bound, because every shipped type has categories
 const PBUDGET = ['list' => 7, 'build' => 8, 'view' => 5, 'viewrel' => 6, 'attach' => 2, 'asset' => 2, 'download' => 4,
     'report' => 4, 'admin' => 3, 'edit' => 5, 'status' => 6, 'delete' => 5];
 

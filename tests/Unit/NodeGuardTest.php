@@ -8,8 +8,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Stage S19.1 of docs/node: the input and output guards the implementation audit asked for. The behaviour is driven by tests/Support/route_probe.php with
- * the argument guard: the disposable database and scratch configuration of the S16 integrations plus a select field of accounts, a favorite worth points,
+ * The input and output guards of Node. The behaviour is driven by tests/Support/route_probe.php with
+ * the argument guard: the disposable database and scratch configuration of the integrations plus a select field of accounts, a favorite worth points,
  * a hostile title and intro, a shop and an order, real HTTP requests of the main administrator, a poll administrator and a user, and the child mode guardext
  * that asks the service directly where no screen reaches it. The installer lock is proven by NodeProfileTest on a real installation.
  */

@@ -127,9 +127,9 @@ function getAdminPanel(): void {
 }
 
 # Finish a clean installation for its first main administrator: every shipped profile of Node becomes an active type through the one import path, news gets the starter material
-# Only the mark node => new that the installer leaves in config/update.php opens this and the mark leaves afterwards, so an upgraded site gets no type here (NOD-200, NOD-230)
-# A profile the installation could not finish - not created, not switched on or, for news, without its starter material - is named in the answer and logged with the step
-# and its reason; the other profiles are created all the same, and a mark that cannot be removed is logged, because no later request reaches this again
+# Only the mark node => new that the installer leaves in config/update.php opens this and the mark leaves afterwards, so an upgraded site gets no type here
+# A profile the installation could not finish - not created, not switched on or, for news, without starter material - is named in the answer and logged with step and reason
+# The other profiles are created all the same, and a mark that cannot be removed is logged, because no later request reaches this again
 # The starter material takes its title and text from the language constants of the panel, so it is written in the language the first administrator works in
 function addNodeProfiles(int $aid): string {
     global $db, $conf, $fld, $pnt;

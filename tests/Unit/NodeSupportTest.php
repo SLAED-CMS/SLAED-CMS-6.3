@@ -8,8 +8,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Stage S14 of docs/node: the comments of a Node material and the private requests of the extension support. The behaviour is driven by
- * tests/Support/route_probe.php with the argument support: the disposable database and scratch configuration of the S13 probe with a fourth
+ * The comments of a Node material and the private requests of the extension support. The behaviour is driven by
+ * tests/Support/route_probe.php with the argument support: the disposable database and scratch configuration of the base route probe with a fourth
  * type help that carries the extension, real HTTP requests of the owners anna and boris, of helper who is a site account and the operator of
  * help at once, and of administrators without that right, then two child modes that boot the core and ask the comment subsystem and the class
  * NodeSupport directly. The static half reads the files of the stage.

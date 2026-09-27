@@ -8,8 +8,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Stage S06 of docs/node: the fields unit of the 6.3 data update in setup/index.php, whose contract is the one-off
- * conversion of Field in docs/node/12-migration.md. tests/Support/update_probe.php lifts the shipped functions out of
+ * The fields unit of the 6.3 data update in setup/index.php, whose contract is the one-off
+ * conversion of Field in docs/NODE.md (Fields unit). tests/Support/update_probe.php lifts the shipped functions out of
  * the installer by name and drives them in an isolated CLI process against a disposable schema and a scratch site, so
  * the manifest, the snapshots, the mark, the definitions and the value rows of the stand are never touched.
  */
@@ -38,7 +38,7 @@ final class UpdateFieldsTest extends TestCase
             $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' '.escapeshellarg($work).' fields 2>&1');
             $data = json_decode($out, true);
             $this->assertIsArray($data, 'The probe did not return JSON: '.$out);
-            if (!empty($data['error'])) $this->markTestSkipped('Probe: '.$data['error']);
+            $this->assertSame('', $data['error'], 'The probe failed');
             $this->assertTrue($data['clean'], 'The probe left its schema on the server');
             self::$probe = $data;
         }

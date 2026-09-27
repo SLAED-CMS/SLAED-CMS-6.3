@@ -16,7 +16,7 @@ use RuntimeException;
 require_once dirname(__DIR__, 2).'/core/classes/feed.php';
 
 /**
- * Stage S07 of docs/node: the shared Feed class. RSS 2.0, RSS 1.0 and Atom become the canonical Markdown byte for byte;
+ * The shared Feed class. RSS 2.0, RSS 1.0 and Atom become the canonical Markdown byte for byte;
  * the transport is scripted through the two operations of the contract, so DNS and HTTP - redirects, a private target,
  * a rebound name, the byte and time bounds, conditional requests - are reproduced without any network.
  */

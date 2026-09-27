@@ -35,14 +35,16 @@ function setTemplateForum(): string {
 
 # The marquee of the header: the latest published material of the first active type this theme shows in its faq mode, read through the shared Node reader
 # The mode is a name of this theme, so the core knows no type here; a type with an extension or a failed read leaves the marquee empty
+# A stored copy of the page lives no longer than the visibility of that material, as the Node block bounds its own
 function getTemplateFaq(): string {
     global $tpl;
     $type = getNodeModeType('faq');
     if ($type === null) return '';
     try {
         $query = getNodeReader()->setNodeType($type)->setNodePage(1, 1);
-        if (in_array('published', $type->settings['list']['orders'], true)) $query->setNodeOrder('published', 'desc');
+        $query->setNodeOrder('published', 'desc');
         $node = $query->getNodeList()[0] ?? null;
+        if (checkPageCache()) Cache::setPageUntil($query->getNodeDeadline());
     } catch (NodeException) {
         return '';
     }
@@ -56,15 +58,12 @@ function getTemplateFaq(): string {
 }
 
 # Provide head-time variables for the lite theme layout
+# The banner category is the one the head resolved by the read right of the visitor; the title of the item follows it only on a page the query names no category for
 function getThemeHeadVars(): array {
     global $conf, $tpl, $sitevars;
     $mname = $conf['name'] ? getModuleName($conf['name']) : '';
-    $fcat = (int)getVar('get', 'cat', 'num', 0);
-    $ctitle = '';
-    if (!$fcat) {
-        $fcat = (int)($sitevars['head_cid'] ?? 0);
-        $ctitle = (string)($sitevars['head_item'] ?? '');
-    }
+    $fcat = (int)($sitevars['head_cid'] ?? 0);
+    $ctitle = getVar('get', 'cat', 'num', 0) ? '' : (string)($sitevars['head_item'] ?? '');
     $sep = $conf[$conf['name']]['defis'] ?? $conf['defis'];
     $cname = ($fcat && $conf['name']) ? getTplCategoryTrail($conf['name'], $fcat, $sep, $mname, false) : '';
     if ($cname !== '' && $ctitle !== '') {

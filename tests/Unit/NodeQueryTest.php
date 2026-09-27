@@ -11,7 +11,7 @@ use ReflectionClass;
 use ReflectionMethod;
 
 /**
- * Stage S09 of docs/node: NodeQuery reads types, materials, targets, resources, trees and sitemap rows against the request
+ * NodeQuery reads types, materials, targets, resources, trees and sitemap rows against the request
  * context, and getNodeContext() builds that context from the trusted state of the request. Every behaviour is driven by
  * tests/Support/node_probe.php in its query mode: a disposable MariaDB database filled with the shipped schema, a scratch
  * configuration that carries the probe types, the shipped reader copied byte for byte next to a factory whose closed map
@@ -52,13 +52,14 @@ final class NodeQueryTest extends TestCase
         $this->assertSame('Invalid node input: '.$path, $call['msg'], $name);
     }
 
-    # The public methods of the reader are exactly the approved API of 05-core-api.md with their exact parameters and results
+    # The public methods of the reader are exactly the approved API of docs/NODE.md (NodeQuery) with their exact parameters and results
     #[Test]
     public function theReaderHasTheContractMethodsAndNothingElse(): void
     {
         $want = [
             '__construct' => ['Database db', 'NodeContext context', 'Field field', ''],
             'checkNodeCategory' => ['NodeType type', 'int cid', 'bool'],
+            'getNodePostCats' => ['NodeType type', 'array'],
             'filterNodeSettings' => ['string ext', 'array settings', 'array fields', 'array'],
             'getNode' => ['int id', 'NodeType type', '?Node'],
             'getNodeAsset' => ['int id', 'NodeType type', '?NodeAsset'],
@@ -217,6 +218,7 @@ final class NodeQueryTest extends TestCase
             'submit access' => ['access', 'workflow.access'], 'group access without groups' => ['groups', 'workflow.groups'],
             'publish outside groups' => ['publish', 'workflow.publish'], 'notice as string' => ['notify', 'workflow.notify'],
             'display mode' => ['assetmode', 'assets.cover.mode'], 'kinds outside the mode' => ['assetkinds', 'assets.cover.kinds'],
+            'report without a report form' => ['assetreport', 'assets.cover.report'],
             'role max over maxassets' => ['assetmax', 'assets.cover.max'], 'role min over max' => ['assetmin', 'assets.cover.max'],
             'unknown role key' => ['assetkey', 'assets.cover'], 'role switch as string' => ['assetstr', 'assets.cover.active'],
             'role title markup' => ['assettitle', 'assets.cover.title'], 'role name case' => ['rolename', 'assets.Cover'], 'link of two' => ['link', 'assets.link.mode'],
@@ -554,7 +556,7 @@ final class NodeQueryTest extends TestCase
         }
     }
 
-    # The budgets of 11-security-performance.md from a fresh reader including the type: three without categories, the batches of the type on top, never more than seven
+    # The budgets of docs/NODE.md (Statement budgets) from a fresh reader including the type: three without categories, the batches of the type on top, never more than seven
     # Building the HTML cache of a list adds the one deadline statement and reuses the category prefetch: four for a plain type, never more than eight
     # The administrative list switches the sets off and costs type, count and page alone, and its models hold null for every set it did not load
     #[Test]

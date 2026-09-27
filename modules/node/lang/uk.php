@@ -24,7 +24,6 @@ define('_NODE_PERIOD','Період перевірки, секунд');
 define('_NODE_PHIGH','Високий');
 define('_NODE_PLOW','Низький');
 define('_NODE_PNORM','Звичайний');
-define('_NODE_PRIO','Пріоритет');
 define('_NODE_PURGE','Терміновий');
 define('_NODE_RELATED','Пов\'язані матеріали');
 define('_NODE_RELHINT','Номери матеріалів через кому');

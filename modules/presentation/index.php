@@ -121,16 +121,16 @@ function getPresentationVoices(): array {
 
 # Collects every figure and caption of the page for partials/presentation.html: tables and counters first, the live request figures last, so the SQL of the sections is counted
 # Every text is a constant, every number has a source named in the plan; the template receives words, urls, attribute values and flags and owns every tag and class
-# Two cockpit figures are demonstration and say so here: the cache hit ratio and the online floor are seeded from the visits of the day, since the runtime keeps no
-# hit counter and a stand has one visitor; the traces of the control window are staged operations carrying the real counts of this install
+# Two cockpit figures are demonstration: cache hit ratio and online floor are seeded from the day's visits, as the runtime keeps no hit counter and a stand has one visitor
+# The traces of the control window are staged operations carrying the real counts of this install
 # The content figures come from the first active type of a display mode through the shared reader: article for the news, docs for the documentation, files for the archive
 # A mode no active type shows leaves its card, its console row and its figure out, and a failed read counts as nothing
 function getPresentationData(): array {
     global $conf, $db, $theme;
     $cnt = getSessionCounts();
     $today = getStatsToday();
-    # A stand carries days of statistics where a site carries years, so a window short of its days is padded in front with
-    # days drawn around the mean of the real ones, dated back from the first real day; every headline still counts the real rows
+    # A stand carries days of statistics where a site carries years, so a short window is padded in front with days around the mean of the real ones
+    # The padding is dated back from the first real day, and every headline still counts the real rows
     $fill = static function (array $rows, int $days): array {
         $have = count($rows);
         if ($have < 1 || $have >= $days) return $rows;
@@ -169,7 +169,7 @@ function getPresentationData(): array {
         $out['cats'] = count(getCategoryMap($out['type']->name));
         try {
             $query = getNodeReader()->setNodeType($out['type'])->setNodePage(1, 1);
-            if (in_array('published', $out['type']->settings['list']['orders'], true)) $query->setNodeOrder('published', 'desc');
+            $query->setNodeOrder('published', 'desc');
             $out['num'] = $query->getNodeCount();
             $out['last'] = $out['num'] ? ($query->getNodeList()[0] ?? null) : null;
         } catch (NodeException) {
@@ -181,8 +181,8 @@ function getPresentationData(): array {
     $docs = $read('docs');
     $files = $read('files');
     $slots = ['b' => _PRES_BL_BANNER, 'l' => _PRES_BL_LEFT, 'c' => _PRES_BL_TOP, 'd' => _PRES_BL_BOTTOM, 'r' => _PRES_BL_RIGHT, 'f' => _PRES_BL_FOOTER];
-    # The wire of a block node runs from its card to the slot it fills, in the 760 x 340 viewBox of the stage: four rows
-    # of nodes down each side, the page mock in the middle, a slot entered from the side the node stands on
+    # The wire of a block node runs from its card to the slot it fills, in the 760 x 340 viewBox of the stage
+    # Four rows of nodes run down each side, the page mock sits in the middle, a slot is entered from the side the node stands on
     $ends = ['b' => [340, 118], 'l' => [296, 170], 'c' => [340, 134], 'd' => [340, 205], 'r' => [464, 170], 'f' => [340, 222]];
     $nodes = [];
     $filled = [];
@@ -198,8 +198,8 @@ function getPresentationData(): array {
         ];
     }
     $cur = array_find($nodes, static fn(array $node): bool => $node['is_on'])['pos'] ?? _PRES_BL_CONTENT;
-    # The eight modules of the map: the ones a reader knows a CMS by come first, whatever their place in the config, and
-    # the rest follow in config order when the install lacks one of them
+    # The eight modules of the map: the ones a reader knows a CMS by come first, whatever their place in the config
+    # The rest follow in config order when the install lacks one of them
     $rank = array_flip(['account', 'search', 'forum', 'contact', 'voting', 'shop']);
     $keys = array_keys($conf['modules']);
     usort($keys, static fn(string $a, string $b): int => ($rank[$a] ?? count($rank)) <=> ($rank[$b] ?? count($rank)));
@@ -230,8 +230,8 @@ function getPresentationData(): array {
         require_once BASE_DIR.'/modules/changelog/common.php';
         $log = chlogLoadCommits($conf, [], '');
         $base = ($log['source'] === 'github') ? 'https://github.com/'.$chlog['ghowner'].'/'.$chlog['ghrepo'].'/commit/' : '';
-        # The chips of a commit are read off its subject: the kind before the colon, then the areas it names; the focus
-        # text is the first paragraph of its body
+        # The chips of a commit are read off its subject: the kind before the colon, then the areas it names
+        # The focus text is the first paragraph of its body
         $areas = ['presentation', 'theme', 'plugin', 'module', 'admin', 'template', 'cache', 'test', 'hero', 'contract', 'page', 'block', 'window', 'editor',
             'upload', 'oauth', 'profile', 'settings', 'rail', 'section', 'partial', 'fragment', 'palette', 'token', 'rig', 'viewer', 'plan', 'devtools'];
         foreach (array_slice($log['commits'], 0, 5) as $i => $row) {
@@ -282,8 +282,8 @@ function getPresentationData(): array {
     $npart = $share($fresh, $back + $fresh);
     $deep = $today['depth'];
     $dpart = $share((float)($deep['8+'] ?? 0), (float)array_sum($deep));
-    # The hours of a stand cluster around one visit, so the day is blended half and half with a typical diurnal profile
-    # carrying the day's own total: the burst stays visible, the sum stays the counted one, and the curve reads like a site
+    # The hours of a stand cluster around one visit, so the day is blended half and half with a typical diurnal profile carrying the day's own total
+    # The burst stays visible, the sum stays the counted one, and the curve reads like a site
     $profile = [2, 1, 1, 1, 1, 2, 3, 5, 7, 8, 9, 9, 8, 8, 8, 8, 9, 10, 10, 9, 8, 6, 4, 3];
     $daily = [];
     foreach ($today['hours'] as $h => $hits) $daily[] = (int)round($hits / 2 + $today['visits'] * $profile[$h] / (2 * array_sum($profile)));
@@ -292,9 +292,8 @@ function getPresentationData(): array {
     foreach ($daily as $hits) $hours[] = ['part' => $share($hits, $peak)];
     $prev = $week[count($week) - 2]['visits'] ?? 0;
     $diff = ($prev > 0) ? (int)round(($today['visits'] - $prev) * 100 / $prev) : 0;
-    # The monitor row reads what costs nothing on a public page: the CPU and RAM histories the admin sampler keeps, the disk
-    # from its own snapshot, the web server from the request; the core count and the uptime spawn a shell on Windows, so
-    # they show only when the sampler has stored them
+    # The monitor row reads what costs nothing on a public page: CPU and RAM histories of the admin sampler, the disk snapshot, the web server from the request
+    # The core count and the uptime spawn a shell on Windows, so they show only when the sampler has stored them
     $hcpu = $store['sys_hist_cpu'] ?? [];
     $hram = $store['sys_hist_ram'] ?? [];
     $cpu = (int)round((float)(end($hcpu) ?: 0));
@@ -311,8 +310,8 @@ function getPresentationData(): array {
     $state = $cache ? _PRES_STK_ACTIVE : _PRES_STK_OFF;
     $hit = $cache ? min(98, 84 + $today['visits'] % 13) : 0;
     $live = max($cnt['all'], 48 + $today['visits'] % 37);
-    # The two bands under the visits: the share the page cache answered and the rest that reached the database. Neither is
-    # counted per hour, so both are read off the visits through the hit ratio, which drifts a little from point to point
+    # The two bands under the visits: the share the page cache answered and the rest that reached the database
+    # Neither is counted per hour, so both are read off the visits through the hit ratio, which drifts a little from point to point
     $split = static function (array $visits, int $hit, int $shift): array {
         $rows = ['visits' => [], 'cache' => [], 'db' => []];
         foreach (array_values($visits) as $i => $hits) {
@@ -485,8 +484,8 @@ function getPresentationData(): array {
         ],
         'badge' => _PRES_GD_MODE, 'net' => _PRES_GD_NET, 'allow' => _PRES_GD_ALLOWBUS, 'deny' => _PRES_GD_DENY, 'track' => _PRES_GD_TRACK, 'scan' => _PRES_GD_SCAN,
         'quarantine' => _PRES_GD_QUARANT, 'caught' => (string)$events, 'entry' => _PRES_GD_ENTRY, 'pass' => _PRES_GD_ALLOW, 'block' => _PRES_GD_BLOCK,
-        # The requests the scene plays, in order: a staged mix of the traffic classes over the routes of this install, each
-        # bound for the window of the house it belongs to (a pane by number, or the door), the bad ones for quarantine
+        # The requests the scene plays, in order: a staged mix of the traffic classes over the routes of this install
+        # Each is bound for the window of the house it belongs to (a pane by number, or the door), the bad ones for quarantine
         'travellers' => array_map(static fn(array $t): array => [
             'tone' => $t[0], 'icon' => $t[1], 'label' => $t[2], 'text' => $t[3], 'zone' => $t[4], 'is_bad' => $t[5],
             'result' => $t[5] ? _PRES_GD_BLOCK.' → '._PRES_GD_QUARANT : $t[6], 'verdict' => $t[5] ? 'danger' : ($t[6] === _PRES_GD_CLASSIFY ? 'info' : 'success'),
@@ -530,8 +529,8 @@ function getPresentationData(): array {
         ],
         'note' => _PRES_GD_NOTE,
     ];
-    # The response spark: no request keeps a history of its generation time, so forty points breathe around the time of
-    # this one. The PDO cases: the four shapes a query takes in this install, played by the plugin over the real prefix
+    # The response spark: no request keeps a history of its generation time, so forty points breathe around the time of this one
+    # The PDO cases: the four shapes a query takes in this install, played by the plugin over the real prefix
     $spark = [];
     foreach (range(0, 39) as $i) $spark[] = (int)round($gen * (0.78 + sin($i * 0.55) * 0.14 + cos($i * 1.3 + 1) * 0.08));
     $case = static fn(string $verb, string $query, array $params, bool $prepared, bool $write, string $result, string $elapsed): array => [
@@ -629,9 +628,8 @@ function getPresentationData(): array {
             $ring((string)$dpart, '%', _PRES_ST_DEPTH, $dpart, 'sm', true),
         ],
     ];
-    # The scenarios the flow plays in turn: with the cache on a hit, a miss and a bypass, with it off one live render.
-    # Each names its mode, badge, route, the two lines of the core, the two words of the gate and the parser word of the
-    # module, the four states of the side grid with their tones, and the nodes the packet visits by number
+    # The scenarios the flow plays in turn: with the cache on a hit, a miss and a bypass, with it off one live render
+    # Each names mode, badge, route, two core lines, two gate words, the module parser word, four side grid states with tones and the node numbers the packet visits
     $flow = static fn(string $mode, string $badge, string $btone, string $route, string $sub, string $state, string $gatea, string $gateb, string $modb, array $states, array $tones, string $seq): array => [
         'mode' => $mode, 'badge' => $badge, 'btone' => $btone, 'route' => $route, 'sub' => $sub, 'state' => $state, 'gatea' => $gatea, 'gateb' => $gateb,
         'modb' => $modb, 'states' => implode('|', $states), 'tones' => implode('|', $tones), 'seq' => $seq,

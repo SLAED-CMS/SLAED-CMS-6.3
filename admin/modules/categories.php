@@ -384,7 +384,7 @@ function getCategoryRights(): array {
     $out = [];
     foreach (['pview' => '0|0', 'pread' => '0|0', 'ppost' => '0|0', 'preply' => '0|0', 'pedit' => '3|0', 'pdelete' => '3|0', 'pmod' => '3|0'] as $key => $def) {
         $list = array_values(array_filter(getVar('post', $key.'[]', '', []), fn(mixed $v): bool => is_string($v) && preg_match('/^[0-9]+\|[0-9]+$/D', $v)));
-        $out[$key] = $list ? scatacess($list) : $def;
+        $out[$key] = $list ? getCategoryAccess($list) : $def;
     }
     return $out;
 }

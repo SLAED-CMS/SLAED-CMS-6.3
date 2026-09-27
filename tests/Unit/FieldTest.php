@@ -15,7 +15,7 @@ use ReflectionNamedType;
 require_once dirname(__DIR__, 2).'/core/classes/field.php';
 
 /**
- * Stage S06 of docs/node: the shared Field class. The closed registry of ten types, the atomic check of definitions with
+ * The shared Field class. The closed registry of ten types, the atomic check of definitions with
  * the path of the first error, one normalization behind the check and the filter, the six machine codes, the hard
  * ceilings no option raises, and the shape of the class itself - six public methods, no constructor, no state.
  */

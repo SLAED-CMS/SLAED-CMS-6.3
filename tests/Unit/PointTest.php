@@ -6,8 +6,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Stage S01 of docs/node: the Point class is the one writer of the points journal and of the fast balance, and
- * docs/node/points.md is its contract. tests/Support/point_probe.php boots the real core in an isolated CLI process
+ * The Point class is the one writer of the points journal and of the fast balance, and
+ * docs/POINTS.md is its contract. tests/Support/point_probe.php boots the real core in an isolated CLI process
  * and drives the class against a disposable schema carrying the shipped account table and the shipped journal, so
  * the DDL of setup/sql/table.sql is executed by the same run. Every persistent result is read by a connection of
  * its own. The site database is never touched.
@@ -53,7 +53,7 @@ final class PointTest extends TestCase
         $this->assertSame(['active', 'actions'], array_keys($conf['points']), 'The points scope does not carry exactly active and actions');
         $this->assertSame('1', $conf['points']['active']);
         $want = array_map(static fn(array $one): array => ['points' => $one[0], 'period' => $one[1], 'limit' => $one[2]], self::ACTIONS);
-        $this->assertSame($want, $conf['points']['actions'], 'The shipped rules are not the fifteen starter rules of points.md');
+        $this->assertSame($want, $conf['points']['actions'], 'The shipped rules are not the fifteen starter rules of docs/POINTS.md');
         $this->assertArrayNotHasKey('rate', $conf['points']['actions'], 'A rating reward came back into the points scope');
         $this->assertTrue($this->getProbe()['clean'], 'The probe left its schema on the server');
     }

@@ -109,4 +109,53 @@ class PhpFileFormatTest extends TestCase
             "Проблемы с окончаниями строк:\n".implode("\n", $errors)
         );
     }
+
+    public function testPhpCommentsSingleLine(): void
+    {
+        $errors = [];
+
+        foreach (self::$phpFiles as $file) {
+            $relative = str_replace(DIRECTORY_SEPARATOR, '/', substr($file, strlen(self::$basePath) + 1));
+
+            if (!preg_match('#^((core|modules|blocks|admin|setup)/|[^/]+$)#', $relative)) {
+                continue;
+            }
+
+            foreach (self::getWrappedComments(file_get_contents($file)) as $line) {
+                $errors[] = "$relative:$line - комментарий продолжает предыдущую строку #";
+            }
+        }
+
+        $this->assertEmpty(
+            $errors,
+            "Перенесённые комментарии (.rules/global.md, Comments):\n".implode("\n", $errors)
+        );
+    }
+
+    public function testWrappedCommentIsDetected(): void
+    {
+        $code = "<?php\n# Reads the list of materials of one type,\n# ordered by date\n# Returns an empty array on failure\nfunction getList(): array { return []; }\n";
+
+        $this->assertSame([3], self::getWrappedComments($code));
+    }
+
+    private static function getWrappedComments(string $code): array
+    {
+        $lines = [];
+        $prev = 0;
+
+        foreach (token_get_all($code) as $token) {
+            if (!is_array($token) || $token[0] !== T_COMMENT || !str_starts_with($token[1], '#')) {
+                continue;
+            }
+
+            if ($prev === $token[2] - 1 && preg_match('/^#\s*[a-z]/', $token[1])) {
+                $lines[] = $token[2];
+            }
+
+            $prev = $token[2];
+        }
+
+        return $lines;
+    }
 }

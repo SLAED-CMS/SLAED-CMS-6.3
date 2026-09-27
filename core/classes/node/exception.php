@@ -7,7 +7,6 @@
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
 # The only error of the public Node API; the cause is the standard code, the message is for the log and never reaches a visitor
-# The module maps each code to its own HTTP status and localized text, and a storage failure carries the original exception as previous
 final class NodeException extends RuntimeException {
 
     # The material or a related entity that an operation has to change does not exist

@@ -2,7 +2,7 @@
 # 2005 - 2026 SLAED
 # License: MIT
 # Website: slaed.net
-# Compatible: MySQL 8.0+ & MariaDB 10+
+# Compatible: MySQL 8.0.16+ & MariaDB 10.5.2+
 
 INSERT INTO `{prefix}_blocks` VALUES
 (1, '', 'Навигация', '', '', 'r', 2, 1, 0, '', '', 'modules.php', 0, '0', 'd', 'all', ''),

@@ -135,8 +135,8 @@ class Comment {
         $this->getNodeWriter()->updateNodeComments($cid, $type, $this->getLiveCount($mod, $cid));
     }
 
-    # Let the extension of a Node type follow the first publication of one comment inside the open transaction, told whose reply it is: the author of the comment,
-    # never the moderator who published it; a material that is no longer readable is left alone
+    # Let the extension of a Node type follow the first publication of one comment inside the open transaction, told whose reply it is: its author, not the publishing moderator
+    # A material that is no longer readable is left alone
     # A reply in a request of support whose author moderates the type in the same request and does not own the request rewards him with moderate, once per request
     private function updateNodeAction(NodeType $type, string $mod, int $cid, int $uid, int $id): void {
         $ext = $this->getNodeHandler($type);
@@ -309,8 +309,8 @@ class Comment {
     }
 
     # Return the published comments of one account, newest first, for the activity feed of a profile
-    # A comment on a Node material appears only when the viewer may read that material, checked for a whole slice with one batch read of the targets;
-    # the slices follow the id downward until the limit is filled, at most ten of them, so private replies of support never shorten the feed of a busy writer to nothing
+    # A comment on a Node material appears only when the viewer may read that material, checked for a whole slice with one batch read of the targets
+    # The slices follow the id downward until the limit is filled, at most ten of them, so private replies of support never shorten the feed of a busy writer to nothing
     public function getUserList(int $uid, int $limit): array {
         if ($uid < 1 || $limit < 1) return [];
         $size = min(intval($limit), 500);
@@ -339,10 +339,27 @@ class Comment {
     }
 
     # Count the published comments of one account, the number the profile hub shows beside the counters of the other modules
+    # A comment on a Node material counts by the rule of the feed: only when the viewer may read that material, checked per target in parts of one batch read of the reader
     public function getUserCount(int $uid): int {
+        global $conf;
         if ($uid < 1) return 0;
-        $from = PREFIX_DB.'_comment WHERE uid = :uid AND status = :stat AND deleted IS NULL';
-        return $this->getTotal($from, ['uid' => $uid, 'stat' => CommentStatus::Published->value]);
+        $sql = 'SELECT modul, cid, COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE uid = :uid AND status = :stat AND deleted IS NULL GROUP BY modul, cid';
+        $rows = $this->db->getSqlRows($this->db->getSqlQuery($sql, ['uid' => $uid, 'stat' => CommentStatus::Published->value])) ?: [];
+        $sum = 0;
+        $refs = [];
+        foreach ($rows as $row) {
+            if (!$this->checkNodeKind($row['modul'])) $sum += intval($row['num']);
+            elseif (intval($row['cid']) > 0) $refs[intval($row['cid'])] = [$row['modul'], intval($row['num'])];
+        }
+        foreach (array_chunk($refs, max(1, min(500, $conf['node']['limits']['syncbatch'] ?? 500)), true) as $part) {
+            try {
+                $open = $this->getNodeReader()->getNodeTargetList(array_map(fn(array $v): string => $v[0], $part));
+            } catch (NodeException) {
+                $open = [];
+            }
+            foreach ($part as $cid => $one) if (isset($open[$cid])) $sum += $one[1];
+        }
+        return $sum;
     }
 
     # Count the comments in one moderation state across every module, the number the waiting-content chip of the admin sidebar shows
@@ -521,8 +538,8 @@ class Comment {
     # Publish or hide one comment as a moderator of the module the stored row names, move the counter of its target with it and award a first publication
     # The state is changed by a conditional update rather than by a read followed by a write, so two parallel requests cannot both count the same transition
     # The wanted state is bound twice under two names because a native prepared statement rejects one named placeholder used in two positions
-    # A comment of a Node material locks the material before its own row and writes the live counter of the material inside the same transaction,
-    # and only its first publication, which shown records once and never clears, is followed by the extension of the type: publishing again after a hide is no new reply
+    # A comment of a Node material locks the material before its own row and writes the live counter of the material inside the same transaction
+    # Only its first publication, which shown records once and never clears, is followed by the extension of the type: publishing again after a hide is no new reply
     # That first publication of a foreign comment rewards the moderator with moderate; the award is not taken back when the comment is hidden or removed
     # A publication of a comment whose material is gone is refused, and a failed counter, extension or award rolls the whole moderation back and is logged
     public function setStatus(int $id, bool $open): bool {

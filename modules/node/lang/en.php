@@ -24,7 +24,6 @@ define('_NODE_PERIOD','Check period, seconds');
 define('_NODE_PHIGH','High');
 define('_NODE_PLOW','Low');
 define('_NODE_PNORM','Normal');
-define('_NODE_PRIO','Priority');
 define('_NODE_PURGE','Urgent');
 define('_NODE_RELATED','Related materials');
 define('_NODE_RELHINT','Numbers of the materials, separated by commas');

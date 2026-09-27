@@ -8,9 +8,9 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Stages S19.3 and S20.3 of docs/node: the integrity fixes that only a real request reaches. The behaviour is driven by tests/Support/route_probe.php with the
- * argument intact: the disposable database and scratch configuration of the S16 integrations with the points of the data update switched on, real HTTP
- * requests of the main administrator, a user and a guest, and the rows each request leaves checked by SQL. The class side of the stage - comments of a
+ * The integrity rules that only a real request reaches. The behaviour is driven by tests/Support/route_probe.php with the
+ * argument intact: the disposable database and scratch configuration of the integrations with the points of the data update switched on, real HTTP
+ * requests of the main administrator, a user and a guest, and the rows each request leaves checked by SQL. The class side of these rules - comments of a
  * deleted material, remains of gone owners, the journal after a commit - is held by NodeServiceTest and NodeConfigTest.
  */
 final class NodeIntegrityTest extends TestCase
@@ -78,11 +78,26 @@ final class NodeIntegrityTest extends TestCase
         $this->assertSame([303, true, [0, 0, 2, 2]], $run['annul']['again'], 'A repeated annulment moved the aggregate');
     }
 
-    # S20.3: the category screen decides by the registry of types, so a category of a type whose configuration no longer reads is refused rather than
+    # The category screen decides by the registry of types, so a category of a type whose configuration no longer reads is refused rather than
     # deleted by the raw statements of an old module; once the type reads again the same request deletes it through the writer
     #[Test]
     public function aCategoryOfABrokenTypeIsNotDeletedRaw(): void
     {
         $this->assertSame([true, 303, 1, [303, 0]], $this->getRun()['broken'], 'The category of a broken type went the raw way or a healthy one stayed');
+    }
+
+    # A star posted while a parallel request holds the account with the last free favorite waits for it, counts again and adds nothing past the limit
+    #[Test]
+    public function aFavoriteAtTheLimitIsCountedAgainUnderTheLock(): void
+    {
+        $this->assertSame([true, 'held', 200, 2, 0], $this->getRun()['favrace'], 'Two parallel stars passed the limit of favorites together');
+    }
+
+    # A loop stored in the categories of a type no longer spins the category screen or RSS, and the form of a material keeps its category from the loop;
+    # a branch under a lost parent stands at the top level with its subcategory indented below it
+    #[Test]
+    public function aStoredCategoryLoopKeepsThePagesAlive(): void
+    {
+        $this->assertSame([200, true, 200, true, true, true, true, true], $this->getRun()['ring'], 'A stored loop of categories hung a page or dropped the category of a material');
     }
 }

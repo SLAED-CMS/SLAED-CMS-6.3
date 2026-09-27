@@ -35,9 +35,9 @@ class Parser {
     private bool $vary = false;
 
     # Parse src through the pipeline; heading offset raises Markdown levels inside an already titled container and caps them at H6
-    # The format names how the source is to be read, not who wrote it: plain recognizes no Markdown construct and turns every line ending into a break, breaks is Markdown that
-    # also breaks on a single line ending, and anything else is plain Markdown, where a lone line ending joins the lines around it
-    # breaks is what a conversation channel asks for: a reader of a comment or a message typed the line endings they meant, and every one of them renders the same way whoever wrote it
+    # The format names how the source is to be read, not who wrote it: plain recognizes no Markdown construct and turns every line ending into a break
+    # The breaks format is Markdown that also breaks on a single line ending, and anything else is plain Markdown, where a lone line ending joins the lines around it
+    # A conversation channel asks for breaks: a reader of a comment or a message typed the line endings they meant, and every one renders the same way whoever wrote it
     # A positive nid names the stored Node material the text belongs to: its attachments then point at the controlled attach route of the type instead of the closed directory
     # Trust makes a safe rendering honour the trusted tags: only what [usehtml] and [usephp] enclose becomes markup or runs, everything around them stays escaped
     public function filterDoc(string $src, bool $safe = true, string $mod = '', int $hoff = 0, string $fmt = '', int $nid = 0, bool $trust = false): string {
@@ -473,8 +473,8 @@ class Parser {
     }
 
     # Process BB block tags: bracket-free *NN smilies first, then behind the [ guard: [hr], [li], [usehtml], [usephp], [tabs], [code], [php], [quote]/[hide]/alignment, [attach=]
-    # Both trusted tags act in trusted rendering and in a safe rendering that trusts its tags; the right to author them belongs to the super administrator alone and is settled
-    # by filterTrustedTags() at every write
+    # Both trusted tags act in trusted rendering and in a safe rendering that trusts its tags
+    # The right to author them belongs to the super administrator alone and is settled by filterTrustedTags() at every write
     private function filterBbBlocks(string $src): string {
         if (preg_match('/(?<!\*)\*(0[1-9]|1[0-8])(?!\d)/', $src)) {
             $src = preg_replace_callback(

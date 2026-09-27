@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Stage S12 of docs/node: the one file answer of the project, getFileStream(), and the private revalidation of Cache it
+ * The one file answer of the project, getFileStream(), and the private revalidation of Cache it
  * rides on. Every case is a real HTTP exchange with the built-in web server running tests/Support/web_probe.php, which
  * serves scratch fixtures through the shipped function: the compatible two-argument download, the closed inline registry,
  * the private cache with entity tag and date, HEAD, one byte range, If-Range, 416, the $start callback and the bounded

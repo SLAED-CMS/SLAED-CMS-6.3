@@ -54,7 +54,7 @@ final class PageCacheContractTest extends TestCase
         return self::$probes[$mode] = $data;
     }
 
-    # Run the comment writer of stage S19.4 through tests/Support/route_probe.php: a disposable database, a real HTTP stand and a child that writes as the admin entry
+    # Run the comment writer through tests/Support/route_probe.php: a disposable database, a real HTTP stand and a child that writes as the admin entry
     private function getCommentRun(): array
     {
         if (isset(self::$probes['comment'])) return self::$probes['comment'];

@@ -10,7 +10,7 @@ use ReflectionClass;
 use ReflectionMethod;
 
 /**
- * Stage S11 of docs/node: NodeService writes materials. Create, preview, change, the moves of the state matrix and the
+ * NodeService writes materials. Create, preview, change, the moves of the state matrix and the
  * physical delete with their categories, fields, relations and resources; the tree and the external link under the lock of
  * the type; counters, reports and the delivery of future publications with Point; the categories of a type and the
  * moderator right node-<name> of the upload helpers. Every behaviour is driven by tests/Support/node_probe.php in its
@@ -185,7 +185,7 @@ final class NodeServiceTest extends TestCase
         $this->assertSame(0, $run['guards'], 'A write left a cache guard behind');
     }
 
-    # Update: the stale, the foreign and the forged are refused without a trace; a moderator replaces every full set, keeps author, address and inactive field
+    # Update: the stale, the foreign, the forged and a mere author are refused without a trace; a moderator replaces every full set, keeps author, address and inactive field
     #[Test]
     public function anUpdateReplacesTheFullSetsAtTheExpectedVersion(): void
     {
@@ -204,6 +204,9 @@ final class NodeServiceTest extends TestCase
             $full['assets']));
         $cleared = $run['cleared']['value'];
         $this->assertSame([3, [], [], []], [$cleared['version'], $cleared['cids'], $cleared['rels'], $cleared['assets']], 'Empty full sets do not clear');
+        $this->assertRefused($run['author'], 2, 'The context moderates no material', 'The author of a pending material');
+        $this->assertRefused($run['authormod'], 2, 'The context does not moderate the type', 'The author who moderates another type');
+        $this->assertTrue($run['authorsame'], 'A refused update of the author changed something');
         $keep = $run['keep']['value'];
         $this->assertSame([2, '127.0.0.1', 'Edited', 'Pending'], [$keep['uid'], $keep['ip'], $keep['title'], $keep['status']], 'A moderator took over author or address');
         $this->assertSame(['old' => 'keep', 'release' => '2.0'], $run['fields']['value'], 'Inactive values, hidden input and unknown names');
@@ -261,7 +264,7 @@ final class NodeServiceTest extends TestCase
         $this->assertSame(['nodes' => 0, 'node_assets' => 0, 'node_categories' => 0], $run['rows']);
         $this->assertTrue($run['file'], 'The delete removed the file a resource pointed at');
         $this->assertSame([], $run['child'], 'The parent link of a child survived the delete of its parent');
-        $this->assertSame(7, $run['sqlnode'], 'The statements of a physical delete, the favorites and the locking read of the comments of the material included');
+        $this->assertSame(8, $run['sqlnode'], 'The statements of a physical delete, the favorites and the locking reads of the resources and comments included');
     }
 
     # Full sets: the limits of categories and relations by the sync batch and of resources by maxassets, the roles, the shapes and the kinds
@@ -326,7 +329,7 @@ final class NodeServiceTest extends TestCase
     }
 
     # Publication: a future date gets its job and no points, the job is delivered exactly once by the background context after its date,
-    # and every move, cancel, absorbed reward, missing author, inactive type, recoverable failure, parallel run and crash follows 03-database.md
+    # and every move, cancel, absorbed reward, missing author, inactive type, recoverable failure, parallel run and crash follows docs/NODE.md (Material states)
     #[Test]
     public function aFuturePublicationIsDeliveredOnceByTheScheduler(): void
     {
@@ -557,8 +560,8 @@ final class NodeServiceTest extends TestCase
         $this->assertSame(['ok' => true, 'value' => 0], $run['clear']);
     }
 
-    # The file of an attachment (S12): a stored material grants the names of its own intro and body to a reader, in two statements with the type; a thumb only after
-    # its original and only when it exists; the preview of NOD-199 grants the files of the visitor and every file to a moderator without SQL; each refusal is the same ''
+    # The file of an attachment: a stored material grants the names of its own intro and body to a reader, in two statements with the type; a thumb only after
+    # its original and only when it exists; a preview grants the files of the visitor and every file to a moderator without SQL; each refusal is the same ''
     #[Test]
     public function anAttachmentFileIsGrantedByItsMaterialOrItsOwner(): void
     {
@@ -589,11 +592,12 @@ final class NodeServiceTest extends TestCase
         $this->assertStringNotContainsString('getNodeTypeMap()', $code, 'The screen decides a Node category by the type map, which skips a broken type');
         $this->assertStringNotContainsString('_nodes', $code, 'The category screen touches a Node table itself');
         $mods = self::getBody('core/helpers.php', 'getCategoryModules');
-        $this->assertStringContainsString("array_filter(getNodeTypeMap(), fn(NodeType \$v): bool => \$v->settings['features']['categories'])", $mods, 'The category modules miss the Node types');
+        $this->assertStringContainsString("array_filter(getNodeTypeMap(), fn(NodeType \$v): bool => \$v->settings['features']['categories'])", $mods,
+            'The category modules miss the Node types');
         $this->assertStringContainsString("array_merge(['forum', 'shop'], array_keys(\$types))", $mods);
     }
 
-    # S19.3: the comments of a deleted material leave inside its transaction with every award compensated, and a failed comment step keeps the material;
+    # The comments of a deleted material leave inside its transaction with every award compensated, and a failed comment step keeps the material;
     # one link cannot come twice in one input, the publication of an expired material and a closed points configuration are handled, a moderator reads any state
     #[Test]
     public function theIntegrityFixesHold(): void
@@ -622,7 +626,7 @@ final class NodeServiceTest extends TestCase
         $this->assertSame(['ok' => true, 'value' => null], $run['target']['off'][1]);
     }
 
-    # S20.3: a compensation Point refuses rolls the delete back with its comments and journal, a closed points configuration deletes without it and logs;
+    # A compensation Point refuses rolls the delete back with its comments and journal, a closed points configuration deletes without it and logs;
     # a comment of a material gone or closed between the check and the lock is refused without a row or points, a lost points unit rolls the comment back
     # and is logged, and the publication of a pending comment of a material that is gone is refused while one of a live material is rewarded
     #[Test]
@@ -639,5 +643,83 @@ final class NodeServiceTest extends TestCase
         $this->assertSame([false, 0, 0, false, 0, 1], $user['lost'], 'A lost points unit kept the comment, its transaction or its guard, or logged nothing');
         $this->assertSame([false, 0, 0], $run['root']['orphan'], 'A pending comment of a material that is gone was published');
         $this->assertSame([true, 1, 1], $run['root']['live'], 'A pending comment of a live material was not published and rewarded');
+    }
+
+    # A parent below the category itself or on a stored loop is refused and a valid move passes; a deletion takes the whole subtree or, with a main
+    # category anywhere in it, nothing, and leaves no subcategory without its parent; a category of the forum with topics never becomes a category of a type
+    #[Test]
+    public function theCategoryTreeStaysATree(): void
+    {
+        $run = $this->getRuns()['branch'];
+        foreach (array_slice($run['loop'], 0, 4) as $i => $call) $this->assertInvalid($call, 'category.parent', 'loop '.$i);
+        $this->assertSame(['ok' => true, 'value' => null], $run['loop'][4], 'A valid move under an ancestor was refused');
+        $this->assertInvalid($run['add'], 'category.parent', 'a new category under a stored loop');
+        $this->assertSame([0, 30, 31, 30], $run['parents'], 'A refused parent was stored');
+        $this->assertInvalid($run['used'][0], 'category.used', 'a subtree with a main category in a grandchild');
+        $this->assertSame([0, 30, 31, 30], array_slice($run['used'], 1), 'A refused deletion removed part of the subtree');
+        $this->assertSame([['ok' => true, 'value' => null], null, null, null, null], $run['tree'], 'The deletion left part of the subtree');
+        $this->assertSame(['version' => 2, 'cids' => []], $run['extra'], 'The extra link of a grandchild left without a new version of its material');
+        $this->assertSame(0, $run['orphans'], 'A category outlived its parent');
+        $this->assertInvalid($run['forum'][0], 'category.used', 'a forum category with topics');
+        $this->assertSame(['forum', ['ok' => true, 'value' => null], 'news'], array_slice($run['forum'], 1), 'The forum category moved with its topics or not at all');
+    }
+
+    # A report decision holding its resource and the deletion of the material in another session meet without a deadlock; both land
+    #[Test]
+    public function aReportDecisionAndADeleteDoNotDeadlock(): void
+    {
+        $run = $this->getRuns()['cross'];
+        $this->assertSame(['ok' => true, 'value' => null], $run['decide'], 'The report decision failed beside the deletion');
+        $this->assertSame(['ok' => true, 'value' => null], $run['delete'], 'The deletion failed beside the report decision');
+        $this->assertSame([false, 0, 1], $run['after'], 'The material or its resource stayed, or the useful report was not rewarded');
+    }
+
+    # A feature is not switched off while the type holds its data, and the materials keep their categories and links
+    #[Test]
+    public function aFeatureStaysOnWhileTheTypeHoldsItsData(): void
+    {
+        $run = $this->getRuns()['model'];
+        foreach (['categories', 'tree', 'related'] as $key) {
+            $this->assertSame(['ok' => false, 'code' => 3, 'class' => 'NodeException', 'msg' => 'Invalid node input: features.'.$key], $run['features'][$key], $key);
+        }
+        [$news, $docs, $parent, $related, $cid] = $run['kept'];
+        $this->assertSame([true, true, 10], [$news, $docs, $cid], 'A refused switch changed the type or the category of a material');
+        $this->assertGreaterThan(0, $parent, 'The parent link of the material was lost');
+        $this->assertGreaterThan(0, $related, 'The related link of the material was lost');
+        $this->assertTrue($run['free']['ok'], 'A feature without data could not be switched off');
+    }
+
+    # A new external address of a visitor goes to moderation with its material, and a category hidden from the visitor takes no post, preview included
+    #[Test]
+    public function aVisitorWritesOnlyWhatModerationAndTheCategorySee(): void
+    {
+        $run = $this->getRuns()['model'];
+        $this->assertSame(['ok' => false, 'code' => 3, 'class' => 'NodeException', 'msg' => 'Invalid node input: assets.0.src'], $run['external']['direct']);
+        $this->assertSame([['ok' => true, 'value' => 'Pending'], ['ok' => true, 'value' => 'Published']], [$run['external']['pending'], $run['external']['root']]);
+        $deny = ['ok' => false, 'code' => 2, 'class' => 'NodeException', 'msg' => 'The context may not post into the category'];
+        $this->assertSame([$deny, $deny], [$run['hidden']['anna'], $run['hidden']['preview']], 'A visitor posted into a category hidden from the visitor');
+        $this->assertSame([['ok' => true, 'value' => 25], ['ok' => true, 'value' => 25]], [$run['hidden']['boris'], $run['hidden']['mixed']]);
+    }
+
+    # An own report earns its moderator nothing, a file replaced by a link starts without metadata and hits, and the profile counts what its feed shows
+    #[Test]
+    public function reportsResourcesAndProfilesFollowTheModel(): void
+    {
+        $run = $this->getRuns()['model'];
+        $this->assertSame([['ok' => true, 'value' => null], []], [$run['own'], $run['ownpoints']], 'An own report earned an award');
+        $this->assertSame(['manual-abcdefghij-2.pdf', 'application/pdf', 1], [$run['file']['src'], $run['file']['mime'], $run['file']['hits']]);
+        $this->assertSame(['ok' => true, 'value' => 2], $run['swap']);
+        $this->assertSame(['src' => 'https://example.com/moved.zip', 'mime' => null, 'size' => null, 'hits' => 0], $run['link'], 'The link kept the metadata of the file');
+        $this->assertSame([true, 2, 2], $run['profile'], 'The profile count differs from its feed or counts a hidden material');
+    }
+
+    # A delete of a material with an extension locks the comments before its first plain read, so a comment edited meanwhile is no 1020
+    #[Test]
+    public function aDeleteLocksTheCommentsBeforeItsFirstRead(): void
+    {
+        $run = $this->getRuns()['snap'];
+        if (!$run['snapshot']) $this->markTestSkipped('The server has no innodb_snapshot_isolation');
+        $this->assertSame(['ok' => true, 'value' => null], $run['delete'], 'The delete failed on a comment edited before its lock');
+        $this->assertSame([0, 0, [['delete', true]], true], $run['after'], 'The material, its comment or the extension row stayed, or the edit never ran');
     }
 }

@@ -4,20 +4,22 @@
 # License: MIT
 # Website: slaed.net
 
-# CLI probe for stages S13 and S14 of docs/node: the public and administrative routes of Node answered by the real index.php and admin.php over real HTTP
+# CLI probe for the public and administrative routes of Node answered by the real index.php and admin.php over real HTTP
 # It builds one disposable MariaDB database from the shipped table.sql, a scratch copy of the configuration that registers four types, a scratch upload root with the
 # guards of the release, and serves the tree with the built-in server and tests/Support/route_web.php as router; every exchange is a real request with its own cookies
 # The report answers what each exchange returned and what the database, the cache and the files hold afterwards; nothing touches the site database or directories
-# The second argument support runs the comments of Node and the private requests of the support type instead of the routes of S13; the child modes comments and ext
+# The second argument support runs the comments of Node and the private requests of the support type instead of the base routes; the child modes comments and ext
 # boot the core on the same scratch configuration and database as one visitor and ask the comment subsystem and the class NodeSupport directly
-# The argument sync runs the external materials of stage S15 with two types of the extension sync; its child mode syncext asks NodeSync with a scripted transport
-# The argument integ runs the integrations of stage S16 - rating, favorites, poll, search, RSS, blocks and their settings - and its child integext the sitemap
-# The argument guard runs the closed routes of stage S19.1 on the same integrations, and its child guardext asks the service for the right of polls
-# The argument intact runs the integrity fixes of stage S19.3 on the same integrations: point corrections, the block save and vote annulments
-# The argument cache runs the comment writer of stage S19.4 against the page cache, and its child cachecom approves a comment as the administrative entry does
-# The argument secure runs the public form of stage S20.1 on the same integrations: the upload right and limits, the write window, the captcha and the title in search
-# The argument tree runs the document tree of stage S20.4 on docs switched to the tree, and its child treeext counts the statements of the tree read of one view
-# The argument modes runs the display modes of stage S20.6 on five types; serve modes keeps a server with the same types up until the file stop appears
+# The argument sync runs the external materials with two types of the extension sync; its child mode syncext asks NodeSync with a scripted transport
+# The argument integ runs the integrations - rating, favorites, poll, search, RSS, blocks and their settings - and its child integext the sitemap
+# The argument guard runs the closed routes on the same integrations, and its child guardext asks the service for the right of polls
+# The argument intact runs the integrity checks on the same integrations: point corrections, the block save and vote annulments
+# The argument cache runs the comment writer against the page cache, and its child cachecom approves a comment as the administrative entry does
+# The argument secure runs the public form on the same integrations: the upload right and limits, the write window, the captcha and the title in search
+# The argument tree runs the document tree on docs switched to the tree, and its child treeext counts the statements of the tree read of one view
+# The argument modes runs the display modes on five types; serve modes keeps a server with the same types up until the file stop appears
+# The argument seo runs the canonical routes, the head and the feeds, and its child seoext asks the core for the letters of an empty shop and the feeds
+# The argument head runs the routes, the notices, the page cache and the theme header
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
     exit;
@@ -25,7 +27,7 @@ if (PHP_SAPI !== 'cli') {
 error_reporting(E_ALL);
 ini_set('display_errors', '0');
 $rwork = str_replace('\\', '/', (string)($argv[1] ?? sys_get_temp_dir().'/slaed_node_route'));
-if (in_array($argv[2] ?? '', ['view', 'comments', 'ext', 'syncext', 'integext', 'guardext', 'cachecom', 'treeext'], true)) {
+if (in_array($argv[2] ?? '', ['view', 'comments', 'ext', 'syncext', 'integext', 'guardext', 'cachecom', 'treeext', 'seoext'], true)) {
     $probework = $rwork.'/child';
     if (in_array($argv[2], ['syncext', 'cachecom'], true)) define('COUNTER_DIR', $rwork.'/counter');
     foreach (['CONFIG_DIR' => 'config', 'BACKUP_DIR' => 'backup', 'CACHE_DIR' => 'cache', 'UPLOADS_DIR' => 'uploads'] as $rkey => $rdir) define($rkey, $rwork.'/'.$rdir);
@@ -34,7 +36,8 @@ if (in_array($argv[2] ?? '', ['view', 'comments', 'ext', 'syncext', 'integext', 
     if (($argv[2] ?? '') === 'cachecom') setRouteChild('root');
     require_once BASE_DIR.'/core/system.php';
     $rchild = ['view' => 'getRouteViewData', 'comments' => 'getRouteCommentData', 'ext' => 'getRouteExtData', 'syncext' => 'getRouteSyncData',
-        'integext' => 'getRouteIntegData', 'guardext' => 'getRouteGuardData', 'cachecom' => 'getRouteComData', 'treeext' => 'getRouteTreeData'][$argv[2]];
+        'integext' => 'getRouteIntegData', 'guardext' => 'getRouteGuardData', 'cachecom' => 'getRouteComData', 'treeext' => 'getRouteTreeData',
+        'seoext' => 'getRouteSeoData'][$argv[2]];
     echo json_encode($rchild());
     exit;
 }
@@ -169,8 +172,8 @@ function addRouteRows(PDO $pdo): void {
         .' (3, \'boss\', \'boss@probe.test\', \'hash-boss\', 0, 0, \'node\', \'127.0.0.1\'),'
         .' (4, \'docsman\', \'docsman@probe.test\', \'hash-docsman\', 0, 0, \'node-docs\', \'127.0.0.1\'),'
         .' (5, \'helper\', \'helper@probe.test\', \'hash-helper\', 0, 1, \'node-help,comments\', \'127.0.0.1\')');
-    $pdo->exec('INSERT INTO '.$pre.'categories (id, modul, title, intro, pread, ppost, lang) VALUES (1, \'news\', \'Open\', \'\', \'0|0\', \'1|0\', \'\'),'
-        .' (2, \'news\', \'Members\', \'\', \'1|0\', \'1|0\', \'\'), (3, \'help\', \'Desk\', \'\', \'1|0\', \'1|0\', \'\')');
+    $pdo->exec('INSERT INTO '.$pre.'categories (id, modul, title, intro, pview, pread, ppost, lang) VALUES (1, \'news\', \'Open\', \'\', \'0|0\', \'0|0\', \'1|0\', \'\'),'
+        .' (2, \'news\', \'Members\', \'\', \'1|0\', \'1|0\', \'1|0\', \'\'), (3, \'help\', \'Desk\', \'\', \'1|0\', \'1|0\', \'1|0\', \'\')');
     $pdo->exec('INSERT INTO '.$pre.'node_types (id, name, title, intro, ext, active, sort, version) VALUES (1, \'news\', \'News\', \'\', \'\', 1, 10, 1),'
         .' (2, \'docs\', \'Docs\', \'\', \'\', 1, 20, 1), (3, \'off\', \'Off\', \'\', \'\', 0, 30, 1), (4, \'help\', \'Help\', \'\', \'support\', 1, 40, 1)');
     $rows = [
@@ -371,7 +374,8 @@ function getRouteAttach(): array {
     ];
 }
 
-# The structured resources: an image shown without counting, a download counted before a whole body or a range from zero only, an external visit counted before its redirect
+# The structured resources: an image shown without counting, a download counted before a whole body or a range from zero only, an external visit counted before its redirect,
+# and an external image address, which its page shows itself, no redirect at all
 function getRouteAssets(PDO $pdo): array {
     $img = getRouteReply('', 'GET', 'index.php?name=news&op=asset&id=1');
     $out = ['image' => [$img['code'], $img['head']['content-type'] ?? '', getRouteHits($pdo, 1)]];
@@ -386,6 +390,11 @@ function getRouteAssets(PDO $pdo): array {
     $out['unmet'] = [$bad['code'], getRouteHits($pdo, 2)];
     $link = getRouteReply('', 'GET', 'index.php?name=news&op=asset&id=3');
     $out['link'] = [$link['code'], $link['head']['location'] ?? '', getRouteHits($pdo, 3)];
+    $pdo->exec('INSERT INTO '.RPREF.'_node_assets (id, nid, kind, role, src, name, intro, hits, sort) VALUES (4, 101, \'image\', \'cover\', \'https://example.com/p.png\','
+        .' \'\', \'\', 0, 1)');
+    $shown = getRouteReply('', 'GET', 'index.php?name=news&op=asset&id=4');
+    $out['shown'] = [$shown['code'], $shown['head']['location'] ?? '', getRouteHits($pdo, 4)];
+    $pdo->exec('DELETE FROM '.RPREF.'_node_assets WHERE id = 4');
     $out['foreign'] = [getRouteReply('', 'GET', 'index.php?name=docs&op=asset&id=2')['code'], getRouteReply('', 'GET', 'index.php?name=news&op=asset&id=99')['code']];
     $out['direct'] = getRouteReply('', 'GET', 'uploads/news/manual-dddddddddd.pdf')['code'];
     return $out;
@@ -555,7 +564,7 @@ function getRouteTypes(PDO $pdo, string $work): array {
 }
 
 # The data contract of the view preparer on the materials of the probe, read in a child process that boots the core on the scratch configuration and database
-# Every mode answers exactly the keys of 05-core-api.md; a target answers the same keys empty; the resources carry no source, report or reporter; foreign pairs are refused
+# Every mode answers exactly the keys of docs/NODE.md (NodeView keys); a target answers them empty; the resources carry no source, report or reporter; foreign pairs are refused
 function getRouteViewData(): array {
     global $db, $prs, $fld;
     $keys = ['id', 'type', 'mode', 'href', 'title', 'intro', 'intro_html', 'body_html', 'author', 'ahref', 'ctitle', 'chref', 'date', 'date_iso', 'mtime_iso', 'views', 'comnum',
@@ -1017,7 +1026,8 @@ function getRouteSyncData(): array {
     $rss = fn(string $title, array $head = []): array => ['code' => 200, 'headers' => $head + ['Content-Type' => ['application/rss+xml']], 'body' => '<?xml version="1.0"?>'
         .'<rss version="2.0"><channel><title>C</title><item><title>'.$title.'</title><link>https://example.com/1</link></item></channel></rss>'];
     $ext = new NodeSync($db, $root, new Feed($conf['rss'], $send));
-    $out = ['config' => [getRouteCall(fn() => $ext->filterNodeConfig([], $type->settings, [])), getRouteCall(fn() => $ext->filterNodeConfig(['x' => 1], $type->settings, []))]];
+    $out = ['config' => [getRouteCall(fn() => $ext->filterNodeConfig([], $type->settings, [])), getRouteCall(fn() => $ext->filterNodeConfig(['x' => 1], $type->settings, [])),
+        getRouteCall(fn() => $ext->filterNodeConfig([], array_replace_recursive($type->settings, ['features' => ['submit' => true]]), []))]];
     $data = fn(array $in): array => getRouteCall(fn() => $ext->filterNodeData($type, $in));
     $out['input'] = [
         'good' => $data(['refresh' => 0, 'url' => ' https://EXAMPLE.com:443/a|b?q=1#top ']),
@@ -1125,7 +1135,7 @@ function getRouteHold(string $work): array {
         'index.php?name=news')['code'], $early];
 }
 
-# The integrations of stage S16 on two types: news rates, keeps favorites, links a poll, marks home materials and feeds search, RSS, sitemap and blocks;
+# The integrations on two types: news rates, keeps favorites, links a poll, marks home materials and feeds search, RSS, sitemap and blocks;
 # docs feeds search, sitemap and blocks without RSS, rating or favorites; a poll, a home mark and three instances of the file block node.php are seeded
 function addRouteIntegTypes(PDO $pdo, string $work): void {
     $pre = RPREF.'_';
@@ -1152,11 +1162,17 @@ function getRouteRate(PDO $pdo, int $id): array {
     return [(int)getRouteCol($pdo, $id, 'score'), (int)getRouteCol($pdo, $id, 'ratings'), $cnt('rating_votes'), $cnt('rating_actors')];
 }
 
-# The live token a page hands its rating widget, and the address of the favorite switch it offers
+# The live token a page hands its rating widget, the address of the favorite switch it offers and the header token the switch posts with
 function getRoutePageBits(string $html): array {
     $tok = preg_match('#"token": "([A-Za-z0-9]+)"#', $html, $hit) ? $hit[1] : '';
-    $fav = preg_match('#hx-get="(index\.php\?go=1&amp;op=addFavorite[^"]+)"#', $html, $hit) ? html_entity_decode($hit[1]) : '';
-    return [$tok, $fav];
+    $fav = preg_match('#hx-post="(index\.php\?go=1&amp;op=addFavorite[^"]+)"#', $html, $hit) ? html_entity_decode($hit[1]) : '';
+    $ftok = preg_match('#op=addFavorite[^"]+"[^>]*"X-CSRF-TOKEN": "([A-Za-z0-9]+)"#', $html, $hit) ? $hit[1] : '';
+    return [$tok, $fav, $ftok];
+}
+
+# Post the favorite switch the way the star does: an empty body and the token in the header
+function getRouteFavPost(string $who, string $path, string $tok): array {
+    return getRouteReply($who, 'POST', $path, [], ['X-CSRF-TOKEN: '.$tok]);
 }
 
 # The shared rating, the favorites, the poll, search, RSS, the blocks and the settings of the integrations over real HTTP, the sitemap in a child
@@ -1189,14 +1205,16 @@ function getRouteInteg(PDO $pdo, string $work): array {
     $out['average'] = [$live['code'], preg_match('#class="sl-urating"[^>]*#', $live['body']) ? '' : 'none',
         preg_match('#<div title="([^"]*)" class="sl-urating"#', $live['body'], $hit) ? $hit[1] : ''];
     $favs = fn(int $uid, int $fid): int => (int)$pdo->query('SELECT COUNT(*) FROM '.$pre.'favorites WHERE uid = '.$uid.' AND fid = '.$fid)->fetchColumn();
-    [, $afav] = getRoutePageBits(getRouteReply('anna', 'GET', 'index.php?name=news&op=view&id=102')['body']);
-    $one = getRouteReply('anna', 'GET', $afav);
+    [, $afav, $aftok] = getRoutePageBits(getRouteReply('anna', 'GET', 'index.php?name=news&op=view&id=102')['body']);
+    getRouteReply('anna', 'GET', $afav.'&token='.$aftok);
+    $plain = $favs(2, 102);
+    $one = getRouteFavPost('anna', $afav, $aftok);
     $docfav = str_replace(['id=102', 'mod=news'], ['id=201', 'mod=docs'], $afav);
-    getRouteReply('anna', 'GET', $docfav);
-    getRouteReply('anna', 'GET', str_replace('id=102', 'id=105', $afav));
-    [, $bfav] = getRoutePageBits(getRouteReply('boris', 'GET', 'index.php?name=news&op=view&id=102')['body']);
-    getRouteReply('boris', 'GET', str_replace('id=102', 'id=104', $bfav));
-    $out['fav'] = [$afav !== '', $one['code'], str_contains($one['body'], 'sl-fav-on'), $favs(2, 102), $favs(2, 201), $favs(2, 105), $favs(3, 104)];
+    getRouteFavPost('anna', $docfav, $aftok);
+    getRouteFavPost('anna', str_replace('id=102', 'id=105', $afav), $aftok);
+    [, $bfav, $bftok] = getRoutePageBits(getRouteReply('boris', 'GET', 'index.php?name=news&op=view&id=102')['body']);
+    getRouteFavPost('boris', str_replace('id=102', 'id=104', $bfav), $bftok);
+    $out['fav'] = [$afav !== '', $one['code'], str_contains($one['body'], 'sl-fav-on'), $favs(2, 102), $favs(2, 201), $favs(2, 105), $favs(3, 104), $plain];
     $list = fn(): string => getRouteReply('anna', 'GET', 'index.php?name=account&op=favorites')['body'];
     $shown = str_contains($list(), 'Beta');
     $pdo->exec('UPDATE '.$pre.'nodes SET status = 0 WHERE id = 102');
@@ -1275,6 +1293,7 @@ function getRouteInteg(PDO $pdo, string $work): array {
 
 # The sitemap of the child: the generator runs against the files of the tree, so the map and the HTML map of the stand are kept byte for byte and put back afterwards
 # Two warm runs, at the configured limits.syncbatch and at 100, answer how many statements more the smaller cursor batches of Node cost
+# A multilingual map lists a category of the site language and leaves out one of another language, which a visitor without a language cookie gets as not found
 function getRouteIntegData(): array {
     global $db, $conf;
     $keep = [];
@@ -1299,6 +1318,15 @@ function getRouteIntegData(): array {
         $conf['node']['limits']['syncbatch'] = 100;
         $num = $db->qnum;
         $out['batch'] = [addSitemapTask(true)['status'], $db->qnum - $num - $wide];
+        $conf['multilingual'] = 1;
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET lang = :lang WHERE id = 1', ['lang' => 'zz']);
+        addSitemapTask(true);
+        $out['lang'] = str_contains(html_entity_decode((string)file_get_contents(BASE_DIR.'/sitemap.xml')), 'index.php?name=news&cat=1<');
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET lang = :lang WHERE id = 1', ['lang' => $conf['language']]);
+        addSitemapTask(true);
+        $out['lang'] = [$out['lang'], str_contains(html_entity_decode((string)file_get_contents(BASE_DIR.'/sitemap.xml')), 'index.php?name=news&cat=1<')];
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET lang = \'\' WHERE id = 1');
+        $conf['multilingual'] = 0;
         return $out;
     } finally {
         foreach ($keep as $file => $old) {
@@ -1312,7 +1340,7 @@ function getRouteIntegData(): array {
     }
 }
 
-# The seed of stage S19.1 on top of the integrations: the marks of the data update, a select field of accounts, a favorite worth points and a limit of two,
+# The seed of the guards on top of the integrations: the marks of the data update, a select field of accounts, a favorite worth points and a limit of two,
 # a hostile Node title and a script in an intro, three products, a client, a partner and an order of anna, and docsman allowed the poll screen
 function addRouteGuardRows(PDO $pdo, string $work): void {
     $pre = RPREF.'_';
@@ -1381,7 +1409,7 @@ function getRouteConf(string $work): array {
     return array_map(fn($v) => sha1_file($work.'/config/'.$v.'.php'), ['fields', 'node']);
 }
 
-# The guards of stage S19.1 over real HTTP: search output, the fields screen, the type of a Node deletion, favorites, Node categories and the shop and order actions
+# The guards over real HTTP: search output, the fields screen, the type of a Node deletion, favorites, Node categories and the shop and order actions
 function getRouteGuard(PDO $pdo, string $work): array {
     $pre = RPREF.'_';
     $out = [];
@@ -1424,8 +1452,8 @@ function getRouteGuard(PDO $pdo, string $work): array {
     $drop = getRouteReply('root', 'POST', 'admin.php', ['name' => 'node', 'op' => 'delete', 'id' => '201', 'type' => 'news', 'version' => '1',
         'token' => getRouteToken($page, 'delete')]);
     $out['delete'] = [$drop['code'], $count('SELECT COUNT(*) FROM '.$pre.'nodes WHERE id = 201')];
-    [, $fav] = getRoutePageBits(getRouteReply('anna', 'GET', 'index.php?name=news&op=view&id=102')['body']);
-    $try = fn(string $mod, int $id): int => getRouteReply('anna', 'GET', str_replace(['id=102', 'mod=news'], ['id='.$id, 'mod='.$mod], $fav))['code'];
+    [, $fav, $ftok] = getRoutePageBits(getRouteReply('anna', 'GET', 'index.php?name=news&op=view&id=102')['body']);
+    $try = fn(string $mod, int $id): int => getRouteFavPost('anna', str_replace(['id=102', 'mod=news'], ['id='.$id, 'mod='.$mod], $fav), $ftok)['code'];
     $favs = fn(string $mod): int => $count('SELECT COUNT(*) FROM '.$pre.'favorites WHERE uid = 2 AND modul = \''.$mod.'\'');
     $out['fav'] = [$fav !== '', $try('bogus', 5), $favs('bogus'), $try('forum', 999), $favs('forum'), $try('shop', 9), $try('shop', 7), $try('news', 102), $try('shop', 8),
         $favs('shop'), $favs('news'), $count('SELECT COUNT(*) FROM '.$pre.'points WHERE uid = 2 AND action = \'favorite\''),
@@ -1475,7 +1503,7 @@ function getRouteGuard(PDO $pdo, string $work): array {
     return $out;
 }
 
-# The integrity of stage S19.3 over real HTTP: a manual point correction applies once per form and is checked before the profile is written,
+# The integrity over real HTTP: a manual point correction applies once per form and is checked before the profile is written,
 # a block save that fails in its last statement takes its parameter back, and the main administrator annuls votes of a disabled material, a type without rating and
 # a disabled type
 function getRouteIntact(PDO $pdo, string $work): array {
@@ -1555,6 +1583,31 @@ function getRouteIntact(PDO $pdo, string $work): array {
     $out['broken'] = [$tok !== '', $gone['code'], (int)$count('SELECT COUNT(*) FROM '.$pre.'categories WHERE id = 90')];
     $again = getRouteReply('root', 'POST', 'admin.php', ['name' => 'categories', 'op' => 'delete', 'id' => '90', 'modul' => 'docs', 'token' => $tok]);
     $out['broken'][] = [$again['code'], (int)$count('SELECT COUNT(*) FROM '.$pre.'categories WHERE id = 90')];
+    $data = require $work.'/config/favorites.php';
+    $data['favorites'] = array_replace($data['favorites'], ['favact' => '1', 'favorites' => '2']);
+    setRouteFile($work.'/config/favorites.php', $data);
+    if (is_file($work.'/config/local.php')) unlink($work.'/config/local.php');
+    $pdo->exec('DELETE FROM '.$pre.'favorites WHERE uid = 2');
+    $pdo->exec('INSERT INTO '.$pre.'favorites (uid, fid, modul, time) VALUES (2, 104, \'news\', NOW())');
+    [, $fav, $ftok] = getRoutePageBits(getRouteReply('anna', 'GET', 'index.php?name=news&op=view&id=101')['body']);
+    $hold = proc_open([PHP_BINARY, __FILE__, $work, 'favhold', $GLOBALS['rbase']], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+    $held = trim((string)fgets($pipes[1]));
+    $star = getRouteFavPost('anna', $fav, $ftok);
+    proc_close($hold);
+    $out['favrace'] = [$fav !== '', $held, $star['code'], (int)$count('SELECT COUNT(*) FROM '.$pre.'favorites WHERE uid = 2'),
+        (int)$count('SELECT COUNT(*) FROM '.$pre.'favorites WHERE uid = 2 AND fid = 101')];
+    $ring = fn(int $id, int $up, int $num): string => '('.$id.', \'news\', \'Ring '.$id.'\', \'\', '.$up.', '.$num.', \'0|0\', \'0|0\', \'0|0\', \'\')';
+    $pdo->exec('INSERT INTO '.$pre.'categories (id, modul, title, intro, parent, ordern, pview, pread, ppost, lang) VALUES '.$ring(95, 96, 0).', '.$ring(96, 95, 0).', '
+        .$ring(97, 999, 5).', '.$ring(98, 97, 1));
+    $pdo->exec('UPDATE '.$pre.'nodes SET cid = 95 WHERE id = 102');
+    foreach (glob($work.'/cache/pages/*/*') ?: [] as $one) if (is_file($one)) unlink($one);
+    $start = microtime(true);
+    $cat = getRouteReply('root', 'GET', 'admin.php?name=categories&op=edit&cid=95');
+    $rss = getRouteReply('', 'GET', 'index.php?name=rss&mod=news');
+    $sheet = getRouteReply('root', 'GET', 'admin.php?name=node&op=edit&id=102')['body'];
+    $out['ring'] = [$cat['code'], str_contains($cat['body'], 'Ring 96'), $rss['code'], str_contains($rss['body'], 'Ring 96'),
+        (bool)preg_match('#<option[^>]*value="95"[^>]*selected#', $sheet), microtime(true) - $start < 30,
+        strpos($sheet, 'value="97"') < strpos($sheet, 'value="98"'), (bool)preg_match('#value="98"[^>]*>\x{00A0}+Ring 98#u', $sheet)];
     return $out;
 }
 
@@ -1614,8 +1667,9 @@ function getRouteGuardData(): array {
     return $out;
 }
 
-# The public form of stage S20.1 on the integration types: news open to guests under review, an inactive and a link role beside its two, the write window of one minute,
-# a rule of news without guest upload and with two files a request, the materials of the stand older than the window, and a published title with an ampersand
+# The public form on the integration types: news open to guests under review, an inactive and a link role beside its two, the write window of one minute,
+# a rule of news without guest upload and with two files a request, the materials of the stand older than the window, and a published title with an ampersand;
+# for the categories and links of the form news gets the tree, a scheduled material 107, a category Secret only members see, a category Lobby open to every writer and a shown Open
 function addRouteSecureTypes(PDO $pdo, string $work): void {
     $pre = RPREF.'_';
     $data = require $work.'/config/node.php';
@@ -1623,6 +1677,7 @@ function addRouteSecureTypes(PDO $pdo, string $work): void {
     $data['node']['types']['news']['workflow'] = ['access' => 'all'];
     $data['node']['types']['news']['assets']['old'] = getRouteRole('Old', 'download', [], 1, false, false, 2) + ['active' => false];
     $data['node']['types']['news']['assets']['site'] = getRouteRole('Site', 'link', ['file'], 1, true, false, 3);
+    $data['node']['types']['news']['features']['tree'] = true;
     setRouteFile($work.'/config/node.php', $data);
     $data = require $work.'/config/uploads.php';
     $rule = explode('|', $data['uploads']['news']);
@@ -1630,7 +1685,11 @@ function addRouteSecureTypes(PDO $pdo, string $work): void {
     $data['uploads']['news'] = implode('|', $rule);
     setRouteFile($work.'/config/uploads.php', $data);
     $pdo->exec('INSERT INTO '.$pre.'nodes (id, tid, cid, uid, aname, ip, title, intro, body, field, status, published)'
-        .' VALUES (106, 1, 0, 2, \'\', \'127.0.0.1\', \'Q&A probe\', \'intro of 106\', \'Body of 106\', \'\', 2, \'2026-01-08 10:00:00\')');
+        .' VALUES (106, 1, 0, 2, \'\', \'127.0.0.1\', \'Q&A probe\', \'intro of 106\', \'Body of 106\', \'\', 2, \'2026-01-08 10:00:00\'),'
+        .' (107, 1, 0, 2, \'\', \'127.0.0.1\', \'Later\', \'intro of 107\', \'Body of 107\', \'\', 2, NOW() + INTERVAL 1 DAY)');
+    $pdo->exec('INSERT INTO '.$pre.'categories (id, modul, title, intro, pview, pread, ppost, lang) VALUES (4, \'news\', \'Secret\', \'\', \'1|0\', \'0|0\', \'0|0\', \'\'),'
+        .' (5, \'news\', \'Lobby\', \'\', \'0|0\', \'0|0\', \'0|0\', \'\')');
+    $pdo->exec('UPDATE '.$pre.'categories SET pview = \'0|0\' WHERE id = 1');
     $pdo->exec('UPDATE '.$pre.'nodes SET created = NOW() - INTERVAL 1 DAY');
 }
 
@@ -1654,7 +1713,8 @@ function getRouteAltcha(string $who): string {
     return '';
 }
 
-# The public form of stage S20.1: the upload right, the role and request limits of a file, the write window, the captcha of a guest, the closed category and search
+# The public form: the upload right, the role and request limits of a file, the write window, the captcha of a guest, the closed category and search;
+# then the categories the form offers, related and parent links to materials the writer may not read, the escaped title of the pending notice, the profile import
 function getRouteSecure(PDO $pdo, string $work): array {
     $pre = RPREF.'_';
     $count = fn(string $table): int => (int)$pdo->query('SELECT COUNT(*) FROM '.$pre.$table)->fetchColumn();
@@ -1702,10 +1762,39 @@ function getRouteSecure(PDO $pdo, string $work): array {
     setRouteCaptcha($work, false);
     $find = getRouteReply('', 'GET', 'index.php?name=search&word=probe')['body'];
     $out['search'] = [str_contains($find, 'title="Q&amp;A probe"'), str_contains($find, 'Q&amp;amp;A')];
+    $pick = fn(string $html): string => preg_match('#<select\b[^>]*name="cid".*?</select>#s', $html, $hit) ? $hit[0] : '';
+    $has = fn(string $html, int $cid): bool => str_contains($pick($html), 'value="'.$cid.'"');
+    [$gform, $aform] = [$form(''), $form('anna')];
+    $out['cats'] = [$has($gform, 5), $has($gform, 4), $has($gform, 1), $has($aform, 4), $has($aform, 1)];
+    $gtok = getRouteToken($gform, 'name="action"');
+    $atok = getRouteToken($aform, 'name="action"');
+    $look = fn(string $who, string $tok, string $key, int $rid): int => $send($who, $base + ['token' => $tok, 'aname' => 'Guest', $key => (string)$rid]);
+    $out['refs'] = [
+        'guest' => array_map(fn(int $rid): array => [$look('', $gtok, 'relrel', $rid), $look('', $gtok, 'relparent', $rid)], [999, 103, 107, 105]),
+        'user' => [$look('anna', $atok, 'relrel', 103), $look('anna', $atok, 'relparent', 107)],
+    ];
+    $out['hidden'] = [$look('', $gtok, 'cid', 4), $look('anna', $atok, 'cid', 4)];
+    $pdo->exec('UPDATE '.$pre.'nodes SET created = NOW() - INTERVAL 1 DAY');
+    $evil = '<a href="x">t</a>';
+    $made = $send('', ['title' => $evil, 'aname' => 'Guest', 'intro' => '', 'body' => '', 'action' => 'submit', 'token' => $gtok]);
+    $st = $pdo->prepare('SELECT body FROM '.$pre.'mail WHERE title LIKE ? ORDER BY id DESC LIMIT 1');
+    $st->execute(['%'.$evil]);
+    $body = (string)$st->fetchColumn();
+    $out['mail'] = [$made, $body !== '', str_contains($body, htmlspecialchars($evil, ENT_QUOTES)), str_contains($body, $evil)];
+    $admin = getRouteReply('root', 'GET', 'admin.php?name=node&op=import')['body'];
+    $prof = getRouteReply('root', 'GET', 'admin.php?name=node&op=export&type=docs')['body'];
+    $types = fn(): int => $count('node_types');
+    $load = function (string $ext) use ($work, $prof, $admin): int {
+        file_put_contents($work.'/profile.'.$ext, $prof);
+        return getRouteReply('root', 'POST', 'admin.php', ['name' => 'node', 'op' => 'import', 'token' => getRouteToken($admin, 'import'), 'tname' => 'docsc'.$ext[0],
+            'file' => new CURLFile($work.'/profile.'.$ext, 'application/json', 'profile.'.$ext)])['code'];
+    };
+    $was = $types();
+    $out['import'] = [str_starts_with(ltrim($prof), '{'), $load('txt'), $types() - $was, $load('json'), $types() - $was];
     return $out;
 }
 
-# The document tree of stage S20.4: docs gets the tree and related links, two branches under Guide, a pending root Hidden with the published child Orphan,
+# The document tree: docs gets the tree and related links, two branches under Guide, a pending root Hidden with the published child Orphan,
 # the plain root Doc one of the shared rows beside them, and one related link of Config, so the view reads its related cards as well
 function addRouteTreeTypes(PDO $pdo, string $work): void {
     $pre = RPREF.'_';
@@ -1741,7 +1830,7 @@ function getRouteTreeNav(string $html): array {
     ];
 }
 
-# The document tree of stage S20.4 over real requests: the branch, the trail and the neighbours of the reading order, a pending parent that stays hidden,
+# The document tree over real requests: the branch, the trail and the neighbours of the reading order, a pending parent that stays hidden,
 # the pending root itself for the moderator of docs, a type without the tree, one escaping of a title, and the statements the child treeext counts
 # before and after the type outgrows one batch of getNodeTree()
 function getRouteTree(PDO $pdo): array {
@@ -1790,7 +1879,7 @@ function getRouteTreeData(): array {
     return ['view' => $view, 'tree' => $db->qnum - $num, 'items' => array_column($data['items'] ?? [], 'title'), 'next' => $data['next_title'] ?? ''];
 }
 
-# The display modes of stage S20.6: news on article, docs on docs, and three more types - faq, files with a cover and a download role, media with a poster,
+# The display modes: news on article, docs on docs, and three more types - faq, files with a cover and a download role, media with a poster,
 # a player source, a gallery and the field year; two materials each, one media material with a poster and one with a gallery image only
 function addRouteModeTypes(PDO $pdo, string $work): void {
     $pre = RPREF.'_';
@@ -1870,7 +1959,7 @@ function getRouteModeOrder(string $html, array $marks): array {
     return array_keys($pos);
 }
 
-# The display modes of stage S20.6 over real requests: every list and one view of each type, read back by the classes of its mode; article keeps the base set,
+# The display modes over real requests: every list and one view of each type, read back by the classes of its mode; article keeps the base set,
 # the related cards of a media material come in the grid of its mode as well
 function getRouteModes(PDO $pdo): array {
     $pdo->exec('INSERT INTO '.RPREF.'_node_relations (nid, rid, type, sort) VALUES (701, 702, \'related\', 0)');
@@ -1898,6 +1987,180 @@ function getRouteModes(PDO $pdo): array {
     return $out;
 }
 
+# The types of the routes and feeds: docs sorted by title without the publication sort, in a feed and a block of its own, news in a feed with an attachment in an introduction
+# and a material in a category named by a language constant, and a slogan of the site the start page must show
+function addRouteSeoTypes(PDO $pdo, string $work): void {
+    $pre = RPREF.'_';
+    $data = require $work.'/config/node.php';
+    $data['node']['types']['docs']['list'] = ['orders' => ['title', 'updated', 'views'], 'order' => 'title', 'dir' => 'asc'];
+    $data['node']['types']['docs']['integrations'] = ['search' => false, 'rss' => true, 'sitemap' => false, 'blocks' => true, 'seo' => 'article'];
+    $data['node']['types']['news']['integrations'] = ['search' => false, 'rss' => true, 'sitemap' => false, 'blocks' => false, 'seo' => 'news'];
+    setRouteFile($work.'/config/node.php', $data);
+    $data = require $work.'/config/global.php';
+    $data['slogan'] = 'Probe slogan of the site';
+    setRouteFile($work.'/config/global.php', $data);
+    $pdo->exec('INSERT INTO '.$pre.'categories (id, modul, title, intro, pread, ppost, lang) VALUES (4, \'news\', \'_CATEGORY\', \'\', \'0|0\', \'1|0\', \'\')');
+    $pdo->exec('UPDATE '.$pre.'nodes SET cid = 4 WHERE id = 105');
+    $pdo->exec('UPDATE '.$pre.'nodes SET intro = \'Intro [attach=att-aaaaaaaaaa.png align=left title=att]\' WHERE id = 105');
+    $pdo->exec('INSERT INTO '.$pre.'nodes (id, tid, cid, uid, aname, ip, title, intro, body, field, status, published)'
+        .' VALUES (202, 2, 0, 3, \'\', \'127.0.0.1\', \'Zebra doc\', \'intro of 202\', \'Body of zebra\', \'\', 2, \'2026-01-10 10:00:00\')');
+    $pdo->exec('INSERT INTO '.$pre.'blocks (id, bkey, title, content, url, bpos, weight, status, refresh, time, lang, bfile, view, expire, action, which, param)'
+        .' VALUES (60, \'\', \'Docs last block\', \'\', \'\', \'c\', 1, 1, 0, \'\', \'\', \'node.php\', 0, \'0\', \'d\', \'rss\', \'{"type":"docs","mode":"last","limit":5}\'),'
+        .' (61, \'\', \'Stale seo block\', \'\', \'\', \'c\', 2, 1, 0, \'\', \'\', \'node.php\', 0, \'0\', \'d\', \'rss\', \'{"type":"off","mode":"last","limit":2}\')');
+}
+
+# The canonical route answers: canonical addresses beside foreign parameters, the description of the start page, a category named by a constant in view and feed,
+# the date order of the docs block and feed, a page past the end with the default sort, the feeds without rss and the alternate link, absolute addresses of a description
+# and the whole correspondence of a support card with twenty root messages and a branch of six replies
+function getRouteSeo(PDO $pdo, string $work): array {
+    global $rport;
+    $pre = RPREF.'_';
+    $site = 'http://127.0.0.1:'.$rport;
+    $get = fn(string $path, string $who = ''): array => getRouteReply($who, 'GET', $path);
+    $link = fn(string $html, string $rel): string => preg_match('#<link\s+rel="'.$rel.'"[^>]*href="([^"]*)"#s', $html, $hit) ? html_entity_decode($hit[1]) : '';
+    $meta = fn(string $html): string => preg_match('#<meta\s+name="description"\s+content="([^"]*)"#', $html, $hit) ? html_entity_decode($hit[1]) : '';
+    $out = [];
+    $junk = $get('index.php?name=news&op=view&id=102&cat=5&num=3&let=Q&uname=zed')['body'];
+    $out['canon'] = [$link($junk, 'canonical'), $link($get('index.php?name=news&op=view&id=102')['body'], 'canonical'),
+        $link($get('index.php?name=news&cat=1&id=9&uname=zed')['body'], 'canonical'), $link($get('index.php?name=news&num=2&id=9')['body'], 'canonical'),
+        $link($get('')['body'], 'canonical'), $link($get('index.php?id=5&uname=zed')['body'], 'canonical'), str_contains($junk, 'content="index, follow"')];
+    $out['site'] = $site;
+    $home = $get('')['body'];
+    $out['desc'] = [$meta($home), str_contains($home, 'property="og:description" content="Probe slogan of the site"'), $meta($get('index.php?name=news')['body'])];
+    $feed = $get('index.php?go=rss&name=news');
+    $word = preg_match("#define\('_CATEGORY', *'([^']+)'\)#", (string)file_get_contents(BASE_DIR.'/lang/ru.php'), $hit) ? $hit[1] : '?';
+    $gamma = $get('index.php?name=news&op=view&id=105')['body'];
+    $head = preg_match('#<title>([^<]*)</title>#', $gamma, $hit) ? $hit[1] : '';
+    $out['const'] = [str_contains($gamma, '_CATEGORY'), str_contains($head, $word), str_contains($get('index.php?name=news')['body'], '_CATEGORY'),
+        str_contains($feed['body'], '_CATEGORY'), preg_match('#<title>Gamma</title>.*?<category>([^<]*)</category>#s', $feed['body'], $hit) ? $hit[1] === $word : false];
+    $cut = fn(string $html, string $mark): string => (string)substr($html, (int)strpos($html, $mark), 3000);
+    $page = $get('index.php?name=rss')['body'];
+    $blk = $cut($page, 'Docs last block');
+    $get('index.php?name=rss&num=2');
+    $form = getRouteReply('anna', 'GET', 'index.php?name=news&op=add')['body'];
+    $out['hint'] = [str_contains($form, 'id="f-relrel-hint"'), str_contains($form, 'aria-describedby="f-relrel-hint"'), str_contains($form, 'id=""')];
+    $docs = $get('index.php?go=rss&name=docs')['body'];
+    $out['order'] = [strpos($blk, 'Zebra doc') !== false && strpos($blk, 'Zebra doc') < (int)strpos($blk, 'Doc one'),
+        strpos($docs, '<title>Zebra doc</title>') !== false && strpos($docs, '<title>Zebra doc</title>') < (int)strpos($docs, '<title>Doc one</title>'),
+        getRouteModeOrder($get('index.php?name=docs')['body'], ['Doc one', 'Zebra doc'])];
+    $far = $get('index.php?name=news&order=published&dir=desc&num=9');
+    $near = $get('index.php?name=news&order=published&dir=desc&num=2');
+    $out['bound'] = [$far['code'], $far['head']['location'] ?? '', $near['code'], $near['head']['location'] ?? ''];
+    $plain = html_entity_decode($feed['body']);
+    $out['rss'] = [$get('index.php?go=rss&name=help')['code'], $get('index.php?go=rss&name=nosuch')['code'], $get('index.php?go=rss&name=off')['code'],
+        $get('index.php?go=rss')['code'], str_contains($get('index.php?go=rss')['body'], '<title>Beta</title>'),
+        $link($get('index.php?name=docs&op=view&id=201')['body'], 'alternate'), $link($get('index.php?name=rss')['body'], 'alternate'),
+        str_contains($plain, '="'.$site.'/index.php?name=news&amp;op=attach&amp;id=105'), str_contains($plain, '="index.php?name=news&amp;op=attach')];
+    $tok = getRouteToken(getRouteReply('anna', 'GET', 'index.php?name=help&op=add')['body'], 'name="action"');
+    $made = getRouteReply('anna', 'POST', 'index.php?name=help&op=add', ['title' => 'Seo request', 'intro' => 'Seo request intro', 'body' => 'Seo request body', 'cid' => '3',
+        'action' => 'submit', 'token' => $tok]);
+    $aid = (int)$pdo->query('SELECT id FROM '.$pre.'nodes WHERE title = \'Seo request\'')->fetchColumn();
+    $st = $pdo->prepare('INSERT INTO '.$pre.'comment (id, pid, cid, modul, time, uid, name, ip, body, status) VALUES (?, ?, ?, \'help\', ?, 2, \'anna\', \'127.0.0.1\', ?, 1)');
+    for ($i = 1; $i <= 20; $i++) $st->execute([900 + $i, 0, $aid, sprintf('2026-02-01 10:%02d:00', $i), sprintf('Root message %02d', $i)]);
+    for ($i = 1; $i <= 6; $i++) $st->execute([950 + $i, 901, $aid, sprintf('2026-02-02 10:%02d:00', $i), 'Reply message '.$i]);
+    $desk = getRouteReply('root', 'GET', 'admin.php?name=node&op=support&id='.$aid);
+    $out['support'] = [$made['code'], $aid > 0, $desk['code'], preg_match_all('/Root message \d\d/', $desk['body']), preg_match_all('/Reply message \d/', $desk['body'])];
+    $out['data'] = json_decode((string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg(__FILE__).' '.escapeshellarg($work).' seoext 2>&1'), true);
+    $log = is_file($work.'/logs/error_site.log') ? (string)file_get_contents($work.'/logs/error_site.log') : '';
+    $out['stale'] = [str_contains($page, 'Stale seo block'), str_contains($log, 'Block node.php'), str_contains($log, '404 Not Found')];
+    return $out;
+}
+
+# The setup of the head run before the server starts: docs is the faq type of the header marquee, a guest may submit news, anna keeps one favorite,
+# and a mixed Node block of home materials on the feeds page has nothing to list, because no type has the home feature
+function addRouteHeadTypes(PDO $pdo, string $work): void {
+    $pre = RPREF.'_';
+    $data = require $work.'/config/node.php';
+    $data['node']['types']['docs']['view'] = ['mode' => 'faq'];
+    $data['node']['types']['news']['workflow'] = ['access' => 'all'];
+    setRouteFile($work.'/config/node.php', $data);
+    $pdo->exec('INSERT INTO '.$pre.'favorites (uid, fid, modul, time) VALUES (2, 101, \'news\', NOW())');
+    $pdo->exec('INSERT INTO '.$pre.'blocks (id, bkey, title, content, url, bpos, weight, status, refresh, time, lang, bfile, view, expire, action, which, param)'
+        .' VALUES (70, \'\', \'Empty head block\', \'\', \'\', \'c\', 1, 1, 0, \'\', \'\', \'node.php\', 0, \'0\', \'d\', \'rss\', \'{"type":"","mode":"home","limit":5}\')');
+}
+
+# The route answers of notices and the page cache: a page past the reader bound, the notice after a submission once and the list cached after it, the notice after a report once,
+# the header marquee bounding the stored
+# copy, a closed category kept out of the banner and the breadcrumb, the canonical address of the start page, letters keeping the category, an empty block left out,
+# and the favorites read without a token in its address
+function getRouteHead(PDO $pdo, string $work): array {
+    global $rport;
+    $pre = RPREF.'_';
+    $site = 'http://127.0.0.1:'.$rport;
+    $get = fn(string $path, string $who = ''): array => getRouteReply($who, 'GET', $path);
+    $link = fn(string $html): string => preg_match('#<link\s+rel="canonical"[^>]*href="([^"]*)"#s', $html, $hit) ? html_entity_decode($hit[1]) : '';
+    $word = fn(string $file, string $key): string => preg_match("#define\('".$key."', *'([^']+)'\)#", (string)file_get_contents(BASE_DIR.'/'.$file), $hit) ? $hit[1] : '?';
+    $crumb = fn(string $html): string => preg_match('#<div class="sl-breadcrumbs">(.*?)</div>#s', $html, $hit) ? $hit[1] : '';
+    $trail = fn(string $html): string => preg_match('#"@type":\s*"BreadcrumbList".*?\]#s', $html, $hit) ? $hit[0] : '';
+    $pages = $work.'/cache/pages/html';
+    $clear = function () use ($pages): void {
+        foreach (glob($pages.'/*') ?: [] as $one) unlink($one);
+    };
+    $until = function () use ($pages): array {
+        return array_map(fn(string $v): int => (int)(json_decode((string)file_get_contents($v), true)['until'] ?? -1), glob($pages.'/*.json') ?: []);
+    };
+    $far = $get('index.php?name=news&num=999999999');
+    $out = ['bound' => [$far['code'], $get('index.php?name=news&num=4294967295')['code'], $get('index.php?name=news&op=view&id=4294967295')['code']]];
+    $clear();
+    $get('index.php?name=news');
+    $free = $until();
+    $pdo->exec('UPDATE '.$pre.'nodes SET expires = NOW() + INTERVAL 1 DAY WHERE tid = 2');
+    $clear();
+    $mark = $get('index.php?name=news')['body'];
+    $bound = $until();
+    $out['faq'] = [count($free), count($bound), ($bound[0] ?? 0) > time() && ($bound[0] ?? 0) < ($free[0] ?? 0),
+        preg_match('#sl-head-marquee">(.*?)</li>#s', $mark, $hit) ? trim(strip_tags($hit[1])) : ''];
+    $form = $get('index.php?name=news&op=add')['body'];
+    $post = ['title' => 'Head notice', 'aname' => 'Guest', 'intro' => 'Intro', 'body' => 'Body', 'action' => 'submit', 'token' => getRouteToken($form, 'name="action"')];
+    $sent = getRouteReply('', 'POST', 'index.php?name=news&op=add', $post);
+    $note = $word('modules/node/lang/ru.php', '_NODE_PENDING');
+    $clear();
+    $first = $get('index.php?name=news')['body'];
+    $stored = count(glob($pages.'/*.html') ?: []);
+    $again = $get('index.php?name=news')['body'];
+    $out['notice'] = [$sent['code'], $sent['head']['location'] ?? '', str_contains($first, $note), $stored, str_contains($again, $note), count(glob($pages.'/*.html') ?: [])];
+    $tok = getRouteToken($get('index.php?name=news&op=view&id=101')['body'], 'op=report');
+    $told = getRouteReply('', 'POST', 'index.php?name=news&op=report&id=2', ['token' => $tok]);
+    $said = $word('modules/node/lang/ru.php', '_NODE_REPORTED');
+    $out['report'] = [$told['code'], $told['head']['location'] ?? '', str_contains($get('index.php?name=news&op=view&id=101')['body'], $said),
+        str_contains($get('index.php?name=news&op=view&id=101')['body'], $said)];
+    $guest = $get('index.php?name=news&op=add&cat=2')['body'];
+    $anna = $get('index.php?name=news&op=add&cat=2', 'anna')['body'];
+    $view = $get('index.php?name=news&op=view&id=102&cat=2')['body'];
+    $own = $get('index.php?name=news&op=view&id=101&cat=2')['body'];
+    $out['banner'] = [str_contains($crumb($guest), 'Members'), str_contains($trail($guest), 'Members'), str_contains($crumb($anna), 'Members'),
+        str_contains($crumb($view), 'Members'), str_contains($crumb($own), 'Open') && !str_contains($crumb($own), 'Members')];
+    $out['canon'] = [$link($get('index.php?cat=1')['body']), $link($get('index.php?num=2')['body']), $link($get('')['body'])];
+    $out['site'] = $site;
+    $list = $get('index.php?name=news&cat=1')['body'];
+    $out['letters'] = [str_contains($list, 'index.php?name=news&amp;cat=1&amp;let='), str_contains($get('index.php?name=news')['body'], 'index.php?name=news&amp;let=')];
+    $feeds = $get('index.php?name=rss')['body'];
+    $out['block'] = [str_contains($feeds, 'Empty head block'), str_contains($feeds, $word('lang/ru.php', '_BLOCKPROBLEM2'))];
+    $shelf = $get('index.php?name=account&op=favorites', 'anna')['body'];
+    $part = $get('index.php?go=1&op=getFavoriteList&part=shelves', 'anna');
+    $out['favorites'] = [str_contains($shelf, 'op=getFavoriteList'), str_contains($shelf, 'getFavoriteList&amp;part=shelves&amp;token='), $part['code'],
+        str_contains($part['body'], 'id="favshelves"'), trim($get('index.php?go=1&op=getFavoriteList&part=shelves')['body'])];
+    return $out;
+}
+
+# The child seoext of the seo run asks the core directly: the letters of a shop without a product on sale and the feeds of the site
+function getRouteSeoData(): array {
+    $html = getLetterNavi('shop');
+    return ['letters' => [$html !== '', substr_count($html, '<a ')], 'feeds' => array_keys(getRssFeeds())];
+}
+
+# The child favhold of the intact run holds the account of anna with one more favorite for two seconds, as a parallel request at the limit does before its commit
+if (($argv[2] ?? '') === 'favhold') {
+    $hpdo = getRoutePdo((string)($argv[3] ?? ''));
+    $hpdo->beginTransaction();
+    $hpdo->query('SELECT id FROM '.RPREF.'_users WHERE id = 2 FOR UPDATE');
+    $hpdo->exec('INSERT INTO '.RPREF.'_favorites (uid, fid, modul, time) VALUES (2, 103, \'news\', NOW())');
+    echo "held\n";
+    sleep(2);
+    $hpdo->commit();
+    exit;
+}
+
 $report = ['error' => '', 'clean' => false, 'runs' => []];
 $rbase = '';
 $rproc = null;
@@ -1915,6 +2178,8 @@ try {
     if (($argv[2] ?? '') === 'tree') addRouteTreeTypes($rpdo, $rwork);
     if (($argv[2] ?? '') === 'guard') addRouteGuardRows($rpdo, $rwork);
     if (($argv[2] ?? '') === 'modes' || ($argv[3] ?? '') === 'modes') addRouteModeTypes($rpdo, $rwork);
+    if (($argv[2] ?? '') === 'seo') addRouteSeoTypes($rpdo, $rwork);
+    if (($argv[2] ?? '') === 'head') addRouteHeadTypes($rpdo, $rwork);
     $rproc = addRouteServer($rwork, $rport);
     if (($argv[2] ?? '') === 'serve') {
         fwrite(STDERR, 'serving on '.$rport.' with '.$rbase."\n");
@@ -1937,6 +2202,10 @@ try {
         $report['runs']['tree'] = getRouteTree($rpdo);
     } elseif (($argv[2] ?? '') === 'modes') {
         $report['runs']['modes'] = getRouteModes($rpdo);
+    } elseif (($argv[2] ?? '') === 'seo') {
+        $report['runs']['seo'] = getRouteSeo($rpdo, $rwork);
+    } elseif (($argv[2] ?? '') === 'head') {
+        $report['runs']['head'] = getRouteHead($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'cache') {
         $report['runs']['cache'] = getRouteCacheCom($rpdo, $rwork);
     } else {

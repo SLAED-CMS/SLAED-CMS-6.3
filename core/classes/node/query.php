@@ -7,9 +7,6 @@
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
 # The only reader of Node: types assembled from the type table and the loaded configuration, materials, light targets, resources, trees and sitemap rows
-# Every read is decided against the context the instance was built with: the type, the state and the dates, the read right of the main category and the extension scope
-# A list gets its category rights from one prefetch of the categories of each type per instance, as a predicate on cid; a single material checks its joined category in PHP
-# Nothing outlives the instance: the types and category maps it assembled live until the request ends, and no SQL result is written anywhere
 final class NodeQuery {
 
     # The grammar of a public type name
@@ -56,8 +53,7 @@ final class NodeQuery {
         'link' => ['file'],
     ];
 
-    # Every key of a role with its default in the canonical order; a null default marks a key the definition must carry
-    # Public, because the writer stores a role with only the keys that differ from these defaults
+    # Every key of a role with its default in canonical order, a null default marking a required key; public because the writer stores only the keys that differ
     public const ROLEDEF = [
         'title' => null, 'intro' => '', 'kinds' => [], 'extensions' => [], 'maxbytes' => null, 'min' => 0,
         'max' => null, 'canlink' => false, 'report' => false, 'mode' => null, 'active' => true, 'sort' => 0,
@@ -94,7 +90,6 @@ final class NodeQuery {
     ];
 
     # How each kind of read applies the rules: the state, the dates, the category predicate with or without the language, and the list filters
-    # A state of list follows setNodeStatus(), any lets a moderator read every state, pub reads only the published; no category predicate means the joined row is checked in PHP
     private const READS = [
         'item' => ['state' => 'any', 'time' => true, 'cats' => '', 'filter' => false],
         'target' => ['state' => 'pub', 'time' => true, 'cats' => '', 'filter' => false],
@@ -281,6 +276,7 @@ final class NodeQuery {
 
     # Check the roles of the assets section and answer them expanded to every key, ordered by sort and then by name
     # A mode takes the kinds it can show, the kinds of the role only narrow them, and the external link mode is one local-free role of exactly one resource
+    # Only the modes download and link offer the report form, so a role of any other mode that takes reports is refused
     private function filterAssetRule(mixed $rule, array $lims): array {
         if (!is_array($rule) || ($rule !== [] && array_is_list($rule))) throw $this->getInvalid('assets');
         $out = [];
@@ -303,6 +299,7 @@ final class NodeQuery {
             if (!is_int($one['sort']) || $one['sort'] < 0) throw $this->getInvalid($path.'.sort');
             if (!is_string($one['mode']) || !isset(self::RMODES[$one['mode']])) throw $this->getInvalid($path.'.mode');
             if (!array_intersect(self::RMODES[$one['mode']], $one['kinds'] ?: self::KINDS)) throw $this->getInvalid($path.'.kinds');
+            if ($one['report'] && !in_array($one['mode'], ['download', 'link'], true)) throw $this->getInvalid($path.'.report');
             $link = $one['mode'] === 'link';
             if ($link && (!$one['canlink'] || $one['max'] !== 1 || $exts !== [] || $one['maxbytes'] !== null || ++$links > 1)) throw $this->getInvalid($path.'.mode');
             $out[$role] = $one;
@@ -435,8 +432,8 @@ final class NodeQuery {
         return $this->getQueryRows('SELECT '.self::TYPECOLS.' FROM '.PREFIX_DB.'_node_types'.$where.' ORDER BY sort, id', $pars);
     }
 
-    # Assemble rows into the memory of the instance; a missing section or a version that differs makes the shared configuration be read once more,
-    # which is how a type the request itself has just written is read back; only a version that still differs reads those rows once more, and then fails the type
+    # Assemble rows into the memory of the instance; a missing section or a differing version makes the shared configuration be read once more
+    # That is how a type the request itself has just written is read back; only a version that still differs reads those rows once more, and then fails the type
     private function setTypeRows(array $rows, array $names): void {
         global $conf;
         $stale = [];
@@ -503,10 +500,10 @@ final class NodeQuery {
         return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)."\n";
     }
 
-    # Whether a category read string grants the context: an empty string never, a group list by intersection with the groups, otherwise the level 0 of a guest or 1 of a user
-    private function checkCatRead(string $pread): bool {
-        [$lvl, $ids] = array_pad(explode('|', $pread, 2), 2, '');
-        if ($pread === '' || !ctype_digit($lvl)) return false;
+    # Whether a read, view or post right of a category grants the context: empty never, a group list by intersection with the groups, else the level 0 of a guest or 1 of a user
+    private function checkCatRead(string $perm): bool {
+        [$lvl, $ids] = array_pad(explode('|', $perm, 2), 2, '');
+        if ($perm === '' || !ctype_digit($lvl)) return false;
         $gids = array_values(array_filter(array_map('intval', explode(',', $ids)), fn(int $v): bool => $v > 0));
         if ($gids) return (bool)array_intersect($gids, $this->ctx->groups);
         return intval($lvl) <= ($this->ctx->uid > 0 ? 1 : 0);
@@ -517,12 +514,13 @@ final class NodeQuery {
         return !$apply || $this->ctx->lang === '' || $lang === '' || $lang === $this->ctx->lang;
     }
 
-    # The categories of a type as id => read right and language, read with one statement per type and instance
+    # The categories of a type as id => read, view and post rights and language, read with one statement per type and instance
     private function getCatMap(NodeType $type): array {
         if (!isset($this->cats[$type->id])) {
             $map = [];
-            foreach ($this->getQueryRows('SELECT id, pread, lang FROM '.PREFIX_DB.'_categories WHERE modul = :modul', ['modul' => $type->name]) as $row) {
-                $map[intval($row['id'])] = ['read' => $this->checkCatRead($row['pread']), 'lang' => $row['lang']];
+            foreach ($this->getQueryRows('SELECT id, pread, pview, ppost, lang FROM '.PREFIX_DB.'_categories WHERE modul = :modul', ['modul' => $type->name]) as $row) {
+                $map[intval($row['id'])] = ['read' => $this->checkCatRead($row['pread']), 'view' => $this->checkCatRead($row['pview']),
+                    'post' => $this->checkCatRead($row['ppost']), 'lang' => $row['lang']];
             }
             $this->cats[$type->id] = $map;
         }
@@ -670,8 +668,8 @@ final class NodeQuery {
         return array_map(fn(NodeType $v): array => [$v, $v->ext === '' ? null : $this->getFactoryExt($v->ext)], $this->list);
     }
 
-    # Compile every branch of the current selection for one kind of read; a type branch splits into disjoint parts, each one range of an index:
-    # the main and the extra category when a readable category is chosen, and each given condition, such as pinned and unpinned rows of an ordered read
+    # Compile every branch of the current selection for one kind of read; a type branch splits into disjoint parts, each one range of an index
+    # The parts are the main and the extra category when a readable category is chosen, and each given condition, such as pinned and unpinned rows of an ordered read
     private function getListParts(string $read, array $conds = ['']): array {
         $out = [];
         foreach ($this->getTypeSet() as $i => [$type, $ext]) {
@@ -683,12 +681,13 @@ final class NodeQuery {
     }
 
     # The order of the current selection over the columns of a read row: pinned first where the feature is on, then the chosen or default sort with the id breaking ties
+    # The publication date is the order of every feed and has an index in every type, so it is open to each type; list.orders limits only the other keys
     private function getOrderSql(string $pre): string {
         $one = count($this->list) === 1 ? $this->list[0]->settings['list'] : null;
         [$key, $dir] = $this->order ?: ($one ? [$one['order'], $one['dir']] : ['published', 'desc']);
         $pin = false;
         foreach ($this->list as $type) {
-            if ($this->order && !in_array($key, $type->settings['list']['orders'], true)) throw $this->getInvalid('order');
+            if ($this->order && $key !== 'published' && !in_array($key, $type->settings['list']['orders'], true)) throw $this->getInvalid('order');
             $pin = $pin || $type->settings['features']['pinned'];
         }
         $dir = strtoupper($dir);
@@ -865,8 +864,8 @@ final class NodeQuery {
         return $this;
     }
 
-    # Choose whether the lists of the reader carry the extra fields and the categories, relations and resources of their page; a table that shows none of them
-    # switches them off and keeps the three statements of type, count and page, and the models then hold null for every set that was not loaded
+    # Choose whether the lists of the reader carry the extra fields and the categories, relations and resources of their page
+    # A table that shows none of them switches them off and keeps the three statements of type, count and page; the models then hold null for every set not loaded
     public function setNodeSets(bool $load): self {
         $this->sets = $load;
         return $this;
@@ -885,7 +884,7 @@ final class NodeQuery {
         return $this;
     }
 
-    # Choose one of the closed sort keys and a direction; the key must also be allowed by every selected type when the read runs
+    # Choose one of the closed sort keys and a direction; a key other than published must also be allowed by every selected type when the read runs
     public function setNodeOrder(string $order, string $dir = 'desc'): self {
         if (!in_array($order, self::ORDERS, true) || !in_array($dir, ['asc', 'desc'], true)) throw $this->getInvalid('order');
         $this->order = [$order, $dir];
@@ -927,8 +926,8 @@ final class NodeQuery {
             .' (n.ratings = 0) AS rnone, n.score / NULLIF(n.ratings, 0) AS ravg FROM '.PREFIX_DB.'_nodes AS n'.$part['join'].' WHERE '.$part['where'];
     }
 
-    # Read one page of the selection: the disjoint parts of every branch, each ordered through its index and cut to the page end, are unioned, ordered and paged once more,
-    # and only the ids of that page read their full row, the fields where a selected type uses them and the names of author and category
+    # Read one page of the selection: the disjoint parts of every branch, each ordered through its index and cut to the page end, are unioned, ordered and paged once more
+    # Only the ids of that page read their full row, the fields where a selected type uses them and the names of author and category
     public function getNodeList(): array {
         $parts = $this->getListParts('list', self::PINS);
         $size = $this->getPageSize();
@@ -981,6 +980,15 @@ final class NodeQuery {
         foreach ($this->getQueryRows($query, $pars) as $row) {
             $out[intval($row['tid'])] = ['num' => intval($row['num']), 'score' => intval($row['score']), 'ratings' => intval($row['ratings']), 'favs' => intval($row['favs'])];
         }
+        return $out;
+    }
+
+    # The categories of a type the form offers the context: those whose view right shows them and whose post right admits the writer, every one to a moderator of the type
+    # The writer checks the post right again on save; the view right keeps the title of a hidden category out of the form, as the list answers such a category as missing
+    public function getNodePostCats(NodeType $type): array {
+        $moder = $this->checkModer($type);
+        $out = [];
+        foreach ($this->getCatMap($type) as $cid => $cat) if ($moder || ($cat['view'] && $cat['post'])) $out[] = $cid;
         return $out;
     }
 

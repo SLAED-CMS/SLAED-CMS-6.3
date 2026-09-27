@@ -9,7 +9,6 @@ getLang('node');
 require_once BASE_DIR.'/modules/node/index.php';
 
 # The administrative entry of Node: the materials of the types this administrator moderates, and for the manager of Node the types, their import and the limits
-# Every write goes through NodeQuery and NodeService with the context of the request; a refusal is answered by its code, a success by a redirect to the canonical page
 
 # Whether the context manages Node and its types: the main administrator or the holder of the right node
 function checkNodeManage(): bool {
@@ -48,7 +47,7 @@ function setNodeAdminFault(int $code, string $text, string $cur = '', string $hr
 
 # Refuse a request whose method the operation does not answer
 function checkNodeMethod(array $allow): void {
-    if (in_array(strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')), $allow, true)) return;
+    if (in_array(strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET'), $allow, true)) return;
     header('Allow: '.implode(', ', $allow));
     setNodeAdminFault(405, _ERROR);
 }
@@ -141,7 +140,7 @@ function getNodeAdminForm(NodeType $type, array $vals, array $errs, int $id, int
     if ($feat['comments']) {
         $opts = '';
         foreach ([CommentMode::Disabled->value => _DEACTIVATE, CommentMode::Moderated->value => _APOSTMOD, CommentMode::Open->value => _APOSTNOMOD] as $key => $label) {
-            $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$key, 'label_text' => $label, 'is_selected' => $vals['comon']->value === $key]);
+            $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $key, 'label_text' => $label, 'is_selected' => $vals['comon']->value === $key]);
         }
         $rows[] = ['label_for' => 'f-comon', 'label_html' => _COMMENTS, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'comon', 'selectid' => 'f-comon',
             'options_html' => $opts])];
@@ -149,7 +148,7 @@ function getNodeAdminForm(NodeType $type, array $vals, array $errs, int $id, int
     if ($feat['poll']) {
         $rows[] = ['label_for' => 'f-poll', 'label_html' => _VOTING, 'hint_html' => _NODE_POLLHINT, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number',
             'name_attr' => 'poll',
-            'input_id' => 'f-poll', 'value_attr' => $vals['poll'] ? (string)$vals['poll'] : ''])];
+            'input_id' => 'f-poll', 'value_attr' => $vals['poll'] ?: ''])];
     }
     foreach (['home' => _NODE_FHOME, 'pinned' => _NODE_FPIN] as $key => $label) {
         if (!$feat[$key]) continue;
@@ -166,8 +165,8 @@ function getNodeAdminForm(NodeType $type, array $vals, array $errs, int $id, int
     $hidden = [['name_attr' => 'name', 'value_attr' => 'node'], ['name_attr' => 'op', 'value_attr' => $id ? 'edit' : 'add'], ['name_attr' => 'type', 'value_attr' => $type->name],
         ['name_attr' => 'token', 'value_attr' => getSiteToken('node')]];
     if ($id) {
-        $hidden[] = ['name_attr' => 'id', 'value_attr' => (string)$id];
-        $hidden[] = ['name_attr' => 'version', 'value_attr' => (string)$ver];
+        $hidden[] = ['name_attr' => 'id', 'value_attr' => $id];
+        $hidden[] = ['name_attr' => 'version', 'value_attr' => $ver];
         $opts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'keep', 'label_text' => _NODE_KEEP, 'is_selected' => true])
             .$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SAVECHANGES]);
         $act = $clash ? $tpl->getHtmlFrag('select', ['name_attr' => 'action', 'options_html' => $opts, 'is_inline_gap' => true])
@@ -175,7 +174,7 @@ function getNodeAdminForm(NodeType $type, array $vals, array $errs, int $id, int
     } else {
         $opts = '';
         foreach ([NodeStatus::Draft, NodeStatus::Pending, NodeStatus::Published] as $one) {
-            $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$one->value, 'label_text' => getNodeStateLabel($one), 'is_selected' => $one === $state]);
+            $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $one->value, 'label_text' => getNodeStateLabel($one), 'is_selected' => $one === $state]);
         }
         $act = $tpl->getHtmlFrag('select', ['name_attr' => 'status', 'options_html' => $opts, 'is_inline_gap' => true]);
     }
@@ -213,17 +212,17 @@ function getNodeReportRows(NodeType $type, Node $node): string {
 function getNodeSupportOpts(array $list, ?int $pick, string $all = ''): string {
     global $tpl;
     $out = ($all !== '') ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'all', 'label_text' => $all, 'is_selected' => $pick === null]) : '';
-    foreach ($list as $key => $label) $out .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$key, 'label_text' => $label, 'is_selected' => $pick === $key]);
+    foreach ($list as $key => $label) $out .= $tpl->getHtmlFrag('select-option', ['value_attr' => $key, 'label_text' => $label, 'is_selected' => $pick === $key]);
     return $out;
 }
 
 # One filter of the queue from the query: all for the word all, a whole number for digits, the default for an absent value; anything else is a bad request
 function getNodeSupportFilter(string $key, ?int $def): ?int {
-    $raw = (string)getVar('get', $key, 'raw', '');
+    $raw = getVar('get', $key, 'raw', '');
     if ($raw === '') return $def;
     if ($raw === 'all') return null;
     if (!preg_match('/^(?:0|[1-9][0-9]{0,9})$/D', $raw)) setNodeAdminFault(400, _NODE_INVALID);
-    return (int)$raw;
+    return $raw;
 }
 
 # The queue of a support type: the requests waiting for support by priority and age unless the filter of state, assignment and priority asks for others
@@ -259,7 +258,7 @@ function setNodeSupportQueue(NodeType $type): void {
         $dial = [['href' => $afile.'.php?name=node&op=support&id='.$one->id, 'icon_name' => 'kanban', 'title' => _NODE_CARD],
             ['href' => getSeoUrl(['name' => $type->name, 'op' => 'view', 'id' => $one->id, 'title' => $one->title]), 'icon_name' => 'eye', 'title' => _MVIEW]];
         $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
-            ['is_col_id' => true, 'content_html' => (string)$one->id],
+            ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $one->id],
             ['is_col_title' => true, 'is_truncate' => true, 'title_text' => $one->title, 'has_content_text' => true, 'content_text' => $one->title],
             ['is_col_author' => true, 'has_content_text' => true, 'content_text' => ($card['uname'] !== '') ? $card['uname'] : _ANONYM],
             ['has_content_text' => true, 'content_text' => $labs['state'][$card['state']] ?? ''],
@@ -273,7 +272,7 @@ function setNodeSupportQueue(NodeType $type): void {
         $cont .= $tpl->getHtmlPart('box', ['title' => _NODE_QUEUE, 'content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO])]);
     } else {
         $head = [['content' => _ID, 'is_col_id' => true], ['content' => _TITLE, 'is_col_title' => true, 'is_truncate' => true], ['content' => _POSTEDBY, 'is_col_author' => true],
-            ['content' => _NODE_STATE], ['content' => _NODE_PRIO], ['content' => _NODE_ASSIGN, 'is_truncate' => true], ['content' => _NODE_LAST, 'is_col_date' => true],
+            ['content' => _NODE_STATE], ['content' => _PRIORITY], ['content' => _NODE_ASSIGN, 'is_truncate' => true], ['content' => _LASTACTIVITY, 'is_col_date' => true],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true]];
         $keep = ['state' => ($state === null) ? 'all' : $state, 'aid' => ($aid === null) ? 'all' : $aid, 'prio' => ($prio === null) ? 'all' : $prio];
         $link = static fn(int $i): array => ['href' => $afile.'.php?name=node&type='.$type->name.'&'.http_build_query($keep).'&num='.$i];
@@ -290,13 +289,13 @@ function show(): void {
     global $afile, $tpl;
     checkNodeMethod(['GET', 'HEAD']);
     $types = array_filter(getNodeTypeMap(), fn(NodeType $v): bool => checkNodeModer($v));
-    $name = (string)getVar('get', 'type', 'var', '');
+    $name = getVar('get', 'type', 'var', '');
     if ($name !== '' && !isset($types[$name])) setNodeAdminFault(404, _NODE_GONE);
     if ($name !== '' && $types[$name]->ext === 'support') {
         setNodeSupportQueue($types[$name]);
         return;
     }
-    $raw = (string)getVar('get', 'status', 'raw', '');
+    $raw = getVar('get', 'status', 'raw', '');
     $state = ($raw === '') ? NodeStatus::Published : (ctype_digit($raw) ? NodeStatus::tryFrom((int)$raw) : null);
     if ($state === null) setNodeAdminFault(400, _NODE_INVALID);
     $num = max(1, getVar('get', 'num', 'num', 1));
@@ -305,7 +304,7 @@ function show(): void {
     $topts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $name === '']);
     foreach ($types as $key => $one) $topts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $key, 'label_text' => getModuleName($key), 'is_selected' => $key === $name]);
     $sopts = '';
-    foreach (NodeStatus::cases() as $one) $sopts .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$one->value, 'label_text' => getNodeStateLabel($one),
+    foreach (NodeStatus::cases() as $one) $sopts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $one->value, 'label_text' => getNodeStateLabel($one),
         'is_selected' => $one === $state]);
     $cont .= $tpl->getHtmlPart('div', ['is_searchbox' => true, 'content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
@@ -346,7 +345,7 @@ function show(): void {
             _DELETE.' "'.$node->title.'"?');
         $who = ($node->uid > 0) ? (string)$node->uname : (($node->aname !== '') ? $node->aname : _ANONYM);
         $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
-            ['is_col_id' => true, 'content_html' => (string)$node->id],
+            ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $node->id],
             ['is_col_title' => true, 'is_truncate' => true, 'title_text' => $node->title, 'has_content_text' => true, 'content_text' => $node->title],
             ['is_truncate' => true, 'has_content_text' => true, 'content_text' => getModuleName($type->name)],
             ['has_content_text' => true, 'content_text' => getNodeStateLabel($node->status)],
@@ -358,7 +357,7 @@ function show(): void {
     if ($rows === '') {
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO])]);
     } else {
-        $head = [['content' => _ID, 'is_col_id' => true], ['content' => _TITLE, 'is_col_title' => true, 'is_truncate' => true], ['content' => _NODE_TYPE,
+        $head = [['content' => _ID, 'is_col_id' => true], ['content' => _TITLE, 'is_col_title' => true, 'is_truncate' => true], ['content' => _TYPE,
             'is_truncate' => true], ['content' => _STATUS], ['content' => _DATE, 'is_col_date' => true], ['content' => _POSTEDBY, 'is_col_author' => true],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true]];
         $link = static fn(int $i): array => ['href' => $afile.'.php?name=node'.(($name !== '') ? '&type='.$name : '').'&status='.$state->value.'&num='.$i];
@@ -374,7 +373,7 @@ function add(): void {
     global $afile, $tpl;
     checkNodeMethod(['GET', 'HEAD', 'POST']);
     $types = array_filter(getNodeTypeMap(), fn(NodeType $v): bool => checkNodeModer($v));
-    $name = (string)getVar('req', 'type', 'var', '');
+    $name = getVar('req', 'type', 'var', '');
     if ($name === '') {
         setHead();
         $cont = getNodeAdminTabs('add');
@@ -422,7 +421,7 @@ function add(): void {
 function edit(): void {
     global $afile, $tpl;
     checkNodeMethod(['GET', 'HEAD', 'POST']);
-    [$type, $node] = getNodeAdminItem(getVar('req', 'id', 'num', 0), (string)getVar('req', 'type', 'var', ''));
+    [$type, $node] = getNodeAdminItem(getVar('req', 'id', 'num', 0), getVar('req', 'type', 'var', ''));
     $card = ($type->ext === 'sync') ? (getNodeHandler($type)->getNodeData($type, [$node], 'admin')[$node->id] ?? []) : [];
     $ext = $card ? ['url' => $card['url'], 'refresh' => $card['refresh']] : [];
     $vals = getNodeFormVals($node, $ext);
@@ -432,7 +431,7 @@ function edit(): void {
     $clash = false;
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         if (!checkAdminPost('node')) setNodeAdminFault(403, _TOKENMISS);
-        $act = (string)getVar('post', 'action', 'var', 'save');
+        $act = getVar('post', 'action', 'var', 'save');
         $sent = getVar('post', 'version', 'num', 0);
         [$input, $vals, $bad] = getNodeFormPost($type, true, $node);
         if ($act === 'keep') {
@@ -474,10 +473,10 @@ function edit(): void {
             ['label_html' => _NODE_DUE, 'field_html' => htmlspecialchars($when($card['due']), ENT_QUOTES, 'UTF-8')],
             ['label_html' => _NODE_CHECKED, 'field_html' => htmlspecialchars($when($card['checked']), ENT_QUOTES, 'UTF-8')],
             ['label_html' => _NODE_SYNCED, 'field_html' => htmlspecialchars($when($card['synced']), ENT_QUOTES, 'UTF-8')],
-            ['label_html' => _NODE_FAILS, 'field_html' => (string)$card['fails']],
+            ['label_html' => _NODE_FAILS, 'has_field_text' => true, 'field_text' => $card['fails']],
             ['label_html' => _ERROR, 'field_html' => ($card['error'] !== '') ? htmlspecialchars($card['error'], ENT_QUOTES, 'UTF-8') : _NO],
         ];
-        $hidden = [['name_attr' => 'name', 'value_attr' => 'node'], ['name_attr' => 'op', 'value_attr' => 'sync'], ['name_attr' => 'id', 'value_attr' => (string)$node->id],
+        $hidden = [['name_attr' => 'name', 'value_attr' => 'node'], ['name_attr' => 'op', 'value_attr' => 'sync'], ['name_attr' => 'id', 'value_attr' => $node->id],
             ['name_attr' => 'type', 'value_attr' => $type->name], ['name_attr' => 'token', 'value_attr' => getSiteToken('node')]];
         echo $tpl->getHtmlPart('box', ['title' => _NODE_SOURCE, 'content_html' => $tpl->getHtmlPart('form', ['action_url' => $afile.'.php', 'hidden' => $hidden,
             'rows' => $rows, 'actions_html' => $tpl->getHtmlFrag('button', ['submit_label' => _NODE_SYNCGO, 'button_type' => 'submit'])])]);
@@ -489,7 +488,7 @@ function sync(): void {
     global $afile;
     checkNodeMethod(['POST']);
     if (!checkAdminPost('node')) setNodeAdminFault(403, _TOKENMISS);
-    [$type, $node] = getNodeAdminItem(getVar('post', 'id', 'num', 0), (string)getVar('post', 'type', 'var', ''));
+    [$type, $node] = getNodeAdminItem(getVar('post', 'id', 'num', 0), getVar('post', 'type', 'var', ''));
     $hand = getNodeHandler($type);
     if (!$hand instanceof NodeSync) setNodeAdminFault(404, _NODE_GONE);
     $self = $afile.'.php?name=node&op=edit&id='.$node->id.'&type='.$type->name;
@@ -517,8 +516,8 @@ function status(): void {
     if (!checkAdminPost('node')) setNodeAdminFault(403, _TOKENMISS);
     $id = getVar('post', 'id', 'num', 0);
     $types = array_filter(getNodeTypeMap(), fn(NodeType $v): bool => checkNodeModer($v));
-    $type = $types[(string)getVar('post', 'type', 'var', '')] ?? setNodeAdminFault(404, _NODE_GONE);
-    $raw = (string)getVar('post', 'status', 'raw', '');
+    $type = $types[getVar('post', 'type', 'var', '')] ?? setNodeAdminFault(404, _NODE_GONE);
+    $raw = getVar('post', 'status', 'raw', '');
     $to = ctype_digit($raw) ? (NodeStatus::tryFrom((int)$raw) ?? setNodeAdminFault(422, _NODE_INVALID)) : setNodeAdminFault(422, _NODE_INVALID);
     $was = getNodeReader($type)->getNodeContent($id, $type) ?? setNodeAdminFault(404, _NODE_GONE);
     try {
@@ -536,7 +535,7 @@ function delete(): void {
     if (!checkAdminPost('node')) setNodeAdminFault(403, _TOKENMISS);
     $id = getVar('post', 'id', 'num', 0);
     $types = array_filter(getNodeTypeMap(), fn(NodeType $v): bool => checkNodeModer($v));
-    $type = $types[(string)getVar('post', 'type', 'var', '')] ?? setNodeAdminFault(404, _NODE_GONE);
+    $type = $types[getVar('post', 'type', 'var', '')] ?? setNodeAdminFault(404, _NODE_GONE);
     getNodeReader($type)->getNodeContent($id, $type) ?? setNodeAdminFault(404, _NODE_GONE);
     try {
         getNodeWriter($type)->deleteNode($id, getVar('post', 'version', 'num', 0), $com);
@@ -551,8 +550,8 @@ function report(): void {
     checkNodeMethod(['POST']);
     if (!checkAdminPost('node')) setNodeAdminFault(403, _TOKENMISS);
     $types = array_filter(getNodeTypeMap(), fn(NodeType $v): bool => checkNodeModer($v));
-    $type = $types[(string)getVar('post', 'type', 'var', '')] ?? setNodeAdminFault(404, _NODE_GONE);
-    $useful = (string)getVar('post', 'useful', 'raw', '');
+    $type = $types[getVar('post', 'type', 'var', '')] ?? setNodeAdminFault(404, _NODE_GONE);
+    $useful = getVar('post', 'useful', 'raw', '');
     if (!in_array($useful, ['0', '1'], true)) setNodeAdminFault(422, _NODE_INVALID);
     try {
         getNodeWriter($type)->deleteNodeAssetReport(getVar('post', 'id', 'num', 0), $type, $useful === '1');
@@ -599,11 +598,11 @@ function types(): void {
         $dial[] = getTplPostAction($base + ['op' => 'typestatus', 'active' => $type->active ? 0 : 1], 'power', $type->active ? _DEACTIVATE : _ACTIVATE);
         $dial[] = getTplPostAction($base + ['op' => 'typedelete'], 'x-octagon', _DELETE, _DELETE.' "'.$name.'"?');
         $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
-            ['is_col_id' => true, 'content_html' => (string)$type->id],
+            ['is_col_id' => true, 'has_content_text' => true, 'content_text' => $type->id],
             ['has_content_text' => true, 'content_text' => $name],
             ['is_col_title' => true, 'is_truncate' => true, 'has_content_text' => true, 'content_text' => getModuleName($name)],
             ['has_content_text' => true, 'content_text' => $type->settings['view']['mode']],
-            ['has_content_text' => true, 'content_text' => (string)$type->version],
+            ['has_content_text' => true, 'content_text' => $type->version],
             ['is_col_status' => true, 'content_html' => ad_status('', $type->active ? '1' : '0')],
             ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $dial])],
         ]])]);
@@ -612,7 +611,7 @@ function types(): void {
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NODE_NOTYPES])]);
     } else {
         $head = [['content' => _ID, 'is_col_id' => true], ['content' => _NODE_NAME], ['content' => _TITLE, 'is_col_title' => true, 'is_truncate' => true],
-            ['content' => _NODE_MODE], ['content' => _NODE_VER], ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
+            ['content' => _NODE_MODE], ['content' => _VERSION], ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true]];
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'is_fixed' => true, 'head' => $head, 'rows_html' => $rows])]);
     }
@@ -626,8 +625,8 @@ function types(): void {
         $dial = [getTplPostAction(['name' => 'node', 'op' => 'remains', 'modul' => $name], 'x-octagon', _DELETE, _DELETE.' "'.$name.'"?')];
         $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
             ['is_col_title' => true, 'has_content_text' => true, 'content_text' => $name],
-            ['has_content_text' => true, 'content_text' => (string)$num['comments']],
-            ['has_content_text' => true, 'content_text' => (string)$num['favorites']],
+            ['has_content_text' => true, 'content_text' => $num['comments']],
+            ['has_content_text' => true, 'content_text' => $num['favorites']],
             ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $dial])],
         ]])]);
     }
@@ -647,7 +646,7 @@ function remains(): void {
     checkNodeMethod(['POST']);
     checkNodeTypes('types');
     if (!checkAdminPost('node')) setNodeAdminFault(403, _TOKENMISS, 'types');
-    $name = (string)getVar('post', 'modul', 'var', '');
+    $name = getVar('post', 'modul', 'var', '');
     try {
         getNodeWriter()->deleteNodeRemains($name);
     } catch (NodeException $err) {
@@ -693,23 +692,23 @@ function getNodeTypeVals(?NodeType $type, ?array $prof): array {
     ];
 }
 
-# Read the posted type form into the effective settings and the input the service takes; fields, uploads and rating stay those of the stored type or the defaults,
-# and the extension settings those of the stored type or of the shipped profile the new type starts from
+# Read the posted type form into the effective settings and the input the service takes; fields, uploads and rating stay those of the stored type or the defaults
+# The extension settings stay those of the stored type or of the shipped profile the new type starts from
 # A public workflow for guests without moderation is taken only with its explicit confirmation, because every visitor would then publish directly
 function getNodeTypePost(?NodeType $old, ?array $prof): array {
-    $num = fn(string $key, int $def): int => (($v = getVar('post', $key, 'raw', '')) !== '' && is_string($v) && preg_match('/^-?[0-9]{1,18}$/D', trim($v))) ? (int)trim($v) : $def;
-    $flag = fn(string $key): bool => (string)getVar('post', $key, 'raw', '') === '1';
-    $pick = fn(string $key, array $allow): array => array_values(array_intersect($allow, (array)getVar('post', $key.'[]', '', [])));
-    $who = (array)getVar('post', 'access[]', '', []);
+    $num = fn(string $key, int $def): int => (($v = getVar('post', $key, 'raw', '')) !== '' && is_string($v) && preg_match('/^-?[0-9]{1,18}$/D', trim($v))) ? trim($v) : $def;
+    $flag = fn(string $key): bool => getVar('post', $key, 'raw', '') === '1';
+    $pick = fn(string $key, array $allow): array => array_values(array_intersect($allow, getVar('post', $key.'[]', '', [])));
+    $who = getVar('post', 'access[]', '', []);
     $gids = [];
     foreach ($who as $one) if (is_string($one) && preg_match('/^2\|([1-9][0-9]{0,9})$/D', $one, $hit)) $gids[] = (int)$hit[1];
     $access = in_array('0|0', $who, true) ? 'all' : ($gids ? 'group' : 'user');
     $pubs = [];
-    foreach ((array)getVar('post', 'publish[]', '', []) as $one) if (is_string($one) && preg_match('/^2\|([1-9][0-9]{0,9})$/D', $one, $hit)) $pubs[] = (int)$hit[1];
+    foreach (getVar('post', 'publish[]', '', []) as $one) if (is_string($one) && preg_match('/^2\|([1-9][0-9]{0,9})$/D', $one, $hit)) $pubs[] = (int)$hit[1];
     $feats = [];
     foreach (array_keys(getNodeTypeBase()['features']) as $key) $feats[$key] = $flag('feat_'.$key);
     $roles = [];
-    foreach ((array)getVar('post', 'role[]', '', []) as $row) {
+    foreach (getVar('post', 'role[]', '', []) as $row) {
         if (!is_array($row)) continue;
         $key = trim((string)($row['name'] ?? ''));
         if ($key === '') continue;
@@ -731,22 +730,22 @@ function getNodeTypePost(?NodeType $old, ?array $prof): array {
         ];
     }
     $set = [
-        'list' => ['orders' => $pick('orders', ['published', 'updated', 'title', 'views', 'rating']), 'order' => (string)getVar('post', 'order', 'var', 'published'),
-            'dir' => (string)getVar('post', 'dir', 'var', 'desc'), 'limit' => $num('limit', 10), 'alpha' => $flag('alpha'), 'show' => $pick('show', ['category', 'author', 'date',
+        'list' => ['orders' => $pick('orders', ['published', 'updated', 'title', 'views', 'rating']), 'order' => getVar('post', 'order', 'var', 'published'),
+            'dir' => getVar('post', 'dir', 'var', 'desc'), 'limit' => $num('limit', 10), 'alpha' => $flag('alpha'), 'show' => $pick('show', ['category', 'author', 'date',
                 'views'])],
-        'view' => ['mode' => trim((string)getVar('post', 'mode', 'raw', 'default'))],
+        'view' => ['mode' => trim(getVar('post', 'mode', 'raw', 'default'))],
         'form' => [],
         'workflow' => ['access' => $access, 'groups' => $gids, 'publish' => $pubs, 'notify' => ['pending' => $flag('notify_pending'), 'result' => $flag('notify_result')]],
         'admin' => [],
         'features' => $feats,
         'assets' => $roles,
         'integrations' => ['search' => $flag('integ_search'), 'rss' => $flag('integ_rss'), 'sitemap' => $flag('integ_sitemap'), 'blocks' => $flag('integ_blocks'),
-            'seo' => (string)getVar('post', 'seo', 'var', 'website')],
+            'seo' => getVar('post', 'seo', 'var', 'website')],
         'ext' => $old?->settings['ext'] ?? (array)($prof['type']['settings']['ext'] ?? []),
     ];
-    $vals = ['name' => trim((string)getVar('post', 'tname', 'raw', '')), 'title' => trim((string)getVar('post', 'title', 'raw', '')), 'intro' => trim((string)getVar('post',
+    $vals = ['name' => trim(getVar('post', 'tname', 'raw', '')), 'title' => trim(getVar('post', 'title', 'raw', '')), 'intro' => trim(getVar('post',
         'intro', 'raw', '')),
-        'ext' => trim((string)getVar('post', 'ext', 'raw', '')), 'sort' => $num('sort', 0), 'set' => $set];
+        'ext' => trim(getVar('post', 'ext', 'raw', '')), 'sort' => $num('sort', 0), 'set' => $set];
     $errs = ($access === 'all' && $feats['submit'] && !$feats['moderation'] && !$flag('guestok')) ? [_NODE_GUESTNO] : [];
     $input = new NodeTypeInput($vals['title'], $vals['intro'], $vals['ext'], $vals['sort'], $set, $old?->fields ?? [], $old?->uploads ?? [], $old?->rating ?? []);
     return [$input, $vals, $errs];
@@ -756,7 +755,7 @@ function getNodeTypePost(?NodeType $old, ?array $prof): array {
 function getNodeTypeDiff(NodeType $now, array $vals): array {
     $out = [];
     foreach (['title' => _TITLE, 'intro' => _DESCRIPTION, 'ext' => _NODE_EXT, 'sort' => _SORT] as $key => $label) if ((string)$vals[$key] !== (string)$now->$key) $out[] = $label;
-    $map = ['list' => _NODE_SECLIST, 'view' => _NODE_MODE, 'workflow' => _NODE_FLOW, 'features' => _NODE_FEATURES, 'assets' => _NODE_ROLES, 'integrations' => _NODE_INTEG];
+    $map = ['list' => _LIST, 'view' => _NODE_MODE, 'workflow' => _NODE_FLOW, 'features' => _NODE_FEATURES, 'assets' => _NODE_ROLES, 'integrations' => _NODE_INTEG];
     foreach ($map as $key => $label) if (json_encode($vals['set'][$key]) !== json_encode($now->settings[$key])) $out[] = $label;
     return $out;
 }
@@ -769,7 +768,8 @@ function getNodeTypeRows(array $vals, bool $new): array {
     $box = fn(string $name, bool $on, string $label): string => $tpl->getHtmlFrag('checkbox', ['name_attr' => $name, 'value_attr' => '1', 'is_checked' => $on,
         'label_text' => $label]);
     $opts = fn(array $list, string|array $cur): string => implode('', array_map(fn(int|string $k, string $v): string => $tpl->getHtmlFrag('select-option', [
-        'value_attr' => (string)$k, 'label_text' => $v, 'is_selected' => is_array($cur) ? in_array((string)$k, $cur, true) : (string)$k === (string)$cur]), array_keys($list), $list));
+        'value_attr' => $k, 'label_text' => $v, 'is_selected' => is_array($cur) ? in_array((string)$k, $cur, true) : (string)$k === (string)$cur]),
+        array_keys($list), $list));
     $head = fn(string $label): array => ['label_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => $label]), 'field_html' => '', 'is_full' => true];
     $rows = [];
     $rows[] = ['label_for' => 'f-tname', 'label_html' => _NODE_NAME, 'hint_html' => $esc(_NODE_NAMEHINT), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text',
@@ -783,8 +783,8 @@ function getNodeTypeRows(array $vals, bool $new): array {
         'name_attr' => 'ext',
         'input_id' => 'f-ext', 'value_attr' => $vals['ext'], 'maxlength_num' => 20])];
     $rows[] = ['label_for' => 'f-sort', 'label_html' => _SORT, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'sort', 'input_id' => 'f-sort',
-        'value_attr' => (string)$vals['sort']])];
-    $rows[] = $head(_NODE_SECLIST);
+        'value_attr' => $vals['sort']])];
+    $rows[] = $head(_LIST);
     $orders = ['published' => _NEW, 'updated' => _NODE_UPDATED, 'title' => _TITLE, 'views' => _POP, 'rating' => _BEST];
     $rows[] = ['label_html' => _NODE_ORDERS, 'field_html' => implode(' ', array_map(fn(string $k, string $v): string => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'orders[]',
         'value_attr' => $k, 'is_checked' => in_array($k, $set['list']['orders'], true), 'label_text' => $v]), array_keys($orders), $orders))];
@@ -793,7 +793,7 @@ function getNodeTypeRows(array $vals, bool $new): array {
         .$tpl->getHtmlFrag('select', ['name_attr' => 'dir', 'options_html' => $opts(['desc' => _DESC, 'asc' => _ASC], $set['list']['dir'])])];
     $rows[] = ['label_for' => 'f-limit', 'label_html' => _NODE_LIMIT, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'limit',
         'input_id' => 'f-limit',
-        'value_attr' => (string)$set['list']['limit']])];
+        'value_attr' => $set['list']['limit']])];
     $rows[] = ['label_html' => _NODE_ALPHA, 'field_html' => $box('alpha', $set['list']['alpha'], _YES)];
     $show = ['category' => _CATEGORY, 'author' => _POSTEDBY, 'date' => _DATE, 'views' => _READS];
     $rows[] = ['label_html' => _NODE_SHOW, 'field_html' => implode(' ', array_map(fn(string $k, string $v): string => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'show[]',
@@ -831,9 +831,9 @@ function getNodeTypeRows(array $vals, bool $new): array {
         $cell = $tpl->getHtmlPart('div', ['rows' => [
             ['label_html' => _NODE_ROLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => $pre.'[name]', 'value_attr' => $name,
                 'maxlength_num' => 50])],
-            ['label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => $pre.'[title]', 'value_attr' => (string)($def['title'] ?? ''),
+            ['label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => $pre.'[title]', 'value_attr' => $def['title'] ?? '',
                 'maxlength_num' => 255])],
-            ['label_html' => _DESCRIPTION, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => $pre.'[intro]', 'value_attr' => (string)$def['intro'],
+            ['label_html' => _DESCRIPTION, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => $pre.'[intro]', 'value_attr' => $def['intro'],
                 'maxlength_num' => 1000])],
             ['label_html' => _NODE_RMODE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => $pre.'[mode]', 'options_html' => $opts($modes,
                 (string)($def['mode'] ?? 'download'))])],
@@ -841,11 +841,11 @@ function getNodeTypeRows(array $vals, bool $new): array {
             ['label_html' => _NODE_EXTS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => $pre.'[extensions]', 'value_attr' => implode(',',
                 (array)$def['extensions'])])],
             ['label_html' => _NODE_MAXBYTES, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => $pre.'[maxbytes]',
-                'value_attr' => ($def['maxbytes'] === null) ? '' : (string)$def['maxbytes']])],
+                'value_attr' => $def['maxbytes']])],
             ['label_html' => _NODE_MIN.' / '._NODE_MAX, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => $pre.'[min]',
-                'value_attr' => (string)$def['min'],
-                'is_inline_gap' => true]).$tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => $pre.'[max]', 'value_attr' => (string)($def['max'] ?? 1)])],
-            ['label_html' => _SORT, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => $pre.'[sort]', 'value_attr' => (string)$def['sort']])],
+                'value_attr' => $def['min'],
+                'is_inline_gap' => true]).$tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => $pre.'[max]', 'value_attr' => $def['max'] ?? 1])],
+            ['label_html' => _SORT, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => $pre.'[sort]', 'value_attr' => $def['sort']])],
             ['label_html' => _NODE_ROLEOPTS, 'field_html' => $box($pre.'[canlink]', $def['canlink'], _NODE_CANLINK).' '.$box($pre.'[report]', $def['report'], _NODE_CANREP)
                 .' '.$box($pre.'[active]', $def['active'], _NODE_ACTIVE)],
         ]]);
@@ -867,9 +867,9 @@ function type(): void {
     global $afile, $tpl;
     checkNodeMethod(['GET', 'HEAD', 'POST']);
     checkNodeTypes('type');
-    $name = (string)getVar('req', 'type', 'var', '');
+    $name = getVar('req', 'type', 'var', '');
     $old = ($name !== '') ? (getNodeTypeMap()[$name] ?? setNodeAdminFault(404, _NODE_GONE, 'types')) : null;
-    $pname = (string)getVar('req', 'profile', 'var', '');
+    $pname = getVar('req', 'profile', 'var', '');
     $prof = ($pname !== '') ? (getNodeProfile($pname) ?? setNodeAdminFault(404, _NODE_GONE, 'type')) : null;
     $vals = getNodeTypeVals($old, $prof);
     $ver = $old?->version ?? 0;
@@ -880,7 +880,7 @@ function type(): void {
         [$input, $vals, $bad] = getNodeTypePost($old, $prof);
         if ($old !== null) $vals['name'] = $old->name;
         $sent = getVar('post', 'version', 'num', 0);
-        $act = (string)getVar('post', 'action', 'var', 'save');
+        $act = getVar('post', 'action', 'var', 'save');
         if ($act === 'keep' && $old !== null) {
             $ver = $old->version;
         } elseif ($bad) {
@@ -920,7 +920,7 @@ function type(): void {
     $hidden = [['name_attr' => 'name', 'value_attr' => 'node'], ['name_attr' => 'op', 'value_attr' => 'type'], ['name_attr' => 'token', 'value_attr' => getSiteToken('node')]];
     if ($old !== null) {
         $hidden[] = ['name_attr' => 'type', 'value_attr' => $old->name];
-        $hidden[] = ['name_attr' => 'version', 'value_attr' => (string)$ver];
+        $hidden[] = ['name_attr' => 'version', 'value_attr' => $ver];
     }
     if ($prof !== null) $hidden[] = ['name_attr' => 'profile', 'value_attr' => $pname];
     $opts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'keep', 'label_text' => _NODE_KEEP, 'is_selected' => true])
@@ -956,8 +956,8 @@ function typestatus(): void {
     checkNodeMethod(['POST']);
     checkNodeTypes('types');
     if (!checkAdminPost('node')) setNodeAdminFault(403, _TOKENMISS, 'types');
-    $name = (string)getVar('post', 'type', 'var', '');
-    $on = (string)getVar('post', 'active', 'raw', '');
+    $name = getVar('post', 'type', 'var', '');
+    $on = getVar('post', 'active', 'raw', '');
     if (!in_array($on, ['0', '1'], true)) setNodeAdminFault(422, _NODE_INVALID, 'types');
     try {
         getNodeWriter()->updateNodeTypeStatus($name, $on === '1', getVar('post', 'version', 'num', 0));
@@ -972,7 +972,7 @@ function typedelete(): void {
     checkNodeMethod(['POST']);
     checkNodeTypes('types');
     if (!checkAdminPost('node')) setNodeAdminFault(403, _TOKENMISS, 'types');
-    $name = (string)getVar('post', 'type', 'var', '');
+    $name = getVar('post', 'type', 'var', '');
     try {
         getNodeWriter()->deleteNodeType($name, getVar('post', 'version', 'num', 0));
     } catch (NodeException $err) {
@@ -985,13 +985,13 @@ function typeclone(): void {
     global $afile, $tpl;
     checkNodeMethod(['GET', 'HEAD', 'POST']);
     checkNodeTypes('types');
-    $name = (string)getVar('req', 'type', 'var', '');
+    $name = getVar('req', 'type', 'var', '');
     $old = getNodeTypeMap()[$name] ?? setNodeAdminFault(404, _NODE_GONE, 'types');
     $note = '';
     $new = '';
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         if (!checkAdminPost('node')) setNodeAdminFault(403, _TOKENMISS, 'types');
-        $new = trim((string)getVar('post', 'tname', 'raw', ''));
+        $new = trim(getVar('post', 'tname', 'raw', ''));
         try {
             $json = getNodeReader()->getNodeTypeExport($old->name);
             getNodeWriter()->addNodeTypeImport($json, $new);
@@ -1019,7 +1019,7 @@ function typeclone(): void {
 function export(): void {
     checkNodeMethod(['GET', 'HEAD']);
     checkNodeTypes('types');
-    $name = (string)getVar('get', 'type', 'var', '');
+    $name = getVar('get', 'type', 'var', '');
     try {
         $json = getNodeReader()->getNodeTypeExport($name);
     } catch (NodeException $err) {
@@ -1040,10 +1040,11 @@ function import(): void {
     $new = '';
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         if (!checkAdminPost('node')) setNodeAdminFault(403, _TOKENMISS, 'import');
-        $new = trim((string)getVar('post', 'tname', 'raw', ''));
+        $new = trim(getVar('post', 'tname', 'raw', ''));
         $file = $_FILES['file'] ?? null;
         $json = '';
-        if (is_array($file) && (int)($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK && is_uploaded_file((string)$file['tmp_name']) && (int)$file['size'] <= 1048576) {
+        $isjson = is_array($file) && strtolower(pathinfo((string)($file['name'] ?? ''), PATHINFO_EXTENSION)) === 'json';
+        if ($isjson && (int)($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK && is_uploaded_file((string)$file['tmp_name']) && (int)$file['size'] <= 1048576) {
             $json = (string)file_get_contents((string)$file['tmp_name']);
         }
         try {
@@ -1084,7 +1085,7 @@ function config(): void {
         if (!checkAdminPost('node')) setNodeAdminFault(403, _TOKENMISS, 'config');
         $new = [];
         foreach (array_keys($keys) as $key) {
-            $raw = trim((string)getVar('post', $key, 'raw', ''));
+            $raw = trim(getVar('post', $key, 'raw', ''));
             $new[$key] = preg_match(($key === 'send') ? '/^(?:0|[1-9][0-9]{0,8})$/D' : '/^[1-9][0-9]{0,8}$/D', $raw) ? (int)$raw : -1;
         }
         $lims = $new;
@@ -1127,10 +1128,10 @@ function config(): void {
         http_response_code($code);
     }
     setHead();
-    $rows = [['label_html' => _NODE_FORMAT, 'field_html' => htmlspecialchars((string)($conf['node']['version'] ?? ''), ENT_QUOTES, 'UTF-8')]];
+    $rows = [['label_html' => _NODE_FORMAT, 'field_html' => htmlspecialchars($conf['node']['version'] ?? '', ENT_QUOTES, 'UTF-8')]];
     foreach ($keys as $key => $label) {
         $rows[] = ['label_for' => 'f-'.$key, 'label_html' => $label, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => $key, 'input_id' => 'f-'.$key,
-            'value_attr' => (string)($lims[$key] ?? ''), 'is_required' => true])];
+            'value_attr' => $lims[$key] ?? '', 'is_required' => true])];
     }
     echo getNodeAdminTabs('config')
         .(($note !== '') ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => htmlspecialchars($note, ENT_QUOTES, 'UTF-8')]) : '')
@@ -1168,8 +1169,23 @@ function support(): void {
     $who = ($view['author'] !== '') ? $view['author'] : _ANONYM;
     $text = $tpl->getHtmlFrag('link', ['href' => $view['href'], 'title' => _MVIEW, 'label' => $node->title, 'is_line_break' => true])
         .$tpl->getHtmlFrag('span', ['text' => ' '.$who.' - '.$view['date'], 'is_line_break' => true]).$view['intro_html'].$view['body_html'];
+    $msgs = [];
+    $page = 1;
+    do {
+        $part = $com->getList($type->name, $node->id, $page);
+        $cut = false;
+        foreach ($part['rows'] as $one) {
+            if ($one['depth'] === 0) {
+                $msgs[] = $one;
+                $cut = $one['kids'] > $one['shown'];
+                if ($cut) array_push($msgs, ...$com->getBranch($one['id'], $one['kids'])['rows']);
+            } elseif (!$cut) {
+                $msgs[] = $one;
+            }
+        }
+    } while ($page++ < $part['pages']);
     $talk = '';
-    foreach ($com->getList($type->name, $node->id, 1)['rows'] as $one) {
+    foreach ($msgs as $one) {
         $name = (string)($one['user']['name'] ?? '') ?: ($one['name'] ?: _ANONYM);
         $talk .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
             ['is_col_author' => true, 'has_content_text' => true, 'content_text' => $name],
@@ -1182,12 +1198,12 @@ function support(): void {
             'options_html' => getNodeSupportOpts([0 => _NODE_NOBODY] + getAdminNames('node-'.$type->name), $card['aid'])])],
         ['label_for' => 'f-state', 'label_html' => _NODE_STATE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'state', 'selectid' => 'f-state',
             'options_html' => getNodeSupportOpts($labs['state'], $card['state'])])],
-        ['label_for' => 'f-prio', 'label_html' => _NODE_PRIO, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'prio', 'selectid' => 'f-prio',
+        ['label_for' => 'f-prio', 'label_html' => _PRIORITY, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'prio', 'selectid' => 'f-prio',
             'options_html' => getNodeSupportOpts($labs['prio'], $card['prio'])])],
-        ['label_html' => _NODE_LAST, 'field_html' => htmlspecialchars(format_time($card['activity'], _TIMESTRING), ENT_QUOTES, 'UTF-8')],
+        ['label_html' => _LASTACTIVITY, 'field_html' => htmlspecialchars(format_time($card['activity'], _TIMESTRING), ENT_QUOTES, 'UTF-8')],
     ];
-    $hidden = [['name_attr' => 'name', 'value_attr' => 'node'], ['name_attr' => 'op', 'value_attr' => 'support'], ['name_attr' => 'id', 'value_attr' => (string)$node->id],
-        ['name_attr' => 'version', 'value_attr' => (string)$card['version']], ['name_attr' => 'token', 'value_attr' => getSiteToken('node')]];
+    $hidden = [['name_attr' => 'name', 'value_attr' => 'node'], ['name_attr' => 'op', 'value_attr' => 'support'], ['name_attr' => 'id', 'value_attr' => $node->id],
+        ['name_attr' => 'version', 'value_attr' => $card['version']], ['name_attr' => 'token', 'value_attr' => getSiteToken('node')]];
     echo getNodeAdminTabs('')
         .$tpl->getHtmlPart('box', ['title' => _NODE_CARD, 'content_html' => $tpl->getHtmlPart('form', ['action_url' => $afile.'.php', 'hidden' => $hidden, 'rows' => $rows,
             'actions_html' => $tpl->getHtmlFrag('button', ['submit_label' => _SAVECHANGES, 'button_type' => 'submit'])])])

@@ -8,8 +8,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Stage S17 of docs/node: the ten shipped profiles of modules/node/profiles. The files are exports of the slaed.node format with the settings
- * of docs/node/06 in canonical form and empty upload and rating rules, which a create fills with the rules of the site. A clean installation
+ * The ten shipped profiles of modules/node/profiles. The files are exports of the slaed.node format with the settings
+ * of docs/NODE.md (Types) in canonical form and empty upload and rating rules, which a create fills with the rules of the site. A clean installation
  * turns every profile into an active type through the one import path when its first administrator is created, and writes the starter news;
  * an update creates no type. The installation is driven by tests/Support/install_probe.php over real HTTP on a copy of the release with
  * a disposable MariaDB database: the installer, the panel, the public pages, private support and the external source of content.
@@ -84,7 +84,7 @@ final class NodeProfileTest extends TestCase
         $this->assertSame([10, 20, 30, 40, 50, 60, 70, 80, 90, 100], $sorts);
     }
 
-    # Each profile carries the settings docs/node/06 approves: display mode, extension, SEO, the switches that differ, the roles and the fields
+    # Each profile carries the settings docs/NODE.md (Shipped profiles) approves: display mode, extension, SEO, the switches that differ, the roles and the fields
     #[Test]
     public function eachProfileCarriesItsApprovedSettings(): void
     {
@@ -169,7 +169,8 @@ final class NodeProfileTest extends TestCase
     }
 
     # The clean installation: the form of the installer opens without config/db.php and saving writes it, the installer leaves the mark and drops the types
-    # an earlier installation left in the configuration of the tree with their four areas, the first administrator gets ten active types with every shared area
+    # the shipped configuration and an earlier installation left in the tree with their four areas and names every one of them,
+    # the first administrator gets ten active types with every shared area
     # and directory, the starter news, the mark gone, and a second request creates nothing
     #[Test]
     public function aCleanInstallationCreatesTheTenTypes(): void
@@ -178,7 +179,7 @@ final class NodeProfileTest extends TestCase
         $this->assertSame([200, 'new', true], $run['setup']);
         $this->assertSame([true, 200, true, true], $run['dbfile'], 'The release carries no config/db.php: the form opens without it and the installer writes it');
         $this->assertSame([true, false, false, true, true], $run['lock'], 'The installed site keeps setup.php shut: no form, no secret, no write, no renamed panel');
-        $this->assertTrue($run['unlock'], 'The owner key opens the installer again');
+        $this->assertSame([true, true, true, true, true], $run['unlock'], 'An empty key opened the installer, the code did not guard the form or stayed readable in the key');
         $this->assertSame(0, $run['before']);
         $this->assertSame(303, $run['admin'][0]);
         $want = [];
@@ -189,7 +190,9 @@ final class NodeProfileTest extends TestCase
         $this->assertSame(array_fill_keys(self::NAMES, 2), $run['node']);
         $order = array_column($want, 0);
         $this->assertSame(['uploads' => $order, 'ratings' => $order, 'fields' => ['files', 'media']], $run['areas']);
-        $this->assertSame([true, false, false, false, false], $run['ghost'], 'Types of an earlier installation survived the clean installation');
+        $this->assertSame(['content', 'docs', 'jokes', 'media', 'news', 'stale'], $run['ghost']['names'], 'The tree no longer ships the types of the stand');
+        $this->assertSame([true, []], [$run['ghost']['said'], $run['ghost']['left']], 'Types of the tree survived the clean installation or were not named');
+        $this->assertSame([false, false, false, false], $run['stale'], 'A type of an earlier installation came back with the profiles');
         $this->assertSame($order, $run['dirs']);
         $this->assertFalse($run['mark']);
         $this->assertSame([['name' => 'news', 'cid' => 0, 'uid' => 0, 'aname' => 'SLAED', 'title' => 'Добро пожаловать в SLAED CMS', 'status' => 2, 'home' => 1,
@@ -199,8 +202,10 @@ final class NodeProfileTest extends TestCase
     }
 
     # The unlocked installer over real HTTP: its form carries no password and an empty one connects with the stored password; a clean installation over
-    # the tables of its prefix, a prefix and a panel name outside their grammar, an update whose prefix has no tables and a wrong password are refused
-    # with their reason and no fatal error, config/ and the key untouched; a clean installation whose data file fails writes no mark and keeps the key
+    # the tables of its prefix, a prefix and a panel name outside their grammar, a panel named index or setup, a branch the installer does not offer,
+    # an update whose prefix has no tables, a wrong password, a missing or wrong code of the key, a pending configuration journal and a config/security.php
+    # PHP cannot write are refused with their reason and no fatal error, config/ and the key untouched and the permissions of db.php and global.php kept;
+    # a clean installation whose data file fails writes no mark and keeps the key
     #[Test]
     public function theUnlockedInstallerRefusesBeforeItWrites(): void
     {
@@ -209,12 +214,18 @@ final class NodeProfileTest extends TestCase
         $this->assertSame([true, true], $run['keep'], 'An empty password field did not keep the stored password, or the refused run wrote a file');
         $this->assertSame([true, false], $run['wrong'], 'A wrong password ends in a fatal error instead of the reason');
         $this->assertSame([true, true, true, true], [$run['fresh'], $run['prefix'], $run['afile'], $run['none']]);
+        $this->assertSame([true, true], $run['entry'], 'The panel may be named after another entry point of the root');
+        $this->assertTrue($run['step'], 'A branch the installer does not offer was not refused');
+        $this->assertSame([true, true], $run['code'], 'A clean installation or another database host went through without the code of the key');
+        $this->assertTrue($run['jour'], 'The installer wrote while a configuration operation of the site was unfinished');
+        $this->assertTrue($run['write'], 'The installer started while config/security.php was not writable');
+        $this->assertTrue($run['perm'][0], 'The installer changed the permissions of config/db.php or config/global.php');
         $this->assertSame([true, true], $run['same'], 'A refused run changed config/ or took the key');
         $this->assertSame([true, false, true, true], $run['ddl'], 'A failed clean installation wrote its marks or took the key');
         $this->assertSame(['error_php' => 0, 'error_sql' => 0, 'error_site' => 2], $run['logs'], 'Only the two refused connections are logged');
     }
 
-    # A profile the installation cannot finish - here a user file in uploads/jokes, which NOD-200 refuses to take over - is named in the notice of the next page and
+    # A profile the installation cannot finish - here a user file in uploads/jokes, which the installation refuses to take over - is named in the notice of the next page and
     # in the site log with its step, the other nine types and the starter news are created all the same, and the mark is gone
     #[Test]
     public function aFailedProfileIsNamedAndTheOthersAreCreated(): void

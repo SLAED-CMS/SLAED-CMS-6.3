@@ -733,9 +733,9 @@ return [
             .'the editable text off with a line; the site draws them as the logged-in half of its login list, which is the same ul the header already fills when '
             .'nobody is logged in, so the two cannot be one element',
         'fragments/alert.html' =>
-            'the flash notice is the panel alone: getFlashHtml() and the admin tabs are its only producers, and is_flash with alert_attr are what place it, fade it '
-            .'and start its countdown. Under that the panel prints the text as handed and the site wraps it in a paragraph, because the site notice is a block of '
-            .'running text and the panel notice is one line - the same split the .sl-alert rules already carry',
+            'the fading flash notice is the panel alone: is_flash with alert_attr are what place it, fade it and start its countdown, and the site shows the same '
+            .'one-time notice of getFlashHtml() as a plain notice at the top of its content. Under that the panel prints the text as handed and the site wraps it in '
+            .'a paragraph, because the site notice is a block of running text and the panel notice is one line - the same split the .sl-alert rules already carry',
         'fragments/block-content.html' =>
             'a class map, and the map is each theme own vocabulary: three named containers in the panel against fifteen on the site, with the four they share '
             .'spelled the same way. Unifying means one theme emitting class names nothing in it styles, which is how a dead class enters a package hundreds of '

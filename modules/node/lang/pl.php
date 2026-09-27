@@ -24,7 +24,6 @@ define('_NODE_PERIOD','Okres sprawdzania, sekundy');
 define('_NODE_PHIGH','Wysoki');
 define('_NODE_PLOW','Niski');
 define('_NODE_PNORM','Normalny');
-define('_NODE_PRIO','Priorytet');
 define('_NODE_PURGE','Pilny');
 define('_NODE_RELATED','Powiązane materiały');
 define('_NODE_RELHINT','Numery materiałów oddzielone przecinkami');

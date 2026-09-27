@@ -12,9 +12,7 @@ if (!defined('MODULE_FILE')) {
 function info(): void {
     global $db, $conf, $tpl;
     $url = getVar('post', 'url', 'url');
-    $mods = [];
-    foreach (getNodeTypeMap() as $key => $type) if ($type->active && $type->settings['integrations']['rss']) $mods[$key] = getModuleName($key);
-    if (is_active('shop')) $mods['shop'] = _SHOP;
+    $mods = getRssFeeds();
     $mod = getVar('post', 'mod', 'text', '');
     if (!isset($mods[$mod])) $mod = (string)array_key_first($mods);
     $cat = getVar('post', 'cat', 'num');
