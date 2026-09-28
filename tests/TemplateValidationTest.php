@@ -441,4 +441,26 @@ class TemplateValidationTest extends TestCase
         $this->assertSame(2, substr_count($code, "/compile.lock', 'c')"), 'A writer compiles without the lock of the theme');
         $this->assertSame(2, substr_count($code, 'clearstatcache(true, '), 'A writer does not check again once it holds the lock');
     }
+
+    # The select fragment of the site read input_id and the admin one selectid, so a caller naming one key left the other theme without an id and its label pointing nowhere
+    # Both fragments read selectid, and no caller of the select fragment names input_id
+    public function testSelectFragmentsShareTheirIdKey(): void
+    {
+        foreach (['admin', 'lite'] as $theme) {
+            $frag = (string)file_get_contents(self::$templatesPath.'/'.$theme.'/fragments/select.html');
+            $this->assertStringContainsString('{% if selectid %}id="{{ selectid }}"{% endif %}', $frag, 'The select fragment of '.$theme.' does not read selectid');
+            $this->assertStringNotContainsString('input_id', $frag, 'The select fragment of '.$theme.' reads a second id key');
+        }
+        $errors = [];
+        foreach (getTreeFiles(self::$basePath) as $file) {
+            $path = str_replace('\\', '/', $file->getPathname());
+            if ($file->getExtension() !== 'php' || preg_match('#/(tests|plugins)/#', $path)) continue;
+            $code = (string)file_get_contents($path);
+            if (!preg_match_all("#getHtmlFrag\('select', \[(.{0,600}?)\]\)#s", $code, $hits, PREG_OFFSET_CAPTURE)) continue;
+            foreach ($hits[1] as [$args, $at]) {
+                if (str_contains($args, "'input_id'")) $errors[] = substr($path, strlen(self::$basePath) + 1).':'.(substr_count(substr($code, 0, $at), "\n") + 1);
+            }
+        }
+        $this->assertSame([], $errors, 'A caller of the select fragment names input_id, which neither theme reads');
+    }
 }

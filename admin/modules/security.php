@@ -102,6 +102,7 @@ function logview(): void {
         $cont .= checkPerms($path);
         $cont .= $tpl->getHtmlPart('box', ['content_html' => Editor::getCode([
             'id' => 'code',
+            'label' => $title,
             'lang' => 'text',
             'text' => $content,
         ])]);

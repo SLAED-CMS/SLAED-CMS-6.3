@@ -106,6 +106,7 @@ function getEditbox(
             'field_html' => Editor::getCode([
                 'id' => 'code',
                 'name' => 'template',
+                'label' => _FILE.': '.$file,
                 'lang' => 'php',
                 'text' => $text,
             ]),

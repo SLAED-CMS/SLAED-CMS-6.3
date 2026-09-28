@@ -290,6 +290,7 @@ function tplconfig(): void {
                 'field_html' => Editor::getCode([
                     'id' => 'code_'.$i,
                     'name' => 'tmp[]',
+                    'label' => _TPFOR.': '.$typm[$i],
                     'lang' => 'html',
                     'text' => $conf['filetype'][$typm[$i]] ?? '',
                 ]),

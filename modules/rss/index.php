@@ -40,7 +40,7 @@ function info(): void {
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label_for' => 'f-mod',
         'label' => _RSS_INFO_TIP,
-        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'mod', 'input_id' => 'f-mod', 'options_html' => $modsOptions, 'select_attr' => 'OnChange="submit()"']),
+        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'mod', 'selectid' => 'f-mod', 'options_html' => $modsOptions, 'select_attr' => 'OnChange="submit()"']),
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label_for' => 'f-cat',
@@ -50,7 +50,7 @@ function info(): void {
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label_for' => 'f-num',
         'label' => _RSS_INFO_MENG,
-        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'num', 'input_id' => 'f-num', 'options_html' => $numOptions]),
+        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'num', 'selectid' => 'f-num', 'options_html' => $numOptions]),
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label_for' => 'f-rsscode',
@@ -78,7 +78,7 @@ function info(): void {
             'fields' => $tpl->getHtmlFrag('form-field-row', [
                 'label_for' => 'f-url-pick',
                 'label' => _SELECTASITE,
-                'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'url', 'input_id' => 'f-url-pick', 'options_html' => rss_select()]),
+                'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'url', 'selectid' => 'f-url-pick', 'options_html' => rss_select()]),
             ]),
             'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'label' => _OK]),
         ]);

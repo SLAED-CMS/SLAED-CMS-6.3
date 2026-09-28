@@ -445,6 +445,7 @@ function filecode(): void {
             'field_html' => Editor::getCode([
                 'id' => 'code',
                 'name' => 'blocktext',
+                'label' => _CONTENT,
                 'lang' => 'php',
                 'text' => trim($out[1] ?? ''),
             ]),

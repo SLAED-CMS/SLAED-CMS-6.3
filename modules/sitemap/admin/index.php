@@ -87,6 +87,7 @@ function sitemap(): void {
         ],
         'content_html' => Editor::getCode([
             'id' => 'code',
+            'label' => _FILE.': '.$file,
             'lang' => 'xml',
             'text' => str_replace('&', '&amp;', $conts),
         ]),
@@ -125,6 +126,7 @@ function xsledit(): void {
         'content_html' => Editor::getCode([
             'id' => 'code',
             'name' => 'template',
+            'label' => _FILE.': '.$file,
             'lang' => 'xml',
             'text' => $conts,
         ]),

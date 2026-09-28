@@ -91,10 +91,15 @@ interface CodeDriver {
     // Returns HTML for <script> and <link> tags
     public function getAssets(string $profile): string;
     
-    // Returns the actual <textarea> and initialization scripts specific to a syntax lang
-    public function getWidget(string $id, string $name, string $value, string $lang, string $profile): string;
+    // Returns the actual <textarea> and initialization scripts specific to a syntax lang;
+    // $label is the accessible name the driver puts on its editable area, never empty
+    public function getWidget(string $id, string $name, string $value, string $lang, string $profile, string $label): string;
 }
 ```
+
+A code editor has no caption of its own, so `Editor::getCode()` hands every driver a name: the `label`
+key of its data, or the generic `_TEXT` when a caller gives none. CodeMirror writes it as `aria-label` of
+its content through `EditorView.contentAttributes`, so a screen reader announces the file it edits.
 
 ## Usage
 
@@ -117,6 +122,7 @@ echo Editor::getContent([
 echo Editor::getCode([
     'id' => 'source',
     'name' => 'source',
+    'label' => _FILE.': '.$path,
     'text' => $codeContent,
     'lang' => 'php'
 ]);

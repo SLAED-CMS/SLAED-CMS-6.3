@@ -146,9 +146,10 @@ function getNodeAdminForm(NodeType $type, array $vals, array $errs, int $id, int
             'options_html' => $opts])];
     }
     if ($feat['poll']) {
-        $rows[] = ['label_for' => 'f-poll', 'label_html' => _VOTING, 'hint_html' => _NODE_POLLHINT, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number',
+        $rows[] = ['label_for' => 'f-poll', 'label_html' => _VOTING, 'hint_html' => _NODE_POLLHINT, 'hint_id' => 'f-poll-hint',
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number',
             'name_attr' => 'poll',
-            'input_id' => 'f-poll', 'value_attr' => $vals['poll'] ?: ''])];
+            'input_id' => 'f-poll', 'describedby' => 'f-poll-hint', 'value_attr' => $vals['poll'] ?: ''])];
     }
     foreach (['home' => _NODE_FHOME, 'pinned' => _NODE_FPIN] as $key => $label) {
         if (!$feat[$key]) continue;
@@ -156,8 +157,9 @@ function getNodeAdminForm(NodeType $type, array $vals, array $errs, int $id, int
             'is_checked' => $vals[$key]])];
     }
     $date = fn(?string $val): string => ($val === null) ? '' : str_replace(' ', 'T', substr($val, 0, 16));
-    $rows[] = ['label_for' => 'f-pubdate', 'label_html' => _CHNGSTORY, 'hint_html' => _NODE_DATEHINT, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'datetime-local',
-        'name_attr' => 'pubdate', 'input_id' => 'f-pubdate', 'value_attr' => $date($vals['pubdate'])])];
+    $rows[] = ['label_for' => 'f-pubdate', 'label_html' => _CHNGSTORY, 'hint_html' => _NODE_DATEHINT, 'hint_id' => 'f-pubdate-hint',
+        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'datetime-local',
+        'name_attr' => 'pubdate', 'input_id' => 'f-pubdate', 'describedby' => 'f-pubdate-hint', 'value_attr' => $date($vals['pubdate'])])];
     if ($feat['schedule']) {
         $rows[] = ['label_for' => 'f-expires', 'label_html' => _ENDDATE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'datetime-local', 'name_attr' => 'expires',
             'input_id' => 'f-expires', 'value_attr' => $date($vals['expires'])])];
@@ -773,16 +775,19 @@ function getNodeTypeRows(array $vals, bool $new): array {
         array_keys($list), $list));
     $head = fn(string $label): array => ['label_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => $label]), 'field_html' => '', 'is_full' => true];
     $rows = [];
-    $rows[] = ['label_for' => 'f-tname', 'label_html' => _NODE_NAME, 'hint_html' => $esc(_NODE_NAMEHINT), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text',
-        'name_attr' => 'tname', 'input_id' => 'f-tname', 'value_attr' => $vals['name'], 'maxlength_num' => 20, 'is_required' => true, 'is_readonly' => !$new])];
+    $rows[] = ['label_for' => 'f-tname', 'label_html' => _NODE_NAME, 'hint_html' => $esc(_NODE_NAMEHINT), 'hint_id' => 'f-tname-hint',
+        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text',
+        'name_attr' => 'tname', 'input_id' => 'f-tname', 'describedby' => 'f-tname-hint',
+        'value_attr' => $vals['name'], 'maxlength_num' => 20, 'is_required' => true, 'is_readonly' => !$new])];
     $rows[] = ['label_for' => 'f-title', 'label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'input_id' => 'f-title',
         'value_attr' => $vals['title'], 'maxlength_num' => 100, 'is_required' => true])];
     $rows[] = ['label_for' => 'f-intro', 'label_html' => _DESCRIPTION, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'intro',
         'input_id' => 'f-intro',
         'value_attr' => $vals['intro'], 'maxlength_num' => 1000])];
-    $rows[] = ['label_for' => 'f-ext', 'label_html' => _NODE_EXT, 'hint_html' => $esc(_NODE_EXTHINT), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text',
+    $rows[] = ['label_for' => 'f-ext', 'label_html' => _NODE_EXT, 'hint_html' => $esc(_NODE_EXTHINT), 'hint_id' => 'f-ext-hint',
+        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text',
         'name_attr' => 'ext',
-        'input_id' => 'f-ext', 'value_attr' => $vals['ext'], 'maxlength_num' => 20])];
+        'input_id' => 'f-ext', 'describedby' => 'f-ext-hint', 'value_attr' => $vals['ext'], 'maxlength_num' => 20])];
     $rows[] = ['label_for' => 'f-sort', 'label_html' => _SORT, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'sort', 'input_id' => 'f-sort',
         'value_attr' => $vals['sort']])];
     $rows[] = $head(_LIST);
@@ -799,8 +804,9 @@ function getNodeTypeRows(array $vals, bool $new): array {
     $show = ['category' => _CATEGORY, 'author' => _POSTEDBY, 'date' => _DATE, 'views' => _READS];
     $rows[] = ['label_html' => _NODE_SHOW, 'field_html' => implode(' ', array_map(fn(string $k, string $v): string => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'show[]',
         'value_attr' => $k, 'is_checked' => in_array($k, $set['list']['show'], true), 'label_text' => $v]), array_keys($show), $show))];
-    $rows[] = ['label_for' => 'f-mode', 'label_html' => _NODE_MODE, 'hint_html' => $esc(_NODE_MODEHINT), 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'mode',
-        'selectid' => 'f-mode', 'options_html' => $opts(array_combine(NodeQuery::MODES, NodeQuery::MODES), $set['view']['mode'])])];
+    $rows[] = ['label_for' => 'f-mode', 'label_html' => _NODE_MODE, 'hint_html' => $esc(_NODE_MODEHINT), 'hint_id' => 'f-mode-hint',
+        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'mode',
+        'selectid' => 'f-mode', 'describedby' => 'f-mode-hint', 'options_html' => $opts(array_combine(NodeQuery::MODES, NodeQuery::MODES), $set['view']['mode'])])];
     $rows[] = $head(_NODE_FEATURES);
     $feats = ['categories' => _CATEGORIES, 'comments' => _COMMENTS, 'rating' => _RATING, 'favorites' => _FAVORITES, 'poll' => _VOTING, 'home' => _NODE_FHOME,
         'pinned' => _NODE_FPIN,
@@ -1008,8 +1014,9 @@ function typeclone(): void {
             'action_url' => $afile.'.php',
             'hidden' => [['name_attr' => 'name', 'value_attr' => 'node'], ['name_attr' => 'op', 'value_attr' => 'clone'], ['name_attr' => 'type', 'value_attr' => $old->name],
                 ['name_attr' => 'token', 'value_attr' => getSiteToken('node')]],
-            'rows' => [['label_for' => 'f-tname', 'label_html' => _NODE_NEWNAME, 'hint_html' => htmlspecialchars(_NODE_NAMEHINT, ENT_QUOTES, 'UTF-8'),
-                'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'tname', 'input_id' => 'f-tname', 'value_attr' => $new, 'maxlength_num' => 20,
+            'rows' => [['label_for' => 'f-tname', 'label_html' => _NODE_NEWNAME, 'hint_html' => htmlspecialchars(_NODE_NAMEHINT, ENT_QUOTES, 'UTF-8'), 'hint_id' => 'f-tname-hint',
+                'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'tname', 'input_id' => 'f-tname', 'describedby' => 'f-tname-hint',
+                    'value_attr' => $new, 'maxlength_num' => 20,
                 'is_required' => true])]],
             'actions_html' => $tpl->getHtmlFrag('button', ['submit_label' => _NODE_CLONE, 'button_type' => 'submit']),
         ])]);
@@ -1074,8 +1081,9 @@ function import(): void {
             'rows' => [
                 ['label_for' => 'f-file', 'label_html' => _NODE_JSON, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'file', 'name_attr' => 'file', 'input_id' => 'f-file',
                     'input_attr' => 'accept="application/json,.json"', 'is_required' => true])],
-                ['label_for' => 'f-tname', 'label_html' => _NODE_NEWNAME, 'hint_html' => htmlspecialchars(_NODE_NAMEHINT, ENT_QUOTES, 'UTF-8'),
-                    'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'tname', 'input_id' => 'f-tname', 'value_attr' => $new, 'maxlength_num' => 20])],
+                ['label_for' => 'f-tname', 'label_html' => _NODE_NEWNAME, 'hint_html' => htmlspecialchars(_NODE_NAMEHINT, ENT_QUOTES, 'UTF-8'), 'hint_id' => 'f-tname-hint',
+                    'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'tname', 'input_id' => 'f-tname', 'describedby' => 'f-tname-hint',
+                        'value_attr' => $new, 'maxlength_num' => 20])],
             ],
             'actions_html' => $tpl->getHtmlFrag('button', ['submit_label' => _NODE_IMPORT, 'button_type' => 'submit']),
         ])]);

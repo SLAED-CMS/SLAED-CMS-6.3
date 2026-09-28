@@ -13,11 +13,11 @@ interface ContentDriver {
     public function getWidget(string $id, string $name, string $value, string $profile, array $data = []): string;
 }
 
-# Contract for all code/syntax editors
+# Contract for all code/syntax editors; the label is the accessible name of the editable area and is never empty
 interface CodeDriver {
     public function getAssets(string $profile): string;
 
-    public function getWidget(string $id, string $name, string $value, string $lang, string $profile): string;
+    public function getWidget(string $id, string $name, string $value, string $lang, string $profile, string $label): string;
 }
 
 class Editor {
@@ -66,6 +66,7 @@ class Editor {
     }
 
     # Render code editor widget; lang required, validated against manifest
+    # The label names the editable area for a screen reader, and falls back to the same generic text a content editor gets, since no code editor has a caption of its own
     public static function getCode(array $data): string {
         global $conf;
         $key = (string)($conf['editor']['code'] ?? 'codemirror');
@@ -87,7 +88,9 @@ class Editor {
         $id = (string)($data['id'] ?? 'code');
         $name = (string)($data['name'] ?? '');
         $value = (string)($data['text'] ?? '');
-        return $driver instanceof CodeDriver ? $driver->getAssets($profile).self::getThemeSkin($key).$driver->getWidget($id, $name, $value, $lang, $profile) : '';
+        $label = (string)($data['label'] ?? '');
+        if ($label === '') $label = _TEXT;
+        return $driver instanceof CodeDriver ? $driver->getAssets($profile).self::getThemeSkin($key).$driver->getWidget($id, $name, $value, $lang, $profile, $label) : '';
     }
 
     # Render editor select dropdown for settings UI

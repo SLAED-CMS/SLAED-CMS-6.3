@@ -49,7 +49,7 @@ function contact(): void {
     $fields = $asend ? $tpl->getHtmlFrag('form-field-row', [
         'label_for' => 'f-id',
         'label' => _TO,
-        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'id', 'input_id' => 'f-id', 'options_html' => $asend]),
+        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'id', 'selectid' => 'f-id', 'options_html' => $asend]),
     ]) : '';
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label_for' => 'f-sname',

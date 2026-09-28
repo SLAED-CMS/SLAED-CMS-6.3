@@ -89,6 +89,7 @@ function getTemplateEditorBlock(string $templ, string $filelink, string $mode, s
             'field_html' => Editor::getCode([
                 'id' => 'code_'.md5($filelink),
                 'name' => 'template',
+                'label' => _FILE.': '.$filelink,
                 'lang' => str_ends_with($filelink, '.css') ? 'css' : 'html',
                 'text' => (string)file_get_contents($filelink),
             ]),

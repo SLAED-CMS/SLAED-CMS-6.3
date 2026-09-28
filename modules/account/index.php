@@ -1053,7 +1053,7 @@ function edithome(): void {
         }
         $flds[] = ['label' => _GENDER, 'label_for' => 'f-gender', 'control_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'gender',
-            'input_id' => 'f-gender',
+            'selectid' => 'f-gender',
             'is_account' => true,
             'select_attr' => $mark('gender'),
             'options_html' => $gopt,
@@ -1203,7 +1203,7 @@ function edithome(): void {
             }
             $lins[] = ['label' => _C_12, 'label_for' => 'f-story', 'hint' => _ACCOUNT_STORYNOTE, 'hint_id' => 'f-story-hint', 'control_html' => $tpl->getHtmlFrag('select', [
                 'name_attr' => 'story',
-                'input_id' => 'f-story',
+                'selectid' => 'f-story',
                 'describedby' => 'f-story-hint',
                 'options_html' => $sopt,
             ])];
@@ -1248,7 +1248,7 @@ function edithome(): void {
         if ($tcnt > 1) {
             $lins[] = ['label' => _THEME, 'label_for' => 'f-theme', 'hint' => _ACCOUNT_THEMENOTE, 'hint_id' => 'f-theme-hint', 'control_html' => $tpl->getHtmlFrag('select', [
                 'name_attr' => 'theme',
-                'input_id' => 'f-theme',
+                'selectid' => 'f-theme',
                 'describedby' => 'f-theme-hint',
                 'options_html' => $topt,
             ])];

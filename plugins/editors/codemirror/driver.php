@@ -22,12 +22,13 @@ class EditorCodemirror implements CodeDriver {
             .$tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/editors/codemirror/assets/cm6.bundle.js', 'attr' => '']);
     }
 
-    public function getWidget(string $id, string $name, string $value, string $lang, string $profile): string {
+    public function getWidget(string $id, string $name, string $value, string $lang, string $profile, string $label): string {
         global $tpl;
         $fn = self::LANGS[$lang] ?? '';
         $ext = $fn ? 'CM6.'.$fn.'(),' : '';
         $dark = ($profile === 'full') ? ',CM6.oneDark' : '';
-        $exts = '[CM6.basicSetup,'.$ext.'CM6.keymap.of([CM6.indentWithTab])'.$dark.']';
+        $jlab = json_encode(['aria-label' => $label], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE);
+        $exts = '[CM6.basicSetup,'.$ext.'CM6.keymap.of([CM6.indentWithTab]),CM6.EditorView.contentAttributes.of('.$jlab.')'.$dark.']';
         $jid = json_encode($id);
         $jcm = json_encode($id.'_cm');
         $eid = htmlspecialchars($id, ENT_QUOTES, 'UTF-8');

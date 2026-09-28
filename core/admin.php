@@ -1404,6 +1404,7 @@ function getAdminFileEditor(array $edit): string {
             .Editor::getCode([
                 'id' => $code,
                 'name' => 'text',
+                'label' => _FILE.': '.$path,
                 'lang' => $man->getCodeLanguage($path),
                 'text' => (string)($edit['text'] ?? ''),
             ]),

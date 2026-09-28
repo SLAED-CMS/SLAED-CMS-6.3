@@ -299,7 +299,7 @@ function getNodeFormRows(NodeType $type, array $vals, array $errs, bool $moder, 
     }
     if ($feat['categories']) {
         $allow = getNodeReader()->getNodePostCats($type);
-        $rows[] = ['label' => _CATEGORY, 'for' => 'f-cid', 'field' => $tpl->getHtmlFrag('select', ['name_attr' => 'cid', 'input_id' => 'f-cid', 'selectid' => 'f-cid',
+        $rows[] = ['label' => _CATEGORY, 'for' => 'f-cid', 'field' => $tpl->getHtmlFrag('select', ['name_attr' => 'cid', 'selectid' => 'f-cid',
             'options_html' => getNodeCatOptions($type, [$vals['cid']], true, $allow)])];
         $rows[] = ['label' => _NODE_CATS, 'for' => 'f-cids', 'field' => $tpl->getHtmlFrag('select', ['name_attr' => 'cids', 'selectid' => 'f-cids', 'is_multiple' => true,
             'is_name_array' => true, 'options_html' => getNodeCatOptions($type, $vals['cids'], false, $allow)])];

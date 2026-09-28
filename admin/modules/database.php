@@ -325,6 +325,7 @@ function dump(): void {
             'field_html' => Editor::getCode([
                 'id' => 'code',
                 'name' => 'string',
+                'label' => _INQUIRY,
                 'lang' => 'sql',
                 'text' => $string,
             ]),

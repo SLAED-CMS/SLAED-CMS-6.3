@@ -1153,13 +1153,13 @@ function getTplCategorySelect(string $mod = '', int $id = 0, string $name = '', 
         }
         return !$raw ? $tpl->getHtmlFrag('select', [
             'name_attr' => $name,
-            'input_id' => 'f-'.$name,
+            'selectid' => 'f-'.$name,
             'select_class' => $clas,
             'title' => _CATEGORIES,
             'options_html' => $opts,
         ]) : $opts;
     }
-    if ($empty) return $tpl->getHtmlFrag('select', ['name_attr' => $name, 'input_id' => 'f-'.$name, 'select_class' => $clas, 'title' => _CATEGORIES, 'options_html' => $empty]);
+    if ($empty) return $tpl->getHtmlFrag('select', ['name_attr' => $name, 'selectid' => 'f-'.$name, 'select_class' => $clas, 'title' => _CATEGORIES, 'options_html' => $empty]);
     return '';
 }
 

@@ -377,6 +377,8 @@ Current helpers:
 
 The pluggable editor layer is active via the `Editor` class (`core/classes/editor.php`). Forms and textareas should output via `Editor::getContent()` or `Editor::getCode()` rather than hardcoded editor initializers. The available editor drivers are bundled under `plugins/editors/`.
 
+A code editor driver of your own must accept a sixth argument: `CodeDriver::getWidget(string $id, string $name, string $value, string $lang, string $profile, string $label)`. The label is the accessible name of the editable area and is never empty; a driver with the old five-argument signature no longer loads. Pass `'label'` to `Editor::getCode()` to name the field.
+
 ### Content Parsing
 
 User and administrative content formatting should be passed through the unified `Parser` class (`core/classes/parser.php`), typically accessed via its `filterContent()` method.
