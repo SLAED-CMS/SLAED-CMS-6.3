@@ -6,6 +6,10 @@
 
 return [
     'fields' => [
+        'account' => [
+        ],
+        'forum' => [
+        ],
         'order' => [
             'field1' => [
                 'title' => 'WebMoney',
