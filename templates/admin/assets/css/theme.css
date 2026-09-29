@@ -196,17 +196,13 @@ input[type="submit"].sl-but-back {
   );
 }
 
+/* The toned buttons are solid bars, as the panel heads are: one fill, one border, one bevel and white text in both schemes */
 .sl-but-blue {
-  color: var(--sl-on-solid);
+  color: var(--sl-solid-text);
   text-shadow: 0 1px 0 var(--sl-scrim-subtle);
-  border-color: var(--sl-primary-strong);
-  background-color: var(--sl-primary-strong);
-  background: linear-gradient(
-    to bottom,
-    var(--sl-primary-strong) 0%,
-    var(--sl-primary-strong) 48%,
-    var(--sl-primary) 100%
-  );
+  border-color: var(--sl-solid-border);
+  background: var(--sl-solid-bg);
+  box-shadow: var(--sl-solid-shadow);
 }
 
 input.sl-but-blue[value="OK"],
@@ -221,29 +217,19 @@ input.sl-but-blue[value="ОК"] {
 
 /* Reserved: danger-action button variant (delete, reset, uninstall); no permanent emitter yet by design */
 .sl-but-red {
-  color: var(--sl-on-solid);
+  color: var(--sl-solid-text);
   text-shadow: 0 1px 0 var(--sl-scrim-subtle);
-  border-color: var(--sl-danger-strong);
-  background-color: var(--sl-danger);
-  background: linear-gradient(
-    to bottom,
-    var(--sl-danger) 0%,
-    var(--sl-danger) 48%,
-    var(--sl-danger-strong) 100%
-  );
+  border-color: var(--sl-solid-bad-border);
+  background: var(--sl-solid-bad-bg);
+  box-shadow: var(--sl-solid-shadow);
 }
 
 .sl-but-green {
-  color: var(--sl-on-solid);
+  color: var(--sl-solid-text);
   text-shadow: 0 1px 0 var(--sl-scrim-subtle);
-  border-color: var(--sl-success-strong);
-  background-color: var(--sl-success);
-  background: linear-gradient(
-    to bottom,
-    var(--sl-success) 0%,
-    var(--sl-success) 48%,
-    var(--sl-success-strong) 100%
-  );
+  border-color: var(--sl-solid-good-border);
+  background: var(--sl-solid-good-bg);
+  box-shadow: var(--sl-solid-shadow);
 }
 
 .sl-but-foot {
@@ -1530,24 +1516,21 @@ tr.sl-row-collapsed {
   overflow: hidden;
 }
 
+/* A solid head: a deep fill with white text in both schemes, read from the --sl-solid-* tokens */
 .sl-block-sidebar h3 {
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   font-size: inherit;
   height: var(--sl-panel-height);
   line-height: var(--sl-panel-height);
-  color: var(--sl-on-solid);
+  color: var(--sl-solid-text);
   text-shadow: 0 1px 0 var(--sl-scrim-subtle);
-  background-color: var(--sl-success);
-  background: linear-gradient(
-    to bottom,
-    var(--sl-success) 0%,
-    var(--sl-success) 48%,
-    var(--sl-success-strong) 100%
-  );
+  background: var(--sl-solid-good-bg);
   border: 1px solid transparent;
-  box-shadow: var(--sl-btn-shadow);
+  box-shadow: var(--sl-solid-shadow);
   box-sizing: border-box;
 }
 
@@ -1622,25 +1605,13 @@ tr.sl-row-collapsed {
 
 .sl-block-sidebar:has([data-sl-toggle-control="sl-block-3"]) h3,
 .sl-block-sidebar:has([data-sl-toggle-control="sl-block-4"]) h3 {
-  background-color: var(--sl-warning);
-  background: linear-gradient(
-    to bottom,
-    var(--sl-warning) 0%,
-    var(--sl-warning) 48%,
-    var(--sl-warning-strong) 100%
-  );
+  background: var(--sl-solid-warn-bg);
 }
 
 .sl-block-sidebar:has([data-sl-toggle-control="sl-block-1"]) h3,
 .sl-block-sidebar:has([data-sl-toggle-control="sl-block-2"]) h3 {
-  background-color: var(--sl-primary-strong);
-  background: linear-gradient(
-    to bottom,
-    var(--sl-primary-strong) 0%,
-    var(--sl-primary-strong) 48%,
-    var(--sl-primary) 100%
-  );
-  border-color: var(--sl-primary-strong);
+  background: var(--sl-solid-bg);
+  border-color: var(--sl-solid-border);
 }
 
 .sl-wrapper.sl-admin-shell .sl-admin-sidebar {
@@ -1671,9 +1642,9 @@ tr.sl-row-collapsed {
 
 .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-block-sidebar h3 {
   padding: var(--sl-admin-tight-title-pad) 0;
-  border: 1px solid var(--sl-success-strong);
+  border: 1px solid var(--sl-solid-good-border);
   border-radius: var(--sl-admin-tight-title-radius);
-  box-shadow: var(--sl-btn-shadow);
+  box-shadow: var(--sl-solid-shadow);
   height: auto;
   line-height: 1;
 }
@@ -1831,14 +1802,8 @@ tr.sl-row-collapsed {
   .sl-admin-sidebar
   .sl-block-sidebar:has([data-sl-toggle-control="sl-block-4"])
   h3 {
-  border-color: var(--sl-warning-strong);
-  background-color: var(--sl-warning);
-  background: linear-gradient(
-    to bottom,
-    var(--sl-warning) 0%,
-    var(--sl-warning) 48%,
-    var(--sl-warning-strong) 100%
-  );
+  border-color: var(--sl-solid-warn-border);
+  background: var(--sl-solid-warn-bg);
 }
 
 /* Admin home: menu grid, module cards and LED indicators */
@@ -2038,11 +2003,6 @@ tr.sl-row-collapsed {
 .sl-dial-toggle,
 .sl-dial-item {
   border: 0;
-}
-
-.sl-dial.sl-open .sl-dial-toggle,
-.sl-dial:hover .sl-dial-toggle {
-  background-color: var(--sl-primary-strong);
 }
 
 .sl-dial .sl-dial-item {
@@ -2674,9 +2634,12 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   white-space: nowrap;
 }
 
+/* A solid head, as a sidebar block head is */
 .sl-dashboard-panel-head {
   margin-bottom: var(--sl-space-3);
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -2684,19 +2647,13 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   line-height: var(--sl-panel-height);
   height: var(--sl-panel-height);
   text-transform: none;
-  color: var(--sl-on-solid);
+  color: var(--sl-solid-text);
   text-align: center;
   border-radius: var(--sl-radius-1);
   border: 1px solid transparent;
   text-shadow: 0 1px 0 var(--sl-scrim-subtle);
-  box-shadow: var(--sl-btn-shadow);
-  background-color: var(--sl-primary-strong);
-  background: linear-gradient(
-    to bottom,
-    var(--sl-primary-strong) 0%,
-    var(--sl-primary-strong) 48%,
-    var(--sl-primary) 100%
-  );
+  box-shadow: var(--sl-solid-shadow);
+  background: var(--sl-solid-bg);
   box-sizing: border-box;
 }
 
@@ -2709,7 +2666,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   margin: 0;
   padding: 0 var(--sl-space-3);
   line-height: 1;
-  color: var(--sl-on-solid);
+  color: var(--sl-solid-text);
   background: none;
 }
 
@@ -2740,7 +2697,60 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 .sl-dashboard-panel-head.sl-is-open {
-  border-color: var(--sl-primary-strong);
+  border-color: var(--sl-solid-border);
+}
+
+/* Motion over the page: nothing here changes a colour or a measure, and where motion is reduced it is not there */
+@media (prefers-reduced-motion: no-preference) {
+  /* The beam crosses every solid head once a cycle, each a tenth of a cycle after the one before it, and at once under the hand */
+  :is(.sl-dashboard-panel-head, .sl-block-sidebar h3)::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: var(--sl-beam-width);
+    background: linear-gradient(100deg, transparent, var(--sl-beam-bg), transparent);
+    transform: translateX(-160%) skewX(-18deg);
+    animation: sl-beam var(--sl-beam-dur) var(--sl-ease-in-out) infinite;
+    animation-delay: calc(var(--sl-d-turn, 0) * var(--sl-beam-dur) / 10);
+    pointer-events: none;
+  }
+
+  :is(.sl-dashboard-panel-head, .sl-block-sidebar h3):hover::after {
+    animation: sl-beam-once calc(var(--sl-beam-dur) / 8) var(--sl-ease-out);
+  }
+
+  /* The light that follows the pointer, as on the presentation page; admin-ui.js writes where it is */
+  body[data-sl-pointer]::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: var(--sl-z-popover);
+    background: radial-gradient(circle var(--sl-pointer-width) at var(--sl-d-pointer-x) var(--sl-d-pointer-y), var(--sl-tint), transparent 70%);
+    pointer-events: none;
+  }
+}
+
+@keyframes sl-beam {
+  0%,
+  72% {
+    transform: translateX(-160%) skewX(-18deg);
+  }
+
+  100% {
+    transform: translateX(420%) skewX(-18deg);
+  }
+}
+
+@keyframes sl-beam-once {
+  from {
+    transform: translateX(-160%) skewX(-18deg);
+  }
+
+  to {
+    transform: translateX(420%) skewX(-18deg);
+  }
 }
 
 .sl-dashboard-panel-content {
@@ -3471,9 +3481,13 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 }
 
 .sl-but-mini:hover,
-.sl-but-mini:focus-visible {
-  background-color: var(--sl-primary-strong);
-  color: var(--sl-on-solid);
+.sl-but-mini:focus-visible,
+.sl-dial.sl-open .sl-dial-toggle,
+.sl-dial:hover .sl-dial-toggle,
+.sl-fm-bar .sl-but-mini[aria-pressed="true"],
+.sl-but-mini.sl-fm-main {
+  background: var(--sl-solid-bg);
+  color: var(--sl-solid-text);
 }
 
 .sl-but-mini:focus-visible {
@@ -3496,7 +3510,7 @@ button.sl-but-mini {
 
 .sl-but-mini.sl-is-muted:hover,
 .sl-but-mini.sl-is-muted:focus-visible {
-  background-color: var(--sl-bg-subtle);
+  background: var(--sl-bg-subtle);
   color: var(--sl-primary);
 }
 
@@ -3506,7 +3520,7 @@ button.sl-but-mini {
 }
 
 .sl-but-mini[disabled]:hover {
-  background-color: var(--sl-border-strong);
+  background: var(--sl-border-strong);
   color: var(--sl-on-solid);
 }
 
@@ -3565,6 +3579,7 @@ button.sl-but-mini {
   padding: 0 var(--sl-space-6) 0 var(--sl-space-2);
   text-align: left;
   background-color: var(--sl-bg-muted);
+/* A mini button in hand, pressed or leading its panel, and the dial toggle in use are solid pills, as a toned button is */
   border-radius: var(--sl-radius-1);
 }
 
@@ -5196,13 +5211,13 @@ body:has(.sl-admin-login-shell)::before {
   display: block;
   margin: 0 auto;
   padding: var(--sl-space-4) 0 0;
-  color: var(--sl-on-solid);
+  color: var(--sl-solid-text);
   text-align: center;
   font-size: var(--sl-font-small);
 }
 
 .sl-admin-login-copyright a {
-  color: var(--sl-on-solid);
+  color: var(--sl-solid-text);
 }
 
 @media (max-width: 768px) {
@@ -5506,15 +5521,9 @@ body:has(.sl-admin-login-shell)::before {
 }
 
 .sl-toolbar li:hover {
-  background-color: var(--sl-primary-strong);
-  background: linear-gradient(
-    to bottom,
-    var(--sl-primary-strong) 0%,
-    var(--sl-primary-strong) 48%,
-    var(--sl-primary) 100%
-  );
-  border-color: var(--sl-primary-strong);
-  box-shadow: var(--sl-btn-shadow);
+  background: var(--sl-solid-bg);
+  border-color: var(--sl-solid-border);
+  box-shadow: var(--sl-solid-shadow);
 }
 
 .sl-toolbar li:hover a,
@@ -5600,6 +5609,7 @@ body:has(.sl-admin-login-shell)::before {
 .sl-admin-language-link:hover {
   background: transparent;
   filter: brightness(1.08);
+/* An item in hand is a solid bar, as a panel head is */
 }
 
 .sl-admin-language-link:hover .sl-menu-list-image {
@@ -5639,14 +5649,14 @@ body:has(.sl-admin-login-shell)::before {
   box-sizing: border-box;
 }
 
-/* Footer: bottom shell band */
+/* Footer: bottom shell band, a solid band as a head is */
 .sl-footer {
   overflow: visible;
   position: relative;
   height: var(--sl-footer-height);
   margin: 0 calc(var(--sl-space-6) * -1);
   background: var(--sl-grad-stripe);
-  border-top: 1px solid var(--sl-primary);
+  border-top: 1px solid var(--sl-footer-border);
   border-radius: 0 0 var(--sl-radius-2) var(--sl-radius-2);
 }
 
@@ -5657,7 +5667,7 @@ body:has(.sl-admin-login-shell)::before {
 
 .sl-copyright,
 .sl-copyright a {
-  color: var(--sl-on-solid);
+  color: var(--sl-solid-text);
 }
 
 .sl-wrapper a:hover:where(:not(.sl-but-mini)) {
@@ -5706,7 +5716,7 @@ body:has(.sl-admin-login-shell)::before {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--sl-on-solid);
+  color: var(--sl-solid-text);
   font-family: "bootstrap-icons" !important;
   font-size: var(--sl-size-icon-md);
   font-style: normal;
@@ -5726,7 +5736,7 @@ body:has(.sl-admin-login-shell)::before {
 }
 
 .sl-footer span a.sl-thide:hover::before {
-  color: var(--sl-primary-subtle);
+  color: var(--sl-solid-link-text);
 }
 
 @media (max-width: 900px) {
@@ -5942,7 +5952,7 @@ body:has(.sl-admin-login-shell)::before {
 }
 
 .sl-captcha .altcha-checkbox input[type="checkbox"]:checked + svg {
-  color: var(--sl-on-solid);
+  color: var(--sl-solid-text);
 }
 
 /* Error page: 404/access/ban message layout shared by setExit */
@@ -6061,11 +6071,6 @@ body:has(.sl-admin-login-shell)::before {
 .sl-fm-queue-cap b {
   font-weight: var(--sl-weight-normal);
   color: var(--sl-text);
-}
-
-.sl-fm-bar .sl-but-mini[aria-pressed="true"] {
-  background-color: var(--sl-primary);
-  color: var(--sl-on-solid);
 }
 
 /* Separator between the button groups of the toolbar */
@@ -6525,12 +6530,6 @@ body:has(.sl-admin-login-shell)::before {
 
 .sl-fm-edit .sl-code-editor {
   min-height: var(--sl-fm-edit-height);
-}
-
-/* The one action a panel leads with: the same accent the mockup gives the primary object action */
-.sl-but-mini.sl-fm-main {
-  background-color: var(--sl-primary);
-  color: var(--sl-on-solid);
 }
 
 /* A shown object announces itself under the pointer: the kind icon gives way to the glass, and the thumbnail is the button that opens the gallery (§9.1) */

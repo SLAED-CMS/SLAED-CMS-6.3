@@ -119,6 +119,49 @@
     0 2px 4px light-dark(rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0.7)), inset 0 1px 0 light-dark(rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.05)),
     inset 0 -1px 0 light-dark(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.55));
   --sl-card-shadow: 0 1px 1px light-dark(rgba(35, 52, 70, 0.08), rgba(0, 0, 0, 0.45));
+  /* The solid bars - a panel head, a sidebar block head, the footer band - carry white text on a deep fill in both
+     schemes. In dark the tone tokens turn into light tints, right for a glyph and glaring as the fill of a whole bar, so
+     a bar reads its own fill: the tone of the light scheme, and in dark that tone under a seventy per cent shade,
+     because against a dark page one fill reads brighter than against white. Its border and its bevel keep the light
+     scheme's values unshaded, and the text stays white */
+  --sl-solid-bg: linear-gradient(
+    to bottom,
+    light-dark(var(--sl-primary-strong), #144d6f) 0%,
+    light-dark(var(--sl-primary-strong), #144d6f) 48%,
+    light-dark(var(--sl-primary), #06537c) 100%
+  );
+  --sl-solid-border: light-dark(var(--sl-primary-strong), #1c6e9e);
+  --sl-solid-text: light-dark(var(--sl-on-solid), #ffffff);
+  --sl-solid-shadow: 0 2px 4px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.42), inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  --sl-solid-good-bg: linear-gradient(
+    to bottom,
+    light-dark(var(--sl-success), #1b5e27) 0%,
+    light-dark(var(--sl-success), #1b5e27) 48%,
+    light-dark(var(--sl-success-strong), #165a22) 100%
+  );
+  --sl-solid-good-border: light-dark(var(--sl-success-strong), #1f8031);
+  --sl-solid-warn-bg: linear-gradient(
+    to bottom,
+    light-dark(var(--sl-warning), #985304) 0%,
+    light-dark(var(--sl-warning), #985304) 48%,
+    light-dark(var(--sl-warning-strong), #882e08) 100%
+  );
+  --sl-solid-warn-border: light-dark(var(--sl-warning-strong), #c2410c);
+  --sl-solid-bad-bg: linear-gradient(
+    to bottom,
+    light-dark(var(--sl-danger), #8f3030) 0%,
+    light-dark(var(--sl-danger), #8f3030) 48%,
+    light-dark(var(--sl-danger-strong), #8b2525) 100%
+  );
+  --sl-solid-bad-border: light-dark(var(--sl-danger-strong), #c73535);
+  /* A link glyph on a solid band, in hand */
+  --sl-solid-link-text: light-dark(var(--sl-primary-subtle), #d9eef6);
+  /* The beam that crosses a solid head: how wide the shaft is, how long one cycle takes, and its light */
+  --sl-beam-width: 34%;
+  --sl-beam-dur: 7s;
+  --sl-beam-bg: rgba(255, 255, 255, 0.42);
+  /* The light that follows the pointer over the page */
+  --sl-pointer-width: 300px;
   --sl-panel-shadow: 0 1px 3px light-dark(rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.4));
   --sl-panel-height: 32px;
   --sl-pager-height: 30px;
@@ -176,8 +219,8 @@
     ),
     linear-gradient(
       to bottom,
-      var(--sl-primary-strong) 0%,
-      var(--sl-primary) 100%
+      light-dark(var(--sl-primary-strong), #144d6f) 0%,
+      light-dark(var(--sl-primary), #06537c) 100%
     );
   --sl-grad-progress-1: linear-gradient(to top, light-dark(#00adee, #5cc6f0) 10%, var(--sl-progress-1) 90%);
   --sl-grad-progress-2: linear-gradient(to top, light-dark(#8fc857, #a9d97a) 10%, var(--sl-progress-2) 90%);
@@ -325,6 +368,7 @@
   --sl-form-label-width: 160px;
   --sl-graph-height: 285px;
   --sl-header-height: 72px;
+  --sl-footer-border: light-dark(var(--sl-primary), #0877b1);
   /* The module tile paints its border and its ground from its own colour, which is what makes one rule serve four tones */
   --sl-ico-bg: color-mix(in srgb, currentColor 10%, var(--sl-bg));
   --sl-ico-border: color-mix(in srgb, currentColor 26%, var(--sl-border));

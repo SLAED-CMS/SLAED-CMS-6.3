@@ -853,9 +853,45 @@
         event.preventDefault();
         event.returnValue = '';
     });
+    /* Motion over the page: the place of every solid head in the order its beam crosses, and the light that follows the pointer.
+       The pointer is written once a frame and only where motion is welcome; a touch has no pointer to follow */
+    function isStill() {
+        return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    }
+    function setBeamTurns() {
+        document.querySelectorAll('.sl-dashboard-panel-head, .sl-block-sidebar h3').forEach(function (head, i) {
+            head.style.setProperty('--sl-d-turn', i);
+        });
+    }
+    var point = { left: 0, top: 0 };
+    var frame = 0;
+    document.addEventListener('pointermove', function (event) {
+        if (event.pointerType === 'touch' || isStill()) return;
+        point.left = event.clientX;
+        point.top = event.clientY;
+        if (frame) return;
+        frame = window.requestAnimationFrame(function () {
+            document.body.style.setProperty('--sl-d-pointer-x', point.left + 'px');
+            document.body.style.setProperty('--sl-d-pointer-y', point.top + 'px');
+            document.body.setAttribute('data-sl-pointer', '');
+            frame = 0;
+        });
+    }, { passive: true });
+    function setPointerOff() {
+        window.cancelAnimationFrame(frame);
+        frame = 0;
+        document.body.removeAttribute('data-sl-pointer');
+    }
+    document.documentElement.addEventListener('pointerleave', setPointerOff);
+    document.addEventListener('pointercancel', setPointerOff);
+    window.addEventListener('blur', setPointerOff);
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', addFileStep);
+        document.addEventListener('DOMContentLoaded', function () {
+            addFileStep();
+            setBeamTurns();
+        });
     } else {
         addFileStep();
+        setBeamTurns();
     }
 })();
