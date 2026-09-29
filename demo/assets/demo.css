@@ -457,6 +457,25 @@
   line-height: var(--sl-line-loose);
 }
 
+/* The card of a variant filled from its manifest by data-demo-about */
+.demo-about-title {
+  margin: 0 0 var(--sl-space-3);
+  font-size: var(--sl-font-h3);
+}
+
+.demo-about-note {
+  margin: 0 0 var(--sl-space-4);
+  color: var(--sl-text-muted);
+  line-height: var(--sl-line-loose);
+}
+
+.demo-about-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-2);
+  margin: 0;
+}
+
 /* Motion kill switch of the rig, and the platform one it mirrors */
 [data-demo-motion="off"] *,
 [data-demo-motion="off"] *::before,

@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Волна &middot; Алерт подтверждения — стенд панели администратора SLAED CMS</title>
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheet and script are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '">');</script>
+  <script src="../plugins/system/global-func.js"></script>
+  <script src="../plugins/system/slaed.js"></script>
+  <script src="../templates/admin/assets/js/admin-ui.js"></script>
+  <style>
+    /* The stage, the same in all eight faces: the desk of buttons and the row of tones */
+    .v-desk {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--sl-space-3);
+    }
+
+    .v-desk label {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-2);
+      margin-left: auto;
+      color: var(--sl-text-muted);
+    }
+
+    .v-cap {
+      margin: 0 0 var(--sl-space-4);
+      font-size: var(--sl-font-h4);
+    }
+
+    .v-tones .sl-alert:last-child {
+      margin-bottom: 0;
+    }
+
+    /* The bar as it stood before 03 went into the theme: every face starts from this ground, not from the ring */
+    .sl-alert-flash-bar {
+      inset: 0;
+      width: auto;
+      aspect-ratio: auto;
+      border-radius: 0;
+      box-shadow: none;
+      transform: none;
+      transform-origin: left center;
+      animation: v-frame var(--sl-flash-dur) linear forwards;
+    }
+
+    @keyframes v-frame {
+      from { transform: scaleX(1); }
+      to { transform: scaleX(0); }
+    }
+
+    /* 06 Волна. The alert pours out of the tick in a wave, and the tick then sends rings like a sonar. The countdown is
+       a dotted line along the foot; the alert leaves drawn back into its tick */
+    
+    :root {
+      --v-icon-x: calc(var(--sl-space-5) + var(--sl-size-icon-lg) / 2);
+      --v-icon-bx: calc(var(--sl-alert-border) + var(--v-icon-x));
+      --v-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .sl-alert-flash-bar::before,
+    .sl-alert-flash-bar::after {
+      content: none;
+    }
+
+    .sl-alert-flash {
+      transition:
+        opacity var(--sl-time-slow) var(--sl-ease-out),
+        clip-path var(--sl-time-slow) var(--sl-ease-in-out),
+        margin var(--sl-time-slow) var(--sl-ease-out),
+        padding var(--sl-time-slow) var(--sl-ease-out),
+        max-height var(--sl-time-slow) var(--sl-ease-out);
+    }
+
+    .sl-alert-flash-bar {
+      top: auto;
+      height: 2px;
+      background: repeating-linear-gradient(90deg, var(--sl-alert-c) 0 6px, transparent 6px 11px);
+    }
+
+    .sl-alert-success::before {
+      border-radius: 50%;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .sl-alert-flash {
+        animation: v-pour 0.75s var(--sl-ease-out) both;
+      }
+
+      .sl-alert-flash.sl-is-hiding {
+        clip-path: circle(0 at var(--v-icon-bx) 50%);
+        transform: none;
+      }
+
+      .sl-alert-success::before {
+        animation: v-sonar 2.2s var(--sl-ease-out) 0.5s infinite;
+      }
+    }
+
+    @keyframes v-pour {
+      from { clip-path: circle(0 at var(--v-icon-bx) 50%); }
+      to { clip-path: circle(150% at var(--v-icon-bx) 50%); }
+    }
+
+    @keyframes v-sonar {
+      from {
+        box-shadow:
+          0 0 0 0 color-mix(in srgb, var(--sl-alert-c) 50%, transparent),
+          0 0 0 0 color-mix(in srgb, var(--sl-alert-c) 30%, transparent);
+      }
+      to {
+        box-shadow:
+          0 0 0 9px transparent,
+          0 0 0 16px transparent;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="sl-wrapper sl-admin-shell">
+    <div class="sl-wraptop"></div>
+    <div class="sl-wrapmid">
+      <div class="sl-header sl-admin-header">
+        <div class="sl-admin-brand"><h1><a href="//slaed.net" target="_blank" title="Название сайта"><img src="../templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="Название сайта" title="Название сайта"></a></h1></div>
+        <div class="sl-admin-toolbar">
+          <div class="sl-toolbar">
+            <div>
+              <ul class="sl-reset">
+<li><a href="../admin.php" title="Главная"><i class="bi bi-house-door"></i> <b>Главная</b></a></li>
+<li><a href="../admin.php?name=blocks" title="Блоки и баннеры"><i class="bi bi-grid-3x3-gap"></i> <b>Блоки и баннеры</b></a></li>
+<li><a href="../admin.php?name=modules" title="Модули"><i class="bi bi-gpu-card"></i> <b>Модули</b></a></li>
+<li><a href="../admin.php?name=categories" title="Категории"><i class="bi bi-folder"></i> <b>Категории</b></a></li>
+<li class="sl-split-item"><a href="/" title="Сайт"><i class="bi bi-globe2"></i> <b>Сайт</b></a></li>
+<li><a href="../index.php?name=account" title="Профиль"><i class="bi bi-person"></i> <b>Профиль</b></a></li>
+<li class="sl-split-item"><a href="../admin.php?op=logout" title="Выход"><i class="bi bi-box-arrow-right"></i> <b>Выход</b></a></li>
+<li class="sl-set-item"><button type="button" title="Опции"><i class="bi bi-sliders" aria-hidden="true"></i> <b>Опции</b></button></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sl-admin-main">
+        <aside class="sl-admin-sidebar">
+          <div class="sl-block-sidebar">
+            <h3 title="Свёртывание / Развёртывание" data-sl-toggle-control="sl-block-7" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b><i class="bi bi-person-gear"></i>Администрация</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></h3>
+            <div id="sl-block-7" class="sl-block-sidebar-content" data-sl-toggle="sl-block-7">
+              <div class="sl-admin-block-links">
+                <div class="sl-admin-block-link"><a href="../admin.php" title="Панель администратора"><i class="bi bi-house-door"></i> Панель администратора</a></div>
+                <div class="sl-admin-block-link"><a href="../admin.php?op=logout" title="Выход"><i class="bi bi-box-arrow-right"></i> Выход</a></div>
+              </div>
+            </div>
+          </div>
+          <div class="sl-block-sidebar">
+            <h3 title="Свёртывание / Развёртывание" data-sl-toggle-control="sl-block-8" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b><i class="bi bi-eye"></i>Наблюдение</b><i class="bi bi-arrows-collapse sl-panel-toggle sl-panel-toggle-open" aria-hidden="true"></i><i class="bi bi-arrows-expand sl-panel-toggle sl-panel-toggle-closed" aria-hidden="true"></i></h3>
+            <div id="sl-block-8" class="sl-block-sidebar-content" data-sl-toggle="sl-block-8">
+              <div class="sl-session-line sl-session-line--icon"><div class="sl-session-icon"><i class="bi bi-person-gear"></i></div><div>Администрация:</div><div class="sl-session-right">1</div></div>
+              <div class="sl-session-line sl-session-line--icon"><div class="sl-session-icon"><i class="bi bi-person"></i></div><div>Пользователей:</div><div class="sl-session-right">0</div></div>
+              <div class="sl-session-line sl-session-line--icon"><div class="sl-session-icon"><i class="bi bi-person-slash"></i></div><div>Гостей:</div><div class="sl-session-right">0</div></div>
+              <div class="sl-session-line sl-session-line--icon"><div class="sl-session-icon"><i class="bi bi-people"></i></div><div>Всего:</div><div class="sl-session-right">1</div></div>
+            </div>
+          </div>
+        </aside>
+        <main class="sl-admin-content"><div class="sl-admin-content-inner">
+          <div class="sl-box">
+            <div class="sl-module-head">
+              <div class="sl-module-head-icon"><i class="bi bi-grid-3x3-gap" title="Блоки и баннеры"></i></div>
+              <div class="sl-module-head-body">
+                <h1 class="sl-module-head-title">Блоки и баннеры</h1>
+              </div>
+            </div>
+            <ul class="sl-tabs-nav sl-tabs-nav-main">
+<li class="sl-tabs-item"><a href="../admin.php?name=blocks" title="Главная" class="sl-tabs-link sl-is-active">Главная</a></li>
+<li class="sl-tabs-item"><a href="../admin.php?name=blocks&amp;op=add" title="Добавить блок" class="sl-tabs-link">Добавить блок</a></li>
+<li class="sl-tabs-item"><a href="../admin.php?name=blocks&amp;op=fileadd" title="Добавить файловый блок" class="sl-tabs-link">Добавить файловый блок</a></li>
+<li class="sl-tabs-item"><a href="../admin.php?name=blocks&amp;op=fileedit" title="Редактировать блок" class="sl-tabs-link">Редактировать блок</a></li>
+<li class="sl-tabs-item"><a href="../admin.php?name=blocks&amp;op=info" title="Справка" class="sl-tabs-link">Справка</a></li>
+            </ul>
+          </div>
+          <div data-demo-flash-host></div>
+          <div class="sl-alert sl-alert-info">
+            <div class="sl-alert-body">Перетащите значок в колонке «Позиция» внутри группы. Свободные блоки собраны отдельно и выводятся тегом [block=id]; позиция и порядок к ним не применяются.</div>
+          </div>
+          <div class="sl-box">
+            <h2 class="v-cap">Пульт: ответ на действие</h2>
+            <div class="v-desk">
+              <button type="button" class="sl-but" data-demo-flash="success"><i class="bi bi-floppy" aria-hidden="true"></i> Сохранить</button>
+              <button type="button" class="sl-but" data-demo-flash="success"><i class="bi bi-pencil-square" aria-hidden="true"></i> Изменить</button>
+              <button type="button" class="sl-but" data-demo-flash="success"><i class="bi bi-check2" aria-hidden="true"></i> ОК</button>
+              <button type="button" class="sl-but" data-demo-flash="warn"><i class="bi bi-shield-exclamation" aria-hidden="true"></i> Токен устарел</button>
+              <label><input type="checkbox" data-demo-flash-loop checked> Повторять</label>
+            </div>
+          </div>
+          <div class="sl-box v-tones">
+            <h2 class="v-cap">Четыре тона рядом</h2>
+            <div class="sl-alert sl-alert-info"><div class="sl-alert-body">Информация, которая будет доступна всем авторам.</div></div>
+            <div class="sl-alert sl-alert-success"><div class="sl-alert-body">Изменения успешно сохранены.</div></div>
+            <div class="sl-alert sl-alert-warn"><div class="sl-alert-body">Несовпадение защитного токена!</div></div>
+            <div class="sl-alert sl-alert-error"><div class="sl-alert-body">Ошибка</div></div>
+          </div>
+          <div class="sl-box" data-demo-about></div>
+        </div></main>
+      </div>
+      <div class="sl-footer sl-admin-footer">
+        <div class="sl-copyright">Генерация: 0.251 сек. и 15 запросов к базе данных за 0.005 сек.<br><a href="https://slaed.net" title="SLAED CMS" target="_blank" rel="noopener noreferrer">SLAED CMS</a> © 2005-2026 Eduard Laas. Released under MIT License.</div>
+        <span><a href="//slaed.net" title="SLAED CMS" class="sl-thide sl-slaed-home" target="_blank" rel="noopener noreferrer">SLAED CMS</a><a href="#" title="Наверх" class="sl-thide" onclick="Upper('html, body', 600); return false;">Наверх</a></span>
+      </div>
+    </div>
+    <div class="sl-wrapfoot"></div>
+  </div>
+  <template data-demo-flash-tpl="success">
+  <div class="sl-alert sl-alert-success sl-alert-flash" data-sl-autohide="5000">
+    <div class="sl-alert-flash-bar"></div>
+    <div class="sl-alert-body">Изменения успешно сохранены.</div>
+  </div>
+  </template>
+  <template data-demo-flash-tpl="warn">
+  <div class="sl-alert sl-alert-warn sl-alert-flash" data-sl-autohide="5000">
+    <div class="sl-alert-flash-bar"></div>
+    <div class="sl-alert-body">Несовпадение защитного токена!</div>
+  </div>
+  </template>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

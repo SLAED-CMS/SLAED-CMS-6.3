@@ -372,12 +372,77 @@ const DEMO_ADMIN = [
   },
 ];
 
+/* The sixth series: the confirmation an admin screen shows after a save, the fragment `alert` with `is_flash`. The
+   live one enters as it is, counts down with two hair lines and pulses its tick exactly as the info alert standing
+   under it pulses its letter. Every face keeps the markup of the fragment and the autohide of slaed.js, and changes
+   three things only: how the flash arrives, how it counts its five seconds down and how it leaves - and what the
+   success tick does, so that it no longer repeats the info alert. The content is the same in all eight */
+const DEMO_FLASH = [
+  {
+    file: 'flash-01-stamp.html',
+    title: 'Печать',
+    note: 'Алерт ложится как оттиск: выходит из размытия чуть крупнее и садится на место. Галочка падает штампом с поворотом, от неё расходится ' +
+      'кольцо краски, а потом раз в три секунды галочка коротко прижимается снова. Отсчёт — полоса тона снизу, уходит влево. Уходит алерт, сжимаясь.',
+    tags: ['оттиск', 'штамп', 'кольцо краски', 'полоса снизу'],
+  },
+  {
+    file: 'flash-02-stroke.html',
+    title: 'Росчерк',
+    note: 'Алерт прописывается слева направо, как росчерк пера, и галочка пишется тем же движением, а потом изредка кивает. Отсчёт живёт в самой ' +
+      'левой кромке: полоса тона стекает вниз по бледной дорожке. Уходит алерт, стираясь вправо.',
+    tags: ['росчерк', 'кромка-таймер', 'кивок'],
+  },
+  {
+    file: 'flash-03-ring.html',
+    title: 'Кольцо',
+    note: 'Отсчёт вокруг самой галочки — круговой таймер: кольцо тона убывает за пять секунд. Алерт выпрыгивает пружиной, галочка влетает ' +
+      'с оборота и потом мягко светится. Уходит, схлопываясь.',
+    tags: ['круговой таймер', 'пружина', 'свечение'],
+  },
+  {
+    file: 'flash-04-sheen.html',
+    title: 'Блик',
+    note: 'Язык шапок панели: алерт поднимается, и по нему один раз проходит блик тона. Галочка вспыхивает и раз в три секунды поблёскивает ' +
+      'с поворотом. Отсчёт — светящаяся линия снизу, тает к центру. Уходит в дымку.',
+    tags: ['блик как у шапок', 'линия к центру', 'поблёскивание'],
+  },
+  {
+    file: 'flash-05-capsule.html',
+    title: 'Капсула',
+    note: 'Алерт влетает справа с перелётом, как уведомление. Отсчёт — заливка тона по всей площади, которая вытекает справа налево. ' +
+      'Галочка делает оборот монетой и потом подпрыгивает. Уходит обратно вправо.',
+    tags: ['влёт справа', 'заливка-таймер', 'оборот монетой'],
+  },
+  {
+    file: 'flash-06-wave.html',
+    title: 'Волна',
+    note: 'Алерт разливается волной из самой галочки, а галочка потом шлёт круги, как сонар. Отсчёт — пунктир снизу. Уходит алерт, ' +
+      'стягиваясь обратно в галочку.',
+    tags: ['волна из иконки', 'сонар', 'пунктир'],
+  },
+  {
+    file: 'flash-07-burst.html',
+    title: 'Искры',
+    note: 'Праздник сохранения: галочка выпрыгивает желе, из неё брызгают искры четырёх тонов темы, потом она изредка пружинит. Отсчёт — ' +
+      'полоса из тона в акцент. У предупреждения искр нет: радоваться нечему.',
+    tags: ['искры', 'желе', 'только успех'],
+  },
+  {
+    file: 'flash-08-orbit.html',
+    title: 'Орбита',
+    note: 'Рамка-таймер: по контуру алерта горит неоновая линия и убывает по кругу за пять секунд, ярче всего у своего края. Галочка светится ' +
+      'неоном и изредка мигает, как лампа. Уходит, гаснув.',
+    tags: ['контур-таймер', 'неон', 'мерцание'],
+  },
+];
+
 const DEMO_SERIES = [
   { key: 'presentation', title: 'Презентационная страница', addr: 'index.php?name=presentation', items: DEMO_VARIANTS },
   { key: 'settings', title: 'Настройки аккаунта', addr: 'index.php?name=account&op=edithome', items: DEMO_SETTINGS },
   { key: 'upload', title: 'Добавление файла', addr: 'index.php?name=files&op=add', items: DEMO_UPLOAD },
   { key: 'favorites', title: 'Фавориты', addr: 'index.php?name=account&op=favorites', items: DEMO_FAVORITES },
   { key: 'admin', title: 'Панель администратора', addr: 'admin.php', items: DEMO_ADMIN },
+  { key: 'flash', title: 'Алерт подтверждения', addr: 'admin.php после сохранения', items: DEMO_FLASH },
 ];
 
 /* Which series a file belongs to, and where it stands in it. An unknown file gets the first series at index -1,
@@ -1384,6 +1449,43 @@ function setDemoSteps() {
   });
 }
 
+/* The confirmation series replays the flash an admin screen shows after a save. A button with data-demo-flash names a
+   <template data-demo-flash-tpl>; the copy replaces the last one in data-demo-flash-host, and the theme's own
+   htmx:afterSwap hook arms its autohide, so the countdown and the exit are the theme's and not the stand's. With
+   data-demo-flash-loop checked the last one plays again a moment after the theme has taken it away.
+   data-demo-about receives the manifest card of the variant, so its text lives at one address */
+function setDemoFlash(place) {
+  document.querySelectorAll('[data-demo-about]').forEach((node) => {
+    if (!place.item) return;
+    const no = String(place.idx + 1).padStart(2, '0');
+    const tags = (place.item.tags || []).map((t) => `<span class="sl-chip">${t}</span>`).join(' ');
+    node.innerHTML = `<h2 class="demo-about-title">${no} &middot; ${place.item.title}</h2>` +
+      `<p class="demo-about-note">${place.item.note}</p><p class="demo-about-tags">${tags}</p>`;
+  });
+  const host = document.querySelector('[data-demo-flash-host]');
+  if (!host) return;
+  const loop = document.querySelector('[data-demo-flash-loop]');
+  let last = 'success';
+  let wait = 0;
+  const play = (kind) => {
+    const tpl = document.querySelector(`template[data-demo-flash-tpl="${kind}"]`);
+    if (!tpl) return;
+    last = kind;
+    clearTimeout(wait);
+    host.replaceChildren(tpl.content.cloneNode(true));
+    host.dispatchEvent(new CustomEvent('htmx:afterSwap', { bubbles: true }));
+  };
+  new MutationObserver(() => {
+    if (host.children.length || !loop || !loop.checked) return;
+    wait = setTimeout(() => play(last), 1200);
+  }).observe(host, { childList: true });
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-demo-flash]');
+    if (btn) play(btn.dataset.demoFlash);
+  });
+  play('success');
+}
+
 function initDemoPage() {
   const params = new URLSearchParams(location.search);
   const bare = params.has('bare');
@@ -1417,6 +1519,7 @@ function initDemoPage() {
   setDemoSpy();
   setDemoDrop();
   setDemoWindow();
+  setDemoFlash(place);
 
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-demo-set]');
