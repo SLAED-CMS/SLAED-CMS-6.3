@@ -273,24 +273,24 @@ function banlist(): void {
             ]),
         ],
         [
-            'label_for' => 'f-time',
+            'label_for' => 'f-utime',
             'label_html' => _TIME,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'is_required' => true,
                 'itype' => 'number',
                 'name_attr' => 'time',
-                'input_id' => 'f-time',
+                'input_id' => 'f-utime',
                 'placeholder_text' => _TIME,
                 'value_attr' => (string)$time,
             ]),
         ],
         [
-            'label_for' => 'f-info',
+            'label_for' => 'f-uinfo',
             'label_html' => _BANN_REAS,
             'field_html' => $tpl->getHtmlFrag('textarea', [
                 'input_attr' => 'placeholder="'._BANN_REAS.'" required',
                 'name_attr' => 'info',
-                'input_id' => 'f-info',
+                'input_id' => 'f-uinfo',
                 'value_text' => $info,
             ]),
         ],

@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-28T12:27:55Z",
+  "generated": "2026-09-28T13:24:51Z",
   "_": "What the label crawl finds today, so a run fails on what it finds tomorrow. Each key is kind|route|id-or-selector and each value how often it was seen. Every entry is a defect a plan names; the file shrinks and never grows. Coverage is judged apart from it: a route that stopped rendering hides violations rather than fixing them.",
   "coverage": {
     "pages": 312,
@@ -354,9 +354,5 @@
       "site:voting:view#rec"
     ]
   },
-  "violations": {
-    "dup-id|admin:security:banlist|f-info": 1,
-    "dup-id|admin:security:banlist|f-time": 1,
-    "hint-no-row|site:account:edithome|f-avatar-2-hint": 1
-  }
+  "violations": {}
 }
