@@ -3,7 +3,7 @@
     class="sl-alert {% if type %}sl-alert-{{ type }}{% elseif is_warn %}sl-alert-warn{% else %}sl-alert-info{% endif %}{% if is_flash %} sl-alert-flash{% endif %}"
     {% if alert_attr %}{{{ alert_attr }}}{% endif %}
   >
-    {% if is_flash %}<div class="sl-alert-flash-bar"></div>{% endif %}
+    {% if is_flash %}<div class="sl-alert-flash-bar"><svg aria-hidden="true" focusable="false"><circle cx="50%" cy="50%" r="50%" pathLength="100"></circle></svg></div>{% endif %}
     <div class="sl-alert-body">
       {% if text %}{{{ text }}}{% endif %}
       {% if messages %}<ul class="sl-alert-list">{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>{% endif %}

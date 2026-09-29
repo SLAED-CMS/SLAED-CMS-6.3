@@ -590,11 +590,11 @@ return [
             'the glyph of the notice: the panel spells the weight its icon font needs beside a reset that would otherwise bolden it, the site nudges it '
             .'down to sit on the first line of a block',
         '.sl-alert-flash' =>
-            'the flash of the panel is placed and faded as a whole; the site flash only collapses its height, because it sits in a column that already '
-            .'holds its place',
+            'the flash of the panel springs in, and is placed and faded as a whole; the site flash only collapses its height, because it sits in a '
+            .'column that already holds its place',
         '.sl-alert-flash-bar' =>
-            'the countdown: the panel draws it in the tone\'s own colour on a transparent ground and pins it to the top edge, the site gives it a height '
-            .'and fills it',
+            'the countdown: the panel draws it as a ring centred on the tick, a circle whose dash runs out, the site gives the bar a height and '
+            .'fills it',
         '.sl-pager' =>
             'the panel pager is a row inside a list foot that has already laid it out; the site pager is a centred band with a rule above it, standing '
             .'between the list and the page',

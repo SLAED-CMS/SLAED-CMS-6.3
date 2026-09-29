@@ -348,6 +348,7 @@ function setTplAdminInfoPage(array $data = []): void {
                     $alert = $tpl->getHtmlFrag('alert', [
                         'alert_attr' => 'data-sl-autohide="5000"',
                         'is_flash' => true,
+                        'type' => 'success',
                         'text' => _SUCCSAVE,
                     ]);
                 }

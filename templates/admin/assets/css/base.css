@@ -285,6 +285,8 @@
   --sl-modal-dur: 0.22s;
   /* The overshoot a dialog opens with: a curve leaving the 0-1 range is a different kind of motion, not a ladder step */
   --sl-modal-ease: cubic-bezier(0.34, 1.3, 0.64, 1);
+  /* The overshoot of an alert: a flash springs onto its place and a success tick lands from its turn */
+  --sl-alert-ease: cubic-bezier(0.34, 1.56, 0.64, 1);
 
   /* Components: geometry, tints and shadows. A figure sizing a control, a panel or a column has one address here */
   --sl-alert-height: 40px;
@@ -334,6 +336,9 @@
   --sl-field-min-height: 180px;
   --sl-field-mix: 8%;
   --sl-flash-height: 160px;
+  /* The countdown of a flash is a ring round its tick: how thick the ring is, and how much of the tone its track carries */
+  --sl-flash-ring: 3px;
+  --sl-flash-mix: 16%;
   --sl-fm-as-height: 30px;
   --sl-fm-bar-width: 250px;
   --sl-fm-body-height: 56vh;
@@ -363,12 +368,12 @@
   --sl-fm-thumb-height: 24px;
   --sl-fm-tile-height: 74px;
   --sl-footer-height: 58px;
+  --sl-footer-border: light-dark(var(--sl-primary), #0877b1);
   --sl-footer-shadow: 0 1px 0 light-dark(rgba(255, 255, 255, 0.25), rgba(0, 0, 0, 0.35));
   --sl-form-width: 545px;
   --sl-form-label-width: 160px;
   --sl-graph-height: 285px;
   --sl-header-height: 72px;
-  --sl-footer-border: light-dark(var(--sl-primary), #0877b1);
   /* The module tile paints its border and its ground from its own colour, which is what makes one rule serve four tones */
   --sl-ico-bg: color-mix(in srgb, currentColor 10%, var(--sl-bg));
   --sl-ico-border: color-mix(in srgb, currentColor 26%, var(--sl-border));

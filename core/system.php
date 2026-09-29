@@ -2174,7 +2174,7 @@ function setFlash(string $text, bool $warn = false): void {
     $_SESSION[$conf['user_c'].'-flash'] = ['text' => $text, 'warn' => $warn ? 1 : 0];
 }
 
-# Render and clear one-time flash message
+# Render and clear one-time flash message: a refusal warns, anything else confirms that the action went through
 function getFlashHtml(): string {
     global $conf, $tpl;
     if (session_status() !== PHP_SESSION_ACTIVE) return '';
@@ -2184,7 +2184,7 @@ function getFlashHtml(): string {
     $text = (string)($data['text'] ?? '');
     if ($text === '') return '';
     return $tpl->getHtmlFrag('alert', [
-        'is_warn' => !empty($data['warn']),
+        'type' => !empty($data['warn']) ? 'warn' : 'success',
         'is_flash' => true,
         'alert_attr' => 'data-sl-autohide="5000"',
         'text' => $text,

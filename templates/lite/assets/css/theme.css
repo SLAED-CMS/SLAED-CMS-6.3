@@ -699,9 +699,12 @@ a.sl-crumb:hover + .sl-crumb-sep {
   --sl-alert-c: var(--sl-success);
 }
 
+/* The success tick lands from a turn and then glows: its own motion, never the pulse of the info letter */
 .sl-alert-success::before {
   content: "\f26a";
-  animation: sl-alert-pulse var(--sl-alert-dur) var(--sl-ease-in-out) infinite;
+  animation:
+    sl-alert-land calc(var(--sl-time-slow) * 2) var(--sl-alert-ease) var(--sl-time-fast) both,
+    sl-alert-glow var(--sl-alert-dur) var(--sl-ease-in-out) calc(var(--sl-time-slow) * 3) infinite;
 }
 
 .sl-alert-warn {
@@ -726,9 +729,29 @@ a.sl-crumb:hover + .sl-crumb-sep {
   --sl-alert-c: var(--sl-accent);
 }
 
+/* The accent megaphone announces: it tips up from its grip and rocks back, and two arcs of voice leave its bell,
+   which opens to the right, into the gap before the text. The glyph stands on the first line here, so the arc is set
+   on the middle of the glyph rather than of the alert, and ends a hair past the bell */
 .sl-alert-accent::before {
   content: "\f483";
-  animation: sl-alert-pulse var(--sl-alert-dur) var(--sl-ease-in-out) infinite;
+  transform-origin: 30% 60%;
+  animation: sl-alert-announce var(--sl-alert-dur) var(--sl-ease-in-out) infinite;
+}
+
+.sl-alert-accent::after {
+  content: "";
+  position: absolute;
+  left: calc(var(--sl-space-6) + var(--sl-size-icon-md) - var(--sl-space-4));
+  top: calc(var(--sl-space-5) + var(--sl-size-icon-md) / 2);
+  width: var(--sl-space-5);
+  height: var(--sl-space-5);
+  border: var(--sl-space-1) solid transparent;
+  border-right-color: var(--sl-alert-c);
+  border-radius: var(--sl-radius-circle);
+  opacity: 0;
+  transform: translateY(-50%);
+  animation: sl-alert-voice var(--sl-alert-dur) var(--sl-ease-out) infinite;
+  pointer-events: none;
 }
 
 /* Flash: auto-hide variant with a depleting 5s timer bar */
@@ -772,6 +795,69 @@ a.sl-crumb:hover + .sl-crumb-sep {
 
   50% {
     transform: scale(1.15);
+  }
+}
+
+@keyframes sl-alert-land {
+  from {
+    opacity: 0;
+    transform: rotate(-200deg) scale(0.3);
+  }
+}
+
+@keyframes sl-alert-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0 transparent);
+  }
+
+  50% {
+    filter: drop-shadow(0 0 var(--sl-space-3) var(--sl-alert-c));
+  }
+}
+
+@keyframes sl-alert-announce {
+  0%,
+  60%,
+  100% {
+    transform: none;
+  }
+
+  10% {
+    transform: rotate(-14deg) scale(1.1);
+  }
+
+  22% {
+    transform: rotate(6deg) scale(1.08);
+  }
+
+  34% {
+    transform: rotate(-6deg) scale(1.04);
+  }
+
+  46% {
+    transform: rotate(0) scale(1);
+  }
+}
+
+/* Two arcs a cycle: each is born small at the bell and fades out a step to the right */
+@keyframes sl-alert-voice {
+  0%,
+  28.01% {
+    opacity: 0;
+    transform: translate(0, -50%) scale(0.4);
+  }
+
+  8%,
+  36% {
+    opacity: 1;
+  }
+
+  28%,
+  56%,
+  100% {
+    opacity: 0;
+    transform: translate(var(--sl-space-2), -50%) scale(1.2);
   }
 }
 
@@ -833,6 +919,7 @@ a.sl-crumb:hover + .sl-crumb-sep {
 
 @media (prefers-reduced-motion: reduce) {
   .sl-alert::before,
+  .sl-alert::after,
   .sl-alert-flash-bar {
     animation: none !important;
   }

@@ -3124,9 +3124,12 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   --sl-alert-c: var(--sl-success);
 }
 
+/* The success tick lands from a turn and then glows: its own motion, never the pulse of the info letter */
 .sl-alert-success::before {
   content: "\f26a";
-  animation: sl-alert-pulse var(--sl-alert-dur) var(--sl-ease-in-out) infinite;
+  animation:
+    sl-alert-land calc(var(--sl-time-slow) * 2) var(--sl-alert-ease) var(--sl-time-fast) both,
+    sl-alert-glow var(--sl-alert-dur) var(--sl-ease-in-out) calc(var(--sl-time-slow) * 3) infinite;
 }
 
 .sl-alert-warn {
@@ -3151,9 +3154,29 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   --sl-alert-c: var(--sl-accent);
 }
 
+/* The accent megaphone announces: it tips up from its grip and rocks back, and two arcs of voice leave its bell,
+   which opens to the right, into the gap before the text. Set at the glyph size from the padding edge, the arc sits
+   a step to the left of the glyph end, so its curve rises just past the bell and fades before the text */
 .sl-alert-accent::before {
   content: "\f483";
-  animation: sl-alert-pulse var(--sl-alert-dur) var(--sl-ease-in-out) infinite;
+  transform-origin: 30% 60%;
+  animation: sl-alert-announce var(--sl-alert-dur) var(--sl-ease-in-out) infinite;
+}
+
+.sl-alert-accent::after {
+  content: "";
+  position: absolute;
+  left: var(--sl-size-icon-lg);
+  top: 50%;
+  width: var(--sl-space-6);
+  height: var(--sl-space-6);
+  border: var(--sl-space-1) solid transparent;
+  border-right-color: var(--sl-alert-c);
+  border-radius: var(--sl-radius-circle);
+  opacity: 0;
+  transform: translateY(-50%);
+  animation: sl-alert-voice var(--sl-alert-dur) var(--sl-ease-out) infinite;
+  pointer-events: none;
 }
 
 @keyframes sl-alert-pulse {
@@ -3164,6 +3187,69 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 
   50% {
     transform: scale(1.14);
+  }
+}
+
+@keyframes sl-alert-land {
+  from {
+    opacity: 0;
+    transform: rotate(-200deg) scale(0.3);
+  }
+}
+
+@keyframes sl-alert-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0 transparent);
+  }
+
+  50% {
+    filter: drop-shadow(0 0 var(--sl-space-3) var(--sl-alert-c));
+  }
+}
+
+@keyframes sl-alert-announce {
+  0%,
+  60%,
+  100% {
+    transform: none;
+  }
+
+  10% {
+    transform: rotate(-14deg) scale(1.1);
+  }
+
+  22% {
+    transform: rotate(6deg) scale(1.08);
+  }
+
+  34% {
+    transform: rotate(-6deg) scale(1.04);
+  }
+
+  46% {
+    transform: rotate(0) scale(1);
+  }
+}
+
+/* Two arcs a cycle: each is born small at the bell and fades out a step to the right */
+@keyframes sl-alert-voice {
+  0%,
+  28.01% {
+    opacity: 0;
+    transform: translate(0, -50%) scale(0.4);
+  }
+
+  8%,
+  36% {
+    opacity: 1;
+  }
+
+  28%,
+  56%,
+  100% {
+    opacity: 0;
+    transform: translate(var(--sl-space-2), -50%) scale(1.2);
   }
 }
 
@@ -3215,15 +3301,18 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .sl-alert::before,
-  .sl-alert-flash-bar {
+  .sl-alert::after,
+  .sl-alert-flash,
+  .sl-alert-flash-bar circle {
     animation: none !important;
   }
 }
 
+/* A flash springs onto its place, counts its five seconds down on a ring round its tick and leaves collapsing */
 .sl-alert-flash {
   position: relative;
   opacity: 1;
-  transform: translateY(0);
+  transform: none;
   transition:
     opacity var(--sl-time-slow) var(--sl-ease-out),
     transform var(--sl-time-slow) var(--sl-ease-out),
@@ -3232,42 +3321,45 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
     max-height var(--sl-time-slow) var(--sl-ease-out);
   max-height: var(--sl-flash-height);
   overflow: hidden;
+  animation: sl-alert-pop var(--sl-time-slow) var(--sl-alert-ease) backwards;
 }
 
+/* The ring stands centred on the tick, half the padding out from it on every side; its track is an inset shadow */
 .sl-alert-flash-bar {
   position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
+  left: calc(var(--sl-space-5) / 2);
+  top: 50%;
+  width: calc(var(--sl-size-icon-lg) + var(--sl-space-5));
+  aspect-ratio: 1;
+  border-radius: var(--sl-radius-circle);
+  box-shadow: inset 0 0 0 var(--sl-flash-ring) color-mix(in srgb, var(--sl-alert-c) var(--sl-flash-mix), transparent);
+  transform: translateY(-50%);
   pointer-events: none;
-  background: none;
-  color: var(--sl-alert-c, var(--sl-success));
-  transform-origin: left center;
-  animation: sl-alert-flash-frame var(--sl-flash-dur) linear forwards;
 }
 
-.sl-alert-flash-bar::before,
-.sl-alert-flash-bar::after {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: currentColor;
-  content: "";
+/* The circle fills its SVG, and the SVG stands half a ring in from the edge, so the stroke lies exactly on the track;
+   turned and mirrored, the dash starts at the top and runs out counter-clockwise, leaving the arc on the right */
+.sl-alert-flash-bar svg {
+  display: block;
+  width: calc(100% - var(--sl-flash-ring));
+  height: calc(100% - var(--sl-flash-ring));
+  margin: calc(var(--sl-flash-ring) / 2);
+  overflow: visible;
+  transform: rotate(-90deg) scaleY(-1);
 }
 
-.sl-alert-flash-bar::before {
-  top: 0;
-}
-
-.sl-alert-flash-bar::after {
-  bottom: 0;
+/* pathLength makes the circumference one hundred, so the dash runs out by the same figure whatever the size */
+.sl-alert-flash-bar circle {
+  fill: none;
+  stroke: var(--sl-alert-c);
+  stroke-width: var(--sl-flash-ring);
+  stroke-dasharray: 100;
+  animation: sl-alert-flash-ring var(--sl-flash-dur) linear forwards;
 }
 
 .sl-alert-flash.sl-is-hiding {
   opacity: 0;
-  transform: translateY(-6px);
+  transform: scale(0.9);
   margin-top: 0;
   margin-bottom: 0;
   padding-top: 0;
@@ -3275,13 +3367,16 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   max-height: 0;
 }
 
-@keyframes sl-alert-flash-frame {
+@keyframes sl-alert-pop {
   from {
-    transform: scaleX(1);
+    opacity: 0;
+    transform: scale(0.9);
   }
+}
 
+@keyframes sl-alert-flash-ring {
   to {
-    transform: scaleX(0);
+    stroke-dashoffset: 100;
   }
 }
 
@@ -3480,6 +3575,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   line-height: 1;
 }
 
+/* A mini button in hand, pressed or leading its panel, and the dial toggle in use are solid pills, as a toned button is */
 .sl-but-mini:hover,
 .sl-but-mini:focus-visible,
 .sl-dial.sl-open .sl-dial-toggle,
@@ -3579,7 +3675,6 @@ button.sl-but-mini {
   padding: 0 var(--sl-space-6) 0 var(--sl-space-2);
   text-align: left;
   background-color: var(--sl-bg-muted);
-/* A mini button in hand, pressed or leading its panel, and the dial toggle in use are solid pills, as a toned button is */
   border-radius: var(--sl-radius-1);
 }
 
@@ -5520,6 +5615,7 @@ body:has(.sl-admin-login-shell)::before {
   margin-left: auto;
 }
 
+/* An item in hand is a solid bar, as a panel head is */
 .sl-toolbar li:hover {
   background: var(--sl-solid-bg);
   border-color: var(--sl-solid-border);
@@ -5535,7 +5631,7 @@ body:has(.sl-admin-login-shell)::before {
 .sl-toolbar li a:hover,
 .sl-toolbar li:hover button,
 .sl-toolbar li button:hover {
-  color: var(--sl-on-solid);
+  color: var(--sl-solid-text);
   text-decoration: none;
   text-shadow: 0 1px 0 var(--sl-scrim-subtle);
   background: transparent;
@@ -5609,7 +5705,6 @@ body:has(.sl-admin-login-shell)::before {
 .sl-admin-language-link:hover {
   background: transparent;
   filter: brightness(1.08);
-/* An item in hand is a solid bar, as a panel head is */
 }
 
 .sl-admin-language-link:hover .sl-menu-list-image {
@@ -5952,7 +6047,7 @@ body:has(.sl-admin-login-shell)::before {
 }
 
 .sl-captcha .altcha-checkbox input[type="checkbox"]:checked + svg {
-  color: var(--sl-solid-text);
+  color: var(--sl-on-solid);
 }
 
 /* Error page: 404/access/ban message layout shared by setExit */
