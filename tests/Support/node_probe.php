@@ -328,7 +328,7 @@ function getProbeUpdate(): array {
     }
     $out = ['base' => setProbeRun($pdo, $keep)];
     $pdo->exec('ALTER TABLE `'.PROBEPREF.'_admins` MODIFY `modules` VARCHAR(255) NOT NULL DEFAULT \'\'');
-    $pdo->exec('INSERT INTO `'.PROBEPREF.'_admins` (name, email, modules) VALUES (\'probe\', \'probe@probe.test\', \'forum,shop,node,node-news\')');
+    $pdo->exec('INSERT INTO `'.PROBEPREF.'_admins` (name, email, modules) VALUES (\'probe\', \'probe@probe.test\', \'forum,voting,node,node-news\')');
     $out['checks'] = intval($pdo->query('SELECT @@SESSION.foreign_key_checks')->fetchColumn());
     $sql = 'SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE \''.PROBEPREF.'\\_node%\'';
     $out['tables'] = intval($pdo->query($sql)->fetchColumn());
@@ -507,7 +507,7 @@ function addProbeRows(PDO $pdo): void {
     $pdo->exec('INSERT INTO '.$pre.'admins (id, name, email, password, super, modules, ip) VALUES'
         .' (1, \'root\', \'root@probe.test\', \'hash-root\', 1, \'\', \'127.0.0.1\'),'
         .' (2, \'moder\', \'moder@probe.test\', \'hash-moder\', 0, \'forum,node-news,node-docs,node-news,node-Bad,node-,nodes\', \'127.0.0.1\'),'
-        .' (3, \'boss\', \'boss@probe.test\', \'hash-boss\', 0, \'node,shop\', \'127.0.0.1\')');
+        .' (3, \'boss\', \'boss@probe.test\', \'hash-boss\', 0, \'node,voting\', \'127.0.0.1\')');
     $cats = [[1, 'news', 'Open', '0|0', ''], [2, 'news', 'Members', '1|0', ''], [3, 'news', 'Club', '2|1', ''], [4, 'news', 'Sealed', '', ''], [5, 'news', 'English', '0|0', 'en'],
         [6, 'news', 'Russian', '0|0', 'ru'], [7, 'docs', 'Manual', '0|0', ''], [8, 'forum', 'Forum', '0|0', ''], [9, 'news', 'Active', '2|2', '']];
     $st = $pdo->prepare('INSERT INTO '.$pre.'categories (id, modul, title, intro, pread, lang) VALUES (?, ?, ?, \'\', ?, ?)');
@@ -1364,7 +1364,7 @@ function addProbeServiceRows(PDO $pdo): void {
     $pdo->exec('INSERT INTO '.$pre.'admins (id, name, email, password, super, modules, ip) VALUES'
         .' (1, \'root\', \'root@probe.test\', \'hash-root\', 1, \'\', \'127.0.0.1\'),'
         .' (2, \'moder\', \'moder@probe.test\', \'hash-moder\', 0, \'forum,node-news,node-docs,node-files\', \'127.0.0.1\'),'
-        .' (3, \'boss\', \'boss@probe.test\', \'hash-boss\', 0, \'node,shop\', \'127.0.0.1\')');
+        .' (3, \'boss\', \'boss@probe.test\', \'hash-boss\', 0, \'node,voting\', \'127.0.0.1\')');
     $pdo->exec('INSERT INTO '.$pre.'categories (id, modul, title, intro, pread, lang) VALUES (1, \'media\', \'Old media\', \'\', \'0|0\', \'\')');
 }
 
@@ -1765,7 +1765,7 @@ function getProbeSvcRemains(PDO $pdo): array {
     $pre = PREFIX_DB.'_';
     $live = (string)$pdo->query('SELECT name FROM '.$pre.'node_types ORDER BY id LIMIT 1')->fetchColumn();
     $row = fn(string $mod): string => '(1, '.$pdo->quote($mod).', NOW(), 0, \'g\', \'x\', 1)';
-    $pdo->exec('INSERT INTO '.$pre.'comment (cid, modul, time, uid, name, body, status) VALUES '.implode(', ', array_map($row, ['oldsec', 'OldSec', 'oldsec', 'shop', $live])));
+    $pdo->exec('INSERT INTO '.$pre.'comment (cid, modul, time, uid, name, body, status) VALUES '.implode(', ', array_map($row, ['oldsec', 'OldSec', 'oldsec', 'voting', $live])));
     $pdo->exec('INSERT INTO '.$pre.'favorites (uid, fid, modul, time) VALUES (2, 1, \'oldsec\', NOW()), (2, 1, \'forum\', NOW()), (3, 1, \'gonefav\', NOW())');
     $srv = getProbeService('boss');
     $count = fn(string $mod): int => (int)$pdo->query('SELECT (SELECT COUNT(*) FROM '.$pre.'comment WHERE CAST(modul AS BINARY) = CAST('.$pdo->quote($mod)
@@ -1777,12 +1777,12 @@ function getProbeSvcRemains(PDO $pdo): array {
     ];
     $out['denied'] = [getProbeCall(fn(): array => getProbeService('moder')->getNodeRemains()), getProbeCall(fn(): null => getProbeService('moder')->deleteNodeRemains('oldsec'))];
     $out['kept'] = [];
-    foreach (['shop', 'forum', $live, 'nothing'] as $mod) $out['kept'][$mod] = getProbeCall(fn(): null => $srv->deleteNodeRemains($mod));
+    foreach (['voting', 'forum', $live, 'nothing'] as $mod) $out['kept'][$mod] = getProbeCall(fn(): null => $srv->deleteNodeRemains($mod));
     $out['one'] = getProbeCall(fn(): null => $srv->deleteNodeRemains('oldsec'));
     $out['case'] = getProbeCall(fn(): NodeType => $srv->addNodeType('oldsec', getProbeInput()));
     $out['two'] = getProbeCall(fn(): null => $srv->deleteNodeRemains('OldSec'));
     $out['rows'] = [];
-    foreach (['oldsec', 'OldSec', 'shop', 'forum', $live, 'gonefav'] as $mod) $out['rows'][$mod] = $count($mod);
+    foreach (['oldsec', 'OldSec', 'voting', 'forum', $live, 'gonefav'] as $mod) $out['rows'][$mod] = $count($mod);
     $out['added'] = getProbeCall(fn(): int => $srv->addNodeType('oldsec', getProbeInput())->version);
     $out['after'] = getProbeCall(fn(): array => array_keys($srv->getNodeRemains()));
     $out['dropped'] = getProbeCall(fn(): null => $srv->deleteNodeType('oldsec', 1));
@@ -2822,7 +2822,7 @@ function getProbeMatIntegrity(): array {
         $ids[$uid] = intval($pdb->getSqlLastId());
         if ($uid) $GLOBALS['mpnt']->addEvent('comment', 'node.news', 'comment:'.$ids[$uid], $uid, ['mid' => $pub->id]);
     }
-    $pdb->getSqlQuery('INSERT INTO '.$pre.'comment (cid, modul, time, uid, name, body, status) VALUES (:cid, \'shop\', NOW(), 2, \'n\', \'x\', 1)', ['cid' => $pub->id]);
+    $pdb->getSqlQuery('INSERT INTO '.$pre.'comment (cid, modul, time, uid, name, body, status) VALUES (:cid, \'voting\', NOW(), 2, \'n\', \'x\', 1)', ['cid' => $pub->id]);
     $bal = fn(int $uid): int => intval(getProbeValue('SELECT points FROM '.$pre.'users WHERE id = :id', ['id' => $uid]));
     $was = [2 => $bal(2), 4 => $bal(4)];
     $cnt = fn(string $mod): int => intval(getProbeValue('SELECT COUNT(*) FROM '.$pre.'comment WHERE cid = :cid AND modul = :mod', ['cid' => $pub->id, 'mod' => $mod]));
@@ -2831,7 +2831,7 @@ function getProbeMatIntegrity(): array {
     $pdb->getSqlQuery('RENAME TABLE '.$pre.'comment_off TO '.$pre.'comment');
     $out['kept'] = [getProbeStored($pub->id, 'news') !== null, $cnt('news'), count(getProbePoints('publish', 'node:'.$pub->id))];
     $out['done'] = getProbeCall(fn(): null => getProbeWriter('moder')->deleteNode($pub->id, 1, getProbeCom()));
-    $out['gone'] = [getProbeStored($pub->id, 'news') !== null, $cnt('news'), $cnt('shop')];
+    $out['gone'] = [getProbeStored($pub->id, 'news') !== null, $cnt('news'), $cnt('voting')];
     $out['balance'] = [2 => $bal(2) - $was[2], 4 => $bal(4) - $was[4]];
     $out['reverse'] = [];
     foreach ([2, 4] as $uid) {
@@ -3120,7 +3120,7 @@ if ($pmat) {
             'msched' => addSchedulerRun('nodepublish', 'manual'),
             'mcomm' => getProbeMatComm((string)($pargs[0] ?? '')),
             'mdelete' => getProbeCall(fn(): null => getProbeWriter('mixed')->deleteNode(intval($pargs[0] ?? 0), intval($pargs[1] ?? 0), getProbeCom())),
-            'mupload' => ['moder' => checkUploadModer('news'), 'forum' => checkUploadModer('forum'), 'shop' => checkUploadModer('shop'), 'none' => checkUploadModer(''),
+            'mupload' => ['moder' => checkUploadModer('news'), 'forum' => checkUploadModer('forum'), 'voting' => checkUploadModer('voting'), 'none' => checkUploadModer(''),
                 'owner' => getEditorFileOwner('news'), 'flag' => getUploadFileArea(getUploadPlaceRule('news.attach'))->getCapabilities()['delete']],
         };
         echo json_encode($answer);

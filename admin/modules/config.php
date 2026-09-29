@@ -519,28 +519,6 @@ function config(): void {
         'hint_id' => $fids['hint'],
         'field_html' => getTplModuleSelect('module', $conf['module'], 1, [], $fids['input'], $fids['hint']),
     ];
-    $mods = ['auto_links', 'order', 'shop_clients', 'voting'];
-    $mname = ['auto_links', 'order', 'shop', 'voting'];
-    $ival = 0;
-    $opts = '';
-    foreach ($mods as $val) {
-        if ($val != '') {
-            if (file_exists('modules/'.$mname[$ival].'/admin/index.php')) {
-                $opts .= $tpl->getHtmlFrag('select-option', [
-                    'value_attr' => $val,
-                    'label_text' => getModuleName($mname[$ival]),
-                    'is_selected' => $conf['amod'] == $val,
-                ]);
-            }
-            $ival++;
-        }
-    }
-    $rows[] = ['label_for' => 'f-amod', 'label_html' => _PUTINAHOME, 'field_html' => $tpl->getHtmlFrag('select', [
-        'name_attr' => 'amod',
-        'selectid' => 'f-amod',
-        'options_html' => $opts,
-        'is_config' => true,
-    ])];
     $rows[] = ['label_html' => _EDITORUSER, 'field_html' => Editor::getSelect('editor_user', (string)($conf['editor']['user'] ?? 'plain'), 'content', 'user')];
     $list = timezone_identifiers_list();
     $name = $conf['gtime'] ?? '';
@@ -1184,7 +1162,6 @@ function save(): void {
             'ip_link' => getVar('post', 'ip_link', 'url', 'http://whois.domaintools.com/'),
             'theme' => ($xtheme = getVar('post', 'theme', 'var')) && checkThemeAssets($xtheme) ? $xtheme : (string)$conf['theme'],
             'module' => $xmodule,
-            'amod' => getVar('post', 'amod', 'var'),
             'editor' => [
                 'user' => $eduser,
                 'code' => (string)($conf['editor']['code'] ?? 'codemirror'),

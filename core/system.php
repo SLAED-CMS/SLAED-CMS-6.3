@@ -906,7 +906,7 @@ function updateRefererTrack(int $ctime, string $request, string $uname): void {
     $refert = (file_exists($referf) && filesize($referf) != 0) ? file_get_contents($referf) : 0;
     $past = $ctime - intval($conf['referers']['refer_t']);
     if ($refert < $past) {
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_referer WHERE lid = :lid', ['lid' => 0]);
+        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_referer');
         if (file_exists($referf)) unlink($referf);
         $fp = fopen($referf, 'wb');
         fwrite($fp, $ctime);
@@ -915,32 +915,9 @@ function updateRefererTrack(int $ctime, string $request, string $uname): void {
     $ip = getIp();
     $uid = is_user() ? intval($user[0]) : 0;
     $link = filterText($request);
-    $args = ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => $referer, 'url' => $link, 'lid' => 0];
-    if (is_active('auto_links')) {
-        [$exist] = $db->getSqlRow($db->getSqlQuery('SELECT ip FROM '.PREFIX_DB.'_referer WHERE ip = :ip AND lid != :lid', ['ip' => $ip, 'lid' => 0]));
-        if ($exist) {
-            if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) {
-                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, url, time, lid) VALUES (:uid, :name, :ip, :referer, :url, NOW(), :lid)', $args);
-            }
-            return;
-        }
-        $lid = 0;
-        $result = $db->getSqlQuery('SELECT id, url FROM '.PREFIX_DB.'_auto_links');
-        while ([$aid, $aurl] = $db->getSqlRow($result)) {
-            if ($aurl !== '' && stripos($referer, $aurl) !== false) {
-                $lid = intval($aid);
-                break;
-            }
-        }
-        if ($lid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_auto_links SET hits = hits + 1 WHERE id = :lid', ['lid' => $lid]);
-            $args['lid'] = $lid;
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, url, time, lid) VALUES (:uid, :name, :ip, :referer, :url, NOW(), :lid)', $args);
-            return;
-        }
-    }
+    $args = ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => $referer, 'url' => $link];
     if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) {
-        $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, url, time, lid) VALUES (:uid, :name, :ip, :referer, :url, NOW(), :lid)', $args);
+        $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, url, time) VALUES (:uid, :name, :ip, :referer, :url, NOW())', $args);
     }
 }
 
@@ -1379,9 +1356,9 @@ function getSeoRoute(array $seo = []): array {
     }
     $robot = trim((string)($seo['robots'] ?? ''));
     $canon = trim((string)($seo['canon'] ?? ''));
-    $services = ['contact', 'money', 'order', 'recommend', 'search', 'whois'];
+    $services = ['contact', 'recommend', 'search'];
     $forms = [
-        'add', 'activate', 'broc', 'check', 'client', 'edithome', 'favorites', 'kasse',
+        'add', 'activate', 'broc', 'check', 'client', 'edithome', 'favorites',
         'partner', 'passlost', 'preview', 'privat', 'send', 'upload',
     ];
     $noindex = in_array($name, $services, true) || in_array($op, $forms, true) || $op === 'liste' || ($name === 'account' && $op !== 'view');
@@ -1720,12 +1697,11 @@ function addMonitorSample(): array {
     return ['status' => 'success', 'message' => 'Monitor sample written: CPU '.$cpu.'%, RAM '.$mem['percent'].'%'];
 }
 
-# The RSS feeds of the site keyed by name with their labels: every active Node type with the rss integration, then the shop while it is active
+# The RSS feeds of the site keyed by name with their labels: every active Node type with the rss integration
 # The feed route, the alternate link of the head and the feed picker read this one list, so no link names a feed the route refuses
 function getRssFeeds(): array {
     $out = [];
     foreach (getNodeTypeMap() as $key => $type) if ($type->active && $type->settings['integrations']['rss']) $out[$key] = getModuleName($key);
-    if (is_active('shop')) $out['shop'] = _SHOP;
     return $out;
 }
 
@@ -2076,7 +2052,6 @@ function setHead(array|Closure $seo = []): void {
         'home' => _HOME,
         'account' => _ACCOUNT,
         'album' => _ALBUM,
-        'alinks' => _A_LINKS,
         'feedback' => _FEEDBACK,
         'content_label' => _CONTENT,
         'faq' => _FAQ,
@@ -2089,12 +2064,10 @@ function setHead(array|Closure $seo = []): void {
         'media' => _MEDIA,
         'users' => _USERS,
         'news' => _NEWS,
-        'order' => _ORDER,
         'pages' => _PAGES,
         'recommend' => _RECOMMEND,
         'rss' => _RSS,
         'search' => _SEARCH,
-        'shop' => _SHOP,
         'topusers' => _TOPUSERS,
         'voting' => _VOTING,
         'homepage' => _S_STARTSEITE,
@@ -2483,7 +2456,7 @@ function checkCaptcha(string $act): bool {
     return Captcha::check($act);
 }
 
-# Build the module categories block: fluid tiles with tinted icon, aggregated per-category count and subcategory chips
+# Build the module categories block: fluid tiles with tinted icon and subcategory chips
 function setCategories(string $mod, int $sub, bool $desc, string $id = ''): string {
  global $db, $conf, $locale, $tpl;
     if (!filterVar($mod)) return '';
@@ -2504,32 +2477,16 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
         $massiv[] = [$cid, $title, $intro, $img, $parentid, $pview, $pread, $ordern];
     }
     if (!$massiv) return '';
-    $catid = [];
-    foreach ($massiv as $val) {
-        if ($val[4] == $id && is_acess($val[5])) {
-            $catid[] = (int)$val[0];
-            foreach ($massiv as $sval) {
-                if ($val[0] == $sval[4] && is_acess($sval[5])) $catid[] = (int)$sval[0];
-            }
-        }
-    }
-    $catid = array_values(array_filter(array_unique($catid), static fn($v) => $v > 0));
-    if (!$catid) return '';
-    [$counts, $total, $in] = getCategoryCounts($mod, $catid);
     $cont = '';
     foreach ($massiv as $val) {
         if ($val[4] == $id && is_acess($val[5])) {
             $name = getConst($val[1]);
             $hidden = !is_acess($val[6]);
-            $num = $counts[(int)$val[0]] ?? 0;
             $subs = [];
             foreach ($massiv as $sval) {
-                if ($val[0] == $sval[4] && is_acess($sval[5])) {
-                    $num += $counts[(int)$sval[0]] ?? 0;
-                    if ($sub == 1 && is_acess($sval[6])) {
-                        $sname = getConst($sval[1]);
-                        $subs[] = ['href' => getSeoUrl(['name' => $mod, 'cat' => $sval[0]]), 'title' => $sname, 'name' => $sname];
-                    }
+                if ($val[0] == $sval[4] && is_acess($sval[5]) && $sub == 1 && is_acess($sval[6])) {
+                    $sname = getConst($sval[1]);
+                    $subs[] = ['href' => getSeoUrl(['name' => $mod, 'cat' => $sval[0]]), 'title' => $sname, 'name' => $sname];
                 }
             }
             $cont .= $tpl->getHtmlFrag('category-row', [
@@ -2539,7 +2496,7 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
                 'title' => $hidden ? $name.' - '._CCLOSED : $name,
                 'name' => $name,
                 'icon_name' => preg_match('/^[a-z0-9-]+$/', (string)$val[3]) ? $val[3] : 'folder',
-                'count' => $num ? (string)$num : '',
+                'count' => '',
                 'description' => $desc ? getConst($val[2]) : '',
                 'subs' => $subs,
             ]);
@@ -2550,35 +2507,12 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
         'categories' => _CATEGORIES,
         'content' => $cont,
         'total' => _ALLIN,
-        'pages' => $total,
-        'in' => $in,
+        'pages' => 0,
+        'in' => '',
         'cat' => count($massiv),
         'category' => _ALLINC,
         'mod' => $mod,
     ]);
-}
-
-# Per-category published-material counts for a module (grouped by cid) plus the summed total and the unit label
-function getCategoryCounts(string $mod, array $catid): array {
- global $db;
-    switch ($mod) {
-        case 'shop':  $table = 'products'; $cond = "time <= NOW() AND status != '0'"; $in = _INS;  break;
-        default: return [[], 0, ''];
-    }
-    $ph = [];
-    $pm = [];
-    foreach ($catid as $k => $v) {
-        $ph[] = ':c'.$k;
-        $pm['c'.$k] = (int)$v;
-    }
-    $res = $db->getSqlQuery('SELECT cid, COUNT(id) FROM '.PREFIX_DB.'_'.$table.' WHERE cid IN ('.implode(', ', $ph).') AND '.$cond.' GROUP BY cid', $pm);
-    $counts = [];
-    $total = 0;
-    while ([$ccid, $cn] = $db->getSqlRow($res)) {
-        $counts[(int)$ccid] = (int)$cn;
-        $total += (int)$cn;
-    }
-    return [$counts, $total, $in];
 }
 
 # Load configuration file or directory and return chmod warning if needed
@@ -3074,9 +3008,6 @@ function addSitemapTask(bool $force = false): array {
         } elseif ($mod[$i] == 'forum' && is_active($mod[$i], '0')) {
             $result = $db->getSqlQuery('SELECT id, cid, title, time FROM '.PREFIX_DB."_forum WHERE pid = '0' AND time <= NOW() AND status > '1'");
             while ([$id, $cat, $title, $time] = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
-        } elseif ($mod[$i] == 'shop' && is_active($mod[$i], '0')) {
-            $result = $db->getSqlQuery('SELECT id, cid, time, title FROM '.PREFIX_DB."_products WHERE time <= NOW() AND status != '0'");
-            while ([$id, $cat, $time, $title] = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
         } elseif ($mod[$i] == 'voting' && is_active($mod[$i], '0')) {
             $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_voting WHERE modul = '' AND time <= NOW()"
                 ." AND (enddate >= NOW() AND status = '0' OR status = '1')");
@@ -3988,14 +3919,11 @@ function addMailTask(): array {
 }
 
 # Resolve one audience criterion into the paged query its rows are expanded by and the count query the selector shows beside it
-# The client sets are grouped by address, because one person may hold several orders and the mailing is addressed to the person
-# Every source is ordered by its own primary key, which is what makes a cursor over it resumable after a run is killed
+# Every audience is a set of accounts ordered by primary key, which is what makes a cursor over it resumable after a run is killed
 function getMailAudience(string $audit, string $apar): array {
     global $db;
-    $tabl = PREFIX_DB.'_users';
     $cond = '';
     $pars = [];
-    $uniq = false;
     switch ($audit) {
         case 'all': $cond = '1'; break;
         case 'subs': $cond = 'newslet = 1'; break;
@@ -4014,22 +3942,11 @@ function getMailAudience(string $audit, string $apar): array {
             $cond = 'lastvis >= DATE_SUB(NOW(), INTERVAL :day DAY)';
             $pars['day'] = max(1, intval($apar));
             break;
-        case 'money': $tabl = PREFIX_DB.'_money'; $cond = 'status = 1'; $uniq = true; break;
-        case 'order': $tabl = PREFIX_DB.'_order'; $cond = 'status = 1'; $uniq = true; break;
-        case 'shop':
-            $tabl = PREFIX_DB.'_clients';
-            $cond = ($apar === 'on') ? 'status = 1' : (($apar === 'off') ? 'status = 0' : '1');
-            $uniq = true;
-            break;
         default: return [];
     }
     $cond .= ' AND email != \'\'';
-    $list = $uniq
-        ? 'SELECT MIN(id) AS id, email FROM '.$tabl.' WHERE '.$cond.' GROUP BY email HAVING id > :cur ORDER BY id ASC LIMIT '
-        : 'SELECT id, email FROM '.$tabl.' WHERE '.$cond.' AND id > :cur ORDER BY id ASC LIMIT ';
-    $nums = $uniq
-        ? 'SELECT COUNT(DISTINCT email) AS num FROM '.$tabl.' WHERE '.$cond
-        : 'SELECT COUNT(id) AS num FROM '.$tabl.' WHERE '.$cond;
+    $list = 'SELECT id, email FROM '.PREFIX_DB.'_users WHERE '.$cond.' AND id > :cur ORDER BY id ASC LIMIT ';
+    $nums = 'SELECT COUNT(id) AS num FROM '.PREFIX_DB.'_users WHERE '.$cond;
     return ['list' => $list, 'nums' => $nums, 'pars' => $pars];
 }
 
@@ -4118,9 +4035,7 @@ function getModuleName(string $con): string {
         'account' => _ACCOUNT,
         'album' => _ALBUM,
         'all' => _ALL,
-        'auto_links' => _A_LINKS,
         'changelog' => _CHANGELOG,
-        'clients' => _CLIENTS,
         'contact' => _FEEDBACK,
         'content' => _CONTENT,
         'faq' => _FAQ,
@@ -4133,9 +4048,7 @@ function getModuleName(string $con): string {
         'links' => _LINKS,
         'media' => _MEDIA,
         'members' => _USERS,
-        'money' => _MONEY,
         'news' => _NEWS,
-        'order' => _ORDER,
         'pages' => _PAGES,
         'presentation' => _PRESENTATION,
         'radio' => _RADIO,
@@ -4143,11 +4056,9 @@ function getModuleName(string $con): string {
         'rss' => _RSS,
         'rss_info' => _RSS,
         'search' => _SEARCH,
-        'shop' => _SHOP,
         'sitemap' => _SITEMAP,
         'users' => _TOPUSERS,
         'voting' => _VOTING,
-        'whois' => _WHOIS,
     ];
     return $map[$con] ?? $con;
 }
@@ -4158,14 +4069,14 @@ function getIconName(string $con): string {
     global $conf;
     $map = [
         'comm' => 'chat-text', 'faq' => 'question-circle', 'files' => 'file-earmark-arrow-down', 'forum' => 'window-stack', 'help' => 'life-preserver',
-        'jokes' => 'emoji-smile', 'links' => 'link-45deg', 'media' => 'camera-reels', 'news' => 'newspaper', 'pages' => 'file-text', 'shop' => 'bag',
+        'jokes' => 'emoji-smile', 'links' => 'link-45deg', 'media' => 'camera-reels', 'news' => 'newspaper', 'pages' => 'file-text',
         'account' => 'person', 'activity' => 'activity', 'all' => 'grid', 'blocks' => 'grid-3x3-gap', 'bookmark' => 'bookmark-fill', 'cabinet' => 'house',
-        'categories' => 'folder', 'clients' => 'people', 'delete' => 'trash', 'download' => 'download', 'editor' => 'pencil-square', 'favorites' => 'star',
+        'categories' => 'folder', 'delete' => 'trash', 'download' => 'download', 'editor' => 'pencil-square', 'favorites' => 'star',
         'fields' => 'plus-square-dotted', 'fmcompress' => 'file-zip', 'fmcopy' => 'files', 'fmdelete' => 'trash3', 'fmedit' => 'pencil-square',
         'fmmove' => 'folder-symlink', 'fmrename' => 'input-cursor-text', 'focus' => 'lightning-charge', 'groups' => 'people', 'home' => 'house-door',
         'hub' => 'grid', 'image' => 'image', 'images' => 'images', 'items' => 'grid', 'keys' => 'key', 'language' => 'translate', 'logout' => 'box-arrow-right',
-        'mail' => 'envelope-paper', 'messages' => 'envelope', 'module' => 'puzzle', 'modules' => 'gpu-card', 'oauth' => 'diagram-3', 'partners' => 'briefcase',
-        'password' => 'shield-plus', 'person' => 'person', 'personal' => 'person-lines-fill', 'privacy' => 'shield-lock', 'products' => 'box-seam',
+        'mail' => 'envelope-paper', 'messages' => 'envelope', 'module' => 'puzzle', 'modules' => 'gpu-card', 'oauth' => 'diagram-3',
+        'password' => 'shield-plus', 'person' => 'person', 'personal' => 'person-lines-fill', 'privacy' => 'shield-lock',
         'profile' => 'person-vcard', 'rating' => 'star-fill', 'read' => 'envelope-open', 'rss' => 'rss', 'save' => 'archive', 'search' => 'search',
         'settings' => 'gear', 'site' => 'globe2', 'system' => 'pc-display', 'tags' => 'tags', 'unread' => 'envelope', 'unsave' => 'bookmark-dash',
         'visit' => 'clock-history', 'warn' => 'exclamation-triangle', 'work' => 'briefcase', 'write' => 'pencil-square',
@@ -4578,136 +4489,6 @@ function getForumTopics(string $cols, string $bclos, int $limit): mixed {
     $where = $bclos ? 'cid NOT IN ('.$bclos.') AND' : '';
     $vis = is_moder('forum') ? '' : "AND time <= now() AND status > '1'";
     return $db->getSqlQuery('SELECT '.$cols.' FROM '.PREFIX_DB.'_forum WHERE '.$where." pid = '0' ".$vis.' ORDER BY ltime DESC LIMIT 0, '.$limit);
-}
-
-# Read the product ids of the cart cookie as a comma list, empty when the cookie is missing or holds anything but positive ids
-# The value is base64, which getCookies() would strip of its + / = characters, so the prefixed cookie is read directly
-function getCartCookie(): string {
-    global $conf;
-    $raw = $_COOKIE[$conf['user_c'].'-shop'] ?? '';
-    $ids = is_string($raw) ? base64_decode($raw, true) : false;
-    return (is_string($ids) && preg_match('#^[1-9][0-9]*(,[1-9][0-9]*)*$#', $ids)) ? $ids : '';
-}
-
-# Show cart
-function getCartSummary(string $info = ''): string {
-    global $db, $conf, $tpl;
-    $info = ($info === '') ? getCartCookie() : base64_decode($info);
-    $cookies = (preg_match('#[^0-9,]#', $info)) ? '' : $info;
-    if ($cookies) {
-        $massiv = explode(',', $cookies);
-        $ids = array_values(array_unique(array_map('intval', $massiv)));
-        $ids = array_values(array_filter($ids, static fn($v) => $v > 0));
-        if (!$ids) return '';
-        $pp = [];
-        $pm = [];
-        foreach ($ids as $k => $pid) {
-            $ph = 'id'.$k;
-            $pp[] = ':'.$ph;
-            $pm[$ph] = $pid;
-        }
-        $result = $db->getSqlQuery('SELECT id, time, title, price FROM '.PREFIX_DB.'_products WHERE id IN ('.implode(', ', $pp).')', $pm);
-        $rows = '';
-        $ptotal = 0;
-        while ([$id, $time, $title, $price] = $db->getSqlRow($result)) {
-            $i = 0;
-            foreach ($massiv as $val) {
-                if ($val == $id) $i++;
-            }
-            $price = $price * $i;
-            $ptotal += $price;
-            $titlink = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=shop&op=view&id='.$id, 'title' => $title, 'label' => $title]);
-            $actions = $tpl->getHtmlFrag('link', [
-                'href' => 'index.php?go=2&op=addCartItem&id='.$id.'&token='.getSiteToken(),
-                'is_htmx' => true, 'hx_target' => '#repkasse', 'title' => _PPLUS, 'is_cart_plus' => true,
-            ])
-                .$tpl->getHtmlFrag('link', [
-                    'href' => 'index.php?go=2&op=deleteCartItem&id='.$id.'&token='.getSiteToken(),
-                    'is_htmx' => true, 'hx_target' => '#repkasse', 'title' => ($i > 1) ? _PMINUS : _DELETE, 'is_cart_minus' => true,
-                ]);
-            $rows .= $tpl->getHtmlFrag('table-row', [
-                'id' => 'kasse-'.$id,
-                'is_cart_row' => true,
-                'cells' => [
-                    ['href' => '#kasse-'.$id, 'title' => (string)$id, 'text' => (string)$id, 'is_cart_col_num' => true, 'is_cart_id' => true],
-                    ['is_cart_col_content' => true, 'heading_html' => $titlink.' '.getTplNewGraphic($time)],
-                    ['is_cart_col_num' => true, 'text' => (string)$i],
-                    ['is_cart_col_stat' => true, 'text' => $price.' '.$conf['shop']['valute']],
-                    ['is_cart_col_stat' => true, 'content_html' => $actions],
-                ],
-            ]);
-        }
-        $footer = $tpl->getHtmlFrag('table-row', [
-            'is_cart_foot' => true,
-            'cells' => [
-                [
-                    'colspan' => 2,
-                    'content_html' => $tpl->getHtmlFrag('link', ['href' => 'index.php?name=shop&op=kasse', 'title' => _SCACH, 'label' => _SCACH, 'is_cart_checkout' => true]),
-                ],
-                [
-                    'colspan' => 3,
-                    'content_html' => $tpl->getHtmlFrag('span', [
-                        'title' => _PARTNERGES,
-                        'text' => _PARTNERGES.': '.$ptotal.' '.$conf['shop']['valute'],
-                        'is_cart_total' => true,
-                    ]),
-                ],
-            ],
-        ]);
-        return $tpl->getHtmlFrag('table', [
-            'title' => _PBASKET,
-            'is_cart' => true,
-            'rows_html' => $rows.$footer,
-            'headers' => [
-                ['text' => _ID, 'is_cart_col_num' => true],
-                ['text' => _PRODUCT],
-                ['text' => cutstr(_QUANTITY, 3, 1), 'is_cart_col_num' => true],
-                ['text' => _PREIS, 'is_cart_col_stat' => true],
-                ['text' => _FUNCTIONS, 'is_cart_col_stat' => true],
-            ],
-        ]);
-    }
-    return '';
-}
-
-# Add cart item
-function addCartItem(): void {
-    global $conf;
-    $id = getVar('get', 'id', 'num', 0);
-    $cookies = getCartCookie();
-    $info = '';
-    if ($id) {
-        $info = ($cookies) ? base64_encode($cookies.','.$id) : base64_encode($id);
-        setCookies('shop', time() + $conf['shop']['shop_t'], $info);
-    }
-    echo getCartSummary($info);
-}
-
-# Delete cart item
-function deleteCartItem(): void {
-    global $conf;
-    $id = getVar('get', 'id', 'num', 0);
-    $cookies = getCartCookie();
-    $info = '';
-    if ($id && $cookies) {
-        $massiv = explode(',', $cookies);
-        $a = 0;
-        foreach ($massiv as $val) {
-            if ($val == $id && $a == 0) {
-                $a++;
-                continue;
-            }
-            $info .= ($info === '') ? $val : ','.$val;
-        }
-        if ($info === '') {
-            setCookiesDelete('shop');
-            unset($_COOKIE[$conf['user_c'].'-shop']);
-        } else {
-            $info = base64_encode($info);
-            setCookies('shop', time() + $conf['shop']['shop_t'], $info);
-        }
-    }
-    echo getCartSummary($info);
 }
 
 # Format user warnings
@@ -5159,25 +4940,18 @@ function getFileStream(string $path, string $name, string $mime = 'application/o
     exit;
 }
 
-# The letter navigation of a list: digits, the alphabet of the language and the Latin alphabet, each sign a link where the list has something under it
+# The letter navigation of a list: digits, the alphabet of the language and the Latin alphabet, every sign unlinked for a module that is no Node type
 # A registered Node type links every letter to its list filter, because the letters of its titles would cost a query of their own; each keeps its category, as its pager does
-# The index of the shop stays the letters it has, and a shop without a product on sale shows every sign unlinked
 function getLetterNavi(string $mod, int $cat = 0): string {
-    global $db, $tpl, $conf;
+    global $tpl, $conf;
     $node = isset($conf['node']['types'][$mod]);
-    $alpha = [];
-    if ($mod === 'shop') {
-        $rows = $db->getSqlRows($db->getSqlQuery('SELECT title FROM '.PREFIX_DB."_products WHERE time <= NOW() AND status != '0'")) ?: [];
-        foreach ($rows as $row) $alpha[] = ucfirst(mb_substr(trim((string)$row['title']), 0, 1, 'utf-8'));
-        $alpha = array_unique($alpha);
-    }
     $href = static fn(string $char): string => $node ? getSeoUrl(['name' => $mod] + ($cat > 0 ? ['cat' => $cat] : []) + ['let' => rawurlencode($char)])
         : 'index.php?name='.$mod.'&op=liste&let='.urlencode($char);
     $rows = [];
     $digits = '';
     foreach (range(0, 9) as $num) {
         $label = $tpl->getHtmlFrag('span', ['text' => (string)$num, 'is_alpha_letter' => true]);
-        $digits .= ($node || in_array((string)$num, $alpha))
+        $digits .= $node
             ? $tpl->getHtmlFrag('link', ['href' => $href((string)$num), 'title' => (string)$num, 'label_html' => $label])
             : $label;
     }
@@ -5185,7 +4959,7 @@ function getLetterNavi(string $mod, int $cat = 0): string {
     $locale = '';
     foreach (preg_split('//u', _ALPHABET, -1, PREG_SPLIT_NO_EMPTY) as $char) {
         $label = $tpl->getHtmlFrag('span', ['text' => $char, 'is_alpha_letter' => true]);
-        $locale .= ($node || in_array($char, $alpha))
+        $locale .= $node
             ? $tpl->getHtmlFrag('link', ['href' => $href($char), 'title' => $char, 'label_html' => $label])
             : $label;
     }
@@ -5194,7 +4968,7 @@ function getLetterNavi(string $mod, int $cat = 0): string {
         $latin = '';
         foreach (range('A', 'Z') as $eng) {
             $label = $tpl->getHtmlFrag('span', ['text' => $eng, 'is_alpha_letter' => true]);
-            $latin .= ($node || in_array($eng, $alpha))
+            $latin .= $node
                 ? $tpl->getHtmlFrag('link', ['href' => $href($eng), 'title' => $eng, 'label_html' => $label])
                 : $label;
         }
@@ -5939,21 +5713,6 @@ function catids(string $mod = '', int $id = 0): string {
     return '';
 }
 
-# Format categories IDs from module
-function catmids(string $modul, string $field): string {
- global $db, $conf, $locale;
-    if ($conf['multilingual']) {
-        $where  = 'WHERE modul = :modul AND (lang = :locale OR lang = \'\')';
-        $params = ['modul' => $modul, 'locale' => $locale];
-    } else {
-        $where  = 'WHERE modul = :modul';
-        $params = ['modul' => $modul];
-    }
-    $result = $db->getSqlQuery('SELECT id, pread FROM '.PREFIX_DB.'_categories '.$where.' ORDER BY id', $params);
-    while ([$cid, $pread] = $db->getSqlRow($result)) if (is_acess($pread)) $catid[] = $cid;
-    return isset($catid) ? 'AND '.$field.' IN ('.implode(', ', $catid).')' : '';
-}
-
 # Decode stored HTML entities to plain UTF-8 text for safe re-escaping at the output boundary
 function getDecodedText(string $text): string {
     return html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
@@ -6276,7 +6035,6 @@ function getRatingService(): Rating {
     $maps = [
         'account' => ['_users', 'votes', 'tvotes', 'id', '', ''],
         'forum' => ['_forum', 'ratings', 'score', 'uid', " AND pid = '0'", " AND time <= NOW() AND status > '1'"],
-        'shop' => ['_products', 'votes', 'tvotes', '0', '', " AND time <= NOW() AND status != '0'"],
     ];
     $actor = ['uid' => is_user() ? intval(substr($user[0], 0, 11)) : 0, 'ip' => getIp(), 'aid' => isAdmin() ? intval(substr($admin[0], 0, 11)) : 0, 'super' => isAdmin(true)];
     $moder = is_moder('forum') === 1;
@@ -6333,7 +6091,7 @@ function getRatingService(): Rating {
 function getRatingView(): void {
     global $tpl;
     $forms = [
-        'mod' => '/^(?:account|forum|shop|node\.[a-z][a-z0-9]{0,19})$/D',
+        'mod' => '/^(?:account|forum|node\.[a-z][a-z0-9]{0,19})$/D',
         'id' => '/^[1-9][0-9]{0,9}$/D',
         'rate' => '/^[1-5]$/D',
         'request' => '/^[a-f0-9]{32}$/D',

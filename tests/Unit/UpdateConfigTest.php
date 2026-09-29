@@ -31,6 +31,7 @@ final class UpdateConfigTest extends TestCase
     }
 
     # The values of the site go over the shipped source, the release keeps its version and asset list, the site stays closed, a language name becomes its code
+    # The start module of the panel is a setting the release dropped, so the one the site stored never reaches the carried source
     # A start module or a theme that left the tree falls back to the shipped value, a logo the theme holds stays, and seo wins over the global of 6.2
     #[Test]
     public function theSiteValuesGoOverTheRelease(): void
@@ -41,7 +42,7 @@ final class UpdateConfigTest extends TestCase
         $this->assertFalse($run['leak'], 'The output of an old source reached the page');
         $this->assertSame(['Old site', '1', 'ru', 'forum', '-', '_', 'kept'], [$glob['sitename'], $glob['close'], $glob['language'], $glob['module'], $glob['sep'], $glob['tsep'],
             $glob['oldkey']]);
-        $this->assertSame([$run['ship']['version'], $run['ship']['css_f'], $run['ship']['amod']], [$glob['version'], $glob['css_f'], $glob['amod']]);
+        $this->assertSame([$run['ship']['version'], $run['ship']['css_f'], $run['ship']['amod']], [$glob['version'], $glob['css_f'], $glob['amod'] ?? null]);
         $this->assertSame([$run['ship']['theme'], 'mark.svg'], [$glob['theme'], $glob['site_logo']], 'A theme that left the tree was kept or a logo of the theme was dropped');
         $this->assertSame(['de', 'k1'], [$run['lang']['lang'], $run['lang']['key']]);
         $want = ['stat' => '0'] + $run['ship']['statistic'];

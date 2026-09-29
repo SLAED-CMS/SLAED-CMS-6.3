@@ -718,7 +718,7 @@ function getInstallAfter(PDO $pdo, array $page): array {
             ? (json_decode((string)file_get_contents($isite.'/storage/backup/update/newsletter/manifest.json'), true)['state'] ?? '') : 'missing',
         'queued' => (int)$pdo->query('SELECT COUNT(*) FROM '.IPREF.'_mail WHERE kind = \'newsletter\'')->fetchColumn(),
         'abort' => getInstallConf('newsletter')['newsletter']['abort'] ?? null,
-        'global' => array_intersect_key(getInstallConf('global'), array_flip(['language', 'version', 'module', 'amod', 'sitename', 'css_f', 'sep'])),
+        'global' => array_intersect_key(getInstallConf('global'), array_flip(['language', 'version', 'module', 'sitename', 'css_f', 'sep'])),
         'presentation' => isset($mods['presentation']),
         'maildrain' => ($jobs['maildrain'] ?? null) === ($ship['scheduler']['jobs']['maildrain'] ?? false),
         'ids' => ['old' => $top, 'next' => $next],
@@ -766,7 +766,7 @@ function setInstallDefs(string $snap): bool {
 # Put back the value sources the site corrected by hand after its preflight refused them, as its snapshot recorded them; the answer is the rows changed per area
 function setInstallSources(PDO $pdo, string $snap): array {
     $out = [];
-    foreach (['account' => ['users', 'field'], 'forum' => ['forum', 'field'], 'order' => ['order', 'info']] as $area => [$tab, $col]) {
+    foreach (['account' => ['users', 'field'], 'forum' => ['forum', 'field']] as $area => [$tab, $col]) {
         $stm = $pdo->prepare('UPDATE '.IPREF.'_'.$tab.' SET '.$col.' = :src WHERE id = :id AND '.$col.' != :old');
         $out[$area] = 0;
         foreach ((array)json_decode((string)file_get_contents($snap.'/'.$area.'.json'), true) as [$id, $src]) {

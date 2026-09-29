@@ -46,7 +46,7 @@ Settings of each profile are in [Shipped profiles](#shipped-profiles).
 
 ### What Node does not cover
 
-Accounts, private messages, the forum and the shop stay separate subsystems. Node has no own categories or
+Accounts, private messages and the forum stay separate subsystems. Node has no own categories or
 comments, runs no PHP, SQL or class named in type settings, offers no logic builder or public headless API,
 and imports no data from the tables of the removed modules.
 
@@ -1265,8 +1265,8 @@ public function deleteNodeRemains(string $name): void
   cache guard. The parent is `0` or a category of the same module whose chain (locked) neither reaches the category
   nor loops (`INVALID category.parent`).
 - `updateNodeCategory()` refuses to move a used category to another module (`INVALID category.used`): main or extra
-  category of any material, direct subcategories, or items of a fixed module (`forum` in `_forum`, `shop` in
-  `_products`, counted without a lock). `deleteNodeCategory()` deletes the whole subtree; a main category of any
+  category of any material, direct subcategories, or items of the fixed module `forum` in `_forum`, counted
+  without a lock). `deleteNodeCategory()` deletes the whole subtree; a main category of any
   material in it refuses (`category.used`), extra links go and the affected materials get a new version.
 - `checkTypeRegistry()` answers whether a name is in `_node_types` whatever its configuration says; the category
   screen chooses the Node path by it, so a broken type is refused instead of falling back to plain SQL.
@@ -1328,12 +1328,12 @@ All in `core/system.php` unless noted.
 | `getNodeBlockParam(string $param): ?array` | canonical JSON of `_blocks.param`: exactly `type`, `mode` (`last`/`home`), `limit` 1…50; a named type needs `integrations.blocks`, `home` its `features.home` |
 | `addNodeMail(array $list, string $title, string $text): bool` | one queued mail per address: `mtemp` with escaped `[text]`, subject `<sitename> - <title>`, kind `node`, priority 3 |
 | `addNodePublishTask(): array`, `addNodeSyncTask(): array` | scheduler adapters; a `NodeException` becomes `status = failed` |
-| `getRssFeeds(): array` | active types with `integrations.rss`, then an active shop |
+| `getRssFeeds(): array` | active types with `integrations.rss` |
 | `checkUploadModer(string $mod): bool` | upload moderator; a type only through `node-<name>` |
 | `getUserMail(int $uid): string`, `getAdminNames(string $key): array` | stored account address; `id => name` of main administrators and holders of the key |
 | `getConst(string $con): string` | a defined `_NAME` answers its text, anything else as is |
 | `updateNodeTypePart(string $name, string $part, array $value, int $version): string` (`core/admin.php`) | replaces `fields`, `uploads`, `rating` or `integrations` of a type via `updateNodeType()`; `''` or a safe text by code |
-| `getCategoryModules(): array` (`core/helpers.php`) | `forum`, `shop` and types with `features.categories` |
+| `getCategoryModules(): array` (`core/helpers.php`) | `forum` and types with `features.categories` |
 
 ```php
 function getFileStream(string $path, string $name, string $mime = 'application/octet-stream', bool $inline = false, bool $cached = false, ?callable $start = null): void
@@ -1347,7 +1347,7 @@ from byte zero, never for `HEAD`, 304 or 416. The body streams in 64 KiB blocks 
 
 ## Field
 
-`final class Field` (`core/classes/field.php`) serves the extra fields of every area: accounts, forum, orders and
+`final class Field` (`core/classes/field.php`) serves the extra fields of every area: accounts, forum and
 each Node type. `core/system.php` creates the shared `$fld = new Field()`, passed explicitly to `NodeQuery`,
 `NodeService` and `NodeView`. The class has no constructor or state, reads neither configuration nor database and
 writes nothing.
@@ -1438,7 +1438,7 @@ values.
 
 ### Storage
 
-Definitions live in `config/fields.php` under `fields.<area>`: `account`, `forum`, `order`, and
+Definitions live in `config/fields.php` under `fields.<area>`: `account`, `forum` and
 `fields.node.<type>`. Definition CRUD and the file write stay outside `Field`.
 
 - `getFieldRules(string $mod)` (`core/helpers.php`) answers the checked set of an area once per request; every area
@@ -2347,8 +2347,8 @@ public list outside it is `404`, and `setHead()` uses it so a closed category ne
 
 ### Comments
 
-`Comment` (`core/classes/comment.php`) keeps its single constructor. `Comment::MODULES` holds only `account`,
-`shop` and `voting`; any other `modul` naming a registered type is a Node target, resolved lazily by a
+`Comment` (`core/classes/comment.php`) keeps its single constructor. `Comment::MODULES` holds only `account`
+and `voting`; any other `modul` naming a registered type is a Node target, resolved lazily by a
 `NodeQuery`/`NodeService` pair built from the class's `Database` and `getNodeContext()`.
 
 - A discussion, `Comment::getTargetMode()` and the form need a readable target, the `comments` feature and no
@@ -2363,8 +2363,7 @@ public list outside it is `404`, and `setHead()` uses it so a closed category ne
   `updateNodeAction($type, $target, 'comment', $uid)` runs, `$uid` being the author, never the approving
   moderator; later edits, hides and deletes do not call it again.
 - A write owning its transaction follows the page-cache protocol (private `setWriteBegin()`, `setWriteUndo()`,
-  `setWriteDone()`); a joined write takes no guard - its owner (Node, account deletion, shop bulk delete, poll
-  deletion) holds it and forces the generation after `COMMIT`.
+  `setWriteDone()`); a joined write takes no guard - its owner (Node, account deletion, poll deletion) holds it and forces the generation after `COMMIT`.
 - `Comment::deleteTarget(string $mod, array $ids, array $uids = []): bool` locks the comment rows by ascending id,
   then all authors plus `$uids` in one `Point::setUserLocks()`, then compensates each award.
   `NodeService::deleteNode()` passes the material author so his publication award is compensated afterwards.
@@ -2412,8 +2411,7 @@ pages of the smallest `list.limit` (at most `limits.maxlist`). There is no index
 
 ### RSS
 
-`getRssFeeds(): array` is the one list of feeds: every active type with `integrations.rss`, then `shop` while
-active. The feed route `index.php?go=rss` (`getRssChannel()` in `core/user.php`), the alternate link of the head
+`getRssFeeds(): array` is the one list of feeds: every active type with `integrations.rss`. The feed route `index.php?go=rss` (`getRssChannel()` in `core/user.php`), the alternate link of the head
 and the picker of `modules/rss` read only this list. No name selects the start module when it has a feed, else
 the first feed; an unknown name is `404`. A Node feed reads one page of `min(num, list.limit, limits.maxlist)`
 items (`num` bounded by `rss.min`/`rss.max`), `published desc` with pinned first where the type has `pinned`;
@@ -2916,7 +2914,7 @@ files also have a static half that reads the sources.
 | `NodeSupportTest` | 13 | `route_probe.php support` | comments on Node, private requests, card, mail |
 | `NodeSyncTest` | 10 | `route_probe.php sync` | source form, `op=sync`, `nodesync`, scripted transport |
 | `NodeIntegTest` | 14 | `route_probe.php integ` | rating, favorites, poll, home, search, RSS, sitemap, blocks |
-| `NodeGuardTest` | 10 | `route_probe.php guard` | output escaping, favorites with points, shop, poll right |
+| `NodeGuardTest` | 10 | `route_probe.php guard` | output escaping, favorites with points, poll right |
 | `NodeIntegrityTest` | 7 | `route_probe.php intact` | rows left by real requests, checked by SQL |
 | `NodeProfileTest` | 14 | `install_probe.php` | clean install creates the ten profiles; panel and public walk |
 | `UpdateSiteTest` | 9 | `install_probe.php update` | 6.2 -> 6.3 update of `tests/Fixtures/update62` and `update62early` over HTTP |
@@ -3088,9 +3086,8 @@ any file is written.
   MySQL 8.0.16+, else `_SETUPVER`.
 - `new`: no table named `<prefix>_…` may exist (`_SETUPTAKEN`).
 - `update6_3`: `<prefix>_users` and `<prefix>_admins` must exist (`_SETUPTABLES`); every existing table of the
-  transaction list (`users`, `admins`, `comment`, `forum`, `order`, `clients`, `favorites`, `user_oauth`,
-  `points`, `products`, `rating_targets`, `rating_actors`, `rating_votes`, `categories`, `voting`,
-  `newsletter`, `privat`) must be InnoDB, else `_SETUPINNODB` followed by one `ALTER TABLE … ENGINE=InnoDB;` per table.
+  transaction list (`users`, `admins`, `comment`, `forum`, `favorites`, `user_oauth`, `points`,
+  `rating_targets`, `rating_actors`, `rating_votes`, `categories`, `voting`, `newsletter`, `privat`) must be InnoDB, else `_SETUPINNODB` followed by one `ALTER TABLE … ENGINE=InnoDB;` per table.
   Nothing is converted automatically. A table that does not exist yet is skipped.
 
 A table that takes part in a Point, Rating, Field, Node, private message or newsletter transaction belongs in that list.
@@ -3171,7 +3168,7 @@ carries `deny from all`.
 |---|---|---|
 | `points` | `balances.json` (uid -> `_users.points`) | `cursor` 0, `count` |
 | `ratings` | `targets.json`, `terms.json`, `rules.json` | `cursor` per `targets`/`terms`, `moment` (server time of the preflight), `count` with `targets`, `terms`, `voting`, `foreign`, `orphan`, `dropped` |
-| `fields` | `definitions.json`, `account.json`, `forum.json`, `order.json` | `cursor` and `count` per area |
+| `fields` | `definitions.json`, `account.json`, `forum.json` | `cursor` and `count` per area |
 | `newsletter` | `recipients.json` | `count` (`campaigns`, `recipients`), `sent`; states `prepared` -> `verified` |
 | `config` | the moved `config_<name>.php` sources | none |
 
@@ -3205,14 +3202,13 @@ the positional `users.points` string of 6.2 is not carried.
 ### Ratings unit
 
 `setUpdateRatings(Database $db, string $prefix): string` handles the remaining targets `account` (`_users`
-`votes`/`tvotes`), `forum` (`_forum` `ratings`/`score`, topics `pid = 0`) and `shop` (`_products`
-`votes`/`tvotes`).
+`votes`/`tvotes`) and `forum` (`_forum` `ratings`/`score`, topics `pid = 0`).
 
 - Preflight, nothing written on failure (first 50 entries and the total reported): an aggregate outside
   `votes <= total <= 5 × votes`; a kept `_rating` row without an actor or with a time that is not a positive
-  integer up to the server time; an invalid rule; a missing rule for `account`, `forum` or `shop`.
+  integer up to the server time; an invalid rule; a missing rule for `account` or `forum`.
 - Rules: `period|active|detail` of 6.2 becomes the four keys with `guests = '1'`; `period` must be a multiple of
-  86400, `0` stays "no wait". Only `account`, `forum`, `shop` and `node.<name>` are kept.
+  86400, `0` stays "no wait". Only `account`, `forum` and `node.<name>` are kept.
 - Aggregates go to `rating_targets` (`base` = total, `created` = `moment`); the latest `_rating.time` per actor
   (`u:<uid>` or `g:<normalized address>`) and target goes to `rating_actors.last`. No vote row is created.
 - The unit never modifies `_rating`; poll rows, other events and rows of missing targets are counted and left.
@@ -3222,8 +3218,8 @@ the positional `users.points` string of 6.2 is not carried.
 
 ### Fields unit
 
-`setUpdateFields(Database $db, string $prefix): string` converts `account` (`_users.field`), `forum`
-(`_forum.field`) and `order` (`_order.info`).
+`setUpdateFields(Database $db, string $prefix): string` converts `account` (`_users.field`) and `forum`
+(`_forum.field`).
 
 ```php
 function getUpdateRules(string $area, mixed $text, Field $fld, array &$bad): array
@@ -3257,7 +3253,7 @@ function getUpdateValue(array $rules, array $slots, int $size, string $text, Fie
 - Batches of 500 rows under `SELECT … FOR UPDATE`. After all batches every non-empty value of the column is
   compared with the snapshot; only then is `config/fields.php` published with `$raw = true`.
 
-The columns `_users.field`, `_forum.field`, `_order.info` are `MEDIUMTEXT NOT NULL` for the 1 MiB JSON limit of
+The columns `_users.field` and `_forum.field` are `MEDIUMTEXT NOT NULL` for the 1 MiB JSON limit of
 Field, declared so in `table.sql` and in the final alignment of the schema file.
 
 ### Module registry
@@ -3288,8 +3284,8 @@ function deleteSetupTypes(array $keep = []): array|false
 
 - Unshipped keys stay for the data units (`users.point`, `users.points`, positional `fields` and `ratings`); the
   settings form drops the rest on its next save.
-- `global`: `close = '1'`; language names become codes (also `lang.lang`); `module` and `amod` keep only modules
-  of the tree; `version`, `css_f`, `script_f` come from the release; a missing theme or logo falls back.
+- `global`: `close = '1'`; language names become codes (also `lang.lang`); `module` keeps only modules of the
+  tree and `amod` is dropped; `version`, `css_f`, `script_f` come from the release; a missing theme or logo falls back.
 - `uploads`: a 12-field rule loses field 8 (`adminlist`) and gains `guestfiles` = `userfiles` as field 12.
 - `security.blocker_ip`: `ip|octets|hash|time|reason` becomes `CIDR|hash|time|reason`; other entries are dropped.
 - Not carried: the nine removed modules, `templ`, `header`, `chmod`, `core`, `rewrite`, `rules`, `db`, a file
@@ -3356,7 +3352,7 @@ Rules, enforced by `tests/SchemaUpdateValidationTest.php` for the file:
   `MODIFY`, data that only the final type accepts is written after it. Example: `_admins.editor` of 6.2 is a
   `TINYINT`; `NULL -> 0` runs before the widening, `'plain'` for `''`, `0`, `1` after it.
 - Most type alignment of existing columns lives in the section "Final type alignment to setup/sql/table.sql";
-  a rename a `MODIFY` depends on comes before that `MODIFY` (the `_whois` renames sit in Batch N for this reason).
+  a rename a `MODIFY` depends on comes before that `MODIFY`.
 - A statement that would fail on a repeat is not an unconditional `ALTER` (the `_users` alignment leaves out
   `network`, which the OAuth block drops). A plain `MODIFY` to the final definition re-runs to the same result.
 - Tables 6.2 lacks are `CREATE TABLE IF NOT EXISTS` with the definitions of `table.sql` verbatim, ordered by their

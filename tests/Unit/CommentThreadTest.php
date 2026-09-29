@@ -20,7 +20,7 @@ final class CommentThreadTest extends TestCase
         $data = json_decode($out, true);
         $this->assertIsArray($data, 'Probe commentthread did not return JSON: '.$out);
         if (empty($data['admin'])) $this->markTestSkipped('No super administrator with a stored address on this installation');
-        if (empty($data['target'])) $this->markTestSkipped('No published shop target on this installation');
+        if (empty($data['target'])) $this->markTestSkipped('No visible poll on this installation');
         return self::$probe = $data;
     }
 
@@ -205,7 +205,7 @@ final class CommentThreadTest extends TestCase
     public function theTargetCounterIsSweptAndRepaired(): void
     {
         $data = $this->getProbe();
-        if ($data['drift']['seeded'] < 1) $this->markTestSkipped('No commented shop target on this installation');
+        if ($data['drift']['seeded'] < 1) $this->markTestSkipped('No commented poll on this installation');
         $this->assertSame($data['drift']['seeded'], $data['drift']['found'], 'The sweep did not find the drift the probe created');
         $this->assertSame($data['drift']['seeded'], $data['drift']['fixed'], 'The repair did not write the rows it was handed');
         $this->assertSame(0, $data['drift']['left'], 'The repair left drift it had just been told about');
@@ -265,7 +265,7 @@ final class CommentThreadTest extends TestCase
         $tool = $this->getFile('tools/comment-recount.php');
         $this->assertStringContainsString('$com->getCountDrift($only)', $tool);
         $this->assertStringContainsString('$com->updateCountDrift($drift)', $tool);
-        $this->assertDoesNotMatchRegularExpression('#_faq|_products|_voting#', $tool, 'The tool carries its own copy of the module map');
+        $this->assertDoesNotMatchRegularExpression('#_faq|_users|_voting#', $tool, 'The tool carries its own copy of the module map');
     }
 
     # The forum keeps the same kind of counter and now repairs it the same way, instead of nudging it with nothing to notice when it slips

@@ -164,7 +164,6 @@ final class ThemeContractTest extends TestCase
             'templates/lite/layouts/admin.html',
             'templates/lite/layouts/bare.html',
             'templates/lite/partials/site-header.html',
-            'templates/lite/fragments/shop-invoice.html',
         ];
         foreach ($list as $path) {
             $html = (string)file_get_contents($root.'/'.$path);

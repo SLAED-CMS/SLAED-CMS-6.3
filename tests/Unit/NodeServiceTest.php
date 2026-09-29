@@ -514,9 +514,9 @@ final class NodeServiceTest extends TestCase
     public function theUploadHelpersKnowTheModeratorOfANodeType(): void
     {
         $run = $this->getRuns()['upload'];
-        $this->assertSame(['moder' => true, 'forum' => true, 'shop' => false, 'none' => false, 'owner' => null, 'flag' => true], $run['moder']);
-        $this->assertSame(['moder' => false, 'forum' => false, 'shop' => false, 'none' => false, 'owner' => '2', 'flag' => false], $run['anna']);
-        $this->assertSame(['moder' => false, 'forum' => true, 'shop' => false, 'none' => false, 'flag' => false], array_diff_key($run['legacy'], ['owner' => 0]),
+        $this->assertSame(['moder' => true, 'forum' => true, 'voting' => false, 'none' => false, 'owner' => null, 'flag' => true], $run['moder']);
+        $this->assertSame(['moder' => false, 'forum' => false, 'voting' => false, 'none' => false, 'owner' => '2', 'flag' => false], $run['anna']);
+        $this->assertSame(['moder' => false, 'forum' => true, 'voting' => false, 'none' => false, 'flag' => false], array_diff_key($run['legacy'], ['owner' => 0]),
             'The stored key of a removed module made its administrator a moderator of the Node type of that name');
         $this->assertStringContainsString("return \$mod !== '' && is_moder(\$mod) === 1;", self::getBody('core/system.php', 'checkUploadModer'));
         $this->assertStringContainsString("if (isset(\$conf['node']['types'][\$modul])) \$modul = 'node-'.\$modul;", self::getBody('core/system.php', 'is_admin_modul'));
@@ -592,7 +592,7 @@ final class NodeServiceTest extends TestCase
         $mods = self::getBody('core/helpers.php', 'getCategoryModules');
         $this->assertStringContainsString("array_filter(getNodeTypeMap(), fn(NodeType \$v): bool => \$v->settings['features']['categories'])", $mods,
             'The category modules miss the Node types');
-        $this->assertStringContainsString("array_merge(['forum', 'shop'], array_keys(\$types))", $mods);
+        $this->assertStringContainsString("array_merge(['forum'], array_keys(\$types))", $mods);
     }
 
     # The comments of a deleted material leave inside its transaction with every award compensated, and a failed comment step keeps the material

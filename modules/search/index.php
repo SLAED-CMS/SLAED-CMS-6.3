@@ -113,28 +113,8 @@ function getSearchUrl(array $params, string $word, string $anchor = ''): string 
 
 function getSearchMap(): array {
     return [
-        'auto_links' => ['kind' => 'auto'],
         'forum' => ['kind' => 'forum'],
-        'shop' => ['kind' => 'shop'],
     ];
-}
-
-function getSearchAuto(array $state): array {
-    global $db, $afile;
-    $rows = [];
-    $pars = ['worda' => '%'.$state['word'].'%', 'wordb' => '%'.$state['word'].'%', 'wordc' => '%'.$state['word'].'%', 'lim' => $state['lim']];
-    $result = $db->getSqlQuery(
-        'SELECT id, title, intro, added, hits FROM '.PREFIX_DB.'_auto_links'
-        .' WHERE hits != \'0\' AND (title LIKE :worda OR intro LIKE :wordb OR url LIKE :wordc) ORDER BY added DESC LIMIT :lim',
-        $pars
-    );
-    while ([$mid, $titl, $cont, $time, $hits] = $db->getSqlRow($result)) {
-        $url = getSearchUrl(['name' => 'auto_links', 'op' => 'view', 'id' => $mid, 'title' => $titl], '');
-        $rows[] = getSearchItem('auto_links', $url, $afile.'.php?name=auto_links&op=add&id='.$mid, [
-            'title' => $titl, 'time' => $time, 'content' => $cont, 'reads' => $hits,
-        ]);
-    }
-    return $rows;
 }
 
 function getSearchForum(array $state): array {
@@ -162,24 +142,6 @@ function getSearchForum(array $state): array {
         $rows[] = getSearchItem('forum', $url, $edit, [
             'title' => $titl, 'time' => $time, 'cid' => $cid, 'content' => $cont,
             'nick' => $nick, 'user' => $user, 'post' => true, 'comments' => $comm, 'reads' => $reads,
-        ]);
-    }
-    return $rows;
-}
-
-function getSearchShop(array $state): array {
-    global $db, $afile;
-    $rows = [];
-    $pars = ['worda' => '%'.$state['word'].'%', 'wordb' => '%'.$state['word'].'%', 'wordc' => '%'.$state['word'].'%', 'lim' => $state['lim']];
-    $result = $db->getSqlQuery(
-        'SELECT p.id, p.time, p.title, p.cid, p.intro, p.comments, p.counter FROM '.PREFIX_DB.'_products AS p'
-        .' WHERE p.time <= NOW() AND p.status = \'1\' AND (p.title LIKE :worda OR p.intro LIKE :wordb OR p.body LIKE :wordc) ORDER BY p.time DESC LIMIT :lim',
-        $pars
-    );
-    while ([$mid, $time, $titl, $cid, $cont, $comm, $reads] = $db->getSqlRow($result)) {
-        $url = getSearchUrl(['name' => 'shop', 'op' => 'view', 'id' => $mid, 'title' => $titl], $state['word']);
-        $rows[] = getSearchItem('shop', $url, $afile.'.php?name=shop&op=productadd&id='.$mid, [
-            'title' => $titl, 'time' => $time, 'cid' => $cid, 'content' => $cont, 'comments' => $comm, 'reads' => $reads,
         ]);
     }
     return $rows;
@@ -236,9 +198,7 @@ function getSearchRows(array $state): array {
         $cfg = $list[$mod] ?? null;
         if (!$cfg) continue;
         $rows = array_merge($rows, match ($cfg['kind']) {
-            'auto' => getSearchAuto($state),
             'forum' => getSearchForum($state),
-            'shop' => getSearchShop($state),
         });
     }
     [$more, $total] = getSearchNode($state, $types, count($rows));

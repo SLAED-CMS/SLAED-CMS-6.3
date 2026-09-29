@@ -13,6 +13,5 @@ parameters:
         - vendor/*
     ignoreErrors:
         - '#Undefined variable: \$uname#'
-        - '#Function whois invoked with 0 parameters#'
     reportUnmatchedIgnoredErrors: true
     treatPhpDocTypesAsCertain: false

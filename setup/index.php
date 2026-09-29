@@ -422,8 +422,8 @@ function checkUpdateBase(Database $db, string $prefix, bool $fresh = false): str
     [$num] = $db->getSqlRow($db->getSqlQuery($sql.'table_name IN (:users, :admins)', ['users' => $prefix.'_users', 'admins' => $prefix.'_admins']));
     if ($num < 2) return sprintf(_SETUPTABLES, $prefix);
     $list = [];
-    $tabs = ['users', 'admins', 'comment', 'forum', 'order', 'clients', 'favorites', 'user_oauth', 'points', 'products', 'rating_targets', 'rating_actors', 'rating_votes',
-        'categories', 'voting', 'newsletter', 'privat'];
+    $tabs = ['users', 'admins', 'comment', 'forum', 'favorites', 'user_oauth', 'points', 'rating_targets', 'rating_actors', 'rating_votes', 'categories', 'voting',
+        'newsletter', 'privat'];
     foreach ($tabs as $key => $name) $list['t'.$key] = $prefix.'_'.$name;
     $sql = 'SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN (:'.implode(', :', array_keys($list)).')'
         .' AND engine IS NOT NULL AND engine != \'InnoDB\'';
@@ -473,7 +473,7 @@ function setUpdatePoints(Database $db, string $prefix): string {
         $stale = isset($users['point']) || isset($users['points']);
         $point['active'] = $flag;
         unset($users['point'], $users['points']);
-        if (count($point['actions'] ?? []) !== 15 || !in_array($point['active'], ['0', '1'], true)) return getInfo('points: config/points.php is not a valid points scope', false);
+        if (count($point['actions'] ?? []) !== 14 || !in_array($point['active'], ['0', '1'], true)) return getInfo('points: config/points.php is not a valid points scope', false);
         if ($moved && !setConfigFile('points.php', $point)) return getInfo('points: config/points.php could not be written, run the update again', false);
         if ($stale && !setConfigFile('users.php', $users)) return getInfo('points: config/users.php could not be written, run the update again', false);
         $info['target'] = ['points.php' => hash_file('sha256', CONFIG_DIR.'/points.php'), 'users.php' => hash_file('sha256', CONFIG_DIR.'/users.php')];
@@ -491,7 +491,7 @@ function setUpdatePoints(Database $db, string $prefix): string {
 function setUpdateRatings(Database $db, string $prefix): string {
     $dir = BASE_DIR.'/storage/backup/update/ratings';
     $file = $dir.'/manifest.json';
-    $maps = ['account' => ['users', 'votes', 'tvotes', ''], 'forum' => ['forum', 'ratings', 'score', ' WHERE pid = 0'], 'shop' => ['products', 'votes', 'tvotes', '']];
+    $maps = ['account' => ['users', 'votes', 'tvotes', ''], 'forum' => ['forum', 'ratings', 'score', ' WHERE pid = 0']];
     $mark = is_file(CONFIG_DIR.'/update.php') ? ((require CONFIG_DIR.'/update.php')['update'] ?? []) : [];
     $info = is_file($file) ? json_decode((string)file_get_contents($file), true) : null;
     $bad = [];
@@ -759,15 +759,16 @@ function getUpdateValue(array $rules, array $slots, int $size, string $text, Fie
     return ['why' => $list ? 'the full and the short layout both fit and differ' : $why];
 }
 
-# The fields unit of the 6.3 data update: name the positional definitions of account, forum and order and turn every stored value row into one canonical JSON object
+# The fields unit of the 6.3 data update: name the positional definitions of account and forum and turn every stored value row into one canonical JSON object
 # Nothing is written before the whole preflight passed: a definition or a row that cannot be mapped without guessing stops the unit with the table, the id and the reason
 # A caption without an option and data at a switched off position grow the definitions by a disabled option or an inactive field in row order, and the report counts them
 # The unit resumes from its manifest: verified is skipped, applying and prepared continue by cursor, and a stored row has to equal its source or its target
 # Definitions that are already named while positional rows exist and no manifest does stop it, because the old definitions are the only key to those rows
+# Named definitions of the order area are not carried, because the release no longer ships the module that owns them
 function setUpdateFields(Database $db, string $prefix): string {
     $dir = BASE_DIR.'/storage/backup/update/fields';
     $file = $dir.'/manifest.json';
-    $maps = ['account' => ['users', 'field'], 'forum' => ['forum', 'field'], 'order' => ['order', 'info']];
+    $maps = ['account' => ['users', 'field'], 'forum' => ['forum', 'field']];
     $mark = is_file(CONFIG_DIR.'/update.php') ? ((require CONFIG_DIR.'/update.php')['update'] ?? []) : [];
     $info = is_file($file) ? json_decode((string)file_get_contents($file), true) : null;
     $flag = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
@@ -832,7 +833,7 @@ function setUpdateFields(Database $db, string $prefix): string {
         if ($bad) return getInfo('fields: the preflight found data it will not guess, nothing was written ('.count($bad).'): '.implode(', ', array_slice($bad, 0, 50)), false);
         try {
             foreach ($rules as $area => $set) $rules[$area] = $fld->filterFieldList($set);
-            if ($named) $rules += $old;
+            if ($named) $rules += array_diff_key($old, ['order' => true]);
             ksort($rules);
         } catch (InvalidArgumentException $err) {
             return getInfo('fields: config/fields.php '.$area.' '.$err->getMessage().' is refused by the shared check of definitions, nothing was written', false);
@@ -898,8 +899,8 @@ function setUpdateFields(Database $db, string $prefix): string {
     }
     if (!setConfigFile('update.php', ['fields' => '6.3.0'] + $mark)) return getInfo('fields: config/update.php could not be written, the subsystem stays closed', false);
     $stat = $info['count'];
-    $text = 'fields: named definitions published, value rows carried over: '.intval($stat['account']).' accounts, '.intval($stat['forum']).' forum posts, ';
-    $text .= intval($stat['order']).' orders; kept as switched off: '.intval($info['grown']['options'] ?? 0).' options, '.intval($info['grown']['fields'] ?? 0).' fields';
+    $text = 'fields: named definitions published, value rows carried over: '.intval($stat['account']).' accounts, '.intval($stat['forum']).' forum posts; kept as switched off: ';
+    $text .= intval($info['grown']['options'] ?? 0).' options, '.intval($info['grown']['fields'] ?? 0).' fields';
     return getInfo($text.'; the subsystem is open', true);
 }
 
@@ -919,7 +920,6 @@ function setUpdateConfig(): string {
     $skip = ['news', 'pages', 'faq', 'help', 'jokes', 'content', 'links', 'files', 'media', 'templ', 'header', 'chmod', 'core', 'rewrite', 'rules', 'db'];
     $langs = ['english' => 'en', 'french' => 'fr', 'german' => 'de', 'polish' => 'pl', 'russian' => 'ru', 'ukrainian' => 'uk'];
     $mods = array_map('basename', glob(BASE_DIR.'/modules/*', GLOB_ONLYDIR) ?: []);
-    $amods = array_merge($mods, array_map(fn(string $v): string => basename($v, '.php'), glob(BASE_DIR.'/admin/modules/*.php') ?: []));
     $plan = [];
     $left = [];
     foreach ($list as $file) {
@@ -943,12 +943,10 @@ function setUpdateConfig(): string {
         if ($into === 'global') {
             $site['close'] = '1';
             if (isset($site['language'])) $site['language'] = $langs[$site['language']] ?? $site['language'];
-            foreach (['module' => $mods, 'amod' => $amods] as $key => $have) {
-                $keep = implode(',', array_intersect(array_map('trim', explode(',', (string)($site[$key] ?? ''))), $have));
-                if ($keep === '') unset($site[$key]);
-                else $site[$key] = $keep;
-            }
-            unset($site['version'], $site['css_f'], $site['script_f']);
+            $keep = implode(',', array_intersect(array_map('trim', explode(',', (string)($site['module'] ?? ''))), $mods));
+            if ($keep === '') unset($site['module']);
+            else $site['module'] = $keep;
+            unset($site['version'], $site['css_f'], $site['script_f'], $site['amod']);
             if (isset($site['theme']) && !is_dir(BASE_DIR.'/templates/'.basename((string)$site['theme']))) unset($site['theme']);
             $look = BASE_DIR.'/templates/'.basename((string)($site['theme'] ?? $base['theme'] ?? '')).'/images/logos/';
             if (isset($site['site_logo']) && !is_file($look.basename((string)$site['site_logo']))) unset($site['site_logo']);

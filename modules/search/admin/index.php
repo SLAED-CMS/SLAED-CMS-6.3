@@ -51,9 +51,7 @@ function getSearchcurr(): array {
 
 function getSearchspec(): array {
     return [
-        'auto_links' => ['table' => PREFIX_DB.'_auto_links', 'fields' => 'title, description, link', 'type' => _SEARCHSPECIAL, 'edit' => 'auto_links_add'],
         'forum' => ['table' => PREFIX_DB.'_forum', 'fields' => 'title, body', 'type' => _SEARCHSPECIAL, 'edit' => 'forum_add'],
-        'shop' => ['table' => PREFIX_DB.'_products', 'fields' => 'title, intro, body', 'type' => _SEARCHSPECIAL, 'edit' => 'shop_products_add'],
     ];
 }
 
@@ -410,7 +408,7 @@ function toplist(): void {
 
 function config(): void {
     global $afile, $conf, $tpl;
-    $allow = ['auto_links', 'forum', 'shop'];
+    $allow = ['forum'];
     $anum = intval($conf['search']['anum'] ?? 50);
     $anump = intval($conf['search']['anump'] ?? 10);
     $audit = getSearchaudit();

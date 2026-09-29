@@ -48,7 +48,7 @@ final class NodeService {
     private const CATKEYS = ['modul', 'title', 'intro', 'img', 'lang', 'parent', 'status', 'pview', 'pread', 'ppost', 'preply', 'pedit', 'pdelete', 'pmod'];
 
     # The table of the items of each fixed module with categories, whose category may not become a category of a type while it still holds items
-    private const CATOWN = ['forum' => 'forum', 'shop' => 'products'];
+    private const CATOWN = ['forum' => 'forum'];
 
     # The columns of a stored material the writer reads back
     private const COLS = 'n.id, n.tid, n.cid, n.uid, n.aname, n.ip, n.title, n.intro, n.body, n.field, n.poll, n.home, n.comon, n.pinned, n.comnum, n.views, n.score,'

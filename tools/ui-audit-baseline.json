@@ -1,5 +1,5 @@
 {
-    "generated": "2026-09-27T18:37:30Z",
+    "generated": "2026-09-29T05:24:04Z",
     "themes": {
         "admin": {
             "count": 0,
@@ -24,7 +24,7 @@
             "dup": 0,
             "names": 0,
             "dead": 0,
-            "single": 198,
+            "single": 197,
             "alias": 0,
             "unsat": 0,
             "unmet": 0,
@@ -32,7 +32,7 @@
             "clash": 0,
             "classes": 0,
             "important": 13,
-            "tokens": 432,
+            "tokens": 430,
             "contrast": 0
         }
     },
@@ -528,8 +528,6 @@
             "--sl-info-muted",
             "--sl-info-row-height",
             "--sl-info-subtle",
-            "--sl-invoice-logo-width",
-            "--sl-invoice-width",
             "--sl-item-height",
             "--sl-layout-container",
             "--sl-layout-grid",

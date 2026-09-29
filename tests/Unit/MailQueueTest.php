@@ -152,7 +152,7 @@ final class MailQueueTest extends TestCase
     {
         $db = new MailQueueDatabase();
         $mailer = $this->getMail($db);
-        $mesg = ['kind' => 'order', 'email' => 'user@slaed.net', 'sender' => 'info@slaed.net', 'body' => 'text'];
+        $mesg = ['kind' => 'contact', 'email' => 'user@slaed.net', 'sender' => 'info@slaed.net', 'body' => 'text'];
         $this->assertTrue($mailer->addQueue($mesg + ['title' => str_repeat('a', 255)]));
         $this->assertFalse($mailer->addQueue($mesg + ['title' => str_repeat('a', 256)]));
         $this->assertSame('rejected subject, longer than 255 characters', $mailer->getError());
@@ -165,7 +165,7 @@ final class MailQueueTest extends TestCase
     {
         $db = new MailQueueDatabase();
         $this->assertTrue($this->getMail($db)->addQueue([
-            'kind' => 'order',
+            'kind' => 'contact',
             'email' => 'user@slaed.net',
             'sender' => 'info@slaed.net',
             'title' => str_repeat("\u{041F}", 255),
@@ -180,9 +180,9 @@ final class MailQueueTest extends TestCase
         $db = new MailQueueDatabase();
         $mailer = $this->getMail($db);
         $long = str_repeat('a', 90).'@slaed.net';
-        $this->assertFalse($mailer->addQueue(['kind' => 'order', 'email' => 'user@slaed.net', 'sender' => $long]));
+        $this->assertFalse($mailer->addQueue(['kind' => 'contact', 'email' => 'user@slaed.net', 'sender' => $long]));
         $this->assertSame('rejected sender address', $mailer->getError());
-        $this->assertFalse($mailer->addQueue(['kind' => 'order', 'email' => str_repeat('a', 250).'@slaed.net', 'sender' => 'info@slaed.net']));
+        $this->assertFalse($mailer->addQueue(['kind' => 'contact', 'email' => str_repeat('a', 250).'@slaed.net', 'sender' => 'info@slaed.net']));
         $this->assertSame('rejected recipient address', $mailer->getError());
         $this->assertSame([], $db->sql);
     }

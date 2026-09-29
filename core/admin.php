@@ -368,11 +368,6 @@ function getAdminInfo(): string {
         if ($panel) {
             $groups = [
                 'account' => [['name=account&op=newuser', '_NEW_USER', '_USERS', 'person-plus', 'users_temp', '']],
-                'shop'    => [
-                    ['name=shop&op=clients', '_CLIENTS', '_CLIENTS', 'bag-plus', 'clients', "status = '2'"],
-                    ['name=shop&op=partners', '_PARTNERS', '_PARTNERS', 'shop', 'partners', "status = '2'"],
-                ],
-                'whois'   => [['name=whois&status=1', '_WHOIS', '_WHOIS', 'person-vcard', 'whois', "status = '0'"]],
             ];
             $fresh = [];
             foreach ($groups as $mod => $defs) {
@@ -423,7 +418,7 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
     $where = ($modul) ? 'WHERE modul = :modul' : '';
     $params = ($modul) ? ['modul' => $modul] : [];
     $modlink = ($modul) ? '&modul='.$modul : '';
-    $tabs = ['forum' => '_forum', 'shop' => '_products'];
+    $tabs = ['forum' => '_forum'];
     $cats = [];
     $result = $db->getSqlQuery('SELECT id, modul, title, intro, img, lang, parent, ordern, status FROM '.PREFIX_DB.'_categories '.$where.' ORDER BY modul, ordern', $params);
     while ([$cid, $cmod, $title, $intro, $img, $lang, $parent, , $status] = $db->getSqlRow($result)) {
@@ -795,10 +790,6 @@ function getAdminFavoriteList(int $obj = 0): string {
             $numl = count($val);
             if ($key == 'forum') {
                 $sql = 'SELECT f.id, f.fid, f.modul, n.title, u.name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_forum AS n ON (f.fid = n.id)';
-                $result = $db->getSqlQuery($sql.' LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while ([$id, $fid, $modul, $title, $uname] = $db->getSqlRow($result)) $items[] = [$id, $fid, $modul, $title, $uname];
-            } elseif ($key == 'shop') {
-                $sql = 'SELECT f.id, f.fid, f.modul, n.title, u.name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_products AS n ON (f.fid = n.id)';
                 $result = $db->getSqlQuery($sql.' LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while ([$id, $fid, $modul, $title, $uname] = $db->getSqlRow($result)) $items[] = [$id, $fid, $modul, $title, $uname];
             } elseif (isset($conf['node']['types'][$key])) {

@@ -453,7 +453,7 @@ final class NodeModelTest extends TestCase
         $this->assertSame([], $run['second'], 'The repeated update has failing statements');
         $this->assertSame($probe['fresh']['create'], $run['create'], 'The updated tables differ from a fresh install');
         $this->assertSame($probe['fresh']['create'], $run['again'], 'The repeated update changed the tables');
-        $this->assertSame('forum,shop,node,node-news', $run['modules'], 'Widening the administrator rights changed a stored value');
+        $this->assertSame('forum,voting,node,node-news', $run['modules'], 'Widening the administrator rights changed a stored value');
         $this->assertStringContainsString('`modules` text NOT NULL', $run['create']['admins']);
     }
 }

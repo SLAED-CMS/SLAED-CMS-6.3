@@ -21,7 +21,7 @@ function ratings(): void {
     $flags = ['in' => ['active', _C_21], 'view' => ['detail', _C_22], 'guest' => ['guests', _RATINGS_GUESTS]];
     $blocks = '';
     $types = getNodeTypeMap();
-    $scopes = ['account' => getModuleName('account'), 'forum' => getModuleName('forum'), 'shop' => getModuleName('shop')];
+    $scopes = ['account' => getModuleName('account'), 'forum' => getModuleName('forum')];
     foreach ($types as $name => $type) {
         $label = (str_starts_with($type->title, '_') && defined($type->title)) ? constant($type->title) : $type->title;
         $scopes['node.'.$name] = htmlspecialchars($label, ENT_QUOTES, 'UTF-8');
@@ -76,7 +76,7 @@ function save(): void {
     $text = _TOKENMISS;
     $content = [];
     $types = getNodeTypeMap();
-    $scopes = array_merge(['account', 'forum', 'shop'], array_map(fn(string $v): string => 'node.'.$v, array_keys($types)));
+    $scopes = array_merge(['account', 'forum'], array_map(fn(string $v): string => 'node.'.$v, array_keys($types)));
     if (!$warn) {
         foreach ($scopes as $i => $val) {
             $days = trim(getVar('post', 'time['.$i.']', 'raw', ''));
@@ -113,7 +113,7 @@ function save(): void {
 
 function votes(): void {
     global $afile, $tpl;
-    $names = ['account' => getModuleName('account'), 'forum' => getModuleName('forum'), 'shop' => getModuleName('shop')];
+    $names = ['account' => getModuleName('account'), 'forum' => getModuleName('forum')];
     foreach (array_keys(getNodeTypeMap()) as $name) $names['node.'.$name] = getModuleName($name);
     $scope = getVar('get', 'scope', 'raw', '');
     $scope = (is_string($scope) && isset($names[$scope])) ? $scope : '';

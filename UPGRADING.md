@@ -135,9 +135,8 @@ The update runs in this order and reports every step on its result page:
 
 1. **Preflight**, before any file is written. The server must be MariaDB 10.5.2+ or MySQL 8.0.16+, the
    `users` and `admins` tables of the entered prefix must exist, and the
-   tables that take part in transactions (`users`, `admins`, `comment`, `forum`, `order`, `clients`, `favorites`,
-   `user_oauth`, `points`, `products`, `rating_targets`, `rating_actors`, `rating_votes`, `categories`,
-   `voting`, `newsletter`, `privat`) must be InnoDB. Otherwise the update stops and prints the `ALTER TABLE … ENGINE=InnoDB`
+   tables that take part in transactions (`users`, `admins`, `comment`, `forum`, `favorites`, `user_oauth`,
+   `points`, `rating_targets`, `rating_actors`, `rating_votes`, `categories`, `voting`, `newsletter`, `privat`) must be InnoDB. Otherwise the update stops and prints the `ALTER TABLE … ENGINE=InnoDB`
    statements to run; nothing is converted automatically and no file of the site changes.
 2. **The site is closed** (`close = 1`). Every configuration file the installer writes removes
    `config/local.php`, so the next request already sees the closed site. It stays closed after the update;
@@ -174,11 +173,11 @@ The update runs in this order and reports every step on its result page:
 8. When the whole run reports no error, the snapshots are deleted: they hold guest addresses, balances and
    field values. Only the `manifest.json` files stay, and a repeated run skips every finished unit by them.
 
-The **fields** unit checks every stored value of account, forum and order fields before it writes anything.
+The **fields** unit checks every stored value of account and forum fields before it writes anything.
 A select value that no option of the definitions carries becomes a disabled option of its field, and data at a
 switched off position becomes an inactive field of that position; the result page counts both. When it cannot
 map a value without guessing, it writes nothing and names the table, the row id and the reason, for example
-`sport_order 261 (value 10 holds data and has no definition)`. Correct that row in the database and run the
+`sport_users 261 (value 10 holds data and has no definition)`. Correct that row in the database and run the
 update again: finished units are skipped, the fields unit starts over, and a repeated run changes nothing.
 
 The update creates no Node types and imports no content of the removed modules: their tables, categories
@@ -192,9 +191,9 @@ What the update changes in the data, beyond the steps above:
 - **Ratings.** Totals stay as starting totals and the last vote time of each visitor stays as the waiting
   period; no individual vote is recreated, and `{prefix}_rating` stays because polls use it. Carried rating rules
   allow guests; an interval of 0 means no waiting. The unit writes nothing when it finds broken data and names
-  it: a rating total outside one to five times its vote count (accounts, forum topics, products), a
+  it: a rating total outside one to five times its vote count (accounts, forum topics), a
   `{prefix}_rating` row without an account, a valid address or with a future time, a broken rule, or a missing
-  rule for `account`, `forum` or `shop`. Correct it and run the update again. Poll and rating votes of 6.2 are
+  rule for `account` or `forum`. Correct it and run the update again. Poll and rating votes of 6.2 are
   kept once per address and target: of two accounts that voted from one address, the earliest vote stays, and the
   result page names the removed rows.
 - **Points.** `{prefix}_users.points` stays the balance, rating rewards of 6.2 included; a negative balance becomes
@@ -288,6 +287,23 @@ their blocks, configuration files and tables in `setup/sql/table.sql`. Their con
 - Custom code that read these tables or called helpers of the removed modules must move to `NodeQuery`
   (reads) and `NodeService` (writes).
 
+### Shop, Order and Service Modules Are Not Shipped
+
+The modules `shop`, `clients`, `order`, `money`, `auto_links` and `whois` are not part of the package, nor
+their block `blocks/auto_links.php`, configuration files, upload directories and tables in `setup/sql/table.sql`.
+
+- The update leaves their tables (`{prefix}_products`, `{prefix}_clients`, `{prefix}_clients_down`,
+  `{prefix}_partners`, `{prefix}_order`, `{prefix}_money`, `{prefix}_auto_links`, `{prefix}_whois`) and their
+  `uploads/<name>` directories as they are: nothing is read, altered or dropped. Their
+  `config/config_<name>.php` sources are not carried over.
+- The shared subsystems have no scope for them: the shop cart, the shop comments, ratings and favorites, the
+  points action `order`, the extra-field area `order`, and the RSS feed, sitemap section, search source and
+  newsletter audiences of these modules do not exist. The ratings unit counts a 6.2 rule of `shop` as dropped
+  and its votes as foreign; the fields unit leaves `{prefix}_order.info` in its positional form.
+- The update drops `{prefix}_referer.lid`, which tied a referer to a link of `auto_links`, and the setting
+  `amod` of `config/global.php`.
+- A site that needs these modules stays on its current release.
+
 ### Web Server Rule for Node Upload Directories
 
 Node serves every file of a type through a controlled route, and a type is switched on only when the web
@@ -315,7 +331,7 @@ location ^~ /storage/ {
   starting balance by the update.
 - Ratings live in `{prefix}_rating_targets`, `{prefix}_rating_actors` and `{prefix}_rating_votes`; a vote is a
   POST request. The rules of every target are in `config/ratings.php`.
-- Extra fields of accounts, forum posts and orders are named definitions in `config/fields.php` with JSON
+- Extra fields of accounts and forum posts are named definitions in `config/fields.php` with JSON
   values, handled by the `Field` class; the positional `||` strings of 6.2 are no longer read.
 
 ### OAuth2/OIDC Login Added

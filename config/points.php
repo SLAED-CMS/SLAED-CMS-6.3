@@ -14,7 +14,6 @@ return [
             'download' => ['points' => '3', 'period' => '86400', 'limit' => '20'],
             'visit' => ['points' => '0', 'period' => '86400', 'limit' => '20'],
             'poll' => ['points' => '3', 'period' => '86400', 'limit' => '10'],
-            'order' => ['points' => '10', 'period' => '0', 'limit' => '0'],
             'favorite' => ['points' => '0', 'period' => '86400', 'limit' => '20'],
             'message' => ['points' => '0', 'period' => '86400', 'limit' => '20'],
             'recommend' => ['points' => '0', 'period' => '86400', 'limit' => '5'],

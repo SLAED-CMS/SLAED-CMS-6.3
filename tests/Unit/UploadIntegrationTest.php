@@ -116,10 +116,10 @@ final class UploadIntegrationTest extends TestCase
     public function anAttachmentPlaceIsTheModuleRuleItself(): void
     {
         $data = $this->getProbe('place');
-        $this->assertSame([], $data['attach'], 'shop.attach no longer equals getUploadRuleData(shop)');
-        $rule = $data['rules']['shop.attach'];
-        $this->assertSame('shop', $rule['mod'], 'An attachment place lost the module it belongs to');
-        $this->assertSame('shop', $rule['store'], 'An attachment place no longer stores into the directory of its own module');
+        $this->assertSame([], $data['attach'], 'forum.attach no longer equals getUploadRuleData(forum)');
+        $rule = $data['rules']['forum.attach'];
+        $this->assertSame('forum', $rule['mod'], 'An attachment place lost the module it belongs to');
+        $this->assertSame('forum', $rule['store'], 'An attachment place no longer stores into the directory of its own module');
         $this->assertTrue($rule['canlink'], 'An attachment place refuses an address, which the editor has always accepted');
         $this->assertSame(['editorUpload', 'editorFiles', 'editorDelete', 'editorArchive'], $rule['ops'], 'An attachment place no longer permits all four editor routes');
     }

@@ -13,7 +13,7 @@ final class NodeGuardTest extends TestCase
     private static array $probe = [];
 
     # The probe runs the disposable database and scratch configuration of the integrations with a select field of accounts and a favorite worth points
-    # It adds a hostile title and intro, a shop and an order, and real HTTP requests of the main administrator, a poll administrator and a user
+    # It adds a hostile title and intro, forum topics and shelves, and real HTTP requests of the main administrator, a poll administrator and a user
     # The child mode guardext asks the service directly where no screen reaches it
     # Run the probe once in its guard mode and memoize the run; every admin write of it has to leave the PHP and SQL logs empty
     private function getRun(): array
@@ -48,18 +48,11 @@ final class NodeGuardTest extends TestCase
         $this->assertSame([12, 303, 0], $this->getRun()['forum'], 'A view of the forum list rewrote the counters, or the posted synchronization did not');
     }
 
-    # The settings of auto_links offer the banners of the site theme, not of the panel, and a save keeps the stored banner when the posted one is not on offer
-    #[Test]
-    public function theAutoLinksSettingsKeepABannerOnOffer(): void
-    {
-        $this->assertSame([true, true, 'hits.gif'], $this->getRun()['banner'], 'The banner list is empty or a banner that was not offered was stored');
-    }
-
     # On a multilingual site the header of a module outside Node names a category of the site language and never one of another language
     #[Test]
     public function theHeadCategoryFollowsTheLanguage(): void
     {
-        $this->assertSame([true, false], $this->getRun()['lang'], 'The breadcrumb of a shop category ignores the language of the site');
+        $this->assertSame([true, false], $this->getRun()['lang'], 'The breadcrumb of a forum category ignores the language of the site');
     }
 
     # The fields screen writes only from a POST whose token is in the body and whose every area arrived whole; nothing of a refused form reaches a file
@@ -104,8 +97,8 @@ final class NodeGuardTest extends TestCase
         $run = $this->getRun()['fav'];
         $this->assertTrue($run[0], 'The material offers no favorite switch');
         $this->assertSame([0, 0], [$run[2], $run[4]], 'An invented module or a missing forum topic was stored');
-        $this->assertSame([1, 1], [$run[9], $run[10]], 'A hidden product or one beyond the limit was stored, or a visible target was not');
-        $this->assertSame([2, ['news:102', 'shop:7']], [$run[11], $run[12]], 'Points were granted for a row that was not stored');
+        $this->assertSame([1, 1], [$run[9], $run[10]], 'A hidden topic or one beyond the limit was stored, or a visible target was not');
+        $this->assertSame([2, ['forum:7', 'news:102']], [$run[11], $run[12]], 'Points were granted for a row that was not stored');
     }
 
     # A Node category is created by the writer: the right of its type, a parent of the same module, and every access rule with its group list stored
@@ -119,25 +112,6 @@ final class NodeGuardTest extends TestCase
         $this->assertSame([303, 0], $run['cats']['parent'], 'A parent of another module was accepted');
         $this->assertSame([1, [1, '2|1', '0|0', '2|1,0', '1|0']], $run['cats']['rights'], 'The access rules of a new category were lost');
         $this->assertSame(['2|1', '0|0'], $run['cats']['save'], 'The access rules of a saved category were lost');
-    }
-
-    # The state changing actions of shop and order refuse a GET with the token in the address and work as POST forms
-    #[Test]
-    public function shopAndOrderChangeStateOnlyByPost(): void
-    {
-        $run = $this->getRun();
-        $this->assertSame([true, [302, 302, 302, 302, 302, 302], true], $run['shop']['get'], 'A GET changed a client, a partner or a product');
-        $this->assertSame([[2, 1, 1, 1, 1, 3], [0, 1, 1, 1, 0, 3]], $run['shop']['post'], 'A POST did not switch the client or the product');
-        $this->assertSame([true, [1, 0, 0]], $run['order']['get'], 'A GET activated or deleted an order');
-    }
-
-    # An order is confirmed only by the switch 0 to 1: another target state is refused without a reward, the confirmation rewards once
-    #[Test]
-    public function anOrderIsRewardedOnlyForItsConfirmation(): void
-    {
-        $run = $this->getRun()['order'];
-        $this->assertSame([1, 0, 0], $run['two']);
-        $this->assertSame([1, 1, 1], $run['one']);
     }
 
     # The right of polls: an administrator of voting unlinks a poll through the screen, and a context without that right is refused by the service itself

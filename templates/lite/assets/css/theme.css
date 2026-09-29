@@ -1618,7 +1618,6 @@ button.sl-but-mini:hover,
 }
 
 /* Tables: list-wrap and list-row layouts */
-.sl-cart-row td,
 .sl-forum-line td {
   border-bottom: 1px solid var(--sl-border);
   padding: var(--sl-space-2);
@@ -1705,53 +1704,6 @@ button.sl-but-mini:hover,
 .sl-image-preview-mini:hover {
   width: var(--sl-preview-max-width);
   height: var(--sl-preview-max-height);
-}
-
-.sl-cart-table {
-  width: 100%;
-}
-
-.sl-cart-title {
-  font-size: var(--sl-font-h4);
-  font-weight: var(--sl-weight-semibold);
-  text-align: start;
-}
-
-.sl-cart-foot td {
-  padding-top: var(--sl-space-4);
-}
-
-.sl-cart-foot td:first-child {
-  text-align: left;
-}
-
-.sl-cart-foot td:last-child {
-  text-align: right;
-}
-
-td.sl-cart-col-num {
-  text-align: center;
-  width: var(--sl-col-num-width);
-  padding-right: 0;
-  padding-left: 0;
-}
-
-td.sl-cart-col-stat {
-  text-align: center;
-  width: var(--sl-col-status-width);
-  padding-right: 0;
-  padding-left: 0;
-  color: var(--sl-text-strong);
-}
-
-.sl-cart-col-content strong {
-  font-size: var(--sl-font-body);
-  margin: 0;
-}
-
-.sl-shop-price {
-  font-size: var(--sl-font-h1);
-  margin-bottom: var(--sl-space-4);
 }
 
 .sl-read-link {
@@ -2103,10 +2055,6 @@ ol.sl-sublist-two li::before {
   width: 100%;
 }
 
-.sl-embed-img {
-  border: 0;
-}
-
 .sl-note {
   cursor: help;
 }
@@ -2145,19 +2093,6 @@ ol.sl-sublist-two li::before {
 
 .sl-right {
   text-align: right;
-}
-
-.sl-shop-invoice {
-  width: var(--sl-invoice-width);
-  margin: 5%;
-}
-
-.sl-shop-invoice-logo {
-  width: var(--sl-invoice-logo-width);
-}
-
-.sl-money-separator {
-  border: 1px solid var(--sl-text);
 }
 
 .sl-tip {
@@ -5635,13 +5570,8 @@ a.sl-chip-neutral {
   text-decoration: none;
 }
 
-/* Plain icon controls (not chips): cart/shop actions + forum/topic state glyphs */
-.sl-cart-checkout .bi,
-.sl-shop-checkout .bi,
-.sl-shop-add .bi,
+/* Plain icon controls (not chips): the plus action + forum/topic state glyphs */
 .sl-plus .bi,
-.sl-cart-plus .bi,
-.sl-cart-minus .bi,
 .sl-forum-new .bi,
 .sl-forum-old .bi,
 .sl-forum-closed .bi,

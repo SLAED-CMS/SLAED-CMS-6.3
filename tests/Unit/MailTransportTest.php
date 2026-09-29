@@ -57,7 +57,7 @@ final class MailTransportTest extends TestCase
     public function aMalformedRecipientIsRefusedBeforeDelivery(): void
     {
         $mailer = $this->getMail();
-        $this->assertFalse($mailer->addQueue(['kind' => 'order', 'email' => 'not-an-address', 'sender' => 'info@slaed.net']));
+        $this->assertFalse($mailer->addQueue(['kind' => 'contact', 'email' => 'not-an-address', 'sender' => 'info@slaed.net']));
         $this->assertSame('rejected recipient address', $mailer->getError());
     }
 

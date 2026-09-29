@@ -19,8 +19,7 @@ function getCampAudit(string $audit, string $apar): string {
         $row = $db->getSqlRow($db->getSqlQuery('SELECT name FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => intval($apar)]));
         return _GROUP.' "'.($row ? (string)$row['name'] : $apar).'"';
     }
-    $map = ['all' => _MASSMAIL, 'subs' => _ANEWSLETTER, 'active' => _NLACTIVE, 'money' => _CLIENTSM.' "'._MONEY.'"', 'order' => _CLIENTSM.' "'._ORDER.'"'];
-    if ($audit === 'shop') return _CLIENTSM.' "'._SHOP.'" ('.(($apar === 'on') ? _AKTIVE : (($apar === 'off') ? _DEAKTIVE : _ALL)).')';
+    $map = ['all' => _MASSMAIL, 'subs' => _ANEWSLETTER, 'active' => _NLACTIVE];
     if ($audit === 'active') return _NLACTIVE.' - '.intval($apar);
     if ($audit === 'list') return _NLSTLIST;
     return $map[$audit] ?? $audit;
@@ -64,13 +63,6 @@ function getCampOptions(string $pick): array {
     foreach ($rows as $row) {
         $name = (intval($row['extra']) === 1) ? _SPEC_GROUP : _GROUP;
         $opts[] = getCampOption('group', (string)$row['id'], $name.' "'.$row['name'].'"', $pick);
-    }
-    if (is_active('money')) $opts[] = getCampOption('money', '', _CLIENTSM.' "'._MONEY.'"', $pick);
-    if (is_active('order')) $opts[] = getCampOption('order', '', _CLIENTSM.' "'._ORDER.'"', $pick);
-    if (is_active('shop')) {
-        $opts[] = getCampOption('shop', 'all', _CLIENTSM.' "'._SHOP.'" ('._ALL.')', $pick);
-        $opts[] = getCampOption('shop', 'on', _CLIENTSM.' "'._SHOP.'" ('._AKTIVE.')', $pick);
-        $opts[] = getCampOption('shop', 'off', _CLIENTSM.' "'._SHOP.'" ('._DEAKTIVE.')', $pick);
     }
     return $opts;
 }

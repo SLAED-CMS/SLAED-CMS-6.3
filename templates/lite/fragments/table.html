@@ -4,13 +4,13 @@
     {% if class %}{{ class }}
     {% else %}
       {% if is_list or sortable %}sl-table-list
-      {% else %}sl-table{% if is_amount %} sl-table-amount{% endif %}{% if is_form %} sl-table-form{% endif %}{% if is_cart %} sl-cart-table{% endif %}{% if is_faq %} sl-table-faq{% endif %}
+      {% else %}sl-table{% if is_amount %} sl-table-amount{% endif %}{% if is_form %} sl-table-form{% endif %}{% if is_faq %} sl-table-faq{% endif %}
       {% endif %}
     {% endif %}
   "
   {% if sortable %}data-sl-table-sort{% endif %}
 >
-{% if title %}<caption{% if title_class or is_cart %} class="{% if title_class %}{{ title_class }}{% endif %}{% if is_cart %}{% if title_class %} {% endif %}sl-cart-title{% endif %}"{% endif %}>{{ title }}</caption>{% endif %}
+{% if title %}<caption{% if title_class %} class="{{ title_class }}"{% endif %}>{{ title }}</caption>{% endif %}
 {% if headers %}
 <thead class="{% if head_class %}{{ head_class }}{% else %}sl-table-head{% endif %}">
   <tr>

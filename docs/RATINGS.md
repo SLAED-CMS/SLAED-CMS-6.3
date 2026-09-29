@@ -17,7 +17,6 @@ key of its rule:
 |---|---|---|---|
 | `account` | a row of `_users` | `votes`, `tvotes` | the user itself (`id`) |
 | `forum` | a topic of `_forum` (`pid = 0`); a reply is never a target | `ratings`, `score` | the topic starter (`uid`) |
-| `shop` | a row of `_products` | `votes`, `tvotes` | none |
 | `node.<name>` | a material of the registered Node type `<name>` | `_nodes.ratings`, `_nodes.score` | the author (`uid`) |
 
 `<name>` matches `[a-z][a-z0-9]{0,19}`. No scope is ever used as an SQL identifier or a path: the adapters map the
@@ -147,7 +146,7 @@ contract, a negative total on annulment. `invalid`, `denied`, `conflict` and `in
 
 ## Configuration
 
-`config/ratings.php` returns the area `ratings`: one rule per scope, keyed `account`, `forum`, `shop` and
+`config/ratings.php` returns the area `ratings`: one rule per scope, keyed `account`, `forum` and
 `node.<name>` for every registered Node type. Every rule has exactly four string keys:
 
 | Key | Stored form | Meaning | Default of a new rule |
@@ -240,7 +239,6 @@ The adapters of `getRatingService()`:
 |---|---|---|
 | `account` | every user row | same |
 | `forum` | topic with `time <= NOW()` and `status > 1`, then the read right `pread` of its category (checked after the lock) | the main administrator and a forum moderator (`is_moder('forum') === 1`) reach every topic |
-| `shop` | product with `time <= NOW()` and `status != 0` | the main administrator reaches every product |
 | `node.<name>` | active type; the material as `NodeQuery::getNodeTarget()` shows it to the actor; under the lock `NodeService::getLockedTarget()` (type row, then material row) | the main administrator reaches a material in any state and a disabled type, with `enabled = false` |
 
 For the fixed scopes `enabled` is always `true`. For Node it is true only when the material is readable to the
@@ -385,8 +383,6 @@ goes through the one endpoint.
 | `core/user.php`, author card of a comment | `getRatingAsync(0, $auid, 'account', ..., $cmid, 1)` | `account` | thumbs, list |
 | `modules/forum/index.php`, first post of a topic | `getRatingAsync(1, $fid, 'forum', ...)` | `forum` | thumbs, detail |
 | `modules/forum/index.php`, author of each post | `getRatingAsync(0, $uid, 'account', ..., $fid, 1)` | `account` | thumbs, list |
-| `modules/shop/index.php`, product list | `getRatingAsync(0, $id, 'shop', ...)` | `shop` | stars, list |
-| `modules/shop/index.php`, product view | `getRatingAsync(1, $id, 'shop', ...)` | `shop` | stars, detail |
 | `modules/node/index.php`, material view | `getRatingAsync(1, $node->id, 'node.<name>', ...)` when `features.rating` | `node.<name>` | stars, detail |
 | `NodeView` (`core/classes/node/view.php`) | key `rating` = `Rating::getAverage($node->score, $node->ratings)` | `node.<name>` | six-digit average, no widget |
 
@@ -400,7 +396,7 @@ unit. It carries the accumulated aggregates of the fixed scopes as starting bala
 participations as terms. It invents no vote and no point event; `_rating_votes` stays empty. Node targets start
 with a zero balance, as the update imports no content of the removed modules.
 
-**Targets.** Every row of `_users`, every topic of `_forum` (`pid = 0`) and every row of `_products`, zero
+**Targets.** Every row of `_users` and every topic of `_forum` (`pid = 0`), zero
 aggregates included, becomes one `_rating_targets` row: `base` = the old sum (`tvotes`, `score`), `votes` = the old
 count (`votes`, `ratings`), `created` = the database clock at the moment of the update. After the carry-over a new
 vote lands on top of this balance, and its annulment takes exactly that vote back: with 37 over 10 kept, a vote of

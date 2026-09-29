@@ -133,11 +133,10 @@ in `links`, `media` and `files` are actions, not pages.
 | `content` | view | `id`, `num` | renders through `filterDoc()`, no replace rules |
 | `changelog` | list | `page` | renders through `filterDoc()` |
 | `main` | page | none | already reachable as the front page |
-| `shop` | later | — | catalogue is cacheable, cart and checkout are not; own batch |
 | `forum` | no | — | per-user read state, POST-heavy |
-| `search`, `contact`, `order`, `recommend`, `whois` | no | — | forms and free-text input |
+| `search`, `contact`, `recommend` | no | — | forms and free-text input |
 | `account`, `users` | no | — | never reached, the visitor is logged in |
-| `rss`, `sitemap`, `voting`, `clients` | no | — | own transport, own headers, or actions |
+| `rss`, `sitemap`, `voting` | no | — | own transport, own headers, or actions |
 
 **Comment pagination.** An article with comments is also reachable under `com`,
 `all` and `at`. Leaving them out of the contract means page two of a thread
@@ -183,13 +182,6 @@ content family. Verify that the stored count rises on every hit while the page
 is served from disk, that a corrupt or unknown descriptor is ignored rather than
 executed, and that the sidecar contract still fails closed when body and hash
 disagree.
-
-## Batch 5 — shop catalogue
-
-Only after its own audit: the module mixes a catalogue with a cart, a checkout
-and partner pages in one router. Establish first that nothing in the catalogue
-branch reads cart state or a per-visitor price, then cache the list and the item
-page under the same contract as the rest.
 
 ## Out of scope
 

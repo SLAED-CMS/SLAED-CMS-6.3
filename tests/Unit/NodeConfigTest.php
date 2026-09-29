@@ -290,7 +290,7 @@ final class NodeConfigTest extends TestCase
         $this->assertSame(['ok' => true, 'value' => null], $run['done']);
         foreach (['row', 'node', 'fields', 'uploads', 'rating'] as $key) $this->assertNull($run['trace'][$key], $key.' is left after the delete');
         $this->assertSame(['.htaccess', 'index.html', 'thumb/index.html'], $run['walk'], 'The directory was not kept with its guards');
-        $this->assertSame(['1' => '', '2' => 'forum,node-news,node-docs', '3' => 'node,shop'], $run['admins'], 'The right of the deleted type was left');
+        $this->assertSame(['1' => '', '2' => 'forum,node-news,node-docs', '3' => 'node,voting'], $run['admins'], 'The right of the deleted type was left');
         $this->assertSame(['ok' => true, 'value' => 1], $run['reuse'], 'The name of a deleted type cannot be registered again');
         $this->assertSame(['ok' => true, 'value' => null], $run['again']);
     }
@@ -367,7 +367,7 @@ final class NodeConfigTest extends TestCase
         $this->assertSame(['ok' => true, 'value' => null], $run['one']);
         $this->assertRefused($run['case'], 3, 'Invalid node input: remains', 'OldSec still holds the name');
         $this->assertSame(['ok' => true, 'value' => null], $run['two']);
-        $this->assertSame(['oldsec' => 0, 'OldSec' => 0, 'shop' => 1, 'forum' => 1, $live => 1, 'gonefav' => 1], $run['rows'], 'The cleanup touched a live owner');
+        $this->assertSame(['oldsec' => 0, 'OldSec' => 0, 'voting' => 1, 'forum' => 1, $live => 1, 'gonefav' => 1], $run['rows'], 'The cleanup touched a live owner');
         $this->assertSame(['ok' => true, 'value' => 1], $run['added'], 'The cleaned name does not register');
         $this->assertSame(['ok' => true, 'value' => ['gonefav']], $run['after']);
         $this->assertSame(['ok' => true, 'value' => null], $run['dropped']);

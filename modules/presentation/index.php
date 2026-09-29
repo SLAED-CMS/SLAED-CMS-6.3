@@ -214,7 +214,7 @@ function getPresentationData(): array {
         ];
     }
     $cur = array_find($nodes, static fn(array $node): bool => $node['is_on'])['pos'] ?? _PRES_BL_CONTENT;
-    $rank = array_flip(['account', 'search', 'forum', 'contact', 'voting', 'shop']);
+    $rank = array_flip(['account', 'search', 'forum', 'contact', 'voting']);
     $keys = array_keys($conf['modules']);
     usort($keys, static fn(string $a, string $b): int => ($rank[$a] ?? count($rank)) <=> ($rank[$b] ?? count($rank)));
     $mods = [];
@@ -543,9 +543,9 @@ function getPresentationData(): array {
         'result' => $result, 'elapsed' => $elapsed, 'mode' => $prepared ? _PRES_SP_PREPARED : _PRES_SP_DIRECT, 'state' => $write ? _PRES_SP_WRITE : _PRES_SP_READY,
     ];
     $cases = [
-        $case('SELECT', 'SELECT id, title FROM '.PREFIX_DB.'_products WHERE cid = :cid LIMIT ?', [':cid = 2', '? = 10'], true, false, 'rowCount() = 10 · FETCH_BOTH', '0.00083'),
+        $case('SELECT', 'SELECT id, title FROM '.PREFIX_DB.'_nodes WHERE cid = :cid LIMIT ?', [':cid = 2', '? = 10'], true, false, 'rowCount() = 10 · FETCH_BOTH', '0.00083'),
         $case('SELECT', 'SELECT COUNT(*) AS total FROM '.PREFIX_DB.'_forum WHERE status = ?', ['? = 1'], true, false, 'rowCount() = 1 · FETCH_BOTH', '0.00061'),
-        $case('UPDATE', 'UPDATE '.PREFIX_DB.'_products SET counter = counter + 1 WHERE id = :id', [':id = 125'], true, true, 'rowCount() = 1', '0.00074'),
+        $case('UPDATE', 'UPDATE '.PREFIX_DB.'_nodes SET views = views + 1 WHERE id = :id', [':id = 125'], true, true, 'rowCount() = 1', '0.00074'),
         $case('SHOW', 'SHOW TABLE STATUS', [], false, false, 'rowCount() = 34 · PDOStatement', '0.00112'),
     ];
     $runtime = [

@@ -70,15 +70,15 @@ class ConfigFileTest extends TestCase
     public function theStringFormKeepsItsStoredShape(): void
     {
         $data = $this->getProbe('string');
-        $want = ['whois' => ['alpha' => '1', 'deep' => ['num' => '7', 'flag' => '0'], 'text' => "one\ntwo\nthree", 'zeta' => '2']];
+        $want = ['sample' => ['alpha' => '1', 'deep' => ['num' => '7', 'flag' => '0'], 'text' => "one\ntwo\nthree", 'zeta' => '2']];
         $this->assertTrue($data['done'], 'A plain save of an independent source was refused');
         $this->assertSame($want, $data['data'], 'The stored shape of the string form changed');
         $this->assertFalse($data['crlf'], 'A carriage return reached a stored source');
-        $this->assertSame(['whois.php'], $data['others'], 'A save of one source touched another');
-        $this->assertSame($want['whois'], $data['local'], 'local.php was not published with the save');
+        $this->assertSame(['sample.php'], $data['others'], 'A save of one source touched another');
+        $this->assertSame($want['sample'], $data['local'], 'local.php was not published with the save');
         $this->assertTrue($data['same'], 'An unchanged save was refused');
         $this->assertTrue($data['bytes'], 'An unchanged save did not reproduce the file byte for byte');
-        $this->assertSame(['whois' => ['kept' => 'yes', 'zeta' => '3']], $data['merge'], 'The third argument no longer keeps what the form did not post');
+        $this->assertSame(['sample' => ['kept' => 'yes', 'zeta' => '3']], $data['merge'], 'The third argument no longer keeps what the form did not post');
         $this->assertSame(['marker' => false, 'dirs' => 0], $data['trace'], 'A finished operation left its journal behind');
         $this->assertSame([], $data['temps'], 'A temporary file stayed beside the sources');
     }

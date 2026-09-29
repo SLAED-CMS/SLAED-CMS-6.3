@@ -42,11 +42,5 @@ return [
             'detail' => '1',
             'guests' => '1',
         ],
-        'shop' => [
-            'active' => '1',
-            'period' => '2592000',
-            'detail' => '0',
-            'guests' => '1',
-        ],
     ],
 ];

@@ -366,17 +366,6 @@ function getUserNavItems(bool $home = false): array {
             'badge' => $new ? $mark : '', 'badge_id' => $home ? 'pmbadgenav' : '',
         ];
     }
-    if (is_active('clients') && isModGroup('clients')) {
-        getLang('clients');
-        $items[] = ['label' => _PRODUCTS, 'title' => _PRODUCTSINFO, 'href' => 'index.php?name=clients', 'icon' => getIconName('products')];
-    }
-    if (is_active('shop')) {
-        getLang('shop');
-        $items[] = ['label' => _CLIENT, 'title' => _CLIENTINFO, 'href' => 'index.php?name=shop&op=clients', 'icon' => getIconName('clients')];
-        if (($conf['shop']['part'] ?? 0) === 1) {
-            $items[] = ['label' => _PARTNER, 'title' => _PARTNERINFO, 'href' => 'index.php?name=shop&op=partners', 'icon' => getIconName('partners')];
-        }
-    }
     foreach (getNodeTypeMap() as $type) {
         if (!$type->active || $type->ext !== 'support') continue;
         $label = getModuleName($type->name);
@@ -1404,9 +1393,8 @@ function addFavorite(): void {
             if ($db->checkSqlActive()) $db->setSqlRollback();
             Logger::addSite('error', 'Node: a favorite could not be added', ['type' => $mod, 'nid' => $id, 'error' => $err->getMessage()]);
         }
-    } elseif ($conf['favorites']['favact'] && $room && in_array($mod, ['forum', 'shop'], true)) {
-        $live = ($mod === 'forum') ? 'SELECT COUNT(id) FROM '.PREFIX_DB.'_forum WHERE id = :fid AND pid = 0 AND time <= NOW() AND status != \'0\''
-            : 'SELECT COUNT(id) FROM '.PREFIX_DB.'_products WHERE id = :fid AND status != \'0\' AND time <= NOW()';
+    } elseif ($conf['favorites']['favact'] && $room && $mod === 'forum') {
+        $live = 'SELECT COUNT(id) FROM '.PREFIX_DB.'_forum WHERE id = :fid AND pid = 0 AND time <= NOW() AND status != \'0\'';
         try {
             if (!$db->setSqlBegin()) throw new RuntimeException('the transaction of a favorite cannot be started');
             $lock = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_users WHERE id = :uid FOR UPDATE', ['uid' => $uid]);
@@ -1444,7 +1432,7 @@ function getFavoriteList(int $obj = 0): string {
     $mod = filterVar(getVar('req', 'mod', 'text', ''));
     $seek = mb_substr(trim(getVar('req', 'q', 'word', '')), 0, 60, 'utf-8');
     $part = getVar('get', 'part', 'text', '') === 'shelves';
-    $tables = ['forum' => 'forum', 'shop' => 'products'];
+    $tables = ['forum' => 'forum'];
 
     $fmap = [];
     $times = [];
@@ -1577,7 +1565,7 @@ function deleteFavorite(): string {
 # A name without a feed is not found; no name takes the start module when it has a feed, else the first feed of the site
 # A reader resolves no address of a description against the site, so every relative link and image source of a description is made absolute
 function getRssChannel(): string {
-    global $db, $conf, $prs, $fld;
+    global $conf, $prs, $fld;
     $feeds = getRssFeeds();
     $name = filterVar(getVar('post', 'name', 'text', '') ?: getVar('get', 'name', 'text', ''));
     $hmod = trim(explode(',', $conf['module'])[0]);
@@ -1592,28 +1580,16 @@ function getRssChannel(): string {
     $num = ($num) ? (($num <= $conf['rss']['max']) ? $num : $conf['rss']['max']) : $conf['rss']['min'];
     $id = getVar('post', 'id', 'num', 0) ?: getVar('get', 'id', 'num', 0);
     $self = htmlspecialchars($conf['homeurl'].'/index.php?go=rss&name='.$name.(($cat) ? '&cat='.$cat : '').(($id) ? '&id='.$id : '').'&num='.$num);
-    $type = getNodeTypeMap()[$name] ?? null;
+    $type = getNodeTypeMap()[$name];
     $nodes = [];
-    if ($type !== null) {
-        $size = min($num, $type->settings['list']['limit'], intval($conf['node']['limits']['maxlist'] ?? 0));
-        try {
-            $query = getNodeReader($type)->setNodeType($type)->setNodePage(1, max(1, $size));
-            if ($cat && $type->settings['features']['categories']) $query->setNodeCategory($cat);
-            $query->setNodeOrder('published', 'desc');
-            $nodes = $query->getNodeList();
-        } catch (NodeException $err) {
-            Logger::addSite('error', 'RSS: a Node type cannot be read', ['type' => $name, 'code' => $err->getCode()]);
-        }
-        $result = '';
-    } else {
-        $params = [];
-        $where = $cat ? 'WHERE s.cid = :cat AND s.time <= NOW() AND s.status = 1' : 'WHERE s.time <= NOW() AND s.status = 1';
-        if ($cat) $params['cat'] = $cat;
-        $result = $db->getSqlQuery(
-            'SELECT s.id, s.title, s.time, s.intro, c.title FROM '.PREFIX_DB.'_products AS s'
-            .' LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) '.$where.' ORDER BY s.time DESC LIMIT '.intval($num),
-            $params
-        );
+    $size = min($num, $type->settings['list']['limit'], intval($conf['node']['limits']['maxlist'] ?? 0));
+    try {
+        $query = getNodeReader($type)->setNodeType($type)->setNodePage(1, max(1, $size));
+        if ($cat && $type->settings['features']['categories']) $query->setNodeCategory($cat);
+        $query->setNodeOrder('published', 'desc');
+        $nodes = $query->getNodeList();
+    } catch (NodeException $err) {
+        Logger::addSite('error', 'RSS: a Node type cannot be read', ['type' => $name, 'code' => $err->getCode()]);
     }
     $content = '<?xml version="1.0" encoding="'._CHARSET."\"?>\n"
     ."<rss version=\"2.0\" xmlns:atom=\"http://www.w3.org/2005/Atom\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n"
@@ -1639,20 +1615,6 @@ function getRssChannel(): string {
         .(($view['ctitle'] !== '') ? '<category>'.htmlspecialchars($view['ctitle'])."</category>\n" : '')
         .(in_array('author', $type->settings['list']['show'], true) ? '<dc:creator>'.htmlspecialchars($view['author'] ?: _ANONYM)."</dc:creator>\n" : '')
         ."</item>\n\n";
-    }
-    if ($name === 'shop' && $result) {
-        while ([$rid, $rtitle, $rtime, $rintro, $rctitle] = $db->getSqlRow($result)) {
-            $rurl = htmlspecialchars($conf['homeurl'].'/index.php?name='.$name.'&op=view&id='.$rid);
-            $content .= "<item>\n"
-            .'<title>'.htmlspecialchars($rtitle)."</title>\n"
-            .'<pubDate>'.htmlspecialchars(date('D, j M Y H:i:s O', strtotime($rtime)))."</pubDate>\n"
-            .'<guid>'.$rurl."</guid>\n"
-            .'<link>'.$rurl."</link>\n"
-            .'<description>'.htmlspecialchars($full($prs->filterContent($rintro, false, $name)))."</description>\n"
-            .'<comments>'.$rurl.'#'.$rid."</comments>\n";
-            $content .= ($rctitle) ? '<category>'.htmlspecialchars($rctitle)."</category>\n" : '';
-            $content .= "</item>\n\n";
-        }
     }
     $content .= "</channel>\n</rss>";
     return $content;

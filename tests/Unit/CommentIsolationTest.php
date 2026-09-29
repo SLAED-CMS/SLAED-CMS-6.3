@@ -18,7 +18,6 @@ final class CommentIsolationTest extends TestCase
         'core/user.php',
         'modules/account/index.php',
         'modules/search/admin/index.php',
-        'modules/shop/admin/index.php',
     ];
 
     private static array $files = [];
@@ -111,7 +110,7 @@ final class CommentIsolationTest extends TestCase
     public function theTargetMapKeepsTheModulesAndNoSlot(): void
     {
         $code = (string)file_get_contents(dirname(__DIR__, 2).'/'.self::OWNER);
-        $want = ['account' => '_users', 'shop' => '_products', 'voting' => '_voting'];
+        $want = ['account' => '_users', 'voting' => '_voting'];
         preg_match('#private const MODULES = \[(.+?)\];#s', $code, $hit);
         $this->assertNotEmpty($hit, 'The module map is gone from the class');
         $this->assertSame(count($want), substr_count($hit[1], '=>'), 'The module map holds a different number of modules');

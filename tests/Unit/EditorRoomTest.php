@@ -9,12 +9,11 @@ use PHPUnit\Framework\TestCase;
 class EditorRoomTest extends TestCase
 {
     private const BODIES = [
-        'comment.body', 'forum.body', 'message.body', 'money.note', 'newsletter.body', 'nodes.body', 'order.note', 'privat.body',
-        'products.body',
+        'comment.body', 'forum.body', 'message.body', 'newsletter.body', 'nodes.body', 'privat.body',
     ];
 
     private const SUMMARIES = [
-        'auto_links.intro', 'money.intro', 'nodes.intro', 'products.intro', 'users.block', 'users.sig',
+        'nodes.intro', 'users.block', 'users.sig',
     ];
 
     private static array $files = [];

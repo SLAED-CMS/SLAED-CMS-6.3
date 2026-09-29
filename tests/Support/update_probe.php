@@ -24,16 +24,16 @@ const PROBEPREF = 'probe';
 # The balances the snapshot has to carry, the top of the unsigned column among them
 const PROBEBAL = [2 => 10, 3 => 0, 4 => 4294967295];
 
-# The rules of a 6.2 site: period, switch and place of three remaining scopes, a zero period among them, and one scope of a module that left the release
+# The rules of a 6.2 site: period, switch and place of two remaining scopes, a zero period among them, and two scopes of modules that left the release
 const PROBEOLD = ['account' => '2592000|1|0', 'forum' => '0|0|1', 'shop' => '86400|1|1', 'news' => '2592000|1|0'];
 
 # The rows of the old shared table as id, target, module, time, account and address: two addresses of one account, a guest, two spellings of one IPv6 address
-# The rest are a poll, two other events, a missing product, a forum reply that is no target, and an account without an address
+# The rest are a poll, two other events, a row of the shop that left the release, a forum reply that is no target, and an account without an address
 const PROBEROWS = [
     [1, 2, 'account', '1000000000', 9, '1.1.1.1'], [2, 2, 'account', '1700000000', 9, '2.2.2.2'], [3, 2, 'account', '1700000100', 0, '3.3.3.3'],
     [4, 5, 'forum', '1700000200', 0, '2001:DB8:0:0:0:0:0:1'], [5, 5, 'forum', '1700000205', 0, '2001:db8::1'], [6, 35, 'voting', '1700000300', 9, '4.4.4.4'],
     [7, 1, 'download', '1700000300', 0, '4.4.4.4'], [8, 1, 'news', '1700000300', 0, '4.4.4.4'], [9, 999, 'shop', '1700000300', 0, '4.4.4.4'],
-    [10, 7, 'forum', '1700000300', 0, '4.4.4.4'], [11, 8, 'shop', '1700000400', 9, ''],
+    [10, 7, 'forum', '1700000300', 0, '4.4.4.4'], [11, 5, 'forum', '1700000400', 9, ''],
 ];
 
 # The installer defines the same guard before it loads the database facade on its own
@@ -95,7 +95,7 @@ function addProbeSchema(): void {
     $root = getProbeSide(true);
     $root->exec('CREATE DATABASE `'.$GLOBALS['pname'].'` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
     $root->exec('USE `'.$GLOBALS['pname'].'`');
-    foreach (['users', 'admins', 'points', 'forum', 'order', 'products', 'rating', 'rating_targets', 'rating_actors', 'rating_votes'] as $name) $root->exec(getProbeTable($name));
+    foreach (['users', 'admins', 'points', 'forum', 'rating', 'rating_targets', 'rating_actors', 'rating_votes'] as $name) $root->exec(getProbeTable($name));
     foreach (PROBEBAL as $id => $sum) {
         $root->exec('INSERT INTO `'.PROBEPREF.'_users` (`id`, `name`, `email`, `password`, `block`, `warnings`, `field`, `points`)'
             .' VALUES ('.$id.', \'user'.$id.'\', \'user'.$id.'@probe.test\', \'x\', \'\', \'\', \'\', '.$sum.')');
@@ -260,7 +260,7 @@ function setRateSite(array $rules = PROBEOLD, array $mark = ['points' => '6.3.0'
     setConfigFile('ratings.php', $rules);
     if ($mark) setConfigFile('update.php', $mark);
     $side = getProbeSide();
-    foreach (['rating_targets', 'rating_actors', 'rating_votes', 'rating', 'forum', 'products'] as $name) $side->exec('DELETE FROM `'.PROBEPREF.'_'.$name.'`');
+    foreach (['rating_targets', 'rating_actors', 'rating_votes', 'rating', 'forum'] as $name) $side->exec('DELETE FROM `'.PROBEPREF.'_'.$name.'`');
     $side->exec('DELETE FROM `'.PROBEPREF.'_users` WHERE id >= 100');
     $bulk = [];
     for ($i = 100; $i < 1300; $i++) $bulk[] = '('.$i.', \'bulk'.$i.'\', \'bulk'.$i.'@probe.test\', \'x\', \'\', \'\', \'\', '.($i % 3).', '.(($i % 3) * 4).')';
@@ -268,7 +268,6 @@ function setRateSite(array $rules = PROBEOLD, array $mark = ['points' => '6.3.0'
     foreach ([2 => [10, 37], 3 => [0, 0], 4 => [1, 5]] as $id => [$num, $sum]) $side->exec('UPDATE `'.PROBEPREF.'_users` SET votes = '.$num.', tvotes = '.$sum.' WHERE id = '.$id);
     $side->exec('INSERT INTO `'.PROBEPREF.'_forum` (`id`, `pid`, `uid`, `name`, `title`, `field`, `score`, `ratings`, `status`) VALUES'
         .' (5, 0, 2, \'user2\', \'topic\', \'\', 6, 2, 2), (7, 5, 3, \'user3\', \'reply\', \'\', 5, 1, 2)');
-    $side->exec('INSERT INTO `'.PROBEPREF.'_products` (`id`, `title`, `intro`, `body`, `assoc`, `votes`, `tvotes`, `status`) VALUES (8, \'product\', \'\', \'\', \'\', 3, 15, 1)');
     $add = $side->prepare('INSERT INTO `'.PROBEPREF.'_rating` (`id`, `mid`, `modul`, `time`, `uid`, `ip`) VALUES (?, ?, ?, ?, ?, ?)');
     foreach ($rows as $row) $add->execute($row);
 }
@@ -333,7 +332,7 @@ function getRateClean(): array {
     $out['nomark'] = getRateRun();
     $out['same'] = $kept === array_map(fn($v) => file_get_contents($dir.'/'.$v), $names);
     $rule = ['active' => '1', 'period' => '86400', 'detail' => '0', 'guests' => '0'];
-    setRateSite(['account' => $rule, 'forum' => $rule, 'shop' => $rule, 'node.news' => $rule]);
+    setRateSite(['account' => $rule, 'forum' => $rule, 'node.news' => $rule]);
     $out['ready'] = getRateRun();
     return $out;
 }
@@ -387,7 +386,6 @@ function getRateStop(): array {
     ];
     setRateSite(['account' => '100|1|0', 'forum' => '0|2|1'], ['points' => '6.3.0'], array_merge(PROBEROWS, $rows));
     getProbeSide()->exec('UPDATE `'.PROBEPREF.'_users` SET votes = 0, tvotes = 4 WHERE id = 3');
-    getProbeSide()->exec('UPDATE `'.PROBEPREF.'_products` SET votes = 2, tvotes = 11 WHERE id = 8');
     getProbeSide()->exec('UPDATE `'.PROBEPREF.'_forum` SET ratings = 3, score = 2 WHERE id = 5');
     $out['broken'] = getRateRun();
     return $out;
@@ -395,26 +393,25 @@ function getRateStop(): array {
 
 # The preflight of the branch names a table of the ratings transactions that is on another engine
 function getRateFlight(): array {
-    getProbeSide()->exec('ALTER TABLE `'.PROBEPREF.'_products` ENGINE=MyISAM');
+    getProbeSide()->exec('ALTER TABLE `'.PROBEPREF.'_forum` ENGINE=MyISAM');
     $out = ['engine' => checkUpdateBase($GLOBALS['pdb'], PROBEPREF)];
-    getProbeSide()->exec('ALTER TABLE `'.PROBEPREF.'_products` ENGINE=InnoDB');
+    getProbeSide()->exec('ALTER TABLE `'.PROBEPREF.'_forum` ENGINE=InnoDB');
     return $out;
 }
 
 # The definitions of a 6.2 site: a select, a text with a default, a switched off position, a date, a moment and a textarea, with the duty slot as 1, 2, 0 and empty
 # An empty slot is written as 0 the way the 6.2 form did, because two pipes in a row already part two positions; only the very last slot of the string can be empty
-# The forum keeps a switched off position between two selects, so a row can follow the full or the short layout; the order has two texts around a switched off position
+# The forum keeps a switched off position between two selects, so a row can follow the full or the short layout; the order area belongs to a module that left the release
 const PROBEDEFS = [
     'account' => 'Version|A,B,C|3|1||Name|John|1|2||0|0|1|1||Born|0|5|2||Seen|0|4|0||Notes|0|2|',
     'forum' => 'Sys|X,Y|3|2||0|0|1|1||Host|L,R|3|2',
     'order' => 'Wallet|0|1|1||0|0|1|1||First|0|1|2',
 ];
 
-# The value rows of that site: every type filled, placeholders beside an empty text and a text zero, an empty row, the full and short forum layout, and a gap in an order
+# The value rows of that site: every type filled, placeholders beside an empty text and a text zero, an empty row, and the full and short forum layout
 const PROBEVALS = [
     'users' => [2 => 'B|Änn "Q"||2001-02-03|2020-05-06 07:08|one', 3 => '0|||0|0|0', 4 => ''],
     'forum' => [5 => 'X||R', 7 => 'Y|L', 9 => '0|0|0'],
-    'order' => [1 => 'Z1||Bob'],
 ];
 
 # Put the scratch site and the disposable schema back to a 6.2 installation with extra fields: positional definitions, the marks of the two units before, and positional value rows
@@ -425,7 +422,7 @@ function setFieldSite(array $defs = PROBEDEFS, array $mark = ['points' => '6.3.0
     setConfigFile('fields.php', $defs);
     if ($mark) setConfigFile('update.php', $mark);
     $side = getProbeSide();
-    foreach (['forum', 'order'] as $name) $side->exec('DELETE FROM `'.PROBEPREF.'_'.$name.'`');
+    $side->exec('DELETE FROM `'.PROBEPREF.'_forum`');
     $side->exec('DELETE FROM `'.PROBEPREF.'_users` WHERE id >= 100');
     $list = [];
     for ($i = 100; $i < 1300; $i++) $list[] = '('.$i.', \'bulk'.$i.'\', \'bulk'.$i.'@probe.test\', \'x\', \'\', \'\', \''.($bulk ? 'A|user '.$i : '').'\')';
@@ -434,11 +431,9 @@ function setFieldSite(array $defs = PROBEDEFS, array $mark = ['points' => '6.3.0
     foreach ($rows['users'] as $id => $text) $set->execute([$text, $id]);
     $add = $side->prepare('INSERT INTO `'.PROBEPREF.'_forum` (`id`, `pid`, `uid`, `name`, `title`, `field`, `status`) VALUES (?, 0, 2, \'user2\', \'topic\', ?, 2)');
     foreach ($rows['forum'] as $id => $text) $add->execute([$id, $text]);
-    $add = $side->prepare('INSERT INTO `'.PROBEPREF.'_order` (`id`, `email`, `info`, `note`) VALUES (?, \'order@probe.test\', ?, \'\')');
-    foreach ($rows['order'] as $id => $text) $add->execute([$id, $text]);
 }
 
-# Everything the fields unit leaves behind, read fresh from disk and schema: its answer, the manifest, the snapshots, the three columns, the published definitions and the mark
+# Everything the fields unit leaves behind, read fresh from disk and schema: its answer, the manifest, the snapshots, the two columns, the published definitions and the mark
 function getFieldState(string $html): array {
     $dir = BASE_DIR.'/storage/backup/update/fields';
     $info = is_file($dir.'/manifest.json') ? json_decode((string)file_get_contents($dir.'/manifest.json'), true) : null;
@@ -456,11 +451,10 @@ function getFieldState(string $html): array {
         'cursor' => $info['cursor'] ?? null,
         'count' => $info['count'] ?? null,
         'files' => $files,
-        'sealed' => is_array($info) && count($info['target']) === 4 && ($info['target']['fields.php'] ?? '') === hash_file('sha256', CONFIG_DIR.'/fields.php'),
+        'sealed' => is_array($info) && count($info['target']) === 3 && ($info['target']['fields.php'] ?? '') === hash_file('sha256', CONFIG_DIR.'/fields.php'),
         'users' => $side->query('SELECT id, field FROM '.$pref.'users` WHERE id < 100 ORDER BY id')->fetchAll(PDO::FETCH_KEY_PAIR),
         'bulk' => array_map('intval', $side->query($like)->fetchAll(PDO::FETCH_KEY_PAIR)),
         'forum' => $side->query('SELECT id, field FROM '.$pref.'forum` ORDER BY id')->fetchAll(PDO::FETCH_KEY_PAIR),
-        'order' => $side->query('SELECT id, info FROM '.$pref.'order` ORDER BY id')->fetchAll(PDO::FETCH_KEY_PAIR),
         'rules' => (include CONFIG_DIR.'/fields.php')['fields'],
         'mark' => is_file(CONFIG_DIR.'/update.php') ? (include CONFIG_DIR.'/update.php')['update'] : null,
     ];
@@ -478,7 +472,7 @@ function getFieldClean(): array {
     setFieldSite();
     $out = ['first' => getFieldRun()];
     $dir = BASE_DIR.'/storage/backup/update/fields';
-    $names = ['manifest.json', 'definitions.json', 'account.json', 'forum.json', 'order.json'];
+    $names = ['manifest.json', 'definitions.json', 'account.json', 'forum.json'];
     $kept = array_map(fn($v) => file_get_contents($dir.'/'.$v), $names);
     getProbeSide()->exec('UPDATE `'.PROBEPREF.'_users` SET field = \'{"field2":"later"}\' WHERE id = 4');
     $out['again'] = getFieldRun();
@@ -486,11 +480,11 @@ function getFieldClean(): array {
     $out['nomark'] = getFieldRun();
     $out['same'] = $kept === array_map(fn($v) => file_get_contents($dir.'/'.$v), $names);
     $named = $out['first']['rules'];
-    setFieldSite(PROBEDEFS, ['points' => '6.3.0'], ['users' => [2 => '', 3 => '', 4 => ''], 'forum' => [], 'order' => []], false);
+    setFieldSite(PROBEDEFS, ['points' => '6.3.0'], ['users' => [2 => '', 3 => '', 4 => ''], 'forum' => []], false);
     setConfigFile('fields.php', $named, [], true);
     $out['named'] = getFieldRun();
     $defs = ['account' => 'Version | A , B |3|1||0|0|1|1||Note|0|1|2', 'forum' => PROBEDEFS['forum'], 'order' => PROBEDEFS['order']];
-    $rows = ['users' => [2 => 'C|hidden|n', 3 => ' B ', 4 => 'C|0|m'], 'forum' => [5 => 'X|L|R', 7 => 'Y|L'], 'order' => []];
+    $rows = ['users' => [2 => 'C|hidden|n', 3 => ' B ', 4 => 'C|0|m'], 'forum' => [5 => 'X|L|R', 7 => 'Y|L']];
     setFieldSite($defs, ['points' => '6.3.0', 'ratings' => '6.3.0'], $rows, false);
     $out['grow'] = getFieldRun();
     return $out;
@@ -507,7 +501,7 @@ function getFieldResume(): array {
         $list = json_decode((string)file_get_contents($dir.'/account.json'), true);
         $set = getProbeSide()->prepare('UPDATE `'.PROBEPREF.'_users` SET field = ? WHERE id = ?');
         foreach (array_slice($list, $stop) as [$id, $from]) $set->execute([$from, $id]);
-        $info = ['state' => $stop ? 'applying' : 'prepared', 'cursor' => ['account' => $stop, 'forum' => 0, 'order' => 0], 'target' => []] + json_decode($keep, true);
+        $info = ['state' => $stop ? 'applying' : 'prepared', 'cursor' => ['account' => $stop, 'forum' => 0], 'target' => []] + json_decode($keep, true);
         file_put_contents($dir.'/manifest.json', json_encode($info));
         unlink(CONFIG_DIR.'/update.php');
         setConfigFile('fields.php', PROBEDEFS);
@@ -532,21 +526,21 @@ function getFieldStop(): array {
     $file = BASE_DIR.'/storage/backup/update/fields/manifest.json';
     file_put_contents($file, json_encode(['state' => 'applying'] + json_decode((string)file_get_contents($file), true)));
     unlink(CONFIG_DIR.'/update.php');
-    file_put_contents(BASE_DIR.'/storage/backup/update/fields/order.json', '[[1,"Z1||Bob","{\"field1\":\"forged\"}"]]');
+    file_put_contents(BASE_DIR.'/storage/backup/update/fields/forum.json', '[[7,"Y|L","{\"field1\":\"forged\"}"]]');
     $out['forged'] = getFieldRun();
     setFieldSite();
     getFieldRun();
-    $info = ['state' => 'applying', 'cursor' => ['account' => 0, 'forum' => 0, 'order' => 0], 'target' => []] + json_decode((string)file_get_contents($file), true);
+    $info = ['state' => 'applying', 'cursor' => ['account' => 0, 'forum' => 0], 'target' => []] + json_decode((string)file_get_contents($file), true);
     file_put_contents($file, json_encode($info));
     unlink(CONFIG_DIR.'/update.php');
     setConfigFile('fields.php', PROBEDEFS);
     getProbeSide()->exec('UPDATE `'.PROBEPREF.'_forum` SET field = \'{"field1":"foreign"}\' WHERE id = 7');
     $out['foreign'] = getFieldRun();
-    $rows = ['users' => [2 => 'D|x', 3 => 'A|n||03.02.2001', 4 => 'A|n||||t|extra'], 'forum' => [5 => 'X|L|R', 7 => 'Y'], 'order' => [1 => 'a|0', 2 => "two\nlines"]];
-    setFieldSite(PROBEDEFS, ['points' => '6.3.0', 'ratings' => '6.3.0'], $rows);
+    $rows = ['users' => [2 => 'D|x', 3 => 'A|n||03.02.2001', 4 => 'A|n||||t|extra'], 'forum' => [5 => 'X|L|R', 7 => 'Y', 8 => 'a|0', 9 => "two\nlines"]];
+    setFieldSite(['forum' => 'Wallet|0|1|1||0|0|1|1||First|0|1|2'] + PROBEDEFS, ['points' => '6.3.0', 'ratings' => '6.3.0'], $rows);
     $out['rows'] = getFieldRun();
     $defs = ['account' => 'Kind|A,B,A|3|1||Wide|x|7|1||Five|a|b|1|2', 'forum' => 'Born|31.12.2000|5|2', 'order' => PROBEDEFS['order']];
-    setFieldSite($defs, ['points' => '6.3.0', 'ratings' => '6.3.0'], ['users' => [2 => '', 3 => '', 4 => ''], 'forum' => [], 'order' => [1 => 'a||b']], false);
+    setFieldSite($defs, ['points' => '6.3.0', 'ratings' => '6.3.0'], ['users' => [2 => '', 3 => '', 4 => ''], 'forum' => [5 => 'a||b']], false);
     $out['defs'] = getFieldRun();
     return $out;
 }
@@ -620,7 +614,7 @@ function getConfState(string $html): array {
         'fields' => getConfRead('fields'),
         'uploads' => getConfRead('uploads'),
         'bans' => array_intersect_key((array)getConfRead('security'), ['blocker_ip' => 0, 'blocker_user' => 0]),
-        'ship' => ['version' => $ship['global']['version'], 'css_f' => $ship['global']['css_f'], 'amod' => $ship['global']['amod'], 'theme' => $ship['global']['theme'],
+        'ship' => ['version' => $ship['global']['version'], 'css_f' => $ship['global']['css_f'], 'amod' => $ship['global']['amod'] ?? null, 'theme' => $ship['global']['theme'],
             'users' => array_keys($ship['users']['users']), 'statistic' => $ship['statistic']['statistic']],
         'old' => array_map('basename', glob(CONFIG_DIR.'/config_*.php') ?: []),
         'back' => array_map('basename', glob($back.'/*') ?: []),
@@ -715,7 +709,7 @@ function setModSite(bool $table): void {
     mkdir(CONFIG_DIR, 0777, true);
     mkdir(BASE_DIR.'/admin/modules', 0777, true);
     touch(BASE_DIR.'/admin/modules/config.php');
-    foreach (['forum', 'shop', 'node', 'extra'] as $name) {
+    foreach (['forum', 'voting', 'node', 'extra'] as $name) {
         mkdir(BASE_DIR.'/modules/'.$name, 0777, true);
         touch(BASE_DIR.'/modules/'.$name.'/index.php');
     }
@@ -729,8 +723,8 @@ function setModSite(bool $table): void {
     if (!$table) return;
     getProbeSide()->exec('CREATE TABLE `'.PROBEPREF.'_modules` (`mid` INT NOT NULL PRIMARY KEY, `title` VARCHAR(255) NOT NULL, `active` TINYINT NOT NULL, `view` TINYINT NOT NULL,'
         .' `inmenu` TINYINT NOT NULL, `mod_group` INT NOT NULL, `blocks` TINYINT NOT NULL, `blocks_c` TINYINT NOT NULL) ENGINE=InnoDB');
-    getProbeSide()->exec('INSERT INTO `'.PROBEPREF."_modules` VALUES (1, 'forum', 0, 1, 0, 3, 1, 1), (2, 'shop', 1, 2, 1, 0, 2, 0), (3, 'news', 1, 0, 1, 0, 0, 0)");
-    getProbeSide()->exec('INSERT INTO `'.PROBEPREF."_admins` (`id`, `name`, `email`, `modules`) VALUES (1, 'probe', 'probe@probe.test', '1,3,shop,9')");
+    getProbeSide()->exec('INSERT INTO `'.PROBEPREF."_modules` VALUES (1, 'forum', 0, 1, 0, 3, 1, 1), (2, 'voting', 1, 2, 1, 0, 2, 0), (3, 'news', 1, 0, 1, 0, 0, 0)");
+    getProbeSide()->exec('INSERT INTO `'.PROBEPREF."_admins` (`id`, `name`, `email`, `modules`) VALUES (1, 'probe', 'probe@probe.test', '1,3,voting,9')");
 }
 
 # What the registry step leaves behind: its answer, the records of config/modules.php read fresh, and the rights of the administrator

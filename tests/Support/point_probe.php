@@ -302,7 +302,7 @@ function getProbeLimit(): array {
     $pdb = $GLOBALS['pdb'];
     $pnt = getProbePoint(['comment' => ['points' => '5', 'period' => '60', 'limit' => '2'], 'publish' => ['period' => '0', 'limit' => '0']]);
     $out = ['runs' => []];
-    foreach ([['account', 'comment:1'], ['shop', 'comment:2'], ['voting', 'comment:3'], ['account', 'comment:4']] as [$scope, $source]) {
+    foreach ([['account', 'comment:1'], ['forum.topic', 'comment:2'], ['voting', 'comment:3'], ['account', 'comment:4']] as [$scope, $source]) {
         $out['runs'][] = $pnt->addEvent('comment', $scope, $source, 2);
     }
     $out['held'] = [getProbeSums(), getProbeBal()];

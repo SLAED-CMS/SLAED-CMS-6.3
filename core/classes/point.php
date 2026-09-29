@@ -11,7 +11,7 @@ final class Point {
 
     # The closed vocabulary of rewarded actions; the configuration has to carry exactly these and the journal stores nothing else
     private const ACTIONS = [
-        'publish', 'comment', 'view', 'download', 'visit', 'poll', 'order', 'favorite',
+        'publish', 'comment', 'view', 'download', 'visit', 'poll', 'favorite',
         'message', 'recommend', 'register', 'login', 'report', 'moderate', 'adjust',
     ];
 
@@ -71,7 +71,7 @@ final class Point {
         return is_string($val) && preg_match(self::NUMBER, $val) && intval($val) <= $max ? intval($val) : false;
     }
 
-    # Check the whole points scope and answer the fifteen rules as numbers, or an empty array when any key, any value or any pair of period and limit is wrong
+    # Check the whole points scope and answer the fourteen rules as numbers, or an empty array when any key, any value or any pair of period and limit is wrong
     private function filterConfig(array $conf): array {
         if (count($conf) !== 2 || !isset($conf['active'], $conf['actions']) || !in_array($conf['active'], ['0', '1'], true)) return [];
         if (!is_array($conf['actions']) || count($conf['actions']) !== count(self::ACTIONS)) return [];

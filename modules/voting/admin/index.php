@@ -29,7 +29,7 @@ function getVotingModuleSelect(string $modul = ''): string {
         'label_text' => _NO,
         'is_selected' => $modul === '',
     ]);
-    $mods = ['shop'];
+    $mods = [];
     foreach (getNodeTypeMap() as $key => $type) if ($type->settings['features']['poll']) $mods[] = $key;
     if ($modul !== '' && !in_array($modul, $mods, true)) $mods[] = $modul;
     foreach ($mods as $val) {

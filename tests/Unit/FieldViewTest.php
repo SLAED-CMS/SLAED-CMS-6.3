@@ -14,7 +14,7 @@ require_once dirname(__DIR__, 2).'/core/classes/field.php';
 require_once dirname(__DIR__, 2).'/core/classes/template.php';
 require_once dirname(__DIR__, 2).'/core/classes/parser.php';
 
-# The form and the view the shared Field class prepares, and the wiring of its three owners account, forum and order
+# The form and the view the shared Field class prepares, and the wiring of its two owners account and forum
 final class FieldViewTest extends TestCase
 {
     # The definitions every test here shares: a required text with a hint, a multiple select with a disabled option, a switch, a textarea, an address, a mail and a hidden field
@@ -173,7 +173,7 @@ final class FieldViewTest extends TestCase
     public function aBrokenStoredValueIsLeftOut(): void
     {
         $set = ['site' => self::getSet()['site'], 'name' => ['options' => ['max' => 3]] + self::getSet()['name']];
-        $view = (new Field())->getFieldView(self::getParser(), $set, ['site' => 'javascript:alert(1)', 'name' => 'longer'], 'order');
+        $view = (new Field())->getFieldView(self::getParser(), $set, ['site' => 'javascript:alert(1)', 'name' => 'longer'], 'forum');
         $this->assertSame(['name'], array_keys($view));
     }
 
@@ -208,7 +208,7 @@ final class FieldViewTest extends TestCase
                 if ($file->getExtension() !== 'php') continue;
                 $code = (string)file_get_contents($file->getPathname());
                 $path = str_replace('\\', '/', substr($file->getPathname(), strlen($root) + 1));
-                $owner = (bool)preg_match('#^(?:core/helpers\.php|admin/modules/fields\.php|modules/(?:account|forum|order)/)#', $path);
+                $owner = (bool)preg_match('#^(?:core/helpers\.php|admin/modules/fields\.php|modules/(?:account|forum)/)#', $path);
                 if ($owner) $this->assertStringNotContainsString("explode('||'", $code, $path.' still splits positional definitions');
                 $this->assertStringNotContainsString("'field[]'", str_replace("getVar('post', 'field[]', '', [])", '', $code), $path.' still names a positional control');
                 $this->assertSame(
@@ -229,8 +229,7 @@ final class FieldViewTest extends TestCase
             'A helper reads or writes fields past the mark of the data update'
         );
         foreach ([
-            'modules/order/index.php' => 1, 'modules/order/admin/index.php' => 2, 'modules/forum/index.php' => 1,
-            'modules/account/index.php' => 1, 'modules/account/admin/index.php' => 1,
+            'modules/forum/index.php' => 1, 'modules/account/index.php' => 1, 'modules/account/admin/index.php' => 1,
         ] as $path => $num) {
             $this->assertSame($num, substr_count((string)file_get_contents($root.'/'.$path), 'getFieldsPost('), $path.' does not write its fields through getFieldsPost()');
         }

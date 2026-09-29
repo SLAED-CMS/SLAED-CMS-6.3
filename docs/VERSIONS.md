@@ -1,5 +1,22 @@
 # Versions
 
+## 2026-09-29
+
+### The shop, order and service modules leave the package
+
+`shop`, `clients`, `order`, `money`, `auto_links` and `whois` are no longer shipped: their module directories,
+the block `auto_links`, their configuration files, upload directories, templates, language constants and tables
+in `setup/sql/table.sql` are gone, and so is every hook the core kept for them — the cart route `go=2`, the
+shop scope of comments, ratings and favorites, the points action `order`, the extra-field area `order`, the shop
+feed, sitemap section and search source, the newsletter audiences of the three client lists, and the
+administration counters of new clients, partners and whois requests. The referer log no longer links a visitor to
+a link of `auto_links`, so `_referer.lid` is dropped, and the unread setting `amod` is gone from the global
+configuration.
+
+The `update6_3` branch leaves the tables and upload directories of these modules on an updated site untouched:
+`table_update6_3.sql` no longer normalizes them, the ratings unit counts 6.2 shop rules as dropped, and the fields
+unit converts account and forum fields only.
+
 ## 2026-09-24
 
 ### Node replaces nine content modules, and the 6.3 update carries a real 6.2 site over

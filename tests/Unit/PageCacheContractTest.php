@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 # Regression tests of the 2026 page-cache performance contracts against production code; Cache::getQueryVars() is called directly
 final class PageCacheContractTest extends TestCase
 {
-    private const ROUTE_ALLOW = ['name' => '#^shop$#', 'op' => '#^$#', 'cat' => '#^[1-9][0-9]{0,8}$#', 'num' => '#^[1-9][0-9]{0,8}$#'];
+    private const ROUTE_ALLOW = ['name' => '#^news$#', 'op' => '#^$#', 'cat' => '#^[1-9][0-9]{0,8}$#', 'num' => '#^[1-9][0-9]{0,8}$#'];
     private static array $probes = [];
     private array $temps = [];
 
@@ -128,27 +128,27 @@ final class PageCacheContractTest extends TestCase
     {
         $url = '/index.php?utm_source=x&utm_medium=y&gclid=abc&fbclid=def&yclid=1&_openstat=z';
         $this->assertSame([], \Cache::getQueryVars($url, self::ROUTE_ALLOW));
-        $url = '/index.php?name=shop&utm_campaign=promo&cat=3';
-        $this->assertSame(['name' => 'shop', 'cat' => '3'], \Cache::getQueryVars($url, self::ROUTE_ALLOW));
+        $url = '/index.php?name=news&utm_campaign=promo&cat=3';
+        $this->assertSame(['name' => 'news', 'cat' => '3'], \Cache::getQueryVars($url, self::ROUTE_ALLOW));
     }
 
     # A fully valid list query returns the decoded parameter map
     #[Test]
     public function validListQueryReturnsDecodedMap(): void
     {
-        $vars = \Cache::getQueryVars('/index.php?name=shop&cat=3&num=2', self::ROUTE_ALLOW);
-        $this->assertSame(['name' => 'shop', 'cat' => '3', 'num' => '2'], $vars);
-        $this->assertSame(['name' => 'shop', 'op' => ''], \Cache::getQueryVars('/index.php?name=shop&op=', self::ROUTE_ALLOW));
+        $vars = \Cache::getQueryVars('/index.php?name=news&cat=3&num=2', self::ROUTE_ALLOW);
+        $this->assertSame(['name' => 'news', 'cat' => '3', 'num' => '2'], $vars);
+        $this->assertSame(['name' => 'news', 'op' => ''], \Cache::getQueryVars('/index.php?name=news&op=', self::ROUTE_ALLOW));
     }
 
     # Any query key outside the route contract makes the request non-cacheable
     #[Test]
     public function unknownKeysRejectTheRequest(): void
     {
-        $this->assertNull(\Cache::getQueryVars('/index.php?name=shop&foo=1', self::ROUTE_ALLOW));
+        $this->assertNull(\Cache::getQueryVars('/index.php?name=news&foo=1', self::ROUTE_ALLOW));
         $this->assertNull(\Cache::getQueryVars('/index.php?rnd991234', self::ROUTE_ALLOW));
         $this->assertNull(\Cache::getQueryVars('/index.php?=x', self::ROUTE_ALLOW));
-        $this->assertNull(\Cache::getQueryVars('/index.php?name=shop&amp;cat=1', self::ROUTE_ALLOW));
+        $this->assertNull(\Cache::getQueryVars('/index.php?name=news&amp;cat=1', self::ROUTE_ALLOW));
     }
 
     # A semantic key appearing more than once makes the request non-cacheable
@@ -156,7 +156,7 @@ final class PageCacheContractTest extends TestCase
     public function duplicateKeysRejectTheRequest(): void
     {
         $this->assertNull(\Cache::getQueryVars('/index.php?cat=1&cat=2', self::ROUTE_ALLOW));
-        $this->assertNull(\Cache::getQueryVars('/index.php?name=shop&%6Eame=shop', self::ROUTE_ALLOW));
+        $this->assertNull(\Cache::getQueryVars('/index.php?name=news&%6Eame=news', self::ROUTE_ALLOW));
     }
 
     # Values that do not match the per-key format make the request non-cacheable
@@ -178,8 +178,8 @@ final class PageCacheContractTest extends TestCase
     #[Test]
     public function alternateEncodingsDecodeToTheSameMap(): void
     {
-        $plain = \Cache::getQueryVars('/index.php?name=shop&cat=3', self::ROUTE_ALLOW);
-        $coded = \Cache::getQueryVars('/index.php?name=%73%68%6F%70&cat=%33', self::ROUTE_ALLOW);
+        $plain = \Cache::getQueryVars('/index.php?name=news&cat=3', self::ROUTE_ALLOW);
+        $coded = \Cache::getQueryVars('/index.php?name=%6E%65%77%73&cat=%33', self::ROUTE_ALLOW);
         $this->assertSame($plain, $coded);
     }
 

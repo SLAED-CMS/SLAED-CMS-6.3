@@ -491,9 +491,8 @@ function getFieldsInRows(array $data = []): array {
 # Whether a field may embed is derived, never stored: the room has to hold a whole data URI of Parser::EMBEDMAX, which TEXT cannot, so a summary field refuses one at any size
 function getEditorRoomData(string $store): array {
     $room = [
-        'comment.body' => 'mediumtext', 'forum.body' => 'mediumtext', 'message.body' => 'mediumtext', 'money.note' => 'mediumtext',
-        'newsletter.body' => 'mediumtext', 'order.note' => 'mediumtext', 'privat.body' => 'mediumtext', 'products.body' => 'mediumtext',
-        'nodes.body' => 'mediumtext', 'auto_links.intro' => 'text', 'money.intro' => 'text', 'nodes.intro' => 'text', 'products.intro' => 'text',
+        'comment.body' => 'mediumtext', 'forum.body' => 'mediumtext', 'message.body' => 'mediumtext', 'newsletter.body' => 'mediumtext',
+        'privat.body' => 'mediumtext', 'nodes.body' => 'mediumtext', 'nodes.intro' => 'text',
         'users.block' => 'text', 'users.sig' => 'text',
         'config' => 'config',
     ];
@@ -1251,11 +1250,11 @@ function getTplModuleSelect(string $name, string $mod, string $no = '', array $a
     ]);
 }
 
-# Return the names of modules that support categories: the two physical ones and every registered Node type with the category feature, as the administrative screens read them
-# The types are never listed by name here, so a new type appears on the category screen as soon as it is registered and a site without the Node tables lists the two alone
+# Return the names of modules that support categories: the forum and every registered Node type with the category feature, as the administrative screens read them
+# The types are never listed by name here, so a new type appears on the category screen as soon as it is registered and a site without the Node tables lists the forum alone
 function getCategoryModules(): array {
     $types = array_filter(getNodeTypeMap(), fn(NodeType $v): bool => $v->settings['features']['categories']);
-    return array_merge(['forum', 'shop'], array_keys($types));
+    return array_merge(['forum'], array_keys($types));
 }
 
 # Render a select with category-enabled modules

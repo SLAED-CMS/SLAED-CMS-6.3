@@ -80,7 +80,7 @@ final class RatingOwnersTest extends TestCase
         $rules = (require $this->getRoot().'/config/ratings.php')['ratings'];
         $types = array_keys((require $this->getRoot().'/config/node.php')['node']['types'] ?? []);
         $rules = array_diff_key($rules, array_flip(array_map(fn($v) => 'node.'.$v, $types)));
-        $this->assertSame(['account', 'forum', 'shop'], array_keys($rules));
+        $this->assertSame(['account', 'forum'], array_keys($rules));
         foreach ($rules as $name => $rule) {
             $this->assertSame(['active', 'period', 'detail', 'guests'], array_keys($rule), $name);
             $this->assertSame([true, true, true, true], array_map('is_string', array_values($rule)), $name);

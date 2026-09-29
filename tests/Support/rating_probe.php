@@ -20,8 +20,13 @@ const PROBEUSER = [2 => 'anna', 3 => 'boris', 4 => 'clara', 5 => 'dmitri', 6 => 
 # The top of the unsigned columns the test adapters write the aggregate into
 const PROBEMAX = 4294967295;
 
-# The closed map of the test adapters: the table behind a scope and whether its rows are materials without a known author
-const PROBEMAP = ['account' => ['_users', false], 'forum' => ['_products', true], 'shop' => ['_products', true], 'node.probe' => ['_products', true]];
+# The closed map of the test adapters: the table behind a scope, whether its rows are materials without a known author, and its count and sum columns
+const PROBEMAP = [
+    'account' => ['_users', false, 'votes', 'tvotes'],
+    'forum' => ['_nodes', true, 'ratings', 'score'],
+    'node.story' => ['_nodes', true, 'ratings', 'score'],
+    'node.probe' => ['_nodes', true, 'ratings', 'score'],
+];
 
 # The rule a new scope starts with, as the strings the configuration stores
 const PROBERULE = ['active' => '1', 'period' => '2592000', 'detail' => '1', 'guests' => '1'];
@@ -77,12 +82,14 @@ function getProbeBase(): ProbeBase {
     return new ProbeBase($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $GLOBALS['pname']);
 }
 
-# Create the disposable schema with the three shipped rating tables and the two shipped tables the test adapters rate, and connect the project facade to it
+# Create the disposable schema with the three shipped rating tables and the shipped tables the test adapters rate, and connect the project facade to it
+# The materials are rows of the shipped node table under one probe type, because the type table is what its foreign key demands
 function addProbeSchema(): void {
     $root = getProbeRoot();
     $root->exec('CREATE DATABASE `'.$GLOBALS['pname'].'` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
     $root->exec('USE `'.$GLOBALS['pname'].'`');
-    foreach (['users', 'products', 'rating_actors', 'rating_targets', 'rating_votes'] as $name) $root->exec(getProbeTable($name));
+    foreach (['users', 'node_types', 'nodes', 'rating_actors', 'rating_targets', 'rating_votes'] as $name) $root->exec(getProbeTable($name));
+    $root->exec('INSERT INTO `'.PREFIX_DB.'_node_types` (`id`, `name`, `title`, `intro`, `active`) VALUES (1, \'story\', \'probe\', \'\', 1)');
     foreach (PROBEUSER as $id => $name) {
         $root->exec('INSERT INTO `'.PREFIX_DB.'_users` (`id`, `name`, `email`, `password`, `block`, `warnings`, `field`)'
             .' VALUES ('.$id.', \''.$name.'\', \''.$name.'@probe.test\', \'x\', \'\', \'\', \'\')');
@@ -114,10 +121,10 @@ function deleteProbeTree(string $dir): void {
 # Reset the three rating tables, the aggregates of the accounts and the four rated materials: visible, enabled and without a vote
 function setProbeSeed(): void {
     $pdb = $GLOBALS['pdb'];
-    foreach (['rating_votes', 'rating_actors', 'rating_targets', 'products'] as $name) $pdb->getSqlQuery('DELETE FROM '.PREFIX_DB.'_'.$name);
+    foreach (['rating_votes', 'rating_actors', 'rating_targets', 'nodes'] as $name) $pdb->getSqlQuery('DELETE FROM '.PREFIX_DB.'_'.$name);
     $pdb->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET votes = 0, tvotes = 0, points = 0');
     for ($i = 1; $i <= 4; $i++) {
-        $pdb->getSqlQuery('INSERT INTO '.PREFIX_DB.'_products (id, title, intro, body, assoc, ihome, status) VALUES (:id, \'probe\', \'\', \'\', \'\', 1, 1)', ['id' => $i]);
+        $pdb->getSqlQuery('INSERT INTO '.PREFIX_DB.'_nodes (id, tid, title, intro, body, field, home, status) VALUES (:id, 1, \'probe\', \'\', \'\', \'\', 1, 1)', ['id' => $i]);
     }
     $GLOBALS['pcalls'] = [];
     $GLOBALS['pwrite'] = true;
@@ -129,13 +136,13 @@ function getProbeRead(Database $pdb): Closure {
     return static function (string $scope, int $id, array $actor, bool $lock) use ($pdb): ?array {
         $GLOBALS['pcalls'][] = ['read', $scope, $lock, $pdb->checkSqlActive()];
         if (!isset(PROBEMAP[$scope])) return null;
-        [$tab, $free] = PROBEMAP[$scope];
-        $sql = 'SELECT votes, tvotes'.($free ? ', ihome, status' : '').' FROM '.PREFIX_DB.$tab.' WHERE id = :id'.($lock ? ' FOR UPDATE' : '');
+        [$tab, $free, $cnt, $sum] = PROBEMAP[$scope];
+        $sql = 'SELECT '.$cnt.' AS votes, '.$sum.' AS tvotes'.($free ? ', home, status' : '').' FROM '.PREFIX_DB.$tab.' WHERE id = :id'.($lock ? ' FOR UPDATE' : '');
         $res = $pdb->getSqlQuery($sql, ['id' => $id]);
         if ($res === false) throw new RuntimeException('the probe adapter could not read its target');
         $row = $pdb->getSqlRow($res);
         if (!$row || ($free && !intval($row['status']) && !$actor['super'])) return null;
-        return ['owner' => $free ? 0 : $id, 'score' => intval($row['tvotes']), 'ratings' => intval($row['votes']), 'enabled' => !$free || intval($row['ihome']) === 1];
+        return ['owner' => $free ? 0 : $id, 'score' => intval($row['tvotes']), 'ratings' => intval($row['votes']), 'enabled' => !$free || intval($row['home']) === 1];
     };
 }
 
@@ -144,7 +151,8 @@ function getProbeWrite(Database $pdb): Closure {
     return static function (string $scope, int $id, int $score, int $num) use ($pdb): bool {
         $GLOBALS['pcalls'][] = ['write', $scope, $score, $num];
         if (!$GLOBALS['pwrite'] || $score > PROBEMAX || $num > PROBEMAX) return false;
-        $sql = 'UPDATE '.PREFIX_DB.PROBEMAP[$scope][0].' SET votes = :num, tvotes = :score WHERE id = :id';
+        [$tab, , $cnt, $sum] = PROBEMAP[$scope];
+        $sql = 'UPDATE '.PREFIX_DB.$tab.' SET '.$cnt.' = :num, '.$sum.' = :score WHERE id = :id';
         return $pdb->getSqlQuery($sql, ['num' => $num, 'score' => $score, 'id' => $id]) !== false;
     };
 }
@@ -196,7 +204,8 @@ function getProbeRows(string $name): array {
 
 # The committed aggregate of one rated row as the pair of sum and count, read through a connection of its own
 function getProbeSum(string $scope, int $id): array {
-    $row = getProbeSide()->query('SELECT tvotes, votes FROM '.PREFIX_DB.PROBEMAP[$scope][0].' WHERE id = '.$id)->fetch(PDO::FETCH_NUM);
+    [$tab, , $cnt, $sum] = PROBEMAP[$scope];
+    $row = getProbeSide()->query('SELECT '.$sum.', '.$cnt.' FROM '.PREFIX_DB.$tab.' WHERE id = '.$id)->fetch(PDO::FETCH_NUM);
     return $row ? [intval($row[0]), intval($row[1])] : [];
 }
 
@@ -261,8 +270,8 @@ function getProbeCache(): array {
     return $out;
 }
 
-# Whether one ratings scope lets the shop be read: a usable rule answers ok, a blocked one answers blocked
-function getProbeCode(array $conf, string $scope = 'shop'): string {
+# Whether one ratings scope lets the story be read: a usable rule answers ok, a blocked one answers blocked
+function getProbeCode(array $conf, string $scope = 'node.story'): string {
     return getProbeRating(getProbeUser(2), [], null, $conf)->getRating($scope, 1)['code'];
 }
 
@@ -297,10 +306,10 @@ function getProbeConfig(): array {
         'wide' => ['bonus' => '1'],
     ];
     $out = ['valid' => []];
-    foreach ($list as $name => $rule) $out['valid'][$name] = getProbeCode(getProbeConf(['shop' => $rule]));
+    foreach ($list as $name => $rule) $out['valid'][$name] = getProbeCode(getProbeConf(['node.story' => $rule]));
     $thin = getProbeConf();
-    unset($thin['shop']['guests']);
-    $flat = ['shop' => '1'] + getProbeConf();
+    unset($thin['node.story']['guests']);
+    $flat = ['node.story' => '1'] + getProbeConf();
     $less = getProbeConf();
     unset($less['account']);
     $name = ['Node.Probe' => PROBERULE, 'gallery' => PROBERULE] + getProbeConf();
@@ -312,12 +321,12 @@ function getProbeConfig(): array {
     $out['ghost'] = getProbeCode(getProbeConf(), 'node.ghost');
     $broken = getProbeRating(getProbeUser(2), [], null, getProbeConf(['forum' => ['active' => '2']]));
     $closed = getProbeRating(getProbeUser(2), [], null, []);
-    $out['rule'] = [$broken->getRule('shop'), $broken->getRule('forum'), $broken->addRating('forum', 1, 5, getProbeKey(3))['code'], $closed->getRule('shop'),
-        $closed->getRating('shop', 1)['code']];
-    $off = getProbeRating(getProbeUser(2), ['shop' => ['active' => '0']]);
-    $out['switch'] = [getProbeBrief($off->getRating('shop', 1)), getProbeBrief($off->addRating('shop', 1, 5, getProbeKey(1)))];
-    $dim = getProbeRating(getProbeUser(2), ['shop' => ['detail' => '0']]);
-    $out['detail'] = [getProbeBrief($dim->getRating('shop', 1)), getProbeBrief($dim->addRating('shop', 1, 5, getProbeKey(2)))];
+    $out['rule'] = [$broken->getRule('node.story'), $broken->getRule('forum'), $broken->addRating('forum', 1, 5, getProbeKey(3))['code'], $closed->getRule('node.story'),
+        $closed->getRating('node.story', 1)['code']];
+    $off = getProbeRating(getProbeUser(2), ['node.story' => ['active' => '0']]);
+    $out['switch'] = [getProbeBrief($off->getRating('node.story', 1)), getProbeBrief($off->addRating('node.story', 1, 5, getProbeKey(1)))];
+    $dim = getProbeRating(getProbeUser(2), ['node.story' => ['detail' => '0']]);
+    $out['detail'] = [getProbeBrief($dim->getRating('node.story', 1)), getProbeBrief($dim->addRating('node.story', 1, 5, getProbeKey(2)))];
     $out['log'] = [checkProbeLog('the rule of a scope is invalid'), checkProbeLog('the rule of a scope is missing'), checkProbeLog('Node.Probe')];
     return $out;
 }
@@ -341,18 +350,18 @@ function getProbeActor(): array {
     $out = ['deny' => []];
     foreach ($list as $name => $actor) {
         $rat = getProbeRating($actor);
-        $out['deny'][$name] = [$rat->getRating('shop', 1)['code'], $rat->addRating('shop', 1, 5, getProbeKey(1))['code']];
+        $out['deny'][$name] = [$rat->getRating('node.story', 1)['code'], $rat->addRating('node.story', 1, 5, getProbeKey(1))['code']];
         $out['deny'][$name] = array_merge($out['deny'][$name], [$rat->deleteRating(1, 'x')['code'], $rat->getRatingList()['code']]);
     }
     $out['cost'] = $pdb->qnum - $num;
     $out['noip'] = [];
     foreach (['void' => '', 'zero' => '0.0.0.0', 'none' => '::', 'junk' => 'not an address', 'port' => '10.0.0.1:80'] as $name => $ip) {
         $rat = getProbeRating(getProbeGuest($ip));
-        $out['noip'][$name] = [getProbeBrief($rat->getRating('shop', 1)), $rat->addRating('shop', 1, 5, getProbeKey(1))['code']];
+        $out['noip'][$name] = [getProbeBrief($rat->getRating('node.story', 1)), $rat->addRating('node.story', 1, 5, getProbeKey(1))['code']];
     }
     $out['norm'] = [
-        getProbeRating(getProbeGuest('2001:DB8::1'))->addRating('shop', 1, 4, getProbeKey(2))['code'],
-        getProbeRating(getProbeGuest('2001:db8:0:0:0:0:0:1'))->addRating('shop', 1, 4, getProbeKey(3))['code'],
+        getProbeRating(getProbeGuest('2001:DB8::1'))->addRating('node.story', 1, 4, getProbeKey(2))['code'],
+        getProbeRating(getProbeGuest('2001:db8:0:0:0:0:0:1'))->addRating('node.story', 1, 4, getProbeKey(3))['code'],
         array_column(getProbeRows('actors'), 2),
     ];
     $out['log'] = checkProbeLog('the actor is invalid');
@@ -363,35 +372,35 @@ function getProbeActor(): array {
 function getProbeInput(): array {
     setProbeSeed();
     $pdb = $GLOBALS['pdb'];
-    $pdb->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET status = 0, votes = 3, tvotes = 12 WHERE id = 4');
+    $pdb->getSqlQuery('UPDATE '.PREFIX_DB.'_nodes SET status = 0, ratings = 3, score = 12 WHERE id = 4');
     $rat = getProbeRating(getProbeUser(2));
     $key = getProbeKey(1);
     $num = $pdb->qnum;
     $out = ['deny' => [
-        'scopecase' => $rat->addRating('Shop', 1, 5, $key)['code'],
+        'scopecase' => $rat->addRating('Node.story', 1, 5, $key)['code'],
         'scopevoid' => $rat->addRating('', 1, 5, $key)['code'],
         'scopeold' => $rat->addRating('news', 1, 5, $key)['code'],
-        'scopetable' => $rat->addRating('products', 1, 5, $key)['code'],
-        'scopeline' => $rat->addRating("shop\n", 1, 5, $key)['code'],
+        'scopetable' => $rat->addRating('nodes', 1, 5, $key)['code'],
+        'scopeline' => $rat->addRating("node.story\n", 1, 5, $key)['code'],
         'scopenode' => $rat->addRating('node.', 1, 5, $key)['code'],
         'scopelong' => $rat->addRating('node.'.str_repeat('a', 21), 1, 5, $key)['code'],
-        'idzero' => $rat->addRating('shop', 0, 5, $key)['code'],
-        'idsign' => $rat->addRating('shop', -1, 5, $key)['code'],
-        'idover' => $rat->addRating('shop', PROBEMAX + 1, 5, $key)['code'],
-        'valzero' => $rat->addRating('shop', 1, 0, $key)['code'],
-        'valsix' => $rat->addRating('shop', 1, 6, $key)['code'],
-        'valsign' => $rat->addRating('shop', 1, -5, $key)['code'],
-        'keyvoid' => $rat->addRating('shop', 1, 5, '')['code'],
-        'keyshort' => $rat->addRating('shop', 1, 5, substr($key, 1))['code'],
-        'keylong' => $rat->addRating('shop', 1, 5, $key.'a')['code'],
-        'keycase' => $rat->addRating('shop', 1, 5, strtoupper($key))['code'],
-        'keyline' => $rat->addRating('shop', 1, 5, substr($key, 1)."\n")['code'],
-        'readscope' => $rat->getRating('products', 1)['code'],
-        'readid' => $rat->getRating('shop', 0)['code'],
+        'idzero' => $rat->addRating('node.story', 0, 5, $key)['code'],
+        'idsign' => $rat->addRating('node.story', -1, 5, $key)['code'],
+        'idover' => $rat->addRating('node.story', PROBEMAX + 1, 5, $key)['code'],
+        'valzero' => $rat->addRating('node.story', 1, 0, $key)['code'],
+        'valsix' => $rat->addRating('node.story', 1, 6, $key)['code'],
+        'valsign' => $rat->addRating('node.story', 1, -5, $key)['code'],
+        'keyvoid' => $rat->addRating('node.story', 1, 5, '')['code'],
+        'keyshort' => $rat->addRating('node.story', 1, 5, substr($key, 1))['code'],
+        'keylong' => $rat->addRating('node.story', 1, 5, $key.'a')['code'],
+        'keycase' => $rat->addRating('node.story', 1, 5, strtoupper($key))['code'],
+        'keyline' => $rat->addRating('node.story', 1, 5, substr($key, 1)."\n")['code'],
+        'readscope' => $rat->getRating('nodes', 1)['code'],
+        'readid' => $rat->getRating('node.story', 0)['code'],
     ]];
     $out['cost'] = $pdb->qnum - $num;
-    $out['gone'] = [$rat->getRating('shop', 99), $rat->addRating('shop', 99, 5, $key)];
-    $out['hidden'] = [$rat->getRating('shop', 4), $rat->addRating('shop', 4, 5, $key)];
+    $out['gone'] = [$rat->getRating('node.story', 99), $rat->addRating('node.story', 99, 5, $key)];
+    $out['hidden'] = [$rat->getRating('node.story', 4), $rat->addRating('node.story', 4, 5, $key)];
     $out['rows'] = [getProbeRows('votes'), getProbeRows('targets'), getProbeMarks()];
     return $out;
 }
@@ -399,13 +408,13 @@ function getProbeInput(): array {
 # The scale and the average: whole sums and counts, a derived string of six digits, the rows behind one vote, and the invariant of base plus active votes
 function getProbeScale(): array {
     setProbeSeed();
-    $out = ['empty' => getProbeRating(getProbeUser(2))->getRating('shop', 1)];
-    $out['first'] = getProbeRating(getProbeUser(2))->addRating('shop', 1, 5, getProbeKey(1));
+    $out = ['empty' => getProbeRating(getProbeUser(2))->getRating('node.story', 1)];
+    $out['first'] = getProbeRating(getProbeUser(2))->addRating('node.story', 1, 5, getProbeKey(1));
     $out['calls'] = $GLOBALS['pcalls'];
-    $out['second'] = getProbeRating(getProbeUser(3))->addRating('shop', 1, 1, getProbeKey(2));
-    $out['third'] = getProbeRating(getProbeUser(4))->addRating('shop', 1, 5, getProbeKey(3));
-    $out['read'] = getProbeRating(getProbeUser(5))->getRating('shop', 1);
-    $out['stored'] = [getProbeSum('shop', 1), getProbeRows('targets'), getProbeRows('actors'), getProbeRows('votes')];
+    $out['second'] = getProbeRating(getProbeUser(3))->addRating('node.story', 1, 1, getProbeKey(2));
+    $out['third'] = getProbeRating(getProbeUser(4))->addRating('node.story', 1, 5, getProbeKey(3));
+    $out['read'] = getProbeRating(getProbeUser(5))->getRating('node.story', 1);
+    $out['stored'] = [getProbeSum('node.story', 1), getProbeRows('targets'), getProbeRows('actors'), getProbeRows('votes')];
     $out['marks'] = getProbeMarks();
     $out['open'] = $GLOBALS['pdb']->checkSqlActive();
     return $out;
@@ -425,10 +434,10 @@ function getProbeCarry(): array {
     $out['loose'] = [getProbeBrief($rat->getRating('account', 4)), getProbeBrief($rat->addRating('account', 4, 5, getProbeKey(2)))];
     $out['loose'] = array_merge($out['loose'], [getProbeSum('account', 4), count(getProbeRows('votes'))]);
     $out['log'] = checkProbeLog('was never carried over');
-    $pdb->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET votes = :num, tvotes = :sum WHERE id = 2', ['num' => PROBEMAX, 'sum' => PROBEMAX]);
-    $sql = 'INSERT INTO '.PREFIX_DB.'_rating_targets (scope, mid, base, votes, created) VALUES (\'shop\', 2, :sum, :num, UNIX_TIMESTAMP())';
+    $pdb->getSqlQuery('UPDATE '.PREFIX_DB.'_nodes SET ratings = :num, score = :sum WHERE id = 2', ['num' => PROBEMAX, 'sum' => PROBEMAX]);
+    $sql = 'INSERT INTO '.PREFIX_DB.'_rating_targets (scope, mid, base, votes, created) VALUES (\'node.story\', 2, :sum, :num, UNIX_TIMESTAMP())';
     $pdb->getSqlQuery($sql, ['num' => PROBEMAX, 'sum' => PROBEMAX]);
-    $out['full'] = [$rat->addRating('shop', 2, 1, getProbeKey(3))['code'], getProbeSum('shop', 2)[1] === PROBEMAX, count(getProbeRows('votes'))];
+    $out['full'] = [$rat->addRating('node.story', 2, 1, getProbeKey(3))['code'], getProbeSum('node.story', 2)[1] === PROBEMAX, count(getProbeRows('votes'))];
     return $out;
 }
 
@@ -437,30 +446,30 @@ function getProbeWho(): array {
     setProbeSeed();
     $pdb = $GLOBALS['pdb'];
     $out = [
-        'home' => getProbeRating(getProbeUser(2, '10.0.0.1'))->addRating('shop', 1, 5, getProbeKey(1))['code'],
-        'away' => getProbeRating(getProbeUser(2, '10.9.9.9'))->addRating('shop', 1, 5, getProbeKey(2))['code'],
-        'mate' => getProbeRating(getProbeUser(3, '10.0.0.1'))->addRating('shop', 1, 4, getProbeKey(3))['code'],
-        'guest' => getProbeRating(getProbeGuest('10.0.0.1'))->addRating('shop', 1, 3, getProbeKey(4))['code'],
-        'again' => getProbeRating(getProbeGuest('10.0.0.1'))->addRating('shop', 1, 3, getProbeKey(5))['code'],
-        'login' => getProbeRating(getProbeUser(4, '10.0.0.1'))->addRating('shop', 1, 2, getProbeKey(6))['code'],
-        'logout' => getProbeRating(getProbeGuest('10.0.0.1'))->addRating('shop', 1, 3, getProbeKey(7))['code'],
-        'other' => getProbeRating(getProbeGuest('10.0.0.2'))->addRating('shop', 1, 1, getProbeKey(8))['code'],
+        'home' => getProbeRating(getProbeUser(2, '10.0.0.1'))->addRating('node.story', 1, 5, getProbeKey(1))['code'],
+        'away' => getProbeRating(getProbeUser(2, '10.9.9.9'))->addRating('node.story', 1, 5, getProbeKey(2))['code'],
+        'mate' => getProbeRating(getProbeUser(3, '10.0.0.1'))->addRating('node.story', 1, 4, getProbeKey(3))['code'],
+        'guest' => getProbeRating(getProbeGuest('10.0.0.1'))->addRating('node.story', 1, 3, getProbeKey(4))['code'],
+        'again' => getProbeRating(getProbeGuest('10.0.0.1'))->addRating('node.story', 1, 3, getProbeKey(5))['code'],
+        'login' => getProbeRating(getProbeUser(4, '10.0.0.1'))->addRating('node.story', 1, 2, getProbeKey(6))['code'],
+        'logout' => getProbeRating(getProbeGuest('10.0.0.1'))->addRating('node.story', 1, 3, getProbeKey(7))['code'],
+        'other' => getProbeRating(getProbeGuest('10.0.0.2'))->addRating('node.story', 1, 1, getProbeKey(8))['code'],
     ];
     $out['rows'] = array_map(static fn(array $row): array => [$row[3], $row[4], $row[5]], getProbeRows('votes'));
-    $out['sum'] = getProbeSum('shop', 1);
-    $shut = getProbeRating(getProbeGuest('10.0.0.3'), ['shop' => ['guests' => '0']]);
+    $out['sum'] = getProbeSum('node.story', 1);
+    $shut = getProbeRating(getProbeGuest('10.0.0.3'), ['node.story' => ['guests' => '0']]);
     $num = $pdb->qnum;
-    $out['shut'] = [$shut->addRating('shop', 1, 5, getProbeKey(9))['code'], $pdb->qnum - $num, getProbeBrief($shut->getRating('shop', 1))];
-    $out['member'] = getProbeRating(getProbeUser(5), ['shop' => ['guests' => '0']])->addRating('shop', 1, 5, getProbeKey(10))['code'];
+    $out['shut'] = [$shut->addRating('node.story', 1, 5, getProbeKey(9))['code'], $pdb->qnum - $num, getProbeBrief($shut->getRating('node.story', 1))];
+    $out['member'] = getProbeRating(getProbeUser(5), ['node.story' => ['guests' => '0']])->addRating('node.story', 1, 5, getProbeKey(10))['code'];
     return $out;
 }
 
-# Move the last participation of one actor of the shop to a moment relative to the clock of the database
+# Move the last participation of one actor of the story to a moment relative to the clock of the database
 function setProbeLast(string $actor, int $back): void {
     $GLOBALS['pdb']->getSqlQuery('UPDATE '.PREFIX_DB.'_rating_actors SET last = UNIX_TIMESTAMP() - :back WHERE actor = :actor', ['back' => $back, 'actor' => $actor]);
 }
 
-# The last participation of one actor of the shop as it is committed
+# The last participation of one actor of the story as it is committed
 function getProbeLast(string $actor): int {
     foreach (getProbeRows('actors') as $row) {
         if ($row[2] === $actor) return $row[3];
@@ -471,30 +480,30 @@ function getProbeLast(string $actor): int {
 # The interval: its border, a refusal that does not extend it, a period that was shortened, lengthened or switched off, and a last participation from the future
 function getProbePeriod(): array {
     setProbeSeed();
-    $rat = static fn(string $per): Rating => getProbeRating(getProbeUser(2), ['shop' => ['period' => $per]]);
-    $out = ['first' => $rat('100')->addRating('shop', 1, 5, getProbeKey(1))['code']];
-    $now = $rat('100')->addRating('shop', 1, 5, getProbeKey(2));
+    $rat = static fn(string $per): Rating => getProbeRating(getProbeUser(2), ['node.story' => ['period' => $per]]);
+    $out = ['first' => $rat('100')->addRating('node.story', 1, 5, getProbeKey(1))['code']];
+    $now = $rat('100')->addRating('node.story', 1, 5, getProbeKey(2));
     $out['fresh'] = [$now['code'], $now['wait'] >= 99 && $now['wait'] <= 100, $now['canvote'], $now['score']];
     setProbeLast('u:2', 90);
     $was = getProbeLast('u:2');
-    $now = $rat('100')->addRating('shop', 1, 5, getProbeKey(3));
-    $see = $rat('100')->getRating('shop', 1);
+    $now = $rat('100')->addRating('node.story', 1, 5, getProbeKey(3));
+    $see = $rat('100')->getRating('node.story', 1);
     $out['inside'] = [$now['code'], $now['wait'] >= 8 && $now['wait'] <= 10, $see['code'], $see['wait'] >= 8 && $see['wait'] <= 10, $see['canvote'], getProbeLast('u:2') === $was];
     setProbeLast('u:2', 100);
-    $see = $rat('100')->getRating('shop', 1);
-    $now = $rat('100')->addRating('shop', 1, 4, getProbeKey(4));
+    $see = $rat('100')->getRating('node.story', 1);
+    $now = $rat('100')->addRating('node.story', 1, 4, getProbeKey(4));
     $out['border'] = [$see['wait'], $see['canvote'], $now['code'], $now['wait'] >= 99, $now['canvote'], getProbeLast('u:2') > $was];
     setProbeLast('u:2', 50);
-    $out['shorter'] = [$rat('100')->addRating('shop', 1, 3, getProbeKey(5))['code'], $rat('40')->addRating('shop', 1, 3, getProbeKey(5))['code']];
-    $out['longer'] = $rat('0')->getRating('shop', 1)['canvote'] ? $rat('1000')->addRating('shop', 1, 3, getProbeKey(6))['code'] : 'closed';
-    $free = [$rat('0')->addRating('shop', 1, 2, getProbeKey(7)), $rat('0')->addRating('shop', 1, 2, getProbeKey(8))];
+    $out['shorter'] = [$rat('100')->addRating('node.story', 1, 3, getProbeKey(5))['code'], $rat('40')->addRating('node.story', 1, 3, getProbeKey(5))['code']];
+    $out['longer'] = $rat('0')->getRating('node.story', 1)['canvote'] ? $rat('1000')->addRating('node.story', 1, 3, getProbeKey(6))['code'] : 'closed';
+    $free = [$rat('0')->addRating('node.story', 1, 2, getProbeKey(7)), $rat('0')->addRating('node.story', 1, 2, getProbeKey(8))];
     $out['free'] = [$free[0]['code'], $free[0]['canvote'], $free[0]['wait'], $free[1]['code'], $free[1]['vote'] > $free[0]['vote']];
     $GLOBALS['pdb']->getSqlQuery('UPDATE '.PREFIX_DB.'_rating_actors SET last = UNIX_TIMESTAMP() + 1000 WHERE actor = \'u:2\'');
-    $see = $rat('100')->getRating('shop', 1);
-    $out['future'] = [$rat('100')->addRating('shop', 1, 1, getProbeKey(9))['code'], $rat('0')->addRating('shop', 1, 1, getProbeKey(10))['code']];
+    $see = $rat('100')->getRating('node.story', 1);
+    $out['future'] = [$rat('100')->addRating('node.story', 1, 1, getProbeKey(9))['code'], $rat('0')->addRating('node.story', 1, 1, getProbeKey(10))['code']];
     $out['future'] = array_merge($out['future'], [$see['code'], $see['wait'], $see['canvote']]);
     $out['log'] = checkProbeLog('lies in the future');
-    $out['sum'] = [getProbeSum('shop', 1), count(getProbeRows('votes'))];
+    $out['sum'] = [getProbeSum('node.story', 1), count(getProbeRows('votes'))];
     return $out;
 }
 
@@ -503,14 +512,14 @@ function getProbeRequest(): array {
     setProbeSeed();
     $rat = getProbeRating(getProbeUser(2));
     $key = getProbeKey(1);
-    $new = $rat->addRating('shop', 1, 4, $key);
-    $rep = $rat->addRating('shop', 1, 4, $key);
+    $new = $rat->addRating('node.story', 1, 4, $key);
+    $rep = $rat->addRating('node.story', 1, 4, $key);
     $out = ['new' => getProbeBrief($new), 'repeat' => [getProbeBrief($rep), $rep['vote'] === $new['vote'], $rep['wait'] > 0]];
-    $out['clash'] = [getProbeBrief($rat->addRating('shop', 1, 5, $key)), getProbeSum('shop', 1), count(getProbeRows('votes'))];
-    $out['mate'] = getProbeRating(getProbeUser(3))->addRating('shop', 1, 2, $key)['code'];
-    $out['next'] = $rat->addRating('shop', 2, 3, $key)['code'];
+    $out['clash'] = [getProbeBrief($rat->addRating('node.story', 1, 5, $key)), getProbeSum('node.story', 1), count(getProbeRows('votes'))];
+    $out['mate'] = getProbeRating(getProbeUser(3))->addRating('node.story', 1, 2, $key)['code'];
+    $out['next'] = $rat->addRating('node.story', 2, 3, $key)['code'];
     $out['scope'] = $rat->addRating('node.probe', 3, 3, $key)['code'];
-    $out['later'] = getProbeRating(getProbeUser(2), ['shop' => ['period' => '0']])->addRating('shop', 1, 4, $key)['duplicate'];
+    $out['later'] = getProbeRating(getProbeUser(2), ['node.story' => ['period' => '0']])->addRating('node.story', 1, 4, $key)['duplicate'];
     $out['rows'] = count(getProbeRows('votes'));
     return $out;
 }
@@ -518,13 +527,13 @@ function getProbeRequest(): array {
 # The own vote and the switched off target: both are seen with their aggregate and take no vote of that actor, while a material without a known author is nobody's own
 function getProbeOwn(): array {
     setProbeSeed();
-    $GLOBALS['pdb']->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET ihome = 0 WHERE id = 3');
+    $GLOBALS['pdb']->getSqlQuery('UPDATE '.PREFIX_DB.'_nodes SET home = 0 WHERE id = 3');
     $out = ['mate' => getProbeBrief(getProbeRating(getProbeUser(3))->addRating('account', 2, 4, getProbeKey(1)))];
     $own = getProbeRating(getProbeUser(2));
     $out['self'] = [getProbeBrief($own->getRating('account', 2)), getProbeBrief($own->addRating('account', 2, 5, getProbeKey(2))), getProbeSum('account', 2)];
     $out['guest'] = getProbeRating(getProbeGuest())->addRating('account', 2, 5, getProbeKey(3))['code'];
-    $out['free'] = getProbeRating(getProbeGuest())->addRating('shop', 1, 5, getProbeKey(4))['code'];
-    $out['closed'] = [getProbeBrief($own->getRating('shop', 3)), getProbeBrief($own->addRating('shop', 3, 5, getProbeKey(5))), getProbeRows('targets')];
+    $out['free'] = getProbeRating(getProbeGuest())->addRating('node.story', 1, 5, getProbeKey(4))['code'];
+    $out['closed'] = [getProbeBrief($own->getRating('node.story', 3)), getProbeBrief($own->addRating('node.story', 3, 5, getProbeKey(5))), getProbeRows('targets')];
     return $out;
 }
 
@@ -533,7 +542,7 @@ function getProbeAnnul(): array {
     setProbeSeed();
     $pdb = $GLOBALS['pdb'];
     $ids = [];
-    foreach ([[2, 'shop', 1, 5], [3, 'shop', 1, 2], [4, 'shop', 2, 4], [2, 'account', 3, 3], [3, 'node.probe', 4, 1]] as $key => [$uid, $scope, $mid, $val]) {
+    foreach ([[2, 'node.story', 1, 5], [3, 'node.story', 1, 2], [4, 'node.story', 2, 4], [2, 'account', 3, 3], [3, 'node.probe', 4, 1]] as $key => [$uid, $scope, $mid, $val]) {
         $ids[] = getProbeRating(getProbeUser($uid))->addRating($scope, $mid, $val, getProbeKey($key))['vote'];
     }
     $sup = getProbeRating(getProbeAdmin(true));
@@ -555,27 +564,28 @@ function getProbeAnnul(): array {
     $last = getProbeLast('u:3');
     $GLOBALS['pcalls'] = [];
     $res = $sup->deleteRating($ids[1], str_repeat('я', 255));
-    $out['done'] = [getProbeBrief($res), $res['vote'] === $ids[1], getProbeSum('shop', 1), $GLOBALS['pcalls'], getProbeLast('u:3') === $last];
+    $out['done'] = [getProbeBrief($res), $res['vote'] === $ids[1], getProbeSum('node.story', 1), $GLOBALS['pcalls'], getProbeLast('u:3') === $last];
     $row = getProbeRows('votes')[1];
     $out['row'] = [$row[8] > 0, $row[9], mb_strlen($row[10]), $row[5]];
     $res = $sup->deleteRating($ids[1], 'once more');
-    $out['twice'] = [getProbeBrief($res), getProbeSum('shop', 1), mb_strlen(getProbeRows('votes')[1][10])];
-    $out['still'] = getProbeRating(getProbeUser(3))->addRating('shop', 1, 5, getProbeKey(20))['code'];
-    $pdb->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET status = 0 WHERE id = 2');
-    $out['hidden'] = [getProbeRating(getProbeAdmin(true), ['shop' => ['active' => '0', 'guests' => '0']])->deleteRating($ids[2], 'hidden and off')['code'], getProbeSum('shop', 2)];
+    $out['twice'] = [getProbeBrief($res), getProbeSum('node.story', 1), mb_strlen(getProbeRows('votes')[1][10])];
+    $out['still'] = getProbeRating(getProbeUser(3))->addRating('node.story', 1, 5, getProbeKey(20))['code'];
+    $pdb->getSqlQuery('UPDATE '.PREFIX_DB.'_nodes SET status = 0 WHERE id = 2');
+    $shut = getProbeRating(getProbeAdmin(true), ['node.story' => ['active' => '0', 'guests' => '0']]);
+    $out['hidden'] = [$shut->deleteRating($ids[2], 'hidden and off')['code'], getProbeSum('node.story', 2)];
     $less = getProbeConf();
     unset($less['account']);
     $out['norule'] = [getProbeRating(getProbeAdmin(true), [], null, $less)->deleteRating($ids[3], 'no rule')['code'], getProbeSum('account', 3)];
-    $pdb->getSqlQuery('DELETE FROM '.PREFIX_DB.'_products WHERE id = 4');
+    $pdb->getSqlQuery('DELETE FROM '.PREFIX_DB.'_nodes WHERE id = 4');
     $out['gone'] = [getProbeBrief($sup->deleteRating($ids[4], 'gone')), getProbeRows('votes')[4][8]];
-    $pdb->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET votes = 0, tvotes = 0 WHERE id = 1');
+    $pdb->getSqlQuery('UPDATE '.PREFIX_DB.'_nodes SET ratings = 0, score = 0 WHERE id = 1');
     $out['broken'] = [$sup->deleteRating($ids[0], 'broken')['code'], getProbeRows('votes')[0][8], checkProbeLog('would turn the aggregate negative')];
     $all = $sup->getRatingList();
     $out['list'] = [
         'all' => [$all['ok'], $all['code'], array_column($all['rows'], 'id') === $ids, $all['next'] === $ids[4], array_keys($all['rows'][0] ?? [])],
         'first' => $all['rows'][0] ?? [],
-        'scope' => array_column($sup->getRatingList('shop')['rows'], 'mid'),
-        'target' => array_column($sup->getRatingList('shop', 1)['rows'], 'uid'),
+        'scope' => array_column($sup->getRatingList('node.story')['rows'], 'mid'),
+        'target' => array_column($sup->getRatingList('node.story', 1)['rows'], 'uid'),
         'after' => array_column($sup->getRatingList('', 0, $ids[2])['rows'], 'scope'),
         'page' => [count($sup->getRatingList('', 0, 0, 2)['rows']), $sup->getRatingList('', 0, 0, 2)['next'] === $ids[1]],
         'past' => $sup->getRatingList('', 0, $ids[4]),
@@ -583,8 +593,8 @@ function getProbeAnnul(): array {
     ];
     $out['badlist'] = [
         'idbare' => $sup->getRatingList('', 1)['code'],
-        'scope' => $sup->getRatingList('products')['code'],
-        'idsign' => $sup->getRatingList('shop', -1)['code'],
+        'scope' => $sup->getRatingList('nodes')['code'],
+        'idsign' => $sup->getRatingList('node.story', -1)['code'],
         'after' => $sup->getRatingList('', 0, -1)['code'],
         'limzero' => $sup->getRatingList('', 0, 0, 0)['code'],
         'limover' => $sup->getRatingList('', 0, 0, 101)['code'],
@@ -597,12 +607,12 @@ function getProbeAnnul(): array {
 function getProbeForeign(): array {
     setProbeSeed();
     $pdb = $GLOBALS['pdb'];
-    $vote = getProbeRating(getProbeUser(2))->addRating('shop', 1, 5, getProbeKey(1))['vote'];
+    $vote = getProbeRating(getProbeUser(2))->addRating('node.story', 1, 5, getProbeKey(1))['vote'];
     $pdb->setSqlBegin();
     $pdb->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET `rank` = \'main\' WHERE id = 2');
     $GLOBALS['pcalls'] = [];
     $out = [
-        'add' => getProbeRating(getProbeUser(3))->addRating('shop', 1, 5, getProbeKey(2))['code'],
+        'add' => getProbeRating(getProbeUser(3))->addRating('node.story', 1, 5, getProbeKey(2))['code'],
         'delete' => getProbeRating(getProbeAdmin(true))->deleteRating($vote, 'inside')['code'],
         'calls' => $GLOBALS['pcalls'],
         'open' => $pdb->checkSqlActive(),
@@ -610,7 +620,7 @@ function getProbeForeign(): array {
     ];
     $pdb->setSqlCommit();
     $row = getProbeSide()->query('SELECT `rank` FROM '.PREFIX_DB.'_users WHERE id = 2')->fetchColumn();
-    $out['kept'] = [$row, getProbeSum('shop', 1), count(getProbeRows('votes')), checkProbeLog('inside a foreign open transaction')];
+    $out['kept'] = [$row, getProbeSum('node.story', 1), count(getProbeRows('votes')), checkProbeLog('inside a foreign open transaction')];
     return $out;
 }
 
@@ -622,36 +632,37 @@ function getProbeFail(): array {
         setProbeSeed();
         $rat = getProbeRating(getProbeUser(2));
         $pdb->fail = $i;
-        $res = $rat->addRating('shop', 1, 5, getProbeKey(1));
+        $res = $rat->addRating('node.story', 1, 5, getProbeKey(1));
         $pdb->fail = 0;
         $rows = count(getProbeRows('votes')) + count(getProbeRows('actors')) + count(getProbeRows('targets'));
-        $out['add'][$i] = [$res['code'], $res['score'], $rows, getProbeSum('shop', 1)[0], $pdb->checkSqlActive(), count(getProbeMarks())];
+        $out['add'][$i] = [$res['code'], $res['score'], $rows, getProbeSum('node.story', 1)[0], $pdb->checkSqlActive(), count(getProbeMarks())];
     }
     for ($i = 1; $i <= 11; $i++) {
         setProbeSeed();
-        $vote = getProbeRating(getProbeUser(2))->addRating('shop', 1, 5, getProbeKey(1))['vote'];
+        $vote = getProbeRating(getProbeUser(2))->addRating('node.story', 1, 5, getProbeKey(1))['vote'];
         $sup = getProbeRating(getProbeAdmin(true));
         $pdb->fail = $i;
         $res = $sup->deleteRating($vote, 'fail');
         $pdb->fail = 0;
-        $out['delete'][$i] = [$res['code'], getProbeRows('votes')[0][8] > 0, getProbeSum('shop', 1)[0], $pdb->checkSqlActive(), count(getProbeMarks())];
+        $out['delete'][$i] = [$res['code'], getProbeRows('votes')[0][8] > 0, getProbeSum('node.story', 1)[0], $pdb->checkSqlActive(), count(getProbeMarks())];
     }
     setProbeSeed();
     $GLOBALS['pwrite'] = false;
-    $code = getProbeRating(getProbeUser(2))->addRating('shop', 1, 5, getProbeKey(1))['code'];
+    $code = getProbeRating(getProbeUser(2))->addRating('node.story', 1, 5, getProbeKey(1))['code'];
     $out['write'] = [$code, count(getProbeRows('votes')), $pdb->checkSqlActive(), count(getProbeMarks())];
     $GLOBALS['pwrite'] = true;
     $pdb->getSqlQuery('CREATE TRIGGER probestop BEFORE INSERT ON '.PREFIX_DB.'_rating_actors FOR EACH ROW SIGNAL SQLSTATE \'45000\' SET MESSAGE_TEXT = \'probe\'');
-    $code = getProbeRating(getProbeUser(2))->addRating('shop', 1, 5, getProbeKey(1))['code'];
-    $out['real'] = [$code, count(getProbeRows('votes')), getProbeSum('shop', 1), $pdb->checkSqlActive(), count(getProbeMarks())];
+    $code = getProbeRating(getProbeUser(2))->addRating('node.story', 1, 5, getProbeKey(1))['code'];
+    $out['real'] = [$code, count(getProbeRows('votes')), getProbeSum('node.story', 1), $pdb->checkSqlActive(), count(getProbeMarks())];
     $pdb->getSqlQuery('DROP TRIGGER probestop');
     $hard = 'SIGNAL SQLSTATE \'40001\' SET MESSAGE_TEXT = \'probe deadlock\', MYSQL_ERRNO = 1213';
     $pdb->getSqlQuery('CREATE TRIGGER probehard BEFORE INSERT ON '.PREFIX_DB.'_rating_votes FOR EACH ROW '.$hard);
-    $out['hard'] = [getProbeRating(getProbeUser(2))->addRating('shop', 1, 5, getProbeKey(1))['code'], count(getProbeRows('votes')), $pdb->checkSqlActive(), count(getProbeMarks())];
+    $code = getProbeRating(getProbeUser(2))->addRating('node.story', 1, 5, getProbeKey(1))['code'];
+    $out['hard'] = [$code, count(getProbeRows('votes')), $pdb->checkSqlActive(), count(getProbeMarks())];
     $pdb->getSqlQuery('DROP TRIGGER probehard');
-    $sql = 'INSERT INTO '.PREFIX_DB.'_rating_votes (scope, mid, actor, value, request, created) VALUES (\'shop\', 1, \'u:2\', 6, \''.getProbeKey(1).'\', 1)';
+    $sql = 'INSERT INTO '.PREFIX_DB.'_rating_votes (scope, mid, actor, value, request, created) VALUES (\'node.story\', 1, \'u:2\', 6, \''.getProbeKey(1).'\', 1)';
     $out['value'] = getProbeThrow(static fn(): bool => getProbeSide()->exec($sql) > 0);
-    $out['healed'] = getProbeBrief(getProbeRating(getProbeUser(2))->addRating('shop', 1, 5, getProbeKey(1)));
+    $out['healed'] = getProbeBrief(getProbeRating(getProbeUser(2))->addRating('node.story', 1, 5, getProbeKey(1)));
     $out['log'] = checkProbeLog('the write was not stored') && checkProbeLog('the write threw');
     return $out;
 }
@@ -671,12 +682,12 @@ function getProbeLost(string $base): array {
     $pdb = $GLOBALS['pdb'] = getProbeBase();
     $rat = getProbeRating(getProbeUser(2));
     $pdb->deny = 1;
-    $out = ['back' => [$rat->addRating('shop', 1, 5, getProbeKey(1))['code'], count(getProbeRows('votes')), count(getProbeMarks()), Cache::checkWriteGuard()]];
+    $out = ['back' => [$rat->addRating('node.story', 1, 5, getProbeKey(1))['code'], count(getProbeRows('votes')), count(getProbeMarks()), Cache::checkWriteGuard()]];
     $pdb->deny = 2;
-    $out['kept'] = [$rat->addRating('shop', 1, 5, getProbeKey(2))['code'], count(getProbeRows('votes')), count(getProbeMarks())];
+    $out['kept'] = [$rat->addRating('node.story', 1, 5, getProbeKey(2))['code'], count(getProbeRows('votes')), count(getProbeMarks())];
     $pdb->deny = 0;
-    $out['again'] = getProbeBrief($rat->addRating('shop', 1, 5, getProbeKey(2)));
-    $out['end'] = [getProbeSum('shop', 1), count(getProbeRows('votes')), count(getProbeMarks()), $pdb->checkSqlActive()];
+    $out['again'] = getProbeBrief($rat->addRating('node.story', 1, 5, getProbeKey(2)));
+    $out['end'] = [getProbeSum('node.story', 1), count(getProbeRows('votes')), count(getProbeMarks()), $pdb->checkSqlActive()];
     return $out;
 }
 
@@ -696,7 +707,7 @@ function getProbeRival(string $base, float $when, int $uid, string $request, int
     $GLOBALS['pdb'] = getProbeBase();
     $rat = getProbeRating(getProbeUser($uid));
     while (microtime(true) < $when) usleep(200);
-    $res = $rat->addRating('shop', 1, $value, $request);
+    $res = $rat->addRating('node.story', 1, $value, $request);
     return [$res['code'], $res['duplicate'], $res['vote']];
 }
 
@@ -727,13 +738,13 @@ function getProbeRivals(array $list): array {
 function getProbeRace(): array {
     setProbeSeed();
     $out = ['intent' => getProbeRivals([[2, getProbeKey(1), 5], [2, getProbeKey(2), 5], [2, getProbeKey(3), 5], [2, getProbeKey(4), 5]])];
-    $out['once'] = [getProbeSum('shop', 1), count(getProbeRows('votes')), count(getProbeRows('actors'))];
+    $out['once'] = [getProbeSum('node.story', 1), count(getProbeRows('votes')), count(getProbeRows('actors'))];
     setProbeSeed();
     $out['resend'] = getProbeRivals(array_fill(0, 4, [2, getProbeKey(1), 4]));
-    $out['same'] = [getProbeSum('shop', 1), count(getProbeRows('votes'))];
+    $out['same'] = [getProbeSum('node.story', 1), count(getProbeRows('votes'))];
     setProbeSeed();
     $out['crowd'] = getProbeRivals([[2, getProbeKey(1), 5], [3, getProbeKey(2), 4], [4, getProbeKey(3), 3], [5, getProbeKey(4), 2], [6, getProbeKey(5), 1]]);
-    $out['all'] = [getProbeSum('shop', 1), count(getProbeRows('votes')), count(getProbeRows('targets'))];
+    $out['all'] = [getProbeSum('node.story', 1), count(getProbeRows('votes')), count(getProbeRows('targets'))];
     $out['marks'] = [count(getProbeMarks()), Cache::checkWriteGuard()];
     return $out;
 }

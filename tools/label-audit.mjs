@@ -56,13 +56,13 @@ const origin = new URL(conf.base).origin;
 // renders a form or renders a view, and what is left out is reported as a skipped op rather than passed over silently
 const OPEN = new Set(['', 'view', 'edit', 'add', 'new', 'newuser', 'passlost', 'config', 'info', 'list', 'search',
     'profil', 'profile', 'privat', 'favorites', 'settings', 'docs', 'stat', 'preview', 'reply', 'newtopic', 'quote', 'contact',
-    'edithome', 'oauthlist', 'banlist', 'liste', 'rules', 'stats', 'partners', 'clients', 'fileadd', 'fileedit', 'subadd', 'addedit']);
+    'edithome', 'oauthlist', 'banlist', 'liste', 'rules', 'stats', 'fileadd', 'fileedit', 'subadd', 'addedit']);
 // The parameters that name one record rather than one route. Every one of them is dropped from the signature, and the
 // four that identify a record leave the `#rec` mark behind, so a hundred categories are one route that is known to be
 // record-bound. Measured, without this the panel alone offered more than five hundred signatures - eighty six category
 // ids, forty nine banned addresses - and the walk hit its own limit with the queue still full.
 // Everything not named here keeps its value in the signature, which is what holds the tab strips of the panel apart:
-// name=whois&status=1 is a different screen from the tab beside it, name=categories&modul=forum is the same screen twice
+// name=comments&status=1 is a different screen from the tab beside it, name=categories&modul=forum is the same screen twice
 // Addresses the walk asks for outright instead of waiting to be linked to them. The registration and lost-password
 // forms are linked only from the page a guest is shown, so whether the member side ever opened them depended on the
 // walk - measured, `site:account:newuser` was in one baseline and not in the next, for no change anybody made. They

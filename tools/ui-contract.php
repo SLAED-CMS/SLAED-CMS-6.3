@@ -209,7 +209,7 @@ return [
         'fmenu', 'fm-panel', 'fm-pick', 'fm-preview', 'fm-props', 'fm-quota', 'fm-row', 'fm-search', 'fm-sep', 'fm-split', 'fm-thumb',
         'fm-tile', 'footer', 'form', 'form-label', 'forum', 'fp', 'fp-ava', 'fresh', 'fresh-day', 'fresh-days', 'fresh-month',
         'fresh-now', 'fresh-week', 'gauge', 'graph', 'guard', 'header', 'hub-head', 'hub-row',
-        'ico', 'idea', 'info-row', 'invoice', 'invoice-logo', 'item', 'knob', 'lang', 'led', 'letter', 'live-dot', 'loading',
+        'ico', 'idea', 'info-row', 'item', 'knob', 'lang', 'led', 'letter', 'live-dot', 'loading',
         'loading-dot', 'login', 'login-drop', 'login-footer', 'login-header', 'logo', 'madein', 'marquee', 'menu', 'meta',
         'meter', 'modal', 'modal-act', 'modal-btn', 'mode', 'module-head', 'monitor-table', 'move', 'msg', 'msg-brand', 'nav', 'opt', 'opt-lamp', 'opt-rail',
         'pager', 'pager-dot', 'pager-item', 'panel', 'panel-feed', 'placeholder', 'plot', 'pmf-ava', 'pmf-blank', 'pmf-chip', 'pmf-day', 'pmf-filter',
@@ -472,10 +472,6 @@ return [
         '.sl-dial-toggle, .sl-dial-item, .sl-live-act',
         # A quotation in running text beside the two cells of a session line: both have to break an unbreakable run, and nothing else joins a quote to a session
         '#content blockquote, .sl-session-name, .sl-session-module',
-        # The number column of a cart beside the number column of a file list: two fixed tracks of two tables, each retuned by whoever owns that table
-        'td.sl-cart-col-num, th.sl-fl-col-num, td.sl-fl-col-num',
-        # The title cell of a cart row beside the heading of a file row: one is inline emphasis, the other a heading, and they are the same size by chance
-        '.sl-cart-col-content strong, .sl-fl-col-content h4, .sl-fl-col-content h3',
         # The body of a preview panel beside the info block of a profile: two grids that close their gaps
         '.sl-preview-body, .sl-profile-info',
         # The subject of a commit beside the count of a result set: a title and a figure, in one screen but not in one component

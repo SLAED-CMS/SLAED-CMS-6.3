@@ -47,7 +47,7 @@ final class CommentTargetTest extends TestCase
     {
         $data = $this->getProbe();
         $this->assertTrue($data['clean'], 'The probe transaction was not rolled back');
-        foreach (['shop', 'voting'] as $mod) {
+        foreach (['news', 'voting'] as $mod) {
             if (!$data['rows'][$mod]) {
                 $this->addToAssertionCount(1);
                 continue;
@@ -153,7 +153,6 @@ final class CommentTargetTest extends TestCase
     public function moduleDeleteHandlersHoldNoCommentSql(): void
     {
         $files = [
-            'shop' => 'modules/shop/admin/index.php',
             'voting' => 'modules/voting/admin/index.php',
         ];
         foreach ($files as $mod => $file) {
@@ -161,20 +160,6 @@ final class CommentTargetTest extends TestCase
             $this->assertStringNotContainsString('PREFIX_DB.\'_comment', $code, $file.' still holds a comment statement');
             $this->assertStringContainsString('$com->deleteTarget(\''.$mod.'\'', $code, $file.' does not delete through the class');
         }
-    }
-
-    # The bulk handler of the shop binds its id list instead of pasting it into the statement
-    #[Test]
-    public function shopBulkHandlerBindsItsIdList(): void
-    {
-        $code = $this->getFile('modules/shop/admin/index.php');
-        $beg = strpos($code, 'function productops(');
-        $this->assertNotFalse($beg);
-        $end = strpos($code, "\n}\n", $beg);
-        $body = substr($code, $beg, $end - $beg);
-        $this->assertStringNotContainsString('IN (\'.$id.\')', $body, 'The shop handler still interpolates its id list');
-        $this->assertStringContainsString('$in = implode(\', \', $keys);', $body);
-        $this->assertSame(0, substr_count($body, 'IN (\'.$id'), 'An interpolated id list is left in the shop handler');
     }
 
     # The profile feed and the profile hub read their comments through the class rather than through the module map

@@ -225,7 +225,7 @@ function setErrorOut(string $detail = ''): void {
     static $busy = false;
     if ($busy) return;
     $busy = true;
-    if (in_array((string)($_REQUEST['go'] ?? ''), ['1', '2', '3', '4', '5', 'asset', 'captcha', 'rss', 'xsl'], true) || headers_sent()) {
+    if (in_array((string)($_REQUEST['go'] ?? ''), ['1', '3', '4', '5', 'asset', 'captcha', 'rss', 'xsl'], true) || headers_sent()) {
         if (!headers_sent()) http_response_code(500);
         return;
     }

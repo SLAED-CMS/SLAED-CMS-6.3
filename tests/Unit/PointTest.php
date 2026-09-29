@@ -11,7 +11,7 @@ final class PointTest extends TestCase
     private const ACTIONS = [
         'publish' => ['10', '86400', '10'], 'comment' => ['5', '86400', '30'], 'view' => ['0', '86400', '50'],
         'download' => ['3', '86400', '20'], 'visit' => ['0', '86400', '20'], 'poll' => ['3', '86400', '10'],
-        'order' => ['10', '0', '0'], 'favorite' => ['0', '86400', '20'], 'message' => ['0', '86400', '20'],
+        'favorite' => ['0', '86400', '20'], 'message' => ['0', '86400', '20'],
         'recommend' => ['0', '86400', '5'], 'register' => ['0', '0', '0'], 'login' => ['0', '86400', '1'],
         'report' => ['3', '86400', '5'], 'moderate' => ['0', '86400', '100'], 'adjust' => ['0', '0', '0'],
     ];
@@ -49,7 +49,7 @@ final class PointTest extends TestCase
         $this->assertSame(['active', 'actions'], array_keys($conf['points']), 'The points scope does not carry exactly active and actions');
         $this->assertSame('1', $conf['points']['active']);
         $want = array_map(static fn(array $one): array => ['points' => $one[0], 'period' => $one[1], 'limit' => $one[2]], self::ACTIONS);
-        $this->assertSame($want, $conf['points']['actions'], 'The shipped rules are not the fifteen starter rules of docs/POINTS.md');
+        $this->assertSame($want, $conf['points']['actions'], 'The shipped rules are not the fourteen starter rules of docs/POINTS.md');
         $this->assertArrayNotHasKey('rate', $conf['points']['actions'], 'A rating reward came back into the points scope');
         $this->assertTrue($this->getProbe()['clean'], 'The probe left its schema on the server');
     }

@@ -141,7 +141,7 @@ composer quality
 
 ### Content and Modules
 
-- News, forum, shop, media, files, account, search, and other modules
+- Typed content through Node, forum, account, search, and other modules
 - WYSIWYG editor integrations
 - File uploads and media handling
 - RSS, SEO metadata, referer and statistics modules
@@ -212,7 +212,7 @@ slaed-cms/
 - Current runtime code and actively modernized components coexist in the repository.
 - New template work targets `core/classes/template.php`, the shared `$tpl` runtime object, and HTML files under `templates/*`.
 - Current theme directories are `admin` and `lite`.
-- Current module directories are `account`, `auto_links`, `changelog`, `clients`, `contact`, `forum`, `money`, `order`, `presentation`, `recommend`, `rss`, `search`, `shop`, `sitemap`, `users`, `voting`, and `whois`.
+- Current module directories are `account`, `changelog`, `contact`, `forum`, `node`, `presentation`, `recommend`, `rss`, `search`, `sitemap`, `users`, and `voting`.
 - Public documentation aims to describe the current repository state, not a future fully completed migration.
 
 For contribution rules and coding conventions, see [CONTRIBUTING.md](CONTRIBUTING.md).

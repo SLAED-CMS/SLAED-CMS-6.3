@@ -27,9 +27,9 @@ final class CommentNotifyTest extends TestCase
     private function getNotify(): array
     {
         $data = $this->getProbe();
-        if (empty($data['target'])) $this->markTestSkipped('No writable shop target on this installation');
+        if (empty($data['target'])) $this->markTestSkipped('No writable poll on this installation');
         if ($data['addmail'] !== '1') $this->markTestSkipped('Comment notifications are switched off on this installation');
-        if (!$data['subs']) $this->markTestSkipped('No administrator on this installation is subscribed to shop notifications');
+        if (!$data['subs']) $this->markTestSkipped('No administrator on this installation is subscribed to poll notifications');
         return $data;
     }
 
@@ -51,7 +51,7 @@ final class CommentNotifyTest extends TestCase
     public function theProbeRunLeavesBothTablesUntouched(): void
     {
         $data = $this->getProbe();
-        if (empty($data['target'])) $this->markTestSkipped('No writable shop target on this installation');
+        if (empty($data['target'])) $this->markTestSkipped('No writable poll on this installation');
         $this->assertSame([0, 0], $data['gone'], 'The probe left a comment or a queue row behind');
         $this->assertTrue($data['clean'], 'The probe run did not restore both tables');
     }

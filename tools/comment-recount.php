@@ -10,7 +10,7 @@
 # An installation upgraded from before that fix therefore carries historical drift; this tool finds it and writes the live number back
 # Usage: php tools/comment-recount.php report - read-only, prints every target that disagrees
 # Usage: php tools/comment-recount.php fix - writes the live count back into those targets
-# Options: --mod=shop --limit=50
+# Options: --mod=voting --limit=50
 # The live number is the public one (published, not deleted), recomputed inside the UPDATE, so a comment written between report and fix cannot be lost
 # The same work runs unattended as the `commentsync` scheduler job; this tool is the manual way in
 # There is no --db= option: the core is booted so the module map, visibility rules and counter semantics have one home, and the core reads config/db.php
@@ -33,7 +33,7 @@ function getOption(array $args, string $name, string $def): string {
 
 $mode = $argv[1] ?? '';
 if (!in_array($mode, ['report', 'fix'], true)) {
-    fwrite(STDERR, "Usage: php tools/comment-recount.php report|fix [--mod=shop] [--limit=50]\n");
+    fwrite(STDERR, "Usage: php tools/comment-recount.php report|fix [--mod=voting] [--limit=50]\n");
     exit(1);
 }
 

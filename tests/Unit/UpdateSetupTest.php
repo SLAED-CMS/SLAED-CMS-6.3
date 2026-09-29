@@ -42,15 +42,15 @@ final class UpdateSetupTest extends TestCase
         $run = $this->getRun()['site'];
         $ship = $run['ship'];
         $this->assertSame(['1', '0', '0'], [$ship['forum']['active'], $ship['forum']['view'], $ship['forum']['group']], 'The shipped forum record no longer differs from the site');
-        $this->assertSame(['config', 'extra', 'forum', 'node', 'shop'], $run['names']);
+        $this->assertSame(['config', 'extra', 'forum', 'node', 'voting'], $run['names']);
         $this->assertSame(['active' => 0, 'view' => 1, 'menu' => 0, 'group' => 3, 'side' => 1, 'top' => 1, 'lang' => '_FORUM', 'icon' => $ship['forum']['icon']],
             $run['mods']['forum']);
-        $this->assertSame(['active' => 1, 'view' => 2, 'menu' => 1, 'group' => 0, 'side' => 2, 'top' => 0], array_slice($run['mods']['shop'], 0, 6));
+        $this->assertSame(['active' => 1, 'view' => 2, 'menu' => 1, 'group' => 0, 'side' => 2, 'top' => 0], array_slice($run['mods']['voting'], 0, 6));
         $this->assertSame(['active' => 0, 'view' => 0, 'menu' => 1, 'group' => 0, 'side' => 0, 'top' => 0, 'lang' => '_EXTRA', 'icon' => 'puzzle'], $run['mods']['extra']);
         $this->assertSame(['active' => 1, 'view' => 0, 'menu' => 0, 'group' => 0, 'side' => 2, 'top' => 0], array_slice($run['mods']['node'], 0, 6));
         $this->assertStringContainsString('records of removed modules dropped:', $run['text']);
         $this->assertStringContainsString(' news,', $run['text']);
-        $this->assertSame('forum,news,shop', $run['rights']);
+        $this->assertSame('forum,news,voting', $run['rights']);
         $again = $this->getRun()['again'];
         $this->assertSame([$run['mods'], $run['rights'], ''], [$again['mods'], $again['rights'], $again['text']], 'A repeat changed the registry');
     }
@@ -61,7 +61,7 @@ final class UpdateSetupTest extends TestCase
     {
         $run = $this->getRun()['plain'];
         $ship = $run['ship'];
-        foreach (['forum', 'shop', 'config'] as $name) {
+        foreach (['forum', 'voting', 'config'] as $name) {
             $want = array_map('intval', array_intersect_key($ship[$name], array_flip(['active', 'view', 'menu', 'group', 'side', 'top'])));
             $this->assertSame($want, array_slice($run['mods'][$name], 0, 6), 'The record of '.$name.' changed');
         }
@@ -93,7 +93,7 @@ final class UpdateSetupTest extends TestCase
         $run = $this->getRun();
         $this->assertSame(['active' => 1] + $run['site']['mods']['forum'], $run['owned']['mods']['forum']);
         $this->assertSame(array_diff_key($run['site']['mods'], ['forum' => 0]), array_diff_key($run['owned']['mods'], ['forum' => 0]));
-        $this->assertSame('forum,news,shop', $run['owned']['rights']);
+        $this->assertSame('forum,news,voting', $run['owned']['rights']);
         $this->assertStringContainsString('switches of the 6.2 table probe_modules were carried by the first run', $run['owned']['text']);
     }
 

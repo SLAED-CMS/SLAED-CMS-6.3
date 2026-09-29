@@ -10,19 +10,18 @@ use PHPUnit\Framework\TestCase;
 # The ratings unit of the 6.3 data update in setup/index.php, whose contract is the carry-over of the accumulated ratings in docs/RATINGS.md
 final class UpdateRatingsTest extends TestCase
 {
-    private const TARGETS = [['account', 2, 37, 10], ['account', 3, 0, 0], ['account', 4, 5, 1], ['forum', 5, 6, 2], ['shop', 8, 15, 3]];
+    private const TARGETS = [['account', 2, 37, 10], ['account', 3, 0, 0], ['account', 4, 5, 1], ['forum', 5, 6, 2]];
 
     private const ACTORS = [
         ['account', 2, 'g:3.3.3.3', 1700000100],
         ['account', 2, 'u:9', 1700000000],
         ['forum', 5, 'g:2001:db8::1', 1700000205],
-        ['shop', 8, 'u:9', 1700000400],
+        ['forum', 5, 'u:9', 1700000400],
     ];
 
     private const RULES = [
         'account' => ['active' => '1', 'period' => '2592000', 'detail' => '0', 'guests' => '1'],
         'forum' => ['active' => '0', 'period' => '0', 'detail' => '1', 'guests' => '1'],
-        'shop' => ['active' => '1', 'period' => '86400', 'detail' => '1', 'guests' => '1'],
     ];
 
     private static array $probe = [];
@@ -49,21 +48,22 @@ final class UpdateRatingsTest extends TestCase
     private function checkFinished(array $run, string $text, int $votes = 0): void
     {
         $this->assertTrue($run['done'], $text.': '.$run['text']);
-        $this->assertSame(['verified', ['targets' => 1205, 'terms' => 4]], [$run['state'], $run['cursor']], $text.': the manifest did not reach its end');
+        $this->assertSame(['verified', ['targets' => 1204, 'terms' => 4]], [$run['state'], $run['cursor']], $text.': the manifest did not reach its end');
         $this->assertTrue($run['files'] && $run['sealed'] && $run['moment'], $text.': the manifest does not seal its snapshots, the rules and the moment of the carry-over');
-        $this->assertSame([self::TARGETS, 1205], [$run['targets'], $run['total']], $text.': a starting balance is not the aggregate of its owner');
+        $this->assertSame([self::TARGETS, 1204], [$run['targets'], $run['total']], $text.': a starting balance is not the aggregate of its owner');
         $this->assertSame(self::ACTORS, $run['actors'], $text.': the kept last times are not the newest real ones per account and per normalized address');
         $this->assertSame([$votes, 11], [$run['votes'], $run['old']], $text.': a vote was invented or the old table was touched');
     }
 
     # The clean path keeps sum and count of every remaining target, restores the real terms, leaves polls and other events alone and converts the rules
+    # The rule and the rows of the shop, a module that left the release, are dropped and left alone like those of any other gone module
     #[Test]
     public function theCleanRunKeepsEveryAggregateAsItsStartingBalance(): void
     {
         $run = $this->getRun('clean')['first'];
         $this->checkFinished($run, 'first run');
         $this->assertSame([[2, 10, 37], [3, 0, 0], [4, 1, 5]], $run['owners'], 'The unit changed the aggregate of an owner');
-        $stat = ['targets' => 1205, 'terms' => 4, 'voting' => 1, 'foreign' => 2, 'orphan' => 2, 'dropped' => 1];
+        $stat = ['targets' => 1204, 'terms' => 4, 'voting' => 1, 'foreign' => 3, 'orphan' => 1, 'dropped' => 2];
         $this->assertSame($stat, $run['count'], 'The report does not count the rows it left alone');
         $this->assertSame(self::RULES, $run['rules'], 'The old rules were not carried into four keys with guests allowed and a zero period kept');
         $this->assertSame(['points' => '6.3.0', 'ratings' => '6.3.0'], $run['mark'], 'The mark of the unit is missing or the points mark was lost');
@@ -88,7 +88,7 @@ final class UpdateRatingsTest extends TestCase
         $run = $this->getRun('clean')['ready'];
         $this->checkFinished($run, 'converted rules');
         $rule = ['active' => '1', 'period' => '86400', 'detail' => '0', 'guests' => '0'];
-        $this->assertSame(['account' => $rule, 'forum' => $rule, 'node.news' => $rule, 'shop' => $rule], $run['rules']);
+        $this->assertSame(['account' => $rule, 'forum' => $rule, 'node.news' => $rule], $run['rules']);
         $this->assertSame(0, $run['count']['dropped']);
     }
 
@@ -134,7 +134,7 @@ final class UpdateRatingsTest extends TestCase
     {
         $run = $this->getRun('stop')['broken'];
         $this->assertFalse($run['done']);
-        $names = ['config/ratings.php account', 'config/ratings.php forum', 'config/ratings.php shop (missing)', 'probe_users 3', 'probe_forum 5', 'probe_products 8'];
+        $names = ['config/ratings.php account', 'config/ratings.php forum', 'probe_users 3', 'probe_forum 5'];
         foreach (array_merge($names, ['probe_rating 20', 'probe_rating 21', 'probe_rating 22', 'probe_rating 23']) as $name) {
             $this->assertStringContainsString($name, $run['text'], 'The preflight does not name '.$name);
         }
@@ -150,7 +150,7 @@ final class UpdateRatingsTest extends TestCase
         $this->assertMatchesRegularExpression('/setUpdatePoints\(\$db, \$xprefix\);\s+\$bodytext \.= setUpdateRatings\(\$db, \$xprefix\);/', $code);
         $mark = "['points' => '6.3.0', 'ratings' => '6.3.0', 'fields' => '6.3.0', 'node' => 'new']";
         $this->assertStringContainsString($mark, $code, 'A fresh installation does not leave the ratings mark');
-        $this->assertStringEndsWith('start the update again: ALTER TABLE `probe_products` ENGINE=InnoDB;', $this->getRun('flight')['engine']);
+        $this->assertStringEndsWith('start the update again: ALTER TABLE `probe_forum` ENGINE=InnoDB;', $this->getRun('flight')['engine']);
         $sql = (string)file_get_contents(dirname(__DIR__, 2).'/setup/sql/table_update6_3.sql');
         foreach (['rating_targets', 'rating_actors', 'rating_votes'] as $name) $this->assertStringContainsString('CREATE TABLE IF NOT EXISTS `{prefix}_'.$name.'`', $sql);
     }

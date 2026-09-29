@@ -706,14 +706,6 @@ CALL mkuseruniq('{prefix}_admins');
 CALL addidx('{prefix}_admins', 'email', '`email`(191)', 0);
 
 # =============================================================================
-# Batch B — _auto_links
-# =============================================================================
-
-CALL rencol('{prefix}_auto_links', 'sitename', 'title');
-CALL addidx('{prefix}_auto_links', 'added', '`added`', 0);
-CALL addidx('{prefix}_auto_links', 'hits', '`hits`', 0);
-
-# =============================================================================
 # Batch C — _blocks
 # =============================================================================
 
@@ -740,26 +732,6 @@ CALL renidx('{prefix}_categories', 'parentid', 'parent');
 CALL addidx('{prefix}_categories', 'modul', '`modul`', 0);
 CALL addidx('{prefix}_categories', 'parent', '`parent`', 0);
 CALL addidx('{prefix}_categories', 'ordern', '`ordern`', 0);
-
-# =============================================================================
-# Batch E — _clients
-# =============================================================================
-
-CALL rencol('{prefix}_clients', 'id_user', 'uid');
-CALL rencol('{prefix}_clients', 'id_product', 'prod');
-CALL rencol('{prefix}_clients', 'id_partner', 'part');
-CALL rencol('{prefix}_clients', 'partner_proz', 'proz');
-CALL rencol('{prefix}_clients', 'adres', 'addr');
-CALL rencol('{prefix}_clients', 'active', 'status');
-CALL renidx('{prefix}_clients', 'id_user', 'uid');
-CALL renidx('{prefix}_clients', 'id_product', 'prod');
-CALL renidx('{prefix}_clients', 'id_partner', 'part');
-CALL renidx('{prefix}_clients', 'active', 'status');
-CALL addidx('{prefix}_clients', 'uid', '`uid`', 0);
-CALL addidx('{prefix}_clients', 'prod', '`prod`', 0);
-CALL addidx('{prefix}_clients', 'part', '`part`', 0);
-CALL addidx('{prefix}_clients', 'status', '`status`', 0);
-CALL addidx('{prefix}_clients', 'email', '`email`(191)', 0);
 
 # =============================================================================
 # Batch F — _comment
@@ -818,32 +790,6 @@ CALL addidx('{prefix}_message', 'status', '`status`', 0);
 CALL addidx('{prefix}_message', 'lang', '`lang`', 0);
 
 # =============================================================================
-# Batch J — _order
-# =============================================================================
-
-CREATE TABLE IF NOT EXISTS `{prefix}_order` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `uid` INT UNSIGNED NOT NULL DEFAULT 0,
-  `email` VARCHAR(255) NOT NULL,
-  `info` MEDIUMTEXT NOT NULL,
-  `note` TEXT NOT NULL,
-  `ip` VARCHAR(45) NOT NULL DEFAULT '',
-  `agent` VARCHAR(255) NOT NULL DEFAULT '',
-  `time` DATETIME DEFAULT NULL,
-  `status` BOOLEAN NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CALL rencol('{prefix}_order', 'date',  'time');
-CALL rencol('{prefix}_order', 'mail',  'email');
-CALL rencol('{prefix}_order', 'com',   'note');
-CALL renidx('{prefix}_order', 'date',  'time');
-CALL addidx('{prefix}_order', 'status', '`status`', 0);
-CALL addidx('{prefix}_order', 'time',   '`time`',   0);
-CALL addcol('{prefix}_order', 'uid', 'INT UNSIGNED NOT NULL DEFAULT 0');
-CALL poscol('{prefix}_order', 'uid', 'INT UNSIGNED NOT NULL DEFAULT 0', 'id');
-
-# =============================================================================
 # Batch J — _points
 # =============================================================================
 
@@ -871,19 +817,6 @@ CREATE TABLE IF NOT EXISTS `{prefix}_points` (
   CONSTRAINT `{prefix}_fk_points_rid` FOREIGN KEY (`rid`) REFERENCES `{prefix}_points` (`id`) ON DELETE RESTRICT,
   CONSTRAINT `{prefix}_chk_points_uid` CHECK (`uid` > 0)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
-
-# =============================================================================
-# Batch K — _partners
-# =============================================================================
-
-CALL rencol('{prefix}_partners', 'id_user', 'uid');
-CALL rencol('{prefix}_partners', 'adres', 'addr');
-CALL rencol('{prefix}_partners', 'active', 'status');
-CALL renidx('{prefix}_partners', 'id_user', 'uid');
-CALL renidx('{prefix}_partners', 'active', 'status');
-CALL addidx('{prefix}_partners', 'uid', '`uid`', 0);
-CALL addidx('{prefix}_partners', 'status', '`status`', 0);
-CALL addidx('{prefix}_partners', 'email', '`email`(191)', 0);
 
 # =============================================================================
 # Batch K — _privat
@@ -929,18 +862,6 @@ CALL addidx('{prefix}_privat', 'out_new', '`uidout`, `delout`, `viewed`', 0);
 CALL addidx('{prefix}_privat', 'flood', '`uidout`, `time`', 0);
 CALL stopnull('{prefix}_privat', 'time', 'privat.time holds NULL rows: repair them before this upgrade');
 CALL modcol('{prefix}_privat', 'time', 'DATETIME NOT NULL');
-
-# =============================================================================
-# Batch K — _products
-# =============================================================================
-
-CALL rencol('{prefix}_products', 'preis', 'price');
-CALL rencol('{prefix}_products', 'totalvotes', 'tvotes');
-CALL rencol('{prefix}_products', 'active', 'status');
-CALL renidx('{prefix}_products', 'active', 'status');
-CALL addidx('{prefix}_products', 'cid', '`cid`', 0);
-CALL addidx('{prefix}_products', 'status', '`status`', 0);
-CALL addidx('{prefix}_products', 'ihome', '`ihome`', 0);
 
 # =============================================================================
 # Batch K — _rating
@@ -1009,6 +930,7 @@ CALL renidx('{prefix}_referer', 'date', 'time');
 CALL addidx('{prefix}_referer', 'uid', '`uid`', 0);
 CALL addidx('{prefix}_referer', 'time', '`time`', 0);
 CALL addidx('{prefix}_referer', 'ip', '`ip`', 0);
+CALL delcol('{prefix}_referer', 'lid');
 
 # =============================================================================
 # Batch K — _search
@@ -1045,41 +967,6 @@ CALL addidx('{prefix}_session', 'ip', '`ip`', 0);
 CALL rencol('{prefix}_voting', 'date', 'time');
 CALL addidx('{prefix}_voting', 'modul', '`modul`', 0);
 CALL addidx('{prefix}_voting', 'status', '`status`', 0);
-
-# =============================================================================
-# Batch M — missing target tables and legacy side tables
-# =============================================================================
-
-CREATE TABLE IF NOT EXISTS `{prefix}_clients_down` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `title` VARCHAR(100) NOT NULL,
-  `body` MEDIUMTEXT NOT NULL,
-  `url` VARCHAR(100) NOT NULL DEFAULT '',
-  `num` VARCHAR(10) NOT NULL DEFAULT '',
-  `code` VARCHAR(100) NOT NULL DEFAULT '',
-  `hits` INT UNSIGNED NOT NULL DEFAULT 0,
-  `pid` INT UNSIGNED NOT NULL DEFAULT 0,
-  `status` BOOLEAN NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`),
-  KEY `pid` (`pid`),
-  KEY `status` (`status`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `{prefix}_money` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `sum` INT UNSIGNED NOT NULL DEFAULT 0,
-  `email` VARCHAR(255) NOT NULL,
-  `intro` TEXT NOT NULL,
-  `note` TEXT NOT NULL,
-  `ip` VARCHAR(45) NOT NULL DEFAULT '',
-  `agent` VARCHAR(255) NOT NULL DEFAULT '',
-  `time` DATETIME DEFAULT NULL,
-  `status` BOOLEAN NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`),
-  KEY `email` (`email`(191)),
-  KEY `status` (`status`),
-  KEY `time` (`time`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 # =============================================================================
 # Batch L — _users
@@ -1162,34 +1049,6 @@ CALL addidx('{prefix}_users_temp', 'code', '`code`', 0);
 CALL fixgrppk('{prefix}_groups');
 CALL addidx('{prefix}_groups', 'name', '`name`(191)', 0);
 
-# _whois: rename legacy text and status columns before type normalization
-# Must run here (Batch N) because the MODIFY below references body/sdomain/shost/sdc
-CALL rencol('{prefix}_whois', 'hometext',  'body');
-CALL rencol('{prefix}_whois', 'st_domain', 'sdomain');
-CALL rencol('{prefix}_whois', 'st_host',   'shost');
-CALL rencol('{prefix}_whois', 'st_dc',     'sdc');
-
-# _whois: normalize types from legacy schema to match table.sql
-UPDATE `{prefix}_whois` SET `name`   = '' WHERE `name`   IS NULL;
-UPDATE `{prefix}_whois` SET `ip`     = '' WHERE `ip`     IS NULL;
-UPDATE `{prefix}_whois` SET `domain` = '' WHERE `domain` IS NULL;
-UPDATE `{prefix}_whois` SET `host`   = '' WHERE `host`   IS NULL;
-UPDATE `{prefix}_whois` SET `dc`     = '' WHERE `dc`     IS NULL;
-ALTER TABLE `{prefix}_whois`
-  MODIFY `id`      INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  MODIFY `uid`     INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `name`    VARCHAR(25) NOT NULL DEFAULT '',
-  MODIFY `ip`      VARCHAR(45) NOT NULL DEFAULT '',
-  MODIFY `time`    DATETIME DEFAULT NULL,
-  MODIFY `domain`  VARCHAR(255) NOT NULL DEFAULT '',
-  MODIFY `host`    VARCHAR(255) NOT NULL DEFAULT '',
-  MODIFY `dc`      VARCHAR(255) NOT NULL DEFAULT '',
-  MODIFY `body`    MEDIUMTEXT,
-  MODIFY `sdomain` TINYINT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `shost`   TINYINT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `sdc`     TINYINT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `status`  TINYINT UNSIGNED NOT NULL DEFAULT 0;
-
 # _users: normalize legacy zero-dates before changing column defaults
 UPDATE `{prefix}_users` SET `regdate` = '1970-01-01 00:00:01' WHERE `regdate` = '0000-00-00 00:00:00';
 UPDATE `{prefix}_users` SET `lastvis` = '1970-01-01 00:00:01' WHERE `lastvis` = '0000-00-00 00:00:00';
@@ -1229,8 +1088,6 @@ CALL rencol('{prefix}_admins',   'pwd',    'password');
 CALL rencol('{prefix}_admins',   'lvisit', 'lastvis');
 CALL renidx('{prefix}_admins',   'lvisit', 'lastvis');
 CALL addidx('{prefix}_admins',   'lastvis', '`lastvis`', 0);
-CALL rencol('{prefix}_products', 'count',  'counter');
-CALL rencol('{prefix}_order',    'com',    'note');
 CALL rencol('{prefix}_session',  'module', 'modul');
 
 # =============================================================================
@@ -1248,50 +1105,29 @@ CALL addidx('{prefix}_voting',     'lang', '`lang`', 0);
 CALL addidx('{prefix}_categories', 'modul_lang_status', '`modul`, `lang`, `status`', 0);
 
 # =============================================================================
-# Batch Q: field naming unification — step 3 (comment counters)
-# =============================================================================
-
-CALL rencol('{prefix}_products', 'com',  'comments');
-
-# =============================================================================
 # Batch S: content column renames — step 5
 #   _forum:    hometext → body
-#   _products: text     → intro,  bodytext → body
 #   _comment:  comment  → body
 # =============================================================================
 
 CALL rencol('{prefix}_forum',    'hometext',    'body');
-CALL rencol('{prefix}_products', 'text',        'intro');
-CALL rencol('{prefix}_products', 'bodytext',    'body');
 CALL rencol('{prefix}_comment',  'comment',     'body');
 
 # =============================================================================
 # Batch T: content column renames — remaining tables
 #   _categories: description → intro
 #   _groups:     description → intro
-#   _auto_links: description → intro
-#   _whois renames its columns in Batch N, before the MODIFY there
 # =============================================================================
 
 CALL rencol('{prefix}_categories', 'description', 'intro');
 CALL rencol('{prefix}_groups',     'description', 'intro');
-CALL rencol('{prefix}_auto_links', 'description', 'intro');
-CALL addidx('{prefix}_whois',      'uid',  '`uid`',  0);
-CALL addidx('{prefix}_whois',      'time', '`time`', 0);
 
 # =============================================================================
 # Batch V: naming consistency — url, email, website, pview/pread/... columns
 # =============================================================================
 
-# _auto_links: link → url, mail → email
-CALL rencol('{prefix}_auto_links', 'link',        'url');
-CALL rencol('{prefix}_auto_links', 'mail',        'email');
-
 # _referer: link → url
 CALL rencol('{prefix}_referer',    'link',        'url');
-
-# _order: mail → email
-CALL rencol('{prefix}_order',      'mail',        'email');
 
 # _categories: auth_* → p* (permission columns)
 CALL rencol('{prefix}_categories', 'auth_view',   'pview');
@@ -1304,32 +1140,17 @@ CALL rencol('{prefix}_categories', 'auth_mod',    'pmod');
 
 # =============================================================================
 # Batch W: body column unification
-#   _clients_down: infotext   → body,  prod_id   → pid
 #   _message:      content    → body
 #   _newsletter:   content    → body
 #   _privat:       content    → body
 #   _voting:       questions  → body
 # =============================================================================
 
-CALL rencol('{prefix}_clients_down', 'infotext',   'body');
-CALL rencol('{prefix}_clients_down', 'prod_id',    'pid');
-CALL addidx('{prefix}_clients_down', 'pid',    '`pid`',    0);
-CALL addidx('{prefix}_clients_down', 'status', '`status`', 0);
 CALL rencol('{prefix}_message',      'content',    'body');
 CALL rencol('{prefix}_newsletter',   'content',    'body');
 CALL addidx('{prefix}_newsletter',   'time',    '`time`',      0);
 CALL rencol('{prefix}_privat',       'content',    'body');
 CALL rencol('{prefix}_voting',       'questions',  'body');
-
-# _money: rename legacy columns to the normalized 6.3 schema
-CALL rencol('{prefix}_money', 'mail', 'email');
-CALL rencol('{prefix}_money', 'info', 'intro');
-CALL rencol('{prefix}_money', 'com',  'note');
-CALL rencol('{prefix}_money', 'date', 'time');
-CALL renidx('{prefix}_money', 'date', 'time');
-CALL addidx('{prefix}_money', 'email',  '`email`(191)', 0);
-CALL addidx('{prefix}_money', 'status', '`status`',     0);
-CALL addidx('{prefix}_money', 'time',   '`time`',       0);
 
 # =============================================================================
 # Final type alignment to setup/sql/table.sql
@@ -1359,16 +1180,6 @@ ALTER TABLE `{prefix}_admins`
   MODIFY `lastvis`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
 UPDATE `{prefix}_admins` SET `editor` = 'plain' WHERE `editor` IN ('', '0', '1');
-
-ALTER TABLE `{prefix}_auto_links`
-  MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  MODIFY `title` VARCHAR(100) NOT NULL,
-  MODIFY `intro` TEXT NOT NULL,
-  MODIFY `url` VARCHAR(100) NOT NULL,
-  MODIFY `email` VARCHAR(100) NOT NULL,
-  MODIFY `hits` INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `outs` INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `added` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
 ALTER TABLE `{prefix}_blocks`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -1408,37 +1219,6 @@ ALTER TABLE `{prefix}_categories`
   MODIFY `pdelete` VARCHAR(100) NOT NULL DEFAULT '',
   MODIFY `pmod` VARCHAR(100) NOT NULL DEFAULT '';
 
-ALTER TABLE `{prefix}_clients`
-  MODIFY `id`   INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  MODIFY `name` VARCHAR(255) NOT NULL,
-  MODIFY `addr` VARCHAR(255) NOT NULL DEFAULT '',
-  MODIFY `phone` VARCHAR(255) NOT NULL DEFAULT '',
-  MODIFY `email` VARCHAR(255) NOT NULL,
-  MODIFY `website` VARCHAR(255) NOT NULL DEFAULT '',
-  MODIFY `info` VARCHAR(255) NOT NULL DEFAULT '',
-  MODIFY `uid` INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `prod` INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `part` INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `proz` TINYINT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `regdate` INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `enddate` INT UNSIGNED NOT NULL DEFAULT 0;
-
-UPDATE `{prefix}_clients_down` SET `body` = '' WHERE `body` IS NULL;
-UPDATE `{prefix}_clients_down` SET `url`  = '' WHERE `url`  IS NULL;
-UPDATE `{prefix}_clients_down` SET `num`  = '' WHERE `num`  IS NULL;
-UPDATE `{prefix}_clients_down` SET `code` = '' WHERE `code` IS NULL;
-
-ALTER TABLE `{prefix}_clients_down`
-  MODIFY `id`     INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  MODIFY `title`  VARCHAR(100) NOT NULL,
-  MODIFY `body`   MEDIUMTEXT NOT NULL,
-  MODIFY `url`    VARCHAR(100) NOT NULL DEFAULT '',
-  MODIFY `num`    VARCHAR(10) NOT NULL DEFAULT '',
-  MODIFY `code`   VARCHAR(100) NOT NULL DEFAULT '',
-  MODIFY `hits`   INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `pid`    INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `status` BOOLEAN NOT NULL DEFAULT 0;
-
 # An older 6.2 schema lets a comment author be NULL, which the unsigned NOT NULL below refuses under strict mode
 UPDATE `{prefix}_comment` SET `uid` = 0 WHERE `uid` IS NULL;
 
@@ -1448,7 +1228,7 @@ UPDATE `{prefix}_comment` SET `uid` = 0 WHERE `uid` IS NULL;
 # while TEXT holds 65535. With STRICT_TRANS_TABLES that is a lost post, not a lost image. The
 # summary columns (`intro`, and `users.block`) stay TEXT on purpose: a list query draws twenty of
 # them onto one page, and an image referenced by address or uploaded to the server still fits
-# there. auto_links.intro and users.sig widen only to TEXT and for a reason of their own: a
+# there. users.sig widens only to TEXT and for a reason of its own: a
 # VARCHAR(255) behind a rich editor holds about 127 Cyrillic characters, which is one sentence
 ALTER TABLE `{prefix}_comment`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -1502,50 +1282,11 @@ ALTER TABLE `{prefix}_message`
   MODIFY `view`   BOOLEAN NOT NULL DEFAULT 1,
   MODIFY `lang`   VARCHAR(30) NOT NULL DEFAULT '';
 
-UPDATE `{prefix}_money` SET `email` = '' WHERE `email` IS NULL;
-UPDATE `{prefix}_money` SET `intro` = '' WHERE `intro` IS NULL;
-UPDATE `{prefix}_money` SET `note`  = '' WHERE `note`  IS NULL;
-UPDATE `{prefix}_money` SET `ip`    = '' WHERE `ip`    IS NULL;
-UPDATE `{prefix}_money` SET `agent` = '' WHERE `agent` IS NULL;
-
-ALTER TABLE `{prefix}_money`
-  MODIFY `id`     INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  MODIFY `sum`    INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `email`  VARCHAR(255) NOT NULL,
-  MODIFY `intro`  TEXT NOT NULL,
-  MODIFY `note`   MEDIUMTEXT NOT NULL,
-  MODIFY `ip`     VARCHAR(45) NOT NULL DEFAULT '',
-  MODIFY `agent`  VARCHAR(255) NOT NULL DEFAULT '',
-  MODIFY `time`   DATETIME DEFAULT NULL,
-  MODIFY `status` BOOLEAN NOT NULL DEFAULT 0;
-
 ALTER TABLE `{prefix}_newsletter`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `title` VARCHAR(50) NOT NULL,
   MODIFY `body` MEDIUMTEXT,
   MODIFY `send` INT UNSIGNED NOT NULL DEFAULT 0;
-
-UPDATE `{prefix}_order` SET `ip`    = '' WHERE `ip`    IS NULL;
-UPDATE `{prefix}_order` SET `agent` = '' WHERE `agent` IS NULL;
-
-ALTER TABLE `{prefix}_order`
-  MODIFY `id`     INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  MODIFY `email`  VARCHAR(255) NOT NULL,
-  MODIFY `info`   MEDIUMTEXT NOT NULL,
-  MODIFY `note`   MEDIUMTEXT NOT NULL,
-  MODIFY `ip`     VARCHAR(45) NOT NULL DEFAULT '',
-  MODIFY `agent`  VARCHAR(255) NOT NULL DEFAULT '',
-  MODIFY `time`   DATETIME DEFAULT NULL,
-  MODIFY `status` BOOLEAN NOT NULL DEFAULT 0;
-
-ALTER TABLE `{prefix}_partners`
-  MODIFY `id`   INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  MODIFY `name` VARCHAR(255) NOT NULL,
-  MODIFY `email` VARCHAR(255) NOT NULL,
-  MODIFY `uid` INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `regdate` INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `rest` INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `bek` INT UNSIGNED NOT NULL DEFAULT 0;
 
 # The message table is reconciled column by column: a bare MODIFY rebuilds the table even when nothing changes, and an installation already on 6.3 must not be rewritten
 CALL modcol('{prefix}_privat', 'id',    'INT UNSIGNED NOT NULL AUTO_INCREMENT');
@@ -1554,24 +1295,6 @@ CALL modcol('{prefix}_privat', 'body',  'MEDIUMTEXT NOT NULL');
 CALL modcol('{prefix}_privat', 'uidin', 'INT UNSIGNED NOT NULL DEFAULT 0');
 CALL modcol('{prefix}_privat', 'uidout', 'INT UNSIGNED NOT NULL DEFAULT 0');
 CALL modcol('{prefix}_privat', 'ip',    'VARCHAR(45) NOT NULL DEFAULT \'\'');
-
-ALTER TABLE `{prefix}_products`
-  MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  MODIFY `title` VARCHAR(100) NOT NULL,
-  MODIFY `intro` TEXT NOT NULL,
-  MODIFY `body` MEDIUMTEXT NOT NULL,
-  MODIFY `assoc` TEXT NOT NULL,
-  MODIFY `cid` INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `price` INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `vote` INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `ihome` BOOLEAN NOT NULL DEFAULT 0,
-  MODIFY `acomm` BOOLEAN NOT NULL DEFAULT 0,
-  MODIFY `comments` INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `counter` INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `votes` INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `tvotes` INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `fix` BOOLEAN NOT NULL DEFAULT 0,
-  MODIFY `status` BOOLEAN DEFAULT 0;
 
 ALTER TABLE `{prefix}_rating`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -1591,8 +1314,7 @@ ALTER TABLE `{prefix}_referer`
   MODIFY `uid` INT UNSIGNED NOT NULL,
   MODIFY `name` VARCHAR(40) NOT NULL,
   MODIFY `ip` VARCHAR(45) NOT NULL DEFAULT '',
-  MODIFY `time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  MODIFY `lid` INT UNSIGNED NOT NULL DEFAULT 0;
+  MODIFY `time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
 UPDATE `{prefix}_session` SET `url` = '' WHERE `url` IS NULL;
 
@@ -2009,8 +1731,6 @@ DROP PROCEDURE IF EXISTS finalize_user_names;
 # =============================================================================
 #
 # 1. Legacy side tables handled by this script:
-#    - `{prefix}_money`        — columns renamed, types aligned, indexes added
-#    - `{prefix}_clients_down` — columns renamed, types aligned, indexes added
 #    - `{prefix}_modules` is outside this migration
 #
 # 2. Password hashing migration (PHP side — already done in current codebase):

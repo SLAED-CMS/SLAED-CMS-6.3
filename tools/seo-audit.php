@@ -46,7 +46,7 @@ function getSeoAuditPage(string $url): array {
 }
 
 $details = [
-    'shop' => 'WebPage', 'forum' => 'WebPage', 'voting' => 'WebPage', 'docs' => 'Article', 'jokes' => 'Article', 'media' => 'Article',
+    'forum' => 'WebPage', 'voting' => 'WebPage', 'docs' => 'Article', 'jokes' => 'Article', 'media' => 'Article',
 ];
 foreach ($details as $mod => $type) {
     $page = getSeoAuditPage($base.'/index.php?name='.$mod);

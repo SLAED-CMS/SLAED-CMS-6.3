@@ -343,8 +343,7 @@ Comment storage, same date:
 
 - `{prefix}_comment`: 7353 rows — files 4821, voting 1084, news 1083, faq 141,
   pages 116, links 104, shop 2, media 0; 7348 published, 3 pending;
-- `_comment`, `_users`, `_products`, `_voting` and `_newsletter` are all
-  InnoDB.
+- `_comment`, `_users`, `_voting` and `_newsletter` are all InnoDB.
 
 The index gaps that reading found are closed. `{prefix}_comment` in
 `setup/sql/table.sql` now carries `ip_time(ip, time, id)` for the flood check
@@ -563,6 +562,6 @@ Recommended focused targets:
 - `/`
 - `/index.php?name=forum`
 - `/admin.php`
-- one heavy admin module page, such as `admin.php?name=shop`
+- one heavy admin module page, such as `admin.php?name=node`
 - one changelog cache miss and one changelog cache hit
 - one page with active right/left blocks

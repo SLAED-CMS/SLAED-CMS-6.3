@@ -21,24 +21,17 @@ final class PointOwnersTest extends TestCase
             "addEvent('adjust', 'account', 'reset:'.\$_SESSION[\$skey]['id'].':'.\$uid.':'.\$part,",
         ],
         'modules/account/index.php' => ["addEvent('register', 'account', 'user:'.\$nuid,", "addEvent('login', 'account', 'day:'.gmdate('Ymd'),"],
-        'modules/auto_links/index.php' => ["addEvent('visit', 'auto-links', 'link:'.\$id,"],
         'modules/contact/index.php' => ["addEvent('message', 'contact', 'req:'.bin2hex(random_bytes(16)),"],
         'modules/forum/index.php' => [
             "addEvent('comment', 'forum.topic', 'post:'.\$lpid,", "addEvent('publish', 'forum.topic', 'topic:'.\$lpid,",
             "getEventId(\$act, 'forum.topic', (\$pid ? 'post:' : 'topic:').\$id,", "getEventId('comment', 'forum.topic', 'post:'.\$id,",
             "addEvent(\$act, 'forum.topic', 'reverse:'.\$rid,",
         ],
-        'modules/order/admin/index.php' => [
-            "addEvent('order', 'order', 'order:'.\$id,", "getEventId('order', 'order', 'order:'.\$id,", "addEvent('order', 'order', 'reverse:'.\$rid,",
-        ],
         'modules/recommend/index.php' => ["addEvent('recommend', 'recommend', 'req:'.bin2hex(random_bytes(16)),"],
-        'modules/shop/admin/index.php' => [
-            "addEvent('order', 'shop', 'client:'.\$id,", "getEventId('order', 'shop', 'client:'.\$id,", "addEvent('order', 'shop', 'reverse:'.\$rid,",
-        ],
     ];
 
     private const LABELS = [
-        '_POINTS_PUBLISH', '_POINTS_COMMENT', '_POINTS_VIEW', '_POINTS_DOWNLOAD', '_POINTS_VISIT', '_POINTS_POLL', '_POINTS_ORDER', '_POINTS_FAVORITE',
+        '_POINTS_PUBLISH', '_POINTS_COMMENT', '_POINTS_VIEW', '_POINTS_DOWNLOAD', '_POINTS_VISIT', '_POINTS_POLL', '_POINTS_FAVORITE',
         '_POINTS_MESSAGE', '_POINTS_RECOMMEND', '_POINTS_REGISTER', '_POINTS_LOGIN', '_POINTS_REPORT', '_POINTS_MODERATE', '_POINTS_ADJUST',
     ];
 
@@ -157,8 +150,6 @@ final class PointOwnersTest extends TestCase
         $this->checkOrder($this->getBody($com, 'addComment'), ['$this->setNodeCount(', '$this->updateNodeAction(', '$this->updateTargetPoints('], 'addComment');
         $this->checkOrder($this->getBody($com, 'setStatus'), ['$this->setNodeCount(', '$this->updateNodeAction(', '$this->updateTargetPoints('], 'setStatus');
         $this->checkOrder($this->getBody($com, 'deleteComment'), ['$this->setNodeCount(', '$this->updateTargetPoints('], 'deleteComment');
-        $shop = $this->getBody('modules/shop/admin/index.php', 'clientsave');
-        $this->checkOrder($shop, ['$pnt->setUserLocks([(int)$ouid, (int)$uid])', "\$pnt->getEventId('order', 'shop'", "\$pnt->addEvent('order', 'shop', 'client:'"], 'clientsave');
     }
 
     # The two screens that print the labels build the constant name from the action, which is why no search by name finds a reader

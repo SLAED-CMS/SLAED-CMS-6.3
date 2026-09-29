@@ -531,7 +531,7 @@ final class NodeRouteTest extends TestCase
         $run = $this->getMode('seo');
         $this->assertSame([404, 404, 404, 200, true, $run['site'].'/index.php?go=rss&name=docs', $run['site'].'/index.php?go=rss&name=news', true, false], $run['rss'],
             'A feed answers without rss, the alternate link names a wrong feed or a description links relatively');
-        $this->assertSame(['news', 'docs', 'shop'], $run['data']['feeds'], 'The list of feeds differs from the types with rss and the shop');
+        $this->assertSame(['news', 'docs'], $run['data']['feeds'], 'The list of feeds differs from the types with rss');
     }
 
     # The support card of the administration shows every root message beyond the first page and every reply beyond the cap of a branch
@@ -539,13 +539,6 @@ final class NodeRouteTest extends TestCase
     public function theSupportCardShowsTheWholeCorrespondence(): void
     {
         $this->assertSame([303, true, 200, 20, 6], $this->getMode('seo')['support'], 'The support card hides a part of the correspondence');
-    }
-
-    # The letters of a shop without a product on sale render without a link instead of failing
-    #[Test]
-    public function theLettersOfAnEmptyShopRender(): void
-    {
-        $this->assertSame([true, 0], $this->getMode('seo')['data']['letters'], 'The letters of an empty shop fail or link to nothing');
     }
 
     # A stale block instance stays off without a log line per render, and the hint of the related field is bound to its input

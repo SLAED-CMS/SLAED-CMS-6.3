@@ -27,7 +27,7 @@ final class CommentStateTest extends TestCase
     {
         $data = $this->getProbe('commentstage');
         if (!$data['admin']) $this->markTestSkipped('No super administrator with a stored address on this installation');
-        if (empty($data['target'])) $this->markTestSkipped('No writable shop target on this installation');
+        if (empty($data['target'])) $this->markTestSkipped('No writable poll on this installation');
         return $data;
     }
 
@@ -146,7 +146,7 @@ final class CommentStateTest extends TestCase
     public function theWritePathStoresSourceAndNotEscapedHtml(): void
     {
         $data = $this->getProbe('commentguest');
-        if (!isset($data['norm'])) $this->markTestSkipped('No writable shop target on this installation');
+        if (!isset($data['norm'])) $this->markTestSkipped('No writable poll on this installation');
         [$error, $body, $word, $cens, $repl] = $data['norm'];
         $this->assertSame('', $error, 'The crafted body was refused');
         $this->assertStringNotContainsString('[usehtml]', $body, 'A visitor stored the trusted html token');

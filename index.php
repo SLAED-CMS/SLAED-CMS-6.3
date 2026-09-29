@@ -182,14 +182,6 @@ if (empty($go)) {
             case 'updateVotingResult': updateVotingResult(); break;
         }
         if (in_array($op, ['updatePost', 'updateVotingResult'], true)) Cache::addEpoch();
-    } elseif ($go == 2) {
-        getLang('shop');
-        Cache::setHeaders(false);
-        switch($op) {
-            default: getCartSummary(); break;
-            case 'addCartItem': addCartItem(); break;
-            case 'deleteCartItem': deleteCartItem(); break;
-        }
     } elseif ($go == 3) {
         Cache::setHeaders(false);
         switch($op) {

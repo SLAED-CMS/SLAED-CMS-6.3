@@ -11,7 +11,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function getFieldAreas(): array {
     global $conf;
     $out = [];
-    foreach (['account' => _ACCOUNT, 'forum' => _FORUM, 'order' => _ORDER] as $area => $label) {
+    foreach (['account' => _ACCOUNT, 'forum' => _FORUM] as $area => $label) {
         $out[$area] = ['label' => $label, 'defs' => is_array($conf['fields'][$area] ?? null) ? $conf['fields'][$area] : []];
     }
     foreach (getNodeTypeMap() as $name => $type) {

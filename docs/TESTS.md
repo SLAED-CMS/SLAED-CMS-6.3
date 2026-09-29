@@ -149,21 +149,13 @@ inside `hx-headers`, `[[sldyn:...]]` markers and the captcha field — otherwise
 the list never compares equal even to itself. On a difference the fresh capture
 is written next to the baseline as `<module>.actual.html` for diffing.
 
-Both modules that render comments are meant to be covered: `shop` and `voting`. A
-`capture` that reports fewer than two has lost one of them — re-prepare it and
-capture once more, or the parity claim silently excludes a module.
+Every module with published comments in the database is meant to be covered. A
+`capture` that reports fewer modules than the database holds has lost one of them —
+re-prepare it and capture once more, or the parity claim silently excludes a module.
 
-Coverage assumes **every module is enabled**, and `config/modules.php` now has
-all 41 active. An inactive module is a gap in the test stand, not a reason to
+Coverage assumes **every module is enabled** in `config/modules.php`. An inactive module is a gap in the test stand, not a reason to
 skip it — the comment engine has to keep working for both regardless of what
 any single site switches on.
-
-One needed the stand prepared:
-
-- `shop` — product 24 carried two comments while its `acomm` mode was `0`, so the
-  region was never rendered. Prepare with
-  `UPDATE {prefix}_products SET acomm = 1 WHERE id = 24;`, revert with
-  `UPDATE {prefix}_products SET acomm = 0 WHERE id = 24;`
 
 After any change to `config/modules.php`, delete `config/local.php` so the
 generated config cache rebuilds — a direct edit to a source config file is not

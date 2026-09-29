@@ -26,7 +26,6 @@ class Comment {
     # Account has no denormalised comment counter; its target exists only to restore profile discussions and their points
     private const MODULES = [
         'account' => '_users',
-        'shop' => '_products',
         'voting' => '_voting',
     ];
 
@@ -405,11 +404,8 @@ class Comment {
             if ($this->site['prof'] === 1 && !is_user() && !isAdmin()) return CommentMode::Disabled;
             $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT id FROM '.$tab.' WHERE id = :id', ['id' => $id]));
             return $row ? CommentMode::Open : CommentMode::Disabled;
-        } elseif ($mod == 'voting') {
-            $sql = 'SELECT acomm FROM '.$tab.' WHERE id = :id AND modul = \'\' AND time <= NOW() AND (enddate >= NOW() AND status = \'0\' OR status = \'1\')';
-        } else {
-            $sql = 'SELECT acomm FROM '.$tab.' AS t WHERE t.id = :id AND t.time <= NOW() AND t.status != \'0\' '.catmids($mod, 't.cid');
         }
+        $sql = 'SELECT acomm FROM '.$tab.' WHERE id = :id AND modul = \'\' AND time <= NOW() AND (enddate >= NOW() AND status = \'0\' OR status = \'1\')';
         $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['id' => $id]));
         return $row ? (CommentMode::tryFrom(intval($row['acomm'])) ?? CommentMode::Disabled) : CommentMode::Disabled;
     }

@@ -10,10 +10,10 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 final class Rating {
 
     # The closed grammar of a scope, which is also the key of its rule: the three fixed subsystems and one public name of a registered Node type
-    private const SCOPE = '/^(?:account|forum|shop|node\.[a-z][a-z0-9]{0,19})$/D';
+    private const SCOPE = '/^(?:account|forum|node\.[a-z][a-z0-9]{0,19})$/D';
 
     # The scopes whose rule has to exist whatever Node types are registered
-    private const FIXED = ['account', 'forum', 'shop'];
+    private const FIXED = ['account', 'forum'];
 
     # The canonical decimal string the period is stored as, and the 32 lowercase hex characters of one delivery key
     private const NUMBER = '/^(?:0|[1-9][0-9]{0,18})$/D';

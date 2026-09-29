@@ -18,7 +18,7 @@
 # The argument secure runs the public form on the same integrations: the upload right and limits, the write window, the captcha and the title in search
 # The argument tree runs the document tree on docs switched to the tree, and its child treeext counts the statements of the tree read of one view
 # The argument modes runs the display modes on five types; serve modes keeps a server with the same types up until the file stop appears
-# The argument seo runs the canonical routes, the head and the feeds, and its child seoext asks the core for the letters of an empty shop and the feeds
+# The argument seo runs the canonical routes, the head and the feeds, and its child seoext asks the core for the feeds
 # The argument head runs the routes, the notices, the page cache and the theme header
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
@@ -1371,7 +1371,7 @@ function getRouteIntegData(): array {
 }
 
 # The seed of the guards on top of the integrations: the marks of the data update, a select field of accounts, a favorite worth points and a limit of two
-# It adds a hostile Node title, a script in an intro, three products, a client, a partner, an order of anna, the poll screen for docsman and shop shelves of two languages
+# It adds a hostile Node title, a script in an intro, three forum topics on a shelf of the site language, the poll screen for docsman and forum shelves of two languages
 function addRouteGuardRows(PDO $pdo, string $work): void {
     $pre = RPREF.'_';
     setRouteFile($work.'/config/update.php', ['update' => ['fields' => '6.3.0', 'points' => '6.3.0', 'ratings' => '6.3.0']]);
@@ -1383,7 +1383,6 @@ function addRouteGuardRows(PDO $pdo, string $work): void {
     $data = require $work.'/config/points.php';
     $data['points']['active'] = '1';
     $data['points']['actions']['favorite'] = ['points' => '5', 'period' => '0', 'limit' => '0'];
-    $data['points']['actions']['order'] = ['points' => '10', 'period' => '0', 'limit' => '0'];
     setRouteFile($work.'/config/points.php', $data);
     $data = require $work.'/config/favorites.php';
     $data['favorites'] = array_replace($data['favorites'], ['favact' => '1', 'favorites' => '2']);
@@ -1391,16 +1390,14 @@ function addRouteGuardRows(PDO $pdo, string $work): void {
     $pdo->exec('UPDATE '.$pre.'nodes SET title = \'<img src=x onerror=alert(1)>Beta\', intro = \'[usehtml]<script>noise(3)</script><style>.noise{}</style>[/usehtml]Beta plumage\''
         .' WHERE id = 102');
     $pdo->exec('UPDATE '.$pre.'nodes SET intro = \'<script>alert(2)</script>Gamma\' WHERE id = 105');
-    $pdo->exec('INSERT INTO '.$pre.'products (id, cid, time, title, intro, body, assoc, status) VALUES'
-        .' (7, 0, NOW() - INTERVAL 1 DAY, \'Lamp\', \'\', \'\', \'\', 1), (8, 0, NOW() - INTERVAL 1 DAY, \'Desk\', \'\', \'\', \'\', 1),'
-        .' (9, 0, NOW() - INTERVAL 1 DAY, \'Hidden\', \'\', \'\', \'\', 0)');
-    $pdo->exec('INSERT INTO '.$pre.'clients (id, uid, prod, name, email, status) VALUES (1, 2, 7, \'Client\', \'client@probe.test\', 2)');
-    $pdo->exec('INSERT INTO '.$pre.'partners (id, uid, name, email, status) VALUES (1, 3, \'Partner\', \'partner@probe.test\', 1)');
-    $pdo->exec('INSERT INTO '.$pre.'order (id, uid, email, info, note, time, status) VALUES (1, 2, \'anna@probe.test\', \'\', \'\', NOW(), 0)');
+    $topic = fn(int $id, string $title, int $stat): string => '('.$id.', 0, 60, 3, \'boris\', \''.$title.'\', NOW() - INTERVAL 1 DAY, \'\', \'\', '
+        .'3, \'boris\', NOW() - INTERVAL 1 DAY, '.$stat.')';
+    $pdo->exec('INSERT INTO '.$pre.'forum (id, pid, cid, uid, name, title, time, body, field, luid, lname, ltime, status) VALUES '
+        .$topic(7, 'Lamp', 2).', '.$topic(8, 'Desk', 2).', '.$topic(9, 'Hidden', 0));
     $pdo->exec('UPDATE '.$pre.'admins SET modules = \'node-docs,voting\' WHERE id = 4');
     $lang = (string)(require $work.'/config/global.php')['language'];
-    $pdo->exec('INSERT INTO '.$pre.'categories (id, modul, title, intro, pview, pread, ppost, lang) VALUES (60, \'shop\', \'Own shelf\', \'\', \'0|0\', \'0|0\', \'0|0\', '
-        .$pdo->quote($lang).'), (61, \'shop\', \'Alien shelf\', \'\', \'0|0\', \'0|0\', \'0|0\', '.$pdo->quote($lang === 'en' ? 'de' : 'en').')');
+    $pdo->exec('INSERT INTO '.$pre.'categories (id, modul, title, intro, pview, pread, ppost, lang) VALUES (60, \'forum\', \'Own shelf\', \'\', \'0|0\', \'0|0\', \'0|0\', '
+        .$pdo->quote($lang).'), (61, \'forum\', \'Alien shelf\', \'\', \'0|0\', \'0|0\', \'0|0\', '.$pdo->quote($lang === 'en' ? 'de' : 'en').')');
     $pdo->exec('INSERT INTO '.$pre.'categories (id, modul, title, intro, topics, posts, lang) VALUES (70, \'forum\', \'Drifted forum\', \'\', 5, 7, \'\')');
 }
 
@@ -1444,7 +1441,7 @@ function getRouteConf(string $work): array {
     return array_map(fn($v) => sha1_file($work.'/config/'.$v.'.php'), ['fields', 'node']);
 }
 
-# The guards over real HTTP: search output, the fields screen, the type of a Node deletion, favorites, Node categories, the shop and order actions, the head category language
+# The guards over real HTTP: search output, the fields screen, the type of a Node deletion, favorites, Node categories, the head category language
 function getRouteGuard(PDO $pdo, string $work): array {
     $pre = RPREF.'_';
     $out = [];
@@ -1490,8 +1487,8 @@ function getRouteGuard(PDO $pdo, string $work): array {
     [, $fav, $ftok] = getRoutePageBits(getRouteReply('anna', 'GET', 'index.php?name=news&op=view&id=102')['body']);
     $try = fn(string $mod, int $id): int => getRouteFavPost('anna', str_replace(['id=102', 'mod=news'], ['id='.$id, 'mod='.$mod], $fav), $ftok)['code'];
     $favs = fn(string $mod): int => $count('SELECT COUNT(*) FROM '.$pre.'favorites WHERE uid = 2 AND modul = \''.$mod.'\'');
-    $out['fav'] = [$fav !== '', $try('bogus', 5), $favs('bogus'), $try('forum', 999), $favs('forum'), $try('shop', 9), $try('shop', 7), $try('news', 102), $try('shop', 8),
-        $favs('shop'), $favs('news'), $count('SELECT COUNT(*) FROM '.$pre.'points WHERE uid = 2 AND action = \'favorite\''),
+    $out['fav'] = [$fav !== '', $try('bogus', 5), $favs('bogus'), $try('forum', 999), $favs('forum'), $try('forum', 9), $try('forum', 7), $try('news', 102), $try('forum', 8),
+        $favs('forum'), $favs('news'), $count('SELECT COUNT(*) FROM '.$pre.'points WHERE uid = 2 AND action = \'favorite\''),
         $pdo->query('SELECT source FROM '.$pre.'points WHERE uid = 2 AND action = \'favorite\' ORDER BY source')->fetchAll(PDO::FETCH_COLUMN)];
     $cats = fn(): int => $count('SELECT COUNT(*) FROM '.$pre.'categories');
     $add = fn(string $who, array $row): int => getRouteReply($who, 'POST', 'admin.php', $row + ['name' => 'categories', 'op' => 'addsave', 'title' => 'Probe cat',
@@ -1506,31 +1503,6 @@ function getRouteGuard(PDO $pdo, string $work): array {
     getRouteReply('root', 'POST', 'admin.php', ['name' => 'categories', 'op' => 'save', 'id' => '1', 'modul' => 'news', 'title' => 'Open', 'description' => '',
         'imgcat' => '', 'lang' => '', 'parent' => '0', 'status' => '1', 'ppost' => ['2|1'], 'pread' => ['0|0'], 'token' => getRouteToken($edit, 'save')]);
     $out['cats']['save'] = $pdo->query('SELECT ppost, pread FROM '.$pre.'categories WHERE id = 1')->fetch(PDO::FETCH_NUM);
-    $shop = getRouteReply('root', 'GET', 'admin.php?name=shop&op=partners&status=1')['body'];
-    $stok = getRouteToken($shop, 'partnerset');
-    $rows = fn(): array => [$count('SELECT status FROM '.$pre.'clients WHERE id = 1'), $count('SELECT COUNT(*) FROM '.$pre.'clients'),
-        $count('SELECT status FROM '.$pre.'partners WHERE id = 1'), $count('SELECT COUNT(*) FROM '.$pre.'partners'),
-        $count('SELECT status FROM '.$pre.'products WHERE id = 7'), $count('SELECT COUNT(*) FROM '.$pre.'products')];
-    $before = $rows();
-    $codes = [];
-    foreach (['clientset&id=1', 'clientdel&id=1', 'partnerset&id=1', 'partnerdel&id=1', 'productops&typ=a0&id=7', 'productops&typ=d&id=7'] as $op) {
-        $codes[] = getRouteReply('root', 'GET', 'admin.php?name=shop&op='.$op.'&token='.$stok)['code'];
-    }
-    $out['shop']['get'] = [$stok !== '', $codes, $rows() === $before];
-    getRouteReply('root', 'POST', 'admin.php', ['name' => 'shop', 'op' => 'clientset', 'id' => '1', 'token' => $stok]);
-    getRouteReply('root', 'POST', 'admin.php', ['name' => 'shop', 'op' => 'productops', 'typ' => 'a0', 'id' => '7', 'token' => $stok]);
-    $out['shop']['post'] = [$before, $rows()];
-    $order = getRouteReply('root', 'GET', 'admin.php?name=order')['body'];
-    $otok = getRouteToken($order, 'activate');
-    $state = fn(): array => [$count('SELECT COUNT(*) FROM '.$pre.'order WHERE id = 1'), $count('SELECT status FROM '.$pre.'order WHERE id = 1'),
-        $count('SELECT COUNT(*) FROM '.$pre.'points WHERE uid = 2 AND action = \'order\'')];
-    getRouteReply('root', 'GET', 'admin.php?name=order&op=activate&id=1&act=1&token='.$otok);
-    getRouteReply('root', 'GET', 'admin.php?name=order&op=delete&id=1&token='.$otok);
-    $out['order']['get'] = [$otok !== '', $state()];
-    getRouteReply('root', 'POST', 'admin.php', ['name' => 'order', 'op' => 'activate', 'id' => '1', 'act' => '2', 'token' => $otok]);
-    $out['order']['two'] = $state();
-    getRouteReply('root', 'POST', 'admin.php', ['name' => 'order', 'op' => 'activate', 'id' => '1', 'act' => '1', 'token' => $otok]);
-    $out['order']['one'] = $state();
     $vote = getRouteReply('docsman', 'GET', 'admin.php?name=voting')['body'];
     $gone = getRouteReply('docsman', 'POST', 'admin.php', ['name' => 'voting', 'op' => 'delete', 'id' => '7', 'token' => getRouteToken($vote, 'delete')]);
     $out['poll'] = [$gone['code'], (int)getRouteCol($pdo, 102, 'poll'), $count('SELECT COUNT(*) FROM '.$pre.'voting WHERE id = 7')];
@@ -1538,18 +1510,10 @@ function getRouteGuard(PDO $pdo, string $work): array {
     $drift = $count('SELECT topics + posts FROM '.$pre.'categories WHERE id = 70');
     $synced = getRouteReply('root', 'POST', 'admin.php', ['name' => 'forum', 'op' => 'sync', 'token' => getRouteToken($forum, 'sync')]);
     $out['forum'] = [$drift, $synced['code'], $count('SELECT topics + posts FROM '.$pre.'categories WHERE id = 70')];
-    $links = getRouteReply('root', 'GET', 'admin.php?name=auto_links&op=config')['body'];
-    $ltok = getRouteToken($links, 'name="img"');
-    $img = fn(): string => (string)(require $work.'/config/auto_links.php')['auto_links']['img'];
-    $was = $img();
-    getRouteReply('root', 'POST', 'admin.php?name=auto_links&op=configsave', ['img' => '', 'token' => $ltok]);
-    $none = $img();
-    getRouteReply('root', 'POST', 'admin.php?name=auto_links&op=configsave', ['img' => 'hits.gif', 'token' => $ltok]);
-    $out['banner'] = [str_contains($links, 'value="hits.gif"'), $was !== '' && $none === $was, $img()];
     $data = require $work.'/config/global.php';
     setRouteFile($work.'/config/global.php', array_replace($data, ['multilingual' => '1']));
     if (is_file($work.'/config/local.php')) unlink($work.'/config/local.php');
-    $trail = fn(int $cid): string => preg_match('#"@type":\s*"BreadcrumbList".*?\]#s', getRouteReply('', 'GET', 'index.php?name=shop&cat='.$cid)['body'], $hit) ? $hit[0] : '';
+    $trail = fn(int $cid): string => preg_match('#"@type":\s*"BreadcrumbList".*?\]#s', getRouteReply('', 'GET', 'index.php?name=forum&cat='.$cid)['body'], $hit) ? $hit[0] : '';
     $out['lang'] = [str_contains($trail(60), 'Own shelf'), str_contains($trail(61), 'Alien shelf')];
     setRouteFile($work.'/config/global.php', $data);
     if (is_file($work.'/config/local.php')) unlink($work.'/config/local.php');
@@ -2210,10 +2174,9 @@ function getRouteHead(PDO $pdo, string $work): array {
     return $out;
 }
 
-# The child seoext of the seo run asks the core directly: the letters of a shop without a product on sale and the feeds of the site
+# The child seoext of the seo run asks the core directly for the feeds of the site
 function getRouteSeoData(): array {
-    $html = getLetterNavi('shop');
-    return ['letters' => [$html !== '', substr_count($html, '<a ')], 'feeds' => array_keys(getRssFeeds())];
+    return ['feeds' => array_keys(getRssFeeds())];
 }
 
 # The child favhold of the intact run holds the account of anna with one more favorite for two seconds, as a parallel request at the limit does before its commit

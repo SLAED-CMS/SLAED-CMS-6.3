@@ -1195,13 +1195,13 @@ function getProbePlace(): array {
         }
         $out['hand'][$place] = $diff;
     }
-    $rule = getUploadPlaceRule('shop.attach');
-    $plain = getUploadRuleData('shop');
+    $rule = getUploadPlaceRule('forum.attach');
+    $plain = getUploadRuleData('forum');
     $diff = [];
     foreach ($plain as $key => $val) {
         if (($rule[$key] ?? null) !== $val) $diff[] = $key;
     }
-    $out['rules']['shop.attach'] = $rule;
+    $out['rules']['forum.attach'] = $rule;
     $out['attach'] = $diff;
     foreach (['users', 'users.', '.avatar', 'users.avatar.x', 'Users.Avatar', '', 'users avatar', 'users.bogus', 'nosuch.attach', 'files.dist'] as $bad) {
         $out['bad'][$bad] = (bool)getUploadPlaceRule($bad)['ok'];

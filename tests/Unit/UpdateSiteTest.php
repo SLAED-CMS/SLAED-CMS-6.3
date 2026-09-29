@@ -80,7 +80,7 @@ final class UpdateSiteTest extends TestCase
             $this->assertSame(['old' => 300, 'next' => 301], $run[$name]['ids'], $name);
             $this->assertSame(0, $run[$name]['dupes'], $name.': a repeat removed a vote');
         }
-        $this->assertSame(['account', 'forum', 'shop'], array_keys($run['first']['ratings']));
+        $this->assertSame(['account', 'forum'], array_keys($run['first']['ratings']));
         $this->assertTrue($run['third']['same']);
         $this->assertFalse($run['unlock']);
     }

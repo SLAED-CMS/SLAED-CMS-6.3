@@ -120,16 +120,16 @@ function getProbeReap(array $child): mixed {
 # The string form: the stored shape of an independent source, the published snapshot, the unchanged save and every refused name
 function getProbeString(): array {
     $before = getProbeHashes();
-    $done = setConfigFile('whois.php', ['zeta' => 2, 'alpha' => true, 'text' => "one\r\ntwo\rthree", 'deep' => ['num' => 7, 'flag' => false]]);
-    $code = (string)file_get_contents(CONFIG_DIR.'/whois.php');
+    $done = setConfigFile('sample.php', ['zeta' => 2, 'alpha' => true, 'text' => "one\r\ntwo\rthree", 'deep' => ['num' => 7, 'flag' => false]]);
+    $code = (string)file_get_contents(CONFIG_DIR.'/sample.php');
     $after = getProbeHashes();
-    $data = getProbeSource('whois.php');
-    $local = getProbeLocal()['whois'] ?? null;
-    $same = setConfigFile('whois.php', ['zeta' => 2, 'alpha' => true, 'text' => "one\r\ntwo\rthree", 'deep' => ['num' => 7, 'flag' => false]]);
-    $bytes = (string)file_get_contents(CONFIG_DIR.'/whois.php') === $code;
-    $merge = setConfigFile('whois.php', ['zeta' => 3], ['zeta' => 1, 'kept' => 'yes']);
+    $data = getProbeSource('sample.php');
+    $local = getProbeLocal()['sample'] ?? null;
+    $same = setConfigFile('sample.php', ['zeta' => 2, 'alpha' => true, 'text' => "one\r\ntwo\rthree", 'deep' => ['num' => 7, 'flag' => false]]);
+    $bytes = (string)file_get_contents(CONFIG_DIR.'/sample.php') === $code;
+    $merge = setConfigFile('sample.php', ['zeta' => 3], ['zeta' => 1, 'kept' => 'yes']);
     $deny = [];
-    foreach (['local.php', 'system.php', 'fields.php', 'uploads.php', 'ratings.php', 'node.php', '../whois.php', 'Whois.php', 'whois', 'sub/whois.php'] as $name) {
+    foreach (['local.php', 'system.php', 'fields.php', 'uploads.php', 'ratings.php', 'node.php', '../sample.php', 'Sample.php', 'sample', 'sub/sample.php'] as $name) {
         $deny[$name] = setConfigFile($name, ['probe' => '1']);
     }
     return [
@@ -140,7 +140,7 @@ function getProbeString(): array {
         'local' => $local,
         'same' => $same,
         'bytes' => $bytes,
-        'merge' => $merge ? getProbeSource('whois.php') : null,
+        'merge' => $merge ? getProbeSource('sample.php') : null,
         'deny' => $deny,
         'trace' => getProbeTrace(),
         'temps' => glob(CONFIG_DIR.'/*.tmp') ?: [],
@@ -187,7 +187,7 @@ function getProbeClosure(): array {
     });
     $nested = null;
     setConfigFile(static function (array $base, Closure $save) use (&$nested): string {
-        $nested = setConfigFile('whois.php', ['nested' => '1']);
+        $nested = setConfigFile('sample.php', ['nested' => '1']);
         return 'aborted';
     });
     $proof = ['name' => 'probe', 'id' => 7, 'old' => 1, 'new' => 2, 'kind' => 'update'];
@@ -291,7 +291,7 @@ function getProbeFaults(): array {
         $out['build'] = true;
     }
     file_put_contents(CONFIG_DIR.'/ratings.php', $good);
-    $out['free'] = [getProbeChild('try', [CONFIG_DIR])['free'] ?? null, setConfigFile('whois.php', ['after' => '1']), getProbeTrace()['marker']];
+    $out['free'] = [getProbeChild('try', [CONFIG_DIR])['free'] ?? null, setConfigFile('sample.php', ['after' => '1']), getProbeTrace()['marker']];
     setProbeReset();
     $proof = ['name' => 'probe', 'id' => 7, 'old' => 1, 'new' => 2, 'kind' => 'update'];
     setConfigFile(static function (array $base, Closure $save) use ($proof): string {
@@ -339,7 +339,7 @@ function getProbeCase(string $tamper): array {
         'why' => $jour['why'] ?? null,
         'states' => array_map(static fn(array $one): string => $one['state'], $jour['files'] ?? []),
         'served' => sha1_file(CONFIG_DIR.'/local.php') === $local,
-        'refused' => [setConfigFile('whois.php', ['late' => '1']), setConfigFile(getProbeWriter('ratings', ['late' => '1|1|1']))],
+        'refused' => [setConfigFile('sample.php', ['late' => '1']), setConfigFile(getProbeWriter('ratings', ['late' => '1|1|1']))],
     ];
     unlink(CONFIG_DIR.'/local.php');
     $conf = getConfig();
@@ -354,7 +354,7 @@ function getProbeCase(string $tamper): array {
         'local' => getProbeLocal()['fields']['crash'] ?? null,
         'cache' => is_file(CACHE_DIR.'/pages/probe.html'),
         'trace' => getProbeTrace(),
-        'save' => $out['restore'] ? setConfigFile('whois.php', ['late' => '2']) : null,
+        'save' => $out['restore'] ? setConfigFile('sample.php', ['late' => '2']) : null,
     ];
     return $out;
 }

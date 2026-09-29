@@ -18,9 +18,7 @@ final class UpdateFieldsTest extends TestCase
 
     private const FORUM = [5 => '{"field1":"option1","field3":"option2"}', 7 => '{"field1":"option2","field3":"option1"}', 9 => ''];
 
-    private const ORDER = [1 => '{"field1":"Z1","field3":"Bob"}'];
-
-    private const COUNT = ['account' => 1202, 'forum' => 3, 'order' => 1];
+    private const COUNT = ['account' => 1202, 'forum' => 3];
 
     private static array $probe = [];
 
@@ -49,10 +47,11 @@ final class UpdateFieldsTest extends TestCase
         $this->assertSame(['verified', self::COUNT, self::COUNT], [$run['state'], $run['cursor'], $run['count']], $text.': the manifest did not reach its end');
         $this->assertTrue($run['files'] && $run['sealed'], $text.': the manifest does not seal its snapshots, the stored rows and the published definitions');
         $this->assertSame([1 => 1200], $run['bulk'], $text.': a row of the three batches was not carried over');
-        $this->assertSame([self::FORUM, self::ORDER], [$run['forum'], $run['order']], $text.': the forum or the order rows differ');
+        $this->assertSame(self::FORUM, $run['forum'], $text.': the forum rows differ');
     }
 
     # The clean path names every position by its original number, maps the four slots, keeps a text zero, drops placeholders and empty texts, and picks the one layout that fits
+    # The definitions of the order area belong to a module that left the release and are not carried
     #[Test]
     public function theCleanRunCarriesEveryRowOver(): void
     {
@@ -68,7 +67,7 @@ final class UpdateFieldsTest extends TestCase
         $this->assertSame([10, 20, 40, 50, 60], array_column($rules['account'], 'sort'));
         $this->assertSame(['option1' => 'A', 'option2' => 'B', 'option3' => 'C'], array_map(fn($v) => $v['title'], $rules['account']['field1']['options']['items']));
         $this->assertSame(['field1', 'field3'], array_keys($rules['forum']));
-        $this->assertSame(['field1', 'field3'], array_keys($rules['order']));
+        $this->assertSame(['account', 'forum'], array_keys($rules), 'The definitions of an area without an owner were carried');
         foreach ($rules as $set) {
             foreach ($set as $rule) {
                 $this->assertSame(
@@ -98,7 +97,7 @@ final class UpdateFieldsTest extends TestCase
     {
         $run = $this->getRun('clean')['named'];
         $this->assertTrue($run['done'], $run['text']);
-        $this->assertSame(['verified', ['account' => 0, 'forum' => 0, 'order' => 0]], [$run['state'], $run['count']]);
+        $this->assertSame(['verified', ['account' => 0, 'forum' => 0]], [$run['state'], $run['count']]);
         $this->assertSame($this->getRun('clean')['first']['rules'], $run['rules'], 'The named definitions were rewritten');
         $this->assertSame('6.3.0', $run['mark']['fields'] ?? null);
     }
@@ -122,7 +121,7 @@ final class UpdateFieldsTest extends TestCase
         foreach ([
             'mark' => 'the mark is set and no manifest exists',
             'named' => 'already in the 6.3 format',
-            'forged' => 'order.json does not match its manifest',
+            'forged' => 'forum.json does not match its manifest',
             'foreign' => 'neither its source nor its target',
         ] as $name => $text) {
             $this->assertFalse($stop[$name]['done'], $name);
@@ -144,7 +143,7 @@ final class UpdateFieldsTest extends TestCase
         $this->assertFalse($run['done']);
         $want = [
             'probe_users 3 (field4 is refused by the shared check: format)', 'probe_users 4 (value 7 holds data and has no definition)',
-            'probe_order 1 (the full and the short layout both fit and differ)', 'probe_order 2 (field1 is refused by the shared check: format)',
+            'probe_forum 8 (the full and the short layout both fit and differ)', 'probe_forum 9 (field1 is refused by the shared check: format)',
         ];
         foreach ($want as $text) $this->assertStringContainsString($text, $run['text']);
         $this->assertStringNotContainsString('probe_users 2 ', $run['text'], 'An unknown caption was refused instead of becoming a disabled option');
@@ -190,16 +189,16 @@ final class UpdateFieldsTest extends TestCase
         foreach (['account position 1 (an option caption repeats)', 'account position 2 (four slots', 'account position 3 (four slots', 'forum field1.default'] as $text) {
             $this->assertStringContainsString($text, $run['text']);
         }
-        $this->assertSame([null, false, 'a||b'], [$run['state'], $run['dir'], $run['order'][1]]);
+        $this->assertSame([null, false, 'a||b'], [$run['state'], $run['dir'], $run['forum'][5]]);
     }
 
-    # The three columns hold one mebibyte of JSON in a fresh schema, the update widens them and never narrows them again, and the branch calls the unit after the ratings
+    # The two columns hold one mebibyte of JSON in a fresh schema, the update widens them and never narrows them again, and the branch calls the unit after the ratings
     #[Test]
     public function theSchemaAndTheBranchCarryTheUnit(): void
     {
         $root = dirname(__DIR__, 2);
         $fresh = (string)file_get_contents($root.'/setup/sql/table.sql');
-        foreach (['users' => 'field', 'forum' => 'field', 'order' => 'info'] as $tab => $col) {
+        foreach (['users' => 'field', 'forum' => 'field'] as $tab => $col) {
             $this->assertSame(
                 1,
                 preg_match('/CREATE TABLE `\{prefix\}_'.$tab.'` \((?:(?!CREATE TABLE).)*?`'.$col.'` MEDIUMTEXT NOT NULL,/s', $fresh),
@@ -208,8 +207,8 @@ final class UpdateFieldsTest extends TestCase
         }
         $sql = (string)file_get_contents($root.'/setup/sql/table_update6_3.sql');
         $sql = (string)preg_replace('/CREATE TABLE IF NOT EXISTS `\{prefix\}_node[a-z_]*` \(.*?\n\)\s*ENGINE[^;]*;/s', '', $sql);
-        $this->assertSame(0, preg_match('/`(?:field|info)`\s+TEXT NOT NULL/', $sql), 'The update narrows a column of extra field values back to TEXT');
-        $this->assertSame(4, preg_match_all('/`(?:field|info)`\s+MEDIUMTEXT NOT NULL/', $sql), 'The update does not widen forum.field, order.info and users.field');
+        $this->assertSame(0, preg_match('/`field`\s+TEXT NOT NULL/', $sql), 'The update narrows a column of extra field values back to TEXT');
+        $this->assertSame(2, preg_match_all('/`field`\s+MEDIUMTEXT NOT NULL/', $sql), 'The update does not widen forum.field and users.field');
         $code = (string)file_get_contents($root.'/setup/index.php');
         $this->assertSame(1, preg_match('/setUpdatePoints\(\$db, \$xprefix\);\s+\$bodytext \.= setUpdateRatings\(\$db, \$xprefix\);'
             .'\s+\$bodytext \.= setUpdateFields\(\$db, \$xprefix\);/', $code), 'The order of the units changed');

@@ -9,7 +9,7 @@ return [
         'anum' => '50',
         'anump' => '10',
         'asearch' => '0',
-        'mods' => 'forum,shop',
+        'mods' => 'forum',
         'slet' => '3',
         'slimit' => '500',
         'snum' => '25',

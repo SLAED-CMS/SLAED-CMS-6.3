@@ -14,7 +14,7 @@
 # Optional: SLAED_REMOTE_URL names a public file for the positive remote row; without it that row reports as not run rather than as passed
 # Optional: SLAED_ROUTE_INSECURE=1 disables TLS verification, for a stand with a self signed certificate only
 #
-# The editor mode rewrites the two upload switches of the shop record in config/uploads.php
+# The editor mode rewrites the two upload switches of the forum record in config/uploads.php
 # Every mode that drops the compiled configuration also makes the server mint a fresh master secret into config/security.php, so that file is guarded and restored whatever happens
 # It restores what it changed byte for byte, but it changes it while it runs; run it against a stand, never against production data
 
@@ -282,22 +282,22 @@ function setFormBody(array $pair): string {
 # A guest reaches the listing only where the record enables guest upload; where it does not, the access check answers first
 function checkReadRows(string $ajar, string $ujar, string $gjar): void {
     echo "Editor read and refusal rows\n";
-    $base = ROOTDIR.'/uploads/shop';
+    $base = ROOTDIR.'/uploads/forum';
     $png = addTestFixture('ed.png', 'png', 120, 90);
     $cut = addTestFixture('cut.png', 'cut');
     $txt = addTestFixture('ed.txt', 'txt');
     foreach (['moderator' => $ajar, 'user' => $ujar] as $who => $jar) {
-        $url = '/index.php?go=4&op=editorFiles&place=shop.attach&token='.getScopeToken($jar, 'ajax');
+        $url = '/index.php?go=4&op=editorFiles&place=forum.attach&token='.getScopeToken($jar, 'ajax');
         $out = json_decode(getHttpReply($jar, $url)['body'], true);
         $good = is_array($out['files'] ?? null);
         checkMatrixRow('editor listing answers '.$who, $good, $good ? count($out['files']).' files' : 'no file list');
     }
-    $url = '/index.php?go=4&op=editorFiles&place=shop.attach&token='.getScopeToken($gjar, 'ajax');
+    $url = '/index.php?go=4&op=editorFiles&place=forum.attach&token='.getScopeToken($gjar, 'ajax');
     $out = json_decode(getHttpReply($gjar, $url)['body'], true);
     $open = is_array($out['files'] ?? null);
     $done = $open ? $out['files'] === [] : ($out['ok'] ?? null) === false;
     checkMatrixRow('a guest receives no historical file', $done, $open ? 'listed and empty' : 'refused by the record');
-    $res = getHttpReply($ujar, '/index.php?go=4&op=nosuchop&place=shop.attach&token='.getScopeToken($ujar, 'ajax'));
+    $res = getHttpReply($ujar, '/index.php?go=4&op=nosuchop&place=forum.attach&token='.getScopeToken($ujar, 'ajax'));
     checkMatrixRow('unknown editor operation answers 400', $res['code'] === 400 && str_contains($res['body'], '"ok":false'));
     $res = getHttpReply($ujar, '/index.php?go=4&op=nosuchop&place=nosuchmodule.attach&token='.getScopeToken($ujar, 'ajax'));
     checkMatrixRow('unknown operation with unknown module answers 400', $res['code'] === 400);
@@ -305,7 +305,7 @@ function checkReadRows(string $ajar, string $ujar, string $gjar): void {
     foreach ($cases as $name => [$tok, $file]) {
         $was = getDirTree($base);
         $send = ['token' => $tok !== '' ? $tok : getScopeToken($ujar, 'upload')];
-        getHttpReply($ujar, '/index.php?go=4&op=editorUpload&place=shop.attach', $send, ['file' => $file]);
+        getHttpReply($ujar, '/index.php?go=4&op=editorUpload&place=forum.attach', $send, ['file' => $file]);
         checkMatrixRow('editor write with '.$name.' publishes nothing', getTreeDelta($base, $was) === []);
     }
     $was = getDirTree(ROOTDIR.'/uploads/presentation');
@@ -363,18 +363,18 @@ function checkOpsGateRows(string $ujar, string $png): void {
     $was = getDirTree(ROOTDIR.'/uploads/avatars');
     $send = ['token' => 'bogus'];
     $deny = getHttpReply($ujar, '/index.php?go=4&op=editorUpload&place=users.avatar', $send, ['file' => $png])['body'];
-    $miss = getHttpReply($ujar, '/index.php?go=4&op=editorUpload&place=shop.attach', $send, ['file' => $png])['body'];
+    $miss = getHttpReply($ujar, '/index.php?go=4&op=editorUpload&place=forum.attach', $send, ['file' => $png])['body'];
     $done = getTreeDelta(ROOTDIR.'/uploads/avatars', $was) === [] && $deny !== $miss && str_contains($deny, '"ok":false');
     checkMatrixRow('a field place is refused the upload route before its token', $done, substr($deny, 0, 90));
     $good = getScopeToken($ujar, 'ajax');
     $send = ['file' => 'nosuchfile.png'];
     $deny = getHttpReply($ujar, '/index.php?go=4&op=editorDelete&place=users.avatar&token='.$good, $send)['body'];
-    $miss = getHttpReply($ujar, '/index.php?go=4&op=editorDelete&place=shop.attach&token='.$good, $send)['body'];
+    $miss = getHttpReply($ujar, '/index.php?go=4&op=editorDelete&place=forum.attach&token='.$good, $send)['body'];
     $done = $deny !== $miss && str_contains($deny, '"ok":false');
     checkMatrixRow('a field place is refused the deletion route before its token', $done, substr($deny, 0, 90));
     $res = getHttpReply($ujar, '/index.php?go=4&op=editorFiles&place=users&token='.$good);
     checkMatrixRow('a place without a slot is refused', str_contains($res['body'], 'malformed'), substr($res['body'], 0, 90));
-    $res = getHttpReply($ujar, '/index.php?go=4&op=editorFiles&mod=shop&token='.$good);
+    $res = getHttpReply($ujar, '/index.php?go=4&op=editorFiles&mod=forum&token='.$good);
     checkMatrixRow('the former module parameter reaches no route', str_contains($res['body'], 'Illegal file access'), substr($res['body'], 0, 90));
 }
 
@@ -526,10 +526,10 @@ function checkWriteRows(string $ajar, string $ujar): void {
     $png = addTestFixture('ed.png', 'png', 120, 90);
     $txt = addTestFixture('ed.txt', 'txt');
 
-    $base = ROOTDIR.'/uploads/shop';
+    $base = ROOTDIR.'/uploads/forum';
     $was = getDirTree($base);
     $send = ['token' => getScopeToken($ujar, 'upload')];
-    $out = json_decode(getHttpReply($ujar, '/index.php?go=4&op=editorUpload&place=shop.attach', $send, ['file' => $png])['body'], true);
+    $out = json_decode(getHttpReply($ujar, '/index.php?go=4&op=editorUpload&place=forum.attach', $send, ['file' => $png])['body'], true);
     $new = getTreeDelta($base, $was);
     checkMatrixRow('editor write publishes one owned file', ($out['ok'] ?? false) && count($new) === 1, implode(', ', $new));
 
@@ -596,7 +596,7 @@ function getUploadRuleKeys(): array {
     return $all[1];
 }
 
-# Rewrite the two upload switches of the shop record and drop the merged configuration cache, so the next request reads the record this row is about
+# Rewrite the two upload switches of the forum record and drop the merged configuration cache, so the next request reads the record this row is about
 # The record is a pipe separated string in a fixed key order; only the two positions of the switches are touched and every other value the record carries is kept
 # Both positions and the field count come from the shipped key order, so a key added to or removed from the record moves this walk with it instead of writing into the wrong field
 function setUploadSwitch(int $user, int $guest): bool {
@@ -606,12 +606,12 @@ function setUploadSwitch(int $user, int $guest): bool {
     if ($upos === false || $gpos === false) return false;
     $file = ROOTDIR.'/config/uploads.php';
     $code = (string)file_get_contents($file);
-    if (!preg_match("#'shop' => '([^']*)',#", $code, $hit)) return false;
+    if (!preg_match("#'forum' => '([^']*)',#", $code, $hit)) return false;
     $rule = explode('|', $hit[1]);
     if (count($rule) !== count($keys)) return false;
     $rule[$upos] = (string)$user;
     $rule[$gpos] = (string)$guest;
-    $done = file_put_contents($file, str_replace($hit[0], "'shop' => '".implode('|', $rule)."',", $code)) !== false;
+    $done = file_put_contents($file, str_replace($hit[0], "'forum' => '".implode('|', $rule)."',", $code)) !== false;
     $gone = deleteConfigMerge();
     clearstatcache();
     return $done && $gone;
@@ -619,16 +619,16 @@ function setUploadSwitch(int $user, int $guest): bool {
 
 # Publish one editor file as the given visitor and report whether the route accepted it and what the destination gained
 function addEditorFile(string $jar, string $png): array {
-    $base = ROOTDIR.'/uploads/shop';
+    $base = ROOTDIR.'/uploads/forum';
     $was = getDirTree($base);
     $send = ['token' => getScopeToken($jar, 'upload')];
-    $out = json_decode(getHttpReply($jar, '/index.php?go=4&op=editorUpload&place=shop.attach', $send, ['file' => $png])['body'], true);
+    $out = json_decode(getHttpReply($jar, '/index.php?go=4&op=editorUpload&place=forum.attach', $send, ['file' => $png])['body'], true);
     return ['ok' => (bool)($out['ok'] ?? false), 'new' => getTreeDelta($base, $was)];
 }
 
 # List the editor files of the given visitor and report whether a list was answered at all and which names it carried
 function getEditorFiles(string $jar): array {
-    $url = '/index.php?go=4&op=editorFiles&place=shop.attach&token='.getScopeToken($jar, 'ajax');
+    $url = '/index.php?go=4&op=editorFiles&place=forum.attach&token='.getScopeToken($jar, 'ajax');
     $out = json_decode(getHttpReply($jar, $url)['body'], true);
     $rows = is_array($out['files'] ?? null) ? array_column($out['files'], 'file') : null;
     return ['ok' => $rows !== null, 'files' => $rows ?? []];
@@ -642,7 +642,7 @@ function checkEditorMatrixRows(string $ajar, string $ujar, string $gjar): void {
     $who = ['moderator' => $ajar, 'member' => $ujar, 'guest' => $gjar];
     foreach ([[0, 0], [1, 0], [0, 1], [1, 1]] as [$user, $guest]) {
         if (!setUploadSwitch($user, $guest)) {
-            setSkipRow('the access matrix', 'the shop record of config/uploads.php could not be rewritten', true);
+            setSkipRow('the access matrix', 'the forum record of config/uploads.php could not be rewritten', true);
             return;
         }
         $name = 'userupload='.$user.' guestupload='.$guest;
@@ -661,7 +661,7 @@ function checkEditorMatrixRows(string $ajar, string $ujar, string $gjar): void {
 function checkEditorGuestRows(string $gjar): void {
     echo "Editor guest isolation\n";
     if (!setUploadSwitch(1, 1)) {
-        setSkipRow('the guest isolation rows', 'the shop record of config/uploads.php could not be rewritten', true);
+        setSkipRow('the guest isolation rows', 'the forum record of config/uploads.php could not be rewritten', true);
         return;
     }
     $png = addTestFixture('gx.png', 'png', 60, 40);
@@ -737,7 +737,7 @@ if ($GLOBALS['fails'] > 0) {
 if ($mode === 'read' || $mode === 'all') checkReadRows($ajar, $ujar, $gjar);
 if ($mode === 'write' || $mode === 'all') checkWriteRows($ajar, $ujar);
 if ($mode === 'write' || $mode === 'all') checkAvatarRows($ujar, $gjar);
-# The editor rows rewrite the two upload switches of the shop record between themselves, so the file is kept and restored byte for byte around the whole block
+# The editor rows rewrite the two upload switches of the forum record between themselves, so the file is kept and restored byte for byte around the whole block
 if ($mode === 'editor' || $mode === 'all') {
     $path = ROOTDIR.'/config/uploads.php';
     $befo = (string)file_get_contents($path);

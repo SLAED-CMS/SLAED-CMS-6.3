@@ -97,7 +97,6 @@ Frontend helper routing includes:
 | `go` value | Role |
 |---|---|
 | `1` | common AJAX helpers such as comments, ratings, favorites, voting, and sessions |
-| `2` | shop cart helpers |
 | `3` | scheduler HTTP runner |
 | `4` | uploads and editor file helpers |
 | `5` | admin-only helper endpoints |
@@ -443,7 +442,7 @@ ship with it quietly missing. An interface that draws no button is not a guard.
 empties any string carrying a dot, so `users.avatar` cannot travel as `mod` at all;
 the grammar above is what validates it. The `$go == 4` entry guard in `index.php`
 reads `place`, and every endpoint URL is built server side —
-`index.php?go=4&op=editorUpload&place=shop.attach`.
+`index.php?go=4&op=editorUpload&place=forum.attach`.
 
 The window built on this boundary is documented in `docs/WINDOW.md`; the runtime
 that drives it in `docs/EDITORS.md`.

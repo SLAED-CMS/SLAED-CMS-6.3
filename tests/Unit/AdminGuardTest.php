@@ -120,22 +120,6 @@ final class AdminGuardTest extends TestCase
         $this->assertSame(['admin', 'saved', false], [$data['saved'], $data['text'], $data['warn']]);
     }
 
-    # Every state-changing handler of shop and order requires POST with a body token of its scope, like the rest of the panel
-    #[Test]
-    public function theShopAndOrderHandlersRequirePost(): void
-    {
-        $list = [
-            'shop' => ['clientset', 'clientsave', 'clientdel', 'productsave', 'productops', 'partnerset', 'partnersave', 'partnerdel', 'export', 'save'],
-            'order' => ['save', 'delete', 'activate', 'configsave'],
-        ];
-        foreach ($list as $mod => $funcs) {
-            $path = 'modules/'.$mod.'/admin/index.php';
-            $this->assertStringNotContainsString('checkSiteToken(', $this->getFile($path), $path.' still accepts a token from a header or a GET');
-            $this->assertStringNotContainsString('getSiteToken()', $this->getFile($path), $path.' renders a token of another scope');
-            foreach ($funcs as $func) $this->assertStringContainsString("checkAdminPost('".$mod."')", $this->getBody($path, $func), $mod.' '.$func.'() has no POST check');
-        }
-    }
-
     # No admin handler accepts a token from a header, a GET or another scope, and no admin address carries one
     #[Test]
     public function everyAdminHandlerRequiresPost(): void
@@ -214,12 +198,12 @@ final class AdminGuardTest extends TestCase
         $this->assertStringNotContainsString('PREFIX_DB', substr($query, 0, (int)strpos($query, "\n    }\n")), 'The installer runs queries before PREFIX_DB exists');
     }
 
-    # A forum topic or a product is added under the lock of the account and a recount in the same transaction, like a Node material
+    # A forum topic is added under the lock of the account and a recount in the same transaction, like a Node material
     #[Test]
     public function aPlainFavoriteCountsUnderTheAccountLock(): void
     {
         $body = $this->getBody('core/user.php', 'addFavorite');
-        $plain = substr($body, (int)strpos($body, "in_array(\$mod, ['forum', 'shop'], true)"));
+        $plain = substr($body, (int)strpos($body, "\$mod === 'forum'"));
         $this->assertStringContainsString('setSqlBegin()', $plain);
         $this->assertStringContainsString('_users WHERE id = :uid FOR UPDATE', $plain);
         $this->assertStringContainsString("\$all < intval(\$conf['favorites']['favorites'])", $plain);

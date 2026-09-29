@@ -4,7 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
-# The rating rules of the 6.2 site of tests/Fixtures/update62/site.sql as period, switch and detail per module, two of them of modules the release removed
+# The rating rules of the 6.2 site of tests/Fixtures/update62/site.sql as period, switch and detail per module, three of them of modules the release removed
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
 $confra = [

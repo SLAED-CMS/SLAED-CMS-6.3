@@ -15,7 +15,7 @@ An event is identified by four values that together form the unique key `event` 
 | Part | Meaning |
 |---|---|
 | `uid` | Recipient. For an ordinary user action the recipient is also the actor. |
-| `action` | One of the fifteen approved actions. Decides the amount. |
+| `action` | One of the fourteen approved actions. Decides the amount. |
 | `scope` | Context of the event, for audit, grouping and uniqueness. Never changes meaning or amount. |
 | `source` | Server-made stable key of one fact. Never taken from a user request. |
 
@@ -32,7 +32,6 @@ The closed vocabulary (`Point::ACTIONS`):
 | `download` | a counted download |
 | `visit` | a counted visit of an external link |
 | `poll` | a vote in a poll |
-| `order` | a confirmed order |
 | `favorite` | an item added to favorites |
 | `message` | a message or contact request |
 | `recommend` | a recommendation of the site |
@@ -51,8 +50,8 @@ Actions are validated in PHP, not by SQL `ENUM` or `CHECK`, so the vocabulary is
 | `scope` | `^[a-z][a-z0-9.:-]{0,49}$` | 1..50 ASCII |
 | `source` | `^[A-Za-z0-9][A-Za-z0-9:._-]{0,63}$` | 1..64 ASCII |
 
-Neither value is ever an SQL identifier, class name, table or path. The scope grammar has no underscore, which is
-why the `auto_links` module files its events under `auto-links`; an event with scope `auto_links` is refused.
+Neither value is ever an SQL identifier, class name, table or path. The scope grammar has no underscore, so an event
+whose scope carries one is refused.
 Node materials use `node.<type name>`; fixed modules use their module name (see the owner map).
 
 The source prefix `reverse:` is reserved for compensations: an event without `rid` whose source starts with
@@ -178,7 +177,7 @@ return [
 | Key | Type | Default | Rule |
 |---|---|---|---|
 | `points.active` | string | `'1'` | `'0'` or `'1'`. `'0'` stops ordinary awards (without any SQL) and hides points in the interface; compensations and `adjust` keep working. |
-| `points.actions` | array | 15 rules | Exactly the fifteen actions, each an array of exactly the three keys below. |
+| `points.actions` | array | 14 rules | Exactly the fourteen actions, each an array of exactly the three keys below. |
 | `actions.<name>.points` | string | see below | Canonical decimal, 0..1000. |
 | `actions.<name>.period` | string | see below | Canonical decimal, seconds: `'0'` or 60..31536000. |
 | `actions.<name>.limit` | string | see below | Canonical decimal: `'0'` or 1..10000. |
@@ -193,7 +192,6 @@ Shipped rules:
 | `download` | 3 | 86400 | 20 |
 | `visit` | 0 | 86400 | 20 |
 | `poll` | 3 | 86400 | 10 |
-| `order` | 10 | 0 | 0 |
 | `favorite` | 0 | 86400 | 20 |
 | `message` | 0 | 86400 | 20 |
 | `recommend` | 0 | 86400 | 5 |
@@ -313,7 +311,7 @@ What owners must do:
 - An owner that moves points of several accounts in one transaction calls `setUserLocks()` with all of them before
   its first `addEvent()` or `getEventId()`, so two operations never lock the same accounts crosswise. Users:
   `Comment::deleteTarget()` (authors of the deleted comments plus the extra accounts the caller passes, which is how
-  `NodeService::deleteNode()` adds the material author) and `clientsave()` in the shop admin (old and new client).
+  `NodeService::deleteNode()` adds the material author).
 - Lock order for Node writes: extension rows, then `Point` accounts, then the journal. `addNode()`, `updateNode()`,
   `updateNodeStatus()` and `deleteNode()` let the extension write its rows before `setPublishJob()` or the
   compensation.
@@ -337,15 +335,12 @@ Every call site of `addEvent()`/`getEventId()` in the tree. "Never" means the aw
 | `publish` | `node.<type>` | `node:<id>` | `NodeService::setPublishJob()` from `addNode()`, `updateNode()`, `updateNodeStatus()`; `setPublishDue()` from `updateNodePublishList()` | First Published state with a reached date, in the write's transaction; a future date is awarded when the scheduler job `nodepublish` delivers it. Recipient: the registered author. | `deleteNode()`, in the delete transaction; a failed compensation fails the delete |
 | `publish` | `forum.topic` | `topic:<id>`, `mid` topic id | `modules/forum/index.php` `send()` | Registered author creates a visible topic, or a moderator edit makes a hidden one visible | Final `delete()` of the topic |
 | `comment` | `forum.topic` | `post:<id>`, `mid` topic id | `modules/forum/index.php` `send()` | Registered author creates a visible post, or a moderator edit makes a hidden one visible | Final `delete()` of the post |
-| `comment` | `account`, `shop`, `voting`, `node.<type>` | `comment:<id>`, `mid` target id | `Comment::addComment()`, `Comment::setStatus()` via `updateTargetPoints()` | The comment first becomes visible: added published, or approved | `Comment::deleteComment()`, `Comment::deleteTarget()` |
+| `comment` | `account`, `voting`, `node.<type>` | `comment:<id>`, `mid` target id | `Comment::addComment()`, `Comment::setStatus()` via `updateTargetPoints()` | The comment first becomes visible: added published, or approved | `Comment::deleteComment()`, `Comment::deleteTarget()` |
 | `view` | `node.<type>` | `node:<id>` | `NodeService::updateNodeViews()` | Counted view by a registered reader, once per material | Never |
 | `download` | `node.<type>` | `asset:<id>` | `NodeService::updateNodeAssetHits()` | Allowed download start of a role with mode `download`, registered visitor, once per resource | Never |
 | `visit` | `node.<type>` | `asset:<id>` | `NodeService::updateNodeAssetHits()` | External visit of a role with mode `link` and an `http(s)` source | Never |
-| `visit` | `auto-links` | `link:<id>`, `mid` link id | `modules/auto_links/index.php` `view()` | After the `outs` counter, registered user, once per link | Never |
 | `poll` | `voting` | `poll:<id>` | `updateVotingResult()` in `core/system.php` | Accepted vote of a registered user, once per poll | Never |
-| `order` | `order` | `order:<id>`, `mid`, `aid` | `modules/order/admin/index.php` `activate()` | Administrator moves `status` 0 to 1. Recipient `_order.uid` (0 for guest orders: no award) | `activate()` 1 to 0, `delete()` of a confirmed order |
-| `order` | `shop` | `client:<id>`, `mid`, `aid` | `modules/shop/admin/index.php` `clientset()`, `clientsave()` | `_clients.status` becomes 1 (toggle, form edit, or a new client row created with status 1). Recipient `_clients.uid`; each client row is rewarded separately | Leaving status 1, a change of `uid` (old recipient compensated, new one awarded), `clientdel()` |
-| `favorite` | `favorites` | `<module>:<id>`, `mid` target id | `addFavorite()` in `core/user.php` | Item added (Node type, forum topic or shop product) | Never, also not when the item or target is removed |
+| `favorite` | `favorites` | `<module>:<id>`, `mid` target id | `addFavorite()` in `core/user.php` | Item added (Node type or forum topic) | Never, also not when the item or target is removed |
 | `message` | `privat` | `privat:<id>` | `addPrivateMessage()` in `core/user.php` | Message stored | Never |
 | `message` | `contact` | `req:<32 hex>` | `modules/contact/index.php` `contact()` | Mail queued, registered sender | Never |
 | `recommend` | `recommend` | `req:<32 hex>` | `modules/recommend/index.php` `send()` | Mail queued, registered sender | Never |
@@ -354,7 +349,7 @@ Every call site of `addEvent()`/`getEventId()` in the tree. "Never" means the aw
 | `report` | `node.<type>` | `report:<asset id>:<16 hex>` | `NodeService::deleteNodeAssetReport()` with `useful` | Useful report of a registered reporter other than the deciding site account | Never |
 | `moderate` | `node.<type>` | `approve:<id>`, `aid` | `NodeService::updateNodeStatus()` | Moderator moves a foreign material from Pending to Published | Never |
 | `moderate` | `node.<type>` | `report:<asset id>:<16 hex>`, `aid` | `NodeService::deleteNodeAssetReport()` | Decision on an open report, useful or not, not the moderator's own report | Never |
-| `moderate` | `account`, `shop`, `voting`, `node.<type>` | `comment:<id>`, `mid` target, `aid` | `Comment::setStatus()` via `addModerPoint()` | First publication (`shown` was NULL) of a foreign comment by a moderator of the module | Never |
+| `moderate` | `account`, `voting`, `node.<type>` | `comment:<id>`, `mid` target, `aid` | `Comment::setStatus()` via `addModerPoint()` | First publication (`shown` was NULL) of a foreign comment by a moderator of the module | Never |
 | `moderate` | `node.<type>` | `reply:<request id>`, `mid` comment id, `aid` | `Comment` via `updateNodeAction()` and `addModerPoint()` | First visible reply of staff in a request of a type with extension `support`: the author is the request's site account, moderates the type and does not own the request; once per staff member and request | Never |
 | `adjust` | `account` | `adjust:<32 hex>`, `aid`, `note`, `points` | `addsave()` in `modules/account/admin/index.php` | Administrator correction | Not compensable |
 | `adjust` | `account` | `reset:<16 hex>:<uid>:<part>`, `aid`, `note = 'reset'`, `points` | `setPointsReset()` in `modules/account/admin/index.php` | Shared reset | Not compensable |
@@ -379,16 +374,13 @@ Rules behind the map:
   `post:<id>`; topic and post ids share one sequence, so both sources never exist for one id. Deleting a topic
   compensates only the topic author's `publish`; the `comment` awards of posts inside it stay. A new post takes its
   id from `getSqlLastId()`.
-- Order form: an order stored directly with status 1 (premoderation `order.pr` off) gets no award; only the
-  administrator's 0 to 1 in `activate()` awards.
 - Node deferred publication: a future date creates a `_node_publish` job, no early `Point` call. The source stays
   `node:<id>`, so a repeated job never awards twice. Zero, disabled or over the limit: processed without a row;
   `$valid === false`: delivered without award, warning logged; recoverable refusal: job moved 60 seconds on; lost
   transaction: job untouched; author without an account: passed over.
 - Re-publication awards for the first time only if no award was recorded before; an existing award, even
   compensated, makes it an empty repeat. Switching points on never awards the existing archive.
-- Owners without a transaction of their own open one: order `activate()`/`delete()`, shop `clientset()`,
-  `clientsave()`, `clientdel()`, forum `delete()`. Like `Comment` and `NodeService` they check the compensation: a
+- Owners without a transaction of their own open one: forum `delete()`. Like `Comment` and `NodeService` they check the compensation: a
   false `getEventId()` or a refused compensation (already logged by `Point`) rolls the deletion or status change
   back and answers `_ERROR`. The award of these owners stays unchecked, as every award.
 - Removed without replacement: page views in `setHead()` (no object and no stable source) and rating rewards in
@@ -461,7 +453,7 @@ The points unit of the 6.3 data update is `setUpdatePoints()` in `setup/index.ph
   taken for a starting one. A snapshot that does not match its manifest stops it too.
 - The legacy switch `users.point` becomes `points.active` (`'1'`/`'0'`); `config/points.php` is written only when
   the value differs, and `config/users.php` only when it still carries `point` or `points`, which are removed. The
-  shipped `points.php` is otherwise not rewritten. A points scope without fifteen actions or with a bad `active`
+  shipped `points.php` is otherwise not rewritten. A points scope without fourteen actions or with a bad `active`
   stops the unit.
 - Last, the unit writes `update.points = '6.3.0'` into `config/update.php`, which opens the class (see
   Configuration). If that write fails the subsystem stays closed.

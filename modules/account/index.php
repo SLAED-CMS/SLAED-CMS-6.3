@@ -605,9 +605,8 @@ function profil(): void {
             $ftitles = [];
             if (isset($conf['node']['types'][$fmod])) {
                 $ftitles = getNodeTitleMap(array_fill_keys($fids, $fmod));
-            } else {
-                $ftable = ($fmod === 'shop') ? 'products' : $fmod;
-                $fres = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_'.$ftable.' WHERE id IN ('.implode(', ', $fids).')');
+            } elseif ($fmod === 'forum') {
+                $fres = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_forum WHERE id IN ('.implode(', ', $fids).')');
                 while ([$fid, $ftitle] = $db->getSqlRow($fres)) $ftitles[$fid] = $ftitle;
             }
             foreach ($ftitles as $fid => $ftitle) {

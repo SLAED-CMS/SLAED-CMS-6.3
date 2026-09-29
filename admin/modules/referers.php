@@ -221,7 +221,7 @@ function delete(): void {
     global $db, $afile;
     $warn = !checkAdminPost('referers');
     if (!$warn) {
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_referer WHERE lid = 0');
+        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_referer');
     }
     setRedirect($afile.'.php?name=referers', false, 302, $warn ? _TOKENMISS : _SUCCCLEAR, $warn);
 }
