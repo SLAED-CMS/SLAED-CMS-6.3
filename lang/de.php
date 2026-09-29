@@ -479,7 +479,7 @@ define('_RATINGS_FORM','Die Bewertungsanfrage ist fehlerhaft.');
 define('_RATINGS_DENY','Bewertung nicht möglich: Die Bewertung ist deaktiviert, für Gäste gesperrt oder es ist Ihr eigener Beitrag.');
 define('_RATINGS_GONE','Das bewertete Objekt wurde nicht gefunden.');
 define('_RATINGS_TWICE','Diese Anfrage wurde bereits mit einem anderen Wert angenommen.');
-define('_RATINGS_WAIT','Sie haben bereits bewertet. Tage bis zur nächsten Bewertung: %d');
+define('_RATINGS_WAIT','Ihre Bewertung wurde bereits gezählt. Erneut bewerten können Sie ab dem %s.');
 define('_RATINGS_FAIL','Die Bewertung wurde nicht gespeichert, bitte versuchen Sie es erneut.');
 define('_RATINGS_OFF','Die Bewertung ist hier vorübergehend nicht verfügbar: Die Regel dieses Bereichs ist fehlerhaft.');
 define('_READMORE','Mehr lesen');

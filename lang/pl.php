@@ -479,7 +479,7 @@ define('_RATINGS_FORM','Żądanie oceny jest nieprawidłowe.');
 define('_RATINGS_DENY','Nie można ocenić: oceny są wyłączone, zamknięte dla gości albo to Twój własny materiał.');
 define('_RATINGS_GONE','Nie znaleziono ocenianego obiektu.');
 define('_RATINGS_TWICE','To żądanie zostało już przyjęte z inną wartością.');
-define('_RATINGS_WAIT','Już oceniono. Dni do następnej oceny: %d');
+define('_RATINGS_WAIT','Twoja ocena została już uwzględniona. Ponownie ocenić można od %s.');
 define('_RATINGS_FAIL','Ocena nie została zapisana, spróbuj ponownie.');
 define('_RATINGS_OFF','Ocenianie jest tu chwilowo niedostępne: reguła tej sekcji jest uszkodzona.');
 define('_READMORE','Więcej');

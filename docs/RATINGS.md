@@ -294,7 +294,7 @@ renders the static aggregate. The widget and the rating sums of the profile read
 | `unavailable` | 404 | alert `_RATINGS_GONE` |
 | `blocked` | 503 | alert `_RATINGS_OFF` |
 | `conflict` | 409 | alert `_RATINGS_TWICE` |
-| `interval` | 429, `Retry-After: <seconds>` | alert `_RATINGS_WAIT` with the days left, rounded up |
+| `interval` | 429, `Retry-After: <seconds>` | alert `_RATINGS_WAIT` with the date the next vote opens, in `_DATESTRING` |
 | `storage` | 500 | alert `_RATINGS_FAIL` |
 
 A refusal is always its own status with a `warn` alert fragment, never a refreshed block that would hide it, so the

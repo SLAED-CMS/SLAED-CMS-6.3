@@ -479,7 +479,7 @@ define('_RATINGS_FORM','La requête d\'évaluation est incorrecte.');
 define('_RATINGS_DENY','Évaluation impossible : la notation est désactivée, fermée aux invités, ou il s\'agit de votre propre contenu.');
 define('_RATINGS_GONE','L\'élément évalué est introuvable.');
 define('_RATINGS_TWICE','Cette requête a déjà été acceptée avec une autre valeur.');
-define('_RATINGS_WAIT','Vous avez déjà voté. Jours avant la prochaine évaluation : %d');
+define('_RATINGS_WAIT','Votre note a déjà été prise en compte. Vous pourrez noter à nouveau à partir du %s.');
 define('_RATINGS_FAIL','L\'évaluation n\'a pas été enregistrée, veuillez réessayer.');
 define('_RATINGS_OFF','L\'évaluation est temporairement indisponible ici : la règle de cette section est défectueuse.');
 define('_READMORE','Lire la suite');

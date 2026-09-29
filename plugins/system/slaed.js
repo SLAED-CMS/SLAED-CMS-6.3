@@ -1685,6 +1685,17 @@
         done();
     }
 
+    // Burst: one node pops, rings and throws sparks; a turn staggers it behind the nodes before it in a row
+    function setBurst(node, turn) {
+        var at = turn || 0;
+        node.style.setProperty('--sl-d-turn', at);
+        node.classList.add('sl-is-burst');
+        window.setTimeout(function () {
+            node.classList.remove('sl-is-burst');
+            node.style.removeProperty('--sl-d-turn');
+        }, 700 + at * 100);
+    }
+
     // Favorites: remember the clicked star so the freshly swapped on-state can burst and toast
     var favpending = null;
 
@@ -1696,8 +1707,7 @@
         if (!host) return;
         var star = host.querySelector('.sl-fav-on');
         if (!star) return;
-        star.classList.add('sl-is-burst');
-        window.setTimeout(function () { star.classList.remove('sl-is-burst'); }, 700);
+        setBurst(star);
         setToast(done);
     }
 
@@ -1893,18 +1903,39 @@
 
     // Rating votes: every intended click carries a fresh delivery key, and the key stays on the control while the outcome is unknown - a lost connection or a
     // server failure - so the repeat of the same click answers the stored vote instead of placing a second one. A refusal keeps the block and is told by the warning toast
+    // A star vote is remembered with the box it lands in, so the stars up to the chosen one burst in a row once the
+    // counted rating is swapped in; a refused vote swaps nothing and forgets it
+    var ratepending = null;
+
+    function setRatingBurst(box) {
+        if (!ratepending || !box || box.id !== ratepending.id) return;
+        var stars = box.querySelectorAll('.sl-urating .sl-star');
+        var rate = Math.min(ratepending.rate, stars.length);
+        ratepending = null;
+        for (var i = 0; i < rate; i++) setBurst(stars[i], i);
+    }
+
     function setRatingVotes() {
         document.addEventListener('htmx:configRequest', function (event) {
             var elt = event.detail ? event.detail.elt : null;
             if (!elt || !elt.closest || !elt.closest('[data-sl-rate]')) return;
             if (!elt.getAttribute('data-sl-rate-key')) elt.setAttribute('data-sl-rate-key', getRequestKey());
             event.detail.parameters.request = elt.getAttribute('data-sl-rate-key');
+            var stars = elt.closest('.sl-urating');
+            var rate = parseInt(event.detail.parameters.rate, 10);
+            if (stars && elt.classList.contains('sl-star') && rate > 0) {
+                ratepending = { id: (stars.getAttribute('hx-target') || '').replace(/^#/, ''), rate: rate };
+            }
+        });
+        document.addEventListener('htmx:afterSwap', function (event) {
+            setRatingBurst(event.target);
         });
         document.addEventListener('htmx:afterRequest', function (event) {
             var elt = event.detail ? event.detail.elt : null;
             var xhr = event.detail ? event.detail.xhr : null;
             if (!elt || !xhr || !elt.getAttribute || !elt.getAttribute('data-sl-rate-key')) return;
             if (xhr.status > 0 && xhr.status < 500) elt.removeAttribute('data-sl-rate-key');
+            if (xhr.status >= 400) ratepending = null;
             if (xhr.status < 400) return;
             var box = new DOMParser().parseFromString(xhr.responseText || '', 'text/html').body;
             var line = box.querySelector('.sl-alert-text') || box;

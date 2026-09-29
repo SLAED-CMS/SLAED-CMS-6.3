@@ -6557,17 +6557,19 @@ a.sl-chip-neutral {
   cursor: not-allowed;
 }
 
-/* Add burst: star pop plus ring wave on the button and six sparks via pseudo elements */
-.sl-fav .sl-is-burst {
-  animation: sl-fav-ring var(--sl-fav-dur) var(--sl-ease-out);
+/* Burst: a node pops its glyph, throws a ring wave and six sparks. It was drawn for the favourite star and serves the
+   rating stars as well, so its figures keep the favourite's names; a turn staggers a node behind the ones before it,
+   and the sparks stay hidden until their node's turn comes */
+.sl-is-burst {
+  animation: sl-burst-ring var(--sl-fav-dur) var(--sl-ease-out) calc(var(--sl-d-turn, 0) * var(--sl-fav-dur) / 6);
 }
 
-.sl-fav .sl-is-burst > .bi {
-  animation: sl-fav-pop var(--sl-fav-dur) var(--sl-fav-ease);
+.sl-is-burst > .bi {
+  animation: sl-burst-pop var(--sl-fav-dur) var(--sl-fav-ease) calc(var(--sl-d-turn, 0) * var(--sl-fav-dur) / 6) backwards;
 }
 
-.sl-fav .sl-is-burst::before,
-.sl-fav .sl-is-burst::after {
+.sl-is-burst::before,
+.sl-is-burst::after {
   content: "";
   position: absolute;
   top: 50%;
@@ -6575,19 +6577,26 @@ a.sl-chip-neutral {
   width: var(--sl-space-2);
   height: var(--sl-space-2);
   border-radius: var(--sl-radius-circle);
+  opacity: 0;
   pointer-events: none;
-  animation: sl-fav-spark var(--sl-fav-dur) var(--sl-ease-out) forwards;
+  animation: sl-burst-spark var(--sl-fav-dur) var(--sl-ease-out) calc(var(--sl-d-turn, 0) * var(--sl-fav-dur) / 6) forwards;
 }
 
-.sl-fav .sl-is-burst::before {
+.sl-is-burst::before {
   box-shadow: var(--sl-fav-shadow);
 }
 
-.sl-fav .sl-is-burst::after {
+.sl-is-burst::after {
   box-shadow: var(--sl-spark-shadow);
 }
 
-@keyframes sl-fav-pop {
+/* A rating star is a bare glyph, so it takes the round the ring wave needs only while it bursts */
+.sl-urating .sl-is-burst {
+  position: relative;
+  border-radius: var(--sl-radius-circle);
+}
+
+@keyframes sl-burst-pop {
   0% {
     transform: scale(0.4) rotate(-30deg);
   }
@@ -6601,7 +6610,7 @@ a.sl-chip-neutral {
   }
 }
 
-@keyframes sl-fav-ring {
+@keyframes sl-burst-ring {
   0% {
     box-shadow: 0 0 0 0 color-mix(in srgb, var(--sl-primary) var(--sl-fav-mix), transparent);
   }
@@ -6611,7 +6620,7 @@ a.sl-chip-neutral {
   }
 }
 
-@keyframes sl-fav-spark {
+@keyframes sl-burst-spark {
   from {
     opacity: 1;
     transform: translate(-50%, -50%) scale(0.35);
@@ -7153,6 +7162,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   height: 100%;
 }
 
+/* A toast is an inverse band, as the top bar is: it does not turn over with the scheme, so it reads dark on either page */
 .sl-toast {
   position: fixed;
   left: 50%;
@@ -7163,8 +7173,8 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   gap: var(--sl-space-3);
   padding: var(--sl-space-4) var(--sl-space-6);
   border-radius: var(--sl-radius-pill);
-  background: var(--sl-text-strong);
-  color: var(--sl-on-solid);
+  background: var(--sl-bg-inverse);
+  color: var(--sl-band-text);
   box-shadow: var(--sl-shadow-float);
   opacity: 0;
   pointer-events: none;
@@ -7377,10 +7387,10 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   dialog.sl-modal::backdrop,
   .sl-modal-btn,
   .sl-modal-act,
-  .sl-fav .sl-is-burst,
-  .sl-fav .sl-is-burst::before,
-  .sl-fav .sl-is-burst::after,
-  .sl-fav .sl-is-burst > .bi,
+  .sl-is-burst,
+  .sl-is-burst::before,
+  .sl-is-burst::after,
+  .sl-is-burst > .bi,
   .sl-share-net-ico,
   .sl-toast,
   .sl-live-icon,

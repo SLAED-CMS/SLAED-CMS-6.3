@@ -6115,7 +6115,7 @@ function getRatingView(): void {
         [$stat, $text] = $codes['invalid'];
     } else {
         $res = getRatingService()->addRating($vals['mod'], intval($vals['id']), intval($vals['rate']), $vals['request']);
-        [$stat, $text] = $res['ok'] ? [200, ''] : ($codes[$res['code']] ?? [429, sprintf(_RATINGS_WAIT, ceil($res['wait'] / 86400))]);
+        [$stat, $text] = $res['ok'] ? [200, ''] : ($codes[$res['code']] ?? [429, sprintf(_RATINGS_WAIT, date(_DATESTRING, time() + intval($res['wait'])))]);
         if ($stat === 429) header('Retry-After: '.$res['wait']);
     }
     http_response_code($stat);
