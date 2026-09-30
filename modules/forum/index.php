@@ -461,7 +461,7 @@ function forum(): void {
 # The quick-reply token travels in a header rather than in the address, which keeps it out of history, logs and referrers
 # A removal is a write, so it is submitted rather than followed: a link would delete on a prefetch and carry its token through history and logs
 function view(): void {
-    global $db, $user, $conf, $tpl, $prs;
+    global $db, $conf, $tpl, $prs;
     $rows = [];
     $where = [];
     $users = [];
@@ -747,7 +747,7 @@ function view(): void {
                 $warn = '';
                 $thank = '';
                 $eitems = [];
-                if ($ismod || ($isedit && $val[3] == (int)$user[0] && $tstatus)) {
+                if (checkForumRight($ismod, $isedit, (int)$val[3], (int)$tstatus)) {
                     $eitems[] = [
                         'href' => 'index.php?go=1&op=updatePost&id='.$fid.'&cid='.$fcat.'&typ=1&mod='.$conf['name'],
                         'title' => _ONEDIT,
@@ -758,7 +758,7 @@ function view(): void {
                     ];
                     $eitems[] = ['href' => 'index.php?name='.$conf['name'].'&op=add&cat='.$fcat.'&id='.$fid.'&pid='.$topic, 'title' => _FULLEDIT, 'icon_name' => 'pencil'];
                 }
-                if ($ismod || ($isdelete && $val[3] == (int)$user[0])) {
+                if (checkForumRight($ismod, $isdelete, (int)$val[3])) {
                     $eitems[] = [
                         'href' => 'index.php?name='.$conf['name'],
                         'form_id' => 'fdel'.$fid,
@@ -902,6 +902,7 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
 # Mass moderation moves, hides and deletes topics, so it is a write and answers to the same token rule as the rest
 # A hidden topic stops being visible activity, so whoever advertised it has to be asked again
 # A moved topic only updates the totals: both branches are asked what they really hold once the topic has changed hands
+# A moderator acts only on the topics stored in the category whose moderator they are, whatever else the form lists
 function move(): void {
     global $db, $conf;
     if (!checkSiteToken()) {
@@ -918,12 +919,12 @@ function move(): void {
         $move = (is_numeric($tmove[0])) ? (int)$tmove : (int)substr($tmove, 1);
         if ($ismod && is_array($id) && $tmove[0]) {
             foreach ($id as $val) {
-                if ((int)$val) {
+                if ((int)$val && getForumPlace((int)$val)['cid'] === (int)$catid) {
                     if ($tmove[0] == 's') {
                         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET status = :tmove WHERE id = :val', ['tmove' => $move, 'val' => $val]);
                         setForumLast((int)$catid, (int)$val);
                     } elseif ($tmove[0] == 'd') {
-                        delete($catid, $val);
+                        delete($val);
                     } elseif (is_numeric($tmove[0])) {
                         $rcatids = catids($conf['name'], $move);
                         $db->getSqlQuery(
@@ -948,10 +949,14 @@ function move(): void {
     setRedirect('index.php?name='.$conf['name'].$link);
 }
 
+# The form of a new topic, a reply or an edit; a named post or topic brings its own category and topic, as in send()
 function add(): void {
-    global $db, $user, $conf, $stop, $tpl;
-    $cat = getVar('req', 'cat', 'num');
-    $catid = $cat;
+    global $db, $conf, $stop, $tpl;
+    $id = getVar('req', 'id', 'num');
+    $pid = getVar('req', 'pid', 'num');
+    $place = getForumPlace(intval($id ?: $pid));
+    $catid = ($id || $pid) ? $place['cid'] : getVar('req', 'cat', 'num');
+    $pid = ($pid && !$id) ? $place['topic'] : $pid;
     [$ctitle, $authp, $authy, $authe, $authm] = $db->getSqlRow($db->getSqlQuery(
         'SELECT title, ppost, preply, pedit, pmod FROM '.PREFIX_DB.'_categories WHERE id = :catid',
         ['catid' => $catid]
@@ -961,8 +966,6 @@ function add(): void {
     $isedit = is_acess($authe);
     $ismod = is_acess($authm);
     $form = false;
-    $id = getVar('req', 'id', 'num');
-    $pid = getVar('req', 'pid', 'num');
     $qpid = 0;
     $fid = 0;
     $ftitle = '';
@@ -971,15 +974,14 @@ function add(): void {
     $status = 3;
     $time = '';
     $subh = 0;
-    $where = (is_moder($conf['name'])) ? 'WHERE id = :pid' : 'WHERE id = :pid AND status != \'0\'';
-    [$fstatus] = $db->getSqlRow($db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_forum '.$where, ['pid' => $pid]));
+    $fstatus = $place['status'];
     if ($conf['forum']['add'] && $id) {
         $fid = $id;
         [$qpid, $uid, $subject, $time, $hometext, $field, $status] = $db->getSqlRow($db->getSqlQuery(
             'SELECT pid, uid, title, time, body, field, status FROM '.PREFIX_DB.'_forum WHERE id = :id',
             ['id' => $id]
         ));
-        if ($ismod || ($isedit && $uid == (int)$user[0] && $fstatus > 2)) {
+        if (checkForumRight($ismod, $isedit, (int)$uid, $fstatus)) {
             $subh = ($qpid) ? 1 : 0;
             $info = _EDITS.': '.$subject;
             $head = $conf['defis'].' '._FORUM.' '.$conf['defis'].' '.$ctitle.' '.$conf['defis'].' '.$info;
@@ -998,7 +1000,7 @@ function add(): void {
         if ($pid) {
             $id = ($qid) ? $qid : $pid;
             [$ftitle, $ftext, $status] = $db->getSqlRow($db->getSqlQuery('SELECT title, body, status FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
-            $form = (is_moder($conf['name'])) ? true : (($fstatus > 2) ? true : false);
+            $form = $isreply && (is_moder($conf['name']) || $fstatus > 2);
         } else {
             $form = true;
         }
@@ -1125,6 +1127,8 @@ function pmoder(int|string $status, int $subh): string {
 
 # Both forms that reach this handler carry the token of the page they were rendered on, and neither may write without it
 # The letter limit bounds the longest word of the post in characters; a limit of zero bounds no word at all
+# A named post or topic brings its own category and topic through getForumPlace(); only a new topic takes the category of the form
+# A reply always answers the topic of the post it names, so neither the rights nor the counters can be pointed at another category
 function send(): void {
     global $db, $user, $conf, $stop, $tpl, $mailer, $pnt;
     if (!checkSiteToken()) {
@@ -1133,8 +1137,11 @@ function send(): void {
         setFoot();
         return;
     }
-    $cat = getVar('req', 'cat', 'num');
-    $catid = $cat;
+    $fid = getVar('post', 'fid', 'num');
+    $pid = getVar('post', 'pid', 'num');
+    $place = getForumPlace(intval($fid ?: $pid));
+    $catid = ($fid || $pid) ? $place['cid'] : getVar('req', 'cat', 'num');
+    $pid = ($pid && !$fid) ? $place['topic'] : $pid;
     if ($conf['forum']['add'] && $catid) {
         [$ctitle, $authp, $authy, $authe, $authm] = $db->getSqlRow($db->getSqlQuery(
             'SELECT title, ppost, preply, pedit, pmod FROM '.PREFIX_DB.'_categories WHERE id = :catid',
@@ -1144,9 +1151,7 @@ function send(): void {
         $isreply = is_acess($authy);
         $isedit = is_acess($authe);
         $ismod = is_acess($authm);
-        $fid = getVar('post', 'fid', 'num');
         $id = $fid;
-        $pid = getVar('post', 'pid', 'num');
         $postname = filterText(substr(getVar('post', 'postname', 'text'), 0, 25));
         $subject = getVar('post', 'subject', 'text');
         $hometext = getVar('post', 'hometext', 'text');
@@ -1172,13 +1177,12 @@ function send(): void {
         if ($room = checkEditorTextRoom($hometext, 'forum.body')) $stop[] = $room;
         $stop = array_merge($stop, $flds['stop']);
         if (!$stop && getVar('post', 'posttype', 'var') == 'save') {
-            $where = (is_moder($conf['name'])) ? 'WHERE id = :pid' : 'WHERE id = :pid AND status != \'0\'';
-            [$fstatus] = $db->getSqlRow($db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_forum '.$where, ['pid' => $pid]));
+            $fstatus = $place['status'];
             if ($id) {
                 [$fpid, $uid, $ftime, $fwas] = $db->getSqlRow($db->getSqlQuery('SELECT pid, uid, time, status FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
                 $ftop = !$fpid;
                 $fpid = ($fpid) ? $fpid : $id;
-                if ($ismod || ($isedit && $uid == (int)$user[0] && $fstatus > 2)) {
+                if (checkForumRight($ismod, $isedit, (int)$uid, $fstatus)) {
                     $ftime = ($ismod) ? $time : $ftime;
                     if ($ismod) {
                         $db->getSqlQuery(
@@ -1208,12 +1212,7 @@ function send(): void {
                     $postid = '';
                     $status = ($conf['forum']['anonpost'] == 1) ? (($pid) ? 1 : 3) : 0;
                 }
-                $insert = false;
-                if ($pid && $isreply) {
-                    $insert = (is_moder($conf['name'])) ? true : (($fstatus > 2) ? true : false);
-                } elseif ($istopic) {
-                    $insert = true;
-                }
+                $insert = $pid ? ($isreply && (is_moder($conf['name']) || $fstatus > 2)) : $istopic;
                 if ($insert) {
                     $catids = catids($conf['name'], $catid);
                     $db->getSqlQuery(
@@ -1287,22 +1286,23 @@ function send(): void {
 # Deleting a whole topic only updates the category totals: which topic each category advertises is settled by setForumLast() once the rows have really left
 # The branch is asked for its last message only once the rows have gone or moved, otherwise it would still answer with what was just removed
 # A removed topic also invalidates every category that pointed at it, which a walk from this one would never reach
-function delete(int|string|null $catid = null, int|string|null $id = null): void {
-    global $db, $user, $conf, $pnt;
-    $hasargs = ($catid !== null || $id !== null);
+# The category whose rights and totals apply is the one the post is stored in, whoever names it
+function delete(int|string|null $id = null): void {
+    global $db, $conf, $pnt;
+    $hasargs = ($id !== null);
     if (!$hasargs && !checkSiteToken()) {
         setRedirect('index.php?name='.$conf['name']);
         return;
     }
-    $catid = ($catid !== null && $catid !== '') ? $catid : getVar('req', 'cat', 'num');
     $id = ($id !== null && $id !== '') ? $id : getVar('req', 'id', 'num');
+    $catid = getForumPlace(intval($id))['cid'];
     $lid = 0;
     if ($conf['forum']['add'] && $catid && $id) {
         [$authd, $authm] = $db->getSqlRow($db->getSqlQuery('SELECT pdelete, pmod FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
         $isdelete = is_acess($authd);
         $ismod = is_acess($authm);
         [$pid, $uid] = $db->getSqlRow($db->getSqlQuery('SELECT pid, uid FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
-        $may = $ismod || ($isdelete && $uid == (int)$user[0]);
+        $may = checkForumRight($ismod, $isdelete, (int)$uid);
         $own = $may && $db->setSqlBegin();
         if ($may && !$own) setFlash(_ERROR, true);
         if ($own) {

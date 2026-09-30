@@ -296,6 +296,46 @@ function getProbeCommentWrite(bool $guest): array {
     return $out;
 }
 
+# Report the two rules every forum handler takes its right from: the stored place of a post and the one right over it
+# The place is compared with the columns of live rows, and the right is asked as a guest and then as a signed-in account; nothing is written
+function getProbeForumRight(): array {
+    global $db, $user;
+    $out = ['reply' => [], 'topic' => [], 'missing' => getForumPlace(999999999), 'guest' => [], 'user' => [], 'signed' => false];
+    $sql = 'SELECT f.id, f.cid, f.uid, f.pid, t.status AS tstat FROM '.PREFIX_DB.'_forum AS f JOIN '.PREFIX_DB.'_forum AS t ON t.id = f.pid'
+        .' WHERE f.pid > 0 ORDER BY f.id DESC LIMIT 1';
+    $rep = $db->getSqlRow($db->getSqlQuery($sql));
+    if ($rep) {
+        $want = ['cid' => intval($rep['cid']), 'topic' => intval($rep['pid']), 'uid' => intval($rep['uid']), 'status' => intval($rep['tstat'])];
+        $out['reply'] = [getForumPlace(intval($rep['id'])), $want];
+    }
+    $top = $db->getSqlRow($db->getSqlQuery('SELECT id, cid, uid, status FROM '.PREFIX_DB.'_forum WHERE pid = 0 ORDER BY id DESC LIMIT 1'));
+    if ($top) {
+        $want = ['cid' => intval($top['cid']), 'topic' => intval($top['id']), 'uid' => intval($top['uid']), 'status' => intval($top['status'])];
+        $out['topic'] = [getForumPlace(intval($top['id'])), $want];
+    }
+    $out['guest'] = [
+        'moder' => checkForumRight(true, false, 0, 0),
+        'anon' => checkForumRight(false, true, 0, 3),
+        'author' => checkForumRight(false, true, 1, 3),
+    ];
+    $sql = 'SELECT id, name, password FROM '.PREFIX_DB.'_users WHERE access = 0 AND password != \'\' AND name REGEXP \'^[A-Za-z0-9_.-]+$\' ORDER BY id ASC LIMIT 1';
+    $one = $db->getSqlRow($db->getSqlQuery($sql));
+    if (!$one) return $out;
+    $uid = intval($one['id']);
+    $user = [(string)$one['id'], (string)$one['name'], (string)$one['password']];
+    $out['signed'] = is_user() && intval($user[0]) === $uid;
+    $out['user'] = [
+        'own' => checkForumRight(false, true, $uid, 3),
+        'closed' => checkForumRight(false, true, $uid, 2),
+        'other' => checkForumRight(false, true, $uid + 1, 3),
+        'noright' => checkForumRight(false, false, $uid, 3),
+        'nobody' => checkForumRight(false, true, 0, 3),
+        'delete' => checkForumRight(false, true, $uid),
+        'moder' => checkForumRight(true, false, $uid + 1, 0),
+    ];
+    return $out;
+}
+
 # Report what stage 2 promises about a comment write: one rule set, a stable sort, a conditional state change, a soft delete and a stored format
 # The run signs in as the administrator whose stored address this process reports, because the moderator half of the class cannot be reached otherwise from a CLI probe
 # The flood window is measured against the stored time with the clock of PHP, so the marker is written from the clock of PHP too
@@ -1022,6 +1062,8 @@ if ($mode === 'core') {
     $out = getProbeComment();
 } elseif ($mode === 'commentread') {
     $out = getProbeCommentRead();
+} elseif ($mode === 'forumright') {
+    $out = getProbeForumRight();
 } elseif ($mode === 'commentwrite') {
     $out = getProbeCommentWrite(false);
 } elseif ($mode === 'commentguest') {

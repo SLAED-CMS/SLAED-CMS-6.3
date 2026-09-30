@@ -572,31 +572,42 @@ function addComment(): void {
     echo getCommentView($row, $row['pid'] ? 0 : $numb, getPageToken()).$oob;
 }
 
+# The stored place of one forum post: its category, its topic with the status of that topic, and its author, read from the rows and never from the request
+# A post that does not exist has no category, so a handler that names a post stops before it reads any right
+function getForumPlace(int $id): array {
+    global $db;
+    $row = ($id > 0) ? $db->getSqlRow($db->getSqlQuery('SELECT pid, cid, uid, status FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id])) : false;
+    if (!$row) return ['cid' => 0, 'topic' => 0, 'uid' => 0, 'status' => 0];
+    $top = intval($row['pid']) ?: $id;
+    $stat = ($top === $id) ? $row : $db->getSqlRow($db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $top]));
+    return ['cid' => intval($row['cid']), 'topic' => $top, 'uid' => intval($row['uid']), 'status' => intval($stat['status'] ?? 0)];
+}
+
+# One right over a forum post, shared by the buttons of the view and every handler that acts on it: the moderator of its category always holds it
+# Its author holds it only signed in, with the category right, while the topic stays open; a guest never matches a post written without an account
+# A right the state of the topic does not limit, such as deleting, leaves the status at its open default
+function checkForumRight(bool $mod, bool $may, int $uid, int $stat = 3): bool {
+    global $user;
+    return $mod || ($may && is_user() && $uid > 0 && $uid === intval($user[0]) && $stat > 2);
+}
+
 # Validate and update an existing forum post in-place
 # The word limit is checked against the longest word in characters, so a multibyte alphabet keeps the full allowance
-# The authority is the moderator flag of the category the message belongs to, not a module name taken from the request
-# The refusal is echoed rather than returned: the route calls this for its output and discards whatever it hands back
+# The authority is the category the message is stored in, read by getForumPlace(); the category the address carries decides nothing
+# Every refusal is echoed rather than returned: the route calls this for its output and discards whatever it hands back
 function updatePost() {
     global $db, $user, $conf, $tpl, $prs;
     $conf['forum'] = $conf['forum'] ?? [];
     $id    = getVar('post', 'id',  'num',  0)  ?: getVar('get', 'id',  'num',  0);
-    $cid   = getVar('post', 'cid', 'num',  0)  ?: getVar('get', 'cid', 'num',  0);
     $typ   = getVar('post', 'typ', 'num',  0)  ?: getVar('get', 'typ', 'num',  0);
     $mod   = filterVar(getVar('post', 'mod', 'text', '') ?: getVar('get', 'mod', 'text', ''));
     $text  = trim(getVar('post', 'text', 'raw', ''));
-    if ($conf['forum']['add'] && $id && $cid) {
-        [$pedit, $pmod] = $db->getSqlRow($db->getSqlQuery('SELECT pedit, pmod FROM '.PREFIX_DB.'_categories WHERE id = :cid', ['cid' => $cid]));
-        $isedit = is_acess($pedit);
-        $ismod = is_acess($pmod);
-        [$pid, $uid, $hometext, $fstatus] = $db->getSqlRow($db->getSqlQuery('SELECT pid, uid, body, status FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
-        if ($pid) {
-            if ($ismod) {
-                [$fstatus] = $db->getSqlRow($db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_forum WHERE id = :pid', ['pid' => $pid]));
-            } else {
-                [$fstatus] = $db->getSqlRow($db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_forum WHERE id = :pid AND status != 0', ['pid' => $pid]));
-            }
-        }
-        if ($ismod || ($isedit && $uid == intval($user[0]) && $fstatus > 2)) {
+    $place = getForumPlace(intval($id));
+    $cid = $place['cid'];
+    if ($conf['forum']['add'] && $cid) {
+        [$pedit, $pmod] = $db->getSqlRow($db->getSqlQuery('SELECT pedit, pmod FROM '.PREFIX_DB.'_categories WHERE id = :cid', ['cid' => $cid])) ?: ['', ''];
+        [$hometext] = $db->getSqlRow($db->getSqlQuery('SELECT body FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
+        if (checkForumRight(is_acess((string)$pmod), is_acess((string)$pedit), $place['uid'], $place['status'])) {
             if (!$text) {
                 $content = $typ
                     ? getTplAjaxTextarea([
@@ -630,10 +641,10 @@ function updatePost() {
                 }
             }
         } else {
-            return $tpl->getHtmlFrag('alert', ['text' => _ERROR, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
+            echo $tpl->getHtmlFrag('alert', ['text' => _ERROR, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
         }
     } else {
-        return $tpl->getHtmlFrag('alert', ['text' => _ERROR, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
+        echo $tpl->getHtmlFrag('alert', ['text' => _ERROR, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
     }
 }
 
