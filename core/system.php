@@ -5748,62 +5748,6 @@ function is_active(string $mod, string $view = ''): int {
     return isset($list[$vnum][$mod]) ? 1 : 0;
 }
 
-# Format PHP code
-function encode_php(array $text): string {
- global $conf, $tpl;
-    static $sname;
-
-    $replace = isset($text[2]) ? trim($text[2]) : trim($text[1]);
-    $cname = isset($text[2]) ? filterVar($text[1]) : 'php';
-
-    $from = ['bash', 'cpp', 'csharp', 'css', 'delphi', 'diff', 'groovy', 'java', 'jscript', 'php', 'plain', 'python', 'ruby', 'scala', 'sql', 'vb', 'xml'];
-    $to = ['Bash', 'Cpp', 'CSharp', 'Css', 'Delphi', 'Diff', 'Groovy', 'Java', 'JScript', 'Php', 'Plain', 'Python', 'Ruby', 'Scala', 'Sql', 'Vb', 'Xml'];
-    $cname = str_ireplace($from, $to, $cname);
-    $ucname = strtolower($cname);
-
-    $in = ['&#034;', '&quot;', '&#036;', '&dollar;', '&#038;', '&amp;', '&#039;', '&apos;', '&#060;', '&lt;', '&#062;', '&gt;', '&#092;', '&bsol;'];
-    $out = ['"', '"', '$', '$', '&', '&', "'", "'", '<', '<', '>', '>', '\\', '\\'];
-    $replace = ($conf['syntax'] <= 1) ? str_replace($in, $out, $replace) : $replace;
-    $replace = preg_replace('#<br.*>#i', '', $replace);
-
-    if (!$conf['syntax']) {
-        if (preg_match("#<\?(php)?[^[:graph:]]#", $replace)) {
-            $replace = highlight_string($replace, true);
-        } else {
-            $replace = preg_replace("#&lt;\?php&nbsp;#", '', highlight_string('<?php '.$replace, true));
-        }
-        $format = str_replace('&nbsp;&nbsp;', '&nbsp; ', $replace);
-    } elseif ($conf['syntax'] == 1) {
-        $lines = explode("\n", str_replace(["\r\n", "\r"], "\n", $replace));
-        $count = 1;
-        $rows = '';
-        foreach ($lines as $code) {
-            $odd = (bool)($count % 2);
-            if (preg_match("#<\?(php)?[^[:graph:]]#", $code)) {
-                $chtml = highlight_string($code, true);
-            } else {
-                $chtml = preg_replace("#&lt;\?php&nbsp;#", '', highlight_string('<?php '.$code, true));
-            }
-            $rows .= $tpl->getHtmlFrag('code-row', ['is_odd' => $odd, 'row_num' => $count, 'code_html' => $chtml]);
-            $count++;
-        }
-        $format = $tpl->getHtmlFrag('table', ['is_form' => true, 'rows_html' => str_replace('&nbsp;&nbsp;', '&nbsp; ', $rows)]);
-    } elseif ($conf['syntax'] == 2) {
-        if ($sname !== 'hljs') {
-            $scripts = $tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/highlightjs/highlight.min.js', 'attr' => '']);
-            $scripts .= $tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/highlightjs/highlight-line-numbers.min.js', 'attr' => '']);
-            $scripts .= $tpl->getHtmlFrag('head-script-inline', ['js' => 'hljs.highlightAll();hljs.initLineNumbersOnLoad();']);
-            $sname = 'hljs';
-        } else {
-            $scripts = '';
-        }
-        $hmap = ['jscript' => 'javascript', 'vb' => 'vbnet', 'plain' => 'plaintext'];
-        $hlang = $hmap[$ucname] ?? $ucname;
-        $format = $tpl->getHtmlFrag('code-highlight', ['scripts_html' => $scripts, 'lang' => $hlang, 'code_html' => $replace]);
-    }
-    return $tpl->getHtmlPart('div', ['is_code' => true, 'title' => htmlspecialchars($cname.' - '._CODE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'content_html' => $format ?? '']);
-}
-
 # Mail check
 function checkemail(string $mail): array {
  global $stop;

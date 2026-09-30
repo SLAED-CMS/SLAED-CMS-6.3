@@ -404,6 +404,33 @@ namespace Tests\Unit {
             }
         }
 
+        # A code block is written by any author, so every highlighter mode must escape it: mode 2 hands the code to its fragment as markup and once let a tag through
+        # Legacy text stores code entity-encoded and an editor line break raw before the line end; both must render as the author typed, escaped exactly once
+        #[Test]
+        public function checkCodeBlocksEscapeInEveryMode(): void
+        {
+            $hadconf = array_key_exists('conf', $GLOBALS);
+            $oldconf = $GLOBALS['conf'] ?? null;
+            try {
+                foreach (['0', '1', '2'] as $mode) {
+                    $GLOBALS['conf'] = ['syntax' => $mode];
+                    foreach (['[php]echo "<script>x</script>";[/php]', '[code=js]var a = "<script>x</script>";[/code]'] as $src) {
+                        $html = (new \Parser())->filterDoc($src, true, '');
+                        $this->assertStringNotContainsString('<script>x', $html, "mode $mode: $src");
+                        $this->assertStringContainsString('script&gt;', $html, "mode $mode: $src");
+                    }
+                }
+                $GLOBALS['conf'] = ['syntax' => '2'];
+                $html = (new \Parser())->filterDoc('[php]echo &quot;a&amp;b&quot;;[/php]', true, '');
+                $this->assertStringContainsString('echo &quot;a&amp;b&quot;;', $html);
+                $html = (new \Parser())->filterDoc("[php]one();<br />\ntwo(\"<br>\");[/php]", true, '');
+                $this->assertStringContainsString("one();\ntwo(&quot;&lt;br&gt;&quot;);", $html);
+            } finally {
+                if ($hadconf) $GLOBALS['conf'] = $oldconf;
+                else unset($GLOBALS['conf']);
+            }
+        }
+
         #[Test]
         public function checkBbTypographyNestingLimit(): void
         {

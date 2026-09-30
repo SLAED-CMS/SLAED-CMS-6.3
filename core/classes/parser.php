@@ -127,6 +127,7 @@ class Parser {
             $conf['uploads']['height'] ?? '',
             $conf['filetype'] ?? [],
             $conf['homeurl'] ?? '',
+            $conf['syntax'] ?? '',
         ]));
     }
 
@@ -472,6 +473,46 @@ class Parser {
         return [$this->getPartHtml('parser-table', ['head' => $head, 'rows' => $rows])."\n", $i];
     }
 
+    # Render one [php] or [code=language] block through the highlighter the site configured: highlight_string in modes 0 and 1, highlight.js in mode 2
+    # A raw line break an editor stored right before a line end is dropped and the entities of stored legacy text are decoded, so every mode escapes the code once
+    # Mode 2 escapes the code itself, because its fragment takes the code as markup; a language outside the name grammar gives no language at all
+    private function getCodeHtml(string $src, string $lang): string {
+        global $conf;
+        static $sname = '';
+        $mode = intval($conf['syntax'] ?? 0);
+        $from = ['bash', 'cpp', 'csharp', 'css', 'delphi', 'diff', 'groovy', 'java', 'jscript', 'php', 'plain', 'python', 'ruby', 'scala', 'sql', 'vb', 'xml'];
+        $to = ['Bash', 'Cpp', 'CSharp', 'Css', 'Delphi', 'Diff', 'Groovy', 'Java', 'JScript', 'Php', 'Plain', 'Python', 'Ruby', 'Scala', 'Sql', 'Vb', 'Xml'];
+        $cname = str_ireplace($from, $to, preg_match('#[^a-zA-Z0-9_\-]#', $lang) ? '' : $lang);
+        $in = ['&#034;', '&quot;', '&#036;', '&dollar;', '&#038;', '&amp;', '&#039;', '&apos;', '&#060;', '&lt;', '&#062;', '&gt;', '&#092;', '&bsol;'];
+        $out = ['"', '"', '$', '$', '&', '&', "'", "'", '<', '<', '>', '>', '\\', '\\'];
+        $code = str_replace($in, $out, preg_replace('#<br\s*/?>(?=\r?\n|$)#i', '', trim($src)) ?? '');
+        if ($mode === 0) {
+            $html = preg_match("#<\?(php)?[^[:graph:]]#", $code) ? highlight_string($code, true)
+                : preg_replace("#&lt;\?php&nbsp;#", '', highlight_string('<?php '.$code, true));
+            $format = str_replace('&nbsp;&nbsp;', '&nbsp; ', (string)$html);
+        } elseif ($mode === 1) {
+            $rows = '';
+            foreach (explode("\n", str_replace(["\r\n", "\r"], "\n", $code)) as $i => $line) {
+                $html = preg_match("#<\?(php)?[^[:graph:]]#", $line) ? highlight_string($line, true)
+                    : preg_replace("#&lt;\?php&nbsp;#", '', highlight_string('<?php '.$line, true));
+                $rows .= $this->getPartHtml('code-row', ['is_odd' => $i % 2 === 0, 'row_num' => $i + 1, 'code_html' => (string)$html]);
+            }
+            $format = $this->getPartHtml('table', ['is_form' => true, 'rows_html' => str_replace('&nbsp;&nbsp;', '&nbsp; ', $rows)]);
+        } else {
+            $scripts = '';
+            if ($sname !== 'hljs') {
+                $scripts = $this->getPartHtml('head-script-src', ['src' => 'plugins/highlightjs/highlight.min.js', 'attr' => ''])
+                    .$this->getPartHtml('head-script-src', ['src' => 'plugins/highlightjs/highlight-line-numbers.min.js', 'attr' => ''])
+                    .$this->getPartHtml('head-script-inline', ['js' => 'hljs.highlightAll();hljs.initLineNumbersOnLoad();']);
+                $sname = 'hljs';
+            }
+            $hlang = ['jscript' => 'javascript', 'vb' => 'vbnet', 'plain' => 'plaintext'][strtolower($cname)] ?? strtolower($cname);
+            $format = $this->getPartHtml('code-highlight', ['scripts_html' => $scripts, 'lang' => $hlang,
+                'code_html' => htmlspecialchars($code, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')]);
+        }
+        return $this->getPartHtml('div', ['is_code' => true, 'title' => $cname.' - '._CODE, 'content_html' => $format], true);
+    }
+
     # Process BB block tags: bracket-free *NN smilies first, then behind the [ guard: [hr], [li], [usehtml], [usephp], [tabs], [code], [php], [quote]/[hide]/alignment, [attach=]
     # Both trusted tags act in trusted rendering and in a safe rendering that trusts its tags
     # The right to author them belongs to the super administrator alone and is settled by filterTrustedTags() at every write
@@ -553,13 +594,13 @@ class Parser {
 
         $src = preg_replace_callback(
             '/\[code=(.*?)\](.*?)\[\/code\]/si',
-            fn(array $m): string => $this->addStash((string)encode_php([0 => $m[0], 1 => $m[1], 2 => $m[2]])),
+            fn(array $m): string => $this->addStash($this->getCodeHtml($m[2], $m[1])),
             $src
         ) ?? $src;
 
         $src = preg_replace_callback(
             '/\[php\](.*?)\[\/php\]/si',
-            fn(array $m): string => $this->addStash((string)encode_php([0 => $m[0], 1 => $m[1]])),
+            fn(array $m): string => $this->addStash($this->getCodeHtml($m[1], 'php')),
             $src
         ) ?? $src;
 
