@@ -559,7 +559,7 @@ function setNodeList(): void {
             $page = $tpl->getHtmlPart(getNodeTplName('partials', 'list', $type), [
                 'navi_html' => getNodeNavi($type, $key, $way, $cat),
                 'intro' => ($cat || $num > 1 || $let !== '') ? '' : getConst($type->intro),
-                'cats_html' => $type->settings['features']['categories'] ? setCategories($type->name, 1, false, $cat) : '',
+                'cats_html' => $type->settings['features']['categories'] ? setCategories($type->name, $cat) : '',
                 'letters_html' => $set['alpha'] ? getLetterNavi($type->name, $cat) : '',
                 'items_html' => $items,
                 'pager_html' => getTplPagerView($num, $pages, 8, $link, ['count' => $count, 'limit' => $set['limit']]),

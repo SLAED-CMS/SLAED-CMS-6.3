@@ -1903,16 +1903,22 @@
 
     // Rating votes: every intended click carries a fresh delivery key, and the key stays on the control while the outcome is unknown - a lost connection or a
     // server failure - so the repeat of the same click answers the stored vote instead of placing a second one. A refusal keeps the block and is told by the warning toast
-    // A star vote is remembered with the box it lands in, so the stars up to the chosen one burst in a row once the
-    // counted rating is swapped in; a refused vote swaps nothing and forgets it
+    // A vote is remembered with the box it lands in: once the counted rating is swapped in, a star vote bursts the stars up
+    // to the chosen one in a row and a thumb vote bursts the thumb that was pressed; a refused vote swaps nothing and forgets it
     var ratepending = null;
 
     function setRatingBurst(box) {
         if (!ratepending || !box || box.id !== ratepending.id) return;
-        var stars = box.querySelectorAll('.sl-urating .sl-star');
-        var rate = Math.min(ratepending.rate, stars.length);
+        var rate = ratepending.rate;
+        var thumb = ratepending.thumb;
         ratepending = null;
-        for (var i = 0; i < rate; i++) setBurst(stars[i], i);
+        if (thumb) {
+            var hand = box.querySelector(rate === 5 ? '.sl-rate-plus' : '.sl-rate-minus');
+            if (hand) setBurst(hand);
+            return;
+        }
+        var stars = box.querySelectorAll('.sl-urating .sl-star');
+        for (var i = 0; i < Math.min(rate, stars.length); i++) setBurst(stars[i], i);
     }
 
     function setRatingVotes() {
@@ -1921,10 +1927,11 @@
             if (!elt || !elt.closest || !elt.closest('[data-sl-rate]')) return;
             if (!elt.getAttribute('data-sl-rate-key')) elt.setAttribute('data-sl-rate-key', getRequestKey());
             event.detail.parameters.request = elt.getAttribute('data-sl-rate-key');
-            var stars = elt.closest('.sl-urating');
+            var host = elt.closest('[data-sl-rate]');
             var rate = parseInt(event.detail.parameters.rate, 10);
-            if (stars && elt.classList.contains('sl-star') && rate > 0) {
-                ratepending = { id: (stars.getAttribute('hx-target') || '').replace(/^#/, ''), rate: rate };
+            var thumb = elt.classList.contains('sl-rate-plus') || elt.classList.contains('sl-rate-minus');
+            if (rate > 0 && (thumb || elt.classList.contains('sl-star'))) {
+                ratepending = { id: (host.getAttribute('hx-target') || '').replace(/^#/, ''), rate: rate, thumb: thumb };
             }
         });
         document.addEventListener('htmx:afterSwap', function (event) {

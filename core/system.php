@@ -2456,8 +2456,8 @@ function checkCaptcha(string $act): bool {
     return Captcha::check($act);
 }
 
-# Build the module categories block: fluid tiles with tinted icon and subcategory chips
-function setCategories(string $mod, int $sub, bool $desc, string $id = ''): string {
+# Build the module categories block: fluid tiles with tinted icon, the description and subcategory chips
+function setCategories(string $mod, string $id = ''): string {
  global $db, $conf, $locale, $tpl;
     if (!filterVar($mod)) return '';
     $id = intval($id) ?: 0;
@@ -2484,7 +2484,7 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
             $hidden = !is_acess($val[6]);
             $subs = [];
             foreach ($massiv as $sval) {
-                if ($val[0] == $sval[4] && is_acess($sval[5]) && $sub == 1 && is_acess($sval[6])) {
+                if ($val[0] == $sval[4] && is_acess($sval[5]) && is_acess($sval[6])) {
                     $sname = getConst($sval[1]);
                     $subs[] = ['href' => getSeoUrl(['name' => $mod, 'cat' => $sval[0]]), 'title' => $sname, 'name' => $sname];
                 }
@@ -2497,7 +2497,7 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
                 'name' => $name,
                 'icon_name' => preg_match('/^[a-z0-9-]+$/', (string)$val[3]) ? $val[3] : 'folder',
                 'count' => '',
-                'description' => $desc ? getConst($val[2]) : '',
+                'description' => getConst($val[2]),
                 'subs' => $subs,
             ]);
         }

@@ -6590,10 +6590,17 @@ a.sl-chip-neutral {
   box-shadow: var(--sl-spark-shadow);
 }
 
-/* A rating star is a bare glyph, so it takes the round the ring wave needs only while it bursts */
-.sl-urating .sl-is-burst {
+/* A rating star is a bare glyph and a thumb an inline chip, so both take the round the ring wave needs only while they
+   burst; a thumb bursts in the tone its hover promised, the up thumb with the copy feedback below */
+.sl-urating .sl-is-burst,
+.sl-rate-like .sl-is-burst {
   position: relative;
   border-radius: var(--sl-radius-circle);
+}
+
+.sl-rate-minus.sl-is-burst {
+  background-color: var(--sl-danger);
+  color: var(--sl-on-solid);
 }
 
 @keyframes sl-burst-pop {
@@ -6753,7 +6760,8 @@ button.sl-but-mini.sl-net-brand:hover,
   filter: brightness(1.15);
 }
 
-/* Copy feedback: the pressed control flashes green with a check icon */
+/* Copy feedback: the pressed control flashes green with a check icon; an up thumb bursts in the same green */
+.sl-rate-plus.sl-is-burst,
 .sl-is-copied,
 .sl-chip.sl-is-copied,
 a.sl-but-mini.sl-is-copied:hover,
