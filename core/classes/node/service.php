@@ -147,13 +147,16 @@ final class NodeService {
     }
 
     # Refuse a new name outside the grammar, a reserved name, a module name other than the nine replacements, or a name a shared area already carries
+    # The upload rule a removed module left under one of the nine replaced names is no refusal: the new type takes it over, see addNodeType()
     # Also refuse a name the upload root holds in another case and a name whose categories, comments or favorites remain from an earlier owner
     private function checkNewName(string $name, array $base): void {
         global $conf;
         if (!preg_match(self::NAME, $name) || in_array($name, self::RESERVED, true)) throw $this->getInvalid('name');
+        $swap = in_array($name, self::SWAPS, true);
         $module = isset($conf['modules'][$name]) || is_dir(BASE_DIR.'/modules/'.$name);
-        if ($module && !in_array($name, self::SWAPS, true)) throw $this->getInvalid('name');
-        $used = isset($base['node']['types'][$name]) || isset($base['fields']['node'][$name]) || isset($base['uploads'][$name]) || isset($base['ratings']['node.'.$name]);
+        if ($module && !$swap) throw $this->getInvalid('name');
+        $used = isset($base['node']['types'][$name]) || isset($base['fields']['node'][$name]) || (isset($base['uploads'][$name]) && !$swap)
+            || isset($base['ratings']['node.'.$name]);
         if ($used) throw $this->getInvalid('name');
         $list = scandir(UPLOADS_DIR);
         if ($list === false) throw $this->getStorage('The upload root cannot be listed');
@@ -458,10 +461,20 @@ final class NodeService {
 
     # Create a disabled type of version 1 under a new public name: its row, its sections in the four shared areas and its upload directory with the guard
     # An empty upload rule copies the rule all and an empty rating rule is the new rule; an existing directory is taken only when it holds nothing but guard files
+    # An empty upload rule of one of the nine replaced names takes over the valid rule the removed module left under that name; a broken one is logged and all applies
     public function addNodeType(string $name, NodeTypeInput $input): NodeType {
         $this->setTypeWrite($name, function (array $base, ?array $row) use ($name, $input): array {
             if ($row !== null) throw $this->getInvalid('name');
             $this->checkNewName($name, $base);
+            $left = $input->uploads === [] && isset($base['uploads'][$name]);
+            $old = $left ? $this->getUploadPieces($base['uploads'][$name]) : [];
+            try {
+                $fine = $old !== [] && $this->filterUploadRule($old) !== '';
+            } catch (NodeException) {
+                $fine = false;
+            }
+            if ($left && !$fine) Logger::addSite('warning', 'Node: the upload rule a removed module left is invalid, the new type takes the rule all', ['name' => $name]);
+            if ($fine) $input = new NodeTypeInput($input->title, $input->intro, $input->ext, $input->sort, $input->settings, $input->fields, $old, $input->rating);
             $data = $this->getTypeData($input, $base, true, 1);
             $this->setTypeRoot($name);
             $sql = 'INSERT INTO '.PREFIX_DB.'_node_types (name, title, intro, ext, active, sort, version, created, updated)'
@@ -1081,7 +1094,7 @@ final class NodeService {
     }
 
     # Keep the delivery of a future publication in line with the stored state: a published material with a future date has its job and any other state has none
-    # A publication whose date has come, at once or because a pending job was moved into the past, is rewarded inside this transaction
+    # A publication whose date has come, at once or because a pending job was moved into the past, is rewarded inside this transaction, a material of a removed module never
     private function setPublishJob(NodeType $type, int $id, int $uid, NodeStatus $status, ?string $pub, ?string $job, bool $was, string $now): void {
         $live = $status === NodeStatus::Published;
         $wait = $live && $pub !== null && strcmp($pub, $now) > 0;
@@ -1091,7 +1104,13 @@ final class NodeService {
         } elseif (!$wait && $job !== null) {
             $this->getQueryRes('DELETE FROM '.PREFIX_DB.'_node_publish WHERE nid = :id', ['id' => $id]);
         }
-        if ($live && !$wait && (!$was || $job !== null)) $this->addNodePoint('publish', $type, 'node:'.$id, $uid);
+        if ($live && !$wait && (!$was || $job !== null) && !$this->checkNodeLegacy($id)) $this->addNodePoint('publish', $type, 'node:'.$id, $uid);
+    }
+
+    # Whether a material came from a removed module: that module rewarded its publication and 6.3 carried the balance, so Node never rewards it a second time
+    # One indexed read, asked only on the way to a publication award
+    private function checkNodeLegacy(int $id): bool {
+        return $this->getRowCount('SELECT COUNT(*) FROM '.PREFIX_DB.'_node_legacy WHERE nid = :id', ['id' => $id]) > 0;
     }
 
     # Build one resource from its row, the unknown metadata as null
@@ -1497,7 +1516,7 @@ final class NodeService {
                 $this->getQueryRes('UPDATE '.PREFIX_DB.'_node_publish SET due = published WHERE nid = :id', ['id' => $id]);
             } else {
                 $uid = intval($row['uid']);
-                $user = $uid > 0 && $this->getRowCount('SELECT COUNT(*) FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $uid]) > 0;
+                $user = $uid > 0 && $this->getRowCount('SELECT COUNT(*) FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $uid]) > 0 && !$this->checkNodeLegacy($id);
                 $shut = $user && !$this->getPoint()->valid;
                 if ($shut) Logger::addSite('warning', 'Node: a publication was delivered without its award, the points configuration is closed or invalid', ['nid' => $id]);
                 $done = !$user || $shut || $this->getPoint()->addEvent('publish', 'node.'.$name, 'node:'.$id, $uid);

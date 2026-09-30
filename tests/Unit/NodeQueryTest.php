@@ -65,6 +65,7 @@ final class NodeQueryTest extends TestCase
             'getNodeContent' => ['int id', 'NodeType type', '?Node'],
             'getNodeCount' => ['int'],
             'getNodeDeadline' => ['?int'],
+            'getNodeLegacy' => ['string mod', 'int id = 0', '?array'],
             'getNodeList' => ['array'],
             'getNodeSitemap' => ['int after = 0', 'int limit = 500', 'array'],
             'getNodeTarget' => ['string type', 'int id', 'bool any = false', '?NodeTarget'],
@@ -478,6 +479,8 @@ final class NodeQueryTest extends TestCase
         $this->assertSame(['class' => 'NodeTarget', 'type' => true, 'id' => 101, 'uid' => 2, 'title' => 'Open air', 'comon' => 'Open', 'comnum' => 0, 'score' => 8, 'ratings' => 2,
             'props' => ['type', 'id', 'uid', 'title', 'comon', 'comnum', 'score', 'ratings']], $run['one']);
         $this->assertTrue($run['shared']);
+        $this->assertSame(['item' => ['type' => 'news', 'nid' => 101], 'list' => ['type' => 'docs', 'nid' => 0], 'off' => null, 'miss' => null, 'bad' => null],
+            $run['legacy'], 'An old address of a removed module does not lead to its migrated material or type');
         $this->assertFalse($run['wrongtype']);
         $this->assertSame([[], 0], $run['empty']);
         $this->assertSame(['count' => 30, 'sql' => 2], $run['big']);

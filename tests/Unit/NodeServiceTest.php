@@ -352,6 +352,8 @@ final class NodeServiceTest extends TestCase
         $this->assertSame(['processed' => 1, 'failed' => 0, 'skipped' => 0], $run['zero']['run']);
         $this->assertSame([null, 0], [$run['zero']['job'], $run['zero']['points']], 'A zero reward did not absorb the job');
         $this->assertSame(['Published', 1], $run['zero']['later'], 'An absorbed job blocks the first reward of a later publication');
+        $this->assertSame(['run' => ['processed' => 1, 'failed' => 0, 'skipped' => 0], 'job' => null, 'points' => 0, 'later' => ['Published', 0]], $run['legacy'],
+            'A material of a removed module was rewarded again for a publication its module already rewarded');
         $edge = $run['edge'];
         $this->assertSame(['processed' => 3, 'failed' => 0, 'skipped' => 0], $edge['run']);
         $this->assertSame([null, null, 0, null, 1], [$edge['anon'], $edge['lost'], $edge['lostpts'], $edge['gap'], $edge['gappts']],

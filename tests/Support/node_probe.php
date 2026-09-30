@@ -84,7 +84,7 @@ final class ProbeHoldDb extends Database {
 const PROBEPREF = 'probe';
 
 # The Node tables of the fresh schema in the order they have to be created
-const PROBENODE = ['node_types', 'nodes', 'node_assets', 'node_categories', 'node_publish', 'node_relations', 'node_support', 'node_sync'];
+const PROBENODE = ['node_types', 'nodes', 'node_assets', 'node_categories', 'node_legacy', 'node_publish', 'node_relations', 'node_support', 'node_sync'];
 
 # Every name the closed map may load, and names a crafted or future request could ask for
 const PROBECLASS = [
@@ -249,7 +249,7 @@ function getProbeTry(PDO $pdo, string $sql): string {
 # The rows one material still owns in every dependent table, relations counted from both ends
 function getProbeOwned(PDO $pdo, int $id): array {
     $out = [];
-    foreach (['node_assets', 'node_categories', 'node_publish', 'node_support', 'node_sync'] as $name) {
+    foreach (['node_assets', 'node_categories', 'node_legacy', 'node_publish', 'node_support', 'node_sync'] as $name) {
         $out[$name] = intval($pdo->query('SELECT COUNT(*) FROM `'.PROBEPREF.'_'.$name.'` WHERE nid = '.$id)->fetchColumn());
     }
     $out['node_relations'] = intval($pdo->query('SELECT COUNT(*) FROM `'.PROBEPREF.'_node_relations` WHERE nid = '.$id.' OR rid = '.$id)->fetchColumn());
@@ -277,6 +277,9 @@ function getProbeRules(PDO $pdo): array {
         'kind' => getProbeTry($pdo, 'INSERT INTO '.$pre.'node_assets` (nid, kind, role, src, intro) VALUES (2, \'doc\', \'download\', \'a.doc\', \'\')'),
         'role' => getProbeTry($pdo, 'INSERT INTO '.$pre.'node_assets` (nid, kind, role, src, intro) VALUES (2, \'file\', \'\', \'a.doc\', \'\')'),
         'src' => getProbeTry($pdo, 'INSERT INTO '.$pre.'node_assets` (nid, kind, role, src, intro) VALUES (2, \'file\', \'download\', \'\', \'\')'),
+        'legacy' => getProbeTry($pdo, 'INSERT INTO '.$pre.'node_legacy` (modul, oid, nid) VALUES (\'news\', 7, 1), (\'pages\', 7, 2)'),
+        'legtwin' => getProbeTry($pdo, 'INSERT INTO '.$pre.'node_legacy` (modul, oid, nid) VALUES (\'news\', 7, 3)'),
+        'legorphan' => getProbeTry($pdo, 'INSERT INTO '.$pre.'node_legacy` (modul, oid, nid) VALUES (\'faq\', 7, 99)'),
         'support' => getProbeTry($pdo, 'INSERT INTO '.$pre.'node_support` (nid) VALUES (1)'),
         'suptwin' => getProbeTry($pdo, 'INSERT INTO '.$pre.'node_support` (nid) VALUES (1)'),
         'state' => getProbeTry($pdo, 'INSERT INTO '.$pre.'node_support` (nid, state) VALUES (2, 3)'),
@@ -562,6 +565,7 @@ function addProbeRows(PDO $pdo): void {
         .' (4, 301, \'image\', \'gone\', \'x.png\', \'x.png\', \'\', NULL, NULL, NULL, NULL, 0, 0),'
         .' (5, 304, \'file\', \'download\', \'draft.pdf\', \'draft.pdf\', \'\', NULL, NULL, NULL, NULL, 0, 0),'
         .' (6, 101, \'image\', \'cover\', \'n.png\', \'n.png\', \'\', NULL, NULL, NULL, NULL, 0, 0)');
+    $pdo->exec('INSERT INTO '.$pre.'node_legacy (modul, oid, nid) VALUES (\'news\', 7, 101), (\'pages\', 9, 202), (\'gone\', 1, 401)');
 }
 
 # The test implementations of the extension interface: one the scratch map registers under the key probe, one no key names
@@ -1071,6 +1075,8 @@ function getProbeTargets(): array {
         return count($list) === 2 && $list[0]->type === $list[1]->type;
     })();
     $out['wrongtype'] = $query->getNodeTarget('docs', 101) !== null;
+    $out['legacy'] = ['item' => $query->getNodeLegacy('news', 7), 'list' => $query->getNodeLegacy('pages'), 'off' => $query->getNodeLegacy('gone', 1),
+        'miss' => $query->getNodeLegacy('news', 8), 'bad' => $query->getNodeLegacy('News', 7)];
     [$empty, $num] = getProbeCost(fn(): array => getProbeQuery('guest')->getNodeTargetList([]));
     $out['empty'] = [$empty, $num];
     $big = array_fill_keys(range(1001, 1500), 'plain');
@@ -1471,6 +1477,25 @@ function getProbeSvcNames(): array {
     return $out;
 }
 
+# Upload rules removed modules left under two of the nine replaced names: the valid one becomes the rule of the new type, the broken one gives way to the rule all
+function getProbeSvcLegacy(): array {
+    $srv = getProbeService('boss');
+    $file = CONFIG_DIR.'/uploads.php';
+    $data = require $file;
+    $rule = 'gif,png,zip|1000|500|100|100|5|120|10|10|1|0|10';
+    $data['uploads']['jokes'] = $rule;
+    $data['uploads']['content'] = 'gif|1|2';
+    setProbeFile($file, $data);
+    if (is_file(CONFIG_DIR.'/local.php')) unlink(CONFIG_DIR.'/local.php');
+    $out = ['rule' => $rule, 'add' => [], 'trace' => [], 'gone' => []];
+    foreach (['jokes', 'content'] as $name) {
+        $out['add'][$name] = getProbeCall(fn(): int => $srv->addNodeType($name, getProbeInput())->version);
+        $out['trace'][$name] = getProbeTrace($name);
+        $out['gone'][$name] = getProbeCall(fn(): null => $srv->deleteNodeType($name, 1));
+    }
+    return $out;
+}
+
 # Create: news, files over a directory of guards alone and docs as their profiles define them; the stored form, the defaults of both rules, the guard and the cache generation
 function getProbeSvcAdd(): array {
     $srv = getProbeService('boss');
@@ -1819,6 +1844,7 @@ function getProbeServiceRuns(): array {
     addProbeWeb();
     $out['rights'] = getProbeSvcRights();
     $out['names'] = getProbeSvcNames();
+    $out['legacy'] = getProbeSvcLegacy();
     $out['add'] = getProbeSvcAdd();
     $out['update'] = getProbeSvcUpdate();
     $out['assets'] = getProbeSvcAssets($pdo);
@@ -2526,6 +2552,12 @@ function getProbeMatPublish(): array {
     $GLOBALS['pdb']->getSqlQuery('UPDATE '.$pre.'nodes SET expires = :exp WHERE id = :id', ['exp' => getProbeClock(-60), 'id' => $gap->id]);
     $out['edge'] = ['run' => $run()['extra'], 'anon' => getProbeJob($anon->id), 'lost' => getProbeJob($lost->id), 'lostpts' => count(getProbePoints('publish',
         'node:'.$lost->id)), 'gap' => getProbeJob($gap->id), 'gappts' => $pts($gap->id)];
+    $leg = $late();
+    $GLOBALS['pdb']->getSqlQuery('INSERT INTO '.$pre.'node_legacy (modul, oid, nid) VALUES (\'news\', 7, :id)', ['id' => $leg->id]);
+    setProbeCome($leg->id);
+    $out['legacy'] = ['run' => $run()['extra'], 'job' => getProbeJob($leg->id), 'points' => $pts($leg->id)];
+    $dis = $srv->updateNodeStatus($leg->id, NodeStatus::Disabled, 1);
+    $out['legacy']['later'] = [$srv->updateNodeStatus($leg->id, NodeStatus::Published, $dis->version)->status->name, $pts($leg->id)];
     $shut = $late();
     setProbeCome($shut->id);
     $GLOBALS['pdb']->getSqlQuery('UPDATE '.$pre.'node_types SET active = 0 WHERE name = \'news\'');

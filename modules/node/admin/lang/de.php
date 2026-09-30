@@ -102,11 +102,6 @@ define('_NODE_SYNCSKIP','Die Quelle wurde nicht geprüft: das Material wurde inz
 define('_NODE_TCREATED','Der Typ wurde deaktiviert angelegt. Prüfen Sie seine Einstellungen und schalten Sie ihn ein.');
 define('_NODE_TDELETED','Der Typ wurde gelöscht.');
 define('_NODE_TGUARD','Der Typ %s wurde nicht eingeschaltet: der Webserver verweigert den direkten Zugriff auf sein Upload-Verzeichnis nicht oder das Verzeichnis ist nicht beschreibbar.');
-define('_NODE_TODEL','In den Papierkorb');
-define('_NODE_TODRAFT','Zu den Entwürfen');
-define('_NODE_TOOFF','Deaktivieren');
-define('_NODE_TOPEND','Zur Prüfung');
-define('_NODE_TOPUB','Veröffentlichen');
 define('_NODE_TSAVED','Der Typ wurde gespeichert.');
 define('_NODE_TYPEOFF','Der Typ wurde ausgeschaltet.');
 define('_NODE_TYPEON','Der Typ wurde eingeschaltet.');

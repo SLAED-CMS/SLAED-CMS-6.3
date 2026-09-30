@@ -1131,6 +1131,17 @@ final class NodeQuery {
         return min(500, $this->getNodeLimits($conf['node'] ?? null)['syncbatch'] ?? 500);
     }
 
+    # The new place of an address of a removed module the migration carried: the type and material of one old id, or with id 0 the type its materials went to
+    # The map is _node_legacy; a type the context may not receive answers null like a missing row, and the material itself is checked by the route it leads to
+    public function getNodeLegacy(string $mod, int $id = 0): ?array {
+        if (!preg_match(self::NAME, $mod) || $id < 0 || $id > 4294967295) return null;
+        $sql = 'SELECT t.name, l.nid FROM '.PREFIX_DB.'_node_legacy AS l INNER JOIN '.PREFIX_DB.'_nodes AS n ON n.id = l.nid'
+            .' INNER JOIN '.PREFIX_DB.'_node_types AS t ON t.id = n.tid WHERE l.modul = :mod'.($id > 0 ? ' AND l.oid = :oid' : '').' LIMIT 1';
+        $row = $this->getQueryRows($sql, ['mod' => $mod] + ($id > 0 ? ['oid' => $id] : []))[0] ?? null;
+        if ($row === null || $this->getNodeType($row['name']) === null) return null;
+        return ['type' => $row['name'], 'nid' => ($id > 0) ? intval($row['nid']) : 0];
+    }
+
     # Read the light target of one global id of the expected type with the very check of the batch read
     public function getNodeTarget(string $type, int $id, bool $any = false): ?NodeTarget {
         return $this->getNodeTargetList([$id => $type], $any)[$id] ?? null;

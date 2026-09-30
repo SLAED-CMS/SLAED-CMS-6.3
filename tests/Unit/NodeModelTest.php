@@ -355,7 +355,7 @@ final class NodeModelTest extends TestCase
         $update = self::getSql('table_update6_3.sql');
         preg_match_all('/CREATE TABLE `\{prefix\}_(node[a-z_]*)` (\(.*?\n\)\s*ENGINE[^;]*;)/s', $fresh, $new, PREG_SET_ORDER);
         preg_match_all('/CREATE TABLE IF NOT EXISTS `\{prefix\}_(node[a-z_]*)` (\(.*?\n\)\s*ENGINE[^;]*;)/s', $update, $old, PREG_SET_ORDER);
-        $want = ['node_types', 'nodes', 'node_assets', 'node_categories', 'node_publish', 'node_relations', 'node_support', 'node_sync'];
+        $want = ['node_types', 'nodes', 'node_assets', 'node_categories', 'node_legacy', 'node_publish', 'node_relations', 'node_support', 'node_sync'];
         $this->assertSame($want, array_column($new, 1), 'table.sql does not create the Node tables in dependency order');
         $this->assertSame(array_column($new, 2, 1), array_column($old, 2, 1), 'The update creates other Node tables than a fresh install');
         $this->assertSame(1, preg_match_all('/MODIFY `modules`\s+(.+?),?\n/', $update, $mods), 'The administrator rights are declared more than once');
@@ -371,13 +371,14 @@ final class NodeModelTest extends TestCase
         $run = $this->getProbe()['runs']['fresh'];
         $this->assertSame(1, $run['checks'], 'The install did not run with foreign key checks on');
         $this->assertSame([], $run['failed']);
-        $this->assertSame(array_fill_keys(['probe_node_assets', 'probe_node_categories', 'probe_node_publish', 'probe_node_relations', 'probe_node_support', 'probe_node_sync',
-            'probe_node_types', 'probe_nodes'], 'InnoDB'), $run['engines']);
+        $this->assertSame(array_fill_keys(['probe_node_assets', 'probe_node_categories', 'probe_node_legacy', 'probe_node_publish', 'probe_node_relations', 'probe_node_support',
+            'probe_node_sync', 'probe_node_types', 'probe_nodes'], 'InnoDB'), $run['engines']);
         $want = ['probe_chk_node_assets_kind' => 'CHECK', 'probe_chk_node_assets_role' => 'CHECK', 'probe_chk_node_assets_src' => 'CHECK',
             'probe_chk_node_relations_self' => 'CHECK', 'probe_chk_node_support_prio' => 'CHECK', 'probe_chk_node_support_state' => 'CHECK',
             'probe_chk_node_sync_refresh' => 'CHECK', 'probe_fk_nodes_type' => 'FOREIGN KEY', 'probe_fk_node_assets_node' => 'FOREIGN KEY',
-            'probe_fk_node_categories_node' => 'FOREIGN KEY', 'probe_fk_node_publish_node' => 'FOREIGN KEY', 'probe_fk_node_relations_node' => 'FOREIGN KEY',
-            'probe_fk_node_relations_related' => 'FOREIGN KEY', 'probe_fk_node_support_node' => 'FOREIGN KEY', 'probe_fk_node_sync_node' => 'FOREIGN KEY'];
+            'probe_fk_node_categories_node' => 'FOREIGN KEY', 'probe_fk_node_legacy_node' => 'FOREIGN KEY', 'probe_fk_node_publish_node' => 'FOREIGN KEY',
+            'probe_fk_node_relations_node' => 'FOREIGN KEY', 'probe_fk_node_relations_related' => 'FOREIGN KEY', 'probe_fk_node_support_node' => 'FOREIGN KEY',
+            'probe_fk_node_sync_node' => 'FOREIGN KEY'];
         $this->assertSame($want, array_filter($run['constraints'], fn($k) => str_contains($k, '_node'), ARRAY_FILTER_USE_KEY));
     }
 
@@ -393,6 +394,7 @@ final class NodeModelTest extends TestCase
                 'updated' => 'tid,status,pinned,updated,id', 'views' => 'tid,status,pinned,views,published,id'],
             'node_assets' => ['node' => 'nid,role,sort,id', 'report' => 'reported,id', 'src' => 'src(191)', 'unique PRIMARY' => 'id'],
             'node_categories' => ['cat' => 'cid,nid', 'unique PRIMARY' => 'id', 'unique node' => 'nid,cid'],
+            'node_legacy' => ['node' => 'nid', 'unique PRIMARY' => 'modul,oid'],
             'node_publish' => ['queue' => 'due,nid', 'unique PRIMARY' => 'nid'],
             'node_relations' => ['source' => 'nid,type,sort,rid', 'target' => 'rid,type,sort,nid', 'unique PRIMARY' => 'id', 'unique edge' => 'nid,type,rid'],
             'node_support' => ['admin' => 'aid,state,activity,id', 'queue' => 'state,prio,activity,id', 'unique PRIMARY' => 'id', 'unique node' => 'nid'],
@@ -407,11 +409,11 @@ final class NodeModelTest extends TestCase
     public function theConstraintsHoldAgainstRealRows(): void
     {
         $run = $this->getProbe()['runs']['fresh']['rules'];
-        foreach (['type', 'nodes', 'category', 'relation', 'asset', 'support', 'sync', 'manual', 'publish', 'drop', 'empty', 'typegone'] as $key) {
+        foreach (['type', 'nodes', 'category', 'legacy', 'relation', 'asset', 'support', 'sync', 'manual', 'publish', 'drop', 'empty', 'typegone'] as $key) {
             $this->assertSame('accepted', $run[$key], $key);
         }
-        foreach (['twin', 'catwin', 'reltwin', 'suptwin', 'synctwin', 'pubtwin'] as $key) $this->assertSame('refused 1062', $run[$key], $key);
-        foreach (['orphan', 'catorphan', 'relorphan', 'retype'] as $key) $this->assertSame('refused 1452', $run[$key], $key);
+        foreach (['twin', 'catwin', 'legtwin', 'reltwin', 'suptwin', 'synctwin', 'pubtwin'] as $key) $this->assertSame('refused 1062', $run[$key], $key);
+        foreach (['orphan', 'catorphan', 'legorphan', 'relorphan', 'retype'] as $key) $this->assertSame('refused 1452', $run[$key], $key);
         foreach (['relself', 'kind', 'role', 'src', 'state', 'prio', 'refresh', 'longest'] as $key) {
             $this->assertMatchesRegularExpression('/^refused (4025|3819)$/', $run[$key], $key);
         }
@@ -430,12 +432,13 @@ final class NodeModelTest extends TestCase
         $this->assertEquals(['refresh' => 3600, 'due' => null, 'etag' => '', 'modified' => '', 'fails' => 0, 'error' => ''], $run['syncdef']);
     }
 
-    # The physical delete of a material removes its categories, assets, delivery, support and sync rows and its relations from both ends, and nothing else
+    # The physical delete of a material removes its categories, legacy address, assets, delivery, support and sync rows and its relations from both ends, and nothing else
     #[Test]
     public function deletingAMaterialCascadesToItsOwnRowsOnly(): void
     {
         $run = $this->getProbe()['runs']['fresh']['rules'];
-        $this->assertSame(['node_assets' => 2, 'node_categories' => 1, 'node_publish' => 1, 'node_support' => 1, 'node_sync' => 1, 'node_relations' => 2], $run['before']);
+        $want = ['node_assets' => 2, 'node_categories' => 1, 'node_legacy' => 1, 'node_publish' => 1, 'node_support' => 1, 'node_sync' => 1, 'node_relations' => 2];
+        $this->assertSame($want, $run['before']);
         $this->assertSame(array_fill_keys(array_keys($run['before']), 0), $run['after']);
         $this->assertSame(1, $run['others'], 'The relation between two other materials was removed');
     }

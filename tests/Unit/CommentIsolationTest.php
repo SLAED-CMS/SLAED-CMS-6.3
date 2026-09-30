@@ -8,9 +8,9 @@ use PHPUnit\Framework\TestCase;
 # The comment table has exactly one owner, the global helpers that shared it are gone, and no table name built from a variable reaches it
 final class CommentIsolationTest extends TestCase
 {
-    # The one file allowed to name the comment table, and the trees whose content is generated, vendored or deliberately outside the rule
+    # The one file allowed to name the comment table, and the trees generated, vendored or outside the rule, the one-off migration update.php beside setup
     private const OWNER = 'core/classes/comment.php';
-    private const SKIP = ['vendor', 'node_modules', 'storage', 'setup', 'tools', 'tests', '.git'];
+    private const SKIP = ['vendor', 'node_modules', 'storage', 'setup', 'update.php', 'tools', 'tests', '.git'];
 
     # Every production file that builds a table name from a variable, measured on 2026-07-28; a new entry has to be reviewed before it is added here
     private const ASSEMBLED = [

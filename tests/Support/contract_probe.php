@@ -99,13 +99,17 @@ function getProbeComment(): array {
 }
 
 # Report whether the read methods of the Comment class answer exactly what the queries they replace answer, against the live rows of this installation
+# The legacy queries know no read rights, so the comparison leaves out comments on Node types: samples come from other targets and wide lists drop those modules
 function getProbeCommentRead(): array {
     global $db, $com, $conf;
     $sort = !empty($conf['comments']['sort']) ? 'ASC' : 'DESC';
     $lnum = intval($conf['comments']['num'] ?? 15);
     $anum = intval($conf['comments']['anum'] ?? 25);
     $out = ['wired' => ($com instanceof Comment)];
-    $top = $db->getSqlRow($db->getSqlQuery('SELECT modul, cid, COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE status = 1 GROUP BY modul, cid ORDER BY num DESC LIMIT 1'));
+    $bare = 'modul NOT IN (SELECT name FROM '.PREFIX_DB.'_node_types)';
+    $free = 'uid NOT IN (SELECT uid FROM '.PREFIX_DB.'_comment WHERE modul IN (SELECT name FROM '.PREFIX_DB.'_node_types))';
+    $sql = 'SELECT modul, cid, COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE status = 1 AND '.$bare.' GROUP BY modul, cid ORDER BY num DESC LIMIT 1';
+    $top = $db->getSqlRow($db->getSqlQuery($sql));
     $mod = $top ? (string)$top['modul'] : '';
     $cid = $top ? intval($top['cid']) : 0;
     $out['target'] = [$mod, $cid];
@@ -129,7 +133,8 @@ function getProbeCommentRead(): array {
         $first = ($sort === 'ASC') ? $off + 1 : (($tot > $off) ? $tot - $off : $tot);
         $out['list'][] = [$was, array_column($now['rows'], 'id'), [$off, $pgs, $first], [$now['offset'], $now['pages'], $now['first']]];
     }
-    $urow = $db->getSqlRow($db->getSqlQuery('SELECT uid FROM '.PREFIX_DB.'_comment WHERE uid > 0 AND status = 1 GROUP BY uid ORDER BY COUNT(*) DESC LIMIT 1'));
+    $sql = 'SELECT uid FROM '.PREFIX_DB.'_comment WHERE uid IN (SELECT id FROM '.PREFIX_DB.'_users) AND status = 1 AND '.$free.' GROUP BY uid ORDER BY COUNT(*) DESC LIMIT 1';
+    $urow = $db->getSqlRow($db->getSqlQuery($sql));
     $uid = $urow ? intval($urow['uid']) : 0;
     $out['author'] = [];
     if ($uid) {
@@ -141,8 +146,10 @@ function getProbeCommentRead(): array {
             $was = [(string)$one['name'], (string)$one['rank'], intval($one['points'])];
             $was = array_merge($was, [(string)($one['gnam'] ?? ''), (string)($one['grnk'] ?? ''), (string)($one['gclr'] ?? '')]);
         }
-        $urow = $db->getSqlRow($db->getSqlQuery('SELECT modul, cid FROM '.PREFIX_DB.'_comment WHERE uid = :uid AND status = 1 ORDER BY id DESC LIMIT 1', ['uid' => $uid]));
-        $now = $com->getList((string)$urow['modul'], intval($urow['cid']), 1);
+        $urow = $db->getSqlRow($db->getSqlQuery('SELECT modul, cid, time FROM '.PREFIX_DB.'_comment WHERE uid = :uid AND status = 1 ORDER BY id DESC LIMIT 1', ['uid' => $uid]));
+        $sql = 'SELECT COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE modul = :mod AND cid = :cid AND status != 0 AND time '.(($sort === 'ASC') ? '<' : '>').' :time';
+        $pos = intval($db->getSqlRow($db->getSqlQuery($sql, ['mod' => $urow['modul'], 'cid' => $urow['cid'], 'time' => $urow['time']]))['num']);
+        $now = $com->getList((string)$urow['modul'], intval($urow['cid']), intdiv($pos, $lnum) + 1);
         $has = [];
         foreach ($now['rows'] as $one) {
             if ($one['uid'] !== $uid || !$one['user']) continue;
@@ -156,7 +163,7 @@ function getProbeCommentRead(): array {
     foreach ($db->getSqlRows($db->getSqlQuery($sql, ['uid' => $uid])) ?: [] as $one) $was[] = intval($one['id']);
     $out['feed'] = [$was, array_column($com->getUserList($uid, 25), 'id')];
     $was = [];
-    foreach ($db->getSqlRows($db->getSqlQuery('SELECT DISTINCT modul FROM '.PREFIX_DB.'_comment ORDER BY modul ASC')) ?: [] as $one) {
+    foreach ($db->getSqlRows($db->getSqlQuery('SELECT DISTINCT modul FROM '.PREFIX_DB.'_comment WHERE '.$bare.' ORDER BY modul ASC')) ?: [] as $one) {
         if ($one['modul'] !== '') $was[] = (string)$one['modul'];
     }
     $out['mods'] = [$was, $com->getModuleList()];
@@ -182,6 +189,7 @@ function getProbeCommentRead(): array {
     ];
     foreach ($cases as $case) {
         [$where, $args, $stat, $amod, $find, $term] = $case;
+        $where .= ' AND s.'.$bare;
         $cnt = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) AS num FROM '.$join.'WHERE s.deleted IS NULL AND '.$where, $args));
         $was = [];
         $list = $db->getSqlRows($db->getSqlQuery($sel.'WHERE s.deleted IS NULL AND '.$where.' ORDER BY s.time '.$aord.' LIMIT 0, '.$anum, $args)) ?: [];
@@ -750,12 +758,14 @@ function getProbeRssView(): array {
 
 # Report whether the migrated profile feed renders the same markup as the UNION it replaces, and whether the hub writes the three fields the comment branch of its own UNION wrote
 # The comparison runs without Node types: their tabs came after the move of the comments and the legacy copy has no equal of them, NodeQueryTest holds their numbers
+# The accounts are the busiest ones without a comment on a Node type, whose comments the class shows by read rights the legacy UNION never knew
 function getProbeCommentFeed(): array {
     global $db, $com;
     $GLOBALS['conf']['name'] = 'account';
     $GLOBALS['conf']['node']['types'] = [];
     $out = ['feed' => [], 'hub' => []];
-    $sql = 'SELECT uid, COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE uid > 0 GROUP BY uid ORDER BY num DESC LIMIT 6';
+    $sql = 'SELECT uid, COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE uid > 0'
+        .' AND uid NOT IN (SELECT uid FROM '.PREFIX_DB.'_comment WHERE modul IN (SELECT name FROM '.PREFIX_DB.'_node_types)) GROUP BY uid ORDER BY num DESC LIMIT 6';
     $uids = array_map(static fn(array $one): int => intval($one['uid']), $db->getSqlRows($db->getSqlQuery($sql)) ?: []);
     $free = 'SELECT id FROM '.PREFIX_DB.'_users WHERE id NOT IN (SELECT DISTINCT uid FROM '.PREFIX_DB.'_comment WHERE uid > 0) ORDER BY id ASC LIMIT 1';
     $row = $db->getSqlRow($db->getSqlQuery($free));
@@ -787,11 +797,14 @@ function getProbeCommentCount(string $where = '', array $pars = []): int {
 
 # Report whether deleteTarget() removes exactly the rows the module delete handlers removed before the move, inside a transaction that is always rolled back
 # The crafted arguments matter because the target id list is the one place a delete handler used to interpolate, so both the list and the module name are driven with hostile values
+# The account of the count is the busiest one without a comment on a Node type, because the class counts those by read rights the legacy count never knew
 function getProbeCommentTarget(): array {
     global $db, $com;
     $mods = ['news', 'voting'];
     $out = ['rows' => [], 'bulk' => [], 'cross' => [], 'refuse' => [], 'craft' => [], 'count' => [], 'clean' => false];
-    $urow = $db->getSqlRow($db->getSqlQuery('SELECT uid FROM '.PREFIX_DB.'_comment WHERE uid > 0 GROUP BY uid ORDER BY COUNT(*) DESC LIMIT 1'));
+    $sql = 'SELECT uid FROM '.PREFIX_DB.'_comment WHERE uid > 0 AND uid NOT IN (SELECT uid FROM '.PREFIX_DB.'_comment WHERE modul IN (SELECT name FROM '.PREFIX_DB.'_node_types))'
+        .' GROUP BY uid ORDER BY COUNT(*) DESC LIMIT 1';
+    $urow = $db->getSqlRow($db->getSqlQuery($sql));
     $uid = $urow ? intval($urow['uid']) : 0;
     $was = getProbeCommentCount('uid = :uid AND status != \'0\'', ['uid' => $uid]);
     $out['count'] = [$was, $com->getUserCount($uid), $com->getUserCount(0), $com->getUserCount(-5)];

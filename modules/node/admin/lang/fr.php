@@ -102,11 +102,6 @@ define('_NODE_SYNCSKIP','La source n\'a pas été vérifiée : la publication a 
 define('_NODE_TCREATED','Le type a été créé désactivé. Vérifiez ses réglages et activez-le.');
 define('_NODE_TDELETED','Le type a été supprimé.');
 define('_NODE_TGUARD','Le type %s n\'a pas été activé : le serveur web ne refuse pas l\'accès direct à son répertoire de fichiers ou le répertoire n\'est pas accessible en écriture.');
-define('_NODE_TODEL','À la corbeille');
-define('_NODE_TODRAFT','Aux brouillons');
-define('_NODE_TOOFF','Désactiver');
-define('_NODE_TOPEND','À vérifier');
-define('_NODE_TOPUB','Publier');
 define('_NODE_TSAVED','Le type a été enregistré.');
 define('_NODE_TYPEOFF','Le type a été désactivé.');
 define('_NODE_TYPEON','Le type a été activé.');

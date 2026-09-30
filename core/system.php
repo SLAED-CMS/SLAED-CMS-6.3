@@ -1497,24 +1497,24 @@ function getSeoSchema(string $kind, array $seo, bool $ishome = false): array {
     return $data;
 }
 
-# Return the shared category map for one module or all modules as id => raw title, parent, ordern
+# Return the shared category map for one module or all modules as id => raw title, parent, ordern and the icon name of img
 # The map lives in an epoch-keyed persistent data cache plus a request-static copy; callers apply getConst and escaping at their own boundary
 function getCategoryMap(string $mod = ''): array {
     global $db;
     static $maps = [];
     $key = ($mod === '') ? '*' : $mod;
     if (isset($maps[$key])) return $maps[$key];
-    $file = Cache::getPath('data', Cache::getHash(['catmap', $key, Cache::getEpoch()]), 'json');
+    $file = Cache::getPath('data', Cache::getHash(['catmap', 'img', $key, Cache::getEpoch()]), 'json');
     if (Cache::isFresh($file, 86400)) {
         $data = json_decode(Cache::getBody($file), true);
         if (is_array($data)) return $maps[$key] = $data;
     }
     $where = ($mod !== '') ? ' WHERE modul = :modul' : '';
     $pars = ($mod !== '') ? ['modul' => $mod] : [];
-    $res = $db->getSqlQuery('SELECT id, title, parent, ordern FROM '.PREFIX_DB.'_categories'.$where, $pars);
+    $res = $db->getSqlQuery('SELECT id, title, parent, ordern, img FROM '.PREFIX_DB.'_categories'.$where, $pars);
     $map = [];
-    while ([$cid, $title, $parent, $ordern] = $db->getSqlRow($res)) {
-        $map[(int)$cid] = ['title' => (string)$title, 'parent' => (int)$parent, 'ordern' => (int)$ordern];
+    while ([$cid, $title, $parent, $ordern, $img] = $db->getSqlRow($res)) {
+        $map[(int)$cid] = ['title' => (string)$title, 'parent' => (int)$parent, 'ordern' => (int)$ordern, 'img' => (string)$img];
     }
     Cache::setBody($file, json_encode($map, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
     return $maps[$key] = $map;
@@ -5905,6 +5905,45 @@ function getNodeTitleMap(array $refs): array {
         foreach (array_chunk($refs, $query->getTargetSize(), true) as $part) foreach ($query->getNodeTargetList($part) as $id => $tgt) $out[$id] = $tgt->title;
     } catch (NodeException $err) {
         Logger::addSite('error', 'Node: the titles of targets cannot be read', ['code' => $err->getCode()]);
+    }
+    return $out;
+}
+
+# The address a request of a removed module moved to, or an empty string: a material or report address leads to the migrated material, a list, rank or category one to its type
+# Callers ask only on the way to a 404, so a site without migrated modules pays one indexed read on a refused address and nothing more
+function getNodeLegacyUrl(string $mod, string $op, int $id, int $cat): string {
+    $item = in_array($op, ['view', 'broken'], true);
+    if (($item && $id < 1) || (!$item && !in_array($op, ['', 'liste', 'best', 'pop', 'closed'], true))) return '';
+    try {
+        $hit = getNodeReader()->getNodeLegacy($mod, $item ? $id : 0);
+    } catch (NodeException) {
+        return '';
+    }
+    if ($hit === null) return '';
+    return getSeoUrl(['name' => $hit['type']] + ($item ? ['op' => 'view', 'id' => $hit['nid']] : ($cat > 0 ? ['cat' => $cat] : [])));
+}
+
+# The label and the icon of the move of a material into one state
+function getNodeMoveLabel(NodeStatus $to): array {
+    return match ($to) {
+        NodeStatus::Draft => [_NODE_TODRAFT, 'file-earmark'],
+        NodeStatus::Pending => [_NODE_TOPEND, 'hourglass-split'],
+        NodeStatus::Published => [_NODE_TOPUB, 'check2-circle'],
+        NodeStatus::Disabled => [_NODE_TOOFF, 'eye-slash'],
+        NodeStatus::Deleted => [_NODE_TODEL, 'trash'],
+    };
+}
+
+# The moderator actions of one material for a speed dial: its editor, then every move of its state the matrix allows as a post of the Node panel
+# The panel list adds the view and the physical deletion around them; a public page asks for refer, so the panel answers a move with the page it came from
+function getNodeModerDial(NodeType $type, Node $node, bool $back = false): array {
+    global $afile;
+    $out = [['href' => $afile.'.php?name=node&op=edit&id='.$node->id.'&type='.$type->name, 'icon_name' => 'pencil', 'title' => _FULLEDIT]];
+    foreach (NodeStatus::cases() as $to) {
+        if (!$node->status->checkStatusMove($to)) continue;
+        [$label, $icon] = getNodeMoveLabel($to);
+        $hide = ['name' => 'node', 'op' => 'status', 'id' => $node->id, 'type' => $type->name, 'status' => $to->value, 'version' => $node->version];
+        $out[] = getTplPostAction($hide + ($back ? ['refer' => 1] : []), $icon, $label);
     }
     return $out;
 }

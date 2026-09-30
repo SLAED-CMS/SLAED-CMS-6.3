@@ -102,11 +102,6 @@ define('_NODE_SYNCSKIP','Источник не проверен: материа�
 define('_NODE_TCREATED','Тип создан отключённым. Проверьте его настройки и включите.');
 define('_NODE_TDELETED','Тип удалён.');
 define('_NODE_TGUARD','Тип %s не включён: веб-сервер не закрывает прямой доступ к его каталогу загрузок или каталог недоступен для записи.');
-define('_NODE_TODEL','В корзину');
-define('_NODE_TODRAFT','В черновики');
-define('_NODE_TOOFF','Отключить');
-define('_NODE_TOPEND','На проверку');
-define('_NODE_TOPUB','Опубликовать');
 define('_NODE_TSAVED','Тип сохранён.');
 define('_NODE_TYPEOFF','Тип отключён.');
 define('_NODE_TYPEON','Тип включён.');

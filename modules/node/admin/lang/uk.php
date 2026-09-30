@@ -102,11 +102,6 @@ define('_NODE_SYNCSKIP','Джерело не перевірено: матері�
 define('_NODE_TCREATED','Тип створено вимкненим. Перевірте його налаштування та увімкніть.');
 define('_NODE_TDELETED','Тип видалено.');
 define('_NODE_TGUARD','Тип %s не увімкнено: вебсервер не закриває прямий доступ до його каталогу завантажень або каталог недоступний для запису.');
-define('_NODE_TODEL','У кошик');
-define('_NODE_TODRAFT','До чернеток');
-define('_NODE_TOOFF','Вимкнути');
-define('_NODE_TOPEND','На перевірку');
-define('_NODE_TOPUB','Опублікувати');
 define('_NODE_TSAVED','Тип збережено.');
 define('_NODE_TYPEOFF','Тип вимкнено.');
 define('_NODE_TYPEON','Тип увімкнено.');

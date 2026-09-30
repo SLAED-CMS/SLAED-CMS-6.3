@@ -148,6 +148,19 @@ final class NodeConfigTest extends TestCase
         }
     }
 
+    # An upload rule a removed module left under a replaced name blocks no new type: a valid one is taken over, a broken one is replaced by the copy of all
+    #[Test]
+    public function aLeftUploadRuleOfAReplacedNameIsTakenOver(): void
+    {
+        $run = $this->getRuns()['legacy'];
+        foreach (['jokes', 'content'] as $name) {
+            $this->assertSame(['ok' => true, 'value' => 1], $run['add'][$name], $name.' was refused over the rule its old module left');
+            $this->assertSame(['ok' => true, 'value' => null], $run['gone'][$name], $name.' could not be deleted again');
+        }
+        $this->assertSame($run['rule'], $run['trace']['jokes']['uploads'], 'The valid old rule was not taken over');
+        $this->assertSame($run['trace']['content']['all'], $run['trace']['content']['uploads'], 'A broken old rule did not give way to the rule all');
+    }
+
     # A new type is disabled at version 1; its sections are the stored differences, its rules the copy of all and the new rating rule, its directory carries the guard
     #[Test]
     public function aTypeIsCreatedDisabledWithEveryPart(): void
@@ -384,7 +397,7 @@ final class NodeConfigTest extends TestCase
         $this->assertSame(1, $run['trace']['row']['version']);
     }
 
-    # Besides the journal of published type changes, the only lines the run leaves in the log are the types held while an operation was unfinished
+    # Besides the journal of type changes, the run logs only the broken rule an old module left and the types held while an operation was unfinished
     # The journal names every kind of change with the administrator of the context, and a status that did not change leaves no line
     #[Test]
     public function heldTypesAreLogged(): void
@@ -396,7 +409,10 @@ final class NodeConfigTest extends TestCase
             if ($one['msg'] === 'Node: a type operation was published') $jour[$one['kind']][] = [$one['level'], $one['aid'], $one['new'] === 0 || $one['new'] === $one['old'] + 1];
             else $seen[] = $one['msg'].' '.($one['name'] ?? '');
         }
-        $this->assertSame(['Node: a type is invalid or held by an unfinished configuration operation news'], array_values(array_unique($seen)));
+        $this->assertSame([
+            'Node: the upload rule a removed module left is invalid, the new type takes the rule all content',
+            'Node: a type is invalid or held by an unfinished configuration operation news',
+        ], array_values(array_unique($seen)));
         ksort($jour);
         $this->assertSame(['add', 'delete', 'status', 'update'], array_keys($jour));
         foreach ($jour as $kind => $rows) $this->assertSame([['info', 3, true]], array_values(array_unique($rows, SORT_REGULAR)), $kind);

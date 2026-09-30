@@ -63,17 +63,6 @@ function getNodeStateLabel(NodeStatus $one): string {
     };
 }
 
-# The label and the icon of the move of a material into one state
-function getNodeMoveLabel(NodeStatus $to): array {
-    return match ($to) {
-        NodeStatus::Draft => [_NODE_TODRAFT, 'file-earmark'],
-        NodeStatus::Pending => [_NODE_TOPEND, 'hourglass-split'],
-        NodeStatus::Published => [_NODE_TOPUB, 'check2-circle'],
-        NodeStatus::Disabled => [_NODE_TOOFF, 'eye-slash'],
-        NodeStatus::Deleted => [_NODE_TODEL, 'trash'],
-    };
-}
-
 # One material of the types this administrator moderates by its global id, with its type; a named type is checked, without one the moderated types are asked in turn
 function getNodeAdminItem(int $id, string $name): array {
     if ($id < 1) setNodeAdminFault(404, _NODE_GONE);
@@ -336,14 +325,8 @@ function show(): void {
     foreach ($count ? $query->getNodeList() : [] as $node) {
         $type = $tmap[$node->tid];
         $dial = [['href' => getSeoUrl(['name' => $type->name, 'op' => 'view', 'id' => $node->id, 'title' => $node->title]), 'icon_name' => 'eye', 'title' => _MVIEW],
-            ['href' => $afile.'.php?name=node&op=edit&id='.$node->id.'&type='.$type->name, 'icon_name' => 'pencil', 'title' => _FULLEDIT]];
-        foreach (NodeStatus::cases() as $to) {
-            if (!$node->status->checkStatusMove($to)) continue;
-            [$label, $icon] = getNodeMoveLabel($to);
-            $dial[] = getTplPostAction(['name' => 'node', 'op' => 'status', 'id' => $node->id, 'type' => $type->name, 'status' => $to->value, 'version' => $node->version],
-                $icon, $label);
-        }
-        $dial[] = getTplPostAction(['name' => 'node', 'op' => 'delete', 'id' => $node->id, 'type' => $type->name, 'version' => $node->version], 'x-octagon', _DELETE,
+            ...getNodeModerDial($type, $node)];
+        $dial[] =getTplPostAction(['name' => 'node', 'op' => 'delete', 'id' => $node->id, 'type' => $type->name, 'version' => $node->version], 'x-octagon', _DELETE,
             _DELETE.' "'.$node->title.'"?');
         $who = ($node->uid > 0) ? (string)$node->uname : (($node->aname !== '') ? $node->aname : _ANONYM);
         $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [

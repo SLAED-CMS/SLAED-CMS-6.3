@@ -102,11 +102,6 @@ define('_NODE_SYNCSKIP','The source was not checked: the material changed meanwh
 define('_NODE_TCREATED','The type has been created disabled. Check its settings and switch it on.');
 define('_NODE_TDELETED','The type has been deleted.');
 define('_NODE_TGUARD','The type %s was not switched on: the web server does not refuse direct access to its upload directory or the directory is not writable.');
-define('_NODE_TODEL','To the trash');
-define('_NODE_TODRAFT','To drafts');
-define('_NODE_TOOFF','Disable');
-define('_NODE_TOPEND','Send to review');
-define('_NODE_TOPUB','Publish');
 define('_NODE_TSAVED','The type has been saved.');
 define('_NODE_TYPEOFF','The type has been switched off.');
 define('_NODE_TYPEON','The type has been switched on.');

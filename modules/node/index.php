@@ -403,10 +403,32 @@ function getNodeCover(NodeType $type, array $view): string {
     return '';
 }
 
-# The first resource of a prepared material among the roles shown as a download, which the file card offers directly; an empty array when there is none
+# The first resource of a prepared material among the roles shown as a download or a link, which a card offers directly with its count; an empty array when there is none
 function getNodeDownload(NodeType $type, array $view): array {
-    foreach ($type->settings['assets'] as $role => $def) if ($def['mode'] === 'download' && isset($view['assets'][$role][0])) return $view['assets'][$role][0];
+    foreach ($type->settings['assets'] as $role => $def) {
+        if (in_array($def['mode'], ['download', 'link'], true) && isset($view['assets'][$role][0])) return $view['assets'][$role][0];
+    }
     return [];
+}
+
+# The facts the standard view and card show around a stored material: comments, the fresh mark, the category icon, favorite, rating and the moderator menu
+# Every piece comes from the row or from caches the request already holds, so a list adds no statement per material; a preview without id gets none of the live parts
+function getNodeMetaVars(NodeType $type, Node $node): array {
+    $feat = $type->settings['features'];
+    $live = $node->id > 0;
+    $cat = ($node->cid > 0) ? (getCategoryMap($type->name)[$node->cid] ?? []) : [];
+    $past = $node->pubdate !== null && strtotime($node->pubdate) <= time();
+    return [
+        'is_live' => $live,
+        'is_comm' => $live && $feat['comments'] && $node->comon !== CommentMode::Disabled,
+        'comm_label' => _COMMENTS,
+        'fresh_html' => ($past && $node->status === NodeStatus::Published) ? getTplNewGraphic($node->pubdate) : '',
+        'cicon_html' => getCategoryIcon((string)($cat['img'] ?? '')),
+        'ctone' => intval($cat['ordern'] ?? 0) % 6,
+        'fav_html' => ($live && $feat['favorites']) ? getFavoriteButton($node->id, $type->name) : '',
+        'rating_html' => ($live && $feat['rating']) ? getRatingAsync(1, $node->id, 'node.'.$type->name, $node->ratings, $node->score) : '',
+        'moder_html' => ($live && checkNodeModer($type)) ? getActionMenu(getNodeModerDial($type, $node, true)) : '',
+    ];
 }
 
 # Render the resources of a prepared material, one fragment of the display mode of each role; a role shown by no mode of its own stays out
@@ -433,24 +455,28 @@ function getNodeAssetView(NodeType $type, array $view): string {
     return $out;
 }
 
-# Render one prepared material through the view part of its display mode with the related cards, the editing link of its moderator and the data of its extension
-# The live parts of a stored material - its poll, its rating, its favorite switch and its branch of the document tree - are rendered apart and handed in; a preview has none
-function getNodeViewHtml(NodeType $type, array $view, string $rels, string $edit, array $ext = [], array $live = []): string {
-    global $tpl, $fld, $prs;
+# Render one prepared material through the view part of its display mode with the related cards, the facts and menus around it and the data of its extension
+# The poll and the branch of the document tree are rendered apart and handed in; a stored public material is shared, its registered author gets the menu of a profile
+function getNodeViewHtml(NodeType $type, Node $node, array $view, string $rels, array $ext = [], array $live = []): string {
+    global $tpl, $conf;
     $rows = '';
     foreach ($view['fields'] as $one) $rows .= $tpl->getHtmlFrag('field-value', ['label' => $one['label_text'], 'value_html' => $one['value_html'],
         'value_text' => $one['value_text']]);
-    return $tpl->getHtmlPart(getNodeTplName('partials', 'view', $type), $view + getNodeViewVars($type) + [
+    $open = $node->id > 0 && $type->ext !== 'support';
+    $who = ($node->id > 0 && $view['ahref'] !== '') ? [
+        !empty($conf['privat']['act']) ? ['href' => 'index.php?name=account&op=privat&uname='.urlencode($view['author']), 'title' => _SENDMES, 'icon_name' => 'envelope'] : [],
+        ['href' => $view['ahref'], 'title' => _PERSONALINFO, 'icon_name' => 'person'],
+    ] : [];
+    return $tpl->getHtmlPart(getNodeTplName('partials', 'view', $type), $view + getNodeViewVars($type) + getNodeMetaVars($type, $node) + [
         'fields_html' => $rows,
         'assets_html' => getNodeAssetView($type, $view),
         'rels_html' => $rels,
         'rels_label' => _NODE_RELATED,
         'poll_html' => $live['poll'] ?? '',
-        'rating_html' => $live['rating'] ?? '',
-        'fav_html' => $live['fav'] ?? '',
         'tree_html' => $live['tree'] ?? '',
-        'edit_href' => $edit,
-        'edit_label' => _EDIT,
+        'share_url' => $open ? getPublicUrl(['name' => $type->name, 'op' => 'view', 'id' => $node->id, 'title' => $node->title]) : '',
+        'share_title' => $node->title,
+        'user_html' => getActionMenu($who, true),
         'ext' => $ext,
     ]);
 }
@@ -523,8 +549,8 @@ function setNodeList(): void {
             $items = '';
             foreach ($list as $node) {
                 $view = getNodeViewData($type, $node, 'list');
-                $items .= $tpl->getHtmlFrag(getNodeTplName('fragments', 'card', $type), $view + getNodeViewVars($type) + ['cover' => getNodeCover($type, $view),
-                    'download' => getNodeDownload($type, $view), 'ext' => getNodeExtVars($type, $node, $extm[$node->id] ?? [])]);
+                $items .= $tpl->getHtmlFrag(getNodeTplName('fragments', 'card', $type), $view + getNodeViewVars($type) + getNodeMetaVars($type, $node)
+                    + ['cover' => getNodeCover($type, $view), 'download' => getNodeDownload($type, $view), 'ext' => getNodeExtVars($type, $node, $extm[$node->id] ?? [])]);
             }
             $link = static fn(int $i): array => ['href' => getSeoUrl($base + (($sort !== '' || $dir !== '') ? ['order' => $key, 'dir' => $way] : [])
                 + ($i > 1 ? ['num' => $i] : []))];
@@ -665,7 +691,7 @@ function getNodeTreeData(NodeQuery $query, NodeType $type, Node $node): array {
 # A request of support is refused to a guest before anything is read and is never indexed; the canonical address is the address of the material, whatever else the query carries
 # A refusal of the reader answers by its code, a storage failure goes to the shared handler
 function setNodeView(): void {
-    global $conf, $afile, $tpl, $com;
+    global $conf, $tpl, $com;
     $id = getNodeNumber('id', 404);
     if (!$id) setNodeDeny(404);
     $type = getNodeRoute();
@@ -674,7 +700,11 @@ function setNodeView(): void {
     try {
         $query = getNodeReader($type);
         $node = $query->getNode($id, $type);
-        if ($node === null) setNodeDeny(404);
+        if ($node === null) {
+            $move = getNodeLegacyUrl($type->name, 'view', $id, 0);
+            if ($move !== '') setRedirect($move, false, 301);
+            setNodeDeny(404);
+        }
         $view = getNodeViewData($type, $node, 'view');
         $refs = [];
         foreach ($node->rels ?? [] as $rel) if ($rel->type === 'related') $refs[$rel->rid] = $type->name;
@@ -685,7 +715,6 @@ function setNodeView(): void {
             $card = ['is_views' => false, 'cover' => ''] + getNodeViewData($type, $tgt, 'card') + getNodeViewVars($type);
             $rels .= $tpl->getHtmlFrag(getNodeTplName('fragments', 'card', $type), $card);
         }
-        $moder = checkNodeModer($type);
         $cover = getNodeCover($type, $view);
         $hand = getNodeHandler($type);
         $ext = getNodeExtVars($type, $node, $hand ? ($hand->getNodeData($type, [$node], 'view')[$node->id] ?? []) : []);
@@ -695,8 +724,6 @@ function setNodeView(): void {
         $poll = ($feat['poll'] && $node->poll) ? getVotingView($node->poll, $type->name) : '';
         $live = [
             'poll' => ($poll !== '') ? $tpl->getHtmlFrag('block-content', ['id' => 'rep'.$type->name, 'is_section' => true, 'content' => $poll, 'has_hr' => true]) : '',
-            'rating' => $feat['rating'] ? getRatingAsync(1, $node->id, 'node.'.$type->name, $node->ratings, $node->score) : '',
-            'fav' => $feat['favorites'] ? getFavoriteButton($node->id, $type->name) : '',
             'tree' => $tree ? $tpl->getHtmlFrag(getNodeTplName('fragments', 'tree', $type), $tree) : '',
         ];
     } catch (NodeException $err) {
@@ -716,7 +743,7 @@ function setNodeView(): void {
         'mtime' => $node->updated,
         'img' => ($cover === '' || preg_match('#^https?://#i', $cover)) ? $cover : rtrim($conf['homeurl'], '/').'/'.$cover,
     ]);
-    echo getNodeViewHtml($type, $view, $rels, $moder ? $afile.'.php?name=node&op=edit&id='.$node->id.'&type='.$type->name : '', $ext, $live)
+    echo getNodeViewHtml($type, $node, $view, $rels, $ext, $live)
         .($talk ? setComShow($node->id, $com->getTargetMode($type->name, $node->id)->value) : '');
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
         addDeferredTask(static function () use ($id, $type): void {
@@ -757,7 +784,7 @@ function setNodeForm(): void {
             try {
                 if ($act === 'preview') {
                     $node = getNodeWriter($type)->getNodePreview($type, $input, $state);
-                    $prev = $tpl->getHtmlPart('preview', ['title' => _PREVIEW, 'body_a' => getNodeViewHtml($type, getNodeViewData($type, $node, 'view'), '', '')]);
+                    $prev = $tpl->getHtmlPart('preview', ['title' => _PREVIEW, 'body_a' => getNodeViewHtml($type, $node, getNodeViewData($type, $node, 'view'), '')]);
                 } else {
                     $node = getNodeWriter($type)->addNode($type, $input, $state);
                     if ($state === NodeStatus::Pending && $type->settings['workflow']['notify']['pending']) {
@@ -910,7 +937,11 @@ if (!defined('ADMIN_FILE')) {
     if ($njour && ($njour['why'] === 'journal' || in_array($conf['name'], $njour['types'], true))) setNodeDeny(503);
     $nops = getNodeOps(($op === 'support') ? getNodeRoute()->ext : '');
     $nway = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
-    if (!isset($nops[$op])) setNodeDeny(404);
+    if (!isset($nops[$op])) {
+        $nmove = getNodeLegacyUrl($conf['name'], $op, getVar('get', 'id', 'num', 0), getVar('get', 'cat', 'num', 0));
+        if ($nmove !== '') setRedirect($nmove, false, 301);
+        setNodeDeny(404);
+    }
     if (!in_array($nway, $nops[$op], true)) setNodeDeny(405, $nops[$op]);
     switch ($op) {
         default: setNodeList(); break;

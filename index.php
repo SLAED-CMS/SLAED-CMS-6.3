@@ -68,6 +68,10 @@ if (empty($go)) {
         exit;
     }
     if ($name) {
+        if (!isset($conf['modules'][$name]) && !is_dir(BASE_DIR.'/modules/'.$name)) {
+            $lmove = getNodeLegacyUrl($name, (string)$op, getVar('get', 'id', 'num', 0), getVar('get', 'cat', 'num', 0));
+            if ($lmove !== '') setRedirect($lmove, false, 301);
+        }
         $conf['name'] = $name;
         $module = 1;
         $mconf = $conf['modules'][$name] ?? [];

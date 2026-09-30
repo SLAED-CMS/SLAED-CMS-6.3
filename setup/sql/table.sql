@@ -329,6 +329,15 @@ CREATE TABLE `{prefix}_node_categories` (
   CONSTRAINT `{prefix}_fk_node_categories_node` FOREIGN KEY (`nid`) REFERENCES `{prefix}_nodes` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
+CREATE TABLE `{prefix}_node_legacy` (
+  `modul` VARCHAR(50) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `oid` INT UNSIGNED NOT NULL,
+  `nid` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`modul`, `oid`),
+  KEY `node` (`nid`),
+  CONSTRAINT `{prefix}_fk_node_legacy_node` FOREIGN KEY (`nid`) REFERENCES `{prefix}_nodes` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
 CREATE TABLE `{prefix}_node_publish` (
   `nid` INT UNSIGNED NOT NULL,
   `published` DATETIME NOT NULL,

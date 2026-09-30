@@ -28,7 +28,8 @@ remaining modules alike.
 
 `modules/node/profiles/` holds ten type profiles in the `slaed.node` export format. A clean installation
 creates ten active types from them; an updated site gets none and creates types in the admin panel, from a
-profile or from scratch. The 6.3 update imports no content of the removed modules (see UPGRADING.md).
+profile or from scratch. The 6.3 update imports no content of the removed modules (see UPGRADING.md); the
+separate script `update.php` carries it, see [Migration of the removed modules](#migration-of-the-removed-modules).
 Settings of each profile are in [Shipped profiles](#shipped-profiles).
 
 | Profile | Replaces | Extension | `view.mode` | Special behaviour |
@@ -48,7 +49,7 @@ Settings of each profile are in [Shipped profiles](#shipped-profiles).
 
 Accounts, private messages and the forum stay separate subsystems. Node has no own categories or
 comments, runs no PHP, SQL or class named in type settings, offers no logic builder or public headless API,
-and imports no data from the tables of the removed modules.
+and reads no table of the removed modules at runtime; only the one-off `update.php` does.
 
 ### Responsibilities
 
@@ -279,6 +280,7 @@ configuration inside the locked Closure mode of `setConfigFile()` and never writ
 | `_node_types` | registered types: identity, state, version |
 | `_nodes` | every material: main category, author, texts, fields, state, counters |
 | `_node_categories` | extra categories of a material |
+| `_node_legacy` | old address of a migrated material: removed module and old id |
 | `_node_relations` | directed relations between materials |
 | `_node_assets` | structured resources of a material |
 | `_node_publish` | pending reward of a scheduled publication |
@@ -590,6 +592,25 @@ Constraints: `{prefix}_fk_node_assets_node` (`nid` → `_nodes.id`, `ON UPDATE R
   creates the Point event `report`, the moderator gets `moderate` unless the report is his own, and both
   columns are cleared in the same transaction. A report changes neither the material's state, `version` and
   `updated` nor `_node_assets.updated`; replacing the file clears the report and resets `hits`.
+
+### `_node_legacy`
+
+| Column | Type | Meaning |
+|---|---|---|
+| `modul` | `VARCHAR(50) ascii_bin NOT NULL` | name of the removed module the material came from |
+| `oid` | `INT UNSIGNED NOT NULL` | id the material had in that module |
+| `nid` | `INT UNSIGNED NOT NULL` | the migrated material |
+
+Keys: `PRIMARY (modul, oid)`, `node (nid)`. Foreign key `{prefix}_fk_node_legacy_node` (`nid` → `_nodes.id`,
+`ON UPDATE RESTRICT ON DELETE CASCADE`).
+
+- Only `update.php` writes rows, in the transaction of the module it carries, for every material its module had
+  published; a submission it had not approved had no public page and gets none. No Node operation writes here, and a
+  physically deleted material takes its old address with it, so that address answers 404.
+- `NodeQuery::getNodeLegacy()` reads it, and only on the way to a 404: see [Response codes](#response-codes).
+- A material with a row here earns no Point award `publish`, neither at once nor from a publication job: its removed
+  module rewarded the publication and the 6.3 update carried that balance. `NodeService` asks the table only on the way
+  to that award.
 
 ### `_node_publish`
 
@@ -933,6 +954,7 @@ Public constants shared with the writer: `TREEPART = 500`, `KINDS`, `RMODES` (ki
 | list | `getNodeList`, `getNodeCount`, `getNodeTree`, `getNodeAuthorStat` | per `setNodeStatus()` | SQL predicate with language |
 | site | `getNodeSitemap` | published in window | SQL predicate with language |
 | dead | `getNodeDeadline` | published, future moments | SQL predicate with language |
+| legacy | `getNodeLegacy` | none: it answers an address, the route it leads to reads the material | none; only a type the context receives |
 
 - "Published in window": `status = Published`, `published <= NOW()`, `expires` empty or later, database clock. A
   disabled type yields nothing to a non-moderator. The extension scope always applies; a moderator always passes
@@ -1032,6 +1054,7 @@ public function getNodeCategoryCount(NodeType $type): array
 public function checkNodeCategory(NodeType $type, int $cid): bool
 public function getNodePostCats(NodeType $type): array
 public function getNodeDeadline(): ?int
+public function getNodeLegacy(string $mod, int $id = 0): ?array
 ```
 
 - `getNodeTree()`: one selected type with `features.tree`, `limit` 1…500; rows `id`, `title`, `parent`, `sort` for
@@ -1047,6 +1070,9 @@ public function getNodeDeadline(): ?int
   the context language; all for a moderator).
 - `getNodeDeadline()`: Unix time of the nearest future `published` or `expires` of the list, or `null`, one
   statement; routes pass it to `Cache::setPageUntil()` while building the HTML cache.
+- `getNodeLegacy()`: the row of `_node_legacy` for a removed module name and its old id as `['type', 'nid']`, or
+  with `id` 0 the type its materials went to (`nid` 0); `null` for a name outside the grammar, a missing row or a
+  type the context does not receive.
 
 #### Read budgets per method
 
@@ -1061,6 +1087,7 @@ Counted by `$db->qnum` around the Node handler; `getNodeContext()`, Point and gl
 | `getNode()` | 4 |
 | `getNodeTargetList()` | type rows not yet known + 1 |
 | `getNodeTree()`, `getNodeSitemap()` | 1 per batch |
+| `getNodeLegacy()` | 1, plus the type read of `getNodeType()` |
 
 Lists never run N+1 for authors, fields, categories, relations, resources, rating or favorites. The budgets of
 whole routes are in [Statement budgets](#statement-budgets).
@@ -1571,6 +1598,10 @@ final readonly class NodeTypeInput {
   replacements `news`, `pages`, `faq`, `help`, `jokes`, `content`, `links`, `files`, `media`; a name any of the four
   areas carries or `uploads/` holds in another case; a name with rows in `_categories` (`INVALID categories`) or in
   `_comment`/`_favorites` (`INVALID remains`, cleared with admin `op=remains`).
+- One area is no refusal for the nine replacements: the upload rule a removed module left under its name in
+  `config/uploads.php`. A new type of that name with an empty upload rule takes the old rule over; a rule the check
+  refuses is logged (`Node: the upload rule a removed module left is invalid, …`) and the new type gets the copy of
+  `all` as every other new type does.
 - `title` (1-100) and `intro` (0-1000) are plain text or a defined language constant; `ext` is empty or a key of the
   closed extension map (`support`, `sync`); `sort` is 0-4294967295.
 
@@ -1817,7 +1848,7 @@ names without a definition are dropped on the next change.
 
 | Area | Key | Form | On create when the input brings none |
 |---|---|---|---|
-| `config/uploads.php` | `$conf['uploads'][<name>]` | one string of twelve `|`-separated pieces: `extensions`, `maxquota`, `maxbytes`, `maxwidth`, `maxheight`, `maxfiles`, `thumbwidth`, `moderfiles`, `userfiles`, `userupload`, `guestupload`, `guestfiles` | a copy of `$conf['uploads']['all']` |
+| `config/uploads.php` | `$conf['uploads'][<name>]` | one string of twelve `|`-separated pieces: `extensions`, `maxquota`, `maxbytes`, `maxwidth`, `maxheight`, `maxfiles`, `thumbwidth`, `moderfiles`, `userfiles`, `userupload`, `guestupload`, `guestfiles` | the valid rule a removed module left under one of the nine replaced names, else a copy of `$conf['uploads']['all']` |
 | `config/ratings.php` | `$conf['ratings']['node.<name>']` | exactly `active`, `period`, `detail`, `guests`, all strings; `active`/`detail`/`guests` `'0'` or `'1'`, `period` whole seconds | `['active' => '1', 'period' => '2592000', 'detail' => '1', 'guests' => '1']` |
 
 Upload extensions must be supported by the upload service and unique; `userupload` and `guestupload` are 0 or 1; the
@@ -2011,6 +2042,7 @@ with an `Allow` header. Comments, rating and favorites use their own global rout
 | Code | Cause |
 |---|---|
 | 301 | explicit `order`/`dir` equal to the type default: redirect to the clean list URL (keeps `cat`, `let`, `num > 1`) |
+| 301 | an address of a removed module in `_node_legacy`: `view`/`broken` with an old `id` to the migrated material; the list, `liste`, `best`, `pop`, `closed` to the list of its type (keeps `cat`). Asked by `getNodeLegacyUrl()` in `core/system.php` only where the answer would be 404: an unknown `id` of `view`, an unknown operation, and in `index.php` a name that is neither module nor type (`pages` → `docs`) |
 | 302 / 303 | redirect after a write (`setRedirect()` sends 303 for POST); 302 for an external `download`/`link` source |
 | 400 | malformed `cat`/`num`; bad or disabled `let`; `order` unknown, or other than `published` and outside `list.orders`; `dir` not `asc`/`desc`; form `action` not `preview`/`submit` |
 | 403 | guest non-moderator on a `support` list or material; form not open to the visitor; bad token on `add`, `report`, `support`; `support` by a non-owner or to another state; writer `DENIED` |
@@ -2230,12 +2262,20 @@ Parser output), `value_href` (`url`, or `mailto:` for `email`), `items` (select 
 Shared view labels (`getNodeViewVars()`): `is_date`, `is_author`, `is_category`, `is_views` (from `list.show`),
 `date_label`, `views_label`, `author_label`, `read_label`, `download_label`, `hits_label`.
 
+Material facts (`getNodeMetaVars()`), read from the row and from caches the request already holds, so a list adds no
+statement per material: `is_live` (a stored material, not a preview or a light related target), `is_comm` and
+`comm_label` (the `comments` feature on and the material's mode not `Disabled`), `fresh_html` (the shared "new" badge
+of a publication already reached), `cicon_html` and `ctone` (the icon name of the main category's `img` and its tone
+from `ordern`), `fav_html`, `rating_html`, and `moder_html` (for a moderator of the type the speed dial of
+`getNodeModerDial()`: the editor and every allowed move of the state, posted to the panel with `refer` so the page comes
+back).
+
 | Template | Called by | Keys |
 |---|---|---|
 | `partials/node/list.html` | `setNodeList()` | `navi_html`, `intro`, `cats_html`, `letters_html`, `items_html`, `pager_html`, `empty_alert` |
-| `fragments/node/card.html` in a list | `setNodeList()` | NodeView (`list`) + view labels + `cover`, `download` (first resource of a `download`-mode role or `[]`), `ext` |
+| `fragments/node/card.html` in a list | `setNodeList()` | NodeView (`list`) + view labels + material facts + `cover`, `download` (first resource of a `download`- or `link`-mode role or `[]`), `ext` |
 | `fragments/node/card.html` as related card | `setNodeView()` | NodeView (`card` of a target) + view labels, `is_views = false`, `cover = ''` |
-| `partials/node/view.html` | `getNodeViewHtml()` | NodeView (`view`) + view labels + `fields_html`, `assets_html`, `rels_html`, `rels_label`, `poll_html`, `rating_html`, `fav_html`, `tree_html`, `edit_href`, `edit_label`, `ext` |
+| `partials/node/view.html` | `getNodeViewHtml()` | NodeView (`view`) + view labels + material facts + `fields_html`, `assets_html`, `rels_html`, `rels_label`, `poll_html`, `tree_html`, `share_url`, `share_title`, `user_html`, `ext` |
 | resource fragment of a role | `getNodeAssetView()` | `items` (resource items + `is_video`, `is_audio`), `role_title`, `poster` (first `poster` href), `token`, `report_label`, `download_label`, `visit_label`, `hits_label` |
 | `fragments/node/tree.html` | `getNodeTreeData()` | `title`, `trail` (`href`, `title`), `items` (`href`, `title`, `is_current`, `kids`, `is_more`), `first`, `is_before`, `is_after`, `prev_href`, `prev_title`, `next_href`, `next_title`, `toc_label`, `prev_label`, `next_label` |
 | `fragments/node/block.html` | `blocks/node.php` | NodeView (`card` of a full material); the items go into the shared `fragments/list.html` |
@@ -2245,8 +2285,12 @@ Shared view labels (`getNodeViewVars()`): `is_date`, `is_author`, `is_category`,
   `support` it holds `state`, `prio`, `version`, `activity`, `aid`, `aname` (moderators only) plus `state_label`,
   `prio_label`, `is_closed`, `is_author`, `state_title`, `prio_title`, `is_owner`, `action`, `token`, `next`,
   `switch_label`, `card_href`. `sync` gives nothing to public views.
-- `edit_href` is set for a moderator of the type. Poll, rating, favorites and tree are rendered by their own
+- The view carries the three speed dials of a comment in `sl-meta-actions`: share (`share_url`, a stored material of a
+  type without `support`), the author menu `user_html` (private message and profile of a registered author) and the
+  moderator menu `moder_html`, then the anchor `#node-<id>`. Poll, rating, favorites and tree are rendered by their own
   subsystems and handed in as HTML; a preview has none of them and no related cards.
+- The special layouts `docs/card.html` (table of contents), `faq/card.html` (question and answer) and
+  `media/card.html` (tile) keep their compact form without the material facts.
 - The preview wraps the view template in the shared `partials/preview.html` (`title`, `body_a`).
 - The tree branch shows the root trail, up to ten siblings on each side of the current document and its first twenty
   children, plus previous and next document in tree order; it is omitted for a single document or a material outside
@@ -3397,3 +3441,33 @@ only (the mark `modules`, no manifest, the later poll vote of one address remove
 one poll, the kept panel name `myadm` now holding the shipped loader, language and address of 6.2, the switched-off blocks, type creation in the
 panel, the `_nodes` counter after a deleted material, and empty PHP and SQL logs. A change to the branch or the
 schema file is done only when this test passes.
+
+## Migration of the removed modules
+
+`update.php` in the root carries the content of `news`, `pages`, `faq`, `help`, `links`, `files` and `content` into
+Node on a site that ran the 6.3 update. Only the main administrator opens it; the page shows the plan per module and
+a POST with the token scope `update` runs every step that is not done yet. The old tables stay as they are.
+
+| Module | Type | Notes |
+|---|---|---|
+| `news`, `faq`, `links`, `files` | same name, from its profile | `fix` → `pinned`, `vote` → `poll`, `assoc` → extra categories; the file or address of `files` and `links` becomes the resource of the `download` or `link` role |
+| `pages` | `docs` | the type gains the features its data needs, such as comments and rating |
+| `help` | `help` (`support`) | every request becomes a published material, each reply a comment of its author; open or closed goes to the queue row, which follows the last reply |
+| `content` | `content` without extension | static pages; a feed address is noted, not carried |
+
+Steps, in this order; the manifest `storage/backup/update/node/manifest.json` records each, so a stopped run
+continues where it stopped:
+
+1. Stash: categories, comments and favorites of a module move to the key `~<module>`, the files of
+   `uploads/<module>` into the manifest directory, so the name check of a new type passes.
+2. Types: a missing type is created from its shipped profile and takes over the upload rule the module left
+   (see [Identity rules](#identity-rules)); an existing one only gains the features the data needs.
+3. Counter: `_nodes` continues above the highest old id of every module, so no old address names a new material.
+4. Data, one transaction per module: materials with dates, views, states, rating balances, resources and the
+   `_node_legacy` row, then comments and favorites rebound to the new ids (rows of a gone material take the key
+   `old<module>`, which `op=remains` cleans up), the terms of `_rating`, the comment counters and `node-<type>`
+   rights instead of the module name. Texts are converted from the trusted HTML the old modules rendered into BB
+   and Markdown; blocks the conversion does not know become `[usehtml]` blocks.
+5. Files: attachments return to `uploads/<type>`, a name the file layer does not manage gets a managed one and
+   its tags follow; a file a text addresses directly is copied into the public `uploads/archive/<module>/`.
+6. Activation of every type the run created or switched off.

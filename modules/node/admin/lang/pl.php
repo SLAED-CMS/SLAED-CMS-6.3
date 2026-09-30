@@ -102,11 +102,6 @@ define('_NODE_SYNCSKIP','Źródło nie zostało sprawdzone: materiał został w 
 define('_NODE_TCREATED','Typ został utworzony jako wyłączony. Sprawdź jego ustawienia i włącz go.');
 define('_NODE_TDELETED','Typ został usunięty.');
 define('_NODE_TGUARD','Typ %s nie został włączony: serwer WWW nie blokuje bezpośredniego dostępu do jego katalogu plików lub katalog nie jest zapisywalny.');
-define('_NODE_TODEL','Do kosza');
-define('_NODE_TODRAFT','Do szkiców');
-define('_NODE_TOOFF','Wyłącz');
-define('_NODE_TOPEND','Do sprawdzenia');
-define('_NODE_TOPUB','Opublikuj');
 define('_NODE_TSAVED','Typ został zapisany.');
 define('_NODE_TYPEOFF','Typ został wyłączony.');
 define('_NODE_TYPEON','Typ został włączony.');
