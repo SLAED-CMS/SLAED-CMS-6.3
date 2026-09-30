@@ -1,5 +1,52 @@
 # Versions
 
+## 2026-09-30
+
+### The content of the removed modules moves into Node, and their old addresses follow it
+
+`update.php` in the root carries `news`, `pages`, `faq`, `help`, `links`, `files` and `content` of a site that
+ran the 6.3 update into Node types - `pages` into `docs`, `content` into a type without extension - with
+categories, comments, favorites, rating balances, resources and files; the old tables stay. Only the main
+administrator runs it, a stopped run continues from its manifest, and texts are converted from the trusted HTML
+the old modules rendered into BB and Markdown. The new table `_node_legacy` maps every old address to its
+material; the counter of `_nodes` continues above every old id, so an old address never names a new material,
+and it answers 301 to the migrated material or list where it would otherwise meet a 404. A migrated material earns
+no second publication award when a moderator publishes it again, since its module rewarded it once already.
+
+The views and cards of Node show what the old modules showed: the share, author and moderator speed dials and the
+anchor of the material, the chips of comments, author and downloads, favorites, rating, the category icon and the
+fresh mark. The moderator dial of the site and the one of the panel list come from one function.
+
+A new type of one of the nine replaced names now takes over the upload rule its old module left in
+`config/uploads.php`, where it used to be refused as a taken name.
+
+The category tiles of a Node list show the description of every category, as the old modules did;
+`setCategories()` lost the two switches its one caller always set the same way.
+
+### A forum post is acted on under the rights of the category it is stored in
+
+The quick edit, the full edit, the reply, the deletion and the moderator actions of the forum took the rights of
+the category the request named, so the moderator of one category could edit, delete, close or move the posts of
+every other one. `getForumPlace()` now reads the category, the topic and the author of a named post from its rows,
+and `checkForumRight()` is the one right over it that the handlers and the buttons of the view share: the
+moderator of its category, or its signed-in author with the right of the category while the topic is open. A
+reply always answers the topic of the post it names and needs the reply right, a guest no longer matches a post
+written without an account, and a refused quick edit shows its alert instead of an empty body.
+
+### A thumb vote bursts the thumb it pressed
+
+The thumbs of the shared rating - a forum post, a profile, the rating under an avatar in the forum and the
+comments, the user list - answer a counted vote with the burst of the favourite star, in the green or red their
+hover promised.
+
+### Code blocks are escaped in every highlighter mode
+
+With `syntax = 2`, the shipped default, `[php]` and `[code=language]` handed their content to the page as
+markup, so any author of a comment, a forum post or a material could store a script. The renderer moved into
+the parser as `Parser::getCodeHtml()`; it decodes the entities of stored legacy text once and escapes in every
+mode, drops only the editor line breaks before a line end instead of everything between the first `<br` and the
+last `>`, and the highlighter mode joined the fingerprint of the parser cache.
+
 ## 2026-09-29
 
 ### The shop, order and service modules leave the package
