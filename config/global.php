@@ -110,7 +110,7 @@ support@slaed.net',
     'tsep' => '-',
     'user_c' => 'slaed',
     'user_c_t' => '2592000',
-    'var_view' => '0',
+    'var_view' => '1',
     'variables' => '0,1,1,1,1,1,1,0,1',
     'version' => '6.3.0 Phoenix',
 ];

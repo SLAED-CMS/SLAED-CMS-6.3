@@ -30,13 +30,43 @@ return [
             'detail' => '1',
             'guests' => '1',
         ],
+        'node.faq' => [
+            'active' => '1',
+            'period' => '2592000',
+            'detail' => '1',
+            'guests' => '1',
+        ],
+        'node.files' => [
+            'active' => '1',
+            'period' => '2592000',
+            'detail' => '1',
+            'guests' => '1',
+        ],
+        'node.help' => [
+            'active' => '1',
+            'period' => '2592000',
+            'detail' => '1',
+            'guests' => '1',
+        ],
         'node.jokes' => [
             'active' => '1',
             'period' => '2592000',
             'detail' => '1',
             'guests' => '1',
         ],
+        'node.links' => [
+            'active' => '1',
+            'period' => '2592000',
+            'detail' => '1',
+            'guests' => '1',
+        ],
         'node.media' => [
+            'active' => '1',
+            'period' => '2592000',
+            'detail' => '1',
+            'guests' => '1',
+        ],
+        'node.news' => [
             'active' => '1',
             'period' => '2592000',
             'detail' => '1',

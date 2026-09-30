@@ -74,7 +74,7 @@ return [
         ],
         'types' => [
             'content' => [
-                'version' => 2,
+                'version' => 5,
                 'list' => [
                     'orders' => [
                         0 => 'published',
@@ -110,7 +110,7 @@ return [
                 ],
             ],
             'docs' => [
-                'version' => 2,
+                'version' => 3,
                 'list' => [
                     'orders' => [
                         0 => 'updated',
@@ -132,11 +132,11 @@ return [
                 ],
                 'features' => [
                     'categories' => true,
-                    'comments' => false,
-                    'rating' => false,
+                    'comments' => true,
+                    'rating' => true,
                     'favorites' => true,
                     'poll' => false,
-                    'home' => false,
+                    'home' => true,
                     'pinned' => false,
                     'submit' => false,
                     'moderation' => false,
@@ -149,6 +149,158 @@ return [
                     'sitemap' => true,
                     'blocks' => true,
                     'seo' => 'article',
+                ],
+            ],
+            'faq' => [
+                'version' => 2,
+                'list' => [
+                    'orders' => [
+                        0 => 'published',
+                        1 => 'updated',
+                        2 => 'title',
+                        3 => 'views',
+                        4 => 'rating',
+                    ],
+                ],
+                'view' => [
+                    'mode' => 'faq',
+                ],
+                'features' => [
+                    'categories' => true,
+                    'comments' => true,
+                    'rating' => true,
+                    'favorites' => true,
+                    'poll' => false,
+                    'home' => true,
+                    'pinned' => true,
+                    'submit' => true,
+                    'moderation' => true,
+                    'schedule' => true,
+                    'related' => true,
+                    'tree' => false,
+                ],
+                'assets' => [
+                    'download' => [
+                        'title' => '_DOWNLOAD',
+                        'kinds' => [
+                            0 => 'file',
+                            1 => 'image',
+                            2 => 'audio',
+                            3 => 'video',
+                        ],
+                        'max' => 10,
+                        'canlink' => true,
+                        'report' => true,
+                        'mode' => 'download',
+                        'sort' => 10,
+                    ],
+                ],
+                'integrations' => [
+                    'search' => true,
+                    'rss' => true,
+                    'sitemap' => true,
+                    'blocks' => true,
+                    'seo' => 'article',
+                ],
+            ],
+            'files' => [
+                'version' => 2,
+                'list' => [
+                    'orders' => [
+                        0 => 'published',
+                        1 => 'updated',
+                        2 => 'title',
+                        3 => 'views',
+                        4 => 'rating',
+                    ],
+                    'limit' => 25,
+                    'alpha' => true,
+                ],
+                'view' => [
+                    'mode' => 'files',
+                ],
+                'features' => [
+                    'categories' => true,
+                    'comments' => true,
+                    'rating' => true,
+                    'favorites' => true,
+                    'poll' => false,
+                    'home' => true,
+                    'pinned' => true,
+                    'submit' => true,
+                    'moderation' => true,
+                    'schedule' => true,
+                    'related' => true,
+                    'tree' => false,
+                ],
+                'assets' => [
+                    'cover' => [
+                        'title' => '_NODE_COVER',
+                        'kinds' => [
+                            0 => 'image',
+                        ],
+                        'max' => 1,
+                        'mode' => 'image',
+                        'sort' => 10,
+                    ],
+                    'download' => [
+                        'title' => '_DOWNLOAD',
+                        'kinds' => [
+                            0 => 'file',
+                            1 => 'image',
+                            2 => 'audio',
+                            3 => 'video',
+                        ],
+                        'min' => 1,
+                        'max' => 10,
+                        'canlink' => true,
+                        'report' => true,
+                        'mode' => 'download',
+                        'sort' => 20,
+                    ],
+                ],
+                'integrations' => [
+                    'search' => true,
+                    'rss' => true,
+                    'sitemap' => true,
+                    'blocks' => true,
+                    'seo' => 'article',
+                ],
+            ],
+            'help' => [
+                'version' => 2,
+                'list' => [
+                    'limit' => 20,
+                    'show' => [
+                        0 => 'category',
+                        1 => 'date',
+                    ],
+                ],
+                'view' => [
+                    'mode' => 'support',
+                ],
+                'workflow' => [
+                    'notify' => [
+                        'pending' => false,
+                        'result' => false,
+                    ],
+                ],
+                'features' => [
+                    'categories' => true,
+                    'comments' => true,
+                    'rating' => false,
+                    'favorites' => false,
+                    'poll' => false,
+                    'home' => false,
+                    'pinned' => false,
+                    'submit' => true,
+                    'moderation' => false,
+                    'schedule' => false,
+                    'related' => false,
+                    'tree' => false,
+                ],
+                'ext' => [
+                    'mail' => true,
                 ],
             ],
             'jokes' => [
@@ -182,6 +334,63 @@ return [
                     'sitemap' => true,
                     'blocks' => true,
                     'seo' => 'article',
+                ],
+            ],
+            'links' => [
+                'version' => 2,
+                'list' => [
+                    'orders' => [
+                        0 => 'published',
+                        1 => 'updated',
+                        2 => 'title',
+                        3 => 'views',
+                        4 => 'rating',
+                    ],
+                    'limit' => 25,
+                    'alpha' => true,
+                ],
+                'features' => [
+                    'categories' => true,
+                    'comments' => true,
+                    'rating' => true,
+                    'favorites' => true,
+                    'poll' => false,
+                    'home' => true,
+                    'pinned' => true,
+                    'submit' => true,
+                    'moderation' => true,
+                    'schedule' => true,
+                    'related' => true,
+                    'tree' => false,
+                ],
+                'assets' => [
+                    'cover' => [
+                        'title' => '_NODE_COVER',
+                        'kinds' => [
+                            0 => 'image',
+                        ],
+                        'max' => 1,
+                        'mode' => 'image',
+                        'sort' => 10,
+                    ],
+                    'link' => [
+                        'title' => '_URL',
+                        'kinds' => [
+                            0 => 'file',
+                        ],
+                        'min' => 1,
+                        'max' => 1,
+                        'canlink' => true,
+                        'report' => true,
+                        'mode' => 'link',
+                        'sort' => 20,
+                    ],
+                ],
+                'integrations' => [
+                    'search' => true,
+                    'rss' => true,
+                    'sitemap' => true,
+                    'blocks' => true,
                 ],
             ],
             'media' => [
@@ -266,6 +475,62 @@ return [
                     'sitemap' => true,
                     'blocks' => true,
                     'seo' => 'article',
+                ],
+            ],
+            'news' => [
+                'version' => 2,
+                'list' => [
+                    'orders' => [
+                        0 => 'published',
+                        1 => 'updated',
+                        2 => 'title',
+                        3 => 'views',
+                        4 => 'rating',
+                    ],
+                ],
+                'view' => [
+                    'mode' => 'article',
+                ],
+                'features' => [
+                    'categories' => true,
+                    'comments' => true,
+                    'rating' => true,
+                    'favorites' => true,
+                    'poll' => true,
+                    'home' => true,
+                    'pinned' => true,
+                    'submit' => true,
+                    'moderation' => true,
+                    'schedule' => true,
+                    'related' => true,
+                    'tree' => false,
+                ],
+                'assets' => [
+                    'cover' => [
+                        'title' => '_NODE_COVER',
+                        'kinds' => [
+                            0 => 'image',
+                        ],
+                        'max' => 1,
+                        'mode' => 'image',
+                        'sort' => 10,
+                    ],
+                    'gallery' => [
+                        'title' => '_ALBUM',
+                        'kinds' => [
+                            0 => 'image',
+                        ],
+                        'max' => 20,
+                        'mode' => 'gallery',
+                        'sort' => 20,
+                    ],
+                ],
+                'integrations' => [
+                    'search' => true,
+                    'rss' => true,
+                    'sitemap' => true,
+                    'blocks' => true,
+                    'seo' => 'news',
                 ],
             ],
         ],
