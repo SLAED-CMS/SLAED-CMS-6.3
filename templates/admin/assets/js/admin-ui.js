@@ -901,13 +901,53 @@
     document.documentElement.addEventListener('pointerleave', setPointerOff);
     document.addEventListener('pointercancel', setPointerOff);
     window.addEventListener('blur', setPointerOff);
+    /* The run of the installer: every part of the installation is its own POST of the run form, so the bar shows how far the server really got.
+       An answer carries the per cent, the task just done and whether another part follows; the last answer, a failed part and a broken reply all hand the form back,
+       and setup.php decides whether the closing stop, the refusal of the failed part or the run where it stands comes next */
+    function setSetupRun() {
+        var run = document.querySelector('[data-sl-setup-run]');
+        var form = run ? run.closest('form') : null;
+        if (!form) return;
+        var bar = run.querySelector('[data-sl-setup-bar]');
+        var line = run.querySelector('[role="progressbar"]');
+        var task = run.querySelector('[data-sl-setup-task]');
+        var num = run.querySelector('[data-sl-setup-num]');
+        function setSetupEnd() {
+            var go = document.createElement('input');
+            go.type = 'hidden';
+            go.name = 'go';
+            go.value = 'next';
+            form.appendChild(go);
+            form.submit();
+        }
+        function addSetupPart() {
+            var data = new FormData(form);
+            data.set('go', 'part');
+            fetch(form.getAttribute('action'), { method: 'POST', body: data, credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+                .then(function (res) { return res.json(); })
+                .then(function (json) {
+                    if (typeof json.percent === 'number') {
+                        bar.style.width = json.percent + '%';
+                        line.setAttribute('aria-valuenow', json.percent);
+                        num.textContent = json.percent;
+                    }
+                    if (json.task) task.textContent = json.task;
+                    if (json.more) addSetupPart();
+                    else window.setTimeout(setSetupEnd, isStill() ? 0 : 400);
+                })
+                .catch(setSetupEnd);
+        }
+        addSetupPart();
+    }
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function () {
             addFileStep();
             setBeamTurns();
+            setSetupRun();
         });
     } else {
         addFileStep();
         setBeamTurns();
+        setSetupRun();
     }
 })();

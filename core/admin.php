@@ -1624,3 +1624,34 @@ function getAdminFileDownload(): void {
     }
     getFileStream($one['realpath'], $one['name']);
 }
+
+# Finish a clean installation for its first main administrator: every shipped profile of Node becomes an active type through the one import path, news gets the starter material
+# Only the mark node => new that the installer leaves in config/update.php opens this and the mark leaves afterwards, so an upgraded site gets no type here
+# A profile the installation could not finish - not created, not switched on or, for news, without starter material - is named in the answer and logged with step and reason
+# The other profiles are created all the same, and a mark that cannot be removed is logged, because no later request reaches this again
+# The starter material takes its title and text from the language constants of the panel, so it is written in the language the first administrator works in
+function addNodeProfiles(int $aid): string {
+    global $db, $conf, $fld, $pnt;
+    if (($conf['update']['node'] ?? '') !== 'new') return '';
+    $srv = new NodeService($db, new NodeContext(0, [], $aid, [], true, true, getIp(), ''), $fld, $pnt);
+    $fail = [];
+    foreach (glob(BASE_DIR.'/modules/node/profiles/*.json') ?: [] as $file) {
+        $name = basename($file, '.json');
+        $step = 'import';
+        try {
+            $type = $srv->addNodeTypeImport((string)file_get_contents($file));
+            $step = 'status';
+            $type = $srv->updateNodeTypeStatus($type->name, true, $type->version);
+            if ($type->name !== 'news') continue;
+            $step = 'starter';
+            $input = new NodeInput(0, [], 'SLAED', _NODE_START_TITLE, _NODE_START_INTRO, _NODE_START_BODY, [], 0, true, CommentMode::Open, false, null, null, [], [], []);
+            $srv->addNode($type, $input, NodeStatus::Published);
+        } catch (NodeException $err) {
+            $fail[] = $name;
+            $info = ['name' => $name, 'step' => $step, 'code' => $err->getCode(), 'path' => $err->getMessage()];
+            Logger::addSite('error', 'Node: the installation could not finish a profile', $info);
+        }
+    }
+    if (!setConfigFile('update.php', array_diff_key($conf['update'], ['node' => '']))) Logger::addSite('error', 'Node: the installation mark could not be removed');
+    return $fail ? sprintf(_NODE_SETUP, implode(', ', $fail)) : '';
+}

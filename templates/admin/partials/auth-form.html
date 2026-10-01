@@ -6,5 +6,5 @@
       {% endfor %}
     </ul>
   </div>
-  <div class="sl-admin-login-submit">{% include 'fragments/hidden.html' with hidden %}{% include 'fragments/button.html' with submit %}</div>
+  <div class="sl-admin-login-submit">{% include 'fragments/hidden.html' with hidden %}{% if token %}{% include 'fragments/hidden.html' with token %}{% endif %}{% include 'fragments/button.html' with submit %}</div>
 </form>

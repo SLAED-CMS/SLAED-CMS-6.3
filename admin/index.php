@@ -136,57 +136,28 @@ function getAdminPanel(): void {
     setFoot();
 }
 
-# Finish a clean installation for its first main administrator: every shipped profile of Node becomes an active type through the one import path, news gets the starter material
-# Only the mark node => new that the installer leaves in config/update.php opens this and the mark leaves afterwards, so an upgraded site gets no type here
-# A profile the installation could not finish - not created, not switched on or, for news, without starter material - is named in the answer and logged with step and reason
-# The other profiles are created all the same, and a mark that cannot be removed is logged, because no later request reaches this again
-# The starter material takes its title and text from the language constants of the panel, so it is written in the language the first administrator works in
-function addNodeProfiles(int $aid): string {
-    global $db, $conf, $fld, $pnt;
-    if (($conf['update']['node'] ?? '') !== 'new') return '';
-    $srv = new NodeService($db, new NodeContext(0, [], $aid, [], true, true, getIp(), ''), $fld, $pnt);
-    $fail = [];
-    foreach (glob(BASE_DIR.'/modules/node/profiles/*.json') ?: [] as $file) {
-        $name = basename($file, '.json');
-        $step = 'import';
-        try {
-            $type = $srv->addNodeTypeImport((string)file_get_contents($file));
-            $step = 'status';
-            $type = $srv->updateNodeTypeStatus($type->name, true, $type->version);
-            if ($type->name !== 'news') continue;
-            $step = 'starter';
-            $input = new NodeInput(0, [], 'SLAED', _NODE_START_TITLE, _NODE_START_INTRO, _NODE_START_BODY, [], 0, true, CommentMode::Open, false, null, null, [], [], []);
-            $srv->addNode($type, $input, NodeStatus::Published);
-        } catch (NodeException $err) {
-            $fail[] = $name;
-            $info = ['name' => $name, 'step' => $step, 'code' => $err->getCode(), 'path' => $err->getMessage()];
-            Logger::addSite('error', 'Node: the installation could not finish a profile', $info);
-        }
-    }
-    if (!setConfigFile('update.php', array_diff_key($conf['update'], ['node' => '']))) Logger::addSite('error', 'Node: the installation mark could not be removed');
-    return $fail ? sprintf(_NODE_SETUP, implode(', ', $fail)) : '';
-}
-
-# Create the first administrator from the setup form, and only while the table is still empty; every later account is added from the admins module
+# Create an administrator from the form the login page shows while the admins table is empty, the way back into a panel whose last administrator row is gone
+# The form carries a token of its own scope like every state-changing form, and the password is hashed as typed, as the admins module and the login take it
 function addAdminAccount(): void {
     global $db, $afile, $conf, $stop, $prv;
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_admins LIMIT 1')) == 0) {
         $aname     = filterText(trim(substr($_POST['aname'] ?? '', 0, 25)));
         $aurl      = filterWebUrl($_POST['aurl'] ?? '');
         $aemail    = filterText(getVar('post', 'aemail', 'raw', ''));
-        $apwdraw   = trim(substr($_POST['apwd'] ?? '', 0, 25));
-        $apwd2raw  = trim(substr($_POST['apwd2'] ?? '', 0, 25));
+        $apass = getVar('post', 'apwd', 'raw', '');
+        $atwo = getVar('post', 'apwd2', 'raw', '');
         $auser_new = intval($_POST['auser_new'] ?? 0);
         $aeditor   = (string)($conf['editor']['admin'] ?? 'plain');
         if (!isValidEditor($aeditor, 'admin')) $aeditor = 'plain';
         $alang     = getCookies('language');
         $aip       = getip();
         if (!$aname || !analyze_name($aname)) $stop = _ERRORINVNICK;
-        if (!$apwdraw && !$apwd2raw) $stop = _NOPASS;
-        if ($apwdraw !== $apwd2raw) $stop = _ERROR_PASS;
+        if ($apass === '' && $atwo === '') $stop = _NOPASS;
+        if ($apass !== $atwo) $stop = _ERROR_PASS;
         if (strlen($aname) > 25) $stop = _NICKLONG;
+        if (!checkAdminPost('add_admin')) $stop = _TOKENMISS;
         if (!$stop) {
-            $apwd = getPassHash($apwdraw);
+            $apwd = getPassHash($apass);
             $db->getSqlQuery(
                 'INSERT INTO '.PREFIX_DB.'_admins VALUES (NULL, :name, \'Admin\', :url, :email, :pass, \'1\', :editor, \'1\', \'\', :lang, :ip, now(), now())',
                 ['name' => $aname, 'url' => $aurl, 'email' => $aemail, 'pass' => $apwd, 'editor' => $aeditor, 'lang' => $alang, 'ip' => $aip]
@@ -219,25 +190,31 @@ function addAdminAccount(): void {
 }
 
 # Authorize one login attempt: captcha, credentials, password rehash, session, and the report either way
+# The password is checked as typed, as the admins module and the recovery form hash it; until 2026-10 the login cut it to 25 bytes, trimmed it and escaped it
+# A stored hash that matches only that old form still opens the panel and stays as it is, so no working login is lost; a legacy md5 hash is renewed from the form that matched
 function checkAdminLogin(): void {
     global $db, $afile, $conf, $stop;
     if (checkCaptcha('adminlogin')) $stop = _SECCODEINCOR;
     $name = htmlspecialchars(trim(substr($_POST['name'] ?? '', 0, 25)));
-    $pwd  = htmlspecialchars(trim(substr($_POST['pwd'] ?? '', 0, 25)));
-    if (!$name || !$pwd) $stop = _LOGININCOR;
+    $pwd = getVar('post', 'pwd', 'raw', '');
+    $old = htmlspecialchars(trim(substr($pwd, 0, 25)));
+    if (!$name || $pwd === '') $stop = _LOGININCOR;
     $aid = $aname = $apwd = $aeditor = null;
+    $back = false;
     if (!$stop) {
         $result = $db->getSqlQuery('SELECT id, name, password, editor FROM '.PREFIX_DB.'_admins WHERE name = :name', ['name' => $name]);
         if ($db->getSqlRowCount($result) == 1) {
             [$aid, $aname, $apwd, $aeditor] = $db->getSqlRow($result);
         }
-        if (!$aid || $aname !== $name || !checkPassHash($pwd, (string)$apwd)) $stop = _LOGININCOR;
+        $good = $aid && $aname === $name && checkPassHash($pwd, (string)$apwd);
+        $back = !$good && $aid && $aname === $name && $old !== $pwd && checkPassHash($old, (string)$apwd);
+        if (!$good && !$back) $stop = _LOGININCOR;
     }
     if (!$stop) {
         if (strlen((string)$apwd) === 32 && ctype_xdigit((string)$apwd)) {
-            $newHash = getPassHash($pwd);
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_admins SET password = :pass WHERE id = :id', ['pass' => $newHash, 'id' => $aid]);
-            $apwd = $newHash;
+            $hash = getPassHash($back ? $old : $pwd);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_admins SET password = :pass WHERE id = :id', ['pass' => $hash, 'id' => $aid]);
+            $apwd = $hash;
         }
         unset($_SESSION[$conf['admin_c']]);
         $info = base64_encode($aid.':'.$aname.':'.$apwd.':'.$aeditor);
@@ -250,7 +227,7 @@ function checkAdminLogin(): void {
         setRedirect($afile.'.php');
     } else {
         Captcha::registerLoginFailure('admin');
-        addLoginReport(1, 0, $name, $pwd);
+        addLoginReport(1, 0, $name, $old);
         getAdminLoginForm();
     }
 }
@@ -301,12 +278,12 @@ function getAdminLoginForm(): void {
                 [
                     'has_colon' => true,
                     'label' => _PASSWORD,
-                    'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'apwd', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD, 'is_required' => true]),
+                    'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'apwd', 'placeholder_text' => _PASSWORD, 'is_required' => true]),
                 ],
                 [
                     'has_colon' => true,
                     'label' => _RETYPEPASSWORD,
-                    'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'apwd2', 'maxlength_num' => 25, 'placeholder_text' => _RETYPEPASSWORD, 'is_required' => true]),
+                    'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'apwd2', 'placeholder_text' => _RETYPEPASSWORD, 'is_required' => true]),
                 ],
                 [
                     'label' => _CREATEUSERDATA,
@@ -319,6 +296,7 @@ function getAdminLoginForm(): void {
                 ],
             ],
             'hidden' => ['name_attr' => 'op', 'value_attr' => 'add_admin'],
+            'token' => ['name_attr' => 'token', 'value_attr' => getSiteToken('add_admin')],
             'submit' => ['button_type' => 'submit', 'submit_label' => _SEND],
         ]);
     } else {
@@ -342,7 +320,6 @@ function getAdminLoginForm(): void {
                 'label' => _PASSWORD,
                 'field_html' => $tpl->getHtmlFrag('input', [
                     'name_attr' => 'pwd',
-                    'maxlength_num' => 25,
                     'placeholder_text' => _PASSWORD,
                     'autocomplete_attr' => 'current-password',
                     'is_required' => true,
