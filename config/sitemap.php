@@ -20,7 +20,7 @@ return [
         'gen_h' => '1',
         'gen_m' => '1',
         'gen_p' => '1',
-        'mod' => '0',
+        'mod' => 'forum',
         'pr_c' => '0',
         'pr_h' => '0',
         'pr_m' => '0',

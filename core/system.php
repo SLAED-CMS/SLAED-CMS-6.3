@@ -3006,6 +3006,7 @@ function doCss(): string {
 # Create a sitemap: the XML goes straight into its files as it is produced, a new file follows every 50000 URLs, and more than one file is joined by an index
 # The modules of sitemap.mod are read as before; a Node type takes part through its own sitemap integration, its materials in cursor batches read as a guest of the site language
 # Neither a closed category nor the whole set of materials is ever held; the HTML map shows a Node type with its categories and leaves its materials to the XML
+# The forum keeps a category and a topic whose right opens to a guest by the guest branch of is_acess(): level 0, no group, and an empty right stays closed
 function addSitemapTask(bool $force = false): array {
     global $db, $conf, $tpl, $fld;
     $sm = $conf['sitemap'];
@@ -3020,13 +3021,18 @@ function addSitemapTask(bool $force = false): array {
     $types = [];
     foreach (getNodeTypeMap() as $type) if ($type->active && $type->settings['integrations']['sitemap']) $types[$type->name] = $type;
     if (!$mod && !$types) return ['status' => 'disabled', 'message' => 'Sitemap has no modules selected, the existing map was left untouched'];
+    $guest = static function (string $ids): bool {
+        [$lvl, $gids] = array_pad(explode('|', $ids, 2), 2, '');
+        return $ids !== '' && 0 >= intval($lvl) && !$gids;
+    };
     for ($i = 0; $i < count($mod); $i++) {
         if ($mod[$i] == 'account' && is_active($mod[$i], '0')) {
             $result = $db->getSqlQuery('SELECT id, name, lastvis FROM '.PREFIX_DB.'_users');
             while ([$id, $title, $time] = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, '', $title, $time, $mod[$i]];
         } elseif ($mod[$i] == 'forum' && is_active($mod[$i], '0')) {
-            $result = $db->getSqlQuery('SELECT id, cid, title, time FROM '.PREFIX_DB."_forum WHERE pid = '0' AND time <= NOW() AND status > '1'");
-            while ([$id, $cat, $title, $time] = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
+            $result = $db->getSqlQuery('SELECT f.id, f.cid, f.title, f.time, c.pread FROM '.PREFIX_DB.'_forum AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON c.id = f.cid'
+                ." WHERE f.pid = '0' AND f.time <= NOW() AND f.status > '1'");
+            while ([$id, $cat, $title, $time, $pread] = $db->getSqlRow($result)) if ($guest((string)$pread)) $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
         } elseif ($mod[$i] == 'voting' && is_active($mod[$i], '0')) {
             $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_voting WHERE modul = '' AND time <= NOW()"
                 ." AND (enddate >= NOW() AND status = '0' OR status = '1')");
@@ -3082,8 +3088,9 @@ function addSitemapTask(bool $force = false): array {
         if ($sm['gen_h']) $put($line(getPublicUrl(), $date, 'h'));
         if ($sm['gen_m']) foreach (array_merge(array_keys($info), array_keys($types)) as $key) $put($line(getPublicUrl(['name' => $key]), $date, 'm'));
         foreach (array_keys($info) as $key) {
-            $result = $db->getSqlQuery('SELECT id, modul, title, parent FROM '.PREFIX_DB.'_categories WHERE modul = :mod', ['mod' => $key]);
-            while ([$cid, $cmodul, $title, $parent] = $db->getSqlRow($result)) {
+            $result = $db->getSqlQuery('SELECT id, modul, title, parent, pview FROM '.PREFIX_DB.'_categories WHERE modul = :mod', ['mod' => $key]);
+            while ([$cid, $cmodul, $title, $parent, $pview] = $db->getSqlRow($result)) {
+                if ($cmodul === 'forum' && !$guest((string)$pview)) continue;
                 $cd[$cid] = [$cid, $parent, $title, $cmodul];
                 if ($sm['gen_c']) $put($line(getPublicUrl(['name' => $cmodul, 'cat' => $cid]), $date, 'c'));
             }
