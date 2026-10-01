@@ -131,6 +131,7 @@ thead tr th[data-sort-method="none"]::after {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: var(--sl-space-2);
   white-space: nowrap;
   min-height: var(--sl-size-control);
   height: var(--sl-size-control);
@@ -1516,7 +1517,7 @@ tr.sl-row-collapsed {
   overflow: hidden;
 }
 
-/* A solid head: a deep fill with white text in both schemes, read from the --sl-solid-* tokens */
+/* A solid head: a deep fill with white text in both schemes, read from the --sl-solid-* tokens; every tone sets its fill and its border as a pair, here and only here */
 .sl-block-sidebar h3 {
   cursor: pointer;
   position: relative;
@@ -1529,7 +1530,7 @@ tr.sl-row-collapsed {
   color: var(--sl-solid-text);
   text-shadow: 0 1px 0 var(--sl-scrim-subtle);
   background: var(--sl-solid-good-bg);
-  border: 1px solid transparent;
+  border: 1px solid var(--sl-solid-good-border);
   box-shadow: var(--sl-solid-shadow);
   box-sizing: border-box;
 }
@@ -1606,6 +1607,7 @@ tr.sl-row-collapsed {
 .sl-block-sidebar:has([data-sl-toggle-control="sl-block-3"]) h3,
 .sl-block-sidebar:has([data-sl-toggle-control="sl-block-4"]) h3 {
   background: var(--sl-solid-warn-bg);
+  border-color: var(--sl-solid-warn-border);
 }
 
 .sl-block-sidebar:has([data-sl-toggle-control="sl-block-1"]) h3,
@@ -1642,9 +1644,7 @@ tr.sl-row-collapsed {
 
 .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-block-sidebar h3 {
   padding: var(--sl-admin-tight-title-pad) 0;
-  border: 1px solid var(--sl-solid-good-border);
   border-radius: var(--sl-admin-tight-title-radius);
-  box-shadow: var(--sl-solid-shadow);
   height: auto;
   line-height: 1;
 }
@@ -1660,17 +1660,6 @@ tr.sl-row-collapsed {
   font-size: var(--sl-size-icon-xs);
   line-height: 1;
   flex: 0 0 auto;
-}
-
-.sl-wrapper.sl-admin-shell
-  .sl-admin-sidebar
-  .sl-block-sidebar:has([data-sl-toggle-control="sl-block-1"])
-  h3,
-.sl-wrapper.sl-admin-shell
-  .sl-admin-sidebar
-  .sl-block-sidebar:has([data-sl-toggle-control="sl-block-2"])
-  h3 {
-  border-color: var(--sl-primary-strong);
 }
 
 .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-block-sidebar-content {
@@ -1792,18 +1781,6 @@ tr.sl-row-collapsed {
   );
   border-color: var(--sl-border-strong);
   box-shadow: var(--sl-shadow-raised);
-}
-
-.sl-wrapper.sl-admin-shell
-  .sl-admin-sidebar
-  .sl-block-sidebar:has([data-sl-toggle-control="sl-block-3"])
-  h3,
-.sl-wrapper.sl-admin-shell
-  .sl-admin-sidebar
-  .sl-block-sidebar:has([data-sl-toggle-control="sl-block-4"])
-  h3 {
-  border-color: var(--sl-solid-warn-border);
-  background: var(--sl-solid-warn-bg);
 }
 
 /* Admin home: menu grid, module cards and LED indicators */
@@ -3072,7 +3049,7 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   margin: var(--sl-space-3) 0;
   padding: var(--sl-space-3) var(--sl-space-5);
   color: var(--sl-text);
-  text-align: justify;
+  text-align: start;
   background: var(--sl-alert-tint);
   border-left: var(--sl-alert-border) solid var(--sl-alert-c);
   border-radius: var(--sl-radius-2);
@@ -5349,6 +5326,16 @@ body:has(.sl-admin-login-shell)::before {
   .sl-admin-login-list li {
     grid-template-columns: 1fr;
     gap: var(--sl-space-2);
+  }
+
+  /* The licence line wraps on a phone, so the striped foot grows with it instead of cutting the second line off */
+  .sl-admin-login-footer {
+    height: auto;
+    min-height: var(--sl-login-footer-height);
+  }
+
+  .sl-admin-login-copyright {
+    padding: var(--sl-space-4) var(--sl-space-4) var(--sl-space-3);
   }
 }
 

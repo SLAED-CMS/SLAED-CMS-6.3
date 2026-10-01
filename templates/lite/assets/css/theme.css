@@ -638,7 +638,7 @@ a.sl-crumb:hover + .sl-crumb-sep {
 .sl-alert-text {
   margin: 0;
   line-height: var(--sl-line-loose);
-  text-align: justify;
+  text-align: start;
   color: var(--sl-text);
 }
 
