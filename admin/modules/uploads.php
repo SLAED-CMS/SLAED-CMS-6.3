@@ -45,7 +45,7 @@ function uploads(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
-        'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _MANUAL],
         'subtitle_html' => getUploadsSearch($dir),
     ]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
@@ -95,7 +95,7 @@ function sysfiles(): void {
     setHead();
     echo getTplAdminTabs([
         'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
-        'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _MANUAL],
         'tab' => 1,
     ]).getAdminFileShell(true);
     setFoot();
@@ -110,7 +110,7 @@ function fmedit(): void {
     setHead();
     echo getTplAdminTabs([
         'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
-        'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _MANUAL],
         'tab' => 1,
     ]).getAdminFileShell(true, ['path' => $file, 'text' => $body['text'], 'version' => $body['version']]);
     setFoot();
@@ -141,7 +141,7 @@ function fmsave(): void {
     setHead();
     echo getTplAdminTabs([
         'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
-        'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _MANUAL],
         'tab' => 1,
     ]).getAdminFileShell(true, [
         'path' => $file,
@@ -272,7 +272,7 @@ function tplconfig(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
-        'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _MANUAL],
         'tab' => 2,
     ]);
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _TPINFO]);
@@ -330,7 +330,7 @@ function config(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
-        'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _MANUAL],
         'tab' => 3,
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/uploads.php');
@@ -653,7 +653,7 @@ function configsave(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
-        'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _MANUAL],
     ]);
 }
 

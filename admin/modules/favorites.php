@@ -14,7 +14,7 @@ function favorites(): void {
         return;
     }
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=favorites', 'name=favorites&op=config', 'name=favorites&op=info'], 'tabs' => [_HOME, _PREFERENCES, _DOCS]]);
+    $cont = getTplAdminTabs(['ops' => ['name=favorites', 'name=favorites&op=config', 'name=favorites&op=info'], 'tabs' => [_HOME, _PREFERENCES, _MANUAL]]);
     echo $cont.$tpl->getHtmlPart('box', [
         'box_id' => 'repadminFavoriteList',
         'content_html' => getAdminFavoriteList(1),
@@ -25,7 +25,7 @@ function favorites(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=favorites', 'name=favorites&op=config', 'name=favorites&op=info'], 'tabs' => [_HOME, _PREFERENCES, _DOCS], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=favorites', 'name=favorites&op=config', 'name=favorites&op=info'], 'tabs' => [_HOME, _PREFERENCES, _MANUAL], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/favorites.php');
     $rows = [
         [
@@ -149,7 +149,7 @@ function delete(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=favorites', 'name=favorites&op=config', 'name=favorites&op=info'],
-        'tabs' => [_HOME, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _PREFERENCES, _MANUAL],
     ]);
 }
 

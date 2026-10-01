@@ -70,7 +70,7 @@ function referers(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=referers', 'name=referers&op=config', 'name=referers&op=info'],
-        'tabs' => [_HOME, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _PREFERENCES, _MANUAL],
         'subtitle_html' => getRefererSearch(),
     ]);
     $cont .= $tpl->getHtmlFrag('alert', ['text' => getTplPostButton(['name' => 'referers', 'op' => 'delete'], 'trash', _DELETE)]);
@@ -127,7 +127,7 @@ function config(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=referers', 'name=referers&op=config', 'name=referers&op=info'],
-        'tabs' => [_HOME, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _PREFERENCES, _MANUAL],
         'tab' => 1,
         'subtitle_html' => getRefererSearch(),
     ]);
@@ -229,7 +229,7 @@ function delete(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=referers', 'name=referers&op=config', 'name=referers&op=info'],
-        'tabs' => [_HOME, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _PREFERENCES, _MANUAL],
     ]);
 }
 

@@ -43,7 +43,7 @@ function lang(): void {
     }
 
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=lang', 'name=lang&op=config', 'name=lang&op=info'], 'tabs' => [_HOME, _PREFERENCES, _DOCS]]);
+    $cont = getTplAdminTabs(['ops' => ['name=lang', 'name=lang&op=config', 'name=lang&op=info'], 'tabs' => [_HOME, _PREFERENCES, _MANUAL]]);
     $rows = [];
     $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
         'cells' => [
@@ -108,7 +108,7 @@ function lang(): void {
 function fileedit(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=lang', 'name=lang&op=config', 'name=lang&op=info'], 'tabs' => [_HOME, _PREFERENCES, _DOCS]]);
+    $cont = getTplAdminTabs(['ops' => ['name=lang', 'name=lang&op=config', 'name=lang&op=info'], 'tabs' => [_HOME, _PREFERENCES, _MANUAL]]);
     $mod = getVar('get', 'mod', 'var', '');
     $typ = getVar('get', 'typ', 'var', '');
     $page = getVar('get', 'page', 'num', 1);
@@ -245,7 +245,7 @@ function save(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=lang', 'name=lang&op=config', 'name=lang&op=info'], 'tabs' => [_HOME, _PREFERENCES, _DOCS], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=lang', 'name=lang&op=config', 'name=lang&op=info'], 'tabs' => [_HOME, _PREFERENCES, _MANUAL], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/lang.php');
     $s_lang = $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => getTplLanguageOptions($conf['lang']['lang'], 1), 'is_config' => true]);
     $rows = [
@@ -316,7 +316,7 @@ function configsave(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=lang', 'name=lang&op=config', 'name=lang&op=info'],
-        'tabs' => [_HOME, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _PREFERENCES, _MANUAL],
     ]);
 }
 

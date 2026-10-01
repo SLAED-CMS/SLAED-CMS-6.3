@@ -85,7 +85,7 @@ function comments(): void {
             $curq.'&op=config',
             $curq.'&op=info',
         ],
-        'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _MANUAL],
         'tab' => $status,
         'subtitle_html' => $subtitle,
     ]);
@@ -229,7 +229,7 @@ function edit(): void {
             $curq.'&op=config',
             $curq.'&op=info',
         ],
-        'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _MANUAL],
         'tab' => $status,
         'subtitle_html' => getCommentsSearch(),
     ]);
@@ -333,7 +333,7 @@ function config(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=comments', 'name=comments&status=1', 'name=comments&op=config', 'name=comments&op=info'],
-        'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _MANUAL],
         'tab' => 2,
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/comments.php');
@@ -607,7 +607,7 @@ function recount(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=comments', 'name=comments&status=1', 'name=comments&op=config', 'name=comments&op=info'],
-        'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _MANUAL],
     ]);
 }
 

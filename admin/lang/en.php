@@ -346,6 +346,7 @@ define('_MAP_PR_M','The priority of the modules of the site');
 define('_MAP_PR_P','The priority of publications in modules');
 define('_MAP_SITE','Create a regular structure card to view on the website?');
 define('_MAP_XSL','Use the design template for the XSL map file?');
+define('_MANUAL','Help');
 define('_MASSMAIL','Massive newsletter to all users');
 define('_MATCHANY','Match anywhere in the text');
 define('_MESSAGE_BOX','Display messages on the main page?');

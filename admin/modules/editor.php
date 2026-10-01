@@ -77,7 +77,7 @@ function getEditbox(
 ): string {
     global $afile, $tpl;
     $ops = ['name=editor', 'name=editor&op=editheader', 'name=editor&op=htaccess', 'name=editor&op=robots', 'name=editor&op=info'];
-    $tabs = [_EFUNCN, _EHEADN, _EHTN, _ERON, _DOCS];
+    $tabs = [_EFUNCN, _EHEADN, _EHTN, _ERON, _MANUAL];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => $tab]);
     $text = getEdittxt($file, $trim);
     $text = filterRawEditorText($file, $text);
@@ -176,7 +176,7 @@ function save(): void {
         setHead();
         $cont = getTplAdminTabs([
             'ops' => ['name=editor', 'name=editor&op=editheader', 'name=editor&op=htaccess', 'name=editor&op=robots', 'name=editor&op=info'],
-            'tabs' => [_EFUNCN, _EHEADN, _EHTN, _ERON, _DOCS],
+            'tabs' => [_EFUNCN, _EHEADN, _EHTN, _ERON, _MANUAL],
             'tab' => $edit === 'editheader' ? 1 : ($edit === 'htaccess' ? 2 : ($edit === 'robots' ? 3 : 0)),
         ]);
         echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _TOKENMISS]);
@@ -199,7 +199,7 @@ function save(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=editor', 'name=editor&op=editheader', 'name=editor&op=htaccess', 'name=editor&op=robots', 'name=editor&op=info'],
-        'tabs' => [_EFUNCN, _EHEADN, _EHTN, _ERON, _DOCS],
+        'tabs' => [_EFUNCN, _EHEADN, _EHTN, _ERON, _MANUAL],
     ]);
 }
 

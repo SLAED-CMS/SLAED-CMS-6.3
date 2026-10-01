@@ -10,7 +10,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function ratings(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=ratings', 'name=ratings&op=votes', 'name=ratings&op=info'], 'tabs' => [_HOME, _RATINGS_VOTES, _DOCS]]);
+    $cont = getTplAdminTabs(['ops' => ['name=ratings', 'name=ratings&op=votes', 'name=ratings&op=info'], 'tabs' => [_HOME, _RATINGS_VOTES, _MANUAL]]);
     $cont .= checkPerms(CONFIG_DIR.'/ratings.php');
     if (($conf['update']['ratings'] ?? '') !== '6.3.0') {
         echo $cont.$tpl->getHtmlFrag('alert', ['text' => _RATINGS_NOMARK, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
@@ -122,7 +122,7 @@ function votes(): void {
     $vote = getVar('get', 'vote', 'num', 0);
     $link = $afile.'.php?name=ratings&op=votes'.($scope !== '' ? '&scope='.$scope : '').($mid ? '&mid='.$mid : '');
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=ratings', 'name=ratings&op=votes', 'name=ratings&op=info'], 'tabs' => [_HOME, _RATINGS_VOTES, _DOCS], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=ratings', 'name=ratings&op=votes', 'name=ratings&op=info'], 'tabs' => [_HOME, _RATINGS_VOTES, _MANUAL], 'tab' => 1]);
     if ($vote) {
         $field = $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'reason', 'value_attr' => '', 'maxlength_num' => '255', 'is_config' => true, 'is_required' => true]);
         $cont .= $tpl->getHtmlPart('box', ['title' => _RATINGS_ANNUL.' #'.$vote, 'content_html' => $tpl->getHtmlPart('form', [
@@ -196,7 +196,7 @@ function annul(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=ratings', 'name=ratings&op=votes', 'name=ratings&op=info'],
-        'tabs' => [_HOME, _RATINGS_VOTES, _DOCS],
+        'tabs' => [_HOME, _RATINGS_VOTES, _MANUAL],
     ]);
 }
 

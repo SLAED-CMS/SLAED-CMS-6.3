@@ -200,7 +200,7 @@ function getSearchlink(int $sort = 3, int $order = 2, int $num = 1, string $find
 function getSearchnavi(string $sub = '', int $tab = 0): string {
     return getTplAdminTabs([
         'ops' => ['name=search', 'name=search&op=toplist', 'name=search&op=config', 'name=search&op=delete', 'name=search&op=info'],
-        'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _DOCS],
+        'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _MANUAL],
         'tab' => $tab,
         'subtitle_html' => $sub,
     ]);
@@ -758,7 +758,7 @@ function drop(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=search', 'name=search&op=toplist', 'name=search&op=config', 'name=search&op=delete', 'name=search&op=info'],
-        'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _DOCS],
+        'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _MANUAL],
     ]);
 }
 

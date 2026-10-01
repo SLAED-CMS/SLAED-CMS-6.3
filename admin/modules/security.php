@@ -26,7 +26,7 @@ function security(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=security', 'name=security&op=banlist', 'name=security&op=passwd', 'name=security&op=config', 'name=security&op=info'],
-        'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _MANUAL],
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     $head = [
@@ -49,7 +49,7 @@ function security(): void {
                     [
                         'href' => $afile.'.php?name=security&op=logview&file='.urlencode($name),
                         'icon_name' => 'file-text',
-                        'title' => _DOCS,
+                        'title' => _SHOW,
                     ],
                     [
                         'href' => $afile.'.php?name=security&op=download&file='.urlencode($name),
@@ -86,7 +86,7 @@ function logview(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=security', 'name=security&op=banlist', 'name=security&op=passwd', 'name=security&op=config', 'name=security&op=info'],
-        'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _MANUAL],
     ]);
     $file = getVar('get', 'file', 'var');
     if ($file) {
@@ -122,7 +122,7 @@ function banlist(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=security', 'name=security&op=banlist', 'name=security&op=passwd', 'name=security&op=config', 'name=security&op=info'],
-        'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _MANUAL],
         'tab' => 1,
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
@@ -419,7 +419,7 @@ function passwd(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=security', 'name=security&op=banlist', 'name=security&op=passwd', 'name=security&op=config', 'name=security&op=info'],
-        'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _MANUAL],
         'tab' => 2,
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
@@ -510,7 +510,7 @@ function config(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=security', 'name=security&op=banlist', 'name=security&op=passwd', 'name=security&op=config', 'name=security&op=info'],
-        'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _MANUAL],
         'tab' => 3,
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
@@ -967,7 +967,7 @@ function configsave(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=security', 'name=security&op=banlist', 'name=security&op=passwd', 'name=security&op=config', 'name=security&op=info'],
-        'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _MANUAL],
     ]);
 }
 

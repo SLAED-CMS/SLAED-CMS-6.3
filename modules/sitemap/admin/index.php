@@ -49,7 +49,7 @@ function sitemap(): void {
     $file = 'sitemap.xml';
     $cont = getTplAdminTabs([
         'ops' => ['name=sitemap', 'name=sitemap&op=xsledit', 'name=sitemap&op=config', 'name=sitemap&op=info'],
-        'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _MANUAL],
     ]);
     $cont .= checkPerms(BASE_DIR.'/'.$file);
     $conts = is_readable($file) ? file_get_contents($file) : '';
@@ -110,7 +110,7 @@ function xsledit(): void {
     $file = SITEMAP_DIR.'/sitemap.xsl';
     $cont = getTplAdminTabs([
         'ops' => ['name=sitemap', 'name=sitemap&op=xsledit', 'name=sitemap&op=config', 'name=sitemap&op=info'],
-        'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _MANUAL],
         'tab' => 1,
     ]);
     $cont .= checkPerms($file);
@@ -157,7 +157,7 @@ function config(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=sitemap', 'name=sitemap&op=xsledit', 'name=sitemap&op=config', 'name=sitemap&op=info'],
-        'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _MANUAL],
         'tab' => 2,
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/sitemap.php');
@@ -273,7 +273,7 @@ function configsave(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=sitemap', 'name=sitemap&op=xsledit', 'name=sitemap&op=config', 'name=sitemap&op=info'],
-        'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _MANUAL],
     ]);
 }
 

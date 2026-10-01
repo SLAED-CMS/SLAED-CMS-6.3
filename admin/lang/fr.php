@@ -346,6 +346,7 @@ define('_MAP_PR_M','La priorité des modules du site');
 define('_MAP_PR_P','La priorité des publications dans les modules');
 define('_MAP_SITE','Créer ordinaire de la structure de la carte pour afficher sur votre site?');
 define('_MAP_XSL','Utiliser le modèle de conception du XSL pour le fichier de la carte?');
+define('_MANUAL','Aide');
 define('_MASSMAIL','Tous les utilisateurs de');
 define('_MATCHANY','Filtrage des mots dans le texte');
 define('_MESSAGE_BOX',"Afficher des messages sur la page d'accueil?");

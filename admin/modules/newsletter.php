@@ -51,7 +51,7 @@ function getCampOption(string $audit, string $apar, string $label, string $pick)
 # Build the tab strip every screen of this module shows, with only its own index changed
 function getCampTabs(int $tab): string {
     $ops = ['name=newsletter', 'name=newsletter&op=add', 'name=newsletter&op=queue', 'name=newsletter&op=config', 'name=newsletter&op=info'];
-    return getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _ADD, _NLQUEUE, _PREFERENCES, _DOCS], 'tab' => $tab]);
+    return getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _ADD, _NLQUEUE, _PREFERENCES, _MANUAL], 'tab' => $tab]);
 }
 
 # Offer every audience the installation can address as a criterion, never as a list of addresses
@@ -563,7 +563,7 @@ function configsave(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=newsletter', 'name=newsletter&op=add', 'name=newsletter&op=queue', 'name=newsletter&op=config', 'name=newsletter&op=info'],
-        'tabs' => [_HOME, _ADD, _NLQUEUE, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _ADD, _NLQUEUE, _PREFERENCES, _MANUAL],
     ]);
 }
 

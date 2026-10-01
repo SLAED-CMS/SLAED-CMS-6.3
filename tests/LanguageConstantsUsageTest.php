@@ -40,18 +40,29 @@ final class LanguageConstantsUsageTest extends TestCase
         $this->assertTrue(true, $msg);
     }
 
-    # Maps each defined constant to its file:line list, then counts T_STRING usages (not the define() declarations) and template tokens
+    # Maps each defined constant to its file:line list, then counts T_STRING usages (not the define() declarations), template tokens and the names a module profile carries
+    # A Node profile in modules/*/profiles/*.json names its type and its fields by constant, so those names are used although no PHP file spells them
     private static function collectStats(): array
     {
         $defs = [];
         $phpFiles = [];
         $tplFiles = [];
+        $jsonFiles = [];
         $iterator = getTreeFiles(self::$basePath);
 
         $skipDirs = ['vendor', 'tests', '.git', '.reports'];
 
         foreach ($iterator as $file) {
             if (!$file->isFile()) {
+                continue;
+            }
+
+            if ($file->getExtension() === 'json') {
+                $path = $file->getPathname();
+                $rel = str_replace('\\', '/', str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $path));
+                if (preg_match('#^modules/[^/]+/profiles/[^/]+\.json$#', $rel)) {
+                    $jsonFiles[] = $path;
+                }
                 continue;
             }
 
@@ -146,6 +157,19 @@ final class LanguageConstantsUsageTest extends TestCase
             }
 
             if (preg_match_all('/\{\{\{?\s*(_[A-Z0-9_]+)\s*\}\}\}?/', $text, $all) < 1) {
+                continue;
+            }
+
+            foreach ($all[1] as $name) {
+                if (isset($use[$name])) {
+                    $use[$name]++;
+                }
+            }
+        }
+
+        foreach ($jsonFiles as $path) {
+            $text = file_get_contents($path);
+            if ($text === false || preg_match_all('/"(_[A-Z][A-Z0-9_]*)"/', $text, $all) < 1) {
                 continue;
             }
 

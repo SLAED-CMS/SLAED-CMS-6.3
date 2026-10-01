@@ -10,7 +10,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function groups(): void {
     global $db, $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=groups', 'name=groups&op=add', 'name=groups&op=points', 'name=groups&op=info'], 'tabs' => [_HOME, _ADD, _POINTS, _DOCS]]);
+    $cont = getTplAdminTabs(['ops' => ['name=groups', 'name=groups&op=add', 'name=groups&op=points', 'name=groups&op=info'], 'tabs' => [_HOME, _ADD, _POINTS, _MANUAL]]);
     $result = $db->getSqlQuery('SELECT id, name, intro, points, extra, `rank`, color FROM '.PREFIX_DB.'_groups ORDER BY points, extra');
     if ($db->getSqlRowCount($result) > 0) {
         $head = [
@@ -98,7 +98,8 @@ function add(): void {
     }
     $rank = empty($rank) ? 'rank_1.png' : $rank;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=groups', 'name=groups&op=add', 'name=groups&op=points', 'name=groups&op=info'], 'tabs' => [_HOME, _ADD, _POINTS, _DOCS], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=groups', 'name=groups&op=add', 'name=groups&op=points', 'name=groups&op=info'],
+        'tabs' => [_HOME, _ADD, _POINTS, _MANUAL], 'tab' => 1]);
     $cont .= $tpl->getHtmlFrag('alert', ['text' => _GROUPSI]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
     $rows = [];
@@ -236,7 +237,8 @@ function save(): void {
 function points(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=groups', 'name=groups&op=add', 'name=groups&op=points', 'name=groups&op=info'], 'tabs' => [_HOME, _ADD, _POINTS, _DOCS], 'tab' => 2]);
+    $cont = getTplAdminTabs(['ops' => ['name=groups', 'name=groups&op=add', 'name=groups&op=points', 'name=groups&op=info'],
+        'tabs' => [_HOME, _ADD, _POINTS, _MANUAL], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/points.php');
     $mark = ($conf['update']['points'] ?? '') === '6.3.0';
     if (!$mark) $cont .= $tpl->getHtmlFrag('alert', ['text' => _POINTS_NOMARK, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
@@ -392,7 +394,7 @@ function delete(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=groups', 'name=groups&op=add', 'name=groups&op=points', 'name=groups&op=info'],
-        'tabs' => [_HOME, _ADD, _POINTS, _DOCS],
+        'tabs' => [_HOME, _ADD, _POINTS, _MANUAL],
     ]);
 }
 

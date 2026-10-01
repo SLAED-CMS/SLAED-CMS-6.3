@@ -39,7 +39,7 @@ function account(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops'  => ['name=account', 'name=account&op=add', 'name=account&op=newuser', 'name=account&op=pointreset', 'name=account&op=config', 'name=account&op=info'],
-        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _MANUAL],
         'subtitle_html' => getAccountSearch(),
     ]);
     $where = '1 = 1';
@@ -258,7 +258,7 @@ function add(bool $fresh = false): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops'  => ['name=account', 'name=account&op=add', 'name=account&op=newuser', 'name=account&op=pointreset', 'name=account&op=config', 'name=account&op=info'],
-        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _MANUAL],
         'subtitle_html' => getAccountSearch(),
         'tab'  => 1,
     ]);
@@ -710,7 +710,7 @@ function newuser(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops'  => ['name=account', 'name=account&op=add', 'name=account&op=newuser', 'name=account&op=pointreset', 'name=account&op=config', 'name=account&op=info'],
-        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _MANUAL],
         'subtitle_html' => getAccountSearch(),
         'tab'  => 2,
     ]);
@@ -778,7 +778,7 @@ function pointreset(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops'  => ['name=account', 'name=account&op=add', 'name=account&op=newuser', 'name=account&op=pointreset', 'name=account&op=config', 'name=account&op=info'],
-        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _MANUAL],
         'subtitle_html' => getAccountSearch(),
         'tab'  => 3,
     ]);
@@ -884,7 +884,7 @@ function config(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops'  => ['name=account', 'name=account&op=add', 'name=account&op=newuser', 'name=account&op=pointreset', 'name=account&op=config', 'name=account&op=info'],
-        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _MANUAL],
         'subtitle_html' => getAccountSearch(),
         'tab'  => 4,
     ]);
@@ -1286,7 +1286,7 @@ function oauthlist(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops'  => ['name=account', 'name=account&op=add', 'name=account&op=newuser', 'name=account&op=pointreset', 'name=account&op=config', 'name=account&op=info'],
-        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _MANUAL],
         'subtitle_html' => getAccountSearch(),
     ]);
     $id = getVar('get', 'id', 'num');
@@ -1368,7 +1368,7 @@ function oauthunlink(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops'  => ['name=account', 'name=account&op=add', 'name=account&op=newuser', 'name=account&op=pointreset', 'name=account&op=config', 'name=account&op=info'],
-        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _MANUAL],
         'subtitle_html' => getAccountSearch(),
     ]);
 }

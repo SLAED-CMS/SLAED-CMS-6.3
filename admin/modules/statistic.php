@@ -227,7 +227,7 @@ function statistic(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=statistic', 'name=statistic&op=config', 'name=statistic&op=info'],
-        'tabs' => [_HOME, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _PREFERENCES, _MANUAL],
         'subtitle_html' => getStatisticSearch(),
     ]);
     $cont .= checkPerms(COUNTER_DIR);
@@ -338,7 +338,7 @@ function config(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=statistic', 'name=statistic&op=config', 'name=statistic&op=info'],
-        'tabs' => [_HOME, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _PREFERENCES, _MANUAL],
         'tab' => 1,
         'subtitle_html' => getStatisticSearch(),
     ]);
@@ -408,7 +408,7 @@ function save(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=statistic', 'name=statistic&op=config', 'name=statistic&op=info'],
-        'tabs' => [_HOME, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _PREFERENCES, _MANUAL],
         'subtitle_html' => getStatisticSearch(),
     ]);
 }

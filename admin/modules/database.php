@@ -98,7 +98,7 @@ function database(): void {
     global $db, $conf, $afile, $tpl;
     $type = getVar('get', 'type', 'var');
     $ops = ['name=database', 'name=database&type=optimize', 'name=database&type=repair', 'name=database&op=dump', 'name=database&op=info'];
-    $tabs = [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _DOCS];
+    $tabs = [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _MANUAL];
     $headtag = ($type === 'optimize' || $type === 'repair') ? _STATUS : _FUNCTIONS;
     $dbname = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($conf['db']['name'] ?? ''));
     if ($dbname === '') {
@@ -256,7 +256,7 @@ function dump(): void {
     $string = getVar('post', 'string', 'raw', '');
     $action = getVar('post', 'action', 'var', '');
     $ops = ['name=database', 'name=database&type=optimize', 'name=database&type=repair', 'name=database&op=dump', 'name=database&op=info'];
-    $tabs = [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _DOCS];
+    $tabs = [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _MANUAL];
     setHead();
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 3]);
     if ($type === 'dump' && !empty($string) && ($action === 'parse' || $action === 'exec')) {
@@ -340,7 +340,7 @@ function dump(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=database', 'name=database&type=optimize', 'name=database&type=repair', 'name=database&op=dump', 'name=database&op=info'],
-        'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _DOCS],
+        'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _MANUAL],
     ]);
 }
 

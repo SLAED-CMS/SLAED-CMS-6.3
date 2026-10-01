@@ -23,7 +23,7 @@ function getNodeAdminOps(): array {
         $ops += ['types' => [_NODE_TYPES, 'name=node&op=types'], 'type' => [_NODE_NEWTYPE, 'name=node&op=type'], 'import' => [_NODE_IMPORT, 'name=node&op=import'],
             'config' => [_PREFERENCES, 'name=node&op=config']];
     }
-    return $ops + ['info' => [_DOCS, 'name=node&op=info']];
+    return $ops + ['info' => [_MANUAL, 'name=node&op=info']];
 }
 
 # The head of every screen of the module with the tab of the current operation marked

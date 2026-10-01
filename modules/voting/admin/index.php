@@ -83,7 +83,7 @@ function voting(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=voting', 'name=voting&op=add', 'name=voting&op=config', 'name=voting&op=info'],
-        'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _ADD, _PREFERENCES, _MANUAL],
     ]);
     $num = getVar('get', 'num', 'num', 1);
     $anum = (int)$conf['voting']['anum'];
@@ -165,7 +165,7 @@ function add(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=voting', 'name=voting&op=add', 'name=voting&op=config', 'name=voting&op=info'],
-        'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _ADD, _PREFERENCES, _MANUAL],
         'tab' => 1,
     ]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
@@ -354,7 +354,7 @@ function config(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=voting', 'name=voting&op=add', 'name=voting&op=config', 'name=voting&op=info'],
-        'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _ADD, _PREFERENCES, _MANUAL],
         'tab' => 2,
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/voting.php');
@@ -433,7 +433,7 @@ function configsave(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=voting', 'name=voting&op=add', 'name=voting&op=config', 'name=voting&op=info'],
-        'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS],
+        'tabs' => [_HOME, _ADD, _PREFERENCES, _MANUAL],
     ]);
 }
 

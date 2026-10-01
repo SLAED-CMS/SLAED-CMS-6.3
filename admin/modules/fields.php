@@ -157,7 +157,7 @@ function fields(array $sent = [], string $fail = ''): void {
         $panels[] = $tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'fields-panel-'.$k, 'active' => $ctab === $k, 'content_html' => $blok]);
         $k++;
     }
-    $links[] = ['href' => $afile.'.php?name=fields&op=info&tab='.$ctab, 'label' => _DOCS, 'link_attr' => 'data-sl-tab-info-link="fields-main"', 'title' => _DOCS];
+    $links[] = ['href' => $afile.'.php?name=fields&op=info&tab='.$ctab, 'label' => _MANUAL, 'link_attr' => 'data-sl-tab-info-link="fields-main"', 'title' => _MANUAL];
     $cont = getTplAdminTabs(['is_runtime' => true, 'links' => $links, 'tabs_id' => 'fields-main', 'tabs_index' => $ctab, 'tabs_sync_selector' => 'input[name="tab"]']);
     $cont .= checkPerms(CONFIG_DIR.'/fields.php');
     if (!$mark) {
@@ -256,7 +256,7 @@ function info(): void {
     $areas = array_column(getFieldAreas(), 'label');
     foreach (array_keys($areas) as $key) $ops[] = 'name=fields&tab='.$key;
     $ops[] = 'name=fields&op=info';
-    setTplAdminInfoPage(['ops' => $ops, 'tabs' => array_merge($areas, [_DOCS])]);
+    setTplAdminInfoPage(['ops' => $ops, 'tabs' => array_merge($areas, [_MANUAL])]);
 }
 
 switch ($op) {

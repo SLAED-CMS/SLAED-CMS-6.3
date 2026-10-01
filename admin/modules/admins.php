@@ -52,7 +52,7 @@ function checkAdminlast(int $aid): bool {
 function admins(): void {
     global $db, $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=admins', 'name=admins&op=add', 'name=admins&op=info'], 'tabs' => [_HOME, _ADD, _DOCS]]);
+    $cont = getTplAdminTabs(['ops' => ['name=admins', 'name=admins&op=add', 'name=admins&op=info'], 'tabs' => [_HOME, _ADD, _MANUAL]]);
     $head = [
         ['content' => _NICKNAME],
         ['content' => _URANK],
@@ -142,7 +142,7 @@ function add(): void {
     $need = $aid ? '' : ' required';
     $check = getVar('post', 'mail', 'bool', 0) ? '1' : '';
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=admins', 'name=admins&op=add', 'name=admins&op=info'], 'tabs' => [_HOME, _ADD, _DOCS], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=admins', 'name=admins&op=add', 'name=admins&op=info'], 'tabs' => [_HOME, _ADD, _MANUAL], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => array_values((array)$stop)]);
     $items = '';
     $mods = getAdminModuleNames((string)$mods);
@@ -494,7 +494,7 @@ function delete(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=admins', 'name=admins&op=add', 'name=admins&op=info'],
-        'tabs' => [_HOME, _ADD, _DOCS],
+        'tabs' => [_HOME, _ADD, _MANUAL],
     ]);
 }
 

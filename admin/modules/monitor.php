@@ -868,7 +868,7 @@ function setMonitorPage(object $db, array $conf, string $afile, ?array $snapshot
     global $tpl;
     $ctx = getMonitorDashboardContext($db, $conf, $snapshot);
     $vars = getMonitorTemplateVars($snapshot, $ctx, $conf, $db, $afile);
-    $navi = getTplAdminTabs(['ops' => ['name=monitor', 'name=monitor&op=info'], 'tabs' => [_HOME, _DOCS]]);
+    $navi = getTplAdminTabs(['ops' => ['name=monitor', 'name=monitor&op=info'], 'tabs' => [_HOME, _MANUAL]]);
     echo $navi.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('basic-monitor', $vars)]);
 }
 
@@ -884,7 +884,7 @@ function monitor(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=monitor', 'name=monitor&op=info'],
-        'tabs' => [_HOME, _DOCS],
+        'tabs' => [_HOME, _MANUAL],
     ]);
 }
 

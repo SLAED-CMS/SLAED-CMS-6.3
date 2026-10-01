@@ -305,9 +305,9 @@ function config(): void {
     }
     $links[] = [
         'href' => $afile.'.php?name=config&op=info&tab='.$ctab,
-        'label' => _DOCS,
+        'label' => _MANUAL,
         'link_attr' => 'data-sl-tab-info-link="config-main"',
-        'title' => _DOCS,
+        'title' => _MANUAL,
     ];
     $cont = getTplAdminTabs([
         'is_runtime' => true,
@@ -1315,7 +1315,7 @@ function restore(): void {
         setRedirect($afile.'.php?name=config&op=restore', false, 302, $text, $warn);
     }
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=config', 'name=config&op=restore', 'name=config&op=info'], 'tabs' => [_PREFERENCES, _CONFIG_RESTORE, _DOCS], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=config', 'name=config&op=restore', 'name=config&op=info'], 'tabs' => [_PREFERENCES, _CONFIG_RESTORE, _MANUAL], 'tab' => 1]);
     $jour = getConfigJournal();
     if (!$jour) {
         echo $cont.$tpl->getHtmlFrag('alert', ['text' => _CONFIG_CLEAN]);
@@ -1356,7 +1356,7 @@ function info(): void {
             'name=config&tab=6',
             'name=config&op=info',
         ],
-        'tabs' => [_GENPREF, _SEO, _MULTILINGUAL.' / '._GEOLOCATION, _CENSORS, _BOTSOPT, _OPTIMIZE, _MAILOPT, _DOCS],
+        'tabs' => [_GENPREF, _SEO, _MULTILINGUAL.' / '._GEOLOCATION, _CENSORS, _BOTSOPT, _OPTIMIZE, _MAILOPT, _MANUAL],
     ]);
 }
 

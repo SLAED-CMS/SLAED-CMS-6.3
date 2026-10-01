@@ -22,7 +22,7 @@ function categories(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => $ops,
-        'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _DOCS],
+        'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _MANUAL],
         'subtitle_html' => $subtitle,
     ]);
     echo $cont
@@ -67,7 +67,7 @@ function add(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => $ops,
-        'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _DOCS],
+        'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _MANUAL],
         'tab' => 1,
         'subtitle_html' => $subtitle,
     ]);
@@ -207,7 +207,7 @@ function subadd(): void {
         ])]);
         $cont = getTplAdminTabs([
             'ops' => $ops,
-            'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _DOCS],
+            'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _MANUAL],
             'tab' => 2,
             'subtitle_html' => $subtitle,
         ]);
@@ -338,7 +338,7 @@ function subadd(): void {
         ])]);
         $navi = getTplAdminTabs([
             'ops' => $ops,
-            'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _DOCS],
+            'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _MANUAL],
             'tab' => 2,
             'subtitle_html' => $subtitle,
         ]);
@@ -364,7 +364,7 @@ function addedit(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => $ops,
-        'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _DOCS],
+        'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _MANUAL],
         'tab' => 3,
         'subtitle_html' => $subtitle,
     ]);
@@ -411,7 +411,7 @@ function edit(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => $ops,
-        'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _DOCS],
+        'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _MANUAL],
         'tab' => 3,
         'subtitle_html' => $subtitle,
     ]);
@@ -704,7 +704,7 @@ function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=categories'.$modlink, 'name=categories&op=add'.$modlink, 'name=categories&op=subadd'.$modlink, 'name=categories&op=addedit'.$modlink,
             'name=categories&op=info'.$modlink],
-        'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _DOCS],
+        'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _MANUAL],
     ]);
 }
 

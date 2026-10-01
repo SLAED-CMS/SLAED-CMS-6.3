@@ -274,7 +274,7 @@ define('_HOUR','час');
 define('_ID','№');
 define('_IMG','Изображение');
 define('_INFO','Информация');
-define('_DOCS','Справка');
+define('_DOCS','Документация');
 define('_INPUT','Вход');
 define('_INSERTIMG','Вставить изображение');
 define('_INTERESTS','Интересы');

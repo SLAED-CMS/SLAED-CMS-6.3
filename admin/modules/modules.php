@@ -30,7 +30,7 @@ function modules(): void {
         ]),
     ]);
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=modules'.$typelink, 'name=modules&op=info'], 'tabs' => [_HOME, _DOCS], 'subtitle_html' => $search]);
+    $cont = getTplAdminTabs(['ops' => ['name=modules'.$typelink, 'name=modules&op=info'], 'tabs' => [_HOME, _MANUAL], 'subtitle_html' => $search]);
     if (!empty($infos)) $cont .= $tpl->getHtmlFrag('alert', ['text' => $infos]);
     $config = false;
     $modlist = [];
@@ -132,7 +132,7 @@ function modules(): void {
         $titlel = ($menu == 0)
             ? $tpl->getHtmlFrag('popover', [
                 'items' => [
-                    ['label' => _DOCS, 'value' => _NO_SICHT, 'is_last' => true],
+                    ['label' => _STATUS, 'value' => _NO_SICHT, 'is_last' => true],
                 ],
                 'label_text' => $lang,
                 'title_text' => $lang,
@@ -164,7 +164,7 @@ function modules(): void {
         $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
                 ['is_col_id' => true, 'content_html' => (string)$a],
-                ['is_truncate' => true, 'title_text' => $titlel, 'content_html' => $tpl->getHtmlFrag('bootstrap-icon', ['icon_name' => $typel]).' '.$titlel],
+                ['is_truncate' => true, 'title_text' => $lang, 'content_html' => $tpl->getHtmlFrag('bootstrap-icon', ['icon_name' => $typel]).' '.$titlel],
                 ['is_truncate' => true, 'title_text' => $title, 'content_html' => $title],
                 ['content_html' => $who_view],
                 ['content_html' => $group_name],
@@ -226,7 +226,7 @@ function edit(): void {
         ]),
     ]);
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=modules'.($mtype !== 2 ? '&type='.$mtype : ''), 'name=modules&op=info'], 'tabs' => [_HOME, _DOCS], 'subtitle_html' => $search]);
+    $cont = getTplAdminTabs(['ops' => ['name=modules'.($mtype !== 2 ? '&type='.$mtype : ''), 'name=modules&op=info'], 'tabs' => [_HOME, _MANUAL], 'subtitle_html' => $search]);
     $grpopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NONE, 'is_selected' => (int)$group === 0]);
     $numrow = $db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_groups'));
     if ($numrow > 0) {
@@ -403,7 +403,7 @@ function add(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=modules', 'name=modules&op=info'],
-        'tabs' => [_HOME, _DOCS],
+        'tabs' => [_HOME, _MANUAL],
     ]);
 }
 

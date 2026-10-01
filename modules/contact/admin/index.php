@@ -11,7 +11,7 @@ function contact(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=contact', 'name=contact&op=info'],
-        'tabs' => [_PREFERENCES, _DOCS],
+        'tabs' => [_PREFERENCES, _MANUAL],
     ]);
     $rows = [
         [
@@ -66,7 +66,7 @@ function save(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=contact', 'name=contact&op=info'],
-        'tabs' => [_PREFERENCES, _DOCS],
+        'tabs' => [_PREFERENCES, _MANUAL],
     ]);
 }
 
