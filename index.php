@@ -203,7 +203,7 @@ if (empty($go)) {
                 exit;
             }
             session_write_close();
-            echo json_encode(addSchedulerRun($name ?: null, $type), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            echo json_encode($name ? addSchedulerRun($name, $type) : addSchedulerBatch($type), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             exit;
         }
     } elseif ($go == 4) {

@@ -128,6 +128,20 @@ final class SchedulerLockTest extends TestCase
         $this->assertTrue($data['slotstale'], 'The barrier answers no regardless of state, which would block every scheduled run');
     }
 
+    # One cron call runs every due job once in priority order instead of only the first, so a job due every minute cannot keep the jobs behind it waiting
+    # A job another process holds is passed over and the rest of the call still runs
+    #[Test]
+    public function oneCallRunsEveryDueJobOnce(): void
+    {
+        $data = $this->getProbe('batch');
+        $this->assertSame('done', $data['status']);
+        $this->assertSame(['probejob', 'otherjob'], $data['first'], 'One call did not run every due job in priority order');
+        $this->assertSame([true, true], $data['ran']);
+        $this->assertSame('idle', $data['second'], 'A second call ran a job whose slot the first call had already covered');
+        $this->assertTrue($data['held'], 'The second process did not take the lock, so the busy case proves nothing');
+        $this->assertSame(['otherjob'], $data['busy'], 'A job held by another process stalled the call or was run twice');
+    }
+
     # A run whose state cannot be stored is refused rather than executed: otherwise the work would happen, report success and still look due to the next pass
     #[Test]
     public function aRunThatCannotRecordItsStateDoesNotStart(): void

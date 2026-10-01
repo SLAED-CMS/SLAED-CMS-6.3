@@ -658,6 +658,25 @@ function addSchedulerRun(?string $name = null, string $type = 'manual'): array {
     return $data;
 }
 
+# Runs every due job of one cron or pseudo call in priority order, each at most once, and starts no further job once the time budget of the request is spent
+# All of them run because a job due every minute would otherwise take every call, and the jobs further down the priority list would never get their turn
+function addSchedulerBatch(string $type): array {
+    global $conf;
+    if ((int)($conf['scheduler']['active'] ?? 0) !== 1) return ['status' => 'disabled', 'message' => 'Scheduler is disabled', 'jobs' => []];
+    $exec = intval(ini_get('max_execution_time'));
+    $tend = microtime(true) + ((PHP_SAPI === 'cli' || $exec <= 0) ? 120 : max(10, intval($exec * 0.6)));
+    $runs = [];
+    foreach (getSchedulerJobs() as $job) {
+        if (microtime(true) >= $tend) break;
+        $name = (string)($job['name'] ?? '');
+        if ($name === '' || !checkSchedulerDue($name, $job)) continue;
+        $data = addSchedulerRun($name, $type);
+        if (($data['status'] ?? '') !== 'idle') $runs[] = ['job' => $name, 'status' => (string)($data['status'] ?? ''), 'message' => (string)($data['message'] ?? '')];
+    }
+    if (!$runs) return ['status' => 'idle', 'message' => 'No due jobs', 'jobs' => []];
+    return ['status' => 'done', 'message' => count($runs).' job(s) run', 'jobs' => $runs];
+}
+
 # Format block
 function getBlocks(string $side, string $fly = ''): void {
     global $db, $conf, $locale, $name, $home, $pos, $bfile, $prs;

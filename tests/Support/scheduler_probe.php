@@ -167,6 +167,28 @@ function getProbeUnwritable(): array {
     return $out;
 }
 
+# One cron call runs every due job once in priority order, and the next call finds nothing left to do
+# A job another process holds is passed over while the rest of the call still runs, because one busy job must not stall the queue behind it
+function getProbeBatch(): array {
+    $due = ['running' => 0, 'started_at' => 0, 'last_status' => 'idle', 'last_run' => 1700000000, 'next_run' => 0, 'next_schedule' => '', 'next_last_run' => 0];
+    foreach ([PROBEJOB, OTHERJOB] as $name) setProbeState($name, $due);
+    $first = addSchedulerBatch('cron');
+    $second = addSchedulerBatch('cron');
+    $out = [
+        'status' => $first['status'],
+        'first' => array_column($first['jobs'], 'job'),
+        'second' => $second['status'],
+        'ran' => [getProbeState(PROBEJOB)['lastrun'] !== 1700000000, getProbeState(OTHERJOB)['lastrun'] !== 1700000000],
+    ];
+    foreach ([PROBEJOB, OTHERJOB] as $name) setProbeState($name, $due);
+    $hold = addProbeHolder(PROBEJOB, 1500);
+    $busy = addSchedulerBatch('cron');
+    $out['held'] = $hold['held'];
+    $out['busy'] = array_column($busy['jobs'], 'job');
+    deleteProbeHolder($hold);
+    return $out;
+}
+
 # The access matrix of the direct endpoint: each trigger carries its own credential and nothing else opens it
 function getProbeAccess(): array {
     $GLOBALS['conf']['scheduler']['token'] = 'cron-secret-value';
@@ -289,6 +311,7 @@ try {
         'recover' => getProbeRecover(),
         'access' => getProbeAccess(),
         'slot' => getProbeSlot(),
+        'batch' => getProbeBatch(),
         'unwritable' => getProbeUnwritable(),
         'unlock' => getProbeUnlock(),
         'trigger' => getProbeTrigger(),
