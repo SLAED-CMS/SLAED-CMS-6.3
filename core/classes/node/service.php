@@ -838,6 +838,12 @@ final class NodeService {
         return ($this->ctx->uid > 0) ? $this->ctx->uid : ($moder ? null : getEditorFileOwner($type->name));
     }
 
+    # Whether the upload rule of the type alone lets the context upload into its area, as the comment editor of a material does: a member by userupload, a guest by guestupload
+    private function checkUploadRight(NodeType $type): bool {
+        $rule = $type->uploads ?: [];
+        return intval($rule[($this->ctx->uid > 0) ? 'userupload' : 'guestupload'] ?? 0) === 1;
+    }
+
     # Read one file of the type area for a new binding: a plain existing file outside thumb, no guard file, an allowed extension within the size
     # The file must be owned by the visitor unless the context moderates the type
     private function getFileRow(FileManager $area, string $path, array $exts, int $max, bool $moder, ?string $token, string $err): array {
@@ -1416,9 +1422,11 @@ final class NodeService {
     # Resolve one editor attachment of the type to its canonical path for the controlled file answer; every refusal answers the same empty string
     # The name must be a whole managed name of the upload service with an extension the type still allows, and it lives in the root of the type or, as thumb, in thumb/
     # A stored material (id above zero) grants a name its own intro or body carries, read with the light text projection, so knowing the name of a file opens nothing
-    # The preview of an unsaved material (id zero) grants a file of the visitor alone - the account, the session token of a guest - unless the context moderates the type
+    # A name a published comment of the material carries is granted the same way, every comment not deleted for a moderator, and only once the material itself is readable
+    # The preview of an unsaved text (id zero) grants a file of the visitor alone - the account, the session token of a guest - unless the context moderates the type
+    # The preview is open to whoever may write the type or upload into its area, because the comment editor of a material uploads into the same area
     # The original is checked before its thumb in both branches, and nothing here counts, writes or trusts an owner, address or name the request brought besides the key
-    public function getNodeFile(NodeType $type, int $id, string $key, bool $thumb): string {
+    public function getNodeFile(NodeType $type, int $id, string $key, bool $thumb, Comment $com): string {
         $ext = strtolower(pathinfo($key, PATHINFO_EXTENSION));
         $exts = $type->uploads ? explode(',', $type->uploads['extensions']) : [];
         $good = $id >= 0 && !$this->ctx->task && strlen($key) <= 255 && $key === basename(str_replace('\\', '/', $key));
@@ -1430,11 +1438,14 @@ final class NodeService {
                 $node = $this->query->getNodeContent($id, $type);
                 $prs = new Parser();
                 $names = $node ? array_merge($prs->getAttachList($node->intro), $prs->getAttachList((string)$node->body)) : [];
+                if ($node && !in_array($key, $names, true)) {
+                    foreach ($com->getAttachTexts($type->name, $id, $this->checkModer($type)) as $text) $names = array_merge($names, $prs->getAttachList($text));
+                }
                 $row = in_array($key, $names, true) ? $area->getFileData($key) : [];
                 if (!$row || $row['kind'] === 'dir' || $row['path'] !== $key) return '';
             } else {
                 $moder = $this->checkModer($type);
-                if (!$moder && !$this->checkFlowAccess($type)) return '';
+                if (!$moder && !$this->checkFlowAccess($type) && !$this->checkUploadRight($type)) return '';
                 $row = $this->getFileRow($area, $key, $exts, $type->uploads['maxbytes'], $moder, $this->getFileToken($type, $moder), 'attach');
                 if ($row['path'] !== $key) return '';
             }

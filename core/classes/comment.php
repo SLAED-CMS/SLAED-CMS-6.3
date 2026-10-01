@@ -311,6 +311,16 @@ class Comment {
         return $out;
     }
 
+    # The bodies of the comments of one target that name an attachment: the published ones, or every one not deleted when the caller moderates the target
+    # Node asks this to grant a file its attach route delivers, after it has read the material itself through its own checks
+    public function getAttachTexts(string $mod, int $cid, bool $all): array {
+        $sql = 'SELECT body FROM '.PREFIX_DB.'_comment WHERE modul = :mod AND cid = :cid AND deleted IS NULL AND body LIKE :tag'.($all ? '' : ' AND status = :stat');
+        $pars = ['mod' => $mod, 'cid' => $cid, 'tag' => '%[attach=%'] + ($all ? [] : ['stat' => CommentStatus::Published->value]);
+        $out = [];
+        foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: [] as $row) $out[] = (string)$row['body'];
+        return $out;
+    }
+
     # Return one comment by its id, with the account name and the full author record of a registered author, or an empty array when the row is gone
     # The author record is what a single-comment fragment response needs, and it costs no query for a guest comment because the author lookup is skipped for uid 0
     public function getComment(int $id): array {
@@ -518,11 +528,11 @@ class Comment {
     # The permission, the module and the edit window all come from the stored row, so a request can neither name the module nor extend its own window
     public function updateComment(int $id, string $body): array {
         global $user;
-        $sql = 'SELECT uid, time, body, modul FROM '.PREFIX_DB.'_comment WHERE id = :id AND deleted IS NULL';
+        $sql = 'SELECT uid, cid, time, body, modul FROM '.PREFIX_DB.'_comment WHERE id = :id AND deleted IS NULL';
         $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['id' => $id]));
         $mod = (string)($row['modul'] ?? '');
         $uid = $row ? intval($row['uid']) : 0;
-        $out = ['allow' => false, 'mod' => $mod, 'body' => (string)($row['body'] ?? ''), 'saved' => false, 'error' => []];
+        $out = ['allow' => false, 'mod' => $mod, 'cid' => intval($row['cid'] ?? 0), 'body' => (string)($row['body'] ?? ''), 'saved' => false, 'error' => []];
         $wait = strtotime((string)($row['time'] ?? '')) + intval($this->conf['edit']);
         if (!is_moder($mod) && !(is_user() && $uid == intval($user[0]) && time() < $wait)) return $out;
         $out['allow'] = true;

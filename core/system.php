@@ -6130,7 +6130,7 @@ function updateComment(): void {
         ]);
         return;
     }
-    echo $prs->filterContent($edit['body'], true, $edit['mod'], 2, 'breaks');
+    echo $prs->filterContent($edit['body'], true, $edit['mod'], 2, 'breaks', isset($conf['node']['types'][$edit['mod']]) ? $edit['cid'] : 0);
 }
 
 # Publish or hide one comment as a moderator and answer the comment itself, so the reader keeps the slice and the scroll position the action was taken from

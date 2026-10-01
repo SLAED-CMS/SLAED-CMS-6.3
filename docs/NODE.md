@@ -1224,7 +1224,7 @@ role, fit the smaller `maxbytes`, match its kind and belong to the visitor (acco
 #### Resources and reports
 
 ```php
-public function getNodeFile(NodeType $type, int $id, string $key, bool $thumb): string
+public function getNodeFile(NodeType $type, int $id, string $key, bool $thumb, Comment $com): string
 public function updateNodeAssetHits(int $id, NodeType $type): void
 public function updateNodeAssetReport(int $id, NodeType $type): void
 public function deleteNodeAssetReport(int $id, NodeType $type, bool $useful): void
@@ -1232,8 +1232,9 @@ public function deleteNodeAssetReport(int $id, NodeType $type, bool $useful): vo
 
 - `getNodeFile()` resolves an attachment to its canonical path for `getFileStream()`, `''` for any refusal. `key`
   is a managed basename (`FileManager::checkFileName()`, ≤ 255 bytes) with an allowed extension. With `id > 0` it
-  must occur in the text of a material the reader returns; with `id = 0` (preview) it must belong to the visitor
-  unless he moderates, and no SQL runs.
+  must occur in the text of a material the reader returns, or in a published comment of that material (any comment
+  not deleted for a moderator), read by `Comment::getAttachTexts()`; with `id = 0` (preview) it must belong to the
+  visitor unless he moderates, the visitor may write the type or upload into its area, and no SQL runs.
 - `updateNodeAssetHits()` re-reads through `getNodeAsset()`, accepts mode `download`, or `link` with an external
   URL, and adds one hit atomically right before an allowed `GET` download or visit (`HEAD`, display and later ranges
   do not count).
@@ -2519,7 +2520,8 @@ root, editor thumbnails in `thumb/`. The editor passes the type name as `mod`, s
   kept. Checked on preview and again on save; a refusal writes nothing.
 - The parser renders `[attach]` of a stored material as `index.php?name=<type>&op=attach&id=<nid>&key=<name>`
   (plus `thumb=1` for an existing thumbnail) when it receives `int $nid` in `Parser::filterContent()` or
-  `Parser::filterDoc()`; its cache key includes `nid`. Calls without `nid` are not Node.
+  `Parser::filterDoc()`; its cache key includes `nid`. Calls without `nid` are not Node. A comment of a Node type
+  renders with the id of its material, so its attachments take the same route and the rights of the material.
 
 
 ## Extensions
@@ -2780,11 +2782,12 @@ forbidden in the whole `uploads` tree.
   comes from the request. A local `src` is canonical and must resolve by `realpath()` inside `uploads/<type>`,
   outside `thumb/`.
 - `op=attach`: the query is exactly `name`, `op`, `key`, optional `thumb=1` and either `id=<nid>` or `preview=1`.
-  `NodeService::getNodeFile(NodeType $type, int $id, string $key, bool $thumb): string` accepts only a whole
+  `NodeService::getNodeFile(NodeType $type, int $id, string $key, bool $thumb, Comment $com): string` accepts only a whole
   managed name equal to its own basename (`FileManager::checkFileName()` alone applies `basename()`), an allowed
   extension and a `realpath()` inside the root; a stored material grants only names its own `intro`/`body` carry
-  (read by `getNodeContent()`, no `LIKE`, no other materials); preview grants only the visitor's own upload unless
-  he moderates the type. Every refusal is the same `404`.
+  (read by `getNodeContent()`, no `LIKE`, no other materials) and its published comments carry (all comments not
+  deleted for a moderator); preview grants only the visitor's own upload unless he moderates the type. Every refusal
+  is the same `404`.
 - Resources have no rights of their own: they inherit material state, main-category read right and extension
   limits.
 - `getFileStream(string $path, string $name, string $mime = 'application/octet-stream', bool $inline = false,
@@ -3467,7 +3470,15 @@ continues where it stopped:
    `_node_legacy` row, then comments and favorites rebound to the new ids (rows of a gone material take the key
    `old<module>`, which `op=remains` cleans up), the terms of `_rating`, the comment counters and `node-<type>`
    rights instead of the module name. Texts are converted from the trusted HTML the old modules rendered into BB
-   and Markdown; blocks the conversion does not know become `[usehtml]` blocks.
-5. Files: attachments return to `uploads/<type>`, a name the file layer does not manage gets a managed one and
-   its tags follow; a file a text addresses directly is copied into the public `uploads/archive/<module>/`.
-6. Activation of every type the run created or switched off.
+   and Markdown; blocks the conversion does not know become `[usehtml]` blocks, and a bare relative address of
+   `[img]` or `[url]` gains `./`, the local form the safe parser accepts. An `[attach]` of a comment or a help reply
+   keeps its tag under the managed name and is shown through the attach route of the material; a direct address
+   into a closed module directory is written as `./uploads/archive/<module>/...`.
+5. Outer addresses, once: direct addresses into the closed module directories that the forum, comments,
+   private messages, newsletters, blocks, signatures and polls keep are pointed at `uploads/archive/<module>/`.
+   The mail queue is left as it was written.
+6. Files: the type root `uploads/<type>` takes only what the materials use - every `[attach]` file of their texts
+   and comments under its managed name with its thumbnail, and the local file of every resource. A file the site addresses directly moves
+   into the public `uploads/archive/<module>/`; one that is both is copied there. A file nothing uses stays in the
+   working directory `storage/backup/update/node/files/<module>`, outside the site, and the run notes the count.
+7. Activation of every type the run created or switched off.

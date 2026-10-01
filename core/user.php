@@ -87,7 +87,8 @@ function getCommentView(array $val, int $numb, string $token): string {
     } elseif (is_user() && $auid > 0 && $auid === intval($user[0]) && time() < strtotime($when) + $conf['comments']['edit']) {
         $items[] = $form;
     }
-    $text = $tpl->getHtmlFrag('block-content', ['id' => 'repcom'.$cmid, 'content' => $prs->filterContent($val['body'], true, $cmod, 2, 'breaks')]);
+    $cnid = isset($conf['node']['types'][$cmod]) ? intval($val['cid'] ?? 0) : 0;
+    $text = $tpl->getHtmlFrag('block-content', ['id' => 'repcom'.$cmid, 'content' => $prs->filterContent($val['body'], true, $cmod, 2, 'breaks', $cnid)]);
     $sent = (string)($val['edited'] ?? '');
     $mark = ($sent !== '') ? $tpl->getHtmlFrag('inline-badge', [
         'title_text' => (string)_COMMENTS_EDITED,

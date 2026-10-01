@@ -861,6 +861,7 @@ function setNodeAsset(): void {
 # One editor attachment of the type: a name the text of the stored material carries, or the preview of a new upload of the visitor; any refusal is the same not found
 # The query must be exactly one of the two forms, so a flag, a repeated or an unknown parameter never changes which branch decides
 function setNodeAttach(): void {
+    global $com;
     $url = (string)($_SERVER['REQUEST_URI'] ?? '');
     $base = ['name' => '#^[a-z][a-z0-9]{0,19}$#D', 'op' => '#^attach$#D', 'key' => '#^.{1,255}$#Ds', 'thumb' => '#^1$#D'];
     $saved = Cache::getQueryVars($url, $base + ['id' => '#^[1-9][0-9]{0,9}$#D']);
@@ -871,7 +872,7 @@ function setNodeAttach(): void {
     $type = getNodeRoute();
     $key = getVar('get', 'key', 'raw', '');
     $thumb = getVar('get', 'thumb', 'raw', '') === '1';
-    $path = getNodeWriter($type)->getNodeFile($type, $id, $key, $thumb);
+    $path = getNodeWriter($type)->getNodeFile($type, $id, $key, $thumb, $com);
     if ($path === '') setNodeDeny(404);
     $info = class_exists('finfo') ? new finfo(FILEINFO_MIME_TYPE) : null;
     $mime = $info ? $info->file($path) : false;

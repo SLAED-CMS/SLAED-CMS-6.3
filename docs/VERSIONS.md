@@ -1,5 +1,34 @@
 # Versions
 
+## 2026-10-01
+
+### The migration of the old modules leaves one copy of every file, and every migrated image shows
+
+A rehearsal on a copy of the production site found four faults of `update.php`, each fixed:
+
+- **A stopped run.** The empty `index.html` placeholders of the old upload folders stayed in place, and Node took them
+  for user files and refused the new type. Only the guard files of the release stay now.
+- **Images replaced by `#`.** The converter wrote images and links as bare relative addresses like `uploads/x.png`,
+  which the safe parser of Node replaces with `#`, so no migrated image showed. They now gain `./`. The
+  entity-quoted attributes of old HTML are decoded first.
+- **Duplicate files.** Every file went back into the closed type folder, and directly linked ones were copied into
+  `uploads/archive/` as well, which left 270 duplicates. A file now has one place: the type folder holds what the
+  materials use, the archive what the site links to directly. A file nothing uses stays outside the site in the
+  working directory.
+- **Broken outside links.** The forum, comments, private messages, newsletters, blocks, signatures and polls kept
+  links into the folders Node closes. They are pointed at the archive as well, written as `./uploads/archive/...`.
+
+### A comment of a Node material shows its attachments
+
+A file uploaded into a comment of a material landed in the closed folder of the type and was linked there
+directly, so it answered 403. A comment of a Node type now renders with the id of its material, and
+`op=attach` grants the names its published comments carry, every comment not deleted for a moderator, with the
+rights of the material. The preview of a fresh upload is open to whoever may upload into the type. The migration
+keeps the attachments of comments and help replies in the type folder for the same route, so a private help
+request keeps its files private.
+
+The menu and footer of the lite theme link to `docs`, not to the removed `pages`.
+
 ## 2026-09-30
 
 ### The content of the removed modules moves into Node, and their old addresses follow it

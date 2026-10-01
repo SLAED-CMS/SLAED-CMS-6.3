@@ -2426,7 +2426,7 @@ function getProbeMatAttach(): array {
         NodeStatus::Published)->id;
     $wait = getProbeWriter('root')->addNode($news, getProbeIn(['cid' => 10, 'body' => $tag('photo-abcdefghij-2.png')]), NodeStatus::Pending)->id;
     $rel = fn(string $path): string => ($path === '') ? '' : substr($path, strlen(str_replace('\\', '/', (string)realpath(UPLOADS_DIR))) + 1);
-    $file = fn(string $who, NodeType $type, int $id, string $key, bool $thumb = false): string => $rel(getProbeWriter($who)->getNodeFile($type, $id, $key, $thumb));
+    $file = fn(string $who, NodeType $type, int $id, string $key, bool $thumb = false): string => $rel(getProbeWriter($who)->getNodeFile($type, $id, $key, $thumb, getProbeCom()));
     $out = [
         'saved' => $file('guest', $news, $pub, 'photo-abcdefghij-2.png'),
         'intro' => $file('guest', $news, $pub, 'photo-bcdefghijk-3.png'),
@@ -2460,9 +2460,31 @@ function getProbeMatAttach(): array {
         'task' => $file('task', $news, 0, 'photo-abcdefghij-2.png'),
         'text' => $file('anna', $news, 0, 'notes-cdefghijkl-2.txt'),
     ];
+    $bare = getProbeWriter('root')->addNode($news, getProbeIn(['cid' => 10, 'body' => 'No attachment of its own']), NodeStatus::Published)->id;
+    $plain = getProbeWriter('root')->addNode($news, getProbeIn(['cid' => 10, 'body' => 'Neither attachment nor comment']), NodeStatus::Published)->id;
+    $note = function (int $nid, string $name, int $stat, bool $gone = false): void {
+        $sql = 'INSERT INTO '.PREFIX_DB.'_comment (pid, cid, modul, time, uid, name, ip, body, status, shown, deleted) VALUES (0, :cid, \'news\', NOW(), 0, \'Probe\','
+            .' \'127.0.0.1\', :body, :stat, NOW(), '.($gone ? 'NOW()' : 'NULL').')';
+        $GLOBALS['pdb']->getSqlQuery($sql, ['cid' => $nid, 'body' => 'See [attach='.$name.' align=left title=Photo]', 'stat' => $stat]);
+    };
+    $note($bare, 'photo-abcdefghij-2.png', 1);
+    $note($bare, 'photo-bcdefghijk-3.png', 0);
+    $note($bare, 'doc-abcdefghij-2.pdf', 1, true);
+    $note($wait, 'photo-bcdefghijk-3.png', 1);
+    $out['comment'] = [
+        'published' => $file('guest', $news, $bare, 'photo-abcdefghij-2.png'),
+        'thumb' => $file('guest', $news, $bare, 'photo-abcdefghij-2.png', true),
+        'pending' => $file('guest', $news, $bare, 'photo-bcdefghijk-3.png'),
+        'pendmoder' => $file('root', $news, $bare, 'photo-bcdefghijk-3.png'),
+        'deleted' => $file('root', $news, $bare, 'doc-abcdefghij-2.pdf'),
+        'closed' => $file('guest', $news, $wait, 'photo-bcdefghijk-3.png'),
+        'elsewhere' => $file('guest', $news, $plain, 'photo-abcdefghij-2.png').'|'.$file('guest', $files, $bare, 'photo-abcdefghij-2.png'),
+    ];
     $query = getProbeQuery('guest');
-    [, $out['sql']] = getProbeCost(fn(): string => getProbeWriter('guest')->getNodeFile($query->getNodeType('news'), $pub, 'photo-abcdefghij-2.png', false));
-    [, $out['previewsql']] = getProbeCost(fn(): string => getProbeWriter('anna')->getNodeFile($news, 0, 'photo-abcdefghij-2.png', false));
+    [, $out['sql']] = getProbeCost(fn(): string => getProbeWriter('guest')->getNodeFile($query->getNodeType('news'), $pub, 'photo-abcdefghij-2.png', false, getProbeCom()));
+    [, $out['commentsql']] = getProbeCost(fn(): string => getProbeWriter('guest')->getNodeFile($query->getNodeType('news'), $bare, 'photo-abcdefghij-2.png', false,
+        getProbeCom()));
+    [, $out['previewsql']] = getProbeCost(fn(): string => getProbeWriter('anna')->getNodeFile($news, 0, 'photo-abcdefghij-2.png', false, getProbeCom()));
     return $out;
 }
 

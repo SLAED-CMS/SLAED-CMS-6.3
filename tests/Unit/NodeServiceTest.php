@@ -94,7 +94,7 @@ final class NodeServiceTest extends TestCase
             'deleteNodeRemains' => ['string name', 'void'],
             'deleteNodeType' => ['string name', 'int version', 'void'],
             'getLockedTarget' => ['int id', 'NodeType type', 'bool any = false', '?NodeTarget'],
-            'getNodeFile' => ['NodeType type', 'int id', 'string key', 'bool thumb', 'string'],
+            'getNodeFile' => ['NodeType type', 'int id', 'string key', 'bool thumb', 'Comment com', 'string'],
             'getNodePreview' => ['NodeType type', 'NodeInput input', 'NodeStatus status', 'Node'],
             'getNodeRemains' => ['array'],
             'setTargetLock' => ['int id', 'NodeType type', 'void'],
@@ -578,6 +578,13 @@ final class NodeServiceTest extends TestCase
         foreach (['foreign', 'clara', 'guest', 'guestall', 'task', 'text'] as $key) $this->assertSame('', $pre[$key], 'The preview granted '.$key);
         foreach (['moder', 'root', 'far'] as $key) $this->assertSame('news/photo-bcdefghijk-3.png', $pre[$key], 'The moderator '.$key.' is refused a file of the type');
         $this->assertSame([2, 0], [$run['sql'], $run['previewsql']], 'The attachment costs the type and the text row, the preview no statement');
+        $com = $run['comment'];
+        $this->assertSame(['news/photo-abcdefghij-2.png', 'news/thumb/photo-abcdefghij-2.png'], [$com['published'], $com['thumb']], 'A published comment does not grant');
+        $this->assertSame('', $com['pending'], 'A pending comment granted its file to a guest');
+        $this->assertSame('news/photo-bcdefghijk-3.png', $com['pendmoder'], 'A moderator is refused the file of a pending comment');
+        foreach (['deleted', 'closed'] as $key) $this->assertSame('', $com[$key], 'The '.$key.' comment granted its file');
+        $this->assertSame('|', $com['elsewhere'], 'A comment opened a file of another material or another type');
+        $this->assertSame(2, $run['commentsql'], 'A name of a comment costs the reader the type and the text row; the comments are read by the comment class');
     }
 
     # The category screen hands every write of a category of a Node type to the writer and keeps its own SQL for the other modules
