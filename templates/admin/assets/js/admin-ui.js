@@ -79,7 +79,7 @@
             setIconCurrent(modal);
             return;
         }
-        var cell = node.closest('.sl-icon-cell');
+        var cell = node.closest('.sl-icon-cell[data-sl-icon-name]');
         if (cell) {
             setIconValue(cell.getAttribute('data-sl-icon-name'));
             window.setWindowClose(cell.closest('dialog'));
@@ -854,7 +854,8 @@
         event.returnValue = '';
     });
     /* Motion over the page: the place of every solid head in the order its beam crosses, and the light that follows the pointer.
-       The pointer is written once a frame and only where motion is welcome; a touch has no pointer to follow */
+       The pointer is written once a frame and only where motion is welcome; a touch has no pointer to follow.
+       The installer card also learns where the pointer is inside it, so the light runs along its rim */
     function isStill() {
         return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     }
@@ -865,6 +866,10 @@
     }
     var point = { left: 0, top: 0 };
     var frame = 0;
+    function getSetupCard() {
+        var form = document.querySelector('.sl-setup');
+        return form ? form.closest('.sl-admin-login-card') : null;
+    }
     document.addEventListener('pointermove', function (event) {
         if (event.pointerType === 'touch' || isStill()) return;
         point.left = event.clientX;
@@ -874,6 +879,12 @@
             document.body.style.setProperty('--sl-d-pointer-x', point.left + 'px');
             document.body.style.setProperty('--sl-d-pointer-y', point.top + 'px');
             document.body.setAttribute('data-sl-pointer', '');
+            var card = getSetupCard();
+            if (card) {
+                var box = card.getBoundingClientRect();
+                card.style.setProperty('--sl-d-rim-x', (point.left - box.left) + 'px');
+                card.style.setProperty('--sl-d-rim-y', (point.top - box.top) + 'px');
+            }
             frame = 0;
         });
     }, { passive: true });
@@ -881,6 +892,11 @@
         window.cancelAnimationFrame(frame);
         frame = 0;
         document.body.removeAttribute('data-sl-pointer');
+        var card = getSetupCard();
+        if (card) {
+            card.style.removeProperty('--sl-d-rim-x');
+            card.style.removeProperty('--sl-d-rim-y');
+        }
     }
     document.documentElement.addEventListener('pointerleave', setPointerOff);
     document.addEventListener('pointercancel', setPointerOff);

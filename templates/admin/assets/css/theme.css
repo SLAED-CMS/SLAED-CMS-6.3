@@ -2592,7 +2592,8 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   color: var(--sl-primary-strong);
 }
 
-.sl-icon-cell.sl-is-active {
+.sl-icon-cell.sl-is-active,
+.sl-icon-cell:has(:checked) {
   border-color: var(--sl-primary);
   background: var(--sl-primary-subtle);
   color: var(--sl-primary);
@@ -2601,6 +2602,22 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 .sl-icon-cell .bi {
   font-size: var(--sl-size-icon-lg);
   line-height: 1;
+}
+
+/* A cell may be a choice: its radio sits unseen under it, so the cell is what is pressed, seen and focused, and a picture stands where a glyph would */
+.sl-icon-cell:has(:focus-visible) {
+  box-shadow: var(--sl-shadow-focus);
+}
+
+.sl-icon-cell input {
+  position: absolute;
+  opacity: 0;
+}
+
+.sl-icon-cell img {
+  width: var(--sl-size-icon-lg);
+  border-radius: var(--sl-radius-1);
+  box-shadow: var(--sl-shadow-xs);
 }
 
 .sl-icon-cell span {
@@ -2679,8 +2696,9 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
 
 /* Motion over the page: nothing here changes a colour or a measure, and where motion is reduced it is not there */
 @media (prefers-reduced-motion: no-preference) {
-  /* The beam crosses every solid head once a cycle, each a tenth of a cycle after the one before it, and at once under the hand */
-  :is(.sl-dashboard-panel-head, .sl-block-sidebar h3)::after {
+  /* The beam crosses every solid head once a cycle, each a tenth of a cycle after the one before it, and at once under the hand; on the installer card it crosses the logo */
+  :is(.sl-dashboard-panel-head, .sl-block-sidebar h3)::after,
+  .sl-admin-login-card:has(.sl-setup) .sl-admin-login-header::before {
     content: "";
     position: absolute;
     top: 0;
@@ -5336,6 +5354,449 @@ body:has(.sl-admin-login-shell)::before {
 
   .sl-admin-login-copyright {
     padding: var(--sl-space-4) var(--sl-space-4) var(--sl-space-3);
+  }
+}
+
+/* Installer: setup.php on the login card - a road of segments under the header, one stop at a time, the run of the installation and the seal at the end */
+.sl-admin-login-shell:has(.sl-setup) {
+  width: min(var(--sl-setup-width), calc(100vw - var(--sl-space-6) * 2));
+}
+
+.sl-admin-login-card:has(.sl-setup) {
+  position: relative;
+}
+
+/* The rim of the card lights up where the pointer is; admin-ui.js writes that place inside the card, and without a pointer the light rests on the top edge */
+.sl-admin-login-card:has(.sl-setup)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: radial-gradient(circle var(--sl-pointer-width) at var(--sl-d-rim-x, 50%) var(--sl-d-rim-y, 0), var(--sl-primary), transparent 70%);
+  pointer-events: none;
+  mask: linear-gradient(var(--sl-bg) 0 0) content-box, linear-gradient(var(--sl-bg) 0 0);
+  mask-composite: exclude;
+}
+
+.sl-setup .sl-admin-login-form-frame {
+  padding-top: 0;
+}
+
+.sl-admin-login-list small {
+  grid-column: 2;
+  margin-top: calc(var(--sl-space-3) * -1);
+  color: var(--sl-text-subtle);
+  font-size: var(--sl-font-small);
+}
+
+/* The road: one segment per stop, the passed ones filled and the current one flowing; the names stay for a reader and take no room */
+.sl-setup-road {
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  gap: var(--sl-space-2);
+  margin: 0;
+  padding: var(--sl-space-6) 0 0;
+  list-style: none;
+}
+
+.sl-setup-road li {
+  height: var(--sl-space-2);
+  overflow: hidden;
+  border-radius: var(--sl-radius-pill);
+  background: var(--sl-border);
+  font-size: 0;
+  transition: background-color var(--sl-time-slow) var(--sl-ease-out);
+}
+
+.sl-setup-road .sl-is-done {
+  background: var(--sl-primary-muted);
+}
+
+.sl-setup-road .sl-is-current {
+  background: linear-gradient(90deg, var(--sl-primary), var(--sl-primary-muted), var(--sl-primary)) 0 0 / 200% 100%;
+}
+
+.sl-setup-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sl-space-6);
+  margin: var(--sl-space-7) 0 var(--sl-space-3);
+}
+
+.sl-setup-head h2 {
+  margin: 0;
+  font-size: var(--sl-font-h2);
+}
+
+.sl-setup-head span {
+  color: var(--sl-text-subtle);
+  font-size: var(--sl-font-small);
+  white-space: nowrap;
+}
+
+.sl-setup-lead {
+  margin: 0 0 var(--sl-space-6);
+  color: var(--sl-text-muted);
+  line-height: var(--sl-line-normal);
+}
+
+/* Language tiles are icon cells in three columns */
+.sl-setup-langs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sl-space-3);
+  margin-bottom: var(--sl-space-6);
+}
+
+/* Check rows: icon, name and note; beside a form the name takes the room and the note stands at the end */
+.sl-setup-checks {
+  display: grid;
+  gap: var(--sl-space-1);
+  margin: 0 0 var(--sl-space-6);
+  padding: 0;
+  list-style: none;
+}
+
+.sl-setup-checks li {
+  display: grid;
+  grid-template-columns: var(--sl-size-icon-sm) 9em 1fr;
+  gap: var(--sl-space-4);
+  align-items: center;
+  padding: var(--sl-space-3) 0;
+  border-bottom: 1px solid var(--sl-border);
+}
+
+.sl-admin-login-form-frame + .sl-setup-checks li {
+  grid-template-columns: var(--sl-size-icon-sm) minmax(0, 1fr) auto;
+}
+
+.sl-setup-checks .bi {
+  color: var(--sl-success);
+  font-size: var(--sl-size-icon-sm);
+}
+
+.sl-setup-checks span {
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+  line-height: var(--sl-line-tight);
+}
+
+.sl-setup-checks .sl-is-fail .bi,
+.sl-setup-checks .sl-is-fail span {
+  color: var(--sl-danger);
+}
+
+/* The run: the progress line streams under the beam light and a glowing head leads it, the task under way and the per cent beneath */
+.sl-setup-run {
+  margin-bottom: var(--sl-space-6);
+}
+
+.sl-setup-run .sl-progress-line div {
+  position: relative;
+  overflow: visible;
+  background-image: repeating-linear-gradient(45deg, var(--sl-beam-bg) 0 6px, transparent 6px 12px), var(--sl-grad-progress-1);
+  background-size: 17px 17px, auto;
+  transition: width var(--sl-time-fast) linear;
+}
+
+.sl-setup-run .sl-progress-line div::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: calc(var(--sl-space-3) / -2);
+  width: var(--sl-space-3);
+  height: var(--sl-space-3);
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-on-solid);
+  box-shadow: var(--sl-setup-shadow);
+  transform: translateY(-50%);
+}
+
+.sl-setup-run p {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sl-space-4);
+  margin: var(--sl-space-4) 0 0;
+  color: var(--sl-text-muted);
+  font-size: var(--sl-font-small);
+}
+
+.sl-setup-run b {
+  color: var(--sl-text);
+}
+
+/* The last stop: a seal whose ring and tick draw themselves while ten sparks of the theme tones fly off; without motion it simply stands drawn */
+.sl-setup-done {
+  display: grid;
+  justify-items: center;
+  gap: var(--sl-space-3);
+  margin: var(--sl-space-8) 0 var(--sl-space-6);
+  text-align: center;
+}
+
+.sl-setup-done h2 {
+  margin: 0;
+  font-size: var(--sl-font-h1);
+}
+
+.sl-setup-done p {
+  margin: 0;
+  color: var(--sl-text-muted);
+  line-height: var(--sl-line-normal);
+}
+
+.sl-setup-seal {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--sl-setup-seal-width);
+  aspect-ratio: 1;
+}
+
+.sl-setup-seal svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: var(--sl-success);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 100;
+}
+
+.sl-setup-seal i {
+  position: absolute;
+  inset: 0;
+  width: calc(var(--sl-setup-seal-width) / 12);
+  height: calc(var(--sl-setup-seal-width) / 12);
+  margin: auto;
+  border-radius: var(--sl-radius-circle);
+  background: var(--sl-primary);
+  opacity: 0;
+}
+
+.sl-setup-seal i:nth-child(5n + 3) {
+  background: var(--sl-success);
+  rotate: 36deg;
+}
+
+.sl-setup-seal i:nth-child(5n + 4) {
+  background: var(--sl-warning);
+  rotate: 72deg;
+}
+
+.sl-setup-seal i:nth-child(5n + 5) {
+  background: var(--sl-accent);
+  rotate: 108deg;
+}
+
+.sl-setup-seal i:nth-child(5n + 6) {
+  background: var(--sl-danger);
+  rotate: 144deg;
+}
+
+/* Five tones on five angles, and the second five turned half round: a scale of minus one is a turn of 180 degrees */
+.sl-setup-seal i:nth-child(n + 7) {
+  scale: -1;
+}
+
+/* Enter in a field submits the first button of the form, so an unseen forward button stands first: the visible row keeps its reading and focus order */
+.sl-setup-default {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* The buttons: back at the left edge, the probe in the middle, forward at the right edge */
+.sl-setup-nav {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: var(--sl-space-4);
+}
+
+.sl-setup-nav > * {
+  grid-row: 1;
+  justify-self: start;
+}
+
+.sl-setup-nav .sl-but-back {
+  grid-column: 1;
+  justify-self: start;
+}
+
+.sl-setup-nav .sl-setup-probe {
+  grid-column: 2;
+}
+
+.sl-setup-nav .sl-setup-next {
+  grid-column: -2;
+  justify-self: end;
+}
+
+.sl-setup-nav:has(> :only-child) .sl-setup-next {
+  grid-column: 1 / -1;
+  justify-self: center;
+}
+
+@media (max-width: 560px) {
+  .sl-admin-login-list small {
+    grid-column: 1;
+    margin-top: 0;
+  }
+
+  .sl-setup-langs {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .sl-setup-checks li,
+  .sl-admin-login-form-frame + .sl-setup-checks li {
+    grid-template-columns: var(--sl-size-icon-sm) 1fr;
+  }
+
+  .sl-setup-checks span {
+    grid-column: 2;
+  }
+
+  /* On a phone the probe takes its own full row above the two edges */
+  .sl-setup-nav {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .sl-setup-nav:has(.sl-setup-probe) > * {
+    grid-row: 2;
+  }
+
+  .sl-setup-nav .sl-setup-probe {
+    grid-row: 1;
+    grid-column: 1 / -1;
+    justify-self: stretch;
+  }
+}
+
+/* Motion of the installer: every animation runs from the hidden state to the finished one, so where motion is reduced the card stands finished */
+@media (prefers-reduced-motion: no-preference) {
+  .sl-admin-login-card:has(.sl-setup-road li:first-child.sl-is-current) {
+    animation: sl-setup-arrive calc(var(--sl-setup-dur) * 1.6) var(--sl-ease-out) both;
+  }
+
+  .sl-setup-road .sl-is-current {
+    animation: sl-setup-flow calc(var(--sl-setup-dur) * 3.2) linear infinite;
+  }
+
+  .sl-setup-stop > * {
+    animation: sl-setup-in var(--sl-setup-dur) var(--sl-ease-out) both;
+  }
+
+  .sl-setup[data-sl-dir="prev"] .sl-setup-stop > * {
+    animation-name: sl-setup-back;
+  }
+
+  .sl-setup-stop > :nth-child(2) {
+    animation-delay: calc(var(--sl-setup-dur) * 0.1);
+  }
+
+  .sl-setup-stop > :nth-child(3) {
+    animation-delay: calc(var(--sl-setup-dur) * 0.2);
+  }
+
+  .sl-setup-stop > :nth-child(4) {
+    animation-delay: calc(var(--sl-setup-dur) * 0.3);
+  }
+
+  .sl-setup-stop > :nth-child(n + 5) {
+    animation-delay: calc(var(--sl-setup-dur) * 0.4);
+  }
+
+  .sl-setup-langs :checked ~ img {
+    animation: sl-setup-bob var(--sl-setup-dur) var(--sl-alert-ease);
+  }
+
+  .sl-setup-checks li {
+    animation: sl-setup-back var(--sl-setup-dur) var(--sl-ease-out) calc(var(--sl-d-turn, 0) * var(--sl-setup-dur) / 4) both;
+  }
+
+  .sl-setup-checks .bi {
+    animation: sl-alert-land var(--sl-setup-dur) var(--sl-alert-ease) calc(var(--sl-d-turn, 0) * var(--sl-setup-dur) / 4) both;
+  }
+
+  .sl-setup-run .sl-progress-line div {
+    animation: sl-setup-stripes calc(var(--sl-setup-dur) * 1.2) linear infinite;
+  }
+
+  /* The ring and the tick are the flash ring of an alert run backwards: they draw where the flash ring empties */
+  .sl-setup-seal circle {
+    animation: sl-alert-flash-ring calc(var(--sl-setup-dur) * 1.4) var(--sl-ease-out) calc(var(--sl-setup-dur) * 0.2) reverse both;
+  }
+
+  .sl-setup-seal path {
+    animation: sl-alert-flash-ring calc(var(--sl-setup-dur) * 0.8) var(--sl-ease-out) calc(var(--sl-setup-dur) * 1.4) reverse both;
+  }
+
+  /* A spark rests hidden at the centre, so before its turn and after its flight nothing of it shows */
+  .sl-setup-seal i {
+    animation: sl-setup-spark calc(var(--sl-setup-dur) * 1.8) var(--sl-ease-out) calc(var(--sl-setup-dur) * 1.7) forwards;
+  }
+
+  .sl-setup-done h2,
+  .sl-setup-done p {
+    animation: sl-modal-in var(--sl-setup-dur) var(--sl-ease-out) calc(var(--sl-setup-dur) * 1.8) both;
+  }
+}
+
+@keyframes sl-setup-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.96);
+    filter: blur(6px);
+  }
+}
+
+@keyframes sl-setup-flow {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes sl-setup-in {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+}
+
+@keyframes sl-setup-back {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+}
+
+@keyframes sl-setup-bob {
+  40% {
+    transform: translateY(-6px) rotate(-6deg);
+  }
+}
+
+@keyframes sl-setup-stripes {
+  to {
+    background-position: 17px 0, 0 0;
+  }
+}
+
+@keyframes sl-setup-spark {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-64px) scale(0.3);
   }
 }
 

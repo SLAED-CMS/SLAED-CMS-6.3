@@ -1,0 +1,61 @@
+{% extends 'layouts/bare.html' %}
+
+{% block content %}
+<form class="sl-setup" action="{{ action }}" method="post"{% if is_back %} data-sl-dir="prev"{% endif %}>
+  {% for item in hidden %}{% include 'fragments/hidden.html' with item %}{% endfor %}
+  {% if next_text and not is_done %}<button type="submit" name="go" value="next" class="sl-setup-default" tabindex="-1" aria-hidden="true"></button>{% endif %}
+  <ol class="sl-setup-road" aria-label="{{ road_text }}">
+    {% for item in road %}<li title="{{ item.title }}"{% if item.is_current %} class="sl-is-current" aria-current="step"{% elseif item.is_done %} class="sl-is-done"{% endif %}>{{ item.title }}</li>{% endfor %}
+  </ol>
+  <div class="sl-setup-stop">
+    {% if is_done %}
+    <div class="sl-setup-done">
+      <span class="sl-setup-seal" aria-hidden="true"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24" pathLength="100"></circle><path d="M15 27l7 7 15-16" pathLength="100"></path></svg><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+      <h2>{{ title }}</h2>
+      {% if lead %}<p>{{ lead }}</p>{% endif %}
+    </div>
+    {% else %}
+    <div class="sl-setup-head"><h2>{{ title }}</h2><span>{{ step_text }}</span></div>
+    {% if lead %}<p class="sl-setup-lead">{{ lead }}</p>{% endif %}
+    {% endif %}
+    {% if alert_html %}{{{ alert_html }}}{% endif %}
+    {% if langs %}
+    <div class="sl-setup-langs" role="radiogroup" aria-label="{{ title }}">
+      {% for item in langs %}<label class="sl-icon-cell" lang="{{ item.value_attr }}"><input type="radio" name="{{ item.name_attr }}" value="{{ item.value_attr }}"{% if item.is_checked %} checked{% endif %}><img src="{{ item.flag }}" alt="">{{ item.label }}</label>{% endfor %}
+    </div>
+    {% endif %}
+    {% if rows %}
+    <div class="sl-admin-login-form-frame">
+      <ul class="sl-admin-login-list">
+        {% for row in rows %}
+        <li>{% if row.input_id %}<label for="{{ row.input_id }}">{{ row.label }}</label>{% else %}<span>{{ row.label }}</span>{% endif %}<div class="sl-admin-login-field">{{{ row.field_html }}}</div>{% if row.hint %}<small{% if row.hint_id %} id="{{ row.hint_id }}"{% endif %}>{{ row.hint }}</small>{% endif %}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+    {% if checks %}
+    <ul class="sl-setup-checks">
+      {% for row in checks %}<li style="--sl-d-turn: {{ row.turn }}"{% if row.is_fail %} class="sl-is-fail"{% endif %}><i class="bi {% if row.is_fail %}bi-x-circle-fill{% else %}bi-check-circle-fill{% endif %}" aria-hidden="true"></i><b>{{ row.text }}</b><span>{{ row.note }}</span></li>{% endfor %}
+    </ul>
+    {% endif %}
+    {% if is_run %}
+    <div class="sl-setup-run" data-sl-setup-run>
+      <div class="sl-progress-line sl-progress-1" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ percent }}" aria-label="{{ title }}"><div style="width: {{ percent }}%;" data-sl-setup-bar></div></div>
+      <p><span data-sl-setup-task>{{ task }}</span><b><span data-sl-setup-num>{{ percent }}</span>%</b></p>
+    </div>
+    {% endif %}
+    {% if is_done %}
+    <div class="sl-setup-nav">
+      <a class="sl-but" href="{{ site_url }}"><i class="bi bi-globe2" aria-hidden="true"></i> {{ site_text }}</a>
+      <a class="sl-but-blue sl-setup-next" href="{{ panel_url }}"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> {{ panel_text }}</a>
+    </div>
+    {% elseif next_text %}
+    <div class="sl-setup-nav">
+      {% if back_text %}<button type="submit" name="go" value="back" class="sl-but-back" formnovalidate><i class="bi bi-arrow-left" aria-hidden="true"></i> {{ back_text }}</button>{% endif %}
+      {% if probe_text %}<button type="submit" name="go" value="probe" class="sl-but sl-setup-probe"><i class="bi bi-plug" aria-hidden="true"></i> {{ probe_text }}</button>{% endif %}
+      <button type="submit" name="go" value="next" class="{% if is_install %}sl-but-green{% else %}sl-but-blue{% endif %} sl-setup-next"><i class="bi {% if is_install %}bi-download{% else %}bi-arrow-right{% endif %}" aria-hidden="true"></i> {{ next_text }}</button>
+    </div>
+    {% endif %}
+  </div>
+</form>
+{% endblock %}
