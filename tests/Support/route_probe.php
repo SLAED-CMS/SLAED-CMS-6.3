@@ -210,10 +210,12 @@ function addRouteFiles(string $work): void {
 }
 
 # Start the built-in server with the route router on a free port and wait until it answers
+# OPcache revalidates on every request: the probe rewrites the scratch configuration between requests, and a file cached for two seconds more would serve the old values
 function addRouteServer(string $work, int $port): mixed {
     $env = getenv() + ['SLAED_ROUTE_ROOT' => $work];
     $log = ['file', $work.'/server.log', 'a'];
-    $proc = proc_open([PHP_BINARY, '-S', '127.0.0.1:'.$port, BASE_DIR.'/tests/Support/route_web.php'], [1 => $log, 2 => $log], $pipes, BASE_DIR, $env);
+    $cmd = [PHP_BINARY, '-d', 'opcache.revalidate_freq=0', '-S', '127.0.0.1:'.$port, BASE_DIR.'/tests/Support/route_web.php'];
+    $proc = proc_open($cmd, [1 => $log, 2 => $log], $pipes, BASE_DIR, $env);
     set_error_handler(static fn(): bool => true);
     for ($i = 0; $i < 50 && !($test = stream_socket_client('tcp://127.0.0.1:'.$port, $no, $err, 1)); $i++) usleep(100000);
     restore_error_handler();

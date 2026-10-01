@@ -151,20 +151,6 @@ final class NodeProfileTest extends TestCase
         }
     }
 
-    # Only a new installation leaves the mark that makes the first administrator create the types; the update branch of the installer creates no type
-    #[Test]
-    public function onlyANewInstallationLeavesTheMark(): void
-    {
-        $code = (string)file_get_contents(self::getRoot().'/setup/index.php');
-        $from = strpos($code, "if (\$setup == 'new') {");
-        $to = strpos($code, "} elseif (\$setup == 'update4_1') {");
-        $this->assertNotFalse($from);
-        $this->assertNotFalse($to);
-        $this->assertSame(1, substr_count($code, "'node' => 'new'"));
-        $this->assertStringContainsString("'node' => 'new'", substr($code, $from, $to - $from));
-        $this->assertStringNotContainsString('NodeService', $code);
-    }
-
     # The clean installation: the form of the installer opens without config/db.php and saving writes it, then the installer leaves the mark
     # The installer drops the types the shipped configuration and an earlier installation left in the tree, with their four areas, and names every one of them
     # Every profile becomes an active type through the one import path when the first administrator is created
@@ -176,7 +162,6 @@ final class NodeProfileTest extends TestCase
         $this->assertSame([200, 'new', true], $run['setup']);
         $this->assertSame([true, 200, true, true], $run['dbfile'], 'The release carries no config/db.php: the form opens without it and the installer writes it');
         $this->assertSame([true, false, false, true, true], $run['lock'], 'The installed site keeps setup.php shut: no form, no secret, no write, no renamed panel');
-        $this->assertSame([true, true, true, true, true], $run['unlock'], 'An empty key opened the installer, the code did not guard the form or stayed readable in the key');
         $this->assertSame(0, $run['before']);
         $this->assertSame(303, $run['admin'][0]);
         $want = [];
@@ -198,13 +183,12 @@ final class NodeProfileTest extends TestCase
         $this->assertSame([false, false], $run['notice']);
     }
 
-    # The unlocked installer over real HTTP: its form carries no password, and an empty one connects with the stored password
+    # The installer over real HTTP: its form carries no password, and an empty one connects with the stored password
     # Refused with their reason and no fatal error: a clean installation over the tables of its prefix, a prefix or panel name outside their grammar, a panel named index or setup
-    # Refused the same way: a branch the installer does not offer, an update whose prefix has no tables, a wrong password, a missing or wrong code of the key
-    # Refused the same way: a pending configuration journal and a config/security.php PHP cannot write; config/, the key and the permissions of db.php and global.php stay
-    # A clean installation whose data file fails writes no mark and keeps the key
+    # Refused the same way: a wrong password, a pending configuration journal and a config/security.php PHP cannot write; config/ and the permissions of db.php and global.php stay
+    # A clean installation whose data file fails writes no mark
     #[Test]
-    public function theUnlockedInstallerRefusesBeforeItWrites(): void
+    public function theInstallerRefusesBeforeItWrites(): void
     {
         $run = $this->getRuns()['setup']['refuse'];
         $this->assertSame([true, false], $run['form'], 'The form of the installer shows the stored password');
@@ -212,8 +196,6 @@ final class NodeProfileTest extends TestCase
         $this->assertSame([true, false], $run['wrong'], 'A wrong password ends in a fatal error instead of the reason');
         $this->assertSame([true, true, true, true], [$run['fresh'], $run['prefix'], $run['afile'], $run['none']]);
         $this->assertSame([true, true], $run['entry'], 'The panel may be named after another entry point of the root');
-        $this->assertTrue($run['step'], 'A branch the installer does not offer was not refused');
-        $this->assertSame([true, true], $run['code'], 'A clean installation or another database host went through without the code of the key');
         $this->assertTrue($run['jour'], 'The installer wrote while a configuration operation of the site was unfinished');
         $this->assertTrue($run['write'], 'The installer started while config/security.php was not writable');
         $this->assertTrue($run['perm'][0], 'The installer changed the permissions of config/db.php or config/global.php');

@@ -203,7 +203,6 @@ Current unit test files include:
 - `EditorFormatTest.php`
 - `EditorRoomTest.php`
 - `EditorWindowTest.php`
-- `ExampleTest.php`
 - `FileManagerCatalogTest.php`
 - `FileManagerEditTest.php`
 - `FileManagerLockTest.php`

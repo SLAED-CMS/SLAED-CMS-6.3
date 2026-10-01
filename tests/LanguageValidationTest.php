@@ -242,14 +242,6 @@ class LanguageValidationTest extends TestCase
         );
     }
 
-    # Skipped: the unused constant check is replaced by the token-based audit in LanguageConstantsUsageTest
-    public function testNoUnusedConstants(): void
-    {
-        $this->markTestSkipped(
-            'Проверка отключена: заменена на token-based аудит в LanguageConstantsUsageTest::testLanguageConstantsUsageSummary'
-        );
-    }
-
     # Checks that language files were found
     public function testLanguageFilesFound(): void
     {
