@@ -955,7 +955,7 @@ function add_voting(string $modul, string $selectName, int $selectedId): string 
 }
 
 # Split one SQL script into the statements a driver can take one at a time, honouring quoting, comments and the DELIMITER directive of a stored routine
-# Three callers run scripts written by hand and none of them may split on a bare semicolon: the Inquiry tab, the module installer and setup/index.php
+# Three callers run scripts written by hand and none of them may split on a bare semicolon: the Inquiry tab, the module installer and update.php
 # A statement is returned exactly as the file wrote it: an escape inside a string literal is part of the statement and is never unwrapped on the way through
 function getSqlbatch(string $sql): array {
     $sql = str_replace("\r\n", "\n", str_replace("\r", "\n", $sql));

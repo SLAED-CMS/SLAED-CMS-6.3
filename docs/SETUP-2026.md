@@ -30,7 +30,8 @@ What the run never does on its own:
 
 - Commit or push. A commit follows only the owner's explicit command, staged by exact paths, without
   `Co-Authored-By`, through `.gitmessage`, and `'secret'` in `config/security.php` blanked before it.
-- Touch `setup_old/` (the owner deletes it), the owner's change in `config/security.php`, or the stand config files.
+- Touch `setup_old/` (the old installer, kept in git by the owner's decision), the owner's change in
+  `config/security.php`, or the stand config files.
 - Change the decisions in the table below. A decision that turns out wrong in the code stops the batch and goes to
   the owner as a question.
 
@@ -65,10 +66,10 @@ What the run never does on its own:
 
 ## What exists today
 
-- `setup/` is deleted in the working tree and still tracked at HEAD; the old code waits in the untracked `setup_old/`
-  until the owner removes it. The root `setup.php` still requires `setup/index.php` and is broken until batch 4.
-  Whenever this plan names a file of `setup_old/`, the same file is `git show HEAD:setup/<path>` once that directory
-  is gone; never restore `setup/` into the working tree.
+- `setup/` left the repository with `b2973ad4`; the old code is tracked again as `setup_old/` by the owner's
+  decision, byte for byte the `setup/` of `e28d3639`, except its `.sql` files, which `.gitignore` keeps out. The root
+  `setup.php` still requires `setup/index.php` and is broken until batch 4. Never restore `setup/` into the working
+  tree.
 - The old installer boots without `core/system.php`: it reads `config/global.php` and `config/security.php`, borrows
   `getSqlbatch()` and `getSqlinfo()` from `core/admin.php`, `FileManager` for the config lock, `Logger`, and loads
   `Database` from `core/classes/pdo.php` late. `Database` calls the installer's `setExit()` under `SETUP_FILE`.
