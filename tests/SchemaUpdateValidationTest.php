@@ -16,7 +16,7 @@ class SchemaUpdateValidationTest extends TestCase
 
     private static function loadSchemaTables(): void
     {
-        $schemaFile = self::$basePath.'/setup/sql/table.sql';
+        $schemaFile = self::$basePath.'/storage/update/sql/table.sql';
         if (!file_exists($schemaFile)) {
             return;
         }
@@ -54,7 +54,7 @@ class SchemaUpdateValidationTest extends TestCase
     private static function getUpdateFiles(): array
     {
         $out = [];
-        foreach (['setup/sql/table_update6_3.sql'] as $name) {
+        foreach (['storage/update/sql/table_update6_3.sql'] as $name) {
             if (file_exists(self::$basePath.'/'.$name)) {
                 $out[$name] = self::$basePath.'/'.$name;
             }
@@ -97,7 +97,7 @@ class SchemaUpdateValidationTest extends TestCase
     # The deprecated modules table is skipped, since it is no longer part of the schema
     public function testUpdateSqlTablesExistInSchema(): void
     {
-        $updateFile = self::$basePath.'/setup/sql/table_update6_3.sql';
+        $updateFile = self::$basePath.'/storage/update/sql/table_update6_3.sql';
         if (!file_exists($updateFile)) {
             $this->markTestSkipped('table_update6_3.sql not found');
             return;
@@ -134,7 +134,7 @@ class SchemaUpdateValidationTest extends TestCase
             if (!isset(self::$tables[$table])) {
                 $line = substr_count(substr($content, 0, $offset), "\n") + 1;
                 $errors[] = sprintf(
-                    "setup/sql/table_update6_3.sql:%d - table '%s' not found in table.sql",
+                    "storage/update/sql/table_update6_3.sql:%d - table '%s' not found in table.sql",
                     $line,
                     $table
                 );

@@ -7,7 +7,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The ratings unit of the 6.3 data update in setup/index.php, whose contract is the carry-over of the accumulated ratings in docs/RATINGS.md
+# The ratings unit of the 6.3 data update in update.php, whose contract is the carry-over of the accumulated ratings in docs/RATINGS.md
 final class UpdateRatingsTest extends TestCase
 {
     private const TARGETS = [['account', 2, 37, 10], ['account', 3, 0, 0], ['account', 4, 5, 1], ['forum', 5, 6, 2]];
@@ -26,7 +26,7 @@ final class UpdateRatingsTest extends TestCase
 
     private static array $probe = [];
 
-    # The probe tests/Support/update_probe.php lifts the shipped functions out of the installer by name into an isolated CLI process on a disposable schema and scratch site
+    # The probe tests/Support/update_probe.php lifts the functions out of update.php by name into an isolated CLI process on a disposable schema and scratch site
     # The manifest, the snapshots, the mark, the rules and the aggregates of the stand are never touched
     # Run the probe once and memoize its report for every test in this class
     private function getRun(string $name): array
@@ -146,12 +146,10 @@ final class UpdateRatingsTest extends TestCase
     #[Test]
     public function theBranchRunsTheUnitAfterPoints(): void
     {
-        $code = (string)file_get_contents(dirname(__DIR__, 2).'/setup/index.php');
-        $this->assertMatchesRegularExpression('/setUpdatePoints\(\$db, \$xprefix\);\s+\$bodytext \.= setUpdateRatings\(\$db, \$xprefix\);/', $code);
-        $mark = "['points' => '6.3.0', 'ratings' => '6.3.0', 'fields' => '6.3.0', 'node' => 'new']";
-        $this->assertStringContainsString($mark, $code, 'A fresh installation does not leave the ratings mark');
+        $code = (string)file_get_contents(dirname(__DIR__, 2).'/update.php');
+        $this->assertStringContainsString('setUpdatePoints($db, $pref), setUpdateRatings($db, $pref)', $code);
         $this->assertStringEndsWith('start the update again: ALTER TABLE `probe_forum` ENGINE=InnoDB;', $this->getRun('flight')['engine']);
-        $sql = (string)file_get_contents(dirname(__DIR__, 2).'/setup/sql/table_update6_3.sql');
+        $sql = (string)file_get_contents(dirname(__DIR__, 2).'/storage/update/sql/table_update6_3.sql');
         foreach (['rating_targets', 'rating_actors', 'rating_votes'] as $name) $this->assertStringContainsString('CREATE TABLE IF NOT EXISTS `{prefix}_'.$name.'`', $sql);
     }
 }

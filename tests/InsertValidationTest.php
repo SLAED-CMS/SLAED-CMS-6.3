@@ -19,7 +19,7 @@ class InsertValidationTest extends TestCase
     # Parses table.sql and collects the required columns of each table (NOT NULL without DEFAULT)
     private static function parseTableSchema(): void
     {
-        $sqlFile = self::$basePath.'/setup/sql/table.sql';
+        $sqlFile = self::$basePath.'/storage/update/sql/table.sql';
         $content = file_get_contents($sqlFile);
 
         preg_match_all('/CREATE TABLE [`\']?\{prefix\}_(\w+)[`\']?\s*\((.*?)\)\s*ENGINE/is', $content, $matches, PREG_SET_ORDER);
@@ -139,7 +139,7 @@ class InsertValidationTest extends TestCase
     # Checks that table.sql exists and declares tables
     public function testTableSchemaExists(): void
     {
-        $sqlFile = self::$basePath.'/setup/sql/table.sql';
+        $sqlFile = self::$basePath.'/storage/update/sql/table.sql';
         $this->assertFileExists($sqlFile, 'Файл table.sql не найден');
         $this->assertNotEmpty(self::$tableSchema, 'Схема таблиц пуста');
     }

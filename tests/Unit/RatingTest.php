@@ -16,7 +16,7 @@ final class RatingTest extends TestCase
     private static array $probe = [];
 
     # The probe tests/Support/rating_probe.php boots the real core in an isolated CLI process and drives the class through trusted test adapters
-    # Its disposable schema is built from the shipped DDL, so the same run executes the three tables of setup/sql/table.sql
+    # Its disposable schema is built from the shipped DDL, so the same run executes the three tables of storage/update/sql/table.sql
     # The cache directory, the generation counter and the logs live in scratch, every persistent result is read by a connection of its own
     # Concurrency is made of real processes, and the site database is only read, by the renders of the page-cache scenario
     # Run the probe once and memoize its report for every test in this class
@@ -79,7 +79,7 @@ final class RatingTest extends TestCase
     #[Test]
     public function theSchemaCarriesTheThreeTables(): void
     {
-        $sql = (string)file_get_contents(dirname(__DIR__, 2).'/setup/sql/table.sql');
+        $sql = (string)file_get_contents(dirname(__DIR__, 2).'/storage/update/sql/table.sql');
         foreach (['rating', 'rating_actors', 'rating_targets', 'rating_votes'] as $name) $this->assertSame(1, substr_count($sql, 'CREATE TABLE `{prefix}_'.$name.'` ('), $name);
         foreach (['UNIQUE KEY `request` (`scope`, `mid`, `actor`, `request`)', 'KEY `target` (`scope`, `mid`, `id`)', 'KEY `scope` (`scope`, `id`)',
             'CONSTRAINT `{prefix}_chk_rating_votes_value` CHECK (`value` BETWEEN 1 AND 5)', 'PRIMARY KEY (`scope`, `mid`, `actor`)', 'PRIMARY KEY (`scope`, `mid`)'] as $one) {

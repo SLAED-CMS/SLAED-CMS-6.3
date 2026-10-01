@@ -4,9 +4,9 @@
 # License: MIT
 # Website: slaed.net
 
-# CLI probe for the points, ratings and fields units of the 6.3 data update in setup/index.php, whose contracts are docs/NODE.md (The 6.3 update) and docs/RATINGS.md
-# The second argument names the unit, points when it is left out; all three share the schema, the lifted installer code and the scratch site
-# The installer cannot be required from CLI: it is a request handler that acts on load, so its functions are lifted out of the shipped source by name
+# CLI probe for the units of the 6.3 data update in update.php, whose contracts are docs/NODE.md (The 6.3 update) and docs/RATINGS.md
+# The second argument names the unit, points when it is left out; every unit shares the schema, the lifted update code and the scratch site
+# The update cannot be required from CLI: it is a request handler that acts on load, so its functions are lifted out of the source by name
 # BASE_DIR and CONFIG_DIR point into scratch, so the manifest, the snapshot, the mark and every configuration file the unit writes stay away from the site
 # Nothing touches the site database either: the probe creates its own schema, works only in it, and drops it again
 $probework = str_replace('\\', '/', (string)($argv[1] ?? ''));
@@ -36,13 +36,11 @@ const PROBEROWS = [
     [10, 7, 'forum', '1700000300', 0, '4.4.4.4'], [11, 5, 'forum', '1700000400', 9, ''],
 ];
 
-# The installer defines the same guard before it loads the database facade on its own
+# The first stage of the update defines the same guard before it loads the database facade on its own
 if (!defined('FUNC_FILE')) define('FUNC_FILE', true);
 require_once PROBEROOT.'/core/classes/pdo.php';
 require_once PROBEROOT.'/core/classes/field.php';
 require_once PROBEROOT.'/core/classes/filemanager.php';
-require_once PROBEROOT.'/setup/lang/en.php';
-foreach (['_OK' => 'probe-ok', '_ERROR' => 'probe-error'] as $name => $text) define($name, $text);
 
 # A database facade that can name another server version, which is the one fact of the preflight a real server cannot be asked to change
 final class ProbeBase extends Database {
@@ -76,18 +74,28 @@ function getProbeSide(bool $root = false): PDO {
 
 # One shipped CREATE TABLE out of the fresh schema, filled for the disposable database
 function getProbeTable(string $name, string $engine = 'InnoDB'): string {
-    $text = (string)file_get_contents(PROBEROOT.'/setup/sql/table.sql');
+    $text = (string)file_get_contents(PROBEROOT.'/storage/update/sql/table.sql');
     if (!preg_match('/CREATE TABLE `\{prefix\}_'.$name.'`.*?\n\)\s*ENGINE=[^;]*;/s', $text, $hit)) throw new RuntimeException('table.sql carries no '.$name.' table');
     return str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [PROBEPREF, $engine, 'utf8mb4', 'utf8mb4_unicode_ci'], $hit[0]);
 }
 
-# Lift one function out of the shipped installer into this process
+# Lift one function out of update.php into this process
 function addProbeCode(string $name): void {
-    $code = (string)file_get_contents(PROBEROOT.'/setup/index.php');
+    $code = (string)file_get_contents(PROBEROOT.'/update.php');
     $from = strpos($code, 'function '.$name.'(');
     $to = $from === false ? false : strpos($code, "\n}\n", $from);
-    if ($from === false || $to === false) throw new RuntimeException($name.'() is gone from setup/index.php');
+    if ($from === false || $to === false) throw new RuntimeException($name.'() is gone from update.php');
     eval(substr($code, $from, $to - $from + 3));
+}
+
+# The text of the report rows a unit answered, joined in their order, empty for a unit that answered none
+function getProbeText(array $rows): string {
+    return implode(' ', array_column($rows, 'text'));
+}
+
+# Whether a unit answered at least one row and every row it answered passed
+function checkProbeDone(array $rows): bool {
+    return $rows !== [] && !checkUpdateFail($rows);
 }
 
 # Create the disposable schema with the account table, the journal and three accounts, and connect the project facade to it
@@ -127,13 +135,13 @@ function setProbeSite(string $point = '0'): void {
     mkdir(CONFIG_DIR, 0777, true);
     copy(PROBEROOT.'/config/points.php', CONFIG_DIR.'/points.php');
     $users = (require PROBEROOT.'/config/users.php')['users'];
-    setConfigFile('users.php', ['point' => $point, 'points' => '1,2,3'] + $users);
+    setUpdateFile('users.php', ['point' => $point, 'points' => '1,2,3'] + $users);
     getProbeSide()->exec('DELETE FROM `'.PROBEPREF.'_points`');
     foreach (PROBEBAL as $id => $sum) getProbeSide()->exec('UPDATE `'.PROBEPREF.'_users` SET points = '.$sum.' WHERE id = '.$id);
 }
 
 # Everything the unit leaves behind, read fresh from disk: its answer, the manifest, the snapshot, the mark and the two scopes it carries over
-function getProbeState(string $html): array {
+function getProbeState(array $rows): array {
     $dir = BASE_DIR.'/storage/backup/update/points';
     $info = is_file($dir.'/manifest.json') ? json_decode((string)file_get_contents($dir.'/manifest.json'), true) : null;
     $snap = is_file($dir.'/balances.json') ? (string)file_get_contents($dir.'/balances.json') : null;
@@ -141,8 +149,8 @@ function getProbeState(string $html): array {
     $users = (include CONFIG_DIR.'/users.php')['users'];
     $hash = fn(string $name): string => (string)hash_file('sha256', CONFIG_DIR.'/'.$name);
     return [
-        'done' => str_contains($html, _OK) && !str_contains($html, _ERROR),
-        'text' => trim(strip_tags($html)),
+        'done' => checkProbeDone($rows),
+        'text' => getProbeText($rows),
         'state' => $info['state'] ?? null,
         'count' => $info['count'] ?? null,
         'source' => $snap !== null && ($info['source']['balances.json'] ?? '') === hash('sha256', $snap),
@@ -212,7 +220,7 @@ function getProbeStop(): array {
     getProbeSide()->exec('INSERT INTO `'.PROBEPREF.'_points` (uid, action, scope, source, points) VALUES (2, \'login\', \'account\', \'day:20260921\', 1)');
     $out['rows'] = getProbeRun();
     setProbeSite('0');
-    setConfigFile('update.php', ['points' => '6.3.0']);
+    setUpdateFile('update.php', ['points' => '6.3.0']);
     $out['mark'] = getProbeRun();
     setProbeSite('0');
     getProbeRun();
@@ -226,7 +234,7 @@ function getProbeStop(): array {
     setProbeSite('0');
     $point = (require PROBEROOT.'/config/points.php')['points'];
     unset($point['actions']['login']);
-    setConfigFile('points.php', $point);
+    setUpdateFile('points.php', $point);
     $out['scope'] = getProbeRun();
     return $out;
 }
@@ -257,8 +265,8 @@ function getProbeFlight(): array {
 function setRateSite(array $rules = PROBEOLD, array $mark = ['points' => '6.3.0'], array $rows = PROBEROWS): void {
     deleteProbeTree(BASE_DIR);
     mkdir(CONFIG_DIR, 0777, true);
-    setConfigFile('ratings.php', $rules);
-    if ($mark) setConfigFile('update.php', $mark);
+    setUpdateFile('ratings.php', $rules);
+    if ($mark) setUpdateFile('update.php', $mark);
     $side = getProbeSide();
     foreach (['rating_targets', 'rating_actors', 'rating_votes', 'rating', 'forum'] as $name) $side->exec('DELETE FROM `'.PROBEPREF.'_'.$name.'`');
     $side->exec('DELETE FROM `'.PROBEPREF.'_users` WHERE id >= 100');
@@ -273,7 +281,7 @@ function setRateSite(array $rules = PROBEOLD, array $mark = ['points' => '6.3.0'
 }
 
 # Everything the ratings unit leaves behind, read fresh from disk and schema: answer, manifest, snapshots, the three new tables, the owners, the old table, the rules and the mark
-function getRateState(string $html): array {
+function getRateState(array $rows): array {
     $dir = BASE_DIR.'/storage/backup/update/ratings';
     $info = is_file($dir.'/manifest.json') ? json_decode((string)file_get_contents($dir.'/manifest.json'), true) : null;
     $side = getProbeSide();
@@ -283,8 +291,8 @@ function getRateState(string $html): array {
     $files = is_array($info);
     foreach ($files ? $info['source'] : [] as $name => $hash) $files = $files && is_file($dir.'/'.$name) && hash_file('sha256', $dir.'/'.$name) === $hash;
     return [
-        'done' => str_contains($html, _OK) && !str_contains($html, _ERROR),
-        'text' => trim(strip_tags($html)),
+        'done' => checkProbeDone($rows),
+        'text' => getProbeText($rows),
         'dir' => is_dir($dir),
         'state' => $info['state'] ?? null,
         'cursor' => $info['cursor'] ?? null,
@@ -419,8 +427,8 @@ const PROBEVALS = [
 function setFieldSite(array $defs = PROBEDEFS, array $mark = ['points' => '6.3.0', 'ratings' => '6.3.0'], array $rows = PROBEVALS, bool $bulk = true): void {
     deleteProbeTree(BASE_DIR);
     mkdir(CONFIG_DIR, 0777, true);
-    setConfigFile('fields.php', $defs);
-    if ($mark) setConfigFile('update.php', $mark);
+    setUpdateFile('fields.php', $defs);
+    if ($mark) setUpdateFile('update.php', $mark);
     $side = getProbeSide();
     $side->exec('DELETE FROM `'.PROBEPREF.'_forum`');
     $side->exec('DELETE FROM `'.PROBEPREF.'_users` WHERE id >= 100');
@@ -434,7 +442,7 @@ function setFieldSite(array $defs = PROBEDEFS, array $mark = ['points' => '6.3.0
 }
 
 # Everything the fields unit leaves behind, read fresh from disk and schema: its answer, the manifest, the snapshots, the two columns, the published definitions and the mark
-function getFieldState(string $html): array {
+function getFieldState(array $rows): array {
     $dir = BASE_DIR.'/storage/backup/update/fields';
     $info = is_file($dir.'/manifest.json') ? json_decode((string)file_get_contents($dir.'/manifest.json'), true) : null;
     $side = getProbeSide();
@@ -444,8 +452,8 @@ function getFieldState(string $html): array {
     foreach ($files ? $info['source'] : [] as $name => $hash) $files = $files && is_file($dir.'/'.$name) && hash_file('sha256', $dir.'/'.$name) === $hash;
     $like = 'SELECT field LIKE \'{"field1":"option1","field2":"user %"}\', COUNT(*) FROM '.$pref.'users` WHERE id >= 100 GROUP BY 1';
     return [
-        'done' => str_contains($html, _OK) && !str_contains($html, _ERROR),
-        'text' => trim(strip_tags($html)),
+        'done' => checkProbeDone($rows),
+        'text' => getProbeText($rows),
         'dir' => is_dir($dir),
         'state' => $info['state'] ?? null,
         'cursor' => $info['cursor'] ?? null,
@@ -481,7 +489,7 @@ function getFieldClean(): array {
     $out['same'] = $kept === array_map(fn($v) => file_get_contents($dir.'/'.$v), $names);
     $named = $out['first']['rules'];
     setFieldSite(PROBEDEFS, ['points' => '6.3.0'], ['users' => [2 => '', 3 => '', 4 => ''], 'forum' => []], false);
-    setConfigFile('fields.php', $named, [], true);
+    setUpdateFile('fields.php', $named, [], true);
     $out['named'] = getFieldRun();
     $defs = ['account' => 'Version | A , B |3|1||0|0|1|1||Note|0|1|2', 'forum' => PROBEDEFS['forum'], 'order' => PROBEDEFS['order']];
     $rows = ['users' => [2 => 'C|hidden|n', 3 => ' B ', 4 => 'C|0|m'], 'forum' => [5 => 'X|L|R', 7 => 'Y|L']];
@@ -504,7 +512,7 @@ function getFieldResume(): array {
         $info = ['state' => $stop ? 'applying' : 'prepared', 'cursor' => ['account' => $stop, 'forum' => 0], 'target' => []] + json_decode($keep, true);
         file_put_contents($dir.'/manifest.json', json_encode($info));
         unlink(CONFIG_DIR.'/update.php');
-        setConfigFile('fields.php', PROBEDEFS);
+        setUpdateFile('fields.php', PROBEDEFS);
         $out['cursor'.$stop] = getFieldRun();
     }
     return $out;
@@ -519,7 +527,7 @@ function getFieldStop(): array {
     setFieldSite();
     $named = getFieldRun()['rules'];
     setFieldSite();
-    setConfigFile('fields.php', $named, [], true);
+    setUpdateFile('fields.php', $named, [], true);
     $out['named'] = getFieldRun();
     setFieldSite();
     getFieldRun();
@@ -533,7 +541,7 @@ function getFieldStop(): array {
     $info = ['state' => 'applying', 'cursor' => ['account' => 0, 'forum' => 0], 'target' => []] + json_decode((string)file_get_contents($file), true);
     file_put_contents($file, json_encode($info));
     unlink(CONFIG_DIR.'/update.php');
-    setConfigFile('fields.php', PROBEDEFS);
+    setUpdateFile('fields.php', PROBEDEFS);
     getProbeSide()->exec('UPDATE `'.PROBEPREF.'_forum` SET field = \'{"field1":"foreign"}\' WHERE id = 7');
     $out['foreign'] = getFieldRun();
     $rows = ['users' => [2 => 'D|x', 3 => 'A|n||03.02.2001', 4 => 'A|n||||t|extra'], 'forum' => [5 => 'X|L|R', 7 => 'Y', 8 => 'a|0', 9 => "two\nlines"]];
@@ -596,7 +604,7 @@ function getConfRead(string $name): mixed {
 }
 
 # Everything the configuration step leaves behind: its answer, the six sources, what is left of the 6.2 files in config/, what the backup holds and the hashes of config/
-function getConfState(string $html): array {
+function getConfState(array $rows): array {
     clearstatcache();
     $hash = [];
     foreach (glob(CONFIG_DIR.'/*.php') ?: [] as $file) $hash[basename($file)] = hash_file('sha256', $file);
@@ -604,9 +612,9 @@ function getConfState(string $html): array {
     $ship = [];
     foreach (CONFSHIP as $name) $ship[$name] = eval('?>'.getConfShip($name));
     return [
-        'done' => str_contains($html, _OK) && !str_contains($html, _ERROR),
-        'text' => trim(strip_tags($html)),
-        'leak' => str_contains($html, 'probe</script>'),
+        'done' => checkProbeDone($rows),
+        'text' => getProbeText($rows),
+        'leak' => str_contains(getProbeText($rows), 'probe</script>'),
         'global' => getConfRead('global'),
         'users' => getConfRead('users'),
         'lang' => getConfRead('lang'),
@@ -623,10 +631,10 @@ function getConfState(string $html): array {
 }
 
 # The 6.2 configuration of a site goes over the release once: the first run, a repeat with nothing left to carry, a run that meets one source again after a break
-# It also reports the connection settings of the 6.2 db.php the installer reads for its lock and its form
+# It also reports the connection settings of the 6.2 db.php the first stage of the update reads for its run
 function getConfClean(): array {
     setConfSite();
-    $out = ['base' => getSetupBase()];
+    $out = ['base' => getUpdateCred()];
     $out['first'] = getConfState(setUpdateConfig());
     $out['again'] = getConfState(setUpdateConfig());
     copy(BASE_DIR.'/storage/backup/update/config/config_global.php', CONFIG_DIR.'/config_global.php');
@@ -656,15 +664,15 @@ function setMailDrop(): void {
 }
 
 # Everything the newsletter step leaves behind: its answer, the manifest, whether the snapshot is there, the queued rows and the state of the three campaigns
-function getMailState(string $html): array {
+function getMailState(array $said): array {
     $dir = BASE_DIR.'/storage/backup/update/newsletter';
     clearstatcache();
     $info = is_file($dir.'/manifest.json') ? json_decode((string)file_get_contents($dir.'/manifest.json'), true) : null;
     $side = getProbeSide();
     $rows = $side->query('SELECT ref, email, sender, title, kind FROM `'.PROBEPREF.'_mail` ORDER BY ref, email')->fetchAll(PDO::FETCH_NUM);
     return [
-        'done' => !str_contains($html, _ERROR),
-        'text' => trim(strip_tags($html)),
+        'done' => !checkUpdateFail($said),
+        'text' => getProbeText($said),
         'state' => $info['state'] ?? null,
         'count' => $info['count'] ?? null,
         'snap' => is_file($dir.'/recipients.json'),
@@ -717,7 +725,7 @@ function setModSite(bool $table): void {
     $mods = (require CONFIG_DIR.'/modules.php')['modules'];
     $mods['news'] = $mods['forum'];
     unset($mods['extra']);
-    setConfigFile('modules.php', $mods);
+    setUpdateFile('modules.php', $mods);
     getProbeSide()->exec('DROP TABLE IF EXISTS `'.PROBEPREF.'_modules`');
     getProbeSide()->exec('DELETE FROM `'.PROBEPREF.'_admins`');
     if (!$table) return;
@@ -728,11 +736,11 @@ function setModSite(bool $table): void {
 }
 
 # What the registry step leaves behind: its answer, the records of config/modules.php read fresh, and the rights of the administrator
-function getModState(string $html): array {
+function getModState(array $rows): array {
     clearstatcache();
     $mods = (include CONFIG_DIR.'/modules.php')['modules'] ?? [];
     $keys = ['active', 'view', 'menu', 'group', 'side', 'top'];
-    $out = ['text' => $html, 'names' => array_keys($mods), 'ship' => (include PROBEROOT.'/config/modules.php')['modules']];
+    $out = ['text' => getProbeText($rows), 'names' => array_keys($mods), 'ship' => (include PROBEROOT.'/config/modules.php')['modules']];
     foreach ($mods as $name => $row) $out['mods'][$name] = array_map('intval', array_intersect_key($row, array_flip($keys))) + ['lang' => $row['lang'], 'icon' => $row['icon']];
     $out['rights'] = (string)getProbeSide()->query('SELECT modules FROM `'.PROBEPREF.'_admins` WHERE id = 1')->fetchColumn();
     return $out;
@@ -740,7 +748,6 @@ function getModState(string $html): array {
 
 # The module registry of a 6.2 site with its _modules table, a repeat, a repeat after the mark whose owner switched forum on in between, and a site without the table
 # The types of config/node.php the update takes out are checked while it keeps the registered ones
-# The preflight of a clean installation needs a server as new as the update does and no table of its prefix
 # The preflight of the update needs the users and admins tables of its prefix and refuses an admins or newsletter table outside InnoDB
 # The faults of the update come last: an admins table the registry cannot read and an uploads.php the type step cannot write
 # A read-only ratings.php keeps the ratings unit from its manifest seal and its mark until the permissions are fixed
@@ -751,24 +758,19 @@ function getSetupClean(): array {
     $out['again'] = getModState(setUpdateModules($pdb, PROBEPREF));
     $mods = (include CONFIG_DIR.'/modules.php')['modules'];
     $mods['forum']['active'] = '1';
-    setConfigFile('modules.php', $mods);
+    setUpdateFile('modules.php', $mods);
     $out['owned'] = getModState(setUpdateModules($pdb, PROBEPREF, false));
     $pack = ['node' => ['types' => ['content' => ['version' => 2], 'docs' => ['version' => 2], 'news' => ['version' => 1]]],
         'fields' => ['account' => [], 'node' => ['content' => ['f' => []], 'docs' => ['f' => []]]], 'uploads' => ['all' => 'x', 'content' => 'x', 'docs' => 'x', 'news' => 'x'],
         'ratings' => ['account' => [], 'node.content' => [], 'node.docs' => [], 'node.news' => []]];
-    foreach ($pack as $name => $data) setConfigFile($name.'.php', $data, [], true);
-    $gone = deleteSetupTypes(['docs', 'other']);
-    $read = fn(string $name): array => array_keys(getSetupConfig(CONFIG_DIR.'/'.$name.'.php')[$name] ?? []);
-    $out['types'] = ['gone' => $gone, 'node' => array_keys(getSetupConfig(CONFIG_DIR.'/node.php')['node']['types'] ?? []), 'fields' => $read('fields'),
-        'node.fields' => array_keys(getSetupConfig(CONFIG_DIR.'/fields.php')['fields']['node'] ?? []), 'uploads' => $read('uploads'), 'ratings' => $read('ratings'),
-        'again' => deleteSetupTypes(['docs'])];
+    foreach ($pack as $name => $data) setUpdateFile($name.'.php', $data, [], true);
+    $gone = deleteUpdateTypes(['docs', 'other']);
+    $read = fn(string $name): array => array_keys(getUpdateSource(CONFIG_DIR.'/'.$name.'.php')[$name] ?? []);
+    $out['types'] = ['gone' => $gone, 'node' => array_keys(getUpdateSource(CONFIG_DIR.'/node.php')['node']['types'] ?? []), 'fields' => $read('fields'),
+        'node.fields' => array_keys(getUpdateSource(CONFIG_DIR.'/fields.php')['fields']['node'] ?? []), 'uploads' => $read('uploads'), 'ratings' => $read('ratings'),
+        'again' => deleteUpdateTypes(['docs'])];
     setModSite(false);
     $out['plain'] = getModState(setUpdateModules($pdb, PROBEPREF));
-    $out['fresh'] = ['taken' => checkUpdateBase($pdb, PROBEPREF, true), 'free' => checkUpdateBase($pdb, 'free', true), 'near' => checkUpdateBase($pdb, 'prob', true),
-        'wild' => checkUpdateBase($pdb, 'prob_', true)];
-    $pdb->fake = '10.5.1-MariaDB';
-    $out['fresh']['old'] = checkUpdateBase($pdb, 'free', true);
-    $pdb->fake = '';
     $out['update'] = ['real' => checkUpdateBase($pdb, PROBEPREF), 'none' => checkUpdateBase($pdb, 'free')];
     getProbeSide()->exec('RENAME TABLE `'.PROBEPREF.'_admins` TO `'.PROBEPREF.'_admins_off`');
     $out['update']['half'] = checkUpdateBase($pdb, PROBEPREF);
@@ -781,14 +783,14 @@ function getSetupClean(): array {
     setModSite(true);
     $was = sha1_file(CONFIG_DIR.'/modules.php');
     getProbeSide()->exec('RENAME TABLE `'.PROBEPREF.'_admins` TO `'.PROBEPREF.'_admins_off`');
-    $text = setUpdateModules($pdb, PROBEPREF);
+    $rows = setUpdateModules($pdb, PROBEPREF);
     getProbeSide()->exec('RENAME TABLE `'.PROBEPREF.'_admins_off` TO `'.PROBEPREF.'_admins`');
-    $out['fault'] = ['text' => trim(strip_tags($text)), 'red' => str_contains($text, 'sl_red'), 'same' => sha1_file(CONFIG_DIR.'/modules.php') === $was];
-    foreach ($pack as $name => $data) setConfigFile($name.'.php', $data, [], true);
+    $out['fault'] = ['text' => getProbeText($rows), 'red' => checkUpdateFail($rows), 'same' => sha1_file(CONFIG_DIR.'/modules.php') === $was];
+    foreach ($pack as $name => $data) setUpdateFile($name.'.php', $data, [], true);
     chmod(CONFIG_DIR.'/uploads.php', 0444);
-    $gone = deleteSetupTypes(['docs']);
+    $gone = deleteUpdateTypes(['docs']);
     chmod(CONFIG_DIR.'/uploads.php', 0644);
-    $out['types']['locked'] = [$gone, array_keys(getSetupConfig(CONFIG_DIR.'/node.php')['node']['types'] ?? []), deleteSetupTypes(['docs'])];
+    $out['types']['locked'] = [$gone, array_keys(getUpdateSource(CONFIG_DIR.'/node.php')['node']['types'] ?? []), deleteUpdateTypes(['docs'])];
     setRateSite();
     chmod(CONFIG_DIR.'/ratings.php', 0444);
     $out['locked'] = ['first' => getRateRun()];
@@ -800,8 +802,8 @@ function getSetupClean(): array {
 $report = ['error' => '', 'clean' => false, 'runs' => []];
 
 try {
-    $units = ['setConfigFile', 'getSetupConfig', 'getSetupBase', 'getInfo', 'checkUpdateBase', 'setUpdateBackup', 'setUpdatePoints', 'setUpdateRatings', 'getUpdateRules',
-        'getUpdateValue', 'setUpdateFields', 'setUpdateConfig', 'setUpdateMails', 'setUpdateModules', 'deleteSetupTypes'];
+    $units = ['setUpdateFile', 'getUpdateSource', 'getUpdateCred', 'getUpdateRow', 'checkUpdateFail', 'checkUpdateBase', 'setUpdateBackup', 'setUpdatePoints',
+        'setUpdateRatings', 'getUpdateRules', 'getUpdateValue', 'setUpdateFields', 'setUpdateConfig', 'setUpdateMails', 'setUpdateModules', 'deleteUpdateTypes'];
     foreach ($units as $name) addProbeCode($name);
     addProbeSchema();
     $report['runs'] = match ($argv[2] ?? 'points') {

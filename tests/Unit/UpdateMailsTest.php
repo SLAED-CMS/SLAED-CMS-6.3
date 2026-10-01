@@ -20,7 +20,7 @@ final class UpdateMailsTest extends TestCase
 
     private static array $probe = [];
 
-    # The probe tests/Support/update_probe.php lifts the shipped functions of setup/index.php by name and drives them against a disposable schema, never the stand database
+    # The probe tests/Support/update_probe.php lifts the functions out of update.php by name and drives them against a disposable schema, never the stand database
     # Run the probe once in its newsletter mode and memoize the report for every test in this class
     private function getRun(): array
     {

@@ -7,14 +7,14 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The points unit of the 6.3 data update in setup/index.php, whose contract is docs/NODE.md (Points unit)
+# The points unit of the 6.3 data update in update.php, whose contract is docs/NODE.md (Points unit)
 final class UpdatePointsTest extends TestCase
 {
     private const SNAP = ['2' => 10, '3' => 0, '4' => 4294967295];
 
     private static array $probe = [];
 
-    # The probe tests/Support/update_probe.php lifts the shipped functions out of the installer by name into an isolated CLI process on a disposable schema and scratch site
+    # The probe tests/Support/update_probe.php lifts the functions out of update.php by name into an isolated CLI process on a disposable schema and scratch site
     # The manifest, the snapshot, the mark and the configuration of the stand are never touched
     # Run the probe once and memoize its report for every test in this class
     private function getRun(string $name): array
@@ -99,22 +99,22 @@ final class UpdatePointsTest extends TestCase
 
     # The preflight refuses a server that lacks CHECK or the RENAME COLUMN and RENAME INDEX of the schema file
     # It also refuses a table of a points, ratings or Node transaction on another engine
-    # It runs before the installer writes a single file or renames the panel, and the branch closes the site right after it
+    # It runs before the update writes a single file or renames the panel, and the run closes the site right after it
     #[Test]
     public function thePreflightRefusesBeforeAnythingChanges(): void
     {
         $run = $this->getRun('flight');
         $this->assertSame('', $run['real'], 'The stand server was refused');
-        $code = (string)file_get_contents(dirname(__DIR__, 2).'/setup/index.php');
-        $save = strpos($code, 'function save(): void {');
-        $from = strpos($code, '$stop = checkUpdateBase($db, $xprefix);');
-        $this->assertNotFalse($save, 'The installer lost its save handler');
-        $this->assertNotFalse($from, 'The update branch lost its preflight');
+        $code = (string)file_get_contents(dirname(__DIR__, 2).'/update.php');
+        $save = strpos($code, 'function setUpdateRun(): array {');
+        $from = strpos($code, '$stop = checkUpdateBase($db, $pref);');
+        $this->assertNotFalse($save, 'The update lost its run');
+        $this->assertNotFalse($from, 'The run lost its preflight');
         $head = substr($code, $save, $from - $save);
-        $this->assertSame([0, 0], [substr_count($head, 'setConfigFile('), substr_count($head, 'rename(')], 'A file is written before the preflight');
-        $next = substr($code, $from, strpos($code, 'getSqlFile(', $from) - $from);
-        $shut = "setConfigFile('global.php', array_diff_key(\$conf, ['security' => '', 'db' => '']), ['close' => '1'])";
-        $this->assertStringContainsString($shut, $next, 'The branch does not close the site between the preflight and the DDL');
+        $this->assertSame([0, 0], [substr_count($head, 'setUpdateFile('), substr_count($head, 'rename(')], 'A file is written before the preflight');
+        $next = substr($code, $from, strpos($code, 'setUpdateSql(', $from) - $from);
+        $shut = "setUpdateFile('global.php', array_diff_key(\$conf, ['security' => '', 'db' => '']), ['close' => '1'])";
+        $this->assertStringContainsString($shut, $next, 'The run does not close the site between the preflight and the DDL');
         $this->assertLessThan(strpos($next, 'setUpdateConfig()'), strpos($next, $shut), 'The 6.2 settings are carried before the site is closed');
         $pass = array_keys(array_filter($run['server'], fn($v) => $v === ''));
         $this->assertSame(['10.5.2-MariaDB', '11.7.2-MariaDB-log', '8.0.16'], $pass, 'The version bound moved');

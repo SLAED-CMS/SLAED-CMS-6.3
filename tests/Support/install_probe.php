@@ -80,7 +80,8 @@ if (preg_match('#^/uploads/([a-z0-9_]+)/#', $ipath, $ihit) && is_file(__DIR__.'/
     http_response_code(403);
     exit;
 }
-if (!in_array($ipath, ['/', '/index.php', '/admin.php', '/myadm.php', '/setup.php'], true) || !is_file(__DIR__.(($ipath === '/') ? '/index.php' : $ipath))) return false;
+$iserve = ['/', '/index.php', '/admin.php', '/myadm.php', '/setup.php', '/update.php'];
+if (!in_array($ipath, $iserve, true) || !is_file(__DIR__.(($ipath === '/') ? '/index.php' : $ipath))) return false;
 foreach (['HTTP_HOST', 'REQUEST_URI', 'HTTP_REFERER', 'HTTP_USER_AGENT', 'REMOTE_ADDR'] as $ikey) if (isset($_SERVER[$ikey])) putenv($ikey.'='.$_SERVER[$ikey]);
 $iglob = require __DIR__.'/config/global.php';
 if (isset($_SERVER['HTTP_X_PROBE_USER'])) $_COOKIE[$iglob['user_c'].'-account'] = $_SERVER['HTTP_X_PROBE_USER'];
@@ -353,7 +354,7 @@ function getInstallRefuse(PDO $pdo, array $form): array {
     $out['same'] =[getInstallFiles() === $was, is_file($isite.'/config/setup.unlock')];
     $saved = [];
     foreach (glob($isite.'/config/*.php') ?: [] as $file) $saved[$file] = (string)file_get_contents($file);
-    $sql = $isite.'/setup/sql/insert.sql';
+    $sql = $isite.'/storage/update/sql/insert.sql';
     $text = (string)file_get_contents($sql);
     file_put_contents($sql, $text."\nINSERT INTO `{prefix}_missing` (`id`) VALUES (1);\n");
     unlink($isite.'/config/update.php');
@@ -595,16 +596,16 @@ function addInstallDump(string $base, string $dump): array {
     return [proc_close($proc), $err];
 }
 
-# The table names the installer creates, without the prefix, in the order of setup/sql/table.sql
+# The table names the installer creates, without the prefix, in the order of storage/update/sql/table.sql
 function getInstallTables(): array {
-    preg_match_all('/CREATE TABLE `\{prefix\}_([a-z0-9_]+)`/', (string)file_get_contents(BASE_DIR.'/setup/sql/table.sql'), $hit);
+    preg_match_all('/CREATE TABLE `\{prefix\}_([a-z0-9_]+)`/', (string)file_get_contents(BASE_DIR.'/storage/update/sql/table.sql'), $hit);
     return $hit[1];
 }
 
 # Run the shipped schema into an empty database under a prefix, statement by statement; the answer is the number of tables it holds afterwards
 function addInstallFresh(PDO $pdo, string $pref): int {
     $text = str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [$pref, 'InnoDB', 'utf8mb4', 'utf8mb4_unicode_ci'],
-        (string)file_get_contents(BASE_DIR.'/setup/sql/table.sql'));
+        (string)file_get_contents(BASE_DIR.'/storage/update/sql/table.sql'));
     foreach (preg_split('/;\s*\n/', $text) ?: [] as $sql) if (trim($sql) !== '' && !str_starts_with(trim($sql), '--')) $pdo->exec($sql);
     return count($pdo->query('SHOW TABLES')->fetchAll());
 }
@@ -659,13 +660,19 @@ function getInstallDiffs(array $fresh, array $done): array {
     return $out;
 }
 
-# What one run of the update left: the rows the installer reported as failed, the closed site, the marks, the reconciled registry, the converted sources
+# The report rows of one answer of update.php as text and verdict, in their order
+function getInstallRows(string $body): array {
+    preg_match_all('#<tr\s*>\s*<td\s*>\s*(.*?)\s*</td>\s*<td[^>]*>\s*<span[^>]*class="[^"]*\bsl-text-(success|danger)\b#s', $body, $hit, PREG_SET_ORDER);
+    return array_map(fn(array $v): array => [html_entity_decode($v[1], ENT_QUOTES), $v[2] === 'success'], $hit);
+}
+
+# What one run of the update left: the rows update.php reported as failed, the closed site, the marks, the reconciled registry, the converted sources
 # It also reads the manifests of the three units, the balances and the Node tables, whether config/local.php is gone, the panel file, the site language and address
 # Then come the blocks of removed modules switched off, the Node types taken out of the configuration, and the switches of the owner
 # The counter of _nodes comes from SHOW CREATE TABLE, because MySQL 8 answers SHOW TABLE STATUS from cached statistics
 function getInstallAfter(PDO $pdo, array $page): array {
     global $isite;
-    preg_match_all('#<tr><td>[^<]*</td><td>([^<]*)(?:</td>)?<td><span class="sl_red">#', $page['body'], $bad);
+    $rows = getInstallRows($page['body']);
     preg_match('#records of removed modules dropped: ([a-z_, ]+)#', $page['body'], $gone);
     preg_match('#_blocks of removed modules switched off: ([a-z_., ]+)#', $page['body'], $boff);
     preg_match('#_node_types removed with their fields, upload and rating rules: ([a-z_, ]+)#', $page['body'], $tgone);
@@ -689,8 +696,8 @@ function getInstallAfter(PDO $pdo, array $page): array {
     }
     return [
         'code' => $page['code'],
-        'failed' => array_map('trim', $bad[1]),
-        'green' => substr_count($page['body'], 'sl_green'),
+        'failed' => array_values(array_column(array_filter($rows, fn(array $v): bool => !$v[1]), 0)),
+        'green' => count(array_filter($rows, fn(array $v): bool => $v[1])),
         'close' => getInstallConf('global')['close'] ?? null,
         'marks' => getInstallConf('update')['update'] ?? [],
         'modules' => ['node' => $mods['node'] ?? null, 'old' => array_values(array_intersect(IPROFS, array_keys($mods))), 'gone' => $gone[1] ?? '',
@@ -778,9 +785,9 @@ function setInstallSources(PDO $pdo, string $snap): array {
 }
 
 # The standard update of a real 6.2 site: its dump in a disposable database under its own prefix, its configuration from the revision given, the release code around it
-# From the snapshot of its own field update come the definitions it never committed; the 6.2 loader myadm.php is still in the root, and the form names myadm again
-# The address of the 6.2 site points at the second server while the installer is asked on the first, and the installer runs in another language than the site
-# The installer is asked over HTTP until the preflight refuses, then with four wrong codes, the right one and five wrong ones, which remove the key
+# From the snapshot of its own field update come the definitions it never committed; the 6.2 loader myadm.php is still in the root, and config_security.php names it
+# The address of the 6.2 site points at the second server while update.php is asked on the first
+# The first stage of update.php opens without a login on a 6.2 site: its page offers the run and writes nothing, the run is refused by the preflight first
 # A 6.2 table _modules the registry cannot read stops the run before the schema without the mark modules, so the next run, over a broken schema file, is the first
 # The sources the site corrected are put back only when the field unit refused them; the owner switches forum and the newsletter job, and three blocks appear
 # Then it is asked to finish and asked once more for the repeat, and the structure is compared with a clean installation
@@ -798,57 +805,36 @@ function getInstallUpgrade(PDO $pdo, string $base, string $dump, string $rev, st
     if ($snap !== '') $out['fields'] = setInstallDefs($snap);
     $col = $pdo->query('SHOW COLUMNS FROM '.IPREF.'_users LIKE \'user_points\'')->fetch() ? 'user_points' : 'points';
     $out['before'] = array_map('intval', $pdo->query('SELECT COUNT(*), COALESCE(SUM('.$col.'), 0) FROM '.IPREF.'_users')->fetch(PDO::FETCH_NUM));
-    $dbc = getInstallCred();
-    $glob = getInstallConf('global');
-    $form = ['op' => 'save', 'setup' => 'update6_3', 'xhost' => $dbc['host'], 'xuname' => $dbc['uname'], 'xpass' => $dbc['pass'], 'xname' => $base, 'xprefix' => IPREF,
-        'xsync' => '1', 'xafile' => 'myadm', 'xcode' => IKEY];
-    $head = ['Host: 127.0.0.1:'.$iport, 'Cookie: '.$glob['user_c'].'-lang=de'];
+    $form = ['op' => 'update'];
+    $head = ['Host: 127.0.0.1:'.$iport];
     if (!$pdo->query('SHOW COLUMNS FROM '.IPREF.'_newsletter LIKE \'mails\'')->fetch()) $pdo->exec('ALTER TABLE '.IPREF.'_newsletter ADD `mails` TEXT');
     $pdo->exec('UPDATE '.IPREF.'_newsletter SET mails = \'one@probe.test, two@probe.test,one@probe.test\' ORDER BY id LIMIT 2');
     $news = getInstallConf('newsletter');
     $news['newsletter']['abort'] = '7';
     file_put_contents($isite.'/config/newsletter.php', "<?php\nreturn ".var_export($news, true).";\n");
     $was = getInstallFiles();
-    if (is_file($isite.'/config/db.php')) {
-        $page = getInstallReply([], 'POST', 'setup.php', $form, $head);
-        $out['lock'] = [str_contains($page['body'], 'config/setup.unlock'), getInstallFiles() === $was];
-    }
-    file_put_contents($isite.'/config/setup.unlock', IKEY);
-    $was = getInstallFiles();
+    $page = getInstallReply([], 'GET', 'update.php', [], $head);
+    $out['page'] = [$page['code'], preg_match('#name="op"\s+value="update"#', $page['body']) === 1, getInstallRows($page['body']), getInstallFiles() === $was];
     $pdo->exec('ALTER TABLE '.IPREF.'_voting ENGINE=MyISAM');
-    $page = getInstallReply([], 'POST', 'setup.php', $form, $head);
+    $page = getInstallReply([], 'POST', 'update.php', $form, $head);
     $pdo->exec('ALTER TABLE '.IPREF.'_voting ENGINE=InnoDB');
-    $key = ['setup.unlock' => true];
-    $out['refuse'] = [str_contains($page['body'], 'ALTER TABLE `'.IPREF.'_voting` ENGINE=InnoDB;'), array_diff_key(getInstallFiles(), $key) === array_diff_key($was, $key),
-        is_file($isite.'/config/setup.unlock')];
+    $out['refuse'] = [str_contains($page['body'], 'ALTER TABLE `'.IPREF.'_voting` ENGINE=InnoDB;'), getInstallFiles() === $was];
     $out['guest'] = [getInstallReply([], 'GET', '/')['code'], is_file($isite.'/config/local.php'), (getInstallConf('global')['close'] ?? null)];
-    $wrong = ['xcode' => 'wrong-code-2026'] + $form;
-    foreach (range(1, 4) as $i) getInstallReply([], 'POST', 'setup.php', $wrong, $head);
-    $four = explode("\n", trim((string)file_get_contents($isite.'/config/setup.unlock')));
-    getInstallReply([], 'POST', 'setup.php', ['op' => 'config', 'xcode' => IKEY], $head);
-    $clear = explode("\n", trim((string)file_get_contents($isite.'/config/setup.unlock')));
-    foreach (range(1, 5) as $i) $page = getInstallReply([], 'POST', 'setup.php', $wrong, $head);
-    $said = false;
-    foreach (glob(BASE_DIR.'/setup/lang/*.php') ?: [] as $one) {
-        if (preg_match("#define\('_SETUPKEYGONE','(.+?)'\);#", (string)file_get_contents($one), $hit)) $said = $said || str_contains($page['body'], stripslashes($hit[1]));
-    }
-    $out['key'] = [$four[1] ?? '', count($clear), is_file($isite.'/config/setup.unlock'), $said];
-    file_put_contents($isite.'/config/setup.unlock', IKEY);
     $pdo->exec('ALTER TABLE '.IPREF.'_modules RENAME COLUMN `blocks_c` TO `blocks_x`');
     $mods = sha1_file($isite.'/config/modules.php');
-    $page = getInstallReply([], 'POST', 'setup.php', $form, $head);
-    preg_match_all('#<tr><td>[^<]*</td><td>([^<]*)(?:</td>)?<td><span class="sl_red">#', $page['body'], $bad);
-    $out['nomods'] = [implode(' ', $bad[1]), getInstallConf('update')['update'] ?? [], sha1_file($isite.'/config/modules.php') === $mods,
+    $page = getInstallReply([], 'POST', 'update.php', $form, $head);
+    $bad = array_column(array_filter(getInstallRows($page['body']), fn(array $v): bool => !$v[1]), 0);
+    $out['nomods'] = [implode(' ', $bad), getInstallConf('update')['update'] ?? [], sha1_file($isite.'/config/modules.php') === $mods,
         preg_match('#negative point balances set to 0 [^(]*\(accounts: (\d+)\)#', $page['body'], $hit) ? intval($hit[1]) : null];
     $pdo->exec('ALTER TABLE '.IPREF.'_modules RENAME COLUMN `blocks_x` TO `blocks_c`');
-    $ddl = $isite.'/setup/sql/table_update6_3.sql';
+    $ddl = $isite.'/storage/update/sql/table_update6_3.sql';
     $keep = (string)file_get_contents($ddl);
     file_put_contents($ddl, "ALTER TABLE `{prefix}_probe_missing` ADD `x` INT;\n".$keep);
-    $out['broken'] = getInstallAfter($pdo, getInstallReply([], 'POST', 'setup.php', $form, $head));
+    $out['broken'] = getInstallAfter($pdo, getInstallReply([], 'POST', 'update.php', $form, $head));
     $out['broken']['guest'] = getInstallReply([], 'GET', '/')['code'];
     file_put_contents($ddl, $keep);
     $time = microtime(true);
-    $out['first'] = getInstallAfter($pdo, getInstallReply([], 'POST', 'setup.php', $form, $head)) + ['time' => round(microtime(true) - $time, 1)];
+    $out['first'] = getInstallAfter($pdo, getInstallReply([], 'POST', 'update.php', $form, $head)) + ['time' => round(microtime(true) - $time, 1)];
     if ($snap !== '' && !isset($out['first']['marks']['fields'])) $out['sources'] = setInstallSources($pdo, $snap);
     $mods = getInstallConf('modules');
     $mods['modules']['forum']['active'] = ($mods['modules']['forum']['active'] ?? '1') === '1' ? '0' : '1';
@@ -860,15 +846,12 @@ function getInstallUpgrade(PDO $pdo, string $base, string $dump, string $rev, st
     $out['owned'] = [$mods['modules']['forum']['active'], '0'];
     $pdo->exec('INSERT INTO '.IPREF."_blocks (title, content, bfile, status, which) VALUES ('Probe news', '', 'news.php', 1, 'all'),"
         ." ('Probe jokes', '', 'block-jokes.php', 1, 'all'), ('Probe own', '', 'modules.php', 1, 'all')");
-    file_put_contents($isite.'/config/setup.unlock', IKEY);
     $time = microtime(true);
-    $out['second'] = getInstallAfter($pdo, getInstallReply([], 'POST', 'setup.php', $form, $head)) + ['time' => round(microtime(true) - $time, 1)];
+    $out['second'] = getInstallAfter($pdo, getInstallReply([], 'POST', 'update.php', $form, $head)) + ['time' => round(microtime(true) - $time, 1)];
     $mani = fn(): array => array_map('sha1_file', glob($isite.'/storage/backup/update/*/manifest.json') ?: []);
     $was = $mani();
-    file_put_contents($isite.'/config/setup.unlock', IKEY);
-    $out['third'] = getInstallAfter($pdo, getInstallReply([], 'POST', 'setup.php', $form, $head));
+    $out['third'] = getInstallAfter($pdo, getInstallReply([], 'POST', 'update.php', $form, $head));
     $out['third']['same'] = $mani() === $was;
-    $out['unlock'] = is_file($isite.'/config/setup.unlock');
     $fresh = 'slaed_inst_'.bin2hex(random_bytes(4));
     $pdo->exec('CREATE DATABASE `'.$fresh.'` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
     try {
@@ -920,8 +903,7 @@ function getInstallUpgrade(PDO $pdo, string $base, string $dump, string $rev, st
     $last = (int)$pdo->lastInsertId();
     $pdo->exec('DELETE FROM '.IPREF.'_nodes WHERE id = '.$last);
     $was = $next();
-    file_put_contents($isite.'/config/setup.unlock', IKEY);
-    $page = getInstallAfter($pdo, getInstallReply([], 'POST', 'setup.php', $again, $head));
+    $page = getInstallAfter($pdo, getInstallReply([], 'POST', 'update.php', $again, $head));
     $out['last'] = ['id' => $last, 'old' => $page['ids']['old'], 'before' => $was, 'after' => $next(), 'failed' => $page['failed']];
     return $out;
 }

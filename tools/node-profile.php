@@ -64,7 +64,7 @@ function addProfileBase(): PDO {
     getProfilePdo()->exec('CREATE DATABASE `'.$pname.'` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
     $pdo = getProfilePdo($pname);
     $text = str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [PPREF, 'InnoDB', 'utf8mb4', 'utf8mb4_unicode_ci'],
-        (string)file_get_contents(BASE_DIR.'/setup/sql/table.sql'));
+        (string)file_get_contents(BASE_DIR.'/storage/update/sql/table.sql'));
     foreach (preg_split('/;\s*\n/', $text) ?: [] as $sql) if (trim($sql) !== '' && !str_starts_with(trim($sql), '--')) $pdo->exec($sql);
     return $pdo;
 }

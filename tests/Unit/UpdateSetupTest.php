@@ -7,16 +7,16 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The 6.3 update: the module registry, the removal of unregistered Node types and the preflight of setup/index.php
+# The 6.3 update: the module registry, the removal of unregistered Node types and the preflight of update.php
 final class UpdateSetupTest extends TestCase
 {
     private static array $probe = [];
 
     # The registry keeps the switches of the 6.2 _modules table over config/modules.php on the first run and leaves the switches of the owner alone after it
     # The types of config/node.php leave their four areas unless the type table registers them
-    # The preflight refuses a clean installation over the tables of its prefix or on an old server, and an update without users and admins tables
+    # The preflight refuses an old server and an update without users and admins tables
     # It also refuses an update whose admins and newsletter tables are not InnoDB
-    # The probe tests/Support/update_probe.php lifts the shipped functions out of the installer by name onto a scratch site and a disposable schema, never the stand
+    # The probe tests/Support/update_probe.php lifts the functions out of update.php by name onto a scratch site and a disposable schema, never the stand
     # Run the probe once in its setup mode and memoize the report for every test in this class
     private function getRun(): array
     {
@@ -68,15 +68,11 @@ final class UpdateSetupTest extends TestCase
         $this->assertSame('', $run['rights']);
     }
 
-    # A clean installation needs a server as new as the update does and no table of its prefix; the update needs both the users and the admins table of its prefix
-    # A prefix that only starts like a taken one, or holds the underscore LIKE would take for any character, is free
+    # The update needs both the users and the admins table of its prefix
     #[Test]
     public function thePreflightRefusesAWrongBase(): void
     {
         $run = $this->getRun();
-        $this->assertStringStartsWith('The database already holds tables of the prefix probe_', $run['fresh']['taken']);
-        $this->assertSame(['', '', ''], [$run['fresh']['free'], $run['fresh']['near'], $run['fresh']['wild']]);
-        $this->assertStringContainsString('older than 10.5.2', $run['fresh']['old']);
         $this->assertSame('', $run['update']['real']);
         $this->assertStringStartsWith('The tables free_users and free_admins are not both in the database', $run['update']['none']);
         $this->assertStringStartsWith('The tables probe_users and probe_admins are not both in the database', $run['update']['half']);
@@ -137,43 +133,27 @@ final class UpdateSetupTest extends TestCase
         $this->assertNotSame($run['first']['rules'], $run['again']['rules'], 'The repeat did not publish the rules');
     }
 
-    # The installer never prints the stored password into its form and asks an installed site for the code of its key before the form and before any write
-    # It checks every code through the one counting check under the lock of the key and offers a random panel name instead of admin
-    # It runs the schema file without the zero date modes of MySQL 8 and gives the session its mode back
-    # It checks the prefix, the panel name, the writable configuration and a pending configuration journal before it connects, and never changes permissions
-    # It writes the mark modules only while no row failed, and a clean installation writes its marks only after both SQL files ran without a failed statement
+    # The update never changes permissions and runs the schema file without the zero date modes of MySQL 8, giving the session its mode back
+    # It checks the writable configuration and a pending configuration journal before it connects, and the preflight before the first write
+    # It writes the mark modules only while no row failed, and the units run only after the schema file ran without a failed statement
     #[Test]
-    public function theInstallerChecksBeforeItWrites(): void
+    public function theUpdateChecksBeforeItWrites(): void
     {
-        $code = (string)file_get_contents(dirname(__DIR__, 2).'/setup/index.php');
-        $this->assertStringNotContainsString('chmod(', $code, 'The installer changes permissions');
-        $from = strpos($code, 'function config(): void {');
-        $form = substr($code, $from, strpos($code, "\n}\n", $from) - $from);
-        $this->assertStringContainsString('name="xpass" value=""', $form);
-        $this->assertStringNotContainsString("['pass']", $form, 'The form reads the stored password');
-        $pick = "\$xafile = (\$spanel !== 'admin') ? \$spanel : strtolower(getRandomString('10'));";
-        $this->assertStringContainsString($pick, $form, 'The form offers the guessable name admin');
-        $sql = (string)file_get_contents(dirname(__DIR__, 2).'/setup/sql/table_update6_3.sql');
+        $code = (string)file_get_contents(dirname(__DIR__, 2).'/update.php');
+        $this->assertStringNotContainsString('chmod(', $code, 'The update changes permissions');
+        $sql = (string)file_get_contents(dirname(__DIR__, 2).'/storage/update/sql/table_update6_3.sql');
         $mode = "SET SESSION sql_mode = TRIM(BOTH ',' FROM REPLACE(REPLACE(REPLACE(REPLACE(@@SESSION.sql_mode, 'NO_ZERO_IN_DATE', ''), 'NO_ZERO_DATE', '')";
         $text = 'The schema file does not leave the zero date modes of MySQL 8 before its first ALTER';
         $this->assertLessThan(strpos($sql, 'CREATE PROCEDURE rencol'), strpos($sql, $mode), $text);
         $this->assertStringEndsWith("SET SESSION sql_mode = @SLAED_MODE;\n", $sql, 'The schema file does not give the session its mode back');
-        $gate = strpos($form, "if (\$scode !== '' && (\$xcode === '' || !checkSetupCode(\$xcode))) {");
-        $this->assertNotFalse($gate, 'The form lost the check of the code');
-        $this->assertLessThan(strpos($form, 'name="xhost"'), $gate, 'The form shows the connection data before the code');
-        $save = strpos($code, 'function save(): void {');
+        $save = strpos($code, 'function setUpdateRun(): array {');
         $conn = strpos($code, 'new Database(', $save);
         $head = substr($code, $save, $conn - $save);
-        $this->assertSame(1, substr_count($code, 'password_verify('), 'A code is checked outside the counting check');
-        $this->assertStringContainsString("if (\$scode !== '' && !checkSetupCode(\$xcode)) setExit(_SETUPCODE);", $head);
-        $want = ['setExit(_SETUPCODE)', 'setExit(_SETUPTYPE)', 'setExit(_SETUPPREFIX)', 'setExit(_SETUPAFILE)', 'checkWritableConfig($name)', 'setExit(_SETUPJOUR)'];
-        foreach ($want as $one) $this->assertStringContainsString($one, $head);
-        $this->assertStringContainsString("if (\$first && !str_contains(\$bodytext, 'sl_red') && !setConfigFile('update.php', ['modules' => '6.3.0']", $code);
-        $fresh = strpos($code, '$stop = checkUpdateBase($db, $xprefix, true);', $conn);
-        $this->assertNotFalse($fresh, 'A clean installation lost its preflight');
-        $this->assertSame(0, substr_count(substr($code, $save, $fresh - $save), 'setConfigFile('), 'A file is written before the preflight of a clean installation');
-        $new = strpos($code, "if (\$setup == 'new') {\n        \$title = _SAVE_NEW;");
-        $mark = strpos($code, "setConfigFile('update.php', ['points' => '6.3.0'", $new);
-        $this->assertStringContainsString("if (\$ddl !== '' && !str_contains(\$ddl, 'sl_red')) {", substr($code, $new, $mark - $new), 'The marks do not wait for the SQL files');
+        foreach (['checkUpdateWrite($name)', "is_file(BACKUP_DIR.'/config/marker.json')"] as $one) $this->assertStringContainsString($one, $head);
+        $this->assertStringContainsString("\$done = !\$first || checkUpdateFail(\$rows) || setUpdateFile('update.php', ['modules' => '6.3.0'] + \$mark);", $code);
+        $ddl = strpos($code, "\$ddl = setUpdateSql(\$db, 'table_update6_3.sql', \$pref);");
+        $unit = strpos($code, 'setUpdatePoints($db, $pref)', $save);
+        $this->assertNotFalse($ddl, 'The run lost its schema file');
+        $this->assertStringContainsString('if ($ddl === [] || checkUpdateFail($ddl)) return', substr($code, $ddl, $unit - $ddl), 'The units do not wait for the schema file');
     }
 }

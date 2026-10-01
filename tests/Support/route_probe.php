@@ -89,7 +89,7 @@ function addRouteBase(): array {
     getRoutePdo()->exec('CREATE DATABASE `'.$name.'` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
     $pdo = getRoutePdo($name);
     addRouteSplitter();
-    $sql = getSqlbatch((string)file_get_contents(BASE_DIR.'/setup/sql/table.sql'));
+    $sql = getSqlbatch((string)file_get_contents(BASE_DIR.'/storage/update/sql/table.sql'));
     if ($sql['error'] !== '') throw new RuntimeException('table.sql does not split');
     foreach ($sql['statements'] as $one) $pdo->exec(str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [RPREF, 'InnoDB', 'utf8mb4', 'utf8mb4_unicode_ci'], $one));
     return [$pdo, $name];

@@ -97,7 +97,7 @@ final class BackupContractTest extends TestCase
         $live = $conf['scheduler']['jobs']['dbbackup']['settings'] ?? [];
         $this->assertSame(self::SHIPPED, $live, 'config/scheduler.php drifted away from the settings this test asserts');
         $this->assertSame('0', $live['keep'], 'Retention is on by default, so a fresh install would delete archives on its own');
-        $setup = (string)file_get_contents($root.'/setup/index.php');
+        $setup = (string)file_get_contents($root.'/update.php');
         $from = strpos($setup, '$bset = [');
         $this->assertNotFalse($from, 'The upgrade block no longer fills the backup settings');
         $block = substr($setup, $from, (int)strpos($setup, '];', $from) - $from);

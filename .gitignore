@@ -23,17 +23,14 @@
 /config/changelog.php
 /config/local.php
 
-# Marks of finished 6.3 data updates: written by setup on the site itself, a shipped mark would open a subsystem that was never updated
+# Marks of finished 6.3 data updates: written by setup.php or update.php on the site itself, a shipped mark would open a subsystem that was never updated
 /config/update.php
-
-# The owner key that opens the installer on an installed site; a shipped key would leave every installation open
-/config/setup.unlock
 
 # Backups
 *.bak
 *.backup
 *.sql
-!setup/sql/*.sql
+!storage/update/sql/*.sql
 !tests/Fixtures/*/site.sql
 *.zip
 *.gz

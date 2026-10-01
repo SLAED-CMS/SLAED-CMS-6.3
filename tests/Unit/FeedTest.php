@@ -474,8 +474,8 @@ class FeedTest extends TestCase
     #[Test]
     public function theUpdateClearsTheStoredHtmlOfFeedBlocksAfterTheFieldBlock(): void
     {
-        $code = self::getCode('setup/index.php');
-        $at = strpos($code, '$bodytext .= setUpdateFields($db, $xprefix);');
+        $code = self::getCode('update.php');
+        $at = strpos($code, 'setUpdateFields($db, $pref));');
         $this->assertNotFalse($at);
         $tail = substr($code, $at, 1200);
         $this->assertStringContainsString("SET content = \\'\\', time = \\'0\\' WHERE url != \\'\\'", $tail, 'The body is emptied and the next view refreshes at once');

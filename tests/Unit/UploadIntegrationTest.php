@@ -416,7 +416,7 @@ final class UploadIntegrationTest extends TestCase
         $body = $this->getBody('core/system.php', 'getConfigCode');
         $this->assertStringNotContainsString('$wrap', $body, 'The writer splits a long value across lines again');
         $this->assertStringNotContainsString("\$ind.'    .'", $body, 'The writer emits a concatenation again');
-        $this->assertStringNotContainsString('$wrap', $this->getFile('setup/index.php'), 'The installer writer would produce files the panel writer would not');
+        $this->assertStringNotContainsString('$wrap', $this->getFile('update.php'), 'The update writer would produce files the panel writer would not');
         foreach (['config/filetype.php', 'config/uploads.php', 'config/users.php'] as $path) {
             $this->assertDoesNotMatchRegularExpression("#\n\s+\.'#", $this->getFile($path), $path.' still carries a value split across lines');
         }

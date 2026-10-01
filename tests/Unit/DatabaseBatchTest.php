@@ -135,29 +135,29 @@ class DatabaseBatchTest extends TestCase
         $this->assertSame([PREFIX_DB.'_one'], getSqlFileTables($sql, 'CREATE'), 'An uninstall would touch a table the script never created');
     }
 
-    # All three callers split with the same code: the Inquiry tab, the module installer and the system installer
-    # The file core/admin.php defines functions only, so setup/index.php borrows it before the rest of the system exists and its guard admits the installer by name
-    # A splitter of its own is what this guards against: the one the installer used to carry cut on line endings and would have cut a literal spanning two lines in half
+    # Every caller splits with the same code: the Inquiry tab, the module installer and the 6.3 update
+    # The file core/admin.php defines functions only, so update.php borrows it before the rest of the system exists and its guard admits SETUP_FILE by name
+    # A splitter of its own is what this guards against: the one the old installer carried cut on line endings and would have cut a literal spanning two lines in half
     #[Test]
-    public function theInstallerSplitsWithTheSharedCode(): void
+    public function theUpdateSplitsWithTheSharedCode(): void
     {
-        $setup = (string)file_get_contents(dirname(__DIR__, 2).'/setup/index.php');
+        $setup = (string)file_get_contents(dirname(__DIR__, 2).'/update.php');
         $admin = (string)file_get_contents(dirname(__DIR__, 2).'/core/admin.php');
-        $this->assertStringContainsString("require_once BASE_DIR.'/core/admin.php'", $setup, 'The installer no longer loads the shared splitter');
-        $this->assertStringNotContainsString('function getSqlStatements(', $setup, 'The installer carries a splitter of its own again');
-        $this->assertStringContainsString("!defined('ADMIN_FILE') && !defined('SETUP_FILE')", $admin, 'The shared file refuses the installer that loads it');
-        $from = strpos($setup, 'function getSqlFile(');
-        $this->assertNotFalse($from, 'getSqlFile() is gone from setup/index.php');
+        $this->assertStringContainsString("require_once BASE_DIR.'/core/admin.php'", $setup, 'The update no longer loads the shared splitter');
+        $this->assertStringNotContainsString('function getSqlStatements(', $setup, 'The update carries a splitter of its own again');
+        $this->assertStringContainsString("!defined('ADMIN_FILE') && !defined('SETUP_FILE')", $admin, 'The shared file refuses the update that loads it');
+        $from = strpos($setup, 'function setUpdateSql(');
+        $this->assertNotFalse($from, 'setUpdateSql() is gone from update.php');
         $body = substr($setup, $from, (int)strpos($setup, "\n}\n", $from) - $from);
-        $this->assertStringContainsString('getSqlbatch(', $body, 'The installer does not split through the shared code');
-        $this->assertStringContainsString('getSqlinfo(', $body, 'The installer still guesses the table name of a statement on its own');
+        $this->assertStringContainsString('getSqlbatch(', $body, 'The update does not split through the shared code');
+        $this->assertStringContainsString('getSqlinfo(', $body, 'The update still guesses the table name of a statement on its own');
     }
 
     # The shipped upgrade channel is the case the splitter was found on: every block carries real SQL and an escaped default reaches the driver as written
     #[Test]
     public function theShippedUpgradeSplitsIntoRealStatements(): void
     {
-        $file = dirname(__DIR__, 2).'/setup/sql/table_update6_3.sql';
+        $file = dirname(__DIR__, 2).'/storage/update/sql/table_update6_3.sql';
         $this->assertFileExists($file);
         $out = getSqlbatch((string)file_get_contents($file));
         $this->assertSame('', $out['error']);

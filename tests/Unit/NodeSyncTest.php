@@ -211,7 +211,7 @@ final class NodeSyncTest extends TestCase
         $job = ['title' => 'Node sync', 'type' => 'system', 'active' => '1', 'system' => 'nodesync', 'schedule' => '*/5 * * * *', 'priority' => '7', 'lock_timeout' => '180',
             'manual' => '1', 'settings' => ['limit' => '10']];
         $this->assertSame($job, (require $root.'/config/scheduler.php')['scheduler']['jobs']['nodesync']);
-        $setup = (string)file_get_contents($root.'/setup/index.php');
+        $setup = (string)file_get_contents($root.'/update.php');
         $this->assertStringContainsString("if (is_array(\$sched) && !isset(\$sched['jobs']['nodesync'])) {", $setup);
         $this->assertStringContainsString("'system' => 'nodesync',", $setup);
         $this->assertStringContainsString("const SCHED_LIMITS = ['nodepublish' => 500, 'nodesync' => 50];", (string)file_get_contents($root.'/admin/modules/scheduler.php'));

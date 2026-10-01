@@ -486,7 +486,7 @@ function getFieldsInRows(array $data = []): array {
 }
 
 # Map one declared storage to the room it has, so the editor that renders a field and the write path that stores it read the same number and can never disagree about it
-# The table carries the column type and not a byte count: a type is compared line for line against setup/sql/table.sql by a test, while a map of numbers can only be checked by eye
+# The table carries the column type, not a byte count: a test compares each type line for line with storage/update/sql/table.sql, a map of numbers only an eye can check
 # The config store is a field written into a PHP file rather than a column; no ERROR 1406 waits for it, but it loads on every request reading that config, so it takes TEXT room
 # A store the table does not carry is answered with the narrowest field there is, because a permissive default would make every call site have to be right the first time
 # Whether a field may embed is derived, never stored: the room has to hold a whole data URI of Parser::EMBEDMAX, which TEXT cannot, so a summary field refuses one at any size

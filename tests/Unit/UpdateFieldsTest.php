@@ -7,7 +7,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The fields unit of the 6.3 data update in setup/index.php, whose contract is the one-off conversion of Field in docs/NODE.md (Fields unit)
+# The fields unit of the 6.3 data update in update.php, whose contract is the one-off conversion of Field in docs/NODE.md (Fields unit)
 final class UpdateFieldsTest extends TestCase
 {
     private const USERS = [
@@ -22,7 +22,7 @@ final class UpdateFieldsTest extends TestCase
 
     private static array $probe = [];
 
-    # The probe tests/Support/update_probe.php lifts the shipped functions out of the installer by name into an isolated CLI process on a disposable schema and scratch site
+    # The probe tests/Support/update_probe.php lifts the functions out of update.php by name into an isolated CLI process on a disposable schema and scratch site
     # The manifest, the snapshots, the mark, the definitions and the value rows of the stand are never touched
     # Run the probe once and memoize its report for every test in this class
     private function getRun(string $name): array
@@ -197,7 +197,7 @@ final class UpdateFieldsTest extends TestCase
     public function theSchemaAndTheBranchCarryTheUnit(): void
     {
         $root = dirname(__DIR__, 2);
-        $fresh = (string)file_get_contents($root.'/setup/sql/table.sql');
+        $fresh = (string)file_get_contents($root.'/storage/update/sql/table.sql');
         foreach (['users' => 'field', 'forum' => 'field'] as $tab => $col) {
             $this->assertSame(
                 1,
@@ -205,12 +205,12 @@ final class UpdateFieldsTest extends TestCase
                 $tab.'.'.$col.' is not MEDIUMTEXT in table.sql'
             );
         }
-        $sql = (string)file_get_contents($root.'/setup/sql/table_update6_3.sql');
+        $sql = (string)file_get_contents($root.'/storage/update/sql/table_update6_3.sql');
         $sql = (string)preg_replace('/CREATE TABLE IF NOT EXISTS `\{prefix\}_node[a-z_]*` \(.*?\n\)\s*ENGINE[^;]*;/s', '', $sql);
         $this->assertSame(0, preg_match('/`field`\s+TEXT NOT NULL/', $sql), 'The update narrows a column of extra field values back to TEXT');
         $this->assertSame(2, preg_match_all('/`field`\s+MEDIUMTEXT NOT NULL/', $sql), 'The update does not widen forum.field and users.field');
-        $code = (string)file_get_contents($root.'/setup/index.php');
-        $this->assertSame(1, preg_match('/setUpdatePoints\(\$db, \$xprefix\);\s+\$bodytext \.= setUpdateRatings\(\$db, \$xprefix\);'
-            .'\s+\$bodytext \.= setUpdateFields\(\$db, \$xprefix\);/', $code), 'The order of the units changed');
+        $code = (string)file_get_contents($root.'/update.php');
+        $order = 'setUpdatePoints($db, $pref), setUpdateRatings($db, $pref), setUpdateFields($db, $pref)';
+        $this->assertStringContainsString($order, $code, 'The order of the units changed');
     }
 }

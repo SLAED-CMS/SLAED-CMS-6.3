@@ -47,7 +47,7 @@ final class CommentThreadTest extends TestCase
     #[Test]
     public function theSchemaCarriesTheTreeColumns(): void
     {
-        $code = $this->getFile('setup/sql/table.sql');
+        $code = $this->getFile('storage/update/sql/table.sql');
         $beg = strpos($code, 'CREATE TABLE `{prefix}_comment`');
         $this->assertNotFalse($beg);
         $table = substr($code, $beg, strpos($code, ';', $beg) - $beg);
@@ -60,7 +60,7 @@ final class CommentThreadTest extends TestCase
     #[Test]
     public function theUpgradeBackfillsBeforeItIndexes(): void
     {
-        foreach (['setup/sql/table_update6_3.sql'] as $file) {
+        foreach (['storage/update/sql/table_update6_3.sql'] as $file) {
             $code = $this->getFile($file);
             $this->assertStringContainsString("CALL delcol('{prefix}_comment', 'path')", $code, $file.' does not drop the path column');
             $this->assertStringContainsString("CALL delidx('{prefix}_comment', 'modul_cid_path')", $code, $file.' does not drop the path index');
@@ -74,9 +74,9 @@ final class CommentThreadTest extends TestCase
     #[Test]
     public function theFirstPublicationIsDeclaredInBothChannels(): void
     {
-        $code = $this->getFile('setup/sql/table.sql');
+        $code = $this->getFile('storage/update/sql/table.sql');
         $this->assertStringContainsString("`status` BOOLEAN NOT NULL DEFAULT 0,\n  `shown` DATETIME DEFAULT NULL,", $code, 'The fresh schema does not keep shown behind status');
-        $code = $this->getFile('setup/sql/table_update6_3.sql');
+        $code = $this->getFile('storage/update/sql/table_update6_3.sql');
         $this->assertStringContainsString("CALL poscol('{prefix}_comment', 'shown', 'DATETIME DEFAULT NULL', 'status');", $code, 'The upgrade does not place shown behind status');
         $fill = strpos($code, 'UPDATE `{prefix}_comment` SET `shown` = `time` WHERE `status` = 1 AND `shown` IS NULL;');
         $this->assertNotFalse($fill, 'The upgrade does not fill shown of the published comments');

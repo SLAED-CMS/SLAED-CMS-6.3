@@ -7,14 +7,14 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The 6.3 update of setup/index.php carries a real 6.2 site over (docs/NODE.md, The 6.3 update)
+# The 6.3 update of update.php carries a real 6.2 site over (docs/NODE.md, The 6.3 update)
 final class UpdateSiteTest extends TestCase
 {
     private static array $probe = [];
 
     # The fixture tests/Fixtures/update62 holds the CREATE TABLE statements of all 33 tables a real 6.2 site dumped, a small invented seed and the 6.2 configuration files
     # The probe tests/Support/install_probe.php in its update mode loads it into a disposable MariaDB database and serves a copy of the release around it
-    # Over real HTTP the installer is refused without the key and by the preflight, stopped by a broken schema file, then runs first, after changed switches and a third time
+    # Over real HTTP update.php opens without a login, its run is refused by the preflight, stopped by a broken schema file, then runs three times
     # The result is compared with a clean installation, two guests vote in one poll, the panel and Node are walked, and a last run follows a deleted material
     # The fixture tests/Fixtures/update62early is an earlier 6.2 site with narrower and signed columns the same update brings to the same clean schema
     # Run the update probe once per 6.2 fixture and memoize its update report; both use the configuration of update62, a probe that fails is a failure, not a skip
@@ -42,8 +42,8 @@ final class UpdateSiteTest extends TestCase
         $this->assertSame(['old_probe_missing'], $fail, 'The first schema run failed on more than the broken statement');
     }
 
-    # The fixture loads, the installer refuses without the key and on a MyISAM table without touching a file, and a broken schema file stops before any unit
-    # Four wrong codes are counted in the key, the right code clears the count, and the fifth wrong code in a row removes the key
+    # The fixture loads, the page of the first stage offers the run and writes nothing, the preflight refuses a MyISAM table without touching a file
+    # A broken schema file stops before any unit
     # A registry stop before the mark modules leaves config/modules.php alone, and the next run, over a broken schema file, reads the 6.2 table as the first and writes the mark
     #[Test]
     public function theUpdateRefusesBeforeItWritesAnything(): void
@@ -51,10 +51,9 @@ final class UpdateSiteTest extends TestCase
         $run = $this->getRun();
         $this->assertSame([0, ''], $run['dump']);
         $this->assertSame([3, 35], $run['before']);
-        $this->assertSame([true, true], $run['lock']);
-        $this->assertSame([true, true, true], $run['refuse']);
+        $this->assertSame([200, true, [], true], $run['page'], 'The page of the first stage does not offer the run, shows a report or writes a file');
+        $this->assertSame([true, true], $run['refuse']);
         $this->assertSame([200, true, '0'], $run['guest']);
-        $this->assertSame(['4', 1, false, true], $run['key'], 'The key does not count wrong codes, keeps a count after the right one, or survives the fifth');
         $this->assertStringContainsString('module registry: old_modules could not be read', $run['nomods'][0]);
         $this->assertSame([[], true, 0], array_slice($run['nomods'], 1), 'A registry that could not be read left the mark modules or wrote the file');
         $this->checkBrokenRun($run);
@@ -82,7 +81,6 @@ final class UpdateSiteTest extends TestCase
         }
         $this->assertSame(['account', 'forum'], array_keys($run['first']['ratings']));
         $this->assertTrue($run['third']['same']);
-        $this->assertFalse($run['unlock']);
     }
 
     # The structure after three runs over the 6.2 schema equals a clean installation of the release, table for table, column for column and index for index
@@ -114,7 +112,7 @@ final class UpdateSiteTest extends TestCase
     }
 
     # The panel stays myadm.php, now the shipped loader in place of the one of 6.2
-    # The language and the address of the 6.2 site survive an installer asked in German on another host
+    # The language and the address of the 6.2 site survive an update asked on another host
     # The blocks of removed modules are switched off with their names while a block of the owner stays, and the switches of the owner survive the repeat
     #[Test]
     public function theSiteKeepsWhatItOwns(): void

@@ -142,9 +142,9 @@ class PhpFileFormatTest extends TestCase
     public function testSqlCommentsWithoutPeriod(): void
     {
         $errors = [];
-        foreach (glob(self::$basePath.'/setup/sql/*.sql') as $file) {
+        foreach (glob(self::$basePath.'/storage/update/sql/*.sql') as $file) {
             foreach (explode("\n", file_get_contents($file)) as $i => $text) {
-                if (preg_match('/^\s*#.*\.\s*$/', $text)) $errors[] = 'setup/sql/'.basename($file).':'.($i + 1).' - комментарий кончается точкой';
+                if (preg_match('/^\s*#.*\.\s*$/', $text)) $errors[] = 'storage/update/sql/'.basename($file).':'.($i + 1).' - комментарий кончается точкой';
             }
         }
         $this->assertEmpty($errors, "Точки в SQL-комментариях (.rules/global.md, Comments):\n".implode("\n", $errors));

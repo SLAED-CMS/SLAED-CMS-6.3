@@ -180,7 +180,7 @@ function addProbeSplitter(): void {
 
 # The statements of one shipped SQL file with the placeholders filled the way the installer fills them
 function getProbeStatements(string $file, string $pref = PROBEPREF): array {
-    $sql = getSqlbatch((string)file_get_contents(BASE_DIR.'/setup/sql/'.$file));
+    $sql = getSqlbatch((string)file_get_contents(BASE_DIR.'/storage/update/sql/'.$file));
     if ($sql['error'] !== '') throw new RuntimeException($file.' does not split: '.$sql['error']);
     $fill = static fn(string $one): string => str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [$pref, 'InnoDB', 'utf8mb4', 'utf8mb4_unicode_ci'], $one);
     return array_map($fill, $sql['statements']);

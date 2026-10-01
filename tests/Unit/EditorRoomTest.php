@@ -65,7 +65,7 @@ class EditorRoomTest extends TestCase
     # Every column the fresh schema declares, as table.column => type, which is what a room entry has to agree with
     private function getSchema(): array
     {
-        preg_match_all('#CREATE\s+TABLE\s+`\{prefix\}_([a-z0-9_]+)`\s*\((.*?)\n\)\s*ENGINE#is', $this->getFile('setup/sql/table.sql'), $blocks, PREG_SET_ORDER);
+        preg_match_all('#CREATE\s+TABLE\s+`\{prefix\}_([a-z0-9_]+)`\s*\((.*?)\n\)\s*ENGINE#is', $this->getFile('storage/update/sql/table.sql'), $blocks, PREG_SET_ORDER);
         $out = [];
         foreach ($blocks as $block) {
             foreach (explode("\n", $block[2]) as $line) {
@@ -73,7 +73,7 @@ class EditorRoomTest extends TestCase
                 $out[$block[1].'.'.strtolower($col[1])] = strtolower($col[2]);
             }
         }
-        $this->assertNotEmpty($out, 'setup/sql/table.sql parsed to no column at all');
+        $this->assertNotEmpty($out, 'storage/update/sql/table.sql parsed to no column at all');
         return $out;
     }
 
@@ -175,7 +175,7 @@ class EditorRoomTest extends TestCase
         foreach ($this->getTable() as $store => $kind) {
             if ($kind === 'config') continue;
             $this->assertArrayHasKey($store, $schema, 'The room table carries '.$store.', which the fresh schema does not declare at all');
-            $this->assertSame($schema[$store], $kind, 'The room table calls '.$store.' a '.$kind.' and setup/sql/table.sql creates it as a '.$schema[$store]);
+            $this->assertSame($schema[$store], $kind, 'The room table calls '.$store.' a '.$kind.' and storage/update/sql/table.sql creates it as a '.$schema[$store]);
         }
     }
 

@@ -26,7 +26,7 @@ final class PrivatMigrationTest extends TestCase
         return self::$probe = $data;
     }
 
-    # Every channel and every state ends on the table setup/sql/table.sql declares, column order and index set included
+    # Every channel and every state ends on the table storage/update/sql/table.sql declares, column order and index set included
     #[Test]
     public function everyChannelEndsOnTheFreshSchema(): void
     {

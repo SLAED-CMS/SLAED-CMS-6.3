@@ -52,7 +52,7 @@ function getProbeRoot(): PDO {
 
 # One shipped CREATE TABLE out of the fresh schema, filled for the disposable database, so the class is driven against the table an installation really carries
 function getProbeTable(string $name): string {
-    $text = (string)file_get_contents(BASE_DIR.'/setup/sql/table.sql');
+    $text = (string)file_get_contents(BASE_DIR.'/storage/update/sql/table.sql');
     if (!preg_match('/CREATE TABLE `\{prefix\}_'.$name.'`.*?\n\)\s*ENGINE=[^;]*;/s', $text, $hit)) throw new RuntimeException('table.sql carries no '.$name.' table');
     return str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [PREFIX_DB, 'InnoDB', 'utf8mb4', 'utf8mb4_unicode_ci'], $hit[0]);
 }

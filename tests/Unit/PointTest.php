@@ -19,7 +19,7 @@ final class PointTest extends TestCase
     private static array $probe = [];
 
     # The probe tests/Support/point_probe.php boots the real core in an isolated CLI process against a disposable schema of the shipped account table and journal
-    # The same run executes the DDL of setup/sql/table.sql, every persistent result is read by a connection of its own, and the site database is never touched
+    # The same run executes the DDL of storage/update/sql/table.sql, every persistent result is read by a connection of its own, and the site database is never touched
     # Run the probe once and memoize its report for every test in this class
     private function getProbe(): array
     {

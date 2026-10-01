@@ -382,7 +382,7 @@ final class NodeServiceTest extends TestCase
     }
 
     # The job is registered in all four places of the scheduler and returns its statuses: the map and the dispatch of core/system.php, the shipped configuration
-    # The update branch in setup/index.php adds the job too, and the adapter builds the one trusted background context
+    # The 6.3 update in update.php adds the job too, and the adapter builds the one trusted background context
     #[Test]
     public function theJobIsRegisteredInTheFourPlacesOfTheScheduler(): void
     {
@@ -396,9 +396,9 @@ final class NodeServiceTest extends TestCase
         $job = $conf['scheduler']['jobs']['nodepublish'] ?? [];
         $this->assertSame(['system', '1', 'nodepublish', '* * * * *', '180', '1', ['limit' => '50']], [$job['type'] ?? '', $job['active'] ?? '', $job['system'] ?? '',
             $job['schedule'] ?? '', $job['lock_timeout'] ?? '', $job['manual'] ?? '', $job['settings'] ?? []]);
-        $setup = (string)file_get_contents(self::getRoot().'/setup/index.php');
+        $setup = (string)file_get_contents(self::getRoot().'/update.php');
         $this->assertStringContainsString("if (is_array(\$sched) && !isset(\$sched['jobs']['nodepublish'])) {", $setup);
-        $this->assertStringContainsString("'schedule' => '* * * * *',\n                    'priority' => '6',\n                    'lock_timeout' => '180',", $setup);
+        $this->assertStringContainsString("'schedule' => '* * * * *',\n            'priority' => '6',\n            'lock_timeout' => '180',", $setup);
     }
 
     # Counters: a view counts a readable publication only and is rewarded once, and comments and ratings are written only inside the transaction of their owner

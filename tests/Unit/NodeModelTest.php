@@ -39,7 +39,7 @@ final class NodeModelTest extends TestCase
     # One shipped SQL file
     private static function getSql(string $name): string
     {
-        return (string)file_get_contents(dirname(__DIR__, 2).'/setup/sql/'.$name);
+        return (string)file_get_contents(dirname(__DIR__, 2).'/storage/update/sql/'.$name);
     }
 
     # A function or method as its parameters, each written as type, name and default
