@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Диалог &middot; Установщик — стенд SLAED CMS</title>
+  <link rel="icon" type="image/svg+xml" href="../templates/admin/images/favicon.svg">
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheet and script are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '">');</script>
+  <style>
+    /* 06 Диалог. The installation as a conversation: SLAED asks, the answer is given in a bubble under the question,
+       an answered turn folds into one short reply and the next question appears below. The whole exchange stays in
+       view, and a click on any reply goes back to that question */
+    body {
+      background: var(--sl-surface);
+    }
+
+    .v-page {
+      width: min(760px, calc(100vw - var(--sl-space-6) * 2));
+      margin: 0 auto;
+      padding: var(--sl-space-8) 0 var(--sl-space-8);
+    }
+
+    .v-top {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-5);
+      margin-bottom: var(--sl-space-8);
+      padding-bottom: var(--sl-space-6);
+      border-bottom: 1px solid var(--sl-border);
+    }
+
+    .v-top img {
+      width: var(--sl-size-icon-xl);
+    }
+
+    .v-top b {
+      display: block;
+      font-size: var(--sl-font-h3);
+    }
+
+    .v-top span {
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-top span::before {
+      content: "";
+      display: inline-block;
+      width: var(--sl-space-3);
+      height: var(--sl-space-3);
+      margin-right: var(--sl-space-3);
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-success);
+    }
+
+    .v-turn[data-done="false"]:not([aria-current="true"]) {
+      display: none;
+    }
+
+    .v-turn {
+      display: grid;
+      gap: var(--sl-space-4);
+      margin-bottom: var(--sl-space-7);
+    }
+
+    .v-turn[aria-current="true"] {
+      animation: v-rise var(--sl-time-slow) var(--sl-ease-out);
+    }
+
+    @keyframes v-rise {
+      from { opacity: 0; transform: translateY(12px); }
+    }
+
+    .v-say {
+      display: grid;
+      grid-template-columns: var(--sl-size-tile) minmax(0, 1fr);
+      gap: var(--sl-space-5);
+      align-items: start;
+    }
+
+    .v-say > img {
+      width: var(--sl-size-tile);
+      height: var(--sl-size-tile);
+      padding: var(--sl-space-3);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-bg);
+      box-sizing: border-box;
+    }
+
+    .v-bub {
+      justify-self: start;
+      max-width: 100%;
+      padding: var(--sl-space-6) var(--sl-space-7);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-1) var(--sl-radius-3) var(--sl-radius-3) var(--sl-radius-3);
+      background: var(--sl-bg);
+      box-shadow: var(--sl-shadow-xs);
+      box-sizing: border-box;
+    }
+
+    .v-bub > p {
+      margin: 0;
+      font-size: var(--sl-font-h3);
+      line-height: var(--sl-line-normal);
+    }
+
+    .v-bub > p + p {
+      margin-top: var(--sl-space-3);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-body);
+    }
+
+    .v-turn[data-done="true"] .v-bub > p {
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-body);
+    }
+
+    .v-turn[data-done="true"] .v-bub > p + p,
+    .v-turn[data-done="true"] .v-bub > :not(p) {
+      display: none;
+    }
+
+    .v-turn[data-done="true"] .v-bub {
+      padding: var(--sl-space-4) var(--sl-space-6);
+      box-shadow: none;
+    }
+
+    /* The reply: a form card while the question is open, a blue bubble with the answer once it is given */
+    .v-reply {
+      justify-self: end;
+      width: min(560px, 100%);
+      margin-left: calc(var(--sl-size-tile) + var(--sl-space-5));
+      padding: var(--sl-space-6) var(--sl-space-7);
+      border: 1px solid var(--sl-primary-muted);
+      border-radius: var(--sl-radius-3) var(--sl-radius-1) var(--sl-radius-3) var(--sl-radius-3);
+      background: var(--sl-bg);
+      box-shadow: var(--sl-shadow-raised);
+      box-sizing: border-box;
+    }
+
+    .v-ans {
+      display: none;
+      justify-self: end;
+      padding: var(--sl-space-4) var(--sl-space-6);
+      border: 0;
+      border-radius: var(--sl-radius-3) var(--sl-radius-1) var(--sl-radius-3) var(--sl-radius-3);
+      background: var(--sl-primary);
+      color: var(--sl-on-solid);
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .v-ans::after {
+      content: "\f4ca";
+      margin-left: var(--sl-space-4);
+      font-family: bootstrap-icons;
+      opacity: var(--sl-fade-muted);
+    }
+
+    .v-turn[data-done="true"] .v-reply {
+      display: none;
+    }
+
+    .v-turn[data-done="true"] .v-ans {
+      display: block;
+    }
+
+    .v-fields {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--sl-space-5) var(--sl-space-6);
+    }
+
+    .v-fields > label,
+    .v-fields > div {
+      display: grid;
+      gap: var(--sl-space-2);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-fields > .v-wide {
+      grid-column: 1 / -1;
+    }
+
+    .v-fields input {
+      width: 100%;
+      box-sizing: border-box;
+      color: var(--sl-text);
+      font-size: var(--sl-font-body);
+    }
+
+    .v-fields small {
+      color: var(--sl-text-subtle);
+    }
+
+    .v-act {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: var(--sl-space-5);
+      margin-top: var(--sl-space-6);
+    }
+
+    .v-act :is(button, a),
+    .v-base > .sl-but {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+    }
+
+    .v-reply > .v-act:only-child {
+      margin-top: 0;
+    }
+
+    .v-act kbd {
+      color: var(--sl-text-subtle);
+      font-family: inherit;
+      font-size: var(--sl-font-small);
+    }
+
+    .v-pills {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: var(--sl-space-3);
+    }
+
+    .v-pills label {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      padding: var(--sl-space-3) var(--sl-space-6) var(--sl-space-3) var(--sl-space-3);
+      border: 1px solid var(--sl-primary-muted);
+      border-radius: var(--sl-radius-pill);
+      color: var(--sl-primary-strong);
+      cursor: pointer;
+    }
+
+    .v-pills label:has(:checked) {
+      background: var(--sl-primary);
+      color: var(--sl-on-solid);
+    }
+
+    .v-pills input {
+      position: absolute;
+      opacity: 0;
+    }
+
+    .v-pills img {
+      width: var(--sl-size-icon-md);
+      height: var(--sl-size-icon-md);
+      border-radius: var(--sl-radius-circle);
+      object-fit: cover;
+    }
+
+    .v-checks {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--sl-space-2) var(--sl-space-7);
+      margin: var(--sl-space-5) 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .v-checks li {
+      display: flex;
+      gap: var(--sl-space-3);
+      align-items: baseline;
+      transition: opacity var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-checks li[data-state="wait"] {
+      opacity: 0;
+    }
+
+    .v-checks .bi {
+      color: var(--sl-success);
+    }
+
+    .v-checks span {
+      overflow: hidden;
+      color: var(--sl-text-subtle);
+      font-size: var(--sl-font-small);
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .v-base {
+      display: grid;
+      gap: var(--sl-space-4);
+      margin-top: var(--sl-space-6);
+      padding-top: var(--sl-space-6);
+      border-top: 1px solid var(--sl-border);
+    }
+
+    .v-base .sl-but {
+      justify-self: start;
+    }
+
+    .v-base[data-run="idle"] .v-checks {
+      display: none;
+    }
+
+    .v-base .v-checks {
+      grid-template-columns: 1fr;
+      margin: 0;
+    }
+
+    .v-run {
+      margin-top: var(--sl-space-6);
+    }
+
+    .v-run .sl-progress-line div {
+      width: calc(var(--d-run) * 100%);
+      transition: width var(--sl-time-fast) linear;
+    }
+
+    .v-run p {
+      display: flex;
+      justify-content: space-between;
+      gap: var(--sl-space-5);
+      margin: var(--sl-space-4) 0 0;
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-run ol {
+      display: none;
+    }
+
+    .v-final {
+      border-color: var(--sl-success);
+    }
+
+    .v-final > p:first-child::before {
+      content: "\f26a";
+      margin-right: var(--sl-space-4);
+      font-family: bootstrap-icons;
+      color: var(--sl-success);
+    }
+
+    .v-final dl {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: var(--sl-space-3) var(--sl-space-6);
+      margin: var(--sl-space-6) 0;
+    }
+
+    .v-final dt {
+      color: var(--sl-text-muted);
+    }
+
+    .v-final dd {
+      margin: 0;
+    }
+
+    .v-final .sl-alert {
+      margin: 0;
+    }
+
+    .v-final .v-act {
+      justify-content: flex-start;
+    }
+
+    .v-about {
+      margin-top: var(--sl-space-8);
+    }
+
+    @media (max-width: 560px) {
+      .v-fields,
+      .v-checks {
+        grid-template-columns: 1fr;
+      }
+
+      .v-reply {
+        margin-left: 0;
+      }
+    }
+  </style>
+</head>
+<body class="sl-admin-shell">
+  <div class="v-page">
+    <div class="v-top">
+      <img src="../templates/admin/images/logos/slaed-logo-mark-gradient-blue.svg" alt="">
+      <div><b>SLAED CMS 8.0</b><span>Установка, новая</span></div>
+    </div>
+
+    <div data-demo-steps>
+
+      <div class="v-turn" data-demo-rail>
+        <div class="v-say"><img src="../templates/admin/images/logos/slaed-logo-mark-gradient-blue.svg" alt=""><div class="v-bub">
+          <p>Здравствуйте! Я установлю SLAED CMS 8.0. На каком языке говорим?</p>
+          <p>Он же станет языком сайта по умолчанию. Остальные пять останутся доступны посетителям.</p>
+        </div></div>
+        <div class="v-reply">
+          <div class="v-pills">
+            <label><input type="radio" name="lang" value="en"><img src="../templates/admin/images/flags/gb.svg" alt="">English</label>
+            <label><input type="radio" name="lang" value="de"><img src="../templates/admin/images/flags/de.svg" alt="">Deutsch</label>
+            <label><input type="radio" name="lang" value="fr"><img src="../templates/admin/images/flags/fr.svg" alt="">Français</label>
+            <label><input type="radio" name="lang" value="pl"><img src="../templates/admin/images/flags/pl.svg" alt="">Polski</label>
+            <label><input type="radio" name="lang" value="ru" checked><img src="../templates/admin/images/flags/ru.svg" alt="">Русский</label>
+            <label><input type="radio" name="lang" value="uk"><img src="../templates/admin/images/flags/ua.svg" alt="">Українська</label>
+          </div>
+          <div class="v-act"><button type="button" class="sl-but-blue" data-demo-go="next">Ответить <i class="bi bi-send"></i></button></div>
+        </div>
+        <button type="button" class="v-ans" data-demo-go="0">Русский</button>
+      </div>
+
+      <div class="v-turn" data-demo-rail>
+        <div class="v-say"><img src="../templates/admin/images/logos/slaed-logo-mark-gradient-blue.svg" alt=""><div class="v-bub">
+          <p>Сначала посмотрю на сервер.</p>
+          <p>Всё, что нужно системе, на месте.</p>
+          <div data-demo-run="auto" data-demo-run-rows="server" data-demo-run-ms="140">
+            <ul class="v-checks" data-demo-run-list><template><li><i class="bi bi-check-circle-fill"></i><b data-demo-task-text></b><span data-demo-task-note></span></li></template></ul>
+          </div>
+        </div></div>
+        <div class="v-reply">
+          <div class="v-act"><kbd>PHP 8.4.12, 10 из 10</kbd><button type="button" class="sl-but-blue" data-demo-go="next">Хорошо, дальше <i class="bi bi-send"></i></button></div>
+        </div>
+        <button type="button" class="v-ans" data-demo-go="1">Хорошо, дальше</button>
+      </div>
+
+      <div class="v-turn" data-demo-rail>
+        <div class="v-say"><img src="../templates/admin/images/logos/slaed-logo-mark-gradient-blue.svg" alt=""><div class="v-bub">
+          <p>Где лежит база данных?</p>
+          <p>Нужна MariaDB 10.5.2 или новее. Базу создайте заранее — таблицы я создам сам.</p>
+        </div></div>
+        <div class="v-reply">
+          <div class="v-fields">
+            <label>Сервер<input type="text" value="localhost" required></label>
+            <label>Название базы<input type="text" value="slaed_cms" required></label>
+            <label>Пользователь<input type="text" value="slaed" autocomplete="off" required></label>
+            <label>Пароль<input type="password" value="db-secret-pass" autocomplete="new-password"></label>
+            <label class="v-wide">Префикс таблиц<input type="text" value="Kx7mQ2w9Ra" required><small>Случайный — по нему таблицы не угадать</small></label>
+          </div>
+          <div class="v-base" data-demo-run data-demo-run-rows="base" data-demo-run-ms="380">
+            <button type="button" class="sl-but" data-demo-run-go><i class="bi bi-plug"></i> Проверить подключение</button>
+            <ul class="v-checks" data-demo-run-list><template><li><i class="bi bi-check-circle-fill"></i><b data-demo-task-text></b><span data-demo-task-note></span></li></template></ul>
+          </div>
+          <div class="v-act"><button type="button" class="sl-but" data-demo-go="prev">Назад</button><button type="button" class="sl-but-blue" data-demo-go="next">Ответить <i class="bi bi-send"></i></button></div>
+        </div>
+        <button type="button" class="v-ans" data-demo-go="2">slaed@localhost, база slaed_cms, префикс Kx7mQ2w9Ra</button>
+      </div>
+
+      <div class="v-turn" data-demo-rail>
+        <div class="v-say"><img src="../templates/admin/images/logos/slaed-logo-mark-gradient-blue.svg" alt=""><div class="v-bub">
+          <p>Как назовём сайт?</p>
+          <p>Адрес я определил по запросу. Файл панели переименую, чтобы её адрес нельзя было угадать.</p>
+        </div></div>
+        <div class="v-reply">
+          <div class="v-fields">
+            <label class="v-wide">Название сайта<input type="text" value="Мой сайт" required></label>
+            <label>Адрес сайта<input type="url" value="https://slaed.loc" required></label>
+            <label>Файл панели<input type="text" value="q4vz8kx2ma" required><small>admin.php станет q4vz8kx2ma.php</small></label>
+          </div>
+          <div class="v-act"><button type="button" class="sl-but" data-demo-go="prev">Назад</button><button type="button" class="sl-but-blue" data-demo-go="next">Ответить <i class="bi bi-send"></i></button></div>
+        </div>
+        <button type="button" class="v-ans" data-demo-go="3">«Мой сайт» на https://slaed.loc</button>
+      </div>
+
+      <div class="v-turn" data-demo-rail>
+        <div class="v-say"><img src="../templates/admin/images/logos/slaed-logo-mark-gradient-blue.svg" alt=""><div class="v-bub">
+          <p>Кто будет администратором?</p>
+          <p>Это первый администратор сайта. Остальных добавите в панели.</p>
+        </div></div>
+        <div class="v-reply">
+          <div class="v-fields">
+            <label>Ник<input type="text" value="slaed" maxlength="25" autocomplete="username" required></label>
+            <label>E-mail<input type="email" value="admin@slaed.loc" required></label>
+            <label>Пароль<input type="password" value="owner-pass-2026" maxlength="25" autocomplete="new-password" required></label>
+            <label>Повтор пароля<input type="password" value="owner-pass-2026" maxlength="25" autocomplete="new-password" required></label>
+            <div class="v-wide">Аккаунт на сайте с тем же ником и паролем<div class="sl-radio-group sl-radio-switch"><label class="sl-radio"><input type="radio" name="auser" value="1" checked>Да</label><label class="sl-radio"><input type="radio" name="auser" value="0">Нет</label></div></div>
+          </div>
+          <div class="v-act"><button type="button" class="sl-but" data-demo-go="prev">Назад</button><button type="button" class="sl-but-green" data-demo-go="next"><i class="bi bi-download"></i> Устанавливай</button></div>
+        </div>
+        <button type="button" class="v-ans" data-demo-go="4">slaed, admin@slaed.loc, аккаунт на сайте тоже</button>
+      </div>
+
+      <div class="v-turn" data-demo-rail>
+        <div class="v-say"><img src="../templates/admin/images/logos/slaed-logo-mark-gradient-blue.svg" alt=""><div class="v-bub">
+          <p>Устанавливаю.</p>
+          <p>Ничего не нужно делать: пишу конфигурацию и создаю таблицы.</p>
+          <div class="v-run" data-demo-run="auto" data-demo-run-rows="install" data-demo-run-then="v-after">
+            <div class="sl-progress-line sl-progress-1"><div></div></div>
+            <p><span data-demo-run-label>подготовка</span><b><span data-demo-run-num>0</span>%</b></p>
+            <ol data-demo-run-list><template><li><b data-demo-task-text></b><span data-demo-task-note></span></li></template></ol>
+          </div>
+          <button type="button" id="v-after" data-demo-go="next" hidden></button>
+        </div></div>
+      </div>
+
+      <div class="v-turn" data-demo-rail>
+        <div class="v-say"><img src="../templates/admin/images/logos/slaed-logo-mark-gradient-blue.svg" alt=""><div class="v-bub v-final">
+          <p>Готово! SLAED CMS 8.0 установлена: 34 таблицы, 12 модулей, 6 языков.</p>
+          <dl>
+            <dt>Сайт</dt><dd><a href="../index.php">https://slaed.loc</a></dd>
+            <dt>Панель</dt><dd><a href="../admin.php">https://slaed.loc/q4vz8kx2ma.php</a> — сохраните адрес, ссылки с сайта нет</dd>
+            <dt>Администратор</dt><dd>slaed, admin@slaed.loc</dd>
+          </dl>
+          <div class="sl-alert sl-alert-success"><div class="sl-alert-body">Установщик удалил себя: setup.php на сервере больше нет.</div></div>
+          <div class="v-act"><a class="sl-but" href="../index.php"><i class="bi bi-globe2"></i> Открыть сайт</a><a class="sl-but-blue" href="../admin.php"><i class="bi bi-box-arrow-in-right"></i> Войти в панель</a></div>
+        </div></div>
+      </div>
+
+    </div>
+
+    <div class="sl-box v-about" data-demo-about></div>
+  </div>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

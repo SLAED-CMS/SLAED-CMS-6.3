@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Порог &middot; Сезон &middot; Установщик — стенд SLAED CMS</title>
+  <link rel="icon" type="image/svg+xml" href="../templates/lite/images/favicon.svg">
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheet and script are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '">');</script>
+  <style>
+    /* 12 Порог · Сезон. The door of 01 moved onto the site theme: the season photo band of the site head carries the
+       title in Magistral, the card rises over its lower edge, the switch of the light mode sits in the card head as
+       it sits in the top bar of the site, and the season falls across the page - snow, petals, glints or leaves,
+       whichever season the body names. The live installer would pick the season by the month */
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--sl-bg-subtle);
+      overflow-x: hidden;
+    }
+
+    .v-band .sl-wrp {
+      align-items: flex-start;
+      padding-top: var(--sl-space-6);
+    }
+
+    .v-band h1 {
+      color: inherit;
+    }
+
+    .v-band small {
+      display: block;
+      margin-top: var(--sl-space-2);
+      font-size: var(--sl-font-small);
+      opacity: var(--sl-fade-subtle);
+    }
+
+    .v-stage {
+      position: relative;
+      z-index: var(--sl-z-raised);
+      flex: 1;
+      width: min(520px, calc(100vw - var(--sl-space-6) * 2));
+      margin: calc(var(--sl-space-9) * -1) auto var(--sl-space-10);
+    }
+
+    .v-card {
+      overflow: hidden;
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-3);
+      background: var(--sl-bg);
+      box-shadow: var(--sl-shadow-float);
+    }
+
+    .v-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--sl-space-6);
+      padding: var(--sl-space-6) var(--sl-space-8);
+      border-bottom: 1px solid var(--sl-border);
+    }
+
+    .v-head img {
+      height: var(--sl-size-tile);
+    }
+
+    /* The switch of the site top bar; the stand writes aria-pressed where the site writes sl-is-active */
+    .v-head .sl-mode-cell[aria-pressed="true"] {
+      opacity: 0;
+    }
+
+    .v-head .sl-mode-rail:has(.sl-mode-cell:nth-child(2)[aria-pressed="true"]) .sl-mode-knob {
+      transform: translateX(var(--sl-mode-width));
+    }
+
+    .v-head .sl-mode-rail:has(.sl-mode-cell:nth-child(3)[aria-pressed="true"]) .sl-mode-knob {
+      transform: translateX(calc(var(--sl-mode-width) * 2));
+    }
+
+    .v-knob-light,
+    .v-knob-auto,
+    .v-knob-dark {
+      display: none;
+    }
+
+    .v-head .sl-mode-rail:has(.sl-mode-cell:nth-child(1)[aria-pressed="true"]) .v-knob-light,
+    .v-head .sl-mode-rail:has(.sl-mode-cell:nth-child(2)[aria-pressed="true"]) .v-knob-auto,
+    .v-head .sl-mode-rail:has(.sl-mode-cell:nth-child(3)[aria-pressed="true"]) .v-knob-dark {
+      display: inline;
+    }
+
+    /* The road: seven numbered stops on one thread, the thread filling up to where the reader stands */
+    .v-path {
+      --v-fill: calc((var(--d-step, 1) - 1) / 6 * 100%);
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      margin: 0;
+      padding: var(--sl-space-7) var(--sl-space-6) var(--sl-space-2);
+      list-style: none;
+    }
+
+    .v-path::before,
+    .v-path::after {
+      content: "";
+      position: absolute;
+      top: calc(var(--sl-space-7) + var(--sl-size-chip) / 2 - 1px);
+      left: calc(var(--sl-space-6) + 100% / 14);
+      height: 2px;
+      background: var(--sl-border);
+    }
+
+    .v-path::before {
+      right: calc(var(--sl-space-6) + 100% / 14);
+    }
+
+    .v-path::after {
+      width: calc((100% - var(--sl-space-6) * 2) / 7 * 6 * (var(--d-step, 1) - 1) / 6);
+      background: var(--sl-primary);
+      transition: width var(--sl-time-slow) var(--sl-ease-out);
+    }
+
+    .v-path button {
+      position: relative;
+      z-index: var(--sl-z-raised);
+      display: grid;
+      justify-items: center;
+      gap: var(--sl-space-2);
+      width: 100%;
+      padding: 0;
+      border: 0;
+      background: none;
+      color: var(--sl-text-subtle);
+      font: inherit;
+      font-size: var(--sl-font-micro);
+      cursor: pointer;
+    }
+
+    .v-path b {
+      display: grid;
+      place-items: center;
+      width: var(--sl-size-chip);
+      height: var(--sl-size-chip);
+      border: 2px solid var(--sl-border);
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-bg);
+      box-sizing: border-box;
+      font-weight: var(--sl-weight-semibold);
+      transition: background-color var(--sl-time-slow) var(--sl-ease-out), border-color var(--sl-time-slow) var(--sl-ease-out);
+    }
+
+    .v-path [data-done="true"] b {
+      border-color: var(--sl-primary);
+      background: var(--sl-primary);
+      color: var(--sl-on-solid);
+      font-size: 0;
+    }
+
+    .v-path [data-done="true"] b::before {
+      content: "\f633";
+      font-family: bootstrap-icons;
+      font-size: var(--sl-font-small);
+    }
+
+    .v-path [aria-current="true"] b {
+      border-color: var(--sl-primary);
+      color: var(--sl-primary);
+      box-shadow: var(--sl-shadow-focus);
+    }
+
+    .v-path [aria-current="true"] button {
+      color: var(--sl-text);
+    }
+
+    .v-body {
+      padding: var(--sl-space-6) var(--sl-space-8) var(--sl-space-8);
+    }
+
+    .v-body h2 {
+      margin: 0 0 var(--sl-space-3);
+      font-size: var(--sl-font-h1);
+    }
+
+    .v-lead {
+      margin: 0 0 var(--sl-space-6);
+      color: var(--sl-text-muted);
+    }
+
+    .v-langs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--sl-space-3);
+    }
+
+    .v-langs label {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      padding: var(--sl-space-3) var(--sl-space-4);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-pill);
+      cursor: pointer;
+      transition: border-color var(--sl-time-base) var(--sl-ease-out), background-color var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-langs label:hover {
+      border-color: var(--sl-primary);
+    }
+
+    .v-langs label:has(:checked) {
+      border-color: var(--sl-primary);
+      background: var(--sl-primary);
+      color: var(--sl-on-solid);
+    }
+
+    .v-langs input {
+      position: absolute;
+      opacity: 0;
+    }
+
+    .v-langs img {
+      width: var(--sl-size-icon-md);
+      height: var(--sl-size-icon-md);
+      border-radius: var(--sl-radius-circle);
+      object-fit: cover;
+    }
+
+    .v-form {
+      display: grid;
+      grid-template-columns: 130px minmax(0, 1fr);
+      gap: var(--sl-space-4) var(--sl-space-6);
+      align-items: center;
+    }
+
+    .v-form input {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .v-form small {
+      grid-column: 2;
+      margin-top: calc(var(--sl-space-3) * -1);
+      color: var(--sl-text-subtle);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-checks {
+      display: grid;
+      gap: var(--sl-space-1);
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .v-checks li {
+      display: grid;
+      grid-template-columns: var(--sl-size-icon-sm) 8em 1fr;
+      gap: var(--sl-space-4);
+      align-items: center;
+      padding: var(--sl-space-3) 0;
+      border-bottom: 1px solid var(--sl-border);
+      transition: opacity var(--sl-time-slow) var(--sl-ease-out), transform var(--sl-time-slow) var(--sl-ease-out);
+    }
+
+    .v-checks li[data-state="wait"] {
+      opacity: var(--sl-fade-disabled);
+      transform: translateX(-6px);
+    }
+
+    .v-checks .bi {
+      color: var(--sl-text-subtle);
+    }
+
+    .v-checks [data-state="done"] .bi {
+      color: var(--sl-success);
+    }
+
+    .v-checks [data-state="done"] .bi::before {
+      content: "\f26a";
+    }
+
+    .v-checks span {
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-base {
+      display: grid;
+      gap: var(--sl-space-4);
+      margin-top: var(--sl-space-6);
+    }
+
+    .v-base .sl-but {
+      justify-self: start;
+    }
+
+    .v-base[data-run="idle"] .v-checks {
+      display: none;
+    }
+
+    .v-nav {
+      display: flex;
+      justify-content: space-between;
+      gap: var(--sl-space-4);
+      margin-top: var(--sl-space-7);
+    }
+
+    .v-nav:has(> :only-child) {
+      justify-content: center;
+    }
+
+    .v-nav :is(a, button),
+    .v-base .sl-but {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+    }
+
+    .v-nav [disabled] {
+      visibility: hidden;
+    }
+
+    /* The run: the season ring of the mark - the logo inside a ring that fills, the task under way beneath it */
+    .v-run {
+      display: grid;
+      justify-items: center;
+      gap: var(--sl-space-4);
+      text-align: center;
+    }
+
+    .v-run .sl-knob {
+      --sl-knob-size: 150px;
+      --sl-knob-width: 5;
+      --sl-knob-tone: var(--sl-primary);
+      margin: 0;
+    }
+
+    .v-run .sl-knob img {
+      width: 64px;
+    }
+
+    .v-run p {
+      margin: 0;
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-run b {
+      font-size: var(--sl-font-h2);
+      font-weight: var(--sl-weight-normal);
+    }
+
+    .v-run ol {
+      display: none;
+    }
+
+    .v-done {
+      display: grid;
+      justify-items: center;
+      gap: var(--sl-space-3);
+      margin-bottom: var(--sl-space-6);
+      text-align: center;
+    }
+
+    .v-done h2 {
+      margin: 0;
+    }
+
+    .v-done p {
+      margin: 0;
+      color: var(--sl-text-muted);
+    }
+
+    .v-seal {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 72px;
+      height: 72px;
+    }
+
+    .v-seal svg {
+      width: 100%;
+      height: 100%;
+      fill: none;
+      stroke: var(--sl-success);
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 100;
+    }
+
+    .v-foot {
+      padding: var(--sl-space-4) var(--sl-space-8);
+      border-top: 1px solid var(--sl-border);
+      color: var(--sl-text-subtle);
+      font-size: var(--sl-font-small);
+      text-align: center;
+    }
+
+    .v-about {
+      margin-top: var(--sl-space-8);
+    }
+
+    /* The season across the page. Every flake is one <i>, placed and timed by its index; the season on the body gives
+       the shape and the tone. The fall sits under the card and over the band, and never takes a click */
+    .v-fall {
+      position: fixed;
+      inset: 0;
+      z-index: var(--sl-z-base);
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .v-fall i {
+      position: absolute;
+      top: -4vh;
+      left: var(--v-x);
+      width: 8px;
+      height: 8px;
+      border-radius: var(--sl-radius-circle);
+      background: color-mix(in srgb, var(--sl-season-winter) 45%, var(--sl-bg));
+      opacity: 0.9;
+    }
+
+    .v-fall i:nth-child(1) { --v-x: 4%; --v-t: 11s; --v-d: -2s; }
+    .v-fall i:nth-child(2) { --v-x: 11%; --v-t: 14s; --v-d: -8s; }
+    .v-fall i:nth-child(3) { --v-x: 17%; --v-t: 9s; --v-d: -4s; }
+    .v-fall i:nth-child(4) { --v-x: 24%; --v-t: 13s; --v-d: -11s; }
+    .v-fall i:nth-child(5) { --v-x: 31%; --v-t: 10s; --v-d: -6s; }
+    .v-fall i:nth-child(6) { --v-x: 38%; --v-t: 15s; --v-d: -1s; }
+    .v-fall i:nth-child(7) { --v-x: 46%; --v-t: 12s; --v-d: -9s; }
+    .v-fall i:nth-child(8) { --v-x: 53%; --v-t: 9s; --v-d: -3s; }
+    .v-fall i:nth-child(9) { --v-x: 61%; --v-t: 14s; --v-d: -12s; }
+    .v-fall i:nth-child(10) { --v-x: 68%; --v-t: 11s; --v-d: -7s; }
+    .v-fall i:nth-child(11) { --v-x: 75%; --v-t: 13s; --v-d: -5s; }
+    .v-fall i:nth-child(12) { --v-x: 82%; --v-t: 10s; --v-d: -10s; }
+    .v-fall i:nth-child(13) { --v-x: 89%; --v-t: 15s; --v-d: -2s; }
+    .v-fall i:nth-child(14) { --v-x: 95%; --v-t: 12s; --v-d: -8s; }
+    .v-fall i:nth-child(3n) { width: 5px; height: 5px; }
+    .v-fall i:nth-child(4n) { width: 11px; height: 11px; }
+
+    .sl-autumn .v-fall i,
+    .sl-spring .v-fall i {
+      width: 14px;
+      height: 10px;
+    }
+
+    .sl-autumn .v-fall i {
+      border-radius: 0 100% 0 100%;
+      background: var(--sl-season-autumn);
+    }
+
+    .sl-autumn .v-fall i:nth-child(3n) {
+      background: var(--sl-warning);
+    }
+
+    .sl-autumn .v-fall i:nth-child(4n) {
+      background: var(--sl-danger);
+    }
+
+    .sl-spring .v-fall i {
+      border-radius: 100% 0 100% 0;
+      background: color-mix(in srgb, var(--sl-danger) 30%, var(--sl-bg));
+    }
+
+    .sl-spring .v-fall i:nth-child(2n) {
+      background: color-mix(in srgb, var(--sl-season-spring) 45%, var(--sl-bg));
+    }
+
+    .sl-summer .v-fall i {
+      background: color-mix(in srgb, var(--sl-warning) 70%, var(--sl-bg));
+      box-shadow: 0 0 8px 2px color-mix(in srgb, var(--sl-warning) 40%, transparent);
+      opacity: 0.7;
+    }
+
+    .sl-newyear .v-fall i:nth-child(3n) {
+      background: var(--sl-danger);
+    }
+
+    .sl-newyear .v-fall i:nth-child(4n) {
+      background: var(--sl-warning);
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .v-fall i {
+        animation: v-fall var(--v-t) linear var(--v-d) infinite;
+      }
+
+      .sl-summer .v-fall i {
+        animation-name: v-float;
+      }
+
+      .v-card {
+        animation: v-arrive 0.8s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
+      }
+
+      .v-band h1 {
+        animation: v-title 0.9s ease-out both;
+      }
+
+      .v-body [data-demo-step]:not([hidden]) > * {
+        animation: v-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+      }
+
+      .v-card[data-dir="prev"] [data-demo-step]:not([hidden]) > * {
+        animation-name: v-back;
+      }
+
+      .v-body [data-demo-step] > :nth-child(2) { animation-delay: 0.05s; }
+      .v-body [data-demo-step] > :nth-child(3) { animation-delay: 0.1s; }
+      .v-body [data-demo-step] > :nth-child(4) { animation-delay: 0.15s; }
+
+      .v-path [aria-current="true"] b {
+        animation: v-ping 2s ease-out infinite;
+      }
+
+      .v-checks [data-state="done"] .bi {
+        animation: v-pop 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+      }
+
+      .v-run .sl-knob img {
+        animation: v-breathe 2.4s ease-in-out infinite;
+      }
+
+      .v-seal circle {
+        animation: v-draw 0.7s ease-out 0.1s both;
+      }
+
+      .v-seal path {
+        animation: v-draw 0.4s ease-out 0.7s both;
+      }
+
+      .v-done h2,
+      .v-done p {
+        animation: v-in 0.5s ease-out 0.9s both;
+      }
+    }
+
+    @keyframes v-fall {
+      0% { transform: translate(0, 0) rotate(0); }
+      50% { transform: translate(40px, 55vh) rotate(180deg); }
+      100% { transform: translate(-10px, 110vh) rotate(360deg); }
+    }
+
+    @keyframes v-float {
+      0% { transform: translate(0, 105vh); opacity: 0; }
+      20% { opacity: 0.7; }
+      100% { transform: translate(30px, 20vh); opacity: 0; }
+    }
+
+    @keyframes v-arrive {
+      from { opacity: 0; transform: translateY(32px); }
+    }
+
+    @keyframes v-title {
+      from { opacity: 0; letter-spacing: 0.4em; }
+    }
+
+    @keyframes v-in {
+      from { opacity: 0; transform: translateX(24px); }
+    }
+
+    @keyframes v-back {
+      from { opacity: 0; transform: translateX(-24px); }
+    }
+
+    @keyframes v-ping {
+      0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--sl-primary) 45%, transparent); }
+      70%, 100% { box-shadow: 0 0 0 10px transparent; }
+    }
+
+    @keyframes v-pop {
+      0% { transform: scale(0.2); }
+    }
+
+    @keyframes v-breathe {
+      50% { transform: scale(1.08); }
+    }
+
+    @keyframes v-draw {
+      from { stroke-dashoffset: 100; }
+      to { stroke-dashoffset: 0; }
+    }
+
+    @media (max-width: 560px) {
+      .v-path span {
+        display: none;
+      }
+
+      .v-langs {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .v-form {
+        grid-template-columns: 1fr;
+        gap: var(--sl-space-2);
+      }
+
+      .v-form small {
+        grid-column: 1;
+        margin-top: 0;
+      }
+
+      .v-checks li {
+        grid-template-columns: var(--sl-size-icon-sm) 1fr;
+      }
+
+      .v-checks span {
+        grid-column: 2;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="v-fall" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+
+  <div id="head-content" class="v-band">
+    <div class="sl-wrp"><h1 class="sl-font">Установка<small>SLAED CMS 8.0 · новый сайт за семь шагов</small></h1></div>
+  </div>
+
+  <main class="v-stage">
+    <div class="v-card" data-demo-steps>
+      <div class="v-head">
+        <img src="../templates/lite/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="SLAED CMS">
+        <div class="sl-mode">
+          <span class="sl-mode-rail">
+            <button type="button" class="sl-mode-cell" data-demo-set="mode" data-demo-value="light" title="Светлая" aria-label="Светлая"><i class="bi bi-sun" aria-hidden="true"></i></button><button type="button" class="sl-mode-cell" data-demo-set="mode" data-demo-value="auto" title="Системная" aria-label="Системная"><i class="bi bi-circle-half" aria-hidden="true"></i></button><button type="button" class="sl-mode-cell" data-demo-set="mode" data-demo-value="dark" title="Тёмная" aria-label="Тёмная"><i class="bi bi-moon" aria-hidden="true"></i></button>
+            <span class="sl-mode-knob" aria-hidden="true"><i class="bi bi-sun v-knob-light"></i><i class="bi bi-circle-half v-knob-auto"></i><i class="bi bi-moon v-knob-dark"></i></span>
+          </span>
+        </div>
+      </div>
+
+      <ol class="v-path" aria-label="Путь установки">
+        <li data-demo-rail><button type="button" data-demo-go="0"><b>1</b><span>Язык</span></button></li>
+        <li data-demo-rail><button type="button" data-demo-go="1"><b>2</b><span>Сервер</span></button></li>
+        <li data-demo-rail><button type="button" data-demo-go="2"><b>3</b><span>База</span></button></li>
+        <li data-demo-rail><button type="button" data-demo-go="3"><b>4</b><span>Сайт</span></button></li>
+        <li data-demo-rail><button type="button" data-demo-go="4"><b>5</b><span>Админ</span></button></li>
+        <li data-demo-rail><button type="button" data-demo-go="5"><b>6</b><span>Установка</span></button></li>
+        <li data-demo-rail><button type="button" data-demo-go="6"><b>7</b><span>Готово</span></button></li>
+      </ol>
+
+      <div class="v-body">
+
+        <section data-demo-step>
+          <h2 class="sl-font">Язык</h2>
+          <p class="v-lead">Язык установщика и сайта по умолчанию. Остальные пять останутся доступны посетителям.</p>
+          <div class="v-langs">
+            <label><input type="radio" name="lang" value="en"><img src="../templates/lite/images/flags/gb.svg" alt="">English</label>
+            <label><input type="radio" name="lang" value="de"><img src="../templates/lite/images/flags/de.svg" alt="">Deutsch</label>
+            <label><input type="radio" name="lang" value="fr"><img src="../templates/lite/images/flags/fr.svg" alt="">Français</label>
+            <label><input type="radio" name="lang" value="pl"><img src="../templates/lite/images/flags/pl.svg" alt="">Polski</label>
+            <label><input type="radio" name="lang" value="ru" checked><img src="../templates/lite/images/flags/ru.svg" alt="">Русский</label>
+            <label><input type="radio" name="lang" value="uk"><img src="../templates/lite/images/flags/ua.svg" alt="">Українська</label>
+          </div>
+          <div class="v-nav"><button type="button" class="sl-but" data-demo-go="next">Продолжить <i class="bi bi-arrow-right"></i></button></div>
+        </section>
+
+        <section data-demo-step hidden>
+          <h2 class="sl-font">Сервер</h2>
+          <p class="v-lead">Установщик проверил сервер. Всё, что нужно системе, на месте.</p>
+          <div data-demo-run="auto" data-demo-run-rows="server" data-demo-run-ms="140">
+            <ul class="v-checks" data-demo-run-list><template><li><i class="bi bi-circle"></i><b data-demo-task-text></b><span data-demo-task-note></span></li></template></ul>
+          </div>
+          <div class="v-nav"><button type="button" class="sl-but" data-demo-go="prev">Назад</button><button type="button" class="sl-but" data-demo-go="next">Продолжить <i class="bi bi-arrow-right"></i></button></div>
+        </section>
+
+        <section data-demo-step hidden>
+          <h2 class="sl-font">База данных</h2>
+          <p class="v-lead">MariaDB 10.5.2 или новее. Базу создайте заранее — таблицы установщик создаст сам.</p>
+          <div class="v-form">
+            <label for="v-host">Сервер</label><input id="v-host" type="text" value="localhost" required>
+            <label for="v-user">Пользователь</label><input id="v-user" type="text" value="slaed" autocomplete="off" required>
+            <label for="v-pass">Пароль</label><input id="v-pass" type="password" value="db-secret-pass" autocomplete="new-password">
+            <label for="v-base">Название базы</label><input id="v-base" type="text" value="slaed_cms" required>
+            <label for="v-pref">Префикс таблиц</label><input id="v-pref" type="text" value="Kx7mQ2w9Ra" required><small>Случайный — по нему таблицы не угадать</small>
+          </div>
+          <div class="v-base" data-demo-run data-demo-run-rows="base" data-demo-run-ms="380">
+            <button type="button" class="sl-but" data-demo-run-go><i class="bi bi-plug"></i> Проверить подключение</button>
+            <ul class="v-checks" data-demo-run-list><template><li><i class="bi bi-circle"></i><b data-demo-task-text></b><span data-demo-task-note></span></li></template></ul>
+          </div>
+          <div class="v-nav"><button type="button" class="sl-but" data-demo-go="prev">Назад</button><button type="button" class="sl-but" data-demo-go="next">Продолжить <i class="bi bi-arrow-right"></i></button></div>
+        </section>
+
+        <section data-demo-step hidden>
+          <h2 class="sl-font">Сайт</h2>
+          <p class="v-lead">Как сайт называется и где живёт. Адрес определён по запросу.</p>
+          <div class="v-form">
+            <label for="v-site">Название</label><input id="v-site" type="text" value="Мой сайт" required>
+            <label for="v-url">Адрес</label><input id="v-url" type="url" value="https://slaed.loc" required>
+            <label for="v-file">Файл панели</label><input id="v-file" type="text" value="q4vz8kx2ma" required><small>admin.php станет q4vz8kx2ma.php — адрес панели не угадать</small>
+          </div>
+          <div class="v-nav"><button type="button" class="sl-but" data-demo-go="prev">Назад</button><button type="button" class="sl-but" data-demo-go="next">Продолжить <i class="bi bi-arrow-right"></i></button></div>
+        </section>
+
+        <section data-demo-step hidden>
+          <h2 class="sl-font">Администратор</h2>
+          <p class="v-lead">Первый администратор сайта. Остальных добавите в панели.</p>
+          <div class="v-form">
+            <label for="v-nick">Ник</label><input id="v-nick" type="text" value="slaed" maxlength="25" autocomplete="username" required>
+            <label for="v-mail">E-mail</label><input id="v-mail" type="email" value="admin@slaed.loc" required>
+            <label for="v-pwd">Пароль</label><input id="v-pwd" type="password" value="owner-pass-2026" maxlength="25" autocomplete="new-password" required>
+            <label for="v-pwd2">Повтор</label><input id="v-pwd2" type="password" value="owner-pass-2026" maxlength="25" autocomplete="new-password" required>
+            <span>Аккаунт на сайте</span><div class="sl-radio-group sl-radio-switch"><label class="sl-radio"><input type="radio" name="auser" value="1" checked>Да</label><label class="sl-radio"><input type="radio" name="auser" value="0">Нет</label></div><small>С тем же ником и паролем</small>
+          </div>
+          <div class="v-nav"><button type="button" class="sl-but" data-demo-go="prev">Назад</button><button type="button" class="sl-but" data-demo-go="next"><i class="bi bi-download"></i> Установить</button></div>
+        </section>
+
+        <section data-demo-step hidden>
+          <div class="v-run" data-demo-run="auto" data-demo-run-rows="install" data-demo-run-then="v-after">
+            <div class="sl-knob">
+              <svg class="sl-knob-svg" viewBox="0 0 100 100" aria-hidden="true">
+                <circle class="sl-knob-bg" cx="50" cy="50" r="46"></circle>
+                <circle class="sl-knob-val" cx="50" cy="50" r="46" pathLength="100" stroke-dasharray="0 100" data-demo-run-arc></circle>
+              </svg>
+              <img src="../templates/lite/images/logos/slaed-logo-mark-gradient-blue.svg" alt="">
+            </div>
+            <b class="sl-font"><span data-demo-run-num>0</span>%</b>
+            <p data-demo-run-label>подготовка</p>
+            <ol data-demo-run-list><template><li><b data-demo-task-text></b><span data-demo-task-note></span></li></template></ol>
+          </div>
+          <button type="button" id="v-after" data-demo-go="next" hidden></button>
+        </section>
+
+        <section data-demo-step hidden>
+          <div class="v-done">
+            <span class="v-seal" aria-hidden="true"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24" pathLength="100"></circle><path d="M15 27l7 7 15-16" pathLength="100"></path></svg></span>
+            <h2 class="sl-font">Готово</h2>
+            <p>SLAED CMS 8.0 установлена: 34 таблицы, 12 модулей, 6 языков.</p>
+          </div>
+          <div class="sl-alert sl-alert-info"><div class="sl-alert-body">Адрес панели — https://slaed.loc/q4vz8kx2ma.php. Сохраните его: ссылки на панель с сайта нет.</div></div>
+          <div class="sl-alert sl-alert-success"><div class="sl-alert-body">Установщик удалил себя: setup.php на сервере больше нет.</div></div>
+          <div class="v-nav"><a class="sl-but" href="../index.php"><i class="bi bi-globe2"></i> Открыть сайт</a><a class="sl-but" href="../admin.php"><i class="bi bi-box-arrow-in-right"></i> Войти в панель</a></div>
+        </section>
+
+      </div>
+      <div class="v-foot"><a href="https://slaed.net" title="SLAED CMS" target="_blank" rel="noopener noreferrer">SLAED CMS</a> © 2005-2026 Eduard Laas. Released under MIT License.</div>
+    </div>
+    <div class="v-about" data-demo-about></div>
+  </main>
+
+  <div id="demo-line"></div>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

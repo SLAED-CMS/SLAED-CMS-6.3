@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Порог &middot; Движение &middot; Установщик — стенд SLAED CMS</title>
+  <link rel="icon" type="image/svg+xml" href="../templates/admin/images/favicon.svg">
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheet and script are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '">');</script>
+  <style>
+    /* 01 Порог. The installer is the door the owner will use afterwards: the login card of the panel, its header, its
+       striped foot. One stop at a time inside the card, seven segments of the road under the header */
+    .v-door {
+      --sl-login-width: 480px;
+    }
+
+    .v-path {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: var(--sl-space-2);
+      margin: 0;
+      padding: var(--sl-space-6) var(--sl-space-8) 0;
+      list-style: none;
+    }
+
+    .v-path button {
+      display: block;
+      width: 100%;
+      height: var(--sl-space-2);
+      padding: 0;
+      border: 0;
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-border);
+      cursor: pointer;
+      transition: background-color var(--sl-time-slow) var(--sl-ease-out);
+    }
+
+    .v-path [data-done="true"] button {
+      background: var(--sl-primary-muted);
+    }
+
+    .v-path [aria-current="true"] button {
+      background: var(--sl-primary);
+    }
+
+    .v-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--sl-space-6);
+      margin: var(--sl-space-7) 0 var(--sl-space-3);
+    }
+
+    .v-head h2 {
+      margin: 0;
+      font-size: var(--sl-font-h2);
+    }
+
+    .v-head span {
+      color: var(--sl-text-subtle);
+      font-size: var(--sl-font-small);
+      white-space: nowrap;
+    }
+
+    .v-lead {
+      margin: 0 0 var(--sl-space-6);
+      color: var(--sl-text-muted);
+      line-height: var(--sl-line-normal);
+    }
+
+    .v-door .sl-admin-login-form-frame {
+      padding-top: 0;
+    }
+
+    .v-door .sl-admin-login-list li {
+      grid-template-columns: 140px minmax(0, 1fr);
+    }
+
+    .v-door .sl-admin-login-list small {
+      grid-column: 2;
+      margin-top: calc(var(--sl-space-3) * -1);
+      color: var(--sl-text-subtle);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-langs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--sl-space-3);
+      margin-bottom: var(--sl-space-6);
+    }
+
+    .v-langs label {
+      display: grid;
+      justify-items: center;
+      gap: var(--sl-space-3);
+      padding: var(--sl-space-5) var(--sl-space-3);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-2);
+      cursor: pointer;
+      transition: border-color var(--sl-time-base) var(--sl-ease-out), background-color var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-langs label:hover {
+      border-color: var(--sl-primary-muted);
+    }
+
+    .v-langs label:has(:checked) {
+      border-color: var(--sl-primary);
+      background: var(--sl-tint);
+      color: var(--sl-primary-strong);
+    }
+
+    .v-langs input {
+      position: absolute;
+      opacity: 0;
+    }
+
+    .v-langs img {
+      width: var(--sl-size-icon-lg);
+      border-radius: var(--sl-radius-1);
+      box-shadow: var(--sl-shadow-xs);
+    }
+
+    .v-checks {
+      display: grid;
+      gap: var(--sl-space-1);
+      margin: 0 0 var(--sl-space-6);
+      padding: 0;
+      list-style: none;
+    }
+
+    .v-checks li {
+      display: grid;
+      grid-template-columns: var(--sl-size-icon-sm) 9em 1fr;
+      gap: var(--sl-space-4);
+      align-items: center;
+      padding: var(--sl-space-3) 0;
+      border-bottom: 1px solid var(--sl-border);
+      transition: opacity var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-checks li[data-state="wait"] {
+      opacity: var(--sl-fade-disabled);
+    }
+
+    .v-checks .bi {
+      font-size: var(--sl-size-icon-sm);
+      color: var(--sl-text-subtle);
+    }
+
+    .v-checks [data-state="done"] .bi {
+      color: var(--sl-success);
+    }
+
+    .v-checks [data-state="done"] .bi::before {
+      content: "\f26a";
+    }
+
+    .v-checks span {
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-base {
+      margin-bottom: var(--sl-space-6);
+    }
+
+    .v-base .v-checks {
+      margin-bottom: 0;
+    }
+
+    .v-base .v-checks li {
+      grid-template-columns: var(--sl-size-icon-sm) minmax(0, 1fr) auto;
+    }
+
+    .v-base[data-run="idle"] {
+      display: none;
+    }
+
+    .v-run {
+      margin-bottom: var(--sl-space-6);
+    }
+
+    .v-run .sl-progress-line div {
+      width: calc(var(--d-run) * 100%);
+      transition: width var(--sl-time-fast) linear;
+    }
+
+    .v-run p {
+      display: flex;
+      justify-content: space-between;
+      gap: var(--sl-space-4);
+      margin: var(--sl-space-4) 0 0;
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-run b {
+      color: var(--sl-text);
+    }
+
+    .v-run .v-checks {
+      display: none;
+    }
+
+    .v-done {
+      display: grid;
+      justify-items: center;
+      gap: var(--sl-space-3);
+      margin: var(--sl-space-8) 0 var(--sl-space-6);
+      text-align: center;
+    }
+
+    .v-done .bi {
+      font-size: var(--sl-size-icon-xl);
+      color: var(--sl-success);
+    }
+
+    .v-done h2 {
+      margin: 0;
+      font-size: var(--sl-font-h1);
+    }
+
+    .v-done p {
+      margin: 0;
+      color: var(--sl-text-muted);
+    }
+
+    .v-nav {
+      display: flex;
+      justify-content: space-between;
+      gap: var(--sl-space-4);
+    }
+
+    .v-nav > * {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+    }
+
+    .v-nav:has(> :only-child) {
+      justify-content: center;
+    }
+
+    /* Three buttons: back and forward at the edges, the probe of the base in the middle */
+    .v-nav:has(> :nth-child(3)) {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+    }
+
+    .v-nav:has(> :nth-child(3)) > :first-child {
+      justify-self: start;
+    }
+
+    .v-nav:has(> :nth-child(3)) > :last-child {
+      justify-self: end;
+    }
+
+    .v-nav [disabled] {
+      visibility: hidden;
+    }
+
+    .v-about {
+      width: min(var(--sl-login-width), calc(100vw - var(--sl-space-6) * 2));
+      margin-top: var(--sl-space-8);
+      box-sizing: border-box;
+      position: relative;
+      z-index: var(--sl-z-raised);
+    }
+
+    @media (max-width: 560px) {
+      .v-nav:has(> :nth-child(3)) {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .v-nav .v-probe {
+        grid-column: 1 / -1;
+        order: -1;
+        justify-content: center;
+      }
+
+      .v-door .sl-admin-login-list li {
+        grid-template-columns: 1fr;
+        gap: var(--sl-space-2);
+      }
+
+      .v-door .sl-admin-login-list small {
+        grid-column: 1;
+        margin-top: 0;
+      }
+
+      .v-langs {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .v-checks li {
+        grid-template-columns: var(--sl-size-icon-sm) 1fr;
+      }
+
+      .v-checks span {
+        grid-column: 2;
+      }
+    }
+
+    /* 09 Порог · Движение. The door of 01 with a layer of motion and light and nothing else changed: the card arrives,
+       a soft light follows the pointer over the page and along the rim of the card, a sheen crosses the logo, the
+       road fills segment by segment, every stop slides in from the side it lies on, and the run streams */
+    .v-glow {
+      position: fixed;
+      inset: 0;
+      z-index: var(--sl-z-base);
+      pointer-events: none;
+      background: radial-gradient(560px circle at var(--dx, 50%) var(--dy, 30%), var(--sl-tint-strong), transparent 70%);
+    }
+
+    .v-door .sl-admin-login-card {
+      position: relative;
+    }
+
+    .v-door .sl-admin-login-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      padding: 1px;
+      border-radius: inherit;
+      background: radial-gradient(280px circle at var(--dx, 50%) var(--dy, 0), var(--sl-primary), transparent 70%);
+      pointer-events: none;
+      -webkit-mask: linear-gradient(var(--sl-bg) 0 0) content-box, linear-gradient(var(--sl-bg) 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+    }
+
+    .v-door .sl-admin-login-header::before {
+      content: "";
+      position: absolute;
+      z-index: var(--sl-z-raised);
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: var(--sl-beam-width);
+      background: linear-gradient(100deg, transparent, var(--sl-beam-bg), transparent);
+      transform: translateX(-120%);
+      pointer-events: none;
+    }
+
+    .v-path button {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .v-path [aria-current="true"] button {
+      background: linear-gradient(90deg, var(--sl-primary), var(--sl-primary-muted), var(--sl-primary)) 0 0 / 200% 100%;
+    }
+
+    .v-langs label {
+      transition: transform var(--sl-time-base) var(--sl-ease-out), box-shadow var(--sl-time-base) var(--sl-ease-out),
+        border-color var(--sl-time-base) var(--sl-ease-out), background-color var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-langs label:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--sl-shadow-raised);
+    }
+
+    .v-checks li {
+      transition: opacity var(--sl-time-slow) var(--sl-ease-out), transform var(--sl-time-slow) var(--sl-ease-out);
+    }
+
+    .v-checks li[data-state="wait"] {
+      transform: translateX(-8px);
+    }
+
+    .v-run .sl-progress-line div {
+      position: relative;
+      overflow: visible;
+      background-image:
+        repeating-linear-gradient(45deg, var(--sl-beam-bg) 0 6px, transparent 6px 12px),
+        var(--sl-grad-progress-1);
+      background-size: 17px 17px, auto;
+    }
+
+    .v-run .sl-progress-line div::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      right: -4px;
+      width: 8px;
+      height: 8px;
+      margin-top: -4px;
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-on-solid);
+      box-shadow: 0 0 10px 3px var(--sl-primary);
+    }
+
+    .v-run[data-run="done"] .sl-progress-line div::after {
+      opacity: 0;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .v-door .sl-admin-login-card {
+        animation: v-arrive 0.8s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
+      }
+
+      .v-door .sl-admin-login-header::before {
+        animation: v-beam var(--sl-beam-dur) ease-in-out 1s infinite;
+      }
+
+      .v-path [aria-current="true"] button {
+        animation: v-flow 1.6s linear infinite;
+      }
+
+      .v-door [data-demo-step]:not([hidden]) > * {
+        animation: v-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+      }
+
+      .v-door[data-dir="prev"] [data-demo-step]:not([hidden]) > * {
+        animation-name: v-back;
+      }
+
+      .v-door [data-demo-step] > :nth-child(2) { animation-delay: 0.05s; }
+      .v-door [data-demo-step] > :nth-child(3) { animation-delay: 0.1s; }
+      .v-door [data-demo-step] > :nth-child(4) { animation-delay: 0.15s; }
+      .v-door [data-demo-step] > :nth-child(5) { animation-delay: 0.2s; }
+
+      .v-langs label:has(:checked) img {
+        animation: v-bob 0.5s cubic-bezier(0.3, 1.6, 0.5, 1);
+      }
+
+      .v-checks [data-state="done"] .bi {
+        animation: v-pop 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+      }
+
+      .v-run .sl-progress-line div {
+        animation: v-stripes 0.6s linear infinite;
+      }
+    }
+
+    @keyframes v-arrive {
+      from { opacity: 0; transform: translateY(28px) scale(0.96); filter: blur(6px); }
+    }
+
+    @keyframes v-beam {
+      0% { transform: translateX(-120%); }
+      40%, 100% { transform: translateX(420%); }
+    }
+
+    @keyframes v-flow {
+      to { background-position: -200% 0; }
+    }
+
+    @keyframes v-in {
+      from { opacity: 0; transform: translateX(28px); }
+    }
+
+    @keyframes v-back {
+      from { opacity: 0; transform: translateX(-28px); }
+    }
+
+    @keyframes v-bob {
+      40% { transform: translateY(-6px) rotate(-6deg); }
+    }
+
+    @keyframes v-pop {
+      0% { transform: scale(0.2); }
+    }
+
+    @keyframes v-stripes {
+      to { background-position: 17px 0, 0 0; }
+    }
+
+    /* The seal of the last stop: the ring and the tick draw themselves and ten sparks of the theme tones fly off.
+       Every animation runs from the hidden state to the drawn one, so with motion off the seal simply stands drawn */
+    .v-seal {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 72px;
+      height: 72px;
+    }
+
+    .v-seal svg {
+      width: 100%;
+      height: 100%;
+      fill: none;
+      stroke: var(--sl-success);
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 100;
+    }
+
+    .v-seal i {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 6px;
+      height: 6px;
+      margin: -3px 0 0 -3px;
+      border-radius: var(--sl-radius-circle);
+      background: var(--v-c);
+      opacity: 0;
+    }
+
+    .v-seal i:nth-child(2) { --v-a: 0deg; --v-c: var(--sl-primary); }
+    .v-seal i:nth-child(3) { --v-a: 36deg; --v-c: var(--sl-success); }
+    .v-seal i:nth-child(4) { --v-a: 72deg; --v-c: var(--sl-warning); }
+    .v-seal i:nth-child(5) { --v-a: 108deg; --v-c: var(--sl-accent); }
+    .v-seal i:nth-child(6) { --v-a: 144deg; --v-c: var(--sl-danger); }
+    .v-seal i:nth-child(7) { --v-a: 180deg; --v-c: var(--sl-primary); }
+    .v-seal i:nth-child(8) { --v-a: 216deg; --v-c: var(--sl-success); }
+    .v-seal i:nth-child(9) { --v-a: 252deg; --v-c: var(--sl-warning); }
+    .v-seal i:nth-child(10) { --v-a: 288deg; --v-c: var(--sl-accent); }
+    .v-seal i:nth-child(11) { --v-a: 324deg; --v-c: var(--sl-danger); }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .v-seal circle {
+        animation: v-draw 0.7s ease-out 0.1s both;
+      }
+
+      .v-seal path {
+        animation: v-draw 0.4s ease-out 0.7s both;
+      }
+
+      .v-seal i {
+        animation: v-spark 0.9s cubic-bezier(0.2, 0.7, 0.3, 1) 0.85s both;
+      }
+
+      .v-done h2,
+      .v-done p {
+        animation: v-rise 0.5s ease-out 0.9s both;
+      }
+    }
+
+    @keyframes v-draw {
+      from { stroke-dashoffset: 100; }
+      to { stroke-dashoffset: 0; }
+    }
+
+    @keyframes v-spark {
+      0% { opacity: 1; transform: rotate(var(--v-a)) translateY(0) scale(1); }
+      100% { opacity: 0; transform: rotate(var(--v-a)) translateY(-64px) scale(0.3); }
+    }
+
+    @keyframes v-rise {
+      from { opacity: 0; transform: translateY(10px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="v-glow" data-demo-spot aria-hidden="true"></div>
+
+  <div class="sl-admin-shell sl-admin-login-shell v-door" data-demo-steps>
+    <div class="sl-admin-login-top"></div>
+    <div class="sl-admin-login-card" data-demo-spot>
+      <div class="sl-admin-login-header">
+        <div class="sl-admin-brand"><h1><a href="//slaed.net" target="_blank" title="SLAED CMS"><img src="../templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="SLAED CMS" title="SLAED CMS"></a></h1></div>
+      </div>
+      <ol class="v-path" aria-label="Путь установки">
+        <li data-demo-rail><button type="button" data-demo-go="0" title="Язык"></button></li>
+        <li data-demo-rail><button type="button" data-demo-go="1" title="Сервер"></button></li>
+        <li data-demo-rail><button type="button" data-demo-go="2" title="База данных"></button></li>
+        <li data-demo-rail><button type="button" data-demo-go="3" title="Сайт"></button></li>
+        <li data-demo-rail><button type="button" data-demo-go="4" title="Администратор"></button></li>
+        <li data-demo-rail><button type="button" data-demo-go="5" title="Установка"></button></li>
+        <li data-demo-rail><button type="button" data-demo-go="6" title="Готово"></button></li>
+      </ol>
+      <div class="sl-admin-login-content">
+
+        <section data-demo-step>
+          <div class="v-head"><h2>Язык</h2><span>шаг 1 из 7</span></div>
+          <p class="v-lead">Язык установщика и сайта по умолчанию. Остальные пять останутся доступны посетителям.</p>
+          <div class="v-langs">
+            <label><input type="radio" name="lang" value="en"><img src="../templates/admin/images/flags/gb.svg" alt="">English</label>
+            <label><input type="radio" name="lang" value="de"><img src="../templates/admin/images/flags/de.svg" alt="">Deutsch</label>
+            <label><input type="radio" name="lang" value="fr"><img src="../templates/admin/images/flags/fr.svg" alt="">Français</label>
+            <label><input type="radio" name="lang" value="pl"><img src="../templates/admin/images/flags/pl.svg" alt="">Polski</label>
+            <label><input type="radio" name="lang" value="ru" checked><img src="../templates/admin/images/flags/ru.svg" alt="">Русский</label>
+            <label><input type="radio" name="lang" value="uk"><img src="../templates/admin/images/flags/ua.svg" alt="">Українська</label>
+          </div>
+          <div class="v-nav"><button type="button" class="sl-but-blue" data-demo-go="next"><i class="bi bi-arrow-right"></i> Продолжить</button></div>
+        </section>
+
+        <section data-demo-step hidden>
+          <div class="v-head"><h2>Сервер</h2><span>шаг 2 из 7</span></div>
+          <p class="v-lead">Установщик проверил сервер. Всё, что нужно системе, на месте.</p>
+          <div data-demo-run="auto" data-demo-run-rows="server" data-demo-run-ms="140">
+            <ul class="v-checks" data-demo-run-list><template><li><i class="bi bi-circle"></i><b data-demo-task-text></b><span data-demo-task-note></span></li></template></ul>
+          </div>
+          <div class="v-nav"><button type="button" class="sl-but-back" data-demo-go="prev"><i class="bi bi-arrow-left"></i> Назад</button><button type="button" class="sl-but-blue" data-demo-go="next"><i class="bi bi-arrow-right"></i> Продолжить</button></div>
+        </section>
+
+        <section data-demo-step hidden>
+          <div class="v-head"><h2>База данных</h2><span>шаг 3 из 7</span></div>
+          <p class="v-lead">MariaDB 10.5.2 или новее. Базу создайте заранее — таблицы установщик создаст сам.</p>
+          <div class="sl-admin-login-form-frame">
+            <ul class="sl-admin-login-list">
+              <li><span>Сервер:</span><div class="sl-admin-login-field"><input type="text" value="localhost" required></div></li>
+              <li><span>Пользователь:</span><div class="sl-admin-login-field"><input type="text" value="slaed" autocomplete="off" required></div></li>
+              <li><span>Пароль:</span><div class="sl-admin-login-field"><input type="password" value="db-secret-pass" autocomplete="new-password"></div></li>
+              <li><span>Название базы:</span><div class="sl-admin-login-field"><input type="text" value="slaed_cms" required></div></li>
+              <li><span>Префикс таблиц:</span><div class="sl-admin-login-field"><input type="text" value="Kx7mQ2w9Ra" required></div><small>Случайный — по нему таблицы не угадать</small></li>
+            </ul>
+          </div>
+          <div class="v-base" id="v-base" data-demo-run-rows="base" data-demo-run data-demo-run-ms="380">
+            <ul class="v-checks" data-demo-run-list><template><li><i class="bi bi-circle"></i><b data-demo-task-text></b><span data-demo-task-note></span></li></template></ul>
+          </div>
+          <div class="v-nav"><button type="button" class="sl-but-back" data-demo-go="prev"><i class="bi bi-arrow-left"></i> Назад</button><button type="button" class="sl-but v-probe" data-demo-run-go="v-base"><i class="bi bi-plug"></i> Проверить</button><button type="button" class="sl-but-blue" data-demo-go="next"><i class="bi bi-arrow-right"></i> Продолжить</button></div>
+        </section>
+
+        <section data-demo-step hidden>
+          <div class="v-head"><h2>Сайт</h2><span>шаг 4 из 7</span></div>
+          <p class="v-lead">Как сайт называется и где живёт. Адрес определён по запросу.</p>
+          <div class="sl-admin-login-form-frame">
+            <ul class="sl-admin-login-list">
+              <li><span>Название:</span><div class="sl-admin-login-field"><input type="text" value="Мой сайт" required></div></li>
+              <li><span>Адрес:</span><div class="sl-admin-login-field"><input type="url" value="https://slaed.loc" required></div></li>
+              <li><span>Файл панели:</span><div class="sl-admin-login-field"><input type="text" value="q4vz8kx2ma" required></div><small>admin.php станет q4vz8kx2ma.php — адрес панели не угадать</small></li>
+            </ul>
+          </div>
+          <div class="v-nav"><button type="button" class="sl-but-back" data-demo-go="prev"><i class="bi bi-arrow-left"></i> Назад</button><button type="button" class="sl-but-blue" data-demo-go="next"><i class="bi bi-arrow-right"></i> Продолжить</button></div>
+        </section>
+
+        <section data-demo-step hidden>
+          <div class="v-head"><h2>Администратор</h2><span>шаг 5 из 7</span></div>
+          <p class="v-lead">Первый администратор сайта. Остальных добавите в панели.</p>
+          <div class="sl-admin-login-form-frame">
+            <ul class="sl-admin-login-list">
+              <li><span>Ник:</span><div class="sl-admin-login-field"><input type="text" value="slaed" maxlength="25" autocomplete="username" required></div></li>
+              <li><span>E-mail:</span><div class="sl-admin-login-field"><input type="email" value="admin@slaed.loc" required></div></li>
+              <li><span>Пароль:</span><div class="sl-admin-login-field"><input type="password" value="owner-pass-2026" maxlength="25" autocomplete="new-password" required></div></li>
+              <li><span>Повтор:</span><div class="sl-admin-login-field"><input type="password" value="owner-pass-2026" maxlength="25" autocomplete="new-password" required></div></li>
+              <li><span>Аккаунт на сайте:</span><div class="sl-admin-login-field"><div class="sl-radio-group sl-radio-switch"><label class="sl-radio"><input type="radio" name="auser" value="1" checked>Да</label><label class="sl-radio"><input type="radio" name="auser" value="0">Нет</label></div></div><small>С тем же ником и паролем</small></li>
+            </ul>
+          </div>
+          <div class="v-nav"><button type="button" class="sl-but-back" data-demo-go="prev"><i class="bi bi-arrow-left"></i> Назад</button><button type="button" class="sl-but-green" data-demo-go="next"><i class="bi bi-download"></i> Установить</button></div>
+        </section>
+
+        <section data-demo-step hidden>
+          <div class="v-head"><h2>Установка</h2><span>шаг 6 из 7</span></div>
+          <p class="v-lead">Ничего не нужно делать: установщик пишет конфигурацию и создаёт таблицы.</p>
+          <div class="v-run" data-demo-run="auto" data-demo-run-rows="install" data-demo-run-then="v-after">
+            <div class="sl-progress-line sl-progress-1"><div></div></div>
+            <p><span data-demo-run-label>Подготовка</span><b><span data-demo-run-num>0</span>%</b></p>
+            <ul class="v-checks" data-demo-run-list><template><li><i class="bi bi-circle"></i><b data-demo-task-text></b><span data-demo-task-note></span></li></template></ul>
+          </div>
+          <button type="button" id="v-after" data-demo-go="next" hidden></button>
+        </section>
+
+        <section data-demo-step hidden>
+          <div class="v-done">
+            <span class="v-seal" aria-hidden="true"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24" pathLength="100"></circle><path d="M15 27l7 7 15-16" pathLength="100"></path></svg><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+            <h2>Готово</h2>
+            <p>SLAED CMS 8.0 установлена: 34 таблицы, 12 модулей, 6 языков.</p>
+          </div>
+          <div class="sl-alert sl-alert-info"><div class="sl-alert-body">Адрес панели — https://slaed.loc/q4vz8kx2ma.php. Сохраните его: ссылки на панель с сайта нет.</div></div>
+          <div class="sl-alert sl-alert-success"><div class="sl-alert-body">Установщик удалил себя: setup.php на сервере больше нет.</div></div>
+          <div class="v-nav"><a class="sl-but" href="../index.php"><i class="bi bi-globe2"></i> Открыть сайт</a><a class="sl-but-blue" href="../admin.php"><i class="bi bi-box-arrow-in-right"></i> Войти в панель</a></div>
+        </section>
+
+      </div>
+      <div class="sl-admin-login-footer"><div class="sl-admin-login-copyright"><a href="https://slaed.net" title="SLAED CMS" target="_blank" rel="noopener noreferrer">SLAED CMS</a> © 2005-2026 Eduard Laas. Released under MIT License.</div></div>
+    </div>
+    <div class="sl-admin-login-bottom"></div>
+  </div>
+  <div class="sl-box v-about" data-demo-about></div>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Консоль &middot; Установщик — стенд SLAED CMS</title>
+  <link rel="icon" type="image/svg+xml" href="../templates/admin/images/favicon.svg">
+  <link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheet and script are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '">');</script>
+  <style>
+    /* 04 Консоль. The installer as a terminal: every stop is a prompt, the answer is typed on the prompt line, an
+       answered prompt folds into one line with its answer and stays above the next one. The window declares the dark
+       scheme for itself, so every token inside resolves to the dark value of the theme in both modes of the page */
+    body {
+      background: var(--sl-bg-subtle);
+    }
+
+    .v-page {
+      width: min(920px, calc(100vw - var(--sl-space-6) * 2));
+      margin: 0 auto;
+      padding: var(--sl-space-8) 0;
+    }
+
+    .v-term {
+      color-scheme: dark;
+      --v-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      overflow: hidden;
+      border: 1px solid var(--sl-border-strong);
+      border-radius: var(--sl-radius-3);
+      background: var(--sl-bg);
+      color: var(--sl-text);
+      box-shadow: var(--sl-shadow-float);
+      font-family: var(--v-mono);
+      font-size: var(--sl-font-body);
+      line-height: var(--sl-line-loose);
+    }
+
+    .v-bar {
+      display: flex;
+      align-items: center;
+      gap: var(--sl-space-3);
+      padding: var(--sl-space-4) var(--sl-space-6);
+      border-bottom: 1px solid var(--sl-border);
+      background: var(--sl-surface);
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-bar i {
+      width: var(--sl-space-5);
+      height: var(--sl-space-5);
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-danger);
+    }
+
+    .v-bar i + i {
+      background: var(--sl-warning);
+    }
+
+    .v-bar i + i + i {
+      background: var(--sl-success);
+    }
+
+    .v-bar span {
+      flex: 1;
+      text-align: center;
+    }
+
+    .v-screen {
+      min-height: 520px;
+      padding: var(--sl-space-7) var(--sl-space-8) var(--sl-space-8);
+    }
+
+    .v-banner {
+      margin: 0 0 var(--sl-space-7);
+      color: var(--sl-primary);
+      font: inherit;
+      line-height: var(--sl-line-tight);
+      white-space: pre;
+    }
+
+    .v-banner small {
+      color: var(--sl-text-subtle);
+      font-size: inherit;
+    }
+
+    .v-blk[data-done="false"]:not([aria-current="true"]) {
+      display: none;
+    }
+
+    .v-blk + .v-blk {
+      margin-top: var(--sl-space-2);
+    }
+
+    .v-q {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0 var(--sl-space-4);
+      width: 100%;
+      padding: 0;
+      border: 0;
+      background: none;
+      color: var(--sl-text);
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .v-q::before {
+      content: "?";
+      color: var(--sl-primary);
+      font-weight: var(--sl-weight-bold);
+    }
+
+    .v-blk[data-done="true"] .v-q::before {
+      content: "\2714";
+      color: var(--sl-success);
+    }
+
+    .v-q b {
+      font-weight: var(--sl-weight-bold);
+    }
+
+    .v-q span {
+      display: none;
+      color: var(--sl-primary-strong);
+    }
+
+    .v-blk[data-done="true"] .v-q span {
+      display: inline;
+    }
+
+    .v-q span::before {
+      content: "\203A  ";
+      color: var(--sl-text-subtle);
+      white-space: pre;
+    }
+
+    .v-blk[aria-current="true"] .v-q::after {
+      content: "";
+      width: 0.6em;
+      height: 1.2em;
+      align-self: center;
+      background: var(--sl-primary);
+      animation: v-blink 1s steps(1) infinite;
+    }
+
+    @keyframes v-blink {
+      50% { opacity: 0; }
+    }
+
+    .v-a {
+      display: none;
+      margin: var(--sl-space-3) 0 var(--sl-space-6);
+      padding-left: var(--sl-space-6);
+      border-left: 1px dashed var(--sl-border-strong);
+    }
+
+    .v-blk[aria-current="true"] .v-a {
+      display: block;
+    }
+
+    .v-hint {
+      margin: 0 0 var(--sl-space-3);
+      color: var(--sl-text-subtle);
+    }
+
+    .v-hint::before {
+      content: "# ";
+    }
+
+    .v-pick {
+      display: grid;
+      grid-template-columns: repeat(3, max-content);
+      gap: 0 var(--sl-space-8);
+    }
+
+    .v-pick label {
+      color: var(--sl-text-muted);
+      cursor: pointer;
+    }
+
+    .v-pick label::before {
+      content: "( ) ";
+      white-space: pre;
+    }
+
+    .v-pick label:has(:checked) {
+      color: var(--sl-primary-strong);
+    }
+
+    .v-pick label:has(:checked)::before {
+      content: "(\2022) ";
+    }
+
+    .v-pick input {
+      position: absolute;
+      opacity: 0;
+    }
+
+    .v-field {
+      display: grid;
+      grid-template-columns: 15ch minmax(0, 32ch) 1fr;
+      gap: var(--sl-space-5);
+      align-items: baseline;
+    }
+
+    .v-field label {
+      color: var(--sl-text-muted);
+    }
+
+    .v-field label::after {
+      content: ":";
+    }
+
+    .v-field input {
+      min-height: 0;
+      padding: 0 var(--sl-space-2);
+      border: 0;
+      border-bottom: 1px solid var(--sl-border-strong);
+      border-radius: 0;
+      background: transparent;
+      color: var(--sl-text);
+      font: inherit;
+    }
+
+    .v-field input:focus {
+      border-bottom-color: var(--sl-primary);
+      box-shadow: none;
+    }
+
+    .v-field small {
+      color: var(--sl-text-subtle);
+      font-size: inherit;
+    }
+
+    .v-field .sl-radio-switch {
+      font-family: var(--sl-face-body, inherit);
+    }
+
+    .v-yn {
+      display: flex;
+      gap: var(--sl-space-6);
+    }
+
+    .v-yn label::after {
+      content: none;
+    }
+
+    .v-yn label:has(:checked) {
+      color: var(--sl-primary-strong);
+    }
+
+    .v-yn label:has(:checked)::before {
+      content: "[x] ";
+      white-space: pre;
+    }
+
+    .v-yn label:not(:has(:checked))::before {
+      content: "[ ] ";
+      white-space: pre;
+    }
+
+    .v-yn input {
+      position: absolute;
+      opacity: 0;
+    }
+
+    .v-log {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .v-log li {
+      display: grid;
+      grid-template-columns: 7ch minmax(0, auto) 1fr;
+      gap: var(--sl-space-5);
+    }
+
+    .v-log li::before {
+      content: "[ \2026 ]";
+      color: var(--sl-text-subtle);
+      white-space: pre;
+    }
+
+    .v-log li[data-state="done"]::before {
+      content: "[ OK ]";
+      color: var(--sl-success);
+    }
+
+    .v-log li[data-state="run"]::before {
+      color: var(--sl-primary);
+    }
+
+    .v-log span {
+      color: var(--sl-text-subtle);
+    }
+
+    .v-log [data-state="wait"] span,
+    .v-log [data-state="run"] span {
+      visibility: hidden;
+    }
+
+    .v-run-go {
+      padding: 0;
+      border: 0;
+      background: none;
+      color: var(--sl-primary-strong);
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .v-run-go::before {
+      content: "$ ";
+      color: var(--sl-text-subtle);
+    }
+
+    .v-base[data-run="idle"] .v-log {
+      display: none;
+    }
+
+    .v-base:not([data-run="idle"]) .v-run-go {
+      display: none;
+    }
+
+    .v-enter {
+      margin-top: var(--sl-space-5);
+      padding: var(--sl-space-1) var(--sl-space-4);
+      border: 1px solid var(--sl-border-strong);
+      border-radius: var(--sl-radius-1);
+      background: var(--sl-surface);
+      color: var(--sl-text);
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .v-enter:hover {
+      border-color: var(--sl-primary);
+      color: var(--sl-primary-strong);
+    }
+
+    .v-enter-go {
+      border-color: var(--sl-success);
+      color: var(--sl-success);
+    }
+
+    /* The run streams as a tail: finished lines pile at the foot and the oldest leave the window at the top */
+    .v-tail {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      height: 240px;
+      overflow: hidden;
+      mask-image: linear-gradient(transparent, #000 30%);
+    }
+
+    .v-tail li {
+      flex: none;
+    }
+
+    .v-tail li[data-state="wait"] {
+      display: none;
+    }
+
+    .v-tail [data-group="table"] b::before {
+      content: "CREATE TABLE ";
+      color: var(--sl-accent);
+      font-weight: var(--sl-weight-normal);
+    }
+
+    .v-tail [data-group="config"] b::before {
+      content: "WRITE ";
+      color: var(--sl-accent);
+      font-weight: var(--sl-weight-normal);
+    }
+
+    .v-tail [data-group="data"] b::before {
+      content: "INSERT INTO ";
+      color: var(--sl-accent);
+      font-weight: var(--sl-weight-normal);
+    }
+
+    .v-blocks {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: var(--sl-space-4);
+      align-items: center;
+      margin-top: var(--sl-space-5);
+    }
+
+    .v-blocks div {
+      height: 1em;
+      background: repeating-linear-gradient(90deg, var(--sl-border) 0 0.5em, transparent 0.5em 0.62em);
+    }
+
+    .v-blocks div::before {
+      content: "";
+      display: block;
+      width: calc(var(--d-run) * 100%);
+      height: 100%;
+      background: repeating-linear-gradient(90deg, var(--sl-success) 0 0.5em, transparent 0.5em 0.62em);
+    }
+
+    .v-done p {
+      margin: 0;
+    }
+
+    .v-done .v-ok {
+      color: var(--sl-success);
+      font-weight: var(--sl-weight-bold);
+    }
+
+    .v-done dl {
+      display: grid;
+      grid-template-columns: 15ch 1fr;
+      gap: var(--sl-space-1) var(--sl-space-5);
+      margin: var(--sl-space-5) 0;
+    }
+
+    .v-done dt {
+      color: var(--sl-text-muted);
+    }
+
+    .v-done dd {
+      margin: 0;
+    }
+
+    .v-done a {
+      color: var(--sl-primary-strong);
+    }
+
+    .v-done .v-gone {
+      color: var(--sl-text-muted);
+    }
+
+    .v-done .v-gone::before {
+      content: "\2714  ";
+      color: var(--sl-success);
+      white-space: pre;
+    }
+
+    .v-about {
+      margin-top: var(--sl-space-8);
+    }
+
+    @media (max-width: 768px) {
+      .v-screen {
+        padding: var(--sl-space-6);
+      }
+
+      .v-banner {
+        font-size: var(--sl-font-micro);
+      }
+
+      .v-pick {
+        grid-template-columns: repeat(2, max-content);
+      }
+
+      .v-field {
+        grid-template-columns: 1fr;
+        gap: 0;
+        margin-bottom: var(--sl-space-3);
+      }
+
+      .v-log li {
+        grid-template-columns: 7ch minmax(0, 1fr);
+      }
+
+      .v-log span {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body class="sl-admin-shell">
+  <div class="v-page">
+    <div class="v-term">
+      <div class="v-bar"><i></i><i></i><i></i><span>setup.php — SLAED CMS 8.0</span></div>
+      <div class="v-screen" data-demo-steps>
+<pre class="v-banner">  ____  _        _    _____ ____
+ / ___|| |      / \  | ____|  _ \
+ \___ \| |     / _ \ |  _| | | | |
+  ___) | |___ / ___ \| |___| |_| |
+ |____/|_____/_/   \_\_____|____/   <small>CMS 8.0 · новая установка</small></pre>
+
+        <div class="v-blk" data-demo-rail>
+          <button type="button" class="v-q" data-demo-go="0"><b>Язык установки</b><span>Русский</span></button>
+          <div class="v-a">
+            <p class="v-hint">язык установщика и сайта по умолчанию, остальные пять останутся посетителям</p>
+            <div class="v-pick">
+              <label><input type="radio" name="lang" value="en">English</label>
+              <label><input type="radio" name="lang" value="de">Deutsch</label>
+              <label><input type="radio" name="lang" value="fr">Français</label>
+              <label><input type="radio" name="lang" value="pl">Polski</label>
+              <label><input type="radio" name="lang" value="ru" checked>Русский</label>
+              <label><input type="radio" name="lang" value="uk">Українська</label>
+            </div>
+            <button type="button" class="v-enter" data-demo-go="next">&crarr; Enter</button>
+          </div>
+        </div>
+
+        <div class="v-blk" data-demo-rail>
+          <button type="button" class="v-q" data-demo-go="1"><b>Проверка сервера</b><span>PHP 8.4.12, всё на месте</span></button>
+          <div class="v-a">
+            <p class="v-hint">всё, что нужно системе, на месте</p>
+            <div data-demo-run="auto" data-demo-run-rows="server" data-demo-run-ms="120">
+              <ul class="v-log" data-demo-run-list><template><li><b data-demo-task-text></b><span data-demo-task-note></span></li></template></ul>
+            </div>
+            <button type="button" class="v-enter" data-demo-go="next">&crarr; Enter</button>
+          </div>
+        </div>
+
+        <div class="v-blk" data-demo-rail>
+          <button type="button" class="v-q" data-demo-go="2"><b>База данных</b><span>slaed@localhost/slaed_cms, Kx7mQ2w9Ra_</span></button>
+          <div class="v-a">
+            <p class="v-hint">MariaDB 10.5.2 или новее; базу создайте заранее, таблицы установщик создаст сам</p>
+            <div class="v-field"><label>сервер</label><input type="text" value="localhost" required><small></small></div>
+            <div class="v-field"><label>пользователь</label><input type="text" value="slaed" autocomplete="off" required><small></small></div>
+            <div class="v-field"><label>пароль</label><input type="password" value="db-secret-pass" autocomplete="new-password"><small></small></div>
+            <div class="v-field"><label>база</label><input type="text" value="slaed_cms" required><small></small></div>
+            <div class="v-field"><label>префикс</label><input type="text" value="Kx7mQ2w9Ra" required><small># случайный — таблицы не угадать</small></div>
+            <div class="v-base" data-demo-run data-demo-run-rows="base" data-demo-run-ms="380">
+              <p><button type="button" class="v-run-go" data-demo-run-go>проверить подключение</button></p>
+              <ul class="v-log" data-demo-run-list><template><li><b data-demo-task-text></b><span data-demo-task-note></span></li></template></ul>
+            </div>
+            <button type="button" class="v-enter" data-demo-go="next">&crarr; Enter</button>
+          </div>
+        </div>
+
+        <div class="v-blk" data-demo-rail>
+          <button type="button" class="v-q" data-demo-go="3"><b>Сайт</b><span>«Мой сайт», https://slaed.loc</span></button>
+          <div class="v-a">
+            <p class="v-hint">как сайт называется и где живёт; адрес определён по запросу</p>
+            <div class="v-field"><label>название</label><input type="text" value="Мой сайт" required><small></small></div>
+            <div class="v-field"><label>адрес</label><input type="url" value="https://slaed.loc" required><small></small></div>
+            <div class="v-field"><label>файл панели</label><input type="text" value="q4vz8kx2ma" required><small># admin.php станет q4vz8kx2ma.php</small></div>
+            <button type="button" class="v-enter" data-demo-go="next">&crarr; Enter</button>
+          </div>
+        </div>
+
+        <div class="v-blk" data-demo-rail>
+          <button type="button" class="v-q" data-demo-go="4"><b>Администратор</b><span>slaed &lt;admin@slaed.loc&gt;</span></button>
+          <div class="v-a">
+            <p class="v-hint">первый администратор сайта, остальных добавите в панели</p>
+            <div class="v-field"><label>ник</label><input type="text" value="slaed" maxlength="25" autocomplete="username" required><small></small></div>
+            <div class="v-field"><label>e-mail</label><input type="email" value="admin@slaed.loc" required><small></small></div>
+            <div class="v-field"><label>пароль</label><input type="password" value="owner-pass-2026" maxlength="25" autocomplete="new-password" required><small></small></div>
+            <div class="v-field"><label>повтор</label><input type="password" value="owner-pass-2026" maxlength="25" autocomplete="new-password" required><small></small></div>
+            <div class="v-field"><label>аккаунт на сайте</label><div class="v-yn"><label><input type="radio" name="auser" value="1" checked>да</label><label><input type="radio" name="auser" value="0">нет</label></div><small># с тем же ником и паролем</small></div>
+            <button type="button" class="v-enter v-enter-go" data-demo-go="next">&crarr; установить</button>
+          </div>
+        </div>
+
+        <div class="v-blk" data-demo-rail>
+          <button type="button" class="v-q" data-demo-go="5"><b>Установка</b><span>34 таблицы, 12 модулей</span></button>
+          <div class="v-a" data-demo-run="auto" data-demo-run-rows="install" data-demo-run-then="v-after">
+            <ul class="v-log v-tail" data-demo-run-list><template><li><b data-demo-task-text></b><span data-demo-task-note></span></li></template></ul>
+            <div class="v-blocks"><span>[</span><div></div><span>] <span data-demo-run-num>0</span>%</span></div>
+            <button type="button" id="v-after" data-demo-go="next" hidden></button>
+          </div>
+        </div>
+
+        <div class="v-blk v-done" data-demo-rail>
+          <button type="button" class="v-q" data-demo-go="6"><b>Готово</b><span></span></button>
+          <div class="v-a">
+            <p class="v-ok">SLAED CMS 8.0 установлена: 34 таблицы, 12 модулей, 6 языков.</p>
+            <dl>
+              <dt>сайт</dt><dd><a href="../index.php">https://slaed.loc</a></dd>
+              <dt>панель</dt><dd><a href="../admin.php">https://slaed.loc/q4vz8kx2ma.php</a> <span class="v-hint"># сохраните адрес, ссылки с сайта нет</span></dd>
+              <dt>администратор</dt><dd>slaed &lt;admin@slaed.loc&gt;</dd>
+            </dl>
+            <p class="v-gone">установщик удалил себя: setup.php на сервере больше нет</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sl-box v-about" data-demo-about></div>
+  </div>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

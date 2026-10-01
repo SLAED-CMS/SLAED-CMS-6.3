@@ -1,0 +1,709 @@
+<!doctype html>
+<html lang="ru" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Порог &middot; Lite &middot; Установщик — стенд SLAED CMS</title>
+  <link rel="icon" type="image/svg+xml" href="../templates/lite/images/favicon.svg">
+  <link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+  <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+  <!-- The stand is served without Cache-Control; its sheet and script are stamped so an edit is seen at once -->
+  <script>document.write('<link rel="stylesheet" href="assets/demo.css?v=' + Date.now() + '">');</script>
+  <style>
+    /* 13 Порог · Lite. The door of 01 with the motion of 09, standing on the site theme: the buttons are the pills of
+       lite, the titles are Magistral, the switch of the light mode sits in the corner of the head as on the site.
+       Light follows the pointer over the page and along the rim, a sheen crosses the logo, the road fills segment by
+       segment, every stop slides in from its side, the run streams, and the seal of the last stop throws sparks */
+    body {
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: var(--sl-space-8) var(--sl-space-6);
+      box-sizing: border-box;
+      background: linear-gradient(180deg, color-mix(in srgb, var(--sl-primary) 30%, var(--sl-primary-subtle)) 0%,
+        var(--sl-primary-subtle) 52%, var(--sl-surface) 100%) fixed;
+      overflow-x: hidden;
+    }
+
+    .v-glow {
+      position: fixed;
+      inset: 0;
+      z-index: var(--sl-z-base);
+      pointer-events: none;
+      background: radial-gradient(560px circle at var(--dx, 50%) var(--dy, 30%), var(--sl-tint-strong), transparent 70%);
+    }
+
+    .v-door {
+      position: relative;
+      z-index: var(--sl-z-raised);
+      width: min(480px, 100%);
+    }
+
+    .v-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--sl-radius-3);
+      background: var(--sl-bg);
+      box-shadow: var(--sl-shadow-float);
+    }
+
+    .v-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      padding: 1px;
+      border-radius: inherit;
+      background: radial-gradient(280px circle at var(--dx, 50%) var(--dy, 0), var(--sl-primary), transparent 70%);
+      pointer-events: none;
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+    }
+
+    /* The head of the door: the wordmark alone in the middle, the hairline of the theme under it, the mode switch in
+       the corner and a sheen that crosses the logo now and then */
+    .v-top {
+      position: relative;
+      display: grid;
+      place-items: center;
+      height: 104px;
+      overflow: hidden;
+    }
+
+    .v-top img {
+      width: 256px;
+    }
+
+    .v-top::after {
+      content: "";
+      position: absolute;
+      right: var(--sl-space-3);
+      bottom: 0;
+      left: var(--sl-space-3);
+      height: 1px;
+      background: var(--sl-grad-line);
+    }
+
+    .v-top::before {
+      content: "";
+      position: absolute;
+      z-index: var(--sl-z-raised);
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: var(--sl-beam-width);
+      background: linear-gradient(100deg, transparent, var(--sl-beam-bg), transparent);
+      transform: translateX(-120%);
+      mix-blend-mode: soft-light;
+      pointer-events: none;
+    }
+
+    .v-top .sl-mode {
+      position: absolute;
+      z-index: var(--sl-z-overlay);
+      top: var(--sl-space-4);
+      right: var(--sl-space-4);
+      transform: scale(0.8);
+      transform-origin: top right;
+    }
+
+    /* The switch of the site top bar; the stand writes aria-pressed where the site writes sl-is-active */
+    .v-top .sl-mode-cell[aria-pressed="true"] {
+      opacity: 0;
+    }
+
+    .v-top .sl-mode-rail:has(.sl-mode-cell:nth-child(2)[aria-pressed="true"]) .sl-mode-knob {
+      transform: translateX(var(--sl-mode-width));
+    }
+
+    .v-top .sl-mode-rail:has(.sl-mode-cell:nth-child(3)[aria-pressed="true"]) .sl-mode-knob {
+      transform: translateX(calc(var(--sl-mode-width) * 2));
+    }
+
+    .v-knob-light,
+    .v-knob-auto,
+    .v-knob-dark {
+      display: none;
+    }
+
+    .v-top .sl-mode-rail:has(.sl-mode-cell:nth-child(1)[aria-pressed="true"]) .v-knob-light,
+    .v-top .sl-mode-rail:has(.sl-mode-cell:nth-child(2)[aria-pressed="true"]) .v-knob-auto,
+    .v-top .sl-mode-rail:has(.sl-mode-cell:nth-child(3)[aria-pressed="true"]) .v-knob-dark {
+      display: inline;
+    }
+
+    .v-path {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: var(--sl-space-2);
+      margin: 0;
+      padding: var(--sl-space-6) var(--sl-space-8) 0;
+      list-style: none;
+    }
+
+    .v-path button {
+      display: block;
+      width: 100%;
+      height: var(--sl-space-2);
+      padding: 0;
+      border: 0;
+      border-radius: var(--sl-radius-pill);
+      background: var(--sl-border);
+      cursor: pointer;
+      transition: background-color var(--sl-time-slow) var(--sl-ease-out);
+    }
+
+    .v-path [data-done="true"] button {
+      background: color-mix(in srgb, var(--sl-primary) 45%, var(--sl-bg));
+    }
+
+    .v-path [aria-current="true"] button {
+      background: linear-gradient(90deg, var(--sl-primary), color-mix(in srgb, var(--sl-primary) 40%, var(--sl-bg)), var(--sl-primary)) 0 0 / 200% 100%;
+    }
+
+    .v-body {
+      padding: 0 var(--sl-space-8) var(--sl-space-8);
+    }
+
+    .v-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--sl-space-6);
+      margin: var(--sl-space-7) 0 var(--sl-space-3);
+    }
+
+    .v-head h2 {
+      margin: 0;
+      font-size: var(--sl-font-h1);
+    }
+
+    .v-head span {
+      color: var(--sl-text-subtle);
+      font-size: var(--sl-font-small);
+      white-space: nowrap;
+    }
+
+    .v-lead {
+      margin: 0 0 var(--sl-space-6);
+      color: var(--sl-text-muted);
+      line-height: var(--sl-line-normal);
+    }
+
+    .v-langs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--sl-space-3);
+    }
+
+    .v-langs label {
+      display: grid;
+      justify-items: center;
+      gap: var(--sl-space-3);
+      padding: var(--sl-space-5) var(--sl-space-3);
+      border: 1px solid var(--sl-border);
+      border-radius: var(--sl-radius-2);
+      cursor: pointer;
+      transition: transform var(--sl-time-base) var(--sl-ease-out), box-shadow var(--sl-time-base) var(--sl-ease-out),
+        border-color var(--sl-time-base) var(--sl-ease-out), background-color var(--sl-time-base) var(--sl-ease-out);
+    }
+
+    .v-langs label:hover {
+      border-color: var(--sl-primary);
+      transform: translateY(-3px);
+      box-shadow: var(--sl-shadow-raised);
+    }
+
+    .v-langs label:has(:checked) {
+      border-color: var(--sl-primary);
+      background: var(--sl-tint);
+      color: var(--sl-primary-strong);
+    }
+
+    .v-langs input {
+      position: absolute;
+      opacity: 0;
+    }
+
+    .v-langs img {
+      width: var(--sl-size-icon-lg);
+      border-radius: var(--sl-radius-1);
+      box-shadow: var(--sl-shadow-xs);
+    }
+
+    .v-form {
+      display: grid;
+      grid-template-columns: 130px minmax(0, 1fr);
+      gap: var(--sl-space-4) var(--sl-space-6);
+      align-items: center;
+    }
+
+    .v-form input {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .v-form small {
+      grid-column: 2;
+      margin-top: calc(var(--sl-space-3) * -1);
+      color: var(--sl-text-subtle);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-checks {
+      display: grid;
+      gap: var(--sl-space-1);
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .v-checks li {
+      display: grid;
+      grid-template-columns: var(--sl-size-icon-sm) 8em 1fr;
+      gap: var(--sl-space-4);
+      align-items: center;
+      padding: var(--sl-space-3) 0;
+      border-bottom: 1px solid var(--sl-border);
+      transition: opacity var(--sl-time-slow) var(--sl-ease-out), transform var(--sl-time-slow) var(--sl-ease-out);
+    }
+
+    .v-checks li[data-state="wait"] {
+      opacity: var(--sl-fade-disabled);
+      transform: translateX(-8px);
+    }
+
+    .v-checks .bi {
+      color: var(--sl-text-subtle);
+    }
+
+    .v-checks [data-state="done"] .bi {
+      color: var(--sl-success);
+    }
+
+    .v-checks [data-state="done"] .bi::before {
+      content: "\f26a";
+    }
+
+    .v-checks span {
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-base {
+      display: grid;
+      gap: var(--sl-space-4);
+      margin-top: var(--sl-space-6);
+    }
+
+    .v-base .sl-but {
+      justify-self: start;
+    }
+
+    .v-base:not([data-run="idle"]) .sl-but,
+    .v-base[data-run="idle"] .v-checks {
+      display: none;
+    }
+
+    .v-nav {
+      display: flex;
+      justify-content: space-between;
+      gap: var(--sl-space-4);
+      margin-top: var(--sl-space-7);
+    }
+
+    .v-nav:has(> :only-child) {
+      justify-content: center;
+    }
+
+    .v-nav .sl-but {
+      margin: 0;
+    }
+
+    .v-nav [disabled] {
+      visibility: hidden;
+    }
+
+    .v-run .sl-progress-line div {
+      position: relative;
+      overflow: visible;
+      width: calc(var(--d-run) * 100%);
+      background-image:
+        repeating-linear-gradient(45deg, color-mix(in srgb, var(--sl-on-solid) 28%, transparent) 0 6px, transparent 6px 12px),
+        var(--sl-grad-progress-1);
+      background-size: 17px 17px, auto;
+      transition: width var(--sl-time-fast) linear;
+    }
+
+    .v-run .sl-progress-line div::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      right: -4px;
+      width: 8px;
+      height: 8px;
+      margin-top: -4px;
+      border-radius: var(--sl-radius-circle);
+      background: var(--sl-on-solid);
+      box-shadow: 0 0 10px 3px var(--sl-primary);
+    }
+
+    .v-run[data-run="done"] .sl-progress-line div::after {
+      opacity: 0;
+    }
+
+    .v-run p {
+      display: flex;
+      justify-content: space-between;
+      gap: var(--sl-space-4);
+      margin: var(--sl-space-4) 0 0;
+      color: var(--sl-text-muted);
+      font-size: var(--sl-font-small);
+    }
+
+    .v-run b {
+      color: var(--sl-text);
+    }
+
+    .v-run ol {
+      display: none;
+    }
+
+    .v-done {
+      display: grid;
+      justify-items: center;
+      gap: var(--sl-space-3);
+      margin: var(--sl-space-8) 0 var(--sl-space-6);
+      text-align: center;
+    }
+
+    .v-done h2 {
+      margin: 0;
+      font-size: var(--sl-font-h1);
+    }
+
+    .v-done p {
+      margin: 0;
+      color: var(--sl-text-muted);
+    }
+
+    /* The seal: ring and tick draw themselves and ten sparks of the theme tones fly off. Every animation runs from
+       the hidden state to the drawn one, so with motion off the seal simply stands drawn */
+    .v-seal {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 72px;
+      height: 72px;
+    }
+
+    .v-seal svg {
+      width: 100%;
+      height: 100%;
+      fill: none;
+      stroke: var(--sl-success);
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 100;
+    }
+
+    .v-seal i {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 6px;
+      height: 6px;
+      margin: -3px 0 0 -3px;
+      border-radius: var(--sl-radius-circle);
+      background: var(--v-c);
+      opacity: 0;
+    }
+
+    .v-seal i:nth-child(2) { --v-a: 0deg; --v-c: var(--sl-primary); }
+    .v-seal i:nth-child(3) { --v-a: 36deg; --v-c: var(--sl-success); }
+    .v-seal i:nth-child(4) { --v-a: 72deg; --v-c: var(--sl-warning); }
+    .v-seal i:nth-child(5) { --v-a: 108deg; --v-c: var(--sl-accent); }
+    .v-seal i:nth-child(6) { --v-a: 144deg; --v-c: var(--sl-danger); }
+    .v-seal i:nth-child(7) { --v-a: 180deg; --v-c: var(--sl-primary); }
+    .v-seal i:nth-child(8) { --v-a: 216deg; --v-c: var(--sl-success); }
+    .v-seal i:nth-child(9) { --v-a: 252deg; --v-c: var(--sl-warning); }
+    .v-seal i:nth-child(10) { --v-a: 288deg; --v-c: var(--sl-accent); }
+    .v-seal i:nth-child(11) { --v-a: 324deg; --v-c: var(--sl-danger); }
+
+    .v-foot {
+      padding: var(--sl-space-4) var(--sl-space-6);
+      background:
+        repeating-linear-gradient(135deg, color-mix(in srgb, var(--sl-on-solid) 8%, transparent) 0 2px, transparent 2px 6px),
+        var(--sl-primary);
+      color: var(--sl-on-solid);
+      font-size: var(--sl-font-small);
+      text-align: center;
+    }
+
+    .v-foot a:is(:link, :visited, :hover) {
+      color: inherit;
+    }
+
+    .v-about {
+      position: relative;
+      z-index: var(--sl-z-raised);
+      width: min(480px, 100%);
+      margin-top: var(--sl-space-8);
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .v-card {
+        animation: v-arrive 0.8s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
+      }
+
+      .v-top::before {
+        animation: v-beam var(--sl-beam-dur) ease-in-out 1s infinite;
+      }
+
+      .v-path [aria-current="true"] button {
+        animation: v-flow 1.6s linear infinite;
+      }
+
+      .v-body [data-demo-step]:not([hidden]) > * {
+        animation: v-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+      }
+
+      .v-door[data-dir="prev"] [data-demo-step]:not([hidden]) > * {
+        animation-name: v-back;
+      }
+
+      .v-body [data-demo-step] > :nth-child(2) { animation-delay: 0.05s; }
+      .v-body [data-demo-step] > :nth-child(3) { animation-delay: 0.1s; }
+      .v-body [data-demo-step] > :nth-child(4) { animation-delay: 0.15s; }
+      .v-body [data-demo-step] > :nth-child(5) { animation-delay: 0.2s; }
+
+      .v-langs label:has(:checked) img {
+        animation: v-bob 0.5s cubic-bezier(0.3, 1.6, 0.5, 1);
+      }
+
+      .v-checks [data-state="done"] .bi {
+        animation: v-pop 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+      }
+
+      .v-run .sl-progress-line div {
+        animation: v-stripes 0.6s linear infinite;
+      }
+
+      .v-seal circle {
+        animation: v-draw 0.7s ease-out 0.1s both;
+      }
+
+      .v-seal path {
+        animation: v-draw 0.4s ease-out 0.7s both;
+      }
+
+      .v-seal i {
+        animation: v-spark 0.9s cubic-bezier(0.2, 0.7, 0.3, 1) 0.85s both;
+      }
+
+      .v-done h2,
+      .v-done p {
+        animation: v-rise 0.5s ease-out 0.9s both;
+      }
+    }
+
+    @keyframes v-arrive {
+      from { opacity: 0; transform: translateY(28px) scale(0.96); filter: blur(6px); }
+    }
+
+    @keyframes v-beam {
+      0% { transform: translateX(-120%); }
+      40%, 100% { transform: translateX(420%); }
+    }
+
+    @keyframes v-flow {
+      to { background-position: -200% 0; }
+    }
+
+    @keyframes v-in {
+      from { opacity: 0; transform: translateX(28px); }
+    }
+
+    @keyframes v-back {
+      from { opacity: 0; transform: translateX(-28px); }
+    }
+
+    @keyframes v-bob {
+      40% { transform: translateY(-6px) rotate(-6deg); }
+    }
+
+    @keyframes v-pop {
+      0% { transform: scale(0.2); }
+    }
+
+    @keyframes v-stripes {
+      to { background-position: 17px 0, 0 0; }
+    }
+
+    @keyframes v-draw {
+      from { stroke-dashoffset: 100; }
+      to { stroke-dashoffset: 0; }
+    }
+
+    @keyframes v-spark {
+      0% { opacity: 1; transform: rotate(var(--v-a)) translateY(0) scale(1); }
+      100% { opacity: 0; transform: rotate(var(--v-a)) translateY(-64px) scale(0.3); }
+    }
+
+    @keyframes v-rise {
+      from { opacity: 0; transform: translateY(10px); }
+    }
+
+    @media (max-width: 560px) {
+      .v-langs {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .v-form {
+        grid-template-columns: 1fr;
+        gap: var(--sl-space-2);
+      }
+
+      .v-form small {
+        grid-column: 1;
+        margin-top: 0;
+      }
+
+      .v-checks li {
+        grid-template-columns: var(--sl-size-icon-sm) 1fr;
+      }
+
+      .v-checks span {
+        grid-column: 2;
+      }
+
+      .v-top .sl-mode {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="v-glow" data-demo-spot aria-hidden="true"></div>
+
+  <div class="v-door" data-demo-steps>
+    <div class="v-card" data-demo-spot>
+      <div class="v-top">
+        <a href="//slaed.net" target="_blank" title="SLAED CMS"><img src="../templates/lite/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="SLAED CMS"></a>
+        <div class="sl-mode">
+          <span class="sl-mode-rail">
+            <button type="button" class="sl-mode-cell" data-demo-set="mode" data-demo-value="light" title="Светлая" aria-label="Светлая"><i class="bi bi-sun" aria-hidden="true"></i></button><button type="button" class="sl-mode-cell" data-demo-set="mode" data-demo-value="auto" title="Системная" aria-label="Системная"><i class="bi bi-circle-half" aria-hidden="true"></i></button><button type="button" class="sl-mode-cell" data-demo-set="mode" data-demo-value="dark" title="Тёмная" aria-label="Тёмная"><i class="bi bi-moon" aria-hidden="true"></i></button>
+            <span class="sl-mode-knob" aria-hidden="true"><i class="bi bi-sun v-knob-light"></i><i class="bi bi-circle-half v-knob-auto"></i><i class="bi bi-moon v-knob-dark"></i></span>
+          </span>
+        </div>
+      </div>
+
+      <ol class="v-path" aria-label="Путь установки">
+        <li data-demo-rail><button type="button" data-demo-go="0" title="Язык"></button></li>
+        <li data-demo-rail><button type="button" data-demo-go="1" title="Сервер"></button></li>
+        <li data-demo-rail><button type="button" data-demo-go="2" title="База данных"></button></li>
+        <li data-demo-rail><button type="button" data-demo-go="3" title="Сайт"></button></li>
+        <li data-demo-rail><button type="button" data-demo-go="4" title="Администратор"></button></li>
+        <li data-demo-rail><button type="button" data-demo-go="5" title="Установка"></button></li>
+        <li data-demo-rail><button type="button" data-demo-go="6" title="Готово"></button></li>
+      </ol>
+
+      <div class="v-body">
+
+        <section data-demo-step>
+          <div class="v-head"><h2 class="sl-font">Язык</h2><span>шаг 1 из 7</span></div>
+          <p class="v-lead">Язык установщика и сайта по умолчанию. Остальные пять останутся доступны посетителям.</p>
+          <div class="v-langs">
+            <label><input type="radio" name="lang" value="en"><img src="../templates/lite/images/flags/gb.svg" alt="">English</label>
+            <label><input type="radio" name="lang" value="de"><img src="../templates/lite/images/flags/de.svg" alt="">Deutsch</label>
+            <label><input type="radio" name="lang" value="fr"><img src="../templates/lite/images/flags/fr.svg" alt="">Français</label>
+            <label><input type="radio" name="lang" value="pl"><img src="../templates/lite/images/flags/pl.svg" alt="">Polski</label>
+            <label><input type="radio" name="lang" value="ru" checked><img src="../templates/lite/images/flags/ru.svg" alt="">Русский</label>
+            <label><input type="radio" name="lang" value="uk"><img src="../templates/lite/images/flags/ua.svg" alt="">Українська</label>
+          </div>
+          <div class="v-nav"><button type="button" class="sl-but" data-demo-go="next">Продолжить <i class="bi bi-arrow-right"></i></button></div>
+        </section>
+
+        <section data-demo-step hidden>
+          <div class="v-head"><h2 class="sl-font">Сервер</h2><span>шаг 2 из 7</span></div>
+          <p class="v-lead">Установщик проверил сервер. Всё, что нужно системе, на месте.</p>
+          <div data-demo-run="auto" data-demo-run-rows="server" data-demo-run-ms="140">
+            <ul class="v-checks" data-demo-run-list><template><li><i class="bi bi-circle"></i><b data-demo-task-text></b><span data-demo-task-note></span></li></template></ul>
+          </div>
+          <div class="v-nav"><button type="button" class="sl-but" data-demo-go="prev"><i class="bi bi-arrow-left"></i> Назад</button><button type="button" class="sl-but" data-demo-go="next">Продолжить <i class="bi bi-arrow-right"></i></button></div>
+        </section>
+
+        <section data-demo-step hidden>
+          <div class="v-head"><h2 class="sl-font">База данных</h2><span>шаг 3 из 7</span></div>
+          <p class="v-lead">MariaDB 10.5.2 или новее. Базу создайте заранее — таблицы установщик создаст сам.</p>
+          <div class="v-form">
+            <label for="v-host">Сервер</label><input id="v-host" type="text" value="localhost" required>
+            <label for="v-user">Пользователь</label><input id="v-user" type="text" value="slaed" autocomplete="off" required>
+            <label for="v-pass">Пароль</label><input id="v-pass" type="password" value="db-secret-pass" autocomplete="new-password">
+            <label for="v-base">Название базы</label><input id="v-base" type="text" value="slaed_cms" required>
+            <label for="v-pref">Префикс таблиц</label><input id="v-pref" type="text" value="Kx7mQ2w9Ra" required><small>Случайный — по нему таблицы не угадать</small>
+          </div>
+          <div class="v-base" data-demo-run data-demo-run-rows="base" data-demo-run-ms="380">
+            <button type="button" class="sl-but" data-demo-run-go><i class="bi bi-plug"></i> Проверить подключение</button>
+            <ul class="v-checks" data-demo-run-list><template><li><i class="bi bi-circle"></i><b data-demo-task-text></b><span data-demo-task-note></span></li></template></ul>
+          </div>
+          <div class="v-nav"><button type="button" class="sl-but" data-demo-go="prev"><i class="bi bi-arrow-left"></i> Назад</button><button type="button" class="sl-but" data-demo-go="next">Продолжить <i class="bi bi-arrow-right"></i></button></div>
+        </section>
+
+        <section data-demo-step hidden>
+          <div class="v-head"><h2 class="sl-font">Сайт</h2><span>шаг 4 из 7</span></div>
+          <p class="v-lead">Как сайт называется и где живёт. Адрес определён по запросу.</p>
+          <div class="v-form">
+            <label for="v-site">Название</label><input id="v-site" type="text" value="Мой сайт" required>
+            <label for="v-url">Адрес</label><input id="v-url" type="url" value="https://slaed.loc" required>
+            <label for="v-file">Файл панели</label><input id="v-file" type="text" value="q4vz8kx2ma" required><small>admin.php станет q4vz8kx2ma.php — адрес панели не угадать</small>
+          </div>
+          <div class="v-nav"><button type="button" class="sl-but" data-demo-go="prev"><i class="bi bi-arrow-left"></i> Назад</button><button type="button" class="sl-but" data-demo-go="next">Продолжить <i class="bi bi-arrow-right"></i></button></div>
+        </section>
+
+        <section data-demo-step hidden>
+          <div class="v-head"><h2 class="sl-font">Администратор</h2><span>шаг 5 из 7</span></div>
+          <p class="v-lead">Первый администратор сайта. Остальных добавите в панели.</p>
+          <div class="v-form">
+            <label for="v-nick">Ник</label><input id="v-nick" type="text" value="slaed" maxlength="25" autocomplete="username" required>
+            <label for="v-mail">E-mail</label><input id="v-mail" type="email" value="admin@slaed.loc" required>
+            <label for="v-pwd">Пароль</label><input id="v-pwd" type="password" value="owner-pass-2026" maxlength="25" autocomplete="new-password" required>
+            <label for="v-pwd2">Повтор</label><input id="v-pwd2" type="password" value="owner-pass-2026" maxlength="25" autocomplete="new-password" required>
+            <span>Аккаунт на сайте</span><div class="sl-radio-group sl-radio-switch"><label class="sl-radio"><input type="radio" name="auser" value="1" checked>Да</label><label class="sl-radio"><input type="radio" name="auser" value="0">Нет</label></div><small>С тем же ником и паролем</small>
+          </div>
+          <div class="v-nav"><button type="button" class="sl-but" data-demo-go="prev"><i class="bi bi-arrow-left"></i> Назад</button><button type="button" class="sl-but" data-demo-go="next"><i class="bi bi-download"></i> Установить</button></div>
+        </section>
+
+        <section data-demo-step hidden>
+          <div class="v-head"><h2 class="sl-font">Установка</h2><span>шаг 6 из 7</span></div>
+          <p class="v-lead">Ничего не нужно делать: установщик пишет конфигурацию и создаёт таблицы.</p>
+          <div class="v-run" data-demo-run="auto" data-demo-run-rows="install" data-demo-run-then="v-after">
+            <div class="sl-progress-line sl-progress-1"><div></div></div>
+            <p><span data-demo-run-label>подготовка</span><b><span data-demo-run-num>0</span>%</b></p>
+            <ol data-demo-run-list><template><li><b data-demo-task-text></b><span data-demo-task-note></span></li></template></ol>
+          </div>
+          <button type="button" id="v-after" data-demo-go="next" hidden></button>
+        </section>
+
+        <section data-demo-step hidden>
+          <div class="v-done">
+            <span class="v-seal" aria-hidden="true"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24" pathLength="100"></circle><path d="M15 27l7 7 15-16" pathLength="100"></path></svg><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+            <h2 class="sl-font">Готово</h2>
+            <p>SLAED CMS 8.0 установлена: 34 таблицы, 12 модулей, 6 языков.</p>
+          </div>
+          <div class="sl-alert sl-alert-info"><div class="sl-alert-body">Адрес панели — https://slaed.loc/q4vz8kx2ma.php. Сохраните его: ссылки на панель с сайта нет.</div></div>
+          <div class="sl-alert sl-alert-success"><div class="sl-alert-body">Установщик удалил себя: setup.php на сервере больше нет.</div></div>
+          <div class="v-nav"><a class="sl-but" href="../index.php"><i class="bi bi-globe2"></i> Открыть сайт</a><a class="sl-but" href="../admin.php"><i class="bi bi-box-arrow-in-right"></i> Войти в панель</a></div>
+        </section>
+
+      </div>
+      <div class="v-foot"><a href="https://slaed.net" title="SLAED CMS" target="_blank" rel="noopener noreferrer">SLAED CMS</a> © 2005-2026 Eduard Laas. Released under MIT License.</div>
+    </div>
+  </div>
+  <div class="v-about" data-demo-about></div>
+  <script>document.write('<script src="assets/demo.js?v=' + Date.now() + '"><\/script>');</script>
+</body>
+</html>

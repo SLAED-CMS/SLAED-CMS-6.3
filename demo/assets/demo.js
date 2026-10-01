@@ -436,6 +436,145 @@ const DEMO_FLASH = [
   },
 ];
 
+/* The seventh series: the installer, `setup.php`, a clean installation only. The old one asked for a language on a
+   table of flags and for everything else on one table of fields, then printed a report of table rows and sent the
+   owner to admin.php to create the first administrator. Every face carries the same seven stops - language, server,
+   database, site, administrator, run, done - with the same fields and values, and the run takes its rows from
+   DEMO_SETUP_RUN, so what the installer checks and creates is one list for all eight */
+const DEMO_SETUP = [
+  {
+    file: 'setup-01-door.html',
+    title: 'Порог',
+    note: 'Установщик — та же дверь, что и вход в панель: карточка входа администратора, её шапка с логотипом, её подвал с полосой. ' +
+      'В карточке один шаг за раз, под шапкой — семь сегментов пути. Самый тихий вариант: ничего нового, кроме самой установки.',
+    tags: ['карточка входа', 'шаг за шагом', 'минимум'],
+  },
+  {
+    file: 'setup-02-wizard.html',
+    title: 'Мастер',
+    note: 'Классический мастер в широкой карточке. Слева рельс из семи остановок, и у пройденной под названием стоит ответ: язык, ' +
+      'версия PHP, база, адрес сайта, ник. Справа одна панель строками формы панели администратора, внизу — назад и дальше.',
+    tags: ['рельс со сводкой', 'строки формы', 'классика'],
+  },
+  {
+    file: 'setup-03-scroll.html',
+    title: 'Лента',
+    note: 'Ничего не спрятано: все шаги одной страницей, разделами панели с номером в шапке. Слева липкое оглавление следит за чтением, ' +
+      'сверху полоса показывает пройденное. Одна кнопка «Установить» внизу, прогон идёт там же, где была кнопка.',
+    tags: ['одна страница', 'оглавление-шпион', 'одна кнопка'],
+  },
+  {
+    file: 'setup-04-console.html',
+    title: 'Консоль',
+    note: 'Установщик как терминал: шаги — подсказки командной строки, ответ вводится в той же строке. Прогон — живой журнал ' +
+      'CREATE TABLE с отметкой OK и полосой из блоков. Окно объявляет себе тёмную схему, поэтому токены темы внутри него тёмные в обоих режимах страницы.',
+    tags: ['терминал', 'журнал', 'моноширинный'],
+  },
+  {
+    file: 'setup-05-panel.html',
+    title: 'Пульт',
+    note: 'Установщик уже выглядит как панель, в которую ведёт: шапка, сайдбар, заголовок модуля и его вкладки. Вкладки — шаги, ' +
+      'сайдбар — лампы готовности, которые загораются по мере ответов. Прогон — кольцо панели и строка текущей задачи.',
+    tags: ['оболочка admin.php', 'вкладки-шаги', 'лампы', 'кольцо'],
+  },
+  {
+    file: 'setup-06-dialog.html',
+    title: 'Диалог',
+    note: 'Установка как разговор. SLAED задаёт вопрос, ответ даётся в пузыре под ним; отвеченное сворачивается в короткую реплику, ' +
+      'а следующий вопрос появляется ниже. Вся переписка остаётся перед глазами, к любому ответу можно вернуться щелчком.',
+    tags: ['вопрос-ответ', 'история перед глазами', 'крупный шрифт'],
+  },
+  {
+    file: 'setup-07-express.html',
+    title: 'Экспресс',
+    note: 'Один экран и один клик. Всё, у чего есть разумное значение, уже заполнено; слева три группы полей, справа живой список ' +
+      'готовности. «Установить» превращает карточку в кольцо прогона, а кольцо — в итог.',
+    tags: ['один экран', 'значения по умолчанию', 'список готовности'],
+  },
+  {
+    file: 'setup-08-build.html',
+    title: 'Сборка',
+    note: 'Рядом с формой строится чертёж будущего сайта: название появляется в его шапке по мере ввода, база и администратор ' +
+      'дорисовывают свои части. На прогоне чертёж собирается по-настоящему: тридцать четыре клетки таблиц и двенадцать модулей загораются одна за другой.',
+    tags: ['чертёж сайта', 'живое превью', 'сборка по клеткам'],
+  },
+  {
+    file: 'setup-09-motion.html',
+    title: 'Порог · Движение',
+    note: 'Порог один в один и слой движения поверх. Карточка прибывает из размытия, за курсором по странице и по кромке карточки идёт свет, по логотипу ' +
+      'проходит блик. Путь заполняется сегментами, каждый шаг въезжает с той стороны, где лежит, флаг подпрыгивает на выборе, проверки щёлкают галочками, ' +
+      'полоса прогона бежит штрихами с огоньком на конце. Финал рисует кольцо и галочку и разбрасывает искры пяти тонов темы.',
+    tags: ['лидер', '01 + движение', 'свет за курсором', 'шаги со стороны', 'искры', 'проверка базы в ряду кнопок'],
+  },
+  {
+    file: 'setup-10-dawn.html',
+    title: 'Порог · Рассвет',
+    note: 'Вокруг Порога — небо одного утра. Первый шаг — глубокая ночь со звёздами, каждый ответ переводит час вперёд: звёзды гаснут, у горизонта ' +
+      'разгорается заря, из-за холмов поднимается знак SLAED, как солнце. На последнем шаге полный день и вращающиеся лучи. Час — одно число от шага пути.',
+    tags: ['01 + сюжет', 'ночь → день', 'знак-солнце', 'только CSS'],
+  },
+  {
+    file: 'setup-11-depth.html',
+    title: 'Порог · Глубина',
+    note: 'Порог в пространстве. Карточка наклоняется к курсору и несёт блик, за ней колода оставшихся шагов, которая тает с каждым ответом, ' +
+      'кольца знака плывут на трёх глубинах. Шаг перелистывается, как страница, назад — в обратную сторону. На «Готово» карточка оборачивается целиком.',
+    tags: ['01 + 3D', 'колода шагов', 'параллакс', 'перелистывание'],
+  },
+  {
+    file: 'setup-12-season.html',
+    title: 'Порог · Сезон',
+    note: 'Порог на теме сайта lite. Сезонная фотополоса шапки сайта несёт заголовок Magistral, карточка заходит на её нижний край, в шапке карточки — ' +
+      'переключатель режима, как в верхней полосе сайта. Путь — семь номеров на одной нити. По странице идёт сезон: снег, лепестки, блики или листья — ' +
+      'какой сезон выбран на панели стенда; живой установщик выберет его по месяцу. Прогон — кольцо со знаком внутри.',
+    tags: ['тема lite', 'сезонная полоса', 'снег и листья', 'переключатель режима'],
+  },
+  {
+    file: 'setup-13-lite.html',
+    title: 'Порог · Lite',
+    note: 'Проба: Порог с движением 09 на теме сайта lite. Кнопки — пилюли lite, как в 12, заголовки — Magistral, переключатель режима — в углу шапки. ' +
+      'Свет за курсором по странице и кромке, блик логотипа, путь сегментами, шаги со своей стороны, полоса прогона со штрихами и огоньком, ' +
+      'печать с искрами на финале. Своего у лица только раскладка: компоненты, кнопки и тона — темы.',
+    tags: ['09 + кнопки 12', 'тема lite', 'движение'],
+  },
+];
+
+/* What the installer checks and does, in the order it does it: the server checks, the three questions to the
+   database and the run itself - configuration, the 34 tables of setup/sql/table.sql, the three seeded ones, the
+   administrator and the lock. The prefix and the panel file are the random values every face shows */
+const DEMO_SETUP_RUN = {
+  server: [
+    { text: 'PHP 8.4.12', note: 'нужен 8.4 или новее', group: 'php' },
+    { text: 'mbstring', note: 'строки в UTF-8', group: 'php' },
+    { text: 'PDO MySQL', note: 'доступ к базе', group: 'php' },
+    { text: 'JSON', note: 'конфигурация и ответы', group: 'php' },
+    { text: 'Zip', note: 'архивы и резервные копии', group: 'php' },
+    { text: 'Zlib', note: 'сжатие страниц', group: 'php' },
+    { text: 'config/', note: 'запись разрешена', group: 'disk' },
+    { text: 'storage/', note: 'запись разрешена', group: 'disk' },
+    { text: 'uploads/', note: 'запись разрешена', group: 'disk' },
+    { text: 'HTTPS', note: 'сайт отвечает по https://slaed.loc', group: 'web' },
+  ],
+  base: [
+    { text: 'Соединение с localhost', note: 'пользователь slaed', group: 'link' },
+    { text: 'MariaDB 10.11.8', note: 'нужна 10.5.2 или новее', group: 'link' },
+    { text: 'Префикс Kx7mQ2w9Ra свободен', note: 'таблиц с ним в базе нет', group: 'link' },
+  ],
+  install: [
+    ...['db', 'global', 'security'].map((f) => ({ text: `config/${f}.php`, note: 'записан', group: 'config' })),
+    ...['admins', 'blocks', 'categories', 'comment', 'favorites', 'forum', 'groups', 'mail', 'maildead', 'message', 'newsletter',
+      'node_types', 'nodes', 'node_assets', 'node_categories', 'node_legacy', 'node_publish', 'node_relations', 'node_support',
+      'node_sync', 'oauth_temp', 'points', 'privat', 'rating', 'rating_actors', 'rating_targets', 'rating_votes', 'referer',
+      'search', 'session', 'user_oauth', 'users', 'users_temp', 'voting']
+      .map((t) => ({ text: `Kx7mQ2w9Ra_${t}`, note: 'создана', group: 'table' })),
+    ...[['blocks', 'начальные блоки'], ['categories', 'категории'], ['forum', 'первый раздел форума']]
+      .map(([t, n]) => ({ text: `Kx7mQ2w9Ra_${t}`, note: n, group: 'data' })),
+    { text: 'Модули', note: '12 подключено', group: 'final' },
+    { text: 'Администратор slaed', note: 'создан, аккаунт пользователя тоже', group: 'final' },
+    { text: 'admin.php → q4vz8kx2ma.php', note: 'панель переименована', group: 'final' },
+    { text: 'setup.php', note: 'установщик удалил себя', group: 'final' },
+  ],
+};
+
 const DEMO_SERIES = [
   { key: 'presentation', title: 'Презентационная страница', addr: 'index.php?name=presentation', items: DEMO_VARIANTS },
   { key: 'settings', title: 'Настройки аккаунта', addr: 'index.php?name=account&op=edithome', items: DEMO_SETTINGS },
@@ -443,6 +582,7 @@ const DEMO_SERIES = [
   { key: 'favorites', title: 'Фавориты', addr: 'index.php?name=account&op=favorites', items: DEMO_FAVORITES },
   { key: 'admin', title: 'Панель администратора', addr: 'admin.php', items: DEMO_ADMIN },
   { key: 'flash', title: 'Алерт подтверждения', addr: 'admin.php после сохранения', items: DEMO_FLASH },
+  { key: 'setup', title: 'Установщик', addr: 'setup.php', items: DEMO_SETUP },
 ];
 
 /* Which series a file belongs to, and where it stands in it. An unknown file gets the first series at index -1,
@@ -1419,10 +1559,12 @@ function setDemoSteps() {
   document.querySelectorAll('[data-demo-steps]').forEach((box) => {
     const panels = [...box.querySelectorAll('[data-demo-step]')];
     const rails = [...box.querySelectorAll('[data-demo-rail]')];
+    /* A face whose stops are the rail itself, a dialogue or a scroll, carries no panels and counts its rail */
+    const count = panels.length || rails.length;
     let at = 0;
 
     function draw() {
-      at = Math.max(0, Math.min(panels.length - 1, at));
+      at = Math.max(0, Math.min(count - 1, at));
       panels.forEach((p, i) => p.toggleAttribute('hidden', i !== at));
       rails.forEach((r, i) => {
         r.setAttribute('aria-current', String(i === at));
@@ -1430,7 +1572,7 @@ function setDemoSteps() {
       });
       box.style.setProperty('--d-step', String(at + 1));
       box.querySelectorAll('[data-demo-go="prev"]').forEach((b) => { b.disabled = at === 0; });
-      box.querySelectorAll('[data-demo-go="next"]').forEach((b) => { b.disabled = at === panels.length - 1; });
+      box.querySelectorAll('[data-demo-go="next"]').forEach((b) => { b.disabled = at === count - 1; });
       box.querySelectorAll('[data-demo-step-num]').forEach((n) => { n.textContent = String(at + 1); });
     }
 
@@ -1439,13 +1581,95 @@ function setDemoSteps() {
       if (!go) return;
       e.preventDefault();
       const dir = go.dataset.demoGo;
+      const was = at;
       at = (dir === 'next') ? at + 1 : (dir === 'prev') ? at - 1 : Number(dir);
+      /* The way the reader went, so a face can bring the next panel in from the side it lies on */
+      box.dataset.dir = (at < was) ? 'prev' : 'next';
       draw();
       /* A short step after a long one leaves the reader below the whole panel: bring the rail back only when it
          has actually scrolled off the top, so a step change from the top of the page never jumps */
       if (box.getBoundingClientRect().top < 0) box.scrollIntoView({ block: 'start', behavior: 'smooth' });
     });
     draw();
+  });
+}
+
+/* The installer series plays its checks and its run. A data-demo-run box takes its rows from DEMO_SETUP_RUN by the
+   name in data-demo-run-rows: the <template> inside its data-demo-run-list is cloned once per row, the clone gets the
+   row as data-demo-task and data-group, and its data-demo-task-text and data-demo-task-note get the two texts. The
+   rows then go wait, run and done in order; the box carries data-run idle, run or done and --d-run from 0 to 1,
+   data-demo-run-num shows the percent, data-demo-run-label the row under way, and every data-demo-run-arc the drawn
+   share of a circle with pathLength 100. A box marked auto starts the first time it is seen, a data-demo-run-go
+   starts the box it names by id or the one it stands in, and data-demo-run-then names a button pressed at the end */
+function setDemoRun() {
+  const boxes = [...document.querySelectorAll('[data-demo-run]')];
+  if (!boxes.length) return;
+  const plays = new Map();
+
+  boxes.forEach((box) => {
+    const rows = DEMO_SETUP_RUN[box.dataset.demoRunRows] || [];
+    box.querySelectorAll('[data-demo-run-list]').forEach((list) => {
+      const tpl = list.querySelector('template');
+      if (!tpl) return;
+      rows.forEach((row) => {
+        const node = tpl.content.firstElementChild.cloneNode(true);
+        node.dataset.demoTask = row.text;
+        node.dataset.group = row.group;
+        node.querySelectorAll('[data-demo-task-text]').forEach((n) => { n.textContent = row.text; });
+        node.querySelectorAll('[data-demo-task-note]').forEach((n) => { n.textContent = row.note; });
+        list.appendChild(node);
+      });
+    });
+    const tasks = [...box.querySelectorAll('[data-demo-task]')];
+    const pace = Number(box.dataset.demoRunMs) || 90;
+    let timer = 0;
+
+    function draw(at) {
+      const done = Math.max(0, Math.min(at, tasks.length));
+      const pct = tasks.length ? Math.round(done / tasks.length * 100) : 100;
+      tasks.forEach((t, i) => { t.dataset.state = (i < at) ? 'done' : (i === at) ? 'run' : 'wait'; });
+      box.style.setProperty('--d-run', String(pct / 100));
+      box.querySelectorAll('[data-demo-run-num]').forEach((n) => { n.textContent = String(pct); });
+      box.querySelectorAll('[data-demo-run-arc]').forEach((a) => a.setAttribute('stroke-dasharray', `${pct} 100`));
+      const cur = tasks[Math.min(at, tasks.length - 1)];
+      if (cur) box.querySelectorAll('[data-demo-run-label]').forEach((n) => { n.textContent = cur.dataset.demoTask; });
+    }
+
+    function play() {
+      clearTimeout(timer);
+      let at = 0;
+      box.dataset.run = 'run';
+      const tick = () => {
+        draw(at);
+        if (at < tasks.length) {
+          at++;
+          timer = setTimeout(tick, pace);
+          return;
+        }
+        box.dataset.run = 'done';
+        const then = box.dataset.demoRunThen ? document.getElementById(box.dataset.demoRunThen) : null;
+        if (then) timer = setTimeout(() => then.click(), 900);
+      };
+      tick();
+    }
+
+    box.dataset.run = 'idle';
+    draw(-1);
+    plays.set(box, play);
+    if (box.dataset.demoRun !== 'auto') return;
+    const io = new IntersectionObserver((seen) => {
+      if (seen.some((s) => s.isIntersecting) && box.dataset.run === 'idle') play();
+    });
+    io.observe(box);
+  });
+
+  document.addEventListener('click', (e) => {
+    const go = e.target.closest('[data-demo-run-go]');
+    if (!go) return;
+    const box = go.dataset.demoRunGo ? document.getElementById(go.dataset.demoRunGo) : go.closest('[data-demo-run]');
+    if (!plays.has(box)) return;
+    e.preventDefault();
+    plays.get(box)();
   });
 }
 
@@ -1515,6 +1739,7 @@ function initDemoPage() {
   setDemoLive();
   setDemoMeter();
   setDemoDirty();
+  setDemoRun();
   setDemoSteps();
   setDemoSpy();
   setDemoDrop();
