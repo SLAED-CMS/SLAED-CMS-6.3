@@ -37,7 +37,6 @@ function getRobotsTemplate(): string {
         'Disallow: /core/',
         'Disallow: /lang/',
         'Disallow: /modules/',
-        'Disallow: /setup/',
         'Disallow: /setup.php',
         'Disallow: /sound/',
         'Disallow: /storage/',

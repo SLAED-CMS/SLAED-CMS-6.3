@@ -110,9 +110,13 @@ Module availability and visibility are also influenced by runtime config and dat
 
 ### Installation
 
-1. Delete `setup.php` after installation.
-2. Review access to `config/` and `storage/` on the web server.
-3. Use strong database and administrator credentials.
+1. Run the installation right after the upload: until it has finished, whoever opens `setup.php` first installs the
+   site. A site whose `config/db.php` names a database that holds an administrator, or that does not answer, is
+   refused.
+2. `setup.php` deletes itself at the end of the installation. If the panel warns that `setup.php` is still in the
+   site root, delete it from the server: an installed site only refuses it, it does not delete it.
+3. Review access to `config/` and `storage/` on the web server.
+4. Use strong database and administrator credentials.
 
 ### Configuration
 

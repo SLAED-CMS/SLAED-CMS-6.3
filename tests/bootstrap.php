@@ -55,3 +55,11 @@ if (!function_exists('getAgent')) {
         return 'PHPUnit';
     }
 }
+
+# The real normalizer lives in core/system.php, which a unit test does not load; tests/Support/mail_probe.php asserts it on the booted core
+if (!function_exists('getOutputHtml')) {
+    function getOutputHtml(string $html): string
+    {
+        return $html;
+    }
+}

@@ -1143,7 +1143,7 @@ function addPrivateMessage(): void {
         if ($mail && $wish) {
             $back = $conf['homeurl'].'/index.php?name=account&op=privat&id='.$new['id'].'#prmess';
             $link = $tpl->getHtmlFrag('link', ['href' => $back, 'title' => '', 'label_html' => $back]);
-            $text = str_replace('[text]', sprintf(_PRNEWMAIL, filterText(mb_substr($user[1], 0, 25)), $link), $conf['mtemp']);
+            $text = getMailFrame(sprintf(_PRNEWMAIL, filterText(mb_substr($user[1], 0, 25)), $link));
             $mailer->addQueue([
                 'kind' => 'privat', 'email' => $mail, 'title' => $conf['sitename'].' - '._PRIVAT,
                 'body' => $text, 'sender' => $conf['adminmail'], 'prio' => 3,

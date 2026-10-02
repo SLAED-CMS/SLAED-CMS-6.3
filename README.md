@@ -1,8 +1,8 @@
 # SLAED CMS 6.3
 
 [![PHP Version](https://img.shields.io/badge/PHP-8.4%2B-slateblue.svg)](https://www.php.net/)
-[![MariaDB](https://img.shields.io/badge/MariaDB-10%2B-1F305F.svg)](https://mariadb.org/)
-[![MySQL](https://img.shields.io/badge/MySQL-8.0%2B-00758F.svg)](https://www.mysql.com/)
+[![MariaDB](https://img.shields.io/badge/MariaDB-10.5.2%2B-1F305F.svg)](https://mariadb.org/)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0.16%2B-00758F.svg)](https://www.mysql.com/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Active_Development-orange.svg)](#)
 [![Migration](https://img.shields.io/badge/Migration-90%25_Complete-purple.svg)](#)
@@ -30,27 +30,24 @@ The repository entrypoints and active runtime files currently include:
 # 1. Clone or download the repository
 git clone https://github.com/SLAED-CMS/SLAED-CMS-6.3.git
 
-# 2. Create a database and import the base schema
-mysql -u root -p your_database < setup/sql/table.sql
+# 2. Create an empty database
 
-# 3. Review config/*.php and local overrides
-
-# 4. Open in browser
-http://localhost/slaed-cms/
+# 3. Open the installer in the browser
+http://localhost/slaed-cms/setup.php
 ```
 
 > [!WARNING]
-> The installer locks itself once `config/db.php` names a database. To run an update later, upload
-> `config/setup.unlock` holding a code of at least 8 characters first; a successful run removes it again.
+> Run the installer right after the upload: until it has finished, whoever opens `setup.php` first installs the site.
+> At the end it deletes itself; a site that is already installed is refused.
 
 ---
 
 ## System Requirements
 
 - **PHP:** 8.4+
-- **Database:** PDO MySQL-compatible server (MySQL 8.0+ or MariaDB 10+)
+- **Database:** PDO MySQL-compatible server (MySQL 8.0.16+ or MariaDB 10.5.2+), InnoDB
 - **Web Server:** Apache, Nginx, IIS, or another PHP-capable web server
-- **Extensions:** `composer.json` requires PDO, JSON, mbstring, GD and cURL. Fileinfo, Zip and Zlib are declared under `suggest`: the upload service falls back to its own structural validators without them. SMTP over TLS uses OpenSSL and the Sendmail transport uses `proc_open`
+- **Extensions:** `composer.json` requires PDO, JSON, mbstring, GD and cURL. Fileinfo, Zip and Zlib are declared under `suggest`: the upload service falls back to its own structural validators without them. SMTP over TLS uses OpenSSL and the Sendmail transport uses `proc_open`. The installer does not go on while PDO MySQL, JSON or mbstring is missing; a missing Zip or Zlib only gets a warning row, and the archives of that kind stay off
 - **Encoding:** UTF-8 / utf8mb4
 
 > [!NOTE]
@@ -64,24 +61,14 @@ http://localhost/slaed-cms/
 
 1. Download or clone the repository.
 2. Extract files into the web root.
-3. Create a database for the installation.
-4. Import the base schema from `setup/sql/table.sql`.
-5. Review the files in `config/` and adjust local settings as needed.
-6. Open `http://yoursite.com/setup.php` and complete the setup flow.
-7. The installer is now locked; an update needs `config/setup.unlock` with a code of your own (see `UPGRADING.md`).
+3. Create an empty database on MariaDB 10.5.2+ or MySQL 8.0.16+.
+4. Open `http://yoursite.com/setup.php` and walk its stops: language, server checks, database, site, administrator.
+5. Press **Install**. The installer writes the configuration, creates the tables, the first administrator and the
+   content types, names the address of the panel and deletes itself.
 
-Current SQL files present in `setup/sql/`:
-
-- `table.sql`
-- `insert.sql`
-- `table_update4_1.sql`
-- `table_update4_2.sql`
-- `table_update4_3.sql`
-- `table_update5_0.sql`
-- `table_update5_1.sql`
-- `table_update6_0.sql`
-- `table_update6_2.sql`
-- `table_update6_3.sql`
+The installer creates the tables from `storage/update/sql/table.sql` and `storage/update/sql/insert.sql`. Both carry
+the placeholders `{prefix}`, `{engine}`, `{charset}` and `{collate}`, so neither can be imported by hand. A site of
+an older release is not updated by this release, see [UPGRADING.md](UPGRADING.md).
 
 ### Permissions
 
@@ -193,7 +180,6 @@ slaed-cms/
 ├── lang/                  # Main language files
 ├── modules/               # Frontend modules
 ├── plugins/               # Bundled JS/editor/plugin assets
-├── setup/                 # Installation and SQL files
 ├── sound/                 # Bundled sound assets
 ├── storage/               # Runtime-generated cache, logs, counters, GeoIP, sitemap, backups
 ├── templates/             # Themes and template trees

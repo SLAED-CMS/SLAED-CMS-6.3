@@ -1276,7 +1276,7 @@ function mailtest(): void {
     $text = _TOKENMISS;
     if (!$warn) {
         $mail = trim(getVar('post', 'mailto', 'raw')) ?: (string)$conf['adminmail'];
-        $body = str_replace('[text]', _MAIL_TEST.': '.$conf['homeurl'], (string)$conf['mtemp']);
+        $body = getMailFrame(_MAIL_TEST.': '.$conf['homeurl']);
         $data = ['sent' => 0, 'fail' => 0, 'stop' => ''];
         if ($mailer->addQueue(['kind' => 'test', 'email' => $mail, 'sender' => (string)$conf['adminmail'], 'title' => _MAIL_TEST, 'body' => $body, 'prio' => 1])) {
             $data = $mailer->updateQueue();

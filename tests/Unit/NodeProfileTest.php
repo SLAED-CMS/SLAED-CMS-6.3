@@ -7,7 +7,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The ten shipped profiles of modules/node/profiles: slaed.node exports a clean installation imports as active types, while an update creates no type
+# The ten shipped profiles of modules/node/profiles: slaed.node exports the clean installation of setup.php imports as active types, while an update creates no type
 final class NodeProfileTest extends TestCase
 {
     private const NAMES = ['content', 'docs', 'faq', 'files', 'help', 'jokes', 'links', 'media', 'news', 'pages'];
@@ -151,19 +151,28 @@ final class NodeProfileTest extends TestCase
         }
     }
 
-    # The clean installation: the form of the installer opens without config/db.php and saving writes it, then the installer leaves the mark
-    # The installer drops the types the shipped configuration and an earlier installation left in the tree, with their four areas, and names every one of them
-    # Every profile becomes an active type through the one import path when the first administrator is created
-    # The first administrator gets ten active types with every shared area and directory and the starter news, the mark is gone, and a second request creates nothing
+    # The clean installation through the seven stops of setup.php: the release carries no config/db.php, the first page opens and writes the one-time token
+    # The run goes part by part, and the marks of config/update.php appear only after the last statement of insert.sql, before the administrator part creates any type
+    # The closing stop names the panel, deletes setup.php and the token, and the panel opens in the language of the first stop
+    # The first part drops the types the shipped configuration and an earlier installation left in the tree, with their four areas
+    # The administrator part creates the administrator with a site account of the same password and turns every profile into an active type through the one import path
+    # The ten types carry every shared area and directory and the starter news, the mark is gone, and the recovery form of the panel creates nothing more
     #[Test]
     public function aCleanInstallationCreatesTheTenTypes(): void
     {
         $run = $this->getRuns()['setup'];
-        $this->assertSame([200, 'new', true], $run['setup']);
-        $this->assertSame([true, 200, true, true], $run['dbfile'], 'The release carries no config/db.php: the form opens without it and the installer writes it');
-        $this->assertSame([true, false, false, true, true], $run['lock'], 'The installed site keeps setup.php shut: no form, no secret, no write, no renamed panel');
-        $this->assertSame(0, $run['before']);
-        $this->assertSame(303, $run['admin'][0]);
+        $home = $run['guard'];
+        $this->assertSame([true, 200, 0, true], $run['first'], 'The release carries no config/db.php: the first stop opens without it and hands out the token');
+        $this->assertSame([4, 5, 200, 6, $home, 'ru', 'probe'], $run['setup']);
+        $parts = $run['parts'];
+        $num = count($parts);
+        $this->assertGreaterThan(3, $num);
+        $this->assertSame(array_merge(array_fill(0, $num - 1, true), [false]), array_column($parts, 1), 'Every part but the last announces another');
+        $this->assertSame(100, $parts[$num - 1][0]);
+        $this->assertSame(array_merge(array_fill(0, $num - 2, false), [true, false]), array_column($parts, 2), 'The marks came before both SQL files ran');
+        $this->assertSame([0, 10], [$parts[$num - 2][3], $parts[$num - 1][3]], 'A type was created before the administrator part');
+        $this->assertSame([true, false, true], $run['done'], 'The closing stop did not name the panel, delete the installer, or set the language');
+        $this->assertSame([['Probe', 'probe@probe.test', 'ru', $home, 'Probe', 1], true], $run['account']);
         $want = [];
         foreach (['news', 'pages', 'faq', 'help', 'jokes', 'content', 'links', 'files', 'media', 'docs'] as $i => $name) {
             $want[] = [$name, '_'.strtoupper($name), ['help' => 'support', 'content' => 'sync'][$name] ?? '', 1, ($i + 1) * 10, 2];
@@ -172,48 +181,65 @@ final class NodeProfileTest extends TestCase
         $this->assertSame(array_fill_keys(self::NAMES, 2), $run['node']);
         $order = array_column($want, 0);
         $this->assertSame(['uploads' => $order, 'ratings' => $order, 'fields' => ['files', 'media']], $run['areas']);
-        $this->assertSame(['content', 'docs', 'jokes', 'media', 'news', 'stale'], $run['ghost']['names'], 'The tree no longer ships the types of the stand');
-        $this->assertSame([true, []], [$run['ghost']['said'], $run['ghost']['left']], 'Types of the tree survived the clean installation or were not named');
+        $this->assertSame(['content', 'docs', 'faq', 'files', 'help', 'links', 'news', 'stale'], $run['ghost']['names'], 'The shipped types changed');
+        $this->assertSame([], $run['ghost']['left'], 'Types of the tree survived the first part of the run');
         $this->assertSame([false, false, false, false], $run['stale'], 'A type of an earlier installation came back with the profiles');
         $this->assertSame($order, $run['dirs']);
         $this->assertFalse($run['mark']);
         $this->assertSame([['name' => 'news', 'cid' => 0, 'uid' => 0, 'aname' => 'SLAED', 'title' => 'Добро пожаловать в SLAED CMS', 'status' => 2, 'home' => 1,
             'comon' => 2]], $run['starter']);
         $this->assertSame([303, 1, 10], $run['again']);
-        $this->assertSame([false, false], $run['notice']);
+        $this->assertSame([2, false], $run['notice']);
     }
 
-    # The installer over real HTTP: its form carries no password, and an empty one connects with the stored password
-    # Refused with their reason and no fatal error: a clean installation over the tables of its prefix, a prefix or panel name outside their grammar, a panel named index or setup
-    # Refused the same way: a wrong password, a pending configuration journal and a config/security.php PHP cannot write; config/ and the permissions of db.php and global.php stay
-    # A clean installation whose data file fails writes no mark
+    # The installed site keeps setup.php shut: a copy put back answers a visit and a part of the run with the refusal, shows no form and no token and stays in place
+    # A config/db.php whose database does not answer counts as installed too; nothing is written, and only that refused connection is logged
+    #[Test]
+    public function theInstalledSiteKeepsTheInstallerShut(): void
+    {
+        $run = $this->getRuns()['setup']['lock'];
+        foreach (['visit', 'part', 'down'] as $kind) $this->assertSame([true, -1, false, true], $run[$kind], $kind);
+        $this->assertTrue($run['same'], 'The shut installer changed config/ or the panel');
+        $this->assertSame(['error_php' => 0, 'error_sql' => 0, 'error_site' => 1], $run['logs']);
+    }
+
+    # The installer over real HTTP refuses on the stop the answer came from and writes nothing: a POST without the token of its browser, a part without a run
+    # The database stop refuses a wrong password with its reason and never prints a password, refuses a taken prefix and one outside its grammar, and names a free one
+    # The site stop refuses an empty name, an address that is no http or https home, and a panel named outside its grammar or after another file of the root
+    # The administrator stop refuses what the panel refuses; Install refuses a pending journal and a config/security.php PHP cannot write, before the database is asked
+    # A run whose data file fails hands the form back with the reason and writes no mark; the permissions of the files it rewrote stay, and only the wrong password is logged
     #[Test]
     public function theInstallerRefusesBeforeItWrites(): void
     {
         $run = $this->getRuns()['setup']['refuse'];
-        $this->assertSame([true, false], $run['form'], 'The form of the installer shows the stored password');
-        $this->assertSame([true, true], $run['keep'], 'An empty password field did not keep the stored password, or the refused run wrote a file');
-        $this->assertSame([true, false], $run['wrong'], 'A wrong password ends in a fatal error instead of the reason');
-        $this->assertSame([true, true, true, true], [$run['fresh'], $run['prefix'], $run['afile'], $run['none']]);
-        $this->assertSame([true, true], $run['entry'], 'The panel may be named after another entry point of the root');
-        $this->assertTrue($run['jour'], 'The installer wrote while a configuration operation of the site was unfinished');
-        $this->assertTrue($run['write'], 'The installer started while config/security.php was not writable');
-        $this->assertTrue($run['perm'][0], 'The installer changed the permissions of config/db.php or config/global.php');
-        $this->assertSame([true, true], $run['same'], 'A refused run changed config/ or took the key');
-        $this->assertSame([true, false, true, true], $run['ddl'], 'A failed clean installation wrote its marks or took the key');
-        $this->assertSame(['error_php' => 0, 'error_sql' => 0, 'error_site' => 2], $run['logs'], 'Only the two refused connections are logged');
+        $this->assertSame([true, true, '{"more":false}', 1, true], $run['token'],
+            'A POST without its own token or with the token of another browser passed, or a stop past the reach was taken');
+        $this->assertSame(2, $run['server'], 'The server checks of the probe failed');
+        $this->assertSame([2, true, false, false], $run['wrong'], 'A wrong password ends in a fatal error, without the reason, or prints the password');
+        $this->assertSame([2, true], $run['taken']);
+        $this->assertSame([2, true], $run['probe'], 'The probe of a free prefix did not name it free');
+        $this->assertSame([2, true], $run['prefix']);
+        $this->assertSame([3, 3, 3, 3, 3], $run['panel'], 'The panel may be named outside its grammar or after another file of the root');
+        $this->assertSame([3, 3, 3, 3, 3], $run['site'], 'An empty site name or an address that is no home of the site passed');
+        $this->assertSame([[4, 4, 4, 4, 4, 4], true], $run['admin'], 'The administrator stop took what the panel refuses, or printed the password back');
+        $this->assertSame([4, true], $run['jour'], 'The installer started while a configuration operation of the site was unfinished');
+        $this->assertSame([4, true], $run['write'], 'The installer started while config/security.php was not writable');
+        $this->assertTrue($run['same'], 'A refused stop changed config/ or the panel');
+        $this->assertSame([5, false, 4, true, false, true], $run['ddl'], 'A failed run wrote its marks or did not name the failed table');
+        $this->assertTrue($run['perm'][0], 'The installer changed the permissions of config/global.php or config/security.php');
+        $this->assertSame(['error_php' => 0, 'error_sql' => 0, 'error_site' => 1], $run['logs'], 'Only the refused connection is logged');
     }
 
-    # A profile the installation cannot finish - here a user file in uploads/jokes it refuses to take over - is named in the next page notice and the site log with its step
+    # A profile the installation cannot finish - here a user file in uploads/jokes it refuses to take over - is named on the closing stop and in the site log with its step
     # The other nine types and the starter news are created all the same, and the mark is gone
     #[Test]
     public function aFailedProfileIsNamedAndTheOthersAreCreated(): void
     {
         if (self::$fail === []) self::$fail = $this->getProbe('fail');
         $run = self::$fail['setup'];
-        $this->assertSame(303, $run['admin'][0]);
+        $this->assertSame([4, 5, 200, 6], array_slice($run['setup'], 0, 4));
         $this->assertSame(['news', 'pages', 'faq', 'help', 'content', 'links', 'files', 'media', 'docs'], array_column($run['types'], 0));
-        $this->assertSame([true, true], $run['notice']);
+        $this->assertSame([3, true], $run['notice']);
         $this->assertFalse($run['mark']);
         $this->assertCount(1, $run['starter']);
         $logs = self::$fail['logs'];

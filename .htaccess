@@ -53,7 +53,6 @@ RewriteBase /
 
 # Block access to sensitive directories
 RewriteRule ^config/ - [F,L]
-RewriteRule ^setup/ - [F,L]
 
 # Block PHP execution in uploads
 RewriteRule ^uploads/.*\.php$ - [F,L,NC]

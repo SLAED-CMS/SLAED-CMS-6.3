@@ -49,17 +49,11 @@ git remote add upstream https://github.com/SLAED-CMS/SLAED-CMS-6.3.git
 
 ### 1. Database
 
-Create a database and import the base schema:
+Create an empty database on MariaDB 10.5.2+ or MySQL 8.0.16+. Do not import the schema by hand: the files in
+`storage/update/sql/` carry the placeholders `{prefix}`, `{engine}`, `{charset}` and `{collate}`, which only the
+installer fills in.
 
-```bash
-mysql -u root -p your_database < setup/sql/table.sql
-```
-
-### 2. Configuration
-
-Review the files in `config/` and adjust local settings as needed for your environment.
-
-### 3. Writable Directories
+### 2. Writable Directories
 
 Typical writable directories:
 
@@ -68,9 +62,19 @@ chmod -R 755 config/ storage/ uploads/
 chmod 666 config/*.php
 ```
 
-### 4. Setup
+### 3. Installation
 
-Run `setup.php` in the browser for a local installation if needed, then delete it after installation.
+Open `setup.php` in the browser and walk its seven stops. The run writes `config/db.php`, `config/global.php`,
+`config/security.php` and `config/update.php`, renames `admin.php` to the panel name you give, creates the first
+administrator with the Node types and deletes `setup.php` at the end. In a working copy, keep `admin` as the panel
+name and commit nothing the run changed: the deleted `setup.php` and the configuration files it rewrites
+(`global.php`, `security.php` and the Node package `node.php`, `fields.php`, `uploads.php`, `ratings.php`), which
+`git status` lists. A second installation needs `git checkout -- setup.php config/` and the removal of
+`config/db.php` and `config/update.php`, which git ignores.
+
+### 4. Configuration
+
+Review the files in `config/` and adjust local settings as needed for your environment.
 
 ---
 

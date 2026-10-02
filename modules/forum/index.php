@@ -1252,7 +1252,7 @@ function send(): void {
                                     $finurl = $conf['homeurl'].'/index.php?name=forum&op=view&id='.$pid.'#'.$lpid;
                                     $link = $tpl->getHtmlFrag('link', ['href' => $finurl, 'title' => $finurl, 'label' => $finurl]);
                                     $subject = $conf['sitename'].' - '._FORUM;
-                                    $message = str_replace('[text]', sprintf(_ADDMAILF, $postname, $link), $conf['mtemp']);
+                                    $message = getMailFrame(sprintf(_ADDMAILF, $postname, $link));
                                     $mailer->addQueue(['kind' => 'forum', 'email' => $mail, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 3]);
                                 }
                             }

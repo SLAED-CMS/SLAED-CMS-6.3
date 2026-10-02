@@ -24,31 +24,19 @@ function getSetupVar(string $src, string $key, string $type = ''): string {
     return $val;
 }
 
-# The one-time token of this installation, kept in storage/install.php from the first form until the installer deletes itself
-# The file is PHP and returns the token, so a web server that does not deny storage/ executes it and shows nothing; $make writes it while it is missing
-function getSetupToken(bool $make = false): string {
-    $file = BASE_DIR.'/storage/install.php';
-    $text = is_file($file) ? (string)file_get_contents($file) : '';
-    if (preg_match('/\'([0-9a-f]{64})\'/', $text, $hit)) return $hit[1];
-    if (!$make) return '';
-    $code = bin2hex(random_bytes(32));
-    $text = '<?php'."\n".'return \''.$code.'\';'."\n";
-    return (is_writable(dirname($file)) && file_put_contents($file, $text, LOCK_EX) === strlen($text)) ? $code : '';
-}
-
-# Whether a POST carries the token of this installation; it is the CSRF guard of every form and of every part of the run, because the core tokens need the core
-function checkSetupToken(): bool {
-    $code = getSetupToken();
+# Whether a POST carries the token of this installation, kept in the session of the browser that started it
+# It is the CSRF guard of every form and of every part of the run, because the core tokens need the core
+function checkSetupToken(array $state): bool {
+    $code = (string)$state['token'];
     return $code !== '' && hash_equals($code, getSetupVar('post', 'token', 'var'));
 }
 
-# The answers of this installation from the session of the browser that started it; a session of another token or of none begins with an empty token
+# The answers of this installation from the session of the browser that started it; a session without them begins with an empty token
 # The key reach is the furthest stop this browser may post from, part the next part of the run or -1 before it, count the number of parts and made the tables created
 function getSetupState(): array {
     global $conf;
     $data = $_SESSION[$conf['user_c'].'-setup'] ?? [];
-    $code = getSetupToken();
-    if (!is_array($data) || $code === '' || !hash_equals($code, (string)($data['token'] ?? ''))) $data = [];
+    if (!is_array($data)) $data = [];
     $base = ['token' => '', 'lang' => '', 'reach' => 0, 'base' => [], 'site' => [], 'admin' => [], 'part' => -1, 'count' => 0, 'busy' => -1, 'fail' => '', 'note' => ''];
     return $data + $base + ['made' => 0];
 }
@@ -60,11 +48,11 @@ function setSetupState(array $data): void {
     else $_SESSION[$conf['user_c'].'-setup'] = $data;
 }
 
-# Begin the answers of a new installation on its first form: the token is written now, the prefix of the tables and the panel file are random and the address comes from the request
+# Begin the answers of a new installation on its first form: the token, the prefix of the tables and the panel file are random and the address comes from the request
 function getSetupFresh(): array {
     global $conf;
     $data = getSetupState();
-    $data['token'] = getSetupToken(true);
+    $data['token'] = bin2hex(random_bytes(32));
     $data['base'] = ['host' => 'localhost', 'uname' => '', 'pass' => '', 'name' => '', 'prefix' => getSetupRandom(10)];
     $data['site'] = ['name' => (string)($conf['sitename'] ?? ''), 'url' => getSetupUrl(), 'panel' => strtolower(getSetupRandom(10))];
     $data['admin'] = ['name' => '', 'mail' => '', 'hash' => '', 'user' => '1'];
@@ -204,12 +192,16 @@ function checkSetupDone(array $state): bool {
 }
 
 # The check rows of the server stop: PHP 8.4 and the extensions the system needs, the three directories PHP has to write into and the protocol the site answers by
+# Zip and Zlib are optional: a missing one only warns, the site runs without it, archives of that kind are off and an upload of that kind keeps its structural check
 # The directory config/ counts as writable only while the files the run writes are writable too, because a permission is never changed
 function getSetupChecks(): array {
     $list = [['PHP '.PHP_VERSION, sprintf(_SETUP_NEED, '8.4'), version_compare(PHP_VERSION, '8.4.0', '>=')]];
-    $exts = ['mbstring' => ['mbstring', _SETUP_MBSTRING], 'pdo_mysql' => ['PDO MySQL', _SETUP_PDO], 'json' => ['JSON', _SETUP_JSON], 'zip' => ['Zip', _SETUP_ZIP],
-        'zlib' => ['Zlib', _SETUP_ZLIB]];
-    foreach ($exts as $ext => [$name, $note]) $list[] = [$name, extension_loaded($ext) ? $note : _SETUP_NOEXT, extension_loaded($ext)];
+    $exts = ['mbstring' => ['mbstring', _SETUP_MBSTRING, true], 'pdo_mysql' => ['PDO MySQL', _SETUP_PDO, true], 'json' => ['JSON', _SETUP_JSON, true],
+        'zip' => ['Zip', _SETUP_ZIP, false], 'zlib' => ['Zlib', _SETUP_ZLIB, false]];
+    foreach ($exts as $ext => [$name, $note, $must]) {
+        $has = extension_loaded($ext);
+        $list[] = [$name, $has ? $note : ($must ? _SETUP_NOEXT : _SETUP_NOOPT), $has || !$must, !$has && !$must];
+    }
     $cfg = checkSetupWrite('db.php') && checkSetupWrite('global.php') && checkSetupWrite('security.php') && checkSetupWrite('update.php');
     foreach (['config' => $cfg, 'storage' => true, 'uploads' => true] as $dir => $good) {
         $good = $good && is_dir(BASE_DIR.'/'.$dir) && is_writable(BASE_DIR.'/'.$dir);
@@ -218,7 +210,7 @@ function getSetupChecks(): array {
     $url = getSetupUrl();
     $list[] = [strtoupper((string)parse_url($url, PHP_URL_SCHEME)), sprintf(_SETUP_ANSWERS, $url), true];
     $rows = [];
-    foreach ($list as $i => [$text, $note, $good]) $rows[] = ['turn' => $i, 'text' => $text, 'note' => $note, 'is_fail' => !$good];
+    foreach ($list as $i => $row) $rows[] = ['turn' => $i, 'text' => $row[0], 'note' => $row[1], 'is_fail' => !$row[2], 'is_warn' => $row[3] ?? false];
     return $rows;
 }
 
@@ -315,7 +307,7 @@ function getSetupParts(): array {
 # Take the next part of the run for this request and mark it busy, or answer -1: a wrong token, a run that has not started, has failed or is over
 # A part that is still marked busy broke its request off, so it fails the run instead of running twice
 function getSetupNext(array &$state): int {
-    if (!checkSetupToken() || $state['part'] < 0 || $state['fail'] !== '' || $state['part'] >= $state['count']) return -1;
+    if (!checkSetupToken($state) || $state['part'] < 0 || $state['fail'] !== '' || $state['part'] >= $state['count']) return -1;
     if ($state['busy'] >= 0) {
         $state['fail'] = _ERROR.': '._SETUP_INSTALL.' '.($state['busy'] + 1).' / '.$state['count'];
         setSetupState($state);
@@ -446,7 +438,7 @@ function addSetupAdmin(array &$state, string $hash): array {
     return ['task' => _ADMIN.' '.$adm['name'].' — '.(($adm['user'] === '1') ? _SETUP_ADM_USER : _SETUP_ADM_MADE), 'fail' => ''];
 }
 
-# The closing stop, reached once every part has run: the installer and its token delete themselves and the stop names the panel address, which the site never links
+# The closing stop, reached once every part has run: the installer deletes itself, the session of the run ends and the stop names the panel address, which the site never links
 # A file the server would not let go keeps the warning the panel shows as well, and a Node profile the last part could not finish is named beside it
 # The lead counts the tables created, the active modules of the site without those of the panel, and the shipped languages
 function setSetupDone(array &$state): array {
@@ -455,7 +447,6 @@ function setSetupDone(array &$state): array {
     $panel = $site['url'].'/'.$site['panel'].'.php';
     $mods = array_filter(getSetupSource('modules.php')['modules'] ?? [], fn(mixed $v): bool => is_array($v) && ($v['active'] ?? '') === '1' && ($v['type'] ?? '1') === '1');
     $lead = sprintf(_SETUP_FINISHED, $conf['version'], $state['made'], count($mods), count(getSetupLangs()));
-    if (is_file(BASE_DIR.'/storage/install.php')) unlink(BASE_DIR.'/storage/install.php');
     $gone = is_writable(BASE_DIR) && unlink(__FILE__);
     $alert = getSetupAlert(sprintf(_SETUP_PANEL_URL, $panel), 'info').getSetupAlert($gone ? _SETUP_GONE : _DELSETUP, $gone ? 'success' : 'warn');
     if ($state['note'] !== '') $alert .= getSetupAlert($state['note'], 'warn');
@@ -464,10 +455,9 @@ function setSetupDone(array &$state): array {
         'panel_text' => _SETUP_OPENPANEL];
 }
 
-# Refuse an installed site: no form and no write, the token and the session of the installation are dropped, and the installer tries to delete itself
+# Refuse an installed site: no form, no write and no delete, only the session of the installation is dropped
+# The installer deletes itself only at the end of its own installation, so a site that keeps it, a development copy too, keeps the warning of the panel instead
 function setSetupShut(): void {
-    if (is_file(BASE_DIR.'/storage/install.php')) unlink(BASE_DIR.'/storage/install.php');
-    if (is_writable(BASE_DIR)) unlink(__FILE__);
     setSetupState([]);
     setSetupPage(-1, ['title' => _SETUP_TITLE, 'alert_html' => getSetupAlert(_SETUP_INSTALLED, 'warn')]);
 }
@@ -579,12 +569,11 @@ function getSetupMove(int $stop, string $go, array &$state): array {
 # A run under way leaves the stops alone, so a second tab or a reload never changes an answer the run already uses; a GET opens the first stop or the run where it stands
 function setSetupStep(array $state): void {
     $post = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST';
-    if ($post && !checkSetupToken()) $state = [];
+    if ($post && !checkSetupToken($state)) $state = [];
     if (($state['token'] ?? '') === '') {
         $state = getSetupFresh();
         setSetupState($state);
-        $fail = ($state['token'] === '') ? 'storage/ — '._SETUP_NOWRITE : ($post ? _ACCESSDENIED : '');
-        setSetupPage(0, getSetupView(0, $state) + ['alert_html' => ($fail !== '') ? getSetupAlert($fail, 'error') : '']);
+        setSetupPage(0, getSetupView(0, $state) + ['alert_html' => $post ? getSetupAlert(_ACCESSDENIED, 'error') : '']);
         return;
     }
     $go = $post ? getSetupVar('post', 'go', 'var') : '';
@@ -615,7 +604,7 @@ function setSetupPage(int $stop, array $view): void {
     $names = [_LANGUAGE, _SETUP_SERVER, _DATABASE, _SITE, _ADMIN, _SETUP_INSTALL, _SETUP_DONE];
     $road = [];
     foreach ($names as $i => $name) $road[] = ['title' => $name, 'is_done' => $stop >= 0 && $i < $stop, 'is_current' => $i === $stop];
-    $hide = [['name_attr' => 'token', 'value_attr' => getSetupToken()], ['name_attr' => 'stop', 'value_attr' => (string)$stop]];
+    $hide = [['name_attr' => 'token', 'value_attr' => getSetupState()['token']], ['name_attr' => 'stop', 'value_attr' => (string)$stop]];
     $meta = $tpl->getHtmlFrag('head-title', ['title' => _SETUP_TITLE])."\n".$tpl->getHtmlFrag('head-meta', ['name' => 'robots', 'content' => 'noindex, nofollow']);
     $script = $tpl->getHtmlFrag('head-script-src', ['src' => 'templates/admin/assets/js/admin-ui.js', 'attr' => 'defer']);
     $logo = 'templates/admin/images/logos/'.basename((string)($conf['admin_logo'] ?? ''));

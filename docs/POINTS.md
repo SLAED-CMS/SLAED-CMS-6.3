@@ -156,7 +156,7 @@ CREATE TABLE `{prefix}_points` (
   `adjust`; only a compensation row may carry 0).
 - Append-only: no `updated`, `status`, IP or JSON column, no garbage collection. Constraint names carry
   `{prefix}_` so two prefixes can share one database.
-- Created by `setup/sql/table.sql` on install and `setup/sql/table_update6_3.sql` on update.
+- Created by `storage/update/sql/table.sql` on install and `storage/update/sql/table_update6_3.sql` on update.
 
 ## Configuration
 
@@ -439,8 +439,8 @@ Tab `_NULLPOINTS` (op `pointreset`), submitted to `resave()` with `points = 1`, 
 
 ## 6.3 carry-over
 
-The points unit of the 6.3 data update is `setUpdatePoints()` in `setup/index.php`; it runs after
-`setup/sql/table_update6_3.sql` succeeded. It concerns only balances and the switch:
+The points unit of the 6.3 data update is `setUpdatePoints()` in `update.php`; it runs after
+`storage/update/sql/table_update6_3.sql` succeeded. It concerns only balances and the switch:
 
 - Balances are kept as they are, including earlier rating rewards; nothing is zeroed or recalculated, and no
   historic `adjust` rows are invented. The journal starts with new events. A new account starts at 0.
@@ -463,7 +463,7 @@ The operator procedure of the update is described in `UPGRADING.md`.
 ## Tests
 
 - `tests/Unit/PointTest.php` runs `tests/Support/point_probe.php` in a separate PHP process. The probe boots the
-  real core, creates a disposable schema from the `_users` and `_points` DDL of `setup/sql/table.sql`, reseeds it
+  real core, creates a disposable schema from the `_users` and `_points` DDL of `storage/update/sql/table.sql`, reseeds it
   for every scenario, reads persistent results through a second connection, and drops the schema; a `Database`
   subclass can make a commit answer unknown. It covers configuration, validation, limits, overflow, compensation,
   savepoints, lock order, unproven outcomes, stale snapshots, concurrent writers (real processes) and the resumable

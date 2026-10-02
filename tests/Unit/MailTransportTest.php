@@ -33,7 +33,7 @@ final class MailTransportTest extends TestCase
     # Deliver one message the way the drain does, through the transport rather than through the queue, which from stage 2 is the only path a message takes out
     private function getSend(\Mail $mailer): bool
     {
-        return (bool)$this->getCall($mailer, 'setDelivery', ['user@slaed.net', 'info@slaed.net', 'Test', 'Hello', 3]);
+        return (bool)$this->getCall($mailer, 'setDelivery', ['user@slaed.net', 'info@slaed.net', 'Test', 'Hello']);
     }
 
     # A recipient carrying a line break is refused before any transport is entered, so an injected header can never reach mail()

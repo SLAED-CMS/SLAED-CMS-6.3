@@ -51,7 +51,7 @@ final class MailSmtpTest extends TestCase
     # Deliver one message the way the drain does, through the transport rather than through the queue, which from stage 2 is the only path a message takes to a relay
     private function getSend(\Mail $mailer, string $subj = 'Test', string $body = 'Hello'): bool
     {
-        return (bool)$this->getCall($mailer, 'setDelivery', ['user@slaed.net', 'info@slaed.net', $subj, $body, 3]);
+        return (bool)$this->getCall($mailer, 'setDelivery', ['user@slaed.net', 'info@slaed.net', $subj, $body]);
     }
 
     # Read everything the class wrote to the relay, without blocking on a connection it left open

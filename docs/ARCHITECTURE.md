@@ -142,18 +142,116 @@ The admin dashboard and sidebar are assembled in `admin/index.php` and
 ### Installation
 
 Files:
-- `setup.php`
-- `setup/index.php`
+- `setup.php`: the installer, one file in the root
+- `storage/update/sql/table.sql`, `storage/update/sql/insert.sql`: the schema and
+  the seed it runs
+- `templates/admin/pages/setup.html`: the page of every stop
 
 Role:
-- `setup.php` defines `SETUP_FILE`, defines `BASE_DIR`, and loads
-  `setup/index.php`
-- `setup/index.php` loads installation language files and selected config files
-- setup writes configuration through `setConfigFile()`
-- setup imports SQL files from `setup/sql/`
+- `setup.php` installs a new site and nothing else. It updates no existing site;
+  a 6.2 site is brought over by `update.php`, an internal tool of the maintainer
+  that the release does not ship (`docs/NODE.md`, "The 6.3 update").
+- When the run is over, the closing stop deletes `setup.php`. This is the only
+  place it deletes itself. A file the server would not let go, or one that stays on
+  an installed site, leaves the `_DELSETUP` warning on the closing stop and on the
+  dashboard of the panel.
 
-Setup has its own small page rendering helpers and does not use the normal
-frontend/admin `Template` runtime.
+Boot:
+- every request defines `SETUP_FILE`, `BASE_DIR`, `CONFIG_DIR`, `BACKUP_DIR` and
+  `LOGS_DIR`, reads `config/global.php` and `config/security.php`, loads
+  `core/admin.php` (`getSqlbatch()`, `getSqlinfo()`, `addNodeProfiles()`), starts
+  the session, then defines `FUNC_FILE` and loads `filemanager`, `logger`, `pdo`,
+  `template`, `lang/<code>.php` and `admin/lang/<code>.php`
+- `core/system.php` is not loaded: a site without `config/db.php` cannot boot it.
+  Only the administrator part of the run boots the core (`MODULE_FILE`, then
+  `getLang('admin')`) on the configuration the earlier parts wrote
+- because that part loads the core into the same process, no function of
+  `setup.php` carries a name the core declares; all of them are `*Setup*`
+- `Database` throws a `RuntimeException` under `SETUP_FILE` instead of calling
+  `setExit()`, and the installer shows the reason
+- the request is read only through `getSetupVar()`; the core `getVar()` is not
+  loaded
+
+Installed site:
+- `checkSetupDone()` counts a site as installed when `config/db.php` names a
+  database whose `_admins` table holds a row, or that does not answer at all, so a
+  site whose server is down is never handed to a visitor. Only the browser whose
+  session holds a run under way passes.
+- `setSetupShut()` answers an installed site with `_SETUP_INSTALLED`, without a
+  form, a write or a delete, and drops the session of the installation; `setup.php`
+  stays, so a development copy of an installed site keeps its installer
+
+State and CSRF:
+- the answers of the stops live in the PHP session under
+  `$conf['user_c'].'-setup'`, never in hidden fields or cookies; no password is
+  printed back into a form, and the administrator password is kept only as its
+  hash
+- the first form puts a random token into that session. Every form carries it in
+  the hidden field `token`, and `checkSetupToken()` guards every POST and every
+  part of the run; the token of another browser is refused like none. This is the one exception to `getSiteToken()`,
+  recorded in `.rules/global.md`
+- every form posts `token`, `stop` and `go` (`back`, `probe`, `next`, `part`);
+  `reach` in the session is the furthest stop the browser may post from, and a run
+  under way forces every request to the run stop
+
+Stops, each its own request, seven on the road of the card:
+1. language: six tiles; the choice becomes the core cookie
+   `{user_c}-language` in the administrator part
+2. server: PHP 8.4, mbstring, PDO MySQL, JSON, writable `config/`
+   (with `db.php`, `global.php`, `security.php`, `update.php`), `storage/`,
+   `uploads/`, and the protocol; a failed row keeps the stop. Zip and Zlib are
+   optional: a missing one is a warning row that lets the stop pass
+3. database: host, user, password, name and a random prefix; `go=probe` runs
+   `getSetupProbe()`: the connection, MariaDB 10.5.2+ or MySQL 8.0.16+, and a
+   prefix no table of the database carries
+4. site: name, address (http or https, no user, query or fragment) and a random
+   panel file name; `index`, `setup`, `update` and another file of the root are
+   refused
+5. administrator: nickname, e-mail, password twice, and whether a site account of
+   the same name and password is created; Install runs `checkSetupRun()`:
+   grammar of prefix and panel, the four config files writable, no
+   `storage/backup/config/marker.json`, both SQL files split, the probe again
+6. run: the progress line of the admin theme; the driver in
+   `templates/admin/assets/js/admin-ui.js` posts `go=part` until `more` is false,
+   then submits the form with `go=next`
+7. done: the panel address, which the site never links, the self-deletion, a
+   Node profile that could not be finished, and the links to the site and the
+   panel
+
+Run, in parts (`getSetupParts()`), each its own POST:
+- configuration: the probe again, `global.php` (`language`, `homeurl`,
+  `sitename`), the rename of `admin.php` to the panel name, `security.php`
+  (`afile`), `db.php`, and `deleteSetupTypes()` removing the Node types of the
+  shipped `config/node.php` with their package; the database password leaves the
+  session afterwards
+- `table.sql` in groups of seven statements, then every statement of
+  `insert.sql` alone; the last one writes the marks `points`, `ratings`, `fields`
+  and `node` of `config/update.php`, so a failed statement leaves no mark
+- administrator: the core boots, the `_admins` row and the optional `_users` row
+  take the hash, then `addNodeProfiles()` creates the ten shipped types and the
+  starter news and removes the mark `node`
+- a part is marked busy in the session before it runs, and a request that meets a
+  busy part fails the run instead of running it twice. A failed part sends the
+  browser back to the administrator stop with the reason; once a table part has
+  run, Install again meets the taken prefix, so the tables are dropped or another
+  prefix is chosen
+
+Page:
+- every stop renders `pages/setup.html` on `layouts/bare.html` of the admin
+  theme; the stop is data, PHP prints no markup and no class, and the styles are
+  the `sl-setup-*` rules of `templates/admin/assets/css/theme.css` with the
+  tokens `--sl-setup-*` declared in `tools/ui-contract.php`
+- the texts are the `_SETUP_*` constants of `admin/lang/*.php` beside globals of
+  `lang/*.php` and `admin/lang/*.php`, so a future update module can reuse them
+
+Recovery:
+- `addAdminAccount()` and the empty-table form of `admin/index.php`
+  (`op=add_admin`, token scope `add_admin`) stay as the way back into the panel
+  when the admins table has lost its last row
+
+Tests: `tests/Unit/NodeProfileTest.php` walks the installer over real HTTP
+through `tests/Support/install_probe.php`; `tests/Unit/UpdateSetupTest.php`
+checks its preflight and the order of its checks.
 
 ## Bootstrap
 
@@ -461,6 +559,10 @@ Runtime-generated files are stored under:
 - `storage/logs/scheduler/`
 - `storage/sitemap/`
 - `storage/backup/`
+
+`storage/update/sql/` is source, not runtime data: the schema `table.sql`, the
+seed `insert.sql` and the 6.2 update `table_update6_3.sql`. `storage/.htaccess`
+keeps all of `storage/` from the web.
 
 Uploads are stored under:
 - `uploads/`

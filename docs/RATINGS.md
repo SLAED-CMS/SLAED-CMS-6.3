@@ -90,7 +90,7 @@ path reads it once with its own `SELECT`. PHP time takes no part.
 
 ### Storage
 
-Three InnoDB tables in `setup/sql/table.sql`; `scope`, `actor` and `request` are ASCII with binary collation. There
+Three InnoDB tables in `storage/update/sql/table.sql`; `scope`, `actor` and `request` are ASCII with binary collation. There
 are no foreign keys to the polymorphic targets. All times are Unix seconds.
 
 | Table | Columns | Keys |
@@ -391,7 +391,7 @@ The Node list also sorts by `rating`. The fragments are `templates/lite/fragment
 
 ## 6.3 carry-over
 
-The ratings unit is `setUpdateRatings()` in `setup/index.php`, run after the points unit and before the fields
+The ratings unit is `setUpdateRatings()` in `update.php`, run after the points unit and before the fields
 unit. It carries the accumulated aggregates of the fixed scopes as starting balances and the real last
 participations as terms. It invents no vote and no point event; `_rating_votes` stays empty. Node targets start
 with a zero balance, as the update imports no content of the removed modules.
@@ -406,7 +406,7 @@ single values are unknown.
 **Terms.** From the rows of `_rating` for the kept targets, the latest time per target and actor goes into
 `_rating_actors.last`: `u:<uid>` for a positive `uid`, otherwise `g:<address>` normalized with
 `inet_ntop(inet_pton())` (the same result as `getIpNorm()`; `core/security.php` cannot be loaded by the
-installer). Accounts and guests are never merged by address. A voter without a surviving row has no term, so the
+first stage of `update.php`). Accounts and guests are never merged by address. A voter without a surviving row has no term, so the
 first allowed vote is accepted under the current rules; the schema file of the update keeps only the earliest row of
 one address and target, so a later account of that address is such a voter.
 
@@ -443,7 +443,7 @@ configuration step of the update before this unit reads it.
 
 | File | Covers |
 |---|---|
-| `tests/Unit/RatingTest.php` with `tests/Support/rating_probe.php` | The class in an isolated CLI process of the real core, on a disposable schema from `setup/sql/table.sql`, test adapters, scratch cache, counter and logs. API and independence from Point, Node and the PHP clock; the tables; the guard protocol and dead-writer recovery; a real `setHead()`/`setFoot()` fill; rules, actor, scale, balance, identity, interval, delivery key, own vote, annulment, journal; each statement failing once, deadlock, unknown commit; concurrent processes. |
+| `tests/Unit/RatingTest.php` with `tests/Support/rating_probe.php` | The class in an isolated CLI process of the real core, on a disposable schema from `storage/update/sql/table.sql`, test adapters, scratch cache, counter and logs. API and independence from Point, Node and the PHP clock; the tables; the guard protocol and dead-writer recovery; a real `setHead()`/`setFoot()` fill; rules, actor, scale, balance, identity, interval, delivery key, own vote, annulment, journal; each statement failing once, deadlock, unknown commit; concurrent processes. |
 | `tests/Unit/RatingOwnersTest.php` | The wiring: `_rating` statements speak of polls only; the vote reads only the POST body and checks the method before the token; `getRatingView` among the self-guarding handlers; the shipped four-key rules and the mark; no mass reset in the account admin; the seven site and nine admin texts in all six locales. |
 | `tests/Unit/UpdateRatingsTest.php` with `tests/Support/update_probe.php` (`ratings`) | The carry-over: clean path, resume from `prepared`/`applying`, stop on rows or a mark without a manifest, forged snapshot or moved aggregate, the preflight report, kept four-key rules, a lost mark written again, the order after the points unit and the engine check. |
 | `tests/Unit/NodeIntegTest.php`, `tests/Unit/NodeIntegrityTest.php` (`route_probe.php`) | `node.<name>` over real HTTP: live widget only with the feature, unavailable closed/pending/disabled materials, refused wrong token and `GET`; annulment on a disabled material, a type with rating off and a disabled type. |

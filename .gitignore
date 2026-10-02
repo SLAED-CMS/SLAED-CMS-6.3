@@ -10,7 +10,6 @@
 /storage/captcha/*
 /storage/baseline/*
 /storage/migrate/*
-/storage/install.php
 
 # Keep directory structure
 !*/index.html

@@ -7,7 +7,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-# The 6.3 update: the module registry, the removal of unregistered Node types and the preflight of update.php
+# The 6.3 update: the module registry, the removal of unregistered Node types and the preflight of update.php, beside the preflight and the order of checks of setup.php
 final class UpdateSetupTest extends TestCase
 {
     private static array $probe = [];
@@ -79,6 +79,55 @@ final class UpdateSetupTest extends TestCase
         $want = 'These tables are not InnoDB, convert them and start the update again: ALTER TABLE `probe_admins` ENGINE=InnoDB;'
             .' ALTER TABLE `probe_newsletter` ENGINE=InnoDB;';
         $this->assertSame($want, $run['update']['engine']);
+    }
+
+    # A clean installation needs a prefix no table of the database carries: one that only starts like a taken one, or holds the _ LIKE would take for any character, is free
+    # The server has to be MariaDB 10.5.2 or MySQL 8.0.16 or newer, and answers without a database name are refused before any connection
+    # The probe lifts getSetupProbe() out of setup.php onto the disposable schema, with a facade that can name another server version
+    #[Test]
+    public function theInstallerPreflightRefusesAWrongBase(): void
+    {
+        $run = $this->getRun()['fresh'];
+        $this->assertStringStartsWith('The database already holds tables of the prefix probe_,', $run['taken']);
+        $this->assertSame(['', '', ''], [$run['free'], $run['near'], $run['wild']]);
+        $this->assertSame('The database server 10.5.1-MariaDB is older than 10.5.2.', $run['server']['10.5.1-MariaDB']);
+        $this->assertSame('The database server 8.0.15 is older than 8.0.16.', $run['server']['8.0.15']);
+        $this->assertSame(['', ''], [$run['server']['10.5.2-MariaDB'], $run['server']['8.0.16']]);
+        $this->assertSame('Problem establishing a connection to the database!', $run['none']);
+    }
+
+    # The installer reads the request only through getSetupVar(), prints no password back, never changes permissions and declares no function the core declares
+    # Install checks the grammar of prefix and panel, the writable configuration, a pending journal and both schema files before it asks the database
+    # The marks of config/update.php are written in one place, after the statements of a part ran
+    #[Test]
+    public function theInstallerChecksBeforeItWrites(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $code = (string)file_get_contents($root.'/setup.php');
+        $this->assertStringNotContainsString('chmod(', $code, 'The installer changes permissions');
+        foreach (['$_GET', '$_REQUEST'] as $one) $this->assertStringNotContainsString($one, $code);
+        $this->assertSame([1, 1], [substr_count($code, '$_POST'), substr_count($code, '$_COOKIE')], 'The request is read outside getSetupVar()');
+        foreach (['xpass', 'apwd', 'apwd2'] as $one) $this->assertMatchesRegularExpression("/\\['".$one."', [A-Z_0-9]+, '', /", $code, 'The form prints the password '.$one);
+        $from = strpos($code, 'function checkSetupRun(array $state): string {');
+        $body = substr($code, $from, strpos($code, "\n}\n", $from) - $from);
+        $want = ['checkSetupPrefix(', 'checkSetupPanel(', 'checkSetupWrite(', "is_file(BACKUP_DIR.'/config/marker.json')", 'getSetupSql(', 'getSetupProbe('];
+        $at = array_map(fn($v) => strpos($body, $v), $want);
+        $this->assertNotContains(false, $at, 'Install lost a check');
+        $sorted = $at;
+        sort($sorted);
+        $this->assertSame($sorted, $at, 'Install asks the database before it checks the answers, the files or the journal');
+        $this->assertSame(1, substr_count($code, "setSetupFile('update.php', "), 'The marks are written in more than one place');
+        $mark = strpos($code, "setSetupFile('update.php', ");
+        $this->assertLessThan($mark, strpos($code, 'if ($db->getSqlQuery($sql) === false) return'), 'The marks are written before the statements of their part ran');
+        preg_match_all('/^function ([a-zA-Z]+)\(/m', $code, $own);
+        $core = [];
+        foreach (getTreeFiles($root.'/core') as $file) {
+            if (str_ends_with($file->getFilename(), '.php') && preg_match_all('/^function ([a-zA-Z_]+)\(/m', (string)file_get_contents($file->getPathname()), $hit)) {
+                $core = array_merge($core, $hit[1]);
+            }
+        }
+        $this->assertNotEmpty($own[1]);
+        $this->assertSame([], array_values(array_intersect($own[1], $core)), 'setup.php declares a function the core declares');
     }
 
     # A repeat after the mark modules reads the _modules table of 6.2 no more: forum, which the owner switched on between the runs, stays on, the rights stay names

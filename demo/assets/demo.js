@@ -539,7 +539,7 @@ const DEMO_SETUP = [
 ];
 
 /* What the installer checks and does, in the order it does it: the server checks, the three questions to the
-   database and the run itself - configuration, the 34 tables of setup/sql/table.sql, the three seeded ones, the
+   database and the run itself - configuration, the 34 tables of storage/update/sql/table.sql, the three seeded ones, the
    administrator and the lock. The prefix and the panel file are the random values every face shows */
 const DEMO_SETUP_RUN = {
   server: [

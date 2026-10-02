@@ -4,15 +4,15 @@
 # Website: slaed.net
 # Compatible: MySQL 8.0.16+ & MariaDB 10.5.2+
 #
-# table_update6_3.sql — public update from SLAED 6.2 to SLAED 6.3 Phoenix
+# table_update6_3.sql — update from SLAED 6.2 to SLAED 6.3 Phoenix
 #
 # Purpose:
 # - migrate a live SLAED 6.2 database to the normalized schema used by 6.3
 # - survive partial/manual refactors without crashing on already-renamed objects
-# - the procedures skip a missing table silently; a plain statement (ALTER ... MODIFY, UPDATE, DELETE) needs its table and fails as a red line
+# - the procedures skip a missing table silently; a plain statement (ALTER ... MODIFY, UPDATE, DELETE) needs its table and fails its report row
 #
 # Usage:
-# - executed by setup/index.php during the public 6.2 -> 6.3 update path
+# - executed by update.php, the internal update tool of the maintainer that the release does not ship
 # - back up the database before running the updater
 # - safe to re-run for idempotent rename/index batches below
 #
@@ -830,7 +830,7 @@ CREATE TABLE IF NOT EXISTS `{prefix}_points` (
 # a second time. rencol() keeps the BOOLEAN the old column was declared as, so modcol() forces viewed onto
 # the definition the fresh schema gives it and leaves the table alone when it already carries it
 # The composites are added last and time keeps its place in front of them, which is the order
-# setup/sql/table.sql declares, so an upgraded table and a fresh one are the same table
+# storage/update/sql/table.sql declares, so an upgraded table and a fresh one are the same table
 # No index on status is created here any more: this file used to add one and now drops it, on a column
 # that does not survive the batch
 # out_new and flood answer the two reads out_box cannot: the outgoing unread counter of the sidebar block,
@@ -1153,7 +1153,7 @@ CALL rencol('{prefix}_privat',       'content',    'body');
 CALL rencol('{prefix}_voting',       'questions',  'body');
 
 # =============================================================================
-# Final type alignment to setup/sql/table.sql
+# Final type alignment to storage/update/sql/table.sql
 # =============================================================================
 
 # _admins.editor names the editor plugin an administrator writes with and has done since the editor
@@ -1512,7 +1512,7 @@ DROP TABLE IF EXISTS `{prefix}_comment_rate`;
 # case-insensitive column would fold exactly the distinction it keeps
 #
 # _newsletter gains the campaign state machine. The mails column is dropped last
-# and only here: setup/index.php reads whatever is still pending out of it before
+# and only here: update.php reads whatever is still pending out of it before
 # this file runs and writes those addresses into the queue afterwards, so the
 # drop can never take a mailing with it
 

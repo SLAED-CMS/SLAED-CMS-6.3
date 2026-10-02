@@ -346,7 +346,7 @@ Comment storage, same date:
 - `_comment`, `_users`, `_voting` and `_newsletter` are all InnoDB.
 
 The index gaps that reading found are closed. `{prefix}_comment` in
-`setup/sql/table.sql` now carries `ip_time(ip, time, id)` for the flood check
+`storage/update/sql/table.sql` now carries `ip_time(ip, time, id)` for the flood check
 and four composite indexes that back the list orderings —
 `modul_cid_status_deleted`, `modul_cid_deleted`, `status_deleted_time` and
 `modul_cid_pid_time` — plus a `UNIQUE(reqkey)` for double-submit. Re-measure

@@ -27,7 +27,7 @@ class FileManager {
     private const AUDIOS = ['mp3', 'wav', 'flac', 'ogg', 'oga', 'opus', 'm4a'];
     private const VIDEOS = ['mp4', 'webm'];
     private const PACKS = ['zip', 'rar', 'gz', '7z', 'tar'];
-    private const CRIT = ['index.php', 'admin.php', 'setup.php', '.htaccess'];
+    private const CRIT = ['index.php', 'admin.php', '.htaccess'];
     private const CRITDIR = ['config', 'core'];
     # The bytes of the guard that closes a directory on Apache and LiteSpeed and marks it closed for the shared nginx rule; the upload directories ship the same line
     private const DENY = 'deny from all';

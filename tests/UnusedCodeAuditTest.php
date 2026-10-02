@@ -237,7 +237,7 @@ final class UnusedCodeAuditTest extends TestCase
         $candidates = [];
         $files_scanned = 0;
 
-        foreach (self::iterPhpFiles(['vendor', 'tests', '.git', '.reports', 'setup', 'plugins']) as $path) {
+        foreach (self::iterPhpFiles(['vendor', 'tests', '.git', '.reports', 'plugins']) as $path) {
             $files_scanned++;
             $tokens = token_get_all((string) file_get_contents($path));
             $n = count($tokens);

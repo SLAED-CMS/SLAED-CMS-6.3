@@ -35,7 +35,7 @@
     {% endif %}
     {% if checks %}
     <ul class="sl-setup-checks">
-      {% for row in checks %}<li style="--sl-d-turn: {{ row.turn }}"{% if row.is_fail %} class="sl-is-fail"{% endif %}><i class="bi {% if row.is_fail %}bi-x-circle-fill{% else %}bi-check-circle-fill{% endif %}" aria-hidden="true"></i><b>{{ row.text }}</b><span>{{ row.note }}</span></li>{% endfor %}
+      {% for row in checks %}<li style="--sl-d-turn: {{ row.turn }}"{% if row.is_fail %} class="sl-is-fail"{% elseif row.is_warn %} class="sl-is-warn"{% endif %}><i class="bi {% if row.is_fail %}bi-x-circle-fill{% elseif row.is_warn %}bi-exclamation-triangle-fill{% else %}bi-check-circle-fill{% endif %}" aria-hidden="true"></i><b>{{ row.text }}</b><span>{{ row.note }}</span></li>{% endfor %}
     </ul>
     {% endif %}
     {% if is_run %}

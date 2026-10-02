@@ -281,13 +281,38 @@ function getProbeCampSlice(int $nid): array {
 
 # Split one delivered message into its header block and its decoded body, which is what the transcript has to be read through to assert anything about it
 # The block is kept as it arrived and read unfolded, because a folded header is one logical line and asserting the folding itself needs the wire form
+# The body is multipart/alternative, so each part is decoded on its own: body is the HTML part, text the plain-text alternative
 function getProbeMessage(string $mesg): array {
     $part = explode("\r\n\r\n", $mesg, 2);
     $head = $part[0] ?? '';
-    $body = base64_decode(str_replace("\r\n", '', $part[1] ?? ''), true);
     $subj = preg_match('/^Subject: ([^\r\n]*(?:\r\n[ \t][^\r\n]*)*)/m', $head, $mtch) ? $mtch[1] : '';
     $flat = trim(preg_replace('/\r\n[ \t]+/', ' ', $subj) ?? '');
-    return ['head' => $head, 'subject' => $flat, 'plain' => ($subj !== '') ? mb_decode_mimeheader($subj) : '', 'body' => ($body === false) ? '' : $body];
+    $out = ['head' => $head, 'subject' => $flat, 'plain' => ($subj !== '') ? mb_decode_mimeheader($subj) : '', 'body' => '', 'text' => ''];
+    if (!preg_match('/boundary="([^"]+)"/', $head, $bnd)) return $out;
+    foreach (explode('--'.$bnd[1], $part[1] ?? '') as $one) {
+        $sect = explode("\r\n\r\n", ltrim($one, "\r\n"), 2);
+        if (count($sect) < 2) continue;
+        $data = base64_decode(str_replace("\r\n", '', $sect[1]), true);
+        if (str_contains($sect[0], 'text/html')) $out['body'] = ($data === false) ? '' : $data;
+        if (str_contains($sect[0], 'text/plain')) $out['text'] = ($data === false) ? '' : $data;
+    }
+    return $out;
+}
+
+# Report what the site mail frame makes of a plain-text template: its own lines become <br>, the inserted HTML text arrives untouched
+# Then queue the real link fragment in the frame and read back the stored body, which addQueue() has put through the page output normalizer
+function getProbeFrame(): array {
+    global $db, $conf, $tpl;
+    $row = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) AS num FROM '.PREFIX_DB.'_mail'));
+    $ntime = intval($row['num'] ?? 0);
+    $conf['mtemp'] = "Hello!\r\n\r\n[text]\r\n\r\nBest regards,\nSLAED CMS";
+    $out = ['body' => getMailFrame("<a\n  href=\"https://slaed.loc/\"\n>\n    link</a><br>line")];
+    $link = $tpl->getHtmlFrag('link', ['href' => 'https://slaed.loc/?a=1&b=2', 'title' => 'Go', 'label' => 'https://slaed.loc/', 'is_blank' => true]);
+    getProbeMail()->addQueue(['kind' => PROBEKIND, 'email' => 'frame@slaed.net', 'sender' => 'info@slaed.net', 'title' => 'frame', 'body' => getMailFrame('Link: '.$link)]);
+    $row = $db->getSqlRow($db->getSqlQuery('SELECT body FROM '.PREFIX_DB.'_mail WHERE email = :mail', ['mail' => 'frame@slaed.net']));
+    $out['stored'] = (string)($row['body'] ?? '');
+    $out['clean'] = deleteProbeRows($ntime);
+    return $out;
 }
 
 # Take a loopback port the operating system reports as free, because a fixed one would collide with whatever else this machine happens to run
@@ -307,6 +332,8 @@ if ($mode === 'mailqueue') {
     $out = getProbeDrain();
 } elseif ($mode === 'mailcamp') {
     $out = getProbeCamp();
+} elseif ($mode === 'mailframe') {
+    $out = getProbeFrame();
 }
 while (ob_get_level() > 0) ob_end_clean();
 echo json_encode($out, JSON_UNESCAPED_SLASHES);

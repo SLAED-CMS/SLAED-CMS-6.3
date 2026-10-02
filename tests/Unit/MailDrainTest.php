@@ -33,6 +33,35 @@ final class MailDrainTest extends TestCase
         $this->assertTrue($this->getProbe('mailcamp')['clean']);
     }
 
+    # The plain-text mtemp frame keeps its lines in the text/html body, while the inserted text, a template-indented link among it, is not touched
+    #[Test]
+    public function theMailFrameKeepsItsLinesAndLeavesTheTextAlone(): void
+    {
+        $html = "Hello!<br>\r\n<br>\r\n<a\n  href=\"https://slaed.loc/\"\n>\n    link</a><br>line<br>\r\n<br>\r\nBest regards,<br>\nSLAED CMS";
+        $this->assertSame($html, $this->getProbe('mailframe')['body']);
+    }
+
+    # A queued body carries the standard page formatting: the multiline link fragment is one tag on one line and no blank line survives
+    #[Test]
+    public function aQueuedBodyCarriesThePageFormatting(): void
+    {
+        $data = $this->getProbe('mailframe');
+        $this->assertTrue($data['clean'], 'The frame probe left a queue row behind');
+        $this->assertStringContainsString('<a href="https://slaed.loc/?a=1&amp;b=2" title="Go" target="_blank" rel="noopener noreferrer">', $data['stored']);
+        $this->assertDoesNotMatchRegularExpression('#\n[ \t\r]*\n#', $data['stored'], 'A blank line reached the queued body');
+    }
+
+    # Every code path that wraps a text into mtemp goes through getMailFrame(), because a bare str_replace() sends the frame without its lines
+    #[Test]
+    public function noCodePathWrapsTheFrameByHand(): void
+    {
+        $root = dirname(__DIR__, 2);
+        foreach (['core/user.php', 'core/system.php', 'admin/modules/config.php', 'modules/account/index.php', 'modules/forum/index.php'] as $file) {
+            $code = (string)file_get_contents($root.'/'.$file);
+            $this->assertDoesNotMatchRegularExpression('#str_replace\(\'\[text\]\'[^;]*\$conf\[\'mtemp\'\]\)#', $code, $file.' wraps mtemp by hand');
+        }
+    }
+
     # A criterion is expanded by the scheduler into one row per recipient, resumably, and the request that pressed save writes none of them
     #[Test]
     public function theProducerExpandsACriterionIntoQueueRows(): void
@@ -201,6 +230,8 @@ final class MailDrainTest extends TestCase
         $this->assertStringContainsString('<p>first</p>', $data[0]['body']);
         $this->assertStringContainsString('127.0.0.1', $data[0]['body']);
         $this->assertStringNotContainsString('127.0.0.1', $data[1]['body'], 'A row that never asked for the client block was given one');
+        $this->assertStringStartsWith('first', $data[0]['text'], 'The delivered message has no plain-text alternative of its body');
+        $this->assertStringNotContainsString('<', $data[0]['text'], 'Markup reached the plain-text alternative');
     }
 
     # A shared body is read from its source row at send time, so one mailing stores one body however many recipients it has

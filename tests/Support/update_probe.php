@@ -79,13 +79,20 @@ function getProbeTable(string $name, string $engine = 'InnoDB'): string {
     return str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [PROBEPREF, $engine, 'utf8mb4', 'utf8mb4_unicode_ci'], $hit[0]);
 }
 
-# Lift one function out of update.php into this process
-function addProbeCode(string $name): void {
-    $code = (string)file_get_contents(PROBEROOT.'/update.php');
+# Lift one function out of update.php, or out of setup.php for the preflight of a clean installation, into this process; $swap replaces text of its source first
+function addProbeCode(string $name, string $file = 'update.php', array $swap = []): void {
+    $code = (string)file_get_contents(PROBEROOT.'/'.$file);
     $from = strpos($code, 'function '.$name.'(');
     $to = $from === false ? false : strpos($code, "\n}\n", $from);
-    if ($from === false || $to === false) throw new RuntimeException($name.'() is gone from update.php');
-    eval(substr($code, $from, $to - $from + 3));
+    if ($from === false || $to === false) throw new RuntimeException($name.'() is gone from '.$file);
+    eval(strtr(substr($code, $from, $to - $from + 3), $swap));
+}
+
+# The facade the preflight lifted from setup.php connects with: the facade of the probe on the database it names, answering the server version $GLOBALS['pfake'] names
+function getProbeBase(string $host, string $user, string $pass, string $name): ProbeBase {
+    $base = new ProbeBase($host, $user, $pass, $name);
+    $base->fake = (string)($GLOBALS['pfake'] ?? '');
+    return $base;
 }
 
 # The text of the report rows a unit answered, joined in their order, empty for a unit that answered none
@@ -746,9 +753,25 @@ function getModState(array $rows): array {
     return $out;
 }
 
+# The preflight of a clean installation, lifted from setup.php: a taken prefix, a free one, one that only starts like a taken one and one holding the _ LIKE takes for any character
+# Then the oldest accepted and the newest refused version of both servers, and answers without a database name, which never reach the server
+function getFreshFlight(): array {
+    $cred = $GLOBALS['pcred'];
+    $base = ['host' => $cred['host'], 'uname' => $cred['uname'], 'pass' => $cred['pass'], 'name' => $GLOBALS['pname']];
+    $out = [];
+    foreach (['taken' => PROBEPREF, 'free' => 'free', 'near' => 'prob', 'wild' => 'prob_'] as $key => $pref) $out[$key] = getSetupProbe(['prefix' => $pref] + $base)['fail'];
+    foreach (['10.5.1-MariaDB', '10.5.2-MariaDB', '8.0.15', '8.0.16'] as $ver) {
+        $GLOBALS['pfake'] = $ver;
+        $out['server'][$ver] = getSetupProbe(['prefix' => 'free'] + $base)['fail'];
+    }
+    $GLOBALS['pfake'] = '';
+    $out['none'] = getSetupProbe(['name' => '', 'prefix' => 'free'] + $base)['fail'];
+    return $out;
+}
+
 # The module registry of a 6.2 site with its _modules table, a repeat, a repeat after the mark whose owner switched forum on in between, and a site without the table
 # The types of config/node.php the update takes out are checked while it keeps the registered ones
-# The preflight of the update needs the users and admins tables of its prefix and refuses an admins or newsletter table outside InnoDB
+# The preflight of the update needs the users and admins tables of its prefix and refuses an admins or newsletter table outside InnoDB; the one of setup.php is checked beside it
 # The faults of the update come last: an admins table the registry cannot read and an uploads.php the type step cannot write
 # A read-only ratings.php keeps the ratings unit from its manifest seal and its mark until the permissions are fixed
 function getSetupClean(): array {
@@ -771,6 +794,7 @@ function getSetupClean(): array {
         'again' => deleteUpdateTypes(['docs'])];
     setModSite(false);
     $out['plain'] = getModState(setUpdateModules($pdb, PROBEPREF));
+    $out['fresh'] = getFreshFlight();
     $out['update'] = ['real' => checkUpdateBase($pdb, PROBEPREF), 'none' => checkUpdateBase($pdb, 'free')];
     getProbeSide()->exec('RENAME TABLE `'.PROBEPREF.'_admins` TO `'.PROBEPREF.'_admins_off`');
     $out['update']['half'] = checkUpdateBase($pdb, PROBEPREF);
@@ -805,6 +829,11 @@ try {
     $units = ['setUpdateFile', 'getUpdateSource', 'getUpdateCred', 'getUpdateRow', 'checkUpdateFail', 'checkUpdateBase', 'setUpdateBackup', 'setUpdatePoints',
         'setUpdateRatings', 'getUpdateRules', 'getUpdateValue', 'setUpdateFields', 'setUpdateConfig', 'setUpdateMails', 'setUpdateModules', 'deleteUpdateTypes'];
     foreach ($units as $name) addProbeCode($name);
+    if (($argv[2] ?? '') === 'setup') {
+        require_once PROBEROOT.'/lang/en.php';
+        require_once PROBEROOT.'/admin/lang/en.php';
+        addProbeCode('getSetupProbe', 'setup.php', ['new Database(' => 'getProbeBase(']);
+    }
     addProbeSchema();
     $report['runs'] = match ($argv[2] ?? 'points') {
         'ratings' => ['clean' => getRateClean(), 'resume' => getRateResume(), 'stop' => getRateStop(), 'flight' => getRateFlight()],

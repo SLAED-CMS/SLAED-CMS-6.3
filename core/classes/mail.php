@@ -25,6 +25,8 @@ class Mail {
     private array $conf;
     private array $rule;
     private string $site;
+    private string $admin;
+    private string $bound;
     private int $wait;
     private string $error = '';
     private bool $fback = false;
@@ -44,11 +46,14 @@ class Mail {
 
     # Build the service from the site config; the database handle is what the queue is stored in and the lock window is read from the drain job, whose claims this object releases
     # Two sections are read, because delivery and campaign policy are different questions: mail says how a message leaves, newsletter says how a mailing is allowed to run
+    # The MIME boundary starts with "=_", which no base64 line can contain, so one boundary per object is safe for every message it sends
     public function __construct(?Database $db, array $conf) {
         $this->db = $db;
         $this->conf = is_array($conf['mail'] ?? null) ? $conf['mail'] : [];
         $this->rule = is_array($conf['newsletter'] ?? null) ? $conf['newsletter'] : [];
         $this->site = $conf['sitename'] ?? '';
+        $this->admin = $conf['adminmail'] ?? '';
+        $this->bound = '=_'.bin2hex(random_bytes(12));
         $job = $conf['scheduler']['jobs']['maildrain'] ?? [];
         $this->wait = max(60, intval(is_array($job) ? ($job['lock_timeout'] ?? 0) : 0) ?: 900);
     }
@@ -62,6 +67,7 @@ class Mail {
     # The client block is appended here, inside the request that owns the visitor data, and never at send time where only the scheduler's own address would be available
     # Every value is bounded against the column that stores it, because under strict SQL mode an oversized write fails and would take the message with it
     # A campaign row is written held and marked as part of an audience, so nothing of a mailing is claimable until the state machine of that mailing says so
+    # The body passes getOutputHtml() like a served page, so a fragment a template wraps over lines is stored as one-line tags without blank lines
     public function addQueue(array $mesg): bool {
         $kind = substr($this->filterHeader($mesg['kind'] ?? ''), 0, self::KINDLEN);
         $rcpt = $this->filterAddress($mesg['email'] ?? '');
@@ -74,6 +80,7 @@ class Mail {
         $ref = max(0, intval($mesg['ref'] ?? 0));
         $body = ($ref > 0) ? '' : (string)($mesg['body'] ?? '');
         if ($ref === 0 && !empty($mesg['client'])) $body .= $this->getClientBlock();
+        $body = getOutputHtml($body);
         $sql = 'INSERT INTO '.PREFIX_DB.'_mail (kind, sender, email, title, body, ref, prio, camp, hold, time, ntime)'
             .' VALUES (:kind, :from, :mail, :subj, :body, :ref, :prio, :camp, :hold, NOW(), NOW())';
         $pars = ['kind' => $kind, 'from' => $smail, 'mail' => $rcpt, 'subj' => $subj, 'body' => $body, 'ref' => $ref, 'prio' => (intval($mesg['prio'] ?? 0) ?: 3)];
@@ -207,7 +214,7 @@ class Mail {
             }
             $body = $text;
         }
-        $sent = $this->setDelivery((string)$row['email'], (string)$row['sender'], (string)$row['title'], $body, intval($row['prio']));
+        $sent = $this->setDelivery((string)$row['email'], (string)$row['sender'], (string)$row['title'], $body);
         if ($sent) {
             $this->setResult($id, true);
             $this->setCampResult($row, true, '');
@@ -608,10 +615,23 @@ class Mail {
         return trim(preg_replace('/[\x00-\x1F\x7F]+/', ' ', $text) ?? '');
     }
 
-    # Resolve the From address: the configured identity when it is set and valid, otherwise the address the caller sends on behalf of
+    # Resolve the From address and the envelope sender: the configured identity, else the site address, and the caller's address only when the site has neither
+    # A form visitor never becomes the sender of a site that has its own address, because the visitor's domain fails SPF and DMARC and anyone could mail in anyone's name
     private function getSender(string $smail): string {
-        $from = $this->filterAddress($this->conf['frommail'] ?? '');
-        return ($from !== '') ? $from : $this->filterAddress($smail);
+        foreach ([$this->conf['frommail'] ?? '', $this->admin, $smail] as $one) {
+            $mail = $this->filterAddress($one);
+            if ($mail !== '') return $mail;
+        }
+        return '';
+    }
+
+    # Resolve Reply-To: a caller sending on behalf of someone else, a form visitor, is answered directly, and the site's own mail goes to the configured reply address
+    private function getReplyTo(string $smail): string {
+        $smail = $this->filterAddress($smail);
+        $own = array_map('strtolower', [$this->filterAddress($this->conf['frommail'] ?? ''), $this->filterAddress($this->admin)]);
+        if ($smail !== '' && !in_array(strtolower($smail), $own, true)) return $smail;
+        $reply = $this->filterAddress($this->conf['replyto'] ?? '');
+        return ($reply !== '') ? $reply : $smail;
     }
 
     # Encode a display name as an RFC 2047 encoded word, or quote it when it is plain ASCII, because an encoded word inside a quoted string is never decoded
@@ -630,6 +650,33 @@ class Mail {
     # Encode a body as base64 wrapped at 76 characters, because an unwrapped line breaks the 1000-octet transport limit
     private function getBody(string $text): string {
         return chunk_split(base64_encode($text), 76, self::CRLF);
+    }
+
+    # Build the multipart/alternative body: the plain-text part first and the HTML part last, because a client shows the last part it can render
+    # The HTML part stays the fragment it was composed as: with a text part beside it no filter scores a missing html tag, and webmail strips a body element anyway
+    private function getMimeBody(string $html): string {
+        $out = '';
+        foreach (['text/plain' => $this->getPlainText($html), 'text/html' => $html] as $type => $text) {
+            $out .= '--'.$this->bound.self::CRLF.'Content-Type: '.$type.'; charset='.self::CHARSET.self::CRLF;
+            $out .= 'Content-Transfer-Encoding: base64'.self::CRLF.self::CRLF.$this->getBody($text);
+        }
+        return $out.'--'.$this->bound.'--'.self::CRLF;
+    }
+
+    # Derive the plain-text part from the HTML: source whitespace folds to spaces, breaks and block ends become lines, and a link keeps its address beside its text
+    # Every line is trimmed and runs of empty lines fold to one, so template indentation never reaches a reader who sees the text part
+    private function getPlainText(string $html): string {
+        $text = preg_replace('#<(script|style)\b.*?</\1\s*>#si', '', $html) ?? $html;
+        $text = preg_replace('#[ \t\r\n]+#', ' ', $text) ?? $text;
+        $text = preg_replace_callback('#<a\s[^>]*?href\s*=\s*(["\'])(.*?)\1[^>]*>(.*?)</a>#si', static function (array $link): string {
+            $href = trim($link[2]);
+            $name = trim(strip_tags($link[3]));
+            return ($name === '' || html_entity_decode($name) === html_entity_decode($href)) ? $href : $name.' ('.$href.')';
+        }, $text) ?? $text;
+        $text = preg_replace('#<br\s*/?>|<hr\b[^>]*>|</(p|div|li|tr|h[1-6]|blockquote|table)\s*>#i', "\n", $text) ?? $text;
+        $rows = explode("\n", html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5, self::CHARSET));
+        $text = implode("\n", array_map(static fn(string $row): string => trim(preg_replace('#[ \t]+#', ' ', $row) ?? $row), $rows));
+        return str_replace("\n", self::CRLF, trim(preg_replace('#\n{3,}#', "\n\n", $text) ?? $text));
     }
 
     # Build the originating IP, browser and agent hash block a caller asks for with client, keeping the template form when a template is available and the plain form when it is not
@@ -652,21 +699,22 @@ class Mail {
     # Assemble the MIME header block for one already validated sender; no Return-Path is written because the receiving MTA owns that header
     # An empty recipient means the transport writes its own To, which is what PHP mail() does and what a second To header would duplicate
     # An empty subject means the same for Subject, which PHP mail() takes as its own parameter while a piped or dialogued message has to carry it inside the block
-    private function getHeaders(string $rcpt, string $smail, string $subj, int $prio): string {
+    # Date and Message-ID are written here for every transport, because a relay spoken to directly is not obliged to add them and their absence costs spam score
+    # X-Priority is always normal: the queue priority orders the drain, and a high-priority flag on a site notice is what filters read as a spam signal
+    private function getHeaders(string $rcpt, string $smail, string $subj): string {
         $rcpt = $this->filterAddress($rcpt);
         $from = $this->getSender($smail);
         $name = ($this->conf['fromname'] ?? '') !== '' ? $this->conf['fromname'] : $this->site;
-        $reply = ($this->conf['replyto'] ?? '') !== '' ? $this->conf['replyto'] : $smail;
         $name = $this->getSenderName($name);
-        $reply = $this->filterAddress($reply);
-        $head = ['MIME-Version: 1.0'];
-        $head[] = 'Content-Type: text/html; charset='.self::CHARSET;
-        $head[] = 'Content-Transfer-Encoding: base64';
+        $reply = $this->getReplyTo($smail);
+        $host = ($from !== '') ? substr($from, strrpos($from, '@') + 1) : 'localhost';
+        $head = ['Date: '.date('r'), 'Message-ID: <'.bin2hex(random_bytes(16)).'@'.$host.'>', 'MIME-Version: 1.0'];
+        $head[] = 'Content-Type: multipart/alternative; boundary="'.$this->bound.'"';
         $head[] = 'From: '.(($name !== '') ? $name.' ' : '').'<'.$from.'>';
         if ($rcpt !== '') $head[] = 'To: <'.$rcpt.'>';
         if ($reply !== '') $head[] = 'Reply-To: <'.$reply.'>';
         if ($subj !== '') $head[] = 'Subject: '.$subj;
-        $head[] = 'X-Priority: '.$prio;
+        $head[] = 'X-Priority: 3';
         $head[] = 'X-Mailer: SLAED CMS';
         return implode(self::CRLF, $head);
     }
@@ -674,15 +722,15 @@ class Mail {
     # Encode the transport-independent parts of one message and hand it to the configured transport, which is the only path out of the queue and is reachable from the drain alone
     # An unset or unknown transport delivers through PHP mail(), so an installation that upgrades and configures nothing keeps sending the way it did before
     # The phase and the code are cleared per message, so what a failed row records is what its own attempt answered and never what an earlier row left behind
-    private function setDelivery(string $rcpt, string $smail, string $text, string $body, int $prio): bool {
+    private function setDelivery(string $rcpt, string $smail, string $text, string $body): bool {
         $this->phase = '';
         $this->code = '';
         $subj = $this->getSubject($text);
-        $body = $this->getBody($body);
+        $body = $this->getMimeBody($body);
         return match ($this->conf['transport'] ?? '') {
-            'sendmail' => $this->addSendMail($rcpt, $smail, $subj, $body, $prio),
-            'smtp' => $this->addSmtpMail($rcpt, $smail, $subj, $body, $prio),
-            default => $this->addPhpMail($rcpt, $smail, $subj, $body, $prio),
+            'sendmail' => $this->addSendMail($rcpt, $smail, $subj, $body),
+            'smtp' => $this->addSmtpMail($rcpt, $smail, $subj, $body),
+            default => $this->addPhpMail($rcpt, $smail, $subj, $body),
         };
     }
 
@@ -690,8 +738,8 @@ class Mail {
     # A host refusing the fifth parameter is expected rather than fatal: the message goes out without it and the parameter is dropped for the rest of the run
     # The fallback is attempted and logged once per run, so a transport failing for its own reasons costs one attempt per message rather than two
     # The warning handler captures the text instead of discarding it, because an unhandled warning inside a pseudo-cron request would leak into the response body
-    private function addPhpMail(string $rcpt, string $smail, string $subj, string $body, int $prio): bool {
-        $head = $this->getHeaders('', $smail, '', $prio);
+    private function addPhpMail(string $rcpt, string $smail, string $subj, string $body): bool {
+        $head = $this->getHeaders('', $smail, '');
         $from = $this->getSender($smail);
         $args = ($from !== '' && !$this->fback) ? '-f'.$from : '';
         $back = false;
@@ -720,7 +768,7 @@ class Mail {
     # Both output pipes are drained before the exit status is read, because a binary writing to stdout would otherwise block on a full pipe while we wait for it to finish
     # A short write is a failure of its own: a binary that died before reading the message can still exit zero, and an unchecked fwrite() would report that as an accepted delivery
     # The write uses the same warning handler as PHP mail(), because a closed pipe raises one and an unhandled warning would leak into the response body
-    private function addSendMail(string $rcpt, string $smail, string $subj, string $body, int $prio): bool {
+    private function addSendMail(string $rcpt, string $smail, string $subj, string $body): bool {
         $ctx = ['transport' => 'sendmail', 'mail' => $this->getMaskedMail($rcpt)];
         if (!function_exists('proc_open')) return $this->setError('sendmail is unavailable, proc_open is disabled on this host', $ctx);
         $path = $this->filterHeader($this->conf['sendmail'] ?? '');
@@ -730,7 +778,7 @@ class Mail {
         if ($from !== '') $args[] = '-f'.$from;
         $proc = proc_open($args, [['pipe', 'r'], ['pipe', 'w'], ['pipe', 'w']], $pipe);
         if (!is_resource($proc)) return $this->setError('the sendmail binary could not be started', $ctx);
-        $mesg = $this->getHeaders($rcpt, $smail, $subj, $prio).self::CRLF.self::CRLF.$body;
+        $mesg = $this->getHeaders($rcpt, $smail, $subj).self::CRLF.self::CRLF.$body;
         $this->setWarnCatch();
         $done = fwrite($pipe[0], $mesg) ?: 0;
         fclose($pipe[0]);
@@ -750,13 +798,13 @@ class Mail {
     # Deliver over a raw SMTP dialogue, the only transport that reaches a relay this installation chooses rather than the one the host happens to provide
     # The connection is opened once and kept, so a drain run spends one handshake on a whole batch instead of one per message
     # The recipient and the resolved sender have both passed the address sanitiser, so neither the envelope nor the header block can carry an injected line
-    private function addSmtpMail(string $rcpt, string $smail, string $subj, string $body, int $prio): bool {
+    private function addSmtpMail(string $rcpt, string $smail, string $subj, string $body): bool {
         $this->mask = $this->getMaskedMail($rcpt);
         if (!$this->checkSmtpLink()) return false;
         if (!$this->checkSmtpStep('MAIL FROM:<'.$this->getSender($smail).'>', '2', 'from')) return false;
         if (!$this->checkSmtpStep('RCPT TO:<'.$rcpt.'>', '2', 'rcpt')) return false;
         if (!$this->checkSmtpStep('DATA', '354', 'data')) return false;
-        $mesg = $this->getHeaders($rcpt, $smail, $subj, $prio).self::CRLF.self::CRLF.$body;
+        $mesg = $this->getHeaders($rcpt, $smail, $subj).self::CRLF.self::CRLF.$body;
         if (!$this->setSmtpText($this->getSmtpData($mesg))) return $this->setSmtpFail('the connection was closed while the message was being written');
         return $this->checkSmtpStep('', '2', 'data');
     }

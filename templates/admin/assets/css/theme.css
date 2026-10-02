@@ -5489,6 +5489,11 @@ body:has(.sl-admin-login-shell)::before {
   color: var(--sl-danger);
 }
 
+.sl-setup-checks .sl-is-warn .bi,
+.sl-setup-checks .sl-is-warn span {
+  color: var(--sl-warning-strong);
+}
+
 /* The run: the progress line streams under the beam light and a glowing head leads it, the task under way and the per cent beneath */
 .sl-setup-run {
   margin-bottom: var(--sl-space-6);

@@ -3865,6 +3865,12 @@ function getTimedHtml(string $html): string {
     return strtr($html, $maps);
 }
 
+# Wrap one HTML text into the site mail frame; mtemp is plain text since 6.3, so its own lines become <br> here while the inserted text keeps the markup it carries
+function getMailFrame(string $html): string {
+    global $conf;
+    return str_replace('[text]', $html, nl2br($conf['mtemp'], false));
+}
+
 # Notify subscribed admins by email on new content or comment submission
 # The stored module list is only read here; normalising it is a write and belongs to the admin screen that owns those records, which already writes the normalised form
 # A registered Node type is moderated through its right node-<name>, so its name is read as that right, the way is_admin_modul() reads it
@@ -3879,8 +3885,8 @@ function addAdminMail(bool $enab, string $mod, string $username = '', string $ti
         $puname  = $username ? filterText(substr($username, 0, 25)) : _ANONYM;
         $safe = htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $message = $iscmt
-            ? str_replace('[text]', sprintf(_ADDMAILC, $puname, $safe, $text), $conf['mtemp'])
-            : str_replace('[text]', sprintf(_ADDMAIL, $puname, $safe), $conf['mtemp']);
+            ? getMailFrame(sprintf(_ADDMAILC, $puname, $safe, $text))
+            : getMailFrame(sprintf(_ADDMAIL, $puname, $safe));
         $params = [];
         $where = " WHERE smail = '1'";
         if ($conf['multilingual']) {
@@ -5912,7 +5918,7 @@ function getNodeWriter(?NodeType $type = null): NodeService {
 # The answer is false as soon as one row was refused, while the other addresses are still queued; Mail logs every refused row itself
 function addNodeMail(array $list, string $title, string $text): bool {
     global $conf, $mailer;
-    $body = str_replace('[text]', htmlspecialchars($text, ENT_QUOTES, 'UTF-8'), $conf['mtemp']);
+    $body = getMailFrame(htmlspecialchars($text, ENT_QUOTES, 'UTF-8'));
     $row = ['kind' => 'node', 'title' => $conf['sitename'].' - '.$title, 'body' => $body, 'sender' => $conf['adminmail'], 'prio' => 3];
     $done = true;
     foreach ($list as $one) $done = $mailer->addQueue(['email' => $one] + $row) && $done;

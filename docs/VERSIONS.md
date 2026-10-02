@@ -2,6 +2,31 @@
 
 ## 2026-10-01
 
+### One file installs a new site and deletes itself, and the 6.2 update leaves the release
+
+The installer is one file, `setup.php`, and installs a new site only. The `setup/` directory, its key
+`config/setup.unlock` and its update branches are gone; the update files of 4.1 to 6.2 are dropped.
+
+- **Seven stops on the login card of the admin theme:** language, server checks, database with a probe, site,
+  administrator, the run and the closing stop. Markup, styles and motion belong to the admin theme, the texts to the
+  `_SETUP_*` constants of `admin/lang/*.php`.
+- **The run in parts.** Configuration, the tables in groups, every seed statement and the administrator are separate
+  requests, so the progress line shows how far the server really got. A part that broke its request off fails the
+  run instead of running twice.
+- **The first administrator** is created by the installer itself, with the ten Node types and the starter news.
+  The form of `admin.php` for an empty admins table stays as the way back into the panel.
+- **CSRF** is a random token in the session of the browser that runs the installation, carried to the end.
+- **An installed site** — its database holds an administrator or does not answer — is refused without a write or a
+  delete. The installer deletes itself only at the end of its own installation; a file that stays keeps the warning
+  of the panel.
+- **The language** chosen on the first stop reaches the panel: the installer sets the core cookie
+  `{user_c}-language`, not the old `{user_c}-lang`.
+- **The schema** moves to `storage/update/sql/`: `table.sql`, `insert.sql` and `table_update6_3.sql`.
+- **The 6.2 update** moves into `update.php`, an internal tool of the maintainer that the release does not ship. A
+  6.2 site is not updated by the release.
+- **An administrator password** is hashed as typed in the installer, the recovery form and the admins module; the
+  login still opens with a hash made from the old cut and escaped form. The recovery form carries a token.
+
 ### The migration of the old modules leaves one copy of every file, and every migrated image shows
 
 A rehearsal on a copy of the production site found four faults of `update.php`, each fixed:

@@ -434,7 +434,7 @@ class FeedTest extends TestCase
     {
         $root = dirname(__DIR__, 2);
         $left = [];
-        foreach (['index.php', 'admin', 'core', 'modules', 'blocks', 'plugins', 'setup', 'templates'] as $part) {
+        foreach (['index.php', 'setup.php', 'update.php', 'admin', 'core', 'modules', 'blocks', 'plugins', 'templates'] as $part) {
             $list = is_file($root.'/'.$part) ? [$root.'/'.$part] : [];
             if (is_dir($root.'/'.$part)) {
                 foreach (getTreeFiles($root.'/'.$part) as $file) {

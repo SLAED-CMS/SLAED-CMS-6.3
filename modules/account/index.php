@@ -229,7 +229,7 @@ function finnewuser(): void {
             } else {
                 $link = $tpl->getHtmlFrag('link', ['href' => $finishlink, 'title' => _ACTIVATIONSUB, 'label' => $finishlink, 'is_blank' => true]);
                 $subject = $conf['sitename'].' - '._ACTIVATIONSUB;
-                $message = str_replace('[text]', getTplLines([sprintf(_PASSFSEND, $mail, $conf['sitename'], $link, $nick, $pass), _IFYOUDIDNOTASK], true, true), $conf['mtemp']);
+                $message = getMailFrame(getTplLines([sprintf(_PASSFSEND, $mail, $conf['sitename'], $link, $nick, $pass), _IFYOUDIDNOTASK], true, true));
                 $mailer->addQueue(['kind' => 'account', 'email' => $mail, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 3]);
                 $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php', 'secs' => 30]);
                 $cont = $tpl->getHtmlFrag('title', ['title' => _ACCOUNTCREATED, 'is_level_one' => true])
@@ -885,7 +885,7 @@ function passmail(): void {
                 'label_html' => $conf['homeurl'].'/index.php?name='.$conf['name'],
             ]);
             $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$nick;
-            $message = str_replace('[text]', sprintf(_PASSSEND, $nick, $conf['sitename'], $nick, $newpass, $link), $conf['mtemp']);
+            $message = getMailFrame(sprintf(_PASSSEND, $nick, $conf['sitename'], $nick, $newpass, $link));
             $mailer->addQueue(['kind' => 'account', 'email' => $mail, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 3]);
             setHead([
                 'title' => _PASSWORDLOST,
@@ -901,7 +901,7 @@ function passmail(): void {
                 'label_html' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&op=passlost&code='.$subpass.'&email='.$email,
             ]);
             $subject = $conf['sitename'].' - '._CODEFOR.' '.$nick;
-            $message = str_replace('[text]', getTplLines([sprintf(_PASSCSEND, $nick, $conf['sitename'], $subpass, $link), _IFYOUDIDNOTASK], true, true), $conf['mtemp']);
+            $message = getMailFrame(getTplLines([sprintf(_PASSCSEND, $nick, $conf['sitename'], $subpass, $link), _IFYOUDIDNOTASK], true, true));
             $mailer->addQueue(['kind' => 'account', 'email' => $mail, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 3]);
             setRedirect('index.php?name='.$conf['name'].'&op=passlost&email='.$email);
         }
@@ -1507,7 +1507,7 @@ function savepass(): void {
                         'label_html' => $conf['homeurl'].'/index.php?name='.$conf['name'],
                     ]);
                     $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$nick;
-                    $message = str_replace('[text]', sprintf(_PASSESEND, $nick, $conf['sitename'], $nick, $link), $conf['mtemp']);
+                    $message = getMailFrame(sprintf(_PASSESEND, $nick, $conf['sitename'], $nick, $link));
                     $mailer->addQueue(['kind' => 'account', 'email' => $mail, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 3]);
                     setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $nick, $hash, $story, $blockon, $theme]);
                     setRedirect('index.php?name='.$conf['name'].'&op=edithome', false, 302, _SUCCSAVE);
