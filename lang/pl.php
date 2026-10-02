@@ -504,6 +504,7 @@ define('_RESUME','Wznów');
 define('_RETRY','Spróbuj ponownie');
 define('_RETYPEPASSWORD','Powtórz hasło');
 define('_RNEWSLETTER','Otrzymywanie wiadomości?');
+define('_MAIL_UNSUB','Wypisz się z newslettera');
 define('_RSS','RSS Kanały');
 define('_RSS_FROM','Informacje ze strony internetowej');
 define('_RSS_PROBLEM','Istnieje problem z nagłówkami na tej stronie!');

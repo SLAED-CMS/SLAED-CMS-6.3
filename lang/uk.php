@@ -504,6 +504,7 @@ define('_RESUME','Продовжити');
 define('_RETRY','Повторити');
 define('_RETYPEPASSWORD','Підтвердіть пароль');
 define('_RNEWSLETTER','Отримувати новини поштою?');
+define('_MAIL_UNSUB','Відписатися від розсилки');
 define('_RSS','RSS канали');
 define('_RSS_FROM','Інформація з сайту');
 define('_RSS_PROBLEM','Існує проблема з заголовками!');

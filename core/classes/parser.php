@@ -750,6 +750,7 @@ class Parser {
     }
 
     # Convert block-level Markdown to HTML; each element is stashed so the top-level filterSafe() never escapes parser output, raw HTML blocks only pass when safe=false
+    # A line opening with a break is no raw HTML block: the plain editor stores one at every line end, and such a block would swallow the rest of the text unparsed
     private function filterBlocks(string $src): string {
         $lines = explode("\n", $src);
         $n     = count($lines);
@@ -842,7 +843,7 @@ class Parser {
                 }
             }
 
-            if (!$this->safe && preg_match('/^<\/?[a-zA-Z]/', $trim)) {
+            if (!$this->safe && preg_match('/^<\/?(?!br\b)[a-zA-Z]/i', $trim)) {
                 $raw = '';
                 while ($i < $n && trim($lines[$i]) !== '') { $raw .= $lines[$i++]."\n"; }
                 $map = [];
@@ -920,7 +921,7 @@ class Parser {
         if (str_contains($src, "\n")) {
             $brk = $this->getPartTag(['is_break' => true])."\n";
             $src = preg_replace(['/  \n/', '/\\\\\n/'], $brk, $src);
-            if ($this->fmt === 'breaks') $src = preg_replace('/(?<!<br>)\n/', $brk, $src) ?? $src;
+            if ($this->fmt === 'breaks') $src = preg_replace('/(?<!<br>|<br\/>|<br \/>)\n/i', $brk, $src) ?? $src;
         }
 
         return $src;

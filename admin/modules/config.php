@@ -184,6 +184,51 @@ function getMailPanel(): string {
         'maxlength_num' => 100,
         'is_config' => true,
     ]), '', _MAIL_REPLYINFO, $fids);
+    $fids = getFieldIds('', 'mailbounce');
+    $rows[] = getMailRow(_MAIL_BOUNCE, $tpl->getHtmlFrag('input', [
+        'itype' => 'text',
+        'name_attr' => 'mailbounce',
+        'describedby' => $fids['hint'],
+        'value_attr' => (string)($mail['bounce'] ?? ''),
+        'maxlength_num' => 100,
+        'is_config' => true,
+    ]), '', _MAIL_BOUNCEI, $fids);
+    $fids = getFieldIds('', 'mailpophost');
+    $rows[] = getMailRow(_MAIL_POPHOST, $tpl->getHtmlFrag('input', [
+        'itype' => 'text',
+        'name_attr' => 'mailpophost',
+        'describedby' => $fids['hint'],
+        'value_attr' => (string)($mail['pophost'] ?? ''),
+        'maxlength_num' => 100,
+        'is_config' => true,
+    ]), '', _MAIL_POPINFO, $fids);
+    $rows[] = getMailRow(_MAIL_POPPORT, $tpl->getHtmlFrag('input', [
+        'itype' => 'number',
+        'name_attr' => 'mailpopport',
+        'value_attr' => (string)($mail['popport'] ?? '995'),
+        'is_config' => true,
+    ]));
+    $plist = $slist;
+    foreach ($plist as $key => $item) $plist[$key]['is_selected'] = $item['value_attr'] === (string)($mail['popsecure'] ?? 'ssl');
+    $rows[] = getMailRow(_MAIL_POPSEC, $tpl->getHtmlFrag('select', ['name_attr' => 'mailpopsec', 'options' => $plist, 'is_config' => true]).$nossl);
+    $rows[] = getMailRow(_MAIL_POPUSER, $tpl->getHtmlFrag('input', [
+        'itype' => 'text',
+        'name_attr' => 'mailpopuser',
+        'value_attr' => (string)($mail['popuser'] ?? ''),
+        'maxlength_num' => 100,
+        'autocomplete_attr' => 'off',
+        'is_config' => true,
+    ]));
+    $fids = getFieldIds('', 'mailpoppass');
+    $rows[] = getMailRow(_MAIL_POPPASS, $tpl->getHtmlFrag('input', [
+        'itype' => 'password',
+        'name_attr' => 'mailpoppass',
+        'describedby' => $fids['hint'],
+        'value_attr' => '',
+        'maxlength_num' => 100,
+        'autocomplete_attr' => 'new-password',
+        'is_config' => true,
+    ]), '', _MAIL_PASSINFO, $fids);
     $rows[] = getMailRow(_MAIL_HOST, $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'mailhost',
@@ -1232,9 +1277,12 @@ function save(): void {
         if (!in_array($mtrans, ['php', 'sendmail', 'smtp'], true)) $mtrans = 'php';
         $msecur = getVar('post', 'mailsecure', 'var', 'none');
         if (!in_array($msecur, ['none', 'tls', 'ssl'], true)) $msecur = 'none';
+        $psecur = getVar('post', 'mailpopsec', 'var', 'ssl');
+        if (!in_array($psecur, ['none', 'tls', 'ssl'], true)) $psecur = 'ssl';
         $mfrom = trim(getVar('post', 'mailfmail', 'raw'));
         $mreply = trim(getVar('post', 'mailreply', 'raw'));
-        foreach ([$mfrom, $mreply] as $addr) {
+        $mbounce = trim(getVar('post', 'mailbounce', 'raw'));
+        foreach ([$mfrom, $mreply, $mbounce] as $addr) {
             if ($addr !== '' && !filter_var($addr, FILTER_VALIDATE_EMAIL)) setRedirect($afile.'.php?name=config&tab='.$ctab, false, 302, _MAIL_BADMAIL, true);
         }
         $mpass = getVar('post', 'mailpass', 'raw');
@@ -1243,6 +1291,11 @@ function save(): void {
             'fromname' => trim(getVar('post', 'mailfname', 'raw')),
             'frommail' => $mfrom,
             'replyto' => $mreply,
+            'bounce' => $mbounce,
+            'pophost' => trim(getVar('post', 'mailpophost', 'raw')),
+            'popport' => getVar('post', 'mailpopport', 'num', 995),
+            'popsecure' => $psecur,
+            'popuser' => trim(getVar('post', 'mailpopuser', 'raw')),
             'sendmail' => trim(getVar('post', 'mailpath', 'raw')),
             'host' => trim(getVar('post', 'mailhost', 'raw')),
             'port' => getVar('post', 'mailport', 'num', 587),
@@ -1260,6 +1313,8 @@ function save(): void {
             'dnsttl' => max(60, getVar('post', 'mailttl', 'num', 604800)),
         ];
         if ($mpass !== '') $mail['pass'] = $mpass;
+        $ppass = getVar('post', 'mailpoppass', 'raw');
+        if ($ppass !== '') $mail['poppass'] = $ppass;
         setConfigFile('global.php', $cont);
         setConfigFile('mail.php', $mail, is_array($conf['mail'] ?? null) ? $conf['mail'] : []);
     }

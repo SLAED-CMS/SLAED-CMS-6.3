@@ -187,6 +187,89 @@ function getProbeDrain(): array {
     return $out;
 }
 
+# Read a probe mailbox once through Mail::updateBounce() and report what the run answered beside what the mailbox recorded: the logins and the deletions it carried out
+# The mailbox expects the user bounces and the password secret, so a wrong password is the login failure a misconfigured installation would see
+function getProbePop(array $mesg, string $mode, string $pass): array {
+    $port = getProbePort();
+    $file = LOGS_DIR.'/pop.json';
+    file_put_contents($file, json_encode(['mesg' => $mesg, 'mode' => $mode, 'pass' => 'secret']));
+    $proc = proc_open([PHP_BINARY, BASE_DIR.'/tests/Support/mail_pop.php', (string)$port, $file, '20'], [['pipe', 'r'], ['pipe', 'w'], ['pipe', 'w']], $pipe);
+    if (!is_resource($proc)) return ['error' => 'the probe mailbox could not be started'];
+    usleep(400000);
+    $sect = ['pophost' => '127.0.0.1', 'popport' => (string)$port, 'popsecure' => 'none', 'popuser' => 'bounces', 'poppass' => $pass, 'timeout' => '5'];
+    $run = getProbeMail($sect)->updateBounce();
+    usleep(200000);
+    proc_terminate($proc);
+    proc_close($proc);
+    $box = json_decode((string)file_get_contents($file), true);
+    return ['run' => [$run['read'], $run['dead'], $run['error'] !== ''], 'deleted' => $box['deleted'] ?? null, 'links' => $box['links'] ?? 0];
+}
+
+# Report what a delivery report does: a message goes out under the bounce envelope with a signed Message-ID, and only a report quoting it for that recipient counts
+# The forged reports reuse the real Message-ID, so they fail on the binding to the recipient, the permanence of the failure or the signature, never on a missing header alone
+function getProbeBounce(): array {
+    global $db;
+    $row = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) AS num FROM '.PREFIX_DB.'_mail'));
+    $ntime = intval($row['num'] ?? 0);
+    $out = [];
+    $port = getProbePort();
+    $file = LOGS_DIR.'/relay.json';
+    $proc = proc_open([PHP_BINARY, BASE_DIR.'/tests/Support/mail_relay.php', (string)$port, $file, '30'], [['pipe', 'r'], ['pipe', 'w'], ['pipe', 'w']], $pipe);
+    if (!is_resource($proc)) return $out + ['error' => 'the probe relay could not be started'];
+    usleep(400000);
+    $sect = ['transport' => 'smtp', 'host' => '127.0.0.1', 'port' => (string)$port, 'secure' => 'none', 'auth' => '0', 'timeout' => '5', 'rate' => '0'];
+    $mailer = getProbeMail($sect + ['bounce' => 'bounces@slaed.net'], ['bouncemax' => '2']);
+    $mailer->addQueue(['kind' => PROBEKIND, 'email' => 'gone@slaed.net', 'sender' => 'info@slaed.net', 'title' => 'bounce', 'body' => '<p>bounce</p>', 'prio' => 1]);
+    $mailer->updateQueue();
+    proc_terminate($proc);
+    proc_close($proc);
+    $data = json_decode((string)file_get_contents($file), true);
+    $head = getProbeMessage((string)($data['mails'][0] ?? ''))['head'];
+    $mid = preg_match('/^Message-ID: <([^>]+)>/m', $head, $mtch) ? $mtch[1] : '';
+    $out['envelope'] = $data['envs'] ?? [];
+    $out['signed'] = (bool)preg_match('/^[0-9a-f]{32}\.[0-9a-f]{16}@[a-z0-9.\-]+$/', $mid);
+    $dsn = static function (string $rcpt, string $code, string $mid): string {
+        return "From: MAILER-DAEMON@mail.example\nTo: bounces@slaed.net\nSubject: Undelivered Mail Returned to Sender\n"
+            ."Message-ID: <0123456789abcdef0123456789abcdef.0123456789abcdef@mail.example>\n"
+            ."Content-Type: multipart/report; report-type=delivery-status; boundary=\"b1\"\n\n--b1\nContent-Type: text/plain\n\nThe mail could not be delivered.\n\n"
+            ."--b1\nContent-Type: message/delivery-status\n\nReporting-MTA: dns; mail.example\n\nFinal-Recipient: rfc822; ".$rcpt
+            ."\nOriginal-Recipient: rfc822;".$rcpt."\nAction: ".(str_starts_with($code, '5.') ? 'failed' : 'delayed')."\nStatus: ".$code
+            ."\nDiagnostic-Code: smtp; 550 5.1.1 user unknown\n\n--b1\nContent-Type: text/rfc822-headers\n\nFrom: site@slaed.net\nTo: ".$rcpt
+            ."\nMessage-ID: <".$mid.">\nSubject: bounce\n\n--b1--\n";
+    };
+    $fake = substr($mid, 0, 33).strrev(substr($mid, 33, 16)).substr($mid, 49);
+    $out['forged'] = [
+        'other' => $mailer->addBounce($dsn('victim@slaed.net', '5.1.1', $mid)),
+        'temp' => $mailer->addBounce($dsn('gone@slaed.net', '4.4.1', $mid)),
+        'badsig' => $mailer->addBounce($dsn('gone@slaed.net', '5.1.1', $fake)),
+        'noid' => $mailer->addBounce(str_replace('Message-ID: <'.$mid.">\n", '', $dsn('gone@slaed.net', '5.1.1', $mid))),
+        'plain' => $mailer->addBounce("From: someone@mail.example\nSubject: Out of office\n\nI am away until Monday.\n"),
+    ];
+    $out['afterforged'] = $mailer->getDeadList(1)['total'];
+    $out['first'] = $mailer->addBounce(str_replace("\n", "\r\n", $dsn('gone@slaed.net', '5.1.1', $mid)));
+    $out['stillsends'] = $mailer->checkAddress('gone@slaed.net');
+    $out['second'] = $mailer->addBounce($dsn('gone@slaed.net', '5.1.1', $mid));
+    $out['excluded'] = !$mailer->checkAddress('gone@slaed.net');
+    $list = $mailer->getDeadList(1);
+    $one = $list['rows'][0] ?? [];
+    $out['row'] = [$list['total'], (string)($one['email'] ?? ''), intval($one['fails'] ?? 0), (string)($one['phase'] ?? ''), (string)($one['code'] ?? '')];
+    $out['revived'] = $mailer->deleteDeadMail([intval($one['id'] ?? 0)]);
+    $out['sendsagain'] = $mailer->checkAddress('gone@slaed.net');
+    $real = str_replace("\n", "\r\n", $dsn('gone@slaed.net', '5.1.1', $mid));
+    $away = "From: someone@mail.example\nSubject: Out of office\n\n.I am away until Monday.\n";
+    $out['pop'] = [
+        'badpass' => getProbePop([$real], '', 'wrong'),
+        'broken' => getProbePop([$real, $away], 'drop', 'secret'),
+        'afterbroken' => $mailer->getDeadList(1)['total'],
+        'normal' => getProbePop([$real, $away, $dsn('victim@slaed.net', '5.1.1', $mid)], '', 'secret'),
+    ];
+    $list = $mailer->getDeadList(1);
+    $out['pop']['row'] = [$list['total'], (string)($list['rows'][0]['email'] ?? ''), intval($list['rows'][0]['fails'] ?? 0)];
+    $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_maildead WHERE email LIKE :mail', ['mail' => '%@slaed.net']);
+    $out['clean'] = deleteProbeRows($ntime);
+    return $out;
+}
+
 # Report what a campaign does end to end: a criterion expanded into held rows, the sample drawn and delivered, the campaign parking, an operator releasing it and the rest going out
 # The audience is a group this scenario creates for itself, so the expansion can be driven against the real tables without a single real subscriber entering the queue
 # The rows it writes into _users are removed by the identifiers it was given, never by a pattern over an address, because a pattern also matches accounts the installation owns
@@ -200,12 +283,12 @@ function getProbeCamp(): array {
     }
     $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_groups (name, intro, points, extra, rank, color) VALUES (\'probe group\', \'\', 0, 1, \'\', \'\')');
     $gid = intval($db->getSqlLastId());
-    $mail = ['camper@slaed.net', 'campertwo@slaed.net', 'camperthree@slaed.net', 'camperdead@slaed.net'];
+    $mail = ['camper@slaed.net', 'campertwo@slaed.net', 'camperthree@slaed.net', 'camperdead@slaed.net', 'campergone@slaed.net'];
     $sql = 'INSERT INTO '.PREFIX_DB.'_users (name, email, password, block, warnings, field, grp, newslet, regdate, lastvis)'
-        .' VALUES (:name, :mail, \'x\', \'\', \'\', \'\', :grp, 1, NOW(), NOW())';
+        .' VALUES (:name, :mail, \'x\', \'\', \'\', \'\', :grp, :news, NOW(), NOW())';
     $ours = [];
     foreach ($mail as $idx => $addr) {
-        $db->getSqlQuery($sql, ['name' => 'probeuser'.chr(97 + $idx), 'mail' => $addr, 'grp' => $gid]);
+        $db->getSqlQuery($sql, ['name' => 'probeuser'.chr(97 + $idx), 'mail' => $addr, 'grp' => $gid, 'news' => ($addr === 'campergone@slaed.net') ? 0 : 1]);
         $ours[] = intval($db->getSqlLastId());
     }
     $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_maildead (email, fails, phase, code, time) VALUES (:mail, 5, \'rcpt\', \'550\', NOW())', ['mail' => 'camperdead@slaed.net']);
@@ -225,6 +308,7 @@ function getProbeCamp(): array {
     $out['state'] = getProbeCampRow($nid);
     $out['slice'] = getProbeCampSlice($nid);
     $out['dead'] = intval($db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) AS num FROM '.PREFIX_DB.'_mail WHERE email = \'camperdead@slaed.net\''))['num'] ?? 0);
+    $out['gone'] = intval($db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) AS num FROM '.PREFIX_DB.'_mail WHERE email = \'campergone@slaed.net\''))['num'] ?? 0);
     $out['canary'] = $GLOBALS['mailer']->updateQueue();
     $out['held'] = getProbeCampRow($nid);
     $out['blocked'] = $GLOBALS['mailer']->updateQueue();
@@ -236,8 +320,16 @@ function getProbeCamp(): array {
     $data = json_decode((string)file_get_contents($file), true);
     $out['relay'] = ['links' => intval($data['links'] ?? 0), 'mails' => count($data['mails'] ?? [])];
     $out['shared'] = 0;
+    $out['unsub'] = 0;
     foreach ($data['mails'] ?? [] as $mesg) {
-        if (str_contains(getProbeMessage((string)$mesg)['body'], 'shared probe body')) $out['shared']++;
+        $part = getProbeMessage((string)$mesg);
+        if (str_contains($part['body'], 'shared probe body')) $out['shared']++;
+        $rcpt = preg_match('/^To: <([^>]+)>/m', $part['head'], $mtch) ? $mtch[1] : '';
+        $link = 'op=unsub&mail='.rawurlencode($rcpt).'&key='.getUnsubKey($rcpt);
+        $head = preg_match('/^List-Unsubscribe: <[^>]*'.preg_quote($link, '/').'>\r?$/m', $part['head'])
+            && str_contains($part['head'], 'List-Unsubscribe-Post: List-Unsubscribe=One-Click') && str_contains($part['head'], 'Precedence: bulk')
+            && !str_contains($part['head'], 'Auto-Submitted');
+        if ($rcpt !== '' && $head && str_contains(html_entity_decode($part['body']), $link) && str_contains($part['text'], $link)) $out['unsub']++;
     }
     proc_terminate($proc);
     proc_close($proc);
@@ -334,6 +426,8 @@ if ($mode === 'mailqueue') {
     $out = getProbeCamp();
 } elseif ($mode === 'mailframe') {
     $out = getProbeFrame();
+} elseif ($mode === 'mailbounce') {
+    $out = getProbeBounce();
 }
 while (ob_get_level() > 0) ob_end_clean();
 echo json_encode($out, JSON_UNESCAPED_SLASHES);

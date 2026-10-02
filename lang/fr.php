@@ -504,6 +504,7 @@ define('_RESUME','Reprendre');
 define('_RETRY','Réessayer');
 define('_RETYPEPASSWORD','Répéter le mot de passe');
 define('_RNEWSLETTER','Recevoir des nouvelles par e-mail?');
+define('_MAIL_UNSUB','Se désabonner de la lettre d\'information');
 define('_RSS','Flux RSS');
 define('_RSS_FROM','Les informations du site');
 define('_RSS_PROBLEM','Il existe un problème avec les titres!');

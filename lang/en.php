@@ -504,6 +504,7 @@ define('_RESUME','Resume');
 define('_RETRY','Try again');
 define('_RETYPEPASSWORD','Re-type Password');
 define('_RNEWSLETTER','Receive Newsletter by E-Mail?');
+define('_MAIL_UNSUB','Unsubscribe from the newsletter');
 define('_RSS','RSS Channels');
 define('_RSS_FROM','The information from a site');
 define('_RSS_PROBLEM','There is a problem with headers!');

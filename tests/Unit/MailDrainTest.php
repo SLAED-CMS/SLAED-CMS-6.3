@@ -81,6 +81,68 @@ final class MailDrainTest extends TestCase
         $this->assertSame(0, $data['dead'], 'A suppressed address was written into the queue');
     }
 
+    # A message leaves under the bounce envelope with a Message-ID signed for its recipient, so the report that comes back can be traced to that address
+    #[Test]
+    public function aMessageLeavesUnderTheBounceEnvelopeWithASignedId(): void
+    {
+        $data = $this->getProbe('mailbounce');
+        $this->assertSame(['<bounces@slaed.net>'], $data['envelope']);
+        $this->assertTrue($data['signed'], 'The Message-ID carries no signature for its recipient');
+        $this->assertTrue($data['clean'], 'The bounce scenario left rows behind');
+    }
+
+    # A report naming another address, a temporary failure, a wrong signature, a report without the Message-ID or an auto-reply never marks anyone
+    #[Test]
+    public function aForgedOrSoftReportMarksNobody(): void
+    {
+        $data = $this->getProbe('mailbounce');
+        foreach ($data['forged'] as $name => $res) $this->assertSame([], $res['dead'], 'The '.$name.' report marked an address');
+        $this->assertSame(0, $data['afterforged']);
+    }
+
+    # A real report is written to the registry, the address leaves mailings at the configured count, and an operator puts it back
+    #[Test]
+    public function aRealReportIsCountedUntilTheAddressLeavesMailings(): void
+    {
+        $data = $this->getProbe('mailbounce');
+        $this->assertSame(['gone@slaed.net'], $data['first']['dead'], 'A report with CRLF line endings was not read');
+        $this->assertTrue($data['stillsends'], 'One report already excluded the address');
+        $this->assertTrue($data['excluded'], 'The second report did not exclude the address');
+        $this->assertSame([1, 'gone@slaed.net', 2, 'dsn', '5.1.1'], $data['row']);
+        $this->assertSame(1, $data['revived']);
+        $this->assertTrue($data['sendsagain'], 'A revived address still did not receive mailings');
+    }
+
+    # The bounce mailbox is read over POP3: a wrong password and a session broken mid-message count nothing and delete nothing, so the next run reads the same reports once
+    # A whole session reads every message, counts only the believable failure, deletes everything it read and commits the deletions with QUIT
+    #[Test]
+    public function theBounceMailboxIsReadOnceAndEmptied(): void
+    {
+        $pop = $this->getProbe('mailbounce')['pop'];
+        $this->assertSame(['run' => [0, 0, true], 'deleted' => [], 'links' => 1], $pop['badpass'], 'A refused login read or deleted something');
+        $this->assertSame(['run' => [0, 0, true], 'deleted' => [], 'links' => 1], $pop['broken'], 'A broken session counted or deleted something');
+        $this->assertSame(0, $pop['afterbroken'], 'A broken session wrote a verdict');
+        $this->assertSame(['run' => [3, 1, false], 'deleted' => [1, 2, 3], 'links' => 1], $pop['normal']);
+        $this->assertSame([1, 'gone@slaed.net', 1], $pop['row']);
+    }
+
+    # A group audience keeps to the accounts that receive the mailing: a member who unsubscribed is never selected, so it is neither queued nor counted as skipped
+    #[Test]
+    public function anUnsubscribedMemberIsNotPartOfTheAudience(): void
+    {
+        $data = $this->getProbe('mailcamp');
+        $this->assertSame(0, $data['gone'], 'An account that unsubscribed was written into the queue');
+        $this->assertSame(3, $data['state']['total']);
+    }
+
+    # Every delivered mailing carries the one-click unsubscribe of its own recipient, in the list headers and in both body parts, and none is marked auto-generated
+    #[Test]
+    public function everyMailingCarriesTheUnsubscribeOfItsRecipient(): void
+    {
+        $data = $this->getProbe('mailcamp');
+        $this->assertSame(3, $data['unsub'], 'A delivered mailing lacked the signed unsubscribe of its own recipient');
+    }
+
     # The expansion releases only its sample and holds the audience, and the campaign says which of the two branches it took
     #[Test]
     public function theSampleIsReleasedAndTheAudienceIsHeld(): void

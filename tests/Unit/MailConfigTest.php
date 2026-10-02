@@ -12,6 +12,7 @@ final class MailConfigTest extends TestCase
         'auth' => '0',
         'backoff' => '300',
         'batch' => '25',
+        'bounce' => '',
         'dnsttl' => '604800',
         'frommail' => '',
         'fromname' => '',
@@ -19,6 +20,11 @@ final class MailConfigTest extends TestCase
         'keep' => '30',
         'keepbulk' => '3',
         'pass' => '',
+        'pophost' => '',
+        'poppass' => '',
+        'popport' => '995',
+        'popsecure' => 'ssl',
+        'popuser' => '',
         'port' => '587',
         'rate' => '60',
         'replyto' => '',
@@ -59,7 +65,7 @@ final class MailConfigTest extends TestCase
     public function noCredentialOrIdentityFieldIsShippedFilled(): void
     {
         $sect = $this->getSection();
-        foreach (['fromname', 'frommail', 'replyto', 'host', 'user', 'pass'] as $key) {
+        foreach (['fromname', 'frommail', 'replyto', 'bounce', 'host', 'user', 'pass', 'pophost', 'popuser', 'poppass'] as $key) {
             $this->assertSame('', $sect[$key], $key.' must ship empty');
         }
     }

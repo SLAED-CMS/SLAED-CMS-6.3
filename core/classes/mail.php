@@ -20,21 +20,28 @@ class Mail {
     private const SUBJLEN = 255;
     private const PRUNENUM = 1000;
     private const DEADCAP = 255;
+    private const BOUNCELEN = 1048576;
+    private const BOUNCENUM = 50;
 
     private ?Database $db;
     private array $conf;
     private array $rule;
     private string $site;
     private string $admin;
+    private string $home;
+    private string $bounce;
+    private string $dest = '';
     private string $bound;
     private int $wait;
     private string $error = '';
     private bool $fback = false;
     private bool $ftry = false;
     private mixed $sock = null;
+    private mixed $pop = null;
     private string $warn = '';
     private string $phase = '';
     private string $code = '';
+    private string $unsub = '';
     private string $repl = '';
     private string $mask = '';
     private string $lock = '';
@@ -53,14 +60,17 @@ class Mail {
         $this->rule = is_array($conf['newsletter'] ?? null) ? $conf['newsletter'] : [];
         $this->site = $conf['sitename'] ?? '';
         $this->admin = $conf['adminmail'] ?? '';
+        $this->home = $conf['homeurl'] ?? '';
+        $this->bounce = $this->filterAddress($this->conf['bounce'] ?? '');
         $this->bound = '=_'.bin2hex(random_bytes(12));
         $job = $conf['scheduler']['jobs']['maildrain'] ?? [];
         $this->wait = max(60, intval(is_array($job) ? ($job['lock_timeout'] ?? 0) : 0) ?: 900);
     }
 
-    # Close an open relay session when the service goes away, because a request or a drain run may end while the last message still holds the connection
+    # Close an open relay or mailbox session when the service goes away, because a request or a drain run may end while a connection is still held
     public function __destruct() {
         $this->deleteSmtpLink();
+        $this->deletePopLink();
     }
 
     # Accept one message from a call site and store it as a queue row; the answer means accepted into the queue, and no caller learns the delivery outcome synchronously any more
@@ -199,12 +209,14 @@ class Mail {
     # The answer says what the run should do next: a refusal describing the transport rather than the message stops the run instead of spending an attempt on every remaining row
     # A refusal is permanent for the row unless its code says otherwise, and only a permanent verdict at the recipient step is ever read as a statement about the address
     # The phase and the code are cleared before anything is attempted, so a row refused before a transport is entered cannot be recorded under the answer the previous row got
+    # A mailing row gets the unsubscribe link of its own recipient in the body and in the list headers; the link is cleared first so no other row inherits it
     private function setQueueSend(array $row): string {
         $id = intval($row['id']);
         $body = (string)$row['body'];
         $ref = intval($row['ref']);
         $this->phase = '';
         $this->code = '';
+        $this->unsub = '';
         if ($ref > 0) {
             $text = $this->getRefBody((string)$row['kind'], $ref);
             if ($text === null) {
@@ -212,7 +224,8 @@ class Mail {
                 $this->setCampResult($row, false, 'message');
                 return 'fail';
             }
-            $body = $text;
+            $this->unsub = $this->getUnsubUrl((string)$row['email']);
+            $body = $text.$this->getUnsubBlock();
         }
         $sent = $this->setDelivery((string)$row['email'], (string)$row['sender'], (string)$row['title'], $body);
         if ($sent) {
@@ -396,12 +409,15 @@ class Mail {
 
     # Count one permanent recipient verdict against the address it was about, which is the only failure the taxonomy allows to be read as a fact about a mailbox
     # The counter is a running total rather than a flag: one 5xx can be a policy answer, several are a pattern, and an administrator can clear it
+    # Every placeholder is named once, because native prepares refuse a repeated name and the whole write would fail without a word
     private function addDeadMail(string $mail): void {
         $mail = $this->filterDeadMail($mail);
         if ($mail === '' || !$this->db instanceof Database) return;
+        $phase = mb_substr($this->phase, 0, 10);
+        $code = mb_substr($this->code, 0, 20);
         $sql = 'INSERT INTO '.PREFIX_DB.'_maildead (email, fails, phase, code, time) VALUES (:mail, 1, :phase, :code, NOW())'
-            .' ON DUPLICATE KEY UPDATE fails = LEAST('.self::DEADCAP.', fails + 1), phase = :phase, code = :code, time = NOW()';
-        $this->db->getSqlQuery($sql, ['mail' => $mail, 'phase' => mb_substr($this->phase, 0, 10), 'code' => mb_substr($this->code, 0, 20)]);
+            .' ON DUPLICATE KEY UPDATE fails = LEAST('.self::DEADCAP.', fails + 1), phase = :uphase, code = :ucode, time = NOW()';
+        $this->db->getSqlQuery($sql, ['mail' => $mail, 'phase' => $phase, 'code' => $code, 'uphase' => $phase, 'ucode' => $code]);
     }
 
     # Ask whether the domain of an address accepts mail at all, which is the cheapest large win on an aged list and the one check that scales with domains rather than addresses
@@ -554,6 +570,210 @@ class Mail {
         return intval($this->db->getSqlAffected());
     }
 
+    # List the addresses the registry holds, newest verdict first and paged like the queue, so an operator can see why an address stopped receiving mailings
+    public function getDeadList(int $page): array {
+        $lim = 20;
+        $out = ['rows' => [], 'total' => 0, 'page' => 1, 'pages' => 1, 'limit' => $lim];
+        if (!$this->db instanceof Database) return $out;
+        $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT COUNT(id) AS num FROM '.PREFIX_DB.'_maildead'));
+        $out['total'] = intval($row['num'] ?? 0);
+        $out['pages'] = max(1, (int)ceil($out['total'] / $lim));
+        $out['page'] = max(1, min($out['pages'], $page));
+        $sql = 'SELECT id, email, fails, phase, code, time FROM '.PREFIX_DB.'_maildead ORDER BY time DESC, id DESC LIMIT '.(($out['page'] - 1) * $lim).', '.$lim;
+        $out['rows'] = $this->db->getSqlRows($this->db->getSqlQuery($sql)) ?: [];
+        return $out;
+    }
+
+    # Forget the verdicts held against named addresses, which is what an operator does once a mailbox is known to work again; the next failure counts from one
+    public function deleteDeadMail(array $list): int {
+        $list = $this->getIdList($list);
+        if ($list === '' || !$this->db instanceof Database) return 0;
+        if (!$this->db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_maildead WHERE id IN ('.$list.')')) return 0;
+        return intval($this->db->getSqlAffected());
+    }
+
+    # Read one delivery status notification the bounce address received and count every permanent failure it reports against the address it names
+    # Only a report about a message this site sent counts: its returned headers carry a Message-ID whose signature binds that message to that very recipient
+    # A report naming anyone else, a temporary failure, an auto-reply or a mail that is no report at all changes nothing, so a forged mail cannot remove a subscriber
+    public function addBounce(string $raw): array {
+        $out = ['dead' => [], 'skip' => 0];
+        foreach ($this->getBounceDead($raw, $out['skip']) as [$mail, $code]) {
+            $this->setBounceDead($mail, $code);
+            $out['dead'][] = $mail;
+        }
+        return $out;
+    }
+
+    # Read the believable permanent failures out of one report as address and status pairs, counting into skip every recipient block that does not qualify
+    private function getBounceDead(string $raw, int &$skip = 0): array {
+        $out = [];
+        $raw = str_replace(["\r\n", "\r"], "\n", substr($raw, 0, self::BOUNCELEN));
+        $cut = strpos($raw, "\n\n");
+        $body = ($cut === false) ? '' : substr($raw, $cut + 2);
+        preg_match_all('/^Message-ID:\s*<([0-9a-f]{32})\.([0-9a-f]{16})@[^>\s]+>/mi', $body, $ids, PREG_SET_ORDER);
+        foreach (preg_split('/\n[ \t]*\n/', $body) ?: [] as $part) {
+            if (!preg_match('/^Final-Recipient:\s*rfc822\s*;\s*<?([^\s<>;]+@[^\s<>;]+)>?/mi', $part, $rcpt)) continue;
+            $act = preg_match('/^Action:\s*(\S+)/mi', $part, $mtch) ? strtolower($mtch[1]) : '';
+            $code = preg_match('/^Status:\s*(\d\.\d{1,3}\.\d{1,3})/mi', $part, $mtch) ? $mtch[1] : '';
+            $mail = $this->filterDeadMail($rcpt[1]);
+            if ($act === 'failed' && str_starts_with($code, '5.') && $mail !== '' && $this->checkBounceId($ids, $mail)) $out[] = [$mail, $code];
+            else $skip++;
+        }
+        return $out;
+    }
+
+    # Write one believed failure into the registry under the phase of a delivery report and its status code
+    private function setBounceDead(string $mail, string $code): void {
+        $this->phase = 'dsn';
+        $this->code = $code;
+        $this->addDeadMail($mail);
+    }
+
+    # Read the bounce mailbox over POP3, count the permanent failures its delivery reports name and delete what was read, which is what a dedicated bounce box is for
+    # A run takes at most BOUNCENUM messages, so a flooded box is worked off over several drains instead of holding one past its time budget
+    # Every message read is deleted, a report or not: the box exists only for reports, and a message left in it would be read again on every run
+    # The verdicts are written only after QUIT committed the deletions, so a session that breaks off counts nothing and the next run reads the same reports once
+    # An unconfigured box is no error, it simply reads nothing; a box that cannot be read reports why, and the drain it runs in carries on regardless
+    public function updateBounce(): array {
+        $out = ['read' => 0, 'dead' => 0, 'error' => ''];
+        if ($this->filterHeader($this->conf['pophost'] ?? '') === '') return $out;
+        if (!$this->checkPopLink()) {
+            $out['error'] = $this->error;
+            return $out;
+        }
+        $stat = $this->getPopAnswer('STAT');
+        $num = preg_match('/^\+OK\s+(\d+)/', $stat, $mtch) ? min(intval($mtch[1]), self::BOUNCENUM) : -1;
+        if ($num < 0) $this->setPopFail('the mailbox refused to report its size: '.$stat);
+        $list = [];
+        for ($i = 1; $i <= $num; $i++) {
+            $raw = $this->getPopMessage($i);
+            if ($raw === null) break;
+            $dead = $this->getBounceDead($raw);
+            if (!str_starts_with($this->getPopAnswer('DELE '.$i), '+OK')) break;
+            $out['read']++;
+            $list = array_merge($list, $dead);
+        }
+        if (!$this->checkPopQuit()) {
+            $out['error'] = $this->error;
+            return $out;
+        }
+        foreach ($list as [$mail, $code]) {
+            $this->setBounceDead($mail, $code);
+            $out['dead']++;
+        }
+        return $out;
+    }
+
+    # Open the bounce mailbox: connect with the configured encryption, raise STLS when asked for, and log in, every step requiring the server's +OK
+    # The certificate is verified exactly as for the relay, and the password is never part of a failure message, which keeps it out of the log
+    private function checkPopLink(): bool {
+        $this->deletePopLink();
+        $host = $this->filterHeader($this->conf['pophost'] ?? '');
+        $encr = $this->conf['popsecure'] ?? 'ssl';
+        if ($encr !== 'none' && !function_exists('stream_socket_enable_crypto')) return $this->setPopFail('pop3 encryption is unavailable, openssl is missing on this host');
+        $port = (int)($this->conf['popport'] ?? 0) ?: (($encr === 'ssl') ? 995 : 110);
+        $tout = (int)($this->conf['timeout'] ?? 0) ?: 10;
+        $opts = stream_context_create(['ssl' => ['verify_peer' => true, 'verify_peer_name' => true, 'peer_name' => $host, 'SNI_enabled' => true]]);
+        $this->setWarnCatch();
+        $sock = stream_socket_client((($encr === 'ssl') ? 'ssl://' : 'tcp://').$host.':'.$port, $ecod, $etxt, $tout, STREAM_CLIENT_CONNECT, $opts);
+        $warn = $this->getWarnText();
+        if (!is_resource($sock)) return $this->setPopFail('the mailbox could not be reached: '.($this->filterHeader($etxt ?? '') ?: $warn));
+        $this->pop = $sock;
+        stream_set_timeout($sock, $tout);
+        if (!str_starts_with($line = $this->getPopAnswer(''), '+OK')) return $this->setPopFail('the mailbox did not greet: '.$line);
+        if ($encr === 'tls') {
+            if (!str_starts_with($line = $this->getPopAnswer('STLS'), '+OK')) return $this->setPopFail('the mailbox refused STLS: '.$line);
+            $this->setWarnCatch();
+            $done = stream_socket_enable_crypto($this->pop, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
+            $warn = $this->getWarnText();
+            if ($done !== true) return $this->setPopFail('the tls handshake with the mailbox failed'.(($warn !== '') ? ': '.$warn : ''));
+        }
+        $user = $this->filterHeader($this->conf['popuser'] ?? '');
+        $pass = $this->filterHeader($this->conf['poppass'] ?? '');
+        if ($user === '' || $pass === '') return $this->setPopFail('the bounce mailbox is configured without a user or a password');
+        if (!str_starts_with($line = $this->getPopAnswer('USER '.$user), '+OK')) return $this->setPopFail('the mailbox refused the user: '.$line);
+        if (!str_starts_with($line = $this->getPopAnswer('PASS '.$pass), '+OK')) return $this->setPopFail('the mailbox refused the login: '.$line);
+        return true;
+    }
+
+    # Retrieve one message, undoing the dot-stuffing of the multi-line answer and keeping no more than BOUNCELEN of it, or null when the mailbox stopped answering
+    private function getPopMessage(int $num): ?string {
+        $line = $this->getPopAnswer('RETR '.$num);
+        if (!str_starts_with($line, '+OK')) {
+            $this->setPopFail('the mailbox refused to hand out a message: '.$line);
+            return null;
+        }
+        $raw = '';
+        while (is_resource($this->pop) && ($line = fgets($this->pop, 8192)) !== false) {
+            if (rtrim($line, "\r\n") === '.') return $raw;
+            if (str_starts_with($line, '..')) $line = substr($line, 1);
+            if (strlen($raw) < self::BOUNCELEN) $raw .= $line;
+        }
+        $this->setPopFail('the mailbox closed the connection in the middle of a message');
+        return null;
+    }
+
+    # Send one command when there is one and read the single status line that answers it, cleaned of control characters; an empty answer means the connection is gone
+    private function getPopAnswer(string $cmnd): string {
+        if (!is_resource($this->pop)) return '';
+        $this->setWarnCatch();
+        $sent = $cmnd === '' || fwrite($this->pop, $cmnd.self::CRLF) === strlen($cmnd) + 2;
+        $line = $sent ? fgets($this->pop, 1024) : false;
+        $this->getWarnText();
+        return ($line === false) ? '' : $this->filterHeader($line);
+    }
+
+    # Record one mailbox failure and drop the connection, which leaves every message the server has not been told to delete in the box for the next run
+    private function setPopFail(string $mesg): bool {
+        if (is_resource($this->pop)) fclose($this->pop);
+        $this->pop = null;
+        return $this->setError($mesg, ['transport' => 'pop3']);
+    }
+
+    # End the session with QUIT and report whether the server confirmed it, because only a confirmed QUIT carries out the deletions of the session
+    private function checkPopQuit(): bool {
+        if (!is_resource($this->pop)) return false;
+        $line = $this->getPopAnswer('QUIT');
+        fclose($this->pop);
+        $this->pop = null;
+        if (str_starts_with($line, '+OK')) return true;
+        return $this->setError('the mailbox did not confirm the end of the session: '.$line, ['transport' => 'pop3']);
+    }
+
+    # Drop the mailbox session on any other way out without QUIT, so an abandoned session never carries out a deletion whose verdict was not written
+    private function deletePopLink(): void {
+        if (is_resource($this->pop)) fclose($this->pop);
+        $this->pop = null;
+    }
+
+    # Report whether one of the returned Message-IDs was signed by this site for exactly this recipient, which is what makes a report about it believable
+    private function checkBounceId(array $ids, string $mail): bool {
+        foreach ($ids as $one) {
+            $key = $this->getBounceKey($one[1], $mail);
+            if ($key !== '' && hash_equals($key, strtolower($one[2]))) return true;
+        }
+        return false;
+    }
+
+    # Sign the random part of a Message-ID for one recipient, or nothing when there is no recipient or no site secret to sign with
+    private function getBounceKey(string $rand, string $mail): string {
+        $mail = $this->filterDeadMail($mail);
+        if ($mail === '' || !function_exists('getSecret')) return '';
+        return substr(hash_hmac('sha256', strtolower($rand).'|'.$mail, getSecret('bounce')), 0, 16);
+    }
+
+    # Build the local part of a Message-ID: random, and signed for the recipient being delivered to, so a delivery report quoting it can be traced back to that address
+    private function getMessageId(): string {
+        $rand = bin2hex(random_bytes(16));
+        $key = $this->getBounceKey($rand, $this->dest);
+        return ($key === '') ? $rand : $rand.'.'.$key;
+    }
+
+    # Resolve the envelope sender: the configured bounce address when there is one, so delivery reports reach the mailbox that reads them, else the From address
+    private function getEnvelope(string $smail): string {
+        return ($this->bounce !== '') ? $this->bounce : $this->getSender($smail);
+    }
+
     # Turn a submitted set of row identifiers into a list no statement can be reshaped by, because an IN list cannot be a placeholder
     private function getIdList(array $list): string {
         $ids = [];
@@ -665,6 +885,7 @@ class Mail {
 
     # Derive the plain-text part from the HTML: source whitespace folds to spaces, breaks and block ends become lines, and a link keeps its address beside its text
     # Every line is trimmed and runs of empty lines fold to one, so template indentation never reaches a reader who sees the text part
+    # A list item starts its own line with a dash, so a list stays a list for a reader who sees only the text part
     private function getPlainText(string $html): string {
         $text = preg_replace('#<(script|style)\b.*?</\1\s*>#si', '', $html) ?? $html;
         $text = preg_replace('#[ \t\r\n]+#', ' ', $text) ?? $text;
@@ -673,7 +894,8 @@ class Mail {
             $name = trim(strip_tags($link[3]));
             return ($name === '' || html_entity_decode($name) === html_entity_decode($href)) ? $href : $name.' ('.$href.')';
         }, $text) ?? $text;
-        $text = preg_replace('#<br\s*/?>|<hr\b[^>]*>|</(p|div|li|tr|h[1-6]|blockquote|table)\s*>#i', "\n", $text) ?? $text;
+        $text = preg_replace('#<li\b[^>]*>#i', "\n- ", $text) ?? $text;
+        $text = preg_replace('#<br\s*/?>|<hr\b[^>]*>|</(p|div|ul|ol|tr|h[1-6]|blockquote|table)\s*>#i', "\n", $text) ?? $text;
         $rows = explode("\n", html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5, self::CHARSET));
         $text = implode("\n", array_map(static fn(string $row): string => trim(preg_replace('#[ \t]+#', ' ', $row) ?? $row), $rows));
         return str_replace("\n", self::CRLF, trim(preg_replace('#\n{3,}#', "\n\n", $text) ?? $text));
@@ -696,24 +918,50 @@ class Mail {
         return "\n"._IP.': '.getIp()."\n"._BROWSER.': '.$agent."\n"._HASH.': '.md5($agent);
     }
 
+    # Build the unsubscribe address of one mailing recipient, signed for that address, or nothing when the site has no address of its own to send the reader to
+    private function getUnsubUrl(string $mail): string {
+        if ($this->home === '' || !function_exists('getUnsubKey')) return '';
+        return rtrim($this->home, '/').'/index.php?name=account&op=unsub&mail='.rawurlencode($mail).'&key='.getUnsubKey($mail);
+    }
+
+    # Build the unsubscribe line appended to a mailing body, keeping the template form when a template is available and the plain form when it is not
+    private function getUnsubBlock(): string {
+        global $tpl;
+        if ($this->unsub === '') return '';
+        if ($tpl instanceof Template) {
+            $link = $tpl->getHtmlFrag('link', ['href' => $this->unsub, 'title' => _MAIL_UNSUB, 'label' => _MAIL_UNSUB]);
+            return getOutputHtml($tpl->getHtmlPart('message-block', ['title' => '', 'content_html' => $link]));
+        }
+        return "\n\n"._MAIL_UNSUB.': '.$this->unsub;
+    }
+
     # Assemble the MIME header block for one already validated sender; no Return-Path is written because the receiving MTA owns that header
     # An empty recipient means the transport writes its own To, which is what PHP mail() does and what a second To header would duplicate
     # An empty subject means the same for Subject, which PHP mail() takes as its own parameter while a piped or dialogued message has to carry it inside the block
     # Date and Message-ID are written here for every transport, because a relay spoken to directly is not obliged to add them and their absence costs spam score
     # X-Priority is always normal: the queue priority orders the drain, and a high-priority flag on a site notice is what filters read as a spam signal
+    # A mailing carries the one-click unsubscribe of RFC 8058, a list identity in the site domain and the bulk precedence; every other message is marked auto-generated
     private function getHeaders(string $rcpt, string $smail, string $subj): string {
         $rcpt = $this->filterAddress($rcpt);
         $from = $this->getSender($smail);
-        $name = ($this->conf['fromname'] ?? '') !== '' ? $this->conf['fromname'] : $this->site;
-        $name = $this->getSenderName($name);
+        $name = $this->filterHeader((string)($this->conf['fromname'] ?? ''));
+        $name = $this->getSenderName(($name !== '') ? $name : $this->site);
         $reply = $this->getReplyTo($smail);
         $host = ($from !== '') ? substr($from, strrpos($from, '@') + 1) : 'localhost';
-        $head = ['Date: '.date('r'), 'Message-ID: <'.bin2hex(random_bytes(16)).'@'.$host.'>', 'MIME-Version: 1.0'];
+        $head = ['Date: '.date('r'), 'Message-ID: <'.$this->getMessageId().'@'.$host.'>', 'MIME-Version: 1.0'];
         $head[] = 'Content-Type: multipart/alternative; boundary="'.$this->bound.'"';
         $head[] = 'From: '.(($name !== '') ? $name.' ' : '').'<'.$from.'>';
         if ($rcpt !== '') $head[] = 'To: <'.$rcpt.'>';
         if ($reply !== '') $head[] = 'Reply-To: <'.$reply.'>';
         if ($subj !== '') $head[] = 'Subject: '.$subj;
+        if ($this->unsub !== '') {
+            $head[] = 'List-Unsubscribe: <'.$this->unsub.'>';
+            $head[] = 'List-Unsubscribe-Post: List-Unsubscribe=One-Click';
+            $head[] = 'List-Id: <newsletter.'.(parse_url($this->home, PHP_URL_HOST) ?: $host).'>';
+            $head[] = 'Precedence: bulk';
+        } else {
+            $head[] = 'Auto-Submitted: auto-generated';
+        }
         $head[] = 'X-Priority: 3';
         $head[] = 'X-Mailer: SLAED CMS';
         return implode(self::CRLF, $head);
@@ -725,6 +973,7 @@ class Mail {
     private function setDelivery(string $rcpt, string $smail, string $text, string $body): bool {
         $this->phase = '';
         $this->code = '';
+        $this->dest = $rcpt;
         $subj = $this->getSubject($text);
         $body = $this->getMimeBody($body);
         return match ($this->conf['transport'] ?? '') {
@@ -734,13 +983,13 @@ class Mail {
         };
     }
 
-    # Deliver through PHP mail(), the default transport, with the envelope sender following the resolved From so the receiving side authenticates the address the message claims
+    # Deliver through PHP mail(), the default transport, with the envelope sender set to the bounce address or else the resolved From, in the domain the message claims
     # A host refusing the fifth parameter is expected rather than fatal: the message goes out without it and the parameter is dropped for the rest of the run
     # The fallback is attempted and logged once per run, so a transport failing for its own reasons costs one attempt per message rather than two
     # The warning handler captures the text instead of discarding it, because an unhandled warning inside a pseudo-cron request would leak into the response body
     private function addPhpMail(string $rcpt, string $smail, string $subj, string $body): bool {
         $head = $this->getHeaders('', $smail, '');
-        $from = $this->getSender($smail);
+        $from = $this->getEnvelope($smail);
         $args = ($from !== '' && !$this->fback) ? '-f'.$from : '';
         $back = false;
         $this->setWarnCatch();
@@ -773,7 +1022,7 @@ class Mail {
         if (!function_exists('proc_open')) return $this->setError('sendmail is unavailable, proc_open is disabled on this host', $ctx);
         $path = $this->filterHeader($this->conf['sendmail'] ?? '');
         if ($path === '' || !is_file($path) || !is_executable($path)) return $this->setError('the configured sendmail path is not an executable file', $ctx);
-        $from = $this->getSender($smail);
+        $from = $this->getEnvelope($smail);
         $args = [$path, '-t', '-i'];
         if ($from !== '') $args[] = '-f'.$from;
         $proc = proc_open($args, [['pipe', 'r'], ['pipe', 'w'], ['pipe', 'w']], $pipe);
@@ -801,7 +1050,7 @@ class Mail {
     private function addSmtpMail(string $rcpt, string $smail, string $subj, string $body): bool {
         $this->mask = $this->getMaskedMail($rcpt);
         if (!$this->checkSmtpLink()) return false;
-        if (!$this->checkSmtpStep('MAIL FROM:<'.$this->getSender($smail).'>', '2', 'from')) return false;
+        if (!$this->checkSmtpStep('MAIL FROM:<'.$this->getEnvelope($smail).'>', '2', 'from')) return false;
         if (!$this->checkSmtpStep('RCPT TO:<'.$rcpt.'>', '2', 'rcpt')) return false;
         if (!$this->checkSmtpStep('DATA', '354', 'data')) return false;
         $mesg = $this->getHeaders($rcpt, $smail, $subj).self::CRLF.self::CRLF.$body;

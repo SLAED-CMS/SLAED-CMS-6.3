@@ -50,15 +50,16 @@ function getCampOption(string $audit, string $apar, string $label, string $pick)
 
 # Build the tab strip every screen of this module shows, with only its own index changed
 function getCampTabs(int $tab): string {
-    $ops = ['name=newsletter', 'name=newsletter&op=add', 'name=newsletter&op=queue', 'name=newsletter&op=config', 'name=newsletter&op=info'];
-    return getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _ADD, _NLQUEUE, _PREFERENCES, _MANUAL], 'tab' => $tab]);
+    $ops = ['name=newsletter', 'name=newsletter&op=add', 'name=newsletter&op=queue', 'name=newsletter&op=dead', 'name=newsletter&op=config', 'name=newsletter&op=info'];
+    return getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _ADD, _NLQUEUE, _MAIL_DEAD, _PREFERENCES, _MANUAL], 'tab' => $tab]);
 }
 
 # Offer every audience the installation can address as a criterion, never as a list of addresses
 # The activity window is one more option and deliberately not the default: only the site owner knows whether dormant accounts are dead weight or their customers
-function getCampOptions(string $pick): array {
+# The window option carries the days of the form, so its value, its count and the row that shows the days field all name the same window
+function getCampOptions(string $pick, int $days): array {
     global $db;
-    $opts = [getCampOption('all', '', _MASSMAIL, $pick), getCampOption('subs', '', _ANEWSLETTER, $pick), getCampOption('active', '365', _NLACTIVE, $pick)];
+    $opts = [getCampOption('all', '', _MASSMAIL, $pick), getCampOption('subs', '', _ANEWSLETTER, $pick), getCampOption('active', (string)$days, _NLACTIVE, $pick)];
     $rows = $db->getSqlRows($db->getSqlQuery('SELECT id, name, extra FROM '.PREFIX_DB.'_groups ORDER BY id')) ?: [];
     foreach ($rows as $row) {
         $name = (intval($row['extra']) === 1) ? _SPEC_GROUP : _GROUP;
@@ -189,12 +190,13 @@ function add(): void {
         if ($camp) {
             $title = (string)$camp['title'];
             $body = (string)$camp['body'];
-            $pick = $camp['audit'].'-'.(((string)$camp['audit'] === 'active') ? '' : $camp['apar']);
+            $pick = $camp['audit'].'-'.$camp['apar'];
             if ((string)$camp['audit'] === 'active') $days = intval($camp['apar']);
             $lock = intval($camp['status']) !== 0;
             $nid = $lock ? 0 : $id;
         }
     }
+    if (str_starts_with($pick, 'active-')) $pick = 'active-'.$days;
     $stoptext = is_array($stop) ? implode("\n", $stop) : (string)$stop;
     setHead();
     $cont = getCampTabs(1);
@@ -223,7 +225,7 @@ function add(): void {
             [
                 'label_for' => 'f-audit',
                 'label_html' => _NLWHERE,
-                'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'audit', 'selectid' => 'f-audit', 'options' => getCampOptions($pick)]),
+                'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'audit', 'selectid' => 'f-audit', 'options' => getCampOptions($pick, $days)]),
             ],
             [
                 'label_for' => 'f-days',
@@ -238,7 +240,7 @@ function add(): void {
                     'value_attr' => (string)$days,
                     'is_config' => true,
                 ]),
-                'attr' => 'data-sl-show-when="audit" data-sl-show-value="active-"',
+                'attr' => 'data-sl-show-when="audit" data-sl-show-value="active-'.$days.'"',
             ],
             [
                 'label_html' => _TEXT,
@@ -507,10 +509,72 @@ function getQueueQuery(string $back): string {
     return 'kind='.rawurlencode($kind).'&status='.$stat.'&num='.max(1, intval($vars['num'] ?? 1));
 }
 
+function dead(): void {
+    global $afile, $mailer, $tpl;
+    setHead();
+    $cont = getCampTabs(3);
+    $data = $mailer->getDeadList(getVar('get', 'num', 'num', 1));
+    if (!$data['rows']) {
+        echo $cont.$tpl->getHtmlFrag('alert', ['text' => _NO_INFO]);
+        setFoot();
+        return;
+    }
+    $rows = [];
+    foreach ($data['rows'] as $row) {
+        $hide = $tpl->getHtmlFrag('hidden', ['name_attr' => 'name', 'value_attr' => 'newsletter'])
+            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'revive'])
+            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'id', 'value_attr' => (string)$row['id']])
+            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'num', 'value_attr' => (string)$data['page']])
+            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('newsletter')]);
+        $note = trim((string)$row['phase'].' '.$row['code']);
+        $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
+            'cells' => [
+                ['is_col_id' => true, 'content_html' => (string)$row['id']],
+                ['is_truncate' => true, 'title_text' => (string)$row['email'], 'has_content_text' => true, 'content_text' => (string)$row['email']],
+                ['is_col_count' => true, 'has_content_text' => true, 'content_text' => (string)$row['fails']],
+                ['is_truncate' => true, 'title_text' => $note, 'has_content_text' => true, 'content_text' => $note],
+                ['is_col_date' => true, 'content_html' => format_time((string)$row['time'], _TIMESTRING)],
+                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('post-button', [
+                    'action' => $afile.'.php',
+                    'hidden' => $hide,
+                    'is_mini' => true,
+                    'icon_name' => 'arrow-counterclockwise',
+                    'title' => _MAIL_REVIVE,
+                ])],
+            ],
+        ])]);
+    }
+    $cont .= $tpl->getHtmlFrag('table', [
+        'is_fixed' => true,
+        'head' => [
+            ['content' => _ID, 'is_col_id' => true],
+            ['content' => _EMAIL, 'is_truncate' => true],
+            ['content' => _MAIL_FAILS, 'is_col_count' => true],
+            ['content' => _ERROR, 'is_truncate' => true, 'nosort' => true],
+            ['content' => _DATE, 'is_col_date' => true],
+            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
+        ],
+        'rows_html' => implode('', $rows),
+    ]);
+    $link = static fn(int $i): array => ['href' => $afile.'.php?name=newsletter&op=dead&num='.$i];
+    $cont .= getTplPagerView($data['page'], $data['pages'], 8, $link, ['count' => $data['total'], 'limit' => $data['limit'], 'page' => $data['limit']]);
+    echo $cont;
+    setFoot();
+}
+
+function revive(): void {
+    global $afile, $mailer;
+    $id = getVar('post', 'id', 'num');
+    $page = getVar('post', 'num', 'num', 1);
+    $warn = !checkAdminPost('newsletter');
+    if (!$warn && $id) $mailer->deleteDeadMail([$id]);
+    setRedirect($afile.'.php?name=newsletter&op=dead&num='.$page, false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+}
+
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getCampTabs(3);
+    $cont = getCampTabs(4);
     $cont .= checkPerms(CONFIG_DIR.'/newsletter.php');
     $rule = is_array($conf['newsletter'] ?? null) ? $conf['newsletter'] : [];
     $rows = [];
@@ -562,8 +626,8 @@ function configsave(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=newsletter', 'name=newsletter&op=add', 'name=newsletter&op=queue', 'name=newsletter&op=config', 'name=newsletter&op=info'],
-        'tabs' => [_HOME, _ADD, _NLQUEUE, _PREFERENCES, _MANUAL],
+        'ops' => ['name=newsletter', 'name=newsletter&op=add', 'name=newsletter&op=queue', 'name=newsletter&op=dead', 'name=newsletter&op=config', 'name=newsletter&op=info'],
+        'tabs' => [_HOME, _ADD, _NLQUEUE, _MAIL_DEAD, _PREFERENCES, _MANUAL],
     ]);
 }
 
@@ -577,6 +641,8 @@ switch ($op) {
     case 'queue': queue(); break;
     case 'requeue': requeue(); break;
     case 'drop': drop(); break;
+    case 'dead': dead(); break;
+    case 'revive': revive(); break;
     case 'config': config(); break;
     case 'configsave': configsave(); break;
     case 'info': info(); break;

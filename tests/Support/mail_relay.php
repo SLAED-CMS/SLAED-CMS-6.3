@@ -13,7 +13,7 @@ $file = (string)($argv[2] ?? '');
 $stop = time() + max(5, intval($argv[3] ?? 30));
 $serv = stream_socket_server('tcp://127.0.0.1:'.$port, $ecod, $etxt);
 if (!$serv || $file === '') exit(1);
-$data = ['links' => 0, 'mails' => []];
+$data = ['links' => 0, 'mails' => [], 'envs' => []];
 file_put_contents($file, json_encode($data));
 while (time() < $stop) {
     $link = stream_socket_accept($serv, 1);
@@ -42,6 +42,7 @@ while (time() < $stop) {
         } elseif ($cmnd === 'HELO') {
             fwrite($link, "250 probe\r\n");
         } elseif ($cmnd === 'MAIL' || $cmnd === 'RCPT') {
+            if ($cmnd === 'MAIL') $data['envs'][] = trim(substr(trim($line), 10));
             fwrite($link, "250 2.1.0 Ok\r\n");
         } elseif ($cmnd === 'DATA') {
             $body = true;

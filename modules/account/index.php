@@ -1861,6 +1861,33 @@ function oauthunlink(): void {
     setRedirect('index.php?name='.$conf['name'].'&op=edithome', false, 302, _OAUTHOFF);
 }
 
+function unsub(): void {
+    global $db, $conf, $tpl;
+    $mail = getVar('get', 'mail', 'raw', '');
+    $mail = is_string($mail) ? trim($mail) : '';
+    $key = getVar('get', 'key', 'var', '');
+    $good = is_string($key) && $mail !== '' && $key !== '' && hash_equals(getUnsubKey($mail), $key);
+    $post = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) === 'POST';
+    if ($good && $post) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET newslet = 0 WHERE email = :mail', ['mail' => $mail]);
+    setHead(['title' => _MAIL_UNSUB]);
+    $cont = $tpl->getHtmlFrag('title', ['title' => _MAIL_UNSUB, 'is_level_one' => true]);
+    $show = $good ? htmlspecialchars($mail, ENT_QUOTES, 'UTF-8') : '';
+    if (!$good) {
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ACCOUNT_UNSUBBAD]);
+    } elseif ($post) {
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => sprintf(_ACCOUNT_UNSUBOK, $show)]);
+    } else {
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => sprintf(_ACCOUNT_UNSUBASK, $show)]);
+        $cont .= $tpl->getHtmlPart('form-add', [
+            'action' => 'index.php?name='.$conf['name'].'&op=unsub&mail='.rawurlencode($mail).'&key='.$key,
+            'no_enctype' => true,
+            'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'unsub', 'label' => _MAIL_UNSUB]),
+        ]);
+    }
+    echo $cont;
+    setFoot();
+}
+
 switch ($op) {
     default: account(); break;
     case 'newuser': newuser(); break;
@@ -1882,4 +1909,5 @@ switch ($op) {
     case 'oauth': oauthback(); break;
     case 'oauth_finish': oauthfinish(); break;
     case 'oauth_unlink': oauthunlink(); break;
+    case 'unsub': unsub(); break;
 }

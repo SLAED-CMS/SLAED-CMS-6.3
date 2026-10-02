@@ -259,8 +259,11 @@ which runs `addMailTask()` and through it `Mail::updateQueue()`. `getBatch()`
 claims due rows with one conditional `UPDATE` that stamps `locked`/`lockid` and
 pushes `ntime` behind a lock window, so two runs can never take the same row and
 a dead run's rows become claimable again when the window passes. A row that
-exhausts its attempts moves to `{prefix}_maildead`. Failures are recorded
-through `Logger::addSite()`.
+exhausts its attempts stays in the queue as failed. A permanent refusal of the
+recipient, answered in the SMTP dialogue or reported later by a delivery status
+notification that the same job reads from the bounce mailbox over POP3, is
+counted in `{prefix}_maildead`.
+Failures are recorded through `Logger::addSite()`.
 
 The measurements below predate that split. They are kept because the *ratio*
 they establish is the durable fact and because they are what the queue was built

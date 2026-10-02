@@ -504,6 +504,7 @@ define('_RESUME','Fortsetzen');
 define('_RETRY','Erneut versuchen');
 define('_RETYPEPASSWORD','Passwort wiederholen');
 define('_RNEWSLETTER','Newsletter per E-Mail erhalten?');
+define('_MAIL_UNSUB','Vom Newsletter abmelden');
 define('_RSS','RSS Informer');
 define('_RSS_FROM','Information von der Seite');
 define('_RSS_PROBLEM','Es existiert das Problem mit den Kopfteilen!');

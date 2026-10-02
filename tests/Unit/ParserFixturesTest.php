@@ -147,6 +147,13 @@ namespace Tests\Unit {
                 'breaks keep soft lines'    => ["one\ntwo",             true,  '', '<p>one<br>'."\n".'two</p>', 'breaks'],
                 'breaks still read markdown'=> ["**bold**\nnext",       true,  '', '<p><strong>bold</strong><br>'."\n".'next</p>', 'breaks'],
                 'breaks keep the hard one'  => ["one\\\ntwo",           true,  '', '<p>one<br>'."\n".'two</p>', 'breaks'],
+                'breaks keep a typed self-closing break' => ["one<br/>\ntwo<br />\nthree", false, '', "<p>one<br/>\ntwo<br />\nthree</p>", 'breaks'],
+
+                'plain editor text after a list is parsed' => [
+                    "a<br>\n<br>\n- x<br>\n<br>\n[l](https://e.com)<br>\nz", false, '',
+                    "<p>a<br>\n<br></p>\n<ul>\n<li>x<br></li>\n</ul>\n<p><br>\n<a href=\"https://e.com\">l</a><br>\nz</p>",
+                ],
+                'raw html block keeps its breaks' => ["<div>\nx<br>\ny\n</div>", false, '', "<div>\nx<br>\ny\n</div>"],
 
                 'usephp trusted'    => ['[usephp]echo 6*7;[/usephp]',         false, '', '42'],
                 'usephp safe'       => ['[usephp]echo 6*7;[/usephp]',         true,  '', '<p>[usephp]echo 6*7;[/usephp]</p>'],

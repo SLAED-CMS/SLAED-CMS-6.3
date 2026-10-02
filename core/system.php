@@ -3871,6 +3871,11 @@ function getMailFrame(string $html): string {
     return str_replace('[text]', $html, nl2br($conf['mtemp'], false));
 }
 
+# Sign one address for the unsubscribe link of a mailing: the link carries no session, so this key is what proves its holder received a mailing at that address
+function getUnsubKey(string $mail): string {
+    return substr(hash_hmac('sha256', mb_strtolower(trim($mail)), getSecret('unsub')), 0, 32);
+}
+
 # Notify subscribed admins by email on new content or comment submission
 # The stored module list is only read here; normalising it is a write and belongs to the admin screen that owns those records, which already writes the normalised form
 # A registered Node type is moderated through its right node-<name>, so its name is read as that right, the way is_admin_modul() reads it
@@ -3930,16 +3935,20 @@ function filterSize(mixed $size): string {
 # Drain the outgoing mail queue as a scheduler job and report what the run delivered, what it refused and what is still waiting
 # A run that delivered nothing while refusing something is reported as failed, because that is a transport the administrator has to be told about rather than a quiet retry
 # An empty queue is a successful run and never idle: this job runs every five minutes, and idle would count as a failure and leave the last success behind on a healthy installation
+# The bounce mailbox is read in the same run, so delivery reports need no job of their own; a box that cannot be read is named in the message and never fails the delivery
 function addMailTask(): array {
     global $mailer;
     if (!$mailer instanceof Mail) return ['status' => 'failed', 'message' => 'Mail service is unavailable'];
     $data = $mailer->updateQueue();
     if ($data['stop'] === 'database') return ['status' => 'failed', 'message' => 'The mail queue is unreachable'];
-    if ($data['stop'] === 'transport') return ['status' => 'failed', 'message' => 'The transport refused before any message left: '.$mailer->getError()];
-    if ($data['sent'] === 0 && $data['fail'] === 0) return ['status' => 'success', 'message' => 'Nothing to send, pending '.$data['left']];
+    $fail = ($data['stop'] === 'transport') ? $mailer->getError() : '';
+    $back = $mailer->updateBounce();
+    $note = ($back['error'] !== '') ? '; bounce mailbox: '.$back['error'] : (($back['read'] > 0) ? '; bounce reports '.$back['read'].', undeliverable '.$back['dead'] : '');
+    if ($fail !== '') return ['status' => 'failed', 'message' => 'The transport refused before any message left: '.$fail.$note];
+    if ($data['sent'] === 0 && $data['fail'] === 0) return ['status' => 'success', 'message' => 'Nothing to send, pending '.$data['left'].$note];
     return [
         'status' => ($data['sent'] === 0 && $data['fail'] > 0) ? 'failed' : 'success',
-        'message' => 'Sent '.$data['sent'].', failed '.$data['fail'].', pending '.$data['left'],
+        'message' => 'Sent '.$data['sent'].', failed '.$data['fail'].', pending '.$data['left'].$note,
         'extra' => [
             'last_mail_sent' => $data['sent'],
             'last_mail_failed' => $data['fail'],
@@ -3952,6 +3961,7 @@ function addMailTask(): array {
 
 # Resolve one audience criterion into the paged query its rows are expanded by and the count query the selector shows beside it
 # Every audience is a set of accounts ordered by primary key, which is what makes a cursor over it resumable after a run is killed
+# Every audience but all keeps to accounts that receive the mailing; all is the forced send to every account, which only an administrator chooses
 function getMailAudience(string $audit, string $apar): array {
     global $db;
     $cond = '';
@@ -3963,15 +3973,15 @@ function getMailAudience(string $audit, string $apar): array {
             $grup = $db->getSqlRow($db->getSqlQuery('SELECT points, extra FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => intval($apar)]));
             if (!$grup) return [];
             if (intval($grup['extra']) === 1) {
-                $cond = 'grp = :grp';
+                $cond = 'newslet = 1 AND grp = :grp';
                 $pars['grp'] = intval($apar);
             } else {
-                $cond = 'points >= :pts';
+                $cond = 'newslet = 1 AND points >= :pts';
                 $pars['pts'] = intval($grup['points']);
             }
             break;
         case 'active':
-            $cond = 'lastvis >= DATE_SUB(NOW(), INTERVAL :day DAY)';
+            $cond = 'newslet = 1 AND lastvis >= DATE_SUB(NOW(), INTERVAL :day DAY)';
             $pars['day'] = max(1, intval($apar));
             break;
         default: return [];
