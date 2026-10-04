@@ -158,5 +158,12 @@
         if (typeof ed.on === 'function') ed.on('changeMode', function() { setWidth(id); });
         if (doc.readyState === 'complete') setWidth(id);
     };
+    // An editor whose region is swapped away is destroyed, not only forgotten: the vendor instance goes with its entry and its options; the window forgets it on its own
+    api.unregister = function(id) {
+        var ed = map.get(String(id));
+        map.delete(String(id));
+        delete api.options[String(id)];
+        if (ed && typeof ed.destroy === 'function') ed.destroy();
+    };
     win.SlaedToastUi = api;
 })(window, document);

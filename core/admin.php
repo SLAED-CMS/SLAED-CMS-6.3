@@ -1152,6 +1152,7 @@ function updateNodeTypePart(string $name, string $part, array $value, int $versi
         return match ($err->getCode()) {
             NodeException::CONFLICT => sprintf(_NODE_STALE, $label),
             NodeException::STORAGE => getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP,
+            NodeException::BLOCKED => _SAVEBUSY,
             default => sprintf(_NODE_BAD, $label),
         };
     }

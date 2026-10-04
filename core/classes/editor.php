@@ -113,9 +113,34 @@ class Editor {
         ]);
     }
 
+    # Emit the stylesheets and scripts of an editor: plain tags on a page load, where the parser runs them in order before the inline init of an instance
+    # A fragment answered over htmx names them to the client loader instead, which adds only what the page does not carry yet, so no engine and no listener runs twice
+    public static function getAssetTags(array $css, array $js): string {
+        global $tpl;
+        if (($_SERVER['HTTP_HX_REQUEST'] ?? '') === 'true') {
+            $list = json_encode([$css, $js], JSON_UNESCAPED_SLASHES | JSON_HEX_TAG);
+            return $tpl->getHtmlFrag('head-script-inline', ['js' => 'if(window.SlaedEditors){window.SlaedEditors.load.apply(null,'.$list.');}']);
+        }
+        $out = '';
+        foreach ($css as $one) $out .= $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $one, 'type' => '', 'title' => '']);
+        foreach ($js as $one) $out .= $tpl->getHtmlFrag('head-script-src', ['src' => $one, 'attr' => '']);
+        return $out;
+    }
+
+    # Wrap the init of one editor instance so it runs once its engine is there: at once on a page load, after the assets a fragment named over htmx otherwise
+    # The node is captured when the script runs and checked when the init does, so a region swapped away while the engine loaded binds no instance to a removed node
+    # The teardown is handed to the client, which destroys every instance inside a region before that region is swapped away or restored
+    public static function getInitScript(string $id, string $run, string $kill): string {
+        global $tpl;
+        $js = '(function(){var el=document.getElementById('.json_encode($id).');if(!el){return;}var go=function(){if(!el.isConnected){return;}'.$run;
+        $js .= 'if(window.SlaedEditors){window.SlaedEditors.own(el,function(){'.$kill.'});}};';
+        $js .= 'if(window.SlaedEditors){window.SlaedEditors.ready(go);}else{go();}})();';
+        return $tpl->getHtmlFrag('head-script-inline', ['js' => $js]);
+    }
+
     # Emit the active theme skin stylesheet for an editor that declares one in its manifest; deduplicated per theme/editor pair, a declared but missing skin file is logged
     private static function getThemeSkin(string $key): string {
-        global $theme, $tpl;
+        global $theme;
         static $done = [];
         $man = self::getManifest($key);
         if (empty($man['theme']['skin'])) return '';
@@ -127,7 +152,7 @@ class Editor {
             Logger::addSite('error', 'Editor theme skin missing: '.$skin, ['editor' => $key, 'theme' => (string)$theme]);
             return '';
         }
-        return $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $skin, 'type' => '', 'title' => '']);
+        return self::getAssetTags([$skin], []);
     }
 
     # Return parsed manifest for one editor; null if missing or invalid

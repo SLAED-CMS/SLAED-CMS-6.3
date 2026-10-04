@@ -577,6 +577,7 @@ function addsave(): void {
             $text = match ($err->getCode()) {
                 NodeException::CONFLICT => sprintf(_NODE_STALE, $label),
                 NodeException::STORAGE => _ERROR_UP,
+                NodeException::BLOCKED => _SAVEBUSY,
                 default => sprintf(_NODE_BAD, $label),
             };
         }
@@ -620,6 +621,7 @@ function save(): void {
             $text = match ($err->getCode()) {
                 NodeException::CONFLICT => sprintf(_NODE_STALE, $label),
                 NodeException::STORAGE => _ERROR_UP,
+                NodeException::BLOCKED => _SAVEBUSY,
                 default => sprintf(_NODE_BAD, $label),
             };
         }
@@ -659,6 +661,7 @@ function change(): void {
             $text = match ($err->getCode()) {
                 NodeException::CONFLICT => sprintf(_NODE_STALE, $label),
                 NodeException::STORAGE => _ERROR_UP,
+                NodeException::BLOCKED => _SAVEBUSY,
                 default => sprintf(_NODE_BAD, $label),
             };
         }
@@ -687,6 +690,7 @@ function delete(): void {
             $text = match ($err->getCode()) {
                 NodeException::CONFLICT => sprintf(_NODE_STALE, htmlspecialchars($was, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')),
                 NodeException::STORAGE => _ERROR_UP,
+                NodeException::BLOCKED => _SAVEBUSY,
                 default => _INFOCATDEL,
             };
         }

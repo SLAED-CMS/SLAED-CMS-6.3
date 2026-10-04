@@ -1,5 +1,34 @@
 # Versions
 
+## 2026-10-04
+
+### One quick edit for comments, forum posts and Node materials
+
+The quick edit of a comment and of a forum post were two separate paths over one helper, and Node had none. They
+are one protocol now (`QuickEdit`, `getQuickService()`, the routes `getQuickEdit` and `updateQuickEdit`; see
+`docs/ARCHITECTURE.md`, "Quick edit").
+
+- **A refusal keeps the typed text.** Every refusal answers its own status and is told on the warning toast; the
+  editor stays. An expired session answers 403 instead of an alert swapped over the text.
+- **No silent overwrite.** A save carries the stamp the editor was opened with; a text changed meanwhile answers a
+  conflict and asks once whether to overwrite. The repetition of a save whose answer was lost is saved again
+  without a second write.
+- **Cancel needs no request** and asks before it drops unsaved changes; Escape cancels, Ctrl+Enter saves.
+- **The edited mark follows the save** for comments and forum posts.
+- **The forum** writes under the write guard, with the topic and the right read again under the lock, so a topic
+  closed or a post moved after the editor opened refuses the author; the page cache moves only after a write. The
+  route `op=updatePost`, the route `op=updateComment` and `getTplAjaxTextarea()` are gone.
+- **Node** offers the quick edit of the intro and the body on the public page of a type without an extension: to
+  its moderator before the full editor, and to the signed-in author of a pending or published material for
+  `limits.edit` seconds after creation (new key, default `600`, `0` off, on the limits tab; `update.php` adds it to
+  an existing `config/node.php`). An author edit of a published material sends it back to moderation in the same
+  write, unless the author publishes directly; the matrix of states gains `Published → Pending`.
+- **Editor assets load once per page.** A fragment no longer carries the engine of an editor again: the client
+  loader adds only what the page lacks, the init waits for the engine, and an editor swapped away is destroyed. On a
+  page without an editor of its own the quick editor used to stay hidden.
+- **Breaking:** `Comment::updateComment()` takes the stamp and answers a result code; `NodeException` gains
+  `BLOCKED` (7, HTTP 503) for a closed write guard, which `setNodeWrite()` used to report as `STORAGE`.
+
 ## 2026-10-01
 
 ### One file installs a new site and deletes itself, and the 6.2 update leaves the release

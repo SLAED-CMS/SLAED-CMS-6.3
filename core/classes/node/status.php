@@ -18,7 +18,7 @@ enum NodeStatus: int {
     private const MOVES = [
         self::Draft->value => [self::Pending, self::Published, self::Deleted],
         self::Pending->value => [self::Draft, self::Published, self::Deleted],
-        self::Published->value => [self::Disabled, self::Deleted],
+        self::Published->value => [self::Pending, self::Disabled, self::Deleted],
         self::Disabled->value => [self::Pending, self::Published, self::Deleted],
         self::Deleted->value => [self::Disabled],
     ];

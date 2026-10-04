@@ -6,12 +6,26 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
+# Render the body of one stored comment and its edited mark, shared by the comment itself and the quick edit, so a save answers exactly what the page shows
+# The mark stands in a wrapper the page always prints, empty while the comment is unedited, because an out-of-band swap can only replace an element already there
+function getCommentBody(array $val, bool $oob = false): array {
+    global $conf, $tpl, $prs;
+    $cnid = isset($conf['node']['types'][$val['modul']]) ? intval($val['cid'] ?? 0) : 0;
+    $sent = (string)($val['edited'] ?? '');
+    $badge = ($sent !== '') ? $tpl->getHtmlFrag('inline-badge', ['title_text' => (string)_COMMENTS_EDITED, 'label' => format_time($sent, _TIMESTRING),
+        'is_comment_edit' => true]) : '';
+    return [
+        'text' => $prs->filterContent($val['body'], true, $val['modul'], 2, 'breaks', $cnid),
+        'mark' => $tpl->getHtmlFrag('quick-edit', ['is_mark' => true, 'is_oob' => $oob, 'mark_id' => 'quick-mark-comment-'.$val['id'], 'mark_html' => $badge]),
+    ];
+}
+
 # Render one stored comment from the row the comment subsystem answered with: the author card, the moderation actions and the body
 # The running number belongs to the page the row is shown on and the token to the actions inside it, so both are passed in rather than resolved here
 # Every action posts to its own route and carries no token in its URL; the token travels as a request header the comment element declares once for all of them
 # A comment that offers no action declares no token either, so a reader who may change nothing is served no credential at all
 function getCommentView(array $val, int $numb, string $token): string {
-    global $conf, $user, $tpl, $prs;
+    global $conf, $user, $tpl;
     $cmid = $val['id'];
     $cmod = $val['modul'];
     $when = $val['time'];
@@ -74,7 +88,8 @@ function getCommentView(array $val, int $numb, string $token): string {
     }
     $act = 'index.php?go=1&op=';
     $one = '[id=\''.$cmid.'\']';
-    $form = ['href' => $act.'updateComment&id='.$cmid.'&typ=1', 'title' => _ONEDIT, 'icon_name' => 'pencil-square', 'is_htmx' => true, 'hx_target' => '#repcom'.$cmid];
+    $form = ['href' => $act.'getQuickEdit&kind=comment&id='.$cmid.'&field=body', 'title' => _ONEDIT, 'icon_name' => 'pencil-square', 'is_htmx' => true,
+        'hx_target' => '#repcom'.$cmid];
     $items = [];
     if ($mods) {
         $items[] = $form;
@@ -87,14 +102,9 @@ function getCommentView(array $val, int $numb, string $token): string {
     } elseif (is_user() && $auid > 0 && $auid === intval($user[0]) && time() < strtotime($when) + $conf['comments']['edit']) {
         $items[] = $form;
     }
-    $cnid = isset($conf['node']['types'][$cmod]) ? intval($val['cid'] ?? 0) : 0;
-    $text = $tpl->getHtmlFrag('block-content', ['id' => 'repcom'.$cmid, 'content' => $prs->filterContent($val['body'], true, $cmod, 2, 'breaks', $cnid)]);
-    $sent = (string)($val['edited'] ?? '');
-    $mark = ($sent !== '') ? $tpl->getHtmlFrag('inline-badge', [
-        'title_text' => (string)_COMMENTS_EDITED,
-        'label' => format_time($sent, _TIMESTRING),
-        'is_comment_edit' => true,
-    ]) : '';
+    $body = getCommentBody($val);
+    $text = $tpl->getHtmlFrag('block-content', ['id' => 'repcom'.$cmid, 'is_quick' => true, 'content' => $body['text']]);
+    $mark = $body['mark'];
     return $tpl->getHtmlFrag('comment', [
         'id' => $cmid,
         'depth' => $deep,
@@ -592,61 +602,86 @@ function checkForumRight(bool $mod, bool $may, int $uid, int $stat = 3): bool {
     return $mod || ($may && is_user() && $uid > 0 && $uid === intval($user[0]) && $stat > 2);
 }
 
-# Validate and update an existing forum post in-place
-# The word limit is checked against the longest word in characters, so a multibyte alphabet keeps the full allowance
-# The authority is the category the message is stored in, read by getForumPlace(); the category the address carries decides nothing
-# Every refusal is echoed rather than returned: the route calls this for its output and discards whatever it hands back
-function updatePost() {
-    global $db, $user, $conf, $tpl, $prs;
-    $conf['forum'] = $conf['forum'] ?? [];
-    $id    = getVar('post', 'id',  'num',  0)  ?: getVar('get', 'id',  'num',  0);
-    $typ   = getVar('post', 'typ', 'num',  0)  ?: getVar('get', 'typ', 'num',  0);
-    $mod   = filterVar(getVar('post', 'mod', 'text', '') ?: getVar('get', 'mod', 'text', ''));
-    $text  = trim(getVar('post', 'text', 'raw', ''));
-    $place = getForumPlace(intval($id));
-    $cid = $place['cid'];
-    if ($conf['forum']['add'] && $cid) {
-        [$pedit, $pmod] = $db->getSqlRow($db->getSqlQuery('SELECT pedit, pmod FROM '.PREFIX_DB.'_categories WHERE id = :cid', ['cid' => $cid])) ?: ['', ''];
-        [$hometext] = $db->getSqlRow($db->getSqlQuery('SELECT body FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
-        if (checkForumRight(is_acess((string)$pmod), is_acess((string)$pedit), $place['uid'], $place['status'])) {
-            if (!$text) {
-                $content = $typ
-                    ? getTplAjaxTextarea([
-                        'obj' => 'for'.$id, 'go' => '1', 'op' => 'updatePost', 'id' => $id,
-                        'cid' => $cid, 'typ' => '0', 'mod' => $mod, 'store' => 'forum.body', 'text' => $hometext, 'rows' => 10,
-                    ])
-                    : $prs->filterContent($hometext, false, $mod, 2);
-                echo $content;
-            } else {
-                $postid = (is_user()) ? intval($user[0]) : 0;
-                $ip = getip();
-                $long = 0;
-                foreach (preg_split('/\s+/u', $text, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $word) {
-                    $long = max($long, mb_strlen($word));
-                }
-                $htext = filterHtml($text);
-                $room = checkEditorTextRoom($htext, 'forum.body');
-                $stop = [];
-                if ($text == '') $stop[] = _CERROR1;
-                $limit = intval($conf['forum']['letter']);
-                if ($limit > 0 && $long > $limit) $stop[] = _CERROR2;
-                if ($room !== '') $stop[] = $room;
-                if (!$stop) {
-                    $db->getSqlQuery(
-                        'UPDATE '.PREFIX_DB.'_forum SET body = :body, euid = :euid, eip = :eip, etime = NOW() WHERE id = :id',
-                        ['body' => $htext, 'euid' => $postid, 'eip' => $ip, 'id' => $id]
-                    );
-                    echo $prs->filterContent($htext, false, $mod, 2);
-                } else {
-                    echo $tpl->getHtmlFrag('alert', ['messages' => $stop, 'type' => 'warn', 'is_warn' => true]);
-                }
-            }
-        } else {
-            echo $tpl->getHtmlFrag('alert', ['text' => _ERROR, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
-        }
-    } else {
-        echo $tpl->getHtmlFrag('alert', ['text' => _ERROR, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
+# Read one forum post for the quick edit from its rows: whether the actor may edit it, its stored body and edit time with their stamp, and whether edit times are shown
+# The right is the one of the buttons, checkForumRight() over the stored place, behind the forum gate; a post that does not exist answers nothing
+# The moderator of the forum is asked by name, because a fragment request names no module and is_acess() alone would ask the moderator of none, as the page never does
+function getForumSource(int $id): array {
+    global $db, $conf;
+    $place = getForumPlace($id);
+    if (!$place['cid']) return [];
+    $sql = 'SELECT f.body, f.etime, c.pedit, c.pmod FROM '.PREFIX_DB.'_forum AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (c.id = f.cid) WHERE f.id = :id';
+    $row = $db->getSqlRow($db->getSqlQuery($sql, ['id' => $id]));
+    if (!$row) return [];
+    $mod = is_moder('forum') || is_acess((string)$row['pmod']);
+    $body = (string)$row['body'];
+    $time = (string)($row['etime'] ?? '');
+    return ['allow' => !empty($conf['forum']['add']) && checkForumRight($mod, is_acess((string)$row['pedit']), $place['uid'], $place['status']),
+        'body' => $body, 'etime' => $time, 'stamp' => QuickEdit::getStamp($body, $time), 'see' => $mod || !empty($conf['forum']['ledit'])];
+}
+
+# Render the body of one forum post and its edited mark, shared by the topic page and the quick edit, so a save answers exactly what the page shows
+# The mark stands in a wrapper the page always prints, empty while the post is unedited or the reader may not see edit times, so an out-of-band swap finds it
+# The page wraps the body in the highlight of its search word; the quick edit renders without one, and its Cancel restores the highlighted HTML it kept
+function getForumBody(int $id, string $body, string $etime, bool $see, string $word = '', bool $oob = false): array {
+    global $tpl, $prs;
+    $badge = ($see && $etime !== '') ? $tpl->getHtmlFrag('inline-badge', ['title_text' => _PEDIT, 'is_topic_edit' => true, 'label' => format_time($etime, _TIMESTRING)]) : '';
+    return [
+        'text' => filterTextHighlight($prs->filterContent($body, false, 'forum', 2), $word),
+        'mark' => $tpl->getHtmlFrag('quick-edit', ['is_mark' => true, 'is_oob' => $oob, 'mark_id' => 'quick-mark-forum-'.$id, 'mark_html' => $badge]),
+    ];
+}
+
+# Store one quick edit of a forum post at the stamp its editor was opened with and answer the closed result code; the place and the right come from the locked rows
+# The forum gate, the longest word in characters, the stored form of filterHtml() and the room of the column depend on the text alone and are checked first
+# Under the write guard the topic row is locked before the post row, the order the forum rating takes, and the category right and the topic status are read there again
+# A topic closed or a post moved after the editor opened is refused; an equal text answers saved without a write, and only then a stale stamp is a conflict
+# The page cache moves after the commit and only when a row was written, inside the guard, so no request between the two builds a page from the old text
+function updateForumBody(int $id, string $text, string $stamp): array {
+    global $db, $conf, $user;
+    $long = 0;
+    foreach (preg_split('/\s+/u', $text, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $word) $long = max($long, mb_strlen($word));
+    $html = filterHtml($text);
+    $limit = intval($conf['forum']['letter'] ?? 0);
+    $stop = array_values(array_filter([$text === '' ? _CERROR1 : '', ($limit > 0 && $long > $limit) ? _CERROR2 : '', checkEditorTextRoom($html, 'forum.body')]));
+    $head = getForumPlace($id);
+    if (!$head['cid']) return ['code' => 'unavailable', 'error' => []];
+    if (empty($conf['forum']['add'])) return ['code' => 'denied', 'error' => []];
+    if ($stop) return ['code' => 'rules', 'error' => $stop];
+    $guard = Cache::getWriteGuard();
+    if ($guard === false) return ['code' => 'blocked', 'error' => []];
+    if (!$db->setSqlBegin()) {
+        Cache::deleteWriteGuard($guard);
+        return ['code' => 'storage', 'error' => []];
     }
+    $top = $db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_forum WHERE id = :id FOR UPDATE', ['id' => $head['topic']]);
+    $res = ($top === false) ? false : $db->getSqlQuery('SELECT pid, cid, uid, body, etime FROM '.PREFIX_DB.'_forum WHERE id = :id FOR UPDATE', ['id' => $id]);
+    $lock = ($top === false) ? [] : $db->getSqlRow($top);
+    $row = ($res === false) ? [] : $db->getSqlRow($res);
+    $cat = $row ? $db->getSqlRow($db->getSqlQuery('SELECT pedit, pmod FROM '.PREFIX_DB.'_categories WHERE id = :cid', ['cid' => intval($row['cid'])])) : [];
+    $code = match (true) {
+        $res === false => 'storage',
+        !$row || !$lock => 'unavailable',
+        !$cat || (intval($row['pid']) ?: $id) !== $head['topic'] => 'denied',
+        !checkForumRight(is_moder('forum') || is_acess((string)$cat['pmod']), is_acess((string)$cat['pedit']), intval($row['uid']), intval($lock['status'])) => 'denied',
+        $html === (string)$row['body'] => 'equal',
+        !hash_equals(QuickEdit::getStamp((string)$row['body'], (string)($row['etime'] ?? '')), $stamp) => 'conflict',
+        default => 'write',
+    };
+    $pars = ['body' => $html, 'euid' => is_user() ? intval($user[0]) : 0, 'eip' => getIp(), 'id' => $id];
+    if ($code === 'write') $code = $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET body = :body, euid = :euid, eip = :eip, etime = NOW() WHERE id = :id', $pars)
+        !== false ? 'moved' : 'storage';
+    if ($code !== 'equal' && $code !== 'moved') {
+        if ($db->setSqlRollback() || !$db->checkSqlActive()) Cache::deleteWriteGuard($guard);
+        return ['code' => $code, 'error' => []];
+    }
+    if (!$db->setSqlCommit()) {
+        $db->setSqlRollback();
+        Logger::addSite('error', 'Forum: the outcome of a quick edit commit is unknown and the write guard is kept', ['id' => $id]);
+        return ['code' => 'storage', 'error' => []];
+    }
+    $done = ($code === 'equal' || Cache::addEpoch(true)) && Cache::deleteWriteGuard($guard);
+    if (!$done) Logger::addSite('error', 'Forum: a quick edit is stored but the page cache was not invalidated, the write guard is kept', ['id' => $id]);
+    return ['code' => 'saved', 'error' => []];
 }
 
 # The shelf strip of the private message page: the three mailboxes and the compose action, each with the quota ring that replaced the half-capacity alert

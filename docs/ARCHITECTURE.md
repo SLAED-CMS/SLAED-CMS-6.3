@@ -626,6 +626,104 @@ index.php
 Helper endpoints should set their response type explicitly when they do not
 return a normal HTML page.
 
+#### Quick edit
+
+One in-place edit of a stored text, shared by every place that offers it: the
+item's dial opens the text as the editor in the same spot, a save puts the
+rendered text back without leaving the page, Cancel restores what was shown
+without a request.
+
+**Subject.** A subject is one editable text of one item, named by three closed
+values: `kind` (`comment`, `forum`, `node`), `id`, and `field` (`body`; `intro`
+or `body` for a Node material of a type without an extension). The class
+`QuickEdit` (`core/classes/quick.php`) owns the protocol and nothing else; its
+factory `getQuickService()` in `core/system.php` builds one adapter per kind as
+three closures, the way `getRatingService()` builds `Rating`:
+
+- **source** — the right, the stored text, its stamp and the rendered editor,
+  all from the stored row, never from the request. The editor is rendered
+  inside the adapter with the literal store of its column (`comment.body`,
+  `forum.body`, `nodes.intro`, `nodes.body`), because `EditorRoomTest` holds
+  every `getTplTextarea()` call to a literal store.
+- **write** — the kind's own guarded writer: `Comment::updateComment()`,
+  `updateForumBody()` in `core/user.php`, `NodeService::updateNodeText()`.
+- **view** — the stored text rendered exactly as its page renders it
+  (`getCommentBody()`, `getForumBody()`, `NodeView::getNodeView()`), with the
+  edited mark the page always prints in a wrapper (`quick-mark-<kind>-<id>`,
+  empty while unedited), so a save can refresh it out of band.
+
+**Stamp.** A Node material uses its `version`. A comment and a forum post have
+no version column; their stamp is `QuickEdit::getStamp()`, the sha1 of the
+stored body with its edit time (`edited`, `etime`), so an edit through a full
+form changes it too. The stamp travels in the editor form only.
+
+**Order of a save.** What depends on the text alone runs before the
+transaction: the canonical form of the kind's own filter, its rules and the
+room of the column, and for Node the attachment ownership under the directory
+lock. Under the lock the writer decides, in this order: existence
+(`unavailable`), the right and the window again from the locked rows
+(`denied`), an equal canonical text (`saved` without a write, no edit time, no
+epoch), and only then a stale stamp (`conflict`). Equality comes first, so the
+repetition of a save whose answer was lost is saved, not a conflict. Each
+writer bumps the page cache inside its own write guard, and only when it wrote.
+Locks: a comment locks its row alone; a forum post locks the topic row before
+the post row; Node locks the type row, then the material.
+
+**Routes.** `go=1&op=getQuickEdit` (GET only) answers the editor;
+`go=1&op=updateQuickEdit` (POST only) takes `kind`, `id`, `field`, `stamp` and
+`text`. Both stand in the router's `$public` list and check their own token,
+from the `X-CSRF-TOKEN` header alone (`checkQuickRequest()`), so an expired
+session answers 403 and never swaps an alert over the typed text.
+
+| Code | Status | Answer |
+| --- | --- | --- |
+| saved | 200 | the rendered region and the edited mark with `hx-swap-oob`; a note (a Node author edit sent back to moderation) as the event header `sl-quick-note` |
+| invalid | 422 | a field outside its closed form |
+| denied | 403 | no right, the window has closed, or the token is missing or stale |
+| unavailable | 404 | the item is gone; a Node material the visitor may neither edit nor read answers the same, as Node answers a missing and a closed material alike |
+| conflict | 409 | the current text rendered inside `data-sl-quick-stamp` with the fresh stamp |
+| rules | 422 | the messages of the kind's rules |
+| storage | 500 | the write failed |
+| blocked | 503 | the write guard of the page cache is closed |
+
+htmx swaps no 4xx/5xx answer: `setQuickEdit` in `plugins/system/slaed.js`
+tells a refusal on the warning toast and keeps the editor and the text; on 409
+it takes the current text and stamp and asks once through `setConfirmTask()`
+whether to overwrite. Escape cancels and Ctrl+Enter saves unless a window, the
+confirm dialog, an editor popup or the fullscreen editor stands in front.
+
+**Editor assets.** A page load carries an editor's engine as plain tags; a
+fragment answered over htmx names them to the client loader
+(`Editor::getAssetTags()` → `window.SlaedEditors.load()`), which adds only what
+the page lacks, so no engine and no global listener runs twice. The init of an
+instance (`Editor::getInitScript()`) waits for the engine, checks that its node
+is still in the document, and registers its teardown; a region swapped away
+destroys every instance inside it (`SlaedEditors.drop()`), including both Toast
+UI registries.
+
+**Limits.** What the quick edit deliberately does not do, each a decision of
+its own if it is ever wanted:
+
+- Node types with an extension keep the full form: the closed action set of
+  `NodeExtension` has no `edit`, and the `sync` extension owns the body of its
+  materials.
+- The Node title is not a quick-edit field: the address, the `h1`, the document
+  title and the breadcrumbs are built from it, and a region swap updates none of
+  them.
+- A forum post renders as its page renders it, with `safe = false`, while
+  `.rules/architecture.md` lists forum posts under `safe = true`; switching the
+  trust mode changes how every existing post renders.
+- A moderator without the trusted-tag right drops the trusted tags of a text
+  the main administrator wrote (`filterTrustedTags()`), and a non-HTML editor
+  drops `<br>` (`docs/EDITORS.md`), exactly as the full forms do.
+
+**Adding a kind.** Give it a stored stamp (a version column, or the body with
+its edit time), a guarded writer that answers the closed codes in the order
+above, a view that renders as its page does, an always-printed mark wrapper if
+it has an edited mark, a region marked `data-sl-quick` on its page, and a dial
+entry to `getQuickEdit` with the page token; then register the adapter in
+`getQuickService()` and extend `QuickEditTest`.
+
 ## Performance-Sensitive Areas
 
 Current high-interest areas:

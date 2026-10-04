@@ -44,14 +44,17 @@ final class CommentTransportTest extends TestCase
         $this->assertMatchesRegularExpression('#in_array\(\$op, \[[^]]*\], true\) && \(\$_SERVER\[.REQUEST_METHOD.\] \?\? ..\) !== .POST.#', $head);
     }
 
-    # The edit form is the one comment route a GET may still reach, and a save can only read a body out of a POST
+    # The editor of a comment is fetched by GET and saved by POST only, each refused in its own handler, and a body is only ever read out of a POST
     #[Test]
-    public function onlyTheEditFormIsReachableWithGet(): void
+    public function theEditorIsFetchedByGetAndSavedByPostOnly(): void
     {
-        $code = $this->getSource('core/system.php', 'updateComment');
-        $this->assertStringContainsString("\$text = trim(getVar('post', 'text', 'raw', ''))", $code);
-        $this->assertStringNotContainsString("getVar('get', 'text'", $code);
-        $this->assertStringContainsString('getTplAjaxTextarea', $code);
+        $open = $this->getSource('core/system.php', 'getQuickEdit');
+        $save = $this->getSource('core/system.php', 'updateQuickEdit');
+        $this->assertStringContainsString("checkQuickRequest('GET')", $open);
+        $this->assertStringContainsString("checkQuickRequest('POST')", $save);
+        $this->assertStringContainsString("\$body = getVar('post', 'text', 'raw', '')", $save);
+        $this->assertStringNotContainsString("'text'", $open, 'The editor route reads a body');
+        $this->assertStringNotContainsString("case 'updateComment':", $this->getFile('index.php'), 'The old edit route is still routed');
     }
 
     # No comment action carries its token in a URL any more, in the render path or in the shared editor helper
@@ -64,7 +67,7 @@ final class CommentTransportTest extends TestCase
         $this->assertStringContainsString("\$act = 'index.php?go=1&op='", $view);
         $this->assertStringContainsString('deleteComment&id=', $view);
         $this->assertSame(3, substr_count($view, "'is_post' => true"), 'A moderation action is still reachable as a plain link');
-        $this->assertStringNotContainsString('token=', $this->getSource('core/helpers.php', 'getTplAjaxTextarea'), 'The shared editor still builds a token into its url');
+        $this->assertStringNotContainsString('token=', $this->getFile('templates/lite/fragments/quick-edit.html'), 'The quick editor still builds a token into its url');
     }
 
     # Every token in the comment render path is a page token, so a cacheable build stores a signed marker rather than one visitor's token
@@ -76,7 +79,7 @@ final class CommentTransportTest extends TestCase
             $this->assertStringNotContainsString('getSiteToken', $code, $name.'() takes a live token into cacheable markup');
         }
         $this->assertStringContainsString('getPageToken()', $this->getSource('core/user.php', 'getCommentList'));
-        $this->assertStringContainsString('getPageToken()', $this->getSource('core/helpers.php', 'getTplAjaxTextarea'));
+        $this->assertStringContainsString('getPageToken()', $this->getSource('core/system.php', 'getQuickEdit'));
     }
 
     # The add answers one comment fragment and never the whole list again
@@ -248,7 +251,7 @@ final class CommentTransportTest extends TestCase
     public function theClassInvalidatesTheCacheAndTheRouteNoLongerDoes(): void
     {
         $code = $this->getFile('index.php');
-        $this->assertStringContainsString("in_array(\$op, ['updatePost', 'updateVotingResult'], true)) Cache::addEpoch()", $code);
+        $this->assertStringContainsString("if (\$op === 'updateVotingResult') Cache::addEpoch();", $code);
         $this->assertDoesNotMatchRegularExpression("#in_array\(\\\$op, \[[^]]*Comment[^]]*\], true\)\) Cache::addEpoch\(\)#", $code);
         $class = $this->getFile('core/classes/comment.php');
         $this->assertSame(0, substr_count($class, 'Cache::addEpoch();'), 'A write of the class bumps without force, which an early bump of the admin entry swallows');

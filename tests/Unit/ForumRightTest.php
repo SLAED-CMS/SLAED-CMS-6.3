@@ -83,10 +83,12 @@ final class ForumRightTest extends TestCase
         }
         $this->assertStringContainsString("\$catid = getForumPlace(intval(\$id))['cid'];", $this->getSource($file, 'delete'));
         $this->assertStringContainsString('$insert = $pid ? ($isreply', $this->getSource($file, 'send'), 'A reply is inserted without the reply right');
-        $post = $this->getSource('core/user.php', 'updatePost');
-        $this->assertStringContainsString('getForumPlace(intval($id))', $post);
-        $this->assertDoesNotMatchRegularExpression("/getVar\([^)]*'cid'/", $post, 'updatePost() reads a category from the request');
-        $this->assertStringNotContainsString('return $tpl', $post, 'updatePost() returns a refusal the route discards');
+        foreach (['getForumSource', 'updateForumBody'] as $name) {
+            $post = $this->getSource('core/user.php', $name);
+            $this->assertStringContainsString('getForumPlace($id)', $post, $name.'() does not read the stored place of the post');
+            $this->assertStringContainsString('checkForumRight(', $post, $name.'() asks another right than the buttons');
+            $this->assertStringNotContainsString('getVar(', $post, $name.'() reads the request');
+        }
     }
 
     # The buttons of the view ask the same right as the handlers, so the view never offers an action the handler refuses

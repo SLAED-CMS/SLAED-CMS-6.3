@@ -213,7 +213,7 @@ final class FieldViewTest extends TestCase
                 $this->assertStringNotContainsString("'field[]'", str_replace("getVar('post', 'field[]', '', [])", '', $code), $path.' still names a positional control');
                 $this->assertSame(
                     0,
-                    preg_match('/getVar\([^)]*,\s*\'field\'\s*[,)]/', str_replace("getVar('post', 'field', 'raw'", '', $code)),
+                    preg_match('/getVar\([^)]*,\s*\'field\'\s*[,)]/', str_replace(["getVar('post', 'field', 'raw'", "getVar('get', 'field', 'raw'"], '', $code)),
                     $path.' still reads the positional input filter'
                 );
                 if (!in_array($path, ['core/helpers.php', 'admin/modules/fields.php'], true)) {

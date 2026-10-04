@@ -6,6 +6,7 @@
 
 define('_NODE_ACCESS','Kto może wysyłać');
 define('_NODE_ACTIVE','Aktywna');
+define('_NODE_AEDIT','Sekund od utworzenia, w których autor może szybko edytować własny materiał, 0 — autor nie edytuje');
 define('_NODE_AGAIN','Materiał został w międzyczasie zmieniony, nic nie wykonano. Otwórz aktualny rekord i potwierdź akcję ponownie.');
 define('_NODE_ALPHA','Indeks alfabetyczny');
 define('_NODE_ASSIGN','Odpowiedzialny');

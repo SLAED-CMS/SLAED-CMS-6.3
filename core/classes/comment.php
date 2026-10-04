@@ -158,14 +158,15 @@ class Comment {
 
     # Add, edit, status and delete wrap their own writes through this pair; within an open transaction they join it and leave begin, commit and rollback to its owner
     # Open one comment write: inside a transaction of an owner it joins and answers null, and the guard and the final generation stay with that owner
-    # Otherwise it takes the write guard of the page cache before its own BEGIN and answers the guard, or false when either cannot be had and no statement may run
+    # Otherwise it takes the write guard of the page cache before its own BEGIN and answers the guard; when no statement may run it answers why, as a result code
+    # A closed guard answers blocked and a failed BEGIN answers storage, because a caller that reports the outcome tells a busy site from a broken write
     private function setWriteBegin(): mixed {
         if ($this->db->checkSqlActive()) return null;
         $guard = Cache::getWriteGuard();
-        if ($guard === false) return false;
+        if ($guard === false) return 'blocked';
         if ($this->db->setSqlBegin()) return $guard;
         Cache::deleteWriteGuard($guard);
-        return false;
+        return 'storage';
     }
 
     # Take back one comment write: a joined write leaves the rollback to its owner, an own one rolls back and frees its guard once the rollback is proven
@@ -224,7 +225,7 @@ class Comment {
     # The repair is one write under the guard of the page cache, so a page rendered from the drifted counters cannot be stored under the generation that follows it
     public function updateCountDrift(array $rows): int {
         $guard = $this->setWriteBegin();
-        if ($guard === false) return 0;
+        if (is_string($guard)) return 0;
         $done = 0;
         foreach ($rows as $one) {
             if (!$this->setTargetCount(intval($one['cid'] ?? 0), (string)($one['modul'] ?? ''))) continue;
@@ -485,7 +486,7 @@ class Comment {
         $fail = ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
         if ($kind === null && $this->checkNodeKind($mod)) return $fail;
         $guard = $this->setWriteBegin();
-        if ($guard === false) return $fail;
+        if (is_string($guard)) return $fail;
         try {
             $this->setNodeLock($kind, $id, true);
             unset($this->seen[$mod.':'.$id]);
@@ -524,38 +525,55 @@ class Comment {
         return ['id' => $new, 'name' => $name, 'new' => true, 'error' => ''];
     }
 
-    # Load one comment for editing and, when a body is given, store the edited text once the edit rules accept it
-    # The permission, the module and the edit window all come from the stored row, so a request can neither name the module nor extend its own window
-    public function updateComment(int $id, string $body): array {
+    # Whether the actor of the request may edit one comment: a moderator of its module at any time, its signed-in author while the edit window counted from its creation lasts
+    private function checkEditRight(string $mod, int $uid, string $time): bool {
         global $user;
-        $sql = 'SELECT uid, cid, time, body, modul FROM '.PREFIX_DB.'_comment WHERE id = :id AND deleted IS NULL';
+        return is_moder($mod) || (is_user() && $uid > 0 && $uid === intval($user[0]) && time() < strtotime($time) + intval($this->conf['edit']));
+    }
+
+    # Read one comment for an edit: whether the actor may edit it, its module and target, the stored source and the stamp an editor opens with, or nothing when it is gone
+    public function getEditSource(int $id): array {
+        if ($id < 1) return [];
+        $sql = 'SELECT uid, cid, time, body, edited, modul FROM '.PREFIX_DB.'_comment WHERE id = :id AND deleted IS NULL';
         $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['id' => $id]));
-        $mod = (string)($row['modul'] ?? '');
-        $uid = $row ? intval($row['uid']) : 0;
-        $out = ['allow' => false, 'mod' => $mod, 'cid' => intval($row['cid'] ?? 0), 'body' => (string)($row['body'] ?? ''), 'saved' => false, 'error' => []];
-        $wait = strtotime((string)($row['time'] ?? '')) + intval($this->conf['edit']);
-        if (!is_moder($mod) && !(is_user() && $uid == intval($user[0]) && time() < $wait)) return $out;
-        $out['allow'] = true;
-        if ($id < 1 || $mod === '' || !$body) return $out;
-        $out['error'] = $this->checkRules($mod, $body, '', '', false);
-        if ($out['error']) return $out;
-        $text = $this->filterCommentBody($body, $this->getLinkFlag($mod));
-        $room = checkEditorTextRoom($text, 'comment.body');
-        if ($room !== '') {
-            $out['error'] = [$room];
-            return $out;
-        }
+        if (!$row) return [];
+        $mod = (string)$row['modul'];
+        return ['allow' => $this->checkEditRight($mod, intval($row['uid']), (string)$row['time']), 'mod' => $mod, 'cid' => intval($row['cid']),
+            'body' => (string)$row['body'], 'stamp' => QuickEdit::getStamp((string)$row['body'], (string)($row['edited'] ?? ''))];
+    }
+
+    # Store one edited text at the stamp its editor was opened with and answer the closed result code; the module, the right and the window come from the stored row
+    # The rules and the canonical text depend on the text alone and run before the transaction; the rest is decided again under the lock of the row, in a fixed order
+    # Existence, then the right and the window, then an equal canonical text answering saved without a write, and only then a stale stamp as a conflict
+    # Equality comes before the stamp so the repetition of a save whose answer was lost is saved and not a conflict; it moves neither the edit time nor the page cache
+    # The row of the material a comment of Node hangs on is neither read nor written, so the comment row is the one lock and there is no order to keep against a moderation
+    public function updateComment(int $id, string $body, string $stamp): array {
+        $head = $this->getEditSource($id);
+        $out = ['code' => 'unavailable', 'error' => [], 'mod' => (string)($head['mod'] ?? ''), 'body' => (string)($head['body'] ?? '')];
+        if (!$head) return $out;
+        if (!$head['allow']) return ['code' => 'denied'] + $out;
+        $text = $this->filterCommentBody($body, $this->getLinkFlag($head['mod']));
+        $stop = $this->checkRules($head['mod'], $body, '', '', false) ?: array_filter([checkEditorTextRoom($text, 'comment.body')]);
+        if ($stop) return ['code' => 'rules', 'error' => array_values($stop)] + $out;
         $guard = $this->setWriteBegin();
-        if ($guard === false) return $out;
-        $done = $this->db->getSqlQuery(
-            'UPDATE '.PREFIX_DB.'_comment SET body = :body, edited = NOW() WHERE id = :id AND deleted IS NULL',
-            ['body' => $text, 'id' => $id]
-        );
-        if (!$done) $this->setWriteUndo($guard);
-        if (!$done || !$this->setWriteDone($guard)) return $out;
-        $out['body'] = $text;
-        $out['saved'] = true;
-        return $out;
+        if (is_string($guard)) return ['code' => $guard] + $out;
+        $sql = 'SELECT uid, time, body, edited, modul FROM '.PREFIX_DB.'_comment WHERE id = :id AND deleted IS NULL FOR UPDATE';
+        $res = $this->db->getSqlQuery($sql, ['id' => $id]);
+        $row = ($res === false) ? [] : $this->db->getSqlRow($res);
+        $mod = (string)($row['modul'] ?? '');
+        $code = match (true) {
+            $res === false => 'storage',
+            !$row => 'unavailable',
+            !$this->checkEditRight($mod, intval($row['uid']), (string)$row['time']) => 'denied',
+            $text === (string)$row['body'] => 'equal',
+            !hash_equals(QuickEdit::getStamp((string)$row['body'], (string)($row['edited'] ?? '')), $stamp) => 'conflict',
+            default => 'write',
+        };
+        if ($code === 'write') $code = $this->db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET body = :body, edited = NOW() WHERE id = :id',
+            ['body' => $text, 'id' => $id]) !== false ? 'moved' : 'storage';
+        if ($code === 'equal' || $code === 'moved') return ['code' => $this->setWriteDone($guard, $code === 'moved') ? 'saved' : 'storage', 'body' => $text] + $out;
+        $this->setWriteUndo($guard);
+        return ['code' => $code] + $out;
     }
 
     # Publish or hide one comment as a moderator of the module the stored row names, move the counter of its target with it and award a first publication
@@ -571,7 +589,7 @@ class Comment {
         $kind = $this->checkNodeKind((string)$head['modul']) ? $this->getNodeReader()->getNodeType((string)$head['modul']) : null;
         if ($open && $kind === null && $this->checkNodeKind((string)$head['modul'])) return false;
         $guard = $this->setWriteBegin();
-        if ($guard === false) return false;
+        if (is_string($guard)) return false;
         try {
             $kind = $this->setNodeLock($kind, intval($head['cid']), $open);
         } catch (NodeException) {
@@ -614,7 +632,7 @@ class Comment {
         if (!$head || !is_moder((string)$head['modul'])) return false;
         $kind = $this->checkNodeKind((string)$head['modul']) ? $this->getNodeReader()->getNodeType((string)$head['modul']) : null;
         $guard = $this->setWriteBegin();
-        if ($guard === false) return false;
+        if (is_string($guard)) return false;
         try {
             $kind = $this->setNodeLock($kind, intval($head['cid']));
         } catch (NodeException) {
@@ -658,7 +676,7 @@ class Comment {
             $pars['c'.$key] = $val;
         }
         $guard = $this->setWriteBegin();
-        if ($guard === false) return false;
+        if (is_string($guard)) return false;
         $from = ' FROM '.PREFIX_DB.'_comment WHERE cid IN ('.implode(', ', $keys).') AND modul = :mod';
         try {
             $res = $this->db->getSqlQuery('SELECT id, cid, uid'.$from.' ORDER BY id FOR UPDATE', $pars);
@@ -685,7 +703,7 @@ class Comment {
     public function deleteUser(int $uid): bool {
         if ($uid < 1) return false;
         $guard = $this->setWriteBegin();
-        if ($guard === false) return false;
+        if (is_string($guard)) return false;
         if ($this->db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET uid = 0, name = \'\' WHERE uid = :uid', ['uid' => $uid]) === false) {
             $this->setWriteUndo($guard);
             return false;
@@ -704,7 +722,7 @@ class Comment {
         $room = checkEditorTextRoom($body, 'comment.body');
         if ($room !== '') return $room;
         $guard = $this->setWriteBegin();
-        if ($guard === false) return (string)_ERROR;
+        if (is_string($guard)) return (string)_ERROR;
         $sql = 'UPDATE '.PREFIX_DB.'_comment SET body = :body, edited = NOW() WHERE id = :id AND deleted IS NULL';
         $done = $this->db->getSqlQuery($sql, ['body' => $body, 'id' => $id]) !== false;
         if (!$done) $this->setWriteUndo($guard);

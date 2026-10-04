@@ -417,4 +417,20 @@ final class NodeConfigTest extends TestCase
         $this->assertSame(['add', 'delete', 'status', 'update'], array_keys($jour));
         foreach ($jour as $kind => $rows) $this->assertSame([['info', 3, true]], array_values(array_unique($rows, SORT_REGULAR)), $kind);
     }
+
+    # The author window limits.edit is a configuration contract: a shipped default, a key the limits check demands, a field of the limits tab in six locales
+    # The update run adds it too, because a limits section missing one key breaks every type of an installed site
+    #[Test]
+    public function theAuthorWindowIsAConfigurationKey(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $this->assertSame(600, (require $root.'/config/node.php')['node']['limits']['edit'] ?? null, 'The shipped configuration carries no author window');
+        $this->assertStringContainsString("['maxassets', 'maxlist', 'syncbatch', 'send', 'edit']", (string)file_get_contents(self::getFile('query.php')));
+        $panel = (string)file_get_contents($root.'/modules/node/admin/index.php');
+        $this->assertStringContainsString("'edit' => _NODE_AEDIT", $panel, 'The limits tab has no field for the author window');
+        foreach (['de', 'en', 'fr', 'pl', 'ru', 'uk'] as $one) {
+            $this->assertStringContainsString("define('_NODE_AEDIT'", (string)file_get_contents($root.'/modules/node/admin/lang/'.$one.'.php'), $one);
+        }
+        $this->assertStringContainsString('$ndata[\'limits\'][\'edit\'] = 600;', (string)file_get_contents($root.'/update.php'), 'The update run does not add the key');
+    }
 }

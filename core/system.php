@@ -146,6 +146,7 @@ require_once BASE_DIR.'/core/classes/field.php';
 require_once BASE_DIR.'/core/classes/point.php';
 require_once BASE_DIR.'/core/classes/rating.php';
 require_once BASE_DIR.'/core/classes/comment.php';
+require_once BASE_DIR.'/core/classes/quick.php';
 require_once BASE_DIR.'/core/classes/privat.php';
 # Only the closed class map of Node is registered here; its classes load when a request really uses one of them
 require_once BASE_DIR.'/core/classes/node/load.php';
@@ -5976,11 +5977,25 @@ function getNodeMoveLabel(NodeStatus $to): array {
     };
 }
 
+# The quick edit of the intro and of the body of one material on its public page, one dial entry per text, each opening the editor in the region of that text
+# The page token travels in the header of each entry, because the article declares none; a type with an extension keeps its full form and gets no entry
+function getNodeQuickItems(NodeType $type, Node $node): array {
+    if ($type->ext !== '' || $node->id < 1) return [];
+    $out = [];
+    foreach (['intro' => _NODE_INTRO, 'body' => _TEXT] as $field => $label) {
+        $out[] = ['href' => 'index.php?go=1&op=getQuickEdit&kind=node&id='.$node->id.'&field='.$field, 'title' => _ONEDIT.': '.$label, 'icon_name' => 'pencil-square',
+            'is_htmx' => true, 'hx_target' => '#repnode'.$node->id.$field, 'hx_headers' => getPageToken()];
+    }
+    return $out;
+}
+
 # The moderator actions of one material for a speed dial: its editor, then every move of its state the matrix allows as a post of the Node panel
 # The panel list adds the view and the physical deletion around them; a public page asks for refer, so the panel answers a move with the page it came from
-function getNodeModerDial(NodeType $type, Node $node, bool $back = false): array {
+# Only the public page asks for quick: the quick edit of the intro and of the body goes before the editor there, while a panel list and a card hold no region to edit in
+function getNodeModerDial(NodeType $type, Node $node, bool $back = false, bool $quick = false): array {
     global $afile;
-    $out = [['href' => $afile.'.php?name=node&op=edit&id='.$node->id.'&type='.$type->name, 'icon_name' => 'pencil', 'title' => _FULLEDIT]];
+    $out = $quick ? getNodeQuickItems($type, $node) : [];
+    $out[] = ['href' => $afile.'.php?name=node&op=edit&id='.$node->id.'&type='.$type->name, 'icon_name' => 'pencil', 'title' => _FULLEDIT];
     foreach (NodeStatus::cases() as $to) {
         if (!$node->status->checkStatusMove($to)) continue;
         [$label, $icon] = getNodeMoveLabel($to);
@@ -6148,31 +6163,173 @@ function getRatingView(): void {
     else echo getRatingAsync(2, $vals['id'], $vals['mod'], $res['ratings'], $res['score'], '', $vals['typ'] === 'thumbs' ? '1' : '');
 }
 
-# Answer the body region of one comment: the editor when the form is fetched, the rendered body when a save arrives, and the refusal that stopped either
-# The editor is loaded with GET and the save arrives as POST, so a body is only ever read from a request that carries one and a refusal is written rather than returned
-function updateComment(): void {
-    global $conf, $tpl, $prs, $com;
-    $id = getVar('req', 'id', 'num', 0);
-    $typ = getVar('req', 'typ', 'num', 0);
-    $text = trim(getVar('post', 'text', 'raw', ''));
-    $edit = $com->updateComment($id, $text);
-    if (!$edit['allow']) {
-        echo $tpl->getHtmlFrag('alert', ['text' => sprintf(_PEDEND, intval($conf['comments']['edit'] / 60)), 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
+# Build the quick edit of the request once, with one adapter per kind; every adapter takes the right, the text and the stamp from the stored row and never from the request
+# A source renders its editor itself with the literal store of its column, a write goes through the guarded writer of its kind and a view renders as its page does
+# A comment and a forum post answer their body as their page renders it and their edited mark out of band; the editor id carries the subject, as a page may hold an editor
+# The forum view loads the words of its module first, because a fragment request names no module and the edited mark is one of those words
+# A Node material answers its intro or its body as the view renders it, from the stored row, so an author sees the text an edit sent back to moderation
+# A material the visitor may neither edit nor read is answered as gone, because Node answers a missing and a closed material alike
+function getQuickService(): QuickEdit {
+    global $com;
+    static $quick = null;
+    if ($quick !== null) return $quick;
+    $comment = [
+        'fields' => ['body'],
+        'stamp' => '/^[a-f0-9]{40}$/D',
+        'source' => static function (int $id, string $field) use ($com): ?array {
+            $row = $com->getEditSource($id);
+            if (!$row) return null;
+            if (!$row['allow']) return ['allow' => false];
+            $edit = getTplTextarea(['label' => _TEXT, 'id' => 'quick-comment-'.$id.'-body', 'name' => 'text', 'value' => $row['body'], 'mod' => $row['mod'], 'rows' => 10,
+                'placeholder' => _TEXT, 'store' => 'comment.body']);
+            return ['allow' => true, 'stamp' => $row['stamp'], 'editor' => $edit];
+        },
+        'write' => static fn(int $id, string $field, string $stamp, string $text): array => $com->updateComment($id, $text, $stamp),
+        'view' => static function (int $id, string $field) use ($com): array {
+            $row = $com->getComment($id);
+            if (!$row) return [];
+            $body = getCommentBody($row, true);
+            return ['html' => $body['text'], 'mark' => $body['mark'], 'stamp' => QuickEdit::getStamp($row['body'], $row['edited'])];
+        },
+    ];
+    $forum = [
+        'fields' => ['body'],
+        'stamp' => '/^[a-f0-9]{40}$/D',
+        'source' => static function (int $id, string $field): ?array {
+            $row = getForumSource($id);
+            if (!$row) return null;
+            if (!$row['allow']) return ['allow' => false];
+            $edit = getTplTextarea(['label' => _TEXT, 'id' => 'quick-forum-'.$id.'-body', 'name' => 'text', 'value' => $row['body'], 'mod' => 'forum', 'rows' => 10,
+                'placeholder' => _TEXT, 'store' => 'forum.body']);
+            return ['allow' => true, 'stamp' => $row['stamp'], 'editor' => $edit];
+        },
+        'write' => static fn(int $id, string $field, string $stamp, string $text): array => updateForumBody($id, $text, $stamp),
+        'view' => static function (int $id, string $field): array {
+            $row = getForumSource($id);
+            if (!$row) return [];
+            getLang('forum');
+            $body = getForumBody($id, $row['body'], $row['etime'], $row['see'], '', true);
+            return ['html' => $body['text'], 'mark' => $body['mark'], 'stamp' => $row['stamp']];
+        },
+    ];
+    $hide = static fn(?array $src, int $id): bool => $src === null || (!$src['allow'] && getNodeReader()->getNodeTarget($src['type']->name, $id) === null);
+    $node = [
+        'fields' => ['intro', 'body'],
+        'stamp' => '/^[1-9][0-9]{0,9}$/D',
+        'source' => static function (int $id, string $field) use ($hide): ?array {
+            $src = getNodeWriter()->getTextSource($id);
+            if ($hide($src, $id)) return null;
+            if (!$src['allow']) return ['allow' => false];
+            $base = ['label' => _TEXT, 'id' => 'quick-node-'.$id.'-'.$field, 'name' => 'text', 'mod' => $src['type']->name, 'placeholder' => _TEXT];
+            $edit = ($field === 'intro') ? getTplTextarea(['value' => $src['node']->intro, 'rows' => 5, 'store' => 'nodes.intro'] + $base)
+                : getTplTextarea(['value' => (string)$src['node']->body, 'rows' => 12, 'store' => 'nodes.body'] + $base);
+            return ['allow' => true, 'stamp' => (string)$src['node']->version, 'editor' => $edit];
+        },
+        'write' => static function (int $id, string $field, string $stamp, string $text) use ($hide): array {
+            $srv = getNodeWriter();
+            try {
+                $src = $srv->getTextSource($id);
+                if ($hide($src, $id)) return ['code' => 'unavailable', 'error' => []];
+                $was = $src['node'];
+                $now = $srv->updateNodeText($id, $field, $text, intval($stamp));
+            } catch (NodeException $err) {
+                getLang('node');
+                $codes = [NodeException::NOTFOUND => 'unavailable', NodeException::DENIED => 'denied', NodeException::INVALID => 'rules',
+                    NodeException::CONFLICT => 'conflict', NodeException::BLOCKED => 'blocked'];
+                return ['code' => $codes[$err->getCode()] ?? 'storage', 'error' => ($err->getCode() === NodeException::INVALID) ? [_NODE_INVALID] : []];
+            }
+            $back = $was !== null && $was->status === NodeStatus::Published && $now->status === NodeStatus::Pending;
+            return ['code' => 'saved', 'error' => [], 'note' => $back ? _QUICK_WAIT : ''];
+        },
+        'view' => static function (int $id, string $field): array {
+            global $prs, $fld;
+            $src = getNodeWriter()->getTextSource($id);
+            if ($src === null) return [];
+            $view = (new NodeView($prs, $fld))->getNodeView($src['type'], $src['node'], 'view');
+            return ['html' => $view[$field.'_html'], 'mark' => '', 'stamp' => (string)$src['node']->version];
+        },
+    ];
+    $quick = new QuickEdit(['comment' => $comment, 'forum' => $forum, 'node' => $node]);
+    return $quick;
+}
+
+# Check the transport of one quick-edit request before anything is read: the method first, then the site token from the header alone, never from a parameter
+# A token is never carried in an address, so it reaches no log; a missing or stale one answers 403 like any refusal, and the page keeps the editor and the typed text
+function checkQuickRequest(string $method): array {
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== $method) {
+        header('Allow: '.$method);
+        return [405, _ERROR];
+    }
+    $tok = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    return (is_string($tok) && $tok !== '' && checkSiteToken($tok)) ? [200, ''] : [403, _TOKENMISS];
+}
+
+# Answer one refusal of the quick edit with its status and an alert, which htmx does not swap: the script reads the text off it and tells it on the warning toast
+function setQuickRefuse(int $stat, string $text, array $list = []): void {
+    global $tpl;
+    http_response_code($stat);
+    echo $tpl->getHtmlFrag('alert', ($list ? ['messages' => $list] : ['text' => $text]) + ['meta' => '', 'type' => 'warn', 'is_warn' => true]);
+}
+
+# Answer the editor of one quick-edit subject: GET only, the token from the header, the closed forms of kind, id and field, then the right the source of the kind decides
+# The form carries the stamp of the stored row and the page token in its own header, because the item around it may declare none and a save reads the token there alone
+function getQuickEdit(): void {
+    global $tpl;
+    [$stat, $text] = checkQuickRequest('GET');
+    if ($stat !== 200) {
+        setQuickRefuse($stat, $text);
         return;
     }
-    if ($edit['error']) {
-        echo $tpl->getHtmlFrag('alert', ['messages' => $edit['error'], 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
+    $quick = getQuickService();
+    $sub = $quick->getSubject(getVar('get', 'kind', 'raw', ''), getVar('get', 'id', 'raw', ''), getVar('get', 'field', 'raw', ''));
+    $res = $sub ? $quick->getEditor($sub) : ['code' => 'invalid'];
+    $codes = ['invalid' => [422, _QUICK_FORM], 'denied' => [403, _QUICK_DENY], 'unavailable' => [404, _QUICK_GONE]];
+    if ($res['code'] !== 'ready') {
+        setQuickRefuse(...$codes[$res['code']]);
         return;
     }
-    if (!$id || $edit['mod'] === '') return;
-    if (!$text && $typ) {
-        echo getTplAjaxTextarea([
-            'obj' => 'com'.$id, 'go' => '1', 'op' => 'updateComment', 'id' => $id,
-            'cid' => '0', 'typ' => '0', 'mod' => $edit['mod'], 'store' => 'comment.body', 'text' => $edit['body'], 'rows' => 10,
-        ]);
+    echo $tpl->getHtmlFrag('quick-edit', [
+        'is_form' => true,
+        'kind' => $sub['kind'],
+        'id' => $sub['id'],
+        'field' => $sub['field'],
+        'stamp' => $res['stamp'],
+        'token' => getPageToken(),
+        'editor_html' => $res['editor'],
+        'save_label' => _SAVE,
+        'back_label' => _BACK,
+        'ask_text' => _QUICK_TWICE,
+        'leave_text' => _QUICK_LEAVE,
+    ]);
+}
+
+# Store one quick edit: POST only, the token from the header, the closed forms of the five fields, and the status the closed result code maps to
+# A save answers the rendered region with the fresh edited mark out of band; a conflict answers the current text rendered with its fresh stamp, which htmx does not swap
+# A note of the save travels as an event header, which the script tells on the warning toast
+function updateQuickEdit(): void {
+    global $tpl;
+    [$stat, $text] = checkQuickRequest('POST');
+    if ($stat !== 200) {
+        setQuickRefuse($stat, $text);
         return;
     }
-    echo $prs->filterContent($edit['body'], true, $edit['mod'], 2, 'breaks', isset($conf['node']['types'][$edit['mod']]) ? $edit['cid'] : 0);
+    $quick = getQuickService();
+    $sub = $quick->getSubject(getVar('post', 'kind', 'raw', ''), getVar('post', 'id', 'raw', ''), getVar('post', 'field', 'raw', ''), getVar('post', 'stamp', 'raw', ''));
+    $body = getVar('post', 'text', 'raw', '');
+    $res = ($sub && is_string($body)) ? $quick->updateText($sub, trim($body)) : ['code' => 'invalid', 'error' => []];
+    $codes = ['invalid' => [422, _QUICK_FORM], 'denied' => [403, _QUICK_DENY], 'unavailable' => [404, _QUICK_GONE], 'rules' => [422, _ERROR]];
+    $codes += ['storage' => [500, _QUICK_FAIL], 'blocked' => [503, _SAVEBUSY]];
+    if ($res['code'] === 'saved') {
+        if ($res['note'] !== '') header('HX-Trigger: '.json_encode(['sl-quick-note' => $res['note']]));
+        echo $res['html'].$res['mark'];
+        return;
+    }
+    if ($res['code'] === 'conflict') {
+        http_response_code(409);
+        echo $tpl->getHtmlFrag('quick-edit', ['is_current' => true, 'stamp' => $res['stamp'], 'text_html' => $res['html']]);
+        return;
+    }
+    setQuickRefuse($codes[$res['code']][0], $codes[$res['code']][1], $res['error']);
 }
 
 # Publish or hide one comment as a moderator and answer the comment itself, so the reader keeps the slice and the scroll position the action was taken from

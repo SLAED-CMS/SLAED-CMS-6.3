@@ -1670,6 +1670,11 @@
         addBtn(id, ed);
         setPane(id, '');
     };
+    // The editor that registered an upload is gone with its region, so its entry and its options go too and nothing holds the destroyed instance
+    api.deleteUpload = function(id) {
+        edits.delete(String(id));
+        delete api.options[String(id)];
+    };
     // The second entry of the runtime: the window of a form row registers a box and no editor, so the four editor-only paths find null and disable themselves
     // The hook and the toolbar icon return on a missing editor by themselves, which is why a field installs neither and needs no guard of its own
     api.addField = function(id, node, opt) {

@@ -20,6 +20,7 @@
 # The argument modes runs the display modes on five types; serve modes keeps a server with the same types up until the file stop appears
 # The argument seo runs the canonical routes, the head and the feeds, and its child seoext asks the core for the feeds
 # The argument head runs the routes, the notices, the page cache and the theme header
+# The argument quick runs the quick edit of a comment over its two routes: methods, the header token, the closed forms, the codes and what each leaves in the row
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
     exit;
@@ -558,15 +559,15 @@ function getRouteTypes(PDO $pdo, string $work): array {
     $page = getRouteReply('boss', 'GET', 'admin.php?name=node&op=config');
     $tok = getRouteToken($page['body'], 'config');
     $low = getRouteReply('boss', 'POST', 'admin.php', ['name' => 'node', 'op' => 'config', 'token' => $tok, 'maxassets' => '100', 'maxlist' => '1', 'syncbatch' => '500',
-        'send' => '0']);
+        'send' => '0', 'edit' => '600']);
     $cfg = require $work.'/config/node.php';
     $out['limits'] = [$low['code'], $cfg['node']['limits']['maxlist']];
     $few = getRouteReply('boss', 'POST', 'admin.php', ['name' => 'node', 'op' => 'config', 'token' => $tok, 'maxassets' => '1', 'maxlist' => '100', 'syncbatch' => '500',
-        'send' => '0']);
+        'send' => '0', 'edit' => '600']);
     $cfg = require $work.'/config/node.php';
     $out['limits'][] = $few['code'];
     $out['limits'][] = $cfg['node']['limits']['maxassets'];
-    $wide = ['name' => 'node', 'op' => 'config', 'token' => $tok, 'maxassets' => '100', 'maxlist' => '150', 'syncbatch' => '500', 'send' => '0'];
+    $wide = ['name' => 'node', 'op' => 'config', 'token' => $tok, 'maxassets' => '100', 'maxlist' => '150', 'syncbatch' => '500', 'send' => '0', 'edit' => '600'];
     $out['limits'][] = getRouteReply('boss', 'POST', 'admin.php', $wide)['code'];
     $cfg = require $work.'/config/node.php';
     $out['limits'][] = $cfg['node']['limits']['maxlist'];
@@ -2181,6 +2182,152 @@ function getRouteSeoData(): array {
     return ['feeds' => array_keys(getRssFeeds())];
 }
 
+# The quick edit of one comment of anna on an open material, driven over the two routes as anna, boris and the main administrator with the page token of each
+# Every exchange reports its status, and every save what the row and the page cache epoch hold after it, so the order under the lock is measured rather than claimed
+function getRouteQuick(PDO $pdo, string $work): array {
+    $pre = RPREF.'_';
+    $when = (new DateTime('now', new DateTimeZone((require $work.'/config/global.php')['gtime'])))->format('Y-m-d H:i:s');
+    $pdo->exec('UPDATE '.$pre.'nodes SET comon = 2 WHERE id = 101');
+    $pdo->prepare('INSERT INTO '.$pre.'comment (cid, modul, time, uid, name, ip, body, status, shown)'
+        .' VALUES (101, \'news\', ?, 2, \'anna\', \'127.0.0.1\', \'Anna first text\', 1, ?)')->execute([$when, $when]);
+    $cid = (int)$pdo->lastInsertId();
+    $tok = fn(string $who): string => preg_match('#id="formcsave".*?name="token"\s+value="([a-f0-9]{64})"#s',
+        getRouteReply($who, 'GET', 'index.php?name=news&op=view&id=101')['body'], $hit) ? $hit[1] : '';
+    $toks = ['anna' => $tok('anna'), 'boris' => $tok('boris'), 'root' => $tok('root'), 'moder' => $tok('moder')];
+    $head = fn(string $who): array => ['X-CSRF-TOKEN: '.$toks[$who]];
+    $subj = 'kind=comment&id='.$cid.'&field=body';
+    $get = fn(string $who, string $query = '', ?array $hdr = null): array => getRouteReply($who, 'GET', 'index.php?go=1&op=getQuickEdit&'.($query ?: $subj), [],
+        $hdr ?? $head($who));
+    $post = fn(string $who, array $form, ?array $hdr = null): array => getRouteReply($who, 'POST', 'index.php?go=1&op=updateQuickEdit',
+        $form + ['kind' => 'comment', 'id' => (string)$cid, 'field' => 'body'], $hdr ?? $head($who));
+    $row = fn(): array => $pdo->query('SELECT body, edited FROM '.$pre.'comment WHERE id = '.$cid)->fetch(PDO::FETCH_ASSOC);
+    $epoch = fn(): string => is_file($work.'/counter/cache.log') ? (string)file_get_contents($work.'/counter/cache.log') : '';
+    $stamp = fn(array $one): string => sha1($one['body']."\0".(string)$one['edited']);
+    $out = ['ids' => [$cid], 'tokens' => array_map(fn($v) => $v !== '', $toks)];
+    $open = $get('anna');
+    $first = getRouteField($open['body'], 'stamp');
+    $out['open'] = [$open['code'], str_contains($open['body'], 'data-sl-quick-form'), $first === $stamp($row()), str_contains($open['body'], 'id="quick-comment-'.$cid.'-body"'),
+        str_contains($open['body'], 'Anna first text'), str_contains($open['body'], '"X-CSRF-TOKEN": "'.$toks['anna'].'"')];
+    $wrong = getRouteReply('anna', 'POST', 'index.php?go=1&op=getQuickEdit&'.$subj, [], $head('anna'));
+    $right = getRouteReply('anna', 'GET', 'index.php?go=1&op=updateQuickEdit&'.$subj, [], $head('anna'));
+    $out['methods'] = [$wrong['code'], $wrong['head']['allow'] ?? '', $right['code'], $right['head']['allow'] ?? ''];
+    $was = $row();
+    $out['tokens'] += [
+        'none' => $get('anna', '', [])['code'],
+        'param' => $get('anna', $subj.'&token='.$toks['anna'], [])['code'],
+        'postparam' => $post('anna', ['stamp' => $first, 'text' => 'Anna by parameter', 'token' => $toks['anna']], [])['code'],
+        'stale' => $post('anna', ['stamp' => $first, 'text' => 'Anna by stale token'], ['X-CSRF-TOKEN: '.str_repeat('0', 64)])['code'],
+        'kept' => $row() === $was,
+    ];
+    $out['forms'] = [
+        $get('anna', 'kind=bogus&id='.$cid.'&field=body')['code'], $get('anna', 'kind=comment&id=0&field=body')['code'],
+        $get('anna', 'kind=comment&id='.$cid.'&field=intro')['code'], $post('anna', ['stamp' => 'short', 'text' => 'Anna short stamp'])['code'],
+        $post('anna', ['stamp' => $first, 'text' => 'Anna bad kind', 'kind' => 'node'])['code'], $row() === $was,
+    ];
+    $before = $epoch();
+    $save = $post('anna', ['stamp' => $first, 'text' => 'Anna second text']);
+    $saved = $row();
+    $out['save'] = [$save['code'], str_contains($save['body'], 'Anna second text'), str_contains($save['body'], 'id="quick-mark-comment-'.$cid.'" hx-swap-oob="outerHTML"'),
+        $saved['body'], $saved['edited'] !== null, $epoch() !== $before, str_contains($save['body'], 'data-sl-quick-form')];
+    sleep(1);
+    $before = $epoch();
+    $again = $post('anna', ['stamp' => $first, 'text' => 'Anna second text']);
+    $out['repeat'] = [$again['code'], $row() === $saved, $epoch() === $before];
+    $clash = $post('anna', ['stamp' => $first, 'text' => 'Anna third text']);
+    $now = preg_match('#data-sl-quick-stamp="([a-f0-9]{40})"#', $clash['body'], $hit) ? $hit[1] : '';
+    $out['conflict'] = [$clash['code'], $now === $stamp($row()), str_contains($clash['body'], 'Anna second text'), $row() === $saved];
+    $fresh = $stamp($row());
+    $out['rules'] = [$post('anna', ['stamp' => $fresh, 'text' => str_repeat('w', 101)])['code'], $post('anna', ['stamp' => $fresh, 'text' => '  '])['code'], $row() === $saved];
+    $out['foreign'] = [$get('boris')['code'], $post('boris', ['stamp' => $fresh, 'text' => 'Boris took it'])['code'], $row() === $saved];
+    $moder = $post('root', ['stamp' => $fresh, 'text' => 'Root fixed it']);
+    $out['moder'] = [$get('root')['code'], $moder['code'], $row()['body']];
+    $open = $get('anna');
+    $pdo->exec('UPDATE '.$pre.'comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE id = '.$cid);
+    $kept = $row();
+    $out['lost'] = [$open['code'], $post('anna', ['stamp' => getRouteField($open['body'], 'stamp'), 'text' => 'Anna too late'])['code'], $get('anna')['code'], $row() === $kept];
+    $pdo->exec('UPDATE '.$pre.'comment SET deleted = NOW() WHERE id = '.$cid);
+    $out['gone'] = [$get('root')['code'], $post('root', ['stamp' => $stamp($kept), 'text' => 'Root after the delete'])['code'], $row() === $kept];
+    $out['forum'] = getRouteQuickForum($pdo, $work, $head);
+    $out['node'] = getRouteQuickNode($pdo, $when, $head);
+    return $out;
+}
+
+# The quick edit of the published material 101 of anna: her own entry on the page, a save that sends it back to moderation with its note, the repeat and the conflict
+# Then the moderator in the dial before the editor, a stranger, a field the kind does not carry, and the list whose cards offer no quick edit
+function getRouteQuickNode(PDO $pdo, string $when, Closure $head): array {
+    $pre = RPREF.'_';
+    $pdo->prepare('UPDATE '.$pre.'nodes SET created = ? WHERE id = 101')->execute([$when]);
+    $get = fn(string $who, string $field = 'body'): array => getRouteReply($who, 'GET', 'index.php?go=1&op=getQuickEdit&kind=node&id=101&field='.$field, [], $head($who));
+    $post = fn(string $who, string $stamp, string $text, string $field = 'body'): array => getRouteReply($who, 'POST', 'index.php?go=1&op=updateQuickEdit',
+        ['kind' => 'node', 'id' => '101', 'field' => $field, 'stamp' => $stamp, 'text' => $text], $head($who));
+    $row = fn(): array => $pdo->query('SELECT status, version, body, intro FROM '.$pre.'nodes WHERE id = 101')->fetch(PDO::FETCH_ASSOC);
+    $page = getRouteReply('anna', 'GET', 'index.php?name=news&op=view&id=101')['body'];
+    $list = getRouteReply('moder', 'GET', 'index.php?name=news')['body'];
+    $mod = getRouteReply('moder', 'GET', 'index.php?name=news&op=view&id=101')['body'];
+    $out = ['page' => [str_contains($page, 'kind=node&amp;id=101&amp;field=body'), str_contains($page, 'id="repnode101body" data-sl-quick'),
+        str_contains(getRouteReply('boris', 'GET', 'index.php?name=news&op=view&id=101')['body'], 'op=getQuickEdit'), str_contains($list, 'op=getQuickEdit'),
+        strpos($mod, 'field=intro') !== false && strpos($mod, 'field=intro') < strpos($mod, 'op=edit&amp;id=101')]];
+    $open = $get('anna');
+    $was = $row();
+    $out['open'] = [$open['code'], getRouteField($open['body'], 'stamp') === (string)$was['version'], str_contains($open['body'], 'id="quick-node-101-body"')];
+    $save = $post('anna', (string)$was['version'], 'Body by anna quickly');
+    $now = $row();
+    $note = str_contains($save['head']['hx-trigger'] ?? '', 'sl-quick-note');
+    $out['save'] = [$save['code'], str_contains($save['body'], 'Body by anna quickly'), $note,
+        intval($now['status']), intval($now['version']) - intval($was['version'])];
+    $out['repeat'] = [$post('anna', (string)$was['version'], 'Body by anna quickly')['code'], $row() === $now];
+    $out['conflict'] = [$post('anna', (string)$was['version'], 'Body by anna again')['code'], $row() === $now];
+    $out['foreign'] = [$get('boris')['code'], $post('boris', (string)$now['version'], 'Body by boris')['code'], $get('anna', 'title')['code']];
+    $pdo->exec('INSERT INTO '.$pre.'nodes (id, tid, cid, uid, aname, ip, title, intro, body, field, status) VALUES (106, 1, 0, 2, \'\', \'127.0.0.1\', \'Draft\','
+        .' \'intro\', \'body\', \'\', 0)');
+    $draft = getRouteReply('boris', 'POST', 'index.php?go=1&op=updateQuickEdit', ['kind' => 'node', 'id' => '106', 'field' => 'body', 'stamp' => '1', 'text' => 'x'],
+        $head('boris'));
+    $out['draft'] = [getRouteReply('boris', 'GET', 'index.php?go=1&op=getQuickEdit&kind=node&id=106&field=body', [], $head('boris'))['code'], $draft['code'],
+        getRouteReply('boris', 'GET', 'index.php?go=1&op=getQuickEdit&kind=node&id=102&field=body', [], $head('boris'))['code']];
+    $fix = $post('moder', (string)$now['version'], 'Intro by the moderator', 'intro');
+    $out['moder'] = [$fix['code'], isset($fix['head']['hx-trigger']), $row()['intro'], intval($row()['status'])];
+    return $out;
+}
+
+# The quick edit of a reply of anna in an open topic: a save, its repeat, a conflict, and the place read again under the lock when the topic closes or the post moves
+function getRouteQuickForum(PDO $pdo, string $work, Closure $head): array {
+    $pre = RPREF.'_';
+    $pdo->exec('INSERT INTO '.$pre.'categories (id, modul, title, intro, pview, pread, ppost, preply, pedit, pdelete, pmod, lang) VALUES'
+        .' (4, \'forum\', \'Board\', \'\', \'0|0\', \'0|0\', \'1|0\', \'1|0\', \'1|0\', \'1|0\', \'\', \'\'),'
+        .' (5, \'forum\', \'Locked\', \'\', \'0|0\', \'0|0\', \'1|0\', \'1|0\', \'\', \'\', \'\', \'\')');
+    $pdo->exec('INSERT INTO '.$pre.'forum (id, pid, cid, uid, name, title, time, body, field, luid, lname, ltime, status) VALUES'
+        .' (501, 0, 4, 2, \'anna\', \'Anna topic\', NOW(), \'Anna topic body\', \'\', 2, \'anna\', NOW(), 3),'
+        .' (502, 501, 4, 2, \'anna\', \'Anna topic\', NOW(), \'Anna reply body\', \'\', 2, \'anna\', NOW(), 3)');
+    $subj = 'kind=forum&id=502&field=body';
+    $get = fn(string $who): array => getRouteReply($who, 'GET', 'index.php?go=1&op=getQuickEdit&'.$subj, [], $head($who));
+    $post = fn(string $who, string $stamp, string $text): array => getRouteReply($who, 'POST', 'index.php?go=1&op=updateQuickEdit',
+        ['kind' => 'forum', 'id' => '502', 'field' => 'body', 'stamp' => $stamp, 'text' => $text], $head($who));
+    $row = fn(): array => $pdo->query('SELECT cid, body, etime FROM '.$pre.'forum WHERE id = 502')->fetch(PDO::FETCH_ASSOC);
+    $epoch = fn(): string => is_file($work.'/counter/cache.log') ? (string)file_get_contents($work.'/counter/cache.log') : '';
+    $open = $get('anna');
+    $first = getRouteField($open['body'], 'stamp');
+    $out = ['open' => [$open['code'], str_contains($open['body'], 'id="quick-forum-502-body"'), $first === sha1('Anna reply body'."\0")]];
+    $before = $epoch();
+    $save = $post('anna', $first, 'Anna reply edited');
+    $saved = $row();
+    $out['save'] = [$save['code'], str_contains($save['body'], 'Anna reply edited'), str_contains($save['body'], 'id="quick-mark-forum-502" hx-swap-oob="outerHTML"'),
+        $saved['body'], $saved['etime'] !== null, $epoch() !== $before];
+    sleep(1);
+    $before = $epoch();
+    $out['repeat'] = [$post('anna', $first, 'Anna reply edited')['code'], $row() === $saved, $epoch() === $before];
+    $out['conflict'] = [$post('anna', $first, 'Anna reply again')['code'], $row() === $saved];
+    $out['foreign'] = [$get('boris')['code'], $post('boris', sha1($saved['body']."\0".$saved['etime']), 'Boris took it')['code'], $row() === $saved];
+    $fresh = getRouteField($get('anna')['body'], 'stamp');
+    $pdo->exec('UPDATE '.$pre.'forum SET status = 1 WHERE id = 501');
+    $out['closed'] = [$post('anna', $fresh, 'Anna after the close')['code'], $get('anna')['code'], $row() === $saved];
+    $pdo->exec('UPDATE '.$pre.'forum SET status = 3 WHERE id = 501');
+    $fresh = getRouteField($get('anna')['body'], 'stamp');
+    $pdo->exec('UPDATE '.$pre.'forum SET cid = 5 WHERE id IN (501, 502)');
+    $out['moved'] = [$post('anna', $fresh, 'Anna after the move')['code'], $row()['body'] === $saved['body']];
+    $out['moder'] = [$post('root', $fresh, 'Root fixed the reply')['code'], $row()['body']];
+    return $out;
+}
+
 # The child favhold of the intact run holds the account of anna with one more favorite for two seconds, as a parallel request at the limit does before its commit
 if (($argv[2] ?? '') === 'favhold') {
     $hpdo = getRoutePdo((string)($argv[3] ?? ''));
@@ -2240,6 +2387,8 @@ try {
         $report['runs']['head'] = getRouteHead($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'cache') {
         $report['runs']['cache'] = getRouteCacheCom($rpdo, $rwork);
+    } elseif (($argv[2] ?? '') === 'quick') {
+        $report['runs']['quick'] = getRouteQuick($rpdo, $rwork);
     } else {
         $report['runs']['lists'] = getRouteLists($rpdo);
         $report['runs']['view'] = getRouteViewRuns($rpdo);

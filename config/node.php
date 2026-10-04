@@ -57,6 +57,7 @@ return [
             'maxlist' => 100,
             'syncbatch' => 500,
             'send' => 60,
+            'edit' => 600,
         ],
         'support' => [
             'state' => [

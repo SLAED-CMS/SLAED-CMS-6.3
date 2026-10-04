@@ -16,8 +16,8 @@
   <div class="sl-entry-content">
     {{{ poll_html }}}
     {% if cicon_html %}<a href="{{ chref }}" title="{{ ctitle }}" class="sl-icat sl-cat-tone-{{ ctone }}">{{{ cicon_html }}}</a>{% endif %}
-    {{{ intro_html }}}
-    {% if body_html %}{{{ body_html }}}{% endif %}
+    <div id="repnode{{ id }}intro" data-sl-quick>{{{ intro_html }}}</div>
+    <div id="repnode{{ id }}body" data-sl-quick>{{{ body_html }}}</div>
     {% if fields_html %}<div class="sl-section">{{{ fields_html }}}</div>{% endif %}
   </div>
   {% if rating_html %}<div class="sl-meta-foot">

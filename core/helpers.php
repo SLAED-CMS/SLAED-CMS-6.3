@@ -566,54 +566,6 @@ function getTplEditorInsertAttr(string $command, string $value, string $editorId
     return 'data-sl-editor-insert="'.$esc($command).'" data-sl-editor-id="'.$esc($editorId).'" data-sl-editor-value="'.$esc($value).'"';
 }
 
-# Render an inline HTMX edit form with a textarea and save/back buttons
-# It is the same editor the text was written in, so an author never sees the source a toolbar produced, and the id carries the record because the page may hold an editor already
-# The stored value is passed raw: getTplTextarea() decodes it for the format the editor works in, and decoding twice would eat the markup
-# The storage is taken from the caller and never derived here, because this form sends name => text for several different targets and that name identifies no column
-function getTplAjaxTextarea(array $data = []): string {
-    global $tpl;
-    $obj  = (string)($data['obj']  ?? '');
-    $go   = (string)($data['go']   ?? '');
-    $op   = (string)($data['op']   ?? '');
-    $id   = (string)($data['id']   ?? '');
-    $cid  = (string)($data['cid']  ?? '0');
-    $typ  = (string)($data['typ']  ?? '0');
-    $mod  = (string)($data['mod']  ?? '');
-    $text = (string)($data['text'] ?? '');
-    $rows = (int)   ($data['rows'] ?? 5);
-    $store = (string)($data['store'] ?? '');
-    $formId  = 'form'.$obj;
-    $fieldId = $formId.'_text';
-    $esc     = static fn(string $v): string => htmlspecialchars($v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-    $query   = 'index.php?go='.$esc($go).'&op='.$esc($op).'&id='.$esc($id).'&cid='.$esc($cid).'&typ='.$esc($typ).'&mod='.$esc($mod);
-    $head    = ' hx-headers=\'{"X-CSRF-TOKEN": "'.getPageToken().'"}\'';
-    $cerror  = addslashes((string)_CERROR1);
-    $content = getTplTextarea([
-            'label'       => _TEXT,
-            'id'          => $fieldId,
-            'name'        => 'text',
-            'value'       => $text,
-            'mod'         => $mod,
-            'rows'        => $rows,
-            'placeholder' => _TEXT,
-            'store'       => $store,
-        ])
-        .$tpl->getHtmlFrag('button', [
-            'button_type'  => 'submit',
-            'submit_label' => _SAVE,
-            'is_legacy_green' => true,
-            'button_attr'  => 'hx-post="'.$query.'" hx-include="#'.$formId.'" hx-target="#rep'.$obj.'" hx-swap="innerHTML" hx-push-url="false"'.$head
-                .' hx-on:click="if (!document.getElementById(\''.$formId.'\').querySelector(\'[name=&quot;text&quot;]\').value.trim())'
-                .' { alert(\''.$cerror.'\'); event.preventDefault(); }"',
-        ])
-        .$tpl->getHtmlFrag('button', [
-            'button_type'  => 'submit',
-            'submit_label' => _BACK,
-            'button_attr'  => 'hx-get="'.$query.'" hx-target="#rep'.$obj.'" hx-swap="innerHTML" hx-push-url="false"'.$head,
-        ]);
-    return $tpl->getHtmlPart('form-wrap', ['form_name' => 'textareae', 'form_id' => $formId, 'form_class' => 'sl-inline-edit', 'content_html' => $content]);
-}
-
 # Render the shared "new" badge for fresh content
 function getTplNewGraphic(string $time): string {
     global $tpl;
@@ -741,8 +693,7 @@ function getFileManagerWindow(array $opt): string {
     $head = '';
     if (!$done) {
         $done = true;
-        $head = $tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/system/filemanager.js', 'attr' => ''])
-            .$tpl->getHtmlPart('file-manager-templates', []);
+        $head = $tpl->getHtmlPart('file-manager-templates', []).Editor::getAssetTags([], ['plugins/system/filemanager.js']);
     }
     $rul = getUploadPlaceRule((string)($opt['place'] ?? ''));
     $fld = !empty($opt['is_field']);

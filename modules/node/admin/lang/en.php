@@ -6,6 +6,7 @@
 
 define('_NODE_ACCESS','Who may submit');
 define('_NODE_ACTIVE','Active');
+define('_NODE_AEDIT','Seconds after creation in which the author may quick edit an own material, 0 — the author does not edit');
 define('_NODE_AGAIN','The material was changed in the meantime, nothing was done. Open the current record and confirm the action again.');
 define('_NODE_ALPHA','Letter index');
 define('_NODE_ASSIGN','Assignee');

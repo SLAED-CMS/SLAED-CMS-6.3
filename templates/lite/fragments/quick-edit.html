@@ -1,0 +1,9 @@
+{% if is_mark %}<span id="{{ mark_id }}"{% if is_oob %} hx-swap-oob="outerHTML"{% endif %}>{{{ mark_html }}}</span>{% elseif is_current %}<div data-sl-quick-stamp="{{ stamp }}">{{{ text_html }}}</div>{% else %}<form method="post" class="sl-inline-edit" data-sl-quick-form data-sl-quick-ask="{{ ask_text }}" data-sl-quick-leave="{{ leave_text }}" hx-post="index.php?go=1&amp;op=updateQuickEdit" hx-target="closest [data-sl-quick]" hx-swap="innerHTML" hx-push-url="false" hx-headers='{"X-CSRF-TOKEN": "{{ token }}"}'>
+  <input type="hidden" name="kind" value="{{ kind }}">
+  <input type="hidden" name="id" value="{{ id }}">
+  <input type="hidden" name="field" value="{{ field }}">
+  <input type="hidden" name="stamp" value="{{ stamp }}">
+  {{{ editor_html }}}
+  <input type="submit" value="{{ save_label }}" class="sl-but">
+  <input type="button" value="{{ back_label }}" class="sl-but" data-sl-quick-cancel>
+</form>{% endif %}

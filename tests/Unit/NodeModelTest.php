@@ -160,7 +160,7 @@ final class NodeModelTest extends TestCase
         $want = [
             'Draft' => ['Pending', 'Published', 'Deleted'],
             'Pending' => ['Draft', 'Published', 'Deleted'],
-            'Published' => ['Disabled', 'Deleted'],
+            'Published' => ['Pending', 'Disabled', 'Deleted'],
             'Disabled' => ['Pending', 'Published', 'Deleted'],
             'Deleted' => ['Disabled'],
         ];
@@ -171,14 +171,14 @@ final class NodeModelTest extends TestCase
         }
     }
 
-    # The only error of the API: a final runtime exception with six stable codes read through getCode, keeping the storage cause as previous
+    # The only error of the API: a final runtime exception with seven stable codes read through getCode, keeping the storage cause as previous
     #[Test]
-    public function theErrorHasSixStableCodes(): void
+    public function theErrorHasSevenStableCodes(): void
     {
         $ref = new ReflectionClass(NodeException::class);
         $this->assertTrue($ref->isFinal());
         $this->assertSame(RuntimeException::class, $ref->getParentClass()->getName());
-        $this->assertSame(['NOTFOUND' => 1, 'DENIED' => 2, 'INVALID' => 3, 'CONFLICT' => 4, 'STORAGE' => 5, 'LIMITED' => 6], $ref->getConstants());
+        $this->assertSame(['NOTFOUND' => 1, 'DENIED' => 2, 'INVALID' => 3, 'CONFLICT' => 4, 'STORAGE' => 5, 'LIMITED' => 6, 'BLOCKED' => 7], $ref->getConstants());
         $own = array_values(array_filter($ref->getMethods(), fn($m) => $m->getDeclaringClass()->getName() === NodeException::class));
         $this->assertSame([], $own, 'NodeException declares methods');
         $cause = new \PDOException('lost');

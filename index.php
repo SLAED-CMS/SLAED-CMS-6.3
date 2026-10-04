@@ -145,7 +145,8 @@ if (empty($go)) {
         }
     }
 } elseif (is_numeric($go)) {
-    $public = ($go == 1 && in_array($op, ['getUserSessionInfo', 'getUserSessionRows', 'getPrivateMessageView', 'getRatingView', 'getFavoriteList'], true))
+    $public = ($go == 1 && in_array($op, ['getUserSessionInfo', 'getUserSessionRows', 'getPrivateMessageView', 'getRatingView', 'getQuickEdit', 'updateQuickEdit',
+        'getFavoriteList'], true))
         || (($go == 1 || $go == 5) && $op === 'getUserSessionAdminInfo');
     if ($go == 1 && in_array($op, ['addComment', 'updateCommentStatus', 'deleteComment', 'addPrivateMessage',
         'setPrivateMessageRead', 'updatePrivatBox', 'addFavorite', 'deleteFavorite'], true) && ($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
@@ -168,13 +169,13 @@ if (empty($go)) {
             case 'getUserSessionInfo': getUserSessionInfo(); break;
             case 'getUserSessionRows': getUserSessionRows(); break;
             case 'getUserList': getUserList(); break;
-            case 'updateComment': updateComment(); break;
+            case 'getQuickEdit': getQuickEdit(); break;
+            case 'updateQuickEdit': updateQuickEdit(); break;
             case 'addComment': addComment(); break;
             case 'updateCommentStatus': updateCommentStatus(); break;
             case 'deleteComment': deleteComment(); break;
             case 'getCommentPage': getCommentPage(); break;
             case 'getCommentBranch': getCommentBranch(); break;
-            case 'updatePost': updatePost(); break;
             case 'getPrivateMessageView': echo getPrivateMessageView(); break;
             case 'setPrivateMessageRead': setPrivateMessageRead(); break;
             case 'addPrivateMessage': addPrivateMessage(); break;
@@ -185,7 +186,7 @@ if (empty($go)) {
             case 'getVotingView': echo getVotingView(); break;
             case 'updateVotingResult': updateVotingResult(); break;
         }
-        if (in_array($op, ['updatePost', 'updateVotingResult'], true)) Cache::addEpoch();
+        if ($op === 'updateVotingResult') Cache::addEpoch();
     } elseif ($go == 3) {
         Cache::setHeaders(false);
         switch($op) {

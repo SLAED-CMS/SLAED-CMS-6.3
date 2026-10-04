@@ -1870,6 +1870,10 @@ function setUpdateRun(): array {
     $ndata = getUpdateSource(CONFIG_DIR.'/newsletter.php')['newsletter'] ?? [];
     $nset = $ndata + ['abort' => '10', 'bouncemax' => '2', 'breakwin' => '100', 'canary' => '100', 'canarymin' => '500'];
     if ($nset !== $ndata && !setUpdateFile('newsletter.php', $nset)) $rows = array_merge($rows, getUpdateRow('config/newsletter.php'.$text, false));
+    $ndata = getUpdateSource(CONFIG_DIR.'/node.php')['node'] ?? [];
+    $nedit = is_array($ndata['limits'] ?? null) && !array_key_exists('edit', $ndata['limits']);
+    if ($nedit) $ndata['limits']['edit'] = 600;
+    if ($nedit && !setUpdateFile('node.php', $ndata, [], true)) $rows = array_merge($rows, getUpdateRow('config/node.php'.$text, false));
     $rows = array_merge($rows, setUpdateMails($db, $pref, (string)$conf['adminmail'], false));
     $sql = 'SELECT column_name FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = :tbl AND column_name IN (\'points\', \'user_points\')';
     $res = $db->getSqlQuery($sql, ['tbl' => $pref.'_users']);

@@ -606,6 +606,69 @@
         }
     }
 
+    // Editor assets: a page load carries the engines as plain tags the parser runs in order; a fragment answered over htmx names them to this loader instead
+    // Only what the page does not carry yet is added, as ordered scripts, so no engine and no global listener of an editor runs twice on one page
+    // The init of an instance waits here for the assets named before it, and registers how it is destroyed, so a region swapped away takes its instances with it
+    var edwait = null;
+    var edseen = {};
+    var edowns = [];
+
+    function getAssetUrl(src) {
+        return new URL(src, document.baseURI).href;
+    }
+
+    function getEditorScript(src) {
+        var url = getAssetUrl(src);
+        if (edseen[url]) return edseen[url];
+        if (Array.prototype.some.call(document.scripts, function (one) { return one.src === url; })) {
+            edseen[url] = Promise.resolve();
+            return edseen[url];
+        }
+        edseen[url] = new Promise(function (done) {
+            var tag = document.createElement('script');
+            tag.src = url;
+            tag.async = false;
+            tag.onload = done;
+            tag.onerror = done;
+            document.head.appendChild(tag);
+        });
+        return edseen[url];
+    }
+
+    function setEditorStyle(href) {
+        var url = getAssetUrl(href);
+        var have = Array.prototype.some.call(document.querySelectorAll('link[rel="stylesheet"]'), function (one) { return one.href === url; });
+        if (have) return;
+        var tag = document.createElement('link');
+        tag.rel = 'stylesheet';
+        tag.href = url;
+        document.head.appendChild(tag);
+    }
+
+    window.SlaedEditors = {
+        load: function (css, js) {
+            css.forEach(setEditorStyle);
+            var wait = Promise.all(js.map(getEditorScript));
+            var mine = edwait ? Promise.all([edwait, wait]) : wait;
+            edwait = mine;
+            mine.then(function () { if (edwait === mine) edwait = null; });
+        },
+        ready: function (run) {
+            if (edwait) edwait.then(run);
+            else run();
+        },
+        own: function (node, kill) {
+            edowns.push({ node: node, kill: kill });
+        },
+        drop: function (root) {
+            edowns = edowns.filter(function (one) {
+                if (one.node.isConnected && !root.contains(one.node)) return true;
+                try { one.kill(); } catch (err) { return false; }
+                return false;
+            });
+        }
+    };
+
     function getEditorInsertText(command, value) {
         if (command === 'name') return '[b]' + value + '[/b], ';
         if (command === 'attach') return '[attach=' + value + ' align=left title=title width=500 height=500 rel=rel]\n';
@@ -1950,6 +2013,97 @@
         });
     }
 
+    // Quick edit: the dial of an item turns its rendered text into the editor in the same region, a save puts the rendered text back and Cancel restores it with no request
+    // A refusal is told on the warning toast and leaves the editor and the typed text in place; a conflict takes the current text and its stamp and asks once
+    // The keys belong to the editor only while nothing stands in front of it: a window, the confirm dialog, the fullscreen and an open editor popup take them first
+    function getQuickOp(event) {
+        var conf = event.detail ? event.detail.requestConfig : null;
+        var path = conf ? String(conf.path || '') : '';
+        if (path.indexOf('op=getQuickEdit') >= 0) return 'open';
+        return path.indexOf('op=updateQuickEdit') >= 0 ? 'save' : '';
+    }
+
+    function isQuickCovered() {
+        if (document.querySelector('dialog.sl-modal[open], .sl-toastui-editor-fullscreen')) return true;
+        return Array.prototype.some.call(document.querySelectorAll('.toastui-editor-popup, .ck-balloon-panel_visible, .tox-dialog, .tox-menu'), function (one) {
+            return one.offsetParent !== null;
+        });
+    }
+
+    function setQuickBack(region) {
+        if (!region) return;
+        window.SlaedEditors.drop(region);
+        region.innerHTML = region.slkeep || '';
+        region.slkeep = null;
+        if (window.htmx) window.htmx.process(region);
+    }
+
+    function setQuickCancel(form) {
+        var region = form.closest('[data-sl-quick]');
+        if (!form.hasAttribute('data-sl-quick-dirty')) {
+            setQuickBack(region);
+            return;
+        }
+        window.setConfirmTask(form.getAttribute('data-sl-quick-leave') || '', function () { setQuickBack(region); });
+    }
+
+    function setQuickEdit() {
+        document.addEventListener('htmx:beforeRequest', function (event) {
+            var region = event.detail ? event.detail.target : null;
+            if (getQuickOp(event) === 'open' && region && region.querySelector('[data-sl-quick-form]')) event.preventDefault();
+        });
+        document.addEventListener('htmx:beforeSwap', function (event) {
+            var region = event.detail ? event.detail.target : null;
+            var step = getQuickOp(event);
+            if (!step || !region || !event.detail.shouldSwap || !region.hasAttribute('data-sl-quick')) return;
+            if (step === 'open') region.slkeep = region.innerHTML;
+            else window.SlaedEditors.drop(region);
+        });
+        document.addEventListener('htmx:afterRequest', function (event) {
+            var xhr = event.detail ? event.detail.xhr : null;
+            var step = getQuickOp(event);
+            if (!step || !xhr || xhr.status < 400) return;
+            var box = new DOMParser().parseFromString(xhr.responseText || '', 'text/html').body;
+            var form = event.detail.elt && event.detail.elt.closest ? event.detail.elt.closest('[data-sl-quick-form]') : null;
+            var now = box.querySelector('[data-sl-quick-stamp]');
+            if (xhr.status === 409 && form && now) {
+                form.querySelector('[name="stamp"]').value = now.getAttribute('data-sl-quick-stamp');
+                form.closest('[data-sl-quick]').slkeep = now.innerHTML;
+                window.setConfirmTask(form.getAttribute('data-sl-quick-ask') || '', function () { form.requestSubmit(); });
+                return;
+            }
+            var line = box.querySelector('.sl-alert-text') || box;
+            setToast((line.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 200) || String(xhr.status), true);
+        });
+        document.addEventListener('sl-quick-note', function (event) {
+            setToast(event.detail ? String(event.detail.value || '') : '', true);
+        });
+        ['input', 'change'].forEach(function (name) {
+            document.addEventListener(name, function (event) {
+                var form = event.target && event.target.closest ? event.target.closest('[data-sl-quick-form]') : null;
+                if (form) form.setAttribute('data-sl-quick-dirty', '1');
+            });
+        });
+        document.addEventListener('click', function (event) {
+            var back = event.target && event.target.closest ? event.target.closest('[data-sl-quick-cancel]') : null;
+            var form = back ? back.closest('[data-sl-quick-form]') : null;
+            if (!form) return;
+            event.preventDefault();
+            setQuickCancel(form);
+        });
+        document.addEventListener('keydown', function (event) {
+            var form = event.target && event.target.closest ? event.target.closest('[data-sl-quick-form]') : null;
+            if (!form || isQuickCovered()) return;
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                setQuickCancel(form);
+            } else if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+                event.preventDefault();
+                form.requestSubmit();
+            }
+        });
+    }
+
     // Replying points the submit form at one comment: the same action taken twice takes the reply back to the top level, so a reader can always undo the choice
     function setCommentTarget(id) {
         var form = document.getElementById('formcsave');
@@ -2160,6 +2314,7 @@
         setDirtyForms(document);
         setCommentKeys(document);
         setRatingVotes();
+        setQuickEdit();
         setPrivatCarry(document);
         setWindowBack();
     }

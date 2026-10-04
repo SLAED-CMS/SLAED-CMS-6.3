@@ -258,14 +258,14 @@ function getProbeCommentWrite(bool $guest): array {
     if ($open) {
         $new = $com->addComment('voting', $open, 'probe body for the edit window', 'Probe');
         $eid = intval($new['id']);
-        $out['edit']['skewed'] = $eid ? $com->updateComment($eid, 'probe body edited')['allow'] : null;
+        $out['edit']['skewed'] = $eid ? getProbeEdit($com, $eid, 'probe body edited')['allow'] : null;
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = :time WHERE id = :id', ['time' => date('Y-m-d H:i:s'), 'id' => $eid]);
-        $edit = $com->updateComment($eid, 'probe body edited');
+        $edit = getProbeEdit($com, $eid, 'probe body edited');
         $row = $db->getSqlRow($db->getSqlQuery('SELECT body FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $eid]));
         $out['edit']['fresh'] = [$edit['allow'], $edit['saved'], $edit['mod'], $edit['body'], (string)($row['body'] ?? '')];
         $past = date('Y-m-d H:i:s', time() - intval($conf['comments']['edit']) - 60);
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = :time WHERE id = :id', ['time' => $past, 'id' => $eid]);
-        $out['edit']['stale'] = $com->updateComment($eid, 'probe body edited again')['allow'];
+        $out['edit']['stale'] = getProbeEdit($com, $eid, 'probe body edited again')['allow'];
         $out['edit']['status'] = $com->setStatus($eid, true);
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE id = :id', ['id' => $eid]);
     }
@@ -407,7 +407,7 @@ function getProbeCommentStage2(): array {
     $out['show'] = [$com->setStatus($cid, true), $read()];
     $out['showagain'] = [$com->setStatus($cid, true), $read()];
     $out['counters'] = [$was, $read(), $gain];
-    $edit = $com->updateComment($cid, 'stage two probe edited');
+    $edit = getProbeEdit($com, $cid, 'stage two probe edited');
     $row = $db->getSqlRow($db->getSqlQuery('SELECT body, edited FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $cid]));
     $out['edit'] = [$edit['allow'], $edit['saved'], (string)($row['body'] ?? ''), $row['edited'] !== null];
     $out['before'] = $read();
@@ -421,7 +421,7 @@ function getProbeCommentStage2(): array {
         'single' => $com->getComment($cid),
         'list' => in_array($cid, array_column($com->getList('voting', $tid, 1)['rows'], 'id'), true),
         'admin' => in_array($cid, array_column($com->getAdminList(CommentStatus::Published, 'voting', 2, '', 1)['rows'], 'id'), true),
-        'edit' => $com->updateComment($cid, 'after the delete')['saved'],
+        'edit' => getProbeEdit($com, $cid, 'after the delete')['saved'],
         'status' => $com->setStatus($cid, false),
     ];
     $pend = $com->addComment('voting', $tid, 'stage two pending probe', 'Probe', '');
@@ -437,7 +437,7 @@ function getProbeCommentStage2(): array {
         $was = $com->getComment($one)['body'] ?? '';
         $com->updateBody($one, $was);
         $now = $com->getComment($one)['body'] ?? '';
-        $edit = $com->updateComment($one, $was);
+        $edit = getProbeEdit($com, $one, $was);
         $out['round'][$fmt] = [$was === $now, $edit['saved'], $was === ($com->getComment($one)['body'] ?? ''), mb_substr($was, 0, 60)];
     }
     $out['sort'] = [];
@@ -825,6 +825,12 @@ function getProbeCommentFeed(): array {
         $out['hub'][$uid] = [$was, [(string)$com->getUserCount($uid), '', '0']];
     }
     return $out;
+}
+
+# Edit one comment the way an author opens and saves it: the stamp is read first, then the text is stored at it, and the answer is folded into allow and saved
+function getProbeEdit(Comment $com, int $id, string $text): array {
+    $res = $com->updateComment($id, $text, (string)($com->getEditSource($id)['stamp'] ?? ''));
+    return ['allow' => !in_array($res['code'], ['denied', 'unavailable'], true), 'saved' => $res['code'] === 'saved', 'mod' => $res['mod'], 'body' => $res['body']];
 }
 
 # Count the comment rows a probe scenario left behind, so a delete is measured as a difference between two reads instead of being claimed by its return value

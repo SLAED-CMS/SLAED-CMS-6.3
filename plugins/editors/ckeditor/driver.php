@@ -9,11 +9,9 @@ class EditorCkeditor implements ContentDriver {
     private const TB_SIMPLE = "['bold','italic','|','link','bulletedList','numberedList','|','blockQuote','|','undo','redo']";
 
     public function getAssets(string $profile): string {
-        global $tpl;
         if (self::$done) return '';
         self::$done = true;
-        return $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => 'plugins/editors/ckeditor/assets/ckeditor.bundle.css', 'type' => '', 'title' => ''])
-            .$tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/editors/ckeditor/assets/ckeditor.bundle.js', 'attr' => '']);
+        return Editor::getAssetTags(['plugins/editors/ckeditor/assets/ckeditor.bundle.css'], ['plugins/editors/ckeditor/assets/ckeditor.bundle.js']);
     }
 
     public function getWidget(string $id, string $name, string $value, string $profile, array $data = []): string {
@@ -31,11 +29,11 @@ class EditorCkeditor implements ContentDriver {
             'value_attr' => $value,
             'input_attr' => 'id="'.$eid.'"',
         ]);
-        $js = '(function(){var mnt=document.getElementById('.$jid.'+"_ck");';
+        $js = 'var mnt=document.getElementById('.$jid.'+"_ck");';
         $js .= 'var lab=mnt?mnt.getAttribute("aria-labelledby"):"";var alt=mnt?mnt.getAttribute("aria-label"):"";';
         $js .= 'var des=mnt?mnt.getAttribute("aria-describedby"):"";';
         $js .= 'if(mnt){mnt.removeAttribute("aria-labelledby");mnt.removeAttribute("aria-label");mnt.removeAttribute("aria-describedby");}';
-        $js .= 'CK5.ClassicEditor.create(mnt,{';
+        $js .= 'var made=CK5.ClassicEditor.create(mnt,{';
         $js .= 'plugins:'.$pl.',toolbar:'.$tb.',placeholder:'.$jph.',language:"'.$lang.'",licenseKey:"GPL",';
         $js .= 'table:{contentToolbar:["tableColumn","tableRow","mergeTableCells"]}}).then(function(ed){';
         $js .= 'ed.setData('.$jval.');';
@@ -44,7 +42,7 @@ class EditorCkeditor implements ContentDriver {
         $js .= 'if(box&&des){box.setAttribute("aria-describedby",des);}';
         $js .= 'var inp=document.getElementById('.$jid.');';
         $js .= 'inp.form&&inp.form.addEventListener("submit",function(){inp.value=ed.getData();},true);';
-        $js .= '});})();';
-        return $ta.$tpl->getHtmlFrag('head-script-inline', ['js' => $js]);
+        $js .= '});';
+        return $ta.Editor::getInitScript($id, $js, 'made.then(function(ed){ed.destroy();});');
     }
 }

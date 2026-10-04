@@ -1077,7 +1077,7 @@ function config(): void {
     global $afile, $conf, $tpl;
     checkNodeMethod(['GET', 'HEAD', 'POST']);
     checkNodeTypes('config');
-    $keys = ['maxassets' => _NODE_MAXASSETS, 'maxlist' => _NODE_MAXLIST, 'syncbatch' => _NODE_SYNCBATCH, 'send' => _NODE_SEND];
+    $keys = ['maxassets' => _NODE_MAXASSETS, 'maxlist' => _NODE_MAXLIST, 'syncbatch' => _NODE_SYNCBATCH, 'send' => _NODE_SEND, 'edit' => _NODE_AEDIT];
     $lims = $conf['node']['limits'] ?? [];
     $note = '';
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
@@ -1085,7 +1085,7 @@ function config(): void {
         $new = [];
         foreach (array_keys($keys) as $key) {
             $raw = trim(getVar('post', $key, 'raw', ''));
-            $new[$key] = preg_match(($key === 'send') ? '/^(?:0|[1-9][0-9]{0,8})$/D' : '/^[1-9][0-9]{0,8}$/D', $raw) ? (int)$raw : -1;
+            $new[$key] = preg_match(in_array($key, ['send', 'edit'], true) ? '/^(?:0|[1-9][0-9]{0,8})$/D' : '/^[1-9][0-9]{0,8}$/D', $raw) ? (int)$raw : -1;
         }
         $lims = $new;
         $held = '';

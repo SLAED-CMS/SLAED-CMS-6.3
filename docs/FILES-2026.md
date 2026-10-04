@@ -143,7 +143,10 @@ changes a closed folder is checked on Apache and against the nginx rule emulated
    by a name of another target.
 4. **Forum.** The `forum` adapter (category read right, topic state, the post row), the closed `uploads/forum/`, the
    rewrite of the 150 direct addresses of posts, the signatures of the forum, and the nginx rule. Route probes:
-   a closed category, a hidden topic, a guest, a moderator.
+   a closed category, a hidden topic, a guest, a moderator. Once a post grants the files its text names, every
+   writer of a post text checks a new `[attach]` name the way `checkNodeFiles()` does for Node: the full form
+   (`send()` of `modules/forum/index.php`) and the quick edit (`updateForumBody()` in `core/user.php`), so an edit
+   cannot grant a file of `uploads/forum/` its author does not own. `QuickEditTest` gets the refused foreign name.
 5. **Private messages and signatures.** A signature gets one owner and one folder on every page. The `privat` adapter (sender or recipient; a side that has deleted its copy reads nothing,
    as `Privat` already answers for the message itself), the closed
    `uploads/account/` if nothing public lives there after batch 0, and the 16 attachments. Probes for both sides and

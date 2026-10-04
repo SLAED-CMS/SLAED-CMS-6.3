@@ -218,7 +218,7 @@ final class EditorWindowTest extends TestCase
         }
         $win = $this->getBody('core/helpers.php', 'getFileManagerWindow');
         $this->assertStringContainsString('static $done = false;', $win, 'The window delivers its runtime again for every editor of a page instead of once');
-        $this->assertStringContainsString("'src' => 'plugins/system/filemanager.js'", $win, 'The window carries no runtime, so it opens beside a form and answers nothing');
+        $this->assertStringContainsString("Editor::getAssetTags([], ['plugins/system/filemanager.js'])", $win, 'The window carries no runtime, so it answers nothing');
         $this->assertStringContainsString(
             "getHtmlPart('file-manager-templates'",
             $win,

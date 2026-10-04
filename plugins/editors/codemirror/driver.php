@@ -15,11 +15,9 @@ class EditorCodemirror implements CodeDriver {
     ];
 
     public function getAssets(string $profile): string {
-        global $tpl;
         if (self::$done) return '';
         self::$done = true;
-        return $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => 'plugins/editors/codemirror/assets/cm6.css', 'type' => '', 'title' => ''])
-            .$tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/editors/codemirror/assets/cm6.bundle.js', 'attr' => '']);
+        return Editor::getAssetTags(['plugins/editors/codemirror/assets/cm6.css'], ['plugins/editors/codemirror/assets/cm6.bundle.js']);
     }
 
     public function getWidget(string $id, string $name, string $value, string $lang, string $profile, string $label): string {
@@ -39,12 +37,11 @@ class EditorCodemirror implements CodeDriver {
             'input_attr' => 'id="'.$eid.'" hidden',
         ]);
         $ta .= $tpl->getHtmlFrag('editor-mount', ['id' => $id.'_cm', 'is_code' => true]);
-        $js = '(function(){var ta=document.getElementById('.$jid.');';
+        $js = 'var ta=el;';
         $js .= 'var view=new CM6.EditorView({state:CM6.EditorState.create({doc:ta.value,extensions:'.$exts.'}),';
         $js .= 'parent:document.getElementById('.$jcm.')});';
         $js .= 'CM6.editors['.$jid.']=view;';
         $js .= 'ta.form&&ta.form.addEventListener("submit",function(){ta.value=view.state.doc.toString();},true);';
-        $js .= '})();';
-        return $ta.$tpl->getHtmlFrag('head-script-inline', ['js' => $js]);
+        return $ta.Editor::getInitScript($id, $js, 'view.destroy();delete CM6.editors['.$jid.'];');
     }
 }

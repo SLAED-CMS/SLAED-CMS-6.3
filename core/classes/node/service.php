@@ -63,6 +63,7 @@ final class NodeService {
     private ?Point $pnt;
     private ?NodeExtension $ext;
     private NodeQuery $query;
+    private bool $idle = false;
 
     # Keep the database, the request context, the shared field system, the shared points of the operations that reward and the extension of the type a material write serves
     public function __construct(Database $db, NodeContext $context, Field $field, ?Point $point = null, ?NodeExtension $ext = null) {
@@ -815,10 +816,7 @@ final class NodeService {
         if (($uid > 0 && $in->aname !== '') || !$this->checkText($in->aname, 25, true)) throw $this->getInvalid('aname');
         $title = trim($in->title);
         if (!$this->checkText($title, 100, false)) throw $this->getInvalid('title');
-        $text = ['intro' => filterTrustedTags($in->intro, $this->ctx->super), 'body' => filterTrustedTags($in->body, $this->ctx->super)];
-        foreach ($text as $key => $val) {
-            if (!mb_check_encoding($val, 'UTF-8') || checkEditorTextRoom($val, 'nodes.'.$key) !== '') throw $this->getInvalid($key);
-        }
+        $text = ['intro' => $this->filterNodeText('intro', $in->intro), 'body' => $this->filterNodeText('body', $in->body)];
         if ($type->ext === '' && $in->ext !== []) throw $this->getInvalid('ext');
         $vals = $in->fields;
         array_walk_recursive($vals, fn(mixed &$v): mixed => $v = is_string($v) ? filterTrustedTags($v, $this->ctx->super) : $v);
@@ -907,6 +905,7 @@ final class NodeService {
 
     # Run one write of Node rows in lock protocol order: the root lock of the type directory with the file checks, the poll locks, the cache guard, BEGIN, the work, COMMIT
     # The final cache generation follows the commit and only then the guard goes; a refusal before BEGIN and a proven rollback free the guard, an unknown outcome keeps it
+    # A closed guard is refused as BLOCKED; a work that wrote nothing says so through the flag idle, and its commit moves no cache generation
     private function setNodeWrite(?NodeType $root, array $polls, ?Closure $files, Closure $work): mixed {
         $lock = false;
         $held = [];
@@ -914,6 +913,7 @@ final class NodeService {
         $step = 'before';
         $res = null;
         $fail = null;
+        $this->idle = false;
         try {
             if ($root !== null && $files !== null) {
                 require_once BASE_DIR.'/core/classes/filemanager.php';
@@ -923,7 +923,7 @@ final class NodeService {
             }
             foreach ($polls as $poll) $held[] = $this->getPollLock($poll);
             $guard = Cache::getWriteGuard();
-            if ($guard === false) throw $this->getStorage('The cache guard cannot be taken');
+            if ($guard === false) throw new NodeException('The cache guard is closed', NodeException::BLOCKED);
             if (!$this->db->setSqlBegin()) throw $this->getStorage('The transaction cannot be started');
             $step = 'open';
             $res = $work();
@@ -934,7 +934,7 @@ final class NodeService {
             if ($step === 'open' && !$this->db->setSqlRollback()) $step = 'unknown';
             $fail = ($err instanceof NodeException) ? $err : new NodeException('A node write failed', NodeException::STORAGE, $err);
         }
-        $bump = $step === 'done' && Cache::addEpoch(true);
+        $bump = $step === 'done' && ($this->idle || Cache::addEpoch(true));
         if ($step === 'done' && !$bump) Logger::addSite('error', 'Node: the cache generation could not be raised after a write', ['type' => $root?->name ?? '']);
         if ($guard !== false && ($bump || $step === 'before' || $step === 'open')) Cache::deleteWriteGuard($guard);
         foreach ($held as $name) $this->db->getSqlQuery('SELECT RELEASE_LOCK(:name)', ['name' => $name]);
@@ -1185,6 +1185,83 @@ final class NodeService {
         $sql = 'SELECT role, COUNT(*) AS num FROM '.PREFIX_DB.'_node_assets WHERE nid = :id GROUP BY role';
         $have = array_column($this->getQueryRes($sql, ['id' => $node->id])->fetchAll(PDO::FETCH_ASSOC), 'num', 'role');
         foreach ($need as $role => $def) if (intval($have[$role] ?? 0) < $def['min']) throw $this->getInvalid('assets.'.$role.'.min');
+    }
+
+    # The stored form of one text of a material, its intro or its body: the trusted tags only the main administrator keeps, valid UTF-8 and the room of its column
+    # The full form and the quick edit both run it, so a text stored either way is one canonical text and an equal one is recognised as equal
+    private function filterNodeText(string $key, string $text): string {
+        $text = filterTrustedTags($text, $this->ctx->super);
+        if (!mb_check_encoding($text, 'UTF-8') || checkEditorTextRoom($text, 'nodes.'.$key) !== '') throw $this->getInvalid($key);
+        return $text;
+    }
+
+    # Whether the context may quick edit one material of a type without an extension: its moderator in every state, its signed-in author in pending or published
+    # The author edits while limits.edit seconds from the creation last on the clock of the database; a material written without an account has no author to match
+    private function checkTextRight(NodeType $type, Node $node, string $now): bool {
+        global $conf;
+        if ($this->ctx->task || $type->ext !== '') return false;
+        if ($this->checkModer($type)) return true;
+        $wait = $conf['node']['limits']['edit'] ?? 0;
+        $own = $this->ctx->uid > 0 && $node->uid === $this->ctx->uid && in_array($node->status, [NodeStatus::Pending, NodeStatus::Published], true);
+        return $own && is_int($wait) && $wait > 0 && strtotime($now) < strtotime($node->created) + $wait;
+    }
+
+    # Read one material for the quick edit with its type and whether the context may edit its texts, or null when it does not exist or its type is not registered
+    # The stored material is answered in every state, because here the right decides, not the public read: an author sees the text he sent back to moderation
+    public function getTextSource(int $id): ?array {
+        if ($id < 1 || $id > self::MAXINT) return null;
+        $sql = 'SELECT n.tid, t.name, NOW() AS now FROM '.PREFIX_DB.'_nodes AS n INNER JOIN '.PREFIX_DB.'_node_types AS t ON t.id = n.tid WHERE n.id = :id';
+        $row = $this->getQueryRes($sql, ['id' => $id])->fetch(PDO::FETCH_ASSOC);
+        $type = $row ? $this->query->getNodeType($row['name']) : null;
+        if ($type === null || $type->id !== intval($row['tid'])) return null;
+        $node = $this->getStoredNode($id, $type, false);
+        return ($node === null) ? null : ['type' => $type, 'node' => $node, 'allow' => $this->checkTextRight($type, $node, $row['now'])];
+    }
+
+    # Change one text of a material, its intro or its body, at the expected version: the quick edit, for a type without an extension only
+    # The text is checked like the full form checks it and its new attachments under the directory lock; under the locks of the type and the material the right is read again
+    # An equal text answers the stored material without a write, no version step, no date, no state and no cache generation, and only then a stale version is a conflict
+    # An author edit of a published material sends it back to moderation in the same write and version step, unless moderation is off or the author publishes directly
+    # Categories, fields, relations, resources and the poll stay as they are; a job of a future publication goes with the move back, and the next approval rewards nothing twice
+    public function updateNodeText(int $id, string $field, string $text, int $version): Node {
+        if (!in_array($field, ['intro', 'body'], true)) throw $this->getInvalid('field');
+        if ($this->ctx->task) throw $this->getDenied('A background context writes no material');
+        ['type' => $type, 'node' => $old, 'allow' => $allow] = $this->getTextSource($id) ?? throw $this->getMissing('The material does not exist');
+        if ($type->ext !== '' || $this->ext !== null) throw $this->getDenied('A type with an extension keeps its full form');
+        if (!$allow) throw $this->getDenied('The context may not edit this material');
+        $canon = $this->filterNodeText($field, $text);
+        $data = ['intro' => ($field === 'intro') ? $canon : $old->intro, 'body' => ($field === 'body') ? $canon : (string)$old->body, 'assets' => []];
+        $files = function () use ($type, &$data, $old): void {
+            $this->checkNodeFiles($type, $data, $old);
+        };
+        return $this->setNodeWrite($type, [], $files, function () use ($type, $id, $field, $canon, $version): Node {
+            $now = $this->getTypeLock($type);
+            $sql = 'SELECT '.self::COLS.' FROM '.PREFIX_DB.'_nodes AS n WHERE n.id = :id AND n.tid = :tid FOR UPDATE';
+            $row = $this->getQueryRes($sql, ['id' => $id, 'tid' => $type->id])->fetch(PDO::FETCH_ASSOC);
+            if (!$row) throw $this->getMissing('The material does not exist');
+            $cur = $this->getNodeModel($row, $type, null);
+            if (!$this->checkTextRight($type, $cur, $now)) throw $this->getDenied('The context may not edit this material');
+            if ($canon === (string)$row[$field]) {
+                $this->idle = true;
+                return $cur;
+            }
+            if ($cur->version !== $version) throw new NodeException('The expected material version is stale', NodeException::CONFLICT);
+            $flow = $type->settings['workflow'];
+            $direct = $this->ctx->uid > 0 && array_intersect($flow['publish'], $this->ctx->groups) !== [];
+            $back = !$this->checkModer($type) && $cur->status === NodeStatus::Published && $type->settings['features']['moderation'] && !$direct;
+            $state = $back ? NodeStatus::Pending : $cur->status;
+            if ($back) $this->checkNodeReady($type, $cur);
+            $sql = match ($field) {
+                'intro' => 'UPDATE '.PREFIX_DB.'_nodes SET intro = :text, status = :status, version = version + 1, updated = :now WHERE id = :id AND version = :ver',
+                'body' => 'UPDATE '.PREFIX_DB.'_nodes SET body = :text, status = :status, version = version + 1, updated = :now WHERE id = :id AND version = :ver',
+            };
+            $this->getQueryRes($sql, ['text' => $canon, 'status' => $state->value, 'now' => $now, 'id' => $id, 'ver' => $version]);
+            if ($back) {
+                $job = $this->getQueryRes('SELECT published FROM '.PREFIX_DB.'_node_publish WHERE nid = :id FOR UPDATE', ['id' => $id])->fetchColumn();
+                $this->setPublishJob($type, $id, $cur->uid, $state, $cur->pubdate, ($job === false) ? null : (string)$job, true, $now);
+            }
+            return $this->getNodeModel(array_replace($row, [$field => $canon, 'status' => $state->value, 'version' => $version + 1, 'updated' => $now]), $type, null);
+        });
     }
 
     # Check a new material exactly like a create would and answer it unsaved, id 0 and version 0, for the preview of a form: rights, workflow, every set, the files and the dates

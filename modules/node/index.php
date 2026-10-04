@@ -27,6 +27,7 @@ function getNodeFault(NodeException $err): string {
         NodeException::INVALID => _NODE_INVALID,
         NodeException::CONFLICT => _NODE_BUSY,
         NodeException::LIMITED => sprintf(_CERROR5, $conf['node']['limits']['send']),
+        NodeException::BLOCKED => _SAVEBUSY,
         default => _NODE_FAILED,
     };
     if ($err->getCode() === NodeException::INVALID && preg_match('/: (?:ext\.(url|refresh)|assets\.([0-9]+)\.src)$/D', $err->getMessage(), $hit)) {
@@ -38,7 +39,7 @@ function getNodeFault(NodeException $err): string {
 # The HTTP status of a refusal by its code
 function getNodeStatus(NodeException $err): int {
     return [NodeException::NOTFOUND => 404, NodeException::DENIED => 403, NodeException::INVALID => 422, NodeException::CONFLICT => 409,
-        NodeException::LIMITED => 429][$err->getCode()] ?? 500;
+        NodeException::LIMITED => 429, NodeException::BLOCKED => 503][$err->getCode()] ?? 500;
 }
 
 # The field codes of a refused field value, when the refusal names one; the service reports the first error by the path fields.<name>.<code>
@@ -457,6 +458,7 @@ function getNodeAssetView(NodeType $type, array $view): string {
 
 # Render one prepared material through the view part of its display mode with the related cards, the facts and menus around it and the data of its extension
 # The poll and the branch of the document tree are rendered apart and handed in; a stored public material is shared, its registered author gets the menu of a profile
+# Its moderator finds the quick edit of the intro and the body before the editor in the dial, its author the quick edit alone while the writer allows him
 function getNodeViewHtml(NodeType $type, Node $node, array $view, string $rels, array $ext = [], array $live = []): string {
     global $tpl, $conf;
     $rows = '';
@@ -467,7 +469,13 @@ function getNodeViewHtml(NodeType $type, Node $node, array $view, string $rels, 
         !empty($conf['privat']['act']) ? ['href' => 'index.php?name=account&op=privat&uname='.urlencode($view['author']), 'title' => _SENDMES, 'icon_name' => 'envelope'] : [],
         ['href' => $view['ahref'], 'title' => _PERSONALINFO, 'icon_name' => 'person'],
     ] : [];
-    return $tpl->getHtmlPart(getNodeTplName('partials', 'view', $type), $view + getNodeViewVars($type) + getNodeMetaVars($type, $node) + [
+    $meta = getNodeMetaVars($type, $node);
+    $ask = getNodeContext();
+    $moder = $node->id > 0 && checkNodeModer($type);
+    $own = !$moder && $type->ext === '' && $node->id > 0 && $ask->uid > 0 && $node->uid === $ask->uid && (getNodeWriter()->getTextSource($node->id)['allow'] ?? false);
+    if ($moder) $meta['moder_html'] = getActionMenu(getNodeModerDial($type, $node, true, true));
+    elseif ($own) $meta['moder_html'] = getActionMenu(getNodeQuickItems($type, $node));
+    return $tpl->getHtmlPart(getNodeTplName('partials', 'view', $type), $view + getNodeViewVars($type) + $meta + [
         'fields_html' => $rows,
         'assets_html' => getNodeAssetView($type, $view),
         'rels_html' => $rels,

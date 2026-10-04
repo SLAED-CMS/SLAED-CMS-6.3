@@ -194,6 +194,7 @@ getters or setters, no subdirectory beside `ext/`.
 | `CONFLICT` | 4 | the expected version is older than the stored one |
 | `STORAGE` | 5 | the storage operation did not complete |
 | `LIMITED` | 6 | the public write window `limits.send` of the same address has not passed |
+| `BLOCKED` | 7 | the write guard of the page cache is closed, nothing was written |
 
 The message is for the log and never reaches a visitor.
 
@@ -268,7 +269,7 @@ resource. Files are delivered through `getFileStream()` and `Cache`, authorized 
 
 `$conf` is read-only for Node; a type write builds the checked package of its four areas from fresh
 configuration inside the locked Closure mode of `setConfigFile()` and never writes `config/local.php`.
-`config/node.php` has the keys `version` (format), `limits` (`maxassets`, `maxlist`, `syncbatch`, `send`),
+`config/node.php` has the keys `version` (format), `limits` (`maxassets`, `maxlist`, `syncbatch`, `send`, `edit`),
 `support` (the maps `state` and `prio`), `defaults` and `types`; its sections are described with the types.
 
 ## Database
@@ -440,7 +441,7 @@ Allowed moves (`NodeStatus::checkStatusMove(self $to): bool`):
 |---|---|
 | `Draft` | `Pending`, `Published`, `Deleted` |
 | `Pending` | `Draft`, `Published`, `Deleted` |
-| `Published` | `Disabled`, `Deleted` |
+| `Published` | `Pending`, `Disabled`, `Deleted` |
 | `Disabled` | `Pending`, `Published`, `Deleted` |
 | `Deleted` | `Disabled` |
 
@@ -1164,6 +1165,8 @@ public function getNodePreview(NodeType $type, NodeInput $input, NodeStatus $sta
 public function addNode(NodeType $type, NodeInput $input, NodeStatus $status): Node
 public function updateNode(int $id, NodeInput $input, int $version): Node
 public function updateNodeStatus(int $id, NodeStatus $status, int $version): Node
+public function getTextSource(int $id): ?array
+public function updateNodeText(int $id, string $field, string $text, int $version): Node
 public function deleteNode(int $id, int $version, Comment $com): void
 ```
 
@@ -1175,6 +1178,7 @@ Rights:
   moderation needs a group of `workflow.publish`. A background context writes no material.
 - Only a moderator of the type changes, moves or deletes: a context moderating no type is refused before any
   statement, a moderator of another type after reading the head. `manage` alone gives no right on materials.
+  The one exception is the quick edit of one text below, which the signed-in author holds too.
 - A non-moderator sets no `poll`, `home`, `pinned`, `pubdate`, `expires`, posts only into categories whose `pview`
   and `ppost` grant him (`DENIED`), relates only to targets the reader returns, and gets `LIMITED` while the last
   material of the same address is younger than `limits.send` seconds (database clock, all types; `0` off; best
@@ -1218,6 +1222,19 @@ role, fit the smaller `maxbytes`, match its kind and belong to the visitor (acco
   compensation of the author's `publish` (`reverse:<rid>`) → `_favorites` → `DELETE`. Sets, relations of both
   directions, the job and extension rows go by `ON DELETE CASCADE`; files stay. A failed compensation is `STORAGE`;
   only `Point::$valid = false` deletes without it and logs a warning.
+- `getTextSource()` answers the stored material in every state with its type and `allow`, or `null`: the right of
+  the quick edit decides who sees it, not the public read, so an author sees the text an edit sent back to
+  moderation.
+- `updateNodeText()` changes `intro` or `body` of a type without an extension (`DENIED` otherwise, `INVALID field`
+  for any other field). The moderator of the type edits in every state; the signed-in author of a `Pending` or
+  `Published` material edits while `limits.edit` seconds from `created` last on the database clock; a material
+  written without an account has no author. The text passes the checks of `intro` / `body` above and a new
+  `[attach]` name the ownership rule, under the directory lock. Under the type lock and the material `FOR UPDATE`
+  the right is decided again, then a text equal to the stored one answers the stored material without a write (no
+  version, no `updated`, no state, no cache generation), and only then a stale version is `CONFLICT`. An author edit
+  of a `Published` material under `features.moderation` without a group of `workflow.publish` moves it to `Pending`
+  in the same write and version step; it needs the readiness of a move to pending, and a job of a future
+  publication goes with it. Categories, fields, relations, resources and the poll stay as they are.
 - After `CONFLICT` nothing is changed; the controller keeps the input and offers the current version as the new
   base. There is no merge and no version-less write.
 
@@ -1334,10 +1351,11 @@ carry the original as `previous`. `Field` throws `InvalidArgumentException`, whi
 | `CONFLICT` | 4 | stale expected version or a lock not obtained | 409 |
 | `STORAGE` | 5 | the storage operation did not complete | 500 |
 | `LIMITED` | 6 | the write window `limits.send` has not passed | 429 |
+| `BLOCKED` | 7 | the write guard of the page cache is closed | 503 |
 
 The values are a stable internal contract; the module picks HTTP codes (`getNodeStatus()` in
 `modules/node/index.php`) and texts by code (`getNodeFault()`: `_NODE_GONE`, `_ACCESSDENIED`, `_NODE_INVALID`,
-`_NODE_BUSY`, `_CERROR5`, else `_NODE_FAILED`). Reads keep answering `null` for missing and closed alike.
+`_NODE_BUSY`, `_CERROR5`, `_SAVEBUSY`, else `_NODE_FAILED`). Reads keep answering `null` for missing and closed alike.
 
 ### Site helpers
 
@@ -1614,7 +1632,7 @@ settings query.
 ```php
 'node' => [
     'version' => '1',
-    'limits' => ['maxassets' => 100, 'maxlist' => 100, 'syncbatch' => 500, 'send' => 60],
+    'limits' => ['maxassets' => 100, 'maxlist' => 100, 'syncbatch' => 500, 'send' => 60, 'edit' => 600],
     'support' => [
         'state' => ['staff' => 0, 'author' => 1, 'closed' => 2],
         'prio' => ['low' => 0, 'normal' => 1, 'high' => 2, 'urgent' => 3],
@@ -1633,6 +1651,7 @@ settings query.
 | `limits.maxlist` | int | 100 | at least 1; ceiling of `list.limit` and of a block limit |
 | `limits.syncbatch` | int | 500 | at least 1; ids per pass towards a shared subsystem, ceiling of relations and extra categories per input |
 | `limits.send` | int | 60 | at least 0; seconds between two public submissions from one IP for a visitor who does not moderate the type, `0` switches the window off |
+| `limits.edit` | int | 600 | at least 0; seconds from `created` in which the signed-in author may quick edit the intro and body of an own pending or published material of a type without extension, `0` switches the author edit off |
 | `support.state`, `support.prio` | map name => int | see above | the only source of ticket states and priorities |
 | `defaults` | map | see sections | shared values; only the eight sections below, never `ext` |
 | `types.<name>.version` | int | - | equals `_node_types.version`; consistency metadata |
@@ -3167,7 +3186,8 @@ runs and reports, then neither the schema file nor any data unit runs.
    settings; moves `maildrain` to the lowest free priority when another job holds its priority. Written only
    when something changed.
 9. On the first run with no failed row so far: the mark `modules`.
-10. `config/newsletter.php` gains missing keys (`abort`, `bouncemax`, `breakwin`, `canary`, `canarymin`).
+10. `config/newsletter.php` gains missing keys (`abort`, `bouncemax`, `breakwin`, `canary`, `canarymin`), and
+    `config/node.php` gains `limits.edit` (`600`) when its `limits` lack it.
 11. `setUpdateMails(..., false)` snapshots the pending newsletter recipients while the column `mails` exists.
 12. A negative balance in `_users.points` (`user_points` on 6.2) becomes 0, since the schema makes the column
     unsigned; the row counts the accounts.

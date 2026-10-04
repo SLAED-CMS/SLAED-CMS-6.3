@@ -104,15 +104,16 @@ final class CommentTrustBoundaryTest extends TestCase
             $code = $this->getSource('core/classes/comment.php', $name, '    ');
             $this->assertStringContainsString('modul FROM \'.PREFIX_DB.\'_comment WHERE id = :id', $code);
             $this->assertStringContainsString('$mod = (string)($row[\'modul\'] ?? \'\');', $code);
-            $this->assertStringContainsString('is_moder($mod)', $code);
+            $this->assertStringContainsString($name === 'updateComment' ? '$this->checkEditRight($mod, ' : 'is_moder($mod)', $code);
             $this->assertStringNotContainsString('getVar(', $code);
         }
+        $this->assertStringContainsString('is_moder($mod)', $this->getSource('core/classes/comment.php', 'checkEditRight', '    '));
         foreach (['setStatus', 'deleteComment'] as $name) {
             $code = $this->getSource('core/classes/comment.php', $name, '    ');
             $this->assertStringContainsString('$cid = $row ? intval($row[\'cid\']) : 0;', $code);
             $this->assertStringContainsString('$this->addTargetCount($cid, $mod);', $code);
         }
-        foreach (['updateComment', 'updateCommentStatus'] as $name) {
+        foreach (['getQuickEdit', 'updateQuickEdit', 'updateCommentStatus'] as $name) {
             $route = $this->getSource('core/system.php', $name);
             $this->assertStringNotContainsString('getVar(\'post\', \'mod\'', $route);
             $this->assertStringNotContainsString('getVar(\'get\', \'mod\'', $route);

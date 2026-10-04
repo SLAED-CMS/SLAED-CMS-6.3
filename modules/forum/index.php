@@ -700,10 +700,8 @@ function view(): void {
                 }
                 $avname = (!empty($nick)) ? $nick : ($val[4] ?: (string)_ANONYM);
                 $avatar = (!empty($nick)) ? getUserAvatarUrl(['avatar' => $avatar]) : getUserAvatarUrl([], (int)$val[3] > 0 && empty($val[4]));
-                $date = $tpl->getHtmlFrag('inline-badge', ['title_text' => _PADD, 'is_comment_date' => true, 'label' => format_time($val[6], _TIMESTRING)]);
-                if (($ismod || $conf['forum']['ledit']) && $val[16]) {
-                    $date .= $tpl->getHtmlFrag('inline-badge', ['title_text' => _PEDIT, 'is_topic_edit' => true, 'label' => format_time($val[16], _TIMESTRING)]);
-                }
+                $body = getForumBody($fid, (string)$val[7], (string)$val[16], $ismod || !empty($conf['forum']['ledit']), $word);
+                $date = $tpl->getHtmlFrag('inline-badge', ['title_text' => _PADD, 'is_comment_date' => true, 'label' => format_time($val[6], _TIMESTRING)]).$body['mark'];
                 $rating = ($pos == 1) ? getRatingAsync(1, $fid, $conf['name'], $val[12], $val[11], '', 1) : '';
                 $ip = ($ismod && $val[13]) ? Geoip::getIpHtml($val[13], true) : '';
                 $amess = $tpl->getHtmlFrag('link', ['href' => '#'.$fid, 'title' => _MESSAGE.': '.$pos, 'label' => (string)$pos, 'is_card_id' => true]);
@@ -749,7 +747,7 @@ function view(): void {
                 $eitems = [];
                 if (checkForumRight($ismod, $isedit, (int)$val[3], (int)$tstatus)) {
                     $eitems[] = [
-                        'href' => 'index.php?go=1&op=updatePost&id='.$fid.'&cid='.$fcat.'&typ=1&mod='.$conf['name'],
+                        'href' => 'index.php?go=1&op=getQuickEdit&kind=forum&id='.$fid.'&field=body',
                         'title' => _ONEDIT,
                         'icon_name' => 'pencil-square',
                         'is_htmx' => true,
@@ -772,8 +770,7 @@ function view(): void {
                     ];
                 }
                 $edit = getActionMenu($eitems);
-                $body_html = filterTextHighlight($prs->filterContent($val[7], false, $conf['name'], 2), $word);
-                $text = $tpl->getHtmlFrag('block-content', ['id' => 'repfor'.$fid, 'content' => $body_html]);
+                $text = $tpl->getHtmlFrag('block-content', ['id' => 'repfor'.$fid, 'is_quick' => true, 'content' => $body['text']]);
                 if ($fields) $text .= filterTextHighlight($fields, $word);
                 $cont .= $tpl->getHtmlFrag('forum-post', [
                     'id' => $fid,

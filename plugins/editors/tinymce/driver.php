@@ -10,10 +10,9 @@ class EditorTinymce implements ContentDriver {
     private const TB_SIMPLE = 'bold italic | link | bullist numlist';
 
     public function getAssets(string $profile): string {
-        global $tpl;
         if (self::$done) return '';
         self::$done = true;
-        return $tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/editors/tinymce/assets/tinymce.min.js', 'attr' => '']);
+        return Editor::getAssetTags([], ['plugins/editors/tinymce/assets/tinymce.min.js']);
     }
 
     public function getWidget(string $id, string $name, string $value, string $profile, array $data = []): string {
@@ -35,13 +34,11 @@ class EditorTinymce implements ContentDriver {
             'describedby' => (string)($data['describedby'] ?? ''),
             'input_attr' => 'id="'.$eid.'"',
         ]);
-        $js = '(function(){var el=document.getElementById('.$jid.');';
-        $js .= 'if(!el||typeof tinymce==="undefined"){return;}';
+        $js = 'if(typeof tinymce==="undefined"){return;}';
         $js .= 'tinymce.init({target:el,placeholder:'.$jph.',license_key:"gpl",base_url:"'.self::BASE_URL.'",';
         $js .= 'suffix:".min",icons:"default",plugins:"'.$pl.'",toolbar:"'.$tb.'",skin:"oxide",';
         $js .= 'promotion:false,branding:false,menubar:false,statusbar:true,';
         $js .= 'init_instance_callback:function(ed){var box=ed.getBody&&ed.getBody();if(box){box.setAttribute("aria-label",'.$jlab.');}}});';
-        $js .= '})();';
-        return $ta.$tpl->getHtmlFrag('head-script-inline', ['js' => $js]);
+        return $ta.Editor::getInitScript($id, $js, 'var ed=tinymce.get('.$jid.');if(ed){ed.remove();}');
     }
 }

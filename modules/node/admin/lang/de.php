@@ -6,6 +6,7 @@
 
 define('_NODE_ACCESS','Wer einreichen darf');
 define('_NODE_ACTIVE','Aktiv');
+define('_NODE_AEDIT','Sekunden nach dem Anlegen, in denen der Autor sein Material schnell bearbeiten darf, 0 — der Autor bearbeitet nicht');
 define('_NODE_AGAIN','Der Beitrag wurde inzwischen geändert, nichts wurde ausgeführt. Öffnen Sie den aktuellen Datensatz und bestätigen Sie die Aktion erneut.');
 define('_NODE_ALPHA','Buchstabenindex');
 define('_NODE_ASSIGN','Zuständig');

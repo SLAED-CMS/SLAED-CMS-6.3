@@ -6,6 +6,7 @@
 
 define('_NODE_ACCESS','Qui peut soumettre');
 define('_NODE_ACTIVE','Active');
+define('_NODE_AEDIT','Secondes après la création pendant lesquelles l\'auteur peut modifier rapidement son contenu, 0 — l\'auteur ne modifie pas');
 define('_NODE_AGAIN','La publication a été modifiée entre-temps, rien n\'a été fait. Ouvrez l\'enregistrement actuel et confirmez l\'action à nouveau.');
 define('_NODE_ALPHA','Index alphabétique');
 define('_NODE_ASSIGN','Responsable');

@@ -21,21 +21,19 @@ class EditorToastUi implements ContentDriver {
         if (self::$done) return '';
         self::$done = true;
         $locale = $this->getLocale();
-        $assets = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => 'plugins/editors/toastui/assets/toastui-editor.min.css', 'type' => '', 'title' => ''])
-            .$tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/editors/toastui/assets/toastui-editor.all.min.js', 'attr' => '']);
-        if ($locale[1] !== '') $assets .= $tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/editors/toastui/assets/i18n/'.$locale[1], 'attr' => '']);
+        $js = ['plugins/editors/toastui/assets/toastui-editor.all.min.js'];
+        if ($locale[1] !== '') $js[] = 'plugins/editors/toastui/assets/i18n/'.$locale[1];
         $ewords = 'plugins/editors/toastui/assets/i18n/emoji-'.substr(_LOCALE, 0, 2).'.js';
-        if (is_file($ewords)) $assets .= $tpl->getHtmlFrag('head-script-src', ['src' => $ewords, 'attr' => '']);
-        $assets .= $tpl->getHtmlPart('editor-toastui-templates', [
+        if (is_file($ewords)) $js[] = $ewords;
+        $js[] = 'plugins/editors/toastui/assets/editor-tags.js';
+        $js[] = 'plugins/editors/toastui/assets/editor-emoji.js';
+        return $tpl->getHtmlPart('editor-toastui-templates', [
             'emoji_label' => _EEMOJI,
             'close_label' => _CLOSE,
             'move_label' => _EMOVEWIN,
             'expand_label' => _EEXPAND,
             'restore_label' => _ERESTORE,
-        ]);
-        return $assets
-            .$tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/editors/toastui/assets/editor-tags.js', 'attr' => ''])
-            .$tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/editors/toastui/assets/editor-emoji.js', 'attr' => '']);
+        ]).Editor::getAssetTags(['plugins/editors/toastui/assets/toastui-editor.min.css'], $js);
     }
 
     # Render one editor instance together with the single image and file window that replaces the vendor image dialog and the former file catalogue
@@ -202,8 +200,8 @@ class EditorToastUi implements ContentDriver {
             ]),
         ]);
         $jopt = json_encode($opt, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        $js = '(function(){var ta=document.getElementById('.$jid.');var root=window.toastui&&window.toastui.Editor;';
-        $js .= 'if(!ta||!root){return;}';
+        $js = 'var ta=el;var root=window.toastui&&window.toastui.Editor;';
+        $js .= 'if(!root){return;}';
         $js .= 'var ed=new root({el:document.getElementById('.$jid.'+"_toast"),';
         $js .= 'initialEditType:'.$mode.',initialValue:'.$jval.',placeholder:'.$jph.',height:'.$h.',language:'.$lang.',autofocus:'.$focus.',usageStatistics:false});';
         $js .= 'var mnt=document.getElementById('.$jid.'+"_toast");';
@@ -223,7 +221,8 @@ class EditorToastUi implements ContentDriver {
         $js .= 'var sync=function(){ta.value=ed.getMarkdown();};';
         $js .= 'ed.on("change",sync);ed.on("blur",sync);';
         $js .= 'ta.form&&ta.form.addEventListener("submit",sync,true);';
-        $js .= '})();';
-        return $ta.$panel.$tpl->getHtmlFrag('head-script-inline', ['js' => $js]);
+        $kill = 'if(window.SlaedFileManager&&window.SlaedFileManager.deleteUpload){window.SlaedFileManager.deleteUpload('.$jid.');}'
+            .'if(window.SlaedToastUi&&window.SlaedToastUi.unregister){window.SlaedToastUi.unregister('.$jid.');}else{ed.destroy();}';
+        return $ta.$panel.Editor::getInitScript($id, $js, $kill);
     }
 }

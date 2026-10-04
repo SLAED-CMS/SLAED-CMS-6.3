@@ -68,7 +68,7 @@ final class NodeServiceTest extends TestCase
     }
 
     # The writer carries exactly the approved public operations: the four of a type and the import, the four of a material, the preview, the counters
-    # It also carries the three of a resource, the file of an attachment, publication delivery, three category writes and the registry
+    # It also carries the three of a resource, the file of an attachment, publication delivery, three category writes, the registry and the quick edit of one text
     # The constructor takes the nullable points and extension of 05
     #[Test]
     public function theWriterHasTheApprovedOperationsAndNothingElse(): void
@@ -97,6 +97,7 @@ final class NodeServiceTest extends TestCase
             'getNodeFile' => ['NodeType type', 'int id', 'string key', 'bool thumb', 'Comment com', 'string'],
             'getNodePreview' => ['NodeType type', 'NodeInput input', 'NodeStatus status', 'Node'],
             'getNodeRemains' => ['array'],
+            'getTextSource' => ['int id', '?array'],
             'setTargetLock' => ['int id', 'NodeType type', 'void'],
             'updateNode' => ['int id', 'NodeInput input', 'int version', 'Node'],
             'updateNodeAssetHits' => ['int id', 'NodeType type', 'void'],
@@ -106,6 +107,7 @@ final class NodeServiceTest extends TestCase
             'updateNodePublishList' => ['int limit = 50', 'array'],
             'updateNodeRating' => ['int id', 'NodeType type', 'int score', 'int ratings', 'void'],
             'updateNodeStatus' => ['int id', 'NodeStatus status', 'int version', 'Node'],
+            'updateNodeText' => ['int id', 'string field', 'string text', 'int version', 'Node'],
             'updateNodeType' => ['string name', 'NodeTypeInput input', 'int version', 'NodeType'],
             'updateNodeTypeStatus' => ['string name', 'bool active', 'int version', 'NodeType'],
             'updateNodeViews' => ['int id', 'NodeType type', 'void'],
@@ -219,7 +221,7 @@ final class NodeServiceTest extends TestCase
     public function theStateMachineFollowsTheMatrix(): void
     {
         $run = $this->getRuns()['status'];
-        $allow = ['Draft' => ['Pending', 'Published', 'Deleted'], 'Pending' => ['Draft', 'Published', 'Deleted'], 'Published' => ['Disabled', 'Deleted'],
+        $allow = ['Draft' => ['Pending', 'Published', 'Deleted'], 'Pending' => ['Draft', 'Published', 'Deleted'], 'Published' => ['Pending', 'Disabled', 'Deleted'],
             'Disabled' => ['Pending', 'Published', 'Deleted'], 'Deleted' => ['Disabled']];
         foreach ($allow as $from => $list) {
             foreach (array_keys($allow) as $to) {
@@ -242,6 +244,36 @@ final class NodeServiceTest extends TestCase
         $this->assertSame([['uid' => 3, 'aid' => 2, 'scope' => 'node.news', 'points' => 1, 'rid' => null]], $run['moderate']['sub'],
             'The approval of a foreign material did not reward its moderator exactly once, or a second approval rewarded again');
         $this->assertSame([[], []], [$run['moderate']['own'], $run['moderate']['draft']], 'An own material or a publication without review rewarded the moderator');
+        $this->assertSame(0, $run['guards']);
+    }
+
+    # Quick edit: the moderator in every state, the signed-in author of a pending or published material inside limits.edit, nobody for a material without an account
+    # An author edit of a published material goes back to moderation in one version step, the next approval awards nothing twice and no job is left behind
+    #[Test]
+    public function aQuickEditChangesOneTextUnderTheRightAndTheVersion(): void
+    {
+        $run = $this->getRuns()['text'];
+        $this->assertSame(['anna' => true, 'boris' => false, 'guest' => false, 'moder' => true, 'missing' => null], $run['source']);
+        $this->assertInvalid($run['field'], 'field');
+        $this->assertSame(['Pending', 1, 'Body by anna', true], $run['back'], 'An author edit of a published material did not go back to moderation in one step');
+        $this->assertSame([true, true, 'Pending', true], array_slice($run['repeat'], 0, 4), 'The repeat of a stored save moved the version, the date, the state or the cache');
+        $this->assertLessThanOrEqual(6, $run['repeat'][4], 'The repeat of a stored save ran more than its reads and its locks');
+        $this->assertRefused($run['conflict'], 4, 'The expected material version is stale');
+        $this->assertSame(['Published', 1], $run['award'], 'The approval after the move back awarded the publication twice or took it back');
+        $this->assertSame([true, 'Pending', true], $run['job'], 'The move back left the job of a future publication behind');
+        $this->assertInvalid($run['room'], 'intro');
+        $this->assertInvalid($run['attach'], 'attach.owner');
+        $this->assertSame(['ok' => true, 'value' => 'Pending'], $run['own'], 'An attachment of the author was refused');
+        $this->assertSame([true, 1, 'Intro by the moderator'], $run['moder'], 'A moderator edit moved the state or did not take one version step');
+        $this->assertSame([true, true, true, true, true, true, true], $run['sets'], 'A quick edit touched what it does not edit');
+        $this->assertSame('Published', $run['direct'], 'An author who publishes directly was sent back to moderation');
+        $this->assertRefused($run['window'][0], 2, 'The context may not edit this material');
+        $this->assertSame([false, true], array_slice($run['window'], 1), 'The closed window refused the moderator or kept the author');
+        $this->assertFalse($run['off'], 'A window of zero still let the author edit');
+        $this->assertFalse($run['anon'][0]);
+        $this->assertRefused($run['anon'][1], 2, 'The context may not edit this material');
+        $this->assertRefused($run['ext'][0], 2, 'A type with an extension keeps its full form');
+        $this->assertFalse($run['ext'][1]);
         $this->assertSame(0, $run['guards']);
     }
 

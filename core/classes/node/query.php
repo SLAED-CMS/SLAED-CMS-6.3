@@ -204,9 +204,9 @@ final class NodeQuery {
     private function getNodeLimits(mixed $node): array {
         if (!is_array($node) || ($node['version'] ?? null) !== '1' || !is_array($node['limits'] ?? null)) return [];
         $out = [];
-        foreach (['maxassets', 'maxlist', 'syncbatch', 'send'] as $key) {
+        foreach (['maxassets', 'maxlist', 'syncbatch', 'send', 'edit'] as $key) {
             $val = $node['limits'][$key] ?? null;
-            if (!is_int($val) || $val < ($key === 'send' ? 0 : 1)) return [];
+            if (!is_int($val) || $val < (in_array($key, ['send', 'edit'], true) ? 0 : 1)) return [];
             $out[$key] = $val;
         }
         return $out;

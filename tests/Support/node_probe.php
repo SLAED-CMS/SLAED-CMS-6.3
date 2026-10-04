@@ -413,7 +413,7 @@ function getProbeNodeConf(int $stale): array {
     $plain = ['features' => getProbeFeatures([])];
     return ['node' => [
         'version' => '1',
-        'limits' => ['maxassets' => 100, 'maxlist' => 100, 'syncbatch' => 500, 'send' => 0],
+        'limits' => ['maxassets' => 100, 'maxlist' => 100, 'syncbatch' => 500, 'send' => 0, 'edit' => 600],
         'support' => ['state' => ['staff' => 0, 'author' => 1, 'closed' => 2], 'prio' => ['low' => 0, 'normal' => 1, 'high' => 2, 'urgent' => 3]],
         'defaults' => [
             'list' => ['orders' => ['published'], 'order' => 'published', 'dir' => 'desc', 'limit' => 10, 'alpha' => false, 'show' => ['category', 'author', 'date', 'views']],
@@ -2238,6 +2238,67 @@ function getProbeReach(NodeType $type, NodeStatus $want, array $over = []): Node
     return $node;
 }
 
+# Quick edit of one text: who may edit, the author window, a material without an account, the move back to moderation and the award of the next approval
+# Then the version, an equal text and the repeat of a stored save without a write, the room, a foreign attachment, a type with an extension and the sets left alone
+function getProbeMatText(): array {
+    [$news, $hook] = [getProbeMatType('news'), getProbeMatType('hook')];
+    $root = getProbeWriter('root');
+    $anna = getProbeWriter('anna');
+    $keep = $GLOBALS['conf']['node']['limits']['edit'] ?? null;
+    $GLOBALS['conf']['node']['limits']['edit'] = 600;
+    $epoch = fn(): string => is_file(COUNTER_DIR.'/cache.log') ? (string)file_get_contents(COUNTER_DIR.'/cache.log') : '';
+    $sql = 'SELECT COUNT(*) FROM '.PREFIX_DB.'_points WHERE action = :act AND source = :src';
+    $award = fn(int $id): int => intval($GLOBALS['pdb']->getSqlQuery($sql, ['act' => 'publish', 'src' => 'node:'.$id])->fetchColumn());
+    $sub = $anna->addNode($news, getProbeIn(['cid' => 10]), NodeStatus::Pending);
+    $pub = $root->updateNodeStatus($sub->id, NodeStatus::Published, $sub->version);
+    $allow = fn(string $who): ?bool => getProbeWriter($who)->getTextSource($pub->id)['allow'] ?? null;
+    $out = ['source' => ['anna' => $allow('anna'), 'boris' => $allow('boris'), 'guest' => $allow('guest'), 'moder' => $allow('moder'), 'missing' => $anna->getTextSource(999999)]];
+    $out['field'] = getProbeCall(fn(): Node => $anna->updateNodeText($pub->id, 'title', 'Title', $pub->version));
+    $back = $anna->updateNodeText($pub->id, 'body', 'Body by anna', $pub->version);
+    $out['back'] = [$back->status->name, $back->version - $pub->version, getProbeStored($pub->id, 'news')['body'] ?? null, getProbeJob($pub->id) === null];
+    $before = $epoch();
+    $num = $GLOBALS['pdb']->qnum;
+    $rep = $anna->updateNodeText($pub->id, 'body', 'Body by anna', $pub->version);
+    $out['repeat'] = [$rep->version === $back->version, $rep->updated === $back->updated, $rep->status->name, $epoch() === $before, $GLOBALS['pdb']->qnum - $num];
+    $out['conflict'] = getProbeCall(fn(): Node => $anna->updateNodeText($pub->id, 'body', 'Body again', $pub->version));
+    $again = $root->updateNodeStatus($pub->id, NodeStatus::Published, $back->version);
+    $out['award'] = [$again->status->name, $award($pub->id)];
+    $wait = $anna->addNode($news, getProbeIn(['cid' => 10]), NodeStatus::Pending);
+    $wait = $root->updateNode($wait->id, getProbeKeepIn(getProbeMatNode($wait->id, 'news'), ['pubdate' => getProbeClock(3600)]), $wait->version);
+    $wait = $root->updateNodeStatus($wait->id, NodeStatus::Published, $wait->version);
+    $held = getProbeJob($wait->id) !== null;
+    $out['job'] = [$held, $anna->updateNodeText($wait->id, 'body', 'Body before its date', $wait->version)->status->name, getProbeJob($wait->id) === null];
+    $out['room'] = getProbeCall(fn(): Node => $anna->updateNodeText($pub->id, 'intro', str_repeat('a', 70000), $again->version));
+    $out['attach'] = getProbeCall(fn(): Node => $anna->updateNodeText($pub->id, 'body', 'See [attach=photo-bcdefghijk-3.png align=left title=Photo]', $again->version));
+    $own = getProbeCall(fn(): string => $anna->updateNodeText($pub->id, 'body', 'See [attach=photo-abcdefghij-2.png align=left title=Photo]', $again->version)->status->name);
+    $out['own'] = $own;
+    $cur = getProbeMatNode($pub->id, 'news');
+    $mod = getProbeWriter('moder')->updateNodeText($pub->id, 'intro', 'Intro by the moderator', $cur->version);
+    $after = getProbeMatNode($pub->id, 'news');
+    $out['moder'] = [$mod->status === $cur->status, $mod->version - $cur->version, $after->intro];
+    $out['sets'] = [$cur->cids === $after->cids, $cur->rels === $after->rels, count($cur->assets ?? []) === count($after->assets ?? []), $cur->fields === $after->fields,
+        $cur->poll === $after->poll, $cur->title === $after->title, $cur->body === $after->body];
+    $direct = getProbeWriter('boris')->addNode($news, getProbeIn(['cid' => 10]), NodeStatus::Published);
+    $out['direct'] = getProbeWriter('boris')->updateNodeText($direct->id, 'body', 'Body by boris', $direct->version)->status->name;
+    $GLOBALS['pdb']->getSqlQuery('UPDATE '.PREFIX_DB.'_nodes SET created = NOW() - INTERVAL 1 HOUR WHERE id = :id', ['id' => $pub->id]);
+    $late = getProbeMatNode($pub->id, 'news');
+    $out['window'] = [getProbeCall(fn(): Node => $anna->updateNodeText($pub->id, 'body', 'Too late', $late->version)), $allow('anna'), $allow('moder')];
+    $GLOBALS['conf']['node']['limits']['edit'] = 0;
+    $fresh = $anna->addNode($news, getProbeIn(['cid' => 10]), NodeStatus::Pending);
+    $out['off'] = getProbeWriter('anna')->getTextSource($fresh->id)['allow'] ?? null;
+    $GLOBALS['conf']['node']['limits']['edit'] = 600;
+    $anon = $root->addNode($news, getProbeIn(['aname' => 'Gast']), NodeStatus::Published);
+    $out['anon'] = [getProbeWriter('guest')->getTextSource($anon->id)['allow'] ?? null, getProbeCall(fn(): Node => getProbeWriter('guest')->updateNodeText($anon->id, 'body',
+        'Body by a guest', $anon->version))];
+    require_once $GLOBALS['probework'].'/mclass/ext/load.php';
+    $hand = getNodeExtension('hook', $GLOBALS['pdb'], getProbeMatContext('mixed'));
+    $ext = getProbeWriter('mixed', null, $hand)->addNode($hook, getProbeIn(['ext' => ['note' => 'a']]), NodeStatus::Draft);
+    $out['ext'] = [getProbeCall(fn(): Node => $root->updateNodeText($ext->id, 'body', 'Body', $ext->version)), $root->getTextSource($ext->id)['allow'] ?? null];
+    $out['guards'] = getProbeMatCount()['guards'];
+    $GLOBALS['conf']['node']['limits']['edit'] = $keep;
+    return $out;
+}
+
 # States: every pair of the matrix, the repeat without a write, readiness of fields and resources, and the statements of a move with and without a job
 function getProbeMatStatus(): array {
     [$news, $files] = [getProbeMatType('news'), getProbeMatType('files')];
@@ -2838,6 +2899,7 @@ function getProbeMaterialRuns(): array {
     $out['create'] = getProbeMatCreate();
     $out['update'] = getProbeMatUpdate();
     $out['status'] = getProbeMatStatus();
+    $out['text'] = getProbeMatText();
     $out['delete'] = getProbeMatDelete();
     $out['sets'] = getProbeMatSets();
     $out['files'] = getProbeMatFiles();
