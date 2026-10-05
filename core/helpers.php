@@ -957,7 +957,7 @@ function getTplEditMenu(string $edithref, string $delhref, string $title): array
     $pars = [];
     parse_str($parts[1] ?? '', $pars);
     unset($pars['token']);
-    $pars['token'] = getPageToken();
+    $pars['token'] = getSiteToken();
     $hide = '';
     foreach ($pars as $key => $val) {
         $hide .= $tpl->getHtmlFrag('hidden', ['name_attr' => (string)$key, 'value_attr' => (string)$val, 'input_attr' => '']);
@@ -1060,7 +1060,7 @@ function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $sc
         'target_id' => 'rep'.$id.$obj,
         'mod' => strtolower((string)$mod),
         'mid' => (string)intval($id),
-        'token' => $live ? getPageToken() : '',
+        'token' => $live ? getSiteToken() : '',
         'is_live' => $live,
     ] + $part);
     if ($typ == 2) return $body;

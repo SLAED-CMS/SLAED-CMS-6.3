@@ -518,7 +518,6 @@ define('_RSS_PROBLEM','There is a problem with headers!');
 define('_RULES','Rules at registration of users');
 define('_RUSSIAN','Russian');
 define('_SAVE','Save');
-define('_SAVEBUSY','Saving is not available right now, please try again later.');
 define('_SAVECHANGES','Save Changes');
 define('_SUCCSAVE','Changes were saved successfully.');
 define('_SUCCDELETE','The object was deleted successfully.');

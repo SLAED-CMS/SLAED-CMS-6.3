@@ -10,7 +10,7 @@ return [
         'cron_timeout' => '600',
         'jobs' => [
             'cachegc' => [
-                'title' => 'Page cache cleanup',
+                'title' => 'Cache cleanup',
                 'type' => 'system',
                 'active' => '1',
                 'system' => 'cachegc',

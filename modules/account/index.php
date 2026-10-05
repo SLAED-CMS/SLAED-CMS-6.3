@@ -15,7 +15,7 @@ function account(): void {
         profil();
     } else {
         setHead(['title' => _USERREGLOGIN]);
-        $captcha = getPageCaptcha('login');
+        $captcha = getCaptcha('login');
         $cont = $tpl->getHtmlFrag('title', ['title' => _USERREGLOGIN, 'is_level_one' => true]);
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
         $fields = $tpl->getHtmlFrag('form-field-row', [
@@ -105,7 +105,7 @@ function newuser(): void {
             $nick = ($nick) ? filterText(substr($nick, 0, 25)) : '';
             $mail = getVar('post', 'mail', 'text');
             $mail = ($mail) ? filterText($mail) : '';
-            $captcha = getPageCaptcha('register');
+            $captcha = getCaptcha('register');
             $fields = $tpl->getHtmlFrag('form-field-row', [
                 'label_for' => 'f-'.$unkey,
                 'label' => _NICKNAME,
@@ -918,7 +918,7 @@ function setUserLogin(int $uid, string $name, string $pass, int $story, int $blo
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET ip = :ip, lastvis = NOW(), agent = :agent WHERE id = :id', ['ip' => $uip, 'agent' => getAgent(), 'id' => $uid]);
     $pnt->addEvent('login', 'account', 'day:'.gmdate('Ymd'), $uid);
     Captcha::clearLoginFailures('user');
-    addLoginReport(0, 1, $name, '');
+    addLoginReport(0, 1, $name);
 }
 
 function login(): void {
@@ -943,7 +943,7 @@ function login(): void {
         setRedirect('index.php?name='.$conf['name'].'&op=profil', true);
     } else {
         Captcha::registerLoginFailure('user');
-        addLoginReport(0, 0, $uname, $upass);
+        addLoginReport(0, 0, $uname);
         account();
     }
 }
@@ -1730,7 +1730,7 @@ function oauthfinish(): void {
             'create_text' => _OAUTHNEWT,
             'login_label' => _USERLOGIN,
             'create_label' => _NEWUSER,
-            'captcha' => getPageCaptcha('login'),
+            'captcha' => getCaptcha('login'),
             'token' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
             'action' => 'index.php?name='.$conf['name'],
         ]);
@@ -1767,7 +1767,7 @@ function oauthfinish(): void {
         $badcap = checkCaptcha('login');
         if ($badcap || !$uname || !$upass || !is_array($urow) || empty($urow['id']) || !checkPassHash($upass, (string)$urow['password'])) {
             Captcha::registerLoginFailure('user');
-            addLoginReport(0, 0, $uname, $upass);
+            addLoginReport(0, 0, $uname);
             Oauth::setLog('link_login_failed', $prov);
             oauthretry(_LOGININCOR);
         }

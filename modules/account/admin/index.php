@@ -1265,8 +1265,7 @@ function delete(): void {
     if (!$iswarn) {
         $id = getVar('post', 'id', 'num');
         if ($id) {
-            $guard = Cache::getWriteGuard();
-            $open = $guard !== false && $db->setSqlBegin();
+            $open = $db->setSqlBegin();
             $done = $open
                 && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $id]) !== false
                 && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE uid = :id', ['id' => $id]) !== false
@@ -1274,8 +1273,7 @@ function delete(): void {
                 && $com->deleteUser($id)
                 && $prv->deleteUser($id)
                 && $db->setSqlCommit();
-            $back = $open && !$done && $db->setSqlRollback();
-            if ($guard !== false && (!$open || $back || ($done && Cache::addEpoch(true)))) Cache::deleteWriteGuard($guard);
+            if ($open && !$done) $db->setSqlRollback();
         }
     }
     setRedirect($afile.'.php?name=account', false, 302, $iswarn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), $iswarn || !$done);

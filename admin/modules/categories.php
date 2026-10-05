@@ -47,6 +47,7 @@ function fix(): void {
             $ordern++;
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET ordern = :ordern WHERE id = :id', ['ordern' => $ordern, 'id' => $id]);
         }
+        deleteCategoryMap($modul);
     }
     setRedirect($afile.'.php?name=categories&modul='.$modul, false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
@@ -577,7 +578,6 @@ function addsave(): void {
             $text = match ($err->getCode()) {
                 NodeException::CONFLICT => sprintf(_NODE_STALE, $label),
                 NodeException::STORAGE => _ERROR_UP,
-                NodeException::BLOCKED => _SAVEBUSY,
                 default => sprintf(_NODE_BAD, $label),
             };
         }
@@ -587,6 +587,7 @@ function addsave(): void {
         $keys = array_keys($row);
         $sql = 'INSERT INTO '.PREFIX_DB.'_categories ('.implode(', ', $keys).', ordern) VALUES (:'.implode(', :', $keys).', :ordern)';
         $db->getSqlQuery($sql, $row + ['ordern' => intval($ordern) + 1]);
+        deleteCategoryMap($modul);
     }
     setRedirect($afile.'.php?name=categories&modul='.$modul, false, 302, $text, $warn);
 }
@@ -621,7 +622,6 @@ function save(): void {
             $text = match ($err->getCode()) {
                 NodeException::CONFLICT => sprintf(_NODE_STALE, $label),
                 NodeException::STORAGE => _ERROR_UP,
-                NodeException::BLOCKED => _SAVEBUSY,
                 default => sprintf(_NODE_BAD, $label),
             };
         }
@@ -636,6 +636,8 @@ function save(): void {
     if (!$node && !$warn) {
         $set = implode(', ', array_map(fn(string $v): string => $v.' = :'.$v, array_keys($row)));
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET '.$set.' WHERE id = :id', $row + ['id' => $id]);
+        deleteCategoryMap($modul);
+        if ($was !== $modul) deleteCategoryMap($was);
     }
     setRedirect($afile.'.php?name=categories&modul='.$modul, false, 302, $text, $warn);
 }
@@ -661,7 +663,6 @@ function change(): void {
             $text = match ($err->getCode()) {
                 NodeException::CONFLICT => sprintf(_NODE_STALE, $label),
                 NodeException::STORAGE => _ERROR_UP,
-                NodeException::BLOCKED => _SAVEBUSY,
                 default => sprintf(_NODE_BAD, $label),
             };
         }
@@ -690,7 +691,6 @@ function delete(): void {
             $text = match ($err->getCode()) {
                 NodeException::CONFLICT => sprintf(_NODE_STALE, htmlspecialchars($was, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')),
                 NodeException::STORAGE => _ERROR_UP,
-                NodeException::BLOCKED => _SAVEBUSY,
                 default => _INFOCATDEL,
             };
         }
@@ -698,6 +698,7 @@ function delete(): void {
     if (!$node) {
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_categories WHERE id = :id', ['id' => $id]);
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_categories WHERE parent = :id', ['id' => $id]);
+        deleteCategoryMap($was);
     }
     setRedirect($afile.'.php?name=categories&modul='.$modul, false, 302, $text, $warn);
 }

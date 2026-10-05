@@ -327,16 +327,8 @@ function chlogBuildExport(array $commits, string $format): string {
 }
 
 function chlogReadCache(string $key): ?array {
-    $file = CACHE_DIR.'/changelog/'.sha1($key).'.json';
-    if (!is_file($file)) return null;
-
-    $json = file_get_contents($file);
-    if ($json === false) return null;
-
-    $cache = json_decode($json, true);
-    if (!$cache || !isset($cache['meta'], $cache['data'])) return null;
-
-    return $cache;
+    $cache = json_decode(Cache::getBody(Cache::getFile(['changelog', $key], 'json')), true);
+    return (is_array($cache) && isset($cache['meta'], $cache['data'])) ? $cache : null;
 }
 
 function chlogGetCache(string $key): ?array {
@@ -352,11 +344,6 @@ function chlogGetCache(string $key): ?array {
 }
 
 function chlogSetCache(string $key, mixed $data, string $url = '', string $etag = '', string $lastmod = ''): void {
-    $dir = CACHE_DIR.'/changelog';
-    if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) return;
-
-    $file = $dir.'/'.sha1($key).'.json';
-    $tmpfile = $file.'.tmp';
     $ttl = CHLOG_DEFAULT_CACHE_TTL;
 
     global $conf;
@@ -378,15 +365,7 @@ function chlogSetCache(string $key, mixed $data, string $url = '', string $etag 
     $json = json_encode($cache, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if ($json === false) return;
 
-    if (file_put_contents($tmpfile, $json, LOCK_EX) !== false && is_file($tmpfile)) {
-        if (!@rename($tmpfile, $file)) {
-            if (@copy($tmpfile, $file)) {
-                @unlink($tmpfile);
-            } elseif (file_exists($tmpfile)) {
-                @unlink($tmpfile);
-            }
-        }
-    }
+    Cache::setBody(Cache::getFile(['changelog', $key], 'json'), $json);
 }
 
 function chlogPlainFilters(array $filters): bool {

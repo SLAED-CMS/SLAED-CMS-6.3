@@ -141,18 +141,13 @@ class Oauth {
         return $data['data'];
     }
 
-    # Returns the provider JWKS key list from a 24h file cache; force bypasses the cache, network errors fall back to stale cache
+    # Returns the provider JWKS key list from the data cache, fresh for 24h by the file time; force bypasses it, a network error falls back to the stale list
     public static function getJwksKeys(string $prov, bool $force = false): array {
         global $conf;
-        $file = CACHE_DIR.'/jwks_'.preg_replace('/[^a-z]/', '', $prov).'.json';
-        $stale = [];
-        if (is_file($file)) {
-            $json = json_decode((string)file_get_contents($file), true);
-            if (is_array($json) && isset($json['time'], $json['keys'])) {
-                $stale = $json['keys'];
-                if (!$force && (time() - (int)$json['time']) < 86400) return $stale;
-            }
-        }
+        $file = Cache::getFile(['jwks', $prov], 'json');
+        $json = json_decode(Cache::getBody($file), true);
+        $stale = (is_array($json) && is_array($json['keys'] ?? null)) ? $json['keys'] : [];
+        if ($stale && !$force && Cache::isFresh($file, 86400)) return $stale;
         $data = self::getHttp((string)($conf['oauth'][$prov]['jwks'] ?? ''));
         if (!$data['ok'] || empty($data['data']['keys']) || !is_array($data['data']['keys'])) {
             if ($stale) {
@@ -162,14 +157,7 @@ class Oauth {
             throw new RuntimeException('jwks_unavailable');
         }
         $keys = $data['data']['keys'];
-        $json = json_encode(['time' => time(), 'keys' => $keys], JSON_UNESCAPED_SLASHES);
-        $tmp = $file.'.'.getmypid().'.tmp';
-        if (is_string($json) && file_put_contents($tmp, $json, LOCK_EX) !== false) {
-            if (!rename($tmp, $file)) {
-                if (is_file($file)) unlink($file);
-                rename($tmp, $file);
-            }
-        }
+        Cache::setBody($file, (string)json_encode(['keys' => $keys], JSON_UNESCAPED_SLASHES));
         return $keys;
     }
 

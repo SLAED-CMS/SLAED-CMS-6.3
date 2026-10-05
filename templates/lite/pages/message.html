@@ -23,7 +23,10 @@
       <button type="submit" class="sl-search-btn sl-circle-action" aria-label="{{ search }}" title="{{ search }}"><i class="bi bi-search" aria-hidden="true"></i></button>
     </form>
     {% endif %}
-    {% if license %}<div class="sl-msg-foot">{{{ license }}}</div>{% endif %}
+    {% if license %}
+    <div class="sl-msg-line"></div>
+    <div class="sl-msg-foot">{{{ license }}}</div>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

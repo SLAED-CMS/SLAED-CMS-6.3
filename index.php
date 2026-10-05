@@ -36,7 +36,7 @@ if (empty($go) && $op === 'newlang') {
 # The ajax writes that answer only a POST refuse any other method before the token, so a followed link reads as the wrong method it is and not as a lost token
 # The scheduler releases the session lock so long-running jobs do not block parallel requests of the same visitor
 if (empty($go)) {
-    Cache::setHeaders(false);
+    Cache::setHeaders();
     if ($conf['alang']) {
         $coun = Geoip::getCountry(getIp());
         if ($coun !== '' && !is_bot() && empty(getCookies('language'))) {
@@ -150,7 +150,7 @@ if (empty($go)) {
         || (($go == 1 || $go == 5) && $op === 'getUserSessionAdminInfo');
     if ($go == 1 && in_array($op, ['addComment', 'updateCommentStatus', 'deleteComment', 'addPrivateMessage',
         'setPrivateMessageRead', 'updatePrivatBox', 'addFavorite', 'deleteFavorite'], true) && ($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-        Cache::setHeaders(false);
+        Cache::setHeaders();
         header('Allow: POST');
         http_response_code(405);
         die($tpl->getHtmlFrag('alert', ['text' => _ERROR, 'is_warn' => true]));
@@ -162,7 +162,7 @@ if (empty($go)) {
         if (!($go == 4 && $fdsize) && !checkSiteToken($tok)) die($tpl->getHtmlFrag('alert', ['text' => _TOKENMISS, 'is_warn' => true]));
     }
     if ($go == 1) {
-        Cache::setHeaders(false);
+        Cache::setHeaders();
         switch($op) {
             case 'getRatingView': getRatingView(); break;
             case 'getUserSessionAdminInfo': getUserSessionAdminInfo(); break;
@@ -186,9 +186,8 @@ if (empty($go)) {
             case 'getVotingView': echo getVotingView(); break;
             case 'updateVotingResult': updateVotingResult(); break;
         }
-        if ($op === 'updateVotingResult') Cache::addEpoch();
     } elseif ($go == 3) {
-        Cache::setHeaders(false);
+        Cache::setHeaders();
         switch($op) {
             case 'scheduler':
             header('Content-Type: application/json; charset=UTF-8');
@@ -208,7 +207,7 @@ if (empty($go)) {
             exit;
         }
     } elseif ($go == 4) {
-        Cache::setHeaders(false);
+        Cache::setHeaders();
         $place = getVar('get', 'place', 'raw', '');
         if ($place) {
             switch($op) {
@@ -235,7 +234,7 @@ if (empty($go)) {
         if (isAdmin(true)) {
             define('ADMIN_FILE', true);
             getLang('admin');
-            Cache::setHeaders(false);
+            Cache::setHeaders();
             require_once BASE_DIR.'/core/admin.php';
             $tpl = new Template('admin');
             switch($op) {
@@ -258,23 +257,15 @@ if (empty($go)) {
     $cvar = explode(',', $conf['variables']);
     if (!$cvar[0] && is_moder()) echo getTimedHtml(getVariables());
 } elseif ($go == 'rss') {
-    Cache::setHeaders(false);
+    Cache::setHeaders();
     echo getRssChannel();
 } elseif ($go == 'search') {
-    Cache::setHeaders(true, Cache::STATICDAYS);
+    Cache::setHeaders('public');
     echo getOpenSearch();
 } elseif ($go == 'xsl') {
-    Cache::setHeaders(true, Cache::STATICDAYS, 'text/xsl');
+    Cache::setHeaders('public', 'text/xsl');
     echo getOpenXsl();
-} elseif ($go == 'asset') {
-    $hash = getVar('req', 'file', 'var');
-    $type = getVar('req', 'type', 'var');
-    if (!in_array($type, ['css', 'js'], true)) die('Illegal file access');
-    $afile = Cache::getPath('assets', $hash, $type);
-    if ($afile === '' || !is_file($afile)) die('Illegal file access');
-    Cache::setHeaders(true, 0, ($type === 'css') ? 'text/css' : 'text/javascript', 0, true);
-    echo Cache::getBody($afile);
 } elseif ($go == 'captcha') {
-    Cache::setHeaders(false);
+    Cache::setHeaders();
     getCaptchaChallenge(getVar('req', 'act', 'var') ?: 'default');
 }

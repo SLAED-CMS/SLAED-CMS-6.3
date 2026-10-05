@@ -73,7 +73,7 @@ class Logger {
 
     # Get normalized channel
     protected static function getChan(string $chan): string {
-        $list = ['php', 'sql', 'file', 'site', 'warn', 'hack'];
+        $list = ['php', 'sql', 'file', 'site', 'warn', 'hack', 'request'];
         return in_array($chan, $list, true) ? $chan : '';
     }
 
@@ -87,6 +87,7 @@ class Logger {
             'site' => 'error_site.log',
             'warn' => 'warn.log',
             'hack' => 'hack.log',
+            'request' => 'request.log',
         ];
         return isset($list[$chan]) ? rtrim(LOGS_DIR, '\\/').'/'.$list[$chan] : '';
     }

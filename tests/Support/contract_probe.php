@@ -4,7 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
-# CLI probe for the page-cache, statistics, and GeoIP contract tests
+# CLI probe for the statistics, comment and GeoIP contract tests
 # It boots the real core like index.php, one scenario per process, with LOGS_DIR and COUNTER_DIR redirected to scratch
 $probework = (string)($argv[2] ?? '');
 require_once __DIR__.'/probe_boot.php';
@@ -30,23 +30,6 @@ require_once BASE_DIR.'/core/system.php';
 function getProbeCookie(array $part): string {
     $body = implode('|', $part);
     return rtrim(strtr(base64_encode($body.'|'.hash_hmac('sha256', $body, getSecret('stats'))), '+/', '-_'), '=');
-}
-
-# Prepare one cacheable-route request context and report the real contract decision and identity
-# A registered Node type is added to the loaded configuration of this process alone, because the lists of those types are the routes the page cache knows
-# A start page is a request without a name that index.php has already given the type it drew from the home list
-function getProbeRoute(string $uri, array $get, string $host, string $mod = 'presentation', string $act = '', int $start = 0): array {
-    global $name, $op, $home, $theme, $conf;
-    putenv('HTTP_HOST='.$host);
-    $_SERVER['REQUEST_URI'] = $uri;
-    $_GET = $get;
-    if ($mod !== 'presentation') $conf['node']['types'][$mod] = ['version' => 1];
-    $name = $mod;
-    $op = $act;
-    $home = $start;
-    $theme = $theme ?? getTheme();
-    $vars = getCacheRouteVars();
-    return ['vars' => $vars, 'cache' => checkPageCache(), 'hash' => ($vars !== null) ? getPageHash() : ''];
 }
 
 # Report the scratch counter state after one statistics hit so the test can assert files instead of return values
@@ -780,7 +763,7 @@ function getProbeRssView(): array {
     global $conf;
     require_once BASE_DIR.'/core/classes/feed.php';
     $url = 'https://Feed.Example.invalid/News/RSS.xml';
-    $file = Cache::getPath('data', Cache::getHash(['rssview', Feed::getFeedUrl($url)['url'], $conf['rss']['max'] ?? '']), 'json');
+    $file = Cache::getFile(['rssview', Feed::getFeedUrl($url)['url'], $conf['rss']['max'] ?? ''], 'json');
     $dir = dirname($file);
     Cache::setBody($file, (string)json_encode(['body' => "## Stored entry\n"]));
     $out = ['stored' => str_contains(getRssView(htmlspecialchars($url)), 'Stored entry')];
@@ -933,38 +916,11 @@ function getProbeFieldPost(): array {
     $out['view'] = [str_contains($rows, '[usephp]'), str_contains($rows, '42-proof')];
     return $out;
 }
-$mode = $argv[1] ?? 'core';
+$mode = $argv[1] ?? 'statscookie';
 $conf = $GLOBALS['conf'];
 $chost = strtolower((string)parse_url((string)$conf['homeurl'], PHP_URL_HOST));
 $out = [];
-if ($mode === 'core') {
-    $out['valid'] = [
-        'token_ajax' => checkDynamicMark('token', 'ajax'),
-        'token_account' => checkDynamicMark('token', 'account'),
-        'token_scheduler' => checkDynamicMark('token', 'scheduler'),
-        'captcha_login' => checkDynamicMark('captcha', 'login'),
-        'captcha_register' => checkDynamicMark('captcha', 'register'),
-        'captcha_contact' => checkDynamicMark('captcha', 'contact'),
-        'captcha_admin' => checkDynamicMark('captcha', 'adminlogin'),
-        'captcha_empty' => checkDynamicMark('captcha', ''),
-        'voting_id' => checkDynamicMark('voting', '17'),
-        'token_empty' => checkDynamicMark('token', ''),
-        'token_admin' => checkDynamicMark('token', 'admin'),
-        'captcha_comment' => checkDynamicMark('captcha', 'comment'),
-        'voting_zero' => checkDynamicMark('voting', '0'),
-        'voting_neg' => checkDynamicMark('voting', '-5'),
-        'voting_huge' => checkDynamicMark('voting', '1234567890'),
-        'voting_inject' => checkDynamicMark('voting', '1;drop'),
-        'shell' => checkDynamicMark('shell', 'id'),
-    ];
-    $mark = getDynamicMark('token', 'ajax');
-    $sub = setDynamicRegions('A '.$mark.' B');
-    $out['mark_shape'] = (bool)preg_match('#^\[\[sldyn:token:ajax:[a-f0-9]{16}\]\]$#', $mark);
-    $out['sub_token'] = (bool)preg_match('#^A [a-f0-9]{64} B$#', $sub);
-    $forged = '[[sldyn:token:ajax:'.str_repeat('0', 16).']]';
-    $out['forged_literal'] = (setDynamicRegions($forged) === $forged);
-    $junk = '[[sldyn:shell:id:'.substr(hash_hmac('sha256', 'shell:id', getSecret('dynreg')), 0, 16).']]';
-    $out['junk_empty'] = (setDynamicRegions($junk) === '');
+if ($mode === 'statscookie') {
     $now = time();
     $iph = substr(hash_hmac('sha256', getIp(), getSecret('stats')), 0, 16);
     $sid = str_repeat('ab', 8);
@@ -978,31 +934,6 @@ if ($mode === 'core') {
     $vone = updateStatsCookie(0);
     $out['v1_isnew'] = $vone['sess']['is_new'] ?? false;
     $out['v1_depth'] = $vone['sess']['depth'] ?? 0;
-    $out['poison_before'] = checkCachePoison();
-    $out['reject_empty'] = (getDynamicMark('shell', 'id') === '');
-    $out['poison_after'] = checkCachePoison();
-    $rlog = is_file(LOGS_DIR.'/error_file.log') ? (string)file_get_contents(LOGS_DIR.'/error_file.log') : '';
-    $out['reject_logged'] = str_contains($rlog, 'Rejected dynamic-region marker: shell');
-} elseif ($mode === 'route') {
-    $out = getProbeRoute('/index.php?num=1', ['num' => '1'], $chost);
-} elseif ($mode === 'routenum') {
-    $out = getProbeRoute('/index.php', [], $chost);
-} elseif ($mode === 'routenode') {
-    $out = getProbeRoute('/index.php?name=news&cat=3&num=2', ['name' => 'news', 'cat' => '3', 'num' => '2'], $chost, 'news');
-} elseif ($mode === 'routehomenews') {
-    $out = getProbeRoute('/index.php', [], $chost, 'news', '', 1);
-} elseif ($mode === 'routehomedocs') {
-    $out = getProbeRoute('/index.php', [], $chost, 'docs', '', 1);
-} elseif ($mode === 'routenewsplain') {
-    $out = getProbeRoute('/index.php?name=news', ['name' => 'news'], $chost, 'news');
-} elseif ($mode === 'routenodeop') {
-    $out = getProbeRoute('/index.php?name=news&op=view&id=5', ['name' => 'news', 'op' => 'view', 'id' => '5'], $chost, 'news', 'view');
-} elseif ($mode === 'routenodelet') {
-    $out = getProbeRoute('/index.php?name=news&let=A', ['name' => 'news', 'let' => 'A'], $chost, 'news');
-} elseif ($mode === 'routebad') {
-    $out = getProbeRoute('/index.php?foo=1', ['foo' => '1'], $chost);
-} elseif ($mode === 'routehost') {
-    $out = getProbeRoute('/index.php', [], 'evil.example');
 } elseif ($mode === 'stathit') {
     $_SERVER['REMOTE_ADDR'] = $argv[3] ?? '127.0.0.1';
     $rep = max(1, (int)($argv[4] ?? 1));

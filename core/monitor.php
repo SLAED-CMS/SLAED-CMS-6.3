@@ -719,7 +719,7 @@ function getSecurityEventCount(int $hours = 24): int {
 # Returns latest recent security-related event with source label and timestamp context
 function getSecurityEventHours(int $hours = 24): string {
     $logsdir = defined('LOGS_DIR') ? (string)LOGS_DIR : BASE_DIR.'/storage/logs';
-    $files = ['warn.log', 'hack.log', 'error_site.log', 'error_php.log', 'log.log'];
+    $files = ['warn.log', 'hack.log', 'error_site.log', 'error_php.log', 'request.log'];
     $thresh = time() - ($hours * 3600);
     $bestts = 0;
     $besttxt = '';

@@ -70,75 +70,12 @@ final class CommentTransportTest extends TestCase
         $this->assertStringNotContainsString('token=', $this->getFile('templates/lite/fragments/quick-edit.html'), 'The quick editor still builds a token into its url');
     }
 
-    # Every token in the comment render path is a page token, so a cacheable build stores a signed marker rather than one visitor's token
-    #[Test]
-    public function everyTokenInTheRenderPathIsAPageToken(): void
-    {
-        foreach (['getCommentList', 'setComShow', 'addComment'] as $name) {
-            $code = $this->getSource('core/user.php', $name);
-            $this->assertStringNotContainsString('getSiteToken', $code, $name.'() takes a live token into cacheable markup');
-        }
-        $this->assertStringContainsString('getPageToken()', $this->getSource('core/user.php', 'getCommentList'));
-        $this->assertStringContainsString('getPageToken()', $this->getSource('core/system.php', 'getQuickEdit'));
-    }
-
-    # The add answers one comment fragment and never the whole list again
-    # The response shape is decided by HTMX response headers, so the swap depends on where the reader is without being baked into cacheable markup
-    #[Test]
-    public function theAddAnswersOneCommentRatherThanTheList(): void
-    {
-        $code = $this->getSource('core/user.php', 'addComment');
-        $this->assertStringNotContainsString('echo getCommentList(', $code);
-        $this->assertStringContainsString('getCommentView(', $code);
-        $this->assertStringContainsString("header('HX-Reswap: '.(\$at > 0 ? 'afterend' : (\$total === 1 ? 'innerHTML' : 'afterbegin')))", $code);
-        $this->assertStringContainsString("header('HX-Retarget: [id=\\''.\$data['rows'][\$at - 1]['id'].'\\']')", $code);
-        $this->assertStringContainsString("header('HX-Retarget: #repcstat')", $code);
-    }
-
-    # A published comment that lands outside the reader's slice is announced instead of being pushed into the wrong page
-    #[Test]
-    public function aCommentOutsideTheSliceIsAnnouncedNotInserted(): void
-    {
-        $code = $this->getSource('core/user.php', 'addComment');
-        $this->assertStringContainsString('_COMMENTS_ADDED', $code);
-        $this->assertStringContainsString("if (\$one['id'] === \$row['id'])", $code, 'The response no longer looks the stored comment up in the page it answers');
-        $this->assertStringContainsString('if ($at < 0) {', $code, 'A comment the page does not carry is not announced separately');
-        $this->assertStringContainsString('_POSTNOTE', $code);
-    }
-
-    # Inserting into a full slice also removes the row that falls off the far end, so the page keeps its size
-    #[Test]
-    public function afullSliceShedsItsFarEndRow(): void
-    {
-        $code = $this->getSource('core/user.php', 'addComment');
-        $this->assertStringContainsString("getHtmlFrag('swap-oob'", $code);
-        $this->assertStringContainsString('$drop = intdiv($total - 1, $size)', $code);
-        $this->assertStringContainsString('$drop = 2', $code);
-        $frag = $this->getFile('templates/lite/fragments/swap-oob.html');
-        $this->assertStringContainsString('hx-swap-oob="delete"', $frag);
-    }
-
-    # Status and delete name their swap in the response, so a refused action leaves the element the request named alone
-    #[Test]
-    public function aRefusedActionRemovesNothing(): void
-    {
-        $view = $this->getSource('core/user.php', 'getCommentView');
-        $this->assertSame(3, substr_count($view, "'hx_swap' => 'none'"), 'A moderation action still decides its own swap in the markup');
-        $stat = $this->getSource('core/system.php', 'updateCommentStatus');
-        $this->assertStringContainsString("header('HX-Reswap: outerHTML')", $stat);
-        $this->assertStringContainsString('getCommentView(', $stat);
-        $gone = $this->getSource('core/system.php', 'deleteComment');
-        $this->assertStringContainsString("header('HX-Reswap: delete')", $gone);
-        $this->assertStringContainsString("header('HX-Retarget: #repcstat')", $gone);
-    }
-
-    # The form carries a browser-minted idempotency key and a hidden token, and it posts to a real action without HTMX
     #[Test]
     public function theFormCarriesItsKeyItsTokenAndAPlainAction(): void
     {
         $code = $this->getSource('core/user.php', 'setComShow');
         $this->assertStringContainsString("'input_attr' => 'data-sl-reqkey'", $code);
-        $this->assertStringContainsString("'name_attr' => 'token', 'value_attr' => getPageToken()", $code);
+        $this->assertStringContainsString("'name_attr' => 'token', 'value_attr' => getSiteToken()", $code);
         $this->assertStringContainsString("'action' => \$post", $code);
         $this->assertStringNotContainsString("'no_action' => true", $code);
         $this->assertStringContainsString("'id' => 'repcstat'", $code);
@@ -245,22 +182,14 @@ final class CommentTransportTest extends TestCase
         }
     }
 
-    # The page cache is invalidated by the class after a successful write, not by the route that happened to be called
-    # Every write opens under the write guard of the page cache and ends with the forced generation after its commit, both kept in one place of the class
+    # Every write of the class opens and finishes its transaction through one pair of helpers, kept in one place of the class
     #[Test]
-    public function theClassInvalidatesTheCacheAndTheRouteNoLongerDoes(): void
+    public function everyWriteGoesThroughOneTransactionPair(): void
     {
-        $code = $this->getFile('index.php');
-        $this->assertStringContainsString("if (\$op === 'updateVotingResult') Cache::addEpoch();", $code);
-        $this->assertDoesNotMatchRegularExpression("#in_array\(\\\$op, \[[^]]*Comment[^]]*\], true\)\) Cache::addEpoch\(\)#", $code);
-        $class = $this->getFile('core/classes/comment.php');
-        $this->assertSame(0, substr_count($class, 'Cache::addEpoch();'), 'A write of the class bumps without force, which an early bump of the admin entry swallows');
-        $this->assertSame(1, substr_count($class, 'Cache::addEpoch(true)'), 'The forced generation after a commit is not kept in one place');
-        $this->assertSame(1, substr_count($class, 'Cache::getWriteGuard()'), 'The write guard is not taken in one place');
         foreach (['addComment', 'updateComment', 'updateBody', 'setStatus', 'deleteComment', 'deleteTarget', 'deleteUser', 'updateCountDrift'] as $name) {
             $one = $this->getSource('core/classes/comment.php', $name, '    ');
-            $this->assertStringContainsString('$this->setWriteBegin()', $one, $name.'() writes without the guard of the page cache');
-            $this->assertStringContainsString('$this->setWriteDone($guard', $one, $name.'() stores without invalidating');
+            $this->assertStringContainsString('$this->setWriteBegin()', $one, $name.'() writes outside the transaction pair');
+            $this->assertStringContainsString('$this->setWriteDone($own)', $one, $name.'() does not finish its transaction through the pair');
         }
     }
 }

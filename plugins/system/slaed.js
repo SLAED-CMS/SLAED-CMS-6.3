@@ -1943,7 +1943,7 @@
     }
 
     // Comment submits carry a per-attempt idempotency key: the server stores it once, so a retried POST answers the first comment instead of writing a second one
-    // The key is minted here rather than rendered by PHP, because a cached page would hand every visitor the same value and the unique index would refuse all but the first
+    // The key is minted here rather than rendered by PHP, so every attempt from one rendered form gets a value of its own
     function setCommentKeys(root) {
         var list = (root && root.querySelectorAll) ? root.querySelectorAll('[data-sl-reqkey]') : [];
         for (var i = 0; i < list.length; i++) {

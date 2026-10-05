@@ -35,7 +35,6 @@ function setTemplateForum(): string {
 
 # The marquee of the header: the latest published material of the first active type this theme shows in its faq mode, read through the shared Node reader
 # The mode is a name of this theme, so the core knows no type here; a type with an extension or a failed read leaves the marquee empty
-# A stored copy of the page lives no longer than the visibility of that material, as the Node block bounds its own
 function getTemplateFaq(): string {
     global $tpl;
     $type = getNodeModeType('faq');
@@ -44,7 +43,6 @@ function getTemplateFaq(): string {
         $query = getNodeReader()->setNodeType($type)->setNodePage(1, 1);
         $query->setNodeOrder('published', 'desc');
         $node = $query->getNodeList()[0] ?? null;
-        if (checkPageCache()) Cache::setPageUntil($query->getNodeDeadline());
     } catch (NodeException) {
         return '';
     }

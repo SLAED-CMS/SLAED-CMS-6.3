@@ -72,7 +72,6 @@ function getRegion(string $html, string $name): string {
 function filterVolatile(string $html): string {
     $html = preg_replace('#token=[0-9a-f]{16,}#i', 'token=TOKEN', $html);
     $html = preg_replace('#("X-CSRF-TOKEN":\s*")[0-9a-f]{16,}(")#i', '\1TOKEN\2', $html);
-    $html = preg_replace('#\[\[sldyn:([a-z]+):([^:]*):[0-9a-f]+\]\]#i', '[[sldyn:\1:\2:MARK]]', $html);
     return preg_replace('#name="captcha[^"]*" value="[^"]*"#i', 'name="captcha" value="CAPTCHA"', $html);
 }
 

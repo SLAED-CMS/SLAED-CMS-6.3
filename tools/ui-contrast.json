@@ -5824,28 +5824,6 @@
       "theme": "lite",
       "page": "presentation",
       "mode": "dark",
-      "sel": "span.sl-pres-epoch",
-      "bgsel": "span.sl-pres-epoch",
-      "fg": "rgb(255, 176, 87)",
-      "bg": "rgb(11, 29, 44)",
-      "size": 11,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
-      "page": "presentation",
-      "mode": "light",
-      "sel": "span.sl-pres-epoch",
-      "bgsel": "span.sl-pres-epoch",
-      "fg": "rgb(194, 65, 12)",
-      "bg": "rgb(248, 249, 251)",
-      "size": 11,
-      "weight": 400
-    },
-    {
-      "theme": "lite",
-      "page": "presentation",
-      "mode": "dark",
       "sel": "span.sl-pres-flow-chip",
       "bgsel": "div.sl-pres-flow.sl-pres-scene",
       "fg": "rgb(114, 230, 176)",

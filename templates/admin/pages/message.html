@@ -10,7 +10,10 @@
       {% if message_html %}{{{ message_html }}}{% else %}{{{ content }}}{% endif %}
     </div>
     {% if home %}<a class="sl-but sl-msg-home" href="{{ homeurl }}">{{ home }}</a>{% endif %}
-    {% if license %}<div class="sl-msg-foot">{{{ license }}}</div>{% endif %}
+    {% if license %}
+    <div class="sl-msg-line"></div>
+    <div class="sl-msg-foot">{{{ license }}}</div>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

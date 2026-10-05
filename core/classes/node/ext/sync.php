@@ -200,21 +200,14 @@ final class NodeSync implements NodeExtension {
     # A new text passes the bound of nodes.body and changes only the body, the update time and the version of the material with the source row
     # An answer 304 or the same text changes only the source row; a failure keeps the text and the validators, counts the failure and waits longer
     # A concurrent change of either side writes nothing
-    # The cache guard of a new text goes only after a proven rollback or a raised generation: a commit or a rollback whose outcome is unknown keeps it
     private function setSourceResult(array $snap, array $res): array {
         $nid = $snap['nid'];
         $new = $res['ok'] && $res['changed'] && $res['body'] !== $snap['body'];
         $err = $res['ok'] ? '' : (($res['error'] !== '') ? $res['error'] : 'transport');
         if ($new && checkEditorTextRoom($res['body'], 'nodes.body') !== '') [$new, $err] = [false, 'body'];
-        $guard = false;
         $step = 'before';
-        $wrote = false;
         $out = ['id' => $nid, 'status' => 'skipped', 'error' => ''];
         try {
-            if ($new) {
-                $guard = Cache::getWriteGuard();
-                if ($guard === false) throw $this->getStorage('The cache guard cannot be taken');
-            }
             if (!$this->db->setSqlBegin()) throw $this->getStorage('The transaction cannot be started');
             $step = 'open';
             $sql = 'SELECT version, status, NOW() AS now FROM '.PREFIX_DB.'_nodes WHERE id = :id FOR UPDATE';
@@ -236,7 +229,6 @@ final class NodeSync implements NodeExtension {
                         $sql = 'UPDATE '.PREFIX_DB.'_nodes SET body = :body, updated = :now, version = version + 1 WHERE id = :id AND version = :ver';
                         $done = $this->getQueryRes($sql, ['body' => $res['body'], 'now' => $now, 'id' => $nid, 'ver' => $snap['version']])->rowCount();
                         if ($done !== 1) throw $this->getStorage('The body of a synchronised material was not written');
-                        $wrote = true;
                     }
                     $sql = 'UPDATE '.PREFIX_DB.'_node_sync SET checked = :now'.($new ? ', synced = :snow' : '').', etag = :etag, modified = :mod, fails = 0, error = \'\','
                         .' due = '.$due.' WHERE nid = :nid';
@@ -247,16 +239,11 @@ final class NodeSync implements NodeExtension {
             }
             $step = 'unknown';
             if (!$this->db->setSqlCommit()) throw $this->getStorage('The commit of a sync result is uncertain');
-            $step = 'done';
         } catch (Throwable $fail) {
-            if ($step === 'open' && !$this->db->setSqlRollback()) $step = 'unknown';
+            if ($step === 'open') $this->db->setSqlRollback();
             Logger::addSite('error', 'Node: the result of a feed source could not be stored', ['nid' => $nid, 'error' => get_class($fail)]);
             $out = ['id' => $nid, 'status' => 'failed', 'error' => 'storage'];
         }
-        $bump = $wrote && $step === 'done' && Cache::addEpoch(true);
-        if ($wrote && $step === 'done' && !$bump) Logger::addSite('error', 'Node: the cache generation could not be raised after a sync', ['nid' => $nid]);
-        $keep = $step === 'unknown' || ($wrote && $step === 'done' && !$bump);
-        if ($guard !== false && !$keep) Cache::deleteWriteGuard($guard);
         if ($out['status'] === 'failed' && $out['error'] !== 'storage') Logger::addSite('warning', 'Node: a feed source failed', ['nid' => $nid, 'error' => $out['error']]);
         return $out;
     }

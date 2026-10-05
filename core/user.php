@@ -196,7 +196,7 @@ function getCommentList(int $cid = 0, string $mod = '', int $page = 0, int $full
     $pag = empty($num) ? 'op=view&id='.$cid : 'op=view&id='.$cid.'&num='.$num;
     $rows = ($data['total'] < 1)
         ? $tpl->getHtmlFrag('alert', ['text' => _NOCOMMENTS, 'meta' => '', 'type' => 'info', 'is_warn' => false])
-        : getCommentRows($data, $mod, $cid, getPageToken(), $pag);
+        : getCommentRows($data, $mod, $cid, getSiteToken(), $pag);
     $out = $tpl->getHtmlFrag('block-content', ['id' => 'repcrows', 'content' => $rows]);
     if ($data['total'] < 1) return $out;
     return $out.getPageNumbers($mod, $data['total'], $data['pages'], $data['limit'], $pag.'&', $conf['comments']['nump'], $data['page'], '#comm', 'com');
@@ -211,7 +211,7 @@ function getCommentPage(): void {
     $page = getVar('req', 'com', 'num', 1);
     $data = $com->getList($mod, $id, $page);
     if ($data['total'] < 1 || $data['page'] !== $page) return;
-    echo getCommentRows($data, $mod, $id, getPageToken(), 'op=view&id='.$id);
+    echo getCommentRows($data, $mod, $id, getSiteToken(), 'op=view&id='.$id);
 }
 
 # Answer the replies of one comment the reader has not been shown yet, as the sequence of fragments appended in place of the control that asked for them
@@ -223,7 +223,7 @@ function getCommentBranch(): void {
     $reps = max(1, intval($conf['comments']['reps'] ?? 5));
     $data = $com->getBranch($id, $reps, $skip);
     if (!$data['rows']) return;
-    $token = getPageToken();
+    $token = getSiteToken();
     $cont = '';
     foreach ($data['rows'] as $val) $cont .= getCommentView($val, 0, $token);
     if ($data['left'] > 0) {
@@ -288,7 +288,7 @@ function setComShow(int $id = 0, int $acomm = 0): string {
             ])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'reqkey', 'value_attr' => '', 'input_attr' => 'data-sl-reqkey'])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'pid', 'value_attr' => '', 'input_attr' => 'data-sl-reply-to'])
-            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getPageToken()]);
+            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken()]);
         $post = 'index.php?go=1&op=addComment&id='.$id.'&mod='.$conf['name'].'&com='.$page;
         $submit = $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit',
             'label' => _COMMENTREPLY,
@@ -306,7 +306,7 @@ function setComShow(int $id = 0, int $acomm = 0): string {
             'form_name' => 'post',
             'no_enctype' => true,
             'fields' => $fields,
-            'captcha' => getPageCaptcha('comment'),
+            'captcha' => getCaptcha('comment'),
             'submit' => $submit,
         ]);
     }
@@ -580,7 +580,7 @@ function addComment(): void {
     foreach ($off ? $com->getBranch($off, 500)['rows'] : [] as $kid) $oob .= $tpl->getHtmlFrag('swap-oob', ['id' => $kid['id']]);
     if ($at > 0) header('HX-Retarget: [id=\''.$data['rows'][$at - 1]['id'].'\']');
     header('HX-Reswap: '.($at > 0 ? 'afterend' : ($total === 1 ? 'innerHTML' : 'afterbegin')));
-    echo getCommentView($row, $row['pid'] ? 0 : $numb, getPageToken()).$oob;
+    echo getCommentView($row, $row['pid'] ? 0 : $numb, getSiteToken()).$oob;
 }
 
 # The stored place of one forum post: its category, its topic with the status of that topic, and its author, read from the rows and never from the request
@@ -633,9 +633,8 @@ function getForumBody(int $id, string $body, string $etime, bool $see, string $w
 
 # Store one quick edit of a forum post at the stamp its editor was opened with and answer the closed result code; the place and the right come from the locked rows
 # The forum gate, the longest word in characters, the stored form of filterHtml() and the room of the column depend on the text alone and are checked first
-# Under the write guard the topic row is locked before the post row, the order the forum rating takes, and the category right and the topic status are read there again
+# Inside its transaction the topic row is locked before the post row, the order the forum rating takes, and the category right and the topic status are read there again
 # A topic closed or a post moved after the editor opened is refused; an equal text answers saved without a write, and only then a stale stamp is a conflict
-# The page cache moves after the commit and only when a row was written, inside the guard, so no request between the two builds a page from the old text
 function updateForumBody(int $id, string $text, string $stamp): array {
     global $db, $conf, $user;
     $long = 0;
@@ -647,12 +646,7 @@ function updateForumBody(int $id, string $text, string $stamp): array {
     if (!$head['cid']) return ['code' => 'unavailable', 'error' => []];
     if (empty($conf['forum']['add'])) return ['code' => 'denied', 'error' => []];
     if ($stop) return ['code' => 'rules', 'error' => $stop];
-    $guard = Cache::getWriteGuard();
-    if ($guard === false) return ['code' => 'blocked', 'error' => []];
-    if (!$db->setSqlBegin()) {
-        Cache::deleteWriteGuard($guard);
-        return ['code' => 'storage', 'error' => []];
-    }
+    if (!$db->setSqlBegin()) return ['code' => 'storage', 'error' => []];
     $top = $db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_forum WHERE id = :id FOR UPDATE', ['id' => $head['topic']]);
     $res = ($top === false) ? false : $db->getSqlQuery('SELECT pid, cid, uid, body, etime FROM '.PREFIX_DB.'_forum WHERE id = :id FOR UPDATE', ['id' => $id]);
     $lock = ($top === false) ? [] : $db->getSqlRow($top);
@@ -671,16 +665,14 @@ function updateForumBody(int $id, string $text, string $stamp): array {
     if ($code === 'write') $code = $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET body = :body, euid = :euid, eip = :eip, etime = NOW() WHERE id = :id', $pars)
         !== false ? 'moved' : 'storage';
     if ($code !== 'equal' && $code !== 'moved') {
-        if ($db->setSqlRollback() || !$db->checkSqlActive()) Cache::deleteWriteGuard($guard);
+        $db->setSqlRollback();
         return ['code' => $code, 'error' => []];
     }
     if (!$db->setSqlCommit()) {
         $db->setSqlRollback();
-        Logger::addSite('error', 'Forum: the outcome of a quick edit commit is unknown and the write guard is kept', ['id' => $id]);
+        Logger::addSite('error', 'Forum: the outcome of a quick edit commit is unknown', ['id' => $id]);
         return ['code' => 'storage', 'error' => []];
     }
-    $done = ($code === 'equal' || Cache::addEpoch(true)) && Cache::deleteWriteGuard($guard);
-    if (!$done) Logger::addSite('error', 'Forum: a quick edit is stored but the page cache was not invalidated, the write guard is kept', ['id' => $id]);
     return ['code' => 'saved', 'error' => []];
 }
 
@@ -1395,7 +1387,7 @@ function getFavoriteButton(?int $fid, string $mod): string {
         'is_limit' => true,
         'title' => sprintf(_FAVOR_EXIT, $conf['favorites']['favorites']),
     ]);
-    return $tpl->getHtmlFrag('favorite', ['rep_id' => $repid, 'href' => 'index.php?go=1&op=addFavorite&id='.$fid.'&mod='.$mod, 'token' => getPageToken()]);
+    return $tpl->getHtmlFrag('favorite', ['rep_id' => $repid, 'href' => 'index.php?go=1&op=addFavorite&id='.$fid.'&mod='.$mod, 'token' => getSiteToken()]);
 }
 
 # Add an item to the user's favorites list and echo the updated toggle button

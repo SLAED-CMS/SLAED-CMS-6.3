@@ -89,44 +89,8 @@ $admin = (($tmp = base64_decode($_SESSION[$conf['admin_c']] ?? '', true)) && $tm
 # Format user variable
 $user = (($tmp = base64_decode($_COOKIE[$conf['user_c'].'-account'] ?? '', true)) && $tmp !== '') ? explode(':', $tmp) : [];
 
-# Analyzer of variables
-function getVariablesInfo(): string {
-    $cont = [];
-    foreach (['POST', 'GET', 'COOKIE', 'FILES', 'SESSION'] as $var) {
-        $arr = $GLOBALS['_'.$var] ?? [];
-        if ($arr) $cont[] = $var.': '.print_r($arr, true);
-    }
-    return implode("\n", $cont);
-}
-
-# Add security log entry (IP, user, URL, agent; auto-rotates on size limit)
-function addLog(): bool {
-    global $user, $conf;
-    $ip = getIp();
-    $agent = getAgent();
-    $url = filterText((string)getenv('REQUEST_URI'));
-    $refer = getReferer();
-    $ref = $refer ? "\n"._REFERER.': '.$refer : '';
-    $luser = (is_array($user) && isset($user[1])) ? substr((string)$user[1], 0, 25) : substr(_ANONYM, 0, 25);
-    $log = LOGS_DIR.'/log.log';
-    $max = $conf['security']['log_size'] ?? 10485760;
-    $fhandle = fopen($log, 'ab');
-    if ($fhandle === false) return false;
-    clearstatcache(true, $log);
-    if (filesize($log) >= $max) {
-        fclose($fhandle);
-        $safe = pathinfo($log, PATHINFO_FILENAME).'_'.date('Y-m-d_H-i-s');
-        addCompress(dirname($log), $log, $safe, 'auto', true, true);
-        $fhandle = fopen($log, 'ab');
-        if ($fhandle === false) return false;
-    }
-    $vars = getVariablesInfo();
-    $entry = ($vars ? $vars."\n" : '')._IP.': '.$ip."\n"._USER.': '.$luser."\n"._URL.': '.$url.$ref."\n"._BROWSER.': '.$agent."\n"._DATE.': '.date(_TIMESTRING)."\n".'----'."\n";
-    fwrite($fhandle, $entry);
-    fclose($fhandle);
-    return true;
-}
-if ($conf['security']['log']) addLog();
+# Request journal: every request is one Logger line of request.log, so posted secrets are masked and cookies and the session leave only their names
+if ($conf['security']['log']) Logger::addEntry('request', 'info', 'Request', ['user' => $user[1] ?? '']);
 
 # Security cookies blocker or ip blocker and member blocker
 $bcookie = getCookies($conf['security']['blocker_cookie']);
@@ -225,7 +189,7 @@ function setErrorOut(string $detail = ''): void {
     static $busy = false;
     if ($busy) return;
     $busy = true;
-    if (in_array((string)($_REQUEST['go'] ?? ''), ['1', '3', '4', '5', 'asset', 'captcha', 'rss', 'xsl'], true) || headers_sent()) {
+    if (in_array((string)($_REQUEST['go'] ?? ''), ['1', '3', '4', '5', 'captcha', 'rss', 'xsl'], true) || headers_sent()) {
         if (!headers_sent()) http_response_code(500);
         return;
     }
@@ -670,7 +634,6 @@ function getSecret(string $purpose): string {
 # Returns a session-bound HMAC-SHA256 CSRF token scoped to the given context
 # Token is valid for the lifetime of the PHP session; invalidated when the master secret changes
 function getSiteToken(string $scope = 'ajax'): string {
-    if (!defined('ADMIN_FILE') && function_exists('checkPageCache') && checkPageCache()) checkCachePoison(true);
     $sid  = session_id();
     $data = $sid !== '' ? $scope.'|'.$sid : $scope;
     return hash_hmac('sha256', $data, getSecret('csrf'));

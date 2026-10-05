@@ -518,7 +518,6 @@ define('_RSS_PROBLEM','Il existe un problème avec les titres!');
 define('_RULES',"Les règles de l'enregistrement de l'utilisateur");
 define('_RUSSIAN','Russe');
 define('_SAVE','Enregistrer');
-define('_SAVEBUSY','L\'enregistrement est indisponible pour le moment, veuillez réessayer plus tard.');
 define('_SAVECHANGES','Enregistrer les modifications');
 define('_SUCCSAVE','Les modifications ont été enregistrées avec succès.');
 define('_SUCCDELETE',"L'objet a été supprimé avec succès.");

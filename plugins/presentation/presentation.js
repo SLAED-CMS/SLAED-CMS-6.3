@@ -139,7 +139,7 @@
         return tone || '#888888';
     }
 
-    // The rhythm chart: the visits by hour, day of the week or day of the month, and under them the share the page cache
+    // The rhythm chart: the visits by hour, day of the week or day of the month, and under them the demonstration share the caches
     // answered and the rest that reached the database, all three written by the module. The headline follows the period,
     // and the change is shown only where a like period precedes it. The spark of the runtime section draws the visits alone
     function setChart(root) {
@@ -608,7 +608,7 @@
 
     // The PDO stage: every beat the next case of the pool is written onto the query line, the console and the trace, the
     // packet walks the five nodes at a step a share of the beat, and at the end the counters of the console grow by the
-    // case, the row bars take fresh shares and a write flashes the cache epoch. Cloning the first param chip is the only
+    // case and the row bars take fresh shares. Cloning the first param chip is the only
     // markup ever made here; everything else is text and attributes on what the template rendered
     function setPdo(root) {
         if (root.getAttribute('data-sl-pres-ready') === '1' || isStill()) return;
@@ -630,7 +630,6 @@
         var trace = root.querySelectorAll('.sl-pres-trace > div');
         var stats = root.querySelectorAll('.sl-pres-console-grid .sl-pres-stat > b');
         var bars = root.querySelectorAll('.sl-pres-bars > i');
-        var epoch = root.querySelector('.sl-pres-epoch');
         var at = 0;
         var step = 0;
         var timer = 0;
@@ -691,10 +690,6 @@
                     total += parseFloat(c.getAttribute('data-sl-pres-elapsed')) || 0;
                     if (stats[0]) stats[0].firstChild.nodeValue = String(count);
                     if (stats[1]) stats[1].firstChild.nodeValue = total.toFixed(4) + ' ';
-                    if (epoch && c.hasAttribute('data-sl-pres-write')) {
-                        epoch.classList.add('sl-is-on');
-                        window.setTimeout(function () { epoch.classList.remove('sl-is-on'); }, STEP * 0.42);
-                    }
                     return;
                 }
                 nodes[step].classList.add('sl-is-on');
@@ -774,8 +769,8 @@
     }
 
     // The request path: every beat the flow takes the next scenario of the pool - its mode on the scene, its badge, route,
-    // core lines, gate and parser words, the four states of the side grid and the case of the decision tree - and walks
-    // the packet's nodes one by one; a miss ends with the gate storing the page, which the badge says for a moment
+    // core lines, the words of the parser cache and the template, the four states of the side grid and the case of the
+    // decision tree - and walks the packet's nodes one by one; a miss ends with the parser cache storing the markup
     function setFlow(root) {
         if (root.getAttribute('data-sl-pres-ready') === '1' || isStill()) return;
         var scene = root.querySelector('.sl-pres-flow');
@@ -787,10 +782,10 @@
         var route = root.querySelector('.sl-pres-flow-top .sl-pres-mono');
         var sub = root.querySelector('.sl-pres-flow-core small');
         var state = root.querySelector('.sl-pres-flow-core .sl-pres-pill');
-        var gate = nodes[2].querySelectorAll('small > span');
-        var mod = nodes[4].querySelectorAll('small > span');
+        var gate = nodes[4].querySelectorAll('small > span');
+        var mod = nodes[5].querySelectorAll('small > span');
         var cases = root.querySelectorAll('.sl-pres-case');
-        var stats = root.querySelectorAll('.sl-pres-states > .sl-pres-stat:not(.sl-pres-epoch-row)');
+        var stats = root.querySelectorAll('.sl-pres-states > .sl-pres-stat:not(.sl-pres-clean-row)');
         var at = 0;
         var timer = 0;
         var setTone = function (el, tone) {
@@ -835,7 +830,7 @@
             var i = 0;
             paint(c);
             var light = function () {
-                for (var n = 0; n < nodes.length; n++) nodes[n].classList.toggle('sl-is-on', String(n + 1) === seq[i] || (i === seq.length - 1 && c.getAttribute('data-sl-pres-mode') === 'miss' && n === 2));
+                for (var n = 0; n < nodes.length; n++) nodes[n].classList.toggle('sl-is-on', String(n + 1) === seq[i] || (i === seq.length - 1 && c.getAttribute('data-sl-pres-mode') === 'miss' && n === 4));
                 if (i === seq.length - 1 && c.getAttribute('data-sl-pres-mode') === 'miss') setBadge(root.getAttribute('data-sl-pres-store'), 'success');
             };
             light();

@@ -7,7 +7,7 @@
 if (!defined('ADMIN_FILE')) die('Illegal file access');
 require_once BASE_DIR.'/core/system.php';
 getLang('admin');
-Cache::setHeaders(false);
+Cache::setHeaders();
 checkAccess();
 
 # Check that a module exposes an editable configuration: a config file plus a config handler in its admin routing
@@ -223,11 +223,11 @@ function checkAdminLogin(): void {
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :ip', ['ip' => $ip]);
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_admins SET ip = :ip, lastvis = now() WHERE id = :id', ['ip' => $ip, 'id' => $aid]);
         Captcha::clearLoginFailures('admin');
-        addLoginReport(1, 1, $name, '');
+        addLoginReport(1, 1, $name);
         setRedirect($afile.'.php');
     } else {
         Captcha::registerLoginFailure('admin');
-        addLoginReport(1, 0, $name, $old);
+        addLoginReport(1, 0, $name);
         getAdminLoginForm();
     }
 }

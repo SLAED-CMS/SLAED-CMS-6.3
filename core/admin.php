@@ -540,6 +540,7 @@ function updateAdminCategoryOrder(): void {
                 $ordern++;
                 $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET ordern = :ordern WHERE id = :cid AND modul = :cmod', ['ordern' => $ordern, 'cid' => $cid, 'cmod' => $cmod]);
             }
+            deleteCategoryMap((string)$cmod);
         }
     }
     getAdminCategoryList(filterVar(getVar('get', 'mod', 'var', '')), 0);
@@ -1152,7 +1153,6 @@ function updateNodeTypePart(string $name, string $part, array $value, int $versi
         return match ($err->getCode()) {
             NodeException::CONFLICT => sprintf(_NODE_STALE, $label),
             NodeException::STORAGE => getConfigJournal() ? _CONFIG_PENDING : _ERROR_UP,
-            NodeException::BLOCKED => _SAVEBUSY,
             default => sprintf(_NODE_BAD, $label),
         };
     }
@@ -1605,7 +1605,7 @@ function getAdminFilePreview(): void {
         exit;
     }
     while (ob_get_level() > 0) ob_end_clean();
-    Cache::setHeaders(false, 0, $types[$one['extension']]);
+    Cache::setHeaders('none', $types[$one['extension']]);
     header('Content-Security-Policy: default-src \'none\'; sandbox');
     header('Content-Disposition: inline; filename="'.rawurlencode($one['name']).'"');
     header('Content-Length: '.$one['size']);

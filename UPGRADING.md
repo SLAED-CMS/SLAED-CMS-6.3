@@ -111,9 +111,9 @@ Built-in OAuth2 Authorization Code Flow with PKCE (Google and Microsoft in V1, n
 
 ### Cache And Asset Settings
 
-`config/global.php` holds four page-cache fields: `cache`, `cache_t`, `cache_b`, `cache_l`. Keys not in that set are ignored and disappear on the next save of the settings form.
+`config/global.php` holds the cache field `cache`: it switches the parser cache on (`1`) or off (`0`). The `cachegc` job removes cache files not rewritten for a day (`Cache::KEEP`). Styles and scripts are linked one file at a time from `css_f`, `script_f` and the theme package. Keys the settings form does not write are ignored and disappear on its next save.
 
-`cache_b` is the number of days a browser may keep a page, `0` for off. The asset key changes with `ASSETS_VER`, so a rebuilt JS bundle needs nothing cleared by hand. `cache_version` `4` rebuilds `config/local.php` on the first request, and stored pages live under the `pc3` key, which the `cachegc` job cleans up.
+`cache_version` `4` rebuilds `config/local.php` on the first request.
 
 `config/local.php` is the merged configuration cache. It is accepted on its version marker alone and is never compared against the source files it was built from. The installer removes it with every configuration file it writes; a hand edit of a file in `config/` needs `rm -f config/local.php`.
 

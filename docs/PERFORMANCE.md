@@ -22,8 +22,8 @@ remediation plans are separate documents and are removed once implemented.
    database connection, and runs request security checks.
 4. The active theme hook and runtime classes such as `Template`, `Parser`,
    `Geoip`, `Captcha`, and `Cache` are loaded.
-5. `setHead()` prepares SEO/head data, tracking, optional page-cache lookup,
-   assets, login/header state, scheduler trigger, and theme variables.
+5. `setHead()` prepares SEO/head data, tracking, assets, login/header state,
+   scheduler trigger, and theme variables.
 6. The routed module renders content.
 7. `setFoot()` collects blocks and renders the final page through
    `$tpl->getHtmlPage(...)`.
@@ -56,70 +56,26 @@ Implication:
 - direct edits to source config files are not re-fingerprinted on every request
   while `config/local.php` remains valid
 
-### Page Cache
+### Response Caching
 
-The frontend page cache is enabled for guests (`cache = 1`) and is safe for
-visitor-bound content through the dynamic-regions mechanism:
+Every page is rendered live on every request and its HTML is sent with
+no-store headers (`Cache::setHeaders()`, mode `none`). Only the OpenSearch
+description and the XSL stylesheet are sent public, and
+`Cache::setHeaders()` drops every pending `Set-Cookie` whenever it emits
+`Cache-Control: public`, so a shared proxy or CDN can never store one
+visitor's stats cookie, locale cookie, or `PHPSESSID` and hand it to the next
+visitor.
 
-- **Dynamic regions**: visitor-bound content (CSRF tokens, captcha, the whole
-  voting widget) is stored in the cache as signed markers
-  (`[[sldyn:type:par:hmac]]`, HMAC via `getSecret('dynreg')` so user content
-  cannot forge substitutable markers) and substituted with freshly rendered
-  content at serve time — on cache hits over `Cache::getBody()` and on misses
-  before the direct echo. Cache files on disk contain zero live tokens.
-  Emitters: `getPageToken()` (token-or-marker), captcha/voting ternaries in
-  `setHead`, `blocks/login.php`, `blocks/user_info.php`, `blocks/voting.php`.
-- **Default-deny allowlist**: `checkPageCache()` only caches route/op pairs
-  explicitly allowlisted (currently `news` list); everything else renders
-  live.
-- **Bounded identity**: `getCacheRouteVars()` validates the request against a
-  per-route parameter contract (`Cache::getQueryVars()`; for the `news` list:
-  `name`, `op`, `cat`, `num`, with tracking keys dropped through the central
-  list). Unknown, duplicate, or malformed query keys make the request render
-  live and never create a cache entry. The cache identity (`getPageHash()`,
-  identity version `pc3`) is built from the validated values plus the
-  canonical `homeurl` host — `num=1` and the omitted page share one entry,
-  alternate encodings collapse, and a foreign `Host` header cannot create a
-  cache namespace. Pre-contract cache files are unreachable and removed by
-  normal GC.
-- **Marker contract**: only approved type/parameter combinations
-  (`checkDynamicMark()`: `token` scopes `ajax`/`account`/`scheduler`,
-  `captcha` action `login`, `voting` positive IDs) can be signed; an invalid
-  emitter poisons the build, is logged, and falls back to live rendering.
-  The contract is revalidated at serve time, so forged or stale markers stay
-  inert.
-- **Poison guard**: any live `getSiteToken()`/`getCaptcha()` call during a
-  cacheable build marks the build poisoned (`checkCachePoison()`) and the
-  page is never stored — unregistered visitor-bound content on an
-  allowlisted route disables caching automatically instead of leaking.
-- **Fail-closed sidecar**: every cached body has a `.json` sidecar with the
-  body hash and a `dyn` flag. A missing, corrupt, or mismatched sidecar is
-  treated as dynamic. Dynamic pages are served with no-store browser headers
-  and never answer 304; only a valid `dyn=false` sidecar allows the public
-  `cache_b` header branch.
-- **No cookies on public responses**: `Cache::setHeaders()` drops every
-  pending `Set-Cookie` whenever it emits `Cache-Control: public`, so a shared
-  proxy or CDN can never store one visitor's stats cookie, locale cookie, or
-  `PHPSESSID` and hand it to the next visitor. A first request that lands on
-  a publicly cacheable page therefore receives no cookie until the next
-  no-store response; exact counters are unaffected because they come from the
-  server-side `ips.log`/`user.log` sets, and `?newlang=` requests are never
-  cacheable. Existing sessions survive (PHP sends the session cookie only when
-  it creates a new ID), and CSRF is unaffected because any page carrying a
-  token or captcha is dynamic and therefore no-store.
-
-Page-cache cleanup runs as a scheduler task (`cachegc`), active by default,
-not a per-request sweep. CSS/JS bundling cache (`cache_css`/`cache_script`)
-remains a separate setting.
+Cache cleanup runs as a scheduler task (`cachegc`), active by default, not a
+per-request sweep: it removes data and compiled template files not
+rewritten for `Cache::KEEP` seconds, one day.
 
 ### Parser Cache
 
-Below the page cache sits a second, finer layer: `Parser::filterContent()`
-stores the finished rendering of one text under `storage/cache/pages/data`, so
-a news body, a page or a comment thread is parsed once and read back on every
-later request. It is gated by the same `cache` setting, and by nothing else —
-option 2 narrows the page cache to the home page but does not narrow this
-layer.
+`Parser::filterContent()` stores the finished rendering of one text under
+`storage/cache/data`, so a news body, a page or a comment thread is parsed
+once and read back on every later request. It is gated by the `cache` setting
+(on/off, `Parser::checkCacheReady()`), and by nothing else.
 
 - **Size threshold**: `Parser::CACHEMIN` is 2048 bytes of source, and
   `getCachePath()` returns an empty string below it, which gates the read and
@@ -140,7 +96,7 @@ layer.
 - **Never stored**: a rendering that varies per request. `[block=id]` and
   `[usephp]` set `$this->vary` while parsing and `filterContent()` skips the
   write, whatever the size of the source.
-- `storage/cache/pages/data` also holds two smaller JSON caches that follow
+- `storage/cache/data` also holds two smaller JSON caches that follow
   the same retention: the category map (`core/system.php`) and the MX lookup
   of the mail transport (`core/classes/mail.php`).
 
@@ -155,9 +111,9 @@ stat-class calls on the first render of a file, then a plain `include` for
 repeats. String-sourced
 fragments (bodies of `{% block %}` / `{% slot %}`) are compiled to
 content-addressed `inline-*.php` files; superseded ones are swept by the
-scheduler `cachegc` task (`addCacheGcTask()` runs `Cache::deleteStaleTree`
-over `storage/cache/templates` with the same `cache_t`-derived retention as
-page, data, and lock caches), so stale compiled templates are collected
+scheduler `cachegc` task (`addCacheGcTask()` runs `Cache::deleteStale`
+over `storage/cache/templates` with the same retention, `Cache::KEEP`, as
+the data cache), so stale compiled templates are collected
 instead of accumulating forever.
 
 ### Changelog
@@ -237,7 +193,7 @@ Recommended direction:
 
 Scheduler config has pseudo-triggering enabled. Frontend output can include a
 small asynchronous trigger for due scheduler work. Heavy system jobs include
-database backup, file scan, sitemap generation, and page-cache cleanup.
+database backup, file scan, sitemap generation, and cache cleanup.
 
 Recommended direction:
 
@@ -365,17 +321,10 @@ it, code-size growth translates directly into generation time.
 
 ## Static Asset Caching And Compression (Web Server)
 
-SLAED ships to many users on different servers, so the safe defaults are split
-between portable code (asset bundle headers in PHP) and per-server static-file
-configuration that the operator must apply.
-
-### Scope split
-
-- The hashed CSS/JS bundle is served by PHP through `index.php?go=asset`. Its
-  cache headers and gzip are handled in PHP and work on any server.
-- Plain static files (images, fonts, direct `.css`/`.js`, `.svg`) are served by
-  the web server itself. Their `Cache-Control`/`Expires` and compression are a
-  server-config concern, not PHP.
+SLAED ships to many users on different servers. Static files (styles, scripts,
+images, fonts, `.svg`) are served by the web server itself, one file per
+address, so their `Cache-Control`/`Expires` and compression are a server-config
+concern the operator must apply, not PHP.
 
 ### Apache / LiteSpeed
 
@@ -394,7 +343,7 @@ nginx ignores `.htaccess`. Apply the equivalent in the server/location config.
 The known production gap is that WOFF2 and some SVG have no `Cache-Control`.
 
 ```nginx
-# Compression (the PHP bundle is served via index.php?go=asset, so gzip_proxied is required).
+# Compression.
 # Do not gzip woff2/woff — they are already compressed.
 # text/html is compressed by nginx whenever gzip is on and must not be listed in gzip_types: naming it there only produces a duplicate-MIME warning.
 gzip on;
@@ -536,14 +485,11 @@ ErrorDocument 504 /error.html
 
 - Do not assume `getConfig()` scans all config files on every request when
   `config/local.php` is valid.
-- Do not assume page-cache cleanup scans cache files on every request; current
+- Do not assume cache cleanup scans cache files on every request; current
   cleanup is a scheduler task.
 - Do not treat SQL as the primary bottleneck without current measurements.
 - Do not treat template IO as a bottleneck: on a warm cache the compiled
   engine performs no template source reads and no re-compilation.
-- Do not add visitor-bound markup to cacheable routes without registering a
-  dynamic region or accepting that the poison guard disables caching for the
-  route (see Page Cache above).
 - Do not refactor security checks for speed without focused security regression
   tests.
 

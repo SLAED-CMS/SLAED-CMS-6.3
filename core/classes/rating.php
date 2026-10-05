@@ -272,18 +272,11 @@ final class Rating {
         return [$this->getResult('ok', $next, ['vote' => $vote, 'wait' => $wait, 'canvote' => $can]), true];
     }
 
-    # Run one writing unit inside the transaction of the subsystem and the write guard of the page cache: guard, BEGIN, the unit, COMMIT, the forced bump, and then the guard goes
-    # A unit that wrote nothing, failed or threw is rolled back, and the guard goes with a rollback that is proven, which includes a transaction the server already dropped
-    # The subsystem owns this transaction and guard, takes its locks in one fixed order and reads the clock of the database only
-    # An unknown commit answers storage and keeps the guard; a bump that fails after a proven commit is reported and keeps the guard too, while the stored vote answers as stored
+    # Run one writing unit inside the transaction of the subsystem: BEGIN, the unit, COMMIT; a unit that wrote nothing, failed or threw is rolled back
+    # The subsystem owns this transaction, takes its locks in one fixed order and reads the clock of the database only; an unknown commit answers storage
     private function setUnitRun(Closure $unit, array $ctx): array {
         if ($this->db->checkSqlActive()) {
             $this->addRatingLog('a write was called inside a foreign open transaction and is refused', $ctx);
-            return $this->getResult('storage');
-        }
-        $guard = Cache::getWriteGuard();
-        if ($guard === false) {
-            $this->addRatingLog('the write guard of the page cache could not be opened and the write is refused', $ctx);
             return $this->getResult('storage');
         }
         try {
@@ -294,15 +287,13 @@ final class Rating {
         }
         if (!$keep) {
             if ($out['code'] === 'storage') $this->addRatingLog('the write was not stored', $ctx);
-            if ($this->db->setSqlRollback() || !$this->db->checkSqlActive()) Cache::deleteWriteGuard($guard);
+            $this->db->setSqlRollback();
             return $out;
         }
         if (!$this->db->setSqlCommit()) {
-            $this->addRatingLog('the outcome of the commit is unknown and the write guard is kept', $ctx);
+            $this->addRatingLog('the outcome of the commit is unknown', $ctx);
             return $this->getResult('storage');
         }
-        $done = Cache::addEpoch(true) && Cache::deleteWriteGuard($guard);
-        if (!$done) $this->addRatingLog('the write is stored but the page cache was not invalidated, the write guard is kept', $ctx);
         return $out;
     }
 

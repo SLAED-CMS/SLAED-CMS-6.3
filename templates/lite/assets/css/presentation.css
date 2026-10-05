@@ -962,7 +962,7 @@
 
 .sl-pres-metric > small,
 .sl-pres-mod > small,
-.sl-pres-epoch-row > small {
+.sl-pres-clean-row > small {
   font-size: var(--sl-font-micro);
   color: var(--sl-pres-muted-text);
 }
@@ -3095,8 +3095,7 @@
    <div class="sl-pres-pdo"><div class="sl-pres-pdo-stage sl-pres-scene"><div class="sl-pres-pdo-head"><b><i class="bi"></i> DATABASE / PDO</b><span>mode</span><em>READY</em></div>
    <div class="sl-pres-query"><span>SELECT</span><code>sql</code><span class="sl-pres-params"><i>:cat</i></span></div><div class="sl-pres-bus"></div><i class="sl-pres-packet"></i>
    <div class="sl-pres-node"><i class="bi"></i><span>01</span><b>Module</b><small>note</small></div> x5
-   <div class="sl-pres-return"><div class="sl-pres-result"><i class="bi"></i><span>result → <b>rows</b></span><em>ready</em></div><div class="sl-pres-bars"><i></i> x10</div></div>
-   <span class="sl-pres-epoch"><i class="bi"></i> ADMIN WRITE → EPOCH +1</span></div>
+   <div class="sl-pres-return"><div class="sl-pres-result"><i class="bi"></i><span>result → <b>rows</b></span><em>ready</em></div><div class="sl-pres-bars"><i></i> x10</div></div></div>
    <div class="sl-pres-console"><div class="sl-pres-console-head"><i class="bi"></i><b>Database::getSqlQuery()</b><span>PREPARED</span></div>
    <pre class="sl-pres-code"><span class="sl-is-com">..</span></pre><div class="sl-pres-console-grid">4 x sl-pres-stat</div><div class="sl-pres-trace"><div><time>..</time><b>..</b><em data-sl-tone="success">..</em></div> x3</div></div></div> */
 .sl-pres-pdo {
@@ -3254,8 +3253,8 @@
 }
 
 /* The stage once the plugin drives it: the packet stands where --sl-d-x says and walks between nodes over one step,
-   the row bars take the share the plugin wrote, and the epoch pill shows only while a write flashes it; a write turns
-   the query line and the packet to the warning tone through data-sl-tone */
+   the row bars take the share the plugin wrote; a write turns the query line and the packet to the warning tone
+   through data-sl-tone */
 .sl-pres-pdo-stage[data-sl-pres-live] .sl-pres-packet {
   left: var(--sl-d-x);
   animation: none;
@@ -3270,15 +3269,6 @@
 .sl-pres-pdo-stage[data-sl-pres-live] .sl-pres-bars > i {
   height: var(--sl-d-part);
   transition: height calc(var(--sl-pres-dur) * 0.15) var(--sl-ease-out);
-}
-
-.sl-pres-pdo-stage[data-sl-pres-live] .sl-pres-epoch {
-  opacity: 0;
-  transition: opacity var(--sl-time-base) var(--sl-ease-out);
-}
-
-.sl-pres-pdo-stage[data-sl-pres-live] .sl-pres-epoch.sl-is-on {
-  opacity: 1;
 }
 
 .sl-pres-pdo-stage > .sl-pres-node {
@@ -3364,20 +3354,6 @@
 .sl-pres-bars > i:nth-child(8) { height: calc(100% * 0.72); }
 .sl-pres-bars > i:nth-child(9) { height: calc(100% * 0.49); }
 .sl-pres-bars > i:nth-child(10) { height: calc(100% * 0.64); }
-
-.sl-pres-epoch {
-  position: absolute;
-  right: 5%;
-  bottom: var(--sl-space-3);
-  border: 1px solid var(--sl-pres-border);
-  border-radius: var(--sl-radius-pill);
-  background: var(--sl-pres-panel-bg);
-  padding: var(--sl-space-2) var(--sl-space-3);
-  font-family: ui-monospace, Consolas, monospace;
-  font-size: var(--sl-font-micro);
-  color: var(--sl-warning-strong);
-  opacity: var(--sl-fade-muted);
-}
 
 .sl-pres-console {
   display: grid;
@@ -4087,12 +4063,12 @@
 }
 
 /* ===== 07 partials/presentation-pipeline.html =====
-   <div class="sl-pres-arch"><div class="sl-pres-flow sl-pres-scene" data-sl-mode="miss|hit|off"><div class="sl-pres-flow-top"><span class="sl-pres-mono">route</span><span class="sl-pres-pill" data-sl-tone>MISS · BUILD</span></div>
-   <svg class="sl-pres-paths" viewBox="0 0 700 460"><path class="sl-pres-path-ring"/><path class="sl-pres-path-live"/><path class="sl-pres-path-short"/><circle class="sl-pres-path-packet"><animateMotion/></circle></svg>
-   <div class="sl-pres-flow-core"><img><b>PAGE CACHE</b><small>note</small><span class="sl-pres-pill" data-sl-tone>state</span></div><span class="sl-pres-flow-chip"><i class="bi"></i> dynamic regions</span>
+   <div class="sl-pres-arch"><div class="sl-pres-flow sl-pres-scene" data-sl-mode="hit|miss|bypass|off"><div class="sl-pres-flow-top"><span class="sl-pres-mono">route</span><span class="sl-pres-pill" data-sl-tone>MISS · BUILD</span></div>
+   <svg class="sl-pres-paths" viewBox="0 0 700 460"><path class="sl-pres-path-ring"/><path class="sl-pres-path-live"/><circle class="sl-pres-path-packet"><animateMotion/></circle></svg>
+   <div class="sl-pres-flow-core"><img><b>PARSER CACHE</b><small>note</small><span class="sl-pres-pill" data-sl-tone>state</span></div><span class="sl-pres-flow-chip"><i class="bi"></i> stored markup</span>
    <div class="sl-pres-node"><i class="bi"></i><span>01</span><b>Request</b><small><span>..</span><span>..</span></small></div> x7</div>
    <div class="sl-pres-arch-side"><div class="sl-pres-tree"><div class="sl-pres-panel-head">..</div><div class="sl-pres-case sl-is-on"><strong>HIT</strong><span>..</span></div> x3</div>
-   <div class="sl-pres-states">4 x sl-pres-stat + <div class="sl-pres-stat sl-pres-epoch-row">..</div></div><p class="sl-pres-note">..</p></div></div> */
+   <div class="sl-pres-states">4 x sl-pres-stat + <div class="sl-pres-stat sl-pres-clean-row">..</div></div><p class="sl-pres-note">..</p></div></div> */
 .sl-pres-arch {
   display: grid;
   grid-template-columns: minmax(0, 1.45fr) minmax(0, 0.55fr);
@@ -4147,33 +4123,10 @@
   transition: opacity var(--sl-time-slow) var(--sl-ease-out);
 }
 
-.sl-pres-path-short {
-  fill: none;
-  stroke: var(--sl-primary);
-  stroke-width: 2;
-  stroke-dasharray: 7 8;
-  opacity: 0;
-  transition: opacity var(--sl-time-slow) var(--sl-ease-out);
-}
-
-.sl-pres-flow[data-sl-mode="hit"] .sl-pres-path-short {
-  opacity: 1;
-}
-
-.sl-pres-flow[data-sl-mode="hit"] .sl-pres-path-live {
-  opacity: var(--sl-fade-disabled);
-}
-
 .sl-pres-path-packet {
   fill: var(--sl-pres-text);
   stroke: var(--sl-primary);
   stroke-width: 1;
-}
-
-/* Two packets, one per path: the ring one rides every mode but a hit, the short one rides the hit alone */
-.sl-pres-flow[data-sl-mode="hit"] .sl-pres-path-packet:nth-of-type(1),
-.sl-pres-flow:not([data-sl-mode="hit"]) .sl-pres-path-packet:nth-of-type(2) {
-  display: none;
 }
 
 .sl-pres-flow-core {
@@ -4281,9 +4234,8 @@
   transform: translateX(-50%) translateY(-2px);
 }
 
-.sl-pres-flow[data-sl-mode="hit"] > .sl-pres-node:nth-child(n + 4 of .sl-pres-node):nth-child(-n + 6 of .sl-pres-node),
-.sl-pres-flow[data-sl-mode="off"] > .sl-pres-node:nth-child(3 of .sl-pres-node),
-.sl-pres-flow[data-sl-mode="bypass"] > .sl-pres-node:nth-child(3 of .sl-pres-node) {
+.sl-pres-flow[data-sl-mode="off"] > .sl-pres-node:nth-child(5 of .sl-pres-node),
+.sl-pres-flow[data-sl-mode="bypass"] > .sl-pres-node:nth-child(5 of .sl-pres-node) {
   opacity: var(--sl-fade-disabled);
 }
 
@@ -4330,7 +4282,7 @@
   white-space: normal;
 }
 
-.sl-pres-epoch-row {
+.sl-pres-clean-row {
   grid-column: 1 / -1;
   display: flex;
   align-items: center;
@@ -4338,7 +4290,7 @@
   gap: var(--sl-space-3);
 }
 
-.sl-pres-epoch-row > small > .sl-pres-dot {
+.sl-pres-clean-row > small > .sl-pres-dot {
   margin-right: var(--sl-space-2);
   width: var(--sl-space-2);
   height: var(--sl-space-2);
@@ -5392,8 +5344,7 @@
   .sl-pres-paths,
   .sl-pres-bus,
   .sl-pres-packet,
-  .sl-pres-flow-chip,
-  .sl-pres-epoch {
+  .sl-pres-flow-chip {
     display: none;
   }
 

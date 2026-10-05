@@ -11,7 +11,7 @@
 # The report gives the statements per scenario against the budget, the one against the largest page, p50 and p95 of the wall time and the average statement time
 # The report also gives the plans of the main statements with the rows each one really read
 # Exit code 1 follows a scenario over its budget, a full scan of a Node table, a list page reading more rows than its page end asks for, or a failure
-# Exit code 1 also follows a deadline reading more than the timed and pinned rows of its type and a category list off the two category indexes
+# Exit code 1 also follows a category list off the two category indexes
 # Options: --rows=<count of materials, 1000..1000000, default 100000> --runs=<repeats, default 30> --out=<report file> --keep (leave database and scratch)
 # Nothing touches the site database, config/, storage/ or uploads/ of the site: the directories of the core point into scratch before it boots
 if (PHP_SAPI !== 'cli') {
@@ -36,7 +36,7 @@ const PPREF = 'prof';
 const PCATS = 20;
 
 # Budgets of docs/NODE.md (Statement budgets) as the largest statement count each scenario may reach; a list is held to its upper bound, because every shipped type has categories
-const PBUDGET = ['list' => 7, 'build' => 8, 'view' => 5, 'viewrel' => 6, 'attach' => 2, 'asset' => 2, 'download' => 4,
+const PBUDGET = ['list' => 7, 'view' => 5, 'viewrel' => 6, 'attach' => 2, 'asset' => 2, 'download' => 4,
     'report' => 4, 'admin' => 3, 'edit' => 5, 'status' => 6, 'delete' => 5];
 
 # Remove one scratch tree
@@ -361,16 +361,15 @@ function getProfileReads(PDO $pdo, array $one): int {
     return $num;
 }
 
-# What a read statement of a list does, told by what it reads and never by the shape of the statement: the page, the count or the time bound of the list, else other
+# What a read statement of a list does, told by what it reads and never by the shape of the statement: the page or the count of the list, else other
 function getProfileKind(string $sql): string {
     if (str_contains($sql, ' AS pin, ') && str_contains($sql, ' LIMIT ')) return 'page';
-    if (str_contains($sql, 'UNIX_TIMESTAMP(MIN(')) return 'deadline';
     return preg_match('/^SELECT (SUM\(q\.num\)|COUNT\(\*\)) AS num FROM /', $sql) ? 'count' : 'other';
 }
 
 # The reads a list statement may reach: every part of a page reads its rows up to the page end and hands them to the union
 # The rows of the page itself pass the page table, their full row and the two joined names; the pinned part sorts all pinned rows of the type
-# The extra category part reads all links of the category, a count the rows of the category, and a time bound the pinned and timed rows of the type
+# The extra category part reads all links of the category, a count the rows of the category
 # Each bound carries a fixed allowance for the lookups of the plan
 function getProfileBound(PDO $pdo, array $plan, array $shape): ?int {
     $pre = PPREF.'_';
@@ -380,7 +379,6 @@ function getProfileBound(PDO $pdo, array $plan, array $shape): ?int {
     return match ($plan['kind']) {
         'page' => 2 * $shape['end'] * $plan['parts'] + 4 * $shape['size'] + 2 * $pins + 3 * $links + 50,
         'count' => $shape['cid'] ? 3 * ($num('SELECT COUNT(*) FROM '.$pre.'nodes WHERE cid = '.$shape['cid']) + $links) + 50 : null,
-        'deadline' => 3 * $num('SELECT COUNT(*) FROM '.$pre.'nodes WHERE tid = '.$shape['tid'].' AND status = 2 AND (pinned <> 0 OR published > NOW() OR expires > NOW())') + 50,
         default => null,
     };
 }
@@ -397,17 +395,16 @@ function getProfileScenes(PDO $pdo, array $types, int $runs): array {
     $asset = $pick('SELECT a.id FROM '.$pre.'node_assets AS a INNER JOIN '.$pre.'nodes AS n ON n.id = a.nid WHERE n.tid = '.$files->id.' AND n.status = 2'
         .' AND a.role = \'download\' ORDER BY a.id LIMIT 1');
     $cat = $pick('SELECT cid FROM '.$pre.'nodes WHERE id = '.$item);
-    $read = function (NodeType $type, int $size, int $page = 1, int $cid = 0, string $let = '', bool $dead = false, array $ord = []) use ($runs): array {
-        $fn = function () use ($type, $size, $page, $cid, $let, $dead, $ord): void {
+    $read = function (NodeType $type, int $size, int $page = 1, int $cid = 0, string $let = '', array $ord = []) use ($runs): array {
+        $fn = function () use ($type, $size, $page, $cid, $let, $ord): void {
             $query = getProfileQuery(false, $type);
             $query->setNodeType($query->getNodeType($type->name))->setNodePage($page, $size);
             if ($cid) $query->setNodeCategory($cid);
             if ($let !== '') $query->setNodeLetter($let);
             if ($ord) $query->setNodeOrder(...$ord);
             if ($query->getNodeCount()) $query->getNodeList();
-            if ($dead) $query->getNodeDeadline();
         };
-        return ['budget' => $dead ? 'build' : 'list', 'shape' => ['tid' => $type->id, 'end' => $page * $size, 'size' => $size, 'cid' => $cid]] + getProfileRun($fn, $runs);
+        return ['budget' => 'list', 'shape' => ['tid' => $type->id, 'end' => $page * $size, 'size' => $size, 'cid' => $cid]] + getProfileRun($fn, $runs);
     };
     $out = [];
     foreach ($types as $name => $type) {
@@ -419,14 +416,11 @@ function getProfileScenes(PDO $pdo, array $types, int $runs): array {
     $out['list news category'] = $read($news, 10, 1, $cat);
     $out['list news category page 5'] = $read($news, 10, 5, $cat);
     $out['list news last page'] = $read($news, 10, intdiv($pick('SELECT COUNT(*) FROM '.$pre.'nodes WHERE tid = '.$news->id.' AND status = 2') + 9, 10));
-    $out['list news title'] = $read($news, 10, 1, 0, '', false, ['title', 'asc']);
-    $out['list news title desc'] = $read($news, 10, 1, 0, '', false, ['title', 'desc']);
-    $out['list news updated'] = $read($news, 10, 1, 0, '', false, ['updated', 'desc']);
-    $out['list news published asc'] = $read($news, 10, 1, 0, '', false, ['published', 'asc']);
+    $out['list news title'] = $read($news, 10, 1, 0, '', ['title', 'asc']);
+    $out['list news title desc'] = $read($news, 10, 1, 0, '', ['title', 'desc']);
+    $out['list news updated'] = $read($news, 10, 1, 0, '', ['updated', 'desc']);
+    $out['list news published asc'] = $read($news, 10, 1, 0, '', ['published', 'asc']);
     $out['list docs letter'] = $read($types['docs'], 50, 1, 0, 'b');
-    $out['build news'] = $read($news, 10, 1, 0, '', true);
-    $out['build news category'] = $read($news, 10, 1, $cat, '', true);
-    $out['build media max'] = $read($types['media'], 100, 1, 0, '', true);
     $out['view docs'] = ['budget' => 'view'] + getProfileRun(function () use ($types, $plain): void {
         $query = getProfileQuery(false);
         $type = $query->getNodeType('docs');

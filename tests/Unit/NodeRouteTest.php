@@ -87,16 +87,14 @@ final class NodeRouteTest extends TestCase
         $this->assertSame([200, true], $run['home'], 'The start page is not the list of its type');
     }
 
-    # A guest list is stored bound to the deadline of Node and served again without reading the database; a signed-in visitor is always served live
+    # A list is rendered from the database on every request, for a guest as for a signed-in visitor, and never reaches a browser cache
     #[Test]
-    public function aGuestListIsServedFromThePageCache(): void
+    public function aListIsRenderedLiveForEveryVisitor(): void
     {
         $run = $this->getRuns()['lists'];
-        $this->assertSame(1, $run['cache']['pages'], 'The guest list was not stored');
-        $this->assertSame([PHP_INT_MAX], $run['cache']['until'], 'The stored list is not bound to the deadline of Node');
-        $this->assertTrue($run['nostore'], 'A bound Node page reaches the browser cache');
-        $this->assertFalse($run['hit'], 'The second guest request read the database instead of the stored page');
-        $this->assertTrue($run['user'], 'A signed-in visitor was served a stored page');
+        $this->assertTrue($run['nostore'], 'A Node page reaches the browser cache');
+        $this->assertTrue($run['hit'], 'The second guest request did not read the changed title');
+        $this->assertTrue($run['user'], 'A signed-in visitor did not read the changed title');
     }
 
     # One material: the type of the route, the rights, the controlled addresses, and the view counted after the answer for GET alone
@@ -134,8 +132,9 @@ final class NodeRouteTest extends TestCase
         $this->assertSame([200, 'image/png', 'private, no-cache, must-revalidate, no-transform', 70], $run['file']);
         $this->assertSame([200, 0], $run['head']);
         $this->assertSame(200, $run['thumb']);
-        $this->assertSame(array_fill(0, 8, 404), $run['refused'],
-            'A name of no text, a crafted key, an extra, a mixed or a wrong flag, a closed material or a foreign type is served');
+        $this->assertSame(array_fill(0, 14, 404), $run['refused'],
+            'A name of no text, a crafted key, an extra, a mixed or a wrong flag, a closed material, a foreign type, a repeated or an unknown key is served');
+        $this->assertSame(200, $run['coded'], 'A percent-encoded key is not the same key as its plain form');
         $this->assertSame(403, $run['direct'], 'The upload directory of the type is open to direct access');
         $this->assertFalse($run['climb'], 'A key climbing out of the directory served a file');
     }
@@ -242,7 +241,7 @@ final class NodeRouteTest extends TestCase
         $this->assertSame([303, 404, 200], $run['off']);
     }
 
-    # A type an unfinished configuration operation holds answers 503 without a stored copy, before its op and method are checked, and opens again once the marker is gone
+    # A type an unfinished configuration operation holds answers 503 before its op and method are checked, and opens again once the marker is gone
     #[Test]
     public function aHeldTypeIsClosed(): void
     {
@@ -293,20 +292,17 @@ final class NodeRouteTest extends TestCase
         $this->assertStringNotContainsString('getSqlQuery', (string)file_get_contents($root.'/modules/node/admin/index.php'), 'The administrative controller runs SQL');
     }
 
-    # Routing, cache map, navigation and rights know the types from the registry alone: no list of type names in the shared code
+    # Routing, navigation and rights know the types from the registry alone: no list of type names in the shared code
     #[Test]
     public function theSharedCodeKnowsTypesFromTheRegistry(): void
     {
         $index = (string)file_get_contents(self::getRoot().'/index.php');
         $this->assertStringContainsString("if (\$nname === 'node' || isset(\$conf['node']['types'][\$nname])) {", $index);
         $this->assertStringContainsString("require_once BASE_DIR.'/modules/node/index.php';", $index);
-        $this->assertStringContainsString("if ((\$op ?? '') !== '' || !isset(\$conf['node']['types'][\$name ?? ''])) return false;", self::getBody('core/system.php',
-            'checkPageCache'));
         $this->assertStringContainsString('getNodeTypeMap()[$con]', self::getBody('core/system.php', 'getModuleName'));
         $this->assertStringContainsString("if (isset(\$conf['node']['types'][\$modul])) \$modul = 'node-'.\$modul;", self::getBody('core/system.php', 'is_admin_modul'));
         $this->assertStringContainsString('getNodeTypeMap()', self::getBody('core/helpers.php', 'getTplModuleSelect'));
         $this->assertStringContainsString('getNodeTypeMap()', (string)file_get_contents(self::getRoot().'/blocks/modules.php'));
-        $this->assertStringContainsString('if ($seo instanceof Closure) $seo = $seo();', self::getBody('core/system.php', 'setHead'));
         foreach (['core/system.php', 'core/helpers.php', 'index.php', 'admin/index.php', 'blocks/modules.php'] as $file) {
             $this->assertDoesNotMatchRegularExpression("/'(?:news|docs|files|faq|pages|jokes|links|media|help|content)'\\s*=>\\s*'node/",
                 (string)file_get_contents(self::getRoot().'/'.$file));
@@ -557,17 +553,14 @@ final class NodeRouteTest extends TestCase
         $this->assertSame([404, 404, 404], $this->getMode('head')['bound'], 'A page or a material past the reader bound answered other than not found');
     }
 
-    # The notice of a submission shows once and keeps the page out of the cache, the list after it is cached, the notice of a report shows once
-    # The header marquee bounds the stored copy
+    # The notice of a submission shows once, the notice of a report shows once, and the header marquee shows the latest faq material
     #[Test]
-    public function theNoticeShowsOnceAndTheMarqueeBoundsTheCache(): void
+    public function theNoticeShowsOnceAndTheMarqueeShowsTheLatest(): void
     {
         $run = $this->getMode('head');
-        $this->assertSame([303, 'index.php?name=news', true, 0, false, 1], $run['notice'], 'The notice did not show once, or the page with it was cached, or the next one not');
+        $this->assertSame([303, 'index.php?name=news', true, false], $run['notice'], 'The notice of a submission did not show exactly once');
         $this->assertSame([303, 'index.php?name=news&op=view&id=101', true, false], $run['report'], 'The notice of a report did not show exactly once');
-        [$free, $bound, $early] = $run['faq'];
-        $this->assertSame([1, 1, true], [$free, $bound, $early], 'The stored copy outlives the material of the header marquee');
-        $this->assertStringContainsString('Doc one', $run['faq'][3], 'The header marquee does not show the latest faq material');
+        $this->assertStringContainsString('Doc one', $run['faq'], 'The header marquee does not show the latest faq material');
     }
 
     # A closed category stays out of the banner and the breadcrumb, a member who reads it sees it, and a view shows its own category

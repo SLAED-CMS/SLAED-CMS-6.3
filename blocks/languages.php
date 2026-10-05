@@ -16,7 +16,7 @@ foreach (scandir(BASE_DIR.'/lang') ?: [] as $file) {
 }
 sort($langlist);
 $hide = '';
-foreach (['op' => 'newlang', 'refer' => '1', 'token' => getPageToken('newlang')] as $key => $val) {
+foreach (['op' => 'newlang', 'refer' => '1', 'token' => getSiteToken('newlang')] as $key => $val) {
     $hide .= $tpl->getHtmlFrag('hidden', ['name_attr' => $key, 'value_attr' => $val, 'input_attr' => '']);
 }
 if ($conf['flags'] == 1) {

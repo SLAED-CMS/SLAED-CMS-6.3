@@ -27,7 +27,6 @@ function getNodeFault(NodeException $err): string {
         NodeException::INVALID => _NODE_INVALID,
         NodeException::CONFLICT => _NODE_BUSY,
         NodeException::LIMITED => sprintf(_CERROR5, $conf['node']['limits']['send']),
-        NodeException::BLOCKED => _SAVEBUSY,
         default => _NODE_FAILED,
     };
     if ($err->getCode() === NodeException::INVALID && preg_match('/: (?:ext\.(url|refresh)|assets\.([0-9]+)\.src)$/D', $err->getMessage(), $hit)) {
@@ -39,7 +38,7 @@ function getNodeFault(NodeException $err): string {
 # The HTTP status of a refusal by its code
 function getNodeStatus(NodeException $err): int {
     return [NodeException::NOTFOUND => 404, NodeException::DENIED => 403, NodeException::INVALID => 422, NodeException::CONFLICT => 409,
-        NodeException::LIMITED => 429, NodeException::BLOCKED => 503][$err->getCode()] ?? 500;
+        NodeException::LIMITED => 429][$err->getCode()] ?? 500;
 }
 
 # The field codes of a refused field value, when the refusal names one; the service reports the first error by the path fields.<name>.<code>
@@ -510,7 +509,7 @@ function getNodeRoute(): NodeType {
     return getNodeTypeMap()[$conf['name']] ?? setNodeDeny(404);
 }
 
-# The list of a type with its category, letter, sort and page: a stored page is answered before any query of Node, and only the default sort of the three parameters is cached
+# The list of a type with its category, letter, sort and page
 # Explicitly sent default sort parameters are sent back to the clean address, and a sort or letter the type does not allow is a bad request; published is allowed to every type
 # A page past the end is not found before any redirect and before the reader sets its page
 # The canonical address names only the category and the page; the start page keeps the site description and names the type once a category or a page is asked
@@ -527,59 +526,55 @@ function setNodeList(): void {
     if ($dir !== '' && !in_array($dir, ['asc', 'desc'], true)) setNodeDeny(400);
     $page = '';
     try {
-        setHead(function () use ($cat, $num, $let, $sort, $dir, $home, &$page): array {
-            global $conf, $tpl;
-            $type = getNodeRoute();
-            $priv = $type->ext === 'support';
-            if ($priv && getNodeContext()->uid < 1 && !checkNodeModer($type)) setNodeDeny(403);
-            $set = $type->settings['list'];
-            if ($let !== '' && !$set['alpha']) setNodeDeny(400);
-            if ($sort !== '' && $sort !== 'published' && !in_array($sort, $set['orders'], true)) setNodeDeny(400);
-            if ($cat && !$type->settings['features']['categories']) setNodeDeny(404);
-            $key = $sort ?: $set['order'];
-            $way = $dir ?: (($key === $set['order']) ? $set['dir'] : (($key === 'title') ? 'asc' : 'desc'));
-            $base = ['name' => $type->name] + ($cat ? ['cat' => $cat] : []) + ($let !== '' ? ['let' => rawurlencode($let)] : []);
-            $cats = getCategoryMap($type->name);
-            $query = getNodeReader($type)->setNodeType($type);
-            if ($cat && (!isset($cats[$cat]) || !$query->checkNodeCategory($type, $cat))) setNodeDeny(404);
-            if ($cat) $query->setNodeCategory($cat);
-            if ($let !== '') $query->setNodeLetter($let);
-            if ($sort !== '' || $dir !== '') $query->setNodeOrder($key, $way);
-            $count = $query->getNodeCount();
-            $pages = max(1, (int)ceil($count / $set['limit']));
-            if ($num > $pages) setNodeDeny(404);
-            $query->setNodePage($num, $set['limit']);
-            if (($sort !== '' || $dir !== '') && $key === $set['order'] && $way === $set['dir']) setRedirect(getSeoUrl($base + ($num > 1 ? ['num' => $num] : [])), false, 301);
-            $list = $count ? $query->getNodeList() : [];
-            if (checkPageCache()) Cache::setPageUntil($query->getNodeDeadline());
-            $hand = $list ? getNodeHandler($type) : null;
-            $extm = $hand ? $hand->getNodeData($type, $list, 'list') : [];
-            $items = '';
-            foreach ($list as $node) {
-                $view = getNodeViewData($type, $node, 'list');
-                $items .= $tpl->getHtmlFrag(getNodeTplName('fragments', 'card', $type), $view + getNodeViewVars($type) + getNodeMetaVars($type, $node)
-                    + ['cover' => getNodeCover($type, $view), 'download' => getNodeDownload($type, $view), 'ext' => getNodeExtVars($type, $node, $extm[$node->id] ?? [])]);
-            }
-            $link = static fn(int $i): array => ['href' => getSeoUrl($base + (($sort !== '' || $dir !== '') ? ['order' => $key, 'dir' => $way] : [])
-                + ($i > 1 ? ['num' => $i] : []))];
-            $title = getModuleName($type->name);
-            $ctitle = $cat ? html_entity_decode(getConst($cats[$cat]['title']), ENT_QUOTES | ENT_HTML5, 'UTF-8') : '';
-            $page = $tpl->getHtmlPart(getNodeTplName('partials', 'list', $type), [
-                'navi_html' => getNodeNavi($type, $key, $way, $cat),
-                'intro' => ($cat || $num > 1 || $let !== '') ? '' : getConst($type->intro),
-                'cats_html' => $type->settings['features']['categories'] ? setCategories($type->name, $cat) : '',
-                'letters_html' => $set['alpha'] ? getLetterNavi($type->name, $cat) : '',
-                'items_html' => $items,
-                'pager_html' => getTplPagerView($num, $pages, 8, $link, ['count' => $count, 'limit' => $set['limit']]),
-                'empty_alert' => ['text' => _NO_INFO, 'is_warn' => false],
-            ]);
-            $plain = $sort === '' && $dir === '' && $let === '';
-            $spot = ($cat ? ['cat' => $cat] : []) + ($num > 1 ? ['num' => $num] : []);
-            return ['title' => ($ctitle !== '') ? $ctitle : $title, 'ctitle' => ($ctitle !== '') ? $title : '', 'cid' => $cat, 'kind' => 'collection',
-                'robots' => $priv ? 'noindex, nofollow' : ($plain ? '' : 'noindex, follow'),
-                'canon' => ($home && !$spot) ? getPublicUrl() : getSeoUrl(['name' => $type->name] + $spot)]
-                + ($home ? [] : ['desc' => $cat ? null : getConst($type->intro)]);
-        });
+        $type = getNodeRoute();
+        $priv = $type->ext === 'support';
+        if ($priv && getNodeContext()->uid < 1 && !checkNodeModer($type)) setNodeDeny(403);
+        $set = $type->settings['list'];
+        if ($let !== '' && !$set['alpha']) setNodeDeny(400);
+        if ($sort !== '' && $sort !== 'published' && !in_array($sort, $set['orders'], true)) setNodeDeny(400);
+        if ($cat && !$type->settings['features']['categories']) setNodeDeny(404);
+        $key = $sort ?: $set['order'];
+        $way = $dir ?: (($key === $set['order']) ? $set['dir'] : (($key === 'title') ? 'asc' : 'desc'));
+        $base = ['name' => $type->name] + ($cat ? ['cat' => $cat] : []) + ($let !== '' ? ['let' => rawurlencode($let)] : []);
+        $cats = getCategoryMap($type->name);
+        $query = getNodeReader($type)->setNodeType($type);
+        if ($cat && (!isset($cats[$cat]) || !$query->checkNodeCategory($type, $cat))) setNodeDeny(404);
+        if ($cat) $query->setNodeCategory($cat);
+        if ($let !== '') $query->setNodeLetter($let);
+        if ($sort !== '' || $dir !== '') $query->setNodeOrder($key, $way);
+        $count = $query->getNodeCount();
+        $pages = max(1, (int)ceil($count / $set['limit']));
+        if ($num > $pages) setNodeDeny(404);
+        $query->setNodePage($num, $set['limit']);
+        if (($sort !== '' || $dir !== '') && $key === $set['order'] && $way === $set['dir']) setRedirect(getSeoUrl($base + ($num > 1 ? ['num' => $num] : [])), false, 301);
+        $list = $count ? $query->getNodeList() : [];
+        $hand = $list ? getNodeHandler($type) : null;
+        $extm = $hand ? $hand->getNodeData($type, $list, 'list') : [];
+        $items = '';
+        foreach ($list as $node) {
+            $view = getNodeViewData($type, $node, 'list');
+            $items .= $tpl->getHtmlFrag(getNodeTplName('fragments', 'card', $type), $view + getNodeViewVars($type) + getNodeMetaVars($type, $node)
+                + ['cover' => getNodeCover($type, $view), 'download' => getNodeDownload($type, $view), 'ext' => getNodeExtVars($type, $node, $extm[$node->id] ?? [])]);
+        }
+        $link = static fn(int $i): array => ['href' => getSeoUrl($base + (($sort !== '' || $dir !== '') ? ['order' => $key, 'dir' => $way] : [])
+            + ($i > 1 ? ['num' => $i] : []))];
+        $title = getModuleName($type->name);
+        $ctitle = $cat ? html_entity_decode(getConst($cats[$cat]['title']), ENT_QUOTES | ENT_HTML5, 'UTF-8') : '';
+        $page = $tpl->getHtmlPart(getNodeTplName('partials', 'list', $type), [
+            'navi_html' => getNodeNavi($type, $key, $way, $cat),
+            'intro' => ($cat || $num > 1 || $let !== '') ? '' : getConst($type->intro),
+            'cats_html' => $type->settings['features']['categories'] ? setCategories($type->name, $cat) : '',
+            'letters_html' => $set['alpha'] ? getLetterNavi($type->name, $cat) : '',
+            'items_html' => $items,
+            'pager_html' => getTplPagerView($num, $pages, 8, $link, ['count' => $count, 'limit' => $set['limit']]),
+            'empty_alert' => ['text' => _NO_INFO, 'is_warn' => false],
+        ]);
+        $plain = $sort === '' && $dir === '' && $let === '';
+        $spot = ($cat ? ['cat' => $cat] : []) + ($num > 1 ? ['num' => $num] : []);
+        setHead(['title' => ($ctitle !== '') ? $ctitle : $title, 'ctitle' => ($ctitle !== '') ? $title : '', 'cid' => $cat, 'kind' => 'collection',
+            'robots' => $priv ? 'noindex, nofollow' : ($plain ? '' : 'noindex, follow'),
+            'canon' => ($home && !$spot) ? getPublicUrl() : getSeoUrl(['name' => $type->name] + $spot)]
+            + ($home ? [] : ['desc' => $cat ? null : getConst($type->intro)]));
     } catch (NodeException $err) {
         if (getNodeStatus($err) === 500) throw $err;
         setNodeDeny(getNodeStatus($err));
@@ -823,7 +818,7 @@ function setNodeForm(): void {
         .(($note !== '') ? $tpl->getHtmlFrag('alert', ['text' => htmlspecialchars($note, ENT_QUOTES, 'UTF-8'), 'is_warn' => true]) : '')
         .$prev
         .$tpl->getHtmlPart('form-add', ['action' => getSeoUrl(['name' => $type->name, 'op' => 'add']), 'form_name' => 'nodeadd', 'fields' => $rows,
-            'captcha' => getPageCaptcha('comment'), 'submit' => $send]);
+            'captcha' => getCaptcha('comment'), 'submit' => $send]);
     setFoot();
 }
 
@@ -866,14 +861,32 @@ function setNodeAsset(): void {
     exit;
 }
 
+# The query of one URL checked against a key => value regex allowlist: an unknown, a repeated, a malformed or an empty key refuses the whole query with null
+# Keys and values are compared decoded, so a percent-encoded form is the same key and cannot slip past as a second one
+function getNodeQuery(string $url, array $allow): ?array {
+    $cut = strpos($url, '?');
+    $query = ($cut === false) ? '' : substr($url, $cut + 1);
+    $vars = [];
+    foreach (explode('&', $query) as $pair) {
+        if ($pair === '') continue;
+        $eq = strpos($pair, '=');
+        $key = urldecode(($eq === false) ? $pair : substr($pair, 0, $eq));
+        if (!isset($allow[$key]) || isset($vars[$key])) return null;
+        $val = ($eq === false) ? '' : urldecode(substr($pair, $eq + 1));
+        if (!preg_match($allow[$key], $val)) return null;
+        $vars[$key] = $val;
+    }
+    return $vars;
+}
+
 # One editor attachment of the type: a name the text of the stored material carries, or the preview of a new upload of the visitor; any refusal is the same not found
 # The query must be exactly one of the two forms, so a flag, a repeated or an unknown parameter never changes which branch decides
 function setNodeAttach(): void {
     global $com;
     $url = (string)($_SERVER['REQUEST_URI'] ?? '');
     $base = ['name' => '#^[a-z][a-z0-9]{0,19}$#D', 'op' => '#^attach$#D', 'key' => '#^.{1,255}$#Ds', 'thumb' => '#^1$#D'];
-    $saved = Cache::getQueryVars($url, $base + ['id' => '#^[1-9][0-9]{0,9}$#D']);
-    $fresh = Cache::getQueryVars($url, $base + ['preview' => '#^1$#D']);
+    $saved = getNodeQuery($url, $base + ['id' => '#^[1-9][0-9]{0,9}$#D']);
+    $fresh = getNodeQuery($url, $base + ['preview' => '#^1$#D']);
     $id = isset($saved['id'], $saved['key']) ? (int)$saved['id'] : 0;
     $view = !$id && isset($fresh['preview'], $fresh['key']);
     if (!$id && !$view) setNodeDeny(404);

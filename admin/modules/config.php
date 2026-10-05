@@ -962,74 +962,18 @@ function config(): void {
         ksort($dirs);
     }
     $rows = [];
-    $opts = $tpl->getHtmlFrag('select-option', [
-        'value_attr' => '0',
-        'label_text' => _NO,
-        'is_selected' => $conf['cache'] == 0,
-    ]).$tpl->getHtmlFrag('select-option', [
-        'value_attr' => '1',
-        'label_text' => _CACHE_1,
-        'is_selected' => $conf['cache'] == 1,
-    ]).$tpl->getHtmlFrag('select-option', [
-        'value_attr' => '2',
-        'label_text' => _CACHE_2,
-        'is_selected' => $conf['cache'] == 2,
-    ]);
     $rows[] = [
-        'label_for' => 'f-cache',
         'label_html' => _CACHE,
         'hint_html' => _CACHEINFO,
-        'hint_id' => $hntid = getFieldIds('f-cache')['hint'],
-        'field_html' => $tpl->getHtmlFrag('select', [
-            'describedby' => $hntid,
-            'name_attr' => 'cache',
-            'selectid' => 'f-cache',
-            'options_html' => $opts,
-            'is_config' => true,
-        ]),
-    ];
-    $rows[] = [
-        'label_for' => 'f-cache-t',
-        'label_html' => _CACHETIME,
-        'hint_html' => _CACHETIMEINFO,
-        'hint_id' => $hntid = getFieldIds('f-cache-t')['hint'],
-        'field_html' => $tpl->getHtmlFrag('input', [
-            'describedby' => $hntid,
-            'itype' => 'number',
-            'name_attr' => 'cache_t',
-            'input_id' => 'f-cache-t',
-            'value_attr' => (string)$conf['cache_t'],
-            'placeholder_text' => _CACHETIME,
-            'is_required' => true,
-            'is_config' => true,
-        ]),
-    ];
-    $rows[] = ['label_for' => 'f-cache-b', 'label_html' => _CACHEBROW, 'field_html' => $tpl->getHtmlFrag('input', [
-        'itype' => 'number',
-        'name_attr' => 'cache_b',
-        'input_id' => 'f-cache-b',
-        'value_attr' => (string)$conf['cache_b'],
-        'placeholder_text' => _CACHEBROW,
-        'is_required' => true,
-        'is_config' => true,
-    ])];
-    $rows[] = [
-        'label_html' => _CACHELOCK,
-        'hint_html' => _CACHELOCKINFO,
-        'label_id' => ($fids = getFieldIds('', 'cache_l'))['label'],
+        'label_id' => ($fids = getFieldIds('', 'cache'))['label'],
         'hint_id' => $fids['hint'],
         'field_html' => getTplRadioGroup([
             'describedby' => $fids['hint'],
             'labelledby' => $fids['label'],
-            'name' => 'cache_l',
-            'value' => $conf['cache_l'] ?? '0',
+            'name' => 'cache',
+            'value' => $conf['cache'],
             'options' => $yesno,
         ]),
-    ];
-    $rows[] = [
-        'label_html' => _CACHECSS,
-        'label_id' => $labid = getFieldIds('', 'cache_css')['label'],
-        'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'cache_css', 'value' => $conf['cache_css'], 'options' => $yesno]),
     ];
     $rows[] = [
         'label_for' => 'f-css-f',
@@ -1046,26 +990,6 @@ function config(): void {
         ]),
     ];
     $rows[] = [
-        'label_html' => _CSSHEAD,
-        'label_id' => $labid = getFieldIds('', 'css_h')['label'],
-        'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'css_h', 'value' => $conf['css_h'], 'options' => $yesno]),
-    ];
-    $rows[] = [
-        'label_html' => _CSSCOMP,
-        'label_id' => $labid = getFieldIds('', 'css_c')['label'],
-        'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'css_c', 'value' => $conf['css_c'], 'options' => $yesno]),
-    ];
-    $rows[] = [
-        'label_html' => _CSSENC,
-        'label_id' => $labid = getFieldIds('', 'css_e')['label'],
-        'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'css_e', 'value' => $conf['css_e'], 'options' => $yesno]),
-    ];
-    $rows[] = [
-        'label_html' => _CACHESCRIPT,
-        'label_id' => $labid = getFieldIds('', 'cache_script')['label'],
-        'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'cache_script', 'value' => $conf['cache_script'], 'options' => $yesno]),
-    ];
-    $rows[] = [
         'label_for' => 'f-script-f',
         'label_html' => _SCRIPTFILE,
         'hint_html' => _SCRIPTFILEINFO.' '._NOKOMA,
@@ -1078,11 +1002,6 @@ function config(): void {
             'is_required' => true,
             'is_config' => true,
         ]),
-    ];
-    $rows[] = [
-        'label_html' => _SCRIPTHEAD,
-        'label_id' => $labid = getFieldIds('', 'script_h')['label'],
-        'field_html' => getTplRadioGroup(['labelledby' => $labid, 'name' => 'script_h', 'value' => $conf['script_h'], 'options' => $yesno]),
     ];
     $rows[] = [
         'label_html' => _SCRIPTASIN,
@@ -1257,17 +1176,9 @@ function save(): void {
             'fbots' => strtr(getVar('post', 'fbots', 'text', ''), $kprotect),
             'botsact' => getVar('post', 'botsact', 'num'),
             'cache' => getVar('post', 'cache', 'num'),
-            'cache_t' => getVar('post', 'cache_t', 'num', 60),
-            'cache_b' => getVar('post', 'cache_b', 'num'),
-            'cache_l' => getVar('post', 'cache_l', 'num'),
-            'cache_css' => getVar('post', 'cache_css', 'num'),
-            'css_f' => strtr(getVar('post', 'css_f', 'text', 'templates/[theme]/,plugins/highlightjs/slaed-theme.css'), $kprotect),
-            'css_h' => getVar('post', 'css_h', 'num'),
-            'css_c' => getVar('post', 'css_c', 'num'),
-            'css_e' => getVar('post', 'css_e', 'num'),
-            'cache_script' => getVar('post', 'cache_script', 'num'),
-            'script_f' => strtr(getVar('post', 'script_f', 'text', 'plugins/system/global-func.js,plugins/system/slaed.js,plugins/tablesort/tablesort.min.js'), $kprotect),
-            'script_h' => getVar('post', 'script_h', 'num'),
+            'css_f' => strtr(getVar('post', 'css_f', 'text', 'plugins/highlightjs/slaed-theme.css'), $kprotect),
+            'script_f' => strtr(getVar('post', 'script_f', 'text',
+                'plugins/htmx/htmx.min.js,plugins/system/global-func.js,plugins/system/slaed.js,plugins/tablesort/tablesort.min.js'), $kprotect),
             'script_a' => getVar('post', 'script_a', 'num'),
             'script_b' => getVar('post', 'script_b', 'num'),
             'mtemp' => filterTrustedTags(getVar('post', 'mtemp', 'raw'), isAdmin(true)),

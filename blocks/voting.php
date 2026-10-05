@@ -22,5 +22,5 @@ $order = ($mode >= 2) ? 'RAND()' : 'id DESC';
 [$bid] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_voting WHERE '.$where.' ORDER BY '.$order.' LIMIT 1', $params)) ?: [''];
 $content = $bid ? $tpl->getHtmlFrag('block-content', [
     'id' => 'repblockvoting',
-    'content' => checkPageCache() ? getDynamicMark('voting', (string)$bid) : getVotingView((int)$bid, 'blockvoting'),
+    'content' => getVotingView((int)$bid, 'blockvoting'),
 ]) : '';

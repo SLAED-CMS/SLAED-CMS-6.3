@@ -25,9 +25,8 @@
 // A contrast pair existing only on hover is invisible to a crawler that never hovers, which is why the
 // states live in the manifest and not in the runner. Credentials come from the environment, never the file.
 //
-// Before capturing, empty storage/cache/pages and storage/cache/templates and keep cache_css and css_h
-// off: doCss() bundles when either is set, the bundle fingerprint sits in $conf['derived']['assets'], and
-// a warm-cache comparison compares caches instead of renders.
+// Before capturing, empty storage/cache/data and storage/cache/templates: a warm-cache comparison compares
+// caches instead of renders.
 
 import { chromium } from 'playwright';
 import { execFileSync } from 'node:child_process';
@@ -82,10 +81,10 @@ function getChangedFiles() {
   }
 }
 
-// The rendered tree has to be the tree on disk: doCss() bundles when cache_css or css_h is set, and a page cache
-// serves a render made before the edit, so a comparison of caches is not a comparison of themes
+// The rendered tree has to be the tree on disk: a stored parser output or compiled template may predate the edit,
+// so a comparison of caches is not a comparison of themes
 function setCachesEmpty() {
-  for (const dir of ['storage/cache/pages', 'storage/cache/templates']) {
+  for (const dir of ['storage/cache/data', 'storage/cache/templates']) {
     const full = join(root, dir);
     if (!existsSync(full)) continue;
     for (const item of readdirSync(full)) rmSync(join(full, item), { recursive: true, force: true });

@@ -161,16 +161,18 @@ final class AdminGuardTest extends TestCase
     {
         $data = $this->getProbe('catparent', $pair);
         $this->assertArrayNotHasKey('update', $data, 'The category was written');
+        $this->assertArrayNotHasKey('reset', $data, 'A refused write dropped the category map');
         $this->assertSame(['badparent', true], [$data['text'], $data['warn']]);
     }
 
-    # A parent outside the subtree and the top level are written as posted
+    # A parent outside the subtree and the top level are written as posted, and the stored category map of the module is dropped once
     #[Test]
     public function aCategoryTakesAParentOutsideItsSubtree(): void
     {
         foreach (['3:4' => 4, '2:0' => 0] as $pair => $want) {
             $data = $this->getProbe('catparent', $pair);
             $this->assertSame($want, $data['update'][0]['parent'] ?? null, $pair.' was not written');
+            $this->assertSame(['forum'], $data['reset'] ?? [], $pair.' did not drop the category map of its module once');
             $this->assertSame(['saved', false], [$data['text'], $data['warn']]);
         }
     }
@@ -185,15 +187,10 @@ final class AdminGuardTest extends TestCase
         $this->assertSame([4, 3, 1, 2], array_column($data['update'], 'id'));
     }
 
-    # The first write of the panel raised the generation before the other writes and the commit, and nothing raised it after them; the end of the request now forces it
-    # The online tracking wrote _session on every view of the panel and so dropped the page cache on every click; it moves no generation now
+    # The query method of the shipped database class names no table prefix, because the installer runs queries before PREFIX_DB exists
     #[Test]
-    public function aPanelWriteRaisesTheGenerationAgainAtTheEnd(): void
+    public function theQueryNeedsNoTablePrefix(): void
     {
-        $data = $this->getProbe('epoch');
-        $this->assertSame(0, $data['session'] ?? null, 'The online tracking of every panel request drops the whole page cache');
-        $this->assertSame(1, $data['early'] ?? null, 'The first write does not raise the generation at once, or every write does');
-        $this->assertSame(2, $data['final'] ?? null, 'The end of the request does not force the generation after the writes');
         $query = substr($this->getFile('core/classes/pdo.php'), (int)strpos($this->getFile('core/classes/pdo.php'), 'function getSqlQuery('));
         $this->assertStringNotContainsString('PREFIX_DB', substr($query, 0, (int)strpos($query, "\n    }\n")), 'The installer runs queries before PREFIX_DB exists');
     }

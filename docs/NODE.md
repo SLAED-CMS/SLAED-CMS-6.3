@@ -194,7 +194,6 @@ getters or setters, no subdirectory beside `ext/`.
 | `CONFLICT` | 4 | the expected version is older than the stored one |
 | `STORAGE` | 5 | the storage operation did not complete |
 | `LIMITED` | 6 | the public write window `limits.send` of the same address has not passed |
-| `BLOCKED` | 7 | the write guard of the page cache is closed, nothing was written |
 
 The message is for the log and never reaches a visitor.
 
@@ -374,7 +373,6 @@ RESTRICT`.
 | `updated` | `tid, status, pinned, updated, id` | order by last change |
 | `views` | `tid, status, pinned, views, published, id` | order by views |
 | `title` | `tid, status, pinned, title, id` | letter filter and order by title |
-| `expires` | `tid, status, expires` | nearest end of visibility for the list cache deadline |
 | `tree` | `tid, status, id` | `getNodeTree()` batches by id cursor |
 | `queue` | `status, created, id` | moderation queue and state lists |
 | `author` | `uid, status, published, id` | materials of an author |
@@ -393,8 +391,6 @@ Rules the indexes rely on:
   first never sorts the whole type. Mixed-type reads join their type branches the same way.
 - Public reads compare `status = 2` exactly and add
   `published <= NOW() AND (expires IS NULL OR expires > NOW())`. A moderator of the type reads any state.
-- `getNodeDeadline()` finds the next future `published` through the `pinned` parts of `pub` and the next
-  future `expires` through `expires`; it sets the time limit of the list HTML cache.
 
 Column rules:
 
@@ -710,17 +706,15 @@ Constraints: `{prefix}_fk_node_sync_node` (`nid` → `_nodes.id`, `ON UPDATE RES
 - The network request runs before the transaction; row, URL and material version are re-checked before
   writing, so a stale download never overwrites a concurrent change.
 - An unchanged answer updates validators, `checked`, `due`, clears `fails` and `error`, and leaves the
-  material and the HTML cache alone. A changed text is stored in
-  `_nodes.body` with a new version and `updated`, sets `synced`, and the cache moves after the commit.
+  material alone. A changed text is stored in `_nodes.body` with a new version and `updated`, and sets `synced`.
 - A failure keeps the text, raises `fails`, stores a safe message and, when `refresh > 0`, sets `due` to
   `checked + 300 × 2^(fails−1)` seconds, at most one day.
 - `NodeSync` hooks write the row in the material's transaction; the cascade is only a safety net.
 
 ### Write discipline
 
-Every Node write follows [the single lock order](#the-single-lock-order) and the
-[page cache protocol](#html-page-cache). A type row that changed version since the request read it is a
-`CONFLICT`, because the input was checked against the older settings.
+Every Node write follows [the single lock order](#the-single-lock-order). A type row that changed version since
+the request read it is a `CONFLICT`, because the input was checked against the older settings.
 
 ### Administrator rights column
 
@@ -732,8 +726,8 @@ keys; there is no rights table. The admin form accepts only keys of real modules
 `NodeQuery` is the only reader of Node and `NodeService` the only writer. Modules, blocks, feeds, the sitemap,
 comments, rating, favorites and search never run SQL against the Node tables. Rules a maintainer must keep:
 
-- A read never exposes SQL, rows or the reason of a refusal. A write always runs rights, validation, one
-  transaction and cache invalidation.
+- A read never exposes SQL, rows or the reason of a refusal. A write always runs rights, validation and one
+  transaction.
 - No public method branches on a type name; behaviour comes from type settings and the type's extension.
 - Input is typed (`NodeInput`, `NodeTypeInput`), never a free array. IDs, counters, audit dates and computed values
   are assigned by the service.
@@ -954,7 +948,6 @@ Public constants shared with the writer: `TREEPART = 500`, `KINDS`, `RMODES` (ki
 | target | `getNodeTarget`, `getNodeTargetList` | published in window | PHP check of the joined row |
 | list | `getNodeList`, `getNodeCount`, `getNodeTree`, `getNodeAuthorStat` | per `setNodeStatus()` | SQL predicate with language |
 | site | `getNodeSitemap` | published in window | SQL predicate with language |
-| dead | `getNodeDeadline` | published, future moments | SQL predicate with language |
 | legacy | `getNodeLegacy` | none: it answers an address, the route it leads to reads the material | none; only a type the context receives |
 
 - "Published in window": `status = Published`, `published <= NOW()`, `expires` empty or later, database clock. A
@@ -1054,7 +1047,6 @@ public function getNodeAuthorStat(): array
 public function getNodeCategoryCount(NodeType $type): array
 public function checkNodeCategory(NodeType $type, int $cid): bool
 public function getNodePostCats(NodeType $type): array
-public function getNodeDeadline(): ?int
 public function getNodeLegacy(string $mod, int $id = 0): ?array
 ```
 
@@ -1069,8 +1061,6 @@ public function getNodeLegacy(string $mod, int $id = 0): ?array
 - `checkNodeCategory()`: the category is readable in the type by the list rule (a public list outside it is 404).
   `getNodePostCats()`: categories the form offers (`pview` and `ppost` both grant and the category is shared or of
   the context language; all for a moderator).
-- `getNodeDeadline()`: Unix time of the nearest future `published` or `expires` of the list, or `null`, one
-  statement; routes pass it to `Cache::setPageUntil()` while building the HTML cache.
 - `getNodeLegacy()`: the row of `_node_legacy` for a removed module name and its old id as `['type', 'nid']`, or
   with `id` 0 the type its materials went to (`nid` 0); `null` for a name outside the grammar, a missing row or a
   type the context does not receive.
@@ -1084,7 +1074,7 @@ Counted by `$db->qnum` around the Node handler; `getNodeContext()`, Point and gl
 | `getNodeType()` / `getNodeTypeList()` | 1 per new name / 1 for all, 0 from memory (a version mismatch adds a re-read) |
 | category pre-read | 1 per type per instance |
 | `getNodeList()` | 1 page + at most one batch each for `cids`, `rels`, `assets` |
-| `getNodeCount()`, `getNodeDeadline()`, `getNodeAuthorStat()`, `getNodeCategoryCount()`, `getNodeContent()`, `getNodeAsset()` | 1 |
+| `getNodeCount()`, `getNodeAuthorStat()`, `getNodeCategoryCount()`, `getNodeContent()`, `getNodeAsset()` | 1 |
 | `getNode()` | 4 |
 | `getNodeTargetList()` | type rows not yet known + 1 |
 | `getNodeTree()`, `getNodeSitemap()` | 1 per batch |
@@ -1104,10 +1094,9 @@ first statement (`INVALID point`) by `addNode()`, `updateNode()`, `updateNodeSta
 `updateNodeViews()`, `updateNodeAssetHits()`, `deleteNodeAssetReport()`, `updateNodePublishList()`. Callers outside
 the Node classes take a writer from `getNodeWriter()`.
 
-#### Lock order and cache invalidation
+#### Lock order
 
-Every writer follows [the single lock order](#the-single-lock-order) and the
-[page cache protocol](#html-page-cache); a type operation runs the sequence of
+Every writer follows [the single lock order](#the-single-lock-order); a type operation runs the sequence of
 [the configuration protocol](#lock-order-of-a-type-operation). Inside a material write the type row is locked
 `FOR UPDATE` first: another version than the read `NodeType` is `CONFLICT`, a disabled type is `NOTFOUND` for
 non-moderators; then categories, materials by ascending ID, the `parent` chain by locking reads, resources and
@@ -1231,7 +1220,7 @@ role, fit the smaller `maxbytes`, match its kind and belong to the visitor (acco
   written without an account has no author. The text passes the checks of `intro` / `body` above and a new
   `[attach]` name the ownership rule, under the directory lock. Under the type lock and the material `FOR UPDATE`
   the right is decided again, then a text equal to the stored one answers the stored material without a write (no
-  version, no `updated`, no state, no cache generation), and only then a stale version is `CONFLICT`. An author edit
+  version, no `updated`, no state), and only then a stale version is `CONFLICT`. An author edit
   of a `Published` material under `features.moderation` without a group of `workflow.publish` moves it to `Pending`
   in the same write and version step; it needs the readiness of a move to pending, and a job of a future
   publication goes with it. Categories, fields, relations, resources and the poll stay as they are.
@@ -1283,11 +1272,11 @@ public function deleteNodePoll(int $id): void
   `getLockedTarget()` takes that lock and then reads the target by the reader's predicate (`null` when missing,
   closed or foreign); Rating calls it first in a vote, favorites after locking the user row.
 - `updateNodeComments()` and `updateNodeRating()` store trusted aggregates inside the owner's transaction after
-  `setTargetLock()`, change neither `version`, `updated` nor the cache generation, and never commit. `count` is
+  `setTargetLock()`, change neither `version` nor `updated`, and never commit. `count` is
   0…4294967295; ratings need `ratings <= score <= 5 × ratings`.
 - `deleteNodePoll()` needs `polls` and the open transaction of the poll owner, who holds `GET_LOCK('node.poll.<id>')`.
   It locks all type rows by ascending ID (the reached types are known only from materials), then the poll's
-  materials, and clears `poll` with `version + 1` and `updated`; the owner raises the generation after commit.
+  materials, and clears `poll` with `version + 1` and `updated`; the owner commits.
 
 `Comment` treats a module key naming a registered type as a Node target (own reader and writer without Point).
 Each comment write calls `setTargetLock()` before touching `_comment`, re-reads the discussion mode under the lock,
@@ -1306,9 +1295,9 @@ public function deleteNodeRemains(string $name): void
 ```
 
 - Categories of a Node type change only here; `row` is the full category form (the columns `modul` … `pmod`). The
-  context needs `super`, `manage` or moderation of each touched type; writes lock those type rows and run under the
-  cache guard. The parent is `0` or a category of the same module whose chain (locked) neither reaches the category
-  nor loops (`INVALID category.parent`).
+  context needs `super`, `manage` or moderation of each touched type; writes lock those type rows. The parent is `0`
+  or a category of the same module whose chain (locked) neither reaches the category nor loops
+  (`INVALID category.parent`).
 - `updateNodeCategory()` refuses to move a used category to another module (`INVALID category.used`): main or extra
   category of any material, direct subcategories, or items of the fixed module `forum` in `_forum`, counted
   without a lock). `deleteNodeCategory()` deletes the whole subtree; a main category of any
@@ -1351,11 +1340,10 @@ carry the original as `previous`. `Field` throws `InvalidArgumentException`, whi
 | `CONFLICT` | 4 | stale expected version or a lock not obtained | 409 |
 | `STORAGE` | 5 | the storage operation did not complete | 500 |
 | `LIMITED` | 6 | the write window `limits.send` has not passed | 429 |
-| `BLOCKED` | 7 | the write guard of the page cache is closed | 503 |
 
 The values are a stable internal contract; the module picks HTTP codes (`getNodeStatus()` in
 `modules/node/index.php`) and texts by code (`getNodeFault()`: `_NODE_GONE`, `_ACCESSDENIED`, `_NODE_INVALID`,
-`_NODE_BUSY`, `_CERROR5`, `_SAVEBUSY`, else `_NODE_FAILED`). Reads keep answering `null` for missing and closed alike.
+`_NODE_BUSY`, `_CERROR5`, else `_NODE_FAILED`). Reads keep answering `null` for missing and closed alike.
 
 ### Site helpers
 
@@ -1990,7 +1978,7 @@ function setConfigRestore(string $force = ''): bool
 | `getConfigCode()` | The one exporter: standard header plus a deterministic `return [...]`. |
 | `setConfigSource()` | Temporary neighbour, PHP parse check, atomic rename, OPcache invalidation; an empty code removes the file. |
 | `getConfigJournal()` | `[]` without a marker; else `op`, `phase`, `time`, `types`, `proof`, `files` (`old`/`new`/`now` hashes, `state`), `verdict` (`old`/`new`/empty), `why` (`journal`, `backup`, `source`, `proof` or empty). |
-| `setConfigRestore()` | Finishes an operation under the lock: without an argument by the verdict, with a Node proof by a locking read of the type row (`proof.new` version means new, `proof.old` means old). Republishes `local.php`, clears the HTML cache (admin entry), re-checks hashes, removes marker and operation directories. Repeatable. |
+| `setConfigRestore()` | Finishes an operation under the lock: without an argument by the verdict, with a Node proof by a locking read of the type row (`proof.new` version means new, `proof.old` means old). Republishes `local.php`, clears the cache (admin entry), re-checks hashes, removes marker and operation directories. Repeatable. |
 
 Pipeline of both forms: take the config lock; refuse when `storage/backup/config/marker.json` exists; write both
 snapshots and `journal.json` under `storage/backup/config/<operation>/`; write the marker (operation, touched files,
@@ -2006,12 +1994,11 @@ The sequence of `NodeService::setTypeWrite()`, which every Node writer of the sh
 1. `setConfigFile()` takes the config lock and re-reads the four areas.
 2. `checkBaseNode()` refuses (`CONFLICT`) when the global Node settings loaded by the request differ from the fresh
    ones, because the settings check reads the loaded `$conf['node']`.
-3. The directory lock of `uploads/<name>`, then the cache write guard `Cache::getWriteGuard()`.
+3. The directory lock of `uploads/<name>`.
 4. `BEGIN`, the type row by `SELECT ... FOR UPDATE`, the version and data checks, the SQL.
 5. `$save($package, ['kind' => add|update|status|delete, 'name', 'id', 'old', 'new'])`, then `COMMIT`.
 
-Afterwards the cache generation is raised (`Cache::addEpoch(true)`), the guard is released after a raised generation
-or a rollback, the directory lock is released, and a published change is logged with its proof and administrator id.
+Afterwards the directory lock is released, and a published change is logged with its proof and administrator id.
 A writer never calls `setConfigFile()` inside a closure and never takes the config lock after locking a type row.
 
 On read, `types.<name>.version` must equal `_node_types.version`; a missing section or a different version re-reads
@@ -2142,24 +2129,6 @@ The list passes title, category title, `cid` and, outside the start page, the ty
 page gets none). The material passes title, category title, `cid`, the first 160 characters of the plain intro,
 author, publication and update time and the absolute cover URL. The breadcrumb category is the `cid` the page names;
 without it, `cat` of the query counts only when `NodeQuery::checkNodeCategory()` grants it.
-
-### Page cache
-
-`checkPageCache()` makes the list of a registered type the only cacheable route of the site. A response is read from
-or stored in the HTML cache only when all of these hold:
-
-- not the admin area, method GET, `$conf['cache']` on (`2` limits it to the start page);
-- no user or admin session, theme colour mode `auto`, no pending flash message;
-- `name` is a registered type and `op` is empty;
-- the host equals the host of `homeurl`, and the query holds only `name`, empty `op`, `cat`, `num`, each once and
-  well-formed (`cat`/`num` 1-9 digits) - so `let`, `order`, `dir` or any extra parameter disables caching;
-- the write-guard journal is free.
-
-The key (`getPageHash()`) is `pc3`, the site version, the cache generation, the canonical host, scheme, theme,
-locale and the route variables `name` (or `home` = the drawn type on the start page), `cat`, `num > 1`. A stored list
-is bound to `NodeQuery::getNodeDeadline()`, the next future publication or expiry among its rows
-(`Cache::setPageUntil()`); the file block `blocks/node.php` binds the page the same way. `view`, `add`, `asset`,
-`attach`, `report` and `support` are never HTML-cached; resources use only the private browser cache.
 
 ### Admin operations
 
@@ -2426,8 +2395,9 @@ and `voting`; any other `modul` naming a registered type is a Node target, resol
 - The action counts at the first visibility of the comment (at once in open mode, or on approval). Only then
   `updateNodeAction($type, $target, 'comment', $uid)` runs, `$uid` being the author, never the approving
   moderator; later edits, hides and deletes do not call it again.
-- A write owning its transaction follows the page-cache protocol (private `setWriteBegin()`, `setWriteUndo()`,
-  `setWriteDone()`); a joined write takes no guard - its owner (Node, account deletion, poll deletion) holds it and forces the generation after `COMMIT`.
+- A write owning its transaction runs `BEGIN`, its work and `COMMIT` (private `setWriteBegin()`, `setWriteUndo()`,
+  `setWriteDone()`); a joined write runs inside the open transaction of its owner (Node, account deletion, poll
+  deletion), which commits or rolls back.
 - `Comment::deleteTarget(string $mod, array $ids, array $uids = []): bool` locks the comment rows by ascending id,
   then all authors plus `$uids` in one `Point::setUserLocks()`, then compensates each award.
   `NodeService::deleteNode()` passes the material author so his publication award is compensated afterwards.
@@ -2458,8 +2428,8 @@ is switched off. The view shows the poll through `getVotingView()` while the fea
 handler, rights, CSRF and vote limit (legacy `_rating` rows with `modul = 'voting'`).
 
 Assigning, changing or clearing a link takes the named SQL lock `node.poll.<id>` (`GET_LOCK`, 5 s wait, ascending
-ids, `0` skipped) before the cache guard and `BEGIN`; a timeout is `CONFLICT`; `RELEASE_LOCK` follows the
-transaction. Deleting a poll (`modules/voting/admin/index.php`) takes the same lock and the guard, then calls
+ids, `0` skipped) before `BEGIN`; a timeout is `CONFLICT`; `RELEASE_LOCK` follows the
+transaction. Deleting a poll (`modules/voting/admin/index.php`) takes the same lock, then calls
 `NodeService::deleteNodePoll(int $id): void` inside its transaction: requires `NodeContext::$polls`, locks every
 `_node_types` row and then the poll's materials by ascending id, and sets their `poll` to `0` (version and
 `updated` move). Poll and material deletions never delete each other.
@@ -2504,8 +2474,7 @@ is `''` (mixed feed of all active `blocks` types) or one such type; `mode` is `l
 `admin/modules/blocks.php` edits and validates these fields and flags an invalid instance with `_BLOCKPROBLEM`;
 at render time such an instance shows `_BLOCKPROBLEM` to a moderator only, without a log line. A single-type block
 orders `published desc` whatever `list.orders` says; pinned come first where a selected type has `pinned`. An
-empty result sets the content to `null`, so `setBlockView()` prints nothing (no title, no `_BLOCKPROBLEM2`). A
-cached page is bound with `Cache::setPageUntil($query->getNodeDeadline())`.
+empty result sets the content to `null`, so `setBlockView()` prints nothing (no title, no `_BLOCKPROBLEM2`).
 
 ### Home page and display-mode lookups
 
@@ -2517,7 +2486,7 @@ a kind of content" asks `getNodeModeType($mode)`, never a type name:
 |---|---|---|
 | `modules/presentation/index.php` | `article`, `docs`, `files` | count, category count, latest material |
 | `admin/modules/monitor.php` `getMonitorDbStats()` | `article`, `files` | dashboard counts |
-| `templates/lite/index.php` `getTemplateFaq()` | `faq` | header marquee; binds a cached page with `getNodeDeadline()` |
+| `templates/lite/index.php` `getTemplateFaq()` | `faq` | header marquee |
 
 The profile (`core/user.php`) counts an author's materials with `NodeQuery::getNodeAuthorStat()` and lists the
 latest per type; `support` types appear only in the account menu, never in profiles.
@@ -2688,10 +2657,9 @@ public function updateNodeSyncList(int $limit): array;
 - One check: snapshot read without lock; `Feed::getFeedContent($url, $etag, $modified)` outside any
   transaction; then a transaction locks `_nodes` and `_node_sync` and writes only if URL and `_nodes.version`
   match the snapshot and the material is not deleted. A new body that fits `checkEditorTextRoom(..., 'nodes.body')`
-  is written by one conditional `UPDATE` of `body`, `updated`, `version + 1` with the source row, under a cache
-  guard and followed by `Cache::addEpoch(true)`. `304` or an identical body touches only the source row. A
-  failure keeps text and validators, increments `fails` and retries after 300 s doubled per failure, capped at
-  86400 s; `error` holds a short code only.
+  is written by one conditional `UPDATE` of `body`, `updated`, `version + 1` with the source row. `304` or an
+  identical body touches only the source row. A failure keeps text and validators, increments `fails` and retries
+  after 300 s doubled per failure, capped at 86400 s; `error` holds a short code only.
 
 Scheduler job `nodesync` (`*/5 * * * *`, `lock_timeout = 180`, `manual = 1`, `settings.limit = 10`) runs
 `addNodeSyncTask()`, which builds `new NodeContext(0, [], 0, [], false, false, '', '', true)` and calls only
@@ -2856,9 +2824,7 @@ theme, blocks and independent global subsystems are outside it, and the `NodeCon
 
 | Scenario | Usual | Ceiling |
 |---|---:|---:|
-| Anonymous list from the HTML cache | 0 | 0 |
-| List without building the cache | 3, with categories 5 | 7 |
-| Building the cache of a list (adds `getNodeDeadline()`) | 4, with categories 6 | 8 |
+| List | 3, with categories 5 | 7 |
 | Full material | 5 | 6 with related cards; a tree type adds `floor(N/500) + 1` tree batches and a category-right prefetch |
 | Controlled `[attach]` | 2 | 2 |
 | Resource read or `HEAD` | 2 | 2 |
@@ -2879,7 +2845,7 @@ theme, blocks and independent global subsystems are outside it, and the `NodeCon
 - A delete reads head and type, locks type, material (version check) and resources, then runs one `DELETE`. A zero
   point reward runs no SQL; a non-zero one is measured apart.
 
-`NodeQueryTest` pins the list and build budgets per probe type, `NodeServiceTest` the state change (`<= 6`,
+`NodeQueryTest` pins the list budgets per probe type, `NodeServiceTest` the state change (`<= 6`,
 `<= 7` with a job) and the delete trace, `NodeRouteTest` the view with tree batches; `tools/node-profile.php`
 enforces the ceilings on a large database.
 
@@ -2898,28 +2864,6 @@ threshold). The profile reports timing; only statement counts are hard gates.
   index with one checked letter or digit and a parameterized `LIKE` prefix. SQL never filters or sorts on field
   JSON. `views` and `hits` move by one atomic statement; the report queue uses `(reported, id)`.
 
-### HTML page cache
-
-Which responses are cached and what the key holds is in [Page cache](#page-cache). Every content writer
-protects the cache with the write guard:
-
-- `Cache::getWriteGuard(): mixed` creates `CACHE_DIR/guards/<32 hex>.lock` and holds its file lock (serialized by
-  `CACHE_DIR/guards.lock`); failure forbids the changing SQL. The owner takes it before `BEGIN`, calls
-  `Cache::addEpoch(true)` after `COMMIT` and only after a proven bump `Cache::deleteWriteGuard($guard)`. A proven
-  rollback releases it; an unknown outcome or failed bump keeps it and is logged.
-- `Cache::checkWriteGuard(): bool` is the only entry for reading and filling: it clears released markers after a
-  successful bump, leaves held ones, and answers `true` only with no marker and a readable generation
-  (`COUNTER_DIR/cache.log`; a non-numeric value is never rewritten and keeps the cache off). Sweeps never touch
-  the guards.
-- A fill stores only if the generation taken before reading data is unchanged after rendering.
-- Every Node read feeding a cached page (list, `blocks/node.php`, lite FAQ marquee) calls
-  `Cache::setPageUntil($query->getNodeDeadline())`. `NodeQuery::getNodeDeadline(): ?int` is the nearest future
-  `published` or `expires` of materials the list could show (one statement, only while building). A bound page is
-  never served at or after its bound, not even as stale, and is sent with `Cache::setHeaders(false)`
-  (`no-store`).
-- All content writers - materials, types, categories, comments, rating, sync, background publication - follow
-  this protocol; `views`, `hits`, `reported`, `ruid` do not move the generation.
-
 ### The single lock order
 
 Operations take these in this order and never take an earlier one while holding a later one:
@@ -2927,14 +2871,13 @@ Operations take these in this order and never take an earlier one while holding 
 1. the configuration lock of `setConfigFile()` (type operations);
 2. `FileManager::getPathLock(UPLOADS_DIR.'/<type>')` (type operations, material writes with files);
 3. named locks `node.poll.<id>`, ascending (poll links and poll deletion);
-4. `Cache::getWriteGuard()`;
-5. `BEGIN`;
-6. `_node_types` rows, ascending id;
-7. `_categories` rows, ascending id;
-8. `_nodes` rows, ascending id;
-9. specialised rows: `_node_assets`, `_node_publish`, extension rows, comment rows;
-10. Point `_users` rows, ascending id, the operation's whole set at once via `Point::setUserLocks(array $uids): bool`;
-11. the Point journal.
+4. `BEGIN`;
+5. `_node_types` rows, ascending id;
+6. `_categories` rows, ascending id;
+7. `_nodes` rows, ascending id;
+8. specialised rows: `_node_assets`, `_node_publish`, extension rows, comment rows;
+9. Point `_users` rows, ascending id, the operation's whole set at once via `Point::setUserLocks(array $uids): bool`;
+10. the Point journal.
 
 Rating locks its target, actor and vote rows after the owner's locks and never the participating user. Network
 access and upload bodies are handled before any lock.
@@ -2986,14 +2929,14 @@ files also have a static half that reads the sources.
 | `UpdateSiteTest` | 9 | `install_probe.php update` | 6.2 -> 6.3 update of `tests/Fixtures/update62` and `update62early` by `update.php` over HTTP |
 | `Update{Config,Mails,Setup}Test` | 6, 4, 10 | `update_probe.php config`/`mails`/`setup` | settings carry-over, newsletter, registry, both preflights |
 | `Update{Points,Ratings,Fields}Test` | 6, 8, 9 | `update_probe.php` (`points`)/`ratings`/`fields` | data update units |
-| `PointTest`, `RatingTest` | 20, 22 | `point_probe.php`, `rating_probe.php` | the classes; `RatingTest` also the cache guard |
+| `PointTest`, `RatingTest` | 20, 18 | `point_probe.php`, `rating_probe.php` | the classes |
 | `PointOwnersTest`, `RatingOwnersTest` | 7, 5 | static | owner wiring, labels in six locales |
 | `FieldTest`, `FieldViewTest` | 10, 6 | static; `contract_probe.php fieldpost` | `Field`, its form and view outputs |
 | `FeedTest` | 21 | static; `contract_probe.php rssview` | RSS/Atom to Markdown, scripted DNS/HTTP rules |
 
 `FieldIdsTest` covers the form-field helper `getFieldIds()`, not Node. Related: `ConfigFileTest` and
-`FileManagerLockTest` (`config_probe.php`), `PageCacheContractTest` (`contract_probe.php` route modes,
-`route_probe.php cache`), `FileStreamTest` (`web_probe.php`), `SchedulerLockTest` (`scheduler_probe.php`).
+`FileManagerLockTest` (`config_probe.php`), `CacheContractTest` (static), `FileStreamTest` (`web_probe.php`),
+`SchedulerLockTest` (`scheduler_probe.php`).
 
 ### Probes
 
@@ -3012,9 +2955,9 @@ stand's database, `config/`, `storage/` and `uploads/` are never written.
 - `route_probe.php <scratch> [mode]`: one database from `table.sql`, scratch configuration with the probe types,
   scratch uploads with release guards, the real `index.php` and `admin.php` behind `php -S` with
   `tests/Support/route_web.php` as router (visitor from the header `X-Probe-Who`, honoured only there). Modes:
-  none (lists, view, attach, admin), `support`, `sync`, `integ`, `guard`, `intact`, `cache`, `secure`, `tree`,
-  `modes`, `seo`, `head`; children `view`, `comments`, `ext`, `syncext`, `integext`, `guardext`, `cachecom`,
-  `treeext`, `seoext` call classes directly on the same database; `serve [modes]` keeps a server up until a file
+  none (lists, view, attach, admin), `support`, `sync`, `integ`, `guard`, `intact`, `secure`, `tree`, `modes`,
+  `seo`, `head`; children `view`, `comments`, `ext`, `syncext`, `integext`, `guardext`, `treeext`, `seoext` call
+  classes directly on the same database; `serve [modes]` keeps a server up until a file
   `stop` appears in the scratch root.
 - `install_probe.php <scratch> [keep | fail | update <dump> <config-dir-or-revision> <prefix> [<snapshot>]]`
   serves a copy of the tracked tree (without `docs`, `tests`, `tools`) with two `php -S` instances, so the

@@ -17,8 +17,8 @@ final class RatingTest extends TestCase
 
     # The probe tests/Support/rating_probe.php boots the real core in an isolated CLI process and drives the class through trusted test adapters
     # Its disposable schema is built from the shipped DDL, so the same run executes the three tables of storage/update/sql/table.sql
-    # The cache directory, the generation counter and the logs live in scratch, every persistent result is read by a connection of its own
-    # Concurrency is made of real processes, and the site database is only read, by the renders of the page-cache scenario
+    # The cache directory, the counters and the logs live in scratch, every persistent result is read by a connection of its own
+    # Concurrency is made of real processes
     # Run the probe once and memoize its report for every test in this class
     private function getProbe(): array
     {
@@ -88,59 +88,6 @@ final class RatingTest extends TestCase
         $this->assertSame('PDOException', $this->getRun('fail')['value'], 'The server stored a vote outside the scale');
     }
 
-    # The write-guard protocol of the page cache the class depends on is the one of docs/NODE.md (HTML page cache)
-    # The forced bump and the marker: one bump per request unless forced, a marker locked while its owner lives, a sweep that spares the journal, a registered handle alone closes
-    #[Test]
-    public function theWriteGuardIsAJournalNoSweepTouches(): void
-    {
-        $run = $this->getRun('cache');
-        $this->assertSame([true, 1, true, 1, true, 2], $run['bump'], 'A repeat bumped again, or the forced bump did not');
-        $this->assertSame([true, []], $run['idle']);
-        $this->assertSame([true, 1, true, false], $run['open'], 'An open guard did not leave one locked marker that switches the cache off');
-        $this->assertSame([[false], 1, 0], $run['peek'], 'Another process touched the marker of a live writer');
-        $this->assertSame([2, 0, 1], $run['sweep'], 'The sweep did not remove exactly the two cached files and spare the marker');
-        $this->assertSame([true, false], $run['spared'], 'The sweep did not spare exactly the lock of the journal');
-        $this->assertSame([false, false, false, 1], $run['deny'], 'A value the class never registered closed a guard');
-        $this->assertSame([true, 0, false, true], $run['close']);
-    }
-
-    # A generation that cannot be read switches the cache off instead of answering zero, and a forced bump refuses to rebuild it from what intval() makes of it
-    # A marker whose writer died is recovered by one bump and then removed
-    #[Test]
-    public function aDeadWriterIsRecoveredByABump(): void
-    {
-        $run = $this->getRun('cache');
-        $this->assertSame([false, 0, false, 'x'], $run['garbled'], 'A malformed generation was rewritten, which can move it back onto one already served');
-        $this->assertSame([true, '10'], $run['padded'], 'A counter with leading zeros was overwritten in place and kept a tail of the old number');
-        $this->assertSame([true, true], $run['healed']);
-        $this->assertSame([[true], 1], $run['died'], 'The dead writer left no marker behind');
-        $this->assertSame([true, 0, 1], $run['recover'], 'The recovery did not bump once and remove the marker');
-    }
-
-    # The real route decision follows the journal, and the identity of a page remembers the generation it was built from
-    #[Test]
-    public function thePageCacheFollowsTheJournal(): void
-    {
-        $run = $this->getRun('page');
-        foreach (['free' => true, 'held' => false, 'after' => true] as $name => $want) {
-            $this->assertIsArray($run[$name], 'The route child answered nothing');
-            $this->assertSame($want, $run[$name]['cache'], 'checkPageCache() is wrong while the guard is '.$name);
-            $this->assertSame([true, true, true], [$run[$name]['kept'], $run[$name]['moved'], $run[$name]['memo']]);
-        }
-    }
-
-    # Through the real head and foot: nothing is stored when the generation moved or a guard stands; a stored page is served as it is, not while a marker stands, not after a bump
-    #[Test]
-    public function thePageIsFilledAndReadByGenerationAndMarkers(): void
-    {
-        $want = ['moved' => ['moved', 0], 'held' => ['held', 0], 'plain' => ['plain', 1], 'again' => ['plain', 1]];
-        $want += ['fresh' => ['fresh', 1], 'cached' => ['plain', 1], 'later' => ['later', 2]];
-        $this->assertSame($want, $this->getRun('fill'));
-        $code = (string)file_get_contents(dirname(__DIR__, 2).'/core/system.php');
-        $this->assertStringContainsString('return $free ??= Cache::checkWriteGuard();', $code);
-        $this->assertStringContainsString('getPageHash() === getPageHash(true) && Cache::checkWriteGuard() && Cache::setBody(', $code);
-    }
-
     # Every rule is taken whole or not at all, in the stored string form only, and a broken or missing rule blocks its own scope and no other and answers blocked
     #[Test]
     public function aRuleIsAcceptedWholeOrNotAtAll(): void
@@ -192,7 +139,7 @@ final class RatingTest extends TestCase
         $this->assertSame(0, $run['cost']);
         $this->assertSame([self::NONE, self::NONE], $run['gone']);
         $this->assertSame([self::NONE, self::NONE], $run['hidden'], 'A hidden target revealed its counters');
-        $this->assertSame([[], [], []], $run['rows']);
+        $this->assertSame([[], []], $run['rows']);
     }
 
     # The scale: whole sums and counts, 5 and 1 make 6 over 2 and an average of 3, a derived string of six digits, and exactly the rows of the contract behind every vote
@@ -214,7 +161,7 @@ final class RatingTest extends TestCase
         $this->assertSame(['u:2', 'u:3', 'u:4'], array_column($actors, 2));
         $this->assertSame([[2, 5], [3, 1], [4, 5]], array_map(static fn(array $row): array => [$row[4], $row[5]], $votes));
         foreach ($votes as $key => $row) $this->assertSame([$actors[$key][3], 0, 0, ''], [$row[7], $row[8], $row[9], $row[10]], 'last is not the moment of the vote');
-        $this->assertSame([[], false], [$run['marks'], $run['open']]);
+        $this->assertFalse($run['open']);
     }
 
     # A starting balance is carried, a vote lands on top of it and its annulment takes exactly that vote back; an aggregate nobody carried over and a full column take no vote
@@ -318,46 +265,46 @@ final class RatingTest extends TestCase
         $this->assertSame($bad, $run['badlist']);
     }
 
-    # A write inside a transaction somebody else opened is refused before the adapter, a marker or a statement, and that transaction commits untouched
+    # A write inside a transaction somebody else opened is refused before the adapter or a statement, and that transaction commits untouched
     #[Test]
     public function aForeignTransactionIsRefused(): void
     {
         $run = $this->getRun('foreign');
-        $this->assertSame(['storage', 'storage', [], true, []], [$run['add'], $run['delete'], $run['calls'], $run['open'], $run['marks']]);
+        $this->assertSame(['storage', 'storage', [], true], [$run['add'], $run['delete'], $run['calls'], $run['open']]);
         $this->assertSame(['main', [5, 1], 1, true], $run['kept']);
     }
 
-    # Each of the nine statements of a vote and of an annulment fails once: storage, nothing stored, no open transaction, no marker; likewise the adapter, a real error, a deadlock
+    # Each of the nine statements of a vote and of an annulment fails once: storage, nothing stored, no open transaction; likewise the adapter, a real error, a deadlock
     #[Test]
     public function everyFailedStatementRollsTheWholeUnitBack(): void
     {
         $run = $this->getRun('fail');
         for ($i = 1; $i <= 9; $i++) {
-            $this->assertSame(['storage', 0, 0, 0, false, 0], $run['add'][$i], 'vote statement '.$i);
-            $this->assertSame(['storage', false, 5, false, 0], $run['delete'][$i], 'annulment statement '.$i);
+            $this->assertSame(['storage', 0, 0, 0, false], $run['add'][$i], 'vote statement '.$i);
+            $this->assertSame(['storage', false, 5, false], $run['delete'][$i], 'annulment statement '.$i);
         }
         foreach ([10, 11] as $i) {
-            $this->assertSame(['ok', 5, 3, 5, false, 0], $run['add'][$i], 'A vote has more than nine statements');
-            $this->assertSame(['ok', true, 0, false, 0], $run['delete'][$i], 'An annulment has more than nine statements');
+            $this->assertSame(['ok', 5, 3, 5, false], $run['add'][$i], 'A vote has more than nine statements');
+            $this->assertSame(['ok', true, 0, false], $run['delete'][$i], 'An annulment has more than nine statements');
         }
-        $this->assertSame(['storage', 0, false, 0], $run['write'], 'A refusal of the write adapter was stored');
-        $this->assertSame(['storage', 0, [0, 0], false, 0], $run['real']);
-        $this->assertSame(['storage', 0, false, 0], $run['hard']);
+        $this->assertSame(['storage', 0, false], $run['write'], 'A refusal of the write adapter was stored');
+        $this->assertSame(['storage', 0, [0, 0], false], $run['real']);
+        $this->assertSame(['storage', 0, false], $run['hard']);
         $this->assertSame(['ok', true, 5, 1, '5', false, false], $run['healed']);
         $this->assertTrue($run['log']);
     }
 
-    # An unknown commit answers storage and keeps its marker, the repeat of the delivery finds out what happened, and the next reader recovers the markers of the dead writer
+    # An unknown commit answers storage, and the repeat of the delivery finds out what happened
     #[Test]
-    public function anUnknownCommitKeepsItsGuard(): void
+    public function anUnknownCommitAnswersStorage(): void
     {
         $run = $this->getRun('commit');
         $this->assertIsArray($run['child'], 'The writer process answered nothing');
-        $this->assertSame(['storage', 0, 1, false], $run['child']['back']);
-        $this->assertSame(['storage', 1, 2], $run['child']['kept']);
+        $this->assertSame(['storage', 0], $run['child']['back']);
+        $this->assertSame(['storage', 1], $run['child']['kept']);
         $this->assertSame(['ok', true, 5, 1, '5', true, false], $run['child']['again'], 'The repeat of a committed delivery was not answered as the stored vote');
-        $this->assertSame([[5, 1], 1, 2, false], $run['child']['end']);
-        $this->assertSame([2, [true, 0, 2], true], [$run['left'], $run['recover'], $run['log']]);
+        $this->assertSame([[5, 1], 1, false], $run['child']['end']);
+        $this->assertTrue($run['log']);
     }
 
     # Real processes at one moment: two intentions of one actor leave one vote, one delivery sent four times leaves one vote, and five actors lose no update
@@ -375,6 +322,5 @@ final class RatingTest extends TestCase
         $this->assertSame([[4, 1], 1], $run['same']);
         $this->assertSame(['ok', 'ok', 'ok', 'ok', 'ok'], array_column($run['crowd'], 0));
         $this->assertSame([[15, 5], 5, 1], $run['all'], 'An update of the aggregate was lost');
-        $this->assertSame([0, true], $run['marks']);
     }
 }

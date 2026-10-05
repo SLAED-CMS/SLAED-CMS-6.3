@@ -94,19 +94,15 @@ final class NodeQuery {
 
     # How each kind of read applies the rules: the state, the dates, the category predicate with or without the language, and the list filters
     private const READS = [
-        'item' => ['state' => 'any', 'time' => true, 'cats' => '', 'filter' => false],
-        'target' => ['state' => 'pub', 'time' => true, 'cats' => '', 'filter' => false],
-        'site' => ['state' => 'pub', 'time' => true, 'cats' => 'lang', 'filter' => false],
-        'parent' => ['state' => 'pub', 'time' => true, 'cats' => 'lang', 'filter' => false],
-        'list' => ['state' => 'list', 'time' => true, 'cats' => 'lang', 'filter' => true],
-        'dead' => ['state' => 'pub', 'time' => false, 'cats' => 'lang', 'filter' => true],
+        'item' => ['state' => 'any', 'cats' => '', 'filter' => false],
+        'target' => ['state' => 'pub', 'cats' => '', 'filter' => false],
+        'site' => ['state' => 'pub', 'cats' => 'lang', 'filter' => false],
+        'parent' => ['state' => 'pub', 'cats' => 'lang', 'filter' => false],
+        'list' => ['state' => 'list', 'cats' => 'lang', 'filter' => true],
     ];
 
     # The two disjoint parts an ordered read splits every branch into: with pinned constant in each, an index holding pinned after type and state gives the rows in the sort order
     private const PINS = ['n.pinned <> 0', 'n.pinned = 0'];
-
-    # The parts of the time bound of a list: future publications of pinned and unpinned rows through the pub index, and future expiries through the expires index
-    private const DEADS = ['n.pinned <> 0 AND n.published > NOW()', 'n.pinned = 0 AND n.published > NOW()', 'n.expires > NOW()'];
 
     private Database $db;
     private NodeContext $ctx;
@@ -664,7 +660,7 @@ final class NodeQuery {
             if ($state !== null && $state !== NodeStatus::Published) $where[] = '1 = 0';
             $where[] = 'n.status = :'.$key.'s';
             $pars[$key.'s'] = NodeStatus::Published->value;
-            if ($rule['time']) $where[] = 'n.published <= NOW() AND (n.expires IS NULL OR n.expires > NOW())';
+            $where[] = 'n.published <= NOW() AND (n.expires IS NULL OR n.expires > NOW())';
         }
         if ($rule['cats'] !== '') {
             $lang = $rule['cats'] === 'lang';
@@ -1028,24 +1024,6 @@ final class NodeQuery {
         $sql = 'SELECT cid, COUNT(*) AS num FROM '.PREFIX_DB.'_nodes WHERE tid = :tid AND cid > 0 GROUP BY cid';
         foreach ($this->getQueryRows($sql, ['tid' => $type->id]) as $row) $out[intval($row['cid'])] = intval($row['num']);
         return $out;
-    }
-
-    # The next moment the published selection changes on its own: the nearest future publication or expiry among the materials the list would show once their time comes
-    # One aggregate statement answers a Unix time or null; the rights, filters and scope stay, the time condition of the list gives way to the future parts of DEADS
-    public function getNodeDeadline(): ?int {
-        $parts = $this->getListParts('dead', self::DEADS);
-        $pars = [];
-        $sql = [];
-        foreach ($parts as $part) {
-            $sql[] = 'SELECT UNIX_TIMESTAMP(MIN(CASE WHEN n.published > NOW() THEN n.published END)) AS pa,'
-                .' UNIX_TIMESTAMP(MIN(CASE WHEN n.expires > NOW() THEN n.expires END)) AS pb'
-                .' FROM '.PREFIX_DB.'_nodes AS n'.$part['join'].' WHERE '.$part['where'];
-            $pars += $part['pars'];
-        }
-        $query = count($sql) === 1 ? $sql[0] : 'SELECT MIN(q.pa) AS pa, MIN(q.pb) AS pb FROM ('.implode(' UNION ALL ', $sql).') AS q';
-        $row = $this->getQueryRows($query, $pars)[0] ?? [];
-        $when = array_map('intval', array_filter([$row['pa'] ?? null, $row['pb'] ?? null], fn(mixed $v): bool => $v !== null));
-        return $when ? min($when) : null;
     }
 
     # Read the main row of one material of the type with its author and category, checked like every read; the field column only when asked

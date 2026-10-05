@@ -91,18 +91,18 @@ final class QuickEditTest extends TestCase
         $this->assertSame([422, 422, 422, 422, 422, true], $this->getRun()['forms']);
     }
 
-    # A save stores the canonical text, answers the rendered body with the edited mark out of band and moves the page cache once
+    # A save stores the canonical text and answers the rendered body with the edited mark out of band
     #[Test]
     public function aSaveAnswersTheRegionAndItsMark(): void
     {
-        $this->assertSame([200, true, true, 'Anna second text', true, true, false], $this->getRun()['save']);
+        $this->assertSame([200, true, true, 'Anna second text', true, false], $this->getRun()['save']);
     }
 
-    # The repetition of a save with its old stamp and the same text is saved again and changes neither the edit time nor the epoch
+    # The repetition of a save with its old stamp and the same text is saved again and does not change the edit time
     #[Test]
     public function aRepeatedSaveIsSavedWithoutAWrite(): void
     {
-        $this->assertSame([200, true, true], $this->getRun()['repeat'], 'The repeat of a stored save was a conflict, wrote again or moved the page cache');
+        $this->assertSame([200, true], $this->getRun()['repeat'], 'The repeat of a stored save was a conflict or wrote again');
     }
 
     # Another text at a stale stamp is a conflict that answers the current text with its fresh stamp and stores nothing
@@ -148,8 +148,8 @@ final class QuickEditTest extends TestCase
     {
         $run = $this->getRun()['forum'];
         $this->assertSame([200, true, true], $run['open'], 'The forum editor did not open with its own id and the stamp of the stored row');
-        $this->assertSame([200, true, true, 'Anna reply edited', true, true], $run['save']);
-        $this->assertSame([200, true, true], $run['repeat'], 'The repeat of a stored forum save was a conflict, wrote again or moved the page cache');
+        $this->assertSame([200, true, true, 'Anna reply edited', true], $run['save']);
+        $this->assertSame([200, true], $run['repeat'], 'The repeat of a stored forum save was a conflict or wrote again');
         $this->assertSame([409, true], $run['conflict']);
         $this->assertSame([403, 403, true], $run['foreign']);
     }

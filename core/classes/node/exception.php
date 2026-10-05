@@ -26,7 +26,4 @@ final class NodeException extends RuntimeException {
 
     # The public write window limits.send of the same address has not passed yet
     public const LIMITED = 6;
-
-    # The write guard of the page cache is closed, so nothing was written; a busy site, not a broken write
-    public const BLOCKED = 7;
 }

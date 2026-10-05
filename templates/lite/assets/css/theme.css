@@ -600,6 +600,8 @@ a.sl-crumb:hover + .sl-crumb-sep {
   border-left: var(--sl-alert-border) solid var(--sl-alert-c);
   border-radius: var(--sl-radius-1);
   box-shadow: var(--sl-shadow-xs);
+  /* A path or an address in the message has no space to break at, so it breaks anywhere rather than leaving the alert */
+  overflow-wrap: anywhere;
 }
 
 .sl-alert::before {
@@ -6525,8 +6527,6 @@ a.sl-chip-neutral {
 }
 
 .sl-msg-foot {
-  padding-top: var(--sl-space-5);
-  border-top: 1px solid var(--sl-border-subtle);
   font-size: var(--sl-font-small);
   color: var(--sl-text-muted);
   max-width: var(--sl-msg-width);

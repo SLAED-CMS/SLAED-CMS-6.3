@@ -52,6 +52,18 @@ final class StatsContractTest extends TestCase
         return $data;
     }
 
+    # Run the stats cookie scenario of the probe once in a fresh PHP process and decode its JSON report
+    private function getCookieProbe(): array
+    {
+        static $data = null;
+        if ($data !== null) return $data;
+        $script = dirname(__DIR__).'/Support/contract_probe.php';
+        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' statscookie 2>&1');
+        $data = json_decode($out, true);
+        $this->assertIsArray($data, 'Probe did not return JSON: '.$out);
+        return $data;
+    }
+
     # Start one probe process per IP at once so their locked counter updates really overlap, then wait for all of them
     private function setParallelHits(array $ips, int $rep): void
     {
@@ -238,5 +250,25 @@ final class StatsContractTest extends TestCase
         $this->assertSame('3', $part[2]);
         $this->assertSame('203.0.113.36,', $this->getFile('ips.log'));
         $this->assertSame('', $this->getFile('user.log'), 'a guest never enters the user set');
+    }
+
+    # The real updateStatsCookie() continues a v2 session, keeps the country cache, and exposes no uniqueness state
+    #[Test]
+    public function statsCookieVtwoRoundTripsWithoutUniquenessState(): void
+    {
+        $data = $this->getCookieProbe();
+        $this->assertSame(['sess', 'country'], $data['v2_keys']);
+        $this->assertSame(5, $data['v2_depth']);
+        $this->assertFalse($data['v2_isnew']);
+        $this->assertSame('DE', $data['v2_country']);
+    }
+
+    # The real updateStatsCookie() discards legacy v1 cookies and starts a fresh session
+    #[Test]
+    public function statsCookieVoneIsDiscarded(): void
+    {
+        $data = $this->getCookieProbe();
+        $this->assertTrue($data['v1_isnew']);
+        $this->assertSame(1, $data['v1_depth']);
     }
 }

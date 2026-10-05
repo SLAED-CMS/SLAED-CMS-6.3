@@ -13,7 +13,7 @@ class QuickEdit {
     private const ID = '/^[1-9][0-9]{0,9}$/D';
 
     # The result codes a write may answer; anything else an adapter answers is taken as a failed write
-    private const CODES = ['saved', 'denied', 'unavailable', 'conflict', 'rules', 'storage', 'blocked'];
+    private const CODES = ['saved', 'denied', 'unavailable', 'conflict', 'rules', 'storage'];
 
     private array $kinds;
 

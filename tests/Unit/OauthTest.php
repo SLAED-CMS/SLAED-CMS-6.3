@@ -14,11 +14,12 @@ final class OauthTest extends TestCase
     private static string $kid = 'unit-kid';
     private static string $jwksFile = '';
 
-    # The JWT cases use a synthetic unittest provider and a locally generated RSA key, so only jwks_unittest.json is written, never the real provider caches
+    # The JWT cases use a synthetic unittest provider and a locally generated RSA key, so only the unittest JWKS entry of the data cache is written, never the real provider caches
     public static function setUpBeforeClass(): void
     {
+        require_once BASE_DIR.'/core/classes/cache.php';
         require_once BASE_DIR.'/core/classes/oauth.php';
-        self::$jwksFile = CACHE_DIR.'/jwks_unittest.json';
+        self::$jwksFile = \Cache::getFile(['jwks', 'unittest'], 'json');
         $GLOBALS['conf']['security'] = ['log_size' => 262144];
         $GLOBALS['conf']['homeurl'] = 'https://slaed.loc';
         $GLOBALS['conf']['oauth'] = [
@@ -37,7 +38,7 @@ final class OauthTest extends TestCase
                 'kty' => 'RSA', 'kid' => self::$kid, 'alg' => 'RS256',
                 'n' => \Oauth::getEncode($det['rsa']['n']), 'e' => \Oauth::getEncode($det['rsa']['e']),
             ];
-            file_put_contents(self::$jwksFile, json_encode(['time' => time(), 'keys' => [$jwk]]));
+            \Cache::setBody(self::$jwksFile, (string)json_encode(['keys' => [$jwk]]));
         }
     }
 

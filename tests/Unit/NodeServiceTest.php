@@ -170,7 +170,6 @@ final class NodeServiceTest extends TestCase
         $draft = $run['draft']['value'];
         $this->assertSame(['Draft', 1, 0, 'Editor', '127.0.0.1', null, [15, 16], 1], [$draft['status'], $draft['version'], $draft['uid'], $draft['aname'], $draft['ip'],
             $draft['pubdate'], $draft['cids'], $draft['poll']], 'The draft of a moderator');
-        $this->assertTrue($run['epoch'], 'A create does not reach the page cache');
         $pend = $run['pending']['value'];
         $this->assertSame(['Pending', 2, '', null, 12], [$pend['status'], $pend['uid'], $pend['aname'], $pend['ip'], $pend['cid']], 'The submission of a user');
         $direct = $run['direct']['value'];
@@ -181,7 +180,6 @@ final class NodeServiceTest extends TestCase
         $this->assertSame(['Pending', 0, ['release' => '1.0', 'site' => 'https://example.com/']], [$guest['status'], $guest['uid'], $guest['fields']], 'A guest submission');
         $this->assertSame('https://example.com/g.zip', $guest['assets'][0]['src']);
         $this->assertInvalid($run['nomin'], 'assets.download.min', 'A pending material below the minimum of a role');
-        $this->assertSame(0, $run['guards'], 'A write left a cache guard behind');
     }
 
     # Update: the stale, the foreign, the forged and a mere author are refused without a trace; a moderator replaces every full set, keeps author, address and inactive field
@@ -244,7 +242,6 @@ final class NodeServiceTest extends TestCase
         $this->assertSame([['uid' => 3, 'aid' => 2, 'scope' => 'node.news', 'points' => 1, 'rid' => null]], $run['moderate']['sub'],
             'The approval of a foreign material did not reward its moderator exactly once, or a second approval rewarded again');
         $this->assertSame([[], []], [$run['moderate']['own'], $run['moderate']['draft']], 'An own material or a publication without review rewarded the moderator');
-        $this->assertSame(0, $run['guards']);
     }
 
     # Quick edit: the moderator in every state, the signed-in author of a pending or published material inside limits.edit, nobody for a material without an account
@@ -256,8 +253,8 @@ final class NodeServiceTest extends TestCase
         $this->assertSame(['anna' => true, 'boris' => false, 'guest' => false, 'moder' => true, 'missing' => null], $run['source']);
         $this->assertInvalid($run['field'], 'field');
         $this->assertSame(['Pending', 1, 'Body by anna', true], $run['back'], 'An author edit of a published material did not go back to moderation in one step');
-        $this->assertSame([true, true, 'Pending', true], array_slice($run['repeat'], 0, 4), 'The repeat of a stored save moved the version, the date, the state or the cache');
-        $this->assertLessThanOrEqual(6, $run['repeat'][4], 'The repeat of a stored save ran more than its reads and its locks');
+        $this->assertSame([true, true, 'Pending'], array_slice($run['repeat'], 0, 3), 'The repeat of a stored save moved the version, the date or the state');
+        $this->assertLessThanOrEqual(6, $run['repeat'][3], 'The repeat of a stored save ran more than its reads and its locks');
         $this->assertRefused($run['conflict'], 4, 'The expected material version is stale');
         $this->assertSame(['Published', 1], $run['award'], 'The approval after the move back awarded the publication twice or took it back');
         $this->assertSame([true, 'Pending', true], $run['job'], 'The move back left the job of a future publication behind');
@@ -274,7 +271,6 @@ final class NodeServiceTest extends TestCase
         $this->assertRefused($run['anon'][1], 2, 'The context may not edit this material');
         $this->assertRefused($run['ext'][0], 2, 'A type with an extension keeps its full form');
         $this->assertFalse($run['ext'][1]);
-        $this->assertSame(0, $run['guards']);
     }
 
     # Delete: the stale and the foreign are refused; the physical delete takes every row of the material, compensates the publication once
@@ -354,7 +350,6 @@ final class NodeServiceTest extends TestCase
         $this->assertSame(0, $run['after'], 'A move that died before its commit left its edge');
         $this->assertSame(['ok' => true, 'value' => 2], $run['next'], 'The move after the crash found a held lock or a partial state');
         $this->assertTrue($run['nextedge']);
-        $this->assertTrue($run['cleared'], 'The guard of the crashed writer was not recovered');
     }
 
     # Publication: a future date gets its job and no points, the job is delivered exactly once by the background context after its date
@@ -434,7 +429,7 @@ final class NodeServiceTest extends TestCase
     }
 
     # Counters: a view counts a readable publication only and is rewarded once, and comments and ratings are written only inside the transaction of their owner
-    # Such writes are checked and go without a new version, date or cache generation
+    # Such writes are checked and go without a new version or date
     #[Test]
     public function theCountersMoveWithoutAVersion(): void
     {
@@ -442,7 +437,6 @@ final class NodeServiceTest extends TestCase
         $this->assertSame([['ok' => true, 'value' => null], ['ok' => true, 'value' => null]], $run['view']);
         $this->assertRefused($run['draft'], 1, 'The material does not exist');
         $this->assertSame([['uid' => 2, 'points' => 1, 'rid' => null]], $run['points'], 'A view is not rewarded exactly once');
-        $this->assertTrue($run['epoch'], 'A view raised the cache generation');
         $this->assertInvalid($run['notx'], 'transaction');
         $this->assertSame(['ok' => true, 'value' => null], $run['comments']);
         $this->assertInvalid($run['negative'], 'comnum');
@@ -467,7 +461,6 @@ final class NodeServiceTest extends TestCase
         $this->assertSame(['hits' => 2, 'open' => 1, 'ruid' => 2], array_diff_key($run['rows']['download'], ['updated' => 0]), 'The first report lost its author');
         $this->assertSame(['hits' => 1, 'open' => 1, 'ruid' => 0], array_diff_key($run['rows']['link'], ['updated' => 0]), 'A guest report');
         $this->assertTrue($run['sameupd'], 'A counter or a report changed the date of the resource');
-        $this->assertTrue($run['epoch'], 'A counter or a report raised the cache generation');
         $this->assertSame(1, $run['version']);
         foreach (['anna', 'boss', 'moder'] as $key) $this->assertRefused($run['decide'][$key], 2, 'The context does not moderate the type', $key);
         foreach (['useful', 'again', 'guest'] as $key) $this->assertSame(['ok' => true, 'value' => null], $run['decide'][$key], $key);
@@ -493,7 +486,6 @@ final class NodeServiceTest extends TestCase
         $this->assertRefused($run['anna'], 2, 'The context administers no category');
         $this->assertRefused($run['moder'], 2, 'The context does not administer the type');
         $this->assertRefused($run['deletemissing'], 1, 'The category does not exist');
-        $this->assertTrue($run['epoch'], 'A category write does not reach the page cache');
         $this->assertSame(['news', 'german'], $run['stored']);
         $this->assertSame(['ok' => true, 'value' => null], $run['delete']);
         $this->assertSame([null, null], $run['gone'], 'The category or its subcategory stayed');
@@ -506,7 +498,7 @@ final class NodeServiceTest extends TestCase
         $this->assertTrue($run['broken'][0], 'A type with a broken configuration left the registry');
         $this->assertRefused($run['broken'][1], 5, 'The node type cannot be read', 'a category of a broken type');
         $this->assertSame('links', $run['broken'][2], 'The category of a broken type was deleted');
-        $this->assertSame([0, 16], [$run['guards'], $run['used']]);
+        $this->assertSame(16, $run['used']);
     }
 
     # Preview: the same checks as a create, an unsaved material with id 0 and version 0 and its metadata, and nothing written anywhere
@@ -523,7 +515,6 @@ final class NodeServiceTest extends TestCase
         $this->assertRefused($run['task'], 2, 'A background context writes no material');
         $this->assertSame(['ok' => true, 'value' => 0], $run['nopoint'], 'A preview needs the points of a write');
         $this->assertTrue($run['same'], 'A preview wrote a row, a job, points or a guard');
-        $this->assertTrue($run['epoch'], 'A preview raised the cache generation');
     }
 
     # The extension of a type: exactly the registered instance writes it, its data is checked before and written inside the transaction of every write
@@ -674,13 +665,13 @@ final class NodeServiceTest extends TestCase
     {
         $run = $this->getRuns()['award'];
         $this->assertRefused($run['refused'], 5, 'The award of the material cannot be compensated', 'a delete whose compensation Point refuses');
-        $this->assertSame([true, 1, 0, 0], $run['kept'], 'A refused compensation did not keep the material, its comment and the journal');
+        $this->assertSame([true, 1, 0], $run['kept'], 'A refused compensation did not keep the material, its comment and the journal');
         $this->assertSame(['ok' => true, 'value' => null], $run['closed']);
         $this->assertSame([false, 0, 1, 1, 1], $run['gone'], 'A closed points configuration did not delete, compensated the publication or logged nothing');
         $user = $run['user'];
         foreach (['gone', 'closed'] as $key) $this->assertSame(['Open', false, 0, 0], $user[$key], 'A comment of a material '.$key.' before the lock was stored');
         $this->assertSame(['Open', true, 1, 1], $user['fine'], 'A comment of an open material was not stored and rewarded');
-        $this->assertSame([false, 0, 0, false, 0, 1], $user['lost'], 'A lost points unit kept the comment, its transaction or its guard, or logged nothing');
+        $this->assertSame([false, 0, 0, false, 1], $user['lost'], 'A lost points unit kept the comment or its transaction, or logged nothing');
         $this->assertSame([false, 0, 0], $run['root']['orphan'], 'A pending comment of a material that is gone was published');
         $this->assertSame([true, 1, 1], $run['root']['live'], 'A pending comment of a live material was not published and rewarded');
     }

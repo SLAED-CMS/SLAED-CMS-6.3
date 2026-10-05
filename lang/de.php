@@ -518,7 +518,6 @@ define('_RSS_PROBLEM','Es existiert das Problem mit den Kopfteilen!');
 define('_RULES','Die Regeln bei der Registrierung der Benutzer');
 define('_RUSSIAN','Russisch');
 define('_SAVE','Speichern');
-define('_SAVEBUSY','Speichern ist gerade nicht möglich, bitte versuchen Sie es später erneut.');
 define('_SAVECHANGES','Änderungen speichern');
 define('_SUCCSAVE','Die Änderungen wurden erfolgreich gespeichert.');
 define('_SUCCDELETE','Das Objekt wurde erfolgreich gelöscht.');

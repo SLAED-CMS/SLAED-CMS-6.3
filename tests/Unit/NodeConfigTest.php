@@ -109,7 +109,7 @@ final class NodeConfigTest extends TestCase
         $this->assertSame(1, substr_count($code, 'setConfigFile('), 'The configuration is written by more than one path');
         $this->assertStringContainsString('->filterNodeSettings(', $code, 'The settings are not checked by the one validator of the reader');
         $this->assertSame(0, preg_match('/function (?:filter|check)(?:List|View|Flow|Feature|Link|Asset)Rule/', $code), 'The writer has a second validator of the settings');
-        foreach (['Cache::getWriteGuard()', 'Cache::addEpoch(true)', 'Cache::deleteWriteGuard(', 'FileManager::getPathLock(', 'FOR UPDATE'] as $step) {
+        foreach (['FileManager::getPathLock(', 'FOR UPDATE'] as $step) {
             $this->assertStringContainsString($step, $code, $step);
         }
     }
@@ -179,9 +179,7 @@ final class NodeConfigTest extends TestCase
         $this->assertSame(['active' => '1', 'period' => '2592000', 'detail' => '1', 'guests' => '1'], $trace['rating']);
         $this->assertNull($trace['fields']);
         $this->assertTrue($trace['dir'] && $trace['guard'], 'The directory or its guard is missing');
-        $this->assertTrue($run['epoch'], 'The cache generation was not raised');
         $this->assertFalse($run['state']['marker']);
-        $this->assertSame(0, $run['state']['guards'], 'A cache guard was left');
         $this->assertSame(12, count($run['read']['uploads']));
         $this->assertTrue($run['public'], 'A disabled type is public');
         $this->assertTrue($run['files']['ok'] && $run['docs']['ok']);
@@ -346,8 +344,6 @@ final class NodeConfigTest extends TestCase
             $end = $run['end'];
             $this->assertFalse($end['marker'], $when.': the marker is left');
             $this->assertSame([$row, $old, $title], [$end['row'], $end['old'], $end['read']], $when.': the restore took the wrong side');
-            $this->assertTrue($end['recover'], $when.': the guard of the dead writer was not recovered');
-            $this->assertSame(0, $end['left']);
         }
         $this->assertSame(['done' => false, 'why' => 'proof', 'marker' => true], $this->getRuns()['crash']['before']['blocked'], 'A row of neither side was decided');
     }

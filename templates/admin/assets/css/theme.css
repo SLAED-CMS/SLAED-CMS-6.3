@@ -3068,6 +3068,8 @@ dialog.sl-modal[data-sl-window].sl-is-full .sl-modal-act-move { display: none; }
   padding: var(--sl-space-3) var(--sl-space-5);
   color: var(--sl-text);
   text-align: start;
+  /* A path or an address in the message has no space to break at, so it breaks anywhere rather than leaving the alert */
+  overflow-wrap: anywhere;
   background: var(--sl-alert-tint);
   border-left: var(--sl-alert-border) solid var(--sl-alert-c);
   border-radius: var(--sl-radius-2);
@@ -4353,7 +4355,8 @@ button.sl-but-mini {
 }
 
 .sl-generates,
-.sl-license {
+.sl-license,
+.sl-msg-foot {
   color: var(--sl-text-muted);
   font-size: var(--sl-font-small);
 }
@@ -6561,13 +6564,6 @@ body:has(.sl-admin-login-shell)::before {
   align-items: center;
   justify-content: center;
   margin-bottom: var(--sl-space-7);
-}
-
-.sl-msg-foot {
-  padding-top: var(--sl-space-6);
-  border-top: 1px solid var(--sl-border);
-  font-size: var(--sl-font-small);
-  color: var(--sl-text-muted);
 }
 
 /* File browser: the shell of the system file tab — toolbar, three columns, capability row and status line (docs/FILE-MANAGER-CONCEPT-2026.md) */

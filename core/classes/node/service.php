@@ -63,7 +63,6 @@ final class NodeService {
     private ?Point $pnt;
     private ?NodeExtension $ext;
     private NodeQuery $query;
-    private bool $idle = false;
 
     # Keep the database, the request context, the shared field system, the shared points of the operations that reward and the extension of the type a material write serves
     public function __construct(Database $db, NodeContext $context, Field $field, ?Point $point = null, ?NodeExtension $ext = null) {
@@ -417,37 +416,32 @@ final class NodeService {
         if (($base['node']['types'][$name]['version'] ?? null) !== $version) throw $this->getStorage('The configuration does not carry the type at its version');
     }
 
-    # Run one type operation as the closure of the shared configuration writer in the order of the lock protocol, then finish the cache invalidation
-    # The work gets the fresh areas and the locked row and answers the package and the proof; a refusal rolls back, an unknown commit or a failed bump keeps the guard
+    # Run one type operation as the closure of the shared configuration writer in the order of the lock protocol
+    # The work gets the fresh areas and the locked row and answers the package and the proof; a refusal rolls back
     # A published change leaves its proof and its administrator in the site journal, since the configuration journal of the writer is removed once it is finished
     private function setTypeWrite(string $name, Closure $work): void {
         $this->checkManage();
         if (!preg_match(self::NAME, $name)) throw $this->getInvalid('name');
-        $state = ['fail' => null, 'guard' => false, 'lock' => false, 'res' => '', 'proof' => []];
+        $state = ['fail' => null, 'lock' => false, 'proof' => []];
         $done = setConfigFile(function (array $base, Closure $save) use ($name, $work, &$state): string {
             try {
                 $this->checkBaseNode($base);
                 $state['lock'] = FileManager::getPathLock(UPLOADS_DIR.'/'.$name);
                 if ($state['lock'] === false) throw $this->getStorage('The directory lock of the type cannot be taken');
-                $state['guard'] = Cache::getWriteGuard();
-                if ($state['guard'] === false) throw $this->getStorage('The cache guard cannot be taken');
                 if (!$this->db->setSqlBegin()) throw $this->getStorage('The transaction cannot be started');
                 [$pack, $state['proof']] = $work($base, $this->getTypeRow($name));
                 if (!$save($pack, $state['proof'])) throw $this->getStorage('The configuration package cannot be saved');
             } catch (Throwable $err) {
                 $this->db->setSqlRollback();
                 $state['fail'] = ($err instanceof NodeException) ? $err : new NodeException('A node type operation failed', NodeException::STORAGE, $err);
-                return $state['res'] = 'aborted';
+                return 'aborted';
             }
             if (!$this->db->setSqlCommit()) {
                 $state['fail'] = $this->getStorage('The commit of a node type operation is uncertain');
-                return $state['res'] = 'uncertain';
+                return 'uncertain';
             }
-            return $state['res'] = 'committed';
+            return 'committed';
         });
-        $bump = $done && Cache::addEpoch(true);
-        if ($done && !$bump) Logger::addSite('error', 'Node: the cache generation could not be raised after a type operation', ['name' => $name]);
-        if ($state['guard'] !== false && ($bump || $state['res'] === 'aborted')) Cache::deleteWriteGuard($state['guard']);
         if ($state['lock'] !== false) FileManager::deletePathLock($state['lock']);
         if ($done && $state['proof']) Logger::addSite('info', 'Node: a type operation was published', $state['proof'] + ['aid' => $this->ctx->aid]);
         if (!$done) throw $state['fail'] ?? new NodeException('The configuration of a node type cannot be written', NodeException::STORAGE);
@@ -903,17 +897,13 @@ final class NodeService {
         return $name;
     }
 
-    # Run one write of Node rows in lock protocol order: the root lock of the type directory with the file checks, the poll locks, the cache guard, BEGIN, the work, COMMIT
-    # The final cache generation follows the commit and only then the guard goes; a refusal before BEGIN and a proven rollback free the guard, an unknown outcome keeps it
-    # A closed guard is refused as BLOCKED; a work that wrote nothing says so through the flag idle, and its commit moves no cache generation
+    # Run one write of Node rows in lock protocol order: the root lock of the type directory with the file checks, the poll locks, BEGIN, the work, COMMIT
     private function setNodeWrite(?NodeType $root, array $polls, ?Closure $files, Closure $work): mixed {
         $lock = false;
         $held = [];
-        $guard = false;
         $step = 'before';
         $res = null;
         $fail = null;
-        $this->idle = false;
         try {
             if ($root !== null && $files !== null) {
                 require_once BASE_DIR.'/core/classes/filemanager.php';
@@ -922,21 +912,15 @@ final class NodeService {
                 $files();
             }
             foreach ($polls as $poll) $held[] = $this->getPollLock($poll);
-            $guard = Cache::getWriteGuard();
-            if ($guard === false) throw new NodeException('The cache guard is closed', NodeException::BLOCKED);
             if (!$this->db->setSqlBegin()) throw $this->getStorage('The transaction cannot be started');
             $step = 'open';
             $res = $work();
             $step = 'unknown';
             if (!$this->db->setSqlCommit()) throw $this->getStorage('The commit of a node write is uncertain');
-            $step = 'done';
         } catch (Throwable $err) {
-            if ($step === 'open' && !$this->db->setSqlRollback()) $step = 'unknown';
+            if ($step === 'open') $this->db->setSqlRollback();
             $fail = ($err instanceof NodeException) ? $err : new NodeException('A node write failed', NodeException::STORAGE, $err);
         }
-        $bump = $step === 'done' && ($this->idle || Cache::addEpoch(true));
-        if ($step === 'done' && !$bump) Logger::addSite('error', 'Node: the cache generation could not be raised after a write', ['type' => $root?->name ?? '']);
-        if ($guard !== false && ($bump || $step === 'before' || $step === 'open')) Cache::deleteWriteGuard($guard);
         foreach ($held as $name) $this->db->getSqlQuery('SELECT RELEASE_LOCK(:name)', ['name' => $name]);
         if ($lock !== false) FileManager::deletePathLock($lock);
         if ($fail !== null) throw $fail;
@@ -1220,7 +1204,7 @@ final class NodeService {
 
     # Change one text of a material, its intro or its body, at the expected version: the quick edit, for a type without an extension only
     # The text is checked like the full form checks it and its new attachments under the directory lock; under the locks of the type and the material the right is read again
-    # An equal text answers the stored material without a write, no version step, no date, no state and no cache generation, and only then a stale version is a conflict
+    # An equal text answers the stored material without a write, no version step, no date and no state, and only then a stale version is a conflict
     # An author edit of a published material sends it back to moderation in the same write and version step, unless moderation is off or the author publishes directly
     # Categories, fields, relations, resources and the poll stay as they are; a job of a future publication goes with the move back, and the next approval rewards nothing twice
     public function updateNodeText(int $id, string $field, string $text, int $version): Node {
@@ -1241,10 +1225,7 @@ final class NodeService {
             if (!$row) throw $this->getMissing('The material does not exist');
             $cur = $this->getNodeModel($row, $type, null);
             if (!$this->checkTextRight($type, $cur, $now)) throw $this->getDenied('The context may not edit this material');
-            if ($canon === (string)$row[$field]) {
-                $this->idle = true;
-                return $cur;
-            }
+            if ($canon === (string)$row[$field]) return $cur;
             if ($cur->version !== $version) throw new NodeException('The expected material version is stale', NodeException::CONFLICT);
             $flow = $type->settings['workflow'];
             $direct = $this->ctx->uid > 0 && array_intersect($flow['publish'], $this->ctx->groups) !== [];
@@ -1469,7 +1450,7 @@ final class NodeService {
 
     # Clear the link of every material to one shared poll that is being deleted, inside the open transaction of the poll owner, who already holds the named lock of the poll
     # Which types a poll reaches is only known from the materials, and a plain read of them would open a snapshot before the wait
-    # So every type row is locked first by ascending id, then the materials of the poll by ascending id; the owner raises the cache generation after its commit
+    # So every type row is locked first by ascending id, then the materials of the poll by ascending id
     public function deleteNodePoll(int $id): void {
         if (!$this->ctx->polls) throw $this->getDenied('Only an administrator with the right of polls deletes a poll');
         if ($id < 1 || $id > self::MAXINT) throw $this->getInvalid('poll');
@@ -1699,7 +1680,7 @@ final class NodeService {
     public function addNodeCategory(array $row): int {
         $this->checkCatRow($row);
         $types = $this->getCatTypes([$row['modul']]);
-        return $this->setNodeWrite(null, [], null, function () use ($row, $types): int {
+        $cid = $this->setNodeWrite(null, [], null, function () use ($row, $types): int {
             $this->setCatTypeLock($types);
             $this->checkCatParent(0, $row['parent'], $row['modul']);
             $num = $this->getRowCount('SELECT COALESCE(MAX(ordern), 0) FROM '.PREFIX_DB.'_categories WHERE modul = :modul', ['modul' => $row['modul']]);
@@ -1707,6 +1688,8 @@ final class NodeService {
             $this->getQueryRes($sql, $row + ['ordern' => $num + 1]);
             return intval($this->db->getSqlLastId());
         });
+        deleteCategoryMap($row['modul']);
+        return $cid;
     }
 
     # Change one category of a Node type with the full checked row of the category form, under the lock of every type it leaves or enters and of the category itself
@@ -1733,6 +1716,8 @@ final class NodeService {
             $this->getQueryRes('UPDATE '.PREFIX_DB.'_categories SET '.$set.' WHERE id = :id', $row + ['id' => $id]);
             return true;
         });
+        deleteCategoryMap($was);
+        if ($row['modul'] !== $was) deleteCategoryMap($row['modul']);
     }
 
     # Delete one category of a Node type with its whole subtree under the lock of the type, the categories of its module and the materials, so no subcategory outlives its parent
@@ -1765,5 +1750,6 @@ final class NodeService {
             $this->getQueryRes('DELETE FROM '.PREFIX_DB.'_categories WHERE id IN ('.$in.')', $pars);
             return true;
         });
+        deleteCategoryMap($was);
     }
 }

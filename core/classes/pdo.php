@@ -18,7 +18,6 @@ class Database {
     public string $qtime = '';
     public ?string $qid = null;
     public ?PDOException $laste = null;
-    private bool $qbump = false;
 
     # Opens connection to the SQL server (PDO); a refused connection is logged, and a caller without the core under SETUP_FILE gets the reason as an exception to report
     public function __construct(string $server, string $user, string $pass, string $dbname, string $charset = 'utf8mb4') {
@@ -120,8 +119,6 @@ class Database {
     }
 
     # Executes SQL query (raw or with parameters). Supports: Named (:name) or Positional (?) placeholders
-    # The first write of the panel raises the page-cache generation at once and forces it again when the request ends, after every commit, so no page cached in between survives
-    # The online tracking of _session runs on every request of the panel and no cached page shows it, so its writes move no generation
     function getSqlQuery(string $query = '', array $params = []): PDOStatement|false {
         global $conf, $tpl;
         $this->qresult = null;
@@ -152,11 +149,6 @@ class Database {
         if ($this->qresult) {
             $this->qnum++;
             unset($this->qrow[$this->qid], $this->qrowset[$this->qid]);
-            if (!$this->qbump && defined('ADMIN_FILE') && preg_match('/^\s*(INSERT|UPDATE|DELETE|REPLACE|TRUNCATE)\b(?!\s+(?:INTO\s+|FROM\s+)?`?\w+_session\b)/i', $query)) {
-                $this->qbump = true;
-                Cache::addEpoch();
-                register_shutdown_function(static fn(): bool => Cache::addEpoch(true));
-            }
             return $this->qresult;
         }
         if (!$conf['security']['error_log']) return false;

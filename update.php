@@ -168,8 +168,7 @@ function setMigrateStash(array $plan, array &$state): void {
     $todo = array_keys(array_filter($plan, fn(array $v): bool => $v['block'] === ''));
     $todo = array_values(array_filter($todo, fn(string $v): bool => empty($state['stash'][$v])));
     if (!$todo) return;
-    $guard = Cache::getWriteGuard();
-    if ($guard === false || !$db->setSqlBegin()) throw new RuntimeException('The transaction of the stash step cannot be started');
+    if (!$db->setSqlBegin()) throw new RuntimeException('The transaction of the stash step cannot be started');
     try {
         foreach ($todo as $mod) {
             foreach (['_categories', '_comment', '_favorites'] as $tab) {
@@ -179,11 +178,9 @@ function setMigrateStash(array $plan, array &$state): void {
         if (!$db->setSqlCommit()) throw new RuntimeException('The commit of the stash step failed');
     } catch (Throwable $err) {
         $db->setSqlRollback();
-        Cache::deleteWriteGuard($guard);
         throw $err;
     }
-    Cache::addEpoch(true);
-    Cache::deleteWriteGuard($guard);
+    foreach ($todo as $mod) deleteCategoryMap($mod);
     $skip = FileManager::getGuardFiles();
     foreach ($todo as $mod) {
         $dir = getMigrateDir().'/files/'.$mod;
@@ -637,7 +634,7 @@ function setMigrateLinks(string $mod, NodeType $type, array $map, array $names, 
     }
 }
 
-# Carry the data of one module in one transaction under the lock of its type row and the page cache guard; the map is written to the manifest before the commit
+# Carry the data of one module in one transaction under the lock of its type row; the map is written to the manifest before the commit
 # A repeat after a commit whose manifest was not finished recognizes the first new material, or with no material the emptied ~<module> key, and only finishes the manifest
 function setMigrateData(string $mod, array $one, array &$state): void {
     global $db;
@@ -664,8 +661,7 @@ function setMigrateData(string $mod, array $one, array &$state): void {
     $texts = array_merge($texts, getMigrateQuery($sql, ['key' => '~'.$mod, 'tag' => '%[attach=%'])->fetchAll(PDO::FETCH_COLUMN));
     $names = getMigrateNames($type->name, array_map('strval', $texts), $files[$mod]);
     $arch = [];
-    $guard = Cache::getWriteGuard();
-    if ($guard === false || !$db->setSqlBegin()) throw new RuntimeException('The transaction of '.$mod.' cannot be started');
+    if (!$db->setSqlBegin()) throw new RuntimeException('The transaction of '.$mod.' cannot be started');
     try {
         getMigrateQuery('SELECT id FROM '.PREFIX_DB.'_node_types WHERE id = :id FOR UPDATE', ['id' => $type->id]);
         getMigrateQuery('UPDATE '.PREFIX_DB.'_categories SET modul = :name WHERE modul = :key', ['name' => $type->name, 'key' => '~'.$mod]);
@@ -681,13 +677,11 @@ function setMigrateData(string $mod, array $one, array &$state): void {
         if (!$db->setSqlCommit()) throw new RuntimeException('The commit of '.$mod.' failed');
     } catch (Throwable $err) {
         $db->setSqlRollback();
-        Cache::deleteWriteGuard($guard);
         $state['data'][$mod] = [];
         setMigrateState($state);
         throw $err;
     }
-    Cache::addEpoch(true);
-    Cache::deleteWriteGuard($guard);
+    deleteCategoryMap($type->name);
     $state['data'][$mod]['state'] = 'done';
     setMigrateState($state);
 }
@@ -709,8 +703,7 @@ function setMigrateOuter(array &$state): void {
     $files = array_filter($files);
     $arch = [];
     $rows = 0;
-    $guard = Cache::getWriteGuard();
-    if ($guard === false || !$db->setSqlBegin()) throw new RuntimeException('The transaction of the outer addresses cannot be started');
+    if (!$db->setSqlBegin()) throw new RuntimeException('The transaction of the outer addresses cannot be started');
     try {
         $sql = 'SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :tab';
         foreach ($files ? getMigrateOuter() : [] as $tab => $cols) {
@@ -737,13 +730,10 @@ function setMigrateOuter(array &$state): void {
         if (!$db->setSqlCommit()) throw new RuntimeException('The commit of the outer addresses failed');
     } catch (Throwable $err) {
         $db->setSqlRollback();
-        Cache::deleteWriteGuard($guard);
         unset($state['outer']);
         setMigrateState($state);
         throw $err;
     }
-    Cache::addEpoch(true);
-    Cache::deleteWriteGuard($guard);
 }
 
 # Remove the directories below and at one path that hold no file any more, deepest first; a directory that still holds something stays
@@ -2000,7 +1990,7 @@ if (($_REQUEST['op'] ?? '') === 'update' || !isset($umark['points'], $umark['rat
 define('MODULE_FILE', true);
 require_once BASE_DIR.'/core/system.php';
 require_once BASE_DIR.'/core/classes/filemanager.php';
-Cache::setHeaders(false);
+Cache::setHeaders();
 if (!isAdmin(true)) setExit(_ACCESSDENIED);
 $conf['name'] = '';
 $fail = '';

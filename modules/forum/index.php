@@ -383,7 +383,7 @@ function forum(): void {
                                 .$tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'label' => _OK])]);
                             $cont .= $tpl->getHtmlPart('form-wrap', [
                                 'action' => 'index.php?name='.$conf['name'],
-                                'content_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getPageToken(), 'input_attr' => '']).$topicList,
+                                'content_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken(), 'input_attr' => '']).$topicList,
                             ]);
                         } else {
                             $cont .= $topicList;
@@ -752,7 +752,7 @@ function view(): void {
                         'icon_name' => 'pencil-square',
                         'is_htmx' => true,
                         'hx_target' => '#repfor'.$fid,
-                        'hx_headers' => getPageToken(),
+                        'hx_headers' => getSiteToken(),
                     ];
                     $eitems[] = ['href' => 'index.php?name='.$conf['name'].'&op=add&cat='.$fcat.'&id='.$fid.'&pid='.$topic, 'title' => _FULLEDIT, 'icon_name' => 'pencil'];
                 }
@@ -763,7 +763,7 @@ function view(): void {
                         'hidden' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'delete', 'input_attr' => ''])
                             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$fcat, 'input_attr' => ''])
                             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'id', 'value_attr' => (string)$fid, 'input_attr' => ''])
-                            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getPageToken(), 'input_attr' => '']),
+                            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken(), 'input_attr' => '']),
                         'title' => _ONDELETE,
                         'icon_name' => 'trash',
                         'confirm_text' => _DELETE.' "'.$val[5].'"?',
@@ -818,7 +818,7 @@ function view(): void {
                     ]);
                 $cont .= $tpl->getHtmlPart('form-wrap', [
                     'action' => 'index.php?name='.$conf['name'],
-                    'content_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getPageToken(), 'input_attr' => ''])
+                    'content_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken(), 'input_attr' => ''])
                         .$tpl->getHtmlPart('fieldset-panel', ['legend' => _OPMOD, 'is_moder_mass' => true, 'content' => $selmm]),
                 ]);
             }
@@ -865,7 +865,7 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
         $hide = $tpl->getHtmlFrag('hidden', ['name_attr' => 'subject', 'value_attr' => $subject, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'pid', 'value_attr' => (string)$id, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$catid, 'input_attr' => ''])
-            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getPageToken(), 'input_attr' => ''])
+            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken(), 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'posttype', 'value_attr' => 'save', 'input_attr' => '']);
         $rows .= $tpl->getHtmlFrag('form-field-row', [
             'label' => '',
@@ -1063,7 +1063,7 @@ function add(): void {
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'fid', 'value_attr' => (string)$fid, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'pid', 'value_attr' => (string)$pid, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$catid, 'input_attr' => ''])
-            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getPageToken(), 'input_attr' => '']);
+            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken(), 'input_attr' => '']);
         $rows .= $tpl->getHtmlFrag('form-field-row', [
             'label' => '',
             'field_html' => $hide

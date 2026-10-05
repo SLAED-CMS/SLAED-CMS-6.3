@@ -444,7 +444,7 @@ class Mail {
     # Locate the cache entry one domain verdict is stored in, or report that this installation has no cache to store it in
     private function getDnsFile(string $host): string {
         if (!class_exists('Cache') || !defined('CACHE_DIR')) return '';
-        return Cache::getPath('data', Cache::getHash(['maildns', $host]), 'json');
+        return Cache::getFile(['maildns', $host], 'json');
     }
 
     # Resolve the shared body of a bulk message once per batch, because a mailing stores its text on its own row and its queue rows carry only the reference to it

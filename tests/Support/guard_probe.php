@@ -8,7 +8,6 @@
 # It lifts the shipped function out of its source and runs it over stubs and an in-memory table, so no scenario boots the core or touches a database
 # BASE_DIR is the scratch root the caller passed, so every rename the scenarios ask for happens inside it and nothing below the site moves
 # Modes: debug prints the panel over a hostile cookie; afile <name> posts that admin file name; catparent <id:parent> saves a forum category; forumlast repairs a cycle
-# Mode epoch writes through the shipped Database of the panel over SQLite: online tracking, then two content rows; it reports the generation after each and after shutdown
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
     exit;
@@ -20,7 +19,7 @@ $pmode = (string)($argv[1] ?? '');
 $pwork = str_replace('\\', '/', (string)($argv[2] ?? ''));
 $pname = (string)($argv[3] ?? '');
 $psite = str_replace('\\', '/', dirname(__DIR__, 2));
-if ($pwork === '' || !in_array($pmode, ['debug', 'afile', 'catparent', 'forumlast', 'epoch'], true)) {
+if ($pwork === '' || !in_array($pmode, ['debug', 'afile', 'catparent', 'forumlast'], true)) {
     echo json_encode(['error' => 'usage']);
     exit;
 }
@@ -95,6 +94,11 @@ function getNodeWriter(): object {
             return false;
         }
     };
+}
+
+# Record every module whose stored category map a write drops, instead of touching the data cache
+function deleteCategoryMap(string $mod): void {
+    $GLOBALS['pdone']['data']['reset'][] = $mod;
 }
 
 # Record every category set the repair asks the last message of, instead of reading the forum table
@@ -177,27 +181,6 @@ try {
         ]);
         setForumLast(3, 9);
         $pdone['data']['done'] = true;
-    } elseif ($pmode === 'epoch') {
-        define('FUNC_FILE', true);
-        define('ADMIN_FILE', true);
-        define('COUNTER_DIR', $pwork.'/counter');
-        define('CACHE_DIR', $pwork.'/cache');
-        require $psite.'/core/classes/cache.php';
-        require $psite.'/core/classes/pdo.php';
-        $conf = ['security' => ['error_log' => 0]];
-        $db = (new ReflectionClass('Database'))->newInstanceWithoutConstructor();
-        $db->sqlconnid = new PDO('sqlite::memory:');
-        $db->getSqlQuery('CREATE TABLE probe (id INTEGER)');
-        $db->getSqlQuery('CREATE TABLE probe_session (id INTEGER)');
-        foreach (['INSERT INTO probe_session VALUES (1)', 'UPDATE probe_session SET id = 2', 'DELETE FROM probe_session WHERE id = 3'] as $sql) $db->getSqlQuery($sql);
-        $pdone['data']['session'] = Cache::getEpoch();
-        foreach ([1, 2] as $i) $db->getSqlQuery('INSERT INTO probe VALUES (:id)', ['id' => $i]);
-        $pdone['data']['early'] = Cache::getEpoch();
-        register_shutdown_function(static function (): void {
-            $GLOBALS['pdone']['data']['final'] = Cache::getEpoch();
-            echo json_encode($GLOBALS['pdone']);
-        });
-        exit;
     } else {
         foreach (['admin', 'index'] as $file) file_put_contents(BASE_DIR.'/'.$file.'.php', $file);
         setProbeLift($psite.'/admin/modules/security.php', 'configsave', $pwork.'/lift_afile.php');

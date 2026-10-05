@@ -4,9 +4,9 @@
 # License: MIT
 # Website: slaed.net
 
-# CLI probe for the Rating class of docs/RATINGS.md and for the write-guard protocol of the page cache it depends on
+# CLI probe for the Rating class of docs/RATINGS.md
 # It boots the real core the way index.php does, then drives the class through trusted test adapters against a disposable schema built from the shipped DDL
-# The cache directory, the generation counter and the logs are redirected into scratch, so no marker, no bump and no line ever reaches the stand
+# The cache directory, the counters and the logs are redirected into scratch, so no line ever reaches the stand
 # Every scenario reseeds its tables, every persistent result is read by a connection of its own, and concurrency is made of real processes
 $probework = (string)($argv[1] ?? '');
 require_once __DIR__.'/probe_boot.php';
@@ -214,11 +214,6 @@ function getProbeBrief(array $res): array {
     return [$res['code'], $res['vote'] > 0, $res['score'], $res['ratings'], $res['average'], $res['duplicate'], $res['canvote']];
 }
 
-# The markers of the guard journal that exist right now
-function getProbeMarks(): array {
-    return array_values(preg_grep('/^[a-f0-9]{32}\.lock$/', is_dir(CACHE_DIR.'/guards') ? scandir(CACHE_DIR.'/guards') : []));
-}
-
 # Whether the site log of this run carries a line with the given text
 function checkProbeLog(string $text): bool {
     $file = LOGS_DIR.'/error_site.log';
@@ -237,37 +232,6 @@ function getProbeChild(string $mode, array $args = []): mixed {
     $text = getProbeText($mode, $args);
     $data = json_decode($text, true);
     return is_array($data) ? $data : 'no answer: '.substr($text, 0, 200);
-}
-
-# The write-guard protocol of the page cache on its own: the forced bump, the marker and its lock, the sweep that spares the journal, the refusals, and the recovery after a death
-function getProbeCache(): array {
-    $was = Cache::getEpoch();
-    $out = ['bump' => [Cache::addEpoch(), Cache::getEpoch() - $was, Cache::addEpoch(), Cache::getEpoch() - $was, Cache::addEpoch(true), Cache::getEpoch() - $was]];
-    $out['idle'] = [Cache::checkWriteGuard(), getProbeMarks()];
-    $guard = Cache::getWriteGuard();
-    $out['open'] = [is_resource($guard), count(getProbeMarks()), is_file(CACHE_DIR.'/guards.lock'), Cache::checkWriteGuard()];
-    $was = Cache::getEpoch();
-    $out['peek'] = [getProbeChild('peek'), count(getProbeMarks()), Cache::getEpoch() - $was];
-    Cache::setBody(CACHE_DIR.'/pages/html/'.str_repeat('a', 40).'.html', 'page');
-    Cache::setBody(CACHE_DIR.'/templates/probe.php', 'tpl');
-    touch(CACHE_DIR.'/guards.lock', time() - 100000);
-    $out['sweep'] = [Cache::deleteAll(), Cache::deleteStaleTree(CACHE_DIR, 1), count(getProbeMarks())];
-    $out['spared'] = [is_file(CACHE_DIR.'/guards.lock'), is_file(CACHE_DIR.'/templates/probe.php')];
-    $alien = fopen(CACHE_DIR.'/alien.lock', 'c');
-    $out['deny'] = [Cache::deleteWriteGuard('guard'), Cache::deleteWriteGuard(null), Cache::deleteWriteGuard($alien), count(getProbeMarks())];
-    fclose($alien);
-    $out['close'] = [Cache::deleteWriteGuard($guard), count(getProbeMarks()), Cache::deleteWriteGuard($guard), Cache::checkWriteGuard()];
-    $good = (string)file_get_contents(COUNTER_DIR.'/cache.log');
-    file_put_contents(COUNTER_DIR.'/cache.log', 'x');
-    $out['garbled'] = [Cache::checkWriteGuard(), Cache::getEpoch(), Cache::addEpoch(true), (string)file_get_contents(COUNTER_DIR.'/cache.log')];
-    file_put_contents(COUNTER_DIR.'/cache.log', '0009');
-    $out['padded'] = [Cache::addEpoch(true), (string)file_get_contents(COUNTER_DIR.'/cache.log')];
-    file_put_contents(COUNTER_DIR.'/cache.log', $good);
-    $out['healed'] = [Cache::checkWriteGuard(), (string)Cache::getEpoch() === $good];
-    $out['died'] = [getProbeChild('hold'), count(getProbeMarks())];
-    $was = Cache::getEpoch();
-    $out['recover'] = [Cache::checkWriteGuard(), count(getProbeMarks()), Cache::getEpoch() - $was];
-    return $out;
 }
 
 # Whether one ratings scope lets the story be read: a usable rule answers ok, a blocked one answers blocked
@@ -401,7 +365,7 @@ function getProbeInput(): array {
     $out['cost'] = $pdb->qnum - $num;
     $out['gone'] = [$rat->getRating('node.story', 99), $rat->addRating('node.story', 99, 5, $key)];
     $out['hidden'] = [$rat->getRating('node.story', 4), $rat->addRating('node.story', 4, 5, $key)];
-    $out['rows'] = [getProbeRows('votes'), getProbeRows('targets'), getProbeMarks()];
+    $out['rows'] = [getProbeRows('votes'), getProbeRows('targets')];
     return $out;
 }
 
@@ -415,7 +379,6 @@ function getProbeScale(): array {
     $out['third'] = getProbeRating(getProbeUser(4))->addRating('node.story', 1, 5, getProbeKey(3));
     $out['read'] = getProbeRating(getProbeUser(5))->getRating('node.story', 1);
     $out['stored'] = [getProbeSum('node.story', 1), getProbeRows('targets'), getProbeRows('actors'), getProbeRows('votes')];
-    $out['marks'] = getProbeMarks();
     $out['open'] = $GLOBALS['pdb']->checkSqlActive();
     return $out;
 }
@@ -616,7 +579,6 @@ function getProbeForeign(): array {
         'delete' => getProbeRating(getProbeAdmin(true))->deleteRating($vote, 'inside')['code'],
         'calls' => $GLOBALS['pcalls'],
         'open' => $pdb->checkSqlActive(),
-        'marks' => getProbeMarks(),
     ];
     $pdb->setSqlCommit();
     $row = getProbeSide()->query('SELECT `rank` FROM '.PREFIX_DB.'_users WHERE id = 2')->fetchColumn();
@@ -635,7 +597,7 @@ function getProbeFail(): array {
         $res = $rat->addRating('node.story', 1, 5, getProbeKey(1));
         $pdb->fail = 0;
         $rows = count(getProbeRows('votes')) + count(getProbeRows('actors')) + count(getProbeRows('targets'));
-        $out['add'][$i] = [$res['code'], $res['score'], $rows, getProbeSum('node.story', 1)[0], $pdb->checkSqlActive(), count(getProbeMarks())];
+        $out['add'][$i] = [$res['code'], $res['score'], $rows, getProbeSum('node.story', 1)[0], $pdb->checkSqlActive()];
     }
     for ($i = 1; $i <= 11; $i++) {
         setProbeSeed();
@@ -644,21 +606,21 @@ function getProbeFail(): array {
         $pdb->fail = $i;
         $res = $sup->deleteRating($vote, 'fail');
         $pdb->fail = 0;
-        $out['delete'][$i] = [$res['code'], getProbeRows('votes')[0][8] > 0, getProbeSum('node.story', 1)[0], $pdb->checkSqlActive(), count(getProbeMarks())];
+        $out['delete'][$i] = [$res['code'], getProbeRows('votes')[0][8] > 0, getProbeSum('node.story', 1)[0], $pdb->checkSqlActive()];
     }
     setProbeSeed();
     $GLOBALS['pwrite'] = false;
     $code = getProbeRating(getProbeUser(2))->addRating('node.story', 1, 5, getProbeKey(1))['code'];
-    $out['write'] = [$code, count(getProbeRows('votes')), $pdb->checkSqlActive(), count(getProbeMarks())];
+    $out['write'] = [$code, count(getProbeRows('votes')), $pdb->checkSqlActive()];
     $GLOBALS['pwrite'] = true;
     $pdb->getSqlQuery('CREATE TRIGGER probestop BEFORE INSERT ON '.PREFIX_DB.'_rating_actors FOR EACH ROW SIGNAL SQLSTATE \'45000\' SET MESSAGE_TEXT = \'probe\'');
     $code = getProbeRating(getProbeUser(2))->addRating('node.story', 1, 5, getProbeKey(1))['code'];
-    $out['real'] = [$code, count(getProbeRows('votes')), getProbeSum('node.story', 1), $pdb->checkSqlActive(), count(getProbeMarks())];
+    $out['real'] = [$code, count(getProbeRows('votes')), getProbeSum('node.story', 1), $pdb->checkSqlActive()];
     $pdb->getSqlQuery('DROP TRIGGER probestop');
     $hard = 'SIGNAL SQLSTATE \'40001\' SET MESSAGE_TEXT = \'probe deadlock\', MYSQL_ERRNO = 1213';
     $pdb->getSqlQuery('CREATE TRIGGER probehard BEFORE INSERT ON '.PREFIX_DB.'_rating_votes FOR EACH ROW '.$hard);
     $code = getProbeRating(getProbeUser(2))->addRating('node.story', 1, 5, getProbeKey(1))['code'];
-    $out['hard'] = [$code, count(getProbeRows('votes')), $pdb->checkSqlActive(), count(getProbeMarks())];
+    $out['hard'] = [$code, count(getProbeRows('votes')), $pdb->checkSqlActive()];
     $pdb->getSqlQuery('DROP TRIGGER probehard');
     $sql = 'INSERT INTO '.PREFIX_DB.'_rating_votes (scope, mid, actor, value, request, created) VALUES (\'node.story\', 1, \'u:2\', 6, \''.getProbeKey(1).'\', 1)';
     $out['value'] = getProbeThrow(static fn(): bool => getProbeSide()->exec($sql) > 0);
@@ -682,21 +644,19 @@ function getProbeLost(string $base): array {
     $pdb = $GLOBALS['pdb'] = getProbeBase();
     $rat = getProbeRating(getProbeUser(2));
     $pdb->deny = 1;
-    $out = ['back' => [$rat->addRating('node.story', 1, 5, getProbeKey(1))['code'], count(getProbeRows('votes')), count(getProbeMarks()), Cache::checkWriteGuard()]];
+    $out = ['back' => [$rat->addRating('node.story', 1, 5, getProbeKey(1))['code'], count(getProbeRows('votes'))]];
     $pdb->deny = 2;
-    $out['kept'] = [$rat->addRating('node.story', 1, 5, getProbeKey(2))['code'], count(getProbeRows('votes')), count(getProbeMarks())];
+    $out['kept'] = [$rat->addRating('node.story', 1, 5, getProbeKey(2))['code'], count(getProbeRows('votes'))];
     $pdb->deny = 0;
     $out['again'] = getProbeBrief($rat->addRating('node.story', 1, 5, getProbeKey(2)));
-    $out['end'] = [getProbeSum('node.story', 1), count(getProbeRows('votes')), count(getProbeMarks()), $pdb->checkSqlActive()];
+    $out['end'] = [getProbeSum('node.story', 1), count(getProbeRows('votes')), $pdb->checkSqlActive()];
     return $out;
 }
 
 # The unknown commit seen from outside: while the writer lives its markers stand, and once it is gone the next reader bumps the generation and clears them
 function getProbeCommit(): array {
     setProbeSeed();
-    $out = ['child' => getProbeChild('lost'), 'left' => count(getProbeMarks())];
-    $was = Cache::getEpoch();
-    $out['recover'] = [Cache::checkWriteGuard(), count(getProbeMarks()), Cache::getEpoch() - $was];
+    $out = ['child' => getProbeChild('lost')];
     $out['log'] = checkProbeLog('the outcome of the commit is unknown');
     return $out;
 }
@@ -745,89 +705,6 @@ function getProbeRace(): array {
     setProbeSeed();
     $out['crowd'] = getProbeRivals([[2, getProbeKey(1), 5], [3, getProbeKey(2), 4], [4, getProbeKey(3), 3], [5, getProbeKey(4), 2], [6, getProbeKey(5), 1]]);
     $out['all'] = [getProbeSum('node.story', 1), count(getProbeRows('votes')), count(getProbeRows('targets'))];
-    $out['marks'] = [count(getProbeMarks()), Cache::checkWriteGuard()];
-    return $out;
-}
-
-# The decision of the real page cache for a cacheable route, which has to follow the guard journal
-# The cacheable routes are the lists of the registered Node types, so the process registers a type news in its loaded configuration and nowhere else
-function getProbeRoute(): array {
-    global $name, $op, $home, $theme, $conf;
-    $conf['cache'] = 1;
-    $conf['node']['types']['news'] = ['version' => 1];
-    putenv('HTTP_HOST='.strtolower((string)parse_url((string)$conf['homeurl'], PHP_URL_HOST)));
-    $_SERVER['REQUEST_URI'] = '/index.php?name=news';
-    $_GET = ['name' => 'news'];
-    $name = 'news';
-    $op = '';
-    $home = 0;
-    $theme = $theme ?? getTheme();
-    $first = checkPageCache();
-    $hash = getPageHash();
-    Cache::addEpoch(true);
-    return ['cache' => $first, 'vars' => getCacheRouteVars(), 'kept' => getPageHash() === $hash, 'moved' => getPageHash(true) !== $hash, 'memo' => checkPageCache() === $first];
-}
-
-# Render one cacheable page through the real head and foot of the core, which is where the page cache is read and filled
-# The session, referer and statistics writers are switched off, so the run reads the stand and writes nothing but the scratch cache
-function getProbeRender(string $case): void {
-    global $name, $op, $home, $theme, $conf;
-    $conf['cache'] = 1;
-    $conf['node']['types']['news'] = ['version' => 1];
-    $conf['session'] = 0;
-    $conf['referers']['refer'] = 0;
-    $conf['statistic']['stat'] = 0;
-    $conf['name'] = 'news';
-    putenv('HTTP_HOST='.strtolower((string)parse_url((string)$conf['homeurl'], PHP_URL_HOST)));
-    $_SERVER['REQUEST_URI'] = '/index.php?name=news';
-    $_GET = ['name' => 'news'];
-    $name = 'news';
-    $op = '';
-    $home = 0;
-    $theme = $theme ?? getTheme();
-    setHead(['title' => 'probe']);
-    echo 'probe body '.$case;
-    if ($case === 'moved') Cache::addEpoch(true);
-    setFoot();
-}
-
-# The stored pages of the scratch cache
-function getProbePages(): array {
-    return array_values(preg_grep('/\.html$/', is_dir(CACHE_DIR.'/pages/html') ? scandir(CACHE_DIR.'/pages/html') : []));
-}
-
-# The page cache and the journal together: a cacheable route is cacheable while no marker stands, stops being one while a writer holds its guard, and is one again afterwards
-function getProbePage(): array {
-    $out = ['free' => getProbeChild('route')];
-    $guard = Cache::getWriteGuard();
-    $out['held'] = getProbeChild('route');
-    Cache::deleteWriteGuard($guard);
-    $out['after'] = getProbeChild('route');
-    return $out;
-}
-
-# One real render of the cacheable page in a process of its own: which body the visitor was given, and how many pages the cache holds afterwards
-function getProbeShow(string $case): array {
-    $html = getProbeText('render', [$case]);
-    return [preg_match('/probe body ([a-z]+)/', $html, $hit) ? $hit[1] : '', count(getProbePages())];
-}
-
-# The fill and the read of the page cache through the real head and foot: a generation that moved during the render and an open guard both keep the page out of the cache
-# A stored page is served again as it is, is not served while a marker stands, and gives way to a new render once the generation moved on
-function getProbeFill(): array {
-    deleteProbeTree(CACHE_DIR.'/pages');
-    $out = ['moved' => getProbeShow('moved')];
-    $guard = Cache::getWriteGuard();
-    $out['held'] = getProbeShow('held');
-    Cache::deleteWriteGuard($guard);
-    $out['plain'] = getProbeShow('plain');
-    $out['again'] = getProbeShow('again');
-    $guard = Cache::getWriteGuard();
-    $out['fresh'] = getProbeShow('fresh');
-    Cache::deleteWriteGuard($guard);
-    $out['cached'] = getProbeShow('cached');
-    Cache::addEpoch(true);
-    $out['later'] = getProbeShow('later');
     return $out;
 }
 
@@ -840,33 +717,14 @@ if ($mode === 'lost') {
     echo json_encode(getProbeLost((string)$argv[3]));
     exit;
 }
-if ($mode === 'peek') {
-    echo json_encode([Cache::checkWriteGuard()]);
-    exit;
-}
-if ($mode === 'hold') {
-    echo json_encode([is_resource(Cache::getWriteGuard())]);
-    exit;
-}
-if ($mode === 'render') {
-    getProbeRender((string)($argv[4] ?? ''));
-    exit;
-}
-if ($mode === 'route') {
-    echo json_encode(getProbeRoute());
-    exit;
-}
 
 $report = ['error' => '', 'clean' => false, 'runs' => []];
 
 try {
     deleteProbeTree(CACHE_DIR);
-    foreach ([LOGS_DIR.'/error_site.log', COUNTER_DIR.'/cache.log'] as $file) {
-        if (is_file($file)) unlink($file);
-    }
+    if (is_file(LOGS_DIR.'/error_site.log')) unlink(LOGS_DIR.'/error_site.log');
     addProbeSchema();
     $report['runs'] = [
-        'cache' => getProbeCache(),
         'config' => getProbeConfig(),
         'actor' => getProbeActor(),
         'input' => getProbeInput(),
@@ -881,8 +739,6 @@ try {
         'fail' => getProbeFail(),
         'commit' => getProbeCommit(),
         'race' => getProbeRace(),
-        'page' => getProbePage(),
-        'fill' => getProbeFill(),
     ];
     $report['point'] = [class_exists('Point', false), array_sum(array_map('intval', getProbeSide()->query('SELECT points FROM '.PREFIX_DB.'_users')->fetchAll(PDO::FETCH_COLUMN)))];
 } catch (Throwable $err) {

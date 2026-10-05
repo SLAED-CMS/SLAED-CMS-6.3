@@ -888,7 +888,6 @@ function getProbeLanguage(): array {
         $news = $query->getNodeType('news');
         $out[$lang] = getProbeAll($query->setNodeType($news));
         $out[$lang.'cat'] = getProbeAll(getProbeQuery('guest', $lang)->setNodeType($news)->setNodeCategory(5));
-        $out[$lang.'deadline'] = getProbeQuery('guest', $lang)->setNodeType($news)->getNodeDeadline();
         $out[$lang.'item'] = [$query->getNode(112, $news) !== null, $query->getNode(113, $news) !== null];
         $out[$lang.'target'] = array_keys($query->getNodeTargetList([112 => 'news', 113 => 'news']));
         $out[$lang.'site'] = array_column($query->getNodeSitemap(0, 500), 'id');
@@ -1182,39 +1181,6 @@ function getProbeAuthor(PDO $pdo): array {
     return $out;
 }
 
-# The next moment a selection changes by time, against the stored dates read by the database itself, and what it costs
-function getProbeDeadline(PDO $pdo): array {
-    $pre = PREFIX_DB.'_';
-    $sql = 'SELECT LEAST((SELECT UNIX_TIMESTAMP(published) FROM '.$pre.'nodes WHERE id = 106), (SELECT UNIX_TIMESTAMP(expires) FROM '.$pre.'nodes WHERE id = 119))';
-    $want = intval($pdo->query($sql)->fetchColumn());
-    $out = ['want' => $want];
-    foreach (['guest', 'root'] as $who) {
-        $query = getProbeQuery($who);
-        $news = $query->getNodeType('news');
-        $query->setNodeType($news);
-        [$out[$who], $out[$who.'sql']] = getProbeCost(fn(): ?int => $query->getNodeDeadline());
-        [, $out[$who.'again']] = getProbeCost(fn(): ?int => $query->getNodeDeadline());
-    }
-    $query = getProbeQuery('guest');
-    $query->setNodeType($query->getNodeType('plain'));
-    [$out['plain'], $out['plainsql']] = getProbeCost(fn(): ?int => $query->getNodeDeadline());
-    $query = getProbeQuery('guest');
-    $out['category'] = $query->setNodeType($query->getNodeType('news'))->setNodeCategory(1)->getNodeDeadline();
-    $query = getProbeQuery('guest');
-    $out['mixed'] = $query->setNodeTypes([$query->getNodeType('news'), $query->getNodeType('plain')])->getNodeDeadline();
-    $pdo->exec('UPDATE '.$pre.'nodes SET expires = NOW() + INTERVAL 1 HOUR WHERE id = 114');
-    $out['pinwant'] = intval($pdo->query('SELECT UNIX_TIMESTAMP(expires) FROM '.$pre.'nodes WHERE id = 114')->fetchColumn());
-    $query = getProbeQuery('guest');
-    $out['pinned'] = $query->setNodeType($query->getNodeType('news'))->getNodeDeadline();
-    $pdo->exec('UPDATE '.$pre.'nodes SET expires = NULL WHERE id = 114');
-    $pdo->exec('UPDATE '.$pre.'nodes SET published = NOW() + INTERVAL 5 HOUR, pinned = 1 WHERE id = 115');
-    $out['extrawant'] = intval($pdo->query('SELECT UNIX_TIMESTAMP(published) FROM '.$pre.'nodes WHERE id = 115')->fetchColumn());
-    $query = getProbeQuery('clara');
-    $out['extra'] = $query->setNodeType($query->getNodeType('news'))->setNodeCategory(1)->getNodeDeadline();
-    $pdo->exec('UPDATE '.$pre.'nodes SET published = \'2026-01-15 10:00:00\', pinned = 0 WHERE id = 115');
-    return $out;
-}
-
 # The statement budgets of docs/NODE.md (Statement budgets), each measured from a fresh reader including the type read, and the page size never changing the count
 function getProbeBudget(): array {
     $out = [];
@@ -1228,13 +1194,6 @@ function getProbeBudget(): array {
     };
     $runs = [['plain', 3], ['plain', 10], ['news', 3], ['news', 10], ['docs', 3], ['docs', 10], ['files', 3], ['files', 10]];
     foreach ($runs as [$name, $size]) $out[$name.'-'.$size] = $list($name, $size);
-    foreach (['plain', 'news', 'docs', 'files'] as $name) {
-        $query = getProbeQuery('guest');
-        [, $out['build-'.$name]] = getProbeCost(function () use ($query, $name) {
-            $query->setNodeType($query->getNodeType($name))->setNodePage(1, 10);
-            return [$query->getNodeList(), $query->getNodeCount(), $query->getNodeDeadline()];
-        });
-    }
     $query = getProbeQuery('guest');
     [, $out['targets']] = getProbeCost(fn(): array => $query->getNodeTargetList([101 => 'news', 301 => 'files', 201 => 'docs', 1001 => 'plain']));
     $bare = [];
@@ -1291,7 +1250,6 @@ function getProbeQueryRuns(): array {
     $out['targets'] = getProbeTargets();
     $out['tree'] = getProbeTree();
     $out['sitemap'] = getProbeSitemap();
-    $out['deadline'] = getProbeDeadline($pdo);
     $out['budget'] = getProbeBudget();
     $out['author'] = getProbeAuthor($pdo);
     $out['context'] = [];
@@ -1410,7 +1368,7 @@ function getProbeWalk(string $dir, string $pre = ''): array {
     return $out;
 }
 
-# The four shared sources, the type rows, the upload tree, the unfinished operation and the cache guards, to prove what an operation left or did not leave
+# The four shared sources, the type rows, the upload tree and the unfinished operation, to prove what an operation left or did not leave
 function getProbeState(): array {
     clearstatcache();
     $out = [];
@@ -1418,7 +1376,6 @@ function getProbeState(): array {
     $out['rows'] = $GLOBALS['pdb']->getSqlQuery('SELECT name, active, version FROM '.PREFIX_DB.'_node_types ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
     $out['tree'] = getProbeWalk(UPLOADS_DIR);
     $out['marker'] = is_file(BACKUP_DIR.'/config/marker.json');
-    $out['guards'] = count(glob(CACHE_DIR.'/guards/*.lock') ?: []);
     return $out;
 }
 
@@ -1496,13 +1453,11 @@ function getProbeSvcLegacy(): array {
     return $out;
 }
 
-# Create: news, files over a directory of guards alone and docs as their profiles define them; the stored form, the defaults of both rules, the guard and the cache generation
+# Create: news, files over a directory of guards alone and docs as their profiles define them; the stored form, the defaults of both rules and the guard
 function getProbeSvcAdd(): array {
     $srv = getProbeService('boss');
     $pro = getProbeProfiles();
-    $epoch = Cache::getEpoch();
     $out = ['news' => getProbeCall(fn(): ?array => getProbeType($srv->addNodeType('news', getProbeInput(['title' => 'News', 'settings' => $pro['news']]))))];
-    $out['epoch'] = Cache::getEpoch() > $epoch;
     $out['trace'] = getProbeTrace('news');
     $out['state'] = getProbeState();
     $out['files'] = getProbeCall(fn(): ?array => getProbeType($srv->addNodeType('files', getProbeInput(['title' => '_DOWNLOAD', 'sort' => 30, 'settings' => $pro['files'],
@@ -1771,9 +1726,7 @@ function getProbeSvcCrash(PDO $pdo): array {
         $one['restore'] = getProbeChild('restore');
         clearstatcache();
         $one['end'] = ['marker' => is_file(BACKUP_DIR.'/config/marker.json'), 'row' => getProbeVersion('news'), 'old' => sha1_file(CONFIG_DIR.'/node.php') === $old,
-            'read' => getProbeType(getProbeQuery('boss')->getNodeType('news'))['title'] ?? null, 'guards' => count(glob(CACHE_DIR.'/guards/*.lock') ?: [])];
-        $one['end']['recover'] = Cache::checkWriteGuard();
-        $one['end']['left'] = count(glob(CACHE_DIR.'/guards/*.lock') ?: []);
+            'read' => getProbeType(getProbeQuery('boss')->getNodeType('news'))['title'] ?? null];
         $out[$when] = $one;
     }
     $ver = getProbeVersion('news');
@@ -2085,13 +2038,12 @@ function getProbeClock(int $sec = 0): string {
     return (string)getProbeValue('SELECT NOW() + INTERVAL '.$sec.' SECOND');
 }
 
-# The rows the writer can leave behind, counted table by table, with the cache guards
+# The rows the writer can leave behind, counted table by table
 function getProbeMatCount(): array {
     $out = [];
     foreach (['nodes', 'node_categories', 'node_relations', 'node_assets', 'node_publish', 'points', 'categories'] as $tab) {
         $out[$tab] = intval(getProbeValue('SELECT COUNT(*) FROM '.PREFIX_DB.'_'.$tab));
     }
-    $out['guards'] = count(glob(CACHE_DIR.'/guards/*.lock') ?: []);
     return $out;
 }
 
@@ -2153,13 +2105,11 @@ function getProbeMatCreate(): array {
         'nopoint' => getProbeCall(fn(): Node => getProbeWriter('root', null, null, true)->addNode($news, getProbeIn(), NodeStatus::Draft)),
     ]];
     $out['same'] = $before === getProbeMatCount();
-    $epoch = Cache::getEpoch();
     $out['draft'] = getProbeCall(fn(): ?array => getProbeNode(getProbeWriter('root')->addNode(
         $news,
         getProbeIn(['aname' => 'Editor', 'cid' => 10, 'cids' => [16, 10, 15], 'poll' => 1]),
         NodeStatus::Draft
     )));
-    $out['epoch'] = Cache::getEpoch() > $epoch;
     $out['pending'] = getProbeCall(fn(): ?array => getProbeNode(getProbeWriter('anna')->addNode($news, getProbeIn(['cid' => 12]), NodeStatus::Pending)));
     $out['direct'] = getProbeCall(fn(): ?array => getProbeNode(getProbeWriter('boris')->addNode($news, getProbeIn(['cid' => 10]), NodeStatus::Published)));
     $out['clock'] = getProbeClock();
@@ -2169,7 +2119,6 @@ function getProbeMatCreate(): array {
     $out['guestfile'] = getProbeCall(fn(): ?array => getProbeNode(getProbeWriter('guest')->addNode($files, getProbeIn(['fields' => ['release' => '1.0', 'gone' => 'x'],
         'assets' => $link]), NodeStatus::Pending)));
     $out['nomin'] = getProbeCall(fn(): Node => getProbeWriter('guest')->addNode($files, getProbeIn(['fields' => ['release' => '1.0']]), NodeStatus::Pending));
-    $out['guards'] = getProbeMatCount()['guards'];
     return $out;
 }
 
@@ -2246,7 +2195,6 @@ function getProbeMatText(): array {
     $anna = getProbeWriter('anna');
     $keep = $GLOBALS['conf']['node']['limits']['edit'] ?? null;
     $GLOBALS['conf']['node']['limits']['edit'] = 600;
-    $epoch = fn(): string => is_file(COUNTER_DIR.'/cache.log') ? (string)file_get_contents(COUNTER_DIR.'/cache.log') : '';
     $sql = 'SELECT COUNT(*) FROM '.PREFIX_DB.'_points WHERE action = :act AND source = :src';
     $award = fn(int $id): int => intval($GLOBALS['pdb']->getSqlQuery($sql, ['act' => 'publish', 'src' => 'node:'.$id])->fetchColumn());
     $sub = $anna->addNode($news, getProbeIn(['cid' => 10]), NodeStatus::Pending);
@@ -2256,10 +2204,9 @@ function getProbeMatText(): array {
     $out['field'] = getProbeCall(fn(): Node => $anna->updateNodeText($pub->id, 'title', 'Title', $pub->version));
     $back = $anna->updateNodeText($pub->id, 'body', 'Body by anna', $pub->version);
     $out['back'] = [$back->status->name, $back->version - $pub->version, getProbeStored($pub->id, 'news')['body'] ?? null, getProbeJob($pub->id) === null];
-    $before = $epoch();
     $num = $GLOBALS['pdb']->qnum;
     $rep = $anna->updateNodeText($pub->id, 'body', 'Body by anna', $pub->version);
-    $out['repeat'] = [$rep->version === $back->version, $rep->updated === $back->updated, $rep->status->name, $epoch() === $before, $GLOBALS['pdb']->qnum - $num];
+    $out['repeat'] = [$rep->version === $back->version, $rep->updated === $back->updated, $rep->status->name, $GLOBALS['pdb']->qnum - $num];
     $out['conflict'] = getProbeCall(fn(): Node => $anna->updateNodeText($pub->id, 'body', 'Body again', $pub->version));
     $again = $root->updateNodeStatus($pub->id, NodeStatus::Published, $back->version);
     $out['award'] = [$again->status->name, $award($pub->id)];
@@ -2294,7 +2241,6 @@ function getProbeMatText(): array {
     $hand = getNodeExtension('hook', $GLOBALS['pdb'], getProbeMatContext('mixed'));
     $ext = getProbeWriter('mixed', null, $hand)->addNode($hook, getProbeIn(['ext' => ['note' => 'a']]), NodeStatus::Draft);
     $out['ext'] = [getProbeCall(fn(): Node => $root->updateNodeText($ext->id, 'body', 'Body', $ext->version)), $root->getTextSource($ext->id)['allow'] ?? null];
-    $out['guards'] = getProbeMatCount()['guards'];
     $GLOBALS['conf']['node']['limits']['edit'] = $keep;
     return $out;
 }
@@ -2347,7 +2293,6 @@ function getProbeMatStatus(): array {
     $sql = 'SELECT uid, aid, scope, points, rid FROM '.PREFIX_DB.'_points WHERE action = :act AND source = :src ORDER BY id';
     $pts = fn(int $id): array => $GLOBALS['pdb']->getSqlQuery($sql, ['act' => 'moderate', 'src' => 'approve:'.$id])->fetchAll(PDO::FETCH_ASSOC);
     $out['moderate'] = ['sub' => $pts($sub->id), 'own' => $pts($own->id), 'draft' => $pts($draft->id)];
-    $out['guards'] = getProbeMatCount()['guards'];
     return $out;
 }
 
@@ -2585,7 +2530,6 @@ function getProbeMatTree(): array {
     $out['after'] = getProbeParent($set['b']);
     $out['next'] = getProbeChild('mtree', [(string)$set['d'], (string)$set['a']]);
     $out['nextedge'] = getProbeParent($set['d']) === $set['a'];
-    $out['cleared'] = Cache::checkWriteGuard();
     return $out;
 }
 
@@ -2679,12 +2623,10 @@ function getProbeMatCounters(): array {
     $news = getProbeMatType('news');
     $pub = getProbeWriter('root')->addNode($news, getProbeIn(['cid' => 10]), NodeStatus::Published);
     $draft = getProbeWriter('root')->addNode($news, getProbeIn(['cid' => 10]), NodeStatus::Draft);
-    $epoch = Cache::getEpoch();
     $srv = getProbeWriter('anna');
     $out = ['view' => [getProbeCall(fn(): null => $srv->updateNodeViews($pub->id, $news)), getProbeCall(fn(): null => $srv->updateNodeViews($pub->id, $news))]];
     $out['draft'] = getProbeCall(fn(): null => $srv->updateNodeViews($draft->id, $news));
     $out['points'] = getProbePoints('view', 'node:'.$pub->id);
-    $out['epoch'] = Cache::getEpoch() === $epoch;
     $db = $GLOBALS['pdb'];
     $out['notx'] = getProbeCall(fn(): null => $srv->updateNodeComments($pub->id, $news, 3));
     $db->setSqlBegin();
@@ -2718,7 +2660,6 @@ function getProbeMatAssetOps(): array {
     $link = getProbeWriter('root')->addNode($links, getProbeIn(['assets' => [getProbeAsset(null, 'file', 'link', 'https://example.com/visit')]]), NodeStatus::Published);
     $lid = $link->assets[0]->id;
     $before = getProbeAssetRow($map['download']);
-    $epoch = Cache::getEpoch();
     $srv = getProbeWriter('anna');
     $out = ['hits' => [
         getProbeCall(fn(): null => $srv->updateNodeAssetHits($map['download'], $files)),
@@ -2734,7 +2675,6 @@ function getProbeMatAssetOps(): array {
     $out['guest'] = getProbeCall(fn(): null => getProbeWriter('guest')->updateNodeAssetReport($lid, $links));
     $out['rows'] = ['download' => getProbeAssetRow($map['download']), 'link' => getProbeAssetRow($lid)];
     $out['sameupd'] = $out['rows']['download']['updated'] === $before['updated'];
-    $out['epoch'] = Cache::getEpoch() === $epoch;
     $out['version'] = getProbeStored($node->id, 'files')['version'];
     $out['decide'] = [
         'anna' => getProbeCall(fn(): null => $srv->deleteNodeAssetReport($map['download'], $files, true)),
@@ -2767,7 +2707,6 @@ function getProbeMatCategories(): array {
     $use = getProbeWriter('root')->addNode($news, getProbeIn(['cid' => 16]), NodeStatus::Draft);
     $ext = getProbeWriter('root')->addNode($news, getProbeIn(['cid' => 10, 'cids' => [17]]), NodeStatus::Draft);
     $srv = getProbeWriter('boss');
-    $epoch = Cache::getEpoch();
     $out = [
         'move' => getProbeCall(fn(): null => $srv->updateNodeCategory(16, ['modul' => 'forum'] + getProbeCatRow(16))),
         'moveextra' => getProbeCall(fn(): null => $srv->updateNodeCategory(17, ['modul' => 'forum'] + getProbeCatRow(17))),
@@ -2779,7 +2718,6 @@ function getProbeMatCategories(): array {
         'deleteused' => getProbeCall(fn(): null => $srv->deleteNodeCategory(16)),
         'deletemissing' => getProbeCall(fn(): null => $srv->deleteNodeCategory(9999)),
     ];
-    $out['epoch'] = Cache::getEpoch() > $epoch;
     $out['stored'] = [getProbeCatRow(16)['modul'] ?? null, getProbeCatRow(16)['lang'] ?? null];
     $out['delete'] = getProbeCall(fn(): null => $srv->deleteNodeCategory(17));
     $out['gone'] = [getProbeCatRow(17), getProbeCatRow(18)];
@@ -2796,7 +2734,6 @@ function getProbeMatCategories(): array {
     $bent = getProbeWriter('boss');
     $out['broken'] = [$bent->checkTypeRegistry(['links']), getProbeCall(fn(): null => $bent->deleteNodeCategory(23)), getProbeCatRow(23)['modul'] ?? null];
     $GLOBALS['pdb']->getSqlQuery('UPDATE '.PREFIX_DB.'_node_types SET version = version - 1 WHERE name = \'links\'');
-    $out['guards'] = getProbeMatCount()['guards'];
     $out['used'] = $use->cid;
     return $out;
 }
@@ -2805,7 +2742,6 @@ function getProbeMatCategories(): array {
 function getProbeMatPreview(): array {
     $news = getProbeMatType('news');
     $before = getProbeMatCount();
-    $epoch = Cache::getEpoch();
     $srv = getProbeWriter('anna');
     $body = 'x [attach=photo-abcdefghij-2.png align=left title=P]';
     $out = [
@@ -2819,7 +2755,6 @@ function getProbeMatPreview(): array {
         'nopoint' => getProbeCall(fn(): int => getProbeWriter('anna', null, null, true)->getNodePreview($news, getProbeIn(['cid' => 10]), NodeStatus::Pending)->id),
     ];
     $out['same'] = $before === getProbeMatCount();
-    $out['epoch'] = Cache::getEpoch() === $epoch;
     return $out;
 }
 
@@ -3004,7 +2939,7 @@ function getProbeMatAward(): array {
     $was = $sum();
     $rows = fn(): int => intval(getProbeValue('SELECT COUNT(*) FROM '.$pre.'comment WHERE modul = \'news\' AND cid = :cid', ['cid' => $one->id]));
     $out = ['refused' => getProbeCall(fn(): null => getProbeWriter('moder', $side)->deleteNode($one->id, 1, getProbeCom()))];
-    $out['kept'] = [getProbeStored($one->id, 'news') !== null, $rows(), $sum() - $was, getProbeMatCount()['guards']];
+    $out['kept'] = [getProbeStored($one->id, 'news') !== null, $rows(), $sum() - $was];
     $out['closed'] = getProbeCall(fn(): null => getProbeWriter('moder', new Point($pdb, []))->deleteNode($one->id, 1, getProbeCom()));
     $out['gone'] = [getProbeStored($one->id, 'news') !== null, $rows(), $sum() - $was, count(getProbePoints('publish', 'node:'.$one->id)),
         getProbeLines('Node: a material delete compensates no award')];
@@ -3052,7 +2987,7 @@ function getProbeMatComm(string $who): array {
     $id = $open();
     $was = $sum();
     $res = $com($sdb)->addComment('news', $id, 'probe body', '');
-    $out['lost'] = [$res['id'] > 0, $rows($id), $sum() - $was, $sdb->checkSqlActive(), getProbeMatCount()['guards'], getProbeLines('Comment: a new comment was rolled back')];
+    $out['lost'] = [$res['id'] > 0, $rows($id), $sum() - $was, $sdb->checkSqlActive(), getProbeLines('Comment: a new comment was rolled back')];
     return $out;
 }
 

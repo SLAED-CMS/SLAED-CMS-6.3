@@ -15,9 +15,9 @@ $labels = [
     'error_site' => _SEC_STAT_ERROR_S,
     'error_sql' => _SEC_STAT_ERROR_SQL,
     'hack' => _SEC_STAT_HACK,
-    'log' => _SEC_STAT_LOG,
     'log_admin' => _SEC_STAT_A,
     'log_user' => _SEC_STAT_U,
+    'request' => _SEC_STAT_LOG,
     'warn' => _SEC_STAT_WARN
 ];
 

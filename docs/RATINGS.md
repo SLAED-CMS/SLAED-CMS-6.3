@@ -65,7 +65,7 @@ that is physically gone answers `unavailable` and changes nothing.
 | Interval | See Periods: `interval` with the remaining seconds. |
 | `detail` | A place of display only, never an access rule (see Owner map). |
 
-Cheap refusals happen before any SQL, guard or transaction: the form of the arguments, the missing rule,
+Cheap refusals happen before any SQL or transaction: the form of the arguments, the missing rule,
 `active = '0'`, a guest without an address, a guest where `guests = '0'`. A network repeat of a request that was
 accepted before the rating was switched off or closed to guests therefore also answers `denied`; the stored vote
 does not change.
@@ -111,15 +111,14 @@ The old table `_rating` belongs to polls only (`modul = 'voting'`); ratings neve
 Every write runs in `Rating::setUnitRun()`:
 
 1. Refuse when the connection already has an open transaction (`storage`, logged): Rating owns its transaction.
-2. `Cache::getWriteGuard()`; no guard, no write (`storage`).
-3. `BEGIN`.
-4. The read adapter with `lock = true`: its first statement is the locking read of the owner row (Node: the type
+2. `BEGIN`.
+3. The read adapter with `lock = true`: its first statement is the locking read of the owner row (Node: the type
    row, then the material row). This lock serializes one target.
-5. `_rating_targets` row (`FOR UPDATE`, created when missing), then `_rating_actors` row (`FOR UPDATE`), then the
+4. `_rating_targets` row (`FOR UPDATE`, created when missing), then `_rating_actors` row (`FOR UPDATE`), then the
    vote by `request` (`FOR UPDATE`).
-6. Insert the vote, insert or update `last`, hand the new totals to the write adapter (Node: the extension follows
+5. Insert the vote, insert or update `last`, hand the new totals to the write adapter (Node: the extension follows
    the vote inside the same transaction).
-7. `COMMIT`, then `Cache::addEpoch(true)`, then `Cache::deleteWriteGuard()`.
+6. `COMMIT`.
 
 The annulment reads the vote once without a lock to learn its target, then takes the same locks in the same order
 and reads the vote again `FOR UPDATE`; this avoids a vote-to-target lock inversion. A vote on an account locks only
@@ -132,12 +131,9 @@ rolled back, logged and answered as `storage`.
 
 Outcomes:
 
-- A unit that wrote nothing or failed is rolled back. The guard is removed only after a proven rollback: a
-  successful `ROLLBACK` or no active transaction left on the connection.
-- An unknown `COMMIT` outcome answers `storage` and keeps the guard. Repeating the same `request` finds out what
-  happened idempotently; a repeated annulment is an empty success.
-- A failed bump or guard removal after a proven commit is logged and keeps the guard; the vote is stored and
-  answers as stored. The recovery in `Cache::checkWriteGuard()` finishes the invalidation.
+- A unit that wrote nothing or failed is rolled back.
+- An unknown `COMMIT` outcome answers `storage`. Repeating the same `request` finds out what happened
+  idempotently; a repeated annulment is an empty success.
 - A lost race (deadlock, duplicate key) answers `storage`; the repeat of the same `request` is idempotent.
 
 Every failure a client cannot cause answers `storage` and goes to the site log with the prefix `Rating:`: a foreign
@@ -282,7 +278,7 @@ renders the static aggregate. The widget and the rating sums of the profile read
 - The handler checks the method first, then the site token from the POST body with `checkSiteToken()`. For that
   reason `index.php` lists `getRatingView` among the self-guarding handlers of `go=1`, so the shared token check does
   not run first and a `GET` gets 405 rather than a token refusal.
-- Every `go=1` response is sent with `Cache::setHeaders(false)`: `Cache-Control: no-store`.
+- Every `go=1` response is sent with `Cache::setHeaders()`: `Cache-Control: no-store`.
 
 | Outcome | Status | Body |
 |---|---|---|
@@ -312,47 +308,6 @@ Client side (`plugins/system/slaed.js`, `setRatingVotes()`):
 - A status of 400 or more keeps the widget in place and shows `setToast(text, true)`: the shared `.sl-toast` in its
   warn variant `.sl-toast-warn` with the icon `bi-exclamation-triangle`, the text taken from `.sl-alert-text` of the
   refusal body (at most 200 characters, the status code when empty).
-
-## Page cache interplay
-
-A stored vote changes an aggregate that cached pages may show, so every write of Rating is a content write under
-the write-guard protocol of `Cache` (`core/classes/cache.php`).
-
-**Generation.** `storage/counter/cache.log` holds the generation, a plain number of up to 18 digits.
-`Cache::getEpoch()` reads it under `LOCK_SH`; a missing file is generation 0. `Cache::addEpoch(bool $force = false)`
-bumps it under `LOCK_EX`, writing over the old value in place so a reader never sees an empty file, and answers
-whether the new value is proven on disk. Without `$force` one bump per request is enough; the owner of a guard
-always forces the bump that follows its commit. Any write statement of the panel goes through
-`Database::getSqlQuery()`, whose first one bumps at once and registers a forced bump for the end of the request, so
-a page cached between an unguarded write and its commit does not outlive the request. Writes on `_session`, the
-online tracking every request of the panel runs, move no generation. A counter that is not a plain number is never rebuilt: it switches
-the page cache off until an operator fixes it, so the generation never moves back onto one already served. The
-counter lives outside `storage/cache`, so clearing the cache cannot reset it.
-
-**Guards.** `Cache::getWriteGuard()` creates a unique marker `storage/cache/guards/<32 hex>.lock` and holds its file
-lock (`LOCK_EX`) for the life of the writer; creation, removal and recovery of markers are serialized by the
-journal lock `storage/cache/guards.lock`. `Cache::deleteWriteGuard($guard)` accepts only a handle the class
-registered, and removes its marker. `Cache::checkWriteGuard()` answers whether the page cache may be read and
-filled: the generation is readable and no marker is left. A marker whose lock is free belongs to a writer that
-died; the check bumps the generation (forced) and removes it. A marker whose lock is held belongs to a live writer
-and is neither touched nor waited for. `Cache::deleteAll()`, `deleteStale()` and `deleteStaleTree()` never touch
-`guards/` or `guards.lock`.
-
-**Read and fill in `core/system.php`.**
-
-- `checkPageCache()` is the route decision (non-admin `GET`, cache on, anonymous visitor, default colour mode, no
-  flash, the list of a registered Node type, a valid route contract). Its last word is `Cache::checkWriteGuard()`,
-  asked once per request and remembered, so every block of a page agrees on it.
-- `getPageHash()` builds the page identity from the version prefix `pc3`, `$conf['version']`, the generation, host,
-  scheme, theme, locale and route parameters. Its first answer is remembered: it carries the generation the page was
-  built from. `setHead()` asks for it before reading page data; a route that reads data before `setHead()` must call
-  `getPageHash()` first.
-- `setFoot()` stores the page only when the remembered hash equals a live one (`getPageHash(true)`), meaning the
-  generation did not move during the render, and `Cache::checkWriteGuard()` answers true again, because a writer may
-  have started meanwhile.
-
-The live rating widget takes its token through `getPageToken()`, which on a cacheable build emits a signed dynamic
-marker replaced per visitor, so a stored page never hands one visitor the token of another.
 
 ## Admin screens
 
@@ -443,7 +398,7 @@ configuration step of the update before this unit reads it.
 
 | File | Covers |
 |---|---|
-| `tests/Unit/RatingTest.php` with `tests/Support/rating_probe.php` | The class in an isolated CLI process of the real core, on a disposable schema from `storage/update/sql/table.sql`, test adapters, scratch cache, counter and logs. API and independence from Point, Node and the PHP clock; the tables; the guard protocol and dead-writer recovery; a real `setHead()`/`setFoot()` fill; rules, actor, scale, balance, identity, interval, delivery key, own vote, annulment, journal; each statement failing once, deadlock, unknown commit; concurrent processes. |
+| `tests/Unit/RatingTest.php` with `tests/Support/rating_probe.php` | The class in an isolated CLI process of the real core, on a disposable schema from `storage/update/sql/table.sql`, test adapters, scratch cache, counter and logs. API and independence from Point, Node and the PHP clock; the tables; rules, actor, scale, balance, identity, interval, delivery key, own vote, annulment, journal; each statement failing once, deadlock, unknown commit; concurrent processes. |
 | `tests/Unit/RatingOwnersTest.php` | The wiring: `_rating` statements speak of polls only; the vote reads only the POST body and checks the method before the token; `getRatingView` among the self-guarding handlers; the shipped four-key rules and the mark; no mass reset in the account admin; the seven site and nine admin texts in all six locales. |
 | `tests/Unit/UpdateRatingsTest.php` with `tests/Support/update_probe.php` (`ratings`) | The carry-over: clean path, resume from `prepared`/`applying`, stop on rows or a mark without a manifest, forged snapshot or moved aggregate, the preflight report, kept four-key rules, a lost mark written again, the order after the points unit and the engine check. |
 | `tests/Unit/NodeIntegTest.php`, `tests/Unit/NodeIntegrityTest.php` (`route_probe.php`) | `node.<name>` over real HTTP: live widget only with the feature, unavailable closed/pending/disabled materials, refused wrong token and `GET`; annulment on a disabled material, a type with rating off and a disabled type. |

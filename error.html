@@ -100,7 +100,7 @@ a { text-decoration: none; color: var(--sl-primary); outline: none; }
 .sl-msg-line { height: 1px; margin: 0 0 var(--sl-space-8); background: var(--sl-grad-line); }
 .sl-msg-title { margin: 0 0 var(--sl-space-6); font-size: var(--sl-font-h2); color: var(--sl-text-strong); }
 .sl-msg-body { margin-bottom: var(--sl-space-8); }
-.sl-alert { display: flex; align-items: flex-start; gap: var(--sl-space-5); margin: 0; padding: var(--sl-space-5) var(--sl-space-6); text-align: left; background: var(--sl-alert-tint); border-left: var(--sl-alert-border) solid var(--sl-alert-c); border-radius: var(--sl-radius-1); box-shadow: var(--sl-shadow-xs); }
+.sl-alert { display: flex; align-items: flex-start; gap: var(--sl-space-5); margin: 0; padding: var(--sl-space-5) var(--sl-space-6); text-align: left; background: var(--sl-alert-tint); border-left: var(--sl-alert-border) solid var(--sl-alert-c); border-radius: var(--sl-radius-1); box-shadow: var(--sl-shadow-xs); overflow-wrap: anywhere; }
 .sl-alert-warn { --sl-alert-c: var(--sl-warning); --sl-alert-tint: color-mix(in srgb, var(--sl-alert-c) 9%, transparent); }
 .sl-alert .bi { flex: 0 0 auto; width: var(--sl-size-icon-md); height: var(--sl-size-icon-md); margin-top: 1px; color: var(--sl-alert-c); animation: sl-alert-shake var(--sl-alert-dur) var(--sl-ease-in-out) infinite; }
 .sl-alert-body { flex: 1 1 auto; min-width: 0; }
@@ -110,7 +110,7 @@ a { text-decoration: none; color: var(--sl-primary); outline: none; }
 .sl-msg-search { float: none; width: auto; max-width: var(--sl-msg-width); margin: 0 auto var(--sl-space-5); }
 .sl-msg-search .sl-home-link { flex: 0 0 var(--sl-size-control); height: var(--sl-size-control); border-radius: 50%; color: var(--sl-text-strong); }
 .sl-msg-search .sl-home-link:hover, .sl-msg-search .sl-home-link:focus-visible { color: var(--sl-on-solid); background: var(--sl-bg-inverse); }
-.sl-msg-foot { padding-top: var(--sl-space-5); border-top: 1px solid var(--sl-border-subtle); font-size: var(--sl-font-small); color: var(--sl-text-muted); max-width: var(--sl-msg-width); }
+.sl-msg-foot { font-size: var(--sl-font-small); color: var(--sl-text-muted); max-width: var(--sl-msg-width); }
 svg.bi { fill: currentColor; flex: none; }
 .sl-circle-action svg.bi { position: relative; z-index: var(--sl-z-raised); width: var(--sl-size-icon-sm); height: var(--sl-size-icon-sm); }
 </style>
@@ -224,6 +224,7 @@ viewBox="0 0 8832.5 2699.43"
       <input type="text" name="word" maxlength="100" placeholder="Search" class="sl-field" required>
       <button type="submit" class="sl-circle-action" aria-label="Search" title="Search"><svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/></svg></button>
     </form>
+    <div class="sl-msg-line"></div>
     <div class="sl-msg-foot"><a href="https://slaed.net" target="_blank" title="SLAED CMS">SLAED CMS</a> © 2005-<span id="sl-year">2026</span> Eduard Laas. Released under MIT License.</div>
   </div>
 </div>

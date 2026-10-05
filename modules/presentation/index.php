@@ -136,15 +136,15 @@ function getPresentationVoices(): array {
 # The blended burst stays visible, the sum stays the counted one, and the curve reads like a site
 # The monitor row reads what costs nothing on a public page: CPU and RAM histories of the admin sampler, the disk snapshot, the web server from the request
 # The core count and the uptime spawn a shell on Windows, so they show only when the sampler has stored them
-# The two bands under the visits are the share the page cache answered and the rest that reached the database
-# Neither band is counted per hour, so both are read off the visits through the hit ratio, which drifts a little from point to point
+# The two bands under the visits are a demonstration share the caches answered and the rest that reached the database
+# Neither band is counted per hour, so both are read off the visits through the demonstration hit ratio, which drifts a little from point to point
 # The requests the guard scene plays, in order, are a staged mix of the traffic classes over the routes of this install
 # Each request is bound for the window of the house it belongs to (a pane by number, or the door), the bad ones for quarantine
 # No request keeps a history of its generation time, so the forty points of the response spark breathe around the time of this one
 # The PDO cases are the four shapes a query takes in this install, played by the plugin over the real prefix
 # The runtime strip carries eight staged events, the first five on screen, stamped a few seconds apart back from now, and the plugin turns it
-# The scenarios the pipeline flow plays in turn are a hit, a miss and a bypass with the cache on, and one live render with it off
-# Each scenario names mode, badge, route, two core lines, two gate words, the module parser word, four side grid states with tones and the node numbers the packet visits
+# The scenarios the pipeline flow plays in turn are a hit, a miss and a bypass of the parser cache with the cache on, and one parse without it when it is off
+# Each scenario names mode, badge, route, two core lines, two words of the parser cache node, the template word, the side grid states with tones and the visited nodes
 function getPresentationData(): array {
     global $conf, $db, $theme;
     $cnt = getSessionCounts();
@@ -574,7 +574,7 @@ function getPresentationData(): array {
                 ['icon' => 'plug', 'num' => '03', 'title' => 'PDO', 'note' => _PRES_SP_N_PDO], ['icon' => 'server', 'num' => '04', 'title' => $driver, 'note' => _PRES_SP_N_SQL],
                 ['icon' => 'table', 'num' => '05', 'title' => 'PDOStatement', 'note' => ''],
             ],
-            'result' => _PRES_SP_RESULT, 'rows' => _PRES_SP_ROWS, 'epoch' => _PRES_SP_EPOCH, 'mode' => _PRES_SP_PREPARED, 'comment' => _PRES_SP_COMMENT,
+            'result' => _PRES_SP_RESULT, 'rows' => _PRES_SP_ROWS, 'mode' => _PRES_SP_PREPARED, 'comment' => _PRES_SP_COMMENT,
             'nocomment' => _PRES_SP_NOPARAM, 'cases' => $cases, 'first' => $cases[0],
             'stats' => [
                 $stat(_PRES_QUERIES, (string)$load['qnum']), $stat(_PRES_SQL_TIME, $sql, 's'),
@@ -649,30 +649,31 @@ function getPresentationData(): array {
         'mode' => $mode, 'badge' => $badge, 'btone' => $btone, 'route' => $route, 'sub' => $sub, 'state' => $state, 'gatea' => $gatea, 'gateb' => $gateb,
         'modb' => $modb, 'states' => implode('|', $states), 'tones' => implode('|', $tones), 'seq' => $seq,
     ];
+    $view = 'GET /index.php?name=news&op=view · '._PRES_AR_S_GUEST;
     $flows = $cache ? [
-        $flow('hit', 'HIT', 'success', 'GET /index.php?name=forum · '._PRES_AR_S_GUEST, _PRES_AR_DYNAMIC, _PRES_AR_WARM, _PRES_AR_S_LOOKUP, 'HIT', _PRES_AR_S_ALLOW,
-            ['HIT', _PRES_AR_S_ALLOW, _PRES_AR_LIVE, '—'], ['success', 'muted', 'success', 'muted'], '1,2,3,7'),
-        $flow('miss', 'MISS', 'warning', 'GET /index.php?name=forum&cat=1 · '._PRES_AR_S_GUEST, _PRES_AR_REBUILD, 'MISS', _PRES_AR_S_LOOKUP, 'MISS', _PRES_AR_S_WARM,
-            ['MISS', _PRES_AR_WARM, _PRES_AR_LIVE, _PRES_AR_ACQUIRED], ['warning', 'success', 'success', ''], '1,2,3,4,5,6,7'),
-        $flow('bypass', 'BYPASS', 'info', 'POST /index.php?name=account', _PRES_AR_NOSTORE, 'BYPASS', _PRES_AR_S_LIVE, 'BYPASS', _PRES_AR_S_LIVE,
-            ['BYPASS', _PRES_AR_WARM, _PRES_AR_LIVE, '—'], ['muted', 'success', 'success', 'muted'], '1,2,4,5,6,7'),
+        $flow('hit', 'HIT', 'success', $view, _PRES_AR_DYNAMIC, _PRES_AR_WARM, 'storage/cache/data', 'HIT', 'HTML',
+            ['HIT', _PRES_AR_COMPILED, _PRES_AR_DATA_V, _PRES_AR_PAGE_V], ['success', 'success', 'success', 'success'], '1,2,3,4,5,6,7'),
+        $flow('miss', 'MISS', 'warning', $view, _PRES_AR_REBUILD, 'MISS', 'storage/cache/data', 'MISS', 'HTML',
+            ['MISS', _PRES_AR_COMPILED, _PRES_AR_DATA_V, _PRES_AR_PAGE_V], ['warning', 'success', 'success', 'success'], '1,2,3,4,5,6,7'),
+        $flow('bypass', 'BYPASS', 'info', 'GET /index.php?name=forum · '._PRES_AR_S_GUEST, _PRES_AR_NOSTORE, 'BYPASS', '< 2048 B', 'BYPASS', 'HTML',
+            ['BYPASS', _PRES_AR_COMPILED, _PRES_AR_DATA_V, _PRES_AR_PAGE_V], ['muted', 'success', 'success', 'success'], '1,2,3,4,6,7'),
     ] : [
-        $flow('off', _PRES_AR_MODE_OFF, 'warning', 'GET /index.php?name=forum · '._PRES_AR_S_GUEST, _PRES_AR_NOSTORE, _PRES_AR_MODE_OFF, _PRES_AR_MODE_OFF, 'OFF', _PRES_AR_S_LIVE,
-            [_PRES_AR_MODE_OFF, _PRES_AR_MODE_OFF, _PRES_AR_LIVE, '—'], ['warning', 'muted', 'success', 'muted'], '1,2,4,5,6,7'),
+        $flow('off', _PRES_AR_MODE_OFF, 'warning', $view, _PRES_AR_NOSTORE, _PRES_AR_MODE_OFF, 'cache = 0', 'OFF', 'HTML',
+            [_PRES_AR_MODE_OFF, _PRES_AR_COMPILED, _PRES_AR_DATA_V, _PRES_AR_PAGE_V], ['warning', 'success', 'success', 'success'], '1,2,3,4,6,7'),
     ];
     $pipeline = [
         'head' => $head(7, getIconName('system'), _PRES_H_ARCH, _PRES_L_ARCH, $cache ? _PRES_AR_ON : _PRES_AR_OFF, $cache ? 'success' : 'warning'),
         'flows' => $flows, 'store' => 'STORE',
-        'mode' => $cache ? 'hit' : 'off', 'route' => 'GET /'.($cache === 1 ? 'index.php?name=forum' : '').' · '._PRES_AR_S_GUEST,
-        'decision' => $cache ? 'HIT' : 'BYPASS', 'is_on' => $cache > 0, 'theme' => $theme, 'logo' => $logo, 'cache' => _PRES_AR_CACHE,
-        'cache_note' => $cache ? _PRES_AR_DYNAMIC : _PRES_AR_REBUILD, 'cache_state' => $cache ? _PRES_AR_WARM : _PRES_AR_MODE_OFF, 'chip' => _PRES_AR_DYNAMIC,
+        'mode' => $cache ? 'hit' : 'off', 'route' => $view,
+        'decision' => $cache ? 'HIT' : _PRES_AR_MODE_OFF, 'is_on' => $cache > 0, 'theme' => $theme, 'logo' => $logo, 'cache' => _PRES_AR_CACHE,
+        'cache_note' => $cache ? _PRES_AR_DYNAMIC : _PRES_AR_NOSTORE, 'cache_state' => $cache ? _PRES_AR_WARM : _PRES_AR_MODE_OFF, 'chip' => _PRES_AR_DYNAMIC,
         'nodes' => [
             ['icon' => 'box-arrow-in-down', 'num' => '01', 'title' => _PRES_AR_N_REQ, 'a' => 'HTTP GET', 'b' => _PRES_AR_S_GUEST],
             ['icon' => 'shield-check', 'num' => '02', 'title' => _PRES_AR_N_GUARD, 'a' => _PRES_AR_S_SEC, 'b' => _PRES_AR_S_ALLOW],
-            ['icon' => 'device-ssd', 'num' => '03', 'title' => _PRES_AR_N_GATE, 'a' => _PRES_AR_S_LOOKUP, 'b' => $cache ? 'HIT' : 'BYPASS'],
-            ['icon' => 'cpu', 'num' => '04', 'title' => _PRES_AR_N_KERNEL, 'a' => _PRES_AR_S_ROUTE, 'b' => _PRES_AR_S_LIVE],
-            ['icon' => 'boxes', 'num' => '05', 'title' => _PRES_AR_N_MODULE, 'a' => _PRES_AR_S_CONTENT, 'b' => _PRES_AR_S_WARM],
-            ['icon' => 'layout-text-window-reverse', 'num' => '06', 'title' => _PRES_AR_N_TPL, 'a' => _PRES_AR_S_RENDER, 'b' => 'HTML'],
+            ['icon' => 'cpu', 'num' => '03', 'title' => _PRES_AR_N_KERNEL, 'a' => _PRES_AR_S_ROUTE, 'b' => _PRES_AR_S_LIVE],
+            ['icon' => 'boxes', 'num' => '04', 'title' => _PRES_AR_N_MODULE, 'a' => _PRES_AR_S_CONTENT, 'b' => _PRES_AR_DATA_V],
+            ['icon' => 'device-ssd', 'num' => '05', 'title' => _PRES_AR_N_GATE, 'a' => $cache ? 'storage/cache/data' : 'cache = 0', 'b' => $cache ? 'HIT' : 'OFF'],
+            ['icon' => 'layout-text-window-reverse', 'num' => '06', 'title' => _PRES_AR_N_TPL, 'a' => _PRES_AR_COMPILED, 'b' => 'HTML'],
             ['icon' => 'box-arrow-up-right', 'num' => '07', 'title' => _PRES_AR_N_RESP, 'a' => _PRES_AR_S_DYNAMIC, 'b' => _PRES_AR_S_SERVE],
         ],
         'tree' => _PRES_AR_TREE, 'tree_mode' => 'cache = '.$cache,
@@ -682,11 +683,12 @@ function getPresentationData(): array {
             ['name' => 'BYPASS', 'text' => _PRES_AR_BYPASS_T, 'is_on' => $cache === 0, 'tone' => 'info'],
         ],
         'states' => [
-            $stat(_PRES_AR_CACHE, [_PRES_AR_MODE_OFF, _PRES_AR_MODE_ALL, _PRES_AR_MODE_HOME][$cache] ?? _PRES_AR_MODE_OFF, '', '', -1, $cache ? 'success' : 'warning'),
-            $stat(_PRES_AR_PARSER, _PRES_AR_WARM, '', '', -1, 'success'), $stat(_PRES_AR_REGIONS, _PRES_AR_LIVE, '', '', -1, 'success'), $stat(_PRES_AR_LOCK, _PRES_AR_ACQUIRED),
+            $stat(_PRES_AR_PARSER, $cache ? 'HIT' : _PRES_AR_MODE_OFF, '', '', -1, $cache ? 'success' : 'warning'),
+            $stat(_PRES_AR_TPLS, _PRES_AR_COMPILED, '', '', -1, 'success'), $stat(_PRES_AR_DATA, _PRES_AR_DATA_V, '', '', -1, 'success'),
+            $stat(_PRES_AR_PAGE, _PRES_AR_PAGE_V, '', '', -1, 'success'),
         ],
-        'invalid' => _PRES_AR_INVALID, 'epoch' => sprintf(_PRES_AR_EPOCH, Cache::getEpoch()), 'epoch_note' => _PRES_AR_EPOCH_T,
-        'ttl' => sprintf(_PRES_AR_TTL, (int)round((int)$conf['cache_t'] / 60), (int)$conf['cache_b']), 'note' => _PRES_AR_NOTE,
+        'clean' => _PRES_AR_GC, 'clean_value' => sprintf(_PRES_AR_GC_V, intdiv(Cache::KEEP, 3600)), 'clean_note' => _PRES_AR_GC_T,
+        'note' => _PRES_AR_NOTE,
     ];
     $gallery = ['prev' => _PRES_GL_PREV, 'next' => _PRES_GL_NEXT, 'hint' => _PRES_GL_HINT, 'role' => _PRES_GL_ROLE, 'of' => _PRES_GL_OF];
     $pulse = [

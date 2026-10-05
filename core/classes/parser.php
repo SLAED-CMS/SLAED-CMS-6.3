@@ -136,9 +136,9 @@ class Parser {
         static $ver = '';
         if (strlen($src) < self::CACHEMIN || !$this->checkCacheReady()) return '';
         if ($ver === '') $ver = (string)filemtime(__FILE__);
-        return Cache::getPath('data', Cache::getHash([
+        return Cache::getFile([
             'parser', $ver, $this->getConfigHash($mod), sha1($src), (int)$safe, (int)$trust, $mod, $hoff, $fmt, $nid, getTheme(), _LOCALE,
-        ]), 'html');
+        ], 'html');
     }
 
     # Apply module regex replace rules from $conf['replace'][$mod]; tags are stashed once with salted tokens, the # delimiter is escaped and invalid patterns are skipped

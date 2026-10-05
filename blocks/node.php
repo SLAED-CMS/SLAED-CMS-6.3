@@ -36,7 +36,6 @@ if ($set === null) {
             }
             if ($set['mode'] === 'home') $query->setNodeHome();
             $list = $query->getNodeList();
-            if (checkPageCache()) Cache::setPageUntil($query->getNodeDeadline());
         } catch (NodeException $err) {
             Logger::addSite('error', 'Block node.php: the materials cannot be read', ['bid' => intval($bid), 'code' => $err->getCode()]);
         }

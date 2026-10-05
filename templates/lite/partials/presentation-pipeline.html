@@ -8,9 +8,7 @@
       <svg class="sl-pres-paths" viewBox="0 0 700 460" preserveAspectRatio="none" aria-hidden="true">
         <path class="sl-pres-path-ring" d="M350,33 Q475,38 570,96 Q648,151 642,226 Q640,330 560,382 Q460,446 350,433 Q240,446 140,382 Q60,330 58,226 Q52,145 145,88 Q248,28 350,33Z"></path>
         <path class="sl-pres-path-live" d="M350,33 Q475,38 570,96 Q648,151 642,226 Q640,330 560,382 Q460,446 350,433 Q240,446 140,382 Q60,330 58,226 Q52,145 145,88 Q248,28 350,33"></path>
-        <path class="sl-pres-path-short" d="M350,33 Q475,38 570,96 Q648,151 642,226 C555,159 463,126 350,138 C238,126 145,159 58,226 Q52,145 145,88 Q248,28 350,33"></path>
         <circle class="sl-pres-path-packet" r="5"><animateMotion dur="7s" repeatCount="indefinite" path="M350,33 Q475,38 570,96 Q648,151 642,226 Q640,330 560,382 Q460,446 350,433 Q240,446 140,382 Q60,330 58,226 Q52,145 145,88 Q248,28 350,33Z"></animateMotion></circle>
-        <circle class="sl-pres-path-packet" r="5"><animateMotion dur="4.4s" repeatCount="indefinite" path="M350,33 Q475,38 570,96 Q648,151 642,226 C555,159 463,126 350,138 C238,126 145,159 58,226 Q52,145 145,88 Q248,28 350,33"></animateMotion></circle>
       </svg>
       <div class="sl-pres-flow-core">
         <div>
@@ -30,9 +28,9 @@
       </div>
       <div class="sl-pres-states">
         {% for item in states %}{% include 'fragments/presentation-stat.html' with item %}{% endfor %}
-        <div class="sl-pres-stat sl-pres-epoch-row"><span>{{ invalid }}</span><b>{{ epoch }}</b><small><i class="sl-pres-dot"></i>{{ epoch_note }}</small></div>
+        <div class="sl-pres-stat sl-pres-clean-row"><span>{{ clean }}</span><b>{{ clean_value }}</b><small><i class="sl-pres-dot"></i>{{ clean_note }}</small></div>
       </div>
-      <p class="sl-pres-note"><i class="bi bi-info-circle" aria-hidden="true"></i><b>{{ ttl }}</b> · {{ note }}</p>
+      <p class="sl-pres-note"><i class="bi bi-info-circle" aria-hidden="true"></i>{{ note }}</p>
     </div>
   </div>
 </div>

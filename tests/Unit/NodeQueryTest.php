@@ -64,7 +64,6 @@ final class NodeQueryTest extends TestCase
             'getNodeCategoryCount' => ['NodeType type', 'array'],
             'getNodeContent' => ['int id', 'NodeType type', '?Node'],
             'getNodeCount' => ['int'],
-            'getNodeDeadline' => ['?int'],
             'getNodeLegacy' => ['string mod', 'int id = 0', '?array'],
             'getNodeList' => ['array'],
             'getNodeSitemap' => ['int after = 0', 'int limit = 500', 'array'],
@@ -293,7 +292,7 @@ final class NodeQueryTest extends TestCase
         $this->assertSame(3, $run['double']['count']);
     }
 
-    # The language of the categories narrows lists, their deadline and the sitemap rows, never a direct read or a target
+    # The language of the categories narrows lists and the sitemap rows, never a direct read or a target
     #[Test]
     public function theLanguageNarrowsListsAndTheSitemap(): void
     {
@@ -306,7 +305,6 @@ final class NodeQueryTest extends TestCase
         foreach (['ru', 'en'] as $lang) {
             $this->assertSame([true, true], $run[$lang.'item'], $lang);
             $this->assertSame([112, 113], $run[$lang.'target'], $lang);
-            $this->assertNotNull($run[$lang.'deadline'], $lang);
         }
         $this->assertSame([false, true], [in_array(112, $run['rusite'], true), in_array(113, $run['rusite'], true)], 'The sitemap of ru carries a row of another language');
         $this->assertSame([true, false], [in_array(112, $run['ensite'], true), in_array(113, $run['ensite'], true)], 'The sitemap of en carries a row of another language');
@@ -516,24 +514,6 @@ final class NodeQueryTest extends TestCase
         $this->assertRefused($run['after'], 'sitemap', 'cursor -1');
     }
 
-    # The deadline is the nearest future publication or expiry the list would show, one aggregate on top of the prefetch, null when nothing is timed
-    #[Test]
-    public function theDeadlineIsTheNextTimedChange(): void
-    {
-        $run = $this->getRuns()['deadline'];
-        $this->assertSame($run['want'], $run['guest']);
-        $this->assertSame($run['want'], $run['root']);
-        $this->assertSame($run['want'], $run['mixed']);
-        $this->assertSame(2, $run['guestsql']);
-        $this->assertSame(1, $run['guestagain']);
-        $this->assertSame(1, $run['rootsql']);
-        $this->assertNull($run['plain']);
-        $this->assertSame(1, $run['plainsql']);
-        $this->assertNull($run['category'], 'A time of another category leaked into the deadline');
-        $this->assertSame($run['pinwant'], $run['pinned'], 'The expiry of a pinned material bounds the list');
-        $this->assertSame($run['extrawant'], $run['extra'], 'A pinned future material of the extra category bounds the category list');
-    }
-
     # The author numbers per type are exactly what the list of the same selection reads, for a guest and the main administrator, in one statement
     # Favorites count only on their own type and material; without an author the call is refused. The category counts of a type follow the rule of the category writer
     #[Test]
@@ -559,14 +539,13 @@ final class NodeQueryTest extends TestCase
     }
 
     # The budgets of docs/NODE.md (Statement budgets) from a fresh reader including the type: three without categories, the batches of the type on top, never more than seven
-    # Building the HTML cache of a list adds the one deadline statement and reuses the category prefetch: four for a plain type, never more than eight
     # The administrative list switches the sets off and costs type, count and page alone, and its models hold null for every set it did not load
     #[Test]
     public function statementBudgetsHold(): void
     {
         $run = $this->getRuns()['budget'];
         $want = ['plain-3' => 3, 'plain-10' => 3, 'news-3' => 7, 'news-10' => 7, 'docs-3' => 6, 'docs-10' => 6, 'files-3' => 7, 'files-10' => 7,
-            'build-plain' => 4, 'build-news' => 8, 'build-docs' => 7, 'build-files' => 8, 'targets' => 2, 'admin-news' => 3, 'admin-files' => 3,
+            'targets' => 2, 'admin-news' => 3, 'admin-files' => 3,
             'bare' => [0, null, null, null]];
         $this->assertSame($want, $run);
     }

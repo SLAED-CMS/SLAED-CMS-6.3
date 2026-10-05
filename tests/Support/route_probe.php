@@ -14,12 +14,11 @@
 # The argument integ runs the integrations - rating, favorites, poll, search, RSS, blocks and their settings - and its child integext the sitemap
 # The argument guard runs the closed routes on the same integrations, and its child guardext asks the service for the right of polls
 # The argument intact runs the integrity checks on the same integrations: point corrections, the block save and vote annulments
-# The argument cache runs the comment writer against the page cache, and its child cachecom approves a comment as the administrative entry does
 # The argument secure runs the public form on the same integrations: the upload right and limits, the write window, the captcha and the title in search
 # The argument tree runs the document tree on docs switched to the tree, and its child treeext counts the statements of the tree read of one view
 # The argument modes runs the display modes on five types; serve modes keeps a server with the same types up until the file stop appears
 # The argument seo runs the canonical routes, the head and the feeds, and its child seoext asks the core for the feeds
-# The argument head runs the routes, the notices, the page cache and the theme header
+# The argument head runs the routes, the notices and the theme header
 # The argument quick runs the quick edit of a comment over its two routes: methods, the header token, the closed forms, the codes and what each leaves in the row
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
@@ -28,16 +27,14 @@ if (PHP_SAPI !== 'cli') {
 error_reporting(E_ALL);
 ini_set('display_errors', '0');
 $rwork = str_replace('\\', '/', (string)($argv[1] ?? sys_get_temp_dir().'/slaed_node_route'));
-if (in_array($argv[2] ?? '', ['view', 'comments', 'ext', 'syncext', 'integext', 'guardext', 'cachecom', 'treeext', 'seoext'], true)) {
+if (in_array($argv[2] ?? '', ['view', 'comments', 'ext', 'syncext', 'integext', 'guardext', 'treeext', 'seoext'], true)) {
     $probework = $rwork.'/child';
-    if (in_array($argv[2], ['syncext', 'cachecom'], true)) define('COUNTER_DIR', $rwork.'/counter');
     foreach (['CONFIG_DIR' => 'config', 'BACKUP_DIR' => 'backup', 'CACHE_DIR' => 'cache', 'UPLOADS_DIR' => 'uploads'] as $rkey => $rdir) define($rkey, $rwork.'/'.$rdir);
     require_once __DIR__.'/probe_boot.php';
     if (($argv[2] ?? '') === 'comments') setRouteChild((string)($argv[3] ?? ''));
-    if (($argv[2] ?? '') === 'cachecom') setRouteChild('root');
     require_once BASE_DIR.'/core/system.php';
     $rchild = ['view' => 'getRouteViewData', 'comments' => 'getRouteCommentData', 'ext' => 'getRouteExtData', 'syncext' => 'getRouteSyncData',
-        'integext' => 'getRouteIntegData', 'guardext' => 'getRouteGuardData', 'cachecom' => 'getRouteComData', 'treeext' => 'getRouteTreeData',
+        'integext' => 'getRouteIntegData', 'guardext' => 'getRouteGuardData', 'treeext' => 'getRouteTreeData',
         'seoext' => 'getRouteSeoData'][$argv[2]];
     echo json_encode($rchild());
     exit;
@@ -283,14 +280,6 @@ function getRouteHits(PDO $pdo, int $id): int {
     return (int)$pdo->query('SELECT hits FROM '.RPREF.'_node_assets WHERE id = '.$id)->fetchColumn();
 }
 
-# The pages the scratch page cache holds and the bound of the newest one
-function getRouteCache(string $work): array {
-    $list = glob($work.'/cache/pages/html/*.html') ?: [];
-    $meta = [];
-    foreach (glob($work.'/cache/pages/html/*.json') ?: [] as $one) $meta[] = json_decode((string)file_get_contents($one), true);
-    return ['pages' => count($list), 'until' => array_column($meta, 'until')];
-}
-
 # The deferred counter of a view runs after the answer; wait for it a bounded time
 function getRouteViews(PDO $pdo, int $id, int $want): int {
     for ($i = 0; $i < 30; $i++) {
@@ -301,9 +290,8 @@ function getRouteViews(PDO $pdo, int $id, int $want): int {
     return (int)getRouteCol($pdo, $id, 'views');
 }
 
-# The public list: status, clean parameters, paging, the category rights, the start page, the page cache and a forged context
+# The public list: status, clean parameters, paging, the category rights, the start page, a live render and a forged context
 function getRouteLists(PDO $pdo): array {
-    global $rwork;
     $code = fn(string $who, string $path, string $method = 'GET'): int => getRouteReply($who, $method, $path)['code'];
     $out = [];
     $one = getRouteReply('', 'GET', 'index.php?name=news');
@@ -311,7 +299,6 @@ function getRouteLists(PDO $pdo): array {
         'Members')];
     $out['canon'] = str_contains($one['body'], 'rel="canonical" href="http://127.0.0.1');
     $out['nostore'] = str_contains((string)($one['head']['cache-control'] ?? ''), 'no-store');
-    $out['cache'] = getRouteCache($rwork);
     $pdo->exec('UPDATE '.RPREF.'_nodes SET title = \'Gamma changed\' WHERE id = 105');
     $out['hit'] = str_contains(getRouteReply('', 'GET', 'index.php?name=news')['body'], 'Gamma changed');
     $out['user'] = str_contains(getRouteReply('anna', 'GET', 'index.php?name=news')['body'], 'Gamma changed');
@@ -380,7 +367,12 @@ function getRouteAttach(): array {
             $code('', 'index.php?name=news&op=attach&id=101&key=att-aaaaaaaaaa.png&foo=1'), $code('', 'index.php?name=news&op=attach&id=101&key=att-aaaaaaaaaa.png&preview=1'),
             $code('', 'index.php?name=news&op=attach&id=101&key=att-aaaaaaaaaa.png&thumb=2'), $code('', 'index.php?name=news&op=attach&id=103&key=att-aaaaaaaaaa.png'),
             $code('', 'index.php?name=docs&op=attach&id=101&key=att-aaaaaaaaaa.png'), $code('', 'index.php?name=news&op=attach&key=att-aaaaaaaaaa.png&preview=1'),
+            $code('', 'index.php?name=news&op=attach&id=101&key=att-aaaaaaaaaa.png&%6Bey=att-aaaaaaaaaa.png'),
+            $code('', 'index.php?name=news&op=attach&id=101&id=101&key=att-aaaaaaaaaa.png'), $code('', 'index.php?name=news&op=attach&id=101&key=att-aaaaaaaaaa.png&amp;thumb=1'),
+            $code('', 'index.php?name=news&op=attach&id=101&key=att-aaaaaaaaaa.png&utm_source=x'),
+            $code('', 'index.php?name=news&op=attach&id=01&key=att-aaaaaaaaaa.png'), $code('', 'index.php?name=news&op=attach&id=101&key=att-aaaaaaaaaa.png&=x'),
         ],
+        'coded' => $code('', 'index.php?name=%6E%65%77%73&op=attach&id=101&%6Bey=att-aaaaaaaaaa.png'),
         'direct' => $code('', 'uploads/news/att-aaaaaaaaaa.png'),
         'climb' => str_contains(getRouteReply('', 'GET', 'index.php?name=news&op=attach&id=101&key=..%2Fconfig%2Fdb.php')['body'], "'pass'"),
     ];
@@ -1019,12 +1011,11 @@ function getRouteSync(PDO $pdo, string $work): array {
     $out['run'] = [$run['code'], getRouteSource($pdo, $bid), getRouteSource($pdo, $aid)['fails'], getRouteSource($pdo, 501)['fails'], getRouteSource($pdo, 601)['fails'],
         getRouteSource($pdo, $mid)['fails'], $state['last_status'] ?? '', $state['last_message'] ?? ''];
     $pdo->exec('UPDATE '.$pre.'node_sync SET url = \'https://example.com/feed.xml\', etag = \'\', modified = \'\', fails = 0, error = \'\' WHERE nid = '.$aid);
-    $cached = getRouteReply('', 'GET', 'index.php?name=content');
+    $before = getRouteReply('', 'GET', 'index.php?name=content');
     $pdo->exec('UPDATE '.$pre.'nodes SET intro = '.$pdo->quote('Quiet intro').' WHERE id = '.$aid);
-    $hit = getRouteReply('', 'GET', 'index.php?name=content');
+    $after = getRouteReply('', 'GET', 'index.php?name=content');
     $out['ext'] = json_decode((string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg(__FILE__).' '.escapeshellarg($work).' syncext 2>&1'), true);
-    $fresh = getRouteReply('', 'GET', 'index.php?name=content');
-    $out['cache'] = [str_contains($cached['body'], 'Own intro'), str_contains($hit['body'], 'Own intro'), str_contains($fresh['body'], 'Quiet intro'),
+    $out['live'] = [str_contains($before['body'], 'Own intro'), str_contains($after['body'], 'Quiet intro'),
         str_contains(getRouteReply('', 'GET', 'index.php?name=content&op=view&id='.$aid)['body'], 'Hello feed')];
     $out['ids'] = [$aid, $bid, $mid];
     return $out;
@@ -1077,20 +1068,17 @@ function getRouteSyncData(): array {
     $node = (new NodeQuery($db, $root, $fld))->setNodeExtension($ext)->getNode($aid, $type);
     $out['data'] = [array_keys($ext->getNodeData($type, [$node], 'admin')[$aid] ?? []), $ext->getNodeData($type, [$node], 'view'),
         (new NodeSync($db, $moder, new Feed($conf['rss'], $send)))->getNodeData($type, [$node], 'admin')];
-    $epoch = fn(): int => is_file(COUNTER_DIR.'/cache.log') ? (int)file_get_contents(COUNTER_DIR.'/cache.log') : 0;
     $ver = (int)$col($aid, 'version');
-    $was = $epoch();
     $replies = [$rss('Hello feed', ['ETag' => ['"e1"'], 'Last-Modified' => ['Tue, 02 Jan 2024 00:00:00 GMT']])];
     $res = $ext->updateNodeSync($aid);
-    $out['new'] = [$res, str_contains($col($aid, 'body'), '## Hello feed'), (int)$col($aid, 'version') - $ver, $epoch() - $was, $src($aid),
+    $out['new'] = [$res, str_contains($col($aid, 'body'), '## Hello feed'), (int)$col($aid, 'version') - $ver, $src($aid),
         isset($gets[0]['headers']['If-None-Match'])];
     $body = $col($aid, 'body');
     $ver = (int)$col($aid, 'version');
     $replies = [['code' => 304, 'headers' => [], 'body' => '']];
     $gets = [];
-    $was = $epoch();
     $out['same'] = [$ext->updateNodeSync($aid), $gets[0]['headers']['If-None-Match'] ?? '', $gets[0]['headers']['If-Modified-Since'] ?? '', $col($aid, 'body') === $body,
-        (int)$col($aid, 'version') - $ver, $epoch() - $was, $src($aid)['etag']];
+        (int)$col($aid, 'version') - $ver, $src($aid)['etag']];
     $replies = [$rss('Hello feed', ['ETag' => ['"e2"']])];
     $out['equal'] = [$ext->updateNodeSync($aid), (int)$col($aid, 'version') - $ver, $src($aid)['etag']];
     $replies = [['code' => 500, 'headers' => [], 'body' => 'oops'], ['code' => 200, 'headers' => ['Content-Type' => ['application/rss+xml']], 'body' => '<rss><broken']];
@@ -1106,8 +1094,7 @@ function getRouteSyncData(): array {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_node_sync SET url = \'https://example.net/moved.xml\' WHERE nid = :id', ['id' => $aid]);
         return ['code' => 500, 'headers' => [], 'body' => ''];
     }];
-    $was = $epoch();
-    $out['race'] = [$ext->updateNodeSync($aid), str_contains($col($aid, 'body'), 'Stale text'), $ext->updateNodeSync($aid), $src($aid), $epoch() - $was];
+    $out['race'] = [$ext->updateNodeSync($aid), str_contains($col($aid, 'body'), 'Stale text'), $ext->updateNodeSync($aid), $src($aid)];
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_node_sync SET url = \'https://example.com/feed.xml\' WHERE nid = :id', ['id' => $aid]);
     $snap = ['nid' => $aid, 'url' => 'https://example.com/feed.xml', 'etag' => '', 'modified' => '', 'body' => $col($aid, 'body'), 'version' => (int)$col($aid, 'version'),
         'status' => 2, 'name' => 'content', 'ext' => 'sync'];
@@ -1125,11 +1112,9 @@ function getRouteSyncData(): array {
             return false;
         }
     };
-    $guards = fn(): int => count(glob(CACHE_DIR.'/guards/*.lock') ?: []);
-    $was = $guards();
     $new = ['ok' => true, 'changed' => true, 'code' => 200, 'body' => 'Lost text', 'etag' => '', 'modified' => '', 'error' => ''];
     $call = (new ReflectionMethod(NodeSync::class, 'setSourceResult'))->invoke(new NodeSync($lost, $root, new Feed($conf['rss'], $send)), $snap, $new);
-    $out['undo'] = [$call, $col($aid, 'body') === $body, $guards() - $was];
+    $out['undo'] = [$call, $col($aid, 'body') === $body];
     $out['refused'] = [getRouteCall(fn() => (new NodeSync($db, $task, new Feed($conf['rss'], $send)))->updateNodeSync($aid)),
         getRouteCall(fn() => (new NodeSync($db, $anna, new Feed($conf['rss'], $send)))->updateNodeSync($aid)), getRouteCall(fn() => $ext->updateNodeSync(101)),
         getRouteCall(fn() => $ext->updateNodeSync(999999)), getRouteCall(fn() => $ext->updateNodeSyncList(10))];
@@ -1630,7 +1615,7 @@ function getRouteIntact(PDO $pdo, string $work): array {
     $pdo->exec('INSERT INTO '.$pre.'categories (id, modul, title, intro, parent, ordern, pview, pread, ppost, lang) VALUES '.$ring(95, 96, 0).', '.$ring(96, 95, 0).', '
         .$ring(97, 999, 5).', '.$ring(98, 97, 1));
     $pdo->exec('UPDATE '.$pre.'nodes SET cid = 95 WHERE id = 102');
-    foreach (glob($work.'/cache/pages/*/*') ?: [] as $one) if (is_file($one)) unlink($one);
+    foreach (glob($work.'/cache/data/*') ?: [] as $one) if (is_file($one)) unlink($one);
     $start = microtime(true);
     $cat = getRouteReply('root', 'GET', 'admin.php?name=categories&op=edit&cid=95');
     $rss = getRouteReply('', 'GET', 'index.php?name=rss&mod=news');
@@ -1639,44 +1624,6 @@ function getRouteIntact(PDO $pdo, string $work): array {
         (bool)preg_match('#<option[^>]*value="95"[^>]*selected#', $sheet), microtime(true) - $start < 30,
         strpos($sheet, 'value="97"') < strpos($sheet, 'value="98"'), (bool)preg_match('#value="98"[^>]*>\x{00A0}+Ring 98#u', $sheet)];
     return $out;
-}
-
-# The child of the cache run: the main administrator approves the pending comment of Gamma inside the administrative entry, where every write statement bumps early
-function getRouteComData(): array {
-    global $com;
-    define('ADMIN_FILE', true);
-    return ['done' => $com->setStatus(901, true)];
-}
-
-# The comment writer against the page cache over real HTTP: a child approves a comment of a Node material while the probe keeps its count waiting on a second comment
-# A guest asks the list once the early bump of the entry has come; the page of that moment must not be stored, and the generation has to move after the commit
-function getRouteCacheCom(PDO $pdo, string $work): array {
-    global $rbase;
-    $pre = RPREF.'_';
-    $pdo->exec('INSERT INTO '.$pre.'comment (id, pid, cid, modul, time, uid, name, ip, body, status) VALUES'
-        .' (901, 0, 105, \'news\', NOW(), 2, \'anna\', \'127.0.0.1\', \'first\', 0), (902, 0, 105, \'news\', NOW(), 3, \'boris\', \'127.0.0.1\', \'second\', 1)');
-    $pdo->exec('UPDATE '.$pre.'nodes SET comnum = 1 WHERE id = 105');
-    $gen = fn(): int => is_file($work.'/counter/cache.log') ? (int)file_get_contents($work.'/counter/cache.log') : 0;
-    $pages = fn(): int => count(glob($work.'/cache/pages/html/*.html') ?: []);
-    $guards = fn(): int => count(glob($work.'/cache/guards/*.lock') ?: []);
-    foreach (glob($work.'/cache/pages/html/*') ?: [] as $one) unlink($one);
-    $hold = getRoutePdo($rbase);
-    $hold->beginTransaction();
-    $hold->exec('UPDATE '.$pre.'comment SET time = time + INTERVAL 1 SECOND WHERE id = 902');
-    $proc = proc_open([PHP_BINARY, __FILE__, $work, 'cachecom'], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipe);
-    $was = $gen();
-    for ($i = 0; $i < 200 && $gen() === $was; $i++) usleep(50000);
-    usleep(300000);
-    $during = ['early' => $gen() - $was, 'guards' => $guards(), 'gen' => $gen()];
-    $page = getRouteReply('', 'GET', 'index.php?name=news');
-    $during += ['code' => $page['code'], 'pages' => $pages()];
-    $hold->rollBack();
-    $child = json_decode((string)stream_get_contents($pipe[1]), true);
-    foreach ($pipe as $one) fclose($one);
-    proc_close($proc);
-    $after = ['gen' => $gen() - $during['gen'], 'guards' => $guards(), 'comnum' => (int)getRouteCol($pdo, 105, 'comnum'),
-        'status' => (int)$pdo->query('SELECT status FROM '.$pre.'comment WHERE id = 901')->fetchColumn()];
-    return ['child' => $child, 'during' => $during, 'after' => $after];
 }
 
 # The service side in a child that boots the core, where only a main administrator reaches the category screen: a moderator of docs creates a category of docs
@@ -2115,44 +2062,27 @@ function addRouteHeadTypes(PDO $pdo, string $work): void {
 }
 
 # The route answers of notices and the page cache: a page past the reader bound, the notice after a submission once and the list cached after it, the notice after a report once
-# The header marquee bounds the stored copy, a closed category stays out of the banner and the breadcrumb, and the start page keeps its canonical address
+# The header marquee shows the latest faq material, a closed category stays out of the banner and the breadcrumb, and the start page keeps its canonical address
 # Letters keep the category, an empty block is left out, and the favorites are read without a token in their address
-function getRouteHead(PDO $pdo, string $work): array {
+function getRouteHead(): array {
     global $rport;
-    $pre = RPREF.'_';
     $site = 'http://127.0.0.1:'.$rport;
     $get = fn(string $path, string $who = ''): array => getRouteReply($who, 'GET', $path);
     $link = fn(string $html): string => preg_match('#<link\s+rel="canonical"[^>]*href="([^"]*)"#s', $html, $hit) ? html_entity_decode($hit[1]) : '';
     $word = fn(string $file, string $key): string => preg_match("#define\('".$key."', *'([^']+)'\)#", (string)file_get_contents(BASE_DIR.'/'.$file), $hit) ? $hit[1] : '?';
     $crumb = fn(string $html): string => preg_match('#<div class="sl-breadcrumbs">(.*?)</div>#s', $html, $hit) ? $hit[1] : '';
     $trail = fn(string $html): string => preg_match('#"@type":\s*"BreadcrumbList".*?\]#s', $html, $hit) ? $hit[0] : '';
-    $pages = $work.'/cache/pages/html';
-    $clear = function () use ($pages): void {
-        foreach (glob($pages.'/*') ?: [] as $one) unlink($one);
-    };
-    $until = function () use ($pages): array {
-        return array_map(fn(string $v): int => (int)(json_decode((string)file_get_contents($v), true)['until'] ?? -1), glob($pages.'/*.json') ?: []);
-    };
     $far = $get('index.php?name=news&num=999999999');
     $out = ['bound' => [$far['code'], $get('index.php?name=news&num=4294967295')['code'], $get('index.php?name=news&op=view&id=4294967295')['code']]];
-    $clear();
-    $get('index.php?name=news');
-    $free = $until();
-    $pdo->exec('UPDATE '.$pre.'nodes SET expires = NOW() + INTERVAL 1 DAY WHERE tid = 2');
-    $clear();
     $mark = $get('index.php?name=news')['body'];
-    $bound = $until();
-    $out['faq'] = [count($free), count($bound), ($bound[0] ?? 0) > time() && ($bound[0] ?? 0) < ($free[0] ?? 0),
-        preg_match('#sl-head-marquee">(.*?)</li>#s', $mark, $hit) ? trim(strip_tags($hit[1])) : ''];
+    $out['faq'] = preg_match('#sl-head-marquee">(.*?)</li>#s', $mark, $hit) ? trim(strip_tags($hit[1])) : '';
     $form = $get('index.php?name=news&op=add')['body'];
     $post = ['title' => 'Head notice', 'aname' => 'Guest', 'intro' => 'Intro', 'body' => 'Body', 'action' => 'submit', 'token' => getRouteToken($form, 'name="action"')];
     $sent = getRouteReply('', 'POST', 'index.php?name=news&op=add', $post);
     $note = $word('modules/node/lang/ru.php', '_NODE_PENDING');
-    $clear();
     $first = $get('index.php?name=news')['body'];
-    $stored = count(glob($pages.'/*.html') ?: []);
     $again = $get('index.php?name=news')['body'];
-    $out['notice'] = [$sent['code'], $sent['head']['location'] ?? '', str_contains($first, $note), $stored, str_contains($again, $note), count(glob($pages.'/*.html') ?: [])];
+    $out['notice'] = [$sent['code'], $sent['head']['location'] ?? '', str_contains($first, $note), str_contains($again, $note)];
     $tok = getRouteToken($get('index.php?name=news&op=view&id=101')['body'], 'op=report');
     $told = getRouteReply('', 'POST', 'index.php?name=news&op=report&id=2', ['token' => $tok]);
     $said = $word('modules/node/lang/ru.php', '_NODE_REPORTED');
@@ -2183,7 +2113,7 @@ function getRouteSeoData(): array {
 }
 
 # The quick edit of one comment of anna on an open material, driven over the two routes as anna, boris and the main administrator with the page token of each
-# Every exchange reports its status, and every save what the row and the page cache epoch hold after it, so the order under the lock is measured rather than claimed
+# Every exchange reports its status, and every save what the row holds after it, so the order under the lock is measured rather than claimed
 function getRouteQuick(PDO $pdo, string $work): array {
     $pre = RPREF.'_';
     $when = (new DateTime('now', new DateTimeZone((require $work.'/config/global.php')['gtime'])))->format('Y-m-d H:i:s');
@@ -2201,7 +2131,6 @@ function getRouteQuick(PDO $pdo, string $work): array {
     $post = fn(string $who, array $form, ?array $hdr = null): array => getRouteReply($who, 'POST', 'index.php?go=1&op=updateQuickEdit',
         $form + ['kind' => 'comment', 'id' => (string)$cid, 'field' => 'body'], $hdr ?? $head($who));
     $row = fn(): array => $pdo->query('SELECT body, edited FROM '.$pre.'comment WHERE id = '.$cid)->fetch(PDO::FETCH_ASSOC);
-    $epoch = fn(): string => is_file($work.'/counter/cache.log') ? (string)file_get_contents($work.'/counter/cache.log') : '';
     $stamp = fn(array $one): string => sha1($one['body']."\0".(string)$one['edited']);
     $out = ['ids' => [$cid], 'tokens' => array_map(fn($v) => $v !== '', $toks)];
     $open = $get('anna');
@@ -2224,15 +2153,13 @@ function getRouteQuick(PDO $pdo, string $work): array {
         $get('anna', 'kind=comment&id='.$cid.'&field=intro')['code'], $post('anna', ['stamp' => 'short', 'text' => 'Anna short stamp'])['code'],
         $post('anna', ['stamp' => $first, 'text' => 'Anna bad kind', 'kind' => 'node'])['code'], $row() === $was,
     ];
-    $before = $epoch();
     $save = $post('anna', ['stamp' => $first, 'text' => 'Anna second text']);
     $saved = $row();
     $out['save'] = [$save['code'], str_contains($save['body'], 'Anna second text'), str_contains($save['body'], 'id="quick-mark-comment-'.$cid.'" hx-swap-oob="outerHTML"'),
-        $saved['body'], $saved['edited'] !== null, $epoch() !== $before, str_contains($save['body'], 'data-sl-quick-form')];
+        $saved['body'], $saved['edited'] !== null, str_contains($save['body'], 'data-sl-quick-form')];
     sleep(1);
-    $before = $epoch();
     $again = $post('anna', ['stamp' => $first, 'text' => 'Anna second text']);
-    $out['repeat'] = [$again['code'], $row() === $saved, $epoch() === $before];
+    $out['repeat'] = [$again['code'], $row() === $saved];
     $clash = $post('anna', ['stamp' => $first, 'text' => 'Anna third text']);
     $now = preg_match('#data-sl-quick-stamp="([a-f0-9]{40})"#', $clash['body'], $hit) ? $hit[1] : '';
     $out['conflict'] = [$clash['code'], $now === $stamp($row()), str_contains($clash['body'], 'Anna second text'), $row() === $saved];
@@ -2247,7 +2174,7 @@ function getRouteQuick(PDO $pdo, string $work): array {
     $out['lost'] = [$open['code'], $post('anna', ['stamp' => getRouteField($open['body'], 'stamp'), 'text' => 'Anna too late'])['code'], $get('anna')['code'], $row() === $kept];
     $pdo->exec('UPDATE '.$pre.'comment SET deleted = NOW() WHERE id = '.$cid);
     $out['gone'] = [$get('root')['code'], $post('root', ['stamp' => $stamp($kept), 'text' => 'Root after the delete'])['code'], $row() === $kept];
-    $out['forum'] = getRouteQuickForum($pdo, $work, $head);
+    $out['forum'] = getRouteQuickForum($pdo, $head);
     $out['node'] = getRouteQuickNode($pdo, $when, $head);
     return $out;
 }
@@ -2290,7 +2217,7 @@ function getRouteQuickNode(PDO $pdo, string $when, Closure $head): array {
 }
 
 # The quick edit of a reply of anna in an open topic: a save, its repeat, a conflict, and the place read again under the lock when the topic closes or the post moves
-function getRouteQuickForum(PDO $pdo, string $work, Closure $head): array {
+function getRouteQuickForum(PDO $pdo, Closure $head): array {
     $pre = RPREF.'_';
     $pdo->exec('INSERT INTO '.$pre.'categories (id, modul, title, intro, pview, pread, ppost, preply, pedit, pdelete, pmod, lang) VALUES'
         .' (4, \'forum\', \'Board\', \'\', \'0|0\', \'0|0\', \'1|0\', \'1|0\', \'1|0\', \'1|0\', \'\', \'\'),'
@@ -2303,18 +2230,15 @@ function getRouteQuickForum(PDO $pdo, string $work, Closure $head): array {
     $post = fn(string $who, string $stamp, string $text): array => getRouteReply($who, 'POST', 'index.php?go=1&op=updateQuickEdit',
         ['kind' => 'forum', 'id' => '502', 'field' => 'body', 'stamp' => $stamp, 'text' => $text], $head($who));
     $row = fn(): array => $pdo->query('SELECT cid, body, etime FROM '.$pre.'forum WHERE id = 502')->fetch(PDO::FETCH_ASSOC);
-    $epoch = fn(): string => is_file($work.'/counter/cache.log') ? (string)file_get_contents($work.'/counter/cache.log') : '';
     $open = $get('anna');
     $first = getRouteField($open['body'], 'stamp');
     $out = ['open' => [$open['code'], str_contains($open['body'], 'id="quick-forum-502-body"'), $first === sha1('Anna reply body'."\0")]];
-    $before = $epoch();
     $save = $post('anna', $first, 'Anna reply edited');
     $saved = $row();
     $out['save'] = [$save['code'], str_contains($save['body'], 'Anna reply edited'), str_contains($save['body'], 'id="quick-mark-forum-502" hx-swap-oob="outerHTML"'),
-        $saved['body'], $saved['etime'] !== null, $epoch() !== $before];
+        $saved['body'], $saved['etime'] !== null];
     sleep(1);
-    $before = $epoch();
-    $out['repeat'] = [$post('anna', $first, 'Anna reply edited')['code'], $row() === $saved, $epoch() === $before];
+    $out['repeat'] = [$post('anna', $first, 'Anna reply edited')['code'], $row() === $saved];
     $out['conflict'] = [$post('anna', $first, 'Anna reply again')['code'], $row() === $saved];
     $out['foreign'] = [$get('boris')['code'], $post('boris', sha1($saved['body']."\0".$saved['etime']), 'Boris took it')['code'], $row() === $saved];
     $fresh = getRouteField($get('anna')['body'], 'stamp');
@@ -2384,9 +2308,7 @@ try {
     } elseif (($argv[2] ?? '') === 'seo') {
         $report['runs']['seo'] = getRouteSeo($rpdo, $rwork);
     } elseif (($argv[2] ?? '') === 'head') {
-        $report['runs']['head'] = getRouteHead($rpdo, $rwork);
-    } elseif (($argv[2] ?? '') === 'cache') {
-        $report['runs']['cache'] = getRouteCacheCom($rpdo, $rwork);
+        $report['runs']['head'] = getRouteHead();
     } elseif (($argv[2] ?? '') === 'quick') {
         $report['runs']['quick'] = getRouteQuick($rpdo, $rwork);
     } else {

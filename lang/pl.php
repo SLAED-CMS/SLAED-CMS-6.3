@@ -518,7 +518,6 @@ define('_RSS_PROBLEM','Istnieje problem z nagłówkami na tej stronie!');
 define('_RULES','Zasady rejestracji użytkowników');
 define('_RUSSIAN','Rosyjski');
 define('_SAVE','Zapisz');
-define('_SAVEBUSY','Zapisywanie jest teraz niedostępne, spróbuj ponownie później.');
 define('_SAVECHANGES','Zapisz zmiany');
 define('_SUCCSAVE','Zmiany zostały pomyślnie zapisane.');
 define('_SUCCDELETE','Obiekt został pomyślnie usunięty.');

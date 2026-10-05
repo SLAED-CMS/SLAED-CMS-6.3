@@ -118,18 +118,18 @@ final class NodeSyncTest extends TestCase
         $this->assertSame([['url', 'refresh', 'due', 'checked', 'synced', 'fails', 'error'], [], []], $ext['data'], 'A public view or a foreign moderator got the source');
     }
 
-    # A new text changes the body, the version and the cache generation once; 304 sends the stored validators and the same text changes nothing but the source row
+    # A new text changes the body and the version once; 304 sends the stored validators and the same text changes nothing but the source row
     #[Test]
     public function aFetchWritesOnlyANewText(): void
     {
         $ext = $this->getRun()['ext'];
-        [$res, $body, $ver, $epoch, $src, $cond] = $ext['new'];
+        [$res, $body, $ver, $src, $cond] = $ext['new'];
         $this->assertSame(['status' => 'updated', 'error' => ''], array_slice($res, 1), 'A new text was not stored');
-        $this->assertSame([true, 1, 1, false], [$body, $ver, $epoch, $cond], 'The new text did not reach the body once, the cache generation or the version');
+        $this->assertSame([true, 1, false], [$body, $ver, $cond], 'The new text did not reach the body once or the version');
         $this->assertSame(['"e1"', 'Tue, 02 Jan 2024 00:00:00 GMT', 0, 1, 1, 1200], [$src['etag'], $src['modified'], (int)$src['fails'], (int)$src['seen'], (int)$src['done'],
             (int)$src['gap']]);
-        [$res, $etag, $since, $same, $ver, $epoch, $kept] = $ext['same'];
-        $this->assertSame(['unchanged', '"e1"', 'Tue, 02 Jan 2024 00:00:00 GMT', true, 0, 0, '"e1"'], [$res['status'], $etag, $since, $same, $ver, $epoch, $kept]);
+        [$res, $etag, $since, $same, $ver, $kept] = $ext['same'];
+        $this->assertSame(['unchanged', '"e1"', 'Tue, 02 Jan 2024 00:00:00 GMT', true, 0, '"e1"'], [$res['status'], $etag, $since, $same, $ver, $kept]);
         $this->assertSame(['unchanged', 0, '"e2"'], [$ext['equal'][0]['status'], $ext['equal'][1], $ext['equal'][2]], 'The same text wrote the body or kept the old validator');
     }
 
@@ -142,12 +142,12 @@ final class NodeSyncTest extends TestCase
         $this->assertSame(['failed', 'status', 1, 'status', 300, '"e2"'], [$one['status'], $one['error'], (int)$first['fails'], $first['error'], (int)$first['gap'],
             $first['etag']]);
         $this->assertSame(['failed', 'xml', 2, 600, true, 0], [$two['status'], $two['error'], (int)$second['fails'], (int)$second['gap'], $kept, $ver]);
-        [$stale, $wrote, $moved, $src, $epoch] = $ext['race'];
-        $this->assertSame(['skipped', false, 'skipped', 'https://example.net/moved.xml', 0, 0], [$stale['status'], $wrote, $moved['status'], $src['url'],
-            (int)$src['fails'], $epoch], 'A result fetched before a concurrent change was written or dropped the page cache');
+        [$stale, $wrote, $moved, $src] = $ext['race'];
+        $this->assertSame(['skipped', false, 'skipped', 'https://example.net/moved.xml', 0], [$stale['status'], $wrote, $moved['status'], $src['url'],
+            (int)$src['fails']], 'A result fetched before a concurrent change was written');
         $this->assertSame([['id' => $ext['new'][0]['id'], 'status' => 'failed', 'error' => 'body'], true], $ext['huge'], 'A text beyond nodes.body was stored');
-        $this->assertSame([['id' => $ext['new'][0]['id'], 'status' => 'failed', 'error' => 'storage'], true, 1], $ext['undo'],
-            'A rollback whose outcome is unknown stored the text or freed the cache guard');
+        $this->assertSame([['id' => $ext['new'][0]['id'], 'status' => 'failed', 'error' => 'storage'], true], $ext['undo'],
+            'A rollback whose outcome is unknown stored the text');
     }
 
     # The manual check is the moderator's and the queue the background context's alone; the queue takes 1..50 and checks the due sources in due order
@@ -165,16 +165,16 @@ final class NodeSyncTest extends TestCase
         $this->assertSame([true, 0, 0, 0], [$two, (int)$manual, (int)$trash, (int)$off], 'The queue checked a manual, trashed or disabled source');
     }
 
-    # The hooks refuse a body from a form inside the transaction of the material and roll the whole write back; the page cache drops the old list after a new text
+    # The hooks refuse a body from a form inside the transaction of the material and roll the whole write back; the list and the view show every change at once
     #[Test]
-    public function theHooksRollBackAndTheCacheFollows(): void
+    public function theHooksRollBackAndThePagesFollow(): void
     {
         $run = $this->getRun();
         [$add, $rows, $edit, [$url, $body]] = $run['ext']['hooks'];
         $this->assertSame([['ok' => false, 'code' => 3, 'msg' => 'Invalid sync input: body'], 0], [$add, $rows], 'A new material with a body was stored');
         $this->assertSame(['ok' => false, 'code' => 3, 'msg' => 'Invalid sync input: body'], $edit, 'A changed body was accepted');
         $this->assertSame(['https://example.com/feed.xml', true], [$url, $body], 'The refused edit changed the source or the body');
-        $this->assertSame([true, true, true, true], $run['cache'], 'The list was not cached, or the new text did not invalidate it, or the page misses the text');
+        $this->assertSame([true, true, true], $run['live'], 'The list did not show a changed intro at once, or the page misses the new text');
     }
 
     # The stage keeps its files and contracts: the closed factory hands Feed to sync alone, the class never calls the writer of Node, Feed shares one normalizer

@@ -1,5 +1,39 @@
 # Versions
 
+## 2026-10-05
+
+### Every page is rendered live, and the ready-page cache leaves the system
+
+A load test on the stand (nginx in front of eight PHP 8.4 FastCGI workers with opcache, 1000 guest requests per
+page) showed the ready-page cache paying only on the lists of a type: 142 against 60 requests per second at a
+concurrency of 16, 100 against 37 at 64. The material view (40 req/s) and the forum (47 req/s) were never stored,
+a stored hit still cost about 56 ms of worker time, and a block printing a live token kept a page out of the cache
+at random. The template, parser and data caches carry the expensive part of a page.
+
+- **Gone with it:** the stored pages and their route contract, the signed dynamic markers of tokens, captcha and
+  polls, the write guard around every content write, the cache generation moved by every database write, the
+  deadline of a Node list and the single-flight rebuild.
+- **Settings:** `cache` is an on/off switch of the parser cache; `cache_b`, `cache_l` and `cache_t` are gone; the
+  `cachegc` job, now titled "Cache cleanup", removes files not rewritten for a day (`Cache::KEEP`).
+- **Styles and scripts are linked one file at a time.** Joining them into bundles (`cache_css`, `cache_script`),
+  inlining them into the page (`css_h`, `script_h`), compressing CSS (`css_c`) and embedding images into it as data
+  URIs (`css_e`) are gone with the route `go=asset`: a browser keeps every file on its own, and one changed file no
+  longer invalidates the rest.
+- **Folders:** the caches live in `storage/cache/data/`; `storage/cache/pages/`, the guard journal and
+  `storage/counter/cache.log` are no longer written. The changelog entries and the OAuth key sets moved from
+  `storage/cache/changelog/` and `storage/cache/jwks_*.json` into the same data cache, so the cleanup job reaches
+  them too.
+- **One cache API:** `Cache::getFile()` names a stored entry, `Cache::deleteStale()` sweeps a directory, and
+  `Cache::setHeaders()` takes the mode of the answer, `none`, `private` or `public`; the duplicate header
+  `X-Powered-CMS` is gone. The query allowlist of an editor attachment lives in Node and refuses a tracking
+  parameter like any other unknown key. One `getAssetList()` builds the linked styles and scripts of a theme.
+- **The category map** is dropped explicitly by every writer of a category title, parent, order or icon.
+- **Presentation:** the request path shows the parser cache, the compiled templates, the category map and the page
+  built live.
+- **Breaking:** `NodeException::BLOCKED`, the quick-edit result `blocked`, `getPageToken()`, `getPageCaptcha()`,
+  `NodeQuery::getNodeDeadline()` and `setHead()` with a closure are gone; `Cache::getPath()`, `Cache::getHash()`,
+  `Cache::getQueryVars()`, `Cache::setPrivateHeaders()` and `getAssetFiles()` are replaced as above.
+
 ## 2026-10-04
 
 ### One quick edit for comments, forum posts and Node materials

@@ -145,8 +145,8 @@ The tool picks the most commented target per module from the database, fetches
 the guest view, extracts the `repcsave` region and stores it under
 `storage/baseline/comments/` with a `manifest.json` of sizes and SHA-256 hashes.
 Request-scoped values are normalised first — URL `token=`, the `X-CSRF-TOKEN`
-inside `hx-headers`, `[[sldyn:...]]` markers and the captcha field — otherwise
-the list never compares equal even to itself. On a difference the fresh capture
+inside `hx-headers` and the captcha field — otherwise the list never compares
+equal even to itself. On a difference the fresh capture
 is written next to the baseline as `<module>.actual.html` for diffing.
 
 Every module with published comments in the database is meant to be covered. A
@@ -188,6 +188,7 @@ Current unit test files include:
 - `AdminSearchboxBridgeFlowTest.php`
 - `BackupContractTest.php`
 - `BackupIntegrationTest.php`
+- `CacheContractTest.php`
 - `CommentIsolationTest.php`
 - `CommentNotifyTest.php`
 - `CommentReadTest.php`
@@ -221,7 +222,6 @@ Current unit test files include:
 - `MailTransportTest.php`
 - `OauthLinkTest.php`
 - `OauthTest.php`
-- `PageCacheContractTest.php`
 - `ParserFixturesTest.php`
 - `PasswordHashTest.php`
 - `PrivatClassTest.php`
@@ -240,7 +240,7 @@ Current unit test files include:
 
 Contract tests (`CommentNotifyTest`, `CommentReadTest`, `CommentStateTest`, `CommentTargetTest`,
 `CommentThreadTest`, `CommentTrustBoundaryTest`, `CommentWriteTest`, `GeoipReaderTest`, `InputFilterTest`,
-`InputVarContractTest`, `PageCacheContractTest`, `StatsContractTest`) drive
+`InputVarContractTest`, `StatsContractTest`) drive
 production code through `tests/Support/contract_probe.php`, which boots the real
 core in an isolated CLI process per scenario. Prefer that route over copying an algorithm into a test:
 the previous replica-based `InputFilterTest` silently drifted away from the

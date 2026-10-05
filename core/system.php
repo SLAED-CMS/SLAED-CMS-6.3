@@ -30,10 +30,6 @@ if (!defined('CAPTCHA_DIR')) define('CAPTCHA_DIR', BASE_DIR.'/storage/captcha');
 # Uploads directory for user content
 if (!defined('UPLOADS_DIR')) define('UPLOADS_DIR', BASE_DIR.'/uploads');
 
-# Asset bundle version; bump on every release that ships changed CSS/JS/fonts so cached immutable bundles are invalidated even when deployment preserves mtimes
-# Bump it for a change of the builder as well: the key covers the sources and the settings, not the code that joins them, so a stored bundle would outlive the rule that produced it
-define('ASSETS_VER', 3);
-
 # Load the runtime config from cache, rebuilding it from source if needed
 # The rebuild also stores derived data (asset manifests per theme, parsed SEO graph/schema, logo sizes) under $conf['derived']
 # Theme asset or logo changes therefore need a config rebuild (admin save or deleting config/local.php) to take effect
@@ -76,19 +72,10 @@ function getConfig(bool $fresh = false): array {
         }
         $conf['dev_mode'] ??= false;
         unset($conf['style']);
-        $stat = static function(array $files): string {
-            $map = [];
-            foreach ($files as $file) $map[$file] = is_file($file) ? filemtime($file).':'.filesize($file) : '0:0';
-            return sha1(serialize($map));
-        };
         $conf['derived'] = [];
         foreach (glob('templates/*', GLOB_ONLYDIR) ?: [] as $tdir) {
             $tname = basename($tdir);
-            $centr = explode(',', str_replace('[theme]', $tname, (string)($conf['css_f'] ?? '')));
-            $sentr = explode(',', (string)($conf['script_f'] ?? ''));
-            $clist = array_values(array_unique(array_merge(getAssetFiles($centr, 'css'), getThemeAssets($tname, 'css'))));
-            $slist = array_values(array_unique(array_merge(getAssetFiles($sentr, 'js'), getThemeAssets($tname, 'js'))));
-            $conf['derived']['assets'][$tname] = ['css' => $clist, 'cssfp' => $stat($clist), 'js' => $slist, 'jsfp' => $stat($slist)];
+            $conf['derived']['assets'][$tname] = ['css' => getAssetList($tname, 'css', $conf['css_f'] ?? ''), 'js' => getAssetList($tname, 'js', $conf['script_f'] ?? '')];
             $conf['derived']['logo'][$tname] = getImageBox($tdir.'/images/logos/'.($conf['site_logo'] ?? ''));
         }
         if (!empty($conf['graph'])) $conf['derived']['graph'] = getSeoGraph((string)$conf['graph'], []);
@@ -504,7 +491,7 @@ function addSchedulerTrigger(): array {
     if (!$job) return [];
     $json = json_encode(['time' => time(), 'job' => (string)($job['name'] ?? '')], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if (!is_string($json) || !Cache::setBody($file, $json)) return [];
-    return ['url' => 'index.php?go=3&op=scheduler', 'token' => checkPageCache() ? getDynamicMark('token', 'scheduler') : rawurlencode(getSiteToken('scheduler'))];
+    return ['url' => 'index.php?go=3&op=scheduler', 'token' => rawurlencode(getSiteToken('scheduler'))];
 }
 
 # Fetches a remote scheduler target through a safe GET request and captures transport errors
@@ -1518,13 +1505,13 @@ function getSeoSchema(string $kind, array $seo, bool $ishome = false): array {
 }
 
 # Return the shared category map for one module or all modules as id => raw title, parent, ordern and the icon name of img
-# The map lives in an epoch-keyed persistent data cache plus a request-static copy; callers apply getConst and escaping at their own boundary
+# The map lives in a persistent data cache plus a request-static copy; callers apply getConst and escaping at their own boundary
 function getCategoryMap(string $mod = ''): array {
     global $db;
     static $maps = [];
     $key = ($mod === '') ? '*' : $mod;
     if (isset($maps[$key])) return $maps[$key];
-    $file = Cache::getPath('data', Cache::getHash(['catmap', 'img', $key, Cache::getEpoch()]), 'json');
+    $file = Cache::getFile(['catmap', 'img', $key], 'json');
     if (Cache::isFresh($file, 86400)) {
         $data = json_decode(Cache::getBody($file), true);
         if (is_array($data)) return $maps[$key] = $data;
@@ -1538,6 +1525,14 @@ function getCategoryMap(string $mod = ''): array {
     }
     Cache::setBody($file, json_encode($map, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
     return $maps[$key] = $map;
+}
+
+# Drop the stored category maps of one module and of all modules, so the next read builds them again; every writer of a category title, parent, order or icon calls it
+function deleteCategoryMap(string $mod): void {
+    foreach (array_unique([$mod, '*']) as $key) {
+        $file = Cache::getFile(['catmap', 'img', $key], 'json');
+        if ($file !== '' && is_file($file)) unlink($file);
+    }
 }
 
 # Build a visible module/category/page breadcrumb trail as BreadcrumbList data
@@ -1575,126 +1570,9 @@ function getSeoBreadcrumbSchema(string $name, int $cid, string $title, string $u
     return ['@context' => 'https://schema.org', '@type' => 'BreadcrumbList', 'itemListElement' => $items];
 }
 
-# Record or report visitor-bound content leaking into a cacheable page build; a poisoned build is never stored in the page cache
-function checkCachePoison(bool $mark = false): bool {
-    static $bad = false;
-    if ($mark) $bad = true;
-    return $bad;
-}
-
-# Validate one dynamic-region type and parameter against the approved marker contract; only these exact combinations may ever be signed or rendered
-function checkDynamicMark(string $type, string $par): bool {
-    if ($type === 'token') return in_array($par, ['ajax', 'account', 'scheduler', 'mode', 'newlang'], true);
-    if ($type === 'captcha') return in_array($par, ['login', 'register', 'comment', 'contact'], true);
-    if ($type === 'voting') return preg_match('#^[1-9][0-9]{0,8}$#', $par) === 1;
-    return false;
-}
-
-# Build one signed dynamic-region marker for cacheable builds; an invalid type or parameter poisons the build, is logged, and never yields a signed marker
-function getDynamicMark(string $type, string $par = ''): string {
-    if (!checkDynamicMark($type, $par)) {
-        checkCachePoison(true);
-        addErrorFile('Rejected dynamic-region marker: '.$type);
-        return '';
-    }
-    return '[[sldyn:'.$type.':'.$par.':'.substr(hash_hmac('sha256', $type.':'.$par, getSecret('dynreg')), 0, 16).']]';
-}
-
-# Return the CSRF token for page markup, or a signed dynamic-region marker when the build is cacheable; a rejected marker falls back to the live token
-function getPageToken(string $scope = 'ajax'): string {
-    if (!checkPageCache()) return getSiteToken($scope);
-    $mark = getDynamicMark('token', $scope);
-    return ($mark !== '') ? $mark : getSiteToken($scope);
-}
-
-# Return the captcha block for page markup, or a signed dynamic-region marker when the build is cacheable; a rejected marker falls back to the live captcha
-function getPageCaptcha(string $act): string {
-    if (!checkPageCache()) return getCaptcha($act);
-    $mark = getDynamicMark('captcha', $act);
-    return ($mark !== '') ? $mark : getCaptcha($act);
-}
-
-# Render one known dynamic region fresh for the current visitor; the contract is revalidated at serve time so forged or stale markers stay inert
-function getDynamicRegion(string $type, string $par): string {
-    if (!checkDynamicMark($type, $par)) return '';
-    if ($type === 'token') return htmlspecialchars(getSiteToken($par), ENT_QUOTES, 'UTF-8');
-    if ($type === 'captcha') return getCaptcha($par);
-    return getVotingView((int)$par, 'blockvoting');
-}
-
-# Replace signed dynamic-region markers with freshly rendered visitor-bound content; unsigned or forged markers stay literal text
-function setDynamicRegions(string $html): string {
-    if (!str_contains($html, '[[sldyn:')) return $html;
-    return preg_replace_callback('#\[\[sldyn:([a-z]+):([a-z0-9_-]*):([a-f0-9]{16})\]\]#', static function(array $m): string {
-        if (!hash_equals(substr(hash_hmac('sha256', $m[1].':'.$m[2], getSecret('dynreg')), 0, 16), $m[3])) return $m[0];
-        return getDynamicRegion($m[1], $m[2]);
-    }, $html) ?? $html;
-}
-
-# Validate the current request against the per-route page-cache contract: canonical homeurl host plus known, single, well-formed query keys; null means render live without caching
-# The start page carries no name of its own and shows one type of the home list at random, so its identity carries the type that was drawn and every home type is stored apart
-function getCacheRouteVars(): ?array {
-    global $conf, $home, $name;
-    static $memo = false;
-    if ($memo !== false) return $memo;
-    $canon = strtolower((string)parse_url((string)($conf['homeurl'] ?? ''), PHP_URL_HOST));
-    $port = parse_url((string)($conf['homeurl'] ?? ''), PHP_URL_PORT);
-    if ($canon === '' || strtolower(getHost()) !== $canon.($port ? ':'.$port : '')) return $memo = null;
-    $url = $_SERVER['REQUEST_URI'] ?? getenv('REQUEST_URI') ?: '';
-    $allow = ['name' => '#^[a-z][a-z0-9]{0,19}$#', 'op' => '#^$#', 'cat' => '#^[1-9][0-9]{0,8}$#', 'num' => '#^[1-9][0-9]{0,8}$#'];
-    if (Cache::getQueryVars($url, $allow) === null) return $memo = null;
-    $vars = ['name' => getVar('get', 'name', 'var')];
-    if (!$vars['name'] && !empty($home)) $vars['home'] = (string)$name;
-    $cat = getVar('get', 'cat', 'num');
-    if ($cat) $vars['cat'] = (string)$cat;
-    $num = getVar('get', 'num', 'num');
-    if ($num > 1) $vars['num'] = (string)$num;
-    return $memo = $vars;
-}
-
-# Decide whether the request may be served from or stored into the page cache; routes are default-deny and must satisfy the parameter contract
-# The routes of the map are the lists of the registered Node types, taken from the loaded registry without a query; the list is the empty op alone
-# The last word belongs to the write-guard journal: while a content write is unfinished, or the generation cannot be read, no page is read from the cache or stored into it
-# That answer is taken once per request, so every block of one page agrees on it; the fill asks the journal again, because a writer may have started during the render
-# A visitor who picked a colour mode carries it in the document attribute and in the toggle's own icon, while the cache key is the route alone
-# A stored copy would hand the next visitor someone else's mode, so only the default `auto` build is cacheable
-function checkPageCache(): bool {
-    global $conf, $home, $name, $op;
-    static $free = null;
-    if (defined('ADMIN_FILE')) return false;
-    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') return false;
-    if (empty($conf['cache'])) return false;
-    if ($conf['cache'] == 2 && !$home) return false;
-    if (is_user() || isAdmin()) return false;
-    if (getThemeMode() !== 'auto') return false;
-    if (!empty($_SESSION[$conf['user_c'].'-flash'])) return false;
-    if (($op ?? '') !== '' || !isset($conf['node']['types'][$name ?? ''])) return false;
-    if (getCacheRouteVars() === null) return false;
-    return $free ??= Cache::checkWriteGuard();
-}
-
-# Build the pc3 page cache identity from version, epoch, canonical host, scheme, theme, locale, and validated route parameters; old cache files stay unreachable until GC
-# The prefix is the version field of the key: an entry written under earlier rules must not be served now, and bumping the literal retires all of them at once
-# The first answer of a request is remembered: it carries the generation the page was built from, taken before its data was read, and the fill compares it with a live one
-function getPageHash(bool $live = false): string {
-    global $theme, $locale, $conf;
-    static $memo = '';
-    if (!$live && $memo !== '') return $memo;
-    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-    $canon = strtolower((string)parse_url((string)($conf['homeurl'] ?? ''), PHP_URL_HOST));
-    $vars = getCacheRouteVars() ?? [];
-    ksort($vars);
-    $hash = Cache::getHash(['pc3', $conf['version'] ?? '', Cache::getEpoch(), $canon, $scheme, $theme, $locale, http_build_query($vars)]);
-    return $live ? $hash : $memo = $hash;
-}
-
-# Sweep stale page-cache files older than the retention window as a scheduler job and report the removed count
-# Asset bundles are swept too: a bundle in use is rewritten on every rebuild, so only one no page points at reaches the retention window, a full day of page TTLs
+# Sweep cache files older than the retention window of Cache::KEEP as a scheduler job and report the removed count
 function addCacheGcTask(): array {
-    global $conf;
-    $ttl = max((int)$conf['cache_t'] * 24, 86400);
-    $num = Cache::deleteStale('html', $ttl) + Cache::deleteStale('locks', $ttl) + Cache::deleteStale('data', $ttl)
-        + Cache::deleteStale('assets', $ttl) + Cache::deleteStaleTree(CACHE_DIR.'/templates', $ttl);
+    $num = Cache::deleteStale(CACHE_DIR.'/data', Cache::KEEP) + Cache::deleteStale(CACHE_DIR.'/templates', Cache::KEEP);
     return ['status' => 'success', 'message' => 'Removed '.$num.' cache files'];
 }
 
@@ -1726,13 +1604,10 @@ function getRssFeeds(): array {
 }
 
 # Format head
-# A stored page may be handed to the browser cache too: that needs an entry with no dynamic region and a cache_b in days
-# Such a response drops the generation-time marker, because a copy the browser answers from its own store would keep showing the moment the first visitor was served
-# The page facts may come as a closure that runs only when the page is really built: a route whose facts cost queries answers a stored copy without running one of them
 # The alternate feed link names the feed of the current module, else the feed of the start module, and is left out when neither has one
 # The category of the breadcrumb and of the theme header is the one the page names; without it the category of the query counts only when the visitor may read it
 # That read is judged by the reader of a Node type or by the read right and, on a multilingual site, the language of any other module, so a closed category never shows its title
-function setHead(array|Closure $seo = []): void {
+function setHead(array $seo = []): void {
     global $db, $home, $conf, $user, $name, $theme, $op, $tpl, $adminpage, $adminvars, $sitepage, $sitevars, $locale;
     $name = $name ?? '';
     $ctime = time();
@@ -1750,43 +1625,6 @@ function setHead(array|Closure $seo = []): void {
         $stats = updateStatsCookie($guest);
         addDeferredTask(static fn() => updateStatsTrack($request, $guest, $stats));
     }
-    if (checkPageCache()) {
-        $hash = getPageHash();
-        $file = Cache::getPath('html', $hash, 'html');
-        if (Cache::isFresh($file, $conf['cache_t'])) {
-            $body = Cache::getBody($file);
-            $meta = ($body !== '') ? Cache::getMeta($file, $body) : [];
-            if ($meta && ($meta['until'] === 0 || time() < $meta['until'])) {
-                $days = (int)$conf['cache_b'];
-                if (!$meta['dyn'] && $days > 0 && $meta['until'] === 0) {
-                    $mtime = filemtime($file);
-                    Cache::setHeaders(true, $days, 'text/html', $mtime);
-                    if (Cache::checkNotModified($mtime)) {
-                        setDeferredTasks();
-                        exit;
-                    }
-                    $body = str_replace(GEN_MARK, '', $body);
-                } elseif ($meta['dyn'] || $meta['until'] > 0) {
-                    Cache::setHeaders(false);
-                }
-                echo getTimedHtml(setDynamicRegions($body));
-                setDeferredTasks();
-                exit;
-            }
-        }
-        if (!empty($conf['cache_l']) && is_file($file) && !Cache::getRebuildLock($hash)) {
-            $body = Cache::getBody($file);
-            $meta = ($body !== '') ? Cache::getMeta($file, $body) : [];
-            if ($meta && ($meta['until'] === 0 || time() < $meta['until'])) {
-                if ($meta['dyn'] || $meta['until'] > 0) Cache::setHeaders(false);
-                echo getTimedHtml(setDynamicRegions($body));
-                setDeferredTasks();
-                exit;
-            }
-        }
-        ob_start();
-    }
-    if ($seo instanceof Closure) $seo = $seo();
     $hcid = (int)($seo['cid'] ?? getVar('get', 'cat', 'num', 0));
     if (!isset($seo['cid']) && $hcid > 0 && !defined('ADMIN_FILE')) {
         $ntype = getNodeTypeMap()[$name] ?? null;
@@ -2013,8 +1851,8 @@ function setHead(array|Closure $seo = []): void {
         }
         $login = $tpl->getHtmlFrag('list', ['is_unordered' => true, 'is_login_top' => true, 'is_logged' => true, 'items_html' => $html]);
     } elseif ($conf['users']['enter']) {
-        $captcha = getPageCaptcha('login');
-        $atok = htmlspecialchars(getPageToken('account'), ENT_QUOTES, 'UTF-8');
+        $captcha = getCaptcha('login');
+        $atok = htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8');
         $login = $tpl->getHtmlPart('login-nav', [
             'login'    => _LOGIN,
             'nickname' => _NICKNAME,
@@ -2099,10 +1937,7 @@ function setHead(array|Closure $seo = []): void {
 }
 
 # Format foot
-# What is stored is what is served: the entry holds the same HTML the first visitor received, with the serve-time markers still in it, so no later visitor is given a different page
-# The response that is also handed to the browser cache drops the generation-time marker rather than filling it, because a frozen copy would report the timing of a foreign request
-# Nothing is stored when the generation moved during the render or a write guard is open: the page may rest on an older SQL snapshot, not the new generation
-# A one-time notice of the visitor opens the content of both surfaces and is cleared by it; the site decides the cache first, which a pending notice refuses
+# A one-time notice of the visitor opens the content of both surfaces and is cleared by it
 function setFoot(): void {
     global $home, $name, $conf, $tpl, $adminpage, $adminvars, $sitepage, $sitevars, $blocks, $blocks_c, $foot;
     if (defined('ADMIN_FILE')) {
@@ -2123,7 +1958,6 @@ function setFoot(): void {
     }
     $vars = is_array($sitevars ?? null) ? $sitevars : [];
     $body = (ob_get_level() > 0) ? (string)ob_get_clean() : '';
-    $docache = checkPageCache();
     $flash = getFlashHtml();
     $time = ($conf['db_t'] == '1') ? GEN_MARK : '';
     $license = !empty($vars['license']) ? (string)$vars['license'] : '';
@@ -2156,7 +1990,7 @@ function setFoot(): void {
         'blocks_down' => $down,
     ]);
     $vars = array_replace($vars, getThemeHookVars('getThemeFootVars'));
-    $debug = (!$docache && checkDebugView()) ? getVariables() : '';
+    $debug = checkDebugView() ? getVariables() : '';
     $foot = getFootControls(_PAGETOP, _PAGETOP, $time, $license, '', false, $debug !== '');
     $vars = array_replace($vars, [
         'foot_html' => $foot,
@@ -2166,21 +2000,7 @@ function setFoot(): void {
     $page = (is_string($sitepage ?? '') && $sitepage !== '') ? $sitepage : ($home ? 'home' : 'module');
     $html = getOutputHtml($tpl->getHtmlPage($page, $vars, $page === 'home' ? 'home' : 'app'));
     unset($sitepage, $sitevars);
-    if ($docache && $html !== '' && !checkCachePoison()) {
-        $dyn = str_contains($html, '[[sldyn:');
-        $file = Cache::getPath('html', getPageHash(), 'html');
-        $done = getPageHash() === getPageHash(true) && Cache::checkWriteGuard() && Cache::setBody($file, $html) && Cache::setMeta($file, $html, $dyn);
-        $days = (int)$conf['cache_b'];
-        $bound = $done && Cache::getMeta($file, $html)['until'] > 0;
-        if ($done && !$dyn && !$bound && $days > 0) {
-            clearstatcache(true, $file);
-            Cache::setHeaders(true, $days, 'text/html', filemtime($file));
-            $html = str_replace(GEN_MARK, '', $html);
-        }
-        if (($dyn || $bound) && !headers_sent()) Cache::setHeaders(false);
-    }
-    Cache::setRebuildFree();
-    echo getTimedHtml(setDynamicRegions($html));
+    echo getTimedHtml($html);
     while (ob_get_level() > 0) ob_end_flush();
     flush();
     setDeferredTasks();
@@ -2835,173 +2655,56 @@ function setConfigFile(string|Closure $fp, array $arr = [], array $act = []): bo
     }
 }
 
-# Returns list of asset files found in standard theme subdirectories
+# The asset files of one theme package in their linking order: each vendor directory with its subdirectories, then assets/<ext> of the theme
 function getThemeAssets(string $theme, string $ext): array {
-    $base = 'templates/'.$theme.'/';
+    $base = 'templates/'.$theme.'/assets/';
+    $dirs = [];
+    foreach (glob($base.'vendor/*/', GLOB_ONLYDIR) ?: [] as $sub) array_push($dirs, $sub, ...(glob($sub.'*/', GLOB_ONLYDIR) ?: []));
+    $dirs[] = $base.$ext.'/';
     $out = [];
-    foreach (glob($base.'*.'.$ext) ?: [] as $file) $out[] = $file;
-    foreach (glob($base.'assets/vendor/*/', GLOB_ONLYDIR) ?: [] as $sub) {
-        foreach (glob($sub.'*.'.$ext) ?: [] as $file) $out[] = $file;
-        foreach (glob($sub.'*/', GLOB_ONLYDIR) ?: [] as $subsub) {
-            foreach (glob($subsub.'*.'.$ext) ?: [] as $file) $out[] = $file;
-        }
-    }
-    foreach (glob($base.'assets/'.$ext.'/*.'.$ext) ?: [] as $file) $out[] = $file;
-    if ($ext === 'js') {
-        foreach (glob($base.'js/*.'.$ext) ?: [] as $file) $out[] = $file;
-    }
-    return array_values(array_unique($out));
+    foreach ($dirs as $dir) array_push($out, ...(glob($dir.'*.'.$ext) ?: []));
+    return $out;
 }
 
-# Resolves asset config entries that may point to files or directories
-function getAssetFiles(array $entries, string $ext): array {
+# The stylesheets or scripts a page links in their order: the comma list of files and directories from css_f or script_f, [theme] read as the theme, then the package
+function getAssetList(string $theme, string $ext, string $list): array {
     $out = [];
-    foreach ($entries as $entry) {
-        $entry = trim((string)$entry);
+    foreach (explode(',', str_replace('[theme]', $theme, $list)) as $entry) {
+        $entry = rtrim(trim($entry), '/\\');
         if ($entry === '') continue;
-        if (is_file($entry) && strtolower(pathinfo($entry, PATHINFO_EXTENSION)) === $ext) {
-            $out[] = $entry;
-            continue;
-        }
-        if (is_dir($entry)) {
-            foreach (glob(rtrim($entry, '/\\').'/*.'.$ext) ?: [] as $file) {
-                if (is_file($file)) $out[] = $file;
-            }
-        }
+        if (is_dir($entry)) array_push($out, ...(glob($entry.'/*.'.$ext) ?: []));
+        if (is_file($entry) && strtolower(pathinfo($entry, PATHINFO_EXTENSION)) === $ext) $out[] = $entry;
     }
-    return array_values(array_unique($out));
+    return array_values(array_unique(array_merge($out, getThemeAssets($theme, $ext))));
 }
 
-# Definition and processing of header scripts files
-# Concatenated sources are separated by a semicolon and a line break, never by a space: a file ending in a line comment without a break would swallow the next one
-# The semicolon also ends a statement left without its own where its author ended it, instead of joining it to the first line of the following file
+# The script tags of the page head: the files of getAssetList() in their order, and on the site the head of config/header.php
 function doScript(): string {
     global $theme, $conf, $tpl;
-    $async = ($conf['script_a']) ? 'async ' : '';
-    $drv = $conf['derived']['assets'][$theme] ?? null;
-    if ($drv !== null) {
-        $array = $drv['js'];
-    } else {
-        $entries = explode(',', $conf['script_f']);
-        $array = array_values(array_unique(array_merge(getAssetFiles($entries, 'js'), getThemeAssets($theme, 'js'))));
-    }
+    $async = ($conf['script_a']) ? 'async' : '';
+    $array = $conf['derived']['assets'][$theme]['js'] ?? getAssetList($theme, 'js', $conf['script_f']);
     $arr = [];
-    $cont = '';
-    if (!defined('ADMIN_FILE')) {
-        $sfile = '';
-        $route = '';
-        if ($conf['cache_script']) {
-            $fp = $drv['jsfp'] ?? sha1(serialize(array_map(
-                static fn($file) => is_file($file) ? filemtime($file).':'.filesize($file) : '0:0',
-                array_combine($array, $array) ?: []
-            )));
-            $hash = Cache::getHash(['assets-v'.ASSETS_VER, $theme, 'js', $fp, $conf['script_h'], $conf['script_a']]);
-            $sfile = Cache::getPath('assets', $hash, 'js');
-            $route = 'index.php?go=asset&file='.$hash.'&type=js';
-        }
-        if ($conf['cache_script'] && Cache::isFresh($sfile, $conf['cache_t'])) {
-            $cont = ($conf['script_h']) ? Cache::getBody($sfile) : $tpl->getHtmlFrag('head-script-src', ['src' => $route, 'attr' => trim($async)]);
-        } else {
-            foreach ($array as $file) {
-                if (file_exists($file)) {
-                    if ($conf['cache_script'] || $conf['script_h']) {
-                        $arr[] = file_get_contents($file);
-                    } else {
-                        $arr[] = $tpl->getHtmlFrag('head-script-src', ['src' => $file, 'attr' => trim($async)]);
-                    }
-                }
-            }
-            $bond = ($conf['cache_script'] || $conf['script_h']) ? implode(";\n", $arr) : implode("\n", $arr);
-            $cont = ($conf['script_h']) ? $tpl->getHtmlFrag('head-script-inline', ['js' => $bond]) : $bond;
-            if ($conf['cache_script']) {
-                Cache::setBody($sfile, $cont);
-                $cont = (is_file($sfile) && !$conf['script_h']) ? $tpl->getHtmlFrag('head-script-src', ['src' => $route, 'attr' => trim($async)]) : $cont;
-            }
-        }
-        if (file_exists(CONFIG_DIR.'/header.php')) {
-            ob_start();
-            include CONFIG_DIR.'/header.php';
-            $cont .= ob_get_clean();
-        }
-    } else {
-        foreach ($array as $file) {
-            if (file_exists($file)) {
-                $arr[] = $tpl->getHtmlFrag('head-script-src', ['src' => $file, 'attr' => trim($async)]);
-            }
-        }
-        $cont = implode("\n", $arr);
+    foreach ($array as $file) {
+        if (file_exists($file)) $arr[] = $tpl->getHtmlFrag('head-script-src', ['src' => $file, 'attr' => $async]);
+    }
+    $cont = implode("\n", $arr);
+    if (!defined('ADMIN_FILE') && file_exists(CONFIG_DIR.'/header.php')) {
+        ob_start();
+        include CONFIG_DIR.'/header.php';
+        $cont .= ob_get_clean();
     }
     return $cont;
 }
 
-# Definition and processing of CSS files
+# The stylesheet links of the page head: the files of getAssetList() in their order
 function doCss(): string {
     global $theme, $conf, $tpl;
-    $drv = $conf['derived']['assets'][$theme] ?? null;
-    if ($drv !== null) {
-        $array = $drv['css'];
-    } else {
-        $entries = explode(',', str_replace('[theme]', $theme, $conf['css_f']));
-        $array = array_values(array_unique(array_merge(getAssetFiles($entries, 'css'), getThemeAssets($theme, 'css'))));
-    }
+    $array = $conf['derived']['assets'][$theme]['css'] ?? getAssetList($theme, 'css', $conf['css_f']);
     $arr = [];
-    $cont = '';
-    if (!defined('ADMIN_FILE')) {
-        $bundle = !empty($conf['cache_css']) || !empty($conf['css_h']);
-        $cfile = '';
-        $route = '';
-        if ($bundle) {
-            $fp = $drv['cssfp'] ?? sha1(serialize(array_map(
-                static fn($file) => is_file($file) ? filemtime($file).':'.filesize($file) : '0:0',
-                array_combine($array, $array) ?: []
-            )));
-            $hash = Cache::getHash(['assets-v'.ASSETS_VER, $theme, 'css', $fp, $conf['css_c'], $conf['css_h'], $conf['css_e']]);
-            $cfile = Cache::getPath('assets', $hash, 'css');
-            $route = 'index.php?go=asset&file='.$hash.'&type=css';
-        }
-        if ($bundle && Cache::isFresh($cfile, $conf['cache_t'])) {
-            $cont = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $route, 'type' => '', 'title' => '']);
-        } else {
-            foreach ($array as $file) {
-                if (file_exists($file)) {
-                    if ($bundle) {
-                        $dir = rtrim(str_replace('\\', '/', dirname($file)), '/').'/';
-                        $cont = file_get_contents($file);
-                        $cont = preg_replace_callback(
-                            '#url\((\'|"|)((?!data:|https?:|//|/).*?)(\'|"|)\)#i',
-                            function(array $m) use ($dir): string {
-                                $parts = explode('/', $dir.$m[2]);
-                                $out = [];
-                                foreach ($parts as $part) {
-                                    if ($part === '..') array_pop($out);
-                                    elseif ($part !== '' && $part !== '.') $out[] = $part;
-                                }
-                                return 'url('.$m[1].implode('/', $out).$m[3].')';
-                            },
-                            $cont
-                        );
-                        if ($conf['css_e']) $cont = preg_replace_callback('#url\((.*?\.(png|jpg|jpeg|gif|svg|bmp))\)#i', 'getImgEncode', $cont);
-                        $arr[] = ($conf['css_c'] && !str_contains(basename($file), '.min.')) ? getCompressCss($cont) : $cont;
-                    } else {
-                        $arr[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $file, 'type' => '', 'title' => '']);
-                    }
-                }
-            }
-            $cont = $bundle ? implode(' ', $arr) : implode("\n", $arr);
-            if ($bundle) {
-                Cache::setBody($cfile, $cont);
-                $cont = is_file($cfile) ? $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $route, 'type' => '', 'title' => '']) : '';
-            }
-        }
-    } else {
-        foreach ($array as $file) {
-            if (file_exists($file)) {
-                $arr[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $file, 'type' => '', 'title' => '']);
-            }
-        }
-        $cont = implode("\n", $arr);
+    foreach ($array as $file) {
+        if (file_exists($file)) $arr[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $file, 'type' => '', 'title' => '']);
     }
-    return $cont;
+    return implode("\n", $arr);
 }
 
 # Create a sitemap: the XML goes straight into its files as it is produced, a new file follows every 50000 URLs, and more than one file is joined by an index
@@ -3238,31 +2941,14 @@ function getNaviTabs(int $id = 0, string $pref = '', array $tabs = [], array $co
     return $tpl->getHtmlPart('tabs', ['id' => $gid, 'is_runtime' => true, 'tabs_html' => $tlinks, 'content_html' => $cdivs]);
 }
 
-# Render the captcha block for a form action (empty when not required); a live captcha inside a cacheable build poisons the page cache
+# Render the captcha block for a form action (empty when not required)
 function getCaptcha(string $act): string {
-    if (!defined('ADMIN_FILE') && checkPageCache()) checkCachePoison(true);
     return Captcha::html($act);
 }
 
 # Serve a captcha challenge as JSON for the given action
 function getCaptchaChallenge(string $act): void {
     Captcha::challenge($act);
-}
-
-# Convert image to base64
-function getImgEncode(array $img): string {
-    if (file_exists($img[1]) && filesize($img[1]) <= 10240) {
-        $type = pathinfo($img[1], PATHINFO_EXTENSION);
-        static $argc, $cach;
-        if ($argc != $img[1] || !isset($cach)) {
-            $argc = $img[1];
-            $cach = base64_encode(file_get_contents($argc));
-        }
-        $cont = 'url(data:image/'.$type.';base64,'.$cach.')';
-    } else {
-        $cont = 'url('.$img[1].')';
-    }
-    return $cont;
 }
 
 # Resolve intrinsic [width, height] for CLS-safe image attributes; [0, 0] when unknown
@@ -3283,22 +2969,10 @@ function getImageBox(string $file): array {
     return (is_array($info) && $info[0] > 0 && $info[1] > 0) ? [(int)$info[0], (int)$info[1]] : [0, 0];
 }
 
-# Compress CSS: strip block comments (except those opening with a dash), turn tabs and newlines into spaces, collapse runs of spaces and drop spaces around punctuation
-# A file that is already minified is left alone: it carries no comments and no indentation to win back, and running a regex over it only spends time on the build
-# There is no counterpart for scripts on purpose: a regex cannot tell code from the inside of a string, so stripping spaces around braces and operators breaks valid JavaScript
-function getCompressCss(string $css): string {
-    $css = preg_replace('#\/\*(?!-)[\x00-\xff]*?\*\/#', '', $css);
-    $css = str_replace(["\n", "\r", "\t"], ' ', $css);
-    $css = preg_replace('#\s+#', ' ', $css);
-    $css = preg_replace('#\s?([\{\}\:\;\,])\s?#', '\\1', $css);
-    return $css;
-}
-
 # Normalize final HTML output while keeping the template's own indentation, doing heavy work only on the few multiline matches
 # Raw bodies of script/style/pre/code/textarea and comments are protected first
 # Then multiline class lists and multiline tags are squeezed to a single line
 # Blank lines are dropped, the leading indent of every line is kept, and all other template whitespace is left untouched
-# There is no stronger mode: the page that is served and the page that is stored are the same string, so a second pass would only make the two differ
 function getOutputHtml(string $html): string {
     if ($html === '') return '';
     $keep = [];
@@ -3802,7 +3476,7 @@ function getThemeModeSwitch(string $action): string {
     $name = ['auto' => _MODE_AUTO, 'light' => _MODE_LIGHT, 'dark' => _MODE_DARK];
     $mode = getThemeMode();
     $html = '';
-    foreach (['op' => 'mode', 'refer' => '1', 'token' => getPageToken('mode')] as $key => $val) {
+    foreach (['op' => 'mode', 'refer' => '1', 'token' => getSiteToken('mode')] as $key => $val) {
         $html .= $tpl->getHtmlFrag('hidden', ['name_attr' => $key, 'value_attr' => $val, 'input_attr' => '']);
     }
     $list = [];
@@ -4918,13 +4592,13 @@ function getFileStream(string $path, string $name, string $mime = 'application/o
     while (ob_get_level() > 0) ob_end_clean();
     ini_set('zlib.output_compression', '0');
     if ($cached) {
-        Cache::setPrivateHeaders($type, $mtime, $etag);
+        Cache::setHeaders('private', $type, $mtime, $etag);
         if (Cache::checkNotModified($mtime, $etag)) {
             fclose($hand);
             exit;
         }
     } else {
-        Cache::setHeaders(false, 0, $type);
+        Cache::setHeaders('none', $type);
         header('Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0, no-transform');
     }
     $from = 0;
@@ -5114,7 +4788,7 @@ function getRssView(string $url): string {
     require_once BASE_DIR.'/core/classes/feed.php';
     $url = getDecodedText($url);
     $norm = Feed::getFeedUrl($url);
-    $file = $norm ? Cache::getPath('data', Cache::getHash(['rssview', $norm['url'], $conf['rss']['max'] ?? '']), 'json') : '';
+    $file = $norm ? Cache::getFile(['rssview', $norm['url'], $conf['rss']['max'] ?? ''], 'json') : '';
     $keep = ($file !== '' && Cache::isFresh($file, 900)) ? json_decode(Cache::getBody($file), true) : null;
     $body = (is_array($keep) && is_string($keep['body'] ?? null)) ? $keep['body'] : null;
     if ($body === null) {
@@ -5659,10 +5333,11 @@ function addFilescanTask(): array {
     ];
 }
 
-# Append one login attempt to the admin or the user log: who tried, from where, with which browser, and whether it was let in
-# The attempted password is written only when the caller hands one over, which it does for a refused attempt and never for an accepted one
+# Append one login attempt to the admin or the user log: who tried, under which login, from where, with which browser, when, and whether it was let in
+# No attempted password is ever written: a journal holding one is a credential store that travels into backups and rotation archives
 # Each surface answers for its own journal, and the flag is read before the kind becomes a string: a non-empty string is true either way, which left log_u unreachable
-function addLoginReport(int $id, int $typ, string $login, string $pass): void {
+# A full journal is moved away before the file is opened, so the entry that triggers the rotation lands in the new file and not in the one addCompress() took
+function addLoginReport(int $id, int $typ, string $login): void {
     global $admin, $conf, $user;
     $adm = ($id !== 0);
     $id = $adm ? 'admin' : 'user';
@@ -5670,19 +5345,19 @@ function addLoginReport(int $id, int $typ, string $login, string $pass): void {
         $typ = ($typ) ? _YES : _NO;
         $ip = getIp();
         $login = ($login) ? "\n"._NICKNAME.': '.substr($login, 0, 25) : '';
-        $lpass = ($pass) ? "\n"._PASSWORD.': '.substr($pass, 0, 25) : '';
         $agent = getAgent();
         $url = filterText(getenv('REQUEST_URI'));
         $ladmin = ($admin) ? "\n"._ADMIN.': '.substr($admin[1], 0, 25) : '';
         $luser = ($user) ? "\n"._USER.': '.substr($user[1], 0, 25) : '';
         $path = LOGS_DIR.'/log_'.$id.'.log';
+        clearstatcache(true, $path);
+        if (is_file($path) && filesize($path) > $conf['security']['log_size']) {
+            addCompress(LOGS_DIR, $path, 'log_'.$id.'_'.date('Y-m-d_H-i').'.log', 'auto', true, true);
+        }
         if ($fhandle = fopen($path, 'ab')) {
-            if (filesize($path) > $conf['security']['log_size']) {
-                addCompress(LOGS_DIR, $path, 'log_'.$id.'_'.date('Y-m-d_H-i').'.log', 'auto', true);
-            }
             fwrite(
                 $fhandle,
-                _INPUT.': '.$typ."\n"._IP.': '.$ip.$login.$lpass.$ladmin.$luser."\n"._URL.': '.$url."\n"._BROWSER.': '.$agent."\n"._DATE.': '.date(_TIMESTRING)."\n---\n"
+                _INPUT.': '.$typ."\n"._IP.': '.$ip.$login.$ladmin.$luser."\n"._URL.': '.$url."\n"._BROWSER.': '.$agent."\n"._DATE.': '.date(_TIMESTRING)."\n---\n"
             );
             fclose($fhandle);
         }
@@ -5984,7 +5659,7 @@ function getNodeQuickItems(NodeType $type, Node $node): array {
     $out = [];
     foreach (['intro' => _NODE_INTRO, 'body' => _TEXT] as $field => $label) {
         $out[] = ['href' => 'index.php?go=1&op=getQuickEdit&kind=node&id='.$node->id.'&field='.$field, 'title' => _ONEDIT.': '.$label, 'icon_name' => 'pencil-square',
-            'is_htmx' => true, 'hx_target' => '#repnode'.$node->id.$field, 'hx_headers' => getPageToken()];
+            'is_htmx' => true, 'hx_target' => '#repnode'.$node->id.$field, 'hx_headers' => getSiteToken()];
     }
     return $out;
 }
@@ -6235,7 +5910,7 @@ function getQuickService(): QuickEdit {
             } catch (NodeException $err) {
                 getLang('node');
                 $codes = [NodeException::NOTFOUND => 'unavailable', NodeException::DENIED => 'denied', NodeException::INVALID => 'rules',
-                    NodeException::CONFLICT => 'conflict', NodeException::BLOCKED => 'blocked'];
+                    NodeException::CONFLICT => 'conflict'];
                 return ['code' => $codes[$err->getCode()] ?? 'storage', 'error' => ($err->getCode() === NodeException::INVALID) ? [_NODE_INVALID] : []];
             }
             $back = $was !== null && $was->status === NodeStatus::Published && $now->status === NodeStatus::Pending;
@@ -6294,7 +5969,7 @@ function getQuickEdit(): void {
         'id' => $sub['id'],
         'field' => $sub['field'],
         'stamp' => $res['stamp'],
-        'token' => getPageToken(),
+        'token' => getSiteToken(),
         'editor_html' => $res['editor'],
         'save_label' => _SAVE,
         'back_label' => _BACK,
@@ -6318,7 +5993,7 @@ function updateQuickEdit(): void {
     $body = getVar('post', 'text', 'raw', '');
     $res = ($sub && is_string($body)) ? $quick->updateText($sub, trim($body)) : ['code' => 'invalid', 'error' => []];
     $codes = ['invalid' => [422, _QUICK_FORM], 'denied' => [403, _QUICK_DENY], 'unavailable' => [404, _QUICK_GONE], 'rules' => [422, _ERROR]];
-    $codes += ['storage' => [500, _QUICK_FAIL], 'blocked' => [503, _SAVEBUSY]];
+    $codes += ['storage' => [500, _QUICK_FAIL]];
     if ($res['code'] === 'saved') {
         if ($res['note'] !== '') header('HX-Trigger: '.json_encode(['sl-quick-note' => $res['note']]));
         echo $res['html'].$res['mark'];
@@ -6347,7 +6022,7 @@ function updateCommentStatus(): void {
         return;
     }
     header('HX-Reswap: outerHTML');
-    echo getCommentView($row, $numb, getPageToken());
+    echo getCommentView($row, $numb, getSiteToken());
 }
 
 # Remove one comment as a moderator and answer nothing, because the reader's slice loses exactly the element the request named

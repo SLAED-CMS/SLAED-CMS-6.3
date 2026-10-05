@@ -448,11 +448,6 @@ without focused regression tests.
 Cache runtime:
 - `core/classes/cache.php`
 
-Page-cache integration:
-- `checkPageCache()`
-- `Cache::setBody()`
-- `Cache::setHeaders()`
-
 Scheduler integration:
 - HTTP runner through frontend helper branch `go = 3`
 - scheduler configuration under `config/scheduler.php`
@@ -550,7 +545,7 @@ that drives it in `docs/EDITORS.md`.
 Runtime-generated files are stored under:
 
 - `storage/cache/`
-- `storage/cache/pages/`
+- `storage/cache/data/`
 - `storage/cache/templates/`
 - `storage/captcha/`
 - `storage/counter/`
@@ -645,7 +640,7 @@ three closures, the way `getRatingService()` builds `Rating`:
   inside the adapter with the literal store of its column (`comment.body`,
   `forum.body`, `nodes.intro`, `nodes.body`), because `EditorRoomTest` holds
   every `getTplTextarea()` call to a literal store.
-- **write** — the kind's own guarded writer: `Comment::updateComment()`,
+- **write** — the kind's own transactional writer: `Comment::updateComment()`,
   `updateForumBody()` in `core/user.php`, `NodeService::updateNodeText()`.
 - **view** — the stored text rendered exactly as its page renders it
   (`getCommentBody()`, `getForumBody()`, `NodeView::getNodeView()`), with the
@@ -662,10 +657,9 @@ transaction: the canonical form of the kind's own filter, its rules and the
 room of the column, and for Node the attachment ownership under the directory
 lock. Under the lock the writer decides, in this order: existence
 (`unavailable`), the right and the window again from the locked rows
-(`denied`), an equal canonical text (`saved` without a write, no edit time, no
-epoch), and only then a stale stamp (`conflict`). Equality comes first, so the
-repetition of a save whose answer was lost is saved, not a conflict. Each
-writer bumps the page cache inside its own write guard, and only when it wrote.
+(`denied`), an equal canonical text (`saved` without a write, no edit time),
+and only then a stale stamp (`conflict`). Equality comes first, so the
+repetition of a save whose answer was lost is saved, not a conflict.
 Locks: a comment locks its row alone; a forum post locks the topic row before
 the post row; Node locks the type row, then the material.
 
@@ -684,7 +678,6 @@ session answers 403 and never swaps an alert over the typed text.
 | conflict | 409 | the current text rendered inside `data-sl-quick-stamp` with the fresh stamp |
 | rules | 422 | the messages of the kind's rules |
 | storage | 500 | the write failed |
-| blocked | 503 | the write guard of the page cache is closed |
 
 htmx swaps no 4xx/5xx answer: `setQuickEdit` in `plugins/system/slaed.js`
 tells a refusal on the warning toast and keeps the editor and the text; on 409
@@ -718,11 +711,11 @@ its own if it is ever wanted:
   drops `<br>` (`docs/EDITORS.md`), exactly as the full forms do.
 
 **Adding a kind.** Give it a stored stamp (a version column, or the body with
-its edit time), a guarded writer that answers the closed codes in the order
-above, a view that renders as its page does, an always-printed mark wrapper if
-it has an edited mark, a region marked `data-sl-quick` on its page, and a dial
-entry to `getQuickEdit` with the page token; then register the adapter in
-`getQuickService()` and extend `QuickEditTest`.
+its edit time), a transactional writer that answers the closed codes in the
+order above, a view that renders as its page does, an always-printed mark
+wrapper if it has an edited mark, a region marked `data-sl-quick` on its page,
+and a dial entry to `getQuickEdit` with the page token; then register the
+adapter in `getQuickService()` and extend `QuickEditTest`.
 
 ## Performance-Sensitive Areas
 
@@ -801,7 +794,7 @@ Use these documents as the primary sources for their topics:
 - Do not assume a middleware pipeline exists.
 - Do not assume all plugins share the editor manifest contract.
 - Do not assume modules are isolated packages.
-- Do not assume page cache, asset cache, or scheduler jobs are enabled without
+- Do not assume parser cache, asset cache, or scheduler jobs are enabled without
   checking current configuration.
 - Do not copy architecture claims from other projects without validating them
   against this repository.
