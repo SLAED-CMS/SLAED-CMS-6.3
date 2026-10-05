@@ -10,7 +10,7 @@
 $probework = (string)($argv[2] ?? '');
 require_once __DIR__.'/probe_boot.php';
 # The queue scenarios publish below a disposable upload root that stands for the site one, so the root of an upload area is a directory of this scratch as well
-if (in_array((string)($argv[1] ?? ''), ['queue', 'area', 'hold'], true)) define('UPLOADS_DIR', str_replace('\\', '/', $probework).'/root');
+if (in_array((string)($argv[1] ?? ''), ['queue', 'area', 'typearea', 'hold'], true)) define('UPLOADS_DIR', str_replace('\\', '/', $probework).'/root');
 require_once BASE_DIR.'/core/system.php';
 require_once BASE_DIR.'/core/classes/upload.php';
 # The scratch of one scenario survives its run, so a parent starts from an empty lock directory: a lock file left by an earlier run is nothing this run opened
@@ -895,6 +895,31 @@ function getProbeQueue(string $sub = ''): array {
     return $out + ['free' => $free, 'dir' => LOGS_DIR.'/uploads', 'want' => $want, 'locks' => getProbeLockList()];
 }
 
+# Two types are two upload areas: while the parent holds the folder of one type below NODE_DIR, an upload of another process into another type gets through at once
+# The root of the types is no area of its own, so neither writer opens its lock; the child is given a bounded time, and a child that waits is released rather than awaited
+function getProbeTypeArea(): array {
+    addProbeRoot();
+    foreach (['node/news', 'node/docs'] as $dir) mkdir($GLOBALS['proot'].'/'.$dir, 0777, true);
+    $flag = $GLOBALS['pwork'].'/hold.flag';
+    if (is_file($flag)) unlink($flag);
+    $lock = FileManager::getPathLock(str_replace('\\', '/', (string)realpath($GLOBALS['proot'].'/node/news')));
+    $cmd = escapeshellarg(PHP_BINARY).' '.escapeshellarg(__FILE__).' hold '.escapeshellarg($GLOBALS['pwork']).' '.escapeshellarg('node/docs');
+    $proc = proc_open($cmd, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipe);
+    for ($i = 0; $i < 200 && is_resource($proc) && proc_get_status($proc)['running']; $i++) usleep(50000);
+    $free = microtime(true);
+    FileManager::deletePathLock($lock);
+    $child = [];
+    if (is_resource($proc)) {
+        $child = json_decode(trim((string)stream_get_contents($pipe[1])), true);
+        foreach ($pipe as $hand) fclose($hand);
+        proc_close($proc);
+    }
+    $want = array_map(fn(string $v): string => substr(sha1(getProbeLockKey($GLOBALS['proot'].'/'.$v)), 0, 16).'.lock', ['node/news', 'node/docs']);
+    sort($want);
+    return ['held' => $lock !== false, 'child' => is_array($child) ? $child : [], 'after' => getProbeList('node/docs'), 'free' => $free, 'want' => $want,
+        'locks' => getProbeLockList()];
+}
+
 # Assemble the multi-file shape a browser sends for one file input that accepts several files
 function getProbeMulti(array $list): array {
     $out = ['name' => [], 'tmp_name' => [], 'size' => [], 'error' => []];
@@ -1173,6 +1198,7 @@ function getProbeResolver(): array {
 # The place resolver answered against the shipped configuration: the field place is compared field for field with the array the module assembled by hand before batch 1
 # The attachment place must still answer exactly what getUploadRuleData() answers, because <mod>.attach is that helper and not a second reading of the same configuration
 # The upload switch is flipped and restored, because the shipped record has it open and a rule that never read the setting would answer alike on it
+# The first registered type of the stand answers its folder through every builder of the rule, beside a type the registry does not carry yet and a module
 function getProbePlace(): array {
     global $conf;
     $hand = [
@@ -1217,6 +1243,12 @@ function getProbePlace(): array {
     $conf['users']['aupload'] = '0';
     $out['locked']['aupload'] = (int)getUploadPlaceRule('users.avatar')['userupload'];
     $conf['users']['aupload'] = $avat;
+    $type = (string)array_key_first($conf['node']['types'] ?? []);
+    $rule = ($type !== '') ? getUploadPlaceRule($type.'.attach') : [];
+    $out['node'] = ['type' => $type, 'root' => str_replace('\\', '/', NODE_DIR), 'base' => str_replace('\\', '/', UPLOADS_DIR),
+        'folder' => ($type !== '') ? getUploadFolder($type) : '', 'fresh' => getUploadFolder('zzfresh', true), 'module' => getUploadFolder('forum'),
+        'store' => $rule['store'] ?? '', 'dir' => $rule['dir'] ?? '', 'path' => str_replace('\\', '/', $rule['path'] ?? ''),
+        'plain' => str_replace('\\', '/', ($type !== '') ? getUploadRuleData($type)['path'] : '')];
     return $out;
 }
 
@@ -1258,6 +1290,7 @@ try {
         'hold' => getProbeHold((string)($argv[3] ?? 'files')),
         'queue' => getProbeQueue(),
         'area' => getProbeQueue('sub'),
+        'typearea' => getProbeTypeArea(),
         'types' => getProbeTypes(),
         'nomagic' => getProbeNomagic(),
         'magic' => getProbeMagic(),

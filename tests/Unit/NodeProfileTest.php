@@ -184,7 +184,7 @@ final class NodeProfileTest extends TestCase
         $this->assertSame(['content', 'docs', 'faq', 'files', 'help', 'links', 'news', 'stale'], $run['ghost']['names'], 'The shipped types changed');
         $this->assertSame([], $run['ghost']['left'], 'Types of the tree survived the first part of the run');
         $this->assertSame([false, false, false, false], $run['stale'], 'A type of an earlier installation came back with the profiles');
-        $this->assertSame($order, $run['dirs']);
+        $this->assertSame($order, $run['dirs'], 'A type does not carry its guarded folder in uploads/node/<type>');
         $this->assertFalse($run['mark']);
         $this->assertSame([['name' => 'news', 'cid' => 0, 'uid' => 0, 'aname' => 'SLAED', 'title' => 'Добро пожаловать в SLAED CMS', 'status' => 2, 'home' => 1,
             'comon' => 2]], $run['starter']);
@@ -230,7 +230,7 @@ final class NodeProfileTest extends TestCase
         $this->assertSame(['error_php' => 0, 'error_sql' => 0, 'error_site' => 1], $run['logs'], 'Only the refused connection is logged');
     }
 
-    # A profile the installation cannot finish - here a user file in uploads/jokes it refuses to take over - is named on the closing stop and in the site log with its step
+    # A profile the installation cannot finish - here a user file in uploads/node/jokes it refuses to take over - is named on the closing stop and in the site log with its step
     # The other nine types and the starter news are created all the same, and the mark is gone
     #[Test]
     public function aFailedProfileIsNamedAndTheOthersAreCreated(): void

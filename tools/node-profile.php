@@ -155,8 +155,10 @@ $pguard = null;
 $preport = ['error' => '', 'rows' => $prows, 'runs' => $pruns, 'xdebug' => extension_loaded('xdebug'), 'server' => '', 'fail' => []];
 try {
     deleteProfileTree($pwork);
-    mkdir($pwork.'/uploads', 0777, true);
+    mkdir($pwork.'/uploads/node', 0777, true);
     copy(BASE_DIR.'/uploads/index.html', $pwork.'/uploads/index.html');
+    copy(BASE_DIR.'/uploads/node/index.html', $pwork.'/uploads/node/index.html');
+    copy(BASE_DIR.'/uploads/node/.htaccess', $pwork.'/uploads/node/.htaccess');
     $pport = getProfilePort();
     $pbase = addProfileBase();
     setProfileConfig($pwork.'/config', $pport);

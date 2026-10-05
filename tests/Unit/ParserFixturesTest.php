@@ -27,6 +27,9 @@ namespace {
     if (!function_exists('getUploadRuleData')) {
         function getUploadRuleData(string $mod): array { return ['thumbwidth' => 250]; }
     }
+    if (!function_exists('getUploadFolder')) {
+        function getUploadFolder(string $mod, bool $node = false): string { return $node ? 'node/'.$mod : $mod; }
+    }
 }
 
 namespace Tests\Unit {

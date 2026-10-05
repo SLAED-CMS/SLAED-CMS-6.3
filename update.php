@@ -350,7 +350,7 @@ function getMigrateNames(string $name, array $texts, array $files): array {
             $ext = preg_replace('/[^A-Za-z0-9]/', '', pathinfo($one, PATHINFO_EXTENSION)) ?: 'bin';
             do {
                 $new = $stem.'-'.getRandomString(FileManager::SALTLEN).'.'.$ext;
-            } while (isset($files[$new]) || in_array($new, $out, true) || file_exists(UPLOADS_DIR.'/'.$name.'/'.$new));
+            } while (isset($files[$new]) || in_array($new, $out, true) || file_exists(UPLOADS_DIR.'/'.getUploadFolder($name, true).'/'.$new));
             $out[$one] = $new;
         }
     }
@@ -780,7 +780,7 @@ function setMigrateFiles(array &$state): void {
             $path = UPLOADS_DIR.'/archive'.$sub.'/index.html';
             if (is_dir(dirname($path)) && !is_file($path) && $page !== '') file_put_contents($path, $page);
         }
-        $into = UPLOADS_DIR.'/'.$one['type'];
+        $into = UPLOADS_DIR.'/'.getUploadFolder($one['type'], true);
         $names = $one['names'] ?? [];
         $moves = $one['moves'] ?? [];
         foreach (array_keys($keep) as $rel) {

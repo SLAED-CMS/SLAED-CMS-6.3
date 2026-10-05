@@ -177,6 +177,23 @@ final class UploadIntegrationTest extends TestCase
         $this->assertStringEndsWith('/'.$avat['store'], $avat['path'], 'The absolute directory of users.avatar is not the relative one below the upload root');
     }
 
+    # docs/1-FILES-2026.md, Node under one root: a type keeps its files in uploads/node/<type>, and the place rule, the plain rule and the folder function agree on it
+    # A type the registry does not carry yet is named through the flag, and a module keeps the folder of its own name in the upload root
+    #[Test]
+    public function theFolderOfATypeLiesBelowTheRootOfTheTypes(): void
+    {
+        $node = $this->getProbe('place')['node'];
+        if ($node['type'] === '') $this->markTestSkipped('The stand registers no Node type');
+        $this->assertSame($node['base'].'/node', $node['root'], 'NODE_DIR is not the folder node of the upload root');
+        $this->assertSame('node/'.$node['type'], $node['folder'], 'getUploadFolder() does not name the folder of a registered type below the root of the types');
+        $this->assertSame('node/zzfresh', $node['fresh'], 'A type named through the flag is not placed below the root of the types');
+        $this->assertSame('forum', $node['module'], 'A module left the upload root');
+        $this->assertSame('node/'.$node['type'], $node['store'], 'The upload service stores the files of a type outside uploads/node/<type>');
+        $this->assertSame('uploads/node/'.$node['type'], $node['dir'], 'The site relative folder of a type is not uploads/node/<type>');
+        $this->assertSame($node['root'].'/'.$node['type'], $node['path'], 'The absolute folder of the place is not the one below NODE_DIR');
+        $this->assertSame($node['path'], $node['plain'], 'getUploadRuleData() and the place rule disagree about the folder of a type');
+    }
+
     # docs/ARCHITECTURE.md, Upload Place Boundary: every editor route travels on the place and no longer on the module, because filterVar() empties a string carrying a dot
     # The entry guard of index.php is the load bearing half: a request the branch drops never reaches a case at all, so a guard written in a route below it would never run
     #[Test]

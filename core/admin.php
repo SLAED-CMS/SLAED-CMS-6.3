@@ -1181,10 +1181,12 @@ function getAdminFileManager(string $mode = ''): FileManager {
 }
 
 # Return the upload rule one browser path publishes under: the first segment of the path names the module, so a directory of the tree carries the settings of its own module
+# Below the root of the Node types the second segment names the type, and the owner travels in the rule as mod, so the route that publishes reads it from here alone
 # The shared quota of a module counts what its users stored and is not a limit on the administration, so the one rule value the catalogue drops is that ceiling
 function getAdminUploadRule(string $dir): array {
-    $mod = ($dir === '') ? '' : explode('/', $dir)[0];
-    return array_merge(getUploadRuleData($mod), ['maxquota' => 0]);
+    $part = explode('/', $dir);
+    $mod = ($dir === '') ? '' : (($part[0] === basename(NODE_DIR)) ? ($part[1] ?? '') : $part[0]);
+    return array_merge(getUploadRuleData($mod), ['mod' => $mod, 'maxquota' => 0]);
 }
 
 # Return one relative path of the request unfiltered, because what a path means is decided by the canonicalization of the file layer and never by a filter of the input side

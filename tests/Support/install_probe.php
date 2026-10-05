@@ -11,7 +11,7 @@
 # Every exchange is a real request to the real setup.php, admin.php and index.php of the copy; the installer is walked stop by stop and its run part by part
 # The report answers what each exchange returned and what the database, the configuration and the files of the copy hold afterwards; the site is never touched
 # The second argument keep leaves the copy served on the first port after the checks until the file stop appears in the scratch root, for a browser to walk it
-# The argument fail leaves a user file in uploads/jokes of the copy before the first administrator is created and checks only that installation
+# The argument fail leaves a user file in uploads/node/jokes of the copy before the first administrator is created and checks only that installation
 # The arguments update <dump> <revision> <prefix> [<snapshot>] upgrade a real 6.2 site instead, with its dump and its configuration as the revision tracked it
 # That upgrade adds the field definitions and corrected sources from the snapshot directory of its own field update, and runs the checks of the 6.3 update
 # The directory tests/Fixtures/update62 is such a site: the schema of a real 6.2 site with a small seed as the dump and its 6.2 configuration directory as the revision
@@ -281,7 +281,7 @@ function getInstallMuted(callable $run): array {
 }
 
 # The clean installation through the seven stops of setup.php in one browser session: the first page hands out the token, the stops take the answers, Install starts the run
-# The parts of the run are posted one by one, and the closing stop names the panel and deletes the installer; fail leaves a user file in uploads/jokes before the run
+# The parts of the run are posted one by one, and the closing stop names the panel and deletes the installer; fail leaves a user file in uploads/node/jokes before the run
 # Its first part drops the types the shipped configuration and an earlier installation left in the tree, with their four areas
 # Then the ten types, their four shared areas, their directories and the starter material are read, and a request of the recovery form of the panel creates nothing
 function getInstallSetup(PDO $pdo, string $base): array {
@@ -303,8 +303,8 @@ function getInstallSetup(PDO $pdo, string $base): array {
     $ans = getInstallAnswers($base);
     $out['refuse'] = getInstallMuted(fn(): array => getInstallRefuse($pdo, $ans));
     if ($ifail) {
-        mkdir($isite.'/uploads/jokes', 0777, true);
-        file_put_contents($isite.'/uploads/jokes/stray.txt', 'a file of a user');
+        mkdir($isite.'/uploads/node/jokes', 0777, true);
+        file_put_contents($isite.'/uploads/node/jokes/stray.txt', 'a file of a user');
     }
     $walk = getInstallWalk($ans);
     $run = getInstallStep(4, 'next', $ans[4]);
@@ -338,7 +338,7 @@ function getInstallSetup(PDO $pdo, string $base): array {
         'fields' => array_keys(getInstallConf('fields')['fields']['node'] ?? []),
     ];
     $out['stale'] = [isset($node['types']['stale']), isset(getInstallConf('fields')['fields']['node']['stale']), isset($up['stale']), isset($rate['node.stale'])];
-    $out['dirs'] = array_values(array_filter(IPROFS, fn(string $v): bool => is_file($isite.'/uploads/'.$v.'/.htaccess') && is_file($isite.'/uploads/'.$v.'/index.html')));
+    $out['dirs'] = array_values(array_filter(IPROFS, fn(string $v): bool => is_file($isite.'/uploads/node/'.$v.'/.htaccess') && is_file($isite.'/uploads/node/'.$v.'/index.html')));
     $out['mark'] = array_key_exists('node', getInstallConf('update')['update'] ?? []);
     $out['starter'] = $pdo->query('SELECT t.name, n.cid, n.uid, n.aname, n.title, n.status, n.home, n.comon FROM '.IPREF.'_nodes AS n'
         .' INNER JOIN '.IPREF.'_node_types AS t ON t.id = n.tid')->fetchAll(PDO::FETCH_ASSOC);

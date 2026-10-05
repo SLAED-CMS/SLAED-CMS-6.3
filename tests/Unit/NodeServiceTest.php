@@ -585,26 +585,28 @@ final class NodeServiceTest extends TestCase
     # The file of an attachment: a stored material grants the names of its own intro and body to a reader, in two statements with the type
     # A thumb is granted only after its original and only when it exists
     # A preview grants the files of the visitor and every file to a moderator without SQL; each refusal is the same ''
+    # Every granted path lies in uploads/node/<type>, the folder getUploadFolder() names for a type
     #[Test]
     public function anAttachmentFileIsGrantedByItsMaterialOrItsOwner(): void
     {
         $run = $this->getRuns()['attach'];
-        $this->assertSame('news/photo-abcdefghij-2.png', $run['saved']);
-        $this->assertSame('news/photo-bcdefghijk-3.png', $run['intro'], 'A name of the intro is not granted');
-        $this->assertSame('news/thumb/photo-abcdefghij-2.png', $run['thumb']);
+        $this->assertSame('node/news/photo-abcdefghij-2.png', $run['saved']);
+        $this->assertSame('node/news/photo-bcdefghijk-3.png', $run['intro'], 'A name of the intro is not granted');
+        $this->assertSame('node/news/thumb/photo-abcdefghij-2.png', $run['thumb']);
         foreach (['nothumb', 'absent', 'pending', 'othertype', 'task', 'negative'] as $key) $this->assertSame('', $run[$key], $key.' was granted');
-        $this->assertSame('news/photo-abcdefghij-2.png', $run['pendroot'], 'The moderator cannot read the file of a pending material');
+        $this->assertSame('node/news/photo-abcdefghij-2.png', $run['pendroot'], 'The moderator cannot read the file of a pending material');
         foreach ($run['attack'] as $i => $pair) $this->assertSame('|', $pair, 'Crafted key '.$i.' reached a file');
         $this->assertContains($run['symlink'], ['none', ''], 'A link out of the type directory was followed');
         $pre = $run['preview'];
-        $this->assertSame(['news/photo-abcdefghij-2.png', 'news/thumb/photo-abcdefghij-2.png', 'news/photo-bcdefghijk-3.png'], [$pre['anna'], $pre['annathumb'], $pre['boris']]);
+        $this->assertSame(['node/news/photo-abcdefghij-2.png', 'node/news/thumb/photo-abcdefghij-2.png', 'node/news/photo-bcdefghijk-3.png'],
+            [$pre['anna'], $pre['annathumb'], $pre['boris']]);
         foreach (['foreign', 'clara', 'guest', 'guestall', 'task', 'text'] as $key) $this->assertSame('', $pre[$key], 'The preview granted '.$key);
-        foreach (['moder', 'root', 'far'] as $key) $this->assertSame('news/photo-bcdefghijk-3.png', $pre[$key], 'The moderator '.$key.' is refused a file of the type');
+        foreach (['moder', 'root', 'far'] as $key) $this->assertSame('node/news/photo-bcdefghijk-3.png', $pre[$key], 'The moderator '.$key.' is refused a file of the type');
         $this->assertSame([2, 0], [$run['sql'], $run['previewsql']], 'The attachment costs the type and the text row, the preview no statement');
         $com = $run['comment'];
-        $this->assertSame(['news/photo-abcdefghij-2.png', 'news/thumb/photo-abcdefghij-2.png'], [$com['published'], $com['thumb']], 'A published comment does not grant');
+        $this->assertSame(['node/news/photo-abcdefghij-2.png', 'node/news/thumb/photo-abcdefghij-2.png'], [$com['published'], $com['thumb']], 'A published comment does not grant');
         $this->assertSame('', $com['pending'], 'A pending comment granted its file to a guest');
-        $this->assertSame('news/photo-bcdefghijk-3.png', $com['pendmoder'], 'A moderator is refused the file of a pending comment');
+        $this->assertSame('node/news/photo-bcdefghijk-3.png', $com['pendmoder'], 'A moderator is refused the file of a pending comment');
         foreach (['deleted', 'closed'] as $key) $this->assertSame('', $com[$key], 'The '.$key.' comment granted its file');
         $this->assertSame('|', $com['elsewhere'], 'A comment opened a file of another material or another type');
         $this->assertSame(2, $run['commentsql'], 'A name of a comment costs the reader the type and the text row; the comments are read by the comment class');

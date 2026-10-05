@@ -8,7 +8,7 @@
 # It serves the real index.php and admin.php with every writable directory and the configuration redirected into scratch, over the probe's disposable database
 # The visitor comes from the header X-Probe-Who and is one of the accounts the probe seeded
 # The account helper is both a site account and the administrator of the support type, the way an operator answers requests on the site
-# /uploads/<dir>/<file> follows the nginx rule of UPGRADING.md (Web Server Rule for Node Upload Directories): 403 for a directory with the .htaccess guard, the file otherwise
+# /uploads/<dir>/<path> follows the nginx rule of UPGRADING.md (Web Server Rule for Node Upload Directories): 403 below a folder of the upload root with the .htaccess guard
 # A stylesheet, script, font or picture under templates/ or plugins/ is left to the built-in server, so a browser on the probe sees the page as the site does
 # The directory is served by the stand as well, so anything but the built-in server gets a plain 404 before a single line of it runs
 if (PHP_SAPI !== 'cli-server') {
@@ -23,7 +23,7 @@ if ($rroot === '' || !is_dir($rroot.'/config')) {
     http_response_code(500);
     exit;
 }
-if (preg_match('#^/uploads/([a-z0-9]+)/([A-Za-z0-9_.-]+)$#D', $rpath, $rhit)) {
+if (preg_match('#^/uploads/([a-z0-9]+)/([A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*)$#D', $rpath, $rhit) && !in_array('..', explode('/', $rhit[2]), true)) {
     $rdir = $rroot.'/uploads/'.$rhit[1];
     if (is_file($rdir.'/.htaccess')) http_response_code(403);
     elseif (is_file($rdir.'/'.$rhit[2])) readfile($rdir.'/'.$rhit[2]);

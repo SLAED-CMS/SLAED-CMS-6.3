@@ -1275,10 +1275,11 @@ function deleteProbeTree(string $dir): void {
 
 # Put the service run on clean scratch: the configuration of the stand with the empty Node registry of the release, so the stand types leave all four shared areas
 # The write window is off, since every material of the run comes from one address, and the upload root carries the guard of the release
-# Three prepared directories: files holds guards alone, pages keeps an old file inside thumb, and Faq differs from a type name only in case
+# The root of the types carries the guards of the release; below it files holds guards alone and pages keeps an old file inside thumb
+# Two folders of the upload root share a name with a type, Faq in another case and avatars as it is: a type lives below the root of the types and never meets them
 function addProbeScratch(string $work): void {
     foreach (['svc', 'svcbackup', 'svccache', 'svcuploads', 'logs'] as $dir) deleteProbeTree($work.'/'.$dir);
-    foreach (['svc', 'logs', 'svcuploads/files/thumb', 'svcuploads/pages/thumb', 'svcuploads/Faq'] as $dir) mkdir($work.'/'.$dir, 0777, true);
+    foreach (['svc', 'logs', 'svcuploads/node/files/thumb', 'svcuploads/node/pages/thumb', 'svcuploads/Faq', 'svcuploads/avatars'] as $dir) mkdir($work.'/'.$dir, 0777, true);
     foreach (glob(BASE_DIR.'/config/*.php') ?: [] as $file) if (basename($file) !== 'local.php') copy($file, $work.'/svc/'.basename($file));
     $node = require BASE_DIR.'/config/node.php';
     $names = array_keys($node['node']['types'] ?? []);
@@ -1293,8 +1294,12 @@ function addProbeScratch(string $work): void {
     $node['node']['limits']['send'] = 0;
     setProbeFile($work.'/svc/node.php', $node);
     $guard = (string)file_get_contents(BASE_DIR.'/uploads/index.html');
-    foreach (['svcuploads', 'svcuploads/files', 'svcuploads/files/thumb', 'svcuploads/pages'] as $dir) file_put_contents($work.'/'.$dir.'/index.html', $guard);
-    file_put_contents($work.'/svcuploads/pages/thumb/old.txt', 'kept');
+    foreach (['svcuploads', 'svcuploads/node', 'svcuploads/node/files', 'svcuploads/node/files/thumb', 'svcuploads/node/pages'] as $dir) {
+        file_put_contents($work.'/'.$dir.'/index.html', $guard);
+    }
+    file_put_contents($work.'/svcuploads/node/.htaccess', 'deny from all');
+    file_put_contents($work.'/svcuploads/node/pages/thumb/old.txt', 'kept');
+    file_put_contents($work.'/svcuploads/avatars/face.png', 'kept');
 }
 
 # Serve the scratch uploads under the nginx rule of UPGRADING.md (Web Server Rule for Node Upload Directories) and point the site at it, so switching a type on gets a real answer
@@ -1388,12 +1393,12 @@ function getProbeTrace(string $name): array {
     }
     $res = $GLOBALS['pdb']->getSqlQuery('SELECT id, title, intro, ext, active, sort, version FROM '.PREFIX_DB.'_node_types WHERE name = :name', ['name' => $name]);
     $row = $res ? $res->fetch(PDO::FETCH_ASSOC) : false;
-    $guard = UPLOADS_DIR.'/'.$name.'/index.html';
-    $deny = UPLOADS_DIR.'/'.$name.'/.htaccess';
+    $guard = NODE_DIR.'/'.$name.'/index.html';
+    $deny = NODE_DIR.'/'.$name.'/.htaccess';
     $good = is_file($guard) && file_get_contents($guard) === file_get_contents(UPLOADS_DIR.'/index.html') && is_file($deny) && file_get_contents($deny) === 'deny from all';
     return ['row' => $row ?: null, 'node' => $src['node']['types'][$name] ?? null, 'fields' => $src['fields']['node'][$name] ?? null,
         'uploads' => $src['uploads'][$name] ?? null, 'rating' => $src['ratings']['node.'.$name] ?? null, 'all' => $src['uploads']['all'] ?? null,
-        'dir' => is_dir(UPLOADS_DIR.'/'.$name), 'guard' => $good,
+        'dir' => is_dir(NODE_DIR.'/'.$name), 'top' => is_dir(UPLOADS_DIR.'/'.$name), 'guard' => $good,
         'defaults' => $src['node']['defaults'] ?? null];
 }
 
@@ -1416,17 +1421,17 @@ function getProbeSvcRights(): array {
     return $out;
 }
 
-# Names: the grammar, the reserved and system names, a module, a key of a shared area, a directory in another case, a category and a user file of an earlier owner
+# Names: the grammar, the reserved and system names, a module, a key of a shared area, a category and a user file of an earlier owner are refused
+# A name a folder of the upload root carries, as it is or in another case, is accepted, because the folder of a type lies below the root of the types
 function getProbeSvcNames(): array {
     $srv = getProbeService('boss');
-    $bad = ['', str_repeat('a', 21), '1abc', 'News', 'новости', 'a-b', 'a_b', 'node', 'admin', 'uploads', 'con', 'lpt9', 'account', 'forum', 'all', 'dir', 'faq', 'media',
-        'pages'];
+    $bad = ['', str_repeat('a', 21), '1abc', 'News', 'новости', 'a-b', 'a_b', 'node', 'admin', 'uploads', 'con', 'lpt9', 'account', 'forum', 'all', 'dir', 'media', 'pages'];
     $before = getProbeState();
     $out = ['bad' => [], 'good' => [], 'gone' => [], 'trace' => []];
     foreach ($bad as $name) $out['bad'][$name] = getProbeCall(fn(): NodeType => $srv->addNodeType($name, getProbeInput()));
     $out['same'] = $before === getProbeState();
-    $out['pages'] = getProbeWalk(UPLOADS_DIR.'/pages');
-    foreach (['x', 'a'.str_repeat('b', 19)] as $name) {
+    $out['pages'] = getProbeWalk(NODE_DIR.'/pages');
+    foreach (['x', 'a'.str_repeat('b', 19), 'faq', 'avatars'] as $name) {
         $out['good'][$name] = getProbeCall(fn(): int => $srv->addNodeType($name, getProbeInput())->version);
         $out['gone'][$name] = getProbeCall(fn(): null => $srv->deleteNodeType($name, 1));
         $out['trace'][$name] = getProbeTrace($name);
@@ -1546,7 +1551,7 @@ function getProbeSvcStatus(PDO $pdo): array {
     $out['extnode'] = getProbeCall(fn(): NodeType => $srv->updateNodeType('docs', getProbeKeep($docs, ['ext' => 'zzz']), 1));
     $pdo->exec('DELETE FROM '.$pre.'nodes WHERE id = 800');
     $srv->addNodeType('nodir', getProbeInput());
-    deleteProbeTree(UPLOADS_DIR.'/nodir');
+    deleteProbeTree(NODE_DIR.'/nodir');
     $out['nodir'] = getProbeCall(fn(): NodeType => $srv->updateNodeTypeStatus('nodir', true, 1));
     $srv->addNodeType('brok', getProbeInput());
     $data = require CONFIG_DIR.'/uploads.php';
@@ -1568,7 +1573,7 @@ function getProbeSvcStatus(PDO $pdo): array {
 # Protection: a type goes public only when the web server itself refuses its directory; a served guard page, a tampered or linked guard keep it off, a missing guard is written
 function getProbeSvcGate(): array {
     $srv = getProbeService('boss');
-    $dir = UPLOADS_DIR.'/gate';
+    $dir = NODE_DIR.'/gate';
     $open = $GLOBALS['probework'].'/open';
     $out = ['add' => getProbeCall(fn(): int => $srv->addNodeType('gate', getProbeInput())->version)];
     $out['made'] = [is_file($dir.'/index.html'), is_file($dir.'/.htaccess') ? file_get_contents($dir.'/.htaccess') : null];
@@ -1680,14 +1685,14 @@ function getProbeSvcDelete(PDO $pdo): array {
     $out['category'] = getProbeCall(fn(): null => $srv->deleteNodeType('files', $ver));
     $pdo->exec('DELETE FROM '.$pre.'categories WHERE id = 50');
     foreach (['thumb/user.jpg', '.hidden'] as $file) {
-        file_put_contents(UPLOADS_DIR.'/files/'.$file, 'x');
+        file_put_contents(NODE_DIR.'/files/'.$file, 'x');
         $out['file'][$file] = getProbeCall(fn(): null => $srv->deleteNodeType('files', $ver));
-        unlink(UPLOADS_DIR.'/files/'.$file);
+        unlink(NODE_DIR.'/files/'.$file);
     }
     $out['kept'] = getProbeTrace('files');
     $out['done'] = getProbeCall(fn(): null => $srv->deleteNodeType('files', $ver));
     $out['trace'] = getProbeTrace('files');
-    $out['walk'] = getProbeWalk(UPLOADS_DIR.'/files');
+    $out['walk'] = getProbeWalk(NODE_DIR.'/files');
     $out['admins'] = $pdo->query('SELECT id, modules FROM '.$pre.'admins ORDER BY id')->fetchAll(PDO::FETCH_KEY_PAIR);
     $out['reuse'] = getProbeCall(fn(): int => $srv->addNodeType('files', getProbeInput())->version);
     $out['again'] = getProbeCall(fn(): null => $srv->deleteNodeType('files', 1));
@@ -1957,7 +1962,7 @@ function addProbeMatTypes(): array {
     ];
     foreach ($put as $name => $list) {
         foreach ($list as $file => $body) {
-            $path = UPLOADS_DIR.'/'.$name.'/'.$file;
+            $path = NODE_DIR.'/'.$name.'/'.$file;
             if (!is_dir(dirname($path))) mkdir(dirname($path), 0777, true);
             file_put_contents($path, $body);
         }
@@ -2319,7 +2324,7 @@ function getProbeMatDelete(): array {
     foreach (['nodes' => 'id', 'node_assets' => 'nid', 'node_categories' => 'nid'] as $tab => $col) {
         $out['rows'][$tab] = intval(getProbeValue('SELECT COUNT(*) FROM '.PREFIX_DB.'_'.$tab.' WHERE '.$col.' = :id', ['id' => $pub->id]));
     }
-    $out['file'] = is_file(UPLOADS_DIR.'/news/photo-bcdefghijk-3.png');
+    $out['file'] = is_file(NODE_DIR.'/news/photo-bcdefghijk-3.png');
     $anon = getProbeWriter('root')->addNode($news, getProbeIn(['cid' => 10]), NodeStatus::Draft);
     $num = $GLOBALS['pdb']->qnum;
     getProbeWriter('moder')->deleteNode($anon->id, 1, getProbeCom());
@@ -2425,7 +2430,7 @@ function getProbeMatFiles(): array {
 # Every refusal answers the same empty string; a crafted key, a name of another material, another type, a closed material and the background context open nothing
 function getProbeMatAttach(): array {
     [$news, $files] = [getProbeMatType('news'), getProbeMatType('files')];
-    $root = UPLOADS_DIR.'/news';
+    $root = NODE_DIR.'/news';
     copy($root.'/photo-abcdefghij-2.png', $root.'/thumb/photo-abcdefghij-2.png');
     $tag = fn(string $name): string => 'Text [attach='.$name.' align=left title=Photo] end';
     $pub = getProbeWriter('root')->addNode($news, getProbeIn(['cid' => 10, 'body' => $tag('photo-abcdefghij-2.png'), 'intro' => $tag('photo-bcdefghijk-3.png')]),

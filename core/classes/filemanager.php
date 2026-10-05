@@ -311,9 +311,11 @@ class FileManager {
     # Two writers holding two protocols of their own would not wait for each other at all, which is why the pair is public here instead of private in whoever writes first
     # The lock is owned by the request: a key it already holds answers the same handle and counts the entry, since a second flock on a new handle would wait for this process
     # A directory below the root of one upload area is locked after that root, so a write into a subdirectory waits for an owner that holds the whole area, as a type deletion does
+    # An area is a folder of the upload root, and below NODE_DIR the folder of one type, so the writers of two types never wait for each other
     public static function getPathLock(string $dir): mixed {
         $key = self::getLockKey($dir);
-        $base = defined('UPLOADS_DIR') ? self::getLockKey(UPLOADS_DIR) : '';
+        $node = defined('NODE_DIR') ? self::getLockKey(NODE_DIR) : '';
+        $base = ($node !== '' && str_starts_with($key, $node.'/')) ? $node : (defined('UPLOADS_DIR') ? self::getLockKey(UPLOADS_DIR) : '');
         $rest = ($base !== '' && str_starts_with($key, $base.'/')) ? substr($key, strlen($base) + 1) : '';
         $top = str_contains($rest, '/') ? self::getPathLock($base.'/'.strstr($rest, '/', true)) : null;
         if ($top === false) return false;

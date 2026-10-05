@@ -141,4 +141,20 @@ final class FileManagerLockTest extends TestCase
         $this->assertGreaterThan($data['free'], $child['done'], 'The child got through while the root of its area was still held');
         $this->assertSame($data['want'], $data['locks'], 'The upload locked something other than the root of the area and its own directory');
     }
+
+    # Below NODE_DIR the folder of one type is the root of an area, so a writer of one type never waits for the holder of another and the root of the types is never locked
+    # The lock order of docs/NODE.md names uploads/node/<type> as the type lock, one queue per type as before the types moved below one root
+    #[Test]
+    public function twoTypesAreTwoUploadAreas(): void
+    {
+        $data = $this->getProbe('typearea');
+        $child = $data['child'];
+        if (($child['error'] ?? '') === 'nofixture') $this->markTestSkipped('This build cannot encode the PNG fixture the child publishes');
+        $this->assertTrue($data['held'], 'The file layer could not take the folder of the first type');
+        $this->assertNotSame([], $child, 'The child process reported nothing back');
+        $this->assertTrue($child['ok'], 'The child publication failed with '.var_export($child['error'] ?? null, true));
+        $this->assertCount(1, $data['after'], 'The child published a different number of files than one');
+        $this->assertLessThan($data['free'], $child['done'], 'An upload into one type waited for the holder of another type');
+        $this->assertSame($data['want'], $data['locks'], 'A writer of a type locked the root of the types or something else than the folders of the two types');
+    }
 }

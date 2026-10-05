@@ -647,7 +647,7 @@ class Parser {
 
     # Resolve [attach=file align=X title=Y ...] to image or file link HTML with per-request file probe memoization and atomic thumb regeneration
     # One pass reads all three forms of the grammar, so a text mixing them renders every attachment getAttachList() names
-    # An attachment is resolved against the upload directory, so like an image it renders what the filesystem holds right now and the result is never stored
+    # An attachment is resolved against the upload folder of its owner, getUploadFolder(), so like an image it renders what the filesystem holds now and the result is never stored
     # A text of a stored Node material links the controlled attach route of its type instead of the closed directory, with thumb=1 only for a thumb that exists
     private function filterAttach(string $src): string {
         global $conf;
@@ -657,6 +657,7 @@ class Parser {
         static $fex = [];
         static $isz = [];
         $twd = getUploadRuleData($mod)['thumbwidth'] ?: ($conf['uploads']['width'] ?? '250');
+        $room = getUploadFolder($mod);
         $img = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif'];
         foreach ($mm as $m) {
             $fn  = (string)$m[1];
@@ -666,16 +667,16 @@ class Parser {
             $hg  = $m[5] ?? '';
             $rl  = $m[6] ?? '';
             $ext = strtolower((string)substr((string)strrchr($fn, '.'), 1));
-            $file = 'uploads/'.$mod.'/'.$fn;
-            $path = UPLOADS_DIR.'/'.$mod.'/'.$fn;
+            $file = 'uploads/'.$room.'/'.$fn;
+            $path = UPLOADS_DIR.'/'.$room.'/'.$fn;
             $link = ($this->nid > 0) ? 'index.php?name='.$mod.'&op=attach&id='.$this->nid.'&key='.rawurlencode($fn) : $file;
             $href = str_replace('&', '&amp;', $link);
             $timg = $href;
             if ($tl === '' || strtolower($tl) === 'title') $tl = $fn;
             if (in_array($ext, $img, true)) {
-                $tfile = 'uploads/'.$mod.'/thumb/'.$fn;
-                $tpath = UPLOADS_DIR.'/'.$mod.'/thumb/'.$fn;
-                $tdir  = UPLOADS_DIR.'/'.$mod.'/thumb';
+                $tfile = 'uploads/'.$room.'/thumb/'.$fn;
+                $tpath = UPLOADS_DIR.'/'.$room.'/thumb/'.$fn;
+                $tdir  = UPLOADS_DIR.'/'.$room.'/thumb';
                 if ($mod !== '' && ($fex[$path] ??= file_exists($path)) && !($fex[$tpath] ??= file_exists($tpath))) {
                     if (!file_exists($tdir)) mkdir($tdir, 0777, true);
                     $tmp = $tpath.'.'.getmypid().'.tmp';

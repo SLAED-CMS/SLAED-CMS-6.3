@@ -72,11 +72,33 @@ their block `blocks/auto_links.php`, configuration files, upload directories and
   no `amod`.
 - A site that needs these modules stays on its current release.
 
+### Node Upload Directories Under `uploads/node/`
+
+Every Node type keeps its files in `uploads/node/<type>/`; the folders of the modules (`account`, `all`, `avatars`,
+`forum`, `presentation`, `voting`) stay in `uploads/`. A site whose type folders still sit at `uploads/<type>/`
+moves each of them with its contents before the new files answer a request:
+
+| From | To |
+| --- | --- |
+| `uploads/content/` | `uploads/node/content/` |
+| `uploads/docs/` | `uploads/node/docs/` |
+| `uploads/faq/` | `uploads/node/faq/` |
+| `uploads/files/` | `uploads/node/files/` |
+| `uploads/help/` | `uploads/node/help/` |
+| `uploads/links/` | `uploads/node/links/` |
+| `uploads/news/` | `uploads/node/news/` |
+| `uploads/<type>/` of any other type | `uploads/node/<type>/` |
+
+`uploads/node/` ships with the release and carries `index.html` and `.htaccess`; keep both. No stored text and no
+setting carries the folder: texts reach their files through `op=attach` and `op=asset` by name, and the default
+folder of the uploads screen (`dir` in `config/uploads.php`) names a type, not a path.
+
 ### Web Server Rule for Node Upload Directories
 
 Node serves every file of a type through a controlled route, and a type is switched on only when the web
-server refuses direct access to `uploads/<type>/` (answer `403` or `404`). Apache and LiteSpeed follow the
-`.htaccess` guard Node writes into the directory. nginx ignores `.htaccess` and needs one shared rule:
+server refuses direct access to `uploads/node/<type>/` (answer `403` or `404`). Apache and LiteSpeed follow the
+`.htaccess` guards of `uploads/node/` and of the type folder. nginx ignores `.htaccess` and needs one shared rule,
+which refuses every folder of `uploads/` that carries a `.htaccess`, `uploads/node/` among them:
 
 ```nginx
 location ~ ^/uploads/([^/]+)/ {

@@ -15,6 +15,7 @@ define('CONFIG_DIR', BASE_DIR.'/config');
 define('CACHE_DIR', BASE_DIR.'/storage/cache');
 define('COUNTER_DIR', BASE_DIR.'/storage/counter');
 define('UPLOADS_DIR', BASE_DIR.'/uploads');
+define('NODE_DIR', UPLOADS_DIR.'/node');
 
 # Write the logs of in-process tests into a directory of this run: the mail tests refuse addresses on purpose, and their lines landed in the site log of the stand
 define('LOGS_DIR', str_replace('\\', '/', sys_get_temp_dir()).'/slaed-phpunit-'.getmypid().'/logs');

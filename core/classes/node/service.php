@@ -148,7 +148,7 @@ final class NodeService {
 
     # Refuse a new name outside the grammar, a reserved name, a module name other than the nine replacements, or a name a shared area already carries
     # The upload rule a removed module left under one of the nine replaced names is no refusal: the new type takes it over, see addNodeType()
-    # Also refuse a name the upload root holds in another case and a name whose categories, comments or favorites remain from an earlier owner
+    # Also refuse a name whose categories, comments or favorites remain from an earlier owner; the folder of a type lies below NODE_DIR, where only another type can meet it
     private function checkNewName(string $name, array $base): void {
         global $conf;
         if (!preg_match(self::NAME, $name) || in_array($name, self::RESERVED, true)) throw $this->getInvalid('name');
@@ -158,9 +158,6 @@ final class NodeService {
         $used = isset($base['node']['types'][$name]) || isset($base['fields']['node'][$name]) || (isset($base['uploads'][$name]) && !$swap)
             || isset($base['ratings']['node.'.$name]);
         if ($used) throw $this->getInvalid('name');
-        $list = scandir(UPLOADS_DIR);
-        if ($list === false) throw $this->getStorage('The upload root cannot be listed');
-        foreach ($list as $one) if ($one !== $name && strtolower($one) === $name) throw $this->getInvalid('name');
         if ($this->getRowCount('SELECT COUNT(*) FROM '.PREFIX_DB.'_categories WHERE modul = :name', ['name' => $name])) throw $this->getInvalid('categories');
         foreach (['_comment', '_favorites'] as $tab) {
             if ($this->getRowCount('SELECT COUNT(*) FROM '.PREFIX_DB.$tab.' WHERE modul = :name', ['name' => $name])) throw $this->getInvalid('remains');
@@ -237,7 +234,7 @@ final class NodeService {
 
     # Prepare the file area of a new type: a directory holding any user file or in an unsafe state is refused, a missing one is created with its guards before any user file
     private function setTypeRoot(string $name): void {
-        $dir = UPLOADS_DIR.'/'.$name;
+        $dir = UPLOADS_DIR.'/'.getUploadFolder($name, true);
         $guards = $this->getGuardList();
         if (is_link($dir) || (file_exists($dir) && !is_dir($dir))) throw $this->getInvalid('directory');
         if (is_dir($dir) && $this->checkUserFiles($dir, $guards)) throw $this->getInvalid('directory');
@@ -249,11 +246,11 @@ final class NodeService {
     # Only a first answer of 403 or 404 confirms the refusal; a served page, a redirect or a failed request leave the type off, because file delivery has no direct mode at all
     private function checkTypeGuard(string $name): void {
         global $conf;
-        $dir = UPLOADS_DIR.'/'.$name;
+        $dir = UPLOADS_DIR.'/'.getUploadFolder($name, true);
         if (is_link($dir) || !is_dir($dir)) throw $this->getInvalid('directory');
         $this->setTypeGuards($dir);
         $base = rtrim($conf['homeurl'] ?? '', '/');
-        $res = preg_match('#^https?://#i', $base) ? getSchedulerFetch($base.'/uploads/'.rawurlencode($name).'/index.html') : ['code' => 0];
+        $res = preg_match('#^https?://#i', $base) ? getSchedulerFetch($base.'/uploads/'.getUploadFolder($name, true).'/index.html') : ['code' => 0];
         if (!in_array($res['code'], [403, 404], true)) throw $this->getInvalid('directory');
     }
 
@@ -426,7 +423,7 @@ final class NodeService {
         $done = setConfigFile(function (array $base, Closure $save) use ($name, $work, &$state): string {
             try {
                 $this->checkBaseNode($base);
-                $state['lock'] = FileManager::getPathLock(UPLOADS_DIR.'/'.$name);
+                $state['lock'] = FileManager::getPathLock(UPLOADS_DIR.'/'.getUploadFolder($name, true));
                 if ($state['lock'] === false) throw $this->getStorage('The directory lock of the type cannot be taken');
                 if (!$this->db->setSqlBegin()) throw $this->getStorage('The transaction cannot be started');
                 [$pack, $state['proof']] = $work($base, $this->getTypeRow($name));
@@ -512,7 +509,7 @@ final class NodeService {
             if ((bool)$row['active'] === $active) return [$base, []];
             if ($active) {
                 $this->getTypeData($this->getStoredInput($row, $base, $name), $base, false, $version + 1);
-                $dir = UPLOADS_DIR.'/'.$name;
+                $dir = UPLOADS_DIR.'/'.getUploadFolder($name, true);
                 if (is_link($dir) || !is_dir($dir) || !is_writable($dir)) throw $this->getInvalid('directory');
             }
             $sql = 'UPDATE '.PREFIX_DB.'_node_types SET active = :active, version = version + 1, updated = NOW() WHERE id = :id';
@@ -531,7 +528,7 @@ final class NodeService {
             $id = intval($row['id']);
             if ($this->getRowCount('SELECT COUNT(*) FROM '.PREFIX_DB.'_nodes WHERE tid = :id', ['id' => $id])) throw $this->getInvalid('nodes');
             if ($this->getRowCount('SELECT COUNT(*) FROM '.PREFIX_DB.'_categories WHERE modul = :name', ['name' => $name])) throw $this->getInvalid('categories');
-            $dir = UPLOADS_DIR.'/'.$name;
+            $dir = UPLOADS_DIR.'/'.getUploadFolder($name, true);
             if (file_exists($dir) && (is_link($dir) || !is_dir($dir) || $this->checkUserFiles($dir, $this->getGuardList()))) throw $this->getInvalid('directory');
             $key = 'node-'.$name;
             $rows = $this->getQueryRes('SELECT id, modules FROM '.PREFIX_DB.'_admins WHERE modules LIKE :key', ['key' => '%'.$key.'%'])->fetchAll(PDO::FETCH_ASSOC);
@@ -853,7 +850,7 @@ final class NodeService {
         return (is_string($mime) && strlen($mime) <= 100 && preg_match('#^[a-z0-9.+-]+/[a-z0-9.+-]+$#D', $mime)) ? $mime : null;
     }
 
-    # Resolve every new binding of a file of the type area: an attachment name the text gains and a new local source of a resource must exist in uploads/<type>
+    # Resolve every new binding of a file of the type area: an attachment name the text gains and a new local source of a resource must exist in uploads/node/<type>
     # Such a file keeps an allowed extension and size and belongs to the visitor unless the context moderates the type
     # A name the stored text already carried is checked for its form alone
     # The owner is the account of the context and, for a guest alone, the token of the session; a local source takes its canonical path and the metadata read here once
@@ -873,7 +870,8 @@ final class NodeService {
         }
         if (!$fresh && !$local) return;
         require_once BASE_DIR.'/core/classes/filemanager.php';
-        $area = new FileManager('editor', UPLOADS_DIR.'/'.$type->name);
+        $root = UPLOADS_DIR.'/'.getUploadFolder($type->name, true);
+        $area = new FileManager('editor', $root);
         $moder = $this->checkModer($type);
         $token = $this->getFileToken($type, $moder);
         foreach ($fresh as $name) $this->getFileRow($area, $name, $exts, $rule['maxbytes'], $moder, $token, 'attach');
@@ -884,7 +882,7 @@ final class NodeService {
             $row = $this->getFileRow($area, $one['src'], $allow, $max, $moder, $token, 'assets.'.$i.'.src');
             if ($one['kind'] !== 'file' && $row['kind'] !== $one['kind']) throw $this->getInvalid('assets.'.$i.'.kind');
             $data['assets'][$i]['src'] = $row['path'];
-            $data['assets'][$i]['meta'] = [$this->getFileMime(UPLOADS_DIR.'/'.$type->name.'/'.$row['path']), $row['size'], $row['width'], $row['height'], null];
+            $data['assets'][$i]['meta'] = [$this->getFileMime($root.'/'.$row['path']), $row['size'], $row['width'], $row['height'], null];
         }
     }
 
@@ -907,7 +905,7 @@ final class NodeService {
         try {
             if ($root !== null && $files !== null) {
                 require_once BASE_DIR.'/core/classes/filemanager.php';
-                $lock = FileManager::getPathLock(UPLOADS_DIR.'/'.$root->name);
+                $lock = FileManager::getPathLock(UPLOADS_DIR.'/'.getUploadFolder($root->name, true));
                 if ($lock === false) throw $this->getStorage('The directory lock of the type cannot be taken');
                 $files();
             }
@@ -1490,7 +1488,7 @@ final class NodeService {
         $good = $id >= 0 && !$this->ctx->task && strlen($key) <= 255 && $key === basename(str_replace('\\', '/', $key));
         require_once BASE_DIR.'/core/classes/filemanager.php';
         if (!$good || !FileManager::checkFileName($key) || !in_array($ext, $exts, true) || !in_array($ext, getUploadService()::getSupportedTypes(), true)) return '';
-        $area = new FileManager('editor', UPLOADS_DIR.'/'.$type->name);
+        $area = new FileManager('editor', UPLOADS_DIR.'/'.getUploadFolder($type->name, true));
         try {
             if ($id > 0) {
                 $node = $this->query->getNodeContent($id, $type);
@@ -1512,7 +1510,7 @@ final class NodeService {
         }
         $rel = $thumb ? 'thumb/'.$key : $key;
         $one = $thumb ? $area->getFileData($rel) : $row;
-        $full = ($one && $one['kind'] !== 'dir' && $one['path'] === $rel) ? realpath(UPLOADS_DIR.'/'.$type->name.'/'.$rel) : false;
+        $full = ($one && $one['kind'] !== 'dir' && $one['path'] === $rel) ? realpath(UPLOADS_DIR.'/'.getUploadFolder($type->name, true).'/'.$rel) : false;
         return ($full === false) ? '' : str_replace('\\', '/', $full);
     }
 

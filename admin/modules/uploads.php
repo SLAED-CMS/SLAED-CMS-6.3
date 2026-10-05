@@ -14,11 +14,22 @@ function getUploadModuleList(): array {
     return in_array('all', $mods, true) ? array_merge(['all'], $rest) : $rest;
 }
 
+# The folders of the upload root relative to it, and below the root of the Node types each type folder, as the screen offers them for browsing and as the default folder
+function getUploadsFolders(): array {
+    $out = [];
+    foreach (scandir(UPLOADS_DIR) as $file) {
+        if (preg_match('/\./', $file)) continue;
+        $out[] = $file;
+        if ($file !== basename(NODE_DIR)) continue;
+        foreach (scandir(NODE_DIR) as $one) if (!preg_match('/\./', $one) && is_dir(NODE_DIR.'/'.$one)) $out[] = $file.'/'.$one;
+    }
+    return $out;
+}
+
 function getUploadsSearch(string $mod): string {
     global $afile, $tpl;
     $opts = '';
-    foreach (scandir(UPLOADS_DIR) as $file) {
-        if (preg_match('/\./', $file)) continue;
+    foreach (getUploadsFolders() as $file) {
         $opts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => $file,
             'label_text' => 'uploads/'.$file,
@@ -41,7 +52,8 @@ function uploads(): void {
     getAdminFileMode('uploads');
     $walk = getAdminFilePath('dir');
     if ($walk === '') $walk = getAdminFilePath('dir', 'post');
-    $dir = ($walk === '') ? $conf['uploads']['dir'] : explode('/', $walk)[0];
+    $part = explode('/', $walk);
+    $dir = ($walk === '') ? getUploadFolder($conf['uploads']['dir']) : implode('/', array_slice($part, 0, ($part[0] === basename(NODE_DIR)) ? 2 : 1));
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
@@ -62,7 +74,7 @@ function fmupload(): void {
     $json = getVar('post', 'ajax', 'num', 0) === 1;
     $back = $afile.'.php?name=uploads'.(($dir === '') ? '' : '&dir='.rawurlencode($dir));
     $rule = getAdminUploadRule($dir);
-    $mod = ($dir === '') ? '' : explode('/', $dir)[0];
+    $mod = $rule['mod'];
     $errs = array_filter((array)($_FILES['userfile']['error'] ?? []), static fn($v): bool => (int)$v !== UPLOAD_ERR_NO_FILE);
     $pass = checkAdminPost('uploads');
     unset($_POST['token']);
@@ -337,12 +349,13 @@ function config(): void {
     $serv = getUploadService();
     $typs = implode(', ', $serv::getSupportedTypes());
     $directory = '';
-    foreach (scandir(UPLOADS_DIR) as $file) {
-        if (preg_match('/\./', $file)) continue;
+    foreach (getUploadsFolders() as $file) {
+        if ($file === basename(NODE_DIR)) continue;
+        $name = basename($file);
         $directory .= $tpl->getHtmlFrag('select-option', [
-            'value_attr' => $file,
+            'value_attr' => $name,
             'label_text' => 'uploads/'.$file,
-            'is_selected' => $conf['uploads']['dir'] == $file,
+            'is_selected' => $conf['uploads']['dir'] == $name,
         ]);
     }
     $tarea = $tpl->getHtmlFrag('textarea', [

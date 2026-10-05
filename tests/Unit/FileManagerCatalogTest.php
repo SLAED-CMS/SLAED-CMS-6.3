@@ -472,12 +472,16 @@ final class FileManagerCatalogTest extends TestCase
         }
     }
 
-    # The rule of the upload takes the module out of the path it publishes into, and the shared quota of that module is not a limit on the administration
+    # The rule of the upload takes the module out of the path it publishes into, below the root of the Node types the type, and the shared quota is no limit on the administration
     #[Test]
     public function theRuleOfTheUploadComesFromThePath(): void
     {
         $body = $this->getBody('core/admin.php', 'getAdminUploadRule');
-        $this->assertStringContainsString("explode('/', \$dir)[0]", $body, 'The module of an upload is taken from somewhere other than the path it goes into');
+        $this->assertStringContainsString("explode('/', \$dir)", $body, 'The module of an upload is taken from somewhere other than the path it goes into');
+        $this->assertStringContainsString('basename(NODE_DIR)', $body, 'A path below the root of the Node types names the folder node instead of its type');
+        $this->assertStringContainsString("'mod' => \$mod", $body, 'The owner of the path does not travel in the rule the publishing route reads');
+        $route = (string)file_get_contents(BASE_DIR.'/admin/modules/uploads.php');
+        $this->assertStringContainsString("\$mod = \$rule['mod'];", $route, 'The upload route works the owner out a second time');
         $this->assertStringContainsString('getUploadRuleData(', $body, 'The upload rule is built beside the settings of the module');
         $this->assertStringContainsString("'maxquota' => 0", $body, 'The shared quota of the module is applied to the administration');
     }

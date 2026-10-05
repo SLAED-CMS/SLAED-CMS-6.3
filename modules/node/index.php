@@ -824,7 +824,7 @@ function setNodeForm(): void {
 
 # The canonical file of one stored resource inside the directory of its type, outside thumb, or an empty string for anything else
 function getNodeAssetPath(NodeType $type, string $src): string {
-    $root = realpath(UPLOADS_DIR.'/'.$type->name);
+    $root = realpath(UPLOADS_DIR.'/'.getUploadFolder($type->name, true));
     $full = ($root === false || $src === '') ? false : realpath($root.'/'.$src);
     if ($root === false || $full === false || !is_file($full)) return '';
     $root = str_replace('\\', '/', $root).'/';

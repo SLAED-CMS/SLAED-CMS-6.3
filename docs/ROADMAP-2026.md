@@ -45,8 +45,9 @@ into the plan, then do whatever work the step names.
 ## Steps
 
 - [x] 1. PRIVATE-DATA batch 1 — no secret reaches a journal. (2026-10-05)
-- [ ] 2. FILES batch 0 — *decision*: the open decisions of "Decisions before work starts", then the inventory.
-- [ ] 3. FILES batch 1 — Node under one root, `uploads/node/<type>/`.
+- [x] 2. FILES batch 0 — *decision*: the open decisions, now recorded under "Decisions", then the inventory.
+  (2026-10-05)
+- [x] 3. FILES batch 1 — Node under one root, `uploads/node/<type>/`. (2026-10-05)
 - [ ] 4. PRIVATE-DATA batch 2 — the project out of web reach, the `public/` tree.
 - [ ] 5. PRIVATE-DATA batch 3 — the self-check, `checkTypeGuard()` on it.
 - [ ] 6. PRIVATE-DATA batch 4 — `nginx.conf.example`, `setup_old/` leaves the tree.

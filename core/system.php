@@ -30,6 +30,9 @@ if (!defined('CAPTCHA_DIR')) define('CAPTCHA_DIR', BASE_DIR.'/storage/captcha');
 # Uploads directory for user content
 if (!defined('UPLOADS_DIR')) define('UPLOADS_DIR', BASE_DIR.'/uploads');
 
+# Upload root of the Node types below the upload directory, one folder per type
+if (!defined('NODE_DIR')) define('NODE_DIR', UPLOADS_DIR.'/node');
+
 # Load the runtime config from cache, rebuilding it from source if needed
 # The rebuild also stores derived data (asset manifests per theme, parsed SEO graph/schema, logo sizes) under $conf['derived']
 # Theme asset or logo changes therefore need a config rebuild (admin save or deleting config/local.php) to take effect
@@ -3377,7 +3380,7 @@ function getImgText(string $text, string $type = '', bool $check = true, string 
     $mod = filterVar(($mod !== '') ? $mod : (string)($conf['name'] ?? ''));
     if (preg_match('#\[attach=(.*?)\s(.*?)\]#i', $text, $match)) {
         $fname = basename(trim($match[1]));
-        $img = (!$type) ? 'uploads/'.$mod.'/thumb/'.$fname : 'uploads/'.$mod.'/'.$fname;
+        $img = 'uploads/'.getUploadFolder($mod).'/'.((!$type) ? 'thumb/' : '').$fname;
     } elseif (preg_match('#\[img=[a-zA-Z]+\](.*?)\[/img\]#i', $text, $match)) {
         $img = trim($match[1]);
     } elseif (preg_match('#\[img\](.*?)\[/img\]#i', $text, $match)) {
@@ -4244,7 +4247,7 @@ function getUploadPlaceRule(string $place): array {
         return getUploadRuleData($mod) + [
             'place' => $place,
             'mod' => $mod,
-            'store' => $mod,
+            'store' => getUploadFolder($mod),
             'canlink' => true,
             'ops' => ['editorUpload', 'editorFiles', 'editorDelete', 'editorArchive'],
         ];
@@ -4302,19 +4305,29 @@ function getUploadPlaceRule(string $place): array {
     ];
 }
 
+# Return the folder of one upload owner relative to UPLOADS_DIR: a Node type keeps its files in a folder of its name below NODE_DIR, any other module in one of its own name
+# The type registry tells a type apart; a type operation names a type the registry does not carry yet or no longer, so it says so through the flag
+# Every builder of an upload path asks here, so the place of the types is decided once and a type can never share a folder with a module of the same name
+function getUploadFolder(string $mod, bool $node = false): string {
+    global $conf;
+    if (!$node && !isset($conf['node']['types'][$mod])) return $mod;
+    return substr(NODE_DIR, strlen(UPLOADS_DIR) + 1).'/'.$mod;
+}
+
 # Split the pipe-separated upload configuration of one directory into named rule keys; all twelve are returned even when ok is false, so a caller needing one limit can read it
 # The order is the stored one with exactly these twelve fields; a rule written short by hand keeps its guest limit at the user one, because zero there means no limit
 function getUploadRuleData(string $mod): array {
     global $conf;
     $con = isset($conf['uploads'][$mod]) ? explode('|', (string)$conf['uploads'][$mod]) : [];
     $err = '';
-    $path = UPLOADS_DIR.'/'.$mod;
+    $room = getUploadFolder($mod);
+    $path = UPLOADS_DIR.'/'.$room;
     if ($mod === '' || $con === []) $err = 'Upload configuration is missing';
     elseif (!is_dir($path)) $err = 'Upload directory is missing';
     return [
         'ok' => $err === '',
         'error' => $err,
-        'dir' => 'uploads/'.$mod,
+        'dir' => 'uploads/'.$room,
         'path' => $path,
         'extensions' => (string)($con[0] ?? ''),
         'maxquota' => (int)($con[1] ?? 0),

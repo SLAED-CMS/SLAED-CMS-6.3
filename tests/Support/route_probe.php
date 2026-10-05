@@ -192,18 +192,21 @@ function addRouteRows(PDO $pdo): void {
         .' (3, 101, \'file\', \'files\', \'https://example.com/tool\', \'Tool\', \'\', NULL, NULL, NULL, NULL, 0, 1)');
 }
 
-# The scratch upload root with the guard of the release in every type directory and the files the materials point at
+# The scratch upload root with the guard of the release on the root of the types and in every type directory, and the files the materials point at
 function addRouteFiles(string $work): void {
     $guard = (string)file_get_contents(BASE_DIR.'/uploads/index.html');
     $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==');
     file_put_contents($work.'/uploads/index.html', $guard);
+    mkdir($work.'/uploads/node', 0777, true);
+    file_put_contents($work.'/uploads/node/index.html', $guard);
+    file_put_contents($work.'/uploads/node/.htaccess', 'deny from all');
     foreach (['news', 'docs', 'off', 'help'] as $name) {
-        mkdir($work.'/uploads/'.$name.'/thumb', 0777, true);
-        file_put_contents($work.'/uploads/'.$name.'/index.html', $guard);
-        file_put_contents($work.'/uploads/'.$name.'/.htaccess', 'deny from all');
+        mkdir($work.'/uploads/node/'.$name.'/thumb', 0777, true);
+        file_put_contents($work.'/uploads/node/'.$name.'/index.html', $guard);
+        file_put_contents($work.'/uploads/node/'.$name.'/.htaccess', 'deny from all');
     }
-    foreach (['cover-cccccccccc.png', 'att-aaaaaaaaaa.png', 'other-bbbbbbbbbb.png', 'thumb/att-aaaaaaaaaa.png'] as $one) file_put_contents($work.'/uploads/news/'.$one, $png);
-    file_put_contents($work.'/uploads/news/manual-dddddddddd.pdf', '%PDF-1.4'.str_repeat('0123456789', 199).'%%');
+    foreach (['cover-cccccccccc.png', 'att-aaaaaaaaaa.png', 'other-bbbbbbbbbb.png', 'thumb/att-aaaaaaaaaa.png'] as $one) file_put_contents($work.'/uploads/node/news/'.$one, $png);
+    file_put_contents($work.'/uploads/node/news/manual-dddddddddd.pdf', '%PDF-1.4'.str_repeat('0123456789', 199).'%%');
     file_put_contents($work.'/upload.png', $png);
 }
 
@@ -337,7 +340,7 @@ function getRouteViewRuns(PDO $pdo): array {
     $code = fn(string $who, string $path, string $method = 'GET'): int => getRouteReply($who, $method, $path)['code'];
     $one = getRouteReply('', 'GET', 'index.php?name=news&op=view&id=101');
     $out = ['view' => [$one['code'], str_contains($one['body'], '<h1 class="sl-title">Alpha</h1>'), str_contains($one['body'], 'op=attach&amp;id=101&amp;key=att-aaaaaaaaaa.png'),
-        str_contains($one['body'], 'op=asset&amp;id=2'), str_contains($one['body'], 'uploads/news/')]];
+        str_contains($one['body'], 'op=asset&amp;id=2'), str_contains($one['body'], 'uploads/node/news/')]];
     $out['views'] = getRouteViews($pdo, 101, 1);
     getRouteReply('', 'HEAD', 'index.php?name=news&op=view&id=101');
     usleep(500000);
@@ -373,7 +376,7 @@ function getRouteAttach(): array {
             $code('', 'index.php?name=news&op=attach&id=01&key=att-aaaaaaaaaa.png'), $code('', 'index.php?name=news&op=attach&id=101&key=att-aaaaaaaaaa.png&=x'),
         ],
         'coded' => $code('', 'index.php?name=%6E%65%77%73&op=attach&id=101&%6Bey=att-aaaaaaaaaa.png'),
-        'direct' => $code('', 'uploads/news/att-aaaaaaaaaa.png'),
+        'direct' => $code('', 'uploads/node/news/att-aaaaaaaaaa.png'),
         'climb' => str_contains(getRouteReply('', 'GET', 'index.php?name=news&op=attach&id=101&key=..%2Fconfig%2Fdb.php')['body'], "'pass'"),
     ];
 }
@@ -400,7 +403,7 @@ function getRouteAssets(PDO $pdo): array {
     $out['shown'] = [$shown['code'], $shown['head']['location'] ?? '', getRouteHits($pdo, 4)];
     $pdo->exec('DELETE FROM '.RPREF.'_node_assets WHERE id = 4');
     $out['foreign'] = [getRouteReply('', 'GET', 'index.php?name=docs&op=asset&id=2')['code'], getRouteReply('', 'GET', 'index.php?name=news&op=asset&id=99')['code']];
-    $out['direct'] = getRouteReply('', 'GET', 'uploads/news/manual-dddddddddd.pdf')['code'];
+    $out['direct'] = getRouteReply('', 'GET', 'uploads/node/news/manual-dddddddddd.pdf')['code'];
     return $out;
 }
 
@@ -456,8 +459,9 @@ function getRouteForm(PDO $pdo): array {
     $key = preg_match('#op=attach&amp;key=([A-Za-z0-9_.-]+)&amp;preview=1#', $prev['body'], $hit) ? $hit[1] : '';
     $path = 'index.php?name=news&op=attach&key='.$key.'&preview=1';
     $mine = getRouteReply('anna', 'GET', $path);
-    $out['upload'] = [$prev['code'], $key !== '', str_contains($key, '-2.'), is_file($GLOBALS['rwork'].'/uploads/news/'.$key), $mine['code'], $mine['head']['cache-control'] ?? '',
-        getRouteReply('boris', 'GET', $path)['code'], getRouteReply('', 'GET', $path)['code'], getRouteReply('moder', 'GET', $path)['code'], $count() - $was];
+    $out['upload'] = [$prev['code'], $key !== '', str_contains($key, '-2.'), is_file($GLOBALS['rwork'].'/uploads/node/news/'.$key), $mine['code'],
+        $mine['head']['cache-control'] ?? '', getRouteReply('boris', 'GET', $path)['code'], getRouteReply('', 'GET', $path)['code'], getRouteReply('moder', 'GET', $path)['code'],
+        $count() - $was];
     $sub = getRouteReply('anna', 'POST', 'index.php?name=news&op=add', ['title' => 'With cover', 'intro' => '', 'body' => '', 'action' => 'submit', 'token' => $tok,
         'asset' => [['role' => 'cover', 'id' => '', 'title' => 'My cover']], 'apath0' => $key]);
     $row = $pdo->query('SELECT a.src, a.kind, a.mime FROM '.RPREF.'_node_assets AS a INNER JOIN '.RPREF.'_nodes AS n ON n.id = a.nid'
@@ -532,7 +536,7 @@ function getRouteTypes(PDO $pdo, string $work): array {
         'order' => 'published', 'dir' => 'desc', 'limit' => '10', 'show' => ['date'], 'mode' => 'default', 'access' => ['1|0'], 'notify_pending' => '1', 'seo' => 'website'];
     $made = getRouteReply('boss', 'POST', 'admin.php', $post);
     $out = ['create' => [$made['code'], $has('temp'), (int)$pdo->query('SELECT active FROM '.RPREF.'_node_types WHERE name = \'temp\'')->fetchColumn(),
-        is_dir($work.'/uploads/temp')]];
+        is_dir($work.'/uploads/node/temp')]];
     $out['twice'] = [getRouteReply('boss', 'POST', 'admin.php', $post)['code'], $has('temp')];
     $roles = ['role' => [['name' => 'shot', 'title' => 'Shot', 'mode' => 'image', 'max' => '1', 'report' => '1', 'active' => '1'],
         ['name' => 'pack', 'title' => 'Pack', 'mode' => 'download', 'max' => '1', 'report' => '1', 'active' => '1']]];
@@ -895,9 +899,9 @@ function addRouteSyncTypes(PDO $pdo, string $work): void {
     foreach (['content', 'feeds'] as $name) {
         $data['uploads'][$name] = $data['uploads']['all'];
         $rate['ratings']['node.'.$name] = ['active' => '1', 'period' => '2592000', 'detail' => '1', 'guests' => '1'];
-        mkdir($work.'/uploads/'.$name.'/thumb', 0777, true);
-        file_put_contents($work.'/uploads/'.$name.'/index.html', $guard);
-        file_put_contents($work.'/uploads/'.$name.'/.htaccess', 'deny from all');
+        mkdir($work.'/uploads/node/'.$name.'/thumb', 0777, true);
+        file_put_contents($work.'/uploads/node/'.$name.'/index.html', $guard);
+        file_put_contents($work.'/uploads/node/'.$name.'/.htaccess', 'deny from all');
     }
     setRouteFile($work.'/config/uploads.php', $data);
     setRouteFile($work.'/config/ratings.php', $rate);
@@ -1695,7 +1699,7 @@ function getRouteAltcha(string $who): string {
 function getRouteSecure(PDO $pdo, string $work): array {
     $pre = RPREF.'_';
     $count = fn(string $table): int => (int)$pdo->query('SELECT COUNT(*) FROM '.$pre.$table)->fetchColumn();
-    $files = fn(): int => count(glob($work.'/uploads/news/*-*.*') ?: []);
+    $files = fn(): int => count(glob($work.'/uploads/node/news/*-*.*') ?: []);
     $form = fn(string $who): string => getRouteReply($who, 'GET', 'index.php?name=news&op=add')['body'];
     $send = fn(string $who, array $post): int => getRouteReply($who, 'POST', 'index.php?name=news&op=add', $post)['code'];
     $file = fn(): CURLFile => new CURLFile($work.'/upload.png', 'image/png', 'upload.png');
@@ -1886,15 +1890,15 @@ function addRouteModeTypes(PDO $pdo, string $work): void {
     foreach (['faq', 'files', 'media'] as $name) {
         $data['uploads'][$name] = $data['uploads']['all'];
         $rate['ratings']['node.'.$name] = ['active' => '1', 'period' => '2592000', 'detail' => '1', 'guests' => '1'];
-        mkdir($work.'/uploads/'.$name.'/thumb', 0777, true);
-        file_put_contents($work.'/uploads/'.$name.'/index.html', $guard);
-        file_put_contents($work.'/uploads/'.$name.'/.htaccess', 'deny from all');
+        mkdir($work.'/uploads/node/'.$name.'/thumb', 0777, true);
+        file_put_contents($work.'/uploads/node/'.$name.'/index.html', $guard);
+        file_put_contents($work.'/uploads/node/'.$name.'/.htaccess', 'deny from all');
     }
     setRouteFile($work.'/config/uploads.php', $data);
     setRouteFile($work.'/config/ratings.php', $rate);
-    file_put_contents($work.'/uploads/files/pack-eeeeeeeeee.zip', str_repeat('0123456789', 200));
-    foreach (['files/cover-hhhhhhhhhh.png', 'media/poster-ffffffffff.png', 'media/shot-iiiiiiiiii.png'] as $one) file_put_contents($work.'/uploads/'.$one, $png);
-    file_put_contents($work.'/uploads/media/clip-gggggggggg.mp4', str_repeat("\0", 64));
+    file_put_contents($work.'/uploads/node/files/pack-eeeeeeeeee.zip', str_repeat('0123456789', 200));
+    foreach (['files/cover-hhhhhhhhhh.png', 'media/poster-ffffffffff.png', 'media/shot-iiiiiiiiii.png'] as $one) file_put_contents($work.'/uploads/node/'.$one, $png);
+    file_put_contents($work.'/uploads/node/media/clip-gggggggggg.mp4', str_repeat("\0", 64));
     $pdo->exec('INSERT INTO '.$pre.'node_types (id, name, title, intro, ext, active, sort, version) VALUES (5, \'faq\', \'FAQ\', \'\', \'\', 1, 50, 1),'
         .' (6, \'files\', \'Files\', \'\', \'\', 1, 60, 1), (7, \'media\', \'Media\', \'\', \'\', 1, 70, 1)');
     $rows = [

@@ -127,7 +127,8 @@ final class NodeConfigTest extends TestCase
         $this->assertTrue($run['same'], 'A denied operation left a trace');
     }
 
-    # Every name outside the grammar, reserved, taken by a module or a shared area, held by the file tree in another case, or left with data of an earlier owner is refused
+    # Every name outside the grammar, reserved, taken by a module or a shared area, or left with data of an earlier owner is refused
+    # A name a folder of the upload root carries, as it is or in another case, is accepted: the folder of a type lies in uploads/node/<type> and the upload root is never scanned
     #[Test]
     public function aNewNameIsCheckedBeforeAnythingIsWritten(): void
     {
@@ -136,16 +137,17 @@ final class NodeConfigTest extends TestCase
             $path = ['media' => 'categories', 'pages' => 'directory'][$name] ?? 'name';
             $this->assertInvalid($call, $path, (string)$name);
         }
-        $this->assertCount(19, $run['bad']);
+        $this->assertCount(18, $run['bad']);
         $this->assertTrue($run['same'], 'A refused name left a row, a source or a directory');
         $this->assertSame(['index.html', 'thumb/old.txt'], $run['pages'], 'The old file of an earlier owner was touched');
-        foreach (['x', 'a'.str_repeat('b', 19)] as $name) {
+        foreach (['x', 'a'.str_repeat('b', 19), 'faq', 'avatars'] as $name) {
             $this->assertSame(['ok' => true, 'value' => 1], $run['good'][$name], $name.' of length '.strlen($name).' was refused');
             $this->assertSame(['ok' => true, 'value' => null], $run['gone'][$name]);
             $trace = $run['trace'][$name];
             foreach (['row', 'node', 'fields', 'uploads', 'rating'] as $key) $this->assertNull($trace[$key], $name.': '.$key.' is left after the delete');
-            $this->assertTrue($trace['dir'] && $trace['guard'], $name.': the directory and its guard were not kept');
+            $this->assertTrue($trace['dir'] && $trace['guard'], $name.': the directory below the root of the types and its guard were not kept');
         }
+        foreach (['x', 'a'.str_repeat('b', 19)] as $name) $this->assertFalse($run['trace'][$name]['top'], $name.': a type made a folder in the upload root');
     }
 
     # An upload rule a removed module left under a replaced name blocks no new type: a valid one is taken over, a broken one is replaced by the copy of all

@@ -812,7 +812,7 @@ final readonly class NodeAsset {
 - `NodeTarget` has no text, sets or URL. `uid` is the stored author (Rating refuses a vote on one's own material
   by it); `0` never proves guest ownership.
 - `NodeRelation` and `NodeAsset` mirror their rows. In a resource, unknown metadata and an absent report are `null`;
-  `src` is a path under `uploads/<type>` or an external URL; `ruid` is the author of the open report or `0`.
+  `src` is a path under `uploads/node/<type>` or an external URL; `ruid` is the author of the open report or `0`.
 
 ```php
 final readonly class NodeInput {
@@ -1191,7 +1191,7 @@ Input rules (`INVALID <path>`):
 | `ext` | `[]` for a standard type, else `filterNodeData()` of the extension |
 
 A resource unchanged in `kind`, `role`, `src` keeps its metadata unchecked. A new local source (and a new `[attach]`
-name in the text) must exist in `uploads/<type>` under the directory lock, carry an allowed extension of rule and
+name in the text) must exist in `uploads/node/<type>` under the directory lock, carry an allowed extension of rule and
 role, fit the smaller `maxbytes`, match its kind and belong to the visitor (account ID or the guest token of
 `getEditorFileOwner()`) unless he moderates; `mime` comes from `finfo`. A replaced `src`, `kind` or `role` resets
 `hits` and the report. Removing a resource deletes the row, never the file.
@@ -2493,8 +2493,10 @@ latest per type; `support` types appear only in the account menu, never in profi
 
 ### Editor attachments and the file manager
 
-Each type owns the upload area `uploads/<type>`: editor `[attach]` files and local `_node_assets` sources in its
-root, editor thumbnails in `thumb/`. The editor passes the type name as `mod`, so `getTplTextarea()` picks
+Each type owns the upload area `uploads/node/<type>`: editor `[attach]` files and local `_node_assets` sources in its
+root, editor thumbnails in `thumb/`. The root of the types is the constant `NODE_DIR`, and `getUploadFolder()` in
+`core/system.php` names the folder of an owner relative to `UPLOADS_DIR` for every builder of an upload path: a
+registered type, or a type named through its flag, answers `node/<type>`, a module the folder of its own name. The editor passes the type name as `mod`, so `getTplTextarea()` picks
 `$conf['uploads'][<type>]` and the place `<type>.attach`; the only structured-resource picker is
 `getFileManagerField()` (docs/WINDOW.md). Node never renames or copies files; `Upload` names them once.
 
@@ -2752,13 +2754,14 @@ text, never the exception message.
 
 ### Controlled files
 
-Direct access to `uploads/<type>/` (root, editor files, `thumb/`) is forbidden for every type; PHP execution is
-forbidden in the whole `uploads` tree.
+Direct access to `uploads/node/<type>/` (root, editor files, `thumb/`) is forbidden for every type; PHP execution
+is forbidden in the whole `uploads` tree. `uploads/node/` carries the guards itself, so the nginx rule refuses it
+whole.
 
 - Guards (`FileManager::getGuardFiles()`): `index.html` with the bytes of `uploads/index.html` and `.htaccess`
   with `FileManager::DENY`. Apache and LiteSpeed follow `.htaccess`; nginx needs the shared rule in UPGRADING.md,
   "Web Server Rule for Node Upload Directories". `tests/Support/route_web.php` and `web_probe.php` emulate it.
-- Enabling a type completes missing guards, then requests `<homeurl>/uploads/<type>/index.html` with
+- Enabling a type completes missing guards, then requests `<homeurl>/uploads/node/<type>/index.html` with
   `getSchedulerFetch()`; only `403` or `404` passes, anything else (including a redirect or connection error) is
   `INVALID directory` and the type stays off.
 - A type is created only over an empty directory or one with exact guard files only (hidden files, previews and
@@ -2766,7 +2769,7 @@ forbidden in the whole `uploads` tree.
   removes the directory or its guards.
 - `op=asset&id=<id>`: the id is resolved by `NodeQuery::getNodeAsset()` (resource, material, route type, category
   right, extension scope, active role, one statement) into an immutable `NodeAsset`; no path, name, MIME or URL
-  comes from the request. A local `src` is canonical and must resolve by `realpath()` inside `uploads/<type>`,
+  comes from the request. A local `src` is canonical and must resolve by `realpath()` inside `uploads/node/<type>`,
   outside `thumb/`.
 - `op=attach`: the query is exactly `name`, `op`, `key`, optional `thumb=1` and either `id=<nid>` or `preview=1`.
   `NodeService::getNodeFile(NodeType $type, int $id, string $key, bool $thumb, Comment $com): string` accepts only a whole
@@ -2869,7 +2872,7 @@ threshold). The profile reports timing; only statement counts are hard gates.
 Operations take these in this order and never take an earlier one while holding a later one:
 
 1. the configuration lock of `setConfigFile()` (type operations);
-2. `FileManager::getPathLock(UPLOADS_DIR.'/<type>')` (type operations, material writes with files);
+2. `FileManager::getPathLock(NODE_DIR.'/<type>')` (type operations, material writes with files);
 3. named locks `node.poll.<id>`, ascending (poll links and poll deletion);
 4. `BEGIN`;
 5. `_node_types` rows, ascending id;
@@ -2890,8 +2893,9 @@ and deletions lock type, categories, materials (busy or stale `409`, rights `403
 
 `FileManager` locks belong to the request: a map of canonical key (private `getLockKey()`: `realpath()` of the
 deepest existing part plus the rest, lower case on Windows) to handle with a nesting count, so re-entry never
-self-blocks. A directory below `UPLOADS_DIR/<area>` takes the area root first, so `Upload` and `FileManager` wait
-for the holder of a type root. Filesystem work is not transactional: an unbound upload stays with its owner,
+self-blocks. A directory below an area takes the area root first, so `Upload` and `FileManager` wait for the holder
+of a type root. An area is a folder of `UPLOADS_DIR`, and below `NODE_DIR` the folder of one type, so the writers of
+two types never wait for each other and the root of the types is never locked. Filesystem work is not transactional: an unbound upload stays with its owner,
 sources are never deleted before the links commit, and guards are never removed.
 
 `Point` runs before the owner's `COMMIT`, inside a `SAVEPOINT` when a transaction is open (owning
@@ -3456,7 +3460,7 @@ continues where it stopped:
 5. Outer addresses, once: direct addresses into the closed module directories that the forum, comments,
    private messages, newsletters, blocks, signatures and polls keep are pointed at `uploads/archive/<module>/`.
    The mail queue is left as it was written.
-6. Files: the type root `uploads/<type>` takes only what the materials use - every `[attach]` file of their texts
+6. Files: the type root `uploads/node/<type>` takes only what the materials use - every `[attach]` file of their texts
    and comments under its managed name with its thumbnail, and the local file of every resource. A file the site addresses directly moves
    into the public `uploads/archive/<module>/`; one that is both is copied there. A file nothing uses stays in the
    working directory `storage/backup/update/node/files/<module>`, outside the site, and the run notes the count.

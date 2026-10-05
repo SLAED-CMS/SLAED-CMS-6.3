@@ -327,7 +327,7 @@ function checkNodeRows(string $ajar, string $gjar): void {
         return;
     }
     $type = (string)$row[0]['name'];
-    $base = ROOTDIR.'/uploads/'.$type;
+    $base = ROOTDIR.'/uploads/node/'.$type;
     $png = addTestFixture('node.png', 'png', 80, 60);
     $was = getDirTree($base);
     $send = ['token' => getScopeToken($ajar, 'upload')];
@@ -350,7 +350,7 @@ function checkNodeRows(string $ajar, string $gjar): void {
     checkMatrixRow('the moderator reads the file through the preview route', $mine === 200, (string)$mine);
     $guest = getHttpReply($gjar, $path)['code'];
     checkMatrixRow('a guest does not read a file no material binds', $guest !== 200, (string)$guest);
-    $raw = getHttpReply($gjar, '/uploads/'.$type.'/'.rawurlencode($name))['code'];
+    $raw = getHttpReply($gjar, '/uploads/node/'.$type.'/'.rawurlencode($name))['code'];
     checkMatrixRow('the web server refuses the directory of the type', $raw === 403, (string)$raw);
 }
 

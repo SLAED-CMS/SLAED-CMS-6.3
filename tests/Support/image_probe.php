@@ -108,8 +108,8 @@ function getProbeSkip(): array {
 # The fixture is a png cut to 33 bytes: the header still parses, so the markup is reached with real dimensions, while the decoder refuses it and no thumbnail is produced
 function getProbeAttach(): array {
     if (!function_exists('imagepng') || !function_exists('imagecreatefrompng')) return ['ran' => false, 'why' => 'this build has no png decoder'];
-    $dir = UPLOADS_DIR.'/news';
-    if (!is_dir($dir) || !is_writable($dir)) return ['ran' => false, 'why' => 'uploads/news is not a writable directory on this installation'];
+    $dir = NODE_DIR.'/news';
+    if (!is_dir($dir) || !is_writable($dir)) return ['ran' => false, 'why' => 'uploads/node/news is not a writable directory on this installation'];
     $name = 'probeattach'.bin2hex(random_bytes(4)).'.png';
     $file = $dir.'/'.$name;
     $img = imagecreatetruecolor(64, 48);
@@ -121,7 +121,7 @@ function getProbeAttach(): array {
     $left = is_file($thumb);
     if (is_file($file)) unlink($file);
     if ($left) unlink($thumb);
-    return ['ran' => true, 'html' => $html, 'src' => 'uploads/news/'.$name, 'thumb' => 'uploads/news/thumb/'.$name, 'left' => $left];
+    return ['ran' => true, 'html' => $html, 'src' => 'uploads/node/news/'.$name, 'thumb' => 'uploads/node/news/thumb/'.$name, 'left' => $left];
 }
 
 $mode = (string)($argv[1] ?? '');

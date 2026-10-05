@@ -5,7 +5,7 @@
 # Website: slaed.net
 
 # The web server of the probes, run as the router of the built-in server `php -S` with the scratch root in SLAED_WEB_ROOT; it answers a closed set of paths and nothing else
-# /uploads/<dir>/<file> follows the nginx rule of UPGRADING.md (Web Server Rule for Node Upload Directories): 403 for a directory with the .htaccess guard, the file otherwise
+# /uploads/<dir>/<path> follows the nginx rule of UPGRADING.md (Web Server Rule for Node Upload Directories): 403 below a folder of the upload root with the .htaccess guard
 # The file open in that root switches the rule off, which is a server whose owner never added it; the upload root itself comes from SLAED_WEB_UPLOADS
 # /stream answers one fixture of <root>/files through the shipped getFileStream(), lifted out of core/system.php, and records what the callback and the shutdown saw
 # The directory is served by the stand as well, so anything but the built-in server gets a plain 404 before a single line of it runs
@@ -22,7 +22,7 @@ if ($wroot === '' || !is_dir($wroot)) {
     http_response_code(500);
     exit;
 }
-if (preg_match('#^/uploads/([a-z0-9]+)/([A-Za-z0-9_.-]+)$#D', $wpath, $whit)) {
+if (preg_match('#^/uploads/([a-z0-9]+)/([A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*)$#D', $wpath, $whit) && !in_array('..', explode('/', $whit[2]), true)) {
     $wdir = $wups.'/'.$whit[1];
     if (!is_file($wroot.'/open') && is_file($wdir.'/.htaccess')) http_response_code(403);
     elseif (is_file($wdir.'/'.$whit[2])) readfile($wdir.'/'.$whit[2]);
