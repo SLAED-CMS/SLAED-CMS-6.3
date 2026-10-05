@@ -70,12 +70,12 @@ class Cache {
         return true;
     }
 
-    # Remove every cached file under storage/cache, keeping the protected markers, the lock files and the directory tree
+    # Remove every cached file under storage/cache, keeping the lock files and the directory tree
     public static function deleteAll(): int {
         return self::deleteStale(CACHE_DIR, 0);
     }
 
-    # Recursively remove the cached files under one directory not rewritten for ttl seconds, every file for zero, keeping the protected markers, the lock files and the tree
+    # Recursively remove the cached files under one directory not rewritten for ttl seconds, every file for zero, keeping the lock files and the tree
     # A lock keeps its time while processes take it, and unlinking one still held lets the next process lock a new file beside it; an evicted entry only costs a rebuild
     public static function deleteStale(string $dir, int $ttl): int {
         if ($ttl < 0 || !is_dir($dir)) return 0;
@@ -84,23 +84,25 @@ class Cache {
         $iter = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
         foreach ($iter as $file) {
             if (!$file->isFile()) continue;
-            $name = $file->getFilename();
-            if ($name === '.htaccess' || $name === 'index.html' || str_ends_with($name, '.lock')) continue;
+            if (str_ends_with($file->getFilename(), '.lock')) continue;
             if (($ttl === 0 || $file->getMTime() < $edge) && unlink($file->getPathname())) $num++;
         }
         return $num;
     }
 
-    # Emit the content type, the cache policy and security headers: none forbids a copy, private lets one browser keep it revalidated, public lets anyone keep it STATICDAYS days
+    # Emit the content type, the cache policy and security headers: none forbids a copy, private lets one browser keep it revalidated, public lets anyone keep it $age seconds
+    # A public answer lives STATICDAYS days unless the caller names its own age, and carries the entity tag it is given, so a shared cache can revalidate it as a browser does
     # A public answer drops every pending cookie so a shared proxy never hands one visitor state to another; a kept answer drops the Pragma and Expires a session emits
-    public static function setHeaders(string $mode = 'none', string $type = 'text/html', int $mtime = 0, string $etag = ''): void {
+    public static function setHeaders(string $mode = 'none', string $type = 'text/html', int $mtime = 0, string $etag = '', int $age = 0): void {
         header('Content-Type: '.(($type === 'text/html') ? $type.'; charset='._CHARSET : $type));
         header_remove('Pragma');
         header_remove('Expires');
         if ($mode === 'public') {
+            $age = ($age > 0) ? $age : self::STATICDAYS * 86400;
             header_remove('Set-Cookie');
-            header('Cache-Control: public, max-age='.(self::STATICDAYS * 86400));
-            header('Expires: '.gmdate('D, d M Y H:i:s', time() + self::STATICDAYS * 86400).' GMT');
+            header('Cache-Control: public, max-age='.$age);
+            header('Expires: '.gmdate('D, d M Y H:i:s', time() + $age).' GMT');
+            if ($etag !== '') header('ETag: '.$etag);
         } elseif ($mode === 'private') {
             header('Cache-Control: private, no-cache, must-revalidate, no-transform');
             if ($etag !== '') header('ETag: '.$etag);

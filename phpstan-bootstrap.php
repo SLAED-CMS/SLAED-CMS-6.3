@@ -17,6 +17,9 @@ if (!isset($rfl)) {
 if (!defined('BASE_DIR')) {
     define('BASE_DIR', __DIR__);
 }
+if (!defined('PUBLIC_DIR')) {
+    define('PUBLIC_DIR', __DIR__.'/public');
+}
 
 require_once __DIR__.'/phpstan-stubs.php';
 

@@ -79,8 +79,8 @@ function getProbeTable(string $name, string $engine = 'InnoDB'): string {
     return str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [PROBEPREF, $engine, 'utf8mb4', 'utf8mb4_unicode_ci'], $hit[0]);
 }
 
-# Lift one function out of update.php, or out of setup.php for the preflight of a clean installation, into this process; $swap replaces text of its source first
-function addProbeCode(string $name, string $file = 'update.php', array $swap = []): void {
+# Lift one function out of public/update.php, or out of public/setup.php for the preflight of a clean installation, into this process; $swap replaces text of its source first
+function addProbeCode(string $name, string $file = 'public/update.php', array $swap = []): void {
     $code = (string)file_get_contents(PROBEROOT.'/'.$file);
     $from = strpos($code, 'function '.$name.'(');
     $to = $from === false ? false : strpos($code, "\n}\n", $from);
@@ -591,8 +591,8 @@ function setConfSite(): void {
     mkdir(BASE_DIR.'/modules/forum', 0777, true);
     mkdir(BASE_DIR.'/admin/modules', 0777, true);
     touch(BASE_DIR.'/admin/modules/config.php');
-    mkdir(BASE_DIR.'/templates/lite/images/logos', 0777, true);
-    touch(BASE_DIR.'/templates/lite/images/logos/mark.svg');
+    mkdir(PUBLIC_DIR.'/templates/lite/images/logos', 0777, true);
+    touch(PUBLIC_DIR.'/templates/lite/images/logos/mark.svg');
     foreach (CONFSHIP as $name) file_put_contents(CONFIG_DIR.'/'.$name.'.php', getConfShip($name));
     $head = "<?php\nif (!defined('FUNC_FILE')) die('Illegal file access');\n\n";
     foreach (CONFOLD as $name => $body) file_put_contents(CONFIG_DIR.'/config_'.$name.'.php', $head.$body."\n\n?>\n");
@@ -832,7 +832,7 @@ try {
     if (($argv[2] ?? '') === 'setup') {
         require_once PROBEROOT.'/lang/en.php';
         require_once PROBEROOT.'/admin/lang/en.php';
-        addProbeCode('getSetupProbe', 'setup.php', ['new Database(' => 'getProbeBase(']);
+        addProbeCode('getSetupProbe', 'public/setup.php', ['new Database(' => 'getProbeBase(']);
     }
     addProbeSchema();
     $report['runs'] = match ($argv[2] ?? 'points') {

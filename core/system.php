@@ -27,8 +27,11 @@ if (!defined('LOGS_DIR')) define('LOGS_DIR', BASE_DIR.'/storage/logs');
 if (!defined('SITEMAP_DIR')) define('SITEMAP_DIR', BASE_DIR.'/storage/sitemap');
 if (!defined('CAPTCHA_DIR')) define('CAPTCHA_DIR', BASE_DIR.'/storage/captcha');
 
-# Uploads directory for user content
-if (!defined('UPLOADS_DIR')) define('UPLOADS_DIR', BASE_DIR.'/uploads');
+# The public part a browser fetches, the document root; an entry of public/ defines it, and a tool or a test without one reads the folder of the project
+if (!defined('PUBLIC_DIR')) define('PUBLIC_DIR', BASE_DIR.'/public');
+
+# The one upload root, its public folders and the one sender of every file, which the light path of index.php loads before anything of this file
+require_once BASE_DIR.'/core/stream.php';
 
 # Upload root of the Node types below the upload directory, one folder per type
 if (!defined('NODE_DIR')) define('NODE_DIR', UPLOADS_DIR.'/node');
@@ -76,7 +79,7 @@ function getConfig(bool $fresh = false): array {
         $conf['dev_mode'] ??= false;
         unset($conf['style']);
         $conf['derived'] = [];
-        foreach (glob('templates/*', GLOB_ONLYDIR) ?: [] as $tdir) {
+        foreach (glob(PUBLIC_DIR.'/templates/*', GLOB_ONLYDIR) ?: [] as $tdir) {
             $tname = basename($tdir);
             $conf['derived']['assets'][$tname] = ['css' => getAssetList($tname, 'css', $conf['css_f'] ?? ''), 'js' => getAssetList($tname, 'js', $conf['script_f'] ?? '')];
             $conf['derived']['logo'][$tname] = getImageBox($tdir.'/images/logos/'.($conf['site_logo'] ?? ''));
@@ -125,7 +128,7 @@ require_once BASE_DIR.'/core/security.php';
 require_once BASE_DIR.'/core/monitor.php';
 
 $theme = getTheme();
-if (is_file(BASE_DIR.'/templates/'.$theme.'/index.php')) require_once BASE_DIR.'/templates/'.$theme.'/index.php';
+if (is_file(PUBLIC_DIR.'/templates/'.$theme.'/index.php')) require_once PUBLIC_DIR.'/templates/'.$theme.'/index.php';
 require_once BASE_DIR.'/core/classes/template.php';
 require_once BASE_DIR.'/core/classes/parser.php';
 require_once BASE_DIR.'/core/classes/geoip.php';
@@ -885,7 +888,7 @@ function updateSessionTrack(int $ctime, string $request, string $name): array {
         $sessf = COUNTER_DIR.'/session.log';
         $sesst = (file_exists($sessf) && filesize($sessf) != 0) ? file_get_contents($sessf) : 0;
         $past = $ctime - intval($conf['sess_t']);
-        if ($sesst < $past) {
+        if ($sesst < $past && (is_dir(COUNTER_DIR) || mkdir(COUNTER_DIR, 0755, true) || is_dir(COUNTER_DIR))) {
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE time < :past', ['past' => $past]);
             if (file_exists($sessf)) unlink($sessf);
             $fp = fopen($sessf, 'wb');
@@ -915,7 +918,7 @@ function updateRefererTrack(int $ctime, string $request, string $uname): void {
     $referf = COUNTER_DIR.'/referer.log';
     $refert = (file_exists($referf) && filesize($referf) != 0) ? file_get_contents($referf) : 0;
     $past = $ctime - intval($conf['referers']['refer_t']);
-    if ($refert < $past) {
+    if ($refert < $past && (is_dir(COUNTER_DIR) || mkdir(COUNTER_DIR, 0755, true) || is_dir(COUNTER_DIR))) {
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_referer');
         if (file_exists($referf)) unlink($referf);
         $fp = fopen($referf, 'wb');
@@ -1184,6 +1187,7 @@ function updateStatsTrack(string $request, int $guest, array $state): void {
         }
         return $handle ?: false;
     };
+    if (!is_dir(COUNTER_DIR) && !mkdir(COUNTER_DIR, 0755, true) && !is_dir(COUNTER_DIR)) return;
     $flk = $safeOpen($spath.'statistic.lock', 'c');
     if ($flk === false) return;
     if (!flock($flk, LOCK_EX)) {
@@ -1783,7 +1787,7 @@ function setHead(array $seo = []): void {
         $strmeta .= $tpl->getHtmlFrag('head-title', ['title' => $conf['sitename'].' '.$sep.' '._ADMIN])."\n";
     }
     $favicon = 'templates/'.(defined('ADMIN_FILE') ? 'admin' : $theme).'/images/favicon.svg';
-    if (is_file(BASE_DIR.'/'.$favicon)) {
+    if (is_file(PUBLIC_DIR.'/'.$favicon)) {
         $strlink .= $tpl->getHtmlFrag('head-link', ['rel' => 'shortcut icon', 'href' => $favicon, 'type' => 'image/svg+xml', 'title' => ''])."\n";
     }
     $strlink .= doCss();
@@ -1791,7 +1795,7 @@ function setHead(array $seo = []): void {
     if (defined('ADMIN_FILE')) {
         $adlogo = basename((string)($conf['admin_logo'] ?? 'slaed_logo_256x73.png'));
         $adpath = getThemeImagePath('logos/'.$adlogo);
-        if (!is_file($adpath)) $adpath = getThemeImagePath('logos/slaed_logo_256x73.png');
+        if (!is_file(PUBLIC_DIR.'/'.$adpath)) $adpath = getThemeImagePath('logos/slaed_logo_256x73.png');
         $adminvars = [
             'theme' => getTheme(),
             'mode' => getThemeMode(),
@@ -1885,7 +1889,7 @@ function setHead(array $seo = []): void {
         $item = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account', 'title' => _BREG, 'label' => _BREG, 'is_login_button' => true, 'is_bold_label' => true]);
         $login = $tpl->getHtmlFrag('list', ['is_unordered' => true, 'is_login_top' => true, 'items_html' => $tpl->getHtmlFrag('list-item', ['content_html' => $item])]);
     }
-    [$logo_w, $logo_h] = $conf['derived']['logo'][$theme] ?? getImageBox(BASE_DIR.'/templates/'.$theme.'/images/logos/'.($conf['site_logo'] ?? ''));
+    [$logo_w, $logo_h] = $conf['derived']['logo'][$theme] ?? getImageBox(PUBLIC_DIR.'/templates/'.$theme.'/images/logos/'.($conf['site_logo'] ?? ''));
     $sitevars = [
         'theme' => getTheme(),
         'mode' => getThemeMode(),
@@ -2659,24 +2663,27 @@ function setConfigFile(string|Closure $fp, array $arr = [], array $act = []): bo
 }
 
 # The asset files of one theme package in their linking order: each vendor directory with its subdirectories, then assets/<ext> of the theme
+# The files are found below PUBLIC_DIR and answered as addresses relative to it, which is what a page links
 function getThemeAssets(string $theme, string $ext): array {
-    $base = 'templates/'.$theme.'/assets/';
+    $base = PUBLIC_DIR.'/templates/'.$theme.'/assets/';
     $dirs = [];
     foreach (glob($base.'vendor/*/', GLOB_ONLYDIR) ?: [] as $sub) array_push($dirs, $sub, ...(glob($sub.'*/', GLOB_ONLYDIR) ?: []));
     $dirs[] = $base.$ext.'/';
     $out = [];
     foreach ($dirs as $dir) array_push($out, ...(glob($dir.'*.'.$ext) ?: []));
-    return $out;
+    return array_map(static fn(string $v): string => substr($v, strlen(PUBLIC_DIR) + 1), $out);
 }
 
 # The stylesheets or scripts a page links in their order: the comma list of files and directories from css_f or script_f, [theme] read as the theme, then the package
+# An entry is an address relative to the document root, so it is looked up below PUBLIC_DIR and answered in the same relative form
 function getAssetList(string $theme, string $ext, string $list): array {
     $out = [];
     foreach (explode(',', str_replace('[theme]', $theme, $list)) as $entry) {
         $entry = rtrim(trim($entry), '/\\');
         if ($entry === '') continue;
-        if (is_dir($entry)) array_push($out, ...(glob($entry.'/*.'.$ext) ?: []));
-        if (is_file($entry) && strtolower(pathinfo($entry, PATHINFO_EXTENSION)) === $ext) $out[] = $entry;
+        $full = PUBLIC_DIR.'/'.$entry;
+        if (is_dir($full)) array_push($out, ...array_map(static fn(string $v): string => $entry.'/'.basename($v), glob($full.'/*.'.$ext) ?: []));
+        if (is_file($full) && strtolower(pathinfo($entry, PATHINFO_EXTENSION)) === $ext) $out[] = $entry;
     }
     return array_values(array_unique(array_merge($out, getThemeAssets($theme, $ext))));
 }
@@ -2688,7 +2695,7 @@ function doScript(): string {
     $array = $conf['derived']['assets'][$theme]['js'] ?? getAssetList($theme, 'js', $conf['script_f']);
     $arr = [];
     foreach ($array as $file) {
-        if (file_exists($file)) $arr[] = $tpl->getHtmlFrag('head-script-src', ['src' => $file, 'attr' => $async]);
+        if (file_exists(PUBLIC_DIR.'/'.$file)) $arr[] = $tpl->getHtmlFrag('head-script-src', ['src' => $file, 'attr' => $async]);
     }
     $cont = implode("\n", $arr);
     if (!defined('ADMIN_FILE') && file_exists(CONFIG_DIR.'/header.php')) {
@@ -2705,7 +2712,7 @@ function doCss(): string {
     $array = $conf['derived']['assets'][$theme]['css'] ?? getAssetList($theme, 'css', $conf['css_f']);
     $arr = [];
     foreach ($array as $file) {
-        if (file_exists($file)) $arr[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $file, 'type' => '', 'title' => '']);
+        if (file_exists(PUBLIC_DIR.'/'.$file)) $arr[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $file, 'type' => '', 'title' => '']);
     }
     return implode("\n", $arr);
 }
@@ -2719,7 +2726,7 @@ function addSitemapTask(bool $force = false): array {
     $sm = $conf['sitemap'];
     $auto = !$force && !defined('ADMIN_FILE');
     if ($auto && empty($sm['auto'])) return ['status' => 'idle', 'message' => 'Sitemap generation was skipped'];
-    $sfile = BASE_DIR.'/sitemap.xml';
+    $sfile = PUBLIC_DIR.'/sitemap.xml';
     $stime = (file_exists($sfile) && filesize($sfile) != 0) ? filemtime($sfile) : 0;
     if ($auto && $stime >= time() - intval($sm['auto_t'] ?? 0)) return ['status' => 'idle', 'message' => 'Sitemap generation was skipped'];
     $date = date('Y-m-d');
@@ -2781,7 +2788,7 @@ function addSitemapTask(bool $force = false): array {
             $fh = null;
         }
         if ($fh === null) {
-            $files[] = BASE_DIR.'/sitemap-'.(count($files) + 1).'.xml';
+            $files[] = PUBLIC_DIR.'/sitemap-'.(count($files) + 1).'.xml';
             $fh = fopen(end($files), 'wb');
             if ($fh === false) throw new RuntimeException('a sitemap file cannot be opened');
             fwrite($fh, $fix($head.'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n"));
@@ -2887,20 +2894,20 @@ function addSitemapTask(bool $force = false): array {
             $keep[] = basename($file);
             $links .= '<sitemap><loc>'.$home.'/'.basename($file).'</loc><lastmod>'.$date.'</lastmod></sitemap>'."\n";
         }
-        file_put_contents(BASE_DIR.'/sitemap.xml', $fix($head.'<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n".$links.'</sitemapindex>'));
+        file_put_contents(PUBLIC_DIR.'/sitemap.xml', $fix($head.'<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n".$links.'</sitemapindex>'));
     } elseif ($files) {
-        rename($files[0], BASE_DIR.'/sitemap.xml');
+        rename($files[0], PUBLIC_DIR.'/sitemap.xml');
     } else {
-        file_put_contents(BASE_DIR.'/sitemap.xml', $fix($head.'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n".'</urlset>'));
+        file_put_contents(PUBLIC_DIR.'/sitemap.xml', $fix($head.'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n".'</urlset>'));
     }
-    foreach (glob(BASE_DIR.'/sitemap-*.xml*') ?: [] as $old) {
+    foreach (glob(PUBLIC_DIR.'/sitemap-*.xml*') ?: [] as $old) {
         if (preg_match('/^sitemap-[1-9][0-9]*\.xml(?:\.gz)?$/D', basename($old)) && !in_array(basename($old), $keep, true)) unlink($old);
     }
     return [
         'status' => 'success',
         'message' => 'Sitemap generation completed',
         'extra' => [
-            'last_map_size' => file_exists(BASE_DIR.'/sitemap.xml') ? (int)filesize(BASE_DIR.'/sitemap.xml') : 0,
+            'last_map_size' => file_exists(PUBLIC_DIR.'/sitemap.xml') ? (int)filesize(PUBLIC_DIR.'/sitemap.xml') : 0,
             'last_url_count' => $total,
             'last_output' => 'sitemap.xml',
         ],
@@ -3375,12 +3382,13 @@ function getProtocol(): string {
 # An attachment is resolved against the upload directory of its own module, and the module is named explicitly by a caller that renders the content of another one
 # Without that name the request module would decide the path, which is right for a module rendering itself and wrong for a page that lists the newest rows of several
 # The name becomes a path segment, so it passes the same filter the request boundary applies; anything else answers an empty name, whose path resolves to no file
+# An attachment has an address only in a public folder, getUploadUrl(); an address under uploads/ is checked below UPLOADS_DIR and any other below PUBLIC_DIR
 function getImgText(string $text, string $type = '', bool $check = true, string $mod = ''): string|false {
  global $conf;
     $mod = filterVar(($mod !== '') ? $mod : (string)($conf['name'] ?? ''));
     if (preg_match('#\[attach=(.*?)\s(.*?)\]#i', $text, $match)) {
         $fname = basename(trim($match[1]));
-        $img = 'uploads/'.getUploadFolder($mod).'/'.((!$type) ? 'thumb/' : '').$fname;
+        $img = getUploadUrl(getUploadFolder($mod).'/'.((!$type) ? 'thumb/' : '').$fname);
     } elseif (preg_match('#\[img=[a-zA-Z]+\](.*?)\[/img\]#i', $text, $match)) {
         $img = trim($match[1]);
     } elseif (preg_match('#\[img\](.*?)\[/img\]#i', $text, $match)) {
@@ -3389,7 +3397,8 @@ function getImgText(string $text, string $type = '', bool $check = true, string 
         $img = '';
     }
     if ($img !== '' && stripos($img, 'data:') === 0) $img = '';
-    $path = empty($img) ? '' : BASE_DIR.'/'.ltrim(str_replace('\\', '/', $img), '/');
+    $rel = ltrim(str_replace('\\', '/', $img), '/');
+    $path = empty($img) ? '' : (str_starts_with($rel, 'uploads/') ? UPLOADS_DIR.substr($rel, 7) : PUBLIC_DIR.'/'.$rel);
     $img = empty($img) ? false : ($check ? (file_exists($path) ? $img : false) : $img);
     return $img;
 }
@@ -3493,7 +3502,7 @@ function getThemeModeSwitch(string $action): string {
 function checkThemeAssets(string $name): bool {
     static $cache = [];
     if (isset($cache[$name])) return $cache[$name];
-    $base = BASE_DIR.'/templates/'.$name.'/';
+    $base = PUBLIC_DIR.'/templates/'.$name.'/';
     $need = [
         'assets/css/base.css',
         'assets/css/theme.css',
@@ -3507,7 +3516,7 @@ function checkThemeAssets(string $name): bool {
         if (!is_file($base.$file)) return $cache[$name] = false;
     }
     if (!is_dir($base.'images/avatars/presets')) return $cache[$name] = false;
-    foreach (glob(BASE_DIR.'/plugins/editors/*/manifest.json') ?: [] as $file) {
+    foreach (glob(PUBLIC_DIR.'/plugins/editors/*/manifest.json') ?: [] as $file) {
         $man = Editor::getManifest(basename(dirname($file)));
         $dec = (array)($man['theme'] ?? []);
         if (!$dec) continue;
@@ -3815,7 +3824,7 @@ function getLanguageFlagSrc(string $lang): string {
     $map = ['en' => 'gb', 'uk' => 'ua'];
     $code = $map[$lang] ?? $lang;
     $path = 'flags/'.$code.'.svg';
-    return file_exists(getThemeImagePath($path)) ? getThemeImagePath($path) : getThemeImagePath('flags/unknown.svg');
+    return file_exists(PUBLIC_DIR.'/'.getThemeImagePath($path)) ? getThemeImagePath($path) : getThemeImagePath('flags/unknown.svg');
 }
 
 # Hash a user password with bcrypt
@@ -4236,7 +4245,8 @@ function getEditorJson(array $dat): void {
 # The listing caps are the shipped ones of every record in config/uploads.php, so the field place invents no number and no administrative setting is added to hold one
 # A guest owns no account, so users.avatar answers zero for both guest fields without reading a setting, and the route refuses a guest before it asks anything else
 # The ops key names which of the four editor routes the place permits: a field place uploads through its own form, so leaving the other three open would create orphan files
-# The directory comes in the three forms its readers need - dir site relative, store relative to the upload root as the service takes it, path absolute as the file layer opens it
+# The directory comes in the three forms its readers need - dir the address of a public folder or empty, store relative to the upload root, path absolute as the file layer opens it
+# A missing directory is no refusal: the upload service creates the folder of its owner on the first write
 function getUploadPlaceRule(string $place): array {
     global $conf;
     $good = preg_match('#^[a-z0-9_]+\.[a-z0-9_]+$#', $place) === 1;
@@ -4277,8 +4287,8 @@ function getUploadPlaceRule(string $place): array {
         $room = trim(str_replace('\\', '/', $room), '/');
         $room = str_starts_with($room, 'uploads/') ? substr($room, 8) : (($room === 'uploads') ? '' : $room);
         $path = ($room === '') ? '' : UPLOADS_DIR.'/'.$room;
-        $err = ($path === '') ? 'Upload configuration is missing' : (is_dir($path) ? '' : 'Upload directory is missing');
-        $keep += ['dir' => ($room === '') ? '' : 'uploads/'.$room, 'store' => $room, 'path' => $path];
+        $err = ($path === '') ? 'Upload configuration is missing' : '';
+        $keep += ['dir' => ($room === '') ? '' : getUploadUrl($room), 'store' => $room, 'path' => $path];
     }
     return $keep + [
         'ok' => $err === '',
@@ -4315,19 +4325,19 @@ function getUploadFolder(string $mod, bool $node = false): string {
 }
 
 # Split the pipe-separated upload configuration of one directory into named rule keys; all twelve are returned even when ok is false, so a caller needing one limit can read it
+# A missing directory is no refusal: the upload service creates the folder of its owner on the first write, and dir is empty for a private owner, see getUploadUrl()
 # The order is the stored one with exactly these twelve fields; a rule written short by hand keeps its guest limit at the user one, because zero there means no limit
 function getUploadRuleData(string $mod): array {
     global $conf;
-    $con = isset($conf['uploads'][$mod]) ? explode('|', (string)$conf['uploads'][$mod]) : [];
+    $con = (isset($conf['uploads'][$mod]) && (string)$conf['uploads'][$mod] !== '') ? explode('|', (string)$conf['uploads'][$mod]) : [];
     $err = '';
     $room = getUploadFolder($mod);
     $path = UPLOADS_DIR.'/'.$room;
     if ($mod === '' || $con === []) $err = 'Upload configuration is missing';
-    elseif (!is_dir($path)) $err = 'Upload directory is missing';
     return [
         'ok' => $err === '',
         'error' => $err,
-        'dir' => 'uploads/'.$room,
+        'dir' => getUploadUrl($room),
         'path' => $path,
         'extensions' => (string)($con[0] ?? ''),
         'maxquota' => (int)($con[1] ?? 0),
@@ -4424,7 +4434,7 @@ function getUploadFileArea(array $rule): FileManager {
 # A module moderator is excused the ownership test alone, which is the same excuse getUploadFileArea() grants for deletion and packing, and never the existence test above it
 function getUploadTakenFile(array $rule, string $take): array {
     $one = getUploadFileArea($rule)->getFileData($take);
-    if ($one === [] || $one['kind'] === 'dir' || $one['url'] === '' || isset(FileManager::getGuardFiles()[$one['name']])) return ['ok' => false, 'error' => 'gone', 'file' => []];
+    if ($one === [] || $one['kind'] === 'dir' || $one['url'] === '') return ['ok' => false, 'error' => 'gone', 'file' => []];
     $mod = (string)$rule['mod'];
     $own = getEditorFileOwner($mod);
     if (!checkUploadModer($mod) && ($own === null || FileManager::getFileOwner($one['name']) !== $own)) return ['ok' => false, 'error' => 'owner', 'file' => []];
@@ -4481,17 +4491,19 @@ function getEditorFileData(array $one, bool $moder = false, string $mod = ''): a
 # Publish one editor submission through the upload service and answer with the editor JSON; rules, naming and quota belong to the service, the adapter only maps its codes
 # Who the stored file belongs to is answered by getEditorFileOwner() alone, so the upload route and the listing route can never disagree about the segment the name carries
 # Every submission is journalled on its own, as the other two routes of the window are: a file that reaches the disk without a record is a file nobody can account for later
+# The file context is built after the write, because the first write creates a missing folder of its owner, and a context over the missing folder would answer nothing
 function addEditorUpload(): void {
     global $admin, $user;
     $rul = getEditorRouteRule();
     $mod = (string)$rul['mod'];
-    $area = getUploadFileArea($rul);
     $own = getEditorFileOwner($mod);
     $who = (string)($user[1] ?? '');
     if ($who === '') $who = (string)($admin[1] ?? '');
     $out = [];
     $bad = [];
-    foreach (getUploadService()->addUploadedFiles($_FILES['file'] ?? [], $rul, (string)$rul['store'], $mod, $own) as $res) {
+    $sent = getUploadService()->addUploadedFiles($_FILES['file'] ?? [], $rul, (string)$rul['store'], $mod, $own);
+    $area = getUploadFileArea($rul);
+    foreach ($sent as $res) {
         $one = $res['ok'] ? $area->getFileData((string)$res['file']) : [];
         Logger::addFile($res['ok'] ? 'notice' : 'warning', 'Editor file operation', [
             'user' => substr($who, 0, 25),
@@ -4525,7 +4537,7 @@ function getEditorFileJson(): void {
     $row = [];
     $used = 0;
     foreach ($area->getFileList('') as $one) {
-        if ($one['kind'] === 'dir' || isset(FileManager::getGuardFiles()[$one['name']])) continue;
+        if ($one['kind'] === 'dir') continue;
         $used += $one['size'];
         if (!$all && ($tok === null || FileManager::getFileOwner($one['name']) !== $tok)) continue;
         $row[] = getEditorFileData($one, $all, $mod);
@@ -4576,98 +4588,6 @@ function setEditorFileRun(string $op): void {
         ]);
     }
     getEditorJson(['ok' => $done > 0, 'done' => $done, 'total' => count($mark), 'error' => ($done > 0) ? '' : ($note ?: _ERROR)]);
-}
-
-# Hand one stored file to the client and end the request there, which is the single file answer of the project and the one place its headers are decided
-# The type comes from server metadata only, and a type outside the closed inline registry is sent as the opaque one and saved, so no active type runs on the site origin
-# The name is reduced to its own last segment and encoded, so a name assembled out of a request carries no separator and can append no header line
-# A cached answer is private and revalidated on every use through its entity tag and date; the file itself is never copied into the cache directory
-# A GET honours one byte range, a malformed or unsatisfiable one gets 416 and several are ignored for the whole file; a HEAD gets the headers of the whole file
-# $start runs once, after the conditions are decided and before the first header leaves, for a whole body or a range from byte zero alone - never for HEAD, 304 or 416
-# The body is read in bounded blocks from the one open handle and the loop stops when the client goes away, so the size of the file never reaches the memory of PHP
-function getFileStream(string $path, string $name, string $mime = 'application/octet-stream', bool $inline = false, bool $cached = false, ?callable $start = null): void {
-    $safe = ['image/gif', 'image/jpeg', 'image/png', 'image/webp', 'image/avif', 'audio/mpeg', 'audio/wav', 'audio/x-wav', 'audio/vnd.wave', 'audio/flac', 'audio/x-flac',
-        'audio/ogg', 'audio/mp4', 'audio/x-m4a', 'audio/webm', 'video/mp4', 'video/webm', 'video/ogg'];
-    $name = rawurlencode(basename(str_replace('\\', '/', $name)));
-    $hand = ($name !== '' && is_file($path) && is_readable($path)) ? fopen($path, 'rb') : false;
-    $stat = $hand ? fstat($hand) : false;
-    if ($stat === false) {
-        if ($hand) fclose($hand);
-        http_response_code(404);
-        exit;
-    }
-    $size = $stat['size'];
-    $mtime = $stat['mtime'];
-    $type = in_array($mime, $safe, true) ? $mime : 'application/octet-stream';
-    $show = $inline && $type !== 'application/octet-stream';
-    $etag = '"'.substr(sha1((realpath($path) ?: $path).'|'.$size.'|'.$mtime), 0, 32).'"';
-    $head = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'HEAD';
-    while (ob_get_level() > 0) ob_end_clean();
-    ini_set('zlib.output_compression', '0');
-    if ($cached) {
-        Cache::setHeaders('private', $type, $mtime, $etag);
-        if (Cache::checkNotModified($mtime, $etag)) {
-            fclose($hand);
-            exit;
-        }
-    } else {
-        Cache::setHeaders('none', $type);
-        header('Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0, no-transform');
-    }
-    $from = 0;
-    $last = $size - 1;
-    $want = $head ? '' : trim((string)($_SERVER['HTTP_RANGE'] ?? ''));
-    $cond = trim((string)($_SERVER['HTTP_IF_RANGE'] ?? ''));
-    if ($want !== '' && $cond !== '' && $cond !== $etag && $cond !== gmdate('D, d M Y H:i:s', $mtime).' GMT') $want = '';
-    if ($want !== '' && preg_match('#^bytes\s*=#i', $want)) {
-        $sets = array_map('trim', explode(',', preg_replace('#^bytes\s*=#i', '', $want)));
-        $bad = false;
-        foreach ($sets as $one) if (!preg_match('#^(?:\d+-\d*|-\d+)$#D', $one)) $bad = true;
-        if (!$bad && count($sets) === 1) {
-            [$lo, $hi] = explode('-', $sets[0]);
-            if ($lo === '') {
-                $from = max(0, $size - intval($hi));
-                $bad = intval($hi) === 0 || $size === 0;
-            } else {
-                $from = intval($lo);
-                if ($hi !== '') $last = min($last, intval($hi));
-                $bad = $from >= $size || ($hi !== '' && intval($hi) < $from);
-            }
-        }
-        if ($bad) {
-            fclose($hand);
-            header('Content-Range: bytes */'.$size);
-            http_response_code(416);
-            exit;
-        }
-        if (count($sets) > 1) {
-            $from = 0;
-            $last = $size - 1;
-        } else {
-            http_response_code(206);
-            header('Content-Range: bytes '.$from.'-'.$last.'/'.$size);
-        }
-    }
-    header('Accept-Ranges: bytes');
-    header('Content-Disposition: '.($show ? 'inline' : 'attachment').'; filename="'.$name.'"; filename*=UTF-8\'\''.$name);
-    header('Content-Length: '.max(0, $last - $from + 1));
-    if ($head) {
-        fclose($hand);
-        exit;
-    }
-    if ($start !== null && $from === 0) $start();
-    set_time_limit(0);
-    if ($from > 0) fseek($hand, $from);
-    $left = $last - $from + 1;
-    while ($left > 0 && !feof($hand) && !connection_aborted()) {
-        $part = fread($hand, min(65536, $left));
-        if ($part === false || $part === '') break;
-        echo $part;
-        flush();
-        $left -= strlen($part);
-    }
-    fclose($hand);
-    exit;
 }
 
 # The letter navigation of a list: digits, the alphabet of the language and the Latin alphabet, every sign unlinked for a module that is no Node type
@@ -4735,7 +4655,7 @@ function ad_status(mixed $link, mixed $id, string $text = ''): string {
         : $tpl->getHtmlFrag('inline-badge', ['title_text' => _DEACT, 'is_status_inactive' => true, 'label' => '']);
 }
 
-# Returns the path of an image inside the active theme images directory
+# Returns the address of an image inside the active theme images directory, relative to the document root; a file check prefixes PUBLIC_DIR
 function getThemeImagePath(string $img): string {
     static $base;
     if (!$base) $base = 'templates/'.getTheme().'/images/';
@@ -5170,14 +5090,14 @@ function analyze_name(mixed $name): string {
     return $name;
 }
 
-# Log files report
+# Log files report: walk one directory below BASE_DIR and record every readable file under its key ./<path relative to BASE_DIR>, whatever the working directory is
 function create_dump(string $dir, array &$log, array $skip = []): void {
     if (is_dir($dir)) {
         if ($dh = opendir($dir)) {
             while (($file = readdir($dh)) !== false) {
                 if ($file == '.' || $file == '..') continue;
                 $location = $dir.$file;
-                $relative = ltrim(str_replace('\\', '/', $location), './');
+                $relative = substr(str_replace('\\', '/', $location), strlen(BASE_DIR) + 1);
                 $ignore = false;
                 foreach ($skip as $path) {
                     $path = trim(str_replace('\\', '/', (string)$path), '/');
@@ -5191,7 +5111,7 @@ function create_dump(string $dir, array &$log, array $skip = []): void {
                 if (filetype($location) == 'dir') {
                     create_dump($location.'/', $log, $skip);
                 } else {
-                    if (is_readable($location)) $log[$location] = md5_file($location);
+                    if (is_readable($location)) $log['./'.$relative] = md5_file($location);
                 }
             }
             closedir($dh);
@@ -5303,7 +5223,7 @@ function addFilescanTask(): array {
         $skip[] = $line;
     }
     $skip = array_values(array_unique($skip));
-    create_dump('./', $dump, $skip);
+    create_dump(BASE_DIR.'/', $dump, $skip);
     $dumpp = LOGS_DIR.'/dump.log';
     $logpp = LOGS_DIR.'/dump_log.log';
     if (file_exists($dumpp) && filesize($dumpp) != 0) {

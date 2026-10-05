@@ -238,7 +238,7 @@ final class NodeSupportTest extends TestCase
         $body = substr($com, $from, strpos($com, "\n    }\n", $from) - $from);
         $this->assertLessThan(strpos($body, 'INSERT INTO'), strpos($body, '$this->setNodeLock('), 'addComment inserts before it locks the material');
         $this->assertStringContainsString('LOCK IN SHARE MODE', $com, 'The live counter is not read with a locking read');
-        $this->assertFileExists($root.'/templates/lite/partials/node/support/view.html');
-        $this->assertFileExists($root.'/templates/lite/fragments/node/support/card.html');
+        $this->assertFileExists($root.'/public/templates/lite/partials/node/support/view.html');
+        $this->assertFileExists($root.'/public/templates/lite/fragments/node/support/card.html');
     }
 }

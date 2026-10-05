@@ -11,10 +11,10 @@ if (!defined('BLOCK_FILE')) {
 
 global $tpl;
 $path = getThemeImagePath('banners/random');
-$dir = opendir($path);
+$dir = opendir(PUBLIC_DIR.'/'.$path);
 $ban = [];
 while (false !== ($file = readdir($dir))) {
-    if ($file != '.' && $file != '..' && $file != 'index.html' && !is_dir($path.'/'.$file)) $ban[] = $file;
+    if ($file != '.' && $file != '..' && $file != 'index.html' && !is_dir(PUBLIC_DIR.'/'.$path.'/'.$file)) $ban[] = $file;
 }
 closedir($dir);
 $i = mt_rand(0, count($ban) - 1);

@@ -19,7 +19,7 @@ final class TreeWalkTest extends TestCase
     {
         require_once dirname(__DIR__, 2).'/tools/ui-audit.php';
         self::$root = str_replace('\\', '/', dirname(__DIR__, 2));
-        self::$path = self::$root.'/templates/scratch-'.substr(sha1('walk'.getmypid().microtime(true)), 0, 8);
+        self::$path = self::$root.'/public/templates/scratch-'.substr(sha1('walk'.getmypid().microtime(true)), 0, 8);
         mkdir(self::$path.'/fragments', 0777, true);
         file_put_contents(self::$path.'/fragments/walk.html', '<div class="sl-walk-probe"></div>');
     }
@@ -37,13 +37,13 @@ final class TreeWalkTest extends TestCase
     public function aScratchThemeAndStorageAreNeverWalked(): void
     {
         $seen = [];
-        foreach ([self::$root, self::$root.'/templates'] as $dir) {
+        foreach ([self::$root, self::$root.'/public/templates'] as $dir) {
             foreach (getTreeFiles($dir) as $item) $seen[] = str_replace('\\', '/', $item->getPathname());
         }
-        $this->assertContains(self::$root.'/templates/lite/assets/css/base.css', $seen, 'The walk lost a real theme');
+        $this->assertContains(self::$root.'/public/templates/lite/assets/css/base.css', $seen, 'The walk lost a real theme');
         $this->assertSame([], preg_grep('#/templates/scratch-[0-9a-f]{8}/#', $seen), 'The walk entered a scratch theme');
         $this->assertSame([], preg_grep('#^'.preg_quote(self::$root, '#').'/storage/#', $seen), 'The walk entered storage');
-        $this->assertSame([], preg_grep('#^templates/scratch-#', getRepoFiles(['html'], ['templates'])), 'The UI audit lists a scratch theme');
+        $this->assertSame([], preg_grep('#^public/templates/scratch-#', getRepoFiles(['html'], ['public/templates'])), 'The UI audit lists a scratch theme');
     }
 
     # A scratch theme removed while the walk is under way is no error, because the walk never held it
@@ -51,7 +51,7 @@ final class TreeWalkTest extends TestCase
     public function aScratchThemeRemovedMidWalkIsNoError(): void
     {
         $seen = 0;
-        foreach (getTreeFiles(self::$root.'/templates') as $item) {
+        foreach (getTreeFiles(self::$root.'/public/templates') as $item) {
             if ($seen++ === 0) self::tearDownAfterClass();
         }
         $this->assertGreaterThan(1, $seen, 'The walk stopped after the removal');
@@ -62,9 +62,9 @@ final class TreeWalkTest extends TestCase
     #[Test]
     public function aThemeListingSkipsTheScratchTheme(): void
     {
-        $this->assertTrue(isTreeSkipped(self::$root.'/templates/scratch-0123abcd'));
+        $this->assertTrue(isTreeSkipped(self::$root.'/public/templates/scratch-0123abcd'));
         $this->assertTrue(isTreeSkipped(str_replace('/', '\\', self::$root).'\\storage\\cache'));
-        $this->assertFalse(isTreeSkipped(self::$root.'/templates/lite'));
-        $this->assertFalse(isTreeSkipped(self::$root.'/templates/scratch-notours'));
+        $this->assertFalse(isTreeSkipped(self::$root.'/public/templates/lite'));
+        $this->assertFalse(isTreeSkipped(self::$root.'/public/templates/scratch-notours'));
     }
 }

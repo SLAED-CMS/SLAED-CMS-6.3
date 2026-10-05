@@ -202,7 +202,7 @@ final class FieldViewTest extends TestCase
     public function theOwnersUseTheSharedHelpersAlone(): void
     {
         $root = dirname(__DIR__, 2);
-        foreach (['admin', 'blocks', 'core', 'modules', 'plugins'] as $dir) {
+        foreach (['admin', 'blocks', 'core', 'modules', 'public/plugins'] as $dir) {
             $walk = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root.'/'.$dir, \FilesystemIterator::SKIP_DOTS));
             foreach ($walk as $file) {
                 if ($file->getExtension() !== 'php') continue;

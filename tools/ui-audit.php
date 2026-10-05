@@ -7,7 +7,7 @@
 # The theme audit measures what `.rules/theme.md` demands and `tools/ui-contract.php` declares
 # It is the authority over every number written about the themes, including in docs/TEMPLATES.md
 # Usage: php tools/ui-audit.php --theme=admin [--count|--bare|--dist=padding|--dup|--names|--ramp|--cross|--markup]
-# Usage: php tools/ui-audit.php --file=templates/admin/assets/css/theme.css --migrating
+# Usage: php tools/ui-audit.php --file=public/templates/admin/assets/css/theme.css --migrating
 # Usage: php tools/ui-audit.php --store rewrites tools/ui-audit-baseline.json from the current tree
 
 const UI_ROOT = __DIR__.'/..';
@@ -858,7 +858,7 @@ function checkClassUse(array $model): array {
         if (preg_match_all('/\.(sl-[a-z0-9-]+)/i', $rule['sel'], $hits)) foreach ($hits[1] as $item) $seen[$item] = true;
     }
     $text = '';
-    foreach (getRepoFiles(['html', 'php', 'js', 'json'], ['templates', 'admin', 'core', 'modules', 'plugins', 'config']) as $path) $text .= getFileText($path)."\n";
+    foreach (getRepoFiles(['html', 'php', 'js', 'json'], ['public/templates', 'admin', 'core', 'modules', 'public/plugins', 'config']) as $path) $text .= getFileText($path)."\n";
     $out = ['unused' => [], 'composed' => []];
     foreach (array_keys($seen) as $item) {
         if (isClassUsed($item, $text)) continue;
@@ -991,7 +991,7 @@ function getOpenForks(array $data): array {
 function checkPhpMarkup(): array {
     $cont = getContract();
     $out = [];
-    foreach (getRepoFiles(['php'], ['admin', 'core', 'modules', 'plugins']) as $path) {
+    foreach (getRepoFiles(['php'], ['admin', 'core', 'modules', 'public/plugins']) as $path) {
         $skip = false;
         foreach (array_keys($cont['markup']['exclude']) as $item) if (str_contains($path, $item)) $skip = true;
         if ($skip) continue;

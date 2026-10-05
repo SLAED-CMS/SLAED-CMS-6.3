@@ -43,11 +43,13 @@ pipeline in the current codebase.
 ### Frontend
 
 File:
-- `index.php`
+- `public/index.php`, the front controller in the document root
 
 Role:
-- defines `MODULE_FILE`
-- defines `BASE_DIR`
+- defines `BASE_DIR` (the folder above it, the project) and `PUBLIC_DIR` (its own folder) unless a test or a tool
+  defined them first
+- defines `MODULE_FILE`, loads `core/stream.php` and answers a request under `uploads/` there through the light
+  path, before the core boots
 - loads `core/system.php`
 - reads `go`, `name`, `op`, and `file` through `getVar()`
 - routes normal page requests to `modules/<name>/<file>.php`
@@ -109,11 +111,11 @@ Frontend helper routing includes:
 ### Admin
 
 Files:
-- `admin.php`
+- `public/admin.php`, the short entry the installer and the security section rename to the panel name
 - `admin/index.php`
 
 Role:
-- `admin.php` defines `ADMIN_FILE`, defines `BASE_DIR`, and loads
+- `public/admin.php` defines `ADMIN_FILE`, `BASE_DIR` and `PUBLIC_DIR`, and loads
   `admin/index.php`
 - `admin/index.php` loads `core/system.php`
 - admin language and access checks are performed before admin routing
@@ -157,7 +159,7 @@ Role:
   dashboard of the panel.
 
 Boot:
-- every request defines `SETUP_FILE`, `BASE_DIR`, `CONFIG_DIR`, `BACKUP_DIR` and
+- the installer is `public/setup.php`; every request defines `SETUP_FILE`, `BASE_DIR`, `PUBLIC_DIR`, `CONFIG_DIR`, `BACKUP_DIR` and
   `LOGS_DIR`, reads `config/global.php` and `config/security.php`, loads
   `core/admin.php` (`getSqlbatch()`, `getSqlinfo()`, `addNodeProfiles()`), starts
   the session, then defines `FUNC_FILE` and loads `filemanager`, `logger`, `pdo`,
@@ -556,11 +558,14 @@ Runtime-generated files are stored under:
 - `storage/backup/`
 
 `storage/update/sql/` is source, not runtime data: the schema `table.sql`, the
-seed `insert.sql` and the 6.2 update `table_update6_3.sql`. `storage/.htaccess`
-keeps all of `storage/` from the web.
+seed `insert.sql` and the 6.2 update `table_update6_3.sql`. `storage/` lies outside
+the document root `public/`, so the web never reaches it.
 
 Uploads are stored under:
-- `uploads/`
+- `uploads/`, at the project level and outside the document root. A file of a public
+  folder (`getUploadPublic()` in `core/stream.php`) is served at `uploads/<folder>/<name>`
+  by the light path of `index.php` before the core boots; any other folder only by the
+  route of its owner. `getUploadUrl()` answers the address, `getFileStream()` sends every byte.
 
 Do not treat generated storage contents as source files. Documentation and tests
 should describe the directories and contracts, not specific generated artifacts.
@@ -570,7 +575,7 @@ should describe the directories and contracts, not specific generated artifacts.
 Theme-local assets belong under each theme:
 
 ```text
-templates/<theme>/assets/
+public/templates/<theme>/assets/
 ```
 
 The current runtime discovers theme assets and can inject companion assets for

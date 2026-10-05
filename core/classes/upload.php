@@ -119,7 +119,7 @@ class Upload {
         $info = $this->getImageBounds($tmp, $ext, $rule);
         if ($info['error'] !== '') return $this->getFailResult($info['error']);
         $rel = $this->getSafeDir($dir);
-        $canon = ($rel === '') ? '' : $this->getDestPath($rel);
+        $canon = ($rel === '') ? '' : $this->getDestPath($rel, true);
         if ($canon === '') return $this->getFailResult('destination');
         $part = $this->getPartPath($canon);
         if (!$this->addSourceFile($tmp, $part)) {
@@ -150,7 +150,7 @@ class Upload {
             return $this->getFailResult('unsupported');
         }
         $rel = $this->getSafeDir($dir);
-        $canon = ($rel === '') ? '' : $this->getDestPath($rel);
+        $canon = ($rel === '') ? '' : $this->getDestPath($rel, true);
         if ($canon === '') return $this->getFailResult('destination');
         $part = $this->getPartPath($canon);
         $res = $this->addRemoteFetch($url, $part, (int)($rule['maxbytes'] ?? 0));
@@ -1147,13 +1147,20 @@ class Upload {
     }
 
     # Resolves one normalized directory to its canonical path and proves it is a writable directory strictly below the upload root, which is what closes symlink escapes
-    private function getDestPath(string $dir): string {
-        $path = realpath($this->root.'/'.$dir);
+    # A write creates a missing folder of its owner segment by segment, each one proven below the root before the next is made, so a link never leads a mkdir out of the root
+    private function getDestPath(string $dir, bool $make = false): string {
         $root = realpath($this->root);
-        if ($path === false || $root === false) return '';
-        $path = str_replace('\\', '/', $path);
-        $root = str_replace('\\', '/', $root);
-        if (!str_starts_with($path, rtrim($root, '/').'/')) return '';
+        if ($root === false) return '';
+        $root = rtrim(str_replace('\\', '/', $root), '/');
+        $path = $root;
+        foreach (explode('/', $dir) as $one) {
+            $next = $path.'/'.$one;
+            if ($make && !file_exists($next) && !is_link($next) && !mkdir($next, 0755) && !is_dir($next)) return '';
+            $real = realpath($next);
+            if ($real === false) return '';
+            $path = str_replace('\\', '/', $real);
+            if (!str_starts_with($path, $root.'/')) return '';
+        }
         return is_dir($path) && is_writable($path) ? $path : '';
     }
 
@@ -1227,12 +1234,12 @@ class Upload {
         return str_starts_with($file, '.upload-') && str_ends_with($file, '.part');
     }
 
-    # Sums the published bytes of one destination in constant memory; partials and the directory sentinels are never counted
+    # Sums the published bytes of one destination in constant memory; partials are never counted
     private function getUsedBytes(string $canon): int {
         $sum = 0;
         foreach (scandir($canon) ?: [] as $file) {
             $path = $canon.'/'.$file;
-            if ($file === '.' || $file === '..' || isset(FileManager::getGuardFiles()[$file])) continue;
+            if ($file === '.' || $file === '..') continue;
             if ($this->checkPartName($file) || !is_file($path)) continue;
             $sum += max(0, (int)filesize($path));
         }

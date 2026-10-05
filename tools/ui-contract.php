@@ -19,19 +19,19 @@ return [
     # Theme packages the audit walks. `api` is the file holding the :root block above the marker
     'themes' => [
         'admin' => [
-            'root' => 'templates/admin',
-            'api' => 'templates/admin/assets/css/base.css',
-            'css' => ['templates/admin/assets/css/base.css', 'templates/admin/assets/css/theme.css', 'templates/admin/assets/editors/toastui/skin.css'],
+            'root' => 'public/templates/admin',
+            'api' => 'public/templates/admin/assets/css/base.css',
+            'css' => ['public/templates/admin/assets/css/base.css', 'public/templates/admin/assets/css/theme.css', 'public/templates/admin/assets/editors/toastui/skin.css'],
             'kind' => 'admin',
         ],
         'lite' => [
-            'root' => 'templates/lite',
-            'api' => 'templates/lite/assets/css/base.css',
+            'root' => 'public/templates/lite',
+            'api' => 'public/templates/lite/assets/css/base.css',
             # The file presentation.css dresses the one page of the presentation module and lands between base and theme, because the runtime bundles the directory by name
             # The audit walks a list instead, so the file is named here or it is bundled and never checked
             'css' => [
-                'templates/lite/assets/css/base.css', 'templates/lite/assets/css/presentation.css',
-                'templates/lite/assets/css/theme.css', 'templates/lite/assets/editors/toastui/skin.css',
+                'public/templates/lite/assets/css/base.css', 'public/templates/lite/assets/css/presentation.css',
+                'public/templates/lite/assets/css/theme.css', 'public/templates/lite/assets/editors/toastui/skin.css',
             ],
             'kind' => 'frontend',
         ],
@@ -258,33 +258,33 @@ return [
 
     # Names read by JavaScript through getComputedStyle. Renaming one edits the script in the same commit
     'js' => [
-        '--sl-size-chip' => 'plugins/system/slaed.js, drives speed dial geometry',
-        '--sl-primary' => 'plugins/presentation/presentation.js, paints the visits of the rhythm chart',
-        '--sl-accent' => 'plugins/presentation/presentation.js, paints the hosts of the rhythm chart',
-        '--sl-text-muted' => 'plugins/presentation/presentation.js, paints the axis labels of the rhythm chart',
-        '--sl-border' => 'plugins/presentation/presentation.js, paints the grid of the rhythm chart',
-        '--sl-font-micro' => 'plugins/presentation/presentation.js, sizes the axis labels of the rhythm chart',
+        '--sl-size-chip' => 'public/plugins/system/slaed.js, drives speed dial geometry',
+        '--sl-primary' => 'public/plugins/presentation/presentation.js, paints the visits of the rhythm chart',
+        '--sl-accent' => 'public/plugins/presentation/presentation.js, paints the hosts of the rhythm chart',
+        '--sl-text-muted' => 'public/plugins/presentation/presentation.js, paints the axis labels of the rhythm chart',
+        '--sl-border' => 'public/plugins/presentation/presentation.js, paints the grid of the rhythm chart',
+        '--sl-font-micro' => 'public/plugins/presentation/presentation.js, sizes the axis labels of the rhythm chart',
     ],
 
     # Files outside the theme packages that declare or read theme token names
     'places' => [
-        'templates/lite/fragments/comment.html',
-        'templates/lite/partials/account-home.html',
-        'templates/lite/partials/account-profile.html',
-        'templates/lite/partials/account-settings.html',
-        'templates/lite/partials/block-user-info.html',
-        'templates/lite/partials/session-summary.html',
-        'templates/lite/partials/presentation-hero.html',
-        'templates/lite/partials/presentation-stats.html',
-        'templates/lite/fragments/presentation-ring.html',
-        'templates/lite/fragments/presentation-stat.html',
+        'public/templates/lite/fragments/comment.html',
+        'public/templates/lite/partials/account-home.html',
+        'public/templates/lite/partials/account-profile.html',
+        'public/templates/lite/partials/account-settings.html',
+        'public/templates/lite/partials/block-user-info.html',
+        'public/templates/lite/partials/session-summary.html',
+        'public/templates/lite/partials/presentation-hero.html',
+        'public/templates/lite/partials/presentation-stats.html',
+        'public/templates/lite/fragments/presentation-ring.html',
+        'public/templates/lite/fragments/presentation-stat.html',
         'admin/modules/monitor.php',
         'admin/modules/admins.php',
-        'plugins/system/slaed.js',
-        'plugins/system/filemanager.js',
-        'plugins/presentation/presentation.js',
+        'public/plugins/system/slaed.js',
+        'public/plugins/system/filemanager.js',
+        'public/plugins/presentation/presentation.js',
         'tests/Unit/EditorWindowTest.php',
-        'error.html',
+        'public/error.html',
     ],
 
     # Colour ramp, derived by `--ramp` from the real distribution and never invented

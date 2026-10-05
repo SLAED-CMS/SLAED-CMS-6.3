@@ -32,7 +32,7 @@ function getUploadsSearch(string $mod): string {
     foreach (getUploadsFolders() as $file) {
         $opts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => $file,
-            'label_text' => 'uploads/'.$file,
+            'label_text' => getUploadUrl($file) ?: $file,
             'is_selected' => $mod === $file,
         ]);
     }
@@ -354,7 +354,7 @@ function config(): void {
         $name = basename($file);
         $directory .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => $name,
-            'label_text' => 'uploads/'.$file,
+            'label_text' => getUploadUrl($file) ?: $file,
             'is_selected' => $conf['uploads']['dir'] == $name,
         ]);
     }

@@ -316,14 +316,14 @@ final class FileManagerEditTest extends TestCase
         $note = 'The editor does not name its widget, so the guard cannot find the document';
         $this->assertStringContainsString('data-sl-fm-code=', $part, $note);
         $this->assertStringContainsString('_UPLOADS_LEAVE', $this->getFile('core/admin.php'), 'The question of the guard is not taken from a language constant');
-        $js = $this->getFile('templates/admin/assets/js/admin-ui.js');
+        $js = $this->getFile('public/templates/admin/assets/js/admin-ui.js');
         foreach (['htmx:confirm', 'beforeunload', 'setConfirmTask', 'fmfree'] as $mark) {
             $this->assertStringContainsString($mark, $js, 'The guard of the editor misses '.$mark);
         }
         $only = 'The guard answers every request of the page, so refreshing a panel of its own asks about leaving an editor it does not touch';
         $this->assertStringContainsString("from.closest('#slfmbody, .sl-fm-bar')", $js, $only);
         $task = 'window.setConfirmTask = function (text, run)';
-        $this->assertStringContainsString($task, $this->getFile('plugins/system/slaed.js'), 'The shared confirm protocol takes no task of a caller');
+        $this->assertStringContainsString($task, $this->getFile('public/plugins/system/slaed.js'), 'The shared confirm protocol takes no task of a caller');
     }
 
     # Every save leaves one journal entry naming the administrator, the operation, the path and the result, and the content of the file never travels into it

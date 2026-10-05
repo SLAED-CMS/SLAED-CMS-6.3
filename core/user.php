@@ -58,7 +58,7 @@ function getCommentView(array $val, int $numb, string $token): string {
     $agnam = (string)($usr['gname'] ?? '');
     $trank = (!empty($agnam)) ? _GROUP.': '.$agnam : _RANK;
     $rimg = (!empty($usr['grank'])) ? getThemeImagePath('ranks/'.$usr['grank']) : '';
-    $rlink = ($rimg && file_exists($rimg)) ? $tpl->getHtmlFrag('image', ['src' => $rimg, 'alt' => $trank, 'title' => $trank]) : '';
+    $rlink = ($rimg && file_exists(PUBLIC_DIR.'/'.$rimg)) ? $tpl->getHtmlFrag('image', ['src' => $rimg, 'alt' => $trank, 'title' => $trank]) : '';
     $rate = $auid ? getRatingAsync(0, $auid, 'account', $usr['votes'] ?? 0, $usr['tvotes'] ?? 0, $cmid, 1) : '';
     $utip = getUserTip(
         $agnam,
@@ -441,14 +441,18 @@ function getUserInfo(): array {
 }
 
 # Resolve the avatar URL for a user record; system avatars (user/guest/deleted) and presets come from the active theme, uploaded files from the avatar upload directory
+# The avatar folder is named relative to UPLOADS_DIR, a leading uploads/ of a stored value dropped, and its address is the one of getUploadUrl(), as for every public owner
 function getUserAvatarUrl(array $userinfo = [], bool $deleted = false): string {
     global $conf;
     $base = 'templates/'.getTheme().'/images/avatars/';
     if ($deleted) return $base.'system/deleted.svg';
     if (!$userinfo) return $base.'system/guest.svg';
     $ava = $userinfo['avatar'] ?? '';
-    if (str_starts_with($ava, 'presets/')) return (preg_match('#^presets/[\w.-]+\.(gif|png|jpe?g|svg)$#i', $ava) && file_exists($base.$ava)) ? $base.$ava : $base.'system/user.svg';
-    return ($ava && file_exists($conf['users']['adirectory'].'/'.$ava)) ? $conf['users']['adirectory'].'/'.$ava : $base.'system/user.svg';
+    $preset = preg_match('#^presets/[\w.-]+\.(gif|png|jpe?g|svg)$#i', $ava) && file_exists(PUBLIC_DIR.'/'.$base.$ava);
+    if (str_starts_with($ava, 'presets/')) return $preset ? $base.$ava : $base.'system/user.svg';
+    $room = preg_replace('#^uploads(?:/|$)#', '', trim(str_replace('\\', '/', (string)($conf['users']['adirectory'] ?? '')), '/'));
+    $href = ($ava !== '' && $room !== '' && is_file(UPLOADS_DIR.'/'.$room.'/'.$ava)) ? getUploadUrl($room.'/'.$ava) : '';
+    return ($href !== '') ? $href : $base.'system/user.svg';
 }
 
 # Resolve point-level data for a user: reached point groups, ring color, progress percent and next-group hint; group color/rank override the point-group ones
@@ -1672,7 +1676,7 @@ function getOpenSearch() {
     .'<Url type="application/atom+xml" template="'.$find."\"/>\n"
     .'<Url type="application/rss+xml" template="'.$find."\"/>\n"
     .'<Url type="text/html" template="'.$find."\"/>\n"
-    .(is_file(BASE_DIR.'/templates/'.$conf['theme'].'/images/favicon.svg')
+    .(is_file(PUBLIC_DIR.'/templates/'.$conf['theme'].'/images/favicon.svg')
         ? '<Image height="16" width="16" type="image/svg+xml">'.htmlspecialchars($conf['homeurl'].'/templates/'.$conf['theme'].'/images/favicon.svg')."</Image>\n"
         : '')
     .'<Attribution>Copyright (c) SLAED CMS '.$conf['version']."</Attribution>\n"

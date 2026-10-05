@@ -4,7 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
-if (!defined('ADMIN_FILE')) die('Illegal file access');
+if (!defined('ADMIN_FILE') || !defined('PUBLIC_DIR')) die('Illegal file access');
 require_once BASE_DIR.'/core/system.php';
 getLang('admin');
 Cache::setHeaders();
@@ -97,7 +97,7 @@ function getAdminPanel(): void {
     $content = '';
     $minver = '8.1.0';
     $info = sprintf(_PHPSETUP, $minver);
-    if (file_exists('setup.php')) $content .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _DELSETUP]);
+    if (file_exists(PUBLIC_DIR.'/setup.php')) $content .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _DELSETUP]);
     if (PHP_VERSION < $minver) $content .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $info]);
     if ($conf['admininfo']) $content .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $conf['admininfo']]);
     if ($panel) {
@@ -340,7 +340,7 @@ function getAdminLoginForm(): void {
 
 function isValidEditor(string $key, string $role): bool {
     if ($key === '') return false;
-    $path = BASE_DIR.'/plugins/editors/'.$key.'/manifest.json';
+    $path = PUBLIC_DIR.'/plugins/editors/'.$key.'/manifest.json';
     if (!is_file($path)) return false;
     $json = file_get_contents($path);
     if ($json === false || $json === '') return false;

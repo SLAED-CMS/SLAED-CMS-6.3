@@ -32,8 +32,8 @@ git clone https://github.com/SLAED-CMS/SLAED-CMS-6.3.git
 
 # 2. Create an empty database
 
-# 3. Open the installer in the browser
-http://localhost/slaed-cms/setup.php
+# 3. Point the document root at public/ and open the installer in the browser
+http://localhost/setup.php
 ```
 
 > [!WARNING]
@@ -60,15 +60,54 @@ http://localhost/slaed-cms/setup.php
 ### Manual Installation
 
 1. Download or clone the repository.
-2. Extract files into the web root.
+2. Upload the project and point the document root of the site at its folder `public/`, see
+   [Document Root and Web Server](#document-root-and-web-server).
 3. Create an empty database on MariaDB 10.5.2+ or MySQL 8.0.16+.
 4. Open `http://yoursite.com/setup.php` and walk its stops: language, server checks, database, site, administrator.
+   The server checks show the mode of the document root the installer found.
 5. Press **Install**. The installer writes the configuration, creates the tables, the first administrator and the
    content types, names the address of the panel and deletes itself.
 
 The installer creates the tables from `storage/update/sql/table.sql` and `storage/update/sql/insert.sql`. Both carry
 the placeholders `{prefix}`, `{engine}`, `{charset}` and `{collate}`, so neither can be imported by hand. A site of
 an older release is not updated by this release, see [UPGRADING.md](UPGRADING.md).
+
+### Document Root and Web Server
+
+The browser may reach the folder `public/` and nothing else. It holds the entries (`index.php`, `admin.php`,
+`setup.php`, `update.php`), `.htaccess`, `robots.txt`, `error.html`, the sitemap files, `templates/`, `plugins/` and
+`sound/`. Everything else stays outside: the code in `core/`, `modules/`, `admin/`, the settings in `config/`, the
+logs and database backups in `storage/`, and every uploaded file in `uploads/`. The public files of `uploads/`
+(avatars, the forum, `all/` and the other open folders) are still served at `/uploads/...` by `index.php`; the files
+of a content type only through their checked route.
+
+The installer records the mode it found as `webroot` in `config/global.php`: `public` when the document root is
+`public/`, `project` when it is the whole project.
+
+**Root on `public/` (recommended, any server).** Point the document root of the domain at `<project>/public`.
+
+- Apache and LiteSpeed need nothing more than `AllowOverride All` and `mod_rewrite`: `public/.htaccess` carries the rules.
+- nginx does not read `.htaccess`. The project ships `nginx.conf.example`: copy its `server` block and adjust
+  `server_name`, `root` and `fastcgi_pass`. It sets the root on `public/`, sends `/uploads/` and every missing path to
+  `index.php`, refuses the PHP and the markup of the themes and routes the error pages; `tests/Unit/NginxConfigTest.php`
+  keeps it in step with `public/.htaccess`.
+
+**Shared hosting.** Pick the first variant the hosting allows:
+
+1. *The panel lets you set the document root* (Beget, Timeweb, ISPmanager, Plesk, cPanel for addon domains and
+   subdomains): upload the project, for example to `slaed/`, and set the document root of the domain to `slaed/public`.
+2. *The document root is fixed* (`public_html`, `www`) *and the server is Apache or LiteSpeed*: upload the whole project
+   into it. The `.htaccess` of the project sends every request into `public/`, so `/config/db.php` or `/storage/...`
+   answer 404. Without `mod_rewrite` that file refuses every request: the site does not open, and nothing private does
+   either. The installer reports this mode as a warning row.
+3. *The document root is fixed, and its parent folder is yours* (the classic cPanel layout `/home/<user>/public_html`):
+   upload the project into the parent folder and use the content of `public/` as `public_html` itself, so `core/`,
+   `config/`, `storage/` and `uploads/` lie beside `public_html` and never under it. The entries find the project as the
+   parent of their own folder, so the folder may carry any name.
+
+> [!WARNING]
+> A server that reads no `.htaccess` (nginx, or IIS) with the document root on the whole project serves the logs, the
+> backups and the closed upload folders to anyone. On such a host only the root on `public/` is safe.
 
 ### Permissions
 
@@ -179,16 +218,21 @@ slaed-cms/
 ├── docs/                  # Architectural documentation and guidelines
 ├── lang/                  # Main language files
 ├── modules/               # Frontend modules
-├── plugins/               # Bundled JS/editor/plugin assets
-├── sound/                 # Bundled sound assets
+├── public/                # The document root: the only part a browser reaches
+│   ├── plugins/           # Bundled JS/editor/plugin assets
+│   ├── sound/             # Bundled sound assets
+│   ├── templates/         # Themes and template trees
+│   ├── .htaccess          # Rewrite rules of the document root
+│   ├── admin.php          # Admin entry point, runs admin/index.php
+│   ├── index.php          # Frontend entry point, the light path of uploads included
+│   ├── setup.php          # Installation entry point
+│   └── update.php         # Data update of a 6.2 site
 ├── storage/               # Runtime-generated cache, logs, counters, GeoIP, sitemap, backups
-├── templates/             # Themes and template trees
 ├── tests/                 # PHPUnit and validation tests
 ├── tools/                 # Audit, gate and capture scripts run from the project root
-├── uploads/               # Uploaded files
-├── admin.php              # Admin entry point
-├── index.php              # Frontend entry point
-└── setup.php              # Installation entry point
+├── uploads/               # Uploaded files, outside the document root; public folders through the light path
+├── .htaccess              # Rewrites every request into public/ when the document root is the project
+└── nginx.conf.example     # Server block for nginx, kept in step with public/.htaccess by a test
 ```
 
 ---

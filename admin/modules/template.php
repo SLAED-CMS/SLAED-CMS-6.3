@@ -21,7 +21,7 @@ function getTemplateFiles(string $dir, string $ext): array {
 
 function getTemplateHtmlFiles(string $templ): array {
     $dirs = [];
-    $base = BASE_DIR.'/templates/'.$templ;
+    $base = PUBLIC_DIR.'/templates/'.$templ;
     foreach (['fragments', 'partials', 'layouts', 'pages'] as $part) {
         $path = $base.'/'.$part;
         if (is_dir($path)) $dirs[] = $path;
@@ -35,7 +35,7 @@ function getTemplateHtmlFiles(string $templ): array {
 }
 
 function getTemplateCssFiles(string $templ): array {
-    $dir = BASE_DIR.'/templates/'.$templ.'/assets/css';
+    $dir = PUBLIC_DIR.'/templates/'.$templ.'/assets/css';
     return getTemplateFiles($dir, 'css');
 }
 
@@ -50,8 +50,8 @@ function getTemplateTabsOps(string $templ): array {
 function getTemplateSearch(string $templ): string {
     global $afile, $tpl;
     $opts = '';
-    foreach (scandir(BASE_DIR.'/templates') as $file) {
-        if ($file === '.' || $file === '..' || !is_dir(BASE_DIR.'/templates/'.$file)) continue;
+    foreach (scandir(PUBLIC_DIR.'/templates') as $file) {
+        if ($file === '.' || $file === '..' || !is_dir(PUBLIC_DIR.'/templates/'.$file)) continue;
         $opts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => $file,
             'label_text' => $file,
@@ -82,7 +82,7 @@ function getTemplateEditorBlock(string $templ, string $filelink, string $mode, s
         ],
         'rows' => [[
             'label_html' => '',
-            'field_html' => getTplLines([_FILE.': '.$filelink, _DATE.': '.date(_TIMESTRING, filemtime($filelink))]),
+            'field_html' => getTplLines([_FILE.': '.$filelink, _DATE.': '.date(_TIMESTRING, filemtime(PUBLIC_DIR.'/'.$filelink))]),
             'is_full' => true,
         ], [
             'label_html' => '',
@@ -91,7 +91,7 @@ function getTemplateEditorBlock(string $templ, string $filelink, string $mode, s
                 'name' => 'template',
                 'label' => _FILE.': '.$filelink,
                 'lang' => str_ends_with($filelink, '.css') ? 'css' : 'html',
-                'text' => (string)file_get_contents($filelink),
+                'text' => (string)file_get_contents(PUBLIC_DIR.'/'.$filelink),
             ]),
             'is_full' => true,
         ]],
@@ -103,11 +103,11 @@ function getTemplateEditorBlock(string $templ, string $filelink, string $mode, s
 function getTemplateFilePath(string $templ, string $filelink, bool $iscss): string {
     $templ = basename(trim($templ));
     if ($templ === '') return '';
-    $base = BASE_DIR.'/templates/'.$templ;
+    $base = PUBLIC_DIR.'/templates/'.$templ;
     $path = str_replace(['\\', '//'], ['/', '/'], trim($filelink));
     if ($path === '') return '';
     $realbase = realpath($base);
-    $realpath = realpath(BASE_DIR.'/'.$path);
+    $realpath = realpath(PUBLIC_DIR.'/'.$path);
     if ($realbase === false || $realpath === false) return '';
     $realbase = str_replace('\\', '/', $realbase);
     $realpath = str_replace('\\', '/', $realpath);
@@ -129,12 +129,12 @@ function template(): void {
         'tabs' => [_TEMPLATES, _STYLES, _MANUAL],
         'subtitle_html' => getTemplateSearch($templ),
     ]);
-    $dir = BASE_DIR.'/templates/'.$templ;
+    $dir = PUBLIC_DIR.'/templates/'.$templ;
     if (is_dir($dir)) {
         $conts = '';
         $files = getTemplateHtmlFiles($templ);
         foreach ($files as $path) {
-            $rel = str_replace(str_replace('\\', '/', BASE_DIR.'/'), '', $path);
+            $rel = str_replace(str_replace('\\', '/', PUBLIC_DIR.'/'), '', $path);
             $permtest = checkPerms($path);
             if ($permtest) $cont .= $permtest;
             $conts .= getTemplateEditorBlock($templ, $rel, 'text/html', 'save');
@@ -157,12 +157,12 @@ function style(): void {
         'tab' => 1,
         'subtitle_html' => getTemplateSearch($templ),
     ]);
-    $dir = BASE_DIR.'/templates/'.$templ.'/assets/css';
+    $dir = PUBLIC_DIR.'/templates/'.$templ.'/assets/css';
     if (is_dir($dir)) {
         $conts = '';
         $files = getTemplateCssFiles($templ);
         foreach ($files as $path) {
-            $rel = str_replace(str_replace('\\', '/', BASE_DIR.'/'), '', $path);
+            $rel = str_replace(str_replace('\\', '/', PUBLIC_DIR.'/'), '', $path);
             $permtest = checkPerms($path);
             if ($permtest) $cont .= $permtest;
             $conts .= getTemplateEditorBlock($templ, $rel, 'text/css', 'stylesave');

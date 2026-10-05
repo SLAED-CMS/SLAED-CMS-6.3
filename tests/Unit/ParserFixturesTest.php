@@ -549,7 +549,7 @@ namespace Tests\Unit {
         }
 
         # A stored Node material (nid above zero) links the controlled attach route of its type with an encoded key, escaped once for the attribute, and never the closed directory
-        # The thumb gets thumb=1 for the copy that exists, the old call keeps the direct address, and the memory of a request keeps both renderings apart
+        # The thumb gets thumb=1 for the copy that exists, the old call of a private folder gets no direct address, and the memory of a request keeps both renderings apart
         #[Test]
         public function checkAttachOfAStoredMaterialUsesTheControlledRoute(): void
         {
@@ -566,8 +566,7 @@ namespace Tests\Unit {
                 $src = '[attach=my file.pdf align=left title=Doc] [attach=a-abcdefghij-2.png align=left title=A]';
                 $old = self::$p->filterDoc($src, true, $mod);
                 $new = self::$p->filterDoc($src, true, $mod, 0, '', 7);
-                $this->assertStringContainsString('href="uploads/'.$mod.'/my file.pdf"', $old, 'The old call lost its direct address');
-                $this->assertStringContainsString('src="uploads/'.$mod.'/thumb/a-abcdefghij-2.png"', $old);
+                $this->assertStringNotContainsString('uploads/', $old, 'The old call spelled a direct address of a private folder, which only the route of its owner may build');
                 $base = 'index.php?name='.$mod.'&amp;op=attach&amp;id=7&amp;key=';
                 $this->assertStringContainsString('href="'.$base.'my%20file.pdf"', $new);
                 $this->assertStringContainsString('href="'.$base.'a-abcdefghij-2.png"><img src="'.$base.'a-abcdefghij-2.png&amp;thumb=1"', $new);

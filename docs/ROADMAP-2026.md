@@ -48,9 +48,10 @@ into the plan, then do whatever work the step names.
 - [x] 2. FILES batch 0 — *decision*: the open decisions, now recorded under "Decisions", then the inventory.
   (2026-10-05)
 - [x] 3. FILES batch 1 — Node under one root, `uploads/node/<type>/`. (2026-10-05)
-- [ ] 4. PRIVATE-DATA batch 2 — the project out of web reach, the `public/` tree.
+- [x] 4. PRIVATE-DATA batch 2 — the project out of web reach, the `public/` tree, the whole `uploads/` outside it
+  with the light path. Its decisions were taken 2026-10-05 and stand in the plan; the step is the code. (2026-10-05)
 - [ ] 5. PRIVATE-DATA batch 3 — the self-check, `checkTypeGuard()` on it.
-- [ ] 6. PRIVATE-DATA batch 4 — `nginx.conf.example`, `setup_old/` leaves the tree.
+- [ ] 6. PRIVATE-DATA batch 4 — `setup_old/` leaves the tree; `nginx.conf.example` landed with step 4 (2026-10-05).
 - [ ] 7. PROD-FINDINGS item 1 — `.html` and missing uploads answer 410, `/index.php/…` answers 301.
 - [ ] 8. FILES batch 2 — inline attachment.
 - [ ] 9. FILES batch 3 — Node texts off the archive.

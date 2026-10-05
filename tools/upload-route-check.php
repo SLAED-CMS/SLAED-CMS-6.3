@@ -351,7 +351,7 @@ function checkNodeRows(string $ajar, string $gjar): void {
     $guest = getHttpReply($gjar, $path)['code'];
     checkMatrixRow('a guest does not read a file no material binds', $guest !== 200, (string)$guest);
     $raw = getHttpReply($gjar, '/uploads/node/'.$type.'/'.rawurlencode($name))['code'];
-    checkMatrixRow('the web server refuses the directory of the type', $raw === 403, (string)$raw);
+    checkMatrixRow('the light path refuses the directory of the type', in_array($raw, [403, 404], true), (string)$raw);
 }
 
 # A field place permits the listing route alone, and the routes its window never offers are refused by the server rather than by an interface that draws no button

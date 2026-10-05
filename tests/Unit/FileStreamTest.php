@@ -166,14 +166,14 @@ final class FileStreamTest extends TestCase
     #[Test]
     public function theCachedAnswerIsPrivateAndRevalidated(): void
     {
-        $one = $this->getReply('GET', ['f' => 'plain.bin', 'mime' => 'image/png', 'cached' => 1, 'cookie' => 1]);
+        $one = $this->getReply('GET', ['f' => 'plain.bin', 'mime' => 'image/png', 'cache' => 'private', 'cookie' => 1]);
         $this->assertSame('private, no-cache, must-revalidate, no-transform', $this->getHead($one, 'cache-control'));
         $this->assertMatchesRegularExpression('#^"[a-f0-9]{32}"$#', (string)$this->getHead($one, 'etag'));
         $this->assertSame(gmdate('D, d M Y H:i:s', (int)filemtime(self::$work.'/files/plain.bin')).' GMT', $this->getHead($one, 'last-modified'));
         $this->assertSame('probe=1; path=/', $this->getHead($one, 'set-cookie'));
         $this->assertNull($this->getHead($one, 'pragma'));
         $this->assertSame('bytes', $this->getHead($one, 'accept-ranges'));
-        $again = $this->getReply('GET', ['f' => 'plain.bin', 'mime' => 'image/png', 'cached' => 1]);
+        $again = $this->getReply('GET', ['f' => 'plain.bin', 'mime' => 'image/png', 'cache' => 'private']);
         $this->assertSame($this->getHead($one, 'etag'), $this->getHead($again, 'etag'), 'the tag is stable for an unchanged file');
         $this->assertFalse(is_dir(self::$work.'/cache'), 'no copy of the file is stored');
     }
@@ -182,7 +182,7 @@ final class FileStreamTest extends TestCase
     #[Test]
     public function conditionalRequestsAnswerNotModified(): void
     {
-        $base = ['f' => 'plain.bin', 'mime' => 'image/png', 'cached' => 1, 'start' => 1];
+        $base = ['f' => 'plain.bin', 'mime' => 'image/png', 'cache' => 'private', 'start' => 1];
         $etag = (string)$this->getHead($this->getReply('HEAD', $base), 'etag');
         $date = gmdate('D, d M Y H:i:s', time() + 3600).' GMT';
         $hit = $this->getReply('GET', $base, ['If-None-Match' => $etag]);
@@ -205,7 +205,7 @@ final class FileStreamTest extends TestCase
     #[Test]
     public function headSendsTheWholeFileHeadersWithoutBody(): void
     {
-        $one = $this->getReply('HEAD', ['f' => 'plain.bin', 'mime' => 'image/png', 'cached' => 1, 'start' => 1], ['Range' => 'bytes=0-9']);
+        $one = $this->getReply('HEAD', ['f' => 'plain.bin', 'mime' => 'image/png', 'cache' => 'private', 'start' => 1], ['Range' => 'bytes=0-9']);
         $this->assertSame(200, $one['status']);
         $this->assertSame('1000', $this->getHead($one, 'content-length'));
         $this->assertNull($this->getHead($one, 'content-range'));
@@ -218,7 +218,7 @@ final class FileStreamTest extends TestCase
     public function oneRangeGetsPartialContent(): void
     {
         $plain = $this->getPlain();
-        $base = ['f' => 'plain.bin', 'mime' => 'video/mp4', 'cached' => 1, 'start' => 1];
+        $base = ['f' => 'plain.bin', 'mime' => 'video/mp4', 'cache' => 'private', 'start' => 1];
         $cases = ['bytes=0-99' => [0, 99, 1], 'bytes=100-199' => [100, 199, 0], 'bytes=900-' => [900, 999, 0], 'bytes=-100' => [900, 999, 0],
             'bytes=0-' => [0, 999, 1], 'bytes=990-5000' => [990, 999, 0], 'bytes=-5000' => [0, 999, 1], 'BYTES = 10-19' => [10, 19, 0]];
         foreach ($cases as $range => [$from, $last, $starts]) {
@@ -235,7 +235,7 @@ final class FileStreamTest extends TestCase
     #[Test]
     public function badRangesAreRefusedAndSeveralAreIgnored(): void
     {
-        $base = ['f' => 'plain.bin', 'mime' => 'video/mp4', 'cached' => 1, 'start' => 1];
+        $base = ['f' => 'plain.bin', 'mime' => 'video/mp4', 'cache' => 'private', 'start' => 1];
         foreach (['bytes=1000-', 'bytes=5-1', 'bytes=abc', 'bytes=-0', 'bytes=', 'bytes=0-1,x', 'bytes=1-2-3'] as $range) {
             $one = $this->getReply('GET', $base, ['Range' => $range]);
             $this->assertSame(416, $one['status'], $range);
@@ -262,7 +262,7 @@ final class FileStreamTest extends TestCase
     #[Test]
     public function ifRangeKeepsTheRangeOnlyForTheCurrentValidator(): void
     {
-        $base = ['f' => 'plain.bin', 'mime' => 'video/mp4', 'cached' => 1];
+        $base = ['f' => 'plain.bin', 'mime' => 'video/mp4', 'cache' => 'private'];
         $head = $this->getReply('HEAD', $base);
         $this->assertSame(206, $this->getReply('GET', $base, ['Range' => 'bytes=0-9', 'If-Range' => (string)$this->getHead($head, 'etag')])['status']);
         $this->assertSame(206, $this->getReply('GET', $base, ['Range' => 'bytes=0-9', 'If-Range' => (string)$this->getHead($head, 'last-modified')])['status']);

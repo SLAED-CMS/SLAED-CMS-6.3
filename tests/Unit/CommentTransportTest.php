@@ -34,7 +34,7 @@ final class CommentTransportTest extends TestCase
     #[Test]
     public function mutationsAreRefusedOutsidePost(): void
     {
-        $code = $this->getFile('index.php');
+        $code = $this->getFile('public/index.php');
         $beg = strpos($code, 'if ($go == 1 && in_array($op, [');
         $this->assertNotFalse($beg, 'The method guard of the ajax router was not found');
         $this->assertLessThan(strpos($code, 'checkSiteToken($tok)'), $beg, 'The method is not refused before the token');
@@ -54,7 +54,7 @@ final class CommentTransportTest extends TestCase
         $this->assertStringContainsString("checkQuickRequest('POST')", $save);
         $this->assertStringContainsString("\$body = getVar('post', 'text', 'raw', '')", $save);
         $this->assertStringNotContainsString("'text'", $open, 'The editor route reads a body');
-        $this->assertStringNotContainsString("case 'updateComment':", $this->getFile('index.php'), 'The old edit route is still routed');
+        $this->assertStringNotContainsString("case 'updateComment':", $this->getFile('public/index.php'), 'The old edit route is still routed');
     }
 
     # No comment action carries its token in a URL any more, in the render path or in the shared editor helper
@@ -67,7 +67,7 @@ final class CommentTransportTest extends TestCase
         $this->assertStringContainsString("\$act = 'index.php?go=1&op='", $view);
         $this->assertStringContainsString('deleteComment&id=', $view);
         $this->assertSame(3, substr_count($view, "'is_post' => true"), 'A moderation action is still reachable as a plain link');
-        $this->assertStringNotContainsString('token=', $this->getFile('templates/lite/fragments/quick-edit.html'), 'The quick editor still builds a token into its url');
+        $this->assertStringNotContainsString('token=', $this->getFile('public/templates/lite/fragments/quick-edit.html'), 'The quick editor still builds a token into its url');
     }
 
     #[Test]
@@ -95,12 +95,12 @@ final class CommentTransportTest extends TestCase
     #[Test]
     public function theKeyIsMintedInTheBrowserAndClearsOnlyOnSuccess(): void
     {
-        $code = $this->getFile('plugins/system/slaed.js');
+        $code = $this->getFile('public/plugins/system/slaed.js');
         $this->assertStringContainsString("document.addEventListener('sl-comment-add'", $code);
         $this->assertStringContainsString('data-sl-reqkey', $code);
         $this->assertStringContainsString('getRandomValues', $code);
         $this->assertStringContainsString('form.reset()', $code);
-        foreach (['templates/lite/fragments/button.html', 'templates/admin/fragments/button.html'] as $file) {
+        foreach (['public/templates/lite/fragments/button.html', 'public/templates/admin/fragments/button.html'] as $file) {
             $this->assertStringNotContainsString('hx_on_after', $this->getFile($file), $file.' still resets on every request');
         }
     }
@@ -129,7 +129,7 @@ final class CommentTransportTest extends TestCase
         $this->assertStringContainsString("'hx_headers' => \$token", $code);
         $this->assertStringContainsString("getSeoUrl(['name' => \$mod, \$pag.'&com' => \$next])", $code, 'The control is not an ordinary page link without HTMX');
         $this->assertStringContainsString("if (\$data['page'] >= \$data['pages']) return \$cont", $code, 'The last page still offers to load a page after it');
-        $this->assertStringContainsString("case 'getCommentPage': getCommentPage(); break;", $this->getFile('index.php'));
+        $this->assertStringContainsString("case 'getCommentPage': getCommentPage(); break;", $this->getFile('public/index.php'));
         $route = $this->getSource('core/user.php', 'getCommentPage');
         $this->assertStringContainsString("if (\$data['total'] < 1 || \$data['page'] !== \$page) return;", $route, 'A page past the last is clamped and answered twice');
         $this->assertStringNotContainsString('getPageNumbers(', $route, 'The appended slice carries a second pager');
@@ -161,7 +161,7 @@ final class CommentTransportTest extends TestCase
         $branch = $this->getSource('core/user.php', 'getCommentBranch');
         $this->assertStringContainsString('$com->getBranch($id, $reps, $skip)', $branch);
         $this->assertStringContainsString("\$data['left'] > 0", $branch, 'The answer offers a further control even when nothing is left');
-        $this->assertStringContainsString("case 'getCommentBranch': getCommentBranch(); break;", $this->getFile('index.php'));
+        $this->assertStringContainsString("case 'getCommentBranch': getCommentBranch(); break;", $this->getFile('public/index.php'));
         $show = $this->getSource('core/user.php', 'setComShow');
         $this->assertStringContainsString("getVar('get', 'all', 'num', 0)", $show, 'The plain reply link is not resolved on the server');
         $this->assertStringContainsString('$full', $this->getSource('core/classes/comment.php', 'getList', '    '), 'The class cannot answer one branch whole');

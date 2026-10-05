@@ -707,7 +707,7 @@ function view(): void {
                 $amess = $tpl->getHtmlFrag('link', ['href' => '#'.$fid, 'title' => _MESSAGE.': '.$pos, 'label' => (string)$pos, 'is_card_id' => true]);
                 $rank = (!empty($rank)) ? $rank : '';
                 $trank = (!empty($gname)) ? _GROUP.': '.$gname : _RANK;
-                $rlink = (!empty($grank) && file_exists(getThemeImagePath('ranks/'.$grank)))
+                $rlink = (!empty($grank) && file_exists(PUBLIC_DIR.'/'.getThemeImagePath('ranks/'.$grank)))
                     ? $tpl->getHtmlFrag('image', ['src' => getThemeImagePath('ranks/'.$grank), 'alt' => $trank, 'title' => $trank])
                     : '';
                 $rate = (!empty($uid)) ? getRatingAsync(0, $uid, 'account', $votes, $total, $fid, 1) : '';

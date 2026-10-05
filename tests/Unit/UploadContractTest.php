@@ -185,7 +185,7 @@ final class UploadContractTest extends TestCase
         $this->assertSame([], $data['aged']['parts'], 'The publication left a partial of its own behind');
     }
 
-    # Quota counts the incoming file exactly once and never counts partials or the directory sentinels
+    # Quota counts the incoming file exactly once and never counts a partial; no upload folder carries a guard file, so every other name is a stored file
     #[Test]
     public function quotaCountsTheIncomingFileOnceAndSkipsSentinels(): void
     {
@@ -193,10 +193,10 @@ final class UploadContractTest extends TestCase
         $this->assertTrue($data['edge']['ok'], 'A file that exactly fills the quota was refused');
         $this->checkFailShape($data['over'], 'quota', 'One byte over the quota');
         $this->assertSame(['stored.bin'], $data['over']['left'], 'The rejected file was published anyway');
-        $this->assertTrue($data['skipped']['ok'], 'index.html, .htaccess and a partial were counted against the quota');
+        $this->assertTrue($data['skipped']['ok'], 'A partial was counted against the quota');
     }
 
-    # Only a plain relative directory that resolves below the upload root is a destination
+    # Only a plain relative directory that resolves below the upload root is a destination; a missing folder of an owner is created by the first write
     #[Test]
     public function onlyARelativeDirectoryBelowTheRootIsADestination(): void
     {
@@ -205,6 +205,8 @@ final class UploadContractTest extends TestCase
             $this->assertTrue($data['runs'][$key]['ok'], 'The '.$key.' destination was refused');
             $this->assertStringStartsWith('files/', (string)$data['runs'][$key]['path']);
         }
+        $this->assertTrue($data['runs']['made']['ok'] && $data['made'], 'A missing folder of an owner was not created by the first write');
+        $this->assertStringStartsWith('owner/sub/', (string)$data['runs']['made']['path']);
         foreach (['empty', 'dot', 'up', 'inner', 'abs', 'drive', 'nul', 'gone'] as $key) {
             $this->assertFalse($data['runs'][$key]['ok'], 'The '.$key.' destination was accepted');
             $this->assertSame('destination', $data['runs'][$key]['error'], 'The '.$key.' destination failed with the wrong code');

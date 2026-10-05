@@ -73,7 +73,7 @@ final class LanguageConstantsUsageTest extends TestCase
                 if (array_intersect($skipDirs, $parts)) {
                     continue;
                 }
-                if (str_starts_with(str_replace('\\', '/', $rel), 'templates/')) {
+                if (str_starts_with(str_replace('\\', '/', $rel), 'public/templates/')) {
                     $tplFiles[] = $path;
                 }
                 continue;

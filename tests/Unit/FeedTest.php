@@ -434,7 +434,7 @@ class FeedTest extends TestCase
     {
         $root = dirname(__DIR__, 2);
         $left = [];
-        foreach (['index.php', 'setup.php', 'update.php', 'admin', 'core', 'modules', 'blocks', 'plugins', 'templates'] as $part) {
+        foreach (['public/index.php', 'public/setup.php', 'public/update.php', 'admin', 'core', 'modules', 'blocks', 'public/plugins', 'public/templates'] as $part) {
             $list = is_file($root.'/'.$part) ? [$root.'/'.$part] : [];
             if (is_dir($root.'/'.$part)) {
                 foreach (getTreeFiles($root.'/'.$part) as $file) {
@@ -474,7 +474,7 @@ class FeedTest extends TestCase
     #[Test]
     public function theUpdateClearsTheStoredHtmlOfFeedBlocksAfterTheFieldBlock(): void
     {
-        $code = self::getCode('update.php');
+        $code = self::getCode('public/update.php');
         $at = strpos($code, 'setUpdateFields($db, $pref));');
         $this->assertNotFalse($at);
         $tail = substr($code, $at, 1200);

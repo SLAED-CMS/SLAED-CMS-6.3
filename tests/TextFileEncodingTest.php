@@ -23,7 +23,7 @@ class TextFileEncodingTest extends TestCase
         'docs',
         'lang',
         'modules',
-        'templates',
+        'public',
         'tests',
         '.prompts',
     ];

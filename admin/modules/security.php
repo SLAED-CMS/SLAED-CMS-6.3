@@ -890,7 +890,7 @@ function configsave(): void {
     $tafile = ($conf['security']['afile']) ? $conf['security']['afile'] : 'admin';
     $nfile = $warn ? $tafile : getVar('post', 'afile', 'text');
     $move = $nfile !== $tafile;
-    if ($move && (!preg_match('#^[a-z0-9_-]+$#D', $nfile) || file_exists(BASE_DIR.'/'.$nfile.'.php') || !rename(BASE_DIR.'/'.$tafile.'.php', BASE_DIR.'/'.$nfile.'.php'))) {
+    if ($move && (!preg_match('#^[a-z0-9_-]+$#D', $nfile) || file_exists(PUBLIC_DIR.'/'.$nfile.'.php') || !rename(PUBLIC_DIR.'/'.$tafile.'.php', PUBLIC_DIR.'/'.$nfile.'.php'))) {
         $warn = true;
         $text = _ADMIN_FILE_ERR;
     }

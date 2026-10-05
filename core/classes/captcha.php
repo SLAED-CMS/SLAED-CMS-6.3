@@ -130,14 +130,9 @@ class AltchaCaptchaProvider implements CaptchaProvider {
 }
 
 class CaptchaStore {
-    # Ensure the storage directory exists and is protected from direct web access
+    # Ensure the storage directory exists and is writable; it lies outside the document root, so no guard file is needed against direct web access
     public static function ensureDir(): bool {
         if (!is_dir(CAPTCHA_DIR) && !mkdir(CAPTCHA_DIR, 0750, true) && !is_dir(CAPTCHA_DIR)) return false;
-        $guard = CAPTCHA_DIR.'/.htaccess';
-        if (!is_file($guard)) self::write($guard, 'deny from all');
-        $index = CAPTCHA_DIR.'/index.html';
-        $page = defined('BASE_DIR') ? BASE_DIR.'/storage/index.html' : '';
-        if (!is_file($index) && $page !== '' && is_file($page)) copy($page, $index);
         return is_writable(CAPTCHA_DIR);
     }
 

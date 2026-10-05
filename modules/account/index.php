@@ -397,7 +397,7 @@ function view(): void {
             foreach ($rgroup as $pos => $guname) $chips[] = ['name' => $guname, 'tone' => $tones[min($pos, 5)]];
             $tags = ($inter) ? array_values(array_filter(array_map('trim', explode(',', $inter)))) : [];
             $trank = ($gname) ? _GROUP.': '.$gname : (($rgroup) ? _USER_GROUPS.': '.implode(', ', $rgroup) : _RANK);
-            $rankImage = ($grank && file_exists(getThemeImagePath('ranks/'.$grank))) ? getThemeImagePath('ranks/'.$grank) : '';
+            $rankImage = ($grank && file_exists(PUBLIC_DIR.'/'.getThemeImagePath('ranks/'.$grank))) ? getThemeImagePath('ranks/'.$grank) : '';
             $panels = [
                 ['title' => _ACCOUNT, 'icon' => getIconName('profile'), 'rows' => [
                     $mkrow('calendar3', _REG, $regdate),
@@ -981,7 +981,7 @@ function getSetupSwitch(string $capt, string $name, string $valu, string $hint =
 function getAvatarPreset(string $avat): string {
     $avat = basename($avat);
     if ($avat === '' || !preg_match("#\.(gif|png|jpe?g|svg)$#is", $avat)) return '';
-    return file_exists('templates/'.getTheme().'/images/avatars/presets/'.$avat) ? 'presets/'.$avat : '';
+    return file_exists(PUBLIC_DIR.'/templates/'.getTheme().'/images/avatars/presets/'.$avat) ? 'presets/'.$avat : '';
 }
 
 # The one declaration of what a filled profile is: the counted controls of the settings form against the columns behind them, each with the value that counts as empty
@@ -1152,7 +1152,7 @@ function edithome(): void {
         ]];
         $aset = [];
         $adir = 'templates/'.getTheme().'/images/avatars/presets';
-        foreach (scandir($adir) ?: [] as $file) {
+        foreach (scandir(PUBLIC_DIR.'/'.$adir) ?: [] as $file) {
             if (!preg_match("#\.(gif|png|jpe?g|svg)$#is", $file)) continue;
             $alt = _AVATARSAVE.' '._ID.' '.str_replace('_', ' ', preg_replace("/^(.*)\..*$/", '\\1', $file));
             $aset[] = [
@@ -1237,9 +1237,9 @@ function edithome(): void {
         $topt = '';
         $tcnt = 0;
         if ($conf['users']['theme']) {
-            foreach (scandir(BASE_DIR.'/templates') ?: [] as $file) {
+            foreach (scandir(PUBLIC_DIR.'/templates') ?: [] as $file) {
                 if ($file === '.' || $file === '..' || $file === 'admin') continue;
-                if (!is_dir(BASE_DIR.'/templates/'.$file) || !checkThemeAssets($file)) continue;
+                if (!is_dir(PUBLIC_DIR.'/templates/'.$file) || !checkThemeAssets($file)) continue;
                 $topt .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$file, 'label_text' => (string)$file, 'is_selected' => $file == $info['theme']]);
                 $tcnt++;
             }

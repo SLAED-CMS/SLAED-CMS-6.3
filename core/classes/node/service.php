@@ -198,57 +198,34 @@ final class NodeService {
         });
     }
 
-    # The guard files of an upload directory by name with their exact bytes, as the file layer knows them; a release without the index of the upload root is broken
-    private function getGuardList(): array {
-        require_once BASE_DIR.'/core/classes/filemanager.php';
-        $list = FileManager::getGuardFiles();
-        if (in_array('', $list, true)) throw $this->getStorage('The guard file of the upload root is missing');
-        return $list;
-    }
-
-    # Whether a directory holds anything but guard files: any other file, a guard name with other bytes, a link or a place that cannot be listed counts as user data
-    private function checkUserFiles(string $dir, array $guards): bool {
+    # Whether a directory holds anything at all: any file, a link or a place that cannot be listed counts as user data, and only a tree of empty directories does not
+    private function checkUserFiles(string $dir): bool {
         $list = scandir($dir);
         if ($list === false) return true;
         foreach ($list as $one) {
             if ($one === '.' || $one === '..') continue;
             $path = $dir.'/'.$one;
             if (is_link($path)) return true;
-            if (is_dir($path)) {
-                if ($this->checkUserFiles($path, $guards)) return true;
-            } elseif (!isset($guards[$one]) || file_get_contents($path) !== $guards[$one]) {
-                return true;
-            }
+            if (!is_dir($path) || $this->checkUserFiles($path)) return true;
         }
         return false;
     }
 
-    # Write every guard file a type directory lacks; a guard name holding other bytes or a link leaves the directory unconfirmed
-    private function setTypeGuards(string $dir): void {
-        foreach ($this->getGuardList() as $one => $text) {
-            $path = $dir.'/'.$one;
-            if (!file_exists($path) && file_put_contents($path, $text) !== strlen($text)) throw $this->getStorage('The guard of the type cannot be written');
-            if (is_link($path) || file_get_contents($path) !== $text) throw $this->getInvalid('directory');
-        }
-    }
-
-    # Prepare the file area of a new type: a directory holding any user file or in an unsafe state is refused, a missing one is created with its guards before any user file
+    # Prepare the file area of a new type: a directory holding any user file or in an unsafe state is refused, a missing one is created before any user file
+    # No upload folder lies below the document root, so the folder needs no guard file of its own: the light path of index.php refuses every folder off its public list
     private function setTypeRoot(string $name): void {
         $dir = UPLOADS_DIR.'/'.getUploadFolder($name, true);
-        $guards = $this->getGuardList();
         if (is_link($dir) || (file_exists($dir) && !is_dir($dir))) throw $this->getInvalid('directory');
-        if (is_dir($dir) && $this->checkUserFiles($dir, $guards)) throw $this->getInvalid('directory');
-        if (!is_dir($dir) && !mkdir($dir, 0755) && !is_dir($dir)) throw $this->getStorage('The directory of the type cannot be created');
-        $this->setTypeGuards($dir);
+        if (is_dir($dir) && $this->checkUserFiles($dir)) throw $this->getInvalid('directory');
+        if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) throw $this->getStorage('The directory of the type cannot be created');
     }
 
-    # Confirm that the web server itself refuses the directory of a type before it goes public: the guards are completed, then the site asks for its own guard page
+    # Confirm that the site refuses the directory of a type before it goes public: it asks for a name in that folder at the address the folder would have
     # Only a first answer of 403 or 404 confirms the refusal; a served page, a redirect or a failed request leave the type off, because file delivery has no direct mode at all
     private function checkTypeGuard(string $name): void {
         global $conf;
         $dir = UPLOADS_DIR.'/'.getUploadFolder($name, true);
         if (is_link($dir) || !is_dir($dir)) throw $this->getInvalid('directory');
-        $this->setTypeGuards($dir);
         $base = rtrim($conf['homeurl'] ?? '', '/');
         $res = preg_match('#^https?://#i', $base) ? getSchedulerFetch($base.'/uploads/'.getUploadFolder($name, true).'/index.html') : ['code' => 0];
         if (!in_array($res['code'], [403, 404], true)) throw $this->getInvalid('directory');
@@ -529,7 +506,7 @@ final class NodeService {
             if ($this->getRowCount('SELECT COUNT(*) FROM '.PREFIX_DB.'_nodes WHERE tid = :id', ['id' => $id])) throw $this->getInvalid('nodes');
             if ($this->getRowCount('SELECT COUNT(*) FROM '.PREFIX_DB.'_categories WHERE modul = :name', ['name' => $name])) throw $this->getInvalid('categories');
             $dir = UPLOADS_DIR.'/'.getUploadFolder($name, true);
-            if (file_exists($dir) && (is_link($dir) || !is_dir($dir) || $this->checkUserFiles($dir, $this->getGuardList()))) throw $this->getInvalid('directory');
+            if (file_exists($dir) && (is_link($dir) || !is_dir($dir) || $this->checkUserFiles($dir))) throw $this->getInvalid('directory');
             $key = 'node-'.$name;
             $rows = $this->getQueryRes('SELECT id, modules FROM '.PREFIX_DB.'_admins WHERE modules LIKE :key', ['key' => '%'.$key.'%'])->fetchAll(PDO::FETCH_ASSOC);
             foreach ($rows as $one) {
@@ -833,11 +810,11 @@ final class NodeService {
         return intval($rule[($this->ctx->uid > 0) ? 'userupload' : 'guestupload'] ?? 0) === 1;
     }
 
-    # Read one file of the type area for a new binding: a plain existing file outside thumb, no guard file, an allowed extension within the size
+    # Read one file of the type area for a new binding: a plain existing file outside thumb, an allowed extension within the size
     # The file must be owned by the visitor unless the context moderates the type
     private function getFileRow(FileManager $area, string $path, array $exts, int $max, bool $moder, ?string $token, string $err): array {
         $row = $area->getFileData($path);
-        if (!$row || $row['kind'] === 'dir' || isset(FileManager::getGuardFiles()[$row['name']]) || str_starts_with($row['path'], 'thumb/')) throw $this->getInvalid($err);
+        if (!$row || $row['kind'] === 'dir' || str_starts_with($row['path'], 'thumb/')) throw $this->getInvalid($err);
         if (!in_array($row['extension'], $exts, true) || ($max > 0 && $row['size'] > $max)) throw $this->getInvalid($err);
         if (!$moder && ($token === null || FileManager::getFileOwner($row['name']) !== $token)) throw $this->getInvalid($err.'.owner');
         return $row;

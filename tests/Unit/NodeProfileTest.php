@@ -184,7 +184,7 @@ final class NodeProfileTest extends TestCase
         $this->assertSame(['content', 'docs', 'faq', 'files', 'help', 'links', 'news', 'stale'], $run['ghost']['names'], 'The shipped types changed');
         $this->assertSame([], $run['ghost']['left'], 'Types of the tree survived the first part of the run');
         $this->assertSame([false, false, false, false], $run['stale'], 'A type of an earlier installation came back with the profiles');
-        $this->assertSame($order, $run['dirs'], 'A type does not carry its guarded folder in uploads/node/<type>');
+        $this->assertSame($order, $run['dirs'], 'A type does not carry its folder in uploads/node/<type>, or the folder carries a guard');
         $this->assertFalse($run['mark']);
         $this->assertSame([['name' => 'news', 'cid' => 0, 'uid' => 0, 'aname' => 'SLAED', 'title' => 'Добро пожаловать в SLAED CMS', 'status' => 2, 'home' => 1,
             'comon' => 2]], $run['starter']);
@@ -219,7 +219,7 @@ final class NodeProfileTest extends TestCase
         $this->assertSame([2, true], $run['taken']);
         $this->assertSame([2, true], $run['probe'], 'The probe of a free prefix did not name it free');
         $this->assertSame([2, true], $run['prefix']);
-        $this->assertSame([3, 3, 3, 3, 3], $run['panel'], 'The panel may be named outside its grammar or after another file of the root');
+        $this->assertSame([3, 3, 3, 3], $run['panel'], 'The panel may be named outside its grammar or after another file of the document root');
         $this->assertSame([3, 3, 3, 3, 3], $run['site'], 'An empty site name or an address that is no home of the site passed');
         $this->assertSame([[4, 4, 4, 4, 4, 4], true], $run['admin'], 'The administrator stop took what the panel refuses, or printed the password back');
         $this->assertSame([4, true], $run['jour'], 'The installer started while a configuration operation of the site was unfinished');

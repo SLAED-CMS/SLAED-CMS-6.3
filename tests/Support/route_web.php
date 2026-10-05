@@ -8,8 +8,8 @@
 # It serves the real index.php and admin.php with every writable directory and the configuration redirected into scratch, over the probe's disposable database
 # The visitor comes from the header X-Probe-Who and is one of the accounts the probe seeded
 # The account helper is both a site account and the administrator of the support type, the way an operator answers requests on the site
-# /uploads/<dir>/<path> follows the nginx rule of UPGRADING.md (Web Server Rule for Node Upload Directories): 403 below a folder of the upload root with the .htaccess guard
-# A stylesheet, script, font or picture under templates/ or plugins/ is left to the built-in server, so a browser on the probe sees the page as the site does
+# The document root is public/, as on the stand: /uploads/<path> reaches index.php, whose light path serves a public folder of the scratch upload root and refuses the rest
+# A stylesheet, script, font or picture under templates/ or plugins/ is left to the built-in server started on public/, so a browser on the probe sees the page as the site does
 # The directory is served by the stand as well, so anything but the built-in server gets a plain 404 before a single line of it runs
 if (PHP_SAPI !== 'cli-server') {
     http_response_code(404);
@@ -23,19 +23,13 @@ if ($rroot === '' || !is_dir($rroot.'/config')) {
     http_response_code(500);
     exit;
 }
-if (preg_match('#^/uploads/([a-z0-9]+)/([A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*)$#D', $rpath, $rhit) && !in_array('..', explode('/', $rhit[2]), true)) {
-    $rdir = $rroot.'/uploads/'.$rhit[1];
-    if (is_file($rdir.'/.htaccess')) http_response_code(403);
-    elseif (is_file($rdir.'/'.$rhit[2])) readfile($rdir.'/'.$rhit[2]);
-    else http_response_code(404);
-    exit;
-}
 if (preg_match('#^/(templates|plugins)/[A-Za-z0-9_/-]+(\.[A-Za-z0-9_-]+)*\.(css|js|woff2?|png|webp|svg|jpg|gif|ico)$#D', $rpath)) return false;
-if (!in_array($rpath, ['/', '/index.php', '/admin.php'], true)) {
+if (!in_array($rpath, ['/', '/index.php', '/admin.php'], true) && !str_starts_with($rpath, '/uploads/')) {
     http_response_code(404);
     exit;
 }
 define('BASE_DIR', str_replace('\\', '/', dirname(__DIR__, 2)));
+define('PUBLIC_DIR', BASE_DIR.'/public');
 $rdirs = ['CONFIG_DIR' => 'config', 'BACKUP_DIR' => 'backup', 'CACHE_DIR' => 'cache', 'COUNTER_DIR' => 'counter', 'LOGS_DIR' => 'logs', 'SITEMAP_DIR' => 'sitemap',
     'CAPTCHA_DIR' => 'captcha', 'UPLOADS_DIR' => 'uploads'];
 foreach ($rdirs as $rkey => $rdir) define($rkey, $rroot.'/'.$rdir);
@@ -48,6 +42,12 @@ if (isset($rusers[$rwho])) $_COOKIE[$rglob['user_c'].'-account'] = base64_encode
 session_start();
 if (isset($radmins[$rwho])) $_SESSION[$rglob['admin_c']] = base64_encode($radmins[$rwho]);
 foreach (['HTTP_HOST', 'REQUEST_URI', 'HTTP_REFERER', 'HTTP_USER_AGENT'] as $rkey) if (isset($_SERVER[$rkey])) putenv($rkey.'='.$_SERVER[$rkey]);
-chdir(BASE_DIR);
-unset($rroot, $rpath, $rdirs, $rkey, $rdir, $rglob, $rusers, $radmins, $rhit);
-require BASE_DIR.((parse_url((string)($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH) === '/admin.php') ? '/admin.php' : '/index.php');
+chdir(PUBLIC_DIR);
+$radmin = $rpath === '/admin.php';
+unset($rroot, $rpath, $rdirs, $rkey, $rdir, $rglob, $rusers, $radmins);
+$_SERVER['SCRIPT_NAME'] = $radmin ? '/admin.php' : '/index.php';
+if ($radmin) {
+    define('ADMIN_FILE', true);
+    $sgtime = microtime(true);
+}
+require $radmin ? BASE_DIR.'/admin/index.php' : PUBLIC_DIR.'/index.php';

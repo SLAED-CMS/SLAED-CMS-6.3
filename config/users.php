@@ -6,7 +6,7 @@
 
 return [
     'users' => [
-        'adirectory' => 'uploads/avatars',
+        'adirectory' => 'avatars',
         'aheight' => '100',
         'amaxsize' => '51200',
         'anum' => '50',

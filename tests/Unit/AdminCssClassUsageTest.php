@@ -60,9 +60,10 @@ final class AdminCssClassUsageTest extends TestCase
     private static function getThemes(): array
     {
         $themes = [];
-        foreach (scandir(self::$base.'/templates') ?: [] as $theme) {
-            $path = self::$base.'/templates/'.$theme.'/assets/css';
-            if ($theme === '.' || $theme === '..' || isTreeSkipped(self::$base.'/templates/'.$theme) || !is_file($path.'/base.css') || !is_file($path.'/theme.css')) continue;
+        foreach (scandir(self::$base.'/public/templates') ?: [] as $theme) {
+            $path = self::$base.'/public/templates/'.$theme.'/assets/css';
+            if ($theme === '.' || $theme === '..' || isTreeSkipped(dirname($path, 2))) continue;
+            if (!is_file($path.'/base.css') || !is_file($path.'/theme.css')) continue;
             $themes[] = $theme;
         }
         sort($themes);
@@ -95,7 +96,7 @@ final class AdminCssClassUsageTest extends TestCase
     private static function getCssClasses(string $theme): array
     {
         $classes = [];
-        foreach (glob(self::$base.'/templates/'.$theme.'/assets/css/*.css') ?: [] as $file) {
+        foreach (glob(self::$base.'/public/templates/'.$theme.'/assets/css/*.css') ?: [] as $file) {
             $text = file_get_contents($file);
             if ($text === false) continue;
             $text = preg_replace('~/\*.*?\*/~s', '', $text) ?? $text;
@@ -136,7 +137,7 @@ final class AdminCssClassUsageTest extends TestCase
     private static function getEmitterFiles(string $theme): array
     {
         $files = [];
-        $roots = [self::$base.'/templates/'.$theme, self::$base.'/plugins/system'];
+        $roots = [self::$base.'/public/templates/'.$theme, self::$base.'/public/plugins/system'];
         if ($theme === 'admin') {
             $roots[] = self::$base.'/admin';
             $roots[] = self::$base.'/modules';

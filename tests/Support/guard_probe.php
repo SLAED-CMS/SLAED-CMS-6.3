@@ -25,6 +25,8 @@ if ($pwork === '' || !in_array($pmode, ['debug', 'afile', 'catparent', 'forumlas
 }
 if (!is_dir($pwork.'/root')) mkdir($pwork.'/root', 0777, true);
 define('BASE_DIR', $pwork.'/root');
+define('PUBLIC_DIR', BASE_DIR.'/public');
+if (!is_dir(PUBLIC_DIR)) mkdir(PUBLIC_DIR, 0777, true);
 define('DBG_MARK', 'mark');
 define('_SYSTEM_INFO', 'info');
 define('_ERRLOG', 'errlog');
@@ -182,7 +184,7 @@ try {
         setForumLast(3, 9);
         $pdone['data']['done'] = true;
     } else {
-        foreach (['admin', 'index'] as $file) file_put_contents(BASE_DIR.'/'.$file.'.php', $file);
+        foreach (['admin', 'index'] as $file) file_put_contents(PUBLIC_DIR.'/'.$file.'.php', $file);
         setProbeLift($psite.'/admin/modules/security.php', 'configsave', $pwork.'/lift_afile.php');
         chdir(BASE_DIR);
         $conf = ['security' => ['afile' => 'admin', 'blocker_ip' => '', 'blocker_user' => '', 'admin_ip' => '', 'login' => '', 'password' => '', 'secret' => 'x']];
@@ -192,7 +194,7 @@ try {
             configsave();
         } catch (LogicException) {
         }
-        $pdone['data']['files'] = array_values(array_diff(scandir(BASE_DIR) ?: [], ['.', '..']));
+        $pdone['data']['files'] = array_values(array_diff(scandir(PUBLIC_DIR) ?: [], ['.', '..']));
         $pdone['data']['outside'] = array_values(array_diff(scandir($pwork) ?: [], ['.', '..', 'root', 'lift_afile.php']));
     }
 } catch (Throwable $err) {

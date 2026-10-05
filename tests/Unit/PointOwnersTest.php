@@ -50,14 +50,14 @@ final class PointOwnersTest extends TestCase
     private function getTree(): array
     {
         $out = [];
-        foreach (['admin', 'blocks', 'core', 'lang', 'modules', 'plugins', 'templates'] as $dir) {
+        foreach (['admin', 'blocks', 'core', 'lang', 'modules', 'public/plugins', 'public/templates'] as $dir) {
             $walk = getTreeFiles($this->getRoot().'/'.$dir);
             foreach ($walk as $file) {
                 if ($file->getExtension() !== 'php') continue;
                 $out[str_replace('\\', '/', substr($file->getPathname(), strlen($this->getRoot()) + 1))] = (string)file_get_contents($file->getPathname());
             }
         }
-        foreach (['index.php', 'admin.php'] as $name) $out[$name] = (string)file_get_contents($this->getRoot().'/'.$name);
+        foreach (['public/index.php', 'public/admin.php'] as $name) $out[$name] = (string)file_get_contents($this->getRoot().'/'.$name);
         return $out;
     }
 

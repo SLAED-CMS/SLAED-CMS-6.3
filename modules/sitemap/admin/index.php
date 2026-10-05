@@ -51,13 +51,13 @@ function sitemap(): void {
         'ops' => ['name=sitemap', 'name=sitemap&op=xsledit', 'name=sitemap&op=config', 'name=sitemap&op=info'],
         'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _MANUAL],
     ]);
-    $cont .= checkPerms(BASE_DIR.'/'.$file);
-    $conts = is_readable($file) ? file_get_contents($file) : '';
+    $cont .= checkPerms(PUBLIC_DIR.'/'.$file);
+    $conts = is_readable(PUBLIC_DIR.'/'.$file) ? file_get_contents(PUBLIC_DIR.'/'.$file) : '';
     $f = 0;
     $asize = 0;
     $lines = [_SITEMAP.': '.$conf['homeurl'].'/'.$file];
-    foreach (glob('sitemap*.xml*') as $cfile) {
-        $cont .= checkPerms(BASE_DIR.'/'.$cfile);
+    foreach (glob(PUBLIC_DIR.'/sitemap*.xml*') ?: [] as $cfile) {
+        $cont .= checkPerms($cfile);
         $handle = fopen($cfile, 'rb');
         $n = 0;
         if ($handle) {
@@ -68,7 +68,7 @@ function sitemap(): void {
             fclose($handle);
         }
         $size = filesize($cfile);
-        $lines[] = _FILE.': '.$cfile;
+        $lines[] = _FILE.': '.basename($cfile);
         $lines[] = _DATE.': '.date(_TIMESTRING, filemtime($cfile));
         $lines[] = _SIZE.': '.filterSize($size);
         $lines[] = _URLS.': '.$n;
@@ -187,7 +187,7 @@ function config(): void {
         ]);
         $hidden[] = ['nameattr' => 'ver['.$name.']', 'valueattr' => (string)$type->version];
     }
-    $mods = array_values(array_diff(scandir('modules'), ['.', '..', 'node']));
+    $mods = array_values(array_diff(scandir(BASE_DIR.'/modules') ?: [], ['.', '..', 'node']));
     $rows = [
         ['label_html' => _MODULES, 'field_html' => getTplModuleSelect('mod', $conf['sitemap']['mod'] ?? '', 1, $mods), 'is_full' => true],
         ...($typehtml !== '' ? [['label_html' => _NODE, 'field_html' => $typehtml, 'is_full' => true]] : []),

@@ -89,31 +89,30 @@ moves each of them with its contents before the new files answer a request:
 | `uploads/news/` | `uploads/node/news/` |
 | `uploads/<type>/` of any other type | `uploads/node/<type>/` |
 
-`uploads/node/` ships with the release and carries `index.html` and `.htaccess`; keep both. No stored text and no
-setting carries the folder: texts reach their files through `op=attach` and `op=asset` by name, and the default
-folder of the uploads screen (`dir` in `config/uploads.php`) names a type, not a path.
+No folder of `uploads/` carries a guard file any more, and the upload service creates a missing folder of its owner
+on the first write. No stored text and no setting carries the folder: texts reach their files through `op=attach`
+and `op=asset` by name, and the default folder of the uploads screen (`dir` in `config/uploads.php`) names a type,
+not a path.
 
-### Web Server Rule for Node Upload Directories
+### The Document Root Is `public/`
 
-Node serves every file of a type through a controlled route, and a type is switched on only when the web
-server refuses direct access to `uploads/node/<type>/` (answer `403` or `404`). Apache and LiteSpeed follow the
-`.htaccess` guards of `uploads/node/` and of the type folder. nginx ignores `.htaccess` and needs one shared rule,
-which refuses every folder of `uploads/` that carries a `.htaccess`, `uploads/node/` among them:
+The browser reaches `public/` and nothing else: the entries `index.php`, `admin.php`, `setup.php` and
+`update.php`, `.htaccess`, `robots.txt`, `favicon.ico`, `error.html`, the sitemap files, `templates/`, `plugins/`,
+`sound/` and `demo/`. `core/`, `modules/`, `admin/` with the body of the panel, `config/`, `storage/` and the whole
+`uploads/` stay at the project level. Point the document root of the server at `public/`; where a host cannot move
+it, the `.htaccess` of the project rewrites every request into `public/` (Apache and LiteSpeed with `mod_rewrite`
+only, and without the module it refuses everything). The server settings and the variants for shared hosting are in
+README.md, "Document Root and Web Server". The installer records the mode it found as `webroot` in
+`config/global.php`.
 
-```nginx
-location ~ ^/uploads/([^/]+)/ {
-    if (-f $document_root/uploads/$1/.htaccess) { return 403; }
-}
-```
+No upload lies in the document root. An address `uploads/<folder>/<name>` reaches `index.php`, whose light path
+serves a file of a public folder (avatars, `presentation`, `all`, `voting`, `archive`, the forum and the account)
+before the core boots and refuses every other folder; the files of a Node type leave only through `op=attach` and
+`op=asset`. nginx reads no `.htaccess`: the release ships `nginx.conf.example`, whose `server` block carries the root
+on `public/`, the prefix `/uploads/` for the front controller and the refusals of `public/.htaccess`.
 
-`storage/` holds logs, backups, the schema files and, while an installation runs, its token, and must never be
-served. Apache and LiteSpeed follow its `.htaccess`; nginx needs:
-
-```nginx
-location ^~ /storage/ {
-    deny all;
-}
-```
+Every `.htaccess` outside `public/` but the one of the project, and every guard `index.html` outside it, are gone:
+a folder outside the document root needs none.
 
 ### Points, Ratings and Extra Fields
 

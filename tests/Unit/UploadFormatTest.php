@@ -162,7 +162,7 @@ final class UploadFormatTest extends TestCase
         $this->assertSame($want, $this->getList('core/classes/parser.php', '$img = ['), 'filterAttach() disagrees on the image set');
         $this->assertStringNotContainsString('$ftype = [', $this->getFile('core/admin.php'), 'The administration restates the image set in a list of its own again');
         $this->assertSame($want, $this->getList('core/classes/parser.php', 'public const EMBEDIMG = ['), 'Parser::EMBEDIMG disagrees on the image set');
-        $drv = $this->getFile('plugins/editors/toastui/driver.php');
+        $drv = $this->getFile('public/plugins/editors/toastui/driver.php');
         $this->assertStringContainsString('Parser::EMBEDIMG', $drv, 'The editor window no longer reads the one embeddable type list and restates it in its own words');
         $this->assertSame(0, preg_match("#'embedimg' => \[#", $drv), 'The editor window restates the image set in a list of its own again');
         $pars = $this->getFile('core/classes/parser.php');
@@ -191,7 +191,7 @@ final class UploadFormatTest extends TestCase
     #[Test]
     public function theLightboxFollowsTheAttachmentClass(): void
     {
-        $code = $this->getFile('plugins/system/slaed.js');
+        $code = $this->getFile('public/plugins/system/slaed.js');
         $this->assertStringContainsString("closest('a.sl-attach, a[data-sl-shot-open]')", $code, 'The lightbox no longer triggers on the attachment class and the shot hook');
         $this->assertStringNotContainsString('a.screens', $code, 'The lightbox still triggers on the dead screens class');
         $this->assertStringNotContainsString('a.site-link', $code, 'The lightbox still triggers on the dead site-link class of the old main module');
@@ -214,7 +214,7 @@ final class UploadFormatTest extends TestCase
         $this->assertStringContainsString('style="max-width:500px"', $runs['image'], 'The image family did not receive the configured thumbnail width');
         $this->assertStringContainsString('<audio controls preload="metadata"', $runs['audio'], 'The audio family is not rendered through <audio>');
         $this->assertStringContainsString('width="100" height="80"', $runs['video'], 'The video family did not receive the dimensions of the tag');
-        $this->assertStringContainsString('<a href="uploads/slaedrender/render.pdf">Render</a></object>', $runs['document'], 'The document family lost its link fallback');
+        $this->assertStringContainsString('<a href="uploads/archive/render.pdf">Render</a></object>', $runs['document'], 'The document family lost its link fallback');
         $this->assertStringContainsString('rel="noopener"', $runs['archive'], 'The archive family lost its link hardening');
     }
 }

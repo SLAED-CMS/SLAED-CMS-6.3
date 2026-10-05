@@ -429,10 +429,10 @@ function setExit(string $msg, string $typ = '', string $title = ''): never {
     $license = getLicenseHtml();
     $adlogo = basename((string)($conf['admin_logo'] ?? 'slaed_logo_256x73.png'));
     $adpath = getThemeImagePath('logos/'.$adlogo);
-    if (!is_file($adpath)) $adpath = getThemeImagePath('logos/slaed_logo_256x73.png');
+    if (!is_file(PUBLIC_DIR.'/'.$adpath)) $adpath = getThemeImagePath('logos/slaed_logo_256x73.png');
     $linksrc = [];
     $favicon = 'templates/'.$theme.'/images/favicon.svg';
-    if (is_file(BASE_DIR.'/'.$favicon)) {
+    if (is_file(PUBLIC_DIR.'/'.$favicon)) {
         $linksrc[] = $tpl->getHtmlFrag('head-link', ['rel' => 'shortcut icon', 'href' => $favicon, 'type' => 'image/svg+xml', 'title' => '']);
     }
     foreach (getThemeAssets($theme, 'css') as $asset) {
@@ -709,15 +709,15 @@ function setLang(): void {
     $mult = ((int)($conf['multilingual'] ?? 0) === 1);
     if ($mult) {
         $clang = getCookies('language');
-        $locale = ($clang && is_readable('lang/'.$clang.'.php')) ? $clang : $mlang;
+        $locale = ($clang && is_readable(BASE_DIR.'/lang/'.$clang.'.php')) ? $clang : $mlang;
         if (!$clang || $clang !== $locale) {
             setCookies('language', time() + (int)($conf['user_c_t'] ?? 0), $locale);
         }
     } else {
         $locale = $mlang;
     }
-    $file = 'lang/'.$locale.'.php';
-    require_once is_readable($file) ? $file : 'lang/'.$mlang.'.php';
+    $file = BASE_DIR.'/lang/'.$locale.'.php';
+    require_once is_readable($file) ? $file : BASE_DIR.'/lang/'.$mlang.'.php';
 }
 
 # Store the locale a switch asked for; the answer travels in a POST body with a token of its own scope, because a link that changes it is followed by prefetchers and scanners
@@ -726,7 +726,7 @@ function setLangChoice(): void {
     global $conf;
     if (((int)($conf['multilingual'] ?? 0)) !== 1 || !checkAdminPost('newlang')) return;
     $want = getVar('post', 'newlang', 'var', '');
-    if ($want !== '' && is_readable('lang/'.$want.'.php')) setCookies('language', time() + (int)($conf['user_c_t'] ?? 0), $want);
+    if ($want !== '' && is_readable(BASE_DIR.'/lang/'.$want.'.php')) setCookies('language', time() + (int)($conf['user_c_t'] ?? 0), $want);
 }
 
 # Load module language file and return the active locale
@@ -739,16 +739,16 @@ function getLang(string $module = '', bool $admin = false): string {
     $key = $module.'|'.$ctx.'|'.$locale;
     if (!array_key_exists($key, $lmods)) {
         if ($module === 'admin') {
-            $list = ['admin/lang/'.$locale.'.php', 'admin/lang/'.$mlang.'.php'];
+            $list = [BASE_DIR.'/admin/lang/'.$locale.'.php', BASE_DIR.'/admin/lang/'.$mlang.'.php'];
         } elseif ($admin) {
             $list = [
-                'modules/'.$module.'/admin/lang/'.$locale.'.php',
-                'modules/'.$module.'/admin/lang/'.$mlang.'.php',
+                BASE_DIR.'/modules/'.$module.'/admin/lang/'.$locale.'.php',
+                BASE_DIR.'/modules/'.$module.'/admin/lang/'.$mlang.'.php',
             ];
         } else {
             $list = [
-                'modules/'.$module.'/lang/'.$locale.'.php',
-                'modules/'.$module.'/lang/'.$mlang.'.php',
+                BASE_DIR.'/modules/'.$module.'/lang/'.$locale.'.php',
+                BASE_DIR.'/modules/'.$module.'/lang/'.$mlang.'.php',
             ];
         }
         $done = false;

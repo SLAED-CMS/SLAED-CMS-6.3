@@ -5,7 +5,7 @@
 # Website: slaed.net
 
 # CLI probe for the public and administrative routes of Node answered by the real index.php and admin.php over real HTTP
-# It builds one disposable MariaDB database from the shipped table.sql, a scratch configuration that registers four types and a scratch upload root with release guards
+# It builds one disposable MariaDB database from the shipped table.sql, a scratch configuration that registers four types and a scratch upload root without guards
 # It serves the tree with the built-in server and tests/Support/route_web.php as router; every exchange is a real request with its own cookies
 # The report answers what each exchange returned and what the database, the cache and the files hold afterwards; nothing touches the site database or directories
 # The second argument support runs the comments of Node and the private requests of the support type instead of the base routes
@@ -40,6 +40,7 @@ if (in_array($argv[2] ?? '', ['view', 'comments', 'ext', 'syncext', 'integext', 
     exit;
 }
 if (!defined('BASE_DIR')) define('BASE_DIR', str_replace('\\', '/', dirname(__DIR__, 2)));
+if (!defined('PUBLIC_DIR')) define('PUBLIC_DIR', BASE_DIR.'/public');
 
 # The table prefix of the disposable database
 const RPREF = 'probe';
@@ -192,18 +193,12 @@ function addRouteRows(PDO $pdo): void {
         .' (3, 101, \'file\', \'files\', \'https://example.com/tool\', \'Tool\', \'\', NULL, NULL, NULL, NULL, 0, 1)');
 }
 
-# The scratch upload root with the guard of the release on the root of the types and in every type directory, and the files the materials point at
+# The scratch upload root with the directory of every type, and the files the materials point at; no folder carries a guard, the light path refuses the private ones
 function addRouteFiles(string $work): void {
-    $guard = (string)file_get_contents(BASE_DIR.'/uploads/index.html');
     $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==');
-    file_put_contents($work.'/uploads/index.html', $guard);
     mkdir($work.'/uploads/node', 0777, true);
-    file_put_contents($work.'/uploads/node/index.html', $guard);
-    file_put_contents($work.'/uploads/node/.htaccess', 'deny from all');
     foreach (['news', 'docs', 'off', 'help'] as $name) {
         mkdir($work.'/uploads/node/'.$name.'/thumb', 0777, true);
-        file_put_contents($work.'/uploads/node/'.$name.'/index.html', $guard);
-        file_put_contents($work.'/uploads/node/'.$name.'/.htaccess', 'deny from all');
     }
     foreach (['cover-cccccccccc.png', 'att-aaaaaaaaaa.png', 'other-bbbbbbbbbb.png', 'thumb/att-aaaaaaaaaa.png'] as $one) file_put_contents($work.'/uploads/node/news/'.$one, $png);
     file_put_contents($work.'/uploads/node/news/manual-dddddddddd.pdf', '%PDF-1.4'.str_repeat('0123456789', 199).'%%');
@@ -215,7 +210,7 @@ function addRouteFiles(string $work): void {
 function addRouteServer(string $work, int $port): mixed {
     $env = getenv() + ['SLAED_ROUTE_ROOT' => $work];
     $log = ['file', $work.'/server.log', 'a'];
-    $cmd = [PHP_BINARY, '-d', 'opcache.revalidate_freq=0', '-S', '127.0.0.1:'.$port, BASE_DIR.'/tests/Support/route_web.php'];
+    $cmd = [PHP_BINARY, '-d', 'opcache.revalidate_freq=0', '-S', '127.0.0.1:'.$port, '-t', PUBLIC_DIR, BASE_DIR.'/tests/Support/route_web.php'];
     $proc = proc_open($cmd, [1 => $log, 2 => $log], $pipes, BASE_DIR, $env);
     set_error_handler(static fn(): bool => true);
     for ($i = 0; $i < 50 && !($test = stream_socket_client('tcp://127.0.0.1:'.$port, $no, $err, 1)); $i++) usleep(100000);
@@ -886,7 +881,7 @@ function getRouteSupport(PDO $pdo): array {
     return $out;
 }
 
-# The two types of the extension sync for its own run: content, active, and feeds, disabled, with their upload guards, rating rules and the scheduler switched on
+# The two types of the extension sync for its own run: content, active, and feeds, disabled, with their upload folders, rating rules and the scheduler switched on
 function addRouteSyncTypes(PDO $pdo, string $work): void {
     $pdo->exec('INSERT INTO '.RPREF.'_node_types (id, name, title, intro, ext, active, sort, version) VALUES (5, \'content\', \'Content\', \'\', \'sync\', 1, 50, 1),'
         .' (6, \'feeds\', \'Feeds\', \'\', \'sync\', 0, 60, 1)');
@@ -895,13 +890,10 @@ function addRouteSyncTypes(PDO $pdo, string $work): void {
     setRouteFile($work.'/config/node.php', $data);
     $data = require $work.'/config/uploads.php';
     $rate = require $work.'/config/ratings.php';
-    $guard = (string)file_get_contents(BASE_DIR.'/uploads/index.html');
     foreach (['content', 'feeds'] as $name) {
         $data['uploads'][$name] = $data['uploads']['all'];
         $rate['ratings']['node.'.$name] = ['active' => '1', 'period' => '2592000', 'detail' => '1', 'guests' => '1'];
         mkdir($work.'/uploads/node/'.$name.'/thumb', 0777, true);
-        file_put_contents($work.'/uploads/node/'.$name.'/index.html', $guard);
-        file_put_contents($work.'/uploads/node/'.$name.'/.htaccess', 'deny from all');
     }
     setRouteFile($work.'/config/uploads.php', $data);
     setRouteFile($work.'/config/ratings.php', $rate);
@@ -1319,10 +1311,10 @@ function getRouteInteg(PDO $pdo, string $work): array {
 function getRouteIntegData(): array {
     global $db, $conf;
     $keep = [];
-    foreach ([BASE_DIR.'/sitemap.xml', SITEMAP_DIR.'/sitemap.txt'] as $file) $keep[$file] = is_file($file) ? [file_get_contents($file), filemtime($file)] : null;
+    foreach ([PUBLIC_DIR.'/sitemap.xml', SITEMAP_DIR.'/sitemap.txt'] as $file) $keep[$file] = is_file($file) ? [file_get_contents($file), filemtime($file)] : null;
     try {
         $res = addSitemapTask(true);
-        $xml = (string)file_get_contents(BASE_DIR.'/sitemap.xml');
+        $xml = (string)file_get_contents(PUBLIC_DIR.'/sitemap.xml');
         $txt = (string)file_get_contents(SITEMAP_DIR.'/sitemap.txt');
         preg_match_all('#<loc>([^<]+)</loc>#', $xml, $all);
         $locs = array_map('html_entity_decode', $all[1]);
@@ -1343,10 +1335,10 @@ function getRouteIntegData(): array {
         $conf['multilingual'] = 1;
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET lang = :lang WHERE id = 1', ['lang' => 'zz']);
         addSitemapTask(true);
-        $out['lang'] = str_contains(html_entity_decode((string)file_get_contents(BASE_DIR.'/sitemap.xml')), 'index.php?name=news&cat=1<');
+        $out['lang'] = str_contains(html_entity_decode((string)file_get_contents(PUBLIC_DIR.'/sitemap.xml')), 'index.php?name=news&cat=1<');
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET lang = :lang WHERE id = 1', ['lang' => $conf['language']]);
         addSitemapTask(true);
-        $out['lang'] = [$out['lang'], str_contains(html_entity_decode((string)file_get_contents(BASE_DIR.'/sitemap.xml')), 'index.php?name=news&cat=1<')];
+        $out['lang'] = [$out['lang'], str_contains(html_entity_decode((string)file_get_contents(PUBLIC_DIR.'/sitemap.xml')), 'index.php?name=news&cat=1<')];
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET lang = \'\' WHERE id = 1');
         $conf['multilingual'] = 0;
         return $out;
@@ -1885,14 +1877,11 @@ function addRouteModeTypes(PDO $pdo, string $work): void {
     setRouteFile($work.'/config/fields.php', $data);
     $data = require $work.'/config/uploads.php';
     $rate = require $work.'/config/ratings.php';
-    $guard = (string)file_get_contents(BASE_DIR.'/uploads/index.html');
     $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==');
     foreach (['faq', 'files', 'media'] as $name) {
         $data['uploads'][$name] = $data['uploads']['all'];
         $rate['ratings']['node.'.$name] = ['active' => '1', 'period' => '2592000', 'detail' => '1', 'guests' => '1'];
         mkdir($work.'/uploads/node/'.$name.'/thumb', 0777, true);
-        file_put_contents($work.'/uploads/node/'.$name.'/index.html', $guard);
-        file_put_contents($work.'/uploads/node/'.$name.'/.htaccess', 'deny from all');
     }
     setRouteFile($work.'/config/uploads.php', $data);
     setRouteFile($work.'/config/ratings.php', $rate);
@@ -2080,6 +2069,9 @@ function getRouteHead(): array {
     $out = ['bound' => [$far['code'], $get('index.php?name=news&num=4294967295')['code'], $get('index.php?name=news&op=view&id=4294967295')['code']]];
     $mark = $get('index.php?name=news')['body'];
     $out['faq'] = preg_match('#sl-head-marquee">(.*?)</li>#s', $mark, $hit) ? trim(strip_tags($hit[1])) : '';
+    preg_match_all('#(?:href|src)="((?:templates|plugins)/[^"?\#]+)#', $mark, $hits);
+    $files = array_values(array_unique($hits[1]));
+    $out['assets'] = [count($files), array_values(array_filter($files, fn(string $v): bool => $get(html_entity_decode($v))['code'] !== 200))];
     $form = $get('index.php?name=news&op=add')['body'];
     $post = ['title' => 'Head notice', 'aname' => 'Guest', 'intro' => 'Intro', 'body' => 'Body', 'action' => 'submit', 'token' => getRouteToken($form, 'name="action"')];
     $sent = getRouteReply('', 'POST', 'index.php?name=news&op=add', $post);

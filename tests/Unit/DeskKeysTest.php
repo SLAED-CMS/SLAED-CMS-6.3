@@ -9,9 +9,9 @@ use PHPUnit\Framework\TestCase;
 final class DeskKeysTest extends TestCase
 {
     private const THEMES = ['admin', 'lite'];
-    private const ADMINJS = 'templates/admin/assets/js/admin-ui.js';
-    private const EDITJS = 'plugins/system/filemanager.js';
-    private const SITEJS = 'plugins/system/slaed.js';
+    private const ADMINJS = 'public/templates/admin/assets/js/admin-ui.js';
+    private const EDITJS = 'public/plugins/system/filemanager.js';
+    private const SITEJS = 'public/plugins/system/slaed.js';
 
     private static array $files = [];
 
@@ -39,15 +39,15 @@ final class DeskKeysTest extends TestCase
     #[Test]
     public function theContextMenuIsTheFanOfTheObjectAndLivesWithTheComponent(): void
     {
-        $js = str_replace('document.', 'doc.', $this->getFile('plugins/system/slaed.js'));
+        $js = str_replace('document.', 'doc.', $this->getFile('public/plugins/system/slaed.js'));
         $note = 'The shared component takes no right button, so a context menu would have to be built once per screen';
         $this->assertStringContainsString("doc.addEventListener('contextmenu'", $js, $note);
-        $part = $this->getPart('plugins/system/slaed.js', 'function getDialOwn(', 600);
+        $part = $this->getPart('public/plugins/system/slaed.js', 'function getDialOwn(', 600);
         $note = 'The menu is not found through the fan of the object, so every screen would have to name its own rows';
         $this->assertStringContainsString("querySelectorAll('.sl-dial')", $part, $note);
         $note = 'A box holding several fans is taken for an object, so the empty ground of a list opens the menu of some object standing in it';
         $this->assertStringContainsString('if (list.length > 1) return null;', $part, $note);
-        $point = $this->getPart('plugins/system/slaed.js', 'function setDialPoint(', 900);
+        $point = $this->getPart('public/plugins/system/slaed.js', 'function setDialPoint(', 900);
         $note = 'The fan is not opened at the pointer, which is the whole of what a context menu adds';
         $this->assertStringContainsString("classList.add('sl-dial-point', 'sl-open')", $point, $note);
         $note = 'The placement is not measured against the box the fan stands in, so a scrolled work area would cut it away';
@@ -63,7 +63,7 @@ final class DeskKeysTest extends TestCase
     public function bothThemesCarryTheMenuState(): void
     {
         foreach (self::THEMES as $name) {
-            $css = $this->getFile('templates/'.$name.'/assets/css/theme.css');
+            $css = $this->getFile('public/templates/'.$name.'/assets/css/theme.css');
             $note = 'Theme '.$name.' has no placement for the fan opened at the pointer';
             $this->assertStringContainsString('.sl-dial.sl-dial-point {', $css, $note);
             $note = 'The window of theme '.$name.' keeps its own anchor, so the menu would stand in the corner of the row';
@@ -71,7 +71,7 @@ final class DeskKeysTest extends TestCase
             $note = 'The catalogue of theme '.$name.' says nothing while a file is dragged over it';
             $this->assertStringContainsString('.sl-fm-win .sl-fm-pane.sl-drag-over {', $css, $note);
         }
-        $css = $this->getFile('templates/admin/assets/css/theme.css');
+        $css = $this->getFile('public/templates/admin/assets/css/theme.css');
         foreach (['.sl-fm-drop.sl-drag-over {', '.sl-fm-node.sl-drag-over,', '.sl-fm-cell[aria-selected="true"] .sl-fm-tile {'] as $rule) {
             $note = 'The administrative theme is missing '.$rule.', so a target of a drag or the current tile is drawn nowhere';
             $this->assertStringContainsString($rule, $css, $note);
@@ -165,7 +165,7 @@ final class DeskKeysTest extends TestCase
         $note = 'The editor keeps a second answer to the key, so two handlers race for one press';
         $this->assertStringNotContainsString("ev.key === 'Escape'", $this->getFile(self::EDITJS), $note);
         foreach (self::THEMES as $name) {
-            $tpl = $this->getFile('templates/'.$name.'/partials/file-manager-templates.html');
+            $tpl = $this->getFile('public/templates/'.$name.'/partials/file-manager-templates.html');
             $note = 'A row of theme '.$name.' cannot take the focus, so the arrows never reach the catalogue';
             $this->assertStringContainsString('<div class="sl-fm-row" tabindex="-1">', $tpl, $note);
             $note = 'A tile of theme '.$name.' cannot take the focus, so the arrows never reach the catalogue';
@@ -236,7 +236,7 @@ final class DeskKeysTest extends TestCase
         $note = 'The list decides on its own what may be dragged instead of reading the capability of the object';
         $this->assertStringContainsString("'is_move' => !empty(\$row['capabilities']['move'])", $php, $note);
         foreach (['file-browser-row', 'file-browser-tile'] as $name) {
-            $tpl = $this->getFile('templates/admin/fragments/'.$name.'.html');
+            $tpl = $this->getFile('public/templates/admin/fragments/'.$name.'.html');
             $note = 'The '.$name.' fragment is draggable whatever the object allows';
             $this->assertStringContainsString('{% if is_move %} draggable="true"{% endif %}', $tpl, $note);
             $note = 'The '.$name.' fragment carries no path, so a dragged object cannot name itself';
@@ -244,7 +244,7 @@ final class DeskKeysTest extends TestCase
             $note = 'The '.$name.' fragment offers a file as a target of a move';
             $this->assertStringContainsString('{% if is_dir %} data-sl-fm-dir="{{ pick_value }}"{% endif %}', $tpl, $note);
         }
-        $tree = $this->getFile('templates/admin/partials/file-browser-tree.html');
+        $tree = $this->getFile('public/templates/admin/partials/file-browser-tree.html');
         $note = 'The tree takes no drop, and the one place every directory of the context is listed is the tree';
         $this->assertStringContainsString('data-sl-fm-dir="{{ node.path }}"', $tree, $note);
         $note = 'The module hands a class name to the template, and the markup of this screen belongs to the template';

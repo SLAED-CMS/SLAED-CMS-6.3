@@ -22,11 +22,13 @@ class Template {
     protected static ?int $mtime = null;
 
     # Set base template and cache paths for the selected theme; resolve the real base path once per instance
+    # The theme lives in the document root, PUBLIC_DIR, and its compiled copy in the cache of the project, which no browser reaches
     public function __construct(string $theme = 'default') {
         $this->theme = $this->checkName($theme) ? $theme : 'default';
         $root = defined('BASE_DIR') ? BASE_DIR : dirname(__DIR__, 2);
         $root = str_replace('\\', '/', rtrim($root, '\\/'));
-        $this->base = $root.'/templates/'.$this->theme;
+        $pub = defined('PUBLIC_DIR') ? str_replace('\\', '/', rtrim(PUBLIC_DIR, '\\/')) : $root.'/public';
+        $this->base = $pub.'/templates/'.$this->theme;
         $this->cache = $root.'/storage/cache/templates/'.$this->theme;
         $rbase = realpath($this->base);
         $this->real = ($rbase !== false) ? rtrim(str_replace('\\', '/', $rbase), '/') : '';

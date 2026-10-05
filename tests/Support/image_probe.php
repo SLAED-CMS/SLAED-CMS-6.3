@@ -104,12 +104,14 @@ function getProbeSkip(): array {
 }
 
 # The renderer half of the fallback: a source whose thumbnail cannot be produced must be rendered against the full size file and never against a thumbnail that was never written
-# This is the one scenario that writes below the site upload tree, because filterAttach() resolves every path from BASE_DIR and cannot be pointed at the scratch root
+# This is the one scenario that writes below the site upload tree, because filterAttach() resolves every path from UPLOADS_DIR and cannot be pointed at the scratch root
+# The owner is the public folder all, whose files have a direct address; a folder the probe had to create is removed again
 # The fixture is a png cut to 33 bytes: the header still parses, so the markup is reached with real dimensions, while the decoder refuses it and no thumbnail is produced
 function getProbeAttach(): array {
     if (!function_exists('imagepng') || !function_exists('imagecreatefrompng')) return ['ran' => false, 'why' => 'this build has no png decoder'];
-    $dir = NODE_DIR.'/news';
-    if (!is_dir($dir) || !is_writable($dir)) return ['ran' => false, 'why' => 'uploads/node/news is not a writable directory on this installation'];
+    $dir = UPLOADS_DIR.'/all';
+    $made = !is_dir($dir) && mkdir($dir, 0755, true);
+    if (!is_dir($dir) || !is_writable($dir)) return ['ran' => false, 'why' => 'uploads/all is not a writable directory on this installation'];
     $name = 'probeattach'.bin2hex(random_bytes(4)).'.png';
     $file = $dir.'/'.$name;
     $img = imagecreatetruecolor(64, 48);
@@ -117,11 +119,13 @@ function getProbeAttach(): array {
     file_put_contents($file, substr((string)file_get_contents($file), 0, 33));
     $thumb = $dir.'/thumb/'.$name;
     $pars = new Parser();
-    $html = $pars->filterDoc('[attach='.$name.' align=left title=probe]', false, 'news');
+    $html = $pars->filterDoc('[attach='.$name.' align=left title=probe]', false, 'all');
     $left = is_file($thumb);
     if (is_file($file)) unlink($file);
     if ($left) unlink($thumb);
-    return ['ran' => true, 'html' => $html, 'src' => 'uploads/node/news/'.$name, 'thumb' => 'uploads/node/news/thumb/'.$name, 'left' => $left];
+    if ($made && is_dir($dir.'/thumb')) rmdir($dir.'/thumb');
+    if ($made) rmdir($dir);
+    return ['ran' => true, 'html' => $html, 'src' => 'uploads/all/'.$name, 'thumb' => 'uploads/all/thumb/'.$name, 'left' => $left];
 }
 
 $mode = (string)($argv[1] ?? '');

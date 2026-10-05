@@ -159,11 +159,11 @@ final class ThemeContractTest extends TestCase
     {
         $root = dirname(__DIR__, 2);
         $list = [
-            'templates/admin/layouts/admin.html',
-            'templates/admin/layouts/bare.html',
-            'templates/lite/layouts/admin.html',
-            'templates/lite/layouts/bare.html',
-            'templates/lite/partials/site-header.html',
+            'public/templates/admin/layouts/admin.html',
+            'public/templates/admin/layouts/bare.html',
+            'public/templates/lite/layouts/admin.html',
+            'public/templates/lite/layouts/bare.html',
+            'public/templates/lite/partials/site-header.html',
         ];
         foreach ($list as $path) {
             $html = (string)file_get_contents($root.'/'.$path);

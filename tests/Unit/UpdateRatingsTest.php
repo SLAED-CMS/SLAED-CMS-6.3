@@ -146,7 +146,7 @@ final class UpdateRatingsTest extends TestCase
     #[Test]
     public function theBranchRunsTheUnitAfterPoints(): void
     {
-        $code = (string)file_get_contents(dirname(__DIR__, 2).'/update.php');
+        $code = (string)file_get_contents(dirname(__DIR__, 2).'/public/update.php');
         $this->assertStringContainsString('setUpdatePoints($db, $pref), setUpdateRatings($db, $pref)', $code);
         $this->assertStringEndsWith('start the update again: ALTER TABLE `probe_forum` ENGINE=InnoDB;', $this->getRun('flight')['engine']);
         $sql = (string)file_get_contents(dirname(__DIR__, 2).'/storage/update/sql/table_update6_3.sql');

@@ -172,7 +172,7 @@ final class UploadIntegrationTest extends TestCase
     {
         $data = $this->getProbe('place');
         $avat = $data['rules']['users.avatar'];
-        $this->assertSame($data['dirs']['users.avatar'], $avat['dir'], 'An avatar no longer lands in the configured avatar directory');
+        $this->assertSame($data['dirs']['users.avatar'], $avat['store'], 'An avatar no longer lands in the configured avatar folder below the upload root');
         $this->assertSame('uploads/'.$avat['store'], $avat['dir'], 'The two relative directory forms of users.avatar disagree');
         $this->assertStringEndsWith('/'.$avat['store'], $avat['path'], 'The absolute directory of users.avatar is not the relative one below the upload root');
     }
@@ -189,7 +189,7 @@ final class UploadIntegrationTest extends TestCase
         $this->assertSame('node/zzfresh', $node['fresh'], 'A type named through the flag is not placed below the root of the types');
         $this->assertSame('forum', $node['module'], 'A module left the upload root');
         $this->assertSame('node/'.$node['type'], $node['store'], 'The upload service stores the files of a type outside uploads/node/<type>');
-        $this->assertSame('uploads/node/'.$node['type'], $node['dir'], 'The site relative folder of a type is not uploads/node/<type>');
+        $this->assertSame('', $node['dir'], 'The private folder of a type has an address of its own; only the route of its owner builds one');
         $this->assertSame($node['root'].'/'.$node['type'], $node['path'], 'The absolute folder of the place is not the one below NODE_DIR');
         $this->assertSame($node['path'], $node['plain'], 'getUploadRuleData() and the place rule disagree about the folder of a type');
     }
@@ -203,7 +203,7 @@ final class UploadIntegrationTest extends TestCase
         $this->assertStringContainsString("getVar('get', 'place', 'raw', '')", $rule, 'The shared guard reads the place through a filter that empties a dot');
         $this->assertStringContainsString('getUploadPlaceRule(', $rule, 'The shared guard resolves something other than the place rule');
         $this->assertStringNotContainsString("getVar('get', 'mod'", $rule, 'The shared guard still reads the module parameter, which cannot carry a place at all');
-        $code = $this->getFile('index.php');
+        $code = $this->getFile('public/index.php');
         $from = strpos($code, '$go == 4');
         $stop = strpos($code, '$go == 5');
         $this->assertNotFalse($from, 'The editor branch of the front controller is gone');
@@ -237,7 +237,7 @@ final class UploadIntegrationTest extends TestCase
     #[Test]
     public function everyEndpointUrlCarriesThePlace(): void
     {
-        $drv = $this->getFile('plugins/editors/toastui/driver.php');
+        $drv = $this->getFile('public/plugins/editors/toastui/driver.php');
         $this->assertStringContainsString(".'.attach'", $drv, 'The editor no longer names the attachment place of its module, so its URLs carry nothing the routes can resolve');
         foreach (['editorUpload', 'editorFiles', 'editorDelete', 'editorArchive'] as $op) {
             $this->assertStringContainsString('op='.$op.'&place=', $drv, 'The endpoint URL of '.$op.' does not carry a place');
@@ -275,7 +275,7 @@ final class UploadIntegrationTest extends TestCase
             'The path is read past the place context, so a name reaching outside the directory would answer'
         );
         $this->assertStringContainsString("\$one['kind'] === 'dir'", $body, 'A directory answers as a file, so a pick could name the store itself');
-        $this->assertStringContainsString("isset(FileManager::getGuardFiles()[\$one['name']])", $body, 'The two names that are never content are offered as content');
+        $this->assertStringNotContainsString('getGuardFiles', $body, 'The resolver still skips guard names, which no upload folder carries any more');
         $this->assertStringContainsString(
             'FileManager::getFileOwner(',
             $body,
@@ -307,6 +307,8 @@ final class UploadIntegrationTest extends TestCase
     {
         $body = $this->getBody('core/system.php', 'addEditorUpload');
         $this->assertStringContainsString("(string)\$rul['store']", $body, 'The upload route names its destination itself instead of taking the one the place resolved');
+        $this->assertLessThan(strpos($body, 'getUploadFileArea('), strpos($body, 'addUploadedFiles('),
+            'The file context is built before the write, so the first upload into a folder the write creates reports a stored file as a failure');
     }
 
     # The accessor builds one instance over the upload root and is the only place that names it; the lock directory belongs to the protocol and is named by FileManager alone
@@ -433,7 +435,7 @@ final class UploadIntegrationTest extends TestCase
         $body = $this->getBody('core/system.php', 'getConfigCode');
         $this->assertStringNotContainsString('$wrap', $body, 'The writer splits a long value across lines again');
         $this->assertStringNotContainsString("\$ind.'    .'", $body, 'The writer emits a concatenation again');
-        $this->assertStringNotContainsString('$wrap', $this->getFile('update.php'), 'The update writer would produce files the panel writer would not');
+        $this->assertStringNotContainsString('$wrap', $this->getFile('public/update.php'), 'The update writer would produce files the panel writer would not');
         foreach (['config/filetype.php', 'config/uploads.php', 'config/users.php'] as $path) {
             $this->assertDoesNotMatchRegularExpression("#\n\s+\.'#", $this->getFile($path), $path.' still carries a value split across lines');
         }
@@ -443,7 +445,7 @@ final class UploadIntegrationTest extends TestCase
     #[Test]
     public function theEditorEntryHasNoGenericUploadFallback(): void
     {
-        $code = $this->getFile('index.php');
+        $code = $this->getFile('public/index.php');
         $from = strpos($code, 'elseif ($go == 4)');
         $this->assertNotFalse($from, 'The editor entry is gone');
         $body = substr($code, $from, (int)strpos($code, 'elseif ($go == 5)', $from) - $from);

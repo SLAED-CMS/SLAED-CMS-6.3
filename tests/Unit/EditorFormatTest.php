@@ -28,7 +28,7 @@ final class EditorFormatTest extends TestCase
     #[Test]
     public function codeEditorsCarryAnAccessibleName(): void
     {
-        require_once BASE_DIR.'/plugins/editors/codemirror/driver.php';
+        require_once BASE_DIR.'/public/plugins/editors/codemirror/driver.php';
         $keep = $GLOBALS['tpl'] ?? null;
         $GLOBALS['tpl'] = new class {
             public function getHtmlFrag(string $name, array $data = []): string

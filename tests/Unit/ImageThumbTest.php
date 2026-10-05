@@ -130,7 +130,7 @@ final class ImageThumbTest extends TestCase
     public function bothThemesCarryTheAttachmentStyling(): void
     {
         foreach (['lite', 'admin'] as $name) {
-            $css = $this->getFile('templates/'.$name.'/assets/css/base.css');
+            $css = $this->getFile('public/templates/'.$name.'/assets/css/base.css');
             foreach (['.sl-attach {', '.sl-attach-left {', '.sl-attach-right {', '.sl-attach-center {'] as $rule) {
                 $this->assertStringContainsString($rule, $css, 'Theme '.$name.' is missing the '.trim($rule, ' {').' rule');
             }

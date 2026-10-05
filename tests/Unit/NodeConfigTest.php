@@ -139,13 +139,13 @@ final class NodeConfigTest extends TestCase
         }
         $this->assertCount(18, $run['bad']);
         $this->assertTrue($run['same'], 'A refused name left a row, a source or a directory');
-        $this->assertSame(['index.html', 'thumb/old.txt'], $run['pages'], 'The old file of an earlier owner was touched');
+        $this->assertSame(['thumb/old.txt'], $run['pages'], 'The old file of an earlier owner was touched');
         foreach (['x', 'a'.str_repeat('b', 19), 'faq', 'avatars'] as $name) {
             $this->assertSame(['ok' => true, 'value' => 1], $run['good'][$name], $name.' of length '.strlen($name).' was refused');
             $this->assertSame(['ok' => true, 'value' => null], $run['gone'][$name]);
             $trace = $run['trace'][$name];
             foreach (['row', 'node', 'fields', 'uploads', 'rating'] as $key) $this->assertNull($trace[$key], $name.': '.$key.' is left after the delete');
-            $this->assertTrue($trace['dir'] && $trace['guard'], $name.': the directory below the root of the types and its guard were not kept');
+            $this->assertTrue($trace['dir'] && $trace['bare'], $name.': the directory below the root of the types was not kept, or it carries a guard');
         }
         foreach (['x', 'a'.str_repeat('b', 19)] as $name) $this->assertFalse($run['trace'][$name]['top'], $name.': a type made a folder in the upload root');
     }
@@ -163,7 +163,7 @@ final class NodeConfigTest extends TestCase
         $this->assertSame($run['trace']['content']['all'], $run['trace']['content']['uploads'], 'A broken old rule did not give way to the rule all');
     }
 
-    # A new type is disabled at version 1; its sections are the stored differences, its rules the copy of all and the new rating rule, its directory carries the guard
+    # A new type is disabled at version 1; its sections are the stored differences, its rules the copy of all and the new rating rule, its directory carries no guard
     #[Test]
     public function aTypeIsCreatedDisabledWithEveryPart(): void
     {
@@ -180,13 +180,13 @@ final class NodeConfigTest extends TestCase
         $this->assertSame($trace['all'], $trace['uploads'], 'The upload rule is not the copy of the rule all');
         $this->assertSame(['active' => '1', 'period' => '2592000', 'detail' => '1', 'guests' => '1'], $trace['rating']);
         $this->assertNull($trace['fields']);
-        $this->assertTrue($trace['dir'] && $trace['guard'], 'The directory or its guard is missing');
+        $this->assertTrue($trace['dir'] && $trace['bare'], 'The directory is missing or carries a guard');
         $this->assertFalse($run['state']['marker']);
         $this->assertSame(12, count($run['read']['uploads']));
         $this->assertTrue($run['public'], 'A disabled type is public');
         $this->assertTrue($run['files']['ok'] && $run['docs']['ok']);
         $this->assertSame(['release', 'site'], array_keys($run['filestrace']['fields']));
-        $this->assertTrue($run['filestrace']['guard'], 'The directory of guards alone was not taken');
+        $this->assertTrue($run['filestrace']['bare'], 'The empty directory was not taken without a guard');
         $this->assertInvalid($run['again'], 'name', 'a second create');
     }
 
@@ -302,30 +302,27 @@ final class NodeConfigTest extends TestCase
         $this->assertNotNull($run['kept']['node']);
         $this->assertSame(['ok' => true, 'value' => null], $run['done']);
         foreach (['row', 'node', 'fields', 'uploads', 'rating'] as $key) $this->assertNull($run['trace'][$key], $key.' is left after the delete');
-        $this->assertSame(['.htaccess', 'index.html', 'thumb/index.html'], $run['walk'], 'The directory was not kept with its guards');
+        $this->assertSame([], $run['walk'], 'The empty directory of the deleted type was not kept as it was');
         $this->assertSame(['1' => '', '2' => 'forum,node-news,node-docs', '3' => 'node,voting'], $run['admins'], 'The right of the deleted type was left');
         $this->assertSame(['ok' => true, 'value' => 1], $run['reuse'], 'The name of a deleted type cannot be registered again');
         $this->assertSame(['ok' => true, 'value' => null], $run['again']);
     }
 
-    # A type goes public only when the web server refuses its directory - the probe server carries the nginx rule of UPGRADING.md (Web Server Rule for Node Upload Directories)
-    # A new directory gets both guards, a missing one is written back, a served guard page or a guard with other bytes keeps the type off, and a type already on stays on
+    # A type goes public only when the site refuses its directory - the probe server runs the light path of core/stream.php, or serves the folder while the file open exists
+    # A new directory stays empty, a served file keeps the type off, the refusal of the light path lets it on, and a type already on stays on
     #[Test]
     public function aTypeGoesPublicOnlyBehindARefusingWebServer(): void
     {
         $run = $this->getRuns()['gate'];
         $this->assertSame(['ok' => true, 'value' => 1], $run['add']);
-        $this->assertSame([true, 'deny from all'], $run['made'], 'The new directory did not get both guards');
-        $this->assertInvalid($run['open'], 'directory', 'a served guard page');
-        $this->assertSame('deny from all', $run['written'], 'The missing guard was not written back');
-        $this->assertInvalid($run['tampered'], 'directory', 'a guard with other bytes');
-        $this->assertInvalid($run['index'], 'directory', 'an index with other bytes');
+        $this->assertSame([], $run['made'], 'The new directory got a guard file');
+        $this->assertInvalid($run['open'], 'directory', 'a served file of the directory');
         $this->assertSame(['ok' => true, 'value' => 2], $run['on']);
         $this->assertSame(['ok' => true, 'value' => 2], $run['again'], 'A repeat of the state asks the server again');
         $this->assertTrue($run['trace']);
         $this->assertSame(['ok' => true, 'value' => 3], $run['off']);
-        $this->assertSame(['ok' => true, 'value' => null], $run['delete'], 'A directory of guards alone keeps the type from being deleted');
-        $this->assertSame(['.htaccess', 'index.html'], $run['kept'], 'The guards of the deleted type were removed');
+        $this->assertSame(['ok' => true, 'value' => null], $run['delete'], 'An empty directory keeps the type from being deleted');
+        $this->assertSame([], $run['kept'], 'The directory of the deleted type was not kept empty');
     }
 
     # A writer dies before and after its commit: the type is held, other type writes wait, and the restore follows the database or refuses a row that fits neither side
@@ -429,6 +426,6 @@ final class NodeConfigTest extends TestCase
         foreach (['de', 'en', 'fr', 'pl', 'ru', 'uk'] as $one) {
             $this->assertStringContainsString("define('_NODE_AEDIT'", (string)file_get_contents($root.'/modules/node/admin/lang/'.$one.'.php'), $one);
         }
-        $this->assertStringContainsString('$ndata[\'limits\'][\'edit\'] = 600;', (string)file_get_contents($root.'/update.php'), 'The update run does not add the key');
+        $this->assertStringContainsString('$ndata[\'limits\'][\'edit\'] = 600;', (string)file_get_contents($root.'/public/update.php'), 'The update run does not add the key');
     }
 }

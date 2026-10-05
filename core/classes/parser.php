@@ -237,11 +237,11 @@ class Parser {
         return getDecodedText($s);
     }
 
-    # Public web root for resolving relative asset paths
-    private function getRootPath(): string {
-        static $root = '';
-        if ($root === '') $root = dirname(__DIR__, 2);
-        return $root;
+    # The file behind one site-relative address: an address under uploads/ lies below UPLOADS_DIR, the one upload root, and any other below the document root
+    private function getAddressFile(string $path): string {
+        $root = dirname(__DIR__, 2);
+        if (str_starts_with($path, 'uploads/')) return (defined('UPLOADS_DIR') ? UPLOADS_DIR : $root.'/uploads').substr($path, 7);
+        return (defined('PUBLIC_DIR') ? PUBLIC_DIR : $root.'/public').'/'.$path;
     }
 
     # Render parser images through the theme fragment so markup stays out of PHP
@@ -333,12 +333,11 @@ class Parser {
 
         if ($path === '' || preg_match('#^[a-z][a-z0-9+.\-]*:#i', $path)) return $raw;
 
-        $full = $this->getRootPath().'/'.$path;
-        if (is_file($full)) return $path;
+        if (is_file($this->getAddressFile($path))) return $path;
 
         if (preg_match('#^(uploads/[^/]+)/([^/]+)$#', $path, $m)) {
             $thumb = $m[1].'/thumb/'.$m[2];
-            if (is_file($this->getRootPath().'/'.$thumb)) return $thumb;
+            if (is_file($this->getAddressFile($thumb))) return $thumb;
         }
 
         return null;
@@ -667,14 +666,14 @@ class Parser {
             $hg  = $m[5] ?? '';
             $rl  = $m[6] ?? '';
             $ext = strtolower((string)substr((string)strrchr($fn, '.'), 1));
-            $file = 'uploads/'.$room.'/'.$fn;
+            $file = getUploadUrl($room.'/'.$fn);
             $path = UPLOADS_DIR.'/'.$room.'/'.$fn;
             $link = ($this->nid > 0) ? 'index.php?name='.$mod.'&op=attach&id='.$this->nid.'&key='.rawurlencode($fn) : $file;
             $href = str_replace('&', '&amp;', $link);
             $timg = $href;
             if ($tl === '' || strtolower($tl) === 'title') $tl = $fn;
             if (in_array($ext, $img, true)) {
-                $tfile = 'uploads/'.$room.'/thumb/'.$fn;
+                $tfile = getUploadUrl($room.'/thumb/'.$fn);
                 $tpath = UPLOADS_DIR.'/'.$room.'/thumb/'.$fn;
                 $tdir  = UPLOADS_DIR.'/'.$room.'/thumb';
                 if ($mod !== '' && ($fex[$path] ??= file_exists($path)) && !($fex[$tpath] ??= file_exists($tpath))) {

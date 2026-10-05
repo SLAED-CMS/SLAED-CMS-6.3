@@ -28,6 +28,5 @@ return (new Config())
                 'uploads',
                 'vendor',
             ])
-            ->notPath('plugins/filemanager/uploader/jupload.php')
     )
 ;

@@ -277,10 +277,10 @@ class EditorRoomTest extends TestCase
     #[Test]
     public function theEditorReadsTheCapAndTheTypeListFromPhp(): void
     {
-        $drv = $this->getFile('plugins/editors/toastui/driver.php');
+        $drv = $this->getFile('public/plugins/editors/toastui/driver.php');
         $this->assertStringContainsString("'embedmax' => Parser::EMBEDMAX,", $drv, 'The editor no longer receives the cap from the one constant that defines it');
         $this->assertStringContainsString("'embedimg' => Parser::EMBEDIMG,", $drv, 'The editor no longer receives the type list from the one array that defines it');
-        $js = $this->getFile('plugins/system/filemanager.js');
+        $js = $this->getFile('public/plugins/system/filemanager.js');
         $this->assertStringContainsString('getOpt(id).embedimg', $js, 'The editor no longer reads the type list it was handed');
         $this->assertStringContainsString('opt.embedmax', $js, 'The editor no longer reads the cap it was handed');
         $this->assertSame(0, preg_match('#65536|87384#', $js), 'The editor restates the cap as a number of its own, which is a second definition that can drift');
@@ -294,7 +294,7 @@ class EditorRoomTest extends TestCase
     #[Test]
     public function everyRouteIntoTheEmbedPathPassesTheSameGuard(): void
     {
-        $js = $this->getFile('plugins/system/filemanager.js');
+        $js = $this->getFile('public/plugins/system/filemanager.js');
         $note = 'The blob hook is not registered as a statement of its own, so a condition can stand in front of it';
         $this->assertMatchesRegularExpression('#\n\s*addHook\(id, ed\);#', $this->getEntry($js), $note);
         $hook = (int)strpos($js, "ed.addHook('addImageBlobHook'");
@@ -314,22 +314,22 @@ class EditorRoomTest extends TestCase
     #[Test]
     public function oneWindowAndOneIconReplaceTheTwoDialogs(): void
     {
-        $js = $this->getFile('plugins/system/filemanager.js');
+        $js = $this->getFile('public/plugins/system/filemanager.js');
         foreach (['setImageChrome', 'setPopupChrome'] as $name) {
             $this->assertStringNotContainsString($name, $js, $name.'() is back, so code measures and rewrites a popup it does not own');
         }
         $this->assertStringContainsString("ed.removeToolbarItem('image')", $js, 'The vendor image item is back beside our own, so there are two windows again');
         $note = 'The toolbar icon is conditional again, so a visitor who may only insert an address finds none';
         $this->assertMatchesRegularExpression('#\n\s*addBtn\(id, ed\);#', $this->getEntry($js), $note);
-        $lite = $this->getFile('templates/lite/partials/file-manager.html');
-        $this->assertSame($lite, $this->getFile('templates/admin/partials/file-manager.html'), 'The two themes no longer carry the same window markup');
+        $lite = $this->getFile('public/templates/lite/partials/file-manager.html');
+        $this->assertSame($lite, $this->getFile('public/templates/admin/partials/file-manager.html'), 'The two themes no longer carry the same window markup');
         $this->assertStringContainsString('js-slaed-image-url', $lite, 'The address field is gone from the window, which is the one thing every visitor may use');
         $note = 'The address field answers to more than canlink, though the place rule is the one thing that may withhold an address';
         $this->assertSame(1, $this->getDepth($lite, 'js-slaed-image-url'), $note);
         $note = 'The address section stands under a condition of its own, so a place storing a file name could still be handed one';
         $this->assertStringContainsString('{% if can_link %}'."\n".'        <section class="sl-fm-pane" data-sl-pane="url"', $lite, $note);
         foreach (['lite', 'admin'] as $theme) {
-            $path = dirname(__DIR__, 2).'/templates/'.$theme.'/partials/editor-toastui-dialogs.html';
+            $path = dirname(__DIR__, 2).'/public/templates/'.$theme.'/partials/editor-toastui-dialogs.html';
             $this->assertFileDoesNotExist($path, 'A second window markup survives in the '.$theme.' theme');
         }
     }

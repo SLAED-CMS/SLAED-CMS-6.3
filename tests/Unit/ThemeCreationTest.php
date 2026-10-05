@@ -46,15 +46,15 @@ namespace Tests\Unit {
             $list = [];
             foreach (['assets/css/base.css', 'assets/css/presentation.css', 'assets/css/theme.css', 'assets/editors/toastui/skin.css'] as $one) {
                 $full = self::$path.'/'.$one;
-                if (is_file($full)) $list['templates/'.self::$name.'/'.$one] = str_replace("\r\n", "\n", (string)file_get_contents($full));
+                if (is_file($full)) $list['public/templates/'.self::$name.'/'.$one] = str_replace("\r\n", "\n", (string)file_get_contents($full));
             }
-            return getTextModel($list, 'templates/'.self::$name.'/assets/css/base.css');
+            return getTextModel($list, 'public/templates/'.self::$name.'/assets/css/base.css');
         }
 
         #[Test]
         public function theCopyIsTheEtalonWithOneBlockRepainted(): void
         {
-            $etalon = self::$root.'/templates/'.self::ETALON;
+            $etalon = self::$root.'/public/templates/'.self::ETALON;
             $mark = getContract()['marker'];
             foreach (['assets/css/presentation.css', 'assets/css/theme.css', 'assets/editors/toastui/skin.css'] as $one) {
                 $this->assertFileEquals($etalon.'/'.$one, self::$path.'/'.$one, $one.' changed, so the copy is not "edit one block" any more');
@@ -161,12 +161,12 @@ namespace Tests\Unit {
             foreach (array_keys($skel['frontend']) as $one) {
                 $this->assertStringContainsString("'".$one."'", $rule, $one.' is in the skeleton and TemplateValidationTest never looks for it');
             }
-            foreach (glob(dirname(__DIR__, 2).'/plugins/editors/*/manifest.json') ?: [] as $file) {
+            foreach (glob(dirname(__DIR__, 2).'/public/plugins/editors/*/manifest.json') ?: [] as $file) {
                 $man = json_decode((string)file_get_contents($file), true);
                 $dec = (array)($man['theme'] ?? []);
                 if ($dec === []) continue;
                 foreach (array_keys(getContract()['themes']) as $theme) {
-                    $root = dirname(__DIR__, 2).'/templates/'.$theme.'/';
+                    $root = dirname(__DIR__, 2).'/public/templates/'.$theme.'/';
                     if (!empty($dec['skin'])) $this->assertFileExists($root.'assets/editors/'.$man['id'].'/skin.css', $theme.' declares no skin for the '.$man['id'].' editor');
                     foreach ((array)($dec['partials'] ?? []) as $part) {
                         $this->assertFileExists($root.'partials/'.$part.'.html', $theme.' is missing the '.$part.' partial the '.$man['id'].' editor declares');

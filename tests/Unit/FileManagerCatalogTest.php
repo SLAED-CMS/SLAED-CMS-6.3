@@ -290,7 +290,7 @@ final class FileManagerCatalogTest extends TestCase
     public function theCatalogueIsTheOnlyListOfTheTree(): void
     {
         $this->assertStringNotContainsString('function getAdminUploadFiles(', $this->getFile('core/admin.php'), 'The quick list of the module is still built');
-        $this->assertStringNotContainsString('getAdminUploadFiles', $this->getFile('index.php'), 'The route the quick list was read through is still wired');
+        $this->assertStringNotContainsString('getAdminUploadFiles', $this->getFile('public/index.php'), 'The route the quick list was read through is still wired');
         $body = $this->getBody('admin/modules/uploads.php', 'uploads');
         $this->assertStringNotContainsString('uploads-panel', $body, 'The catalogue screen still carries the sub-tabs the quick lists lived in');
         $this->assertStringContainsString('getAdminFileShell(true)', $body, 'The catalogue screen shows no browser of its own');
@@ -316,9 +316,9 @@ final class FileManagerCatalogTest extends TestCase
         $rule = $this->getBody('core/system.php', 'getUploadRuleData');
         $this->assertStringContainsString("'moderfiles' => (int)(\$con[7] ?? 0)", $rule, 'The stored rule was not closed up after the retired field was taken out of it');
         $this->assertStringNotContainsString('$con[12]', $rule, 'The rule still reads a position the stored strings no longer carry');
-        $shell = $this->getFile('templates/admin/partials/file-browser.html');
+        $shell = $this->getFile('public/templates/admin/partials/file-browser.html');
         $this->assertStringNotContainsString('pager_html', $shell, 'The shell still leaves a place for the pager');
-        $css = $this->getFile('templates/admin/assets/css/theme.css');
+        $css = $this->getFile('public/templates/admin/assets/css/theme.css');
         $this->assertDoesNotMatchRegularExpression('#\.sl-fm-scroll \{[^}]*max-height#', $css, 'The list still stands in a box of its own height');
         $this->assertDoesNotMatchRegularExpression('#\.sl-fm-scroll \{[^}]*overflow#', $css, 'The list still scrolls inside itself instead of with the page');
         $this->assertMatchesRegularExpression('#\.sl-fm-scroll thead th \{\s*position: sticky;#', $css, 'The column titles do not stay while the rows pass under them');
@@ -334,12 +334,12 @@ final class FileManagerCatalogTest extends TestCase
             $css,
             'The caption of a tile runs under the fan that stands over it'
         );
-        $tile = $this->getFile('templates/admin/fragments/file-browser-tile.html');
+        $tile = $this->getFile('public/templates/admin/fragments/file-browser-tile.html');
         $this->assertStringContainsString('<label class="sl-fm-pick">', $tile, 'The mark of a tile has no plate of its own and is lost on a coloured thumbnail');
         $this->assertStringContainsString('{{ size_text }} · {{ day_text }}', $tile, 'The caption of a tile does not name the size and the day the mockup shows');
         $this->assertStringNotContainsString(
             'sl-fm-tile-mark',
-            $this->getFile('templates/admin/assets/css/theme.css'),
+            $this->getFile('public/templates/admin/assets/css/theme.css'),
             'The plate of a mark carries a second name beside the one the editor window gives it'
         );
         $this->assertDoesNotMatchRegularExpression(
@@ -381,7 +381,7 @@ final class FileManagerCatalogTest extends TestCase
     public function oneDownloadPathServesTheProject(): void
     {
         $this->assertStringNotContainsString('function stream(', $this->getFile('core/system.php'), 'The download helper of the legacy contract is still defined');
-        $body = $this->getBody('core/system.php', 'getFileStream');
+        $body = $this->getBody('core/stream.php', 'getFileStream');
         $this->assertStringContainsString("'application/octet-stream'", $body, 'A download is answered with a type the browser may execute');
         $this->assertStringContainsString("rawurlencode(basename(str_replace('\\\\', '/', \$name)))", $body, 'The name of a download reaches the header as it was given');
         $this->assertStringContainsString('exit;', $body, 'A download does not end the request it answers');
@@ -445,10 +445,10 @@ final class FileManagerCatalogTest extends TestCase
     public function theAttributeThatHidesBeatsEveryClass(): void
     {
         foreach (['admin', 'lite'] as $skin) {
-            $base = $this->getFile('templates/'.$skin.'/assets/css/base.css');
+            $base = $this->getFile('public/templates/'.$skin.'/assets/css/base.css');
             $note = 'The theme '.$skin.' has no reset for the attribute that hides, so a class with a display keeps a hidden element on the screen';
             $this->assertMatchesRegularExpression('#\[hidden\] \{\s*display: none !important;#', $base, $note);
-            $theme = $this->getFile('templates/'.$skin.'/assets/css/theme.css');
+            $theme = $this->getFile('public/templates/'.$skin.'/assets/css/theme.css');
             $one = 'The theme '.$skin.' patches the same trap class by class again beside the one reset of its base';
             $this->assertDoesNotMatchRegularExpression('#\.[a-z0-9-]+\[hidden\] \{\s*display: none;\s*\}#', $theme, $one);
         }
@@ -458,11 +458,11 @@ final class FileManagerCatalogTest extends TestCase
     #[Test]
     public function theListNamesTheStateItIsIn(): void
     {
-        $part = $this->getFile('templates/admin/partials/file-browser-list.html');
+        $part = $this->getFile('public/templates/admin/partials/file-browser-list.html');
         foreach (['sl-skel', 'data-sl-fm-fail', 'data-sl-fm-real', 'sl-fm-empty'] as $mark) {
             $this->assertStringContainsString($mark, $part, 'The list of the browser carries no '.$mark.', so one state of the list has nowhere to be shown');
         }
-        $code = $this->getFile('templates/admin/assets/js/admin-ui.js');
+        $code = $this->getFile('public/templates/admin/assets/js/admin-ui.js');
         foreach (['htmx:beforeRequest', 'htmx:responseError', 'htmx:sendError'] as $hook) {
             $this->assertStringContainsString($hook, $code, 'Nothing listens for '.$hook.', so the browser cannot tell a list on its way from one that never arrived');
         }

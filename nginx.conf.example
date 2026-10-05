@@ -1,0 +1,49 @@
+# Author: Eduard Laas
+# 2005 - 2026 SLAED
+# License: MIT
+# Website: slaed.net
+
+# The server block of SLAED CMS for nginx, which reads no .htaccess: copy it into the configuration of the site and adjust
+# server_name, root and fastcgi_pass. The document root is the folder public/ of the project and nothing above it,
+# so core/, config/, storage/ and uploads/ never exist for the web. tests/Unit/NginxConfigTest.php keeps this file in step
+# with public/.htaccess: whatever that file refuses inside public/, this one refuses too.
+
+server {
+    listen 80;
+    server_name example.com;
+
+    # The document root: the folder public/ of the project
+    root /var/www/slaed/public;
+    index index.php;
+    charset utf-8;
+    autoindex off;
+
+    # Errors that PHP answers render the page of the site; 502 and 504 mean PHP is down, so the static page answers them
+    fastcgi_intercept_errors off;
+    error_page 400 401 402 403 404 500 503 /index.php?error=$status;
+    error_page 502 504 /error.html;
+
+    # No upload lies in the document root: every address under /uploads/ reaches index.php, whose light path serves a
+    # public folder and refuses the rest. The prefix match with ^~ wins over any regex for static files below.
+    location ^~ /uploads/ {
+        rewrite ^ /index.php last;
+    }
+
+    # The PHP and the markup of the themes are assembled by PHP, no browser fetches them
+    location ~* ^/templates/(?:.*\.php|[^/]+/.*\.html)$ {
+        return 404;
+    }
+
+    # A missing file or folder goes to the front controller, as the rewrite of public/.htaccess does
+    location / {
+        try_files $uri $uri/ /index.php?$args;
+    }
+
+    location ~ \.php$ {
+        try_files $fastcgi_script_name =404;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param HTTP_AUTHORIZATION $http_authorization;
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
+    }
+}

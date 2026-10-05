@@ -1274,8 +1274,8 @@ function deleteProbeTree(string $dir): void {
 }
 
 # Put the service run on clean scratch: the configuration of the stand with the empty Node registry of the release, so the stand types leave all four shared areas
-# The write window is off, since every material of the run comes from one address, and the upload root carries the guard of the release
-# The root of the types carries the guards of the release; below it files holds guards alone and pages keeps an old file inside thumb
+# The write window is off, since every material of the run comes from one address; no folder of the upload root carries a guard file
+# Below the root of the types files holds an empty thumb directory alone and pages keeps an old file inside thumb
 # Two folders of the upload root share a name with a type, Faq in another case and avatars as it is: a type lives below the root of the types and never meets them
 function addProbeScratch(string $work): void {
     foreach (['svc', 'svcbackup', 'svccache', 'svcuploads', 'logs'] as $dir) deleteProbeTree($work.'/'.$dir);
@@ -1293,16 +1293,11 @@ function addProbeScratch(string $work): void {
     }
     $node['node']['limits']['send'] = 0;
     setProbeFile($work.'/svc/node.php', $node);
-    $guard = (string)file_get_contents(BASE_DIR.'/uploads/index.html');
-    foreach (['svcuploads', 'svcuploads/node', 'svcuploads/node/files', 'svcuploads/node/files/thumb', 'svcuploads/node/pages'] as $dir) {
-        file_put_contents($work.'/'.$dir.'/index.html', $guard);
-    }
-    file_put_contents($work.'/svcuploads/node/.htaccess', 'deny from all');
     file_put_contents($work.'/svcuploads/node/pages/thumb/old.txt', 'kept');
     file_put_contents($work.'/svcuploads/avatars/face.png', 'kept');
 }
 
-# Serve the scratch uploads under the nginx rule of UPGRADING.md (Web Server Rule for Node Upload Directories) and point the site at it, so switching a type on gets a real answer
+# Serve the scratch uploads through the light path of core/stream.php and point the site at it, so switching a type on gets a real answer
 # The server is the built-in one with tests/Support/web_probe.php as router; it ends with the probe, and the flag file open of the scratch root switches its rule off
 function addProbeWeb(): void {
     global $conf;
@@ -1393,12 +1388,10 @@ function getProbeTrace(string $name): array {
     }
     $res = $GLOBALS['pdb']->getSqlQuery('SELECT id, title, intro, ext, active, sort, version FROM '.PREFIX_DB.'_node_types WHERE name = :name', ['name' => $name]);
     $row = $res ? $res->fetch(PDO::FETCH_ASSOC) : false;
-    $guard = NODE_DIR.'/'.$name.'/index.html';
-    $deny = NODE_DIR.'/'.$name.'/.htaccess';
-    $good = is_file($guard) && file_get_contents($guard) === file_get_contents(UPLOADS_DIR.'/index.html') && is_file($deny) && file_get_contents($deny) === 'deny from all';
+    $bare = !file_exists(NODE_DIR.'/'.$name.'/index.html') && !file_exists(NODE_DIR.'/'.$name.'/.htaccess');
     return ['row' => $row ?: null, 'node' => $src['node']['types'][$name] ?? null, 'fields' => $src['fields']['node'][$name] ?? null,
         'uploads' => $src['uploads'][$name] ?? null, 'rating' => $src['ratings']['node.'.$name] ?? null, 'all' => $src['uploads']['all'] ?? null,
-        'dir' => is_dir(NODE_DIR.'/'.$name), 'top' => is_dir(UPLOADS_DIR.'/'.$name), 'guard' => $good,
+        'dir' => is_dir(NODE_DIR.'/'.$name), 'top' => is_dir(UPLOADS_DIR.'/'.$name), 'bare' => $bare,
         'defaults' => $src['node']['defaults'] ?? null];
 }
 
@@ -1458,7 +1451,7 @@ function getProbeSvcLegacy(): array {
     return $out;
 }
 
-# Create: news, files over a directory of guards alone and docs as their profiles define them; the stored form, the defaults of both rules and the guard
+# Create: news, files over a directory of empty folders alone and docs as their profiles define them; the stored form, the defaults of both rules and no guard
 function getProbeSvcAdd(): array {
     $srv = getProbeService('boss');
     $pro = getProbeProfiles();
@@ -1570,28 +1563,24 @@ function getProbeSvcStatus(PDO $pdo): array {
     return $out;
 }
 
-# Protection: a type goes public only when the web server itself refuses its directory; a served guard page, a tampered or linked guard keep it off, a missing guard is written
+# Protection: a type goes public only when the site refuses its directory; the light path does, a server that still serves the upload root keeps the type off
+# The probe server serves the name the check asks for while the file open exists, and no guard file is written into the directory at any step
 function getProbeSvcGate(): array {
     $srv = getProbeService('boss');
     $dir = NODE_DIR.'/gate';
     $open = $GLOBALS['probework'].'/open';
     $out = ['add' => getProbeCall(fn(): int => $srv->addNodeType('gate', getProbeInput())->version)];
-    $out['made'] = [is_file($dir.'/index.html'), is_file($dir.'/.htaccess') ? file_get_contents($dir.'/.htaccess') : null];
-    unlink($dir.'/.htaccess');
+    $out['made'] = getProbeWalk($dir);
+    file_put_contents($dir.'/index.html', 'served');
     touch($open);
     $out['open'] = getProbeCall(fn(): NodeType => $srv->updateNodeTypeStatus('gate', true, 1));
     unlink($open);
-    $out['written'] = is_file($dir.'/.htaccess') ? file_get_contents($dir.'/.htaccess') : null;
-    file_put_contents($dir.'/.htaccess', 'allow from all');
-    $out['tampered'] = getProbeCall(fn(): NodeType => $srv->updateNodeTypeStatus('gate', true, 1));
-    unlink($dir.'/.htaccess');
-    $out['index'] = file_put_contents($dir.'/index.html', 'changed') > 0 ? getProbeCall(fn(): NodeType => $srv->updateNodeTypeStatus('gate', true, 1)) : null;
-    file_put_contents($dir.'/index.html', (string)file_get_contents(UPLOADS_DIR.'/index.html'));
+    unlink($dir.'/index.html');
     $out['on'] = getProbeCall(fn(): int => $srv->updateNodeTypeStatus('gate', true, 1)->version);
     touch($open);
     $out['again'] = getProbeCall(fn(): int => $srv->updateNodeTypeStatus('gate', true, 2)->version);
     unlink($open);
-    $out['trace'] = getProbeTrace('gate')['guard'];
+    $out['trace'] = getProbeTrace('gate')['bare'];
     $out['off'] = getProbeCall(fn(): int => $srv->updateNodeTypeStatus('gate', false, 2)->version);
     $out['delete'] = getProbeCall(fn(): null => $srv->deleteNodeType('gate', 3));
     $out['kept'] = getProbeWalk($dir);
@@ -2455,7 +2444,7 @@ function getProbeMatAttach(): array {
         'legacy.png', '.htaccess', 'index.html', str_repeat('a', 240).'-abcdefghij-2.png', '\\news\\photo-abcdefghij-2.png', 'photo-abcdefghij-2.png '];
     foreach ($keys as $i => $key) $out['attack'][$i] = $file('root', $news, $pub, $key).'|'.$file('root', $news, 0, $key);
     $link = $root.'/link-abcdefghij-2.png';
-    $out['symlink'] = symlink(BASE_DIR.'/uploads/index.html', $link) ? $file('root', $news, 0, 'link-abcdefghij-2.png') : 'none';
+    $out['symlink'] = symlink(BASE_DIR.'/public/index.php', $link) ? $file('root', $news, 0, 'link-abcdefghij-2.png') : 'none';
     if (is_link($link)) unlink($link);
     $out['preview'] = [
         'anna' => $file('anna', $news, 0, 'photo-abcdefghij-2.png'),

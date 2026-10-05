@@ -313,7 +313,7 @@ final class CommentThreadTest extends TestCase
         $this->assertTrue($data['tomb']['child'], 'The reply of a removed comment left the page');
         $this->assertNotSame('', $data['tomb']['marked'], 'The tombstone is not a removed row at all');
         $this->assertTrue($data['tomb']['gone'], 'The tombstone stayed after its last reply was removed');
-        $this->assertStringContainsString('is_gone', $this->getFile('templates/lite/fragments/comment.html'));
+        $this->assertStringContainsString('is_gone', $this->getFile('public/templates/lite/fragments/comment.html'));
         $this->assertStringContainsString('_COMMENTS_GONE', $this->getSource('core/user.php', 'getCommentView'));
     }
 

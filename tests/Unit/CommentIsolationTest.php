@@ -10,7 +10,7 @@ final class CommentIsolationTest extends TestCase
 {
     # The one file allowed to name the comment table, and the trees generated, vendored or outside the rule, and the internal migration update.php
     private const OWNER = 'core/classes/comment.php';
-    private const SKIP = ['vendor', 'node_modules', 'storage', 'update.php', 'tools', 'tests', '.git'];
+    private const SKIP = ['vendor', 'node_modules', 'storage', 'public/update.php', 'tools', 'tests', '.git'];
 
     # Every production file that builds a table name from a variable, measured on 2026-07-28; a new entry has to be reviewed before it is added here
     private const ASSEMBLED = [
@@ -34,7 +34,7 @@ final class CommentIsolationTest extends TestCase
             $name = substr($path, strlen($root) + 1);
             if ($item->isDir()) continue;
             if (substr($name, -4) !== '.php') continue;
-            if (in_array(explode('/', $name)[0], self::SKIP, true)) continue;
+            if (in_array(explode('/', $name)[0], self::SKIP, true) || in_array($name, self::SKIP, true)) continue;
             $out[$name] = (string)file_get_contents($path);
         }
         ksort($out);

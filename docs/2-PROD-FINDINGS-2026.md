@@ -36,9 +36,10 @@ Three families of addresses the outside world still holds answer 404 or will soo
 - **A duplicated script segment.** 1049 requests to `/index.php/index.php`, 187 of them exactly `?name=sitemap`, plus
   40 to `/index.php/`. The referer is Google: path-info duplication in links published once and still followed.
 - **Direct file addresses.** Production serves `uploads/<module>/<name>` directly today. After 8.0 the folders of
-  the closed owners — Node types, the forum, private messages, the archive — are no longer under the document root
-  (0-PRIVATE-DATA-2026.md, 1-FILES-2026.md); the public owners stay in `public/uploads/`. Images of a closed owner
-  indexed by search engines or linked from elsewhere stop answering.
+  the closed owners — Node types, the forum, private messages, the archive — are served only by their routes
+  (0-PRIVATE-DATA-2026.md, 1-FILES-2026.md); no upload is under the document root any more, and the public owners keep
+  their addresses through the light path of the front controller. Images of a closed owner indexed by search engines
+  or linked from elsewhere stop answering.
 
 ### What to do
 
@@ -52,17 +53,20 @@ reaches a module.
   PHP is asked. No table of the old scheme is built: a crawler drops a 410 sooner than a 404, which is the whole
   gain left to win. Apache sends a missing path to PHP through the `!-f` rewrite already; nginx answers its own 404
   today, so `nginx.conf.example` of 0-PRIVATE-DATA-2026.md batch 4 gains the fallback to `index.php` for a missing
-  `*.html` and for a missing file under `uploads/`.
+  `*.html`; every address under `uploads/` reaches `index.php` there already, through the location of the light path.
 - **The script segment is normalised.** A request whose path carries anything after `index.php` answers 301 to the
   same script with the same query string. One rule covers `/index.php/index.php` and `/index.php/` alike. It
   replaces the guard at the top of `core/security.php` that forces `$_GET['error'] = 404` for every `PATH_INFO`
   request today.
-- **Retired files answer 410.** A request for a missing file under `uploads/` answers 410. No record maps an old
-  address to a route (decided 2026-10-05): 8.0 is installed from scratch, and `update.php` updates the database only.
+- **Retired files answer 410.** Every refusal of the light path of 0-PRIVATE-DATA-2026.md batch 2 answers 410
+  instead of 404: a missing file under `uploads/`, and the direct address of a file of a closed owner. No record maps
+  an old address to a route (decided 2026-10-05): 8.0 is installed from scratch, and `update.php` updates the
+  database only.
 
 Tests: a `.html` path answers 410 and a physical `.html` file is not touched; `/index.php/index.php?name=sitemap`
-answers 301 to `/index.php?name=sitemap`; a missing file under `uploads/` answers 410 and an existing public upload
-is served; an address of this tree answers as before; a static test finds both fallbacks in `nginx.conf.example`.
+answers 301 to `/index.php?name=sitemap`; a missing file under `uploads/` and a file of a closed owner answer 410 and
+an existing public upload is served; an address of this tree answers as before; a static test finds the `*.html`
+fallback and the location of the light path in `nginx.conf.example`.
 
 ## Item 2 — `addFile()` guesses whether it got a path or data
 

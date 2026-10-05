@@ -23,7 +23,7 @@ function getPresentationSites(): array {
         $item = $meta[$file] ?? [];
         $cat = (string)($item['cat'] ?? '');
         $rows[] = [
-            'src' => 'uploads/presentation/sites/thumb/'.$file,
+            'src' => getUploadUrl('presentation/sites/thumb/'.$file),
             'w' => $wid,
             'h' => $hei,
             'name' => (string)($item['name'] ?? pathinfo($file, PATHINFO_FILENAME)),
@@ -50,8 +50,8 @@ function getPresentationBrand(): array {
         $group = (string)($item['group'] ?? '');
         $mark = (string)($item['mark'] ?? '');
         $rows[] = [
-            'src' => 'uploads/presentation/brand/'.$thumb,
-            'href' => 'uploads/presentation/brand/'.$file,
+            'src' => getUploadUrl('presentation/brand/'.$thumb),
+            'href' => getUploadUrl('presentation/brand/'.$file),
             'w' => $wid,
             'h' => $hei,
             'title' => (defined($title) ? constant($title) : $title).($mark !== '' ? ' · '.$mark : ''),
@@ -76,7 +76,7 @@ function getPresentationDna(): array {
         $more = (string)($item['more'] ?? '');
         $href = (string)($item['href'] ?? '');
         $rows[] = [
-            'src' => 'uploads/presentation/dna/'.$file, 'key' => pathinfo($file, PATHINFO_FILENAME),
+            'src' => getUploadUrl('presentation/dna/'.$file), 'key' => pathinfo($file, PATHINFO_FILENAME),
             'w' => $wid,
             'h' => $hei,
             'title' => defined($title) ? constant($title) : $title,

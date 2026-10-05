@@ -13,12 +13,12 @@ class TemplateValidationTest extends TestCase
     public static function setUpBeforeClass(): void
     {
         self::$basePath = dirname(__DIR__);
-        self::$templatesPath = self::$basePath.'/templates';
+        self::$templatesPath = self::$basePath.'/public/templates';
         self::loadKnownPlaceholders();
         self::scanTemplates();
     }
 
-    # Returns a normalized repository-relative path and rejects paths outside the repository
+    # Returns a normalized repository-relative path and rejects paths outside the repository; a path of the document root is answered relative to public/, as a page addresses it
     private static function getRelativePath(string $path): string
     {
         $base = rtrim(str_replace('\\', '/', self::$basePath), '/');
@@ -26,7 +26,8 @@ class TemplateValidationTest extends TestCase
         if (!str_starts_with($norm, $base.'/')) {
             throw new RuntimeException('Path is outside the repository: '.$norm);
         }
-        return substr($norm, strlen($base) + 1);
+        $rel = substr($norm, strlen($base) + 1);
+        return str_starts_with($rel, 'public/') ? substr($rel, 7) : $rel;
     }
 
     # Discovers installed frontend themes without assuming names or shared implementations
@@ -237,7 +238,7 @@ class TemplateValidationTest extends TestCase
         $base = str_replace('/', '\\', self::$basePath);
         $front = self::getFrontendThemes();
         $this->assertSame('modules/forum/index.php', self::getRelativePath($base.'\\modules\\forum\\index.php'));
-        $this->assertSame('templates/lite/partials/menu.html', self::getRelativePath($base.'\\templates/lite\\partials\\menu.html'));
+        $this->assertSame('templates/lite/partials/menu.html', self::getRelativePath($base.'\\public\\templates/lite\\partials\\menu.html'));
         $this->assertSame('modules/forum/index.php', self::getRelativePath(str_replace('\\', '/', self::$basePath).'/modules/forum/index.php'));
         $this->assertSame($front, self::getThemesForPath('modules/forum/index.php', $front));
         $this->assertSame(['admin'], self::getThemesForPath('admin/modules/blocks.php', $front));
@@ -248,11 +249,11 @@ class TemplateValidationTest extends TestCase
     {
         $errors = [];
         $front = self::getFrontendThemes();
-        $roots = ['admin', 'blocks', 'modules', 'templates/admin'];
+        $roots = ['admin', 'blocks', 'modules', 'public/templates/admin'];
         $found = 0;
         $known = 0;
         $inner = 0;
-        foreach ($front as $theme) $roots[] = 'templates/'.$theme;
+        foreach ($front as $theme) $roots[] = 'public/templates/'.$theme;
 
         foreach ($roots as $root) {
             $path = self::$basePath.'/'.$root;

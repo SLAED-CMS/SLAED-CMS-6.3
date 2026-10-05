@@ -48,9 +48,9 @@ final class CacheContractTest extends TestCase
         $this->assertSame([], $warns, 'The lost race still raises a warning');
     }
 
-    # The sweep removes what was not rewritten within the window, everything for zero, and never a lock file or a protected marker, however old
+    # The sweep removes what was not rewritten within the window, everything for zero, and never a lock file, however old; a guard name is an entry like any other
     #[Test]
-    public function theSweepKeepsLocksAndMarkers(): void
+    public function theSweepKeepsLocks(): void
     {
         $dir = sys_get_temp_dir().'/slaed-sweep-'.bin2hex(random_bytes(4));
         mkdir($dir.'/sub', 0777, true);
@@ -61,10 +61,10 @@ final class CacheContractTest extends TestCase
         }
         file_put_contents($dir.'/new.json', 'x');
         try {
-            $this->assertSame(2, \Cache::deleteStale($dir, 3600), 'The sweep does not remove exactly the two stale entries');
+            $this->assertSame(4, \Cache::deleteStale($dir, 3600), 'The sweep does not remove exactly the four stale entries');
             $this->assertFileExists($dir.'/new.json', 'The sweep removed a fresh entry');
             $this->assertSame(1, \Cache::deleteStale($dir, 0), 'A zero window does not remove every entry');
-            foreach (['compile.lock', 'sub/index.html', '.htaccess'] as $name) $this->assertFileExists($dir.'/'.$name, 'The sweep removed '.$name);
+            $this->assertFileExists($dir.'/compile.lock', 'The sweep removed a lock');
         } finally {
             foreach (['old.json', 'sub/old.php', 'compile.lock', 'sub/index.html', '.htaccess', 'new.json'] as $name) if (is_file($dir.'/'.$name)) unlink($dir.'/'.$name);
             rmdir($dir.'/sub');

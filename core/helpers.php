@@ -301,8 +301,8 @@ function setTplAdminInfoPage(array $data = []): void {
     if (!empty($data['base'])) {
         $base = (string)$data['base'];
     } elseif ($name) {
-        $mbase = 'modules/'.$name.'/admin/info';
-        $abase = 'admin/info/'.$name;
+        $mbase = BASE_DIR.'/modules/'.$name.'/admin/info';
+        $abase = BASE_DIR.'/admin/info/'.$name;
         if ($fdoc($mbase.'/'.$locale) !== '') {
             $base = $mbase;
         } elseif ($fdoc($abase.'/'.$locale) !== '') {
@@ -369,7 +369,7 @@ function setTplAdminInfoPage(array $data = []): void {
         'tabs' => $tabs,
         'tab' => $tab,
     ]);
-    if (!empty($conf['adminfo']) && file_exists($path)) $cont .= checkPerms(BASE_DIR.'/'.$path);
+    if (!empty($conf['adminfo']) && file_exists($path)) $cont .= checkPerms($path);
     $cont .= $body;
     if (!empty($conf['adminfo'])) {
         $rows = [[
@@ -1178,7 +1178,7 @@ function getTplModuleSelect(string $name, string $mod, string $no = '', array $a
     $cont = '';
     if ($no !== '') $cont .= $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => empty($mod)]);
     $mods = explode(',', $mod);
-    $list = array_merge(array_diff(scandir('modules'), ['node']), array_keys(array_filter(getNodeTypeMap(), fn(NodeType $v): bool => $v->active)));
+    $list = array_merge(array_diff(scandir(BASE_DIR.'/modules') ?: [], ['node']), array_keys(array_filter(getNodeTypeMap(), fn(NodeType $v): bool => $v->active)));
     foreach ($list as $file) {
         if (str_contains($file, '.')) continue;
         if ($allow && !in_array($file, $allow, true)) continue;

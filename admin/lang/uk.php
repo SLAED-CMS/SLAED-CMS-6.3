@@ -19,6 +19,7 @@ define('_ADDNEWFILEBLOCK','Додати файловий блок');
 define('_ADDRESS','Адреса');
 define('_ADDSUBCATEGORY','Додати-під категорію');
 define('_ADIR','Каталог зображень від кореня сайту');
+define('_ACCOUNT_ADIR','Тека аватарів усередині uploads/');
 define('_ADMCOL','Кількість колонок при виведенні модулів панелі адміністратора');
 define('_ADMINEMAIL','E-Mail адміністратора');
 define('_ADMINFOEDIT','Активувати редактор відділу інформації?');
@@ -593,6 +594,9 @@ define('_SETUP_NOWRITE','PHP не може сюди писати, встанов
 define('_SETUP_NOEXT','не встановлено');
 define('_SETUP_NOOPT','не встановлено, сайт працює й без нього');
 define('_SETUP_ANSWERS','сайт відповідає за %s');
+define('_SETUP_WEBROOT','Корінь сайту');
+define('_SETUP_ROOT_PUB','public/: нічого поза ним не доступно з вебу');
+define('_SETUP_ROOT_PRJ','проєкт: його .htaccess спрямовує кожен запит у public/, лише Apache або LiteSpeed');
 define('_SETUP_CONNECT','З\'єднання з %s');
 define('_SETUP_CONN_USER','користувач %s');
 define('_SETUP_FREE','Префікс %s вільний');

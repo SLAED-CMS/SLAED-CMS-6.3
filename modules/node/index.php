@@ -857,7 +857,7 @@ function setNodeAsset(): void {
     }
     $path = getNodeAssetPath($type, $one->src);
     if ($path === '') setNodeDeny(404);
-    getFileStream($path, ($one->name !== '') ? $one->name : basename($one->src), $one->mime ?? 'application/octet-stream', $mode !== 'download', true, $count ? $hits : null);
+    getFileStream($path, ($one->name !== '') ? $one->name : basename($one->src), $one->mime ?? 'application/octet-stream', $mode !== 'download', 'private', $count ? $hits : null);
     exit;
 }
 
@@ -897,7 +897,7 @@ function setNodeAttach(): void {
     if ($path === '') setNodeDeny(404);
     $info = class_exists('finfo') ? new finfo(FILEINFO_MIME_TYPE) : null;
     $mime = $info ? $info->file($path) : false;
-    getFileStream($path, $key, is_string($mime) ? $mime : 'application/octet-stream', true, $id > 0);
+    getFileStream($path, $key, is_string($mime) ? $mime : 'application/octet-stream', true, ($id > 0) ? 'private' : 'none');
     exit;
 }
 

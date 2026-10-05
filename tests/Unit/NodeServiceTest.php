@@ -423,7 +423,7 @@ final class NodeServiceTest extends TestCase
         $job = $conf['scheduler']['jobs']['nodepublish'] ?? [];
         $this->assertSame(['system', '1', 'nodepublish', '* * * * *', '180', '1', ['limit' => '50']], [$job['type'] ?? '', $job['active'] ?? '', $job['system'] ?? '',
             $job['schedule'] ?? '', $job['lock_timeout'] ?? '', $job['manual'] ?? '', $job['settings'] ?? []]);
-        $setup = (string)file_get_contents(self::getRoot().'/update.php');
+        $setup = (string)file_get_contents(self::getRoot().'/public/update.php');
         $this->assertStringContainsString("if (is_array(\$sched) && !isset(\$sched['jobs']['nodepublish'])) {", $setup);
         $this->assertStringContainsString("'schedule' => '* * * * *',\n            'priority' => '6',\n            'lock_timeout' => '180',", $setup);
     }
@@ -551,7 +551,7 @@ final class NodeServiceTest extends TestCase
             $this->assertStringNotContainsString('is_moder(', $body, $name);
         }
         $this->assertStringContainsString("'moder' => \$upl && checkUploadModer(\$mod),", self::getBody('core/helpers.php', 'getUploadPlaceView'));
-        $this->assertStringContainsString('$mdr = $upl && checkUploadModer($mod);', (string)file_get_contents(self::getRoot().'/plugins/editors/toastui/driver.php'));
+        $this->assertStringContainsString('$mdr = $upl && checkUploadModer($mod);', (string)file_get_contents(self::getRoot().'/public/plugins/editors/toastui/driver.php'));
         $room = self::getBody('core/helpers.php', 'getEditorRoomData');
         $this->assertStringContainsString("'nodes.body' => 'mediumtext'", $room);
         $this->assertStringContainsString("'nodes.intro' => 'text'", $room);

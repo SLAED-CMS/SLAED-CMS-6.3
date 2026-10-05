@@ -209,7 +209,7 @@ final class UpdateFieldsTest extends TestCase
         $sql = (string)preg_replace('/CREATE TABLE IF NOT EXISTS `\{prefix\}_node[a-z_]*` \(.*?\n\)\s*ENGINE[^;]*;/s', '', $sql);
         $this->assertSame(0, preg_match('/`field`\s+TEXT NOT NULL/', $sql), 'The update narrows a column of extra field values back to TEXT');
         $this->assertSame(2, preg_match_all('/`field`\s+MEDIUMTEXT NOT NULL/', $sql), 'The update does not widen forum.field and users.field');
-        $code = (string)file_get_contents($root.'/update.php');
+        $code = (string)file_get_contents($root.'/public/update.php');
         $order = 'setUpdatePoints($db, $pref), setUpdateRatings($db, $pref), setUpdateFields($db, $pref)';
         $this->assertStringContainsString($order, $code, 'The order of the units changed');
     }

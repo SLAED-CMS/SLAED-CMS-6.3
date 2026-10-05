@@ -13,10 +13,10 @@ require_once dirname(__DIR__, 2).'/tools/ui-audit.php';
 # Copy one etalon under a name nothing else uses and repaint its palette, which is the whole of "creating a theme"
 function setScratchTheme(string $etalon): array {
     $root = dirname(__DIR__, 2);
-    $from = $root.'/templates/'.$etalon;
+    $from = $root.'/public/templates/'.$etalon;
     if (!is_dir($from)) throw new RuntimeException('No etalon at '.$from);
     $name = 'scratch-'.substr(sha1($etalon.getmypid().microtime(true)), 0, 8);
-    $path = $root.'/templates/'.$name;
+    $path = $root.'/public/templates/'.$name;
     if (is_dir($path)) deleteScratchTheme($path);
     setScratchTree($from, $path);
     setScratchPalette($path.'/assets/css/base.css');

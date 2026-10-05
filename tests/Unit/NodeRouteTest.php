@@ -135,7 +135,7 @@ final class NodeRouteTest extends TestCase
         $this->assertSame(array_fill(0, 14, 404), $run['refused'],
             'A name of no text, a crafted key, an extra, a mixed or a wrong flag, a closed material, a foreign type, a repeated or an unknown key is served');
         $this->assertSame(200, $run['coded'], 'A percent-encoded key is not the same key as its plain form');
-        $this->assertSame(403, $run['direct'], 'The upload directory of the type is open to direct access');
+        $this->assertSame(404, $run['direct'], 'The upload directory of the type is open to direct access, the light path served it');
         $this->assertFalse($run['climb'], 'A key climbing out of the directory served a file');
     }
 
@@ -153,7 +153,7 @@ final class NodeRouteTest extends TestCase
         $this->assertSame([302, 'https://example.com/tool', 1], $run['link']);
         $this->assertSame([404, '', 0], $run['shown'], 'An external address of an image role became a redirect of the site');
         $this->assertSame([404, 404], $run['foreign']);
-        $this->assertSame(403, $run['direct']);
+        $this->assertSame(404, $run['direct'], 'The light path served a file of a private folder');
     }
 
     # A report needs POST and the token, is stored once with its reporter, and a second report of the same visitor within a minute is refused
@@ -282,10 +282,11 @@ final class NodeRouteTest extends TestCase
         $this->assertStringNotContainsString('getSqlQuery', (string)file_get_contents($root.'/core/classes/node/view.php'), 'The preparer runs SQL');
         $this->assertTrue(method_exists('Template', 'checkTemplateFile') || str_contains((string)file_get_contents($root.'/core/classes/template.php'),
             'public function checkTemplateFile(string $kind, string $name): bool'));
-        foreach (['partials/node/list.html', 'partials/node/view.html'] as $one) $this->assertFileExists($root.'/templates/lite/'.$one);
-        foreach (['card', 'block', 'image', 'gallery', 'download', 'player', 'link', 'tree'] as $one) $this->assertFileExists($root.'/templates/lite/fragments/node/'.$one.'.html');
-        $this->assertFileDoesNotExist($root.'/templates/lite/fragments/node/search.html', 'The search module renders the rows of Node itself');
-        $this->assertFileEquals($root.'/templates/lite/fragments/repeat.html', $root.'/templates/admin/fragments/repeat.html', 'The repeatable rows differ between the themes');
+        $lite = $root.'/public/templates/lite';
+        foreach (['partials/node/list.html', 'partials/node/view.html'] as $one) $this->assertFileExists($lite.'/'.$one);
+        foreach (['card', 'block', 'image', 'gallery', 'download', 'player', 'link', 'tree'] as $one) $this->assertFileExists($lite.'/fragments/node/'.$one.'.html');
+        $this->assertFileDoesNotExist($lite.'/fragments/node/search.html', 'The search module renders the rows of Node itself');
+        $this->assertFileEquals($lite.'/fragments/repeat.html', $root.'/public/templates/admin/fragments/repeat.html', 'The repeatable rows differ between the themes');
         foreach (['index.php', 'lang', 'admin/index.php', 'admin/lang', 'admin/info/ru.md'] as $one) $this->assertFileExists($root.'/modules/node/'.$one);
         foreach (['controllers', 'repositories', 'src', 'sql'] as $one) $this->assertDirectoryDoesNotExist($root.'/modules/node/'.$one);
         $this->assertStringNotContainsString('getSqlQuery', (string)file_get_contents($root.'/modules/node/index.php'), 'The public controller runs SQL');
@@ -296,14 +297,14 @@ final class NodeRouteTest extends TestCase
     #[Test]
     public function theSharedCodeKnowsTypesFromTheRegistry(): void
     {
-        $index = (string)file_get_contents(self::getRoot().'/index.php');
+        $index = (string)file_get_contents(self::getRoot().'/public/index.php');
         $this->assertStringContainsString("if (\$nname === 'node' || isset(\$conf['node']['types'][\$nname])) {", $index);
         $this->assertStringContainsString("require_once BASE_DIR.'/modules/node/index.php';", $index);
         $this->assertStringContainsString('getNodeTypeMap()[$con]', self::getBody('core/system.php', 'getModuleName'));
         $this->assertStringContainsString("if (isset(\$conf['node']['types'][\$modul])) \$modul = 'node-'.\$modul;", self::getBody('core/system.php', 'is_admin_modul'));
         $this->assertStringContainsString('getNodeTypeMap()', self::getBody('core/helpers.php', 'getTplModuleSelect'));
         $this->assertStringContainsString('getNodeTypeMap()', (string)file_get_contents(self::getRoot().'/blocks/modules.php'));
-        foreach (['core/system.php', 'core/helpers.php', 'index.php', 'admin/index.php', 'blocks/modules.php'] as $file) {
+        foreach (['core/system.php', 'core/helpers.php', 'public/index.php', 'admin/index.php', 'blocks/modules.php'] as $file) {
             $this->assertDoesNotMatchRegularExpression("/'(?:news|docs|files|faq|pages|jokes|links|media|help|content)'\\s*=>\\s*'node/",
                 (string)file_get_contents(self::getRoot().'/'.$file));
         }
@@ -551,6 +552,9 @@ final class NodeRouteTest extends TestCase
     public function aPagePastTheReaderBoundIsNotFound(): void
     {
         $this->assertSame([404, 404, 404], $this->getMode('head')['bound'], 'A page or a material past the reader bound answered other than not found');
+        [$count, $miss] = $this->getMode('head')['assets'];
+        $this->assertGreaterThan(5, $count, 'The rendered page links no assets of the theme or the plugins');
+        $this->assertSame([], $miss, 'An asset of the rendered page is not served from the document root public/');
     }
 
     # The notice of a submission shows once, the notice of a report shows once, and the header marquee shows the latest faq material

@@ -299,7 +299,7 @@ final class FileManagerPathTest extends TestCase
             $this->assertTrue($fm->checkFileAccess('config/main.php', $op), 'A configuration file may not be '.$op.'ed');
         }
         $this->assertTrue($fm->getFileData('config/main.php')['critical'], 'A configuration file is not marked critical');
-        $this->assertTrue($fm->getFileData('index.php')['critical'], 'The front controller is not marked critical');
+        $this->assertTrue($fm->getFileData('.htaccess')['critical'], 'The rewrite of the project is not marked critical');
         $this->assertTrue($fm->getFileData('core/system.php')['critical'], 'A file of the core is not marked critical');
         $this->assertFalse($fm->getFileData('templates/theme.css')['critical'], 'An ordinary template file is marked critical');
     }
@@ -438,16 +438,41 @@ final class FileManagerPathTest extends TestCase
         $this->assertSame($sort, $name, 'The files of a listing are not ordered by name');
     }
 
-    # The address of one object is its path below the document root, and the system context answers none at all because its files are served by a route
-    # This test needs a real document root, so it reads the repository and never changes it
+    # The document root marks its .htaccess and every entry critical, whatever the folder is called and whatever name the panel carries
+    # The tree of the repository proves public/; a child process with PUBLIC_DIR on public_html/ and a renamed panel proves the name is read and not assumed
     #[Test]
-    public function theAddressOfAnObjectIsRelativeToTheDocumentRoot(): void
+    public function theEntriesOfTheDocumentRootAreCritical(): void
     {
-        $upl = new \FileManager('uploads', BASE_DIR);
-        $this->assertSame('index.php', $upl->getFileData('index.php')['url'], 'The address below the document root is not the relative path');
-        $this->assertSame('uploads/all', $upl->getFileData('uploads/all')['url'], 'A directory below the document root carries no address');
-        $this->assertSame('', (new \FileManager('system', BASE_DIR))->getFileData('index.php')['url'], 'The system context hands out a direct address');
-        $this->assertSame('', $this->getManager('uploads')->getFileData('files/note.md')['url'], 'A root outside the document root answers an address');
+        $fm = new \FileManager('system', BASE_DIR);
+        foreach (['.htaccess', 'public/index.php', 'public/admin.php', 'public/setup.php', 'public/update.php', 'public/.htaccess'] as $one) {
+            $this->assertTrue($fm->getFileData($one)['critical'], $one.' is not marked critical');
+        }
+        foreach (['public/robots.txt', 'public/templates/lite/index.php', 'public/plugins/editors/toastui/driver.php'] as $one) {
+            $this->assertFalse($fm->getFileData($one)['critical'], $one.' is marked critical');
+        }
+        $root = self::$work.'/hosting';
+        if (!is_dir($root.'/public_html')) mkdir($root.'/public_html', 0777, true);
+        foreach (['public_html/index.php', 'public_html/myadm.php', 'public_html/.htaccess', 'public_html/robots.txt'] as $one) file_put_contents($root.'/'.$one, 'x');
+        $code = "<?php\ndefine('FUNC_FILE', true);\ndefine('PUBLIC_DIR', '".$root."/public_html');\nrequire '".BASE_DIR."/core/classes/filemanager.php';\n"
+            ."\$fm = new FileManager('system', '".$root."');\n\$out = [];\n"
+            ."foreach (['public_html/index.php', 'public_html/myadm.php', 'public_html/.htaccess', 'public_html/robots.txt'] as \$one) "
+            ."\$out[\$one] = \$fm->getFileData(\$one)['critical'] ?? null;\necho json_encode(\$out);\n";
+        file_put_contents(self::$work.'/crit.php', $code);
+        $out = json_decode((string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg(self::$work.'/crit.php').' 2>&1'), true);
+        $want = ['public_html/index.php' => true, 'public_html/myadm.php' => true, 'public_html/.htaccess' => true, 'public_html/robots.txt' => false];
+        $this->assertSame($want, $out, 'A document root named public_html or a renamed panel loses its critical mark');
+    }
+
+    # The address of one object is the one getUploadUrl() gives its path below UPLOADS_DIR: a public folder has one, a private folder and the system context none
+    # This test needs the real upload root, so it reads the repository and never changes it
+    #[Test]
+    public function theAddressOfAnObjectIsTheOneOfItsPublicFolder(): void
+    {
+        $this->assertSame('uploads/presentation', (new \FileManager('uploads', UPLOADS_DIR))->getFileData('presentation')['url'], 'A public folder carries no address');
+        $this->assertSame(['uploads/forum/a.png', '', ''], [getUploadUrl('forum/a.png'), getUploadUrl('node/news/a.png'), getUploadUrl('../config/db.php')],
+            'An address is not the one of the public list');
+        $this->assertSame('', (new \FileManager('system', BASE_DIR))->getFileData('public/index.php')['url'], 'The system context hands out a direct address');
+        $this->assertSame('', $this->getManager('uploads')->getFileData('files/note.md')['url'], 'A root outside the upload root answers an address');
     }
 
     # The managed name is taken apart here and nowhere else: the identifier of a member, the token of a guest, a name that carries no owner and a name that is not managed at all

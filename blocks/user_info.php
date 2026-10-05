@@ -53,7 +53,7 @@ if (is_user()) {
         if ($gname === '' && $points) $gname = $rank;
     }
     $gcolor = ($gcolor && preg_match('/^#[0-9a-f]{6}$/i', $gcolor)) ? $gcolor : '';
-    $rankurl = ($grank && file_exists(getThemeImagePath('ranks/'.$grank))) ? getThemeImagePath('ranks/'.$grank) : '';
+    $rankurl = ($grank && file_exists(PUBLIC_DIR.'/'.getThemeImagePath('ranks/'.$grank))) ? getThemeImagePath('ranks/'.$grank) : '';
     $level = ($pnt->active && $points) ? (($ngpts > 0) ? min(99, intval(floor($points / $ngpts * 100))) : 100) : (($grp) ? 100 : 0);
     $data = [
         'is_user' => true,

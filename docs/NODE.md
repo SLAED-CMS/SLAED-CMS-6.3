@@ -236,12 +236,10 @@ bounded 1-50) of `config/scheduler.php`. A public page view never triggers a syn
 ```text
 modules/node/
 ├── index.php            public entry of every type
-├── .htaccess
 ├── lang/                de, en, fr, pl, ru, uk
 ├── profiles/<name>.json the ten shipped profiles, format slaed.node, no PHP
 └── admin/
     ├── index.php        admin entry: materials, types, settings
-    ├── .htaccess
     ├── lang/            de, en, fr, pl, ru, uk
     └── info/ru.md
 ```
@@ -1129,8 +1127,8 @@ partial write; a configuration that does not carry the row's version is `STORAGE
   (`INVALID assets.<role>`); a `link` role needs all its sources to be distinct `http(s)` URLs compared byte for
   byte (`CAST(src AS BINARY)`), else `INVALID assets.<role>.mode`.
 - `updateNodeTypeStatus()` is the only switch; the current state succeeds without write or version. Switching on
-  first, before every lock, completes the guard files and requires `getSchedulerFetch(<homeurl>/uploads/<name>/index.html)`
-  to answer 403 or 404; under the lock it repeats the full check of what is stored and needs a writable, non-link
+  first, before every lock, requires `getSchedulerFetch(<homeurl>/uploads/node/<name>/index.html)` to answer 403 or 404,
+  which the light path of `index.php` does for every folder off its public list; under the lock it repeats the full check of what is stored and needs a writable, non-link
   directory.
 - `deleteNodeType()` needs no material in any state, no category and no user file. It removes the sections from the
   four areas and the key `node-<name>` from every administrator in the same transaction, so a later type of that
@@ -2754,19 +2752,18 @@ text, never the exception message.
 
 ### Controlled files
 
-Direct access to `uploads/node/<type>/` (root, editor files, `thumb/`) is forbidden for every type; PHP execution
-is forbidden in the whole `uploads` tree. `uploads/node/` carries the guards itself, so the nginx rule refuses it
-whole.
+Direct access to `uploads/node/<type>/` (root, editor files, `thumb/`) is impossible for every type: the whole
+`uploads/` lies at the project level, outside the document root `public/`, so no server executes or lists an upload.
+An address under `uploads/` reaches the light path of `index.php` (`core/stream.php`), which serves the folders of
+`getUploadPublic()` alone, and `node` is not among them.
 
-- Guards (`FileManager::getGuardFiles()`): `index.html` with the bytes of `uploads/index.html` and `.htaccess`
-  with `FileManager::DENY`. Apache and LiteSpeed follow `.htaccess`; nginx needs the shared rule in UPGRADING.md,
-  "Web Server Rule for Node Upload Directories". `tests/Support/route_web.php` and `web_probe.php` emulate it.
-- Enabling a type completes missing guards, then requests `<homeurl>/uploads/node/<type>/index.html` with
-  `getSchedulerFetch()`; only `403` or `404` passes, anything else (including a redirect or connection error) is
-  `INVALID directory` and the type stays off.
-- A type is created only over an empty directory or one with exact guard files only (hidden files, previews and
+- No folder carries a guard file. `tests/Support/route_web.php` and `web_probe.php` run the real light path; the file
+  `open` of `web_probe.php` stands for a server that still serves the upload root.
+- Enabling a type requests `<homeurl>/uploads/node/<type>/index.html` with `getSchedulerFetch()`; only `403` or `404`
+  passes, anything else (including a redirect or connection error) is `INVALID directory` and the type stays off.
+- A type is created only over an empty directory or one holding empty directories alone (hidden files, previews and
   thumbnails are user files). Deleting a type re-checks all material states, categories and files and never
-  removes the directory or its guards.
+  removes the directory.
 - `op=asset&id=<id>`: the id is resolved by `NodeQuery::getNodeAsset()` (resource, material, route type, category
   right, extension scope, active role, one statement) into an immutable `NodeAsset`; no path, name, MIME or URL
   comes from the request. A local `src` is canonical and must resolve by `realpath()` inside `uploads/node/<type>`,
@@ -3183,8 +3180,8 @@ earlier mark is lost. The update never writes `node`, so `addNodeProfiles()` cre
 ### Units, manifests and snapshots
 
 Every resumable unit keeps `storage/backup/update/<unit>/manifest.json` and its snapshots beside it, written by
-`setUpdateBackup()` through a temporary file and `rename()`. Directories get mode `0750`; `storage/backup/`
-carries `deny from all`.
+`setUpdateBackup()` through a temporary file and `rename()`. Directories get mode `0750`; `storage/backup/` lies
+outside the document root.
 
 | Unit | Snapshots | Manifest beyond `version`, `state`, `source`, `target` |
 |---|---|---|

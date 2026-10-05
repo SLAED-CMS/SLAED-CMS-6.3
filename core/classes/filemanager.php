@@ -27,10 +27,9 @@ class FileManager {
     private const AUDIOS = ['mp3', 'wav', 'flac', 'ogg', 'oga', 'opus', 'm4a'];
     private const VIDEOS = ['mp4', 'webm'];
     private const PACKS = ['zip', 'rar', 'gz', '7z', 'tar'];
-    private const CRIT = ['index.php', 'admin.php', '.htaccess'];
+    # The file whose loss stops the site at the project level, the rewrite of the project; the document root adds its own entries, see checkCritPath()
+    private const CRIT = ['.htaccess'];
     private const CRITDIR = ['config', 'core'];
-    # The bytes of the guard that closes a directory on Apache and LiteSpeed and marks it closed for the shared nginx rule; the upload directories ship the same line
-    private const DENY = 'deny from all';
 
     # The directory locks this request holds: canonical key => the open handle and the number of entries that took it
     private static array $held = [];
@@ -284,15 +283,6 @@ class FileManager {
         return $done ? ['ok' => true, 'error' => '', 'path' => $new['rel']] : self::getPathFail($stop);
     }
 
-    # Answers the guard files of an upload directory by name with the exact bytes each one has to hold: the index page the upload root ships and the deny rule
-    # A file of that name with other bytes is no guard, so whoever checks a directory for user data compares both; an empty index means the release is broken
-    public static function getGuardFiles(): array {
-        static $memo = null;
-        if ($memo !== null) return $memo;
-        $page = (defined('UPLOADS_DIR') && is_file(UPLOADS_DIR.'/index.html')) ? file_get_contents(UPLOADS_DIR.'/index.html') : false;
-        return $memo = ['index.html' => is_string($page) ? $page : '', '.htaccess' => self::DENY];
-    }
-
     # Answers whether one name follows the managed format the upload service publishes under, which tells a file this project stored apart from one that arrived otherwise
     # The dependency runs one way, Upload -> FileManager, so nothing in this file knows the upload service exists
     public static function checkFileName(string $file): bool {
@@ -500,9 +490,17 @@ class FileManager {
     }
 
     # Answers whether one system path is one of the files whose loss stops the site, which is what makes the interface ask again and the journal record the answer
+    # The document root is PUBLIC_DIR wherever it lies below the project and whatever its name: its .htaccess and every PHP file directly in it are critical
+    # Those PHP files are the entries of the site, so a panel renamed by the installer or the security section stays critical under its new name
     private function checkCritPath(string $rel): bool {
         if ($rel === '') return false;
         $test = strtolower($rel);
+        $pub = defined('PUBLIC_DIR') ? realpath(PUBLIC_DIR) : false;
+        $pub = ($pub === false) ? '' : strtolower(rtrim(str_replace('\\', '/', $pub), '/'));
+        $base = strtolower($this->root);
+        $name = ($pub !== '' && str_starts_with($pub, $base.'/') && str_starts_with($test, substr($pub, strlen($base) + 1).'/'))
+            ? substr($test, strlen($pub) - strlen($base)) : '';
+        if ($name !== '' && !str_contains($name, '/') && ($name === '.htaccess' || str_ends_with($name, '.php'))) return true;
         return in_array($test, self::CRIT, true) || in_array(explode('/', $test)[0], self::CRITDIR, true);
     }
 
@@ -564,13 +562,13 @@ class FileManager {
         return ['width' => (int)$info[0], 'height' => (int)$info[1]];
     }
 
-    # Returns the site-relative address of one object, which exists only below the document root; the system area answers none, because its files are served by a route
+    # Returns the site address of one object, which only a file of a public upload folder has, see getUploadUrl(); the system area answers none, its files are served by a route
     private function getFileLink(string $full): string {
-        if ($this->mode === 'system' || !defined('BASE_DIR')) return '';
-        $base = realpath(BASE_DIR);
+        if ($this->mode === 'system' || !defined('UPLOADS_DIR')) return '';
+        $base = realpath(UPLOADS_DIR);
         if ($base === false) return '';
         $base = rtrim(str_replace('\\', '/', $base), '/');
-        return str_starts_with($full, $base.'/') ? substr($full, strlen($base) + 1) : '';
+        return str_starts_with($full, $base.'/') ? getUploadUrl(substr($full, strlen($base) + 1)) : '';
     }
 
     # Returns the address of the thumbnail one image carries in the additional directory of its own directory, or an empty string when none was stored

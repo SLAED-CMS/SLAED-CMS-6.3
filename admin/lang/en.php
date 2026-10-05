@@ -19,6 +19,7 @@ define('_ADDNEWFILEBLOCK','Add Block File');
 define('_ADDRESS','Address');
 define('_ADDSUBCATEGORY','Add under-category');
 define('_ADIR','Path under your root dir');
+define('_ACCOUNT_ADIR','Avatar folder below uploads/');
 define('_ADMCOL','The number of columns in the output modules the admin panel');
 define('_ADMINEMAIL','Administrator Email');
 define('_ADMINFOEDIT','Activate the editor of the Department of information?');
@@ -593,6 +594,9 @@ define('_SETUP_NOWRITE','PHP may not write here, set the permissions on the serv
 define('_SETUP_NOEXT','not installed');
 define('_SETUP_NOOPT','not installed, the site works without it');
 define('_SETUP_ANSWERS','the site answers at %s');
+define('_SETUP_WEBROOT','Document root');
+define('_SETUP_ROOT_PUB','public/: nothing outside it is reachable over the web');
+define('_SETUP_ROOT_PRJ','the project: its .htaccess sends every request into public/, Apache or LiteSpeed only');
 define('_SETUP_CONNECT','Connection to %s');
 define('_SETUP_CONN_USER','user %s');
 define('_SETUP_FREE','Prefix %s is free');

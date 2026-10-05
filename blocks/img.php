@@ -15,7 +15,7 @@ $ban = [];
 $dir = opendir($path);
 if ($dir) {
     while (false !== ($file = readdir($dir))) {
-        if ($file != '.' && $file != '..' && $file != 'index.html' && !is_dir($path.'/'.$file)) $ban[] = $file;
+        if ($file != '.' && $file != '..' && !is_dir($path.'/'.$file)) $ban[] = $file;
     }
     closedir($dir);
 }
@@ -25,10 +25,10 @@ if ($ban !== []) {
     $list = (count($ban) > 1) ? array_rand($ban, count($ban)) : array_keys($ban);
     shuffle($list);
     foreach ($list as $val) {
-        $img = ($cont === '') ? 'uploads/presentation/sites/thumb/'.$ban[$val] : '';
+        $img = ($cont === '') ? getUploadUrl('presentation/sites/thumb/'.$ban[$val]) : '';
         $cont .= $tpl->getHtmlFrag('link', [
             'title' => 'Лучшие сайты системы',
-            'href' => 'uploads/presentation/sites/'.$ban[$val],
+            'href' => getUploadUrl('presentation/sites/'.$ban[$val]),
             'img_src' => $img,
             'img_alt' => 'Лучшие сайты системы',
         ]);

@@ -67,25 +67,23 @@ function addInstallTree(string $site): int {
     return $num;
 }
 
-# The router of both servers: the directory of a type with its guard refused as the shared web server rule does, static files served as they are
-# The entry points of the copy are required with the account the checks name in X-Probe-User or X-Probe-Admin put where the core reads it
+# The router of both servers, whose document root is public/ of the copy: static files are served as they are, an address under uploads/ reaches the light path of index.php
+# The entry stubs of the copy are required with the account the checks name in X-Probe-User or X-Probe-Admin put where the core reads it
 function setInstallRouter(string $site): void {
     $code = <<<'PHP'
 <?php
 $ipath = (string)parse_url((string)($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH);
-if (preg_match('#^/uploads/([a-z0-9_]+)/#', $ipath, $ihit) && is_file(__DIR__.'/uploads/'.$ihit[1].'/.htaccess')) {
-    http_response_code(403);
-    exit;
-}
 $iserve = ['/', '/index.php', '/admin.php', '/myadm.php', '/setup.php', '/update.php'];
-if (!in_array($ipath, $iserve, true) || !is_file(__DIR__.(($ipath === '/') ? '/index.php' : $ipath))) return false;
+$ifile = (($ipath === '/') || str_starts_with($ipath, '/uploads/')) ? '/index.php' : $ipath;
+if ((!in_array($ipath, $iserve, true) && $ifile !== '/index.php') || !is_file(__DIR__.'/public'.$ifile)) return false;
+$_SERVER['SCRIPT_NAME'] = $ifile;
 foreach (['HTTP_HOST', 'REQUEST_URI', 'HTTP_REFERER', 'HTTP_USER_AGENT', 'REMOTE_ADDR'] as $ikey) if (isset($_SERVER[$ikey])) putenv($ikey.'='.$_SERVER[$ikey]);
 $iglob = require __DIR__.'/config/global.php';
 if (isset($_SERVER['HTTP_X_PROBE_USER'])) $_COOKIE[$iglob['user_c'].'-account'] = $_SERVER['HTTP_X_PROBE_USER'];
 session_start();
 if (isset($_SERVER['HTTP_X_PROBE_ADMIN'])) $_SESSION[$iglob['admin_c']] = $_SERVER['HTTP_X_PROBE_ADMIN'];
-chdir(__DIR__);
-require __DIR__.(($ipath === '/') ? '/index.php' : $ipath);
+chdir(__DIR__.'/public');
+require __DIR__.'/public'.$ifile;
 PHP;
     file_put_contents($site.'/probe_router.php', $code."\n");
 }
@@ -138,7 +136,8 @@ function getInstallPort(): int {
 # OPcache revalidates on every request: the probe rewrites the configuration of the copy between requests, and a file cached two seconds more serves old values
 function addInstallServer(string $site, int $port): mixed {
     $log = ['file', dirname($site).'/server-'.$port.'.log', 'a'];
-    $proc = proc_open([PHP_BINARY, '-d', 'opcache.revalidate_freq=0', '-S', '127.0.0.1:'.$port, '-t', $site, $site.'/probe_router.php'], [1 => $log, 2 => $log], $pipes, $site);
+    $cmd = [PHP_BINARY, '-d', 'opcache.revalidate_freq=0', '-S', '127.0.0.1:'.$port, '-t', $site.'/public', $site.'/probe_router.php'];
+    $proc = proc_open($cmd, [1 => $log, 2 => $log], $pipes, $site);
     set_error_handler(static fn(): bool => true);
     for ($i = 0; $i < 50 && !($test = stream_socket_client('tcp://127.0.0.1:'.$port, $no, $err, 1)); $i++) usleep(100000);
     restore_error_handler();
@@ -320,7 +319,7 @@ function getInstallSetup(PDO $pdo, string $base): array {
     $out['setup'] = [getInstallStop($walk),getInstallStop($run), $done['code'], getInstallStop($done), $glob['homeurl'] ?? '', $glob['language'] ?? '',
         getInstallConf('db')['db']['prefix'] ?? ''];
     $jar = (string)file_get_contents($iwork.'/jar-'.md5((string)json_encode(['jar' => 'setup'])).'.txt');
-    $out['done'] = [checkInstallSaid($done, 'http://127.0.0.1:'.$iguard.'/admin.php'), is_file($isite.'/setup.php'),
+    $out['done'] = [checkInstallSaid($done, 'http://127.0.0.1:'.$iguard.'/admin.php'), is_file($isite.'/public/setup.php'),
         str_contains($jar, $glob['user_c'].'-language'."\t".'ru')];
     $out['notice'] = [substr_count($done['body'], 'class="sl-alert sl-alert-'), str_contains($done['body'], 'jokes')];
     $rows = $pdo->query('SELECT name, title, ext, active, sort, version FROM '.IPREF.'_node_types ORDER BY sort')->fetchAll(PDO::FETCH_ASSOC);
@@ -338,7 +337,8 @@ function getInstallSetup(PDO $pdo, string $base): array {
         'fields' => array_keys(getInstallConf('fields')['fields']['node'] ?? []),
     ];
     $out['stale'] = [isset($node['types']['stale']), isset(getInstallConf('fields')['fields']['node']['stale']), isset($up['stale']), isset($rate['node.stale'])];
-    $out['dirs'] = array_values(array_filter(IPROFS, fn(string $v): bool => is_file($isite.'/uploads/node/'.$v.'/.htaccess') && is_file($isite.'/uploads/node/'.$v.'/index.html')));
+    $bare = fn(string $v): bool => is_dir($isite.'/uploads/node/'.$v) && !glob($isite.'/uploads/node/'.$v.'/{index.html,.htaccess}', GLOB_BRACE);
+    $out['dirs'] = array_values(array_filter(IPROFS, $bare));
     $out['mark'] = array_key_exists('node', getInstallConf('update')['update'] ?? []);
     $out['starter'] = $pdo->query('SELECT t.name, n.cid, n.uid, n.aname, n.title, n.status, n.home, n.comon FROM '.IPREF.'_nodes AS n'
         .' INNER JOIN '.IPREF.'_node_types AS t ON t.id = n.tid')->fetchAll(PDO::FETCH_ASSOC);
@@ -391,7 +391,7 @@ function getInstallRefuse(PDO $pdo, array $ans): array {
     $out['panel'] = array_map(function (string $name) use ($ans): int {
         $page = getInstallStep(3, 'next', ['spanel' => $name] + $ans[3]);
         return checkInstallSaid($page, 'The panel file name may hold only') ? getInstallStop($page) : -9;
-    }, ['../moved', 'index', 'setup', 'update', 'probe_router']);
+    }, ['../moved', 'index', 'setup', 'update']);
     $site = [['sname' => ''], ['surl' => 'javascript:alert(1)'], ['surl' => 'ftp://127.0.0.1'], ['surl' => 'http://user:pw@127.0.0.1'], ['surl' => 'http://127.0.0.1/?a=1']];
     $out['site'] = array_map(fn(array $v): int => getInstallStop(getInstallStep(3, 'next', $v + $ans[3])), $site);
     getInstallStep(3, 'next', $ans[3]);
@@ -447,14 +447,14 @@ function getInstallLock(): array {
             $data['db']['pass'] = 'down-probe-17';
             file_put_contents($isite.'/config/db.php', "<?php\nreturn ".var_export($data, true).";\n");
         }
-        copy(BASE_DIR.'/setup.php', $isite.'/setup.php');
+        copy(BASE_DIR.'/public/setup.php', $isite.'/public/setup.php');
         $post = ['token' => $itoken, 'stop' => '5', 'go' => 'part'];
         $page = ($kind === 'part') ? getInstallReply(['jar' => 'late'], 'POST', 'setup.php', $post) : getInstallReply(['jar' => 'late'], 'GET', 'setup.php');
         file_put_contents($isite.'/config/db.php', $keep);
         $out[$kind] = [checkInstallSaid($page, 'The site is already installed'), getInstallStop($page), preg_match('#value="[a-f0-9]{64}"#', $page['body']) === 1,
-            is_file($isite.'/setup.php')];
+            is_file($isite.'/public/setup.php')];
     }
-    unlink($isite.'/setup.php');
+    unlink($isite.'/public/setup.php');
     $out['same'] = getInstallFiles() === $was;
     return $out;
 }
@@ -811,8 +811,8 @@ function getInstallAfter(PDO $pdo, array $page): array {
         'presentation' => isset($mods['presentation']),
         'maildrain' => ($jobs['maildrain'] ?? null) === ($ship['scheduler']['jobs']['maildrain'] ?? false),
         'ids' => ['old' => $top, 'next' => $next],
-        'panel' => [is_file($isite.'/admin.php'), is_file($isite.'/myadm.php'), getInstallConf('security')['security']['afile'] ?? null,
-            is_file($isite.'/myadm.php') && sha1_file($isite.'/myadm.php') === sha1_file(BASE_DIR.'/admin.php')],
+        'panel' => [is_file($isite.'/public/admin.php'), is_file($isite.'/public/myadm.php'), getInstallConf('security')['security']['afile'] ?? null,
+            is_file($isite.'/public/myadm.php') && sha1_file($isite.'/public/myadm.php') === sha1_file(BASE_DIR.'/public/admin.php')],
         'dupes' => preg_match('#_rating \(rows removed: (\d+)\)#', $page['body'], $hit) ? intval($hit[1]) : null,
         'negative' => preg_match('#negative point balances set to 0 [^(]*\(accounts: (\d+)\)#', $page['body'], $hit) ? intval($hit[1]) : null,
         'site' => [getInstallConf('global')['language'] ?? null, getInstallConf('global')['homeurl'] ?? null],
@@ -827,7 +827,7 @@ function getInstallAfter(PDO $pdo, array $page): array {
 # The files of config/ with their hashes, the panel entry and nothing else, to prove a refused run left the site as it was
 function getInstallFiles(): array {
     global $isite;
-    $out = ['admin.php' => is_file($isite.'/admin.php')];
+    $out = ['admin.php' => is_file($isite.'/public/admin.php')];
     foreach (glob($isite.'/config/*') ?: [] as $one) $out[basename($one)] = sha1_file($one);
     return $out;
 }
@@ -879,7 +879,7 @@ function setInstallSources(PDO $pdo, string $snap): array {
 function getInstallUpgrade(PDO $pdo, string $base, string $dump, string $rev, string $snap): array {
     global $iguard, $iport, $isite;
     $out = ['config' => setInstallOld($isite, $rev, $base), 'dump' => addInstallDump($base, $dump), 'guard' => 'http://127.0.0.1:'.$iguard];
-    file_put_contents($isite.'/myadm.php', "<?php\ndefine('ADMIN_FILE', true);\nrequire_once 'admin/admin.php';\n");
+    file_put_contents($isite.'/public/myadm.php', "<?php\ndefine('ADMIN_FILE', true);\nrequire_once 'admin/admin.php';\n");
     $sec =$isite.'/config/config_security.php';
     if (is_file($sec)) file_put_contents($sec, (string)preg_replace("/'afile' => '[a-z0-9_-]*'/", "'afile' => 'myadm'", (string)file_get_contents($sec)));
     $old = $isite.'/config/config_global.php';

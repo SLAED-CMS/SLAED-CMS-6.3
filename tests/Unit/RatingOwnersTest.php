@@ -41,7 +41,7 @@ final class RatingOwnersTest extends TestCase
     #[Test]
     public function theOldTableIsLeftToThePolls(): void
     {
-        foreach (['admin', 'blocks', 'core', 'modules', 'plugins'] as $dir) {
+        foreach (['admin', 'blocks', 'core', 'modules', 'public/plugins'] as $dir) {
             $walk = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($this->getRoot().'/'.$dir, \FilesystemIterator::SKIP_DOTS));
             foreach ($walk as $file) {
                 if ($file->getExtension() !== 'php') continue;
@@ -63,10 +63,10 @@ final class RatingOwnersTest extends TestCase
             $this->assertStringNotContainsString($name, $body, 'getRatingView() still uses '.$name);
         }
         $this->assertLessThan(strpos($body, 'checkSiteToken('), strpos($body, "header('Allow: POST')"), 'The method is not refused before the token');
-        $this->assertMatchesRegularExpression("/\\\$public = \(\\\$go == 1 && in_array\(\\\$op, \[[^\]]*'getRatingView'[^\]]*\], true\)\)/", $this->getCode('index.php'),
+        $this->assertMatchesRegularExpression("/\\\$public = \(\\\$go == 1 && in_array\(\\\$op, \[[^\]]*'getRatingView'[^\]]*\], true\)\)/", $this->getCode('public/index.php'),
             'The dispatcher asks for a token before the handler can refuse the method');
         foreach (['rating-bar', 'rating-like'] as $name) {
-            $frag = $this->getCode('templates/lite/fragments/'.$name.'.html');
+            $frag = $this->getCode('public/templates/lite/fragments/'.$name.'.html');
             $this->assertStringContainsString('hx-post="index.php?go=1&amp;op=getRatingView"', $frag, $name);
             $this->assertStringNotContainsString('rate=', $frag, $name.' still carries a voting address with parameters');
         }

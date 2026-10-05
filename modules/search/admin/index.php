@@ -426,7 +426,7 @@ function config(): void {
     $cont .= checkPerms(CONFIG_DIR.'/search.php');
     $modshtml = '';
     $curr = getSearchcurr();
-    foreach (scandir('modules') as $file) {
+    foreach (scandir(BASE_DIR.'/modules') as $file) {
         if (str_contains($file, '.')) continue;
         if ($allow && !in_array($file, $allow, true)) continue;
         $modshtml .= $tpl->getHtmlFrag('checkbox', [

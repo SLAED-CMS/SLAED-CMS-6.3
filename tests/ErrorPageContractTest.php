@@ -15,7 +15,7 @@ class ErrorPageContractTest extends TestCase
     # The static error.html must exist, be free of PHP and carry the brand: the web server serves it on 502/504 when PHP is down
     public function testStaticErrorPageIsStaticAndBranded(): void
     {
-        $path = self::$basePath.'/error.html';
+        $path = self::$basePath.'/public/error.html';
         $this->assertFileExists($path, 'Отсутствует статическая страница error.html для error_page 502/504');
 
         $html = (string)file_get_contents($path);
@@ -31,7 +31,7 @@ class ErrorPageContractTest extends TestCase
     # The page depends on no external file (CSS, font, favicon, logo): any may be missing on a given server, so all is inlined
     public function testStaticErrorPageHasNoExternalDependencies(): void
     {
-        $html = (string)file_get_contents(self::$basePath.'/error.html');
+        $html = (string)file_get_contents(self::$basePath.'/public/error.html');
 
         $this->assertMatchesRegularExpression('/<style\b/i', $html, 'CSS должен быть встроен в error.html');
         $this->assertMatchesRegularExpression('/<svg\b/i', $html, 'Логотип и иконки должны быть встроены SVG-кодом');

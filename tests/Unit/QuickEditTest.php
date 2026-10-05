@@ -47,7 +47,7 @@ final class QuickEditTest extends TestCase
     #[Test]
     public function theRoutesCheckTheirOwnTokenFromTheHeader(): void
     {
-        $code = (string)file_get_contents(dirname(__DIR__, 2).'/index.php');
+        $code = (string)file_get_contents(dirname(__DIR__, 2).'/public/index.php');
         $this->assertMatchesRegularExpression("/\\\$public = \(\\\$go == 1 && in_array\(\\\$op, \[[^\]]*'getQuickEdit', 'updateQuickEdit'[^\]]*\], true\)\)/", $code);
         $this->assertStringContainsString("case 'getQuickEdit': getQuickEdit(); break;", $code);
         $this->assertStringContainsString("case 'updateQuickEdit': updateQuickEdit(); break;", $code);

@@ -19,7 +19,7 @@ staged=$(git diff --cached --name-only --diff-filter=ACMR)
 [ -z "$staged" ] && exit 0
 
 # Nothing outside these can move a ratcheted count, the markup scan or the theme tests
-watched=$(printf '%s\n' "$staged" | grep -E '^(templates/|core/|admin/|modules/|plugins/|tests/|tools/ui-)')
+watched=$(printf '%s\n' "$staged" | grep -E '^(public/templates/|core/|admin/|modules/|public/plugins/|tests/|tools/ui-)')
 [ -z "$watched" ] && exit 0
 
 # Neither tool is guaranteed on a fresh machine: php has to be on the PATH of the shell git runs hooks in, and vendor/
@@ -57,7 +57,7 @@ if [ "$fail" != "0" ]; then
 fi
 
 # A change to theme CSS or to canon templates can pass every count and still move pixels, which only the rig sees
-visual=$(printf '%s\n' "$staged" | grep -E '^templates/[^/]+/(assets/css/|assets/editors/|fragments/|partials/)')
+visual=$(printf '%s\n' "$staged" | grep -E '^public/templates/[^/]+/(assets/css/|assets/editors/|fragments/|partials/)')
 if [ -n "$visual" ]; then
     printf '\n[gates] passed, but this commit touches theme CSS or canon templates.\n'
     printf '        No count can see a moved pixel. Before you started editing you should have run:\n'
@@ -69,7 +69,7 @@ fi
 # A row, a caption or a control fragment decides whether a `for` reaches anything and whether a group, an editor or a
 # hint carries a name. No count in ui-audit can see that: it is a question about a rendered document, so it needs a
 # stand, a browser and a session, which is exactly why the crawl is not one of the gates above
-label=$(printf '%s\n' "$staged" | grep -E '^templates/[^/]+/fragments/(div-row|form-field-row|label|label-hint|field-value|block-content|editor-mount|input|select|textarea|radio|checkbox|file-input)\.html$')
+label=$(printf '%s\n' "$staged" | grep -E '^public/templates/[^/]+/fragments/(div-row|form-field-row|label|label-hint|field-value|block-content|editor-mount|input|select|textarea|radio|checkbox|file-input)\.html$')
 if [ -n "$label" ]; then
     printf '\n[gates] this commit touches a row, caption or control fragment.\n'
     printf '        No count can see a broken `for` or an unnamed group. Run:\n'

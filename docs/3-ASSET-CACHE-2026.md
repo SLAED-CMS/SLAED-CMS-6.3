@@ -52,13 +52,14 @@ printed without a version and keeps the short lifetime below.
 | --- | --- | --- |
 | CSS and JS with a version | `templates/`, `plugins/` | `public, max-age=31536000, immutable` |
 | CSS and JS without a version, fonts, images, icons, sounds | `templates/`, `plugins/`, `sound/` | `public, max-age=604800` with the validators |
-| Public uploads | `public/uploads/` | `public, max-age=86400` with the validators |
+| Public uploads | `uploads/` of a public owner, through the light path | `public, max-age=86400` with the validators |
 | Pages | every route of PHP | `no-store`, as today |
 | Files of the routes | `op=attach` of a stored material, `op=asset` | `private, no-cache` with ETag, as `getFileStream()` answers today |
 | Previews and administrative downloads | `op=attach` with `preview=1`, the file view of the panel | `no-store`, as today |
 
 The web server sets these headers, not PHP: the static files never reach PHP. The versioned case is told by its
-query: a request with `v` in the query gets the year, any other the week.
+query: a request with `v` in the query gets the year, any other the week. The public uploads are the exception: no
+upload is under the document root, and the light path of 0-PRIVATE-DATA-2026.md batch 2 sets their header itself.
 
 ### Order without async
 
@@ -91,8 +92,9 @@ WOFF2, images and archives stay uncompressed.
    rendered page carries a version that matches the file; a changed file changes its address; a page renders
    without stating an asset file; an editor loaded by the page and again by an htmx fragment is fetched once.
 2. **Lifetimes.** The rules of the table in `public/.htaccess` (`mod_headers`, guarded by `<IfModule>`) and in
-   `nginx.conf.example`; the old `mod_expires` block of the root `.htaccess` goes. Tests: a test reads both files
-   and asserts every kind of the table; on the stand, a versioned CSS answers the year, a plain image the week, a
+   `nginx.conf.example`; the old `mod_expires` block of the root `.htaccess` goes. The public uploads keep the header
+   of the light path, which already answers the table. Tests: a test reads both files and asserts every kind of the
+   table served by the server; on the stand, a versioned CSS answers the year, a plain image the week, a
    page `no-store`. The answer of a server without `mod_headers` is checked by hand once.
 3. **Defer.** `defer` on every head script, the inline scripts the inventory named, `script_a` and `script_b` out of
    the settings screen, `config/global.php` and the help. Tests: the scripts of a rendered page are deferred and in

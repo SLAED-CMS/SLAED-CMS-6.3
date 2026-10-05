@@ -11,11 +11,15 @@ require_once __DIR__.'/Support/tree_walk.php';
 define('MODULE_FILE', true);
 define('FUNC_FILE', true);
 define('BASE_DIR', dirname(__DIR__));
+define('PUBLIC_DIR', BASE_DIR.'/public');
 define('CONFIG_DIR', BASE_DIR.'/config');
 define('CACHE_DIR', BASE_DIR.'/storage/cache');
 define('COUNTER_DIR', BASE_DIR.'/storage/counter');
 define('UPLOADS_DIR', BASE_DIR.'/uploads');
 define('NODE_DIR', UPLOADS_DIR.'/node');
+
+# The upload root, its public folders and the one sender, which the file layer and the parser ask without the rest of the core
+require_once BASE_DIR.'/core/stream.php';
 
 # Write the logs of in-process tests into a directory of this run: the mail tests refuse addresses on purpose, and their lines landed in the site log of the stand
 define('LOGS_DIR', str_replace('\\', '/', sys_get_temp_dir()).'/slaed-phpunit-'.getmypid().'/logs');

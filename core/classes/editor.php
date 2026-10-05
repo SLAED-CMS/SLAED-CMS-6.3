@@ -148,7 +148,7 @@ class Editor {
         if (isset($done[$mark])) return '';
         $done[$mark] = true;
         $skin = 'templates/'.$theme.'/assets/editors/'.$key.'/skin.css';
-        if (!is_file($skin)) {
+        if (!is_file(PUBLIC_DIR.'/'.$skin)) {
             Logger::addSite('error', 'Editor theme skin missing: '.$skin, ['editor' => $key, 'theme' => (string)$theme]);
             return '';
         }
@@ -158,7 +158,7 @@ class Editor {
     # Return parsed manifest for one editor; null if missing or invalid
     public static function getManifest(string $id): ?array {
         if (isset(self::$mdata[$id])) return self::$mdata[$id];
-        $path = BASE_DIR.'/plugins/editors/'.$id.'/manifest.json';
+        $path = PUBLIC_DIR.'/plugins/editors/'.$id.'/manifest.json';
         if (!is_file($path)) return null;
         $data = json_decode((string)file_get_contents($path), true);
         if (!is_array($data)) return null;
@@ -192,7 +192,7 @@ class Editor {
 
     # Return available editors filtered by type and role, sorted by priority
     private static function getEditorList(string $type, string $role): array {
-        $base = BASE_DIR.'/plugins/editors';
+        $base = PUBLIC_DIR.'/plugins/editors';
         $list = [];
         if (!is_dir($base)) return $list;
         foreach (scandir($base) as $dir) {
@@ -214,7 +214,7 @@ class Editor {
         $man = self::getManifest($id);
         if (!$man) return null;
         $cls = (string)($man['driver'] ?? '');
-        $path = BASE_DIR.'/plugins/editors/'.$id.'/'.($man['entry'] ?? 'driver.php');
+        $path = PUBLIC_DIR.'/plugins/editors/'.$id.'/'.($man['entry'] ?? 'driver.php');
         if ($cls === '' || !is_file($path)) return null;
         require_once $path;
         if (!class_exists($cls)) return null;

@@ -141,7 +141,7 @@ class DatabaseBatchTest extends TestCase
     #[Test]
     public function theUpdateSplitsWithTheSharedCode(): void
     {
-        $setup = (string)file_get_contents(dirname(__DIR__, 2).'/update.php');
+        $setup = (string)file_get_contents(dirname(__DIR__, 2).'/public/update.php');
         $admin = (string)file_get_contents(dirname(__DIR__, 2).'/core/admin.php');
         $this->assertStringContainsString("require_once BASE_DIR.'/core/admin.php'", $setup, 'The update no longer loads the shared splitter');
         $this->assertStringNotContainsString('function getSqlStatements(', $setup, 'The update carries a splitter of its own again');

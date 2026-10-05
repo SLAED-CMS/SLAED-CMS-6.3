@@ -36,7 +36,7 @@ function modules(): void {
     $modlist = [];
     $new = [];
     $removed = [];
-    foreach (scandir('admin/modules') as $file) {
+    foreach (scandir(BASE_DIR.'/admin/modules') as $file) {
         if (preg_match('/^([a-z_]+)\.php$/i', $file, $matches)) {
             $module = $matches[1];
             $modlist[] = $module;
@@ -57,8 +57,9 @@ function modules(): void {
             }
         }
     }
-    foreach (scandir('modules') as $file) {
-        if ($file !== '.' && $file !== '..' && is_dir('modules/'.$file) && (file_exists('modules/'.$file.'/index.php') || file_exists('modules/'.$file.'/admin/index.php'))) {
+    foreach (scandir(BASE_DIR.'/modules') as $file) {
+        $mdir = BASE_DIR.'/modules/'.$file;
+        if ($file !== '.' && $file !== '..' && is_dir($mdir) && (file_exists($mdir.'/index.php') || file_exists($mdir.'/admin/index.php'))) {
             $modlist[] = $file;
             if (!isset($conf['modules'][$file])) {
                 $conf['modules'][$file] = [
@@ -150,14 +151,14 @@ function modules(): void {
             'icon_name' => 'pencil',
             'title' => _FULLEDIT,
         ]];
-        if (file_exists('modules/'.$title.'/sql/table.sql')) {
-            $made = getSqlFileTables((string)file_get_contents('modules/'.$title.'/sql/table.sql'), 'CREATE');
+        if (file_exists(BASE_DIR.'/modules/'.$title.'/sql/table.sql')) {
+            $made = getSqlFileTables((string)file_get_contents(BASE_DIR.'/modules/'.$title.'/sql/table.sql'), 'CREATE');
             $install = $made !== [] && checkSqlTable($made[0]);
             $keys = ['name' => 'modules', 'op' => 'add', 'mod' => $title, 'id' => $install ? '1' : '2', 'type' => $mtype];
             $what = $install ? _DB_DELETE : _DB_INSTALL;
             $items[] = getTplPostAction($keys, $install ? 'database-dash' : 'database-add', $what, $what.' "'.$title.'"?');
         }
-        if (file_exists('modules/'.$title.'/sql/update.sql')) {
+        if (file_exists(BASE_DIR.'/modules/'.$title.'/sql/update.sql')) {
             $items[] = getTplPostAction(['name' => 'modules', 'op' => 'add', 'mod' => $title, 'id' => '3', 'type' => $mtype], 'database-up', _DB_UPDATE,
                 _DB_UPDATE.' "'.$title.'"?');
         }
@@ -374,7 +375,7 @@ function add(): void {
         return;
     }
     if ($mod && $id) {
-        $file = 'modules/'.$mod.'/sql/'.(($id == 3) ? 'update.sql' : 'table.sql');
+        $file = BASE_DIR.'/modules/'.$mod.'/sql/'.(($id == 3) ? 'update.sql' : 'table.sql');
         $ttitle = ($id == 1) ? _DB_DELETE : (($id == 2) ? _DB_INSTALL : _DB_UPDATE);
         $lines = [];
         if (!is_file($file)) {

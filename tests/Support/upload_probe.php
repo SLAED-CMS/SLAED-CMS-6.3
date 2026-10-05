@@ -116,6 +116,7 @@ function addProbeRoot(): void {
         mkdir($dir, 0777, true);
     }
     mkdir($GLOBALS['proot'].'/files', 0777, true);
+    file_put_contents($GLOBALS['proot'].'/blocked', 'a file where a destination directory would be');
 }
 
 # Build one service over the disposable root
@@ -600,7 +601,7 @@ function getProbeCodes(): array {
     $out['brokenhdr'] = getProbeBrokenHeader();
     $out['dimensions'] = addProbeRun($upl, addProbeFile('png', '', 200, 100), getProbeRule(['maxwidth' => 100, 'maxheight' => 100]));
     $out['quota'] = getProbeQuotaRun();
-    $out['destination'] = addProbeRun($upl, addProbeFile('png'), getProbeRule(), 'nosuchdir');
+    $out['destination'] = addProbeRun($upl, addProbeFile('png'), getProbeRule(), 'blocked');
     $out['exists'] = getProbeExistsRun();
     $out['write'] = getProbeWriteRun();
     $out['done'] = addProbeRun($upl, addProbeFile('png'), getProbeRule(), 'files', 'files', 7);
@@ -706,8 +707,6 @@ function getProbeQuota(): array {
     $out['over'] = addProbeRun(getProbeUpload(), $file, getProbeRule(['maxquota' => $size + 99]));
     addProbeRoot();
     $file = addProbeFile('png');
-    file_put_contents($GLOBALS['proot'].'/files/index.html', str_repeat('x', 4000));
-    file_put_contents($GLOBALS['proot'].'/files/.htaccess', str_repeat('x', 4000));
     file_put_contents($GLOBALS['proot'].'/files/.upload-'.str_repeat('c', 16).'.part', str_repeat('x', 4000));
     $out['skipped'] = addProbeRun(getProbeUpload(), $file, getProbeRule(['maxquota' => $size + 10]));
     return $out;
@@ -728,13 +727,15 @@ function getProbePaths(): array {
         'abs' => '/etc',
         'drive' => 'C:/Windows',
         'nul' => "files\x00/x",
-        'gone' => 'nosuchdir',
+        'gone' => 'blocked',
+        'made' => 'owner/sub',
     ];
     foreach ($list as $key => $dir) {
         $file = addProbeFile('png');
         $res = getProbeUpload()->addUploadedFile($file, getProbeRule(), $dir, 'files');
         $out['runs'][$key] = ['ok' => (bool)$res['ok'], 'error' => $res['error'], 'path' => $res['path']];
     }
+    $out['made'] = is_dir($GLOBALS['proot'].'/owner/sub');
     $out['escape'] = getProbeEscape();
     $out['outside'] = is_dir(dirname($GLOBALS['proot']).'/outside') ? scandir(dirname($GLOBALS['proot']).'/outside') : [];
     return $out;
@@ -1135,7 +1136,7 @@ function getProbeRemoteType(): array {
         'broken' => [['reply' => [['code' => 200, 'body' => substr($png, 0, 33)]]], $site, getProbeRule()],
         'dimensions' => [['reply' => $wide], $site, getProbeRule(['maxwidth' => 100, 'maxheight' => 100])],
         'archive' => [['reply' => $arch], 'https://files.example.net/backup.gz', getProbeRule()],
-        'destination' => [['reply' => $good, 'dir' => 'nosuchdir'], $site, getProbeRule()],
+        'destination' => [['reply' => $good, 'dir' => 'blocked'], $site, getProbeRule()],
     ];
     $out = [];
     foreach ($list as $key => $one) {

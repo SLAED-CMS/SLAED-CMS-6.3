@@ -55,11 +55,7 @@ final class EditorWindowTest extends TestCase
             $body,
             'The listing drops what the naming does not know, so an archive packed here would vanish from the catalogue'
         );
-        $this->assertStringContainsString(
-            "isset(FileManager::getGuardFiles()[\$one['name']])",
-            $body,
-            'The listing shows the sentinels of the upload directory as if they were files of the module'
-        );
+        $this->assertStringNotContainsString('getGuardFiles', $body, 'The listing still skips guard names, which no upload folder carries any more');
     }
 
     # The quota of the module is measured on the way through the listing and never by a second walk of the same directory
@@ -94,12 +90,12 @@ final class EditorWindowTest extends TestCase
     {
         $rule = $this->getBody('core/system.php', 'getEditorRouteRule');
         $this->assertStringContainsString("getVar(\$src, 'token', 'raw', '')", $rule, 'The guard reads its token from a fixed place, so one route cannot demand the body');
-        $code = $this->getFile('index.php');
+        $code = $this->getFile('public/index.php');
         foreach (['editorDelete', 'editorArchive'] as $op) {
             $this->assertStringContainsString("case '".$op."':", $code, 'The route '.$op.' is not wired at all');
         }
         $this->assertStringContainsString("setEditorFileRun('editorDelete')", $code, 'The deletion of the window runs something other than the one changing handler');
-        $drv = $this->getFile('plugins/editors/toastui/driver.php');
+        $drv = $this->getFile('public/plugins/editors/toastui/driver.php');
         $this->assertStringNotContainsString("&token='.rawurlencode(\$atk)", $drv, 'A token travels in an address again, where history, logs and the referer carry it along');
     }
 
@@ -107,8 +103,8 @@ final class EditorWindowTest extends TestCase
     #[Test]
     public function everySectionOfTheRailIsRenderedAndStatesItsRight(): void
     {
-        $lite = $this->getFile('templates/lite/partials/file-manager.html');
-        $this->assertSame($lite, $this->getFile('templates/admin/partials/file-manager.html'), 'The two themes no longer carry the same window markup');
+        $lite = $this->getFile('public/templates/lite/partials/file-manager.html');
+        $this->assertSame($lite, $this->getFile('public/templates/admin/partials/file-manager.html'), 'The two themes no longer carry the same window markup');
         foreach (self::PANES as $pane) {
             $this->assertStringContainsString('data-sl-pane="'.$pane.'"', $lite, 'The rail carries no section '.$pane.', so one way of inserting a file has nowhere to live');
         }
@@ -149,12 +145,12 @@ final class EditorWindowTest extends TestCase
     #[Test]
     public function theWindowKeepsItsStylesUnderItsOwnRoot(): void
     {
-        $lite = $this->getFile('templates/lite/assets/editors/toastui/skin.css');
-        $this->assertSame($lite, $this->getFile('templates/admin/assets/editors/toastui/skin.css'), 'The two themes no longer carry the same window skin');
+        $lite = $this->getFile('public/templates/lite/assets/editors/toastui/skin.css');
+        $this->assertSame($lite, $this->getFile('public/templates/admin/assets/editors/toastui/skin.css'), 'The two themes no longer carry the same window skin');
         $rules = (string)preg_replace('#/\*.*?\*/#s', '', $lite);
         $this->assertStringNotContainsString('.sl-fm-', $rules, 'The skin still dresses the file manager, which leaves the window bare on every page without an editor');
         foreach (['lite', 'admin'] as $theme) {
-            $css = $this->getFile('templates/'.$theme.'/assets/css/theme.css');
+            $css = $this->getFile('public/templates/'.$theme.'/assets/css/theme.css');
             foreach (['sl-fm-rail', 'sl-fm-pane', 'sl-fm-tile', 'sl-fm-queue', 'sl-fm-props'] as $part) {
                 $this->assertStringContainsString(
                     '.sl-fm-win .'.$part,
@@ -165,15 +161,15 @@ final class EditorWindowTest extends TestCase
             $this->assertStringContainsString('.sl-skel {', $css, 'The skeleton of a list is missing from the '.$theme.' theme, so one of the two would have to invent it');
             $this->assertStringContainsString('prefers-reduced-motion', $css, 'The skeleton of the '.$theme.' theme pulses even where motion is asked to stop');
         }
-        $loose = preg_match_all('#(?m)^\.sl-fm-(?!win)#', $this->getFile('templates/lite/assets/css/theme.css'));
+        $loose = preg_match_all('#(?m)^\.sl-fm-(?!win)#', $this->getFile('public/templates/lite/assets/css/theme.css'));
         $this->assertSame(0, $loose, 'The window declares a file manager class at the top level, where it meets the same name of the administrative browser');
         foreach (['lite', 'admin'] as $theme) {
-            $insert = $this->getFile('templates/'.$theme.'/fragments/window-body-insert.html');
+            $insert = $this->getFile('public/templates/'.$theme.'/fragments/window-body-insert.html');
             foreach (['sl-fm-label', 'sl-fm-as', 'sl-fm-field'] as $part) {
                 $this->assertStringContainsString($part, $insert, 'The insertion options of theme '.$theme.' stopped using '.$part.', so this guard now proves nothing');
             }
         }
-        $drv = $this->getFile('plugins/editors/toastui/driver.php');
+        $drv = $this->getFile('public/plugins/editors/toastui/driver.php');
         $this->assertStringContainsString(
             "'win_class' => 'sl-fm-win",
             $drv,
@@ -187,9 +183,9 @@ final class EditorWindowTest extends TestCase
     #[Test]
     public function theRuntimeOfTheWindowLeftThePluginWithItsTemplates(): void
     {
-        $js = $this->getFile('plugins/system/filemanager.js');
+        $js = $this->getFile('public/plugins/system/filemanager.js');
         $this->assertFileDoesNotExist(
-            dirname(__DIR__, 2).'/plugins/editors/toastui/assets/editor-upload.js',
+            dirname(__DIR__, 2).'/public/plugins/editors/toastui/assets/editor-upload.js',
             'The runtime is still delivered from the editor plugin, so a page carrying no editor gets a window with no behaviour'
         );
         $this->assertStringContainsString(
@@ -203,7 +199,7 @@ final class EditorWindowTest extends TestCase
         }
         $this->assertStringContainsString('function getEditor(id) {', $js, 'The runtime keeps no editor of its own, so the four editor-only paths have nothing to ask');
         $this->assertStringContainsString('edits.set(String(id), ed);', $js, 'The map of the editors is never written, so an insert reaches no editor at all');
-        $tags = $this->getFile('plugins/editors/toastui/assets/editor-tags.js');
+        $tags = $this->getFile('public/plugins/editors/toastui/assets/editor-tags.js');
         $reach = preg_match_all('#^.*SlaedFileManager.*$#m', $tags);
         $this->assertSame(1, $reach, 'The editor reaches the runtime from more than the one explicit call, so an alias hides the coupling again');
         $this->assertStringContainsString(
@@ -211,7 +207,7 @@ final class EditorWindowTest extends TestCase
             $tags,
             'The editor still asks its own namespace for the upload, which is false now and loses the file button with no error'
         );
-        $drv = $this->getFile('plugins/editors/toastui/driver.php');
+        $drv = $this->getFile('public/plugins/editors/toastui/driver.php');
         $this->assertStringNotContainsString('editor-upload.js', $drv, 'The driver still delivers the runtime, so the move is only half done');
         foreach (['editor-tags.js', 'editor-emoji.js'] as $own) {
             $this->assertStringContainsString($own, $drv, 'The driver stopped delivering '.$own.', which belongs to the editor and not to the window');
@@ -227,20 +223,20 @@ final class EditorWindowTest extends TestCase
         foreach (['fm-act', 'fm-busy', 'fm-dial', 'fm-job', 'fm-pick', 'fm-prop', 'fm-row', 'fm-tile', 'fm-why', 'msg-info', 'msg-warn'] as $name) {
             $this->assertStringContainsString(
                 'data-tpl="'.$name.'"',
-                $this->getFile('templates/lite/partials/file-manager-templates.html'),
+                $this->getFile('public/templates/lite/partials/file-manager-templates.html'),
                 'The template '.$name.' stayed with the editor, so the runtime finds null where it expects a node'
             );
         }
         foreach (['lite', 'admin'] as $theme) {
-            $part = $this->getFile('templates/'.$theme.'/partials/file-manager-templates.html');
+            $part = $this->getFile('public/templates/'.$theme.'/partials/file-manager-templates.html');
             $this->assertSame(11, substr_count($part, '<template'), 'The draw templates of theme '.$theme.' are not the eleven the runtime needs');
-            $emoji = $this->getFile('templates/'.$theme.'/partials/editor-toastui-templates.html');
+            $emoji = $this->getFile('public/templates/'.$theme.'/partials/editor-toastui-templates.html');
             $this->assertSame(4, substr_count($emoji, '<template'), 'The editor partial of theme '.$theme.' holds something besides the four emoji templates it keeps');
             $this->assertStringNotContainsString('data-tpl="fm-', $emoji, 'A file manager template of theme '.$theme.' stayed behind, so one node is looked for in two places');
         }
         $this->assertSame(
-            $this->getFile('templates/lite/partials/file-manager-templates.html'),
-            $this->getFile('templates/admin/partials/file-manager-templates.html'),
+            $this->getFile('public/templates/lite/partials/file-manager-templates.html'),
+            $this->getFile('public/templates/admin/partials/file-manager-templates.html'),
             'The two themes no longer carry the same draw templates'
         );
     }
@@ -249,7 +245,7 @@ final class EditorWindowTest extends TestCase
     #[Test]
     public function theFanFollowsTheCapabilitiesAndNamesItsOwnWidth(): void
     {
-        $js = $this->getFile('plugins/system/filemanager.js');
+        $js = $this->getFile('public/plugins/system/filemanager.js');
         foreach (['able.insert', 'able.download', 'able.compress', 'able.delete'] as $key) {
             $this->assertStringContainsString($key, $js, 'The fan never asks '.$key.', so it offers an action the context withholds');
         }
@@ -264,11 +260,11 @@ final class EditorWindowTest extends TestCase
     #[Test]
     public function theMarksAndTheCurrentObjectAreKeptApart(): void
     {
-        $js = $this->getFile('plugins/system/filemanager.js');
+        $js = $this->getFile('public/plugins/system/filemanager.js');
         $this->assertStringContainsString('function setCurrent(id, num)', $js, 'Nothing makes one object the current one, so the properties would follow a mark');
         $this->assertStringContainsString('function setPicks(id)', $js, 'Nothing keeps the marks, so a tile and a row of one file could show two states');
         $this->assertMatchesRegularExpression('#room\.pick = \[\];#', $js, 'The marks are never dropped, so an action would travel to a file of another listing');
-        $lite = $this->getFile('templates/lite/partials/file-manager.html');
+        $lite = $this->getFile('public/templates/lite/partials/file-manager.html');
         $this->assertStringContainsString('sl-bulk-bar', $lite, 'The panel of the actions over several files is gone from the window');
         $this->assertStringContainsString('data-sl-slot="pickall"', $lite, 'The head of the list carries no mark for all of them');
     }
@@ -277,12 +273,12 @@ final class EditorWindowTest extends TestCase
     #[Test]
     public function theCatalogueCarriesEveryStateOfTheProcess(): void
     {
-        $lite = $this->getFile('templates/lite/partials/file-manager.html');
+        $lite = $this->getFile('public/templates/lite/partials/file-manager.html');
         foreach (['compact', 'full', 'skel', 'empty'] as $view) {
             $this->assertStringContainsString('data-sl-view="'.$view.'"', $lite, 'The catalogue has no view '.$view.', so one state of the process has nowhere to be shown');
         }
         $this->assertStringContainsString('sl-skel-tile', $lite, 'The list on its way shows nothing in the place of the tiles it is about to fill');
-        $js = $this->getFile('plugins/system/filemanager.js');
+        $js = $this->getFile('public/plugins/system/filemanager.js');
         $rows = substr($js, (int)strpos($js, 'function setState(id, name)'), 800);
         foreach (['empty:', 'filter:', 'fail:'] as $state) {
             $this->assertStringContainsString($state, $rows, 'The state '.$state.' speaks with the words of another');
@@ -320,7 +316,7 @@ final class EditorWindowTest extends TestCase
     public function theFormRowOpensTheSameWindowThroughOneDoor(): void
     {
         foreach (['lite', 'admin'] as $theme) {
-            $frag = $this->getFile('templates/'.$theme.'/fragments/file-field.html');
+            $frag = $this->getFile('public/templates/'.$theme.'/fragments/file-field.html');
             foreach (['file', 'path', 'url', 'chip', 'name'] as $part) {
                 $this->assertStringContainsString(
                     'data-sl-field="'.$part.'"',
@@ -342,13 +338,13 @@ final class EditorWindowTest extends TestCase
             );
             $this->assertStringContainsString(
                 '.sl-file-door',
-                $this->getFile('templates/'.$theme.'/assets/css/theme.css'),
+                $this->getFile('public/templates/'.$theme.'/assets/css/theme.css'),
                 'The door of theme '.$theme.' has no shape, so the button, the chip and the limits stack'
             );
         }
         $this->assertSame(
-            $this->getFile('templates/lite/fragments/file-field.html'),
-            $this->getFile('templates/admin/fragments/file-field.html'),
+            $this->getFile('public/templates/lite/fragments/file-field.html'),
+            $this->getFile('public/templates/admin/fragments/file-field.html'),
             'The two themes no longer carry the same door'
         );
         $fld = $this->getBody('core/helpers.php', 'getFileManagerField');
@@ -361,7 +357,7 @@ final class EditorWindowTest extends TestCase
         $this->assertStringContainsString("'url_name' => \$link ?", $fld, 'The address field is printed without asking the place, so canlink decides nothing');
         $this->assertStringContainsString('getFieldIds(', $fld, 'The row of the door mints its ids beside the one helper that owns them');
         $txt = $this->getBody('core/helpers.php', 'getFileManagerText');
-        $drv = $this->getFile('plugins/editors/toastui/driver.php');
+        $drv = $this->getFile('public/plugins/editors/toastui/driver.php');
         $this->assertSame(1, substr_count($drv, 'getFileManagerText('), 'The driver reads the shared words more than once per widget, or has stopped reading them at all');
         $this->assertStringContainsString(
             "'labels' => \$txt['labels'] + [",

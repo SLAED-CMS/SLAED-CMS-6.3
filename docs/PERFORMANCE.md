@@ -328,7 +328,7 @@ concern the operator must apply, not PHP.
 
 ### Apache / LiteSpeed
 
-`.htaccess` already enables `mod_deflate` and `mod_expires` as a fallback:
+`public/.htaccess` already enables `mod_deflate` and `mod_expires` as a fallback:
 text responses are compressed, images/CSS/JS get 30 days, fonts get 1 year. WOFF2
 is intentionally excluded from compression because it is already compressed.
 This works out of the box on Apache and on LiteSpeed in `.htaccess`-compat mode.
@@ -469,9 +469,9 @@ proxy_intercept_errors   off;
 Note: OSPanel may overwrite this snippet on an Nginx-module update; re-apply the two
 lines if branded PHP errors regress. After any change: `nginx -t && nginx -s reload`.
 
-**Apache (`.htaccess`, shipped with the project):** Apache does not intercept
+**Apache (`public/.htaccess`, shipped with the project):** Apache does not intercept
 PHP-emitted statuses the way nginx does, so the equivalent is a set of
-`ErrorDocument` directives — already present in the repo `.htaccess`:
+`ErrorDocument` directives — already present in the repo `public/.htaccess`:
 
 ```apache
 ErrorDocument 404 /index.php?error=404

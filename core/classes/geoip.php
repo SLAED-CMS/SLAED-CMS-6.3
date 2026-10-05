@@ -171,7 +171,7 @@ class Geoip {
         if (isset($cache[$code])) return $cache[$code];
         $path = 'flags/'.$code.'.svg';
         $file = getThemeImagePath($path);
-        $cache[$code] = file_exists($file) ? $file : getThemeImagePath('flags/unknown.svg');
+        $cache[$code] = file_exists(PUBLIC_DIR.'/'.$file) ? $file : getThemeImagePath('flags/unknown.svg');
         return $cache[$code];
     }
 

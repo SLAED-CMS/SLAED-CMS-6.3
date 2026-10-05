@@ -103,7 +103,7 @@ final class UpdateSetupTest extends TestCase
     public function theInstallerChecksBeforeItWrites(): void
     {
         $root = dirname(__DIR__, 2);
-        $code = (string)file_get_contents($root.'/setup.php');
+        $code = (string)file_get_contents($root.'/public/setup.php');
         $this->assertStringNotContainsString('chmod(', $code, 'The installer changes permissions');
         foreach (['$_GET', '$_REQUEST'] as $one) $this->assertStringNotContainsString($one, $code);
         $this->assertSame([1, 1], [substr_count($code, '$_POST'), substr_count($code, '$_COOKIE')], 'The request is read outside getSetupVar()');
@@ -188,7 +188,7 @@ final class UpdateSetupTest extends TestCase
     #[Test]
     public function theUpdateChecksBeforeItWrites(): void
     {
-        $code = (string)file_get_contents(dirname(__DIR__, 2).'/update.php');
+        $code = (string)file_get_contents(dirname(__DIR__, 2).'/public/update.php');
         $this->assertStringNotContainsString('chmod(', $code, 'The update changes permissions');
         $sql = (string)file_get_contents(dirname(__DIR__, 2).'/storage/update/sql/table_update6_3.sql');
         $mode = "SET SESSION sql_mode = TRIM(BOTH ',' FROM REPLACE(REPLACE(REPLACE(REPLACE(@@SESSION.sql_mode, 'NO_ZERO_IN_DATE', ''), 'NO_ZERO_DATE', '')";

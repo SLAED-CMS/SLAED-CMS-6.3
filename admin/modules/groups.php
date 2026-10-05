@@ -128,7 +128,7 @@ function add(): void {
     ];
     $path = 'templates/'.$conf['theme'].'/images/ranks/';
     $pickopts = '';
-    foreach (scandir($path) as $entry) {
+    foreach (scandir(PUBLIC_DIR.'/'.$path) ?: [] as $entry) {
         if (preg_match('#(\.gif|\.png|\.jpg|\.jpeg)$#is', $entry)) {
             $pickopts .= $tpl->getHtmlFrag('select-option', [
                 'value_attr' => $path.$entry,

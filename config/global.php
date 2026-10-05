@@ -104,4 +104,5 @@ support@slaed.net',
     'var_view' => '1',
     'variables' => '0,1,1,1,1,1,1,0,1',
     'version' => '6.3.0 Phoenix',
+    'webroot' => 'public',
 ];

@@ -396,7 +396,7 @@ function config(): void {
         'is_config' => true,
     ])];
     $path = 'templates/'.$conf['theme'].'/images/logos/';
-    $dir = BASE_DIR.'/'.$path;
+    $dir = PUBLIC_DIR.'/'.$path;
     $list = is_dir($dir) ? scandir($dir) : [];
     $opts = '';
     if (is_array($list)) {
@@ -425,9 +425,9 @@ function config(): void {
         'is_popup' => true,
     ])];
     $path = 'templates/admin/images/logos/';
-    $dir = BASE_DIR.'/'.$path;
+    $dir = PUBLIC_DIR.'/'.$path;
     $adlogo = $conf['admin_logo'] ?? 'slaed_logo_256x73.png';
-    if (!is_file(BASE_DIR.'/'.$path.$adlogo)) $adlogo = 'slaed_logo_256x73.png';
+    if (!is_file(PUBLIC_DIR.'/'.$path.$adlogo)) $adlogo = 'slaed_logo_256x73.png';
     $list = is_dir($dir) ? scandir($dir) : [];
     $opts = '';
     if (is_array($list)) {
@@ -537,7 +537,7 @@ function config(): void {
         'is_required' => true,
         'is_config' => true,
     ])];
-    $list = is_dir(BASE_DIR.'/templates') ? scandir(BASE_DIR.'/templates') : [];
+    $list = is_dir(PUBLIC_DIR.'/templates') ? scandir(PUBLIC_DIR.'/templates') : [];
     $opts = '';
     if (is_array($list)) {
         foreach ($list as $file) {
@@ -813,7 +813,7 @@ function config(): void {
         ]),
     ];
     $tabb = $tpl->getHtmlPart('div', ['rows' => $rows]);
-    $list = is_dir('lang') ? scandir('lang') : [];
+    $list = is_dir(BASE_DIR.'/lang') ? scandir(BASE_DIR.'/lang') : [];
     $opts = '';
     if (is_array($list)) {
         foreach ($list as $file) {
@@ -951,8 +951,6 @@ function config(): void {
         $iter = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(CACHE_DIR, FilesystemIterator::SKIP_DOTS));
         foreach ($iter as $file) {
             if (!$file->isFile()) continue;
-            $fname = $file->getFilename();
-            if ($fname === '.htaccess' || $fname === 'index.html') continue;
             $size += (int)$file->getSize();
             $cnt++;
             $rel = substr(str_replace('\\', '/', $file->getPath()), strlen($base) + 1);
@@ -1059,7 +1057,7 @@ function save(): void {
         $xhomeurl = ($homeurl !== '' && substr($homeurl, -1) == '/') ? substr($homeurl, 0, -1) : $homeurl;
         $xsite_logo = str_replace('templates/'.$conf['theme'].'/images/logos/', '', getVar('post', 'site_logo', 'text'));
         $xadlogo = basename(str_replace('templates/admin/images/logos/', '', getVar('post', 'admin_logo', 'text')));
-        if (!is_file(BASE_DIR.'/templates/admin/images/logos/'.$xadlogo)) $xadlogo = 'slaed_logo_256x73.png';
+        if (!is_file(PUBLIC_DIR.'/templates/admin/images/logos/'.$xadlogo)) $xadlogo = 'slaed_logo_256x73.png';
 
         $xuser_c = getVar('post', 'user_c', 'text');
         $xadmin_c = getVar('post', 'admin_c', 'text');
@@ -1111,6 +1109,7 @@ function save(): void {
 
         $cont = [
             'version' => '6.3.0 Phoenix',
+            'webroot' => ($conf['webroot'] ?? '') === 'project' ? 'project' : 'public',
             'sitename' => getVar('post', 'sitename', 'text'),
             'homeurl' => $xhomeurl,
             'admin_logo' => $xadlogo,

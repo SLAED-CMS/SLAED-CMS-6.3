@@ -118,10 +118,10 @@ function getEditbox(
 function getEditorView(string $edit, string $note = '', string $type = 'info'): string {
     return match ($edit) {
         'editheader' => getEditbox(CONFIG_DIR.'/header.php', _EHEAD.': '.CONFIG_DIR.'/header.php '._EINFO2, _EINFOPHP, 'text/x-php', 'editheader', 1, true, '', '', $note, $type),
-        'htaccess' => getEditbox(BASE_DIR.'/.htaccess', _EHT.': '.BASE_DIR.'/.htaccess '._EINFO4, '', 'text/x-php', 'htaccess', 2, false, '', '', $note, $type),
+        'htaccess' => getEditbox(PUBLIC_DIR.'/.htaccess', _EHT.': '.PUBLIC_DIR.'/.htaccess '._EINFO4, '', 'text/x-php', 'htaccess', 2, false, '', '', $note, $type),
         'robots' => getEditbox(
-            BASE_DIR.'/robots.txt',
-            _EROB.': '.BASE_DIR.'/robots.txt '._EINFO5,
+            PUBLIC_DIR.'/robots.txt',
+            _EROB.': '.PUBLIC_DIR.'/robots.txt '._EINFO5,
             '',
             'text/plain',
             'robots',

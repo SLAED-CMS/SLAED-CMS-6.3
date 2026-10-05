@@ -5,9 +5,9 @@
 # Website: slaed.net
 
 # The web server of the probes, run as the router of the built-in server `php -S` with the scratch root in SLAED_WEB_ROOT; it answers a closed set of paths and nothing else
-# /uploads/<dir>/<path> follows the nginx rule of UPGRADING.md (Web Server Rule for Node Upload Directories): 403 below a folder of the upload root with the .htaccess guard
-# The file open in that root switches the rule off, which is a server whose owner never added it; the upload root itself comes from SLAED_WEB_UPLOADS
-# /stream answers one fixture of <root>/files through the shipped getFileStream(), lifted out of core/system.php, and records what the callback and the shutdown saw
+# /uploads/<path> runs the light path of core/stream.php over the upload root of SLAED_WEB_UPLOADS: a public folder is served, every other address answers 404
+# The file open in the scratch root switches the light path off and serves the file as it is, which is a server whose document root still holds the upload root
+# /stream answers one fixture of <root>/files through the shipped getFileStream() of core/stream.php, and records what the callback and the shutdown saw
 # The directory is served by the stand as well, so anything but the built-in server gets a plain 404 before a single line of it runs
 if (PHP_SAPI !== 'cli-server') {
     http_response_code(404);
@@ -22,32 +22,26 @@ if ($wroot === '' || !is_dir($wroot)) {
     http_response_code(500);
     exit;
 }
-if (preg_match('#^/uploads/([a-z0-9]+)/([A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*)$#D', $wpath, $whit) && !in_array('..', explode('/', $whit[2]), true)) {
-    $wdir = $wups.'/'.$whit[1];
-    if (!is_file($wroot.'/open') && is_file($wdir.'/.htaccess')) http_response_code(403);
-    elseif (is_file($wdir.'/'.$whit[2])) readfile($wdir.'/'.$whit[2]);
-    else http_response_code(404);
-    exit;
-}
-if ($wpath !== '/stream') {
+if ($wpath !== '/stream' && !str_starts_with($wpath, '/uploads/')) {
     http_response_code(404);
     exit;
 }
+define('MODULE_FILE', true);
 define('FUNC_FILE', true);
 define('BASE_DIR', str_replace('\\', '/', dirname(__DIR__, 2)));
+define('UPLOADS_DIR', $wups);
 require_once BASE_DIR.'/core/classes/cache.php';
-$wlift = $wroot.'/stream_fn.php';
-if (!is_file($wlift)) {
-    $wcode = (string)file_get_contents(BASE_DIR.'/core/system.php');
-    $wfrom = strpos($wcode, "\nfunction getFileStream(");
-    $wend = ($wfrom === false) ? false : strpos($wcode, "\n}\n", $wfrom);
-    if ($wend === false) {
-        http_response_code(500);
+require_once BASE_DIR.'/core/stream.php';
+if ($wpath !== '/stream') {
+    $wrel = substr($wpath, 9);
+    if (is_file($wroot.'/open')) {
+        if (!in_array('..', explode('/', $wrel), true) && is_file($wups.'/'.$wrel)) readfile($wups.'/'.$wrel);
+        else http_response_code(404);
         exit;
     }
-    file_put_contents($wlift, "<?php\n".substr($wcode, $wfrom, $wend - $wfrom + 3));
+    $_SERVER['SCRIPT_NAME'] = '/index.php';
+    setUploadStream((string)getUploadRequest());
 }
-require $wlift;
 parse_str((string)parse_url((string)($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_QUERY), $wq);
 $wfile = (string)($wq['f'] ?? '');
 if (!preg_match('#^[a-z]+\.[a-z0-9]+$#D', $wfile)) $wfile = 'none.bin';
@@ -60,6 +54,6 @@ $wstart = isset($wq['start']) ? static function () use ($wroot): void {
     file_put_contents($wroot.'/start.log', '1', FILE_APPEND);
 } : null;
 if (isset($wq['mime'])) {
-    getFileStream($wroot.'/files/'.$wfile, (string)($wq['n'] ?? $wfile), (string)$wq['mime'], isset($wq['inline']), isset($wq['cached']), $wstart);
+    getFileStream($wroot.'/files/'.$wfile, (string)($wq['n'] ?? $wfile), (string)$wq['mime'], isset($wq['inline']), (string)($wq['cache'] ?? 'none'), $wstart);
 }
 getFileStream($wroot.'/files/'.$wfile, (string)($wq['n'] ?? $wfile));

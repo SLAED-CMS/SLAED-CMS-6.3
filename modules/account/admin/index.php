@@ -420,7 +420,7 @@ function add(bool $fresh = false): void {
     if ($conf['users']['theme']) {
         $themeopts = '';
         $themecount = 0;
-        foreach (scandir(BASE_DIR.'/templates') as $file) {
+        foreach (scandir(PUBLIC_DIR.'/templates') as $file) {
             if (!preg_match('/\./', $file) && $file != 'admin' && checkThemeAssets($file)) {
                 $themeopts .= $tpl->getHtmlFrag('select-option', [
                     'value_attr' => $file,
@@ -900,7 +900,7 @@ function config(): void {
     $rows = [
         [
             'label_for' => 'f-adirectory',
-            'label_html' => _ADIR,
+            'label_html' => _ACCOUNT_ADIR,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
                 'name_attr' => 'adirectory',

@@ -50,10 +50,10 @@ final class SeoSemanticsValidationTest extends TestCase
 
     public function testSemanticComponentsRequireExplicitBooleanContexts(): void
     {
-        $card = file_get_contents($this->base.'/templates/lite/fragments/card.html');
-        $vote = file_get_contents($this->base.'/templates/lite/partials/voting-widget.html');
-        $pop = file_get_contents($this->base.'/templates/lite/fragments/popover.html');
-        $layout = file_get_contents($this->base.'/templates/lite/layouts/app.html');
+        $card = file_get_contents($this->base.'/public/templates/lite/fragments/card.html');
+        $vote = file_get_contents($this->base.'/public/templates/lite/partials/voting-widget.html');
+        $pop = file_get_contents($this->base.'/public/templates/lite/fragments/popover.html');
+        $layout = file_get_contents($this->base.'/public/templates/lite/layouts/app.html');
 
         $this->assertStringContainsString('{% if is_detail %}<h1', $card);
         $this->assertStringContainsString('{% elseif is_nested %}<h3', $card);

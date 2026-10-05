@@ -20,6 +20,7 @@ ini_set('display_errors', '0');
 ini_set('log_errors', '0');
 if (!defined('MODULE_FILE')) define('MODULE_FILE', true);
 if (!defined('BASE_DIR')) define('BASE_DIR', str_replace('\\', '/', dirname(__DIR__, 2)));
+if (!defined('PUBLIC_DIR')) define('PUBLIC_DIR', BASE_DIR.'/public');
 $probework = str_replace('\\', '/', (string)$probework);
 if ($probework === '') $probework = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_probe';
 if (!defined('COUNTER_DIR')) define('COUNTER_DIR', $probework);

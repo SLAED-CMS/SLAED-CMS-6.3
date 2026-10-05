@@ -8,13 +8,15 @@
 # It boots the real core like index.php so Parser::filterAttach() reads the shipped config/filetype.php and the shipped upload rules
 # The image family is the only one that needs a real file, because filterAttach() renders a placeholder instead of the template when the source is missing
 # The fixture module lives below UPLOADS_DIR because filterAttach() resolves attachments there by construction, and the whole directory is removed again before the probe answers
+# The upload root is a scratch one, so the public folder the fixture takes never touches the uploads of the repository
 $probework = (string)($argv[2] ?? '');
 require_once __DIR__.'/probe_boot.php';
+if (!defined('UPLOADS_DIR')) define('UPLOADS_DIR', $probework.'/uploads');
 require_once BASE_DIR.'/core/system.php';
 if (!class_exists('Parser')) require_once BASE_DIR.'/core/classes/parser.php';
 
-# The upload directory this probe owns; it has no record in config/uploads.php, which is what makes the thumbnail width fall back to the general setting
-const RENDMOD = 'slaedrender';
+# The upload directory this probe owns, a public folder with an address of its own; it has no record in config/uploads.php, so the thumbnail width falls back to the general setting
+const RENDMOD = 'archive';
 
 # One attachment per render family, each with the file name the tag points at
 function getProbeCases(): array {

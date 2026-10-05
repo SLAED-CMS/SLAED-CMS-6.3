@@ -11,10 +11,6 @@
 /storage/baseline/*
 /storage/migrate/*
 
-# Keep directory structure
-!*/index.html
-!*/.htaccess
-
 
 # Database configs (contains passwords)
 /config/db.php

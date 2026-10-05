@@ -19,6 +19,7 @@ define('_ADDNEWFILEBLOCK','Dodaj plików blok');
 define('_ADDRESS','Adres');
 define('_ADDSUBCATEGORY','Dodaj pod-kategorii');
 define('_ADIR','Katalog obrazów w katalogu głównym strony');
+define('_ACCOUNT_ADIR','Folder awatarów w uploads/');
 define('_ADMCOL','Liczba kolumn po wyświetleniu modułów panelu administratora');
 define('_ADMINEMAIL','E-Mail admin');
 define('_ADMINFOEDIT','Aktywacja redaktor działu informacji?');
@@ -593,6 +594,9 @@ define('_SETUP_NOWRITE','PHP nie może tu zapisywać, ustaw uprawnienia na serwe
 define('_SETUP_NOEXT','nie zainstalowano');
 define('_SETUP_NOOPT','nie zainstalowano, strona działa bez niego');
 define('_SETUP_ANSWERS','strona odpowiada pod %s');
+define('_SETUP_WEBROOT','Katalog główny');
+define('_SETUP_ROOT_PUB','public/: nic poza nim nie jest dostępne z sieci');
+define('_SETUP_ROOT_PRJ','projekt: jego .htaccess kieruje każde żądanie do public/, tylko Apache lub LiteSpeed');
 define('_SETUP_CONNECT','Połączenie z %s');
 define('_SETUP_CONN_USER','użytkownik %s');
 define('_SETUP_FREE','Prefiks %s jest wolny');
