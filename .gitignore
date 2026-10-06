@@ -19,6 +19,13 @@
 /config/changelog.php
 /config/local.php
 
+# Markers of the self-check: a random body per installation, so a shipped copy would let a copy of the delivery pass for the site
+/check.txt
+/storage/check.txt
+/config/check.txt
+/uploads/check.txt
+/admin/info/check.txt
+
 # Marks of finished 6.3 data updates: written by setup.php or update.php on the site itself, a shipped mark would open a subsystem that was never updated
 /config/update.php
 

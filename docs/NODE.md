@@ -1127,9 +1127,9 @@ partial write; a configuration that does not carry the row's version is `STORAGE
   (`INVALID assets.<role>`); a `link` role needs all its sources to be distinct `http(s)` URLs compared byte for
   byte (`CAST(src AS BINARY)`), else `INVALID assets.<role>.mode`.
 - `updateNodeTypeStatus()` is the only switch; the current state succeeds without write or version. Switching on
-  first, before every lock, requires `getSchedulerFetch(<homeurl>/uploads/node/<name>/index.html)` to answer 403 or 404,
-  which the light path of `index.php` does for every folder off its public list; under the lock it repeats the full check of what is stored and needs a writable, non-link
-  directory.
+  first, before every lock, requires the self-check `checkPrivateRoots()` to find the upload root `closed`: the marker
+  `uploads/check.txt` it asks for at `<homeurl>` lies in no public folder, so the light path of `index.php` refuses it;
+  under the lock it repeats the full check of what is stored and needs a writable, non-link directory.
 - `deleteNodeType()` needs no material in any state, no category and no user file. It removes the sections from the
   four areas and the key `node-<name>` from every administrator in the same transaction, so a later type of that
   name inherits no rights; the directory and guards stay.
@@ -2759,8 +2759,9 @@ An address under `uploads/` reaches the light path of `index.php` (`core/stream.
 
 - No folder carries a guard file. `tests/Support/route_web.php` and `web_probe.php` run the real light path; the file
   `open` of `web_probe.php` stands for a server that still serves the upload root.
-- Enabling a type requests `<homeurl>/uploads/node/<type>/index.html` with `getSchedulerFetch()`; only `403` or `404`
-  passes, anything else (including a redirect or connection error) is `INVALID directory` and the type stays off.
+- Enabling a type asks the self-check for the upload root: `checkPrivateRoots(['uploads' => UPLOADS_DIR])` requests
+  `<homeurl>/uploads/check.txt` and judges the body. Only `closed` passes; `open` (the marker served, whatever the
+  status) or `unknown` (no answer, no http(s) site address) is `INVALID directory` and the type stays off.
 - A type is created only over an empty directory or one holding empty directories alone (hidden files, previews and
   thumbnails are user files). Deleting a type re-checks all material states, categories and files and never
   removes the directory.

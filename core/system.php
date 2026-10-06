@@ -283,7 +283,7 @@ function getSchedulerPlannedTime(array $job, array $state = []): int {
 # Enforces canonical type/system for built-in jobs and drops legacy keys so stale configs self-heal
 function getSchedulerJob(string $name, ?array $job = null): array {
     global $conf;
-    static $map = ['dbbackup' => 'backup', 'filescan' => 'filescan', 'maildrain' => 'maildrain', 'newsletter' => 'newsletter', 'sitemap' => 'sitemap',
+    static $map = ['dbbackup' => 'backup', 'filescan' => 'filescan', 'maildrain' => 'maildrain', 'newsletter' => 'newsletter', 'selfcheck' => 'selfcheck', 'sitemap' => 'sitemap',
         'cachegc' => 'cachegc', 'monitor' => 'monitor', 'nodepublish' => 'nodepublish', 'nodesync' => 'nodesync'];
     $read = $job === null;
     if ($read) $job = $conf['scheduler']['jobs'][$name] ?? [];
@@ -563,6 +563,69 @@ function addSchedulerCustom(array $job): array {
     ];
 }
 
+# The roots the self-check watches by address path: the project proves the document root, the four folders hold the secrets
+function getPrivateRoots(): array {
+    return ['' => BASE_DIR, 'storage' => BASE_DIR.'/storage', 'config' => CONFIG_DIR, 'uploads' => UPLOADS_DIR, 'admin/info' => BASE_DIR.'/admin/info'];
+}
+
+# Return the random marker check.txt of a folder, written under a lock when missing or damaged, or an empty string when it cannot be written
+function setPrivateMark(string $dir): string {
+    $file = $dir.'/check.txt';
+    $mark = is_file($file) ? trim((string)file_get_contents($file)) : '';
+    if (preg_match('#^[0-9a-f]{32}$#D', $mark)) return $mark;
+    $hand = is_dir($dir) ? fopen($file, 'c+b') : false;
+    if ($hand === false) return '';
+    flock($hand, LOCK_EX);
+    $mark = trim((string)stream_get_contents($hand));
+    if (!preg_match('#^[0-9a-f]{32}$#D', $mark)) {
+        $mark = bin2hex(random_bytes(16));
+        if (!ftruncate($hand, 0) || !rewind($hand) || fwrite($hand, $mark) !== 32) $mark = '';
+    }
+    flock($hand, LOCK_UN);
+    fclose($hand);
+    return $mark;
+}
+
+# Ask each root for its marker over HTTP and judge by the body, never the status: open, closed or unknown; $fetch is the transport seam for tests
+function checkPrivateRoots(?array $roots = null, ?callable $fetch = null): array {
+    global $conf;
+    $fetch ??= 'getSchedulerFetch';
+    $base = rtrim((string)($conf['homeurl'] ?? ''), '/');
+    $web = (bool)preg_match('#^https?://#i', $base);
+    $out = [];
+    foreach ($roots ?? getPrivateRoots() as $root => $dir) {
+        $url = $base.'/'.ltrim($root.'/check.txt', '/');
+        $mark = $web ? setPrivateMark($dir) : '';
+        $res = ($mark !== '') ? $fetch($url) : ['ok' => false, 'body' => '', 'error' => $web ? 'The marker cannot be written' : 'The site address is no http(s) URL'];
+        $state = empty($res['ok']) ? 'unknown' : (str_contains((string)($res['body'] ?? ''), $mark) ? 'open' : 'closed');
+        $out[$root] = ['url' => $url, 'state' => $state, 'error' => ($state === 'unknown') ? (string)($res['error'] ?? '') : ''];
+    }
+    return $out;
+}
+
+# Scheduler job selfcheck: keep the verdict of every root in the job state and fail when a root is not closed
+function addSelfCheckTask(): array {
+    $list = checkPrivateRoots();
+    $bad = array_filter($list, fn(array $v): bool => $v['state'] !== 'closed');
+    $mess = implode('; ', array_map(fn(array $v): string => $v['state'].': '.$v['url'].(($v['error'] !== '') ? ' ('.$v['error'].')' : ''), $bad));
+    return ['status' => $bad ? 'failed' : 'success', 'message' => $bad ? $mess : count($list).' closed', 'extra' => ['roots' => $list]];
+}
+
+# Alerts of the last self-check, a verdict older than a day counting as none; $full adds the all-clear of the security section
+function getSelfCheckAlert(bool $full = false): string {
+    global $tpl;
+    $state = getSchedulerState('selfcheck');
+    $list = is_array($state['roots'] ?? null) ? $state['roots'] : [];
+    if (!$list || time() - (int)$state['last_run'] > 86400) return $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _SEC_CHECK_NONE]);
+    $cont = '';
+    foreach (['open' => _SEC_CHECK_OPEN, 'unknown' => _SEC_CHECK_UNK] as $key => $text) {
+        $urls = array_column(array_filter($list, fn(mixed $v): bool => is_array($v) && ($v['state'] ?? '') === $key), 'url');
+        if ($urls) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $text, 'messages' => $urls]);
+    }
+    if ($cont === '' && $full) $cont = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => sprintf(_SEC_CHECK_DONE, date(_TIMESTRING, (int)$state['last_run']))]);
+    return $cont;
+}
+
 # Returns the next due scheduler job or null when nothing can run
 function getSchedulerNextJob(?string $name = null): ?array {
     if ($name !== null && $name !== '') {
@@ -599,6 +662,7 @@ function addSchedulerSystemJob(string $name): array {
         'monitor' => addMonitorSample(),
         'nodepublish' => addNodePublishTask(),
         'nodesync' => addNodeSyncTask(),
+        'selfcheck' => addSelfCheckTask(),
         default => ['status' => 'failed', 'message' => 'Unknown system job: '.$name],
     };
 }

@@ -13,7 +13,12 @@ UPGRADING.md went with batch 2, because the guards it relied on are gone, so bat
 `nginx.conf.example`. On the owner's request the server half of batch 4 landed with batch 2 as well: the file
 `nginx.conf.example`, `NginxConfigTest`, the help of the security section with the two modes and the variants of
 shared hosting, README.md and UPGRADING.md pointing at the file; batch 4 keeps only `setup_old/`. The critical files
-of the file layer follow the document root by `PUBLIC_DIR`, so a root named `public_html/` keeps them. Batches 3-6
+of the file layer follow the document root by `PUBLIC_DIR`, so a root named `public_html/` keeps them. Batch 3 done
+2026-10-06 (`SelfCheckTest`): `checkPrivateRoots()` over the project and the four folders with the transport as its
+seam, the markers by `setPrivateMark()`, the system job `selfcheck` every hour, which keeps the verdicts in its own
+scheduler state, and `getSelfCheckAlert()` on the home of the panel (only a problem or no run within a day) and in
+the security section (the all-clear as well); the last part of `setup.php` writes the markers, since it is the one that runs with the core; `checkTypeGuard()` asks the upload root
+alone. The plain name was tried on the stock OSPanel nginx of the stand: `check.txt` is served as it is. Batches 4-6
 open. The order
 of the batches is kept in `docs/ROADMAP-2026.md`: batches 0 and 1 of 1-FILES-2026.md run between batch 1 and batch 2,
 so the Node types sit in `uploads/node/<type>/` before the tree is split. Update this line as batches land.
@@ -277,10 +282,14 @@ The check that tells the operator, from inside the administration, whether the p
   which is a false all-clear. Its body is a random string, so a copy of the delivery cannot be recognised by
   content alone. A marker that is missing is written again by the check before it asks, so a restored backup or a
   moved tree never reports `unknown` for that reason alone.
-- **The watched roots.** `storage/`, `config/`, the closed upload root `uploads/` and `admin/info`, each asked at the
-  address it would have if the project root were served. With the root on `public/` they answer nothing; with the
-  root on the project the check proves the rewrite works. The marker of `uploads/` lies in no public folder, so the
-  light path of batch 2 refuses it like any address it does not serve.
+- **The watched roots.** The project itself, `storage/`, `config/`, the closed upload root `uploads/` and
+  `admin/info`, each asked at the address it would have if the project root were served. With the root on `public/`
+  they answer nothing; with the root on the project the check proves the rewrite works. The marker of the project
+  (2026-10-06) proves the document root itself: it catches a root on the project that the server closes only folder by
+  folder, which the four folders alone pass. The four folders hold the secrets and catch an alias of the server that
+  opens one of them while the root is right. Every other folder of the project holds code, not secrets, and a host
+  that keeps its code read-only would leave its marker unwritten and the check `unknown` for good. The marker of
+  `uploads/` lies in no public folder, so the light path of batch 2 refuses it like any address it does not serve.
 - **Ask over HTTP and judge by the body.** Request the marker through the configured site address with
   `getSchedulerFetch()` and compare the answer with the file. A status code decides nothing: an installation that
   maps its errors onto a CMS page can answer 200 with the error page or 404 with a body. The marker string is the
@@ -395,4 +404,4 @@ section and UPGRADING.md. An entry in `docs/VERSIONS.md`. Delete this file.
 
 ## Open
 
-Nothing. Batch 3 tests the plain marker name once against a stock panel configuration before it is trusted.
+Nothing.

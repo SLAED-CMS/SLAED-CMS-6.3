@@ -1715,13 +1715,7 @@ function setUpdateSql(Database $db, string $file, string $prefix): array {
     return $rows;
 }
 
-# Run the 6.3 update of the site config/db.php names and answer its report rows; a refusal before the preflight passed answers one failed row and changes nothing
-# Then the site is closed, the 6.2 settings go over the release, the shipped admin.php takes the name of the panel file of the site and replaces its 6.2 loader
-# The registry, the Node types, the upload rules, the scheduler and the newsletter snapshot follow; a failed row stops the run before the schema file
-# Before the schema file a negative point balance of 6.2 becomes 0, since the schema makes the column unsigned, and the report counts those accounts
-# The scheduler gains the system jobs nodepublish and nodesync it has not carried yet, maildrain moves off a priority another job holds and commentsync is dropped
-# The dbbackup job gains only the missing keys of its scope, compression and retention settings, so a configured value is never overwritten
-# After the schema file the data units, the feed blocks, the blocks of removed modules, the newsletter queue and the id counter of Node run
+# Run the 6.3 update of the site config/db.php names and answer its report rows; a refusal before the preflight changes nothing
 function setUpdateRun(): array {
     global $conf, $spanel;
     foreach (['db.php', 'global.php', 'security.php'] as $name) {
@@ -1819,6 +1813,20 @@ function setUpdateRun(): array {
             'lock_timeout' => '180',
             'manual' => '1',
             'settings' => ['limit' => '10'],
+        ];
+        $sdone = true;
+    }
+    if (is_array($sched) && !isset($sched['jobs']['selfcheck'])) {
+        $sched['jobs']['selfcheck'] = [
+            'title' => 'Self-check',
+            'type' => 'system',
+            'active' => '1',
+            'system' => 'selfcheck',
+            'schedule' => '20 * * * *',
+            'priority' => '10',
+            'lock_timeout' => '300',
+            'manual' => '1',
+            'settings' => [],
         ];
         $sdone = true;
     }

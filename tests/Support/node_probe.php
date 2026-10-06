@@ -1563,19 +1563,17 @@ function getProbeSvcStatus(PDO $pdo): array {
     return $out;
 }
 
-# Protection: a type goes public only when the site refuses its directory; the light path does, a server that still serves the upload root keeps the type off
-# The probe server serves the name the check asks for while the file open exists, and no guard file is written into the directory at any step
+# Protection: a type goes public only while the self-check finds the upload root closed, the probe server serves it while open exists
 function getProbeSvcGate(): array {
     $srv = getProbeService('boss');
     $dir = NODE_DIR.'/gate';
     $open = $GLOBALS['probework'].'/open';
     $out = ['add' => getProbeCall(fn(): int => $srv->addNodeType('gate', getProbeInput())->version)];
     $out['made'] = getProbeWalk($dir);
-    file_put_contents($dir.'/index.html', 'served');
     touch($open);
     $out['open'] = getProbeCall(fn(): NodeType => $srv->updateNodeTypeStatus('gate', true, 1));
     unlink($open);
-    unlink($dir.'/index.html');
+    $out['mark'] = is_file(UPLOADS_DIR.'/check.txt');
     $out['on'] = getProbeCall(fn(): int => $srv->updateNodeTypeStatus('gate', true, 1)->version);
     touch($open);
     $out['again'] = getProbeCall(fn(): int => $srv->updateNodeTypeStatus('gate', true, 2)->version);

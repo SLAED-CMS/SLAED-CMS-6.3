@@ -27,5 +27,6 @@ Technical notes:
 
 # --------------------------------------------------------------------
 # Types: Refactor | Feature | Fix | Docs | Style | Test | Chore | Perf
+# One task, one commit: every area of the task is a numbered section above
 # Bullets: - main point, * sub-detail
 # --------------------------------------------------------------------

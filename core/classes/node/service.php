@@ -220,15 +220,11 @@ final class NodeService {
         if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) throw $this->getStorage('The directory of the type cannot be created');
     }
 
-    # Confirm that the site refuses the directory of a type before it goes public: it asks for a name in that folder at the address the folder would have
-    # Only a first answer of 403 or 404 confirms the refusal; a served page, a redirect or a failed request leave the type off, because file delivery has no direct mode at all
+    # Let a type go public only when the self-check finds the upload root closed
     private function checkTypeGuard(string $name): void {
-        global $conf;
         $dir = UPLOADS_DIR.'/'.getUploadFolder($name, true);
         if (is_link($dir) || !is_dir($dir)) throw $this->getInvalid('directory');
-        $base = rtrim($conf['homeurl'] ?? '', '/');
-        $res = preg_match('#^https?://#i', $base) ? getSchedulerFetch($base.'/uploads/'.getUploadFolder($name, true).'/index.html') : ['code' => 0];
-        if (!in_array($res['code'], [403, 404], true)) throw $this->getInvalid('directory');
+        if (checkPrivateRoots(['uploads' => UPLOADS_DIR])['uploads']['state'] !== 'closed') throw $this->getInvalid('directory');
     }
 
     # The named pieces of a stored upload rule string, whole limits as integers; a string that is not twelve pieces answers an empty array
@@ -474,9 +470,7 @@ final class NodeService {
         return $this->getTypeResult($name);
     }
 
-    # Switch a type on or off at the expected version; switching on repeats the whole check of what is stored and needs the writable directory of the type
-    # Switching an inactive type on first confirms the refusal of its directory by the web server, a network request that runs before every lock
-    # Asking for the state the type already has is no change: it succeeds without a write and keeps the version
+    # Switch a type on or off at the expected version; switching on first asks the self-check, then repeats the whole check of what is stored
     public function updateNodeTypeStatus(string $name, bool $active, int $version): NodeType {
         $this->checkManage();
         if ($active && preg_match(self::NAME, $name) && !((new NodeQuery($this->db, $this->ctx, $this->fld))->getNodeType($name)?->active ?? false)) $this->checkTypeGuard($name);

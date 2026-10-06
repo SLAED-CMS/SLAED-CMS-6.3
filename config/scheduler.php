@@ -113,6 +113,18 @@ return [
                     'limit' => '10',
                 ],
             ],
+            'selfcheck' => [
+                'title' => 'Self-check',
+                'type' => 'system',
+                'active' => '1',
+                'system' => 'selfcheck',
+                'schedule' => '20 * * * *',
+                'priority' => '10',
+                'lock_timeout' => '300',
+                'manual' => '1',
+                'settings' => [
+                ],
+            ],
             'sitemap' => [
                 'title' => 'Sitemap',
                 'type' => 'system',

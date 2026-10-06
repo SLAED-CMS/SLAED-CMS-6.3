@@ -28,7 +28,7 @@ function security(): void {
         'ops' => ['name=security', 'name=security&op=banlist', 'name=security&op=passwd', 'name=security&op=config', 'name=security&op=info'],
         'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _MANUAL],
     ]);
-    $cont .= checkPerms(CONFIG_DIR.'/security.php');
+    $cont .= checkPerms(CONFIG_DIR.'/security.php').getSelfCheckAlert(true);
     $head = [
         ['content' => _TITLE],
         ['content' => _SIZE],

@@ -432,9 +432,7 @@ function setSetupTables(array &$state, array $item): array {
     return ['task' => $task, 'fail' => ''];
 }
 
-# The last part, run with the core booted on the new configuration: the first administrator, a site account of the same name and password when asked, and the Node profiles
-# The hash comes as an argument: it left the session before the core booted, because the security log of the core writes the session out
-# The language cookie of the core takes the language of the first stop, so the panel opens in it; the closing stop deletes the installer afterwards
+# The last part, run with the core: the first administrator, a site account of the same name when asked, the Node profiles and the markers of the self-check
 function addSetupAdmin(array &$state, string $hash): array {
     global $db, $conf;
     $adm = $state['admin'];
@@ -448,6 +446,7 @@ function addSetupAdmin(array &$state, string $hash): array {
     $pars = ['name' => $adm['name'], 'email' => $adm['mail'], 'website' => $state['site']['url'], 'pass' => $hash, 'lang' => $state['lang'], 'ip' => $pars['ip']];
     if ($adm['user'] === '1' && !$db->getSqlQuery($sql, $pars)) return ['task' => '', 'fail' => _ERROR.': '.PREFIX_DB.'_users — '.$db->getSqlError()['message']];
     $state['note'] = addNodeProfiles($aid);
+    foreach (getPrivateRoots() as $dir) setPrivateMark($dir);
     setCookies('language', time() + intval($conf['user_c_t'] ?? 0), $state['lang']);
     return ['task' => _ADMIN.' '.$adm['name'].' — '.(($adm['user'] === '1') ? _SETUP_ADM_USER : _SETUP_ADM_MADE), 'fail' => ''];
 }

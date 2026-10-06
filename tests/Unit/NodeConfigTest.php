@@ -308,15 +308,15 @@ final class NodeConfigTest extends TestCase
         $this->assertSame(['ok' => true, 'value' => null], $run['again']);
     }
 
-    # A type goes public only when the site refuses its directory - the probe server runs the light path of core/stream.php, or serves the folder while the file open exists
-    # A new directory stays empty, a served file keeps the type off, the refusal of the light path lets it on, and a type already on stays on
+    # A type goes public only when the self-check finds the upload root closed, and a new directory stays empty
     #[Test]
     public function aTypeGoesPublicOnlyBehindARefusingWebServer(): void
     {
         $run = $this->getRuns()['gate'];
         $this->assertSame(['ok' => true, 'value' => 1], $run['add']);
         $this->assertSame([], $run['made'], 'The new directory got a guard file');
-        $this->assertInvalid($run['open'], 'directory', 'a served file of the directory');
+        $this->assertInvalid($run['open'], 'directory', 'a served marker of the upload root');
+        $this->assertTrue($run['mark'], 'The self-check did not write the marker of the upload root');
         $this->assertSame(['ok' => true, 'value' => 2], $run['on']);
         $this->assertSame(['ok' => true, 'value' => 2], $run['again'], 'A repeat of the state asks the server again');
         $this->assertTrue($run['trace']);
